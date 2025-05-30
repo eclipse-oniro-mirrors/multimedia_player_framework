@@ -16,7 +16,11 @@
 #ifndef OH_VEF_GRAPHICS_RENDER_MATH_UTIL_H
 #define OH_VEF_GRAPHICS_RENDER_MATH_UTIL_H
 
+#ifdef USE_M133_SKIA
+#include "third_party/skia/third_party/externals/oboe/samples/RhythmGame/third_party/glm/gtc/type_ptr.hpp"
+#else
 #include "third_party/externals/oboe/samples/RhythmGame/third_party/glm/gtc/type_ptr.hpp"
+#endif
 
 namespace OHOS {
 namespace Media {

@@ -17,9 +17,15 @@
 #define OH_VEF_GRAPHICS_RENDER_VECTOR_H
 
 #define GLM_FORCE_XYZW_ONLY
+#ifdef USE_M133_SKIA
+#include "third_party/skia/third_party/externals/oboe/samples/RhythmGame/third_party/glm/vec2.hpp"
+#include "third_party/skia/third_party/externals/oboe/samples/RhythmGame/third_party/glm/vec3.hpp"
+#include "third_party/skia/third_party/externals/oboe/samples/RhythmGame/third_party/glm/vec4.hpp"
+#else
 #include "third_party/externals/oboe/samples/RhythmGame/third_party/glm/vec2.hpp"
 #include "third_party/externals/oboe/samples/RhythmGame/third_party/glm/vec3.hpp"
 #include "third_party/externals/oboe/samples/RhythmGame/third_party/glm/vec4.hpp"
+#endif
 
 namespace OHOS {
 namespace Media {
