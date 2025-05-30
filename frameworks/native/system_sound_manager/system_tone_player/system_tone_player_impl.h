@@ -18,7 +18,7 @@
 
 #include "audio_haptic_manager.h"
 #include "media_errors.h"
-#include "media_monitor_manager.h
+#include "media_monitor_manager.h"
 #include "system_sound_manager_impl.h"
 
 namespace OHOS {
