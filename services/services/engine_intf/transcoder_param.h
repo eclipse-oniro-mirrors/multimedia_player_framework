@@ -76,7 +76,7 @@ struct VideoColorSpace : public TransCoderParam {
     explicit VideoColorSpace(TranscoderColorSpace fmt) : TransCoderParam(TransCoderPublicParamType::COLOR_SPACE_FMT),
         colorSpaceFmt(fmt) {}
     TranscoderColorSpace colorSpaceFmt;
-}
+};
 
 struct AudioEnc : public TransCoderParam {
     explicit AudioEnc(AudioCodecFormat fmt) : TransCoderParam(TransCoderPublicParamType::AUDIO_ENC_FMT), encFmt(fmt) {}
