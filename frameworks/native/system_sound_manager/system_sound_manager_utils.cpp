@@ -21,6 +21,7 @@
 #include "system_sound_log.h"
 #include "media_errors.h"
 #include "os_account_manager.h"
+#include "system_sound_manager.h"
 #include "system_tone_player_impl.h"
 #include "parameter.h"
 
@@ -173,27 +174,34 @@ bool SystemSoundManagerUtils::GetScannerFirstParameter(const char* key, int32_t 
     return false;
 }
 
-std::string SystemSoundManagerUtils::GetTypeForSystemSoundUri(const std::string &uri)
+int32_t SystemSoundManagerUtils::GetTypeForSystemSoundUri(const std::string &audioUri)
 {
-    if (uri == NO_SYSTEM_SOUND) {
-        return NO_SYSTEM_SOUND;
-    }
-    if (uri == NO_RING_SOUND) {
-        return NO_RING_SOUND;
+    if (audioUri == NO_SYSTEM_SOUND || audioUri == NO_SYSTEM_SOUND) {
+        return SystemToneUriType::NO_RINGTONES;
     }
 
-    size_t pos = uri.find_first_of("sys_prod");
+    size_t pos = audioUri.find_first_of("sys_prod");
     if (pos == 0 || pos == 1) {
-        // The uri of a preset ringtone starts with "sys_prod" or "/sys_prod".
-        return "pre_installed";
+        // The audioUri of a preset ringtone starts with "sys prod” or "/sys prod".
+        return SystemToneUriType::PRESET_RINGTONES;
     }
-    pos = uri.find_first_of("data");
+    pos = audioUri.find_first_of("data");
     if (pos == 0 || pos == 1) {
-        // The uri of a custom ringtone starts with "data" or "/data".
-        return "customised";
+        // The audioUri of a custom ringtone starts with "data" or "/data".
+        return SystemToneUriType::CUSTOM_RINGTONES;
     }
+    return UNKNOW_RINGTONES;
+}
 
-    return "unknown";
+std::string SystemSoundManagerUtils::GetErrorReason(const int32_t &errorCode)
+{
+    std::string errorReason = "";
+    if (errorCode == MSERR_OK) {
+        errorReason = "system tone playback successfully";
+    } else {
+        errorReason = "system tone playback failed";
+    }
+    return errorReason;
 }
 } // namesapce Media
 } // namespace OHOS

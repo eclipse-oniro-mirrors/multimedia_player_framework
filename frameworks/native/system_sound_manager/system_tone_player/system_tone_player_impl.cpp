@@ -157,8 +157,8 @@ bool SystemTonePlayerImpl::IsSameHapticMaps(const std::map<ToneHapticsFeature, s
 
 int32_t SystemTonePlayerImpl::InitPlayer(const std::string &audioUri)
 {
-    MEDIA_LOGW("Enter InitPlayer() with audio type: %{public}s",
-        SystemSoundManagerUtils::GetTypeForSystemSoundUri(audioUri).c_str());
+    MEDIA_LOGW("Enter InitPlayer() with audio type: %{public}d",
+        SystemSoundManagerUtils::GetTypeForSystemSoundUri(audioUri));
     if (audioUri == NO_SYSTEM_SOUND) {
         ToneHapticsSettings settings;
         int32_t result = systemSoundMgr_.GetToneHapticsSettings(databaseTool_, audioUri,
@@ -418,6 +418,8 @@ int32_t SystemTonePlayerImpl::Start(const SystemToneOptions &systemToneOptions)
         if (!actualMuteHaptics) {
             if (!databaseTool_.isInitialized && !InitDatabaseTool()) {
                 MEDIA_LOGE("The database tool is not ready!");
+                SendSystemTonePlaybackEvent(ERRCODE_IOERROR, systemToneOptions.muteAudio,
+                    systemToneOptions.muteHaptics);
                 return ERRCODE_IOERROR;
             }
             std::string hapticUri = (configuredUri_ == NO_SYSTEM_SOUND) ?
@@ -429,8 +431,7 @@ int32_t SystemTonePlayerImpl::Start(const SystemToneOptions &systemToneOptions)
             ReleaseDatabaseTool();
         }
         CreateCallbackThread(delayTime);
-        SendMessageZoneEvent(AudioStandard::ERR_INVALID_PARAM,
-            systemToneOptions.muteAudio, systemToneOptions.muteHaptics);
+        SendSystemTonePlaybackEvent(result, systemToneOptions.muteAudio, systemToneOptions.muteHaptics);
         return streamId_;
     }
     result = CreatePlayerWithOptions({actualMuteAudio, actualMuteHaptics});
@@ -441,8 +442,7 @@ int32_t SystemTonePlayerImpl::Start(const SystemToneOptions &systemToneOptions)
     result = playerMap_[streamId_]->Start();
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, -1,
         "Failed to start audio haptic player: %{public}d", result);
-    SendMessageZoneEvent(AudioStandard::ERR_INVALID_PARAM,
-        systemToneOptions.muteAudio, systemToneOptions.muteHaptics);
+    SendSystemTonePlaybackEvent(result, systemToneOptions.muteAudio, systemToneOptions.muteHaptics);
     return streamId_;
 }
 
@@ -835,8 +835,9 @@ bool SystemTonePlayerImpl::IsExitCallbackThreadId(int32_t streamId)
     return callbackThreadIdMap_.count(streamId) != 0 && callbackThreadIdMap_[streamId] == std::this_thread::get_id();
 }
 
-void SystemTonePlayerImpl::SendMessageZoneEvent(const int32_t &errorCode, bool muteAudio, bool muteHaptics)
+void SystemTonePlayerImpl::SendSystemTonePlaybackEvent(const int32_t &errorCode, bool muteAudio, bool muteHaptics)
 {
+    MEDIA_LOGI("Send System Tone Playback Event .");
     AudioStandard::AudioRendererInfo rendererInfo;
     rendererInfo.contentType = AudioStandard::ContentType::CONTENT_TYPE_UNKNOWN;
     rendererInfo.streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_NOTIFICATION;
@@ -850,23 +851,25 @@ void SystemTonePlayerImpl::SendMessageZoneEvent(const int32_t &errorCode, bool m
         return;
     }
 
+    auto now = std::chrono::system_clock::now();
+    time_t rawtime = std::chrono::system_clock::to_time_t(now);
     AudioStandard::AudioRingerMode ringerMode = systemSoundMgr_.GetRingerMode();
     bool vibrateState = systemSoundMgr_.CheckVibrateSwitchStatus();
     int32_t volumeLevel = AudioStandard::AudioSystemManager::GetInstance()->
         GetVolume(AudioStandard::STREAM_NOTIFICATION);
-    
+
     std::shared_ptr<Media::MediaMonitor::EventBean> bean = std::make_shared<Media::MediaMonitor::EventBean>(
-        Media::MediaMonitor::ModuleId::AUDIO, Media::MediaMonitor::EventId::MESSAGE_ZONE,
-        Media::MediaMonitor::EventType::MESSAGE_ZONE_EVENT);
-    bean->Add("IS_PLAYBACK", 0);
-    bean->Add("CONFIGURED_URI", configuredUri_);
+        Media::MediaMonitor::ModuleId::AUDIO, Media::MediaMonitor::EventId::SYSTEM_TONE_PLAYBACK,
+        Media::MediaMonitor::EventType::BEHAVIOR_EVENT);
+    bean->Add("TIME_STAMP", static_cast<uint64_t>(rawtime));
+    bean->Add("SYSTEM_TONE_TYPE", SystemSoundManagerUtils::GetTypeForSystemSoundUri(configuredUri_));
     bean->Add("CLIENT_UID", static_cast<int32_t>(getuid()));
     bean->Add("DEVICE_TYPE", (desc.size() > 0 ? desc[0]->deviceType_ : AudioStandard::DEVICE_TYPE_NONE));
     bean->Add("ERROR_CODE", errorCode);
+    bean->Add("ERROR_REASON", SystemSoundManagerUtils::GetErrorReason(errorCode));
     bean->Add("MUTE_STATE", muteAudio);
     bean->Add("MUTE_HAPTICS", muteHaptics);
     bean->Add("RING_MODE", ringerMode);
-    bean->Add("STREAM_TYPE", AudioStandard::STREAM_NOTIFICATION);
     bean->Add("VIBRATION_STATE", vibrateState);
     bean->Add("VOLUME_LEVEL", volumeLevel);
     Media::MediaMonitor::MediaMonitorManager::GetInstance().WriteLogMsg(bean);

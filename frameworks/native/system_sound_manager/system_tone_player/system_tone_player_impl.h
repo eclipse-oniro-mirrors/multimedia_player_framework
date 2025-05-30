@@ -17,6 +17,8 @@
 #define SYSTEM_TONE_PLAYER_IMPL_H
 
 #include "audio_haptic_manager.h"
+#include "media_errors.h"
+#include "media_monitor_manager.h"
 #include "system_sound_manager_impl.h"
 
 namespace OHOS {
@@ -76,7 +78,7 @@ private:
     void DeleteCallbackThreadId(int32_t streamId);
     void DeleteAllCallbackThreadId();
     bool IsExitCallbackThreadId(int32_t streamId);
-    void SendMessageZoneEvent(const int32_t &errorCode, bool muteAudio, bool muteHaptics);
+    void SendSystemTonePlaybackEvent(const int32_t &errorCode, bool muteAudio, bool muteHaptics);
 
     std::shared_ptr<AudioHapticManager> audioHapticManager_ = nullptr;
     std::unordered_map<int32_t, std::shared_ptr<AudioHapticPlayer>> playerMap_;

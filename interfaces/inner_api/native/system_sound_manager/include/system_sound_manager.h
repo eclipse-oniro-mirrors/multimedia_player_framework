@@ -49,6 +49,13 @@ enum ToneHapticsType {
     NOTIFICATION = 40,
 };
 
+enum SystemToneUriType {
+    UNKNOW_RINGTONES = -1,
+    NO_RINGTONES = 0,
+    PRESET_RINGTONES = 1,
+    CUSTOM_RINGTONES = 2,
+};
+
 class SystemSoundManager {
 public:
     virtual ~SystemSoundManager() = default;
