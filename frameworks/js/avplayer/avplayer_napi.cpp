@@ -59,6 +59,7 @@ namespace {
     constexpr int32_t ARGS_TWO = 2;
     constexpr int32_t ARGS_THREE = 3;
     constexpr int32_t SEEK_CONTINUOUS_TS_ENUM_NUM = 3;
+    constexpr double RATE_DEFAULT_VALUE = 1.0;
 }
 
 namespace OHOS {
@@ -988,7 +989,7 @@ napi_value AVPlayerNapi::JsSetPlaybackRate(napi_env env, napi_callback_info info
         return result;
     }
 
-    double rate = 1.0f;
+    double rate = RATE_DEFAULT_VALUE;
     napi_status status = napi_get_value_double(env, args[0], &rate);
     if (status != napi_ok || !jsPlayer->IsRateValid(rate)) {
         jsPlayer->OnErrorCb(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
