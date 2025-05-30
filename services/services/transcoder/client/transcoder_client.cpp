@@ -108,6 +108,15 @@ int32_t TransCoderClient::SetVideoEncodingBitRate(int32_t rate)
     return transCoderProxy_->SetVideoEncodingBitRate(rate);
 }
 
+int32_t TransCoderClient::SetColorSpace(TranscoderColorSpace colorSpaceFormat)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(transCoderProxy_ != nullptr, MSERR_NO_MEMORY, "transcoder service does not exist.");
+
+    MEDIA_LOGD("SetColorSpace, format(%{public}d)", static_cast<int32_t>(colorSpaceFormat));
+    return transCoderProxy_->SetColorSpace(colorSpaceFormat);
+}
+
 int32_t TransCoderClient::SetAudioEncoder(AudioCodecFormat encoder)
 {
     std::lock_guard<std::mutex> lock(mutex_);

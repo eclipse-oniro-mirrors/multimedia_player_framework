@@ -175,6 +175,25 @@ int32_t TransCoderServer::SetVideoEncodingBitRate(int32_t rate)
     return result.Value();
 }
 
+int32_t TransCoderServer::SetColorSpace(TranscoderColorSpace colorSpaceFormat)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(status_ == REC_CONFIGURED, MSERR_INVALID_OPERATION,
+        "invalid status, current status is %{public}s", GetStatusDescription(status_).c_str());
+    CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    config_.colorSpaceFormat = colorSpaceFormat;
+    VideoColorSpace colorSpaceFmt(colorSpaceFormat);
+    MEDIA_LOGD("set color space, format: %{public}d", static_cast<int32_t>(colorSpaceFormat));
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return transCoderEngine_->Configure(colorSpaceFmt);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
+}
+
 int32_t TransCoderServer::SetAudioEncoder(AudioCodecFormat encoder)
 {
     std::lock_guard<std::mutex> lock(mutex_);

@@ -65,6 +65,7 @@ private:
     void AppendDstMediaInfo(std::shared_ptr<Meta> meta);
     int32_t GetRealPath(const std::string &url, std::string &realUrlPath) const;
     Status ConfigureVideoEncoderFormat(const TransCoderParam &transCoderParam);
+    Status ConfigureColorSpace(const TransCoderParam &transCoderParam);
     Status LinkAudioDecoderFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
     Status LinkAudioEncoderFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
     Status LinkVideoDecoderFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);

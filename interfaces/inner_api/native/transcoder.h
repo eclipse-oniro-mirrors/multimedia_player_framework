@@ -23,6 +23,7 @@
 #include <parcel.h>
 #include "meta/format.h"
 #include "surface.h"
+#include "surface/native_buffer.h"
 #include "av_common.h"
 #include "codec_capability.h"
 #include "media_core.h"
@@ -46,6 +47,79 @@ enum TransCoderOnInfoType : int32_t {
     INFO_TYPE_TRANSCODER_COMPLETED = 0,
     /* return the current progress of transcoder automatically. */
     INFO_TYPE_PROGRESS_UPDATE = 1,
+};
+
+/**
+ * @brief Enumerates transcodering color space.
+ *
+ * @since 6.0
+ * @version 6.0
+ */
+enum TranscoderColorSpace : int32_t {
+    /** None color space */
+    TRANSCODER_COLORSPACE_NONE = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_NONE,
+    /** COLORPRIMARIES_BT601_P */
+    TRANSCODER_COLORSPACE_BT601_EBU_FULL = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT601_EBU_FULL,
+    /** COLORPRIMARIES_BT601_N */
+    TRANSCODER_COLORSPACE_BT601_SMPTE_C_FULL = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT601_SMPTE_C_FULL,
+    /** COLORPRIMARIES_BT709 */
+    TRANSCODER_COLORSPACE_BT709_FULL = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT709_FULL,
+    /** COLORPRIMARIES_BT2020 */
+    TRANSCODER_COLORSPACE_BT2020_HLG_FULL = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT2020_HLG_FULL,
+    /** COLORPRIMARIES_BT2020 */
+    TRANSCODER_COLORSPACE_BT2020_PQ_FULL = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT2020_PQ_FULL,
+    /** COLORPRIMARIES_BT601_P */
+    TRANSCODER_COLORSPACE_BT601_EBU_LIMIT = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT601_EBU_LIMIT,
+    /** COLORPRIMARIES_BT601_N */
+    TRANSCODER_COLORSPACE_BT601_SMPTE_C_LIMIT = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT601_SMPTE_C_LIMIT,
+    /** COLORPRIMARIES_BT709 */
+    TRANSCODER_COLORSPACE_BT709_LIMIT = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT709_LIMIT,
+    /** COLORPRIMARIES_BT2020 */
+    TRANSCODER_COLORSPACE_BT2020_HLG_LIMIT = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT2020_HLG_LIMIT,
+    /** COLORPRIMARIES_BT2020 */
+    TRANSCODER_COLORSPACE_BT2020_PQ_LIMIT = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT2020_PQ_LIMIT,
+    /** COLORPRIMARIES_SRGB */
+    TRANSCODER_COLORSPACE_SRGB_FULL = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_SRGB_FULL,
+    /** COLORPRIMARIES_P3_D65 */
+    TRANSCODER_COLORSPACE_P3_FULL = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_P3_FULL,
+    /** COLORPRIMARIES_P3_D65 */
+    TRANSCODER_COLORSPACE_P3_HLG_FULL = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_P3_HLG_FULL,
+    /** COLORPRIMARIES_P3_D65 */
+    TRANSCODER_COLORSPACE_P3_PQ_FULL = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_P3_PQ_FULL,
+    /** COLORPRIMARIES_ADOBERGB */
+    TRANSCODER_COLORSPACE_ADOBERGB_FULL = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_ADOBERGB_FULL,
+    /** COLORPRIMARIES_SRGB */
+    TRANSCODER_COLORSPACE_SRGB_LIMIT = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_SRGB_LIMIT,
+    /** COLORPRIMARIES_P3_D65 */
+    TRANSCODER_COLORSPACE_P3_LIMIT = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_P3_LIMIT,
+    /** COLORPRIMARIES_P3_D65 */
+    TRANSCODER_COLORSPACE_P3_HLG_LIMIT = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_P3_HLG_LIMIT,
+    /** COLORPRIMARIES_P3_D65 */
+    TRANSCODER_COLORSPACE_P3_PQ_LIMIT = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_P3_PQ_LIMIT,
+    /** COLORPRIMARIES_ADOBERGB */
+    TRANSCODER_COLORSPACE_ADOBERGB_LIMIT = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_ADOBERGB_LIMIT,
+    /** COLORPRIMARIES_SRGB */
+    TRANSCODER_COLORSPACE_LINEAR_SRGB = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_LINEAR_SRGB,
+    /** equal to OH_COLORSPACE_LINEAR_SRGB */
+    TRANSCODER_COLORSPACE_LINEAR_BT709 = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_LINEAR_BT709,
+    /** COLORPRIMARIES_P3_D65 */
+    TRANSCODER_COLORSPACE_LINEAR_P3 = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_LINEAR_P3,
+    /** COLORPRIMARIES_BT2020 */
+    TRANSCODER_COLORSPACE_LINEAR_BT2020 = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_LINEAR_BT2020,
+    /** equal to OH_COLORSPACE_SRGB_FULL */
+    TRANSCODER_COLORSPACE_DISPLAY_SRGB = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_DISPLAY_SRGB,
+    /** equal to OH_COLORSPACE_P3_FULL */
+    TRANSCODER_COLORSPACE_DISPLAY_P3_SRGB = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_DISPLAY_P3_SRGB,
+    /** equal to OH_COLORSPACE_P3_HLG_FULL */
+    TRANSCODER_COLORSPACE_DISPLAY_P3_HLG = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_DISPLAY_P3_HLG,
+    /** equal to OH_COLORSPACE_P3_PQ_FULL */
+    TRANSCODER_COLORSPACE_DISPLAY_P3_PQ = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_DISPLAY_P3_PQ,
+    /** COLORPRIMARIES_BT2020 */
+    TRANSCODER_COLORSPACE_DISPLAY_BT2020_SRGB = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_DISPLAY_BT2020_SRGB,
+    /** equal to OH_COLORSPACE_BT2020_HLG_FULL */
+    TRANSCODER_COLORSPACE_DISPLAY_BT2020_HLG = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_DISPLAY_BT2020_HLG,
+    /** equal to OH_COLORSPACE_BT2020_PQ_FULL */
+    TRANSCODER_COLORSPACE_DISPLAY_BT2020_PQ = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_DISPLAY_BT2020_PQ,
 };
 
 /**
@@ -140,6 +214,18 @@ public:
      * @version 1.0
      */
     virtual int32_t SetVideoSize(int32_t videoFrameWidth, int32_t videoFrameHeight) = 0;
+
+    /**
+     * @brief Sets the colorspace of the video to transcoder
+     *
+     * This function must be called after {@link SetOutputFormat} but before {@link Prepare}.
+     *
+     * @param colorSpaceFormat Indicates the colorSpace format of the video to set.
+     * @return Returns {@link MSERR_OK} if the setting is successful; returns an error code otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetColorSpace(TranscoderColorSpace colorSpaceFormat) = 0;
 
     /**
      * @brief Sets the encoder of the audio to transcoder.

@@ -50,6 +50,7 @@ public:
     int32_t SetVideoEncoder(VideoCodecFormat encoder) override;
     int32_t SetVideoSize(int32_t width, int32_t height) override;
     int32_t SetVideoEncodingBitRate(int32_t rate) override;
+    int32_t SetColorSpace(TranscoderColorSpace colorSpaceFormat) override;
     int32_t SetAudioEncoder(AudioCodecFormat encoder) override;
     int32_t SetAudioEncodingBitRate(int32_t bitRate) override;
     int32_t SetOutputFormat(OutputFormatType format) override;
@@ -83,6 +84,7 @@ private:
     struct ConfigInfo {
         VideoCodecFormat videoCodec = VIDEO_CODEC_FORMAT_BUTT;
         AudioCodecFormat audioCodec = AUDIO_CODEC_FORMAT_BUTT;
+        TranscoderColorSpace colorSpaceFormat = TRANSCODER_COLORSPACE_NONE;
         int32_t width = -1;
         int32_t height = -1;
         int32_t videoBitRate = -1;
