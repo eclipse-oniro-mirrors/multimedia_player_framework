@@ -77,7 +77,7 @@ public:
      * @since 1.0
      * @version 1.0
      */
-     virtual int32_t SetColorSpace(TranscoderColorSpace colorSpaceFormat) = 0;
+    virtual int32_t SetColorSpace(TranscoderColorSpace colorSpaceFormat) = 0;
 
     /**
      * @brief Sets the encoder of the audio to transcoder.
