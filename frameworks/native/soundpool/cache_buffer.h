@@ -108,6 +108,7 @@ private:
     static AudioStandard::AudioRendererRate CheckAndAlignRendererRate(const int32_t rate);
     void DealWriteData(size_t length);
     bool IsAudioRendererCanMix(const AudioStandard::AudioRendererInfo &audioRendererInfo);
+    void FadeInAudioBuffer(const AudioStandard::BufferDesc &bufDesc);
 
     Format trackFormat_;
     std::deque<std::shared_ptr<AudioBufferEntry>> cacheData_;
@@ -116,6 +117,7 @@ private:
     int32_t soundID_;
     int32_t streamID_;
     AudioStandard::AudioSampleFormat sampleFormat_ = AudioStandard::AudioSampleFormat::INVALID_WIDTH;
+    AudioStandard::AudioChannel audioChannel_ = AudioStandard::AudioChannel::MONO;
 
     // use for save audiobuffer
     std::unique_ptr<AudioStandard::AudioRenderer> audioRenderer_;
@@ -129,6 +131,7 @@ private:
     int32_t loop_ = 0;
     int32_t priority_ = 0;
     int32_t rendererFlags_ = NORMAL_PLAY_RENDERER_FLAGS;
+    bool isNeedFadeIn_ = false;
 
     size_t cacheDataFrameIndex_;
     int32_t havePlayedCount_;
