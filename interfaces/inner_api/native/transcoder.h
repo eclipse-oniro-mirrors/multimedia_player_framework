@@ -224,7 +224,7 @@ public:
      * @return Returns {@link MSERR_OK} if the setting is successful; returns an error code otherwise.
      * @since 1.0
      * @version 1.0
-    */
+     */
     virtual int32_t SetColorSpace(TranscoderColorSpace colorSpaceFormat) = 0;
 
     /**
