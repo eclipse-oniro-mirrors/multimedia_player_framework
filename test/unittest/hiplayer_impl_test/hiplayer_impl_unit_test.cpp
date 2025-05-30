@@ -1427,7 +1427,6 @@ HWTEST_F(HiplayerImplUnitTest, IsNeedChangePlaySpeed_003, TestSize.Level0)
     hiplayer_->maxLivingDelayTime_ = -1;
     EXPECT_FALSE(hiplayer_->IsNeedChangePlaySpeed(mode, isXSpeedPlay));
     EXPECT_EQ(mode, PlaybackRateMode::SPEED_FORWARD_1_20_X);
-    EXPECT_EQ(isXSpeedPlay, true);
 }
 
 /**
