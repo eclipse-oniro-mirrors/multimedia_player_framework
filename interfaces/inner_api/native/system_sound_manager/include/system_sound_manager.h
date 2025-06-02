@@ -76,14 +76,15 @@ public:
     {
         fd_ = fd;
     }
-    void SetError(int64_t)
+    void SetError(int64_t errCode)
     {
         errCode_ = errCode;
-    }
+    };
+
 private:
     int64_t fd_;
     int64_t errCode_;
-}
+};
 
 class SystemSoundManager {
 public:
@@ -143,7 +144,7 @@ public:
      * @return Returns the current ringtone attrs.
      * @since 12
      */
-    virtual std::string GetInUseRingtoneAttrs(const std::shared_ptr<AbilityRuntime::Context> &context,
+    virtual ToneAttrs GetInUseRingtoneAttrs(const std::shared_ptr<AbilityRuntime::Context> &context,
         RingtoneType ringtoneType) = 0;
 
     /**

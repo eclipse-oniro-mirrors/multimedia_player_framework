@@ -92,13 +92,15 @@ public:
     {
         return category_;
     }
+
     void SetMediaType(const MediaType mediaType)
     {
         mediaType_ = mediaType;
     }
+
     MediaType GetMediaType() const
     {
-        return mediaType;
+        return mediaType_;
     }
 
 private:

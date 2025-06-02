@@ -63,7 +63,7 @@ struct ParamsForWriteFile {
     off_t fileSize;
     int32_t srcFd;
     int32_t length;
-}
+};
 
 class SystemSoundManagerImpl : public SystemSoundManager {
 public:
@@ -166,7 +166,7 @@ private:
 
     int32_t AddCustomizedTone(const std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
         const std::shared_ptr<ToneAttrs> &toneAttrs);
-    int32_t DeleteCustomizedTone(const std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
+    bool DeleteCustomizedTone(const std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
         const std::shared_ptr<ToneAttrs> &toneAttrs);
     int32_t WriteUriToDatabase(const std::string &key, const std::string &uri);
     std::string GetUriFromDatabase(const std::string &key);
@@ -236,8 +236,8 @@ private:
         int32_t ringType, int32_t toneType, int32_t changedRows);
     int32_t SetExtRingToneUri(const std::string &uri, const std::string &title, int32_t toneType);
     void EventWriteForAddCustomizedTone(const std::shared_ptr<AbilityRuntime::Context> &context,
-        std::shared_ptr<toneAttrs> &toneAttrs, off_t fileSize, int result);
-    void CustomizedToneWriteFile(const std::shared_ptr<AbilityRuntime::Context> &context,
+        const std::shared_ptr<ToneAttrs> &toneAttrs, off_t fileSize, int result);
+    std::string CustomizedToneWriteFile(const std::shared_ptr<AbilityRuntime::Context> &context,
         std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper, const std::shared_ptr<ToneAttrs> &toneAttrs,
         ParamsForWriteFile &paramsForWriteFile);
 
