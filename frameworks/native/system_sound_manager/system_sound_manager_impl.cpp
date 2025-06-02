@@ -705,6 +705,7 @@ std::string SystemSoundManagerImpl::GetRingtoneUri(const shared_ptr<Context> &co
 
 ToneAttrs SystemSoundManagerImpl::GetInUseRingtoneAttrs(const shared_ptr<Context> &context, RingtoneType ringtoneType)
 {
+    MEDIA_LOGI("GetInUseRingtoneAttrs start, ringtoneType: %{public}d", ringtoneType);
     ToneAttrs toneAttrs = { "", "", "", CUSTOMISED, TONE_CATEGORY_RINGTONE };
     if (!IsRingtoneTypeValid(ringtoneType)) {
         MEDIA_LOGE("Invalid ringtone type!");
@@ -1698,6 +1699,7 @@ int32_t SystemSoundManagerImpl::OpenToneUri(const std::shared_ptr<AbilityRuntime
 std::vector<ResultOfOpen> SystemSoundManagerImpl::OpenToneList(const std::shared_ptr<AbilityRuntime::Context> &context,
     const std::vector<std::string> &uriList)
 {
+    MEDIA_LOGI("OpenToneList start, size: %{public}zu", uriList.size());
     std::vector<ResultOfOpen> resultOfOpenList;
     std::lock_guard<std::mutex> lock(uriMutex_);
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
@@ -1738,7 +1740,7 @@ std::vector<ResultOfOpen> SystemSoundManagerImpl::OpenToneList(const std::shared
             resultOfOpenList.push_back(resultOfOpen);
             continue;
         }
-        MEDIA_LOGE("OpenTone: tone of uri failed, uri: %{public}s.", uriList[i].c_str());
+        MEDIA_LOGE("OpenToneList failed, uri: %{public}s.", uriList[i].c_str());
         resultSet == nullptr ? : resultSet->Close();
         resultOfOpen.SetFd(-1);
         resultOfOpen.SetError(TYPEERROR);
@@ -1758,6 +1760,7 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByExternalUri(
     const std::shared_ptr<AbilityRuntime::Context> &context, const std::shared_ptr<ToneAttrs> &toneAttrs,
     const std::string &externalUri)
 {
+    MEDIA_LOGI("AddCustomizedToneByExternalUri start, externalUri: %{public}s", displayName_.c_str());
     std::string fdHead = "fd://";
     std::string srcPath = externalUri;
     int32_t srcFd;
@@ -1806,6 +1809,7 @@ int32_t SystemSoundManagerImpl::AddCustomizedTone(const std::shared_ptr<DataShar
     DataShareValuesBucket valuesBucket;
     valuesBucket.Put(RINGTONE_COLUMN_DISPLAY_NAME, static_cast<string>(displayName_));
     valuesBucket.Put(RINGTONE_COLUMN_TITLE, static_cast<string>(toneAttrs->GetTitle()));
+    valuesBucket.Put(RINGTONE_COLUMN_MEDIA_TYPE, static_cast<int>(toneAttrs->GetMediaType()));
     valuesBucket.Put(RINGTONE_COLUMN_MIME_TYPE, static_cast<string>(mimeType_));
     valuesBucket.Put(RINGTONE_COLUMN_SOURCE_TYPE, static_cast<int>(SOURCE_TYPE_CUSTOMISED));
     switch (category) {
@@ -1846,6 +1850,7 @@ bool SystemSoundManagerImpl::DeleteCustomizedTone(const std::shared_ptrDataShare
     DataShare::DataSharePredicates predicates;
     predicates.EqualTo(RINGTONE_COLUMN_DISPLAY_NAME, static_cast(displayName_));
     predicates.EqualTo(RINGTONE_COLUMN_TITLE, static_cast(toneAttrs->GetTitle()));
+    predicates.EqualTo(RINGTONE_COLUMN_MEDIA_TYPE, static_cast(toneAttrs->GetMediaType()));
     predicates.EqualTo(RINGTONE_COLUMN_MIME_TYPE, static_cast(mimeType_));
     predicates.EqualTo(RINGTONE_COLUMN_SOURCE_TYPE, static_cast(SOURCE_TYPE_CUSTOMISED));
     switch (category) {
@@ -1886,9 +1891,9 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(
     if (toneAttrs->GetMediaType() == MediaType::MEDIA_TYPE_VID) {
         fileSize = lseek(fd, 0, SEEK_END);
         lseek(fd, 0, SEEK_SET);
-        MEDIA_LOGI("wangwei fileSize: %{public}ld", fileSize);
+        MEDIA_LOGI("fileSize: %{public}ld", fileSize);
         if (fileSize > MAX_FILE_SIZE_1G) {
-            MEDIA_LOGW("wangwei the file size exceeds 1G.");
+            MEDIA_LOGW("the file size exceeds 1G.");
             return FILE_SIZE_EXCEEDS_LIMIT;
         }
     }
@@ -1926,7 +1931,7 @@ std::string SystemSoundManagerImpl::CustomizedToneWriteFile(const std::shared_pt
     Uri ofUri(paramsForWriteFile.dstPath);
     int32_t dstFd = dataShareHelper->OpenFile(ofUri, "rw");
     if (dstFd < 0) {
-        MEDIA_LOGE("wangwei AddCustomizedTone: open error is %{public}s", strerror(errno));
+        MEDIA_LOGE("AddCustomizedTone: open error is %{public}s", strerror(errno));
         DeleteCustomizedTone(dataShareHelper, toneAttrs);
         dataShareHelper->Release();
         EventWriteForAddCustomizedTone(context, toneAttrs, paramsForWriteFile.fileSize, ERROR);
@@ -1994,7 +1999,7 @@ int32_t SystemSoundManagerImpl::RemoveCustomizedTone(
 std::vector<int32_t> SystemSoundManagerImpl::RemoveCustomizedToneList(
     const std::shared_ptrAbilityRuntime::Context &context, const std::vectorstd::string &uriList)
 {
-    MEDIA_LOGI("RemoveCustomizedToneList start.");
+    MEDIA_LOGI("RemoveCustomizedToneList start, size: %{public}zu.", uriList.size());
     std::vector<int32_t> removeResults;
     for (uint32_t i = 0; i < uriList.size(); i++) {
         int32_t result = RemoveCustomizedTone(context, uriList[i]);
