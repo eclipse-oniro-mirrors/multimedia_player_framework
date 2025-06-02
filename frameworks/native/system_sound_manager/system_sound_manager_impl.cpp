@@ -1760,7 +1760,7 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByExternalUri(
     const std::shared_ptr<AbilityRuntime::Context> &context, const std::shared_ptr<ToneAttrs> &toneAttrs,
     const std::string &externalUri)
 {
-    MEDIA_LOGI("AddCustomizedToneByExternalUri start, externalUri: %{public}s", displayName_.c_str());
+    MEDIA_LOGI("AddCustomizedToneByExternalUri start, externalUri: %{public}s", externalUri.c_str());
     std::string fdHead = "fd://";
     std::string srcPath = externalUri;
     int32_t srcFd;
@@ -1841,38 +1841,38 @@ int32_t SystemSoundManagerImpl::AddCustomizedTone(const std::shared_ptr<DataShar
     return dataShareHelper->Insert(RINGTONEURI, valuesBucket);
 }
 
-bool SystemSoundManagerImpl::DeleteCustomizedTone(const std::shared_ptrDataShare::DataShareHelper &dataShareHelper,
-    const std::shared_ptr &toneAttrs)
+bool SystemSoundManagerImpl::DeleteCustomizedTone(const std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
+    const std::shared_ptr<ToneAttrs> &toneAttrs)
 {
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, ERROR, "Invalid dataShareHelper.");
     int32_t category = -1;
     category = toneAttrs->GetCategory();
     DataShare::DataSharePredicates predicates;
-    predicates.EqualTo(RINGTONE_COLUMN_DISPLAY_NAME, static_cast(displayName_));
-    predicates.EqualTo(RINGTONE_COLUMN_TITLE, static_cast(toneAttrs->GetTitle()));
-    predicates.EqualTo(RINGTONE_COLUMN_MEDIA_TYPE, static_cast(toneAttrs->GetMediaType()));
-    predicates.EqualTo(RINGTONE_COLUMN_MIME_TYPE, static_cast(mimeType_));
-    predicates.EqualTo(RINGTONE_COLUMN_SOURCE_TYPE, static_cast(SOURCE_TYPE_CUSTOMISED));
+    predicates.EqualTo(RINGTONE_COLUMN_DISPLAY_NAME, static_cast<string>(displayName_));
+    predicates.EqualTo(RINGTONE_COLUMN_TITLE, static_cast<string>(toneAttrs->GetTitle()));
+    predicates.EqualTo(RINGTONE_COLUMN_MEDIA_TYPE, static_cast<int>(toneAttrs->GetMediaType()));
+    predicates.EqualTo(RINGTONE_COLUMN_MIME_TYPE, static_cast<string>(mimeType_));
+    predicates.EqualTo(RINGTONE_COLUMN_SOURCE_TYPE, static_cast<int>(SOURCE_TYPE_CUSTOMISED));
     switch (category) {
         case TONE_CATEGORY_RINGTONE:
-            predicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, static_cast(TONE_TYPE_RINGTONE));
+            predicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, static_cast<int>(TONE_TYPE_RINGTONE));
             break;
         case TONE_CATEGORY_TEXT_MESSAGE:
-            predicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, static_cast(TONE_TYPE_NOTIFICATION));
+            predicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, static_cast<int>(TONE_TYPE_NOTIFICATION));
             break;
         case TONE_CATEGORY_NOTIFICATION:
-            predicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, static_cast(TONE_TYPE_NOTIFICATION));
+            predicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, static_cast<int>(TONE_TYPE_NOTIFICATION));
             break;
         case TONE_CATEGORY_ALARM:
-            predicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, static_cast(TONE_TYPE_ALARM));
+            predicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, static_cast<int>(TONE_TYPE_ALARM));
             break;
         case TONE_CATEGORY_CONTACTS:
-            predicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, static_cast(TONE_TYPE_CONTACTS));
+            predicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, static_cast<int>(TONE_TYPE_CONTACTS));
             break;
         default:
             break;
     }
-    predicates.EqualTo(RINGTONE_COLUMN_DATA, static_cast(toneAttrs->GetUri()));
+    predicates.EqualTo(RINGTONE_COLUMN_DATA, static_cast<string>(toneAttrs->GetUri()));
     bool result = (dataShareHelper->Delete(RINGTONEURI, predicates) > 0);
     MEDIA_LOGI("displayName : %{public}s, result: %{public}d", displayName_.c_str(), result);
     return result;
@@ -1924,8 +1924,8 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(
     return CustomizedToneWriteFile(context, dataShareHelper, toneAttrs, paramsForWriteFile);
 }
 
-std::string SystemSoundManagerImpl::CustomizedToneWriteFile(const std::shared_ptrAbilityRuntime::Context &context,
-    std::shared_ptrDataShare::DataShareHelper &dataShareHelper, const std::shared_ptr &toneAttrs,
+std::string SystemSoundManagerImpl::CustomizedToneWriteFile(const std::shared_ptr<AbilityRuntime::Context> &context,
+    std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper, const std::shared_ptr<ToneAttrs> &toneAttrs,
     ParamsForWriteFile &paramsForWriteFile)
 {
     Uri ofUri(paramsForWriteFile.dstPath);
@@ -1949,7 +1949,7 @@ std::string SystemSoundManagerImpl::CustomizedToneWriteFile(const std::shared_pt
         }
         len -= bytesWritten;
     }
-    close(srcFd);
+    close(paramsForWriteFile.srcFd);
     close(dstFd);
     dataShareHelper->Release();
     EventWriteForAddCustomizedTone(context, toneAttrs, paramsForWriteFile.fileSize, SUCCESS);
@@ -1997,7 +1997,7 @@ int32_t SystemSoundManagerImpl::RemoveCustomizedTone(
 }
 
 std::vector<int32_t> SystemSoundManagerImpl::RemoveCustomizedToneList(
-    const std::shared_ptrAbilityRuntime::Context &context, const std::vectorstd::string &uriList)
+    const std::shared_ptr<AbilityRuntime::Context> &context, const std::vector<std::string> &uriList)
 {
     MEDIA_LOGI("RemoveCustomizedToneList start, size: %{public}zu.", uriList.size());
     std::vector<int32_t> removeResults;
@@ -2920,8 +2920,8 @@ std::string SystemSoundManagerImpl::OpenHapticsUri(const DatabaseTool &databaseT
     return newHapticsUri;
 }
 
-void SystemSoundManagerImpl::EventWriteForAddCustomizedTone(const std::shared_ptrAbilityRuntime::Context &context,
-const std::shared_ptr &toneAttrs, off_t fileSize, int result)
+void SystemSoundManagerImpl::EventWriteForAddCustomizedTone(const std::shared_ptr<AbilityRuntime::Context> &context,
+const std::shared_ptr<ToneAttrs> &toneAttrs, off_t fileSize, int result)
 {
     MEDIA_LOGI("wangwei EventWriteForAddCustomizedTone");
     // auto appInfo = context->GetApplicationInfo();

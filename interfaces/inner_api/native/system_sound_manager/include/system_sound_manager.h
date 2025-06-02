@@ -79,7 +79,7 @@ public:
     void SetError(int64_t errCode)
     {
         errCode_ = errCode;
-    };
+    }
 
 private:
     int64_t fd_;
