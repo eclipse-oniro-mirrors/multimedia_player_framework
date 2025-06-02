@@ -2921,7 +2921,7 @@ std::string SystemSoundManagerImpl::OpenHapticsUri(const DatabaseTool &databaseT
 }
 
 void SystemSoundManagerImpl::EventWriteForAddCustomizedTone(const std::shared_ptr<AbilityRuntime::Context> &context,
-const std::shared_ptr<ToneAttrs> &toneAttrs, off_t fileSize, int result)
+    const std::shared_ptr<ToneAttrs> &toneAttrs, off_t fileSize, int result)
 {
     MEDIA_LOGI("wangwei EventWriteForAddCustomizedTone");
     // auto appInfo = context->GetApplicationInfo();
