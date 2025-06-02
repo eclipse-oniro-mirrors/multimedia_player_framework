@@ -19,6 +19,7 @@
 #include <string>
 
 #include "audio_info.h"
+#include "media_core.h"
 
 
 namespace OHOS {
@@ -91,6 +92,14 @@ public:
     {
         return category_;
     }
+    void SetMediaType(const MediaType mediaType)
+    {
+        mediaType_ = mediaType;
+    }
+    MediaType GetMediaType() const
+    {
+        return mediaType;
+    }
 
 private:
     std::string title_ = "title_test";
@@ -98,6 +107,7 @@ private:
     std::string uri_ = "uri_test";
     ToneCustomizedType custType_ = CUSTOMISED;
     int32_t category_ = 0;
+    MediaType mediaType_ = MediaType::MEDIA_TYPE_MAX_COUNT;
 };
 } // namespace Media
 } // namespace OHOS
