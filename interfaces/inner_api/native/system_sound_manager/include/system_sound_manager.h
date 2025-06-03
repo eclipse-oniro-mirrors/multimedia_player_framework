@@ -155,8 +155,7 @@ public:
      * @return Returns the current ringtone attrs.
      * @since 12
      */
-    virtual ToneAttrs GetInUseRingtoneAttrs(const std::shared_ptr<AbilityRuntime::Context> &context,
-        RingtoneType ringtoneType) = 0;
+    virtual ToneAttrs GetInUseRingtoneAttrs(RingtoneType ringtoneType) = 0;
 
     /**
      * @brief Returns the system tone player instance
@@ -351,14 +350,12 @@ public:
     /**
      * @brief Remove customized tones in ringtone library.
      *
-     * @param context Indicates the Context object on OHOS.
      * @param uriList tone uris
      * @return Returns {@link MSERR_OK} if remove the customized tone successfully;
      * returns error codes defined in {@link media_errors.h} otherwise.
      * @since 12
      */
-    virtual std::vector<int32_t> RemoveCustomizedToneList(const std::shared_ptr<AbilityRuntime::Context> &context,
-        const std::vector<std::string> &uriList) = 0;
+    virtual std::vector<int32_t> RemoveCustomizedToneList(const std::vector<std::string> &uriList) = 0;
 
     /**
      * @brief Returns the tone haptics settings.
@@ -437,13 +434,11 @@ public:
     /**
      * @brief Returns fds of the uris in uriList.
      *
-     * @param context Indicates the Context object on OHOS.
      * @param uriList Indicates the uris to open.
      * @return Returns fds of the uris in uriList.
      * @since 12
      */
-    virtual std::vector<ResultOfOpen> OpenToneList(const std::shared_ptr<AbilityRuntime::Context> &context,
-        const std::vector<std::string> &uriList) = 0;
+    virtual std::vector<ResultOfOpen> OpenToneList(const std::vector<std::string> &uriList) = 0;
 };
 
 class __attribute__((visibility("default"))) SystemSoundManagerFactory {

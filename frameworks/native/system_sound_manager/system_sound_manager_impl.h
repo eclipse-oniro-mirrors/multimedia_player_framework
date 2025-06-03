@@ -80,8 +80,7 @@ public:
         RingtoneType ringtoneType) override;
     std::string GetRingtoneUri(const std::shared_ptr<AbilityRuntime::Context> &context,
         RingtoneType ringtoneType) override;
-    ToneAttrs GetInUseRingtoneAttrs(const std::shared_ptr<AbilityRuntime::Context> &context,
-        RingtoneType ringtoneType) override;
+    ToneAttrs GetInUseRingtoneAttrs(RingtoneType ringtoneType) override;
     std::shared_ptr<RingtonePlayer> GetRingtonePlayer(const std::shared_ptr<AbilityRuntime::Context> &context,
         RingtoneType ringtoneType) override;
     std::shared_ptr<RingtonePlayer> GetSpecificRingTonePlayer(const std::shared_ptr<AbilityRuntime::Context> &context,
@@ -119,8 +118,7 @@ public:
         const int32_t &length) override;
     int32_t RemoveCustomizedTone(const std::shared_ptr<AbilityRuntime::Context> &context,
         const std::string &uri) override;
-    std::vector<int32_t> RemoveCustomizedToneList(const std::shared_ptr<AbilityRuntime::Context> &context,
-        const std::vector<std::string> &uriList) override;
+    std::vector<int32_t> RemoveCustomizedToneList(const std::vector<std::string> &uriList) override;
     int32_t GetToneHapticsSettings(const std::shared_ptr<AbilityRuntime::Context> &context,
         ToneHapticsType toneHapticsType, ToneHapticsSettings &settings) override;
     int32_t SetToneHapticsSettings(const std::shared_ptr<AbilityRuntime::Context> &context,
@@ -151,8 +149,7 @@ public:
     bool CheckVibrateSwitchStatus();
     int32_t OpenToneUri(const std::shared_ptr<AbilityRuntime::Context> &context,
         const std::string &uri, int32_t toneType) override;
-    std::vector<ResultOfOpen> OpenToneList(const std::shared_ptr<AbilityRuntime::Context> &context,
-        const std::vector<std::string> &uriList) override;
+    std::vector<ResultOfOpen> OpenToneList(const std::vector<std::string> &uriList) override;
 
 private:
     void InitDefaultUriMap();

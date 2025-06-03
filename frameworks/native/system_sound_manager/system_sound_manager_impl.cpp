@@ -699,11 +699,11 @@ std::string SystemSoundManagerImpl::GetPresetRingToneUriByType(const DatabaseToo
 
 std::string SystemSoundManagerImpl::GetRingtoneUri(const shared_ptr<Context> &context, RingtoneType ringtoneType)
 {
-    ToneAttrs toneAttrs = GetInUseRingtoneAttrs(context, ringtoneType);
+    ToneAttrs toneAttrs = GetInUseRingtoneAttrs(ringtoneType);
     return toneAttrs.GetUri();
 }
 
-ToneAttrs SystemSoundManagerImpl::GetInUseRingtoneAttrs(const shared_ptr<Context> &context, RingtoneType ringtoneType)
+ToneAttrs SystemSoundManagerImpl::GetInUseRingtoneAttrs(RingtoneType ringtoneType)
 {
     MEDIA_LOGI("GetInUseRingtoneAttrs start, ringtoneType: %{public}d", ringtoneType);
     ToneAttrs toneAttrs = { "", "", "", CUSTOMISED, TONE_CATEGORY_RINGTONE };
@@ -1696,8 +1696,7 @@ int32_t SystemSoundManagerImpl::OpenToneUri(const std::shared_ptr<AbilityRuntime
     return TYPEERROR;
 }
 
-std::vector<ResultOfOpen> SystemSoundManagerImpl::OpenToneList(const std::shared_ptr<AbilityRuntime::Context> &context,
-    const std::vector<std::string> &uriList)
+std::vector<ResultOfOpen> SystemSoundManagerImpl::OpenToneList(const std::vector<std::string> &uriList)
 {
     MEDIA_LOGI("OpenToneList start, size: %{public}zu", uriList.size());
     std::vector<ResultOfOpen> resultOfOpenList;
@@ -1996,11 +1995,11 @@ int32_t SystemSoundManagerImpl::RemoveCustomizedTone(
     return changedRows;
 }
 
-std::vector<SystemSoundError> SystemSoundManagerImpl::RemoveCustomizedToneList(
-    const std::shared_ptr<AbilityRuntime::Context> &context, const std::vector<std::string> &uriList)
+std::vector<SystemSoundError> SystemSoundManagerImpl::RemoveCustomizedToneList(const std::vector<std::string> &uriList)
 {
     MEDIA_LOGI("RemoveCustomizedToneList start, size: %{public}zu.", uriList.size());
     std::vector<SystemSoundError> removeResults;
+    std::shared_ptr<AbilityRuntime::Context> context;
     for (uint32_t i = 0; i < uriList.size(); i++) {
         int32_t result = RemoveCustomizedTone(context, uriList[i]);
         if (result > 0) {
