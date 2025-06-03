@@ -290,6 +290,7 @@ ohos_unittest("screen_capture_server_function_unit_test") {
     "graphic_surface:surface",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
     "i18n:intl_util",
     "ipc:ipc_single",
     "media_foundation:media_foundation",
