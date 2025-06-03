@@ -2153,7 +2153,7 @@ int32_t SystemSoundManagerImpl::GetToneHapticsSettings(const DatabaseTool &datab
         result = GetDefaultToneHapticsSettings(dataShareHelper, toneUri, toneHapticsType, settings);
     }
     if (result == SUCCESS) {
-        result = UpdateToneHapticsSettings(dataShareHelper, toneUri, toneHapticsType, settings);
+        MEDIA_LOGE("GetDefaultToneHapticsSettings: get defaultTone haptics settings success");
     } else {
         MEDIA_LOGE("GetToneHapticsSettings: get defaultTone haptics settings fail");
     }
