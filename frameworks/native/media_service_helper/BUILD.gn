@@ -106,5 +106,5 @@ ohos_shared_library("media_helper_client") {
   innerapi_tags = [ "platformsdk" ]
   subsystem_name = "multimedia"
   part_name = "player_framework"
-  version_script = ""$MEDIA_ROOT_DIR/interfaces/inner_api/native/player_framework.versionscript"
+  version_script = "$MEDIA_ROOT_DIR/interfaces/inner_api/native/player_framework.versionscript"
 }
