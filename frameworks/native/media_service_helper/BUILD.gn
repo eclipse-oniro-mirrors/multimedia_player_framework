@@ -16,13 +16,13 @@ import("//foundation/multimedia/player_framework/config.gni")
 
 MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework"
 
-config("media_public_config") {
+config("media_helper_public_config") {
   include_dirs = [
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native/media_service_helper",
   ]
 }
 
-config("media_client_ipc_config") {
+config("media_helper_ipc_config") {
   include_dirs = [
     "$MEDIA_ROOT_DIR/services/services/common",
     "$MEDIA_ROOT_DIR/services/services/monitor/client",
@@ -30,7 +30,7 @@ config("media_client_ipc_config") {
   ]
 }
 
-config("media_client_base_config") {
+config("media_helper_base_config") {
   include_dirs = [
     "$MEDIA_ROOT_DIR/services/include",
     "$MEDIA_ROOT_DIR/services/utils/include",
@@ -84,11 +84,11 @@ ohos_shared_library("media_helper_client") {
   ]
 
   configs = [
-    ":media_client_base_config",
-    ":media_client_ipc_config",
+    ":media_helper_base_config",
+    ":media_helper_ipc_config",
   ]
 
-  public_configs = [ ":media_public_config" ]
+  public_configs = [ ":media_helper_public_config" ]
   deps = [
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native:media_client",
     "$MEDIA_ROOT_DIR/services/utils:media_service_utils" ]
@@ -103,6 +103,8 @@ ohos_shared_library("media_helper_client") {
     "media_foundation:media_foundation"
   ]
 
+  innerapi_tags = [ "platformsdk" ]
   subsystem_name = "multimedia"
   part_name = "player_framework"
+  version_script = "$MEDIA_ROOT_DIR/interfaces/inner_api/native/player_framework.versionscript"
 }
