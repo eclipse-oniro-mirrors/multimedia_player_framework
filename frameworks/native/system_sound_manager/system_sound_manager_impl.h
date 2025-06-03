@@ -118,7 +118,7 @@ public:
         const int32_t &length) override;
     int32_t RemoveCustomizedTone(const std::shared_ptr<AbilityRuntime::Context> &context,
         const std::string &uri) override;
-    std::vector<int32_t> RemoveCustomizedToneList(const std::vector<std::string> &uriList) override;
+    std::vector<SystemSoundError> RemoveCustomizedToneList(const std::vector<std::string> &uriList) override;
     int32_t GetToneHapticsSettings(const std::shared_ptr<AbilityRuntime::Context> &context,
         ToneHapticsType toneHapticsType, ToneHapticsSettings &settings) override;
     int32_t SetToneHapticsSettings(const std::shared_ptr<AbilityRuntime::Context> &context,

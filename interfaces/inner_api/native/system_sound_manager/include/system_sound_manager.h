@@ -150,7 +150,6 @@ public:
     /**
      * @brief Returns the current ringtone attrs.
      *
-     * @param context Indicates the Context object on OHOS.
      * @param ringtoneType Indicates the ringtone type.
      * @return Returns the current ringtone attrs.
      * @since 12
@@ -355,7 +354,7 @@ public:
      * returns error codes defined in {@link media_errors.h} otherwise.
      * @since 12
      */
-    virtual std::vector<int32_t> RemoveCustomizedToneList(const std::vector<std::string> &uriList) = 0;
+    virtual std::vector<SystemSoundError> RemoveCustomizedToneList(const std::vector<std::string> &uriList) = 0;
 
     /**
      * @brief Returns the tone haptics settings.
