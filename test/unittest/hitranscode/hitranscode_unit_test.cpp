@@ -1134,7 +1134,6 @@ HWTEST_F(HitranscodeUnitTest, Configure_002, TestSize.Level0)
     VideoColorSpace videoColSpaFmt(TRANSCODER_COLORSPACE_BT709_LIMIT);
     ret = transcoder_->Configure(videoColSpaFmt);
     EXPECT_EQ(ret, MSERR_OK);
- 
 }
  
 /**
@@ -1152,7 +1151,6 @@ HWTEST_F(HitranscodeUnitTest, Configure_003, TestSize.Level0)
     VideoColorSpace videoColSpaFmt(TRANSCODER_COLORSPACE_BT709_LIMIT);
     ret = transcoder_->Configure(videoColSpaFmt);
     EXPECT_EQ(ret, MSERR_OK);
- 
 }
  
 /**
@@ -1170,7 +1168,6 @@ HWTEST_F(HitranscodeUnitTest, Configure_004, TestSize.Level0)
     VideoColorSpace videoColSpaFmt(TRANSCODER_COLORSPACE_BT709_LIMIT);
     ret = transcoder_->Configure(videoColSpaFmt);
     EXPECT_EQ(ret, MSERR_OK);
- 
 }
  
 /**
@@ -1188,7 +1185,6 @@ HWTEST_F(HitranscodeUnitTest, Configure_005, TestSize.Level0)
     VideoColorSpace videoColSpaFmt(TRANSCODER_COLORSPACE_P3_FULL);
     ret = transcoder_->Configure(videoColSpaFmt);
     EXPECT_EQ(ret, MSERR_OK);
- 
 }
  
 /**
@@ -1206,7 +1202,6 @@ HWTEST_F(HitranscodeUnitTest, Configure_006, TestSize.Level0)
     VideoColorSpace videoColSpaFmt(TRANSCODER_COLORSPACE_P3_FULL);
     ret = transcoder_->Configure(videoColSpaFmt);
     EXPECT_EQ(ret, MSERR_OK);
- 
 }
  
 /**
@@ -1224,7 +1219,6 @@ HWTEST_F(HitranscodeUnitTest, Configure_007, TestSize.Level0)
     VideoColorSpace videoColSpaFmt(TRANSCODER_COLORSPACE_P3_FULL);
     ret = transcoder_->Configure(videoColSpaFmt);
     EXPECT_EQ(ret, MSERR_OK);
- 
 }
  
 /**
