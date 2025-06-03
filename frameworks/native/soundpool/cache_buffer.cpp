@@ -303,6 +303,7 @@ void CacheBuffer::DealPlayParamsBeforePlay(const PlayParams &playParams)
     audioRenderer_->SetVolume(playParams.leftVolume);
     priority_ = playParams.priority;
     audioRenderer_->SetParallelPlayFlag(playParams.parallelPlayFlag);
+    audioRenderer_->SetAudioHapticSyncId(playParams.audioHapticSyncId);
 }
 
 AudioStandard::AudioRendererRate CacheBuffer::CheckAndAlignRendererRate(const int32_t rate)
