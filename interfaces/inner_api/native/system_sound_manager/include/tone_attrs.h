@@ -109,7 +109,7 @@ private:
     std::string uri_ = "uri_test";
     ToneCustomizedType custType_ = CUSTOMISED;
     int32_t category_ = 0;
-    MediaType mediaType_ = MediaType::MEDIA_TYPE_MAX_COUNT;
+    MediaType mediaType_ = MediaType::MEDIA_TYPE_AUD;
 };
 } // namespace Media
 } // namespace OHOS

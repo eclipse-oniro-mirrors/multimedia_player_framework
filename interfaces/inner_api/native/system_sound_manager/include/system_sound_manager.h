@@ -60,6 +60,17 @@ enum SystemToneUriType {
     CUSTOM_RINGTONES = 2,
 };
 
+enum SystemSoundError {
+    ERROR_IO = 5400103,
+    ERROR_OK = 20700000,
+    ERROR_TYPE_MISMATCH = 20700001,
+    ERROR_UNSUPPORTED_OPERATION = 20700003,
+    ERROR_SIZE_OVER_LIMIT = 20700004,
+    ERROR_NUMBER_OVER_LIMIT = 20700005,
+    ERROR_INSUFFICIENT_ROM = 20700006,
+    ERROR_INVALID_PARAM = 20700007,
+};
+
 class ResultOfOpen {
 public:
     ResultOfOpen() = default;

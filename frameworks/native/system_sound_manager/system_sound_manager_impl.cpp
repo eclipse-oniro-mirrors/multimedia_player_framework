@@ -1996,14 +1996,18 @@ int32_t SystemSoundManagerImpl::RemoveCustomizedTone(
     return changedRows;
 }
 
-std::vector<int32_t> SystemSoundManagerImpl::RemoveCustomizedToneList(
+std::vector<SystemSoundError> SystemSoundManagerImpl::RemoveCustomizedToneList(
     const std::shared_ptr<AbilityRuntime::Context> &context, const std::vector<std::string> &uriList)
 {
     MEDIA_LOGI("RemoveCustomizedToneList start, size: %{public}zu.", uriList.size());
-    std::vector<int32_t> removeResults;
+    std::vector<SystemSoundError> removeResults;
     for (uint32_t i = 0; i < uriList.size(); i++) {
         int32_t result = RemoveCustomizedTone(context, uriList[i]);
-        removeResults.push_back(result);
+        if (result > 0) {
+            removeResults.push_back(SystemSoundError::ERROR_OK);
+        } else {
+            removeResults.push_back(SystemSoundError::ERROR_IO);
+        }
     }
     return removeResults;
 }
