@@ -71,6 +71,12 @@ int32_t TranscoderMock::SetVideoSize(int32_t videoFrameWidth, int32_t videoFrame
     return transcoder_->SetVideoSize(videoFrameWidth, videoFrameHeight);
 }
 
+int32_t TranscoderMock::SetColorSpace(TranscoderColorSpace colorSpaceFormat)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(transcoder_ != nullptr, MSERR_INVALID_OPERATION, "transcoder_ == nullptr");
+    return transcoder_->SetColorSpace(colorSpaceFormat);
+}
+
 int32_t TranscoderMock::SetAudioEncoder(AudioCodecFormat encoder)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(transcoder_ != nullptr, MSERR_INVALID_OPERATION, "transcoder_ == nullptr");
