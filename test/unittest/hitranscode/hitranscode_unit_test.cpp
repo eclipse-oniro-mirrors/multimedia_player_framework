@@ -1118,5 +1118,130 @@ HWTEST_F(HitranscodeUnitTest, Configure_001, TestSize.Level0)
     ret = transcoder_->Configure(inputUrl);
     EXPECT_EQ(ret, MSERR_OK);
 }
+
+/**
+* @tc.name    : Test Configure
+* @tc.number  : Configure_002
+* @tc.desc    : Test Configure
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, Configure_002, TestSize.Level0)
+{
+    VideoRectangle videoRectangle(1280, 720);
+    int32_t ret = transcoder_->Configure(videoRectangle);
+    EXPECT_EQ(ret, MSERR_OK);
+ 
+    VideoColorSpace videoColSpaFmt(TRANSCODER_COLORSPACE_BT709_LIMIT);
+    ret = transcoder_->Configure(videoColSpaFmt);
+    EXPECT_EQ(ret, MSERR_OK);
+ 
+}
+ 
+/**
+* @tc.name    : Test Configure
+* @tc.number  : Configure_003
+* @tc.desc    : Test Configure
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, Configure_003, TestSize.Level0)
+{
+    VideoRectangle videoRectangle(-1, 720);
+    int32_t ret = transcoder_->Configure(videoRectangle);
+    EXPECT_EQ(ret, MSERR_OK);
+ 
+    VideoColorSpace videoColSpaFmt(TRANSCODER_COLORSPACE_BT709_LIMIT);
+    ret = transcoder_->Configure(videoColSpaFmt);
+    EXPECT_EQ(ret, MSERR_OK);
+ 
+}
+ 
+/**
+* @tc.name    : Test Configure
+* @tc.number  : Configure_004
+* @tc.desc    : Test Configure
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, Configure_004, TestSize.Level0)
+{
+    VideoRectangle videoRectangle(1280, -1);
+    int32_t ret = transcoder_->Configure(videoRectangle);
+    EXPECT_EQ(ret, MSERR_OK);
+ 
+    VideoColorSpace videoColSpaFmt(TRANSCODER_COLORSPACE_BT709_LIMIT);
+    ret = transcoder_->Configure(videoColSpaFmt);
+    EXPECT_EQ(ret, MSERR_OK);
+ 
+}
+ 
+/**
+* @tc.name    : Test Configure
+* @tc.number  : Configure_005
+* @tc.desc    : Test Configure
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, Configure_005, TestSize.Level0)
+{
+    VideoRectangle videoRectangle(1280, 720);
+    int32_t ret = transcoder_->Configure(videoRectangle);
+    EXPECT_EQ(ret, MSERR_OK);
+ 
+    VideoColorSpace videoColSpaFmt(TRANSCODER_COLORSPACE_P3_FULL);
+    ret = transcoder_->Configure(videoColSpaFmt);
+    EXPECT_EQ(ret, MSERR_OK);
+ 
+}
+ 
+/**
+* @tc.name    : Test Configure
+* @tc.number  : Configure_006
+* @tc.desc    : Test Configure
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, Configure_006, TestSize.Level0)
+{
+    VideoRectangle videoRectangle(1280, -1);
+    int32_t ret = transcoder_->Configure(videoRectangle);
+    EXPECT_EQ(ret, MSERR_OK);
+ 
+    VideoColorSpace videoColSpaFmt(TRANSCODER_COLORSPACE_P3_FULL);
+    ret = transcoder_->Configure(videoColSpaFmt);
+    EXPECT_EQ(ret, MSERR_OK);
+ 
+}
+ 
+/**
+* @tc.name    : Test Configure
+* @tc.number  : Configure_007
+* @tc.desc    : Test Configure
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, Configure_007, TestSize.Level0)
+{
+    VideoRectangle videoRectangle(-1, 720);
+    int32_t ret = transcoder_->Configure(videoRectangle);
+    EXPECT_EQ(ret, MSERR_OK);
+ 
+    VideoColorSpace videoColSpaFmt(TRANSCODER_COLORSPACE_P3_FULL);
+    ret = transcoder_->Configure(videoColSpaFmt);
+    EXPECT_EQ(ret, MSERR_OK);
+ 
+}
+ 
+/**
+* @tc.name    : Test Configure
+* @tc.number  : Configure_008
+* @tc.desc    : Test Configure
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, Configure_008, TestSize.Level0)
+{
+    VideoRectangle videoRectangle(1280, 720);
+    int32_t ret = transcoder_->Configure(videoRectangle);
+    EXPECT_EQ(ret, MSERR_OK);
+ 
+    VideoColorSpace videoColSpaFmt(TRANSCODER_COLORSPACE_NONE);
+    ret = transcoder_->Configure(videoColSpaFmt);
+    EXPECT_EQ(ret, MSERR_INVALID_VAL);
+}
 } // namespace Media
 } // namespace OHOS
