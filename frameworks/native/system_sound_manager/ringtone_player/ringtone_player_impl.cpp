@@ -305,7 +305,6 @@ void RingtonePlayerImpl::InitPlayer(std::string &audioUri, ToneHapticsSettings &
 {
     MEDIA_LOGI("InitPlayer: ToneUri:%{public}s, hapticsUri:%{public}s, mode:%{public}d.",
         audioUri.c_str(), settings.hapticsUri.c_str(), settings.mode);
-
     if (sourceId_ != -1) {
         if (audioHapticManager_ != nullptr) {
             (void)audioHapticManager_->UnregisterSource(sourceId_);
