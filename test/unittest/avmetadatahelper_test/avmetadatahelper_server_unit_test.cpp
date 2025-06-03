@@ -121,6 +121,17 @@ HWTEST_F(AVMetadataHelperServerUnitTest, GetStatusDescription, TestSize.Level1)
     avmetadataHelperServer_->GetStatusDescription(status);
     EXPECT_EQ(avmetadataHelperServer_->isLiveStream_, false);
 }
+
+/**
+ * @tc.name: MediaTrace
+ * @tc.desc: MediaTrace
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetadataHelperServerUnitTest, MediaTrace, TestSize.Level1)
+{
+    MediaTrace trace("AVMetadataHelperServer::Test", HITRACE_LEVEL_CRITICAL);
+    EXPECT_EQ(HITRACE_LEVEL_CRITICAL, trace.level_);
+}
 }  // namespace Test
 }  // namespace Media
 }  // namespace OHOS

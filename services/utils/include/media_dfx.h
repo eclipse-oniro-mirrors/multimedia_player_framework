@@ -24,6 +24,7 @@
 #include <refbase.h>
 #include "nocopyable.h"
 #include "hisysevent.h"
+#include "hitrace_meter.h"
 #include "meta/meta.h"
 #ifndef CROSS_PLATFORM
 #include "nlohmann/json.hpp"
@@ -97,13 +98,15 @@ __attribute__((visibility("default"))) uint64_t GetMediaInfoContainInstanceNum()
 
 class __attribute__((visibility("default"))) MediaTrace : public NoCopyable {
 public:
-    explicit MediaTrace(const std::string &funcName);
-    static void TraceBegin(const std::string &funcName, int32_t taskId);
-    static void TraceEnd(const std::string &funcName, int32_t taskId);
-    static void CounterTrace(const std::string &varName, int32_t val);
+    explicit MediaTrace(const std::string &funcName, HiTraceOutputLevel level = HITRACE_LEVEL_INFO,
+        const std::string &customArgs = "");
+    static void TraceBegin(const std::string &funcName, int32_t taskId, HiTraceOutputLevel level = HITRACE_LEVEL_INFO,
+        const std::string &customCategory = "", const std::string &customArgs = "");
+    static void TraceEnd(const std::string &funcName, int32_t taskId, HiTraceOutputLevel level = HITRACE_LEVEL_INFO);
+    static void CounterTrace(const std::string &varName, int32_t val, HiTraceOutputLevel level = HITRACE_LEVEL_INFO);
     ~MediaTrace();
 private:
-    bool isSync_ = false;
+    HiTraceOutputLevel level_ = HITRACE_LEVEL_INFO;
 };
 } // namespace Media
 } // namespace OHOS

@@ -20,7 +20,6 @@
 #include <unistd.h>
 
 #include "securec.h"
-#include "hitrace_meter.h"
 #include "hitrace/tracechain.h"
 #include "ipc_skeleton.h"
 #include "media_utils.h"
@@ -477,32 +476,31 @@ uint64_t GetMediaInfoContainInstanceNum()
     return mediaInsNum + reportInsNum;
 }
 
-MediaTrace::MediaTrace(const std::string &funcName)
+MediaTrace::MediaTrace(const std::string &funcName, HiTraceOutputLevel level, const std::string &customArgs)
 {
-    StartTrace(HITRACE_TAG_ZMEDIA, funcName);
-    isSync_ = true;
+    StartTraceEx(level, HITRACE_TAG_ZMEDIA, funcName.c_str(), customArgs.c_str());
+    level_ = level;
 }
 
-void MediaTrace::TraceBegin(const std::string &funcName, int32_t taskId)
+void MediaTrace::TraceBegin(const std::string &funcName, int32_t taskId, HiTraceOutputLevel level,
+    const std::string &customCategory, const std::string &customArgs)
 {
-    StartAsyncTrace(HITRACE_TAG_ZMEDIA, funcName, taskId);
+    StartAsyncTraceEx(level, HITRACE_TAG_ZMEDIA, funcName.c_str(), taskId, customCategory.c_str(), customArgs.c_str());
 }
 
-void MediaTrace::TraceEnd(const std::string &funcName, int32_t taskId)
+void MediaTrace::TraceEnd(const std::string &funcName, int32_t taskId, HiTraceOutputLevel level)
 {
-    FinishAsyncTrace(HITRACE_TAG_ZMEDIA, funcName, taskId);
+    FinishAsyncTraceEx(level, HITRACE_TAG_ZMEDIA, funcName.c_str(), taskId);
 }
 
-void MediaTrace::CounterTrace(const std::string &varName, int32_t val)
+void MediaTrace::CounterTrace(const std::string &varName, int32_t val, HiTraceOutputLevel level)
 {
-    CountTrace(HITRACE_TAG_ZMEDIA, varName, val);
+    CountTraceEx(level, HITRACE_TAG_ZMEDIA, varName.c_str(), val);
 }
 
 MediaTrace::~MediaTrace()
 {
-    if (isSync_) {
-        FinishTrace(HITRACE_TAG_ZMEDIA);
-    }
+    FinishTraceEx(level_, HITRACE_TAG_ZMEDIA);
 }
 } // namespace Media
 } // namespace OHOS
