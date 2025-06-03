@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Huawei Device Co., Ltd.
+ * Copyright (C) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -69,6 +69,12 @@ int32_t TranscoderMock::SetVideoSize(int32_t videoFrameWidth, int32_t videoFrame
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(transcoder_ != nullptr, MSERR_INVALID_OPERATION, "transcoder_ == nullptr");
     return transcoder_->SetVideoSize(videoFrameWidth, videoFrameHeight);
+}
+
+int32_t TranscoderMock::SetColorSpace(TranscoderColorSpace colorSpaceFormat)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(transcoder_ != nullptr, MSERR_INVALID_OPERATION, "transcoder_ == nullptr");
+    return transcoder_->SetColorSpace(colorSpaceFormat);
 }
 
 int32_t TranscoderMock::SetAudioEncoder(AudioCodecFormat encoder)
