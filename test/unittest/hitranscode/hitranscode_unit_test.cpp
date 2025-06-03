@@ -1002,6 +1002,71 @@ HWTEST_F(HitranscodeUnitTest, ConfigureVideoWidthHeight_004, TestSize.Level0)
 }
 
 /**
+* @tc.name    : Test ConfigureColorSpace API
+* @tc.number  : ConfigureColorSpace_001
+* @tc.desc    : Test ConfigureColorSpace.
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, ConfigureColorSpace_001, TestSize.Level0)
+{
+    VideoColorSpace videoColSpaFmt(TRANSCODER_COLORSPACE_P3_FULL);
+    Status ret = transcoder_->ConfigureColorSpace(videoColSpaFmt);
+    EXPECT_EQ(ret, Status::OK);
+}
+ 
+/**
+* @tc.name    : Test ConfigureColorSpace API
+* @tc.number  : ConfigureColorSpace_002
+* @tc.desc    : Test ConfigureColorSpace.
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, ConfigureColorSpace_002, TestSize.Level0)
+{
+    VideoColorSpace videoColSpaFmt(TRANSCODER_COLORSPACE_BT709_LIMIT);
+    Status ret = transcoder_->ConfigureColorSpace(videoColSpaFmt);
+    EXPECT_EQ(ret, Status::OK);
+}
+ 
+/**
+* @tc.name    : Test ConfigureColorSpace API
+* @tc.number  : ConfigureColorSpace_003
+* @tc.desc    : Test ConfigureColorSpace.
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, ConfigureColorSpace_003, TestSize.Level0)
+{
+    VideoColorSpace videoColSpaFmt(TRANSCODER_COLORSPACE_NONE);
+    Status ret = transcoder_->ConfigureColorSpace(videoColSpaFmt);
+    EXPECT_EQ(ret, Status::ERROR_INVALID_PARAMETER);
+}
+ 
+/**
+* @tc.name    : Test ConfigureColorSpace API
+* @tc.number  : ConfigureColorSpace_004
+* @tc.desc    : Test ConfigureColorSpace.
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, ConfigureColorSpace_004, TestSize.Level0)
+{
+    VideoColorSpace videoColSpaFmt(TRANSCODER_COLORSPACE_BT601_EBU_FULL);
+    Status ret = transcoder_->ConfigureColorSpace(videoColSpaFmt);
+    EXPECT_EQ(ret, Status::OK);
+}
+ 
+/**
+* @tc.name    : Test ConfigureColorSpace API
+* @tc.number  : ConfigureColorSpace_005
+* @tc.desc    : Test ConfigureColorSpace.
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, ConfigureColorSpace_005, TestSize.Level0)
+{
+    VideoColorSpace videoColSpaFmt(TRANSCODER_COLORSPACE_DISPLAY_BT2020_HLG);
+    Status ret = transcoder_->ConfigureColorSpace(videoColSpaFmt);
+    EXPECT_EQ(ret, Status::OK);
+}
+
+/**
 * @tc.name    : Test ConfigureMetaDataToTrackFormat
 * @tc.number  : ConfigureMetaDataToTrackFormat_001
 * @tc.desc    : Test ConfigureMetaDataToTrackFormat
