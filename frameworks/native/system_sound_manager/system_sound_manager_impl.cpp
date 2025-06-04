@@ -1721,8 +1721,8 @@ std::vector<std::tuple<std::string, int64_t, SystemSoundError>> SystemSoundManag
 }
 
 void SystemSoundManagerImpl::OpenFilesInList(std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
-const std::vector<std::string> &uriList,
-std::vector<std::tuple<std::string, int64_t, SystemSoundError>> &resultOfOpenList)
+    const std::vector<std::string> &uriList,
+    std::vector<std::tuple<std::string, int64_t, SystemSoundError>> &resultOfOpenList)
 {
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
@@ -2016,7 +2016,7 @@ int32_t SystemSoundManagerImpl::RemoveCustomizedTone(
 }
 
 std::vector<std::pair<std::string, SystemSoundError>> SystemSoundManagerImpl::RemoveCustomizedToneList(
-const std::vectorstd::string &uriList, SystemSoundError errCode)
+const std::vector<std::string> &uriList, SystemSoundError errCode)
 {
     MEDIA_LOGI("RemoveCustomizedToneList start, size: %{public}zu.", uriList.size());
     std::vector<std::pair<std::string, SystemSoundError>> removeResults;
@@ -2024,7 +2024,7 @@ const std::vectorstd::string &uriList, SystemSoundError errCode)
         errCode = ERROR_INVALID_PARAM;
         return removeResults;
     }
-    std::shared_ptrAbilityRuntime::Context context;
+    std::shared_ptr<AbilityRuntime::Context> context;
     for (uint32_t i = 0; i < uriList.size(); i++) {
         int32_t result = RemoveCustomizedTone(context, uriList[i]);
         if (result > 0) {
