@@ -3271,10 +3271,13 @@ int32_t ScreenCaptureServer::ReStartMicForVoIPStatusSwitch()
 int32_t ScreenCaptureServer::OnVoIPStatusChanged(bool isInVoIPCall)
 {
     MEDIA_LOGI("OnVoIPStatusChanged, isInVoIPCall:%{public}d", isInVoIPCall);
-    if (isInVoIPCall && recorderFileAudioType_ == AVScreenCaptureMixMode::MIX_MODE && !innerAudioCapture_ &&
-        innerAudioCapture_->GetAudioCapturerState() == CAPTURER_STOPED) {
-        int32_t ret = innerAudioCapture_->Start(appInfo_); // Resume
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "OnVoIPStatusChanged innerAudioCapture Resume failed");
+    if (isInVoIPCall) {
+        CHECK_AND_RETURN_RET_LOG(innerAudioCapture_, MSERR_UNKNOWN, "innerAudioCapture is nullptr");
+        if (recorderFileAudioType_ == AVScreenCaptureMixMode::MIX_MODE &&
+            innerAudioCapture_->GetAudioCapturerState() == CAPTURER_STOPED) {
+            int32_t ret = innerAudioCapture_->Start(appInfo_); // Resume
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "OnVoIPStatusChanged innerAudioCapture Resume failed");
+        }
     }
     return ReStartMicForVoIPStatusSwitch();
 }
