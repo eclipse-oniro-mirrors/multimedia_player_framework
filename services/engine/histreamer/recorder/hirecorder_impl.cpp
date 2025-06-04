@@ -593,6 +593,18 @@ int32_t HiRecorderImpl::SetParameter(int32_t sourceId, const RecorderParam &recP
     return Configure(sourceId, recParam);
 }
 
+void HiRecorderImpl::UpdateVideoFirstFramePts(const Event &event)
+{
+    if (audioCaptureFilter_) {
+        int64_t firstFramePts = AnyCast<int64_t>(event.param);
+        audioCaptureFilter_->SetVideoFirstFramePts(firstFramePts);
+    }
+    if (audioDataSourceFilter_) {
+        int64_t firstFramePts = AnyCast<int64_t>(event.param);
+        audioDataSourceFilter_->SetVideoFirstFramePts(firstFramePts);
+    }
+}
+
 void HiRecorderImpl::OnEvent(const Event &event)
 {
     switch (event.type) {
@@ -633,10 +645,7 @@ void HiRecorderImpl::OnEvent(const Event &event)
             break;
         }
         case EventType::EVENT_VIDEO_FIRST_FRAME: {
-            if (audioCaptureFilter_) {
-                int64_t firstFramePts = AnyCast<int64_t>(event.param);
-                audioCaptureFilter_->SetVideoFirstFramePts(firstFramePts);
-            }
+            UpdateVideoFirstFramePts(event);
             break;
         }
         default:
