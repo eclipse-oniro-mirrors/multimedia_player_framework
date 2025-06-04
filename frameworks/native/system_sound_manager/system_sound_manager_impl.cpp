@@ -657,7 +657,7 @@ ToneAttrs SystemSoundManagerImpl::GetRingtoneAttrsByType(const DatabaseTool &dat
         toneAttrs.SetTitle(ringtoneAsset->GetTitle());
         toneAttrs.SetFileName(ringtoneAsset->GetDisplayName());
         toneAttrs.SetCategory(ringtoneAsset->GetToneType());
-        toneAttrs.SetMediaType(static_cast<MediaType>(ringtoneAsset->GetMediaType()));
+        toneAttrs.SetMediaType(static_cast<RingtoneMediaType>(ringtoneAsset->GetMediaType()));
     }
     resultSet == nullptr ? : resultSet->Close();
     return toneAttrs;
