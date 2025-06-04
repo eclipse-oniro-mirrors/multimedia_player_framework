@@ -311,7 +311,7 @@ void HiPlayerCallbackLooper::DoReportDfxInfo(const Any& info)
             MEDIA_LOG_E_SHORT("DoReportDfxInfo error, ptr is nullptr");
             return;
         }
-        MEDIA_LOG_D("Report Dfx, callerName: " PUBLIC_LOG_S " type: " PUBLIC_LOG_D32,
+        MEDIA_LOG_DD("Report Dfx, callerName: " PUBLIC_LOG_S " type: " PUBLIC_LOG_D32,
             ptr->callerName.c_str(), static_cast<int32_t>(ptr->type));
         obs->OnDfxInfo(*ptr);
     }

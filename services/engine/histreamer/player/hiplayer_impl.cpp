@@ -93,7 +93,7 @@ public:
 
     void OnEvent(const Event &event) override
     {
-        MEDIA_LOG_D("PlayerEventReceiver OnEvent.");
+        MEDIA_LOG_DD("PlayerEventReceiver OnEvent.");
         task_->SubmitJobOnce([this, event] {
             std::shared_lock<std::shared_mutex> lk(cbMutex_);
             FALSE_RETURN(hiPlayerImpl_ != nullptr);
@@ -103,7 +103,7 @@ public:
 
     void OnDfxEvent(const DfxEvent &event) override
     {
-        MEDIA_LOG_D("PlayerEventReceiver OnDfxEvent.");
+        MEDIA_LOG_DD("PlayerEventReceiver OnDfxEvent.");
         std::shared_lock<std::shared_mutex> lk(cbMutex_);
         FALSE_RETURN(hiPlayerImpl_ != nullptr);
         hiPlayerImpl_->HandleDfxEvent(event);
