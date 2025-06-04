@@ -2935,7 +2935,7 @@ int32_t ScreenCaptureServer::GetMissionIds(std::vector<uint64_t> &missionIds)
 
 int32_t ScreenCaptureServer::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type)
 {
-    MediaTrace trace("ScreenCaptureServer::AcquireAudioBuffer");
+    MediaTrace trace("ScreenCaptureServer::AcquireAudioBuffer", HITRACE_LEVEL_DEBUG);
     std::unique_lock<std::mutex> lock(mutex_);
     MEDIA_LOGD("ScreenCaptureServer: 0x%{public}06" PRIXPTR " AcquireAudioBuffer start, state:%{public}d, "
         "type:%{public}d.", FAKE_POINTER(this), captureState_, type);
@@ -2958,7 +2958,7 @@ int32_t ScreenCaptureServer::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &au
 
 int32_t ScreenCaptureServer::ReleaseAudioBuffer(AudioCaptureSourceType type)
 {
-    MediaTrace trace("ScreenCaptureServer::ReleaseAudioBuffer");
+    MediaTrace trace("ScreenCaptureServer::ReleaseAudioBuffer", HITRACE_LEVEL_DEBUG);
     std::unique_lock<std::mutex> lock(mutex_);
     MEDIA_LOGD("ScreenCaptureServer: 0x%{public}06" PRIXPTR " ReleaseAudioBuffer start, state:%{public}d, "
         "type:%{public}d.", FAKE_POINTER(this), captureState_, type);
@@ -3018,7 +3018,7 @@ int32_t ScreenCaptureServer::GetMicAudioCaptureBufferSize(size_t &size)
 int32_t ScreenCaptureServer::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence,
                                                 int64_t &timestamp, OHOS::Rect &damage)
 {
-    MediaTrace trace("ScreenCaptureServer::AcquireVideoBuffer");
+    MediaTrace trace("ScreenCaptureServer::AcquireVideoBuffer", HITRACE_LEVEL_DEBUG);
     std::unique_lock<std::mutex> lock(mutex_);
     MEDIA_LOGD("ScreenCaptureServer: 0x%{public}06" PRIXPTR " AcquireVideoBuffer start, state:%{public}d, "
         "fence:%{public}d, timestamp:%{public}" PRId64, FAKE_POINTER(this), captureState_, fence, timestamp);
@@ -3051,7 +3051,7 @@ int32_t ScreenCaptureServer::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfa
 
 int32_t ScreenCaptureServer::ReleaseVideoBuffer()
 {
-    MediaTrace trace("ScreenCaptureServer::ReleaseVideoBuffer");
+    MediaTrace trace("ScreenCaptureServer::ReleaseVideoBuffer", HITRACE_LEVEL_DEBUG);
     std::unique_lock<std::mutex> lock(mutex_);
     MEDIA_LOGD("ScreenCaptureServer: 0x%{public}06" PRIXPTR " ReleaseVideoBuffer start, state:%{public}d.",
         FAKE_POINTER(this), captureState_);
@@ -4010,7 +4010,7 @@ ScreenCaptureObserverCallBack::~ScreenCaptureObserverCallBack()
 
 void ScreenCapBufferConsumerListener::OnBufferAvailable()
 {
-    MediaTrace trace("ScreenCapConsumer::OnBufferAvailable");
+    MediaTrace trace("ScreenCapConsumer::OnBufferAvailable", HITRACE_LEVEL_DEBUG);
     MEDIA_LOGD("ScreenCapConsumer: 0x%{public}06" PRIXPTR " OnBufferAvailable start.", FAKE_POINTER(this));
     {
         std::lock_guard<std::mutex> lock(bufferAvailableWorkerMtx_);
@@ -4023,7 +4023,7 @@ void ScreenCapBufferConsumerListener::OnBufferAvailable()
 
 void ScreenCapBufferConsumerListener::OnBufferAvailableAction()
 {
-    MediaTrace trace("ScreenCapConsumer::OnBufferAvailableAction");
+    MediaTrace trace("ScreenCapConsumer::OnBufferAvailableAction", HITRACE_LEVEL_DEBUG);
     MEDIA_LOGD("OnBufferAvailableAction: 0x%{public}06" PRIXPTR " start.", FAKE_POINTER(this));
     CHECK_AND_RETURN(consumer_ != nullptr);
     int64_t timestamp = 0;
@@ -4128,7 +4128,7 @@ void ScreenCapBufferConsumerListener::ProcessVideoBufferCallBack()
 int32_t ScreenCapBufferConsumerListener::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence,
     int64_t &timestamp, OHOS::Rect &damage)
 {
-    MediaTrace trace("ScreenCaptureServer::AcquireVideoBuffer");
+    MediaTrace trace("ScreenCaptureServer::AcquireVideoBuffer", HITRACE_LEVEL_DEBUG);
     using namespace std::chrono_literals;
     std::unique_lock<std::mutex> lock(bufferMutex_);
     MEDIA_LOGD("ScreenCaptureServer: 0x%{public}06" PRIXPTR " AcquireVideoBuffer start, fence:%{public}d, "
@@ -4183,7 +4183,7 @@ int32_t ScreenCapBufferConsumerListener::ReleaseBuffer()
 
 int32_t ScreenCapBufferConsumerListener::ReleaseVideoBuffer()
 {
-    MediaTrace trace("ScreenCaptureServer::ReleaseVideoBuffer");
+    MediaTrace trace("ScreenCaptureServer::ReleaseVideoBuffer", HITRACE_LEVEL_DEBUG);
     std::unique_lock<std::mutex> lock(bufferMutex_);
     MEDIA_LOGD("ScreenCapBufferConsumerListener: 0x%{public}06" PRIXPTR " ReleaseVideoBuffer start.",
         FAKE_POINTER(this));
