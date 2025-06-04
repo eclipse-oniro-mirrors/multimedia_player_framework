@@ -336,7 +336,6 @@ private:
 #ifdef SUPPORT_CALL
     std::atomic<bool> isInTelCall_ = false;
     std::atomic<bool> isInTelCallAudio_ = false;
-    int32_t apiVersion_ = -1;
 #endif
     std::atomic<bool> recorderFileWithVideo_{false};
 private:
