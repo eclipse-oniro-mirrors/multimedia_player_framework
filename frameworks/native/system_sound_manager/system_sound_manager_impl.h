@@ -119,7 +119,7 @@ public:
     int32_t RemoveCustomizedTone(const std::shared_ptr<AbilityRuntime::Context> &context,
         const std::string &uri) override;
     std::vector<std::pair<std::string, SystemSoundError>> RemoveCustomizedToneList(
-        const std::vector<std::string> &uriList) override;
+        const std::vector<std::string> &uriList, SystemSoundError errCode) override;
     int32_t GetToneHapticsSettings(const std::shared_ptr<AbilityRuntime::Context> &context,
         ToneHapticsType toneHapticsType, ToneHapticsSettings &settings) override;
     int32_t SetToneHapticsSettings(const std::shared_ptr<AbilityRuntime::Context> &context,
@@ -151,7 +151,7 @@ public:
     int32_t OpenToneUri(const std::shared_ptr<AbilityRuntime::Context> &context,
         const std::string &uri, int32_t toneType) override;
     std::vector<std::tuple<std::string, int64_t, SystemSoundError>> OpenToneList(
-        const std::vector<std::string> &uriList) override;
+        const std::vector<std::string> &uriList, SystemSoundError errCode) override;
 
 private:
     void InitDefaultUriMap();
@@ -239,8 +239,8 @@ private:
     std::string CustomizedToneWriteFile(const std::shared_ptr<AbilityRuntime::Context> &context,
         std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper, const std::shared_ptr<ToneAttrs> &toneAttrs,
         ParamsForWriteFile &paramsForWriteFile);
-    void OpenFilesInList(std::shared_ptrDataShare::DataShareHelper &dataShareHelper,
-        const std::vectorstd::string &uriList,
+    void OpenFilesInList(std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
+        const std::vector<std::string> &uriList,
         std::vector<std::tuple<std::string, int64_t, SystemSoundError>> &resultOfOpenList);
 
     std::string systemSoundPath_ = "";

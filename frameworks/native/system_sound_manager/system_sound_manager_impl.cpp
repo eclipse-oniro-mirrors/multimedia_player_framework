@@ -1698,16 +1698,16 @@ int32_t SystemSoundManagerImpl::OpenToneUri(const std::shared_ptr<AbilityRuntime
 }
 
 std::vector<std::tuple<std::string, int64_t, SystemSoundError>> SystemSoundManagerImpl::OpenToneList(
-    const std::vectorstd::string &uriList, SystemSoundError errCode)
+    const std::vector<std::string> &uriList, SystemSoundError errCode)
 {
-MEDIA_LOGI("OpenToneList start, size: %{public}zu", uriList.size());
-    std::lock_guardstd::mutex lock(uriMutex_);
+    MEDIA_LOGI("OpenToneList start, size: %{public}zu", uriList.size());
+    std::lock_guard<std::mutex> lock(uriMutex_);
     std::vector<std::tuple<std::string, int64_t, SystemSoundError>> resultOfOpenList;
     if (uriList.size() > MAX_VECTOR_LENGTH) {
         errCode = ERROR_INVALID_PARAM;
         return resultOfOpenList;
     }
-    std::shared_ptrDataShare::DataShareHelper dataShareHelper =
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     if (dataShareHelper == nullptr) {
         MEDIA_LOGE("Create dataShare failed, datashare or library error!");
@@ -1720,8 +1720,8 @@ MEDIA_LOGI("OpenToneList start, size: %{public}zu", uriList.size());
     return resultOfOpenList;
 }
 
-void SystemSoundManagerImpl::OpenFilesInList(std::shared_ptrDataShare::DataShareHelper &dataShareHelper,
-const std::vectorstd::string &uriList,
+void SystemSoundManagerImpl::OpenFilesInList(std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
+const std::vector<std::string> &uriList,
 std::vector<std::tuple<std::string, int64_t, SystemSoundError>> &resultOfOpenList)
 {
     DataShare::DatashareBusinessError businessError;
@@ -1729,14 +1729,14 @@ std::vector<std::tuple<std::string, int64_t, SystemSoundError>> &resultOfOpenLis
     for (uint32_t i = 0; i < uriList.size(); i++) {
         queryPredicates.EqualTo(RINGTONE_COLUMN_DATA, uriList[i]);
         auto resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
-        auto results = make_unique<RingtoneFetchResult>(move(resultSet));
+        auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
         if (results == nullptr) {
             MEDIA_LOGE("query failed, ringtone library error!");
             std::tuple<string, int64_t, SystemSoundError> resultOfOpen = std::make_tuple(uriList[i], -1, ERROR_IO);
             resultOfOpenList.push_back(resultOfOpen);
             continue;
         }
-        unique_ptr ringtoneAsset = results->GetFirstObject();
+        unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
         while ((ringtoneAsset != nullptr) && (uriList[i] != ringtoneAsset->GetPath())) {
             ringtoneAsset = results->GetNextObject();
         }
@@ -1823,7 +1823,7 @@ int32_t SystemSoundManagerImpl::AddCustomizedTone(const std::shared_ptr<DataShar
     if (toneAttrs->GetMediaType() == RINGTONE_MEDIA_TYPE_INVALID) {
         valuesBucket.Put(RINGTONE_COLUMN_MEDIA_TYPE, 0);
     } else {
-        valuesBucket.Put(RINGTONE_COLUMN_MEDIA_TYPE, static_cast(toneAttrs->GetMediaType()));
+        valuesBucket.Put(RINGTONE_COLUMN_MEDIA_TYPE, static_cast<int>(toneAttrs->GetMediaType()));
     }
     valuesBucket.Put(RINGTONE_COLUMN_MIME_TYPE, static_cast<string>(mimeType_));
     valuesBucket.Put(RINGTONE_COLUMN_SOURCE_TYPE, static_cast<int>(SOURCE_TYPE_CUSTOMISED));
@@ -1868,7 +1868,7 @@ bool SystemSoundManagerImpl::DeleteCustomizedTone(const std::shared_ptr<DataShar
     if (toneAttrs->GetMediaType() == RINGTONE_MEDIA_TYPE_INVALID) {
         predicates.EqualTo(RINGTONE_COLUMN_MEDIA_TYPE, 0);
     } else {
-        predicates.EqualTo(RINGTONE_COLUMN_MEDIA_TYPE, static_cast(toneAttrs->GetMediaType()));
+        predicates.EqualTo(RINGTONE_COLUMN_MEDIA_TYPE, static_cast<int>(toneAttrs->GetMediaType()));
     }
     predicates.EqualTo(RINGTONE_COLUMN_MIME_TYPE, static_cast<string>(mimeType_));
     predicates.EqualTo(RINGTONE_COLUMN_SOURCE_TYPE, static_cast<int>(SOURCE_TYPE_CUSTOMISED));

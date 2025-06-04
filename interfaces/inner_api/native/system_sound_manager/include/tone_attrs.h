@@ -21,7 +21,6 @@
 #include "audio_info.h"
 #include "ringtone_type.h"
 
-
 namespace OHOS {
 namespace Media {
 
