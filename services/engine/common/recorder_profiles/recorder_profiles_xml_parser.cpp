@@ -393,9 +393,7 @@ bool RecorderProfilesXmlParser::ParseRecorderProfilesSourceData(const std::strin
         std::string property = SOURCE_TYPE_ID_MAP.at(sourceType);
         if (xmlHasProp(node, reinterpret_cast<xmlChar*>(const_cast<char*>(property.c_str())))) {
             std::unique_ptr<xmlChar, decltype(xmlFree)> propValue(
-                xmlGetProp(node, reinterpret_cast<xmlChar*>(const_cast<char*>(property.c_str()))),
-                xmlFree
-            );
+                xmlGetProp(node, reinterpret_cast<xmlChar*>(const_cast<char*>(property.c_str()))), xmlFree);
             std::string capabilityValue{""};
             if (propValue.get() != nullptr) {
                 capabilityValue = std::string(reinterpret_cast<char*>(propValue.get()));
