@@ -362,12 +362,9 @@ private:
     void NotifyDrmInfoUpdated(const std::multimap<std::string, std::vector<uint8_t>> &infos) override;
     void StopTaskQue();
     void WaitTaskQueStop();
-    void MaxAmplitudeCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName);
-    void MaxAmplitudeCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName);
+    void HandleListenerStateChange(std::string callbackName, bool state);
     void DeviceChangeCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName);
     void DeviceChangeCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName);
-    void ReportMediaProgressCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName);
-    void ReportMediaProgressCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName);
     void SeiMessageCallbackOn(
         AVPlayerNapi *jsPlayer, std::string callbackName, const std::vector<int32_t> &payloadTypes);
     void SeiMessageCallbackOff(
@@ -384,10 +381,8 @@ private:
 
     std::condition_variable stopTaskQueCond_;
     bool taskQueStoped_ = false;
-    bool calMaxAmplitude_ = false;
     bool deviceChangeCallbackflag_ = false;
     bool seiMessageCallbackflag_ = false;
-    bool reportMediaProgressCallbackflag_ = false;
 
     struct AVPlayerContext : public MediaAsyncContext {
         explicit AVPlayerContext(napi_env env) : MediaAsyncContext(env) {}

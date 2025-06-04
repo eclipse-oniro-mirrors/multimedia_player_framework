@@ -3222,42 +3222,16 @@ void AVPlayerNapi::DeviceChangeCallbackOff(AVPlayerNapi *jsPlayer, std::string c
     }
 }
 
-void AVPlayerNapi::ReportMediaProgressCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName)
+void AVPlayerNapi::HandleListenerStateChange(std::string callbackName, bool state)
 {
-    if (jsPlayer == nullptr) {
-        reportMediaProgressCallbackflag_ = false;
-        return;
-    }
-    if (callbackName == "timeUpdate") {
-        reportMediaProgressCallbackflag_ = true;
-    }
-    CHECK_AND_RETURN_LOG(jsPlayer->player_ != nullptr, "player_ is nullptr");
-    if (reportMediaProgressCallbackflag_) {
-        (void)jsPlayer->player_->EnableReportMediaProgress(reportMediaProgressCallbackflag_);
-    }
-}
-
-void AVPlayerNapi::ReportMediaProgressCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName)
-{
-    CHECK_AND_RETURN_LOG(jsPlayer != nullptr, "jsPlayer is nullptr");
-    if (reportMediaProgressCallbackflag_ && callbackName == "timeUpdate") {
-        reportMediaProgressCallbackflag_ = false;
-        CHECK_AND_RETURN_LOG(jsPlayer->player_ != nullptr, "player_ is nullptr");
-        (void)jsPlayer->player_->EnableReportMediaProgress(reportMediaProgressCallbackflag_);
-    }
-}
-
-void AVPlayerNapi::MaxAmplitudeCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName)
-{
-    if (jsPlayer == nullptr) {
-        calMaxAmplitude_ = false;
-        return;
-    }
+    CHECK_AND_RETURN_LOG(player_ != nullptr, "player is nullptr");
+    
     if (callbackName == "amplitudeUpdate") {
-        calMaxAmplitude_ = true;
+        return (void)player_->SetMaxAmplitudeCbStatus(state);
     }
-    if (jsPlayer->player_ != nullptr && calMaxAmplitude_) {
-        (void)jsPlayer->player_->SetMaxAmplitudeCbStatus(calMaxAmplitude_);
+
+    if (callbackName == "timeUpdate") {
+        return (void)player_->EnableReportMediaProgress(state);
     }
 }
 
@@ -3313,8 +3287,7 @@ napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
     } else if (argCount == ARGS_TWO) {
         CHECK_AND_RETURN_RET_NOLOG(
             VerifyExpectedType({env, args[1], napi_function}, jsPlayer, "param should be function."), result);
-        jsPlayer->MaxAmplitudeCallbackOn(jsPlayer, callbackName);
-        jsPlayer->ReportMediaProgressCallbackOn(jsPlayer, callbackName);
+        jsPlayer->HandleListenerStateChange(callbackName, true);
         napi_status status = napi_create_reference(env, args[1], 1, &ref);
         CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create reference!");
     }
@@ -3332,16 +3305,6 @@ bool AVPlayerNapi::VerifyExpectedType(const NapiTypeCheckUnit &unit, AVPlayerNap
         napi_typeof(unit.env, unit.param, &tmpType) != napi_ok || tmpType != unit.expectedType, true);
     jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, msg);
     return false;
-}
-
-void AVPlayerNapi::MaxAmplitudeCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName)
-{
-    if (jsPlayer != nullptr && calMaxAmplitude_ && callbackName == "amplitudeUpdate") {
-        calMaxAmplitude_ = false;
-        if (jsPlayer->player_ != nullptr) {
-            (void)jsPlayer->player_->SetMaxAmplitudeCbStatus(calMaxAmplitude_);
-        }
-    }
 }
 
 void AVPlayerNapi::SeiMessageCallbackOff(AVPlayerNapi *jsPlayer, std::string &callbackName,
@@ -3387,8 +3350,7 @@ napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " set callbackName: %{public}s", FAKE_POINTER(jsPlayer), callbackName.c_str());
     if (callbackName != "seiMessageReceived") {
-        jsPlayer->MaxAmplitudeCallbackOff(jsPlayer, callbackName);
-        jsPlayer->ReportMediaProgressCallbackOff(jsPlayer, callbackName);
+        jsPlayer->HandleListenerStateChange(callbackName, false);
         jsPlayer->ClearCallbackReference(callbackName);
         MEDIA_LOGI("0x%{public}06" PRIXPTR " JsClearOnCallback success", FAKE_POINTER(jsPlayer));
         return result;
