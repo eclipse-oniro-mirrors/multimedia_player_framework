@@ -71,32 +71,6 @@ enum SystemSoundError {
     ERROR_INVALID_PARAM = 20700007,
 };
 
-class ResultOfOpen {
-public:
-    ResultOfOpen() = default;
-    ~ResultOfOpen() = default;
-    int64_t GetFd()
-    {
-        return fd_;
-    }
-    int64_t GetError()
-    {
-        return errCode_;
-    }
-    void SetFd(int64_t fd)
-    {
-        fd_ = fd;
-    }
-    void SetError(int64_t errCode)
-    {
-        errCode_ = errCode;
-    }
-
-private:
-    int64_t fd_;
-    int64_t errCode_;
-};
-
 class SystemSoundManager {
 public:
     virtual ~SystemSoundManager() = default;
@@ -354,7 +328,8 @@ public:
      * returns error codes defined in {@link media_errors.h} otherwise.
      * @since 12
      */
-    virtual std::vector<SystemSoundError> RemoveCustomizedToneList(const std::vector<std::string> &uriList) = 0;
+    virtual std::vector<std::pair<std::string, SystemSoundError>> RemoveCustomizedToneList(
+        const std::vector<std::string> &uriList) = 0;
 
     /**
      * @brief Returns the tone haptics settings.
@@ -437,7 +412,8 @@ public:
      * @return Returns fds of the uris in uriList.
      * @since 12
      */
-    virtual std::vector<ResultOfOpen> OpenToneList(const std::vector<std::string> &uriList) = 0;
+    virtual std::vector<std::tuple<std::string, int64_t, SystemSoundError>> OpenToneList(
+        const std::vector<std::string> &uriList) = 0;
 };
 
 class __attribute__((visibility("default"))) SystemSoundManagerFactory {

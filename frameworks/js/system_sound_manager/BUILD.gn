@@ -84,6 +84,7 @@ ohos_shared_library("systemsoundmanager") {
     "napi:ace_napi",
     "qos_manager:qos",
     "resource_management:global_resmgr",
+    "ringtone_library:ringtone_data_extension",
   ]
   relative_install_dir = "module/multimedia"
   part_name = "player_framework"
