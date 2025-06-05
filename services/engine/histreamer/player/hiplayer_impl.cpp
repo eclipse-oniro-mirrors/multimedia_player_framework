@@ -3662,7 +3662,7 @@ void HiPlayerImpl::SetFlvObs()
 
     // flv live with play water line max wait 30s.
     FALSE_RETURN_MSG(isSetBufferDurationForPlaying_ && bufferDurationForPlaying_ > 0,
-            "Flv live stream and no duration water line");
+        "Flv live stream and no duration water line");
     MEDIA_LOG_I("Wait flv live play water line for max 30s bufferDuration %{public}.2f", bufferDurationForPlaying_);
     std::unique_lock<std::mutex> lock(flvLiveMutex_);
     flvLiveCond_.wait_for(lock, std::chrono::milliseconds(FLV_LIVE_PREPARE_WAIT_TIME),

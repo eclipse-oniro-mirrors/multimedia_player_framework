@@ -57,7 +57,7 @@ void CJAVTranscoderCallback::SaveCallbackReference(CJAVTranscoderEvent event, in
         };
     }
 
-    if (EVENT2CSTR.find(event) != EVENT2CSTR.end()){
+    if (EVENT2CSTR.find(event) != EVENT2CSTR.end()) {
         MEDIA_LOGI("Set callback type: %{public}s", EVENT2CSTR.at(event));
     } else {
         MEDIA_LOGW("event %{public}d is not in EVENT2CSTR", static_cast<int32_t>(event));
