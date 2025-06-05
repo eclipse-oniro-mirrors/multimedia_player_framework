@@ -28,6 +28,8 @@ public:
     virtual int32_t Prepare();
     virtual int32_t Play();
     virtual int32_t Pause(bool isSystemOperation);
+    virtual int32_t Freeze();
+    virtual int32_t UnFreeze();
     virtual int32_t Seek(int32_t mSeconds, PlayerSeekMode mode);
     virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode);
     virtual int32_t SetPlaybackRate(float rate);
@@ -122,6 +124,8 @@ public:
 
     int32_t Play() override;
     int32_t Pause(bool isSystemOperation) override;
+    int32_t Freeze() override;
+    int32_t UnFreeze() override;
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
@@ -147,6 +151,7 @@ public:
 
     int32_t Play() override;
     int32_t Pause(bool isSystemOperation) override;
+    int32_t UnFreeze() override;
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
@@ -177,6 +182,7 @@ public:
 
     int32_t Play() override;
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
+    int32_t UnFreeze() override;
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
     int32_t SetPlaybackRate(float rate) override;

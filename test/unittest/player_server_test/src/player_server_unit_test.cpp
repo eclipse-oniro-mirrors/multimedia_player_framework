@@ -5459,5 +5459,63 @@ HWTEST_F(PlayerServerUnitTest, Player_EnableReportMediaProgress_004, TestSize.Le
     ASSERT_EQ(MSERR_OK, player_->EnableReportMediaProgress(true));
     EXPECT_EQ(MSERR_OK, player_->Play());
 }
+
+/**
+ * @tc.name  : Test Freeze API
+ * @tc.number: Player_Freeze_001
+ * @tc.desc  : Test Player Freeze
+ */
+HWTEST_F(PlayerServerUnitTest, Player_Freeze_001, TestSize.Level1)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    EXPECT_EQ(MSERR_OK, player_->Freeze());
+}
+
+/**
+ * @tc.name  : Test Freeze API
+ * @tc.number: Player_Freeze_002
+ * @tc.desc  : Test Player Freeze
+ */
+HWTEST_F(PlayerServerUnitTest, Player_Freeze_002, TestSize.Level1)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Freeze());
+    sleep(1);
+}
+
+/**
+ * @tc.name  : Test UnFreeze API
+ * @tc.number: Player_UnFreeze_001
+ * @tc.desc  : Test Player UnFreeze
+ */
+HWTEST_F(PlayerServerUnitTest, Player_UnFreeze_001, TestSize.Level1)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    EXPECT_EQ(MSERR_OK, player_->UnFreeze());
+}
+
+/**
+ * @tc.name  : Test Freeze API
+ * @tc.number: Player_UnFreeze_002
+ * @tc.desc  : Test Player UnFreeze
+ */
+HWTEST_F(PlayerServerUnitTest, Player_UnFreeze_002, TestSize.Level1)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Freeze());
+    sleep(1);
+    EXPECT_EQ(MSERR_OK, player_->UnFreeze());
+    sleep(1);
+}
 } // namespace Media
 } // namespace OHOS

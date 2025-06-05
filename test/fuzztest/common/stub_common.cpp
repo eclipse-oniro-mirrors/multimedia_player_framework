@@ -72,5 +72,17 @@ std::vector<pid_t> MediaServiceProxyFuzzer::GetPlayerPids()
     std::vector<pid_t> res;
     return res;
 }
+
+int32_t MediaServiceProxyFuzzer::FreezeStubForPids(const std::set<int32_t> &pidList, bool isProxy)
+{
+    (void) pidList;
+    (void) isProxy;
+    return 0;
+}
+
+int32_t MediaServiceProxyFuzzer::ResetAllProxy()
+{
+    return 0;
+}
 }
 }

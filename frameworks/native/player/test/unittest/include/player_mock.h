@@ -178,6 +178,7 @@ public:
     int32_t SetVideoWindowSize(int32_t width, int32_t height);
     int32_t EnableReportMediaProgress(bool enable);
     void ReleaseClientListener();
+    int32_t EnableReportAudioInterrupt(bool enable);
 private:
     void SeekPrepare(int32_t &mseconds, PlayerSeekMode &mode);
     std::shared_ptr<Player> player_ = nullptr;

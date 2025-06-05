@@ -90,6 +90,7 @@ public:
     bool IsSeekContinuousSupported() override;
     int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes) override;
     int32_t EnableReportMediaProgress(bool enable) override;
+    int32_t EnableReportAudioInterrupt(bool enable) override;
     int32_t SetStartFrameRateOptEnabled(bool enabled) override;
     void ReleaseClientListener() override;
     HiviewDFX::HiTraceId GetTraceId();

@@ -24,6 +24,7 @@
 #include "ipc_skeleton.h"
 #include "nocopyable.h"
 #include "osal/task/task.h"
+#include <set>
 
 namespace OHOS {
 namespace Media {
@@ -57,12 +58,15 @@ public:
     };
     sptr<IRemoteObject> CreateStubObject(StubType type);
     void DestroyStubObject(StubType type, sptr<IRemoteObject> object);
+    void RemovePlayerStubFromMap(sptr<IRemoteObject> object, pid_t pid);
     void DestroyStubObjectForPid(pid_t pid);
     int32_t Dump(int32_t fd, const std::vector<std::u16string> &args);
     void DestroyDumper(StubType type, sptr<IRemoteObject> object);
     void DestroyDumperForPid(pid_t pid);
     void NotifyMemMgrLoaded();
     void DestoryMemoryReportTask();
+    int32_t FreezeStubForPids(const std::set<int32_t> &pidList, bool isProxy);
+    int32_t ResetAllProxy();
 #ifdef SUPPORT_START_STOP_ON_DEMAND
     int32_t GetInstanceCount();
     int32_t GetInstanceCountLocked();
@@ -127,6 +131,7 @@ private:
     std::map<sptr<IRemoteObject>, pid_t> recorderStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> transCoderStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> playerStubMap_;
+    std::map<pid_t, std::set<sptr<IRemoteObject>>> pidToPlayerStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> avMetadataHelperStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> avCodecListStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> avCodecStubMap_;

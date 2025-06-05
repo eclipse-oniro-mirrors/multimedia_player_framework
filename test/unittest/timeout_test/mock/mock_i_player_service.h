@@ -32,6 +32,9 @@ public:
     MOCK_METHOD(int32_t, AddSubSource, (const std::string &url), (override));
     MOCK_METHOD(int32_t, AddSubSource, (int32_t fd, int64_t offset, int64_t size), (override));
     MOCK_METHOD(int32_t, Play, (), (override));
+    MOCK_METHOD(int32_t, Freeze, (), (override));
+    MOCK_METHOD(int32_t, UnFreeze, (), (override));
+    MOCK_METHOD(int32_t, EnableReportAudioInterrupt, (bool enable), (override));
     MOCK_METHOD(int32_t, Prepare, (), (override));
     MOCK_METHOD(int32_t, SetRenderFirstFrame, (bool display), (override));
     MOCK_METHOD(int32_t, SetPlayRange, (int64_t start, int64_t end), (override));

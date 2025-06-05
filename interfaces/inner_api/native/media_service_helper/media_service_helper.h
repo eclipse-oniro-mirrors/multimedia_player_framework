@@ -16,11 +16,17 @@
 #ifndef MEDIA_SERVICE_HELPER_H
 #define MEDIA_SERVICE_HELPER_H
 
+#include <set>
+
 namespace OHOS {
 namespace Media {
-class MediaServiceHelper {
+class __attribute__((visibility("default"))) MediaServiceHelper {
 public:
     static bool CanKillMediaService();
+
+    static int32_t ProxyForFreeze(const std::set<int32_t> &pidList, bool isProxy);
+
+    static int32_t ResetAllProxy();
 };
 } // namespace Media
 } // namespace OHOS

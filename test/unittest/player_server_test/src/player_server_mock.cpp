@@ -378,6 +378,18 @@ int32_t PlayerServerMock::SetMediaSource(const std::shared_ptr<AVMediaSource> &m
     return player_->SetMediaSource(mediaSource, strategy);
 }
 
+int32_t PlayerServerMock::Freeze()
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    return player_->Freeze();
+}
+
+int32_t PlayerServerMock::UnFreeze()
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    return player_->UnFreeze();
+}
+
 int32_t PlayerServerMock::SetSource(const std::string url)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");

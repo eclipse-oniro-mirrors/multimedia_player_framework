@@ -926,6 +926,86 @@ int32_t HiPlayerImpl::Pause(bool isSystemOperation)
     return TransStatus(ret);
 }
 
+int32_t HiPlayerImpl::Freeze()
+{
+    MediaTrace trace("HiPlayerImpl::Freeze");
+    MEDIA_LOG_I("Freeze in");
+    std::unique_lock<std::mutex> lock(freezeMutex_);
+    
+    if (pipelineStates_ != PlayerStates::PLAYER_STARTED) {
+        MEDIA_LOG_I("can not freeze, current state = %{public}d", static_cast<int32_t>(pipelineStates_));
+        PauseSourceDownload();
+        return TransStatus(Status::OK);
+    }
+
+    PauseSourceDownload();
+    callbackLooper_.StopReportMediaProgress();
+    StopFlvCheckLiveDelayTime();
+    callbackLooper_.StopCollectMaxAmplitude();
+    Status ret = Status::OK;
+    ret = demuxer_->Freeze();
+    syncManager_->Pause();
+    if (audioSink_ != nullptr) {
+        audioSink_->FreezeAudioSink();
+    }
+
+    if (ret != Status::OK) {
+        UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
+        return TransStatus(ret);
+    }
+    UpdateStateNoLock(PlayerStates::PLAYER_FROZEN, false, false);
+    return TransStatus(Status::OK);
+}
+
+int32_t HiPlayerImpl::UnFreeze()
+{
+    MediaTrace trace("HiPlayerImpl::UnFreeze");
+    MEDIA_LOG_I("UnFreeze in");
+    std::unique_lock<std::mutex> lock(freezeMutex_);
+
+    if (pipelineStates_ != PlayerStates::PLAYER_FROZEN) {
+        MEDIA_LOG_I("can not unfreeze, current state = %{public}d", static_cast<int32_t>(pipelineStates_));
+        ResumeSourceDownload();
+        return TransStatus(Status::OK);
+    }
+
+    if (audioSink_ != nullptr) {
+        audioSink_->UnFreezeAudioSink();
+    }
+
+    callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
+    callbackLooper_.StartCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
+    Status ret = Status::OK;
+    syncManager_->Resume();
+    ret = demuxer_->UnFreeze();
+    ResumeSourceDownload();
+    startTime_ = GetCurrentMillisecond();
+    StartFlvCheckLiveDelayTime();
+    if (ret != Status::OK) {
+        UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
+        return TransStatus(ret);
+    }
+    UpdateStateNoLock(PlayerStates::PLAYER_STARTED, false, false);
+    return TransStatus(ret);
+}
+
+int32_t HiPlayerImpl::PauseSourceDownload()
+{
+    Status ret = Status::OK;
+    if (ret == Status::OK) {
+        sourceDownloadPaused_ = true;
+    }
+    return MSERR_OK;
+}
+
+int32_t HiPlayerImpl::ResumeSourceDownload()
+{
+    if (sourceDownloadPaused_) {
+        sourceDownloadPaused_ = false;
+    }
+    return MSERR_OK;
+}
+
 void HiPlayerImpl::ReportAudioInterruptEvent()
 {
     isHintPauseReceived_ = false;
@@ -1187,6 +1267,9 @@ Status HiPlayerImpl::HandleSeek(int64_t seekPos, PlayerSeekMode mode)
         case PlayerStates::PLAYER_PREPARED: {
             return doPreparedSeek(seekPos, mode);
         }
+        case PlayerStates::PLAYER_FROZEN: {
+            return doFrozenSeek(seekPos, mode);
+        }
         default:
             MEDIA_LOG_I_SHORT("Seek in error pipelineStates: " PUBLIC_LOG_D32,
                 static_cast<int32_t>(pipelineStates_));
@@ -1258,6 +1341,19 @@ Status HiPlayerImpl::doStartedSeek(int64_t seekPos, PlayerSeekMode mode)
 Status HiPlayerImpl::doPausedSeek(int64_t seekPos, PlayerSeekMode mode)
 {
     MEDIA_LOG_I("doPausedSeek.");
+    pipeline_ -> Pause();
+    pipeline_ -> Flush();
+    auto rtv = doSeek(seekPos, mode);
+    inEosSeek_ = false;
+    if ((rtv == Status::OK) && demuxer_->IsRenderNextVideoFrameSupported() && !demuxer_->IsVideoEos()) {
+        rtv = pipeline_->Preroll(true);
+    }
+    return rtv;
+}
+
+Status HiPlayerImpl::doFrozenSeek(int64_t seekPos, PlayerSeekMode mode)
+{
+    MEDIA_LOG_I("doFrozenSeek.");
     pipeline_ -> Pause();
     pipeline_ -> Flush();
     auto rtv = doSeek(seekPos, mode);
@@ -2638,6 +2734,7 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
     AutoLock lock(handleCompleteMutex_);
     FALSE_RETURN_NOLOG(curState_ != PlayerStateId::STOPPED && HandleEosFlagState(event));
     FALSE_RETURN_MSG(!inEosPlayingSeekContinuous_, "Skip complete event in seek continous!");
+    std::unique_lock<std::mutex> freezeLock(freezeMutex_);
     MEDIA_LOG_I("OnComplete looping: " PUBLIC_LOG_D32 ".", singleLoop_.load());
     isStreaming_ = false;
     Format format;
@@ -2856,6 +2953,7 @@ void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
     if (forceType == OHOS::AudioStandard::INTERRUPT_FORCE) {
         if (hintType == OHOS::AudioStandard::INTERRUPT_HINT_PAUSE
             || hintType == OHOS::AudioStandard::INTERRUPT_HINT_STOP) {
+            std::unique_lock<std::mutex> freezeLock(freezeMutex_);
             isHintPauseReceived_ = true;
             Status ret = Status::OK;
             ret = pipeline_->Pause();

@@ -30,6 +30,8 @@ public:
 
     void OnError(int32_t errorCode, const std::string &errorMsg) override;
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
+    void SetFreezeFlag(bool isFrozen) override;
+    void SetInterruptListenerFlag(bool isRegistered) override;
 
 private:
     sptr<IStandardPlayerListener> listener_ = nullptr;
@@ -42,10 +44,14 @@ public:
 
     void OnError(int32_t errorCode, const std::string &errorMsg) override;
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
+    void SetFreezeFlag(bool isFrozen) override;
+    void SetInterruptListenerFlag(bool isRegistered) override;
 
 private:
     int32_t SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option);
     static inline BrokerDelegator<PlayerListenerProxy> delegator_;
+    std::atomic<bool> isFrozen_ = false;
+    std::atomic<bool> isRegistered_ = false;
 };
 } // namespace Media
 } // namespace OHOS
