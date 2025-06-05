@@ -150,7 +150,7 @@ public:
 
     virtual void EnableHapticsInSlientMode(bool enable) = 0;
 
-    virtual bool IsVibrationIntensityAdjustmentSupported() = 0;
+    virtual bool IsHapticsIntensityAdjustmentSupported() = 0;
 };
 
 class AudioHapticPlayerCallback {

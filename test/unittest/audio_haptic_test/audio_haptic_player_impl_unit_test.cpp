@@ -1142,23 +1142,23 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_057, TestSize.Leve
 }
 
 /**
- * @tc.name  : Test IsVibrationIntensityAdjustmentSupported API
+ * @tc.name  : Test IsHapticsIntensityAdjustmentSupported API
  * @tc.number: AudioHapticPlayerImpl_058
- * @tc.desc  : Test AudioHapticPlayerImpl::IsVibrationIntensityAdjustmentSupported()
+ * @tc.desc  : Test AudioHapticPlayerImpl::IsHapticsIntensityAdjustmentSupported()
  */
 HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_058, TestSize.Level1)
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
     EXPECT_NE(audioHapticPlayerImpl, nullptr);
     
-    EXPECT_EQ(false, audioHapticPlayerImpl->IsVibrationIntensityAdjustmentSupported());
+    EXPECT_EQ(false, audioHapticPlayerImpl->IsHapticsIntensityAdjustmentSupported());
 
     AudioHapticPlayerImpl audioHapticPlayerImpl2;
     auto audioHapticVibrator_ = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl2);
     audioHapticPlayerImpl->audioHapticVibrator_ = audioHapticVibrator_;
     EXPECT_NE(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
     
-    EXPECT_EQ(audioHapticPlayerImpl->IsVibrationIntensityAdjustmentSupported(),
+    EXPECT_EQ(audioHapticPlayerImpl->IsHapticsIntensityAdjustmentSupported(),
         audioHapticVibrator_->IsHdHapticSupported());
 }
 } // namespace Media

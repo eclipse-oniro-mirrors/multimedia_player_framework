@@ -157,7 +157,7 @@ napi_value AudioHapticPlayerNapi::IsHapticsIntensityAdjustmentSupported(napi_env
 
     auto *audioHapticPlayerNapi = reinterpret_cast<AudioHapticPlayerNapi *>(native);
     if (audioHapticPlayerNapi == nullptr) {
-        MEDIA_LOGE("IsVibrationIntensityAdjustmentSupported: unwrap failure!");
+        MEDIA_LOGE("IsHapticsIntensityAdjustmentSupported: unwrap failure!");
         AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_SERVICE_DIED, "unwrap failure");
         return result;
     }
