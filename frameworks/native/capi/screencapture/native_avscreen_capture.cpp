@@ -916,7 +916,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureContentChangedCallback(
     if (screenCaptureObj->callback_ == nullptr ||
         !screenCaptureObj->callback_->SetCaptureContentChangedCallback(callback, userData)) {
         MEDIA_LOGE("OH_AVScreenCapture_SetCaptureContentChangedCallback error");
-        return AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT;
+        return AV_SCREEN_CAPTURE_ERR_NO_MEMORY;
     }
     MEDIA_LOGD("OH_AVScreenCapture_SetCaptureContentChangedCallback E");
     return AV_SCREEN_CAPTURE_ERR_OK;
