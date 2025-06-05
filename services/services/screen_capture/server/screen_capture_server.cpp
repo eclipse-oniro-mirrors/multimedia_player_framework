@@ -3929,8 +3929,8 @@ int32_t ScreenCaptureServer::SetScreenCaptureStrategy(ScreenCaptureStrategy stra
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(captureState_ < AVScreenCaptureState::POPUP_WINDOW, MSERR_UNSUPPORT,
         "strategy can not be modified after screencapture started");
-    MEDIA_LOGI("SetScreenCaptureStrategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d,
-        strategyForPrivacyMaskMode: %{public}d",
+    MEDIA_LOGI("SetScreenCaptureStrategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d,"
+        "strategyForPrivacyMaskMode: %{public}d",
         strategy.enableDeviceLevelCapture, strategy.keepCaptureDuringCall, strategy.strategyForPrivacyMaskMode);
     captureConfig_.strategy = strategy;
     return MSERR_OK;
