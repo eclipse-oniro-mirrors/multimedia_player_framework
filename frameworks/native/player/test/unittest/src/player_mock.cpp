@@ -844,6 +844,12 @@ int32_t PlayerMock::EnableReportMediaProgress(bool enable)
     return player_->EnableReportMediaProgress(enable);
 }
 
+int32_t PlayerMock::EnableReportAudioInterrupt(bool enable)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->EnableReportAudioInterrupt(enable);
+}
+
 void PlayerMock::ReleaseClientListener()
 {
     UNITTEST_CHECK_AND_RETURN_LOG(player_ != nullptr, "player_ == nullptr");

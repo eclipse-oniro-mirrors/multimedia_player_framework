@@ -40,6 +40,8 @@ public:
     void ReleaseClientListener();
     bool CanKillMediaService();
     std::vector<pid_t> GetPlayerPids();
+    int32_t FreezeStubForPids(const std::set<int32_t> &pidList, bool isProxy);
+    int32_t ResetAllProxy();
 private:
     static inline BrokerDelegator<MediaServiceProxyFuzzer> delegator_;
 };

@@ -31,6 +31,8 @@ public:
     int32_t IpcRecovery(bool fromMonitor);
     void SetIpcAlarmedFlag();
     void UnSetIpcAlarmedFlag();
+    int32_t EnableMonitor(int32_t pid);
+    int32_t DisableMonitor(int32_t pid);
 
 protected:
     int32_t RegisterMonitor(int32_t pid);

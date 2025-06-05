@@ -77,6 +77,8 @@ public:
     PlayerServer();
     virtual ~PlayerServer();
 
+    int32_t Freeze() override;
+    int32_t UnFreeze() override;
     int32_t Play() override;
     int32_t Prepare() override;
     int32_t SetRenderFirstFrame(bool display) override;
@@ -155,6 +157,7 @@ public:
     int32_t SetReopenFd(int32_t fd) override;
     int32_t EnableCameraPostprocessing() override;
     int32_t EnableReportMediaProgress(bool enable) override;
+    int32_t EnableReportAudioInterrupt(bool enable) override;
 
 protected:
     class BaseState;
@@ -212,12 +215,18 @@ private:
     int32_t InitPlayEngine(const std::string &url);
     int32_t OnPrepare(bool sync);
     int32_t OnPlay();
+    int32_t OnFreeze();
+    int32_t OnUnFreeze();
     int32_t OnPause(bool isSystemOperation);
     int32_t OnStop(bool sync);
     int32_t OnReset();
     int32_t HandlePrepare();
     int32_t HandlePlay();
     int32_t HandlePause(bool isSystemOperation);
+    int32_t HandleFreeze();
+    int32_t HandleLiteFreeze();
+    int32_t HandleUnFreeze();
+    int32_t HandleLiteUnFreeze();
     int32_t HandlePauseDemuxer();
     int32_t HandleResumeDemuxer();
     int32_t HandleStop();
@@ -227,6 +236,7 @@ private:
     int32_t HandleSetPlaybackSpeed(PlaybackRateMode mode);
     int32_t HandleSetPlaybackRate(float rate);
     int32_t SetAudioEffectMode(const int32_t effectMode);
+    int32_t CheckandDoUnFreeze();
 
     void HandleEos();
     void PreparedHandleEos();
@@ -283,6 +293,7 @@ private:
     bool maxAmplitudeCbStatus_ = false;
     bool seiMessageCbStatus_ = false;
     bool enableReportMediaProgress_ = false;
+    bool enableReportAudioInterrupt_ = false;
     std::vector<int32_t> payloadTypes_ {};
     bool isStreamUsagePauseRequired_ = true;
     std::mutex surfaceMutex_;
@@ -292,6 +303,7 @@ private:
     bool isCalledBySystemApp_ = false;
     std::atomic<uint32_t> totalMemoryUage_ {0};
     PlayerProducer playerProducer_ = PlayerProducer::INNER;
+    std::atomic<bool> isFrozen_ = false;
 };
 } // namespace Media
 } // namespace OHOS

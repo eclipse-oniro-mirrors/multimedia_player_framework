@@ -942,6 +942,21 @@ int32_t PlayerImpl::EnableReportMediaProgress(bool enable)
     return ret;
 }
 
+int32_t PlayerImpl::EnableReportAudioInterrupt(bool enable)
+{
+    time_t startTime = time(nullptr);
+    ScopedTimer timer("EnableReportAudioInterrupt", OVERTIME_WARNING_MS);
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " EnableReportAudioInterrupt in, enable is %{public}d",
+        FAKE_POINTER(this), enable);
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    int32_t ret = MSERR_OK;
+    LISTENER(ret = playerService_->EnableReportAudioInterrupt(enable),
+        "EnableReportAudioInterrupt", false, TIME_OUT_SECOND);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
+    hiAppEventAgent_->TraceApiEvent(ret, "EnableReportAudioInterrupt", startTime, traceId_);
+    return ret;
+}
+
 void PlayerImpl::ReleaseClientListener()
 {
     ScopedTimer timer("ReleaseClientListener", OVERTIME_WARNING_MS);

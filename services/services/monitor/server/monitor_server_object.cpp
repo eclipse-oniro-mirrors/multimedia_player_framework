@@ -66,5 +66,15 @@ void MonitorServerObject::UnSetIpcAlarmedFlag()
 {
     alarmed_ = false;
 }
+
+int32_t MonitorServerObject::EnableMonitor(int32_t pid)
+{
+    return MonitorServer::GetInstance().EnableMonitor(pid);
+}
+
+int32_t MonitorServerObject::DisableMonitor(int32_t pid)
+{
+    return MonitorServer::GetInstance().DisableMonitor(pid);
+}
 } // namespace Media
 } // namespace OHOS

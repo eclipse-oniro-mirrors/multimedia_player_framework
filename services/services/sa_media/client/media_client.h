@@ -47,6 +47,8 @@ public:
     MediaClient() noexcept;
     ~MediaClient();
 
+    int32_t ProxyForFreeze(const std::set<int32_t> &pidList, bool isProxy) override;
+    int32_t ResetAllProxy() override;
     sptr<IStandardMonitorService> GetMonitorProxy() override;
     void ReleaseClientListener() override;
     bool CanKillMediaService() override;

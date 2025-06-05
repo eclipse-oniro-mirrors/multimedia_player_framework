@@ -120,6 +120,8 @@ public:
     explicit PlayerServerMock(std::shared_ptr<PlayerCallbackTest> &callback);
     virtual ~PlayerServerMock();
     bool CreatePlayer();
+    int32_t Freeze();
+    int32_t UnFreeze();
     int32_t SetSource(const std::string url);
     int32_t SetSource(const std::string &path, int64_t offset, int64_t size);
     int32_t SetSource(int32_t fd, int64_t offset, int64_t size);

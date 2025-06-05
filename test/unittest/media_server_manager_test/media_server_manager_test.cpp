@@ -43,6 +43,77 @@ void MediaServerManagerTest::TearDown(void)
 }
 
 /**
+ * @tc.name  : FreezeStubForPids_001
+ * @tc.number: FreezeStubForPids_001
+ * @tc.desc  : Test FreezeStubForPids interface
+ */
+HWTEST_F(MediaServerManagerTest, FreezeStubForPids_001, TestSize.Level1)
+{
+    sptr<IRemoteObject> player =
+        MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::PLAYER);
+    ASSERT_NE(player, nullptr);
+    int32_t pid = IPCSkeleton::GetCallingPid();
+    std::set<int32_t> pidList;
+    pidList.insert(pid);
+    auto isProxy = true;
+    auto ret = MediaServerManager::GetInstance().FreezeStubForPids(pidList, isProxy);
+    EXPECT_EQ(ret, 0);
+    MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::PLAYER, player);
+}
+
+/**
+ * @tc.name  : FreezeStubForPids_002
+ * @tc.number: FreezeStubForPids_002
+ * @tc.desc  : Test FreezeStubForPids interface
+ */
+HWTEST_F(MediaServerManagerTest, FreezeStubForPids_002, TestSize.Level1)
+{
+    sptr<IRemoteObject> player =
+        MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::PLAYER);
+    ASSERT_NE(player, nullptr);
+    std::set<int32_t> pidList;
+    pidList.insert(PID_TEST);
+    auto isProxy = true;
+    auto ret = MediaServerManager::GetInstance().FreezeStubForPids(pidList, isProxy);
+    EXPECT_EQ(ret, 0);
+    MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::PLAYER, player);
+}
+
+/**
+ * @tc.name  : FreezeStubForPids_003
+ * @tc.number: FreezeStubForPids_003
+ * @tc.desc  : Test FreezeStubForPids interface
+ */
+HWTEST_F(MediaServerManagerTest, FreezeStubForPids_003, TestSize.Level1)
+{
+    sptr<IRemoteObject> player =
+        MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::PLAYER);
+    ASSERT_NE(player, nullptr);
+    int32_t pid = IPCSkeleton::GetCallingPid();
+    std::set<int32_t> pidList;
+    pidList.insert(pid);
+    auto isProxy = false;
+    auto ret = MediaServerManager::GetInstance().FreezeStubForPids(pidList, isProxy);
+    EXPECT_EQ(ret, 0);
+    MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::PLAYER, player);
+}
+
+/**
+ * @tc.name  : ResetAllProxy_001
+ * @tc.number: ResetAllProxy_001
+ * @tc.desc  : Test ResetAllProxy interface
+ */
+HWTEST_F(MediaServerManagerTest, ResetAllProxy, TestSize.Level1)
+{
+    sptr<IRemoteObject> player =
+        MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::PLAYER);
+    ASSERT_NE(player, nullptr);
+    auto ret = MediaServerManager::GetInstance().ResetAllProxy();
+    EXPECT_EQ(ret, 0);
+    MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::PLAYER, player);
+}
+
+/**
  * @tc.name  : DestroyStubObject_001
  * @tc.number: DestroyStubObject_001
  * @tc.desc  : Test DestroyStubObject interface

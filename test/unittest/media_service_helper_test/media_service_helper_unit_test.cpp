@@ -21,6 +21,7 @@ using namespace testing::ext;
 
 namespace OHOS {
 namespace Media {
+constexpr int32_t CONSTRUCTED_PID = 999999;
 
 void MediaServiceHelperUnitTest::SetUpTestCase(void)
 {
@@ -36,6 +37,21 @@ void MediaServiceHelperUnitTest::SetUp(void)
 
 void MediaServiceHelperUnitTest::TearDown(void)
 {
+}
+
+HWTEST_F(MediaServiceHelperUnitTest, ProxyForFreeze_001, TestSize.Level0)
+{
+    std::set<int32_t> pidList;
+    pidList.insert(CONSTRUCTED_PID);
+    bool isProxy = true;
+    auto ret = MediaServiceHelper::ProxyForFreeze(pidList, isProxy);
+    EXPECT_FALSE(ret);
+}
+
+HWTEST_F(MediaServiceHelperUnitTest, ResetAllProxy_001, TestSize.Level0)
+{
+    auto ret = MediaServiceHelper::ResetAllProxy();
+    EXPECT_FALSE(ret);
 }
 
 HWTEST_F(MediaServiceHelperUnitTest, CanKillMediaService_001, TestSize.Level0)

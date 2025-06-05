@@ -268,6 +268,11 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
         playerProducer_ == PlayerProducer::NAPI ? enableReportMediaProgress_ : true);
     TRUE_LOG(ret != MSERR_OK, MEDIA_LOGW, "PlayerEngine enable report media progress failed, ret %{public}d", ret);
 
+    if (playerCb_ != nullptr) {
+        playerCb_->SetInterruptListenerFlag(
+            playerProducer_ == PlayerProducer::NAPI ? enableReportAudioInterrupt_ : true);
+    }
+
     lastOpStatus_ = PLAYER_INITIALIZED;
     ChangeState(initializedState_);
 
@@ -626,6 +631,108 @@ int32_t PlayerServer::HandlePause(bool isSystemOperation)
     int32_t ret = playerEngine_->Pause(isSystemOperation);
     UpdateFlvLivePauseTime();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Pause Failed!");
+
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::Freeze()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (lastOpStatus_ != PLAYER_STARTED) {
+        MEDIA_LOGE("Can not Freeze, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_OK;
+    }
+    if (playerCb_ != nullptr) {
+        playerCb_->SetFreezeFlag(true);
+    }
+    auto ret = OnFreeze();
+    isFrozen_ = ret == MSERR_OK;
+    return ret;
+}
+
+int32_t PlayerServer::OnFreeze()
+{
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " PlayerServer OnFreeze in", FAKE_POINTER(this));
+    auto freezeTask = std::make_shared<TaskHandler<void>>([this]() {
+        MediaTrace Trace("PlayerServer::Freeze");
+        MEDIA_LOGI("PlayerServer::OnFreeze start");
+        auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
+        (void)currState->Freeze();
+        MEDIA_LOGI("PlayerServer::OnFreeze end");
+    });
+
+    auto cancelTask = std::make_shared<TaskHandler<void>>([this]() {
+        MEDIA_LOGI("cancel OnFreeze");
+        taskMgr_.MarkTaskDone("interrupted OnFreeze done");
+    });
+
+    int ret = taskMgr_.FreezeTask(freezeTask, cancelTask, "Freeze");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Freeze failed");
+
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::HandleFreeze()
+{
+    MEDIA_LOGI("PlayerServer HandleFreeze in");
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_INVALID_OPERATION, "playerEngine_ is nullptr");
+    ExitSeekContinous(true);
+    int32_t ret = playerEngine_->Freeze();
+    UpdateFlvLivePauseTime();
+    taskMgr_.MarkTaskDone("Freeze done");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Freeze Failed!");
+
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::UnFreeze()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (playerCb_ != nullptr) {
+        playerCb_->SetFreezeFlag(false);
+    }
+    if (!isFrozen_) {
+        MEDIA_LOGE("Can not UnFreeze, is not FrozenState");
+        return MSERR_OK;
+    }
+    auto ret = OnUnFreeze();
+    isFrozen_ = ret != MSERR_OK;
+    return ret;
+}
+
+int32_t PlayerServer::OnUnFreeze()
+{
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " PlayerServer OnUnFreeze in", FAKE_POINTER(this));
+    auto unFreezeTask = std::make_shared<TaskHandler<void>>([this]() {
+        MediaTrace Trace("PlayerServer::UnFreeze");
+        MEDIA_LOGI("PlayerServer::OnUnFreeze start");
+        auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
+        (void)currState->UnFreeze();
+        MEDIA_LOGI("PlayerServer::OnUnFreeze end");
+    });
+
+    auto cancelTask = std::make_shared<TaskHandler<void>>([this]() {
+        MEDIA_LOGI("cancel OnUnFreeze");
+        taskMgr_.MarkTaskDone("cancel OnUnFreeze done");
+    });
+
+    int ret = taskMgr_.UnFreezeTask(unFreezeTask, cancelTask, "UnFreeze");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "UnFreeze failed");
+
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::HandleUnFreeze()
+{
+    MEDIA_LOGI("PlayerServer HandleUnFreeze in");
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_INVALID_OPERATION, "playerEngine_ is nullptr");
+    ExitSeekContinous(true);
+    TryFlvLiveRestartLink();
+    int32_t ret = playerEngine_->UnFreeze();
+    taskMgr_.MarkTaskDone("UnFreeze done");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine UnFreeze Failed!");
 
     return MSERR_OK;
 }
@@ -2262,6 +2369,16 @@ int32_t PlayerServer::EnableReportMediaProgress(bool enable)
     enableReportMediaProgress_ = enable;
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
     return playerEngine_->EnableReportMediaProgress(enableReportMediaProgress_);
+}
+
+int32_t PlayerServer::EnableReportAudioInterrupt(bool enable)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    enableReportAudioInterrupt_ = enable;
+    if (playerCb_ != nullptr) {
+        playerCb_->SetInterruptListenerFlag(enableReportAudioInterrupt_);
+    }
+    return MSERR_OK;
 }
 } // namespace Media
 } // namespace OHOS

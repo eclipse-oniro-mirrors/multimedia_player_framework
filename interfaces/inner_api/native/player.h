@@ -307,6 +307,7 @@ enum PlayerStates : int32_t {
     PLAYER_PLAYBACK_COMPLETE = 8,
     /* released states */
     PLAYER_RELEASED = 9,
+    PLAYER_FROZEN = 10,
 };
 
 enum PlaybackRateMode : int32_t {
@@ -361,6 +362,16 @@ public:
      * @param errorMsg Error message.
      */
     virtual void OnError(int32_t errorCode, const std::string &errorMsg) = 0;
+
+    virtual void SetFreezeFlag(bool isFrozen)
+    {
+        (void)isFrozen;
+    }
+
+    virtual void SetInterruptListenerFlag(bool isRegistered)
+    {
+        (void)isRegistered;
+    }
 };
 
 class Player {
@@ -1010,6 +1021,21 @@ public:
      * @version 1.0
      */
     virtual int32_t EnableReportMediaProgress(bool enable)
+    {
+        (void)enable;
+        return 0;
+    }
+    
+    /**
+     * @brief Enables or disables the report of audio interrupt during frozen state.
+     *
+     * @param enable Indicates whether to enable the report of audio interrupt during frozen state.
+     * @return Returns {@link MSERR_OK} if the report of audio interrupt is enabled or disabled; returns an error code
+     * defined in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t EnableReportAudioInterrupt(bool enable)
     {
         (void)enable;
         return 0;

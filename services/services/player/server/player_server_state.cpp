@@ -53,6 +53,18 @@ int32_t PlayerServer::BaseState::Pause(bool isSystemOperation)
     return MSERR_INVALID_STATE;
 }
 
+int32_t PlayerServer::BaseState::Freeze()
+{
+    ReportInvalidOperation();
+    return MSERR_INVALID_STATE;
+}
+
+int32_t PlayerServer::BaseState::UnFreeze()
+{
+    ReportInvalidOperation();
+    return MSERR_INVALID_STATE;
+}
+
 int32_t PlayerServer::BaseState::PauseDemuxer()
 {
     ReportInvalidOperation();
@@ -345,6 +357,16 @@ int32_t PlayerServer::PlayingState::Pause(bool isSystemOperation)
     return server_.HandlePause(isSystemOperation);
 }
 
+int32_t PlayerServer::PlayingState::Freeze()
+{
+    return server_.HandleFreeze();
+}
+
+int32_t PlayerServer::PlayingState::UnFreeze()
+{
+    return server_.HandleUnFreeze();
+}
+
 int32_t PlayerServer::PlayingState::PauseDemuxer()
 {
     return server_.HandlePauseDemuxer();
@@ -466,6 +488,11 @@ int32_t PlayerServer::PausedState::Stop()
     return server_.HandleStop();
 }
 
+int32_t PlayerServer::PausedState::UnFreeze()
+{
+    return server_.HandleUnFreeze();
+}
+
 int32_t PlayerServer::PausedState::SetPlaybackSpeed(PlaybackRateMode mode)
 {
     return server_.HandleSetPlaybackSpeed(mode);
@@ -565,6 +592,11 @@ int32_t PlayerServer::PlaybackCompletedState::SetPlayRangeWithMode(int64_t start
 int32_t PlayerServer::PlaybackCompletedState::Stop()
 {
     return server_.HandleStop();
+}
+
+int32_t PlayerServer::PlaybackCompletedState::UnFreeze()
+{
+    return server_.HandleUnFreeze();
 }
 
 void PlayerServer::PlaybackCompletedState::HandleStateChange(int32_t newState)

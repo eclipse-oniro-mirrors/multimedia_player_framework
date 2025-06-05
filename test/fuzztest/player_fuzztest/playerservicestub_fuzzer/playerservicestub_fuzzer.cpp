@@ -87,6 +87,19 @@ public:
         std::vector<pid_t> res;
         return res;
     }
+
+    int32_t FreezeStubForPids(const std::set<int32_t> &pidList, bool isProxy)
+    {
+        (void)pidList;
+        (void)isProxy;
+        return 0;
+    }
+
+    int32_t ResetAllProxy()
+    {
+        return 0;
+    }
+
 private:
     static inline BrokerDelegator<MediaServiceProxyFuzzer> delegator_;
 };

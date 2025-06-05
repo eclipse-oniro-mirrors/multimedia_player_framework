@@ -87,6 +87,24 @@ void MediaServer::OnStop()
         SYSTEM_PROCESS_TYPE, SYSTEM_STATUS_STOP, OHOS::PLAYER_DISTRIBUTED_SERVICE_ID);
 }
 
+int32_t MediaServer::FreezeStubForPids(const std::set<int32_t> &pidList, bool isProxy)
+{
+    int32_t size = static_cast<int32_t>(pidList.size());
+    MEDIA_LOGI("received Freeze Notification, pidSize = %{public}d, isProxy = %{public}d",
+               size, isProxy);
+    
+    for (auto pid : pidList) {
+        MEDIA_LOGI("received Freeze Pid, pid = %{public}d, isProxy = %{public}d",
+            pid, isProxy);
+    }
+    return MediaServerManager::GetInstance().FreezeStubForPids(pidList, isProxy);
+}
+
+int32_t MediaServer::ResetAllProxy()
+{
+    return MediaServerManager::GetInstance().ResetAllProxy();
+}
+
 #ifdef SUPPORT_START_STOP_ON_DEMAND
 int32_t MediaServer::OnIdle(const SystemAbilityOnDemandReason &idleReason)
 {

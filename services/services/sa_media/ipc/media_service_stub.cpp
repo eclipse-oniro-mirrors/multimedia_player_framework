@@ -24,6 +24,7 @@ namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaServiceStub"};
 const std::string TASK_NAME = "OHOS::Media::MediaServiceStub::GetSystemAbility";
 const int32_t TIME_OUT_SECOND = 30; // time out is 30 senconds
+const int32_t RSS_UID = 1096;
 }
 
 namespace OHOS {
@@ -52,6 +53,42 @@ void MediaServiceStub::Init()
         [this] (MessageParcel &data, MessageParcel &reply) { return HandleKillMediaService(data, reply); };
     mediaFuncs_[GET_PLAYER_PIDS] =
         [this] (MessageParcel &data, MessageParcel &reply) { return GetPlayerPidsStub(data, reply); };
+    mediaFuncs_[FREEZE] =
+        [this](MessageParcel &data, MessageParcel &reply) { return HandleFreezeStubForPids(data, reply); };
+    mediaFuncs_[RESET_ALL_PROXY] =
+        [this](MessageParcel &data, MessageParcel &reply) { return HandleResetAllProxy(data, reply); };
+}
+
+int32_t MediaServiceStub::HandleFreezeStubForPids(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    CHECK_AND_RETURN_RET_LOG(callingUid == RSS_UID, MSERR_INVALID_OPERATION, "No Permission");
+
+    bool isProxy = false;
+    CHECK_AND_RETURN_RET_LOG(data.ReadBool(isProxy), MSERR_INVALID_OPERATION, "Failed to Read Bool");
+
+    std::set<int32_t> pidList;
+    int32_t size = 0;
+    CHECK_AND_RETURN_RET_LOG(data.ReadInt32(size), MSERR_INVALID_OPERATION, "Failed to Read Int32");
+    CHECK_AND_RETURN_RET_LOG(size > 0, MSERR_INVALID_VAL, "size is invalid");
+
+    for (int32_t i = 0; i < size; i++) {
+        int32_t pid = 0;
+        CHECK_AND_RETURN_RET_LOG(data.ReadInt32(pid), MSERR_INVALID_OPERATION, "Failed to Read Int32");
+        pidList.insert(pid);
+    }
+
+    reply.WriteInt32(FreezeStubForPids(pidList, isProxy));
+    return MSERR_OK;
+}
+
+int32_t MediaServiceStub::HandleResetAllProxy(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    CHECK_AND_RETURN_RET_LOG(callingUid == RSS_UID, MSERR_INVALID_OPERATION, "No Permission");
+    
+    reply.WriteInt32(ResetAllProxy());
+    return MSERR_OK;
 }
 
 int32_t MediaServiceStub::DestroyStubForPid(pid_t pid)

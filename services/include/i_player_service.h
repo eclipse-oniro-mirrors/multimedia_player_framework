@@ -670,6 +670,31 @@ public:
         return 0;
     }
 
+    /**
+     * @brief Enables or disables the report of audio interrupt during frozen state.
+     *
+     * @param enable Indicates whether to enable the report of audio interrupt during frozen state.
+     * @return Returns {@link MSERR_OK} if the report of audio interrupt is enabled or disabled; returns an error code
+     * defined in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t EnableReportAudioInterrupt(bool enable)
+    {
+        (void)enable;
+        return 0;
+    }
+
+    virtual int32_t Freeze()
+    {
+        return 0;
+    }
+
+    virtual int32_t UnFreeze()
+    {
+        return 0;
+    }
+    
     virtual int32_t SetStartFrameRateOptEnabled(bool enabled)
     {
         (void)enabled;

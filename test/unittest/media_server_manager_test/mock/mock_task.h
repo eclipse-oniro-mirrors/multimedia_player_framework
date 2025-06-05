@@ -46,6 +46,19 @@ public:
     {
         return nullptr;
     }
+
+    int32_t FreezeStubForPids(const std::set<int32_t> &pidList, bool isProxy)
+    {
+        (void)pidList;
+        (void)isProxy;
+        return 0;
+    }
+
+    int32_t ResetAllProxy()
+    {
+        return 0;
+    }
+
     MOCK_METHOD(void, ReleaseClientListener, (), (override));
     MOCK_METHOD(bool, CanKillMediaService, (), (override));
     MOCK_METHOD(int32_t, SetDeathListener, (const sptr<IRemoteObject> &object), ());

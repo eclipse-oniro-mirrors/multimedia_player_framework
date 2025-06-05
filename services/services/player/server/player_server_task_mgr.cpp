@@ -175,6 +175,56 @@ int32_t PlayerServerTaskMgr::SeekTask(const std::shared_ptr<ITaskHandler> &task,
     return MSERR_OK;
 }
 
+int32_t PlayerServerTaskMgr::FreezeTask(const std::shared_ptr<ITaskHandler> &task,
+    const std::shared_ptr<ITaskHandler> &cancelTask, const std::string &taskName)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(isInited_, MSERR_INVALID_OPERATION, "not init");
+
+    if (currTwoPhaseTask_ == nullptr) {
+        return EnqueueTask(task, PlayerServerTaskType::FREEZE_TASK, taskName);
+    }
+    MEDIA_LOGI("current task[%{public}s] is in processing, new task[%{public}s] wait",
+        currTwoPhaseTaskName_.c_str(), taskName.c_str());
+    for (auto &item : pendingTwoPhaseTasks_) {
+        if (item.type == PlayerServerTaskType::FREEZE_TASK ||
+            item.type == PlayerServerTaskType::UNFREEZE_TASK) {
+            item.type = PlayerServerTaskType::CANCEL_TASK;
+            MEDIA_LOGI("replace old freeze and unfreeze task");
+        }
+    }
+
+    pendingTwoPhaseTasks_.push_back({
+        PlayerServerTaskType::FREEZE_TASK, task, cancelTask, taskName
+    });
+    return MSERR_OK;
+}
+
+int32_t PlayerServerTaskMgr::UnFreezeTask(const std::shared_ptr<ITaskHandler> &task,
+    const std::shared_ptr<ITaskHandler> &cancelTask, const std::string &taskName)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(isInited_, MSERR_INVALID_OPERATION, "not init");
+
+    if (currTwoPhaseTask_ == nullptr) {
+        return EnqueueTask(task, PlayerServerTaskType::UNFREEZE_TASK, taskName);
+    }
+    MEDIA_LOGI("current task[%{public}s] is in processing, new task[%{public}s] wait",
+        currTwoPhaseTaskName_.c_str(), taskName.c_str());
+    for (auto &item : pendingTwoPhaseTasks_) {
+        if (item.type == PlayerServerTaskType::FREEZE_TASK ||
+            item.type == PlayerServerTaskType::UNFREEZE_TASK) {
+            item.type = PlayerServerTaskType::CANCEL_TASK;
+            MEDIA_LOGI("replace old freeze and unfreeze task");
+        }
+    }
+
+    pendingTwoPhaseTasks_.push_back({
+        PlayerServerTaskType::UNFREEZE_TASK, task, cancelTask, taskName
+    });
+    return MSERR_OK;
+}
+
 int32_t PlayerServerTaskMgr::SeekContinousTask(const std::shared_ptr<ITaskHandler> &task, const std::string &taskName)
 {
     std::unique_lock<std::mutex> lock(mutex_);

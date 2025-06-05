@@ -94,6 +94,16 @@ public:
     virtual int32_t Pause(bool isSystemOperation) = 0;
     virtual int32_t Stop() = 0;
     virtual int32_t Reset() = 0;
+    virtual int32_t Freeze() = 0;
+    virtual int32_t UnFreeze() = 0;
+    virtual int32_t PauseSourceDownload()
+    {
+        return 0;
+    }
+    virtual int32_t ResumeSourceDownload()
+    {
+        return 0;
+    }
     virtual int32_t SetVolume(float leftVolume, float rightVolume) = 0;
     virtual int32_t SetVolumeMode(int32_t mode) = 0;
     virtual int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) = 0;

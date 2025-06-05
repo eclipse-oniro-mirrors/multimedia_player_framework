@@ -31,5 +31,14 @@ bool MediaServiceHelper::CanKillMediaService()
     return canKill;
 }
 
+int32_t MediaServiceHelper::ProxyForFreeze(const std::set<int32_t> &pidList, bool isProxy)
+{
+    return MediaServiceFactory::GetInstance().ProxyForFreeze(pidList, isProxy);
+}
+
+int32_t MediaServiceHelper::ResetAllProxy()
+{
+    return MediaServiceFactory::GetInstance().ResetAllProxy();
+}
 } // namespace Media
 } // namespace OHOS
