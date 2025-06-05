@@ -293,7 +293,7 @@ public:
         return;
     }
 
-    virtual void OnDisplaySelected(ScreenCaptureUserSelectionInfo selectionInfo)
+    virtual void OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo)
     {
         (void)selectionInfo;
         return;

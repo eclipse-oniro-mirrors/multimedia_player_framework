@@ -127,7 +127,7 @@ public:
         screenCaptureObj->selectionInfo_ = new(std::nothrow) ScreenCaptureUserSelectionObject(selectionInfo);
         CHECK_AND_RETURN_LOG(screenCaptureObj->selectionInfo_ != nullptr,
             "failed to new ScreenCaptureUserSelectionObject");
-        callback_(capture, reinterpret_cast<OH_AVScreenCapture_UserSelectionInfo>(screenCaptureObj->selectionInfo_),
+        callback_(capture, reinterpret_cast<OH_AVScreenCapture_UserSelectionInfo*>(screenCaptureObj->selectionInfo_),
             userData_);
     }
 
@@ -497,6 +497,7 @@ private:
     std::shared_ptr<NativeScreenCaptureDataCallback> dataCallback_ = nullptr;
     std::shared_ptr<NativeScreenCaptureDisplaySelectedCallback> displaySelectedCallback_ = nullptr;
     std::shared_ptr<NativeScreenCaptureContentChangedCallback> contentChangedCallback_ = nullptr;
+    std::shared_ptr<NativeScreenCaptureUserSelectedCallback> userSelectedCallback_ = nullptr;
 };
 
 struct ScreenCaptureContentFilterObject : public OH_AVScreenCapture_ContentFilter {
@@ -1279,6 +1280,6 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetDisplayIdSelected(OH_AVScreenC
     CHECK_AND_RETURN_RET_LOG(selectionObj != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL,
         "selectionObj is null");
     *displayId = selectionObj->userSelectionInfo_.displayId;
-    MEDIA_LOGD("OH_AVScreenCapture_GetDisplayIdSelected type: %{public}" PRIu64, *displayId);
+    MEDIA_LOGD("OH_AVScreenCapture_GetDisplayIdSelected displayId: %{public}" PRIu64, *displayId);
     return AV_SCREEN_CAPTURE_ERR_OK;
 }

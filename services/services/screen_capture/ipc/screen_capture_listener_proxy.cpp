@@ -222,7 +222,7 @@ void ScreenCaptureListenerCallback::OnCaptureContentChanged(AVScreenCaptureConte
     }
 }
 
-void ScreenCaptureListenerCallback::OnDisplaySelected(ScreenCaptureUserSelectionInfo selectionInfo)
+void ScreenCaptureListenerCallback::OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances isStopped:%{public}d", FAKE_POINTER(this), isStopped_.load());
     CHECK_AND_RETURN(isStopped_ == false);
