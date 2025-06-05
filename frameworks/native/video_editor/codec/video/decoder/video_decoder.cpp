@@ -53,14 +53,14 @@ VEFError VideoDecoder::Init(OH_AVFormat* videoFormat)
     std::string dumpInfo = OH_AVFormat_DumpInfo(videoFormat);
     MEDIA_LOGI("[%{public}s] initializing decoder, format: %{public}s.", logTag_.c_str(), dumpInfo.c_str());
     std::regex re("codec_profile = (\\d+)");
-	std::smatch match;
-	if (std::regex_search(dumpInfo, match, re)) {
-		std::string bitType = match[1].str();
-		if (bitType == "1") {
-			MEDIA_LOGE("[%{public}s] 10bit mode is 1, don't match.", logTag_.c_str());
-			return VEFError::ERR_INTERNAL_ERROR;
-		}
-	}
+    std::smatch match;
+    if (std::regex_search(dumpInfo, match, re)) {
+        std::string bitType = match[1].str();
+        if (bitType == "1") {
+            MEDIA_LOGE("[%{public}s] 10bit mode is 1, don't match.", logTag_.c_str());
+            return VEFError::ERR_INTERNAL_ERROR;
+        }
+    }
     const char* mime = nullptr;
     if (!OH_AVFormat_GetStringValue(videoFormat, OH_MD_KEY_CODEC_MIME, &mime)) {
         MEDIA_LOGE("[%{public}s] get [%{public}s] from video format failed.", logTag_.c_str(), OH_MD_KEY_CODEC_MIME);

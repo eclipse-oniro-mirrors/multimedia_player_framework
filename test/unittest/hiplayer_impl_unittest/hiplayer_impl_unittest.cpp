@@ -448,7 +448,7 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SetSeiMessageListener_001, TestSize.Lev
 
 // @tc.name     Test IsInValidSeekTime API
 // @tc.number   PHIUT_IsInValidSeekTime_001
-// @tc.desc     Test if (seekTime > endTimeWithMode_) 
+// @tc.desc     Test if (seekTime > endTimeWithMode_)
 HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsInValidSeekTime_001, TestSize.Level0)
 {
     ASSERT_NE(hiplayer_, nullptr);
@@ -553,7 +553,7 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SetVolumeMode_002, TestSize.Level0)
 
 // @tc.name     Test InnerSelectTrack API
 // @tc.number   PHIUT_InnerSelectTrack_001
-// @tc.desc     Test if (IsSubtitleMime(mime))else if (IsVideoMime(mime)) 
+// @tc.desc     Test if (IsSubtitleMime(mime))else if (IsVideoMime(mime))
 HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_InnerSelectTrack_001, TestSize.Level0)
 {
     ASSERT_NE(hiplayer_, nullptr);
