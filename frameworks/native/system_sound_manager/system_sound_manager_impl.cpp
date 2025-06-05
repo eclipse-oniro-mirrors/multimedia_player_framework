@@ -1820,9 +1820,7 @@ int32_t SystemSoundManagerImpl::AddCustomizedTone(const std::shared_ptr<DataShar
     DataShareValuesBucket valuesBucket;
     valuesBucket.Put(RINGTONE_COLUMN_DISPLAY_NAME, static_cast<string>(displayName_));
     valuesBucket.Put(RINGTONE_COLUMN_TITLE, static_cast<string>(toneAttrs->GetTitle()));
-    if (toneAttrs->GetMediaType() == RINGTONE_MEDIA_TYPE_INVALID) {
-        valuesBucket.Put(RINGTONE_COLUMN_MEDIA_TYPE, 0);
-    } else {
+    if (toneAttrs->GetMediaType() != RINGTONE_MEDIA_TYPE_INVALID) {
         valuesBucket.Put(RINGTONE_COLUMN_MEDIA_TYPE, static_cast<int>(toneAttrs->GetMediaType()));
     }
     valuesBucket.Put(RINGTONE_COLUMN_MIME_TYPE, static_cast<string>(mimeType_));
@@ -1865,9 +1863,7 @@ bool SystemSoundManagerImpl::DeleteCustomizedTone(const std::shared_ptr<DataShar
     DataShare::DataSharePredicates predicates;
     predicates.EqualTo(RINGTONE_COLUMN_DISPLAY_NAME, static_cast<string>(displayName_));
     predicates.EqualTo(RINGTONE_COLUMN_TITLE, static_cast<string>(toneAttrs->GetTitle()));
-    if (toneAttrs->GetMediaType() == RINGTONE_MEDIA_TYPE_INVALID) {
-        predicates.EqualTo(RINGTONE_COLUMN_MEDIA_TYPE, 0);
-    } else {
+    if (toneAttrs->GetMediaType() != RINGTONE_MEDIA_TYPE_INVALID) {
         predicates.EqualTo(RINGTONE_COLUMN_MEDIA_TYPE, static_cast<int>(toneAttrs->GetMediaType()));
     }
     predicates.EqualTo(RINGTONE_COLUMN_MIME_TYPE, static_cast<string>(mimeType_));
