@@ -24,7 +24,7 @@ namespace Media {
 class AudioHapticSoundNormalImpl : public AudioHapticSound,
     public std::enable_shared_from_this<AudioHapticSoundNormalImpl> {
 public:
-    AudioHapticSoundNormalImpl(const std::string &audioUri, const bool &muteAudio,
+    AudioHapticSoundNormalImpl(const AudioSource& audioSource, const bool &muteAudio,
         const AudioStandard::StreamUsage &streamUsage);
     ~AudioHapticSoundNormalImpl();
 
@@ -49,13 +49,14 @@ private:
     int32_t LoadAVPlayer();
     int32_t ResetAVPlayer();
     void ReleaseAVPlayer();
+    int32_t OpenAudioSource();
 
-    std::string audioUri_ = "";
+    AudioSource audioSource_;
     bool muteAudio_ = false;
     AudioStandard::StreamUsage streamUsage_ = AudioStandard::STREAM_USAGE_UNKNOWN;
     float volume_ = 1.0f;
     bool loop_ = false;
-    std::string configuredAudioUri_ = "";
+    AudioSource configuredAudioSource_;
     AudioHapticPlayerState playerState_ = AudioHapticPlayerState::STATE_NEW;
 
     std::weak_ptr<AudioHapticSoundCallback> audioHapticPlayerCallback_;

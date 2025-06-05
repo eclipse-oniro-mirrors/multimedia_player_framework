@@ -23,6 +23,7 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, "AudioHapticPlayerImpl"};
+constexpr int32_t INVALID_FD = -1;
 }
 
 namespace OHOS {
@@ -46,7 +47,7 @@ std::shared_ptr<AudioHapticPlayer> AudioHapticPlayerFactory::CreateAudioHapticPl
 std::mutex AudioHapticSound::createAudioHapticSoundMutex_;
 
 std::shared_ptr<AudioHapticSound> AudioHapticSound::CreateAudioHapticSound(
-    const AudioLatencyMode &latencyMode, const std::string &audioUri, const bool &muteAudio,
+    const AudioLatencyMode &latencyMode, const AudioSource& audioSource, const bool &muteAudio,
     const AudioStandard::StreamUsage &streamUsage, const bool &parallelPlayFlag)
 {
     if (latencyMode != AUDIO_LATENCY_MODE_NORMAL && latencyMode != AUDIO_LATENCY_MODE_FAST) {
@@ -58,11 +59,11 @@ std::shared_ptr<AudioHapticSound> AudioHapticSound::CreateAudioHapticSound(
     std::shared_ptr<AudioHapticSound> audioHapticSound = nullptr;
     switch (latencyMode) {
         case AUDIO_LATENCY_MODE_NORMAL:
-            audioHapticSound = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+            audioHapticSound = std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
             break;
         case AUDIO_LATENCY_MODE_FAST:
             audioHapticSound = std::make_shared<AudioHapticSoundLowLatencyImpl>(
-                audioUri, muteAudio, streamUsage, parallelPlayFlag);
+                audioSource, muteAudio, streamUsage, parallelPlayFlag);
             break;
         default:
             MEDIA_LOGE("Invalid param: the latency mode %{public}d is unsupported.", latencyMode);
@@ -74,8 +75,7 @@ std::shared_ptr<AudioHapticSound> AudioHapticSound::CreateAudioHapticSound(
 AudioHapticPlayerImpl::AudioHapticPlayerImpl()
     : latencyMode_(AUDIO_LATENCY_MODE_NORMAL),
       muteAudio_(false),
-      muteHaptic_(false),
-      audioUri_("")
+      muteHaptic_(false)
 {
 }
 
@@ -92,7 +92,7 @@ void AudioHapticPlayerImpl::SetPlayerParam(const AudioHapticPlayerParam &param)
     muteAudio_ = param.options.muteAudio;
     muteHaptic_ = param.options.muteHaptics;
     parallelPlayFlag_ = param.options.parallelPlayFlag;
-    audioUri_ = param.audioUri;
+    audioSource_ = param.audioSource;
     hapticSource_ = param.hapticSource;
     latencyMode_ = param.latencyMode;
     streamUsage_ = param.streamUsage;
@@ -102,7 +102,7 @@ void AudioHapticPlayerImpl::LoadPlayer()
 {
     // Load audio player
     audioHapticSound_ = AudioHapticSound::CreateAudioHapticSound(
-        latencyMode_, audioUri_, muteAudio_, streamUsage_, parallelPlayFlag_);
+        latencyMode_, audioSource_, muteAudio_, streamUsage_, parallelPlayFlag_);
     CHECK_AND_RETURN_LOG(audioHapticSound_ != nullptr, "Failed to create audio haptic sound instance");
     soundCallback_ = std::make_shared<AudioHapticSoundCallbackImpl>(shared_from_this());
     (void)audioHapticSound_->SetAudioHapticSoundCallback(soundCallback_);
@@ -129,7 +129,8 @@ int32_t AudioHapticPlayerImpl::Prepare()
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
     CHECK_AND_RETURN_RET_LOG(audioHapticSound_ != nullptr, MSERR_INVALID_OPERATION,
         "Audio haptic sound is nullptr");
-    CHECK_AND_RETURN_RET_LOG(audioUri_ != "", MSERR_OPEN_FILE_FAILED, "Invalid val: audio uri is empty");
+    CHECK_AND_RETURN_RET_LOG(audioSource_.audioUri != "" || audioSource_.fd > INVALID_FD,
+        MSERR_OPEN_FILE_FAILED, "Invalid val: audioSource");
     result = audioHapticSound_->PrepareSound();
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result, "Failed to load audio file");
 
@@ -264,6 +265,25 @@ int32_t AudioHapticPlayerImpl::SetVolume(float volume)
     }
 
     return result;
+}
+
+bool AudioHapticPlayerImpl::IsVibrationIntensityAdjustmentSupported()
+{
+    MEDIA_LOGI("AudioHapticPlayerImpl::IsVibrationIntensityAdjustmentSupported");
+    std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
+    if (audioHapticVibrator_ != nullptr) {
+        return audioHapticVibrator_->IsHdHapticSupported();
+    }
+    return false;
+}
+
+void AudioHapticPlayerImpl::EnableHapticsInSlientMode(bool enable)
+{
+    MEDIA_LOGI("AudioHapticPlayerImpl::EnableHapticsInSlientMode %{public}d", enable);
+    std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
+    if (audioHapticVibrator_ != nullptr) {
+        audioHapticVibrator_->EnableHapticsInSlientMode(enable);
+    }
 }
 
 int32_t AudioHapticPlayerImpl::SetHapticIntensity(float intensity)
