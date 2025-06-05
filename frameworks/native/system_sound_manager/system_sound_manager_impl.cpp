@@ -1972,7 +1972,7 @@ std::string SystemSoundManagerImpl::CustomizedToneWriteFile(const std::shared_pt
 }
 
 int32_t SystemSoundManagerImpl::RemoveCustomizedTone(
-const std::shared_ptrAbilityRuntime::Context &context, const std::string &uri)
+    const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri)
 {
     MEDIA_LOGI("RemoveCustomizedTone: uri %{public}s", uri.c_str());
     std::lock_guard<std::mutex> lock(uriMutex_);
@@ -2975,7 +2975,7 @@ void SystemSoundManagerImpl::SendCustomizedToneEvent(bool flag, const std::share
     MEDIA_LOGI("SendCustomizedToneEvent start.");
     auto now = std::chrono::system_clock::now();
     time_t rawtime = std::chrono::system_clock::to_time_t(now);
-    std::shared_ptrMedia::MediaMonitor::EventBean bean = std::make_shared<Media::MediaMonitor::EventBean>(
+    std::shared_ptr<Media::MediaMonitor::EventBean> bean = std::make_shared<Media::MediaMonitor::EventBean>(
         Media::MediaMonitor::ModuleId::AUDIO, Media::MediaMonitor::EventId::CUSTOMIZED_TONE,
         Media::MediaMonitor::EventType::BEHAVIOR_EVENT);
     bean->Add("FLAG", flag);
