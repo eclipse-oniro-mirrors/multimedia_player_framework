@@ -488,8 +488,11 @@ void MediaClient::DoMediaServerDied()
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("DoMediaServerDied");
     if (mediaProxy_ != nullptr) {
-        (void)mediaProxy_->AsObject()->RemoveDeathRecipient(deathRecipient_);
-        mediaProxy_ = nullptr;
+        sptr<IRemoteObject> object = mediaProxy_->AsObject();
+        if (object != nullptr) {
+            (void)mediaProxy_->AsObject()->RemoveDeathRecipient(deathRecipient_);
+            mediaProxy_ = nullptr;
+        }
     }
     listenerStub_ = nullptr;
     deathRecipient_ = nullptr;
