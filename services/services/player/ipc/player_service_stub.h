@@ -109,6 +109,7 @@ public:
     int32_t EnableReportMediaProgress(bool enable) override;
     int32_t EnableReportAudioInterrupt(bool enable) override;
     bool isFrozen_ = false;
+    int32_t ForceLoadVideo(bool status) override;
 protected:
     PlayerServiceStub();
     virtual int32_t Init();
@@ -184,6 +185,7 @@ private:
     int32_t EnableCameraPostprocessing(MessageParcel &data, MessageParcel &reply);
     int32_t EnableReportMediaProgress(MessageParcel &data, MessageParcel &reply);
     int32_t EnableReportAudioInterrupt(MessageParcel &data, MessageParcel &reply);
+    int32_t ForceLoadVideo(MessageParcel &data, MessageParcel &reply);
 
     int32_t ReadMediaStreamListFromMessageParcel(
         MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource);

@@ -96,6 +96,7 @@ public:
     HiviewDFX::HiTraceId GetTraceId();
     int32_t SetReopenFd(int32_t fd) override;
     int32_t EnableCameraPostprocessing() override;
+    int32_t ForceLoadVideo(bool status) override;
 private:
     void ResetSeekVariables();
     void HandleSeekDoneInfo(PlayerOnInfoType type, int32_t extra);

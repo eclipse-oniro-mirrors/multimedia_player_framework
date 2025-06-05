@@ -1081,6 +1081,11 @@ public:
     {
         return 0;
     }
+
+    virtual int32_t ForceLoadVideo(bool /* status */)
+    {
+        return 0;
+    }
 };
 
 class __attribute__((visibility("default"))) PlayerFactory {

@@ -95,6 +95,7 @@ public:
     int32_t EnableCameraPostprocessing() override;
     int32_t EnableReportMediaProgress(bool enable) override;
     int32_t EnableReportAudioInterrupt(bool enable) override;
+    int32_t ForceLoadVideo(bool status) override;
 
 private:
     int32_t CreateListenerObject();
