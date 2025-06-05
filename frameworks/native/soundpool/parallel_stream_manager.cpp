@@ -131,6 +131,7 @@ void ParallelStreamManager::DelSoundId(int32_t soundId)
     std::lock_guard lock(globalIdMutex_);
     for (auto it = globalIdVector_.begin(); it !=  globalIdVector_.end();) {
         if (it->first == soundId) {
+            OHOS::Media::AudioRendererManager::GetInstance().DelAudioRenderer(it->second);
             it = globalIdVector_.erase(it);
         } else {
             ++it;

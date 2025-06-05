@@ -108,6 +108,27 @@ void AudioRendererManager::RemoveOldAudioRenderer()
     }
 }
 
+void AudioRendererManager::DelAudioRenderer(int32_t globalId)
+{
+    std::lock_guard<std::mutex> lock(renderMgrMutex_);
+    for (auto it = audioRendererVector_.begin(); it != audioRendererVector_.end();) {
+        if (it->first == globalId) {
+            SoundPoolXCollie soundPoolXCollie("AudioRenderer::DelAudioRenderer time out",
+            [](void *) {
+                MEDIA_LOGI("AudioRenderer::DelAudioRenderer time out");
+            });
+            (it->second)->Release();
+            soundPoolXCollie.CancelXCollieTimer();
+            it = audioRendererVector_.erase(it);
+            break;
+        } else {
+            ++it;
+        }
+    }
+    MEDIA_LOGI("AudioRendererManager::DelAudioRenderer audioRendererVector_ size:%{public}zu",
+        audioRendererVector_.size());
+}
+
 void AudioRendererManager::SetParallelManager(std::weak_ptr<ParallelStreamManager> parallelManager)
 {
     std::lock_guard<std::mutex> lock(renderMgrMutex_);

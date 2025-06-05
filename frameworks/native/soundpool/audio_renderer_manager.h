@@ -42,6 +42,7 @@ public:
     void RemoveOldAudioRenderer();
     void SetParallelManager(std::weak_ptr<ParallelStreamManager> parallelManager);
     void SetStreamIDManager(std::weak_ptr<StreamIDManager> streamIDManager);
+    void DelAudioRenderer(int32_t globalId);
 
 private:
     AudioRendererManager() {}
