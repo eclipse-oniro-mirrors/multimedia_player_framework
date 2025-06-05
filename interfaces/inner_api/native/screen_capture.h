@@ -251,6 +251,11 @@ typedef struct ScreenCaptureRect {
     int32_t height;
 } ScreenCaptureRect;
 
+struct ScreenCaptureUserSelectionInfo {
+    int32_t selectType;
+    uint64_t displayId;
+};
+
 class ScreenCaptureCallBack {
 public:
     virtual ~ScreenCaptureCallBack() = default;
@@ -285,6 +290,12 @@ public:
     {
         (void)event;
         (void)area;
+        return;
+    }
+
+    virtual void OnDisplaySelected(ScreenCaptureUserSelectionInfo selectionInfo)
+    {
+        (void)selectionInfo;
         return;
     }
 };

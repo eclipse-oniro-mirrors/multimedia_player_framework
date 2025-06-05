@@ -54,6 +54,17 @@ int32_t ScreenCaptureListenerStub::OnCaptureContentChangedStub(MessageParcel &da
     return MSERR_OK;
 }
 
+int32_t ScreenCaptureListenerStub::OnUserSelectedStub(MessageParcel &data, MessageParcel &reply)
+{
+    (void) reply;
+    MEDIA_LOGI("ScreenCaptureListenerStub::OnUserSelectedStub start");
+    ScreenCaptureUserSelectionInfo selectionInfo;
+    selectionInfo.selectType = data.ReadInt32();
+    selectionInfo.displayId = data.ReadUint64();
+    OnUserSelected(selectionInfo);
+    return MSERR_OK;
+}
+
 int ScreenCaptureListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {
@@ -94,6 +105,9 @@ int ScreenCaptureListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &dat
         case ScreenCaptureListenerMsg::ON_CONTENT_CHANGED: {
             MEDIA_LOGD("ScreenCaptureListenerMsg::ON_CONTENT_CHANGED");
             return OnCaptureContentChangedStub(data, reply);
+        }
+        case ScreenCaptureListenerMsg::ON_USER_SELECTED: {
+            return OnUserSelectedStub(data, reply);
         }
         default: {
             MEDIA_LOGE("default case, need check ScreenCaptureListenerStub");
@@ -147,6 +161,13 @@ void ScreenCaptureListenerStub::OnCaptureContentChanged(AVScreenCaptureContentCh
 {
     if (callback_ != nullptr) {
         callback_->OnCaptureContentChanged(event, area);
+    }
+}
+
+void ScreenCaptureListenerStub::OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo)
+{
+    if (callback_ != nullptr) {
+        callback_->OnUserSelected(selectionInfo);
     }
 }
 } // namespace Media

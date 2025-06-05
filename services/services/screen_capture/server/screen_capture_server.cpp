@@ -1807,6 +1807,11 @@ void ScreenCaptureServer::PostStartScreenCaptureSuccessAction()
     NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STARTED);
     if (displayScreenId_ != SCREEN_ID_INVALID) {
         NotifyDisplaySelected(displayScreenId_);
+        ScreenCaptureUserSelectionInfo selectionInfo;
+        selectionInfo.displayId = displayScreenId_;
+        selectionInfo.selectType = captureConfig_.captureMode == CaptureMode::CAPTURE_SPECIFIED_WINDOW ?
+            SELECT_TYPE_WINDOW : SELECT_TYPE_SCREEN;
+        NotifyUserSelected(selectionInfo);
     }
 }
 
@@ -1844,6 +1849,15 @@ void ScreenCaptureServer::NotifyDisplaySelected(uint64_t displayId)
     if (screenCaptureCb_ != nullptr) {
         MEDIA_LOGD("NotifyDisplaySelected displayId: (%{public}" PRIu64 ")", displayId);
         screenCaptureCb_->OnDisplaySelected(displayId);
+    }
+}
+
+void ScreenCaptureServer::NotifyUserSelected(ScreenCaptureUserSelectionInfo selectionInfo)
+{
+    if (screenCaptureCb_ != nullptr) {
+        MEDIA_LOGI("NotifyUserSelected displayId: %{public}" PRIu64 ", selectType: %{public}d",
+            selectionInfo.displayId, selectionInfo.selectType);
+        screenCaptureCb_->OnUserSelected(selectionInfo);
     }
 }
 

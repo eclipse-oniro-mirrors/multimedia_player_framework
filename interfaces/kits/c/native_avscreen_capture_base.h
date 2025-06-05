@@ -568,6 +568,28 @@ typedef struct OH_AVScreenCapture_CaptureStrategy OH_AVScreenCapture_CaptureStra
  */
 typedef void (*OH_AVScreenCapture_OnCaptureContentChanged)(OH_AVScreenCapture* capture,
     OH_AVScreenCaptureContentChangedEvent event, OH_Rect* area, void *userData);
+
+/**
+ * @brief Initialization of OH_AVScreenCapture_UserSelectionInfo
+ * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+ *
+ * @since 20
+ */
+typedef struct OH_AVScreenCapture_UserSelectionInfo OH_AVScreenCapture_UserSelectionInfo;
+
+/**
+* @brief When the user selects parameters in the authorization interface (selection interface),
+*  the function interface returns the parameters to the application.
+* @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+* @param {OH_AVScreenCapture*} capture Pointer to an OH_AVScreenCapture instance
+* @param {OH_AVScreenCapture_UserSelectionInfo*} selections The recording parameter information
+*        selected by the user on the authorization interface
+* @param {void*} userData Pointer to user specific data
+*
+* @since 20
+*/
+typedef void (*OH_AVScreenCapture_OnUserSelected)(OH_AVScreenCapture* capture,
+    OH_AVScreenCapture_UserSelectionInfo* selections, void *userData);
 #ifdef __cplusplus
 }
 #endif
