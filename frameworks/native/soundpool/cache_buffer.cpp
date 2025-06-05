@@ -202,6 +202,8 @@ void CacheBuffer::GetAvailableAudioRenderer(const AudioStandard::AudioRendererIn
             audioRenderer_ = CreateAudioRenderer(audioRendererInfo, playParams);
         }
         MEDIA_LOGI("CacheBuffer::GetAvailableAudioRenderer CreateAudioRenderer New end");
+        CHECK_AND_RETURN_LOG(audioRenderer_ != nullptr, "Invalid CreateAudioRenderer");
+        PrepareAudioRenderer(audioRenderer_);
     }
     MEDIA_LOGI("CacheBuffer::GetAvailableAudioRenderer end");
 }
@@ -216,7 +218,6 @@ int32_t CacheBuffer::PreparePlayInner(const AudioStandard::AudioRendererInfo &au
     }
     GetAvailableAudioRenderer(audioRendererInfo, playParams);
     CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL, "Invalid GetAvailableAudioRenderer");
-    PrepareAudioRenderer(audioRenderer_);
     DealPlayParamsBeforePlay(playParams);
     return MSERR_OK;
 }
