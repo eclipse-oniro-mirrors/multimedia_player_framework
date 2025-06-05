@@ -135,7 +135,7 @@ public:
     void OnStateChange(AVScreenCaptureStateCode stateCode);
     void OnDisplaySelected(uint64_t displayId);
     void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area);
-    void OnDisplaySelected(ScreenCaptureUserSelectionInfo selectionInfo);
+    void OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo);
     void Stop();
 };
 } // Media
