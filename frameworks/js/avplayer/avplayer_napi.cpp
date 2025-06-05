@@ -1326,8 +1326,6 @@ napi_value AVPlayerNapi::JsSetUrl(napi_env env, napi_callback_info info)
     return result;
 }
 
-
-
 napi_value AVPlayerNapi::JsSetStartFrameRateOptEnabled(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVPlayerNapi::SetStartFrameRateOptEnabled");

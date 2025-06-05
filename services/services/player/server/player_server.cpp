@@ -259,7 +259,8 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     std::shared_ptr<IPlayerEngineObs> obs = shared_from_this();
     ret = playerEngine_->SetObs(obs);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetObs Failed!");
-    ret = playerEngine_->SetMaxAmplitudeCbStatus(playerProducer_ == PlayerProducer::NAPI ? maxAmplitudeCbStatus_ : true);
+    ret = playerEngine_->SetMaxAmplitudeCbStatus(
+        playerProducer_ == PlayerProducer::NAPI ? maxAmplitudeCbStatus_ : true);
     ret = playerEngine_->SetSeiMessageCbStatus(seiMessageCbStatus_, payloadTypes_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMaxAmplitudeCbStatus Failed!");
 
@@ -2233,7 +2234,7 @@ int32_t PlayerServer::SetSeiMessageCbStatus(bool status, const std::vector<int32
 uint32_t PlayerServer::GetMemoryUsage()
 {
     int32_t version = apiVersion_.load();
-    CHECK_AND_RETURN_RET_LOG(version >= MEMORY_USAGE_VERSION_ISOLATION, 0,"api version is low %{public}d", version);
+    CHECK_AND_RETURN_RET_LOG(version >= MEMORY_USAGE_VERSION_ISOLATION, 0, "api version is low %{public}d", version);
     return totalMemoryUage_.load();
 }
 

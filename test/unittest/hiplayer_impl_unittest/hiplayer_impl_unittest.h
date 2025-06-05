@@ -213,10 +213,10 @@ public:
 class MockMediaSource : public Plugins::MediaSource {
 public:
     explicit MockMediaSource(std::string uri) : MediaSource(std::move(uri)) {}
-    MockMediaSource(std::string uri, std::map<std::string, std::string> header):
-        MediaSource(std::move(uri), std::move(header)) {}
-    explicit MockMediaSource(std::shared_ptr<IMediaDataSource> dataSrc):
-        MediaSource(std::move(dataSrc)) {}
+    MockMediaSource(std::string uri, std::map<std::string, std::string> header)
+        : MediaSource(std::move(uri), std::move(header)) {}
+    explicit MockMediaSource(std::shared_ptr<IMediaDataSource> dataSrc)
+        : MediaSource(std::move(dataSrc)) {}
     ~MockMediaSource() = default;
     MOCK_CONST_METHOD0(GetSourceType, SourceType());
     MOCK_CONST_METHOD0(GetSourceUri, const std::string&());
@@ -235,7 +235,7 @@ public:
 };
 class MockDemuxerFilter : public DemuxerFilter {
 public:
-    explicit MockDemuxerFilter(std::string name, FilterType type):DemuxerFilter(name, type){}
+    explicit MockDemuxerFilter(std::string name, FilterType type):DemuxerFilter(name, type) {}
     ~MockDemuxerFilter() = default;
 
     MOCK_METHOD(void, Init, (const std::shared_ptr<EventReceiver> &receiver,
@@ -345,7 +345,7 @@ public:
 class MockAudioSinkFilter : public AudioSinkFilter {
 public:
     explicit MockAudioSinkFilter(const std::string& name,
-        FilterType filterType = FilterType::FILTERTYPE_ASINK):AudioSinkFilter(name, filterType){}
+        FilterType filterType = FilterType::FILTERTYPE_ASINK):AudioSinkFilter(name, filterType) {}
     ~MockAudioSinkFilter() = default;
     MOCK_METHOD(void, Init, (const std::shared_ptr<EventReceiver> &receiver,
         const std::shared_ptr<FilterCallback> &callback), ());
@@ -393,7 +393,7 @@ public:
 };
 class MockAudioDecoderFilter : public AudioDecoderFilter {
 public:
-    explicit MockAudioDecoderFilter(std::string name, FilterType type):AudioDecoderFilter(name, type){}
+    explicit MockAudioDecoderFilter(std::string name, FilterType type):AudioDecoderFilter(name, type) {}
     ~MockAudioDecoderFilter() = default;
     MOCK_METHOD(Status, DoPrepare, (), ());
     MOCK_METHOD(Status, DoStart, (), ());
