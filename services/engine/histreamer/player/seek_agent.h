@@ -45,8 +45,8 @@ public:
 private:
     Status SetBufferFilledListener();
     Status RemoveBufferFilledListener();
-    Status GetAllTrackInfo(uint32_t &videoTrackId, std::vector<uint32_t> &audioTrackIds);
-    bool GetAudioTrackId(uint32_t &audioTrackId);
+    Status GetAllTrackInfo(int32_t &videoTrackId, std::vector<int32_t> &audioTrackIds);
+    bool GetAudioTrackId(int32_t &audioTrackId);
 
     std::shared_ptr<Pipeline::DemuxerFilter> demuxer_;
     Mutex targetArrivedLock_;
@@ -58,7 +58,7 @@ private:
     int64_t mediaStartPts_{0};
     bool isInterruptNeeded_{false};
     std::atomic<bool> isSeeking_{false};
-    std::map<uint32_t, sptr<AVBufferQueueProducer>> producerMap_;
+    std::map<int32_t, sptr<AVBufferQueueProducer>> producerMap_;
     std::map<uint32_t, sptr<IBrokerListener>> listenerMap_;
 
     static constexpr uint32_t WAIT_MAX_MS = 4000;
