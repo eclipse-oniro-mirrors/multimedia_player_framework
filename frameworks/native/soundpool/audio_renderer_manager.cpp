@@ -120,6 +120,7 @@ void AudioRendererManager::DelAudioRenderer(int32_t globalId)
             (it->second)->Release();
             soundPoolXCollie.CancelXCollieTimer();
             it = audioRendererVector_.erase(it);
+            break;
         } else {
             ++it;
         }
