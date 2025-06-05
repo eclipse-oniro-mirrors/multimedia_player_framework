@@ -234,14 +234,17 @@ private:
     void SetExtRingtoneUri(const std::string &uri, const std::string &title,
         int32_t ringType, int32_t toneType, int32_t changedRows);
     int32_t SetExtRingToneUri(const std::string &uri, const std::string &title, int32_t toneType);
-    void EventWriteForAddCustomizedTone(const std::shared_ptr<AbilityRuntime::Context> &context,
-        const std::shared_ptr<ToneAttrs> &toneAttrs, off_t fileSize, int result);
+    void SendCustomizedToneEvent(bool flag, const std::shared_ptr &toneAttrs, off_t fileSize,
+        std::string mimeType, int result);
     std::string CustomizedToneWriteFile(const std::shared_ptr<AbilityRuntime::Context> &context,
         std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper, const std::shared_ptr<ToneAttrs> &toneAttrs,
         ParamsForWriteFile &paramsForWriteFile);
     void OpenFilesInList(std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
         const std::vector<std::string> &uriList,
         std::vector<std::tuple<std::string, int64_t, SystemSoundError>> &resultOfOpenList);
+    int32_t DoRemove(std::shared_ptrDataShare::DataShareHelper &dataShareHelper, const std::string &uri,
+        off_t fileSize);
+    std::string GetBundleName();
 
     std::string systemSoundPath_ = "";
     std::mutex uriMutex_;

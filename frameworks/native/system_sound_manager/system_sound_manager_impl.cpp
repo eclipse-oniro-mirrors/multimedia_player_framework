@@ -1949,7 +1949,7 @@ std::string SystemSoundManagerImpl::CustomizedToneWriteFile(const std::shared_pt
         MEDIA_LOGE("AddCustomizedTone: open error is %{public}s", strerror(errno));
         DeleteCustomizedTone(dataShareHelper, toneAttrs);
         dataShareHelper->Release();
-        EventWriteForAddCustomizedTone(context, toneAttrs, paramsForWriteFile.fileSize, ERROR);
+        SendCustomizedToneEvent(true, toneAttrs, paramsForWriteFile.fileSize, mimeType_, ERROR);
         return "";
     }
     char buffer[4096];
@@ -1967,31 +1967,49 @@ std::string SystemSoundManagerImpl::CustomizedToneWriteFile(const std::shared_pt
     close(paramsForWriteFile.srcFd);
     close(dstFd);
     dataShareHelper->Release();
-    EventWriteForAddCustomizedTone(context, toneAttrs, paramsForWriteFile.fileSize, SUCCESS);
+    SendCustomizedToneEvent(true, toneAttrs, paramsForWriteFile.fileSize, mimeType_, SUCCESS);
     return toneAttrs->GetUri();
 }
 
 int32_t SystemSoundManagerImpl::RemoveCustomizedTone(
-    const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri)
+const std::shared_ptrAbilityRuntime::Context &context, const std::string &uri)
 {
     MEDIA_LOGI("RemoveCustomizedTone: uri %{public}s", uri.c_str());
-    std::lock_guard<std::mutex> lock(uriMutex_);
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
-        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    std::lock_guardstd::mutex lock(uriMutex_);
+    int32_t srcFd = open(uri.c_str(), O_RDONLY);
+    off_t fileSize = 0;
+        if (srcFd < 0) {
+        MEDIA_LOGE("AddCustomizedTone: fd open error is %{public}s", strerror(errno));
+    } else {
+        fileSize = lseek(srcFd, 0, SEEK_END);
+        close(srcFd);
+    }
+    std::shared_ptrDataShare::DataShareHelper dataShareHelper =
+    SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, ERROR,
         "Create dataShare failed, datashare or ringtone library error.");
+    return DoRemove(dataShareHelper, uri, fileSize);
+}
+
+int32_t SystemSoundManagerImpl::DoRemove(std::shared_ptrDataShare::DataShareHelper &dataShareHelper,
+const std::string &uri, off_t fileSize)
+{
+    std::shared_ptr toneAttrs =
+    std::make_shared("", "", "", CUSTOMISED, TONE_CATEGORY_RINGTONE);
     int32_t changedRows = TYPEERROR;
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
     queryPredicates.EqualTo(RINGTONE_COLUMN_DATA, uri);
     auto resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
-    auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
+    auto results = make_unique<RingtoneFetchResult>(move(resultSet));
     CHECK_AND_RETURN_RET_LOG(results != nullptr, ERROR, "query failed, ringtone library error.");
-    unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
+    unique_ptr ringtoneAsset = results->GetFirstObject();
+    std::string mimeType = "";
     if (ringtoneAsset == nullptr) {
         MEDIA_LOGE("RemoveCustomizedTone: tone of uri is not in the ringtone library!");
         resultSet == nullptr ? : resultSet->Close();
         dataShareHelper->Release();
+        SendCustomizedToneEvent(false, toneAttrs, fileSize, mimeType, ERROR);
         return ERROR;
     }
     while ((ringtoneAsset != nullptr) &&
@@ -1999,6 +2017,9 @@ int32_t SystemSoundManagerImpl::RemoveCustomizedTone(
         ringtoneAsset = results->GetNextObject();
     }
     if (ringtoneAsset != nullptr) {
+        toneAttrs->SetCategory(ringtoneAsset->GetToneType());
+        toneAttrs->SetMediaType(static_cast(ringtoneAsset->GetMediaType()));
+        mimeType = ringtoneAsset->GetMimeType();
         DataShare::DataSharePredicates deletePredicates;
         deletePredicates.SetWhereClause(RINGTONE_COLUMN_TONE_ID + " = ? ");
         deletePredicates.SetWhereArgs({to_string(ringtoneAsset->GetId())});
@@ -2008,6 +2029,7 @@ int32_t SystemSoundManagerImpl::RemoveCustomizedTone(
     }
     resultSet == nullptr ? : resultSet->Close();
     dataShareHelper->Release();
+    SendCustomizedToneEvent(false, toneAttrs, fileSize, mimeType, SUCCESS);
     return changedRows;
 }
 
@@ -2947,22 +2969,51 @@ std::string SystemSoundManagerImpl::OpenHapticsUri(const DatabaseTool &databaseT
     return newHapticsUri;
 }
 
-void SystemSoundManagerImpl::EventWriteForAddCustomizedTone(const std::shared_ptr<AbilityRuntime::Context> &context,
-    const std::shared_ptr<ToneAttrs> &toneAttrs, off_t fileSize, int result)
+void SystemSoundManagerImpl::SendCustomizedToneEvent(bool flag, const std::shared_ptr &toneAttrs,
+off_t fileSize, std::string mimeType, int result)
 {
-    MEDIA_LOGI("wangwei EventWriteForAddCustomizedTone");
-    // auto appInfo = context->GetApplicationInfo();
-    // struct timeval timeOfDay {};
-    // gettimeofday(&timeOfDay, NULL);
-    // int64_t currentTime = timeOfDay.tv_sec;
-    // HiSysEventWrite(HiviewDFX::HiSysEvent::Domain::MULTI_MEDIA, "ADD_CUSTOMIZED_TONE", HiviewDFX::HiSysEvent::EventType::FAULT,
-    // "APP_NAME", appInfo->bundleName.c_str(),
-    // "FILE_SIZE", fileSize,
-    // "RINGTONE_CATEGORY", toneAttrs->GetCategory(),
-    // "MEDIA_TYPE", toneAttrs->GetMediaType(),
-    // "MIME_TYPE", mimeType_,
-    // "TIMESTAMP", currentTime,
-    // "RESULT", result);
+    MEDIA_LOGI("SendCustomizedToneEvent start.");
+    auto now = std::chrono::system_clock::now();
+    time_t rawtime = std::chrono::system_clock::to_time_t(now);
+    std::shared_ptrMedia::MediaMonitor::EventBean bean = std::make_sharedMedia::MediaMonitor::EventBean(
+        Media::MediaMonitor::ModuleId::AUDIO, Media::MediaMonitor::EventId::SYSTEM_TONE_PLAYBACK,
+        Media::MediaMonitor::EventType::BEHAVIOR_EVENT);
+    bean->Add("FLAG", flag);
+    bean->Add("APP_NAME", GetBundleName());
+    bean->Add("FILE_SIZE", static_cast<int32_t>(fileSize));
+    bean->Add("RINGTONE_CATEGORY", toneAttrs->GetCategory());
+    bean->Add("MEDIA_TYPE", static_cast<uint8_t>(toneAttrs->GetMediaType()));
+    bean->Add("MIME_TYPE", mimeType);
+    bean->Add("TIMESTAMP", static_cast<uint64_t>(rawtime));
+    bean->Add("RESULT", static_cast<int8_t>(result));
+    Media::MediaMonitor::MediaMonitorManager::GetInstance().WriteLogMsg(bean);
+}
+
+std::string SystemSoundManagerImpl::GetBundleName()
+{
+    auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (samgr == nullptr) {
+        MEDIA_LOGE("Get ability manager failed.");
+        return "";
+    }
+
+    sptr<IRemoteObject> object = samgr->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (object == nullptr) {
+        MEDIA_LOGE("object is NULL.");
+        return "";
+    }
+    sptr<AppExecFwk::IBundleMgr> bms = iface_cast<AppExecFwk::IBundleMgr>(object);
+    if (bms == nullptr) {
+        MEDIA_LOGE("bundle manager service is NULL.");
+        return "";
+    }
+    std::string bundleName;
+    if (bms->GetNameForUid(getuid(), bundleName)) {
+        MEDIA_LOGE("get bundle name error.");
+        return "";
+    }
+    MEDIA_LOGI("GetBundleName: bundleName is %{public}s", bundleName.c_str());
+    return bundleName;
 }
 } // namesapce Media
 } // namespace OHOS
