@@ -42,7 +42,7 @@ public:
     int32_t GetAudioCurrentTime() override;
     HapticsMode GetHapticsMode() const override;
     void SetHapticsMode(HapticsMode hapticsMode) override;
-    void EnableHapticsInSlientMode(bool enable) override;
+    int32_t EnableHapticsInSlientMode(bool enable) override;
     bool IsHapticsIntensityAdjustmentSupported() override;
 
     void SetPlayerParam(const AudioHapticPlayerParam &param);

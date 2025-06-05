@@ -196,7 +196,11 @@ napi_value AudioHapticPlayerNapi::EnableHapticsInSilentMode(napi_env env, napi_c
         return result;
     }
 
-    audioHapticPlayerNapi->audioHapticPlayer_->EnableHapticsInSlientMode(enable);
+    int32_t ret = audioHapticPlayerNapi->audioHapticPlayer_->EnableHapticsInSlientMode(enable);
+    if (ret == NAPI_ERR_OPERATE_NOT_ALLOWED) {
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_OPERATE_NOT_ALLOWED, "operate not allowed");
+        return result;
+    }
     return result;
 }
 

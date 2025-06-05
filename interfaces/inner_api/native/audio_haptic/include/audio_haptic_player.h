@@ -148,7 +148,7 @@ public:
 
     virtual void SetHapticsMode(HapticsMode hapticsMode) = 0;
 
-    virtual void EnableHapticsInSlientMode(bool enable) = 0;
+    virtual int32_t EnableHapticsInSlientMode(bool enable) = 0;
 
     virtual bool IsHapticsIntensityAdjustmentSupported() = 0;
 };

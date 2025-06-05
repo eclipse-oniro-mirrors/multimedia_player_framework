@@ -29,6 +29,7 @@ namespace OHOS {
 namespace Media {
 const int32_t LOAD_WAIT_SECONDS = 2;
 const int32_t LOAD_WAIT_SECONDS_FOR_LOOP = 40;
+const int32_t ERR_OPERATE_NOT_ALLOWED = 5400102;
 
 std::mutex AudioHapticPlayerFactory::createPlayerMutex_;
 
@@ -275,13 +276,19 @@ bool AudioHapticPlayerImpl::IsHapticsIntensityAdjustmentSupported()
     return false;
 }
 
-void AudioHapticPlayerImpl::EnableHapticsInSlientMode(bool enable)
+int32_t AudioHapticPlayerImpl::EnableHapticsInSlientMode(bool enable)
 {
+    int32_t result = MSERR_OK;
     MEDIA_LOGI("AudioHapticPlayerImpl::EnableHapticsInSlientMode %{public}d", enable);
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
+
+    if (isVibrationRunning_.load()) {
+        return ERR_OPERATE_NOT_ALLOWED;
+    }
     if (audioHapticVibrator_ != nullptr) {
         audioHapticVibrator_->EnableHapticsInSlientMode(enable);
     }
+    return result;
 }
 
 int32_t AudioHapticPlayerImpl::SetHapticIntensity(float intensity)

@@ -102,7 +102,7 @@ bool AudioHapticCommonNapi::InitPromiseFunc(napi_env env, napi_callback_info inf
     if (argc != paramLength) {
         MEDIA_LOGE("requires %{public}u parameters", paramLength);
         std::string logMsg = "requires " + std::to_string(paramLength) + " parameters";
-        AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred, NAPI_ERR_INPUT_INVALID, logMsg);
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID, logMsg);
         return false;
     }
     status = napi_unwrap(env, thisVar, &asyncContext->objectInfo);
