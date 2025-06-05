@@ -21,6 +21,10 @@
 #include "audio_haptic_log.h"
 
 namespace {
+const int32_t SIZE = 1024;
+
+const int ERROR = -1;
+const int SUCCESS = 0;
 
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, "AudioHapticManagerNapi"};
 }

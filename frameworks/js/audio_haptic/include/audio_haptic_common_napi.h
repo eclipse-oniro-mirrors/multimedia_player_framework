@@ -41,10 +41,6 @@ const int32_t PARAM1 = 1;
 const int32_t ARGS_ZERO = 0;
 const int32_t ARGS_ONE = 1;
 const int32_t ARGS_TWO = 2;
-const int32_t SIZE = 1024;
-
-const int ERROR = -1;
-const int SUCCESS = 0;
 
 struct AsyncContext {
     napi_async_work work;
