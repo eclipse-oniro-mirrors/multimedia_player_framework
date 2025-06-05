@@ -33,12 +33,12 @@ namespace Media {
 static const std::string AUDIO_HAPTIC_PLAYER_NAPI_CLASS_NAME = "AudioHapticPlayer";
 
 struct VolumeContext : public AsyncContext {
-    float volume = -1.0f;
+    float volume = 1.0f;
     int32_t result = 0;
 };
 
 struct VibrationContext : public AsyncContext {
-    float intensity = -1.0f;
+    float intensity = 1.0f;
     int32_t result = 0;
 };
 

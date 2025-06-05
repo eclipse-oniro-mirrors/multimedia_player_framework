@@ -17,9 +17,10 @@
 
 #include "access_token.h"
 #include "accesstoken_kit.h"
-#include "audio_haptic_log.h"
 #include "ipc_skeleton.h"
 #include "tokenid_kit.h"
+
+#include "audio_haptic_log.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, "AudioHapticCommonNapi"};
@@ -62,7 +63,6 @@ bool AudioHapticCommonNapi::InitNormalFunc(napi_env env, napi_callback_info info
     napi_value thisVar = nullptr;
     size_t argc = paramLength;
     napi_status status = napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr);
-
     if (status != napi_ok || thisVar == nullptr) {
         MEDIA_LOGE("napi_get_cb_info fail");
         AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_SERVICE_DIED, "napi_get_cb_info fail");

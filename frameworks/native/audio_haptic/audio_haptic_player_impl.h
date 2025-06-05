@@ -43,7 +43,7 @@ public:
     HapticsMode GetHapticsMode() const override;
     void SetHapticsMode(HapticsMode hapticsMode) override;
     void EnableHapticsInSlientMode(bool enable) override;
-    bool IsVibrationIntensityAdjustmentSupported() override;
+    bool IsHapticsIntensityAdjustmentSupported() override;
 
     void SetPlayerParam(const AudioHapticPlayerParam &param);
     void LoadPlayer();

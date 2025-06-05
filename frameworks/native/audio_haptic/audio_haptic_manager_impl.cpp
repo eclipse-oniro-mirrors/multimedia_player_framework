@@ -32,7 +32,6 @@ namespace Media {
 const std::int32_t MAX_PLAYER_NUM = 128;
 const int32_t ERROR = -1;
 const std::string FDHEAD = "fd://";
-const int32_t INVALID_SOURCE_ID = -1;
 
 std::shared_ptr<AudioHapticManager> AudioHapticManagerFactory::audioHapticManager_ = nullptr;
 std::mutex AudioHapticManagerFactory::audioHapticManagerMutex_;

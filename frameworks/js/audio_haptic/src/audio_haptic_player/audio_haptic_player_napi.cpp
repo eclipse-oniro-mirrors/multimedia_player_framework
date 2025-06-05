@@ -161,7 +161,7 @@ napi_value AudioHapticPlayerNapi::IsHapticsIntensityAdjustmentSupported(napi_env
         AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_SERVICE_DIED, "unwrap failure");
         return result;
     }
-    bool isSupported = audioHapticPlayerNapi->audioHapticPlayer_->IsVibrationIntensityAdjustmentSupported();
+    bool isSupported = audioHapticPlayerNapi->audioHapticPlayer_->IsHapticsIntensityAdjustmentSupported();
 
     napi_get_boolean(env, isSupported, &result);
     return result;

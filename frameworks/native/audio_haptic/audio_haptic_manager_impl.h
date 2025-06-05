@@ -35,6 +35,7 @@ struct AudioHapticPlayerInfo {
           latencyMode_(latencyMode),
           streamUsage_(streamUsage) {};
 };
+const int32_t INVALID_SOURCE_ID = -1;
 
 class AudioHapticManagerImpl : public AudioHapticManager {
 public:

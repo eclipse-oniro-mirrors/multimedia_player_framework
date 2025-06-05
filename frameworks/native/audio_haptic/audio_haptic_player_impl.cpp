@@ -266,9 +266,8 @@ int32_t AudioHapticPlayerImpl::SetVolume(float volume)
     return result;
 }
 
-bool AudioHapticPlayerImpl::IsVibrationIntensityAdjustmentSupported()
+bool AudioHapticPlayerImpl::IsHapticsIntensityAdjustmentSupported()
 {
-    MEDIA_LOGI("AudioHapticPlayerImpl::IsVibrationIntensityAdjustmentSupported");
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
     if (audioHapticVibrator_ != nullptr) {
         return audioHapticVibrator_->IsHdHapticSupported();

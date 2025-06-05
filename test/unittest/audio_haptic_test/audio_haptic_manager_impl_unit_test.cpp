@@ -542,10 +542,10 @@ HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_CreatePlayer_006
 }
 
 /**
-* @tc.name  : Test AudioHapticManagerImpl CreatePlayer API
-* @tc.number: AudioHapticManagerImpl_CreatePlayer_007
-* @tc.desc  : Test AudioHapticManagerImpl CreatePlayer interface
-*/
+ * @tc.name  : Test AudioHapticManagerImpl CreatePlayer API
+ * @tc.number: AudioHapticManagerImpl_CreatePlayer_007
+ * @tc.desc  : Test AudioHapticManagerImpl CreatePlayer interface
+ */
 HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_CreatePlayer_007, TestSize.Level1)
 {
     EXPECT_NE(g_audioHapticManagerImpl, nullptr);
@@ -563,7 +563,7 @@ HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_CreatePlayer_007
     audioFile.offset = 0;
     audioFile.length = audioBuff.st_size;
 
-    int32_t hapticDd = open(hapticUri.c_str(), O_RDONLY); 
+    int32_t hapticDd = open(hapticUri.c_str(), O_RDONLY);
     EXPECT_NE(-1, hapticDd);
     struct stat64 hatpicBuff = { 0 };
     ret = fstat64(hapticDd, &hatpicBuff);
@@ -585,10 +585,10 @@ HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_CreatePlayer_007
 }
 
 /**
-* @tc.name  : Test AudioHapticManagerImpl RegisterSourceFromFd API
-* @tc.number: AudioHapticManagerImpl_RegisterSourceFromFd_001
-* @tc.desc  : Test AudioHapticManagerImpl RegisterSourceFromFd Success
-*/
+ * @tc.name  : Test AudioHapticManagerImpl RegisterSourceFromFd API
+ * @tc.number: AudioHapticManagerImpl_RegisterSourceFromFd_001
+ * @tc.desc  : Test AudioHapticManagerImpl RegisterSourceFromFd Success
+ */
 HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_RegisterSourceFromFd_001, TestSize.Level0)
 {
     EXPECT_NE(g_audioHapticManagerImpl, nullptr);
@@ -625,10 +625,10 @@ HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_RegisterSourceFr
 }
 
 /**
-* @tc.name  : Test AudioHapticManagerImpl RegisterSourceFromFd API
-* @tc.number: AudioHapticManagerImpl_RegisterSourceFromFd_002
-* @tc.desc  : Test AudioHapticManagerImpl RegisterSourceFromFd Error Fd
-*/
+ * @tc.name  : Test AudioHapticManagerImpl RegisterSourceFromFd API
+ * @tc.number: AudioHapticManagerImpl_RegisterSourceFromFd_002
+ * @tc.desc  : Test AudioHapticManagerImpl RegisterSourceFromFd Error Fd
+ */
 HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_RegisterSourceFromFd_002, TestSize.Level0)
 {
     EXPECT_NE(g_audioHapticManagerImpl, nullptr);
