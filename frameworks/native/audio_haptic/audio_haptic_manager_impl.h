@@ -43,7 +43,8 @@ public:
 
     int32_t RegisterSource(const std::string &audioUri, const std::string &hapticUri) override;
 
-    int32_t RegisterSourceFromFd(const AudioHapticFileDescriptor& audioFd, const AudioHapticFileDescriptor& hapticFd) override;
+    int32_t RegisterSourceFromFd(const AudioHapticFileDescriptor& audioFd,
+        const AudioHapticFileDescriptor& hapticFd) override;
 
     int32_t RegisterSourceWithEffectId(const std::string &audioUri, const std::string &effectId) override;
 

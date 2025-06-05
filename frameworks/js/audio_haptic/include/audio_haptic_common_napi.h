@@ -68,7 +68,7 @@ public:
     static bool VerifySelfSystemPermission();
     static bool InitNormalFunc(napi_env env, napi_callback_info info,
         void** native, napi_value* argv, size_t paramLength);
- };
+};
 
 struct AutoRef {
     AutoRef(napi_env env, napi_ref cb)

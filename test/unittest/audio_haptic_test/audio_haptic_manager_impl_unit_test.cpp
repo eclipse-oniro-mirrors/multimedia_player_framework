@@ -646,7 +646,7 @@ HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_RegisterSourceFr
     audioFile.offset = 0;
     audioFile.length = audioBuff.st_size;
 
-    int32_t hapticDd = open(hapticUri.c_str(), O_RDONLY); 
+    int32_t hapticDd = open(hapticUri.c_str(), O_RDONLY);
     EXPECT_NE(-1, hapticDd);
     struct stat64 hatpicBuff = { 0 };
     ret = fstat64(hapticDd, &hatpicBuff);

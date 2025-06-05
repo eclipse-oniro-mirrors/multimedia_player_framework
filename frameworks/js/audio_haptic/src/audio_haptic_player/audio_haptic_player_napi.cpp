@@ -139,7 +139,7 @@ napi_value AudioHapticPlayerNapi::CreatePlayerInstance(napi_env env,
 }
 
 napi_value AudioHapticPlayerNapi::IsHapticsIntensityAdjustmentSupported(napi_env env,
-                                                                          napi_callback_info info)
+                                                                        napi_callback_info info)
 {
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
@@ -360,10 +360,7 @@ napi_value AudioHapticPlayerNapi::SetHapticsIntensity(napi_env env, napi_callbac
 
     napi_value funcName = nullptr;
     napi_create_string_utf8(env, "SetVibrationIntensity", NAPI_AUTO_LENGTH, &funcName);
-    napi_status status = napi_create_async_work(
-        env,
-        nullptr,
-        funcName,
+    napi_status status = napi_create_async_work(env, nullptr, funcName,
         [](napi_env env, void *data) {
             auto context = static_cast<VibrationContext*>(data);
             AudioHapticPlayerNapi* object = reinterpret_cast<AudioHapticPlayerNapi*>(context->objectInfo);
@@ -385,9 +382,7 @@ napi_value AudioHapticPlayerNapi::SetHapticsIntensity(napi_env env, napi_callbac
             delete context;
             context = nullptr;
         },
-        static_cast<void*>(asyncContext.get()),
-        &asyncContext->work);
-    
+        static_cast<void*>(asyncContext.get()), &asyncContext->work);
     if (status != napi_ok) {
         MEDIA_LOGE("Start: Failed to get create async work");
         AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred,
@@ -442,7 +437,6 @@ napi_value AudioHapticPlayerNapi::SetVolume(napi_env env, napi_callback_info inf
         },
         static_cast<void*>(asyncContext.get()),
         &asyncContext->work);
-    
     if (status != napi_ok) {
         MEDIA_LOGE("Start: Failed to get create async work");
         AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred,

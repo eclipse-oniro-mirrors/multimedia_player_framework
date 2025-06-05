@@ -72,18 +72,21 @@ struct AudioSource {
     int64_t length;
     int64_t offset;
 
-    bool empty() const {
+    bool empty() const
+    {
         return audioUri.empty() && fd == FILE_DESCRIPTOR_INVALID;
     }
 
-    bool operator==(const AudioSource& other) const {
+    bool operator==(const AudioSource& other) const
+    {
         return this->audioUri == other.audioUri &&
                this->fd == other.fd &&
                this->length == other.length &&
                this->offset == other.offset;
     }
 
-    bool operator!=(const AudioSource& other) const {
+    bool operator!=(const AudioSource& other) const
+    {
         return !(*this == other);
     }
 };

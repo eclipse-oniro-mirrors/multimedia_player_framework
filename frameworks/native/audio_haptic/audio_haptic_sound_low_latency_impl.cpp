@@ -19,6 +19,7 @@
 
 #include "isoundpool.h"
 #include "audio_haptic_log.h"
+#include "directory_ex.h"
 #include "media_errors.h"
 
 namespace {
@@ -90,21 +91,18 @@ int32_t AudioHapticSoundLowLatencyImpl::OpenAudioSource()
         const std::string fdHead = "fd://";
         if (audioUri.find(fdHead) != std::string::npos) {
             int32_t fd = atoi(audioUri.substr(fdHead.size()).c_str());
-            CHECK_AND_RETURN_RET_LOG(fd > 0, MSERR_OPEN_FILE_FAILED, "GetAudioUriFd: Failed to extract fd for avplayer.");
+            CHECK_AND_RETURN_RET_LOG(fd > 0, MSERR_OPEN_FILE_FAILED,
+                "GetAudioUriFd: Failed to extract fd for avplayer.");
             fileDes_ = dup(fd);
             MEDIA_LOGI("fileDes_ == %{public}d", fileDes_);
         } else {
-            char realPathRes[PATH_MAX + 1] = {'\0'};
-            if (audioUri.size() >= PATH_MAX || realpath(audioUri.c_str(), realPathRes) == nullptr) {
-                MEDIA_LOGE("Invalid file path length");
-                return MSERR_UNSUPPORT_FILE;
-            }
-            std::string realPathStr(realPathRes);
-            fileDes_ = open(realPathStr.c_str(), O_RDONLY);
-            if (fileDes_ == -1) {
-                MEDIA_LOGE("GetAudioUriFd: Failed to open the audio uri for sound pool.");
-                return MSERR_OPEN_FILE_FAILED;
-            }
+            std::string absFilePath;
+            CHECK_AND_RETURN_RET_LOG(PathToRealPath(audioUri, absFilePath), MSERR_OPEN_FILE_FAILED,
+                "file is not real path, file path: %{private}s", audioUri.c_str());
+            CHECK_AND_RETURN_RET_LOG(!absFilePath.empty(), MSERR_OPEN_FILE_FAILED,
+                "Failed to obtain the canonical path for source path %{public}d %{private}s",
+                errno, audioUri.c_str());
+            fileDes_ = open(audioUri.c_str(), O_RDONLY);
         }
     } else {
         fileDes_ = dup(audioFd);

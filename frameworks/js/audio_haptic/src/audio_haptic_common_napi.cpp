@@ -92,7 +92,6 @@ bool AudioHapticCommonNapi::InitPromiseFunc(napi_env env, napi_callback_info inf
     napi_value thisVar = nullptr;
     size_t argc = paramLength;
     napi_status status = napi_get_cb_info(env, info, &argc, asyncContext->argv, &thisVar, nullptr);
-
     if (status != napi_ok || thisVar == nullptr) {
         MEDIA_LOGE("napi_get_cb_info fail");
         AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred,

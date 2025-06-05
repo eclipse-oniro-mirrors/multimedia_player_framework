@@ -243,7 +243,6 @@ napi_value AudioHapticManagerNapi::RegisterSourceFromFd(napi_env env, napi_callb
         RegisterSourceFromFdAsyncCallbackComp,
         static_cast<void*>(asyncContext.get()),
         &asyncContext->work);
-
     if (status != napi_ok) {
         MEDIA_LOGE("Failed to get create async work");
         AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred,
@@ -279,7 +278,7 @@ void AudioHapticManagerNapi::RegisterSourceFromFdAsyncCallbackComp(napi_env env,
             napi_resolve_deferred(env, context->deferred, result);
         } else {
             AudioHapticCommonNapi::PromiseReject(env, context->deferred,
-                        context->sourceID, "RegisterSourceFromFd Error: Operation is not supported or failed");
+                context->sourceID, "RegisterSourceFromFd Error: Operation is not supported or failed");
         }
     }
     napi_delete_async_work(env, context->work);
