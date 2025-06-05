@@ -2634,5 +2634,22 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetCaptureAreaInner_001, TestSize.Leve
     int32_t ret = screenCaptureServer_->SetCaptureAreaInner(0, area);
     EXPECT_NE(ret, MSERR_OK);
 }
+
+HWTEST_F(ScreenCaptureServerFunctionTest, UserSelected_001, TestSize.Level2)
+{
+    ScreenCaptureUserSelectionInfo selectionInfo;
+    selectionInfo.selectType = 0;
+    selectionInfo.displayId = 0;
+    screenCaptureServer_->NotifyUserSelected(selectionInfo);
+    EXPECT_EQ(selectionInfo.displayId, 0);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, UserSelected_002, TestSize.Level2)
+{
+    screenCaptureServer_->displayScreenId_ = 0;
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
+    screenCaptureServer_->PostStartScreenCaptureSuccessAction();
+    EXPECT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::STARTED);
+}
 } // Media
 } // OHOS

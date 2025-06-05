@@ -121,6 +121,7 @@ public:
     void OnStateChange(AVScreenCaptureStateCode stateCode) {};
     void OnDisplaySelected(uint64_t displayId) {};
     void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area) {};
+    void OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo) {};
 };
 
 class ScreenCaptureServerUnittestCallbackMock : public ScreenCaptureListenerCallback {
@@ -134,6 +135,7 @@ public:
     void OnStateChange(AVScreenCaptureStateCode stateCode);
     void OnDisplaySelected(uint64_t displayId);
     void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area);
+    void OnDisplaySelected(ScreenCaptureUserSelectionInfo selectionInfo);
     void Stop();
 };
 } // Media
