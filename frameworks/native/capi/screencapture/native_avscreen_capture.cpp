@@ -911,8 +911,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureContentChangedCallback(
         AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
     
     OH_AVSCREEN_CAPTURE_ErrCode errCode = AVScreenCaptureSetCallback(capture, screenCaptureObj);
-    CHECK_AND_RETURN_RET_LOG(errCode == AV_SCREEN_CAPTURE_ERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
-        "SetCaptureContentChangedCallback is null");
+    CHECK_AND_RETURN_RET_LOG(errCode == AV_SCREEN_CAPTURE_ERR_OK, errCode, "SetCaptureContentChangedCallback is null");
 
     if (screenCaptureObj->callback_ == nullptr ||
         !screenCaptureObj->callback_->SetCaptureContentChangedCallback(callback, userData)) {
