@@ -187,11 +187,8 @@ int32_t AudioHapticManagerImpl::RegisterSourceFromFd(const AudioHapticFileDescri
         AUDIO_LATENCY_MODE_NORMAL, AudioStandard::StreamUsage::STREAM_USAGE_MUSIC);
     curPlayerCount_ += 1;
     MEDIA_LOGI("AudioHapticManagerImpl::RegisterSourceFromFd");
-    MEDIA_LOGI("audioFd: %{public}d, audioLength: %{public}ld, audioOffset: %{public}ld",
-        audioFd.fd, audioFd.length, audioFd.offset);
-    MEDIA_LOGI("hapticeFd: %{public}d, hapticeLength: %{public}ld, hapticeOffset: %{public}ld",
-        hapticFd.fd, hapticFd.length, hapticFd.offset);
-    MEDIA_LOGI("sourceId: %{public}d", sourceId);
+    MEDIA_LOGI("audioFd: %{public}d, hapticeFd: %{public}d, sourceId: %{public}d",
+        audioFd.fd, hapticFd.fd, sourceId);
     return sourceId;
 }
 

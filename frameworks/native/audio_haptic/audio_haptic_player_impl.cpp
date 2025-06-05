@@ -23,7 +23,6 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, "AudioHapticPlayerImpl"};
-constexpr int32_t INVALID_FD = -1;
 }
 
 namespace OHOS {

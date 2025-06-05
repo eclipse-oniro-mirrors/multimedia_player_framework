@@ -88,14 +88,14 @@ int32_t AudioHapticSoundLowLatencyImpl::OpenAudioSource()
 
     if (!audioUri.empty()) {
         const std::string fdHead = "fd://";
-        if (audioUri_.find(fdHead) != std::string::npos) {
-            int32_t fd = atoi(audioUri_.substr(fdHead.size()).c_str());
+        if (audioUri.find(fdHead) != std::string::npos) {
+            int32_t fd = atoi(audioUri.substr(fdHead.size()).c_str());
             CHECK_AND_RETURN_RET_LOG(fd > 0, MSERR_OPEN_FILE_FAILED, "GetAudioUriFd: Failed to extract fd for avplayer.");
             fileDes_ = dup(fd);
             MEDIA_LOGI("fileDes_ == %{public}d", fileDes_);
         } else {
             char realPathRes[PATH_MAX + 1] = {'\0'};
-            if (audioUri.size() >= PATH_MAX || realpath(audioUri_.c_str(), realPathRes) == nullptr) {
+            if (audioUri.size() >= PATH_MAX || realpath(audioUri.c_str(), realPathRes) == nullptr) {
                 MEDIA_LOGE("Invalid file path length");
                 return MSERR_UNSUPPORT_FILE;
             }

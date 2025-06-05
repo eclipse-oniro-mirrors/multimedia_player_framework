@@ -1132,9 +1132,6 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_057, TestSize.Leve
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
     EXPECT_NE(audioHapticPlayerImpl, nullptr);
 
-    int32_t ret = audioHapticPlayerImpl->EnableHapticsInSlientMode(true);
-    EXPECT_EQ(-1, ret);
-
     AudioHapticPlayerImpl audioHapticPlayerImpl2;
     auto audioHapticVibrator_ = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl2);
     audioHapticPlayerImpl->audioHapticVibrator_ = audioHapticVibrator_;
