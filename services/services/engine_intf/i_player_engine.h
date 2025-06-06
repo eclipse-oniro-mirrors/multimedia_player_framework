@@ -357,6 +357,11 @@ public:
     {
         return 0;
     }
+
+    virtual int32_t NotifyMemoryExchange(bool /* status */)
+    {
+        return 0;
+    }
 };
 } // namespace Media
 } // namespace OHOS
