@@ -45,7 +45,6 @@ std::shared_ptr<Player> PlayerFactory::CreatePlayer()
 
 std::shared_ptr<Player> PlayerFactory::CreatePlayer(const PlayerProducer producer)
 {
-    time_t startTime = time(nullptr);
     ScopedTimer timer("CreatePlayer", CREATE_AVPLAYER_WARNING_MS);
     MEDIA_LOGD("PlayerImpl: CreatePlayer in");
     std::shared_ptr<PlayerImpl> impl = std::make_shared<PlayerImpl>();
@@ -53,12 +52,6 @@ std::shared_ptr<Player> PlayerFactory::CreatePlayer(const PlayerProducer produce
 
     int32_t ret = MSERR_OK;
     LISTENER(ret = impl->Init(producer), "CreatePlayer", false, TIME_OUT_SECOND);
-    if (ret != MSERR_OK) {
-        auto hiAppEventAgent = std::make_shared<HiAppEventAgent>();
-        if (hiAppEventAgent != nullptr) {
-            hiAppEventAgent->TraceApiEvent(ret, "CreatePlayer", startTime, impl->GetTraceId());
-        }
-    }
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to init PlayerImpl");
 
     return impl;
@@ -81,12 +74,18 @@ std::vector<pid_t> PlayerFactory::GetPlayerPids()
 int32_t PlayerImpl::Init(const PlayerProducer producer)
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Init in", FAKE_POINTER(this));
+    time_t startTime = time(nullptr);
     HiviewDFX::HiTraceChain::SetId(traceId_);
     playerService_ = MediaServiceFactory::GetInstance().CreatePlayerService();
-    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_UNKNOWN, "failed to create player service");
-    playerService_->SetPlayerProducer(producer);
     hiAppEventAgent_ = std::make_shared<HiAppEventAgent>();
-    return MSERR_OK;
+    auto ret = playerService_ == nullptr ? MSERR_UNKNOWN : MSERR_OK;
+    if (hiAppEventAgent_) {
+        hiAppEventAgent_->TraceApiEvent(ret, "CreatePlayer", startTime, traceId_);
+    }
+    if (ret == MSERR_OK) {
+        playerService_->SetPlayerProducer(producer);
+    }
+    return ret;
 }
 
 HiviewDFX::HiTraceId PlayerImpl::GetTraceId()
@@ -98,7 +97,11 @@ PlayerImpl::PlayerImpl()
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
     ResetSeekVariables();
-    traceId_ = HiviewDFX::HiTraceChain::Begin("PlayerImpl", HITRACE_FLAG_DEFAULT);
+    traceId_ = HiTraceChainGetId();
+    if (!traceId_.IsValid()) {
+        MEDIA_LOGI("PlayerImpl:0x%{public}06" PRIXPTR " traceId not valid", FAKE_POINTER(this));
+        traceId_ = HiviewDFX::HiTraceChain::Begin("PlayerImpl", HITRACE_FLAG_DEFAULT);
+    }
 }
 
 PlayerImpl::~PlayerImpl()
@@ -109,7 +112,10 @@ PlayerImpl::~PlayerImpl()
     }
     hiAppEventAgent_ = nullptr;
     ResetSeekVariables();
-    HiviewDFX::HiTraceChain::End(traceId_);
+    if (traceId_.IsValid()) {
+        MEDIA_LOGI("PlayerImpl:0x%{public}06" PRIXPTR " traceId valid", FAKE_POINTER(this));
+        HiviewDFX::HiTraceChain::End(traceId_);
+    }
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
@@ -460,6 +466,7 @@ void PlayerImpl::HandleSeekDoneInfo(PlayerOnInfoType type, int32_t extra)
 
 void PlayerImpl::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
+    time_t startTime = time(nullptr);
     HandleSeekDoneInfo(type, extra);
     std::shared_ptr<PlayerCallback> callback;
     {
@@ -468,6 +475,12 @@ void PlayerImpl::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &info
     }
 
     CHECK_AND_RETURN_LOG(callback != nullptr, "callback is nullptr.");
+    if (type == INFO_TYPE_STATE_CHANGE && hiAppEventAgent_ != nullptr) {
+        PlayerStates state = static_cast<PlayerStates>(extra);
+        if (state == PLAYER_PREPARED) {
+            hiAppEventAgent_->TraceApiEvent(MSERR_OK, "prepared", startTime, traceId_);
+        }
+    }
     if (type == INFO_TYPE_SEEKDONE) {
         if (extra == -1) {
             MEDIA_LOGI("seek done error callback, no need report");
@@ -972,6 +985,13 @@ int32_t PlayerImpl::SetStartFrameRateOptEnabled(bool enabled)
     return playerService_->SetStartFrameRateOptEnabled(enabled);
 }
 
+void PlayerImpl::TraceApiEvent(int errCode, const std::string& message, time_t startTime)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " TraceApiEvent in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_LOG(hiAppEventAgent_ != nullptr, "hiAppEventAgent nullptr");
+    hiAppEventAgent_->TraceApiEvent(errCode, message, startTime, traceId_);
+}
+
 int32_t PlayerImpl::ForceLoadVideo(bool status)
 {
     MEDIA_LOGI("PlayerImpl:0x%{public}06" PRIXPTR " ForceLoadVideo %{public}d", FAKE_POINTER(this), status);
@@ -1013,9 +1033,8 @@ void PlayerImplCallback::OnError(int32_t errorCode, const std::string &errorMsg)
             errorCode = MSERR_DATA_SOURCE_IO_ERROR;
         }
     }
-    auto hiAppEventAgent = std::make_shared<HiAppEventAgent>();
-    if (hiAppEventAgent != nullptr) {
-        hiAppEventAgent->TraceApiEvent(errorCode, errorMsg, startTime);
+    if (player != nullptr) {
+        player->TraceApiEvent(errorCode, errorMsg, startTime);
     }
     CHECK_AND_RETURN_LOG(playerCb != nullptr, "playerCb does not exist..");
     playerCb->OnError(errorCode, errorMsg);

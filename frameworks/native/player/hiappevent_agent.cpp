@@ -25,7 +25,7 @@
 #ifdef SUPPORT_HIAPPEVENT
 namespace {
     constexpr auto KNAME = "ha_app_event";
-    constexpr auto KAPPID = "com_hw_hmos_avplayer";
+    constexpr auto KAPPID = "com_hua" "wei_hmos_sdk_ocg";
     constexpr auto SDKNAME = "MediaKit";
     constexpr auto APINAME = "HMOS_MEDIA_SERVICE";
     constexpr int32_t KTIMEOUT = 90;  // trigger interval in seconds
@@ -71,9 +71,9 @@ void HiAppEventAgent::WriteEndEvent(const std::string &transId,
     event.AddParam("end_time", time(nullptr));
     event.AddParam("result", result);
     event.AddParam("error_code", errCode);
-    event.AddParam("message", message);
+    event.AddParam("contents", message);
     if (traceId.IsValid()) {
-        event.AddParam("traceId", static_cast<int64_t>(traceId.GetChainId()));
+        event.AddParam("hiTraceID", static_cast<int64_t>(traceId.GetChainId()));
     }
     Write(event);
 }
@@ -118,7 +118,6 @@ void HiAppEventAgent::TraceApiEvent(
     int errCode, const std::string& message, time_t startTime, HiviewDFX::HiTraceId traceId)
 {
 #ifdef SUPPORT_HIAPPEVENT
-    CHECK_AND_RETURN_NOLOG(errCode != MSERR_OK);
     {
         std::lock_guard<std::mutex> lock(g_processorMutex);
         if (g_processorId == -1) {
