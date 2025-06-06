@@ -972,6 +972,13 @@ int32_t PlayerImpl::SetStartFrameRateOptEnabled(bool enabled)
     return playerService_->SetStartFrameRateOptEnabled(enabled);
 }
 
+int32_t PlayerImpl::ForceLoadVideo(bool status)
+{
+    MEDIA_LOGI("PlayerImpl:0x%{public}06" PRIXPTR " ForceLoadVideo %{public}d", FAKE_POINTER(this), status);
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    return playerService_->ForceLoadVideo(status);
+}
+
 PlayerImplCallback::PlayerImplCallback(const std::shared_ptr<PlayerCallback> playerCb,
     std::shared_ptr<PlayerImpl> player)
 {

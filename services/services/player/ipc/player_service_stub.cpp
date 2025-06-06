@@ -256,6 +256,8 @@ void PlayerServiceStub::FillPlayerFuncPart3()
         [this](MessageParcel &data, MessageParcel &reply) { return EnableReportAudioInterrupt(data, reply); } };
     playerFuncs_[SET_PLAYER_PRODUCER] = { "Player::SetPlayerProducer",
         [this](MessageParcel &data, MessageParcel &reply) { return SetPlayerProducer(data, reply); } };
+    playerFuncs_[FORCE_LOAD_VIDEO] = { "Player::ForceLoadVideo",
+        [this](MessageParcel &data, MessageParcel &reply) { return ForceLoadVideo(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
@@ -1452,6 +1454,19 @@ int32_t PlayerServiceStub::EnableReportAudioInterrupt(MessageParcel &data, Messa
 {
     bool enable = data.ReadBool();
     reply.WriteInt32(EnableReportAudioInterrupt(enable));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::ForceLoadVideo(bool status)
+{
+    MediaTrace trace("PlayerServiceStub::ForceLoadVideo");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->ForceLoadVideo(status);
+}
+
+int32_t PlayerServiceStub::ForceLoadVideo(MessageParcel &data, MessageParcel &reply)
+{
+    reply.WriteInt32(ForceLoadVideo(data.ReadBool()));
     return MSERR_OK;
 }
 } // namespace Media

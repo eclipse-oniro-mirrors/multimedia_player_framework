@@ -194,6 +194,7 @@ public:
     int32_t SetReopenFd(int32_t fd) override;
     int32_t EnableCameraPostprocessing() override;
     int32_t EnableReportMediaProgress(bool enable) override;
+    int32_t ForceLoadVideo(bool status) override;
 
 private:
     enum HiplayerSvpMode : int32_t {
@@ -476,6 +477,7 @@ private:
     std::atomic<bool> enableCameraPostprocessing_ {false};
     bool sourceDownloadPaused_ {false};
     std::mutex freezeMutex_;
+    bool isForceLoadVideo_ {false};
 };
 } // namespace Media
 } // namespace OHOS

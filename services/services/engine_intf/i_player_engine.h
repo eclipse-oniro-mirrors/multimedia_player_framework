@@ -352,6 +352,11 @@ public:
     {
         return 0;
     }
+
+    virtual int32_t ForceLoadVideo(bool /* enabled */)
+    {
+        return 0;
+    }
 };
 } // namespace Media
 } // namespace OHOS

@@ -158,6 +158,7 @@ public:
     int32_t EnableCameraPostprocessing() override;
     int32_t EnableReportMediaProgress(bool enable) override;
     int32_t EnableReportAudioInterrupt(bool enable) override;
+    int32_t ForceLoadVideo(bool status) override;
 
 protected:
     class BaseState;
@@ -301,6 +302,7 @@ private:
     int64_t sumPauseTime_ {0};
     bool isXSpeedPlay_ {false};
     bool isCalledBySystemApp_ = false;
+    bool isForceLoadVideo_ {false};
     std::atomic<uint32_t> totalMemoryUage_ {0};
     PlayerProducer playerProducer_ = PlayerProducer::INNER;
     std::atomic<bool> isFrozen_ = false;

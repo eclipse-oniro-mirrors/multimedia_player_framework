@@ -118,6 +118,7 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getPlaybackInfo", JsGetPlaybackInfo),
         DECLARE_NAPI_FUNCTION("isSeekContinuousSupported", JsIsSeekContinuousSupported),
         DECLARE_NAPI_FUNCTION("getPlaybackPosition", JsGetPlaybackPosition),
+        DECLARE_NAPI_FUNCTION("forceLoadVideo", JsForceLoadVideo),
 
         DECLARE_NAPI_GETTER_SETTER("url", JsGetUrl, JsSetUrl),
         DECLARE_NAPI_GETTER_SETTER("fdSrc", JsGetAVFileDescriptor, JsSetAVFileDescriptor),
@@ -2223,7 +2224,7 @@ napi_value AVPlayerNapi::JsSetSurfaceID(napi_env env, napi_callback_info info)
     } else if (switchSurface) {
         MEDIA_LOGI("JsSetSurfaceID switch surface in %{public}s state", curState.c_str());
         std::string oldSurface = jsPlayer->surface_;
-        if (oldSurface.empty()) {
+        if (oldSurface.empty() && !jsPlayer->isForceLoadVideo_) {
             jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
                 "switch surface with no old surface");
             return result;
@@ -2711,6 +2712,62 @@ napi_value AVPlayerNapi::JsGetPlaybackPosition(napi_env env, napi_callback_info 
         MEDIA_LOGE("JsGetPlaybackPosition status != napi_ok");
     }
     return value;
+}
+
+napi_value AVPlayerNapi::JsForceLoadVideo(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::ForceLoadVideo");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto promiseCtx = std::make_unique<AVPlayerContext>(env);
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+
+    promiseCtx->napi = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(promiseCtx->napi != nullptr, result, "failed to GetJsInstance");
+    CHECK_AND_RETURN_RET_LOG(promiseCtx->napi->player_ != nullptr, result, "failed to check player_");
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
+
+    bool isForceLoadVideo = false;
+    if (!IsSystemApp()) {
+        promiseCtx->SignError(MSERR_EXT_API9_PERMISSION_DENIED, "only system app support this function");
+    } else if (napi_valuetype valueType = napi_undefined; napi_typeof(env, args[0], &valueType) != napi_ok
+        || valueType != napi_boolean || napi_get_value_bool(env, args[0], &isForceLoadVideo) != napi_ok) {
+        promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "input param type is not boolean");
+    }
+
+    // only if no errors can exec task
+    if (!promiseCtx->errFlag) {
+        promiseCtx->asyncTask = promiseCtx->napi->ForceLoadVideoTask(isForceLoadVideo);
+        promiseCtx->napi->isForceLoadVideo_ = isForceLoadVideo;
+    }
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "JsForceLoadVideo", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {
+        auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
+        CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
+        promiseCtx->CheckTaskResult();
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
+    promiseCtx.release();
+    return result;
+}
+
+std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ForceLoadVideoTask(bool status)
+{
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this, status] {
+        std::unique_lock<std::mutex> lock(taskMutex_);
+        auto state = GetCurrentState();
+        CHECK_AND_RETURN_RET(state == AVPlayerState::STATE_INITIALIZED || state == AVPlayerState::STATE_STOPPED,
+            TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "state unsupport this operation"));
+        auto ret = player_->ForceLoadVideo(status);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK,
+            TaskRet(MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret)), "ForceLoadVideo failed"));
+        return TaskRet(MSERR_EXT_API9_OK, "Success");
+    });
+    (void)taskQue_->EnqueueTask(task);
+    return task;
 }
 
 napi_value AVPlayerNapi::JsGetDuration(napi_env env, napi_callback_info info)
