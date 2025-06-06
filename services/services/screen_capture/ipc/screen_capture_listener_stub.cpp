@@ -58,9 +58,11 @@ int32_t ScreenCaptureListenerStub::OnUserSelectedStub(MessageParcel &data, Messa
 {
     (void) reply;
     MEDIA_LOGI("ScreenCaptureListenerStub::OnUserSelectedStub start");
-    ScreenCaptureUserSelectionInfo selectionInfo;
+    ScreenCaptureUserSelectionInfo selectionInfo = {0, static_cast<uint64_t>(0)};
     selectionInfo.selectType = data.ReadInt32();
     selectionInfo.displayId = data.ReadUint64();
+    CHECK_AND_RETURN_RET_LOG(selectionInfo.selectType == 0 || selectionInfo.selectType == 1, MSERR_INVALID_VAL,
+        "OnUserSelected selectType invalid");
     OnUserSelected(selectionInfo);
     return MSERR_OK;
 }
