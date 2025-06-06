@@ -126,6 +126,7 @@ public:
         CHECK_AND_RETURN_LOG(object != nullptr, "failed to new ScreenCaptureUserSelectionObject");
         callback_(capture, reinterpret_cast<OH_AVScreenCapture_UserSelectionInfo*>(object), userData_);
         delete object;
+        object = nullptr;
     }
 
 private:
