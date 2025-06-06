@@ -74,6 +74,7 @@ std::vector<pid_t> PlayerFactory::GetPlayerPids()
 int32_t PlayerImpl::Init(const PlayerProducer producer)
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Init in", FAKE_POINTER(this));
+    time_t startTime = time(nullptr);
     HiviewDFX::HiTraceChain::SetId(traceId_);
     playerService_ = MediaServiceFactory::GetInstance().CreatePlayerService();
     hiAppEventAgent_ = std::make_shared<HiAppEventAgent>();
