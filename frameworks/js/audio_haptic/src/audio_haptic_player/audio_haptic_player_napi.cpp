@@ -282,7 +282,8 @@ bool AudioHapticPlayerNapi::JudgeVolume(napi_env env, std::unique_ptr<VolumeCont
         return false;
     }
 
-    asyncContext->volume = static_cast<float>(std::round(volume * 100) / 100);
+    const double PRECISION = 100.00;
+    asyncContext->volume = static_cast<float>(std::round(volume * PRECISION) / PRECISION);
     return true;
 }
 
@@ -301,6 +302,7 @@ bool AudioHapticPlayerNapi::JudgeIntensity(napi_env env, std::unique_ptr<Vibrati
         return false;
     }
 
+    const double PRECISION = 100.00;
     asyncContext->intensity = static_cast<float>(std::round(intensity * 100) / 100);
     return true;
 }
