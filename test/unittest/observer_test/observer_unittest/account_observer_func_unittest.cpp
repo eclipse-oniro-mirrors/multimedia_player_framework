@@ -84,43 +84,30 @@ void AccountObserverInnerUnitTest::TearDown(void)
 }
 
 /**
- * @tc.name: RegisterObserver_01
- * @tc.desc: RegisterObserver_01
- * @tc.type: FUNC
- */
-HWTEST_F(AccountObserverInnerUnitTest, RegisterObserver_01, TestSize.Level1)
-{
-    ASSERT_TRUE(AccountObserver::GetInstance().RegisterObserver());
-    AccountObserver::GetInstance().UnregisterObserver();
-}
-
-/**
  * @tc.name: RegisterAccountObserverCallBack_01
- * @tc.desc: RegisterAccountObserverCallBack_01
+ * @tc.desc: StopAndRelease
  * @tc.type: FUNC
  */
 HWTEST_F(AccountObserverInnerUnitTest, RegisterAccountObserverCallBack_01, TestSize.Level1)
 {
     auto accountObserverCallBack = std::make_shared<AccountObserverTestCallBack>();
     ASSERT_TRUE(AccountObserver::GetInstance().RegisterAccountObserverCallBack(accountObserverCallBack));
-    AccountObserver::GetInstance().UnregisterAccountObserverCallBack(accountObserverCallBack);
     ASSERT_TRUE(accountObserverCallBack->StopAndRelease(
         AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER_SWITCHES));
+    AccountObserver::GetInstance().UnregisterAccountObserverCallBack(accountObserverCallBack);
 }
 
 /**
- * @tc.name: AccountCallBackReturn_01
- * @tc.desc: AccountCallBackReturn_01
+ * @tc.name: RegisterAccountObserverCallBack_02
+ * @tc.desc: OnAccountsSwitch
  * @tc.type: FUNC
  */
-HWTEST_F(AccountObserverInnerUnitTest, AccountCallBackReturn_01, TestSize.Level1)
+HWTEST_F(AccountObserverInnerUnitTest, RegisterAccountObserverCallBack_02, TestSize.Level1)
 {
-    AccountObserver::GetInstance().UnregisterObserver();
-    ASSERT_TRUE(AccountObserver::GetInstance().RegisterObserver());
     auto accountObserverCallBack = std::make_shared<AccountObserverTestCallBack>();
     ASSERT_TRUE(AccountObserver::GetInstance().RegisterAccountObserverCallBack(accountObserverCallBack));
     ASSERT_TRUE(AccountObserver::GetInstance().OnAccountsSwitch());
-    AccountObserver::GetInstance().UnregisterObserver();
+    AccountObserver::GetInstance().UnregisterAccountObserverCallBack(accountObserverCallBack);
 }
 } // namespace AccountObserverFuncUT
 } // namespace Media
