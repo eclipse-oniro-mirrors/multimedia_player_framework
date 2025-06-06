@@ -195,6 +195,7 @@ public:
     int32_t EnableCameraPostprocessing() override;
     int32_t EnableReportMediaProgress(bool enable) override;
     int32_t ForceLoadVideo(bool status) override;
+    int32_t NotifyMemoryExchange(bool status) override;
 
 private:
     enum HiplayerSvpMode : int32_t {

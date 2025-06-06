@@ -55,14 +55,12 @@ int32_t PlayerServer::BaseState::Pause(bool isSystemOperation)
 
 int32_t PlayerServer::BaseState::Freeze()
 {
-    ReportInvalidOperation();
-    return MSERR_INVALID_STATE;
+    return server_.HandleLiteFreeze();
 }
 
 int32_t PlayerServer::BaseState::UnFreeze()
 {
-    ReportInvalidOperation();
-    return MSERR_INVALID_STATE;
+    return server_.HandleLiteUnFreeze();
 }
 
 int32_t PlayerServer::BaseState::PauseDemuxer()

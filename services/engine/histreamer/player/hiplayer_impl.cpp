@@ -3869,5 +3869,12 @@ int32_t HiPlayerImpl::ForceLoadVideo(bool status)
     isForceLoadVideo_ = status;
     return MSERR_OK;
 }
+
+int32_t HiPlayerImpl::NotifyMemoryExchange(bool status)
+{
+    FALSE_RETURN_V_NOLOG(videoDecoder_ != nullptr, MSERR_OK);
+    videoDecoder_->NotifyMemoryExchange(status);
+    return MSERR_OK;
+}
 }  // namespace Media
 }  // namespace OHOS
