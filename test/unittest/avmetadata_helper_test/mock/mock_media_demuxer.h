@@ -57,9 +57,9 @@ public:
     MOCK_METHOD(Status, PausePreroll, (), (override));
  
     MOCK_METHOD(Status, StartTask, (int32_t trackId), (override));
-    MOCK_METHOD(Status, SelectTrack, (uint32_t trackIdU32), (override));
-    MOCK_METHOD(Status, UnselectTrack, (uint32_t trackIdU32), (override));
-    MOCK_METHOD(Status, ReadSample, (uint32_t trackIdU32, std::shared_ptr<AVBuffer> sample), (override));
+    MOCK_METHOD(Status, SelectTrack, (uint32_t trackIndex), (override));
+    MOCK_METHOD(Status, UnselectTrack, (uint32_t trackIndex), (override));
+    MOCK_METHOD(Status, ReadSample, (uint32_t trackIndex, std::shared_ptr<AVBuffer> sample), (override));
     MOCK_METHOD(Status, GetBitRates, (std::vector<uint32_t> &bitRates), (override));
     MOCK_METHOD(Status, SelectBitRate, (uint32_t bitRate), (override));
     MOCK_METHOD(Status, GetMediaKeySystemInfo, ((std::multimap<std::string, std::vector<uint8_t>>) &infos), (override));
@@ -102,9 +102,9 @@ public:
                 (const std::shared_ptr<VideoStreamReadyCallback> &callback), (override));
     MOCK_METHOD(void, DeregisterVideoStreamReadyCallback, (), (override));
  
-    MOCK_METHOD(Status, GetIndexByRelativePresentationTimeUs, (const uint32_t trackIdU32,
+    MOCK_METHOD(Status, GetIndexByRelativePresentationTimeUs, (const uint32_t trackIndex,
         const uint64_t relativePresentationTimeUs, uint32_t &index), (override));
-    MOCK_METHOD(Status, GetRelativePresentationTimeUsByIndex, (const uint32_t trackIdU32,
+    MOCK_METHOD(Status, GetRelativePresentationTimeUsByIndex, (const uint32_t trackIndex,
         const uint32_t index, uint64_t &relativePresentationTimeUs), (override));
  
     MOCK_METHOD(Status, ResumeDemuxerReadLoop, (), (override));

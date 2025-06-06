@@ -72,9 +72,9 @@ public:
     virtual Status PausePreroll();
 
     virtual Status StartTask(int32_t trackId);
-    virtual Status SelectTrack(uint32_t trackIdU32); // Interface for AVDemuxer
-    virtual Status UnselectTrack(uint32_t trackIdU32); // Interface for AVDemuxer
-    virtual Status ReadSample(uint32_t trackIdU32, std::shared_ptr<AVBuffer> sample); // Interface for AVDemuxer
+    virtual Status SelectTrack(uint32_t trackIndex); // Interface for AVDemuxer
+    virtual Status UnselectTrack(uint32_t trackIndex); // Interface for AVDemuxer
+    virtual Status ReadSample(uint32_t trackIndex, std::shared_ptr<AVBuffer> sample); // Interface for AVDemuxer
     virtual Status GetBitRates(std::vector<uint32_t> &bitRates);
     virtual Status SelectBitRate(uint32_t bitRate);
     virtual Status GetMediaKeySystemInfo(std::multimap<std::string, std::vector<uint8_t>> &infos);
@@ -113,9 +113,9 @@ public:
     virtual void RegisterVideoStreamReadyCallback(const std::shared_ptr<VideoStreamReadyCallback> &callback);
     virtual void DeregisterVideoStreamReadyCallback();
 
-    virtual Status GetIndexByRelativePresentationTimeUs(const uint32_t trackIdU32,
+    virtual Status GetIndexByRelativePresentationTimeUs(const uint32_t trackIndex,
         const uint64_t relativePresentationTimeUs, uint32_t &index); // Interface for AVDemuxer
-    virtual Status GetRelativePresentationTimeUsByIndex(const uint32_t trackIdU32,
+    virtual Status GetRelativePresentationTimeUsByIndex(const uint32_t trackIndex,
         const uint32_t index, uint64_t &relativePresentationTimeUs); // Interface for AVDemuxer
 
     virtual Status ResumeDemuxerReadLoop();
