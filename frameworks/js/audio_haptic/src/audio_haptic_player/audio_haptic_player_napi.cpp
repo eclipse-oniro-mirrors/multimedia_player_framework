@@ -376,8 +376,7 @@ napi_value AudioHapticPlayerNapi::SetHapticsIntensity(napi_env env, napi_callbac
             napi_delete_async_work(env, context->work);
             delete context;
             context = nullptr;
-        },
-        static_cast<void*>(asyncContext.get()), &asyncContext->work);
+        }, static_cast<void*>(asyncContext.get()), &asyncContext->work);
     if (status != napi_ok) {
         AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred, status, "Failed to get create async work");
     } else {
