@@ -28,6 +28,7 @@ ohos_unittest("audio_haptic_unit_test") {
   cflags = [
     "-Wall",
     "-Werror",
+    "-fno-access-control",
   ]
 
   sources = [

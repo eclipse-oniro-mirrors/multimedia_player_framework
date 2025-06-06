@@ -40,12 +40,12 @@ void AudioHapticSoundLowLatencyImplUnitTest::TearDown(void) {}
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_001, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -67,12 +67,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_002, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -84,46 +84,46 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
 /**
  * @tc.name  : Test AudioHapticSoundLowLatencyImpl API
  * @tc.number: AudioHapticSoundLowLatencyImpl_003
- * @tc.desc  : Test AudioHapticSoundLowLatencyImpl::OpenAudioUri()
+ * @tc.desc  : Test AudioHapticSoundLowLatencyImpl::OpenAudioSource()
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_003, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     audioHapticSoundLowLatencyImpl->fileDes_ = 0;
-    audioHapticSoundLowLatencyImpl->audioUri_ = "123";
+    audioHapticSoundLowLatencyImpl->audioSource_ = {.audioUri = "123"};
 
-    auto ret = audioHapticSoundLowLatencyImpl->OpenAudioUri(audioUri);
+    auto ret = audioHapticSoundLowLatencyImpl->OpenAudioSource();
     EXPECT_NE(ret, MSERR_OK);
 }
 
 /**
  * @tc.name  : Test AudioHapticSoundLowLatencyImpl API
  * @tc.number: AudioHapticSoundLowLatencyImpl_004
- * @tc.desc  : Test AudioHapticSoundLowLatencyImpl::OpenAudioUri()
+ * @tc.desc  : Test AudioHapticSoundLowLatencyImpl::OpenAudioSource()
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_004, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     audioHapticSoundLowLatencyImpl->fileDes_ = -1;
-    audioHapticSoundLowLatencyImpl->audioUri_ = "123";
+    audioHapticSoundLowLatencyImpl->audioSource_ = {.audioUri = "123"};
 
-    auto ret = audioHapticSoundLowLatencyImpl->OpenAudioUri(audioUri);
+    auto ret = audioHapticSoundLowLatencyImpl->OpenAudioSource();
     EXPECT_NE(ret, MSERR_OK);
 }
 
@@ -134,12 +134,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_005, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -156,12 +156,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_006, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -187,12 +187,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_007, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -218,12 +218,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_008, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -249,12 +249,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_009, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -280,12 +280,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_010, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -302,12 +302,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_011, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -324,12 +324,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_012, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -346,12 +346,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_013, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -369,12 +369,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_014, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -403,12 +403,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_015, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -427,12 +427,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_016, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -450,12 +450,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_017, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -484,12 +484,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_018, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -508,12 +508,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_019, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -531,12 +531,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_020, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -553,12 +553,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_021, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -574,12 +574,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_022, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -601,12 +601,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_023, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -623,12 +623,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_024, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -650,12 +650,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_025, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -670,12 +670,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_026, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -695,12 +695,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_027, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -720,12 +720,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_028, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -735,7 +735,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     int32_t soundId = 0;
 
     std::shared_ptr<AudioHapticSoundLowLatencyImpl> sharedcb =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
     aHSoundLowLatencyCallback->soundLowLatencyImpl_ = sharedcb;
 
     EXPECT_NE(aHSoundLowLatencyCallback->soundLowLatencyImpl_.lock(), nullptr);
@@ -751,12 +751,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_029, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -776,12 +776,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_030, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -790,7 +790,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
 
     int32_t streamID = 0;
     std::shared_ptr<AudioHapticSoundLowLatencyImpl> sharedcb =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
     aHSoundLowLatencyCallback->soundLowLatencyImpl_ = sharedcb;
 
     EXPECT_NE(aHSoundLowLatencyCallback->soundLowLatencyImpl_.lock(), nullptr);
@@ -805,12 +805,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_031, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -830,12 +830,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_032, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -844,7 +844,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
 
     int32_t errorCode = 0;
     std::shared_ptr<AudioHapticSoundLowLatencyImpl> sharedcb =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
     aHSoundLowLatencyCallback->soundLowLatencyImpl_ = sharedcb;
 
     EXPECT_NE(aHSoundLowLatencyCallback->soundLowLatencyImpl_.lock(), nullptr);
@@ -859,12 +859,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_033, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -884,12 +884,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
  */
 HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_034, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool parallelPlayFlag = true;
     auto audioHapticSoundLowLatencyImpl =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
     EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
@@ -898,7 +898,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
 
     uint64_t latency = 0;
     std::shared_ptr<AudioHapticSoundLowLatencyImpl> sharedcb =
-        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage, parallelPlayFlag);
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
     aHSoundFirstFrameCallback->soundLowLatencyImpl_ = sharedcb;
 
     EXPECT_NE(aHSoundFirstFrameCallback->soundLowLatencyImpl_.lock(), nullptr);
