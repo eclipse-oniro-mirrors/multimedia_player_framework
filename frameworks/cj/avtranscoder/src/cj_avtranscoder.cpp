@@ -179,7 +179,7 @@ int32_t CJAVTranscoder::GetConfig(const CAVTransCoderConfig &cconfig, CjAVTransC
 
 void CJAVTranscoder::StateCallback(CjAVTransCoderState state)
 {
-    if (STATE2CSTR.find(state) != STATE2CSTR.end()){
+    if (STATE2CSTR.find(state) != STATE2CSTR.end()) {
         MEDIA_LOGI("Change state to %{public}s", STATE2CSTR.at(state));
     } else {
         MEDIA_LOGW("state %{public}d is not in STATE2CSTR", static_cast<int32_t>(state));
