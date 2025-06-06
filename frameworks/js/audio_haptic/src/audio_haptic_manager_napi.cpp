@@ -15,18 +15,12 @@
 
 #include "audio_haptic_manager_napi.h"
 
+#include "audio_haptic_file_descriptor_napi.h"
 #include "audio_haptic_player_napi.h"
 
 #include "audio_haptic_log.h"
 
 namespace {
-/* Constants for array index */
-const int32_t PARAM0 = 0;
-const int32_t PARAM1 = 1;
-
-/* Constants for array size */
-const int32_t ARGS_ONE = 1;
-const int32_t ARGS_TWO = 2;
 const int32_t SIZE = 1024;
 
 const int ERROR = -1;
@@ -126,6 +120,7 @@ napi_value AudioHapticManagerNapi::Init(napi_env env, napi_value exports)
 
     napi_property_descriptor audioHapticMgrProp[] = {
         DECLARE_NAPI_FUNCTION("registerSource", RegisterSource),
+        DECLARE_NAPI_FUNCTION("registerSourceFromFd", RegisterSourceFromFd),
         DECLARE_NAPI_FUNCTION("unregisterSource", UnregisterSource),
         DECLARE_NAPI_FUNCTION("setAudioLatencyMode", SetAudioLatencyMode),
         DECLARE_NAPI_FUNCTION("setStreamUsage", SetStreamUsage),
@@ -212,6 +207,111 @@ napi_value AudioHapticManagerNapi::GetAudioHapticManager(napi_env env, napi_call
 
     napi_get_undefined(env, &result);
     return result;
+}
+
+napi_value AudioHapticManagerNapi::RegisterSourceFromFd(napi_env env, napi_callback_info info)
+{
+    std::unique_ptr<RegisterFromFdContext> asyncContext = std::make_unique<RegisterFromFdContext>();
+    napi_value promise = nullptr;
+    if (!AudioHapticCommonNapi::InitPromiseFunc(env, info, asyncContext.get(), &promise, ARGS_TWO)) {
+        return promise;
+    }
+
+    if (!AudioHapticCommonNapi::VerifySelfSystemPermission()) {
+        AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred,
+            NAPI_ERR_PERMISSION_DENIED, NAPI_ERR_PERMISSION_DENIED_INFO);
+        return promise;
+    }
+
+    AudioHapticFileDescriptor audioFd;
+    if (GetAudioHapticFileDescriptorValue(env, asyncContext->argv[PARAM0], audioFd) != SUCCESS) {
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID, "Invalid first parameter");
+        return promise;
+    }
+    asyncContext->audioFd = audioFd;
+
+    AudioHapticFileDescriptor hapticFd;
+    if (GetAudioHapticFileDescriptorValue(env, asyncContext->argv[PARAM1], hapticFd) != SUCCESS) {
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID, "Invalid second parameter");
+        return promise;
+    }
+    asyncContext->hapticFd = hapticFd;
+
+    napi_value funcName = nullptr;
+    napi_create_string_utf8(env, "RegisterSourceFromFd", NAPI_AUTO_LENGTH, &funcName);
+    napi_status status = napi_create_async_work(
+        env,
+        nullptr,
+        funcName,
+        AsyncRegisterSourceFromFd,
+        RegisterSourceFromFdAsyncCallbackComp,
+        static_cast<void*>(asyncContext.get()),
+        &asyncContext->work);
+    if (status != napi_ok) {
+        MEDIA_LOGE("Failed to get create async work");
+        AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred,
+            status, "Failed to get create async work");
+    } else {
+        napi_queue_async_work(env, asyncContext->work);
+        asyncContext.release();
+    }
+
+    return promise;
+}
+
+void AudioHapticManagerNapi::AsyncRegisterSourceFromFd(napi_env env, void *data)
+{
+    RegisterFromFdContext *context = static_cast<RegisterFromFdContext *>(data);
+    AudioHapticManagerNapi* object = reinterpret_cast<AudioHapticManagerNapi*>(context->objectInfo);
+    if (context->audioFd.fd == -1 || context->hapticFd.fd == -1) {
+        context->sourceID = ERROR;
+    } else {
+        context->sourceID = object->audioHapticMgrClient_->
+            RegisterSourceFromFd(context->audioFd, context->hapticFd);
+    }
+}
+
+void AudioHapticManagerNapi::RegisterSourceFromFdAsyncCallbackComp(napi_env env, napi_status status, void *data)
+{
+    RegisterFromFdContext *context = static_cast<RegisterFromFdContext *>(data);
+    napi_value result = nullptr;
+
+    if (context->deferred) {
+        if (context->sourceID > ERROR) {
+            napi_create_int32(env, context->sourceID, &result);
+            napi_resolve_deferred(env, context->deferred, result);
+        } else {
+            AudioHapticCommonNapi::PromiseReject(env, context->deferred,
+                context->sourceID, "RegisterSourceFromFd Error: Operation is not supported or failed");
+        }
+    }
+    napi_delete_async_work(env, context->work);
+
+    delete context;
+    context = nullptr;
+}
+
+int32_t AudioHapticManagerNapi::GetAudioHapticFileDescriptorValue(napi_env env, napi_value object,
+    AudioHapticFileDescriptor& audioHapticFd)
+{
+    napi_value property = nullptr;
+    napi_valuetype valueType = napi_undefined;
+    napi_typeof(env, object, &valueType);
+    CHECK_AND_RETURN_RET_LOG(valueType == napi_object, ERROR, "type mismatch");
+
+    auto status = napi_get_named_property(env, object, "fd", &property);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, ERROR, "No property: fd");
+    status = napi_get_value_int32(env, property, &(audioHapticFd.fd));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, ERROR, "Invalid value: fd");
+    if (napi_get_named_property(env, object, "length", &property) == napi_ok) {
+        status = napi_get_value_int64(env, property, &(audioHapticFd.length));
+        CHECK_AND_RETURN_RET_LOG(status == napi_ok, ERROR, "Invalid value: length");
+    }
+    if (napi_get_named_property(env, object, "offset", &property) == napi_ok) {
+        status = napi_get_value_int64(env, property, &(audioHapticFd.offset));
+        CHECK_AND_RETURN_RET_LOG(status == napi_ok, ERROR, "Invalid value: offset");
+    }
+    return SUCCESS;
 }
 
 napi_value AudioHapticManagerNapi::RegisterSource(napi_env env, napi_callback_info info)

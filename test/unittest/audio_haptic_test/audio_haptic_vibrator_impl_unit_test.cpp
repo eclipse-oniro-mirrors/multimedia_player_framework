@@ -157,9 +157,9 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_008, TestSize.
     auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
     EXPECT_NE(audioHapticVibratorImpl, nullptr);
 
-    std::string hapticsUri = "fd://123";
+    HapticSource hapticSource = {.hapticUri = "fd://123"};
 
-    auto ret = audioHapticVibratorImpl->OpenHapticFile(hapticsUri);
+    auto ret = audioHapticVibratorImpl->OpenHapticFile(hapticSource);
     EXPECT_NE(ret, MSERR_OK);
 }
 

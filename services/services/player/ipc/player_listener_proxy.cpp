@@ -40,7 +40,10 @@ void PlayerListenerProxy::OnError(int32_t errorCode, const std::string &errorMsg
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option(MessageOption::TF_ASYNC);
+
+    int32_t options = isFrozen_ ? (MessageOption::TF_ASYNC | MessageOption::TF_ASYNC_WAKEUP_LATER)
+        : MessageOption::TF_ASYNC;
+    MessageOption option(options);
 
     bool token = data.WriteInterfaceToken(PlayerListenerProxy::GetDescriptor());
     CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
@@ -63,7 +66,12 @@ void PlayerListenerProxy::OnInfo(PlayerOnInfoType type, int32_t extra, const For
 
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option(MessageOption::TF_ASYNC);
+
+    bool isReportLater = isFrozen_ && (type != INFO_TYPE_INTERRUPT_EVENT ||
+                         (type == INFO_TYPE_INTERRUPT_EVENT && !isRegistered_));
+    int32_t options = isReportLater ? (MessageOption::TF_ASYNC | MessageOption::TF_ASYNC_WAKEUP_LATER)
+        : MessageOption::TF_ASYNC;
+    MessageOption option(options);
 
     bool token = data.WriteInterfaceToken(PlayerListenerProxy::GetDescriptor());
     CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
@@ -71,9 +79,22 @@ void PlayerListenerProxy::OnInfo(PlayerOnInfoType type, int32_t extra, const For
     data.WriteInt32(type);
     data.WriteInt32(extra);
     MediaParcel::Marshalling(data, infoBody);
+    std::string info = infoBody.Stringify();
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " send on info type: %{public}d extra %{public}d, format %{public}s",
+            FAKE_POINTER(this), type, extra, info.c_str());
     int error = SendRequest(PlayerListenerMsg::ON_INFO, data, reply, option);
     CHECK_AND_RETURN_LOG(error == MSERR_OK, "0x%{public}06" PRIXPTR " on info failed, error: %{public}d",
         FAKE_POINTER(this), error);
+}
+
+void PlayerListenerProxy::SetFreezeFlag(bool isFrozen)
+{
+    isFrozen_ = isFrozen;
+}
+
+void PlayerListenerProxy::SetInterruptListenerFlag(bool isRegistered)
+{
+    isRegistered_ = isRegistered;
 }
 
 PlayerListenerCallback::PlayerListenerCallback(const sptr<IStandardPlayerListener> &listener) : listener_(listener)
@@ -97,6 +118,18 @@ void PlayerListenerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const 
 {
     CHECK_AND_RETURN(listener_ != nullptr);
     listener_->OnInfo(type, extra, infoBody);
+}
+
+void PlayerListenerCallback::SetFreezeFlag(bool isFrozen)
+{
+    CHECK_AND_RETURN(listener_ != nullptr);
+    listener_->SetFreezeFlag(isFrozen);
+}
+
+void PlayerListenerCallback::SetInterruptListenerFlag(bool isRegistered)
+{
+    CHECK_AND_RETURN(listener_ != nullptr);
+    listener_->SetInterruptListenerFlag(isRegistered);
 }
 
 int32_t PlayerListenerProxy::SendRequest(uint32_t code, MessageParcel &data,

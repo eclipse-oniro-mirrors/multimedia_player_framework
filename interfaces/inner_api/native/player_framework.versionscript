@@ -41,6 +41,8 @@
       *OHOS::Media::ScreenCaptureMonitor::UnregisterScreenCaptureMonitorListener*;
       *OHOS::Media::MediaServiceFactory::GetInstance*;
       *OHOS::Media::MediaServiceHelper::CanKillMediaService*;
+      *OHOS::Media::MediaServiceHelper::ProxyForFreeze*;
+      *OHOS::Media::MediaServiceHelper::ResetAllProxy*;
     };
     "*MSErrorToString*";
     "*MSExtErrorToString*";

@@ -88,6 +88,7 @@ public:
     int32_t SetReopenFd(int32_t fd) override;
     int32_t EnableCameraPostprocessing() override;
     int32_t EnableReportMediaProgress(bool enable) override;
+    int32_t EnableReportAudioInterrupt(bool enable) override;
 private:
     int32_t SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option);
     void InitPlayerFuncsPart1();

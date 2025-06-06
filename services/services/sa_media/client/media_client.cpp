@@ -74,6 +74,23 @@ MediaClient::~MediaClient()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
+int32_t MediaClient::ProxyForFreeze(const std::set<int32_t> &pidList, bool isProxy)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(IsAlived(), MSERR_SERVICE_DIED, "media service does not exist.");
+    MEDIA_LOGD("received Freeze Notification, pidSize = %{public}d, isProxy = %{public}d",
+               static_cast<int32_t>(pidList.size()), isProxy);
+    return mediaProxy_->FreezeStubForPids(pidList, isProxy);
+}
+
+int32_t MediaClient::ResetAllProxy()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(IsAlived(), MSERR_SERVICE_DIED, "media service does not exist.");
+    MEDIA_LOGI("received ResetAllProxy");
+    return mediaProxy_->ResetAllProxy();
+}
+
 bool MediaClient::IsAlived()
 {
     if (mediaProxy_ == nullptr) {

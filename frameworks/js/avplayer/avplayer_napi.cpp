@@ -3231,6 +3231,10 @@ void AVPlayerNapi::HandleListenerStateChange(std::string callbackName, bool stat
     if (callbackName == "timeUpdate") {
         return (void)player_->EnableReportMediaProgress(state);
     }
+
+    if (callbackName == "audioInterrupt") {
+        return (void)player_->EnableReportAudioInterrupt(state);
+    }
 }
 
 void AVPlayerNapi::SeiMessageCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName,

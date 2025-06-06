@@ -633,7 +633,8 @@ int32_t ScreenCaptureServiceProxy::SetScreenCaptureStrategy(ScreenCaptureStrateg
     bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    token = data.WriteBool(strategy.enableDeviceLevelCapture) && data.WriteBool(strategy.keepCaptureDuringCall);
+    token = data.WriteBool(strategy.enableDeviceLevelCapture) && data.WriteBool(strategy.keepCaptureDuringCall)
+        && data.WriteInt32(strategy.strategyForPrivacyMaskMode);
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write strategy!");
 
     int error = Remote()->SendRequest(SET_STRATEGY, data, reply, option);

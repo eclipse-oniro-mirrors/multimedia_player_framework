@@ -41,6 +41,11 @@ public:
     int32_t StopVibrate() override;
     int32_t GetDelayTime() override;
     void SetIsSupportEffectId(bool isSupport);
+    bool IsHdHapticSupported() override;
+    void EnableHapticsInSilentMode(bool enable) override
+    {
+        enableInSilentMode_ = enable;
+    }
 
 private:
     int32_t StartVibrateForSoundPool();
@@ -48,9 +53,20 @@ private:
     int32_t StartVibrateForAVPlayer();
     int32_t StartNonSyncVibration();
     int32_t StartNonSyncOnceVibration();
-    int32_t RunVibrationPatterns(std::unique_lock<std::mutex> &lock);
-    int32_t OpenHapticFile(const std::string &hapticUri);
+    int32_t RunVibrationPatterns(const std::shared_ptr<VibratorPackage>& vibratorPkg,
+                                 std::unique_lock<std::mutex> &lock);
+    int32_t OpenHapticSource(const HapticSource& hapticSource, int32_t& fd);
+    int32_t OpenHapticFile(const HapticSource& hapticSource);
     int32_t ExtractFd(const std::string& hapticsUri);
+    int32_t PlayVibrationPattern(const std::shared_ptr<VibratorPackage>& vibratorPkg,
+                                 int32_t patternIndex,
+                                 int32_t& vibrateTime,
+                                 std::unique_lock<std::mutex>& lock);
+    int32_t PlayVibrateForAVPlayer(const std::shared_ptr<VibratorPackage>& vibratorPkg,
+                                   std::unique_lock<std::mutex>& lock);
+    int32_t PlayVibrateForSoundPool(const std::shared_ptr<VibratorPackage>& vibratorPkg,
+                                    std::unique_lock<std::mutex>& lock);
+    int32_t SeekAndRestart();
 
     AudioHapticPlayer &audioHapticPlayer_;
 
@@ -58,14 +74,22 @@ private:
     VibratorUsage vibratorUsage_ = VibratorUsage::USAGE_UNKNOWN;
     std::shared_ptr<VibratorFileDescription> vibratorFD_ = nullptr;
     std::shared_ptr<VibratorPackage> vibratorPkg_ = nullptr;
+    std::shared_ptr<VibratorPackage> seekVibratorPkg_ = nullptr;
     std::condition_variable vibrateCV_;
     float vibrateIntensity_ = 1.0f;
     bool isSupportEffectId_ = false;
     HapticSource hapticSource_;
+    bool enableInSilentMode_ = false;
 #endif
     std::mutex vibrateMutex_;
     AudioStandard::StreamUsage streamUsage_ = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool isStopped_ = false;
+    std::atomic<int32_t> vibrationTimeElapsed_ = 0;
+    std::atomic<int64_t> patternStartTime_ = 0;
+    VibratorParameter vibratorParameter_;
+    std::atomic<bool> isRunning_ = false;
+    std::atomic<bool> isIntensityChanged_ = false;
+    std::atomic<bool> isNeedRestart_ = false;
 };
 } // namespace Media
 } // namespace OHOS

@@ -116,6 +116,10 @@ public:
     int32_t Pause(bool isSystemOperation) override;
     int32_t Stop() override;
     int32_t Reset() override;
+    int32_t Freeze() override;
+    int32_t UnFreeze() override;
+    int32_t PauseSourceDownload() override;
+    int32_t ResumeSourceDownload() override;
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t SetVolume(float leftVolume, float rightVolume) override;
     int32_t SetVolumeMode(int32_t mode) override;
@@ -263,6 +267,7 @@ private:
     Status doPreparedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doStartedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doPausedSeek(int64_t seekPos, PlayerSeekMode mode);
+    Status doFrozenSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doCompletedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doSetPlaybackSpeed(float speed);
@@ -469,6 +474,8 @@ private:
     std::mutex fdMutex_ {};
     std::unique_ptr<FdsanFd> fdsanFd_ = nullptr;
     std::atomic<bool> enableCameraPostprocessing_ {false};
+    bool sourceDownloadPaused_ {false};
+    std::mutex freezeMutex_;
 };
 } // namespace Media
 } // namespace OHOS

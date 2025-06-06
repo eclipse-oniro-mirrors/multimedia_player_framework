@@ -22,19 +22,20 @@
 namespace OHOS {
 namespace Media {
 struct AudioHapticPlayerInfo {
-    std::string audioUri_;
+    AudioSource audioSource_;
     HapticSource hapticSource_;
     AudioLatencyMode latencyMode_;
     AudioStandard::StreamUsage streamUsage_;
 
     AudioHapticPlayerInfo() {};
-    AudioHapticPlayerInfo(const std::string &audioUri, const HapticSource &hapticSource,
+    AudioHapticPlayerInfo(const AudioSource& audioSource, const HapticSource &hapticSource,
         const AudioLatencyMode &latencyMode, const AudioStandard::StreamUsage &streamUsage)
-        : audioUri_(audioUri),
+        : audioSource_(audioSource),
           hapticSource_(hapticSource),
           latencyMode_(latencyMode),
           streamUsage_(streamUsage) {};
 };
+const int32_t INVALID_SOURCE_ID = -1;
 
 class AudioHapticManagerImpl : public AudioHapticManager {
 public:
@@ -42,6 +43,9 @@ public:
     ~AudioHapticManagerImpl();
 
     int32_t RegisterSource(const std::string &audioUri, const std::string &hapticUri) override;
+
+    int32_t RegisterSourceFromFd(const AudioHapticFileDescriptor& audioFd,
+        const AudioHapticFileDescriptor& hapticFd) override;
 
     int32_t RegisterSourceWithEffectId(const std::string &audioUri, const std::string &effectId) override;
 
@@ -57,6 +61,7 @@ public:
 private:
     bool CheckAudioLatencyMode(const int32_t &sourceId, const AudioLatencyMode &latencyMode);
     bool CheckAudioStreamUsage(const AudioStandard::StreamUsage &streamUsage);
+    void ReleasePlayerInfo(const std::shared_ptr<AudioHapticPlayerInfo>& info);
 
     std::unordered_map<int32_t, std::shared_ptr<AudioHapticPlayerInfo>> audioHapticPlayerMap_;
     int32_t curPlayerIndex_;

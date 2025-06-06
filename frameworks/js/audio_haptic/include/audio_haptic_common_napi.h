@@ -28,6 +28,26 @@ const int32_t  NAPI_ERR_OPERATE_NOT_ALLOWED = 5400102;
 const int32_t  NAPI_ERR_IO_ERROR = 5400103;
 const int32_t  NAPI_ERR_SERVICE_DIED = 5400105;
 const int32_t  NAPI_ERR_UNSUPPORTED_FORMAT = 5400106;
+const int32_t  NAPI_ERR_PARAM_OUT_OF_RANGE = 5400108;
+const int32_t  NAPI_ERR_PERMISSION_DENIED = 202;
+
+const std::string NAPI_ERR_PERMISSION_DENIED_INFO = "Caller is not a system application";
+
+/* Constants for array index */
+const int32_t PARAM0 = 0;
+const int32_t PARAM1 = 1;
+
+/* Constants for array size */
+const int32_t ARGS_ZERO = 0;
+const int32_t ARGS_ONE = 1;
+const int32_t ARGS_TWO = 2;
+
+struct AsyncContext {
+    napi_async_work work;
+    napi_deferred deferred = nullptr;
+    napi_value argv[ARGS_TWO] = {0};
+    void* objectInfo = nullptr;
+};
 
 class AudioHapticCommonNapi {
 public:
@@ -37,6 +57,13 @@ public:
     static void ThrowError(napi_env env, int32_t code, const std::string &errMessage);
     static std::string GetMessageByCode(int32_t &code);
     static std::string GetStringArgument(napi_env env, napi_value value);
+    static void PromiseReject(napi_env env, napi_deferred deferred,
+        const int32_t &errCode, const std::string &errMessage);
+    static bool InitPromiseFunc(napi_env env, napi_callback_info info,
+        AsyncContext* asyncContext, napi_value* promise, size_t paramLength);
+    static bool VerifySelfSystemPermission();
+    static bool InitNormalFunc(napi_env env, napi_callback_info info,
+        void **native, napi_value *argv, size_t paramLength);
 };
 
 struct AutoRef {

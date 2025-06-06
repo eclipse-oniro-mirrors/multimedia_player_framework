@@ -180,5 +180,76 @@ HWTEST_F(PlayerServiceStubTest, SetMediaSource_004, TestSize.Level1)
     EXPECT_EQ(ret, 0);
     playerServiceStub = nullptr;
 }
+
+/**
+ * @tc.name  : Freeze_001
+ * @tc.number: Freeze_001
+ * @tc.desc  : FUNC
+ */
+HWTEST_F(PlayerServiceStubTest, Freeze_001, TestSize.Level1)
+{
+    sptr<PlayerServiceStub> playerServiceStub = PlayerServiceStub::Create();
+    ASSERT_NE(playerServiceStub, nullptr);
+
+    int ret = playerServiceStub->Freeze();
+    EXPECT_EQ(ret, 0);
+    playerServiceStub = nullptr;
+}
+
+/**
+ * @tc.name  : UnFreeze_001
+ * @tc.number: UnFreeze_001
+ * @tc.desc  : FUNC
+ */
+HWTEST_F(PlayerServiceStubTest, UnFreeze_001, TestSize.Level1)
+{
+    sptr<PlayerServiceStub> playerServiceStub = PlayerServiceStub::Create();
+    ASSERT_NE(playerServiceStub, nullptr);
+
+    playerServiceStub->isFrozen_ = true;
+    int ret = playerServiceStub->UnFreeze();
+    EXPECT_EQ(ret, 0);
+    playerServiceStub = nullptr;
+}
+
+/**
+ * @tc.name  : EnableReportAudioInterrupt_001
+ * @tc.number: EnableReportAudioInterrupt_001
+ * @tc.desc  : FUNC
+ */
+HWTEST_F(PlayerServiceStubTest, EnableReportAudioInterrupt_001, TestSize.Level1)
+{
+    sptr<PlayerServiceStub> playerServiceStub = PlayerServiceStub::Create();
+    ASSERT_NE(playerServiceStub, nullptr);
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteBool(true);
+
+    int ret = playerServiceStub->EnableReportAudioInterrupt(data, reply);
+    EXPECT_EQ(ret, 0);
+    playerServiceStub = nullptr;
+}
+
+/**
+ * @tc.name  : EnableReportAudioInterrupt_002
+ * @tc.number: EnableReportAudioInterrupt_002
+ * @tc.desc  : FUNC
+ */
+HWTEST_F(PlayerServiceStubTest, EnableReportAudioInterrupt_002, TestSize.Level1)
+{
+    sptr<PlayerServiceStub> playerServiceStub = PlayerServiceStub::Create();
+    ASSERT_NE(playerServiceStub, nullptr);
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteBool(false);
+
+    int ret = playerServiceStub->EnableReportAudioInterrupt(data, reply);
+    EXPECT_EQ(ret, 0);
+    playerServiceStub = nullptr;
+}
 }
 }

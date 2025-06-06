@@ -182,6 +182,12 @@ public:
         return 0;
     }
 
+    virtual int32_t EnableReportAudioInterrupt(bool enable)
+    {
+        (void)enable;
+        return 0;
+    }
+
     /**
      * IPC code ID
      */
@@ -245,6 +251,7 @@ public:
         SET_REOPEN_FD,
         ENABLE_CAMERA_POSTPROCESSING,
         ENABLE_REPORT_MEDIA_PROGRESS,
+        ENABLE_REPORT_AUDIO_INTERRUPT,
         MAX_IPC_ID,                   // all IPC codes should be added before MAX_IPC_ID
     };
 

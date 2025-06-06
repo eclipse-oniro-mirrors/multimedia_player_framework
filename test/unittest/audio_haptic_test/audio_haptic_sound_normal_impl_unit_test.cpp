@@ -38,10 +38,11 @@ void AudioHapticSoundNormalImplUnitTest::TearDown(void) {}
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_001, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -56,10 +57,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_001, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_002, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -74,18 +76,19 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_002, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_003, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
     audioHapticSoundNormalImpl->avPlayer_ = PlayerFactory::CreatePlayer();
     EXPECT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
 
-    audioHapticSoundNormalImpl->audioUri_ = "abc";
-    audioHapticSoundNormalImpl->configuredAudioUri_ = "abc";
+    audioHapticSoundNormalImpl->audioSource_ = {.audioUri = "abc"};
+    audioHapticSoundNormalImpl->configuredAudioSource_ = {.audioUri = "abc"};
     auto ret = audioHapticSoundNormalImpl->PrepareSound();
 
     EXPECT_NE(ret, MSERR_OK);
@@ -98,10 +101,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_003, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_004, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -109,7 +113,7 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_004, Tes
     EXPECT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
 
     audioHapticSoundNormalImpl->playerState_ = AudioHapticPlayerState::STATE_RUNNING;
-    audioHapticSoundNormalImpl->audioUri_ = "abc";
+    audioHapticSoundNormalImpl->audioSource_ = {.audioUri = "abc"};
     auto ret = audioHapticSoundNormalImpl->StartSound();
 
     EXPECT_EQ(ret, MSERR_START_FAILED);
@@ -122,10 +126,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_004, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_005, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -133,7 +138,7 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_005, Tes
     EXPECT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
 
     audioHapticSoundNormalImpl->playerState_ = AudioHapticPlayerState::STATE_STOPPED;
-    audioHapticSoundNormalImpl->audioUri_ = "abc";
+    audioHapticSoundNormalImpl->audioSource_ = {.audioUri = "abc"};
     auto ret = audioHapticSoundNormalImpl->StartSound();
 
     EXPECT_EQ(ret, MSERR_START_FAILED);
@@ -146,10 +151,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_005, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_006, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -157,8 +163,8 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_006, Tes
     EXPECT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
 
     audioHapticSoundNormalImpl->playerState_ = AudioHapticPlayerState::STATE_NEW;
-    audioHapticSoundNormalImpl->audioUri_ = "abc";
-    audioHapticSoundNormalImpl->configuredAudioUri_ = "abcd";
+    audioHapticSoundNormalImpl->audioSource_ = {.audioUri = "abc"};
+    audioHapticSoundNormalImpl->configuredAudioSource_ = {.audioUri = "abcd"};
     auto ret = audioHapticSoundNormalImpl->StartSound();
 
     EXPECT_EQ(ret, MSERR_START_FAILED);
@@ -171,10 +177,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_006, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_007, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -182,8 +189,8 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_007, Tes
     EXPECT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
 
     audioHapticSoundNormalImpl->playerState_ = AudioHapticPlayerState::STATE_NEW;
-    audioHapticSoundNormalImpl->audioUri_ = "abc";
-    audioHapticSoundNormalImpl->configuredAudioUri_ = "abc";
+    audioHapticSoundNormalImpl->audioSource_ = {.audioUri = "abc"};
+    audioHapticSoundNormalImpl->configuredAudioSource_ = {.audioUri = "abc"};
     auto ret = audioHapticSoundNormalImpl->StartSound();
 
     EXPECT_EQ(ret, MSERR_START_FAILED);
@@ -196,10 +203,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_007, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_008, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -219,10 +227,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_008, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_009, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -242,10 +251,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_009, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_010, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -263,10 +273,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_010, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_011, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -283,10 +294,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_011, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_012, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -303,10 +315,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_012, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_013, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -323,10 +336,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_013, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_014, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -346,10 +360,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_014, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_015, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -369,10 +384,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_015, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_016, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -392,10 +408,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_016, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_017, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -415,10 +432,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_017, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_018, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -438,10 +456,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_018, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_019, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -461,10 +480,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_019, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_020, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -482,10 +502,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_020, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_021, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -501,10 +522,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_021, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_022, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -522,10 +544,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_022, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_023, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -541,10 +564,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_023, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_024, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -560,10 +584,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_024, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_025, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -584,10 +609,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_025, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_026, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -608,10 +634,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_026, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_027, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -629,10 +656,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_027, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_028, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -653,10 +681,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_028, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_029, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -674,10 +703,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_029, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_030, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -696,10 +726,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_030, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_031, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -715,10 +746,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_031, Tes
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_032, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -726,7 +758,7 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_032, TestSize
     EXPECT_NE(aHSoundNormalCallback, nullptr);
 
     std::shared_ptr<AudioHapticSoundNormalImpl> sharedcb =
-        std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
     aHSoundNormalCallback->soundNormalImpl_ = sharedcb;
     EXPECT_NE(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
 
@@ -743,10 +775,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_032, TestSize
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_033, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -768,10 +801,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_033, TestSize
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_034, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -794,10 +828,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_034, TestSize
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_035, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -820,10 +855,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_035, TestSize
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_036, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -846,10 +882,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_036, TestSize
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_037, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -872,10 +909,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_037, TestSize
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_038, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -897,10 +935,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_038, TestSize
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_039, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -922,10 +961,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_039, TestSize
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_040, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -933,7 +973,7 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_040, TestSize
     EXPECT_NE(aHSoundNormalCallback, nullptr);
 
     std::shared_ptr<AudioHapticSoundNormalImpl> sharedcb =
-        std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
     aHSoundNormalCallback->soundNormalImpl_ = sharedcb;
     EXPECT_NE(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
 
@@ -951,10 +991,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_040, TestSize
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_041, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -976,10 +1017,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_041, TestSize
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_042, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -1001,10 +1043,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_042, TestSize
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_043, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -1012,7 +1055,7 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_043, TestSize
     EXPECT_NE(aHSoundNormalCallback, nullptr);
 
     std::shared_ptr<AudioHapticSoundNormalImpl> sharedcb =
-        std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
     aHSoundNormalCallback->soundNormalImpl_ = sharedcb;
     EXPECT_NE(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
 
@@ -1030,10 +1073,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_043, TestSize
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_044, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -1055,10 +1099,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_044, TestSize
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_045, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -1079,10 +1124,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_045, TestSize
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_046, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -1090,7 +1136,7 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_046, TestSize
     EXPECT_NE(aHSoundNormalCallback, nullptr);
 
     std::shared_ptr<AudioHapticSoundNormalImpl> sharedcb =
-        std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
     aHSoundNormalCallback->soundNormalImpl_ = sharedcb;
     EXPECT_NE(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
 
@@ -1106,10 +1152,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_046, TestSize
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_047, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
@@ -1117,7 +1164,7 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_047, TestSize
     EXPECT_NE(aHSoundNormalCallback, nullptr);
 
     std::shared_ptr<AudioHapticSoundNormalImpl> sharedcb =
-        std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
     aHSoundNormalCallback->soundNormalImpl_ = sharedcb;
     EXPECT_NE(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
 
@@ -1133,10 +1180,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_047, TestSize
  */
 HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_048, TestSize.Level1)
 {
-    std::string audioUri = "123";
+    AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
-    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 

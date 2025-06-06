@@ -1399,7 +1399,7 @@ int32_t ScreenCaptureServer::CheckCaptureStreamParams()
         " videoCapInfo.state:%{public}d, innerCapInfo.state:%{public}d.", FAKE_POINTER(this),
         isSurfaceMode_ ? "true" : "false", captureConfig_.videoInfo.videoCapInfo.state,
         captureConfig_.audioInfo.innerCapInfo.state);
-    if (captureConfig_.audioInfo.micCapInfo.state != AVScreenCaptureParamValidationState::VALIDATION_INVALID) {
+    if (captureConfig_.audioInfo.micCapInfo.state != AVScreenCaptureParamValidationState::VALIDATION_VALID) {
         isMicrophoneSwitchTurnOn_ = false;
     }
     if (isSurfaceMode_) {
@@ -2926,7 +2926,7 @@ VirtualScreenOption ScreenCaptureServer::InitVirtualScreenOption(const std::stri
         .height_ = captureConfig_.videoInfo.videoCapInfo.videoFrameHeight,
         .density_ = 0,
         .surface_ = consumer,
-        .flags_ = 0,
+        .flags_ = captureConfig_.strategy.strategyForPrivacyMaskMode,
         .isForShot_ = true,
         .missionIds_ = {},
         .virtualScreenType_ = VirtualScreenType::SCREEN_RECORDING,
@@ -3177,8 +3177,6 @@ int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
 {
     MediaTrace trace("ScreenCaptureServer::SetMicrophoneEnabled");
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(captureConfig_.audioInfo.micCapInfo.state ==
-        AVScreenCaptureParamValidationState::VALIDATION_VALID, MSERR_OK, "No Microphone Config");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " SetMicrophoneEnabled isMicrophoneSwitchTurnOn_:"
         "%{public}d, new isMicrophone:%{public}d", FAKE_POINTER(this), isMicrophoneSwitchTurnOn_, isMicrophone);
     int32_t ret = MSERR_UNKNOWN;
@@ -3189,6 +3187,8 @@ int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
         isMicrophoneSwitchTurnOn_ = isMicrophone;
         return MSERR_OK;
     }
+    CHECK_AND_RETURN_RET_LOG(captureConfig_.audioInfo.micCapInfo.state ==
+        AVScreenCaptureParamValidationState::VALIDATION_VALID, MSERR_OK, "No Microphone Config");
     if (isMicrophone) {
         ret = SetMicrophoneOn();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetMicrophoneOn failed");
@@ -3948,8 +3948,9 @@ int32_t ScreenCaptureServer::SetScreenCaptureStrategy(ScreenCaptureStrategy stra
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(captureState_ < AVScreenCaptureState::POPUP_WINDOW, MSERR_UNSUPPORT,
         "strategy can not be modified after screencapture started");
-    MEDIA_LOGI("SetScreenCaptureStrategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d",
-        strategy.enableDeviceLevelCapture, strategy.keepCaptureDuringCall);
+    MEDIA_LOGI("SetScreenCaptureStrategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d,"
+        "strategyForPrivacyMaskMode: %{public}d",
+        strategy.enableDeviceLevelCapture, strategy.keepCaptureDuringCall, strategy.strategyForPrivacyMaskMode);
     captureConfig_.strategy = strategy;
     return MSERR_OK;
 }

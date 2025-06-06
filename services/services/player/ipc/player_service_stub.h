@@ -74,6 +74,8 @@ public:
     int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
     int32_t SetSuperResolution(bool enabled) override;
     int32_t SetVideoWindowSize(int32_t width, int32_t height) override;
+    int32_t Freeze();
+    int32_t UnFreeze();
 #ifdef SUPPORT_VIDEO
     int32_t SetVideoSurface(sptr<Surface> surface) override;
 #endif
@@ -105,6 +107,8 @@ public:
     int32_t SetReopenFd(int32_t fd) override;
     int32_t EnableCameraPostprocessing() override;
     int32_t EnableReportMediaProgress(bool enable) override;
+    int32_t EnableReportAudioInterrupt(bool enable) override;
+    bool isFrozen_ = false;
 protected:
     PlayerServiceStub();
     virtual int32_t Init();
@@ -179,11 +183,13 @@ private:
     int32_t SetReopenFd(MessageParcel &data, MessageParcel &reply);
     int32_t EnableCameraPostprocessing(MessageParcel &data, MessageParcel &reply);
     int32_t EnableReportMediaProgress(MessageParcel &data, MessageParcel &reply);
+    int32_t EnableReportAudioInterrupt(MessageParcel &data, MessageParcel &reply);
 
     int32_t ReadMediaStreamListFromMessageParcel(
         MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource);
     void ReadPlayStrategyFromMessageParcel(MessageParcel &data, AVPlayStrategy &strategy);
 
+    int32_t CheckandDoUnFreeze();
     std::map<uint32_t, std::pair<std::string, PlayerStubFunc>> playerFuncs_;
     void FillPlayerFuncPart1();
     void FillPlayerFuncPart2();

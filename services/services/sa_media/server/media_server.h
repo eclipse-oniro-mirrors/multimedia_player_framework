@@ -34,6 +34,10 @@ public:
     explicit MediaServer(int32_t systemAbilityId, bool runOnCreate = true);
     ~MediaServer();
 
+    int32_t FreezeStubForPids(const std::set<int32_t> &pidList, bool isProxy) override;
+
+    int32_t ResetAllProxy() override;
+
     // IStandardMediaService override
     sptr<IRemoteObject> GetSubSystemAbility(IStandardMediaService::MediaSystemAbility subSystemId,
         const sptr<IRemoteObject> &listener) override;
