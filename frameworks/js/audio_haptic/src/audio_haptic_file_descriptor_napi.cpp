@@ -30,8 +30,8 @@ int32_t AudioHapticFileDescriptorNapi::sFd_ = 0;
 int64_t AudioHapticFileDescriptorNapi::sLength_ = 0;
 int64_t AudioHapticFileDescriptorNapi::sOffset_ = 0;
 
-AudioHapticFileDescriptorNapi::AudioHapticFileDescriptorNapi()
-    : env_(nullptr) {
+AudioHapticFileDescriptorNapi::AudioHapticFileDescriptorNapi() : env_(nullptr)
+{
 }
 
 AudioHapticFileDescriptorNapi::~AudioHapticFileDescriptorNapi() = default;

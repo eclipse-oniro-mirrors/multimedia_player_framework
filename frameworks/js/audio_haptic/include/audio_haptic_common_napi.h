@@ -58,12 +58,12 @@ public:
     static std::string GetMessageByCode(int32_t &code);
     static std::string GetStringArgument(napi_env env, napi_value value);
     static void PromiseReject(napi_env env, napi_deferred deferred,
-        const int32_t& errCode, const std::string &errMessage);
+        const int32_t &errCode, const std::string &errMessage);
     static bool InitPromiseFunc(napi_env env, napi_callback_info info,
         AsyncContext* asyncContext, napi_value* promise, size_t paramLength);
     static bool VerifySelfSystemPermission();
     static bool InitNormalFunc(napi_env env, napi_callback_info info,
-        void** native, napi_value* argv, size_t paramLength);
+        void **native, napi_value *argv, size_t paramLength);
 };
 
 struct AutoRef {

@@ -70,7 +70,7 @@ bool AudioHapticCommonNapi::InitNormalFunc(napi_env env, napi_callback_info info
     }
 
     if (argc != paramLength) {
-        MEDIA_LOGE("requires %{public}u parameters", paramLength);
+        MEDIA_LOGE("invalid parameters");
         std::string logMsg = "requires " + std::to_string(paramLength) + " parameters";
         AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID, logMsg);
         return false;
@@ -88,6 +88,10 @@ bool AudioHapticCommonNapi::InitNormalFunc(napi_env env, napi_callback_info info
 bool AudioHapticCommonNapi::InitPromiseFunc(napi_env env, napi_callback_info info,
     AsyncContext* asyncContext, napi_value* promise, size_t paramLength)
 {
+    if (asyncContext == nullptr) {
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_SERVICE_DIED, "error create promise");
+        return false;
+    }
     napi_create_promise(env, &asyncContext->deferred, promise);
     napi_value thisVar = nullptr;
     size_t argc = paramLength;
@@ -100,7 +104,7 @@ bool AudioHapticCommonNapi::InitPromiseFunc(napi_env env, napi_callback_info inf
     }
 
     if (argc != paramLength) {
-        MEDIA_LOGE("requires %{public}u parameters", paramLength);
+        MEDIA_LOGE("invalid parameters");
         std::string logMsg = "requires " + std::to_string(paramLength) + " parameters";
         AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID, logMsg);
         return false;
@@ -109,7 +113,7 @@ bool AudioHapticCommonNapi::InitPromiseFunc(napi_env env, napi_callback_info inf
     if (status != napi_ok) {
         MEDIA_LOGE("Failed to unwrap object");
         AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred,
-            NAPI_ERR_OPERATE_NOT_ALLOWED, "Failed to unwrap object");
+            NAPI_ERR_SERVICE_DIED, "Failed to unwrap object");
         return false;
     }
     return true;
@@ -118,13 +122,7 @@ bool AudioHapticCommonNapi::InitPromiseFunc(napi_env env, napi_callback_info inf
 bool AudioHapticCommonNapi::VerifySelfSystemPermission()
 {
     Security::AccessToken::FullTokenID selfTokenID = IPCSkeleton::GetSelfTokenID();
-    auto tokenTypeFlag = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(static_cast<uint32_t>(selfTokenID));
-    if (tokenTypeFlag == Security::AccessToken::TOKEN_NATIVE ||
-        tokenTypeFlag == Security::AccessToken::TOKEN_SHELL ||
-        Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(selfTokenID)) {
-        return true;
-    }
-    return false;
+    return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(selfTokenID);
 }
 
 std::string AudioHapticCommonNapi::GetMessageByCode(int32_t &code)

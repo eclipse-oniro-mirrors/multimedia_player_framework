@@ -590,7 +590,7 @@ int32_t AudioHapticVibratorImpl::SeekAndRestart()
 {
     seekVibratorPkg_ = std::make_shared<VibratorPackage>();
     auto duration = GetCurrentTimeMillis() - patternStartTime_;
-    MEDIA_LOGI("AudioHapticVibratorImpl::SeekAndRestart vibrationTimeElapsed_: %{public}d duration: %{public}lld",
+    MEDIA_LOGI("AudioHapticVibratorImpl::SeekAndRestart vibrationTimeElapsed_: %{public}d duration: %{public}" PRId64,
         vibrationTimeElapsed_.load(), duration);
     int32_t result = Sensors::SeekTimeOnPackage(vibrationTimeElapsed_ + duration, *vibratorPkg_, *seekVibratorPkg_);
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result,
