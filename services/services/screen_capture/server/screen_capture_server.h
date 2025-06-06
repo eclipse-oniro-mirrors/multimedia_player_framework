@@ -255,6 +255,7 @@ private:
     int32_t RegisterWindowRelatedListener();
     int32_t SetCaptureAreaInner(uint64_t displayId, OHOS::Rect area);
     bool CheckDisplayArea(uint64_t displayId, OHOS::Rect area);
+    void PrepareUserSelectionInfo(ScreenCaptureUserSelectionInfo &selectionInfo);
 
 private:
     std::mutex mutex_;

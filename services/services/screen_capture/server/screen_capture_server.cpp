@@ -864,7 +864,6 @@ void ScreenCaptureServer::PrepareSelectWindow(Json::Value &root, std::shared_ptr
     if (root.type() != Json::objectValue) {
         return;
     }
-    ScreenCaptureUserSelectionInfo selectionInfo = {0, static_cast<uint64_t>(0)};
     const Json::Value displayIdJson = root["displayId"];
     if (!displayIdJson.isNull() && displayIdJson.isInt() && displayIdJson.asInt64() >= 0) {
         uint64_t displayId = static_cast<uint64_t>(displayIdJson.asInt64());
@@ -872,8 +871,6 @@ void ScreenCaptureServer::PrepareSelectWindow(Json::Value &root, std::shared_ptr
         server->SetDisplayId(displayId);
         // 手机模式 missionId displayId 均为-1
         server->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_SCREEN, -1);
-        selectionInfo.selectType = SELECT_TYPE_SCREEN;
-        selectionInfo.displayId = displayId;
     }
     const Json::Value missionIdJson = root["missionId"];
     if (!missionIdJson.isNull() && missionIdJson.isInt() && missionIdJson.asInt() >= 0) {
@@ -881,10 +878,9 @@ void ScreenCaptureServer::PrepareSelectWindow(Json::Value &root, std::shared_ptr
         MEDIA_LOGI("Report Select MissionId: %{public}d", missionId);
         server->SetMissionId(missionId);
         server->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_WINDOW, missionId);
-        selectionInfo.selectType = SELECT_TYPE_WINDOW;
-        sptr<Rosen::Display> defaultDisplay = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
-        selectionInfo.displayId = server->GetDisplayIdOfWindows(defaultDisplay->GetScreenId());
     }
+    ScreenCaptureUserSelectionInfo selectionInfo = {0, static_cast<uint64_t>(0)};
+    server->PrepareUserSelectionInfo(selectionInfo);
     server->NotifyUserSelected(selectionInfo);
 }
 
@@ -1851,6 +1847,20 @@ void ScreenCaptureServer::NotifyDisplaySelected(uint64_t displayId)
     if (screenCaptureCb_ != nullptr) {
         MEDIA_LOGD("NotifyDisplaySelected displayId: (%{public}" PRIu64 ")", displayId);
         screenCaptureCb_->OnDisplaySelected(displayId);
+    }
+}
+
+void ScreenCaptureServer::PrepareUserSelectionInfo(ScreenCaptureUserSelectionInfo &selectionInfo)
+{
+    MEDIA_LOGI("PrepareUserSelectionInfo start");
+    if (captureConfig_.captureMode == CaptureMode::CAPTURE_SPECIFIED_WINDOW) {
+        selectionInfo.selectType = SELECT_TYPE_WINDOW;
+        sptr<Rosen::Display> defaultDisplay = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
+        CHECK_AND_RETURN_LOG(defaultDisplay != nullptr, "PrepareUserSelectionInfo GetDefaultDisplaySync failed");
+        selectionInfo.displayId = GetDisplayIdOfWindows(defaultDisplay->GetScreenId());
+    } else {
+        selectionInfo.selectType = SELECT_TYPE_SCREEN;
+        selectionInfo.displayId = captureConfig_.videoInfo.videoCapInfo.displayId;
     }
 }
 
