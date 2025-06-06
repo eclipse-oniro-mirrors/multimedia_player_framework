@@ -72,16 +72,16 @@ public:
     virtual Status PausePreroll();
 
     virtual Status StartTask(int32_t trackId);
-    virtual Status SelectTrack(int32_t trackId);
-    virtual Status UnselectTrack(int32_t trackId);
-    virtual Status ReadSample(uint32_t trackId, std::shared_ptr<AVBuffer> sample);
+    virtual Status SelectTrack(uint32_t trackIndex); // Interface for AVDemuxer
+    virtual Status UnselectTrack(uint32_t trackIndex); // Interface for AVDemuxer
+    virtual Status ReadSample(uint32_t trackIndex, std::shared_ptr<AVBuffer> sample); // Interface for AVDemuxer
     virtual Status GetBitRates(std::vector<uint32_t> &bitRates);
     virtual Status SelectBitRate(uint32_t bitRate);
     virtual Status GetMediaKeySystemInfo(std::multimap<std::string, std::vector<uint8_t>> &infos);
     virtual void SetDrmCallback(const std::shared_ptr<OHOS::MediaAVCodec::AVDemuxerCallback> &callback);
     virtual void OnEvent(const Plugins::PluginEvent &event);
 
-    virtual std::map<uint32_t, sptr<AVBufferQueueProducer>> GetBufferQueueProducerMap();
+    virtual std::map<int32_t, sptr<AVBufferQueueProducer>> GetBufferQueueProducerMap();
     virtual Status PauseTaskByTrackId(int32_t trackId);
     virtual bool IsRenderNextVideoFrameSupported();
 
@@ -92,12 +92,12 @@ public:
     virtual void SetDumpInfo(bool isDump, uint64_t instanceId);
 
     virtual Status OptimizeDecodeSlow(bool isDecodeOptimizationEnabled);
-    virtual Status SetDecoderFramerateUpperLimit(int32_t decoderFramerateUpperLimit, uint32_t trackId);
+    virtual Status SetDecoderFramerateUpperLimit(int32_t decoderFramerateUpperLimit, int32_t trackId);
     virtual Status SetSpeed(float speed);
-    virtual Status SetFrameRate(double frameRate, uint32_t trackId);
+    virtual Status SetFrameRate(double frameRate, int32_t trackId);
 
     virtual bool IsLocalDrmInfosExisted();
-    virtual void OnBufferAvailable(uint32_t trackId);
+    virtual void OnBufferAvailable(int32_t trackId);
     virtual void SetSelectBitRateFlag(bool flag, uint32_t desBitRate);
     virtual bool CanAutoSelectBitRate();
     virtual void OnDumpInfo(int32_t fd);
@@ -114,9 +114,9 @@ public:
     virtual void DeregisterVideoStreamReadyCallback();
 
     virtual Status GetIndexByRelativePresentationTimeUs(const uint32_t trackIndex,
-        const uint64_t relativePresentationTimeUs, uint32_t &index);
+        const uint64_t relativePresentationTimeUs, uint32_t &index); // Interface for AVDemuxer
     virtual Status GetRelativePresentationTimeUsByIndex(const uint32_t trackIndex,
-        const uint32_t index, uint64_t &relativePresentationTimeUs);
+        const uint32_t index, uint64_t &relativePresentationTimeUs); // Interface for AVDemuxer
 
     virtual Status ResumeDemuxerReadLoop();
     virtual Status PauseDemuxerReadLoop();

@@ -113,10 +113,11 @@ Status SeekAgent::Seek(int64_t seekPos, bool &timeout)
     return st;
 }
 
-Status SeekAgent::GetAllTrackInfo(uint32_t &videoTrackId, std::vector<uint32_t> &audioTrackIds)
+Status SeekAgent::GetAllTrackInfo(int32_t &videoTrackId, std::vector<int32_t> &audioTrackIds)
 {
     auto trackInfo = demuxer_->GetStreamMetaInfo();
-    for (uint32_t index = 0; index < trackInfo.size(); index++) {
+    int32_t trackInfoSize = static_cast<int32_t>(trackInfo.size());
+    for (int32_t index = 0; index < trackInfoSize; index++) {
         auto trackMeta = trackInfo[index];
         std::string mimeType;
         if (trackMeta->Get<Tag::MIME_TYPE>(mimeType) && mimeType.find("video") == 0) {
@@ -132,13 +133,14 @@ Status SeekAgent::GetAllTrackInfo(uint32_t &videoTrackId, std::vector<uint32_t> 
     return Status::OK;
 }
 
-bool SeekAgent::GetAudioTrackId(uint32_t &audioTrackId)
+bool SeekAgent::GetAudioTrackId(int32_t &audioTrackId)
 {
     FALSE_RETURN_V_MSG_E(!producerMap_.empty(), false, "producerMap is empty.");
     FALSE_RETURN_V_MSG_E(demuxer_ != nullptr, false, "Invalid demuxer filter instance.");
     auto trackInfo = demuxer_->GetStreamMetaInfo();
     FALSE_RETURN_V_MSG_E(!trackInfo.empty(), false, "track info is empty.");
-    for (uint32_t index = 0; index < trackInfo.size(); index++) {
+    int32_t trackInfoSize = static_cast<int32_t>(trackInfo.size());
+    for (int32_t index = 0; index < trackInfoSize; index++) {
         auto trackMeta = trackInfo[index];
         std::string mimeType;
         if (!trackMeta->Get<Tag::MIME_TYPE>(mimeType) || mimeType.find("audio") != 0) {
@@ -158,8 +160,8 @@ Status SeekAgent::SetBufferFilledListener()
     producerMap_ = demuxer_->GetBufferQueueProducerMap();
     FALSE_RETURN_V_MSG_E(!producerMap_.empty(), Status::ERROR_INVALID_PARAMETER, "producerMap is empty.");
 
-    uint32_t videoTrackId = -1;
-    std::vector<uint32_t> audioTrackIds;
+    int32_t videoTrackId = -1;
+    std::vector<int32_t> audioTrackIds;
     GetAllTrackInfo(videoTrackId, audioTrackIds);
 
     auto it = producerMap_.begin();
@@ -225,7 +227,7 @@ Status SeekAgent::OnAudioBufferFilled(std::shared_ptr<AVBuffer>& buffer,
     sptr<AVBufferQueueProducer> producer, int32_t trackId)
 {
     MEDIA_LOG_D("OnAudioBufferFilled, pts: %{public}" PRId64, buffer->pts_);
-    if (buffer->pts_ >= seekTargetPts_ || (buffer->flag_ & (uint32_t)(AVBufferFlag::EOS))) {
+    if (buffer->pts_ >= seekTargetPts_ || (buffer->flag_ & static_cast<uint32_t>(AVBufferFlag::EOS))) {
         {
             AutoLock lock(targetArrivedLock_);
             isAudioTargetArrived_ = true;
@@ -247,7 +249,7 @@ Status SeekAgent::OnVideoBufferFilled(std::shared_ptr<AVBuffer>& buffer,
     sptr<AVBufferQueueProducer> producer, int32_t trackId)
 {
     MEDIA_LOG_I("OnVideoBufferFilled, pts: %{public}" PRId64, buffer->pts_);
-    if (buffer->pts_ >= seekTargetPts_ || (buffer->flag_ & (uint32_t)(AVBufferFlag::EOS))) {
+    if (buffer->pts_ >= seekTargetPts_ || (buffer->flag_ & static_cast<uint32_t>(AVBufferFlag::EOS))) {
         {
             AutoLock lock(targetArrivedLock_);
             isVideoTargetArrived_ = true;
@@ -272,7 +274,7 @@ Status SeekAgent::AlignAudioPosition(int64_t audioPosition)
     FALSE_RETURN_V_MSG_E(demuxer_ != nullptr, Status::OK, "Invalid demuxer filter instance.");
     producerMap_ = demuxer_->GetBufferQueueProducerMap();
     FALSE_RETURN_V_MSG_E(!producerMap_.empty(), Status::OK, "producerMap is empty.");
-    uint32_t audioTrackId = 0;
+    int32_t audioTrackId = 0;
     FALSE_RETURN_V_MSG_E(GetAudioTrackId(audioTrackId), Status::OK, "audioTrackIds is empty.");
     seekTargetPts_ = audioPosition * MS_TO_US;
     sptr<IBrokerListener> audioListener
