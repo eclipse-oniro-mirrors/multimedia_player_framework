@@ -864,6 +864,7 @@ void ScreenCaptureServer::PrepareSelectWindow(Json::Value &root, std::shared_ptr
     if (root.type() != Json::objectValue) {
         return;
     }
+    ScreenCaptureUserSelectionInfo selectionInfo;
     const Json::Value displayIdJson = root["displayId"];
     if (!displayIdJson.isNull() && displayIdJson.isInt() && displayIdJson.asInt64() >= 0) {
         uint64_t displayId = static_cast<uint64_t>(displayIdJson.asInt64());
@@ -871,6 +872,8 @@ void ScreenCaptureServer::PrepareSelectWindow(Json::Value &root, std::shared_ptr
         server->SetDisplayId(displayId);
         // 手机模式 missionId displayId 均为-1
         server->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_SCREEN, -1);
+        selectionInfo.selectType = SELECT_TYPE_SCREEN;
+        selectionInfo.displayId = displayId;
     }
     const Json::Value missionIdJson = root["missionId"];
     if (!missionIdJson.isNull() && missionIdJson.isInt() && missionIdJson.asInt() >= 0) {
@@ -878,7 +881,11 @@ void ScreenCaptureServer::PrepareSelectWindow(Json::Value &root, std::shared_ptr
         MEDIA_LOGI("Report Select MissionId: %{public}d", missionId);
         server->SetMissionId(missionId);
         server->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_WINDOW, missionId);
+        selectionInfo.selectType = SELECT_TYPE_WINDOW;
+        sptr<Rosen::Display> defaultDisplay = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
+        selectionInfo.displayId = server->GetDisplayIdOfWindows(defaultDisplay->GetScreenId());
     }
+    server->NotifyUserSelected(selectionInfo);
 }
 
 int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &content)
@@ -1807,11 +1814,6 @@ void ScreenCaptureServer::PostStartScreenCaptureSuccessAction()
     NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STARTED);
     if (displayScreenId_ != SCREEN_ID_INVALID) {
         NotifyDisplaySelected(displayScreenId_);
-        ScreenCaptureUserSelectionInfo selectionInfo;
-        selectionInfo.displayId = displayScreenId_;
-        selectionInfo.selectType = captureConfig_.captureMode == CaptureMode::CAPTURE_SPECIFIED_WINDOW ?
-            SELECT_TYPE_WINDOW : SELECT_TYPE_SCREEN;
-        NotifyUserSelected(selectionInfo);
     }
 }
 

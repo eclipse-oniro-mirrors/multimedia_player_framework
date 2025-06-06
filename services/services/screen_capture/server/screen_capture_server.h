@@ -307,8 +307,8 @@ private:
     sptr<SCDeathRecipientListener> lifecycleListenerDeathRecipient_ = nullptr;
     sptr<SCWindowInfoChangedListener> windowInfoChangedListener_ = nullptr;
     bool isRegionCapture_ = false;
-    uint64_t regionDisplayId_;
-    OHOS::Rect regionArea_;
+    uint64_t regionDisplayId_ = 0;
+    OHOS::Rect regionArea_ = {0, 0, 0, 0};
 
     /* used for CAPTURE STREAM */
     sptr<IBufferConsumerListener> surfaceCb_ = nullptr;

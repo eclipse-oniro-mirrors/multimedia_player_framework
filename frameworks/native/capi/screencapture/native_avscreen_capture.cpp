@@ -48,7 +48,6 @@ struct ScreenCaptureObject : public OH_AVScreenCapture {
 
     const std::shared_ptr<ScreenCapture> screenCapture_ = nullptr;
     std::shared_ptr<NativeScreenCaptureCallback> callback_ = nullptr;
-    ScreenCaptureUserSelectionObject *selectionInfo_ = nullptr;
     bool isStart = false;
 };
 
@@ -122,13 +121,11 @@ public:
     void OnUserSelected(struct OH_AVScreenCapture *capture, ScreenCaptureUserSelectionInfo selectionInfo)
     {
         CHECK_AND_RETURN(capture != nullptr && callback_ != nullptr);
-        struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
-        CHECK_AND_RETURN_LOG(screenCaptureObj->screenCapture_ != nullptr, "screenCapture is null");
-        screenCaptureObj->selectionInfo_ = new(std::nothrow) ScreenCaptureUserSelectionObject(selectionInfo);
-        CHECK_AND_RETURN_LOG(screenCaptureObj->selectionInfo_ != nullptr,
-            "failed to new ScreenCaptureUserSelectionObject");
-        callback_(capture, reinterpret_cast<OH_AVScreenCapture_UserSelectionInfo*>(screenCaptureObj->selectionInfo_),
-            userData_);
+        struct ScreenCaptureUserSelectionObject *object =
+            new(std::nothrow) ScreenCaptureUserSelectionObject(selectionInfo);
+        CHECK_AND_RETURN_LOG(object != nullptr, "failed to new ScreenCaptureUserSelectionObject");
+        callback_(capture, reinterpret_cast<OH_AVScreenCapture_UserSelectionInfo*>(object), userData_);
+        delete object;
     }
 
 private:
@@ -874,9 +871,6 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_Release(struct OH_AVScreenCapture
     if (screenCaptureObj != nullptr && screenCaptureObj->screenCapture_ != nullptr) {
         if (screenCaptureObj->callback_ != nullptr) {
             screenCaptureObj->callback_->StopCallback();
-        }
-        if (screenCaptureObj->selectionInfo_ != nullptr) {
-            delete screenCaptureObj->selectionInfo_;
         }
         int32_t ret = screenCaptureObj->screenCapture_->Release();
         delete capture;
