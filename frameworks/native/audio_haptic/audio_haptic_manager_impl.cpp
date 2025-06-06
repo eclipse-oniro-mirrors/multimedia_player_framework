@@ -185,7 +185,6 @@ int32_t AudioHapticManagerImpl::RegisterSourceFromFd(const AudioHapticFileDescri
     audioHapticPlayerMap_[sourceId] = std::make_shared<AudioHapticPlayerInfo>(audioSrc, hapticSrc,
         AUDIO_LATENCY_MODE_NORMAL, AudioStandard::StreamUsage::STREAM_USAGE_MUSIC);
     curPlayerCount_ += 1;
-    MEDIA_LOGI("AudioHapticManagerImpl::RegisterSourceFromFd");
     MEDIA_LOGI("audioFd: %{public}d, hapticeFd: %{public}d, sourceId: %{public}d",
         audioFd.fd, hapticFd.fd, sourceId);
     return sourceId;
@@ -308,6 +307,10 @@ std::shared_ptr<AudioHapticPlayer> AudioHapticManagerImpl::CreatePlayer(const in
 
 void AudioHapticManagerImpl::ReleasePlayerInfo(const std::shared_ptr<AudioHapticPlayerInfo>& info)
 {
+    if (info == nullptr) {
+        return;
+    }
+
     auto audioSrc = info->audioSource_;
     if (!audioSrc.audioUri.empty()) {
         int32_t fd = ExtractFd(audioSrc.audioUri);
