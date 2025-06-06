@@ -80,7 +80,7 @@ public:
         RingtoneType ringtoneType) override;
     std::string GetRingtoneUri(const std::shared_ptr<AbilityRuntime::Context> &context,
         RingtoneType ringtoneType) override;
-    ToneAttrs GetInUseRingtoneAttrs(RingtoneType ringtoneType) override;
+    ToneAttrs getCurrentRingtoneAttribute(RingtoneType ringtoneType) override;
     std::shared_ptr<RingtonePlayer> GetRingtonePlayer(const std::shared_ptr<AbilityRuntime::Context> &context,
         RingtoneType ringtoneType) override;
     std::shared_ptr<RingtonePlayer> GetSpecificRingTonePlayer(const std::shared_ptr<AbilityRuntime::Context> &context,

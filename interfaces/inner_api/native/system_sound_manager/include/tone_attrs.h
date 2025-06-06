@@ -20,6 +20,7 @@
 
 #include "audio_info.h"
 #include "ringtone_type.h"
+#include "media_core.h"
 
 namespace OHOS {
 namespace Media {
@@ -92,12 +93,12 @@ public:
         return category_;
     }
 
-    void SetMediaType(const RingtoneMediaType mediaType)
+    void SetMediaType(const MediaType mediaType)
     {
         mediaType_ = mediaType;
     }
 
-    RingtoneMediaType GetMediaType() const
+    MediaType GetMediaType() const
     {
         return mediaType_;
     }
@@ -108,7 +109,7 @@ private:
     std::string uri_ = "uri_test";
     ToneCustomizedType custType_ = CUSTOMISED;
     int32_t category_ = 0;
-    RingtoneMediaType mediaType_ = RINGTONE_MEDIA_TYPE_INVALID;
+    MediaType mediaType_ = MediaType::MEDIA_TYPE_AUD;
 };
 } // namespace Media
 } // namespace OHOS

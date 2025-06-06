@@ -65,8 +65,8 @@ enum SystemSoundError {
     ERROR_OK = 20700000,
     ERROR_TYPE_MISMATCH = 20700001,
     ERROR_UNSUPPORTED_OPERATION = 20700003,
-    ERROR_SIZE_OVER_LIMIT = 20700004,
-    ERROR_NUMBER_OVER_LIMIT = 20700005,
+    ERROR_DATA_TOO_LARGE = 20700004,
+    ERROR_TOO_MANY_FILES = 20700005,
     ERROR_INSUFFICIENT_ROM = 20700006,
     ERROR_INVALID_PARAM = 20700007,
 };
@@ -128,7 +128,7 @@ public:
      * @return Returns the current ringtone attrs.
      * @since 12
      */
-    virtual ToneAttrs GetInUseRingtoneAttrs(RingtoneType ringtoneType) = 0;
+    virtual ToneAttrs getCurrentRingtoneAttribute(RingtoneType ringtoneType) = 0;
 
     /**
      * @brief Returns the system tone player instance
