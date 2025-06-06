@@ -2976,16 +2976,16 @@ void SystemSoundManagerImpl::SendCustomizedToneEvent(bool flag, const std::share
     auto now = std::chrono::system_clock::now();
     time_t rawtime = std::chrono::system_clock::to_time_t(now);
     std::shared_ptr<Media::MediaMonitor::EventBean> bean = std::make_shared<Media::MediaMonitor::EventBean>(
-        Media::MediaMonitor::ModuleId::AUDIO, Media::MediaMonitor::EventId::CUSTOMIZED_TONE,
+        Media::MediaMonitor::ModuleId::AUDIO, Media::MediaMonitor::EventId::SYSTEM_TONE_PLAYBACK,
         Media::MediaMonitor::EventType::BEHAVIOR_EVENT);
-    bean->Add("FLAG", flag);
+    bean->Add("ADD_REMOVE_OPERATION", static_cast<int32_t>(flag));
     bean->Add("APP_NAME", GetBundleName());
-    bean->Add("FILE_SIZE", static_cast<int32_t>(fileSize));
+    bean->Add("FILE_SIZE", static_cast<uint64_t>(fileSize));
     bean->Add("RINGTONE_CATEGORY", toneAttrs->GetCategory());
-    bean->Add("MEDIA_TYPE", static_cast<uint8_t>(toneAttrs->GetMediaType()));
+    bean->Add("MEDIA_TYPE", static_cast<int32_t>(toneAttrs->GetMediaType()));
     bean->Add("MIME_TYPE", mimeType);
     bean->Add("TIMESTAMP", static_cast<uint64_t>(rawtime));
-    bean->Add("RESULT", static_cast<int8_t>(result));
+    bean->Add("RESULT", static_cast<int32_t>(result));
     Media::MediaMonitor::MediaMonitorManager::GetInstance().WriteLogMsg(bean);
 }
 
