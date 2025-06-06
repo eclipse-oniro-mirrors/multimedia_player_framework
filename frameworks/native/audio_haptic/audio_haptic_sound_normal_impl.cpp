@@ -102,7 +102,7 @@ int32_t AudioHapticSoundNormalImpl::OpenAudioSource()
             CHECK_AND_RETURN_RET_LOG(!absFilePath.empty(), MSERR_OPEN_FILE_FAILED,
                 "Failed to obtain the canonical path for source path %{public}d %{private}s",
                 errno, audioUri.c_str());
-            fileDes_ = open(audioUri.c_str(), O_RDONLY);
+            fileDes_ = open(absFilePath.c_str(), O_RDONLY | O_CLOEXEC);
         }
     } else {
         fileDes_ = dup(audioFd);

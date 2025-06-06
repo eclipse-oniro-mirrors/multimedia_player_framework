@@ -69,8 +69,8 @@ enum HapticsMode {
 struct AudioSource {
     std::string audioUri = "";
     int32_t fd = FILE_DESCRIPTOR_INVALID;
-    int64_t length;
-    int64_t offset;
+    int64_t length = 0;
+    int64_t offset = 0;
 
     bool empty() const
     {
@@ -94,9 +94,9 @@ struct AudioSource {
 struct HapticSource {
     std::string hapticUri = "";
     std::string effectId = "";
-    int32_t fd = -1;
-    int64_t length;
-    int64_t offset;
+    int32_t fd = FILE_DESCRIPTOR_INVALID;
+    int64_t length = 0;
+    int64_t offset = 0;
 };
 
 struct AudioHapticPlayerParam {
@@ -148,7 +148,7 @@ public:
 
     virtual void SetHapticsMode(HapticsMode hapticsMode) = 0;
 
-    virtual int32_t EnableHapticsInSlientMode(bool enable) = 0;
+    virtual int32_t EnableHapticsInSilentMode(bool enable) = 0;
 
     virtual bool IsHapticsIntensityAdjustmentSupported() = 0;
 };

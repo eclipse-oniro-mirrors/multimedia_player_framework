@@ -185,7 +185,7 @@ napi_value AudioHapticPlayerNapi::EnableHapticsInSilentMode(napi_env env, napi_c
 
     auto *audioHapticPlayerNapi = reinterpret_cast<AudioHapticPlayerNapi *>(native);
     if (audioHapticPlayerNapi == nullptr) {
-        MEDIA_LOGE("EnableHapticsInSlientMode: unwrap failure!");
+        MEDIA_LOGE("EnableHapticsInSilentMode: unwrap failure!");
         AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_SERVICE_DIED, "unwrap failure");
         return result;
     }
@@ -196,7 +196,7 @@ napi_value AudioHapticPlayerNapi::EnableHapticsInSilentMode(napi_env env, napi_c
         return result;
     }
 
-    int32_t ret = audioHapticPlayerNapi->audioHapticPlayer_->EnableHapticsInSlientMode(enable);
+    int32_t ret = audioHapticPlayerNapi->audioHapticPlayer_->EnableHapticsInSilentMode(enable);
     if (ret == NAPI_ERR_OPERATE_NOT_ALLOWED) {
         AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_OPERATE_NOT_ALLOWED, "operate not allowed");
         return result;
@@ -264,19 +264,7 @@ bool AudioHapticPlayerNapi::IsLegalAudioHapticType(int32_t audioHapticType)
 
 bool AudioHapticPlayerNapi::IsLegalVolumeOrIntensity(double number)
 {
-    if (number < 0.0 || number > 1.0) {
-        return false;
-    }
-
-    double scaled = number * 100.0;
-    double rounded = std::round(scaled);
-
-    const double epsilon = 1e-6;
-    
-    if (std::abs(scaled - rounded) > epsilon) {
-        return false;
-    }
-    return true;
+    return number >= 0.0 && number <= 1.0;
 }
 
 bool AudioHapticPlayerNapi::JudgeVolume(napi_env env, std::unique_ptr<VolumeContext>& asyncContext)
@@ -294,7 +282,7 @@ bool AudioHapticPlayerNapi::JudgeVolume(napi_env env, std::unique_ptr<VolumeCont
         return false;
     }
 
-    asyncContext->volume = static_cast<float>(volume);
+    asyncContext->volume = static_cast<float>(std::round(volume * 100) / 100);
     return true;
 }
 
@@ -313,7 +301,7 @@ bool AudioHapticPlayerNapi::JudgeIntensity(napi_env env, std::unique_ptr<Vibrati
         return false;
     }
 
-    asyncContext->intensity = static_cast<float>(intensity);
+    asyncContext->intensity = static_cast<float>(std::round(intensity * 100) / 100);
     return true;
 }
 

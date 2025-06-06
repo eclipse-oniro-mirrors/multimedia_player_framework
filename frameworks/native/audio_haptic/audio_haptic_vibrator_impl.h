@@ -42,9 +42,9 @@ public:
     int32_t GetDelayTime() override;
     void SetIsSupportEffectId(bool isSupport);
     bool IsHdHapticSupported() override;
-    void EnableHapticsInSlientMode(bool enable) override
+    void EnableHapticsInSilentMode(bool enable) override
     {
-        enableInSlientMode_ = enable;
+        enableInSilentMode_ = enable;
     }
 
 private:
@@ -79,7 +79,7 @@ private:
     float vibrateIntensity_ = 1.0f;
     bool isSupportEffectId_ = false;
     HapticSource hapticSource_;
-    bool enableInSlientMode_ = false;
+    bool enableInSilentMode_ = false;
 #endif
     std::mutex vibrateMutex_;
     AudioStandard::StreamUsage streamUsage_ = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;

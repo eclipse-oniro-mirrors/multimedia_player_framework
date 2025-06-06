@@ -145,7 +145,7 @@ int32_t AudioHapticVibratorImpl::OpenHapticSource(const HapticSource& hapticSour
                 return ERROR;
             }
 
-            fd = open(hapticUri.c_str(), O_RDONLY);
+            fd = open(hapticUri.c_str(), O_RDONLY | O_CLOEXEC);
         }
     } else {
         fd = dup(hapticFd);
@@ -309,7 +309,7 @@ int32_t AudioHapticVibratorImpl::StartVibrateWithEffect()
     int32_t result = MSERR_OK;
 #ifdef SUPPORT_VIBRATOR
     std::lock_guard<std::mutex> lock(vibrateMutex_);
-    (void)Sensors::SetUsage(vibratorUsage_, enableInSlientMode_);
+    (void)Sensors::SetUsage(vibratorUsage_, enableInSilentMode_);
     MEDIA_LOGI("PlayPrimitiveEffect with effectId: %{public}s", hapticSource_.effectId.c_str());
     result = Sensors::PlayPrimitiveEffect(hapticSource_.effectId.c_str(), vibrateIntensity_);
     if (result != 0) {
@@ -495,7 +495,7 @@ int32_t AudioHapticVibratorImpl::PlayVibrationPattern(
         [this]() { return isStopped_ || isNeedRestart_; });
     CHECK_AND_RETURN_RET_LOG(!isStopped_ && !isNeedRestart_, result,
         "AudioHapticVibratorImpl::PlayVibrationPattern: Stop() is call when waiting");
-    (void)Sensors::SetUsage(vibratorUsage_, enableInSlientMode_);
+    (void)Sensors::SetUsage(vibratorUsage_, enableInSilentMode_);
     (void)Sensors::SetParameters(vibratorParameter_);
     MEDIA_LOGI("AudioHapticVibratorImpl::PlayVibrationPattern.");
     patternStartTime_ = GetCurrentTimeMillis();

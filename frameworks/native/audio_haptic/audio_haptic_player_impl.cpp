@@ -276,17 +276,17 @@ bool AudioHapticPlayerImpl::IsHapticsIntensityAdjustmentSupported()
     return false;
 }
 
-int32_t AudioHapticPlayerImpl::EnableHapticsInSlientMode(bool enable)
+int32_t AudioHapticPlayerImpl::EnableHapticsInSilentMode(bool enable)
 {
     int32_t result = MSERR_OK;
-    MEDIA_LOGI("AudioHapticPlayerImpl::EnableHapticsInSlientMode %{public}d", enable);
+    MEDIA_LOGI("AudioHapticPlayerImpl::EnableHapticsInSilentMode %{public}d", enable);
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
 
     if (isVibrationRunning_.load()) {
         return ERR_OPERATE_NOT_ALLOWED;
     }
     if (audioHapticVibrator_ != nullptr) {
-        audioHapticVibrator_->EnableHapticsInSlientMode(enable);
+        audioHapticVibrator_->EnableHapticsInSilentMode(enable);
     }
     return result;
 }

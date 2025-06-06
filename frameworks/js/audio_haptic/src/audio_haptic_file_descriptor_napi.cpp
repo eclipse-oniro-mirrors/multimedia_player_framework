@@ -147,7 +147,7 @@ napi_value AudioHapticFileDescriptorNapi::GetFd(napi_env env, napi_callback_info
     }
 
     status = napi_unwrap(env, jsThis, (void **)&audioHapticFileDescriptorNapi);
-    if (status == napi_ok) {
+    if (status == napi_ok && audioHapticFileDescriptorNapi != nullptr) {
         status = napi_create_int32(env, audioHapticFileDescriptorNapi->fd_, &jsResult);
         if (status == napi_ok) {
             return jsResult;
@@ -175,7 +175,7 @@ napi_value AudioHapticFileDescriptorNapi::SetFd(napi_env env, napi_callback_info
     }
 
     status = napi_unwrap(env, jsThis, (void **)&audioHapticFileDescriptorNapi);
-    if (status == napi_ok) {
+    if (status == napi_ok && audioHapticFileDescriptorNapi != nullptr) {
         napi_valuetype valueType = napi_undefined;
         if (napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
             MEDIA_LOGE("SetFd: failed for wrong data type");
@@ -207,7 +207,7 @@ napi_value AudioHapticFileDescriptorNapi::GetLength(napi_env env, napi_callback_
     }
 
     status = napi_unwrap(env, jsThis, (void **)&audioHapticFileDescriptorNapi);
-    if (status == napi_ok) {
+    if (status == napi_ok && audioHapticFileDescriptorNapi != nullptr) {
         status = napi_create_int64(env, audioHapticFileDescriptorNapi->length_, &jsResult);
         if (status == napi_ok) {
             return jsResult;
@@ -235,7 +235,7 @@ napi_value AudioHapticFileDescriptorNapi::SetLength(napi_env env, napi_callback_
     }
 
     status = napi_unwrap(env, jsThis, (void **)&audioHapticFileDescriptorNapi);
-    if (status == napi_ok) {
+    if (status == napi_ok && audioHapticFileDescriptorNapi != nullptr) {
         napi_valuetype valueType = napi_undefined;
         if (napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
             MEDIA_LOGE("SetLength: failed for wrong data type");
@@ -267,7 +267,7 @@ napi_value AudioHapticFileDescriptorNapi::GetOffset(napi_env env, napi_callback_
     }
 
     status = napi_unwrap(env, jsThis, (void **)&audioHapticFileDescriptorNapi);
-    if (status == napi_ok) {
+    if (status == napi_ok && audioHapticFileDescriptorNapi != nullptr) {
         status = napi_create_int64(env, audioHapticFileDescriptorNapi->offset_, &jsResult);
         if (status == napi_ok) {
             return jsResult;
@@ -295,7 +295,7 @@ napi_value AudioHapticFileDescriptorNapi::SetOffset(napi_env env, napi_callback_
     }
 
     status = napi_unwrap(env, jsThis, (void **)&audioHapticFileDescriptorNapi);
-    if (status == napi_ok) {
+    if (status == napi_ok && audioHapticFileDescriptorNapi != nullptr) {
         napi_valuetype valueType = napi_undefined;
         if (napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
             MEDIA_LOGE("SetOffset: failed for wrong data type");

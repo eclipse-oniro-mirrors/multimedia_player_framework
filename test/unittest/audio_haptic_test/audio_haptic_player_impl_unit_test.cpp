@@ -1123,9 +1123,9 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_056, TestSize.Leve
 }
 
 /**
- * @tc.name  : Test EnableHapticsInSlientMode API
+ * @tc.name  : Test EnableHapticsInSilentMode API
  * @tc.number: AudioHapticPlayerImpl_057
- * @tc.desc  : Test AudioHapticPlayerImpl::EnableHapticsInSlientMode()
+ * @tc.desc  : Test AudioHapticPlayerImpl::EnableHapticsInSilentMode()
  */
 HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_057, TestSize.Level1)
 {
@@ -1137,8 +1137,8 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_057, TestSize.Leve
     audioHapticPlayerImpl->audioHapticVibrator_ = audioHapticVibrator_;
     EXPECT_NE(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
     
-    audioHapticPlayerImpl->EnableHapticsInSlientMode(true);
-    EXPECT_EQ(true, audioHapticVibrator_->enableInSlientMode_);
+    audioHapticPlayerImpl->EnableHapticsInSilentMode(true);
+    EXPECT_EQ(true, audioHapticVibrator_->enableInSilentMode_);
 }
 
 /**
