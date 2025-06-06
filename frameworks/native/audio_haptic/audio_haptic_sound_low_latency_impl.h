@@ -24,7 +24,7 @@ namespace Media {
 class AudioHapticSoundLowLatencyImpl : public AudioHapticSound,
     public std::enable_shared_from_this<AudioHapticSoundLowLatencyImpl> {
 public:
-    AudioHapticSoundLowLatencyImpl(const std::string &audioUri, const bool &muteAudio,
+    AudioHapticSoundLowLatencyImpl(const AudioSource& audioSource, const bool &muteAudio,
         const AudioStandard::StreamUsage &streamUsage, const bool &parallelPlayFlag = false);
     ~AudioHapticSoundLowLatencyImpl();
 
@@ -46,15 +46,15 @@ public:
 private:
     int32_t LoadSoundPoolPlayer();
     void ReleaseSoundPoolPlayer();
-    int32_t OpenAudioUri(const std::string &audioUri);
+    int32_t OpenAudioSource();
 
-    std::string audioUri_ = "";
+    AudioSource audioSource_;
     bool muteAudio_ = false;
     bool parallelPlayFlag_ = false;
     AudioStandard::StreamUsage streamUsage_ = AudioStandard::STREAM_USAGE_UNKNOWN;
     float volume_ = 1.0f;
     bool loop_ = false;
-    std::string configuredAudioUri_ = "";
+    AudioSource configuredAudioSource_;
     std::atomic<AudioHapticPlayerState> playerState_ = AudioHapticPlayerState::STATE_NEW;
 
     std::weak_ptr<AudioHapticSoundCallback> audioHapticPlayerCallback_;

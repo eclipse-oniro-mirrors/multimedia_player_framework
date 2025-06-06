@@ -30,8 +30,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "CJA
 namespace OHOS {
 namespace Media {
 
-struct EnumClassHash
-{
+struct EnumClassHash {
     template <typename T>
     std::size_t operator()(T t) const
     {

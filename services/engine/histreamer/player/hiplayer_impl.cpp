@@ -2626,7 +2626,7 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     if (!mimeType_.empty()) {
         source->SetMimeType(mimeType_);
     }
-    if (!seiMessageCbStatus_ && surface_ == nullptr) {
+    if (!seiMessageCbStatus_ && surface_ == nullptr && !isForceLoadVideo_) {
         MEDIA_LOG_D("HiPlayerImpl::DisableMediaTrack");
         demuxer_->DisableMediaTrack(OHOS::Media::Plugins::MediaType::VIDEO);
     }
@@ -3862,6 +3862,12 @@ void HiPlayerImpl::HandleMemoryUsageEvent(const DfxEvent &event)
         msg += key + ":" + std::to_string(value) + ";";
     }
     MEDIA_LOG_I("memusage event reported, appName:%{public}s msg:%{public}s", bundleName_.c_str(), msg.c_str());
+}
+
+int32_t HiPlayerImpl::ForceLoadVideo(bool status)
+{
+    isForceLoadVideo_ = status;
+    return MSERR_OK;
 }
 }  // namespace Media
 }  // namespace OHOS

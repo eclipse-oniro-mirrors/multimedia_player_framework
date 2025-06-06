@@ -202,6 +202,10 @@ private:
      */
     static napi_value JsGetPlaybackPosition(napi_env env, napi_callback_info info);
     /**
+     * readonly forceLoadVideo: boolean
+     */
+    static napi_value JsForceLoadVideo(napi_env env, napi_callback_info info);
+    /**
      * readonly duration: number
      */
     static napi_value JsGetDuration(napi_env env, napi_callback_info info);
@@ -340,6 +344,7 @@ private:
     std::shared_ptr<TaskHandler<TaskRet>> SetVideoWindowSizeTask(int32_t width, int32_t height);
     std::shared_ptr<TaskHandler<TaskRet>> EnableCameraPostprocessingTask();
     std::shared_ptr<TaskHandler<TaskRet>> EqueueSetPlayRangeTask(int32_t start, int32_t end, int32_t mode);
+    std::shared_ptr<TaskHandler<TaskRet>> ForceLoadVideoTask(bool status);
 
     std::string GetCurrentState();
     bool IsControllable();
@@ -448,6 +453,7 @@ private:
     bool getApiVersionFlag_ = true;
 
     std::atomic<bool> isReadyReleased_ = false;
+    bool isForceLoadVideo_ = false;
 };
 } // namespace Media
 } // namespace OHOS

@@ -916,7 +916,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureContentChangedCallback(
     if (screenCaptureObj->callback_ == nullptr ||
         !screenCaptureObj->callback_->SetCaptureContentChangedCallback(callback, userData)) {
         MEDIA_LOGE("OH_AVScreenCapture_SetCaptureContentChangedCallback error");
-        return AV_SCREEN_CAPTURE_ERR_NO_MEMORY;
+        return AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT;
     }
     MEDIA_LOGD("OH_AVScreenCapture_SetCaptureContentChangedCallback E");
     return AV_SCREEN_CAPTURE_ERR_OK;
@@ -1174,5 +1174,18 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureArea(struct OH_AVScreen
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_INVALID_VAL,
         "SetCaptureArea failed!");
     MEDIA_LOGD("OH_AVScreenCapture_SetCaptureArea E");
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}
+
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForPrivacyMaskMode(
+    OH_AVScreenCapture_CaptureStrategy *strategy, int32_t value)
+{
+    MEDIA_LOGD("OH_AVScreenCapture_StrategyForPrivacyMaskMode S");
+    CHECK_AND_RETURN_RET_LOG(strategy != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input strategy is nullptr!");
+    struct ScreenCaptureStrategyObject *strategyObj = reinterpret_cast<ScreenCaptureStrategyObject *>(strategy);
+    CHECK_AND_RETURN_RET_LOG(strategyObj != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "strategyObj is nullptr");
+    CHECK_AND_RETURN_RET_LOG(value == 0 || value == 1, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input value is invalid");
+    strategyObj->strategy.strategyForPrivacyMaskMode = value;
+    MEDIA_LOGD("OH_AVScreenCapture_StrategyForPrivacyMaskMode E");
     return AV_SCREEN_CAPTURE_ERR_OK;
 }

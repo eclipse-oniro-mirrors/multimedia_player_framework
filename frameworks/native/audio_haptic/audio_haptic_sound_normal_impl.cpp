@@ -19,6 +19,7 @@
 #include <fcntl.h>
 
 #include "audio_haptic_log.h"
+#include "directory_ex.h"
 #include "media_errors.h"
 #include "player.h"
 
@@ -30,9 +31,9 @@ namespace OHOS {
 namespace Media {
 const int32_t LOAD_WAIT_SECONDS = 2;
 
-AudioHapticSoundNormalImpl::AudioHapticSoundNormalImpl(const std::string &audioUri, const bool &muteAudio,
+AudioHapticSoundNormalImpl::AudioHapticSoundNormalImpl(const AudioSource& audioSource, const bool &muteAudio,
     const AudioStandard::StreamUsage &streamUsage)
-    : audioUri_(audioUri),
+    : audioSource_(audioSource),
       muteAudio_(muteAudio),
       streamUsage_(streamUsage)
 {
@@ -54,7 +55,7 @@ int32_t AudioHapticSoundNormalImpl::LoadAVPlayer()
     CHECK_AND_RETURN_RET_LOG(avPlayerCallback_ != nullptr, MSERR_INVALID_VAL, "Failed to create callback object");
     avPlayer_->SetPlayerCallback(avPlayerCallback_);
 
-    configuredAudioUri_ = "";
+    configuredAudioSource_ = {};
     playerState_ = AudioHapticPlayerState::STATE_NEW;
     return MSERR_OK;
 }
@@ -66,10 +67,49 @@ int32_t AudioHapticSoundNormalImpl::PrepareSound()
     int32_t result = LoadAVPlayer();
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK && avPlayer_ != nullptr, MSERR_INVALID_VAL,
         "Audio haptic player(avplayer) instance is null");
-    CHECK_AND_RETURN_RET_LOG(!audioUri_.empty(), MSERR_OPEN_FILE_FAILED, "The audio uri is empty");
-    if (audioUri_ != configuredAudioUri_) {
+    CHECK_AND_RETURN_RET_LOG(!audioSource_.empty(), MSERR_OPEN_FILE_FAILED, "The audio source is empty");
+    if (audioSource_ != configuredAudioSource_) {
         return ResetAVPlayer();
     }
+    return MSERR_OK;
+}
+
+int32_t AudioHapticSoundNormalImpl::OpenAudioSource()
+{
+    if (fileDes_ != -1) {
+        (void)close(fileDes_);
+        fileDes_ = -1;
+    }
+
+    auto audioUri = audioSource_.audioUri;
+    auto audioFd = audioSource_.fd;
+    MEDIA_LOGI("Set audio source to avplayer. audioUri [%{public}s] audioFd: [%{public}d]",
+        audioUri.c_str(), audioFd);
+    CHECK_AND_RETURN_RET_LOG(!audioUri.empty() || audioFd > FILE_DESCRIPTOR_INVALID, MSERR_OPEN_FILE_FAILED,
+        "The audio uri is empty or the fd is invalid");
+
+    if (!audioUri.empty()) {
+        const std::string fdHead = "fd://";
+        if (audioUri.find(fdHead) != std::string::npos) {
+            int32_t fd = atoi(audioUri.substr(fdHead.size()).c_str());
+            CHECK_AND_RETURN_RET_LOG(fd > FILE_DESCRIPTOR_INVALID, MSERR_OPEN_FILE_FAILED,
+                "Prepare: Failed to extract fd for avplayer.");
+            fileDes_ = dup(fd);
+        } else {
+            std::string absFilePath;
+            CHECK_AND_RETURN_RET_LOG(PathToRealPath(audioUri, absFilePath), MSERR_OPEN_FILE_FAILED,
+                "file is not real path, file path: %{private}s", audioUri.c_str());
+            CHECK_AND_RETURN_RET_LOG(!absFilePath.empty(), MSERR_OPEN_FILE_FAILED,
+                "Failed to obtain the canonical path for source path %{public}d %{private}s",
+                errno, audioUri.c_str());
+            fileDes_ = open(absFilePath.c_str(), O_RDONLY | O_CLOEXEC);
+        }
+    } else {
+        fileDes_ = dup(audioFd);
+    }
+    MEDIA_LOGI("fileDes_ == %{public}d", fileDes_);
+    CHECK_AND_RETURN_RET_LOG(fileDes_ > FILE_DESCRIPTOR_INVALID, MSERR_OPEN_FILE_FAILED,
+        "Prepare: Invalid fileDes for avplayer.");
     return MSERR_OK;
 }
 
@@ -78,27 +118,10 @@ int32_t AudioHapticSoundNormalImpl::ResetAVPlayer()
     // Reset the player and reload it.
     MEDIA_LOGI("ResetAVPlayer");
     (void)avPlayer_->Reset();
-    MEDIA_LOGI("Set audio source to avplayer. audioUri [%{public}s]", audioUri_.c_str());
-    const std::string fdHead = "fd://";
+    int32_t ret = OpenAudioSource();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to open audio source.");
 
-    if (audioUri_.find(fdHead) != std::string::npos) {
-        int32_t fd = atoi(audioUri_.substr(fdHead.size()).c_str());
-        CHECK_AND_RETURN_RET_LOG(fd > 0, MSERR_OPEN_FILE_FAILED, "Prepare: Failed to extract fd for avplayer.");
-        fileDes_ = dup(fd);
-        MEDIA_LOGI("fileDes_ == %{public}d", fileDes_);
-    } else {
-        char realPathRes[PATH_MAX + 1] = {'\0'};
-        CHECK_AND_RETURN_RET_LOG((strlen(audioUri_.c_str()) < PATH_MAX) &&
-            (realpath(audioUri_.c_str(), realPathRes) != nullptr), MSERR_UNSUPPORT_FILE, "Invalid file path length");
-        std::string realPathStr(realPathRes);
-        if (fileDes_ != -1) {
-            (void)close(fileDes_);
-            fileDes_ = -1;
-        }
-        fileDes_ = open(realPathStr.c_str(), O_RDONLY);
-        CHECK_AND_RETURN_RET_LOG(fileDes_ != -1, MSERR_OPEN_FILE_FAILED, "Prepare: Failed to open uri for avplayer.");
-    }
-    int32_t ret = avPlayer_->SetSource(fileDes_);
+    ret = avPlayer_->SetSource(fileDes_, audioSource_.offset, audioSource_.length);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_OPEN_FILE_FAILED, "Set source failed %{public}d", ret);
 
     Format format;
@@ -123,7 +146,7 @@ int32_t AudioHapticSoundNormalImpl::ResetAVPlayer()
     (void)avPlayer_->SetVolume(actualVolume, actualVolume);
     (void)avPlayer_->SetLooping(loop_);
 
-    configuredAudioUri_ = audioUri_;
+    configuredAudioSource_ = audioSource_;
     playerState_ = AudioHapticPlayerState::STATE_PREPARED;
     return MSERR_OK;
 }
@@ -135,7 +158,7 @@ int32_t AudioHapticSoundNormalImpl::StartSound()
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
     CHECK_AND_RETURN_RET_LOG(avPlayer_ != nullptr && playerState_ != AudioHapticPlayerState::STATE_INVALID,
         MSERR_INVALID_VAL, "StartAVPlayer: no available AVPlayer_");
-    CHECK_AND_RETURN_RET_LOG(!audioUri_.empty(), MSERR_OPEN_FILE_FAILED, "The audio uri is empty");
+    CHECK_AND_RETURN_RET_LOG(!audioSource_.empty(), MSERR_OPEN_FILE_FAILED, "The audio source is invalid");
 
     if (playerState_ == AudioHapticPlayerState::STATE_RUNNING) {
         MEDIA_LOGE("The avplayer has been running. Cannot start again");
@@ -144,7 +167,7 @@ int32_t AudioHapticSoundNormalImpl::StartSound()
     }
 
     // Player doesn't support play in stopped state. Hence reinitialise player for making start<-->stop to work
-    if (playerState_ == AudioHapticPlayerState::STATE_STOPPED || audioUri_ != configuredAudioUri_) {
+    if (playerState_ == AudioHapticPlayerState::STATE_STOPPED || audioSource_ != configuredAudioSource_) {
         ResetAVPlayer();
     }
     auto ret = avPlayer_->Play();

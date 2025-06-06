@@ -25,11 +25,20 @@
 
 namespace OHOS {
 namespace Media {
+struct AudioHapticFileDescriptor {
+    int32_t fd = -1;
+    int64_t length;
+    int64_t offset;
+};
+
 class AudioHapticManager {
 public:
     virtual ~AudioHapticManager() = default;
 
     virtual int32_t RegisterSource(const std::string &audioUri, const std::string &hapticUri) = 0;
+
+    virtual int32_t RegisterSourceFromFd(const AudioHapticFileDescriptor& audioFd,
+        const AudioHapticFileDescriptor& hapticFd);
 
     virtual int32_t RegisterSourceWithEffectId(const std::string &audioUri, const std::string &effectId) = 0;
 

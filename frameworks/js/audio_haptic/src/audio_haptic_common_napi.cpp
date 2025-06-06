@@ -15,6 +15,11 @@
 
 #include "audio_haptic_common_napi.h"
 
+#include "access_token.h"
+#include "accesstoken_kit.h"
+#include "ipc_skeleton.h"
+#include "tokenid_kit.h"
+
 #include "audio_haptic_log.h"
 
 namespace {
@@ -38,6 +43,86 @@ void AudioHapticCommonNapi::ThrowError(napi_env env, int32_t code)
 void AudioHapticCommonNapi::ThrowError(napi_env env, int32_t code, const std::string &errMessage)
 {
     napi_throw_error(env, (std::to_string(code)).c_str(), errMessage.c_str());
+}
+
+void AudioHapticCommonNapi::PromiseReject(napi_env env, napi_deferred deferred,
+    const int32_t& errCode, const std::string& errMessage)
+{
+    napi_value error = nullptr;
+    napi_value message = nullptr;
+    napi_value code = nullptr;
+    napi_create_string_utf8(env, (std::to_string(errCode)).c_str(), NAPI_AUTO_LENGTH, &code);
+    napi_create_string_utf8(env, errMessage.c_str(), NAPI_AUTO_LENGTH, &message);
+    napi_create_error(env, code, message, &error);
+    napi_reject_deferred(env, deferred, error);
+}
+
+bool AudioHapticCommonNapi::InitNormalFunc(napi_env env, napi_callback_info info,
+    void** native, napi_value* argv, size_t paramLength)
+{
+    napi_value thisVar = nullptr;
+    size_t argc = paramLength;
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr);
+    if (status != napi_ok || thisVar == nullptr) {
+        MEDIA_LOGE("napi_get_cb_info fail");
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_SERVICE_DIED, "napi_get_cb_info fail");
+        return false;
+    }
+
+    if (argc != paramLength) {
+        MEDIA_LOGE("invalid parameters");
+        std::string logMsg = "requires " + std::to_string(paramLength) + " parameters";
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID, logMsg);
+        return false;
+    }
+
+    status = napi_unwrap(env, thisVar, native);
+    if (status != napi_ok || *native == nullptr) {
+        MEDIA_LOGE("Failed to unwrap object");
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_OPERATE_NOT_ALLOWED, "Failed to unwrap object");
+        return false;
+    }
+    return true;
+}
+
+bool AudioHapticCommonNapi::InitPromiseFunc(napi_env env, napi_callback_info info,
+    AsyncContext* asyncContext, napi_value* promise, size_t paramLength)
+{
+    if (asyncContext == nullptr) {
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_SERVICE_DIED, "error create promise");
+        return false;
+    }
+    napi_create_promise(env, &asyncContext->deferred, promise);
+    napi_value thisVar = nullptr;
+    size_t argc = paramLength;
+    napi_status status = napi_get_cb_info(env, info, &argc, asyncContext->argv, &thisVar, nullptr);
+    if (status != napi_ok || thisVar == nullptr) {
+        MEDIA_LOGE("napi_get_cb_info fail");
+        AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred,
+            NAPI_ERR_SERVICE_DIED, "napi_get_cb_info fail");
+        return false;
+    }
+
+    if (argc != paramLength) {
+        MEDIA_LOGE("invalid parameters");
+        std::string logMsg = "requires " + std::to_string(paramLength) + " parameters";
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID, logMsg);
+        return false;
+    }
+    status = napi_unwrap(env, thisVar, &asyncContext->objectInfo);
+    if (status != napi_ok) {
+        MEDIA_LOGE("Failed to unwrap object");
+        AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred,
+            NAPI_ERR_SERVICE_DIED, "Failed to unwrap object");
+        return false;
+    }
+    return true;
+}
+
+bool AudioHapticCommonNapi::VerifySelfSystemPermission()
+{
+    Security::AccessToken::FullTokenID selfTokenID = IPCSkeleton::GetSelfTokenID();
+    return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(selfTokenID);
 }
 
 std::string AudioHapticCommonNapi::GetMessageByCode(int32_t &code)

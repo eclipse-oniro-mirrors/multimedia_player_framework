@@ -1300,5 +1300,21 @@ int32_t PlayerServiceProxy::EnableReportAudioInterrupt(bool enable)
         "EnableReportAudioInterrupt failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
+
+int32_t PlayerServiceProxy::ForceLoadVideo(bool status)
+{
+    MediaTrace trace("PlayerServiceProxy::ForceLoadVideo");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+    data.WriteBool(status);
+    int32_t error = SendRequest(FORCE_LOAD_VIDEO, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "ForceLoadVideo failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
 } // namespace Media
 } // namespace OHOS

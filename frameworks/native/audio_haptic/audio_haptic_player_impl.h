@@ -42,6 +42,8 @@ public:
     int32_t GetAudioCurrentTime() override;
     HapticsMode GetHapticsMode() const override;
     void SetHapticsMode(HapticsMode hapticsMode) override;
+    int32_t EnableHapticsInSilentMode(bool enable) override;
+    bool IsHapticsIntensityAdjustmentSupported() override;
 
     void SetPlayerParam(const AudioHapticPlayerParam &param);
     void LoadPlayer();
@@ -68,7 +70,7 @@ private:
     bool muteAudio_;
     bool muteHaptic_;
     bool parallelPlayFlag_ = false;
-    std::string audioUri_;
+    AudioSource audioSource_;
     HapticSource hapticSource_;
     float volume_ = 1.0f;
     bool loop_ = false;

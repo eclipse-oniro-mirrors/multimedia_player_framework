@@ -227,12 +227,8 @@ int32_t PlayerServer::SetSource(int32_t fd, int64_t offset, int64_t size)
 int32_t PlayerServer::InitPlayEngine(const std::string &url)
 {
     MEDIA_LOGI("PlayEngine Init");
-    if (lastOpStatus_ != PLAYER_IDLE) {
-        MEDIA_LOGE("current state is: %{public}s, not support SetSource",
-            GetStatusDescription(lastOpStatus_).c_str());
-        return MSERR_INVALID_OPERATION;
-    }
-
+    CHECK_AND_RETURN_RET_LOG(lastOpStatus_ == PLAYER_IDLE, MSERR_INVALID_OPERATION,
+        "current state is: %{public}s, not support SetSource", GetStatusDescription(lastOpStatus_).c_str());
     int32_t ret = taskMgr_.Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "task mgr init failed");
     MEDIA_LOGI("current url is : %{private}s", url.c_str());
@@ -263,19 +259,16 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
         playerProducer_ == PlayerProducer::NAPI ? maxAmplitudeCbStatus_ : true);
     ret = playerEngine_->SetSeiMessageCbStatus(seiMessageCbStatus_, payloadTypes_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMaxAmplitudeCbStatus Failed!");
-
     ret = playerEngine_->EnableReportMediaProgress(
         playerProducer_ == PlayerProducer::NAPI ? enableReportMediaProgress_ : true);
     TRUE_LOG(ret != MSERR_OK, MEDIA_LOGW, "PlayerEngine enable report media progress failed, ret %{public}d", ret);
-
     if (playerCb_ != nullptr) {
         playerCb_->SetInterruptListenerFlag(
             playerProducer_ == PlayerProducer::NAPI ? enableReportAudioInterrupt_ : true);
     }
-
+    playerEngine_->ForceLoadVideo(isForceLoadVideo_);
     lastOpStatus_ = PLAYER_INITIALIZED;
     ChangeState(initializedState_);
-
     Format format;
     OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_INITIALIZED, format);
     return MSERR_OK;
@@ -1455,7 +1448,7 @@ int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
         MEDIA_LOGI("set surface first in %{public}s state", GetStatusDescription(lastOpStatus_).c_str());
     } else if (switchSurface) {
         MEDIA_LOGI("switch surface in %{public}s state", GetStatusDescription(lastOpStatus_).c_str());
-        if (surface_ == nullptr) {
+        if (surface_ == nullptr && !isForceLoadVideo_) {
             MEDIA_LOGE("old surface is required before switching surface");
             return MSERR_INVALID_OPERATION;
         }
@@ -2378,6 +2371,23 @@ int32_t PlayerServer::EnableReportAudioInterrupt(bool enable)
     if (playerCb_ != nullptr) {
         playerCb_->SetInterruptListenerFlag(enableReportAudioInterrupt_);
     }
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::ForceLoadVideo(bool status)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    isForceLoadVideo_ = status;
+    auto forceLoadVideoTask = std::make_shared<TaskHandler<int32_t>>([this, status]() {
+        MediaTrace trace("PlayerServer::ForceLoadVideo");
+        CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, taskMgr_.MarkTaskDone("ForceLoadVideo done"),
+            "ForceLoadVideo failed, playerEngine is nullptr");
+        auto res = playerEngine_->ForceLoadVideo(status);
+        MEDIA_LOGI("ForceLoadVideo %{public}d", status);
+        taskMgr_.MarkTaskDone("ForceLoadVideo done");
+        return res;
+    });
+    taskMgr_.LaunchTask(forceLoadVideoTask, PlayerServerTaskType::LIGHT_TASK, "ForceLoadVideo");
     return MSERR_OK;
 }
 } // namespace Media
