@@ -864,6 +864,7 @@ void ScreenCaptureServer::PrepareSelectWindow(Json::Value &root, std::shared_ptr
     if (root.type() != Json::objectValue) {
         return;
     }
+    ScreenCaptureUserSelectionInfo selectionInfo = {0, static_cast<uint64_t>(0)};
     const Json::Value displayIdJson = root["displayId"];
     if (!displayIdJson.isNull() && displayIdJson.isInt() && displayIdJson.asInt64() >= 0) {
         uint64_t displayId = static_cast<uint64_t>(displayIdJson.asInt64());
@@ -871,6 +872,8 @@ void ScreenCaptureServer::PrepareSelectWindow(Json::Value &root, std::shared_ptr
         server->SetDisplayId(displayId);
         // 手机模式 missionId displayId 均为-1
         server->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_SCREEN, -1);
+        selectionInfo.selectType = SELECT_TYPE_SCREEN;
+        selectionInfo.displayId = displayId;
     }
     const Json::Value missionIdJson = root["missionId"];
     if (!missionIdJson.isNull() && missionIdJson.isInt() && missionIdJson.asInt() >= 0) {
@@ -878,7 +881,11 @@ void ScreenCaptureServer::PrepareSelectWindow(Json::Value &root, std::shared_ptr
         MEDIA_LOGI("Report Select MissionId: %{public}d", missionId);
         server->SetMissionId(missionId);
         server->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_WINDOW, missionId);
+        selectionInfo.selectType = SELECT_TYPE_WINDOW;
+        sptr<Rosen::Display> defaultDisplay = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
+        selectionInfo.displayId = server->GetDisplayIdOfWindows(defaultDisplay->GetScreenId());
     }
+    server->NotifyUserSelected(selectionInfo);
 }
 
 int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &content)
@@ -1844,6 +1851,15 @@ void ScreenCaptureServer::NotifyDisplaySelected(uint64_t displayId)
     if (screenCaptureCb_ != nullptr) {
         MEDIA_LOGD("NotifyDisplaySelected displayId: (%{public}" PRIu64 ")", displayId);
         screenCaptureCb_->OnDisplaySelected(displayId);
+    }
+}
+
+void ScreenCaptureServer::NotifyUserSelected(ScreenCaptureUserSelectionInfo selectionInfo)
+{
+    if (screenCaptureCb_ != nullptr) {
+        MEDIA_LOGI("NotifyUserSelected displayId: %{public}" PRIu64 ", selectType: %{public}d",
+            selectionInfo.displayId, selectionInfo.selectType);
+        screenCaptureCb_->OnUserSelected(selectionInfo);
     }
 }
 
@@ -3119,8 +3135,8 @@ int32_t ScreenCaptureServer::SetCaptureAreaInner(uint64_t displayId, OHOS::Rect 
     DMRect regionAreaOut;
     regionAreaIn.posX_ = area.x;
     regionAreaIn.posY_ = area.y;
-    regionAreaIn.width_ = area.w;
-    regionAreaIn.height_ = area.h;
+    regionAreaIn.width_ = static_cast<uint32_t>(area.w);
+    regionAreaIn.height_ = static_cast<uint32_t>(area.h);
     auto ret = Rosen::DisplayManager::GetInstance().GetScreenAreaOfDisplayArea(
         displayId, regionAreaIn, regionScreenId, regionAreaOut);
     CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_INVALID_OPERATION,

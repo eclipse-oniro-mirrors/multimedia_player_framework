@@ -496,6 +496,49 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureArea(struct OH_AVScreen
  */
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForPrivacyMaskMode(
     OH_AVScreenCapture_CaptureStrategy *strategy, int32_t value);
+
+/**
+ * @brief Register user selection notification callback function
+ * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+ * @param {OH_AVScreenCapture*} capture Pointer to OH_AVScreenCapture which want to handle user selection info
+ * @param {OH_AVScreenCapture_OnUserSelected} callback user selection callback function, see
+ *        {@link OH_AVScreenCapture_OnUserSelected}
+ * @param {void*} userData The control block pointer passed by the application is carried to the application when it
+ *        is returned
+ * @return Function result code.
+ *          {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
+ *          {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} input capture is nullptr.
+ * @since 20
+ */
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetSelectionCallback(struct OH_AVScreenCapture *capture,
+    OH_AVScreenCapture_OnUserSelected callback, void *userData);
+
+/**
+ * @brief Get the recording content type selected by the user in the confirmation interface
+ * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+ * @param {OH_AVScreenCapture_UserSelectionInfo*} selection Pointer to an OH_AVScreenCapture_UserSelectionInfo instance
+ * @param {int32_t*} type The capture object type selected by the user, 0: represents the screen, 1: represents the
+ *        window.
+ * @return Function result code.
+ *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
+ *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} if selections is nullptr.
+ * @since 20
+ */
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetCaptureTypeSelected(OH_AVScreenCapture_UserSelectionInfo *selection,
+    int32_t* type);
+
+/**
+ * @brief Get the Display ID of user selections in the confirmation interface
+ * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+ * @param {OH_AVScreenCapture_UserSelectionInfo*} selection Pointer to an OH_AVScreenCapture_UserSelectionInfo instance
+ * @param {uint64_t*} displayId Returns the screen ID value selected by the user
+ * @return Function result code.
+ *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
+ *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} if selections is nullptr.
+ * @since 20
+ */
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetDisplayIdSelected(OH_AVScreenCapture_UserSelectionInfo *selection,
+    uint64_t* displayId);
 #ifdef __cplusplus
 }
 #endif

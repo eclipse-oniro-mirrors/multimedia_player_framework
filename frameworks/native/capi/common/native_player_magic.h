@@ -37,6 +37,11 @@ struct OH_AVScreenCapture_CaptureStrategy : public OHOS::RefBase {
     virtual ~OH_AVScreenCapture_CaptureStrategy() = default;
 };
 
+struct OH_AVScreenCapture_UserSelectionInfo : public OHOS::RefBase {
+    OH_AVScreenCapture_UserSelectionInfo() = default;
+    virtual ~OH_AVScreenCapture_UserSelectionInfo() = default;
+};
+
 struct OH_AVPlayer : public OHOS::RefBase {
     OH_AVPlayer() = default;
     virtual ~OH_AVPlayer() = default;

@@ -39,6 +39,7 @@ typedef struct NativeWindow OHNativeWindow;
 using namespace OHOS::Media;
 static std::queue<OH_NativeBuffer*> referencedBuffer_;
 class NativeScreenCaptureCallback;
+struct ScreenCaptureUserSelectionObject;
 
 struct ScreenCaptureObject : public OH_AVScreenCapture {
     explicit ScreenCaptureObject(const std::shared_ptr<ScreenCapture> &capture)
@@ -48,6 +49,13 @@ struct ScreenCaptureObject : public OH_AVScreenCapture {
     const std::shared_ptr<ScreenCapture> screenCapture_ = nullptr;
     std::shared_ptr<NativeScreenCaptureCallback> callback_ = nullptr;
     bool isStart = false;
+};
+
+struct ScreenCaptureUserSelectionObject : public OH_AVScreenCapture_UserSelectionInfo {
+    explicit ScreenCaptureUserSelectionObject(ScreenCaptureUserSelectionInfo selectionInfo)
+        : userSelectionInfo_(selectionInfo) {}
+    ~ScreenCaptureUserSelectionObject() = default;
+    ScreenCaptureUserSelectionInfo userSelectionInfo_;
 };
 
 class NativeScreenCaptureStateChangeCallback {
@@ -101,6 +109,28 @@ public:
 
 private:
     OH_AVScreenCapture_OnDisplaySelected callback_;
+    void *userData_;
+};
+
+class NativeScreenCaptureUserSelectedCallback {
+public:
+    NativeScreenCaptureUserSelectedCallback(OH_AVScreenCapture_OnUserSelected callback, void *userData)
+        : callback_(callback), userData_(userData) {}
+    virtual ~NativeScreenCaptureUserSelectedCallback() = default;
+
+    void OnUserSelected(struct OH_AVScreenCapture *capture, ScreenCaptureUserSelectionInfo selectionInfo)
+    {
+        CHECK_AND_RETURN(capture != nullptr && callback_ != nullptr);
+        struct ScreenCaptureUserSelectionObject *object =
+            new(std::nothrow) ScreenCaptureUserSelectionObject(selectionInfo);
+        CHECK_AND_RETURN_LOG(object != nullptr, "failed to new ScreenCaptureUserSelectionObject");
+        callback_(capture, reinterpret_cast<OH_AVScreenCapture_UserSelectionInfo*>(object), userData_);
+        delete object;
+        object = nullptr;
+    }
+
+private:
+    OH_AVScreenCapture_OnUserSelected callback_;
     void *userData_;
 };
 
@@ -319,6 +349,18 @@ public:
         }
     }
 
+    void OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo) override
+    {
+        MEDIA_LOGI("OnUserSelected() is called");
+        std::shared_lock<std::shared_mutex> lock(mutex_);
+        CHECK_AND_RETURN(capture_ != nullptr);
+
+        if (userSelectedCallback_ != nullptr) {
+            userSelectedCallback_->OnUserSelected(capture_, selectionInfo);
+            return;
+        }
+    }
+
     void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) override
     {
         CHECK_AND_RETURN(!isBufferAvailableCallbackStop_.load());
@@ -413,6 +455,13 @@ public:
         return contentChangedCallback_ != nullptr;
     }
 
+    bool SetUserSelectedCallback(OH_AVScreenCapture_OnUserSelected callback, void *userData)
+    {
+        std::unique_lock<std::shared_mutex> lock(mutex_);
+        userSelectedCallback_ = std::make_shared<NativeScreenCaptureUserSelectedCallback>(callback, userData);
+        return userSelectedCallback_ != nullptr;
+    }
+
     bool SetErrorCallback(OH_AVScreenCapture_OnError callback, void *userData)
     {
         std::unique_lock<std::shared_mutex> lock(mutex_);
@@ -446,6 +495,7 @@ private:
     std::shared_ptr<NativeScreenCaptureDataCallback> dataCallback_ = nullptr;
     std::shared_ptr<NativeScreenCaptureDisplaySelectedCallback> displaySelectedCallback_ = nullptr;
     std::shared_ptr<NativeScreenCaptureContentChangedCallback> contentChangedCallback_ = nullptr;
+    std::shared_ptr<NativeScreenCaptureUserSelectedCallback> userSelectedCallback_ = nullptr;
 };
 
 struct ScreenCaptureContentFilterObject : public OH_AVScreenCapture_ContentFilter {
@@ -1187,5 +1237,57 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForPrivacyMaskMode(
     CHECK_AND_RETURN_RET_LOG(value == 0 || value == 1, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input value is invalid");
     strategyObj->strategy.strategyForPrivacyMaskMode = value;
     MEDIA_LOGD("OH_AVScreenCapture_StrategyForPrivacyMaskMode E");
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}
+
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetSelectionCallback(struct OH_AVScreenCapture *capture,
+    OH_AVScreenCapture_OnUserSelected callback, void *userData)
+{
+    MEDIA_LOGD("OH_AVScreenCapture_SetSelectionCallback S");
+    CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr");
+    CHECK_AND_RETURN_RET_LOG(callback != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input callback is nullptr");
+    struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
+        AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
+    CHECK_AND_RETURN_RET_LOG(!screenCaptureObj->isStart,
+        AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "This interface should be called before Start is called!");
+
+    OH_AVSCREEN_CAPTURE_ErrCode errCode = AVScreenCaptureSetCallback(capture, screenCaptureObj);
+    CHECK_AND_RETURN_RET_LOG(errCode == AV_SCREEN_CAPTURE_ERR_OK, AV_SCREEN_CAPTURE_ERR_INVALID_VAL,
+        "SetSelectionCallback is null");
+    if (screenCaptureObj->callback_ == nullptr ||
+        !screenCaptureObj->callback_->SetUserSelectedCallback(callback, userData)) {
+        MEDIA_LOGE("OH_AVScreenCapture_SetSelectionCallback error");
+        return AV_SCREEN_CAPTURE_ERR_INVALID_VAL;
+    }
+    MEDIA_LOGD("OH_AVScreenCapture_SetSelectionCallback E");
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}
+
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetCaptureTypeSelected(OH_AVScreenCapture_UserSelectionInfo *selection,
+    int32_t* type)
+{
+    MEDIA_LOGD("OH_AVScreenCapture_GetCaptureTypeSelected S");
+    CHECK_AND_RETURN_RET_LOG(selection != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input selection is nullptr");
+    struct ScreenCaptureUserSelectionObject *selectionObj =
+        reinterpret_cast<ScreenCaptureUserSelectionObject *>(selection);
+    CHECK_AND_RETURN_RET_LOG(selectionObj != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL,
+        "selectionObj is null");
+    *type = selectionObj->userSelectionInfo_.selectType;
+    MEDIA_LOGD("OH_AVScreenCapture_GetCaptureTypeSelected type: %{public}d", *type);
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}
+
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetDisplayIdSelected(OH_AVScreenCapture_UserSelectionInfo *selection,
+    uint64_t* displayId)
+{
+    MEDIA_LOGD("OH_AVScreenCapture_GetDisplayIdSelected S");
+    CHECK_AND_RETURN_RET_LOG(selection != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input selection is nullptr");
+    struct ScreenCaptureUserSelectionObject *selectionObj =
+        reinterpret_cast<ScreenCaptureUserSelectionObject *>(selection);
+    CHECK_AND_RETURN_RET_LOG(selectionObj != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL,
+        "selectionObj is null");
+    *displayId = selectionObj->userSelectionInfo_.displayId;
+    MEDIA_LOGD("OH_AVScreenCapture_GetDisplayIdSelected displayId: %{public}" PRIu64, *displayId);
     return AV_SCREEN_CAPTURE_ERR_OK;
 }

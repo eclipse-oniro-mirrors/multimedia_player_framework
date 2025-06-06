@@ -125,6 +125,7 @@ public:
     void NotifyStateChange(AVScreenCaptureStateCode stateCode);
     void NotifyDisplaySelected(uint64_t displayId);
     void NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area);
+    void NotifyUserSelected(ScreenCaptureUserSelectionInfo selectionInfo);
     int32_t SetAndCheckAppInfo(OHOS::AudioStandard::AppInfo &appInfo);
     void SetSCServerSaUid(int32_t saUid);
     int32_t GetSCServerSaUid();
@@ -306,8 +307,8 @@ private:
     sptr<SCDeathRecipientListener> lifecycleListenerDeathRecipient_ = nullptr;
     sptr<SCWindowInfoChangedListener> windowInfoChangedListener_ = nullptr;
     bool isRegionCapture_ = false;
-    uint64_t regionDisplayId_;
-    OHOS::Rect regionArea_;
+    uint64_t regionDisplayId_ = 0;
+    OHOS::Rect regionArea_ = {0, 0, 0, 0};
 
     /* used for CAPTURE STREAM */
     sptr<IBufferConsumerListener> surfaceCb_ = nullptr;
@@ -367,6 +368,8 @@ private:
     static constexpr int64_t MAX_INNER_AUDIO_TIMEOUT_IN_NS = 2000000000; // 2s
     static constexpr int64_t AUDIO_INTERVAL_IN_NS = 20000000; // 20ms
     static constexpr int64_t NEG_AUDIO_INTERVAL_IN_NS = -20000000; // 20ms
+    static constexpr int32_t SELECT_TYPE_SCREEN = 0;
+    static constexpr int32_t SELECT_TYPE_WINDOW = 1;
 };
 } // namespace Media
 } // namespace OHOS

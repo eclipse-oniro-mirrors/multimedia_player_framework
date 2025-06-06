@@ -136,6 +136,21 @@ void ScreenCaptureListenerProxy::OnDisplaySelected(uint64_t displayId)
         "OnDisplaySelected failed, error: %{public}d, displayId: (%{public}" PRIu64 ")", error, displayId);
 }
 
+void ScreenCaptureListenerProxy::OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureListenerProxy::GetDescriptor());
+    CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
+    data.WriteInt32(selectionInfo.selectType);
+    data.WriteUint64(selectionInfo.displayId);
+
+    int error = Remote()->SendRequest(ScreenCaptureListenerMsg::ON_USER_SELECTED, data, reply, option);
+    CHECK_AND_RETURN_LOG(error == MSERR_OK, "OnUserSelected failed, error: %{public}d", error);
+}
+
 ScreenCaptureListenerCallback::ScreenCaptureListenerCallback(const sptr<IStandardScreenCaptureListener> &listener)
     : listener_(listener)
 {
@@ -206,5 +221,15 @@ void ScreenCaptureListenerCallback::OnCaptureContentChanged(AVScreenCaptureConte
         listener_->OnCaptureContentChanged(event, area);
     }
 }
+
+void ScreenCaptureListenerCallback::OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo)
+{
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances isStopped:%{public}d", FAKE_POINTER(this), isStopped_.load());
+    CHECK_AND_RETURN(isStopped_ == false);
+    if (listener_ != nullptr) {
+        listener_->OnUserSelected(selectionInfo);
+    }
+}
+
 } // namespace Media
 } // namespace OHOS
