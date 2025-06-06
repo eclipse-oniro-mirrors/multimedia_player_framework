@@ -3135,8 +3135,8 @@ int32_t ScreenCaptureServer::SetCaptureAreaInner(uint64_t displayId, OHOS::Rect 
     DMRect regionAreaOut;
     regionAreaIn.posX_ = area.x;
     regionAreaIn.posY_ = area.y;
-    regionAreaIn.width_ = area.w;
-    regionAreaIn.height_ = area.h;
+    regionAreaIn.width_ = static_cast<uint32_t>(area.w);
+    regionAreaIn.height_ = static_cast<uint32_t>(area.h);
     auto ret = Rosen::DisplayManager::GetInstance().GetScreenAreaOfDisplayArea(
         displayId, regionAreaIn, regionScreenId, regionAreaOut);
     CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_INVALID_OPERATION,
