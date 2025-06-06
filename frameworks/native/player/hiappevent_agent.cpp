@@ -25,7 +25,8 @@
 #ifdef SUPPORT_HIAPPEVENT
 namespace {
     constexpr auto KNAME = "ha_app_event";
-    constexpr auto KAPPID = "com_huawei_hmos_sdk_ocg";
+    constexpr auto KAPPID_ONE = "com_hua";
+    constexpr auto KAPPID_TWO = "wei_hmos_sdk_ocg";
     constexpr auto SDKNAME = "MediaKit";
     constexpr auto APINAME = "HMOS_MEDIA_SERVICE";
     constexpr int32_t KTIMEOUT = 90;  // trigger interval in seconds
@@ -84,7 +85,7 @@ int64_t HiAppEventAgent::AddProcessor()
 {
     ReportConfig config;
     config.name = KNAME;
-    config.appId = KAPPID;
+    config.appId = KAPPID_ONE + KAPPID_TWO;
     config.routeInfo = "AUTO";
     config.triggerCond.timeout = KTIMEOUT;
     config.triggerCond.row = KCONDROW;

@@ -81,7 +81,7 @@ int32_t PlayerImpl::Init(const PlayerProducer producer)
     auto ret = playerService_ == nullptr ? MSERR_UNKNOWN : MSERR_OK;
     if (hiAppEventAgent_) {
         hiAppEventAgent_->TraceApiEvent(ret, "CreatePlayer", startTime, traceId_);
-    }    
+    }
     if (ret == MSERR_OK) {
         playerService_->SetPlayerProducer(producer);
     }
@@ -98,7 +98,7 @@ PlayerImpl::PlayerImpl()
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
     ResetSeekVariables();
     traceId_ = HiTraceChainGetId();
-    if(!traceId_.IsValid()) {
+    if (!traceId_.IsValid()) {
         MEDIA_LOGI("PlayerImpl:0x%{public}06" PRIXPTR " traceId not valid", FAKE_POINTER(this));
         traceId_ = HiviewDFX::HiTraceChain::Begin("PlayerImpl", HITRACE_FLAG_DEFAULT);
     }
