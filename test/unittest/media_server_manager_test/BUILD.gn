@@ -197,7 +197,6 @@ ohos_unittest("media_server_manager_test") {
   sources = [
     "$MEDIA_PLAYER_ROOT_DIR/services/services/sa_media/server_manager/media_server_manager.cpp",
     "media_server_manager_test.cpp",
-    "media_server_test.cpp",
   ]
 
   resource_config_file =

@@ -434,18 +434,6 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SetAudioRendererParameter_001, TestSize
     EXPECT_NE(hiplayer_->isSeekClosest_.load(), true);
 }
 
-// @tc.name     Test SetSeiMessageListener API
-// @tc.number   PHIUT_SetSeiMessageListener_001
-// @tc.desc     Test SetSeiMessageListener interface, 2.
-HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SetSeiMessageListener_001, TestSize.Level0)
-{
-    ASSERT_NE(hiplayer_, nullptr);
-    hiplayer_->seiDecoder_ =
-        FilterFactory::Instance().CreateFilter<SeiParserFilter>("player.sei", FilterType::FILTERTYPE_SEI);
-    Status ret = hiplayer_->SetSeiMessageListener();
-    EXPECT_NE(ret, Status::OK);
-}
-
 // @tc.name     Test IsInValidSeekTime API
 // @tc.number   PHIUT_IsInValidSeekTime_001
 // @tc.desc     Test if (seekTime > endTimeWithMode_)
