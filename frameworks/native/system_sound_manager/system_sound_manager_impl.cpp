@@ -1750,12 +1750,13 @@ void SystemSoundManagerImpl::OpenFilesInList(std::shared_ptr<DataShare::DataShar
                 std::tuple<string, int64_t, SystemSoundError> resultOfOpen = std::make_tuple(uriList[i], fd, ERROR_OK);
                 resultOfOpenList.push_back(resultOfOpen);
             } else {
+                MEDIA_LOGE("OpenFile failed, uri: %{public}s.", uriList[i].c_str());
                 std::tuple<string, int64_t, SystemSoundError> resultOfOpen = std::make_tuple(uriList[i], -1, ERROR_IO);
                 resultOfOpenList.push_back(resultOfOpen);
             }
             continue;
         }
-        MEDIA_LOGE("OpenToneList failed, uri: %{public}s.", uriList[i].c_str());
+        MEDIA_LOGE("ringtoneAsset is nullptr, uri: %{public}s.", uriList[i].c_str());
         resultSet == nullptr ? : resultSet->Close();
         std::tuple<string, int64_t, SystemSoundError> resultOfOpen = std::make_tuple(uriList[i], -1, ERROR_IO);
         resultOfOpenList.push_back(resultOfOpen);
@@ -1822,9 +1823,9 @@ int32_t SystemSoundManagerImpl::AddCustomizedTone(const std::shared_ptr<DataShar
     valuesBucket.Put(RINGTONE_COLUMN_DISPLAY_NAME, static_cast<string>(displayName_));
     valuesBucket.Put(RINGTONE_COLUMN_TITLE, static_cast<string>(toneAttrs->GetTitle()));
     if (toneAttrs->GetMediaType() == MediaType::MEDIA_TYPE_AUD) {
-        valuesBucket.Put(RINGTONE_COLUMN_MEDIA_TYPE, static_cast(RINGTONE_MEDIA_TYPE_AUDIO));
+        valuesBucket.Put(RINGTONE_COLUMN_MEDIA_TYPE, static_cast<int>(RINGTONE_MEDIA_TYPE_AUDIO));
     } else if (toneAttrs->GetMediaType() == MediaType::MEDIA_TYPE_VID) {
-        valuesBucket.Put(RINGTONE_COLUMN_MEDIA_TYPE, static_cast(RINGTONE_MEDIA_TYPE_VIDEO));
+        valuesBucket.Put(RINGTONE_COLUMN_MEDIA_TYPE, static_cast<int>(RINGTONE_MEDIA_TYPE_VIDEO));
     }
     valuesBucket.Put(RINGTONE_COLUMN_MIME_TYPE, static_cast<string>(mimeType_));
     valuesBucket.Put(RINGTONE_COLUMN_SOURCE_TYPE, static_cast<int>(SOURCE_TYPE_CUSTOMISED));
@@ -1869,9 +1870,9 @@ bool SystemSoundManagerImpl::DeleteCustomizedTone(const std::shared_ptr<DataShar
     predicates.EqualTo(RINGTONE_COLUMN_DISPLAY_NAME, static_cast<string>(displayName_));
     predicates.EqualTo(RINGTONE_COLUMN_TITLE, static_cast<string>(toneAttrs->GetTitle()));
     if (toneAttrs->GetMediaType() == MediaType::MEDIA_TYPE_AUD) {
-        predicates.EqualTo(RINGTONE_COLUMN_MEDIA_TYPE, static_cast(RINGTONE_MEDIA_TYPE_AUDIO));
+        predicates.EqualTo(RINGTONE_COLUMN_MEDIA_TYPE, static_cast<int>(RINGTONE_MEDIA_TYPE_AUDIO));
     } else if (toneAttrs->GetMediaType() == MediaType::MEDIA_TYPE_VID) {
-        predicates.EqualTo(RINGTONE_COLUMN_MEDIA_TYPE, static_cast(RINGTONE_MEDIA_TYPE_VIDEO));
+        predicates.EqualTo(RINGTONE_COLUMN_MEDIA_TYPE, static_cast<int>(RINGTONE_MEDIA_TYPE_VIDEO));
     }
     predicates.EqualTo(RINGTONE_COLUMN_MIME_TYPE, static_cast<string>(mimeType_));
     predicates.EqualTo(RINGTONE_COLUMN_SOURCE_TYPE, static_cast<int>(SOURCE_TYPE_CUSTOMISED));
@@ -1939,7 +1940,7 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(
         return FILE_COUNT_EXCEEDS_LIMIT;
     } else if (sert == NOT_ENOUGH_ROM) {
         return ROM_IS_INSUFFICIENT;
-    } else if () {
+    } else if (sert == FILE_EXIST) {
         return toneAttrs->GetUri();
     }
     std::string dstPath = RINGTONE_PATH_URI + RINGTONE_SLASH_CHAR + to_string(sert);

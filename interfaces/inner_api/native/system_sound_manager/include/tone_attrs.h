@@ -19,7 +19,6 @@
 #include <string>
 
 #include "audio_info.h"
-#include "ringtone_type.h"
 #include "media_core.h"
 
 namespace OHOS {
@@ -29,6 +28,7 @@ enum ToneCustomizedType {
     PRE_INSTALLED = 0,
     CUSTOMISED = 1,
 };
+
 constexpr int32_t TONE_CATEGORY_INVALID = -1;
 constexpr int32_t TONE_CATEGORY_RINGTONE = 1;
 constexpr int32_t TONE_CATEGORY_TEXT_MESSAGE = 2;
