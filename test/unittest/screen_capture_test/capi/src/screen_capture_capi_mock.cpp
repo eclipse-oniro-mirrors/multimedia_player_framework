@@ -287,7 +287,6 @@ int32_t ScreenCaptureCapiMock::ResizeCanvas(int32_t width, int32_t height)
 int32_t ScreenCaptureCapiMock::UpdateSurface(const std::any& surface)
 {
     return MSERR_OK;
-
 }
 
 int32_t ScreenCaptureCapiMock::SkipPrivacyMode(int32_t *windowIDs, int32_t windowCount)
