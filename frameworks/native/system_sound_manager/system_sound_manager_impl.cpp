@@ -734,7 +734,7 @@ ToneAttrs SystemSoundManagerImpl::GetCurrentRingtoneAttribute(RingtoneType ringt
     DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
     toneAttrs = GetRingtoneAttrs(databaseTool, ringtoneType);
     dataShareHelper->Release();
-    MEDIA_LOGI("Finish to get ringtone attrs: type %{public}d, mediaType %{public}d, uri% {public}s",
+    MEDIA_LOGI("Finish to get ringtone attrs: type %{public}d, mediaType %{public}d, uri: %{public}s",
         ringtoneType, toneAttrs.GetMediaType(), toneAttrs.GetUri().c_str());
     return toneAttrs;
 }
@@ -1729,9 +1729,9 @@ void SystemSoundManagerImpl::OpenFilesInList(std::shared_ptr<DataShare::DataShar
     const std::vector<std::string> &uriList,
     std::vector<std::tuple<std::string, int64_t, SystemSoundError>> &resultOfOpenList)
 {
-    DataShare::DatashareBusinessError businessError;
-    DataShare::DataSharePredicates queryPredicates;
     for (uint32_t i = 0; i < uriList.size(); i++) {
+        DataShare::DatashareBusinessError businessError;
+        DataShare::DataSharePredicates queryPredicates;
         queryPredicates.EqualTo(RINGTONE_COLUMN_DATA, uriList[i]);
         auto resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
         auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
