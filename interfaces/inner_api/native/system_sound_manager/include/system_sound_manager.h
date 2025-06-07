@@ -128,7 +128,7 @@ public:
      * @return Returns the current ringtone attrs.
      * @since 12
      */
-    virtual ToneAttrs getCurrentRingtoneAttribute(RingtoneType ringtoneType) = 0;
+    virtual ToneAttrs GetCurrentRingtoneAttribute(RingtoneType ringtoneType) = 0;
 
     /**
      * @brief Returns the system tone player instance
