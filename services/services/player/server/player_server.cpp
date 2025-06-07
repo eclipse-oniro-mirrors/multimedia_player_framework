@@ -728,7 +728,7 @@ int32_t PlayerServer::HandleUnFreeze()
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_INVALID_OPERATION, "playerEngine_ is nullptr");
     (void)HandleLiteUnFreeze();
     ExitSeekContinous(true);
-    playerEngine_->ResumeSourceDownloader();
+    playerEngine_->ResumeSourceDownload();
     if (playerEngine_->IsFlvLive()) {
         HandleFlvLiveRestartLink();
     }
