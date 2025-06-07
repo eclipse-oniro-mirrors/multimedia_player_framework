@@ -477,6 +477,9 @@ Status HiRecorderImpl::HandleStopOperation()
 {
     Status ret = Status::OK;
     outputFormatType_ = OutputFormatType::FORMAT_BUTT;
+    if (videoEncoderFilter_) {
+        ret = videoEncoderFilter_->SetStopTime();
+    }
     if (audioCaptureFilter_) {
         ret = audioCaptureFilter_->SendEos();
     }
