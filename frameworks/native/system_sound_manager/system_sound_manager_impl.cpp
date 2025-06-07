@@ -658,7 +658,11 @@ ToneAttrs SystemSoundManagerImpl::GetRingtoneAttrsByType(const DatabaseTool &dat
         toneAttrs.SetTitle(ringtoneAsset->GetTitle());
         toneAttrs.SetFileName(ringtoneAsset->GetDisplayName());
         toneAttrs.SetCategory(ringtoneAsset->GetToneType());
-        toneAttrs.SetMediaType(static_cast<MediaType>(ringtoneAsset->GetMediaType()));
+        if (ringtoneAsset->GetMediaType() == RINGTONE_MEDIA_TYPE_VIDEO) {
+            toneAttrs.SetMediaType(MediaType::MEDIA_TYPE_VID);
+        } else {
+            toneAttrs.SetMediaType(MediaType::MEDIA_TYPE_AUD);
+        }
     }
     resultSet == nullptr ? : resultSet->Close();
     return toneAttrs;
@@ -2026,7 +2030,11 @@ int32_t SystemSoundManagerImpl::DoRemove(std::shared_ptr<DataShare::DataShareHel
     }
     if (ringtoneAsset != nullptr) {
         toneAttrs->SetCategory(ringtoneAsset->GetToneType());
-        toneAttrs->SetMediaType(static_cast<MediaType>(ringtoneAsset->GetMediaType()));
+        if (ringtoneAsset->GetMediaType() == RINGTONE_MEDIA_TYPE_VIDEO) {
+            toneAttrs->SetMediaType(MediaType::MEDIA_TYPE_VID);
+        } else {
+            toneAttrs->SetMediaType(MediaType::MEDIA_TYPE_AUD);
+        }
         mimeType = ringtoneAsset->GetMimeType();
         DataShare::DataSharePredicates deletePredicates;
         deletePredicates.SetWhereClause(RINGTONE_COLUMN_TONE_ID + " = ? ");
