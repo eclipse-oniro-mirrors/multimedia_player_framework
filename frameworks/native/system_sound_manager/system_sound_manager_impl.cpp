@@ -1993,8 +1993,8 @@ int32_t SystemSoundManagerImpl::RemoveCustomizedTone(
     const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri)
 {
     MEDIA_LOGI("RemoveCustomizedTone: uri %{public}s", uri.c_str());
-    std::lock_guardstd::mutex lock(uriMutex_);
-    std::shared_ptrDataShare::DataShareHelper dataShareHelper =
+    std::lock_guard<std::mutex> lock(uriMutex_);
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, ERROR,
         "RemoveCustomizedTone: Create dataShare failed, datashare or ringtone library error.");
