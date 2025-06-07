@@ -728,7 +728,10 @@ int32_t PlayerServer::HandleUnFreeze()
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_INVALID_OPERATION, "playerEngine_ is nullptr");
     (void)HandleLiteUnFreeze();
     ExitSeekContinous(true);
-    TryFlvLiveRestartLink();
+    playerEngine_->ResumeSourceDownload();
+    if (playerEngine_->IsFlvLive()) {
+        HandleFlvLiveRestartLink();
+    }
     int32_t ret = playerEngine_->UnFreeze();
     taskMgr_.MarkTaskDone("UnFreeze done");
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine UnFreeze Failed!");

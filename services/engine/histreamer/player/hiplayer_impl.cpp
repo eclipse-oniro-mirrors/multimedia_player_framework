@@ -965,7 +965,6 @@ int32_t HiPlayerImpl::UnFreeze()
 
     if (pipelineStates_ != PlayerStates::PLAYER_FROZEN) {
         MEDIA_LOG_I("can not unfreeze, current state = %{public}d", static_cast<int32_t>(pipelineStates_));
-        ResumeSourceDownload();
         return TransStatus(Status::OK);
     }
 
@@ -978,7 +977,6 @@ int32_t HiPlayerImpl::UnFreeze()
     Status ret = Status::OK;
     syncManager_->Resume();
     ret = demuxer_->UnFreeze();
-    ResumeSourceDownload();
     startTime_ = GetCurrentMillisecond();
     StartFlvCheckLiveDelayTime();
     if (ret != Status::OK) {
@@ -991,18 +989,13 @@ int32_t HiPlayerImpl::UnFreeze()
 
 int32_t HiPlayerImpl::PauseSourceDownload()
 {
-    Status ret = Status::OK;
-    if (ret == Status::OK) {
-        sourceDownloadPaused_ = true;
-    }
+    demuxer_->StopBufferring(true);
     return MSERR_OK;
 }
 
 int32_t HiPlayerImpl::ResumeSourceDownload()
 {
-    if (sourceDownloadPaused_) {
-        sourceDownloadPaused_ = false;
-    }
+    demuxer_->StopBufferring(false);
     return MSERR_OK;
 }
 
