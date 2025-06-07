@@ -62,6 +62,7 @@ const std::string DEFAULT_SYSTEM_TONE_PATH = "notifications/";
 const std::string EXT_SERVICE_AUDIO = "const.mulitimedia.service_audio";
 const int STORAGE_MANAGER_MANAGER_ID = 5003;
 const int UNSUPPORTED_ERROR = -5;
+const int INVALID_FD = -1;
 const int32_t NOT_ENOUGH_ROM = -234;
 const int32_t VIDEOS_NUM_EXCEEDS_SPECIFICATION = -235;
 const int32_t FILE_EXIST = -17;
@@ -1703,7 +1704,7 @@ int32_t SystemSoundManagerImpl::OpenToneUri(const std::shared_ptr<AbilityRuntime
 }
 
 std::vector<std::tuple<std::string, int64_t, SystemSoundError>> SystemSoundManagerImpl::OpenToneList(
-    const std::vector<std::string> &uriList, SystemSoundError errCode)
+    const std::vector<std::string> &uriList, SystemSoundError &errCode)
 {
     MEDIA_LOGI("OpenToneList: Start, size: %{public}zu", uriList.size());
     std::lock_guard<std::mutex> lock(uriMutex_);
@@ -1737,7 +1738,8 @@ void SystemSoundManagerImpl::OpenFilesInList(std::shared_ptr<DataShare::DataShar
         auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
         if (results == nullptr) {
             MEDIA_LOGE("OpenFilesInList: Query failed, ringtone library error!");
-            std::tuple<string, int64_t, SystemSoundError> resultOfOpen = std::make_tuple(uriList[i], -1, ERROR_IO);
+            std::tuple<string, int64_t, SystemSoundError> resultOfOpen =
+                std::make_tuple(uriList[i], INVALID_FD, ERROR_IO);
             resultOfOpenList.push_back(resultOfOpen);
             continue;
         }
@@ -1755,14 +1757,15 @@ void SystemSoundManagerImpl::OpenFilesInList(std::shared_ptr<DataShare::DataShar
                 resultOfOpenList.push_back(resultOfOpen);
             } else {
                 MEDIA_LOGE("OpenFilesInList: OpenFile failed, uri: %{public}s.", uriList[i].c_str());
-                std::tuple<string, int64_t, SystemSoundError> resultOfOpen = std::make_tuple(uriList[i], -1, ERROR_IO);
+                std::tuple<string, int64_t, SystemSoundError> resultOfOpen =
+                    std::make_tuple(uriList[i], INVALID_FD, ERROR_IO);
                 resultOfOpenList.push_back(resultOfOpen);
             }
             continue;
         }
         MEDIA_LOGE("OpenFilesInList: ringtoneAsset is nullptr, uri: %{public}s.", uriList[i].c_str());
         resultSet == nullptr ? : resultSet->Close();
-        std::tuple<string, int64_t, SystemSoundError> resultOfOpen = std::make_tuple(uriList[i], -1, ERROR_IO);
+        std::tuple<string, int64_t, SystemSoundError> resultOfOpen = std::make_tuple(uriList[i], INVALID_FD, ERROR_IO);
         resultOfOpenList.push_back(resultOfOpen);
     }
 }
@@ -1940,10 +1943,13 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(
     }
     int32_t sert = AddCustomizedTone(dataShareHelper, toneAttrs);
     if (sert == VIDEOS_NUM_EXCEEDS_SPECIFICATION) {
+        dataShareHelper->Release();
         return FILE_COUNT_EXCEEDS_LIMIT;
     } else if (sert == NOT_ENOUGH_ROM) {
+        dataShareHelper->Release();
         return ROM_IS_INSUFFICIENT;
     } else if (sert == FILE_EXIST) {
+        dataShareHelper->Release();
         return toneAttrs->GetUri();
     }
     std::string dstPath = RINGTONE_PATH_URI + RINGTONE_SLASH_CHAR + to_string(sert);
@@ -1987,19 +1993,21 @@ int32_t SystemSoundManagerImpl::RemoveCustomizedTone(
     const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri)
 {
     MEDIA_LOGI("RemoveCustomizedTone: uri %{public}s", uri.c_str());
-    std::lock_guard<std::mutex> lock(uriMutex_);
-    int32_t srcFd = open(uri.c_str(), O_RDONLY);
+    std::lock_guardstd::mutex lock(uriMutex_);
+    std::shared_ptrDataShare::DataShareHelper dataShareHelper =
+        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, ERROR,
+        "RemoveCustomizedTone: Create dataShare failed, datashare or ringtone library error.");
     off_t fileSize = 0;
+    Uri ofUri(uri);
+    int32_t srcFd = dataShareHelper->OpenFile(ofUri, "rw");
     if (srcFd < 0) {
         MEDIA_LOGE("RemoveCustomizedTone: fd open error is %{public}s", strerror(errno));
     } else {
         fileSize = lseek(srcFd, 0, SEEK_END);
+        MEDIA_LOGI("RemoveCustomizedTone: fileSize %{public}ld", fileSize);
         close(srcFd);
     }
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
-        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, ERROR,
-        "RemoveCustomizedTone: Create dataShare failed, datashare or ringtone library error.");
     return DoRemove(dataShareHelper, uri, fileSize);
 }
 
@@ -2050,7 +2058,7 @@ int32_t SystemSoundManagerImpl::DoRemove(std::shared_ptr<DataShare::DataShareHel
 }
 
 std::vector<std::pair<std::string, SystemSoundError>> SystemSoundManagerImpl::RemoveCustomizedToneList(
-    const std::vector<std::string> &uriList, SystemSoundError errCode)
+    const std::vector<std::string> &uriList, SystemSoundError &errCode)
 {
     MEDIA_LOGI("RemoveCustomizedToneList: Start, size: %{public}zu.", uriList.size());
     std::vector<std::pair<std::string, SystemSoundError>> removeResults;

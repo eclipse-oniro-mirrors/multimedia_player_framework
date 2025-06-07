@@ -329,7 +329,7 @@ public:
      * @since 12
      */
     virtual std::vector<std::pair<std::string, SystemSoundError>> RemoveCustomizedToneList(
-        const std::vector<std::string> &uriList, SystemSoundError errCode) = 0;
+        const std::vector<std::string> &uriList, SystemSoundError &errCode) = 0;
 
     /**
      * @brief Returns the tone haptics settings.
@@ -413,7 +413,7 @@ public:
      * @since 12
      */
     virtual std::vector<std::tuple<std::string, int64_t, SystemSoundError>> OpenToneList(
-        const std::vector<std::string> &uriList, SystemSoundError errCode) = 0;
+        const std::vector<std::string> &uriList, SystemSoundError &errCode) = 0;
 };
 
 class __attribute__((visibility("default"))) SystemSoundManagerFactory {
