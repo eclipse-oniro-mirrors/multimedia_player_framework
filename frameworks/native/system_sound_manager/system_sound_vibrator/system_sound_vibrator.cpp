@@ -302,6 +302,7 @@ int32_t SystemSoundVibrator::GetVibratorDuration(const std::string &hapticUri)
     int32_t result = Sensors::PreProcess(vibratorFD, vibratorPkg);
     if (result != 0) {
         MEDIA_LOGE("Failed to pre-process hapticUri!");
+        Sensors::FreeVibratorPackage(vibratorPkg);
         return ret;
     }
     int32_t delayTime = 0;
