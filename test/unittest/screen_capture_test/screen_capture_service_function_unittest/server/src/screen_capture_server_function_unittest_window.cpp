@@ -312,6 +312,23 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_008, TestSize.Leve
     ASSERT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_SCREEN);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, PrepareUserSelectionInfo_001, TestSize.Level2)
+{
+    ScreenCaptureUserSelectionInfo selectionInfo = {0, static_cast<uint64_t>(0)};
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
+    screenCaptureServer_->PrepareUserSelectionInfo(selectionInfo);
+    ASSERT_EQ(selectionInfo.selectType, 1);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, PrepareUserSelectionInfo_002, TestSize.Level2)
+{
+    ScreenCaptureUserSelectionInfo selectionInfo = {0, static_cast<uint64_t>(0)};
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
+    screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.displayId = 1;
+    screenCaptureServer_->PrepareUserSelectionInfo(selectionInfo);
+    ASSERT_EQ(selectionInfo.displayId, 1);
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, PrivateWindowListenerInScreenCapture_001, TestSize.Level2)
 {
     screenCaptureServer_->RegisterPrivateWindowListener();
