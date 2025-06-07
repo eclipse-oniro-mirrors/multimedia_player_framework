@@ -388,6 +388,7 @@ private:
     bool taskQueStoped_ = false;
     bool deviceChangeCallbackflag_ = false;
     bool seiMessageCallbackflag_ = false;
+    bool reportMediaProgressCallbackflag_ = false;
 
     struct AVPlayerContext : public MediaAsyncContext {
         explicit AVPlayerContext(napi_env env) : MediaAsyncContext(env) {}
