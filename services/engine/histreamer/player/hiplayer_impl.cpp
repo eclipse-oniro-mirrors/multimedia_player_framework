@@ -989,13 +989,13 @@ int32_t HiPlayerImpl::UnFreeze()
 
 int32_t HiPlayerImpl::PauseSourceDownload()
 {
-    demuxer_->StopBuffering(true);
+    demuxer_->StopBufferring(true);
     return MSERR_OK;
 }
 
 int32_t HiPlayerImpl::ResumeSourceDownload()
 {
-    demuxer_->StopBuffering(false);
+    demuxer_->StopBufferring(false);
     return MSERR_OK;
 }
 
