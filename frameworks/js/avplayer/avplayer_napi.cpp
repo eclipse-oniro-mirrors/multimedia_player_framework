@@ -2663,7 +2663,13 @@ napi_value AVPlayerNapi::JsGetCurrentTime(napi_env env, napi_callback_info info)
 
     int32_t currentTime = -1;
     if (jsPlayer->IsControllable()) {
-        currentTime = jsPlayer->position_;
+        if (!jsPlayer->reportMediaProgressCallbackflag_ && jsPlayer->player_ != nullptr) {
+            auto ret = jsPlayer->player_->GetCurrentTime(currentTime);
+            currentTime = ret == MSERR_OK ? currentTime : -1;
+            jsPlayer->HandleListenerStateChange("timeUpdate", true);
+        } else {
+            currentTime = jsPlayer->position_;
+        }
     }
 
     if (jsPlayer->IsLiveSource() && jsPlayer->dataSrcCb_ == nullptr) {
@@ -3286,6 +3292,7 @@ void AVPlayerNapi::HandleListenerStateChange(std::string callbackName, bool stat
     }
 
     if (callbackName == "timeUpdate") {
+        reportMediaProgressCallbackflag_ = state;
         return (void)player_->EnableReportMediaProgress(state);
     }
 
