@@ -29,6 +29,10 @@ namespace OHOS {
 namespace Media {
 const std::string NO_SYSTEM_SOUND = "no_system_sound";
 const std::string NO_RING_SOUND = "no_ring_sound";
+const std::string FILE_SIZE_EXCEEDS_LIMIT = "20700004";
+const std::string FILE_COUNT_EXCEEDS_LIMIT = "20700005";
+const std::string ROM_IS_INSUFFICIENT = "20700006";
+
 
 enum RingtoneType {
     RINGTONE_TYPE_SIM_CARD_0 = 0,
@@ -54,6 +58,17 @@ enum SystemToneUriType {
     NO_RINGTONES = 0,
     PRESET_RINGTONES = 1,
     CUSTOM_RINGTONES = 2,
+};
+
+enum SystemSoundError {
+    ERROR_IO = 5400103,
+    ERROR_OK = 20700000,
+    ERROR_TYPE_MISMATCH = 20700001,
+    ERROR_UNSUPPORTED_OPERATION = 20700003,
+    ERROR_DATA_TOO_LARGE = 20700004,
+    ERROR_TOO_MANY_FILES = 20700005,
+    ERROR_INSUFFICIENT_ROM = 20700006,
+    ERROR_INVALID_PARAM = 20700007,
 };
 
 class SystemSoundManager {
@@ -105,6 +120,15 @@ public:
      */
     virtual std::string GetRingtoneUri(const std::shared_ptr<AbilityRuntime::Context> &context,
         RingtoneType ringtoneType) = 0;
+
+    /**
+     * @brief Returns the current ringtone attrs.
+     *
+     * @param ringtoneType Indicates the ringtone type.
+     * @return Returns the current ringtone attrs.
+     * @since 12
+     */
+    virtual ToneAttrs GetCurrentRingtoneAttribute(RingtoneType ringtoneType) = 0;
 
     /**
      * @brief Returns the system tone player instance
@@ -297,6 +321,17 @@ public:
         const std::string &uri) = 0;
 
     /**
+     * @brief Remove customized tones in ringtone library.
+     *
+     * @param uriList tone uris
+     * @return Returns {@link MSERR_OK} if remove the customized tone successfully;
+     * returns error codes defined in {@link media_errors.h} otherwise.
+     * @since 12
+     */
+    virtual std::vector<std::pair<std::string, SystemSoundError>> RemoveCustomizedToneList(
+        const std::vector<std::string> &uriList, SystemSoundError &errCode) = 0;
+
+    /**
      * @brief Returns the tone haptics settings.
      *
      * @param context Indicates the Context object on OHOS.
@@ -369,6 +404,16 @@ public:
      */
     virtual int32_t OpenToneUri(const std::shared_ptr<AbilityRuntime::Context> &context,
         const std::string &uri, int32_t toneType) = 0;
+
+    /**
+     * @brief Returns fds of the uris in uriList.
+     *
+     * @param uriList Indicates the uris to open.
+     * @return Returns fds of the uris in uriList.
+     * @since 12
+     */
+    virtual std::vector<std::tuple<std::string, int64_t, SystemSoundError>> OpenToneList(
+        const std::vector<std::string> &uriList, SystemSoundError &errCode) = 0;
 };
 
 class __attribute__((visibility("default"))) SystemSoundManagerFactory {
