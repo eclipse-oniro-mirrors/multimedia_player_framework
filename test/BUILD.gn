@@ -56,6 +56,7 @@ group("media_unit_test") {
       "unittest/recorder_test:recorder_function_unit_test",
       "unittest/recorder_test:recorder_server_unit_test",
       "unittest/sa_media_client_unit_test:sa_media_client_unit_test",
+      "unittest/service_dump_manager_unittest:service_dump_manager_unittest",
       "unittest/services/utils:utils_unit_test",
       "unittest/sound_parser_unittest:sound_parser_unittest",
       "unittest/soundpool_cachebuffer_test:soundpool_cachebuffer_unit_test",
