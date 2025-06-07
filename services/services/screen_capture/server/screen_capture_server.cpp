@@ -4478,12 +4478,16 @@ AudioDataSourceReadAtActionState AudioDataSource::WriteMixAudio(std::shared_ptr<
 AudioDataSourceReadAtActionState AudioDataSource::HandleMicBeforeInnerSync(std::shared_ptr<AVBuffer> &buffer,
     uint32_t length, std::shared_ptr<AudioBuffer> &innerAudioBuffer, std::shared_ptr<AudioBuffer> &micAudioBuffer)
 {
-    if (innerAudioBuffer->timestamp - micAudioBuffer->timestamp > MAX_MIC_BEFORE_INNER_TIME_IN_NS) {
+    int64_t timeDiff = innerAudioBuffer->timestamp - micAudioBuffer->timestamp;
+    if (timeDiff > MAX_MIC_BEFORE_INNER_TIME_IN_NS) {
         // Drop mic data Before 40ms
         if (micAudioBuffer && screenCaptureServer_->GetMicAudioCapture()) {
             screenCaptureServer_->GetMicAudioCapture()->DropBufferUntil(innerAudioBuffer->timestamp);
+            MEDIA_LOGI("mic before inner timeDiff: %{public}" PRId64 " DropBufferUntil inner time: %{public}" PRId64
+                " lastAudioPts: %{public}" PRId64, timeDiff,
+                innerAudioBuffer->timestamp, lastWriteAudioFramePts_.load());
         }
-        return AudioDataSourceReadAtActionState::RETRY_SKIP;
+        return AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG;
     }
     return WriteMicAudio(buffer, length, micAudioBuffer);
 }
@@ -4573,6 +4577,7 @@ AudioDataSourceReadAtActionState AudioDataSource::ReadWriteAudioBufferMixCore(st
                 isInWaitMicSyncState_ = true;
                 return AudioDataSourceReadAtActionState::RETRY_IN_INTERVAL;
             } else {
+                MEDIA_LOGD("isInWaitMicSyncState close");
                 isInWaitMicSyncState_ = false;
             }
         }
@@ -4582,7 +4587,8 @@ AudioDataSourceReadAtActionState AudioDataSource::ReadWriteAudioBufferMixCore(st
         return InnerMicAudioSync(buffer, length, innerAudioBuffer, micAudioBuffer);
     }
     if (innerAudioBuffer == nullptr && micAudioBuffer == nullptr) {
-        return AudioDataSourceReadAtActionState::RETRY_SKIP;
+        MEDIA_LOGD("acquire none inner mic buffer");
+        return AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG;
     }
     return AudioDataSourceReadAtActionState::OK;
 }
@@ -4602,11 +4608,10 @@ AudioDataSourceReadAtActionState AudioDataSource::ReadWriteAudioBufferMix(std::s
             MEDIA_LOGD("innerAudioCapture AcquireAudioBuffer failed");
         }
     }
+    CHECK_AND_RETURN_RET_NOLOG(innerAudioBuffer || micAudioBuffer, AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG);
     if (screenCaptureServer_->IsSCRecorderFileWithVideo() && firstAudioFramePts_ == -1) { // video audio sync
         int64_t audioTime = GetFirstAudioTime(innerAudioBuffer, micAudioBuffer);
-        if (audioTime == -1) {
-            return AudioDataSourceReadAtActionState::RETRY_SKIP;
-        }
+        CHECK_AND_RETURN_RET_NOLOG(audioTime != -1, AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG);
         struct timespec timestamp = {0, 0};
         clock_gettime(CLOCK_MONOTONIC, &timestamp);
         int64_t curTime = timestamp.tv_sec * SEC_TO_NS + timestamp.tv_nsec;
@@ -4730,9 +4735,8 @@ AudioDataSourceReadAtActionState AudioDataSource::ReadAtInnerMode(std::shared_pt
 AudioDataSourceReadAtActionState AudioDataSource::ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t length)
 {
     MEDIA_LOGD("AudioDataSource ReadAt start");
-    if (screenCaptureServer_ == nullptr) {
-        return AudioDataSourceReadAtActionState::RETRY_SKIP;
-    }
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, AudioDataSourceReadAtActionState::RETRY_SKIP,
+        "ReadAt screenCaptureServer null");
     if (screenCaptureServer_->GetSCServerCaptureState() != AVScreenCaptureState::STARTED) {
         return AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG;
     }

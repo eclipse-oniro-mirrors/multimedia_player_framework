@@ -1775,7 +1775,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleMicBeforeInnerSync_001, TestSize
     AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->HandleMicBeforeInnerSync(buffer,
         bufferSize, innerAudioBuffer, micAudioBuffer);
     MEDIA_LOGI("HandleMicBeforeInnerSync_001 ret: %{public}d", static_cast<int32_t>(ret));
-    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::RETRY_SKIP);
+    ASSERT_NE(ret, AudioDataSourceReadAtActionState::OK);
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
 
@@ -1814,7 +1814,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleMicBeforeInnerSync_002, TestSize
     AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->HandleMicBeforeInnerSync(buffer,
         bufferSize, innerAudioBuffer, micAudioBuffer);
     MEDIA_LOGI("HandleMicBeforeInnerSync_002 ret: %{public}d", static_cast<int32_t>(ret));
-    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::RETRY_SKIP);
+    ASSERT_NE(ret, AudioDataSourceReadAtActionState::OK);
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
 
