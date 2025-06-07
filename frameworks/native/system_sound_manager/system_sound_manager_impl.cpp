@@ -648,7 +648,7 @@ ToneAttrs SystemSoundManagerImpl::GetRingtoneAttrsByType(const DatabaseTool &dat
     auto resultSet = databaseTool.dataShareHelper->Query(queryUri, queryPredicates, COLUMNS, &businessError);
     MEDIA_LOGI("GetRingtoneAttrsByType: dataShareHelper->Query: errCode %{public}d", businessError.GetCode());
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
-    if (results != nullptr) {
+    if (results == nullptr) {
         MEDIA_LOGE("GetRingtoneAttrsByType: results is nullptr!");
         return toneAttrs;
     }
@@ -1927,7 +1927,7 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(
     int32_t srcFd = fd;
     off_t lseekResult = lseek(srcFd, offset, SEEK_SET);
     if (srcFd < 0 || lseekResult == -1) {
-        MEDIA_LOGE("fd is error");
+        MEDIA_LOGE("AddCustomizedToneByFdAndOffset: fd is error");
         result.clear();
         return result;
     }
@@ -2052,7 +2052,7 @@ int32_t SystemSoundManagerImpl::DoRemove(std::shared_ptr<DataShare::DataShareHel
 std::vector<std::pair<std::string, SystemSoundError>> SystemSoundManagerImpl::RemoveCustomizedToneList(
     const std::vector<std::string> &uriList, SystemSoundError errCode)
 {
-    MEDIA_LOGI("RemoveCustomizedToneList start, size: %{public}zu.", uriList.size());
+    MEDIA_LOGI("RemoveCustomizedToneList: Start, size: %{public}zu.", uriList.size());
     std::vector<std::pair<std::string, SystemSoundError>> removeResults;
     if (uriList.size() > MAX_VECTOR_LENGTH) {
         errCode = ERROR_INVALID_PARAM;
@@ -2065,6 +2065,7 @@ std::vector<std::pair<std::string, SystemSoundError>> SystemSoundManagerImpl::Re
             std::pair<std::string, SystemSoundError> resultPair(uriList[i], ERROR_OK);
             removeResults.push_back(resultPair);
         } else {
+            MEDIA_LOGI("RemoveCustomizedToneList: err, uri: %{public}s.", uriList[i].c_str());
             std::pair<std::string, SystemSoundError> resultPair(uriList[i], ERROR_IO);
             removeResults.push_back(resultPair);
         }
