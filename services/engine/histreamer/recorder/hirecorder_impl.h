@@ -105,6 +105,8 @@ private:
     void ConfigureVidEnableStableQualityMode(const RecorderParam &recParam);
     bool CheckAudioSourceType(AudioSourceType sourceType);
     void ConfigureRotation(const RecorderParam &recParam);
+    Status HandleStopOperation();
+    void ClearAllConfiguration();
     int32_t PrepareMeta();
     EncoderCapabilityData ConvertAudioEncoderInfo(MediaAVCodec::CapabilityData *capabilityData);
     EncoderCapabilityData ConvertVideoEncoderInfo(MediaAVCodec::CapabilityData *capabilityData);
