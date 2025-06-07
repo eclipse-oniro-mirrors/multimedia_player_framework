@@ -476,7 +476,6 @@ private:
     std::mutex fdMutex_ {};
     std::unique_ptr<FdsanFd> fdsanFd_ = nullptr;
     std::atomic<bool> enableCameraPostprocessing_ {false};
-    bool sourceDownloadPaused_ {false};
     std::mutex freezeMutex_;
     bool isForceLoadVideo_ {false};
 };
