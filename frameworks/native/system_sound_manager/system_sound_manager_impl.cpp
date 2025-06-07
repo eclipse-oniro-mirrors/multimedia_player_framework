@@ -113,7 +113,7 @@ Uri RINGTONEURI(RINGTONE_PATH_URI);
 Uri VIBRATEURI(VIBRATE_PATH_URI);
 Uri SIMCARDSETTINGURI(SIMCARD_SETTING_PATH_URI);
 vector<string> COLUMNS = {{RINGTONE_COLUMN_TONE_ID}, {RINGTONE_COLUMN_DATA}, {RINGTONE_COLUMN_DISPLAY_NAME},
-    {RINGTONE_COLUMN_TITLE}, {RINGTONE_COLUMN_TONE_TYPE}, {RINGTONE_COLUMN_SOURCE_TYPE},
+    {RINGTONE_COLUMN_TITLE}, {RINGTONE_COLUMN_TONE_TYPE}, {RINGTONE_COLUMN_MEDIA_TYPE}, {RINGTONE_COLUMN_SOURCE_TYPE},
     {RINGTONE_COLUMN_SHOT_TONE_TYPE}, {RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE}, {RINGTONE_COLUMN_NOTIFICATION_TONE_TYPE},
     {RINGTONE_COLUMN_NOTIFICATION_TONE_SOURCE_TYPE}, {RINGTONE_COLUMN_RING_TONE_TYPE},
     {RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE}, {RINGTONE_COLUMN_ALARM_TONE_TYPE},
@@ -2065,7 +2065,7 @@ std::vector<std::pair<std::string, SystemSoundError>> SystemSoundManagerImpl::Re
             std::pair<std::string, SystemSoundError> resultPair(uriList[i], ERROR_OK);
             removeResults.push_back(resultPair);
         } else {
-            MEDIA_LOGI("RemoveCustomizedToneList: err, uri: %{public}s.", uriList[i].c_str());
+            MEDIA_LOGE("RemoveCustomizedToneList: err, uri: %{public}s.", uriList[i].c_str());
             std::pair<std::string, SystemSoundError> resultPair(uriList[i], ERROR_IO);
             removeResults.push_back(resultPair);
         }
