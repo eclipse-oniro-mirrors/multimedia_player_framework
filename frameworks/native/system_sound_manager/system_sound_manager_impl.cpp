@@ -2005,7 +2005,6 @@ int32_t SystemSoundManagerImpl::RemoveCustomizedTone(
         MEDIA_LOGE("RemoveCustomizedTone: fd open error is %{public}s", strerror(errno));
     } else {
         fileSize = lseek(srcFd, 0, SEEK_END);
-        MEDIA_LOGI("RemoveCustomizedTone: fileSize %{public}ld", fileSize);
         close(srcFd);
     }
     return DoRemove(dataShareHelper, uri, fileSize);
