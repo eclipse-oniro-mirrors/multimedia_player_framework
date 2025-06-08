@@ -752,16 +752,16 @@ void SystemSoundManagerNapi::AsyncOpenToneListAsyncCallbackComp(napi_env env, na
             napi_value jsTuple;
             napi_create_array(env, &jsTuple);
             napi_value jsString;
-            napi_create_string_utf8(env, std::get<0>(openToneResult).c_str(), NAPI_AUTO_LENGTH, &jsString);
-            napi_set_element(env, jsTuple, 0, jsString);
+            napi_create_string_utf8(env, std::get<PARAM0>(openToneResult).c_str(), NAPI_AUTO_LENGTH, &jsString);
+            napi_set_element(env, jsTuple, PARAM0, jsString);
 
             napi_value jsNumber;
-            napi_create_int64(env, std::get<1>(openToneResult), &jsNumber);
-            napi_set_element(env, jsTuple, 1, jsNumber);
+            napi_create_int64(env, std::get<PARAM1>(openToneResult), &jsNumber);
+            napi_set_element(env, jsTuple, PARAM1, jsNumber);
 
             napi_value jsError;
-            napi_create_int32(env, static_cast<int>(std::get<2>(openToneResult)), &jsError);
-            napi_set_element(env, jsTuple, 2, jsError);
+            napi_create_int32(env, static_cast<int>(std::get<PARAM2>(openToneResult)), &jsError);
+            napi_set_element(env, jsTuple, PARAM1, jsError);
 
             napi_set_element(env, result[PARAM1], count, jsTuple);
             count++;
