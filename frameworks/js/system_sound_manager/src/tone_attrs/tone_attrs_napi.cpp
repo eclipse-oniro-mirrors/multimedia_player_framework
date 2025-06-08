@@ -55,6 +55,8 @@ napi_value ToneAttrsNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getCustomizedType", GetCustomizedType),
         DECLARE_NAPI_FUNCTION("setCategory", SetCategory),
         DECLARE_NAPI_FUNCTION("getCategory", GetCategory),
+        DECLARE_NAPI_FUNCTION("setMediaType", SetMediaType),
+        DECLARE_NAPI_FUNCTION("getMediaType", GetMediaType),
     };
 
     status = napi_define_class(env, TONE_ATTRS_NAPI_CLASS_NAME.c_str(), NAPI_AUTO_LENGTH,
@@ -347,5 +349,56 @@ napi_value ToneAttrsNapi::GetCategory(napi_env env, napi_callback_info info)
     return result;
 }
 
+napi_value ToneAttrsNapi::SetMediaType(napi_env env, napi_callback_info info)
+{
+    ToneAttrsNapi *toneAttrsNapi = nullptr;
+    napi_value jsThis = nullptr;
+    size_t argc = 1;
+    napi_value argv[1] = {};
+    CHECK_AND_RETURN_RET_LOG(VerifySelfSystemPermission(),
+        ThrowErrorAndReturn(env, NAPI_ERR_PERMISSION_DENIED_INFO, NAPI_ERR_PERMISSION_DENIED),
+        "No system permission");
+
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, &jsThis, nullptr);
+
+    napi_valuetype valueType = napi_undefined;
+    napi_typeof(env, argv[0], &valueType);
+
+    bool isMediaTypeValid = false;
+    int32_t toneAttrsMediaType = MEDIA_TYPE_AUD;
+    napi_get_value_int32(env, argv[0], &toneAttrsMediaType);
+    if (toneAttrsMediaType == MEDIA_TYPE_AUD || toneAttrsMediaType == MEDIA_TYPE_VID) {
+        isMediaTypeValid = true;
+    }
+    CHECK_AND_RETURN_RET_LOG(argc == 1 && isMediaTypeValid,
+        ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO, NAPI_ERR_INPUT_INVALID),
+        "invalid arguments");
+    CHECK_AND_RETURN_RET_LOG((status == napi_ok) && (jsThis != nullptr), nullptr, "jsThis is nullptr");
+
+    napi_unwrap(env, jsThis, reinterpret_cast<void**>(&toneAttrsNapi));
+    CHECK_AND_RETURN_RET_LOG(toneAttrsNapi != nullptr, nullptr, "toneAttrsNapi is nullptr");
+    CHECK_AND_RETURN_RET_LOG(toneAttrsNapi->toneAttrs_ != nullptr, nullptr, "toneAttrs_ is nullptr");
+    toneAttrsNapi->toneAttrs_->SetMediaType(static_cast<MediaType>(toneAttrsMediaType));
+    return nullptr;
+}
+
+napi_value ToneAttrsNapi::GetMediaType(napi_env env, napi_callback_info info)
+{
+    ToneAttrsNapi *toneAttrsNapi = nullptr;
+    napi_value jsThis = nullptr;
+    size_t argc = 0;
+    CHECK_AND_RETURN_RET_LOG(VerifySelfSystemPermission(),
+        ThrowErrorAndReturn(env, NAPI_ERR_PERMISSION_DENIED_INFO, NAPI_ERR_PERMISSION_DENIED),
+        "No system permission");
+
+    napi_status status = napi_get_cb_info(env, info, &argc, nullptr, &jsThis, nullptr);
+    CHECK_AND_RETURN_RET_LOG((status == napi_ok) && (jsThis != nullptr), nullptr, "jsThis is nullptr");
+    napi_unwrap(env, jsThis, reinterpret_cast<void**>(&toneAttrsNapi));
+    CHECK_AND_RETURN_RET_LOG(toneAttrsNapi != nullptr, nullptr, "toneAttrsNapi is nullptr");
+    CHECK_AND_RETURN_RET_LOG(toneAttrsNapi->toneAttrs_ != nullptr, nullptr, "toneAttrs_ is nullptr");
+    napi_value result;
+    napi_create_int32(env, toneAttrsNapi->toneAttrs_->GetMediaType(), &result);
+    return result;
+}
 } // namespace Media
 } // namespace OHOS

@@ -294,6 +294,9 @@ napi_status SystemSoundManagerNapi::DefineClassProperties(napi_env env, napi_val
         DECLARE_NAPI_FUNCTION("getToneHapticsList", GetToneHapticsList),
         DECLARE_NAPI_FUNCTION("getHapticsAttrsSyncedWithTone", GetHapticsAttrsSyncedWithTone),
         DECLARE_NAPI_FUNCTION("openToneHaptics", OpenToneHaptics),
+        DECLARE_NAPI_FUNCTION("getCurrentRingtoneAttribute", GetCurrentRingtoneAttribute),
+        DECLARE_NAPI_FUNCTION("removeCustomizedToneList", RemoveCustomizedToneList),
+        DECLARE_NAPI_FUNCTION("openToneList", OpenToneList),
     };
 
     return napi_define_class(env, SYSTEM_SND_MNGR_NAPI_CLASS_NAME.c_str(), NAPI_AUTO_LENGTH,
@@ -1796,6 +1799,18 @@ void SystemSoundManagerNapi::AsyncAddCustomizedTone(napi_env env, void *data)
         context->status = ERROR;
         context->errCode = NAPI_ERR_IO_ERROR;
         context->errMessage = "I/O error. Uri is empty, can not found.";
+    } else if (context->uri == FILE_SIZE_EXCEEDS_LIMIT) {
+        context->status = ERROR;
+        context->errCode = ERROR_DATA_TOO_LARGE;
+        context->errMessage = NAPI_ERR_DATA_TOO_LARGE_INFO;
+    } else if (context->uri == FILE_COUNT_EXCEEDS_LIMIT) {
+        context->status = ERROR;
+        context->errCode = ERROR_TOO_MANY_FILES;
+        context->errMessage = NAPI_ERR_TOO_MANY_FILES_INFO;
+    } else if (context->uri == ROM_IS_INSUFFICIENT) {
+        context->status = ERROR;
+        context->errCode = ERROR_INSUFFICIENT_ROM;
+        context->errMessage = NAPI_ERR_INSUFFICIENT_ROM_INFO;
     }
 }
 

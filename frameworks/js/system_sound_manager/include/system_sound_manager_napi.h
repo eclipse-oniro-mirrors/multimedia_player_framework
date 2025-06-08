@@ -165,6 +165,16 @@ private:
     static void GetToneHapticsSettingsToEnv(const napi_env &env, const napi_value &argv,
         ToneHapticsSettings &toneHapticsSettings);
     static std::string ExtractStringToEnv(const napi_env &env, const napi_value &argv);
+    static napi_value GetCurrentRingtoneAttribute(napi_env env, napi_callback_info info);
+    static void AsyncGetCurrentRingtoneAttribute(napi_env env, void *data);
+    static napi_value RemoveCustomizedToneList(napi_env env, napi_callback_info info);
+    static void AsyncRemoveCustomizedToneList(napi_env env, void *data);
+    static void RemoveCustomizedToneListAsyncCallbackComp(napi_env env, napi_status status, void *data);
+    static napi_status GetUriVector(const napi_env &env, std::vector<std::string> &uriList, napi_value in);
+    static std::string GetStringArgument(napi_env env, napi_value value);
+    static napi_value OpenToneList(napi_env env, napi_callback_info info);
+    static void AsyncOpenToneList(napi_env env, void *data);
+    static void AsyncOpenToneListAsyncCallbackComp(napi_env env, napi_status status, void *data);
 
     static thread_local napi_ref sConstructor_;
     static thread_local napi_ref ringtoneType_;
@@ -207,6 +217,9 @@ struct SystemSoundManagerAsyncContext {
     std::string hapticsUri;
     int32_t toneHapticsType;
     ToneHapticsSettings toneHapticsSettings;
+    std::vector<std::pair<std::string, SystemSoundError>> removeResultArray;
+    std::vector<std::string> uriList;
+    std::vector<std::tuple<std::string, int64_t, SystemSoundError>> openToneResultArray;
 };
 } // namespace Media
 } // namespace OHOS
