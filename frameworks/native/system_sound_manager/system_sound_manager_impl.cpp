@@ -3000,7 +3000,7 @@ void SystemSoundManagerImpl::SendCustomizedToneEvent(bool flag, const std::share
     auto now = std::chrono::system_clock::now();
     time_t rawtime = std::chrono::system_clock::to_time_t(now);
     std::shared_ptr<Media::MediaMonitor::EventBean> bean = std::make_shared<Media::MediaMonitor::EventBean>(
-        Media::MediaMonitor::ModuleId::AUDIO, Media::MediaMonitor::EventId::ADD_REMOVE_CUSTOMIZED_TONE,
+        Media::MediaMonitor::ModuleId::AUDIO, Media::MediaMonitor::EventId::SYSTEM_TONE_PLAYBACK,
         Media::MediaMonitor::EventType::BEHAVIOR_EVENT);
     bean->Add("ADD_REMOVE_OPERATION", static_cast<int32_t>(flag));
     bean->Add("APP_NAME", GetBundleName());
