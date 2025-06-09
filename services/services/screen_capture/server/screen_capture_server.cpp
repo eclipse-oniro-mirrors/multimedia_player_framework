@@ -3340,6 +3340,7 @@ int32_t ScreenCaptureServer::TelCallAudioStateUpdated(bool isInTelCallAudio)
 
 int32_t ScreenCaptureServer::OnTelCallStart()
 {
+    std::lock_guard<std::mutex> lock(inCallMutex_);
     MEDIA_LOGI("OnTelCallStart InTelCall:%{public}d, Audio:%{public}d", isInTelCall_.load(), isInTelCallAudio_.load());
     int32_t ret = MSERR_OK;
     if (!isInTelCall_.load() && !isInTelCallAudio_.load()) {
