@@ -115,8 +115,7 @@ std::unique_ptr<IAVMetadataHelperEngine> HstEngineFactory::CreateAVMetadataHelpe
     uint32_t tokenId)
 {
     MEDIA_LOG_D("CreateAVMetadataHelperEngine enter.");
-    auto helper = std::unique_ptr<AVMetadataHelperImpl>(new (std::nothrow) AVMetadataHelperImpl(
-        uid, pid, tokenId, 0));
+    auto helper = std::make_unique<AVMetadataHelperImpl>(uid, pid, tokenId, 0);
     if (helper == nullptr) {
         MEDIA_LOG_E("create AVMetadataHelperImpl failed");
         return nullptr;
