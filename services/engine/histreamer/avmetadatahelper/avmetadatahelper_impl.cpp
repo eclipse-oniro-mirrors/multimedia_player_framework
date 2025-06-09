@@ -36,8 +36,9 @@ void AVMetadataHelperImpl::OnError(MediaAVCodec::AVCodecErrorType errorType, int
     stopProcessing_ = true;
 }
 
-AVMetadataHelperImpl::AVMetadataHelperImpl(int32_t appUid, int32_t appPid uint32_t appTokenId, uint64_t appFullTokenId)
-    : appUid_(appUid), appPid_(appPid), appTokenId_(appTokenId), appFullTokenId_(appFullTokenId)
+AVMetadataHelperImpl::AVMetadataHelperImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId,
+    uint64_t appFullTokenId) : appUid_(appUid), appPid_(appPid), appTokenId_(appTokenId),
+    appFullTokenId_(appFullTokenId)
 {
     MEDIA_LOGD("Constructor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
     groupId_ = std::string("AVMeta_") + std::to_string(OHOS::Media::Pipeline::Pipeline::GetNextPipelineId());
