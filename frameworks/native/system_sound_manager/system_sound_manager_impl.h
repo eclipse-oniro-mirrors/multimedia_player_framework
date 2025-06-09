@@ -176,6 +176,7 @@ private:
     std::string GetRingtoneUriByType(const DatabaseTool &databaseTool, const std::string &type);
     ToneAttrs GetRingtoneAttrsByType(const DatabaseTool &databaseTool, const std::string &type);
     std::string GetPresetRingToneUriByType(const DatabaseTool &databaseTool, const std::string &type);
+    ToneAttrs GetPresetRingToneAttrByType(const DatabaseTool &databaseTool, const std::string &type);
     int32_t SetNoRingToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         RingtoneType ringtoneType);
     int32_t RemoveSourceTypeForRingTone(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,

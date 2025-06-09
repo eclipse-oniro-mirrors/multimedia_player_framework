@@ -704,6 +704,53 @@ std::string SystemSoundManagerImpl::GetPresetRingToneUriByType(const DatabaseToo
     return uri;
 }
 
+ToneAttrs SystemSoundManagerImpl::GetPresetRingToneAttrByType(const DatabaseTool &databaseTool,
+    const std::string &type)
+{
+    ToneAttrs toneAttrs = { "", "", "", CUSTOMISED, TONE_CATEGORY_RINGTONE };
+    if (!databaseTool.isInitialized || databaseTool.dataShareHelper == nullptr) {
+        MEDIA_LOGE("GetPresetRingToneAttrByType: The database tool is not ready!");
+        return toneAttrs;
+    }
+
+    std::string uri = "";
+    DataShare::DatashareBusinessError businessError;
+    DataShare::DataSharePredicates queryPredicates;
+    queryPredicates.SetWhereClause(RINGTONE_COLUMN_RING_TONE_TYPE + " = ? AND " +
+        RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE + " = ? ");
+    queryPredicates.SetWhereArgs({type, to_string(SOURCE_TYPE_PRESET)});
+
+    std::string ringtoneLibraryUri = "";
+    if (databaseTool.isProxy) {
+        ringtoneLibraryUri = RINGTONE_LIBRARY_PROXY_DATA_URI_TONE_FILES +
+            "&user=" + std::to_string(SystemSoundManagerUtils::GetCurrentUserId());
+    } else {
+        ringtoneLibraryUri = RINGTONE_PATH_URI;
+    }
+    Uri queryUri(ringtoneLibraryUri);
+    auto resultSet = databaseTool.dataShareHelper->Query(queryUri, queryPredicates, COLUMNS, &businessError);
+    MEDIA_LOGI("GetPresetRingToneAttrByType: dataShareHelper->Query: errCode %{public}d", businessError.GetCode());
+    auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
+    if (results == nullptr) {
+        MEDIA_LOGE("GetPresetRingToneAttrByType: query failed, ringtone library error!");
+        return toneAttrs;
+    }
+    unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
+    if (ringtoneAsset != nullptr) {
+        toneAttrs.SetUri(ringtoneAsset->GetPath());
+        toneAttrs.SetTitle(ringtoneAsset->GetTitle());
+        toneAttrs.SetFileName(ringtoneAsset->GetDisplayName());
+        toneAttrs.SetCategory(ringtoneAsset->GetToneType());
+        if (ringtoneAsset->GetMediaType() == RINGTONE_MEDIA_TYPE_VIDEO) {
+            toneAttrs.SetMediaType(MediaType::MEDIA_TYPE_VID);
+        } else {
+            toneAttrs.SetMediaType(MediaType::MEDIA_TYPE_AUD);
+        }
+    }
+    resultSet == nullptr ? : resultSet->Close();
+    return toneAttrs;
+}
+
 std::string SystemSoundManagerImpl::GetRingtoneUri(const shared_ptr<Context> &context, RingtoneType ringtoneType)
 {
     ToneAttrs toneAttrs = GetCurrentRingtoneAttribute(ringtoneType);
@@ -786,6 +833,12 @@ ToneAttrs SystemSoundManagerImpl::GetRingtoneAttrs(const DatabaseTool &databaseT
             toneAttrs = GetRingtoneAttrsByType(databaseTool, to_string(ringtoneTypeMap_[ringtoneType]));
             if (toneAttrs.GetUri().empty()) {
                 toneAttrs = GetRingtoneAttrsByType(databaseTool, to_string(RING_TONE_TYPE_SIM_CARD_BOTH));
+            }
+            if (toneAttrs.GetUri().empty()) {
+                toneAttrs = GetPresetRingToneAttrByType(databaseTool, to_string(ringtoneTypeMap_[ringtoneType]));
+            }
+            if (toneAttrs.GetUri().empty()) {
+                toneAttrs = GetPresetRingToneAttrByType(databaseTool, to_string(RING_TONE_TYPE_SIM_CARD_BOTH));
             }
             break;
         default:
