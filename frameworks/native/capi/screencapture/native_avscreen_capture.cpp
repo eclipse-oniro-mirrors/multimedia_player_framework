@@ -31,6 +31,7 @@
 
 namespace {
 constexpr int MAX_WINDOWS_LEN = 1000;
+constexpr int VIRTUAL_DISPLAY_ID_START = 1000;
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "NativeScreenCapture"};
 }
 
@@ -1209,8 +1210,8 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureArea(struct OH_AVScreen
     CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
         AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
     
-    CHECK_AND_RETURN_RET_LOG(displayId >= 0 && displayId < 1000, AV_SCREEN_CAPTURE_ERR_INVALID_VAL,
-        "input displayId invalid");
+    CHECK_AND_RETURN_RET_LOG(displayId >= 0 && displayId < VIRTUAL_DISPLAY_ID_START,
+        AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input displayId invalid");
     CHECK_AND_RETURN_RET_LOG(area != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input area is nullptr");
     CHECK_AND_RETURN_RET_LOG(area->x > 0 && area->y > 0 && area->width > 0 && area->height > 0,
         AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input area invalid");
