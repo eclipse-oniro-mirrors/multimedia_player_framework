@@ -260,6 +260,7 @@ private:
 private:
     std::mutex mutex_;
     std::mutex cbMutex_;
+    std::mutex inCallMutex_;
     std::shared_ptr<ScreenCaptureObserverCallBack> screenCaptureObserverCb_ = nullptr;
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
     bool canvasRotation_ = false;
