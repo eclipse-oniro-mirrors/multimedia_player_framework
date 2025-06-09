@@ -20,6 +20,7 @@
 #include "ibuffer_consumer_listener.h"
 #include "graphic_common_c.h"
 #include "media_errors.h"
+#include "media_utils.h"
 #include "media_log.h"
 #include "media_description.h"
 #include "meta/meta.h"
@@ -113,8 +114,11 @@ private:
     std::weak_ptr<AVThumbnailGenerator> generator_;
 };
 
-AVThumbnailGenerator::AVThumbnailGenerator(std::shared_ptr<MediaDemuxer> &mediaDemuxer) : mediaDemuxer_(mediaDemuxer)
+AVThumbnailGenerator::AVThumbnailGenerator(std::shared_ptr<MediaDemuxer> &mediaDemuxer, int32_t appUid, int32_t appPid,
+    uint32_t appTokenId, uint64_t appFullTokenId) : mediaDemuxer_(mediaDemuxer), appUid_(appUid), appPid_(appPid),
+    appTokenId_(appTokenId), appFullTokenId_(appFullTokenId)
 {
+    appName_ = GetClientBundleName(appUid_);
     MEDIA_LOGI("Constructor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
 }
 
@@ -146,8 +150,17 @@ Status AVThumbnailGenerator::InitDecoder()
         videoDecoder_->Start();
         return Status::OK;
     }
-    videoDecoder_ = MediaAVCodec::VideoDecoderFactory::CreateByMime(trackMime_);
+    Format format;
+    int32_t ret = 0;
+    std::shared_ptr<Media::Meta> callerInfo = std::make_shared<Media::Meta>();
+    callerInfo->SetData(Media::Tag::AV_CODEC_FORWARD_CALLER_PID, appPid_);
+    callerInfo->SetData(Media::Tag::AV_CODEC_FORWARD_CALLER_UID, appUid_);
+    callerInfo->SetData(Media::Tag::AV_CODEC_FORWARD_CALLER_PROCESS_NAME, appName_);
+    format.SetMeta(callerInfo);
+    ret = MediaAVCodec::VideoDecoderFactory::CreateByMime(trackMime_, format, videoDecoder_);
+    MEDIA_LOGI("VideoDecoderAdapter::Init CreateByMime errorCode %{public}d", ret);
     CHECK_AND_RETURN_RET_LOG(videoDecoder_ != nullptr, Status::ERROR_NO_MEMORY, "Create videoDecoder_ is nullptr");
+    MEDIA_LOGI("appUid: %{public}d, appPid: %{public}d, appName: %{public}s", appUid_, appPid_, appName_.c_str());
     Format trackFormat{};
     trackFormat.SetMeta(GetVideoTrackInfo());
     trackFormat.GetIntValue(MediaDescriptionKey::MD_KEY_WIDTH, width_);

@@ -52,7 +52,8 @@ public:
         uint64_t appFullTokenId) override;
 #endif
 #ifdef SUPPORT_METADATA
-    std::unique_ptr<IAVMetadataHelperEngine> CreateAVMetadataHelperEngine() override;
+    std::unique_ptr<IAVMetadataHelperEngine> CreateAVMetadataHelperEngine(int32_t uid = 0, int32_t pid = 0,
+        uint32_t tokenId = 0) override;
 #endif
 };
 
@@ -110,10 +111,11 @@ std::unique_ptr<IPlayerEngine> HstEngineFactory::CreatePlayerEngine(int32_t uid,
 #endif
 
 #ifdef SUPPORT_METADATA
-std::unique_ptr<IAVMetadataHelperEngine> HstEngineFactory::CreateAVMetadataHelperEngine()
+std::unique_ptr<IAVMetadataHelperEngine> HstEngineFactory::CreateAVMetadataHelperEngine(int32_t uid, int32_t pid,
+    uint32_t tokenId)
 {
     MEDIA_LOG_D("CreateAVMetadataHelperEngine enter.");
-    auto helper = std::make_unique<AVMetadataHelperImpl>();
+    auto helper = std::make_unique<AVMetadataHelperImpl>(uid, pid, tokenId, 0);
     if (helper == nullptr) {
         MEDIA_LOG_E("create AVMetadataHelperImpl failed");
         return nullptr;

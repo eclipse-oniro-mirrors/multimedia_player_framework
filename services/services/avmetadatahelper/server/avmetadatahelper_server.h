@@ -57,7 +57,10 @@ private:
     int32_t InitEngine(const std::string &uri);
     int32_t CheckSourceByUriHelper();
 
-    int32_t appUid_;
+    int32_t appUid_ = 0;
+    int32_t appPid_ = 0;
+    uint32_t appTokenId_ = 0;
+    std::string appName_;
     std::shared_ptr<IAVMetadataHelperEngine> avMetadataHelperEngine_ = nullptr;
     std::mutex mutex_;
     std::condition_variable ipcReturnCond_;

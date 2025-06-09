@@ -19,6 +19,7 @@
 #include "engine_factory_repo.h"
 #include "uri_helper.h"
 #include "media_dfx.h"
+#include "media_utils.h"
 #include "ipc_skeleton.h"
 
 namespace {
@@ -46,6 +47,10 @@ AVMetadataHelperServer::AVMetadataHelperServer()
     : taskQue_("AVMetadata")
 {
     appUid_ = IPCSkeleton::GetCallingUid();
+    appPid_ = IPCSkeleton::GetCallingPid();
+    appName_ = GetClientBundleName(appUid_);
+    appTokenId_ = IPCSkeleton::GetCallingTokenID();
+    MEDIA_LOGI("appUid: %{public}d, appPid: %{public}d, appName: %{public}s", appUid_, appPid_, appName_.c_str());
     (void)taskQue_.Start();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
@@ -260,7 +265,7 @@ int32_t AVMetadataHelperServer::InitEngine(const std::string &uri)
     CHECK_AND_RETURN_RET_LOG(engineFactory != nullptr,
         static_cast<int32_t>(MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED),
         "Failed to get engine factory");
-    avMetadataHelperEngine_ = engineFactory->CreateAVMetadataHelperEngine();
+    avMetadataHelperEngine_ = engineFactory->CreateAVMetadataHelperEngine(appUid_, appPid_, appTokenId_);
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr,
         static_cast<int32_t>(MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED),
         "Failed to create avmetadatahelper engine");
