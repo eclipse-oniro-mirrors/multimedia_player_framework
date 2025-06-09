@@ -74,7 +74,11 @@ int32_t SoundParser::DoParser()
     if (result != MSERR_OK && callback_ != nullptr) {
         MEDIA_LOGI("DoDemuxer failed, call callback");
         callback_->OnError(MSERR_UNSUPPORT_FILE);
-        SoundPoolUtils::ErrorInfo errorInfo{MSERR_UNSUPPORT_FILE, soundID_, 0, ERROR_TYPE::LOAD_ERROR, callback_};
+        SoundPoolUtils::ErrorInfo errorInfo{
+            .errorCode = MSERR_UNSUPPORT_FILE,
+            .soundId = soundID_,
+            .errorType = ERROR_TYPE::LOAD_ERROR,
+            .callback = callback_};
         SoundPoolUtils::SendErrorInfo(errorInfo);
         return MSERR_INVALID_VAL;
     } else if (result != MSERR_OK && callback_ == nullptr) {
@@ -85,7 +89,11 @@ int32_t SoundParser::DoParser()
     if (result != MSERR_OK && callback_ != nullptr) {
         MEDIA_LOGI("DoDecode failed, call callback");
         callback_->OnError(MSERR_UNSUPPORT_FILE);
-        SoundPoolUtils::ErrorInfo errorInfo{MSERR_UNSUPPORT_FILE, soundID_, 0, ERROR_TYPE::LOAD_ERROR, callback_};
+        SoundPoolUtils::ErrorInfo errorInfo{
+            .errorCode = MSERR_UNSUPPORT_FILE,
+            .soundId = soundID_,
+            .errorType = ERROR_TYPE::LOAD_ERROR,
+            .callback = callback_};
         SoundPoolUtils::SendErrorInfo(errorInfo);
         return MSERR_INVALID_VAL;
     } else if (result != MSERR_OK && callback_ == nullptr) {

@@ -25,6 +25,21 @@ namespace {
 
 namespace OHOS {
 namespace Media {
+static const std::unordered_map<int32_t, int32_t> errorCodeMap = {
+    {MSERR_INVALID_OPERATION, MSERR_EXT_API9_OPERATE_NOT_PERMIT},
+    {MSERR_NO_MEMORY, MSERR_EXT_API9_NO_MEMORY},
+    {MSERR_SERVICE_DIED, MSERR_EXT_API9_SERVICE_DIED},
+    {MSERR_UNSUPPORT_FILE, MSERR_EXT_API9_IO},
+    {MSERR_INVALID_VAL, MSERR_EXT_API9_IO}
+};
+ 
+static const std::unordered_map<int32_t, std::string> errorMessageMap = {
+    {MSERR_EXT_API9_OPERATE_NOT_PERMIT, "The soundpool timed out. Please confirm that the input stream is normal."},
+    {MSERR_EXT_API9_NO_MEMORY, "soundpool memery error."},
+    {MSERR_EXT_API9_SERVICE_DIED, "releated server died"},
+    {MSERR_EXT_API9_IO, "IO error happened."}
+};
+
 SoundPoolCallBackNapi::SoundPoolCallBackNapi(napi_env env)
 {
     env_ = env;
@@ -46,16 +61,9 @@ void SoundPoolCallBackNapi::OnPlayFinished(int32_t streamID)
 void SoundPoolCallBackNapi::OnError(int32_t errorCode)
 {
     MEDIA_LOGI("OnError recived:error:%{public}d", errorCode);
-    if (errorCode == MSERR_INVALID_OPERATION) {
-        SendErrorCallback(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "The soundpool timed out. Please confirm that the input stream is normal.");
-    } else if (errorCode == MSERR_NO_MEMORY) {
-        SendErrorCallback(MSERR_EXT_API9_NO_MEMORY, "soundpool memery error.");
-    } else if (errorCode == MSERR_SERVICE_DIED) {
-        SendErrorCallback(MSERR_EXT_API9_SERVICE_DIED, "releated server died");
-    } else {
-        SendErrorCallback(MSERR_EXT_API9_IO, "IO error happened.");
-    }
+    int32_t externalsErrorCode = GetExternalErrorCode(errorCode);
+    std::string errorMsg = GetErrorMsg(externalsErrorCode);
+    SendErrorCallback(externalsErrorCode, errorMsg);
 }
 
 void SoundPoolCallBackNapi::OnErrorOccurred(Format &errorInfo)
@@ -63,26 +71,29 @@ void SoundPoolCallBackNapi::OnErrorOccurred(Format &errorInfo)
     MEDIA_LOGI("OnErrorOccurred recived");
     int32_t errorCode;
     errorInfo.GetIntValue(SoundPoolKeys::ERROR_CODE, errorCode);
-    switch (errorCode) {
-        case MSERR_INVALID_OPERATION:
-            errorInfo.PutIntValue(SoundPoolKeys::ERROR_CODE, MSERR_EXT_API9_OPERATE_NOT_PERMIT);
-            errorInfo.PutStringValue(SoundPoolKeys::ERROR_MESSAGE,
-                "The soundpool timed out. Please confirm that the input stream is normal.");
-            break;
-        case MSERR_NO_MEMORY:
-            errorInfo.PutIntValue(SoundPoolKeys::ERROR_CODE, MSERR_EXT_API9_NO_MEMORY);
-            errorInfo.PutStringValue(SoundPoolKeys::ERROR_MESSAGE, "soundpool memery error.");
-            break;
-        case MSERR_SERVICE_DIED:
-            errorInfo.PutIntValue(SoundPoolKeys::ERROR_CODE, MSERR_EXT_API9_SERVICE_DIED);
-            errorInfo.PutStringValue(SoundPoolKeys::ERROR_MESSAGE, "releated server died");
-            break;
-        default:
-            errorInfo.PutIntValue(SoundPoolKeys::ERROR_CODE, MSERR_EXT_API9_IO);
-            errorInfo.PutStringValue(SoundPoolKeys::ERROR_MESSAGE, "IO error happened.");
-            break;
-    }
+    int32_t externalsErrorCode = GetExternalErrorCode(errorCode);
+    std::string errorMsg = GetErrorMsg(externalsErrorCode);
+    errorInfo.PutIntValue(SoundPoolKeys::ERROR_CODE, externalsErrorCode);
+    errorInfo.PutStringValue(SoundPoolKeys::ERROR_MESSAGE, errorMsg);
     SendErrorOccurredCallback(errorInfo);
+}
+
+int32_t SoundPoolCallBackNapi::GetExternalErrorCode(int32_t internalCode)
+{
+    auto it = errorCodeMap.find(internalCode);
+    if (it != errorCodeMap.end()) {
+        return it->second;
+    }
+    return MSERR_EXT_API9_IO;
+}
+ 
+std::string SoundPoolCallBackNapi::GetErrorMsg(int32_t errorCode)
+{
+    auto it = errorMessageMap.find(errorCode);
+    if (it != errorMessageMap.end()) {
+        return it->second;
+    }
+    return "unknown error";
 }
 
 void SoundPoolCallBackNapi::SaveCallbackReference(const std::string &name, std::weak_ptr<AutoRef> ref)

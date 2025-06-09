@@ -71,6 +71,8 @@ private:
     void OnJsErrorOccurredCallBack(SoundPoolJsCallBack *jsCb) const;
     void OnJsloadCompletedCallBack(SoundPoolJsCallBack *jsCb) const;
     void OnJsplayCompletedCallBack(SoundPoolJsCallBack *jsCb) const;
+    int32_t GetExternalErrorCode(int32_t internalCode);
+    std::string GetErrorMsg(int32_t errorCode);
     napi_env env_ = nullptr;
     std::mutex mutex_;
     std::map<std::string, std::weak_ptr<AutoRef>> refMap_;
