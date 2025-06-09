@@ -49,7 +49,7 @@ void AVThumbnailGeneratorUnitTest::TearDownTestCase(void) {}
  
 void AVThumbnailGeneratorUnitTest::SetUp(void)
 {
-    avThumbnailGenerator_ = std::make_shared<AVThumbnailGenerator>(mediaDemuxer_);
+    avThumbnailGenerator_ = std::make_shared<AVThumbnailGenerator>(mediaDemuxer_, 0, 0, 0, 0);
     mockMediaDemuxer_ = std::make_shared<MockMediaDemuxer>();
     avThumbnailGenerator_->mediaDemuxer_ = mockMediaDemuxer_;
 }
