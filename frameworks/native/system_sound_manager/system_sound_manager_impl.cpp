@@ -1836,7 +1836,7 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByExternalUri(
     MEDIA_LOGI("AddCustomizedToneByExternalUri: Start, externalUri: %{public}s", externalUri.c_str());
     std::string fdHead = "fd://";
     std::string srcPath = externalUri;
-    int32_t srcFd;
+    int32_t srcFd = -1;
     if (srcPath.find(fdHead) != std::string::npos) {
         StrToInt(srcPath.substr(fdHead.size()), srcFd);
     } else {
@@ -1847,7 +1847,9 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByExternalUri(
         fdHead.clear();
         return fdHead;
     }
-    return AddCustomizedToneByFd(context, toneAttrs, srcFd);
+    std::string result = AddCustomizedToneByFd(context, toneAttrs, srcFd);
+    close(srcFd);
+    return result;
 }
 
 std::string SystemSoundManagerImpl::AddCustomizedToneByFd(const std::shared_ptr<AbilityRuntime::Context> &context,
@@ -2035,7 +2037,6 @@ std::string SystemSoundManagerImpl::CustomizedToneWriteFile(const std::shared_pt
         }
         len -= bytesWritten;
     }
-    close(paramsForWriteFile.srcFd);
     close(dstFd);
     dataShareHelper->Release();
     SendCustomizedToneEvent(true, toneAttrs, paramsForWriteFile.fileSize, mimeType_, SUCCESS);
