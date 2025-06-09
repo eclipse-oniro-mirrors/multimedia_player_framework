@@ -705,7 +705,7 @@ std::string SystemSoundManagerImpl::GetPresetRingToneUriByType(const DatabaseToo
 }
 
 ToneAttrs SystemSoundManagerImpl::GetPresetRingToneAddrByType(const DatabaseTool &databaseTool,
-const std::string &type)
+    const std::string &type)
 {
     ToneAttrs toneAttrs = { "", "", "", CUSTOMISED, TONE_CATEGORY_RINGTONE };
     if (!databaseTool.isInitialized || databaseTool.dataShareHelper == nullptr) {
