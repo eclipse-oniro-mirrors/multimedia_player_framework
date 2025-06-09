@@ -75,7 +75,7 @@ void CJAVTranscoderCallback::CancelCallbackReference(CJAVTranscoderEvent event)
         onerrorfunc = nullptr;
     }
 
-    if (EVENT2CSTR.find(event) != EVENT2CSTR.end()){
+    if (EVENT2CSTR.find(event) != EVENT2CSTR.end()) {
         MEDIA_LOGI("Cancel callback type: %{public}s", EVENT2CSTR.at(event));
     } else {
         MEDIA_LOGW("event %{public}d is not in EVENT2CSTR", static_cast<int32_t>(event));
@@ -135,8 +135,9 @@ CjAVTransCoderState CJAVTranscoderCallback::GetState()
 
 void CJAVTranscoderCallback::OnError(int32_t errCode, const std::string &errorMsg)
 {
-    MEDIA_LOGE("CJAVTranscoderCallback::OnError: %{public}d, %{public}s", errCode, errorMsg.c_str());
-    SendErrorCallback(errCode, errorMsg);
+    MediaServiceExtErrCodeAPI9 exErr = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode));
+    MEDIA_LOGE("CJAVTranscoderCallback::OnError: %{public}d, %{public}s", exErr, errorMsg.c_str());
+    SendErrorCallback(exErr, errorMsg);
     SendStateCallback(CjAVTransCoderState::STATE_ERROR, StateChangeReason::BACKGROUND);
 }
 
