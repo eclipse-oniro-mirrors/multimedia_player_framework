@@ -1030,7 +1030,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RegisterWindowRelatedListener_001, Tes
     screenCaptureServer_->RegisterWindowRelatedListener();
     ASSERT_NE(screenCaptureServer_->lifecycleListenerDeathRecipient_, nullptr);
     ASSERT_NE(screenCaptureServer_->windowLifecycleListener_, nullptr);
-    ASSERT_NE(screenCaptureServer_->windowInfoChangedListener_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->windowInfoChangedListener_, nullptr);
     screenCaptureServer_->UnRegisterWindowLifecycleListener();
     screenCaptureServer_->UnRegisterWindowInfoChangedListener();
     ASSERT_EQ(screenCaptureServer_->lifecycleListenerDeathRecipient_, nullptr);
@@ -1167,7 +1167,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureRegisterListener_001
     ASSERT_EQ(screenCaptureServer_->GetWindowIdList().size(), 1);
     ASSERT_NE(screenCaptureServer_->lifecycleListenerDeathRecipient_, nullptr);
     ASSERT_NE(screenCaptureServer_->windowLifecycleListener_, nullptr);
-    ASSERT_NE(screenCaptureServer_->windowInfoChangedListener_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->windowInfoChangedListener_, nullptr);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureRegisterListener_002, TestSize.Level2)
