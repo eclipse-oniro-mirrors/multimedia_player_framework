@@ -709,7 +709,7 @@ ToneAttrs SystemSoundManagerImpl::GetPresetRingToneAttrByType(const DatabaseTool
 {
     ToneAttrs toneAttrs = { "", "", "", CUSTOMISED, TONE_CATEGORY_RINGTONE };
     if (!databaseTool.isInitialized || databaseTool.dataShareHelper == nullptr) {
-        MEDIA_LOGE("GetPresetRingToneAddrByType: The database tool is not ready!");
+        MEDIA_LOGE("GetPresetRingToneAttrByType: The database tool is not ready!");
         return toneAttrs;
     }
 
@@ -729,10 +729,10 @@ ToneAttrs SystemSoundManagerImpl::GetPresetRingToneAttrByType(const DatabaseTool
     }
     Uri queryUri(ringtoneLibraryUri);
     auto resultSet = databaseTool.dataShareHelper->Query(queryUri, queryPredicates, COLUMNS, &businessError);
-    MEDIA_LOGI("GetPresetRingToneAddrByType: dataShareHelper->Query: errCode %{public}d", businessError.GetCode());
+    MEDIA_LOGI("GetPresetRingToneAttrByType: dataShareHelper->Query: errCode %{public}d", businessError.GetCode());
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     if (results == nullptr) {
-        MEDIA_LOGE("GetPresetRingToneAddrByType: query failed, ringtone library error!");
+        MEDIA_LOGE("GetPresetRingToneAttrByType: query failed, ringtone library error!");
         return toneAttrs;
     }
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
@@ -742,9 +742,9 @@ ToneAttrs SystemSoundManagerImpl::GetPresetRingToneAttrByType(const DatabaseTool
         toneAttrs.SetFileName(ringtoneAsset->GetDisplayName());
         toneAttrs.SetCategory(ringtoneAsset->GetToneType());
         if (ringtoneAsset->GetMediaType() == RINGTONE_MEDIA_TYPE_VIDEO) {
-            toneAttrs.SetMediaType(ToneMediaType::MEDIA_TYPE_VID);
+            toneAttrs.SetMediaType(MediaType::MEDIA_TYPE_VID);
         } else {
-            toneAttrs.SetMediaType(ToneMediaType::MEDIA_TYPE_AUD);
+            toneAttrs.SetMediaType(MediaType::MEDIA_TYPE_AUD);
         }
     }
     resultSet == nullptr ? : resultSet->Close();
