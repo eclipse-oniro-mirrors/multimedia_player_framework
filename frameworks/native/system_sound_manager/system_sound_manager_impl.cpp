@@ -835,10 +835,10 @@ ToneAttrs SystemSoundManagerImpl::GetRingtoneAttrs(const DatabaseTool &databaseT
                 toneAttrs = GetRingtoneAttrsByType(databaseTool, to_string(RING_TONE_TYPE_SIM_CARD_BOTH));
             }
             if (toneAttrs.GetUri().empty()) {
-                toneAttrs = GetPresetRingToneAddrByType(databaseTool, to_string(ringtoneTypeMap_[ringtoneType]));
+                toneAttrs = GetPresetRingToneAttrByType(databaseTool, to_string(ringtoneTypeMap_[ringtoneType]));
             }
             if (toneAttrs.GetUri().empty()) {
-                toneAttrs = GetPresetRingToneAddrByType(databaseTool, to_string(RING_TONE_TYPE_SIM_CARD_BOTH));
+                toneAttrs = GetPresetRingToneAttrByType(databaseTool, to_string(RING_TONE_TYPE_SIM_CARD_BOTH));
             }
             break;
         default:
