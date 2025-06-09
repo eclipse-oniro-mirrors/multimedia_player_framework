@@ -531,7 +531,7 @@ void HiRecorderImpl::ClearAllConfiguration()
             metaDataFormats_.at(iter.first)->Clear();
         }
         RemoveFilterAction(iter.second);
-    }    
+    }
 }
 
 int32_t HiRecorderImpl::Stop(bool isDrainAll)
