@@ -47,6 +47,9 @@ public:
     void OnVoiceMailMsgIndicatorUpdated(int32_t slotId, bool voiceMailMsgResult) override;
 
     void OnIccAccountUpdated() override;
+
+private:
+    bool HasCallFromTel();
 };
 }
 }
