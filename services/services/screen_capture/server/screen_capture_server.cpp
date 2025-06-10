@@ -379,7 +379,7 @@ void ScreenCaptureServer::SetDefaultDisplayIdOfWindows()
     std::unordered_map<uint64_t, uint64_t> windowDisplayIdMap;
     auto ret = WindowManager::GetInstance().GetDisplayIdByWindowId(missionIds_, windowDisplayIdMap);
     CHECK_AND_RETURN_LOG(ret == Rosen::WMError::WM_OK, "SetDefaultDisplayIdOfWindows GetDisplayIdByWindowId failed");
-    MEDIA_LOGD("SetDefaultDisplayIdOfWindows GetDisplayIdByWindowId ret: %{public}d", ret);
+    MEDIA_LOGI("SetDefaultDisplayIdOfWindows GetDisplayIdByWindowId ret: %{public}d", ret);
     for (const auto& pair : windowDisplayIdMap) {
         MEDIA_LOGD("SetDefaultDisplayIdOfWindows 0x%{public}06" PRIXPTR " WindowId:%{public}" PRIu64
             " in DisplayId:%{public}" PRIu64, FAKE_POINTER(this), pair.first, pair.second);
@@ -432,7 +432,7 @@ int32_t ScreenCaptureServer::RegisterWindowLifecycleListener(std::vector<int32_t
         auto listenerObject = sceneSessionManager->AsObject();
         if (listenerObject) {
             listenerObject->AddDeathRecipient(lifecycleListenerDeathRecipient_);
-            MEDIA_LOGD("RegisterWindowLifecycleListener AddDeathRecipient success.");
+            MEDIA_LOGI("RegisterWindowLifecycleListener AddDeathRecipient success.");
         }
     }
     
@@ -467,7 +467,7 @@ int32_t ScreenCaptureServer::UnRegisterWindowLifecycleListener()
         auto listenerObject = sceneSessionManager->AsObject();
         if (listenerObject) {
             listenerObject->RemoveDeathRecipient(lifecycleListenerDeathRecipient_);
-            MEDIA_LOGD("UnRegisterWindowLifecycleListener RemoveDeathRecipient success.");
+            MEDIA_LOGI("UnRegisterWindowLifecycleListener RemoveDeathRecipient success.");
         }
         lifecycleListenerDeathRecipient_ = nullptr;
     }
