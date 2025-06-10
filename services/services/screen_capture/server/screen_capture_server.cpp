@@ -3576,10 +3576,6 @@ ScreenScaleMode ScreenCaptureServer::GetScreenScaleMode(const AVScreenCaptureFil
     if (iter != modeMap.end()) {
         scaleMode = iter->second;
     }
-    if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
-            .compare(appName_) == 0) {
-        scaleMode = ScreenScaleMode::FILL_MODE;
-    }
     MEDIA_LOGI("ScreenCaptureServer::GetScreenScaleMode succeed, scaleMode: %{public}d", scaleMode);
     return scaleMode;
 }
