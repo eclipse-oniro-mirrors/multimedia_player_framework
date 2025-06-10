@@ -541,9 +541,15 @@ void HiRecorderImpl::ClearAllConfiguration()
     muxerFilter_ = nullptr;
     isWatermarkSupported_ = false;
     codecMimeType_ = "";
-    audioEncFormat_->Clear();
-    videoEncFormat_->Clear();
-    muxerFormat_->Clear();
+    if (audioEncFormat_) {
+        audioEncFormat_->Clear();
+    }
+    if (videoEncFormat_) {
+        videoEncFormat_->Clear();
+    }
+    if (muxerFormat_) {
+        muxerFormat_->Clear();
+    }
     
     auto RemoveFilterAction = [this](auto& filter) {
         if (filter && pipeline_) {
