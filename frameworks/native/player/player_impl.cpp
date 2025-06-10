@@ -270,6 +270,13 @@ int32_t PlayerImpl::SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekM
     return ret;
 }
 
+int32_t PlayerImpl::SetPlayRangeUsWithMode(int64_t start, int64_t end, PlayerSeekMode mode)
+{
+    const int64_t msToUs = 1000;
+    const int64_t complementNum = 999;
+    return SetPlayRangeWithMode(start / msToUs, (end + complementNum) / msToUs, mode);
+}
+
 int32_t PlayerImpl::Prepare()
 {
     time_t startTime = time(nullptr);
