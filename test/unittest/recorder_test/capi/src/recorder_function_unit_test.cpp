@@ -514,7 +514,7 @@ HWTEST_F(RecorderFunctionUnitTest, Recorder_Audio_004, TestSize.Level2)
 #ifdef SUPPORT_CODEC_TYPE_HEVC
 /**
  * @tc.name: Recorder_Audio_005
- * @tc.desc: Test audio recording process 005, amr not support rk2568
+ * @tc.desc: Test audio recording process 005, amr not support rk3568
  * @tc.type: FUNC
  */
 HWTEST_F(RecorderFunctionUnitTest, Recorder_Audio_005, TestSize.Level2)
@@ -536,7 +536,7 @@ HWTEST_F(RecorderFunctionUnitTest, Recorder_Audio_005, TestSize.Level2)
     config.profile.audioChannels = 1;
     config.profile.audioSampleRate = 8000;
     config.audioSourceType = OH_AVRecorder_AudioSourceType::AVRECORDER_MIC;
-    // OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AMR_NB not support rk2568
+    // OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AMR_NB not support rk3568
     config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AMR_NB;
     config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_AMR;
     config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_APP_CREATE;
@@ -570,12 +570,10 @@ HWTEST_F(RecorderFunctionUnitTest, Recorder_Audio_005, TestSize.Level2)
 
     MEDIA_LOGI("RecorderFunctionUnitTest Recorder_Audio_005 out.");
 }
-#endif
 
-#ifdef SUPPORT_CODEC_TYPE_HEVC
 /**
  * @tc.name: Recorder_Audio_006
- * @tc.desc: Test audio recording process 006, amr not support rk2568
+ * @tc.desc: Test audio recording process 006, amr not support rk3568
  * @tc.type: FUNC
  */
 HWTEST_F(RecorderFunctionUnitTest, Recorder_Audio_006, TestSize.Level2)
@@ -597,7 +595,7 @@ HWTEST_F(RecorderFunctionUnitTest, Recorder_Audio_006, TestSize.Level2)
     config.profile.audioChannels = 1;
     config.profile.audioSampleRate = 8000;
     config.audioSourceType = OH_AVRecorder_AudioSourceType::AVRECORDER_MIC;
-    // OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AMR_NB not support rk2568
+    // OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AMR_NB not support rk3568
     config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AMR_NB;
     config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_AMR;
     config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_APP_CREATE;
@@ -631,12 +629,10 @@ HWTEST_F(RecorderFunctionUnitTest, Recorder_Audio_006, TestSize.Level2)
 
     MEDIA_LOGI("RecorderFunctionUnitTest Recorder_Audio_006 out.");
 }
-#endif
 
-#ifdef SUPPORT_CODEC_TYPE_HEVC
 /**
  * @tc.name: Recorder_Audio_007
- * @tc.desc: Test audio recording process 007, amr not support rk2568
+ * @tc.desc: Test audio recording process 007, amr not support rk3568
  * @tc.type: FUNC
  */
 HWTEST_F(RecorderFunctionUnitTest, Recorder_Audio_007, TestSize.Level2)
@@ -658,7 +654,7 @@ HWTEST_F(RecorderFunctionUnitTest, Recorder_Audio_007, TestSize.Level2)
     config.profile.audioChannels = 1;
     config.profile.audioSampleRate = 16000;
     config.audioSourceType = OH_AVRecorder_AudioSourceType::AVRECORDER_MIC;
-    // OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AMR_WB not support rk2568
+    // OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AMR_WB not support rk3568
     config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AMR_WB;
     config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_AMR;
     config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_APP_CREATE;
@@ -692,12 +688,10 @@ HWTEST_F(RecorderFunctionUnitTest, Recorder_Audio_007, TestSize.Level2)
 
     MEDIA_LOGI("RecorderFunctionUnitTest Recorder_Audio_007 out.");
 }
-#endif
 
-#ifdef SUPPORT_CODEC_TYPE_HEVC
 /**
  * @tc.name: Recorder_Audio_008
- * @tc.desc: Test audio recording process 008, amr not support rk2568
+ * @tc.desc: Test audio recording process 008, amr not support rk3568
  * @tc.type: FUNC
  */
 HWTEST_F(RecorderFunctionUnitTest, Recorder_Audio_008, TestSize.Level2)
@@ -719,7 +713,7 @@ HWTEST_F(RecorderFunctionUnitTest, Recorder_Audio_008, TestSize.Level2)
     config.profile.audioChannels = 1;
     config.profile.audioSampleRate = 16000;
     config.audioSourceType = OH_AVRecorder_AudioSourceType::AVRECORDER_MIC;
-    // OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AMR_WB not support rk2568
+    // OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AMR_WB not support rk3568
     config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AMR_WB;
     config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_AMR;
     config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_APP_CREATE;
@@ -753,7 +747,6 @@ HWTEST_F(RecorderFunctionUnitTest, Recorder_Audio_008, TestSize.Level2)
 
     MEDIA_LOGI("RecorderFunctionUnitTest Recorder_Audio_008 out.");
 }
-#endif
 
 /**
  * @tc.name: Recorder_Audio_009
@@ -870,6 +863,7 @@ HWTEST_F(RecorderFunctionUnitTest, Recorder_Audio_010, TestSize.Level2)
 
     MEDIA_LOGI("RecorderFunctionUnitTest Recorder_Audio_010 out.");
 }
+#endif
 
 /**
  * @tc.name: Recorder_Audio_011
