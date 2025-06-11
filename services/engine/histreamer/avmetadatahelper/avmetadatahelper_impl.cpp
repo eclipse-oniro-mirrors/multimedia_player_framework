@@ -37,8 +37,7 @@ void AVMetadataHelperImpl::OnError(MediaAVCodec::AVCodecErrorType errorType, int
 }
 
 AVMetadataHelperImpl::AVMetadataHelperImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId,
-    uint64_t appFullTokenId) : appUid_(appUid), appPid_(appPid), appTokenId_(appTokenId),
-    appFullTokenId_(appFullTokenId)
+    std::string appName) : appUid_(appUid), appPid_(appPid), appTokenId_(appTokenId), appName_(appName)
 {
     MEDIA_LOGD("Constructor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
     groupId_ = std::string("AVMeta_") + std::to_string(OHOS::Media::Pipeline::Pipeline::GetNextPipelineId());
@@ -341,8 +340,7 @@ Status AVMetadataHelperImpl::InitThumbnailGenerator()
     CHECK_AND_RETURN_RET_LOG(
         mediaDemuxer_ != nullptr, Status::ERROR_INVALID_STATE, "mediaDemuxer_ is nullptr");
     if (thumbnailGenerator_ == nullptr) {
-        thumbnailGenerator_ = std::make_shared<AVThumbnailGenerator>(mediaDemuxer_, appUid_, appPid_, appTokenId_,
-            appFullTokenId_);
+        thumbnailGenerator_ = std::make_shared<AVThumbnailGenerator>(mediaDemuxer_, appUid_, appPid_, appTokenId_, 0);
         CHECK_AND_RETURN_RET_LOG(
             thumbnailGenerator_ != nullptr, Status::ERROR_INVALID_STATE, "create thumbnail generator failed.");
         auto res = thumbnailGenerator_->Init();
@@ -351,6 +349,7 @@ Status AVMetadataHelperImpl::InitThumbnailGenerator()
             thumbnailGenerator_ = nullptr;
             return Status::ERROR_INVALID_STATE;
         }
+        thumbnailGenerator_->SetClientBundleName(appName_);
     }
     return Status::OK;
 }

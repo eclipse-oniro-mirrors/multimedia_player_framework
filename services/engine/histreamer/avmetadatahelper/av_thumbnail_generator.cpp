@@ -20,7 +20,6 @@
 #include "ibuffer_consumer_listener.h"
 #include "graphic_common_c.h"
 #include "media_errors.h"
-#include "media_utils.h"
 #include "media_log.h"
 #include "media_description.h"
 #include "meta/meta.h"
@@ -118,7 +117,6 @@ AVThumbnailGenerator::AVThumbnailGenerator(std::shared_ptr<MediaDemuxer> &mediaD
     uint32_t appTokenId, uint64_t appFullTokenId) : mediaDemuxer_(mediaDemuxer), appUid_(appUid), appPid_(appPid),
     appTokenId_(appTokenId), appFullTokenId_(appFullTokenId)
 {
-    appName_ = GetClientBundleName(appUid_);
     MEDIA_LOGI("Constructor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
 }
 
@@ -205,6 +203,12 @@ int32_t AVThumbnailGenerator::Init()
     readTask_->Start();
 
     return MSERR_OK;
+}
+
+void AVThumbnailGenerator::SetClientBundleName(std::string appName)
+{
+    appName_ = appName;
+    return;
 }
 
 void AVThumbnailGenerator::AcquireAvailableInputBuffer()

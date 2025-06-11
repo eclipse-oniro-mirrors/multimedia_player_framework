@@ -36,7 +36,7 @@ class AVMetadataHelperImpl : public IAVMetadataHelperEngine,
                              public std::enable_shared_from_this<AVMetadataHelperImpl>,
                              public NoCopyable {
 public:
-    AVMetadataHelperImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId);
+    AVMetadataHelperImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, std::string appName);
     ~AVMetadataHelperImpl();
 
     void OnError(MediaAVCodec::AVCodecErrorType errorType, int32_t errorCode);
@@ -85,7 +85,7 @@ private:
     int32_t appUid_{0};
     int32_t appPid_{0};
     uint32_t appTokenId_{0};
-    uint64_t appFullTokenId_{0};
+    std::string appName_;
     AVMetadataCaller metadataCaller_ = AVMetadataCaller::AV_META_DATA_DEFAULT;
 };
 }  // namespace Media
