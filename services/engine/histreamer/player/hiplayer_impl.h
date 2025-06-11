@@ -315,6 +315,9 @@ private:
     void SetFlvLiveParams(AVPlayStrategy playbackStrategy);
     void SetPostProcessor();
     void ResetEnableCameraPostProcess();
+    int32_t SetAudioHapticsSyncId(int32_t syncId);
+    int32_t ApplyAudioHapticSyncId(int32_t syncId);
+    inline bool IsValidAudioHapticSyncId(int32_t syncId);
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
@@ -468,6 +471,8 @@ private:
     static constexpr int32_t MAX_TARGET_HEIGHT = 1080;
     static constexpr int32_t MIN_TARGET_WIDTH = 320;
     static constexpr int32_t MIN_TARGET_HEIGHT = 320;
+    static constexpr int32_t INVALID_SYNC_ID = 0;
+    int32_t audioHapticSyncId_ {INVALID_SYNC_ID};
     int32_t postProcessorTargetWidth_ = MAX_TARGET_WIDTH;
     int32_t postProcessorTargetHeight_ = MAX_TARGET_HEIGHT;
     VideoPostProcessorType videoPostProcessorType_ {VideoPostProcessorType::NONE};

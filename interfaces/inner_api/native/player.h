@@ -166,6 +166,7 @@ public:
     static constexpr std::string_view AUDIO_MAX_AMPLITUDE = "max_amplitude";
     static constexpr std::string_view SEI_PLAYBACK_POSITION = "sei_playbackPosition";
     static constexpr std::string_view SUPER_RESOLUTION_ENABLED = "super_resolution_enabled";
+    static constexpr std::string_view PLAYER_AUDIO_HAPTIC_SYNC_ID = "audio_haptic_sync_id";
 };
 
 class PlaybackInfoKey {

@@ -127,6 +127,7 @@ int32_t AudioHapticSoundNormalImpl::ResetAVPlayer()
     Format format;
     format.PutIntValue(PlayerKeys::CONTENT_TYPE, AudioStandard::CONTENT_TYPE_UNKNOWN);
     format.PutIntValue(PlayerKeys::STREAM_USAGE, streamUsage_);
+    format.PutIntValue(PlayerKeys::PLAYER_AUDIO_HAPTIC_SYNC_ID, 1);
     ret = avPlayer_->SetParameter(format);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Set stream usage to AVPlayer failed %{public}d", ret);
 
