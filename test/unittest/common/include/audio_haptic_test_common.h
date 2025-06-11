@@ -29,7 +29,7 @@ namespace Media {
     uint64_t GetTokenIdFromProcess(const std::string &process);
     uint64_t GetTokenIdFromBundleName(const std::string &bundleName);
     bool MockTokenId(const std::string &process);
-    bool AllocPermission(std::vector<std::string> permissions, uint64_t &tokenID, bool isSystemApp = true);
+    bool GetPermission(std::vector<std::string> permissions, uint64_t &tokenID, bool isSystemApp = true);
     bool RecoveryPermission(uint64_t tokenID, uint64_t oldTokenID);
     uint64_t GetAllPermission();
 } // namespace Media

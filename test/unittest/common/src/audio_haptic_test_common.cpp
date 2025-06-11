@@ -88,7 +88,7 @@ bool MockTokenId(const std::string &process)
     return IPCSkeleton::GetSelfTokenID() != 0;
 }
 
-bool AllocPermission(std::vector<std::string> permissions, uint64_t &tokenID, bool isSystemApp)
+bool GetPermission(std::vector<std::string> permissions, uint64_t &tokenID, bool isSystemApp)
 {
     if (!MockTokenId("foundation")) {
         return false;
