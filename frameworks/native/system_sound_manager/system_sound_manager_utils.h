@@ -24,7 +24,6 @@
 
 #include "audio_system_manager.h"
 #include "system_sound_manager.h"
-#include "hitrace_meter.h"
 
 namespace OHOS {
 namespace Media {
@@ -40,6 +39,17 @@ public:
     static bool GetScannerFirstParameter(const char* key, int32_t maxSize);
     static int32_t GetTypeForSystemSoundUri(const std::string &audioUri);
     static std::string GetErrorReason(const int32_t &errorCode);
+};
+
+class attribute((visibility("default"))) MediaTrace : public NoCopyable {
+public:
+    explicit MediaTrace(const std::string &funcName);
+    static void TraceBegin(const std::string &funcName, int32_t taskId);
+    static void TraceEnd(const std::string &funcName, int32_t taskId);
+    static void CounterTrace(const std::string &varName, int32_t val);
+    ~MediaTrace();
+private:
+    bool isSync_ = false;
 };
 } // namespace Media
 } // namespace OHOS

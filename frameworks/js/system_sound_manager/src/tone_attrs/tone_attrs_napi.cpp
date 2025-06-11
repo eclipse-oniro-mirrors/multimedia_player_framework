@@ -378,7 +378,7 @@ napi_value ToneAttrsNapi::SetMediaType(napi_env env, napi_callback_info info)
     napi_unwrap(env, jsThis, reinterpret_cast<void**>(&toneAttrsNapi));
     CHECK_AND_RETURN_RET_LOG(toneAttrsNapi != nullptr, nullptr, "toneAttrsNapi is nullptr");
     CHECK_AND_RETURN_RET_LOG(toneAttrsNapi->toneAttrs_ != nullptr, nullptr, "toneAttrs_ is nullptr");
-    toneAttrsNapi->toneAttrs_->SetMediaType(static_cast<MediaType>(toneAttrsMediaType));
+    toneAttrsNapi->toneAttrs_->SetMediaType(static_cast<ToneMediaType>(toneAttrsMediaType));
     return nullptr;
 }
 
@@ -397,7 +397,7 @@ napi_value ToneAttrsNapi::GetMediaType(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(toneAttrsNapi != nullptr, nullptr, "toneAttrsNapi is nullptr");
     CHECK_AND_RETURN_RET_LOG(toneAttrsNapi->toneAttrs_ != nullptr, nullptr, "toneAttrs_ is nullptr");
     napi_value result;
-    napi_create_int32(env, toneAttrsNapi->toneAttrs_->GetMediaType(), &result);
+    napi_create_int32(env, static_cast<int32_t>(toneAttrsNapi->toneAttrs_->GetMediaType()), &result);
     return result;
 }
 } // namespace Media
