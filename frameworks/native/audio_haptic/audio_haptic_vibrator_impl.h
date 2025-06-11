@@ -44,7 +44,7 @@ public:
     bool IsHdHapticSupported() override;
     void EnableHapticsInSilentMode(bool enable) override
     {
-        enableInSilentMode_ = enable;
+        enableInSilentMode_.store(enable);
     }
 
 private:
@@ -79,7 +79,7 @@ private:
     float vibrateIntensity_ = 1.0f;
     bool isSupportEffectId_ = false;
     HapticSource hapticSource_;
-    bool enableInSilentMode_ = false;
+    std::atomic<bool> enableInSilentMode_ = false;
 #endif
     std::mutex vibrateMutex_;
     AudioStandard::StreamUsage streamUsage_ = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;

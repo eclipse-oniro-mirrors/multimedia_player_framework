@@ -82,18 +82,31 @@ static std::string DupFdFromUri(const std::string &uri)
 
 static int32_t GenerateSyncId()
 {
+    static constexpr uint8_t PID_BITS = 8;        // Number of bits allocated for the Process ID
+    static constexpr uint8_t RANDOM_BITS = 8;     // Number of bits allocated for the random value
+    static constexpr uint8_t TIME_BITS = 24;      // Number of bits allocated for the time difference
+
+    static constexpr uint32_t PID_MASK = (1 << PID_BITS) - 1;      // Mask for PID (0xFF for 8 bits)
+    static constexpr uint32_t RANDOM_MASK = (1 << RANDOM_BITS) - 1; // Mask for random value (0xFF for 8 bits)
+    static constexpr uint32_t TIME_MASK = (1 << TIME_BITS) - 1;    // Mask for time difference (0xFFFFFF for 24 bits)
+
     static thread_local pid_t pid = getpid();
     static thread_local auto start_time = std::chrono::steady_clock::now();
     static thread_local std::mt19937 gen(std::random_device{}());
-    static thread_local std::uniform_int_distribution<uint16_t> dist(0, 255);
+    // Use constants to define the distribution range
+    static thread_local std::uniform_int_distribution<uint16_t> dist(0, RANDOM_MASK);
 
     auto now = std::chrono::steady_clock::now();
     auto duration = now - start_time;
     auto micros = std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
 
-    uint32_t pid_unsigned = static_cast<uint32_t>(pid);
-    uint64_t micros_unsigned = static_cast<uint64_t>(micros);
-    return ((micros_unsigned & 0xFFFFFF) << 8) | (pid_unsigned & 0xFF) | (dist(gen) & 0xFF);
+    uint32_t pidUnsigned = static_cast<uint32_t>(pid);
+    uint64_t microsUnsigned = static_cast<uint64_t>(micros);
+
+    return 
+        ((microsUnsigned & TIME_MASK) << (PID_BITS + RANDOM_BITS)) | // Shift time part by 16 bits (8+8)
+        ((pidUnsigned & PID_MASK) << RANDOM_BITS) |                 // Shift PID part by 8 bits
+        (dist(gen) & RANDOM_MASK);                                  // Random value occupies the lowest 8 bits
 }
 
 std::shared_ptr<AudioHapticManager> AudioHapticManagerFactory::CreateAudioHapticManager()

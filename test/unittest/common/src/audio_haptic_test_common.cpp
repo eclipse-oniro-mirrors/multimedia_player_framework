@@ -26,7 +26,7 @@ using namespace Security::AccessToken;
 using Security::AccessToken::AccessTokenID;
 
 namespace {
-    static uint64_t g_shellTokenID = IPCSkeleton::GetSelfTokenID();
+    static const uint64_t SHELL_TOKEN_ID = IPCSkeleton::GetSelfTokenID();
 }
 
 static uint64_t GetTokenId(const AtmToolsParamInfo &info)
@@ -53,7 +53,7 @@ static uint64_t GetTokenId(const AtmToolsParamInfo &info)
 uint64_t GetTokenIdFromProcess(const std::string &process)
 {
     auto tokenId = IPCSkeleton::GetSelfTokenID();
-    SetSelfTokenID(g_shellTokenID); // only shell can dump tokenid
+    SetSelfTokenID(SHELL_TOKEN_ID); // only shell can dump tokenid
 
     AtmToolsParamInfo info;
     info.processName = process;
@@ -66,7 +66,7 @@ uint64_t GetTokenIdFromProcess(const std::string &process)
 uint64_t GetTokenIdFromBundleName(const std::string &bundleName)
 {
     auto tokenId = IPCSkeleton::GetSelfTokenID();
-    SetSelfTokenID(g_shellTokenID); // only shell can dump tokenid
+    SetSelfTokenID(SHELL_TOKEN_ID); // only shell can dump tokenid
 
     AtmToolsParamInfo info;
     info.bundleName = bundleName;

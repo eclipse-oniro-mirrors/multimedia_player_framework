@@ -18,6 +18,7 @@
 
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <thread>
 
 #include "audio_haptic_log.h"
 #include "directory_ex.h"
