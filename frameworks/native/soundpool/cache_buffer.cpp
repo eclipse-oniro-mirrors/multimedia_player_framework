@@ -246,7 +246,7 @@ int32_t CacheBuffer::DoPlay(const int32_t streamID)
     size_t bufferSize;
     audioRenderer_->GetBufferSize(bufferSize);
     MEDIA_LOGI("CacheBuffer::DoPlay, soundID_:%{public}d, streamID_:%{public}d, bufferSize:%{public}zu,"
-        "  cacheDataFrameIndex_:%{public}zu, cacheDataTotalSize_:%{public}zu", 
+        "  cacheDataFrameIndex_:%{public}zu, cacheDataTotalSize_:%{public}zu",
         soundID_, streamID_, bufferSize, cacheDataFrameIndex_, cacheDataTotalSize_);
     audioRenderer_->SetSourceDuration(sourceDurationMs_);
 
@@ -400,7 +400,7 @@ void CacheBuffer::DealWriteData(size_t length)
 
 void CacheBuffer::OnFirstFrameWriting(uint64_t latency)
 {
-     MEDIA_LOGI("CacheBuffer::OnFirstFrameWriting, soundID_:%{public}d, streamID_:%{public}d", soundID_, streamID_);
+    MEDIA_LOGI("CacheBuffer::OnFirstFrameWriting, soundID_:%{public}d, streamID_:%{public}d", soundID_, streamID_);
     CHECK_AND_RETURN_LOG(frameWriteCallback_ != nullptr, "frameWriteCallback is null.");
     frameWriteCallback_->OnFirstAudioFrameWritingCallback(latency);
 }
@@ -408,7 +408,7 @@ void CacheBuffer::OnFirstFrameWriting(uint64_t latency)
 void CacheBuffer::OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent)
 {
     MEDIA_LOGI("CacheBuffer::OnInterrupt, soundID_:%{public}d, streamID_:%{public}d,"
-        " eventType:%{public}d, forceType:%{public}d, hintType:%{public}d", 
+        " eventType:%{public}d, forceType:%{public}d, hintType:%{public}d",
         soundID_, streamID_, interruptEvent.eventType, interruptEvent.forceType, interruptEvent.hintType);
     if (interruptEvent.hintType == AudioStandard::InterruptHint::INTERRUPT_HINT_PAUSE ||
         interruptEvent.hintType == AudioStandard::InterruptHint::INTERRUPT_HINT_STOP) {

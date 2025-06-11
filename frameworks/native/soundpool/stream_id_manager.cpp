@@ -324,11 +324,11 @@ int32_t StreamIDManager::DoPlay(const int32_t streamID)
     std::shared_ptr<CacheBuffer> cacheBuffer = FindCacheBuffer(streamID);
     CHECK_AND_RETURN_RET_LOG(cacheBuffer.get() != nullptr, MSERR_INVALID_VAL, "cachebuffer invalid.");
     if (cacheBuffer->DoPlay(streamID) == MSERR_OK) {
-        MEDIA_LOGI("StreamIDManager::DoPlay success soundID:%{public}d, streamID:%{public}d", 
+        MEDIA_LOGI("StreamIDManager::DoPlay success soundID:%{public}d, streamID:%{public}d",
             cacheBuffer->GetSoundID(), streamID);
         return MSERR_OK;
     }
-    MEDIA_LOGI("StreamIDManager::DoPlay failed soundID:%{public}d, streamID:%{public}d", 
+    MEDIA_LOGI("StreamIDManager::DoPlay failed soundID:%{public}d, streamID:%{public}d",
         cacheBuffer->GetSoundID(), streamID);
     {
         std::lock_guard lock(streamIDManagerLock_);
@@ -336,7 +336,7 @@ int32_t StreamIDManager::DoPlay(const int32_t streamID)
             int32_t playingStreamID = playingStreamIDs_[i];
             std::shared_ptr<CacheBuffer> playingCacheBuffer = FindCacheBuffer(playingStreamID);
             if (playingCacheBuffer != nullptr && !playingCacheBuffer->IsRunning()) {
-                MEDIA_LOGI("StreamIDManager::DoPlay fail, erase playingStreamID:%{public}d, soundID:%{public}d", 
+                MEDIA_LOGI("StreamIDManager::DoPlay fail, erase playingStreamID:%{public}d, soundID:%{public}d",
                     playingStreamID, playingCacheBuffer->GetSoundID());
                 playingStreamIDs_.erase(playingStreamIDs_.begin() + i);
                 i--;
@@ -459,7 +459,7 @@ void StreamIDManager::OnPlayFinished()
             int32_t playingStreamID = playingStreamIDs_[i];
             std::shared_ptr<CacheBuffer> playingCacheBuffer = FindCacheBuffer(playingStreamID);
             if (playingCacheBuffer != nullptr && !playingCacheBuffer->IsRunning()) {
-                MEDIA_LOGI("StreamIDManager::OnPlayFinished erase playingStreamID:%{public}d, soundID:%{public}d", 
+                MEDIA_LOGI("StreamIDManager::OnPlayFinished erase playingStreamID:%{public}d, soundID:%{public}d",
                     playingStreamID, playingCacheBuffer->GetSoundID());
                 playingStreamIDs_.erase(playingStreamIDs_.begin() + i);
                 i--;

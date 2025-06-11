@@ -279,8 +279,7 @@ int32_t Stream::DoPlay()
         });
     if (!audioRenderer_->Start()) {
         soundPoolXCollie.CancelXCollieTimer();
-        MEDIA_LOGE("Stream::DoPlay audioRenderer start failed, soundID:%{public}d,"
-            " streamID:%{public}d", soundID_, streamID_);
+        MEDIA_LOGE("Stream::DoPlay audioRenderer start failed, soundID:%{public}d, streamID:%{public}d", soundID_, streamID_);
         isRunning_.store(false);
         if (callback_ != nullptr) {
             MEDIA_LOGE("Stream::DoPlay failed, call callback, soundID:%{public}d,"
