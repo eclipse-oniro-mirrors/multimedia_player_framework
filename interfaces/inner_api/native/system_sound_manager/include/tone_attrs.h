@@ -30,12 +30,12 @@ enum ToneCustomizedType {
 
 enum class ToneMediaType : int32_t {
     /**
-    * track is audio.
-    */
+     * track is audio.
+     */
     MEDIA_TYPE_AUD = 0,
-    /*
-    * track is video.
-    */
+    /**
+     * track is video.
+     */
     MEDIA_TYPE_VID = 1,
 };
 

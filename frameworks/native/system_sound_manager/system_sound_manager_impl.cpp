@@ -1785,19 +1785,19 @@ std::vector<std::tuple<std::string, int64_t, SystemSoundError>> SystemSoundManag
     return resultOfOpenList;
 }
 
-void SystemSoundManagerImpl::OpenOneFile(std::shared_ptrDataShare::DataShareHelper &dataShareHelper,
-const std::string &uri, std::tuple<std::string, int64_t, SystemSoundError> &resultOfOpen)
+void SystemSoundManagerImpl::OpenOneFile(std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
+    const std::string &uri, std::tuple<std::string, int64_t, SystemSoundError> &resultOfOpen)
 {
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
     queryPredicates.EqualTo(RINGTONE_COLUMN_DATA, uri);
     auto resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
-    auto results = make_unique<RingtoneFetchResult>(move(resultSet));
+    auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     if (results == nullptr) {
         MEDIA_LOGE("OpenOneFile: Query failed, ringtone library error!");
         return;
     }
-    unique_ptr ringtoneAsset = results->GetFirstObject();
+    unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
     while ((ringtoneAsset != nullptr) && (uri != ringtoneAsset->GetPath())) {
         ringtoneAsset = results->GetNextObject();
     }
@@ -1807,8 +1807,8 @@ const std::string &uri, std::tuple<std::string, int64_t, SystemSoundError> &resu
         int32_t fd = dataShareHelper->OpenFile(ofUri, "r");
         resultSet == nullptr ? : resultSet->Close();
         if (fd > 0) {
-            std::get(resultOfOpen) = fd;
-            std::get(resultOfOpen) = ERROR_OK;
+            std::get<PARAM1>(resultOfOpen) = fd;
+            std::get<PARAM2>(resultOfOpen) = ERROR_OK;
         } else {
             MEDIA_LOGE("OpenOneFile: OpenFile failed, uri: %{public}s.", uri.c_str());
         }
@@ -1848,6 +1848,7 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByExternalUri(
 std::string SystemSoundManagerImpl::AddCustomizedToneByFd(const std::shared_ptr<AbilityRuntime::Context> &context,
     const std::shared_ptr<ToneAttrs> &toneAttrs, const int32_t &fd)
 {
+    MEDIA_LOGI("AddCustomizedToneByFd: Start.");
     return AddCustomizedToneByFdAndOffset(context, toneAttrs, fd, 0, INT_MAX);
 }
 
@@ -1870,6 +1871,7 @@ void SystemSoundManagerImpl::GetCustomizedTone(const std::shared_ptr<ToneAttrs> 
 int32_t SystemSoundManagerImpl::AddCustomizedTone(const std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
     const std::shared_ptr<ToneAttrs> &toneAttrs)
 {
+    MEDIA_LOGI("AddCustomizedTone: Start.");
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, ERROR, "Invalid dataShareHelper.");
     int32_t category = -1;
     category = toneAttrs->GetCategory();
@@ -1918,6 +1920,7 @@ int32_t SystemSoundManagerImpl::AddCustomizedTone(const std::shared_ptr<DataShar
 bool SystemSoundManagerImpl::DeleteCustomizedTone(const std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
     const std::shared_ptr<ToneAttrs> &toneAttrs)
 {
+    MEDIA_LOGI("DeleteCustomizedTone: Start.");
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, ERROR, "Invalid dataShareHelper.");
     int32_t category = -1;
     category = toneAttrs->GetCategory();
@@ -1960,6 +1963,7 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(
     const std::shared_ptr<AbilityRuntime::Context> &context, const std::shared_ptr<ToneAttrs> &toneAttrs,
     const int32_t &fd, const int32_t &offset, const int32_t &length)
 {
+    MEDIA_LOGI("AddCustomizedToneByFdAndOffset: Start.");
     std::string result = "TYPEERROR";
     if (toneAttrs->GetCustomizedType() != CUSTOMISED) {
         MEDIA_LOGE("AddCustomizedToneByFdAndOffset: The ringtone is not customized!");
@@ -2010,6 +2014,7 @@ std::string SystemSoundManagerImpl::CustomizedToneWriteFile(const std::shared_pt
     std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper, const std::shared_ptr<ToneAttrs> &toneAttrs,
     ParamsForWriteFile &paramsForWriteFile)
 {
+    MEDIA_LOGI("CustomizedToneWriteFile: Start.");
     Uri ofUri(paramsForWriteFile.dstPath);
     int32_t dstFd = dataShareHelper->OpenFile(ofUri, "rw");
     if (dstFd < 0) {
@@ -2017,8 +2022,10 @@ std::string SystemSoundManagerImpl::CustomizedToneWriteFile(const std::shared_pt
         DeleteCustomizedTone(dataShareHelper, toneAttrs);
         dataShareHelper->Release();
         SendCustomizedToneEvent(true, toneAttrs, paramsForWriteFile.fileSize, mimeType_, ERROR);
+        MediaTrace::TraceEnd("SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset", FAKE_POINTER(this));
         return "";
     }
+    MEDIA_LOGI("CustomizedToneWriteFile: Openfile success, begin write file.");
     char buffer[4096];
     int32_t len = paramsForWriteFile.length;
     memset_s(buffer, sizeof(buffer), 0, sizeof(buffer));
@@ -2031,9 +2038,11 @@ std::string SystemSoundManagerImpl::CustomizedToneWriteFile(const std::shared_pt
         }
         len -= bytesWritten;
     }
+    MEDIA_LOGI("CustomizedToneWriteFile: Write file end.");
     close(dstFd);
     dataShareHelper->Release();
     SendCustomizedToneEvent(true, toneAttrs, paramsForWriteFile.fileSize, mimeType_, SUCCESS);
+    MediaTrace::TraceEnd("SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset", FAKE_POINTER(this));
     return toneAttrs->GetUri();
 }
 
@@ -2048,7 +2057,7 @@ int32_t SystemSoundManagerImpl::RemoveCustomizedTone(
         "RemoveCustomizedTone: Create dataShare failed, datashare or ringtone library error.");
     std::tuple<string, int64_t, SystemSoundError> resultOfOpen = std::make_tuple(uri, INVALID_FD, ERROR_IO);
     OpenOneFile(dataShareHelper, uri, resultOfOpen);
-    int64_t srcFd = std::get(resultOfOpen);
+    int64_t srcFd = std::get<PARAM1>(resultOfOpen);
     off_t fileSize = 0;
     if (srcFd < 0) {
         MEDIA_LOGE("RemoveCustomizedTone: fd open error is %{public}s", strerror(errno));
