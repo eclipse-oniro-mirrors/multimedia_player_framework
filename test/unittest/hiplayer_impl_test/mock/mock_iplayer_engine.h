@@ -58,7 +58,7 @@ public:
     MOCK_METHOD(int32_t, Pause, (bool isSystemOperation), ());
     MOCK_METHOD(int32_t, Stop, (), ());
     MOCK_METHOD(int32_t, Reset, (), ());
-    MOCK_METHOD(int32_t, Freeze, (), ());
+    MOCK_METHOD(int32_t, Freeze, (bool &isNoNeedToFreeze), ());
     MOCK_METHOD(int32_t, UnFreeze, (), ());
     MOCK_METHOD(int32_t, SetVolume, (float leftVolume, float rightVolume), ());
     MOCK_METHOD(int32_t, SetVolumeMode, (int32_t mode), ());

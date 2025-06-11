@@ -850,6 +850,7 @@ int32_t HiPlayerImpl::Play()
     MEDIA_LOG_I("Play entered.");
     startTime_ = GetCurrentMillisecond();
     playStartTime_ = GetCurrentMillisecond();
+    eosInLoopForFrozen_ = false;
     int32_t ret = MSERR_INVALID_VAL;
     if (!IsValidPlayRange(playRangeStartTime_, playRangeEndTime_)) {
         MEDIA_LOG_E("SetPlayRange failed! start: " PUBLIC_LOG_D64 ", end: " PUBLIC_LOG_D64,
@@ -865,12 +866,7 @@ int32_t HiPlayerImpl::Play()
         callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
         callbackLooper_.StartCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
     } else if (pipelineStates_ == PlayerStates::PLAYER_PAUSED) {
-        if (playRangeStartTime_ > PLAY_RANGE_DEFAULT_VALUE) {
-            ret = TransStatus(Seek(playRangeStartTime_, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
-        }
-        callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
-        callbackLooper_.StartCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
-        ret = TransStatus(Resume());
+        DoPausedPlay(ret);
     } else {
         if (playRangeStartTime_ > PLAY_RANGE_DEFAULT_VALUE) {
             ret = TransStatus(Seek(playRangeStartTime_, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
@@ -894,6 +890,17 @@ int32_t HiPlayerImpl::Play()
         CollectionErrorInfo(ret, "Play failed");
     }
     return ret;
+}
+
+void HiPlayerImpl::DoPausedPlay(int32_t &ret)
+{
+    if (playRangeStartTime_ > PLAY_RANGE_DEFAULT_VALUE) {
+        ret = TransStatus(Seek(playRangeStartTime_, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
+    }
+    callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
+    callbackLooper_.StartCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
+    ret = TransStatus(Resume());
+    return;
 }
 
 int32_t HiPlayerImpl::Pause(bool isSystemOperation)
@@ -926,25 +933,32 @@ int32_t HiPlayerImpl::Pause(bool isSystemOperation)
     return TransStatus(ret);
 }
 
-int32_t HiPlayerImpl::Freeze()
+int32_t HiPlayerImpl::Freeze(bool &isNoNeedToFreeze)
 {
     MediaTrace trace("HiPlayerImpl::Freeze");
     MEDIA_LOG_I("Freeze in");
     std::unique_lock<std::mutex> lock(freezeMutex_);
     
-    if (pipelineStates_ != PlayerStates::PLAYER_STARTED) {
+    if (pipelineStates_ != PlayerStates::PLAYER_STARTED && pipelineStates_ != PlayerStates::PLAYER_PREPARED) {
         MEDIA_LOG_I("can not freeze, current state = %{public}d", static_cast<int32_t>(pipelineStates_));
         PauseSourceDownload();
         return TransStatus(Status::OK);
     }
 
-    PauseSourceDownload();
+    if (eosInLoopForFrozen_ || pipelineStates_ == PlayerStates::PLAYER_PREPARED) {
+        MEDIA_LOG_I("can not freeze in loop mode, current state = %{public}d", static_cast<int32_t>(pipelineStates_));
+        isNoNeedToFreeze = true;
+        eosInLoopForFrozen_ = false;
+        return TransStatus(Status::OK);
+    }
+
     callbackLooper_.StopReportMediaProgress();
     StopFlvCheckLiveDelayTime();
     callbackLooper_.StopCollectMaxAmplitude();
     Status ret = Status::OK;
     ret = demuxer_->Freeze();
     syncManager_->Pause();
+    PauseSourceDownload();
     if (audioSink_ != nullptr) {
         audioSink_->FreezeAudioSink();
     }
@@ -965,7 +979,18 @@ int32_t HiPlayerImpl::UnFreeze()
 
     if (pipelineStates_ != PlayerStates::PLAYER_FROZEN) {
         MEDIA_LOG_I("can not unfreeze, current state = %{public}d", static_cast<int32_t>(pipelineStates_));
+        if (audioSink_ != nullptr) {
+            audioSink_->UnFreezeAudioSink();
+        }
+        if (isForzenSeekRecv_) {
+            pipeline_ -> Flush();
+        }
+        isForzenSeekRecv_ = false;
         return TransStatus(Status::OK);
+    }
+    if (isForzenSeekRecv_) {
+        Seek(frozenSeekTime_, frozenSeekMode_, true, true);
+        isForzenSeekRecv_ = false;
     }
 
     if (audioSink_ != nullptr) {
@@ -989,13 +1014,17 @@ int32_t HiPlayerImpl::UnFreeze()
 
 int32_t HiPlayerImpl::PauseSourceDownload()
 {
+    FALSE_RETURN_V_NOLOG(!isDownloadPaused_, MSERR_OK);
     demuxer_->StopBufferring(true);
+    isDownloadPaused_ = true;
     return MSERR_OK;
 }
 
 int32_t HiPlayerImpl::ResumeSourceDownload()
 {
+    FALSE_RETURN_V_NOLOG(isDownloadPaused_, MSERR_OK);
     demuxer_->StopBufferring(false);
+    isDownloadPaused_ = false;
     return MSERR_OK;
 }
 
@@ -1219,7 +1248,7 @@ int32_t HiPlayerImpl::SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode)
     return Seek(mSeconds, mode);
 }
 
-Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone)
+Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone, bool isUnFreezeSeek)
 {
     MediaTrace trace("HiPlayerImpl::Seek");
     MEDIA_LOG_I("Seek entered. mSeconds : " PUBLIC_LOG_D64 ", seekMode : " PUBLIC_LOG_D32,
@@ -1234,7 +1263,7 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
     int64_t seekPos = std::max(static_cast<int64_t>(0), std::min(mSeconds, static_cast<int64_t>(durationMs_.load())));
     auto rtv = seekPos >= 0 ? Status::OK : Status::ERROR_INVALID_PARAMETER;
     if (rtv == Status::OK) {
-        rtv = HandleSeek(seekPos, mode);
+        rtv = HandleSeek(seekPos, mode, isUnFreezeSeek);
     }
     NotifySeek(rtv, notifySeekDone, seekPos);
     if (audioSink_ != nullptr) {
@@ -1245,7 +1274,7 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
     return rtv;
 }
 
-Status HiPlayerImpl::HandleSeek(int64_t seekPos, PlayerSeekMode mode)
+Status HiPlayerImpl::HandleSeek(int64_t seekPos, PlayerSeekMode mode, bool isUnFreezeSeek)
 {
     switch (pipelineStates_) {
         case PlayerStates::PLAYER_STARTED: {
@@ -1261,7 +1290,7 @@ Status HiPlayerImpl::HandleSeek(int64_t seekPos, PlayerSeekMode mode)
             return doPreparedSeek(seekPos, mode);
         }
         case PlayerStates::PLAYER_FROZEN: {
-            return doFrozenSeek(seekPos, mode);
+            return doFrozenSeek(seekPos, mode, isUnFreezeSeek);
         }
         default:
             MEDIA_LOG_I_SHORT("Seek in error pipelineStates: " PUBLIC_LOG_D32,
@@ -1344,17 +1373,25 @@ Status HiPlayerImpl::doPausedSeek(int64_t seekPos, PlayerSeekMode mode)
     return rtv;
 }
 
-Status HiPlayerImpl::doFrozenSeek(int64_t seekPos, PlayerSeekMode mode)
+Status HiPlayerImpl::doFrozenSeek(int64_t seekPos, PlayerSeekMode mode, bool isUnFreezeSeek)
 {
-    MEDIA_LOG_I("doFrozenSeek.");
-    pipeline_ -> Pause();
-    pipeline_ -> Flush();
-    auto rtv = doSeek(seekPos, mode);
-    inEosSeek_ = false;
-    if ((rtv == Status::OK) && demuxer_->IsRenderNextVideoFrameSupported() && !demuxer_->IsVideoEos()) {
-        rtv = pipeline_->Preroll(true);
+    MEDIA_LOG_I("doFrozenSeek. isUnFreezeSeek = %{public}d", isUnFreezeSeek);
+    if (isUnFreezeSeek) {
+        pipeline_ -> Flush();
+        auto rtv = doSeek(seekPos, mode);
+        inEosSeek_ = false;
+        return rtv;
+    } else {
+        isForzenSeekRecv_ = true;
+        frozenSeekTime_ = seekPos;
+        frozenSeekMode_ = mode;
+        return Status::OK;
     }
-    return rtv;
+}
+
+void HiPlayerImpl::SetEosInLoopForFrozen(bool status)
+{
+    eosInLoopForFrozen_ = status;
 }
 
 Status HiPlayerImpl::doCompletedSeek(int64_t seekPos, PlayerSeekMode mode)
@@ -2743,9 +2780,13 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
         callbackLooper_.StopCollectMaxAmplitude();
     } else {
         inEosSeek_ = true;
+        eosInLoopForFrozen_ = true;
     }
-    pipeline_->Pause();
     callbackLooper_.DoReportCompletedTime();
+    if (pipelineStates_ != PlayerStates::PLAYER_FROZEN ||
+        (pipelineStates_ == PlayerStates::PLAYER_FROZEN && !singleLoop_.load())) {
+        pipeline_->Pause();
+    }
     if (isSetPlayRange_ && (startTimeWithMode_ == PLAY_RANGE_DEFAULT_VALUE ||
         endTimeWithMode_ == PLAY_RANGE_DEFAULT_VALUE)) {
         startTimeWithMode_ = PLAY_RANGE_DEFAULT_VALUE;

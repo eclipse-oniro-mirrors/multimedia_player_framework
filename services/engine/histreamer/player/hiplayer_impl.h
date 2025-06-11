@@ -116,7 +116,7 @@ public:
     int32_t Pause(bool isSystemOperation) override;
     int32_t Stop() override;
     int32_t Reset() override;
-    int32_t Freeze() override;
+    int32_t Freeze(bool &isNoNeedToFreeze) override;
     int32_t UnFreeze() override;
     int32_t PauseSourceDownload() override;
     int32_t ResumeSourceDownload() override;
@@ -196,6 +196,7 @@ public:
     int32_t EnableReportMediaProgress(bool enable) override;
     int32_t ForceLoadVideo(bool status) override;
     int32_t NotifyMemoryExchange(bool status) override;
+    void SetEosInLoopForFrozen(bool status) override;
 
 private:
     enum HiplayerSvpMode : int32_t {
@@ -263,13 +264,13 @@ private:
     bool IsAudioMime(const std::string& mime);
     bool IsSubtitleMime(const std::string& mime);
     bool IsNeedAudioSinkChangeTrack(std::vector<std::shared_ptr<Meta>>& metaInfo, int32_t newAudioTrackId);
-    Status Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone);
-    Status HandleSeek(int64_t seekPos, PlayerSeekMode mode);
+    Status Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone, bool isUnFreezeSeek = false);
+    Status HandleSeek(int64_t seekPos, PlayerSeekMode mode, bool isUnFreezeSeek = false);
     
     Status doPreparedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doStartedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doPausedSeek(int64_t seekPos, PlayerSeekMode mode);
-    Status doFrozenSeek(int64_t seekPos, PlayerSeekMode mode);
+    Status doFrozenSeek(int64_t seekPos, PlayerSeekMode mode, bool isUnFreezeSeek = false);
     Status doCompletedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doSetPlaybackSpeed(float speed);
@@ -284,6 +285,7 @@ private:
     Status InitAudioDefaultTrackIndex();
     Status InitVideoDefaultTrackIndex();
     Status InitSubtitleDefaultTrackIndex();
+    void DoPausedPlay(int32_t &ret);
     bool BreakIfInterruptted();
     void CollectionErrorInfo(int32_t errCode, const std::string& errMsg);
     void NotifyUpdateTrackInfo();
@@ -476,6 +478,11 @@ private:
     std::mutex fdMutex_ {};
     std::unique_ptr<FdsanFd> fdsanFd_ = nullptr;
     std::atomic<bool> enableCameraPostprocessing_ {false};
+    bool isForzenSeekRecv_ = false;
+    bool eosInLoopForFrozen_ = false;
+    int64_t frozenSeekTime_ = 0;
+    PlayerSeekMode frozenSeekMode_ = PlayerSeekMode::SEEK_NEXT_SYNC;
+    bool isDownloadPaused_ = false;
     std::mutex freezeMutex_;
     bool isForceLoadVideo_ {false};
 };
