@@ -1995,15 +1995,17 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(
         return result;
     }
     int32_t sert = AddCustomizedTone(dataShareHelper, toneAttrs);
-    if (sert == VIDEOS_NUM_EXCEEDS_SPECIFICATION) {
+    if (sert < 0) {
         dataShareHelper->Release();
-        return FILE_COUNT_EXCEEDS_LIMIT;
-    } else if (sert == NOT_ENOUGH_ROM) {
-        dataShareHelper->Release();
-        return ROM_IS_INSUFFICIENT;
-    } else if (sert == FILE_EXIST) {
-        dataShareHelper->Release();
-        return toneAttrs->GetUri();
+        SendCustomizedToneEvent(true, toneAttrs, fileSize, mimeType_, ERROR);
+        MediaTrace::TraceEnd("SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset", FAKE_POINTER(this));
+        if (sert == VIDEOS_NUM_EXCEEDS_SPECIFICATION) {
+         return FILE_COUNT_EXCEEDS_LIMIT;
+        } else if (sert == NOT_ENOUGH_ROM) {
+            return ROM_IS_INSUFFICIENT;
+        } else if (sert == FILE_EXIST) {
+            return toneAttrs->GetUri();
+        }
     }
     std::string dstPath = RINGTONE_PATH_URI + RINGTONE_SLASH_CHAR + to_string(sert);
     ParamsForWriteFile paramsForWriteFile = { dstPath, fileSize, srcFd, length };
@@ -2025,7 +2027,7 @@ std::string SystemSoundManagerImpl::CustomizedToneWriteFile(const std::shared_pt
         MediaTrace::TraceEnd("SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset", FAKE_POINTER(this));
         return "";
     }
-    MEDIA_LOGI("CustomizedToneWriteFile: Openfile success, begin write file.");
+    MEDIA_LOGI("CustomizedToneWriteFile: OpenFile success, begin write file.");
     char buffer[4096];
     int32_t len = paramsForWriteFile.length;
     memset_s(buffer, sizeof(buffer), 0, sizeof(buffer));

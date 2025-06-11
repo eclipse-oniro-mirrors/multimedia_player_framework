@@ -241,7 +241,7 @@ private:
         std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper, const std::shared_ptr<ToneAttrs> &toneAttrs,
         ParamsForWriteFile &paramsForWriteFile);
     void OpenOneFile(std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
-        const std::string &uri, std::tuple<std::string, int64_t, SystemSoundError> &resultOfOpen)
+        const std::string &uri, std::tuple<std::string, int64_t, SystemSoundError> &resultOfOpen);
     int32_t DoRemove(std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper, const std::string &uri,
         off_t fileSize);
     std::string GetBundleName();
