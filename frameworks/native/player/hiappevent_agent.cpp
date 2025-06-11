@@ -29,7 +29,7 @@ namespace {
     constexpr auto SDKNAME = "MediaKit";
     constexpr int32_t KTIMEOUT = 90;  // trigger interval in seconds
     constexpr int32_t KCONDROW = 30;  // trigger batch size
-    constexpr int64_t REPORT_INTERVAL = 1;
+    constexpr int64_t REPORT_INTERVAL = 1; // 1s
     static int64_t g_processorId = -1;
     static std::mutex g_processorMutex;
 }
