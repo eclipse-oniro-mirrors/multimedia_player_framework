@@ -15,6 +15,8 @@
 
 #include "audio_haptic_manager_impl_unit_test.h"
 
+#include "audio_haptic_test_common.h"
+
 #include "media_errors.h"
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -32,14 +34,9 @@ const std::string HAPTIC_TEST_EFFECT_ID = "haptic.clock.timer";
 
 static std::shared_ptr<AudioHapticManagerImpl> g_audioHapticManagerImpl = nullptr;
 
-static AccessTokenID g_tokenId = 0;
-
 void AudioHapticManagerImplUnitTest::SetUpTestCase(void)
 {
-    // SetSelfTokenID to foundation for ohos.permission.VIBRATE
-    g_tokenId = AccessTokenKit::GetNativeTokenId("foundation");
-    ASSERT_NE(0, g_tokenId);
-    ASSERT_EQ(0, SetSelfTokenID(g_tokenId));
+    ASSERT_NE(GetAllPermission(), 0);
 
     g_audioHapticManagerImpl = std::make_shared<AudioHapticManagerImpl>();
     ASSERT_NE(g_audioHapticManagerImpl, nullptr);

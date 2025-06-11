@@ -23,6 +23,7 @@ ohos_unittest("audio_haptic_unit_test") {
     "./../../../frameworks/native/audio_haptic",
     "./../../../interfaces/inner_api/native",
     "./../../../interfaces/inner_api/native/audio_haptic/include",
+    "./../common/include",
   ]
 
   cflags = [
@@ -34,6 +35,7 @@ ohos_unittest("audio_haptic_unit_test") {
   sources = [
     "audio_haptic_manager_impl_unit_test.cpp",
     "audio_haptic_unit_test.cpp",
+    "./../common/src/audio_haptic_test_common.cpp",
   ]
 
   deps = [

@@ -23,6 +23,11 @@
 #include "isoundpool.h"
 #include "player.h"
 
+#include <cstdint>
+#include <chrono>
+#include <unistd.h>
+#include <random>
+
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, "AudioHapticManagerImpl"};
 }
@@ -73,6 +78,22 @@ static std::string DupFdFromUri(const std::string &uri)
         return "";
     }
     return FDHEAD + std::to_string(dupFd);
+}
+
+static int32_t GenerateSyncId()
+{
+    static thread_local pid_t pid = getpid();
+    static thread_local auto start_time = std::chrono::steady_clock::now();
+    static thread_local std::mt19937 gen(std::random_device{}());
+    static thread_local std::uniform_int_distribution<uint16_t> dist(0, 255);
+
+    auto now = std::chrono::steady_clock::now();
+    auto duration = now - start_time;
+    auto micros = std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
+
+    uint32_t pid_unsigned = static_cast<uint32_t>(pid);
+    uint64_t micros_unsigned = static_cast<uint64_t>(micros);
+    return ((micros_unsigned & 0xFFFFFF) << 8) | (pid_unsigned & 0xFF) | (dist(gen) & 0xFF);
 }
 
 std::shared_ptr<AudioHapticManager> AudioHapticManagerFactory::CreateAudioHapticManager()
@@ -295,7 +316,7 @@ std::shared_ptr<AudioHapticPlayer> AudioHapticManagerImpl::CreatePlayer(const in
     std::shared_ptr<AudioHapticPlayerInfo> audioHapticPlayerInfo = audioHapticPlayerMap_[sourceID];
     AudioHapticPlayerParam param = AudioHapticPlayerParam(audioHapticPlayerOptions,
         audioHapticPlayerInfo->audioSource_, audioHapticPlayerInfo->hapticSource_,
-        audioHapticPlayerInfo->latencyMode_, audioHapticPlayerInfo->streamUsage_);
+        audioHapticPlayerInfo->latencyMode_, audioHapticPlayerInfo->streamUsage_, GenerateSyncId());
     std::shared_ptr<AudioHapticPlayer> audioHapticPlayer = AudioHapticPlayerFactory::CreateAudioHapticPlayer(param);
 
     if (audioHapticPlayer == nullptr) {

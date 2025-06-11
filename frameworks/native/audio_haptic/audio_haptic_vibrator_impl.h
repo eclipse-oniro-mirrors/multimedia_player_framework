@@ -86,6 +86,7 @@ private:
     bool isStopped_ = false;
     std::atomic<int32_t> vibrationTimeElapsed_ = 0;
     std::atomic<int64_t> patternStartTime_ = 0;
+    std::atomic<int32_t> vibratorTime_ = 0;
     VibratorParameter vibratorParameter_;
     std::atomic<bool> isRunning_ = false;
     std::atomic<bool> isIntensityChanged_ = false;
