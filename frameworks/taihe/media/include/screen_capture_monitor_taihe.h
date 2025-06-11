@@ -29,9 +29,6 @@ using namespace ohos::multimedia::media;
 class ScreenCaptureMonitorImpl {
 public:
     ScreenCaptureMonitorImpl();
-    ScreenCaptureMonitorImpl(ScreenCaptureMonitorImpl *obj);
-    bool IsSystemApp();
-    bool SystemPermission();
     bool GetisSystemScreenRecorderWorking();
     void OnSystemScreenRecorder(callback_view<void(ohos::multimedia::media::ScreenCaptureEvent)> callback);
     void OffSystemScreenRecorder(optional_view<callback<void(ohos::multimedia::media::ScreenCaptureEvent)>> callback);

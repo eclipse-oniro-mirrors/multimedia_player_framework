@@ -13,8 +13,13 @@
  * limitations under the License.
  */
 
+#include "avcodec_info.h"
 #include "media_taihe_utils.h"
 #include "media_log.h"
+#include "access_token.h"
+#include "accesstoken_kit.h"
+#include "ipc_skeleton.h"
+#include "tokenid_kit.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_RECORDER, "MediaTaiheUtils"};
@@ -26,6 +31,17 @@ namespace Media {
 static const std::map<OHOS::AudioStandard::InterruptMode, int32_t> TAIHE_INTERRUPTMODE_INDEX_MAP = {
     {OHOS::AudioStandard::InterruptMode::SHARE_MODE, 0},
     {OHOS::AudioStandard::InterruptMode::INDEPENDENT_MODE, 1},
+};
+
+const std::map<std::string, OHOS::Media::OutputFormatType> g_extensionToOutputFormat = {
+    { "mp4", OHOS::Media::OutputFormatType::FORMAT_MPEG_4 },
+    { "m4a", OHOS::Media::OutputFormatType::FORMAT_M4A },
+};
+
+const std::map<std::string_view, int32_t> g_mimeStrToCodecFormat = {
+    { OHOS::MediaAVCodec::CodecMimeType::AUDIO_AAC, OHOS::Media::AudioCodecFormat::AAC_LC },
+    { OHOS::MediaAVCodec::CodecMimeType::VIDEO_AVC, OHOS::Media::VideoCodecFormat::H264 },
+    { OHOS::MediaAVCodec::CodecMimeType::VIDEO_MPEG4, OHOS::Media::VideoCodecFormat::MPEG4 },
 };
 
 string MediaTaiheUtils::ToTaiheString(const std::string &src)
@@ -44,6 +60,26 @@ bool MediaTaiheUtils::GetEnumKeyByValue(int32_t value, typename EnumType::key_t 
     }
     return false;
 }
+
+template <typename EnumTypeString>
+bool MediaTaiheUtils::GetEnumKeyByStringValue(::taihe::string_view value, typename EnumTypeString::key_t &key)
+{
+    for (size_t index = 0; index < std::size(EnumTypeString::table); ++index) {
+        if (EnumTypeString::table[index] == value) {
+            key = static_cast<typename EnumTypeString::key_t>(index);
+            return true;
+        }
+    }
+    return false;
+}
+
+template
+bool MediaTaiheUtils::GetEnumKeyByStringValue<ohos::multimedia::media::CodecMimeType>(::taihe::string_view value,
+    typename ohos::multimedia::media::CodecMimeType::key_t &key);
+
+template
+bool MediaTaiheUtils::GetEnumKeyByStringValue<ohos::multimedia::media::ContainerFormatType>(::taihe::string_view value,
+    typename ohos::multimedia::media::ContainerFormatType::key_t &key);
 
 template
 bool MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::media::AudioSourceType>(int32_t value,
@@ -208,6 +244,52 @@ map<string, MediaDescriptionValue> MediaTaiheUtils::CreateFormatBuffer(OHOS::Med
         }
     }
     return description;
+}
+
+bool MediaTaiheUtils::IsSystemApp()
+{
+    uint64_t accessTokenIDEx = OHOS::IPCSkeleton::GetCallingFullTokenID();
+    bool isSystemApp = OHOS::Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIDEx);
+    return isSystemApp;
+}
+
+bool MediaTaiheUtils::SystemPermission()
+{
+    auto tokenId = OHOS::IPCSkeleton::GetCallingTokenID();
+    auto tokenType = OHOS::Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
+    if (tokenType == OHOS::Security::AccessToken::TOKEN_NATIVE ||
+        tokenType == OHOS::Security::AccessToken::TOKEN_SHELL) {
+        return true;
+    }
+    return IsSystemApp();
+}
+
+int32_t MediaTaiheUtils::MapExtensionNameToOutputFormat(const std::string &extension,
+    OHOS::Media::OutputFormatType &type)
+{
+    auto iter = g_extensionToOutputFormat.find(extension);
+    if (iter != g_extensionToOutputFormat.end()) {
+        type = iter->second;
+    }
+    return OHOS::Media::MSERR_INVALID_VAL;
+}
+
+int32_t MediaTaiheUtils::MapMimeToAudioCodecFormat(const std::string &mime, OHOS::Media::AudioCodecFormat &codecFormat)
+{
+    auto iter = g_mimeStrToCodecFormat.find(mime);
+    if (iter != g_mimeStrToCodecFormat.end()) {
+        codecFormat = static_cast<OHOS::Media::AudioCodecFormat>(iter->second);
+    }
+    return OHOS::Media::MSERR_INVALID_VAL;
+}
+
+int32_t MediaTaiheUtils::MapMimeToVideoCodecFormat(const std::string &mime, OHOS::Media::VideoCodecFormat &codecFormat)
+{
+    auto iter = g_mimeStrToCodecFormat.find(mime);
+    if (iter != g_mimeStrToCodecFormat.end()) {
+        codecFormat = static_cast<OHOS::Media::VideoCodecFormat>(iter->second);
+    }
+    return OHOS::Media::MSERR_INVALID_VAL;
 }
 }
 }

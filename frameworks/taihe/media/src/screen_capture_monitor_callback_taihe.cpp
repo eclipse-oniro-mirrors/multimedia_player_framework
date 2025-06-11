@@ -44,6 +44,8 @@ void ScreenCaptureMonitorCallback::SaveCallbackReference(const std::string &name
     std::lock_guard<std::mutex> lock(mutex_);
     refMap_[name] = ref;
     MEDIA_LOGI("Set callback type: %{public}s", name.c_str());
+    std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::GetMainEventRunner();
+    mainHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
 }
 
 void ScreenCaptureMonitorCallback::CancelCallbackReference(const std::string &name)

@@ -160,21 +160,53 @@ public:
     void StopSync();
     void ReleaseSync();
     void ResetSync();
+    void ResumeSync();
     friend AVRecorder CreateAVRecorderSync();
 
+    ::ohos::multimedia::media::AVRecorderConfig GetAVRecorderConfigSync();
+    std::shared_ptr<TaskHandler<RetInfo>> GetAVRecorderConfigTask(
+        const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
+    int32_t GetAVRecorderConfig(std::shared_ptr<AVRecorderConfig> &config);
+    ::ohos::multimedia::media::AVRecorderConfig CreateDefaultAVRecorderConfig();
+    ::ohos::multimedia::media::AVRecorderProfile CreateDefaultAVRecorderProfile();
+    void SetAVRecorderConfig(
+        const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, ::ohos::multimedia::media::AVRecorderConfig &res);
+    ::ohos::multimedia::media::AVRecorderProfile CreateAVRecorderProfile(
+        const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
+
+    ::taihe::string GetInputMetaSurfaceSync(::ohos::multimedia::media::MetaSourceType type);
     int32_t GetMetaType(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
         ::ohos::multimedia::media::MetaSourceType type);
     std::shared_ptr<TaskHandler<RetInfo>> GetInputMetaSurface(
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
+
+    bool IsWatermarkSupportedSync();
+    std::shared_ptr<TaskHandler<RetInfo>> IsWatermarkSupportedTask(
+        const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     int32_t IsWatermarkSupported(bool &isWatermarkSupported);
 
+    void UpdateRotationSync(int32_t rotation);
     int32_t GetRotation(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, int32_t rotation);
     std::shared_ptr<TaskHandler<RetInfo>> GetSetOrientationHintTask(
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
 
+    int32_t GetAudioCapturerMaxAmplitudeSync();
     std::shared_ptr<TaskHandler<RetInfo>> GetMaxAmplitudeTask(
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     int32_t GetMaxAmplitude(int32_t &maxAmplitude);
+
+    ::taihe::array<::ohos::multimedia::media::EncoderInfo> GetAvailableEncoderSync();
+    std::shared_ptr<TaskHandler<RetInfo>> GetEncoderInfoTask(
+        const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
+    int32_t GetEncoderInfo(std::vector<EncoderCapabilityData> &encoderInfo);
+    ::taihe::array<::ohos::multimedia::media::EncoderInfo> GetTaiheResult(
+        const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
+    ::taihe::array<::ohos::multimedia::media::EncoderInfo> GetDefaultResult();
+    void GetAudioEncoderInfo(EncoderCapabilityData encoderCapData,
+        std::vector<::ohos::multimedia::media::EncoderInfo> &TaiheEncoderInfos);
+    void GetVideoEncoderInfo(EncoderCapabilityData encoderCapData,
+        std::vector<::ohos::multimedia::media::EncoderInfo> &TaiheEncoderInfos);
+    ::ohos::multimedia::media::Range GetRange(int32_t min, int32_t max);
 
     int32_t GetConfig(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
         ohos::multimedia::media::AVRecorderConfig const& config);
@@ -200,7 +232,10 @@ public:
     int32_t GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
         ohos::multimedia::media::AVMetadata const& metadata);
     int32_t GetAudioCodecFormat(const std::string &mime, OHOS::Media::AudioCodecFormat &codecFormat);
+    int32_t SetAudioCodecFormat(OHOS::Media::AudioCodecFormat &codecFormat, std::string &mime);
     int32_t GetVideoCodecFormat(const std::string &mime, OHOS::Media::VideoCodecFormat &codecFormat);
+    int32_t SetVideoCodecFormat(OHOS::Media::VideoCodecFormat &codecFormat, std::string &mime);
+    int32_t SetFileFormat(OutputFormatType &type, std::string &extension);
     int32_t GetOutputFormat(const std::string &extension, OutputFormatType &type);
     void MediaProfileLog(bool isVideo, AVRecorderProfile &profile);
 

@@ -23,6 +23,7 @@
 #include "audio_device_descriptor.h"
 #include "meta/format.h"
 #include "image_source.h"
+#include "recorder.h"
 
 namespace ANI {
 namespace Media {
@@ -40,12 +41,19 @@ public:
     static string ToTaiheString(const std::string &src);
     template <typename EnumType>
     static bool GetEnumKeyByValue(int32_t value, typename EnumType::key_t &key);
+    template <typename EnumTypeString>
+    static bool GetEnumKeyByStringValue(::taihe::string_view value, typename EnumTypeString::key_t &key);
     static ani_object ToBusinessError(ani_env *env, int32_t code, const std::string &message);
     static ani_object CreatePixelMap(ani_env *env, OHOS::Media::PixelMap &pixelMap);
     static ani_object CreateMediaKeySystemInfo(ani_env *env, ANI::Media::MediaKeySystemInfo &mediaKeySystemInfo);
     static ani_string ToAniString(ani_env *env, const std::string &str);
     static uintptr_t GetUndefined(ani_env* env);
     static map<string, MediaDescriptionValue> CreateFormatBuffer(OHOS::Media::Format &format);
+    static bool IsSystemApp();
+    static bool SystemPermission();
+    static int32_t MapExtensionNameToOutputFormat(const std::string &extension, OHOS::Media::OutputFormatType &type);
+    static int32_t MapMimeToAudioCodecFormat(const std::string &mime, OHOS::Media::AudioCodecFormat &codecFormat);
+    static int32_t MapMimeToVideoCodecFormat(const std::string &mime, OHOS::Media::VideoCodecFormat &codecFormat);
 };
 }
 }

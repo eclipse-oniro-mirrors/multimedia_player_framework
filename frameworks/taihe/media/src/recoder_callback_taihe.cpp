@@ -66,6 +66,8 @@ void RecorderCallbackTaihe::SaveCallbackReference(const std::string &name, std::
 {
     std::lock_guard<std::mutex> lock(mutex_);
     refMap_[name] = ref;
+    std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::GetMainEventRunner();
+    mainHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
 }
 
 void RecorderCallbackTaihe::SendErrorCallback(int32_t errCode)
@@ -90,6 +92,39 @@ void RecorderCallbackTaihe::SendErrorCallback(int32_t errCode)
         this->OnTaiheErrorCallBack(cb);
     };
     mainHandler_->PostTask(task, "OnError", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+}
+
+void RecorderCallbackTaihe::SendStateCallback(const std::string &callbackName)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (refMap_.find(callbackName) == refMap_.end()) {
+        MEDIA_LOGW("can not find %{public}s callback!", callbackName.c_str());
+        return;
+    }
+
+    RecordTaiheCallback *cb = new(std::nothrow) RecordTaiheCallback();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
+    cb->autoRef = refMap_.at(callbackName);
+    cb->callbackName = callbackName;
+
+    auto task = [this, cb]() {
+        this->OnTaiheStateCallBack(cb);
+    };
+    mainHandler_->PostTask(task, "OnStatechange", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+}
+
+void RecorderCallbackTaihe::OnTaiheStateCallBack(RecordTaiheCallback *taiheCb) const
+{
+    std::string request = taiheCb->callbackName;
+    do {
+        MEDIA_LOGD("OnTaiheStateCallBack is called");
+        std::shared_ptr<AutoRef> stateChangeRef = taiheCb->autoRef.lock();
+        CHECK_AND_BREAK_LOG(stateChangeRef != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
+        std::shared_ptr<taihe::callback<void(taihe::string_view)>> cacheCallback =
+            std::reinterpret_pointer_cast<taihe::callback<void(taihe::string_view)>>(stateChangeRef->callbackRef_);
+        (*cacheCallback)(taihe::string_view(request));
+    } while (0);
+    delete taiheCb;
 }
 
 void RecorderCallbackTaihe::OnTaiheErrorCallBack(RecordTaiheCallback *taiheCb) const

@@ -69,6 +69,9 @@ function CreateAVTranscoderSync(): AVTranscoder;
 @gen_promise("createAVScreenCaptureRecorder")
 function CreateAVScreenCaptureRecorderSync(): AVScreenCaptureRecorder;
 
+@gen_promise("reportAVScreenCaptureUserChoice")
+function ReportAVScreenCaptureUserChoiceSync(sessionId: i32, choice: String): void;
+
 enum HdrType: i32 {
     AV_HDR_TYPE_NONE = 0,
     AV_HDR_TYPE_VIVID = 1
@@ -411,6 +414,10 @@ interface VideoRecorder {
     @gen_promise("getInputSurface")
     GetInputSurfaceSync(): String;
 
+    @gen_async("start")
+    @gen_promise("start")
+    StartSync(): void;
+
     @gen_async("pause")
     @gen_promise("pause")
     PauseSync(): void;
@@ -418,6 +425,10 @@ interface VideoRecorder {
     @gen_async("stop")
     @gen_promise("stop")
     StopSync(): void;
+
+    @gen_async("resume")
+    @gen_promise("resume")
+    ResumeSync(): void;
 
     @gen_async("release")
     @gen_promise("release")
@@ -438,7 +449,6 @@ interface VideoRecorder {
         }
     }""")
     OnError(callback: (err: @sts_type("BusinessError<void>") Opaque)=> void): void;
-
 }
 
 enum AudioSourceType: i32 {
@@ -493,6 +503,11 @@ struct VideoRecorderConfig {
     location: Optional<Location>;
 }
 
+struct WatermarkConfig {
+    top: i32;
+    left: i32;
+}
+
 interface AVImageGenerator {
     @get GetFdSrc(): Optional<AVFileDescriptor>;
     @set SetFdSrc(fdSrc: Optional<AVFileDescriptor>): void;
@@ -532,6 +547,31 @@ interface AVRecorder {
     @gen_async("reset")
     @gen_promise("reset")
     ResetSync(): void;
+
+    @gen_async("resume")
+    @gen_promise("resume")
+    ResumeSync(): void;
+
+    @gen_async("getAVRecorderConfig")
+    @gen_promise("getAVRecorderConfig")
+    GetAVRecorderConfigSync(): AVRecorderConfig;
+
+    @gen_promise("getInputMetaSurface")
+    GetInputMetaSurfaceSync(type: MetaSourceType): String;
+
+    @gen_promise("isWatermarkSupported")
+    IsWatermarkSupportedSync(): bool;
+
+    @gen_promise("updateRotation")
+    UpdateRotationSync(rotation: i32): void;
+
+    @gen_async("getAudioCapturerMaxAmplitude")
+    @gen_promise("getAudioCapturerMaxAmplitude")
+    GetAudioCapturerMaxAmplitudeSync(): i32;
+
+    @gen_async("getAvailableEncoder")
+    @gen_promise("getAvailableEncoder")
+    GetAvailableEncoderSync(): Array<EncoderInfo>;
 
     @!sts_inject_into_interface("on(type: string, callback: (state: String, reason: StateChangeReason)=> void): void;")
     @!sts_inject_into_interface("on(type: string, callback: (data: object)=> void): void;")
@@ -727,8 +767,6 @@ struct AVRecorderConfig {
     url: Optional<String>;
     metaSourceTypes: Optional<Array<MetaSourceType>>;
     fileGenerationMode: Optional<FileGenerationMode>;
-    rotation: Optional<i32>;
-    location: Optional<Location>;
     metadata: Optional<AVMetadata>;
     maxDuration: Optional<i32>;
 }

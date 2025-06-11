@@ -13,19 +13,13 @@
  * limitations under the License.
  */
 
-#include <map>
-#include <string>
 #include "screen_capture_monitor_taihe.h"
-#include "tokenid_kit.h"
-#include "ipc_skeleton.h"
-#include "access_token.h"
-#include "accesstoken_kit.h"
+#include "media_taihe_utils.h"
 #include "media_errors.h"
 #include "media_log.h"
 #include "media_dfx.h"
 
 using namespace ANI::Media;
-using namespace OHOS::Security::AccessToken;
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_RECORDER, "ScreenCaptureMonitorTaihe"};
@@ -38,6 +32,7 @@ ScreenCaptureMonitorImpl::ScreenCaptureMonitorImpl()
 {
     OHOS::sptr<ScreenCaptureMonitorCallback> monitorCb(new ScreenCaptureMonitorCallback());
     monitorCb_ = monitorCb;
+    CHECK_AND_RETURN_LOG(monitorCb_ != nullptr, "failed to CreateRecorderCb");
     OHOS::Media::ScreenCaptureMonitor::GetInstance()->RegisterScreenCaptureMonitorListener(monitorCb_);
 }
 
@@ -53,35 +48,14 @@ static void SignError(int32_t code, const std::string &param1, const std::string
     set_business_error(code, message);
 }
 
-bool ScreenCaptureMonitorImpl::IsSystemApp()
-{
-    uint64_t accessTokenIDEx = OHOS::IPCSkeleton::GetCallingFullTokenID();
-    bool isSystemApp = TokenIdKit::IsSystemAppByFullTokenID(accessTokenIDEx);
-    return isSystemApp;
-}
-
-bool ScreenCaptureMonitorImpl::SystemPermission()
-{
-    auto tokenId = OHOS::IPCSkeleton::GetCallingTokenID();
-    auto tokenType = OHOS::Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
-    if (tokenType == OHOS::Security::AccessToken::TOKEN_NATIVE ||
-        tokenType == OHOS::Security::AccessToken::TOKEN_SHELL) {
-        return true;
-    }
-    return IsSystemApp();
-}
-
 bool ScreenCaptureMonitorImpl::GetisSystemScreenRecorderWorking()
 {
     MediaTrace trace("ScreenCaptureMonitorImpl::TaiheGetisSystemScreenRecorderWorking");
     MEDIA_LOGI("Taihe GetisSystemScreenRecorderWorking Start");
-    if (!SystemPermission()) {
+    if (!MediaTaiheUtils::SystemPermission()) {
         SignError(OHOS::Media::MSERR_EXT_API9_PERMISSION_DENIED, "IsSystemScreenRecorderWorking", "system");
     }
-    bool isSystemScreenRecorderWorking = false;
-    isSystemScreenRecorderWorking = OHOS::Media::ScreenCaptureMonitor::GetInstance()->IsSystemScreenRecorderWorking();
-
-    return isSystemScreenRecorderWorking;
+    return OHOS::Media::ScreenCaptureMonitor::GetInstance()->IsSystemScreenRecorderWorking();
 }
 
 void ScreenCaptureMonitorImpl::OnSystemScreenRecorder(
@@ -89,7 +63,7 @@ void ScreenCaptureMonitorImpl::OnSystemScreenRecorder(
 {
     MediaTrace trace("ScreenCaptureMonitorTaihe::OnSystemScreenRecorder");
     MEDIA_LOGI("OnSystemScreenRecorder Start");
-    if (!SystemPermission()) {
+    if (!MediaTaiheUtils::SystemPermission()) {
         SignError(OHOS::Media::MSERR_EXT_API9_PERMISSION_DENIED, "On", "system");
     }
 
@@ -110,7 +84,7 @@ void ScreenCaptureMonitorImpl::OffSystemScreenRecorder(
 {
     MediaTrace trace("ScreenCaptureMonitorTaihe::OffSystemScreenRecorder");
     MEDIA_LOGI("OffSystemScreenRecorder Start");
-    if (!SystemPermission()) {
+    if (!MediaTaiheUtils::SystemPermission()) {
         SignError(OHOS::Media::MSERR_EXT_API9_PERMISSION_DENIED, "Off", "system");
     }
 
