@@ -52,6 +52,7 @@ public:
     void OnOutputBufferAvailable(uint32_t index, std::shared_ptr<AVBuffer> buffer);
     void OnFetchedFrameBufferAvailable();
     int32_t Init();
+    void SetClientBundleName(std::string appName);
     void AcquireAvailableInputBuffer();
 
 private:
