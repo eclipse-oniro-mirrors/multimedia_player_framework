@@ -27,9 +27,9 @@ namespace {
     constexpr auto KNAME = "ha_app_event";
     constexpr auto KAPPID = "com_hua" "wei_hmos_sdk_ocg";
     constexpr auto SDKNAME = "MediaKit";
-    constexpr auto APINAME = "HMOS_MEDIA_SERVICE";
     constexpr int32_t KTIMEOUT = 90;  // trigger interval in seconds
     constexpr int32_t KCONDROW = 30;  // trigger batch size
+    constexpr int64_t REPORT_INTERVAL = 1;
     static int64_t g_processorId = -1;
     static std::mutex g_processorMutex;
 }
@@ -60,18 +60,18 @@ HiAppEventAgent::~HiAppEventAgent()
 
 #ifdef SUPPORT_HIAPPEVENT
 void HiAppEventAgent::WriteEndEvent(const std::string &transId,
-    const int errCode, const std::string& message, time_t startTime, HiviewDFX::HiTraceId traceId)
+    const int errCode, const std::string& apiName, time_t startTime, HiviewDFX::HiTraceId traceId)
 {
     int result = errCode == MSERR_OK ? API_RESULT_SUCCESS : API_RESULT_FAILED;
     Event event("api_diagnostic", "api_exec_end", OHOS::HiviewDFX::HiAppEvent::BEHAVIOR);
     event.AddParam("trans_id", transId);
-    event.AddParam("api_name", std::string(APINAME));
+    event.AddParam("api_name", apiName);
     event.AddParam("sdk_name", std::string(SDKNAME));
     event.AddParam("begin_time", startTime);
     event.AddParam("end_time", time(nullptr));
     event.AddParam("result", result);
     event.AddParam("error_code", errCode);
-    event.AddParam("contents", message);
+    event.AddParam("contents", apiName);
     if (traceId.IsValid()) {
         event.AddParam("hiTraceID", static_cast<int64_t>(traceId.GetChainId()));
     }
@@ -115,7 +115,7 @@ int64_t HiAppEventAgent::AddProcessor()
 #endif
 
 void HiAppEventAgent::TraceApiEvent(
-    int errCode, const std::string& message, time_t startTime, HiviewDFX::HiTraceId traceId)
+    int errCode, const std::string& apiName, time_t startTime, HiviewDFX::HiTraceId traceId)
 {
 #ifdef SUPPORT_HIAPPEVENT
     {
@@ -126,20 +126,25 @@ void HiAppEventAgent::TraceApiEvent(
         if (g_processorId < 0) {
             return;
         }
+        auto it = lastReportTime_.find(apiName);
+        if (it != lastReportTime_.end() && startTime <= it->second + REPORT_INTERVAL) {
+            return;
+        }
+        lastReportTime_[apiName] = startTime;
     }
 
     if (hiAppEventTask_ == nullptr) {
         return;
     }
     std::weak_ptr<HiAppEventAgent> agent = shared_from_this();
-    hiAppEventTask_->SubmitJobOnce([agent, errCode, message, startTime, traceId]() {
+    hiAppEventTask_->SubmitJobOnce([agent, errCode, apiName, startTime, traceId]() {
         auto ptr = agent.lock();
         CHECK_AND_RETURN_NOLOG(ptr != nullptr);
-        ptr->TraceApiEventAsync(errCode, message, startTime, traceId);
+        ptr->TraceApiEventAsync(errCode, apiName, startTime, traceId);
     });
 #else
     (void)errCode;
-    (void)message;
+    (void)apiName;
     (void)startTime;
     (void)traceId;
 #endif
@@ -147,10 +152,10 @@ void HiAppEventAgent::TraceApiEvent(
 
 #ifdef SUPPORT_HIAPPEVENT
 void HiAppEventAgent::TraceApiEventAsync(
-    int errCode, const std::string& message, time_t startTime, HiviewDFX::HiTraceId traceId)
+    int errCode, const std::string& apiName, time_t startTime, HiviewDFX::HiTraceId traceId)
 {
     std::string transId = GenerateTransId();
-    WriteEndEvent(transId, errCode, message, startTime, traceId);
+    WriteEndEvent(transId, errCode, apiName, startTime, traceId);
 }
 #endif
 
