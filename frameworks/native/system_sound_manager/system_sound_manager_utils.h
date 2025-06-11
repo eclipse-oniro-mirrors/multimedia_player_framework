@@ -24,6 +24,7 @@
 
 #include "audio_system_manager.h"
 #include "system_sound_manager.h"
+#include "hitrace_meter.h"
 
 namespace OHOS {
 namespace Media {
