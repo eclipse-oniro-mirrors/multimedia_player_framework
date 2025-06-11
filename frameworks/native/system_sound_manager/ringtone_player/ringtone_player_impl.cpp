@@ -426,7 +426,6 @@ int32_t RingtonePlayerImpl::StartForNoRing(const HapticStartupMode startupMode)
     if (startupMode == HapticStartupMode::FAST && NeedToVibrate(settings)) {
         (void)SystemSoundVibrator::StartVibratorForFastMode();
     }
-    InitPlayer(ringtoneUri, settings, options);
 
     // Start an empty audio stream for NoRing.
     rendererParams_.sampleFormat = AudioStandard::SAMPLE_S24LE;
