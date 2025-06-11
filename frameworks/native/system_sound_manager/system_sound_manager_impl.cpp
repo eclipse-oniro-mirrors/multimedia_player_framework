@@ -2000,7 +2000,7 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(
         SendCustomizedToneEvent(true, toneAttrs, fileSize, mimeType_, ERROR);
         MediaTrace::TraceEnd("SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset", FAKE_POINTER(this));
         if (sert == VIDEOS_NUM_EXCEEDS_SPECIFICATION) {
-         return FILE_COUNT_EXCEEDS_LIMIT;
+            return FILE_COUNT_EXCEEDS_LIMIT;
         } else if (sert == NOT_ENOUGH_ROM) {
             return ROM_IS_INSUFFICIENT;
         } else if (sert == FILE_EXIST) {
