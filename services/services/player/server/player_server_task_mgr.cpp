@@ -186,13 +186,6 @@ int32_t PlayerServerTaskMgr::FreezeTask(const std::shared_ptr<ITaskHandler> &tas
     }
     MEDIA_LOGI("current task[%{public}s] is in processing, new task[%{public}s] wait",
         currTwoPhaseTaskName_.c_str(), taskName.c_str());
-    for (auto &item : pendingTwoPhaseTasks_) {
-        if (item.type == PlayerServerTaskType::FREEZE_TASK ||
-            item.type == PlayerServerTaskType::UNFREEZE_TASK) {
-            item.type = PlayerServerTaskType::CANCEL_TASK;
-            MEDIA_LOGI("replace old freeze and unfreeze task");
-        }
-    }
 
     pendingTwoPhaseTasks_.push_back({
         PlayerServerTaskType::FREEZE_TASK, task, cancelTask, taskName
@@ -211,13 +204,6 @@ int32_t PlayerServerTaskMgr::UnFreezeTask(const std::shared_ptr<ITaskHandler> &t
     }
     MEDIA_LOGI("current task[%{public}s] is in processing, new task[%{public}s] wait",
         currTwoPhaseTaskName_.c_str(), taskName.c_str());
-    for (auto &item : pendingTwoPhaseTasks_) {
-        if (item.type == PlayerServerTaskType::FREEZE_TASK ||
-            item.type == PlayerServerTaskType::UNFREEZE_TASK) {
-            item.type = PlayerServerTaskType::CANCEL_TASK;
-            MEDIA_LOGI("replace old freeze and unfreeze task");
-        }
-    }
 
     pendingTwoPhaseTasks_.push_back({
         PlayerServerTaskType::UNFREEZE_TASK, task, cancelTask, taskName

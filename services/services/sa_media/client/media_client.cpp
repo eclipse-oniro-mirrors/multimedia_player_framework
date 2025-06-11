@@ -52,6 +52,7 @@ constexpr int32_t LOAD_TIME = 30;
 constexpr int32_t SLEEP_TIME = 100;
 constexpr int32_t RETRY_TIME = 3;
 #endif
+constexpr size_t MAX_PID_LIST_SIZE = 1000;
 constexpr uint32_t MAX_WAIT_TIME = 5000;
 std::shared_ptr<MediaClient> g_mediaClientInstance;
 std::once_flag onceFlag_;
@@ -78,8 +79,10 @@ int32_t MediaClient::ProxyForFreeze(const std::set<int32_t> &pidList, bool isPro
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(IsAlived(), MSERR_SERVICE_DIED, "media service does not exist.");
+    auto size = pidList.size();
+    CHECK_AND_RETURN_RET_LOG(size <= MAX_PID_LIST_SIZE, MSERR_INVALID_VAL, "invalid pidList size");
     MEDIA_LOGD("received Freeze Notification, pidSize = %{public}d, isProxy = %{public}d",
-               static_cast<int32_t>(pidList.size()), isProxy);
+               static_cast<int32_t>(size), isProxy);
     return mediaProxy_->FreezeStubForPids(pidList, isProxy);
 }
 
