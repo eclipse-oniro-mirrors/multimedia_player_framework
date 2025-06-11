@@ -32,18 +32,19 @@ public:
     HiAppEventAgent();
     ~HiAppEventAgent();
     void TraceApiEvent(int errCode,
-        const std::string& message, time_t startTime, HiviewDFX::HiTraceId traceId = HiviewDFX::HiTraceId());
+        const std::string& apiName, time_t startTime, HiviewDFX::HiTraceId traceId = HiviewDFX::HiTraceId());
 
 private:
     std::string GenerateTransId();
 #ifdef SUPPORT_HIAPPEVENT
     void TraceApiEventAsync(int errCode,
-        const std::string& message, time_t startTime, HiviewDFX::HiTraceId traceId);
+        const std::string& apiName, time_t startTime, HiviewDFX::HiTraceId traceId);
     int64_t AddProcessor();
     void WriteEndEvent(const std::string& transId,
-        const int errCode, const std::string& message, time_t startTime, HiviewDFX::HiTraceId traceId);
+        const int errCode, const std::string& apiName, time_t startTime, HiviewDFX::HiTraceId traceId);
 
     std::unique_ptr<Task> hiAppEventTask_;
+    std::unordered_map<std::string, time_t> lastReportTime_;
 #endif
 };
 
