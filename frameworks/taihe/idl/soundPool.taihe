@@ -37,9 +37,14 @@ interface SoundPool {
     @gen_promise("load")
     LoadWithFdSync(fd: i32, offset: f64, length: f64): i32;
 
-    @gen_async("play")
     @gen_promise("play")
     PlaySync(soundID: i32, params: Optional<PlayParameters>): i32;
+
+    @gen_async("play")
+    PlayWithoutParam(soundID: i32): i32;
+
+    @gen_async("play")
+    PlayWithParam(soundID: i32, params: PlayParameters): i32;
 
     @gen_async("stop")
     @gen_promise("stop")

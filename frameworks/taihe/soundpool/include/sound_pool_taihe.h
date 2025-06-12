@@ -38,6 +38,8 @@ public:
     int32_t LoadSync(string_view uri);
     int32_t LoadWithFdSync(int32_t fd, double offset, double length);
     int32_t PlaySync(int32_t soundID, optional_view<PlayParameters> params);
+    int32_t PlayWithoutParam(int32_t soundID);
+    int32_t PlayWithParam(int32_t soundID, PlayParameters const& params);
     void StopSync(int32_t streamID);
     void UnloadSync(int32_t soundID);
     void ReleaseSync();
@@ -78,6 +80,10 @@ private:
     std::shared_ptr<ISoundPoolCallback> callbackTaihe_;
     std::map<std::string, std::shared_ptr<AutoRef>> eventCbMap_;
     PlayParams playParameters_;
+    std::string url_ = "";
+    int32_t fd_ = 0;
+    int64_t offset_ = 0;
+    int64_t length_ = 0;
     int32_t soundId_ = 0;
     int32_t streamId_ = 0;
     int32_t loop_ = 0;

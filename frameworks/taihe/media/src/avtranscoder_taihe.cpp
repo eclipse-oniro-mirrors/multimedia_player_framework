@@ -180,11 +180,25 @@ int32_t AVTranscoderImpl::GetFdDst()
 void AVTranscoderImpl::SetFdDst(int32_t fdDst)
 {
     MediaTrace trace("AVTranscoderImpl::set fd");
+    auto asyncCtx = std::make_unique<AVTransCoderAsyncContext>();
+    CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
+    asyncCtx->avTransCoder = this;
+    CHECK_AND_RETURN_LOG(asyncCtx->avTransCoder != nullptr, "failed to GetJsInstanceAndArgs");
     dstFd_ = fdDst;
-    auto retInfo = SetOutputFile(dstFd_);
-    if (retInfo.first != MSERR_EXT_API9_OK) {
-        set_business_error(retInfo.first, retInfo.second);
+    auto task = std::make_shared<TaskHandler<void>>([taihe = asyncCtx->avTransCoder]() {
+        MEDIA_LOGI("JsSetSrcFd Task");
+        taihe->SetOutputFile(taihe->dstFd_);
+    });
+    (void)asyncCtx->avTransCoder->taskQue_->EnqueueTask(task);
+    if (asyncCtx->task_) {
+        auto result = asyncCtx->task_->GetResult();
+        if (result.Value().first != MSERR_EXT_API9_OK) {
+            asyncCtx->SignError(result.Value().first, result.Value().second);
+        }
     }
+    asyncCtx.release();
+
+    MEDIA_LOGI("TaiheSetDstFd Out");
 }
 
 ohos::multimedia::media::AVFileDescriptor AVTranscoderImpl::GetFdSrc()
@@ -202,6 +216,10 @@ ohos::multimedia::media::AVFileDescriptor AVTranscoderImpl::GetFdSrc()
 void AVTranscoderImpl::SetFdSrc(ohos::multimedia::media::AVFileDescriptor const& fdSrc)
 {
     MediaTrace trace("AVTranscoderImpl::set fd");
+    auto asyncCtx = std::make_unique<AVTransCoderAsyncContext>();
+    CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
+    asyncCtx->avTransCoder = this;
+    CHECK_AND_RETURN_LOG(asyncCtx->avTransCoder != nullptr, "failed to GetJsInstanceAndArgs");
     srcFd_.fd = fdSrc.fd;
     if (fdSrc.offset.has_value()) {
         srcFd_.offset = fdSrc.offset.value();
@@ -210,8 +228,19 @@ void AVTranscoderImpl::SetFdSrc(ohos::multimedia::media::AVFileDescriptor const&
         srcFd_.length = fdSrc.length.value();
     }
 
-    auto result = SetInputFile(srcFd_.fd, srcFd_.offset, srcFd_.length);
-    set_business_error(result.first, result.second);
+    auto task = std::make_shared<TaskHandler<void>>([taihe = asyncCtx->avTransCoder]() {
+        MEDIA_LOGI("JsSetSrcFd Task");
+        taihe->SetInputFile(taihe->srcFd_.fd, taihe->srcFd_.offset, taihe->srcFd_.length);
+    });
+    (void)asyncCtx->avTransCoder->taskQue_->EnqueueTask(task);
+    if (asyncCtx->task_) {
+        auto result = asyncCtx->task_->GetResult();
+        if (result.Value().first != MSERR_EXT_API9_OK) {
+            asyncCtx->SignError(result.Value().first, result.Value().second);
+        }
+    }
+    asyncCtx.release();
+
     MEDIA_LOGI("TaiheSetSrcFd Out");
 }
 
@@ -261,6 +290,7 @@ void AVTranscoderImpl::PrepareSync(AVTranscoderConfig const& config)
     MEDIA_LOGI("Taihe %{public}s Start", opt.c_str());
 
     auto asyncCtx = std::make_unique<AVTransCoderAsyncContext>();
+    CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
     asyncCtx->avTransCoder = this;
     CHECK_AND_RETURN_LOG(asyncCtx->avTransCoder != nullptr, "failed to GetTaiheInstanceAndArgs");
     CHECK_AND_RETURN_LOG(asyncCtx->avTransCoder->taskQue_ != nullptr, "taskQue is nullptr!");
@@ -357,6 +387,7 @@ void AVTranscoderImpl::ExecuteByPromise(AVTranscoderImpl *taihe, const std::stri
 {
     MEDIA_LOGI("Taihe %{public}s Start", opt.c_str());
     auto asyncCtx = std::make_unique<AVTransCoderAsyncContext>();
+    CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
     asyncCtx->avTransCoder = this;
     CHECK_AND_RETURN_LOG(asyncCtx->avTransCoder != nullptr, "failed to GetTaiheInstanceAndArgs");
     CHECK_AND_RETURN_LOG(asyncCtx->avTransCoder->taskQue_ != nullptr, "taskQue is nullptr!");

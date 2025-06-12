@@ -37,7 +37,7 @@ struct AVDataSrcDescriptor {
 }
 
 @gen_async("createAVImageGenerator")
-@gen_promise("createAVImageGenerator")  
+@gen_promise("createAVImageGenerator")
 function CreateAVImageGeneratorSync(): AVImageGenerator;
 
 @gen_async("createAVPlayer")
@@ -112,6 +112,7 @@ struct AVMetadata {
 
 enum AVImageQueryOptions: i32 {
     AV_IMAGE_QUERY_NEXT_SYNC = 0,
+    AV_IMAGE_QUERY_PREVIOUS_SYNC = 1,
     AV_IMAGE_QUERY_CLOSEST_SYNC = 2,
     AV_IMAGE_QUERY_CLOSEST = 3
 }
@@ -142,6 +143,12 @@ interface AVMetadataExtractor {
     @gen_async("fetchMetadata")
     @gen_promise("fetchMetadata")
     FetchMetadataSync(): AVMetadata;
+
+    @gen_promise("getFrameIndexByTime")
+    GetFrameIndexByTimeSync(timeUs: f64): i32;
+
+    @gen_promise("getTimeByFrameIndex")
+    GetTimeByFrameIndexSync(index: i32): f64;
 }
 
 enum MediaDescriptionKey: String {
@@ -675,7 +682,6 @@ interface AVTranscoder {
 
     OnProgressUpdate(callback: (data: i32) => void): void;
     OffProgressUpdate(callback: Optional<(data: i32) => void>);
-
 }
 
 struct AVTranscoderConfig {

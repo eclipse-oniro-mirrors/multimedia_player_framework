@@ -38,6 +38,7 @@ ScreenCaptureMonitorImpl::ScreenCaptureMonitorImpl()
 {
     OHOS::sptr<ScreenCaptureMonitorCallback> monitorCb(new ScreenCaptureMonitorCallback());
     monitorCb_ = monitorCb;
+    CHECK_AND_RETURN_LOG(monitorCb_ != nullptr, "failed to CreateRecorderCb");
     OHOS::Media::ScreenCaptureMonitor::GetInstance()->RegisterScreenCaptureMonitorListener(monitorCb_);
 }
 

@@ -46,6 +46,9 @@ bool MediaTaiheUtils::GetEnumKeyByValue(int32_t value, typename EnumType::key_t 
 }
 
 template
+bool MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::media::HdrType>(int32_t value,
+    typename ohos::multimedia::media::HdrType::key_t &key);
+template
 bool MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::media::AudioSourceType>(int32_t value,
     typename ohos::multimedia::media::AudioSourceType::key_t &key);
 template

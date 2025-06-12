@@ -19,9 +19,11 @@
 #include "media_ani_common.h"
 #include "media_data_source.h"
 #include "nocopyable.h"
+#include "event_handler.h"
 
 namespace OHOS {
 namespace Media {
+using DataSrcCallback = taihe::callback<int32_t(taihe::array_view<uint8_t>, int64_t, taihe::optional_view<int64_t>)>;
 
 struct HelperDataSourceTHCallback {
     HelperDataSourceTHCallback(const std::string &callbackName, const std::shared_ptr<AVSharedMemory> &mem,
@@ -58,8 +60,10 @@ public:
 
     int32_t ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem) override;
     int32_t ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem) override;
+    std::shared_ptr<OHOS::AppExecFwk::EventHandler> mainHandler_ = nullptr;
 private:
-    ani_status UvWork(HelperDataSourceTHCallbackWraper *cbWrap);
+    void UvWork(HelperDataSourceTHCallbackWraper *cbWrap,
+        std::shared_ptr<OHOS::AppExecFwk::EventHandler> mainHandler);
     std::mutex mutex_;
     std::map<std::string, std::shared_ptr<ANI::Media::AutoRef>> refMap_;
     int64_t size_ = -1;
