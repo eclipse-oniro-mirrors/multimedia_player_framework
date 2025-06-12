@@ -498,14 +498,14 @@ int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
         }
         case TransCoderPublicParamType::VIDEO_RECTANGLE: {
             ret = ConfigureVideoWidthHeight(transCoderParam);
-            ConfigureVideoBitrate();
+            if (!isConfiguredVideoBitrate_) {
+                ConfigureVideoBitrate();
+            }
             break;
         }
         case TransCoderPublicParamType::VIDEO_BITRATE: {
             VideoBitRate videoBitrate = static_cast<const VideoBitRate&>(transCoderParam);
-            if (videoBitrate.bitRate <= 0) {
-                return MSERR_OK;
-            }
+            FALSE_RETURN_V_MSG(videoBitrate.bitRate > 0, MSERR_OK, "Invalid video bitrate");
             MEDIA_LOG_I("HiTransCoderImpl::Configure videoBitRate %{public}d", videoBitrate.bitRate);
             videoEncFormat_->Set<Tag::MEDIA_BITRATE>(videoBitrate.bitRate);
             break;
@@ -529,6 +529,7 @@ int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
             }
             MEDIA_LOG_I("HiTransCoderImpl::Configure audioBitrate %{public}d", audioBitrate.bitRate);
             audioEncFormat_->Set<Tag::MEDIA_BITRATE>(audioBitrate.bitRate);
+            isConfiguredVideoBitrate_ = true;
             break;
         }
         default:
