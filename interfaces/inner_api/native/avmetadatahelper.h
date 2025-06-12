@@ -227,7 +227,7 @@ enum AVMetadataCode : int32_t {
      */
     AV_KEY_DATE_TIME_FORMAT = 5,
     /**
-     * The metadata key to retrieve the information about the created time  of the media source, 
+     * The metadata key to retrieve the information about the created time  of the media source,
      * using the ISO8601 format. This keyword is provided for the media library.
      */
     AV_KEY_DATE_TIME_ISO8601 = 6,
