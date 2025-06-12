@@ -248,7 +248,7 @@ void AVThumbnailGenerator::GetInputBufferDts(std::shared_ptr<AVBuffer> &inputBuf
         inputBuffer->dts_, static_cast<uint64_t>(inputBufferDtsQue_.size()));
 }
 
-void AVThumbnailGenerator::GetDuration()
+void AVThumbnailGenerator::InitMediaInfoFromGlobalMeta()
 {
     auto meta = mediaDemuxer_->GetGlobalMetaInfo();
     CHECK_AND_RETURN_LOG(meta != nullptr, "Global info is nullptr");
@@ -262,7 +262,7 @@ std::shared_ptr<Meta> AVThumbnailGenerator::GetVideoTrackInfo()
 {
     CHECK_AND_RETURN_RET(trackInfo_ == nullptr, trackInfo_);
     CHECK_AND_RETURN_RET_LOG(mediaDemuxer_ != nullptr, nullptr, "GetTargetTrackInfo demuxer is nullptr");
-    GetDuration();
+    InitMediaInfoFromGlobalMeta();
     std::vector<std::shared_ptr<Meta>> trackInfos = mediaDemuxer_->GetStreamMetaInfo();
     size_t trackCount = trackInfos.size();
     CHECK_AND_RETURN_RET_LOG(trackCount > 0, nullptr, "GetTargetTrackInfo trackCount is invalid");
@@ -418,7 +418,7 @@ void AVThumbnailGenerator::SetDecoderOutputBufferPts(std::shared_ptr<AVBuffer> &
         MEDIA_LOGD("DecOutputbuf PTS: %{public}" PRId64 " dtsQue_ size: %{public}" PRIu64,
             outputBuffer->pts_, static_cast<uint64_t>(inputBufferDtsQue_.size()));
     } else {
-        MEDIA_LOGW("DtsQue_ is empty.");
+        MEDIA_LOGW("DtsQue_ is empty. DecOutputbuf DTS: %{public}" PRId64, outputBuffer->dts_);
         outputBuffer->pts_ = outputBuffer->dts_;
     }
 }

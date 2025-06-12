@@ -120,7 +120,7 @@ private:
     void HandleFetchFrameAtTimeRes();
 
     void PauseFetchFrame();
-    void GetDuration();
+    void InitMediaInfoFromGlobalMeta();
     int64_t ReadLoop();
     void FlushBufferQueue();
     int64_t StopTask();
