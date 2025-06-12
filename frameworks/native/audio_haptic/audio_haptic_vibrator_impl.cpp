@@ -18,6 +18,7 @@
 
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <thread>
 
 #include "audio_haptic_log.h"
 #include "directory_ex.h"
@@ -30,6 +31,7 @@ constexpr int32_t MIN_WAITING_TIME_FOR_VIBRATOR = 1200; // ms
 constexpr uint64_t MILLISECONDS_FOR_ONE_SECOND = 1000; // ms
 constexpr int32_t PLAYER_BUFFER_TIME = 50; // ms
 constexpr int32_t MAX_WAITING_LOOP_COUNT = 10;
+constexpr int32_t WAIT_VIBRATOR_CANCEL_TIME_MS = 50; //ms
 #endif
 
 int64_t GetCurrentTimeMillis()
@@ -282,6 +284,9 @@ int32_t AudioHapticVibratorImpl::StartVibrate(const AudioLatencyMode &latencyMod
     MEDIA_LOGI("StartVibrate: for latency mode %{public}d", latencyMode);
     int32_t result = MSERR_OK;
 #ifdef SUPPORT_VIBRATOR
+    vibrationTimeElapsed_ = 0;
+    patternStartTime_ = 0;
+    vibratorTime_.store(0);
     if (audioHapticPlayer_.GetHapticsMode() == HapticsMode::HAPTICS_MODE_NONE) {
         return result;
     } else if (audioHapticPlayer_.GetHapticsMode() == HapticsMode::HAPTICS_MODE_NON_SYNC) {
@@ -309,7 +314,7 @@ int32_t AudioHapticVibratorImpl::StartVibrateWithEffect()
     int32_t result = MSERR_OK;
 #ifdef SUPPORT_VIBRATOR
     std::lock_guard<std::mutex> lock(vibrateMutex_);
-    (void)Sensors::SetUsage(vibratorUsage_, enableInSilentMode_);
+    (void)Sensors::SetUsage(vibratorUsage_, enableInSilentMode_.load());
     MEDIA_LOGI("PlayPrimitiveEffect with effectId: %{public}s", hapticSource_.effectId.c_str());
     result = Sensors::PlayPrimitiveEffect(hapticSource_.effectId.c_str(), vibrateIntensity_);
     if (result != 0) {
@@ -327,10 +332,8 @@ int32_t AudioHapticVibratorImpl::PlayVibrateForSoundPool(
 {
     int32_t result = MSERR_OK;
 #ifdef SUPPORT_VIBRATOR
-    vibrationTimeElapsed_ = 0;
-    patternStartTime_ = 0;
     // record the pattern time which has been played
-    int32_t vibrateTime = audioHapticPlayer_.GetAudioCurrentTime();
+    int32_t vibrateTime = vibratorTime_.load();
     for (int32_t i = 0; i < vibratorPkg->patternNum; ++i) {
         result = PlayVibrationPattern(vibratorPkg, i, vibrateTime, lock);
         CHECK_AND_RETURN_RET_LOG(result == 0, result, "AudioHapticVibratorImpl::PlayVibrateForSoundPool failed.");
@@ -350,8 +353,6 @@ int32_t AudioHapticVibratorImpl::PlayVibrateForSoundPool(
             seekVibratorPkg_ = nullptr;
         }
     }
-    vibrationTimeElapsed_ = 0;
-    patternStartTime_ = 0;
 #endif
     return result;
 }
@@ -385,10 +386,8 @@ int32_t AudioHapticVibratorImpl::RunVibrationPatterns(const std::shared_ptr<Vibr
 {
     int32_t result = MSERR_OK;
 #ifdef SUPPORT_VIBRATOR
-    vibrationTimeElapsed_ = 0;
-    patternStartTime_ = 0;
     // record the pattern time which has been played
-    int32_t vibrateTime = audioHapticPlayer_.GetAudioCurrentTime();
+    int32_t vibrateTime = vibratorTime_.load();
     for (int32_t i = 0; i < vibratorPkg->patternNum; ++i) {
         result = PlayVibrationPattern(vibratorPkg, i, vibrateTime, lock);
         CHECK_AND_RETURN_RET_LOG(result == 0, result, "AudioHapticVibratorImpl::PlayVibrateForSoundPool failed.");
@@ -417,8 +416,6 @@ int32_t AudioHapticVibratorImpl::RunVibrationPatterns(const std::shared_ptr<Vibr
             seekVibratorPkg_ = nullptr;
         }
     }
-    vibrationTimeElapsed_ = 0;
-    patternStartTime_ = 0;
 #endif
     return result;
 }
@@ -437,16 +434,18 @@ int32_t AudioHapticVibratorImpl::StartNonSyncVibration()
         MEDIA_LOGE("Vibration source file is not prepared. Can not start vibrating");
         return MSERR_INVALID_OPERATION;
     }
+    isRunning_ = true;
     while (!isStopped_) {
-        isRunning_ = true;
+        vibrationTimeElapsed_ = 0;
+        patternStartTime_ = 0;
         result = RunVibrationPatterns(vibratorPkg_, lock);
-        isRunning_ = false;
-        isIntensityChanged_ = false;
         if (result != MSERR_OK) {
             MEDIA_LOGI("StartNonSyncVibration: RunVibrationPatterns fail.");
             return result;
         }
     }
+    isRunning_ = false;
+    isIntensityChanged_ = false;
 #endif
     return result;
 }
@@ -491,11 +490,12 @@ int32_t AudioHapticVibratorImpl::PlayVibrationPattern(
     MEDIA_LOGI("AudioHapticVibratorImpl::PlayVibrationPattern pattern time %{public}d",
         vibratorPkg->patterns[patternIndex].time);
     int32_t patternTime = vibratorPkg->patterns[patternIndex].time - vibrateTime;
+    vibrateTime = vibratorPkg->patterns[patternIndex].time;
     (void)vibrateCV_.wait_for(lock, std::chrono::milliseconds(patternTime < 0 ? 0 : patternTime),
         [this]() { return isStopped_ || isNeedRestart_; });
     CHECK_AND_RETURN_RET_LOG(!isStopped_ && !isNeedRestart_, result,
         "AudioHapticVibratorImpl::PlayVibrationPattern: Stop() is call when waiting");
-    (void)Sensors::SetUsage(vibratorUsage_, enableInSilentMode_);
+    (void)Sensors::SetUsage(vibratorUsage_, enableInSilentMode_.load());
     (void)Sensors::SetParameters(vibratorParameter_);
     MEDIA_LOGI("AudioHapticVibratorImpl::PlayVibrationPattern.");
     patternStartTime_ = GetCurrentTimeMillis();
@@ -514,10 +514,8 @@ int32_t AudioHapticVibratorImpl::PlayVibrateForAVPlayer(const std::shared_ptr<Vi
 {
     int32_t result = MSERR_OK;
 #ifdef SUPPORT_VIBRATOR
-    vibrationTimeElapsed_ = 0;
-    patternStartTime_ = 0;
     // record the pattern time which has been played
-    int32_t vibrateTime = audioHapticPlayer_.GetAudioCurrentTime();
+    int32_t vibrateTime = vibratorTime_.load();
     MEDIA_LOGI("AudioHapticVibratorImpl::PlayVibrateForAVPlayer: now: %{public}d", vibrateTime);
     for (int32_t i = 0; i < vibratorPkg->patternNum; ++i) {
         result = PlayVibrationPattern(vibratorPkg, i, vibrateTime, lock);
@@ -558,8 +556,6 @@ int32_t AudioHapticVibratorImpl::PlayVibrateForAVPlayer(const std::shared_ptr<Vi
             seekVibratorPkg_ = nullptr;
         }
     }
-    vibrationTimeElapsed_ = 0;
-    patternStartTime_ = 0;
 #endif
     return result;
 }
@@ -592,12 +588,16 @@ int32_t AudioHapticVibratorImpl::SeekAndRestart()
     auto duration = GetCurrentTimeMillis() - patternStartTime_;
     MEDIA_LOGI("AudioHapticVibratorImpl::SeekAndRestart vibrationTimeElapsed_: %{public}d duration: %{public}" PRId64,
         vibrationTimeElapsed_.load(), duration);
-    int32_t result = Sensors::SeekTimeOnPackage(vibrationTimeElapsed_ + duration, *vibratorPkg_, *seekVibratorPkg_);
+    int32_t result = Sensors::SeekTimeOnPackage(vibrationTimeElapsed_ + duration + WAIT_VIBRATOR_CANCEL_TIME_MS,
+        *vibratorPkg_, *seekVibratorPkg_);
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result,
         "AudioHapticVibratorImpl::SeekAndRestart SeekTimeOnPackage error");
     isNeedRestart_ = true;
     isIntensityChanged_ = true;
+    vibratorTime_.store(vibrationTimeElapsed_ + duration);
+    // cancel is async, so should wait for 50ms then restart
     (void)Sensors::Cancel();
+    std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_VIBRATOR_CANCEL_TIME_MS));
     vibrateCV_.notify_one();
     return MSERR_OK;
 }

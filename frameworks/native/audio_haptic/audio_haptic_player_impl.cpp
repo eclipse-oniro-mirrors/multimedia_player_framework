@@ -96,6 +96,7 @@ void AudioHapticPlayerImpl::SetPlayerParam(const AudioHapticPlayerParam &param)
     hapticSource_ = param.hapticSource;
     latencyMode_ = param.latencyMode;
     streamUsage_ = param.streamUsage;
+    audioHapticSyncId_ = param.audioHapticSyncId;
 }
 
 void AudioHapticPlayerImpl::LoadPlayer()

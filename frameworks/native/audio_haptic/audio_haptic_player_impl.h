@@ -77,6 +77,7 @@ private:
     AudioHapticPlayerState playerState_ = AudioHapticPlayerState::STATE_INVALID;
     std::mutex audioHapticPlayerLock_;
     HapticsMode hapticsMode_ = HapticsMode::HAPTICS_MODE_INVALID;
+    int32_t audioHapticSyncId_ = 0;
 
     // var for callback
     std::weak_ptr<AudioHapticPlayerCallback> audioHapticPlayerCallback_;

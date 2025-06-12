@@ -15,6 +15,11 @@
 
 #include "audio_haptic_manager_impl.h"
 
+#include <cstdint>
+#include <chrono>
+#include <unistd.h>
+#include <random>
+
 #include "audio_haptic_player_impl.h"
 
 #include "audio_haptic_log.h"
@@ -73,6 +78,35 @@ static std::string DupFdFromUri(const std::string &uri)
         return "";
     }
     return FDHEAD + std::to_string(dupFd);
+}
+
+static int32_t GenerateSyncId()
+{
+    static constexpr uint8_t pidBits = 8;        // Number of bits allocated for the Process ID
+    static constexpr uint8_t randomBits = 8;     // Number of bits allocated for the random value
+    static constexpr uint8_t timeBits = 24;      // Number of bits allocated for the time difference
+
+    static constexpr uint32_t pidMask = (1 << pidBits) - 1;      // Mask for PID (0xFF for 8 bits)
+    static constexpr uint32_t randomMask = (1 << randomBits) - 1; // Mask for random value (0xFF for 8 bits)
+    static constexpr uint32_t timeMask = (1 << timeBits) - 1;    // Mask for time difference (0xFFFFFF for 24 bits)
+
+    static thread_local pid_t pid = getpid();
+    static thread_local auto startTime = std::chrono::steady_clock::now();
+    static thread_local std::mt19937 gen(std::random_device{}());
+    // Use constants to define the distribution range
+    static thread_local std::uniform_int_distribution<uint16_t> dist(0, randomMask);
+
+    auto now = std::chrono::steady_clock::now();
+    auto duration = now - startTime;
+    auto micros = std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
+
+    uint32_t pidUnsigned = static_cast<uint32_t>(pid);
+    uint64_t microsUnsigned = static_cast<uint64_t>(micros);
+
+    return
+        ((microsUnsigned & timeMask) << (pidBits + randomBits)) | // Shift time part by 16 bits (8+8)
+        ((pidUnsigned & pidMask) << randomBits) |                 // Shift PID part by 8 bits
+        (dist(gen) & randomMask);                                  // Random value occupies the lowest 8 bits
 }
 
 std::shared_ptr<AudioHapticManager> AudioHapticManagerFactory::CreateAudioHapticManager()
@@ -295,7 +329,7 @@ std::shared_ptr<AudioHapticPlayer> AudioHapticManagerImpl::CreatePlayer(const in
     std::shared_ptr<AudioHapticPlayerInfo> audioHapticPlayerInfo = audioHapticPlayerMap_[sourceID];
     AudioHapticPlayerParam param = AudioHapticPlayerParam(audioHapticPlayerOptions,
         audioHapticPlayerInfo->audioSource_, audioHapticPlayerInfo->hapticSource_,
-        audioHapticPlayerInfo->latencyMode_, audioHapticPlayerInfo->streamUsage_);
+        audioHapticPlayerInfo->latencyMode_, audioHapticPlayerInfo->streamUsage_, GenerateSyncId());
     std::shared_ptr<AudioHapticPlayer> audioHapticPlayer = AudioHapticPlayerFactory::CreateAudioHapticPlayer(param);
 
     if (audioHapticPlayer == nullptr) {
