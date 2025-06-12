@@ -299,7 +299,7 @@ void HiTransCoderImpl::ConfigureVideoDefaultEncFormat()
 void HiTransCoderImpl::ConfigureAudioDefaultEncFormat()
 {
     std::string audioMime;
-    audioEncFormat_->GetData(Tag::MIME_TYPE, audioMime)
+    audioEncFormat_->GetData(Tag::MIME_TYPE, audioMime);
     FALSE_RETURN_NOLOG(audioMime != Plugins::MimeType::AUDIO_AAC);
     MEDIA_LOG_I("Set the default audioEnc format, " PUBLIC_LOG_S " to " PUBLIC_LOG_S, audioMime.c_str(),
         Plugins::MimeType::AUDIO_AAC);
