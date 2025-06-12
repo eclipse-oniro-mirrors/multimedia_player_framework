@@ -288,6 +288,7 @@ public:
         std::shared_ptr<AudioBuffer> &micAudioBuffer);
     void HandleBufferTimeStamp(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
         std::shared_ptr<AudioBuffer> &micAudioBuffer);
+    ScreenCaptureServer* GetScreenCaptureServer();
 private:
     void MixAudio(char** srcData, char* mixData, int channels, int bufferSize);
 

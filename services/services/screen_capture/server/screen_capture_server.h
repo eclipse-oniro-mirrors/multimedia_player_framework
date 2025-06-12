@@ -136,6 +136,8 @@ public:
     std::shared_ptr<AudioCapturerWrapper> GetMicAudioCapture();
     bool IsStopAcquireAudioBufferFlag();
     bool IsMicrophoneSwitchTurnOn();
+    bool IsMicrophoneCaptureRunning();
+    bool IsInnerCaptureRunning();
     void SetInnerAudioCapture(std::shared_ptr<AudioCapturerWrapper> innerAudioCapture);
     int32_t StopInnerAudioCapture();
     void SetWindowIdList(uint64_t windowId);
