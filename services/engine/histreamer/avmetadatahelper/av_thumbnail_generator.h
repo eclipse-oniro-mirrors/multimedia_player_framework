@@ -18,6 +18,7 @@
 
 #include <unordered_map>
 #include <set>
+#include <deque>
 #include <condition_variable>
 #include <mutex>
 #include <nocopyable.h>
@@ -69,6 +70,9 @@ private:
     std::shared_ptr<Meta> trackInfo_;
     std::mutex mutex_;
     std::mutex queueMutex_;
+    std::mutex dtsQueMutex_;
+    FileType fileType_ = FileType::UNKNOW;
+    std::deque<int64_t> inputBufferDtsQue_;
     std::condition_variable cond_;
     std::condition_variable bufferAvailableCond_;
     std::atomic<uint32_t> bufferIndex_;
@@ -85,6 +89,9 @@ private:
 
     Status InitDecoder();
     std::shared_ptr<Meta> GetVideoTrackInfo();
+    void SetDemuxerOutputBufferPts(std::shared_ptr<AVBuffer> &outputBuffer);
+    void GetInputBufferDts(std::shared_ptr<AVBuffer> &inputBuffer);
+    void SetDecoderOutputBufferPts(std::shared_ptr<AVBuffer> &outputBuffer);
     void ConvertToAVSharedMemory();
     void ConvertP010ToNV12(
         const sptr<SurfaceBuffer> &surfaceBuffer, uint8_t *dstNV12, int32_t strideWidth, int32_t strideHeight);
@@ -114,7 +121,7 @@ private:
     void HandleFetchFrameAtTimeRes();
 
     void PauseFetchFrame();
-    void GetDuration();
+    void InitMediaInfoFromGlobalMeta();
     int64_t ReadLoop();
     void FlushBufferQueue();
     int64_t StopTask();

@@ -336,6 +336,70 @@ HWTEST_F(AVThumbnailGeneratorUnitTest, CopySurfaceBufferInfo, TestSize.Level1)
     EXPECT_EQ(surfaceBuffer1, nullptr);
 }
 
+/**
+ * @tc.name: AcquireAvailableInputBuffer_AVI
+ * @tc.desc: AcquireAvailableInputBuffer_AVI
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVThumbnailGeneratorUnitTest, AcquireAvailableInputBuffer_AVI, TestSize.Level1)
+{
+    mockInputBufferQueueConsumer_ = new MockAVBufferQueueConsumer();
+    EXPECT_CALL(*mockInputBufferQueueConsumer_, AcquireBuffer(_))
+        .WillOnce([](std::shared_ptr<AVBuffer>& outBuffer) {
+            outBuffer = std::make_shared<AVBuffer>();
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            return Status::OK;
+        });
+    avThumbnailGenerator_->inputBufferQueueConsumer_ = mockInputBufferQueueConsumer_;
+    avThumbnailGenerator_->videoDecoder_ = nullptr;
+    avThumbnailGenerator_->AcquireAvailableInputBuffer();
+    EXPECT_EQ(avThumbnailGenerator_->fileType_, FileType::UNKNOW);
+    avThumbnailGenerator_->fileType_ = FileType::AVI;
+    EXPECT_CALL(*mockInputBufferQueueConsumer_, AcquireBuffer(_))
+        .WillOnce([](std::shared_ptr<AVBuffer>& outBuffer) {
+            outBuffer = std::make_shared<AVBuffer>();
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            return Status::OK;
+        });
+    avThumbnailGenerator_->AcquireAvailableInputBuffer();
+    EXPECT_EQ(avThumbnailGenerator_->inputBufferDtsQue_.empty(), false);
+}
+
+/**
+ * @tc.name: OnOutputBufferAvailable_AVI
+ * @tc.desc: OnOutputBufferAvailable_AVI
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVThumbnailGeneratorUnitTest, OnOutputBufferAvailable_AVI, TestSize.Level1)
+{
+    uint32_t index = 1;
+    std::shared_ptr<AVBuffer> buffer = std::make_shared<AVBuffer>();
+    buffer->pts_ = 10;
+    buffer->dts_ = 20;
+    ASSERT_NE(nullptr, buffer);
+    avThumbnailGenerator_->videoDecoder_ = nullptr;
+    avThumbnailGenerator_->OnOutputBufferAvailable(index, buffer);
+    EXPECT_EQ(avThumbnailGenerator_->fileType_, FileType::UNKNOW);
+    avThumbnailGenerator_->fileType_ = FileType::AVI;
+    ASSERT_NE(nullptr, buffer);
+    EXPECT_EQ(avThumbnailGenerator_->inputBufferDtsQue_.empty(), true);
+    avThumbnailGenerator_->OnOutputBufferAvailable(index, buffer);
+    EXPECT_EQ(buffer->pts_, buffer->dts_);
+    int64_t dts = 11;
+    avThumbnailGenerator_->inputBufferDtsQue_.push_back(dts);
+    EXPECT_EQ(avThumbnailGenerator_->inputBufferDtsQue_.empty(), false);
+    ASSERT_NE(nullptr, buffer);
+    avThumbnailGenerator_->OnOutputBufferAvailable(index, buffer);
+    EXPECT_EQ(buffer->pts_, dts);
+
+    EXPECT_EQ(avThumbnailGenerator_->inputBufferQueueConsumer_, nullptr);
+    avThumbnailGenerator_->FlushBufferQueue();
+    EXPECT_EQ(avThumbnailGenerator_->inputBufferDtsQue_.empty(), true);
+    int64_t dtss = 22;
+    avThumbnailGenerator_->inputBufferDtsQue_.push_back(dtss);
+    avThumbnailGenerator_->FlushBufferQueue();
+    EXPECT_EQ(avThumbnailGenerator_->inputBufferDtsQue_.empty(), true);
+}
 }  // namespace Test
 }  // namespace Media
 }  // namespace OHOS
