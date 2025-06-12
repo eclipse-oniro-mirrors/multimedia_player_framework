@@ -18,12 +18,6 @@
 
 #include <string>
 
-const std::vector<std::string> ALL_PERMISSION_LIST {
-    "ohos.permission.MICROPHONE",
-    "ohos.permission.ACCESS_NOTIFICATION_POLICY",
-    "ohos.permission.VIBRATE"
-};
-
 namespace OHOS {
 namespace Media {
     uint64_t GetTokenIdFromProcess(const std::string &process);

@@ -31,7 +31,7 @@ constexpr int32_t MIN_WAITING_TIME_FOR_VIBRATOR = 1200; // ms
 constexpr uint64_t MILLISECONDS_FOR_ONE_SECOND = 1000; // ms
 constexpr int32_t PLAYER_BUFFER_TIME = 50; // ms
 constexpr int32_t MAX_WAITING_LOOP_COUNT = 10;
-constexpr int32_t WAIT_VIBRATOR_CANCEL_TIME = 50; //ms
+constexpr int32_t WAIT_VIBRATOR_CANCEL_TIME_MS = 50; //ms
 #endif
 
 int64_t GetCurrentTimeMillis()
@@ -588,7 +588,7 @@ int32_t AudioHapticVibratorImpl::SeekAndRestart()
     auto duration = GetCurrentTimeMillis() - patternStartTime_;
     MEDIA_LOGI("AudioHapticVibratorImpl::SeekAndRestart vibrationTimeElapsed_: %{public}d duration: %{public}" PRId64,
         vibrationTimeElapsed_.load(), duration);
-    int32_t result = Sensors::SeekTimeOnPackage(vibrationTimeElapsed_ + duration + WAIT_VIBRATOR_CANCEL_TIME,
+    int32_t result = Sensors::SeekTimeOnPackage(vibrationTimeElapsed_ + duration + WAIT_VIBRATOR_CANCEL_TIME_MS,
         *vibratorPkg_, *seekVibratorPkg_);
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result,
         "AudioHapticVibratorImpl::SeekAndRestart SeekTimeOnPackage error");
@@ -597,7 +597,7 @@ int32_t AudioHapticVibratorImpl::SeekAndRestart()
     vibratorTime_.store(vibrationTimeElapsed_ + duration);
     // cancel is async, so should wait for 50ms then restart
     (void)Sensors::Cancel();
-    std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_VIBRATOR_CANCEL_TIME));
+    std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_VIBRATOR_CANCEL_TIME_MS));
     vibrateCV_.notify_one();
     return MSERR_OK;
 }

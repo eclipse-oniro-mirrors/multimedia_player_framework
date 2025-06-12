@@ -15,6 +15,11 @@
 
 #include "audio_haptic_manager_impl.h"
 
+#include <cstdint>
+#include <chrono>
+#include <unistd.h>
+#include <random>
+
 #include "audio_haptic_player_impl.h"
 
 #include "audio_haptic_log.h"
@@ -22,11 +27,6 @@
 
 #include "isoundpool.h"
 #include "player.h"
-
-#include <cstdint>
-#include <chrono>
-#include <unistd.h>
-#include <random>
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, "AudioHapticManagerImpl"};
@@ -91,13 +91,13 @@ static int32_t GenerateSyncId()
     static constexpr uint32_t timeMask = (1 << timeBits) - 1;    // Mask for time difference (0xFFFFFF for 24 bits)
 
     static thread_local pid_t pid = getpid();
-    static thread_local auto start_time = std::chrono::steady_clock::now();
+    static thread_local auto startTime = std::chrono::steady_clock::now();
     static thread_local std::mt19937 gen(std::random_device{}());
     // Use constants to define the distribution range
     static thread_local std::uniform_int_distribution<uint16_t> dist(0, randomMask);
 
     auto now = std::chrono::steady_clock::now();
-    auto duration = now - start_time;
+    auto duration = now - startTime;
     auto micros = std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
 
     uint32_t pidUnsigned = static_cast<uint32_t>(pid);

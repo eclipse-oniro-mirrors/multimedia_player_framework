@@ -26,7 +26,13 @@ using namespace Security::AccessToken;
 using Security::AccessToken::AccessTokenID;
 
 namespace {
-    static const uint64_t SHELL_TOKEN_ID = IPCSkeleton::GetSelfTokenID();
+static const uint64_t SHELL_TOKEN_ID = IPCSkeleton::GetSelfTokenID();
+
+const std::vector<std::string> ALL_PERMISSION_LIST {
+    "ohos.permission.MICROPHONE",
+    "ohos.permission.ACCESS_NOTIFICATION_POLICY",
+    "ohos.permission.VIBRATE"
+};
 }
 
 static uint64_t GetTokenId(const AtmToolsParamInfo &info)
