@@ -900,6 +900,12 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
         GetBoxSelectedFromJson(root, content, std::string("checkBoxSelected"), server->checkBoxSelected_);
         MEDIA_LOGI("ReportAVScreenCaptureUserChoice checkBoxSelected: %{public}d", server->checkBoxSelected_);
 
+        GetBoxSelectedFromJson(root, content, std::string("isInnerAudioBoxSelected"),
+            server->isInnerAudioBoxSelected_);
+        MEDIA_LOGI("ReportAVScreenCaptureUserChoice showShareSystemAudioBox:%{public}d,"
+            "isInnerAudioBoxSelected:%{public}d", server->showShareSystemAudioBox_,
+            server->isInnerAudioBoxSelected_);
+
         if (USER_CHOICE_ALLOW.compare(choice) == 0) {
             PrepareSelectWindow(root, server);
             int32_t ret = server->OnReceiveUserPrivacyAuthority(true);
@@ -1600,6 +1606,10 @@ int32_t ScreenCaptureServer::StartStreamInnerAudioCapture()
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartAudioCapture innerCapture failed");
     }
     innerAudioCapture_ = innerCapture;
+    if (showShareSystemAudioBox_ && !isInnerAudioBoxSelected_ && innerAudioCapture_) {
+        MEDIA_LOGI("StartStreamInnerAudioCapture set isMute");
+        innerAudioCapture_->SetIsMute(true);
+    }
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartStreamInnerAudioCapture OK.", FAKE_POINTER(this));
     return MSERR_OK;
 }
@@ -1641,10 +1651,14 @@ int32_t ScreenCaptureServer::StartFileInnerAudioCapture()
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartFileInnerAudioCapture failed");
     }
     innerAudioCapture_ = innerCapture;
+    if (showShareSystemAudioBox_ && !isInnerAudioBoxSelected_ && innerAudioCapture_) {
+        MEDIA_LOGI("StartFileInnerAudioCapture set isMute");
+        innerAudioCapture_->SetIsMute(true);
+    }
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartFileInnerAudioCapture OK.", FAKE_POINTER(this));
     return MSERR_OK;
 }
- 
+
 int32_t ScreenCaptureServer::StartFileMicAudioCapture()
 {
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartFileMicAudioCapture start, dataType:%{public}d, "
@@ -1975,9 +1989,12 @@ int32_t ScreenCaptureServer::InitAudioCap(AudioCaptureInfo audioInfo)
         captureConfig_.audioInfo.innerCapInfo = audioInfo;
         avType_ = (avType_ == AVScreenCaptureAvType::INVALID_TYPE) ? AVScreenCaptureAvType::AUDIO_TYPE :
             AVScreenCaptureAvType::AV_TYPE;
+        showShareSystemAudioBox_ = true;
+        MEDIA_LOGI("InitAudioCap set isInnerAudioBoxSelected true.");
     }
-    MEDIA_LOGI("InitAudioCap success sampleRate:%{public}d, channels:%{public}d, source:%{public}d, state:%{public}d",
-        audioInfo.audioSampleRate, audioInfo.audioChannels, audioInfo.audioSource, audioInfo.state);
+    MEDIA_LOGI("InitAudioCap success sampleRate:%{public}d, channels:%{public}d, source:%{public}d, state:%{public}d,"
+        "showShareSystemAudioBox:%{public}d", audioInfo.audioSampleRate, audioInfo.audioChannels,
+        audioInfo.audioSource, audioInfo.state, showShareSystemAudioBox_);
     return MSERR_OK;
 }
 
@@ -2292,6 +2309,7 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
         want.SetParam("sessionId", sessionId_);
         want.SetParam("showSensitiveCheckBox", showSensitiveCheckBox_);
         want.SetParam("checkBoxSelected", checkBoxSelected_);
+        want.SetParam("showShareSystemAudioBox", showShareSystemAudioBox_);
         SendConfigToUIParams(want);
         ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want);
         MEDIA_LOGI("StartAbility end %{public}d, DeviceType : PC", ret);
