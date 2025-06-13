@@ -287,11 +287,10 @@ void HiTransCoderImpl::ConfigureDefaultParameter()
 void HiTransCoderImpl::ConfigureVideoDefaultEncFormat()
 {
     std::string videoMime;
-    if (videoEncFormat_->GetData(Tag::MIME_TYPE, videoMime)) {
-        MEDIA_LOG_I("VideoMime is: " PUBLIC_LOG_S, videoMime.c_str());
-    }
+    videoEncFormat_->GetData(Tag::MIME_TYPE, videoMime);
     FALSE_RETURN_NOLOG(videoMime != Plugins::MimeType::VIDEO_HEVC && videoMime != Plugins::MimeType::VIDEO_AVC);
-    MEDIA_LOG_I("Set the default videoEnc format to AVC");
+    MEDIA_LOG_I("Set the default videoEnc format, " PUBLIC_LOG_S " to " PUBLIC_LOG_S, videoMime.c_str(),
+        Plugins::MimeType::VIDEO_AVC);
     videoEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::VIDEO_AVC);
     videoEncFormat_->Set<Tag::VIDEO_H264_PROFILE>(Plugins::VideoH264Profile::BASELINE);
     videoEncFormat_->Set<Tag::VIDEO_H264_LEVEL>(32); // 32: LEVEL 3.2
@@ -300,11 +299,10 @@ void HiTransCoderImpl::ConfigureVideoDefaultEncFormat()
 void HiTransCoderImpl::ConfigureAudioDefaultEncFormat()
 {
     std::string audioMime;
-    if (audioEncFormat_->GetData(Tag::MIME_TYPE, audioMime)) {
-        MEDIA_LOG_I("AudioMime is: " PUBLIC_LOG_S, audioMime.c_str());
-    }
+    audioEncFormat_->GetData(Tag::MIME_TYPE, audioMime);
     FALSE_RETURN_NOLOG(audioMime != Plugins::MimeType::AUDIO_AAC);
-    MEDIA_LOG_I("Set the default audioEnc format to AAC");
+    MEDIA_LOG_I("Set the default audioEnc format, " PUBLIC_LOG_S " to " PUBLIC_LOG_S, audioMime.c_str(),
+        Plugins::MimeType::AUDIO_AAC);
     audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_AAC);
 }
 
@@ -498,16 +496,17 @@ int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
         }
         case TransCoderPublicParamType::VIDEO_RECTANGLE: {
             ret = ConfigureVideoWidthHeight(transCoderParam);
-            ConfigureVideoBitrate();
+            if (!isConfiguredVideoBitrate_) {
+                ConfigureVideoBitrate();
+            }
             break;
         }
         case TransCoderPublicParamType::VIDEO_BITRATE: {
             VideoBitRate videoBitrate = static_cast<const VideoBitRate&>(transCoderParam);
-            if (videoBitrate.bitRate <= 0) {
-                return MSERR_OK;
-            }
+            FALSE_RETURN_V_MSG(videoBitrate.bitRate > 0, MSERR_OK, "Invalid video bitrate");
             MEDIA_LOG_I("HiTransCoderImpl::Configure videoBitRate %{public}d", videoBitrate.bitRate);
             videoEncFormat_->Set<Tag::MEDIA_BITRATE>(videoBitrate.bitRate);
+            isConfiguredVideoBitrate_ = true;
             break;
         }
         case TransCoderPublicParamType::COLOR_SPACE_FMT: {

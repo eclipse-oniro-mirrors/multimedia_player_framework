@@ -125,6 +125,7 @@ private:
     int32_t inputVideoHeight_ = 0;
     bool isExistVideoTrack_ = false;
     bool isNeedVideoResizeFilter_ = false;
+    bool isConfiguredVideoBitrate_ = false;
     std::atomic<int32_t> durationMs_{-1};
 
     uint64_t instanceId_ = 0;
