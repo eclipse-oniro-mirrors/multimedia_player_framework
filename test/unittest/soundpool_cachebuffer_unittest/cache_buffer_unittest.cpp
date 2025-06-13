@@ -211,7 +211,7 @@ HWTEST_F(CacheBufferUnitTest, OnWriteData_001, TestSize.Level1)
 {
     EXPECT_CALL(*mockAudioRenderer_, Stop()).WillOnce(Return(true));
     EXPECT_CALL(*mockAudioRenderer_, Release()).WillOnce(Return(true));
-    EXPECT_CALL(*mockAudioRenderer_, GetBufferDesc(_)).WillOnce(Return(AudioStandard::SUCCESS));
+    EXPECT_CALL(*mockAudioRenderer_, GetBufferDesc(_)).WillRepeatedly(Return(AudioStandard::SUCCESS));
     cacheBuffer_->audioRenderer_ = std::move(mockAudioRenderer_);
     cacheBuffer_->isRunning_.store(true);
     cacheBuffer_->isReadyToStopAudioRenderer_.store(false);
