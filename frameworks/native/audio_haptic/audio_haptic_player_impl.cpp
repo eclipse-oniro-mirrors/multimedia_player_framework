@@ -29,7 +29,6 @@ namespace OHOS {
 namespace Media {
 const int32_t LOAD_WAIT_SECONDS = 2;
 const int32_t LOAD_WAIT_SECONDS_FOR_LOOP = 40;
-const int32_t ERR_OPERATE_NOT_ALLOWED = 5400102;
 
 std::mutex AudioHapticPlayerFactory::createPlayerMutex_;
 
