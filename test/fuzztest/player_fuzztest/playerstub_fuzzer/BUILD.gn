@@ -31,7 +31,6 @@ ohos_fuzztest("PlayerStubFuzzTest") {
     "../../../../test/fuzztest/player_fuzztest",
     "../../../../interfaces/inner_api/native",
     "../../../../test/fuzztest/common",
-    "$MEDIA_PLAYER_GRAPHIC/../graphic_surface/surface/include",
   ]
   cflags = [
     "-std=c++17",

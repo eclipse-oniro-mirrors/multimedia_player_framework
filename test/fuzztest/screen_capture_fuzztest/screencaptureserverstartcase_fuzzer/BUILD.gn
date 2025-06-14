@@ -103,7 +103,6 @@ ohos_fuzztest("ScreenCaptureServerStartCaseFuzzTest") {
     ]
   }
   deps = [
-    "$MEDIA_PLAYER_GRAPHIC/rosen/modules/render_service_client:librender_service_client",
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native:media_client",
     "$MEDIA_ROOT_DIR/services/services:media_service",
     "$MEDIA_ROOT_DIR/services/utils:media_service_utils",
@@ -144,6 +143,7 @@ ohos_fuzztest("ScreenCaptureServerStartCaseFuzzTest") {
     "window_manager:scene_session",
     "window_manager:scene_session_manager",
     "window_manager:session_manager_lite",
+    "graphic_2d:librender_service_client",
   ]
   if (player_framework_support_screen_capture_stopbycall) {
     external_deps += [

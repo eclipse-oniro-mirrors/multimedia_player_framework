@@ -60,7 +60,6 @@ ohos_fuzztest("RecorderSetAudioSourceFuzzTest") {
   }
   deps = [
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native:media_client",
-    "../../../../../../../foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
   ]
   external_deps = [
     "c_utils:utils",
@@ -68,5 +67,6 @@ ohos_fuzztest("RecorderSetAudioSourceFuzzTest") {
     "graphic_surface:sync_fence",
     "hilog:libhilog",
     "player_framework:media_client",
+    "graphic_2d:librender_service_client",
   ]
 }

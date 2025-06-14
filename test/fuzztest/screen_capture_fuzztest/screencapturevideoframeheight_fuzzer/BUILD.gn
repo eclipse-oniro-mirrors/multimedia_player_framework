@@ -58,7 +58,6 @@ ohos_fuzztest("ScreenCaptureVideoFrameHeightFuzzTest") {
     ]
   }
   deps = [
-    "$MEDIA_PLAYER_GRAPHIC/rosen/modules/render_service_client:librender_service_client",
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native:media_client",
   ]
   external_deps = [
@@ -71,5 +70,6 @@ ohos_fuzztest("ScreenCaptureVideoFrameHeightFuzzTest") {
     "graphic_surface:sync_fence",
     "hilog:libhilog",
     "player_framework:media_client",
+    "graphic_2d:librender_service_client",
   ]
 }

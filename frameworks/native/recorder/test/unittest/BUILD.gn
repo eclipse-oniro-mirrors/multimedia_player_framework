@@ -44,7 +44,6 @@ ohos_unittest("recorder_unit_test") {
   }
 
   deps = [
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
   ]
 
@@ -68,6 +67,7 @@ ohos_unittest("recorder_unit_test") {
     "graphic_surface:surface",
     "graphic_surface:sync_fence",
     "hilog:libhilog",
+    "graphic_2d:librender_service_client",
   ]
 
   if (defined(global_parts_info) &&
