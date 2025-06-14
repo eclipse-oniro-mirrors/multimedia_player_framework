@@ -1974,7 +1974,7 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(
         fileSize = lseek(fd, 0, SEEK_END);
         lseek(fd, 0, SEEK_SET);
         if (fileSize > MAX_FILE_SIZE_512M) {
-            MEDIA_LOGE("AddCustomizedToneByFdAndOffset: The file size exceeds 1G.");
+            MEDIA_LOGE("AddCustomizedToneByFdAndOffset: The file size exceeds 512M.");
             return FILE_SIZE_EXCEEDS_LIMIT;
         }
     }

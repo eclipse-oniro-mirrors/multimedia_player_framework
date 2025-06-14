@@ -19,6 +19,7 @@
 #undef private
 #include "context_impl.h"
 #include "tone_attrs.h"
+#include "system_sound_manager_utils.h"
 
 using namespace OHOS::AbilityRuntime;
 using namespace testing::ext;
@@ -1046,9 +1047,9 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetRingtoneAttrs_001, Test
 }
 
 /**
- * @tc.name : Test GetRingtoneAttrsByType API
+ * @tc.name  : Test GetRingtoneAttrsByType API
  * @tc.number: Media_SoundManager_GetRingtoneAttrsByType_001
- * @tc.desc : Test GetRingtoneAttrs interface.
+ * @tc.desc  : Test GetRingtoneAttrs interface.
  */
 HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetRingtoneAttrsByType_001, TestSize.Level2)
 {
@@ -1097,9 +1098,9 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetPresetRingToneAttrByTyp
 }
 
 /**
- * @tc.name : Test OpenToneList API
+ * @tc.name  : Test OpenToneList API
  * @tc.number: Media_SoundManager_OpenToneList_001
- * @tc.desc : Test GetRingtoneAttrs interface.
+ * @tc.desc  : Test GetRingtoneAttrs interface.
  */
 HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_OpenToneList_001, TestSize.Level2)
 {
