@@ -912,6 +912,226 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_AddCustomizedToneByFdAndOf
 }
 
 /**
+ *@tc.name : Test AddCustomizedToneByFdAndOffset API
+ *@tc.number: Media_SoundManager_AddCustomizedToneByFdAndOffset_002
+ *@tc.desc : Test AddCustomizedToneByFdAndOffset interface. Returns attributes of the default system tone.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_AddCustomizedToneByFdAndOffset_002, TestSize.Level2)
+{
+    std::shared_ptr systemSoundManager_ = std::make_shared();
+    std::shared_ptrAbilityRuntime::Context context_ = std::make_shared();
+    std::shared_ptr toneAttrs_ = std::make_shared("default",
+    "default", "default", CUSTOMISED, TONE_CATEGORY_RINGTONE);
+    auto vec = systemSoundManager_->GetAlarmToneAttrList(context_);
+    std::string uri = "";
+    if (vec.size() > 0) {
+        uri = vec[0]->GetUri();
+    }
+    std::shared_ptrDataShare::DataShareHelper dataShareHelper =
+    SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    if (dataShareHelper == nullptr) {
+        std::cout << "dataShareHelper is nullptr"<< std::endl;
+        return;
+    }
+    std::tuple<string, int64_t, SystemSoundError> resultOfOpen = std::make_tuple(uri, INVALID_FD, ERROR_IO);
+    systemSoundManager_->OpenOneFile(dataShareHelper, uri, resultOfOpen);
+    int64_t srcFd = std::get(resultOfOpen);
+    std::string res;
+    toneAttrs_->SetMediaType(ToneMediaType::MEDIA_TYPE_VID);
+    toneAttrs_->SetTitle("06172");
+    toneAttrs_->SetFileName("06172.mp4");
+    res = systemSoundManager_->AddCustomizedToneByFdAndOffset(context_, toneAttrs_, srcFd, 10, 0);
+    EXPECT_EQ(res.empty(), true);
+    toneAttrs_->SetCategory(TONE_CATEGORY_INVALID);
+    res = systemSoundManager_->AddCustomizedToneByFdAndOffset(context_, toneAttrs_, srcFd, 10, 0);
+    EXPECT_EQ(res.empty(), true);
+    toneAttrs_->SetCategory(TONE_CATEGORY_TEXT_MESSAGE);
+    res = systemSoundManager_->AddCustomizedToneByFdAndOffset(context_, toneAttrs_, srcFd, 10, 0);
+    EXPECT_EQ(res.empty(), true);
+    toneAttrs_->SetCategory(TONE_CATEGORY_NOTIFICATION);
+    res = systemSoundManager_->AddCustomizedToneByFdAndOffset(context_, toneAttrs_, srcFd, 10, 0);
+    EXPECT_EQ(res.empty(), true);
+    toneAttrs_->SetCategory(TONE_CATEGORY_ALARM);
+    res = systemSoundManager_->AddCustomizedToneByFdAndOffset(context_, toneAttrs_, srcFd, 10, 0);
+    EXPECT_EQ(res.empty(), true);
+    toneAttrs_->SetCategory(TONE_CATEGORY_CONTACTS);
+    res = systemSoundManager_->AddCustomizedToneByFdAndOffset(context_, toneAttrs_, srcFd, 10, 0);
+    EXPECT_EQ(res.empty(), true);
+}
+/**
+ *@tc.name : Test AddCustomizedToneByFdAndOffset API
+ *@tc.number: Media_SoundManager_AddCustomizedToneByFdAndOffset_003
+ *@tc.desc : Test AddCustomizedToneByFdAndOffset interface. Returns attributes of the default system tone.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_AddCustomizedToneByFdAndOffset_003, TestSize.Level2)
+{
+    AccessToken token;
+    std::shared_ptr systemSoundManager_ = std::make_shared();
+    std::shared_ptrAbilityRuntime::Context context_ = std::make_shared();
+    std::shared_ptr toneAttrs_ = std::make_shared("default",
+    "default", "default", CUSTOMISED, TONE_CATEGORY_RINGTONE);
+    auto vec = systemSoundManager_->GetAlarmToneAttrList(context_);
+    std::string uri = "";
+    if (vec.size() > 0) {
+        uri = vec[0]->GetUri();
+    }
+    std::shared_ptrDataShare::DataShareHelper dataShareHelper =
+    SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    if (dataShareHelper == nullptr) {
+        std::cout << "dataShareHelper is nullptr"<< std::endl;
+    }
+    std::tuple<string, int64_t, SystemSoundError> resultOfOpen = std::make_tuple(uri, INVALID_FD, ERROR_IO);
+    systemSoundManager_->OpenOneFile(dataShareHelper, uri, resultOfOpen);
+    int64_t srcFd = std::get(resultOfOpen);
+    std::string res;
+    toneAttrs_->SetMediaType(ToneMediaType::MEDIA_TYPE_VID);
+    toneAttrs_->SetTitle("06172");
+    toneAttrs_->SetFileName("06172.mp4");
+    res = systemSoundManager_->AddCustomizedToneByFdAndOffset(context_, toneAttrs_, srcFd, 0, 1024);
+    EXPECT_EQ(res.empty(), false);
+    res = systemSoundManager_->AddCustomizedToneByFdAndOffset(context_, toneAttrs_, srcFd, 0, 1024);
+    EXPECT_EQ(res.empty(), false);
+    toneAttrs_->SetTitle("06173");
+    toneAttrs_->SetFileName("06173.mp4");
+    res = systemSoundManager_->AddCustomizedToneByFdAndOffset(context_, toneAttrs_, srcFd, 0, 1024);
+    EXPECT_EQ(res.empty(), false);
+}
+/**
+ *@tc.name : Test GetCurrentRingtoneAttribute API
+ *@tc.number: Media_SoundManager_GetCurrentRingtoneAttribute_001
+ *@tc.desc : Test GetCurrentRingtoneAttribute interface.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetCurrentRingtoneAttribute_001, TestSize.Level2)
+{
+    std::shared_ptr systemSoundManager_ = std::make_shared();
+    std::shared_ptrDataShare::DataShareHelper dataShareHelper =
+    SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    int32_t toneId = 1;
+    RingtoneType ringtoneType = RingtoneType::RINGTONE_TYPE_SIM_CARD_1;
+    int32_t num = 0;
+    systemSoundManager_->UpdateRingtoneUri(dataShareHelper, toneId, ringtoneType, num);
+    ToneAttrs toneAttrs_ = systemSoundManager_->GetCurrentRingtoneAttribute(RINGTONE_TYPE_SIM_CARD_0);
+    EXPECT_EQ(toneAttrs_.GetUri().empty(), false);
+    toneAttrs_ = systemSoundManager_->GetCurrentRingtoneAttribute(static_cast(2));
+    EXPECT_EQ(toneAttrs_.GetUri().empty(), true);
+}
+/**
+ *@tc.name : Test GetRingtoneAttrs API
+ *@tc.number: Media_SoundManager_GetRingtoneAttrs_001
+ *@tc.desc : Test GetRingtoneAttrs interface.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetRingtoneAttrs_001, TestSize.Level2)
+{
+    std::shared_ptr systemSoundManager_ = std::make_shared();
+    bool isProxy = false;
+    DatabaseTool databaseTool = {true, isProxy, nullptr};
+    ToneAttrs toneAttrs_ = systemSoundManager_->GetRingtoneAttrs(databaseTool, RINGTONE_TYPE_SIM_CARD_0);
+    EXPECT_EQ(toneAttrs_.GetUri().empty(), true);
+    std::shared_ptrDataShare::DataShareHelper dataShareHelper =
+    SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    databaseTool = {true, isProxy, dataShareHelper};
+    toneAttrs_ = systemSoundManager_->GetRingtoneAttrs(databaseTool, static_cast(2));
+    EXPECT_EQ(toneAttrs_.GetUri().empty(), false);
+}
+/**
+ *@tc.name : Test GetRingtoneAttrsByType API
+ *@tc.number: Media_SoundManager_GetRingtoneAttrsByType_001
+ *@tc.desc : Test GetRingtoneAttrs interface.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetRingtoneAttrsByType_001, TestSize.Level2)
+{
+    std::shared_ptr systemSoundManager_ = std::make_shared();
+    bool isProxy = false;
+    DatabaseTool databaseTool = {true, isProxy, nullptr};
+    ToneAttrs toneAttrs_ =
+    systemSoundManager_->GetRingtoneAttrsByType(databaseTool, std::to_string(RINGTONE_TYPE_SIM_CARD_0));
+    EXPECT_EQ(toneAttrs_.GetUri().empty(), true);
+    std::shared_ptrDataShare::DataShareHelper dataShareHelper =
+    SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    isProxy = true;
+    databaseTool = {true, isProxy, dataShareHelper};
+    toneAttrs_ = systemSoundManager_->GetRingtoneAttrsByType(databaseTool, std::to_string(RINGTONE_TYPE_SIM_CARD_0));
+    EXPECT_EQ(toneAttrs_.GetUri().empty(), true);
+    isProxy = false;
+    databaseTool = {true, isProxy, dataShareHelper};
+    toneAttrs_ = systemSoundManager_->GetRingtoneAttrsByType(databaseTool, std::to_string(3));
+    EXPECT_EQ(toneAttrs_.GetUri().empty(), true);
+}
+/**
+ *@tc.name : Test GetPresetRingToneAttrByType API
+ *@tc.number: Media_SoundManager_GetPresetRingToneAttrByType_001
+ *@tc.desc : Test GetRingtoneAttrs interface.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetPresetRingToneAttrByType_001, TestSize.Level2)
+{
+    std::shared_ptr systemSoundManager_ = std::make_shared();
+    bool isProxy = false;
+    DatabaseTool databaseTool = {true, isProxy, nullptr};
+    ToneAttrs toneAttrs_ =
+    systemSoundManager_->GetPresetRingToneAttrByType(databaseTool, std::to_string(RINGTONE_TYPE_SIM_CARD_0));
+    EXPECT_EQ(toneAttrs_.GetUri().empty(), true);
+    std::shared_ptrDataShare::DataShareHelper dataShareHelper =
+    SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    isProxy = true;
+    databaseTool = {true, isProxy, dataShareHelper};
+    toneAttrs_ =
+    systemSoundManager_->GetPresetRingToneAttrByType(databaseTool, std::to_string(RINGTONE_TYPE_SIM_CARD_0));
+    EXPECT_EQ(toneAttrs_.GetUri().empty(), true);
+    isProxy = false;
+    databaseTool = {true, isProxy, dataShareHelper};
+    toneAttrs_ = systemSoundManager_->GetPresetRingToneAttrByType(databaseTool, std::to_string(3));
+    EXPECT_EQ(toneAttrs_.GetUri().empty(), true);
+}
+/**
+ *@tc.name : Test OpenToneList API
+ *@tc.number: Media_SoundManager_OpenToneList_001
+ *@tc.desc : Test GetRingtoneAttrs interface.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_OpenToneList_001, TestSize.Level2)
+{
+    std::shared_ptr systemSoundManager_ = std::make_shared();
+    std::vectorstd::string uriList;
+    SystemSoundError errCode;
+    uriList.push_back("/data/storage/el2/base/files/Ringtone/ringtones/06172.mp4");
+    uriList.push_back("/data/storage/el2/base/files/Ringtone/ringtones/06173.mp4");
+    uriList.push_back("/data/storage/el2/base/files/Ringtone/ringtones/06174.mp4");
+    std::vector<std::tuple<std::string, int64_t, SystemSoundError>> resultVec =
+    systemSoundManager_->OpenToneList(uriList, errCode);
+    EXPECT_EQ(errCode, ERROR_OK);
+    for (int i = 0; i < 1024; i++) {
+        uriList.push_back("/data/storage/el2/base/files/Ringtone/ringtones/06174.mp4");
+    }
+    resultVec =
+    systemSoundManager_->OpenToneList(uriList, errCode);
+    EXPECT_EQ(errCode, ERROR_INVALID_PARAM);
+}
+/**
+ *@tc.name : Test RemoveCustomizedToneList API
+ *@tc.number: Media_SoundManager_RemoveCustomizedToneList_001
+ *@tc.desc : Test GetRingtoneAttrs interface.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_RemoveCustomizedToneList_001, TestSize.Level2)
+{
+    std::shared_ptr systemSoundManager_ = std::make_shared();
+    std::vectorstd::string uriList;
+    SystemSoundError errCode;
+    uriList.push_back("/data/storage/el2/base/files/Ringtone/ringtones/06172.mp4");
+    uriList.push_back("/data/storage/el2/base/files/Ringtone/ringtones/06173.mp4");
+    uriList.push_back("/data/storage/el2/base/files/Ringtone/ringtones/06174.mp4");
+    std::vector<std::pair<std::string, SystemSoundError>> resultVec =
+    systemSoundManager_->RemoveCustomizedToneList(uriList, errCode);
+    EXPECT_EQ(errCode, ERROR_OK);
+    AccessToken token;
+    resultVec = systemSoundManager_->RemoveCustomizedToneList(uriList, errCode);
+    EXPECT_EQ(resultVec.size(), 3);
+    for (int i = 0; i < 1024; i++) {
+        uriList.push_back("/data/storage/el2/base/files/Ringtone/ringtones/06174.mp4");
+    }
+    resultVec = systemSoundManager_->RemoveCustomizedToneList(uriList, errCode);
+    EXPECT_EQ(errCode, ERROR_INVALID_PARAM);
+}
+
+/**
  * @tc.name  : Test AddCustomizedToneByFd API
  * @tc.number: Media_SoundManager_AddCustomizedToneByFd_001
  * @tc.desc  : Test AddCustomizedToneByFd interface.
