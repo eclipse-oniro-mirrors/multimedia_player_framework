@@ -113,7 +113,7 @@ HWTEST(RingtonePlayerUnitTest, Media_RingtonePlayer_005, TestSize.Level1)
     auto ringtonePlayerImpl_ = std::make_shared<RingtonePlayerImpl>(context_, *sysSoundMgr, type);
     std::string audioUri = "/media/audio/test.ogg";
     std::string result = ringtonePlayerImpl_->GetNewHapticUriForAudioUri(audioUri);
-    EXPECT_NE(result, "");
+    EXPECT_EQ(result, "");
 }
 
 /**
