@@ -14,6 +14,11 @@
  */
 #include "system_sound_manager_unit_test.h"
 #include "access_token.h"
+#define private public
+#include "../../../system_sound_manager_impl.h"
+#undef private
+#include "context_impl.h"
+#include "tone_attrs.h"
 
 using namespace OHOS::AbilityRuntime;
 using namespace testing::ext;
@@ -915,15 +920,15 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_AddCustomizedToneByFdAndOf
 }
 
 /**
- * @tc.name : Test AddCustomizedToneByFdAndOffset API
+ * @tc.name  : Test AddCustomizedToneByFdAndOffset API
  * @tc.number: Media_SoundManager_AddCustomizedToneByFdAndOffset_004
- * @tc.desc : Test AddCustomizedToneByFdAndOffset interface. Returns attributes of the default system tone.
+ * @tc.desc  : Test AddCustomizedToneByFdAndOffset interface. Returns attributes of the default system tone.
  */
 HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_AddCustomizedToneByFdAndOffset_004, TestSize.Level2)
 {
-    std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared();
-    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared();
-    std::shared_ptr toneAttrs_ = std::make_shared("default",
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+    std::shared_ptr<ToneAttrs> toneAttrs_ = std::make_shared<ToneAttrs>("default",
         "default", "default", CUSTOMISED, TONE_CATEGORY_RINGTONE);
     auto vec = systemSoundManager_->GetAlarmToneAttrList(context_);
     std::string uri = "";
@@ -961,16 +966,17 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_AddCustomizedToneByFdAndOf
     res = systemSoundManager_->AddCustomizedToneByFdAndOffset(context_, toneAttrs_, srcFd, 10, 0);
     EXPECT_EQ(res.empty(), true);
 }
+
 /**
- * @tc.name : Test AddCustomizedToneByFdAndOffset API
+ * @tc.name  : Test AddCustomizedToneByFdAndOffset API
  * @tc.number: Media_SoundManager_AddCustomizedToneByFdAndOffset_005
- * @tc.desc : Test AddCustomizedToneByFdAndOffset interface. Returns attributes of the default system tone.
+ * @tc.desc  : Test AddCustomizedToneByFdAndOffset interface. Returns attributes of the default system tone.
  */
 HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_AddCustomizedToneByFdAndOffset_005, TestSize.Level2)
 {
     AccessToken token;
     std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
-    std::shared_ptrAbilityRuntime::Context context_ = std::make_shared();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
     std::shared_ptr<ToneAttrs> toneAttrs_ = std::make_shared<ToneAttrs>("default",
         "default", "default", CUSTOMISED, TONE_CATEGORY_RINGTONE);
     auto vec = systemSoundManager_->GetAlarmToneAttrList(context_);
@@ -999,10 +1005,11 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_AddCustomizedToneByFdAndOf
     res = systemSoundManager_->AddCustomizedToneByFdAndOffset(context_, toneAttrs_, srcFd, 0, 1024);
     EXPECT_EQ(res.empty(), false);
 }
+
 /**
- * @tc.name : Test GetCurrentRingtoneAttribute API
+ * @tc.name  : Test GetCurrentRingtoneAttribute API
  * @tc.number: Media_SoundManager_GetCurrentRingtoneAttribute_001
- * @tc.desc : Test GetCurrentRingtoneAttribute interface.
+ * @tc.desc  : Test GetCurrentRingtoneAttribute interface.
  */
 HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetCurrentRingtoneAttribute_001, TestSize.Level2)
 {
@@ -1018,10 +1025,11 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetCurrentRingtoneAttribut
     toneAttrs_ = systemSoundManager_->GetCurrentRingtoneAttribute(static_cast<RingtoneType>(2));
     EXPECT_EQ(toneAttrs_.GetUri().empty(), true);
 }
+
 /**
- * @tc.name : Test GetRingtoneAttrs API
+ * @tc.name  : Test GetRingtoneAttrs API
  * @tc.number: Media_SoundManager_GetRingtoneAttrs_001
- * @tc.desc : Test GetRingtoneAttrs interface.
+ * @tc.desc  : Test GetRingtoneAttrs interface.
  */
 HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetRingtoneAttrs_001, TestSize.Level2)
 {
@@ -1036,6 +1044,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetRingtoneAttrs_001, Test
     toneAttrs_ = systemSoundManager_->GetRingtoneAttrs(databaseTool, static_cast<RingtoneType>(2));
     EXPECT_EQ(toneAttrs_.GetUri().empty(), false);
 }
+
 /**
  * @tc.name : Test GetRingtoneAttrsByType API
  * @tc.number: Media_SoundManager_GetRingtoneAttrsByType_001
@@ -1060,10 +1069,11 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetRingtoneAttrsByType_001
     toneAttrs_ = systemSoundManager_->GetRingtoneAttrsByType(databaseTool, std::to_string(3));
     EXPECT_EQ(toneAttrs_.GetUri().empty(), true);
 }
+
 /**
- * @tc.name : Test GetPresetRingToneAttrByType API
+ * @tc.name  : Test GetPresetRingToneAttrByType API
  * @tc.number: Media_SoundManager_GetPresetRingToneAttrByType_001
- * @tc.desc : Test GetRingtoneAttrs interface.
+ * @tc.desc  : Test GetRingtoneAttrs interface.
  */
 HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetPresetRingToneAttrByType_001, TestSize.Level2)
 {
@@ -1078,13 +1088,14 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetPresetRingToneAttrByTyp
     isProxy = true;
     databaseTool = {true, isProxy, dataShareHelper};
     toneAttrs_ =
-    systemSoundManager_->GetPresetRingToneAttrByType(databaseTool, std::to_string(RINGTONE_TYPE_SIM_CARD_0));
+        systemSoundManager_->GetPresetRingToneAttrByType(databaseTool, std::to_string(RINGTONE_TYPE_SIM_CARD_0));
     EXPECT_EQ(toneAttrs_.GetUri().empty(), true);
     isProxy = false;
     databaseTool = {true, isProxy, dataShareHelper};
     toneAttrs_ = systemSoundManager_->GetPresetRingToneAttrByType(databaseTool, std::to_string(3));
     EXPECT_EQ(toneAttrs_.GetUri().empty(), true);
 }
+
 /**
  * @tc.name : Test OpenToneList API
  * @tc.number: Media_SoundManager_OpenToneList_001
@@ -1093,7 +1104,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetPresetRingToneAttrByTyp
 HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_OpenToneList_001, TestSize.Level2)
 {
     std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
-    std::vectorstd::string uriList;
+    std::vector<std::string> uriList;
     SystemSoundError errCode;
     uriList.push_back("/data/storage/el2/base/files/Ringtone/ringtones/06172.mp4");
     uriList.push_back("/data/storage/el2/base/files/Ringtone/ringtones/06173.mp4");
@@ -1104,19 +1115,19 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_OpenToneList_001, TestSize
     for (int i = 0; i < 1024; i++) {
         uriList.push_back("/data/storage/el2/base/files/Ringtone/ringtones/06174.mp4");
     }
-    resultVec =
-    systemSoundManager_->OpenToneList(uriList, errCode);
+    resultVec = systemSoundManager_->OpenToneList(uriList, errCode);
     EXPECT_EQ(errCode, ERROR_INVALID_PARAM);
 }
+
 /**
- * @tc.name : Test RemoveCustomizedToneList API
+ * @tc.name  : Test RemoveCustomizedToneList API
  * @tc.number: Media_SoundManager_RemoveCustomizedToneList_001
- * @tc.desc : Test GetRingtoneAttrs interface.
+ * @tc.desc  : Test GetRingtoneAttrs interface.
  */
 HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_RemoveCustomizedToneList_001, TestSize.Level2)
 {
     std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
-    std::vectorstd::string uriList;
+    std::vector<std::string> uriList;
     SystemSoundError errCode;
     uriList.push_back("/data/storage/el2/base/files/Ringtone/ringtones/06172.mp4");
     uriList.push_back("/data/storage/el2/base/files/Ringtone/ringtones/06173.mp4");
