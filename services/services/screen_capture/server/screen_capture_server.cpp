@@ -1650,6 +1650,12 @@ int32_t ScreenCaptureServer::StartFileInnerAudioCapture()
             std::string(GenerateThreadNameByPrefix("OS_FInnAd")), contentFilter_);
         int32_t ret = innerCapture->Start(appInfo_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartFileInnerAudioCapture failed");
+        if (audioSource_ && audioSource_->GetSpeakerAliveStatus() && !audioSource_->GetIsInVoIPCall() &&
+            IsMicrophoneCaptureRunning()) { // skip only when speaker on, voip off, mic on
+            ret = innerCapture->Stop(); // pause
+            MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " inner stop optimise.", FAKE_POINTER(this));
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartFileInnerAudioCapture pause failed");
+        }
     }
     innerAudioCapture_ = innerCapture;
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartFileInnerAudioCapture OK.", FAKE_POINTER(this));
@@ -1742,12 +1748,9 @@ int32_t ScreenCaptureServer::StartScreenCaptureFile()
             // not return, if start mic capture failed, inner capture will be started
         }
     }
-    if (audioSource_ && !(audioSource_->GetSpeakerAliveStatus() && !audioSource_->GetIsInVoIPCall() &&
-        IsMicrophoneCaptureRunning())) { // skip only when speaker on, voip off, mic on
-        int32_t retInner = StartFileInnerAudioCapture();
-        CHECK_AND_RETURN_RET_LOG(retInner == MSERR_OK, retInner, "StartFileInnerAudioCapture failed, ret:%{public}d,"
-            "dataType:%{public}d", retInner, captureConfig_.dataType);
-    }
+    int32_t retInner = StartFileInnerAudioCapture();
+    CHECK_AND_RETURN_RET_LOG(retInner == MSERR_OK, retInner, "StartFileInnerAudioCapture failed, ret:%{public}d,"
+        "dataType:%{public}d", retInner, captureConfig_.dataType);
     MEDIA_LOGI("StartScreenCaptureFile RecorderServer S");
     ret = recorder_->Start();
     if (ret != MSERR_OK) {
@@ -3260,7 +3263,7 @@ int32_t ScreenCaptureServer::SetMicrophoneOn()
 int32_t ScreenCaptureServer::SetMicrophoneOff()
 {
     int32_t ret = MSERR_UNKNOWN;
-    if (recorderFileAudioType_ == AVScreenCaptureMixMode::MIX_MODE && !innerAudioCapture_) {
+    if (recorderFileAudioType_ == AVScreenCaptureMixMode::MIX_MODE && !IsInnerCaptureRunning()) {
         ret = StartFileInnerAudioCapture();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Start failed");
     }
@@ -3279,7 +3282,7 @@ int32_t ScreenCaptureServer::OnSpeakerAliveStatusChanged(bool speakerAliveStatus
     CHECK_AND_RETURN_RET_LOG(innerAudioCapture_, MSERR_UNKNOWN, "innerAudioCapture_ is nullptr");
     if (!speakerAliveStatus && recorderFileAudioType_ == AVScreenCaptureMixMode::MIX_MODE &&
         innerAudioCapture_->GetAudioCapturerState() == CAPTURER_STOPED) { // back to headset
-        ret = innerAudioCapture_->Start(appInfo_); // Resume
+        ret = StartFileInnerAudioCapture(); // Resume
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Resume failed");
     }
     return MSERR_OK;
@@ -3313,7 +3316,7 @@ int32_t ScreenCaptureServer::OnVoIPStatusChanged(bool isInVoIPCall)
         CHECK_AND_RETURN_RET_LOG(innerAudioCapture_, MSERR_UNKNOWN, "innerAudioCapture is nullptr");
         if (recorderFileAudioType_ == AVScreenCaptureMixMode::MIX_MODE &&
             innerAudioCapture_->GetAudioCapturerState() == CAPTURER_STOPED) {
-            int32_t ret = innerAudioCapture_->Start(appInfo_); // Resume
+            int32_t ret = StartFileInnerAudioCapture(); // Resume
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "OnVoIPStatusChanged innerAudioCapture Resume failed");
         }
     }
@@ -3360,7 +3363,7 @@ int32_t ScreenCaptureServer::OnTelCallStart()
     if (!isInTelCall_.load() && !isInTelCallAudio_.load()) {
         return ret;
     }
-    if (recorderFileAudioType_ == AVScreenCaptureMixMode::MIX_MODE && !innerAudioCapture_) {
+    if (recorderFileAudioType_ == AVScreenCaptureMixMode::MIX_MODE && !IsInnerCaptureRunning()) {
         ret = StartFileInnerAudioCapture();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "tel innerAudioCapture Start failed");
     }
@@ -4801,7 +4804,6 @@ void AudioDataSource::HandleSwitchToSpeakerOptimise(std::shared_ptr<AudioBuffer>
                 innerAudioBuffer->timestamp, lastWriteAudioFramePts_.load());
             innerAudioBuffer = nullptr;
             screenCaptureServer_->StopInnerAudioCapture();
-            screenCaptureServer_->SetInnerAudioCapture(nullptr);
             stableStopInnerSwitchCount_ = 0;
         } else {
             stableStopInnerSwitchCount_++;
