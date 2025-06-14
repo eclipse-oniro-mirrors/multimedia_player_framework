@@ -23,7 +23,7 @@ using namespace Security::AccessToken;
 using Security::AccessToken::AccessTokenID;
 
 inline HapInfoParams testInfoParams = {
-    .bundleName = "com.huawei.hmos.ringtone",
+    .bundleName = "test",
     .userID = 1,
     .instIndex = 0,
     .appIDDesc = "test",
@@ -41,7 +41,7 @@ inline PermissionStateFull testPlaceCallState = {
 
 inline HapPolicyParams testPolicyParams = {
     .apl = APL_SYSTEM_BASIC,
-    .domain = "test.domain.ringtonelibrary",
+    .domain = "test",
     .permList = {},
     .permStateList = { testPlaceCallState },
 };
