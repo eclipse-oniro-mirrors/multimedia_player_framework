@@ -59,7 +59,6 @@ ohos_fuzztest("ScreenCaptureNdkResizeCanvasFuzzTest") {
     ]
   }
   deps = [
-    "$MEDIA_PLAYER_GRAPHIC/rosen/modules/render_service_client:librender_service_client",
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native:media_client",
     "$MEDIA_ROOT_DIR/interfaces/kits/c:native_avscreen_capture",
   ]
@@ -69,6 +68,7 @@ ohos_fuzztest("ScreenCaptureNdkResizeCanvasFuzzTest") {
     "access_token:libtokensetproc_shared",
     "audio_framework:audio_client",
     "av_codec:av_codec_client",
+    "graphic_2d:librender_service_client",
     "graphic_surface:surface",
     "graphic_surface:sync_fence",
     "hilog:libhilog",

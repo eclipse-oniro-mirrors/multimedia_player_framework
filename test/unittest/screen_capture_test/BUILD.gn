@@ -82,7 +82,6 @@ config("screen_capture_test_config") {
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/common/recorder_profiles",
     "$MEDIA_PLAYER_ROOT_DIR/test/unittest/common/include",
     "$MEDIA_PLAYER_ROOT_DIR/test/unittest/screen_capture_test/screen_capture_service_function_unittest/server/include",
-    "$MEDIA_PLAYER_GRAPHIC_SURFACE/interfaces/inner_api/surface",
   ]
 
   defines = []
@@ -103,7 +102,6 @@ ohos_unittest("screen_capture_native_unit_test") {
     "./native/include",
     "$MEDIA_PLAYER_ROOT_DIR/test/unittest/common/include",
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
-    "$MEDIA_PLAYER_GRAPHIC_SURFACE/interfaces/inner_api/surface",
   ]
 
   sanitize = {
