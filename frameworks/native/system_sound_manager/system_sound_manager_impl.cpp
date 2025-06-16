@@ -67,7 +67,7 @@ const int32_t NOT_ENOUGH_ROM = -234;
 const int32_t VIDEOS_NUM_EXCEEDS_SPECIFICATION = -235;
 const int32_t FILE_EXIST = -17;
 const int32_t MAX_VECTOR_LENGTH = 1024;
-const off_t MAX_FILE_SIZE_512M = 512 * 1024 * 1024;
+const off_t MAX_FILE_SIZE_500M = 500 * 1024 * 1024;
 const int32_t PARAM1 = 1;
 const int32_t PARAM2 = 2;
 #ifdef SUPPORT_VIBRATOR
@@ -1975,8 +1975,8 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(
     if (toneAttrs->GetMediaType() == ToneMediaType::MEDIA_TYPE_VID) {
         fileSize = lseek(fd, 0, SEEK_END);
         lseek(fd, 0, SEEK_SET);
-        if (fileSize > MAX_FILE_SIZE_512M) {
-            MEDIA_LOGE("AddCustomizedToneByFdAndOffset: The file size exceeds 512M.");
+        if (fileSize > MAX_FILE_SIZE_500M) {
+            MEDIA_LOGE("AddCustomizedToneByFdAndOffset: The file size exceeds 500M.");
             return FILE_SIZE_EXCEEDS_LIMIT;
         }
     }
