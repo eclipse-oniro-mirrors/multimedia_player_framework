@@ -1241,6 +1241,18 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForPrivacyMaskMode(
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
 
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForCanvasFollowRotation(
+    OH_AVScreenCapture_CaptureStrategy *strategy, bool value)
+{
+    MEDIA_LOGD("OH_AVScreenCapture_StrategyForCanvasFollowRotation S");
+    CHECK_AND_RETURN_RET_LOG(strategy != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input strategy is nullptr!");
+    struct ScreenCaptureStrategyObject *strategyObj = reinterpret_cast<ScreenCaptureStrategyObject *>(strategy);
+    CHECK_AND_RETURN_RET_LOG(strategyObj != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "strategyObj is nullptr");
+    strategyObj->strategy.canvasFollowRotation = value;
+    MEDIA_LOGD("OH_AVScreenCapture_StrategyForCanvasFollowRotation E");
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}
+
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetSelectionCallback(struct OH_AVScreenCapture *capture,
     OH_AVScreenCapture_OnUserSelected callback, void *userData)
 {

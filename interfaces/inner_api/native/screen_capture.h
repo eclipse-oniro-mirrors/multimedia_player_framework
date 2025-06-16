@@ -182,6 +182,7 @@ struct ScreenCaptureStrategy {
     bool enableDeviceLevelCapture = false;
     bool keepCaptureDuringCall = false;
     int32_t strategyForPrivacyMaskMode = 0;
+    bool canvasFollowRotation = false;
     bool enableBFrame = false;
     bool setByUser = false;
 };

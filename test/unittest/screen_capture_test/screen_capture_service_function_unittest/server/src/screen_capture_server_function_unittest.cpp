@@ -2651,5 +2651,14 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UserSelected_002, TestSize.Level2)
     screenCaptureServer_->PostStartScreenCaptureSuccessAction();
     EXPECT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::STARTED);
 }
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetVirtualScreenAutoRotation_001, TestSize.Level2)
+{
+    screenCaptureServer_->displayScreenId_ = 0;
+    screenCaptureServer_->captureConfig_.dataType = DataType::CAPTURE_FILE;
+    EXPECT_NE(screenCaptureServer_->SetVirtualScreenAutoRotation(), MSERR_OK);
+    screenCaptureServer_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
+    EXPECT_EQ(screenCaptureServer_->SetVirtualScreenAutoRotation(), MSERR_OK);
+}
 } // Media
 } // OHOS

@@ -394,6 +394,13 @@ int32_t ScreenCaptureCapiMock::StrategyForKeepCaptureDuringCall(bool value)
     return OH_AVScreenCapture_StrategyForKeepCaptureDuringCall(strategy_, value);
 }
 
+int32_t ScreenCaptureCapiMock::SetCanvasFollowRotationStrategy(bool value)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(strategy_ != nullptr, MSERR_UNKNOWN,
+        "OH_AVScreenCapture_StrategyForCanvasFollowRotation failed");
+    return OH_AVScreenCapture_StrategyForCanvasFollowRotation(strategy_, value);
+}
+
 int32_t ScreenCaptureCapiMock::SetCaptureStrategy()
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
