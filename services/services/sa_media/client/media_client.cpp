@@ -42,6 +42,7 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaClient"};
+    constexpr int32_t LOAD_TIME = 30;
 }
 
 namespace OHOS {
@@ -327,7 +328,12 @@ sptr<IStandardMediaService> MediaClient::GetMediaProxy()
     samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     CHECK_AND_RETURN_RET_LOG(samgr != nullptr, nullptr, "system ability manager is nullptr.");
     sptr<IRemoteObject> object = nullptr;
-    object = samgr->GetSystemAbility(OHOS::PLAYER_DISTRIBUTED_SERVICE_ID);
+    object = samgr->CheckSystemAbility(OHOS::PLAYER_DISTRIBUTED_SERVICE_ID);
+    if (object == nullptr) {
+        MEDIA_LOGI("Loading media_service begin");
+        object = samgr->LoadSystemAbility(OHOS::PLAYER_DISTRIBUTED_SERVICE_ID, LOAD_TIME);
+        MEDIA_LOGI("Loading media_service end");
+    }
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "media object is nullptr.");
 
     mediaProxy_ = iface_cast<IStandardMediaService>(object);
