@@ -74,6 +74,7 @@ ohos_fuzztest("RecorderServiceStubFuzzTest") {
     "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "media_foundation:media_foundation",
   ]
 
   part_name = "player_framework"

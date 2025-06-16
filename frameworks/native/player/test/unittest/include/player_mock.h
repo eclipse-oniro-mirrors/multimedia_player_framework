@@ -21,7 +21,7 @@
 #include "media_data_source_test_seekable.h"
 #include "loader_callback_mock.h"
 #include "unittest_log.h"
-#include "window.h"
+#include "wm/window.h"
 
 namespace OHOS {
 namespace Media {

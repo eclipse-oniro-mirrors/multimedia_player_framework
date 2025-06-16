@@ -17,7 +17,7 @@
 #define TEST_PLAYER_H
 
 #include "player.h"
-#include "window.h"
+#include "wm/window.h"
 #include "surface.h"
 
 namespace OHOS {
