@@ -1842,7 +1842,9 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByExternalUri(
         fdHead.clear();
         return fdHead;
     }
-    return AddCustomizedToneByFd(context, toneAttrs, srcFd);
+    std::string result = AddCustomizedToneByFd(context, toneAttrs, srcFd);
+    close(srcFd);
+    return result;
 }
 
 std::string SystemSoundManagerImpl::AddCustomizedToneByFd(const std::shared_ptr<AbilityRuntime::Context> &context,
