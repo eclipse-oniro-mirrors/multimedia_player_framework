@@ -166,7 +166,6 @@ ohos_unittest("screen_capture_capi_unit_test") {
     "$MEDIA_PLAYER_ROOT_DIR/test/unittest/common/include",
     "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/common",
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
-    "$MEDIA_PLAYER_GRAPHIC_SURFACE/interfaces/inner_api/surface",
   ]
 
   sanitize = {
