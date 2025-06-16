@@ -169,7 +169,7 @@ int32_t SystemSoundVibrator::StartVibratorForRingtone(const std::string &hapticU
     return MSERR_OK;
 }
 
-int32_t SystemSoundVibrator::VibrateForRingtone(const std::string &hapticUri)
+int32_t SystemSoundVibrator::VibrateForRingtone(const std::string hapticUri)
 {
     std::unique_lock<std::mutex> lock(g_vibrateMutex);
     MEDIA_LOGI("VibrateForRingtone with hapticUri [%{public}s] for ringtone", hapticUri.c_str());
@@ -254,13 +254,12 @@ int32_t SystemSoundVibrator::StopVibrator()
         g_isRunning = false;
         g_vibrateCV.notify_all();
     }
-    if (g_vibrateThread != nullptr) {
-        lock.unlock();
-        g_vibrateThread->join();
-        lock.lock();
+    if (g_vibrateThread != nullptr && g_vibrateThread->joinable()) {
+        g_vibrateThread->detach();
         g_vibrateThread = nullptr;
     }
     g_hapticUri = "";
+
 #ifdef SUPPORT_VIBRATOR
     result = Sensors::Cancel();
     MEDIA_LOGI("StopVibrator: %{public}d", result);
