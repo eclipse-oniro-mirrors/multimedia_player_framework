@@ -15,7 +15,7 @@
 
 #include "screen_capture_capi_mock.h"
 #include "native_mfmagic.h"
-#include "native_window.h"
+#include "external_window.h"
 
 using namespace std;
 using namespace OHOS;
@@ -227,8 +227,7 @@ int32_t ScreenCaptureCapiMock::StartScreenCaptureWithSurface(const std::any& val
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
     sptr<Surface> surface = std::any_cast<sptr<Surface>>(value);
-    OHNativeWindow* nativeWindow = new OHNativeWindow();
-    nativeWindow->surface = surface;
+    OHNativeWindow* nativeWindow = OH_NativeWindow_CreateNativeWindow(surface);
     return OH_AVScreenCapture_StartScreenCaptureWithSurface(screenCapture_, nativeWindow);
 }
 

@@ -66,6 +66,7 @@ ohos_fuzztest("ScreenCaptureVideoFrameWidthFuzzTest") {
     "access_token:libtokensetproc_shared",
     "audio_framework:audio_client",
     "av_codec:av_codec_client",
+    "graphic_2d:librender_service_client",
     "graphic_surface:surface",
     "graphic_surface:sync_fence",
     "hilog:libhilog",

@@ -27,7 +27,6 @@ ohos_fuzztest("RecorderSetAudioEncoderFuzzTest") {
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_ROOT_DIR/services/utils/include",
     "$MEDIA_ROOT_DIR/test/fuzztest/common/",
-    "$MEDIA_PLAYER_GRAPHIC/interfaces/innerkits/surface",
   ]
   cflags = [
     "-std=c++17",
@@ -63,6 +62,7 @@ ohos_fuzztest("RecorderSetAudioEncoderFuzzTest") {
   ]
   external_deps = [
     "c_utils:utils",
+    "graphic_2d:librender_service_client",
     "graphic_surface:surface",
     "graphic_surface:sync_fence",
     "hilog:libhilog",
