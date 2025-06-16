@@ -74,7 +74,6 @@ ohos_unittest("service_dump_manager_unittest") {
     "googletest:gtest",
     "hilog:libhilog",
     "ipc:ipc_core",
-    "memory_utils:libdmabufheap",
     "media_foundation:media_foundation",
   ]
 }
