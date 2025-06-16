@@ -245,7 +245,7 @@ void Stream::DealPlayParamsBeforePlay(const PlayParams &playParams)
     audioRenderer_->SetVolume(playParams.leftVolume);
     priority_ = playParams.priority;
     audioRenderer_->SetParallelPlayFlag(playParams.parallelPlayFlag);
-    audioRenderer_->SetAudioHapticSyncId(playParams.audioHapticSyncId);
+    audioRenderer_->SetAudioHapticsSyncId(playParams.audioHapticsSyncId);
 }
 
 int32_t Stream::DoPlay()

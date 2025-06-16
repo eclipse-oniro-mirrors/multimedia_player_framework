@@ -31,7 +31,7 @@ struct PlayParams {
     int32_t priority = 0;
     bool parallelPlayFlag = false;
     std::string cacheDir;
-    int32_t audioHapticSyncId = 0;
+    int32_t audioHapticsSyncId = 0;
 };
 
 class ISoundPoolCallback;

@@ -202,5 +202,31 @@ HWTEST_F(SoundPoolStreamUnitTest, StreamAddStopTaskUnittest_001, TestSize.Level0
     stream_->AddStopTask();
     EXPECT_EQ(stream_->startStopFlag_.load(), true);
 }
+
+// @tc.name     Test DealPlayParamsBeforePlay API
+// @tc.number   StreamDealPlayParamsBeforePlayUnittest_001
+HWTEST_F(SoundPoolStreamUnitTest, StreamDealPlayParamsBeforePlayUnittest_001, TestSize.Level2)
+{
+    ASSERT_NE(stream_, nullptr);
+    auto audioRenderer = std::make_unique<MockAudioRenderer>();
+    EXPECT_CALL(*(audioRenderer), SetRenderRate(_)).Times(1).WillRepeatedly(testing::Return(0));
+    EXPECT_CALL(*(audioRenderer), SetVolume(_)).Times(1).WillRepeatedly(testing::Return(0));
+    EXPECT_CALL(*(audioRenderer), SetOffloadAllowed(_)).Times(1).WillRepeatedly(testing::Return(0));
+    EXPECT_CALL(*(audioRenderer), SetParallelPlayFlag(_)).Times(1).WillRepeatedly(testing::Return(0));
+    EXPECT_CALL(*(audioRenderer), SetAudioHapticsSyncId(_)).Times(1).WillRepeatedly(testing::Return());
+    stream_->audioRenderer_ = std::move(audioRenderer);
+    int32_t audioHapticsSyncId = 1;
+    struct PlayParams playParameters;
+    playParameters.loop = -1;
+    playParameters.rate = 0;
+    playParameters.leftVolume = 0.5;
+    playParameters.rightVolume = 0.3;
+    playParameters.priority = 1;
+    playParameters.parallelPlayFlag = true;
+    playParameters.audioHapticsSyncId = audioHapticsSyncId;
+    stream_->DealPlayParamsBeforePlay(playParameters);
+    ASSERT_EQ(stream_->loop_, playParameters.loop);
+    ASSERT_EQ(stream_->priority_, playParameters.priority);
+}
 } // namespace Media
 } // namespace OHOS

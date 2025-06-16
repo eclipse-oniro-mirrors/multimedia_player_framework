@@ -138,6 +138,7 @@ public:
     MOCK_METHOD(void, SetFastStatusChangeCallback,
         (const std::shared_ptr<AudioStandard::AudioRendererFastStatusChangeCallback>& callback),
         (override));
+    MOCK_METHOD(void, SetAudioHapticsSyncId, (int32_t audioHapticsSyncId), (override));
 };
 } // namespace Media
 } // namespace OHOS
