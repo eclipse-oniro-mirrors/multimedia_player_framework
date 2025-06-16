@@ -82,7 +82,6 @@ ohos_shared_library("media_avplayer") {
     "av_codec:av_codec_client",
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
-    "ets_runtime:libark_jsruntime",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
@@ -93,6 +92,11 @@ ohos_shared_library("media_avplayer") {
     "qos_manager:qos",
     "samgr:samgr_proxy",
   ]
+  if (defined(ark_hybrid) && ark_hybrid) {
+    external_deps += [ "runtime_core:libarkruntime" ]
+  } else {
+    external_deps += [ "ets_runtime:libark_jsruntime" ]
+  }
 
   if (player_framework_support_video) {
     external_deps += [ "graphic_surface:surface" ]
