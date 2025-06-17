@@ -1483,5 +1483,35 @@ HWTEST_F(HiplayerImplUnitTest, UpdateFlvLiveParams_001, TestSize.Level0)
     EXPECT_EQ(hiplayer_->maxLivingDelayTime_, AVPlayStrategyConstant::START_QUICK_PLAY_THRESHOLD_SECONDS);
     EXPECT_EQ(hiplayer_->bufferDurationForPlaying_, AVPlayStrategyConstant::BUFFER_DURATION_FOR_PLAYING_SECONDS);
 }
+
+/**
+* @tc.name    : Test set audio haptic sync id for audio renderer haptic sync
+* @tc.number  : SetAudioHapticsSyncId_001
+* @tc.desc    : Test set audio haptic sync id
+* @tc.require :
+*/
+HWTEST_F(HiplayerImplUnitTest, SetAudioHapticsSyncId_001, TestSize.Level0)
+{
+    EXPECT_EQ(hiplayer_->audioHapticsSyncId_, 0); // Expect default value
+
+    Format format0;
+    format0.PutIntValue(PlayerKeys::CONTENT_TYPE, AudioStandard::CONTENT_TYPE_UNKNOWN);
+    format0.PutIntValue(PlayerKeys::STREAM_USAGE, AudioStandard::STREAM_USAGE_UNKNOWN);
+    format0.PutIntValue(PlayerKeys::PLAYER_AUDIO_HAPTICS_SYNC_ID, 1); // Call with content type and stream usage
+    hiplayer_->SetParameter(format0);
+    EXPECT_EQ(hiplayer_->audioHapticsSyncId_, 1); // Expect success
+
+    Format format1;
+    format1.PutIntValue(PlayerKeys::PLAYER_AUDIO_HAPTICS_SYNC_ID, 2); // call without
+    hiplayer_->SetParameter(format1);
+    EXPECT_EQ(hiplayer_->audioHapticsSyncId_, 1); // Expect fail, no change
+
+    Format format2;
+    format2.PutIntValue(PlayerKeys::CONTENT_TYPE, AudioStandard::CONTENT_TYPE_UNKNOWN);
+    format2.PutIntValue(PlayerKeys::STREAM_USAGE, AudioStandard::STREAM_USAGE_UNKNOWN);
+    format2.PutIntValue(PlayerKeys::PLAYER_AUDIO_HAPTICS_SYNC_ID, 0); // Call with default value
+    hiplayer_->SetParameter(format2);
+    EXPECT_EQ(hiplayer_->audioHapticsSyncId_, 0); // Expect success
+}
 } // namespace Media
 } // namespace OHOS
