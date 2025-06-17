@@ -124,7 +124,7 @@ private:
     int32_t soundID_ = 0;
     int32_t streamID_ = 0;
     AudioStandard::AudioSampleFormat sampleFormat_ = AudioStandard::AudioSampleFormat::INVALID_WIDTH;
-    AudioStandard:: AudioChannel audioChannel_ = AudioStandard:: AudioChannel::MONO;
+    AudioStandard::AudioChannel audioChannel_ = AudioStandard::AudioChannel::MONO;
     PlayParams playParameters_;
     AudioStandard::AudioRendererInfo audioRendererInfo_;
 

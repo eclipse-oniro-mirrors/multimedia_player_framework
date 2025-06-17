@@ -262,7 +262,6 @@ void HiTransCoderImpl::ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta
             (void)SetValueByType(meta, muxerFormat_);
             meta->GetData(Tag::VIDEO_WIDTH, inputVideoWidth_);
             meta->GetData(Tag::VIDEO_HEIGHT, inputVideoHeight_);
-            UpdateVideoEncFormat(meta);
             isExistVideoTrack_ = true;
             isInitializeVideoEncFormat = true;
         } else if (!isInitializeAudioEncFormat && (trackMime.find("audio/") == 0)) {
@@ -278,16 +277,33 @@ void HiTransCoderImpl::ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta
     }
 }
 
-void HiTransCoderImpl::UpdateVideoEncFormat(const std::shared_ptr<Meta> &meta)
+void HiTransCoderImpl::ConfigureDefaultParameter()
+{
+    ConfigureVideoDefaultEncFormat();
+    ConfigureVideoBitrate();
+    ConfigureAudioDefaultEncFormat();
+}
+ 
+void HiTransCoderImpl::ConfigureVideoDefaultEncFormat()
 {
     std::string videoMime;
-    meta->GetData(Tag::MIME_TYPE, videoMime);
-    MEDIA_LOG_I("videoMime is: " PUBLIC_LOG_S, videoMime.c_str());
+    videoEncFormat_->GetData(Tag::MIME_TYPE, videoMime);
     FALSE_RETURN_NOLOG(videoMime != Plugins::MimeType::VIDEO_HEVC && videoMime != Plugins::MimeType::VIDEO_AVC);
-    MEDIA_LOG_I("set the default videoEnc format to AVC");
+    MEDIA_LOG_I("Set the default videoEnc format, " PUBLIC_LOG_S " to " PUBLIC_LOG_S, videoMime.c_str(),
+        Plugins::MimeType::VIDEO_AVC);
     videoEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::VIDEO_AVC);
     videoEncFormat_->Set<Tag::VIDEO_H264_PROFILE>(Plugins::VideoH264Profile::BASELINE);
     videoEncFormat_->Set<Tag::VIDEO_H264_LEVEL>(32); // 32: LEVEL 3.2
+}
+ 
+void HiTransCoderImpl::ConfigureAudioDefaultEncFormat()
+{
+    std::string audioMime;
+    audioEncFormat_->GetData(Tag::MIME_TYPE, audioMime);
+    FALSE_RETURN_NOLOG(audioMime != Plugins::MimeType::AUDIO_AAC);
+    MEDIA_LOG_I("Set the default audioEnc format, " PUBLIC_LOG_S " to " PUBLIC_LOG_S, audioMime.c_str(),
+        Plugins::MimeType::AUDIO_AAC);
+    audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_AAC);
 }
 
 bool HiTransCoderImpl::SetValueByType(const std::shared_ptr<Meta> &innerMeta, std::shared_ptr<Meta> &outputMeta)
@@ -368,7 +384,7 @@ Status HiTransCoderImpl::ConfigureVideoAudioMetaData()
         return Status::ERROR_NO_TRACK;
     }
     ConfigureMetaDataToTrackFormat(globalInfo, trackInfos);
-    ConfigureVideoBitrate();
+    ConfigureDefaultParameter();
     return Status::OK;
 }
 
@@ -480,16 +496,17 @@ int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
         }
         case TransCoderPublicParamType::VIDEO_RECTANGLE: {
             ret = ConfigureVideoWidthHeight(transCoderParam);
-            ConfigureVideoBitrate();
+            if (!isConfiguredVideoBitrate_) {
+                ConfigureVideoBitrate();
+            }
             break;
         }
         case TransCoderPublicParamType::VIDEO_BITRATE: {
             VideoBitRate videoBitrate = static_cast<const VideoBitRate&>(transCoderParam);
-            if (videoBitrate.bitRate <= 0) {
-                return MSERR_OK;
-            }
+            FALSE_RETURN_V_MSG(videoBitrate.bitRate > 0, MSERR_OK, "Invalid video bitrate");
             MEDIA_LOG_I("HiTransCoderImpl::Configure videoBitRate %{public}d", videoBitrate.bitRate);
             videoEncFormat_->Set<Tag::MEDIA_BITRATE>(videoBitrate.bitRate);
+            isConfiguredVideoBitrate_ = true;
             break;
         }
         case TransCoderPublicParamType::COLOR_SPACE_FMT: {

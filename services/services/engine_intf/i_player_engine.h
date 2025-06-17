@@ -94,7 +94,7 @@ public:
     virtual int32_t Pause(bool isSystemOperation) = 0;
     virtual int32_t Stop() = 0;
     virtual int32_t Reset() = 0;
-    virtual int32_t Freeze() = 0;
+    virtual int32_t Freeze(bool &isNoNeedToFreeze) = 0;
     virtual int32_t UnFreeze() = 0;
     virtual int32_t PauseSourceDownload()
     {
@@ -361,6 +361,10 @@ public:
     virtual int32_t NotifyMemoryExchange(bool /* status */)
     {
         return 0;
+    }
+    virtual void SetEosInLoopForFrozen(bool /* status */)
+    {
+        return ;
     }
 };
 } // namespace Media

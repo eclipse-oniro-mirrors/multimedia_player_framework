@@ -85,7 +85,9 @@ private:
         const std::vector<std::shared_ptr<Meta>> &trackInfos);
     int64_t GetCurrentMillisecond();
     void CollectionErrorInfo(int32_t errCode, const std::string& errMsg);
-    void UpdateVideoEncFormat(const std::shared_ptr<Meta> &meta);
+    void ConfigureDefaultParameter();
+    void ConfigureVideoDefaultEncFormat();
+    void ConfigureAudioDefaultEncFormat();
 
     int32_t appUid_{0};
     int32_t appPid_{0};
@@ -123,6 +125,7 @@ private:
     int32_t inputVideoHeight_ = 0;
     bool isExistVideoTrack_ = false;
     bool isNeedVideoResizeFilter_ = false;
+    bool isConfiguredVideoBitrate_ = false;
     std::atomic<int32_t> durationMs_{-1};
 
     uint64_t instanceId_ = 0;

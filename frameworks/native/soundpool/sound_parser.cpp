@@ -178,6 +178,7 @@ int32_t SoundParser::DoDecode(MediaAVCodec::Format trackFormat)
         CHECK_AND_RETURN_RET_LOG(ret == 0, MSERR_INVALID_VAL, "Failed to Start audioDecorder.");
         MEDIA_LOGI("SoundParser::DoDecode, audioDec_ started, soundID:%{public}d", soundID_);
     }
+    MEDIA_LOGI("SoundParser::DoDecode end, soundID:%{public}d", soundID_);
     return MSERR_OK;
 }
 

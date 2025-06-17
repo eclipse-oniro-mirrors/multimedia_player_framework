@@ -306,6 +306,7 @@ private:
     std::atomic<uint32_t> totalMemoryUage_ {0};
     PlayerProducer playerProducer_ = PlayerProducer::INNER;
     std::atomic<bool> isFrozen_ = false;
+    bool isMemoryExchanged_ = false;
 };
 } // namespace Media
 } // namespace OHOS

@@ -25,6 +25,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "Med
 const std::string TASK_NAME = "OHOS::Media::MediaServiceStub::GetSystemAbility";
 const int32_t TIME_OUT_SECOND = 30; // time out is 30 senconds
 const int32_t RSS_UID = 1096;
+constexpr int32_t MAX_PID_LIST_SIZE = 1000;
 }
 
 namespace OHOS {
@@ -70,7 +71,7 @@ int32_t MediaServiceStub::HandleFreezeStubForPids(MessageParcel &data, MessagePa
     std::set<int32_t> pidList;
     int32_t size = 0;
     CHECK_AND_RETURN_RET_LOG(data.ReadInt32(size), MSERR_INVALID_OPERATION, "Failed to Read Int32");
-    CHECK_AND_RETURN_RET_LOG(size > 0, MSERR_INVALID_VAL, "size is invalid");
+    CHECK_AND_RETURN_RET_LOG(size > 0 && size <= MAX_PID_LIST_SIZE, MSERR_INVALID_VAL, "size is invalid");
 
     for (int32_t i = 0; i < size; i++) {
         int32_t pid = 0;

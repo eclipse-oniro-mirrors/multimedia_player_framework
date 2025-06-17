@@ -25,7 +25,6 @@ ohos_fuzztest("AVmetadataFileFuzzTest") {
   resource_config_file = "../../../../test/fuzztest/resource/ohos_test.xml"
 
   include_dirs = [
-    "../../../../../../../foundation/window/window_manager/interfaces/innerkits/wm",
     "../../../../interfaces/inner_api/native",
     "../../../../services/utils/include",
     "../../../../test/fuzztest/common/",
@@ -59,14 +58,13 @@ ohos_fuzztest("AVmetadataFileFuzzTest") {
       "avmetadatafile_fuzzer.cpp",
     ]
   }
-  deps = [
-    "../../../../../../../foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "../../../../../../../foundation/window/window_manager/wm:libwm",
-  ]
+  deps = []
   external_deps = [
     "c_utils:utils",
+    "graphic_2d:librender_service_client",
     "graphic_surface:surface",
     "hilog:libhilog",
     "player_framework:media_client",
+    "window_manager:libwm",
   ]
 }

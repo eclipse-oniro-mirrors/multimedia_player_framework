@@ -671,17 +671,25 @@ int32_t PlayerServer::HandleFreeze()
     MEDIA_LOGI("PlayerServer HandleFreeze in");
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_INVALID_OPERATION, "playerEngine_ is nullptr");
     ExitSeekContinous(true);
-    int32_t ret = playerEngine_->Freeze();
+    bool isNoNeedToFreeze = false;
+    int32_t ret = playerEngine_->Freeze(isNoNeedToFreeze);
     UpdateFlvLivePauseTime();
     taskMgr_.MarkTaskDone("Freeze done");
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Freeze Failed!");
-
+    if (isNoNeedToFreeze) {
+        CHECK_AND_RETURN_RET_NOLOG(playerCb_ != nullptr, MSERR_OK);
+        playerCb_->SetFreezeFlag(false);
+        return MSERR_OK;
+    }
     return HandleLiteFreeze(), MSERR_OK;
 }
 
 int32_t PlayerServer::HandleLiteFreeze()
 {
-    return playerEngine_->NotifyMemoryExchange(true);
+    CHECK_AND_RETURN_RET_NOLOG(!isMemoryExchanged_, MSERR_OK);
+    auto ret = playerEngine_->NotifyMemoryExchange(true);
+    isMemoryExchanged_ = true;
+    return ret;
 }
 
 int32_t PlayerServer::UnFreeze()
@@ -741,7 +749,10 @@ int32_t PlayerServer::HandleUnFreeze()
 
 int32_t PlayerServer::HandleLiteUnFreeze()
 {
-    return playerEngine_->NotifyMemoryExchange(false);
+    CHECK_AND_RETURN_RET_NOLOG(isMemoryExchanged_, MSERR_OK);
+    auto ret = playerEngine_->NotifyMemoryExchange(false);
+    isMemoryExchanged_ = false;
+    return ret;
 }
 
 int32_t PlayerServer::HandlePauseDemuxer()
@@ -1366,12 +1377,14 @@ void PlayerServer::HandleEos()
                 int64_t endTime = playerEngine_->GetPlayRangeEndTime();
                 PlayerSeekMode seekMode = static_cast<PlayerSeekMode>(playerEngine_->GetPlayRangeSeekMode());
                 int32_t seekTime = (startTime != -1 && endTime != -1) ? startTime : 0;
+                playerEngine_->SetEosInLoopForFrozen(false);
                 (void)currState->Seek(seekTime, seekMode);
             }
         });
 
         auto cancelTask = std::make_shared<TaskHandler<void>>([this]() {
             MEDIA_LOGI("Interrupted seek action");
+            playerEngine_->SetEosInLoopForFrozen(false);
             taskMgr_.MarkTaskDone("interrupted seek done");
             disableNextSeekDone_ = false;
         });

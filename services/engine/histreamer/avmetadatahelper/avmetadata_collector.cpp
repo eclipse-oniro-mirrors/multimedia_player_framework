@@ -73,6 +73,7 @@ static const std::unordered_map<int32_t, std::string> AVMETA_KEY_TO_X_MAP = {
     { AV_KEY_LOCATION_LONGITUDE, Tag::MEDIA_LONGITUDE},
     { AV_KEY_LOCATION_LATITUDE, Tag::MEDIA_LATITUDE},
     { AV_KEY_CUSTOMINFO, "customInfo"},
+    { AV_KEY_DATE_TIME_ISO8601, "ISO8601 time"},
 };
 
 AVMetaDataCollector::AVMetaDataCollector(std::shared_ptr<MediaDemuxer> &mediaDemuxer) : mediaDemuxer_(mediaDemuxer)
@@ -331,8 +332,10 @@ void AVMetaDataCollector::FormatDateTime(Metadata &avmeta, const std::shared_ptr
     std::string formattedDateTime;
     if (!date.empty()) {
         formattedDateTime = TimeFormatUtils::FormatDateTimeByTimeZone(date);
+        avmeta.SetMeta(AV_KEY_DATE_TIME_ISO8601, date);
     } else if (!creationTime.empty()) {
         formattedDateTime = TimeFormatUtils::FormatDateTimeByTimeZone(creationTime);
+        avmeta.SetMeta(AV_KEY_DATE_TIME_ISO8601, creationTime);
     }
     avmeta.SetMeta(AV_KEY_DATE_TIME, formattedDateTime);
     avmeta.SetMeta(AV_KEY_DATE_TIME_FORMAT,
