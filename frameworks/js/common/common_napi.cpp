@@ -321,6 +321,10 @@ bool CommonNapi::GetPlayStrategy(napi_env env, napi_value value, AVPlayStrategyT
     } else {
         playStrategy.isSetThresholdForAutoQuickPlay = true;
     }
+
+    if (!GetPropertyBool(env, value, "keepDecodingOnMute", playStrategy.keepDecodingOnMute)) {
+        playStrategy.keepDecodingOnMute = false; // use default value
+    }
     return true;
 }
 

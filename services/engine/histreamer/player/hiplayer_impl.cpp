@@ -642,6 +642,10 @@ int32_t HiPlayerImpl::PrepareAsync()
     }
     isBufferingEnd_ = false;
     DoSetMediaSource(ret);
+    if (mutedMediaType_ == OHOS::Media::MediaType::MEDIA_TYPE_VID) {
+        MEDIA_LOG_I("HiPlayerImpl::PrepareAsync, do setMute true");
+        demuxer_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true, keepDecodingOnMute_);
+    }
     if (ret != Status::OK && !isInterruptNeeded_.load()) {
         OnEvent({"engine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_CONTAINER_TYPE});
         return HandleErrorRet(Status::ERROR_UNSUPPORTED_FORMAT, "PrepareAsync error: DoSetSource error");
@@ -2417,6 +2421,10 @@ void HiPlayerImpl::OnEvent(const Event &event)
             HandleInitialPlayingStateChange(event.type);
             break;
         }
+        case EventType::EVENT_RELEASE_VIDEO_DECODER: {
+            ReleaseVideoDecoderOnMuted();
+            break;
+        }
         default:
             OnEventContinue(event);
     }
@@ -2649,19 +2657,13 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
         FilterType::FILTERTYPE_DEMUXER);
     FALSE_RETURN_V(demuxer_ != nullptr, Status::ERROR_NULL_POINTER);
-    demuxer_->SetPerfRecEnabled(isPerfRecEnabled_);
-    demuxer_->SetApiVersion(apiVersion_);
-    demuxer_->SetSyncCenter(syncManager_);
-    pipeline_->AddHeadFilters({demuxer_});
-    {
-        ScopedTimer timer("Demuxer Init", DEMUXER_INIT_WARNING_MS);
-        demuxer_->Init(playerEventReceiver_, playerFilterCallback_, interruptMonitor_);
-    }
+    DoInitDemuxer();
     DoSetPlayStrategy(source);
     if (!mimeType_.empty()) {
         source->SetMimeType(mimeType_);
     }
-    if (!seiMessageCbStatus_ && surface_ == nullptr && !isForceLoadVideo_) {
+    if (!seiMessageCbStatus_ && surface_ == nullptr && !isForceLoadVideo_ &&
+        mutedMediaType_ != OHOS::Media::MediaType::MEDIA_TYPE_VID) {
         MEDIA_LOG_D("HiPlayerImpl::DisableMediaTrack");
         demuxer_->DisableMediaTrack(OHOS::Media::Plugins::MediaType::VIDEO);
     }
@@ -3407,46 +3409,20 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
         return LinkSeiDecoder(preFilter, type);
     }
     if (videoDecoder_ == nullptr) {
-        videoDecoder_ = FilterFactory::Instance().CreateFilter<DecoderSurfaceFilter>("player.videodecoder",
-            FilterType::FILTERTYPE_VDEC);
-        FALSE_RETURN_V(videoDecoder_ != nullptr, Status::ERROR_NULL_POINTER);
-        videoDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
-        SetPostProcessor();
-        interruptMonitor_->RegisterListener(videoDecoder_);
-        videoDecoder_->SetSyncCenter(syncManager_);
-        videoDecoder_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
-        if (surface_ != nullptr) {
-            videoDecoder_->SetVideoSurface(surface_);
-            videoDecoder_->SetSeiMessageCbStatus(seiMessageCbStatus_  && IsLiveStream(), payloadTypes_);
-        }
-        videoDecoder_->SetPerfRecEnabled(isPerfRecEnabled_);
-        // set decrypt config for drm videos
-        if (isDrmProtected_) {
-            std::unique_lock<std::mutex> lock(drmMutex_);
-            static constexpr int32_t timeout = 5;
-            bool notTimeout = drmConfigCond_.wait_for(lock, std::chrono::seconds(timeout), [this]() {
-                return this->isDrmPrepared_ || this->stopWaitingDrmConfig_;
-            });
-            if (notTimeout && isDrmPrepared_) {
-                MEDIA_LOG_I("LinkVideoDecoderFilter will SetDecryptConfig");
-#ifdef SUPPORT_AVPLAYER_DRM
-                bool svpFlag = svpMode_ == HiplayerSvpMode::SVP_TRUE ? true : false;
-                videoDecoder_->SetDecryptConfig(keySessionServiceProxy_, svpFlag);
-#endif
-            } else {
-                MEDIA_LOG_E("HiPlayerImpl Drmcond wait timeout or has been stopped! Play drm protected video failed!");
-                return Status::ERROR_INVALID_OPERATION;
-            }
-        } else {
-            MEDIA_LOG_D("HiPlayerImpl::LinkVideoDecoderFilter, and it's not drm-protected.");
-        }
+        Status ret = InitVideoDecoder();
+        FALSE_RETURN_V_NOLOG(ret == Status::OK, ret);
     }
     completeState_.emplace_back(std::make_pair("VideoSink", false));
-    initialAVStates_.emplace_back(std::make_pair(EventType::EVENT_VIDEO_RENDERING_START, false));
+    bool needInit = surface_ != nullptr && !isVideoMuted_ && mutedMediaType_ != OHOS::Media::MediaType::MEDIA_TYPE_VID;
+    if (!needInit) {
+        videoDecoder_->SetMediaMuted(true);
+    }
+    initialAVStates_.emplace_back(std::make_pair(EventType::EVENT_VIDEO_RENDERING_START, !needInit));
+    isVideoDecoderInited_ = needInit;
 #ifdef SUPPORT_START_STOP_ON_DEMAND
-    return pipeline_->LinkFilters(preFilter, {videoDecoder_}, type, true);
+    return pipeline_->LinkFilters(preFilter, {videoDecoder_}, type, true, needInit);
 #else
-    return pipeline_->LinkFilters(preFilter, {videoDecoder_}, type);
+    return pipeline_->LinkFilters(preFilter, {videoDecoder_}, type, false, needInit);
 #endif
 }
 #endif
@@ -3472,11 +3448,31 @@ Status HiPlayerImpl::LinkSubtitleSinkFilter(const std::shared_ptr<Filter>& preFi
 
 int32_t HiPlayerImpl::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted)
 {
-    MEDIA_LOG_D("SetMediaMuted %{public}d", static_cast<int32_t>(mediaType));
-    FALSE_RETURN_V(mediaType == OHOS::Media::MediaType::MEDIA_TYPE_AUD, MSERR_INVALID_VAL);
-    FALSE_RETURN_V(audioSink_ != nullptr, MSERR_NO_MEMORY);
-    auto res = audioSink_->SetMuted(isMuted);
-    return res == Status::OK ? MSERR_OK : MSERR_INVALID_OPERATION;
+    MEDIA_LOG_D("SetMediaMuted %{public}d %{public}d", static_cast<int32_t>(mediaType), isMuted);
+    if (mediaType == OHOS::Media::MediaType::MEDIA_TYPE_AUD) {
+        FALSE_RETURN_V(audioSink_ != nullptr, MSERR_NO_MEMORY);
+        auto res = audioSink_->SetMuted(isMuted);
+        return res == Status::OK ? MSERR_OK : MSERR_INVALID_OPERATION;
+    } else if (mediaType == OHOS::Media::MediaType::MEDIA_TYPE_VID) {
+        if (demuxer_ != nullptr) {
+            demuxer_->SetMediaMuted(mediaType, isMuted, keepDecodingOnMute_);
+        }
+        if (videoDecoder_ != nullptr) {
+            videoDecoder_->SetMediaMuted(isMuted);
+        }
+        bool needReinit = !isMuted && surface_ != nullptr && ((!keepDecodingOnMute_ && isVideoMuted_ != isMuted) ||
+            (!isVideoDecoderInited_ && mutedMediaType_ == OHOS::Media::MediaType::MEDIA_TYPE_VID));
+        isVideoMuted_ = isMuted;
+        if (needReinit) {
+            MEDIA_LOG_I("HiPlayerImpl::SetMediaMuted init video decoder");
+            if (videoDecoder_ != nullptr) {
+                videoDecoder_->ReInitAndStart();
+                isVideoDecoderInited_ = true;
+            }
+            return MSERR_OK;
+        }
+    }
+    return MSERR_OK;
 }
 
 int32_t HiPlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
@@ -3492,6 +3488,7 @@ int32_t HiPlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     videoPostProcessorType_ = playbackStrategy.enableSuperResolution ? VideoPostProcessorType::SUPER_RESOLUTION
                                 : VideoPostProcessorType::NONE;
     isPostProcessorOn_ = playbackStrategy.enableSuperResolution;
+    keepDecodingOnMute_ = playbackStrategy.keepDecodingOnMute;
 
     SetFlvLiveParams(playbackStrategy);
     FALSE_RETURN_V(IsLivingMaxDelayTimeValid(), TransStatus(Status::ERROR_INVALID_PARAMETER));
@@ -3932,6 +3929,63 @@ int32_t HiPlayerImpl::NotifyMemoryExchange(bool status)
     FALSE_RETURN_V_NOLOG(videoDecoder_ != nullptr, MSERR_OK);
     videoDecoder_->NotifyMemoryExchange(status);
     return MSERR_OK;
+}
+
+void HiPlayerImpl::DoInitDemuxer()
+{
+    demuxer_->SetPerfRecEnabled(isPerfRecEnabled_);
+    demuxer_->SetApiVersion(apiVersion_);
+    demuxer_->SetSyncCenter(syncManager_);
+    pipeline_->AddHeadFilters({demuxer_});
+    {
+        ScopedTimer timer("Demuxer Init", DEMUXER_INIT_WARNING_MS);
+        demuxer_->Init(playerEventReceiver_, playerFilterCallback_, interruptMonitor_);
+    }
+}
+
+Status HiPlayerImpl::InitVideoDecoder()
+{
+    videoDecoder_ = FilterFactory::Instance().CreateFilter<DecoderSurfaceFilter>("player.videodecoder",
+        FilterType::FILTERTYPE_VDEC);
+    FALSE_RETURN_V(videoDecoder_ != nullptr, Status::ERROR_NULL_POINTER);
+    videoDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
+    SetPostProcessor();
+    interruptMonitor_->RegisterListener(videoDecoder_);
+    videoDecoder_->SetSyncCenter(syncManager_);
+    videoDecoder_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
+    if (surface_ != nullptr) {
+        videoDecoder_->SetVideoSurface(surface_);
+        videoDecoder_->SetSeiMessageCbStatus(seiMessageCbStatus_  && IsLiveStream(), payloadTypes_);
+    }
+    videoDecoder_->SetPerfRecEnabled(isPerfRecEnabled_);
+    // set decrypt config for drm videos
+    if (isDrmProtected_) {
+        std::unique_lock<std::mutex> lock(drmMutex_);
+        static constexpr int32_t timeout = 5;
+        bool notTimeout = drmConfigCond_.wait_for(lock, std::chrono::seconds(timeout), [this]() {
+            return this->isDrmPrepared_ || this->stopWaitingDrmConfig_;
+        });
+        if (notTimeout && isDrmPrepared_) {
+            MEDIA_LOG_I("LinkVideoDecoderFilter will SetDecryptConfig");
+#ifdef SUPPORT_AVPLAYER_DRM
+            bool svpFlag = svpMode_ == HiplayerSvpMode::SVP_TRUE ? true : false;
+            videoDecoder_->SetDecryptConfig(keySessionServiceProxy_, svpFlag);
+#endif
+        } else {
+            MEDIA_LOG_E("HiPlayerImpl Drmcond wait timeout or has been stopped! Play drm protected video failed!");
+            return Status::ERROR_INVALID_OPERATION;
+        }
+    } else {
+        MEDIA_LOG_D("HiPlayerImpl::LinkVideoDecoderFilter, and it's not drm-protected.");
+    }
+    return Status::OK;
+}
+
+void HiPlayerImpl::ReleaseVideoDecoderOnMuted()
+{
+    if (videoDecoder_ != nullptr) {
+        videoDecoder_->ReleaseOnMuted();
+    }
 }
 }  // namespace Media
 }  // namespace OHOS

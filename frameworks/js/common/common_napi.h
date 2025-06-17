@@ -395,6 +395,7 @@ struct AVPlayStrategyTmp {
     double thresholdForAutoQuickPlay {-1};
     bool isSetBufferDurationForPlaying {false};
     bool isSetThresholdForAutoQuickPlay {false};
+    bool keepDecodingOnMute {false};
 };
 
 struct AVPlayMediaStreamTmp {

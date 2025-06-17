@@ -307,6 +307,7 @@ private:
     PlayerProducer playerProducer_ = PlayerProducer::INNER;
     std::atomic<bool> isFrozen_ = false;
     bool isMemoryExchanged_ = false;
+    OHOS::Media::MediaType mutedMediaType_ = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
 };
 } // namespace Media
 } // namespace OHOS

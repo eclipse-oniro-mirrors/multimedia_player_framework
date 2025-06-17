@@ -1475,7 +1475,7 @@ int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
         MEDIA_LOGI("set surface first in %{public}s state", GetStatusDescription(lastOpStatus_).c_str());
     } else if (switchSurface) {
         MEDIA_LOGI("switch surface in %{public}s state", GetStatusDescription(lastOpStatus_).c_str());
-        if (surface_ == nullptr && !isForceLoadVideo_) {
+        if (surface_ == nullptr && !isForceLoadVideo_ && mutedMediaType_ != OHOS::Media::MediaType::MEDIA_TYPE_VID) {
             MEDIA_LOGE("old surface is required before switching surface");
             return MSERR_INVALID_OPERATION;
         }
@@ -2136,7 +2136,7 @@ bool PlayerServer::IsBootCompleted()
 
 int32_t PlayerServer::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted)
 {
-    CHECK_AND_RETURN_RET(mediaType == OHOS::Media::MediaType::MEDIA_TYPE_AUD, MSERR_INVALID_VAL);
+    MEDIA_LOGD("PlayerServer::SetMediaMuted %{public}u %{public}u", mediaType, isMuted);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET(lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_PREPARED ||
                              lastOpStatus_ == PLAYER_STARTED || lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE ||
@@ -2164,6 +2164,9 @@ int32_t PlayerServer::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     CHECK_AND_RETURN_RET_LOG(isValidState, MSERR_INVALID_STATE,
         "can not set playback strategy, current state is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    MEDIA_LOGD("PlayerServer::SetPlaybackStrategy mutedMediaType is: %{public}d", playbackStrategy.mutedMediaType);
+    MEDIA_LOGD("SetPlaybackStrategy keepDecodingOnmute is: %{public}d ", playbackStrategy.keepDecodingOnMute);
+    mutedMediaType_ = playbackStrategy.mutedMediaType;
     return playerEngine_->SetPlaybackStrategy(playbackStrategy);
 }
 

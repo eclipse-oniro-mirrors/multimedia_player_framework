@@ -455,6 +455,7 @@ private:
 
     std::atomic<bool> isReadyReleased_ = false;
     bool isForceLoadVideo_ = false;
+    int32_t mutedMediaType_ = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
 };
 } // namespace Media
 } // namespace OHOS
