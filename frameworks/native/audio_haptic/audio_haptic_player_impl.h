@@ -45,7 +45,6 @@ public:
     void SetHapticsMode(HapticsMode hapticsMode) override;
     int32_t EnableHapticsInSilentMode(bool enable) override;
     bool IsHapticsIntensityAdjustmentSupported() override;
-    int32_t SetHapticsPatternMaxDuration(int32_t duration) override;
 
     void SetPlayerParam(const AudioHapticPlayerParam &param);
     void LoadPlayer();

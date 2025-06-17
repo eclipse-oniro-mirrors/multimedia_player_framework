@@ -20,6 +20,11 @@
 #include <sys/stat.h>
 #include <thread>
 
+#include "access_token.h"
+#include "accesstoken_kit.h"
+#include "ipc_skeleton.h"
+#include "tokenid_kit.h"
+
 #include "audio_haptic_log.h"
 #include "directory_ex.h"
 #include "media_errors.h"
@@ -30,7 +35,8 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, 
 constexpr int32_t MIN_WAITING_TIME_FOR_VIBRATOR = 1200; // ms
 constexpr uint64_t MILLISECONDS_FOR_ONE_SECOND = 1000; // ms
 constexpr int32_t PLAYER_BUFFER_TIME = 50; // ms
-constexpr int32_t PATTERN_MAX_DURATION = 10;
+constexpr int32_t PATTERN_DEFAULT_DURATION = 10;
+constexpr int32_t PATTERN_MAX_DURATION = 200;
 constexpr int32_t WAIT_VIBRATOR_CANCEL_TIME_MS = 50; //ms
 #endif
 
@@ -41,6 +47,12 @@ int64_t GetCurrentTimeMillis()
             std::chrono::system_clock::now().time_since_epoch()
         ).count()
     );
+}
+
+bool IsSelfSystemCaller()
+{
+    Security::AccessToken::FullTokenID selfTokenID = IPCSkeleton::GetSelfTokenID();
+    return  Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(selfTokenID);
 }
 }
 
@@ -541,7 +553,7 @@ int32_t AudioHapticVibratorImpl::PlayVibrateForAVPlayer(const std::shared_ptr<Vi
             vibrateTime = audioHapticPlayer_.GetAudioCurrentTime() - PLAYER_BUFFER_TIME + GetDelayTime();
             count++;
         }
-        if (count == patternMaxDuration_.load() > 0 ? patternMaxDuration_.load() : PATTERN_MAX_DURATION) {
+        if (count == IsSelfSystemCaller() ? PATTERN_MAX_DURATION : PATTERN_DEFAULT_DURATION) {
             MEDIA_LOGE("PlayVibrateForAVPlayer: loop count has reached the max value.");
             return MSERR_INVALID_OPERATION;
         }

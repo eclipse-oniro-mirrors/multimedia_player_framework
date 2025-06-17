@@ -154,8 +154,6 @@ public:
     virtual int32_t EnableHapticsInSilentMode(bool enable) = 0;
 
     virtual bool IsHapticsIntensityAdjustmentSupported() = 0;
-
-    virtual int32_t SetHapticsPatternMaxDuration(int32_t duration) = 0;
 };
 
 class AudioHapticPlayerCallback {

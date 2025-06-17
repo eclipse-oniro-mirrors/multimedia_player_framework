@@ -46,10 +46,6 @@ public:
     {
         enableInSilentMode_.store(enable);
     }
-    void SetHapticsPatternMaxDuration(int32_t duration)  override
-    {
-        patternMaxDuration_.store(duration);
-    }
 
 private:
     int32_t StartVibrateForSoundPool();
@@ -95,7 +91,6 @@ private:
     std::atomic<bool> isRunning_ = false;
     std::atomic<bool> isIntensityChanged_ = false;
     std::atomic<bool> isNeedRestart_ = false;
-    std::atomic<int32_t> patternMaxDuration_ = 0;
 };
 } // namespace Media
 } // namespace OHOS

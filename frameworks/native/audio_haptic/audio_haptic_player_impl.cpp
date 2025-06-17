@@ -295,23 +295,6 @@ int32_t AudioHapticPlayerImpl::EnableHapticsInSilentMode(bool enable)
     return result;
 }
 
-int32_t AudioHapticPlayerImpl::SetHapticsPatternMaxDuration(int32_t duration)
-{
-    int32_t result = MSERR_OK;
-    MEDIA_LOGI("AudioHapticPlayerImpl::SetHapticsPatternMaxDuration %{public}d", duration);
-    std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
-
-    CHECK_AND_RETURN_RET_LOG(playerState_ != AudioHapticPlayerState::STATE_RELEASED, ERR_OPERATE_NOT_ALLOWED,
-        "The audio haptic player has been released.");
-
-    if (audioHapticVibrator_ == nullptr || isVibrationRunning_.load()) {
-        return ERR_OPERATE_NOT_ALLOWED;
-    }
-
-    audioHapticVibrator_->SetHapticsPatternMaxDuration(duration);
-    return result;
-}
-
 int32_t AudioHapticPlayerImpl::SetHapticIntensity(float intensity)
 {
     MEDIA_LOGI("AudioHapticPlayerImpl::SetHapticIntensity %{public}f", intensity);

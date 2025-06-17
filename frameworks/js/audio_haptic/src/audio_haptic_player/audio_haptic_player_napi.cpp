@@ -172,43 +172,6 @@ napi_value AudioHapticPlayerNapi::IsHapticsIntensityAdjustmentSupported(napi_env
     return result;
 }
 
-napi_value AudioHapticPlayerNapi::SetHapticsPatternMaxDuration(napi_env env, napi_callback_info info)
-{
-    napi_value result = nullptr;
-    napi_get_undefined(env, &result);
-
-    void *native = nullptr;
-    napi_value argv[ARGS_ONE] = {0};
-    if (!AudioHapticCommonNapi::InitNormalFunc(env, info, &native, argv, ARGS_ONE)) {
-        return result;
-    }
-
-    auto *audioHapticPlayerNapi = reinterpret_cast<AudioHapticPlayerNapi *>(native);
-    if (audioHapticPlayerNapi == nullptr || audioHapticPlayerNapi->audioHapticPlayer_ == nullptr) {
-        MEDIA_LOGE("SetHapticsPatternMaxDuration: unwrap failure!");
-        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_SERVICE_DIED, "unwrap failure");
-        return result;
-    }
-
-    int32_t duration = 0;
-    if (napi_get_value_int32(env, argv[PARAM0], &duration) != napi_ok) {
-        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID, "input param is invalid");
-        return result;
-    }
-
-    if (duration <= MIN_DURATION || duration > MAX_DURATION) {
-        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_PARAM_OUT_OF_RANGE, "duration: > 10 and <= 200");
-        return result;
-    }
-
-    int32_t ret = audioHapticPlayerNapi->audioHapticPlayer_->SetHapticsPatternMaxDuration(duration);
-    if (ret != 0) {
-        AudioHapticCommonNapi::ThrowError(env, ret, AudioHapticCommonNapi::GetMessageByCode(ret));
-        return result;
-    }
-    return result;
-}
-
 napi_value AudioHapticPlayerNapi::EnableHapticsInSilentMode(napi_env env, napi_callback_info info)
 {
     napi_value result = nullptr;

@@ -68,7 +68,6 @@ private:
     static napi_value SetHapticsIntensity(napi_env env, napi_callback_info info);
     static napi_value EnableHapticsInSilentMode(napi_env env, napi_callback_info info);
     static napi_value IsHapticsIntensityAdjustmentSupported(napi_env env, napi_callback_info info);
-    static napi_value SetHapticsPatternMaxDuration(napi_env env, napi_callback_info info);
     static napi_value SetLoop(napi_env env, napi_callback_info info);
 
     static napi_value RegisterCallback(napi_env env, napi_value jsThis, napi_value* argv, const std::string& cbName);
