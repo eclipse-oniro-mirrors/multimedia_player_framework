@@ -42,8 +42,6 @@ public:
     int32_t InitThreadPool();
     int32_t Play(std::shared_ptr<OHOS::Media::SoundParser> &soundParser, PlayParams &playParameters);
 
-    std::shared_ptr<CacheBuffer> FindCacheBuffer(const int32_t streamID);
-
     std::shared_ptr<CacheBuffer> FindCacheBufferLock(const int32_t streamID);
 
     int32_t GetStreamIDBySoundID(const int32_t soundID);
@@ -87,6 +85,7 @@ private:
     void OnPlayFinished();
     void QueueAndSortPlayingStreamID(int32_t streamID);
     void QueueAndSortWillPlayStreamID(StreamIDAndPlayParamsInfo freshStreamIDAndPlayParamsInfo);
+    std::shared_ptr<CacheBuffer> FindCacheBuffer(const int32_t streamID);
 
     // pair<int32_t, int32_t> is mapping between SoundId and GlobalId
     std::vector<std::pair<int32_t, int32_t>> globalIdVector_;
