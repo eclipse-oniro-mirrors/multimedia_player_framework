@@ -95,7 +95,7 @@ private:
     std::atomic<bool> isRunning_ = false;
     std::atomic<bool> isIntensityChanged_ = false;
     std::atomic<bool> isNeedRestart_ = false;
-    std::atomic<int32_t> patternMaxDuration_ = 0; 
+    std::atomic<int32_t> patternMaxDuration_ = 0;
 };
 } // namespace Media
 } // namespace OHOS

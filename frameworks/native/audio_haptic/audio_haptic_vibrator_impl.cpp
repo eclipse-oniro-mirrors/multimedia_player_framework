@@ -582,7 +582,7 @@ int32_t AudioHapticVibratorImpl::StartVibrateForAVPlayer()
 
 int32_t AudioHapticVibratorImpl::SeekAndRestart()
 {
-    if (patternStartTime_ = 0) {
+    if (patternStartTime_ == 0) {
         return MSERR_OK;
     }
 

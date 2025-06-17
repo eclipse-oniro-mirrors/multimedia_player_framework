@@ -45,7 +45,7 @@ struct VibrationContext : public AsyncContext {
 struct LoopContext : public AsyncContext {
     bool loop = false;
     int32_t result = -1;
-}
+};
 
 class AudioHapticPlayerNapi {
 public:
