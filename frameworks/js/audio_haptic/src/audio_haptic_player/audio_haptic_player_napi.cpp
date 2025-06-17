@@ -52,7 +52,6 @@ napi_value AudioHapticPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("setHapticsIntensity", SetHapticsIntensity),
         DECLARE_NAPI_FUNCTION("enableHapticsInSilentMode", EnableHapticsInSilentMode),
         DECLARE_NAPI_FUNCTION("isHapticsIntensityAdjustmentSupported", IsHapticsIntensityAdjustmentSupported),
-        DECLARE_NAPI_FUNCTION("setHapticsPatternMaxDuration", SetHapticsPatternMaxDuration),
         DECLARE_NAPI_FUNCTION("setLoop", SetLoop),
     };
 

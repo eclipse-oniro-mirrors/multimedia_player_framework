@@ -48,12 +48,6 @@ int64_t GetCurrentTimeMillis()
         ).count()
     );
 }
-
-bool IsSelfSystemCaller()
-{
-    Security::AccessToken::FullTokenID selfTokenID = IPCSkeleton::GetSelfTokenID();
-    return  Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(selfTokenID);
-}
 }
 
 namespace OHOS {
@@ -83,6 +77,12 @@ static const std::unordered_map<AudioStandard::StreamUsage, VibratorUsage> USAGE
 };
 #endif
 const int ERROR = -1;
+
+bool IsSelfSystemCaller()
+{
+    Security::AccessToken::FullTokenID selfTokenID = IPCSkeleton::GetSelfTokenID();
+    return  Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(selfTokenID);
+}
 
 AudioHapticVibratorImpl::AudioHapticVibratorImpl(AudioHapticPlayer &audioHapticPlayer)
     : audioHapticPlayer_(audioHapticPlayer)
@@ -527,7 +527,7 @@ int32_t AudioHapticVibratorImpl::PlayVibrateForAVPlayer(const std::shared_ptr<Vi
     // record the pattern time which has been played
     int32_t vibrateTime = vibratorTime_.load();
     MEDIA_LOGI("AudioHapticVibratorImpl::PlayVibrateForAVPlayer: now: %{public}d", vibrateTime);
-    const patternDuration = IsSelfSystemCaller() ? PATTERN_MAX_DURATION : PATTERN_DEFAULT_DURATION;
+    int32_t patternDuration = IsSelfSystemCaller() ? PATTERN_MAX_DURATION : PATTERN_DEFAULT_DURATION;
     for (int32_t i = 0; i < vibratorPkg->patternNum; ++i) {
         result = PlayVibrationPattern(vibratorPkg, i, vibrateTime, lock);
         AudioHapticPlayerImpl::SendHapticPlayerEvent(result, "PLAY_PATTERN_AVPLAYER");
