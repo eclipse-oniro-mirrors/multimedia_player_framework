@@ -22,8 +22,6 @@ namespace {
 const std::string AUDIO_INTERRUPT_CALLBACK_NAME = "audioInterrupt";
 const std::string END_OF_STREAM_CALLBACK_NAME = "endOfStream";
 const double PRECISION = 100.00;
-const int32_t MIN_DURATION = 10;
-const int32_t MAX_DURATION = 200;
 
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, "AudioHapticPlayerNapi"};
 }

@@ -527,6 +527,7 @@ int32_t AudioHapticVibratorImpl::PlayVibrateForAVPlayer(const std::shared_ptr<Vi
     // record the pattern time which has been played
     int32_t vibrateTime = vibratorTime_.load();
     MEDIA_LOGI("AudioHapticVibratorImpl::PlayVibrateForAVPlayer: now: %{public}d", vibrateTime);
+    const patternDuration = IsSelfSystemCaller() ? PATTERN_MAX_DURATION : PATTERN_DEFAULT_DURATION;
     for (int32_t i = 0; i < vibratorPkg->patternNum; ++i) {
         result = PlayVibrationPattern(vibratorPkg, i, vibrateTime, lock);
         AudioHapticPlayerImpl::SendHapticPlayerEvent(result, "PLAY_PATTERN_AVPLAYER");
@@ -542,7 +543,7 @@ int32_t AudioHapticVibratorImpl::PlayVibrateForAVPlayer(const std::shared_ptr<Vi
         int32_t nextVibratorTime = vibratorPkg->patterns[i + 1].time;
         vibrateTime = audioHapticPlayer_.GetAudioCurrentTime() - PLAYER_BUFFER_TIME + GetDelayTime();
         int32_t count = 0;
-        while (nextVibratorTime - vibrateTime > MIN_WAITING_TIME_FOR_VIBRATOR && count < PATTERN_MAX_DURATION) {
+        while (nextVibratorTime - vibrateTime > MIN_WAITING_TIME_FOR_VIBRATOR && count < patternDuration) {
             (void)vibrateCV_.wait_for(lock, std::chrono::milliseconds(MILLISECONDS_FOR_ONE_SECOND),
                 [this]() { return isStopped_ || isNeedRestart_; });
             CHECK_AND_RETURN_RET_LOG(!isStopped_, result,
@@ -553,7 +554,7 @@ int32_t AudioHapticVibratorImpl::PlayVibrateForAVPlayer(const std::shared_ptr<Vi
             vibrateTime = audioHapticPlayer_.GetAudioCurrentTime() - PLAYER_BUFFER_TIME + GetDelayTime();
             count++;
         }
-        if (count == IsSelfSystemCaller() ? PATTERN_MAX_DURATION : PATTERN_DEFAULT_DURATION) {
+        if (count == patternDuration) {
             MEDIA_LOGE("PlayVibrateForAVPlayer: loop count has reached the max value.");
             return MSERR_INVALID_OPERATION;
         }
