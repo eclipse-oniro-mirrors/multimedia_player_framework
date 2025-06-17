@@ -241,6 +241,8 @@ void AudioHapticPlayerImpl::ReleaseSound()
 int32_t AudioHapticPlayerImpl::SetVolume(float volume)
 {
     MEDIA_LOGI("AudioHapticPlayerImpl::SetVolume %{public}f", volume);
+    CHECK_AND_RETURN_RET_LOG(playerState_ != AudioHapticPlayerState::STATE_RELEASED, ERR_OPERATE_NOT_ALLOWED,
+        "The audio haptic player has been released.");
     if (volume < 0.0f || volume > 1.0f) {
         MEDIA_LOGE("SetVolume: the volume value is invalid.");
         return MSERR_INVALID_VAL;
@@ -283,6 +285,9 @@ int32_t AudioHapticPlayerImpl::EnableHapticsInSilentMode(bool enable)
     MEDIA_LOGI("AudioHapticPlayerImpl::EnableHapticsInSilentMode %{public}d", enable);
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
 
+    CHECK_AND_RETURN_RET_LOG(playerState_ != AudioHapticPlayerState::STATE_RELEASED, ERR_OPERATE_NOT_ALLOWED,
+        "The audio haptic player has been released.");
+
     if (isVibrationRunning_.load()) {
         return ERR_OPERATE_NOT_ALLOWED;
     }
@@ -292,9 +297,27 @@ int32_t AudioHapticPlayerImpl::EnableHapticsInSilentMode(bool enable)
     return result;
 }
 
+int32_t AudioHapticPlayerImpl::SetHapticsPatternMaxDuration(int32_t duration)
+{
+    int32_t result = MSERR_OK;
+    MEDIA_LOGI("AudioHapticPlayerImpl::SetHapticsPatternMaxDuration %{public}d", duration);
+    std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
+
+    CHECK_AND_RETURN_RET_LOG(playerState_ != AudioHapticPlayerState::STATE_RELEASED, ERR_OPERATE_NOT_ALLOWED,
+        "The audio haptic player has been released.");
+
+    if (audioHapticVibrator_ == nullptr || isVibrationRunning_.load()) {
+        return ERR_OPERATE_NOT_ALLOWED;
+    }
+
+    audioHapticVibrator_->SetHapticsPatternMaxDuration(duration);
+}
+
 int32_t AudioHapticPlayerImpl::SetHapticIntensity(float intensity)
 {
     MEDIA_LOGI("AudioHapticPlayerImpl::SetHapticIntensity %{public}f", intensity);
+    CHECK_AND_RETURN_RET_LOG(playerState_ != AudioHapticPlayerState::STATE_RELEASED, ERR_OPERATE_NOT_ALLOWED,
+        "The audio haptic player has been released.");
     if (intensity < 1.0f || intensity > 100.0f) {
         MEDIA_LOGE("SetHapticIntensity: the intensity value is invalid.");
         return MSERR_INVALID_VAL;
@@ -308,6 +331,8 @@ int32_t AudioHapticPlayerImpl::SetLoop(bool loop)
 {
     MEDIA_LOGI("AudioHapticPlayerImpl::SetLoop %{public}d", loop);
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
+    CHECK_AND_RETURN_RET_LOG(playerState_ != AudioHapticPlayerState::STATE_RELEASED, ERR_OPERATE_NOT_ALLOWED,
+        "The audio haptic player has been released.");
     int32_t result = MSERR_OK;
     loop_ = loop;
     if (audioHapticSound_ == nullptr) {

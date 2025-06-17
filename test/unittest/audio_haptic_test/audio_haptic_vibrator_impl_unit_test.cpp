@@ -685,5 +685,21 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_036, TestSize.
     auto ret = audioHapticVibratorImpl->StartVibrate(latencyMode);
     EXPECT_NE(ret, MSERR_OK);
 }
+
+/**
+ * @tc.name  : Test AudioHapticVibratorImpl API
+ * @tc.number: AudioHapticVibratorImpl_037
+ * @tc.desc  : Test AudioHapticVibratorImpl::SeekAndRestart()
+ */
+HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_037, TestSize.Level1)
+{
+    AudioHapticPlayerImpl audioHapticPlayerImpl;
+    auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
+    EXPECT_NE(audioHapticVibratorImpl, nullptr);
+
+    audioHapticVibratorImpl->patternStartTime_ = 0;
+    auto ret = audioHapticVibratorImpl->SeekAndRestart();
+    EXPECT_NE(ret, MSERR_OK);
+}
 } // namespace Media
 } // namespace OHOS

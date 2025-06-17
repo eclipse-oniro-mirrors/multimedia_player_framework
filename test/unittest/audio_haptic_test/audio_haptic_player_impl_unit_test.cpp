@@ -1161,5 +1161,33 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_058, TestSize.Leve
     EXPECT_EQ(audioHapticPlayerImpl->IsHapticsIntensityAdjustmentSupported(),
         audioHapticVibrator_->IsHdHapticSupported());
 }
+
+/**
+ * @tc.name  : Test SetHapticsPatternMaxDuration API
+ * @tc.number: AudioHapticPlayerImpl_059
+ * @tc.desc  : Test AudioHapticPlayerImpl::SetHapticsPatternMaxDuration()
+ */
+HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_059, TestSize.Level1)
+{
+    auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
+    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+
+    AudioHapticPlayerImpl audioHapticPlayerImpl2;
+    auto audioHapticVibrator_ = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl2);
+    audioHapticPlayerImpl->audioHapticVibrator_ = audioHapticVibrator_;
+    EXPECT_NE(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
+    
+    int32_t lessDuration = 9;
+    int32_t moreDuration = 201;
+    int32_t normalDuration = 100;
+    int32_t ret = audioHapticPlayerImpl->SetHapticsPatternMaxDuration(lessDuration);
+    EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, ret);
+    ret = audioHapticPlayerImpl->SetHapticsPatternMaxDuration(moreDuration);
+    EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, ret);
+    ret = audioHapticPlayerImpl->SetHapticsPatternMaxDuration(normalDuration);
+    EXPECT_EQ(MSERR_OK, ret);
+    EXPECT_EQ(normalDuration, audioHapticVibrator_->patternMaxDuration_);
+}
+}
 } // namespace Media
 } // namespace OHOS

@@ -34,13 +34,18 @@ static const std::string AUDIO_HAPTIC_PLAYER_NAPI_CLASS_NAME = "AudioHapticPlaye
 
 struct VolumeContext : public AsyncContext {
     float volume = 1.0f;
-    int32_t result = 0;
+    int32_t result = -1;
 };
 
 struct VibrationContext : public AsyncContext {
     float intensity = 1.0f;
-    int32_t result = 0;
+    int32_t result = -1;
 };
+
+struct LoopContext : public AsyncContext {
+    bool loop = false;
+    int32_t result = -1;
+}
 
 class AudioHapticPlayerNapi {
 public:
@@ -63,6 +68,8 @@ private:
     static napi_value SetHapticsIntensity(napi_env env, napi_callback_info info);
     static napi_value EnableHapticsInSilentMode(napi_env env, napi_callback_info info);
     static napi_value IsHapticsIntensityAdjustmentSupported(napi_env env, napi_callback_info info);
+    static napi_value SetHapticsPatternMaxDuration(napi_env env, napi_callback_info info);
+    static napi_value SetLoop(napi_env env, napi_callback_info info);
 
     static napi_value RegisterCallback(napi_env env, napi_value jsThis, napi_value* argv, const std::string& cbName);
     static napi_value RegisterAudioHapticPlayerCallback(napi_env env, napi_value* argv, const std::string& cbName,

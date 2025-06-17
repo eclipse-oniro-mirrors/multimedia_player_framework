@@ -38,6 +38,7 @@ public:
     virtual int32_t GetDelayTime() = 0;
     virtual void EnableHapticsInSilentMode(bool enable) = 0;
     virtual bool IsHdHapticSupported() = 0;
+    virtual void SetHapticsPatternMaxDuration(int32_t duration) = 0;
 
 private:
     static std::mutex createVibratorMutex_;
