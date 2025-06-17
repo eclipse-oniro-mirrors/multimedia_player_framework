@@ -35,8 +35,8 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, 
 constexpr int32_t MIN_WAITING_TIME_FOR_VIBRATOR = 1200; // ms
 constexpr uint64_t MILLISECONDS_FOR_ONE_SECOND = 1000; // ms
 constexpr int32_t PLAYER_BUFFER_TIME = 50; // ms
-constexpr int32_t PATTERN_DEFAULT_DURATION = 10;
-constexpr int32_t PATTERN_MAX_DURATION = 200;
+constexpr int32_t PATTERN_DEFAULT_COUNT = 10;
+constexpr int32_t PATTERN_MAX_COUNT = 200;
 constexpr int32_t WAIT_VIBRATOR_CANCEL_TIME_MS = 50; //ms
 #endif
 
@@ -81,7 +81,7 @@ const int ERROR = -1;
 bool IsSelfSystemCaller()
 {
     Security::AccessToken::FullTokenID selfTokenID = IPCSkeleton::GetSelfTokenID();
-    return  Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(selfTokenID);
+    return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(selfTokenID);
 }
 
 AudioHapticVibratorImpl::AudioHapticVibratorImpl(AudioHapticPlayer &audioHapticPlayer)
@@ -527,7 +527,7 @@ int32_t AudioHapticVibratorImpl::PlayVibrateForAVPlayer(const std::shared_ptr<Vi
     // record the pattern time which has been played
     int32_t vibrateTime = vibratorTime_.load();
     MEDIA_LOGI("AudioHapticVibratorImpl::PlayVibrateForAVPlayer: now: %{public}d", vibrateTime);
-    int32_t patternDuration = IsSelfSystemCaller() ? PATTERN_MAX_DURATION : PATTERN_DEFAULT_DURATION;
+    int32_t patternDuration = IsSelfSystemCaller() ? PATTERN_MAX_COUNT : PATTERN_DEFAULT_COUNT;
     for (int32_t i = 0; i < vibratorPkg->patternNum; ++i) {
         result = PlayVibrationPattern(vibratorPkg, i, vibrateTime, lock);
         AudioHapticPlayerImpl::SendHapticPlayerEvent(result, "PLAY_PATTERN_AVPLAYER");
