@@ -67,10 +67,6 @@ ohos_fuzztest("ScreenCaptureServerStartCaseFuzzTest") {
     "$MEDIA_ROOT_DIR/test/fuzztest/common/",
     "$MEDIA_ROOT_DIR/test/unittest/common/include",
     "$MEDIA_ROOT_DIR/test/unittest/screen_capture_test/screen_capture_service_function_unittest/server/include",
-    "$MEDIA_PLAYER_GRAPHIC_SURFACE/interfaces/inner_api/surface",
-    "$MEDIA_PLAYER_GRAPHIC/interfaces/innerkits/surface",
-    "$MEDIA_ROOT_DIR/../media_foundation/interface/inner_api",
-    "$MEDIA_ROOT_DIR/../media_foundation/interface/inner_api/common",
   ]
   cflags = [
     "-std=c++17",
@@ -103,7 +99,6 @@ ohos_fuzztest("ScreenCaptureServerStartCaseFuzzTest") {
     ]
   }
   deps = [
-    "$MEDIA_PLAYER_GRAPHIC/rosen/modules/render_service_client:librender_service_client",
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native:media_client",
     "$MEDIA_ROOT_DIR/services/services:media_service",
     "$MEDIA_ROOT_DIR/services/utils:media_service_utils",
@@ -128,6 +123,7 @@ ohos_fuzztest("ScreenCaptureServerStartCaseFuzzTest") {
     "av_codec:av_codec_client",
     "c_utils:utils",
     "distributed_notification_service:ans_innerkits",
+    "graphic_2d:librender_service_client",
     "graphic_surface:surface",
     "graphic_surface:sync_fence",
     "hilog:libhilog",
@@ -144,6 +140,7 @@ ohos_fuzztest("ScreenCaptureServerStartCaseFuzzTest") {
     "window_manager:scene_session",
     "window_manager:scene_session_manager",
     "window_manager:session_manager_lite",
+    "graphic_2d:librender_service_client",
   ]
   if (player_framework_support_screen_capture_stopbycall) {
     external_deps += [

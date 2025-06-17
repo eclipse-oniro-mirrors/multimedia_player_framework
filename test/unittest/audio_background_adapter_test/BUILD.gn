@@ -54,6 +54,7 @@ ohos_unittest("audio_background_adapter_unit_test") {
     "access_token:libtokensetproc_shared",
     "audio_framework:audio_client",
     "av_codec:av_codec_client",
+    "common_event_service:cesfwk_innerkits",
     "c_utils:utils",
     "hdf_core:libhdi",
     "hicollie:libhicollie",

@@ -24,6 +24,7 @@
 #include "system_sound_manager.h"
 #include "system_tone_player_impl.h"
 #include "parameter.h"
+#include "hitrace_meter.h"
 
 using namespace std;
 using namespace nlohmann;
@@ -202,6 +203,34 @@ std::string SystemSoundManagerUtils::GetErrorReason(const int32_t &errorCode)
         errorReason = "system tone playback failed";
     }
     return errorReason;
+}
+
+MediaTrace::MediaTrace(const std::string &funcName)
+{
+    StartTrace(HITRACE_TAG_ZMEDIA, funcName);
+    isSync_ = true;
+}
+
+void MediaTrace::TraceBegin(const std::string &funcName, int32_t taskId)
+{
+    StartAsyncTrace(HITRACE_TAG_ZMEDIA, funcName, taskId);
+}
+
+void MediaTrace::TraceEnd(const std::string &funcName, int32_t taskId)
+{
+    FinishAsyncTrace(HITRACE_TAG_ZMEDIA, funcName, taskId);
+}
+
+void MediaTrace::CounterTrace(const std::string &varName, int32_t val)
+{
+    CountTrace(HITRACE_TAG_ZMEDIA, varName, val);
+}
+
+MediaTrace::~MediaTrace()
+{
+    if (isSync_) {
+        FinishTrace(HITRACE_TAG_ZMEDIA);
+    }
 }
 } // namesapce Media
 } // namespace OHOS

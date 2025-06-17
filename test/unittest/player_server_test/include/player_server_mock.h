@@ -18,7 +18,7 @@
 
 #include "player_server.h"
 #include "unittest_log.h"
-#include "../wm/window.h"
+#include "wm/window.h"
 
 namespace OHOS {
 namespace Media {

@@ -146,6 +146,7 @@ ohos_unittest("account_observer_unit_test") {
     "qos_manager:qos",
     "state_registry:tel_state_registry_api",
     "window_manager:libdm",
+    "eventhandler:libeventhandler",
   ]
 
   defines = []

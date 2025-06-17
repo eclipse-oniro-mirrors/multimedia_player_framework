@@ -109,7 +109,6 @@ ohos_unittest("video_editor_unit_test") {
 
   deps = [
     "../../../video_editor:video_editor",
-    "//third_party/googletest:gmock_main",
   ]
 
   external_deps = [
@@ -132,6 +131,7 @@ ohos_unittest("video_editor_unit_test") {
     "hilog:libhilog",
     "media_foundation:native_media_core",
     "skia:skia_canvaskit",
+    "googletest:gmock_main",
   ]
 
   defines = []

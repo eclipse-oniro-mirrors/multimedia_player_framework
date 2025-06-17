@@ -427,6 +427,11 @@ int32_t RingtonePlayerImpl::StartForNoRing(const HapticStartupMode startupMode)
         (void)SystemSoundVibrator::StartVibratorForFastMode();
     }
 
+    if (ringtoneUri != configuredUri_ || settings.hapticsUri != configuredHaptcisSettings_.hapticsUri ||
+        settings.mode != configuredHaptcisSettings_.mode) {
+        MEDIA_LOGI("Ringtone uri changed. Reload player");
+        InitPlayer(ringtoneUri, settings, options);
+    }
     // Start an empty audio stream for NoRing.
     rendererParams_.sampleFormat = AudioStandard::SAMPLE_S24LE;
     rendererParams_.channelCount = AudioStandard::STEREO;

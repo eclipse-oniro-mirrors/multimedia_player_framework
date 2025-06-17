@@ -1661,6 +1661,11 @@ int32_t HiPlayerImpl::SetParameter(const Format& params)
         if (params.ContainKey(PlayerKeys::VOLUME_MODE)) {
             params.GetIntValue(PlayerKeys::VOLUME_MODE, volumeMode);
         }
+        if (params.ContainKey(PlayerKeys::PLAYER_AUDIO_HAPTICS_SYNC_ID)) {
+            int32_t syncId = DEFAULT_SYNC_ID;
+            params.GetIntValue(PlayerKeys::PLAYER_AUDIO_HAPTICS_SYNC_ID, syncId);
+            SetAudioHapticsSyncId(syncId);
+        }
         return SetAudioRendererInfo(contentType, streamUsage, rendererFlag, volumeMode);
     }
     if (params.ContainKey(PlayerKeys::AUDIO_INTERRUPT_MODE)) {
@@ -3325,6 +3330,7 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
         SetDefaultAudioRenderInfo(trackInfos);
     }
     SetAudioRendererParameter();
+    ApplyAudioHapticsSyncId(audioHapticsSyncId_);
     audioSink_->SetSyncCenter(syncManager_);
 
     completeState_.emplace_back(std::make_pair("AudioSink", false));
@@ -3902,6 +3908,23 @@ int32_t HiPlayerImpl::ForceLoadVideo(bool status)
 {
     isForceLoadVideo_ = status;
     return MSERR_OK;
+}
+
+int32_t HiPlayerImpl::SetAudioHapticsSyncId(int32_t syncId)
+{
+    MEDIA_LOG_I("SetAHapSyncId " PUBLIC_LOG_D32, syncId);
+    audioHapticsSyncId_ = syncId;
+    return TransStatus(Status::OK);
+}
+
+int32_t HiPlayerImpl::ApplyAudioHapticsSyncId(int32_t syncId)
+{
+    FALSE_RETURN_V(audioSink_ != nullptr, TransStatus(Status::ERROR_NULL_POINTER));
+    MEDIA_LOG_I("ApplyAHapSyncId " PUBLIC_LOG_D32, syncId);
+    Status ret = audioSink_->SetAudioHapticsSyncId(syncId);
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, TransStatus(ret),
+        "ApplyAHapSyncId failed with error " PUBLIC_LOG_D32, static_cast<int32_t>(ret));
+    return TransStatus(ret);
 }
 
 int32_t HiPlayerImpl::NotifyMemoryExchange(bool status)
