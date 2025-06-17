@@ -1188,6 +1188,5 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_059, TestSize.Leve
     EXPECT_EQ(MSERR_OK, ret);
     EXPECT_EQ(normalDuration, audioHapticVibrator_->patternMaxDuration_);
 }
-}
 } // namespace Media
 } // namespace OHOS
