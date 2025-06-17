@@ -327,6 +327,7 @@ void RingtonePlayerImpl::InitPlayer(std::string &audioUri, ToneHapticsSettings &
     player_->SetHapticsMode(ConvertToHapticsMode(settings.mode));
     int32_t result = player_->Prepare();
     if (audioUri == NO_RING_SOUND) {
+        MEDIA_LOGI("The incoming audioUri is no_ring_sound.");
         if (!configuredUri_.empty() && configuredUri_ == audioUri) {
             MEDIA_LOGI("The right ringtone uri has been registered. Return directly.");
             ringtoneState_ = RingtoneState::STATE_PREPARED;
@@ -398,6 +399,7 @@ int32_t RingtonePlayerImpl::Start(const HapticStartupMode startupMode)
         ringtoneUri = specifyRingtoneUri_;
     }
     if (ringtoneUri == NO_RING_SOUND) {
+        MEDIA_LOGI("The ringtoneUri is no_ring_sound.");
         return StartForNoRing(startupMode);
     }
     AudioHapticPlayerOptions options = {false, false};
@@ -446,6 +448,7 @@ int32_t RingtonePlayerImpl::StartForNoRing(const HapticStartupMode startupMode)
     int32_t result = MSERR_OK; // if no need to start vibrator, return MSERR_OK.
     if (NeedToVibrate(settings)) {
         std::string hapticUri = systemSoundMgr_.OpenHapticsUri(databaseTool_, settings.hapticsUri);
+        MEDIA_LOGI("need to start vibrator and get the hapticUri as :%{public}s. ", hapticUri.c_str());
         result = SystemSoundVibrator::StartVibratorForRingtone(hapticUri);
     }
     ringtoneState_ = STATE_RUNNING;
@@ -487,6 +490,7 @@ int32_t RingtonePlayerImpl::Stop()
 
     (void)player_->Stop();
     if (configuredUri_ == NO_RING_SOUND && ringtoneState_ == STATE_RUNNING) {
+        MEDIA_LOGI("The configuredUri is no_ring_sound and state is running. Stop vibrator!");
         SystemSoundVibrator::StopVibrator();
     }
     if (audioRenderer_ != nullptr) {
@@ -510,6 +514,7 @@ int32_t RingtonePlayerImpl::Release()
 
     (void)player_->Release();
     if (configuredUri_ == NO_RING_SOUND && ringtoneState_ == STATE_RUNNING) {
+        MEDIA_LOGI("The configuredUri is no_ring_sound and state is running. Stop vibrator!");
         SystemSoundVibrator::StopVibrator();
     }
     if (audioRenderer_ != nullptr) {

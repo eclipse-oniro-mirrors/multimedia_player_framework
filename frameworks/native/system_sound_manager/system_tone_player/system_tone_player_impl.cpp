@@ -837,7 +837,7 @@ bool SystemTonePlayerImpl::IsExitCallbackThreadId(int32_t streamId)
 
 void SystemTonePlayerImpl::SendSystemTonePlaybackEvent(const int32_t &errorCode, bool muteAudio, bool muteHaptics)
 {
-    MEDIA_LOGI("Send System Tone Playback Event .");
+    MEDIA_LOGI("Send System Tone Playback Event.");
     AudioStandard::AudioRendererInfo rendererInfo;
     rendererInfo.contentType = AudioStandard::ContentType::CONTENT_TYPE_UNKNOWN;
     rendererInfo.streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_NOTIFICATION;
