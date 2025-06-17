@@ -365,8 +365,9 @@ std::shared_ptr<CacheBuffer> StreamIDManager::FindCacheBuffer(const int32_t stre
         return nullptr;
     }
     CHECK_AND_RETURN_RET_LOG(streamID >= 0, nullptr, "streamID invalid.");
-    if (cacheBuffers_.find(streamID) != cacheBuffers_.end()) {
-        return cacheBuffers_.at(streamID);
+    auto it = cacheBuffers_.find(streamID);
+    if (it != cacheBuffers_.end()) {
+        return it->second;
     }
     return nullptr;
 }
