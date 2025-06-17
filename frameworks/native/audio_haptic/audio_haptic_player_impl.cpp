@@ -287,12 +287,11 @@ int32_t AudioHapticPlayerImpl::EnableHapticsInSilentMode(bool enable)
     CHECK_AND_RETURN_RET_LOG(playerState_ != AudioHapticPlayerState::STATE_RELEASED, ERR_OPERATE_NOT_ALLOWED,
         "The audio haptic player has been released.");
 
-    if (isVibrationRunning_.load()) {
+    if (audioHapticVibrator_ == nullptr || isVibrationRunning_.load()) {
         return ERR_OPERATE_NOT_ALLOWED;
     }
-    if (audioHapticVibrator_ != nullptr) {
-        audioHapticVibrator_->EnableHapticsInSilentMode(enable);
-    }
+    // will check if vibrator is running and if running return ERR_OPERATE_NOT_ALLOWED
+    audioHapticVibrator_->EnableHapticsInSilentMode(enable);
     return result;
 }
 

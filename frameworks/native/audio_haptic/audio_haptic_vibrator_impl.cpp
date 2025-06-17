@@ -30,7 +30,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, 
 constexpr int32_t MIN_WAITING_TIME_FOR_VIBRATOR = 1200; // ms
 constexpr uint64_t MILLISECONDS_FOR_ONE_SECOND = 1000; // ms
 constexpr int32_t PLAYER_BUFFER_TIME = 50; // ms
-constexpr int32_t MAX_WAITING_LOOP_COUNT = 10;
+constexpr int32_t PATTERN_MAX_DURATION = 10;
 constexpr int32_t WAIT_VIBRATOR_CANCEL_TIME_MS = 50; //ms
 #endif
 
@@ -530,7 +530,7 @@ int32_t AudioHapticVibratorImpl::PlayVibrateForAVPlayer(const std::shared_ptr<Vi
         int32_t nextVibratorTime = vibratorPkg->patterns[i + 1].time;
         vibrateTime = audioHapticPlayer_.GetAudioCurrentTime() - PLAYER_BUFFER_TIME + GetDelayTime();
         int32_t count = 0;
-        while (nextVibratorTime - vibrateTime > MIN_WAITING_TIME_FOR_VIBRATOR && count < MAX_WAITING_LOOP_COUNT) {
+        while (nextVibratorTime - vibrateTime > MIN_WAITING_TIME_FOR_VIBRATOR && count < PATTERN_MAX_DURATION) {
             (void)vibrateCV_.wait_for(lock, std::chrono::milliseconds(MILLISECONDS_FOR_ONE_SECOND),
                 [this]() { return isStopped_ || isNeedRestart_; });
             CHECK_AND_RETURN_RET_LOG(!isStopped_, result,
@@ -541,7 +541,7 @@ int32_t AudioHapticVibratorImpl::PlayVibrateForAVPlayer(const std::shared_ptr<Vi
             vibrateTime = audioHapticPlayer_.GetAudioCurrentTime() - PLAYER_BUFFER_TIME + GetDelayTime();
             count++;
         }
-        if (count == patternMaxDuration_.load() > 0 ? patternMaxDuration_.load() : MAX_WAITING_LOOP_COUNT) {
+        if (count == patternMaxDuration_.load() > 0 ? patternMaxDuration_.load() : PATTERN_MAX_DURATION) {
             MEDIA_LOGE("PlayVibrateForAVPlayer: loop count has reached the max value.");
             return MSERR_INVALID_OPERATION;
         }
