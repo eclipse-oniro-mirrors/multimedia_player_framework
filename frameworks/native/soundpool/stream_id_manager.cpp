@@ -200,7 +200,11 @@ int32_t StreamIDManager::SetPlay(const int32_t soundID, const int32_t streamID, 
     CHECK_AND_RETURN_RET_LOG(streamPlayingThreadPool_ != nullptr, MSERR_INVALID_VAL,
         "Failed to obtain stream play threadpool.");
     // CacheBuffer must prepare before play.
-    std::shared_ptr<CacheBuffer> freshCacheBuffer = FindCacheBuffer(streamID);
+    std::shared_ptr<CacheBuffer> freshCacheBuffer;
+    {
+        std::lock_guard lock(streamIDManagerLock_);
+        freshCacheBuffer = FindCacheBuffer(streamID);
+    }
     CHECK_AND_RETURN_RET_LOG(freshCacheBuffer != nullptr, MSERR_INVALID_VAL, "Invalid fresh cache buffer");
     int32_t result = freshCacheBuffer->PreparePlay(audioRendererInfo_, playParameters);
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, MSERR_INVALID_VAL, "Invalid PreparePlay");
@@ -211,7 +215,11 @@ int32_t StreamIDManager::SetPlay(const int32_t soundID, const int32_t streamID, 
         AddPlayTask(streamID, playParameters);
     } else {
         int32_t playingStreamID = playingStreamIDs_.back();
-        std::shared_ptr<CacheBuffer> playingCacheBuffer = FindCacheBuffer(playingStreamID);
+        std::shared_ptr<CacheBuffer> playingCacheBuffer;
+        {
+            std::lock_guard lock(streamIDManagerLock_);
+            playingCacheBuffer = FindCacheBuffer(playingStreamID);
+        }
         CHECK_AND_RETURN_RET_LOG(freshCacheBuffer != nullptr, MSERR_INVALID_VAL, "Invalid fresh cache buffer");
         CHECK_AND_RETURN_RET_LOG(playingCacheBuffer != nullptr, MSERR_INVALID_VAL, "Invalid playingCacheBuffer");
         MEDIA_LOGI("StreamIDManager fresh sound priority:%{public}d, playing stream priority:%{public}d",
@@ -321,7 +329,11 @@ int32_t StreamIDManager::AddPlayTask(const int32_t streamID, const PlayParams pl
 int32_t StreamIDManager::DoPlay(const int32_t streamID)
 {
     MEDIA_LOGI("StreamIDManager::DoPlay start streamID:%{public}d", streamID);
-    std::shared_ptr<CacheBuffer> cacheBuffer = FindCacheBuffer(streamID);
+    std::shared_ptr<CacheBuffer> cacheBuffer;
+    {
+        std::lock_guard lock(streamIDManagerLock_);
+        cacheBuffer = FindCacheBuffer(streamID);
+    }
     CHECK_AND_RETURN_RET_LOG(cacheBuffer.get() != nullptr, MSERR_INVALID_VAL, "cachebuffer invalid.");
     if (cacheBuffer->DoPlay(streamID) == MSERR_OK) {
         MEDIA_LOGI("StreamIDManager::DoPlay success soundID:%{public}d, streamID:%{public}d",
@@ -353,10 +365,17 @@ std::shared_ptr<CacheBuffer> StreamIDManager::FindCacheBuffer(const int32_t stre
         return nullptr;
     }
     CHECK_AND_RETURN_RET_LOG(streamID >= 0, nullptr, "streamID invalid.");
-    if (cacheBuffers_.find(streamID) != cacheBuffers_.end()) {
-        return cacheBuffers_.at(streamID);
+    auto it = cacheBuffers_.find(streamID);
+    if (it != cacheBuffers_.end()) {
+        return it->second;
     }
     return nullptr;
+}
+
+std::shared_ptr<CacheBuffer> StreamIDManager::FindCacheBufferLock(const int32_t streamID)
+{
+    std::lock_guard lock(streamIDManagerLock_);
+    return FindCacheBuffer(streamID);
 }
 
 int32_t StreamIDManager::GetStreamIDBySoundID(const int32_t soundID)
