@@ -23,7 +23,7 @@ const std::string AUDIO_INTERRUPT_CALLBACK_NAME = "audioInterrupt";
 const std::string END_OF_STREAM_CALLBACK_NAME = "endOfStream";
 const double PRECISION = 100.00;
 const int32_t MIN_DURATION = 10;
-cont int32_t MAX_DURATION = 200;
+const int32_t MAX_DURATION = 200;
 
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, "AudioHapticPlayerNapi"};
 }
@@ -490,7 +490,7 @@ napi_value AudioHapticPlayerNapi::SetLoop(napi_env env, napi_callback_info info)
         return promise;
     }
 
-    if (napi_get_value_bool(env, asyncContext->argv[PARAM0], asyncContext->loop) != napi_ok) {
+    if (napi_get_value_bool(env, asyncContext->argv[PARAM0], &asyncContext->loop) != napi_ok) {
         AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID, "input param is invalid");
         return promise;
     }
