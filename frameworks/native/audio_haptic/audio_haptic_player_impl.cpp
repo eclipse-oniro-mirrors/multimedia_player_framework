@@ -310,6 +310,7 @@ int32_t AudioHapticPlayerImpl::SetHapticsPatternMaxDuration(int32_t duration)
     }
 
     audioHapticVibrator_->SetHapticsPatternMaxDuration(duration);
+    return result;
 }
 
 int32_t AudioHapticPlayerImpl::SetHapticIntensity(float intensity)
