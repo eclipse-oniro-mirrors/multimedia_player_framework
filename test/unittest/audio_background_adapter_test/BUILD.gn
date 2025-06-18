@@ -56,6 +56,7 @@ ohos_unittest("audio_background_adapter_unit_test") {
     "av_codec:av_codec_client",
     "common_event_service:cesfwk_innerkits",
     "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
     "hdf_core:libhdi",
     "hicollie:libhicollie",
     "hilog:libhilog",
