@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,10 @@
 #include "media_server_manager.h"
 #include "mem_mgr_client.h"
 #include "mem_mgr_proxy.h"
+#include "audio_background_adapter.h"
+#ifdef SUPPORT_CALL
+#include "incall_observer.h"
+#endif
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaServer"};
@@ -69,6 +73,11 @@ void MediaServer::OnStart()
     bool res = Publish(this);
     MEDIA_LOGD("MediaServer OnStart res=%{public}d", res);
     AddSystemAbilityListener(MEMORY_MANAGER_SA_ID);
+    AddSystemAbilityListener(AUDIO_POLICY_SERVICE_ID);
+#ifdef SUPPORT_CALL
+    MEDIA_LOGD("InCallObserver init OnStart");
+    InCallObserver::GetInstance();
+#endif
 }
 
 void MediaServer::OnStop()
@@ -76,6 +85,24 @@ void MediaServer::OnStop()
     MEDIA_LOGD("MediaServer OnStop");
     Memory::MemMgrClient::GetInstance().NotifyProcessStatus(getpid(),
         SYSTEM_PROCESS_TYPE, SYSTEM_STATUS_STOP, OHOS::PLAYER_DISTRIBUTED_SERVICE_ID);
+}
+
+int32_t MediaServer::FreezeStubForPids(const std::set<int32_t> &pidList, bool isProxy)
+{
+    int32_t size = static_cast<int32_t>(pidList.size());
+    MEDIA_LOGI("received Freeze Notification, pidSize = %{public}d, isProxy = %{public}d",
+               size, isProxy);
+    
+    for (auto pid : pidList) {
+        MEDIA_LOGI("received Freeze Pid, pid = %{public}d, isProxy = %{public}d",
+            pid, isProxy);
+    }
+    return MediaServerManager::GetInstance().FreezeStubForPids(pidList, isProxy);
+}
+
+int32_t MediaServer::ResetAllProxy()
+{
+    return MediaServerManager::GetInstance().ResetAllProxy();
 }
 
 #ifdef SUPPORT_START_STOP_ON_DEMAND
@@ -127,6 +154,8 @@ void MediaServer::OnAddSystemAbility(int32_t systemAbilityId, const std::string 
         Memory::MemMgrClient::GetInstance().NotifyProcessStatus(getpid(),
             SYSTEM_PROCESS_TYPE, SYSTEM_STATUS_START, OHOS::PLAYER_DISTRIBUTED_SERVICE_ID);
         MediaServerManager::GetInstance().NotifyMemMgrLoaded();
+    } else if (systemAbilityId == AUDIO_POLICY_SERVICE_ID) {
+        AudioBackgroundAdapter::Instance().OnAudioRestart();
     }
 }
 
@@ -199,6 +228,11 @@ int32_t MediaServer::Dump(int32_t fd, const std::vector<std::u16string> &args)
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to call MediaServerManager::Dump.");
     return OHOS::NO_ERROR;
+}
+
+bool MediaServer::CanKillMediaService()
+{
+    return MediaServerManager::GetInstance().CanKillMediaService();
 }
 } // namespace Media
 } // namespace OHOS

@@ -28,6 +28,7 @@ class IStandardPlayerService : public IRemoteBroker {
 public:
     virtual ~IStandardPlayerService() = default;
     virtual int32_t SetListenerObject(const sptr<IRemoteObject> &object) = 0;
+    virtual int32_t SetPlayerProducer(const PlayerProducer producer) = 0;
     virtual int32_t SetSource(const std::string &url) = 0;
     virtual int32_t SetSource(const sptr<IRemoteObject> &object) = 0;
     virtual int32_t SetSource(int32_t fd, int64_t offset, int64_t size) = 0;
@@ -85,6 +86,7 @@ public:
     virtual int32_t GetVideoHeight() = 0;
     virtual int32_t GetDuration(int32_t &duration) = 0;
     virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode) = 0;
+    virtual int32_t SetPlaybackRate(float rate) = 0;
     virtual int32_t GetPlaybackSpeed(PlaybackRateMode &mode) = 0;
     virtual int32_t SetSourceLoader(const sptr<IRemoteObject> &object) = 0;
     virtual int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) = 0;
@@ -157,11 +159,46 @@ public:
         return 0;
     }
 
+    virtual int32_t SetStartFrameRateOptEnabled(bool enabled)
+    {
+        (void)enabled;
+        return 0;
+    }
+
+    virtual int32_t SetReopenFd(int32_t fd)
+    {
+        (void)fd;
+        return 0;
+    }
+ 
+    virtual int32_t EnableCameraPostprocessing()
+    {
+        return 0;
+    }
+
+    virtual int32_t EnableReportMediaProgress(bool enable)
+    {
+        (void)enable;
+        return 0;
+    }
+
+    virtual int32_t EnableReportAudioInterrupt(bool enable)
+    {
+        (void)enable;
+        return 0;
+    }
+    
+    virtual int32_t ForceLoadVideo(bool /* enabled */)
+    {
+        return 0;
+    }
+
     /**
      * IPC code ID
      */
     enum PlayerServiceMsg {
         SET_LISTENER_OBJ = 0,
+        SET_PLAYER_PRODUCER,
         SET_SOURCE,
         SET_MEDIA_DATA_SRC_OBJ,
         SET_FD_SOURCE,
@@ -186,6 +223,7 @@ public:
         GET_PLAY_BACK_POSITION,
         GET_DURATION,
         SET_PLAYERBACK_SPEED,
+        SET_PLAYERBACK_RATE,
         GET_PLAYERBACK_SPEED,
         SET_MEDIA_SOURCE,
         SET_VIDEO_SURFACE,
@@ -214,6 +252,12 @@ public:
         GET_API_VERSION,
         IS_SEEK_CONTINUOUS_SUPPORTED,
         SET_SOURCE_LOADER,
+        SET_START_FRAME_RATE_OPT_ENABLED,
+        SET_REOPEN_FD,
+        ENABLE_CAMERA_POSTPROCESSING,
+        ENABLE_REPORT_MEDIA_PROGRESS,
+        ENABLE_REPORT_AUDIO_INTERRUPT,
+        FORCE_LOAD_VIDEO,
         MAX_IPC_ID,                   // all IPC codes should be added before MAX_IPC_ID
     };
 

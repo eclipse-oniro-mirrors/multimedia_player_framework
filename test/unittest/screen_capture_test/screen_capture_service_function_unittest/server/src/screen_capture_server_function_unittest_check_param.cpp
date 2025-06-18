@@ -118,5 +118,38 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureStreamParams_002, TestSize
     screenCaptureServer_->captureConfig_ = config_;
     ASSERT_NE(screenCaptureServer_->CheckCaptureStreamParams(), MSERR_OK);
 }
+
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckDisplayArea_001, TestSize.Level2)
+{
+    OHOS::Rect area;
+    area.x = 0;
+    area.y = 0;
+    area.w = 5;
+    area.h = 5;
+    bool ret = screenCaptureServer_->CheckDisplayArea(0, area);
+    EXPECT_EQ(ret, true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckDisplayArea_002, TestSize.Level2)
+{
+    OHOS::Rect area;
+    area.x = 0;
+    area.y = 0;
+    area.w = 5;
+    area.h = 5;
+    bool ret = screenCaptureServer_->CheckDisplayArea(10, area);
+    EXPECT_EQ(ret, false);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckDisplayArea_003, TestSize.Level2)
+{
+    OHOS::Rect area;
+    area.x = 0;
+    area.y = 0;
+    area.w = 5000;
+    area.h = 5000;
+    bool ret = screenCaptureServer_->CheckDisplayArea(0, area);
+    EXPECT_EQ(ret, false);
+}
 } // Media
 } // OHOS

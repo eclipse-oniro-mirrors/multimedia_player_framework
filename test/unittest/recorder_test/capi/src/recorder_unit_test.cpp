@@ -25,7 +25,7 @@
 #include "native_window.h"
 #include "media_log.h"
 #include "media_errors.h"
-#include "display_type.h"
+#include "display/composer/v1_2/display_composer_type.h"
 
 using namespace std;
 using namespace OHOS;
@@ -43,6 +43,7 @@ const int32_t STUB_STREAM_COUNT = 602;
 const int32_t STRIDE_ALIGN = 8;
 const int32_t FRAME_DURATION = 30000;
 const int32_t SEC_TO_NS = 1000000000;
+const int32_t RECORDING_TIME = 3;
 
 static HapInfoParams hapInfo = {
     .userID = 100, // 100 user ID
@@ -117,6 +118,14 @@ static OH_AVRecorder_Profile profile_ = {
     .enableTemporalScale = false,
 };
 
+static OH_AVRecorder_Profile audioProfile_ = {
+    .audioBitrate = 96000,
+    .audioSampleRate = 48000,
+    .audioChannels = 2,
+    .audioCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AAC,
+    .fileFormat = OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_MPEG_4,
+};
+
 static OH_AVRecorder_Location location_ = {
     .latitude = 31.123456,
     .longitude = 121.123456,
@@ -138,6 +147,14 @@ static OH_AVRecorder_Config config_ = {
     .audioSourceType = OH_AVRecorder_AudioSourceType::AVRECORDER_MIC,
     .videoSourceType = OH_AVRecorder_VideoSourceType::AVRECORDER_SURFACE_YUV,
     .profile = profile_,
+    .url = nullptr,
+    .fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_APP_CREATE,
+    .metadata = metadata_,
+};
+
+static OH_AVRecorder_Config audioConfig_ = {
+    .audioSourceType = OH_AVRecorder_AudioSourceType::AVRECORDER_MIC,
+    .profile = audioProfile_,
     .url = nullptr,
     .fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_APP_CREATE,
     .metadata = metadata_,
@@ -244,7 +261,7 @@ OH_AVErrCode RequesetBuffer(OHNativeWindow *window, const OH_AVRecorder_Config *
     requestConfig.width = config->profile.videoFrameWidth;
     requestConfig.height = config->profile.videoFrameHeight;
     requestConfig.strideAlignment = STRIDE_ALIGN;
-    requestConfig.format = PIXEL_FMT_YCBCR_420_SP;
+    requestConfig.format = OHOS::HDI::Display::Composer::V1_2::PixelFormat::PIXEL_FMT_YCBCR_420_SP;
     requestConfig.usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA;
     requestConfig.timeout = INT_MAX;
     BufferFlushConfig flushConfig;
@@ -2274,4 +2291,120 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_SetMaxDuration_007, TestSize.Level2)
     free(config.metadata.customInfo.value);
 
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetMaxDuration_007 out.");
+}
+
+/**
+ * @tc.name: Recorder_AAC_001
+ * @tc.desc: Test AAC container format
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_AAC_001, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_AAC_001 in.");
+
+    OH_AVRecorder_Config config = audioConfig_;
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_AAC_001.aac").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
+
+    config.metadata.genre = strdup("");
+    config.metadata.customInfo.key = strdup("abc");
+    config.metadata.customInfo.value = strdup("123");
+    config.metadata.location.latitude = 31.791863;
+    config.metadata.location.longitude = 64.574687;
+
+    config.profile.audioBitrate = 32000;
+    config.profile.audioChannels = 2;
+    config.profile.audioSampleRate = 8000;
+    config.audioSourceType = OH_AVRecorder_AudioSourceType::AVRECORDER_MIC;
+    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AAC;
+    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_AAC;
+    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_APP_CREATE;
+
+    int32_t ret = AV_ERR_OK;
+    ret = OH_AVRecorder_Prepare(recorder_, &config);
+    EXPECT_EQ(ret, AV_ERR_OK);
+
+    ret = OH_AVRecorder_Start(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    sleep(RECORDING_TIME);
+    
+    ret = OH_AVRecorder_Pause(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    sleep(RECORDING_TIME/2);
+
+    ret = OH_AVRecorder_Resume(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    sleep(RECORDING_TIME);
+
+    ret = OH_AVRecorder_Stop(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
+
+    ret = OH_AVRecorder_Reset(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
+
+    free(config.url);
+    free(config.metadata.genre);
+    free(config.metadata.customInfo.key);
+    free(config.metadata.customInfo.value);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_AAC_001 out.");
+}
+
+/**
+ * @tc.name: Recorder_AAC_002
+ * @tc.desc: Test AAC container format
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_AAC_002, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_AAC_002 in.");
+
+    OH_AVRecorder_Config config = audioConfig_;
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_AAC_002.aac").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
+
+    config.metadata.genre = strdup("");
+    config.metadata.customInfo.key = strdup("abc");
+    config.metadata.customInfo.value = strdup("123");
+    config.metadata.location.latitude = 31.791863;
+    config.metadata.location.longitude = 64.574687;
+
+    config.profile.audioBitrate = 32000;
+    config.profile.audioChannels = 2;
+    config.profile.audioSampleRate = 96000;
+    config.audioSourceType = OH_AVRecorder_AudioSourceType::AVRECORDER_MIC;
+    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AAC;
+    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_AAC;
+    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_APP_CREATE;
+
+    int32_t ret = AV_ERR_OK;
+    ret = OH_AVRecorder_Prepare(recorder_, &config);
+    EXPECT_EQ(ret, AV_ERR_OK);
+
+    ret = OH_AVRecorder_Start(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    sleep(RECORDING_TIME);
+    
+    ret = OH_AVRecorder_Pause(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    sleep(RECORDING_TIME/2);
+
+    ret = OH_AVRecorder_Resume(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    sleep(RECORDING_TIME);
+
+    ret = OH_AVRecorder_Stop(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
+
+    ret = OH_AVRecorder_Reset(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
+
+    free(config.url);
+    free(config.metadata.genre);
+    free(config.metadata.customInfo.key);
+    free(config.metadata.customInfo.value);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_AAC_002 out.");
 }

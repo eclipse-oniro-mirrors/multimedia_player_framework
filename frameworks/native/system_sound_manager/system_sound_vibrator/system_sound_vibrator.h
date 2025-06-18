@@ -40,7 +40,7 @@ public:
 
 private:
     static int32_t ExtractFd(const std::string &hapticsUri);
-    static int32_t VibrateForRingtone(const std::string &hapticUri);
+    static int32_t VibrateForRingtone(const std::string hapticUri);
     static int32_t VibrateLoopFunc(std::unique_lock<std::mutex> &lock, int32_t fd);
 
     static std::mutex g_vibrateMutex;

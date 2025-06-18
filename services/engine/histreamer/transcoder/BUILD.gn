@@ -76,6 +76,7 @@ ohos_static_library("media_engine_histreamer_transcoder") {
     "graphic_surface:sync_fence",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
     "ipc:ipc_single",
     "media_foundation:media_foundation",
     "safwk:system_ability_fwk",

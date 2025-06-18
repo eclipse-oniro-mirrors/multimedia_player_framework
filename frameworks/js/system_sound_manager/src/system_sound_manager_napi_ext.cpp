@@ -32,6 +32,7 @@ const int32_t PARAM1 = 1;
 const int32_t PARAM2 = 2;
 
 /* Constants for array size */
+const int32_t ARGS_ONE = 1;
 const int32_t ARGS_TWO = 2;
 const int32_t ARGS_THREE = 3;
 const int32_t SIZE = 1024;
@@ -39,6 +40,7 @@ const int32_t SIZE = 1024;
 const int UNSUPPORTED_ERROR = -5;
 const int OPERATION_ERROR = -4;
 const int IO_ERROR = -3;
+const int ERROR = -1;
 
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, "SystemSoundManagerNapi"};
 }
@@ -545,6 +547,297 @@ void SystemSoundManagerNapi::OpenToneHapticsAsyncCallbackComp(napi_env env, napi
     napi_delete_async_work(env, context->work);
     delete context;
     context = nullptr;
+}
+
+napi_value SystemSoundManagerNapi::RemoveCustomizedToneList(napi_env env, napi_callback_info info)
+{
+    MEDIA_LOGI("RemoveCustomizedToneList start");
+    CHECK_AND_RETURN_RET_LOG(VerifySelfSystemPermission(),
+        ThrowErrorAndReturn(env, NAPI_ERR_PERMISSION_DENIED_INFO, NAPI_ERR_PERMISSION_DENIED),
+        "No system permission");
+    CHECK_AND_RETURN_RET_LOG(VerifyRingtonePermission(), ThrowErrorAndReturn(env,
+        NAPI_ERR_NO_PERMISSION_INFO, NAPI_ERR_NO_PERMISSION), "Permission denied");
+    napi_value result = nullptr;
+    napi_value resource = nullptr;
+    napi_value thisVar = nullptr;
+    size_t argc = ARGS_ONE;
+    napi_value argv[ARGS_ONE] = {};
+
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr);
+    napi_get_undefined(env, &result);
+    CHECK_AND_RETURN_RET_LOG((status == napi_ok && thisVar != nullptr), result,
+        "RemoveCustomizedToneList: Failed to retrieve details about the callback");
+
+    CHECK_AND_RETURN_RET_LOG(argc == ARGS_ONE, ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO,
+        NAPI_ERR_INPUT_INVALID), "invalid arguments");
+    std::unique_ptr<SystemSoundManagerAsyncContext> asyncContext = std::make_unique<SystemSoundManagerAsyncContext>();
+    status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->objectInfo != nullptr, result,
+        "RemoveCustomizedToneList: Failed to unwrap object");
+
+    status = GetUriVector(env, asyncContext->uriList, argv[PARAM0]);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "GetUriVector: Failed to get uriList");
+    CHECK_AND_RETURN_RET_LOG(!asyncContext->uriList.empty(), ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO,
+        NAPI_ERR_INPUT_INVALID), "invalid arguments");
+
+    napi_create_promise(env, &asyncContext->deferred, &result);
+    napi_create_string_utf8(env, "RemoveCustomizedToneList", NAPI_AUTO_LENGTH, &resource);
+
+    status = napi_create_async_work(env, nullptr, resource, AsyncRemoveCustomizedToneList,
+        RemoveCustomizedToneListAsyncCallbackComp, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+    if (status != napi_ok) {
+        MEDIA_LOGE("RemoveCustomizedToneList : Failed to get create async work");
+        napi_get_undefined(env, &result);
+    } else {
+        napi_queue_async_work(env, asyncContext->work);
+        asyncContext.release();
+    }
+    return result;
+}
+
+napi_status SystemSoundManagerNapi::GetUriVector(const napi_env &env,
+    std::vector<std::string> &uriList, napi_value in)
+{
+    uint32_t arrayLen = 0;
+    napi_get_array_length(env, in, &arrayLen);
+    for (uint32_t i = 0; i < arrayLen; i++) {
+        napi_value element;
+        if (napi_get_element(env, in, i, &element) == napi_ok) {
+            uriList.push_back(GetStringArgument(env, element));
+        }
+    }
+    return napi_ok;
+}
+
+std::string SystemSoundManagerNapi::GetStringArgument(napi_env env, napi_value value)
+{
+    std::string strValue = "";
+    size_t bufLength = 0;
+    napi_status status = napi_get_value_string_utf8(env, value, nullptr, 0, &bufLength);
+    if (status == napi_ok && bufLength > 0 && bufLength < PATH_MAX) {
+        strValue.reserve(bufLength + 1);
+        strValue.resize(bufLength);
+        status = napi_get_value_string_utf8(env, value, strValue.data(), bufLength + 1, &bufLength);
+        if (status == napi_ok) {
+            MEDIA_LOGE("argument = %{public}s", strValue.c_str());
+        }
+    }
+    return strValue;
+}
+
+void SystemSoundManagerNapi::AsyncRemoveCustomizedToneList(napi_env env, void *data)
+{
+    SystemSoundManagerAsyncContext *context = static_cast<SystemSoundManagerAsyncContext *>(data);
+    SystemSoundError error = ERROR_INVALID_PARAM;
+    if (context->objectInfo->sysSoundMgrClient_ != nullptr) {
+        context->removeResultArray = context->objectInfo->sysSoundMgrClient_->RemoveCustomizedToneList(
+            context->uriList, error);
+    }
+    if (error == ERROR_INVALID_PARAM) {
+        context->status = ERROR;
+        context->errCode = ERROR_INVALID_PARAM;
+        context->errMessage = NAPI_ERR_URILIST_OVER_LIMIT_INFO;
+    }
+}
+
+void SystemSoundManagerNapi::RemoveCustomizedToneListAsyncCallbackComp(napi_env env, napi_status status, void* data)
+{
+    auto context = static_cast<SystemSoundManagerAsyncContext *>(data);
+    napi_value result[2] = {};
+    if (!context->status) {
+        napi_get_undefined(env, &result[PARAM0]);
+        context->status = napi_create_array_with_length(env, context->removeResultArray.size(), &result[PARAM1]);
+        size_t count = 0;
+        for (auto &removeResult : context->removeResultArray) {
+            napi_value jsTuple;
+            napi_create_array(env, &jsTuple);
+
+            napi_value jsString;
+            napi_create_string_utf8(env, std::get<0>(removeResult).c_str(), NAPI_AUTO_LENGTH, &jsString);
+            napi_set_element(env, jsTuple, 0, jsString);
+
+            napi_value jsError;
+            napi_create_int32(env, static_cast<int>(std::get<1>(removeResult)), &jsError);
+            napi_set_element(env, jsTuple, 1, jsError);
+
+            napi_set_element(env, result[PARAM1], count, jsTuple);
+            count++;
+        }
+    } else {
+        result[PARAM0] = AsyncThrowErrorAndReturn(env, context->errMessage, context->errCode);
+        napi_get_undefined(env, &result[PARAM1]);
+    }
+    if (context->deferred) {
+        if (!context->status) {
+            napi_resolve_deferred(env, context->deferred, result[PARAM1]);
+        } else {
+            napi_reject_deferred(env, context->deferred, result[PARAM0]);
+        }
+    }
+    napi_delete_async_work(env, context->work);
+    delete context;
+    context = nullptr;
+}
+
+napi_value SystemSoundManagerNapi::OpenToneList(napi_env env, napi_callback_info info)
+{
+    MEDIA_LOGI("OpenToneList start");
+    CHECK_AND_RETURN_RET_LOG(VerifySelfSystemPermission(),
+        ThrowErrorAndReturn(env, NAPI_ERR_PERMISSION_DENIED_INFO, NAPI_ERR_PERMISSION_DENIED),
+        "No system permission");
+    napi_value result = nullptr;
+    napi_value resource = nullptr;
+    napi_value thisVar = nullptr;
+    size_t argc = ARGS_ONE;
+    napi_value argv[ARGS_ONE] = {};
+
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr);
+    napi_get_undefined(env, &result);
+    CHECK_AND_RETURN_RET_LOG((status == napi_ok && thisVar != nullptr), result,
+        "OpenToneList: Failed to retrieve details about the callback");
+    CHECK_AND_RETURN_RET_LOG(argc == ARGS_ONE, ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO,
+        NAPI_ERR_INPUT_INVALID), "invalid arguments");
+
+    std::unique_ptr<SystemSoundManagerAsyncContext> asyncContext = std::make_unique<SystemSoundManagerAsyncContext>();
+    status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->objectInfo != nullptr, result,
+        "OpenToneList: Failed to unwrap object");
+
+    status = GetUriVector(env, asyncContext->uriList, argv[PARAM0]);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "GetUriVector: Failed to get uriList");
+    CHECK_AND_RETURN_RET_LOG(!asyncContext->uriList.empty(), ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO,
+        NAPI_ERR_INPUT_INVALID), "invalid arguments");
+
+    napi_create_promise(env, &asyncContext->deferred, &result);
+    napi_create_string_utf8(env, "OpenToneList", NAPI_AUTO_LENGTH, &resource);
+
+    status = napi_create_async_work(env, nullptr, resource, AsyncOpenToneList,
+        AsyncOpenToneListAsyncCallbackComp, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+    if (status != napi_ok) {
+        MEDIA_LOGE("OpenToneList : Failed to get create async work");
+        napi_get_undefined(env, &result);
+    } else {
+        napi_queue_async_work(env, asyncContext->work);
+        asyncContext.release();
+    }
+    return result;
+}
+
+void SystemSoundManagerNapi::AsyncOpenToneList(napi_env env, void *data)
+{
+    SystemSoundManagerAsyncContext *context = static_cast<SystemSoundManagerAsyncContext *>(data);
+    SystemSoundError error = ERROR_INVALID_PARAM;
+    if (context->objectInfo->sysSoundMgrClient_ != nullptr) {
+        context->openToneResultArray = context->objectInfo->sysSoundMgrClient_->OpenToneList(
+            context->uriList, error);
+    }
+    if (error == ERROR_INVALID_PARAM) {
+        context->status = ERROR;
+        context->errCode = ERROR_INVALID_PARAM;
+        context->errMessage = NAPI_ERR_URILIST_OVER_LIMIT_INFO;
+    }
+}
+
+void SystemSoundManagerNapi::AsyncOpenToneListAsyncCallbackComp(napi_env env, napi_status status, void* data)
+{
+    auto context = static_cast<SystemSoundManagerAsyncContext *>(data);
+    napi_value result[2] = {};
+
+    if (!context->status) {
+        napi_get_undefined(env, &result[PARAM0]);
+        context->status = napi_create_array_with_length(env, context->openToneResultArray.size(), &result[PARAM1]);
+        size_t count = 0;
+
+        for (auto &openToneResult : context->openToneResultArray) {
+            napi_value jsTuple;
+            napi_create_array(env, &jsTuple);
+            napi_value jsString;
+            napi_create_string_utf8(env, std::get<PARAM0>(openToneResult).c_str(), NAPI_AUTO_LENGTH, &jsString);
+            napi_set_element(env, jsTuple, PARAM0, jsString);
+
+            napi_value jsNumber;
+            napi_create_int64(env, std::get<PARAM1>(openToneResult), &jsNumber);
+            napi_set_element(env, jsTuple, PARAM1, jsNumber);
+
+            napi_value jsError;
+            napi_create_int32(env, static_cast<int>(std::get<PARAM2>(openToneResult)), &jsError);
+            napi_set_element(env, jsTuple, PARAM2, jsError);
+
+            napi_set_element(env, result[PARAM1], count, jsTuple);
+            count++;
+        }
+    } else {
+        result[PARAM0] = AsyncThrowErrorAndReturn(env, context->errMessage, context->errCode);
+        napi_get_undefined(env, &result[PARAM1]);
+    }
+
+    if (context->deferred) {
+        if (!context->status) {
+            napi_resolve_deferred(env, context->deferred, result[PARAM1]);
+        } else {
+            napi_reject_deferred(env, context->deferred, result[PARAM0]);
+        }
+    }
+    napi_delete_async_work(env, context->work);
+    delete context;
+    context = nullptr;
+}
+
+napi_value SystemSoundManagerNapi::GetCurrentRingtoneAttribute(napi_env env, napi_callback_info info)
+{
+    MEDIA_LOGI("GetCurrentRingtoneAttribute start");
+    CHECK_AND_RETURN_RET_LOG(VerifySelfSystemPermission(),
+        ThrowErrorAndReturn(env, NAPI_ERR_PERMISSION_DENIED_INFO, NAPI_ERR_PERMISSION_DENIED),
+        "No system permission");
+    napi_value result = nullptr;
+    napi_value resource = nullptr;
+    napi_value thisVar = nullptr;
+    size_t argc = ARGS_ONE;
+    napi_value argv[ARGS_ONE] = {0};
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr);
+    napi_get_undefined(env, &result);
+
+    CHECK_AND_RETURN_RET_LOG((status == napi_ok && thisVar != nullptr), result,
+        "GetCurrentRingtoneAttribute: Failed to retrieve details about the callback");
+    CHECK_AND_RETURN_RET_LOG(argc == ARGS_ONE, ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO,
+        NAPI_ERR_INPUT_INVALID), "invalid arguments");
+
+    std::unique_ptr<SystemSoundManagerAsyncContext> asyncContext = std::make_unique<SystemSoundManagerAsyncContext>();
+    status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->objectInfo != nullptr, result,
+        "GetCurrentRingtoneAttribute: Failed to unwrap object");
+
+    napi_get_value_int32(env, argv[PARAM0], &asyncContext->ringtoneType);
+    MEDIA_LOGI("GetCurrentRingtoneAttribute ringtoneType is: %{public}d", asyncContext->ringtoneType);
+    CHECK_AND_RETURN_RET_LOG(asyncContext->ringtoneType == RINGTONE_TYPE_SIM_CARD_0 || asyncContext->ringtoneType
+        == RINGTONE_TYPE_SIM_CARD_1,
+        ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO, NAPI_ERR_INPUT_INVALID), "Parameter error");
+
+    napi_create_promise(env, &asyncContext->deferred, &result);
+    napi_create_string_utf8(env, "GetCurrentRingtoneAttribute", NAPI_AUTO_LENGTH, &resource);
+    status = napi_create_async_work(env, nullptr, resource, AsyncGetCurrentRingtoneAttribute,
+        GetDefaultAttrsAsyncCallbackComp, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+    if (status != napi_ok) {
+        napi_get_undefined(env, &result);
+    } else {
+        napi_queue_async_work(env, asyncContext->work);
+        asyncContext.release();
+    }
+    return result;
+}
+
+void SystemSoundManagerNapi::AsyncGetCurrentRingtoneAttribute(napi_env env, void *data)
+{
+    SystemSoundManagerAsyncContext *context = static_cast<SystemSoundManagerAsyncContext *>(data);
+    if (context->objectInfo->sysSoundMgrClient_ != nullptr) {
+        context->toneAttrs = std::make_shared<ToneAttrs>(context->objectInfo->sysSoundMgrClient_->
+            GetCurrentRingtoneAttribute(static_cast<RingtoneType>(context->ringtoneType)));
+    }
+    if (context->toneAttrs == nullptr) {
+        context->status = ERROR;
+        context->errCode = NAPI_ERR_IO_ERROR;
+        context->errMessage = "I/O error. Can not get default ring tone.";
+    }
 }
 } // namespace Media
 } // namespace OHOS

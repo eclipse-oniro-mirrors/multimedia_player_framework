@@ -15,10 +15,7 @@
 
 #ifndef MEDIA_SOUND_MANAGER_UNIT_TEST_H
 #define MEDIA_SOUND_MANAGER_UNIT_TEST_H
-#include "../../../system_sound_manager_impl.h"
 #include <gtest/gtest.h>
-#include "context_impl.h"
-#include "tone_attrs.h"
 
 namespace OHOS {
 namespace Media {

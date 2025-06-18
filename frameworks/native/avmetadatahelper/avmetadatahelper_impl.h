@@ -40,6 +40,8 @@ public:
     ~AVMetadataHelperImpl();
 
     int32_t SetSource(const std::string &uri, int32_t usage) override;
+    int32_t SetAVMetadataCaller(AVMetadataCaller caller) override;
+    int32_t SetUrlSource(const std::string &uri, const std::map<std::string, std::string> &header) override;
     int32_t SetSource(int32_t fd, int64_t offset, int64_t size, int32_t usage) override;
     int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) override;
     std::string ResolveMetadata(int32_t key) override;
@@ -48,6 +50,7 @@ public:
     std::shared_ptr<AVSharedMemory> FetchArtPicture() override;
     std::shared_ptr<PixelMap> FetchFrameAtTime(int64_t timeUs, int32_t option, const PixelMapParams &param) override;
     std::shared_ptr<PixelMap> FetchFrameYuv(int64_t timeUs, int32_t option, const PixelMapParams &param) override;
+    std::shared_ptr<PixelMap> FetchScaledFrameYuv(int64_t timeUs, int32_t option, const PixelMapParams &param) override;
     void Release() override;
     int32_t Init();
     int32_t SetHelperCallback(const std::shared_ptr<HelperCallback> &callback) override;
@@ -108,7 +111,13 @@ private:
     void SetPixelMapYuvInfo(sptr<SurfaceBuffer> &surfaceBuffer, std::shared_ptr<PixelMap> pixelMap,
                             PixelMapInfo &pixelMapInfo, bool needModifyStride);
     std::string pixelFormatToString(PixelFormat pixelFormat);
+    static void ScalePixelMapByMode(std::shared_ptr<PixelMap> &pixelMap, PixelMapInfo &info,
+                                    const PixelMapParams &param, int32_t scaleMode);
     static void ScalePixelMap(std::shared_ptr<PixelMap> &pixelMap, PixelMapInfo &info, const PixelMapParams &param);
+    static void ScalePixelMapWithEqualRatio(std::shared_ptr<PixelMap> &pixelMap, PixelMapInfo &info,
+                                            const PixelMapParams &param);
+    std::shared_ptr<PixelMap> FetchFrameBase(int64_t timeUs, int32_t option,
+                                             const PixelMapParams &param, int32_t scaleMode);
     int32_t CopySurfaceBufferToPixelMap(sptr<SurfaceBuffer> &SurfaceBuffer,
                                         std::shared_ptr<PixelMap> pixelMap,
                                         PixelMapInfo &pixelMapInfo);

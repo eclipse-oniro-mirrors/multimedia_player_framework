@@ -19,8 +19,13 @@
 namespace OHOS {
 namespace Media {
 using namespace std;
+using namespace testing;
 using namespace testing::ext;
 
+static const int32_t PID_TEST = 12345;
+std::shared_ptr<MockMonitorServiceStub> g_mockMonitorServiceStub = nullptr;
+std::shared_ptr<MockRecorderProfilesServiceStub> g_mockRecorderProfilesServiceStub = nullptr;
+std::shared_ptr<MockTransCoderServiceStub> g_mockTransCoderServiceStub = nullptr;
 void MediaServerManagerTest::SetUpTestCase(void)
 {
 }
@@ -38,11 +43,82 @@ void MediaServerManagerTest::TearDown(void)
 }
 
 /**
- * @tc.name  : DestroyStubObject
- * @tc.number: DestroyStubObject
- * @tc.desc  : FUNC
+ * @tc.name  : FreezeStubForPids_001
+ * @tc.number: FreezeStubForPids_001
+ * @tc.desc  : Test FreezeStubForPids interface
  */
-HWTEST_F(MediaServerManagerTest, DestroyStubObject, TestSize.Level1)
+HWTEST_F(MediaServerManagerTest, FreezeStubForPids_001, TestSize.Level1)
+{
+    sptr<IRemoteObject> player =
+        MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::PLAYER);
+    ASSERT_NE(player, nullptr);
+    int32_t pid = IPCSkeleton::GetCallingPid();
+    std::set<int32_t> pidList;
+    pidList.insert(pid);
+    auto isProxy = true;
+    auto ret = MediaServerManager::GetInstance().FreezeStubForPids(pidList, isProxy);
+    EXPECT_EQ(ret, 0);
+    MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::PLAYER, player);
+}
+
+/**
+ * @tc.name  : FreezeStubForPids_002
+ * @tc.number: FreezeStubForPids_002
+ * @tc.desc  : Test FreezeStubForPids interface
+ */
+HWTEST_F(MediaServerManagerTest, FreezeStubForPids_002, TestSize.Level1)
+{
+    sptr<IRemoteObject> player =
+        MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::PLAYER);
+    ASSERT_NE(player, nullptr);
+    std::set<int32_t> pidList;
+    pidList.insert(PID_TEST);
+    auto isProxy = true;
+    auto ret = MediaServerManager::GetInstance().FreezeStubForPids(pidList, isProxy);
+    EXPECT_EQ(ret, 0);
+    MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::PLAYER, player);
+}
+
+/**
+ * @tc.name  : FreezeStubForPids_003
+ * @tc.number: FreezeStubForPids_003
+ * @tc.desc  : Test FreezeStubForPids interface
+ */
+HWTEST_F(MediaServerManagerTest, FreezeStubForPids_003, TestSize.Level1)
+{
+    sptr<IRemoteObject> player =
+        MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::PLAYER);
+    ASSERT_NE(player, nullptr);
+    int32_t pid = IPCSkeleton::GetCallingPid();
+    std::set<int32_t> pidList;
+    pidList.insert(pid);
+    auto isProxy = false;
+    auto ret = MediaServerManager::GetInstance().FreezeStubForPids(pidList, isProxy);
+    EXPECT_EQ(ret, 0);
+    MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::PLAYER, player);
+}
+
+/**
+ * @tc.name  : ResetAllProxy_001
+ * @tc.number: ResetAllProxy_001
+ * @tc.desc  : Test ResetAllProxy interface
+ */
+HWTEST_F(MediaServerManagerTest, ResetAllProxy, TestSize.Level1)
+{
+    sptr<IRemoteObject> player =
+        MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::PLAYER);
+    ASSERT_NE(player, nullptr);
+    auto ret = MediaServerManager::GetInstance().ResetAllProxy();
+    EXPECT_EQ(ret, 0);
+    MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::PLAYER, player);
+}
+
+/**
+ * @tc.name  : DestroyStubObject_001
+ * @tc.number: DestroyStubObject_001
+ * @tc.desc  : Test DestroyStubObject interface
+ */
+HWTEST_F(MediaServerManagerTest, DestroyStubObject_001, TestSize.Level1)
 {
     sptr<IRemoteObject> recorder =
         MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::RECORDER);
@@ -93,11 +169,11 @@ HWTEST_F(MediaServerManagerTest, DestroyStubObject, TestSize.Level1)
 }
 
 /**
- * @tc.name  : DestroyStubObjectByPid
- * @tc.number: DestroyStubObjectByPid
- * @tc.desc  : FUNC
+ * @tc.name  : DestroyStubObjectForPid_001
+ * @tc.number: DestroyStubObjectForPid_001
+ * @tc.desc  : Test DestroyStubObjectForPid interface
  */
-HWTEST_F(MediaServerManagerTest, DestroyStubObjectByPid, TestSize.Level1)
+HWTEST_F(MediaServerManagerTest, DestroyStubObjectForPid_001, TestSize.Level1)
 {
     sptr<IRemoteObject> recorder =
         MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::RECORDER);
@@ -134,6 +210,412 @@ HWTEST_F(MediaServerManagerTest, DestroyStubObjectByPid, TestSize.Level1)
     EXPECT_NE(screenCaptureMonitor, nullptr);
     pid_t pid = IPCSkeleton::GetCallingPid();
     MediaServerManager::GetInstance().DestroyStubObjectForPid(pid);
+}
+
+/**
+ * @tc.name  : DestroyAVPlayerStubForPid_001
+ * @tc.number: DestroyAVPlayerStubForPid_001
+ * @tc.desc  : Test DestroyAVPlayerStubForPid interface
+ */
+HWTEST_F(MediaServerManagerTest, DestroyAVPlayerStubForPid_001, TestSize.Level1)
+{
+    g_mockMonitorServiceStub = std::make_shared<MockMonitorServiceStub>();
+    ON_CALL(*g_mockMonitorServiceStub, GetInstance())
+       .WillByDefault(testing::Return(sptr<OHOS::Media::MonitorServiceStub>(g_mockMonitorServiceStub.get())));
+    MediaServerManager& mediaServerManager = MediaServerManager::GetInstance();
+    sptr<IRemoteObject> object = mediaServerManager.GetMonitorStubObject();
+    pid_t testPid = PID_TEST;
+    mediaServerManager.avMetadataHelperStubMap_[object] = testPid;
+    ASSERT_EQ(mediaServerManager.avMetadataHelperStubMap_.size(), 1);
+    mediaServerManager.DestroyAVPlayerStubForPid(testPid);
+    ASSERT_EQ(mediaServerManager.avMetadataHelperStubMap_.size(), 0);
+}
+
+/**
+ * @tc.name  : DestroyAVRecorderStubForPid_001
+ * @tc.number: DestroyAVRecorderStubForPid_001
+ * @tc.desc  : Test DestroyAVRecorderStubForPid interface
+ */
+HWTEST_F(MediaServerManagerTest, DestroyAVRecorderStubForPid_001, TestSize.Level1)
+{
+    ON_CALL(*g_mockMonitorServiceStub, GetInstance())
+       .WillByDefault(testing::Return(sptr<OHOS::Media::MonitorServiceStub>(g_mockMonitorServiceStub.get())));
+    MediaServerManager& mediaServerManager = MediaServerManager::GetInstance();
+    sptr<IRemoteObject> object = mediaServerManager.GetMonitorStubObject();
+    pid_t testPid = PID_TEST;
+    mediaServerManager.recorderStubMap_[object] = testPid;
+    ASSERT_EQ(mediaServerManager.recorderStubMap_.size(), 1);
+    mediaServerManager.DestroyAVRecorderStubForPid(testPid);
+    ASSERT_EQ(mediaServerManager.recorderStubMap_.size(), 0);
+}
+
+/**
+ * @tc.name  : DestroyAVRecorderStubForPid_002
+ * @tc.number: DestroyAVRecorderStubForPid_002
+ * @tc.desc  : Test DestroyAVRecorderStubForPid interface
+ */
+HWTEST_F(MediaServerManagerTest, DestroyAVRecorderStubForPid_002, TestSize.Level1)
+{
+    ON_CALL(*g_mockMonitorServiceStub, GetInstance())
+       .WillByDefault(testing::Return(sptr<OHOS::Media::MonitorServiceStub>(g_mockMonitorServiceStub.get())));
+    MediaServerManager& mediaServerManager = MediaServerManager::GetInstance();
+    sptr<IRemoteObject> object = mediaServerManager.GetMonitorStubObject();
+    pid_t testPid = PID_TEST;
+    mediaServerManager.recorderProfilesStubMap_[object] = testPid;
+    ASSERT_EQ(mediaServerManager.recorderProfilesStubMap_.size(), 1);
+    mediaServerManager.DestroyAVRecorderStubForPid(testPid);
+    ASSERT_EQ(mediaServerManager.recorderProfilesStubMap_.size(), 0);
+}
+
+/**
+ * @tc.name  : DestroyAVTranscoderStubForPid_001
+ * @tc.number: DestroyAVTranscoderStubForPid_001
+ * @tc.desc  : Test DestroyAVTranscoderStubForPid interface
+ */
+HWTEST_F(MediaServerManagerTest, DestroyAVTranscoderStubForPid_001, TestSize.Level1)
+{
+    ON_CALL(*g_mockMonitorServiceStub, GetInstance())
+       .WillByDefault(testing::Return(sptr<OHOS::Media::MonitorServiceStub>(g_mockMonitorServiceStub.get())));
+    MediaServerManager& mediaServerManager = MediaServerManager::GetInstance();
+    sptr<IRemoteObject> object = mediaServerManager.GetMonitorStubObject();
+    pid_t testPid = PID_TEST;
+    mediaServerManager.transCoderStubMap_[object] = testPid;
+    ASSERT_EQ(mediaServerManager.transCoderStubMap_.size(), 1);
+    mediaServerManager.DestroyAVTranscoderStubForPid(testPid);
+    ASSERT_EQ(mediaServerManager.transCoderStubMap_.size(), 0);
+}
+
+/**
+ * @tc.name  : DestroyAVCodecStubForPid_001
+ * @tc.number: DestroyAVCodecStubForPid_001
+ * @tc.desc  : Test DestroyAVCodecStubForPid interface
+ */
+HWTEST_F(MediaServerManagerTest, DestroyAVCodecStubForPid_001, TestSize.Level1)
+{
+    ON_CALL(*g_mockMonitorServiceStub, GetInstance())
+       .WillByDefault(testing::Return(sptr<OHOS::Media::MonitorServiceStub>(g_mockMonitorServiceStub.get())));
+    MediaServerManager& mediaServerManager = MediaServerManager::GetInstance();
+    sptr<IRemoteObject> object = mediaServerManager.GetMonitorStubObject();
+    pid_t testPid = PID_TEST;
+    mediaServerManager.avCodecStubMap_[object] = testPid;
+    ASSERT_EQ(mediaServerManager.avCodecStubMap_.size(), 1);
+    mediaServerManager.DestroyAVCodecStubForPid(testPid);
+    ASSERT_EQ(mediaServerManager.avCodecStubMap_.size(), 0);
+}
+
+/**
+ * @tc.name  : DestroyAVCodecStubForPid_002
+ * @tc.number: DestroyAVCodecStubForPid_002
+ * @tc.desc  : Test DestroyAVCodecStubForPid interface
+ */
+HWTEST_F(MediaServerManagerTest, DestroyAVCodecStubForPid_002, TestSize.Level1)
+{
+    ON_CALL(*g_mockMonitorServiceStub, GetInstance())
+       .WillByDefault(testing::Return(sptr<OHOS::Media::MonitorServiceStub>(g_mockMonitorServiceStub.get())));
+    MediaServerManager& mediaServerManager = MediaServerManager::GetInstance();
+    sptr<IRemoteObject> object = mediaServerManager.GetMonitorStubObject();
+    pid_t testPid = PID_TEST;
+    mediaServerManager.avCodecListStubMap_[object] = testPid;
+    ASSERT_EQ(mediaServerManager.avCodecListStubMap_.size(), 1);
+    mediaServerManager.DestroyAVCodecStubForPid(testPid);
+    ASSERT_EQ(mediaServerManager.avCodecListStubMap_.size(), 0);
+}
+
+/**
+ * @tc.name  : DestroyAVScreenCaptureStubForPid_001
+ * @tc.number: DestroyAVScreenCaptureStubForPid_001
+ * @tc.desc  : Test DestroyAVScreenCaptureStubForPid interface
+ */
+HWTEST_F(MediaServerManagerTest, DestroyAVScreenCaptureStubForPid_001, TestSize.Level1)
+{
+    ON_CALL(*g_mockMonitorServiceStub, GetInstance())
+       .WillByDefault(testing::Return(sptr<OHOS::Media::MonitorServiceStub>(g_mockMonitorServiceStub.get())));
+    MediaServerManager& mediaServerManager = MediaServerManager::GetInstance();
+    sptr<IRemoteObject> object = mediaServerManager.GetMonitorStubObject();
+    pid_t testPid = PID_TEST;
+    mediaServerManager.screenCaptureStubMap_[object] = testPid;
+    ASSERT_EQ(mediaServerManager.screenCaptureStubMap_.size(), 1);
+    mediaServerManager.DestroyAVScreenCaptureStubForPid(testPid);
+    ASSERT_EQ(mediaServerManager.screenCaptureStubMap_.size(), 0);
+}
+
+/**
+ * @tc.name  : DestroyAVScreenCaptureStubForPid_002
+ * @tc.number: DestroyAVScreenCaptureStubForPid_002
+ * @tc.desc  : Test DestroyAVScreenCaptureStubForPid interface
+ */
+HWTEST_F(MediaServerManagerTest, DestroyAVScreenCaptureStubForPid_002, TestSize.Level1)
+{
+    ON_CALL(*g_mockMonitorServiceStub, GetInstance())
+       .WillByDefault(testing::Return(sptr<OHOS::Media::MonitorServiceStub>(g_mockMonitorServiceStub.get())));
+    MediaServerManager& mediaServerManager = MediaServerManager::GetInstance();
+    sptr<IRemoteObject> object = mediaServerManager.GetMonitorStubObject();
+    pid_t testPid = PID_TEST;
+    mediaServerManager.screenCaptureMonitorStubMap_[object] = testPid;
+    ASSERT_EQ(mediaServerManager.screenCaptureMonitorStubMap_.size(), 1);
+    mediaServerManager.DestroyAVScreenCaptureStubForPid(testPid);
+    ASSERT_EQ(mediaServerManager.screenCaptureMonitorStubMap_.size(), 0);
+}
+
+/**
+ * @tc.name  : DestroyAVScreenCaptureStubForPid_003
+ * @tc.number: DestroyAVScreenCaptureStubForPid_003
+ * @tc.desc  : Test DestroyAVScreenCaptureStubForPid interface
+ */
+HWTEST_F(MediaServerManagerTest, DestroyAVScreenCaptureStubForPid_003, TestSize.Level1)
+{
+    ON_CALL(*g_mockMonitorServiceStub, GetInstance())
+       .WillByDefault(testing::Return(sptr<OHOS::Media::MonitorServiceStub>(g_mockMonitorServiceStub.get())));
+    MediaServerManager& mediaServerManager = MediaServerManager::GetInstance();
+    sptr<IRemoteObject> object = mediaServerManager.GetMonitorStubObject();
+    pid_t testPid = PID_TEST;
+    mediaServerManager.screenCaptureControllerStubMap_[object] = testPid;
+    ASSERT_EQ(mediaServerManager.screenCaptureControllerStubMap_.size(), 1);
+    mediaServerManager.DestroyAVScreenCaptureStubForPid(testPid);
+    ASSERT_EQ(mediaServerManager.screenCaptureControllerStubMap_.size(), 0);
+}
+
+/**
+ * @tc.name  : DestroyStubObject_002
+ * @tc.number: DestroyStubObject_002
+ * @tc.desc  : Test DestroyStubObject interface
+ */
+HWTEST_F(MediaServerManagerTest, DestroyStubObject_002, TestSize.Level1)
+{
+    ON_CALL(*g_mockMonitorServiceStub, GetInstance())
+       .WillByDefault(testing::Return(sptr<OHOS::Media::MonitorServiceStub>(g_mockMonitorServiceStub.get())));
+    MediaServerManager& mediaServerManager = MediaServerManager::GetInstance();
+    sptr<IRemoteObject> object = mediaServerManager.GetMonitorStubObject();
+    ASSERT_NE(object, nullptr);
+    pid_t testPid = IPCSkeleton::GetCallingPid();
+    mediaServerManager.avCodecStubMap_[object] = testPid;
+    ASSERT_EQ(mediaServerManager.avCodecStubMap_.size(), 1);
+    mediaServerManager.DestroyStubObject(MediaServerManager::StubType::AVCODEC, object);
+    ASSERT_EQ(mediaServerManager.avCodecStubMap_.size(), 0);
+}
+
+/**
+ * @tc.name  : DestroyAVScreenCaptureStub_001
+ * @tc.number: DestroyAVScreenCaptureStub_001
+ * @tc.desc  : Test DestroyAVScreenCaptureStub interface
+ */
+HWTEST_F(MediaServerManagerTest, DestroyAVScreenCaptureStub_001, TestSize.Level1)
+{
+    ON_CALL(*g_mockMonitorServiceStub, GetInstance())
+       .WillByDefault(testing::Return(sptr<OHOS::Media::MonitorServiceStub>(g_mockMonitorServiceStub.get())));
+    MediaServerManager& mediaServerManager = MediaServerManager::GetInstance();
+    sptr<IRemoteObject> object1 = nullptr;
+    sptr<IRemoteObject> object2 = MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::MONITOR);
+    pid_t testPid = 1;
+    mediaServerManager.screenCaptureControllerStubMap_[object2] = testPid;
+    ASSERT_EQ(mediaServerManager.screenCaptureControllerStubMap_.size(), 1);
+    mediaServerManager.DestroyAVScreenCaptureStub(MediaServerManager::StubType::SCREEN_CAPTURE, object1, testPid);
+    ASSERT_EQ(mediaServerManager.screenCaptureControllerStubMap_.size(), 1);
+}
+
+/**
+ * @tc.name  : DestroyAVScreenCaptureStub_002
+ * @tc.number: DestroyAVScreenCaptureStub_002
+ * @tc.desc  : Test DestroyAVScreenCaptureStub interface
+ */
+HWTEST_F(MediaServerManagerTest, DestroyAVScreenCaptureStub_002, TestSize.Level1)
+{
+    ON_CALL(*g_mockMonitorServiceStub, GetInstance())
+       .WillByDefault(testing::Return(sptr<OHOS::Media::MonitorServiceStub>(g_mockMonitorServiceStub.get())));
+    MediaServerManager& mediaServerManager = MediaServerManager::GetInstance();
+    sptr<IRemoteObject> object1 = nullptr;
+    sptr<IRemoteObject> object2 = MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::MONITOR);
+    pid_t testPid = 2;
+    mediaServerManager.screenCaptureMonitorStubMap_[object2] = testPid;
+    ASSERT_EQ(mediaServerManager.screenCaptureMonitorStubMap_.size(), 1);
+    mediaServerManager.DestroyAVScreenCaptureStub(MediaServerManager::StubType::SCREEN_CAPTURE_MONITOR,
+        object1, testPid);
+    ASSERT_EQ(mediaServerManager.screenCaptureMonitorStubMap_.size(), 1);
+}
+
+/**
+ * @tc.name  : DestroyAVScreenCaptureStub_003
+ * @tc.number: DestroyAVScreenCaptureStub_003
+ * @tc.desc  : Test DestroyAVScreenCaptureStub interface
+ */
+HWTEST_F(MediaServerManagerTest, DestroyAVScreenCaptureStub_003, TestSize.Level1)
+{
+    ON_CALL(*g_mockMonitorServiceStub, GetInstance())
+       .WillByDefault(testing::Return(sptr<OHOS::Media::MonitorServiceStub>(g_mockMonitorServiceStub.get())));
+    MediaServerManager& mediaServerManager = MediaServerManager::GetInstance();
+    sptr<IRemoteObject> object1 = nullptr;
+    sptr<IRemoteObject> object2 = MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::MONITOR);
+    pid_t testPid = 3;
+    mediaServerManager.screenCaptureControllerStubMap_[object2] = testPid;
+    ASSERT_EQ(mediaServerManager.screenCaptureControllerStubMap_.size(), 1);
+    mediaServerManager.DestroyAVScreenCaptureStub(MediaServerManager::StubType::SCREEN_CAPTURE_CONTROLLER,
+        object1, testPid);
+    ASSERT_EQ(mediaServerManager.screenCaptureControllerStubMap_.size(), 1);
+    mediaServerManager.DestroyAVScreenCaptureStub(MediaServerManager::StubType::TRANSCODER, object1, testPid);
+}
+
+/**
+ * @tc.name  : DestroyAVPlayerStub_001
+ * @tc.number: DestroyAVPlayerStub_001
+ * @tc.desc  : Test DestroyAVPlayerStub interface
+ */
+HWTEST_F(MediaServerManagerTest, DestroyAVPlayerStub_001, TestSize.Level1)
+{
+    ON_CALL(*g_mockMonitorServiceStub, GetInstance())
+       .WillByDefault(testing::Return(sptr<OHOS::Media::MonitorServiceStub>(g_mockMonitorServiceStub.get())));
+    MediaServerManager& mediaServerManager = MediaServerManager::GetInstance();
+    sptr<IRemoteObject> object1 = nullptr;
+    sptr<IRemoteObject> object2 = MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::MONITOR);
+    pid_t pid = IPCSkeleton::GetCallingPid();
+    mediaServerManager.playerStubMap_[object2] = pid;
+    ASSERT_EQ(mediaServerManager.playerStubMap_.size(), 1);
+    mediaServerManager.DestroyAVPlayerStub(MediaServerManager::StubType::PLAYER, object1, pid);
+    ASSERT_EQ(mediaServerManager.playerStubMap_.size(), 1);
+}
+
+/**
+ * @tc.name  : DestroyAVPlayerStub_002
+ * @tc.number: DestroyAVPlayerStub_002
+ * @tc.desc  : Test DestroyAVPlayerStub interface
+ */
+HWTEST_F(MediaServerManagerTest, DestroyAVPlayerStub_002, TestSize.Level1)
+{
+    ON_CALL(*g_mockMonitorServiceStub, GetInstance())
+       .WillByDefault(testing::Return(sptr<OHOS::Media::MonitorServiceStub>(g_mockMonitorServiceStub.get())));
+    MediaServerManager& mediaServerManager = MediaServerManager::GetInstance();
+    sptr<IRemoteObject> object1 = nullptr;
+    sptr<IRemoteObject> object2 = MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::MONITOR);
+    pid_t pid = IPCSkeleton::GetCallingPid();
+    mediaServerManager.avMetadataHelperStubMap_[object2] = pid;
+    ASSERT_EQ(mediaServerManager.avMetadataHelperStubMap_.size(), 1);
+    mediaServerManager.DestroyAVPlayerStub(MediaServerManager::StubType::AVMETADATAHELPER, object1, pid);
+    ASSERT_EQ(mediaServerManager.avMetadataHelperStubMap_.size(), 1);
+    mediaServerManager.DestroyAVPlayerStub(MediaServerManager::StubType::RECORDER, object1, pid);
+}
+
+/**
+ * @tc.name  : DestroyAVRecorderStub_001
+ * @tc.number: DestroyAVRecorderStub_001
+ * @tc.desc  : Test DestroyAVRecorderStub interface
+ */
+HWTEST_F(MediaServerManagerTest, DestroyAVRecorderStub_001, TestSize.Level1)
+{
+    ON_CALL(*g_mockMonitorServiceStub, GetInstance())
+       .WillByDefault(testing::Return(sptr<OHOS::Media::MonitorServiceStub>(g_mockMonitorServiceStub.get())));
+    MediaServerManager& mediaServerManager = MediaServerManager::GetInstance();
+    sptr<IRemoteObject> object1 = nullptr;
+    sptr<IRemoteObject> object2 = MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::MONITOR);
+    pid_t pid = IPCSkeleton::GetCallingPid();
+    mediaServerManager.recorderStubMap_[object2] = pid;
+    ASSERT_EQ(mediaServerManager.recorderStubMap_.size(), 1);
+    mediaServerManager.DestroyAVRecorderStub(MediaServerManager::StubType::RECORDER, object1, pid);
+    ASSERT_EQ(mediaServerManager.recorderStubMap_.size(), 1);
+}
+
+/**
+ * @tc.name  : DestroyAVRecorderStub_002
+ * @tc.number: DestroyAVRecorderStub_002
+ * @tc.desc  : Test DestroyAVRecorderStub interface
+ */
+HWTEST_F(MediaServerManagerTest, DestroyAVRecorderStub_002, TestSize.Level1)
+{
+    g_mockRecorderProfilesServiceStub = std::make_shared<MockRecorderProfilesServiceStub>();
+    ON_CALL(*g_mockRecorderProfilesServiceStub, GetInstance()).WillByDefault(testing::Return(
+        sptr<OHOS::Media::RecorderProfilesServiceStub>(g_mockRecorderProfilesServiceStub.get())));
+    MediaServerManager& mediaServerManager = MediaServerManager::GetInstance();
+    sptr<IRemoteObject> object =
+        MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::RECORDERPROFILES);
+    pid_t pid = IPCSkeleton::GetCallingPid();
+    mediaServerManager.recorderProfilesStubMap_[object] = pid;
+    ASSERT_EQ(mediaServerManager.recorderProfilesStubMap_.size(), 1);
+    mediaServerManager.DestroyAVRecorderStub(MediaServerManager::StubType::RECORDERPROFILES, object, pid);
+    ASSERT_EQ(mediaServerManager.recorderProfilesStubMap_.size(), 0);
+    mediaServerManager.DestroyAVRecorderStub(MediaServerManager::StubType::SCREEN_CAPTURE, object, pid);
+}
+
+/**
+ * @tc.name  : DestroyAVTransCoderStub_001
+ * @tc.number: DestroyAVTransCoderStub_001
+ * @tc.desc  : Test DestroyAVTransCoderStub interface
+ */
+HWTEST_F(MediaServerManagerTest, DestroyAVTransCoderStub_001, TestSize.Level1)
+{
+    g_mockTransCoderServiceStub = std::make_shared<MockTransCoderServiceStub>();
+    ON_CALL(*g_mockTransCoderServiceStub, GetInstance())
+       .WillByDefault(testing::Return(sptr<OHOS::Media::TransCoderServiceStub>(g_mockTransCoderServiceStub.get())));
+    MediaServerManager& mediaServerManager = MediaServerManager::GetInstance();
+    sptr<IRemoteObject> object1 = nullptr;
+    sptr<IRemoteObject> object2 = MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::TRANSCODER);
+    pid_t pid = IPCSkeleton::GetCallingPid();
+    mediaServerManager.transCoderStubMap_[object2] = pid;
+    ASSERT_EQ(mediaServerManager.transCoderStubMap_.size(), 1);
+    mediaServerManager.DestroyAVTransCoderStub(MediaServerManager::StubType::TRANSCODER, object1, pid);
+    ASSERT_EQ(mediaServerManager.transCoderStubMap_.size(), 1);
+    mediaServerManager.DestroyAVTransCoderStub(MediaServerManager::StubType::SCREEN_CAPTURE_MONITOR, object1, pid);
+}
+
+/**
+ * @tc.name  : DestroyAVCodecStub_001
+ * @tc.number: DestroyAVCodecStub_001
+ * @tc.desc  : Test DestroyAVCodecStub interface
+ */
+HWTEST_F(MediaServerManagerTest, DestroyAVCodecStub_001, TestSize.Level1)
+{
+    ON_CALL(*g_mockTransCoderServiceStub, GetInstance())
+       .WillByDefault(testing::Return(sptr<OHOS::Media::TransCoderServiceStub>(g_mockTransCoderServiceStub.get())));
+    MediaServerManager& mediaServerManager = MediaServerManager::GetInstance();
+    sptr<IRemoteObject> object1 = MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::TRANSCODER);
+    sptr<IRemoteObject> object2 = MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVCODEC);
+    pid_t pid = IPCSkeleton::GetCallingPid();
+    mediaServerManager.avCodecStubMap_[object2] = pid;
+    ASSERT_EQ(mediaServerManager.avCodecStubMap_.size(), 1);
+    mediaServerManager.DestroyAVCodecStub(MediaServerManager::StubType::AVCODEC, object1, pid);
+    ASSERT_EQ(mediaServerManager.avCodecStubMap_.size(), 1);
+    mediaServerManager.DestroyAVCodecStub(MediaServerManager::StubType::AVCODEC, object2, pid);
+    ASSERT_EQ(mediaServerManager.avCodecStubMap_.size(), 0);
+}
+
+/**
+ * @tc.name  : DestroyAVCodecStub_002
+ * @tc.number: DestroyAVCodecStub_002
+ * @tc.desc  : Test DestroyStubObjectForPid interface
+ */
+HWTEST_F(MediaServerManagerTest, DestroyAVCodecStub_002, TestSize.Level1)
+{
+    ON_CALL(*g_mockTransCoderServiceStub, GetInstance())
+       .WillByDefault(testing::Return(sptr<OHOS::Media::TransCoderServiceStub>(g_mockTransCoderServiceStub.get())));
+    MediaServerManager& mediaServerManager = MediaServerManager::GetInstance();
+    sptr<IRemoteObject> object1 = MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::TRANSCODER);
+    sptr<IRemoteObject> object2 = MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVCODECLIST);
+    pid_t pid = IPCSkeleton::GetCallingPid();
+    mediaServerManager.avCodecListStubMap_[object2] = pid;
+    ASSERT_EQ(mediaServerManager.avCodecListStubMap_.size(), 1);
+    mediaServerManager.DestroyAVCodecStub(MediaServerManager::StubType::AVCODECLIST, object1, pid);
+    ASSERT_EQ(mediaServerManager.avCodecListStubMap_.size(), 1);
+    mediaServerManager.DestroyAVCodecStub(MediaServerManager::StubType::AVCODECLIST, object2, pid);
+    ASSERT_EQ(mediaServerManager.avCodecListStubMap_.size(), 0);
+    mediaServerManager.DestroyAVCodecStub(MediaServerManager::StubType::SCREEN_CAPTURE_MONITOR, object2, pid);
+}
+
+/**
+ * @tc.name  : CreateStubObject_002
+ * @tc.number: CreateStubObject_002
+ * @tc.desc  : Test CreateStubObject interface
+ */
+HWTEST_F(MediaServerManagerTest, CreateStubObject_002, TestSize.Level1)
+{
+    ON_CALL(*g_mockMonitorServiceStub, GetInstance())
+       .WillByDefault(testing::Return(sptr<OHOS::Media::MonitorServiceStub>(g_mockMonitorServiceStub.get())));
+    ON_CALL(*g_mockRecorderProfilesServiceStub, GetInstance())
+       .WillByDefault(testing::Return(sptr<OHOS::Media::RecorderProfilesServiceStub>
+        (g_mockRecorderProfilesServiceStub.get())));
+    MediaServerManager& mediaServerManager = MediaServerManager::GetInstance();
+    sptr<IRemoteObject> object1 = mediaServerManager.GetMonitorStubObject();
+    pid_t testPid = PID_TEST;
+    mediaServerManager.recorderProfilesStubMap_[object1] = testPid;
+    ASSERT_EQ(mediaServerManager.recorderProfilesStubMap_.size(), 1);
+    sptr<IRemoteObject> object2 = mediaServerManager.CreateStubObject(MediaServerManager::StubType::RECORDERPROFILES);
+    ASSERT_NE(object2, nullptr);
 }
 }
 }

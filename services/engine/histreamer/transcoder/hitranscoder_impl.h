@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -65,6 +65,7 @@ private:
     void AppendDstMediaInfo(std::shared_ptr<Meta> meta);
     int32_t GetRealPath(const std::string &url, std::string &realUrlPath) const;
     Status ConfigureVideoEncoderFormat(const TransCoderParam &transCoderParam);
+    Status ConfigureColorSpace(const TransCoderParam &transCoderParam);
     Status LinkAudioDecoderFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
     Status LinkAudioEncoderFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
     Status LinkVideoDecoderFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
@@ -84,7 +85,9 @@ private:
         const std::vector<std::shared_ptr<Meta>> &trackInfos);
     int64_t GetCurrentMillisecond();
     void CollectionErrorInfo(int32_t errCode, const std::string& errMsg);
-    void UpdateVideoEncFormat(const std::shared_ptr<Meta> &meta);
+    void ConfigureDefaultParameter();
+    void ConfigureVideoDefaultEncFormat();
+    void ConfigureAudioDefaultEncFormat();
 
     int32_t appUid_{0};
     int32_t appPid_{0};
@@ -122,6 +125,7 @@ private:
     int32_t inputVideoHeight_ = 0;
     bool isExistVideoTrack_ = false;
     bool isNeedVideoResizeFilter_ = false;
+    bool isConfiguredVideoBitrate_ = false;
     std::atomic<int32_t> durationMs_{-1};
 
     uint64_t instanceId_ = 0;

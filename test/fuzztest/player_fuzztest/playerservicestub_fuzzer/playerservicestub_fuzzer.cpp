@@ -69,6 +69,37 @@ public:
         (void)Remote()->SendRequest(MediaServiceMsg::RELEASE_CLIENT_LISTENER, data, reply, option);
     }
 
+    bool CanKillMediaService()
+    {
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+        (void)Remote()->SendRequest(MediaServiceMsg::CAN_KILL_MEDIA_SERVICE, data, reply, option);
+        return reply.ReadBool();
+    }
+
+    std::vector<pid_t> GetPlayerPids()
+    {
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+        (void)Remote()->SendRequest(MediaServiceMsg::GET_PLAYER_PIDS, data, reply, option);
+        std::vector<pid_t> res;
+        return res;
+    }
+
+    int32_t FreezeStubForPids(const std::set<int32_t> &pidList, bool isProxy)
+    {
+        (void)pidList;
+        (void)isProxy;
+        return 0;
+    }
+
+    int32_t ResetAllProxy()
+    {
+        return 0;
+    }
+
 private:
     static inline BrokerDelegator<MediaServiceProxyFuzzer> delegator_;
 };

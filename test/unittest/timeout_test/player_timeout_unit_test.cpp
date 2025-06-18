@@ -591,6 +591,26 @@ HWTEST_F(PlayerTimeoutUnitTest, Player_SetPlaybackSpeed_Timeout_001, TestSize.Le
 }
 
 /**
+ * @tc.name  : Test SetPlaybackRate_Timeout
+ * @tc.number: Player_SetPlaybackRate_Timeout_001
+ * @tc.desc  : Test Player SetPlaybackRate timeout behavior
+ */
+HWTEST_F(PlayerTimeoutUnitTest, Player_SetPlaybackRate_Timeout_001, TestSize.Level0)
+{
+    ASSERT_NE(nullptr, mockPlayerService_);
+    playerImpl_->playerService_ = mockPlayerService_;
+    
+    EXPECT_CALL(*mockPlayerService_, SetPlaybackRate(_))
+        .WillOnce([](float rate) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            return MSERR_OK;
+        });
+    
+    float rate = 2.0f;
+    EXPECT_EQ(MSERR_OK, playerImpl_->SetPlaybackRate(rate));
+}
+
+/**
  * @tc.name  : Test GetPlaybackSpeed_Timeout
  * @tc.number: Player_GetPlaybackSpeed_Timeout_001
  * @tc.desc  : Test Player GetPlaybackSpeed timeout behavior

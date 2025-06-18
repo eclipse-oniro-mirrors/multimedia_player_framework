@@ -57,6 +57,8 @@ public:
     virtual void Release() = 0;
     virtual int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) = 0;
     virtual int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) = 0;
+    virtual int32_t UpdateSurface(sptr<Surface> surface) = 0;
+    virtual int32_t SetCaptureArea(uint64_t displayId, OHOS::Rect area) = 0;
 };
 } // namespace Media
 } // namespace OHOS

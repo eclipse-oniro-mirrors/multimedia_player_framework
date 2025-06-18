@@ -66,6 +66,7 @@ ohos_unittest("soundpool_unit_test") {
     "hilog:libhilog",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
     "qos_manager:qos",

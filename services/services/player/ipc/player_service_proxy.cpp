@@ -55,6 +55,7 @@ PlayerServiceProxy::~PlayerServiceProxy()
 void PlayerServiceProxy::InitPlayerFuncsPart1()
 {
     playerFuncs_[SET_LISTENER_OBJ] = "Player::SetListenerObject";
+    playerFuncs_[SET_PLAYER_PRODUCER] = "Player::SetPlayerProducer";
     playerFuncs_[SET_SOURCE] = "Player::SetSource";
     playerFuncs_[SET_MEDIA_DATA_SRC_OBJ] = "Player::SetMediaDataSource";
     playerFuncs_[SET_FD_SOURCE] = "Player::SetFdSource";
@@ -75,6 +76,7 @@ void PlayerServiceProxy::InitPlayerFuncsPart1()
     playerFuncs_[GET_DURATION] = "Player::GetDuration";
     playerFuncs_[GET_API_VERSION] = "Player::GetApiVersion";
     playerFuncs_[SET_PLAYERBACK_SPEED] = "Player::SetPlaybackSpeed";
+    playerFuncs_[SET_PLAYERBACK_RATE] = "Player::SetPlaybackRate";
     playerFuncs_[GET_PLAYERBACK_SPEED] = "Player::GetPlaybackSpeed";
 #ifdef SUPPORT_VIDEO
     playerFuncs_[SET_VIDEO_SURFACE] = "Player::SetVideoSurface";
@@ -109,6 +111,11 @@ void PlayerServiceProxy::InitPlayerFuncsPart2()
     playerFuncs_[SET_SOURCE_LOADER] = "Player::SetSourceLoader";
     playerFuncs_[SET_SUPER_RESOLUTION] = "Player::SetSuperResolution";
     playerFuncs_[SET_VIDEO_WINDOW_SIZE] = "Player::SetVideoWindowSize";
+    playerFuncs_[SET_START_FRAME_RATE_OPT_ENABLED] = "Player::SetStartFrameRateOptEnabled";
+    playerFuncs_[SET_REOPEN_FD] = "Player::SetReopenFd";
+    playerFuncs_[ENABLE_CAMERA_POSTPROCESSING] = "Player::EnableCameraPostprocessing";
+    playerFuncs_[ENABLE_REPORT_MEDIA_PROGRESS] = "Player::EnableReportMediaProgress";
+    playerFuncs_[ENABLE_REPORT_AUDIO_INTERRUPT] = "Player::EnableReportAudioInterrupt";
 }
 
 int32_t PlayerServiceProxy::SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -138,6 +145,24 @@ int32_t PlayerServiceProxy::SetListenerObject(const sptr<IRemoteObject> &object)
     int32_t error = SendRequest(SET_LISTENER_OBJ, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetListenerObject failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::SetPlayerProducer(const PlayerProducer producer)
+{
+    MediaTrace trace("PlayerServiceProxy::SetPlayerProducer");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    (void)data.WriteInt32(producer);
+    int32_t error = SendRequest(SET_PLAYER_PRODUCER, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetPlayerProducer failed, error: %{public}d", error);
 
     return reply.ReadInt32();
 }
@@ -700,6 +725,23 @@ int32_t PlayerServiceProxy::SetPlaybackSpeed(PlaybackRateMode mode)
     return reply.ReadInt32();
 }
 
+int32_t PlayerServiceProxy::SetPlaybackRate(float rate)
+{
+    MediaTrace trace("PlayerServiceProxy::SetPlaybackRate");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteFloat(rate);
+    int32_t error = SendRequest(SET_PLAYERBACK_RATE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetPlaybackRate failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
 int32_t PlayerServiceProxy::SetSourceLoader(const sptr<IRemoteObject> &object)
 {
     MediaTrace trace("PlayerServiceProxy::SetSourceLoader");
@@ -1141,6 +1183,23 @@ int32_t PlayerServiceProxy::SetMaxAmplitudeCbStatus(bool status)
     return reply.ReadInt32();
 }
 
+int32_t PlayerServiceProxy::SetStartFrameRateOptEnabled(bool enabled)
+{
+    MediaTrace trace("PlayerServiceProxy::SetStartFrameRateOptEnabled");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteBool(enabled);
+    int32_t error = SendRequest(SET_START_FRAME_RATE_OPT_ENABLED, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetStartFrameRateOptEnabled failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
 bool PlayerServiceProxy::IsSeekContinuousSupported()
 {
     MediaTrace trace("PlayerServiceProxy::IsSeekContinuousSupported");
@@ -1171,6 +1230,91 @@ void PlayerServiceProxy::WritePlaybackStrategy(MessageParcel &data, const AVPlay
     (void)data.WriteInt32(static_cast<int32_t>(strategy.mutedMediaType));
     (void)data.WriteString(strategy.preferredAudioLanguage);
     (void)data.WriteString(strategy.preferredSubtitleLanguage);
+}
+
+int32_t PlayerServiceProxy::SetReopenFd(int32_t fd)
+{
+    MediaTrace trace("PlayerServiceProxy::SetReopenFd");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+ 
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+ 
+    MEDIA_LOGI("SetReopenFd in fd: %{public}d", fd);
+    (void)data.WriteFileDescriptor(fd);
+    int32_t error = SendRequest(SET_REOPEN_FD, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetReopenFd failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+ 
+int32_t PlayerServiceProxy::EnableCameraPostprocessing()
+{
+    MediaTrace trace("Proxy::EnableCameraPostprocessing");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+ 
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+ 
+    int32_t error = SendRequest(ENABLE_CAMERA_POSTPROCESSING, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "EnableCameraPostprocessing failed, error: %{public}d", error);
+ 
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::EnableReportMediaProgress(bool enable)
+{
+    MediaTrace trace("PlayerServiceProxy::EnableReportMediaProgress");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteBool(enable);
+    int32_t error = SendRequest(ENABLE_REPORT_MEDIA_PROGRESS, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "EnableReportMediaProgress failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::EnableReportAudioInterrupt(bool enable)
+{
+    MediaTrace trace("PlayerServiceProxy::EnableReportAudioInterrupt");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteBool(enable);
+    int32_t error = SendRequest(ENABLE_REPORT_AUDIO_INTERRUPT, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "EnableReportAudioInterrupt failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::ForceLoadVideo(bool status)
+{
+    MediaTrace trace("PlayerServiceProxy::ForceLoadVideo");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+    data.WriteBool(status);
+    int32_t error = SendRequest(FORCE_LOAD_VIDEO, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "ForceLoadVideo failed, error: %{public}d", error);
+    return reply.ReadInt32();
 }
 } // namespace Media
 } // namespace OHOS

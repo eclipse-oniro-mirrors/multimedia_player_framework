@@ -22,6 +22,7 @@
 #ifdef SUPPORT_AVPLAYER_DRM
 #include "imedia_key_session_service.h"
 #endif
+#include "fd_utils.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerImpl"};
@@ -39,31 +40,52 @@ namespace Media {
 
 std::shared_ptr<Player> PlayerFactory::CreatePlayer()
 {
-    time_t startTime = time(nullptr);
+    return CreatePlayer(PlayerProducer::INNER);
+}
+
+std::shared_ptr<Player> PlayerFactory::CreatePlayer(const PlayerProducer producer)
+{
     ScopedTimer timer("CreatePlayer", CREATE_AVPLAYER_WARNING_MS);
     MEDIA_LOGD("PlayerImpl: CreatePlayer in");
     std::shared_ptr<PlayerImpl> impl = std::make_shared<PlayerImpl>();
     CHECK_AND_RETURN_RET_LOG(impl != nullptr, nullptr, "failed to new PlayerImpl");
 
     int32_t ret = MSERR_OK;
-    LISTENER(ret = impl->Init(), "CreatePlayer", false, TIME_OUT_SECOND);
-    auto hiAppEventAgent = std::make_shared<HiAppEventAgent>();
-    if (hiAppEventAgent != nullptr) {
-        hiAppEventAgent->TraceApiEvent(ret, "CreatePlayer", startTime, impl->GetTraceId());
-    }
+    LISTENER(ret = impl->Init(producer), "CreatePlayer", false, TIME_OUT_SECOND);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to init PlayerImpl");
 
     return impl;
 }
 
-int32_t PlayerImpl::Init()
+std::vector<pid_t> PlayerFactory::GetPlayerPids()
+{
+    std::vector<pid_t> pids = MediaServiceFactory::GetInstance().GetPlayerPids();
+    std::string pidLog = "GetPlayerPids size=" + std::to_string(pids.size());
+    if (pids.size() > 0) {
+        pidLog += ", contents:";
+        for (auto pid : pids) {
+            pidLog += std::to_string(pid) + ", ";
+        }
+    }
+    MEDIA_LOGI("%{public}s", pidLog.c_str());
+    return pids;
+}
+
+int32_t PlayerImpl::Init(const PlayerProducer producer)
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Init in", FAKE_POINTER(this));
+    time_t startTime = time(nullptr);
     HiviewDFX::HiTraceChain::SetId(traceId_);
     playerService_ = MediaServiceFactory::GetInstance().CreatePlayerService();
-    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_UNKNOWN, "failed to create player service");
     hiAppEventAgent_ = std::make_shared<HiAppEventAgent>();
-    return MSERR_OK;
+    auto ret = playerService_ == nullptr ? MSERR_UNKNOWN : MSERR_OK;
+    if (hiAppEventAgent_) {
+        hiAppEventAgent_->TraceApiEvent(ret, "CreatePlayer", startTime, traceId_);
+    }
+    if (ret == MSERR_OK) {
+        playerService_->SetPlayerProducer(producer);
+    }
+    return ret;
 }
 
 HiviewDFX::HiTraceId PlayerImpl::GetTraceId()
@@ -75,7 +97,11 @@ PlayerImpl::PlayerImpl()
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
     ResetSeekVariables();
-    traceId_ = HiviewDFX::HiTraceChain::Begin("PlayerImpl", HITRACE_FLAG_DEFAULT);
+    traceId_ = HiTraceChainGetId();
+    if (!traceId_.IsValid()) {
+        MEDIA_LOGI("PlayerImpl:0x%{public}06" PRIXPTR " traceId not valid", FAKE_POINTER(this));
+        traceId_ = HiviewDFX::HiTraceChain::Begin("PlayerImpl", HITRACE_FLAG_DEFAULT);
+    }
 }
 
 PlayerImpl::~PlayerImpl()
@@ -86,7 +112,10 @@ PlayerImpl::~PlayerImpl()
     }
     hiAppEventAgent_ = nullptr;
     ResetSeekVariables();
-    HiviewDFX::HiTraceChain::End(traceId_);
+    if (traceId_.IsValid()) {
+        MEDIA_LOGI("PlayerImpl:0x%{public}06" PRIXPTR " traceId valid", FAKE_POINTER(this));
+        HiviewDFX::HiTraceChain::End(traceId_);
+    }
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
@@ -106,7 +135,7 @@ int32_t PlayerImpl::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_INVALID_VAL, "playerService_ not exist");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->SetMediaMuted(mediaType, isMuted), "SetMediaMuted", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "SetMediaMuted", startTime, traceId_);
     return ret;
 }
@@ -119,7 +148,7 @@ int32_t PlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
     CHECK_AND_RETURN_RET_LOG(dataSrc != nullptr, MSERR_INVALID_VAL, "failed to create data source");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->SetSource(dataSrc), "SetSource dataSrc", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "SetSource dataSrc", startTime, traceId_);
     return ret;
 }
@@ -133,7 +162,7 @@ int32_t PlayerImpl::SetSource(const std::string &url)
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty..");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->SetSource(url), "SetSource url", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "SetSource in(url)", startTime, traceId_);
     return ret;
 }
@@ -145,9 +174,31 @@ int32_t PlayerImpl::SetSource(int32_t fd, int64_t offset, int64_t size)
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetSource in(fd)", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     int32_t ret = MSERR_OK;
-    LISTENER(ret = playerService_->SetSource(fd, offset, size), "SetSource fd", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    LISTENER(ret = SetSourceTask(fd, offset, size), "SetSource fd", false, TIME_OUT_SECOND);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "SetSource in(fd)", startTime, traceId_);
+    return ret;
+}
+
+int32_t PlayerImpl::SetSourceTask(int32_t fd, int64_t offset, int64_t size)
+{
+    int32_t ret = MSERR_OK;
+    FdsanFd reopenFd = FdUtils::ReOpenFd(fd);
+    if (reopenFd.Get() >= 0) {
+        MEDIA_LOGI("SetSourceTask: reopen success");
+        ret = playerService_->SetSource(reopenFd.Get(), offset, size);
+    } else {
+        ret = playerService_->SetSource(fd, offset, size);
+    }
+    CHECK_AND_RETURN_RET_NOLOG(ret == MSERR_OK, ret);
+    int32_t dupFd = dup(fd);
+    MEDIA_LOGI("PlayerImpl:0x%{public}06" PRIXPTR " SetSourceTask dupFd", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(dupFd >= 0, ret, "Dup failed with err.");
+    if (!fdsanFd_) {
+        fdsanFd_ = std::make_unique<FdsanFd>(dupFd);
+    } else {
+        fdsanFd_->Reset(dupFd);
+    }
     return ret;
 }
 
@@ -161,7 +212,7 @@ int32_t PlayerImpl::AddSubSource(const std::string &url)
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty..");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->AddSubSource(url), "AddSubSource url", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "AddSubSource url", startTime, traceId_);
     return ret;
 }
@@ -174,7 +225,7 @@ int32_t PlayerImpl::AddSubSource(int32_t fd, int64_t offset, int64_t size)
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->AddSubSource(fd, offset, size), "AddSubSource fd", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "AddSubSource fd", startTime, traceId_);
     return ret;
 }
@@ -187,7 +238,7 @@ int32_t PlayerImpl::Play()
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->Play(), "Play", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "Play", startTime, traceId_);
     return ret;
 }
@@ -200,7 +251,7 @@ int32_t PlayerImpl::SetPlayRange(int64_t start, int64_t end)
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->SetPlayRange(start, end), "SetPlayRange", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "SetPlayRange", startTime, traceId_);
     return ret;
 }
@@ -214,9 +265,16 @@ int32_t PlayerImpl::SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekM
     int32_t ret = MSERR_OK;
     LISTENER(
         ret = playerService_->SetPlayRangeWithMode(start, end, mode), "SetPlayRangeWithMode", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "SetPlayRangeWithMode", startTime, traceId_);
     return ret;
+}
+
+int32_t PlayerImpl::SetPlayRangeUsWithMode(int64_t start, int64_t end, PlayerSeekMode mode)
+{
+    const int64_t msToUs = 1000;
+    const int64_t complementNum = 999;
+    return SetPlayRangeWithMode(start / msToUs, (end + complementNum) / msToUs, mode);
 }
 
 int32_t PlayerImpl::Prepare()
@@ -227,7 +285,7 @@ int32_t PlayerImpl::Prepare()
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->Prepare(), "Prepare", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "Prepare", startTime, traceId_);
     return ret;
 }
@@ -241,7 +299,7 @@ int32_t PlayerImpl::SetRenderFirstFrame(bool display)
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->SetRenderFirstFrame(display), "SetRenderFirstFrame", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "SetRenderFirstFrame", startTime, traceId_);
     return ret;
 }
@@ -254,7 +312,7 @@ int32_t PlayerImpl::PrepareAsync()
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->PrepareAsync(), "PrepareAsync", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "PrepareAsync", startTime, traceId_);
     return ret;
 }
@@ -267,7 +325,7 @@ int32_t PlayerImpl::Pause()
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->Pause(), "Pause", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "Pause", startTime, traceId_);
     return ret;
 }
@@ -281,7 +339,7 @@ int32_t PlayerImpl::Stop()
     ResetSeekVariables();
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->Stop(), "Stop", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "Stop", startTime, traceId_);
     return ret;
 }
@@ -295,7 +353,7 @@ int32_t PlayerImpl::Reset()
     ResetSeekVariables();
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->Reset(), "Reset", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "Reset", startTime, traceId_);
     return ret;
 }
@@ -330,7 +388,7 @@ int32_t PlayerImpl::SetVolumeMode(int32_t mode)
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->SetVolumeMode(mode), "SetVolumeMode", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "SetVolumeMode", startTime, traceId_);
     return ret;
 }
@@ -344,7 +402,7 @@ int32_t PlayerImpl::SetVolume(float leftVolume, float rightVolume)
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->SetVolume(leftVolume, rightVolume), "SetVolume", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "SetVolume", startTime, traceId_);
     return ret;
 }
@@ -362,7 +420,7 @@ int32_t PlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
     if (mode == PlayerSeekMode::SEEK_CONTINOUS) {
         int32_t ret = MSERR_OK;
         ret = playerService_->Seek(mSeconds, mode);
-        CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+        CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
         hiAppEventAgent_->TraceApiEvent(ret, "SEEK_CONTINOUS", startTime, traceId_);
         return ret;
     }
@@ -379,7 +437,7 @@ int32_t PlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
             ResetSeekVariables();
         }
         MEDIA_LOGI("Start seek once end");
-        CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, retCode);
+        CHECK_AND_RETURN_RET_NOLOG(retCode != MSERR_OK && hiAppEventAgent_ != nullptr, retCode);
         hiAppEventAgent_->TraceApiEvent(retCode, "seek", startTime, traceId_);
         return retCode;
     } else {
@@ -415,6 +473,7 @@ void PlayerImpl::HandleSeekDoneInfo(PlayerOnInfoType type, int32_t extra)
 
 void PlayerImpl::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
+    time_t startTime = time(nullptr);
     HandleSeekDoneInfo(type, extra);
     std::shared_ptr<PlayerCallback> callback;
     {
@@ -423,6 +482,12 @@ void PlayerImpl::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &info
     }
 
     CHECK_AND_RETURN_LOG(callback != nullptr, "callback is nullptr.");
+    if (type == INFO_TYPE_STATE_CHANGE && hiAppEventAgent_ != nullptr) {
+        PlayerStates state = static_cast<PlayerStates>(extra);
+        if (state == PLAYER_PREPARED) {
+            hiAppEventAgent_->TraceApiEvent(MSERR_OK, "prepared", startTime, traceId_);
+        }
+    }
     if (type == INFO_TYPE_SEEKDONE) {
         if (extra == -1) {
             MEDIA_LOGI("seek done error callback, no need report");
@@ -446,7 +511,7 @@ int32_t PlayerImpl::GetCurrentTime(int32_t &currentTime)
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->GetCurrentTime(currentTime), "GetCurrentTime", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "GetCurrentTime", startTime, traceId_);
     return ret;
 }
@@ -460,7 +525,7 @@ int32_t PlayerImpl::GetPlaybackPosition(int32_t &playbackPosition)
     int32_t ret = MSERR_OK;
     LISTENER(
         ret = playerService_->GetPlaybackPosition(playbackPosition), "GetPlaybackPosition", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "GetPlaybackPosition", startTime, traceId_);
     return ret;
 }
@@ -473,7 +538,7 @@ int32_t PlayerImpl::GetVideoTrackInfo(std::vector<Format> &videoTrack)
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->GetVideoTrackInfo(videoTrack), "GetVideoTrackInfo", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "GetVideoTrackInfo", startTime, traceId_);
     return ret;
 }
@@ -486,7 +551,7 @@ int32_t PlayerImpl::GetPlaybackInfo(Format &playbackInfo)
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->GetPlaybackInfo(playbackInfo), "GetPlaybackInfo", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "GetPlaybackInfo", startTime, traceId_);
     return ret;
 }
@@ -499,7 +564,7 @@ int32_t PlayerImpl::GetAudioTrackInfo(std::vector<Format> &audioTrack)
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->GetAudioTrackInfo(audioTrack), "GetAudioTrackInfo", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "GetAudioTrackInfo", startTime, traceId_);
     return ret;
 }
@@ -513,7 +578,7 @@ int32_t PlayerImpl::GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack)
     int32_t ret = MSERR_OK;
     LISTENER(
         ret = playerService_->GetSubtitleTrackInfo(subtitleTrack), "GetSubtitleTrackInfo", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "GetSubtitleTrackInfo", startTime, traceId_);
     return ret;
 }
@@ -526,7 +591,7 @@ int32_t PlayerImpl::GetVideoWidth()
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->GetVideoWidth(), "GetVideoWidth", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "GetVideoWidth", startTime, traceId_);
     return ret;
 }
@@ -539,7 +604,7 @@ int32_t PlayerImpl::GetVideoHeight()
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->GetVideoHeight(), "GetVideoHeight", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "GetVideoHeight", startTime, traceId_);
     return ret;
 }
@@ -552,10 +617,25 @@ int32_t PlayerImpl::SetPlaybackSpeed(PlaybackRateMode mode)
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->SetPlaybackSpeed(mode), "SetPlaybackSpeed", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "SetPlaybackSpeed", startTime, traceId_);
     return ret;
 }
+
+int32_t PlayerImpl::SetPlaybackRate(float rate)
+{
+    ScopedTimer timer("SetPlaybackRate", OVERTIME_WARNING_MS);
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetPlaybackRate in, mode is %{public}f", FAKE_POINTER(this), rate);
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    const double minRate = 0.125f;
+    const double maxRate = 4.0f;
+    const double eps = 1e-15;
+    if ((rate < minRate - eps) || (rate > maxRate + eps)) {
+        return MSERR_INVALID_VAL;
+    }
+    LISTENER(return playerService_->SetPlaybackRate(rate), "SetPlaybackRate", false, TIME_OUT_SECOND);
+}
+
 
 int32_t PlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy)
 {
@@ -566,7 +646,7 @@ int32_t PlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSo
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->SetMediaSource(mediaSource, strategy), "SetMediaSource", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "SetMediaSource", startTime, traceId_);
     return ret;
 }
@@ -579,7 +659,7 @@ int32_t PlayerImpl::GetPlaybackSpeed(PlaybackRateMode &mode)
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->GetPlaybackSpeed(mode), "GetPlaybackSpeed", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "GetPlaybackSpeed", startTime, traceId_);
     return ret;
 }
@@ -592,7 +672,7 @@ int32_t PlayerImpl::SelectBitRate(uint32_t bitRate)
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->SelectBitRate(bitRate), "SelectBitRate", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "SelectBitRate", startTime, traceId_);
     return ret;
 }
@@ -605,7 +685,7 @@ int32_t PlayerImpl::GetDuration(int32_t &duration)
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->GetDuration(duration), "GetDuration", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "GetDuration", startTime, traceId_);
     return ret;
 }
@@ -618,7 +698,7 @@ int32_t PlayerImpl::GetApiVersion(int32_t &apiVersion)
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->GetApiVersion(apiVersion), "GetApiVersion", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "GetApiVersion", startTime, traceId_);
     return ret;
 }
@@ -634,7 +714,7 @@ int32_t PlayerImpl::SetVideoSurface(sptr<Surface> surface)
     surface_ = surface;
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->SetVideoSurface(surface), "SetVideoSurface", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "SetVideoSurface", startTime, traceId_);
     return ret;
 }
@@ -664,7 +744,7 @@ int32_t PlayerImpl::SetLooping(bool loop)
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->SetLooping(loop), "SetLooping", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "SetLooping", startTime, traceId_);
     return ret;
 }
@@ -692,7 +772,7 @@ int32_t PlayerImpl::SetParameter(const Format &param)
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->SetParameter(param), "SetParameter", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "SetParameter", startTime, traceId_);
     return ret;
 }
@@ -710,7 +790,7 @@ int32_t PlayerImpl::SelectTrack(int32_t index, PlayerSwitchMode mode)
     prevTrackIndex_ = index;
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->SelectTrack(index, mode), "SelectTrack", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "SelectTrack", startTime, traceId_);
     return ret;
 }
@@ -723,7 +803,7 @@ int32_t PlayerImpl::DeselectTrack(int32_t index)
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->DeselectTrack(index), "DeselectTrack", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "DeselectTrack", startTime, traceId_);
     return ret;
 }
@@ -736,7 +816,7 @@ int32_t PlayerImpl::GetCurrentTrack(int32_t trackType, int32_t &index)
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->GetCurrentTrack(trackType, index), "GetCurrentTrack", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "GetCurrentTrack", startTime, traceId_);
     return ret;
 }
@@ -776,7 +856,7 @@ int32_t PlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     int32_t ret = MSERR_OK;
     LISTENER(
         ret = playerService_->SetPlaybackStrategy(playbackStrategy), "SetPlaybackStrategy", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "SetPlaybackStrategy", startTime, traceId_);
     return ret;
 }
@@ -789,7 +869,7 @@ int32_t PlayerImpl::SetSuperResolution(bool enabled)
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->SetSuperResolution(enabled), "SetSuperResolution", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "SetSuperResolution", startTime, traceId_);
     return ret;
 }
@@ -802,7 +882,7 @@ int32_t PlayerImpl::SetVideoWindowSize(int32_t width, int32_t height)
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->SetVideoWindowSize(width, height), "SetVideoWindowSize", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "SetVideoWindowSize", startTime, traceId_);
     return ret;
 }
@@ -816,7 +896,7 @@ int32_t PlayerImpl::SetMaxAmplitudeCbStatus(bool status)
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->SetMaxAmplitudeCbStatus(status), "SetMaxAmplitudeCbStatus", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "SetMaxAmplitudeCbStatus", startTime, traceId_);
     return ret;
 }
@@ -826,6 +906,30 @@ bool PlayerImpl::IsSeekContinuousSupported()
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " IsSeekContinuousSupported in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, false, "player service does not exist.");
     return playerService_->IsSeekContinuousSupported();
+}
+
+int32_t PlayerImpl::SetReopenFd(int32_t fd)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR "SetReopenFd  in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    MEDIA_LOGD("set reopen fd: %{public}d", fd);
+    LISTENER(return playerService_->SetReopenFd(fd), "SetReopenFd", false, TIME_OUT_SECOND);
+}
+ 
+int32_t PlayerImpl::EnableCameraPostprocessing()
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " EnableCameraPostprocessing  in", FAKE_POINTER(this));
+    ScopedTimer timer("EnableCameraPostprocessing", OVERTIME_WARNING_MS);
+    CHECK_AND_RETURN_RET_LOG(fdsanFd_ != nullptr, MSERR_OK, "source fd does not exist.");
+    int fd = fdsanFd_->Get();
+    MEDIA_LOGD("PlayerImpl EnableCameraPostprocessing reopen fd: %{public}d ", fd);
+    FdsanFd reopenFd = FdUtils::ReOpenFd(fd);
+    CHECK_AND_RETURN_RET_LOG(reopenFd.Get() >= 0, MSERR_UNKNOWN, "EnableCameraPostprocessing: reopen failed");
+    auto ret = SetReopenFd(reopenFd.Get());
+    reopenFd.Reset();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_OK, "SetReopenFd failed.");
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    LISTENER(return playerService_->EnableCameraPostprocessing(), "EnableCameraPostprocessing", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes)
@@ -838,8 +942,38 @@ int32_t PlayerImpl::SetSeiMessageCbStatus(bool status, const std::vector<int32_t
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->SetSeiMessageCbStatus(status, payloadTypes),
         "SetSeiMessageCbStatus", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "SetSeiMessageCbStatus", startTime, traceId_);
+    return ret;
+}
+
+int32_t PlayerImpl::EnableReportMediaProgress(bool enable)
+{
+    time_t startTime = time(nullptr);
+    ScopedTimer timer("EnableReportMediaProgress", OVERTIME_WARNING_MS);
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " EnableReportMediaProgress in, enable is %{public}d",
+        FAKE_POINTER(this), enable);
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    int32_t ret = MSERR_OK;
+    LISTENER(ret = playerService_->EnableReportMediaProgress(enable),
+        "EnableReportMediaProgress", false, TIME_OUT_SECOND);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
+    hiAppEventAgent_->TraceApiEvent(ret, "EnableReportMediaProgress", startTime, traceId_);
+    return ret;
+}
+
+int32_t PlayerImpl::EnableReportAudioInterrupt(bool enable)
+{
+    time_t startTime = time(nullptr);
+    ScopedTimer timer("EnableReportAudioInterrupt", OVERTIME_WARNING_MS);
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " EnableReportAudioInterrupt in, enable is %{public}d",
+        FAKE_POINTER(this), enable);
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    int32_t ret = MSERR_OK;
+    LISTENER(ret = playerService_->EnableReportAudioInterrupt(enable),
+        "EnableReportAudioInterrupt", false, TIME_OUT_SECOND);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
+    hiAppEventAgent_->TraceApiEvent(ret, "EnableReportAudioInterrupt", startTime, traceId_);
     return ret;
 }
 
@@ -848,6 +982,28 @@ void PlayerImpl::ReleaseClientListener()
     ScopedTimer timer("ReleaseClientListener", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " ReleaseClientListener in", FAKE_POINTER(this));
     MediaServiceFactory::GetInstance().ReleaseClientListener(); // not related to playerService_ thus no XCollie
+}
+
+int32_t PlayerImpl::SetStartFrameRateOptEnabled(bool enabled)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetStartFrameRateOptEnabled in, enabled is %{public}d",
+        FAKE_POINTER(this), enabled);
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    return playerService_->SetStartFrameRateOptEnabled(enabled);
+}
+
+void PlayerImpl::TraceApiEvent(int errCode, const std::string& message, time_t startTime)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " TraceApiEvent in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_LOG(hiAppEventAgent_ != nullptr, "hiAppEventAgent nullptr");
+    hiAppEventAgent_->TraceApiEvent(errCode, message, startTime, traceId_);
+}
+
+int32_t PlayerImpl::ForceLoadVideo(bool status)
+{
+    MEDIA_LOGI("PlayerImpl:0x%{public}06" PRIXPTR " ForceLoadVideo %{public}d", FAKE_POINTER(this), status);
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    return playerService_->ForceLoadVideo(status);
 }
 
 PlayerImplCallback::PlayerImplCallback(const std::shared_ptr<PlayerCallback> playerCb,
@@ -884,9 +1040,8 @@ void PlayerImplCallback::OnError(int32_t errorCode, const std::string &errorMsg)
             errorCode = MSERR_DATA_SOURCE_IO_ERROR;
         }
     }
-    auto hiAppEventAgent = std::make_shared<HiAppEventAgent>();
-    if (hiAppEventAgent != nullptr) {
-        hiAppEventAgent->TraceApiEvent(errorCode, errorMsg, startTime);
+    if (player != nullptr) {
+        player->TraceApiEvent(errorCode, errorMsg, startTime);
     }
     CHECK_AND_RETURN_LOG(playerCb != nullptr, "playerCb does not exist..");
     playerCb->OnError(errorCode, errorMsg);

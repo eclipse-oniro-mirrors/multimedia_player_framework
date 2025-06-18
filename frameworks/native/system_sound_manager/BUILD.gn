@@ -89,6 +89,7 @@ ohos_shared_library("system_sound_client") {
     "ringtone_library:ringtone_data_extension",
     "ringtone_library:ringtone_data_helper",
     "samgr:samgr_proxy",
+    "hitrace:hitrace_meter",
   ]
 
   if (player_framework_support_vibrator) {

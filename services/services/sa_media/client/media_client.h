@@ -47,8 +47,11 @@ public:
     MediaClient() noexcept;
     ~MediaClient();
 
+    int32_t ProxyForFreeze(const std::set<int32_t> &pidList, bool isProxy) override;
+    int32_t ResetAllProxy() override;
     sptr<IStandardMonitorService> GetMonitorProxy() override;
     void ReleaseClientListener() override;
+    bool CanKillMediaService() override;
 #ifdef SUPPORT_RECORDER
     std::shared_ptr<IRecorderService> CreateRecorderService() override;
     int32_t DestroyRecorderService(std::shared_ptr<IRecorderService> recorder) override;
@@ -76,6 +79,7 @@ public:
     std::shared_ptr<IScreenCaptureController> CreateScreenCaptureControllerClient() override;
     int32_t DestroyScreenCaptureControllerClient(std::shared_ptr<IScreenCaptureController> controller) override;
 #endif
+    std::vector<pid_t> GetPlayerPids() override;
 
 private:
     sptr<IStandardMediaService> GetMediaProxy();

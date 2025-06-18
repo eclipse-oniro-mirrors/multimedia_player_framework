@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2023-2023 Huawei Device Co., Ltd.
+* Copyright (c) 2023-2025 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -47,6 +47,23 @@ const std::pair<Status, int> g_statusPair[] = {
     {Status::ERROR_NO_MEMORY, MSERR_UNKNOWN},
     {Status::ERROR_INVALID_STATE, MSERR_INVALID_STATE},
 };
+
+const std::unordered_map<Status, int32_t> transcoder_statusPair = {
+    {Status::OK, MSERR_OK},
+    {Status::ERROR_UNIMPLEMENTED, MSERR_UNSUPPORT},
+    {Status::ERROR_INVALID_PARAMETER, MSERR_INVALID_VAL},
+    {Status::ERROR_INVALID_OPERATION, MSERR_INVALID_OPERATION},
+    {Status::ERROR_UNSUPPORTED_FORMAT, MSERR_UNSUPPORT_CONTAINER_TYPE},
+    {Status::ERROR_NOT_EXISTED, MSERR_OPEN_FILE_FAILED},
+    {Status::ERROR_NO_MEMORY, MSERR_NO_MEMORY},
+    {Status::ERROR_INVALID_STATE, MSERR_INVALID_STATE},
+    {Status::ERROR_NO_TRACK, MSERR_UNSUPPORT_VID_SRC_TYPE},
+    {Status::ERROR_GET_INPUT_SURFACE_FAILED, MSERR_GET_INPUT_SURFACE_FAILED},
+    {Status::ERROR_SET_OUTPUT_SURFACE_FAILED, MSERR_SET_OUTPUT_SURFACE_FAILED},
+    {Status::ERROR_AUD_ENC_FAILED, MSERR_AUD_ENC_FAILED},
+    {Status::ERROR_VID_RESIZE_FAILED, MSERR_VID_RESIZE_FAILED},
+};
+
 const std::array<std::pair<PlaybackRateMode, float>, 12> PLAY_RATE_REFS = {
     std::make_pair(PlaybackRateMode::SPEED_FORWARD_0_75_X, 0.75),
     std::make_pair(PlaybackRateMode::SPEED_FORWARD_1_00_X, 1.0),
@@ -193,6 +210,15 @@ int __attribute__((visibility("default"))) TransStatus(Status status)
         if (errPair.first == status) {
             return errPair.second;
         }
+    }
+    return MSERR_UNKNOWN;
+}
+
+int32_t __attribute__((visibility("default"))) TransTranscoderStatus(Status status)
+{
+    auto errCodeIter = transcoder_statusPair.find(status);
+    if (errCodeIter != transcoder_statusPair.end()) {
+        return errCodeIter->second;
     }
     return MSERR_UNKNOWN;
 }

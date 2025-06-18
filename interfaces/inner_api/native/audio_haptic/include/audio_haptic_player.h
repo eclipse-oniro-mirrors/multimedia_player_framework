@@ -22,6 +22,9 @@
 
 namespace OHOS {
 namespace Media {
+constexpr int32_t FILE_DESCRIPTOR_ZERO = 0;
+constexpr int32_t FILE_DESCRIPTOR_INVALID = -1;
+
 enum AudioHapticType {
     AUDIO_HAPTIC_TYPE_AUDIO = 0,
     AUDIO_HAPTIC_TYPE_HAPTIC = 1,
@@ -60,29 +63,61 @@ enum HapticsMode {
     HAPTICS_MODE_NONE = 0,
     HAPTICS_MODE_SYNC = 1,
     HAPTICS_MODE_NON_SYNC = 2,
+    HAPTICS_MODE_NON_SYNC_ONCE = 3,
+};
+
+struct AudioSource {
+    std::string audioUri = "";
+    int32_t fd = FILE_DESCRIPTOR_INVALID;
+    int64_t length = 0;
+    int64_t offset = 0;
+
+    bool empty() const
+    {
+        return audioUri.empty() && fd == FILE_DESCRIPTOR_INVALID;
+    }
+
+    bool operator==(const AudioSource& other) const
+    {
+        return this->audioUri == other.audioUri &&
+               this->fd == other.fd &&
+               this->length == other.length &&
+               this->offset == other.offset;
+    }
+
+    bool operator!=(const AudioSource& other) const
+    {
+        return !(*this == other);
+    }
 };
 
 struct HapticSource {
     std::string hapticUri = "";
     std::string effectId = "";
+    int32_t fd = FILE_DESCRIPTOR_INVALID;
+    int64_t length = 0;
+    int64_t offset = 0;
 };
 
 struct AudioHapticPlayerParam {
     AudioHapticPlayerOptions options;
-    std::string audioUri;
+    AudioSource audioSource;
     HapticSource hapticSource;
     AudioLatencyMode latencyMode;
     AudioStandard::StreamUsage streamUsage;
+    int32_t audioHapticSyncId;
 
     AudioHapticPlayerParam() {};
     AudioHapticPlayerParam(const AudioHapticPlayerOptions &options,
-        const std::string &audioUri, const HapticSource &hapticSource,
-        const AudioLatencyMode &latencyMode, const AudioStandard::StreamUsage &streamUsage)
+        const AudioSource& audioSource, const HapticSource &hapticSource,
+        const AudioLatencyMode &latencyMode, const AudioStandard::StreamUsage &streamUsage,
+        int32_t audioHapticSyncId = 0)
         : options(options),
-          audioUri(audioUri),
+          audioSource(audioSource),
           hapticSource(hapticSource),
           latencyMode(latencyMode),
-          streamUsage(streamUsage) {};
+          streamUsage(streamUsage),
+          audioHapticSyncId(audioHapticSyncId) {};
 };
 
 class AudioHapticPlayerCallback;
@@ -115,6 +150,10 @@ public:
     virtual HapticsMode GetHapticsMode() const = 0;
 
     virtual void SetHapticsMode(HapticsMode hapticsMode) = 0;
+
+    virtual int32_t EnableHapticsInSilentMode(bool enable) = 0;
+
+    virtual bool IsHapticsIntensityAdjustmentSupported() = 0;
 };
 
 class AudioHapticPlayerCallback {

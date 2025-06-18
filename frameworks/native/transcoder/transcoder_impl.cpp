@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Huawei Device Co., Ltd.
+ * Copyright (C) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -83,6 +83,15 @@ int32_t TransCoderImpl::SetVideoEncodingBitRate(int32_t bitRate)
     CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr, MSERR_INVALID_OPERATION,
         "transcoder service does not exist..");
     return transCoderService_->SetVideoEncodingBitRate(bitRate);
+}
+
+int32_t TransCoderImpl::SetColorSpace(TranscoderColorSpace colorSpaceFormat)
+{
+    MEDIA_LOGI("TransCoderImpl:0x%{public}06" PRIXPTR " SetColorSpace in, colorSpace is %{public}d",
+        FAKE_POINTER(this), static_cast<int32_t>(colorSpaceFormat));
+    CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr, MSERR_INVALID_OPERATION,
+        "transcoder service does not exist..");
+    return transCoderService_->SetColorSpace(colorSpaceFormat);
 }
 
 int32_t TransCoderImpl::SetAudioEncoder(AudioCodecFormat encoder)

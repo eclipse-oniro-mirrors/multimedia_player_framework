@@ -157,9 +157,9 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_008, TestSize.
     auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
     EXPECT_NE(audioHapticVibratorImpl, nullptr);
 
-    std::string hapticsUri = "fd://123";
+    HapticSource hapticSource = {.hapticUri = "fd://123"};
 
-    auto ret = audioHapticVibratorImpl->OpenHapticFile(hapticsUri);
+    auto ret = audioHapticVibratorImpl->OpenHapticFile(hapticSource);
     EXPECT_NE(ret, MSERR_OK);
 }
 
@@ -606,6 +606,99 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_32, TestSize.L
     audioHapticVibratorImpl->vibratorFD_ = nullptr;
 
     auto ret = audioHapticVibratorImpl->StartVibrateForAVPlayer();
+    EXPECT_NE(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test AudioHapticVibratorImpl API
+ * @tc.number: AudioHapticVibratorImpl_033
+ * @tc.desc  : Test AudioHapticVibratorImpl::StartNonSyncOnceVibration()
+ */
+HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_33, TestSize.Level1)
+{
+    AudioHapticPlayerImpl audioHapticPlayerImpl;
+    auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
+    EXPECT_NE(audioHapticVibratorImpl, nullptr);
+
+    audioHapticVibratorImpl->isStopped_ = true;
+
+    auto ret = audioHapticVibratorImpl->StartNonSyncOnceVibration();
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test AudioHapticVibratorImpl API
+ * @tc.number: AudioHapticVibratorImpl_034
+ * @tc.desc  : Test AudioHapticVibratorImpl::StartNonSyncOnceVibration()
+ */
+HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_34, TestSize.Level1)
+{
+    AudioHapticPlayerImpl audioHapticPlayerImpl;
+    auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
+    EXPECT_NE(audioHapticVibratorImpl, nullptr);
+
+    audioHapticVibratorImpl->isStopped_ = false;
+
+    audioHapticVibratorImpl->vibratorPkg_ = std::make_shared<VibratorPackage>();
+    EXPECT_NE(audioHapticVibratorImpl->vibratorPkg_, nullptr);
+
+    audioHapticVibratorImpl->vibratorFD_ = nullptr;
+
+    auto ret = audioHapticVibratorImpl->StartNonSyncOnceVibration();
+    EXPECT_NE(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test AudioHapticVibratorImpl API
+ * @tc.number: AudioHapticVibratorImpl_035
+ * @tc.desc  : Test AudioHapticVibratorImpl::StartNonSyncOnceVibration()
+ */
+HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_35, TestSize.Level1)
+{
+    AudioHapticPlayerImpl audioHapticPlayerImpl;
+    auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
+    EXPECT_NE(audioHapticVibratorImpl, nullptr);
+
+    audioHapticVibratorImpl->isStopped_ = false;
+
+    audioHapticVibratorImpl->vibratorPkg_ = nullptr;
+    audioHapticVibratorImpl->vibratorFD_ = nullptr;
+
+    auto ret = audioHapticVibratorImpl->StartNonSyncOnceVibration();
+    EXPECT_NE(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test AudioHapticVibratorImpl API
+ * @tc.number: AudioHapticVibratorImpl_036
+ * @tc.desc  : Test AudioHapticVibratorImpl::StartVibrate()
+ */
+HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_036, TestSize.Level1)
+{
+    AudioHapticPlayerImpl audioHapticPlayerImpl;
+    auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
+    EXPECT_NE(audioHapticVibratorImpl, nullptr);
+
+    AudioLatencyMode latencyMode = AUDIO_LATENCY_MODE_NORMAL;
+    HapticsMode hapticsMode = HapticsMode::HAPTICS_MODE_NON_SYNC_ONCE;
+    audioHapticVibratorImpl->audioHapticPlayer_.SetHapticsMode(hapticsMode);
+    auto ret = audioHapticVibratorImpl->StartVibrate(latencyMode);
+    EXPECT_NE(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test AudioHapticVibratorImpl API
+ * @tc.number: AudioHapticVibratorImpl_037
+ * @tc.desc  : Test AudioHapticVibratorImpl::SeekAndRestart()
+ */
+HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_037, TestSize.Level1)
+{
+    AudioHapticPlayerImpl audioHapticPlayerImpl;
+    auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
+    EXPECT_NE(audioHapticVibratorImpl, nullptr);
+
+    audioHapticVibratorImpl->patternStartTime_ = 0;
+    auto ret = audioHapticVibratorImpl->SeekAndRestart();
     EXPECT_NE(ret, MSERR_OK);
 }
 } // namespace Media

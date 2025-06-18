@@ -16,7 +16,11 @@
 #include <GLES3/gl3.h>
 #include <cstdint>
 #include "gl_utils.h"
+#ifdef USE_M133_SKIA
+#include "third_party/skia/third_party/externals/oboe/samples/RhythmGame/third_party/glm/gtc/matrix_transform.hpp"
+#else
 #include "third_party/externals/oboe/samples/RhythmGame/third_party/glm/gtc/matrix_transform.hpp"
+#endif
 
 constexpr uint32_t MESSAGE_MAX_SIZE = 511;
 

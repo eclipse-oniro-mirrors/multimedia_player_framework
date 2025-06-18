@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Huawei Device Co., Ltd.
+ * Copyright (C) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,6 +29,7 @@ enum TransCoderPublicParamType : uint32_t {
     VIDEO_ENC_FMT,
     VIDEO_RECTANGLE,
     VIDEO_BITRATE,
+    COLOR_SPACE_FMT,
     VIDEO_PUBLIC_PARAM_END,
     // audio begin
     AUDIO_PUBLIC_PARAM_BEGIN,
@@ -69,6 +70,12 @@ struct VideoRectangle : public TransCoderParam {
 struct VideoBitRate : public TransCoderParam {
     explicit VideoBitRate(int32_t br) : TransCoderParam(TransCoderPublicParamType::VIDEO_BITRATE), bitRate(br) {}
     int32_t bitRate;
+};
+
+struct VideoColorSpace : public TransCoderParam {
+    explicit VideoColorSpace(TranscoderColorSpace fmt) : TransCoderParam(TransCoderPublicParamType::COLOR_SPACE_FMT),
+        colorSpaceFmt(fmt) {}
+    TranscoderColorSpace colorSpaceFmt;
 };
 
 struct AudioEnc : public TransCoderParam {

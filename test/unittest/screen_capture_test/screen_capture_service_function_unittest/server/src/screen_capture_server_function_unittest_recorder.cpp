@@ -64,6 +64,18 @@ void ScreenCaptureServerUnittestCallbackMock::OnDisplaySelected(uint64_t display
     MEDIA_LOGI("OnDisplaySelected() is called, displayId %{public}" PRIu64, displayId);
 }
 
+void ScreenCaptureServerUnittestCallbackMock::OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event,
+    ScreenCaptureRect* area)
+{
+    MEDIA_LOGI("OnCaptureContentChanged() is called, event: %{public}d", event);
+}
+
+void ScreenCaptureServerUnittestCallbackMock::OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo)
+{
+    MEDIA_LOGI("OnUserSelected() is called, selectType: %{public}d, displayId %{public}" PRIu64,
+        selectionInfo.selectType, selectionInfo.displayId);
+}
+
 void ScreenCaptureServerUnittestCallbackMock::Stop()
 {
     MEDIA_LOGD("Stop() is called");

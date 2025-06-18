@@ -40,7 +40,12 @@ private:
     int32_t GetSystemAbility(MessageParcel &data, MessageParcel &reply);
     int32_t GetSystemAbilityAync(MessageParcel &data, MessageParcel &reply);
     int32_t ReleaseClientListenerStub(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleKillMediaService(MessageParcel &data, MessageParcel &reply);
+    int32_t GetPlayerPidsStub(MessageParcel &data, MessageParcel &reply);
     void ReleaseClientListener() override;
+    std::vector<pid_t> GetPlayerPids() override;
+    int32_t HandleFreezeStubForPids(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleResetAllProxy(MessageParcel &data, MessageParcel &reply);
     void ClientDied(pid_t pid);
     int32_t DestroyStubForPid(pid_t pid);
     std::map<uint32_t, MediaStubFunc> mediaFuncs_;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Huawei Device Co., Ltd.
+ * Copyright (C) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -100,6 +100,23 @@ int32_t TransCoderServiceProxy::SetVideoEncodingBitRate(int32_t rate)
     int error = Remote()->SendRequest(SET_VIDEO_ENCODING_BIT_RATE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetVideoEncodingBitRate failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
+int32_t TransCoderServiceProxy::SetColorSpace(TranscoderColorSpace colorSpaceFormat)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(TransCoderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteInt32(static_cast<int32_t>(colorSpaceFormat));
+    int error = Remote()->SendRequest(SET_COLOR_SPACE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetColorSpace failed, error: %{public}d", error);
 
     return reply.ReadInt32();
 }

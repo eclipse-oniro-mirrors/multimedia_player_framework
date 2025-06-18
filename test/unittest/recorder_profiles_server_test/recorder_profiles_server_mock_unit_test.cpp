@@ -16,7 +16,7 @@
 #include "avcodec_info.h"
 #include "media_errors.h"
 #include "i_recorder_profiles_service.h"
-#include "../recorder_profiles_server_test/recorder_profiles_server_mock_unit_test.h"
+#include "recorder_profiles_server_mock_unit_test.h"
 #include "recorder.h"
 
 using namespace std;

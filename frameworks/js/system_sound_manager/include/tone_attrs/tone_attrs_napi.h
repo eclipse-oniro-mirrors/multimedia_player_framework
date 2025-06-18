@@ -48,6 +48,8 @@ private:
     static napi_value GetCustomizedType(napi_env env, napi_callback_info info);
     static napi_value SetCategory(napi_env env, napi_callback_info info);
     static napi_value GetCategory(napi_env env, napi_callback_info info);
+    static napi_value SetMediaType(napi_env env, napi_callback_info info);
+    static napi_value GetMediaType(napi_env env, napi_callback_info info);
 
     napi_env env_;
     std::shared_ptr<ToneAttrs> toneAttrs_;

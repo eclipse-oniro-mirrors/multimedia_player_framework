@@ -66,7 +66,6 @@ ohos_shared_library("media") {
     "//foundation/multimedia/player_framework/services/utils/include",
     "${multimedia_player_framework_path}/frameworks/js/soundpool/include",
     "${multimedia_player_framework_path}/frameworks/js/metadatahelper",
-    "${multimedia_player_framework_path}/frameworks/js/utils",
     "${multimedia_player_framework_path}/interfaces/inner_api/native/soundpool/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native/",
   ]
@@ -75,7 +74,6 @@ ohos_shared_library("media") {
     "${multimedia_player_framework_path}/frameworks/js/mediasource/media_source_loader_callback.cpp",
     "${multimedia_player_framework_path}/frameworks/js/mediasource/media_source_loading_request_napi.cpp",
     "${multimedia_player_framework_path}/frameworks/js/mediasource/media_source_napi.cpp",
-    "${multimedia_player_framework_path}/frameworks/js/utils/scoped_file_descriptor.cpp",
     "//foundation/multimedia/player_framework/frameworks/js/common/common_napi.cpp",
     "//foundation/multimedia/player_framework/frameworks/js/media/media_enum_napi.cpp",
     "//foundation/multimedia/player_framework/frameworks/js/media/native_module_ohos_media.cpp",
@@ -181,6 +179,7 @@ ohos_shared_library("media") {
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
     "image_framework:image",
     "image_framework:image_native",
     "ipc:ipc_core",

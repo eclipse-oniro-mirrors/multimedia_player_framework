@@ -25,12 +25,16 @@ class MockIPlayerService : public IPlayerService {
 public:
     MockIPlayerService() = default;
     ~MockIPlayerService() override {};
+    MOCK_METHOD(int32_t, SetPlayerProducer, (const PlayerProducer producer), (override));
     MOCK_METHOD(int32_t, SetSource, (const std::string &url), (override));
     MOCK_METHOD(int32_t, SetSource, (const std::shared_ptr<IMediaDataSource> &dataSrc), (override));
     MOCK_METHOD(int32_t, SetSource, (int32_t fd, int64_t offset, int64_t size), (override));
     MOCK_METHOD(int32_t, AddSubSource, (const std::string &url), (override));
     MOCK_METHOD(int32_t, AddSubSource, (int32_t fd, int64_t offset, int64_t size), (override));
     MOCK_METHOD(int32_t, Play, (), (override));
+    MOCK_METHOD(int32_t, Freeze, (), (override));
+    MOCK_METHOD(int32_t, UnFreeze, (), (override));
+    MOCK_METHOD(int32_t, EnableReportAudioInterrupt, (bool enable), (override));
     MOCK_METHOD(int32_t, Prepare, (), (override));
     MOCK_METHOD(int32_t, SetRenderFirstFrame, (bool display), (override));
     MOCK_METHOD(int32_t, SetPlayRange, (int64_t start, int64_t end), (override));
@@ -53,6 +57,7 @@ public:
     MOCK_METHOD(int32_t, GetDuration, (int32_t &duration), (override));
     MOCK_METHOD(int32_t, GetPlaybackInfo, (Format &playbackInfo), (override));
     MOCK_METHOD(int32_t, SetPlaybackSpeed, (PlaybackRateMode mode), (override));
+    MOCK_METHOD(int32_t, SetPlaybackRate, (float rate), (override));
     MOCK_METHOD(int32_t,
         SetMediaSource, (const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy), (override));
     MOCK_METHOD(int32_t, SelectBitRate, (uint32_t bitRate), (override));
@@ -82,6 +87,9 @@ public:
     MOCK_METHOD(int32_t, GetApiVersion, (int32_t &apiVersion), (override));
     MOCK_METHOD(bool, IsSeekContinuousSupported, (), (override));
     MOCK_METHOD(int32_t, SetSeiMessageCbStatus, (bool status, const std::vector<int32_t> &payloadTypes), (override));
+    MOCK_METHOD(int32_t, SetStartFrameRateOptEnabled, (bool enabled), (override));
+    MOCK_METHOD(int32_t, SetReopenFd, (int32_t fd), (override));
+    MOCK_METHOD(int32_t, EnableCameraPostprocessing, (), (override));
 };
 } // namespace Media
 } // namespace OHOS

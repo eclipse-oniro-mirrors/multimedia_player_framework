@@ -94,6 +94,16 @@ public:
     virtual int32_t Pause(bool isSystemOperation) = 0;
     virtual int32_t Stop() = 0;
     virtual int32_t Reset() = 0;
+    virtual int32_t Freeze(bool &isNoNeedToFreeze) = 0;
+    virtual int32_t UnFreeze() = 0;
+    virtual int32_t PauseSourceDownload()
+    {
+        return 0;
+    }
+    virtual int32_t ResumeSourceDownload()
+    {
+        return 0;
+    }
     virtual int32_t SetVolume(float leftVolume, float rightVolume) = 0;
     virtual int32_t SetVolumeMode(int32_t mode) = 0;
     virtual int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) = 0;
@@ -110,6 +120,7 @@ public:
     virtual int32_t GetVideoHeight() = 0;
     virtual int32_t GetDuration(int32_t &duration) = 0;
     virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode) = 0;
+    virtual int32_t SetPlaybackRate(float rate) = 0;
     virtual int32_t GetPlaybackSpeed(PlaybackRateMode &mode) = 0;
     virtual int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) = 0;
     virtual int32_t SetVideoSurface(sptr<Surface> surface) = 0;
@@ -270,11 +281,6 @@ public:
         return 0;
     }
 
-    virtual int32_t HandleEosPlay()
-    {
-        return 0;
-    }
-
     virtual int32_t IsSeekContinuousSupported(bool &IsSeekContinuousSupported)
     {
         (void)IsSeekContinuousSupported;
@@ -322,6 +328,43 @@ public:
     virtual bool IsFlvLive()
     {
         return false;
+    }
+
+    virtual int32_t EnableReportMediaProgress(bool enable)
+    {
+        (void)enable;
+        return 0;
+    }
+
+    virtual int32_t SetStartFrameRateOptEnabled(bool enabled)
+    {
+        (void)enabled;
+        return 0;
+    }
+
+    virtual int32_t SetReopenFd(int32_t fd)
+    {
+        (void)fd;
+        return 0;
+    }
+    
+    virtual int32_t EnableCameraPostprocessing()
+    {
+        return 0;
+    }
+
+    virtual int32_t ForceLoadVideo(bool /* enabled */)
+    {
+        return 0;
+    }
+
+    virtual int32_t NotifyMemoryExchange(bool /* status */)
+    {
+        return 0;
+    }
+    virtual void SetEosInLoopForFrozen(bool /* status */)
+    {
+        return ;
     }
 };
 } // namespace Media

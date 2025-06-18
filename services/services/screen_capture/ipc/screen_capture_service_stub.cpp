@@ -82,6 +82,8 @@ int32_t ScreenCaptureServiceStub::Init()
     screenCaptureStubFuncs_[SET_CHECK_SA_LIMIT] = &ScreenCaptureServiceStub::SetAndCheckSaLimit;
     screenCaptureStubFuncs_[SET_CHECK_LIMIT] = &ScreenCaptureServiceStub::SetAndCheckLimit;
     screenCaptureStubFuncs_[SET_STRATEGY] = &ScreenCaptureServiceStub::SetScreenCaptureStrategy;
+    screenCaptureStubFuncs_[UPDATE_SURFACE] = &ScreenCaptureServiceStub::UpdateSurface;
+    screenCaptureStubFuncs_[SET_CAPTURE_AREA] = &ScreenCaptureServiceStub::SetCaptureArea;
 
     return MSERR_OK;
 }
@@ -205,6 +207,13 @@ int32_t ScreenCaptureServiceStub::StartScreenCaptureWithSurface(sptr<Surface> su
 
     return screenCaptureServer_->StartScreenCaptureWithSurface(surface, isPrivacyAuthorityEnabled);
 }
+ 
+int32_t ScreenCaptureServiceStub::UpdateSurface(sptr<Surface> surface)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE, "screen capture server is nullptr");
+ 
+    return screenCaptureServer_->UpdateSurface(surface);
+}
 
 int32_t ScreenCaptureServiceStub::StopScreenCapture()
 {
@@ -312,6 +321,13 @@ int32_t ScreenCaptureServiceStub::SetScreenCaptureStrategy(ScreenCaptureStrategy
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     return screenCaptureServer_->SetScreenCaptureStrategy(strategy);
+}
+
+int32_t ScreenCaptureServiceStub::SetCaptureArea(uint64_t displayId, OHOS::Rect area)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    return screenCaptureServer_->SetCaptureArea(displayId, area);
 }
 
 int32_t ScreenCaptureServiceStub::ExcludeContent(MessageParcel &data, MessageParcel &reply)
@@ -572,6 +588,25 @@ int32_t ScreenCaptureServiceStub::StartScreenCaptureWithSurface(MessageParcel &d
     reply.WriteInt32(ret);
     return MSERR_OK;
 }
+ 
+int32_t ScreenCaptureServiceStub::UpdateSurface(MessageParcel &data, MessageParcel &reply)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE, "screen capture server is nullptr");
+ 
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
+    CHECK_AND_RETURN_RET_LOG(
+        object != nullptr, MSERR_NO_MEMORY, "ScreenCaptureServiceProxy UpdateSurface object is nullptr");
+ 
+    sptr<IBufferProducer> producer = iface_cast<IBufferProducer>(object);
+    CHECK_AND_RETURN_RET_LOG(producer != nullptr, MSERR_NO_MEMORY, "failed to convert object to producer");
+ 
+    sptr<Surface> surface = Surface::CreateSurfaceAsProducer(producer);
+    CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_NO_MEMORY, "failed to create surface");
+ 
+    int32_t ret = UpdateSurface(surface);
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
 
 int32_t ScreenCaptureServiceStub::StopScreenCapture(MessageParcel &data, MessageParcel &reply)
 {
@@ -681,7 +716,24 @@ int32_t ScreenCaptureServiceStub::SetScreenCaptureStrategy(MessageParcel &data, 
     ScreenCaptureStrategy strategy;
     strategy.enableDeviceLevelCapture = data.ReadBool();
     strategy.keepCaptureDuringCall = data.ReadBool();
+    strategy.strategyForPrivacyMaskMode = data.ReadInt32();
     int32_t ret = SetScreenCaptureStrategy(strategy);
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServiceStub::SetCaptureArea(MessageParcel &data, MessageParcel &reply)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    uint64_t displayId = data.ReadUint64();
+    OHOS::Rect area;
+    area.x = data.ReadInt32();
+    area.y = data.ReadInt32();
+    area.w = data.ReadInt32();
+    area.h = data.ReadInt32();
+
+    int32_t ret = SetCaptureArea(displayId, area);
     reply.WriteInt32(ret);
     return MSERR_OK;
 }

@@ -36,6 +36,7 @@ void ScreenCaptureControllerImpl::ReportAVScreenCaptureUserChoice(int32_t sessio
     MEDIA_LOGI("ScreenCaptureController::ReportAVScreenCaptureUserChoice start");
     std::shared_ptr<IScreenCaptureController> controllerClient =
         MediaServiceFactory::GetInstance().CreateScreenCaptureControllerClient();
+    CHECK_AND_RETURN_LOG(controllerClient != nullptr, "failed to CreateScreenCaptureControllerClient");
 
     int32_t ret = controllerClient->ReportAVScreenCaptureUserChoice(sessionId, choice);
     MEDIA_LOGI("ScreenCaptureController::ReportAVScreenCaptureUserChoice Report result: %{public}d", ret);

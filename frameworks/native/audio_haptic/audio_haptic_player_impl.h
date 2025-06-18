@@ -22,6 +22,7 @@
 
 namespace OHOS {
 namespace Media {
+const int32_t ERR_OPERATE_NOT_ALLOWED = 5400102;
 class AudioHapticSoundCallbackImpl;
 
 class AudioHapticPlayerImpl : public AudioHapticPlayer, public std::enable_shared_from_this<AudioHapticPlayerImpl> {
@@ -42,6 +43,8 @@ public:
     int32_t GetAudioCurrentTime() override;
     HapticsMode GetHapticsMode() const override;
     void SetHapticsMode(HapticsMode hapticsMode) override;
+    int32_t EnableHapticsInSilentMode(bool enable) override;
+    bool IsHapticsIntensityAdjustmentSupported() override;
 
     void SetPlayerParam(const AudioHapticPlayerParam &param);
     void LoadPlayer();
@@ -68,13 +71,14 @@ private:
     bool muteAudio_;
     bool muteHaptic_;
     bool parallelPlayFlag_ = false;
-    std::string audioUri_;
+    AudioSource audioSource_;
     HapticSource hapticSource_;
     float volume_ = 1.0f;
     bool loop_ = false;
     AudioHapticPlayerState playerState_ = AudioHapticPlayerState::STATE_INVALID;
     std::mutex audioHapticPlayerLock_;
     HapticsMode hapticsMode_ = HapticsMode::HAPTICS_MODE_INVALID;
+    int32_t audioHapticSyncId_ = 0;
 
     // var for callback
     std::weak_ptr<AudioHapticPlayerCallback> audioHapticPlayerCallback_;

@@ -32,6 +32,8 @@ public:
     virtual void OnVideoBufferAvailable(bool isReady) = 0;
     virtual void OnStateChange(AVScreenCaptureStateCode stateCode) = 0;
     virtual void OnDisplaySelected(uint64_t displayId) = 0;
+    virtual void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area) = 0;
+    virtual void OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo) = 0;
     /**
      * IPC code ID
      */
@@ -40,7 +42,9 @@ public:
         ON_AUDIO_AVAILABLE = 1,
         ON_VIDEO_AVAILABLE = 2,
         ON_STAGE_CHANGE = 3,
-        ON_DISPLAY_SELECTED = 4
+        ON_DISPLAY_SELECTED = 4,
+        ON_CONTENT_CHANGED = 5,
+        ON_USER_SELECTED = 6
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardScreenCaptureListener");

@@ -28,8 +28,11 @@ public:
     virtual int32_t Prepare();
     virtual int32_t Play();
     virtual int32_t Pause(bool isSystemOperation);
+    virtual int32_t Freeze();
+    virtual int32_t UnFreeze();
     virtual int32_t Seek(int32_t mSeconds, PlayerSeekMode mode);
     virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode);
+    virtual int32_t SetPlaybackRate(float rate);
     virtual int32_t Stop();
     virtual int32_t SeekContinous(int32_t mSeconds, int64_t batchNo);
     virtual int32_t PauseDemuxer();
@@ -59,6 +62,7 @@ protected:
     int32_t MessageTrackDone(int32_t extra);
     int32_t MessageTrackInfoUpdate();
     int32_t MessageSpeedDone();
+    int32_t MessageRateDone();
     int32_t MessageStateChange(int32_t extra);
 
     PlayerServer &server_;
@@ -104,6 +108,7 @@ public:
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
+    int32_t SetPlaybackRate(float rate) override;
     int32_t SeekContinous(int32_t mSeconds, int64_t batchNo) override;
     int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
 
@@ -119,9 +124,12 @@ public:
 
     int32_t Play() override;
     int32_t Pause(bool isSystemOperation) override;
+    int32_t Freeze() override;
+    int32_t UnFreeze() override;
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
+    int32_t SetPlaybackRate(float rate) override;
     int32_t SeekContinous(int32_t mSeconds, int64_t batchNo) override;
     int32_t PauseDemuxer() override;
     int32_t ResumeDemuxer() override;
@@ -143,9 +151,11 @@ public:
 
     int32_t Play() override;
     int32_t Pause(bool isSystemOperation) override;
+    int32_t UnFreeze() override;
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
+    int32_t SetPlaybackRate(float rate) override;
     int32_t SeekContinous(int32_t mSeconds, int64_t batchNo) override;
     int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
 
@@ -172,8 +182,10 @@ public:
 
     int32_t Play() override;
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
+    int32_t UnFreeze() override;
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
+    int32_t SetPlaybackRate(float rate) override;
     int32_t SeekContinous(int32_t mSeconds, int64_t batchNo) override;
     int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
     void StateEnter() override;

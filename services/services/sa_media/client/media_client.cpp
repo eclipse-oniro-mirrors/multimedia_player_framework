@@ -52,6 +52,7 @@ constexpr int32_t LOAD_TIME = 30;
 constexpr int32_t SLEEP_TIME = 100;
 constexpr int32_t RETRY_TIME = 3;
 #endif
+constexpr size_t MAX_PID_LIST_SIZE = 1000;
 constexpr uint32_t MAX_WAIT_TIME = 5000;
 std::shared_ptr<MediaClient> g_mediaClientInstance;
 std::once_flag onceFlag_;
@@ -72,6 +73,25 @@ MediaClient::MediaClient() noexcept
 MediaClient::~MediaClient()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+}
+
+int32_t MediaClient::ProxyForFreeze(const std::set<int32_t> &pidList, bool isProxy)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(IsAlived(), MSERR_SERVICE_DIED, "media service does not exist.");
+    auto size = pidList.size();
+    CHECK_AND_RETURN_RET_LOG(size <= MAX_PID_LIST_SIZE, MSERR_INVALID_VAL, "invalid pidList size");
+    MEDIA_LOGD("received Freeze Notification, pidSize = %{public}d, isProxy = %{public}d",
+               static_cast<int32_t>(size), isProxy);
+    return mediaProxy_->FreezeStubForPids(pidList, isProxy);
+}
+
+int32_t MediaClient::ResetAllProxy()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(IsAlived(), MSERR_SERVICE_DIED, "media service does not exist.");
+    MEDIA_LOGI("received ResetAllProxy");
+    return mediaProxy_->ResetAllProxy();
 }
 
 bool MediaClient::IsAlived()
@@ -346,6 +366,13 @@ int32_t MediaClient::DestroyScreenCaptureControllerClient(std::shared_ptr<IScree
 }
 #endif
 
+std::vector<pid_t> MediaClient::GetPlayerPids()
+{
+    std::vector<pid_t> res;
+    CHECK_AND_RETURN_RET_LOG(IsAlived(), res, "MediaServer Is Not Alived");
+    return mediaProxy_->GetPlayerPids();
+}
+
 sptr<IStandardMonitorService> MediaClient::GetMonitorProxy()
 {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -481,7 +508,10 @@ void MediaClient::DoMediaServerDied()
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("DoMediaServerDied");
     if (mediaProxy_ != nullptr) {
-        (void)mediaProxy_->AsObject()->RemoveDeathRecipient(deathRecipient_);
+        sptr<IRemoteObject> object = mediaProxy_->AsObject();
+        if (object != nullptr) {
+            object->RemoveDeathRecipient(deathRecipient_);
+        }
         mediaProxy_ = nullptr;
     }
     listenerStub_ = nullptr;
@@ -494,6 +524,15 @@ void MediaClient::DoMediaServerDied()
     AVRecorderServerDied();
     AVScreenCaptureServerDied();
     mediaProxyUpdatedCondition_.notify_all();
+}
+
+bool MediaClient::CanKillMediaService()
+{
+    std::unique_lock<std::mutex> lock(mutex_, std::try_to_lock);
+    CHECK_AND_RETURN_RET_LOG(lock.owns_lock(), false, "MediaClient mutex_ try_lock false, please try again later.");
+    CHECK_AND_RETURN_RET_LOG(IsAlived(), false, "media service does not exist.");
+
+    return mediaProxy_->CanKillMediaService();
 }
 } // namespace Media
 } // namespace OHOS

@@ -24,6 +24,8 @@ namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaServiceStub"};
 const std::string TASK_NAME = "OHOS::Media::MediaServiceStub::GetSystemAbility";
 const int32_t TIME_OUT_SECOND = 30; // time out is 30 senconds
+const int32_t RSS_UID = 1096;
+constexpr int32_t MAX_PID_LIST_SIZE = 1000;
 }
 
 namespace OHOS {
@@ -48,6 +50,46 @@ void MediaServiceStub::Init()
         [this](MessageParcel &data, MessageParcel &reply) { return GetSystemAbilityAync(data, reply); };
     mediaFuncs_[RELEASE_CLIENT_LISTENER] =
         [this] (MessageParcel &data, MessageParcel &reply) { return ReleaseClientListenerStub(data, reply); };
+    mediaFuncs_[CAN_KILL_MEDIA_SERVICE] =
+        [this] (MessageParcel &data, MessageParcel &reply) { return HandleKillMediaService(data, reply); };
+    mediaFuncs_[GET_PLAYER_PIDS] =
+        [this] (MessageParcel &data, MessageParcel &reply) { return GetPlayerPidsStub(data, reply); };
+    mediaFuncs_[FREEZE] =
+        [this](MessageParcel &data, MessageParcel &reply) { return HandleFreezeStubForPids(data, reply); };
+    mediaFuncs_[RESET_ALL_PROXY] =
+        [this](MessageParcel &data, MessageParcel &reply) { return HandleResetAllProxy(data, reply); };
+}
+
+int32_t MediaServiceStub::HandleFreezeStubForPids(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    CHECK_AND_RETURN_RET_LOG(callingUid == RSS_UID, MSERR_INVALID_OPERATION, "No Permission");
+
+    bool isProxy = false;
+    CHECK_AND_RETURN_RET_LOG(data.ReadBool(isProxy), MSERR_INVALID_OPERATION, "Failed to Read Bool");
+
+    std::set<int32_t> pidList;
+    int32_t size = 0;
+    CHECK_AND_RETURN_RET_LOG(data.ReadInt32(size), MSERR_INVALID_OPERATION, "Failed to Read Int32");
+    CHECK_AND_RETURN_RET_LOG(size > 0 && size <= MAX_PID_LIST_SIZE, MSERR_INVALID_VAL, "size is invalid");
+
+    for (int32_t i = 0; i < size; i++) {
+        int32_t pid = 0;
+        CHECK_AND_RETURN_RET_LOG(data.ReadInt32(pid), MSERR_INVALID_OPERATION, "Failed to Read Int32");
+        pidList.insert(pid);
+    }
+
+    reply.WriteInt32(FreezeStubForPids(pidList, isProxy));
+    return MSERR_OK;
+}
+
+int32_t MediaServiceStub::HandleResetAllProxy(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    CHECK_AND_RETURN_RET_LOG(callingUid == RSS_UID, MSERR_INVALID_OPERATION, "No Permission");
+    
+    reply.WriteInt32(ResetAllProxy());
+    return MSERR_OK;
 }
 
 int32_t MediaServiceStub::DestroyStubForPid(pid_t pid)
@@ -157,10 +199,27 @@ int32_t MediaServiceStub::ReleaseClientListenerStub(MessageParcel &data, Message
     return MSERR_OK;
 }
 
+int32_t MediaServiceStub::GetPlayerPidsStub(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    std::vector<pid_t> res = GetPlayerPids();
+    int64_t vectorSize = static_cast<int64_t>(res.size());
+    reply.WriteInt64(vectorSize);
+    for (auto &pid : res) {
+        reply.WriteInt64(static_cast<int64_t>(pid));
+    }
+    return MSERR_OK;
+}
+
 void MediaServiceStub::ReleaseClientListener()
 {
     pid_t pid = IPCSkeleton::GetCallingPid();
     (void)DestroyStubForPid(pid);
+}
+
+std::vector<pid_t> MediaServiceStub::GetPlayerPids()
+{
+    return MediaServerManager::GetInstance().GetPlayerPids();
 }
 
 int32_t MediaServiceStub::GetSystemAbility(MessageParcel &data, MessageParcel &reply)
@@ -186,6 +245,13 @@ int32_t MediaServiceStub::GetSystemAbilityAync(MessageParcel &data, MessageParce
     sptr<IRemoteObject> subSystemAbility = GetSubSystemAbilityWithTimeOut(id, listenerObj, timeOutMs);
     LISTENER(mediaReplyProxy->SendSubSystemAbilityAync(subSystemAbility),
         TASK_NAME + ":" + std::to_string(mediaSystemAbility), false, TIME_OUT_SECOND);
+    return MSERR_OK;
+}
+
+int32_t MediaServiceStub::HandleKillMediaService(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    reply.WriteBool(CanKillMediaService());
     return MSERR_OK;
 }
 } // namespace Media

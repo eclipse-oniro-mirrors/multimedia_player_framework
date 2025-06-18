@@ -18,6 +18,7 @@
 
 #include <unordered_map>
 #include <set>
+#include <deque>
 #include <condition_variable>
 #include <mutex>
 #include <nocopyable.h>
@@ -34,7 +35,8 @@ namespace OHOS {
 namespace Media {
 class AVThumbnailGenerator : public NoCopyable, public std::enable_shared_from_this<AVThumbnailGenerator> {
 public:
-    explicit AVThumbnailGenerator(std::shared_ptr<MediaDemuxer> &mediaDemuxer);
+    explicit AVThumbnailGenerator(std::shared_ptr<MediaDemuxer> &mediaDemuxer, int32_t appUid, int32_t appPid,
+        uint32_t appTokenId, uint64_t appFullTokenId);
     ~AVThumbnailGenerator();
     std::shared_ptr<AVSharedMemory> FetchFrameAtTime(int64_t timeUs, int32_t option, const OutputConfiguration &param);
     std::shared_ptr<AVBuffer> FetchFrameYuv(int64_t timeUs, int32_t option, const OutputConfiguration &param);
@@ -51,6 +53,7 @@ public:
     void OnOutputBufferAvailable(uint32_t index, std::shared_ptr<AVBuffer> buffer);
     void OnFetchedFrameBufferAvailable();
     int32_t Init();
+    void SetClientBundleName(std::string appName);
     void AcquireAvailableInputBuffer();
 
 private:
@@ -67,6 +70,9 @@ private:
     std::shared_ptr<Meta> trackInfo_;
     std::mutex mutex_;
     std::mutex queueMutex_;
+    std::mutex dtsQueMutex_;
+    FileType fileType_ = FileType::UNKNOW;
+    std::deque<int64_t> inputBufferDtsQue_;
     std::condition_variable cond_;
     std::condition_variable bufferAvailableCond_;
     std::atomic<uint32_t> bufferIndex_;
@@ -83,6 +89,9 @@ private:
 
     Status InitDecoder();
     std::shared_ptr<Meta> GetVideoTrackInfo();
+    void SetDemuxerOutputBufferPts(std::shared_ptr<AVBuffer> &outputBuffer);
+    void GetInputBufferDts(std::shared_ptr<AVBuffer> &inputBuffer);
+    void SetDecoderOutputBufferPts(std::shared_ptr<AVBuffer> &outputBuffer);
     void ConvertToAVSharedMemory();
     void ConvertP010ToNV12(
         const sptr<SurfaceBuffer> &surfaceBuffer, uint8_t *dstNV12, int32_t strideWidth, int32_t strideHeight);
@@ -90,6 +99,11 @@ private:
     Status SeekToTime(int64_t timeMs, Plugins::SeekMode option, int64_t realSeekTime);
     int32_t width_ = 0;
     int32_t height_ = 0;
+    int32_t appUid_{0};
+    int32_t appPid_{0};
+    uint32_t appTokenId_{0};
+    uint64_t appFullTokenId_{0};
+    std::string appName_;
     double frameRate_ { 0.0 };
     Plugins::SeekMode seekMode_ {};
     int64_t duration_ = 0;
@@ -107,7 +121,7 @@ private:
     void HandleFetchFrameAtTimeRes();
 
     void PauseFetchFrame();
-    void GetDuration();
+    void InitMediaInfoFromGlobalMeta();
     int64_t ReadLoop();
     void FlushBufferQueue();
     int64_t StopTask();

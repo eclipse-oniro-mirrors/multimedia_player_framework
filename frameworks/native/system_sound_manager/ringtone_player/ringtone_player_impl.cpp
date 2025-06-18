@@ -272,6 +272,16 @@ int32_t RingtonePlayerImpl::RegisterSource(const std::string &audioUri, const st
     string newAudioUri = systemSoundMgr_.OpenAudioUri(databaseTool_, audioUri);
     string newHapticUri = systemSoundMgr_.OpenHapticsUri(databaseTool_, hapticUri);
 
+    if (newAudioUri.find(FDHEAD) == std::string::npos && newAudioUri != NO_RING_SOUND) {
+        MEDIA_LOGI("Failed to open ringtone file, select to open default ringtone and play.");
+        std::string uri = "";
+        std::shared_ptr<ToneAttrs> ringtoneAttrs = systemSoundMgr_.GetDefaultRingtoneAttrs(context_, type_);
+        if (ringtoneAttrs != nullptr) {
+            uri = ringtoneAttrs->GetUri();
+        }
+        newAudioUri = systemSoundMgr_.OpenAudioUri(databaseTool_, uri);
+    }
+
     int32_t sourceId = audioHapticManager_->RegisterSource(newAudioUri, newHapticUri);
 
     if (newAudioUri.find(FDHEAD) != std::string::npos) {
@@ -295,10 +305,9 @@ void RingtonePlayerImpl::InitPlayer(std::string &audioUri, ToneHapticsSettings &
 {
     MEDIA_LOGI("InitPlayer: ToneUri:%{public}s, hapticsUri:%{public}s, mode:%{public}d.",
         audioUri.c_str(), settings.hapticsUri.c_str(), settings.mode);
+    CHECK_AND_RETURN_LOG(audioHapticManager_ != nullptr, "Failed to create audio haptic manager.");
     if (sourceId_ != -1) {
-        if (audioHapticManager_ != nullptr) {
-            (void)audioHapticManager_->UnregisterSource(sourceId_);
-        }
+        (void)audioHapticManager_->UnregisterSource(sourceId_);
         sourceId_ = -1;
     }
 
@@ -417,23 +426,30 @@ int32_t RingtonePlayerImpl::StartForNoRing(const HapticStartupMode startupMode)
     if (startupMode == HapticStartupMode::FAST && NeedToVibrate(settings)) {
         (void)SystemSoundVibrator::StartVibratorForFastMode();
     }
-    InitPlayer(ringtoneUri, settings, options);
-    std::string hapticUri = systemSoundMgr_.OpenHapticsUri(databaseTool_, settings.hapticsUri);
-    int32_t result = MSERR_OK; // if no need to start vibrator, return MSERR_OK.
-    if (NeedToVibrate(settings)) {
-        result = SystemSoundVibrator::StartVibratorForRingtone(hapticUri);
-    }
 
+    if (ringtoneUri != configuredUri_ || settings.hapticsUri != configuredHaptcisSettings_.hapticsUri ||
+        settings.mode != configuredHaptcisSettings_.mode) {
+        MEDIA_LOGI("Ringtone uri changed. Reload player");
+        InitPlayer(ringtoneUri, settings, options);
+    }
     // Start an empty audio stream for NoRing.
     rendererParams_.sampleFormat = AudioStandard::SAMPLE_S24LE;
     rendererParams_.channelCount = AudioStandard::STEREO;
-    audioRenderer_ = AudioStandard::AudioRenderer::Create(AudioStandard::AudioStreamType::STREAM_VOICE_RING);
+    if (audioRenderer_ == nullptr) {
+        audioRenderer_ = AudioStandard::AudioRenderer::Create(AudioStandard::AudioStreamType::STREAM_VOICE_RING);
+    }
     CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL, "no audioRenderer");
     int32_t audioRet = audioRenderer_->SetParams(rendererParams_);
     bool isStarted = audioRenderer_->Start();
-    ringtoneState_ = isStarted ? STATE_RUNNING : ringtoneState_;
-    MEDIA_LOGI("isStarted : %{public}d, ret: %{public}d, ", isStarted, audioRet);
+    MEDIA_LOGI("isStarted : %{public}d, audioRet: %{public}d, ", isStarted, audioRet);
 
+    int32_t result = MSERR_OK; // if no need to start vibrator, return MSERR_OK.
+    if (NeedToVibrate(settings)) {
+        std::string hapticUri = systemSoundMgr_.OpenHapticsUri(databaseTool_, settings.hapticsUri);
+        result = SystemSoundVibrator::StartVibratorForRingtone(hapticUri);
+    }
+    ringtoneState_ = STATE_RUNNING;
+    ReleaseDatabaseTool();
     return result;
 }
 

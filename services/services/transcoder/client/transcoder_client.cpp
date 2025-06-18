@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Huawei Device Co., Ltd.
+ * Copyright (C) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -106,6 +106,15 @@ int32_t TransCoderClient::SetVideoEncodingBitRate(int32_t rate)
 
     MEDIA_LOGD("SetVideoEncodingBitRate rate(%{public}d)", rate);
     return transCoderProxy_->SetVideoEncodingBitRate(rate);
+}
+
+int32_t TransCoderClient::SetColorSpace(TranscoderColorSpace colorSpaceFormat)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(transCoderProxy_ != nullptr, MSERR_NO_MEMORY, "transcoder service does not exist.");
+
+    MEDIA_LOGD("SetColorSpace, format(%{public}d)", static_cast<int32_t>(colorSpaceFormat));
+    return transCoderProxy_->SetColorSpace(colorSpaceFormat);
 }
 
 int32_t TransCoderClient::SetAudioEncoder(AudioCodecFormat encoder)

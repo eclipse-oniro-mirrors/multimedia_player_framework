@@ -15,6 +15,8 @@
 
 #include "audio_haptic_unit_test.h"
 
+#include "audio_haptic_test_common.h"
+
 #include "media_errors.h"
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -41,14 +43,9 @@ static std::shared_ptr<AudioHapticPlayer> g_lowLatencyAudioHapticPlayer = nullpt
 static std::shared_ptr<AudioHapticPlayer> g_effectAudioHapticPlayer = nullptr;
 static std::shared_ptr<AudioHapticPlayer> g_nonSyncAudioHapticPlayer = nullptr;
 
-static AccessTokenID g_tokenId = 0;
-
 void AudioHapticUnitTest::SetUpTestCase(void)
 {
-    // SetSelfTokenID to foundation for ohos.permission.VIBRATE
-    g_tokenId = AccessTokenKit::GetNativeTokenId("foundation");
-    ASSERT_NE(0, g_tokenId);
-    ASSERT_EQ(0, SetSelfTokenID(g_tokenId));
+    ASSERT_NE(GetAllPermission(), 0);
 
     g_audioHapticManager = AudioHapticManagerFactory::CreateAudioHapticManager();
     ASSERT_NE(g_audioHapticManager, nullptr);

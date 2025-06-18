@@ -392,8 +392,12 @@ bool RecorderProfilesXmlParser::ParseRecorderProfilesSourceData(const std::strin
     if (xmlStrcmp(node->name, reinterpret_cast<const xmlChar*>(sourceType.c_str())) == 0) {
         std::string property = SOURCE_TYPE_ID_MAP.at(sourceType);
         if (xmlHasProp(node, reinterpret_cast<xmlChar*>(const_cast<char*>(property.c_str())))) {
-            std::string capabilityValue = std::string(reinterpret_cast<char*>(xmlGetProp(node,
-                reinterpret_cast<xmlChar*>(const_cast<char*>(property.c_str())))));
+            std::unique_ptr<xmlChar, decltype(xmlFree)> propValue(
+                xmlGetProp(node, reinterpret_cast<xmlChar*>(const_cast<char*>(property.c_str()))), xmlFree);
+            std::string capabilityValue{""};
+            if (propValue.get() != nullptr) {
+                capabilityValue = std::string(reinterpret_cast<char*>(propValue.get()));
+            }
             int32_t id = 0;
             if (!StrToInt(capabilityValue, id)) {
                 MEDIA_LOGE("call StrToInt func false, input str is: %{public}s", capabilityValue.c_str());

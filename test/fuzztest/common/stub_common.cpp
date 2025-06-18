@@ -53,5 +53,36 @@ void MediaServiceProxyFuzzer::ReleaseClientListener()
     MessageOption option;
     (void)Remote()->SendRequest(MediaServiceMsg::RELEASE_CLIENT_LISTENER, data, reply, option);
 }
+
+bool MediaServiceProxyFuzzer::CanKillMediaService()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    (void)Remote()->SendRequest(MediaServiceMsg::CAN_KILL_MEDIA_SERVICE, data, reply, option);
+    return reply.ReadBool();
+}
+
+std::vector<pid_t> MediaServiceProxyFuzzer::GetPlayerPids()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    (void)Remote()->SendRequest(MediaServiceMsg::GET_PLAYER_PIDS, data, reply, option);
+    std::vector<pid_t> res;
+    return res;
+}
+
+int32_t MediaServiceProxyFuzzer::FreezeStubForPids(const std::set<int32_t> &pidList, bool isProxy)
+{
+    (void) pidList;
+    (void) isProxy;
+    return 0;
+}
+
+int32_t MediaServiceProxyFuzzer::ResetAllProxy()
+{
+    return 0;
+}
 }
 }

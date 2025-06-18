@@ -57,9 +57,9 @@ public:
     MOCK_METHOD(Status, PausePreroll, (), (override));
  
     MOCK_METHOD(Status, StartTask, (int32_t trackId), (override));
-    MOCK_METHOD(Status, SelectTrack, (int32_t trackId), (override));
-    MOCK_METHOD(Status, UnselectTrack, (int32_t trackId), (override));
-    MOCK_METHOD(Status, ReadSample, (uint32_t trackId, std::shared_ptr<AVBuffer> sample), (override));
+    MOCK_METHOD(Status, SelectTrack, (uint32_t trackIndex), (override));
+    MOCK_METHOD(Status, UnselectTrack, (uint32_t trackIndex), (override));
+    MOCK_METHOD(Status, ReadSample, (uint32_t trackIndex, std::shared_ptr<AVBuffer> sample), (override));
     MOCK_METHOD(Status, GetBitRates, (std::vector<uint32_t> &bitRates), (override));
     MOCK_METHOD(Status, SelectBitRate, (uint32_t bitRate), (override));
     MOCK_METHOD(Status, GetMediaKeySystemInfo, ((std::multimap<std::string, std::vector<uint8_t>>) &infos), (override));
@@ -67,7 +67,7 @@ public:
                 (override));
     MOCK_METHOD(void, OnEvent, (const Plugins::PluginEvent &event), (override));
  
-    MOCK_METHOD((std::map<uint32_t, sptr<AVBufferQueueProducer>>), GetBufferQueueProducerMap, (), (override));
+    MOCK_METHOD((std::map<int32_t, sptr<AVBufferQueueProducer>>), GetBufferQueueProducerMap, (), (override));
     MOCK_METHOD(Status, PauseTaskByTrackId, (int32_t trackId), (override));
     MOCK_METHOD(bool, IsRenderNextVideoFrameSupported, (), (override));
  
@@ -78,13 +78,13 @@ public:
     MOCK_METHOD(void, SetDumpInfo, (bool isDump, uint64_t instanceId), (override));
  
     MOCK_METHOD(Status, OptimizeDecodeSlow, (bool isDecodeOptimizationEnabled), (override));
-    MOCK_METHOD(Status, SetDecoderFramerateUpperLimit, (int32_t decoderFramerateUpperLimit, uint32_t trackId),
+    MOCK_METHOD(Status, SetDecoderFramerateUpperLimit, (int32_t decoderFramerateUpperLimit, int32_t trackId),
                 (override));
     MOCK_METHOD(Status, SetSpeed, (float speed), (override));
-    MOCK_METHOD(Status, SetFrameRate, (double frameRate, uint32_t trackId), (override));
+    MOCK_METHOD(Status, SetFrameRate, (double frameRate, int32_t trackId), (override));
  
     MOCK_METHOD(bool, IsLocalDrmInfosExisted, (), (override));
-    MOCK_METHOD(void, OnBufferAvailable, (uint32_t trackId), (override));
+    MOCK_METHOD(void, OnBufferAvailable, (int32_t trackId), (override));
     MOCK_METHOD(void, SetSelectBitRateFlag, (bool flag, uint32_t desBitRate), (override));
     MOCK_METHOD(bool, CanAutoSelectBitRate, (), (override));
     MOCK_METHOD(void, OnDumpInfo, (int32_t fd), (override));

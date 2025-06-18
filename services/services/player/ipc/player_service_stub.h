@@ -37,6 +37,7 @@ public:
 
     int OnRemoteRequest(uint32_t code, MessageParcel &data,
         MessageParcel &reply, MessageOption &option) override;
+    int32_t SetPlayerProducer(const PlayerProducer producer) override;
     int32_t AddSubSource(const std::string &url) override;
     int32_t Play() override;
     int32_t SetSource(const sptr<IRemoteObject> &object) override;
@@ -57,6 +58,7 @@ public:
     int32_t SetVolume(float leftVolume, float rightVolume) override;
     int32_t SetVolumeMode(int32_t mode) override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
+    int32_t SetPlaybackRate(float rate) override;
     int32_t GetVideoWidth() override;
     int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override;
     int32_t GetCurrentTime(int32_t &currentTime) override;
@@ -72,6 +74,8 @@ public:
     int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
     int32_t SetSuperResolution(bool enabled) override;
     int32_t SetVideoWindowSize(int32_t width, int32_t height) override;
+    int32_t Freeze();
+    int32_t UnFreeze();
 #ifdef SUPPORT_VIDEO
     int32_t SetVideoSurface(sptr<Surface> surface) override;
 #endif
@@ -98,7 +102,14 @@ public:
     int32_t SetMaxAmplitudeCbStatus(bool status) override;
     bool IsSeekContinuousSupported() override;
     int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes) override;
+    int32_t SetStartFrameRateOptEnabled(bool enabled) override;
     uint32_t GetMemoryUsage();
+    int32_t SetReopenFd(int32_t fd) override;
+    int32_t EnableCameraPostprocessing() override;
+    int32_t EnableReportMediaProgress(bool enable) override;
+    int32_t EnableReportAudioInterrupt(bool enable) override;
+    bool isFrozen_ = false;
+    int32_t ForceLoadVideo(bool status) override;
 protected:
     PlayerServiceStub();
     virtual int32_t Init();
@@ -113,6 +124,7 @@ protected:
 
 private:
     int32_t SetListenerObject(MessageParcel &data, MessageParcel &reply);
+    int32_t SetPlayerProducer(MessageParcel &data, MessageParcel &reply);
     int32_t SetSource(MessageParcel &data, MessageParcel &reply);
     int32_t SetMediaDataSource(MessageParcel &data, MessageParcel &reply);
     int32_t SetSourceLoader(MessageParcel &data, MessageParcel &reply);
@@ -143,6 +155,7 @@ private:
     int32_t GetDuration(MessageParcel &data, MessageParcel &reply);
     int32_t GetApiVersion(MessageParcel &data, MessageParcel &reply);
     int32_t SetPlaybackSpeed(MessageParcel &data, MessageParcel &reply);
+    int32_t SetPlaybackRate(MessageParcel &data, MessageParcel &reply);
     int32_t GetPlaybackSpeed(MessageParcel &data, MessageParcel &reply);
 #ifdef SUPPORT_VIDEO
     int32_t SetVideoSurface(MessageParcel &data, MessageParcel &reply);
@@ -167,11 +180,18 @@ private:
     int32_t SetMaxAmplitudeCbStatus(MessageParcel &data, MessageParcel &reply);
     int32_t IsSeekContinuousSupported(MessageParcel &data, MessageParcel &reply);
     int32_t SetSeiMessageCbStatus(MessageParcel &data, MessageParcel &reply);
+    int32_t SetStartFrameRateOptEnabled(MessageParcel &data, MessageParcel &reply);
+    int32_t SetReopenFd(MessageParcel &data, MessageParcel &reply);
+    int32_t EnableCameraPostprocessing(MessageParcel &data, MessageParcel &reply);
+    int32_t EnableReportMediaProgress(MessageParcel &data, MessageParcel &reply);
+    int32_t EnableReportAudioInterrupt(MessageParcel &data, MessageParcel &reply);
+    int32_t ForceLoadVideo(MessageParcel &data, MessageParcel &reply);
 
     int32_t ReadMediaStreamListFromMessageParcel(
         MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource);
     void ReadPlayStrategyFromMessageParcel(MessageParcel &data, AVPlayStrategy &strategy);
 
+    int32_t CheckandDoUnFreeze();
     std::map<uint32_t, std::pair<std::string, PlayerStubFunc>> playerFuncs_;
     void FillPlayerFuncPart1();
     void FillPlayerFuncPart2();

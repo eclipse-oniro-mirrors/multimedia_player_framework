@@ -52,6 +52,30 @@ void MediaServiceProxy::ReleaseClientListener()
     }
 }
 
+std::vector<pid_t> MediaServiceProxy::GetPlayerPids()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    
+    std::vector<pid_t> res;
+
+    bool token = data.WriteInterfaceToken(MediaServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, res, "Failed to write descriptor!");
+    int32_t error = -1;
+    error = Remote()->SendRequest(MediaServiceMsg::GET_PLAYER_PIDS, data, reply, option);
+    if (error != MSERR_OK) {
+        MEDIA_LOGE("Send request failed, error: %{public}d", error);
+        return res;
+    }
+    int64_t vecSize = reply.ReadInt64();
+    CHECK_AND_RETURN_RET_LOG(vecSize >= 0, res, "Fail to read vecSize");
+    for (int64_t i = 0; i < vecSize; i++) {
+        res.emplace_back(static_cast<pid_t>(reply.ReadInt64()));
+    }
+    return res;
+}
+
 sptr<IRemoteObject> MediaServiceProxy::GetSubSystemAbility(IStandardMediaService::MediaSystemAbility subSystemId,
     const sptr<IRemoteObject> &listener)
 {
@@ -99,6 +123,65 @@ sptr<IRemoteObject> MediaServiceProxy::GetSubSystemAbilityWithTimeOut(
         "SendRequest failed, error: %{public}d", error);
     
     return mediaReplyStub->WaitForAsyncSubSystemAbility(timeoutMs);
+}
+
+bool MediaServiceProxy::CanKillMediaService()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+ 
+    bool token = data.WriteInterfaceToken(MediaServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
+ 
+    int32_t error = -1;
+    error = Remote()->SendRequest(MediaServiceMsg::CAN_KILL_MEDIA_SERVICE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, false,
+        "CanKillMediaService failed, error: %{public}d", error);
+    
+    return reply.ReadBool();
+}
+
+int32_t MediaServiceProxy::FreezeStubForPids(const std::set<int32_t> &pidList, bool isProxy)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(MediaServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "WriteInterfaceToken failed");
+
+    CHECK_AND_RETURN_RET_LOG(data.WriteBool(isProxy), MSERR_INVALID_OPERATION, "Failed to write bool");
+
+    int32_t size = static_cast<int32_t>(pidList.size());
+    CHECK_AND_RETURN_RET_LOG(size > 0, MSERR_INVALID_VAL, "size is invalid");
+    CHECK_AND_RETURN_RET_LOG(data.WriteInt32(size), MSERR_INVALID_OPERATION, "Failed to write int32");
+
+    for (auto pid : pidList) {
+        CHECK_AND_RETURN_RET_LOG(data.WriteInt32(pid), MSERR_INVALID_OPERATION, "Failed to write int32");
+    }
+
+    int32_t error = -1;
+    error = Remote()->SendRequest(MediaServiceMsg::FREEZE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SendRequest failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
+int32_t MediaServiceProxy::ResetAllProxy()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(MediaServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "WriteInterfaceToken failed");
+
+    int32_t error = -1;
+    error = Remote()->SendRequest(MediaServiceMsg::RESET_ALL_PROXY, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SendRequest failed, error: %{public}d", error);
+    return reply.ReadInt32();
 }
 } // namespace Media
 } // namespace OHOS

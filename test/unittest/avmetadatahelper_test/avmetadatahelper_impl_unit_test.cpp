@@ -66,7 +66,30 @@ sptr<IStandardMonitorService> MediaClient::GetMonitorProxy()
     return nullptr;
 }
 
+bool MediaClient::CanKillMediaService()
+{
+    return false;
+}
+
 void MediaClient::ReleaseClientListener() {}
+
+std::vector<pid_t> MediaClient::GetPlayerPids()
+{
+    std::vector<pid_t> ret;
+    return ret;
+}
+
+int32_t MediaClient::ProxyForFreeze(const std::set<int32_t> &pidList, bool isProxy)
+{
+    (void) pidList;
+    (void) isProxy;
+    return 0;
+}
+
+int32_t MediaClient::ResetAllProxy()
+{
+    return 0;
+}
 
 namespace Test {
 void AVMetadtahelperImplUnitTest::SetUpTestCase(void) {}

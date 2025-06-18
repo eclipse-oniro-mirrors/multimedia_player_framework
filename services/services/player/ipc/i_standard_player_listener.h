@@ -38,6 +38,14 @@ public:
         (void)errorCode;
         (void)errorMsg;
     }
+    virtual void SetFreezeFlag(bool isFrozen)
+    {
+        (void)isFrozen;
+    }
+    virtual void SetInterruptListenerFlag(bool isRegistered)
+    {
+        (void)isRegistered;
+    }
     enum PlayerListenerMsg {
         ON_ERROR = 0,
         ON_INFO,

@@ -231,6 +231,14 @@ public:
      * @brief Release the (service-side) proxy object monitoring client aliveness
      */
     virtual void ReleaseClientListener() = 0;
+
+    virtual bool CanKillMediaService() = 0;
+
+    virtual std::vector<pid_t> GetPlayerPids() = 0;
+
+    virtual int32_t ProxyForFreeze(const std::set<int32_t>& pidList, bool isProxy) = 0;
+
+    virtual int32_t ResetAllProxy() = 0;
 };
 
 class __attribute__((visibility("default"))) MediaServiceFactory {

@@ -38,6 +38,8 @@ enum class PlayerServerTaskType : uint8_t {
     CANCEL_TASK,
     SEEK_CONTINOUS,
     LIGHT_TASK,
+    FREEZE_TASK,
+    UNFREEZE_TASK,
     SET_VIDEO_SURFACE,
     BUTT,
 };
@@ -56,6 +58,10 @@ public:
         const std::string &taskName, int32_t speedMode);
     int32_t SeekContinousTask(const std::shared_ptr<ITaskHandler> &task, const std::string &taskName);
     int32_t SetVideoSurfaeTask(const std::shared_ptr<ITaskHandler> &task, const std::string &taskName);
+    int32_t FreezeTask(const std::shared_ptr<ITaskHandler> &task,
+                       const std::shared_ptr<ITaskHandler> &cancelTask, const std::string &taskName);
+    int32_t UnFreezeTask(const std::shared_ptr<ITaskHandler> &task,
+                         const std::shared_ptr<ITaskHandler> &cancelTask, const std::string &taskName);
     // only take effect when it is called at the task thread.
     int32_t MarkTaskDone(const std::string &taskName);
     void ClearAllTask();

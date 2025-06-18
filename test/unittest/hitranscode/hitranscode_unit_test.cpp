@@ -300,7 +300,7 @@ HWTEST_F(HitranscodeUnitTest, Prepare_001, TestSize.Level0)
 {
     transcoder_->isExistVideoTrack_ = true;
     int32_t ret = transcoder_->Prepare();
-    EXPECT_EQ(ret, static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER));
+    EXPECT_EQ(ret, MSERR_INVALID_VAL);
 }
 
 /**
@@ -316,7 +316,7 @@ HWTEST_F(HitranscodeUnitTest, Prepare_002, TestSize.Level0)
     int32_t width = 0;
     transcoder_->videoEncFormat_->SetData(metaKey, width);
     int32_t ret = transcoder_->Prepare();
-    EXPECT_EQ(ret, static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER));
+    EXPECT_EQ(ret, MSERR_INVALID_VAL);
 }
 
 /**
@@ -332,7 +332,7 @@ HWTEST_F(HitranscodeUnitTest, Prepare_003, TestSize.Level0)
     int32_t height = 0;
     transcoder_->videoEncFormat_->SetData(metaKey, height);
     int32_t ret = transcoder_->Prepare();
-    EXPECT_EQ(ret, static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER));
+    EXPECT_EQ(ret, MSERR_INVALID_VAL);
 }
 
 /**
@@ -353,7 +353,7 @@ HWTEST_F(HitranscodeUnitTest, Prepare_004, TestSize.Level0)
     transcoder_->inputVideoWidth_ = 200;
     transcoder_->inputVideoHeight_ =200;
     int32_t ret = transcoder_->Prepare();
-    EXPECT_EQ(ret, static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER));
+    EXPECT_EQ(ret, MSERR_PARAMETER_VERIFICATION_FAILED);
 }
 
 /**
@@ -374,7 +374,7 @@ HWTEST_F(HitranscodeUnitTest, Prepare_005, TestSize.Level0)
     transcoder_->inputVideoWidth_ = 640;
     transcoder_->inputVideoHeight_ = 480;
     int32_t ret = transcoder_->Prepare();
-    EXPECT_EQ(ret, static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER));
+    EXPECT_EQ(ret, MSERR_PARAMETER_VERIFICATION_FAILED);
 }
 
 /**
@@ -395,7 +395,7 @@ HWTEST_F(HitranscodeUnitTest, Prepare_006, TestSize.Level0)
     transcoder_->inputVideoWidth_ = 200;
     transcoder_->inputVideoHeight_ = 50;
     int32_t ret = transcoder_->Prepare();
-    EXPECT_EQ(ret, static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER));
+    EXPECT_EQ(ret, MSERR_PARAMETER_VERIFICATION_FAILED);
 }
 
 /**
@@ -416,7 +416,7 @@ HWTEST_F(HitranscodeUnitTest, Prepare_007, TestSize.Level0)
     transcoder_->inputVideoWidth_ = 480;
     transcoder_->inputVideoHeight_ = 640;
     int32_t ret = transcoder_->Prepare();
-    EXPECT_EQ(ret, static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER));
+    EXPECT_EQ(ret, MSERR_PARAMETER_VERIFICATION_FAILED);
 }
 
 /**
@@ -437,7 +437,7 @@ HWTEST_F(HitranscodeUnitTest, Prepare_008, TestSize.Level0)
     transcoder_->inputVideoWidth_ = 50;
     transcoder_->inputVideoHeight_ = 640;
     int32_t ret = transcoder_->Prepare();
-    EXPECT_EQ(ret, static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER));
+    EXPECT_EQ(ret, MSERR_PARAMETER_VERIFICATION_FAILED);
 }
 
 /**
@@ -458,7 +458,7 @@ HWTEST_F(HitranscodeUnitTest, Prepare_009, TestSize.Level0)
     transcoder_->inputVideoWidth_ = 480;
     transcoder_->inputVideoHeight_ = 480;
     int32_t ret = transcoder_->Prepare();
-    EXPECT_EQ(ret, static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER));
+    EXPECT_EQ(ret, MSERR_PARAMETER_VERIFICATION_FAILED);
 }
 
 /**
@@ -479,7 +479,7 @@ HWTEST_F(HitranscodeUnitTest, Prepare_010, TestSize.Level0)
     transcoder_->inputVideoWidth_ = 50;
     transcoder_->inputVideoHeight_ = 50;
     int32_t ret = transcoder_->Prepare();
-    EXPECT_EQ(ret, static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER));
+    EXPECT_EQ(ret, MSERR_PARAMETER_VERIFICATION_FAILED);
 }
 
 /**
@@ -500,7 +500,7 @@ HWTEST_F(HitranscodeUnitTest, Prepare_011, TestSize.Level0)
     transcoder_->inputVideoWidth_ = 640;
     transcoder_->inputVideoHeight_ = 640;
     int32_t ret = transcoder_->Prepare();
-    EXPECT_EQ(ret, static_cast<int32_t>(Status::ERROR_NULL_POINTER));
+    EXPECT_EQ(ret, MSERR_UNKNOWN);
 }
 
 /**
@@ -1002,6 +1002,71 @@ HWTEST_F(HitranscodeUnitTest, ConfigureVideoWidthHeight_004, TestSize.Level0)
 }
 
 /**
+* @tc.name    : Test ConfigureColorSpace API
+* @tc.number  : ConfigureColorSpace_001
+* @tc.desc    : Test ConfigureColorSpace.
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, ConfigureColorSpace_001, TestSize.Level0)
+{
+    VideoColorSpace videoColSpaFmt(TRANSCODER_COLORSPACE_P3_FULL);
+    Status ret = transcoder_->ConfigureColorSpace(videoColSpaFmt);
+    EXPECT_EQ(ret, Status::OK);
+}
+ 
+/**
+* @tc.name    : Test ConfigureColorSpace API
+* @tc.number  : ConfigureColorSpace_002
+* @tc.desc    : Test ConfigureColorSpace.
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, ConfigureColorSpace_002, TestSize.Level0)
+{
+    VideoColorSpace videoColSpaFmt(TRANSCODER_COLORSPACE_BT709_LIMIT);
+    Status ret = transcoder_->ConfigureColorSpace(videoColSpaFmt);
+    EXPECT_EQ(ret, Status::OK);
+}
+ 
+/**
+* @tc.name    : Test ConfigureColorSpace API
+* @tc.number  : ConfigureColorSpace_003
+* @tc.desc    : Test ConfigureColorSpace.
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, ConfigureColorSpace_003, TestSize.Level0)
+{
+    VideoColorSpace videoColSpaFmt(TRANSCODER_COLORSPACE_NONE);
+    Status ret = transcoder_->ConfigureColorSpace(videoColSpaFmt);
+    EXPECT_EQ(ret, Status::ERROR_INVALID_PARAMETER);
+}
+ 
+/**
+* @tc.name    : Test ConfigureColorSpace API
+* @tc.number  : ConfigureColorSpace_004
+* @tc.desc    : Test ConfigureColorSpace.
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, ConfigureColorSpace_004, TestSize.Level0)
+{
+    VideoColorSpace videoColSpaFmt(TRANSCODER_COLORSPACE_BT601_EBU_FULL);
+    Status ret = transcoder_->ConfigureColorSpace(videoColSpaFmt);
+    EXPECT_EQ(ret, Status::OK);
+}
+ 
+/**
+* @tc.name    : Test ConfigureColorSpace API
+* @tc.number  : ConfigureColorSpace_005
+* @tc.desc    : Test ConfigureColorSpace.
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, ConfigureColorSpace_005, TestSize.Level0)
+{
+    VideoColorSpace videoColSpaFmt(TRANSCODER_COLORSPACE_DISPLAY_BT2020_HLG);
+    Status ret = transcoder_->ConfigureColorSpace(videoColSpaFmt);
+    EXPECT_EQ(ret, Status::OK);
+}
+
+/**
 * @tc.name    : Test ConfigureMetaDataToTrackFormat
 * @tc.number  : ConfigureMetaDataToTrackFormat_001
 * @tc.desc    : Test ConfigureMetaDataToTrackFormat
@@ -1042,16 +1107,135 @@ HWTEST_F(HitranscodeUnitTest, Configure_001, TestSize.Level0)
 {
     VideoBitRate videoBitRate(0);
     int32_t ret = transcoder_->Configure(videoBitRate);
-    EXPECT_EQ(ret, static_cast<int32_t>(Status::OK));
+    EXPECT_EQ(ret, MSERR_OK);
 
     AudioBitRate audioBitRate(0);
     ret = transcoder_->Configure(audioBitRate);
-    EXPECT_EQ(ret, static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER));
+    EXPECT_EQ(ret, MSERR_PARAMETER_VERIFICATION_FAILED);
 
     std::string url;
     InputUrl inputUrl(url);
     ret = transcoder_->Configure(inputUrl);
-    EXPECT_EQ(ret, static_cast<int32_t>(Status::OK));
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+/**
+* @tc.name    : Test Configure
+* @tc.number  : Configure_002
+* @tc.desc    : Test Configure
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, Configure_002, TestSize.Level0)
+{
+    VideoRectangle videoRectangle(1280, 720);
+    int32_t ret = transcoder_->Configure(videoRectangle);
+    EXPECT_EQ(ret, MSERR_OK);
+ 
+    VideoColorSpace videoColSpaFmt(TRANSCODER_COLORSPACE_BT709_LIMIT);
+    ret = transcoder_->Configure(videoColSpaFmt);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+ 
+/**
+* @tc.name    : Test Configure
+* @tc.number  : Configure_003
+* @tc.desc    : Test Configure
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, Configure_003, TestSize.Level0)
+{
+    VideoRectangle videoRectangle(-1, 720);
+    int32_t ret = transcoder_->Configure(videoRectangle);
+    EXPECT_EQ(ret, MSERR_OK);
+ 
+    VideoColorSpace videoColSpaFmt(TRANSCODER_COLORSPACE_BT709_LIMIT);
+    ret = transcoder_->Configure(videoColSpaFmt);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+ 
+/**
+* @tc.name    : Test Configure
+* @tc.number  : Configure_004
+* @tc.desc    : Test Configure
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, Configure_004, TestSize.Level0)
+{
+    VideoRectangle videoRectangle(1280, -1);
+    int32_t ret = transcoder_->Configure(videoRectangle);
+    EXPECT_EQ(ret, MSERR_OK);
+ 
+    VideoColorSpace videoColSpaFmt(TRANSCODER_COLORSPACE_BT709_LIMIT);
+    ret = transcoder_->Configure(videoColSpaFmt);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+ 
+/**
+* @tc.name    : Test Configure
+* @tc.number  : Configure_005
+* @tc.desc    : Test Configure
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, Configure_005, TestSize.Level0)
+{
+    VideoRectangle videoRectangle(1280, 720);
+    int32_t ret = transcoder_->Configure(videoRectangle);
+    EXPECT_EQ(ret, MSERR_OK);
+ 
+    VideoColorSpace videoColSpaFmt(TRANSCODER_COLORSPACE_P3_FULL);
+    ret = transcoder_->Configure(videoColSpaFmt);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+ 
+/**
+* @tc.name    : Test Configure
+* @tc.number  : Configure_006
+* @tc.desc    : Test Configure
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, Configure_006, TestSize.Level0)
+{
+    VideoRectangle videoRectangle(1280, -1);
+    int32_t ret = transcoder_->Configure(videoRectangle);
+    EXPECT_EQ(ret, MSERR_OK);
+ 
+    VideoColorSpace videoColSpaFmt(TRANSCODER_COLORSPACE_P3_FULL);
+    ret = transcoder_->Configure(videoColSpaFmt);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+ 
+/**
+* @tc.name    : Test Configure
+* @tc.number  : Configure_007
+* @tc.desc    : Test Configure
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, Configure_007, TestSize.Level0)
+{
+    VideoRectangle videoRectangle(-1, 720);
+    int32_t ret = transcoder_->Configure(videoRectangle);
+    EXPECT_EQ(ret, MSERR_OK);
+ 
+    VideoColorSpace videoColSpaFmt(TRANSCODER_COLORSPACE_P3_FULL);
+    ret = transcoder_->Configure(videoColSpaFmt);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+ 
+/**
+* @tc.name    : Test Configure
+* @tc.number  : Configure_008
+* @tc.desc    : Test Configure
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, Configure_008, TestSize.Level0)
+{
+    VideoRectangle videoRectangle(1280, 720);
+    int32_t ret = transcoder_->Configure(videoRectangle);
+    EXPECT_EQ(ret, MSERR_OK);
+ 
+    VideoColorSpace videoColSpaFmt(TRANSCODER_COLORSPACE_NONE);
+    ret = transcoder_->Configure(videoColSpaFmt);
+    EXPECT_EQ(ret, MSERR_INVALID_VAL);
 }
 } // namespace Media
 } // namespace OHOS

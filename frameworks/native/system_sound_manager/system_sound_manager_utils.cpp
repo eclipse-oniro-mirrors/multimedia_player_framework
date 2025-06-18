@@ -21,8 +21,10 @@
 #include "system_sound_log.h"
 #include "media_errors.h"
 #include "os_account_manager.h"
+#include "system_sound_manager.h"
 #include "system_tone_player_impl.h"
 #include "parameter.h"
+#include "hitrace_meter.h"
 
 using namespace std;
 using namespace nlohmann;
@@ -171,6 +173,64 @@ bool SystemSoundManagerUtils::GetScannerFirstParameter(const char* key, int32_t 
         return false;
     }
     return false;
+}
+
+int32_t SystemSoundManagerUtils::GetTypeForSystemSoundUri(const std::string &audioUri)
+{
+    if (audioUri == NO_SYSTEM_SOUND || audioUri == NO_SYSTEM_SOUND) {
+        return SystemToneUriType::NO_RINGTONES;
+    }
+
+    size_t pos = audioUri.find_first_of("sys_prod");
+    if (pos == 0 || pos == 1) {
+        // The audioUri of a preset ringtone starts with "sys prod” or "/sys prod".
+        return SystemToneUriType::PRESET_RINGTONES;
+    }
+    pos = audioUri.find_first_of("data");
+    if (pos == 0 || pos == 1) {
+        // The audioUri of a custom ringtone starts with "data" or "/data".
+        return SystemToneUriType::CUSTOM_RINGTONES;
+    }
+    return UNKNOW_RINGTONES;
+}
+
+std::string SystemSoundManagerUtils::GetErrorReason(const int32_t &errorCode)
+{
+    std::string errorReason = "";
+    if (errorCode == MSERR_OK) {
+        errorReason = "system tone playback successfully";
+    } else {
+        errorReason = "system tone playback failed";
+    }
+    return errorReason;
+}
+
+MediaTrace::MediaTrace(const std::string &funcName)
+{
+    StartTrace(HITRACE_TAG_ZMEDIA, funcName);
+    isSync_ = true;
+}
+
+void MediaTrace::TraceBegin(const std::string &funcName, int32_t taskId)
+{
+    StartAsyncTrace(HITRACE_TAG_ZMEDIA, funcName, taskId);
+}
+
+void MediaTrace::TraceEnd(const std::string &funcName, int32_t taskId)
+{
+    FinishAsyncTrace(HITRACE_TAG_ZMEDIA, funcName, taskId);
+}
+
+void MediaTrace::CounterTrace(const std::string &varName, int32_t val)
+{
+    CountTrace(HITRACE_TAG_ZMEDIA, varName, val);
+}
+
+MediaTrace::~MediaTrace()
+{
+    if (isSync_) {
+        FinishTrace(HITRACE_TAG_ZMEDIA);
+    }
 }
 } // namesapce Media
 } // namespace OHOS

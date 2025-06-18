@@ -33,6 +33,13 @@ public:
         const sptr<IRemoteObject> &listener, uint32_t timeoutMs) override;
     void ReleaseClientListener() override;
 
+    bool CanKillMediaService() override;
+
+    std::vector<pid_t> GetPlayerPids() override;
+    int32_t FreezeStubForPids(const std::set<int32_t> &pidList, bool isProxy) override;
+
+    int32_t ResetAllProxy() override;
+
 private:
     bool IsGetSubSystemAbilityASync() const;
     static inline BrokerDelegator<MediaServiceProxy> delegator_;

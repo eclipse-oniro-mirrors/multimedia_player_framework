@@ -28,7 +28,7 @@
 #include "media_library_adapter.h"
 #include "system_ability_definition.h"
 #include "iservice_registry.h"
-#include "hcamera_service_proxy.h"
+#include "camera_service_proxy.h"
 #endif
 #ifdef SUPPORT_POWER_MANAGER
 #include "shutdown/shutdown_priority.h"
@@ -1171,6 +1171,23 @@ int32_t RecorderServer::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
     return result.Value();
 }
 
+int32_t RecorderServer::SetWillMuteWhenInterrupted(bool muteWhenInterrupted)
+{
+    MEDIA_LOGI("SetWillMuteWhenInterrupted in");
+    std::lock_guard<std::mutex> lock(mutex_);
+    MediaTrace trace("RecorderServer::SetWillMuteWhenInterrupted");
+    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_INITIALIZED && status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->SetWillMuteWhenInterrupted(muteWhenInterrupted);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
+}
+
 void RecorderServer::SetMetaDataReport()
 {
     std::shared_ptr<Media::Meta> meta = std::make_shared<Media::Meta>();
@@ -1249,7 +1266,7 @@ bool RecorderServer::CheckCameraOutputState()
     CHECK_AND_RETURN_RET_LOG(samgr != nullptr, false, "Failed to get System ability manager");
     auto object = samgr->GetSystemAbility(CAMERA_SERVICE_ID);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, false, "object is null");
-    sptr<CameraStandard::ICameraService> serviceProxy = iface_cast<CameraStandard::HCameraServiceProxy>(object);
+    sptr<CameraStandard::ICameraService> serviceProxy = iface_cast<CameraStandard::CameraServiceProxy>(object);
     CHECK_AND_RETURN_RET_LOG(serviceProxy != nullptr, false, "serviceProxy is null");
     int32_t status = 0;
     serviceProxy->GetCameraOutputStatus(IPCSkeleton::GetCallingPid(), status);

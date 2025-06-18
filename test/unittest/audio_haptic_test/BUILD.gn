@@ -14,7 +14,7 @@
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
-module_output_path = "player_framework/player_framework"
+module_output_path = "player_framework/audio_framework_policy"
 
 ohos_unittest("audio_haptic_unit_test") {
   module_out_path = module_output_path
@@ -23,16 +23,19 @@ ohos_unittest("audio_haptic_unit_test") {
     "./../../../frameworks/native/audio_haptic",
     "./../../../interfaces/inner_api/native",
     "./../../../interfaces/inner_api/native/audio_haptic/include",
+    "./../common/include",
   ]
 
   cflags = [
     "-Wall",
     "-Werror",
+    "-fno-access-control",
   ]
 
   sources = [
     "audio_haptic_manager_impl_unit_test.cpp",
     "audio_haptic_unit_test.cpp",
+    "./../common/src/audio_haptic_test_common.cpp",
   ]
 
   deps = [

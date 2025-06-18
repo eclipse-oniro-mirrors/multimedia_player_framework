@@ -59,6 +59,7 @@ namespace {
     constexpr int32_t ARGS_TWO = 2;
     constexpr int32_t ARGS_THREE = 3;
     constexpr int32_t SEEK_CONTINUOUS_TS_ENUM_NUM = 3;
+    constexpr double RATE_DEFAULT_VALUE = 1.0;
 }
 
 namespace OHOS {
@@ -93,10 +94,12 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("setPlaybackRange", JsSetPlaybackRange),
         DECLARE_NAPI_FUNCTION("setSuperResolution", JsSetSuperResolution),
         DECLARE_NAPI_FUNCTION("setVideoWindowSize", JsSetVideoWindowSize),
+        DECLARE_NAPI_FUNCTION("enableCameraPostprocessing", JsEnableCameraPostprocessing),
         DECLARE_NAPI_FUNCTION("on", JsSetOnCallback),
         DECLARE_NAPI_FUNCTION("off", JsClearOnCallback),
         DECLARE_NAPI_FUNCTION("setVolume", JsSetVolume),
         DECLARE_NAPI_FUNCTION("setSpeed", JsSetSpeed),
+        DECLARE_NAPI_FUNCTION("setPlaybackRate", JsSetPlaybackRate),
         DECLARE_NAPI_FUNCTION("setMediaSource", JsSetMediaSource),
         DECLARE_NAPI_FUNCTION("setBitrate", JsSelectBitrate),
         DECLARE_NAPI_FUNCTION("getTrackDescription", JsGetTrackDescription),
@@ -115,6 +118,7 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getPlaybackInfo", JsGetPlaybackInfo),
         DECLARE_NAPI_FUNCTION("isSeekContinuousSupported", JsIsSeekContinuousSupported),
         DECLARE_NAPI_FUNCTION("getPlaybackPosition", JsGetPlaybackPosition),
+        DECLARE_NAPI_FUNCTION("forceLoadVideo", JsForceLoadVideo),
 
         DECLARE_NAPI_GETTER_SETTER("url", JsGetUrl, JsSetUrl),
         DECLARE_NAPI_GETTER_SETTER("fdSrc", JsGetAVFileDescriptor, JsSetAVFileDescriptor),
@@ -126,6 +130,7 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_GETTER_SETTER("audioRendererInfo", JsGetAudioRendererInfo, JsSetAudioRendererInfo),
         DECLARE_NAPI_GETTER_SETTER("audioEffectMode", JsGetAudioEffectMode, JsSetAudioEffectMode),
 
+        DECLARE_NAPI_SETTER("enableStartFrameRateOpt", JsSetStartFrameRateOptEnabled),
         DECLARE_NAPI_GETTER("state", JsGetState),
         DECLARE_NAPI_GETTER("currentTime", JsGetCurrentTime),
         DECLARE_NAPI_GETTER("duration", JsGetDuration),
@@ -162,7 +167,7 @@ napi_value AVPlayerNapi::Constructor(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to new AVPlayerNapi");
 
     jsPlayer->env_ = env;
-    jsPlayer->player_ = PlayerFactory::CreatePlayer();
+    jsPlayer->player_ = PlayerFactory::CreatePlayer(PlayerProducer::NAPI);
     if (jsPlayer->player_ == nullptr) {
         delete jsPlayer;
         MEDIA_LOGE("failed to CreatePlayer");
@@ -962,6 +967,56 @@ napi_value AVPlayerNapi::JsSetSpeed(napi_env env, napi_callback_info info)
     return result;
 }
 
+napi_value AVPlayerNapi::JsSetPlaybackRate(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::setRate");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsSetRate In");
+
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+
+    if (jsPlayer->IsLiveSource()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "The stream is live stream, not support rate");
+        return result;
+    }
+
+    napi_valuetype valueType = napi_undefined;
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE, "rate is not number");
+        return result;
+    }
+
+    double rate = RATE_DEFAULT_VALUE;
+    napi_status status = napi_get_value_double(env, args[0], &rate);
+    if (status != napi_ok || !jsPlayer->IsRateValid(rate)) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
+            "invalid parameters, please check the rate");
+        return result;
+    }
+
+    if (!jsPlayer->IsControllable()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed, unsupport rate operation");
+        return result;
+    }
+
+    auto task = std::make_shared<TaskHandler<void>>([jsPlayer, rate]() {
+        if (jsPlayer->player_ != nullptr) {
+            (void)jsPlayer->player_->SetPlaybackRate(static_cast<float>(rate));
+        }
+    });
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " JsSetRate EnqueueTask In", FAKE_POINTER(jsPlayer));
+    if (jsPlayer->player_ != nullptr) {
+        (void)jsPlayer->taskQue_->EnqueueTask(task);
+    }
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " JsSetRate Out", FAKE_POINTER(jsPlayer));
+    return result;
+}
+
 napi_value AVPlayerNapi::JsSetVolume(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVPlayerNapi::setVolume");
@@ -1272,6 +1327,48 @@ napi_value AVPlayerNapi::JsSetUrl(napi_env env, napi_callback_info info)
     return result;
 }
 
+napi_value AVPlayerNapi::JsSetStartFrameRateOptEnabled(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::SetStartFrameRateOptEnabled");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGD("JsSetStartFrameRateOptEnabled");
+
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1; // enable: bool
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+
+    napi_valuetype valueType = napi_undefined;
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_boolean) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "enableStartFrameRateOpt is not napi_boolean");
+        return result;
+    }
+
+    napi_status status = napi_get_value_bool(env, args[0], &jsPlayer->enabled_);
+    if (status != napi_ok) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
+            "invalid parameters, please check the input enableStartFrameRateOpt");
+        return result;
+    }
+
+    if (!IsSystemApp()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
+            "invalid parameters, please dont't set");
+        return result;
+    }
+
+    auto task = std::make_shared<TaskHandler<void>>([jsPlayer]() {
+        MEDIA_LOGD("SetStartFrameRateOptEnabled Task");
+        if (jsPlayer->player_ != nullptr) {
+            (void)jsPlayer->player_->SetStartFrameRateOptEnabled(jsPlayer->enabled_);
+        }
+    });
+    (void)jsPlayer->taskQue_->EnqueueTask(task);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " SetStartFrameRateOptEnabled Out", FAKE_POINTER(jsPlayer));
+    return result;
+}
+
 #ifdef SUPPORT_AVPLAYER_DRM
 napi_value AVPlayerNapi::JsSetDecryptConfig(napi_env env, napi_callback_info info)
 {
@@ -1450,6 +1547,17 @@ bool AVPlayerNapi::IsLivingMaxDelayTimeValid(const AVPlayStrategyTmp &strategyTm
     }
     if (strategyTmp.thresholdForAutoQuickPlay < AVPlayStrategyConstant::BUFFER_DURATION_FOR_PLAYING_SECONDS ||
         strategyTmp.thresholdForAutoQuickPlay < strategyTmp.preferredBufferDurationForPlaying) {
+        return false;
+    }
+    return true;
+}
+
+bool AVPlayerNapi::IsRateValid(float rate)
+{
+    const double minRate = 0.125f;
+    const double maxRate = 4.0f;
+    const double eps = 1e-15;
+    if ((rate < minRate - eps) || (rate > maxRate + eps)) {
         return false;
     }
     return true;
@@ -1736,6 +1844,66 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::SetVideoWindowSizeTask(int32
             return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
                 "current state is not initialized/prepared/playing/paused/completed/stopped, "
                 "unsupport set super resolution operation");
+        }
+        return TaskRet(MSERR_EXT_API9_OK, "Success");
+    });
+    (void)taskQue_->EnqueueTask(task);
+    return task;
+}
+
+napi_value AVPlayerNapi::JsEnableCameraPostprocessing(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::enableCameraPostprocessing");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGD("JsEnableCameraPostprocessing In");
+ 
+    napi_value args[PARAM_COUNT_SINGLE] = { nullptr };
+    size_t argCount = PARAM_COUNT_SINGLE; // enableCameraPostprocessing(enabled: boolean)
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+ 
+    auto promiseCtx = std::make_unique<AVPlayerContext>(env);
+    CHECK_AND_RETURN_RET_LOG(promiseCtx != nullptr, result, "promiseCtx is null");
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
+ 
+    if (!IsSystemApp()) {
+        promiseCtx->SignError(MSERR_EXT_API9_PERMISSION_DENIED, "systemapi permission denied");
+    }
+    if (!jsPlayer->CanCameraPostprocessing()) {
+        promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not initialized, unsupport enable cameraPostProcessor");
+    } else {
+        promiseCtx->asyncTask = jsPlayer->EnableCameraPostprocessingTask();
+    }
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "JsEnableCameraPostprocessing", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
+        [](napi_env env, void *data) {
+            auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
+            CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
+            promiseCtx->CheckTaskResult();
+        },
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
+    promiseCtx.release();
+    return result;
+}
+ 
+std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::EnableCameraPostprocessingTask()
+{
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this]() {
+        std::unique_lock<std::mutex> lock(taskMutex_);
+        if (CanCameraPostprocessing()) {
+            int32_t ret = player_->EnableCameraPostprocessing();
+            if (ret != MSERR_OK) {
+                auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
+                return TaskRet(errCode, "failed to enable cameraPostProcessor");
+            }
+        } else {
+            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "current state is not initialized, unsupport enable cameraPostProcessor");
         }
         return TaskRet(MSERR_EXT_API9_OK, "Success");
     });
@@ -2056,7 +2224,7 @@ napi_value AVPlayerNapi::JsSetSurfaceID(napi_env env, napi_callback_info info)
     } else if (switchSurface) {
         MEDIA_LOGI("JsSetSurfaceID switch surface in %{public}s state", curState.c_str());
         std::string oldSurface = jsPlayer->surface_;
-        if (oldSurface.empty()) {
+        if (oldSurface.empty() && !jsPlayer->isForceLoadVideo_) {
             jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
                 "switch surface with no old surface");
             return result;
@@ -2181,7 +2349,7 @@ napi_value AVPlayerNapi::JsSetVideoScaleType(napi_env env, napi_callback_info in
     int32_t videoScaleType = 0;
     napi_status status = napi_get_value_int32(env, args[0], &videoScaleType);
     if (status != napi_ok || videoScaleType < static_cast<int32_t>(Plugins::VideoScaleType::VIDEO_SCALE_TYPE_FIT)
-        || videoScaleType > static_cast<int32_t>(Plugins::VideoScaleType::VIDEO_SCALE_TYPE_FIT_CROP)) {
+        || videoScaleType > static_cast<int32_t>(Plugins::VideoScaleType::VIDEO_SCALE_TYPE_SCALED_ASPECT)) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check the input scale type");
         return result;
     }
@@ -2495,7 +2663,13 @@ napi_value AVPlayerNapi::JsGetCurrentTime(napi_env env, napi_callback_info info)
 
     int32_t currentTime = -1;
     if (jsPlayer->IsControllable()) {
-        currentTime = jsPlayer->position_;
+        if (!jsPlayer->reportMediaProgressCallbackflag_ && jsPlayer->player_ != nullptr) {
+            auto ret = jsPlayer->player_->GetCurrentTime(currentTime);
+            currentTime = ret == MSERR_OK ? currentTime : -1;
+            jsPlayer->HandleListenerStateChange("timeUpdate", true);
+        } else {
+            currentTime = jsPlayer->position_;
+        }
     }
 
     if (jsPlayer->IsLiveSource() && jsPlayer->dataSrcCb_ == nullptr) {
@@ -2544,6 +2718,62 @@ napi_value AVPlayerNapi::JsGetPlaybackPosition(napi_env env, napi_callback_info 
         MEDIA_LOGE("JsGetPlaybackPosition status != napi_ok");
     }
     return value;
+}
+
+napi_value AVPlayerNapi::JsForceLoadVideo(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::ForceLoadVideo");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto promiseCtx = std::make_unique<AVPlayerContext>(env);
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+
+    promiseCtx->napi = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(promiseCtx->napi != nullptr, result, "failed to GetJsInstance");
+    CHECK_AND_RETURN_RET_LOG(promiseCtx->napi->player_ != nullptr, result, "failed to check player_");
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
+
+    bool isForceLoadVideo = false;
+    if (!IsSystemApp()) {
+        promiseCtx->SignError(MSERR_EXT_API9_PERMISSION_DENIED, "only system app support this function");
+    } else if (napi_valuetype valueType = napi_undefined; napi_typeof(env, args[0], &valueType) != napi_ok
+        || valueType != napi_boolean || napi_get_value_bool(env, args[0], &isForceLoadVideo) != napi_ok) {
+        promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "input param type is not boolean");
+    }
+
+    // only if no errors can exec task
+    if (!promiseCtx->errFlag) {
+        promiseCtx->asyncTask = promiseCtx->napi->ForceLoadVideoTask(isForceLoadVideo);
+        promiseCtx->napi->isForceLoadVideo_ = isForceLoadVideo;
+    }
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "JsForceLoadVideo", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {
+        auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
+        CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
+        promiseCtx->CheckTaskResult();
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
+    promiseCtx.release();
+    return result;
+}
+
+std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ForceLoadVideoTask(bool status)
+{
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this, status] {
+        std::unique_lock<std::mutex> lock(taskMutex_);
+        auto state = GetCurrentState();
+        CHECK_AND_RETURN_RET(state == AVPlayerState::STATE_INITIALIZED || state == AVPlayerState::STATE_STOPPED,
+            TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "state unsupport this operation"));
+        auto ret = player_->ForceLoadVideo(status);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK,
+            TaskRet(MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret)), "ForceLoadVideo failed"));
+        return TaskRet(MSERR_EXT_API9_OK, "Success");
+    });
+    (void)taskQue_->EnqueueTask(task);
+    return task;
 }
 
 napi_value AVPlayerNapi::JsGetDuration(napi_env env, napi_callback_info info)
@@ -2596,6 +2826,15 @@ bool AVPlayerNapi::CanSetSuperResolution()
     if (state == AVPlayerState::STATE_INITIALIZED || state == AVPlayerState::STATE_PREPARED ||
         state == AVPlayerState::STATE_PLAYING || state == AVPlayerState::STATE_PAUSED ||
         state == AVPlayerState::STATE_STOPPED || state == AVPlayerState::STATE_COMPLETED) {
+        return true;
+    }
+    return false;
+}
+
+bool AVPlayerNapi::CanCameraPostprocessing()
+{
+    auto state = GetCurrentState();
+    if (state == AVPlayerState::STATE_INITIALIZED) {
         return true;
     }
     return false;
@@ -3044,17 +3283,21 @@ void AVPlayerNapi::DeviceChangeCallbackOff(AVPlayerNapi *jsPlayer, std::string c
     }
 }
 
-void AVPlayerNapi::MaxAmplitudeCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName)
+void AVPlayerNapi::HandleListenerStateChange(std::string callbackName, bool state)
 {
-    if (jsPlayer == nullptr) {
-        calMaxAmplitude_ = false;
-        return;
-    }
+    CHECK_AND_RETURN_LOG(player_ != nullptr, "player is nullptr");
+    
     if (callbackName == "amplitudeUpdate") {
-        calMaxAmplitude_ = true;
+        return (void)player_->SetMaxAmplitudeCbStatus(state);
     }
-    if (jsPlayer->player_ != nullptr && calMaxAmplitude_) {
-        (void)jsPlayer->player_->SetMaxAmplitudeCbStatus(calMaxAmplitude_);
+
+    if (callbackName == "timeUpdate") {
+        reportMediaProgressCallbackflag_ = state;
+        return (void)player_->EnableReportMediaProgress(state);
+    }
+
+    if (callbackName == "audioInterrupt") {
+        return (void)player_->EnableReportAudioInterrupt(state);
     }
 }
 
@@ -3110,7 +3353,7 @@ napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
     } else if (argCount == ARGS_TWO) {
         CHECK_AND_RETURN_RET_NOLOG(
             VerifyExpectedType({env, args[1], napi_function}, jsPlayer, "param should be function."), result);
-        jsPlayer->MaxAmplitudeCallbackOn(jsPlayer, callbackName);
+        jsPlayer->HandleListenerStateChange(callbackName, true);
         napi_status status = napi_create_reference(env, args[1], 1, &ref);
         CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create reference!");
     }
@@ -3128,16 +3371,6 @@ bool AVPlayerNapi::VerifyExpectedType(const NapiTypeCheckUnit &unit, AVPlayerNap
         napi_typeof(unit.env, unit.param, &tmpType) != napi_ok || tmpType != unit.expectedType, true);
     jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, msg);
     return false;
-}
-
-void AVPlayerNapi::MaxAmplitudeCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName)
-{
-    if (jsPlayer != nullptr && calMaxAmplitude_ && callbackName == "amplitudeUpdate") {
-        calMaxAmplitude_ = false;
-        if (jsPlayer->player_ != nullptr) {
-            (void)jsPlayer->player_->SetMaxAmplitudeCbStatus(calMaxAmplitude_);
-        }
-    }
 }
 
 void AVPlayerNapi::SeiMessageCallbackOff(AVPlayerNapi *jsPlayer, std::string &callbackName,
@@ -3183,7 +3416,7 @@ napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " set callbackName: %{public}s", FAKE_POINTER(jsPlayer), callbackName.c_str());
     if (callbackName != "seiMessageReceived") {
-        jsPlayer->MaxAmplitudeCallbackOff(jsPlayer, callbackName);
+        jsPlayer->HandleListenerStateChange(callbackName, false);
         jsPlayer->ClearCallbackReference(callbackName);
         MEDIA_LOGI("0x%{public}06" PRIXPTR " JsClearOnCallback success", FAKE_POINTER(jsPlayer));
         return result;

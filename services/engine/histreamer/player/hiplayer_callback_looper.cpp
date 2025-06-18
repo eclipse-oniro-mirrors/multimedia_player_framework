@@ -63,6 +63,19 @@ void HiPlayerCallbackLooper::Stop()
     }
 }
 
+void HiPlayerCallbackLooper::SetMaxAmplitudeCbStatus(bool status)
+{
+    MEDIA_LOG_I("HiPlayerCallbackLooper SetMaxAmplitudeCbStatus");
+    OHOS::Media::AutoLock lock(loopMutex_);
+    FALSE_RETURN(reportUV_ != status);
+
+    reportUV_ = status;
+    FALSE_RETURN(reportUV_ && collectMaxAmplitude_ && !reportUVProgressLoopRunning_);
+    reportUVProgressLoopRunning_ = true;
+    Enqueue(std::make_shared<Event>(WHAT_COLLECT_AMPLITUDE,
+        SteadyClock::GetCurrentTimeMs() + collectMaxAmplitudeIntervalMs_, Any()));
+}
+
 void HiPlayerCallbackLooper::StartWithPlayerEngineObs(const std::weak_ptr<IPlayerEngineObs>& obs)
 {
     OHOS::Media::AutoLock lock(loopMutex_);
@@ -80,14 +93,29 @@ void HiPlayerCallbackLooper::SetPlayEngine(IPlayerEngine* engine, std::string pl
     task_ = std::make_unique<Task>("callbackThread", playerId, TaskType::GLOBAL, TaskPriority::NORMAL, false);
 }
 
+void HiPlayerCallbackLooper::EnableReportMediaProgress(bool enable)
+{
+    MEDIA_LOG_D("EnableReportMediaProgress, enable: " PUBLIC_LOG_D32, static_cast<int32_t>(enable));
+    OHOS::Media::AutoLock lock(loopMutex_);
+    FALSE_RETURN(enableReportMediaProgress_ != enable);
+    enableReportMediaProgress_ = enable;
+    FALSE_RETURN(reportMediaProgress_ && enableReportMediaProgress_ && !isReportMediaProgressLoopRunning_);
+    isReportMediaProgressLoopRunning_ = true;
+    Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS,
+            SteadyClock::GetCurrentTimeMs() + reportProgressIntervalMs_, Any()));
+}
+
 void HiPlayerCallbackLooper::StartReportMediaProgress(int64_t updateIntervalMs)
 {
     MEDIA_LOG_I("HiPlayerCallbackLooper StartReportMediaProgress");
+    OHOS::Media::AutoLock lock(loopMutex_);
     reportProgressIntervalMs_ = updateIntervalMs;
     if (reportMediaProgress_) { // already set
         return;
     }
     reportMediaProgress_ = true;
+    FALSE_RETURN(enableReportMediaProgress_);
+    isReportMediaProgressLoopRunning_ = true;
     Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS,
             SteadyClock::GetCurrentTimeMs() + reportProgressIntervalMs_, Any()));
 }
@@ -95,13 +123,16 @@ void HiPlayerCallbackLooper::StartReportMediaProgress(int64_t updateIntervalMs)
 void HiPlayerCallbackLooper::StartCollectMaxAmplitude(int64_t updateIntervalMs)
 {
     MEDIA_LOG_I("HiPlayerCallbackLooper StartCollectMaxAmplitude");
+    OHOS::Media::AutoLock lock(loopMutex_);
     collectMaxAmplitudeIntervalMs_ = updateIntervalMs;
     if (collectMaxAmplitude_) { // already set
         return;
     }
     collectMaxAmplitude_ = true;
+    FALSE_RETURN(reportUV_);
+    reportUVProgressLoopRunning_ = true;
     Enqueue(std::make_shared<Event>(WHAT_COLLECT_AMPLITUDE,
-            SteadyClock::GetCurrentTimeMs() + collectMaxAmplitudeIntervalMs_, Any()));
+        SteadyClock::GetCurrentTimeMs() + collectMaxAmplitudeIntervalMs_, Any()));
 }
 
 void HiPlayerCallbackLooper::ManualReportMediaProgressOnce()
@@ -148,7 +179,8 @@ void HiPlayerCallbackLooper::DoReportCompletedTime()
 void HiPlayerCallbackLooper::DoReportMediaProgress()
 {
     OHOS::Media::AutoLock lock(loopMutex_);
-    if (!reportMediaProgress_) {
+    if (!reportMediaProgress_ || !enableReportMediaProgress_) {
+        isReportMediaProgressLoopRunning_ = false;
         return;
     }
     auto obs = obs_.lock();
@@ -163,16 +195,15 @@ void HiPlayerCallbackLooper::DoReportMediaProgress()
         }
     }
     isDropMediaProgress_ = false;
-    if (reportMediaProgress_) {
-        Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS,
-            SteadyClock::GetCurrentTimeMs() + reportProgressIntervalMs_, Any()));
-    }
+    Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS,
+        SteadyClock::GetCurrentTimeMs() + reportProgressIntervalMs_, Any()));
 }
 
 void HiPlayerCallbackLooper::DoCollectAmplitude()
 {
     OHOS::Media::AutoLock lock(loopMutex_);
-    if (!collectMaxAmplitude_) {
+    if (!collectMaxAmplitude_ || !reportUV_) {
+        reportUVProgressLoopRunning_ = false;
         return;
     }
     auto obs = obs_.lock();
@@ -191,10 +222,9 @@ void HiPlayerCallbackLooper::DoCollectAmplitude()
             vMaxAmplitudeArray_.clear();
         }
     }
-    if (collectMaxAmplitude_) {
-        Enqueue(std::make_shared<Event>(WHAT_COLLECT_AMPLITUDE,
-            SteadyClock::GetCurrentTimeMs() + collectMaxAmplitudeIntervalMs_, Any()));
-    }
+
+    Enqueue(std::make_shared<Event>(WHAT_COLLECT_AMPLITUDE,
+        SteadyClock::GetCurrentTimeMs() + collectMaxAmplitudeIntervalMs_, Any()));
 }
 
 void HiPlayerCallbackLooper::ReportRemainedMaxAmplitude()
@@ -281,7 +311,7 @@ void HiPlayerCallbackLooper::DoReportDfxInfo(const Any& info)
             MEDIA_LOG_E_SHORT("DoReportDfxInfo error, ptr is nullptr");
             return;
         }
-        MEDIA_LOG_D("Report Dfx, callerName: " PUBLIC_LOG_S " type: " PUBLIC_LOG_D32,
+        MEDIA_LOG_DD("Report Dfx, callerName: " PUBLIC_LOG_S " type: " PUBLIC_LOG_D32,
             ptr->callerName.c_str(), static_cast<int32_t>(ptr->type));
         obs->OnDfxInfo(*ptr);
     }

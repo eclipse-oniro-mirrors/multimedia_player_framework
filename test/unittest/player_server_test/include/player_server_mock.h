@@ -18,7 +18,7 @@
 
 #include "player_server.h"
 #include "unittest_log.h"
-#include "../wm/window.h"
+#include "wm/window.h"
 
 namespace OHOS {
 namespace Media {
@@ -62,6 +62,7 @@ protected:
     int32_t seekPosition_;
     bool seekDoneFlag_;
     bool speedDoneFlag_;
+    bool rateDoneFlag_;
     bool trackDoneFlag_ = false;
     bool trackChange_ = false;
     bool trackInfoUpdate_ = false;
@@ -78,6 +79,7 @@ protected:
     std::condition_variable condVarReset_;
     std::condition_variable condVarSeek_;
     std::condition_variable condVarSpeed_;
+    std::condition_variable condVarRate_;
     std::condition_variable condVarTrackDone_;
     std::condition_variable condVarTrackInfoUpdate_;
 };
@@ -91,6 +93,7 @@ public:
     void Notify(PlayerStates currentState);
     void SetSeekDoneFlag(bool seekDoneFlag);
     void SetSpeedDoneFlag(bool speedDoneFlag);
+    void SetRateDoneFlag(bool rateDoneFlag);
     void SetSeekPosition(int32_t seekPosition);
     void SetState(PlayerStates state);
     void SetTrackDoneFlag(bool trackDoneFlag);
@@ -101,6 +104,7 @@ public:
     int32_t ResetSync();
     int32_t SeekSync();
     int32_t SpeedSync();
+    int32_t RateSync();
     int32_t TrackSync(bool &trackChange);
     int32_t TrackInfoUpdateSync();
     std::string SubtitleTextUpdate(std::string text);
@@ -116,6 +120,8 @@ public:
     explicit PlayerServerMock(std::shared_ptr<PlayerCallbackTest> &callback);
     virtual ~PlayerServerMock();
     bool CreatePlayer();
+    int32_t Freeze();
+    int32_t UnFreeze();
     int32_t SetSource(const std::string url);
     int32_t SetSource(const std::string &path, int64_t offset, int64_t size);
     int32_t SetSource(int32_t fd, int64_t offset, int64_t size);
@@ -139,6 +145,7 @@ public:
     int32_t GetVideoWidth();
     int32_t GetVideoHeight();
     int32_t GetDuration(int32_t &duration);
+    int32_t SetPlaybackRate(float rate);
     int32_t SetPlaybackSpeed(PlaybackRateMode mode);
     int32_t GetPlaybackSpeed(PlaybackRateMode &mode);
     int32_t SelectBitRate(uint32_t bitRate);
@@ -165,6 +172,7 @@ public:
     int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted);
     int32_t SetDeviceChangeCbStatus(bool status);
     int32_t SetRenderFirstFrame(bool display);
+    int32_t EnableReportMediaProgress(bool enable);
 private:
     void SeekPrepare(int32_t &mseconds, PlayerSeekMode &mode);
     std::shared_ptr<IPlayerService> player_ = nullptr;

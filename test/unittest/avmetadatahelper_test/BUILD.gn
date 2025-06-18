@@ -34,6 +34,7 @@ ohos_unittest("avmetadatahelper_unit_test") {
     "sa_media/server",
     "sa_media/server_manager",
     "common",
+    "player/audio_background_adapter",
     "player/ipc",
     "player/player_mem_manage",
     "player/server",
@@ -72,9 +73,6 @@ ohos_unittest("avmetadatahelper_unit_test") {
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/common",
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/common/recorder_profiles",
-    "./../../../../../../drivers/peripheral/display/interfaces/include",
-    "./../../../../image_framework/interfaces/innerkits/include",
-    "./../../../../../window/window_manager/interfaces/innerkits/wm",
     "./../../../../player_framework/frameworks/native/player",
     "./../../../../player_framework/test/unittest/common/include",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/avmetadatahelper/server",
@@ -129,9 +127,6 @@ ohos_unittest("avmetadatahelper_unit_test") {
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/avmetadatahelper:media_engine_histreamer_avmetadatahelper",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
-    "./../../../../../graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "./../../../../../window/window_manager/wm:libwm",
-    "./../../../../image_framework/interfaces/innerkits:image_native",
   ]
 
   external_deps = [
@@ -145,9 +140,9 @@ ohos_unittest("avmetadatahelper_unit_test") {
     "call_manager:tel_call_manager_api",
     "common_event_service:cesfwk_innerkits",
     "core_service:tel_core_service_api",
-    "drivers_interface_camera:metadata",
     "drivers_interface_display:display_commontype_idl_headers",
     "graphic_2d:librender_service_base",
+    "graphic_2d:librender_service_client",
     "graphic_surface:surface",
     "graphic_surface:sync_fence",
     "hdf_core:libhdi",
@@ -157,7 +152,6 @@ ohos_unittest("avmetadatahelper_unit_test") {
     "hitrace:hitrace_meter",
     "hitrace:libhitracechain",
     "i18n:intl_util",
-    "image_framework:image_native",
     "image_framework:image_native",
     "init:libbegetutil",
     "ipc:ipc_single",
@@ -172,6 +166,7 @@ ohos_unittest("avmetadatahelper_unit_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "state_registry:tel_state_registry_api",
+    "window_manager:libwm",
   ]
 
   if (player_framework_support_video) {

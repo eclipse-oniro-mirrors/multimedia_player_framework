@@ -77,6 +77,8 @@ public:
     PlayerServer();
     virtual ~PlayerServer();
 
+    int32_t Freeze() override;
+    int32_t UnFreeze() override;
     int32_t Play() override;
     int32_t Prepare() override;
     int32_t SetRenderFirstFrame(bool display) override;
@@ -101,6 +103,8 @@ public:
     int32_t GetDuration(int32_t &duration) override;
     int32_t GetApiVersion(int32_t &apiVersion) override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
+    int32_t SetPlaybackRate(float rate) override;
+    int32_t SetPlayerProducer(const PlayerProducer producer) override;
     int32_t SetSource(const std::string &url) override;
     int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) override;
     int32_t SetSource(int32_t fd, int64_t offset, int64_t size) override;
@@ -149,6 +153,12 @@ public:
     int32_t SetDeviceChangeCbStatus(bool status) override;
     bool IsSeekContinuousSupported() override;
     int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes) override;
+    int32_t SetStartFrameRateOptEnabled(bool enabled) override;
+    int32_t SetReopenFd(int32_t fd) override;
+    int32_t EnableCameraPostprocessing() override;
+    int32_t EnableReportMediaProgress(bool enable) override;
+    int32_t EnableReportAudioInterrupt(bool enable) override;
+    int32_t ForceLoadVideo(bool status) override;
 
 protected:
     class BaseState;
@@ -194,6 +204,7 @@ protected:
         float leftVolume = INVALID_VALUE;
         float rightVolume = INVALID_VALUE;
         PlaybackRateMode speedMode = SPEED_FORWARD_1_00_X;
+        float speedRate = 1.0f;
         std::string url;
         int32_t effectMode = OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT;
         std::map<std::string, std::string> header;
@@ -205,21 +216,28 @@ private:
     int32_t InitPlayEngine(const std::string &url);
     int32_t OnPrepare(bool sync);
     int32_t OnPlay();
+    int32_t OnFreeze();
+    int32_t OnUnFreeze();
     int32_t OnPause(bool isSystemOperation);
     int32_t OnStop(bool sync);
     int32_t OnReset();
     int32_t HandlePrepare();
     int32_t HandlePlay();
     int32_t HandlePause(bool isSystemOperation);
+    int32_t HandleFreeze();
+    int32_t HandleLiteFreeze();
+    int32_t HandleUnFreeze();
+    int32_t HandleLiteUnFreeze();
     int32_t HandlePauseDemuxer();
     int32_t HandleResumeDemuxer();
     int32_t HandleStop();
     int32_t HandleReset();
     int32_t HandleSeek(int32_t mSeconds, PlayerSeekMode mode);
-    int32_t HandleEosPlay();
     int32_t HandleSetPlayRange(int64_t start, int64_t end, PlayerSeekMode mode);
     int32_t HandleSetPlaybackSpeed(PlaybackRateMode mode);
+    int32_t HandleSetPlaybackRate(float rate);
     int32_t SetAudioEffectMode(const int32_t effectMode);
+    int32_t CheckandDoUnFreeze();
 
     void HandleEos();
     void PreparedHandleEos();
@@ -260,7 +278,7 @@ private:
     int32_t appUid_ = 0;
     int32_t appPid_ = 0;
     std::string appName_;
-    int32_t apiVersion_ = -1;
+    std::atomic<int32_t> apiVersion_ = -1;
     std::atomic<bool> inReleasing_ = false;
     std::atomic<int32_t> userId_ = -1;
     std::atomic<bool> isBootCompleted_ = false;
@@ -275,6 +293,8 @@ private:
     bool deviceChangeCallbackflag_ = false;
     bool maxAmplitudeCbStatus_ = false;
     bool seiMessageCbStatus_ = false;
+    bool enableReportMediaProgress_ = false;
+    bool enableReportAudioInterrupt_ = false;
     std::vector<int32_t> payloadTypes_ {};
     bool isStreamUsagePauseRequired_ = true;
     std::mutex surfaceMutex_;
@@ -282,7 +302,11 @@ private:
     int64_t sumPauseTime_ {0};
     bool isXSpeedPlay_ {false};
     bool isCalledBySystemApp_ = false;
+    bool isForceLoadVideo_ {false};
     std::atomic<uint32_t> totalMemoryUage_ {0};
+    PlayerProducer playerProducer_ = PlayerProducer::INNER;
+    std::atomic<bool> isFrozen_ = false;
+    bool isMemoryExchanged_ = false;
 };
 } // namespace Media
 } // namespace OHOS

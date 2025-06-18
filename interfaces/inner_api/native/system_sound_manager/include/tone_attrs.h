@@ -20,7 +20,6 @@
 
 #include "audio_info.h"
 
-
 namespace OHOS {
 namespace Media {
 
@@ -28,6 +27,18 @@ enum ToneCustomizedType {
     PRE_INSTALLED = 0,
     CUSTOMISED = 1,
 };
+
+enum class ToneMediaType : int32_t {
+    /**
+     * track is audio.
+     */
+    MEDIA_TYPE_AUD = 0,
+    /**
+     * track is video.
+     */
+    MEDIA_TYPE_VID = 1,
+};
+
 constexpr int32_t TONE_CATEGORY_INVALID = -1;
 constexpr int32_t TONE_CATEGORY_RINGTONE = 1;
 constexpr int32_t TONE_CATEGORY_TEXT_MESSAGE = 2;
@@ -92,12 +103,23 @@ public:
         return category_;
     }
 
+    void SetMediaType(const ToneMediaType mediaType)
+    {
+        mediaType_ = mediaType;
+    }
+
+    ToneMediaType GetMediaType() const
+    {
+        return mediaType_;
+    }
+
 private:
     std::string title_ = "title_test";
     std::string fileName_ = "fileName_test";
     std::string uri_ = "uri_test";
     ToneCustomizedType custType_ = CUSTOMISED;
     int32_t category_ = 0;
+    ToneMediaType mediaType_ = ToneMediaType::MEDIA_TYPE_AUD;
 };
 } // namespace Media
 } // namespace OHOS

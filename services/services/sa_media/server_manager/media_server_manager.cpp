@@ -43,6 +43,7 @@
 #include "service_dump_manager.h"
 #include "player_xcollie.h"
 #include "client/memory_collector_client.h"
+#include <set>
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaServerManager"};
@@ -186,6 +187,50 @@ MediaServerManager::~MediaServerManager()
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
+int32_t MediaServerManager::FreezeStubForPids(const std::set<int32_t> &pidList, bool isProxy)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (const auto &pid : pidList) {
+        auto pidIt = pidToPlayerStubMap_.find(pid);
+        if (pidIt == pidToPlayerStubMap_.end()) {
+            MEDIA_LOGD("PID(%{public}d) has no player stubs, skip freeze", pid);
+            continue;
+        }
+
+        const auto &stubSet = pidIt->second;
+        MEDIA_LOGI("Freezing %{public}zu player stubs for PID = %{public}d, isProxy: %{public}d",
+                   stubSet.size(), pid, isProxy);
+        
+        for (const auto &stubObj : stubSet) {
+            auto playerStub = iface_cast<PlayerServiceStub>(stubObj);
+            CHECK_AND_CONTINUE_LOG(playerStub != nullptr,
+                                   "failed to cast PlayerServiceStub, pid = %{public}d", pid);
+
+            if (isProxy) {
+                playerStub->Freeze();
+            } else {
+                playerStub->UnFreeze();
+            }
+        }
+    }
+    return MSERR_OK;
+}
+
+int32_t MediaServerManager::ResetAllProxy()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("received ResetAllProxy");
+    for (const auto &pidEntry : pidToPlayerStubMap_) {
+        for (const auto &remoteObj : pidEntry.second) {
+            auto playerStub = iface_cast<PlayerServiceStub>(remoteObj);
+            CHECK_AND_CONTINUE_LOG(playerStub != nullptr,
+                                   "failed to cast PlayerServiceStub, pid = %{public}d", pidEntry.first);
+            playerStub->UnFreeze();
+        }
+    }
+    return MSERR_OK;
+}
+
 sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -255,6 +300,9 @@ sptr<IRemoteObject> MediaServerManager::CreatePlayerStubObject()
     playerStubMap_[object] = pid;
 
     StartMemoryReportTask();
+
+    auto &instanceSet = pidToPlayerStubMap_[pid];
+    instanceSet.insert(object);
 
     Dumper dumper;
     dumper.entry_ = [player = playerStub](int32_t fd) -> int32_t {
@@ -501,13 +549,13 @@ void MediaServerManager::DestroyAVPlayerStub(StubType type, sptr<IRemoteObject> 
     switch (type) {
         case PLAYER: {
             for (auto it = playerStubMap_.begin(); it != playerStubMap_.end(); it++) {
-                if (it->first == object) {
-                    MEDIA_LOGD("destroy player stub services(%{public}zu) pid(%{public}d).",
-                        playerStubMap_.size(), pid);
-                    (void)playerStubMap_.erase(it);
-                    MediaTrace::CounterTrace("The number of player", playerStubMap_.size());
-                    return;
-                }
+                CHECK_AND_CONTINUE(it->first == object);
+                RemovePlayerStubFromMap(object, it->second);
+                MEDIA_LOGD("destroy player stub services(%{public}zu) pid(%{public}d).",
+                    playerStubMap_.size(), pid);
+                (void)playerStubMap_.erase(it);
+                MediaTrace::CounterTrace("The number of player", playerStubMap_.size());
+                return;
             }
             MEDIA_LOGE("find player object failed, pid(%{public}d).", pid);
             break;
@@ -526,6 +574,19 @@ void MediaServerManager::DestroyAVPlayerStub(StubType type, sptr<IRemoteObject> 
         }
         default:
             break;
+    }
+}
+
+void MediaServerManager::RemovePlayerStubFromMap(sptr<IRemoteObject> object, pid_t pid)
+{
+    auto pidIt = pidToPlayerStubMap_.find(pid);
+    if (pidIt == pidToPlayerStubMap_.end()) {
+        return;
+    }
+
+    pidIt->second.erase(object);
+    if (pidIt->second.empty()) {
+        pidToPlayerStubMap_.erase(pidIt);
     }
 }
 
@@ -722,6 +783,10 @@ void MediaServerManager::DestroyAVCodecStubForPid(pid_t pid)
 void MediaServerManager::DestroyAVPlayerStubForPid(pid_t pid)
 {
     MEDIA_LOGD("player stub services(%{public}zu) pid(%{public}d).", playerStubMap_.size(), pid);
+    auto pidIt = pidToPlayerStubMap_.find(pid);
+    if (pidIt != pidToPlayerStubMap_.end()) {
+        pidToPlayerStubMap_.erase(pidIt);
+    }
     for (auto itPlayer = playerStubMap_.begin(); itPlayer != playerStubMap_.end();) {
         if (itPlayer->second == pid) {
             executor_.Commit(itPlayer->first);
@@ -783,6 +848,21 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
 #ifdef SUPPORT_START_STOP_ON_DEMAND
     UpdateAllInstancesReleasedTime();
 #endif
+}
+
+std::vector<pid_t> MediaServerManager::GetPlayerPids()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    std::vector<pid_t> res;
+    CHECK_AND_RETURN_RET_NOLOG(!playerStubMap_.empty(), res);
+    std::unordered_set<pid_t> tmpRes;
+    for (const auto& [object, pid] : playerStubMap_) {
+        (void)tmpRes.insert(pid);
+    }
+    for (auto &uniqPid : tmpRes) {
+        res.emplace_back(uniqPid);
+    }
+    return res;
 }
 
 void MediaServerManager::DestroyDumper(StubType type, sptr<IRemoteObject> object)
@@ -887,6 +967,20 @@ void MediaServerManager::NotifyMemMgrLoaded()
     isMemMgrLoaded_.store(true);
 }
 
+void MediaServerManager::DestoryMemoryReportTask()
+{
+    MediaTrace trace("MediaServerManager::DestoryMemoryReportTask");
+    MEDIA_LOGI("DestoryMemoryReportTask");
+    std::unique_ptr<Task> memoryReportTask{nullptr};
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        memoryReportTask = std::move(memoryReportTask_);
+        if (memoryReportTask && memoryReportTask->IsTaskRunning()) {
+            memoryReportTask->StopAsync();
+        }
+    }
+}
+
 void MediaServerManager::AsyncExecutor::Commit(sptr<IRemoteObject> obj)
 {
     std::lock_guard<std::mutex> lock(listMutex_);
@@ -948,5 +1042,17 @@ void MediaServerManager::UpdateAllInstancesReleasedTime()
     }
 }
 #endif
+
+bool MediaServerManager::CanKillMediaService()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    bool canKillMediaService = !recorderStubMap_.empty() ||
+                     !avMetadataHelperStubMap_.empty() ||
+                     !screenCaptureStubMap_.empty() ||
+                     !recorderProfilesStubMap_.empty() ||
+                     !screenCaptureControllerStubMap_.empty() ||
+                     !transCoderStubMap_.empty();
+    return !canKillMediaService;
+}
 } // namespace Media
 } // namespace OHOS

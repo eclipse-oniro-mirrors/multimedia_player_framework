@@ -14,7 +14,7 @@
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
-module_output_path = "player_framework/player_framework_ScreenCapture"
+module_output_path = "player_framework/ScreenCapture/observer"
 
 ohos_unittest("incall_observer_unit_test") {
   module_out_path = module_output_path
@@ -146,6 +146,7 @@ ohos_unittest("account_observer_unit_test") {
     "qos_manager:qos",
     "state_registry:tel_state_registry_api",
     "window_manager:libdm",
+    "eventhandler:libeventhandler",
   ]
 
   defines = []

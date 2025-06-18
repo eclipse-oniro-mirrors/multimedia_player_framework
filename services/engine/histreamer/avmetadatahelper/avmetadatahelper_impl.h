@@ -36,12 +36,14 @@ class AVMetadataHelperImpl : public IAVMetadataHelperEngine,
                              public std::enable_shared_from_this<AVMetadataHelperImpl>,
                              public NoCopyable {
 public:
-    AVMetadataHelperImpl();
+    AVMetadataHelperImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, std::string appName);
     ~AVMetadataHelperImpl();
 
     void OnError(MediaAVCodec::AVCodecErrorType errorType, int32_t errorCode);
     int32_t SetSource(const std::string &uri, int32_t usage) override;
     int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) override;
+    int32_t SetAVMetadataCaller(AVMetadataCaller caller) override;
+    int32_t SetUrlSource(const std::string &uri, const std::map<std::string, std::string> &header) override;
     std::string ResolveMetadata(int32_t key) override;
     std::unordered_map<int32_t, std::string> ResolveMetadata() override;
     std::shared_ptr<Meta> GetAVMetadata() override;
@@ -68,16 +70,23 @@ private:
 
     Status SetSourceInternel(const std::string &uri, bool isForFrameConvert);
     Status SetSourceInternel(const std::shared_ptr<IMediaDataSource> &dataSrc);
+    Status SetSourceInternel(const std::string &uri, const std::map<std::string, std::string> &header);
     Status SetSourceForFrameConvert(const std::string &uri);
     Status InitMetadataCollector();
     Status InitThumbnailGenerator();
     int32_t GetTimeForFrameConvert(uint32_t index, uint64_t &time);
     int32_t GetIndexForFrameConvert(uint64_t time, uint32_t &index);
+    int64_t GetDurationMs();
 
     void Reset();
     void Destroy();
     std::string groupId_;
     std::atomic<bool> isInterruptNeeded_ = false;
+    int32_t appUid_{0};
+    int32_t appPid_{0};
+    uint32_t appTokenId_{0};
+    std::string appName_;
+    AVMetadataCaller metadataCaller_ = AVMetadataCaller::AV_META_DATA_DEFAULT;
 };
 }  // namespace Media
 }  // namespace OHOS

@@ -127,6 +127,15 @@ enum AVScreenCaptureBufferType {
     SCREEN_CAPTURE_BUFFERTYPE_AUDIO_MIC = 2,
 };
 
+enum AVScreenCaptureContentChangedEvent {
+    /* Content is hidden */
+    SCREEN_CAPTURE_CONTENT_HIDE = 0,
+    /* Content is visible */
+    SCREEN_CAPTURE_CONTENT_VISIBLE = 1,
+    /* ScreenCapture stopped by user */
+    SCREEN_CAPTURE_CONTENT_UNAVAILABLE = 2,
+};
+
 enum AVScreenCaptureFilterableAudioContent {
     /* Audio content of notification sound */
     SCREEN_CAPTURE_NOTIFICATION_AUDIO = 0,
@@ -172,6 +181,7 @@ struct AudioInfo {
 struct ScreenCaptureStrategy {
     bool enableDeviceLevelCapture = false;
     bool keepCaptureDuringCall = false;
+    int32_t strategyForPrivacyMaskMode = 0;
     bool setByUser = false;
 };
 
@@ -231,6 +241,22 @@ struct AudioBuffer {
     AudioCaptureSourceType sourcetype;
 };
 
+typedef struct ScreenCaptureRect {
+    /* X-coordinate of screen recording */
+    int32_t x;
+    /* y-coordinate of screen recording */
+    int32_t y;
+    /* Width of screen recording */
+    int32_t width;
+    /* Height of screen recording */
+    int32_t height;
+} ScreenCaptureRect;
+
+struct ScreenCaptureUserSelectionInfo {
+    int32_t selectType;
+    uint64_t displayId;
+};
+
 class ScreenCaptureCallBack {
 public:
     virtual ~ScreenCaptureCallBack() = default;
@@ -260,6 +286,19 @@ public:
         (void)displayId;
         return;
     }
+
+    virtual void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area)
+    {
+        (void)event;
+        (void)area;
+        return;
+    }
+
+    virtual void OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo)
+    {
+        (void)selectionInfo;
+        return;
+    }
 };
 
 class ScreenCapture {
@@ -287,12 +326,18 @@ public:
     virtual int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) = 0;
     virtual int32_t SetPrivacyAuthorityEnabled() = 0;
     virtual int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) = 0;
+    virtual int32_t UpdateSurface(sptr<Surface> surface) = 0;
+    virtual int32_t SetCaptureArea(uint64_t displayId, Rect area) = 0;
 };
 
 class __attribute__((visibility("default"))) ScreenCaptureFactory {
 public:
 #ifdef UNSUPPORT_SCREEN_CAPTURE
     static std::shared_ptr<ScreenCapture> CreateScreenCapture()
+    {
+        return nullptr;
+    }
+    static std::shared_ptr<ScreenCapture> CreateScreenCapture(OHOS::AudioStandard::AppInfo &appInfo)
     {
         return nullptr;
     }

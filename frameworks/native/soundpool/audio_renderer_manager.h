@@ -36,18 +36,19 @@ public:
     ~AudioRendererManager();
 
     static AudioRendererManager& GetInstance();
-    int32_t GetGlobeId();
-    std::unique_ptr<AudioStandard::AudioRenderer> GetAudioRendererInstance(int32_t globeId);
-    void SetAudioRendererInstance(int32_t globeId, std::unique_ptr<AudioStandard::AudioRenderer> audioRenderer);
+    int32_t GetGlobalId();
+    std::unique_ptr<AudioStandard::AudioRenderer> GetAudioRendererInstance(int32_t globalId);
+    void SetAudioRendererInstance(int32_t globalId, std::unique_ptr<AudioStandard::AudioRenderer> audioRenderer);
     void RemoveOldAudioRenderer();
     void SetParallelManager(std::weak_ptr<ParallelStreamManager> parallelManager);
     void SetStreamIDManager(std::weak_ptr<StreamIDManager> streamIDManager);
+    void DelAudioRenderer(int32_t globalId);
 
 private:
     AudioRendererManager() {}
-    void DeleteManager(int32_t globeId);
+    void DeleteManager(int32_t globalId);
     std::mutex renderMgrMutex_;
-    int32_t globeIdNext_ = 0;
+    int32_t globalIdNext_ = 0;
     std::list<std::pair<int32_t, std::unique_ptr<AudioStandard::AudioRenderer>>> audioRendererVector_;
     std::list<std::weak_ptr<ParallelStreamManager>> parallelManagerList_;
     std::list<std::weak_ptr<StreamIDManager>> streamIDManagerList_;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -50,6 +50,7 @@ public:
     int32_t SetVideoEncoder(VideoCodecFormat encoder);
     int32_t SetVideoEncodingBitRate(int32_t rate);
     int32_t SetVideoSize(int32_t videoFrameWidth, int32_t videoFrameHeight);
+    int32_t SetColorSpace(TranscoderColorSpace colorSpaceFormat);
     int32_t SetAudioEncoder(AudioCodecFormat encoder);
     int32_t SetAudioEncodingBitRate(int32_t bitRate);
     int32_t SetInputFile(int32_t fd, int64_t offset, int64_t size);

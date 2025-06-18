@@ -40,6 +40,11 @@ void PlayerCallbackTest::SetSpeedDoneFlag(bool speedDoneFlag)
     speedDoneFlag_ = speedDoneFlag;
 }
 
+void PlayerCallbackTest::SetRateDoneFlag(bool rateDoneFlag)
+{
+    rateDoneFlag_ = rateDoneFlag;
+}
+
 void PlayerCallbackTest::SetSeekPosition(int32_t seekPosition)
 {
     seekPosition_ = seekPosition;
@@ -136,6 +141,18 @@ int32_t PlayerCallbackTest::SpeedSync()
     return MSERR_OK;
 }
 
+int32_t PlayerCallbackTest::RateSync()
+{
+    if (rateDoneFlag_ == false) {
+        std::unique_lock<std::mutex> lockRate(mutexCond_);
+        condVarRate_.wait_for(lockRate, std::chrono::seconds(waitsecond));
+        if (rateDoneFlag_== false) {
+            return -1;
+        }
+    }
+    return MSERR_OK;
+}
+
 int32_t PlayerCallbackTest::TrackSync(bool &trackChange)
 {
     if (trackDoneFlag_ == false) {
@@ -207,6 +224,10 @@ void PlayerCallbackTest::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
             state_ = static_cast<PlayerStates>(extra);
             SetState(state_);
             Notify(state_);
+            break;
+        case INFO_TYPE_RATEDONE:
+            SetRateDoneFlag(true);
+            condVarRate_.notify_all();
             break;
         case INFO_TYPE_SPEEDDONE:
             SetSpeedDoneFlag(true);
@@ -355,6 +376,18 @@ int32_t PlayerServerMock::SetMediaSource(const std::shared_ptr<AVMediaSource> &m
 {
     std::unique_lock<std::mutex> lock(mutex_);
     return player_->SetMediaSource(mediaSource, strategy);
+}
+
+int32_t PlayerServerMock::Freeze()
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    return player_->Freeze();
+}
+
+int32_t PlayerServerMock::UnFreeze()
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    return player_->UnFreeze();
 }
 
 int32_t PlayerServerMock::SetSource(const std::string url)
@@ -591,6 +624,17 @@ int32_t PlayerServerMock::SetPlaybackSpeed(PlaybackRateMode mode)
     return player_->SetPlaybackSpeed(mode);
 }
 
+int32_t PlayerServerMock::SetPlaybackRate(float rate)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");
+    callback_->SetRateDoneFlag(false);
+    int32_t ret = player_->SetPlaybackRate(rate);
+    if (ret == MSERR_OK) {
+        return callback_->RateSync();
+    }
+    return player_->SetPlaybackRate(rate);
+}
+
 int32_t PlayerServerMock::GetPlaybackSpeed(PlaybackRateMode &mode)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
@@ -793,5 +837,10 @@ int32_t PlayerServerMock::SetRenderFirstFrame(bool display)
     return player_->SetRenderFirstFrame(display);
 }
 
+int32_t PlayerServerMock::EnableReportMediaProgress(bool enable)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->EnableReportMediaProgress(enable);
+}
 } // namespace Media
 } // namespace OHOS

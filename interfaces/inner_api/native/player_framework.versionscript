@@ -15,6 +15,7 @@
   global:
     extern "C++" {
       *OHOS::Media::PlayerFactory::CreatePlayer*;
+      *OHOS::Media::PlayerFactory::GetPlayerPids*;
       *OHOS::Media::RecorderFactory::CreateRecorder*;
       *OHOS::Media::TransCoderFactory::CreateTransCoder*;
       *OHOS::Media::VideoEncoderFactory::CreateBy*;
@@ -38,6 +39,10 @@
       *OHOS::Media::ScreenCaptureMonitor::IsSystemScreenRecorderWorking*;
       *OHOS::Media::ScreenCaptureMonitor::RegisterScreenCaptureMonitorListener*;
       *OHOS::Media::ScreenCaptureMonitor::UnregisterScreenCaptureMonitorListener*;
+      *OHOS::Media::MediaServiceFactory::GetInstance*;
+      *OHOS::Media::MediaServiceHelper::CanKillMediaService*;
+      *OHOS::Media::MediaServiceHelper::ProxyForFreeze*;
+      *OHOS::Media::MediaServiceHelper::ResetAllProxy*;
     };
     "*MSErrorToString*";
     "*MSExtErrorToString*";

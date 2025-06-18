@@ -32,6 +32,8 @@ public:
     virtual ~AVMetadataHelperServer();
 
     int32_t SetSource(const std::string &uri, int32_t usage) override;
+    int32_t SetAVMetadataCaller(AVMetadataCaller caller) override;
+    int32_t SetUrlSource(const std::string &uri, const std::map<std::string, std::string> &header) override;
     int32_t SetSource(int32_t fd, int64_t offset, int64_t size, int32_t usage) override;
     int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) override;
     std::string ResolveMetadata(int32_t key) override;
@@ -55,7 +57,10 @@ private:
     int32_t InitEngine(const std::string &uri);
     int32_t CheckSourceByUriHelper();
 
-    int32_t appUid_;
+    int32_t appUid_ = 0;
+    int32_t appPid_ = 0;
+    uint32_t appTokenId_ = 0;
+    std::string appName_;
     std::shared_ptr<IAVMetadataHelperEngine> avMetadataHelperEngine_ = nullptr;
     std::mutex mutex_;
     std::condition_variable ipcReturnCond_;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Huawei Device Co., Ltd.
+ * Copyright (C) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -175,6 +175,25 @@ int32_t TransCoderServer::SetVideoEncodingBitRate(int32_t rate)
     return result.Value();
 }
 
+int32_t TransCoderServer::SetColorSpace(TranscoderColorSpace colorSpaceFormat)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(status_ == REC_CONFIGURED, MSERR_INVALID_OPERATION,
+        "invalid status, current status is %{public}s", GetStatusDescription(status_).c_str());
+    CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    config_.colorSpaceFormat = colorSpaceFormat;
+    VideoColorSpace colorSpaceFmt(colorSpaceFormat);
+    MEDIA_LOGD("set color space, format: %{public}d", static_cast<int32_t>(colorSpaceFormat));
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return transCoderEngine_->Configure(colorSpaceFmt);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
+}
+
 int32_t TransCoderServer::SetAudioEncoder(AudioCodecFormat encoder)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -242,7 +261,7 @@ int32_t TransCoderServer::SetInputFile(int32_t fd, int64_t offset, int64_t size)
     config_.srcFdSize = size;
     uriHelper_ = std::make_unique<UriHelper>(fd, offset, size);
     CHECK_AND_RETURN_RET_LOG(uriHelper_->AccessCheck(UriHelper::URI_READ),
-        MSERR_INVALID_VAL, "Failed to read the fd");
+        MSERR_FILE_ACCESS_FAILED, "Failed to read the fd");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return transCoderEngine_->SetInputFile(uriHelper_->FormattedUri());
     });

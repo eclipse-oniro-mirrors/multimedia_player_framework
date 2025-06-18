@@ -32,6 +32,21 @@ namespace OHOS {
 namespace Media {
 static const std::string AUDIO_HAPTIC_PLAYER_NAPI_CLASS_NAME = "AudioHapticPlayer";
 
+struct VolumeContext : public AsyncContext {
+    float volume = 1.0f;
+    int32_t result = -1;
+};
+
+struct VibrationContext : public AsyncContext {
+    float intensity = 1.0f;
+    int32_t result = -1;
+};
+
+struct LoopContext : public AsyncContext {
+    bool loop = false;
+    int32_t result = -1;
+};
+
 class AudioHapticPlayerNapi {
 public:
     static napi_value Init(napi_env env, napi_value exports);
@@ -49,6 +64,11 @@ private:
     static napi_value Release(napi_env env, napi_callback_info info);
     static napi_value On(napi_env env, napi_callback_info info);
     static napi_value Off(napi_env env, napi_callback_info info);
+    static napi_value SetVolume(napi_env env, napi_callback_info info);
+    static napi_value SetHapticsIntensity(napi_env env, napi_callback_info info);
+    static napi_value EnableHapticsInSilentMode(napi_env env, napi_callback_info info);
+    static napi_value IsHapticsIntensityAdjustmentSupported(napi_env env, napi_callback_info info);
+    static napi_value SetLoop(napi_env env, napi_callback_info info);
 
     static napi_value RegisterCallback(napi_env env, napi_value jsThis, napi_value* argv, const std::string& cbName);
     static napi_value RegisterAudioHapticPlayerCallback(napi_env env, napi_value* argv, const std::string& cbName,
@@ -60,6 +80,9 @@ private:
     static void CommonAsyncCallbackComp(napi_env env, napi_status status, void *data);
 
     static bool IsLegalAudioHapticType(int32_t audioHapticType);
+    static bool IsLegalVolumeOrIntensity(double volume);
+    static bool JudgeVolume(napi_env env, std::unique_ptr<VolumeContext>& asyncContext);
+    static bool JudgeIntensity(napi_env env, std::unique_ptr<VibrationContext>& asyncContext);
 
     napi_env env_;
     std::shared_ptr<AudioHapticPlayer> audioHapticPlayer_;

@@ -17,7 +17,10 @@
 #define MEDIA_SERVER_MANAGER_TEST_H
 
 #include "gtest/gtest.h"
-
+#include "gmock/gmock.h"
+#include "mock/mock_monitor_service_stub.h"
+#include "mock/mock_recorder_profiles_service_stub.h"
+#include "mock/mock_transcoder_service_stub.h"
 #include "media_server_manager.h"
 
 namespace OHOS {

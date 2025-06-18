@@ -58,6 +58,7 @@ public:
     sptr<OHOS::SurfaceBuffer> AcquireVideoBuffer(int32_t &fence, int64_t &timestamp, Rect &damage);
     int32_t ReleaseAudioBuffer(AudioCaptureSourceType type);
     int32_t ReleaseVideoBuffer();
+    int32_t UpdateSurface(sptr<Surface> surface);
 };
 
 class TestScreenCaptureCallbackTest : public ScreenCaptureCallBack, public NoCopyable {

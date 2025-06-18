@@ -49,6 +49,7 @@ config("media_service_config") {
     "sa_media/server",
     "sa_media/server_manager",
     "common",
+    "player/audio_background_adapter",
     "player/ipc",
     "player/player_mem_manage",
     "player/server",
@@ -137,6 +138,7 @@ ohos_shared_library("media_service") {
       "media_data_source/ipc/media_data_source_proxy.cpp",
       "media_source/ipc/media_source_loader_proxy.cpp",
       "media_source/ipc/media_source_loading_request_stub.cpp",
+      "player/audio_background_adapter/audio_background_adapter.cpp",
       "player/ipc/player_listener_proxy.cpp",
       "player/ipc/player_service_stub.cpp",
       "player/server/player_server.cpp",
@@ -232,7 +234,6 @@ ohos_shared_library("media_service") {
     "av_codec:av_codec_client",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
-    "drivers_interface_camera:metadata",
     "graphic_2d:librender_service_base",
     "hdf_core:libhdi",
     "hicollie:libhicollie",
@@ -289,6 +290,9 @@ ohos_shared_library("media_service") {
       "graphic_surface:sync_fence",
       "relational_store:native_rdb",
       "window_manager:libdm",
+      "window_manager:scene_session",
+      "window_manager:scene_session_manager",
+      "window_manager:session_manager_lite",
     ]
   }
 

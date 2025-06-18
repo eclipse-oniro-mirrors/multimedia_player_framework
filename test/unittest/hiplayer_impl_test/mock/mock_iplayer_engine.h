@@ -58,6 +58,8 @@ public:
     MOCK_METHOD(int32_t, Pause, (bool isSystemOperation), ());
     MOCK_METHOD(int32_t, Stop, (), ());
     MOCK_METHOD(int32_t, Reset, (), ());
+    MOCK_METHOD(int32_t, Freeze, (bool &isNoNeedToFreeze), ());
+    MOCK_METHOD(int32_t, UnFreeze, (), ());
     MOCK_METHOD(int32_t, SetVolume, (float leftVolume, float rightVolume), ());
     MOCK_METHOD(int32_t, SetVolumeMode, (int32_t mode), ());
     MOCK_METHOD(int32_t, Seek, (int32_t mSeconds, PlayerSeekMode mode), ());
@@ -69,6 +71,7 @@ public:
     MOCK_METHOD(int32_t, GetVideoHeight, (), ());
     MOCK_METHOD(int32_t, GetDuration, (int32_t &duration), ());
     MOCK_METHOD(int32_t, SetPlaybackSpeed, (PlaybackRateMode mode), ());
+    MOCK_METHOD(int32_t, SetPlaybackRate, (float rate), ());
     MOCK_METHOD(int32_t, GetPlaybackSpeed, (PlaybackRateMode &mode), ());
     MOCK_METHOD(int32_t, SetMediaSource, (const std::shared_ptr<AVMediaSource> &mediaSource,
         AVPlayStrategy strategy), ());

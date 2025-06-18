@@ -18,16 +18,10 @@
 #include "audio_haptic_log.h"
 
 namespace {
-/* Constants for array index */
-const int32_t PARAM0 = 0;
-const int32_t PARAM1 = 1;
-
-/* Constants for array size */
-const int32_t ARGS_ONE = 1;
-const int32_t ARGS_TWO = 2;
 
 const std::string AUDIO_INTERRUPT_CALLBACK_NAME = "audioInterrupt";
 const std::string END_OF_STREAM_CALLBACK_NAME = "endOfStream";
+const double PRECISION = 100.00;
 
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, "AudioHapticPlayerNapi"};
 }
@@ -54,6 +48,11 @@ napi_value AudioHapticPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("release", Release),
         DECLARE_NAPI_FUNCTION("on", On),
         DECLARE_NAPI_FUNCTION("off", Off),
+        DECLARE_NAPI_FUNCTION("setVolume", SetVolume),
+        DECLARE_NAPI_FUNCTION("setHapticsIntensity", SetHapticsIntensity),
+        DECLARE_NAPI_FUNCTION("enableHapticsInSilentMode", EnableHapticsInSilentMode),
+        DECLARE_NAPI_FUNCTION("isHapticsIntensityAdjustmentSupported", IsHapticsIntensityAdjustmentSupported),
+        DECLARE_NAPI_FUNCTION("setLoop", SetLoop),
     };
 
     status = napi_define_class(env, AUDIO_HAPTIC_PLAYER_NAPI_CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, Constructor,
@@ -141,6 +140,72 @@ napi_value AudioHapticPlayerNapi::CreatePlayerInstance(napi_env env,
     return result;
 }
 
+napi_value AudioHapticPlayerNapi::IsHapticsIntensityAdjustmentSupported(napi_env env,
+                                                                        napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    if (!AudioHapticCommonNapi::VerifySelfSystemPermission()) {
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_PERMISSION_DENIED, NAPI_ERR_PERMISSION_DENIED_INFO);
+        return result;
+    }
+
+    void *native = nullptr;
+    napi_value argv[ARGS_ONE] = {0};
+    if (!AudioHapticCommonNapi::InitNormalFunc(env, info, &native, argv, ARGS_ZERO)) {
+        return result;
+    }
+
+    auto *audioHapticPlayerNapi = reinterpret_cast<AudioHapticPlayerNapi *>(native);
+    if (audioHapticPlayerNapi == nullptr || audioHapticPlayerNapi->audioHapticPlayer_ == nullptr) {
+        MEDIA_LOGE("IsHapticsIntensityAdjustmentSupported: unwrap failure!");
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_SERVICE_DIED, "unwrap failure");
+        return result;
+    }
+    bool isSupported = audioHapticPlayerNapi->audioHapticPlayer_->IsHapticsIntensityAdjustmentSupported();
+
+    napi_get_boolean(env, isSupported, &result);
+    return result;
+}
+
+napi_value AudioHapticPlayerNapi::EnableHapticsInSilentMode(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    if (!AudioHapticCommonNapi::VerifySelfSystemPermission()) {
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_PERMISSION_DENIED, NAPI_ERR_PERMISSION_DENIED_INFO);
+        return result;
+    }
+
+    void *native = nullptr;
+    napi_value argv[ARGS_ONE] = {0};
+    if (!AudioHapticCommonNapi::InitNormalFunc(env, info, &native, argv, ARGS_ONE)) {
+        return result;
+    }
+
+    auto *audioHapticPlayerNapi = reinterpret_cast<AudioHapticPlayerNapi *>(native);
+    if (audioHapticPlayerNapi == nullptr || audioHapticPlayerNapi->audioHapticPlayer_ == nullptr) {
+        MEDIA_LOGE("EnableHapticsInSilentMode: unwrap failure!");
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_SERVICE_DIED, "unwrap failure");
+        return result;
+    }
+
+    bool enable = false;
+    if (napi_get_value_bool(env, argv[PARAM0], &enable) != napi_ok) {
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID, "input param is invalid");
+        return result;
+    }
+
+    int32_t ret = audioHapticPlayerNapi->audioHapticPlayer_->EnableHapticsInSilentMode(enable);
+    if (ret == NAPI_ERR_OPERATE_NOT_ALLOWED) {
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_OPERATE_NOT_ALLOWED, "operate not allowed");
+        return result;
+    }
+    return result;
+}
+
 napi_value AudioHapticPlayerNapi::IsMuted(napi_env env, napi_callback_info info)
 {
     napi_value result = nullptr;
@@ -199,6 +264,49 @@ bool AudioHapticPlayerNapi::IsLegalAudioHapticType(int32_t audioHapticType)
     return false;
 }
 
+bool AudioHapticPlayerNapi::IsLegalVolumeOrIntensity(double number)
+{
+    return number >= 0.0 && number <= 1.0;
+}
+
+bool AudioHapticPlayerNapi::JudgeVolume(napi_env env, std::unique_ptr<VolumeContext>& asyncContext)
+{
+    napi_valuetype valueType = napi_undefined;
+    napi_typeof(env, asyncContext->argv[PARAM0], &valueType);
+    double volume = -1.00;
+    if (valueType == napi_number) {
+        napi_get_value_double(env, asyncContext->argv[PARAM0], &volume);
+    }
+    if (!IsLegalVolumeOrIntensity(volume)) {
+        MEDIA_LOGE("SetVolume: the param is invalid");
+        AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred,
+            NAPI_ERR_PARAM_OUT_OF_RANGE, "The value ranges from 0.00 to 1.00");
+        return false;
+    }
+
+    asyncContext->volume = static_cast<float>(std::round(volume * PRECISION) / PRECISION);
+    return true;
+}
+
+bool AudioHapticPlayerNapi::JudgeIntensity(napi_env env, std::unique_ptr<VibrationContext>& asyncContext)
+{
+    napi_valuetype valueType = napi_undefined;
+    napi_typeof(env, asyncContext->argv[PARAM0], &valueType);
+    double intensity = -1.00;
+    if (valueType == napi_number) {
+        napi_get_value_double(env, asyncContext->argv[PARAM0], &intensity);
+    }
+    if (!IsLegalVolumeOrIntensity(intensity)) {
+        MEDIA_LOGE("SetIntensity: the param is invalid");
+        AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred,
+            NAPI_ERR_PARAM_OUT_OF_RANGE, "The value ranges from 0.00 to 1.00");
+        return false;
+    }
+
+    asyncContext->intensity = static_cast<float>(std::round(intensity * PRECISION) / PRECISION);
+    return true;
+}
+
 void AudioHapticPlayerNapi::CommonAsyncCallbackComp(napi_env env, napi_status status, void *data)
 {
     auto context = static_cast<AudioHapticPlayerAsyncContext *>(data);
@@ -224,6 +332,165 @@ void AudioHapticPlayerNapi::CommonAsyncCallbackComp(napi_env env, napi_status st
 
     delete context;
     context = nullptr;
+}
+
+napi_value AudioHapticPlayerNapi::SetHapticsIntensity(napi_env env, napi_callback_info info)
+{
+    std::unique_ptr<VibrationContext> asyncContext = std::make_unique<VibrationContext>();
+    napi_value promise = nullptr;
+    if (!AudioHapticCommonNapi::InitPromiseFunc(env, info, asyncContext.get(), &promise, ARGS_ONE)) {
+        return promise;
+    }
+    if (!AudioHapticCommonNapi::VerifySelfSystemPermission()) {
+        AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred,
+            NAPI_ERR_PERMISSION_DENIED, NAPI_ERR_PERMISSION_DENIED_INFO);
+        return promise;
+    }
+    if (!JudgeIntensity(env, asyncContext)) {
+        return promise;
+    }
+
+    napi_value funcName = nullptr;
+    napi_create_string_utf8(env, "SetVibrationIntensity", NAPI_AUTO_LENGTH, &funcName);
+    napi_status status = napi_create_async_work(env, nullptr, funcName,
+        [](napi_env env, void *data) {
+            auto context = static_cast<VibrationContext*>(data);
+            AudioHapticPlayerNapi* object = reinterpret_cast<AudioHapticPlayerNapi*>(context->objectInfo);
+            if (object == nullptr || object->audioHapticPlayer_ == nullptr) {
+                context->result = NAPI_ERR_SERVICE_DIED;
+            } else {
+                context->result = object->audioHapticPlayer_->SetHapticIntensity(context->intensity * PRECISION);
+            }
+        },
+        [](napi_env env, napi_status status, void *data) {
+            auto context = static_cast<VibrationContext*>(data);
+            if (context->deferred) {
+                if (context->result == 0) {
+                    napi_value result;
+                    napi_get_undefined(env, &result);
+                    napi_resolve_deferred(env, context->deferred, result);
+                } else {
+                    AudioHapticCommonNapi::PromiseReject(env, context->deferred,
+                        context->result, "Failed to set SetVibrationIntensity");
+                }
+            }
+            napi_delete_async_work(env, context->work);
+            delete context;
+            context = nullptr;
+        }, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+    if (status != napi_ok) {
+        AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred, status, "Failed to get create async work");
+    } else {
+        napi_queue_async_work(env, asyncContext->work);
+        asyncContext.release();
+    }
+
+    return promise;
+}
+
+napi_value AudioHapticPlayerNapi::SetVolume(napi_env env, napi_callback_info info)
+{
+    std::unique_ptr<VolumeContext> asyncContext = std::make_unique<VolumeContext>();
+    napi_value promise = nullptr;
+    if (!AudioHapticCommonNapi::InitPromiseFunc(env, info, asyncContext.get(), &promise, ARGS_ONE)) {
+        return promise;
+    }
+
+    if (!JudgeVolume(env, asyncContext)) {
+        return promise;
+    }
+
+    napi_value funcName = nullptr;
+    napi_create_string_utf8(env, "SetVolume", NAPI_AUTO_LENGTH, &funcName);
+    napi_status status = napi_create_async_work(
+        env,
+        nullptr,
+        funcName,
+        [](napi_env env, void *data) {
+            auto context = static_cast<VolumeContext*>(data);
+            AudioHapticPlayerNapi* object = reinterpret_cast<AudioHapticPlayerNapi*>(context->objectInfo);
+
+            context->result = object->audioHapticPlayer_->SetVolume(context->volume);
+        },
+        [](napi_env env, napi_status status, void *data) {
+            auto context = static_cast<VolumeContext*>(data);
+            if (context->deferred) {
+                if (context->result == 0) {
+                    napi_value result;
+                    napi_get_undefined(env, &result);
+                    napi_resolve_deferred(env, context->deferred, result);
+                } else {
+                    AudioHapticCommonNapi::PromiseReject(env, context->deferred,
+                        context->result, "Failed to set volume");
+                }
+            }
+            napi_delete_async_work(env, context->work);
+            delete context;
+            context = nullptr;
+        },
+        static_cast<void*>(asyncContext.get()),
+        &asyncContext->work);
+    if (status != napi_ok) {
+        MEDIA_LOGE("Start: Failed to get create async work");
+        AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred,
+            status, "Failed to get create async work");
+    } else {
+        napi_queue_async_work(env, asyncContext->work);
+        asyncContext.release();
+    }
+
+    return promise;
+}
+
+napi_value AudioHapticPlayerNapi::SetLoop(napi_env env, napi_callback_info info)
+{
+    std::unique_ptr<LoopContext> asyncContext = std::make_unique<LoopContext>();
+    napi_value promise = nullptr;
+    if (!AudioHapticCommonNapi::InitPromiseFunc(env, info, asyncContext.get(), &promise, ARGS_ONE)) {
+        return promise;
+    }
+
+    if (napi_get_value_bool(env, asyncContext->argv[PARAM0], &asyncContext->loop) != napi_ok) {
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID, "input param is invalid");
+        return promise;
+    }
+
+    napi_value funcName = nullptr;
+    napi_create_string_utf8(env, "SetLoop", NAPI_AUTO_LENGTH, &funcName);
+    napi_status status = napi_create_async_work(env, nullptr, funcName,
+        [](napi_env env, void *data) {
+            auto context = static_cast<LoopContext*>(data);
+            AudioHapticPlayerNapi* object = reinterpret_cast<AudioHapticPlayerNapi*>(context->objectInfo);
+            if (object != nullptr && object->audioHapticPlayer_ != nullptr) {
+                context->result = object->audioHapticPlayer_->SetLoop(context->loop);
+            }
+        },
+        [](napi_env env, napi_status status, void *data) {
+            auto context = static_cast<LoopContext*>(data);
+            if (context->deferred) {
+                if (context->result == 0) {
+                    napi_value result;
+                    napi_get_undefined(env, &result);
+                    napi_resolve_deferred(env, context->deferred, result);
+                } else {
+                    AudioHapticCommonNapi::PromiseReject(env, context->deferred,
+                        context->result, "Failed to set volume");
+                }
+            }
+            napi_delete_async_work(env, context->work);
+            delete context;
+            context = nullptr;
+        }, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+    if (status != napi_ok) {
+        MEDIA_LOGE("Start: Failed to get create async work");
+        AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred,
+            status, "Failed to get create async work");
+    } else {
+        napi_queue_async_work(env, asyncContext->work);
+        asyncContext.release();
+    }
+
+    return promise;
 }
 
 napi_value AudioHapticPlayerNapi::Start(napi_env env, napi_callback_info info)

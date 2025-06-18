@@ -21,7 +21,7 @@
 #include "media_data_source_test_seekable.h"
 #include "loader_callback_mock.h"
 #include "unittest_log.h"
-#include "window.h"
+#include "wm/window.h"
 
 namespace OHOS {
 namespace Media {
@@ -67,6 +67,7 @@ protected:
     int32_t seekPosition_;
     bool seekDoneFlag_;
     bool speedDoneFlag_;
+    bool rateDoneFlag_ = false;
     bool trackDoneFlag_ = false;
     bool trackChange_ = false;
     bool trackInfoUpdate_ = false;
@@ -82,6 +83,7 @@ protected:
     std::condition_variable condVarStop_;
     std::condition_variable condVarReset_;
     std::condition_variable condVarSeek_;
+    std::condition_variable condVarRate_;
     std::condition_variable condVarSpeed_;
     std::condition_variable condVarTrackDone_;
     std::condition_variable condVarTrackInfoUpdate_;
@@ -96,6 +98,7 @@ public:
     void Notify(PlayerStates currentState);
     void SetSeekDoneFlag(bool seekDoneFlag);
     void SetSpeedDoneFlag(bool speedDoneFlag);
+    void SetRateDoneFlag(bool rateDoneFlag);
     void SetSeekPosition(int32_t seekPosition);
     void SetState(PlayerStates state);
     void SetTrackDoneFlag(bool trackDoneFlag);
@@ -106,6 +109,7 @@ public:
     int32_t ResetSync();
     int32_t SeekSync();
     int32_t SpeedSync();
+    int32_t RateSync();
     int32_t TrackSync(bool &trackChange);
     int32_t TrackInfoUpdateSync();
     std::string SubtitleTextUpdate(std::string text);
@@ -147,6 +151,7 @@ public:
     int32_t GetDuration(int32_t &duration);
     int32_t SetPlaybackSpeed(PlaybackRateMode mode);
     int32_t GetPlaybackSpeed(PlaybackRateMode &mode);
+    int32_t SetPlaybackRate(float rate);
     int32_t SelectBitRate(uint32_t bitRate);
     bool IsPlaying();
     bool IsLooping();
@@ -171,7 +176,9 @@ public:
     int32_t SetVolumeMode(int32_t mode);
     int32_t SetSuperResolution(bool enabled);
     int32_t SetVideoWindowSize(int32_t width, int32_t height);
+    int32_t EnableReportMediaProgress(bool enable);
     void ReleaseClientListener();
+    int32_t EnableReportAudioInterrupt(bool enable);
 private:
     void SeekPrepare(int32_t &mseconds, PlayerSeekMode &mode);
     std::shared_ptr<Player> player_ = nullptr;

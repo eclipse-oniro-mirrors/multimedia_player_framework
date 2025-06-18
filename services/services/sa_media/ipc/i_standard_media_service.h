@@ -20,6 +20,7 @@
 #include "iremote_broker.h"
 #include "iremote_proxy.h"
 #include "iremote_stub.h"
+#include <set>
 
 namespace OHOS {
 namespace Media {
@@ -63,6 +64,21 @@ public:
      * Release the proxy object monitoring client process.
      */
     virtual void ReleaseClientListener() = 0;
+
+    /**
+     * Release the proxy object monitoring client process.
+     */
+    virtual bool CanKillMediaService() = 0;
+
+    /**
+     * Get pid vector of players.
+     */
+    virtual std::vector<pid_t> GetPlayerPids() = 0;
+
+    virtual int32_t FreezeStubForPids(const std::set<int32_t> &pidList, bool isProxy) = 0;
+
+    virtual int32_t ResetAllProxy() = 0;
+
     /**
      * IPC code ID
      */
@@ -70,6 +86,10 @@ public:
         GET_SUBSYSTEM = 0,
         GET_SUBSYSTEM_ASYNC = 1,
         RELEASE_CLIENT_LISTENER = 2,
+        CAN_KILL_MEDIA_SERVICE = 3,
+        GET_PLAYER_PIDS = 4,
+        FREEZE = 5,
+        RESET_ALL_PROXY = 6,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardMediaService");

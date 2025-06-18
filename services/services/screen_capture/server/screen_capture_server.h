@@ -98,6 +98,8 @@ public:
     void Release() override;
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
     int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) override;
+    int32_t UpdateSurface(sptr<Surface> surface) override;
+    int32_t SetCaptureArea(uint64_t displayId, OHOS::Rect area) override;
 
     void SetSessionId(int32_t sessionId);
     int32_t OnReceiveUserPrivacyAuthority(bool isAllowed);
@@ -107,10 +109,6 @@ public:
     int32_t TelCallAudioStateUpdated(bool isInTelCallAudio);
 #endif
     void UpdateMicrophoneEnabled();
-
-    int32_t AcquireAudioBufferMix(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
-        std::shared_ptr<AudioBuffer> &micAudioBuffer, AVScreenCaptureMixMode type);
-    int32_t ReleaseAudioBufferMix(AVScreenCaptureMixMode type);
     int32_t ReleaseMicAudioBuffer();
     int32_t ReleaseInnerAudioBuffer();
     int32_t GetInnerAudioCaptureBufferSize(size_t &size);
@@ -126,12 +124,29 @@ public:
     int32_t GetAppUid();
     void NotifyStateChange(AVScreenCaptureStateCode stateCode);
     void NotifyDisplaySelected(uint64_t displayId);
+    void NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area);
+    void NotifyUserSelected(ScreenCaptureUserSelectionInfo selectionInfo);
     int32_t SetAndCheckAppInfo(OHOS::AudioStandard::AppInfo &appInfo);
     void SetSCServerSaUid(int32_t saUid);
     int32_t GetSCServerSaUid();
     DataType GetSCServerDataType();
     AVScreenCaptureState GetSCServerCaptureState();
-
+    bool IsSCRecorderFileWithVideo();
+    std::shared_ptr<AudioCapturerWrapper> GetInnerAudioCapture();
+    std::shared_ptr<AudioCapturerWrapper> GetMicAudioCapture();
+    bool IsStopAcquireAudioBufferFlag();
+    bool IsMicrophoneSwitchTurnOn();
+    bool IsMicrophoneCaptureRunning();
+    bool IsInnerCaptureRunning();
+    void SetInnerAudioCapture(std::shared_ptr<AudioCapturerWrapper> innerAudioCapture);
+    int32_t StopInnerAudioCapture();
+    void SetWindowIdList(uint64_t windowId);
+    std::vector<int32_t> GetWindowIdList();
+    void OnSceneSessionManagerDied(const wptr<IRemoteObject>& remote);
+    void SetDefaultDisplayIdOfWindows();
+    uint64_t GetDefaultDisplayId();
+    void SetCurDisplayId(uint64_t displayId);
+    uint64_t GetCurDisplayId();
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
     int32_t RegisterServerCallbacks();
@@ -141,6 +156,8 @@ private:
     void PostStartScreenCapture(bool isSuccess);
     void PostStartScreenCaptureSuccessAction();
     int32_t InitRecorderInfo(std::shared_ptr<IRecorderService> &recorder, AudioCaptureInfo audioInfo);
+    int32_t InitRecorderMix();
+    int32_t InitRecorderInner();
     int32_t InitRecorder();
     int32_t StartScreenCaptureFile();
     int32_t StartScreenCaptureStream();
@@ -149,7 +166,6 @@ private:
     int32_t StartStreamInnerAudioCapture();
     int32_t StartStreamMicAudioCapture();
     int32_t StartFileInnerAudioCapture();
-    int32_t StopInnerAudioCapture();
     int32_t StartFileMicAudioCapture();
     int32_t StartMicAudioCapture();
     int32_t StopMicAudioCapture();
@@ -234,10 +250,19 @@ private:
 #endif
     bool DestroyPopWindow();
     void StopNotStartedScreenCapture(AVScreenCaptureStateCode stateCode);
+    int32_t RegisterWindowLifecycleListener(std::vector<int32_t> windowIdList);
+    int32_t UnRegisterWindowLifecycleListener();
+    int32_t RegisterWindowInfoChangedListener();
+    int32_t UnRegisterWindowInfoChangedListener();
+    int32_t RegisterWindowRelatedListener();
+    int32_t SetCaptureAreaInner(uint64_t displayId, OHOS::Rect area);
+    bool CheckDisplayArea(uint64_t displayId, OHOS::Rect area);
+    void PrepareUserSelectionInfo(ScreenCaptureUserSelectionInfo &selectionInfo);
 
 private:
     std::mutex mutex_;
     std::mutex cbMutex_;
+    std::mutex inCallMutex_;
     std::shared_ptr<ScreenCaptureObserverCallBack> screenCaptureObserverCb_ = nullptr;
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
     bool canvasRotation_ = false;
@@ -248,6 +273,8 @@ private:
     bool checkBoxSelected_ = false;
     std::vector<uint64_t> surfaceIdList_ = {};
     std::vector<uint8_t> surfaceTypeList_ = {};
+    bool stopAcquireAudioBufferFromAudio_ = false;
+    AVScreenCaptureMixMode recorderFileAudioType_ = AVScreenCaptureMixMode::INVALID_MODE;
 
     int32_t sessionId_ = 0;
     int32_t notificationId_ = 0;
@@ -273,11 +300,19 @@ private:
     ScreenId virtualScreenId_ = SCREEN_ID_INVALID;
     ScreenId displayScreenId_ = SCREEN_ID_INVALID;
     std::vector<uint64_t> missionIds_;
+    std::vector<int32_t> windowIdList_ = {};
+    ScreenId curWindowInDisplayId_ = SCREEN_ID_INVALID;
     ScreenCaptureContentFilter contentFilter_;
     AVScreenCaptureState captureState_ = AVScreenCaptureState::CREATED;
     std::shared_ptr<NotificationLocalLiveViewContent> localLiveViewContent_;
     int64_t startTime_ = 0;
     sptr<UIExtensionAbilityConnection> connection_ = nullptr;
+    sptr<SCWindowLifecycleListener> windowLifecycleListener_ = nullptr;
+    sptr<SCDeathRecipientListener> lifecycleListenerDeathRecipient_ = nullptr;
+    sptr<SCWindowInfoChangedListener> windowInfoChangedListener_ = nullptr;
+    bool isRegionCapture_ = false;
+    uint64_t regionDisplayId_ = 0;
+    OHOS::Rect regionArea_ = {0, 0, 0, 0};
 
     /* used for CAPTURE STREAM */
     sptr<IBufferConsumerListener> surfaceCb_ = nullptr;
@@ -307,7 +342,7 @@ private:
     std::atomic<bool> isInTelCall_ = false;
     std::atomic<bool> isInTelCallAudio_ = false;
 #endif
-
+    std::atomic<bool> recorderFileWithVideo_{false};
 private:
     static int32_t CheckAudioCapParam(const AudioCaptureInfo &audioCapInfo);
     static int32_t CheckVideoCapParam(const VideoCaptureInfo &videoCapInfo);
@@ -334,6 +369,11 @@ private:
     static constexpr int32_t AV_SCREEN_CAPTURE_SESSION_UID = 1013;
     static constexpr const char* NOTIFICATION_SCREEN_RECORDING_TITLE_ID = "notification_screen_recording_title";
     static constexpr const char* QUOTATION_MARKS_STRING = "\"";
+    static constexpr int64_t MAX_INNER_AUDIO_TIMEOUT_IN_NS = 2000000000; // 2s
+    static constexpr int64_t AUDIO_INTERVAL_IN_NS = 20000000; // 20ms
+    static constexpr int64_t NEG_AUDIO_INTERVAL_IN_NS = -20000000; // 20ms
+    static constexpr int32_t SELECT_TYPE_SCREEN = 0;
+    static constexpr int32_t SELECT_TYPE_WINDOW = 1;
 };
 } // namespace Media
 } // namespace OHOS

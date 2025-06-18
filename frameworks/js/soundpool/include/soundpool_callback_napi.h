@@ -30,6 +30,7 @@ namespace SoundPoolEvent {
     const std::string EVENT_PLAY_FINISHED = "playFinished";
     const std::string EVENT_PLAY_FINISHED_WITH_STREAM_ID = "playFinishedWithStreamId";
     const std::string EVENT_ERROR = "error";
+    const std::string EVENT_ERROR_OCCURRED = "errorOccurred";
 }
 
 class SoundPoolCallBackNapi : public ISoundPoolCallback {
@@ -40,6 +41,7 @@ public:
     void CancelCallbackReference(const std::string &name);
     void ClearCallbackReference();
     void SendErrorCallback(int32_t errCode, const std::string &msg);
+    void SendErrorOccurredCallback(const Format &errorInfo);
     void SendLoadCompletedCallback(int32_t soundId);
     void SendPlayCompletedCallback(int32_t streamID);
 
@@ -47,12 +49,14 @@ protected:
     void OnLoadCompleted(int32_t soundId) override;
     void OnPlayFinished(int32_t streamID) override;
     void OnError(int32_t errorCode) override;
+    void OnErrorOccurred(Format &errorInfo) override;
 
 private:
     struct SoundPoolJsCallBack {
-        void RunJsErrorCallBackTask(int status, SoundPoolJsCallBack *event);
-        void RunJsloadCompletedCallBackTask(int status, SoundPoolJsCallBack *event);
-        void RunJsplayCompletedCallBackTask(int status, SoundPoolJsCallBack *event);
+        void RunJsErrorCallBackTask(SoundPoolJsCallBack *event);
+        void RunJsErrorOccurredCallBackTask(SoundPoolJsCallBack *event);
+        void RunJsloadCompletedCallBackTask(SoundPoolJsCallBack *event);
+        void RunJsplayCompletedCallBackTask(SoundPoolJsCallBack *event);
         
         std::weak_ptr<AutoRef> autoRef;
         std::string callbackName = "unknown";
@@ -61,10 +65,14 @@ private:
         int32_t reason = 1;
         int32_t loadSoundId = 0;
         int32_t playFinishedStreamID = 0;
+        ERROR_TYPE errorType = ERROR_TYPE::LOAD_ERROR;
     };
     void OnJsErrorCallBack(SoundPoolJsCallBack *jsCb) const;
+    void OnJsErrorOccurredCallBack(SoundPoolJsCallBack *jsCb) const;
     void OnJsloadCompletedCallBack(SoundPoolJsCallBack *jsCb) const;
     void OnJsplayCompletedCallBack(SoundPoolJsCallBack *jsCb) const;
+    int32_t GetExternalErrorCode(int32_t internalCode);
+    std::string GetErrorMsg(int32_t errorCode);
     napi_env env_ = nullptr;
     std::mutex mutex_;
     std::map<std::string, std::weak_ptr<AutoRef>> refMap_;

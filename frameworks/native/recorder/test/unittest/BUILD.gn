@@ -14,7 +14,7 @@
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
-module_output_path = "player_framework/player_framework_ScreenCapture"
+module_output_path = "player_framework/ScreenCapture/recorder"
 
 ohos_unittest("recorder_unit_test") {
   module_out_path = module_output_path
@@ -44,7 +44,6 @@ ohos_unittest("recorder_unit_test") {
   }
 
   deps = [
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
   ]
 
@@ -61,10 +60,15 @@ ohos_unittest("recorder_unit_test") {
     "access_token:libnativetoken_shared",
     "access_token:libtokensetproc_shared",
     "c_utils:utils",
+    "drivers_interface_display:libdisplay_composer_proxy_1.0",
+    "drivers_interface_display:libdisplay_composer_proxy_1.1",
     "drivers_interface_display:libdisplay_composer_proxy_1.2",
+    "drivers_interface_display:libhdifd_parcelable",
+    "graphic_2d:librender_service_client",
     "graphic_surface:surface",
     "graphic_surface:sync_fence",
     "hilog:libhilog",
+    "graphic_2d:librender_service_client",
   ]
 
   if (defined(global_parts_info) &&

@@ -41,6 +41,12 @@ static const std::map<std::string, AudioHapticType> audioHapticTypeMap = {
     {"AUDIO_HAPTIC_TYPE_HAPTIC", AUDIO_HAPTIC_TYPE_HAPTIC}
 };
 
+struct RegisterFromFdContext : public AsyncContext {
+    AudioHapticFileDescriptor audioFd;
+    AudioHapticFileDescriptor hapticFd;
+    int32_t sourceID;
+};
+
 class AudioHapticManagerNapi {
 public:
     static napi_value Init(napi_env env, napi_value exports);
@@ -58,6 +64,8 @@ private:
 
     static napi_value RegisterSource(napi_env env, napi_callback_info info);
     static void AsyncRegisterSource(napi_env env, void *data);
+    static napi_value RegisterSourceFromFd(napi_env env, napi_callback_info info);
+    static void AsyncRegisterSourceFromFd(napi_env env, void *data);
     static napi_value UnregisterSource(napi_env env, napi_callback_info info);
     static napi_value SetAudioLatencyMode(napi_env env, napi_callback_info info);
     static napi_value SetStreamUsage(napi_env env, napi_callback_info info);
@@ -65,11 +73,14 @@ private:
     static void AsyncCreatePlayer(napi_env env, void *data);
 
     static void RegisterSourceAsyncCallbackComp(napi_env env, napi_status status, void *data);
+    static void RegisterSourceFromFdAsyncCallbackComp(napi_env env, napi_status status, void *data);
     static void UnregisterSourceAsyncCallbackComp(napi_env env, napi_status status, void *data);
     static void CreatePlayerAsyncCallbackComp(napi_env env, napi_status status, void *data);
 
     static bool IsLegalAudioLatencyMode(int32_t latencyMode);
     static bool IsLegalAudioStreamUsage(int32_t streamUsage);
+    static int32_t GetAudioHapticFileDescriptorValue(napi_env env, napi_value object,
+        AudioHapticFileDescriptor& audioHapticFd);
 
     static thread_local napi_ref sConstructor_;
     static thread_local napi_ref sAudioLatencyMode_;

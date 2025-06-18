@@ -58,13 +58,8 @@ bool InCallObserver::IsInCall(bool refreshState)
     if (refreshState) {
         UnRegisterObserver();
         RegisterObserver();
-        std::shared_ptr<OHOS::Telephony::CallManagerClient> callManagerClientPtr =
-            DelayedSingleton<OHOS::Telephony::CallManagerClient>::GetInstance();
-        if (inCall_.load() && !callManagerClientPtr->HasCall()) {
-            MEDIA_LOGI("0x%{public}06" PRIXPTR " not in call", FAKE_POINTER(this));
-            OnCallStateUpdated(false); // for call crash scene
-        }
     }
+    MEDIA_LOGI("InCallObserver is inCall: %{public}d", inCall_.load());
     return inCall_.load();
 }
 
@@ -155,16 +150,14 @@ bool InCallObserver::RegisterObserver()
     MEDIA_LOGI("InCallObserver Register InCall Listener");
     std::unique_lock<std::mutex> lock(mutex_);
     bool ret = false;
-    for (int slotId = 0; slotId < SIM_SLOT_COUNT; slotId++) {
-        MEDIA_LOGI("InCallObserver Register Listener slotId:%{public}d", slotId);
-        auto telephonyObserver_ = std::make_unique<MediaTelephonyListener>().release();
-        auto res = TelephonyObserverClient::GetInstance().AddStateObserver(telephonyObserver_, slotId,
-            TelephonyObserverBroker::OBSERVER_MASK_CALL_STATE, true);
-        MEDIA_LOGI("InCallObserver Register  Listener observer ret:%{public}d", res);
-        if (res == OHOS::Telephony::TELEPHONY_SUCCESS) {
-            ret = true;
-            mediaTelephonyListeners_.push_back(telephonyObserver_);
-        }
+    auto telephonyObserver_ = std::make_unique<MediaTelephonyListener>().release();
+    auto observerRes = TelephonyObserverClient::GetInstance().AddStateObserver(telephonyObserver_, -1,
+        TelephonyObserverBroker::OBSERVER_MASK_CALL_STATE, true);
+    if (observerRes == OHOS::Telephony::TELEPHONY_SUCCESS) {
+        ret = true;
+        mediaTelephonyListeners_.push_back(telephonyObserver_);
+    } else {
+        MEDIA_LOGI("InCallObserver Register Listener observer ret:%{public}d", observerRes);
     }
     return ret;
 }
@@ -173,11 +166,8 @@ void InCallObserver::UnRegisterObserver()
 {
     MEDIA_LOGI("UnRegister InCall Listener");
     std::unique_lock<std::mutex> lock(mutex_);
-    for (int slotId = 0; slotId < SIM_SLOT_COUNT; slotId++) {
-        MEDIA_LOGI("UnRegister Listener slotId:%{public}d", slotId);
-        TelephonyObserverClient::GetInstance().RemoveStateObserver(slotId,
-            TelephonyObserverBroker::OBSERVER_MASK_CALL_STATE);
-    }
+    TelephonyObserverClient::GetInstance().RemoveStateObserver(-1,
+        TelephonyObserverBroker::OBSERVER_MASK_CALL_STATE);
     mediaTelephonyListeners_.clear();
 }
 }

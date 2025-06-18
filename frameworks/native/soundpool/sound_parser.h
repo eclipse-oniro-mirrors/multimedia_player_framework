@@ -38,6 +38,7 @@
 namespace OHOS {
 namespace Media {
 using namespace MediaAVCodec;
+struct AudioBufferEntry;
 
 class SoundDecoderCallback : public AVCodecCallback, public NoCopyable {
 public:
@@ -78,7 +79,7 @@ public:
         std::shared_ptr<AVSharedMemory> buffer) override;
 
     int32_t SetCallback(const std::shared_ptr<ISoundPoolCallback> &callback);
-    void ReCombineCacheData();
+    int32_t ReCombineCacheData();
     int32_t Release();
 
 private:

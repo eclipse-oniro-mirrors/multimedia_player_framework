@@ -117,6 +117,7 @@ public:
     static constexpr std::string_view PLAYER_IS_LIVE_STREAM = "is_live_stream";
     static constexpr std::string_view PLAYER_SEEK_POSITION = "seek_done";
     static constexpr std::string_view PLAYER_PLAYBACK_SPEED = "speed_done";
+    static constexpr std::string_view PLAYER_PLAYBACK_RATE = "rate_done";
     static constexpr std::string_view PLAYER_BITRATE_DONE = "bitrate_done";
     static constexpr std::string_view PLAYER_CURRENT_POSITION = "current_position";
     static constexpr std::string_view PLAYER_DURATION = "duration";
@@ -165,6 +166,7 @@ public:
     static constexpr std::string_view AUDIO_MAX_AMPLITUDE = "max_amplitude";
     static constexpr std::string_view SEI_PLAYBACK_POSITION = "sei_playbackPosition";
     static constexpr std::string_view SUPER_RESOLUTION_ENABLED = "super_resolution_enabled";
+    static constexpr std::string_view PLAYER_AUDIO_HAPTICS_SYNC_ID = "audio_haptic_sync_id";
 };
 
 class PlaybackInfoKey {
@@ -217,6 +219,8 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_SEEKDONE = 1,
     /* return the message when speeding done. */
     INFO_TYPE_SPEEDDONE,
+    /* return the message when speeding done. */
+    INFO_TYPE_RATEDONE,
     /* return the message when select bitrate done */
     INFO_TYPE_BITRATEDONE,
     /* return the message when playback is end of steam. */
@@ -304,6 +308,7 @@ enum PlayerStates : int32_t {
     PLAYER_PLAYBACK_COMPLETE = 8,
     /* released states */
     PLAYER_RELEASED = 9,
+    PLAYER_FROZEN = 10,
 };
 
 enum PlaybackRateMode : int32_t {
@@ -333,6 +338,12 @@ enum PlaybackRateMode : int32_t {
     SPEED_FORWARD_1_20_X = 100, // flv live quick play, internal value, not open to northbound
 };
 
+enum PlayerProducer : int32_t {
+    INNER = 0,
+    CAPI,
+    NAPI
+};
+
 class PlayerCallback {
 public:
     virtual ~PlayerCallback() = default;
@@ -352,6 +363,16 @@ public:
      * @param errorMsg Error message.
      */
     virtual void OnError(int32_t errorCode, const std::string &errorMsg) = 0;
+
+    virtual void SetFreezeFlag(bool isFrozen)
+    {
+        (void)isFrozen;
+    }
+
+    virtual void SetInterruptListenerFlag(bool isRegistered)
+    {
+        (void)isRegistered;
+    }
 };
 
 class Player {
@@ -623,6 +644,15 @@ public:
     virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode) = 0;
 
     /**
+     * @brief set the player playback rate
+     *
+     * @param rate the rate which can set.
+     * @return Returns {@link MSERR_OK} if the playback rate is set successful; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     */
+    virtual int32_t SetPlaybackRate(float rate) = 0;
+
+    /**
      * @brief get the current player playback rate
      *
      * @param mode the rate mode {@link PlaybackRateMode} which can get.
@@ -882,6 +912,26 @@ public:
         (void)mode;
         return 0;
     }
+
+    /**
+     * @brief Set playback start position and end position.
+     * Use the specified seek mode to jump to the playback start position,
+     * currently support SEEK_PREVIOUS_SYNC and SEEK_CLOSEST,
+     * other values are invalid, the default value is SEEK_PREVIOUS_SYNC.
+     * This function must be called after {@link SetSource}.
+     *
+     * @return Returns {@link MSERR_OK} if the single display is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 6.0
+     * @version 6.0
+     */
+    virtual int32_t SetPlayRangeUsWithMode(int64_t start, int64_t end, PlayerSeekMode mode = SEEK_PREVIOUS_SYNC)
+    {
+        (void)start;
+        (void)end;
+        (void)mode;
+        return 0;
+    }
     
     /**
      * @brief set get device change callback status.
@@ -981,6 +1031,82 @@ public:
         (void)height;
         return 0;
     }
+
+    /**
+     * @brief Enables or disables the report of media progress.
+     *
+     * @param enable Indicates whether to enable the report of media progress.
+     * @return Returns {@link MSERR_OK} if the report of media progress is enabled or disabled; returns an error code
+     * defined in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t EnableReportMediaProgress(bool enable)
+    {
+        (void)enable;
+        return 0;
+    }
+    
+    /**
+     * @brief Enables or disables the report of audio interrupt during frozen state.
+     *
+     * @param enable Indicates whether to enable the report of audio interrupt during frozen state.
+     * @return Returns {@link MSERR_OK} if the report of audio interrupt is enabled or disabled; returns an error code
+     * defined in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t EnableReportAudioInterrupt(bool enable)
+    {
+        (void)enable;
+        return 0;
+    }
+
+    /**
+     * @brief Set Start Frame Rate Opt Enabled.
+     *
+     * @return Returns {@link MSERR_OK} if enabled is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetStartFrameRateOptEnabled(bool enabled)
+    {
+        (void)enabled;
+        return 0;
+    }
+
+    /**
+     * @brief Set video reopen fd.
+     *
+     * @return Returns {@link MSERR_OK} if video reopen fd is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetReopenFd(int32_t fd)
+    {
+        (void)fd;
+        return 0;
+    }
+ 
+    /**
+     * @brief Enable or disable camera post processor.
+     *
+     * @return Returns {@link MSERR_OK} if enable camera post processor is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t EnableCameraPostprocessing()
+    {
+        return 0;
+    }
+
+    virtual int32_t ForceLoadVideo(bool /* status */)
+    {
+        return 0;
+    }
 };
 
 class __attribute__((visibility("default"))) PlayerFactory {
@@ -990,9 +1116,17 @@ public:
     {
         return nullptr;
     }
+
+    static std::shared_ptr<Player> CreatePlayer(const PlayerProducer producer)
+    {
+        return nullptr;
+    }
 #else
     static std::shared_ptr<Player> CreatePlayer();
+
+    static std::shared_ptr<Player> CreatePlayer(const PlayerProducer producer);
 #endif
+    static std::vector<pid_t> GetPlayerPids();
 private:
     PlayerFactory() = default;
     ~PlayerFactory() = default;

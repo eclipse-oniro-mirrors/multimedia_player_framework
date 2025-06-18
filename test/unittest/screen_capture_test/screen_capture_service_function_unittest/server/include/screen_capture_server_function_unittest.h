@@ -48,6 +48,8 @@ public:
     int32_t SetScreenCaptureObserver();
     int32_t StartFileAudioCapture(AVScreenCaptureMixMode mixMode);
     int32_t StartStreamAudioCapture();
+    void SetSCInnerAudioCaptureAndPushData(std::shared_ptr<AudioBuffer> innerAudioBuffer);
+    void SetSCMicAudioCaptureAndPushData(std::shared_ptr<AudioBuffer> micAudioBuffer);
 
 protected:
     std::shared_ptr<ScreenCaptureServer> screenCaptureServer_;
@@ -118,6 +120,8 @@ public:
     void OnVideoBufferAvailable(bool isReady) {};
     void OnStateChange(AVScreenCaptureStateCode stateCode) {};
     void OnDisplaySelected(uint64_t displayId) {};
+    void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area) {};
+    void OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo) {};
 };
 
 class ScreenCaptureServerUnittestCallbackMock : public ScreenCaptureListenerCallback {
@@ -130,6 +134,8 @@ public:
     void OnVideoBufferAvailable(bool isReady);
     void OnStateChange(AVScreenCaptureStateCode stateCode);
     void OnDisplaySelected(uint64_t displayId);
+    void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area);
+    void OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo);
     void Stop();
 };
 } // Media

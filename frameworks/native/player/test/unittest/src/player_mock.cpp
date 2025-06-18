@@ -40,6 +40,11 @@ void PlayerCallbackTest::SetSpeedDoneFlag(bool speedDoneFlag)
     speedDoneFlag_ = speedDoneFlag;
 }
 
+void PlayerCallbackTest::SetRateDoneFlag(bool rateDoneFlag)
+{
+    rateDoneFlag_ = rateDoneFlag;
+}
+
 void PlayerCallbackTest::SetSeekPosition(int32_t seekPosition)
 {
     seekPosition_ = seekPosition;
@@ -136,6 +141,18 @@ int32_t PlayerCallbackTest::SpeedSync()
     return MSERR_OK;
 }
 
+int32_t PlayerCallbackTest::RateSync()
+{
+    if (rateDoneFlag_ == false) {
+        std::unique_lock<std::mutex> lockRate(mutexCond_);
+        condVarRate_.wait_for(lockRate, std::chrono::seconds(waitsecond));
+        if (rateDoneFlag_ == false) {
+            return -1;
+        }
+    }
+    return MSERR_OK;
+}
+
 int32_t PlayerCallbackTest::TrackSync(bool &trackChange)
 {
     if (trackDoneFlag_ == false) {
@@ -207,6 +224,10 @@ void PlayerCallbackTest::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
             state_ = static_cast<PlayerStates>(extra);
             SetState(state_);
             Notify(state_);
+            break;
+        case INFO_TYPE_RATEDONE:
+            SetRateDoneFlag(true);
+            condVarRate_.notify_all();
             break;
         case INFO_TYPE_SPEEDDONE:
             SetSpeedDoneFlag(true);
@@ -611,6 +632,17 @@ int32_t PlayerMock::GetPlaybackSpeed(PlaybackRateMode &mode)
     return player_->GetPlaybackSpeed(mode);
 }
 
+int32_t PlayerMock::SetPlaybackRate(float rate)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");
+    callback_->SetRateDoneFlag(false);
+    int32_t ret = player_->SetPlaybackRate(rate);
+    if (ret == MSERR_OK) {
+        return callback_->RateSync();
+    }
+    return player_->SetPlaybackRate(rate);
+}
+
 int32_t PlayerMock::SelectBitRate(uint32_t bitRate)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
@@ -804,6 +836,18 @@ int32_t PlayerMock::SetVideoWindowSize(int32_t width, int32_t height)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     return player_->SetVideoWindowSize(width, height);
+}
+
+int32_t PlayerMock::EnableReportMediaProgress(bool enable)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->EnableReportMediaProgress(enable);
+}
+
+int32_t PlayerMock::EnableReportAudioInterrupt(bool enable)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->EnableReportAudioInterrupt(enable);
 }
 
 void PlayerMock::ReleaseClientListener()

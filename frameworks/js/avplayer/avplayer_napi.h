@@ -48,6 +48,7 @@ const std::string EVENT_VOLUME_CHANGE = "volumeChange";
 const std::string EVENT_END_OF_STREAM = "endOfStream";
 const std::string EVENT_SEEK_DONE = "seekDone";
 const std::string EVENT_SPEED_DONE = "speedDone";
+const std::string EVENT_RATE_DONE = "playbackRateDone";
 const std::string EVENT_BITRATE_DONE = "bitrateDone";
 const std::string EVENT_TIME_UPDATE = "timeUpdate";
 const std::string EVENT_DURATION_UPDATE = "durationUpdate";
@@ -126,6 +127,10 @@ private:
      */
     static napi_value JsSetSpeed(napi_env env, napi_callback_info info);
     /**
+     * setPlaybackRate(rate: float): void
+     */
+    static napi_value JsSetPlaybackRate(napi_env env, napi_callback_info info);
+    /**
      * setVolume(vol: number): void
      */
     static napi_value JsSetVolume(napi_env env, napi_callback_info info);
@@ -197,6 +202,10 @@ private:
      */
     static napi_value JsGetPlaybackPosition(napi_env env, napi_callback_info info);
     /**
+     * readonly forceLoadVideo: boolean
+     */
+    static napi_value JsForceLoadVideo(napi_env env, napi_callback_info info);
+    /**
      * readonly duration: number
      */
     static napi_value JsGetDuration(napi_env env, napi_callback_info info);
@@ -253,6 +262,10 @@ private:
     static napi_value JsSetSuperResolution(napi_env env, napi_callback_info info);
 
     static napi_value JsSetVideoWindowSize(napi_env env, napi_callback_info info);
+
+    static napi_value JsSetStartFrameRateOptEnabled(napi_env env, napi_callback_info info);
+
+    static napi_value JsEnableCameraPostprocessing(napi_env env, napi_callback_info info);
 
     /**
      * getPlaybackInfo(): playbackInfo;
@@ -329,13 +342,16 @@ private:
     std::shared_ptr<TaskHandler<TaskRet>> SetMediaMutedTask(MediaType type, bool isMuted);
     std::shared_ptr<TaskHandler<TaskRet>> SetSuperResolutionTask(bool enabled);
     std::shared_ptr<TaskHandler<TaskRet>> SetVideoWindowSizeTask(int32_t width, int32_t height);
+    std::shared_ptr<TaskHandler<TaskRet>> EnableCameraPostprocessingTask();
     std::shared_ptr<TaskHandler<TaskRet>> EqueueSetPlayRangeTask(int32_t start, int32_t end, int32_t mode);
+    std::shared_ptr<TaskHandler<TaskRet>> ForceLoadVideoTask(bool status);
 
     std::string GetCurrentState();
     bool IsControllable();
     bool CanSetPlayRange();
     bool CanSetSuperResolution();
     bool IsVideoWindowSizeValid(int32_t width, int32_t height);
+    bool CanCameraPostprocessing();
     bool IsLiveSource() const;
     void EnqueueNetworkTask(const std::string url);
     void EnqueueFdTask(const int32_t fd);
@@ -351,8 +367,7 @@ private:
     void NotifyDrmInfoUpdated(const std::multimap<std::string, std::vector<uint8_t>> &infos) override;
     void StopTaskQue();
     void WaitTaskQueStop();
-    void MaxAmplitudeCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName);
-    void MaxAmplitudeCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName);
+    void HandleListenerStateChange(std::string callbackName, bool state);
     void DeviceChangeCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName);
     void DeviceChangeCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName);
     void SeiMessageCallbackOn(
@@ -367,12 +382,13 @@ private:
     void AddMediaStreamToAVMediaSource(
         const std::shared_ptr<AVMediaSourceTmp> &srcTmp, std::shared_ptr<AVMediaSource> &mediaSource);
     bool IsLivingMaxDelayTimeValid(const AVPlayStrategyTmp &strategyTmp);
+    bool IsRateValid(float rate);
 
     std::condition_variable stopTaskQueCond_;
     bool taskQueStoped_ = false;
-    bool calMaxAmplitude_ = false;
     bool deviceChangeCallbackflag_ = false;
     bool seiMessageCallbackflag_ = false;
+    bool reportMediaProgressCallbackflag_ = false;
 
     struct AVPlayerContext : public MediaAsyncContext {
         explicit AVPlayerContext(napi_env env) : MediaAsyncContext(env) {}
@@ -402,6 +418,7 @@ private:
     std::atomic<bool> isReleased_ = false;
     std::atomic<bool> isInterrupted_ = false;
     std::string url_ = "";
+    bool enabled_ = false;
     struct AVFileDescriptor fileDescriptor_;
     struct AVDataSrcDescriptor dataSrcDescriptor_;
     std::string surface_ = "";
@@ -437,6 +454,7 @@ private:
     bool getApiVersionFlag_ = true;
 
     std::atomic<bool> isReadyReleased_ = false;
+    bool isForceLoadVideo_ = false;
 };
 } // namespace Media
 } // namespace OHOS

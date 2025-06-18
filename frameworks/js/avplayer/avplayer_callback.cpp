@@ -726,6 +726,8 @@ void AVPlayerCallback::InitInfoFuncsPart2()
 {
     onInfoFuncs_[INFO_TYPE_SUPER_RESOLUTION_CHANGED] =
         [this](const int32_t extra, const Format &infoBody) { OnSuperResolutionChangedCb(extra, infoBody); };
+    onInfoFuncs_[INFO_TYPE_RATEDONE] =
+        [this](const int32_t extra, const Format &infoBody) { OnPlaybackRateDoneCb(extra, infoBody); };
 }
 
 void AVPlayerCallback::OnAudioDeviceChangeCb(const int32_t extra, const Format &infoBody)
@@ -949,6 +951,27 @@ void AVPlayerCallback::OnSpeedDoneCb(const int32_t extra, const Format &infoBody
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_SPEED_DONE);
     cb->callbackName = AVPlayerEvent::EVENT_SPEED_DONE;
     cb->value = speedMode;
+    NapiCallback::CompleteCallback(env_, cb);
+}
+
+void AVPlayerCallback::OnPlaybackRateDoneCb(const int32_t extra, const Format &infoBody)
+{
+    (void)extra;
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    float speedRate = 0.0f;
+    (void)infoBody.GetFloatValue(PlayerKeys::PLAYER_PLAYBACK_RATE, speedRate);
+    MEDIA_LOGI("OnPlaybackRateDoneCb is called, speedRate: %{public}f", speedRate);
+    if (refMap_.find(AVPlayerEvent::EVENT_RATE_DONE) == refMap_.end()) {
+        MEDIA_LOGW("can not find ratedone callback!");
+        return;
+    }
+
+    NapiCallback::Double *cb = new(std::nothrow) NapiCallback::Double();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new float");
+
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_RATE_DONE);
+    cb->callbackName = AVPlayerEvent::EVENT_RATE_DONE;
+    cb->value = static_cast<double>(speedRate);
     NapiCallback::CompleteCallback(env_, cb);
 }
 

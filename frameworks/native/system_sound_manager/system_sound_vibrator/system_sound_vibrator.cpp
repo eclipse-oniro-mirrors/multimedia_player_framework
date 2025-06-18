@@ -108,6 +108,7 @@ int32_t SystemSoundVibrator::StartVibratorForSystemTone(const std::string &hapti
     Sensors::SetUsage(USAGE_NOTIFICATION);
     Sensors::SetLoopCount(1);
     result = Sensors::PlayVibratorCustom(fd, 0, statbuf.st_size);
+    MEDIA_LOGW("Start vibrator: PlayVibratorCustom result [%{public}d]", result);
     close(fd);
 #endif
 
@@ -168,7 +169,7 @@ int32_t SystemSoundVibrator::StartVibratorForRingtone(const std::string &hapticU
     return MSERR_OK;
 }
 
-int32_t SystemSoundVibrator::VibrateForRingtone(const std::string &hapticUri)
+int32_t SystemSoundVibrator::VibrateForRingtone(const std::string hapticUri)
 {
     std::unique_lock<std::mutex> lock(g_vibrateMutex);
     MEDIA_LOGI("VibrateForRingtone with hapticUri [%{public}s] for ringtone", hapticUri.c_str());
@@ -253,13 +254,12 @@ int32_t SystemSoundVibrator::StopVibrator()
         g_isRunning = false;
         g_vibrateCV.notify_all();
     }
-    if (g_vibrateThread != nullptr) {
-        lock.unlock();
-        g_vibrateThread->join();
-        lock.lock();
+    if (g_vibrateThread != nullptr && g_vibrateThread->joinable()) {
+        g_vibrateThread->detach();
         g_vibrateThread = nullptr;
     }
     g_hapticUri = "";
+
 #ifdef SUPPORT_VIBRATOR
     result = Sensors::Cancel();
     MEDIA_LOGI("StopVibrator: %{public}d", result);
@@ -301,6 +301,7 @@ int32_t SystemSoundVibrator::GetVibratorDuration(const std::string &hapticUri)
     int32_t result = Sensors::PreProcess(vibratorFD, vibratorPkg);
     if (result != 0) {
         MEDIA_LOGE("Failed to pre-process hapticUri!");
+        Sensors::FreeVibratorPackage(vibratorPkg);
         return ret;
     }
     int32_t delayTime = 0;

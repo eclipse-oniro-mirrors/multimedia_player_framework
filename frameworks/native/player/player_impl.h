@@ -22,6 +22,7 @@
 #include "i_player_service.h"
 #include "hitrace/tracechain.h"
 #include "hiappevent_agent.h"
+#include "common/fdsan_fd.h"
 
 namespace OHOS {
 namespace Media {
@@ -41,6 +42,7 @@ public:
     int32_t SetRenderFirstFrame(bool display) override;
     int32_t SetPlayRange(int64_t start, int64_t end) override;
     int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode = SEEK_PREVIOUS_SYNC) override;
+    int32_t SetPlayRangeUsWithMode(int64_t start, int64_t end, PlayerSeekMode mode = SEEK_PREVIOUS_SYNC) override;
     int32_t PrepareAsync() override;
     int32_t AddSubSource(const std::string &url) override;
     int32_t AddSubSource(int32_t fd, int64_t offset, int64_t size) override;
@@ -59,6 +61,7 @@ public:
     int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) override;
     int32_t GetVideoHeight() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
+    int32_t SetPlaybackRate(float rate) override;
     int32_t GetDuration(int32_t &duration) override;
     int32_t GetApiVersion(int32_t &apiVersion) override;
     int32_t GetPlaybackSpeed(PlaybackRateMode &mode) override;
@@ -77,7 +80,7 @@ public:
     int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
         bool svp) override;
     int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) override;
-    int32_t Init();
+    int32_t Init(const PlayerProducer producer = PlayerProducer::INNER);
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody);
     int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) override;
     int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
@@ -87,11 +90,19 @@ public:
     int32_t SetDeviceChangeCbStatus(bool status) override;
     bool IsSeekContinuousSupported() override;
     int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes) override;
+    int32_t EnableReportMediaProgress(bool enable) override;
+    int32_t EnableReportAudioInterrupt(bool enable) override;
+    int32_t SetStartFrameRateOptEnabled(bool enabled) override;
     void ReleaseClientListener() override;
     HiviewDFX::HiTraceId GetTraceId();
+    int32_t SetReopenFd(int32_t fd) override;
+    int32_t EnableCameraPostprocessing() override;
+    void TraceApiEvent(int errCode, const std::string& message, time_t startTime);
+    int32_t ForceLoadVideo(bool status) override;
 private:
     void ResetSeekVariables();
     void HandleSeekDoneInfo(PlayerOnInfoType type, int32_t extra);
+    int32_t SetSourceTask(int32_t fd, int64_t offset, int64_t size);
     std::recursive_mutex recMutex_;
     int32_t mCurrentPosition = INT32_MIN;
     PlayerSeekMode mCurrentSeekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
@@ -100,6 +111,7 @@ private:
     std::atomic<bool> isSeeking_{false};
     int32_t prevTrackIndex_ = INT32_MIN;
     std::shared_ptr<PlayerCallback> callback_;
+    std::unique_ptr<FdsanFd> fdsanFd_ = nullptr;
 
     std::shared_ptr<IPlayerService> playerService_ = nullptr;
     sptr<Surface> surface_ = nullptr;

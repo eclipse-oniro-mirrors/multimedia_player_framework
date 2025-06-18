@@ -45,6 +45,7 @@
 #include "decoder_surface_filter.h"
 #include "sei_parser_filter.h"
 #endif
+#include "common/fdsan_fd.h"
 
 namespace OHOS {
 namespace Media {
@@ -115,6 +116,10 @@ public:
     int32_t Pause(bool isSystemOperation) override;
     int32_t Stop() override;
     int32_t Reset() override;
+    int32_t Freeze(bool &isNoNeedToFreeze) override;
+    int32_t UnFreeze() override;
+    int32_t PauseSourceDownload() override;
+    int32_t ResumeSourceDownload() override;
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t SetVolume(float leftVolume, float rightVolume) override;
     int32_t SetVolumeMode(int32_t mode) override;
@@ -128,6 +133,7 @@ public:
     int32_t GetPlaybackPosition(int32_t& playbackPositionMs) override;
     int32_t GetDuration(int32_t& durationMs) override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
+    int32_t SetPlaybackRate(float rate) override;
     int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) override;
     int32_t GetPlaybackSpeed(PlaybackRateMode& mode) override;
     int32_t SelectBitRate(uint32_t bitRate, bool isAutoSelect) override;
@@ -148,6 +154,7 @@ public:
                                  const int32_t rendererFlag, const int32_t volumeMode) override;
     int32_t SetAudioInterruptMode(const int32_t interruptMode) override;
     int32_t SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode) override;
+    int32_t SetStartFrameRateOptEnabled(bool enabled) override;
     void SetInterruptState(bool isInterruptNeeded) override;
     void OnDumpInfo(int32_t fd) override;
     void SetInstancdId(uint64_t instanceId) override;
@@ -162,6 +169,7 @@ public:
     void DoRestartLiveLink() override;
 
     // internal interfaces
+    void EnableStartFrameRateOpt(Format &videoTrack);
     void OnEvent(const Event &event);
     void OnEventContinue(const Event &event);
     void OnEventSub(const Event &event);
@@ -183,6 +191,12 @@ public:
     int32_t IsSeekContinuousSupported(bool &isSeekContinuousSupported) override;
     int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes) override;
     void SetPerfRecEnabled(bool isPerfRecEnabled) override;
+    int32_t SetReopenFd(int32_t fd) override;
+    int32_t EnableCameraPostprocessing() override;
+    int32_t EnableReportMediaProgress(bool enable) override;
+    int32_t ForceLoadVideo(bool status) override;
+    int32_t NotifyMemoryExchange(bool status) override;
+    void SetEosInLoopForFrozen(bool status) override;
 
 private:
     enum HiplayerSvpMode : int32_t {
@@ -250,14 +264,16 @@ private:
     bool IsAudioMime(const std::string& mime);
     bool IsSubtitleMime(const std::string& mime);
     bool IsNeedAudioSinkChangeTrack(std::vector<std::shared_ptr<Meta>>& metaInfo, int32_t newAudioTrackId);
-    Status Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone);
-    Status HandleSeek(int64_t seekPos, PlayerSeekMode mode);
+    Status Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone, bool isUnFreezeSeek = false);
+    Status HandleSeek(int64_t seekPos, PlayerSeekMode mode, bool isUnFreezeSeek = false);
     
     Status doPreparedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doStartedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doPausedSeek(int64_t seekPos, PlayerSeekMode mode);
+    Status doFrozenSeek(int64_t seekPos, PlayerSeekMode mode, bool isUnFreezeSeek = false);
     Status doCompletedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doSeek(int64_t seekPos, PlayerSeekMode mode);
+    Status doSetPlaybackSpeed(float speed);
     Status HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs);
     void NotifySeek(Status rtv, bool flag, int64_t seekPos);
     void ResetIfSourceExisted();
@@ -269,6 +285,7 @@ private:
     Status InitAudioDefaultTrackIndex();
     Status InitVideoDefaultTrackIndex();
     Status InitSubtitleDefaultTrackIndex();
+    void DoPausedPlay(int32_t &ret);
     bool BreakIfInterruptted();
     void CollectionErrorInfo(int32_t errCode, const std::string& errMsg);
     void NotifyUpdateTrackInfo();
@@ -284,7 +301,6 @@ private:
     bool HandleEosFlagState(const Event& event);
     int32_t GetSarVideoWidth(std::shared_ptr<Meta> trackInfo);
     int32_t GetSarVideoHeight(std::shared_ptr<Meta> trackInfo);
-    int32_t HandleEosPlay() override;
     bool IsLiveStream();
     Status SetSeiMessageListener();
     void UpdatePlayTotalDuration();
@@ -298,6 +314,9 @@ private:
     void UpdateFlvLiveParams();
     void SetFlvLiveParams(AVPlayStrategy playbackStrategy);
     void SetPostProcessor();
+    void ResetEnableCameraPostProcess();
+    int32_t SetAudioHapticsSyncId(int32_t syncId);
+    int32_t ApplyAudioHapticsSyncId(int32_t syncId);
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
@@ -313,6 +332,7 @@ private:
     std::atomic<bool> isSeek_ {false};
     std::atomic<bool> isSeekClosest_ {false};
     std::atomic<PlaybackRateMode> playbackRateMode_ {PlaybackRateMode::SPEED_FORWARD_1_00_X};
+    std::atomic<float> playbackRate_ {1.0f};
 
     std::shared_ptr<EventReceiver> playerEventReceiver_;
     std::shared_ptr<FilterCallback> playerFilterCallback_;
@@ -346,6 +366,7 @@ private:
     std::atomic<int32_t> videoHeight_{0};
     std::atomic<bool> needSwapWH_{false};
     std::atomic<bool> isInterruptNeeded_{false};
+    bool isEnableStartFrameRateOpt_ {true};
     std::atomic<bool> isBufferingEnd_{false};
 
     std::shared_ptr<Meta> audioRenderInfo_{nullptr};
@@ -449,6 +470,8 @@ private:
     static constexpr int32_t MAX_TARGET_HEIGHT = 1080;
     static constexpr int32_t MIN_TARGET_WIDTH = 320;
     static constexpr int32_t MIN_TARGET_HEIGHT = 320;
+    static constexpr int32_t DEFAULT_SYNC_ID = 0;
+    int32_t audioHapticsSyncId_ {DEFAULT_SYNC_ID};
     int32_t postProcessorTargetWidth_ = MAX_TARGET_WIDTH;
     int32_t postProcessorTargetHeight_ = MAX_TARGET_HEIGHT;
     VideoPostProcessorType videoPostProcessorType_ {VideoPostProcessorType::NONE};
@@ -456,6 +479,16 @@ private:
     // memory usage
     std::unordered_map<std::string, uint32_t> memoryUsageInfo_ {};
     std::mutex memoryReportMutex_;
+    std::mutex fdMutex_ {};
+    std::unique_ptr<FdsanFd> fdsanFd_ = nullptr;
+    std::atomic<bool> enableCameraPostprocessing_ {false};
+    bool isForzenSeekRecv_ = false;
+    bool eosInLoopForFrozen_ = false;
+    int64_t frozenSeekTime_ = 0;
+    PlayerSeekMode frozenSeekMode_ = PlayerSeekMode::SEEK_NEXT_SYNC;
+    bool isDownloadPaused_ = false;
+    std::mutex freezeMutex_;
+    bool isForceLoadVideo_ {false};
 };
 } // namespace Media
 } // namespace OHOS

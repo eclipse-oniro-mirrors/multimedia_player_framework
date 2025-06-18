@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy  of the License at
@@ -119,7 +119,7 @@ public:
         Pipeline::StreamType outType) override
     {
         std::shared_lock<std::shared_mutex> lk(cbMutex_);
-        FALSE_RETURN_V(hiTransCoderImpl_ != nullptr, Status::OK); //hiTransCoderImpl_ is destructed
+        FALSE_RETURN_V(hiTransCoderImpl_ != nullptr, Status::OK); // hiTransCoderImpl_ is destructed
         return hiTransCoderImpl_->OnCallback(filter, cmd, outType);
     }
 
@@ -214,17 +214,17 @@ int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
         Pipeline::FilterType::FILTERTYPE_DEMUXER);
     if (demuxerFilter_ == nullptr) {
         MEDIA_LOG_E("demuxerFilter_ is nullptr");
-        return MSERR_UNKNOWN;
+        return MSERR_NO_MEMORY;
     }
     pipeline_->AddHeadFilters({demuxerFilter_});
     demuxerFilter_->Init(transCoderEventReceiver_, transCoderFilterCallback_);
     (void)demuxerFilter_->SetTranscoderMode();
-    Status ret = demuxerFilter_->SetDataSource(mediaSource);
-    if (ret != Status::OK) {
+    int32_t ret = TransTranscoderStatus(demuxerFilter_->SetDataSource(mediaSource));
+    if (ret != MSERR_OK) {
         MEDIA_LOG_E("SetInputFile error: demuxerFilter_->SetDataSource error");
-        CollectionErrorInfo(static_cast<int32_t>(ret), "SetInputFile error");
+        CollectionErrorInfo(ret, "SetInputFile error");
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_SOURCE});
-        return static_cast<int32_t>(ret);
+        return ret;
     }
     int64_t duration = 0;
     if (demuxerFilter_->GetDuration(duration)) {
@@ -232,9 +232,9 @@ int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
     } else {
         MEDIA_LOG_E("Get media duration failed");
     }
-    ret = ConfigureVideoAudioMetaData();
+    ret = TransTranscoderStatus(ConfigureVideoAudioMetaData());
     CreateMediaInfo(CallType::AVTRANSCODER, appUid_, instanceId_);
-    return static_cast<int32_t>(ret);
+    return ret;
 }
 
 void HiTransCoderImpl::ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta> &globalInfo,
@@ -262,7 +262,6 @@ void HiTransCoderImpl::ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta
             (void)SetValueByType(meta, muxerFormat_);
             meta->GetData(Tag::VIDEO_WIDTH, inputVideoWidth_);
             meta->GetData(Tag::VIDEO_HEIGHT, inputVideoHeight_);
-            UpdateVideoEncFormat(meta);
             isExistVideoTrack_ = true;
             isInitializeVideoEncFormat = true;
         } else if (!isInitializeAudioEncFormat && (trackMime.find("audio/") == 0)) {
@@ -278,16 +277,33 @@ void HiTransCoderImpl::ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta
     }
 }
 
-void HiTransCoderImpl::UpdateVideoEncFormat(const std::shared_ptr<Meta> &meta)
+void HiTransCoderImpl::ConfigureDefaultParameter()
+{
+    ConfigureVideoDefaultEncFormat();
+    ConfigureVideoBitrate();
+    ConfigureAudioDefaultEncFormat();
+}
+ 
+void HiTransCoderImpl::ConfigureVideoDefaultEncFormat()
 {
     std::string videoMime;
-    meta->GetData(Tag::MIME_TYPE, videoMime);
-    MEDIA_LOG_I("videoMime is: " PUBLIC_LOG_S, videoMime.c_str());
+    videoEncFormat_->GetData(Tag::MIME_TYPE, videoMime);
     FALSE_RETURN_NOLOG(videoMime != Plugins::MimeType::VIDEO_HEVC && videoMime != Plugins::MimeType::VIDEO_AVC);
-    MEDIA_LOG_I("set the default videoEnc format to AVC");
+    MEDIA_LOG_I("Set the default videoEnc format, " PUBLIC_LOG_S " to " PUBLIC_LOG_S, videoMime.c_str(),
+        Plugins::MimeType::VIDEO_AVC);
     videoEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::VIDEO_AVC);
     videoEncFormat_->Set<Tag::VIDEO_H264_PROFILE>(Plugins::VideoH264Profile::BASELINE);
     videoEncFormat_->Set<Tag::VIDEO_H264_LEVEL>(32); // 32: LEVEL 3.2
+}
+ 
+void HiTransCoderImpl::ConfigureAudioDefaultEncFormat()
+{
+    std::string audioMime;
+    audioEncFormat_->GetData(Tag::MIME_TYPE, audioMime);
+    FALSE_RETURN_NOLOG(audioMime != Plugins::MimeType::AUDIO_AAC);
+    MEDIA_LOG_I("Set the default audioEnc format, " PUBLIC_LOG_S " to " PUBLIC_LOG_S, audioMime.c_str(),
+        Plugins::MimeType::AUDIO_AAC);
+    audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_AAC);
 }
 
 bool HiTransCoderImpl::SetValueByType(const std::shared_ptr<Meta> &innerMeta, std::shared_ptr<Meta> &outputMeta)
@@ -362,13 +378,13 @@ Status HiTransCoderImpl::ConfigureVideoAudioMetaData()
     MEDIA_LOG_I("trackCount: %{public}d", trackCount);
     if (trackCount == 0) {
         MEDIA_LOG_E("No track found in the source");
-        CollectionErrorInfo(static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER),
+        CollectionErrorInfo(TransTranscoderStatus(Status::ERROR_NO_TRACK),
             "ConfigureVideoAudioMetaData error");
-        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_DEMUXER_FAILED});
-        return Status::ERROR_INVALID_PARAMETER;
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_VID_SRC_TYPE});
+        return Status::ERROR_NO_TRACK;
     }
     ConfigureMetaDataToTrackFormat(globalInfo, trackInfos);
-    ConfigureVideoBitrate();
+    ConfigureDefaultParameter();
     return Status::OK;
 }
 
@@ -378,14 +394,14 @@ int32_t HiTransCoderImpl::SetOutputFile(const int32_t fd)
     MEDIA_LOG_I("HiTransCoder SetOutputFile in, fd is %{public}d", fd);
     fd_ = dup(fd);
     MEDIA_LOG_I("HiTransCoder SetOutputFile dup, fd is %{public}d", fd_);
-    return static_cast<int32_t>(Status::OK);
+    return MSERR_OK;
 }
 
 int32_t HiTransCoderImpl::SetOutputFormat(OutputFormatType format)
 {
     MEDIA_LOG_I("HiTransCoderImpl::SetOutputFormat(), OutputFormatType is %{public}d", static_cast<int32_t>(format));
     outputFormatType_ = format;
-    return static_cast<int32_t>(Status::OK);
+    return MSERR_OK;
 }
 
 int32_t HiTransCoderImpl::SetObs(const std::weak_ptr<ITransCoderEngineObs> &obs)
@@ -393,7 +409,7 @@ int32_t HiTransCoderImpl::SetObs(const std::weak_ptr<ITransCoderEngineObs> &obs)
     MEDIA_LOG_I("HiTransCoderImpl::SetObs()");
     obs_ = obs;
     callbackLooper_->StartWithTransCoderEngineObs(obs);
-    return static_cast<int32_t>(Status::OK);
+    return MSERR_OK;
 }
 
 Status HiTransCoderImpl::ConfigureVideoEncoderFormat(const TransCoderParam &transCoderParam)
@@ -423,10 +439,21 @@ Status HiTransCoderImpl::ConfigureVideoWidthHeight(const TransCoderParam &transC
     VideoRectangle videoRectangle = static_cast<const VideoRectangle&>(transCoderParam);
     if (videoRectangle.width != -1) {
         videoEncFormat_->Set<Tag::VIDEO_WIDTH>(videoRectangle.width);
-        }
+    }
     if (videoRectangle.height != -1) {
         videoEncFormat_->Set<Tag::VIDEO_HEIGHT>(videoRectangle.height);
-        }
+    }
+    return Status::OK;
+}
+
+Status HiTransCoderImpl::ConfigureColorSpace(const TransCoderParam &transCoderParam)
+{
+    VideoColorSpace colSpa = static_cast<const VideoColorSpace&>(transCoderParam);
+    MEDIA_LOG_I("HiTranscoderImpl::ConfigureColorSpace %{public}d", static_cast<int32_t>(colSpa.colorSpaceFmt));
+    if (static_cast<int32_t>(colSpa.colorSpaceFmt) <= 0) {
+        return Status::ERROR_INVALID_PARAMETER;
+    }
+    videoEncFormat_->Set<Tag::AV_TRANSCODER_DST_COLOR_SPACE>(static_cast<int32_t>(colSpa.colorSpaceFmt));
     return Status::OK;
 }
 
@@ -469,16 +496,21 @@ int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
         }
         case TransCoderPublicParamType::VIDEO_RECTANGLE: {
             ret = ConfigureVideoWidthHeight(transCoderParam);
-            ConfigureVideoBitrate();
+            if (!isConfiguredVideoBitrate_) {
+                ConfigureVideoBitrate();
+            }
             break;
         }
         case TransCoderPublicParamType::VIDEO_BITRATE: {
             VideoBitRate videoBitrate = static_cast<const VideoBitRate&>(transCoderParam);
-            if (videoBitrate.bitRate <= 0) {
-                return static_cast<int32_t>(Status::OK);
-            }
+            FALSE_RETURN_V_MSG(videoBitrate.bitRate > 0, MSERR_OK, "Invalid video bitrate");
             MEDIA_LOG_I("HiTransCoderImpl::Configure videoBitRate %{public}d", videoBitrate.bitRate);
             videoEncFormat_->Set<Tag::MEDIA_BITRATE>(videoBitrate.bitRate);
+            isConfiguredVideoBitrate_ = true;
+            break;
+        }
+        case TransCoderPublicParamType::COLOR_SPACE_FMT: {
+            ret = ConfigureColorSpace(transCoderParam);
             break;
         }
         case TransCoderPublicParamType::AUDIO_ENC_FMT: {
@@ -492,7 +524,7 @@ int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
             if (audioBitrate.bitRate <= 0) {
                 MEDIA_LOG_E("Invalid audioBitrate.bitRate %{public}d", audioBitrate.bitRate);
                 OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_PARAMETER_VERIFICATION_FAILED});
-                return static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER);
+                return MSERR_PARAMETER_VERIFICATION_FAILED;
             }
             MEDIA_LOG_I("HiTransCoderImpl::Configure audioBitrate %{public}d", audioBitrate.bitRate);
             audioEncFormat_->Set<Tag::MEDIA_BITRATE>(audioBitrate.bitRate);
@@ -501,7 +533,7 @@ int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
         default:
             break;
     }
-    return static_cast<int32_t>(ret);
+    return TransTranscoderStatus(ret);
 }
 
 int32_t HiTransCoderImpl::Prepare()
@@ -516,27 +548,31 @@ int32_t HiTransCoderImpl::Prepare()
             MEDIA_LOG_D("set output video width: %{public}d, height: %{public}d", width, height);
         } else {
             MEDIA_LOG_E("Output video width or height not set");
-            CollectionErrorInfo(static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER), "Prepare error");
+            CollectionErrorInfo(MSERR_INVALID_VAL, "Prepare error");
             OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_INVALID_VAL});
-            return static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER);
+            return MSERR_INVALID_VAL;
         }
         if (width > inputVideoWidth_ || height > inputVideoHeight_ || std::min(width, height) < MINIMUM_WIDTH_HEIGHT) {
             MEDIA_LOG_E("Output video width or height is invalid");
-            CollectionErrorInfo(static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER), "Prepare error");
+            CollectionErrorInfo(MSERR_PARAMETER_VERIFICATION_FAILED, "Prepare error");
             OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_PARAMETER_VERIFICATION_FAILED});
-            return static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER);
+            return MSERR_PARAMETER_VERIFICATION_FAILED;
         }
         isNeedVideoResizeFilter_ = width != inputVideoWidth_ || height != inputVideoHeight_;
     }
     Status ret = pipeline_->Prepare();
     if (ret != Status::OK) {
         MEDIA_LOG_E("Prepare failed with error " PUBLIC_LOG_D32, ret);
-        auto errCode = TransStatus(ret);
+        auto errCode = TransTranscoderStatus(ret);
         CollectionErrorInfo(errCode, "Prepare error");
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, errCode});
-        return static_cast<int32_t>(errCode);
+        return errCode;
     }
-    return static_cast<int32_t>(SetSurfacePipeline(width, height));
+    Status errCode = SetSurfacePipeline(width, height);
+    if (errCode == Status::ERROR_UNKNOWN) {
+        errCode = Status::ERROR_SET_OUTPUT_SURFACE_FAILED;
+    }
+    return TransTranscoderStatus(errCode);
 }
 
 Status HiTransCoderImpl::SetSurfacePipeline(int32_t outputVideoWidth, int32_t outputVideoHeight)
@@ -545,17 +581,17 @@ Status HiTransCoderImpl::SetSurfacePipeline(int32_t outputVideoWidth, int32_t ou
         Status::ERROR_NULL_POINTER, "VideoDecoder setOutputSurface failed");
     if (isNeedVideoResizeFilter_ && videoResizeFilter_ != nullptr) {
         sptr<Surface> resizeFilterSurface = videoResizeFilter_->GetInputSurface();
-        FALSE_RETURN_V_MSG_E(resizeFilterSurface != nullptr, Status::ERROR_NULL_POINTER,
+        FALSE_RETURN_V_MSG_E(resizeFilterSurface != nullptr, Status::ERROR_GET_INPUT_SURFACE_FAILED,
             "resizeFilterSurface is nullptr");
         Status ret = videoDecoderFilter_->SetOutputSurface(resizeFilterSurface);
         FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "VideoDecoder setOutputSurface failed");
         sptr<Surface> encoderFilterSurface = videoEncoderFilter_->GetInputSurface();
-        FALSE_RETURN_V_MSG_E(encoderFilterSurface != nullptr, Status::ERROR_NULL_POINTER,
+        FALSE_RETURN_V_MSG_E(encoderFilterSurface != nullptr, Status::ERROR_GET_INPUT_SURFACE_FAILED,
             "encoderFilterSurface is nullptr");
         return videoResizeFilter_->SetOutputSurface(encoderFilterSurface, outputVideoWidth, outputVideoHeight);
     }
     sptr<Surface> encoderFilterSurface = videoEncoderFilter_->GetInputSurface();
-    FALSE_RETURN_V_MSG_E(encoderFilterSurface != nullptr, Status::ERROR_NULL_POINTER,
+    FALSE_RETURN_V_MSG_E(encoderFilterSurface != nullptr, Status::ERROR_GET_INPUT_SURFACE_FAILED,
         "encoderFilterSurface is nullptr");
     return videoDecoderFilter_->SetOutputSurface(encoderFilterSurface);
 }
@@ -565,15 +601,15 @@ int32_t HiTransCoderImpl::Start()
     MEDIA_LOG_I("HiTransCoderImpl::Start()");
     MediaTrace trace("HiTransCoderImpl::Start()");
     startTime_ = GetCurrentMillisecond();
-    int32_t ret = TransStatus(pipeline_->Start());
+    int32_t ret = TransTranscoderStatus(pipeline_->Start());
     if (ret != MSERR_OK) {
         MEDIA_LOG_E("Start pipeline failed");
-        CollectionErrorInfo(static_cast<int32_t>(ret), "Start error");
+        CollectionErrorInfo(ret, "Start error");
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, ret});
         return ret;
     }
     callbackLooper_->StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
-    return ret;
+    return MSERR_OK;
 }
 
 int32_t HiTransCoderImpl::Pause()
@@ -581,33 +617,33 @@ int32_t HiTransCoderImpl::Pause()
     MEDIA_LOG_I("HiTransCoderImpl::Pause()");
     MediaTrace trace("HiTransCoderImpl::Pause()");
     callbackLooper_->StopReportMediaProgress();
-    Status ret = pipeline_->Pause();
-    if (ret != Status::OK) {
+    int32_t ret = TransTranscoderStatus(pipeline_->Pause());
+    if (ret != MSERR_OK) {
         MEDIA_LOG_E("Pause pipeline failed");
-        CollectionErrorInfo(static_cast<int32_t>(ret), "Pause error");
-        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_UNKNOWN});
+        CollectionErrorInfo(ret, "Pause error");
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, ret});
     }
     if (startTime_ != -1) {
         transcoderTotalDuration_ += GetCurrentMillisecond() - startTime_;
     }
     startTime_ = -1;
-    return static_cast<int32_t>(ret);
+    return ret;
 }
 
 int32_t HiTransCoderImpl::Resume()
 {
     MEDIA_LOG_I("HiTransCoderImpl::Resume()");
     MediaTrace trace("HiTransCoderImpl::Resume()");
-    Status ret = pipeline_->Resume();
-    if (ret != Status::OK) {
+    int32_t ret = TransTranscoderStatus(pipeline_->Resume());
+    if (ret != MSERR_OK) {
         MEDIA_LOG_E("Resume pipeline failed");
-        CollectionErrorInfo(static_cast<int32_t>(ret), "Resume error");
-        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_UNKNOWN});
-        return static_cast<int32_t>(ret);
+        CollectionErrorInfo(ret, "Resume error");
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, ret});
+        return ret;
     }
     callbackLooper_->StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
     startTime_ = GetCurrentMillisecond();
-    return static_cast<int32_t>(ret);
+    return MSERR_OK;
 }
 
 int32_t HiTransCoderImpl::Cancel()
@@ -615,13 +651,13 @@ int32_t HiTransCoderImpl::Cancel()
     MEDIA_LOG_I("HiTransCoderImpl::Cancel enter");
     MediaTrace trace("HiTransCoderImpl::Cancel()");
     callbackLooper_->StopReportMediaProgress();
-    Status ret = pipeline_->Stop();
+    int32_t ret = TransTranscoderStatus(pipeline_->Stop());
     callbackLooper_->Stop();
-    if (ret != Status::OK) {
+    if (ret != MSERR_OK) {
         MEDIA_LOG_E("Stop pipeline failed");
-        CollectionErrorInfo(static_cast<int32_t>(ret), "Cancel error");
-        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_UNKNOWN});
-        return static_cast<int32_t>(ret);
+        CollectionErrorInfo(ret, "Cancel error");
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, ret});
+        return ret;
     }
     MEDIA_LOG_I("HiTransCoderImpl::Cancel done");
     if (startTime_ != -1) {
@@ -630,7 +666,7 @@ int32_t HiTransCoderImpl::Cancel()
     startTime_ = -1;
     AppendTranscoderMediaInfo();
     ReportMediaInfo(instanceId_);
-    return static_cast<int32_t>(ret);
+    return MSERR_OK;
 }
 
 void HiTransCoderImpl::AppendTranscoderMediaInfo()
@@ -693,6 +729,9 @@ void HiTransCoderImpl::AppendDstMediaInfo(std::shared_ptr<Meta> meta)
     videoEncFormat_->Get<Tag::MEDIA_BITRATE>(dstVideoBitrate);
     meta->SetData(Tag::AV_TRANSCODER_DST_VIDEO_BITRATE, static_cast<int32_t>(dstVideoBitrate));
     meta->SetData(Tag::AV_TRANSCODER_DST_HDR_TYPE, 0);
+    int32_t colorSpaceFormat = 0;
+    videoEncFormat_->Get<Tag::AV_TRANSCODER_DST_COLOR_SPACE>(colorSpaceFormat);
+    meta->SetData(Tag::AV_TRANSCODER_DST_COLOR_SPACE, colorSpaceFormat);
     int32_t dstAudioSampleRate;
     audioEncFormat_->Get<Tag::AUDIO_SAMPLE_RATE>(dstAudioSampleRate);
     meta->SetData(Tag::AV_TRANSCODER_DST_AUDIO_SAMPLE_RATE, dstAudioSampleRate);
@@ -746,9 +785,11 @@ void HiTransCoderImpl::HandleCompleteEvent()
         ptr->OnInfo(TransCoderOnInfoType::INFO_TYPE_PROGRESS_UPDATE, TRANSCODER_COMPLETE_PROGRESS);
         ptr->OnInfo(TransCoderOnInfoType::INFO_TYPE_TRANSCODER_COMPLETED, 0);
     }
-    MEDIA_LOG_I("complete event pipeline stop begin");
-    pipeline_->Stop();
-    MEDIA_LOG_I("complete event pipeline stop end");
+    if (pipeline_ != nullptr) {
+        MEDIA_LOG_I("complete, stop in");
+        int32_t ret = TransTranscoderStatus(pipeline_->Stop());
+        MEDIA_LOG_I("complete, stop out, ret: " PUBLIC_LOG_D32, ret);
+    }
     callbackLooper_->Stop();
 }
 
@@ -761,8 +802,8 @@ Status HiTransCoderImpl::LinkAudioDecoderFilter(const std::shared_ptr<Pipeline::
     FALSE_RETURN_V_MSG_E(audioDecoderFilter_ != nullptr, Status::ERROR_NULL_POINTER,
         "audioDecoderFilter is nullptr");
     audioDecoderFilter_->Init(transCoderEventReceiver_, transCoderFilterCallback_);
-    FALSE_RETURN_V_MSG_E(pipeline_->LinkFilters(preFilter, {audioDecoderFilter_}, type) == Status::OK,
-        Status::ERROR_UNKNOWN, "Add audioDecoderFilter to pipeline fail");
+    Status ret = pipeline_->LinkFilters(preFilter, {audioDecoderFilter_}, type);
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "Add audioDecoderFilter to pipeline fail");
     return Status::OK;
 }
 
@@ -779,15 +820,18 @@ Status HiTransCoderImpl::LinkAudioEncoderFilter(const std::shared_ptr<Pipeline::
     audioEncFormat_->Set<Tag::APP_PID>(appPid_);
     audioEncFormat_->Set<Tag::APP_FULL_TOKEN_ID>(appFullTokenId_);
     audioEncFormat_->Set<Tag::AUDIO_ENCODE_PTS_MODE>(GENERATE_ENCODE_PTS_BY_INPUT_MODE);
-    FALSE_RETURN_V_MSG_E(audioEncoderFilter_->SetCodecFormat(audioEncFormat_) == Status::OK,
-        Status::ERROR_UNKNOWN, "audioEncoderFilter SetCodecFormat fail");
-    FALSE_RETURN_V_MSG_E(audioEncoderFilter_->SetTranscoderMode() == Status::OK,
-        Status::ERROR_UNKNOWN, "audioEncoderFilter SetTranscoderMode fail");
+    Status ret = audioEncoderFilter_->SetCodecFormat(audioEncFormat_);
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "audioEncoderFilter SetCodecFormat fail");
+    ret = audioEncoderFilter_->SetTranscoderMode();
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "audioEncoderFilter SetTranscoderMode fail");
     audioEncoderFilter_->Init(transCoderEventReceiver_, transCoderFilterCallback_);
-    FALSE_RETURN_V_MSG_E(audioEncoderFilter_->Configure(audioEncFormat_) == Status::OK,
-        Status::ERROR_UNKNOWN, "audioEncoderFilter Configure fail");
-    FALSE_RETURN_V_MSG_E(pipeline_->LinkFilters(preFilter, {audioEncoderFilter_}, type) == Status::OK,
-        Status::ERROR_UNKNOWN, "Add audioEncoderFilter to pipeline fail");
+    ret = audioEncoderFilter_->Configure(audioEncFormat_);
+    if (ret == Status::ERROR_UNKNOWN) {
+        ret = Status::ERROR_AUD_ENC_FAILED;
+    }
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "audioEncoderFilter Configure fail");
+    ret = pipeline_->LinkFilters(preFilter, {audioEncoderFilter_}, type);
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "Add audioEncoderFilter to pipeline fail");
     return Status::OK;
 }
 
@@ -799,9 +843,10 @@ Status HiTransCoderImpl::LinkVideoDecoderFilter(const std::shared_ptr<Pipeline::
         "surfacedecoder", Pipeline::FilterType::FILTERTYPE_VIDEODEC);
     FALSE_RETURN_V_MSG_E(videoDecoderFilter_ != nullptr, Status::ERROR_NULL_POINTER,
         "videoDecoderFilter is nullptr");
+    videoDecoderFilter_->SetCodecFormat(videoEncFormat_);
     videoDecoderFilter_->Init(transCoderEventReceiver_, transCoderFilterCallback_);
-    FALSE_RETURN_V_MSG_E(pipeline_->LinkFilters(preFilter, {videoDecoderFilter_}, type) == Status::OK,
-        Status::ERROR_UNKNOWN, "Add videoDecoderFilter_ to pipeline fail");
+    Status ret = pipeline_->LinkFilters(preFilter, {videoDecoderFilter_}, type);
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "Add videoDecoderFilter to pipeline failed");
     return Status::OK;
 }
 
@@ -816,15 +861,15 @@ Status HiTransCoderImpl::LinkVideoEncoderFilter(const std::shared_ptr<Pipeline::
     FALSE_RETURN_V_MSG_E(videoEncFormat_ != nullptr, Status::ERROR_NULL_POINTER,
         "videoEncFormat is nullptr");
     videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(Plugins::VideoEncodeBitrateMode::VBR);
-    FALSE_RETURN_V_MSG_E(videoEncoderFilter_->SetCodecFormat(videoEncFormat_) == Status::OK,
-        Status::ERROR_UNKNOWN, "videoEncoderFilter SetCodecFormat fail");
+    Status ret = videoEncoderFilter_->SetCodecFormat(videoEncFormat_);
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "videoEncoderFilter SetCodecFormat fail");
     videoEncoderFilter_->Init(transCoderEventReceiver_, transCoderFilterCallback_);
-    FALSE_RETURN_V_MSG_E(videoEncoderFilter_->SetTransCoderMode() == Status::OK,
-        Status::ERROR_UNKNOWN, "videoEncoderFilter SetTransCoderMode fail");
-    FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_) == Status::OK,
-        Status::ERROR_UNKNOWN, "videoEncoderFilter Configure fail");
-    FALSE_RETURN_V_MSG_E(pipeline_->LinkFilters(preFilter, {videoEncoderFilter_}, type) == Status::OK,
-        Status::ERROR_UNKNOWN, "Add videoEncoderFilter to pipeline fail");
+    ret = videoEncoderFilter_->SetTransCoderMode();
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "videoEncoderFilter SetTransCoderMode fail");
+    ret = videoEncoderFilter_->Configure(videoEncFormat_);
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "videoEncoderFilter Configure fail");
+    ret = pipeline_->LinkFilters(preFilter, {videoEncoderFilter_}, type);
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "Add videoEncoderFilter to pipeline fail");
     return Status::OK;
 }
 
@@ -837,10 +882,13 @@ Status HiTransCoderImpl::LinkVideoResizeFilter(const std::shared_ptr<Pipeline::F
     FALSE_RETURN_V_MSG_E(videoResizeFilter_ != nullptr, Status::ERROR_NULL_POINTER,
         "videoResizeFilter_ is nullptr");
     videoResizeFilter_->Init(transCoderEventReceiver_, transCoderFilterCallback_);
-    FALSE_RETURN_V_MSG_E(videoResizeFilter_->Configure(videoEncFormat_) == Status::OK,
-        Status::ERROR_UNKNOWN, "videoEncoderFilter Configure fail");
-    FALSE_RETURN_V_MSG_E(pipeline_->LinkFilters(preFilter, {videoResizeFilter_}, type) == Status::OK,
-        Status::ERROR_UNKNOWN, "Add videoResizeFilter to pipeline fail");
+    Status ret = videoResizeFilter_->Configure(videoEncFormat_);
+    if (ret == Status::ERROR_UNKNOWN) {
+        ret = Status::ERROR_VID_RESIZE_FAILED;
+    }
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "videoEncoderFilter Configure fail");
+    ret = pipeline_->LinkFilters(preFilter, {videoResizeFilter_}, type);
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "Add videoResizeFilter to pipeline fail");
     return Status::OK;
 }
 
@@ -848,14 +896,15 @@ Status HiTransCoderImpl::LinkMuxerFilter(const std::shared_ptr<Pipeline::Filter>
     Pipeline::StreamType type)
 {
     MEDIA_LOG_I("HiTransCoderImpl::LinkMuxerFilter()");
+    Status ret = Status::OK;
     if (muxerFilter_ == nullptr) {
         muxerFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::MuxerFilter>
             ("muxerFilter", Pipeline::FilterType::FILTERTYPE_MUXER);
         FALSE_RETURN_V_MSG_E(muxerFilter_ != nullptr, Status::ERROR_NULL_POINTER,
             "muxerFilter is nullptr");
         muxerFilter_->Init(transCoderEventReceiver_, transCoderFilterCallback_);
-        FALSE_RETURN_V_MSG_E(muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_, outputFormatType_) == Status::OK,
-            Status::ERROR_UNKNOWN, "muxerFilter SetOutputParameter fail");
+        ret = muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_, outputFormatType_);
+        FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "muxerFilter SetOutputParameter fail");
         muxerFilter_->SetParameter(muxerFormat_);
         muxerFilter_->SetTransCoderMode();
         MEDIA_LOG_I("HiTransCoder CloseFd, fd is %{public}d", fd_);
@@ -864,8 +913,8 @@ Status HiTransCoderImpl::LinkMuxerFilter(const std::shared_ptr<Pipeline::Filter>
             fd_ = -1;
         }
     }
-    FALSE_RETURN_V_MSG_E(pipeline_->LinkFilters(preFilter, {muxerFilter_}, type) == Status::OK,
-        Status::ERROR_UNKNOWN, "Add muxerFilter to pipeline fail");
+    ret = pipeline_->LinkFilters(preFilter, {muxerFilter_}, type);
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "Add muxerFilter to pipeline fail");
     return Status::OK;
 }
 
@@ -911,16 +960,16 @@ Status HiTransCoderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, co
 
 int32_t HiTransCoderImpl::GetCurrentTime(int32_t& currentPositionMs)
 {
-    FALSE_RETURN_V(muxerFilter_ != nullptr, static_cast<int32_t>(Status::ERROR_UNKNOWN));
+    FALSE_RETURN_V(muxerFilter_ != nullptr, MSERR_UNKNOWN);
     int64_t currentPts = muxerFilter_->GetCurrentPtsMs();
     currentPositionMs = (int32_t)currentPts;
-    return static_cast<int32_t>(Status::OK);
+    return MSERR_OK;
 }
 
 int32_t HiTransCoderImpl::GetDuration(int32_t& durationMs)
 {
     durationMs = durationMs_.load();
-    return static_cast<int32_t>(Status::OK);
+    return MSERR_OK;
 }
 
 int64_t HiTransCoderImpl::GetCurrentMillisecond()

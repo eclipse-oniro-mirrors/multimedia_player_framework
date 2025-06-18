@@ -153,3 +153,5 @@ timerfd_settime;all
 fchown;all
 sched_getscheduler;all
 memfd_create;all
+getgroups;arm64
+getgroups32;arm
