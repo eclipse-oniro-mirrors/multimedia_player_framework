@@ -511,7 +511,7 @@ int32_t AudioHapticVibratorImpl::PlayVibrationPattern(
     CHECK_AND_RETURN_RET_LOG(result == 0, result,
         "AudioHapticVibratorImpl::PlayVibrationPattern: Failed to PlayPattern. Error %{public}d", result);
 
-    // last pattern need to wait    
+    // last pattern need to wait
     if (patternIndex == vibratorPkg->patternNum - 1) {
         int32_t lastPatternDuration = vibratorPkg->patterns[i].patternDuration;
         (void)vibrateCV_.wait_for(lock, std::chrono::milliseconds(lastPatternDuration),

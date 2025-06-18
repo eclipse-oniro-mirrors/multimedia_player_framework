@@ -41,7 +41,8 @@ std::mutex vibrateMutex_;
 
 static std::shared_ptr<VibratorPackage> g_vibrationPackage = nullptr;
 
-void AudioHapticVibratorImplUnitTest::SetUpTestCase(void) {
+void AudioHapticVibratorImplUnitTest::SetUpTestCase(void)
+{
     g_vibrationPackage = std::make_shared<VibratorPackage>();
     g_vibrationPackage->patternNum = TWO_INDEX;
     g_vibrationPackage->packageDuration = PKG_DURATION_MS;
@@ -82,7 +83,8 @@ void AudioHapticVibratorImplUnitTest::SetUpTestCase(void) {
     event2.pointNum = ZERO_INDEX;
     event2.points = nullptr;
 }
-void AudioHapticVibratorImplUnitTest::TearDownTestCase(void) {
+void AudioHapticVibratorImplUnitTest::TearDownTestCase(void)
+{
     for (int i = 0; i < g_vibrationPackage->patternNum; ++i) {
         delete[] g_vibrationPackage->patterns[i].events;
     }
