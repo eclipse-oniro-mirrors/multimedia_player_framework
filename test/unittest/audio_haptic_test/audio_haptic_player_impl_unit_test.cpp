@@ -1132,6 +1132,8 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_057, TestSize.Leve
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
     EXPECT_NE(audioHapticPlayerImpl, nullptr);
 
+    EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, audioHapticPlayerImpl->EnableHapticsInSilentMode(true));
+
     AudioHapticPlayerImpl audioHapticPlayerImpl2;
     auto audioHapticVibrator_ = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl2);
     audioHapticPlayerImpl->audioHapticVibrator_ = audioHapticVibrator_;
@@ -1139,6 +1141,9 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_057, TestSize.Leve
     
     audioHapticPlayerImpl->EnableHapticsInSilentMode(true);
     EXPECT_EQ(true, audioHapticVibrator_->enableInSilentMode_);
+
+    audioHapticPlayerImpl->isVibrationRunning_.store(true);
+    EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, audioHapticPlayerImpl->EnableHapticsInSilentMode(true));
 }
 
 /**
