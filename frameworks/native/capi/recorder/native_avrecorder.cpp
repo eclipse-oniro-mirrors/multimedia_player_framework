@@ -456,10 +456,7 @@ OH_AVErrCode Configure(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
         if (videoOrientation == -1) { // -1 invalid value
             return AV_ERR_INVALID_VAL;
         }
-        int32_t ret = recorderObj->recorder_->SetOrientationHint(videoOrientation);
-        if (ret != MSERR_OK) {
-            MEDIA_LOGI("SetOrientationHint failed!");
-        }
+        recorderObj->recorder_->SetOrientationHint(videoOrientation);
     }
 
     if (config->maxDuration < 1) {
@@ -634,8 +631,7 @@ OH_AVErrCode OH_AVRecorder_UpdateRotation(OH_AVRecorder *recorder, int32_t rotat
     CHECK_AND_RETURN_RET_LOG(recorderObj->recorder_ != nullptr, AV_ERR_INVALID_VAL, "recorder_ is null");
     CHECK_AND_RETURN_RET_LOG(rotation == ROTATION_0 || rotation == ROTATION_90 || rotation == ROTATION_180 ||
         rotation == ROTATION_270, AV_ERR_INVALID_VAL, "Invalid rotation value. Must be 0, 90, 180, or 270.");
-    int32_t ret = recorderObj->recorder_->SetOrientationHint(rotation); 
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "SetOrientationHint failed!");
+    recorderObj->recorder_->SetOrientationHint(rotation);
     
     MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_UpdateRotation out.");
     return AV_ERR_OK;
