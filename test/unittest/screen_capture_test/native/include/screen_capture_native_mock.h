@@ -50,10 +50,15 @@ public:
     {
         return isStateChangeCallBackEnabled_;
     }
+    int32_t CreateCaptureStrategy() override;
+    int32_t StrategyForKeepCaptureDuringCall(bool value) override;
+    int32_t SetCaptureStrategy() override;
+    int32_t ReleaseCaptureStrategy() override;
 private:
     std::shared_ptr<ScreenCapture> screenCapture_ = nullptr;
     std::shared_ptr<ScreenCaptureCallBack> cb_;
     bool isStateChangeCallBackEnabled_ = false;
+    ScreenCaptureStrategy strategy_;
 };
 
 class ScreenCaptureNativeCallbackMock : public ScreenCaptureCallBack, public NoCopyable {

@@ -235,5 +235,27 @@ int32_t ScreenCaptureNativeMock::ExcludeAudioContent(AVScreenCaptureFilterableAu
     filter.filteredAudioContents.insert(audioType);
     return screenCapture_->ExcludeContent(filter);
 }
+
+int32_t ScreenCaptureNativeMock::CreateCaptureStrategy()
+{
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureNativeMock::StrategyForKeepCaptureDuringCall(bool value)
+{
+    strategy_.keepCaptureDuringCall = value;
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureNativeMock::SetCaptureStrategy()
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    return screenCapture_->SetScreenCaptureStrategy(strategy_);
+}
+
+int32_t ScreenCaptureNativeMock::ReleaseCaptureStrategy()
+{
+    return MSERR_OK;
+}
 } // namespace Media
 } // namespace OHOS
