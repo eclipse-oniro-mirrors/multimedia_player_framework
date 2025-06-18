@@ -3279,6 +3279,7 @@ Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFi
     audioDecoder_ = FilterFactory::Instance().CreateFilter<AudioDecoderFilter>("player.audiodecoder",
         FilterType::FILTERTYPE_ADEC);
     FALSE_RETURN_V(audioDecoder_ != nullptr, Status::ERROR_NULL_POINTER);
+    FALSE_GOON_NOEXEC(demuxer_, audioDecoder_->UpdateIsAsyncMode(demuxer_->IsAudioDemuxDecodeAsync()));
     interruptMonitor_->RegisterListener(audioDecoder_);
     audioDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
 
@@ -3321,6 +3322,7 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
     audioSink_ = FilterFactory::Instance().CreateFilter<AudioSinkFilter>("player.audiosink",
         FilterType::FILTERTYPE_ASINK);
     FALSE_RETURN_V(audioSink_ != nullptr, Status::ERROR_NULL_POINTER);
+    FALSE_GOON_NOEXEC(demuxer_, audioSink_->SetIsAudioDemuxDecodeAsync(demuxer_->IsAudioDemuxDecodeAsync()));
     audioSink_->Init(playerEventReceiver_, playerFilterCallback_, interruptMonitor_);
     audioSink_->SetMaxAmplitudeCbStatus(maxAmplitudeCbStatus_);
     audioSink_->SetPerfRecEnabled(isPerfRecEnabled_);
