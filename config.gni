@@ -35,6 +35,7 @@ declare_args() {
   player_framework_support_auto_create_file = false
   player_framework_check_video_is_hdr_vivid = false
   player_framework_enable_start_stop_on_demand = false
+  player_framework_support_lowpower_av_sink = false
   if (defined(build_seccomp) && build_seccomp) {
     player_framework_support_seccomp = true
   }
@@ -106,6 +107,16 @@ if (player_framework_support_player) {
   player_framework_defines += [ "SUPPORT_PLAYER" ]
 } else {
   player_framework_defines += [ "UNSUPPORT_PLAYER" ]
+}
+
+if (player_framework_support_lowpower_av_sink) {
+  player_framework_defines += [ "SUPPORT_LPP" ]
+  player_framework_defines += [ "SUPPORT_LPP_AUDIO_STRAMER" ]
+  player_framework_defines += [ "SUPPORT_LPP_VIDEO_STRAMER" ]
+} else {
+  player_framework_defines += [ "UNSUPPORT_LPP_AUDIO_STRAMER" ]
+  player_framework_defines += [ "UNSUPPORT_LPP_VIDEO_STRAMER" ]
+  player_framework_defines += [ "UNSUPPORT_LPP" ]
 }
 
 if (player_framework_support_player_js_api9) {

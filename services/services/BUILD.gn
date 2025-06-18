@@ -77,8 +77,13 @@ config("media_service_config") {
     "screen_capture_monitor/ipc",
     "transcoder/server",
     "transcoder/ipc",
+    "lpp_audio_streamer/server",
+    "lpp_audio_streamer/ipc",
+    "lpp_video_streamer/server",
+    "lpp_video_streamer/ipc",
     "observer",
     "//foundation/multimedia/player_framework/services/include",
+    "//foundation/multimedia/player_framework/services/engine/histreamer/lpp/lpp_sync_manager",
     "//foundation/multimedia/player_framework/services/services/factory",
     "//foundation/multimedia/player_framework/services/services/engine_intf",
     "//foundation/multimedia/player_framework/services/utils/include",
@@ -121,6 +126,7 @@ ohos_shared_library("media_service") {
 
   sources = [
     "//foundation/multimedia/player_framework/frameworks/native/common/media_errors.cpp",
+    "//foundation/multimedia/player_framework/frameworks/native/common/lpp_common.cpp",
     "common/avsharedmemory_ipc.cpp",
     "factory/engine_factory_repo.cpp",
     "monitor/ipc/monitor_service_stub.cpp",
@@ -212,6 +218,22 @@ ohos_shared_library("media_service") {
       "transcoder/ipc/transcoder_listener_proxy.cpp",
       "transcoder/ipc/transcoder_service_stub.cpp",
       "transcoder/server/transcoder_server.cpp",
+    ]
+  }
+
+  if (player_framework_support_lowpower_av_sink) {
+    sources += [
+      "lpp_audio_streamer/ipc/lpp_audio_streamer_service_stub.cpp",
+      "lpp_audio_streamer/server/lpp_audio_streamer_server.cpp",
+      "lpp_audio_streamer/ipc/lpp_audio_streamer_listener_proxy.cpp",
+    ]
+  }
+
+  if (player_framework_support_lowpower_av_sink) {
+    sources += [
+      "lpp_video_streamer/ipc/lpp_video_streamer_service_stub.cpp",
+      "lpp_video_streamer/server/lpp_video_streamer_server.cpp",
+      "lpp_video_streamer/ipc/lpp_video_streamer_listener_proxy.cpp",
     ]
   }
 

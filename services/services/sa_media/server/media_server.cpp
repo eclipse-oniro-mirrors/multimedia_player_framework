@@ -207,6 +207,21 @@ sptr<IRemoteObject> MediaServer::GetSubSystemAbility(IStandardMediaService::Medi
             return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::SCREEN_CAPTURE_MONITOR);
         }
         default: {
+            return GetSubSystemAbilityPart(subSystemId);
+        }
+    }
+}
+
+sptr<IRemoteObject> MediaServer::GetSubSystemAbilityPart(IStandardMediaService::MediaSystemAbility subSystemId)
+{
+    switch (subSystemId) {
+        case MediaSystemAbility::MEDIA_LPP_AUDIO_PLAYER: {
+            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::LPP_AUDIO_PLAYER);
+        }
+        case MediaSystemAbility::MEDIA_LPP_VIDEO_PLAYER: {
+            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::LPP_VIDEO_PLAYER);
+        }
+        default: {
             MEDIA_LOGE("default case, media client need check subSystemId");
             return nullptr;
         }

@@ -32,6 +32,10 @@
 #include "i_transcoder_engine.h"
 #endif
 
+#ifdef SUPPORT_LPP
+#include "i_lpp_video_streamer.h"
+#include "i_lpp_audio_streamer.h"
+#endif
 namespace OHOS {
 namespace Media {
 class IEngineFactory {
@@ -92,6 +96,26 @@ public:
         (void)appPid;
         (void)appTokenId;
         (void)appFullTokenId;
+        return nullptr;
+    }
+#endif
+
+#ifdef SUPPORT_LPP
+    virtual std::shared_ptr<ILppVideoStreamerEngine> CreateLppVideoStreamerEngine(int32_t appUid, int32_t appPid,
+        uint32_t tokenId)
+    {
+        (void)appUid;
+        (void)appPid;
+        (void)tokenId;
+        return nullptr;
+    }
+
+    virtual std::shared_ptr<ILppAudioStreamerEngine> CreateLppAudioStreamerEngine(int32_t appUid, int32_t appPid,
+        uint32_t tokenId)
+    {
+        (void)appUid;
+        (void)appPid;
+        (void)tokenId;
         return nullptr;
     }
 #endif

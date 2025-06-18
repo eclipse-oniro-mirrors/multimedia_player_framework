@@ -16,6 +16,7 @@
 #ifndef MEDIA_PARCEL_H
 #define MEDIA_PARCEL_H
 
+#include "meta/meta.h"
 #include "meta/format.h"
 #include "message_parcel.h"
 
@@ -27,6 +28,8 @@ public:
     ~MediaParcel() = delete;
     static bool Marshalling(MessageParcel &parcel, const Format &format);
     static bool Unmarshalling(MessageParcel &parcel, Format &format);
+    static bool MetaMarshalling(MessageParcel &parcel, const Media::Format &format);
+    static bool MetaUnmarshalling(MessageParcel &parcel, Media::Format &format);
 };
 } // namespace Media
 } // namespace OHOS

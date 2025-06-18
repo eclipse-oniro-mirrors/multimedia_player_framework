@@ -61,6 +61,18 @@ public:
         DestroyScreenCaptureControllerClient, (std::shared_ptr<IScreenCaptureController> controller), (override));
 #endif
 
+#ifdef SUPPORT_LPP_AUDIO_STRAMER
+    MOCK_METHOD(std::shared_ptr<ILppAudioStreamerService>, CreateLppAudioStreamerService, (), (override));
+    MOCK_METHOD(int32_t,
+        DestroyLppAudioStreamerService, (std::shared_ptr<ILppAudioStreamerService> lppAudioPlayer), (override));
+#endif
+ 
+#ifdef SUPPORT_LPP_VIDEO_STRAMER
+    MOCK_METHOD(std::shared_ptr<ILppVideoStreamerService>, CreateLppVideoStreamerService, (), (override));
+    MOCK_METHOD(int32_t,
+        DestroyLppVideoStreamerService, (std::shared_ptr<ILppVideoStreamerService> lppAudioPlayer), (override));
+#endif
+
     MOCK_METHOD(sptr<IStandardMonitorService>, GetMonitorProxy, (), (override));
     MOCK_METHOD(void, ReleaseClientListener, (), (override));
     MOCK_METHOD(bool, CanKillMediaService, (), (override));

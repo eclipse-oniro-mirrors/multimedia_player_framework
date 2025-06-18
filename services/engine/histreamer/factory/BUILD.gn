@@ -35,6 +35,10 @@ config("media_engine_histreamer_factory_config") {
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/recorder",
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/avmetadatahelper",
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/transcoder",
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/lpp/lpp_audio_streamer",
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/lpp/lpp_video_streamer",
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/lpp/lpp_sync_manager",
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/lpp/lpp_engine_manager",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
   ]
@@ -80,6 +84,13 @@ ohos_static_library("media_engine_histreamer_factory") {
     "media_foundation:media_foundation",
     "safwk:system_ability_fwk",
   ]
+
+  if (player_framework_support_lowpower_av_sink) {
+    external_deps += [ 
+      "drivers_interface_lpplayer:liblow_power_player_proxy_1.0",
+      "hdf_core:libhdi",
+    ]
+  }
 
   if (player_framework_support_drm) {
     external_deps += [ "drm_framework:drm_framework" ]
