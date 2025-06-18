@@ -14,7 +14,7 @@
  */
 #include "system_sound_manager_unit_test.h"
 #include "access_token.h"
-#include "../../../system_sound_manager_impl.h"
+#include "system_sound_manager_impl.h"
 #include "context_impl.h"
 #include "tone_attrs.h"
 #include "system_sound_manager_utils.h"
