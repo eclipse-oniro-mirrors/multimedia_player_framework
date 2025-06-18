@@ -51,6 +51,7 @@ struct RampContext : public AsyncContext {
     int32_t duration = 0;
     float startIntensity = 0.0f;
     float endIntensity = 0.0f;
+    int32_t result = -1;
 };
 
 class AudioHapticPlayerNapi {
