@@ -346,7 +346,7 @@ int32_t AudioHapticVibratorImpl::PlayVibrateForSoundPool(
 #ifdef SUPPORT_VIBRATOR
     // record the pattern time which has been played
     int32_t vibrateTime = vibratorTime_.load();
-    for (int32_t i = 0; i <= vibratorPkg->patternNum; ++i) {
+    for (int32_t i = 0; i < vibratorPkg->patternNum; ++i) {
         result = PlayVibrationPattern(vibratorPkg, i, vibrateTime, lock);
         CHECK_AND_RETURN_RET_LOG(result == 0, result, "AudioHapticVibratorImpl::PlayVibrateForSoundPool failed.");
         if (isStopped_) {
@@ -400,7 +400,7 @@ int32_t AudioHapticVibratorImpl::RunVibrationPatterns(const std::shared_ptr<Vibr
 #ifdef SUPPORT_VIBRATOR
     // record the pattern time which has been played
     int32_t vibrateTime = vibratorTime_.load();
-    for (int32_t i = 0; i <= vibratorPkg->patternNum; ++i) {
+    for (int32_t i = 0; i < vibratorPkg->patternNum; ++i) {
         result = PlayVibrationPattern(vibratorPkg, i, vibrateTime, lock);
         CHECK_AND_RETURN_RET_LOG(result == 0, result, "AudioHapticVibratorImpl::PlayVibrateForSoundPool failed.");
         if (isStopped_) {
@@ -487,28 +487,21 @@ int32_t AudioHapticVibratorImpl::PlayVibrationPattern(
 {
     int32_t result = MSERR_OK;
 #ifdef SUPPORT_VIBRATOR
+    if (patternIndex > vibratorPkg->patternNum - 1) {
+        return result;
+    }
+
     // the delay time of first frame has been handled in audio haptic player
     // calculate the time of single pattern
     MEDIA_LOGI("AudioHapticVibratorImpl::PlayVibrationPattern pattern time %{public}d",
         vibratorPkg->patterns[patternIndex].time);
-    int32_t patternTime = 0;
-    if (patternIndex == vibratorPkg->patternNum) {
-        patternTime = vibratorPkg->patterns[patternIndex - 1].patternDuration;
-    } else {
-        patternTime = vibratorPkg->patterns[patternIndex].time - vibrateTime;
-        vibrateTime = vibratorPkg->patterns[patternIndex].time;
-    }
+    int32_t patternTime = vibratorPkg->patterns[patternIndex].time - vibrateTime;
+    vibrateTime = vibratorPkg->patterns[patternIndex].time;
     
     (void)vibrateCV_.wait_for(lock, std::chrono::milliseconds(patternTime < 0 ? 0 : patternTime),
         [this]() { return isStopped_ || isNeedRestart_; });
     CHECK_AND_RETURN_RET_LOG(!isStopped_ && !isNeedRestart_, result,
         "AudioHapticVibratorImpl::PlayVibrationPattern: Stop() is call when waiting");
-    
-    if (patternIndex == vibratorPkg->patternNum) {
-        MEDIA_LOGI("AudioHapticVibratorImpl::PlayVibrationPattern last pattern play end");
-        return result;
-    }
-
     (void)Sensors::SetUsage(vibratorUsage_, enableInSilentMode_.load());
     (void)Sensors::SetParameters(vibratorParameter_);
     MEDIA_LOGI("AudioHapticVibratorImpl::PlayVibrationPattern.");
@@ -517,6 +510,15 @@ int32_t AudioHapticVibratorImpl::PlayVibrationPattern(
     result = Sensors::PlayPattern(vibratorPkg->patterns[patternIndex]);
     CHECK_AND_RETURN_RET_LOG(result == 0, result,
         "AudioHapticVibratorImpl::PlayVibrationPattern: Failed to PlayPattern. Error %{public}d", result);
+
+    // last pattern need to wait    
+    if (patternIndex == vibratorPkg->patternNum - 1) {
+        int32_t lastPatternDuration = vibratorPkg->patterns[i].patternDuration;
+        (void)vibrateCV_.wait_for(lock, std::chrono::milliseconds(lastPatternDuration),
+            [this]() { return isStopped_ || isNeedRestart_; });
+        CHECK_AND_RETURN_RET_LOG(!isStopped_ && !isNeedRestart_, result,
+            "AudioHapticVibratorImpl::PlayVibrationPattern: Stop() is call when waiting");
+    }
 #endif
     return result;
 }
@@ -530,20 +532,18 @@ int32_t AudioHapticVibratorImpl::PlayVibrateForAVPlayer(const std::shared_ptr<Vi
     int32_t vibrateTime = vibratorTime_.load();
     MEDIA_LOGI("AudioHapticVibratorImpl::PlayVibrateForAVPlayer: now: %{public}d", vibrateTime);
     int32_t patternDuration = IsSelfSystemCaller() ? PATTERN_MAX_COUNT : PATTERN_DEFAULT_COUNT;
-    for (int32_t i = 0; i <= vibratorPkg->patternNum; ++i) {
+    for (int32_t i = 0; i < vibratorPkg->patternNum; ++i) {
         result = PlayVibrationPattern(vibratorPkg, i, vibrateTime, lock);
         AudioHapticPlayerImpl::SendHapticPlayerEvent(result, "PLAY_PATTERN_AVPLAYER");
         CHECK_AND_RETURN_RET_LOG(result == 0, result, "AudioHapticVibratorImpl::PlayVibrateForAVPlayer failed.");
         if (isStopped_) {
             return result;
         }
-        if (isNeedRestart_) {
+        // get the audio time every second and handle the delay time
+        if (isNeedRestart_ || i + 1 >= vibratorPkg->patternNum) {
+            // need restart or the last pattern has been played, break.
             break;
         }
-        if (i + 1 >= vibratorPkg->patternNum) {
-            continue;
-        }
-        // get the audio time every second and handle the delay time
         int32_t nextVibratorTime = vibratorPkg->patterns[i + 1].time;
         vibrateTime = audioHapticPlayer_.GetAudioCurrentTime() - PLAYER_BUFFER_TIME + GetDelayTime();
         int32_t count = 0;
