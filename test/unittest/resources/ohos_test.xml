@@ -677,5 +677,11 @@
             <option name="push" value="test_videofile/camera_info_parser.mp4 -> /data/test" src="res"/>
         </preparer>
     </target>
+    <target name="native_avtranscoder_unit_test">
+        <preparer>
+            <option name="push" value="test_videofile/ChineseColor_H264_AAC_480p_15fps.mp4 -> /data/test" src="res"/>
+            <option name="push" value="res_avtranscoder/Mock_Output.mp4 -> /data/test" src="res"/>
+        </preparer>
+    </target>
 </configuration>
 

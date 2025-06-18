@@ -62,4 +62,15 @@ struct OH_AVMetadataExtractor : public OHOS::RefBase {
     OH_AVMetadataExtractor() = default;
     virtual ~OH_AVMetadataExtractor() = default;
 };
+
+struct OH_AVTranscoder : public OHOS::RefBase {
+    OH_AVTranscoder() = default;
+    virtual ~OH_AVTranscoder() = default;
+};
+
+struct OH_AVTranscoder_Config : public OHOS::RefBase {
+    OH_AVTranscoder_Config() = default;
+    virtual ~OH_AVTranscoder_Config() = default;
+};
+
 #endif // NATIVE_SCREEN_CAPTURE_MAGIC_H
