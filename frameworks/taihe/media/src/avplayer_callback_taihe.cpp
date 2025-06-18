@@ -1034,4 +1034,4 @@ void AVPlayerCallback::Pause()
 }
 
 } // namespace Media
-} // namespace OHOS
+} // namespace ANI

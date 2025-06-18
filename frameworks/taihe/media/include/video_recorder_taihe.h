@@ -50,14 +50,15 @@ constexpr int32_t DEFAULT_FRAME_RATE = 30;
 class VideoRecorderImpl {
 public:
     VideoRecorderImpl();
-    explicit VideoRecorderImpl(VideoRecorderImpl *obj);
     bool IsSurfaceIdVaild(uint64_t surfaceID);
     void CancelCallback();
     friend VideoRecorder CreateVideoRecorderSync();
     void PrepareSync(VideoRecorderConfig const& config);
     string GetInputSurfaceSync();
+    void StartSync();
     void PauseSync();
     void StopSync();
+    void ResumeSync();
     void ReleaseSync();
     void ResetSync();
     string GetState();
@@ -68,7 +69,7 @@ public:
         int32_t audioBitrate = DEFAULT_AUDIO_BIT_RATE;
         int32_t audioChannels = DEFAULT_AUDIO_CHANNELS;
         OHOS::Media::AudioCodecFormat audioCodecFormat = OHOS::Media::AudioCodecFormat::AUDIO_DEFAULT;
-        int32_t auidoSampleRate = DEFAULT_AUDIO_SAMPLE_RATE;
+        int32_t audioSampleRate = DEFAULT_AUDIO_SAMPLE_RATE;
         int32_t duration = DEFAULT_DURATION;
         OHOS::Media::OutputFormatType outputFormat = OHOS::Media::OutputFormatType::FORMAT_DEFAULT;
         int32_t videoBitrate = DEFAULT_VIDEO_BIT_RATE;

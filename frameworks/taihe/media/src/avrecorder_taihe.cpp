@@ -95,7 +95,7 @@ void SetRetInfoError(int32_t errCode, const std::string &operate,
     }
     
     if (errCode == MSERR_UNSUPPORT_AUD_PARAMS) {
-        set_business_error(err, "The video parameter is not supported. Please check the type and range.");
+        set_business_error(err, "The audio parameter is not supported. Please check the type and range.");
         return;
     }
     
@@ -136,6 +136,7 @@ void AVRecorderImpl::PrepareSync(ohos::multimedia::media::AVRecorderConfig const
             set_business_error(result.Value().first, result.Value().second);
         }
     }
+    asyncCtx.release();
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
 }
 
@@ -200,6 +201,10 @@ int32_t AVRecorderImpl::CheckRepeatOperation(const std::string &opt)
     CHECK_AND_RETURN_RET_LOG(taiheCb != nullptr, MSERR_INVALID_OPERATION, "taiheCb is nullptr!");
 
     std::string curState = taiheCb->GetState();
+    if (stateCtrl.find(curState) == stateCtrl.end()) {
+        MEDIA_LOGI("Invalid state: %{public}s.", curState.c_str());
+        return MSERR_INVALID_OPERATION;
+    }
     std::vector<std::string> repeatOpt = stateCtrl.at(curState);
     if (find(repeatOpt.begin(), repeatOpt.end(), opt) != repeatOpt.end()) {
         MEDIA_LOGI("Current state is %{public}s. Please do not call %{public}s again!", curState.c_str(), opt.c_str());
@@ -300,8 +305,6 @@ bool StrToInt(const std::string_view& str, T& value)
     errno = 0;
     const char* addr = valStr.c_str();
     long long result = strtoll(addr, &end, 10); /* 10 means decimal */
-    CHECK_AND_RETURN_RET_LOG(result >= LLONG_MIN && result <= LLONG_MAX, false,
-        "call StrToInt func false,  input str is: %{public}s!", valStr.c_str());
     CHECK_AND_RETURN_RET_LOG(end != addr && end[0] == '\0' && errno != ERANGE, false,
         "call StrToInt func false,  input str is: %{public}s!", valStr.c_str());
     if constexpr (std::is_same<int32_t, T>::value) {
@@ -413,26 +416,6 @@ int32_t AVRecorderImpl::GetConfig(std::unique_ptr<AVRecorderAsyncContext> &async
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetProfile");
     ret = GetModeAndUrl(asyncCtx, config);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetModeAndUrl");
-    if (config.rotation.has_value()) {
-        asyncCtx->config_->rotation = static_cast<int32_t>(config.rotation.value());
-        MEDIA_LOGI("rotation %{public}d!", asyncCtx->config_->rotation);
-    }
-    if (!(asyncCtx->config_->rotation == OHOS::Media::VIDEO_ROTATION_0 ||
-        asyncCtx->config_->rotation == OHOS::Media::VIDEO_ROTATION_90 ||
-        asyncCtx->config_->rotation == OHOS::Media::VIDEO_ROTATION_180 ||
-        asyncCtx->config_->rotation == OHOS::Media::VIDEO_ROTATION_270)) {
-        SetRetInfoError(MSERR_PARAMETER_VERIFICATION_FAILED, "getrotation", "rotation",
-            "rotation angle must be 0, 90, 180 or 270!");
-        return MSERR_PARAMETER_VERIFICATION_FAILED;
-    }
-    rotation_ = asyncCtx->config_->rotation;
-    if (config.location.has_value()) {
-        if (!GetLocation(asyncCtx, config.location.value())) {
-            SetRetInfoError(MSERR_INCORRECT_PARAMETER_TYPE, "GetLocation", "Location",
-                "location type should be Location.");
-            return MSERR_INCORRECT_PARAMETER_TYPE;
-        }
-    }
     if (config.maxDuration.has_value()) {
         asyncCtx->config_->maxDuration = static_cast<int32_t>(config.maxDuration.value());
     }
@@ -732,12 +715,74 @@ int32_t AVRecorderImpl::GetAudioCodecFormat(const std::string &mime, OHOS::Media
     return MSERR_INVALID_VAL;
 }
 
+int32_t AVRecorderImpl::SetAudioCodecFormat(OHOS::Media::AudioCodecFormat &codecFormat, std::string &mime)
+{
+    MEDIA_LOGI("audioCodecFormat %{public}d", codecFormat);
+    const std::map<OHOS::Media::AudioCodecFormat, std::string_view> codecFormatToMimeStr = {
+        { OHOS::Media::AudioCodecFormat::AAC_LC, OHOS::MediaAVCodec::CodecMimeType::AUDIO_AAC },
+        { OHOS::Media::AudioCodecFormat::AUDIO_MPEG, OHOS::MediaAVCodec::CodecMimeType::AUDIO_MPEG },
+        { OHOS::Media::AudioCodecFormat::AUDIO_G711MU, OHOS::MediaAVCodec::CodecMimeType::AUDIO_G711MU },
+        { OHOS::Media::AudioCodecFormat::AUDIO_AMR_NB, OHOS::MediaAVCodec::CodecMimeType::AUDIO_AMR_NB },
+        { OHOS::Media::AudioCodecFormat::AUDIO_AMR_WB, OHOS::MediaAVCodec::CodecMimeType::AUDIO_AMR_WB },
+        { OHOS::Media::AudioCodecFormat::AUDIO_DEFAULT, "" },
+    };
+
+    auto iter = codecFormatToMimeStr.find(codecFormat);
+    if (iter != codecFormatToMimeStr.end()) {
+        mime = iter->second;
+        return MSERR_OK;
+    }
+    return MSERR_INVALID_VAL;
+}
+
+int32_t AVRecorderImpl::SetVideoCodecFormat(OHOS::Media::VideoCodecFormat &codecFormat, std::string &mime)
+{
+    MEDIA_LOGI("VideoCodecFormat %{public}d", codecFormat);
+    const std::map<OHOS::Media::VideoCodecFormat, std::string_view> codecFormatTomimeStr = {
+        { OHOS::Media::VideoCodecFormat::H264, OHOS::MediaAVCodec::CodecMimeType::VIDEO_AVC },
+        { OHOS::Media::VideoCodecFormat::MPEG4, OHOS::MediaAVCodec::CodecMimeType::VIDEO_MPEG4 },
+        { OHOS::Media::VideoCodecFormat::H265, OHOS::MediaAVCodec::CodecMimeType::VIDEO_HEVC },
+        { OHOS::Media::VideoCodecFormat::VIDEO_DEFAULT, ""},
+    };
+
+    auto iter = codecFormatTomimeStr.find(codecFormat);
+    if (iter != codecFormatTomimeStr.end()) {
+        mime = iter->second;
+        return MSERR_OK;
+    }
+    return MSERR_INVALID_VAL;
+}
+
+int32_t AVRecorderImpl::SetFileFormat(OutputFormatType &type, std::string &extension)
+{
+    MEDIA_LOGI("OutputFormatType %{public}d", type);
+    const std::map<OutputFormatType, std::string> outputFormatToextension = {
+        { OutputFormatType::FORMAT_MPEG_4, "mp4" },
+        { OutputFormatType::FORMAT_M4A, "m4a" },
+        { OutputFormatType::FORMAT_MP3, "mp3" },
+        { OutputFormatType::FORMAT_WAV, "wav" },
+        { OutputFormatType::FORMAT_AMR, "amr" },
+        { OutputFormatType::FORMAT_DEFAULT, "" },
+    };
+
+    auto iter = outputFormatToextension.find(type);
+    if (iter != outputFormatToextension.end()) {
+        extension = iter->second;
+        return MSERR_OK;
+    }
+    return MSERR_INVALID_VAL;
+}
+
 int32_t AVRecorderImpl::CheckStateMachine(const std::string &opt)
 {
     auto recorderCb = std::static_pointer_cast<AVRecorderCallback>(recorderCb_);
     CHECK_AND_RETURN_RET_LOG(recorderCb != nullptr, MSERR_INVALID_OPERATION, "taiheCb is nullptr!");
 
     std::string curState = recorderCb->GetState();
+    if (stateCtrlList.find(curState) == stateCtrlList.end()) {
+        MEDIA_LOGI("Invalid state: %{public}s.", curState.c_str());
+        return MSERR_INVALID_OPERATION;
+    }
     std::vector<std::string> allowedOpt = stateCtrlList.at(curState);
     if (find(allowedOpt.begin(), allowedOpt.end(), opt) == allowedOpt.end()) {
         MEDIA_LOGE("The %{public}s operation is not allowed in the %{public}s state!", opt.c_str(), curState.c_str());
@@ -758,10 +803,11 @@ string AVRecorderImpl::GetInputSurfaceExecuteByPromise(const std::string &opt)
 {
     MEDIA_LOGI("Taihe %{public}s Start", opt.c_str());
     auto asyncCtx = std::make_unique<AVRecorderAsyncContext>();
-    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, "", "taskQue is nullptr!");
+    auto res = ::taihe::string("");
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, res, "taskQue is nullptr!");
     asyncCtx->taihe = this;
-    CHECK_AND_RETURN_RET_LOG(asyncCtx->taihe != nullptr, "", "taskQue is nullptr!");
-    CHECK_AND_RETURN_RET_LOG(asyncCtx->taihe->taskQue_ != nullptr, "", "taskQue is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->taihe != nullptr, res, "taskQue is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->taihe->taskQue_ != nullptr, res, "taskQue is nullptr!");
 
     if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
         asyncCtx->task_ = GetPromiseTask(asyncCtx->taihe, opt);
@@ -776,13 +822,12 @@ string AVRecorderImpl::GetInputSurfaceExecuteByPromise(const std::string &opt)
             set_business_error(result.Value().first, result.Value().second);
         }
         if ((result.Value().first == MSERR_EXT_API9_OK) && (asyncCtx->opt_ == AVRecordergOpt::GETINPUTSURFACE)) {
-            return MediaTaiheUtils::ToTaiheString(result.Value().second);
+            res = MediaTaiheUtils::ToTaiheString(result.Value().second);
         }
     }
     asyncCtx.release();
-    MEDIA_LOGI("The taihe thread of %{public}s finishes execution and returns", asyncCtx->opt_.c_str());
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
-    return "";
+    return res;
 }
 
 void AVRecorderImpl::PauseSync()
@@ -811,6 +856,13 @@ void AVRecorderImpl::ResetSync()
     MediaTrace trace("AVRecorder::ResetSync");
     MEDIA_LOGI("Taihe Reset Enter");
     return ExecuteByPromise(AVRecordergOpt::RESET);
+}
+
+void AVRecorderImpl::ResumeSync()
+{
+    MediaTrace trace("AVRecorder::ResumeSync");
+    MEDIA_LOGI("Taihe Resume Enter");
+    return ExecuteByPromise(AVRecordergOpt::RESUME);
 }
 
 void AVRecorderImpl::ExecuteByPromise(const std::string &opt)
@@ -843,6 +895,389 @@ AVRecorder CreateAVRecorderSync()
     MediaTrace trace("AVRecorder::CreateAVRecorderSync");
     MEDIA_LOGI("Taihe CreateAVRecorder Start");
     return make_holder<AVRecorderImpl, AVRecorder>();
+}
+
+::ohos::multimedia::media::AVRecorderConfig AVRecorderImpl::GetAVRecorderConfigSync()
+{
+    MediaTrace trace("AVRecorder::GetAVRecorderConfigSync");
+    const std::string &opt = AVRecordergOpt::GET_AV_RECORDER_CONFIG;
+    MEDIA_LOGI("Taihe %{public}s Start", opt.c_str());
+    ::ohos::multimedia::media::AVRecorderConfig config = CreateDefaultAVRecorderConfig();
+    auto asyncCtx = std::make_unique<AVRecorderAsyncContext>();
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, config, "failed to get AsyncContext");
+    asyncCtx->taihe = this;
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->taihe != nullptr, config, "failed to GetJsInstanceAndArgs");
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->taihe->taskQue_ != nullptr, config, "taskQue is nullptr!");
+
+    if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
+        asyncCtx->task_ = GetAVRecorderConfigTask(asyncCtx);
+        (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+        asyncCtx->opt_ = opt;
+    } else {
+        SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
+    }
+    if (asyncCtx->task_) {
+        auto result = asyncCtx->task_->GetResult();
+        if (result.Value().first != MSERR_EXT_API9_OK) {
+            set_business_error(result.Value().first, result.Value().second);
+        }
+        if ((result.Value().first == MSERR_EXT_API9_OK) &&
+            (asyncCtx->opt_ == AVRecordergOpt::GET_AV_RECORDER_CONFIG)) {
+                SetAVRecorderConfig(asyncCtx, config);
+        }
+    }
+    asyncCtx.release();
+    MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
+    return config;
+}
+
+void AVRecorderImpl::SetAVRecorderConfig(
+    const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, ::ohos::multimedia::media::AVRecorderConfig &res)
+{
+    auto config = asyncCtx->config_;
+    if (config->withAudio == true) {
+        ohos::multimedia::media::AudioSourceType::key_t audioSourceTypeKey;
+        MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::media::AudioSourceType>(
+            config->audioSourceType, audioSourceTypeKey);
+        res.audioSourceType =
+            optional<::ohos::multimedia::media::AudioSourceType>(std::in_place_t{}, audioSourceTypeKey);
+    }
+    if (config->withVideo == true) {
+        ohos::multimedia::media::VideoSourceType::key_t videoSourceTypeKey;
+        MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::media::VideoSourceType>(
+            config->videoSourceType, videoSourceTypeKey);
+        res.videoSourceType =
+            optional<::ohos::multimedia::media::VideoSourceType>(std::in_place_t{}, videoSourceTypeKey);
+    }
+    auto profile = CreateAVRecorderProfile(asyncCtx);
+    res.profile = profile;
+    if (config->withAudio || config->withVideo) {
+        taihe::string urlTaihe = MediaTaiheUtils::ToTaiheString(config->url);
+        res.url = optional<taihe::string>(std::in_place_t{}, urlTaihe);
+    }
+}
+
+::ohos::multimedia::media::AVRecorderConfig AVRecorderImpl::CreateDefaultAVRecorderConfig()
+{
+    ::ohos::multimedia::media::AVRecorderConfig config {
+        optional<::ohos::multimedia::media::AudioSourceType>(std::nullopt),
+        optional<::ohos::multimedia::media::VideoSourceType>(std::nullopt),
+        CreateDefaultAVRecorderProfile(),
+        optional<taihe::string>(std::nullopt),
+        optional<::taihe::array<::ohos::multimedia::media::MetaSourceType>>(std::nullopt),
+        optional<::ohos::multimedia::media::FileGenerationMode>(std::nullopt),
+        optional<::ohos::multimedia::media::AVMetadata>(std::nullopt),
+        optional<int32_t>(std::nullopt),
+    };
+    return config;
+}
+
+::ohos::multimedia::media::AVRecorderProfile AVRecorderImpl::CreateAVRecorderProfile(
+    const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
+{
+    auto config = asyncCtx->config_;
+    std::string fileFormat = "";
+    if (config->withAudio || config->withVideo) {
+        SetFileFormat(config->profile.fileFormat, fileFormat);
+    }
+    taihe::string fileFormatValue = MediaTaiheUtils::ToTaiheString(fileFormat);
+    ohos::multimedia::media::ContainerFormatType::key_t containerFormatTypeKey;
+    MediaTaiheUtils::GetEnumKeyByStringValue<ohos::multimedia::media::ContainerFormatType>(
+        fileFormatValue, containerFormatTypeKey);
+    ::ohos::multimedia::media::AVRecorderProfile aVRecorderProfile {
+        optional<int32_t>(std::nullopt), optional<int32_t>(std::nullopt),
+        optional<::ohos::multimedia::media::CodecMimeType>(std::nullopt),
+        optional<int32_t>(std::nullopt),
+        containerFormatTypeKey,
+        optional<int32_t>(std::nullopt),
+        optional<::ohos::multimedia::media::CodecMimeType>(std::nullopt),
+        optional<int32_t>(std::nullopt), optional<int32_t>(std::nullopt),
+        optional<int32_t>(std::nullopt), optional<bool>(std::nullopt),
+        optional<bool>(std::nullopt), optional<bool>(std::nullopt),
+    };
+    if (config->withAudio) {
+        aVRecorderProfile.audioBitrate = optional<int32_t>(std::in_place_t{}, config->profile.audioBitrate);
+        aVRecorderProfile.audioChannels = optional<int32_t>(std::in_place_t{}, config->profile.audioChannels);
+        aVRecorderProfile.audioSampleRate = optional<int32_t>(std::in_place_t{}, config->profile.audioSampleRate);
+        std::string audioCodec = "";
+        SetAudioCodecFormat(config->profile.audioCodecFormat, audioCodec);
+        taihe::string audioValue = MediaTaiheUtils::ToTaiheString(audioCodec);
+        ohos::multimedia::media::CodecMimeType::key_t codecMimeTypeKey;
+        MediaTaiheUtils::GetEnumKeyByStringValue<ohos::multimedia::media::CodecMimeType>(audioValue, codecMimeTypeKey);
+        aVRecorderProfile.audioCodec =
+            optional<::ohos::multimedia::media::CodecMimeType>(std::in_place_t{}, codecMimeTypeKey);
+    }
+    if (config->withVideo) {
+        aVRecorderProfile.videoBitrate = optional<int32_t>(std::in_place_t{}, config->profile.videoBitrate);
+        aVRecorderProfile.videoFrameWidth = optional<int32_t>(std::in_place_t{}, config->profile.videoFrameWidth);
+        aVRecorderProfile.videoFrameHeight = optional<int32_t>(std::in_place_t{}, config->profile.videoFrameHeight);
+        aVRecorderProfile.videoFrameRate = optional<int32_t>(std::in_place_t{}, config->profile.videoFrameRate);
+        std::string videoCodec = "";
+        SetVideoCodecFormat(config->profile.videoCodecFormat, videoCodec);
+        taihe::string videoValue = MediaTaiheUtils::ToTaiheString(videoCodec);
+        ohos::multimedia::media::CodecMimeType::key_t codecMimeTypeKey;
+        MediaTaiheUtils::GetEnumKeyByStringValue<ohos::multimedia::media::CodecMimeType>(videoValue, codecMimeTypeKey);
+        aVRecorderProfile.videoCodec =
+            optional<::ohos::multimedia::media::CodecMimeType>(std::in_place_t{}, codecMimeTypeKey);
+    }
+    return aVRecorderProfile;
+}
+
+::ohos::multimedia::media::AVRecorderProfile AVRecorderImpl::CreateDefaultAVRecorderProfile()
+{
+    taihe::string value = MediaTaiheUtils::ToTaiheString("");
+    ohos::multimedia::media::CodecMimeType::key_t codecMimeTypeKey;
+    MediaTaiheUtils::GetEnumKeyByStringValue<ohos::multimedia::media::CodecMimeType>(
+        value, codecMimeTypeKey);
+    ohos::multimedia::media::ContainerFormatType::key_t containerFormatTypeKey;
+    MediaTaiheUtils::GetEnumKeyByStringValue<ohos::multimedia::media::ContainerFormatType>(
+        value, containerFormatTypeKey);
+    ::ohos::multimedia::media::AVRecorderProfile aVRecorderProfile {
+        optional<int32_t>(std::nullopt),
+        optional<int32_t>(std::nullopt),
+        optional<::ohos::multimedia::media::CodecMimeType>(std::nullopt),
+        optional<int32_t>(std::nullopt),
+        containerFormatTypeKey,
+        optional<int32_t>(std::nullopt),
+        optional<::ohos::multimedia::media::CodecMimeType>(std::nullopt),
+        optional<int32_t>(std::nullopt),
+        optional<int32_t>(std::nullopt),
+        optional<int32_t>(std::nullopt),
+        optional<bool>(std::nullopt),
+        optional<bool>(std::nullopt),
+    };
+    return aVRecorderProfile;
+}
+
+std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::GetAVRecorderConfigTask(
+    const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
+{
+    return std::make_shared<TaskHandler<RetInfo>>([taihe = asyncCtx->taihe, &config = asyncCtx->config_]() {
+        const std::string &option = AVRecordergOpt::GET_AV_RECORDER_CONFIG;
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+        config = std::make_shared<AVRecorderConfig>();
+
+        CHECK_AND_RETURN_RET(taihe != nullptr && config != nullptr,
+            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
+
+        CHECK_AND_RETURN_RET(taihe->CheckStateMachine(option) == MSERR_OK,
+            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
+        
+        CHECK_AND_RETURN_RET(taihe->CheckRepeatOperation(option) == MSERR_OK,
+            RetInfo(MSERR_EXT_API9_OK, ""));
+
+        int32_t ret = taihe->GetAVRecorderConfig(config);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, GetRetInfo(MSERR_INVALID_VAL, "GetAVRecorderConfigTask", ""),
+            "get AVRecorderConfigTask failed");
+
+        MEDIA_LOGI("%{public}s End", option.c_str());
+        return RetInfo(MSERR_EXT_API9_OK, "");
+    });
+}
+
+int32_t AVRecorderImpl::GetAVRecorderConfig(std::shared_ptr<AVRecorderConfig> &config)
+{
+    ConfigMap configMap;
+    recorder_->GetAVRecorderConfig(configMap);
+    OHOS::Media::Location location;
+    recorder_->GetLocation(location);
+
+    config->profile.audioBitrate = configMap["audioBitrate"];
+    config->profile.audioChannels = configMap["audioChannels"];
+    config->profile.audioCodecFormat = static_cast<OHOS::Media::AudioCodecFormat>(configMap["audioCodec"]);
+    config->profile.audioSampleRate = configMap["audioSampleRate"];
+    config->profile.fileFormat = static_cast<OutputFormatType>(configMap["fileFormat"]);
+    config->profile.videoBitrate = configMap["videoBitrate"];
+    config->profile.videoCodecFormat = static_cast<OHOS::Media::VideoCodecFormat>(configMap["videoCodec"]);
+    config->profile.videoFrameHeight = configMap["videoFrameHeight"];
+    config->profile.videoFrameWidth = configMap["videoFrameWidth"];
+    config->profile.videoFrameRate = configMap["videoFrameRate"];
+
+    config->audioSourceType = static_cast<OHOS::Media::AudioSourceType>(configMap["audioSourceType"]);
+    config->videoSourceType = static_cast<OHOS::Media::VideoSourceType>(configMap["videoSourceType"]);
+    const std::string fdHead = "fd://";
+    config->url = fdHead + std::to_string(configMap["url"]);
+    config->rotation = configMap["rotation"];
+    config->maxDuration = configMap["maxDuration"];
+    config->withVideo = configMap["withVideo"];
+    config->withAudio = configMap["withAudio"];
+    config->withLocation = configMap["withLocation"];
+    config->location.latitude = location.latitude;
+    config->location.longitude = location.longitude;
+    return MSERR_OK;
+}
+
+::taihe::array<::ohos::multimedia::media::EncoderInfo> AVRecorderImpl::GetAvailableEncoderSync()
+{
+    MediaTrace trace("AVRecorder::GetAvailableEncoderSync");
+    const std::string &opt = AVRecordergOpt::GET_ENCODER_INFO;
+    MEDIA_LOGI("Taihe %{public}s Start", opt.c_str());
+    ::taihe::array<::ohos::multimedia::media::EncoderInfo> res = GetDefaultResult();
+    auto asyncCtx = std::make_unique<AVRecorderAsyncContext>();
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, res, "failed to get AsyncContext");
+    asyncCtx->taihe = this;
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->taihe->taskQue_ != nullptr, res, "taskQue is nullptr!");
+    if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
+        asyncCtx->task_ = GetEncoderInfoTask(asyncCtx);
+        (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+        asyncCtx->opt_ = opt;
+    } else {
+        SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
+    }
+    if (asyncCtx->task_) {
+        auto result = asyncCtx->task_->GetResult();
+        if (result.Value().first != MSERR_EXT_API9_OK) {
+            set_business_error(result.Value().first, result.Value().second);
+        }
+        if ((result.Value().first == MSERR_EXT_API9_OK) &&
+            (asyncCtx->opt_ == AVRecordergOpt::GET_ENCODER_INFO)) {
+            res = GetTaiheResult(asyncCtx);
+        }
+    }
+    asyncCtx.release();
+
+    MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
+    return res;
+}
+
+::taihe::array<::ohos::multimedia::media::EncoderInfo> AVRecorderImpl::GetTaiheResult(
+    const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
+{
+    std::vector<::ohos::multimedia::media::EncoderInfo> TaiheEncoderInfo_;
+    for (uint32_t i = 0; i < asyncCtx->encoderInfo_.size(); i++) {
+        if (asyncCtx->encoderInfo_[i].type == "audio") {
+            GetAudioEncoderInfo(asyncCtx->encoderInfo_[i], TaiheEncoderInfo_);
+        } else {
+            GetVideoEncoderInfo(asyncCtx->encoderInfo_[i], TaiheEncoderInfo_);
+        }
+    }
+    return array<::ohos::multimedia::media::EncoderInfo>(TaiheEncoderInfo_);
+}
+
+void AVRecorderImpl::GetAudioEncoderInfo(EncoderCapabilityData encoderCapData,
+    std::vector<::ohos::multimedia::media::EncoderInfo> &TaiheEncoderInfos)
+{
+    taihe::string audioMimeType = MediaTaiheUtils::ToTaiheString(encoderCapData.mimeType);
+    ohos::multimedia::media::CodecMimeType::key_t audioCodecMimeTypeKey;
+    MediaTaiheUtils::GetEnumKeyByStringValue<ohos::multimedia::media::CodecMimeType>(
+        audioMimeType, audioCodecMimeTypeKey);
+    ::ohos::multimedia::media::EncoderInfo TaiheEncoderInfo = {
+        audioCodecMimeTypeKey,
+        MediaTaiheUtils::ToTaiheString(encoderCapData.type),
+        optional<::ohos::multimedia::media::Range>(std::in_place_t{}, GetRange(
+            encoderCapData.bitrate.minVal, encoderCapData.bitrate.maxVal)),
+        optional<::ohos::multimedia::media::Range>(std::nullopt),
+        optional<::ohos::multimedia::media::Range>(std::nullopt),
+        optional<::ohos::multimedia::media::Range>(std::nullopt),
+        optional<::ohos::multimedia::media::Range>(std::in_place_t{}, GetRange(
+            encoderCapData.channels.minVal, encoderCapData.channels.maxVal)),
+        optional<::taihe::array<int32_t>>(std::in_place_t{}, array<int32_t>(encoderCapData.sampleRate)),
+    };
+    TaiheEncoderInfos.push_back(TaiheEncoderInfo);
+}
+
+void AVRecorderImpl::GetVideoEncoderInfo(EncoderCapabilityData encoderCapData,
+    std::vector<::ohos::multimedia::media::EncoderInfo> &TaiheEncoderInfos)
+{
+    taihe::string audioMimeType = MediaTaiheUtils::ToTaiheString(encoderCapData.mimeType);
+    ohos::multimedia::media::CodecMimeType::key_t audioCodecMimeTypeKey;
+    MediaTaiheUtils::GetEnumKeyByStringValue<ohos::multimedia::media::CodecMimeType>(
+        audioMimeType, audioCodecMimeTypeKey);
+    ::ohos::multimedia::media::EncoderInfo TaiheEncoderInfo = {
+        audioCodecMimeTypeKey,
+        MediaTaiheUtils::ToTaiheString(encoderCapData.type),
+        optional<::ohos::multimedia::media::Range>(std::in_place_t{}, GetRange(
+            encoderCapData.bitrate.minVal, encoderCapData.bitrate.maxVal)),
+        optional<::ohos::multimedia::media::Range>(std::in_place_t{}, GetRange(
+            encoderCapData.frameRate.minVal, encoderCapData.frameRate.maxVal)),
+        optional<::ohos::multimedia::media::Range>(std::in_place_t{}, GetRange(
+            encoderCapData.width.minVal, encoderCapData.width.maxVal)),
+        optional<::ohos::multimedia::media::Range>(std::in_place_t{}, GetRange(
+            encoderCapData.height.minVal, encoderCapData.height.maxVal)),
+        optional<::ohos::multimedia::media::Range>(std::nullopt),
+        optional<::taihe::array<int32_t>>(std::nullopt),
+    };
+    TaiheEncoderInfos.push_back(TaiheEncoderInfo);
+}
+
+::ohos::multimedia::media::Range AVRecorderImpl::GetRange(int32_t min, int32_t max)
+{
+    ::ohos::multimedia::media::Range range = {
+        min,
+        max,
+    };
+    return range;
+}
+
+::taihe::array<::ohos::multimedia::media::EncoderInfo> AVRecorderImpl::GetDefaultResult()
+{
+    std::vector<::ohos::multimedia::media::EncoderInfo> TaiheEncoderInfo_;
+    return array<::ohos::multimedia::media::EncoderInfo>(TaiheEncoderInfo_);
+}
+
+std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::GetEncoderInfoTask(
+    const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
+{
+    return std::make_shared<TaskHandler<RetInfo>>([taihe = asyncCtx->taihe, &encoderInfo = asyncCtx->encoderInfo_]() {
+        const std::string &option = AVRecordergOpt::GET_ENCODER_INFO;
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+
+        CHECK_AND_RETURN_RET(taihe != nullptr,
+            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
+
+        CHECK_AND_RETURN_RET(taihe->CheckStateMachine(option) == MSERR_OK,
+            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
+        
+        CHECK_AND_RETURN_RET(taihe->CheckRepeatOperation(option) == MSERR_OK,
+            RetInfo(MSERR_EXT_API9_OK, ""));
+
+        int32_t ret = taihe->GetEncoderInfo(encoderInfo);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, GetRetInfo(MSERR_INVALID_VAL, "GetEncoderInfoTask", ""),
+            "get GetEncoderInfoTask failed");
+
+        MEDIA_LOGI("%{public}s End", option.c_str());
+        return RetInfo(MSERR_EXT_API9_OK, "");
+    });
+}
+
+int32_t AVRecorderImpl::GetEncoderInfo(std::vector<EncoderCapabilityData> &encoderInfo)
+{
+    int32_t ret = recorder_->GetAvailableEncoder(encoderInfo);
+    return ret;
+}
+
+::taihe::string AVRecorderImpl::GetInputMetaSurfaceSync(::ohos::multimedia::media::MetaSourceType type)
+{
+    MediaTrace trace("AVRecorder::GetInputMetaSurfaceSync");
+    const std::string &opt = AVRecordergOpt::GETINPUTMETASURFACE;
+    MEDIA_LOGI("Taihe %{public}s Start", opt.c_str());
+    auto res = ::taihe::string("");
+    auto asyncCtx = std::make_unique<AVRecorderAsyncContext>();
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, res, "taskQue is nullptr!");
+    asyncCtx->taihe = this;
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->taihe != nullptr, res, "taskQue is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->taihe->taskQue_ != nullptr, res, "taskQue is nullptr!");
+
+    if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
+        if (asyncCtx->taihe->GetMetaType(asyncCtx, type) == MSERR_OK) {
+            asyncCtx->task_ = GetInputMetaSurface(asyncCtx);
+            (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+        }
+    } else {
+        SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
+    }
+    if (asyncCtx->task_) {
+        auto result = asyncCtx->task_->GetResult();
+        if (result.Value().first != MSERR_EXT_API9_OK) {
+            set_business_error(result.Value().first, result.Value().second);
+        } else {
+            res = MediaTaiheUtils::ToTaiheString(result.Value().second);
+        }
+    }
+    asyncCtx.release();
+
+    MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
+    return res;
 }
 
 int32_t AVRecorderImpl::GetMetaType(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
@@ -900,9 +1335,103 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::GetInputMetaSurface(
     });
 }
 
+bool AVRecorderImpl::IsWatermarkSupportedSync()
+{
+    MediaTrace trace("AVRecorder::IsWatermarkSupportedSync");
+    const std::string &opt = AVRecordergOpt::IS_WATERMARK_SUPPORTED;
+    MEDIA_LOGI("Taihe %{public}s Start", opt.c_str());
+
+    auto asyncCtx = std::make_unique<AVRecorderAsyncContext>();
+    bool res = false;
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, res, "failed to get AsyncContext");
+    asyncCtx->taihe = this;
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->taihe != nullptr, res, "failed to GetInstanceAndArgs");
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->taihe->taskQue_ != nullptr, res, "taskQue is nullptr!");
+
+    if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
+        asyncCtx->task_ = IsWatermarkSupportedTask(asyncCtx);
+        (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+        asyncCtx->opt_ = opt;
+    } else {
+        SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
+    }
+    if (asyncCtx->task_) {
+        auto result = asyncCtx->task_->GetResult();
+        if (result.Value().first != MSERR_EXT_API9_OK) {
+            set_business_error(result.Value().first, result.Value().second);
+        }
+        if ((result.Value().first == MSERR_EXT_API9_OK) &&
+            (asyncCtx->opt_ == AVRecordergOpt::IS_WATERMARK_SUPPORTED)) {
+            res = asyncCtx->isWatermarkSupported_;
+        }
+    }
+    asyncCtx.release();
+
+    MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
+    return res;
+}
+
+std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::IsWatermarkSupportedTask(
+    const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
+{
+    return std::make_shared<TaskHandler<RetInfo>>([taihe = asyncCtx->taihe,
+        &isWatermarkSupported = asyncCtx->isWatermarkSupported_]() {
+        const std::string &option = AVRecordergOpt::IS_WATERMARK_SUPPORTED;
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+
+        CHECK_AND_RETURN_RET(taihe != nullptr,
+            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
+
+        CHECK_AND_RETURN_RET(taihe->CheckStateMachine(option) == MSERR_OK,
+            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
+        
+        CHECK_AND_RETURN_RET(taihe->CheckRepeatOperation(option) == MSERR_OK,
+            RetInfo(MSERR_EXT_API9_OK, ""));
+
+        int32_t ret = taihe->IsWatermarkSupported(isWatermarkSupported);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, GetRetInfo(MSERR_INVALID_VAL, "IsWatermarkSupportedTask", ""),
+            "IsWatermarkSupportedTask failed");
+
+        MEDIA_LOGI("%{public}s End", option.c_str());
+        return RetInfo(MSERR_EXT_API9_OK, "");
+    });
+}
+
 int32_t AVRecorderImpl::IsWatermarkSupported(bool &isWatermarkSupported)
 {
     return recorder_->IsWatermarkSupported(isWatermarkSupported);
+}
+
+void AVRecorderImpl::UpdateRotationSync(int32_t rotation)
+{
+    MediaTrace trace("AVRecorder::UpdateRotationSync");
+    const std::string &opt = AVRecordergOpt::SET_ORIENTATION_HINT;
+    MEDIA_LOGI("Taihe %{public}s Start", opt.c_str());
+
+    auto asyncCtx = std::make_unique<AVRecorderAsyncContext>();
+    CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
+    asyncCtx->taihe = this;
+    CHECK_AND_RETURN_LOG(asyncCtx->taihe != nullptr, "failed to GetInstanceAndArgs");
+    CHECK_AND_RETURN_LOG(asyncCtx->taihe->taskQue_ != nullptr, "taskQue is nullptr!");
+
+    if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
+        if (asyncCtx->taihe->GetRotation(asyncCtx, rotation) == MSERR_OK) {
+            asyncCtx->task_ = GetSetOrientationHintTask(asyncCtx);
+            (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+        }
+    } else {
+        SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
+    }
+    if (asyncCtx->task_) {
+        auto result = asyncCtx->task_->GetResult();
+        if (result.Value().first != MSERR_EXT_API9_OK) {
+            set_business_error(result.Value().first, result.Value().second);
+        }
+    }
+    asyncCtx.release();
+
+    MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
+    return;
 }
 
 int32_t AVRecorderImpl::GetRotation(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, int32_t rotation)
@@ -942,6 +1471,42 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::GetSetOrientationHintTask(
         MEDIA_LOGI("%{public}s End", option.c_str());
         return RetInfo(MSERR_EXT_API9_OK, "");
     });
+}
+
+int32_t AVRecorderImpl::GetAudioCapturerMaxAmplitudeSync()
+{
+    MediaTrace trace("AVRecorder::GetAudioCapturerMaxAmplitudeSync");
+    const std::string &opt = AVRecordergOpt::GET_MAX_AMPLITUDE;
+    MEDIA_LOGD("Taihe %{public}s Start", opt.c_str());
+
+    int32_t ret = 0;
+    auto asyncCtx = std::make_unique<AVRecorderAsyncContext>();
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, ret, "failed to get AsyncContext");
+    asyncCtx->taihe = this;
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->taihe != nullptr, ret, "failed to GetInstanceAndArgs");
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->taihe->taskQue_ != nullptr, ret, "taskQue is nullptr!");
+
+    if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
+        asyncCtx->task_ = GetMaxAmplitudeTask(asyncCtx);
+        (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+        asyncCtx->opt_ = opt;
+    } else {
+        SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
+    }
+    if (asyncCtx->task_) {
+        auto result = asyncCtx->task_->GetResult();
+        if (result.Value().first != MSERR_EXT_API9_OK) {
+            set_business_error(result.Value().first, result.Value().second);
+        }
+        if ((result.Value().first == MSERR_EXT_API9_OK) &&
+            (asyncCtx->opt_ == AVRecordergOpt::GET_MAX_AMPLITUDE)) {
+            ret = asyncCtx->maxAmplitude_;
+        }
+    }
+    asyncCtx.release();
+
+    MEDIA_LOGD("Taihe %{public}s End", opt.c_str());
+    return ret;
 }
 
 std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::GetMaxAmplitudeTask(
@@ -1110,7 +1675,7 @@ void AVRecorderImpl::OnError(callback_view<void(uintptr_t)> callback)
             std::make_shared<taihe::callback<void(uintptr_t)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
-    SetCallbackReference("error", autoRef);
+    SetCallbackReference(AVRecorderEvent::EVENT_ERROR, autoRef);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheOnError callbackName: error success", FAKE_POINTER(this));
     return;
 }

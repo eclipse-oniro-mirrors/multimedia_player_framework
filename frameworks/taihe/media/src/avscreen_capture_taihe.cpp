@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#include <map>
-#include <string>
 #include "media_errors.h"
 #include "media_log.h"
 #include "media_dfx.h"
@@ -31,18 +29,21 @@ namespace {
 }
 
 namespace ANI::Media {
+std::map<std::string,
+    AVScreenCaptureRecorderImpl::AvScreenCaptureTaskqFunc> AVScreenCaptureRecorderImpl::taskQFuncs_ = {
+    {AVScreenCapturegOpt::START_RECORDING, &AVScreenCaptureRecorderImpl::StartRecording},
+    {AVScreenCapturegOpt::STOP_RECORDING, &AVScreenCaptureRecorderImpl::StopRecording},
+    {AVScreenCapturegOpt::RELEASE, &AVScreenCaptureRecorderImpl::Release},
+};
+
 AVScreenCaptureRecorderImpl::AVScreenCaptureRecorderImpl()
 {
     screenCapture_ = ScreenCaptureFactory::CreateScreenCapture();
-    if (screenCapture_ == nullptr) {
-        MEDIA_LOGE("failed to CreateScreenCapture");
-        return;
-    }
+    CHECK_AND_RETURN_LOG(screenCapture_ != nullptr, "failed to CreateScreenCapture");
+    taskQue_ = std::make_unique<TaskQueue>("OS_AVScreenCaptureTaihe");
+    (void)taskQue_->Start();
     screenCaptureCb_ = std::make_shared<AVScreenCaptureCallback>();
-    if (screenCaptureCb_ == nullptr) {
-        MEDIA_LOGE("failed to CreateScreenCaptureCb");
-        return;
-    }
+    CHECK_AND_RETURN_LOG(screenCaptureCb_ != nullptr, "failed to CreateScreenCaptureCb");
     (void)screenCapture_->SetScreenCaptureCallback(screenCaptureCb_);
 }
 
@@ -50,6 +51,22 @@ AVScreenCaptureRecorder CreateAVScreenCaptureRecorderSync()
 {
     MediaTrace trace("AVScreenCapture::CreateAVScreenRecorder");
     return make_holder<AVScreenCaptureRecorderImpl, AVScreenCaptureRecorder>();
+}
+
+void ReportAVScreenCaptureUserChoiceSync(int32_t sessionId, string_view choice)
+{
+    MediaTrace trace("AVScreenCapture::TaiheReportAVScreenCaptureUserChoice");
+    const std::string &opt = AVScreenCapturegOpt::REPORT_USER_CHOICE;
+    MEDIA_LOGI("Taihe %{public}s Start", opt.c_str());
+    MEDIA_LOGI("TaiheReportAVScreenCaptureUserChoice sessionId: %{public}d, choice: %{public}s",
+        sessionId, static_cast<std::string>(choice).c_str());
+    auto asyncCtx = std::make_unique<AVScreenCaptureAsyncContext>();
+    CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
+    asyncCtx->controller_ = ScreenCaptureControllerFactory::CreateScreenCaptureController();
+    asyncCtx->controller_->ReportAVScreenCaptureUserChoice(sessionId, static_cast<std::string>(choice));
+    asyncCtx.release();
+
+    MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
 }
 
 RetInfo GetReturnInfo(int32_t errCode, const std::string &operate, const std::string &param,
@@ -160,36 +177,38 @@ OHOS::Media::AVScreenCaptureFillMode AVScreenCaptureRecorderImpl::GetScreenCaptu
     return screenCaptureFillMode;
 }
 
-int32_t AVScreenCaptureRecorderImpl::GetConfig(::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config)
+int32_t AVScreenCaptureRecorderImpl::GetConfig(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
+    ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config)
 {
-    config_.captureMode = CaptureMode::CAPTURE_HOME_SCREEN;
-    config_.dataType = DataType::CAPTURE_FILE;
+    asyncCtx->config_.captureMode = CaptureMode::CAPTURE_HOME_SCREEN;
+    asyncCtx->config_.dataType = DataType::CAPTURE_FILE;
 
-    int32_t ret =  GetAudioInfo(config);
+    int32_t ret =  GetAudioInfo(asyncCtx, config);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetAudioInfo");
-    ret =  GetVideoInfo(config);
+    ret =  GetVideoInfo(asyncCtx, config);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetVideoInfo");
-    ret =  GetRecorderInfo(config);
+    ret =  GetRecorderInfo(asyncCtx, config);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetRecorderInfo");
     return MSERR_OK;
 }
 
-int32_t AVScreenCaptureRecorderImpl::GetAudioInfo(::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config)
+int32_t AVScreenCaptureRecorderImpl::GetAudioInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
+    ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config)
 {
     int32_t audioSampleRate = AVSCREENCAPTURE_DEFAULT_AUDIO_SAMPLE_RATE;
     int32_t audioChannels = AVSCREENCAPTURE_DEFAULT_AUDIO_CHANNELS;
     int32_t audioBitrate = AVSCREENCAPTURE_DEFAULT_AUDIO_BIT_RATE;
 
-    AudioCaptureInfo &micConfig = config_.audioInfo.micCapInfo;
-    AudioCaptureInfo &innerConfig = config_.audioInfo.innerCapInfo;
-    AudioEncInfo &encoderConfig = config_.audioInfo.audioEncInfo;
+    AudioCaptureInfo &micConfig = asyncCtx->config_.audioInfo.micCapInfo;
+    AudioCaptureInfo &innerConfig = asyncCtx->config_.audioInfo.innerCapInfo;
+    AudioEncInfo &encoderConfig = asyncCtx->config_.audioInfo.audioEncInfo;
 
     if (config.audioSampleRate.has_value()) {
         audioSampleRate = config.audioSampleRate.value();
     }
     int32_t ret = CheckAudioSampleRate(audioSampleRate);
     CHECK_AND_RETURN_RET(ret == MSERR_OK,
-        (AVScreenCaptureSignError(ret, "getAudioChannelCount", "audioChannelCount"), ret));
+        (asyncCtx->AVScreenCaptureSignError(ret, "getAudioSampleRate", "audioSampleRate"), ret));
     micConfig.audioSampleRate = audioSampleRate;
     innerConfig.audioSampleRate = audioSampleRate;
     MEDIA_LOGI("input audioSampleRate %{public}d", micConfig.audioSampleRate);
@@ -199,7 +218,7 @@ int32_t AVScreenCaptureRecorderImpl::GetAudioInfo(::ohos::multimedia::media::AVS
     }
     ret = CheckAudioChannelCount(audioChannels);
     CHECK_AND_RETURN_RET(ret == MSERR_OK,
-        (AVScreenCaptureSignError(ret, "getAudioChannelCount", "audioChannelCount"), ret));
+        (asyncCtx->AVScreenCaptureSignError(ret, "getAudioChannelCount", "audioChannelCount"), ret));
     micConfig.audioChannels = audioChannels;
     innerConfig.audioChannels = audioChannels;
     MEDIA_LOGI("input audioChannelCount %{public}d", micConfig.audioChannels);
@@ -215,7 +234,8 @@ int32_t AVScreenCaptureRecorderImpl::GetAudioInfo(::ohos::multimedia::media::AVS
     return MSERR_OK;
 }
 
-int32_t AVScreenCaptureRecorderImpl::GetVideoInfo(::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config)
+int32_t AVScreenCaptureRecorderImpl::GetVideoInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
+    ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config)
 {
     int32_t videoBitrate = AVSCREENCAPTURE_DEFAULT_VIDEO_BIT_RATE;
     int32_t preset = AVScreenCaptureRecorderPreset::SCREEN_RECORD_PRESET_H264_AAC_MP4;
@@ -223,16 +243,16 @@ int32_t AVScreenCaptureRecorderImpl::GetVideoInfo(::ohos::multimedia::media::AVS
     int32_t frameHeight = AVSCREENCAPTURE_DEFAULT_FRAME_HEIGHT;
     int32_t displayId = AVSCREENCAPTURE_DEFAULT_DISPLAY_ID;
     int32_t fillMode = OHOS::Media::AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO;
-    VideoEncInfo &encoderConfig = config_.videoInfo.videoEncInfo;
-    VideoCaptureInfo &videoConfig = config_.videoInfo.videoCapInfo;
+    VideoEncInfo &encoderConfig = asyncCtx->config_.videoInfo.videoEncInfo;
+    VideoCaptureInfo &videoConfig = asyncCtx->config_.videoInfo.videoCapInfo;
     if (config.displayId.has_value()) {
         displayId = config.displayId.value();
     }
     CHECK_AND_RETURN_RET(displayId >= 0,
-        (AVScreenCaptureSignError(MSERR_INVALID_VAL, "getDisplayId", "displayId"), MSERR_INVALID_VAL));
+        (asyncCtx->AVScreenCaptureSignError(MSERR_INVALID_VAL, "getDisplayId", "displayId"), MSERR_INVALID_VAL));
     videoConfig.displayId = static_cast<uint64_t>(displayId);
     if (videoConfig.displayId > 0) {
-        config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
+        asyncCtx->config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
     }
     MEDIA_LOGI("input displayId %{public}" PRIu64, videoConfig.displayId);
     if (config.videoBitrate.has_value()) {
@@ -245,39 +265,40 @@ int32_t AVScreenCaptureRecorderImpl::GetVideoInfo(::ohos::multimedia::media::AVS
         preset = static_cast<int32_t>(config.preset.value().get_value());
     }
     int32_t ret = CheckVideoCodecFormat(preset);
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, (AVScreenCaptureSignError(ret, "getPreset", "preset"), ret));
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, (asyncCtx->AVScreenCaptureSignError(ret, "getPreset", "preset"), ret));
     encoderConfig.videoCodec = GetVideoCodecFormat(preset);
     MEDIA_LOGI("input videoCodec %{public}d", encoderConfig.videoCodec);
     if (config.frameWidth.has_value()) {
         frameWidth = config.frameWidth.value();
     }
     if (config.frameHeight.has_value()) {
-        frameWidth = config.frameHeight.value();
+        frameHeight = config.frameHeight.value();
     }
     MEDIA_LOGI("input frameWidth %{public}d, frameHeight %{public}d", frameWidth, frameHeight);
     ret = CheckVideoFrameFormat(frameWidth, frameHeight, videoConfig.videoFrameWidth, videoConfig.videoFrameHeight);
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, (AVScreenCaptureSignError(ret, "getVideoFrame", "VideoFrame"), ret));
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, (asyncCtx->AVScreenCaptureSignError(ret,
+        "getVideoFrame", "VideoFrame"), ret));
     videoConfig.videoSource = OHOS::Media::VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA;
     if (config.fillMode.has_value()) {
-        fillMode = config.fillMode.value();
+        fillMode = config.fillMode.value().get_value();
     }
     videoConfig.screenCaptureFillMode = GetScreenCaptureFillMode(fillMode);
     MEDIA_LOGI("input screenCaptureFillMode %{public}d", videoConfig.screenCaptureFillMode);
     return MSERR_OK;
 }
 
-int32_t AVScreenCaptureRecorderImpl::GetRecorderInfo(
+int32_t AVScreenCaptureRecorderImpl::GetRecorderInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
     ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config)
 {
-    RecorderInfo &recorderConfig = config_.recorderInfo;
+    RecorderInfo &recorderConfig = asyncCtx->config_.recorderInfo;
     recorderConfig.fileFormat = AVSCREENCAPTURE_DEFAULT_FILE_FORMAT;
     int32_t fd = -1;
     fd = config.fd;
     CHECK_AND_RETURN_RET(fd > 0, // 0 to 2 for system std log
-        (AVScreenCaptureSignError(MSERR_INVALID_VAL, "GetRecorderInfo", "url"), MSERR_INVALID_VAL));
+        (asyncCtx->AVScreenCaptureSignError(MSERR_INVALID_VAL, "GetRecorderInfo", "url"), MSERR_INVALID_VAL));
     recorderConfig.url = "fd://" + std::to_string(fd);
     CHECK_AND_RETURN_RET(recorderConfig.url != "",
-        (AVScreenCaptureSignError(MSERR_INVALID_VAL, "GetRecorderInfo", "url"), MSERR_INVALID_VAL));
+        (asyncCtx->AVScreenCaptureSignError(MSERR_INVALID_VAL, "GetRecorderInfo", "url"), MSERR_INVALID_VAL));
     MEDIA_LOGI("input url %{public}s", recorderConfig.url.c_str());
     return MSERR_OK;
 }
@@ -301,46 +322,117 @@ RetInfo AVScreenCaptureRecorderImpl::StopRecording()
 void AVScreenCaptureRecorderImpl::InitSync(::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config)
 {
     MediaTrace trace("AVScreenCapture::TaiheInit");
-    const std::string &option = AVScreenCapturegOpt::INIT;
-    MEDIA_LOGI("%{public}s Start", option.c_str());
-    RetInfo retInfo(MSERR_EXT_API9_OK, "");
-    if (GetConfig(config) == MSERR_OK) {
+    const std::string &opt = AVScreenCapturegOpt::INIT;
+    MEDIA_LOGI("%{public}s Start", opt.c_str());
+    auto asyncCtx = std::make_unique<AVScreenCaptureAsyncContext>();
+    CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
+    asyncCtx->taihe = this;
+    CHECK_AND_RETURN_LOG(asyncCtx->taihe != nullptr, "failed to GetTaiheInstanceAndArgs");
+    CHECK_AND_RETURN_LOG(asyncCtx->taihe->taskQue_ != nullptr, "taskQue is nullptr!");
+
+    if (asyncCtx->taihe->GetConfig(asyncCtx, config) == MSERR_OK) {
+        asyncCtx->task_ = AVScreenCaptureRecorderImpl::GetInitTask(asyncCtx);
+        (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+    }
+
+    if (asyncCtx->task_) {
+        auto result = asyncCtx->task_->GetResult();
+        if (result.Value().first != MSERR_EXT_API9_OK) {
+            set_business_error(result.Value().first, result.Value().second);
+        }
+    }
+    asyncCtx.release();
+
+    MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
+}
+
+std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureRecorderImpl::GetInitTask(
+    const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx)
+{
+    return std::make_shared<TaskHandler<RetInfo>>([taihe = asyncCtx->taihe, config = asyncCtx->config_]() {
+        const std::string &option = AVScreenCapturegOpt::INIT;
         MEDIA_LOGI("%{public}s Start", option.c_str());
-        if (screenCapture_ == nullptr) {
-            retInfo = GetReturnInfo(MSERR_INVALID_OPERATION, option, "");
-            set_business_error(retInfo.first, retInfo.second);
-            return;
-        }
-        int32_t ret = screenCapture_->Init(config_);
-        if (ret != MSERR_OK) {
-            screenCapture_->Release();
-            retInfo = GetReturnInfo(ret, "Init", "");
-        }
+
+        CHECK_AND_RETURN_RET(taihe != nullptr && taihe->screenCapture_ != nullptr,
+            GetReturnInfo(MSERR_INVALID_OPERATION, option, ""));
+
+        int32_t ret = taihe->screenCapture_->Init(config);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, ((void)taihe->screenCapture_->Release(), GetReturnInfo(ret, "Init", "")));
+
         MEDIA_LOGI("%{public}s End", option.c_str());
+        return RetInfo(MSERR_EXT_API9_OK, "");
+    });
+}
+
+void AVScreenCaptureRecorderImpl::ExecuteByPromise(const std::string &opt)
+{
+    MEDIA_LOGI("Taihe %{public}s Start", opt.c_str());
+    auto asyncCtx = std::make_unique<AVScreenCaptureAsyncContext>();
+    CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
+    asyncCtx->taihe = this;
+    CHECK_AND_RETURN_LOG(asyncCtx->taihe != nullptr, "failed to GetTaiheInstanceAndArgs");
+    CHECK_AND_RETURN_LOG(asyncCtx->taihe->taskQue_ != nullptr, "taskQue is nullptr!");
+
+    asyncCtx->task_ = AVScreenCaptureRecorderImpl::GetPromiseTask(asyncCtx->taihe, opt);
+    (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+    asyncCtx->opt_ = opt;
+
+    if (asyncCtx->task_) {
+        auto result = asyncCtx->task_->GetResult();
+        if (result.Value().first != MSERR_EXT_API9_OK) {
+            set_business_error(result.Value().first, result.Value().second);
+        }
     }
-    if (retInfo.first != MSERR_EXT_API9_OK) {
-        set_business_error(retInfo.first, retInfo.second);
-    }
+    asyncCtx.release();
+
+    MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
+}
+
+std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureRecorderImpl::GetPromiseTask(
+    AVScreenCaptureRecorderImpl *avtaihe, const std::string &opt)
+{
+    return std::make_shared<TaskHandler<RetInfo>>([taihe = avtaihe, option = opt]() {
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+        CHECK_AND_RETURN_RET(taihe != nullptr && taihe->screenCapture_ != nullptr,
+            GetReturnInfo(MSERR_INVALID_OPERATION, option, ""));
+
+        RetInfo ret(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "");
+        auto itFunc = taskQFuncs_.find(option);
+        CHECK_AND_RETURN_RET_LOG(itFunc != taskQFuncs_.end(), ret, "%{public}s not found in map!", option.c_str());
+        auto memberFunc = itFunc->second;
+        CHECK_AND_RETURN_RET_LOG(memberFunc != nullptr, ret, "memberFunc is nullptr!");
+        ret = (taihe->*memberFunc)();
+        
+        MEDIA_LOGI("%{public}s End", option.c_str());
+        return ret;
+    });
 }
 
 void AVScreenCaptureRecorderImpl::StartRecordingSync()
 {
-    MediaTrace trace("AVScreenCapture::TaiheStartRecording");
-    RetInfo ret(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "");
-    ret = StartRecording();
-    if (ret.first != MSERR_EXT_API9_OK) {
-        set_business_error(ret.first, ret.second);
-    }
+    MediaTrace trace("AVScreenCaptureRecorderImpl::TaiheStartRecording");
+    return ExecuteByPromise(AVScreenCapturegOpt::START_RECORDING);
 }
 
 void AVScreenCaptureRecorderImpl::StopRecordingSync()
 {
-    MediaTrace trace("AVScreenCapture::TaiheStartRecording");
-    RetInfo ret(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "");
-    ret = StopRecording();
-    if (ret.first != MSERR_EXT_API9_OK) {
-        set_business_error(ret.first, ret.second);
-    }
+    MediaTrace trace("AVScreenCaptureRecorderImpl::TaiheStopRecording");
+    return ExecuteByPromise(AVScreenCapturegOpt::STOP_RECORDING);
+}
+
+std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureRecorderImpl::GetSkipPrivacyModeTask(
+    const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const std::vector<uint64_t> windowIDsVec)
+{
+    return std::make_shared<TaskHandler<RetInfo>>([taihe = asyncCtx->taihe, windowIDsVec]() {
+        const std::string &option = AVScreenCapturegOpt::SKIP_PRIVACY_MODE;
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+        CHECK_AND_RETURN_RET(taihe != nullptr && taihe->screenCapture_ != nullptr,
+            GetReturnInfo(MSERR_INVALID_OPERATION, option, ""));
+        int32_t ret = taihe->screenCapture_->SkipPrivacyMode(const_cast<std::vector<uint64_t> &>(windowIDsVec));
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(MSERR_UNKNOWN, option, ""));
+        MEDIA_LOGI("%{public}s End", option.c_str());
+        return RetInfo(MSERR_EXT_API9_OK, "");
+    });
 }
 
 void AVScreenCaptureRecorderImpl::SkipPrivacyModeSync(::taihe::array_view<double> windowIDs)
@@ -348,39 +440,77 @@ void AVScreenCaptureRecorderImpl::SkipPrivacyModeSync(::taihe::array_view<double
     MediaTrace trace("AVScreenCapture::TaiheSkipPrivacyMode");
     const std::string &option = AVScreenCapturegOpt::SKIP_PRIVACY_MODE;
     MEDIA_LOGI("%{public}s Start", option.c_str());
+    auto asyncCtx = std::make_unique<AVScreenCaptureAsyncContext>();
+    CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
+    asyncCtx->taihe = this;
+    CHECK_AND_RETURN_LOG(asyncCtx->taihe != nullptr, "failed to GetTaiheInstanceAndArgs");
+    CHECK_AND_RETURN_LOG(asyncCtx->taihe->taskQue_ != nullptr, "taskQue is nullptr!");
+
     std::vector<uint64_t> windowIDsVec;
     for (int i = 0; i < windowIDs.size(); i++) {
-        windowIDsVec.push_back(static_cast<uint64_t>(windowIDs[i]));
+        int32_t tempValue = windowIDs[i];
+        if (tempValue >= 0) {
+            windowIDsVec.push_back(static_cast<uint64_t>(tempValue));
+        } else {
+            MEDIA_LOGI("JsSkipPrivacyMode skip %{public}d", tempValue);
+        }
     }
-    if (screenCapture_ == nullptr) {
-        MEDIA_LOGE("CreateScreenCapture_ is nullptr");
-        return;
+    asyncCtx->task_ = AVScreenCaptureRecorderImpl::GetSkipPrivacyModeTask(asyncCtx, windowIDsVec);
+    (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+
+    if (asyncCtx->task_) {
+        auto result = asyncCtx->task_->GetResult();
+        if (result.Value().first != MSERR_EXT_API9_OK) {
+            set_business_error(result.Value().first, result.Value().second);
+        }
     }
-    int32_t ret = screenCapture_->SkipPrivacyMode(const_cast<std::vector<uint64_t> &>(windowIDsVec));
-    RetInfo retInfo(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "");
-    if (ret != MSERR_OK) {
-        retInfo = GetReturnInfo(MSERR_UNKNOWN, option, "");
-        set_business_error(retInfo.first, retInfo.second);
-    }
+    asyncCtx.release();
+
     MEDIA_LOGI("%{public}s End", option.c_str());
+}
+
+std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureRecorderImpl::GetSetMicrophoneEnableTask(
+    const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const bool enable)
+{
+    return std::make_shared<TaskHandler<RetInfo>>([taihe = asyncCtx->taihe, enable]() {
+        const std::string &option = AVScreenCapturegOpt::SET_MIC_ENABLE;
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+
+        CHECK_AND_RETURN_RET(taihe != nullptr && taihe->screenCapture_ != nullptr,
+            GetReturnInfo(MSERR_INVALID_OPERATION, option, ""));
+
+        int32_t ret = taihe->screenCapture_->SetMicrophoneEnabled(enable);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(MSERR_UNKNOWN, option, ""));
+
+        MEDIA_LOGI("%{public}s End", option.c_str());
+        return RetInfo(MSERR_EXT_API9_OK, "");
+    });
 }
 
 void AVScreenCaptureRecorderImpl::SetMicEnabledSync(bool enable)
 {
     MediaTrace trace("AVScreenCapture::TaiheSetMicrophoneEnabled");
     const std::string &option = AVScreenCapturegOpt::SET_MIC_ENABLE;
-    MEDIA_LOGI("%{public}s Start", option.c_str());
-    if (screenCapture_ == nullptr) {
-        MEDIA_LOGE("CreateScreenCapture_ is nullptr");
-        return;
+    MEDIA_LOGI("Taihe %{public}s Start", option.c_str());
+
+    auto asyncCtx = std::make_unique<AVScreenCaptureAsyncContext>();
+    CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
+    asyncCtx->taihe = this;
+    CHECK_AND_RETURN_LOG(asyncCtx->taihe != nullptr, "failed to GetTaiheInstanceAndArgs");
+    CHECK_AND_RETURN_LOG(asyncCtx->taihe->taskQue_ != nullptr, "taskQue is nullptr!");
+
+    asyncCtx->task_ = AVScreenCaptureRecorderImpl::GetSetMicrophoneEnableTask(asyncCtx, enable);
+    (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+
+    if (asyncCtx->task_) {
+        auto result = asyncCtx->task_->GetResult();
+        if (result.Value().first != MSERR_EXT_API9_OK) {
+            set_business_error(result.Value().first, result.Value().second);
+        }
     }
-    int32_t ret = screenCapture_->SetMicrophoneEnabled(enable);
-    RetInfo retInfo(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "");
-    if (ret != MSERR_OK) {
-        retInfo = GetReturnInfo(MSERR_UNKNOWN, option, "");
-        set_business_error(retInfo.first, retInfo.second);
-    }
-    MEDIA_LOGI("%{public}s End", option.c_str());
+    asyncCtx.release();
+
+    MEDIA_LOGI("Taihe %{public}s End", option.c_str());
 }
 
 RetInfo AVScreenCaptureRecorderImpl::Release()
@@ -392,12 +522,8 @@ RetInfo AVScreenCaptureRecorderImpl::Release()
 
 void AVScreenCaptureRecorderImpl::ReleaseSync()
 {
-    MediaTrace trace("AVScreenCapture::Release");
-    RetInfo ret(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "");
-    ret = Release();
-    if (ret.first != MSERR_EXT_API9_OK) {
-        set_business_error(ret.first, ret.second);
-    }
+    MediaTrace trace("AVScreenCaptureRecorderImpl::Release");
+    return ExecuteByPromise(AVScreenCapturegOpt::RELEASE);
 }
 
 void AVScreenCaptureRecorderImpl::OnError(callback_view<void(uintptr_t)> callback)
@@ -471,7 +597,7 @@ void AVScreenCaptureRecorderImpl::CancelCallbackReference(const std::string &cal
     eventCbMap_[callbackName] = nullptr;
 }
 
-void AVScreenCaptureRecorderImpl::AVScreenCaptureSignError(int32_t errCode, const std::string &operate,
+void AVScreenCaptureAsyncContext::AVScreenCaptureSignError(int32_t errCode, const std::string &operate,
     const std::string &param, const std::string &add)
 {
     RetInfo retInfo = GetReturnInfo(errCode, operate, param, add);
@@ -481,3 +607,4 @@ void AVScreenCaptureRecorderImpl::AVScreenCaptureSignError(int32_t errCode, cons
 } // namespace ANI::Media
 
 TH_EXPORT_CPP_API_CreateAVScreenCaptureRecorderSync(CreateAVScreenCaptureRecorderSync);
+TH_EXPORT_CPP_API_ReportAVScreenCaptureUserChoiceSync(ReportAVScreenCaptureUserChoiceSync);
