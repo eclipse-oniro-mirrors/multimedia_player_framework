@@ -53,6 +53,8 @@ napi_value AudioHapticPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("enableHapticsInSilentMode", EnableHapticsInSilentMode),
         DECLARE_NAPI_FUNCTION("isHapticsIntensityAdjustmentSupported", IsHapticsIntensityAdjustmentSupported),
         DECLARE_NAPI_FUNCTION("setLoop", SetLoop),
+        DECLARE_NAPI_FUNCTION("setHapticsRamp", SetHapticsRamp),
+        DECLARE_NAPI_FUNCTION("isHapticsRampSupported", IsHapticsRampSupported),
     };
 
     status = napi_define_class(env, AUDIO_HAPTIC_PLAYER_NAPI_CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, Constructor,
@@ -137,6 +139,34 @@ napi_value AudioHapticPlayerNapi::CreatePlayerInstance(napi_env env,
     }
 
     napi_get_undefined(env, &result);
+    return result;
+}
+
+napi_value AudioHapticPlayerNapi::IsHapticsRampSupported(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    if (!AudioHapticCommonNapi::VerifySelfSystemPermission()) {
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_PERMISSION_DENIED, NAPI_ERR_PERMISSION_DENIED_INFO);
+        return result;
+    }
+
+    void *native = nullptr;
+    napi_value argv[ARGS_ONE] = {0};
+    if (!AudioHapticCommonNapi::InitNormalFunc(env, info, &native, argv, ARGS_ZERO)) {
+        return result;
+    }
+
+    auto *audioHapticPlayerNapi = reinterpret_cast<AudioHapticPlayerNapi *>(native);
+    if (audioHapticPlayerNapi == nullptr || audioHapticPlayerNapi->audioHapticPlayer_ == nullptr) {
+        MEDIA_LOGE("IsHapticsIntensityAdjustmentSupported: unwrap failure!");
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_SERVICE_DIED, "unwrap failure");
+        return result;
+    }
+    bool isSupported = audioHapticPlayerNapi->audioHapticPlayer_->IsHapticsRampSupported();
+
+    napi_get_boolean(env, isSupported, &result);
     return result;
 }
 
@@ -307,6 +337,49 @@ bool AudioHapticPlayerNapi::JudgeIntensity(napi_env env, std::unique_ptr<Vibrati
     return true;
 }
 
+bool AudioHapticPlayerNapi::JudgeRamp(napi_env env, std::unique_ptr<RampContext> &asyncContext)
+{
+    if (napi_get_value_int32(env, asyncContext->argv[PARAM0], &asyncContext->duration) != napi_ok) {
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID, "invalid duration");
+        return false;
+    }
+    int32_t notLessThanDurationMs = 100;
+    if (asyncContext->duration < notLessThanDurationMs) {
+        MEDIA_LOGE("SetHapticsRamp: the duration is invalid");
+        AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred,
+            NAPI_ERR_PARAM_OUT_OF_RANGE, "duration not less than 100 ms");
+        return false;
+    }
+
+    double startIntensity = 0.00;
+    if (napi_get_value_double(env, asyncContext->argv[PARAM1], &startIntensity) != napi_ok) {
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID, "invalid startIntensity");
+        return false;
+    }
+    if (!IsLegalVolumeOrIntensity(startIntensity)) {
+        MEDIA_LOGE("SetHapticsRamp: startIntensity is invalid");
+        AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred,
+            NAPI_ERR_PARAM_OUT_OF_RANGE, "startIntensity's value ranges from 0.00 to 1.00");
+        return false;
+    }
+    asyncContext->startIntensity = static_cast<float>(std::round(startIntensity * PRECISION) / PRECISION);
+
+    double endIntensity = 0.00;
+    if (napi_get_value_double(env, asyncContext->argv[PARAM2], &endIntensity) != napi_ok) {
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID, "invalid endIntensity");
+        return false;
+    }
+    if (!IsLegalVolumeOrIntensity(endIntensity)) {
+        MEDIA_LOGE("SetHapticsRamp: endIntensity is invalid");
+        AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred,
+            NAPI_ERR_PARAM_OUT_OF_RANGE, "endIntensity's value ranges from 0.00 to 1.00");
+        return false;
+    }
+    asyncContext->endIntensity = static_cast<float>(std::round(endIntensity * PRECISION) / PRECISION);
+
+    return true;
+}
+
 void AudioHapticPlayerNapi::CommonAsyncCallbackComp(napi_env env, napi_status status, void *data)
 {
     auto context = static_cast<AudioHapticPlayerAsyncContext *>(data);
@@ -439,6 +512,58 @@ napi_value AudioHapticPlayerNapi::SetVolume(napi_env env, napi_callback_info inf
         asyncContext.release();
     }
 
+    return promise;
+}
+
+napi_value AudioHapticPlayerNapi::SetHapticsRamp(napi_env env, napi_callback_info info)
+{
+    std::unique_ptr<RampContext> asyncContext = std::make_unique<RampContext>();
+    napi_value promise = nullptr;
+    if (!AudioHapticCommonNapi::InitPromiseFunc(env, info, asyncContext.get(), &promise, ARGS_THREE)) {
+        return promise;
+    }
+    if (!AudioHapticCommonNapi::VerifySelfSystemPermission()) {
+        AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred,
+            NAPI_ERR_PERMISSION_DENIED, NAPI_ERR_PERMISSION_DENIED_INFO);
+        return promise;
+    }
+    if (!JudgeRamp(env, asyncContext)) {
+        return promise;
+    }
+    napi_value funcName = nullptr;
+    napi_create_string_utf8(env, "SetHapticsRamp", NAPI_AUTO_LENGTH, &funcName);
+    napi_status status = napi_create_async_work(env, nullptr, funcName,
+        [](napi_env env, void *data) {
+            auto context = static_cast<RampContext*>(data);
+            AudioHapticPlayerNapi* object = reinterpret_cast<AudioHapticPlayerNapi*>(context->objectInfo);
+            if (object != nullptr && object->audioHapticPlayer_ != nullptr) {
+                context->result = object->audioHapticPlayer_->SetHapticsRamp(context->duration,
+                    context->startIntensity * PRECISION, context->endIntensity * PRECISION);
+            }
+        },
+        [](napi_env env, napi_status status, void *data) {
+            auto context = static_cast<RampContext*>(data);
+            if (context->deferred) {
+                if (context->result == 0) {
+                    napi_value result;
+                    napi_get_undefined(env, &result);
+                    napi_resolve_deferred(env, context->deferred, result);
+                } else {
+                    AudioHapticCommonNapi::PromiseReject(env, context->deferred,
+                        context->result, "Failed to set haptics ramp");
+                }
+            }
+            napi_delete_async_work(env, context->work);
+            delete context;
+            context = nullptr;
+        }, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+    if (status != napi_ok) {
+        MEDIA_LOGE("Start: Failed to get create async work");
+        AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred, status, "Failed to get create async work");
+    } else {
+        napi_queue_async_work(env, asyncContext->work);
+        asyncContext.release();
+    }
     return promise;
 }
 

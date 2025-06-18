@@ -47,7 +47,8 @@ std::mutex AudioHapticSound::createAudioHapticSoundMutex_;
 
 std::shared_ptr<AudioHapticSound> AudioHapticSound::CreateAudioHapticSound(
     const AudioLatencyMode &latencyMode, const AudioSource& audioSource, const bool &muteAudio,
-    const AudioStandard::StreamUsage &streamUsage, const bool &parallelPlayFlag)
+    const AudioStandard::StreamUsage &streamUsage, const bool &parallelPlayFlag,
+    const int32_t &audioHapticSyncId)
 {
     if (latencyMode != AUDIO_LATENCY_MODE_NORMAL && latencyMode != AUDIO_LATENCY_MODE_FAST) {
         MEDIA_LOGE("Invalid param: the latency mode %{public}d is unsupported.", latencyMode);
@@ -58,11 +59,12 @@ std::shared_ptr<AudioHapticSound> AudioHapticSound::CreateAudioHapticSound(
     std::shared_ptr<AudioHapticSound> audioHapticSound = nullptr;
     switch (latencyMode) {
         case AUDIO_LATENCY_MODE_NORMAL:
-            audioHapticSound = std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
+            audioHapticSound =
+                std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage, audioHapticSyncId);
             break;
         case AUDIO_LATENCY_MODE_FAST:
             audioHapticSound = std::make_shared<AudioHapticSoundLowLatencyImpl>(
-                audioSource, muteAudio, streamUsage, parallelPlayFlag);
+                audioSource, muteAudio, streamUsage, parallelPlayFlag, audioHapticSyncId);
             break;
         default:
             MEDIA_LOGE("Invalid param: the latency mode %{public}d is unsupported.", latencyMode);
@@ -102,7 +104,7 @@ void AudioHapticPlayerImpl::LoadPlayer()
 {
     // Load audio player
     audioHapticSound_ = AudioHapticSound::CreateAudioHapticSound(
-        latencyMode_, audioSource_, muteAudio_, streamUsage_, parallelPlayFlag_);
+        latencyMode_, audioSource_, muteAudio_, streamUsage_, parallelPlayFlag_, audioHapticSyncId_);
     CHECK_AND_RETURN_LOG(audioHapticSound_ != nullptr, "Failed to create audio haptic sound instance");
     soundCallback_ = std::make_shared<AudioHapticSoundCallbackImpl>(shared_from_this());
     (void)audioHapticSound_->SetAudioHapticSoundCallback(soundCallback_);
@@ -269,6 +271,15 @@ int32_t AudioHapticPlayerImpl::SetVolume(float volume)
     return result;
 }
 
+bool AudioHapticPlayerImpl::IsHapticsRampSupported()
+{
+    std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
+    if (audioHapticVibrator_ != nullptr) {
+        return audioHapticVibrator_->IsHdHapticSupported();
+    }
+    return false;
+}
+
 bool AudioHapticPlayerImpl::IsHapticsIntensityAdjustmentSupported()
 {
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
@@ -307,6 +318,34 @@ int32_t AudioHapticPlayerImpl::SetHapticIntensity(float intensity)
 
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
     return audioHapticVibrator_->SetHapticIntensity(intensity);
+}
+
+int32_t AudioHapticPlayerImpl::SetHapticsRamp(int32_t duration, float startIntensity, float endIntensity)
+{
+    MEDIA_LOGI("AudioHapticPlayerImpl::SetHapticsRamp %{public}d, %{public}f, %{public}f",
+        duration, startIntensity, endIntensity);
+    CHECK_AND_RETURN_RET_LOG(playerState_ != AudioHapticPlayerState::STATE_RELEASED, ERR_OPERATE_NOT_ALLOWED,
+        "The audio haptic player has been released.");
+    CHECK_AND_RETURN_RET_LOG(!isVibrationRunning_.load(), ERR_OPERATE_NOT_ALLOWED, "must set before play haptics");
+
+    // duration not less than 100ms
+    if (duration < 100) {
+        MEDIA_LOGE("AudioHapticPlayerImpl::SetHapticsRamp: the duration value is invalid.");
+        return MSERR_INVALID_VAL;
+    }
+
+    if (startIntensity < 1.0f || startIntensity > 100.0f) {
+        MEDIA_LOGE("AudioHapticPlayerImpl::SetHapticsRamp: the startIntensity value is invalid.");
+        return MSERR_INVALID_VAL;
+    }
+
+    if (endIntensity < 1.0f || endIntensity > 100.0f) {
+        MEDIA_LOGE("AudioHapticPlayerImpl::SetHapticsRamp: the endIntensity value is invalid.");
+        return MSERR_INVALID_VAL;
+    }
+
+    std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
+    return audioHapticVibrator_->SetHapticsRamp(duration, startIntensity, endIntensity);
 }
 
 int32_t AudioHapticPlayerImpl::SetLoop(bool loop)

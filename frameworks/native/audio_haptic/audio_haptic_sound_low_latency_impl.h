@@ -73,6 +73,7 @@ private:
     bool isUnsupportedFile_ = false;
     std::mutex prepareMutex_;
     std::condition_variable prepareCond_;
+    int32_t audioHapticSyncId_ = 0;
 };
 
 class AHSoundLowLatencyCallback : public ISoundPoolCallback {

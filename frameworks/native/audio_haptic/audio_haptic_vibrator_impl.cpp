@@ -260,6 +260,44 @@ int32_t AudioHapticVibratorImpl::SetHapticIntensity(float intensity)
     return result;
 }
 
+int32_t AudioHapticVibratorImpl::SetHapticsRamp(int32_t duration, float startIntensity, float endIntensity)
+{
+    MEDIA_LOGI("AudioHapticVibratorImpl::SetHapticsRamp %{public}d, %{public}f, %{public}f",
+        duration, startIntensity, endIntensity);
+    std::lock_guard<std::mutex> lock(vibrateMutex_);
+    int32_t result = MSERR_OK;
+#ifdef SUPPORT_VIBRATOR
+    if (isRunning_.load() || vibratorPkg_ == nullptr) {
+        return ERR_OPERATE_NOT_ALLOWED;
+    }
+    if (duration > vibratorPkg_->packageDuration) {
+        MEDIA_LOGE("AudioHapticVibratorImpl::SetHapticsRamp error, duration %{public}d, packageDuration %{public}d",
+            duration, vibratorPkg_->packageDuration);
+        return MSERR_INVALID_VAL;
+    }
+    // four points will be enough
+    int32_t numPoints = 4;
+    VibratorCurvePoint points[numPoints];
+    int32_t timeInterval = duration / numPoints;
+    int32_t intensityStep = (endIntensity - startIntensity) / numPoints;
+
+    for (int i = 0; i < numPoints; ++i) {
+        points[i].time = i * timeInterval;
+        points[i].intensity = startIntensity + i * intensityStep;
+    }
+    auto modulatePkg = std::make_shared<VibratorPackage>();
+    result = Sensors::ModulatePackage(points, numPoints, duration, *vibratorPkg_, *modulatePkg);
+    if (result == MSERR_OK) {
+        std::swap(vibratorPkg_, modulatePkg);
+    }
+    if (modulatePkg != nullptr) {
+        Sensors::FreeVibratorPackage(*modulatePkg);
+        modulatePkg = nullptr;
+    }
+#endif
+    return result;
+}
+
 int32_t AudioHapticVibratorImpl::Release()
 {
     std::lock_guard<std::mutex> lock(vibrateMutex_);

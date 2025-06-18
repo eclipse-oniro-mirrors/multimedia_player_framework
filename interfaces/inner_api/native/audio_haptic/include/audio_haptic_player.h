@@ -155,6 +155,10 @@ public:
     virtual int32_t EnableHapticsInSilentMode(bool enable) = 0;
 
     virtual bool IsHapticsIntensityAdjustmentSupported() = 0;
+
+    virtual bool IsHapticsRampSupported() = 0;
+    
+    virtual int32_t SetHapticsRamp(int32_t duration, float startIntensity, float endIntensity) = 0;
 };
 
 class AudioHapticPlayerCallback {

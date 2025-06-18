@@ -46,6 +46,7 @@ public:
     {
         enableInSilentMode_.store(enable);
     }
+    int32_t SetHapticsRamp(int32_t duration, float startIntensity, float endIntensity) override;
 
 private:
     int32_t StartVibrateForSoundPool();
