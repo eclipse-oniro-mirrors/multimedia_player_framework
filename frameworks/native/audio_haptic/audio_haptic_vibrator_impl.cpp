@@ -537,30 +537,29 @@ int32_t AudioHapticVibratorImpl::PlayVibrateForAVPlayer(const std::shared_ptr<Vi
         if (isStopped_) {
             return result;
         }
-        // get the audio time every second and handle the delay time
         if (isNeedRestart_) {
-            // need restart, break.
             break;
         }
-        if (i + 1 < vibratorPkg->patternNum) {
-            int32_t nextVibratorTime = vibratorPkg->patterns[i + 1].time;
+        if (i + 1 >= vibratorPkg->patternNum) {
+            continue;
+        }
+        // get the audio time every second and handle the delay time
+        int32_t nextVibratorTime = vibratorPkg->patterns[i + 1].time;
+        vibrateTime = audioHapticPlayer_.GetAudioCurrentTime() - PLAYER_BUFFER_TIME + GetDelayTime();
+        int32_t count = 0;
+        while (nextVibratorTime - vibrateTime > MIN_WAITING_TIME_FOR_VIBRATOR && count < patternDuration) {
+            (void)vibrateCV_.wait_for(lock, std::chrono::milliseconds(MILLISECONDS_FOR_ONE_SECOND),
+                [this]() { return isStopped_ || isNeedRestart_; });
+            CHECK_AND_RETURN_RET_LOG(!isStopped_, result, "PlayVibrateForAVPlayer: Stop() is call when waiting");
+            if (isNeedRestart_) {
+                break;
+            }
             vibrateTime = audioHapticPlayer_.GetAudioCurrentTime() - PLAYER_BUFFER_TIME + GetDelayTime();
-            int32_t count = 0;
-            while (nextVibratorTime - vibrateTime > MIN_WAITING_TIME_FOR_VIBRATOR && count < patternDuration) {
-                (void)vibrateCV_.wait_for(lock, std::chrono::milliseconds(MILLISECONDS_FOR_ONE_SECOND),
-                    [this]() { return isStopped_ || isNeedRestart_; });
-                CHECK_AND_RETURN_RET_LOG(!isStopped_, result,
-                    "PlayVibrateForAVPlayer: Stop() is call when waiting");
-                if (isNeedRestart_) {
-                    break;
-                }
-                vibrateTime = audioHapticPlayer_.GetAudioCurrentTime() - PLAYER_BUFFER_TIME + GetDelayTime();
-                count++;
-            }
-            if (count == patternDuration) {
-                MEDIA_LOGE("PlayVibrateForAVPlayer: loop count has reached the max value.");
-                return MSERR_INVALID_OPERATION;
-            }
+            count++;
+        }
+        if (count == patternDuration) {
+            MEDIA_LOGE("PlayVibrateForAVPlayer: loop count has reached the max value.");
+            return MSERR_INVALID_OPERATION;
         }
     }
     if (isNeedRestart_ && seekVibratorPkg_ != nullptr) {
