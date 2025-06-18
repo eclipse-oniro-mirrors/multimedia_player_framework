@@ -104,6 +104,10 @@ public:
     {
         return false;
     }
+    virtual int32_t CreateCaptureStrategy();
+    virtual int32_t StrategyForKeepCaptureDuringCall(bool value);
+    virtual int32_t SetCaptureStrategy();
+    virtual int32_t ReleaseCaptureStrategy();
 };
 
 class __attribute__((visibility("default"))) ScreenCaptureMockFactory {

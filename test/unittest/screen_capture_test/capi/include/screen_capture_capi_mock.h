@@ -59,6 +59,10 @@ public:
     {
         return isStateChangeCallBackEnabled_;
     }
+    int32_t CreateCaptureStrategy() override;
+    int32_t StrategyForKeepCaptureDuringCall(bool value) override;
+    int32_t SetCaptureStrategy() override;
+    int32_t ReleaseCaptureStrategy() override;
 private:
     static void SetScreenCaptureCallback(OH_AVScreenCapture *screencapture,
         std::shared_ptr<ScreenCaptureCallBackMock> cb);
@@ -83,6 +87,7 @@ private:
     bool isDataCallBackEnabled_ = false;
     bool isStateChangeCallBackEnabled_ = false;
     struct OH_AVScreenCapture_ContentFilter *contentFilter_ = nullptr;
+    OH_AVScreenCapture_CaptureStrategy *strategy_ = nullptr;
 };
 } // namespace Media
 } // namespace OHOS
