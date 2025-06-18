@@ -139,8 +139,6 @@ void RecorderServiceStub::FillRecFuncPart2()
     recFuncs_[SET_VIDEO_ENABLE_STABLE_QUALITY_MODE] =
         [this](MessageParcel &data, MessageParcel &reply) { return SetVideoEnableStableQualityMode(data, reply); };
     recFuncs_[SET_VIDEO_ENABLE_B_FRAME] =
-        [this](MessageParcel &data, MessageParcel &reply) { return SetVideoEnableBFrame(data, reply); };
-    recFuncs_[GET_AUDIO_CAPTURER_CHANGE_INFO] =
         [this](MessageParcel &data, MessageParcel &reply) { return GetCurrentCapturerChangeInfo(data, reply); };
     recFuncs_[GET_AVAILABLE_ENCODER] =
         [this](MessageParcel &data, MessageParcel &reply) { return GetAvailableEncoder(data, reply); };
@@ -170,6 +168,8 @@ void RecorderServiceStub::FillRecFuncPart3()
 {
     recFuncs_[SET_INTERRUPT_STRATEGY] =
         [this](MessageParcel &data, MessageParcel &reply) { return SetWillMuteWhenInterrupted(data, reply); };
+    recFuncs_[SET_VIDEO_ENABLE_B_FRAME] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetVideoEnableBFrame(data, reply); };
 }
 
 int32_t RecorderServiceStub::DestroyStub()
