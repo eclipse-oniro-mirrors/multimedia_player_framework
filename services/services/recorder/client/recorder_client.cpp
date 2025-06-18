@@ -156,6 +156,15 @@ int32_t RecorderClient::SetVideoEnableStableQualityMode(int32_t sourceId, bool e
     return recorderProxy_->SetVideoEnableStableQualityMode(sourceId, enableStableQualityMode);
 }
 
+int32_t RecorderClient::SetVideoEnableBFrame(int32_t sourceId, bool enableBFrame)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+ 
+    MEDIA_LOGD("SetVideoEnableBFrame sourceId(%{public}d), enableBFrame(%{public}d)", sourceId, enableBFrame);
+    return recorderProxy_->SetVideoEnableBFrame(sourceId, enableBFrame);
+}
+
 int32_t RecorderClient::SetMetaSource(MetaSourceType source, int32_t &sourceId)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -358,21 +367,21 @@ int32_t RecorderClient::SetMaxFileSize(int64_t size)
     return recorderProxy_->SetMaxFileSize(size);
 }
 
-int32_t RecorderClient::SetLocation(float latitude, float longitude)
+void RecorderClient::SetLocation(float latitude, float longitude)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+    CHECK_AND_RETURN_LOG(recorderProxy_ != nullptr, "recorder service does not exist.");
 
-    return recorderProxy_->SetLocation(latitude, longitude);
+    recorderProxy_->SetLocation(latitude, longitude);
 }
 
-int32_t RecorderClient::SetOrientationHint(int32_t rotation)
+void RecorderClient::SetOrientationHint(int32_t rotation)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+    CHECK_AND_RETURN_LOG(recorderProxy_ != nullptr, "recorder service does not exist.");
 
     MEDIA_LOGD ("SetLocation orientation hint: %{public}d", rotation);
-    return recorderProxy_->SetOrientationHint(rotation);
+    recorderProxy_->SetOrientationHint(rotation);
 }
 
 int32_t RecorderClient::SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback)

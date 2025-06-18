@@ -436,6 +436,7 @@ int32_t HiRecorderImpl::PrepareVideoEncoder()
             videoEncFormat_->Set<Tag::VIDEO_PIXEL_FORMAT>(Plugins::VideoPixelFormat::RGBA);
         }
         ConfigureVidEncBitrateMode();
+        videoEncoderFilter_->SetVideoEnableBFrame(enableBFrame_);
         videoEncoderFilter_->SetCodecFormat(videoEncFormat_);
         videoEncoderFilter_->Init(recorderEventReceiver_, recorderCallback_);
         FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_) == Status::OK,
@@ -849,6 +850,10 @@ void HiRecorderImpl::ConfigureVideo(const RecorderParam &recParam)
             ConfigureVidEnableStableQualityMode(recParam);
             break;
         }
+        case RecorderPublicParamType::VID_ENABLE_B_FRAME: {
+            ConfigureVidEnableBFrame(recParam);
+            break;
+        }
         default:
             break;
     }
@@ -951,6 +956,13 @@ void HiRecorderImpl::ConfigureVidEnableStableQualityMode(const RecorderParam &re
     VidEnableStableQualityMode vidEnableStableQualityMode =
         static_cast<const VidEnableStableQualityMode&>(recParam);
     enableStableQualityMode_ = vidEnableStableQualityMode.enableStableQualityMode;
+}
+
+void HiRecorderImpl::ConfigureVidEnableBFrame(const RecorderParam &recParam)
+{
+    VidEnableBFrame vidEnableBFrame =
+        static_cast<const VidEnableBFrame&>(recParam);
+    enableBFrame_ = vidEnableBFrame.enableBFrame;
 }
 
 void HiRecorderImpl::ConfigureVideoEncoderFormat(const RecorderParam &recParam)

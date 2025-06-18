@@ -37,6 +37,7 @@ public:
     int32_t SetVideoIsHdr(int32_t sourceId, bool isHdr) override;
     int32_t SetVideoEnableTemporalScale(int32_t sourceId, bool enableTemporalScale) override;
     int32_t SetVideoEnableStableQualityMode(int32_t sourceId, bool enableStableQualityMode) override;
+    int32_t SetVideoEnableBFrame(int32_t sourceId, bool enableBFrame) override;
     int32_t SetCaptureRate(int32_t sourceId, double fps) override;
     sptr<OHOS::Surface> GetSurface(int32_t sourceId) override;
     sptr<OHOS::Surface> GetMetaSurface(int32_t sourceId) override;
@@ -56,8 +57,8 @@ public:
     int32_t SetFileGenerationMode(FileGenerationMode mode) override;
     int32_t SetNextOutputFile(int32_t fd) override;
     int32_t SetMaxFileSize(int64_t size) override;
-    int32_t SetLocation(float latitude, float longitude) override;
-    int32_t SetOrientationHint(int32_t rotation) override;
+    void SetLocation(float latitude, float longitude) override;
+    void SetOrientationHint(int32_t rotation) override;
     int32_t SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback) override;
     int32_t Prepare() override;
     int32_t Start() override;

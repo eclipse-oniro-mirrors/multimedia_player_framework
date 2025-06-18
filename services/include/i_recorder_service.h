@@ -198,7 +198,7 @@ public:
     virtual int32_t SetVideoEnableTemporalScale(int32_t sourceId, bool enableTemporalScale) = 0;
 
     /**
-     * @brief SetVideoEnableStableQualityMode.
+     * @brief Sets the video stable quality encoding mode..
      *
      * @param sourceId Indicates the video source ID, which can be obtained from {@link SetVideoSource}.
      * @param enableStableQualityMode Indicates the stable quality mode to set.
@@ -207,6 +207,17 @@ public:
      * @version 1.0
      */
     virtual int32_t SetVideoEnableStableQualityMode(int32_t sourceId, bool enableStableQualityMode) = 0;
+
+    /**
+     * @brief Sets the video B Frame encoding mode.
+     *
+     * @param sourceId Indicates the video source ID, which can be obtained from {@link SetVideoSource}.
+     * @param enableBFrame Indicates the B Frame to set.
+     * @return Returns {@link MSERR_OK} if the setting is successful; returns an error code otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetVideoEnableBFrame(int32_t sourceId, bool enableBFrame) = 0;
 
     /**
      * @brief Sets the video capture rate.
@@ -439,7 +450,7 @@ public:
      * @since openharmony 3.1
      * @version 1.0
      */
-    virtual int32_t SetLocation(float latitude, float longitude) = 0;
+    virtual void SetLocation(float latitude, float longitude) = 0;
 
     /**
      * @brief set the orientation hint in output file, and for the file to playback. mp4 support.
@@ -449,7 +460,7 @@ public:
      * @since openharmony 3.1
      * @version 1.0
      */
-    virtual int32_t SetOrientationHint(int32_t rotation) = 0;
+    virtual void SetOrientationHint(int32_t rotation) = 0;
 
     /**
      * @brief Registers a recording listener.

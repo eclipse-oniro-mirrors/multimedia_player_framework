@@ -105,6 +105,7 @@ private:
     void ConfigureVidIsHdr(const RecorderParam &recParam);
     void ConfigureVideoEnableTemporalScale(const RecorderParam &recParam);
     void ConfigureVidEnableStableQualityMode(const RecorderParam &recParam);
+    void ConfigureVidEnableBFrame(const RecorderParam &recParam);
     bool CheckAudioSourceType(AudioSourceType sourceType);
     void ConfigureRotation(const RecorderParam &recParam);
     Status HandleStopOperation();
@@ -161,6 +162,7 @@ private:
     bool videoSourceIsRGBA_ = false;
     bool isWatermarkSupported_ = false;
     bool enableStableQualityMode_ = false;
+    bool enableBFrame_ = false;
 
     Mutex stateMutex_ {};
     ConditionVariable cond_ {};
