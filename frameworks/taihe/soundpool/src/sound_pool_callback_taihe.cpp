@@ -37,22 +37,22 @@ ani_object SoundPoolCallBackTaihe::ToBusinessError(ani_env *env, int32_t code, c
 {
     ani_object err {};
     ani_class cls {};
-    CHECK_AND_RETURN_RET_LOG(ANI_OK != env->FindClass(CLASS_NAME_BUSINESSERROR, &cls), err,
+    CHECK_AND_RETURN_RET_LOG(env->FindClass(CLASS_NAME_BUSINESSERROR, &cls) == ANI_OK, err,
         "find class %{public}s failed", CLASS_NAME_BUSINESSERROR);
     ani_method ctor {};
-    CHECK_AND_RETURN_RET_LOG(ANI_OK != env->Class_FindMethod(cls, "<ctor>", ":V", &ctor), err,
+    CHECK_AND_RETURN_RET_LOG(env->Class_FindMethod(cls, "<ctor>", ":V", &ctor) == ANI_OK, err,
         "find method BusinessError constructor failed");
     ani_object error {};
-    CHECK_AND_RETURN_RET_LOG(ANI_OK != env->Object_New(cls, ctor, &error), err,
+    CHECK_AND_RETURN_RET_LOG(env->Object_New(cls, ctor, &error) == ANI_OK, err,
         "new object %{public}s failed", CLASS_NAME_BUSINESSERROR);
     CHECK_AND_RETURN_RET_LOG(
-        ANI_OK != env->Object_SetPropertyByName_Double(error, "code", static_cast<ani_double>(code)), err,
+        env->Object_SetPropertyByName_Double(error, "code", static_cast<ani_double>(code)) == ANI_OK, err,
         "set property BusinessError.code failed");
     ani_string messageRef {};
-    CHECK_AND_RETURN_RET_LOG(ANI_OK != env->String_NewUTF8(message.c_str(), message.size(), &messageRef), err,
+    CHECK_AND_RETURN_RET_LOG(env->String_NewUTF8(message.c_str(), message.size(), &messageRef) == ANI_OK, err,
         "new message string failed");
     CHECK_AND_RETURN_RET_LOG(
-        ANI_OK != env->Object_SetPropertyByName_Ref(error, "message", static_cast<ani_ref>(messageRef)), err,
+        env->Object_SetPropertyByName_Ref(error, "message", static_cast<ani_ref>(messageRef)) == ANI_OK, err,
         "set property BusinessError.message failed");
     return error;
 }
@@ -106,6 +106,8 @@ void SoundPoolCallBackTaihe::SaveCallbackReference(const std::string &name, std:
     std::lock_guard<std::mutex> lock(mutex_);
     refMap_[name] = ref;
     MEDIA_LOGI("Set callback type: %{public}s", name.c_str());
+    std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::GetMainEventRunner();
+    mainHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
 }
 
 void SoundPoolCallBackTaihe::SendErrorCallback(int32_t errCode, const std::string &msg)
@@ -208,9 +210,9 @@ void SoundPoolCallBackTaihe::OnTaiheloadCompletedCallBack(SoundPoolTaiheCallBack
         std::shared_ptr<AutoRef> ref = taiheCb->autoRef.lock();
 
         auto func = ref->callbackRef_;
-        std::shared_ptr<taihe::callback<void(double)>> cacheCallback =
-            std::reinterpret_pointer_cast<taihe::callback<void(double)>>(func);
-        (*cacheCallback)(static_cast<double>(taiheCb->loadSoundId));
+        std::shared_ptr<taihe::callback<void(int32_t)>> cacheCallback =
+            std::reinterpret_pointer_cast<taihe::callback<void(int32_t)>>(func);
+        (*cacheCallback)(taiheCb->loadSoundId);
     } while (0);
     delete taiheCb;
 }
@@ -224,9 +226,9 @@ void SoundPoolCallBackTaihe::OnTaiheplayCompletedCallBack(SoundPoolTaiheCallBack
             std::shared_ptr<AutoRef> ref = taiheCb->autoRef.lock();
     
             auto func = ref->callbackRef_;
-            std::shared_ptr<taihe::callback<void(double)>> cacheCallback =
-                std::reinterpret_pointer_cast<taihe::callback<void(double)>>(func);
-            (*cacheCallback)(static_cast<double>(taiheCb->playFinishedStreamID));
+            std::shared_ptr<taihe::callback<void(int32_t)>> cacheCallback =
+                std::reinterpret_pointer_cast<taihe::callback<void(int32_t)>>(func);
+            (*cacheCallback)(taiheCb->playFinishedStreamID);
         } else if (request == SoundPoolEvent::EVENT_PLAY_FINISHED) {
             MEDIA_LOGD("OnTaiheloadCompletedCallBack is called");
             std::shared_ptr<AutoRef> ref = taiheCb->autoRef.lock();

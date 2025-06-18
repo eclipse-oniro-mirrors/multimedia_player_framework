@@ -14,6 +14,8 @@
  */
 #include "sound_pool_taihe.h"
 #include "media_log.h"
+#include "ability.h"
+#include "ani_base_context.h"
 #include "media_errors.h"
 #include "media_dfx.h"
 #include "sound_pool_callback_taihe.h"
@@ -33,8 +35,12 @@ SoundPoolImpl::SoundPoolImpl(int32_t maxStreams, uintptr_t audioRendererInfo)
     SoundPoolImpl::ParseAudioRendererInfo(env, reinterpret_cast<ani_object>(audioRendererInfo),
         SoundPoolImpl::rendererInfo);
     soundPool_ = OHOS::Media::SoundPoolFactory::CreateSoundPool(maxStreams, SoundPoolImpl::rendererInfo);
-    callbackTaihe_ =  std::make_shared<SoundPoolCallBackTaihe>();
-    soundPool_->SetSoundPoolCallback(callbackTaihe_);
+    if (soundPool_ == nullptr) {
+        MEDIA_LOGE("failed to CreateSoundPool");
+    } else {
+        callbackTaihe_ =  std::make_shared<SoundPoolCallBackTaihe>();
+        (void)soundPool_->SetSoundPoolCallback(callbackTaihe_);
+    }
 }
 
 void SoundPoolImpl::ParseAudioRendererInfo(ani_env *env, ani_object src,
@@ -100,13 +106,32 @@ int32_t SoundPoolImpl::PlaySync(int32_t soundID, optional_view<PlayParameters> p
     MEDIA_LOGI("SoundPoolTaihe::TaihePlay");
 
     soundId_ = soundID;
+    CHECK_AND_RETURN_RET(soundId_ > 0,
+        (SoundPoolAsyncSignError(MSERR_INVALID_VAL, "getplaysoundId", "soundId"), MSERR_INVALID_VAL));
     if (params.has_value()) {
         int32_t ret = ParserPlayOption(params.value());
-        MEDIA_LOGE("failed to SendEvent, ret = %{public}d", ret);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, 0, "failed to SendEvent, ret = %{public}d", ret);
     }
+    CHECK_AND_RETURN_RET_LOG(soundPool_ != nullptr, 0, "soundPool_ is nullptr!");
+    int32_t streamId = soundPool_->Play(soundId_, playParameters_);
+    if (streamId < 0) {
+        SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "play sound failed");
+    }
+    MEDIA_LOGI("The taihe thread of play finishes execution and returns, streamId: %{public}d", streamId);
+    return streamId;
+}
+
+int32_t SoundPoolImpl::PlayWithoutParam(int32_t soundID)
+{
+    MediaTrace trace("SoundPool::TaihePlayWithoutParam");
+    MEDIA_LOGI("SoundPoolTaihe::TaihePlayWithoutParam");
+    soundId_ = soundID;
+    CHECK_AND_RETURN_RET(soundId_ > 0,
+        (SoundPoolAsyncSignError(MSERR_INVALID_VAL, "getplaysoundId", "soundId"), MSERR_INVALID_VAL));
 
     if (soundPool_ == nullptr) {
         MEDIA_LOGE("soundPool_ is nullptr!");
+        return -1;
     }
     int32_t streamId = soundPool_->Play(soundId_, playParameters_);
     if (streamId < 0) {
@@ -116,10 +141,45 @@ int32_t SoundPoolImpl::PlaySync(int32_t soundID, optional_view<PlayParameters> p
     return streamId;
 }
 
-int32_t SoundPoolImpl::ParserPlayOption(const PlayParameters &params)
+int32_t SoundPoolImpl::PlayWithParam(int32_t soundID, PlayParameters const& params)
 {
+    MediaTrace trace("SoundPool::TaihePlayWithParam");
+    MEDIA_LOGI("SoundPoolTaihe::TaihePlayWithParam");
+        soundId_ = soundID;
     CHECK_AND_RETURN_RET(soundId_ > 0,
         (SoundPoolAsyncSignError(MSERR_INVALID_VAL, "getplaysoundId", "soundId"), MSERR_INVALID_VAL));
+    int32_t ret = ParserPlayOption(params);
+    MEDIA_LOGE("failed to SendEvent, ret = %{public}d", ret);
+
+    if (soundPool_ == nullptr) {
+        MEDIA_LOGE("soundPool_ is nullptr!");
+        return -1;
+    }
+    int32_t streamId = soundPool_->Play(soundId_, playParameters_);
+    if (streamId < 0) {
+        SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "play sound failed");
+    }
+    MEDIA_LOGI("The taihe thread of play finishes execution and returns, streamId: %{public}d", streamId);
+    return streamId;
+}
+
+static std::shared_ptr<OHOS::AbilityRuntime::Context> GetAbilityContext(ani_env *env)
+{
+    auto ability = OHOS::AbilityRuntime::GetCurrentAbility(env);
+    if (ability == nullptr) {
+        MEDIA_LOGE("Failed to obtain ability in FA mode");
+        return nullptr;
+    }
+    auto faContext = ability->GetAbilityContext();
+    if (faContext == nullptr) {
+        MEDIA_LOGE("GetAbilityContext returned null in FA model");
+        return nullptr;
+    }
+    return faContext;
+}
+
+int32_t SoundPoolImpl::ParserPlayOption(const PlayParameters &params)
+{
     if (params.loop.has_value()) {
         playParameters_.loop = static_cast<int32_t>(params.loop.value());
     }
@@ -138,6 +198,12 @@ int32_t SoundPoolImpl::ParserPlayOption(const PlayParameters &params)
     if (params.parallelPlayFlag.has_value()) {
         playParameters_.parallelPlayFlag = static_cast<bool>(params.parallelPlayFlag.value());
     }
+    std::shared_ptr<OHOS::AbilityRuntime::Context> abilityContext = GetAbilityContext(get_env());
+    if (abilityContext != nullptr) {
+        playParameters_.cacheDir = abilityContext->GetCacheDir();
+    } else {
+        playParameters_.cacheDir = "/data/storage/el2/base/temp";
+    }
     MEDIA_LOGI("playParameters_ loop:%{public}d, rate:%{public}d, leftVolume:%{public}f, rightvolume:%{public}f,"
         "priority:%{public}d, parallelPlayFlag:%{public}d", playParameters_.loop, playParameters_.rate,
         playParameters_.leftVolume, playParameters_.rightVolume, playParameters_.priority,
@@ -149,9 +215,11 @@ int32_t SoundPoolImpl::LoadSync(string_view uri)
 {
     MediaTrace trace("SoundPool::TaiheLoad");
     MEDIA_LOGI("SoundPoolNapi::TaiheLoad");
-    int32_t soundId;
-    std::string url = static_cast<std::string>(uri);
-    soundId = soundPool_->Load(url);
+    int32_t soundId = 0;
+    url_ = static_cast<std::string>(uri);
+    CHECK_AND_RETURN_RET(url_ != "",
+        (SoundPoolAsyncSignError(MSERR_OPEN_FILE_FAILED, "geturl", "url"), soundId));
+    soundId = soundPool_->Load(url_);
     if (soundId < 0) {
         SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "load sound failed");
     }
@@ -162,8 +230,18 @@ int32_t SoundPoolImpl::LoadWithFdSync(int32_t fd, double offset, double length)
 {
     MediaTrace trace("SoundPool::TaiheLoad");
     MEDIA_LOGI("SoundPoolNapi::TaiheLoad");
-    int32_t soundId =
-        soundPool_->Load(fd, static_cast<int64_t>(offset), static_cast<int64_t>(length));
+    int32_t soundId = 0;
+    fd_ = fd;
+    CHECK_AND_RETURN_RET(fd_ > 0,
+        (SoundPoolAsyncSignError(MSERR_OPEN_FILE_FAILED, "getfd", "fd"), soundId));
+    offset_ = static_cast<int64_t>(offset);
+    CHECK_AND_RETURN_RET(offset_ >= 0,
+        (SoundPoolAsyncSignError(MSERR_OPEN_FILE_FAILED, "getoffset", "offset"), soundId));
+    length_ = static_cast<int64_t>(length);
+    CHECK_AND_RETURN_RET(length_ > 0,
+        (SoundPoolAsyncSignError(MSERR_OPEN_FILE_FAILED, "getlength", "length"), soundId));
+    soundId =
+        soundPool_->Load(fd, offset_, length_);
     if (soundId < 0) {
         SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "load sound failed");
     }
@@ -174,9 +252,12 @@ void SoundPoolImpl::StopSync(int32_t streamID)
 {
     MediaTrace trace("SoundPool::TaiheStop");
     MEDIA_LOGI("SoundPoolNapi::TaiheStop");
-    int32_t streamID_ = streamID;
+    streamId_ = streamID;
     CHECK_AND_RETURN_LOG(soundPool_ != nullptr, "soundPool_ is nullptr!");
-    int32_t ret = soundPool_->Stop(streamID_);
+    if (streamId_ <= 0) {
+        SignError(MSERR_EXT_API9_INVALID_PARAMETER, "stop streamId failed, invaild value");
+    }
+    int32_t ret = soundPool_->Stop(streamId_);
     if (ret != MSERR_OK) {
         SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "stop streamId failed");
     }
@@ -188,6 +269,9 @@ void SoundPoolImpl::SetLoopSync(int32_t streamID, int32_t loop)
     MediaTrace trace("SoundPool::TaiheSetLoop");
     MEDIA_LOGI("SoundPoolNapi::TaiheSetLoop");
     streamId_ = streamID;
+    if (streamId_ <= 0) {
+        SignError(MSERR_EXT_API9_INVALID_PARAMETER, "SetLoop streamId failed,invaild value");
+    }
     loop_ = loop;
     if (streamId_ > 0) {
         CHECK_AND_RETURN_LOG(soundPool_ != nullptr, "soundPool_ is nullptr!");
@@ -245,14 +329,17 @@ void SoundPoolImpl::UnloadSync(int32_t soundID)
 {
     MediaTrace trace("SoundPool::TaiheUnload");
     MEDIA_LOGI("SoundPoolNapi::TaiheUnload");
-    int32_t soundID_ = soundID;
+    soundId_ = soundID;
     CHECK_AND_RETURN_LOG(soundPool_ != nullptr, "soundPool_ is nullptr!");
-    int32_t ret = soundPool_->Unload(soundID_);
+    if (soundId_ <= 0) {
+        SignError(MSERR_EXT_API9_IO, "unLoad failed,inavild value");
+    }
+    int32_t ret = soundPool_->Unload(soundId_);
     if (ret != MSERR_OK) {
         SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "unLoad soundID failed");
     }
     MEDIA_LOGI("The taihe thread of Unload finishes execution and returns, soundID: %{public}d",
-        soundID_);
+        soundId_);
 }
 
 void SoundPoolImpl::ReleaseSync()

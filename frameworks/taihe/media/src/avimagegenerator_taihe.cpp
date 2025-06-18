@@ -28,34 +28,32 @@ namespace ANI::Media {
 
 AVImageGeneratorImpl::AVImageGeneratorImpl() {}
 
-AVImageGeneratorImpl::AVImageGeneratorImpl(AVImageGeneratorImpl *obj)
+AVImageGeneratorImpl::AVImageGeneratorImpl(std::shared_ptr<OHOS::Media::AVMetadataHelper> avMetadataHelper)
 {
-    if (obj != nullptr) {
-        helper_ = obj->helper_;
-    }
+    helper_ = avMetadataHelper;
 }
 
 optional<AVFileDescriptor> AVImageGeneratorImpl::GetFdSrc()
 {
     OHOS::Media::MediaTrace trace("AVImageGeneratorTaihe::get fd");
+    MEDIA_LOGI("GetFdSrc In");
     AVFileDescriptor fdSrc;
     fdSrc.fd = fileDescriptor_.fd;
     fdSrc.offset = optional<int64_t>(std::in_place_t{}, fileDescriptor_.offset);
     fdSrc.length = optional<int64_t>(std::in_place_t{}, fileDescriptor_.length);
+    MEDIA_LOGI("GetFdSrc Out");
     return optional<AVFileDescriptor>(std::in_place_t{}, fdSrc);
 }
 
 void AVImageGeneratorImpl::SetFdSrc(optional_view<AVFileDescriptor> fdSrc)
 {
     OHOS::Media::MediaTrace trace("AVImageGeneratorTaihe::set fd");
-    if (state_ != OHOS::Media::HelperState::HELPER_STATE_IDLE) {
-        MEDIA_LOGE("Has set source once, unsupport set again");
-        return;
-    }
-    if (helper_ == nullptr) {
-        MEDIA_LOGE("Invalid AVImageGenerator.");
-        return;
-    }
+    MEDIA_LOGI("SetFdSrc In");
+
+    CHECK_AND_RETURN_LOG(state_ == OHOS::Media::HelperState::HELPER_STATE_IDLE,
+        "Has set source once, unsupport set again");
+    CHECK_AND_RETURN_LOG(helper_ != nullptr, "Invalid AVImageGenerator.");
+    
     if (fdSrc.has_value()) {
         fileDescriptor_.fd = fdSrc.value().fd;
         if (fdSrc.value().offset.has_value()) {
@@ -78,29 +76,34 @@ void AVImageGeneratorImpl::SetFdSrc(optional_view<AVFileDescriptor> fdSrc)
 #endif
     state_ = res == OHOS::Media::MSERR_OK ?
         OHOS::Media::HelperState::HELPER_STATE_RUNNABLE : OHOS::Media::HelperState::HELPER_ERROR;
+    MEDIA_LOGI("SetFdSrc Out");
     return;
 }
 
 void AVImageGeneratorImpl::ReleaseSync()
 {
     OHOS::Media::MediaTrace trace("AVImageGeneratorTaihe::ReleaseSync");
+    MEDIA_LOGI("ReleaseSync In");
+    if (state_ == OHOS::Media::HelperState::HELPER_STATE_RELEASED) {
+        set_business_error(OHOS::Media::MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Has released once, can't release again.");
+    }
     if (helper_ == nullptr) {
-        MEDIA_LOGE("AVMetadataExtractorTaihe. is nullptr");
+        MEDIA_LOGE("AVImageGenerator is nullptr");
     } else {
         helper_->Release();
     }
+    MEDIA_LOGI("ReleaseSync Out");
 }
 
 AVImageGenerator CreateAVImageGeneratorSync()
 {
     OHOS::Media::MediaTrace trace("AVImageGeneratorTaihe::CreateAVImageGeneratorSync");
-    AVImageGeneratorImpl *extractor = new AVImageGeneratorImpl();
+    MEDIA_LOGI("TaiheCreateAVImageGenerator In");
     std::shared_ptr<OHOS::Media::AVMetadataHelper> avMetadataHelper =
         OHOS::Media::AVMetadataHelperFactory::CreateAVMetadataHelper();
-    extractor->helper_ = avMetadataHelper;
-    CHECK_AND_RETURN_RET_LOG(extractor->helper_ != nullptr,
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelper != nullptr,
         (make_holder<AVImageGeneratorImpl, AVImageGenerator>(nullptr)), "failed to CreateMetadataHelper");
-    return make_holder<AVImageGeneratorImpl, AVImageGenerator>(extractor);
+    return make_holder<AVImageGeneratorImpl, AVImageGenerator>(avMetadataHelper);
 }
 } // namespace ANI::Media
 

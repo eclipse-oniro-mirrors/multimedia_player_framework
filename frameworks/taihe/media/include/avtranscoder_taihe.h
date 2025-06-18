@@ -106,8 +106,8 @@ struct AVTransCoderConfigInner {
     OutputFormatType fileFormat = OutputFormatType::FORMAT_DEFAULT;
     VideoCodecFormat videoCodecFormat = VideoCodecFormat::VIDEO_DEFAULT;
     int32_t videoBitrate = AVTRANSCODER_DEFAULT_VIDEO_BIT_RATE;
-    int32_t videoFrameWidth = AVTRANSCODER_DEFAULT_FRAME_HEIGHT;
-    int32_t videoFrameHeight = AVTRANSCODER_DEFAULT_FRAME_WIDTH;
+    int32_t videoFrameWidth = AVTRANSCODER_DEFAULT_FRAME_WIDTH;
+    int32_t videoFrameHeight = AVTRANSCODER_DEFAULT_FRAME_HEIGHT;
 };
 
 class AVTranscoderImpl {
