@@ -120,11 +120,15 @@ bool SoundPool::CheckInitParam(int maxStreams, AudioStandard::AudioRendererInfo 
     if (maxStreams <= 0) {
         return false;
     }
+    bool isRendererFlagsInvalid = audioRenderInfo.rendererFlags < 0
+        || (audioRenderInfo.rendererFlags > 1
+        && audioRenderInfo.rendererFlags != AudioStandard::AUDIO_FLAG_VKB_NORMAL
+        && audioRenderInfo.rendererFlags != AudioStandard::AUDIO_FLAG_VKB_FAST);
     if (audioRenderInfo.contentType < AudioStandard::CONTENT_TYPE_UNKNOWN
         || audioRenderInfo.contentType > AudioStandard::CONTENT_TYPE_ULTRASONIC
         || audioRenderInfo.streamUsage < AudioStandard::STREAM_USAGE_UNKNOWN
         || audioRenderInfo.streamUsage > AudioStandard::STREAM_USAGE_VOICE_MODEM_COMMUNICATION
-        || audioRenderInfo.rendererFlags < 0 || audioRenderInfo.rendererFlags > 1) {
+        || isRendererFlagsInvalid) {
         return false;
     }
     return true;
