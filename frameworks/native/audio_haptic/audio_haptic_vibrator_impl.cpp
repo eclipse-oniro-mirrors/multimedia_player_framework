@@ -513,7 +513,7 @@ int32_t AudioHapticVibratorImpl::PlayVibrationPattern(
 
     // last pattern need to wait
     if (patternIndex == vibratorPkg->patternNum - 1) {
-        int32_t lastPatternDuration = vibratorPkg->patterns[i].patternDuration;
+        int32_t lastPatternDuration = vibratorPkg->patterns[patternIndex].patternDuration;
         (void)vibrateCV_.wait_for(lock, std::chrono::milliseconds(lastPatternDuration),
             [this]() { return isStopped_ || isNeedRestart_; });
         CHECK_AND_RETURN_RET_LOG(!isStopped_ && !isNeedRestart_, result,
