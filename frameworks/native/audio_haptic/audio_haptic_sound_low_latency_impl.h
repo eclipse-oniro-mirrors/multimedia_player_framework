@@ -25,7 +25,8 @@ class AudioHapticSoundLowLatencyImpl : public AudioHapticSound,
     public std::enable_shared_from_this<AudioHapticSoundLowLatencyImpl> {
 public:
     AudioHapticSoundLowLatencyImpl(const AudioSource& audioSource, const bool &muteAudio,
-        const AudioStandard::StreamUsage &streamUsage, const bool &parallelPlayFlag = false);
+        const AudioStandard::StreamUsage &streamUsage, const bool &parallelPlayFlag = false,
+        const int32_t &audioHapticSyncId = 0);
     ~AudioHapticSoundLowLatencyImpl();
 
     // AudioHapticSound override

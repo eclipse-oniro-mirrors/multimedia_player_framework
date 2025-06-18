@@ -25,7 +25,7 @@ class AudioHapticSoundNormalImpl : public AudioHapticSound,
     public std::enable_shared_from_this<AudioHapticSoundNormalImpl> {
 public:
     AudioHapticSoundNormalImpl(const AudioSource& audioSource, const bool &muteAudio,
-        const AudioStandard::StreamUsage &streamUsage);
+        const AudioStandard::StreamUsage &streamUsage, const int32_t &audioHapticSyncId = 0);
     ~AudioHapticSoundNormalImpl();
 
     // AudioHapticSound override
