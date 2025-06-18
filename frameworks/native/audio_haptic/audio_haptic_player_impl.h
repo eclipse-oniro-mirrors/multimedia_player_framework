@@ -22,7 +22,6 @@
 
 namespace OHOS {
 namespace Media {
-const int32_t ERR_OPERATE_NOT_ALLOWED = 5400102;
 class AudioHapticSoundCallbackImpl;
 
 class AudioHapticPlayerImpl : public AudioHapticPlayer, public std::enable_shared_from_this<AudioHapticPlayerImpl> {

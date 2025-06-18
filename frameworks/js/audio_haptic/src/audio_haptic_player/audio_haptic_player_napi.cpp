@@ -474,7 +474,7 @@ napi_value AudioHapticPlayerNapi::SetLoop(napi_env env, napi_callback_info info)
                     napi_resolve_deferred(env, context->deferred, result);
                 } else {
                     AudioHapticCommonNapi::PromiseReject(env, context->deferred,
-                        context->result, "Failed to set volume");
+                        context->result, "Failed to set loop");
                 }
             }
             napi_delete_async_work(env, context->work);

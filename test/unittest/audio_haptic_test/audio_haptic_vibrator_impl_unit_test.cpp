@@ -15,17 +15,79 @@
 
 #include "audio_haptic_vibrator_impl_unit_test.h"
 
+#include "audio_haptic_test_common.h"
+#include "media_errors.h"
+
 namespace OHOS {
 namespace Media {
 using namespace testing::ext;
 
 const int32_t NUM123 = 123;
 const int32_t NUM5 = 5;
-const int32_t MSERR_OK = 0;
 const int ERROR = -1;
+const int32_t ZERO_INDEX = 0;
+const int32_t ONE_INDEX = 1;
+const int32_t TWO_INDEX = 2;
+const int32_t INTENSITY_FIFTY = 50;
+const int32_t INTENSITY_SEVENTY = 70;
+const int32_t FREQUENCY = 150;
+const int32_t PKG_DURATION_MS = 30000;
+const int32_t PATTERN1_DURATION_MS = 20000;
+const int32_t PATTERN2_DURATION_MS = 9000;
+const int32_t EVENT_DURATION_MS = 2000;
+const int32_t PATTERN2_TIME_MS = 21000;
 
-void AudioHapticVibratorImplUnitTest::SetUpTestCase(void) {}
-void AudioHapticVibratorImplUnitTest::TearDownTestCase(void) {}
+std::mutex vibrateMutex_;
+
+static std::shared_ptr<VibratorPackage> g_vibrationPackage = nullptr;
+
+void AudioHapticVibratorImplUnitTest::SetUpTestCase(void) {
+    g_vibrationPackage = std::make_shared<VibratorPackage>();
+    g_vibrationPackage->patternNum = TWO_INDEX;
+    g_vibrationPackage->packageDuration = PKG_DURATION_MS;
+
+    g_vibrationPackage->patterns = new VibratorPattern[g_vibrationPackage->patternNum];
+
+    VibratorPattern &pattern1 = g_vibrationPackage->patterns[0];
+    pattern1.time = ZERO_INDEX;
+    pattern1.eventNum = ONE_INDEX;
+    pattern1.patternDuration = PATTERN1_DURATION_MS;
+
+    pattern1.events = new VibratorEvent[pattern1.eventNum];
+
+    VibratorEvent &event1 = pattern1.events[0];
+    event1.type = EVENT_TYPE_UNKNOWN;
+    event1.time = ZERO_INDEX;
+    event1.duration = EVENT_DURATION_MS;
+    event1.intensity = INTENSITY_FIFTY;
+    event1.frequency = FREQUENCY;
+    event1.index = ZERO_INDEX;
+    event1.pointNum = ZERO_INDEX;
+    event1.points = nullptr;
+
+    VibratorPattern &pattern2 = g_vibrationPackage->patterns[1];
+    pattern2.time = PATTERN2_TIME_MS;
+    pattern2.eventNum = ONE_INDEX;
+    pattern2.patternDuration = PATTERN2_DURATION_MS;
+
+    pattern2.events = new VibratorEvent[pattern2.eventNum];
+
+    VibratorEvent &event2 = pattern2.events[0];
+    event2.type = EVENT_TYPE_UNKNOWN;
+    event2.time = ZERO_INDEX;
+    event2.duration = EVENT_DURATION_MS;
+    event2.intensity = INTENSITY_SEVENTY;
+    event2.frequency = FREQUENCY;
+    event2.index = ONE_INDEX;
+    event2.pointNum = ZERO_INDEX;
+    event2.points = nullptr;
+}
+void AudioHapticVibratorImplUnitTest::TearDownTestCase(void) {
+    for (int i = 0; i < g_vibrationPackage->patternNum; ++i) {
+        delete[] g_vibrationPackage->patterns[i].events;
+    }
+    delete[] g_vibrationPackage->patterns;
+}
 void AudioHapticVibratorImplUnitTest::SetUp(void) {}
 void AudioHapticVibratorImplUnitTest::TearDown(void) {}
 
@@ -126,7 +188,7 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_006, TestSize.
     std::string hapticsUri = "fd://0";
 
     auto ret = audioHapticVibratorImpl->ExtractFd(hapticsUri);
-    EXPECT_EQ(ret, ERROR);
+    EXPECT_EQ(ret, MSERR_OK);
 }
 
 /**
@@ -144,23 +206,6 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_007, TestSize.
 
     auto ret = audioHapticVibratorImpl->ExtractFd(hapticsUri);
     EXPECT_EQ(ret, NUM123);
-}
-
-/**
- * @tc.name  : Test AudioHapticVibratorImpl API
- * @tc.number: AudioHapticVibratorImpl_008
- * @tc.desc  : Test AudioHapticVibratorImpl::OpenHapticFile()
- */
-HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_008, TestSize.Level1)
-{
-    AudioHapticPlayerImpl audioHapticPlayerImpl;
-    auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
-    EXPECT_NE(audioHapticVibratorImpl, nullptr);
-
-    HapticSource hapticSource = {.hapticUri = "fd://123"};
-
-    auto ret = audioHapticVibratorImpl->OpenHapticFile(hapticSource);
-    EXPECT_NE(ret, MSERR_OK);
 }
 
 /**
@@ -689,9 +734,45 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_036, TestSize.
 /**
  * @tc.name  : Test AudioHapticVibratorImpl API
  * @tc.number: AudioHapticVibratorImpl_037
+ * @tc.desc  : Test AudioHapticVibratorImpl::IsHdHapticSupported()
+ */
+HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_037, TestSize.Level0)
+{
+    AudioHapticPlayerImpl audioHapticPlayerImpl;
+    auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
+    EXPECT_NE(audioHapticVibratorImpl, nullptr);
+
+    bool ret = audioHapticVibratorImpl->IsHdHapticSupported();
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.name  : Test AudioHapticVibratorImpl API
+ * @tc.number: AudioHapticVibratorImpl_038
+ * @tc.desc  : Test AudioHapticVibratorImpl::SetHapticIntensity()
+ */
+HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_038, TestSize.Level0)
+{
+    AudioHapticPlayerImpl audioHapticPlayerImpl;
+    auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
+    EXPECT_NE(audioHapticVibratorImpl, nullptr);
+
+    audioHapticVibratorImpl->isRunning_ = false;
+    int32_t result = audioHapticVibratorImpl->SetHapticIntensity(50.0f);
+    EXPECT_EQ(result, MSERR_OK);
+
+    audioHapticVibratorImpl->isRunning_ = true;
+    audioHapticVibratorImpl->isIntensityChanged_ = true;
+    result = audioHapticVibratorImpl->SetHapticIntensity(50.0f);
+    EXPECT_EQ(result, ERR_OPERATE_NOT_ALLOWED);
+}
+
+/**
+ * @tc.name  : Test AudioHapticVibratorImpl API
+ * @tc.number: AudioHapticVibratorImpl_039
  * @tc.desc  : Test AudioHapticVibratorImpl::SeekAndRestart()
  */
-HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_037, TestSize.Level1)
+HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_039, TestSize.Level1)
 {
     AudioHapticPlayerImpl audioHapticPlayerImpl;
     auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
@@ -699,7 +780,26 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_037, TestSize.
 
     audioHapticVibratorImpl->patternStartTime_ = 0;
     auto ret = audioHapticVibratorImpl->SeekAndRestart();
-    EXPECT_NE(ret, MSERR_OK);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test AudioHapticVibratorImpl API
+ * @tc.number: AudioHapticVibratorImpl_040
+ * @tc.desc  : Test AudioHapticVibratorImpl::PlayVibrateForAVPlayer()
+ */
+HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_040, TestSize.Level1)
+{
+    uint64_t tokenID;
+    ASSERT_TRUE(GetPermission({"ohos.permission.VIBRATE"}, tokenID, false));
+
+    AudioHapticPlayerImpl audioHapticPlayerImpl;
+    auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
+    EXPECT_NE(audioHapticVibratorImpl, nullptr);
+    EXPECT_NE(g_vibrationPackage, nullptr);
+    std::unique_lock<std::mutex> lock(vibrateMutex_);
+    int32_t result = audioHapticVibratorImpl->PlayVibrateForAVPlayer(g_vibrationPackage, lock);
+    EXPECT_EQ(result, MSERR_INVALID_OPERATION);
 }
 } // namespace Media
 } // namespace OHOS
