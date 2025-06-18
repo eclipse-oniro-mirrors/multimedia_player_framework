@@ -798,7 +798,7 @@ public:
      * @since openharmony 3.1
      * @version 1.0
      */
-    virtual int32_t SetLocation(float latitude, float longitude) = 0;
+    virtual void SetLocation(float latitude, float longitude) = 0;
 
     /**
      * @brief set the orientation hint in output file, and for the file to playback. mp4 support.
@@ -808,7 +808,7 @@ public:
      * @since openharmony 3.1
      * @version 1.0
      */
-    virtual int32_t SetOrientationHint(int32_t rotation) = 0;
+    virtual void SetOrientationHint(int32_t rotation) = 0;
 
     /**
      * @brief Registers a recording listener.
