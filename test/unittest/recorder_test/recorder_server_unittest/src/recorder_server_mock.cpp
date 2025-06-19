@@ -582,6 +582,8 @@ int32_t RecorderServerMock::SetAudVidFormat(const std::string &recorderType, Vid
         recorderConfig.enableStableQualityMode);
     UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetVideoEnableStableQualityMode failed ");
+    ret = recorder_->SetVideoEnableBFrame(recorderConfig.videoSourceId, recorderConfig.enableBFrame);
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetVideoEnableBFrame failed ");
     ret = CameraServicesForVideo(recorderConfig);
     UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "CameraServicesForVideo failed ");
     ret = CameraServicesForAudio(recorderConfig);
@@ -609,6 +611,8 @@ int32_t RecorderServerMock::SetFormat(const std::string &recorderType, VideoReco
             recorderConfig.enableStableQualityMode);
         UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
             "SetVideoEnableStableQualityMode failed ");
+        ret = recorder_->SetVideoEnableBFrame(recorderConfig.videoSourceId, recorderConfig.enableBFrame);
+        UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetVideoEnableBFrame failed ");
         ret = CameraServicesForVideo(recorderConfig);
         UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "CameraServices failed ");
     } else if (recorderType == PURE_AUDIO) {
