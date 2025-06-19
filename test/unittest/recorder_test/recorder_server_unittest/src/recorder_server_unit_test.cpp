@@ -617,6 +617,7 @@ HWTEST_F(RecorderServerUnitTest, recorder_configure_012, TestSize.Level2)
     videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
     videoRecorderConfig.videoFormat = H264;
     videoRecorderConfig.outPutFormat = FORMAT_DEFAULT;
+    videoRecorderConfig.enableBFrame = false;
     videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
@@ -656,7 +657,7 @@ HWTEST_F(RecorderServerUnitTest, recorder_configure_013, TestSize.Level2)
 
 /**
  * @tc.name: recorder_configure_014
- * @tc.desc: record with enableTemporalScale true
+ * @tc.desc: record with enableBFrame and enableTemporalScale true
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -666,6 +667,7 @@ HWTEST_F(RecorderServerUnitTest, recorder_configure_014, TestSize.Level2)
     videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
     videoRecorderConfig.videoFormat = H264;
     videoRecorderConfig.enableTemporalScale = true;
+    videoRecorderConfig.enableBFrame = true;
     videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
