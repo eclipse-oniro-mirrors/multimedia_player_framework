@@ -102,6 +102,7 @@ namespace RecorderTestParam {
         MetaSourceType metaSourceType = MetaSourceType::VIDEO_META_SOURCE_INVALID;
         bool enableTemporalScale = false;
         bool enableStableQualityMode = false;
+        bool enableBFrame = false;
         float latitude = 30.0;
         float longitude = 60.0;
         std::string genre = "hi";
