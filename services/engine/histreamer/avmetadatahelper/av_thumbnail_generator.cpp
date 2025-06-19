@@ -39,6 +39,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "
 namespace OHOS {
 namespace Media {
 using namespace OHOS::HDI::Display::Graphic::Common::V1_0;
+using FileType = OHOS::Media::Plugins::FileType;
 constexpr float BYTES_PER_PIXEL_YUV = 1.5;
 constexpr int32_t RATE_UV = 2;
 constexpr int32_t SHIFT_BITS_P010_2_NV12 = 8;
@@ -148,8 +149,12 @@ Status AVThumbnailGenerator::InitDecoder()
     }
     videoDecoder_ = MediaAVCodec::VideoDecoderFactory::CreateByMime(trackMime_);
     CHECK_AND_RETURN_RET_LOG(videoDecoder_ != nullptr, Status::ERROR_NO_MEMORY, "Create videoDecoder_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(trackInfo_ != nullptr, Status::ERROR_NULL_POINTER, "track info init failed");
     Format trackFormat{};
-    trackFormat.SetMeta(GetVideoTrackInfo());
+    if (fileType_ == FileType::AVI) {
+        trackInfo_->SetData(Tag::MEDIA_FILE_TYPE, FileType::AVI);
+    }
+    trackFormat.SetMeta(trackInfo_);
     trackFormat.GetIntValue(MediaDescriptionKey::MD_KEY_WIDTH, width_);
     trackFormat.GetIntValue(MediaDescriptionKey::MD_KEY_HEIGHT, height_);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Init decoder trackFormat width:%{public}d, height:%{public}d",
@@ -202,6 +207,9 @@ void AVThumbnailGenerator::AcquireAvailableInputBuffer()
     Status ret = inputBufferQueueConsumer_->AcquireBuffer(filledInputBuffer);
     CHECK_AND_RETURN_LOG(ret == Status::OK, "AcquireBuffer fail");
 
+    if (fileType_ == FileType::AVI) {
+        GetInputBufferDts(filledInputBuffer);
+    }
     CHECK_AND_RETURN_LOG(filledInputBuffer->meta_ != nullptr, "filledInputBuffer meta is nullptr.");
     uint32_t index;
     CHECK_AND_RETURN_LOG(filledInputBuffer->meta_->GetData(Tag::BUFFER_INDEX, index), "get index failed.");
@@ -218,19 +226,30 @@ void AVThumbnailGenerator::AcquireAvailableInputBuffer()
     }
 }
 
-void AVThumbnailGenerator::GetDuration()
+void AVThumbnailGenerator::GetInputBufferDts(std::shared_ptr<AVBuffer> &inputBuffer)
+{
+    CHECK_AND_RETURN_NOLOG(inputBuffer != nullptr);
+    std::unique_lock<std::mutex> lock(dtsQueMutex_);
+    inputBufferDtsQue_.push_back(inputBuffer->dts_);
+    MEDIA_LOGD("Inputbuffer DTS: %{public}" PRId64 " dtsQue_ size: %{public}" PRIu64,
+        inputBuffer->dts_, static_cast<uint64_t>(inputBufferDtsQue_.size()));
+}
+
+void AVThumbnailGenerator::InitMediaInfoFromGlobalMeta()
 {
     auto meta = mediaDemuxer_->GetGlobalMetaInfo();
     CHECK_AND_RETURN_LOG(meta != nullptr, "Global info is nullptr");
     (void)meta->Get<Tag::MEDIA_DURATION>(duration_);
     MEDIA_LOGI("%{public}" PRId64, duration_);
+    CHECK_AND_RETURN_NOLOG(meta->GetData(Tag::MEDIA_FILE_TYPE, fileType_));
+    MEDIA_LOGI("file type is: %{public}" PRId32, static_cast<int32_t>(fileType_));
 }
 
 std::shared_ptr<Meta> AVThumbnailGenerator::GetVideoTrackInfo()
 {
     CHECK_AND_RETURN_RET(trackInfo_ == nullptr, trackInfo_);
     CHECK_AND_RETURN_RET_LOG(mediaDemuxer_ != nullptr, nullptr, "GetTargetTrackInfo demuxer is nullptr");
-    GetDuration();
+    InitMediaInfoFromGlobalMeta();
     std::vector<std::shared_ptr<Meta>> trackInfos = mediaDemuxer_->GetStreamMetaInfo();
     size_t trackCount = trackInfos.size();
     CHECK_AND_RETURN_RET_LOG(trackCount > 0, nullptr, "GetTargetTrackInfo trackCount is invalid");
@@ -354,8 +373,18 @@ int64_t AVThumbnailGenerator::ReadLoop()
         inputBufferQueueProducer_->PushBuffer(emptyBuffer, false);
         return ERROR_AGAIN_SLEEP_TIME_US;
     }
+    if (fileType_ == FileType::AVI) {
+        SetDemuxerOutputBufferPts(emptyBuffer);
+    }
     inputBufferQueueProducer_->PushBuffer(emptyBuffer, true);
     return 0;
+}
+
+void AVThumbnailGenerator::SetDemuxerOutputBufferPts(std::shared_ptr<AVBuffer> &outputBuffer)
+{
+    CHECK_AND_RETURN_NOLOG(outputBuffer != nullptr);
+    MEDIA_LOGD("OutputBuffer PTS: %{public}" PRId64 " DTS: %{public}" PRId64, outputBuffer->pts_, outputBuffer->dts_);
+    outputBuffer->pts_ = outputBuffer->dts_;
 }
 
 int64_t AVThumbnailGenerator::StopTask()
@@ -366,8 +395,26 @@ int64_t AVThumbnailGenerator::StopTask()
     return 0;
 }
 
+void AVThumbnailGenerator::SetDecoderOutputBufferPts(std::shared_ptr<AVBuffer> &outputBuffer)
+{
+    CHECK_AND_RETURN_NOLOG(outputBuffer != nullptr);
+    std::unique_lock<std::mutex> lock(dtsQueMutex_);
+    if (!inputBufferDtsQue_.empty()) {
+        outputBuffer->pts_ = inputBufferDtsQue_.front();
+        inputBufferDtsQue_.pop_front();
+        MEDIA_LOGD("DecOutputbuf PTS: %{public}" PRId64 " dtsQue_ size: %{public}" PRIu64,
+            outputBuffer->pts_, static_cast<uint64_t>(inputBufferDtsQue_.size()));
+    } else {
+        MEDIA_LOGW("DtsQue_ is empty. DecOutputbuf DTS: %{public}" PRId64, outputBuffer->dts_);
+        outputBuffer->pts_ = outputBuffer->dts_;
+    }
+}
+
 void AVThumbnailGenerator::OnOutputBufferAvailable(uint32_t index, std::shared_ptr<AVBuffer> buffer)
 {
+    if (fileType_ == FileType::AVI) {
+        SetDecoderOutputBufferPts(buffer);
+    }
     MEDIA_LOGD("OnOutputBufferAvailable index:%{public}u , pts %{public}" PRId64, index, buffer->pts_);
     CHECK_AND_RETURN_LOG(videoDecoder_ != nullptr, "Video decoder not exist");
     bool isEosBuffer = buffer->flag_ & (uint32_t)(AVBufferFlag::EOS);
@@ -737,20 +784,31 @@ void AVThumbnailGenerator::Reset()
     FlushBufferQueue();
 
     hasFetchedFrame_ = false;
+    fileType_ = FileType::UNKNOW;
     trackInfo_ = nullptr;
 }
 
 void AVThumbnailGenerator::FlushBufferQueue()
 {
-    std::unique_lock<std::mutex> lock(queueMutex_);
-    if (inputBufferQueueConsumer_ != nullptr) {
-        for (auto &buffer : bufferVector_) {
-            inputBufferQueueConsumer_->DetachBuffer(buffer);
+    {
+        std::unique_lock<std::mutex> lock(queueMutex_);
+        if (inputBufferQueueConsumer_ != nullptr) {
+            for (auto &buffer : bufferVector_) {
+                inputBufferQueueConsumer_->DetachBuffer(buffer);
+            }
+            bufferVector_.clear();
+            inputBufferQueueConsumer_->SetQueueSize(0);
         }
-        bufferVector_.clear();
-        inputBufferQueueConsumer_->SetQueueSize(0);
+        isBufferAvailable_ = false;
     }
-    isBufferAvailable_ = false;
+    {
+        std::unique_lock<std::mutex> lock(dtsQueMutex_);
+        if (!inputBufferDtsQue_.empty()) {
+            MEDIA_LOGI("Clear dtsQue_, currrent size: %{public}" PRIu64,
+                static_cast<uint64_t>(inputBufferDtsQue_.size()));
+            inputBufferDtsQue_.clear();
+        }
+    }
 }
 
 void AVThumbnailGenerator::CopySurfaceBufferInfo(sptr<SurfaceBuffer> &source, sptr<SurfaceBuffer> &dst)
