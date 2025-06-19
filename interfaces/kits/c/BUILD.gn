@@ -303,7 +303,7 @@ ohos_shared_library("avmetadata_extractor") {
   part_name = "player_framework"
 }
 
-ohos_shared_library("avtranscoder"){
+ohos_shared_library("avtranscoder") {
   stack_protector_ret = true
   install_enable = true
 
