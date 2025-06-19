@@ -1230,6 +1230,7 @@ void PlayerServiceProxy::WritePlaybackStrategy(MessageParcel &data, const AVPlay
     (void)data.WriteInt32(static_cast<int32_t>(strategy.mutedMediaType));
     (void)data.WriteString(strategy.preferredAudioLanguage);
     (void)data.WriteString(strategy.preferredSubtitleLanguage);
+    (void)data.WriteBool(strategy.keepDecodingOnMute);
 }
 
 int32_t PlayerServiceProxy::SetReopenFd(int32_t fd)

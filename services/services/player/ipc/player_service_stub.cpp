@@ -1317,7 +1317,8 @@ int32_t PlayerServiceStub::SetPlaybackStrategy(MessageParcel &data, MessageParce
         .enableSuperResolution = data.ReadBool(),
         .mutedMediaType = static_cast<OHOS::Media::MediaType>(data.ReadInt32()),
         .preferredAudioLanguage = data.ReadString(),
-        .preferredSubtitleLanguage = data.ReadString()
+        .preferredSubtitleLanguage = data.ReadString(),
+        .keepDecodingOnMute = data.ReadBool()
     };
     reply.WriteInt32(SetPlaybackStrategy(avPlaybackStrategy));
     return MSERR_OK;

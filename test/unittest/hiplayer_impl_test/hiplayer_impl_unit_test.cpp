@@ -1241,12 +1241,15 @@ HWTEST_F(HiplayerImplUnitTest, TestSetPlaybackStrategy_001, TestSize.Level0)
 {
     AVPlayStrategy strategy;
     strategy.enableSuperResolution = false;
+    strategy.keepDecodingOnMute = false;
     auto ret = hiplayer_->SetPlaybackStrategy(strategy);
     EXPECT_EQ(ret, MSERR_OK);
     EXPECT_EQ(hiplayer_->videoPostProcessorType_, VideoPostProcessorType::NONE);
     EXPECT_EQ(hiplayer_->isPostProcessorOn_, false);
+    EXPECT_EQ(hiplayer_->keepDecodingOnMute_, false);
 
     strategy.enableSuperResolution = true;
+    strategy.keepDecodingOnMute = true;
     ret = hiplayer_->SetPlaybackStrategy(strategy);
     EXPECT_EQ(ret, MSERR_OK);
     EXPECT_EQ(hiplayer_->videoPostProcessorType_, VideoPostProcessorType::SUPER_RESOLUTION);

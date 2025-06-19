@@ -260,6 +260,7 @@ private:
     Status LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     Status LinkSeiDecoder(const std::shared_ptr<Filter>& preFilter, StreamType type);
     bool IsVideoMime(const std::string& mime);
+    Status InitVideoDecoder();
 #endif
     bool IsAudioMime(const std::string& mime);
     bool IsSubtitleMime(const std::string& mime);
@@ -317,6 +318,8 @@ private:
     void ResetEnableCameraPostProcess();
     int32_t SetAudioHapticsSyncId(int32_t syncId);
     int32_t ApplyAudioHapticsSyncId(int32_t syncId);
+    void DoInitDemuxer();
+    void ReleaseVideoDecoderOnMuted();
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
@@ -489,6 +492,9 @@ private:
     bool isDownloadPaused_ = false;
     std::mutex freezeMutex_;
     bool isForceLoadVideo_ {false};
+    bool keepDecodingOnMute_ = false;
+    bool isVideoMuted_ = false;
+    bool isVideoDecoderInited_ = false;
 };
 } // namespace Media
 } // namespace OHOS

@@ -59,6 +59,7 @@ struct AVPlayStrategy {
     OHOS::Media::MediaType mutedMediaType = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
     std::string preferredAudioLanguage = "";
     std::string preferredSubtitleLanguage = "";
+    bool keepDecodingOnMute = false;
 };
 
 struct AVPlayMediaStream {

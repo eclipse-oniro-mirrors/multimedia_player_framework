@@ -697,5 +697,17 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_OnCallback_002, TestSize.Level0)
     auto ret = hiplayer_->OnCallback(filter, cmd, outType);
     EXPECT_EQ(ret, Status::OK);
 }
+
+HWTEST_F(PlayHiplayerImplUnitTest, SetMediaMuted_001, TestSize.Level0)
+{
+    hiplayer_->videoDecoder_ = std::make_shared<MockDecoderSurfaceFilter>();
+    if (hiplayer_->demuxer_ == nullptr) {
+        std::string name = "testname";
+        FilterType type = FilterType::VIDEO_CAPTURE;
+        hiplayer_->demuxer_ = std::make_shared<MockDemuxerFilter>(name, type);
+    }
+    hiplayer_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true);
+    EXPECT_EQ(hiplayer_->isVideoMuted_, true);
+}
 } // namespace Media
 } // namespace OHOS
