@@ -177,7 +177,7 @@ bool SystemSoundManagerUtils::GetScannerFirstParameter(const char* key, int32_t 
 
 int32_t SystemSoundManagerUtils::GetTypeForSystemSoundUri(const std::string &audioUri)
 {
-    if (audioUri == NO_SYSTEM_SOUND || audioUri == NO_SYSTEM_SOUND) {
+    if (audioUri == NO_SYSTEM_SOUND || audioUri == NO_RING_SOUND) {
         return SystemToneUriType::NO_RINGTONES;
     }
 
