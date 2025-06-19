@@ -2115,20 +2115,40 @@ napi_value AVPlayerNapi::JsSetDataSrc(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create reference!");
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
     jsPlayer->dataSrcCb_->SaveCallbackReference(READAT_CALLBACK_NAME, autoRef);
-
-    if (jsPlayer->player_ != nullptr) {
-        if (jsPlayer->player_->SetSource(jsPlayer->dataSrcCb_) != MSERR_OK) {
-            jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "player SetSource DataSrc failed");
-        } else {
-            jsPlayer->state_ = PlayerStates::PLAYER_INITIALIZED;
-        }
-        if (jsPlayer->dataSrcDescriptor_.fileSize == -1) {
-            jsPlayer->isLiveStream_ = true;
-        }
-    }
-
+    jsPlayer->SetDataSource(jsPlayer);
     MEDIA_LOGI("JsSetDataSrc Out");
     return result;
+}
+
+void AVPlayerNapi::SetDataSource(AVPlayerNapi *jsPlayer)
+{
+    MEDIA_LOGI("SetDataSource while setStateChange_ %{public}d", jsPlayer->hasSetStateChangeCb_);
+    if (jsPlayer->hasSetStateChangeCb_) {
+        if (jsPlayer->player_ != nullptr) {
+            if (jsPlayer->player_->SetSource(jsPlayer->dataSrcCb_) != MSERR_OK) {
+                jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "player SetSource DataSrc failed");
+            } else {
+                jsPlayer->state_ = PlayerStates::PLAYER_INITIALIZED;
+            }
+            if (jsPlayer->dataSrcDescriptor_.fileSize == -1) {
+                jsPlayer->isLiveStream_ = true;
+            }
+        }
+        return;
+    }
+
+    auto task = std::make_shared<TaskHandler<void>>([jsPlayer]() {
+        MEDIA_LOGI("SetDataSrc Task");
+        if (jsPlayer->player_ != nullptr) {
+            if (jsPlayer->player_->SetSource(jsPlayer->dataSrcCb_) != MSERR_OK) {
+                jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "player SetSource DataSrc failed");
+            }
+            if (jsPlayer->dataSrcDescriptor_.fileSize == -1) {
+                jsPlayer->isLiveStream_ = true;
+            }
+        }
+    });
+    (void)jsPlayer->taskQue_->EnqueueTask(task);
 }
 
 napi_value AVPlayerNapi::JsGetDataSrc(napi_env env, napi_callback_info info)
@@ -3341,6 +3361,7 @@ napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_NOLOG(
         VerifyExpectedType({ env, args[0], napi_string }, jsPlayer, "type should be string."), result);
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
+    jsPlayer->hasSetStateChangeCb_ |= (callbackName == "stateChange");
 
     napi_ref ref = nullptr;
     if (argCount == ARGS_THREE) {
@@ -3417,6 +3438,7 @@ napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info
     }
 
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
+    jsPlayer->hasSetStateChangeCb_ &= (callbackName != "stateChange");
     MEDIA_LOGI("0x%{public}06" PRIXPTR " set callbackName: %{public}s", FAKE_POINTER(jsPlayer), callbackName.c_str());
     if (callbackName != "seiMessageReceived") {
         jsPlayer->HandleListenerStateChange(callbackName, false);

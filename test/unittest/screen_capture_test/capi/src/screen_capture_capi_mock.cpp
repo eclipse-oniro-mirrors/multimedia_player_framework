@@ -378,3 +378,32 @@ int32_t ScreenCaptureCapiMock::ExcludeAudioContent(AVScreenCaptureFilterableAudi
         static_cast<OH_AVScreenCaptureFilterableAudioContent>(audioType));
     return OH_AVScreenCapture_ExcludeContent(screenCapture_, contentFilter_);
 }
+
+int32_t ScreenCaptureCapiMock::CreateCaptureStrategy()
+{
+    strategy_ = OH_AVScreenCapture_CreateCaptureStrategy();
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(strategy_ != nullptr, MSERR_UNKNOWN,
+        "OH_AVScreenCapture_CreateCaptureStrategy failed");
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureCapiMock::StrategyForKeepCaptureDuringCall(bool value)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(strategy_ != nullptr, MSERR_UNKNOWN,
+        "OH_AVScreenCapture_CreateCaptureStrategy failed");
+    return OH_AVScreenCapture_StrategyForKeepCaptureDuringCall(strategy_, value);
+}
+
+int32_t ScreenCaptureCapiMock::SetCaptureStrategy()
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(strategy_ != nullptr, MSERR_UNKNOWN,
+        "OH_AVScreenCapture_CreateCaptureStrategy failed");
+    return OH_AVScreenCapture_SetCaptureStrategy(screenCapture_, strategy_);
+}
+
+int32_t ScreenCaptureCapiMock::ReleaseCaptureStrategy()
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(strategy_ != nullptr, MSERR_INVALID_OPERATION, "strategy_ == nullptr");
+    return OH_AVScreenCapture_ReleaseCaptureStrategy(strategy_);
+}

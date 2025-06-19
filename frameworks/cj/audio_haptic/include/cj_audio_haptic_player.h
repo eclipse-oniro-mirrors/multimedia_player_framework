@@ -32,7 +32,6 @@ const int64_t INVALID_OBJ = -1;
 const int32_t INVALID_ID = -1;
 const int32_t SUCCESS = 0;
 const int32_t ERR_INVALID_ARG = 401;
-const int32_t ERR_OPERATE_NOT_ALLOWED = 5400102;
 const int32_t ERR_IO_ERROR = 5400103;
 const int32_t ERR_UNSUPPORTED_FORMAT = 5400106;
 

@@ -331,6 +331,7 @@ private:
     void AddSubSource(std::string url);
     void SetSurface(const std::string &surfaceStr);
     void ResetUserParameters();
+    void SetDataSource(AVPlayerNapi *jsPlayer);
 
     std::shared_ptr<TaskHandler<TaskRet>> PrepareTask();
     std::shared_ptr<TaskHandler<TaskRet>> PlayTask();
@@ -455,6 +456,7 @@ private:
 
     std::atomic<bool> isReadyReleased_ = false;
     bool isForceLoadVideo_ = false;
+    bool hasSetStateChangeCb_ = false;
     int32_t mutedMediaType_ = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
 };
 } // namespace Media

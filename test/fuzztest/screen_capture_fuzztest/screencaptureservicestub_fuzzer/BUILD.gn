@@ -27,14 +27,11 @@ ohos_fuzztest("ScreenCaptureServiceStubFuzzTest") {
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_ROOT_DIR/services/utils/include",
     "$MEDIA_ROOT_DIR/test/fuzztest/common/",
-    "$MEDIA_PLAYER_GRAPHIC/interfaces/innerkits/surface",
     "../../../../services/services/screen_capture/ipc",
     "../../../../services/services/sa_media/ipc",
     "../../../../services/services/sa_media/server",
     "../../../../services/services/sa_media/server_manager",
     "../../../../services/include",
-    "../../../../../media_foundation/interface/inner_api",
-    "../../../../../media_foundation/interface/inner_api/common",
   ]
   cflags = [
     "-std=c++17",
@@ -75,6 +72,7 @@ ohos_fuzztest("ScreenCaptureServiceStubFuzzTest") {
     "graphic_surface:surface",
     "hilog:libhilog",
     "ipc:ipc_single",
+    "media_foundation:media_foundation",
     "player_framework:media_client",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
