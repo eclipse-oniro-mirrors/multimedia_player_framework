@@ -2118,6 +2118,8 @@ int32_t SystemSoundManagerImpl::DoRemove(std::shared_ptr<DataShare::DataShareHel
     return changedRows;
 }
 
+
+
 std::vector<std::pair<std::string, SystemSoundError>> SystemSoundManagerImpl::RemoveCustomizedToneList(
     const std::vector<std::string> &uriList, SystemSoundError &errCode)
 {
