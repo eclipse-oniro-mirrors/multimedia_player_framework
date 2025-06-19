@@ -674,14 +674,21 @@ int32_t PlayerServer::HandleFreeze()
     bool isNoNeedToFreeze = false;
     int32_t ret = playerEngine_->Freeze(isNoNeedToFreeze);
     UpdateFlvLivePauseTime();
-    taskMgr_.MarkTaskDone("Freeze done");
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Freeze Failed!");
+    if (ret != MSERR_OK) {
+        MEDIA_LOGI("Engine Freeze Failed!");
+        taskMgr_.MarkTaskDone("Freeze done");
+        return MSERR_INVALID_OPERATION;
+    }
     if (isNoNeedToFreeze) {
         CHECK_AND_RETURN_RET_NOLOG(playerCb_ != nullptr, MSERR_OK);
         playerCb_->SetFreezeFlag(false);
+        taskMgr_.MarkTaskDone("Freeze done");
         return MSERR_OK;
     }
-    return HandleLiteFreeze(), MSERR_OK;
+    ret = HandleLiteFreeze();
+    MEDIA_LOGI("HandleLiteFreeze ret is %{public}d", ret);
+    taskMgr_.MarkTaskDone("Freeze done");
+    return ret;
 }
 
 int32_t PlayerServer::HandleLiteFreeze()
