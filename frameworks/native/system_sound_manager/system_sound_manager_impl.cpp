@@ -2521,7 +2521,7 @@ int32_t SystemSoundManagerImpl::GetToneHapticsSettings(const DatabaseTool &datab
         result = GetDefaultToneHapticsSettings(dataShareHelper, toneUri, toneHapticsType, settings);
     }
     if (result == SUCCESS) {
-        MEDIA_LOGE("GetDefaultToneHapticsSettings: get defaultTone haptics settings success");
+        MEDIA_LOGI("GetDefaultToneHapticsSettings: get defaultTone haptics settings success");
     } else {
         MEDIA_LOGE("GetToneHapticsSettings: get defaultTone haptics settings fail");
     }
@@ -2559,7 +2559,6 @@ int32_t SystemSoundManagerImpl::SetToneHapticsSettings(std::shared_ptr<DataShare
         MEDIA_LOGE("SetToneHapticsSettings: param fail");
         return IO_ERROR;
     }
-
     ToneHapticsSettings updateSettings = settings;
     if (updateSettings.mode == ToneHapticsMode::NON_SYNC) {
         DataShare::DatashareBusinessError businessError;
