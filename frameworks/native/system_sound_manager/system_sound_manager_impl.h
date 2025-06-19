@@ -245,6 +245,8 @@ private:
     int32_t DoRemove(std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper, const std::string &uri,
         off_t fileSize);
     std::string GetBundleName();
+    std::string AddCustomizedToneCheck(const std::shared_ptr &toneAttrs, const int32_t &fd, off_t &fileSize)
+    void SetToneAttrs(std::shared_ptr &toneAttrs, const unique_ptr &ringtoneAsset)
 
     std::string systemSoundPath_ = "";
     std::mutex uriMutex_;
