@@ -32,10 +32,11 @@ namespace Media {
 const int32_t LOAD_WAIT_SECONDS = 2;
 
 AudioHapticSoundNormalImpl::AudioHapticSoundNormalImpl(const AudioSource& audioSource, const bool &muteAudio,
-    const AudioStandard::StreamUsage &streamUsage)
+    const AudioStandard::StreamUsage &streamUsage, const int32_t &audioHapticSyncId)
     : audioSource_(audioSource),
       muteAudio_(muteAudio),
-      streamUsage_(streamUsage)
+      streamUsage_(streamUsage),
+      audioHapticSyncId_(audioHapticSyncId)
 {
 }
 
@@ -127,6 +128,7 @@ int32_t AudioHapticSoundNormalImpl::ResetAVPlayer()
     Format format;
     format.PutIntValue(PlayerKeys::CONTENT_TYPE, AudioStandard::CONTENT_TYPE_UNKNOWN);
     format.PutIntValue(PlayerKeys::STREAM_USAGE, streamUsage_);
+    format.PutIntValue(PlayerKeys::PLAYER_AUDIO_HAPTICS_SYNC_ID, audioHapticSyncId_);
     ret = avPlayer_->SetParameter(format);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Set stream usage to AVPlayer failed %{public}d", ret);
 

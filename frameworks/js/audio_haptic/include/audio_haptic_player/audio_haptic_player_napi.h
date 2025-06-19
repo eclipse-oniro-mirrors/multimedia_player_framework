@@ -47,6 +47,13 @@ struct LoopContext : public AsyncContext {
     int32_t result = -1;
 };
 
+struct RampContext : public AsyncContext {
+    int32_t duration = 0;
+    float startIntensity = 0.0f;
+    float endIntensity = 0.0f;
+    int32_t result = -1;
+};
+
 class AudioHapticPlayerNapi {
 public:
     static napi_value Init(napi_env env, napi_value exports);
@@ -69,6 +76,8 @@ private:
     static napi_value EnableHapticsInSilentMode(napi_env env, napi_callback_info info);
     static napi_value IsHapticsIntensityAdjustmentSupported(napi_env env, napi_callback_info info);
     static napi_value SetLoop(napi_env env, napi_callback_info info);
+    static napi_value IsHapticsRampSupported(napi_env env, napi_callback_info info);
+    static napi_value SetHapticsRamp(napi_env env, napi_callback_info info);
 
     static napi_value RegisterCallback(napi_env env, napi_value jsThis, napi_value* argv, const std::string& cbName);
     static napi_value RegisterAudioHapticPlayerCallback(napi_env env, napi_value* argv, const std::string& cbName,
@@ -83,6 +92,7 @@ private:
     static bool IsLegalVolumeOrIntensity(double volume);
     static bool JudgeVolume(napi_env env, std::unique_ptr<VolumeContext>& asyncContext);
     static bool JudgeIntensity(napi_env env, std::unique_ptr<VibrationContext>& asyncContext);
+    static bool JudgeRamp(napi_env env, std::unique_ptr<RampContext> &asyncContext);
 
     napi_env env_;
     std::shared_ptr<AudioHapticPlayer> audioHapticPlayer_;

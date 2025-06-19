@@ -36,16 +36,18 @@ const std::string NAPI_ERR_PERMISSION_DENIED_INFO = "Caller is not a system appl
 /* Constants for array index */
 const int32_t PARAM0 = 0;
 const int32_t PARAM1 = 1;
+const int32_t PARAM2 = 2;
 
 /* Constants for array size */
 const int32_t ARGS_ZERO = 0;
 const int32_t ARGS_ONE = 1;
 const int32_t ARGS_TWO = 2;
+const int32_t ARGS_THREE = 3;
 
 struct AsyncContext {
     napi_async_work work;
     napi_deferred deferred = nullptr;
-    napi_value argv[ARGS_TWO] = {0};
+    napi_value argv[ARGS_THREE] = {0};
     void* objectInfo = nullptr;
 };
 

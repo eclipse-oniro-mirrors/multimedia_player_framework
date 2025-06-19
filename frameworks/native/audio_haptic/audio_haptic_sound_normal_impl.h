@@ -25,7 +25,7 @@ class AudioHapticSoundNormalImpl : public AudioHapticSound,
     public std::enable_shared_from_this<AudioHapticSoundNormalImpl> {
 public:
     AudioHapticSoundNormalImpl(const AudioSource& audioSource, const bool &muteAudio,
-        const AudioStandard::StreamUsage &streamUsage);
+        const AudioStandard::StreamUsage &streamUsage, const int32_t &audioHapticSyncId = 0);
     ~AudioHapticSoundNormalImpl();
 
     // AudioHapticSound override
@@ -72,6 +72,7 @@ private:
     bool isUnsupportedFile_ = false;
     std::mutex prepareMutex_;
     std::condition_variable prepareCond_;
+    int32_t audioHapticSyncId_ = 0;
 };
 
 class AHSoundNormalCallback : public PlayerCallback {
