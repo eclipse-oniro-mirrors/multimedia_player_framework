@@ -638,7 +638,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_012, TestSize.Level2)
     videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
     videoRecorderConfig.videoFormat = H264;
     videoRecorderConfig.outPutFormat = FORMAT_DEFAULT;
-    videoRecorderConfig.enableBFrame = fasle;
+    videoRecorderConfig.enableBFrame = false;
     videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
