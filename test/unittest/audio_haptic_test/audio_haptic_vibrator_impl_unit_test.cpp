@@ -856,6 +856,16 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_042, TestSize.
     //duration larger than haptics package duration
     EXPECT_EQ(MSERR_INVALID_VAL, audioHapticVibratorImpl->SetHapticsRamp(50000, 1.0f, 50.0f));
 
+    // start intensity less than 1.0f
+    EXPECT_EQ(MSERR_INVALID_VAL, audioHapticVibratorImpl->SetHapticsRamp(5000, 0.0f, 50.0f));
+    // start intensity larger than 100.0f
+    EXPECT_EQ(MSERR_INVALID_VAL, audioHapticVibratorImpl->SetHapticsRamp(5000, 101.0f, 50.0f));
+
+    // end intensity less than 1.0f
+    EXPECT_EQ(MSERR_INVALID_VAL, audioHapticVibratorImpl->SetHapticsRamp(5000, 20.0f, 0.0f));
+    // end intensity larger than 100.0f
+    EXPECT_EQ(MSERR_INVALID_VAL, audioHapticVibratorImpl->SetHapticsRamp(5000, 20.0f, 101.0f));
+
     // duration 24000ms, start intensity 20.0f, end intensity 70.0f
     EXPECT_EQ(MSERR_OK, audioHapticVibratorImpl->SetHapticsRamp(24000, 20.0f, 70.0f));
 }

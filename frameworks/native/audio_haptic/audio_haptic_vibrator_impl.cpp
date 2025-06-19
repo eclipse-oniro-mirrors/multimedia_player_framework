@@ -276,6 +276,17 @@ int32_t AudioHapticVibratorImpl::SetHapticsRamp(int32_t duration, float startInt
             duration, vibratorPkg_->packageDuration);
         return MSERR_INVALID_VAL;
     }
+
+    if (startIntensity < 1.0f || startIntensity > 100.0f) {
+        MEDIA_LOGE("AudioHapticVibratorImpl::SetHapticsRamp: the startIntensity value is invalid.");
+        return MSERR_INVALID_VAL;
+    }
+
+    if (endIntensity < 1.0f || endIntensity > 100.0f) {
+        MEDIA_LOGE("AudioHapticVibratorImpl::SetHapticsRamp: the endIntensity value is invalid.");
+        return MSERR_INVALID_VAL;
+    }
+
     // four points will be enough
     int32_t numPoints = 4;
     VibratorCurvePoint points[numPoints];
