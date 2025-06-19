@@ -60,6 +60,7 @@ const std::string DEFAULT_RINGTONE_PATH = "ringtones/";
 const std::string DEFAULT_SYSTEM_TONE_URI_JSON = "ringtone_sms-notification.json";
 const std::string DEFAULT_SYSTEM_TONE_PATH = "notifications/";
 const std::string EXT_SERVICE_AUDIO = "const.mulitimedia.service_audio";
+const std::string FIX_MP4 = ".mp4";
 const int STORAGE_MANAGER_MANAGER_ID = 5003;
 const int UNSUPPORTED_ERROR = -5;
 const int INVALID_FD = -1;
@@ -120,7 +121,7 @@ vector<string> COLUMNS = {{RINGTONE_COLUMN_TONE_ID}, {RINGTONE_COLUMN_DATA}, {RI
     {RINGTONE_COLUMN_SHOT_TONE_TYPE}, {RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE}, {RINGTONE_COLUMN_NOTIFICATION_TONE_TYPE},
     {RINGTONE_COLUMN_NOTIFICATION_TONE_SOURCE_TYPE}, {RINGTONE_COLUMN_RING_TONE_TYPE},
     {RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE}, {RINGTONE_COLUMN_ALARM_TONE_TYPE},
-    {RINGTONE_COLUMN_ALARM_TONE_SOURCE_TYPE}};
+    {RINGTONE_COLUMN_ALARM_TONE_SOURCE_TYPE}, {RINGTONE_COLUMN_MIME_TYPE}};
 vector<string> JOIN_COLUMNS = {{RINGTONE_TABLE + "." + RINGTONE_COLUMN_TONE_ID}, {RINGTONE_COLUMN_DATA},
     {RINGTONE_TABLE + "." + RINGTONE_COLUMN_DISPLAY_NAME}, {RINGTONE_COLUMN_TITLE},
     {RINGTONE_COLUMN_TONE_TYPE}, {RINGTONE_COLUMN_SOURCE_TYPE}, {RINGTONE_COLUMN_SHOT_TONE_TYPE},
@@ -1960,7 +1961,7 @@ bool SystemSoundManagerImpl::DeleteCustomizedTone(const std::shared_ptr<DataShar
     return result;
 }
 
-std::string SystemSoundManagerImpl::AddCustomizedToneCheck(const std::shared_ptr &toneAttrs,
+std::string SystemSoundManagerImpl::AddCustomizedToneCheck(const std::shared_ptr<ToneAttrs> &toneAttrs,
     const int32_t &fd, off_t &fileSize)
 {
     if (toneAttrs->GetMediaType() == ToneMediaType::MEDIA_TYPE_VID) {
@@ -2001,11 +2002,11 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(
     off_t fileSize = 0;
     GetCustomizedTone(toneAttrs);
     std::string checkResult = AddCustomizedToneCheck(toneAttrs, fd, fileSize);
-    if (!checkResult.empty() {
+    if (!checkResult.empty()) {
         SendCustomizedToneEvent(true, toneAttrs, fileSize, mimeType_, ERROR);
         MediaTrace::TraceEnd("SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset", FAKE_POINTER(this));
         return checkResult;
-    })
+    }
     std::lock_guard<std::mutex> lock(uriMutex_);
     int32_t srcFd = fd;
     off_t lseekResult = lseek(srcFd, offset, SEEK_SET);
@@ -2142,8 +2143,8 @@ int32_t SystemSoundManagerImpl::DoRemove(std::shared_ptr<DataShare::DataShareHel
     return changedRows;
 }
 
-void SystemSoundManagerImpl::SetToneAttrs(std::shared_ptr &toneAttrs,
-    const unique_ptr &ringtoneAsset)
+void SystemSoundManagerImpl::SetToneAttrs(std::shared_ptr<ToneAttrs> &toneAttrs,
+    const unique_ptr<RingtoneAsset> &ringtoneAsset)
 {
     int32_t toneType = ringtoneAsset->GetToneType();
     if (toneType == TONE_TYPE_RINGTONE) {
@@ -3107,7 +3108,7 @@ void SystemSoundManagerImpl::SendCustomizedToneEvent(bool flag, const std::share
     time_t rawtime = std::chrono::system_clock::to_time_t(now);
     std::shared_ptr<Media::MediaMonitor::EventBean> bean = std::make_shared<Media::MediaMonitor::EventBean>(
         Media::MediaMonitor::ModuleId::AUDIO, Media::MediaMonitor::EventId::ADD_REMOVE_CUSTOMIZED_TONE,
-        Media::MediaMonitor::EventType::BEHAVIOR_EVENT);
+        Media::MediaMonitor::EventType::DURATION_AGGREGATION_EVENT);
     bean->Add("ADD_REMOVE_OPERATION", static_cast<int32_t>(flag));
     MEDIA_LOGI("SendCustomizedToneEvent: operation is %{public}d(0 delete; 1 add).", flag);
     bean->Add("APP_NAME", GetBundleName());

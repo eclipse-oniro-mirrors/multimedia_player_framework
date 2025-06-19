@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -245,8 +245,9 @@ private:
     int32_t DoRemove(std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper, const std::string &uri,
         off_t fileSize);
     std::string GetBundleName();
-    std::string AddCustomizedToneCheck(const std::shared_ptr &toneAttrs, const int32_t &fd, off_t &fileSize)
-    void SetToneAttrs(std::shared_ptr &toneAttrs, const unique_ptr &ringtoneAsset)
+    std::string AddCustomizedToneCheck(const std::shared_ptr<toneAttrs> &toneAttrs, const int32_t &fd,
+        off_t &fileSize);
+    void SetToneAttrs(std::shared_ptr<toneAttrs> &toneAttrs, const std::unique_ptr<toneAttrs> &ringtoneAsset);
 
     std::string systemSoundPath_ = "";
     std::mutex uriMutex_;

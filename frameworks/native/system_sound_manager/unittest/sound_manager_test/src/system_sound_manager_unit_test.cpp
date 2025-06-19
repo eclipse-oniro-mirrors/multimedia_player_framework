@@ -25,7 +25,7 @@ using namespace testing::ext;
 namespace OHOS {
 namespace Media {
 Uri RINGTONEURITEST(RINGTONE_PATH_URI);
-vector COLUMNSTEST = {{RINGTONE_COLUMN_TONE_ID}, {RINGTONE_COLUMN_DATA}, {RINGTONE_COLUMN_DISPLAY_NAME},
+vector<string> COLUMNSTEST = {{RINGTONE_COLUMN_TONE_ID}, {RINGTONE_COLUMN_DATA}, {RINGTONE_COLUMN_DISPLAY_NAME},
     {RINGTONE_COLUMN_TITLE}, {RINGTONE_COLUMN_TONE_TYPE}, {RINGTONE_COLUMN_MEDIA_TYPE}, {RINGTONE_COLUMN_SOURCE_TYPE},
     {RINGTONE_COLUMN_SHOT_TONE_TYPE}, {RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE}, {RINGTONE_COLUMN_NOTIFICATION_TONE_TYPE},
     {RINGTONE_COLUMN_NOTIFICATION_TONE_SOURCE_TYPE}, {RINGTONE_COLUMN_RING_TONE_TYPE},
@@ -336,26 +336,26 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_RemoveCustomizedTone_001, 
  * @tc.name  : Test SetToneAttrs API
  * @tc.number: Media_SoundManager_SetToneAttrs_001
  * @tc.desc  : Test SetToneAttrs interface.
-*/
+ */
 HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_SetToneAttrs_001, TestSize.Level2)
 {
-    std::shared_ptr systemSoundManager_ = std::make_shared();
-    std::shared_ptrAbilityRuntime::Context context_ = std::make_shared();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    std::shared_ptrAbilityRuntime::Context context_ = std::make_shared<ContextImpl>();
     auto vec = systemSoundManager_->GetAlarmToneAttrList(context_);
     std::string uri = "";
     if (vec.size() > 0) {
         uri = vec[0]->GetUri();
     }
-    std::shared_ptrDataShare::DataShareHelper dataShareHelper =
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
     SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    std::shared_ptr toneAttrs = std::make_shared("default",
+    std::shared_ptr<ToneAttrs> toneAttrs = std::make_shared<ToneAttrs>("default",
         "default", "default", CUSTOMISED, TONE_CATEGORY_RINGTONE);
     DataShare::DataSharePredicates queryPredicates;
     DataShare::DatashareBusinessError businessError;
     queryPredicates.EqualTo(RINGTONE_COLUMN_DATA, uri);
     auto resultSet = dataShareHelper->Query(RINGTONEURITEST, queryPredicates, COLUMNSTEST, &businessError);
-    auto results = std::make_unique<RingtoneFetchResult>(move(resultSet));
-    std::unique_ptr ringtoneAsset = results->GetFirstObject();
+    auto results = std::make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
+    std::unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
     if (ringtoneAsset == nullptr) {
         std::cout << "ringtoneAsset is nullptr"<< std::endl;
     }
@@ -1056,22 +1056,22 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_AddCustomizedToneByFdAndOf
  */
 HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_AddCustomizedToneCheck_001, TestSize.Level2)
 {
-    std::shared_ptrAbilityRuntime::Context context_ = std::make_shared();
-    std::shared_ptr systemSoundManager_ = std::make_shared();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
     auto vec = systemSoundManager_->GetAlarmToneAttrList(context_);
     std::string uri = "";
     if (vec.size() > 0) {
         uri = vec[0]->GetUri();
     }
-    std::shared_ptrDataShare::DataShareHelper dataShareHelper =
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
     SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     if (dataShareHelper == nullptr) {
         std::cout << "dataShareHelper is nullptr"<< std::endl;
     }
     std::tuple<string, int64_t, SystemSoundError> resultOfOpen = std::make_tuple(uri, INVALID_FD, ERROR_IO);
     systemSoundManager_->OpenOneFile(dataShareHelper, uri, resultOfOpen);
-    int64_t srcFd = std::get(resultOfOpen);
-    std::shared_ptr toneAttrs = std::make_shared("", "", "", CUSTOMISED, TONE_CATEGORY_RINGTONE);
+    int64_t srcFd = std::get<PARAM1>(resultOfOpen);
+    std::shared_ptr<ToneAttrs> toneAttrs = std::make_shared<ToneAttrs>("", "", "", CUSTOMISED, TONE_CATEGORY_RINGTONE);
     toneAttrs->SetMediaType(ToneMediaType::MEDIA_TYPE_VID);
     toneAttrs->SetFileName("12345.wav");
     off_t fileSize = 0;
