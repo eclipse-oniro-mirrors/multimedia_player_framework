@@ -3113,7 +3113,8 @@ void SystemSoundManagerImpl::SendCustomizedToneEvent(bool flag, const std::share
     bean->Add("APP_NAME", GetBundleName());
     MEDIA_LOGI("SendCustomizedToneEvent: app name is %{public}s", GetBundleName().c_str());
     bean->Add("FILE_SIZE", static_cast<uint64_t>(fileSize));
-    MEDIA_LOGI("SendCustomizedToneEvent: fileSize is %{public}ld byte, max is 500M(524288000 byte)", fileSize);
+    MEDIA_LOGI("SendCustomizedToneEvent: fileSize is %{public}ld byte, max is 500M(524288000 byte)",
+        static_cast<long>(fileSize));
     bean->Add("RINGTONE_CATEGORY", toneAttrs->GetCategory());
     MEDIA_LOGI("SendCustomizedToneEvent: category is %{public}d"
         "(1 ringtone; 4 message or notification; 8 alarm; 16 contact).", toneAttrs->GetCategory());
