@@ -436,9 +436,9 @@ int32_t HiRecorderImpl::PrepareVideoEncoder()
             videoEncFormat_->Set<Tag::VIDEO_PIXEL_FORMAT>(Plugins::VideoPixelFormat::RGBA);
         }
         ConfigureVidEncBitrateMode();
-        videoEncoderFilter_->SetVideoEnableBFrame(enableBFrame_);
         videoEncoderFilter_->SetCodecFormat(videoEncFormat_);
         videoEncoderFilter_->Init(recorderEventReceiver_, recorderCallback_);
+        videoEncoderFilter_->SetVideoEnableBFrame(enableBFrame_);
         FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_) == Status::OK,
             ERR_UNKNOWN_REASON, "videoEncoderFilter Configure fail");
     }
