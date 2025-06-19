@@ -76,6 +76,7 @@ public:
     int32_t SetVideoIsHdr(int32_t sourceId, bool isHdr) override;
     int32_t SetVideoEnableTemporalScale(int32_t sourceId, bool enableTemporalScale) override;
     int32_t SetVideoEnableStableQualityMode(int32_t sourceId, bool enableStableQualityMode) override;
+    int32_t SetVideoEnableBFrame(int32_t sourceId, bool enableBFrame) override;
     int32_t SetMetaSource(MetaSourceType source, int32_t &sourceId) override;
     int32_t SetMetaConfigs(int32_t sourceId) override;
     int32_t SetMetaMimeType(int32_t sourceId, const std::string_view &type) override;
@@ -160,6 +161,7 @@ private:
         bool isHdr = false;
         bool enableTemporalScale = false;
         bool enableStableQualityMode = false;
+        bool enableBFrame = false;
         double captureRate = 0.0;
         int32_t audioSampleRate = 0;
         int32_t audioChannel = 0;

@@ -558,7 +558,7 @@ public:
     virtual int32_t SetVideoEnableTemporalScale(int32_t sourceId, bool enableTemporalScale) = 0;
 
     /**
-     * @brief SetVideoEnableStableQualityMode.
+     * @brief Sets the video stable quality encoding mode.
      *
      * @param sourceId Indicates the video source ID, which can be obtained from {@link SetVideoSource}.
      * @param enableStableQualityMode Indicates the stable quality mode to set.
@@ -567,6 +567,17 @@ public:
      * @version 1.0
      */
     virtual int32_t SetVideoEnableStableQualityMode(int32_t sourceId, bool enableStableQualityMode) = 0;
+
+    /**
+     * @brief Sets the video B Frame encoding mode.
+     *
+     * @param sourceId Indicates the video source ID, which can be obtained from {@link SetVideoSource}.
+     * @param enableBFrame Indicates the B Frame to set.
+     * @return Returns {@link MSERR_OK} if the setting is successful; returns an error code otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetVideoEnableBFrame(int32_t sourceId, bool enableBFrame) = 0;
 
     /**
      * @brief Sets the width and height of the video to record.

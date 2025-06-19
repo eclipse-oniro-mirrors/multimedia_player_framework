@@ -168,6 +168,8 @@ void RecorderServiceStub::FillRecFuncPart3()
 {
     recFuncs_[SET_INTERRUPT_STRATEGY] =
         [this](MessageParcel &data, MessageParcel &reply) { return SetWillMuteWhenInterrupted(data, reply); };
+    recFuncs_[SET_VIDEO_ENABLE_B_FRAME] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetVideoEnableBFrame(data, reply); };
 }
 
 int32_t RecorderServiceStub::DestroyStub()
@@ -296,6 +298,12 @@ int32_t RecorderServiceStub::SetVideoEnableStableQualityMode(int32_t sourceId, b
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
     return recorderServer_->SetVideoEnableStableQualityMode(sourceId, enableStableQualityMode);
+}
+
+int32_t RecorderServiceStub::SetVideoEnableBFrame(int32_t sourceId, bool enableBFrame)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->SetVideoEnableBFrame(sourceId, enableBFrame);
 }
 
 int32_t RecorderServiceStub::SetMetaConfigs(int32_t sourceId)
@@ -615,6 +623,14 @@ int32_t RecorderServiceStub::SetVideoEnableStableQualityMode(MessageParcel &data
     int32_t sourceId = data.ReadInt32();
     bool enableStableQualityMode = data.ReadBool();
     reply.WriteInt32(SetVideoEnableStableQualityMode(sourceId, enableStableQualityMode));
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::SetVideoEnableBFrame(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t sourceId = data.ReadInt32();
+    bool enableBFrame = data.ReadBool();
+    reply.WriteInt32(SetVideoEnableBFrame(sourceId, enableBFrame));
     return MSERR_OK;
 }
 

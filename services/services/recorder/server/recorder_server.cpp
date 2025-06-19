@@ -315,6 +315,25 @@ int32_t RecorderServer::SetVideoEnableStableQualityMode(int32_t sourceId, bool e
     return result.Value();
 }
 
+int32_t RecorderServer::SetVideoEnableBFrame(int32_t sourceId, bool enableBFrame)
+{
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetVideoEnableBFrame in, sourceId(%{public}d), "
+        "enableBFrame(%{public}d)", FAKE_POINTER(this), sourceId, enableBFrame);
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    config_.enableBFrame = enableBFrame;
+    VidEnableBFrame vidEnableBFrame(enableBFrame);
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->Configure(sourceId, vidEnableBFrame);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+ 
+    auto result = task->GetResult();
+    return result.Value();
+}
+
 int32_t RecorderServer::SetMetaSource(MetaSourceType source, int32_t &sourceId)
 {
     MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetMetaSource in, source(%{public}d), "

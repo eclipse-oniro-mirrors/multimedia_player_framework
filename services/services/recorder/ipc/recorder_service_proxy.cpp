@@ -207,6 +207,25 @@ int32_t RecorderServiceProxy::SetVideoEnableStableQualityMode(int32_t sourceId, 
     return reply.ReadInt32();
 }
 
+int32_t RecorderServiceProxy::SetVideoEnableBFrame(int32_t sourceId, bool enableBFrame)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+ 
+    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+ 
+    token = data.WriteInt32(sourceId) && data.WriteBool(enableBFrame);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+ 
+    int error = Remote()->SendRequest(SET_VIDEO_ENABLE_B_FRAME, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetVideoEnableBFrame failed, error: %{public}d", error);
+ 
+    return reply.ReadInt32();
+}
+
 int32_t RecorderServiceProxy::SetMetaConfigs(int32_t sourceId)
 {
     MessageParcel data;

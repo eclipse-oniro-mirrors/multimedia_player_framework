@@ -1931,7 +1931,10 @@ int32_t AVRecorderNapi::GetVideoProfile(std::unique_ptr<AVRecorderAsyncContext> 
         MEDIA_LOGI("avRecorderProfile enableStableQualityMode is not set.");
         profile.enableStableQualityMode = false;
     }
-
+    if (!CommonNapi::GetPropertyBool(env, item, "enableBFrame", profile.enableBFrame)) {
+        MEDIA_LOGI("avRecorderProfile enableBFrame is not set.");
+        profile.enableBFrame = false;
+    }
     MediaProfileLog(true, profile);
     return ret;
 }
@@ -2256,6 +2259,9 @@ RetInfo AVRecorderNapi::SetProfile(std::shared_ptr<AVRecorderConfig> config)
         ret = recorder_->SetVideoEnableStableQualityMode(videoSourceID_, profile.enableStableQualityMode);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoEnableStableQualityMode",
             "enableStableQualityMode"));
+        
+        ret = recorder_->SetVideoEnableBFrame(videoSourceID_, profile.enableBFrame);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoEnableBFrame", "enableBFrame"));
     }
 
     if (config->metaSourceTypeVec.size() != 0 &&

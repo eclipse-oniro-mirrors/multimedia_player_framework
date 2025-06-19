@@ -156,6 +156,15 @@ int32_t RecorderClient::SetVideoEnableStableQualityMode(int32_t sourceId, bool e
     return recorderProxy_->SetVideoEnableStableQualityMode(sourceId, enableStableQualityMode);
 }
 
+int32_t RecorderClient::SetVideoEnableBFrame(int32_t sourceId, bool enableBFrame)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+ 
+    MEDIA_LOGD("SetVideoEnableBFrame sourceId(%{public}d), enableBFrame(%{public}d)", sourceId, enableBFrame);
+    return recorderProxy_->SetVideoEnableBFrame(sourceId, enableBFrame);
+}
+
 int32_t RecorderClient::SetMetaSource(MetaSourceType source, int32_t &sourceId)
 {
     std::lock_guard<std::mutex> lock(mutex_);

@@ -167,6 +167,7 @@ struct AVRecorderProfile {
     bool isHdr = false;
     bool enableTemporalScale = false;
     bool enableStableQualityMode = false;
+    bool enableBFrame = false;
     VideoCodecFormat videoCodecFormat = VideoCodecFormat::VIDEO_DEFAULT;
 
     OutputFormatType fileFormat = OutputFormatType::FORMAT_DEFAULT;
