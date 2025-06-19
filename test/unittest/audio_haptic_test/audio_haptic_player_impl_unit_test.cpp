@@ -1166,5 +1166,44 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_058, TestSize.Leve
     EXPECT_EQ(audioHapticPlayerImpl->IsHapticsIntensityAdjustmentSupported(),
         audioHapticVibrator_->IsHdHapticSupported());
 }
+
+/**
+ * @tc.name  : Test SetHapticsRamp API
+ * @tc.number: AudioHapticPlayerImpl_059
+ * @tc.desc  : Test AudioHapticPlayerImpl::SetHapticsRamp()
+ */
+HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_059, TestSize.Level1)
+{
+    auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
+    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+
+    audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_RELEASED;
+    EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, audioHapticPlayerImpl->SetHapticsRamp(50, 1.0f, 50.0f));
+
+    audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_STOPPED;
+    audioHapticPlayerImpl->isVibrationRunning_.store(true);
+    EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, audioHapticPlayerImpl->SetHapticsRamp(50, 1.0f, 50.0f));
+
+    audioHapticPlayerImpl->isVibrationRunning_.store(false);
+    EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, audioHapticPlayerImpl->SetHapticsRamp(50, 1.0f, 50.0f));
+
+    AudioHapticPlayerImpl audioHapticPlayerImpl2;
+    auto audioHapticVibrator_ = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl2);
+    audioHapticPlayerImpl->audioHapticVibrator_ = audioHapticVibrator_;
+    EXPECT_NE(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
+    
+    // test duration less than 100ms
+    EXPECT_EQ(MSERR_INVALID_VAL, audioHapticPlayerImpl->SetHapticsRamp(50, 1.0f, 50.0f));
+    // test startIntensity less than 1.0f
+    EXPECT_EQ(MSERR_INVALID_VAL, audioHapticPlayerImpl->SetHapticsRamp(1000, -1.0f, 50.0f));
+    // test startIntensity larger than 100.0f
+    EXPECT_EQ(MSERR_INVALID_VAL, audioHapticPlayerImpl->SetHapticsRamp(1000, 101.0f, 50.0f));
+    // test endIntensity less than 1.0f
+    EXPECT_EQ(MSERR_INVALID_VAL, audioHapticPlayerImpl->SetHapticsRamp(1000, 50.0f, -1.0f));
+    // test endIntensity larger than 100.0f
+    EXPECT_EQ(MSERR_INVALID_VAL, audioHapticPlayerImpl->SetHapticsRamp(1000, 50.0f, 101.0f));
+    // test all params ok
+    EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, audioHapticPlayerImpl->SetHapticsRamp(1000, 50.0f, 90.0f));
+}
 } // namespace Media
 } // namespace OHOS

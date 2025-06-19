@@ -34,7 +34,7 @@ const int32_t FREQUENCY = 150;
 const int32_t PKG_DURATION_MS = 30000;
 const int32_t PATTERN1_DURATION_MS = 20000;
 const int32_t PATTERN2_DURATION_MS = 9000;
-const int32_t EVENT_DURATION_MS = 2000;
+const int32_t EVENT_DURATION_MS = 9000;
 const int32_t PATTERN2_TIME_MS = 21000;
 
 std::mutex vibrateMutex_;
@@ -802,6 +802,62 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_040, TestSize.
     std::unique_lock<std::mutex> lock(vibrateMutex_);
     int32_t result = audioHapticVibratorImpl->PlayVibrateForAVPlayer(g_vibrationPackage, lock);
     EXPECT_EQ(result, MSERR_INVALID_OPERATION);
+}
+
+/**
+ * @tc.name  : Test AudioHapticVibratorImpl API
+ * @tc.number: AudioHapticVibratorImpl_041
+ * @tc.desc  : Test AudioHapticVibratorImpl::PlayVibrationPattern()
+ */
+HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_041, TestSize.Level1)
+{
+    uint64_t tokenID;
+    ASSERT_TRUE(GetPermission({"ohos.permission.VIBRATE"}, tokenID, false));
+ 
+    AudioHapticPlayerImpl audioHapticPlayerImpl;
+    auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
+    EXPECT_NE(audioHapticVibratorImpl, nullptr);
+    EXPECT_NE(g_vibrationPackage, nullptr);
+    std::unique_lock<std::mutex> lock(vibrateMutex_);
+    int32_t vibrateTime = 0;
+    int32_t result = audioHapticVibratorImpl->PlayVibrationPattern(g_vibrationPackage, TWO_INDEX, vibrateTime, lock);
+    EXPECT_EQ(result, MSERR_OK);
+    vibrateTime = PATTERN2_TIME_MS;
+    result =
+        audioHapticVibratorImpl->PlayVibrationPattern(g_vibrationPackage, ONE_INDEX, vibrateTime, lock);
+    EXPECT_EQ(result, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test AudioHapticVibratorImpl API
+ * @tc.number: AudioHapticVibratorImpl_042
+ * @tc.desc  : Test AudioHapticVibratorImpl::SetHapticsRamp()
+ */
+HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_042, TestSize.Level1)
+{
+    uint64_t tokenID;
+    ASSERT_TRUE(GetPermission({"ohos.permission.VIBRATE"}, tokenID, false));
+
+    AudioHapticPlayerImpl audioHapticPlayerImpl;
+    auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
+    EXPECT_NE(audioHapticVibratorImpl, nullptr);
+    EXPECT_NE(g_vibrationPackage, nullptr);
+
+    // vibratorPkg_ is null
+    EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, audioHapticVibratorImpl->SetHapticsRamp(50, 1.0f, 50.0f));
+
+    audioHapticVibratorImpl->vibratorPkg_ = g_vibrationPackage;
+    audioHapticVibratorImpl->isRunning_.store(true);
+    // vibratorPkg_ is running
+    EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, audioHapticVibratorImpl->SetHapticsRamp(50, 1.0f, 50.0f));
+    
+    // duration less than 100ms
+    EXPECT_EQ(MSERR_INVALID_VAL, audioHapticVibratorImpl->SetHapticsRamp(50, 1.0f, 50.0f));
+    //duration larger than haptics package duration
+    EXPECT_EQ(MSERR_INVALID_VAL, audioHapticVibratorImpl->SetHapticsRamp(50000, 1.0f, 50.0f));
+
+    // duration 24000ms, start intensity 20.0f, end intensity 70.0f
+    EXPECT_EQ(MSERR_OK, audioHapticVibratorImpl->SetHapticsRamp(24000, 20.0f, 70.0f));
 }
 } // namespace Media
 } // namespace OHOS

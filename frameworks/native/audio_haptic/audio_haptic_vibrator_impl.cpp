@@ -270,7 +270,8 @@ int32_t AudioHapticVibratorImpl::SetHapticsRamp(int32_t duration, float startInt
     if (isRunning_.load() || vibratorPkg_ == nullptr) {
         return ERR_OPERATE_NOT_ALLOWED;
     }
-    if (duration > vibratorPkg_->packageDuration) {
+    // duration not less than 100ms and not larger than haptics package duration
+    if (duration < 100 || duration > vibratorPkg_->packageDuration) {
         MEDIA_LOGE("AudioHapticVibratorImpl::SetHapticsRamp error, duration %{public}d, packageDuration %{public}d",
             duration, vibratorPkg_->packageDuration);
         return MSERR_INVALID_VAL;
