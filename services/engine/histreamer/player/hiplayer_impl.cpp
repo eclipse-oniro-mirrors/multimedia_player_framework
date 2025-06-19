@@ -2407,10 +2407,9 @@ void HiPlayerImpl::OnEvent(const Event &event)
             HandleInitialPlayingStateChange(event.type);
             break;
         }
-        case EventType::EVENT_DRM_INFO_UPDATED: {
+        case EventType::EVENT_DRM_INFO_UPDATED:
             HandleDrmInfoUpdatedEvent(event);
             break;
-        }
         case EventType::EVENT_VIDEO_RENDERING_START: {
             MEDIA_LOG_D_SHORT("video first frame reneder received");
             if (IsAppEnableRenderFirstFrame(appUid_)) {
@@ -2421,10 +2420,12 @@ void HiPlayerImpl::OnEvent(const Event &event)
             HandleInitialPlayingStateChange(event.type);
             break;
         }
-        case EventType::EVENT_RELEASE_VIDEO_DECODER: {
+        case EventType::EVENT_RELEASE_VIDEO_DECODER:
             ReleaseVideoDecoderOnMuted();
             break;
-        }
+        case EventType::EVENT_VIDEO_NO_NEED_INIT:
+            HandleInitialPlayingStateChange(EventType::EVENT_VIDEO_RENDERING_START);
+            break;
         default:
             OnEventContinue(event);
     }
@@ -3415,11 +3416,11 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
         FALSE_RETURN_V_NOLOG(ret == Status::OK, ret);
     }
     completeState_.emplace_back(std::make_pair("VideoSink", false));
+    initialAVStates_.emplace_back(std::make_pair(EventType::EVENT_VIDEO_RENDERING_START, false));
     bool needInit = surface_ != nullptr && !isVideoMuted_ && mutedMediaType_ != OHOS::Media::MediaType::MEDIA_TYPE_VID;
     if (!needInit) {
-        videoDecoder_->SetMediaMuted(true);
+        videoDecoder_->SetMediaMuted(true, false);
     }
-    initialAVStates_.emplace_back(std::make_pair(EventType::EVENT_VIDEO_RENDERING_START, !needInit));
     isVideoDecoderInited_ = needInit;
 #ifdef SUPPORT_START_STOP_ON_DEMAND
     return pipeline_->LinkFilters(preFilter, {videoDecoder_}, type, true, needInit);
@@ -3460,7 +3461,7 @@ int32_t HiPlayerImpl::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMut
             demuxer_->SetMediaMuted(mediaType, isMuted, keepDecodingOnMute_);
         }
         if (videoDecoder_ != nullptr) {
-            videoDecoder_->SetMediaMuted(isMuted);
+            videoDecoder_->SetMediaMuted(isMuted, true);
         }
         bool needReinit = !isMuted && surface_ != nullptr && ((!keepDecodingOnMute_ && isVideoMuted_ != isMuted) ||
             (!isVideoDecoderInited_ && mutedMediaType_ == OHOS::Media::MediaType::MEDIA_TYPE_VID));
@@ -3470,8 +3471,9 @@ int32_t HiPlayerImpl::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMut
         FALSE_RETURN_V_NOLOG(videoDecoder_ != nullptr, MSERR_OK);
         videoDecoder_->ReInitAndStart();
         isVideoDecoderInited_ = true;
+        return MSERR_OK;
     }
-    return MSERR_OK;
+    return MSERR_INVALID_VAL;
 }
 
 int32_t HiPlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)

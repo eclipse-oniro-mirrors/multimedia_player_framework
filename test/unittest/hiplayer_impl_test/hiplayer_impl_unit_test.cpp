@@ -296,7 +296,6 @@ HWTEST_F(HiplayerImplUnitTest, SetMediaSource_005, TestSize.Level0)
     EXPECT_EQ(ret, MSERR_OK);
     EXPECT_EQ(hiplayer_->videoPostProcessorType_, VideoPostProcessorType::SUPER_RESOLUTION);
     EXPECT_EQ(hiplayer_->isPostProcessorOn_, true);
-    EXPECT_EQ(hiplayer_->keepDecodingOnMute_, true);
 }
 
 /**

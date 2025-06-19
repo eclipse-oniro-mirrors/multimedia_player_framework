@@ -4131,13 +4131,13 @@ HWTEST_F(PlayerUnitTest, Player_SetMediaMuted_002, TestSize.Level0)
 {
     ASSERT_NE(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true));
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    ASSERT_NE(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true));
+    ASSERT_EQ(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true));
     ASSERT_EQ(MSERR_OK, player_->PrepareAsync());
-    ASSERT_NE(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true));
+    ASSERT_EQ(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true));
     ASSERT_EQ(MSERR_OK, player_->Play());
-    ASSERT_NE(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true));
+    ASSERT_EQ(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true));
     ASSERT_EQ(MSERR_OK, player_->Stop());
-    ASSERT_NE(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true));
+    ASSERT_EQ(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true));
 }
 
 /**
