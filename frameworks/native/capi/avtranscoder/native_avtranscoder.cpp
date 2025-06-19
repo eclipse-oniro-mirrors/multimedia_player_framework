@@ -477,8 +477,9 @@ OH_AVErrCode NativeAVTranscoder::AVTranscoderConfiguration(NativeAVTranscoderCon
 
     errorCode = transcoder_->SetInputFile(config->srcFd, config->srcOffset, config->length);
     CHECK_AND_RETURN_RET_LOG(errorCode == MSERR_OK, GetOHAVErrCode(errorCode, "SetInputFile"),
-        "AVTranscoderConfiguration is called, SetInputFile check failed, srcFd:%{public}d, srcOffset:%{public}lld,\
-        srcLength:%{public}lld", config->srcFd, config->srcOffset, config->length);
+        "AVTranscoderConfiguration is called, SetInputFile check failed, srcFd:%{public}" PRId32
+        ", srcOffset:%{public}" PRId64 ", srcLength:%{public}" PRId64, config->srcFd, config->srcOffset,
+        config->length);
 
     errorCode = transcoder_->SetOutputFile(config->dstFd);
     CHECK_AND_RETURN_RET_LOG(errorCode == MSERR_OK, GetOHAVErrCode(errorCode, "SetOutputFile"),
