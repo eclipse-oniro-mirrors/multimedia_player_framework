@@ -16,6 +16,10 @@
 #include "system_sound_manager_impl.h"
 
 #include <fstream>
+
+#include "config_policy_utils.h"
+#include "file_ex.h"
+#include "nlohmann/json.hpp"
 #include <nativetoken_kit.h>
 #include "access_token.h"
 #include "accesstoken_kit.h"
@@ -25,10 +29,6 @@
 #include "token_setproc.h"
 #include "ringtone_proxy_uri.h"
 
-#include "config_policy_utils.h"
-#include "file_ex.h"
-#include "nlohmann/json.hpp"
-
 #include "system_sound_log.h"
 #include "media_errors.h"
 #include "ringtone_player_impl.h"
@@ -36,9 +36,9 @@
 #include "os_account_manager.h"
 #include "system_tone_player_impl.h"
 #include "parameter.h"
+#include "system_sound_manager_utils.h"
 #include "string_ex.h"
 #include "parameters.h"
-#include "system_sound_manager_utils.h"
 
 using namespace std;
 using namespace nlohmann;
@@ -108,11 +108,11 @@ std::unordered_map<RingtoneType, RingToneType> ringtoneTypeMap_;
 std::unordered_map<int32_t, ToneCustomizedType> sourceTypeMap_;
 std::unordered_map<SystemToneType, int32_t> systemTypeMap_;
 std::unordered_map<SystemToneType, ShotToneType> shotToneTypeMap_;
+std::unordered_map<RingtoneType, DefaultSystemToneType> defaultoneTypeMap_;
+std::unordered_map<SystemToneType, int32_t> defaultsystemTypeMap_;
 std::unordered_map<ToneHapticsMode, VibratePlayMode> hapticsModeMap_;
 std::unordered_map<ToneHapticsType, std::pair<int32_t, int32_t>> hapticsTypeWhereArgsMap_;
 std::unordered_map<int32_t, std::unordered_map<HapticsStyle, int32_t>> hapticsStyleMap_;
-std::unordered_map<RingtoneType, DefaultSystemToneType> defaultoneTypeMap_;
-std::unordered_map<SystemToneType, int32_t> defaultsystemTypeMap_;
 Uri RINGTONEURI(RINGTONE_PATH_URI);
 Uri VIBRATEURI(VIBRATE_PATH_URI);
 Uri SIMCARDSETTINGURI(SIMCARD_SETTING_PATH_URI);

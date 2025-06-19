@@ -340,14 +340,14 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_RemoveCustomizedTone_001, 
 HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_SetToneAttrs_001, TestSize.Level2)
 {
     std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
-    std::shared_ptrAbilityRuntime::Context context_ = std::make_shared<ContextImpl>();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
     auto vec = systemSoundManager_->GetAlarmToneAttrList(context_);
     std::string uri = "";
     if (vec.size() > 0) {
         uri = vec[0]->GetUri();
     }
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
-    SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     std::shared_ptr<ToneAttrs> toneAttrs = std::make_shared<ToneAttrs>("default",
         "default", "default", CUSTOMISED, TONE_CATEGORY_RINGTONE);
     DataShare::DataSharePredicates queryPredicates;
@@ -1064,7 +1064,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_AddCustomizedToneCheck_001
         uri = vec[0]->GetUri();
     }
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
-    SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     if (dataShareHelper == nullptr) {
         std::cout << "dataShareHelper is nullptr"<< std::endl;
     }
