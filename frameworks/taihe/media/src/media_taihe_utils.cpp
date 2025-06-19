@@ -107,22 +107,22 @@ ani_object MediaTaiheUtils::ToBusinessError(ani_env *env, int32_t code, const st
 {
     ani_object err {};
     ani_class cls {};
-    CHECK_AND_RETURN_RET_LOG(ANI_OK != env->FindClass(CLASS_NAME_BUSINESSERROR, &cls), err,
+    CHECK_AND_RETURN_RET_LOG(env->FindClass(CLASS_NAME_BUSINESSERROR, &cls) == ANI_OK, err,
         "find class %{public}s failed", CLASS_NAME_BUSINESSERROR);
     ani_method ctor {};
-    CHECK_AND_RETURN_RET_LOG(ANI_OK != env->Class_FindMethod(cls, "<ctor>", ":V", &ctor), err,
+    CHECK_AND_RETURN_RET_LOG(env->Class_FindMethod(cls, "<ctor>", ":V", &ctor) == ANI_OK, err,
         "find method BusinessError constructor failed");
     ani_object error {};
-    CHECK_AND_RETURN_RET_LOG(ANI_OK != env->Object_New(cls, ctor, &error), err,
+    CHECK_AND_RETURN_RET_LOG(env->Object_New(cls, ctor, &error) == ANI_OK, err,
         "new object %{public}s failed", CLASS_NAME_BUSINESSERROR);
     CHECK_AND_RETURN_RET_LOG(
-        ANI_OK != env->Object_SetPropertyByName_Double(error, "code", static_cast<ani_double>(code)), err,
+        env->Object_SetPropertyByName_Double(error, "code", static_cast<ani_double>(code)) == ANI_OK, err,
         "set property BusinessError.code failed");
     ani_string messageRef {};
-    CHECK_AND_RETURN_RET_LOG(ANI_OK != env->String_NewUTF8(message.c_str(), message.size(), &messageRef), err,
+    CHECK_AND_RETURN_RET_LOG(env->String_NewUTF8(message.c_str(), message.size(), &messageRef) == ANI_OK, err,
         "new message string failed");
     CHECK_AND_RETURN_RET_LOG(
-        ANI_OK != env->Object_SetPropertyByName_Ref(error, "message", static_cast<ani_ref>(messageRef)), err,
+        env->Object_SetPropertyByName_Ref(error, "message", static_cast<ani_ref>(messageRef)) == ANI_OK, err,
         "set property BusinessError.message failed");
     return error;
 }
@@ -247,6 +247,38 @@ map<string, MediaDescriptionValue> MediaTaiheUtils::CreateFormatBuffer(OHOS::Med
         }
     }
     return description;
+}
+
+map<string, PlaybackInfoValue> MediaTaiheUtils::CreateFormatBufferByRef(OHOS::Media::Format &format)
+{
+    int32_t intValue = 0;
+    int64_t longValue = 0;
+    std::string strValue = "";
+    map<string, PlaybackInfoValue> playbackInfo;
+
+    for (auto &iter : format.GetFormatMap()) {
+        switch (format.GetValueType(std::string_view(iter.first))) {
+            case OHOS::Media::FORMAT_TYPE_INT32:
+                if (format.GetIntValue(iter.first, intValue)) {
+                    playbackInfo.emplace(iter.first, PlaybackInfoValue::make_type_int(intValue));
+                }
+                break;
+            case OHOS::Media::FORMAT_TYPE_INT64:
+                if (format.GetLongValue(iter.first, longValue)) {
+                    playbackInfo.emplace(iter.first, PlaybackInfoValue::make_type_int(longValue));
+                }
+                break;
+            case OHOS::Media::FORMAT_TYPE_STRING:
+                if (format.GetStringValue(iter.first, strValue)) {
+                    playbackInfo.emplace(iter.first, PlaybackInfoValue::make_type_string(strValue));
+                }
+                break;
+            default:
+                MEDIA_LOGE("format key: %{public}s", iter.first.c_str());
+                break;
+        }
+    }
+    return playbackInfo;
 }
 
 bool MediaTaiheUtils::IsSystemApp()

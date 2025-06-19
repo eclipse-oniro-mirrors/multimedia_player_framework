@@ -45,6 +45,47 @@ struct DataSrcDescriptor {
     std::shared_ptr<uintptr_t> callback = nullptr;
 };
 
+struct AVPlayMediaStreamTmp {
+    std::string url;
+    uint32_t width;
+    uint32_t height;
+    uint32_t bitrate;
+};
+
+class AVMediaSourceTmp {
+public:
+    AVMediaSourceTmp() = default;
+    ~AVMediaSourceTmp()
+    {
+        header.clear();
+    }
+
+    void SetMimeType(const std::string& mimeType)
+    {
+        mimeType_ = mimeType;
+    }
+
+    std::string GetMimeType() const
+    {
+        return mimeType_;
+    }
+
+    void AddAVPlayMediaStreamTmp(const AVPlayMediaStreamTmp& avPlayMediaStreamTmp)
+    {
+        mediaStreamVec_.push_back(avPlayMediaStreamTmp);
+    }
+ 
+    const std::vector<AVPlayMediaStreamTmp>& getAVPlayMediaStreamTmpList()
+    {
+        return mediaStreamVec_;
+    }
+
+    std::map<std::string, std::string> header;
+    std::string url {};
+    std::string mimeType_ {};
+private:
+    std::vector<AVPlayMediaStreamTmp> mediaStreamVec_;
+};
 }
 }
 #endif // MEDIA_ANI_COMMON_H

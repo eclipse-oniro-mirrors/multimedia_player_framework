@@ -152,6 +152,9 @@ taihe_shared_library("media_taihe") {
     "media/src/avscreen_capture_taihe.cpp",
     "media/src/avscreen_capture_callback_taihe.cpp",
     "media/src/avrecorder_callback_taihe.cpp",
+    "media/src/media_source_taihe.cpp",
+    "media/src/media_source_loading_request_taihe.cpp",
+    "media/src/media_source_loader_callback_taihe.cpp",
   ]
 
   deps = [

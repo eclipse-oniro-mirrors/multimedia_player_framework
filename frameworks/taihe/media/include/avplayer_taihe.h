@@ -15,6 +15,7 @@
 #ifndef AVPLAYER_TAIHE_H
 #define AVPLAYER_TAIHE_H
 
+#include <shared_mutex>
 #include "audio_info.h"
 #include "audio_effect.h"
 #include "avmetadatahelper.h"
@@ -47,6 +48,21 @@ struct AVPlayerContext {
     }
     std::shared_ptr<TaskHandler<TaskRet>> asyncTask = nullptr;
     std::vector<Format> trackInfoVec_;
+};
+struct AVPlayStrategyTmp {
+    uint32_t preferredWidth;
+    uint32_t preferredHeight;
+    uint32_t preferredBufferDuration;
+    bool preferredHdr;
+    bool showFirstFrameOnPrepare;
+    bool enableSuperResolution;
+    int32_t mutedMediaType = static_cast<int32_t>(OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT);
+    std::string preferredAudioLanguage;
+    std::string preferredSubtitleLanguage;
+    double preferredBufferDurationForPlaying;
+    double thresholdForAutoQuickPlay;
+    bool isSetBufferDurationForPlaying {true};
+    bool isSetThresholdForAutoQuickPlay {true};
 };
 namespace AVPlayerState {
     const std::string STATE_IDLE = "idle";
@@ -113,17 +129,31 @@ public:
     void SetVideoScaleType(optional_view<VideoScaleType> videoScaleType);
     bool IsSeekContinuousSupported();
     array<map<string, MediaDescriptionValue>> GetTrackDescriptionSync();
-    int32_t getPlaybackPosition();
-    void setBitrate(int32_t bitrate);
+    int32_t GetPlaybackPosition();
+    void SetBitrate(int32_t bitrate);
     void StopSync();
     void PlaySync();
     void ResetSync();
     void ReleaseSync();
     void PauseSync();
     void PrepareSync();
+    void SetMediaSourceSync(weak::MediaSource src, optional_view<PlaybackStrategy> strategy);
+    void GetDefaultStrategy(AVPlayStrategyTmp &strategy);
+    void GetPlayStrategy(AVPlayStrategyTmp &playStrategy, PlaybackStrategy strategy);
+    void EnqueueMediaSourceTask(const std::shared_ptr<AVMediaSource> &mediaSource,
+        const struct AVPlayStrategy &strategy);
     void AddSubtitleFromFdSync(int32_t fd, int64_t offset, int64_t length);
+    array<int32_t> GetSelectedTracksSync();
+    void SelectTrackSync(int32_t index, ::taihe::optional_view<::ohos::multimedia::media::SwitchMode> mode);
     void DeselectTrackSync(int32_t index);
     void AddSubtitleFromUrlSync(::taihe::string_view url);
+    map<string, PlaybackInfoValue> GetPlaybackInfoSync();
+    void SetVideoWindowSizeSync(int32_t width, int32_t height);
+    void SetSuperResolutionSync(bool enabled);
+    void SetPlaybackRangeSync(int32_t startTimeMs, int32_t endTimeMs,
+        optional_view<::ohos::multimedia::media::SeekMode> mode);
+    void SetMediaMutedSync(::ohos::multimedia::media::MediaType mediaType, bool muted);
+    void SetPlaybackStrategySync(::ohos::multimedia::media::PlaybackStrategy const& strategy);
     void OnError(callback_view<void(uintptr_t)> callback);
     void OnStateChange(callback_view<void(string_view, ohos::multimedia::media::StateChangeReason)> callback);
     void OnMediaKeySystemInfoUpdate(callback_view<void(uintptr_t)> callback);
@@ -186,6 +216,8 @@ public:
     void SetSource(std::string url);
     void SaveCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
     void QueueOnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg);
+    PlayerSwitchMode TransferSwitchMode(int32_t mode);
+    void GetAVPlayStrategyFromStrategyTmp(AVPlayStrategy &strategy, const AVPlayStrategyTmp &strategyTmp);
 private:
     static bool IsSystemApp();
     void ResetUserParameters();
@@ -197,16 +229,29 @@ private:
     std::shared_ptr<TaskHandler<TaskRet>> ResetTask();
     std::shared_ptr<TaskHandler<TaskRet>> ReleaseTask();
     static void SeekEnqueueTask(AVPlayerImpl *jsPlayer, int32_t time, int32_t mode);
+    static std::shared_ptr<AVMediaSource> GetAVMediaSource(weak::MediaSource src,
+        std::shared_ptr<AVMediaSourceTmp> &srcTmp);
     static PlayerSeekMode TransferSeekMode(int32_t mode);
+    void AddSubSource(std::string url);
     void SetSurface(const std::string &surfaceStr);
     void StartListenCurrentResource();
     void PauseListenCurrentResource();
     bool IsLiveSource() const;
     bool IsControllable();
+    bool CanSetSuperResolution();
+    bool CanSetPlayRange();
+    bool IsPalyingDurationValid(const AVPlayStrategyTmp &strategyTmp);
+    void AddMediaStreamToAVMediaSource(
+        const std::shared_ptr<AVMediaSourceTmp> &srcTmp, std::shared_ptr<AVMediaSource> &mediaSource);
+    bool IsLivingMaxDelayTimeValid(const AVPlayStrategyTmp &strategyTmp);
     std::string GetCurrentState();
-    std::shared_ptr<TaskHandler<TaskRet>> GetTrackDescriptionTask(const std::shared_ptr<AVPlayerContext> &Ctx);
-    map<string, MediaDescriptionValue> CreateFormatBuffer(Format &format);
-    void HandleSelectTrack(int32_t index, optional_view<::ohos::multimedia::media::SwitchMode> mode);
+    std::shared_ptr<TaskHandler<TaskRet>> GetTrackDescriptionTask(const std::unique_ptr<AVPlayerContext> &Ctx);
+    std::shared_ptr<TaskHandler<TaskRet>> SetVideoWindowSizeTask(int32_t width, int32_t height);
+    std::shared_ptr<TaskHandler<TaskRet>> SetSuperResolutionTask(bool enable);
+    std::shared_ptr<TaskHandler<TaskRet>> EqueueSetPlayRangeTask(int32_t start, int32_t end, int32_t mode);
+    std::shared_ptr<TaskHandler<TaskRet>> SetMediaMutedTask(::OHOS::Media::MediaType type, bool isMuted);
+    std::shared_ptr<TaskHandler<TaskRet>> SetPlaybackStrategyTask(AVPlayStrategy playStrategy);
+    void HandleSelectTrack(int32_t index, optional_view<SwitchMode> mode);
     void OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg);
     std::condition_variable stopTaskQueCond_;
     bool taskQueStoped_ = false;
@@ -241,7 +286,9 @@ private:
         OHOS::AudioStandard::StreamUsage::STREAM_USAGE_MEDIA,
         0
     };
-    OHOS::AudioStandard::InterruptMode interruptMode_ = OHOS::AudioStandard::InterruptMode::SHARE_MODE;
+    Format playbackInfo_;
+    int32_t index_ = -1;
+    int32_t mode_ = SWITCH_SMOOTH;
     std::mutex syncMutex_;
     bool getApiVersionFlag_ = true;
     bool calMaxAmplitude_ = false;

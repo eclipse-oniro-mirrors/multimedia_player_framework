@@ -49,6 +49,7 @@ public:
     static ani_string ToAniString(ani_env *env, const std::string &str);
     static uintptr_t GetUndefined(ani_env* env);
     static map<string, MediaDescriptionValue> CreateFormatBuffer(OHOS::Media::Format &format);
+    static map<string, PlaybackInfoValue> CreateFormatBufferByRef(OHOS::Media::Format &format);
     static bool IsSystemApp();
     static bool SystemPermission();
     static int32_t MapExtensionNameToOutputFormat(const std::string &extension, OHOS::Media::OutputFormatType &type);

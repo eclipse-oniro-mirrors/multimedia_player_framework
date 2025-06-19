@@ -30,6 +30,9 @@ namespace ANI::Media {
 MediaSourceLoadingRequestImpl::MediaSourceLoadingRequestImpl(uint64_t requestId)
 {
     request_ = RequestContainer::GetInstance().Find(requestId);
+    CHECK_AND_RETURN_LOG(request_ != nullptr, "failed to getRequest");
+    RequestContainer::GetInstance().Erase(requestId);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Constructor success", FAKE_POINTER(this));
 }
 
 string MediaSourceLoadingRequestImpl::GetUrl()
@@ -44,6 +47,9 @@ optional<map<string, string>> MediaSourceLoadingRequestImpl::GetHeader()
     MediaTrace trace("MediaSourceLoadingRequestTaihe::GetHeader");
     MEDIA_LOGI("GetHeader In");
     std::map<std::string, std::string> header = request_->GetHeader();
+    if (header.empty()) {
+        return optional<map<string, string>>(std::nullopt);
+    }
     map<string, string> taiheHeader;
     for (const auto& [key, value] : header) {
         taihe::string taiheKey(key);
@@ -53,7 +59,7 @@ optional<map<string, string>> MediaSourceLoadingRequestImpl::GetHeader()
     return optional<map<string, string>>(std::in_place_t{}, taiheHeader);
 }
 
-int32_t MediaSourceLoadingRequestImpl::respondData(double uuid, double offset, array_view<uint8_t> buffer)
+int32_t MediaSourceLoadingRequestImpl::RespondData(double uuid, double offset, array_view<uint8_t> buffer)
 {
     MediaTrace trace("MediaSourceLoadingRequestTaihe::respondData");
     MEDIA_LOGI("respondData In");
@@ -69,7 +75,7 @@ int32_t MediaSourceLoadingRequestImpl::respondData(double uuid, double offset, a
     return request_->RespondData(static_cast<int64_t>(uuid), static_cast<int64_t>(offset), bufferInner);
 }
 
-void MediaSourceLoadingRequestImpl::respondHeader(double uuid, optional_view<map<string, string>> header,
+void MediaSourceLoadingRequestImpl::RespondHeader(double uuid, optional_view<map<string, string>> header,
     optional_view<string> redirectUrl)
 {
     MediaTrace trace("MediaSourceLoadingRequestTaihe::respondHeader");
@@ -90,11 +96,21 @@ void MediaSourceLoadingRequestImpl::respondHeader(double uuid, optional_view<map
     MEDIA_LOGI("respondHeader redirectUrl %{private}s", redirectUrlStr.c_str());
 }
 
-void MediaSourceLoadingRequestImpl::finishLoading(double uuid, LoadingRequestError state)
+void MediaSourceLoadingRequestImpl::FinishLoading(double uuid, LoadingRequestError state)
 {
     MediaTrace trace("MediaSourceLoadingRequestTaihe::finishLoading");
     MEDIA_LOGI("finishLoading In");
     int32_t requestError = state.get_value();
     request_->FinishLoading(static_cast<int64_t>(uuid), requestError);
+}
+
+::ohos::multimedia::media::MediaSourceLoadingRequest MediaSourceLoadingRequestImpl::CreateLoadingRequest(
+    std::shared_ptr<LoadingRequest> request)
+{
+    MediaTrace trace("MediaSourceLoadingRequestImpl::CreateLoadingRequest");
+    MEDIA_LOGD("CreateLoadingRequest >>");
+    RequestContainer::GetInstance().Insert(request->GetUniqueId(), request);
+    return taihe::make_holder<MediaSourceLoadingRequestImpl,
+        ::ohos::multimedia::media::MediaSourceLoadingRequest>(request->GetUniqueId());
 }
 } // namespace ANI::Media
