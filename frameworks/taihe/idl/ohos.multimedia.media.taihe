@@ -69,6 +69,9 @@ function CreateAVTranscoderSync(): AVTranscoder;
 @gen_promise("createAVScreenCaptureRecorder")
 function CreateAVScreenCaptureRecorderSync(): AVScreenCaptureRecorder;
 
+function CreateMediaSourceWithUrl(url: String, headers: Optional<@record Map<String, String>>): MediaSource;
+function CreateMediaSourceWithStreamData(streams: Array<MediaStream>): MediaSource;
+
 @gen_promise("reportAVScreenCaptureUserChoice")
 function ReportAVScreenCaptureUserChoiceSync(sessionId: i32, choice: String): void;
 
@@ -82,11 +85,11 @@ struct Location {
     longitude: f64;
 }
 
-struct MediaStream {	
+struct MediaStream {
     url: String;
-    width: i64;
-    height: i64;
-    bitrate: i64;
+    width: i32;
+    height: i32;
+    bitrate: i32;
 }
 
 struct AVMetadata {
@@ -130,6 +133,20 @@ struct PixelMapParams {
     width: Optional<i32>;
     height: Optional<i32>;
     colorFormat: Optional<PixelFormat>;
+}
+
+struct PlaybackStrategy {
+    preferredWidth: Optional<i64>;
+    preferredHeight: Optional<i64>;
+    preferredBufferDuration: Optional<i64>; 
+    preferredHdr: Optional<bool>;
+    mutedMediaType: Optional<MediaType>;
+    preferredAudioLanguage: Optional<String>;
+    preferredSubtitleLanguage: Optional<String>;
+    showFirstFrameOnPrepare: Optional<bool>;
+    preferredBufferDurationForPlaying: Optional<f64>;
+    enableSuperResolution: Optional<bool>;
+    thresholdForAutoQuickPlay: Optional<f64>; 
 }
 
 interface AVMetadataExtractor {
@@ -176,6 +193,11 @@ union MediaDescriptionValue {
     type_int: i32;
 }
 
+union PlaybackInfoValue {
+    type_string: String;
+    type_int: i32;
+}
+
 enum SwitchMode: i32{
     SMOOTH = 0,
     SEGMENT = 1,
@@ -205,6 +227,8 @@ interface AVPlayer {
     @get GetVideoScaleType(): Optional<VideoScaleType>;
     @set SetVideoScaleType(videoScaleType: Optional<VideoScaleType>): void;
     IsSeekContinuousSupported() : bool;
+    GetPlaybackPosition(): i32;
+    SetBitrate(bitrate: i32): void;
 
     @gen_async("getTrackDescription")
     @gen_promise("getTrackDescription")
@@ -233,6 +257,42 @@ interface AVPlayer {
     @gen_async("prepare")
     @gen_promise("prepare")
     PrepareSync(): void;
+
+    @gen_promise("getSelectedTracks")
+    GetSelectedTracksSync(): Array<i32>;
+
+    @gen_promise("selectTrack")
+    SelectTrackSync(index: i32, mode: Optional<SwitchMode>): void;
+
+    @gen_promise("deselectTrack")
+    DeselectTrackSync(index: i32): void;
+
+    @gen_promise("setMediaSource")
+    SetMediaSourceSync(src: MediaSource, strategy: Optional<PlaybackStrategy>): void;
+
+    @gen_promise("addSubtitleFromFd")
+    AddSubtitleFromFdSync(fd: i32, offset: i64, length: i64): void;
+
+    @gen_promise("addSubtitleFromUrl")
+    AddSubtitleFromUrlSync(url: String): void;
+
+    @gen_promise("getPlaybackInfo")
+    GetPlaybackInfoSync(): @record Map<String, PlaybackInfoValue>;
+
+    @gen_promise("setSuperResolution")
+    SetSuperResolutionSync(enabled: bool): void;
+
+    @gen_promise("setVideoWindowSize")
+    SetVideoWindowSizeSync(width: i32, height: i32): void;
+
+    @gen_promise("setPlaybackRange")
+    SetPlaybackRangeSync(startTimeMs: i32, endTimeMs: i32, mode: Optional<SeekMode>): void;
+
+    @gen_promise("setMediaMuted")
+    SetMediaMutedSync(mediaType: MediaType, muted: bool): void;
+
+    @gen_promise("setPlaybackStrategy")
+    SetPlaybackStrategySync(strategy: PlaybackStrategy): void;
 
     @!sts_inject_into_interface("on(type: string, callback: (state: String, reason: StateChangeReason)=> void): void;")
     @!sts_inject_into_interface("on(type: string, callback: (err: BusinessError<void>)=> void): void;")
@@ -357,9 +417,9 @@ interface AVPlayer {
     OffDurationUpdate(callback: Optional<(data: i32) => void>): void;
     OffTimeUpdate(callback: Optional<(data: i32) => void>): void;
     OffVolumeChange(callback: Optional<(data: f64) => void>): void;
-    OffSpeedDone(callback: Optional<(data: i32) => void>): void; 
+    OffSpeedDone(callback: Optional<(data: i32) => void>): void;
     OffBitrateDone(callback: Optional<(data: i32) => void>): void;
-    OffAvailableBitrates(callback: Optional<(data: Array<i32>) => void>): void; 
+    OffAvailableBitrates(callback: Optional<(data: Array<i32>) => void>): void;
     OffAmplitudeUpdate(callback: Optional<(data: Array<f32>) => void>): void;
     OffBufferingUpdate(callback: Optional<(infoType: BufferingInfoType, value: i32) => void>): void;
     OffVideoSizeChange(callback: Optional<(width: i32, height: i32) => void>): void;
@@ -486,6 +546,42 @@ enum ContainerFormatType: String {
     CFT_MPEG_4A = "m4a",
     CFT_MP3 = "mp3",
     CFT_WAV = "wav",
+}
+
+enum AVErrorCode: i32{
+    AVERR_OK = 0,
+    AVERR_NO_PERMISSION = 201,
+    AVERR_INVALID_PARAMETER = 401,
+    AVERR_UNSUPPORT_CAPABILITY = 801,
+    AVERR_NO_MEMORY = 5400101,
+    AVERR_OPERATE_NOT_PERMIT = 5400102,
+    AVERR_IO = 5400103,
+    AVERR_TIMEOUT = 5400104,
+    AVERR_SERVICE_DIED = 5400105,
+    AVERR_UNSUPPORT_FORMAT = 5400106,
+    AVERR_AUDIO_INTERRUPTED = 5400107,
+    AVERR_IO_HOST_NOT_FOUND = 5411001,
+    AVERR_IO_CONNECTION_TIMEOUT = 5411002,
+    AVERR_IO_NETWORK_ABNORMAL = 5411003,
+    AVERR_IO_NETWORK_UNAVAILABLE = 5411004,
+    AVERR_IO_NO_PERMISSION = 5411005,
+    AVERR_IO_REQUEST_DENIED = 5411006,
+    AVERR_IO_RESOURCE_NOT_FOUND = 5411007,
+    AVERR_IO_SSL_CLIENT_CERT_NEEDED = 5411008,
+    AVERR_IO_SSL_CONNECTION_FAILED = 5411009,
+    AVERR_IO_SSL_SERVER_CERT_UNTRUSTED = 5411010,
+    AVERR_IO_UNSUPPORTED_REQUEST = 5411011,
+    AVERR_SEEK_CONTINUOUS_UNSUPPORTED = 5410002,
+    AVERR_SUPER_RESOLUTION_UNSUPPORTED = 5410003,
+    AVERR_SUPER_RESOLUTION_NOT_ENABLED = 5410004,
+}
+
+enum PlaybackInfoKey: String{
+    SERVER_IP_ADDRESS = "server_ip_address",
+    AVG_DOWNLOAD_RATE = "average_download_rate",
+    DOWNLOAD_RATE = "download_rate",
+    IS_DOWNLOADING = "is_downloading",
+    BUFFER_DURATION = "buffer_duration",
 }
 
 struct VideoRecorderProfile {
@@ -793,42 +889,6 @@ struct AVRecorderProfile {
     enableStableQualityMode: Optional<bool>;
 }
 
-enum AudioEncoder: i32 {
-    DEFAULT = 0,
-    AMR_NB = 1,
-    AMR_WB = 2,
-    AAC_LC = 3,
-    HE_AAC = 4
-}
-
-enum AudioOutputFormat: i32 {
-    DEFAULT = 0,
-    MPEG_4 = 2,
-    AMR_NB = 3,
-    AMR_WB = 4,
-    AAC_ADTS = 6
-}
-
-struct AudioRecorderConfig {
-    audioEncoder: Optional<AudioEncoder>;
-    audioEncodeBitRate: Optional<i32>;
-    audioSampleRate: Optional<i32>;
-    numberOfChannels: Optional<i32>;
-    format: Optional<AudioOutputFormat>;
-    uri: String;
-    location: Optional<Location>;
-    audioEncoderMime: Optional<CodecMimeType>;
-    fileFormat: Optional<ContainerFormatType>;
-}
-
-interface AudioRecorder {
-    PrepareSync(config: AudioRecorderConfig): void;
-}
-
-interface AudioPlayer {
-    PlaySync(): void;
-}
-
 enum ScreenCaptureEvent: i32 {
     SCREENCAPTURE_STARTED = 0,
     SCREENCAPTURE_STOPPED = 1
@@ -935,14 +995,21 @@ enum LoadingRequestError: i32 {
 
 interface MediaSourceLoadingRequest {
     @get GetUrl(): String;
-
     @get GetHeader(): Optional<@record Map<String, String>>;
 
-    respondData(uuid: f64, offset: f64, buffer: @arraybuffer Array<u8>): i32;
-    respondHeader(uuid: f64, header: Optional<@record Map<String, String>>, redirectUrl: Optional<String>): void;
-    finishLoading(uuid: f64, state: LoadingRequestError): void;
+    RespondData(uuid: f64, offset: f64, buffer: @arraybuffer Array<u8>): i32;
+    RespondHeader(uuid: f64, header: Optional<@record Map<String, String>>, redirectUrl: Optional<String>): void;
+    FinishLoading(uuid: f64, state: LoadingRequestError): void;
+}
+
+struct MediaSourceLoader {
+    open: (request: MediaSourceLoadingRequest) => f64;
+    read: (uuid: f64, requestedOffset: f64, requestedLength: f64) => void;
+    close: (uuid: f64) => void;
 }
 
 interface MediaSource {
-    setMimeType(mimeType: AVMimeTypes): void;
+    GetImplPtr(): i64;
+    SetMimeType(mimeType: AVMimeTypes): void;
+    SetMediaResourceLoaderDelegate(resourceLoader: MediaSourceLoader): void;
 }

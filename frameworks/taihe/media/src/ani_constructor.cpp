@@ -23,10 +23,10 @@ namespace {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
 {
     ani_env *env;
-    if (ANI_OK != vm->GetEnv(ANI_VERSION_1, &env)) {
+    if (vm->GetEnv(ANI_VERSION_1, &env) != ANI_OK) {
         return ANI_ERROR;
     }
-    if (ANI_OK != ohos::multimedia::media::ANIRegister(env)) {
+    if (ohos::multimedia::media::ANIRegister(env) != ANI_OK) {
         MEDIA_LOGE("Error from ohos::multimedia::media::ANIRegister");
         return ANI_ERROR;
     }

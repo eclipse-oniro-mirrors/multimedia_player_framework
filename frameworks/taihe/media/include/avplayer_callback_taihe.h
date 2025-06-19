@@ -82,6 +82,7 @@ public:
     void ClearCallbackReference(const std::string &name);
     void Start();
     void Pause();
+    void Release();
     std::atomic<bool> isSetVolume_ = false;
     std::shared_ptr<OHOS::AppExecFwk::EventHandler> mainHandler_ = nullptr;
 private:

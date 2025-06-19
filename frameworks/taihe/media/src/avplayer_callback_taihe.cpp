@@ -297,18 +297,17 @@ public:
         }
     };
 
-    static void CompleteCallback(AniCallback::Base *aniCb, const AVPlayerCallback *aVPlayerCallback)
+    static void CompleteCallback(AniCallback::Base *aniCb, std::shared_ptr<OHOS::AppExecFwk::EventHandler> mainHandler)
     {
+        CHECK_AND_RETURN_LOG(aniCb != nullptr, "aniCb is nullptr");
+        CHECK_AND_RETURN_LOG(mainHandler != nullptr, "callback failed, mainHandler is nullptr!");
         auto task = [aniCb]() {
             if (aniCb) {
                 aniCb->UvWork();
+                delete aniCb;
             }
         };
-        if (!aVPlayerCallback) {
-            MEDIA_LOGE("aVPlayerCallback is null");
-            return;
-        }
-        aVPlayerCallback->mainHandler_->PostTask(task, "On", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+        mainHandler->PostTask(task, "On", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
     }
 };
 
@@ -386,10 +385,6 @@ AVPlayerCallback::AVPlayerCallback(AVPlayerNotify *listener)
             [this](const int32_t extra, const Format &infoBody) { OnSetDecryptConfigDoneCb(extra, infoBody); } },
         { INFO_TYPE_MAX_AMPLITUDE_COLLECT,
              [this](const int32_t extra, const Format &infoBody) { OnMaxAmplitudeCollectedCb(extra, infoBody); } },
-        // { INFO_TYPE_INTERRUPT_EVENT,
-        //     [this](const int32_t extra, const Format &infoBody) { OnAudioInterruptCb(extra, infoBody); } },
-        // { INFO_TYPE_AUDIO_DEVICE_CHANGE,
-        //     [this](const int32_t extra, const Format &infoBody) { OnAudioDeviceChangeCb(extra, infoBody); } },
         { INFO_TYPE_DRM_INFO_UPDATED,
             [this](const int32_t extra, const Format &infoBody) { OnDrmInfoUpdatedCb(extra, infoBody); } },
         { INFO_TYPE_SUPER_RESOLUTION_CHANGED,
@@ -439,7 +434,7 @@ void AVPlayerCallback::OnStateChangeCb(const int32_t extra, const Format &infoBo
             cb->callbackName = AVPlayerEvent::EVENT_STATE_CHANGE;
             cb->state = stateStr;
             cb->reason = reason;
-            AniCallback::CompleteCallback(cb, this);
+            AniCallback::CompleteCallback(cb, mainHandler_);
         }
     }
 }
@@ -460,7 +455,7 @@ void AVPlayerCallback::OnSeekDoneCb(const int32_t extra, const Format &infoBody)
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_SEEK_DONE);
     cb->callbackName = AVPlayerEvent::EVENT_SEEK_DONE;
     cb->value = currentPositon;
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnSpeedDoneCb(const int32_t extra, const Format &infoBody)
@@ -480,7 +475,7 @@ void AVPlayerCallback::OnSpeedDoneCb(const int32_t extra, const Format &infoBody
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_SPEED_DONE);
     cb->callbackName = AVPlayerEvent::EVENT_SPEED_DONE;
     cb->value = speedMode;
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnBitRateDoneCb(const int32_t extra, const Format &infoBody)
@@ -500,7 +495,7 @@ void AVPlayerCallback::OnBitRateDoneCb(const int32_t extra, const Format &infoBo
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_BITRATE_DONE);
     cb->callbackName = AVPlayerEvent::EVENT_BITRATE_DONE;
     cb->value = bitRate;
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnPositionUpdateCb(const int32_t extra, const Format &infoBody)
@@ -525,7 +520,7 @@ void AVPlayerCallback::OnPositionUpdateCb(const int32_t extra, const Format &inf
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_TIME_UPDATE);
     cb->callbackName = AVPlayerEvent::EVENT_TIME_UPDATE;
     cb->value = position;
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnDurationUpdateCb(const int32_t extra, const Format &infoBody)
@@ -550,7 +545,7 @@ void AVPlayerCallback::OnDurationUpdateCb(const int32_t extra, const Format &inf
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_DURATION_UPDATE);
     cb->callbackName = AVPlayerEvent::EVENT_DURATION_UPDATE;
     cb->value = duration;
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnVolumeChangeCb(const int32_t extra, const Format &infoBody)
@@ -572,7 +567,7 @@ void AVPlayerCallback::OnVolumeChangeCb(const int32_t extra, const Format &infoB
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_VOLUME_CHANGE);
     cb->callbackName = AVPlayerEvent::EVENT_VOLUME_CHANGE;
     cb->value = static_cast<double>(volumeLevel);
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnBufferingUpdateCb(const int32_t extra, const Format &infoBody)
@@ -610,7 +605,7 @@ void AVPlayerCallback::OnBufferingUpdateCb(const int32_t extra, const Format &in
     cb->callbackName = AVPlayerEvent::EVENT_BUFFERING_UPDATE;
     cb->valueVec.push_back(bufferingType);
     cb->valueVec.push_back(val);
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnMessageCb(const int32_t extra, const Format &infoBody)
@@ -637,7 +632,7 @@ void AVPlayerCallback::OnStartRenderFrameCb() const
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_START_RENDER_FRAME);
     cb->callbackName = AVPlayerEvent::EVENT_START_RENDER_FRAME;
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnVideoSizeChangedCb(const int32_t extra, const Format &infoBody)
@@ -665,7 +660,7 @@ void AVPlayerCallback::OnVideoSizeChangedCb(const int32_t extra, const Format &i
     cb->callbackName = AVPlayerEvent::EVENT_VIDEO_SIZE_CHANGE;
     cb->valueVec.push_back(width);
     cb->valueVec.push_back(height);
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnBitRateCollectedCb(const int32_t extra, const Format &infoBody)
@@ -704,7 +699,7 @@ void AVPlayerCallback::OnBitRateCollectedCb(const int32_t extra, const Format &i
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_AVAILABLE_BITRATES);
     cb->callbackName = AVPlayerEvent::EVENT_AVAILABLE_BITRATES;
     cb->valueVec = bitrateVec;
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnTrackInfoUpdate(const int32_t extra, const Format &infoBody)
@@ -723,7 +718,7 @@ void AVPlayerCallback::OnTrackInfoUpdate(const int32_t extra, const Format &info
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_TRACK_INFO_UPDATE);
     cb->callbackName = AVPlayerEvent::EVENT_TRACK_INFO_UPDATE;
     cb->trackInfo = trackInfo;
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnTrackChangedCb(const int32_t extra, const Format &infoBody)
@@ -745,7 +740,7 @@ void AVPlayerCallback::OnTrackChangedCb(const int32_t extra, const Format &infoB
     cb->callbackName = AVPlayerEvent::EVENT_TRACKCHANGE;
     cb->number = index;
     cb->isSelect = isSelect ? true : false;
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnEosCb(const int32_t extra, const Format &infoBody)
@@ -764,7 +759,7 @@ void AVPlayerCallback::OnEosCb(const int32_t extra, const Format &infoBody)
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_END_OF_STREAM);
     cb->callbackName = AVPlayerEvent::EVENT_END_OF_STREAM;
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
@@ -815,7 +810,7 @@ void AVPlayerCallback::OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std
     cb->errorCode = errorCode;
     cb->errorMsg = message;
 
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnSetDecryptConfigDoneCb(const int32_t extra, const Format &infoBody)
@@ -832,7 +827,7 @@ void AVPlayerCallback::OnSetDecryptConfigDoneCb(const int32_t extra, const Forma
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_SET_DECRYPT_CONFIG_DONE);
     cb->callbackName = AVPlayerEvent::EVENT_SET_DECRYPT_CONFIG_DONE;
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnMaxAmplitudeCollectedCb(const int32_t extra, const Format &infoBody)
@@ -871,7 +866,7 @@ void AVPlayerCallback::OnMaxAmplitudeCollectedCb(const int32_t extra, const Form
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_AMPLITUDE_UPDATE);
     cb->callbackName = AVPlayerEvent::EVENT_AMPLITUDE_UPDATE;
     cb->valueVec = MaxAmplitudeVec;
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnDrmInfoUpdatedCb(const int32_t extra, const Format &infoBody)
@@ -907,7 +902,7 @@ void AVPlayerCallback::OnDrmInfoUpdatedCb(const int32_t extra, const Format &inf
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_DRM_INFO_UPDATE);
     cb->callbackName = AVPlayerEvent::EVENT_DRM_INFO_UPDATE;
     cb->infoMap = drmInfoMap;
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnSuperResolutionChangedCb(const int32_t extra, const Format &infoBody)
@@ -929,7 +924,7 @@ void AVPlayerCallback::OnSuperResolutionChangedCb(const int32_t extra, const For
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_SUPER_RESOLUTION_CHANGED);
     cb->callbackName = AVPlayerEvent::EVENT_SUPER_RESOLUTION_CHANGED;
     cb->value = enabled ? true : false;
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnSeiInfoCb(const int32_t extra, const Format &infoBody)
@@ -953,7 +948,7 @@ void AVPlayerCallback::OnSeiInfoCb(const int32_t extra, const Format &infoBody)
     cb->callbackName = AVPlayerEvent::EVENT_SEI_MESSAGE_INFO;
     cb->playbackPosition = playbackPosition;
     cb->payloadGroup = formatVec;
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnSubtitleInfoCb(const int32_t extra, const Format &infoBody)
@@ -979,7 +974,7 @@ void AVPlayerCallback::OnSubtitleInfoCb(const int32_t extra, const Format &infoB
     cb->valueMap.pts = pts;
     cb->valueMap.duration = duration;
 
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 int32_t AVPlayerCallback::SetDrmInfoData(const uint8_t *drmInfoAddr, int32_t infoCount,
@@ -1013,8 +1008,10 @@ void AVPlayerCallback::SaveCallbackReference(const std::string &name, std::weak_
 {
     std::lock_guard<std::mutex> lock(mutex_);
     refMap_[name] = ref;
-    std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::GetMainEventRunner();
-    mainHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
+    if (mainHandler_ == nullptr) {
+        std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::GetMainEventRunner();
+        mainHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
+    }
 }
 
 void AVPlayerCallback::ClearCallbackReference(const std::string &name)
@@ -1031,6 +1028,15 @@ void AVPlayerCallback::Start()
 void AVPlayerCallback::Pause()
 {
     isLoaded_ = false;
+}
+
+void AVPlayerCallback::Release()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    Format infoBody;
+    AVPlayerCallback::OnStateChangeCb(PlayerStates::PLAYER_RELEASED, infoBody);
+    listener_ = nullptr;
 }
 
 } // namespace Media
