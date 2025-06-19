@@ -35,7 +35,8 @@ namespace OHOS {
 namespace Media {
 class AVThumbnailGenerator : public NoCopyable, public std::enable_shared_from_this<AVThumbnailGenerator> {
 public:
-    explicit AVThumbnailGenerator(std::shared_ptr<MediaDemuxer> &mediaDemuxer);
+    explicit AVThumbnailGenerator(std::shared_ptr<MediaDemuxer> &mediaDemuxer, int32_t appUid, int32_t appPid,
+        uint32_t appTokenId, uint64_t appFullTokenId);
     ~AVThumbnailGenerator();
     std::shared_ptr<AVSharedMemory> FetchFrameAtTime(int64_t timeUs, int32_t option, const OutputConfiguration &param);
     std::shared_ptr<AVBuffer> FetchFrameYuv(int64_t timeUs, int32_t option, const OutputConfiguration &param);
@@ -52,6 +53,7 @@ public:
     void OnOutputBufferAvailable(uint32_t index, std::shared_ptr<AVBuffer> buffer);
     void OnFetchedFrameBufferAvailable();
     int32_t Init();
+    void SetClientBundleName(std::string appName);
     void AcquireAvailableInputBuffer();
 
 private:
@@ -97,6 +99,11 @@ private:
     Status SeekToTime(int64_t timeMs, Plugins::SeekMode option, int64_t realSeekTime);
     int32_t width_ = 0;
     int32_t height_ = 0;
+    int32_t appUid_{0};
+    int32_t appPid_{0};
+    uint32_t appTokenId_{0};
+    uint64_t appFullTokenId_{0};
+    std::string appName_;
     double frameRate_ { 0.0 };
     Plugins::SeekMode seekMode_ {};
     int64_t duration_ = 0;

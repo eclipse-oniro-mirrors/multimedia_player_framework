@@ -77,7 +77,8 @@ public:
 #endif
 
 #ifdef SUPPORT_METADATA
-    virtual std::unique_ptr<IAVMetadataHelperEngine> CreateAVMetadataHelperEngine()
+    virtual std::unique_ptr<IAVMetadataHelperEngine> CreateAVMetadataHelperEngine(int32_t uid = 0, int32_t pid = 0,
+        uint32_t tokenId = 0, std::string appName = "")
     {
         return nullptr;
     }
