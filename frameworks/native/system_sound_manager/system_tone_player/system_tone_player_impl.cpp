@@ -870,6 +870,7 @@ void SystemTonePlayerImpl::SendSystemTonePlaybackEvent(const int32_t &errorCode,
     bean->Add("MUTE_STATE", muteAudio);
     bean->Add("MUTE_HAPTICS", muteHaptics);
     bean->Add("RING_MODE", ringerMode);
+    bean->Add("STREAM_TYPE", AudioStandard::STREAM_NOTIFICATION);
     bean->Add("VIBRATION_STATE", vibrateState);
     bean->Add("VOLUME_LEVEL", volumeLevel);
     Media::MediaMonitor::MediaMonitorManager::GetInstance().WriteLogMsg(bean);
