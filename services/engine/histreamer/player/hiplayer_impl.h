@@ -317,7 +317,7 @@ private:
     void SetPostProcessor();
     void ResetEnableCameraPostProcess();
     int32_t SetAudioHapticsSyncId(int32_t syncId);
-    int32_t ApplyAudioHapticsSyncId(int32_t syncId);
+    void ApplyAudioHapticsSyncId();
     void DoInitDemuxer();
     void ReleaseVideoDecoderOnMuted();
 

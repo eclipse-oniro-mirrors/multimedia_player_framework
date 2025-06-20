@@ -3335,7 +3335,7 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
         SetDefaultAudioRenderInfo(trackInfos);
     }
     SetAudioRendererParameter();
-    ApplyAudioHapticsSyncId(audioHapticsSyncId_);
+    ApplyAudioHapticsSyncId();
     audioSink_->SetSyncCenter(syncManager_);
 
     completeState_.emplace_back(std::make_pair("AudioSink", false));
@@ -3915,14 +3915,13 @@ int32_t HiPlayerImpl::SetAudioHapticsSyncId(int32_t syncId)
     return TransStatus(Status::OK);
 }
 
-int32_t HiPlayerImpl::ApplyAudioHapticsSyncId(int32_t syncId)
+void HiPlayerImpl::ApplyAudioHapticsSyncId()
 {
-    FALSE_RETURN_V(audioSink_ != nullptr, TransStatus(Status::ERROR_NULL_POINTER));
-    MEDIA_LOG_I("ApplyAHapSyncId " PUBLIC_LOG_D32, syncId);
-    Status ret = audioSink_->SetAudioHapticsSyncId(syncId);
-    FALSE_RETURN_V_MSG_E(ret == Status::OK, TransStatus(ret),
+    FALSE_RETURN_W(audioSink_ != nullptr);
+    MEDIA_LOG_D("ApplyAHapSyncId " PUBLIC_LOG_D32, audioHapticsSyncId_);
+    Status ret = audioSink_->SetAudioHapticsSyncId(audioHapticsSyncId_);
+    FALSE_RETURN_MSG(ret == Status::OK,
         "ApplyAHapSyncId failed with error " PUBLIC_LOG_D32, static_cast<int32_t>(ret));
-    return TransStatus(ret);
 }
 
 int32_t HiPlayerImpl::NotifyMemoryExchange(bool status)
