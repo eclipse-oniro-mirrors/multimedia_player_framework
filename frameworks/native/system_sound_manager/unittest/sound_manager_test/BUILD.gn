@@ -84,4 +84,5 @@ ohos_unittest("system_sound_manager_unit_test") {
     "samgr:samgr_proxy",
     "hitrace:hitrace_meter",
   ]
+  remove_configs = [ "//build/config/compiler:no_exceptions" ]
 }
