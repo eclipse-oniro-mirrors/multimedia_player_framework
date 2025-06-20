@@ -63,6 +63,7 @@ public:
     int32_t StrategyForKeepCaptureDuringCall(bool value) override;
     int32_t SetCaptureStrategy() override;
     int32_t ReleaseCaptureStrategy() override;
+    int32_t StrategyForBFramesEncoding(bool value) override;
 private:
     static void SetScreenCaptureCallback(OH_AVScreenCapture *screencapture,
         std::shared_ptr<ScreenCaptureCallBackMock> cb);

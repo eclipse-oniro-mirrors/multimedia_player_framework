@@ -717,6 +717,7 @@ int32_t ScreenCaptureServiceStub::SetScreenCaptureStrategy(MessageParcel &data, 
     strategy.enableDeviceLevelCapture = data.ReadBool();
     strategy.keepCaptureDuringCall = data.ReadBool();
     strategy.strategyForPrivacyMaskMode = data.ReadInt32();
+    strategy.enableBFrame = data.ReadBool();
     int32_t ret = SetScreenCaptureStrategy(strategy);
     reply.WriteInt32(ret);
     return MSERR_OK;

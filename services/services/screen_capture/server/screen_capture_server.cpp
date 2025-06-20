@@ -2118,6 +2118,8 @@ int32_t ScreenCaptureServer::InitRecorder()
         consumer_ = recorder_->GetSurface(videoSourceId_);
         CHECK_AND_RETURN_RET_LOG(consumer_ != nullptr, MSERR_UNKNOWN, "recorder GetSurface failed");
     }
+    ret = recorder_->SetVideoEnableBFrame(videoSourceId_, captureConfig_.strategy.enableBFrame);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "recorder SetVideoEnableBFrame failed");
     CANCEL_SCOPE_EXIT_GUARD(0);
     MEDIA_LOGI("InitRecorder success");
     return MSERR_OK;
@@ -3966,11 +3968,12 @@ void ScreenCaptureServer::ReleaseInner()
 int32_t ScreenCaptureServer::SetScreenCaptureStrategy(ScreenCaptureStrategy strategy)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(captureState_ < AVScreenCaptureState::POPUP_WINDOW, MSERR_UNSUPPORT,
+    CHECK_AND_RETURN_RET_LOG(captureState_ < AVScreenCaptureState::POPUP_WINDOW, MSERR_INVALID_STATE,
         "strategy can not be modified after screencapture started");
     MEDIA_LOGI("SetScreenCaptureStrategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d,"
-        "strategyForPrivacyMaskMode: %{public}d",
-        strategy.enableDeviceLevelCapture, strategy.keepCaptureDuringCall, strategy.strategyForPrivacyMaskMode);
+        "strategyForPrivacyMaskMode: %{public}d, enableBFrame: %{public}d",
+        strategy.enableDeviceLevelCapture, strategy.keepCaptureDuringCall, strategy.strategyForPrivacyMaskMode,
+        strategy.enableBFrame);
     captureConfig_.strategy = strategy;
     return MSERR_OK;
 }

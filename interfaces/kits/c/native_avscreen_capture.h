@@ -432,6 +432,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ReleaseCaptureStrategy(OH_AVScree
  * @return Function result code.
  *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
  *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} capture or strategyvalue is nullptr.
+ *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_STATE} This interface should be called before Start is called.
  * @since 20
  */
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureStrategy(
@@ -539,6 +540,19 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetCaptureTypeSelected(OH_AVScree
  */
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetDisplayIdSelected(OH_AVScreenCapture_UserSelectionInfo *selection,
     uint64_t* displayId);
+
+/**
+ * @brief Indicates whether to enable B-frame encoding, which is used to reduce the size of the recorded file.
+ * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+ * @param {OH_AVScreenCapture_CaptureStrategy*} strategy Pointer to an OH_AVScreenCapture_CaptureStrategy instance
+ * @param {bool} value The default value is false, which means B frames encoding are disabled.
+ * @return Function result code.
+ *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
+ *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} strategy is nullptr.
+ * @since 20
+ */
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForBFramesEncoding(
+    OH_AVScreenCapture_CaptureStrategy *strategy, bool value);
 #ifdef __cplusplus
 }
 #endif

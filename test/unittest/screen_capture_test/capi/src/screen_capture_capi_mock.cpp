@@ -407,3 +407,10 @@ int32_t ScreenCaptureCapiMock::ReleaseCaptureStrategy()
     UNITTEST_CHECK_AND_RETURN_RET_LOG(strategy_ != nullptr, MSERR_INVALID_OPERATION, "strategy_ == nullptr");
     return OH_AVScreenCapture_ReleaseCaptureStrategy(strategy_);
 }
+
+int32_t ScreenCaptureCapiMock::StrategyForBFramesEncoding(bool value)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(strategy_ != nullptr, MSERR_UNKNOWN,
+        "OH_AVScreenCapture_CreateCaptureStrategy failed");
+    return OH_AVScreenCapture_StrategyForBFramesEncoding(strategy_, value);
+}
