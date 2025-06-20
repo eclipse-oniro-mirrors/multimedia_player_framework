@@ -152,18 +152,22 @@ int32_t AudioHapticPlayerImpl::Start()
 
     CHECK_AND_RETURN_RET_LOG(audioHapticVibrator_ != nullptr, MSERR_INVALID_OPERATION,
         "Audio haptic vibrator is nullptr");
-
-    if (vibrateThread_ != nullptr && vibrateThread_->joinable()) {
-        vibrateThread_->join();
-        vibrateThread_.reset();
+    CHECK_AND_RETURN_RET_LOG(audioHapticSound_ != nullptr, MSERR_INVALID_OPERATION,
+        "Audio haptic sound is nullptr");
+    
+    if (playerState_ == AudioHapticPlayerState::STATE_RUNNING) {
+        // stop vibrate
+        StopVibrate();
+        // stop sound
+        result = audioHapticSound_->StopSound();
+        CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result, "Failed to stop sound.");
+        playerState_ = AudioHapticPlayerState::STATE_STOPPED;
     }
+    
     if (vibrateThread_ == nullptr) {
         ResetVibrateState();
         vibrateThread_ = std::make_shared<std::thread>([this] { StartVibrate(); });
     }
-
-    CHECK_AND_RETURN_RET_LOG(audioHapticSound_ != nullptr, MSERR_INVALID_OPERATION,
-        "Audio haptic sound is nullptr");
     result = audioHapticSound_->StartSound();
     SendHapticPlayerEvent(MSERR_OK, "START_HAPTIC_PLAYER");
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result, "Failed to start sound.");

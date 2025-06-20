@@ -1036,6 +1036,10 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticPlayer_Start_002, TestSize.Level1)
     result = g_lowLatencyAudioHapticPlayer->Start();
     EXPECT_EQ(MSERR_OK, result);
 
+    // start twice
+    result = g_lowLatencyAudioHapticPlayer->Start();
+    EXPECT_EQ(MSERR_OK, result);
+
     g_lowLatencyAudioHapticPlayer->Stop();
 }
 
