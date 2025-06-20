@@ -116,7 +116,12 @@ napi_value AVScreenCaptureNapi::Constructor(napi_env env, napi_callback_info inf
 
     status = napi_wrap(env, jsThis, reinterpret_cast<void *>(jsScreenCapture),
                        AVScreenCaptureNapi::Destructor, nullptr, nullptr);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to wrap native instance");
+    if (status != napi_ok) {
+        delete jsScreenCapture;
+        MEDIA_LOGE("Failed to wrap native instance");
+        return result;
+    }
+
     MEDIA_LOGI("Constructor success");
     return jsThis;
 }
@@ -821,8 +826,16 @@ int32_t AVScreenCaptureNapi::GetStrategy(std::unique_ptr<AVScreenCaptureAsyncCon
             strategy.keepCaptureDuringCall), MSERR_INVALID_VAL, "keepCaptureDuringCall invalid");
         strategy.setByUser = true;
     }
-    MEDIA_LOGI("GetStrategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d",
-        strategy.enableDeviceLevelCapture, strategy.keepCaptureDuringCall);
+    // get enableBFrame
+    status = napi_has_named_property(env, strategyVal, "enableBFrame", &exist);
+    if (status == napi_ok && exist) {
+        CHECK_AND_RETURN_RET_LOG(GetOptionalPropertyBool(env, strategyVal, "enableBFrame",
+            strategy.enableBFrame), MSERR_INVALID_VAL, "enableBFrame invalid");
+        strategy.setByUser = true;
+    }
+    MEDIA_LOGI("GetStrategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d, "
+        "enableBFrame: %{public}d", strategy.enableDeviceLevelCapture, strategy.keepCaptureDuringCall,
+        strategy.enableBFrame);
     return MSERR_OK;
 }
 

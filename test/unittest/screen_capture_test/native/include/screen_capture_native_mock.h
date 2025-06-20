@@ -54,6 +54,7 @@ public:
     int32_t StrategyForKeepCaptureDuringCall(bool value) override;
     int32_t SetCaptureStrategy() override;
     int32_t ReleaseCaptureStrategy() override;
+    int32_t StrategyForBFramesEncoding(bool value) override;
 private:
     std::shared_ptr<ScreenCapture> screenCapture_ = nullptr;
     std::shared_ptr<ScreenCaptureCallBack> cb_;

@@ -1187,7 +1187,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureStrategy(struct OH_AVSc
     CHECK_AND_RETURN_RET_LOG(strategyObj != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "strategyObj is nullptr");
 
     int32_t ret = screenCaptureObj->screenCapture_->SetScreenCaptureStrategy(strategyObj->strategy);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_UNSUPPORT, "SetScreenCaptureStrategy failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_INVALID_STATE, "SetScreenCaptureStrategy failed");
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
 
@@ -1290,5 +1290,15 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetDisplayIdSelected(OH_AVScreenC
         "selectionObj is null");
     *displayId = selectionObj->userSelectionInfo_.displayId;
     MEDIA_LOGD("OH_AVScreenCapture_GetDisplayIdSelected displayId: %{public}" PRIu64, *displayId);
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}
+
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForBFramesEncoding(
+    OH_AVScreenCapture_CaptureStrategy *strategy, bool value)
+{
+    CHECK_AND_RETURN_RET_LOG(strategy != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input strategy is nullptr");
+    struct ScreenCaptureStrategyObject *strategyObj = reinterpret_cast<ScreenCaptureStrategyObject *>(strategy);
+    CHECK_AND_RETURN_RET_LOG(strategyObj != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "strategyObj is nullptr");
+    strategyObj->strategy.enableBFrame = value;
     return AV_SCREEN_CAPTURE_ERR_OK;
 }

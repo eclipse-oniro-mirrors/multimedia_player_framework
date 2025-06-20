@@ -108,6 +108,7 @@ public:
     virtual int32_t StrategyForKeepCaptureDuringCall(bool value);
     virtual int32_t SetCaptureStrategy();
     virtual int32_t ReleaseCaptureStrategy();
+    virtual int32_t StrategyForBFramesEncoding(bool value);
 };
 
 class __attribute__((visibility("default"))) ScreenCaptureMockFactory {

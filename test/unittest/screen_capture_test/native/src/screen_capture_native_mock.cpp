@@ -257,5 +257,11 @@ int32_t ScreenCaptureNativeMock::ReleaseCaptureStrategy()
 {
     return MSERR_OK;
 }
+
+int32_t ScreenCaptureNativeMock::StrategyForBFramesEncoding(bool value)
+{
+    strategy_.keepCaptureDuringCall = value;
+    return MSERR_OK;
+}
 } // namespace Media
 } // namespace OHOS
