@@ -289,6 +289,12 @@ int32_t AudioCapturerWrapper::GetCaptureAudioBuffer(std::shared_ptr<AudioBuffer>
     return MSERR_OK;
 }
 
+void AudioCapturerWrapper::SetIsMute(bool isMute)
+{
+    isMute_ = isMute;
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " SetIsMute: %{public}d", FAKE_POINTER(this), isMute_);
+}
+
 int32_t AudioCapturerWrapper::CaptureAudio()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " CaptureAudio S, name:%{public}s", FAKE_POINTER(this), threadName_.c_str());
@@ -317,6 +323,9 @@ int32_t AudioCapturerWrapper::CaptureAudio()
             if (availBuffers_.size() > MAX_AUDIO_BUFFER_SIZE) {
                 PartiallyPrintLog(__LINE__, "consume slow, drop audio frame" + name);
                 continue;
+            }
+            if (isMute_) {
+                memset_s(audioBuffer->buffer, bufferLen, 0, bufferLen);
             }
             availBuffers_.push_back(audioBuffer);
         }

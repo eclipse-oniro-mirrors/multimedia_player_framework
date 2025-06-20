@@ -75,6 +75,7 @@ public:
     int32_t GetCurrentAudioTime(int64_t &currentAudioTime);
     int32_t DropBufferUntil(int64_t audioTime);
     int32_t AddBufferFrom(int64_t timeWindow, int64_t bufferSize, int64_t fromTime);
+    void SetIsMute(bool isMute);
 
 protected:
     virtual void OnStartFailed(ScreenCaptureErrorType errorType, int32_t errorCode);
@@ -106,6 +107,7 @@ private:
     std::deque<std::shared_ptr<AudioBuffer>> availBuffers_;
     std::string bundleName_;
     std::atomic<bool> isInVoIPCall_ = false;
+    bool isMute_ = false;
 #ifdef SUPPORT_CALL
     std::atomic<bool> isInTelCall_ = false;
 #endif
