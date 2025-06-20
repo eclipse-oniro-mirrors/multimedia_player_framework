@@ -25,7 +25,7 @@ namespace {
     static const int32_t SOUNDPOOL_API_VERSION_ISOLATION = 18;
     static const int32_t FAULT_API_VERSION = -1;
     static const int32_t ERROR_RETURN = -1;
-    static constexpr const char* VKB_BUNDLE_NAME = "com.huawei.hmos.virtualkeyboard";
+    static constexpr const char* VKB_BUNDLE_NAME = ".hmos.virtualkeyboard";
 }
 
 namespace OHOS {
@@ -126,8 +126,10 @@ bool SoundPool::CheckInitParam(int maxStreams, AudioStandard::AudioRendererInfo 
         || (audioRenderInfo.rendererFlags > 1
         && audioRenderInfo.rendererFlags != AudioStandard::AUDIO_FLAG_VKB_NORMAL
         && audioRenderInfo.rendererFlags != AudioStandard::AUDIO_FLAG_VKB_FAST)
-        || (audioRenderInfo.rendererFlags == AudioStandard::AUDIO_FLAG_VKB_NORMAL && bundleName != VKB_BUNDLE_NAME)
-        || (audioRenderInfo.rendererFlags == AudioStandard::AUDIO_FLAG_VKB_FAST && bundleName != VKB_BUNDLE_NAME);
+        || (audioRenderInfo.rendererFlags == AudioStandard::AUDIO_FLAG_VKB_NORMAL
+        && bundleName.find(VKB_BUNDLE_NAME) == std::string::npos)
+        || (audioRenderInfo.rendererFlags == AudioStandard::AUDIO_FLAG_VKB_FAST
+        && bundleName.find(VKB_BUNDLE_NAME) == std::string::npos);
     if (audioRenderInfo.contentType < AudioStandard::CONTENT_TYPE_UNKNOWN
         || audioRenderInfo.contentType > AudioStandard::CONTENT_TYPE_ULTRASONIC
         || audioRenderInfo.streamUsage < AudioStandard::STREAM_USAGE_UNKNOWN
