@@ -486,9 +486,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureArea(struct OH_AVScreen
  * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
  * @param {OH_AVScreenCapture_CaptureStrategy*} strategy Pointer to an OH_AVScreenCapture_CaptureStrategy instance
  * @param {int32_t} value
- *    If set to 0, it means that when there is a privacy window interface, the output screen image is completely black.
- *    If set to 1, it means that when there is a privacy window interface,
- *    only the privacy window area of the output screen becomes black, and other values returns an error.
+ * If set to 0, it means that when there is a privacy window interface, the output screen image is completely black.
+ * If set to 1, it means that when there is a privacy window interface, only the privacy window area of the output
+ * screen becomes black, and other values returns an error.
  * @return Function result code.
  *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
  *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} strategy is nullptr or value is invalid.

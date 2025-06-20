@@ -107,7 +107,7 @@ private:
     std::deque<std::shared_ptr<AudioBuffer>> availBuffers_;
     std::string bundleName_;
     std::atomic<bool> isInVoIPCall_ = false;
-    bool isMute_ = false;
+    std::atomic<bool> isMute_ = false;
 #ifdef SUPPORT_CALL
     std::atomic<bool> isInTelCall_ = false;
 #endif
