@@ -66,10 +66,6 @@ bool LppDataPacket::AppendOneBuffer(const std::shared_ptr<AVBuffer> &buffer)
         return false;
     }
     auto bufferSize = static_cast<int>(buffer->memory_->GetSize());
-    MEDIA_LOGI("AppendOneBuffer pts=  %{public}ld, flag_ = %{public}d, bufferSize = %{public}d",
-        buffer->pts_,
-        buffer->flag_,
-        bufferSize);
     auto ret = memory_->Write(buffer->memory_->GetAddr(), bufferSize, dataOffset_);
     if (ret < bufferSize) {  // write error
         MEDIA_LOGW("memory_->Write fail, write size is " PUBLIC_LOG_D32, ret);
@@ -110,12 +106,6 @@ bool LppDataPacket::WriteToMessageParcel(MessageParcel &parcel)
     CHECK_AND_RETURN_RET_LOG(buffer != nullptr, false, "CreateAVBuffer failed");
     buffer->memory_ = memory_;
 
-    MEDIA_LOGI("LppDataPacket WriteToMessageParcel: GetUniqueId %{public}uld, GetMemoryType %{public}u, GetCapacity "
-               "%{public}d, GetSize %{public}d",
-        static_cast<unsigned int>(buffer->GetUniqueId()),
-        static_cast<unsigned int>(buffer->memory_->GetMemoryType()),
-        buffer->memory_->GetCapacity(),
-        buffer->memory_->GetSize());
     MessageParcel bufferParcel1;
     buffer->WriteToMessageParcel(bufferParcel1);
 
@@ -134,28 +124,23 @@ bool LppDataPacket::ReadVector(MessageParcel &parcel)
         uint32_t elem = 0;
         parcel.ReadUint32(elem);
         flag.push_back(elem);
-        MEDIA_LOGI("ReadVector flag_  %{public}d", elem);
     }
     flag_ = flag;
 
     parcel.ReadInt64(size);
-    MEDIA_LOGI("ReadVector size  %{public}ld", size);
     std::vector<int64_t> pts;
     for (int i = 0; i < size; i++) {
         int64_t elem = 0;
         parcel.ReadInt64(elem);
-        MEDIA_LOGI("ReadVector elem  %{public}ld", elem);
         pts.push_back(elem);
     }
     pts_ = pts;
 
     parcel.ReadInt64(size);
-    MEDIA_LOGI("ReadVector size  %{public}ld", size);
     std::vector<int> sizes;
     for (int i = 0; i < size; i++) {
         int elem = 0;
         parcel.ReadInt32(elem);
-        MEDIA_LOGI("ReadVector elem  %{public}d", elem);
         sizes.push_back(elem);
     }
     size_ = sizes;
@@ -169,12 +154,6 @@ bool LppDataPacket::ReadFromMessageParcel(MessageParcel &parcel)
     std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
     CHECK_AND_RETURN_RET_LOG(buffer != nullptr, false, "CreateAVBuffer failed");
     buffer->ReadFromMessageParcel(parcel, false);
-    MEDIA_LOGI("LppDataPacket ReadFromMessageParcel: GetUniqueId %{public}uld, GetMemoryType %{public}u, GetCapacity "
-               "%{public}d, GetSize %{public}d",
-        static_cast<unsigned int>(buffer->GetUniqueId()),
-        static_cast<unsigned int>(buffer->memory_->GetMemoryType()),
-        buffer->memory_->GetCapacity(),
-        buffer->memory_->GetSize());
     memory_ = buffer->memory_;
     MEDIA_LOGI("ReadFromMessageParcel");
     return true;
@@ -237,8 +216,6 @@ int LppDataPacket::WriteOneFrameToAVBuffer(std::shared_ptr<AVBuffer> &avbuffer, 
     dataOffset_ += size_[vectorReadIndex_];
     vectorReadIndex_++;
     frameCount_++;
-    MEDIA_LOGI(
-        "WriteToByteBuffer: pts_ %{public}ld, size_ %{public}d", pts_[vectorReadIndex_], size_[vectorReadIndex_]);
     MEDIA_LOGI("Read one buffer from DataPacket, currentIndex =  %{public}zu", vectorReadIndex_);
     return offset;
 }
