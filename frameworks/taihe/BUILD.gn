@@ -18,7 +18,8 @@ import("./../../multimedia_player_framework_aafwk.gni")
 
 subsystem_name = "multimedia"
 part_name = "player_framework"
-taihe_generated_file_path = "$taihe_file_path/out/$subsystem_name/$part_name"
+taihe_generated_file_path_media = "$taihe_file_path/out/$subsystem_name/$part_name/media"
+taihe_generated_file_path_soundPool = "$taihe_file_path/out/$subsystem_name/$part_name/soundPool"
 
 copy_taihe_idl("copy_media_taihe") {
   sources = [ "//foundation/multimedia/player_framework/frameworks/taihe/idl/ohos.multimedia.media.taihe",
@@ -26,7 +27,7 @@ copy_taihe_idl("copy_media_taihe") {
 }
 
 ohos_taihe("run_media_taihe") {
-  taihe_generated_file_path = "$taihe_generated_file_path"
+  taihe_generated_file_path = "${taihe_generated_file_path_media}"
   deps = [ ":copy_media_taihe" ]
   outputs = [
     "$taihe_generated_file_path/src/ohos.multimedia.media.ani.cpp",
@@ -39,7 +40,7 @@ copy_taihe_idl("copy_soundpool_taihe") {
 }
 
 ohos_taihe("run_soundpool_taihe") {
-  taihe_generated_file_path = "$taihe_generated_file_path"
+  taihe_generated_file_path = "${taihe_generated_file_path_soundPool}"
   deps = [ ":copy_soundpool_taihe" ]
   outputs = [
     "$taihe_generated_file_path/src/soundPool.ani.cpp",
@@ -57,7 +58,7 @@ taihe_shared_library("soundpool_taihe") {
     debug = false
   }
 
-  taihe_generated_file_path = "$taihe_generated_file_path"
+  taihe_generated_file_path = "${taihe_generated_file_path_soundPool}"
   subsystem_name = "$subsystem_name"
   part_name = "$part_name"
 
@@ -122,7 +123,7 @@ taihe_shared_library("media_taihe") {
     debug = false
   }
   
-  taihe_generated_file_path = "$taihe_generated_file_path"
+  taihe_generated_file_path = "${taihe_generated_file_path_media}"
   subsystem_name = "$subsystem_name"
   part_name = "$part_name"
 
@@ -188,8 +189,8 @@ taihe_shared_library("media_taihe") {
 }
 
 generate_static_abc("media_taihe_abc") {
-  base_url = "$taihe_generated_file_path"
-  files = [ "$taihe_generated_file_path/@ohos.multimedia.media.ets" ]
+  base_url = "${taihe_generated_file_path_media}"
+  files = [ "${taihe_generated_file_path_media}/@ohos.multimedia.media.ets" ]
   is_boot_abc = "True"
   device_dst_file = "/system/framework/media_taihe_abc.abc"
   dependencies = [ ":run_media_taihe" ]
@@ -206,8 +207,8 @@ ohos_prebuilt_etc("media_taihe_etc") {
 }
 
 generate_static_abc("soundpool_taihe_abc") {
-  base_url = "$taihe_generated_file_path"
-  files = [ "$taihe_generated_file_path/multimedia.soundPool.ets" ]
+  base_url = "${taihe_generated_file_path_soundPool}"
+  files = [ "${taihe_generated_file_path_soundPool}/multimedia.soundPool.ets" ]
   is_boot_abc = "True"
   device_dst_file = "/system/framework/soundpool_taihe_abc.abc"
   dependencies = [ ":run_soundpool_taihe" ]
