@@ -958,7 +958,7 @@ void HiRecorderImpl::ConfigureVidEnableStableQualityMode(const RecorderParam &re
     VidEnableStableQualityMode vidEnableStableQualityMode =
         static_cast<const VidEnableStableQualityMode&>(recParam);
     enableStableQualityMode_ = vidEnableStableQualityMode.enableStableQualityMode;
-    MEDIA_LOG_I("HiRecorderImpl::enableStableQualityMode_ is %{public}d:", enableStableQualityMode_);
+    MEDIA_LOG_I("HiRecorderImpl::enableStableQualityMode_ is: %{public}d", enableStableQualityMode_);
 }
 
 void HiRecorderImpl::ConfigureVidEnableBFrame(const RecorderParam &recParam)
@@ -967,7 +967,7 @@ void HiRecorderImpl::ConfigureVidEnableBFrame(const RecorderParam &recParam)
     VidEnableBFrame vidEnableBFrame =
         static_cast<const VidEnableBFrame&>(recParam);
     enableBFrame_ = vidEnableBFrame.enableBFrame;
-    MEDIA_LOG_I("HiRecorderImpl::enableBFrame_ is %{public}d:", enableBFrame_);
+    MEDIA_LOG_I("HiRecorderImpl::enableBFrame_ is: %{public}d", enableBFrame_);
 }
 
 void HiRecorderImpl::ConfigureVideoEncoderFormat(const RecorderParam &recParam)
