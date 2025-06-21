@@ -304,11 +304,7 @@ ohos_shared_library("avmetadata_extractor") {
   part_name = "player_framework"
 }
 
-<<<<<<< HEAD
-ohos_shared_library("avtranscoder"){
-=======
-ohos_shared_library("lowpower_avsink") {
->>>>>>> 9bbb264ad (pick fad40a40 lpp player_framework first)
+ohos_shared_library("avtranscoder") {
   stack_protector_ret = true
   install_enable = true
 
@@ -321,20 +317,10 @@ ohos_shared_library("lowpower_avsink") {
     debug = false
   }
 
-<<<<<<< HEAD
-=======
-  sources = [ 
-    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/lppplayer/native_lpp_audio_streamer.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/common/lpp_common.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/lppplayer/native_lpp_video_streamer.cpp",
-  ]
-
->>>>>>> 9bbb264ad (pick fad40a40 lpp player_framework first)
   configs = [ ":media_capi_config" ]
 
   public_configs = [ ":media_capi_public_config" ]
 
-<<<<<<< HEAD
   cflags_cc = [ "--coverage" ]
   cflags = [ "--coverage" ]
   ldflags = [ "--coverage" ]
@@ -343,8 +329,6 @@ ohos_shared_library("lowpower_avsink") {
     "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/avtranscoder/native_avtranscoder.cpp",
   ]
 
-=======
->>>>>>> 9bbb264ad (pick fad40a40 lpp player_framework first)
   deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client" ]
 
   external_deps = [
@@ -353,7 +337,6 @@ ohos_shared_library("lowpower_avsink") {
     "c_utils:utils",
     "graphic_surface:surface",
     "hilog:libhilog",
-<<<<<<< HEAD
     "hisysevent:libhisysevent",
     "ipc:ipc_core",
     "media_foundation:media_foundation",
@@ -366,14 +349,48 @@ ohos_shared_library("lowpower_avsink") {
   defines = []
   defines += player_framework_defines
 
-=======
+  output_extension = "so"
+  subsystem_name = "multimedia"
+  part_name = "player_framework"
+}
+
+ohos_shared_library("lowpower_avsink") {
+  stack_protector_ret = true
+  install_enable = true
+ 
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+ 
+  sources = [ 
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/lppplayer/native_lpp_audio_streamer.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/common/lpp_common.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/lppplayer/native_lpp_video_streamer.cpp",
+  ]
+ 
+  configs = [ ":media_capi_config" ]
+ 
+  public_configs = [ ":media_capi_public_config" ]
+ 
+  deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client" ]
+ 
+  external_deps = [
+    "audio_framework:audio_capturer",
+    "av_codec:av_codec_client",
+    "c_utils:utils",
+    "graphic_surface:surface",
+    "hilog:libhilog",
     "ipc:ipc_core",
     "media_foundation:media_foundation",
     "image_framework:pixelmap",
     "hisysevent:libhisysevent",
   ]
   innerapi_tags = [ "ndk" ]
->>>>>>> 9bbb264ad (pick fad40a40 lpp player_framework first)
   output_extension = "so"
   subsystem_name = "multimedia"
   part_name = "player_framework"
