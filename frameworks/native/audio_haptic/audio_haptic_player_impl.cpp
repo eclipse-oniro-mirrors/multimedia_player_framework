@@ -152,18 +152,22 @@ int32_t AudioHapticPlayerImpl::Start()
 
     CHECK_AND_RETURN_RET_LOG(audioHapticVibrator_ != nullptr, MSERR_INVALID_OPERATION,
         "Audio haptic vibrator is nullptr");
-
-    if (vibrateThread_ != nullptr && vibrateThread_->joinable()) {
-        vibrateThread_->join();
-        vibrateThread_.reset();
+    CHECK_AND_RETURN_RET_LOG(audioHapticSound_ != nullptr, MSERR_INVALID_OPERATION,
+        "Audio haptic sound is nullptr");
+    
+    if (playerState_ == AudioHapticPlayerState::STATE_RUNNING) {
+        // stop vibrate
+        StopVibrate();
+        // stop sound
+        result = audioHapticSound_->StopSound();
+        CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result, "Failed to stop sound.");
+        playerState_ = AudioHapticPlayerState::STATE_STOPPED;
     }
+    
     if (vibrateThread_ == nullptr) {
         ResetVibrateState();
         vibrateThread_ = std::make_shared<std::thread>([this] { StartVibrate(); });
     }
-
-    CHECK_AND_RETURN_RET_LOG(audioHapticSound_ != nullptr, MSERR_INVALID_OPERATION,
-        "Audio haptic sound is nullptr");
     result = audioHapticSound_->StartSound();
     SendHapticPlayerEvent(MSERR_OK, "START_HAPTIC_PLAYER");
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result, "Failed to start sound.");
@@ -320,13 +324,33 @@ int32_t AudioHapticPlayerImpl::SetHapticIntensity(float intensity)
     return audioHapticVibrator_->SetHapticIntensity(intensity);
 }
 
+int32_t AudioHapticPlayerImpl::SetHapticsFeature(const HapticsFeature &feature)
+{
+    MEDIA_LOGI("AudioHapticPlayerImpl::SetHapticsFeature %{public}d", feature);
+
+    std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
+    CHECK_AND_RETURN_RET_LOG(playerState_ != AudioHapticPlayerState::STATE_RELEASED, ERR_OPERATE_NOT_ALLOWED,
+        "The audio haptic player has been released.");
+    CHECK_AND_RETURN_RET_LOG(audioHapticVibrator_ != nullptr, ERR_OPERATE_NOT_ALLOWED, "audioHapticVibrator_ is null");
+    CHECK_AND_RETURN_RET_LOG(!isGentle_.load(), ERR_OPERATE_NOT_ALLOWED, "already gentle");
+
+    int32_t result = audioHapticVibrator_->SetHapticsFeature(feature);
+    CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result, "SetHapticsFeature error");
+    isGentle_.store(true);
+
+    return result;
+}
+
 int32_t AudioHapticPlayerImpl::SetHapticsRamp(int32_t duration, float startIntensity, float endIntensity)
 {
     MEDIA_LOGI("AudioHapticPlayerImpl::SetHapticsRamp %{public}d, %{public}f, %{public}f",
         duration, startIntensity, endIntensity);
+
+    std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
     CHECK_AND_RETURN_RET_LOG(playerState_ != AudioHapticPlayerState::STATE_RELEASED, ERR_OPERATE_NOT_ALLOWED,
         "The audio haptic player has been released.");
-    CHECK_AND_RETURN_RET_LOG(!isVibrationRunning_.load(), ERR_OPERATE_NOT_ALLOWED, "must set before play haptics");
+    CHECK_AND_RETURN_RET_LOG(!isRamp_.load(), ERR_OPERATE_NOT_ALLOWED, "already ramp");
+    CHECK_AND_RETURN_RET_LOG(!isVibrationRunning_.load(), ERR_OPERATE_NOT_ALLOWED, "can't set when playing haptics");
     CHECK_AND_RETURN_RET_LOG(audioHapticVibrator_ != nullptr, ERR_OPERATE_NOT_ALLOWED, "must set before play haptics");
 
     // duration not less than 100ms
@@ -345,8 +369,11 @@ int32_t AudioHapticPlayerImpl::SetHapticsRamp(int32_t duration, float startInten
         return MSERR_INVALID_VAL;
     }
 
-    std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
-    return audioHapticVibrator_->SetHapticsRamp(duration, startIntensity, endIntensity);
+    int32_t result = audioHapticVibrator_->SetHapticsRamp(duration, startIntensity, endIntensity);
+    CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result, "SetHapticsRamp error");
+    isRamp_.store(true);
+
+    return result;
 }
 
 int32_t AudioHapticPlayerImpl::SetLoop(bool loop)

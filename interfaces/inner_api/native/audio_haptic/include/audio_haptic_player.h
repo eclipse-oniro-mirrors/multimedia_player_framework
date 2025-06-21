@@ -53,6 +53,10 @@ enum AudioLatencyMode {
     AUDIO_LATENCY_MODE_FAST = 1
 };
 
+enum HapticsFeature {
+    GENTLE_HAPTICS
+};
+
 struct AudioHapticPlayerOptions {
     bool muteAudio;
     bool muteHaptics;
@@ -159,6 +163,8 @@ public:
     virtual bool IsHapticsRampSupported() = 0;
     
     virtual int32_t SetHapticsRamp(int32_t duration, float startIntensity, float endIntensity) = 0;
+
+    virtual int32_t SetHapticsFeature(const HapticsFeature &feature) = 0;
 };
 
 class AudioHapticPlayerCallback {
