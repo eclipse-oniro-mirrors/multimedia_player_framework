@@ -54,7 +54,7 @@ enum AudioLatencyMode {
 };
 
 enum HapticsFeature {
-    GENTLE
+    GENTLE_HAPTICS
 };
 
 struct AudioHapticPlayerOptions {

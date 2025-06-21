@@ -37,17 +37,14 @@ constexpr uint64_t MILLISECONDS_FOR_ONE_SECOND = 1000; // ms
 constexpr int32_t PLAYER_BUFFER_TIME = 30; // ms
 constexpr int32_t PATTERN_DEFAULT_COUNT = 10;
 constexpr int32_t PATTERN_MAX_COUNT = 200;
-constexpr int32_t WAIT_VIBRATOR_CANCEL_TIME_MS = 50; //ms
-#endif
-
-int64_t GetCurrentTimeMillis()
-{
-    return static_cast<uint64_t>(
-        std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::system_clock::now().time_since_epoch()
-        ).count()
-    );
-}
+constexpr int32_t WAIT_VIBRATOR_CANCEL_TIME_MS = 50; // ms
+constexpr float SIXTY_PERCENT = 0.6f;
+constexpr int32_t HALF = 2;
+constexpr int32_t DURATION_AT_LEAST = 100; // ms
+constexpr int32_t NUM_ZERO = 0;
+constexpr int32_t NUM_ONE = 0;
+constexpr int32_t NUM_TWO = 0;
+constexpr int32_t NUM_THREE = 0;
 
 void CopyEvent(const VibratorEvent &strongEvent, VibratorEvent &weakEvent)
 {
@@ -60,11 +57,11 @@ void CopyEvent(const VibratorEvent &strongEvent, VibratorEvent &weakEvent)
     // Copy event index
     weakEvent.index = strongEvent.index;
     // Modify intensity to 60% of the original and round to the nearest integer
-    weakEvent.intensity = static_cast<int32_t>(std::round(strongEvent.intensity * 0.6));
+    weakEvent.intensity = static_cast<int32_t>(std::round(strongEvent.intensity * SIXTY_PERCENT));
 
     if (weakEvent.type == EVENT_TYPE_CONTINUOUS) {
         // Modify duration to 50% of the original, but not less than 50ms
-        weakEvent.duration = std::max(50, strongEvent.duration / 2);
+        weakEvent.duration = std::max(50, strongEvent.duration / HALF);
 
         // Handle pointNum and points
         if (strongEvent.pointNum != 0) {
@@ -76,10 +73,10 @@ void CopyEvent(const VibratorEvent &strongEvent, VibratorEvent &weakEvent)
 
             // Set four points based on duration
             int32_t duration = weakEvent.duration;
-            weakEvent.points[0] = { 0, 100, 0 };
-            weakEvent.points[1] = { 1, 100, 0 };
-            weakEvent.points[2] = { duration -1, 100, 0 };
-            weakEvent.points[3] = { duration, 0, 0 };
+            weakEvent.points[NUM_ZERO] = { 0, 100, 0 };
+            weakEvent.points[NUM_ONE] = { 1, 100, 0 };
+            weakEvent.points[NUM_TWO] = { duration -1, 100, 0 };
+            weakEvent.points[NUM_THREE] = { duration, 0, 0 };
         }
     }
 }
@@ -102,7 +99,8 @@ void CopyPattern(const VibratorPattern &strongPattern, VibratorPattern &weakPatt
 }
 
 void convertToWeakVibratorPackage(const std::shared_ptr<VibratorPackage> &strongPackage,
-                                  std::shared_ptr<VibratorPackage> &weakPackage) {
+                                  std::shared_ptr<VibratorPackage> &weakPackage)
+{
     if (strongPackage == nullptr || weakPackage == nullptr) {
         return;
     }
@@ -120,6 +118,16 @@ void convertToWeakVibratorPackage(const std::shared_ptr<VibratorPackage> &strong
             CopyPattern(strongPackage->patterns[i], weakPackage->patterns[i]);
         }
     }
+}
+#endif
+
+int64_t GetCurrentTimeMillis()
+{
+    return static_cast<uint64_t>(
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()
+        ).count()
+    );
 }
 }
 
@@ -342,7 +350,7 @@ int32_t AudioHapticVibratorImpl::SetHapticsFeature(const HapticsFeature &feature
     if (vibratorPkg_ == nullptr) {
         return ERR_OPERATE_NOT_ALLOWED;
     }
-    if (feature == HapticsFeature::GENTLE) {
+    if (feature == HapticsFeature::GENTLE_HAPTICS) {
         auto gentlePkg = std::make_shared<VibratorPackage>();
         convertToWeakVibratorPackage(vibratorPkg_, gentlePkg);
         std::swap(vibratorPkg_, gentlePkg);
@@ -373,7 +381,7 @@ int32_t AudioHapticVibratorImpl::SetHapticsRamp(int32_t duration, float startInt
     // duration not less than 100ms and not larger than haptics package duration
     auto lastPattern = vibratorPkg_->patterns[vibratorPkg_->patternNum - 1];
     auto packageDuration = lastPattern.time + lastPattern.patternDuration;
-    if (duration < 100 || duration > packageDuration) {
+    if (duration < DURATION_AT_LEAST || duration > packageDuration) {
         MEDIA_LOGE("AudioHapticVibratorImpl::SetHapticsRamp error, duration %{public}d, packageDuration %{public}d",
             duration, packageDuration);
         return MSERR_INVALID_VAL;
