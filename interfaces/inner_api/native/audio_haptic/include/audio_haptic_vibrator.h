@@ -39,6 +39,7 @@ public:
     virtual void EnableHapticsInSilentMode(bool enable) = 0;
     virtual bool IsHdHapticSupported() = 0;
     virtual int32_t SetHapticsRamp(int32_t duration, float startIntensity, float endIntensity) = 0;
+    virtual int32_t SetHapticsFeature(const HapticsFeature &feature) = 0;
 
 private:
     static std::mutex createVibratorMutex_;

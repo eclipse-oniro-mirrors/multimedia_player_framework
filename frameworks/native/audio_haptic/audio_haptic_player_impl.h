@@ -46,6 +46,7 @@ public:
     bool IsHapticsIntensityAdjustmentSupported() override;
     bool IsHapticsRampSupported() override;
     int32_t SetHapticsRamp(int32_t duration, float startIntensity, float endIntensity) override;
+    int32_t SetHapticsFeature(const HapticsFeature &feature) override;
 
     void SetPlayerParam(const AudioHapticPlayerParam &param);
     void LoadPlayer();
@@ -94,6 +95,8 @@ private:
     bool isAudioPlayFirstFrame_ = false;
     std::atomic<bool> isVibrationStopped_ = false;
     std::atomic_bool isVibrationRunning_{false};
+    std::atomic<bool> isGentle_ = false;
+    std::atomic<bool> isRamp_ = false;
 
     // var for audio
     std::shared_ptr<AudioHapticSound> audioHapticSound_ = nullptr;

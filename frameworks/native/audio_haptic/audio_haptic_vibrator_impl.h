@@ -47,6 +47,7 @@ public:
         enableInSilentMode_.store(enable);
     }
     int32_t SetHapticsRamp(int32_t duration, float startIntensity, float endIntensity) override;
+    int32_t SetHapticsFeature(const HapticsFeature &feature) override;
 
 private:
     int32_t StartVibrateForSoundPool();
@@ -68,6 +69,7 @@ private:
     int32_t PlayVibrateForSoundPool(const std::shared_ptr<VibratorPackage>& vibratorPkg,
                                     std::unique_lock<std::mutex>& lock);
     int32_t SeekAndRestart();
+    void ResumeModulePackge();
 
     AudioHapticPlayer &audioHapticPlayer_;
 
@@ -76,11 +78,13 @@ private:
     std::shared_ptr<VibratorFileDescription> vibratorFD_ = nullptr;
     std::shared_ptr<VibratorPackage> vibratorPkg_ = nullptr;
     std::shared_ptr<VibratorPackage> seekVibratorPkg_ = nullptr;
+    std::shared_ptr<VibratorPackage> modulatePkg_ = nullptr;
     std::condition_variable vibrateCV_;
     float vibrateIntensity_ = 1.0f;
     bool isSupportEffectId_ = false;
     HapticSource hapticSource_;
     std::atomic<bool> enableInSilentMode_ = false;
+    float rampEndIntensity_ = -1.0f;
 #endif
     std::mutex vibrateMutex_;
     AudioStandard::StreamUsage streamUsage_ = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;

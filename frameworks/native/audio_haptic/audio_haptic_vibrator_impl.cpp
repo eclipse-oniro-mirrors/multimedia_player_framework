@@ -48,6 +48,79 @@ int64_t GetCurrentTimeMillis()
         ).count()
     );
 }
+
+void CopyEvent(const VibratorEvent &strongEvent, VibratorEvent &weakEvent)
+{
+    // Copy event type
+    weakEvent.type = strongEvent.type;
+    // Copy event time
+    weakEvent.time = strongEvent.time;
+    // Copy event frequency
+    weakEvent.frequency = strongEvent.frequency;
+    // Copy event index
+    weakEvent.index = strongEvent.index;
+    // Modify intensity to 60% of the original and round to the nearest integer
+    weakEvent.intensity = static_cast<int32_t>(std::round(strongEvent.intensity * 0.6));
+
+    if (weakEvent.type == EVENT_TYPE_CONTINUOUS) {
+        // Modify duration to 50% of the original, but not less than 50ms
+        weakEvent.duration = std::max(50, strongEvent.duration / 2);
+
+        // Handle pointNum and points
+        if (strongEvent.pointNum != 0) {
+            // Set new pointNum to 4
+            weakEvent.pointNum = 4;
+
+            // Allocate new points array
+            weakEvent.points = new VibratorCurvePoint[weakEvent.pointNum];
+
+            // Set four points based on duration
+            int32_t duration = weakEvent.duration;
+            weakEvent.points[0] = { 0, 100, 0 };
+            weakEvent.points[1] = { 1, 100, 0 };
+            weakEvent.points[2] = { duration -1, 100, 0 };
+            weakEvent.points[3] = { duration, 0, 0 };
+        }
+    }
+}
+
+void CopyPattern(const VibratorPattern &strongPattern, VibratorPattern &weakPattern)
+{
+    // Copy pattern basic properties
+    weakPattern.time = strongPattern.time;
+    weakPattern.eventNum = strongPattern.eventNum;
+    weakPattern.patternDuration = strongPattern.patternDuration;
+
+    // Allocate and copy events array
+    if (strongPattern.eventNum > 0 && strongPattern.events != nullptr) {
+        weakPattern.events = new VibratorEvent[strongPattern.eventNum];
+
+        for (int32_t i = 0; i < strongPattern.eventNum; ++i) {
+            CopyEvent(strongPattern.events[i], weakPattern.events[i]);
+        }
+    }
+}
+
+void convertToWeakVibratorPackage(const std::shared_ptr<VibratorPackage> &strongPackage,
+                                  std::shared_ptr<VibratorPackage> &weakPackage) {
+    if (strongPackage == nullptr || weakPackage == nullptr) {
+        return;
+    }
+
+    // Copy basic properties
+    weakPackage->patternNum = strongPackage->patternNum;
+    weakPackage->packageDuration = strongPackage->packageDuration;
+
+    // Allocate and copy patterns array
+    if (strongPackage->patternNum > 0 && strongPackage->patterns != nullptr) {
+        weakPackage->patterns = new VibratorPattern[strongPackage->patternNum];
+
+        // Handle each pattern
+        for (int32_t i = 0; i < strongPackage->patternNum; ++i) {
+            CopyPattern(strongPackage->patterns[i], weakPackage->patterns[i]);
+        }
+    }
+}
 }
 
 namespace OHOS {
@@ -260,6 +333,33 @@ int32_t AudioHapticVibratorImpl::SetHapticIntensity(float intensity)
     return result;
 }
 
+int32_t AudioHapticVibratorImpl::SetHapticsFeature(const HapticsFeature &feature)
+{
+    MEDIA_LOGI("AudioHapticVibratorImpl::SetHapticsFeature %{public}d", feature);
+    std::lock_guard<std::mutex> lock(vibrateMutex_);
+    int32_t result = MSERR_OK;
+#ifdef SUPPORT_VIBRATOR
+    if (vibratorPkg_ == nullptr) {
+        return ERR_OPERATE_NOT_ALLOWED;
+    }
+    if (feature == HapticsFeature::GENTLE) {
+        auto gentlePkg = std::make_shared<VibratorPackage>();
+        convertToWeakVibratorPackage(vibratorPkg_, gentlePkg);
+        std::swap(vibratorPkg_, gentlePkg);
+
+        if (isRunning_) {
+            result = SeekAndRestart();
+        }
+
+        if (gentlePkg != nullptr) {
+            Sensors::FreeVibratorPackage(*gentlePkg);
+            gentlePkg = nullptr;
+        }
+    }
+#endif
+    return result;
+}
+
 int32_t AudioHapticVibratorImpl::SetHapticsRamp(int32_t duration, float startIntensity, float endIntensity)
 {
     MEDIA_LOGI("AudioHapticVibratorImpl::SetHapticsRamp %{public}d, %{public}f, %{public}f",
@@ -271,9 +371,11 @@ int32_t AudioHapticVibratorImpl::SetHapticsRamp(int32_t duration, float startInt
         return ERR_OPERATE_NOT_ALLOWED;
     }
     // duration not less than 100ms and not larger than haptics package duration
-    if (duration < 100 || duration > vibratorPkg_->packageDuration) {
+    auto lastPattern = vibratorPkg_->patterns[patternNum - 1];
+    auto packageDuration = lastPattern.time + lastPattern.duration;
+    if (duration < 100 || duration > packageDuration) {
         MEDIA_LOGE("AudioHapticVibratorImpl::SetHapticsRamp error, duration %{public}d, packageDuration %{public}d",
-            duration, vibratorPkg_->packageDuration);
+            duration, packageDuration);
         return MSERR_INVALID_VAL;
     }
 
@@ -297,14 +399,11 @@ int32_t AudioHapticVibratorImpl::SetHapticsRamp(int32_t duration, float startInt
         points[i].time = i * timeInterval;
         points[i].intensity = startIntensity + i * intensityStep;
     }
-    auto modulatePkg = std::make_shared<VibratorPackage>();
-    result = Sensors::ModulatePackage(points, numPoints, duration, *vibratorPkg_, *modulatePkg);
+    modulatePkg_ = std::make_shared<VibratorPackage>();
+    result = Sensors::ModulatePackage(points, numPoints, packageDuration, *vibratorPkg_, *modulatePkg_);
     if (result == MSERR_OK) {
-        std::swap(vibratorPkg_, modulatePkg);
-    }
-    if (modulatePkg != nullptr) {
-        Sensors::FreeVibratorPackage(*modulatePkg);
-        modulatePkg = nullptr;
+        std::swap(vibratorPkg_, modulatePkg_);
+        rampEndIntensity_ = endIntensity;
     }
 #endif
     return result;
@@ -329,6 +428,10 @@ int32_t AudioHapticVibratorImpl::Release()
         Sensors::FreeVibratorPackage(*seekVibratorPkg_);
         seekVibratorPkg_ = nullptr;
     }
+    if (modulatePkg_ != nullptr) {
+        Sensors::FreeVibratorPackage(*modulatePkg_);
+        modulatePkg_ = nullptr;
+    }
     vibratorFD_ = nullptr;
 
 #endif
@@ -347,7 +450,7 @@ int32_t AudioHapticVibratorImpl::StartVibrate(const AudioLatencyMode &latencyMod
     int32_t result = MSERR_OK;
 #ifdef SUPPORT_VIBRATOR
     vibrationTimeElapsed_ = 0;
-    patternStartTime_ = 0;
+    patternStartTime_ = GetCurrentTimeMillis();
     vibratorTime_.store(0);
     if (audioHapticPlayer_.GetHapticsMode() == HapticsMode::HAPTICS_MODE_NONE) {
         return result;
@@ -415,8 +518,20 @@ int32_t AudioHapticVibratorImpl::PlayVibrateForSoundPool(
             seekVibratorPkg_ = nullptr;
         }
     }
+    ResumeModulePackge();
 #endif
     return result;
+}
+
+void AudioHapticVibratorImpl::ResumeModulePackge()
+{
+    if (modulatePkg_ != nullptr) {
+        std::swap(modulatePkg_, vibratorPkg_);
+        Sensors::FreeVibratorPackage(*modulatePkg_);
+        modulatePkg_ = nullptr;
+        vibratorParameter_.intensity = rampEndIntensity_;
+        rampEndIntensity_ = -1.0f;
+    }
 }
 
 int32_t AudioHapticVibratorImpl::StartVibrateForSoundPool()
@@ -468,6 +583,7 @@ int32_t AudioHapticVibratorImpl::RunVibrationPatterns(const std::shared_ptr<Vibr
             seekVibratorPkg_ = nullptr;
         }
     }
+    ResumeModulePackge();
 #endif
     return result;
 }
@@ -489,7 +605,7 @@ int32_t AudioHapticVibratorImpl::StartNonSyncVibration()
     isRunning_ = true;
     while (!isStopped_) {
         vibrationTimeElapsed_ = 0;
-        patternStartTime_ = 0;
+        patternStartTime_ = GetCurrentTimeMillis();
         result = RunVibrationPatterns(vibratorPkg_, lock);
         if (result != MSERR_OK) {
             MEDIA_LOGI("StartNonSyncVibration: RunVibrationPatterns fail.");
@@ -620,6 +736,7 @@ int32_t AudioHapticVibratorImpl::PlayVibrateForAVPlayer(const std::shared_ptr<Vi
             seekVibratorPkg_ = nullptr;
         }
     }
+    ResumeModulePackge();
 #endif
     return result;
 }
