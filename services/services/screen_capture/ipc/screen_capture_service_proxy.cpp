@@ -634,7 +634,8 @@ int32_t ScreenCaptureServiceProxy::SetScreenCaptureStrategy(ScreenCaptureStrateg
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
     token = data.WriteBool(strategy.enableDeviceLevelCapture) && data.WriteBool(strategy.keepCaptureDuringCall)
-        && data.WriteInt32(strategy.strategyForPrivacyMaskMode) && data.WriteBool(strategy.enableBFrame);
+        && data.WriteInt32(strategy.strategyForPrivacyMaskMode) && data.WriteBool(strategy.canvasFollowRotation)
+        && data.WriteBool(strategy.enableBFrame);
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write strategy!");
 
     int error = Remote()->SendRequest(SET_STRATEGY, data, reply, option);

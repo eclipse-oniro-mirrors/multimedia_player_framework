@@ -247,6 +247,12 @@ int32_t ScreenCaptureNativeMock::StrategyForKeepCaptureDuringCall(bool value)
     return MSERR_OK;
 }
 
+int32_t ScreenCaptureNativeMock::SetCanvasFollowRotationStrategy(bool value)
+{
+    strategy_.canvasFollowRotation = value;
+    return MSERR_OK;
+}
+
 int32_t ScreenCaptureNativeMock::SetCaptureStrategy()
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");

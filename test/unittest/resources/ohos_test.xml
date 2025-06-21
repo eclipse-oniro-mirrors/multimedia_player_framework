@@ -401,6 +401,7 @@
             <option name="shell" value="touch /data/test/media/screen_capture_save_file_skip_privacy.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_keep_capture_during_call_001.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_keep_capture_during_call_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_canvas_follow_rotation_001.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_enable_b_frame_001.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_enable_b_frame_002.mp4"/>
             <option name="shell" value="restorecon /data/test/media"/>
@@ -487,6 +488,7 @@
             <option name="shell" value="touch /data/test/media/screen_capture_save_file_skip_privacy.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_keep_capture_during_call_001.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_keep_capture_during_call_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_canvas_follow_rotation_001.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_enable_b_frame_001.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_enable_b_frame_002.mp4"/>
             <option name="shell" value="restorecon /data/test/media"/>

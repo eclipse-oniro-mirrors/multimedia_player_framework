@@ -2678,6 +2678,16 @@ int32_t ScreenCaptureServer::StartStreamHomeVideoCapture()
     return MSERR_OK;
 }
 
+int32_t ScreenCaptureServer::SetVirtualScreenAutoRotation()
+{
+    CHECK_AND_RETURN_RET(captureConfig_.dataType == DataType::ORIGINAL_STREAM, MSERR_INVALID_OPERATION);
+    MEDIA_LOGI("config strategy canvasFollowRotation %{public}d", captureConfig_.strategy.canvasFollowRotation);
+    auto setAutoRotationRet = ScreenManager::GetInstance().SetVirtualScreenAutoRotation(virtualScreenId_,
+        captureConfig_.strategy.canvasFollowRotation);
+    MEDIA_LOGI("SetVirtualScreenAutoRotation setAutoRotationRet %{public}d", setAutoRotationRet);
+    return MSERR_OK;
+}
+
 int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<OHOS::Surface> consumer)
 {
     MediaTrace trace("ScreenCaptureServer::CreateVirtualScreen");
@@ -2699,7 +2709,7 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
     }
     virtualScreenId_ = ScreenManager::GetInstance().CreateVirtualScreen(virScrOption);
     CHECK_AND_RETURN_RET_LOG(virtualScreenId_ >= 0, MSERR_UNKNOWN, "CreateVirtualScreen failed, invalid screenId");
-
+    SetVirtualScreenAutoRotation();
     if (captureConfig_.dataType == DataType::ORIGINAL_STREAM && checkBoxSelected_) {
         MEDIA_LOGI("CreateVirtualScreen checkBoxSelected: %{public}d", checkBoxSelected_);
         std::vector<ScreenId> screenIds;
@@ -3987,11 +3997,11 @@ int32_t ScreenCaptureServer::SetScreenCaptureStrategy(ScreenCaptureStrategy stra
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(captureState_ < AVScreenCaptureState::POPUP_WINDOW, MSERR_INVALID_STATE,
-        "strategy can not be modified after screencapture started");
+        "strategy can not be modified after screen capture started");
     MEDIA_LOGI("SetScreenCaptureStrategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d,"
-        "strategyForPrivacyMaskMode: %{public}d, enableBFrame: %{public}d",
+        "strategyForPrivacyMaskMode: %{public}d, canvasFollowRotation: %{public}d, enableBFrame: %{public}d",
         strategy.enableDeviceLevelCapture, strategy.keepCaptureDuringCall, strategy.strategyForPrivacyMaskMode,
-        strategy.enableBFrame);
+        strategy.canvasFollowRotation, strategy.enableBFrame);
     captureConfig_.strategy = strategy;
     return MSERR_OK;
 }

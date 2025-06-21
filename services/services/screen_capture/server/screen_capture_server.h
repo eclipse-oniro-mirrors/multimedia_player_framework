@@ -201,6 +201,7 @@ private:
         std::vector<ScreenId> mirrorIds);
     int32_t MakeVirtualScreenMirror();
     int32_t CreateVirtualScreen(const std::string &name, sptr<OHOS::Surface> consumer);
+    int32_t SetVirtualScreenAutoRotation();
     int32_t PrepareVirtualScreenMirror();
     void DestroyVirtualScreen();
 

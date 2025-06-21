@@ -499,6 +499,20 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForPrivacyMaskMode(
     OH_AVScreenCapture_CaptureStrategy *strategy, int32_t value);
 
 /**
+ * @brief Set the canvas to rotate with the screen when capturing the screen
+ * @param {OH_AVScreenCapture_CaptureStrategy*} strategy Pointer to an OH_AVScreenCapture_CaptureStrategy instance
+ * @param {bool} value The default value is False, which means that the width and height of the VirtualDisplay
+ * remain the initial settings. If set to True, it means that the width and height of the VirtualDisplay rotates
+ * with the rotation of the screen..
+ * @return Function result code.
+ *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
+ *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} strategy value is nullptr.
+ * @since 20
+ */
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForCanvasFollowRotation(
+    OH_AVScreenCapture_CaptureStrategy *strategy, bool value);
+
+/**
  * @brief Register user selection notification callback function
  * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
  * @param {OH_AVScreenCapture*} capture Pointer to OH_AVScreenCapture which want to handle user selection info
