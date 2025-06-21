@@ -371,8 +371,8 @@ int32_t AudioHapticVibratorImpl::SetHapticsRamp(int32_t duration, float startInt
         return ERR_OPERATE_NOT_ALLOWED;
     }
     // duration not less than 100ms and not larger than haptics package duration
-    auto lastPattern = vibratorPkg_->patterns[patternNum - 1];
-    auto packageDuration = lastPattern.time + lastPattern.duration;
+    auto lastPattern = vibratorPkg_->patterns[vibratorPkg_->patternNum - 1];
+    auto packageDuration = lastPattern.time + lastPattern.patternDuration;
     if (duration < 100 || duration > packageDuration) {
         MEDIA_LOGE("AudioHapticVibratorImpl::SetHapticsRamp error, duration %{public}d, packageDuration %{public}d",
             duration, packageDuration);
