@@ -319,6 +319,7 @@ int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recPara
         case RecorderPublicParamType::VID_IS_HDR:
         case RecorderPublicParamType::VID_ENABLE_TEMPORAL_SCALE:
         case RecorderPublicParamType::VID_ENABLE_STABLE_QUALITY_MODE:
+        case RecorderPublicParamType::VID_ENABLE_B_FRAME:
             ConfigureVideo(recParam);
             break;
         case RecorderPublicParamType::OUT_PATH:
@@ -953,16 +954,20 @@ void HiRecorderImpl::ConfigureVideoEnableTemporalScale(const RecorderParam &recP
 
 void HiRecorderImpl::ConfigureVidEnableStableQualityMode(const RecorderParam &recParam)
 {
+    MEDIA_LOG_I("HiRecorderImpl::ConfigureVidEnableStableQualityMode enter.");
     VidEnableStableQualityMode vidEnableStableQualityMode =
         static_cast<const VidEnableStableQualityMode&>(recParam);
     enableStableQualityMode_ = vidEnableStableQualityMode.enableStableQualityMode;
+    MEDIA_LOG_I("HiRecorderImpl::enableStableQualityMode_ is: %{public}d", enableStableQualityMode_);
 }
 
 void HiRecorderImpl::ConfigureVidEnableBFrame(const RecorderParam &recParam)
 {
+    MEDIA_LOG_I("HiRecorderImpl::ConfigureVidEnableBFrame enter.");
     VidEnableBFrame vidEnableBFrame =
         static_cast<const VidEnableBFrame&>(recParam);
     enableBFrame_ = vidEnableBFrame.enableBFrame;
+    MEDIA_LOG_I("HiRecorderImpl::enableBFrame_ is: %{public}d", enableBFrame_);
 }
 
 void HiRecorderImpl::ConfigureVideoEncoderFormat(const RecorderParam &recParam)
