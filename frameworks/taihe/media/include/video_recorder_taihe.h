@@ -52,9 +52,8 @@ public:
     VideoRecorderImpl();
     bool IsSurfaceIdVaild(uint64_t surfaceID);
     void CancelCallback();
-    friend VideoRecorder CreateVideoRecorderSync();
     void PrepareSync(VideoRecorderConfig const& config);
-    string GetInputSurfaceSync();
+    optional<string> GetInputSurfaceSync();
     void StartSync();
     void PauseSync();
     void StopSync();

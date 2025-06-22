@@ -44,6 +44,12 @@ const std::map<std::string_view, int32_t> g_mimeStrToCodecFormat = {
     { OHOS::MediaAVCodec::CodecMimeType::VIDEO_MPEG4, OHOS::Media::VideoCodecFormat::MPEG4 },
 };
 
+void MediaTaiheUtils::ThrowExceptionError(const std::string errMsg)
+{
+    MEDIA_LOGE("errMsg: %{public}s", errMsg.c_str());
+    taihe::set_error(errMsg);
+}
+
 string MediaTaiheUtils::ToTaiheString(const std::string &src)
 {
     return ::taihe::string(src);

@@ -16,6 +16,7 @@
 #include "media_errors.h"
 #include "media_log.h"
 #include "media_dfx.h"
+#include "media_taihe_utils.h"
 #include "avscreen_capture_callback_taihe.h"
 #ifndef CROSS_PLATFORM
 #include "display_manager.h"
@@ -39,26 +40,40 @@ std::map<std::string,
 AVScreenCaptureRecorderImpl::AVScreenCaptureRecorderImpl()
 {
     screenCapture_ = ScreenCaptureFactory::CreateScreenCapture();
-    CHECK_AND_RETURN_LOG(screenCapture_ != nullptr, "failed to CreateScreenCapture");
+    if (screenCapture_ == nullptr) {
+        MEDIA_LOGE("failed to CreateScreenCapture");
+        MediaTaiheUtils::ThrowExceptionError("failed to CreateScreenCapture");
+        return;
+    }
     taskQue_ = std::make_unique<TaskQueue>("OS_AVScreenCaptureTaihe");
     (void)taskQue_->Start();
     screenCaptureCb_ = std::make_shared<AVScreenCaptureCallback>();
-    CHECK_AND_RETURN_LOG(screenCaptureCb_ != nullptr, "failed to CreateScreenCaptureCb");
+    if (screenCaptureCb_ == nullptr) {
+        MEDIA_LOGE("failed to CreateScreenCaptureCb");
+        MediaTaiheUtils::ThrowExceptionError("failed to CreateScreenCaptureCb");
+        return;
+    }
     (void)screenCapture_->SetScreenCaptureCallback(screenCaptureCb_);
 }
 
-AVScreenCaptureRecorder CreateAVScreenCaptureRecorderSync()
+optional<AVScreenCaptureRecorder> CreateAVScreenCaptureRecorderSync()
 {
     MediaTrace trace("AVScreenCapture::CreateAVScreenRecorder");
-    return make_holder<AVScreenCaptureRecorderImpl, AVScreenCaptureRecorder>();
+    auto res = make_holder<AVScreenCaptureRecorderImpl, AVScreenCaptureRecorder>();
+    if (taihe::has_error()) {
+        MEDIA_LOGE("Create AVScreenCaptureRecorder failed!");
+        taihe::reset_error();
+        return optional<AVScreenCaptureRecorder>(std::nullopt);
+    }
+    return optional<AVScreenCaptureRecorder>(std::in_place, res);
 }
 
-void ReportAVScreenCaptureUserChoiceSync(int32_t sessionId, string_view choice)
+void ReportAVScreenCaptureUserChoiceSync(double sessionId, string_view choice)
 {
     MediaTrace trace("AVScreenCapture::TaiheReportAVScreenCaptureUserChoice");
     const std::string &opt = AVScreenCapturegOpt::REPORT_USER_CHOICE;
     MEDIA_LOGI("Taihe %{public}s Start", opt.c_str());
-    MEDIA_LOGI("TaiheReportAVScreenCaptureUserChoice sessionId: %{public}d, choice: %{public}s",
+    MEDIA_LOGI("TaiheReportAVScreenCaptureUserChoice sessionId: %{public}f, choice: %{public}s",
         sessionId, static_cast<std::string>(choice).c_str());
     auto asyncCtx = std::make_unique<AVScreenCaptureAsyncContext>();
     CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");

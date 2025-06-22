@@ -36,11 +36,10 @@ public:
     void SetFdSrc(optional_view<AVFileDescriptor> fdSrc);
     optional<AVDataSrcDescriptor> GetDataSrc();
     void SetDataSrc(optional_view<AVDataSrcDescriptor> dataSrc);
-    AVMetadata FetchMetadataSync();
+    optional<AVMetadata> FetchMetadataSync();
     void ReleaseSync();
-    int32_t GetFrameIndexByTimeSync(double timeUs);
-    double GetTimeByFrameIndexSync(int32_t index);
-    friend AVMetadataExtractor CreateAVMetadataExtractorSync();
+    double GetFrameIndexByTimeSync(double timeUs);
+    double GetTimeByFrameIndexSync(double index);
 private:
     std::shared_ptr<OHOS::Media::AVMetadataHelper> helper_;
     std::shared_ptr<OHOS::Media::HelperDataSourceCallback> dataSrcCb_ = nullptr;

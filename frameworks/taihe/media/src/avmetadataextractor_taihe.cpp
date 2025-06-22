@@ -40,8 +40,8 @@ optional<AVFileDescriptor> AVMetadataExtractorImpl::GetFdSrc()
     MEDIA_LOGI("TaiheGetAVFileDescriptor In");
     AVFileDescriptor fdSrc;
     fdSrc.fd = fileDescriptor_.fd;
-    fdSrc.offset = optional<int64_t>(std::in_place_t{}, fileDescriptor_.offset);
-    fdSrc.length = optional<int64_t>(std::in_place_t{}, fileDescriptor_.length);
+    fdSrc.offset = optional<double>(std::in_place_t{}, fileDescriptor_.offset);
+    fdSrc.length = optional<double>(std::in_place_t{}, fileDescriptor_.length);
     MEDIA_LOGI("TaiheGetAVFileDescriptor Out");
     return optional<AVFileDescriptor>(std::in_place_t{}, fdSrc);
 }
@@ -251,34 +251,38 @@ void AVMetadataExtractorImpl::SetMetadataProperty(std::shared_ptr<OHOS::Media::M
     }
 }
 
-AVMetadata AVMetadataExtractorImpl::FetchMetadataSync()
+optional<AVMetadata> AVMetadataExtractorImpl::FetchMetadataSync()
 {
+    OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::FetchMetadataSync");
+    MEDIA_LOGI("FetchMetadataSync In");
     if (state_ != OHOS::Media::HelperState::HELPER_STATE_RUNNABLE) {
         set_business_error(OHOS::Media::MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Can't fetchMetadata, please set source.");
     }
-    AVMetadata res;
-    SetDefaultMetadataProperty(res);
+    CHECK_AND_RETURN_RET_LOG(helper_ != nullptr, optional<AVMetadata>(std::nullopt), "Invalid promiseCtx.");
     std::shared_ptr<OHOS::Media::Meta> metadata = helper_->GetAVMetadata();
     if (metadata == nullptr) {
         MEDIA_LOGE("ResolveMetadata AVMetadata is nullptr");
         set_business_error(OHOS::Media::MSERR_EXT_API9_UNSUPPORT_FORMAT, "ResolveMetadata fail, metadata is null!");
-        return res;
+        return optional<AVMetadata>(std::nullopt);
     }
+    AVMetadata res;
+    SetDefaultMetadataProperty(res);
     SetMetadataProperty(metadata, res);
-    return res;
+    return optional<AVMetadata>(std::in_place_t{}, res);
 }
 
-AVMetadataExtractor CreateAVMetadataExtractorSync()
+optional<AVMetadataExtractor> CreateAVMetadataExtractorSync()
 {
     OHOS::Media::MediaTrace trace("AVMetadataExtractor::CreateAVMetadataExtractor");
     MEDIA_LOGI("TaiheCreateAVMetadataExtractor In");
 
     std::shared_ptr<OHOS::Media::AVMetadataHelper> avMetadataHelper =
         OHOS::Media::AVMetadataHelperFactory::CreateAVMetadataHelper();
-    CHECK_AND_RETURN_RET_LOG(avMetadataHelper != nullptr,
-        (make_holder<AVMetadataExtractorImpl, AVMetadataExtractor>(nullptr)), "failed to CreateMetadataHelper");
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelper != nullptr, optional<AVMetadataExtractor>(std::nullopt),
+        "failed to CreateMetadataHelper");
     MEDIA_LOGI("TaiheCreateAVMetadataExtractor Out");
-    return make_holder<AVMetadataExtractorImpl, AVMetadataExtractor>(avMetadataHelper);
+    auto res = make_holder<AVMetadataExtractorImpl, AVMetadataExtractor>(avMetadataHelper);
+    return optional<AVMetadataExtractor>(std::in_place_t{}, res);
 }
 
 void AVMetadataExtractorImpl::ReleaseSync()
@@ -295,34 +299,44 @@ void AVMetadataExtractorImpl::ReleaseSync()
     helper_->Release();
 }
 
-int32_t AVMetadataExtractorImpl::GetFrameIndexByTimeSync(double timeUs)
+double AVMetadataExtractorImpl::GetFrameIndexByTimeSync(double timeUs)
 {
     OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::GetFrameIndexByTimeSync");
     timeStamp_ = static_cast<uint64_t>(timeUs);
     if (state_ != OHOS::Media::HelperState::HELPER_STATE_RUNNABLE) {
         set_business_error(OHOS::Media::MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Invalid state, please set source");
+        return -1;
     }
 
+    CHECK_AND_RETURN_RET_LOG(helper_ != nullptr, -1, "inner helper is null.");
     auto res = helper_->GetFrameIndexByTime(timeStamp_, index_);
     if (res != OHOS::Media::MSERR_EXT_API9_OK) {
         MEDIA_LOGE("GetFrameIndexByTimeSync get result SignError");
         set_business_error(OHOS::Media::MSERR_EXT_API9_UNSUPPORT_FORMAT, "Demuxer getFrameIndexByTime failed.");
+        return -1;
     }
-    return static_cast<uint32_t>(index_);
+    return static_cast<double>(index_);
 }
 
-double AVMetadataExtractorImpl::GetTimeByFrameIndexSync(int32_t index)
+double AVMetadataExtractorImpl::GetTimeByFrameIndexSync(double index)
 {
     OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::GetTimeByFrameIndexSync");
+    if (index < 0) {
+        set_business_error(OHOS::Media::MSERR_EXT_API9_INVALID_PARAMETER, "frame index is not valid");
+        return -1;
+    }
     index_ = static_cast<uint32_t>(index);
     if (state_ != OHOS::Media::HelperState::HELPER_STATE_RUNNABLE) {
         set_business_error(OHOS::Media::MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Invalid state, please set source");
+        return -1;
     }
 
+    CHECK_AND_RETURN_RET_LOG(helper_ != nullptr, -1, "inner helper is null.");
     auto res = helper_->GetTimeByFrameIndex(index_, timeStamp_);
     if (res != OHOS::Media::MSERR_EXT_API9_OK) {
         MEDIA_LOGE("GetTimeByFrameIndexSync get result SignError");
         set_business_error(OHOS::Media::MSERR_EXT_API9_UNSUPPORT_FORMAT, "Demuxer getTimeByFrameIndex failed.");
+        return -1;
     }
     return static_cast<double>(timeStamp_);
 }

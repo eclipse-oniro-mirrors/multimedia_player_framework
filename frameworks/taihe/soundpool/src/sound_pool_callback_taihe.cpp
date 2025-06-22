@@ -210,8 +210,8 @@ void SoundPoolCallBackTaihe::OnTaiheloadCompletedCallBack(SoundPoolTaiheCallBack
         std::shared_ptr<AutoRef> ref = taiheCb->autoRef.lock();
 
         auto func = ref->callbackRef_;
-        std::shared_ptr<taihe::callback<void(int32_t)>> cacheCallback =
-            std::reinterpret_pointer_cast<taihe::callback<void(int32_t)>>(func);
+        std::shared_ptr<taihe::callback<void(double)>> cacheCallback =
+            std::reinterpret_pointer_cast<taihe::callback<void(double)>>(func);
         (*cacheCallback)(taiheCb->loadSoundId);
     } while (0);
     delete taiheCb;
@@ -226,8 +226,8 @@ void SoundPoolCallBackTaihe::OnTaiheplayCompletedCallBack(SoundPoolTaiheCallBack
             std::shared_ptr<AutoRef> ref = taiheCb->autoRef.lock();
     
             auto func = ref->callbackRef_;
-            std::shared_ptr<taihe::callback<void(int32_t)>> cacheCallback =
-                std::reinterpret_pointer_cast<taihe::callback<void(int32_t)>>(func);
+            std::shared_ptr<taihe::callback<void(double)>> cacheCallback =
+                std::reinterpret_pointer_cast<taihe::callback<void(double)>>(func);
             (*cacheCallback)(taiheCb->playFinishedStreamID);
         } else if (request == SoundPoolEvent::EVENT_PLAY_FINISHED) {
             MEDIA_LOGD("OnTaiheloadCompletedCallBack is called");

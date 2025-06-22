@@ -39,6 +39,7 @@ struct MediaKeySystemInfo {
 class MediaTaiheUtils {
 public:
     static string ToTaiheString(const std::string &src);
+    static void ThrowExceptionError(const std::string errMsg);
     template <typename EnumType>
     static bool GetEnumKeyByValue(int32_t value, typename EnumType::key_t &key);
     template <typename EnumTypeString>

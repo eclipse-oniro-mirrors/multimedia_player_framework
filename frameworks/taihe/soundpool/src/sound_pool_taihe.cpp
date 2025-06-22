@@ -18,6 +18,7 @@
 #include "ani_base_context.h"
 #include "media_errors.h"
 #include "media_dfx.h"
+#include "media_taihe_utils.h"
 #include "sound_pool_callback_taihe.h"
 
 namespace {
@@ -37,6 +38,8 @@ SoundPoolImpl::SoundPoolImpl(int32_t maxStreams, uintptr_t audioRendererInfo)
     soundPool_ = OHOS::Media::SoundPoolFactory::CreateSoundPool(maxStreams, SoundPoolImpl::rendererInfo);
     if (soundPool_ == nullptr) {
         MEDIA_LOGE("failed to CreateSoundPool");
+        MediaTaiheUtils::ThrowExceptionError("failed to CreateSoundPool");
+        return;
     } else {
         callbackTaihe_ =  std::make_shared<SoundPoolCallBackTaihe>();
         (void)soundPool_->SetSoundPoolCallback(callbackTaihe_);
@@ -95,12 +98,18 @@ RetInfo GetRetInfo(int32_t errCode, const std::string &operate, const std::strin
     return RetInfo(err, message);
 }
 
-SoundPool CreateSoundPoolSync(double maxStreams, uintptr_t audioRendererInfo)
+optional<SoundPool> CreateSoundPoolSync(double maxStreams, uintptr_t audioRendererInfo)
 {
-    return make_holder<SoundPoolImpl, SoundPool>(maxStreams, audioRendererInfo);
+    auto res = make_holder<SoundPoolImpl, SoundPool>(maxStreams, audioRendererInfo);
+    if (taihe::has_error()) {
+        MEDIA_LOGE("Create SoundPool failed!");
+        taihe::reset_error();
+        return optional<SoundPool>(std::nullopt);
+    }
+    return optional<SoundPool>(std::in_place, res);
 }
 
-int32_t SoundPoolImpl::PlaySync(int32_t soundID, optional_view<PlayParameters> params)
+double SoundPoolImpl::PlaySync(double soundID, optional_view<PlayParameters> params)
 {
     MediaTrace trace("SoundPool::TaihePlay");
     MEDIA_LOGI("SoundPoolTaihe::TaihePlay");
@@ -121,7 +130,7 @@ int32_t SoundPoolImpl::PlaySync(int32_t soundID, optional_view<PlayParameters> p
     return streamId;
 }
 
-int32_t SoundPoolImpl::PlayWithoutParam(int32_t soundID)
+double SoundPoolImpl::PlayWithoutParam(double soundID)
 {
     MediaTrace trace("SoundPool::TaihePlayWithoutParam");
     MEDIA_LOGI("SoundPoolTaihe::TaihePlayWithoutParam");
@@ -141,7 +150,7 @@ int32_t SoundPoolImpl::PlayWithoutParam(int32_t soundID)
     return streamId;
 }
 
-int32_t SoundPoolImpl::PlayWithParam(int32_t soundID, PlayParameters const& params)
+double SoundPoolImpl::PlayWithParam(double soundID, PlayParameters const& params)
 {
     MediaTrace trace("SoundPool::TaihePlayWithParam");
     MEDIA_LOGI("SoundPoolTaihe::TaihePlayWithParam");
@@ -211,7 +220,7 @@ int32_t SoundPoolImpl::ParserPlayOption(const PlayParameters &params)
     return MSERR_OK;
 }
 
-int32_t SoundPoolImpl::LoadSync(string_view uri)
+double SoundPoolImpl::LoadSync(string_view uri)
 {
     MediaTrace trace("SoundPool::TaiheLoad");
     MEDIA_LOGI("SoundPoolNapi::TaiheLoad");
@@ -226,7 +235,7 @@ int32_t SoundPoolImpl::LoadSync(string_view uri)
     return soundId;
 }
 
-int32_t SoundPoolImpl::LoadWithFdSync(int32_t fd, double offset, double length)
+double SoundPoolImpl::LoadWithFdSync(double fd, double offset, double length)
 {
     MediaTrace trace("SoundPool::TaiheLoad");
     MEDIA_LOGI("SoundPoolNapi::TaiheLoad");
@@ -248,7 +257,7 @@ int32_t SoundPoolImpl::LoadWithFdSync(int32_t fd, double offset, double length)
     return soundId;
 }
 
-void SoundPoolImpl::StopSync(int32_t streamID)
+void SoundPoolImpl::StopSync(double streamID)
 {
     MediaTrace trace("SoundPool::TaiheStop");
     MEDIA_LOGI("SoundPoolNapi::TaiheStop");
@@ -264,7 +273,7 @@ void SoundPoolImpl::StopSync(int32_t streamID)
     MEDIA_LOGI("The taihe thread of stop finishes execution and returns");
 }
 
-void SoundPoolImpl::SetLoopSync(int32_t streamID, int32_t loop)
+void SoundPoolImpl::SetLoopSync(double streamID, double loop)
 {
     MediaTrace trace("SoundPool::TaiheSetLoop");
     MEDIA_LOGI("SoundPoolNapi::TaiheSetLoop");
@@ -283,7 +292,7 @@ void SoundPoolImpl::SetLoopSync(int32_t streamID, int32_t loop)
     }
 }
 
-void SoundPoolImpl::SetPrioritySync(int32_t streamID, int32_t priority)
+void SoundPoolImpl::SetPrioritySync(double streamID, double priority)
 {
     MediaTrace trace("SoundPool::TaiheSetPriority");
     MEDIA_LOGI("SoundPoolNapi::TaiheSetPriority");
@@ -305,7 +314,7 @@ void SoundPoolImpl::SetPrioritySync(int32_t streamID, int32_t priority)
     }
 }
 
-void SoundPoolImpl::SetVolumeSync(int32_t streamID, double leftVolume, double rightVolume)
+void SoundPoolImpl::SetVolumeSync(double streamID, double leftVolume, double rightVolume)
 {
     MediaTrace trace("SoundPool::TaiheSetVolume");
     MEDIA_LOGI("SoundPoolNapi::TaiheSetVolume");
@@ -325,7 +334,7 @@ void SoundPoolImpl::SetVolumeSync(int32_t streamID, double leftVolume, double ri
     }
 }
 
-void SoundPoolImpl::UnloadSync(int32_t soundID)
+void SoundPoolImpl::UnloadSync(double soundID)
 {
     MediaTrace trace("SoundPool::TaiheUnload");
     MEDIA_LOGI("SoundPoolNapi::TaiheUnload");
@@ -380,14 +389,14 @@ void SoundPoolImpl::OffError()
     MEDIA_LOGI("OffError End");
 }
 
-void SoundPoolImpl::OnPlayFinishedWithStreamId(callback_view<void(int32_t)> callback)
+void SoundPoolImpl::OnPlayFinishedWithStreamId(callback_view<void(double)> callback)
 {
     MediaTrace trace("SoundPoolImpl::OnPlayFinishedWithStreamId");
     MEDIA_LOGI("OnPlayFinishedWithStreamId Start");
     std::string callbackName = SoundPoolEvent::EVENT_PLAY_FINISHED_WITH_STREAM_ID;
     ani_env *env = get_env();
-    std::shared_ptr<taihe::callback<void(int32_t)>> taiheCallback =
-            std::make_shared<taihe::callback<void(int32_t)>>(callback);
+    std::shared_ptr<taihe::callback<void(double)>> taiheCallback =
+            std::make_shared<taihe::callback<void(double)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
 
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
@@ -405,14 +414,14 @@ void SoundPoolImpl::OffPlayFinishedWithStreamId()
     MEDIA_LOGI("OffPlayFinishedWithStreamId End");
 }
 
-void SoundPoolImpl::OnLoadComplete(callback_view<void(int32_t)> callback)
+void SoundPoolImpl::OnLoadComplete(callback_view<void(double)> callback)
 {
     MediaTrace trace("SoundPoolImpl::OnLoadComplete");
     MEDIA_LOGI("OnLoadComplete Start");
     std::string callbackName = SoundPoolEvent::EVENT_LOAD_COMPLETED;
     ani_env *env = get_env();
-    std::shared_ptr<taihe::callback<void(int32_t)>> taiheCallback =
-            std::make_shared<taihe::callback<void(int32_t)>>(callback);
+    std::shared_ptr<taihe::callback<void(double)>> taiheCallback =
+            std::make_shared<taihe::callback<void(double)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
 
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);

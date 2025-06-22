@@ -105,8 +105,6 @@ public:
 
     void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
     void CancelCallbackReference(const std::string &callbackName);
-    friend void ReportAVScreenCaptureUserChoiceSync(int32_t sessionId, string_view choice);
-    friend AVScreenCaptureRecorder CreateAVScreenCaptureRecorderSync();
 
     using AvScreenCaptureTaskqFunc = RetInfo (AVScreenCaptureRecorderImpl::*)();
 private:

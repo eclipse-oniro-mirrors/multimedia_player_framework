@@ -29,7 +29,7 @@
 #endif
 
 using namespace ANI::Media;
-using DataSrcCallback = taihe::callback<int32_t(taihe::array_view<uint8_t>, int64_t, taihe::optional_view<int64_t>)>;
+using DataSrcCallback = taihe::callback<double(taihe::array_view<uint8_t>, double, taihe::optional_view<double>)>;
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_METADATA, "AVPlayerTaihe"};
@@ -70,6 +70,11 @@ bool StrToInt(const std::string_view& str, T& value)
 AVPlayerImpl::AVPlayerImpl()
 {
     player_ = OHOS::Media::PlayerFactory::CreatePlayer();
+    if (player_ == nullptr) {
+        MEDIA_LOGE("failed to CreatePlayer");
+        MediaTaiheUtils::ThrowExceptionError("failed to CreatePlayer");
+        return;
+    }
     taskQue_ = std::make_unique<OHOS::Media::TaskQueue>("OS_AVPlayerTaihe");
     (void)taskQue_->Start();
 
@@ -104,7 +109,7 @@ void AVPlayerImpl::SetUrl(optional_view<string> url)
     MEDIA_LOGI("0x%{public}06" PRIXPTR " SetUrl Out", FAKE_POINTER(this));
 }
 
-int32_t AVPlayerImpl::GetWidth()
+double AVPlayerImpl::GetWidth()
 {
     MediaTrace trace("AVPlayerImpl::get width");
     MEDIA_LOGI("TaiheGetWidth");
@@ -117,7 +122,7 @@ int32_t AVPlayerImpl::GetWidth()
     return width;
 }
 
-int32_t AVPlayerImpl::GetHeight()
+double AVPlayerImpl::GetHeight()
 {
     MediaTrace trace("AVPlayerImpl::get height");
     MEDIA_LOGI("TaiheGetHeight");
@@ -142,7 +147,7 @@ string AVPlayerImpl::GetState()
     return curState;
 }
 
-int32_t AVPlayerImpl::GetDuration()
+double AVPlayerImpl::GetDuration()
 {
     MediaTrace trace("AVPlayerImpl::get duration");
     MEDIA_LOGD("TaiheGetDuration In");
@@ -157,7 +162,7 @@ int32_t AVPlayerImpl::GetDuration()
     return duration;
 }
 
-int32_t AVPlayerImpl::GetCurrentTime()
+double AVPlayerImpl::GetCurrentTime()
 {
     MediaTrace trace("AVPlayerImpl::get currentTime");
     MEDIA_LOGD("TaiheGetCurrentTime In");
@@ -418,8 +423,8 @@ optional<ohos::multimedia::media::AVFileDescriptor> AVPlayerImpl::GetFdSrc()
 
     ohos::multimedia::media::AVFileDescriptor fdSrc;
     fdSrc.fd = fileDescriptor_.fd;
-    fdSrc.offset = optional<int64_t>(std::in_place_t{}, fileDescriptor_.offset);
-    fdSrc.length = optional<int64_t>(std::in_place_t{}, fileDescriptor_.length);
+    fdSrc.offset = optional<double>(std::in_place_t{}, fileDescriptor_.offset);
+    fdSrc.length = optional<double>(std::in_place_t{}, fileDescriptor_.length);
     MEDIA_LOGI("TaiheGetAVFileDescriptor Out");
     return optional<ohos::multimedia::media::AVFileDescriptor>(std::in_place_t{}, fdSrc);
 }
@@ -542,7 +547,7 @@ void AVPlayerImpl::SeekEnqueueTask(AVPlayerImpl *taihePlayer, int32_t time, int3
     MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheSeek Out", FAKE_POINTER(taihePlayer));
 }
 
-void AVPlayerImpl::Seek(int32_t timeMs, optional_view<SeekMode> mode)
+void AVPlayerImpl::Seek(double timeMs, optional_view<SeekMode> mode)
 {
     MediaTrace trace("AVPlayerImpl::seek");
     MEDIA_LOGI("TaiheSeek in");
@@ -669,14 +674,16 @@ array<map<string, MediaDescriptionValue>> AVPlayerImpl::GetTrackDescriptionSync(
     context->asyncTask = GetTrackDescriptionTask(context);
     MEDIA_LOGD("0x%{public}06" PRIXPTR " GetTrackDescription EnqueueTask Out", FAKE_POINTER(this));
     auto result = context->asyncTask->GetResult();
+    std::vector<map<string, MediaDescriptionValue>> tdResult;
     if (!result.HasResult()) {
         set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "task has been cleared");
+        return array<map<string, MediaDescriptionValue>>(tdResult);
     }
     if (result.Value().first != MSERR_EXT_API9_OK) {
         set_business_error(result.Value().first, result.Value().second);
+        return array<map<string, MediaDescriptionValue>>(tdResult);
     }
     auto vec = context->trackInfoVec_;
-    std::vector<map<string, MediaDescriptionValue>> tdResult;
     for (size_t index = 0; index < vec.size(); ++index) {
         map<string, MediaDescriptionValue> description;
         description = MediaTaiheUtils::CreateFormatBuffer(vec[index]);
@@ -841,7 +848,7 @@ void AVPlayerImpl::SetMediaSourceSync(weak::MediaSource src, optional_view<Playb
     EnqueueMediaSourceTask(mediaSource, strategyRes);
 }
 
-void AVPlayerImpl::AddSubtitleFromFdSync(int32_t fd, int64_t offset, int64_t length)
+void AVPlayerImpl::AddSubtitleFromFdSync(double fd, double offset, double length)
 {
     MEDIA_LOGI("AddSubtitleAVFileDescriptor In");
     auto task = std::make_shared<TaskHandler<void>>([this, fd, offset, length]() {
@@ -912,13 +919,15 @@ map<string, PlaybackInfoValue> AVPlayerImpl::GetPlaybackInfoSync()
         (void)player_->GetPlaybackInfo(playbackInfo);
     } else {
         set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state unsupport get playback info");
+        map<string, PlaybackInfoValue> playbackInfo;
+        return playbackInfo;
     }
 
     MEDIA_LOGI("GetPlaybackInfoSync Out");
     return MediaTaiheUtils::CreateFormatBufferByRef(playbackInfo);
 }
 
-void AVPlayerImpl::DeselectTrackSync(int32_t index)
+void AVPlayerImpl::DeselectTrackSync(double index)
 {
     MediaTrace trace("AVPlayerImpl::deselectTrack");
     MEDIA_LOGI("deselectTrack In");
@@ -942,7 +951,7 @@ void AVPlayerImpl::DeselectTrackSync(int32_t index)
     MEDIA_LOGI("deselectTrack Out");
 }
 
-void AVPlayerImpl::SelectTrackSync(int32_t index, optional_view<SwitchMode> mode)
+void AVPlayerImpl::SelectTrackSync(double index, optional_view<SwitchMode> mode)
 {
     MediaTrace trace("AVPlayerImpl::selectTrack");
     MEDIA_LOGI("SelectTrack In");
@@ -1007,7 +1016,7 @@ PlayerSwitchMode AVPlayerImpl::TransferSwitchMode(int32_t mode)
     return switchMode;
 }
 
-array<int32_t> AVPlayerImpl::GetSelectedTracksSync()
+array<double> AVPlayerImpl::GetSelectedTracksSync()
 {
     MediaTrace trace("AVPlayerImpl::get selected tracks");
     MEDIA_LOGI("TaiheGetSelectedTracks In");
@@ -1035,10 +1044,10 @@ array<int32_t> AVPlayerImpl::GetSelectedTracksSync()
             "current state unsupport get current selections");
     }
     MEDIA_LOGI("TaiheGetSelectedTracks Out");
-    return array<int32_t>(copy_data_t{}, trackIndex.data(), trackIndex.size());
+    return array<double>(copy_data_t{}, trackIndex.data(), trackIndex.size());
 }
 
-void AVPlayerImpl::SetVideoWindowSizeSync(int32_t width, int32_t height)
+void AVPlayerImpl::SetVideoWindowSizeSync(double width, double height)
 {
     MediaTrace trace("AVPlayerImpl::setVideoWindowSize");
     MEDIA_LOGI("TaiheSetVideoWindowSize In");
@@ -1125,11 +1134,11 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerImpl::SetSuperResolutionTask(bool 
     return task;
 }
 
-int32_t AVPlayerImpl::GetPlaybackPosition()
+double AVPlayerImpl::GetPlaybackPosition()
 {
     MediaTrace trace("AVPlayerImpl::get playbackPosition");
     MEDIA_LOGD("getPlaybackPosition In");
-    int32_t playbackPosition = 0;
+    int32_t playbackPosition = -1;
     CHECK_AND_RETURN_RET_LOG(player_ != nullptr, playbackPosition, "failed to check player_");
     std::string curState = GetCurrentState();
     if (curState == AVPlayerState::STATE_PLAYING &&
@@ -1148,7 +1157,7 @@ int32_t AVPlayerImpl::GetPlaybackPosition()
     return playbackPosition;
 }
 
-void AVPlayerImpl::SetBitrate(int32_t bitrate)
+void AVPlayerImpl::SetBitrate(double bitrate)
 {
     MediaTrace trace("AVPlayerImpl::setBitrate");
     MEDIA_LOGI("SelectBitrate In");
@@ -1173,7 +1182,7 @@ void AVPlayerImpl::SetBitrate(int32_t bitrate)
     MEDIA_LOGI("0x%{public}06" PRIXPTR " SelectBitrate Out", FAKE_POINTER(this));
 }
 
-void AVPlayerImpl::SetPlaybackRangeSync(int32_t startTimeMs, int32_t endTimeMs,
+void AVPlayerImpl::SetPlaybackRangeSync(double startTimeMs, double endTimeMs,
     optional_view<::ohos::multimedia::media::SeekMode> mode)
 {
     MediaTrace trace("AVPlayerImpl::setPlaybackRange");
@@ -1833,7 +1842,7 @@ void AVPlayerImpl::OnStartRenderFrame(callback_view<void(uintptr_t)> callback)
     return;
 }
 
-void AVPlayerImpl::OnSeekDone(callback_view<void(int32_t)> callback)
+void AVPlayerImpl::OnSeekDone(callback_view<void(double)> callback)
 {
     MediaTrace trace("AVPlayerImpl::OnSeekDone");
     MEDIA_LOGD("TaiheOnSeekDone In");
@@ -1843,8 +1852,8 @@ void AVPlayerImpl::OnSeekDone(callback_view<void(int32_t)> callback)
         return;
     }
     ani_env *env = taihe::get_env();
-    std::shared_ptr<taihe::callback<void(int32_t)>> taiheCallback =
-            std::make_shared<taihe::callback<void(int32_t)>>(callback);
+    std::shared_ptr<taihe::callback<void(double)>> taiheCallback =
+            std::make_shared<taihe::callback<void(double)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SaveCallbackReference(AVPlayerEvent::EVENT_SEEK_DONE, autoRef);
@@ -1852,7 +1861,7 @@ void AVPlayerImpl::OnSeekDone(callback_view<void(int32_t)> callback)
     return;
 }
 
-void AVPlayerImpl::OnDurationUpdate(callback_view<void(int32_t)> callback)
+void AVPlayerImpl::OnDurationUpdate(callback_view<void(double)> callback)
 {
     MediaTrace trace("AVPlayerImpl::OnDurationUpdate");
     MEDIA_LOGD("TaiheOnDurationUpdate In");
@@ -1862,8 +1871,8 @@ void AVPlayerImpl::OnDurationUpdate(callback_view<void(int32_t)> callback)
         return;
     }
     ani_env *env = taihe::get_env();
-    std::shared_ptr<taihe::callback<void(int32_t)>> taiheCallback =
-            std::make_shared<taihe::callback<void(int32_t)>>(callback);
+    std::shared_ptr<taihe::callback<void(double)>> taiheCallback =
+            std::make_shared<taihe::callback<void(double)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SaveCallbackReference(AVPlayerEvent::EVENT_DURATION_UPDATE, autoRef);
@@ -1872,7 +1881,7 @@ void AVPlayerImpl::OnDurationUpdate(callback_view<void(int32_t)> callback)
     return;
 }
 
-void AVPlayerImpl::OnTimeUpdate(callback_view<void(int32_t)> callback)
+void AVPlayerImpl::OnTimeUpdate(callback_view<void(double)> callback)
 {
     MediaTrace trace("AVPlayerImpl::OnTimeUpdate");
     MEDIA_LOGD("TaiheOnTimeUpdate In");
@@ -1882,8 +1891,8 @@ void AVPlayerImpl::OnTimeUpdate(callback_view<void(int32_t)> callback)
         return;
     }
     ani_env *env = taihe::get_env();
-    std::shared_ptr<taihe::callback<void(int32_t)>> taiheCallback =
-            std::make_shared<taihe::callback<void(int32_t)>>(callback);
+    std::shared_ptr<taihe::callback<void(double)>> taiheCallback =
+            std::make_shared<taihe::callback<void(double)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SaveCallbackReference(AVPlayerEvent::EVENT_TIME_UPDATE, autoRef);
@@ -1910,7 +1919,7 @@ void AVPlayerImpl::OnVolumeChange(callback_view<void(double)> callback)
     return;
 }
 
-void AVPlayerImpl::OnSpeedDone(callback_view<void(int32_t)> callback)
+void AVPlayerImpl::OnSpeedDone(callback_view<void(double)> callback)
 {
     MediaTrace trace("AVPlayerImpl::OnSpeedDone");
     MEDIA_LOGD("TaiheOnSpeedDone In");
@@ -1920,8 +1929,8 @@ void AVPlayerImpl::OnSpeedDone(callback_view<void(int32_t)> callback)
         return;
     }
     ani_env *env = taihe::get_env();
-    std::shared_ptr<taihe::callback<void(int32_t)>> taiheCallback =
-            std::make_shared<taihe::callback<void(int32_t)>>(callback);
+    std::shared_ptr<taihe::callback<void(double)>> taiheCallback =
+            std::make_shared<taihe::callback<void(double)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SaveCallbackReference(AVPlayerEvent::EVENT_SPEED_DONE, autoRef);
@@ -1929,7 +1938,7 @@ void AVPlayerImpl::OnSpeedDone(callback_view<void(int32_t)> callback)
     return;
 }
 
-void AVPlayerImpl::OnBitrateDone(callback_view<void(int32_t)> callback)
+void AVPlayerImpl::OnBitrateDone(callback_view<void(double)> callback)
 {
     MediaTrace trace("AVPlayerImpl::OnBitrateDone");
     MEDIA_LOGD("TaiheOnBitrateDone In");
@@ -1939,8 +1948,8 @@ void AVPlayerImpl::OnBitrateDone(callback_view<void(int32_t)> callback)
         return;
     }
     ani_env *env = taihe::get_env();
-    std::shared_ptr<taihe::callback<void(int32_t)>> taiheCallback =
-            std::make_shared<taihe::callback<void(int32_t)>>(callback);
+    std::shared_ptr<taihe::callback<void(double)>> taiheCallback =
+            std::make_shared<taihe::callback<void(double)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SaveCallbackReference(AVPlayerEvent::EVENT_BITRATE_DONE, autoRef);
@@ -1948,7 +1957,7 @@ void AVPlayerImpl::OnBitrateDone(callback_view<void(int32_t)> callback)
     return;
 }
 
-void AVPlayerImpl::OnAvailableBitrates(callback_view<void(array_view<int32_t>)> callback)
+void AVPlayerImpl::OnAvailableBitrates(callback_view<void(array_view<double>)> callback)
 {
     MediaTrace trace("AVPlayerImpl::OnBitrateDone");
     MEDIA_LOGD("TaiheOnBitrateDone In");
@@ -1958,8 +1967,8 @@ void AVPlayerImpl::OnAvailableBitrates(callback_view<void(array_view<int32_t>)> 
         return;
     }
     ani_env *env = taihe::get_env();
-    std::shared_ptr<taihe::callback<void(array_view<int32_t>)>> taiheCallback =
-            std::make_shared<taihe::callback<void(array_view<int32_t>)>>(callback);
+    std::shared_ptr<taihe::callback<void(array_view<double>)>> taiheCallback =
+            std::make_shared<taihe::callback<void(array_view<double>)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SaveCallbackReference(AVPlayerEvent::EVENT_AVAILABLE_BITRATES, autoRef);
@@ -1967,7 +1976,7 @@ void AVPlayerImpl::OnAvailableBitrates(callback_view<void(array_view<int32_t>)> 
         FAKE_POINTER(this));
     return;
 }
-void AVPlayerImpl::OnAmplitudeUpdate(callback_view<void(array_view<float>)> callback)
+void AVPlayerImpl::OnAmplitudeUpdate(callback_view<void(array_view<double>)> callback)
 {
     MediaTrace trace("AVPlayerImpl::OnBitrateDone");
     MEDIA_LOGD("TaiheOnBitrateDone In");
@@ -1977,8 +1986,8 @@ void AVPlayerImpl::OnAmplitudeUpdate(callback_view<void(array_view<float>)> call
         return;
     }
     ani_env *env = taihe::get_env();
-    std::shared_ptr<taihe::callback<void(array_view<float>)>> taiheCallback =
-            std::make_shared<taihe::callback<void(array_view<float>)>>(callback);
+    std::shared_ptr<taihe::callback<void(array_view<double>)>> taiheCallback =
+            std::make_shared<taihe::callback<void(array_view<double>)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SaveCallbackReference(AVPlayerEvent::EVENT_AMPLITUDE_UPDATE, autoRef);
@@ -1987,14 +1996,14 @@ void AVPlayerImpl::OnAmplitudeUpdate(callback_view<void(array_view<float>)> call
     return;
 }
 
-void AVPlayerImpl::OnBufferingUpdate(callback_view<void(ohos::multimedia::media::BufferingInfoType, int32_t)> callback)
+void AVPlayerImpl::OnBufferingUpdate(callback_view<void(ohos::multimedia::media::BufferingInfoType, double)> callback)
 {
     MediaTrace trace("AVPlayerImpl::OnBufferingUpdate");
     MEDIA_LOGD("TaiheOnBufferingUpdate In");
 
     ani_env *env = taihe::get_env();
-    std::shared_ptr<taihe::callback<void(ohos::multimedia::media::BufferingInfoType, int32_t)>> taiheCallback =
-            std::make_shared<taihe::callback<void(ohos::multimedia::media::BufferingInfoType, int32_t)>>(callback);
+    std::shared_ptr<taihe::callback<void(ohos::multimedia::media::BufferingInfoType, double)>> taiheCallback =
+            std::make_shared<taihe::callback<void(ohos::multimedia::media::BufferingInfoType, double)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SaveCallbackReference(AVPlayerEvent::EVENT_BUFFERING_UPDATE, autoRef);
@@ -2003,7 +2012,7 @@ void AVPlayerImpl::OnBufferingUpdate(callback_view<void(ohos::multimedia::media:
     return;
 }
 
-void AVPlayerImpl::OnVideoSizeChange(callback_view<void(int32_t, int32_t)> callback)
+void AVPlayerImpl::OnVideoSizeChange(callback_view<void(double, double)> callback)
 {
     MediaTrace trace("AVPlayerImpl::OnVideoSizeChange");
     MEDIA_LOGD("TaiheOnVideoSizeChange In");
@@ -2013,8 +2022,8 @@ void AVPlayerImpl::OnVideoSizeChange(callback_view<void(int32_t, int32_t)> callb
         return;
     }
     ani_env *env = taihe::get_env();
-    std::shared_ptr<taihe::callback<void(int32_t, int32_t)>> taiheCallback =
-            std::make_shared<taihe::callback<void(int32_t, int32_t)>>(callback);
+    std::shared_ptr<taihe::callback<void(double, double)>> taiheCallback =
+            std::make_shared<taihe::callback<void(double, double)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SaveCallbackReference(AVPlayerEvent::EVENT_VIDEO_SIZE_CHANGE, autoRef);
@@ -2023,7 +2032,7 @@ void AVPlayerImpl::OnVideoSizeChange(callback_view<void(int32_t, int32_t)> callb
     return;
 }
 
-void AVPlayerImpl::OnTrackChange(callback_view<void(int32_t, bool)> callback)
+void AVPlayerImpl::OnTrackChange(callback_view<void(double, bool)> callback)
 {
     MediaTrace trace("AVPlayerImpl::OnTrackChange");
     MEDIA_LOGD("TaiheOnTrackChange In");
@@ -2033,8 +2042,8 @@ void AVPlayerImpl::OnTrackChange(callback_view<void(int32_t, bool)> callback)
         return;
     }
     ani_env *env = taihe::get_env();
-    std::shared_ptr<taihe::callback<void(int32_t, bool)>> taiheCallback =
-            std::make_shared<taihe::callback<void(int32_t, bool)>>(callback);
+    std::shared_ptr<taihe::callback<void(double, bool)>> taiheCallback =
+            std::make_shared<taihe::callback<void(double, bool)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SaveCallbackReference(AVPlayerEvent::EVENT_TRACKCHANGE, autoRef);
@@ -2099,8 +2108,8 @@ void AVPlayerImpl::OnTrackInfoUpdate(callback_view<void(array_view<map<string, M
     return;
 }
 
-void AVPlayerImpl::OnSeiMessageReceived(array_view<int32_t> payloadTypes,
-    callback_view<void(array_view<SeiMessage>, optional_view<int32_t>)> callback)
+void AVPlayerImpl::OnSeiMessageReceived(array_view<double> payloadTypes,
+    callback_view<void(array_view<SeiMessage>, optional_view<double>)> callback)
 {
     MediaTrace trace("AVPlayerImpl::OnSeiMessageReceived");
     MEDIA_LOGD("TaiheOnSeiMessageReceived In");
@@ -2121,8 +2130,8 @@ void AVPlayerImpl::OnSeiMessageReceived(array_view<int32_t> payloadTypes,
         player_->SetSeiMessageCbStatus(seiMessageCallbackflag_, payloadTypesInt);
     }
     ani_env *env = taihe::get_env();
-    std::shared_ptr<taihe::callback<void(array_view<SeiMessage>, optional_view<int32_t>)>> taiheCallback =
-            std::make_shared<taihe::callback<void(array_view<SeiMessage>, optional_view<int32_t>)>>(callback);
+    std::shared_ptr<taihe::callback<void(array_view<SeiMessage>, optional_view<double>)>> taiheCallback =
+            std::make_shared<taihe::callback<void(array_view<SeiMessage>, optional_view<double>)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SaveCallbackReference(AVPlayerEvent::EVENT_SEI_MESSAGE_INFO, autoRef);
@@ -2204,7 +2213,7 @@ void AVPlayerImpl::OffStartRenderFrame(optional_view<callback<void(uintptr_t)>> 
     ClearCallbackReference(callbackName);
     MEDIA_LOGI("OffStartRenderFrame End");
 }
-void AVPlayerImpl::OffSeekDone(optional_view<callback<void(int32_t)>> callback)
+void AVPlayerImpl::OffSeekDone(optional_view<callback<void(double)>> callback)
 {
     MediaTrace trace("AVPlayerImpl::OffSeekDone");
     MEDIA_LOGD("OffSeekDone In");
@@ -2218,7 +2227,7 @@ void AVPlayerImpl::OffSeekDone(optional_view<callback<void(int32_t)>> callback)
     ClearCallbackReference(callbackName);
     MEDIA_LOGI("OffSeekDone End");
 }
-void AVPlayerImpl::OffDurationUpdate(optional_view<callback<void(int32_t)>> callback)
+void AVPlayerImpl::OffDurationUpdate(optional_view<callback<void(double)>> callback)
 {
     MediaTrace trace("AVPlayerImpl::OffDurationUpdate");
     MEDIA_LOGD("OffDurationUpdate In");
@@ -2232,7 +2241,7 @@ void AVPlayerImpl::OffDurationUpdate(optional_view<callback<void(int32_t)>> call
     ClearCallbackReference(callbackName);
     MEDIA_LOGI("OffDurationUpdate End");
 }
-void AVPlayerImpl::OffTimeUpdate(optional_view<callback<void(int32_t)>> callback)
+void AVPlayerImpl::OffTimeUpdate(optional_view<callback<void(double)>> callback)
 {
     MediaTrace trace("AVPlayerImpl::OffTimeUpdate");
     MEDIA_LOGD("OffTimeUpdate In");
@@ -2260,7 +2269,7 @@ void AVPlayerImpl::OffVolumeChange(optional_view<callback<void(double)>> callbac
     ClearCallbackReference(callbackName);
     MEDIA_LOGI("OffVolumeChange End");
 }
-void AVPlayerImpl::OffSpeedDone(optional_view<callback<void(int32_t)>> callback)
+void AVPlayerImpl::OffSpeedDone(optional_view<callback<void(double)>> callback)
 {
     MediaTrace trace("AVPlayerImpl::OffSpeedDone");
     MEDIA_LOGD("OffSpeedDone In");
@@ -2274,7 +2283,7 @@ void AVPlayerImpl::OffSpeedDone(optional_view<callback<void(int32_t)>> callback)
     ClearCallbackReference(callbackName);
     MEDIA_LOGI("OffSpeedDone End");
 }
-void AVPlayerImpl::OffBitrateDone(optional_view<callback<void(int32_t)>> callback)
+void AVPlayerImpl::OffBitrateDone(optional_view<callback<void(double)>> callback)
 {
     MediaTrace trace("AVPlayerImpl::OffBitrateDone");
     MEDIA_LOGD("OffBitrateDone In");
@@ -2288,7 +2297,7 @@ void AVPlayerImpl::OffBitrateDone(optional_view<callback<void(int32_t)>> callbac
     ClearCallbackReference(callbackName);
     MEDIA_LOGI("OffBitrateDone End");
 }
-void AVPlayerImpl::OffAvailableBitrates(optional_view<callback<void(array_view<int32_t>)>> callback)
+void AVPlayerImpl::OffAvailableBitrates(optional_view<callback<void(array_view<double>)>> callback)
 {
     MediaTrace trace("AVPlayerImpl::OffAvailableBitrates");
     MEDIA_LOGD("OffAvailableBitrates In");
@@ -2302,7 +2311,7 @@ void AVPlayerImpl::OffAvailableBitrates(optional_view<callback<void(array_view<i
     ClearCallbackReference(callbackName);
     MEDIA_LOGI("OffAvailableBitrates End");
 }
-void AVPlayerImpl::OffAmplitudeUpdate(optional_view<callback<void(array_view<float>)>> callback)
+void AVPlayerImpl::OffAmplitudeUpdate(optional_view<callback<void(array_view<double>)>> callback)
 {
     MediaTrace trace("AVPlayerImpl::OffAmplitudeUpdate");
     MEDIA_LOGD("OffAmplitudeUpdate In");
@@ -2318,7 +2327,7 @@ void AVPlayerImpl::OffAmplitudeUpdate(optional_view<callback<void(array_view<flo
 }
 
 void AVPlayerImpl::OffBufferingUpdate(optional_view<callback<void(ohos::multimedia::media::BufferingInfoType,
-    int32_t)>> callback)
+    double)>> callback)
 {
     MediaTrace trace("AVPlayerImpl::OffBufferingUpdate");
     MEDIA_LOGD("OffBufferingUpdate In");
@@ -2332,7 +2341,7 @@ void AVPlayerImpl::OffBufferingUpdate(optional_view<callback<void(ohos::multimed
     ClearCallbackReference(callbackName);
     MEDIA_LOGI("OffBufferingUpdate End");
 }
-void AVPlayerImpl::OffVideoSizeChange(optional_view<callback<void(int32_t, int32_t)>> callback)
+void AVPlayerImpl::OffVideoSizeChange(optional_view<callback<void(double, double)>> callback)
 {
     MediaTrace trace("AVPlayerImpl::OffVideoSizeChange");
     MEDIA_LOGD("OffVideoSizeChange In");
@@ -2347,7 +2356,7 @@ void AVPlayerImpl::OffVideoSizeChange(optional_view<callback<void(int32_t, int32
     MEDIA_LOGI("OffVideoSizeChange End");
 }
 
-void AVPlayerImpl::OffTrackChange(optional_view<callback<void(int32_t, bool)>> callback)
+void AVPlayerImpl::OffTrackChange(optional_view<callback<void(double, bool)>> callback)
 {
     MediaTrace trace("AVPlayerImpl::OffTrackChange");
     MEDIA_LOGD("OffTrackChange In");
@@ -2391,7 +2400,7 @@ void AVPlayerImpl::OffSuperResolutionChanged(optional_view<callback<void(bool)>>
     ClearCallbackReference(callbackName);
     MEDIA_LOGI("OffSuperResolutionChanged End");
 }
-void AVPlayerImpl::OffTrackInfoUpdate(optional_view<callback<void(array_view<map<string, int32_t>>)>> callback)
+void AVPlayerImpl::OffTrackInfoUpdate(optional_view<callback<void(array_view<map<string, double>>)>> callback)
 {
     MediaTrace trace("AVPlayerImpl::OffTrackInfoUpdate");
     MEDIA_LOGD("OffTrackInfoUpdate In");
@@ -2406,9 +2415,9 @@ void AVPlayerImpl::OffTrackInfoUpdate(optional_view<callback<void(array_view<map
     MEDIA_LOGI("OffTrackInfoUpdate End");
 }
 
-void AVPlayerImpl::OffSeiMessageReceived(array_view<int32_t> payloadTypes,
+void AVPlayerImpl::OffSeiMessageReceived(array_view<double> payloadTypes,
     optional_view<callback<void(array_view<::ohos::multimedia::media::SeiMessage>,
-    optional_view<int32_t>)>> callback)
+    optional_view<double>)>> callback)
 {
     MediaTrace trace("AVPlayerImpl::OffSeiMessageReceived");
     MEDIA_LOGD("OffSeiMessageReceived In");
@@ -2680,9 +2689,15 @@ void AVPlayerImpl::OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::st
     }
 }
 
-AVPlayer CreateAVPlayerSync()
+optional<AVPlayer> CreateAVPlayerSync()
 {
-    return make_holder<AVPlayerImpl, AVPlayer>();
+    auto res = make_holder<AVPlayerImpl, AVPlayer>();
+    if (taihe::has_error()) {
+        MEDIA_LOGE("Create AVPlayer failed!");
+        taihe::reset_error();
+        return optional<AVPlayer>(std::nullopt);
+    }
+    return optional<AVPlayer>(std::in_place, res);
 }
 }
 TH_EXPORT_CPP_API_CreateAVPlayerSync(CreateAVPlayerSync);

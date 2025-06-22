@@ -116,11 +116,12 @@ void HelperDataSourceCallback::UvWork(HelperDataSourceTHCallbackWraper *cbWrap,
 
             auto func = ref->callbackRef_;
             std::shared_ptr<DataSrcCallback> cacheCallback = std::reinterpret_pointer_cast<DataSrcCallback>(func);
-            taihe::optional_view posOption = taihe::optional_view<int64_t>(std::nullopt);
+            taihe::optional_view posOption = taihe::optional_view<double>(std::nullopt);
             if (event->pos_ != -1) {
-                posOption = taihe::optional_view<int64_t>(&event->pos_);
+                double pos = static_cast<double>(event->pos_);
+                posOption = taihe::optional_view<double>(&pos);
             }
-            event->readSize_ = (*cacheCallback)(dataVector, static_cast<int64_t>(event->length_), posOption);
+            event->readSize_ = (*cacheCallback)(dataVector, static_cast<double>(event->length_), posOption);
             std::unique_lock<std::mutex> lock(event->mutexCond_);
             event->setResult_ = true;
             event->cond_.notify_all();

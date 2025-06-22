@@ -85,8 +85,8 @@ public:
             std::shared_ptr<AutoRef> intRef = callback.lock();
             CHECK_AND_RETURN_LOG(intRef != nullptr, "ref is nullptr");
             auto func = intRef->callbackRef_;
-            std::shared_ptr<taihe::callback<void(int32_t)>> cacheCallback =
-                std::reinterpret_pointer_cast<taihe::callback<void(int32_t)>>(func);
+            std::shared_ptr<taihe::callback<void(double)>> cacheCallback =
+                std::reinterpret_pointer_cast<taihe::callback<void(double)>>(func);
             (*cacheCallback)(value);
         }
     };
@@ -100,9 +100,9 @@ public:
             int32_t firstValueAsDouble = static_cast<int32_t>(valueVec[0]);
             int32_t val = 0;
             auto func = intVecRef->callbackRef_;
-            std::shared_ptr<taihe::callback<void(ohos::multimedia::media::BufferingInfoType, int32_t)>>
+            std::shared_ptr<taihe::callback<void(ohos::multimedia::media::BufferingInfoType, double)>>
                 cacheCallback = std::reinterpret_pointer_cast<taihe::callback<void
-                    (ohos::multimedia::media::BufferingInfoType, int32_t)>>(func);
+                    (ohos::multimedia::media::BufferingInfoType, double)>>(func);
             ohos::multimedia::media::BufferingInfoType::key_t key;
             MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::media::BufferingInfoType>(firstValueAsDouble, key);
             (*cacheCallback)(ohos::multimedia::media::BufferingInfoType(key), val);
@@ -115,23 +115,23 @@ public:
         {
             std::shared_ptr<AutoRef> intVecRef = callback.lock();
             CHECK_AND_RETURN_LOG(intVecRef != nullptr, "ref is nullptr");
-            int32_t firstValueAsDouble = static_cast<int32_t>(valueVec[0]);
-            int32_t secondValueAsDouble = static_cast<int32_t>(valueVec[1]);
+            double firstValueAsDouble = static_cast<double>(valueVec[0]);
+            double secondValueAsDouble = static_cast<double>(valueVec[1]);
             auto func = intVecRef->callbackRef_;
-            std::shared_ptr<taihe::callback<void(int32_t, int32_t)>> cacheCallback =
-                std::reinterpret_pointer_cast<taihe::callback<void(int32_t, int32_t)>>(func);
+            std::shared_ptr<taihe::callback<void(double, double)>> cacheCallback =
+                std::reinterpret_pointer_cast<taihe::callback<void(double, double)>>(func);
             (*cacheCallback)(firstValueAsDouble, secondValueAsDouble);
         }
     };
     struct IntArray : public Base {
-        std::vector<int32_t> valueVec;
+        std::vector<double> valueVec;
         void UvWork() override
         {
             std::shared_ptr<AutoRef> intVecRef = callback.lock();
             CHECK_AND_RETURN_LOG(intVecRef != nullptr, "ref is nullptr");
             auto func = intVecRef->callbackRef_;
-            std::shared_ptr<taihe::callback<void(array_view<int32_t>)>> cacheCallback =
-                std::reinterpret_pointer_cast<taihe::callback<void(array_view<int32_t>)>>(func);
+            std::shared_ptr<taihe::callback<void(array_view<double>)>> cacheCallback =
+                std::reinterpret_pointer_cast<taihe::callback<void(array_view<double>)>>(func);
             (*cacheCallback)(valueVec);
         }
     };
@@ -156,10 +156,10 @@ public:
             std::shared_ptr<AutoRef> floatArrayRef = callback.lock();
             CHECK_AND_RETURN_LOG(floatArrayRef != nullptr, "ref is nullptr");
             auto func = floatArrayRef->callbackRef_;
-            std::shared_ptr<taihe::callback<void(array_view<float>)>> cacheCallback =
-                std::reinterpret_pointer_cast<taihe::callback<void(array_view<float>)>>(func);
-            std::vector<float> floatVec(valueVec.begin(), valueVec.end());
-            (*cacheCallback)(array_view<float>(floatVec));
+            std::shared_ptr<taihe::callback<void(array_view<double>)>> cacheCallback =
+                std::reinterpret_pointer_cast<taihe::callback<void(array_view<double>)>>(func);
+            std::vector<double> floatVec(valueVec.begin(), valueVec.end());
+            (*cacheCallback)(array_view<double>(floatVec));
         }
     };
 
@@ -190,8 +190,8 @@ public:
             std::shared_ptr<AutoRef> intVecRef = callback.lock();
             CHECK_AND_RETURN_LOG(intVecRef != nullptr, "ref is nullptr");
             auto func = intVecRef->callbackRef_;
-            std::shared_ptr<taihe::callback<void(int32_t, bool)>> cacheCallback =
-                std::reinterpret_pointer_cast<taihe::callback<void(int32_t, bool)>>(func);
+            std::shared_ptr<taihe::callback<void(double, bool)>> cacheCallback =
+                std::reinterpret_pointer_cast<taihe::callback<void(double, bool)>>(func);
             (*cacheCallback)(number, isSelect);
         }
     };
@@ -224,16 +224,16 @@ public:
     };
 
     struct SeiInfoUpadte : public Base {
-        int32_t playbackPosition;
+        double playbackPosition;
         std::vector<Format> payloadGroup;
         void UvWork() override
         {
             std::shared_ptr<AutoRef> seiInfoRef = callback.lock();
             CHECK_AND_RETURN_LOG(seiInfoRef != nullptr, "ref is nullptr");
             auto func = seiInfoRef->callbackRef_;
-            std::shared_ptr<taihe::callback<void(array_view<SeiMessage>, optional_view<int32_t>)>> cacheCallback =
+            std::shared_ptr<taihe::callback<void(array_view<SeiMessage>, optional_view<double>)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void(array_view<SeiMessage>,
-                    optional_view<int32_t>)>>(func);
+                    optional_view<double>)>>(func);
             std::vector<SeiMessage> seiMessages;
             for (const auto& format : payloadGroup) {
                 uint8_t* bufferData = nullptr;
@@ -255,7 +255,7 @@ public:
                 seiMessages.push_back(seiMessage);
             }
             array_view<SeiMessage> seiMessageView(seiMessages);
-            (*cacheCallback)(seiMessageView, optional_view<int32_t>(&playbackPosition));
+            (*cacheCallback)(seiMessageView, optional_view<double>(&playbackPosition));
         }
     };
 
@@ -291,8 +291,8 @@ public:
                     (::ohos::multimedia::media::SubtitleInfo const&)>>(func);
             ::ohos::multimedia::media::SubtitleInfo subtitleInfo;
             subtitleInfo.text = ::taihe::optional<taihe::string>(std::in_place_t{}, valueMap.text);
-            subtitleInfo.startTime = taihe::optional<int>(std::in_place_t{}, valueMap.pts);
-            subtitleInfo.duration = taihe::optional<int>(std::in_place_t{}, valueMap.duration);
+            subtitleInfo.startTime = taihe::optional<double>(std::in_place_t{}, valueMap.pts);
+            subtitleInfo.duration = taihe::optional<double>(std::in_place_t{}, valueMap.duration);
             (*cacheCallback)(subtitleInfo);
         }
     };
@@ -672,7 +672,7 @@ void AVPlayerCallback::OnBitRateCollectedCb(const int32_t extra, const Format &i
         return;
     }
 
-    std::vector<int32_t> bitrateVec;
+    std::vector<double> bitrateVec;
     if (infoBody.ContainKey(std::string(PlayerKeys::PLAYER_AVAILABLE_BITRATES))) {
         uint8_t *addr = nullptr;
         size_t size  = 0;
@@ -689,7 +689,7 @@ void AVPlayerCallback::OnBitRateCollectedCb(const int32_t extra, const Format &i
             MEDIA_LOGI("bitrate = %{public}u", bitrate);
             addr += sizeof(uint32_t);
             size -= sizeof(uint32_t);
-            bitrateVec.push_back(static_cast<int32_t>(bitrate));
+            bitrateVec.push_back(static_cast<double>(bitrate));
         }
     }
 
