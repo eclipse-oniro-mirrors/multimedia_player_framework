@@ -487,9 +487,10 @@ int32_t PlayerServiceStub::Reset()
 int32_t PlayerServiceStub::Release()
 {
     MediaTrace trace("PlayerServiceStub::Release");
-    playerCallback_ = nullptr;
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
-    return playerServer_->Release();
+    int32_t ret = playerServer_->Release();
+    playerCallback_ = nullptr;
+    return ret;
 }
 
 int32_t PlayerServiceStub::SetVolume(float leftVolume, float rightVolume)
