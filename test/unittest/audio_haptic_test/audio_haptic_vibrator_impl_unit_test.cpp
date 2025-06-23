@@ -768,11 +768,11 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_038, TestSize.
 
     audioHapticVibratorImpl->hapticSource_.fd = TWO_INDEX;
     audioHapticVibratorImpl->isRunning_ = false;
-    int32_t result = audioHapticVibratorImpl->SetHapticsIntensity(50.0f);
+    result = audioHapticVibratorImpl->SetHapticsIntensity(50.0f);
     EXPECT_EQ(result, MSERR_OK);
 
     audioHapticVibratorImpl->isRunning_ = true;
-    int32_t result = audioHapticVibratorImpl->SetHapticsIntensity(50.0f);
+    result = audioHapticVibratorImpl->SetHapticsIntensity(50.0f);
     EXPECT_EQ(result, MSERR_OK);
 
     audioHapticVibratorImpl->isIntensityChanged_ = true;
