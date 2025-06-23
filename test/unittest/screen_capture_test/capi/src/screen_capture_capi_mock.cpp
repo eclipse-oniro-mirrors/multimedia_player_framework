@@ -227,8 +227,8 @@ int32_t ScreenCaptureCapiMock::StartScreenCaptureWithSurface(const std::any& val
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
     sptr<Surface> surface = std::any_cast<sptr<Surface>>(value);
-    OHNativeWindow* nativeWindow = OH_NativeWindow_CreateNativeWindow(surface);
-    return OH_AVScreenCapture_StartScreenCaptureWithSurface(screenCapture_, nativeWindow);
+    OH_NativeWindow_CreateNativeWindowFromSurfaceId(surface->GetUniqueId(), &nativeWindow_);
+    return OH_AVScreenCapture_StartScreenCaptureWithSurface(screenCapture_, nativeWindow_);
 }
 
 int32_t ScreenCaptureCapiMock::Init(AVScreenCaptureConfig config)
@@ -260,6 +260,10 @@ int32_t ScreenCaptureCapiMock::Release()
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
     DelCallback(screenCapture_);
+    if (nativeWindow_ != nullptr) {
+        OH_NativeWindow_DestroyNativeWindow(nativeWindow_);
+        nativeWindow_ = nullptr;
+    }
     int32_t ret = OH_AVScreenCapture_Release(screenCapture_);
     screenCapture_ = nullptr;
     return ret;

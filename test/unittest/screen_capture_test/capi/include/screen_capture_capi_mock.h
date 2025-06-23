@@ -90,6 +90,7 @@ private:
     bool isStateChangeCallBackEnabled_ = false;
     struct OH_AVScreenCapture_ContentFilter *contentFilter_ = nullptr;
     OH_AVScreenCapture_CaptureStrategy *strategy_ = nullptr;
+    OHNativeWindow* nativeWindow_ = nullptr;
 };
 } // namespace Media
 } // namespace OHOS
