@@ -2060,6 +2060,11 @@ int32_t ScreenCaptureServer::InitRecorderInfo(std::shared_ptr<IRecorderService> 
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoFrameRate failed");
         ret = recorder->SetVideoEncodingBitRate(videoSourceId_, captureConfig_.videoInfo.videoEncInfo.videoBitrate);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoEncodingBitRate failed");
+        ret = recorder->SetVideoEnableBFrame(videoSourceId_, captureConfig_.strategy.enableBFrame);
+        if (ret != MSERR_OK) {
+            MEDIA_LOGE("recorder SetVideoEnableBFrame failed");
+            // continue, do not return error
+        }
     }
     return MSERR_OK;
 }
@@ -2135,8 +2140,6 @@ int32_t ScreenCaptureServer::InitRecorder()
         consumer_ = recorder_->GetSurface(videoSourceId_);
         CHECK_AND_RETURN_RET_LOG(consumer_ != nullptr, MSERR_UNKNOWN, "recorder GetSurface failed");
     }
-    ret = recorder_->SetVideoEnableBFrame(videoSourceId_, captureConfig_.strategy.enableBFrame);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "recorder SetVideoEnableBFrame failed");
     CANCEL_SCOPE_EXIT_GUARD(0);
     MEDIA_LOGI("InitRecorder success");
     return MSERR_OK;
