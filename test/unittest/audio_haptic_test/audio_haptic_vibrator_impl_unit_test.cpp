@@ -739,7 +739,7 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_036, TestSize.
 /**
  * @tc.name  : Test AudioHapticVibratorImpl API
  * @tc.number: AudioHapticVibratorImpl_037
- * @tc.desc  : Test AudioHapticVibratorImpl::IsHdHapticSupported()
+ * @tc.desc  : Test AudioHapticVibratorImpl::IsHapticsCustomSupported()
  */
 HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_037, TestSize.Level0)
 {
@@ -747,14 +747,14 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_037, TestSize.
     auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
     EXPECT_NE(audioHapticVibratorImpl, nullptr);
 
-    bool ret = audioHapticVibratorImpl->IsHdHapticSupported();
+    bool ret = audioHapticVibratorImpl->IsHapticsCustomSupported();
     EXPECT_EQ(ret, true);
 }
 
 /**
  * @tc.name  : Test AudioHapticVibratorImpl API
  * @tc.number: AudioHapticVibratorImpl_038
- * @tc.desc  : Test AudioHapticVibratorImpl::SetHapticIntensity()
+ * @tc.desc  : Test AudioHapticVibratorImpl::SetHapticsIntensity()
  */
 HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_038, TestSize.Level0)
 {
@@ -762,13 +762,21 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_038, TestSize.
     auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
     EXPECT_NE(audioHapticVibratorImpl, nullptr);
 
+    // effectId intensity
+    int32_t result = audioHapticVibratorImpl->SetHapticsIntensity(50.0f);
+    EXPECT_EQ(result, MSERR_OK);
+
+    audioHapticVibratorImpl->hapticSource_.fd = TWO_INDEX;
     audioHapticVibratorImpl->isRunning_ = false;
-    int32_t result = audioHapticVibratorImpl->SetHapticIntensity(50.0f);
+    int32_t result = audioHapticVibratorImpl->SetHapticsIntensity(50.0f);
     EXPECT_EQ(result, MSERR_OK);
 
     audioHapticVibratorImpl->isRunning_ = true;
+    int32_t result = audioHapticVibratorImpl->SetHapticsIntensity(50.0f);
+    EXPECT_EQ(result, MSERR_OK);
+
     audioHapticVibratorImpl->isIntensityChanged_ = true;
-    result = audioHapticVibratorImpl->SetHapticIntensity(50.0f);
+    result = audioHapticVibratorImpl->SetHapticsIntensity(50.0f);
     EXPECT_EQ(result, ERR_OPERATE_NOT_ALLOWED);
 }
 

@@ -33,11 +33,11 @@ public:
     virtual int32_t Release() = 0;
     virtual void ResetStopState() = 0;
     virtual int32_t StartVibrate(const AudioLatencyMode &latencyMode) = 0;
-    virtual int32_t SetHapticIntensity(float intensity) = 0;
+    virtual int32_t SetHapticsIntensity(float intensity) = 0;
     virtual int32_t StopVibrate() = 0;
     virtual int32_t GetDelayTime() = 0;
     virtual void EnableHapticsInSilentMode(bool enable) = 0;
-    virtual bool IsHdHapticSupported() = 0;
+    virtual bool IsHapticsCustomSupported() = 0;
     virtual int32_t SetHapticsRamp(int32_t duration, float startIntensity, float endIntensity) = 0;
     virtual int32_t SetHapticsFeature(const HapticsFeature &feature) = 0;
 

@@ -322,20 +322,25 @@ int32_t AudioHapticVibratorImpl::PreLoad(const HapticSource &hapticSource,
     return MSERR_OK;
 }
 
-int32_t AudioHapticVibratorImpl::SetHapticIntensity(float intensity)
+int32_t AudioHapticVibratorImpl::SetHapticsIntensity(float intensity)
 {
-    MEDIA_LOGI("SetHapticIntensity for effectId source. intensity: %{public}f", intensity);
+    MEDIA_LOGI("SetHapticsIntensity for effectId source. intensity: %{public}f", intensity);
     std::lock_guard<std::mutex> lock(vibrateMutex_);
     int32_t result = MSERR_OK;
 #ifdef SUPPORT_VIBRATOR
-    vibrateIntensity_ = intensity;
-    vibratorParameter_.intensity = intensity;
-    if (isRunning_) {
-        if (isIntensityChanged_) {
-            result = ERR_OPERATE_NOT_ALLOWED;
-        } else {
-            result = SeekAndRestart();
+    if (hapticSource_.hapticUri == "" && hapticSource_.fd == FILE_DESCRIPTOR_INVALID) {
+        vibrateIntensity_ = intensity;
+    } else {
+        if (isRunning_) {
+            if (isIntensityChanged_) {
+                result = ERR_OPERATE_NOT_ALLOWED;
+            } else {
+                result = SeekAndRestart();
+            }
         }
+        CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result,
+            "AudioHapticVibratorImpl::SetHapticsIntensity failed. result: %{public}d", result);
+        vibratorParameter_.intensity = intensity;
     }
 #endif
     return result;
@@ -817,13 +822,13 @@ int32_t AudioHapticVibratorImpl::GetDelayTime()
     return delayTime;
 }
 
-bool AudioHapticVibratorImpl::IsHdHapticSupported()
+bool AudioHapticVibratorImpl::IsHapticsCustomSupported()
 {
     std::lock_guard<std::mutex> lock(vibrateMutex_);
     int32_t result = false;
 #ifdef SUPPORT_VIBRATOR
-    result = Sensors::IsHdHapticSupported();
-    MEDIA_LOGI("AudioHapticVibratorImpl::IsHdHapticSupported: %{public}d", result);
+    result = Sensors::IsSupportVibratorCustom();
+    MEDIA_LOGI("AudioHapticVibratorImpl::IsHapticsCustomSupported: %{public}d", result);
 #endif
     return result;
 }

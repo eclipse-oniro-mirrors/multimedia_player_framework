@@ -432,7 +432,7 @@ napi_value AudioHapticPlayerNapi::SetHapticsIntensity(napi_env env, napi_callbac
             if (object == nullptr || object->audioHapticPlayer_ == nullptr) {
                 context->result = NAPI_ERR_SERVICE_DIED;
             } else {
-                context->result = object->audioHapticPlayer_->SetHapticIntensity(context->intensity * PRECISION);
+                context->result = object->audioHapticPlayer_->SetHapticsIntensity(context->intensity * PRECISION);
             }
         },
         [](napi_env env, napi_status status, void *data) {
