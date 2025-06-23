@@ -459,11 +459,10 @@ private:
     bool isHintPauseReceived_ { false };
     std::atomic<bool> interruptNotifyPlay_ {false};
     std::atomic<bool> isSaveInterruptEventNeeded_ {true};
-    OHOS::AudioStandard::InterruptEvent interruptEvent_ = {
-        .eventType = OHOS::AudioStandard::INTERRUPT_TYPE_END,
-        .forceType = OHOS::AudioStandard::INTERRUPT_SHARE,
-        .hintType = OHOS::AudioStandard::INTERRUPT_HINT_RESUME
-    };
+    OHOS::AudioStandard::InterruptEvent interruptEvent_ = OHOS::AudioStandard::InterruptEvent(
+        OHOS::AudioStandard::INTERRUPT_TYPE_END,
+        OHOS::AudioStandard::INTERRUPT_SHARE,
+        OHOS::AudioStandard::INTERRUPT_HINT_RESUME);
     bool isCalledBySystemApp_ { false };
 
     std::atomic<bool> isOnlyAudio_ {false};
