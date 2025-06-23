@@ -1227,11 +1227,11 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticPlayer_Release_004, TestSize.Level1)
 }
 
 /**
- * @tc.name  : Test AudioHapticPlayer SetHapticsIntensity API
- * @tc.number: AudioHapticPlayer_SetHapticsIntensity_001
- * @tc.desc  : Test AudioHapticPlayer SetHapticsIntensity interface
+ * @tc.name  : Test AudioHapticPlayer SetHapticIntensity API
+ * @tc.number: AudioHapticPlayer_SetHapticIntensity_001
+ * @tc.desc  : Test AudioHapticPlayer SetHapticIntensity interface
  */
-HWTEST_F(AudioHapticUnitTest, AudioHapticPlayer_SetHapticsIntensity_001, TestSize.Level1)
+HWTEST_F(AudioHapticUnitTest, AudioHapticPlayer_SetHapticIntensity_001, TestSize.Level1)
 {
     EXPECT_NE(g_audioHapticManager, nullptr);
 
@@ -1251,35 +1251,35 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticPlayer_SetHapticsIntensity_001, TestSiz
     EXPECT_EQ(MSERR_OK, result);
 
     g_effectAudioHapticPlayer->SetVolume(1.0f);
-    g_effectAudioHapticPlayer->SetHapticsIntensity(100.0f);
+    g_effectAudioHapticPlayer->SetHapticIntensity(100.0f);
     result = g_effectAudioHapticPlayer->Start();
     EXPECT_EQ(MSERR_OK, result);
 
     sleep(1);
     g_effectAudioHapticPlayer->Stop();
     g_effectAudioHapticPlayer->SetVolume(0.75f);
-    g_effectAudioHapticPlayer->SetHapticsIntensity(75.0f);
+    g_effectAudioHapticPlayer->SetHapticIntensity(75.0f);
     result = g_effectAudioHapticPlayer->Start();
     EXPECT_EQ(MSERR_OK, result);
 
     sleep(1);
     g_effectAudioHapticPlayer->Stop();
     g_effectAudioHapticPlayer->SetVolume(0.5f);
-    g_effectAudioHapticPlayer->SetHapticsIntensity(50.0f);
+    g_effectAudioHapticPlayer->SetHapticIntensity(50.0f);
     result = g_effectAudioHapticPlayer->Start();
     EXPECT_EQ(MSERR_OK, result);
 
     sleep(1);
     g_effectAudioHapticPlayer->Stop();
     g_effectAudioHapticPlayer->SetVolume(0.25f);
-    g_effectAudioHapticPlayer->SetHapticsIntensity(25.0f);
+    g_effectAudioHapticPlayer->SetHapticIntensity(25.0f);
     result = g_effectAudioHapticPlayer->Start();
     EXPECT_EQ(MSERR_OK, result);
 
     sleep(1);
     g_effectAudioHapticPlayer->Stop();
     g_effectAudioHapticPlayer->SetVolume(0.01f);
-    g_effectAudioHapticPlayer->SetHapticsIntensity(1.0f);
+    g_effectAudioHapticPlayer->SetHapticIntensity(1.0f);
     result = g_effectAudioHapticPlayer->Start();
     EXPECT_EQ(MSERR_OK, result);
 
@@ -1291,11 +1291,11 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticPlayer_SetHapticsIntensity_001, TestSiz
 }
 
 /**
- * @tc.name  : Test AudioHapticPlayer SetHapticsIntensity API
- * @tc.number: AudioHapticPlayer_SetHapticsIntensity_002
- * @tc.desc  : Test AudioHapticPlayer SetHapticsIntensity interface
+ * @tc.name  : Test AudioHapticPlayer SetHapticIntensity API
+ * @tc.number: AudioHapticPlayer_SetHapticIntensity_002
+ * @tc.desc  : Test AudioHapticPlayer SetHapticIntensity interface
  */
-HWTEST_F(AudioHapticUnitTest, AudioHapticPlayer_SetHapticsIntensity_002, TestSize.Level1)
+HWTEST_F(AudioHapticUnitTest, AudioHapticPlayer_SetHapticIntensity_002, TestSize.Level1)
 {
     EXPECT_NE(g_audioHapticManager, nullptr);
  
@@ -1314,16 +1314,16 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticPlayer_SetHapticsIntensity_002, TestSiz
     EXPECT_EQ(MSERR_OK, result);
  
     audioHapticPlayer->SetVolume(1.0f);
-    audioHapticPlayer->SetHapticsIntensity(100.0f);
+    audioHapticPlayer->SetHapticIntensity(100.0f);
     result = audioHapticPlayer->Start();
     EXPECT_EQ(MSERR_OK, result);
  
     sleep(1);
     audioHapticPlayer->SetVolume(0.75f);
-    result = audioHapticPlayer->SetHapticsIntensity(75.0f);
+    result = audioHapticPlayer->SetHapticIntensity(75.0f);
     EXPECT_EQ(MSERR_OK, result);
  
-    result = audioHapticPlayer->SetHapticsIntensity(50.0f);
+    result = audioHapticPlayer->SetHapticIntensity(50.0f);
     EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, result);
  
     audioHapticPlayer->Release();

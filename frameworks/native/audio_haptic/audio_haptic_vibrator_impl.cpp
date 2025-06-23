@@ -322,9 +322,9 @@ int32_t AudioHapticVibratorImpl::PreLoad(const HapticSource &hapticSource,
     return MSERR_OK;
 }
 
-int32_t AudioHapticVibratorImpl::SetHapticsIntensity(float intensity)
+int32_t AudioHapticVibratorImpl::SetHapticIntensity(float intensity)
 {
-    MEDIA_LOGI("SetHapticsIntensity for effectId source. intensity: %{public}f", intensity);
+    MEDIA_LOGI("SetHapticIntensity for effectId source. intensity: %{public}f", intensity);
     std::lock_guard<std::mutex> lock(vibrateMutex_);
     int32_t result = MSERR_OK;
 #ifdef SUPPORT_VIBRATOR
@@ -339,7 +339,7 @@ int32_t AudioHapticVibratorImpl::SetHapticsIntensity(float intensity)
             }
         }
         CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result,
-            "AudioHapticVibratorImpl::SetHapticsIntensity failed. result: %{public}d", result);
+            "AudioHapticVibratorImpl::SetHapticIntensity failed. result: %{public}d", result);
         vibratorParameter_.intensity = intensity;
     }
 #endif

@@ -36,7 +36,7 @@ public:
     int32_t Stop() override;
     int32_t Release() override;
     int32_t SetVolume(float volume) override;
-    int32_t SetHapticsIntensity(float intensity) override;
+    int32_t SetHapticIntensity(float intensity) override;
     int32_t SetLoop(bool loop) override;
     int32_t SetAudioHapticPlayerCallback(const std::shared_ptr<AudioHapticPlayerCallback> &playerCallback) override;
     int32_t GetAudioCurrentTime() override;

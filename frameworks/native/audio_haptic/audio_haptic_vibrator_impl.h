@@ -34,7 +34,7 @@ public:
     ~AudioHapticVibratorImpl();
 
     int32_t PreLoad(const HapticSource &hapticSource, const AudioStandard::StreamUsage &streamUsage) override;
-    int32_t SetHapticsIntensity(float intensity) override;
+    int32_t SetHapticIntensity(float intensity) override;
     int32_t Release() override;
     void ResetStopState() override;
     int32_t StartVibrate(const AudioLatencyMode &latencyMode) override;

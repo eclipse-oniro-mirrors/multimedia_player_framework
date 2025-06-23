@@ -143,7 +143,7 @@ public:
 
     virtual int32_t SetVolume(float volume) = 0;
 
-    virtual int32_t SetHapticsIntensity(float intensity) = 0;
+    virtual int32_t SetHapticIntensity(float intensity) = 0;
 
     virtual int32_t SetLoop(bool loop) = 0;
 

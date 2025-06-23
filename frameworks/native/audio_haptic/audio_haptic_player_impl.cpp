@@ -310,18 +310,18 @@ int32_t AudioHapticPlayerImpl::EnableHapticsInSilentMode(bool enable)
     return result;
 }
 
-int32_t AudioHapticPlayerImpl::SetHapticsIntensity(float intensity)
+int32_t AudioHapticPlayerImpl::SetHapticIntensity(float intensity)
 {
-    MEDIA_LOGI("AudioHapticPlayerImpl::SetHapticsIntensity %{public}f", intensity);
+    MEDIA_LOGI("AudioHapticPlayerImpl::SetHapticIntensity %{public}f", intensity);
     CHECK_AND_RETURN_RET_LOG(playerState_ != AudioHapticPlayerState::STATE_RELEASED, ERR_OPERATE_NOT_ALLOWED,
         "The audio haptic player has been released.");
     if (intensity < 1.0f || intensity > 100.0f) {
-        MEDIA_LOGE("SetHapticsIntensity: the intensity value is invalid.");
+        MEDIA_LOGE("SetHapticIntensity: the intensity value is invalid.");
         return MSERR_INVALID_VAL;
     }
 
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
-    return audioHapticVibrator_->SetHapticsIntensity(intensity);
+    return audioHapticVibrator_->SetHapticIntensity(intensity);
 }
 
 int32_t AudioHapticPlayerImpl::SetHapticsFeature(const HapticsFeature &feature)

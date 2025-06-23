@@ -526,7 +526,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_023, TestSize.Leve
 /**
  * @tc.name  : Test AudioHapticPlayerImpl API
  * @tc.number: AudioHapticPlayerImpl_024
- * @tc.desc  : Test AudioHapticPlayerImpl::SetHapticsIntensity()
+ * @tc.desc  : Test AudioHapticPlayerImpl::SetHapticIntensity()
  */
 HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_024, TestSize.Level1)
 {
@@ -536,14 +536,14 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_024, TestSize.Leve
 
     float intensity = NUM_1;
 
-    auto ret = audioHapticPlayerImpl->SetHapticsIntensity(intensity);
+    auto ret = audioHapticPlayerImpl->SetHapticIntensity(intensity);
     EXPECT_EQ(ret, MSERR_INVALID_VAL);
 }
 
 /**
  * @tc.name  : Test AudioHapticPlayerImpl API
  * @tc.number: AudioHapticPlayerImpl_025
- * @tc.desc  : Test AudioHapticPlayerImpl::SetHapticsIntensity()
+ * @tc.desc  : Test AudioHapticPlayerImpl::SetHapticIntensity()
  */
 HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_025, TestSize.Level1)
 {
@@ -557,14 +557,14 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_025, TestSize.Leve
     audioHapticPlayerImpl->audioHapticVibrator_ = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl2);
     EXPECT_NE(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
 
-    auto ret = audioHapticPlayerImpl->SetHapticsIntensity(intensity);
+    auto ret = audioHapticPlayerImpl->SetHapticIntensity(intensity);
     EXPECT_EQ(ret, MSERR_OK);
 }
 
 /**
  * @tc.name  : Test AudioHapticPlayerImpl API
  * @tc.number: AudioHapticPlayerImpl_026
- * @tc.desc  : Test AudioHapticPlayerImpl::SetHapticsIntensity()
+ * @tc.desc  : Test AudioHapticPlayerImpl::SetHapticIntensity()
  */
 HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_026, TestSize.Level1)
 {
@@ -574,7 +574,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_026, TestSize.Leve
 
     float intensity = NUM_4;
 
-    auto ret = audioHapticPlayerImpl->SetHapticsIntensity(intensity);
+    auto ret = audioHapticPlayerImpl->SetHapticIntensity(intensity);
     EXPECT_EQ(ret, MSERR_INVALID_VAL);
 }
 
