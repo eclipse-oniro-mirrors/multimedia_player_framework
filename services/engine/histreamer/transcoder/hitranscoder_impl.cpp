@@ -535,7 +535,7 @@ Status HiTransCoderImpl::ConfigureAudioParam(const TransCoderParam &transCoderPa
             if (audioBitrate.bitRate <= 0) {
                 MEDIA_LOG_E("Invalid audioBitrate.bitRate %{public}d", audioBitrate.bitRate);
                 OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_PARAMETER_VERIFICATION_FAILED});
-                return MSERR_PARAMETER_VERIFICATION_FAILED;
+                return Status::ERROR_INVALID_PARAMETER;
             }
             int64_t bitrate = -1;
             audioEncFormat_->Get<Tag::MEDIA_BITRATE>(bitrate);
