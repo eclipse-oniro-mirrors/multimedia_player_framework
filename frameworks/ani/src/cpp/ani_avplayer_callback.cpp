@@ -408,6 +408,7 @@ public:
     {
         auto t1 = std::thread([aniCb]() {
             aniCb->UvWork();
+            delete aniCb;
         });
         t1.join();
     }
