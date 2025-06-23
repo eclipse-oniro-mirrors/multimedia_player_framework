@@ -47,7 +47,7 @@ const std::string RELEASE = "Release";
 const std::string SET_AV_TRANSCODER_CONFIG = "SetAVTransCoderConfig";
 }
 
-constexpr int32_t AVTRANSCODER_DEFAULT_AUDIO_BIT_RATE = 48000;
+constexpr int32_t AVTRANSCODER_DEFAULT_AUDIO_BIT_RATE = INT32_MAX;
 constexpr int32_t AVTRANSCODER_DEFAULT_VIDEO_BIT_RATE = -1;
 constexpr int32_t AVTRANSCODER_DEFAULT_FRAME_HEIGHT = -1;
 constexpr int32_t AVTRANSCODER_DEFAULT_FRAME_WIDTH = -1;
@@ -103,7 +103,7 @@ const std::string EVENT_PROGRESS_UPDATE = "progressUpdate";
 struct AVTransCoderAsyncContext;
 
 struct AVTransCoderConfig {
-    AudioCodecFormat audioCodecFormat = AudioCodecFormat::AUDIO_DEFAULT;
+    AudioCodecFormat audioCodecFormat = AudioCodecFormat::AUDIO_CODEC_FORMAT_BUTT;
     int32_t audioBitrate = AVTRANSCODER_DEFAULT_AUDIO_BIT_RATE;
     OutputFormatType fileFormat = OutputFormatType::FORMAT_DEFAULT;
     VideoCodecFormat videoCodecFormat = VideoCodecFormat::VIDEO_DEFAULT;
