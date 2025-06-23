@@ -33,7 +33,7 @@ using namespace OHOS;
 using namespace OHOS::Media;
 using namespace OHOS::MediaAVCodec;
 
-constexpr int32_t AVTRANSCODER_DEFAULT_AUDIO_BIT_RATE = 48000;
+constexpr int32_t AVTRANSCODER_DEFAULT_AUDIO_BIT_RATE = INT32_MAX;
 constexpr int32_t AVTRANSCODER_DEFAULT_VIDEO_BIT_RATE = -1;
 constexpr int32_t AVTRANSCODER_DEFAULT_FRAME_HEIGHT = -1;
 constexpr int32_t AVTRANSCODER_DEFAULT_FRAME_WIDTH = -1;
@@ -295,7 +295,7 @@ struct NativeAVTranscoderConfig : public OH_AVTranscoder_Config {
     int64_t srcOffset = AVTRANSCODER_DEFAULT_OFFSET;
     int64_t length = AVTRANSCODER_DEFAULT_LENGTH;
     int32_t dstFd = AVTRANSCODER_DEFAULT_FD;
-    AudioCodecFormat audioCodecFormat = AudioCodecFormat::AUDIO_DEFAULT;
+    AudioCodecFormat audioCodecFormat = AudioCodecFormat::AUDIO_CODEC_FORMAT_BUTT;
     int32_t audioBitrate = AVTRANSCODER_DEFAULT_AUDIO_BIT_RATE;
     OutputFormatType fileFormat = OutputFormatType::FORMAT_DEFAULT;
     VideoCodecFormat videoCodecFormat = VideoCodecFormat::VIDEO_DEFAULT;
