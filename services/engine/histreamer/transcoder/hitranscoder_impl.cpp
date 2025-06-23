@@ -539,7 +539,7 @@ Status HiTransCoderImpl::ConfigureAudioParam(const TransCoderParam &transCoderPa
             }
             int64_t bitrate = -1;
             audioEncFormat_->Get<Tag::MEDIA_BITRATE>(bitrate);
-            if (audioBitrate.bitrate == INVALID_AUDIO_BITRATE || audioBitrate.bitrate == bitrate) {
+            if (audioBitrate.bitRate == INVALID_AUDIO_BITRATE || audioBitrate.bitRate == bitrate) {
                 skipAudioDecAndEncFlag_.second = true;
             }
             audioBitrate.bitRate = audioBitrate.bitRate == INVALID_AUDIO_BITRATE ?
