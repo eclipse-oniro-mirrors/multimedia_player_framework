@@ -1164,7 +1164,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_058, TestSize.Leve
     EXPECT_NE(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
     
     EXPECT_EQ(audioHapticPlayerImpl->IsHapticsIntensityAdjustmentSupported(),
-        audioHapticVibrator_->IsHdHapticSupported());
+        audioHapticVibrator_->IsHapticsCustomSupported());
 }
 
 /**
