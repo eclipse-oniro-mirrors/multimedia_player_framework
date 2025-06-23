@@ -24,9 +24,9 @@ class ScreenCaptureNativeMock : public ScreenCaptureMock {
 public:
     explicit ScreenCaptureNativeMock(std::shared_ptr<ScreenCapture> screencapture) : screenCapture_(screencapture) {}
     ~ScreenCaptureNativeMock();
-    int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBackMock>& callback,
-        const bool isErrorCallBackEnabled, const bool isDataCallBackEnabled,
-        const bool isStateChangeCallBackEnabled) override;
+    int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallbackMock>& callback,
+        const bool isErrorCallbackEnabled, const bool isDataCallbackEnabled,
+        const bool isStateChangeCallbackEnabled, const bool isCaptureContentChangeCallbackEnabled) override;
     int32_t Init(AVScreenCaptureConfig config) override;
     int32_t StartScreenCapture() override;
     int32_t StartScreenCaptureWithSurface(const std::any& value) override;
@@ -46,9 +46,13 @@ public:
     int32_t ReleaseVideoBuffer() override;
     int32_t ExcludeWindowContent(int32_t *windowIDs, int32_t windowCount) override;
     int32_t ExcludeAudioContent(AVScreenCaptureFilterableAudioContent audioType) override;
-    bool IsStateChangeCallBackEnabled() override
+    bool IsStateChangeCallbackEnabled() override
     {
-        return isStateChangeCallBackEnabled_;
+        return isStateChangeCallbackEnabled_;
+    }
+    bool IsCaptureContentChangeCallbackEnabled() override
+    {
+        return isCaptureContentChangeCallbackEnabled_;
     }
     int32_t CreateCaptureStrategy() override;
     int32_t StrategyForKeepCaptureDuringCall(bool value) override;
@@ -56,16 +60,18 @@ public:
     int32_t ReleaseCaptureStrategy() override;
     int32_t SetCanvasFollowRotationStrategy(bool value) override;
     int32_t StrategyForBFramesEncoding(bool value) override;
+    int32_t StrategyForPrivacyMaskMode(int32_t value) override;
 private:
     std::shared_ptr<ScreenCapture> screenCapture_ = nullptr;
-    std::shared_ptr<ScreenCaptureCallBack> cb_;
-    bool isStateChangeCallBackEnabled_ = false;
+    std::shared_ptr<ScreenCaptureCallback> cb_;
+    bool isStateChangeCallbackEnabled_ = false;
+    bool isCaptureContentChangeCallbackEnabled_ = false;
     ScreenCaptureStrategy strategy_;
 };
 
 class ScreenCaptureNativeCallbackMock : public ScreenCaptureCallBack, public NoCopyable {
 public:
-    ScreenCaptureNativeCallbackMock(std::shared_ptr<ScreenCaptureCallBackMock> cb,
+    ScreenCaptureNativeCallbackMock(std::shared_ptr<ScreenCaptureCallbackMock> cb,
         std::weak_ptr<ScreenCapture> vd) : mockCb_(cb), screenCapture_(vd) {}
     ~ScreenCaptureNativeCallbackMock()
     {
@@ -75,11 +81,12 @@ public:
     void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) override;
     void OnVideoBufferAvailable(bool isReady) override;
     void OnStateChange(AVScreenCaptureStateCode stateCode) override;
+    void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area) override;
     void OnDisplaySelected(uint64_t displayId) override;
     void OnRelease();
 
 private:
-    std::shared_ptr<ScreenCaptureCallBackMock> mockCb_ = nullptr;
+    std::shared_ptr<ScreenCaptureCallbackMock> mockCb_ = nullptr;
     std::weak_ptr<ScreenCapture> screenCapture_;
     std::mutex mutex_;
 };

@@ -210,5 +210,77 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_enable_b_frame_002, TestSize.Leve
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_enable_b_frame_002 after");
 }
+
+/**
+ * @tc.name: screen_capture_strategy_for_maskmode_001
+ * @tc.desc: setStrategyForPrivacyMaskMode == 0
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_strategy_for_maskmode_001, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_strategy_for_maskmode_001 S");
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_strategy_for_maskmode_001.mp4", recorderInfo);
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo micCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT
+    };
+    config_.audioInfo.micCapInfo = micCapInfo;
+    AudioCaptureInfo innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->CreateCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->StrategyForPrivacyMaskMode(0));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->ReleaseCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_strategy_for_maskmode_001 E");
+}
+
+/**
+ * @tc.name: screen_capture_strategy_for_maskmode_002
+ * @tc.desc: setStrategyForPrivacyMaskMode == 1
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_strategy_for_maskmode_002, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_strategy_for_maskmode_002 S");
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_strategy_for_maskmode_002.mp4", recorderInfo);
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo micCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT
+    };
+    config_.audioInfo.micCapInfo = micCapInfo;
+    AudioCaptureInfo innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->CreateCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->StrategyForPrivacyMaskMode(1));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->ReleaseCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_strategy_for_maskmode_002 E");
+}
 } // namespace Media
 } // namespace OHOS

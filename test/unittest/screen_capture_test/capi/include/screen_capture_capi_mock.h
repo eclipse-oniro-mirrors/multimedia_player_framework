@@ -24,9 +24,9 @@ class ScreenCaptureCapiMock : public ScreenCaptureMock {
 public:
     explicit ScreenCaptureCapiMock(OH_AVScreenCapture* screencapture) : screenCapture_(screencapture) {}
     ~ScreenCaptureCapiMock() = default;
-    int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBackMock>& callback,
-        const bool isErrorCallBackEnabled, const bool isDataCallBackEnabled,
-        const bool isStateChangeCallBackEnabled) override;
+    int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallbackMock>& callback,
+        const bool isErrorCallbackEnabled, const bool isDataCallbackEnabled,
+        const bool isStateChangeCallbackEnabled, const bool isCaptureContentChangeCallbackEnabled) override;
     int32_t Init(AVScreenCaptureConfig config) override;
     int32_t StartScreenCapture() override;
     int32_t StartScreenCaptureWithSurface(const std::any& value) override;
@@ -47,17 +47,21 @@ public:
     int32_t ReleaseVideoBuffer() override;
     int32_t ExcludeWindowContent(int32_t *windowIDs, int32_t windowCount) override;
     int32_t ExcludeAudioContent(AVScreenCaptureFilterableAudioContent audioType) override;
-    bool IsErrorCallBackEnabled() override
+    bool IsErrorCallbackEnabled() override
     {
-        return isErrorCallBackEnabled_;
+        return isErrorCallbackEnabled_;
     }
-    bool IsDataCallBackEnabled() override
+    bool IsDataCallbackEnabled() override
     {
-        return isDataCallBackEnabled_;
+        return isDataCallbackEnabled_;
     }
-    bool IsStateChangeCallBackEnabled() override
+    bool IsStateChangeCallbackEnabled() override
     {
-        return isStateChangeCallBackEnabled_;
+        return isStateChangeCallbackEnabled_;
+    }
+    bool IsCaptureContentChangeCallbackEnabled() override
+    {
+        return isCaptureContentChangeCallbackEnabled_;
     }
     int32_t CreateCaptureStrategy() override;
     int32_t StrategyForKeepCaptureDuringCall(bool value) override;
@@ -65,10 +69,11 @@ public:
     int32_t ReleaseCaptureStrategy() override;
     int32_t SetCanvasFollowRotationStrategy(bool value) override;
     int32_t StrategyForBFramesEncoding(bool value) override;
+    int32_t StrategyForPrivacyMaskMode(int32_t value) override;
 private:
     static void SetScreenCaptureCallback(OH_AVScreenCapture *screencapture,
-        std::shared_ptr<ScreenCaptureCallBackMock> cb);
-    static std::shared_ptr<ScreenCaptureCallBackMock> GetCallback(OH_AVScreenCapture *screenCapture);
+        std::shared_ptr<ScreenCaptureCallbackMock> cb);
+    static std::shared_ptr<ScreenCaptureCallbackMock> GetCallback(OH_AVScreenCapture *screenCapture);
     static void DelCallback(OH_AVScreenCapture *screenCapture);
     static void OnError(OH_AVScreenCapture *screenCapture, int32_t errorCode);
     static void OnAudioBufferAvailable(OH_AVScreenCapture *screenCapture, bool isReady, OH_AudioCaptureSourceType type);
@@ -78,18 +83,24 @@ private:
         OH_AVScreenCaptureBufferType bufferType, int64_t timestamp, void *userData);
     static void OnStateChange(struct OH_AVScreenCapture *capture,
         OH_AVScreenCaptureStateCode stateCode, void *userData);
+    static void OnCaptureContentChanged(struct OH_AVScreenCapture *capture, OH_AVScreenCaptureContentChangedEvent
+        event, OH_Rect* area, void *userData);
     static void OnDisplaySelected(struct OH_AVScreenCapture *capture, uint64_t displayId, void *userData);
     OH_AVScreenCaptureConfig Convert(AVScreenCaptureConfig config);
 
+    int32_t GetCaptureContentChangeCallback(const bool isCaptureContentChangeCallbackEnabled);
+
     static std::mutex mutex_;
-    static std::map<OH_AVScreenCapture *, std::shared_ptr<ScreenCaptureCallBackMock>> mockCbMap_;
+    static std::map<OH_AVScreenCapture *, std::shared_ptr<ScreenCaptureCallbackMock>> mockCbMap_;
 
     OH_AVScreenCapture* screenCapture_ = nullptr;
-    bool isErrorCallBackEnabled_ = false;
-    bool isDataCallBackEnabled_ = false;
-    bool isStateChangeCallBackEnabled_ = false;
+    bool isErrorCallbackEnabled_ = false;
+    bool isDataCallbackEnabled_ = false;
+    bool isStateChangeCallbackEnabled_ = false;
+    bool isCaptureContentChangeCallbackEnabled_ = false;
     struct OH_AVScreenCapture_ContentFilter *contentFilter_ = nullptr;
     OH_AVScreenCapture_CaptureStrategy *strategy_ = nullptr;
+    OHNativeWindow* nativeWindow_ = nullptr;
 };
 } // namespace Media
 } // namespace OHOS

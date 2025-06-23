@@ -41,12 +41,13 @@ namespace ScreenCaptureTestParam {
     constexpr double EXCESS_RATE = 1.2;
 } // namespace ScreenCaptureTestParam
 
-class ScreenCaptureCallBackMock : public NoCopyable {
+class ScreenCaptureCallbackMock : public NoCopyable {
 public:
     virtual void OnError(int32_t errorCode) = 0;
     virtual void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) = 0;
     virtual void OnVideoBufferAvailable(bool isReady) = 0;
     virtual void OnStateChange(AVScreenCaptureStateCode stateCode) = 0;
+    virtual void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area) = 0;
     virtual void OnDisplaySelected(uint64_t displayId) = 0;
     virtual void OnError(int32_t errorCode, void *userData)
     {
@@ -70,9 +71,9 @@ public:
 class ScreenCaptureMock {
 public:
     virtual ~ScreenCaptureMock() = default;
-    virtual int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBackMock>& callback,
-        const bool isErrorCallBackEnabled = false, const bool isDataCallBackEnabled = false,
-        const bool isStateChangeCallBackEnabled = false) = 0;
+    virtual int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallbackMock>& callback,
+        const bool isErrorCallbackEnabled = false, const bool isDataCallbackEnabled = false,
+        const bool isStateChangeCallbackEnabled = false, const bool isCaptureContentChangeCallbackEnabled = false) = 0;
     virtual int32_t Init(AVScreenCaptureConfig config) = 0;
     virtual int32_t StartScreenCapture() = 0;
     virtual int32_t StartScreenCaptureWithSurface(const std::any& value) = 0;
@@ -92,15 +93,19 @@ public:
     virtual int32_t ReleaseVideoBuffer() = 0;
     virtual int32_t ExcludeWindowContent(int32_t *windowIDs, int32_t windowCount) = 0;
     virtual int32_t ExcludeAudioContent(AVScreenCaptureFilterableAudioContent audioType) = 0;
-    virtual bool IsErrorCallBackEnabled()
+    virtual bool IsErrorCallbackEnabled()
     {
         return false;
     }
-    virtual bool IsDataCallBackEnabled()
+    virtual bool IsDataCallbackEnabled()
     {
         return false;
     }
-    virtual bool IsStateChangeCallBackEnabled()
+    virtual bool IsStateChangeCallbackEnabled()
+    {
+        return false;
+    }
+    virtual bool IsCaptureContentChangeCallbackEnabled()
     {
         return false;
     }
@@ -110,6 +115,7 @@ public:
     virtual int32_t ReleaseCaptureStrategy();
     virtual int32_t SetCanvasFollowRotationStrategy(bool value);
     virtual int32_t StrategyForBFramesEncoding(bool value);
+    virtual int32_t StrategyForPrivacyMaskMode(int32_t value);
 };
 
 class __attribute__((visibility("default"))) ScreenCaptureMockFactory {
