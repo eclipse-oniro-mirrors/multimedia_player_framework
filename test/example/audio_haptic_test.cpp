@@ -106,8 +106,6 @@ int main()
         std::cout << "failed to register source" << std::endl;
         return ERROR_EXIT;
     }
-    
-    // g_audioHapticManagerImpl->SetAudioLatencyMode(sourceId, AudioLatencyMode::AUDIO_LATENCY_MODE_FAST);
 
     AudioHapticPlayerOptions options;
     std::shared_ptr<AudioHapticPlayer> player = g_audioHapticManagerImpl->CreatePlayer(sourceId, options);
