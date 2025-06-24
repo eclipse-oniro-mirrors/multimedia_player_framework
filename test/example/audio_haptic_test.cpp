@@ -38,7 +38,7 @@ constexpr int32_t MESSGE_OK = 0;
 static std::shared_ptr<AudioHapticManagerImpl> g_audioHapticManagerImpl = nullptr;
 
 static int32_t RegisterSource(std::string audioFilePath, std::string hapticFilePath)
-{  
+{
     int32_t audioFd = open(audioFilePath.c_str(), O_RDONLY);
     struct stat64 audioBuff = { 0 };
     int32_t ret = fstat64(audioFd, &audioBuff);
