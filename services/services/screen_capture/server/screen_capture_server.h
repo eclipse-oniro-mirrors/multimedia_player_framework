@@ -273,7 +273,7 @@ private:
     bool showSensitiveCheckBox_ = false;
     bool checkBoxSelected_ = false;
     bool showShareSystemAudioBox_ = false;
-    bool isInnerAudioBoxSelected_ = false;
+    bool isInnerAudioBoxSelected_ = true;
     std::vector<uint64_t> surfaceIdList_ = {};
     std::vector<uint8_t> surfaceTypeList_ = {};
     bool stopAcquireAudioBufferFromAudio_ = false;

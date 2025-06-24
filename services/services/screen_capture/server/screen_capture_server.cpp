@@ -900,8 +900,10 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
         GetBoxSelectedFromJson(root, content, std::string("checkBoxSelected"), server->checkBoxSelected_);
         MEDIA_LOGI("ReportAVScreenCaptureUserChoice checkBoxSelected: %{public}d", server->checkBoxSelected_);
 
-        GetBoxSelectedFromJson(root, content, std::string("isInnerAudioBoxSelected"),
-            server->isInnerAudioBoxSelected_);
+        if (server->showShareSystemAudioBox_) {
+            GetBoxSelectedFromJson(root, content, std::string("isInnerAudioBoxSelected"),
+                server->isInnerAudioBoxSelected_);
+        }
         MEDIA_LOGI("ReportAVScreenCaptureUserChoice showShareSystemAudioBox:%{public}d,"
             "isInnerAudioBoxSelected:%{public}d", server->showShareSystemAudioBox_,
             server->isInnerAudioBoxSelected_);
@@ -2004,8 +2006,10 @@ int32_t ScreenCaptureServer::InitAudioCap(AudioCaptureInfo audioInfo)
         captureConfig_.audioInfo.innerCapInfo = audioInfo;
         avType_ = (avType_ == AVScreenCaptureAvType::INVALID_TYPE) ? AVScreenCaptureAvType::AUDIO_TYPE :
             AVScreenCaptureAvType::AV_TYPE;
+#ifdef PC_STANDARD
         showShareSystemAudioBox_ = true;
-        MEDIA_LOGI("InitAudioCap set isInnerAudioBoxSelected true.");
+        MEDIA_LOGI("InitAudioCap set showShareSystemAudioBox true.");
+#endif
     }
     MEDIA_LOGI("InitAudioCap success sampleRate:%{public}d, channels:%{public}d, source:%{public}d, state:%{public}d,"
         "showShareSystemAudioBox:%{public}d", audioInfo.audioSampleRate, audioInfo.audioChannels,
@@ -2334,6 +2338,7 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
         ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want);
         MEDIA_LOGI("StartAbility end %{public}d, DeviceType : PC", ret);
     } else {
+        showShareSystemAudioBox_ = false;
         want.SetElementName(GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionbundlename"],
             GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionabilityname"]);
         connection_ = sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(comStr));
@@ -3296,8 +3301,9 @@ int32_t ScreenCaptureServer::SetMicrophoneOn()
 int32_t ScreenCaptureServer::SetMicrophoneOff()
 {
     int32_t ret = MSERR_UNKNOWN;
-    if (recorderFileAudioType_ == AVScreenCaptureMixMode::MIX_MODE && !IsInnerCaptureRunning()) {
-        ret = StartFileInnerAudioCapture();
+    if (recorderFileAudioType_ == AVScreenCaptureMixMode::MIX_MODE && innerAudioCapture_
+        && !IsInnerCaptureRunning()) {
+        ret = innerAudioCapture_->Start(appInfo_); // Resume
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Start failed");
     }
     if (IsMicrophoneCaptureRunning()) {
@@ -3315,7 +3321,7 @@ int32_t ScreenCaptureServer::OnSpeakerAliveStatusChanged(bool speakerAliveStatus
     CHECK_AND_RETURN_RET_LOG(innerAudioCapture_, MSERR_UNKNOWN, "innerAudioCapture_ is nullptr");
     if (!speakerAliveStatus && recorderFileAudioType_ == AVScreenCaptureMixMode::MIX_MODE &&
         innerAudioCapture_->GetAudioCapturerState() == CAPTURER_STOPED) { // back to headset
-        ret = StartFileInnerAudioCapture(); // Resume
+        ret = innerAudioCapture_->Start(appInfo_); // Resume
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Resume failed");
     }
     return MSERR_OK;
@@ -3349,7 +3355,7 @@ int32_t ScreenCaptureServer::OnVoIPStatusChanged(bool isInVoIPCall)
         CHECK_AND_RETURN_RET_LOG(innerAudioCapture_, MSERR_UNKNOWN, "innerAudioCapture is nullptr");
         if (recorderFileAudioType_ == AVScreenCaptureMixMode::MIX_MODE &&
             innerAudioCapture_->GetAudioCapturerState() == CAPTURER_STOPED) {
-            int32_t ret = StartFileInnerAudioCapture(); // Resume
+            int32_t ret = innerAudioCapture_->Start(appInfo_); // Resume
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "OnVoIPStatusChanged innerAudioCapture Resume failed");
         }
     }
@@ -3396,8 +3402,8 @@ int32_t ScreenCaptureServer::OnTelCallStart()
     if (!isInTelCall_.load() && !isInTelCallAudio_.load()) {
         return ret;
     }
-    if (recorderFileAudioType_ == AVScreenCaptureMixMode::MIX_MODE && !IsInnerCaptureRunning()) {
-        ret = StartFileInnerAudioCapture();
+    if (recorderFileAudioType_ == AVScreenCaptureMixMode::MIX_MODE && innerAudioCapture_ && !IsInnerCaptureRunning()) {
+        ret = innerAudioCapture_->Start(appInfo_); // Resume
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "tel innerAudioCapture Start failed");
     }
     if (micAudioCapture_) {
