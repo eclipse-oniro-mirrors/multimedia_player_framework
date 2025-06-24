@@ -47,7 +47,7 @@ void MediaDataSourceLoaderTaiheCallback::WaitResult()
             if (isExit_) {
                 MEDIA_LOGW("Reset, OPen has been cancel!");
             } else {
-                MEDIA_LOGW("timeout 100ms!");
+                MEDIA_LOGW("timeout 200ms!");
             }
         }
     }

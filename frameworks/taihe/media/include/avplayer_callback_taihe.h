@@ -19,7 +19,6 @@
 #include <mutex>
 #include <ani.h>
 #include "media_errors.h"
-#include "event_handler.h"
 #include "player.h"
 #include "media_ani_common.h"
 #include "event_handler.h"

@@ -66,8 +66,10 @@ void RecorderCallbackTaihe::SaveCallbackReference(const std::string &name, std::
 {
     std::lock_guard<std::mutex> lock(mutex_);
     refMap_[name] = ref;
-    std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::GetMainEventRunner();
-    mainHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
+    if (mainHandler_ == nullptr) {
+        std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::GetMainEventRunner();
+        mainHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
+    }
 }
 
 void RecorderCallbackTaihe::SendErrorCallback(int32_t errCode)

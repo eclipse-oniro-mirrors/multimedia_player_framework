@@ -37,6 +37,7 @@ void AVTransCoderCallback::SendCompleteCallback()
     CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
     cb->autoRef = refMap_.at(AVTransCoderEvent::EVENT_COMPLETE);
     cb->callbackName = AVTransCoderEvent::EVENT_COMPLETE;
+    return OnTaiheCompleteCallBack(cb);
 }
 
 void AVTransCoderCallback::SendProgressUpdateCallback(int32_t progress)
@@ -105,8 +106,10 @@ void AVTransCoderCallback::SaveCallbackReference(const std::string &name, std::w
     std::lock_guard<std::mutex> lock(mutex_);
     refMap_[name] = ref;
     MEDIA_LOGI("Set callback type: %{public}s", name.c_str());
-    std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::GetMainEventRunner();
-    mainHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
+    if (mainHandler_ == nullptr) {
+        std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::GetMainEventRunner();
+        mainHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
+    }
 }
 
 void AVTransCoderCallback::SendErrorCallback(MediaServiceExtErrCodeAPI9 errCode, const std::string &msg)

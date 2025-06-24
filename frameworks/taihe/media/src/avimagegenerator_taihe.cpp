@@ -86,6 +86,7 @@ void AVImageGeneratorImpl::ReleaseSync()
     MEDIA_LOGI("ReleaseSync In");
     if (state_ == OHOS::Media::HelperState::HELPER_STATE_RELEASED) {
         set_business_error(OHOS::Media::MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Has released once, can't release again.");
+        return;
     }
     if (helper_ == nullptr) {
         MEDIA_LOGE("AVImageGenerator is nullptr");

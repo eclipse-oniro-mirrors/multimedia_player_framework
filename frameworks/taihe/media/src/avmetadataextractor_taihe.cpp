@@ -257,6 +257,7 @@ optional<AVMetadata> AVMetadataExtractorImpl::FetchMetadataSync()
     MEDIA_LOGI("FetchMetadataSync In");
     if (state_ != OHOS::Media::HelperState::HELPER_STATE_RUNNABLE) {
         set_business_error(OHOS::Media::MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Can't fetchMetadata, please set source.");
+        return optional<AVMetadata>(std::nullopt);
     }
     CHECK_AND_RETURN_RET_LOG(helper_ != nullptr, optional<AVMetadata>(std::nullopt), "Invalid promiseCtx.");
     std::shared_ptr<OHOS::Media::Meta> metadata = helper_->GetAVMetadata();

@@ -50,6 +50,7 @@ public:
             std::shared_ptr<AutoRef> ref = callback.lock();
             CHECK_AND_RETURN_LOG(ref != nullptr, "ref is nullptr");
             auto func = ref->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             uintptr_t undefined = MediaTaiheUtils::GetUndefined(get_env());
             std::shared_ptr<taihe::callback<void(uintptr_t)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void(uintptr_t)>>(func);
@@ -71,6 +72,7 @@ public:
             std::shared_ptr<AutoRef> errorRef = callback.lock();
             CHECK_AND_RETURN_LOG(errorRef != nullptr, "ref is nullptr");
             auto func = errorRef->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             auto err = MediaTaiheUtils::ToBusinessError(get_env(), errorCode, errorMsg);
             std::shared_ptr<taihe::callback<void(uintptr_t)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void(uintptr_t)>>(func);
@@ -85,6 +87,7 @@ public:
             std::shared_ptr<AutoRef> intRef = callback.lock();
             CHECK_AND_RETURN_LOG(intRef != nullptr, "ref is nullptr");
             auto func = intRef->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<void(double)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void(double)>>(func);
             (*cacheCallback)(value);
@@ -100,6 +103,7 @@ public:
             int32_t firstValueAsDouble = static_cast<int32_t>(valueVec[0]);
             int32_t val = 0;
             auto func = intVecRef->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<void(ohos::multimedia::media::BufferingInfoType, double)>>
                 cacheCallback = std::reinterpret_pointer_cast<taihe::callback<void
                     (ohos::multimedia::media::BufferingInfoType, double)>>(func);
@@ -118,6 +122,7 @@ public:
             double firstValueAsDouble = static_cast<double>(valueVec[0]);
             double secondValueAsDouble = static_cast<double>(valueVec[1]);
             auto func = intVecRef->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<void(double, double)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void(double, double)>>(func);
             (*cacheCallback)(firstValueAsDouble, secondValueAsDouble);
@@ -130,6 +135,7 @@ public:
             std::shared_ptr<AutoRef> intVecRef = callback.lock();
             CHECK_AND_RETURN_LOG(intVecRef != nullptr, "ref is nullptr");
             auto func = intVecRef->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<void(array_view<double>)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void(array_view<double>)>>(func);
             (*cacheCallback)(valueVec);
@@ -143,6 +149,7 @@ public:
             std::shared_ptr<AutoRef> stateChangeRef = callback.lock();
             CHECK_AND_RETURN_LOG(stateChangeRef != nullptr, "ref is nullptr");
             auto func = stateChangeRef->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<void(double)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void(double)>>(func);
             (*cacheCallback)(value);
@@ -156,6 +163,7 @@ public:
             std::shared_ptr<AutoRef> floatArrayRef = callback.lock();
             CHECK_AND_RETURN_LOG(floatArrayRef != nullptr, "ref is nullptr");
             auto func = floatArrayRef->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<void(array_view<double>)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void(array_view<double>)>>(func);
             std::vector<double> floatVec(valueVec.begin(), valueVec.end());
@@ -170,6 +178,7 @@ public:
             std::shared_ptr<AutoRef> floatArrayRef = callback.lock();
             CHECK_AND_RETURN_LOG(floatArrayRef != nullptr, "ref is nullptr");
             auto func = floatArrayRef->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<void(array_view<map<string, MediaDescriptionValue>>)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void
                     (array_view<map<string, MediaDescriptionValue>>)>>(func);
@@ -190,6 +199,7 @@ public:
             std::shared_ptr<AutoRef> intVecRef = callback.lock();
             CHECK_AND_RETURN_LOG(intVecRef != nullptr, "ref is nullptr");
             auto func = intVecRef->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<void(double, bool)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void(double, bool)>>(func);
             (*cacheCallback)(number, isSelect);
@@ -202,8 +212,11 @@ public:
         void UvWork() override
         {
             std::shared_ptr<AutoRef> stateChangeRef = callback.lock();
+            CHECK_AND_RETURN_LOG(stateChangeRef != nullptr, "ref is nullptr");
+            auto func = stateChangeRef->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<StateChangeCallback>> cacheCallback =
-                std::reinterpret_pointer_cast<taihe::callback<StateChangeCallback>>(stateChangeRef->callbackRef_);
+                std::reinterpret_pointer_cast<taihe::callback<StateChangeCallback>>(func);
             ohos::multimedia::media::StateChangeReason::key_t key;
             MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::media::StateChangeReason>(reason, key);
             (*cacheCallback)(taihe::string_view(state), ohos::multimedia::media::StateChangeReason(key));
@@ -217,6 +230,7 @@ public:
             std::shared_ptr<AutoRef> boolRef = callback.lock();
             CHECK_AND_RETURN_LOG(boolRef != nullptr, "ref is nullptr");
             auto func = boolRef->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<void(bool)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void(bool)>>(func);
             (*cacheCallback)(value);
@@ -231,6 +245,7 @@ public:
             std::shared_ptr<AutoRef> seiInfoRef = callback.lock();
             CHECK_AND_RETURN_LOG(seiInfoRef != nullptr, "ref is nullptr");
             auto func = seiInfoRef->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<void(array_view<SeiMessage>, optional_view<double>)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void(array_view<SeiMessage>,
                     optional_view<double>)>>(func);
@@ -266,6 +281,7 @@ public:
             std::shared_ptr<AutoRef> mapRef = callback.lock();
             CHECK_AND_RETURN_LOG(mapRef != nullptr, "ref is nullptr");
             auto func = mapRef->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<void(uintptr_t)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void(uintptr_t)>>(func);
             ANI::Media::MediaKeySystemInfo mediaKeySystemInfo;
@@ -286,6 +302,7 @@ public:
             std::shared_ptr<AutoRef> subtitleRef = callback.lock();
             CHECK_AND_RETURN_LOG(subtitleRef != nullptr, "ref is nullptr");
             auto func = subtitleRef->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<void(::ohos::multimedia::media::SubtitleInfo const&)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void
                     (::ohos::multimedia::media::SubtitleInfo const&)>>(func);
@@ -528,14 +545,15 @@ void AVPlayerCallback::OnDurationUpdateCb(const int32_t extra, const Format &inf
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isLoaded_.load(), "current source is unready");
     int32_t duration = extra;
-    MEDIA_LOGI("OnPositionUpdate %{public}d", duration);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnDurationUpdateCb is called, duration: %{public}d",
+        FAKE_POINTER(this), duration);
 
     if (listener_ != nullptr) {
         listener_->NotifyDuration(duration);
     }
 
     if (refMap_.find(AVPlayerEvent::EVENT_DURATION_UPDATE) == refMap_.end()) {
-        MEDIA_LOGW(" can not find timeupdate callback!");
+        MEDIA_LOGD("0x%{public}06" PRIXPTR " can not find duration update callback!", FAKE_POINTER(this));
         return;
     }
 
