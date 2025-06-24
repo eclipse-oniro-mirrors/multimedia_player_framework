@@ -63,7 +63,7 @@ public:
     int32_t StrategyForPrivacyMaskMode(int32_t value) override;
 private:
     std::shared_ptr<ScreenCapture> screenCapture_ = nullptr;
-    std::shared_ptr<ScreenCaptureCallback> cb_;
+    std::shared_ptr<ScreenCaptureCallBack> cb_;
     bool isStateChangeCallbackEnabled_ = false;
     bool isCaptureContentChangeCallbackEnabled_ = false;
     ScreenCaptureStrategy strategy_;
