@@ -39,8 +39,8 @@ optional<AVFileDescriptor> AVImageGeneratorImpl::GetFdSrc()
     MEDIA_LOGI("GetFdSrc In");
     AVFileDescriptor fdSrc;
     fdSrc.fd = fileDescriptor_.fd;
-    fdSrc.offset = optional<int64_t>(std::in_place_t{}, fileDescriptor_.offset);
-    fdSrc.length = optional<int64_t>(std::in_place_t{}, fileDescriptor_.length);
+    fdSrc.offset = optional<double>(std::in_place_t{}, fileDescriptor_.offset);
+    fdSrc.length = optional<double>(std::in_place_t{}, fileDescriptor_.length);
     MEDIA_LOGI("GetFdSrc Out");
     return optional<AVFileDescriptor>(std::in_place_t{}, fdSrc);
 }
@@ -95,15 +95,16 @@ void AVImageGeneratorImpl::ReleaseSync()
     MEDIA_LOGI("ReleaseSync Out");
 }
 
-AVImageGenerator CreateAVImageGeneratorSync()
+optional<AVImageGenerator> CreateAVImageGeneratorSync()
 {
     OHOS::Media::MediaTrace trace("AVImageGeneratorTaihe::CreateAVImageGeneratorSync");
     MEDIA_LOGI("TaiheCreateAVImageGenerator In");
     std::shared_ptr<OHOS::Media::AVMetadataHelper> avMetadataHelper =
         OHOS::Media::AVMetadataHelperFactory::CreateAVMetadataHelper();
-    CHECK_AND_RETURN_RET_LOG(avMetadataHelper != nullptr,
-        (make_holder<AVImageGeneratorImpl, AVImageGenerator>(nullptr)), "failed to CreateMetadataHelper");
-    return make_holder<AVImageGeneratorImpl, AVImageGenerator>(avMetadataHelper);
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelper != nullptr, optional<AVImageGenerator>(std::nullopt),
+        "failed to CreateMetadataHelper");
+    auto res = make_holder<AVImageGeneratorImpl, AVImageGenerator>(avMetadataHelper);
+    return optional<AVImageGenerator>(std::in_place, res);
 }
 } // namespace ANI::Media
 

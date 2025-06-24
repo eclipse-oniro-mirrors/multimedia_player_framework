@@ -155,15 +155,14 @@ public:
     string GetState();
     void PrepareSync(ohos::multimedia::media::AVRecorderConfig const& config);
     void StartSync();
-    string GetInputSurfaceSync();
+    optional<string> GetInputSurfaceSync();
     void PauseSync();
     void StopSync();
     void ReleaseSync();
     void ResetSync();
     void ResumeSync();
-    friend AVRecorder CreateAVRecorderSync();
 
-    ::ohos::multimedia::media::AVRecorderConfig GetAVRecorderConfigSync();
+    optional<::ohos::multimedia::media::AVRecorderConfig> GetAVRecorderConfigSync();
     std::shared_ptr<TaskHandler<RetInfo>> GetAVRecorderConfigTask(
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     int32_t GetAVRecorderConfig(std::shared_ptr<AVRecorderConfig> &config);
@@ -174,7 +173,7 @@ public:
     ::ohos::multimedia::media::AVRecorderProfile CreateAVRecorderProfile(
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
 
-    ::taihe::string GetInputMetaSurfaceSync(::ohos::multimedia::media::MetaSourceType type);
+    optional<string> GetInputMetaSurfaceSync(::ohos::multimedia::media::MetaSourceType type);
     int32_t GetMetaType(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
         ::ohos::multimedia::media::MetaSourceType type);
     std::shared_ptr<TaskHandler<RetInfo>> GetInputMetaSurface(
@@ -185,12 +184,12 @@ public:
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     int32_t IsWatermarkSupported(bool &isWatermarkSupported);
 
-    void UpdateRotationSync(int32_t rotation);
+    void UpdateRotationSync(double rotation);
     int32_t GetRotation(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, int32_t rotation);
     std::shared_ptr<TaskHandler<RetInfo>> GetSetOrientationHintTask(
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
 
-    int32_t GetAudioCapturerMaxAmplitudeSync();
+    double GetAudioCapturerMaxAmplitudeSync();
     std::shared_ptr<TaskHandler<RetInfo>> GetMaxAmplitudeTask(
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     int32_t GetMaxAmplitude(int32_t &maxAmplitude);
@@ -214,7 +213,7 @@ public:
     int32_t CheckStateMachine(const std::string &opt);
     int32_t CheckRepeatOperation(const std::string &opt);
     void ExecuteByPromise(const std::string &opt);
-    string GetInputSurfaceExecuteByPromise(const std::string &opt);
+    optional<string> GetInputSurfaceExecuteByPromise(const std::string &opt);
     void RemoveSurface();
     std::shared_ptr<TaskHandler<RetInfo>> GetPrepareTask(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     int32_t GetSourceType(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,

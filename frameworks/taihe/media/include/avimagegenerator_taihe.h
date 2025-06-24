@@ -34,7 +34,6 @@ public:
     optional<AVFileDescriptor> GetFdSrc();
     void SetFdSrc(optional_view<AVFileDescriptor> fdSrc);
     void ReleaseSync();
-    friend AVImageGenerator CreateAVImageGeneratorSync();
 private:
     std::shared_ptr<OHOS::Media::AVMetadataHelper> helper_;
     struct OHOS::Media::AVFileDescriptor fileDescriptor_;

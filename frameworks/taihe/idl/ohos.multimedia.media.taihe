@@ -27,53 +27,53 @@ from soundPool use PlayParameters;
 from soundPool use SoundPool;
 
 struct AVFileDescriptor {
-    fd: i32;
-    offset: Optional<i64>;
-    length: Optional<i64>;
+    fd: f64;
+    offset: Optional<f64>;
+    length: Optional<f64>;
 }
 struct AVDataSrcDescriptor {
-    fileSize: i64;
-    callback: (buffer: @arraybuffer Array<u8>, length: i64, pos: Optional<i64>) => i32;
+    fileSize: f64;
+    callback: (buffer: @arraybuffer Array<u8>, length: f64, pos: Optional<f64>) => f64;
 }
 
 @gen_async("createAVImageGenerator")
 @gen_promise("createAVImageGenerator")
-function CreateAVImageGeneratorSync(): AVImageGenerator;
+function CreateAVImageGeneratorSync(): Optional<AVImageGenerator>;
 
 @gen_async("createAVPlayer")
 @gen_promise("createAVPlayer")
-function CreateAVPlayerSync(): AVPlayer;
+function CreateAVPlayerSync(): Optional<AVPlayer>;
 
 @gen_async("createAVRecorder")
 @gen_promise("createAVRecorder")
-function CreateAVRecorderSync(): AVRecorder;
+function CreateAVRecorderSync(): Optional<AVRecorder>;
 
 @gen_promise("getScreenCaptureMonitor")
-function GetScreenCaptureMonitorSync(): ScreenCaptureMonitor;
+function GetScreenCaptureMonitorSync(): Optional<ScreenCaptureMonitor>;
 
 @gen_async("createSoundPool")
 @gen_promise("createSoundPool")
-function CreateSoundPoolSync(maxStreams: i32, audioRendererInfo: @sts_type("audio.AudioRendererInfo") Opaque): SoundPool;
+function CreateSoundPoolSync(maxStreams: f64, audioRendererInfo: @sts_type("audio.AudioRendererInfo") Opaque): Optional<SoundPool>;
 
 @gen_async("createVideoRecorder")
 @gen_promise("createVideoRecorder")
-function CreateVideoRecorderSync(): VideoRecorder;
+function CreateVideoRecorderSync(): Optional<VideoRecorder>;
 
 @gen_async("createAVMetadataExtractor")
 @gen_promise("createAVMetadataExtractor")
-function CreateAVMetadataExtractorSync(): AVMetadataExtractor;
+function CreateAVMetadataExtractorSync(): Optional<AVMetadataExtractor>;
 
 @gen_promise("createAVTranscoder")
-function CreateAVTranscoderSync(): AVTranscoder;
+function CreateAVTranscoderSync(): Optional<AVTranscoder>;
 
 @gen_promise("createAVScreenCaptureRecorder")
-function CreateAVScreenCaptureRecorderSync(): AVScreenCaptureRecorder;
+function CreateAVScreenCaptureRecorderSync(): Optional<AVScreenCaptureRecorder>;
 
-function CreateMediaSourceWithUrl(url: String, headers: Optional<@record Map<String, String>>): MediaSource;
-function CreateMediaSourceWithStreamData(streams: Array<MediaStream>): MediaSource;
+function CreateMediaSourceWithUrl(url: String, headers: Optional<@record Map<String, String>>): Optional<MediaSource>;
+function CreateMediaSourceWithStreamData(streams: Array<MediaStream>): Optional<MediaSource>;
 
 @gen_promise("reportAVScreenCaptureUserChoice")
-function ReportAVScreenCaptureUserChoiceSync(sessionId: i32, choice: String): void;
+function ReportAVScreenCaptureUserChoiceSync(sessionId: f64, choice: String): void;
 
 enum HdrType: i32 {
     AV_HDR_TYPE_NONE = 0,
@@ -87,9 +87,9 @@ struct Location {
 
 struct MediaStream {
     url: String;
-    width: i32;
-    height: i32;
-    bitrate: i32;
+    width: f64;
+    height: f64;
+    bitrate: f64;
 }
 
 struct AVMetadata {
@@ -130,15 +130,15 @@ enum PixelFormat: i32 {
 }
 
 struct PixelMapParams {
-    width: Optional<i32>;
-    height: Optional<i32>;
+    width: Optional<f64>;
+    height: Optional<f64>;
     colorFormat: Optional<PixelFormat>;
 }
 
 struct PlaybackStrategy {
-    preferredWidth: Optional<i64>;
-    preferredHeight: Optional<i64>;
-    preferredBufferDuration: Optional<i64>; 
+    preferredWidth: Optional<f64>;
+    preferredHeight: Optional<f64>;
+    preferredBufferDuration: Optional<f64>; 
     preferredHdr: Optional<bool>;
     mutedMediaType: Optional<MediaType>;
     preferredAudioLanguage: Optional<String>;
@@ -162,13 +162,13 @@ interface AVMetadataExtractor {
 
     @gen_async("fetchMetadata")
     @gen_promise("fetchMetadata")
-    FetchMetadataSync(): AVMetadata;
+    FetchMetadataSync(): Optional<AVMetadata>;
 
     @gen_promise("getFrameIndexByTime")
-    GetFrameIndexByTimeSync(timeUs: f64): i32;
+    GetFrameIndexByTimeSync(timeUs: f64): f64;
 
     @gen_promise("getTimeByFrameIndex")
-    GetTimeByFrameIndexSync(index: i32): f64;
+    GetTimeByFrameIndexSync(index: f64): f64;
 }
 
 enum MediaDescriptionKey: String {
@@ -190,12 +190,12 @@ enum MediaDescriptionKey: String {
 
 union MediaDescriptionValue {
     type_string: String;
-    type_int: i32;
+    type_int: f64;
 }
 
 union PlaybackInfoValue {
     type_string: String;
-    type_int: i32;
+    type_int: f64;
 }
 
 enum SwitchMode: i32{
@@ -208,11 +208,11 @@ interface AVPlayer {
     @get GetUrl(): Optional<String>;
     @set SetUrl(url: Optional<String>): void;
 
-    @get GetWidth(): i32;
-    @get GetHeight(): i32;
+    @get GetWidth(): f64;
+    @get GetHeight(): f64;
     @get GetState(): String;
-    @get GetDuration(): i32;
-    @get GetCurrentTime(): i32;
+    @get GetDuration(): f64;
+    @get GetCurrentTime(): f64;
     SetVolume(volume: f64): void;
     @get GetDataSrc(): Optional<AVDataSrcDescriptor>;
     @set SetDataSrc(dataSrc: Optional<AVDataSrcDescriptor>): void;
@@ -223,12 +223,12 @@ interface AVPlayer {
     @get GetFdSrc(): Optional<AVFileDescriptor>;
     @set SetFdSrc(fdSrc: Optional<AVFileDescriptor>): void;
     SetSpeed(speed: PlaybackSpeed): void;
-    Seek(timeMs: i32, mode: Optional<SeekMode>): void;
+    Seek(timeMs: f64, mode: Optional<SeekMode>): void;
     @get GetVideoScaleType(): Optional<VideoScaleType>;
     @set SetVideoScaleType(videoScaleType: Optional<VideoScaleType>): void;
     IsSeekContinuousSupported() : bool;
-    GetPlaybackPosition(): i32;
-    SetBitrate(bitrate: i32): void;
+    GetPlaybackPosition(): f64;
+    SetBitrate(bitrate: f64): void;
 
     @gen_async("getTrackDescription")
     @gen_promise("getTrackDescription")
@@ -259,19 +259,19 @@ interface AVPlayer {
     PrepareSync(): void;
 
     @gen_promise("getSelectedTracks")
-    GetSelectedTracksSync(): Array<i32>;
+    GetSelectedTracksSync(): Array<f64>;
 
     @gen_promise("selectTrack")
-    SelectTrackSync(index: i32, mode: Optional<SwitchMode>): void;
+    SelectTrackSync(index: f64, mode: Optional<SwitchMode>): void;
 
     @gen_promise("deselectTrack")
-    DeselectTrackSync(index: i32): void;
+    DeselectTrackSync(index: f64): void;
 
     @gen_promise("setMediaSource")
     SetMediaSourceSync(src: MediaSource, strategy: Optional<PlaybackStrategy>): void;
 
     @gen_promise("addSubtitleFromFd")
-    AddSubtitleFromFdSync(fd: i32, offset: i64, length: i64): void;
+    AddSubtitleFromFdSync(fd: f64, offset: f64, length: f64): void;
 
     @gen_promise("addSubtitleFromUrl")
     AddSubtitleFromUrlSync(url: String): void;
@@ -283,10 +283,10 @@ interface AVPlayer {
     SetSuperResolutionSync(enabled: bool): void;
 
     @gen_promise("setVideoWindowSize")
-    SetVideoWindowSizeSync(width: i32, height: i32): void;
+    SetVideoWindowSizeSync(width: f64, height: f64): void;
 
     @gen_promise("setPlaybackRange")
-    SetPlaybackRangeSync(startTimeMs: i32, endTimeMs: i32, mode: Optional<SeekMode>): void;
+    SetPlaybackRangeSync(startTimeMs: f64, endTimeMs: f64, mode: Optional<SeekMode>): void;
 
     @gen_promise("setMediaMuted")
     SetMediaMutedSync(mediaType: MediaType, muted: bool): void;
@@ -305,34 +305,34 @@ interface AVPlayer {
             this.OnEndOfStream_inner(callback as (data:undefined)=> void);
         } else if (type === "startRenderFrame"){
             this.OnStartRenderFrame_inner(callback as (data:undefined)=> void);
-        } else if (type === "seekdone"){
-          this.OnSeekDone_inner(callback as (data: int)=> void);
+        } else if (type === "seekDone"){
+          this.OnSeekDone_inner(callback as (data: double)=> void);
         } else if (type === "durationUpdate"){
-          this.OnDurationUpdate_inner(callback as (data: int)=> void);
+          this.OnDurationUpdate_inner(callback as (data: double)=> void);
         } else if (type === "timeUpdate"){
-          this.OnTimeUpdate_inner(callback as (data: int)=> void);
+          this.OnTimeUpdate_inner(callback as (data: double)=> void);
         } else if (type === "volumeChange"){
           this.OnVolumeChange_inner(callback as (data: double)=> void);
         } else if (type === "speedDone"){
-          this.OnSpeedDone_inner(callback as (data: int)=> void);
+          this.OnSpeedDone_inner(callback as (data: double)=> void);
         } else if (type === "bitrateDone"){
-          this.OnBitrateDone_inner(callback as (data: int)=> void);
+          this.OnBitrateDone_inner(callback as (data: double)=> void);
         } else if (type === "availableBitrates"){
-          this.OnAvailableBitrates_inner(callback as (data: Array<int>)=> void);
+          this.OnAvailableBitrates_inner(callback as (data: Array<double>)=> void);
         } else if (type === "amplitudeUpdate"){
-          this.OnAmplitudeUpdate_inner(callback as (data: Array<float>)=> void);
+          this.OnAmplitudeUpdate_inner(callback as (data: Array<double>)=> void);
         } else if (type === "bufferingUpdate"){
-          this.OnBufferingUpdate_inner(callback as (infoType: BufferingInfoType, value: int)=> void);
+          this.OnBufferingUpdate_inner(callback as (infoType: BufferingInfoType, value: double)=> void);
         } else if (type === "videoSizeChange"){
-          this.OnVideoSizeChange_inner(callback as (width: int, height: int)=> void);
+          this.OnVideoSizeChange_inner(callback as (width: double, height: double)=> void);
         } else if (type === "trackChange"){
-          this.OnTrackChange_inner(callback as (index: int, isSelected: boolean)=> void);
+          this.OnTrackChange_inner(callback as (index: double, isSelected: boolean)=> void);
         } else if (type === "subtitleUpdate"){
           this.OnSubtitleUpdate_inner(callback as (data: SubtitleInfo)=> void);
         } else if (type === "superResolutionChanged"){
           this.OnSuperResolutionChanged_inner(callback as (enabled: boolean)=> void);
         } else if (type === "trackInfoUpdate"){
-          this.OnTrackInfoUpdate_inner(callback as (data: Array<Record<string, string | int>>)=> void);
+          this.OnTrackInfoUpdate_inner(callback as (data: Array<Record<string, string | double>>)=> void);
         } else {
             throw new Error(`Unknown type: ${type}`);
         }
@@ -341,30 +341,30 @@ interface AVPlayer {
     OnStateChange(callback: (state: String, reason: StateChangeReason)=> void): void;
     OnEndOfStream(callback: (data: @sts_type("undefined") Opaque) => void): void;
     OnStartRenderFrame(callback: (data: @sts_type("undefined") Opaque) => void): void;
-    OnSeekDone(callback: (data: i32) => void): void;
-    OnDurationUpdate(callback: (data: i32) => void): void;
-    OnTimeUpdate(callback: (data: i32) => void): void;
+    OnSeekDone(callback: (data: f64) => void): void;
+    OnDurationUpdate(callback: (data: f64) => void): void;
+    OnTimeUpdate(callback: (data: f64) => void): void;
     OnVolumeChange(callback: (data: f64) => void): void;
-    OnSpeedDone(callback: (data: i32) => void): void;
-    OnBitrateDone(callback: (data: i32) => void): void;
-    OnAvailableBitrates(callback: (data: Array<i32>) => void): void;
-    OnAmplitudeUpdate(callback: (data: Array<f32>) => void): void;
-    OnBufferingUpdate(callback: (infoType: BufferingInfoType, value: i32) => void): void;
-    OnVideoSizeChange(callback: (width: i32, height: i32) => void): void;
-    OnTrackChange(callback: (index: i32, isSelected: bool) => void): void;
+    OnSpeedDone(callback: (data: f64) => void): void;
+    OnBitrateDone(callback: (data: f64) => void): void;
+    OnAvailableBitrates(callback: (data: Array<f64>) => void): void;
+    OnAmplitudeUpdate(callback: (data: Array<f64>) => void): void;
+    OnBufferingUpdate(callback: (infoType: BufferingInfoType, value: f64) => void): void;
+    OnVideoSizeChange(callback: (width: f64, height: f64) => void): void;
+    OnTrackChange(callback: (index: f64, isSelected: bool) => void): void;
     OnSubtitleUpdate(callback: (data: SubtitleInfo) => void): void;
     OnSuperResolutionChanged(callback: (enabled: bool) => void): void;
     OnTrackInfoUpdate(callback: (data: Array<@record Map<String, MediaDescriptionValue>>) => void): void;
 
-    @!sts_inject_into_interface("on(type: string, payloadTypes: Array<int>, callback: (messages: Array<SeiMessage>, playbackPosition?: int)=> void): void;")
-    @!sts_inject_into_class("""on(type: string, payloadTypes: Array<int>, callback: object): void {
+    @!sts_inject_into_interface("on(type: string, payloadTypes: Array<double>, callback: (messages: Array<SeiMessage>, playbackPosition?: double)=> void): void;")
+    @!sts_inject_into_class("""on(type: string, payloadTypes: Array<double>, callback: object): void {
         if (type === "seiMessageReceived") {
-            this.OnSeiMessageReceived_inner(payloadTypes as (Array<int>), callback as (messages: Array<SeiMessage>, playbackPosition?: int) => void);
+            this.OnSeiMessageReceived_inner(payloadTypes as (Array<double>), callback as (messages: Array<SeiMessage>, playbackPosition?: double) => void);
         } else {
         }
     }""")
-    OnSeiMessageReceived(payloadTypes: Array<i32>, callback: (messages: Array<SeiMessage>,
-        playbackPosition: Optional<i32>) => void): void;
+    OnSeiMessageReceived(payloadTypes: Array<f64>, callback: (messages: Array<SeiMessage>,
+        playbackPosition: Optional<f64>) => void): void;
 
     @!sts_inject_into_interface("off(type: string, callback?: (state: string, reason: StateChangeReason)=> void): void;")
     @!sts_inject_into_interface("off(type: string, callback?: (data: object)=> void): void;")
@@ -373,38 +373,38 @@ interface AVPlayer {
             this.OffError_inner(callback as (((err: BusinessError<void>)=> void) | undefined));
         } else if (type === "stateChange"){
             this.OffStateChange_inner(callback as (((state: String, reason: StateChangeReason)=> void)) | undefined);
-        } else if (type === "EndOfStream"){
+        } else if (type === "endOfStream"){
           this.OffEndOfStream_inner(callback as (((data:undefined)=> void) | undefined));
-        } else if (type === "StartRenderFrame"){
+        } else if (type === "startRenderFrame"){
           this.OffStartRenderFrame_inner(callback as (((data:undefined)=> void) | undefined));
         } else if (type === "seekDone"){
-          this.OffSeekDone_inner(callback as (((data: int) => void) | undefined));
+          this.OffSeekDone_inner(callback as (((data: double) => void) | undefined));
         } else if (type === "durationUpdate"){
-          this.OffDurationUpdate_inner(callback as (((data: int) => void) | undefined));
+          this.OffDurationUpdate_inner(callback as (((data: double) => void) | undefined));
         } else if (type === "timeUpdate"){
-          this.OffTimeUpdate_inner(callback as (((data: int) => void) | undefined));
+          this.OffTimeUpdate_inner(callback as (((data: double) => void) | undefined));
         } else if (type === "volumeChange"){
           this.OffVolumeChange_inner(callback as (((data: double) => void) | undefined));
         } else if (type === "speedDone"){
-          this.OffSpeedDone_inner(callback as (((data: int) => void) | undefined));
+          this.OffSpeedDone_inner(callback as (((data: double) => void) | undefined));
         } else if (type === "bitrateDone"){
-          this.OffBitrateDone_inner(callback as (((data: int) => void) | undefined));
+          this.OffBitrateDone_inner(callback as (((data: double) => void) | undefined));
         } else if (type === "availableBitrates"){
-          this.OffAvailableBitrates_inner(callback as (((data: Array<int>) => void) | undefined));
+          this.OffAvailableBitrates_inner(callback as (((data: Array<double>) => void) | undefined));
         } else if (type === "amplitudeUpdate"){
-          this.OffAmplitudeUpdate_inner(callback as (((data: Array<float>) => void) | undefined));
+          this.OffAmplitudeUpdate_inner(callback as (((data: Array<double>) => void) | undefined));
         } else if (type === "bufferingUpdate"){
-          this.OffBufferingUpdate_inner(callback as (((infoType: object, value: int) => void) | undefined));
+          this.OffBufferingUpdate_inner(callback as (((infoType: object, value: double) => void) | undefined));
         } else if (type === "videoSizeChange"){
-          this.OffVideoSizeChange_inner(callback as (((width: int, height: int) => void) | undefined));
+          this.OffVideoSizeChange_inner(callback as (((width: double, height: double) => void) | undefined));
         } else if (type === "trackChange"){
-          this.OffTrackChange_inner(callback as (((index: int, isSelected: boolean) => void) | undefined));
+          this.OffTrackChange_inner(callback as (((index: double, isSelected: boolean) => void) | undefined));
         } else if (type === "subtitleUpdate"){
           this.OffSubtitleUpdate_inner(callback as (((data: object) => void) | undefined));
         } else if (type === "superResolutionChanged"){
           this.OffSuperResolutionChanged_inner(callback as (((enabled: boolean) => void) | undefined));
         } else if (type === "trackInfoUpdate"){
-          this.OffTrackInfoUpdate_inner(callback as (((data: Array<Record <string, int>>) => void) | undefined));
+          this.OffTrackInfoUpdate_inner(callback as (((data: Array<Record <string, double>>) => void) | undefined));
         } else {
           throw new Error(`Unknown type: ${type}`);
         }
@@ -413,34 +413,34 @@ interface AVPlayer {
     OffStateChange(callback: Optional<(state: String, reason: StateChangeReason)=> void>): void;
     OffEndOfStream(callback: Optional<(data: @sts_type("undefined") Opaque) => void>): void;
     OffStartRenderFrame(callback: Optional<(data: @sts_type("undefined") Opaque) => void>): void;
-    OffSeekDone(callback: Optional<(data: i32) => void>): void;
-    OffDurationUpdate(callback: Optional<(data: i32) => void>): void;
-    OffTimeUpdate(callback: Optional<(data: i32) => void>): void;
+    OffSeekDone(callback: Optional<(data: f64) => void>): void;
+    OffDurationUpdate(callback: Optional<(data: f64) => void>): void;
+    OffTimeUpdate(callback: Optional<(data: f64) => void>): void;
     OffVolumeChange(callback: Optional<(data: f64) => void>): void;
-    OffSpeedDone(callback: Optional<(data: i32) => void>): void;
-    OffBitrateDone(callback: Optional<(data: i32) => void>): void;
-    OffAvailableBitrates(callback: Optional<(data: Array<i32>) => void>): void;
-    OffAmplitudeUpdate(callback: Optional<(data: Array<f32>) => void>): void;
-    OffBufferingUpdate(callback: Optional<(infoType: BufferingInfoType, value: i32) => void>): void;
-    OffVideoSizeChange(callback: Optional<(width: i32, height: i32) => void>): void;
-    OffTrackChange(callback: Optional<(index: i32, isSelected: bool) => void>): void;
+    OffSpeedDone(callback: Optional<(data: f64) => void>): void;
+    OffBitrateDone(callback: Optional<(data: f64) => void>): void;
+    OffAvailableBitrates(callback: Optional<(data: Array<f64>) => void>): void;
+    OffAmplitudeUpdate(callback: Optional<(data: Array<f64>) => void>): void;
+    OffBufferingUpdate(callback: Optional<(infoType: BufferingInfoType, value: f64) => void>): void;
+    OffVideoSizeChange(callback: Optional<(width: f64, height: f64) => void>): void;
+    OffTrackChange(callback: Optional<(index: f64, isSelected: bool) => void>): void;
     OffSubtitleUpdate(callback: Optional<(data: SubtitleInfo) => void>): void;
     OffSuperResolutionChanged(callback: Optional<(enabled: bool) => void>): void;
-    OffTrackInfoUpdate(callback: Optional<(data: Array<@record Map<String, i32>>) => void>): void;
+    OffTrackInfoUpdate(callback: Optional<(data: Array<@record Map<String, f64>>) => void>): void;
 
-    @!sts_inject_into_interface("off(type: string, payloadTypes: Array<int>, callback?: (messages: Array<SeiMessage>, playbackPosition?: int)=> void): void;")
-    @!sts_inject_into_class("""off(type: string, payloadTypes: Array<int>, callback?: object): void {
+    @!sts_inject_into_interface("off(type: string, payloadTypes: Array<double>, callback?: (messages: Array<SeiMessage>, playbackPosition?: double)=> void): void;")
+    @!sts_inject_into_class("""off(type: string, payloadTypes: Array<double>, callback?: object): void {
         if (type === "seiMessageReceived") {
-            this.OffSeiMessageReceived_inner(payloadTypes as (Array<int>), callback as (((messages: Array<SeiMessage>, playbackPosition?: int) => void) | undefined));
+            this.OffSeiMessageReceived_inner(payloadTypes as (Array<double>), callback as (((messages: Array<SeiMessage>, playbackPosition?: double) => void) | undefined));
         } else {
         }
     }""")
-    OffSeiMessageReceived(payloadTypes: Array<i32>, callback: Optional<(messages: Array<SeiMessage>,
-        playbackPosition: Optional<i32>) => void>): void;
+    OffSeiMessageReceived(payloadTypes: Array<f64>, callback: Optional<(messages: Array<SeiMessage>,
+        playbackPosition: Optional<f64>) => void>): void;
 }
 
 struct SeiMessage {
-    payloadType: i32;
+    payloadType: f64;
     payload: @arraybuffer Array<u8>;
 }
 
@@ -467,8 +467,8 @@ enum StateChangeReason: i32 {
 }
 
 struct SubtitleInfo {
-    duration: Optional<i32>;
-    startTime: Optional<i32>;
+    duration: Optional<f64>;
+    startTime: Optional<f64>;
     text: Optional<String>;
 }
 
@@ -479,7 +479,7 @@ interface VideoRecorder {
 
     @gen_async("getInputSurface")
     @gen_promise("getInputSurface")
-    GetInputSurfaceSync(): String;
+    GetInputSurfaceSync(): Optional<String>;
 
     @gen_async("start")
     @gen_promise("start")
@@ -585,16 +585,16 @@ enum PlaybackInfoKey: String{
 }
 
 struct VideoRecorderProfile {
-    @readonly audioBitrate: i32;
-    @readonly audioChannels: i32;
+    @readonly audioBitrate: f64;
+    @readonly audioChannels: f64;
     @readonly audioCodec: CodecMimeType;
-    @readonly audioSampleRate: i32;
+    @readonly audioSampleRate: f64;
     @readonly fileFormat: ContainerFormatType;
-    @readonly videoBitrate: i32;
+    @readonly videoBitrate: f64;
     @readonly videoCodec: CodecMimeType;
-    @readonly videoFrameWidth: i32;
-    @readonly videoFrameHeight: i32;
-    @readonly videoFrameRate: i32;
+    @readonly videoFrameWidth: f64;
+    @readonly videoFrameHeight: f64;
+    @readonly videoFrameRate: f64;
 }
 
 struct VideoRecorderConfig {
@@ -602,13 +602,13 @@ struct VideoRecorderConfig {
     videoSourceType: VideoSourceType;
     profile: VideoRecorderProfile;
     url: String;
-    rotation: Optional<i32>;
+    rotation: Optional<f64>;
     location: Optional<Location>;
 }
 
 struct WatermarkConfig {
-    top: i32;
-    left: i32;
+    top: f64;
+    left: f64;
 }
 
 interface AVImageGenerator {
@@ -633,7 +633,7 @@ interface AVRecorder {
 
     @gen_async("getInputSurface")
     @gen_promise("getInputSurface")
-    GetInputSurfaceSync(): String;
+    GetInputSurfaceSync(): Optional<String>;
 
     @gen_async("pause")
     @gen_promise("pause")
@@ -657,20 +657,20 @@ interface AVRecorder {
 
     @gen_async("getAVRecorderConfig")
     @gen_promise("getAVRecorderConfig")
-    GetAVRecorderConfigSync(): AVRecorderConfig;
+    GetAVRecorderConfigSync(): Optional<AVRecorderConfig>;
 
     @gen_promise("getInputMetaSurface")
-    GetInputMetaSurfaceSync(type: MetaSourceType): String;
+    GetInputMetaSurfaceSync(type: MetaSourceType): Optional<String>;
 
     @gen_promise("isWatermarkSupported")
     IsWatermarkSupportedSync(): bool;
 
     @gen_promise("updateRotation")
-    UpdateRotationSync(rotation: i32): void;
+    UpdateRotationSync(rotation: f64): void;
 
     @gen_async("getAudioCapturerMaxAmplitude")
     @gen_promise("getAudioCapturerMaxAmplitude")
-    GetAudioCapturerMaxAmplitudeSync(): i32;
+    GetAudioCapturerMaxAmplitudeSync(): f64;
 
     @gen_async("getAvailableEncoder")
     @gen_promise("getAvailableEncoder")
@@ -731,8 +731,8 @@ enum MediaType: i32 {
 }
 
 struct Range {
-    min: i32;
-    max: i32;
+    min: f64;
+    max: f64;
 }
 
 struct EncoderInfo {
@@ -743,7 +743,7 @@ struct EncoderInfo {
     width: Optional<Range>;
     height: Optional<Range>;
     channels: Optional<Range>;
-    sampleRate: Optional<Array<i32>>;
+    sampleRate: Optional<Array<f64>>;
 }
 
 enum BufferingInfoType: i32 {
@@ -757,8 +757,8 @@ interface AVTranscoder {
     @get GetFdSrc(): AVFileDescriptor;
     @set SetFdSrc(fdSrc: AVFileDescriptor): void;
 
-    @get GetFdDst(): i32;
-    @set SetFdDst(fdDst: i32): void;
+    @get GetFdDst(): f64;
+    @set SetFdDst(fdDst: f64): void;
 
     @gen_async("prepare")
     @gen_promise("prepare")
@@ -791,7 +791,7 @@ interface AVTranscoder {
         } else if (type === "error") {
             this.OnError_inner(callback as (err: BusinessError<void>)=> void);
         } else if (type === "progressUpdate") {
-            this.OnProgressUpdate_inner(callback as (data: int)=> void);
+            this.OnProgressUpdate_inner(callback as (data: double)=> void);
         } else {
             throw new Error(`Unknown type: ${type}`);
         }
@@ -804,7 +804,7 @@ interface AVTranscoder {
         } else if (type === "error") {
             this.OffError_inner(callback as (((err: BusinessError<void>)=> void) | undefined ));
         } else if (type === "progressUpdate") {
-            this.OffProgressUpdate_inner(callback as (((data: int)=> void) | undefined ));
+            this.OffProgressUpdate_inner(callback as (((data: double)=> void) | undefined ));
         } else {
             throw new Error(`Unknown type: ${type}`);
         }
@@ -816,18 +816,18 @@ interface AVTranscoder {
     OnError(callback: (err: @sts_type("BusinessError<void>") Opaque)=> void): void;
     OffError(callback: Optional<(err: @sts_type("BusinessError<void>") Opaque)=> void>): void;
 
-    OnProgressUpdate(callback: (data: i32) => void): void;
-    OffProgressUpdate(callback: Optional<(data: i32) => void>);
+    OnProgressUpdate(callback: (data: f64) => void): void;
+    OffProgressUpdate(callback: Optional<(data: f64) => void>);
 }
 
 struct AVTranscoderConfig {
-    audioBitrate: Optional<i32>;
+    audioBitrate: Optional<f64>;
     audioCodec: Optional<CodecMimeType>;
     fileFormat: ContainerFormatType;
-    videoBitrate: Optional<i32>;
+    videoBitrate: Optional<f64>;
     videoCodec: Optional<CodecMimeType>;
-    videoFrameWidth: Optional<i32>;
-    videoFrameHeight: Optional<i32>;
+    videoFrameWidth: Optional<f64>;
+    videoFrameHeight: Optional<f64>;
 }
 
 enum AVScreenCaptureRecordPreset:i32 {
@@ -841,15 +841,15 @@ enum AVScreenCaptureFillMode:i32 {
 }
 
 struct AVScreenCaptureRecordConfig {
-    fd: i32;
-    frameWidth: Optional<i32>;
-    frameHeight: Optional<i32>;
-    videoBitrate: Optional<i32>;
-    audioSampleRate: Optional<i32>;
-    audioChannelCount: Optional<i32>;
-    audioBitrate: Optional<i32>;
+    fd: f64;
+    frameWidth: Optional<f64>;
+    frameHeight: Optional<f64>;
+    videoBitrate: Optional<f64>;
+    audioSampleRate: Optional<f64>;
+    audioChannelCount: Optional<f64>;
+    audioBitrate: Optional<f64>;
     preset: Optional<AVScreenCaptureRecordPreset>;
-    displayId: Optional<i32>;
+    displayId: Optional<f64>;
     fillMode: Optional<AVScreenCaptureFillMode>;
 }
 
@@ -870,20 +870,20 @@ struct AVRecorderConfig {
     metaSourceTypes: Optional<Array<MetaSourceType>>;
     fileGenerationMode: Optional<FileGenerationMode>;
     metadata: Optional<AVMetadata>;
-    maxDuration: Optional<i32>;
+    maxDuration: Optional<f64>;
 }
 
 struct AVRecorderProfile {
-    audioBitrate: Optional<i32>;
-    audioChannels: Optional<i32>;
+    audioBitrate: Optional<f64>;
+    audioChannels: Optional<f64>;
     audioCodec: Optional<CodecMimeType>;
-    audioSampleRate: Optional<i32>;
+    audioSampleRate: Optional<f64>;
     fileFormat: ContainerFormatType;
-    videoBitrate: Optional<i32>;
+    videoBitrate: Optional<f64>;
     videoCodec: Optional<CodecMimeType>;
-    videoFrameWidth: Optional<i32>;
-    videoFrameHeight: Optional<i32>;
-    videoFrameRate: Optional<i32>;
+    videoFrameWidth: Optional<f64>;
+    videoFrameHeight: Optional<f64>;
+    videoFrameRate: Optional<f64>;
     isHdr: Optional<bool>;
     enableTemporalScale: Optional<bool>;
     enableStableQualityMode: Optional<bool>;
@@ -997,7 +997,7 @@ interface MediaSourceLoadingRequest {
     @get GetUrl(): String;
     @get GetHeader(): Optional<@record Map<String, String>>;
 
-    RespondData(uuid: f64, offset: f64, buffer: @arraybuffer Array<u8>): i32;
+    RespondData(uuid: f64, offset: f64, buffer: @arraybuffer Array<u8>): Optional<f64>;
     RespondHeader(uuid: f64, header: Optional<@record Map<String, String>>, redirectUrl: Optional<String>): void;
     FinishLoading(uuid: f64, state: LoadingRequestError): void;
 }

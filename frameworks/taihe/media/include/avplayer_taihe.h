@@ -109,11 +109,11 @@ public:
     
     optional<string> GetUrl();
     void SetUrl(optional_view<string> url);
-    int32_t GetWidth();
-    int32_t GetHeight();
+    double GetWidth();
+    double GetHeight();
     string GetState();
-    int32_t GetDuration();
-    int32_t GetCurrentTime();
+    double GetDuration();
+    double GetCurrentTime();
     void SetVolume(double volume);
     optional<AVDataSrcDescriptor> GetDataSrc();
     void SetDataSrc(optional_view<AVDataSrcDescriptor> dataSrc);
@@ -124,13 +124,13 @@ public:
     optional<ohos::multimedia::media::AVFileDescriptor> GetFdSrc();
     void SetFdSrc(optional_view<ohos::multimedia::media::AVFileDescriptor> fdSrc);
     void SetSpeed(PlaybackSpeed speed);
-    void Seek(int32_t timeMs, optional_view<SeekMode> mode);
+    void Seek(double timeMs, optional_view<SeekMode> mode);
     optional<VideoScaleType> GetVideoScaleType();
     void SetVideoScaleType(optional_view<VideoScaleType> videoScaleType);
     bool IsSeekContinuousSupported();
     array<map<string, MediaDescriptionValue>> GetTrackDescriptionSync();
-    int32_t GetPlaybackPosition();
-    void SetBitrate(int32_t bitrate);
+    double GetPlaybackPosition();
+    void SetBitrate(double bitrate);
     void StopSync();
     void PlaySync();
     void ResetSync();
@@ -142,15 +142,15 @@ public:
     void GetPlayStrategy(AVPlayStrategyTmp &playStrategy, PlaybackStrategy strategy);
     void EnqueueMediaSourceTask(const std::shared_ptr<AVMediaSource> &mediaSource,
         const struct AVPlayStrategy &strategy);
-    void AddSubtitleFromFdSync(int32_t fd, int64_t offset, int64_t length);
-    array<int32_t> GetSelectedTracksSync();
-    void SelectTrackSync(int32_t index, ::taihe::optional_view<::ohos::multimedia::media::SwitchMode> mode);
-    void DeselectTrackSync(int32_t index);
+    void AddSubtitleFromFdSync(double fd, double offset, double length);
+    array<double> GetSelectedTracksSync();
+    void SelectTrackSync(double index, ::taihe::optional_view<::ohos::multimedia::media::SwitchMode> mode);
+    void DeselectTrackSync(double index);
     void AddSubtitleFromUrlSync(::taihe::string_view url);
     map<string, PlaybackInfoValue> GetPlaybackInfoSync();
-    void SetVideoWindowSizeSync(int32_t width, int32_t height);
+    void SetVideoWindowSizeSync(double width, double height);
     void SetSuperResolutionSync(bool enabled);
-    void SetPlaybackRangeSync(int32_t startTimeMs, int32_t endTimeMs,
+    void SetPlaybackRangeSync(double startTimeMs, double endTimeMs,
         optional_view<::ohos::multimedia::media::SeekMode> mode);
     void SetMediaMutedSync(::ohos::multimedia::media::MediaType mediaType, bool muted);
     void SetPlaybackStrategySync(::ohos::multimedia::media::PlaybackStrategy const& strategy);
@@ -159,22 +159,22 @@ public:
     void OnMediaKeySystemInfoUpdate(callback_view<void(uintptr_t)> callback);
     void OnEndOfStream(callback_view<void(uintptr_t)> callback);
     void OnStartRenderFrame(callback_view<void(uintptr_t)> callback);
-    void OnSeekDone(callback_view<void(int32_t)> callback);
-    void OnDurationUpdate(callback_view<void(int32_t)> callback);
-    void OnTimeUpdate(callback_view<void(int32_t)> callback);
+    void OnSeekDone(callback_view<void(double)> callback);
+    void OnDurationUpdate(callback_view<void(double)> callback);
+    void OnTimeUpdate(callback_view<void(double)> callback);
     void OnVolumeChange(callback_view<void(double)> callback);
-    void OnSpeedDone(callback_view<void(int32_t)> callback);
-    void OnBitrateDone(callback_view<void(int32_t)> callback);
-    void OnAvailableBitrates(callback_view<void(array_view<int32_t>)> callback);
-    void OnAmplitudeUpdate(callback_view<void(array_view<float>)> callback);
-    void OnBufferingUpdate(callback_view<void(ohos::multimedia::media::BufferingInfoType, int32_t)> callback);
-    void OnVideoSizeChange(callback_view<void(int32_t, int32_t)> callback);
-    void OnTrackChange(callback_view<void(int32_t, bool)> callback);
+    void OnSpeedDone(callback_view<void(double)> callback);
+    void OnBitrateDone(callback_view<void(double)> callback);
+    void OnAvailableBitrates(callback_view<void(array_view<double>)> callback);
+    void OnAmplitudeUpdate(callback_view<void(array_view<double>)> callback);
+    void OnBufferingUpdate(callback_view<void(ohos::multimedia::media::BufferingInfoType, double)> callback);
+    void OnVideoSizeChange(callback_view<void(double, double)> callback);
+    void OnTrackChange(callback_view<void(double, bool)> callback);
     void OnSubtitleUpdate(callback_view<void(SubtitleInfo const&)> callback);
     void OnSuperResolutionChanged(callback_view<void(bool)> callback);
     void OnTrackInfoUpdate(callback_view<void(array_view<map<string, MediaDescriptionValue>>)> callback);
-    void OnSeiMessageReceived(array_view<int32_t> payloadTypes,
-        callback_view<void(array_view<SeiMessage>, optional_view<int32_t>)> callback);
+    void OnSeiMessageReceived(array_view<double> payloadTypes,
+        callback_view<void(array_view<SeiMessage>, optional_view<double>)> callback);
 
     void OffError(optional_view<callback<void(uintptr_t)>> callback);
     void OffStateChange(optional_view<callback<void(string_view,
@@ -182,24 +182,23 @@ public:
     void OffMediaKeySystemInfoUpdate(optional_view<callback<void(uintptr_t)>> callback);
     void OffEndOfStream(optional_view<callback<void(uintptr_t)>> callback);
     void OffStartRenderFrame(optional_view<callback<void(uintptr_t)>> callback);
-    void OffSeekDone(optional_view<callback<void(int32_t)>> callback);
-    void OffDurationUpdate(optional_view<callback<void(int32_t)>> callback);
-    void OffTimeUpdate(optional_view<callback<void(int32_t)>> callback);
+    void OffSeekDone(optional_view<callback<void(double)>> callback);
+    void OffDurationUpdate(optional_view<callback<void(double)>> callback);
+    void OffTimeUpdate(optional_view<callback<void(double)>> callback);
     void OffVolumeChange(optional_view<callback<void(double)>> callback);
-    void OffSpeedDone(optional_view<callback<void(int32_t)>> callback);
-    void OffBitrateDone(optional_view<callback<void(int32_t)>> callback);
-    void OffAvailableBitrates(optional_view<callback<void(array_view<int32_t>)>> callback);
-    void OffAmplitudeUpdate(optional_view<callback<void(array_view<float>)>> callback);
+    void OffSpeedDone(optional_view<callback<void(double)>> callback);
+    void OffBitrateDone(optional_view<callback<void(double)>> callback);
+    void OffAvailableBitrates(optional_view<callback<void(array_view<double>)>> callback);
+    void OffAmplitudeUpdate(optional_view<callback<void(array_view<double>)>> callback);
     void OffBufferingUpdate(optional_view<callback<void(ohos::multimedia::media::BufferingInfoType,
-        int32_t)>> callback);
-    void OffVideoSizeChange(optional_view<callback<void(int32_t, int32_t)>> callback);
-    void OffTrackChange(optional_view<callback<void(int32_t, bool)>> callback);
+        double)>> callback);
+    void OffVideoSizeChange(optional_view<callback<void(double, double)>> callback);
+    void OffTrackChange(optional_view<callback<void(double, bool)>> callback);
     void OffSubtitleUpdate(optional_view<callback<void(SubtitleInfo const&)>> callback);
     void OffSuperResolutionChanged(optional_view<callback<void(bool)>> callback);
-    void OffTrackInfoUpdate(optional_view<callback<void(array_view<map<string, int32_t>>)>> callback);
-    void OffSeiMessageReceived(array_view<int32_t> payloadTypes,
-        optional_view<callback<void(array_view<SeiMessage>, optional_view<int32_t>)>> callback);
-    friend AVPlayer CreateAVPlayerSync();
+    void OffTrackInfoUpdate(optional_view<callback<void(array_view<map<string, double>>)>> callback);
+    void OffSeiMessageReceived(array_view<double> payloadTypes,
+        optional_view<callback<void(array_view<SeiMessage>, optional_view<double>)>> callback);
     bool GetIntArrayArgument(std::vector<int32_t> &vec, const std::vector<int32_t> &inputArray);
     void SeiMessageCallbackOff(std::string &callbackName, const std::vector<int32_t> &payloadTypes);
     void MaxAmplitudeCallbackOff(std::string callbackName);

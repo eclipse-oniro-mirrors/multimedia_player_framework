@@ -40,10 +40,10 @@ public:
     void SetMimeType(::ohos::multimedia::media::AVMimeTypes mimeType);
     void SetMediaResourceLoaderDelegate(::ohos::multimedia::media::MediaSourceLoader const& resourceLoader);
 private:
-    static ::ohos::multimedia::media::MediaSource CreateMediaSourceWithUrl(string_view url,
+    static optional<::ohos::multimedia::media::MediaSource> CreateMediaSourceWithUrl(string_view url,
         optional_view<map<string, string>> headers);
 
-    static ::ohos::multimedia::media::MediaSource CreateMediaSourceWithStreamData(
+    static optional<::ohos::multimedia::media::MediaSource> CreateMediaSourceWithStreamData(
         array_view<::ohos::multimedia::media::MediaStream> streams);
 
     std::shared_ptr<AVMediaSourceTmp> mediaSource_ {nullptr};

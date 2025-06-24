@@ -33,6 +33,7 @@ MediaSourceImpl::MediaSourceImpl(string_view url, optional_view<map<string, stri
     mediaSource_ = std::make_shared<AVMediaSourceTmp>();
     if (mediaSource_ == nullptr) {
         MEDIA_LOGE("TaiheCreateMediaSourceWithUrl GetMediaSource fail");
+        MediaTaiheUtils::ThrowExceptionError("TaiheCreateMediaSourceWithUrl GetMediaSource fail");
         return;
     }
     mediaSource_->url = static_cast<std::string>(url);
@@ -49,12 +50,18 @@ MediaSourceImpl::MediaSourceImpl(array_view<::ohos::multimedia::media::MediaStre
 {
     if (streams.size() == 0) {
         MEDIA_LOGE("TaiheCreateMediaSourceWithStreamData GetMediaSource fail Array<MediaStream> is 0");
+        MediaTaiheUtils::ThrowExceptionError("TaiheCreateMediaSourceWithUrl GetMediaSource fail");
         return;
     }
-    CHECK_AND_RETURN_LOG(streams.size() <= MAX_MEDIA_STREAM_ARRAY_LENGTH, "length Array<MediaStream> is too long");
+    if (streams.size() > MAX_MEDIA_STREAM_ARRAY_LENGTH) {
+        MEDIA_LOGE("TaiheCreateMediaSourceWithStreamData GetMediaSource fail Array<MediaStream> is too long");
+        MediaTaiheUtils::ThrowExceptionError("TaiheCreateMediaSourceWithStreamData GetMediaSource fail");
+        return;
+    }
     mediaSource_ = std::make_shared<AVMediaSourceTmp>();
     if (mediaSource_ == nullptr) {
         MEDIA_LOGE("TaiheCreateMediaSourceWithStreamData GetMediaSource fail");
+        MediaTaiheUtils::ThrowExceptionError("TaiheCreateMediaSourceWithStreamData GetMediaSource fail");
         return;
     }
     for (uint32_t i = 0; i < streams.size(); i++) {
@@ -78,18 +85,30 @@ int64_t MediaSourceImpl::GetImplPtr()
     return reinterpret_cast<uintptr_t>(this);
 }
 
-::ohos::multimedia::media::MediaSource CreateMediaSourceWithUrl(string_view url,
+optional<::ohos::multimedia::media::MediaSource> CreateMediaSourceWithUrl(string_view url,
     optional_view<map<string, string>> headers)
 {
     MEDIA_LOGD("TaiheCreateMediaSourceWithUrl In");
-    return taihe::make_holder<MediaSourceImpl, ::ohos::multimedia::media::MediaSource>(url, headers);
+    auto res = taihe::make_holder<MediaSourceImpl, ::ohos::multimedia::media::MediaSource>(url, headers);
+    if (taihe::has_error()) {
+        MEDIA_LOGE("Create MediaSource failed!");
+        taihe::reset_error();
+        return optional<::ohos::multimedia::media::MediaSource>(std::nullopt);
+    }
+    return optional<::ohos::multimedia::media::MediaSource>(std::in_place, res);
 }
 
-::ohos::multimedia::media::MediaSource CreateMediaSourceWithStreamData(
+optional<::ohos::multimedia::media::MediaSource> CreateMediaSourceWithStreamData(
     array_view<::ohos::multimedia::media::MediaStream> streams)
 {
     MEDIA_LOGD("TaiheCreateMediaSourceWithStreamData In");
-    return taihe::make_holder<MediaSourceImpl, ::ohos::multimedia::media::MediaSource>(streams);
+    auto res = taihe::make_holder<MediaSourceImpl, ::ohos::multimedia::media::MediaSource>(streams);
+    if (taihe::has_error()) {
+        MEDIA_LOGE("Create MediaSource failed!");
+        taihe::reset_error();
+        return optional<::ohos::multimedia::media::MediaSource>(std::nullopt);
+    }
+    return optional<::ohos::multimedia::media::MediaSource>(std::in_place, res);
 }
 
 std::shared_ptr<AVMediaSourceTmp> MediaSourceImpl::GetMediaSource(weak::MediaSource mediaSource)

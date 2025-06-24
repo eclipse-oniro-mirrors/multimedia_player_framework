@@ -72,6 +72,7 @@ taihe_shared_library("soundpool_taihe") {
 
   sources = get_target_outputs(":run_soundpool_taihe")
   sources += [
+    "media/src/media_taihe_utils.cpp",
     "soundpool/src/ani_constructor.cpp",
     "soundpool/src/sound_pool_taihe.cpp",
     "soundpool/src/sound_pool_callback_taihe.cpp",

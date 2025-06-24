@@ -41,6 +41,7 @@ VideoRecorderImpl::VideoRecorderImpl()
     recorder_ = RecorderFactory::CreateRecorder();
     if (recorder_ == nullptr) {
         MEDIA_LOGE("failed to CreateRecorder");
+        MediaTaiheUtils::ThrowExceptionError("failed to CreateRecorder");
         return;
     }
     if (callback_ == nullptr && recorder_ != nullptr) {
@@ -98,18 +99,31 @@ bool StrToInt(const std::string_view& str, T& value)
     return true;
 }
 
-VideoRecorder CreateVideoRecorderSync()
+optional<VideoRecorder> CreateVideoRecorderSync()
 {
     MEDIA_LOGD("CreateVideoRecorder In");
-    return make_holder<VideoRecorderImpl, VideoRecorder>();
+    if (!MediaTaiheUtils::SystemPermission()) {
+        auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>();
+        SignError(asyncCtx.get(),
+            MSERR_EXT_API9_PERMISSION_DENIED, "CreateVideoRecorder", "system");
+        return optional<VideoRecorder>(std::nullopt);
+    }
+    auto res = make_holder<VideoRecorderImpl, VideoRecorder>();
+    if (taihe::has_error()) {
+        MEDIA_LOGE("CreateVideoRecorder failed!");
+        taihe::reset_error();
+        return optional<VideoRecorder>(std::nullopt);
+    }
+    return optional<VideoRecorder>(std::in_place, res);
 }
 
-string VideoRecorderImpl::GetInputSurfaceSync()
+optional<string> VideoRecorderImpl::GetInputSurfaceSync()
 {
     MEDIA_LOGD("GetInputSurface In");
     auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>();
+    auto res = optional<string>(std::nullopt);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, res, "asyncCtx is nullptr!");
     asyncCtx->taihe = this;
-    std::string surfaceId;
 
     if (!MediaTaiheUtils::SystemPermission()) {
         SignError(asyncCtx.get(),
@@ -118,7 +132,7 @@ string VideoRecorderImpl::GetInputSurfaceSync()
 
     if (asyncCtx->taihe == nullptr || asyncCtx->taihe->recorder_ == nullptr) {
         SignError(asyncCtx.get(), MSERR_EXT_API9_OPERATE_NOT_PERMIT, "GetInputSurface", "");
-        return surfaceId;
+        return res;
     }
 
     asyncCtx->taihe->surface_ = asyncCtx->taihe->recorder_->GetSurface(asyncCtx->taihe->videoSourceID); // source id
@@ -128,12 +142,13 @@ string VideoRecorderImpl::GetInputSurfaceSync()
         if (error != OHOS::SURFACE_ERROR_OK) {
             SignError(asyncCtx.get(), MSERR_EXT_API9_OPERATE_NOT_PERMIT, "GetInputSurface", "");
         }
-        surfaceId = std::to_string(asyncCtx->taihe->surface_->GetUniqueId());
+        std::string surfaceId = std::to_string(asyncCtx->taihe->surface_->GetUniqueId());
+        res = optional<string>(std::in_place, surfaceId);
     } else {
         SignError(asyncCtx.get(), MSERR_EXT_API9_OPERATE_NOT_PERMIT, "GetInputSurface", "");
     }
     asyncCtx.release();
-    return MediaTaiheUtils::ToTaiheString(surfaceId);
+    return res;
 }
 
 void VideoRecorderImpl::PrepareSync(VideoRecorderConfig const& config)

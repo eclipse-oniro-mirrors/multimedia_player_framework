@@ -35,7 +35,6 @@ public:
 
     void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
     void CancelCallbackReference(const std::string &callbackName);
-    friend ohos::multimedia::media::ScreenCaptureMonitor GetScreenCaptureMonitorSync();
 
 private:
     OHOS::sptr<OHOS::Media::ScreenCaptureMonitor::ScreenCaptureMonitorListener> monitorCb_ = nullptr;

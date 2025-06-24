@@ -29,7 +29,7 @@ public:
     MediaSourceLoadingRequestImpl(uint64_t requestId);
     string GetUrl();
     optional<map<string, string>> GetHeader();
-    int32_t RespondData(double uuid, double offset, array_view<uint8_t> buffer);
+    optional<double> RespondData(double uuid, double offset, array_view<uint8_t> buffer);
     void RespondHeader(double uuid, optional_view<map<string, string>> header, optional_view<string> redirectUrl);
     void FinishLoading(double uuid, LoadingRequestError state);
     static ::ohos::multimedia::media::MediaSourceLoadingRequest CreateLoadingRequest(
