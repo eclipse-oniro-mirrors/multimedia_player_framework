@@ -42,6 +42,7 @@ group("media_unit_test") {
       "unittest/hiplayer_impl_test:hiplayer_impl_unit_test",
       "unittest/hiplayer_impl_unittest:hiplayer_impl_unittest",
       "unittest/hitranscode:hitranscode_unit_test",
+      "unittest/hitranscode_impl_unittest:hitranscode_impl_unittest",
       "unittest/live_controller_unittest:live_controller_unittest",
       "unittest/media_server_manager_test:media_server_manager_test",
       "unittest/media_service_helper_test:media_service_helper_unit_test",
