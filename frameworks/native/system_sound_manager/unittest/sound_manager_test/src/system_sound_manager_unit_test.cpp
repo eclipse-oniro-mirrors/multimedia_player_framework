@@ -33,8 +33,6 @@ vector<string> COLUMNSTEST = {{RINGTONE_COLUMN_TONE_ID}, {RINGTONE_COLUMN_DATA},
     {RINGTONE_COLUMN_ALARM_TONE_SOURCE_TYPE}, {RINGTONE_COLUMN_MIME_TYPE}};
 const int ERROR = -1;
 const int SUCCESS = 0;
-const int32_t PARAM1 = 1;
-const int INVALID_FD = -1;
 const int RESULT_DEFAULT = -13;
 const int RESULT_SUCCESS = -3;
 constexpr int32_t TONE_CATEGORY_DEFAULT = 8;
