@@ -973,20 +973,8 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_AddCustomizedToneByFdAndOf
     std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
     std::shared_ptr<ToneAttrs> toneAttrs_ = std::make_shared<ToneAttrs>("default",
         "default", "default", CUSTOMISED, TONE_CATEGORY_RINGTONE);
-    auto vec = systemSoundManager_->GetAlarmToneAttrList(context_);
-    std::string uri = "";
-    if (vec.size() > 0) {
-        uri = vec[0]->GetUri();
-    }
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
-        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    if (dataShareHelper == nullptr) {
-        std::cout << "dataShareHelper is nullptr"<< std::endl;
-        return;
-    }
-    std::tuple<string, int64_t, SystemSoundError> resultOfOpen = std::make_tuple(uri, INVALID_FD, ERROR_IO);
-    systemSoundManager_->OpenOneFile(dataShareHelper, uri, resultOfOpen);
-    int64_t srcFd = std::get<PARAM1>(resultOfOpen);
+    std::string audioUri = "/data/test/ringtone.ogg";
+    int64_t srcFd = open(audioUri.c_str(), O_RDONLY);
     std::string res;
     toneAttrs_->SetMediaType(ToneMediaType::MEDIA_TYPE_VID);
     toneAttrs_->SetTitle("06172");
@@ -1022,19 +1010,8 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_AddCustomizedToneByFdAndOf
     std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
     std::shared_ptr<ToneAttrs> toneAttrs_ = std::make_shared<ToneAttrs>("default",
         "default", "default", CUSTOMISED, TONE_CATEGORY_RINGTONE);
-    auto vec = systemSoundManager_->GetAlarmToneAttrList(context_);
-    std::string uri = "";
-    if (vec.size() > 0) {
-        uri = vec[0]->GetUri();
-    }
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
-        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    if (dataShareHelper == nullptr) {
-        std::cout << "dataShareHelper is nullptr"<< std::endl;
-    }
-    std::tuple<string, int64_t, SystemSoundError> resultOfOpen = std::make_tuple(uri, INVALID_FD, ERROR_IO);
-    systemSoundManager_->OpenOneFile(dataShareHelper, uri, resultOfOpen);
-    int64_t srcFd = std::get<PARAM1>(resultOfOpen);
+    std::string audioUri = "/data/test/ringtone.ogg";
+    int64_t srcFd = open(audioUri.c_str(), O_RDONLY);
     std::string res;
     toneAttrs_->SetMediaType(ToneMediaType::MEDIA_TYPE_VID);
     toneAttrs_->SetTitle("06172");
@@ -1056,21 +1033,9 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_AddCustomizedToneByFdAndOf
  */
 HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_AddCustomizedToneCheck_001, TestSize.Level2)
 {
-    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
     std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
-    auto vec = systemSoundManager_->GetAlarmToneAttrList(context_);
-    std::string uri = "";
-    if (vec.size() > 0) {
-        uri = vec[0]->GetUri();
-    }
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
-        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    if (dataShareHelper == nullptr) {
-        std::cout << "dataShareHelper is nullptr"<< std::endl;
-    }
-    std::tuple<string, int64_t, SystemSoundError> resultOfOpen = std::make_tuple(uri, INVALID_FD, ERROR_IO);
-    systemSoundManager_->OpenOneFile(dataShareHelper, uri, resultOfOpen);
-    int64_t srcFd = std::get<PARAM1>(resultOfOpen);
+    std::string audioUri = "/data/test/ringtone.ogg";
+    int64_t srcFd = open(audioUri.c_str(), O_RDONLY);
     std::shared_ptr<ToneAttrs> toneAttrs = std::make_shared<ToneAttrs>("", "", "", CUSTOMISED, TONE_CATEGORY_RINGTONE);
     toneAttrs->SetMediaType(ToneMediaType::MEDIA_TYPE_VID);
     toneAttrs->SetFileName("12345.wav");
@@ -1078,6 +1043,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_AddCustomizedToneCheck_001
     EXPECT_EQ(systemSoundManager_->AddCustomizedToneCheck(toneAttrs, srcFd, fileSize), "TYPEERROR");
     toneAttrs->SetFileName(".mp4");
     EXPECT_EQ(systemSoundManager_->AddCustomizedToneCheck(toneAttrs, srcFd, fileSize), "TYPEERROR");
+    EXPECT_EQ(systemSoundManager_->AddCustomizedToneCheck(nullptr, srcFd, fileSize), "TYPEERROR");
 }
 
 /**

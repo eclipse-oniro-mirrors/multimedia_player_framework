@@ -85,4 +85,5 @@ ohos_unittest("system_sound_manager_unit_test") {
     "hitrace:hitrace_meter",
   ]
   remove_configs = [ "//build/config/compiler:no_exceptions" ]
+  resource_config_file = "../../../../../test/unittest/resources/ohos_test.xml"
 }
