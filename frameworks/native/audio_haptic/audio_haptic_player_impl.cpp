@@ -279,7 +279,7 @@ bool AudioHapticPlayerImpl::IsHapticsRampSupported()
 {
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
     if (audioHapticVibrator_ != nullptr) {
-        return audioHapticVibrator_->IsHdHapticSupported();
+        return audioHapticVibrator_->IsHapticsCustomSupported();
     }
     return false;
 }
@@ -288,7 +288,7 @@ bool AudioHapticPlayerImpl::IsHapticsIntensityAdjustmentSupported()
 {
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
     if (audioHapticVibrator_ != nullptr) {
-        return audioHapticVibrator_->IsHdHapticSupported();
+        return audioHapticVibrator_->IsHapticsCustomSupported();
     }
     return false;
 }

@@ -37,7 +37,7 @@ public:
     virtual int32_t StopVibrate() = 0;
     virtual int32_t GetDelayTime() = 0;
     virtual void EnableHapticsInSilentMode(bool enable) = 0;
-    virtual bool IsHdHapticSupported() = 0;
+    virtual bool IsHapticsCustomSupported() = 0;
     virtual int32_t SetHapticsRamp(int32_t duration, float startIntensity, float endIntensity) = 0;
     virtual int32_t SetHapticsFeature(const HapticsFeature &feature) = 0;
 

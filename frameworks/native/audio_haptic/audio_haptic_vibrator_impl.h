@@ -41,7 +41,7 @@ public:
     int32_t StopVibrate() override;
     int32_t GetDelayTime() override;
     void SetIsSupportEffectId(bool isSupport);
-    bool IsHdHapticSupported() override;
+    bool IsHapticsCustomSupported() override;
     void EnableHapticsInSilentMode(bool enable) override
     {
         enableInSilentMode_.store(enable);
