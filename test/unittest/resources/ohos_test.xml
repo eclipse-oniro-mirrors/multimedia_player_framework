@@ -623,7 +623,14 @@
             <option name="shell" value="restorecon /data/test/"/>
         </preparer>
     </target>
-        <target name="system_tone_player_unit_test">
+    <target name="system_sound_manager_unit_test">
+        <preparer>
+            <option name="push" value="res_audio_haptic/ringtone.ogg -> /data/test/" src="res"/>
+            <option name="push" value="res_audio_haptic/ringtone.json -> /data/test/" src="res"/>
+            <option name="shell" value="restorecon /data/test/"/>
+        </preparer>
+    </target>
+    <target name="system_tone_player_unit_test">
         <preparer>
             <option name="push" value="res_audio_haptic/ringtone.ogg -> /data/test/" src="res"/>
             <option name="push" value="res_audio_haptic/ringtone.json -> /data/test/" src="res"/>
