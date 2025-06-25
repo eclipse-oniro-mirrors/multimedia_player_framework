@@ -357,7 +357,11 @@ int32_t PlayerServerMem::Stop()
 int32_t PlayerServerMem::Reset()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "Reset:RecoverMemByUser fail");
+    if (RecoverMemByUser() != MSERR_OK) {
+        lastestUserSetTime_ = std::chrono::steady_clock::now();
+        MEDIA_LOGE("Reset:RecoverMemByUser failed, force release!");
+        return PlayerServer::Reset();
+    }
 
     recoverCond_.wait_for(lock, std::chrono::seconds(WAIT_RECOVER_TIME_SEC), [this] {
         return isLocalResource_ ? (!isRecoverMemByUser_) : (!isSeekToCurrentTime_);
