@@ -282,6 +282,10 @@ int32_t AVTranscoderImpl::CheckRepeatOperation(const std::string &opt)
     CHECK_AND_RETURN_RET_LOG(taiheCb != nullptr, MSERR_INVALID_OPERATION, "taiheCb is nullptr!");
 
     std::string curState = taiheCb->GetState();
+    if (STATE_CTRL.find(curState) == STATE_CTRL.end()) {
+        MEDIA_LOGI("Invalid state: %{public}s.", curState.c_str());
+        return MSERR_INVALID_OPERATION;
+    }
     std::vector<std::string> repeatOpt = STATE_CTRL.at(curState);
     if (find(repeatOpt.begin(), repeatOpt.end(), opt) != repeatOpt.end()) {
         MEDIA_LOGI("Current state is %{public}s. Please do not call %{public}s again!",

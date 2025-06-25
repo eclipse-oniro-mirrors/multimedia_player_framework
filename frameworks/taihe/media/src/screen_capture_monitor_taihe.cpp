@@ -18,7 +18,6 @@
 #include "media_errors.h"
 #include "media_log.h"
 #include "media_dfx.h"
-#include "media_taihe_utils.h"
 
 using namespace ANI::Media;
 

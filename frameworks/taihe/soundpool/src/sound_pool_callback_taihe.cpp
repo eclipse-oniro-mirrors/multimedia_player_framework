@@ -106,8 +106,11 @@ void SoundPoolCallBackTaihe::SaveCallbackReference(const std::string &name, std:
     std::lock_guard<std::mutex> lock(mutex_);
     refMap_[name] = ref;
     MEDIA_LOGI("Set callback type: %{public}s", name.c_str());
-    std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::GetMainEventRunner();
-    mainHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
+    if (mainHandler_ == nullptr) {
+        std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::GetMainEventRunner();
+        mainHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
+        MEDIA_LOGI("mainHandler_ is nullptr, set it");
+    }
 }
 
 void SoundPoolCallBackTaihe::SendErrorCallback(int32_t errCode, const std::string &msg)
@@ -192,8 +195,9 @@ void SoundPoolCallBackTaihe::OnTaiheErrorCallBack(SoundPoolTaiheCallBack *taiheC
     do {
         MEDIA_LOGD("OnTaiheErrorCallBack is called");
         std::shared_ptr<AutoRef> ref = taiheCb->autoRef.lock();
-
+        CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
         auto func = ref->callbackRef_;
+        CHECK_AND_BREAK_LOG(func != nullptr, "%{public}s failed to get callback", request.c_str());
         auto err = ToBusinessError(taihe::get_env(), taiheCb->errorCode, taiheCb->errorMsg);
         std::shared_ptr<taihe::callback<void(uintptr_t)>> cacheCallback =
             std::reinterpret_pointer_cast<taihe::callback<void(uintptr_t)>>(func);
@@ -210,6 +214,7 @@ void SoundPoolCallBackTaihe::OnTaiheloadCompletedCallBack(SoundPoolTaiheCallBack
         std::shared_ptr<AutoRef> ref = taiheCb->autoRef.lock();
 
         auto func = ref->callbackRef_;
+        CHECK_AND_BREAK_LOG(func != nullptr, "%{public}s failed to get callback", request.c_str());
         std::shared_ptr<taihe::callback<void(double)>> cacheCallback =
             std::reinterpret_pointer_cast<taihe::callback<void(double)>>(func);
         (*cacheCallback)(taiheCb->loadSoundId);
@@ -226,6 +231,7 @@ void SoundPoolCallBackTaihe::OnTaiheplayCompletedCallBack(SoundPoolTaiheCallBack
             std::shared_ptr<AutoRef> ref = taiheCb->autoRef.lock();
     
             auto func = ref->callbackRef_;
+            CHECK_AND_BREAK_LOG(func != nullptr, "%{public}s failed to get callback", request.c_str());
             std::shared_ptr<taihe::callback<void(double)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void(double)>>(func);
             (*cacheCallback)(taiheCb->playFinishedStreamID);

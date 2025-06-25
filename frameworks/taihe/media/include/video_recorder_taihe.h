@@ -50,7 +50,7 @@ constexpr int32_t DEFAULT_FRAME_RATE = 30;
 class VideoRecorderImpl {
 public:
     VideoRecorderImpl();
-    bool IsSurfaceIdVaild(uint64_t surfaceID);
+    bool IsSurfaceIdValid(uint64_t surfaceID);
     void CancelCallback();
     void PrepareSync(VideoRecorderConfig const& config);
     optional<string> GetInputSurfaceSync();

@@ -127,8 +127,8 @@ void AVRecorderImpl::PrepareSync(ohos::multimedia::media::AVRecorderConfig const
     MEDIA_LOGI("Taihe %{public}s Start", opt.c_str());
 
     auto asyncCtx = std::make_unique<AVRecorderAsyncContext>();
-    asyncCtx->taihe = this;
     CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
+    asyncCtx->taihe = this;
     CHECK_AND_RETURN_LOG(asyncCtx->taihe != nullptr, "failed to get AsyncContext");
     CHECK_AND_RETURN_LOG(asyncCtx->taihe->taskQue_ != nullptr, "taskQue is nullptr!");
     if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
@@ -458,7 +458,7 @@ int32_t AVRecorderImpl::GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &a
     }
     std::string strRotation = "";
     if (metadata.videoOrientation.has_value()) {
-        std::string strRotation = static_cast<std::string>(metadata.videoOrientation.value());
+        strRotation = static_cast<std::string>(metadata.videoOrientation.value());
     }
     if (strRotation == "0" || strRotation == "90" || strRotation == "180" || strRotation == "270") {
         asyncCtx->config_->rotation = std::stoi(strRotation);

@@ -50,7 +50,7 @@ VideoRecorderImpl::VideoRecorderImpl()
     }
 }
 
-bool VideoRecorderImpl::IsSurfaceIdVaild(uint64_t surfaceID)
+bool VideoRecorderImpl::IsSurfaceIdValid(uint64_t surfaceID)
 {
     auto surface = OHOS::SurfaceUtils::GetInstance()->GetSurface(surfaceID);
     if (surface == nullptr) {
@@ -271,7 +271,7 @@ void VideoRecorderImpl::ResetSync()
     }
     if (asyncCtx->taihe->surface_ != nullptr) {
         auto id = asyncCtx->taihe->surface_->GetUniqueId();
-        if (asyncCtx->taihe->IsSurfaceIdVaild(id)) {
+        if (asyncCtx->taihe->IsSurfaceIdValid(id)) {
             (void)OHOS::SurfaceUtils::GetInstance()->Remove(id);
         }
         asyncCtx->taihe->surface_ = nullptr;
@@ -322,7 +322,7 @@ void VideoRecorderImpl::ReleaseSync()
     }
     if (asyncCtx->taihe->surface_ != nullptr) {
         auto id = asyncCtx->taihe->surface_->GetUniqueId();
-        if (asyncCtx->taihe->IsSurfaceIdVaild(id)) {
+        if (asyncCtx->taihe->IsSurfaceIdValid(id)) {
             (void)OHOS::SurfaceUtils::GetInstance()->Remove(id);
         }
         asyncCtx->taihe->surface_ = nullptr;
