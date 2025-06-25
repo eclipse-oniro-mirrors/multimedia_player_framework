@@ -862,7 +862,7 @@ void SystemTonePlayerImpl::SendSystemTonePlaybackEvent(const int32_t &errorCode,
         Media::MediaMonitor::ModuleId::AUDIO, Media::MediaMonitor::EventId::SYSTEM_TONE_PLAYBACK,
         Media::MediaMonitor::EventType::BEHAVIOR_EVENT);
     bean->Add("TIME_STAMP", static_cast<uint64_t>(rawtime));
-    bean->Add("SYSTEM_TONE_TYPE", SystemSoundManagerUtils::GetTypeForSystemSoundUri(configuredUri_));
+    bean->Add("SYSTEM_SOUND_TYPE", SystemSoundManagerUtils::GetTypeForSystemSoundUri(configuredUri_));
     bean->Add("CLIENT_UID", static_cast<int32_t>(getuid()));
     bean->Add("DEVICE_TYPE", (desc.size() > 0 ? desc[0]->deviceType_ : AudioStandard::DEVICE_TYPE_NONE));
     bean->Add("ERROR_CODE", errorCode);
