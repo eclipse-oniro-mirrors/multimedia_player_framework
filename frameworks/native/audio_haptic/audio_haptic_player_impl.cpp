@@ -112,6 +112,7 @@ void AudioHapticPlayerImpl::LoadPlayer()
     // Load vibrator
     audioHapticVibrator_ = AudioHapticVibrator::CreateAudioHapticVibrator(*this);
     CHECK_AND_RETURN_LOG(audioHapticVibrator_ != nullptr, "Failed to create audio haptic vibrator instance");
+    audioHapticVibrator_->SetAudioHapticSyncId(audioHapticSyncId_);
 }
 
 bool AudioHapticPlayerImpl::IsMuted(const AudioHapticType &audioHapticType) const

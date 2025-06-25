@@ -834,6 +834,7 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_041, TestSize.
     int32_t result = audioHapticVibratorImpl->PlayVibrationPattern(g_vibrationPackage, TWO_INDEX, vibrateTime, lock);
     EXPECT_EQ(result, MSERR_OK);
     vibrateTime = PATTERN2_TIME_MS;
+    audioHapticVibratorImpl->audioHapticSyncId_ = 1;
     result =
         audioHapticVibratorImpl->PlayVibrationPattern(g_vibrationPackage, ONE_INDEX, vibrateTime, lock);
     EXPECT_EQ(result, MSERR_OK);

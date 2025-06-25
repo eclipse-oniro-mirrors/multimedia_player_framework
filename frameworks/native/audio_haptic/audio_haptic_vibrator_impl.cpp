@@ -686,7 +686,11 @@ int32_t AudioHapticVibratorImpl::PlayVibrationPattern(
     MEDIA_LOGI("AudioHapticVibratorImpl::PlayVibrationPattern.");
     patternStartTime_ = GetCurrentTimeMillis();
     vibrationTimeElapsed_ = vibratorPkg->patterns[patternIndex].time;
-    result = Sensors::PlayPattern(vibratorPkg->patterns[patternIndex]);
+    if (audioHapticSyncId_ > 0) {
+        result = Sensors::PlayPatternBySessionId(audioHapticSyncId_, vibratorPkg->patterns[patternIndex]);
+    } else {
+        result = Sensors::PlayPattern(vibratorPkg->patterns[patternIndex]);
+    }
     CHECK_AND_RETURN_RET_LOG(result == 0, result,
         "AudioHapticVibratorImpl::PlayVibrationPattern: Failed to PlayPattern. Error %{public}d", result);
 
