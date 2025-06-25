@@ -38,12 +38,12 @@ namespace {
 }
 void ScreenCaptureUnitTestCallback::OnError(int32_t errorCode)
 {
-    ASSERT_FALSE(screenCapture_->IsErrorCallBackEnabled());
+    ASSERT_FALSE(screenCapture_->IsErrorCallbackEnabled());
 }
 
 void ScreenCaptureUnitTestCallback::OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type)
 {
-    ASSERT_FALSE(screenCapture_->IsDataCallBackEnabled());
+    ASSERT_FALSE(screenCapture_->IsDataCallbackEnabled());
     if (!isReady) {
         return;
     }
@@ -56,7 +56,7 @@ void ScreenCaptureUnitTestCallback::OnAudioBufferAvailable(bool isReady, AudioCa
         MEDIA_LOGD("AcquireAudioBuffer, audioBufferLen:%{public}d, timeStamp:%{public}" PRId64
             ", audioSourceType:%{public}d", audioBuffer->length, audioBuffer->timestamp, audioBuffer->sourcetype);
         DumpAudioBuffer(audioBuffer);
-        if (!screenCapture_->IsStateChangeCallBackEnabled()) {
+        if (!screenCapture_->IsStateChangeCallbackEnabled()) {
             if (aFlag_ == 1) {
                 screenCapture_->ReleaseAudioBuffer(type);
             }
@@ -72,7 +72,7 @@ void ScreenCaptureUnitTestCallback::DumpAudioBuffer(std::shared_ptr<AudioBuffer>
         MEDIA_LOGE("DumpAudioBuffer audioBuffer or audioBuffer->buffer is nullptr");
         return;
     }
-    if (!screenCapture_->IsStateChangeCallBackEnabled()) {
+    if (!screenCapture_->IsStateChangeCallbackEnabled()) {
         if (aFile_ == nullptr) {
             MEDIA_LOGD("DumpAudioBuffer aFile_ is nullptr");
             return;
@@ -100,7 +100,7 @@ void ScreenCaptureUnitTestCallback::DumpAudioBuffer(std::shared_ptr<AudioBuffer>
 
 void ScreenCaptureUnitTestCallback::OnVideoBufferAvailable(bool isReady)
 {
-    ASSERT_FALSE(screenCapture_->IsDataCallBackEnabled());
+    ASSERT_FALSE(screenCapture_->IsDataCallbackEnabled());
     if (!isReady) {
         return;
     }
@@ -118,7 +118,7 @@ void ScreenCaptureUnitTestCallback::OnVideoBufferAvailable(bool isReady)
         surfacebuffer->GetWidth(), surfacebuffer->GetHeight(), timestamp, length);
     frameNumber++;
     DumpVideoBuffer(surfacebuffer, timestamp);
-    if (!screenCapture_->IsStateChangeCallBackEnabled()) {
+    if (!screenCapture_->IsStateChangeCallbackEnabled()) {
         if (vFlag_ == 1) {
             screenCapture_->ReleaseVideoBuffer();
         }
@@ -133,7 +133,7 @@ void ScreenCaptureUnitTestCallback::DumpVideoBuffer(sptr<OHOS::SurfaceBuffer> su
         MEDIA_LOGE("DumpVideoBuffer surfacebuffer or surfacebuffer->GetVirAddr() is nullptr");
         return;
     }
-    if (!screenCapture_->IsStateChangeCallBackEnabled()) {
+    if (!screenCapture_->IsStateChangeCallbackEnabled()) {
         if (vFile_ == nullptr) {
             MEDIA_LOGE("DumpVideoBuffer vFile_ is nullptr");
             return;
@@ -149,14 +149,22 @@ void ScreenCaptureUnitTestCallback::DumpVideoBuffer(sptr<OHOS::SurfaceBuffer> su
 
 void ScreenCaptureUnitTestCallback::OnError(int32_t errorCode, void *userData)
 {
-    ASSERT_TRUE(screenCapture_->IsErrorCallBackEnabled());
+    ASSERT_TRUE(screenCapture_->IsErrorCallbackEnabled());
     MEDIA_LOGE("Error received, errorCode:%{public}d", errorCode);
 }
 
 void ScreenCaptureUnitTestCallback::OnStateChange(AVScreenCaptureStateCode stateCode)
 {
-    MEDIA_LOGI("ScreenCaptureUnitTestCallback::OnStateChange stateCode:%{public}d", stateCode);
-    screenCaptureState_ = stateCode;
+    MEDIA_LOGI("ScreenCaptureUnitTestCallback::OnStateChange stateCode:%{public}d", static_cast<int32_t>(stateCode));
+    screenCaptureState_.store(stateCode);
+}
+
+void ScreenCaptureUnitTestCallback::OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event,
+    ScreenCaptureRect* area)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTestCallback::OnCaptureContentChanged event:%{public}d", static_cast<int32_t>(event));
+    screenCaptureContentChange_.store(event);
+    area_ = area;
 }
 
 void ScreenCaptureUnitTestCallback::OnDisplaySelected(uint64_t displayId)
@@ -168,7 +176,7 @@ void ScreenCaptureUnitTestCallback::OnDisplaySelected(uint64_t displayId)
 void ScreenCaptureUnitTestCallback::OnBufferAvailable(std::shared_ptr<AVBuffer> buffer,
     AVScreenCaptureBufferType bufferType, int64_t timestamp)
 {
-    ASSERT_TRUE(screenCapture_->IsDataCallBackEnabled());
+    ASSERT_TRUE(screenCapture_->IsDataCallbackEnabled());
     MEDIA_LOGD("ScreenCaptureUnitTestCallback::OnBufferAvailable bufferType:%{public}d, timestamp:%{public}" PRId64,
         bufferType, timestamp);
     if (buffer == nullptr || buffer->memory_ == nullptr) {
@@ -223,7 +231,7 @@ void ScreenCaptureUnitTestCallback::CheckDataCallbackVideo(int32_t flag)
     if (flag != 1) {
         return;
     }
-    if (screenCapture_->IsDataCallBackEnabled()) {
+    if (screenCapture_->IsDataCallbackEnabled()) {
         int32_t fence = 0;
         int64_t timestamp = 0;
         OHOS::Rect damage;
@@ -245,7 +253,7 @@ void ScreenCaptureUnitTestCallback::CheckDataCallbackAudio(AudioCaptureSourceTyp
     if (flag != 1) {
         return;
     }
-    if (screenCapture_->IsDataCallBackEnabled()) {
+    if (screenCapture_->IsDataCallbackEnabled()) {
         std::shared_ptr<AudioBuffer> audioBuffer = nullptr;
         EXPECT_NE(MSERR_OK, screenCapture_->AcquireAudioBuffer(audioBuffer, type));
         EXPECT_NE(MSERR_OK, screenCapture_->ReleaseAudioBuffer(type));
@@ -733,8 +741,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_01, TestSize.
     screenCaptureCb_->InitCaptureTrackInfo(videoFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_VIDEO);
     bool isMicrophone = true; // Enable Mic
     screenCapture_->SetMicrophoneEnabled(isMicrophone);
-    // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true
-    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true));
+    // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true,
+    // captureContentChangeCallback: true
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true, true));
 
     screenCapture_->SetMicrophoneEnabled(true); // Enable Mic
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
@@ -785,8 +794,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_02, TestSize.
     screenCaptureCb_->InitCaptureTrackInfo(innerAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_INNER);
     screenCaptureCb_->InitCaptureTrackInfo(micAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_MIC);
     screenCaptureCb_->InitCaptureTrackInfo(videoFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_VIDEO);
-    // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true
-    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true));
+    // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true,
+    // captureContentChangeCallback: true
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true, true));
 
     screenCapture_->SetMicrophoneEnabled(false); // Enable Mic
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
@@ -834,8 +844,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_03, TestSize.
     screenCaptureCb_->InitCaptureTrackInfo(innerAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_INNER);
     screenCaptureCb_->InitCaptureTrackInfo(micAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_MIC);
     screenCaptureCb_->InitCaptureTrackInfo(videoFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_VIDEO);
-    // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true
-    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true));
+    // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true,
+    // captureContentChangeCallback: true
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true, true));
 
     screenCapture_->SetMicrophoneEnabled(true); // Enable Mic
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
@@ -889,8 +900,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_04, TestSize.
     screenCaptureCb_->InitCaptureTrackInfo(innerAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_INNER);
     screenCaptureCb_->InitCaptureTrackInfo(micAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_MIC);
     screenCaptureCb_->InitCaptureTrackInfo(videoFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_VIDEO);
-    // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true
-    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true));
+    // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true,
+    // captureContentChangeCallback: true
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true, true));
 
     screenCapture_->SetMicrophoneEnabled(true); // Enable Mic
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
@@ -943,8 +955,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_05, TestSize.
     screenCaptureCb_->InitCaptureTrackInfo(innerAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_INNER);
     screenCaptureCb_->InitCaptureTrackInfo(micAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_MIC);
     screenCaptureCb_->InitCaptureTrackInfo(videoFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_VIDEO);
-    // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true
-    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true));
+    // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true,
+    // captureContentChangeCallback: true
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true, true));
 
     screenCapture_->SetMicrophoneEnabled(true); // Enable Mic
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
@@ -1000,8 +1013,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_06, TestSize.
     screenCaptureCb_->InitCaptureTrackInfo(innerAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_INNER);
     screenCaptureCb_->InitCaptureTrackInfo(micAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_MIC);
     screenCaptureCb_->InitCaptureTrackInfo(videoFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_VIDEO);
-    // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true
-    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true));
+    // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true,
+    // captureContentChangeCallback: true
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true, true));
 
     screenCapture_->SetMicrophoneEnabled(true); // Enable Mic
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
@@ -1065,7 +1079,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_07, TestSize.
     screenCaptureCb_->InitCaptureTrackInfo(innerAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_INNER);
     screenCaptureCb_->InitCaptureTrackInfo(micAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_MIC);
     screenCaptureCb_->InitCaptureTrackInfo(videoFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_VIDEO);
-    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true));
+    // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true,
+    // captureContentChangeCallback: true
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true, true));
     sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> screenCaptureMonitorListener1 =
         new ScreenCaptureMonitorListenerMock("scm1");
     sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> screenCaptureMonitorListener2 =
@@ -1111,8 +1127,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_cb_01, TestSize.Level2)
 
     screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_);
     ASSERT_NE(nullptr, screenCaptureCb_);
-    // callback enabled: errorCallback: true, dataCallback: false, stateChangeCallback: true
-    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, false, true));
+    // callback enabled: errorCallback: true, dataCallback: false, stateChangeCallback: true,
+    // captureContentChangeCallback: true
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, false, true, true));
 
     screenCapture_->SetMicrophoneEnabled(true); // Enable Mic
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
@@ -1145,8 +1162,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_cb_02, TestSize.Level2)
 
     screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_);
     ASSERT_NE(nullptr, screenCaptureCb_);
-    // callback enabled: errorCallback: true, dataCallback: false, stateChangeCallback: true
-    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, false, true));
+    // callback enabled: errorCallback: true, dataCallback: false, stateChangeCallback: true,
+    // captureContentChangeCallback: true
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, false, true, true));
 
     screenCapture_->SetMicrophoneEnabled(true); // Enable Mic
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
@@ -1199,8 +1217,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_cb_01, TestSize.Leve
     screenCaptureCb_->InitCaptureTrackInfo(innerAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_INNER);
     screenCaptureCb_->InitCaptureTrackInfo(micAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_MIC);
     screenCaptureCb_->InitCaptureTrackInfo(videoFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_VIDEO);
-    // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true
-    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true));
+    // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true,
+    // captureContentChangeCallback: true
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true, true));
 
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCaptureWithSurface(consumer));
@@ -1260,8 +1279,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_cb_02, TestSize.Leve
     screenCaptureCb_->InitCaptureTrackInfo(innerAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_INNER);
     screenCaptureCb_->InitCaptureTrackInfo(micAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_MIC);
     screenCaptureCb_->InitCaptureTrackInfo(videoFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_VIDEO);
-    // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true
-    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true));
+    // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true,
+    // captureContentChangeCallback: true
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true, true));
 
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCaptureWithSurface(consumer));
@@ -1314,8 +1334,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_cb_03, TestSize.Leve
     screenCaptureCb_->InitCaptureTrackInfo(innerAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_INNER);
     screenCaptureCb_->InitCaptureTrackInfo(micAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_MIC);
     screenCaptureCb_->InitCaptureTrackInfo(videoFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_VIDEO);
-    // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true
-    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true));
+    // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true,
+    // captureContentChangeCallback: true
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true, true));
 
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCaptureWithSurface(consumer));
@@ -1371,8 +1392,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_cb_04, TestSize.Leve
     screenCaptureCb_->InitCaptureTrackInfo(innerAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_INNER);
     screenCaptureCb_->InitCaptureTrackInfo(micAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_MIC);
     screenCaptureCb_->InitCaptureTrackInfo(videoFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_VIDEO);
-    // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true
-    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true));
+    // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true,
+    // captureContentChangeCallback: true
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true, true));
 
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCaptureWithSurface(consumer));

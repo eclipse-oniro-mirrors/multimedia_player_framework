@@ -20,7 +20,7 @@
 
 namespace OHOS {
 namespace Media {
-class ScreenCaptureUnitTestCallback : public ScreenCaptureCallBackMock {
+class ScreenCaptureUnitTestCallback : public ScreenCaptureCallbackMock {
 public:
     explicit ScreenCaptureUnitTestCallback(std::shared_ptr<ScreenCaptureMock> ScreenCapture, FILE *aFile, FILE *vFile,
         int32_t aFlag, int32_t vFlag)
@@ -32,6 +32,7 @@ public:
     void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) override;
     void OnVideoBufferAvailable(bool isReady) override;
     void OnStateChange(AVScreenCaptureStateCode stateCode) override;
+    void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area) override;
     void OnDisplaySelected(uint64_t displayId) override;
     void OnError(int32_t errorCode, void *userData) override;
     void OnBufferAvailable(std::shared_ptr<AVBuffer> buffer, AVScreenCaptureBufferType bufferType,
@@ -47,6 +48,10 @@ public:
     {
         return screenCaptureState_.load();
     }
+    AVScreenCaptureContentChangedEvent GetScreenCaptureContentChangedEvent()
+    {
+        return screenCaptureContentChange_.load();
+    }
     void DumpAudioBuffer(std::shared_ptr<AudioBuffer> audioBuffer);
     void DumpVideoBuffer(sptr<OHOS::SurfaceBuffer> surfacebuffer, int64_t timestamp);
     int32_t GetFrameNumber();
@@ -60,6 +65,9 @@ private:
     int32_t micAudioFlag_ = 0;
     int32_t videoFlag_ = 0;
     std::atomic<AVScreenCaptureStateCode> screenCaptureState_ = AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID;
+    std::atomic<AVScreenCaptureContentChangedEvent> screenCaptureContentChange_ =
+        AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE;
+    ScreenCaptureRect* area_ = nullptr;
     uint64_t screenCaptureDisplayId_ = -1;
 
     FILE *aFile_ = nullptr;
