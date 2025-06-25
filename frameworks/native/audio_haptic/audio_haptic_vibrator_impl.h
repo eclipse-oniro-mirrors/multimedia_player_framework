@@ -48,7 +48,7 @@ public:
     }
     int32_t SetHapticsRamp(int32_t duration, float startIntensity, float endIntensity) override;
     int32_t SetHapticsFeature(const HapticsFeature &feature) override;
-    void SetAudioHapticSyncId(int32_t audioHapticSyncId)
+    void SetAudioHapticSyncId(const int32_t &audioHapticSyncId)
     {
         audioHapticSyncId_ = audioHapticSyncId;
     }
