@@ -241,7 +241,7 @@ private:
     Status LinkSubtitleSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     void SetAudioRendererParameter();
     void NotifySubtitleUpdate(const Event& event);
-    void NotifyDecoderErrorFrame(const Event& event);
+    void NotifyDecoderErrorFrame(int64_t pts);
     void DoInitializeForHttp();
     bool EnableBufferingBySysParam() const;
     bool IsFileUrl(const std::string &url) const;
