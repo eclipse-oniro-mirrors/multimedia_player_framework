@@ -65,6 +65,7 @@ group("media_unit_test") {
       "unittest/recorder_test:recorder_native_unit_test",
       "unittest/recorder_test:recorder_server_unit_test",
       "unittest/sa_media_client_unit_test:sa_media_client_unit_test",
+      "unittest/screen_capture_impl_unittest:screen_capture_impl_unittest",
       "unittest/service_dump_manager_unittest:service_dump_manager_unittest",
       "unittest/services/utils:utils_unit_test",
       "unittest/sound_parser_unittest:sound_parser_unittest",
