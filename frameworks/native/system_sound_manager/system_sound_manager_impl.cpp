@@ -3106,7 +3106,6 @@ std::string SystemSoundManagerImpl::OpenHapticsUri(const DatabaseTool &databaseT
 void SystemSoundManagerImpl::SendCustomizedToneEvent(bool flag, const std::shared_ptr<ToneAttrs> &toneAttrs,
     off_t fileSize, std::string mimeType, int result)
 {
-    MEDIA_LOGI("SendCustomizedToneEvent start.");
     auto now = std::chrono::system_clock::now();
     time_t rawtime = std::chrono::system_clock::to_time_t(now);
     std::shared_ptr<Media::MediaMonitor::EventBean> bean = std::make_shared<Media::MediaMonitor::EventBean>(
