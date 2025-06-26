@@ -37,6 +37,7 @@ public:
     void CancelCallbackReference(const std::string &callbackName);
 
 private:
+    std::mutex mutex_;
     OHOS::sptr<OHOS::Media::ScreenCaptureMonitor::ScreenCaptureMonitorListener> monitorCb_ = nullptr;
     std::map<std::string, std::shared_ptr<AutoRef>> eventCbMap_;
 };

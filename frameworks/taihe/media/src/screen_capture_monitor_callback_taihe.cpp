@@ -85,8 +85,12 @@ void ScreenCaptureMonitorCallback::OnScreenCaptureStarted(int32_t pid)
     auto task = [this, cb]() {
         this->OnTaiheCaptureCallBack(cb);
     };
-    mainHandler_->PostTask(task, "OnSystemScreenRecorder", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
-    return;
+    bool ret = mainHandler_->PostTask(task, "OnScreenCaptureStarted", 0,
+        OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    if (!ret) {
+        MEDIA_LOGE("Failed to PostTask!");
+        delete cb;
+    }
 }
 
 void ScreenCaptureMonitorCallback::OnScreenCaptureFinished(int32_t pid)
@@ -113,8 +117,12 @@ void ScreenCaptureMonitorCallback::OnScreenCaptureFinished(int32_t pid)
     auto task = [this, cb]() {
         this->OnTaiheCaptureCallBack(cb);
     };
-    mainHandler_->PostTask(task, "OnSystemScreenRecorder", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
-    return;
+    bool ret = mainHandler_->PostTask(task, "OnScreenCaptureFinished", 0,
+        OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    if (!ret) {
+        MEDIA_LOGE("Failed to PostTask!");
+        delete cb;
+    }
 }
 
 void ScreenCaptureMonitorCallback::OnTaiheCaptureCallBack(ScreenCaptureMonitorAniCallback *taiheCb) const
@@ -123,8 +131,9 @@ void ScreenCaptureMonitorCallback::OnTaiheCaptureCallBack(ScreenCaptureMonitorAn
     do {
         MEDIA_LOGD("OnTaiheCaptureCallBack is called");
         std::shared_ptr<AutoRef> ref = taiheCb->autoRef.lock();
-
+        CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
         auto func = ref->callbackRef_;
+        CHECK_AND_BREAK_LOG(func != nullptr, "failed to get callback");
         std::shared_ptr<taihe::callback<void(ohos::multimedia::media::ScreenCaptureEvent)>> cacheCallback =
             std::reinterpret_pointer_cast<taihe::callback<void(ohos::multimedia::media::ScreenCaptureEvent)>>(func);
         (*cacheCallback)(static_cast<ohos::multimedia::media::ScreenCaptureEvent::key_t>(taiheCb->captureEvent));

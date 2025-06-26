@@ -115,6 +115,7 @@ void HelperDataSourceCallback::UvWork(HelperDataSourceTHCallbackWraper *cbWrap,
             std::vector<uint8_t> dataVector(event->memory_->GetBase(), event->memory_->GetBase() + event->length_);
 
             auto func = ref->callbackRef_;
+            CHECK_AND_BREAK_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<DataSrcCallback> cacheCallback = std::reinterpret_pointer_cast<DataSrcCallback>(func);
             taihe::optional_view posOption = taihe::optional_view<double>(std::nullopt);
             if (event->pos_ != -1) {
@@ -128,7 +129,11 @@ void HelperDataSourceCallback::UvWork(HelperDataSourceTHCallbackWraper *cbWrap,
         } while (0);
         delete cbWrap;
     };
-    mainHandler->PostTask(task, "On", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    bool ret = mainHandler->PostTask(task, "On", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    if (!ret) {
+        MEDIA_LOGE("Failed to PostTask!");
+        delete cbWrap;
+    }
 }
 
 int32_t HelperDataSourceCallback::ReadAt(int64_t pos, uint32_t length,

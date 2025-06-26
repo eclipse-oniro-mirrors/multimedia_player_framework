@@ -61,8 +61,9 @@ void AVRecorderCallback::OnTaiheErrorCallBack(AVRecordTaiheCallback *taiheCb) co
         do {
             MEDIA_LOGD("OnTaiheErrorCallBack is called");
             std::shared_ptr<AutoRef> ref = event->autoRef.lock();
-            CHECK_AND_RETURN_LOG(ref != nullptr, "ref is nullptr");
+            CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
             auto func = ref->callbackRef_;
+            CHECK_AND_BREAK_LOG(func != nullptr, "failed to get callback");
             auto err = MediaTaiheUtils::ToBusinessError(taihe::get_env(), 0, "OnErrorCallback is OK");
             std::shared_ptr<taihe::callback<void(uintptr_t)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void(uintptr_t)>>(func);
@@ -70,7 +71,11 @@ void AVRecorderCallback::OnTaiheErrorCallBack(AVRecordTaiheCallback *taiheCb) co
         } while (0);
         delete event;
     };
-    mainHandler_->PostTask(task, "OnError", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    bool ret = mainHandler_->PostTask(task, "OnError", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    if (!ret) {
+        MEDIA_LOGE("Failed to PostTask!");
+        delete taiheCb;
+    }
 }
 
 void AVRecorderCallback::SendStateCallback(const std::string &state, const OHOS::Media::StateChangeReason &reason)
@@ -108,7 +113,11 @@ void AVRecorderCallback::OnTaiheStateCallBack(AVRecordTaiheCallback *taiheCb) co
         } while (0);
         delete event;
     };
-    mainHandler_->PostTask(task, "OnStatechange", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    bool ret = mainHandler_->PostTask(task, "OnStatechange", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    if (!ret) {
+        MEDIA_LOGE("Failed to PostTask!");
+        delete taiheCb;
+    }
 }
 
 void AVRecorderCallback::SaveCallbackReference(const std::string &name, std::weak_ptr<AutoRef> ref)

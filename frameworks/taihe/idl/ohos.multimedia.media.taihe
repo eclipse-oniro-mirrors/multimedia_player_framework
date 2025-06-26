@@ -198,7 +198,7 @@ union PlaybackInfoValue {
     type_int: f64;
 }
 
-enum SwitchMode: i32{
+enum SwitchMode: i32 {
     SMOOTH = 0,
     SEGMENT = 1,
     CLOSEST = 2,
@@ -301,37 +301,37 @@ interface AVPlayer {
             this.OnStateChange_inner(callback as (state: String, reason: StateChangeReason)=> void);
         } else if (type === "error") {
             this.OnError_inner(callback as (err: BusinessError<void>)=> void);
-        } else if (type === "endOfStream"){
+        } else if (type === "endOfStream") {
             this.OnEndOfStream_inner(callback as (data:undefined)=> void);
-        } else if (type === "startRenderFrame"){
+        } else if (type === "startRenderFrame") {
             this.OnStartRenderFrame_inner(callback as (data:undefined)=> void);
-        } else if (type === "seekDone"){
+        } else if (type === "seekDone") {
           this.OnSeekDone_inner(callback as (data: double)=> void);
-        } else if (type === "durationUpdate"){
+        } else if (type === "durationUpdate") {
           this.OnDurationUpdate_inner(callback as (data: double)=> void);
-        } else if (type === "timeUpdate"){
+        } else if (type === "timeUpdate") {
           this.OnTimeUpdate_inner(callback as (data: double)=> void);
-        } else if (type === "volumeChange"){
+        } else if (type === "volumeChange") {
           this.OnVolumeChange_inner(callback as (data: double)=> void);
-        } else if (type === "speedDone"){
+        } else if (type === "speedDone") {
           this.OnSpeedDone_inner(callback as (data: double)=> void);
-        } else if (type === "bitrateDone"){
+        } else if (type === "bitrateDone") {
           this.OnBitrateDone_inner(callback as (data: double)=> void);
-        } else if (type === "availableBitrates"){
+        } else if (type === "availableBitrates") {
           this.OnAvailableBitrates_inner(callback as (data: Array<double>)=> void);
-        } else if (type === "amplitudeUpdate"){
+        } else if (type === "amplitudeUpdate") {
           this.OnAmplitudeUpdate_inner(callback as (data: Array<double>)=> void);
-        } else if (type === "bufferingUpdate"){
+        } else if (type === "bufferingUpdate") {
           this.OnBufferingUpdate_inner(callback as (infoType: BufferingInfoType, value: double)=> void);
-        } else if (type === "videoSizeChange"){
+        } else if (type === "videoSizeChange") {
           this.OnVideoSizeChange_inner(callback as (width: double, height: double)=> void);
-        } else if (type === "trackChange"){
+        } else if (type === "trackChange") {
           this.OnTrackChange_inner(callback as (index: double, isSelected: boolean)=> void);
-        } else if (type === "subtitleUpdate"){
+        } else if (type === "subtitleUpdate") {
           this.OnSubtitleUpdate_inner(callback as (data: SubtitleInfo)=> void);
-        } else if (type === "superResolutionChanged"){
+        } else if (type === "superResolutionChanged") {
           this.OnSuperResolutionChanged_inner(callback as (enabled: boolean)=> void);
-        } else if (type === "trackInfoUpdate"){
+        } else if (type === "trackInfoUpdate") {
           this.OnTrackInfoUpdate_inner(callback as (data: Array<Record<string, string | double>>)=> void);
         } else {
             throw new Error(`Unknown type: ${type}`);
@@ -371,39 +371,39 @@ interface AVPlayer {
     @!sts_inject_into_class("""off(type: string, callback?: object): void {
         if (type === "error") {
             this.OffError_inner(callback as (((err: BusinessError<void>)=> void) | undefined));
-        } else if (type === "stateChange"){
+        } else if (type === "stateChange") {
             this.OffStateChange_inner(callback as (((state: String, reason: StateChangeReason)=> void)) | undefined);
-        } else if (type === "endOfStream"){
+        } else if (type === "endOfStream") {
           this.OffEndOfStream_inner(callback as (((data:undefined)=> void) | undefined));
-        } else if (type === "startRenderFrame"){
+        } else if (type === "startRenderFrame") {
           this.OffStartRenderFrame_inner(callback as (((data:undefined)=> void) | undefined));
-        } else if (type === "seekDone"){
+        } else if (type === "seekDone") {
           this.OffSeekDone_inner(callback as (((data: double) => void) | undefined));
-        } else if (type === "durationUpdate"){
+        } else if (type === "durationUpdate") {
           this.OffDurationUpdate_inner(callback as (((data: double) => void) | undefined));
-        } else if (type === "timeUpdate"){
+        } else if (type === "timeUpdate") {
           this.OffTimeUpdate_inner(callback as (((data: double) => void) | undefined));
-        } else if (type === "volumeChange"){
+        } else if (type === "volumeChange") {
           this.OffVolumeChange_inner(callback as (((data: double) => void) | undefined));
-        } else if (type === "speedDone"){
+        } else if (type === "speedDone") {
           this.OffSpeedDone_inner(callback as (((data: double) => void) | undefined));
-        } else if (type === "bitrateDone"){
+        } else if (type === "bitrateDone") {
           this.OffBitrateDone_inner(callback as (((data: double) => void) | undefined));
-        } else if (type === "availableBitrates"){
+        } else if (type === "availableBitrates") {
           this.OffAvailableBitrates_inner(callback as (((data: Array<double>) => void) | undefined));
-        } else if (type === "amplitudeUpdate"){
+        } else if (type === "amplitudeUpdate") {
           this.OffAmplitudeUpdate_inner(callback as (((data: Array<double>) => void) | undefined));
-        } else if (type === "bufferingUpdate"){
+        } else if (type === "bufferingUpdate") {
           this.OffBufferingUpdate_inner(callback as (((infoType: object, value: double) => void) | undefined));
-        } else if (type === "videoSizeChange"){
+        } else if (type === "videoSizeChange") {
           this.OffVideoSizeChange_inner(callback as (((width: double, height: double) => void) | undefined));
-        } else if (type === "trackChange"){
+        } else if (type === "trackChange") {
           this.OffTrackChange_inner(callback as (((index: double, isSelected: boolean) => void) | undefined));
-        } else if (type === "subtitleUpdate"){
+        } else if (type === "subtitleUpdate") {
           this.OffSubtitleUpdate_inner(callback as (((data: object) => void) | undefined));
-        } else if (type === "superResolutionChanged"){
+        } else if (type === "superResolutionChanged") {
           this.OffSuperResolutionChanged_inner(callback as (((enabled: boolean) => void) | undefined));
-        } else if (type === "trackInfoUpdate"){
+        } else if (type === "trackInfoUpdate") {
           this.OffTrackInfoUpdate_inner(callback as (((data: Array<Record <string, double>>) => void) | undefined));
         } else {
           throw new Error(`Unknown type: ${type}`);
@@ -444,7 +444,7 @@ struct SeiMessage {
     payload: @arraybuffer Array<u8>;
 }
 
-enum SeekMode: i32{
+enum SeekMode: i32 {
     SEEK_NEXT_SYNC = 0,
     SEEK_PREV_SYNC = 1,
     SEEK_CLOSEST = 2,
@@ -548,7 +548,7 @@ enum ContainerFormatType: String {
     CFT_WAV = "wav",
 }
 
-enum AVErrorCode: i32{
+enum AVErrorCode: i32 {
     AVERR_OK = 0,
     AVERR_NO_PERMISSION = 201,
     AVERR_INVALID_PARAMETER = 401,
@@ -576,7 +576,7 @@ enum AVErrorCode: i32{
     AVERR_SUPER_RESOLUTION_NOT_ENABLED = 5410004,
 }
 
-enum PlaybackInfoKey: String{
+enum PlaybackInfoKey: String {
     SERVER_IP_ADDRESS = "server_ip_address",
     AVG_DOWNLOAD_RATE = "average_download_rate",
     DOWNLOAD_RATE = "download_rate",
@@ -698,9 +698,9 @@ interface AVRecorder {
     @!sts_inject_into_class("""off(type: string, callback?: object): void {
         if (type === "error") {
             this.OffError_inner(callback as (((err: BusinessError<void>)=> void) | undefined));
-        } else if (type === "stateChange"){
+        } else if (type === "stateChange") {
             this.OffStateChange_inner(callback as (((state: String, reason: StateChangeReason)=> void)) | undefined);
-        } else if (type === "photoAssetAvailable"){
+        } else if (type === "photoAssetAvailable") {
             this.OffPhotoAssetAvailable_inner(callback as (((photoAsset: photoAccessHelper.PhotoAsset)=> void)) | undefined);
         } else {
             throw new Error(`Unknown type: ${type}`);
@@ -866,7 +866,7 @@ struct AVRecorderConfig {
     audioSourceType: Optional<AudioSourceType>;
     videoSourceType: Optional<VideoSourceType>;
     profile: AVRecorderProfile;
-    url: Optional<String>;
+    url: String;
     metaSourceTypes: Optional<Array<MetaSourceType>>;
     fileGenerationMode: Optional<FileGenerationMode>;
     metadata: Optional<AVMetadata>;
