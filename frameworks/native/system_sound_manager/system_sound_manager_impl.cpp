@@ -1833,10 +1833,12 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByExternalUri(
     std::string fdHead = "fd://";
     std::string srcPath = externalUri;
     int32_t srcFd = -1;
+    bool needToCloseSrcFd = false;
     if (srcPath.find(fdHead) != std::string::npos) {
         StrToInt(srcPath.substr(fdHead.size()), srcFd);
     } else {
         srcFd = open(srcPath.c_str(), O_RDONLY);
+        needToCloseSrcFd = (srcFd != -1);
     }
     if (srcFd < 0) {
         MEDIA_LOGE("AddCustomizedToneByExternalUri: fd open error is %{public}s", strerror(errno));
@@ -1844,7 +1846,10 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByExternalUri(
         return fdHead;
     }
     std::string result = AddCustomizedToneByFd(context, toneAttrs, srcFd);
-    close(srcFd);
+    if (needToCloseSrcFd) {
+        MEDIA_LOGI("Close src fd.");
+        close(srcFd);
+    }
     return result;
 }
 
