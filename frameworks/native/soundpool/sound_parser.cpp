@@ -24,6 +24,7 @@ namespace {
     static constexpr int32_t MAX_SOUND_BUFFER_SIZE = 1 * 1024 * 1024;
     static const std::string AUDIO_RAW_MIMETYPE_INFO = "audio/raw";
     static const std::string AUDIO_MPEG_MIMETYPE_INFO = "audio/mpeg";
+    static constexpr int32_t MAX_CODEC_BUFFER_SIZE = 5 * 1024 * 1024;
 }
 
 namespace OHOS {
@@ -372,14 +373,12 @@ void SoundDecoderCallback::OnOutputBufferAvailable(uint32_t index, AVCodecBuffer
             return;
         }
         int32_t size = info.size;
-        uint8_t *buf;
-        if (size > 0) {
-            buf = new(std::nothrow) uint8_t[size];
-        } else {
+        if (size <= 0 || size > MAX_CODEC_BUFFER_SIZE) {
             MEDIA_LOGE("SoundDecoderCallback output size :%{public}d", size);
             amutex_.unlock();
             return;
         }
+        uint8_t *buf = new(std::nothrow) uint8_t[size];
         if (buf != nullptr) {
             if (memcpy_s(buf, size, buffer->GetBase(), info.size) != EOK) {
                 delete[] buf;
