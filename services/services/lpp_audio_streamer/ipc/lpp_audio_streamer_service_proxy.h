@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef lpp_audio_streamer_service_proxy_H
-#define lpp_audio_streamer_service_proxy_H
+#ifndef LPP_AUDIO_STREAMER_SERVICE_PROXY_H
+#define LPP_AUDIO_STREAMER_SERVICE_PROXY_H
 
 #include "i_standard_lpp_audio_streamer_service.h"
 #include "media_parcel.h"

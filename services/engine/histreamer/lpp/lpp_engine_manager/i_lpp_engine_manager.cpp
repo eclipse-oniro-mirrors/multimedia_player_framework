@@ -74,12 +74,12 @@ std::shared_ptr<ILppAudioStreamerEngine> ILppEngineManager::GetLppAudioInstance(
     return nullptr;
 }
 
-void ILppEngineManager::removeLppVideoInstance(const std::string &key)
+void ILppEngineManager::RemoveLppVideoInstance(const std::string &key)
 {
     std::lock_guard<std::mutex> lock(videoMapMutex_);
     lppVideoStreamerMap_.erase(key);
 }
-void ILppEngineManager::removeLppAudioInstance(const std::string &key)
+void ILppEngineManager::RemoveLppAudioInstance(const std::string &key)
 {
     std::lock_guard<std::mutex> lock(audioMapMutex_);
     lppAudioStreamerMap_.erase(key);

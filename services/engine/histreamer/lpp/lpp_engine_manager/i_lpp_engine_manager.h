@@ -45,8 +45,8 @@ public:
     std::shared_ptr<ILppVideoStreamerEngine> GetLppVideoInstance(const std::string &key);
     std::shared_ptr<ILppAudioStreamerEngine> GetLppAudioInstance(const std::string &key);
 
-    void removeLppVideoInstance(const std::string &key);
-    void removeLppAudioInstance(const std::string &key);
+    void RemoveLppVideoInstance(const std::string &key);
+    void RemoveLppAudioInstance(const std::string &key);
 
 private:
     ILppEngineManager();

@@ -70,7 +70,7 @@ HiLppVideoStreamerImpl::~HiLppVideoStreamerImpl()
 {
     Stop();
     auto &lppEngineManager = ILppEngineManager::GetInstance();
-    lppEngineManager.removeLppVideoInstance(streamerId_);
+    lppEngineManager.RemoveLppVideoInstance(streamerId_);
     FALSE_RETURN_MSG(vdec_ != nullptr, "vdec_ nullptr");
     vdec_->Release();
     MEDIA_LOG_I("HiLppVideoStreamerImpl Instances destroy.");

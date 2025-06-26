@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef LPP_video_streamer_LISTENER_STUB_H
-#define LPP_video_streamer_LISTENER_STUB_H
+#ifndef LPP_VIDEO_STREAMER_LISTENER_STUB_H
+#define LPP_VIDEO_STREAMER_LISTENER_STUB_H
 
 #include "i_standard_lpp_video_streamer_listener.h"
 #include "lpp_video_streamer.h"

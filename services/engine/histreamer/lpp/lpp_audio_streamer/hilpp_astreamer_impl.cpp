@@ -68,7 +68,7 @@ HiLppAudioStreamerImpl::HiLppAudioStreamerImpl()
 HiLppAudioStreamerImpl::~HiLppAudioStreamerImpl()
 {
     auto &lppEngineManager = ILppEngineManager::GetInstance();
-    lppEngineManager.removeLppAudioInstance(streamerId_);
+    lppEngineManager.RemoveLppAudioInstance(streamerId_);
     Stop();
     FALSE_RETURN_MSG(aRender_ != nullptr, "audio renderer Start nullptr");
     aRender_->Deinit();
@@ -217,7 +217,7 @@ int32_t HiLppAudioStreamerImpl::Stop()
 {
     MEDIA_LOG_I("HiLppAudioStreamerImpl::Stop");
     auto &lppEngineManager = ILppEngineManager::GetInstance();
-    lppEngineManager.removeLppAudioInstance(streamerId_);
+    lppEngineManager.RemoveLppAudioInstance(streamerId_);
     FALSE_RETURN_V_MSG(aRender_ != nullptr && adec_ != nullptr && dataMgr_ != nullptr && callbackLooper_ != nullptr,
         MSERR_INVALID_OPERATION, "object is nullptr");
     callbackLooper_->StopPositionUpdate();

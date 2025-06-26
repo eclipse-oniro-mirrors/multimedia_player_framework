@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
  #ifndef I_LPP_AUDIO_STREAMER_H
  #define I_LPP_AUDIO_STREAMER_H
 
@@ -54,4 +55,4 @@ public:
 };
 } // namespace Media
 } // namespace OHOS
- #endif // I_LPP_AUDIO_STREAMER_H
+#endif  // I_LPP_AUDIO_STREAMER_H

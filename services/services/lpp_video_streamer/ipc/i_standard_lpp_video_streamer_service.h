@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef i_standard_lpp_video_streamer_service_H
-#define i_standard_lpp_video_streamer_service_H
+#ifndef I_STANDARD_LPP_VIDEO_STREAMER_SERVICE_H
+#define I_STANDARD_LPP_VIDEO_STREAMER_SERVICE_H
 
 #include "ipc_types.h"
 #include "iremote_broker.h"
