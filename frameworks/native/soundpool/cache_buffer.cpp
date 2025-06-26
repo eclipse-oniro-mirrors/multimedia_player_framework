@@ -143,6 +143,8 @@ std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(
         MEDIA_LOGE("create audiorenderer failed, try again.");
         if (rendererFlags_ == AudioStandard::AUDIO_FLAG_VKB_FAST) {
             rendererFlags_ = AudioStandard::AUDIO_FLAG_VKB_NORMAL;
+        } else if (rendererFlags_ == AudioStandard::AUDIO_FLAG_VKB_NORMAL) {
+            rendererFlags_ = AudioStandard::AUDIO_FLAG_VKB_FAST;
         } else {
             rendererFlags_ = NORMAL_PLAY_RENDERER_FLAGS;
         }

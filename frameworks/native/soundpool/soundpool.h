@@ -65,6 +65,7 @@ public:
 
 private:
     bool CheckVolumeVaild(float *leftVol, float *rightVol);
+    static bool CheckRendererFlagsValid(AudioStandard::AudioRendererInfo audioRenderInfo);
     int32_t ReleaseInner();
     std::shared_ptr<SoundIDManager> soundIDManager_;
     std::shared_ptr<StreamIDManager> streamIdManager_;

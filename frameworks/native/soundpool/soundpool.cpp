@@ -121,15 +121,7 @@ bool SoundPool::CheckInitParam(int maxStreams, AudioStandard::AudioRendererInfo 
     if (maxStreams <= 0) {
         return false;
     }
-    std::string bundleName = AudioStandard::AudioSystemManager::GetInstance()->GetSelfBundleName(getuid());
-    bool isRendererFlagsInvalid = audioRenderInfo.rendererFlags < 0
-        || (audioRenderInfo.rendererFlags > 1
-        && audioRenderInfo.rendererFlags != AudioStandard::AUDIO_FLAG_VKB_NORMAL
-        && audioRenderInfo.rendererFlags != AudioStandard::AUDIO_FLAG_VKB_FAST)
-        || (audioRenderInfo.rendererFlags == AudioStandard::AUDIO_FLAG_VKB_NORMAL
-        && bundleName.find(VKB_BUNDLE_NAME) == std::string::npos)
-        || (audioRenderInfo.rendererFlags == AudioStandard::AUDIO_FLAG_VKB_FAST
-        && bundleName.find(VKB_BUNDLE_NAME) == std::string::npos);
+    bool isRendererFlagsInvalid = !CheckRendererFlagsValid(audioRenderInfo);
     if (audioRenderInfo.contentType < AudioStandard::CONTENT_TYPE_UNKNOWN
         || audioRenderInfo.contentType > AudioStandard::CONTENT_TYPE_ULTRASONIC
         || audioRenderInfo.streamUsage < AudioStandard::STREAM_USAGE_UNKNOWN
@@ -411,6 +403,23 @@ void SoundPool::SetApiVersion(int32_t apiVersion)
 {
     std::lock_guard lock(soundPoolLock_);
     apiVersion_ = apiVersion;
+}
+
+bool SoundPool::CheckRendererFlagsValid(AudioStandard::AudioRendererInfo audioRenderInfo)
+{
+    if (audioRenderInfo.rendererFlags == 0 || audioRenderInfo.rendererFlags == 1) {
+        return true;
+    }
+    bool isBundleNameValid = false;
+    std::string bundleName = AudioStandard::AudioSystemManager::GetInstance()->GetSelfBundleName(getuid());
+    AudioStandard::AudioSystemManager::GetInstance()->CheckVKBInfo(bundleName, isBundleNameValid);
+    if (audioRenderInfo.rendererFlags == AudioStandard::AUDIO_FLAG_VKB_NORMAL && isBundleNameValid) {
+        return true;
+    }
+    if (audioRenderInfo.rendererFlags == AudioStandard::AUDIO_FLAG_VKB_FAST && isBundleNameValid) {
+        return true;
+    }
+    return false;
 }
 
 } // namespace Media
