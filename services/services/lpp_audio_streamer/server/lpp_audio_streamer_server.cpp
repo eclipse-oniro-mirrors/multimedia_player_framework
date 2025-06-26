@@ -34,20 +34,21 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "Lpp
 namespace OHOS {
 namespace Media {
 
-std::map<AudioState, std::set<AudioState>> AUDIO_STATE_TX_MAP = {
-    {AudioState::INITIALIZED, {AudioState::CREATED}},
-    {AudioState::READY, {AudioState::INITIALIZED, AudioState::PAUSED, AudioState::EOS}},
-    {AudioState::STARTING, {AudioState::READY, AudioState::PAUSED}},
-    {AudioState::PAUSED, {AudioState::STARTING}},
-    {AudioState::EOS, {AudioState::PAUSED, AudioState::STARTING}},
-    {AudioState::STOPPED, {AudioState::STARTING, AudioState::PAUSED, AudioState::READY, AudioState::EOS}},
+std::map<LppAudioState, std::set<LppAudioState>> AUDIO_STATE_TX_MAP = {
+    {LppAudioState::INITIALIZED, {LppAudioState::CREATED}},
+    {LppAudioState::READY, {LppAudioState::INITIALIZED, LppAudioState::PAUSED, LppAudioState::EOS}},
+    {LppAudioState::STARTING, {LppAudioState::READY, LppAudioState::PAUSED}},
+    {LppAudioState::PAUSED, {LppAudioState::STARTING}},
+    {LppAudioState::EOS, {LppAudioState::PAUSED, LppAudioState::STARTING}},
+    {LppAudioState::STOPPED, {LppAudioState::STARTING, LppAudioState::PAUSED, 
+                        LppAudioState::READY, LppAudioState::EOS}},
 };
 
-std::map<std::string, std::set<AudioState>> AUDIO_FUNC_STATE_CHECK_MAP = {
-    {"Flush", {AudioState::PAUSED, AudioState::EOS}},
-    {"Prepare", {AudioState::INITIALIZED}},
-    {"Start", {AudioState::READY}},
-    {"Resume", {AudioState::PAUSED}},
+std::map<std::string, std::set<LppAudioState>> AUDIO_FUNC_STATE_CHECK_MAP = {
+    {"Flush", {LppAudioState::PAUSED, LppAudioState::EOS}},
+    {"Prepare", {LppAudioState::INITIALIZED}},
+    {"Start", {LppAudioState::READY}},
+    {"Resume", {LppAudioState::PAUSED}},
 };
 
 std::shared_ptr<ILppAudioStreamerService> LppAudioStreamerServer::Create()
@@ -114,7 +115,7 @@ std::string LppAudioStreamerServer::GetStreamerId()
 int32_t LppAudioStreamerServer::SetParameter(const Format &param)
 {
     MEDIA_LOGI("LppAudioStreamerServer SetParameter");
-    CHECK_AND_RETURN_RET_LOG(StateEnter(AudioState::INITIALIZED), MSERR_INVALID_OPERATION, "wrong state");
+    CHECK_AND_RETURN_RET_LOG(StateEnter(LppAudioState::INITIALIZED), MSERR_INVALID_OPERATION, "wrong state");
     auto ret = Init(mime_);
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     ret = streamerEngine_->SetParameter(param);
@@ -131,7 +132,7 @@ int32_t LppAudioStreamerServer::Configure(const Format &param)
 int32_t LppAudioStreamerServer::Prepare()
 {
     MEDIA_LOGI("LppAudioStreamerServer Prepare");
-    CHECK_AND_RETURN_RET_LOG(StateEnter(AudioState::READY, "Prepare"), MSERR_INVALID_OPERATION, "wrong state");
+    CHECK_AND_RETURN_RET_LOG(StateEnter(LppAudioState::READY, "Prepare"), MSERR_INVALID_OPERATION, "wrong state");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->Prepare();
     CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), MSERR_INVALID_OPERATION, "Prepare Failed!");
@@ -141,7 +142,7 @@ int32_t LppAudioStreamerServer::Prepare()
 int32_t LppAudioStreamerServer::Start()
 {
     MEDIA_LOGI("LppAudioStreamerServer Start");
-    CHECK_AND_RETURN_RET_LOG(StateEnter(AudioState::STARTING, "Start"), MSERR_INVALID_OPERATION, "wrong state");
+    CHECK_AND_RETURN_RET_LOG(StateEnter(LppAudioState::STARTING, "Start"), MSERR_INVALID_OPERATION, "wrong state");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->Start();
     CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), MSERR_INVALID_OPERATION, "Start Failed!");
@@ -151,7 +152,7 @@ int32_t LppAudioStreamerServer::Start()
 int32_t LppAudioStreamerServer::Pause()
 {
     MEDIA_LOGI("LppAudioStreamerServer Pause");
-    CHECK_AND_RETURN_RET_LOG(StateEnter(AudioState::PAUSED), MSERR_INVALID_OPERATION, "wrong state");
+    CHECK_AND_RETURN_RET_LOG(StateEnter(LppAudioState::PAUSED), MSERR_INVALID_OPERATION, "wrong state");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->Pause();
     CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), MSERR_INVALID_OPERATION, "Pause Failed!");
@@ -161,7 +162,7 @@ int32_t LppAudioStreamerServer::Pause()
 int32_t LppAudioStreamerServer::Resume()
 {
     MEDIA_LOGI("LppAudioStreamerServer Resume");
-    CHECK_AND_RETURN_RET_LOG(StateEnter(AudioState::STARTING, "Resume"), MSERR_INVALID_OPERATION, "wrong state");
+    CHECK_AND_RETURN_RET_LOG(StateEnter(LppAudioState::STARTING, "Resume"), MSERR_INVALID_OPERATION, "wrong state");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->Resume();
     CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), MSERR_INVALID_OPERATION, "Resume Failed!");
@@ -171,7 +172,7 @@ int32_t LppAudioStreamerServer::Resume()
 int32_t LppAudioStreamerServer::Flush()
 {
     MEDIA_LOGI("LppAudioStreamerServer Flush");
-    CHECK_AND_RETURN_RET_LOG(StateEnter(AudioState::READY, "Flush"), MSERR_INVALID_OPERATION, "wrong state");
+    CHECK_AND_RETURN_RET_LOG(StateEnter(LppAudioState::READY, "Flush"), MSERR_INVALID_OPERATION, "wrong state");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->Flush();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Resume Failed!");
@@ -182,7 +183,7 @@ int32_t LppAudioStreamerServer::Flush()
 int32_t LppAudioStreamerServer::Stop()
 {
     MEDIA_LOGI("LppAudioStreamerServer Stop");
-    CHECK_AND_RETURN_RET_LOG(StateEnter(AudioState::STOPPED), MSERR_INVALID_OPERATION, "wrong state");
+    CHECK_AND_RETURN_RET_LOG(StateEnter(LppAudioState::STOPPED), MSERR_INVALID_OPERATION, "wrong state");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->Stop();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Stop Failed!");
@@ -193,7 +194,7 @@ int32_t LppAudioStreamerServer::Stop()
 int32_t LppAudioStreamerServer::Reset()
 {
     MEDIA_LOGI("LppAudioStreamerServer Reset");
-    CHECK_AND_RETURN_RET_LOG(StateEnter(AudioState::CREATED), MSERR_INVALID_OPERATION, "wrong state");
+    CHECK_AND_RETURN_RET_LOG(StateEnter(LppAudioState::CREATED), MSERR_INVALID_OPERATION, "wrong state");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->Reset();
     streamerEngine_ = nullptr;
@@ -204,7 +205,7 @@ int32_t LppAudioStreamerServer::Reset()
 int32_t LppAudioStreamerServer::Release()
 {
     MEDIA_LOGI("LppAudioStreamerServer Release");
-    StateEnter(AudioState::RELEASED);
+    StateEnter(LppAudioState::RELEASED);
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_OK, "streamerEngine_ is nullptr");
     streamerEngine_ = nullptr;
     return MSERR_OK;
@@ -256,13 +257,13 @@ int32_t LppAudioStreamerServer::SetLppAudioStreamerCallback(const std::shared_pt
 void LppAudioStreamerServer::EosPause()
 {
     MEDIA_LOGI("LppAudioStreamerServer::EosPause");
-    CHECK_AND_RETURN_LOG(StateEnter(AudioState::EOS), "wrong state");
+    CHECK_AND_RETURN_LOG(StateEnter(LppAudioState::EOS), "wrong state");
     CHECK_AND_RETURN_LOG(streamerEngine_ != nullptr, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->Pause();
     CHECK_AND_RETURN_LOG(ErrorCheck(ret), "EosPause Failed!");
 }
 
-bool LppAudioStreamerServer::StateEnter(AudioState targetState, std::string funcName)
+bool LppAudioStreamerServer::StateEnter(LppAudioState targetState, std::string funcName)
 {
     std::lock_guard<std::mutex> lock(stateMutex_);
     MEDIA_LOGI("LppAudioStreamerServer::StateEnter state = %{public}d, targetState = %{public}d",
@@ -277,7 +278,7 @@ bool LppAudioStreamerServer::StateEnter(AudioState targetState, std::string func
     return true;
 }
 
-bool LppAudioStreamerServer::StateCheck(AudioState curState)
+bool LppAudioStreamerServer::StateCheck(LppAudioState curState)
 {
     std::lock_guard<std::mutex> lock(stateMutex_);
     return state_ == curState;
@@ -286,8 +287,8 @@ bool LppAudioStreamerServer::StateCheck(AudioState curState)
 bool LppAudioStreamerServer::ErrorCheck(int32_t errorCode)
 {
     std::lock_guard<std::mutex> lock(stateMutex_);
-    if (errorCode != MSERR_OK && state_ != AudioState::ERROR) {
-        state_ = AudioState::ERROR;
+    if (errorCode != MSERR_OK && state_ != LppAudioState::ERROR) {
+        state_ = LppAudioState::ERROR;
         return false;
     }
     return true;

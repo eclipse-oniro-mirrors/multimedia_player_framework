@@ -25,7 +25,7 @@
 namespace OHOS {
 namespace Media {
 
-enum class AudioState : int32_t {
+enum class LppAudioState : int32_t {
     CREATED = 0,
     INITIALIZED = 1,
     READY = 2,
@@ -97,11 +97,11 @@ public:
 private:
     int32_t CreateStreamerEngine();
     void EosPause();
-    bool StateEnter(AudioState targetState, const std::string funcName = "");
-    bool StateCheck(AudioState curState);
+    bool StateEnter(LppAudioState targetState, const std::string funcName = "");
+    bool StateCheck(LppAudioState curState);
     bool ErrorCheck(int32_t errorCode);
 
-    AudioState state_ {AudioState::CREATED};
+    LppAudioState state_ {LppAudioState::CREATED};
     std::mutex stateMutex_ {};
 
     std::string mime_ {};
