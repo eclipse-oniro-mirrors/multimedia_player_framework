@@ -97,7 +97,6 @@ private:
     std::shared_ptr<AudioBufferEntry> fullCacheData_;
     bool decodeShouldCompleted_;
     int32_t currentSoundBufferSize_;
-    std::condition_variable bufferCond_;
     std::shared_ptr<ISoundPoolCallback> callback_ = nullptr;
     std::mutex amutex_;
 };

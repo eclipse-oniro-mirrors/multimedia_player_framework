@@ -335,7 +335,6 @@ void SoundDecoderCallback::DealBufferRawFile(MediaAVCodec::AVCodecBufferFlag buf
             MEDIA_LOGI("audio buffer copy failed:%{public}s", strerror(errno));
         } else {
             availableAudioBuffers_.push_back(std::make_shared<AudioBufferEntry>(buf, size));
-            bufferCond_.notify_all();
         }
     }
     currentSoundBufferSize_ += size;
@@ -373,14 +372,20 @@ void SoundDecoderCallback::OnOutputBufferAvailable(uint32_t index, AVCodecBuffer
             return;
         }
         int32_t size = info.size;
-        uint8_t *buf = new(std::nothrow) uint8_t[size];
+        uint8_t *buf;
+        if (size > 0) {
+            buf = new(std::nothrow) uint8_t[size];
+        } else {
+            MEDIA_LOGE("SoundDecoderCallback output size :%{public}d", size);
+            amutex_.unlock();
+            return;
+        }
         if (buf != nullptr) {
             if (memcpy_s(buf, size, buffer->GetBase(), info.size) != EOK) {
                 delete[] buf;
                 MEDIA_LOGI("audio buffer copy failed:%{public}s", strerror(errno));
             } else {
                 availableAudioBuffers_.push_back(std::make_shared<AudioBufferEntry>(buf, size));
-                bufferCond_.notify_all();
             }
         }
         currentSoundBufferSize_ += size;
