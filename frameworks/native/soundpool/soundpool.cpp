@@ -25,7 +25,6 @@ namespace {
     static const int32_t SOUNDPOOL_API_VERSION_ISOLATION = 18;
     static const int32_t FAULT_API_VERSION = -1;
     static const int32_t ERROR_RETURN = -1;
-    static constexpr const char* VKB_BUNDLE_NAME = ".hmos.virtualkeyboard";
 }
 
 namespace OHOS {
