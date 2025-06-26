@@ -276,7 +276,7 @@ private:
     bool isInnerAudioBoxSelected_ = true;
     std::vector<uint64_t> surfaceIdList_ = {};
     std::vector<uint8_t> surfaceTypeList_ = {};
-    bool stopAcquireAudioBufferFromAudio_ = false;
+    std::atomic<bool> stopAcquireAudioBufferFromAudio_ = false;
     AVScreenCaptureMixMode recorderFileAudioType_ = AVScreenCaptureMixMode::INVALID_MODE;
 
     int32_t sessionId_ = 0;

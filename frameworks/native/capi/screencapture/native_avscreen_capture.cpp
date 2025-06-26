@@ -589,6 +589,23 @@ void SetVideoCapInfo(OH_AVScreenCaptureConfig config, AVScreenCaptureConfig& con
     config_.videoInfo.videoCapInfo.videoSource =
         static_cast<VideoSourceType>(config.videoInfo.videoCapInfo.videoSource);
 }
+
+VideoCodecFormat ConvertOHVideoCodecFormat(OH_VideoCodecFormat ohVideoCodec)
+{
+    switch (ohVideoCodec) {
+        case OH_VideoCodecFormat::OH_VIDEO_DEFAULT:
+        case OH_VideoCodecFormat::OH_H264:
+            return VideoCodecFormat::H264;
+        case OH_VideoCodecFormat::OH_H265:
+            return VideoCodecFormat::H265;
+        case OH_VideoCodecFormat::OH_MPEG4:
+            return VideoCodecFormat::MPEG4;
+        default:
+            break;
+    }
+    MEDIA_LOGE("videoCodec is invalid, value is: %{public}d", static_cast<int32_t>(ohVideoCodec));
+    return VideoCodecFormat::VIDEO_CODEC_FORMAT_BUTT;
+}
 }
 
 AVScreenCaptureConfig OH_AVScreenCapture_Convert(OH_AVScreenCaptureConfig config)
@@ -611,9 +628,7 @@ AVScreenCaptureConfig OH_AVScreenCapture_Convert(OH_AVScreenCaptureConfig config
         static_cast<AudioCodecFormat>(config.audioInfo.audioEncInfo.audioCodecformat);
     SetVideoCapInfo(config, config_);
     config_.videoInfo.videoEncInfo = {
-        .videoCodec = static_cast<VideoCodecFormat>(config.videoInfo.videoEncInfo.videoCodec ==
-            OH_VideoCodecFormat::OH_VIDEO_DEFAULT ?
-            OH_VideoCodecFormat::OH_H264 : config.videoInfo.videoEncInfo.videoCodec),
+        .videoCodec = ConvertOHVideoCodecFormat(config.videoInfo.videoEncInfo.videoCodec),
         .videoBitrate = config.videoInfo.videoEncInfo. videoBitrate,
         .videoFrameRate = config.videoInfo.videoEncInfo.videoFrameRate
     };

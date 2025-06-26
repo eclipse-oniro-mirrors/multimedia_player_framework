@@ -976,7 +976,7 @@ std::shared_ptr<AudioCapturerWrapper> ScreenCaptureServer::GetMicAudioCapture()
 
 bool ScreenCaptureServer::IsStopAcquireAudioBufferFlag()
 {
-    return stopAcquireAudioBufferFromAudio_;
+    return stopAcquireAudioBufferFromAudio_.load();
 }
 
 void ScreenCaptureServer::SetDisplayId(uint64_t displayId)
@@ -3745,7 +3745,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureRecorder()
     MediaTrace trace("ScreenCaptureServer::StopScreenCaptureRecorder");
     int32_t ret = MSERR_OK;
     if (recorder_ != nullptr) {
-        stopAcquireAudioBufferFromAudio_ = true;
+        stopAcquireAudioBufferFromAudio_.store(true);
         if (recorderFileAudioType_ == AVScreenCaptureMixMode::MIX_MODE &&
             audioSource_ && audioSource_->IsInWaitMicSyncState() &&
             IsInnerCaptureRunning()) {
