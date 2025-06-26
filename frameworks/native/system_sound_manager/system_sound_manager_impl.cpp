@@ -68,7 +68,7 @@ const int32_t NOT_ENOUGH_ROM = -234;
 const int32_t VIDEOS_NUM_EXCEEDS_SPECIFICATION = -235;
 const int32_t FILE_EXIST = -17;
 const int32_t MAX_VECTOR_LENGTH = 1024;
-const off_t MAX_FILE_SIZE_500M = 500 * 1024 * 1024;
+const off_t MAX_FILE_SIZE_200M = 200 * 1024 * 1024;
 const int32_t PARAM1 = 1;
 const int32_t PARAM2 = 2;
 #ifdef SUPPORT_VIBRATOR
@@ -1964,15 +1964,20 @@ bool SystemSoundManagerImpl::DeleteCustomizedTone(const std::shared_ptr<DataShar
 std::string SystemSoundManagerImpl::AddCustomizedToneCheck(const std::shared_ptr<ToneAttrs> &toneAttrs,
     const int32_t &fd, off_t &fileSize)
 {
+    std::string result = "TYPEERROR";
+    if (toneAttrs == nullptr) {
+        MEDIA_LOGE("AddCustomizedToneCheck: The toneAttrs is nullptr!");
+        return result;
+    }
+    GetCustomizedTone(toneAttrs);
     if (toneAttrs->GetMediaType() == ToneMediaType::MEDIA_TYPE_VID) {
         fileSize = lseek(fd, 0, SEEK_END);
         lseek(fd, 0, SEEK_SET);
-        if (fileSize > MAX_FILE_SIZE_500M) {
-            MEDIA_LOGE("AddCustomizedToneCheck: The file size exceeds 500M.");
+        if (fileSize > MAX_FILE_SIZE_200M) {
+            MEDIA_LOGE("AddCustomizedToneCheck: The file size exceeds 200M.");
             return FILE_SIZE_EXCEEDS_LIMIT;
         }
     }
-    std::string result = "TYPEERROR";
     if (toneAttrs->GetCustomizedType() != CUSTOMISED) {
         MEDIA_LOGE("AddCustomizedToneCheck: The ringtone is not customized!");
         return result;
@@ -2000,7 +2005,6 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(
     MediaTrace::TraceBegin("SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset", FAKE_POINTER(this));
     std::string result = "TYPEERROR";
     off_t fileSize = 0;
-    GetCustomizedTone(toneAttrs);
     std::string checkResult = AddCustomizedToneCheck(toneAttrs, fd, fileSize);
     if (!checkResult.empty()) {
         SendCustomizedToneEvent(true, toneAttrs, fileSize, mimeType_, ERROR);
@@ -3113,7 +3117,7 @@ void SystemSoundManagerImpl::SendCustomizedToneEvent(bool flag, const std::share
     bean->Add("APP_NAME", GetBundleName());
     MEDIA_LOGI("SendCustomizedToneEvent: app name is %{public}s", GetBundleName().c_str());
     bean->Add("FILE_SIZE", static_cast<uint64_t>(fileSize));
-    MEDIA_LOGI("SendCustomizedToneEvent: fileSize is %{public}ld byte, max is 500M(524288000 byte)",
+    MEDIA_LOGI("SendCustomizedToneEvent: fileSize is %{public}ld byte, max is 200M(209715200 byte)",
         static_cast<long>(fileSize));
     bean->Add("RINGTONE_CATEGORY", toneAttrs->GetCategory());
     MEDIA_LOGI("SendCustomizedToneEvent: category is %{public}d"
