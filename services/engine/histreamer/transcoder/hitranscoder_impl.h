@@ -79,6 +79,7 @@ private:
     Status ConfigureVideoAudioMetaData();
     void ConfigureVideoWidthHeight(const TransCoderParam &transCoderParam);
     Status ConfigureAudioParam(const TransCoderParam &transCoderParam);
+    Status ConfigureVideoParam(const TransCoderParam &transCoderParam);
     Status ConfigureVideoBitrate();
     bool SetValueByType(const std::shared_ptr<Meta> &innerMeta, std::shared_ptr<Meta> &outputMeta);
     bool ProcessMetaKey(
@@ -90,6 +91,20 @@ private:
     void ConfigureDefaultParameter();
     void ConfigureVideoDefaultEncFormat();
     void ConfigureAudioDefaultEncFormat();
+
+    struct SkipProcessFilterFlag {
+        bool isSameAudioEncFmt = false;
+        bool isSameAudioBitrate = false;
+        bool isSameVideoResolution = false;
+        bool CanSkipAudioDecAndEncFilter()
+        {
+            return isSameAudioEncFmt && isSameAudioBitrate;
+        }
+        bool CanSkipVideoResizeFilter()
+        {
+            return isSameVideoResolution;
+        }
+    }
 
     int32_t appUid_{0};
     int32_t appPid_{0};
@@ -127,9 +142,7 @@ private:
     int32_t inputVideoHeight_ = 0;
     std::string inputAudioMimeType_;
     bool isExistVideoTrack_ = false;
-    bool isNeedVideoResizeFilter_ = false;
     bool isConfiguredVideoBitrate_ = false;
-    std::pair<bool, bool> skipAudioDecAndEncFlag_ {};
     std::atomic<int32_t> durationMs_{-1};
 
     uint64_t instanceId_ = 0;
