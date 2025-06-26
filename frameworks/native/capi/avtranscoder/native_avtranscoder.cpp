@@ -1028,3 +1028,10 @@ OH_AVErrCode OH_AVTranscoder_SetProgressUpdateCallback(
 
     return nativeTranscoderCallback->SetOnProgressUpdateCallback(callback, userData);
 }
+
+OH_AVErrCode OH_AVTranscoderConfig_EnableBFrame(OH_AVTranscoder_Config *config, bool enabled)
+{
+    (void)config;
+    (void)enabled;
+    return AV_ERR_UNSUPPORT;
+}
