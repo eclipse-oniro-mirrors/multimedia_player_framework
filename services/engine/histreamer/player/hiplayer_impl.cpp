@@ -2500,6 +2500,9 @@ void HiPlayerImpl::OnEventSub(const Event &event)
             NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_PERCENT, AnyCast<int32_t>(event.param));
             break;
         }
+        case EventType::EVENT_DECODE_ERROR_FRAME:
+            NotifyDecoderErrorFrame(AnyCast<int64_t>(event.param));
+            break;
         default:
             break;
     }
@@ -2902,6 +2905,12 @@ void HiPlayerImpl::NotifySubtitleUpdate(const Event& event)
     if (needUpdateSubtitle_.load()) {
         callbackLooper_.OnInfo(INFO_TYPE_SUBTITLE_UPDATE_INFO, 0, format);
     }
+}
+
+void HiPlayerImpl::NotifyDecoderErrorFrame(int64_t pts)
+{
+    FALSE_RETURN_MSG(demuxer_ != nullptr, "DemuxerFilter is nullptr");
+    demuxer_->HandleDecoderErrorFrame(pts);
 }
 
 void HiPlayerImpl::UpdateStateNoLock(PlayerStates newState, bool notifyUpward, bool isSystemOperation)
