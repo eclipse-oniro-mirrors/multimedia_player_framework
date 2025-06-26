@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
- #ifndef I_LPP_AUDIO_STREAMER_H
- #define I_LPP_AUDIO_STREAMER_H
+#ifndef I_LPP_AUDIO_STREAMER_H
+#define I_LPP_AUDIO_STREAMER_H
 
 #include <string>
 #include <refbase.h>

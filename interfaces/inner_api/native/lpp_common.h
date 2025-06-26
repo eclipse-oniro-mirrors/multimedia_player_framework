@@ -61,4 +61,4 @@ private:
  
 } // namespace Media
 } // namespace OHOS
- #endif // LPP_COMMON_H
+#endif // LPP_COMMON_H

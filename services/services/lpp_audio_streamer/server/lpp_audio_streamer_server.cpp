@@ -40,8 +40,8 @@ std::map<LppAudioState, std::set<LppAudioState>> AUDIO_STATE_TX_MAP = {
     {LppAudioState::STARTING, {LppAudioState::READY, LppAudioState::PAUSED}},
     {LppAudioState::PAUSED, {LppAudioState::STARTING}},
     {LppAudioState::EOS, {LppAudioState::PAUSED, LppAudioState::STARTING}},
-    {LppAudioState::STOPPED, {LppAudioState::STARTING, LppAudioState::PAUSED, 
-                        LppAudioState::READY, LppAudioState::EOS}},
+    {LppAudioState::STOPPED, {LppAudioState::STARTING, LppAudioState::PAUSED,
+        LppAudioState::READY, LppAudioState::EOS}},
 };
 
 std::map<std::string, std::set<LppAudioState>> AUDIO_FUNC_STATE_CHECK_MAP = {
