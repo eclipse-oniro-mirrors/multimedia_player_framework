@@ -1180,11 +1180,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_059, TestSize.Leve
     audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_RELEASED;
     EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, audioHapticPlayerImpl->SetHapticsRamp(50, 1.0f, 50.0f));
 
-    audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_STOPPED;
-    audioHapticPlayerImpl->isVibrationRunning_.store(true);
-    EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, audioHapticPlayerImpl->SetHapticsRamp(50, 1.0f, 50.0f));
-
-    audioHapticPlayerImpl->isVibrationRunning_.store(false);
+    audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_RUNNING;
     EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, audioHapticPlayerImpl->SetHapticsRamp(50, 1.0f, 50.0f));
 
     AudioHapticPlayerImpl audioHapticPlayerImpl2;

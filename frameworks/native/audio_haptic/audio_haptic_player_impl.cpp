@@ -112,6 +112,7 @@ void AudioHapticPlayerImpl::LoadPlayer()
     // Load vibrator
     audioHapticVibrator_ = AudioHapticVibrator::CreateAudioHapticVibrator(*this);
     CHECK_AND_RETURN_LOG(audioHapticVibrator_ != nullptr, "Failed to create audio haptic vibrator instance");
+    audioHapticVibrator_->SetAudioHapticSyncId(audioHapticSyncId_);
 }
 
 bool AudioHapticPlayerImpl::IsMuted(const AudioHapticType &audioHapticType) const
@@ -350,7 +351,8 @@ int32_t AudioHapticPlayerImpl::SetHapticsRamp(int32_t duration, float startInten
     CHECK_AND_RETURN_RET_LOG(playerState_ != AudioHapticPlayerState::STATE_RELEASED, ERR_OPERATE_NOT_ALLOWED,
         "The audio haptic player has been released.");
     CHECK_AND_RETURN_RET_LOG(!isRamp_.load(), ERR_OPERATE_NOT_ALLOWED, "already ramp");
-    CHECK_AND_RETURN_RET_LOG(!isVibrationRunning_.load(), ERR_OPERATE_NOT_ALLOWED, "can't set when playing haptics");
+    CHECK_AND_RETURN_RET_LOG(playerState_ != AudioHapticPlayerState::STATE_RUNNING, ERR_OPERATE_NOT_ALLOWED,
+        "can't set when playing haptics");
     CHECK_AND_RETURN_RET_LOG(audioHapticVibrator_ != nullptr, ERR_OPERATE_NOT_ALLOWED, "must set before play haptics");
 
     // duration not less than 100ms

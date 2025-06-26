@@ -48,7 +48,10 @@ public:
     }
     int32_t SetHapticsRamp(int32_t duration, float startIntensity, float endIntensity) override;
     int32_t SetHapticsFeature(const HapticsFeature &feature) override;
-
+    void SetAudioHapticSyncId(const int32_t &audioHapticSyncId) override
+    {
+        audioHapticSyncId_ = audioHapticSyncId;
+    }
 private:
     int32_t StartVibrateForSoundPool();
     int32_t StartVibrateWithEffect();
@@ -85,6 +88,7 @@ private:
     HapticSource hapticSource_;
     std::atomic<bool> enableInSilentMode_ = false;
     float rampEndIntensity_ = -1.0f;
+    int32_t audioHapticSyncId_ = 0;
 #endif
     std::mutex vibrateMutex_;
     AudioStandard::StreamUsage streamUsage_ = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
