@@ -104,7 +104,9 @@ private:
         {
             return isSameVideoResolution;
         }
-    }
+    };
+
+    SkipProcessFilterFlag skipProcessFilterFlag_ {};
 
     int32_t appUid_{0};
     int32_t appPid_{0};
