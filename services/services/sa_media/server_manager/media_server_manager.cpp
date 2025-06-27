@@ -36,6 +36,12 @@
 #include "screen_capture_monitor_service_stub.h"
 #include "screen_capture_controller_stub.h"
 #endif
+#ifdef SUPPORT_LPP_AUDIO_STRAMER
+#include "lpp_audio_streamer_service_stub.h"
+#endif
+#ifdef SUPPORT_LPP_VIDEO_STRAMER
+#include "lpp_video_streamer_service_stub.h"
+#endif
 #include "monitor_service_stub.h"
 #include "media_log.h"
 #include "media_errors.h"
@@ -261,6 +267,16 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
         case SCREEN_CAPTURE_CONTROLLER:
             return CreateScreenCaptureControllerStubObject();
 #endif
+#ifdef SUPPORT_LPP_AUDIO_STRAMER
+        case LPP_AUDIO_PLAYER:
+            MEDIA_LOGI("LPP_AUDIO_PLAYER start");
+            return CreateLppAudioPlayerStubObject();
+#endif
+#ifdef SUPPORT_LPP_VIDEO_STRAMER
+        case LPP_VIDEO_PLAYER:
+            MEDIA_LOGI("LPP_VIDEO_PLAYER start");
+            return CreateLppVideoPlayerStubObject();
+#endif
         case MONITOR:
             return GetMonitorStubObject();
         default:
@@ -484,6 +500,65 @@ sptr<IRemoteObject> MediaServerManager::CreateScreenCaptureControllerStubObject(
 }
 #endif
 
+#ifdef SUPPORT_LPP_AUDIO_STRAMER
+sptr<IRemoteObject> MediaServerManager::CreateLppAudioPlayerStubObject()
+{
+    MEDIA_LOGI("CreateLppAudioPlayerStubObject start");
+    sptr<LppAudioStreamerServiceStub> lppAudioPlayerStub = LppAudioStreamerServiceStub::Create();
+    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerStub != nullptr, nullptr,
+        "failed to create LppAudioStreamerServiceStub");
+ 
+    sptr<IRemoteObject> object = lppAudioPlayerStub->AsObject();
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr,
+        "failed to create LppAudioStreamerServiceStub");
+ 
+    pid_t pid = IPCSkeleton::GetCallingPid();
+    lppAudioPlayerStubMap_[object] = pid;
+ 
+    Dumper dumper;
+    dumper.pid_ = pid;
+    dumper.uid_ = IPCSkeleton::GetCallingUid();
+    dumper.remoteObject_ = object;
+    dumperTbl_[StubType::LPP_AUDIO_PLAYER].emplace_back(dumper);
+ 
+    MEDIA_LOGD("The number of lppaudio player services(%{public}zu) pid(%{public}d).",
+        lppAudioPlayerStubMap_.size(), pid);
+    (void)Dump(-1, std::vector<std::u16string>());
+    MEDIA_LOGI("CreateLppAudioPlayerStubObject end");
+    return object;
+}
+#endif
+ 
+#ifdef SUPPORT_LPP_VIDEO_STRAMER
+sptr<IRemoteObject> MediaServerManager::CreateLppVideoPlayerStubObject()
+{
+    MEDIA_LOGI("CreateLppVideoPlayerStubObject start");
+    sptr<LppVideoStreamerServiceStub> lppVideoPlayerStub = LppVideoStreamerServiceStub::Create();
+    
+    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerStub != nullptr, nullptr,
+        "failed to create LppVideoStreamerServiceStub");
+ 
+    sptr<IRemoteObject> object = lppVideoPlayerStub->AsObject();
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr,
+        "failed to create LppVideoStreamerServiceStub");
+ 
+    pid_t pid = IPCSkeleton::GetCallingPid();
+    lppVideoPlayerStubMap_[object] = pid;
+ 
+    Dumper dumper;
+    dumper.pid_ = pid;
+    dumper.uid_ = IPCSkeleton::GetCallingUid();
+    dumper.remoteObject_ = object;
+    dumperTbl_[StubType::LPP_VIDEO_PLAYER].emplace_back(dumper);
+ 
+    MEDIA_LOGD("The number of lppvideo player services(%{public}zu) pid(%{public}d).",
+        lppVideoPlayerStubMap_.size(), pid);
+    (void)Dump(-1, std::vector<std::u16string>());
+    MEDIA_LOGI("CreateLppVideoPlayerStubObject end");
+    return object;
+}
+#endif
+
 sptr<IRemoteObject> MediaServerManager::GetMonitorStubObject()
 {
     sptr<MonitorServiceStub> monitorStub = MonitorServiceStub::GetInstance();
@@ -667,6 +742,46 @@ void MediaServerManager::DestroyAVScreenCaptureStub(StubType type, sptr<IRemoteO
     }
 }
 
+void MediaServerManager::DestroyLppAudioPlayerStub(StubType type, sptr<IRemoteObject> object, pid_t pid)
+{
+    switch (type) {
+        case LPP_AUDIO_PLAYER: {
+            for (auto it = lppAudioPlayerStubMap_.begin(); it != lppAudioPlayerStubMap_.end(); it++) {
+                if (it->first == object) {
+                    MEDIA_LOGD("destroy lppaudio player stub services(%{public}zu) pid(%{public}d).",
+                        lppAudioPlayerStubMap_.size(), pid);
+                    (void)lppAudioPlayerStubMap_.erase(it);
+                    return;
+                }
+            }
+            MEDIA_LOGE("find lppaudio player object failed, pid(%{public}d).", pid);
+            break;
+        }
+        default:
+            break;
+    }
+}
+ 
+void MediaServerManager::DestroyLppVideoPlayerStub(StubType type, sptr<IRemoteObject> object, pid_t pid)
+{
+    switch (type) {
+        case LPP_VIDEO_PLAYER: {
+            for (auto it = lppVideoPlayerStubMap_.begin(); it != lppVideoPlayerStubMap_.end(); it++) {
+                if (it->first == object) {
+                    MEDIA_LOGD("destroy lppvideo player stub services(%{public}zu) pid(%{public}d).",
+                        lppVideoPlayerStubMap_.size(), pid);
+                    (void)lppVideoPlayerStubMap_.erase(it);
+                    return;
+                }
+            }
+            MEDIA_LOGE("find lppvideo player object failed, pid(%{public}d).", pid);
+            break;
+        }
+        default:
+            break;
+    }
+}
+
 void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> object)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -692,6 +807,12 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
         case SCREEN_CAPTURE_MONITOR:
         case SCREEN_CAPTURE_CONTROLLER:
             DestroyAVScreenCaptureStub(type, object, pid);
+            break;
+        case LPP_AUDIO_PLAYER:
+            DestroyLppAudioPlayerStub(type, object, pid);
+            break;
+        case LPP_VIDEO_PLAYER:
+            DestroyLppVideoPlayerStub(type, object, pid);
             break;
         default: {
             MEDIA_LOGE("default case, media server manager failed, pid(%{public}d).", pid);
@@ -834,6 +955,34 @@ void MediaServerManager::DestroyAVRecorderStubForPid(pid_t pid)
     MEDIA_LOGD("mediaprofile stub services(%{public}zu).", recorderProfilesStubMap_.size());
 }
 
+void MediaServerManager::DestroyLppAudioPlayerStubForPid(pid_t pid)
+{
+    MEDIA_LOGD("LppAudioPlayer stub services(%{public}zu) pid(%{public}d).", lppAudioPlayerStubMap_.size(), pid);
+    for (auto itLppAudioPlayer = lppAudioPlayerStubMap_.begin(); itLppAudioPlayer != lppAudioPlayerStubMap_.end();) {
+        if (itLppAudioPlayer->second == pid) {
+            executor_.Commit(itLppAudioPlayer->first);
+            itLppAudioPlayer = lppAudioPlayerStubMap_.erase(itLppAudioPlayer);
+        } else {
+            itLppAudioPlayer++;
+        }
+    }
+    MEDIA_LOGD("LppAudioPlayer stub services(%{public}zu).", lppAudioPlayerStubMap_.size());
+}
+ 
+void MediaServerManager::DestroyLppVideoPlayerStubForPid(pid_t pid)
+{
+    MEDIA_LOGD("LppVideoPlayer stub services(%{public}zu) pid(%{public}d).", lppVideoPlayerStubMap_.size(), pid);
+    for (auto itLppVideoPlayer = lppVideoPlayerStubMap_.begin(); itLppVideoPlayer != lppVideoPlayerStubMap_.end();) {
+        if (itLppVideoPlayer->second == pid) {
+            executor_.Commit(itLppVideoPlayer->first);
+            itLppVideoPlayer = lppVideoPlayerStubMap_.erase(itLppVideoPlayer);
+        } else {
+            itLppVideoPlayer++;
+        }
+    }
+    MEDIA_LOGD("LppVideoPlayer stub services(%{public}zu).", lppVideoPlayerStubMap_.size());
+}
+
 void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -843,6 +992,8 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
     DestroyAVCodecStubForPid(pid);
     DestroyAVTranscoderStubForPid(pid);
     DestroyAVScreenCaptureStubForPid(pid);
+    DestroyLppAudioPlayerStubForPid(pid);
+    DestroyLppVideoPlayerStubForPid(pid);
     MonitorServiceStub::GetInstance()->OnClientDie(pid);
     executor_.Clear();
 #ifdef SUPPORT_START_STOP_ON_DEMAND

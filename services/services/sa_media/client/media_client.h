@@ -38,6 +38,12 @@
 #include "screen_capture_monitor_client.h"
 #include "screen_capture_controller_client.h"
 #endif
+#ifdef SUPPORT_LPP_AUDIO_STRAMER
+#include "lpp_audio_streamer_client.h"
+#endif
+#ifdef SUPPORT_LPP_VIDEO_STRAMER
+#include "lpp_video_streamer_client.h"
+#endif
 #include "nocopyable.h"
 
 namespace OHOS {
@@ -80,6 +86,15 @@ public:
     int32_t DestroyScreenCaptureControllerClient(std::shared_ptr<IScreenCaptureController> controller) override;
 #endif
     std::vector<pid_t> GetPlayerPids() override;
+#ifdef SUPPORT_LPP_AUDIO_STRAMER
+    std::shared_ptr<ILppAudioStreamerService> CreateLppAudioStreamerService() override;
+    int32_t DestroyLppAudioStreamerService(std::shared_ptr<ILppAudioStreamerService> lppAudioPlayer) override;
+#endif
+
+#ifdef SUPPORT_LPP_VIDEO_STRAMER
+    std::shared_ptr<ILppVideoStreamerService> CreateLppVideoStreamerService() override;
+    int32_t DestroyLppVideoStreamerService(std::shared_ptr<ILppVideoStreamerService> lppAudioPlayer) override;
+#endif
 
 private:
     sptr<IStandardMediaService> GetMediaProxy();
@@ -114,6 +129,12 @@ private:
     std::list<std::shared_ptr<IScreenCaptureMonitorService>> screenCaptureMonitorClientList_;
     std::list<std::shared_ptr<IScreenCaptureService>> screenCaptureClientList_;
     std::list<std::shared_ptr<IScreenCaptureController>> screenCaptureControllerList_;
+#endif
+#ifdef SUPPORT_LPP_AUDIO_STRAMER
+    std::list<std::shared_ptr<ILppAudioStreamerService>> lppAudioPlayerClientList_;
+#endif
+#ifdef SUPPORT_LPP_VIDEO_STRAMER
+    std::list<std::shared_ptr<ILppVideoStreamerService>> lppVideoStreamerClientList_;
 #endif
     std::mutex mutex_;
     std::condition_variable mediaProxyUpdatedCondition_;

@@ -27,6 +27,10 @@
 #ifdef SUPPORT_PLAYER
 #include "hiplayer_impl.h"
 #endif
+#ifdef SUPPORT_LPP
+#include "hilpp_vstreamer_impl.h"
+#include "hilpp_astreamer_impl.h"
+#endif
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "HstEngineFactory" };
@@ -54,6 +58,12 @@ public:
 #ifdef SUPPORT_METADATA
     std::unique_ptr<IAVMetadataHelperEngine> CreateAVMetadataHelperEngine(int32_t uid = 0, int32_t pid = 0,
         uint32_t tokenId = 0, std::string appName = "") override;
+#endif
+#ifdef SUPPORT_LPP
+    std::shared_ptr<ILppVideoStreamerEngine> CreateLppVideoStreamerEngine(int32_t appUid, int32_t appPid,
+        uint32_t tokenId) override;
+    std::shared_ptr<ILppAudioStreamerEngine> CreateLppAudioStreamerEngine(int32_t appUid, int32_t appPid,
+        uint32_t tokenId) override;
 #endif
 };
 
@@ -121,6 +131,38 @@ std::unique_ptr<IAVMetadataHelperEngine> HstEngineFactory::CreateAVMetadataHelpe
         return nullptr;
     }
     return helper;
+}
+#endif
+
+#ifdef SUPPORT_LPP
+std::shared_ptr<ILppVideoStreamerEngine> HstEngineFactory::CreateLppVideoStreamerEngine(int32_t appUid, int32_t appPid,
+    uint32_t tokenId)
+{
+    (void)appUid;
+    (void)appPid;
+    (void)tokenId;
+    auto engine = std::make_shared<HiLppVideoStreamerImpl>();
+    if (engine == nullptr) {
+        MEDIA_LOG_E("create HiLppVideoStreamerEngine failed");
+        return nullptr;
+    }
+    return engine;
+    return nullptr;
+}
+ 
+std::shared_ptr<ILppAudioStreamerEngine> HstEngineFactory::CreateLppAudioStreamerEngine(int32_t appUid, int32_t appPid,
+    uint32_t tokenId)
+{
+    (void)appUid;
+    (void)appPid;
+    (void)tokenId;
+    auto engine = std::make_shared<HiLppAudioStreamerImpl>();
+    if (engine == nullptr) {
+        MEDIA_LOG_E("create LppAudioStreamerEngine failed");
+        return nullptr;
+    }
+    return engine;
+    return nullptr;
 }
 #endif
 } // namespace Media

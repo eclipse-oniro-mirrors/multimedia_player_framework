@@ -146,5 +146,21 @@ bool MediaParcel::Unmarshalling(MessageParcel &parcel, Format &format)
 
     return res;
 }
+
+bool MediaParcel::MetaMarshalling(MessageParcel &parcel, const Media::Format &format)
+{
+    Format *formatRef = const_cast<Format *>(&format);
+    CHECK_AND_RETURN_RET_LOG(formatRef != nullptr, false, "formatRef is nullptr.");
+    return formatRef->GetMeta()->ToParcel(parcel);
+}
+
+bool MediaParcel::MetaUnmarshalling(MessageParcel &parcel, Media::Format &format)
+{
+    auto meta = std::make_shared<Meta>();
+    CHECK_AND_RETURN_RET_LOG(meta != nullptr, false, "create meta failed.");
+    bool ret = meta->FromParcel(parcel) && format.SetMeta(std::move(meta));
+    return ret;
+}
+
 } // namespace Media
 } // namespace OHOS

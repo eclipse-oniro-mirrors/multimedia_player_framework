@@ -60,6 +60,29 @@ int32_t MediaClient::DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataH
 {
     return 0;
 }
+#ifdef SUPPORT_LPP_AUDIO_STRAMER
+std::shared_ptr<ILppAudioStreamerService> MediaClient::CreateLppAudioStreamerService()
+{
+    return nullptr;
+}
+ 
+int32_t MediaClient::DestroyLppAudioStreamerService(std::shared_ptr<ILppAudioStreamerService> lppAudioPlayer)
+{
+    return 0;
+}
+#endif
+
+#ifdef SUPPORT_LPP_VIDEO_STRAMER
+std::shared_ptr<ILppVideoStreamerService> MediaClient::CreateLppVideoStreamerService()
+{
+    return nullptr;
+}
+ 
+int32_t MediaClient::DestroyLppVideoStreamerService(std::shared_ptr<ILppVideoStreamerService> lppVideoStreamer)
+{
+    return 0;
+}
+#endif
 
 sptr<IStandardMonitorService> MediaClient::GetMonitorProxy()
 {

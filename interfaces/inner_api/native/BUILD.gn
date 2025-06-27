@@ -49,6 +49,10 @@ config("media_client_ipc_config") {
     "$MEDIA_ROOT_DIR/services/services/screen_capture_monitor/client",
     "$MEDIA_ROOT_DIR/services/services/transcoder/ipc",
     "$MEDIA_ROOT_DIR/services/services/transcoder/client",
+    "$MEDIA_ROOT_DIR/services/services/lpp_audio_streamer/ipc",
+    "$MEDIA_ROOT_DIR/services/services/lpp_audio_streamer/client",
+    "$MEDIA_ROOT_DIR/services/services/lpp_video_streamer/ipc",
+    "$MEDIA_ROOT_DIR/services/services/lpp_video_streamer/client",
     "$MEDIA_ROOT_DIR/frameworks/native/media_source_loading_request",
   ]
 }
@@ -105,6 +109,7 @@ ohos_shared_library("media_client") {
 
   sources = [
     "$MEDIA_ROOT_DIR/frameworks/native/common/media_errors.cpp",
+    "$MEDIA_ROOT_DIR/frameworks/native/common/lpp_common.cpp",
     "$MEDIA_ROOT_DIR/services/services/common/avsharedmemory_ipc.cpp",
     "$MEDIA_ROOT_DIR/services/services/monitor/client/monitor_client.cpp",
     "$MEDIA_ROOT_DIR/services/services/monitor/client/monitor_client_object.cpp",
@@ -169,6 +174,24 @@ ohos_shared_library("media_client") {
       "$MEDIA_ROOT_DIR/services/services/transcoder/client/transcoder_client.cpp",
       "$MEDIA_ROOT_DIR/services/services/transcoder/ipc/transcoder_listener_stub.cpp",
       "$MEDIA_ROOT_DIR/services/services/transcoder/ipc/transcoder_service_proxy.cpp",
+    ]
+  }
+
+  if (player_framework_support_lowpower_av_sink) {
+    sources += [
+      "$MEDIA_ROOT_DIR/frameworks/native/lpp_audio_streamer/audio_streamer_impl.cpp",
+      "$MEDIA_ROOT_DIR/services/services/lpp_audio_streamer/client/lpp_audio_streamer_client.cpp",
+      "$MEDIA_ROOT_DIR/services/services/lpp_audio_streamer/ipc/lpp_audio_streamer_listener_stub.cpp",
+      "$MEDIA_ROOT_DIR/services/services/lpp_audio_streamer/ipc/lpp_audio_streamer_service_proxy.cpp",
+    ]
+  }
+
+  if (player_framework_support_lowpower_av_sink) {
+    sources += [
+      "$MEDIA_ROOT_DIR/frameworks/native/lpp_video_streamer/video_streamer_impl.cpp",
+      "$MEDIA_ROOT_DIR/services/services/lpp_video_streamer/client/lpp_video_streamer_client.cpp",
+      "$MEDIA_ROOT_DIR/services/services/lpp_video_streamer/ipc/lpp_video_streamer_listener_stub.cpp",
+      "$MEDIA_ROOT_DIR/services/services/lpp_video_streamer/ipc/lpp_video_streamer_service_proxy.cpp",
     ]
   }
 

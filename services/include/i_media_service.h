@@ -36,6 +36,12 @@
 #include "i_screen_capture_controller.h"
 #endif
 #include "i_standard_monitor_service.h"
+#ifdef SUPPORT_LPP_AUDIO_STRAMER
+#include "i_lpp_audio_streamer_service.h"
+#endif
+#ifdef SUPPORT_LPP_VIDEO_STRAMER
+#include "i_lpp_video_streamer_service.h"
+#endif
 
 namespace OHOS {
 namespace Media {
@@ -214,6 +220,20 @@ public:
      * @version 1.0
      */
     virtual int32_t DestroyScreenCaptureControllerClient(std::shared_ptr<IScreenCaptureController> controller) = 0;
+#endif
+
+#ifdef SUPPORT_LPP_AUDIO_STRAMER
+
+    virtual std::shared_ptr<ILppAudioStreamerService> CreateLppAudioStreamerService() = 0;
+
+    virtual int32_t DestroyLppAudioStreamerService(std::shared_ptr<ILppAudioStreamerService> lppAudioPlayer) = 0;
+#endif
+
+#ifdef SUPPORT_LPP_AUDIO_STRAMER
+
+    virtual std::shared_ptr<ILppVideoStreamerService> CreateLppVideoStreamerService() = 0;
+
+    virtual int32_t DestroyLppVideoStreamerService(std::shared_ptr<ILppVideoStreamerService> lppVideoPlayer) = 0;
 #endif
 
     /**

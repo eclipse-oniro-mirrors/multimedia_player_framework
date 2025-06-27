@@ -77,6 +77,16 @@ std::shared_ptr<IScreenCaptureService> MediaLocal::CreateScreenCaptureService()
     return ScreenCaptureServer::Create();
 }
 
+std::shared_ptr<ILppAudioStreamerService> MediaLocal::CreateLppAudioStreamerService()
+{
+    return LppAudioStreamerServer::Create();
+}
+
+std::shared_ptr<ILppVideoStreamerService> MediaLocal::CreateLppVideoStreamerService()
+{
+    return LppVideoStreamerServer::Create();
+}
+
 int32_t MediaLocal::DestroyRecorderService(std::shared_ptr<IRecorderService> recorder)
 {
     (void)recorder;
@@ -122,6 +132,18 @@ int32_t MediaLocal::DestroyMediaProfileService(std::shared_ptr<IRecorderProfiles
 int32_t MediaLocal::DestroyScreenCaptureService(std::shared_ptr<IScreenCaptureService> screenCapture)
 {
     (void)screenCapture;
+    return MSERR_OK;
+}
+
+int32_t MediaLocal::DestroyLppAudioStreamerService(std::shared_ptr<ILppAudioStreamerService> player)
+{
+    (void)player;
+    return MSERR_OK;
+}
+
+int32_t MediaLocal::DestroyLppVideoStreamerService(std::shared_ptr<ILppVideoStreamerService> player)
+{
+    (void)player;
     return MSERR_OK;
 }
 } // namespace Media

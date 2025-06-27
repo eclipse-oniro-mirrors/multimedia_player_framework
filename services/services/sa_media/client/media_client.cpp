@@ -37,6 +37,12 @@
 #include "i_standard_screen_capture_service.h"
 #include "i_standard_screen_capture_monitor_service.h"
 #endif
+#ifdef SUPPORT_LPP_AUDIO_STRAMER
+#include "i_standard_lpp_audio_streamer_service.h"
+#endif
+#ifdef SUPPORT_LPP_VIDEO_STRAMER
+#include "i_standard_lpp_video_streamer_service.h"
+#endif
 #include "media_log.h"
 #include "media_errors.h"
 #include "player_xcollie.h"
@@ -372,6 +378,70 @@ std::vector<pid_t> MediaClient::GetPlayerPids()
     CHECK_AND_RETURN_RET_LOG(IsAlived(), res, "MediaServer Is Not Alived");
     return mediaProxy_->GetPlayerPids();
 }
+
+#ifdef SUPPORT_LPP_AUDIO_STRAMER
+std::shared_ptr<ILppAudioStreamerService> MediaClient::CreateLppAudioStreamerService()
+{
+    MEDIA_LOGI("CreateLppAudioStreamerService start");
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "media service does not exist.");
+
+    sptr<IRemoteObject> object = mediaProxy_->GetSubSystemAbility(
+        IStandardMediaService::MediaSystemAbility::MEDIA_LPP_AUDIO_PLAYER, listenerStub_->AsObject());
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "lppAudioPlayer proxy object is nullptr.");
+
+    sptr<IStandardLppAudioStreamerService> lppAudioPlayerProxy = iface_cast<IStandardLppAudioStreamerService>(object);
+    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerProxy != nullptr, nullptr, "lppAudioPlayerProxy proxy is nullptr.");
+
+    std::shared_ptr<LppAudioStreamerClient> lppAudioPlayer = LppAudioStreamerClient::Create(lppAudioPlayerProxy);
+    CHECK_AND_RETURN_RET_LOG(lppAudioPlayer != nullptr, nullptr, "failed to create lppAudioPlayer client.");
+
+    lppAudioPlayerClientList_.push_back(lppAudioPlayer);
+    MEDIA_LOGI("CreateLppAudioStreamerService end");
+    return lppAudioPlayer;
+}
+
+int32_t MediaClient::DestroyLppAudioStreamerService(std::shared_ptr<ILppAudioStreamerService> lppAudioPlayer)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(lppAudioPlayer != nullptr, MSERR_NO_MEMORY,
+        "input lppAudioPlayer is nullptr.");
+    lppAudioPlayerClientList_.remove(lppAudioPlayer);
+    return MSERR_OK;
+}
+#endif
+
+#ifdef SUPPORT_LPP_VIDEO_STRAMER
+std::shared_ptr<ILppVideoStreamerService> MediaClient::CreateLppVideoStreamerService()
+{
+    MEDIA_LOGI("CreateLppVideoStreamerService start");
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "media service does not exist.");
+
+    sptr<IRemoteObject> object = mediaProxy_->GetSubSystemAbility(
+        IStandardMediaService::MediaSystemAbility::MEDIA_LPP_VIDEO_PLAYER, listenerStub_->AsObject());
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "lppVideoStreamer proxy object is nullptr.");
+
+    sptr<IStandardLppVideoStreamerService> lppVideoStreamerProxy = iface_cast<IStandardLppVideoStreamerService>(object);
+    CHECK_AND_RETURN_RET_LOG(lppVideoStreamerProxy != nullptr, nullptr, "lppVideoStreamerProxy proxy is nullptr.");
+
+    std::shared_ptr<LppVideoStreamerClient> lppVideoStreamer = LppVideoStreamerClient::Create(lppVideoStreamerProxy);
+    CHECK_AND_RETURN_RET_LOG(lppVideoStreamer != nullptr, nullptr, "failed to create lppVideoStreamer client.");
+
+    lppVideoStreamerClientList_.push_back(lppVideoStreamer);
+    MEDIA_LOGI("CreateLppVideoStreamerService end");
+    return lppVideoStreamer;
+}
+
+int32_t MediaClient::DestroyLppVideoStreamerService(std::shared_ptr<ILppVideoStreamerService> lppVideoStreamer)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(lppVideoStreamer != nullptr, MSERR_NO_MEMORY,
+        "input lppVideoStreamer is nullptr.");
+    lppVideoStreamerClientList_.remove(lppVideoStreamer);
+    return MSERR_OK;
+}
+#endif
 
 sptr<IStandardMonitorService> MediaClient::GetMonitorProxy()
 {

@@ -35,6 +35,8 @@ public:
     std::shared_ptr<IAVCodecListService> CreateAVCodecListService() override;
     std::shared_ptr<IRecorderProfilesService> CreateRecorderProfilesService() override;
     std::shared_ptr<IScreenCaptureService> CreateScreenCaptureService() override;
+    std::shared_ptr<ILppAudioStreamerService> CreateLppAudioStreamerService() override;
+    std::shared_ptr<ILppVideoStreamerService> CreateLppVideoStreamerService() override;
     int32_t DestroyRecorderService(std::shared_ptr<IRecorderService> recorder) override;
     int32_t DestroyTransCoderService(std::shared_ptr<ITransCoderService> transCoder) override;
     int32_t DestroyPlayerService(std::shared_ptr<IPlayerService> player) override;
@@ -43,6 +45,8 @@ public:
     int32_t DestroyAVCodecListService(std::shared_ptr<IAVCodecListService> avCodecList) override;
     int32_t DestroyMediaProfileService(std::shared_ptr<IRecorderProfilesService> recorderProfiles) override;
     int32_t DestroyScreenCaptureService(std::shared_ptr<IScreenCaptureService> screenCapture) override;
+    int32_t DestroyeLppAudioPlayerService(std::shared_ptr<ILppAudioStreamerService> lppAudioPlayer) override;
+    int32_t DestroyeLppVideoPlayerService(std::shared_ptr<ILppVideoStreamerService> lppVideoPlayer) override;
 };
 } // namespace Media
 } // namespace OHOS

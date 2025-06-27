@@ -54,7 +54,9 @@ public:
         SCREEN_CAPTURE,
         SCREEN_CAPTURE_CONTROLLER,
         TRANSCODER,
-        SCREEN_CAPTURE_MONITOR
+        SCREEN_CAPTURE_MONITOR,
+        LPP_AUDIO_PLAYER,
+        LPP_VIDEO_PLAYER
     };
     sptr<IRemoteObject> CreateStubObject(StubType type);
     void DestroyStubObject(StubType type, sptr<IRemoteObject> object);
@@ -97,6 +99,12 @@ private:
     sptr<IRemoteObject> CreateScreenCaptureMonitorStubObject();
     sptr<IRemoteObject> CreateScreenCaptureControllerStubObject();
 #endif
+#ifdef SUPPORT_LPP_AUDIO_STRAMER
+    sptr<IRemoteObject> CreateLppAudioPlayerStubObject();
+#endif
+#ifdef SUPPORT_LPP_VIDEO_STRAMER
+    sptr<IRemoteObject> CreateLppVideoPlayerStubObject();
+#endif
     sptr<IRemoteObject> GetMonitorStubObject();
 
     void DestroyAVCodecStub(StubType type, sptr<IRemoteObject> object, pid_t pid);
@@ -104,11 +112,15 @@ private:
     void DestroyAVRecorderStub(StubType type, sptr<IRemoteObject> object, pid_t pid);
     void DestroyAVTransCoderStub(StubType type, sptr<IRemoteObject> object, pid_t pid);
     void DestroyAVScreenCaptureStub(StubType type, sptr<IRemoteObject> object, pid_t pid);
+    void DestroyLppAudioPlayerStub(StubType type, sptr<IRemoteObject> object, pid_t pid);
+    void DestroyLppVideoPlayerStub(StubType type, sptr<IRemoteObject> object, pid_t pid);
     void DestroyAVCodecStubForPid(pid_t pid);
     void DestroyAVPlayerStubForPid(pid_t pid);
     void DestroyAVRecorderStubForPid(pid_t pid);
     void DestroyAVTranscoderStubForPid(pid_t pid);
     void DestroyAVScreenCaptureStubForPid(pid_t pid);
+    void DestroyLppAudioPlayerStubForPid(pid_t pid);
+    void DestroyLppVideoPlayerStubForPid(pid_t pid);
 
     void StartMemoryReportTask();
     void ReleaseMemoryReportTask();
@@ -139,6 +151,8 @@ private:
     std::map<sptr<IRemoteObject>, pid_t> screenCaptureStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> screenCaptureMonitorStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> screenCaptureControllerStubMap_;
+    std::map<sptr<IRemoteObject>, pid_t> lppAudioPlayerStubMap_;
+    std::map<sptr<IRemoteObject>, pid_t> lppVideoPlayerStubMap_;
     std::map<StubType, std::vector<Dumper>> dumperTbl_;
     AsyncExecutor executor_;
 

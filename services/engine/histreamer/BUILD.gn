@@ -49,6 +49,10 @@ ohos_shared_library("media_engine_histreamer") {
     deps += [ "transcoder:media_engine_histreamer_transcoder" ]
   }
 
+  if (player_framework_support_lowpower_av_sink) {
+    deps += [ "lpp:media_engine_histreamer_lpp_package" ]
+  }
+
   relative_install_dir = "media"
   subsystem_name = "multimedia"
   part_name = "player_framework"

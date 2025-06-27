@@ -21,6 +21,8 @@
 #include "player.h"
 #include "recorder.h"
 #include "avmetadatahelper.h"
+#include "lpp_audio_streamer.h"
+#include "lpp_video_streamer.h"
 
 struct OH_AVScreenCapture : public OHOS::RefBase {
     OH_AVScreenCapture() = default;
@@ -71,6 +73,21 @@ struct OH_AVTranscoder : public OHOS::RefBase {
 struct OH_AVTranscoder_Config : public OHOS::RefBase {
     OH_AVTranscoder_Config() = default;
     virtual ~OH_AVTranscoder_Config() = default;
+};
+
+struct OH_LowPowerAudioSink : public OHOS::RefBase {
+    OH_LowPowerAudioSink() = default;
+    virtual ~OH_LowPowerAudioSink() = default;
+};
+
+struct OH_LowPowerVideoSink : public OHOS::RefBase {
+    OH_LowPowerVideoSink() = default;
+    virtual ~OH_LowPowerVideoSink() = default;
+};
+
+struct OH_AVSamplesBuffer : public OHOS::RefBase {
+    OH_AVSamplesBuffer() = default;
+    virtual ~OH_AVSamplesBuffer() = default;
 };
 
 #endif // NATIVE_SCREEN_CAPTURE_MAGIC_H

@@ -59,6 +59,8 @@ public:
 
     MOCK_METHOD(int32_t, SetDecryptConfig, (const sptr<DrmStandard::IMediaKeySessionService> &keySession,
         const bool svpFlag), ());
+    MOCK_METHOD(int32_t, SetLowPowerPlayerMode, (const bool isLpp), (override));
+    MOCK_METHOD(int32_t, GetChannelId, (int32_t &channelId), (override));
 };
 } // namespace MediaAVCodec
 } // namespace OHOS
