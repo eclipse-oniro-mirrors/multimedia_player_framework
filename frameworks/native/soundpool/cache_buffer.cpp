@@ -141,7 +141,12 @@ std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(
 
     if (audioRenderer == nullptr) {
         MEDIA_LOGE("create audiorenderer failed, try again.");
-        rendererFlags_ = NORMAL_PLAY_RENDERER_FLAGS;
+        if (rendererFlags_ == AudioStandard::AUDIO_FLAG_VKB_FAST
+            || rendererFlags_ == AudioStandard::AUDIO_FLAG_VKB_NORMAL) {
+            rendererFlags_ = AudioStandard::AUDIO_FLAG_VKB_NORMAL;
+        } else {
+            rendererFlags_ = NORMAL_PLAY_RENDERER_FLAGS;
+        }
         rendererOptions.rendererInfo.rendererFlags = rendererFlags_;
         SoundPoolXCollie soundPoolXCollieNormal("AudioRenderer::Create normal time out",
             [](void *) {

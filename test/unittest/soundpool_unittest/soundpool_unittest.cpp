@@ -61,6 +61,36 @@ HWTEST_F(SoundPoolUnittest, CheckInitParam_001, TestSize.Level0)
 }
 
 /**
+ * @tc.name  : Test CheckInitParam
+ * @tc.number: CheckInitParam_002
+ * @tc.desc  : Test Return false
+ */
+HWTEST_F(SoundPoolUnittest, CheckInitParam_002, TestSize.Level1)
+{
+    ASSERT_NE(soundPool_, nullptr);
+    int maxStreams = NUM_TEST;
+    AudioStandard::AudioRendererInfo audioRenderInfo;
+    audioRenderInfo.rendererFlags = 1024;
+    auto ret = SoundPool::CheckInitParam(maxStreams, audioRenderInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.name  : Test CheckInitParam
+ * @tc.number: CheckInitParam_003
+ * @tc.desc  : Test Return false
+ */
+HWTEST_F(SoundPoolUnittest, CheckInitParam_003, TestSize.Level1)
+{
+    ASSERT_NE(soundPool_, nullptr);
+    int maxStreams = NUM_TEST;
+    AudioStandard::AudioRendererInfo audioRenderInfo;
+    audioRenderInfo.rendererFlags = 1025;
+    auto ret = SoundPool::CheckInitParam(maxStreams, audioRenderInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
  * @tc.name  : Test Play
  * @tc.number: Play_001
  * @tc.desc  : Test return -1
