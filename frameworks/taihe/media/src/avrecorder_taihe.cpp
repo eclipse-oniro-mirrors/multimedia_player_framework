@@ -129,7 +129,6 @@ void AVRecorderImpl::PrepareSync(ohos::multimedia::media::AVRecorderConfig const
     auto asyncCtx = std::make_unique<AVRecorderAsyncContext>();
     CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
     asyncCtx->taihe = this;
-    CHECK_AND_RETURN_LOG(asyncCtx->taihe != nullptr, "failed to get AsyncContext");
     CHECK_AND_RETURN_LOG(asyncCtx->taihe->taskQue_ != nullptr, "taskQue is nullptr!");
     if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
         if (asyncCtx->taihe->GetConfig(asyncCtx, config) == MSERR_OK) {
@@ -504,11 +503,7 @@ int32_t AVRecorderImpl::GetModeAndUrl(std::unique_ptr<AVRecorderAsyncContext> &a
         asyncCtx->config_->fileGenerationMode = static_cast<OHOS::Media::FileGenerationMode>(mode);
         MEDIA_LOGI("FileGenerationMode %{public}d!", mode);
     }
-    if (config.url.has_value()) {
-        asyncCtx->config_->url = static_cast<std::string>(config.url.value());
-    } else {
-        asyncCtx->config_->url = "";
-    }
+    asyncCtx->config_->url = static_cast<std::string>(config.url);
     MEDIA_LOGI("url %{public}s!", asyncCtx->config_->url.c_str());
     if (asyncCtx->config_->fileGenerationMode == OHOS::Media::FileGenerationMode::APP_CREATE) {
         if (asyncCtx->config_->url == "") {
@@ -969,8 +964,7 @@ void AVRecorderImpl::SetAVRecorderConfig(
     auto profile = CreateAVRecorderProfile(asyncCtx);
     res.profile = profile;
     if (config->withAudio || config->withVideo) {
-        taihe::string urlTaihe = MediaTaiheUtils::ToTaiheString(config->url);
-        res.url = optional<taihe::string>(std::in_place_t{}, urlTaihe);
+        res.url = MediaTaiheUtils::ToTaiheString(config->url);
     }
 }
 
@@ -980,7 +974,7 @@ void AVRecorderImpl::SetAVRecorderConfig(
         optional<::ohos::multimedia::media::AudioSourceType>(std::nullopt),
         optional<::ohos::multimedia::media::VideoSourceType>(std::nullopt),
         CreateDefaultAVRecorderProfile(),
-        optional<taihe::string>(std::nullopt),
+        "",
         optional<::taihe::array<::ohos::multimedia::media::MetaSourceType>>(std::nullopt),
         optional<::ohos::multimedia::media::FileGenerationMode>(std::nullopt),
         optional<::ohos::multimedia::media::AVMetadata>(std::nullopt),

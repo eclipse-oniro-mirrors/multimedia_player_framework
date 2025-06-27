@@ -112,6 +112,7 @@ void ScreenCaptureMonitorImpl::OffSystemScreenRecorder(
 
 void ScreenCaptureMonitorImpl::SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     eventCbMap_[callbackName] = ref;
     CHECK_AND_RETURN_LOG(monitorCb_ != nullptr, "monitorCb_ is nullptr!");
     auto taiheCb = static_cast<ScreenCaptureMonitorCallback*>(monitorCb_.GetRefPtr());
@@ -120,6 +121,7 @@ void ScreenCaptureMonitorImpl::SetCallbackReference(const std::string &callbackN
 
 void ScreenCaptureMonitorImpl::CancelCallbackReference(const std::string &callbackName)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_LOG(monitorCb_ != nullptr, "monitorCb_ is nullptr!");
     auto taiheCb = static_cast<ScreenCaptureMonitorCallback*>(monitorCb_.GetRefPtr());
     taiheCb->CancelCallbackReference(callbackName);

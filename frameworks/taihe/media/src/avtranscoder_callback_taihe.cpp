@@ -131,7 +131,11 @@ void AVTransCoderCallback::SendErrorCallback(MediaServiceExtErrCodeAPI9 errCode,
     auto task = [this, cb]() {
         this->OnTaiheErrorCallBack(cb);
     };
-    mainHandler_->PostTask(task, "OnError", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    bool ret = mainHandler_->PostTask(task, "OnError", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    if (!ret) {
+        MEDIA_LOGE("Failed to PostTask!");
+        delete cb;
+    }
 }
 
 void AVTransCoderCallback::OnTaiheErrorCallBack(AVTransCoderTaiheCallback *taiheCb) const
@@ -140,7 +144,9 @@ void AVTransCoderCallback::OnTaiheErrorCallBack(AVTransCoderTaiheCallback *taihe
     do {
         MEDIA_LOGD("OnTaiheErrorCallBack is called");
         std::shared_ptr<AutoRef> ref = taiheCb->autoRef.lock();
+        CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
         auto func = ref->callbackRef_;
+        CHECK_AND_BREAK_LOG(func != nullptr, "failed to get callback");
         auto err = MediaTaiheUtils::ToBusinessError(get_env(), taiheCb->errorCode, taiheCb->errorMsg);
         std::shared_ptr<taihe::callback<void(uintptr_t)>> cacheCallback =
             std::reinterpret_pointer_cast<taihe::callback<void(uintptr_t)>>(func);
@@ -158,6 +164,7 @@ void AVTransCoderCallback::OnTaiheProgressUpdateCallback(AVTransCoderTaiheCallba
         CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
 
         auto func = ref->callbackRef_;
+        CHECK_AND_BREAK_LOG(func != nullptr, "failed to get callback");
         std::shared_ptr<taihe::callback<void(double)>> cacheCallback =
             std::reinterpret_pointer_cast<taihe::callback<void(double)>>(func);
         (*cacheCallback)(static_cast<double>(taiheCb->progress));
@@ -174,6 +181,7 @@ void AVTransCoderCallback::OnTaiheCompleteCallBack(AVTransCoderTaiheCallback *ta
         CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
 
         auto func = ref->callbackRef_;
+        CHECK_AND_BREAK_LOG(func != nullptr, "failed to get callback");
         uintptr_t undefined = MediaTaiheUtils::GetUndefined(get_env());
         std::shared_ptr<taihe::callback<void(uintptr_t)>> cacheCallback =
             std::reinterpret_pointer_cast<taihe::callback<void(uintptr_t)>>(func);

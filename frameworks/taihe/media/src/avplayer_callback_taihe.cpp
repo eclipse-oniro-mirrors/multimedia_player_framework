@@ -48,7 +48,8 @@ public:
         virtual void UvWork()
         {
             std::shared_ptr<AutoRef> ref = callback.lock();
-            CHECK_AND_RETURN_LOG(ref != nullptr, "ref is nullptr");
+            CHECK_AND_RETURN_LOG(ref != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
             auto func = ref->callbackRef_;
             CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             uintptr_t undefined = MediaTaiheUtils::GetUndefined(get_env());
@@ -70,7 +71,8 @@ public:
         void UvWork() override
         {
             std::shared_ptr<AutoRef> errorRef = callback.lock();
-            CHECK_AND_RETURN_LOG(errorRef != nullptr, "ref is nullptr");
+            CHECK_AND_RETURN_LOG(errorRef != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
             auto func = errorRef->callbackRef_;
             CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             auto err = MediaTaiheUtils::ToBusinessError(get_env(), errorCode, errorMsg);
@@ -85,7 +87,8 @@ public:
         void UvWork() override
         {
             std::shared_ptr<AutoRef> intRef = callback.lock();
-            CHECK_AND_RETURN_LOG(intRef != nullptr, "ref is nullptr");
+            CHECK_AND_RETURN_LOG(intRef != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
             auto func = intRef->callbackRef_;
             CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<void(double)>> cacheCallback =
@@ -99,7 +102,9 @@ public:
         void UvWork() override
         {
             std::shared_ptr<AutoRef> intVecRef = callback.lock();
-            CHECK_AND_RETURN_LOG(intVecRef != nullptr, "ref is nullptr");
+            CHECK_AND_RETURN_LOG(intVecRef != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
+            CHECK_AND_RETURN_LOG(valueVec.size() > 0, "valueVec is empty");
             int32_t firstValueAsDouble = static_cast<int32_t>(valueVec[0]);
             int32_t val = 0;
             auto func = intVecRef->callbackRef_;
@@ -118,7 +123,9 @@ public:
         void UvWork() override
         {
             std::shared_ptr<AutoRef> intVecRef = callback.lock();
-            CHECK_AND_RETURN_LOG(intVecRef != nullptr, "ref is nullptr");
+            CHECK_AND_RETURN_LOG(intVecRef != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
+            CHECK_AND_RETURN_LOG(valueVec.size() > 1, "valueVec size is less than 2");
             double firstValueAsDouble = static_cast<double>(valueVec[0]);
             double secondValueAsDouble = static_cast<double>(valueVec[1]);
             auto func = intVecRef->callbackRef_;
@@ -133,7 +140,8 @@ public:
         void UvWork() override
         {
             std::shared_ptr<AutoRef> intVecRef = callback.lock();
-            CHECK_AND_RETURN_LOG(intVecRef != nullptr, "ref is nullptr");
+            CHECK_AND_RETURN_LOG(intVecRef != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
             auto func = intVecRef->callbackRef_;
             CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<void(array_view<double>)>> cacheCallback =
@@ -146,9 +154,10 @@ public:
         double value = 0.0;
         void UvWork() override
         {
-            std::shared_ptr<AutoRef> stateChangeRef = callback.lock();
-            CHECK_AND_RETURN_LOG(stateChangeRef != nullptr, "ref is nullptr");
-            auto func = stateChangeRef->callbackRef_;
+            std::shared_ptr<AutoRef> doubleRef = callback.lock();
+            CHECK_AND_RETURN_LOG(doubleRef != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
+            auto func = doubleRef->callbackRef_;
             CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<void(double)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void(double)>>(func);
@@ -161,7 +170,8 @@ public:
         void UvWork() override
         {
             std::shared_ptr<AutoRef> floatArrayRef = callback.lock();
-            CHECK_AND_RETURN_LOG(floatArrayRef != nullptr, "ref is nullptr");
+            CHECK_AND_RETURN_LOG(floatArrayRef != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
             auto func = floatArrayRef->callbackRef_;
             CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<void(array_view<double>)>> cacheCallback =
@@ -176,7 +186,8 @@ public:
         void UvWork() override
         {
             std::shared_ptr<AutoRef> floatArrayRef = callback.lock();
-            CHECK_AND_RETURN_LOG(floatArrayRef != nullptr, "ref is nullptr");
+            CHECK_AND_RETURN_LOG(floatArrayRef != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
             auto func = floatArrayRef->callbackRef_;
             CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<void(array_view<map<string, MediaDescriptionValue>>)>> cacheCallback =
@@ -196,9 +207,9 @@ public:
         bool isSelect = false;
         void UvWork() override
         {
-            std::shared_ptr<AutoRef> intVecRef = callback.lock();
-            CHECK_AND_RETURN_LOG(intVecRef != nullptr, "ref is nullptr");
-            auto func = intVecRef->callbackRef_;
+            std::shared_ptr<AutoRef> trackChangeRef = callback.lock();
+            CHECK_AND_RETURN_LOG(trackChangeRef != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
+            auto func = trackChangeRef->callbackRef_;
             CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<void(double, bool)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void(double, bool)>>(func);
@@ -212,7 +223,8 @@ public:
         void UvWork() override
         {
             std::shared_ptr<AutoRef> stateChangeRef = callback.lock();
-            CHECK_AND_RETURN_LOG(stateChangeRef != nullptr, "ref is nullptr");
+            CHECK_AND_RETURN_LOG(stateChangeRef != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
             auto func = stateChangeRef->callbackRef_;
             CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<StateChangeCallback>> cacheCallback =
@@ -228,7 +240,8 @@ public:
         void UvWork() override
         {
             std::shared_ptr<AutoRef> boolRef = callback.lock();
-            CHECK_AND_RETURN_LOG(boolRef != nullptr, "ref is nullptr");
+            CHECK_AND_RETURN_LOG(boolRef != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
             auto func = boolRef->callbackRef_;
             CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<void(bool)>> cacheCallback =
@@ -243,7 +256,7 @@ public:
         void UvWork() override
         {
             std::shared_ptr<AutoRef> seiInfoRef = callback.lock();
-            CHECK_AND_RETURN_LOG(seiInfoRef != nullptr, "ref is nullptr");
+            CHECK_AND_RETURN_LOG(seiInfoRef != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
             auto func = seiInfoRef->callbackRef_;
             CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<void(array_view<SeiMessage>, optional_view<double>)>> cacheCallback =
@@ -279,7 +292,9 @@ public:
         void UvWork() override
         {
             std::shared_ptr<AutoRef> mapRef = callback.lock();
-            CHECK_AND_RETURN_LOG(mapRef != nullptr, "ref is nullptr");
+            CHECK_AND_RETURN_LOG(mapRef != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
+
             auto func = mapRef->callbackRef_;
             CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<void(uintptr_t)>> cacheCallback =
@@ -300,7 +315,7 @@ public:
         void UvWork() override
         {
             std::shared_ptr<AutoRef> subtitleRef = callback.lock();
-            CHECK_AND_RETURN_LOG(subtitleRef != nullptr, "ref is nullptr");
+            CHECK_AND_RETURN_LOG(subtitleRef != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
             auto func = subtitleRef->callbackRef_;
             CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<void(::ohos::multimedia::media::SubtitleInfo const&)>> cacheCallback =
@@ -324,7 +339,11 @@ public:
                 delete aniCb;
             }
         };
-        mainHandler->PostTask(task, "On", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+        bool ret = mainHandler->PostTask(task, "On", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+        if (!ret) {
+            MEDIA_LOGE("Failed to PostTask!");
+            delete aniCb;
+        }
     }
 };
 

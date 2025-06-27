@@ -84,9 +84,9 @@ int64_t MediaSourceLoaderCallback::Open(std::shared_ptr<LoadingRequest> &request
     MEDIA_LOGD("CallBack %{public}s start", taiheCb_->callbackName_.c_str());
     do {
         std::shared_ptr<AutoRef> ref = taiheCb_->autoRef_.lock();
-        CHECK_AND_RETURN_RET_LOG(ref != nullptr, 0, "%{public}s AutoRef is nullptr", taiheCb_->callbackName_.c_str());
+        CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", taiheCb_->callbackName_.c_str());
         auto func = ref->callbackRef_;
-
+        CHECK_AND_BREAK_LOG(func != nullptr, "failed to get callback");
         std::shared_ptr<taihe::callback<
             double(::ohos::multimedia::media::weak::MediaSourceLoadingRequest)>> cacheCallback =
             std::reinterpret_pointer_cast<taihe::callback<double
@@ -127,8 +127,9 @@ void MediaSourceLoaderCallback::Read(int64_t uuid, int64_t requestedOffset, int6
     MEDIA_LOGD("CallBack %{public}s start", taiheCb_->callbackName_.c_str());
     do {
         std::shared_ptr<AutoRef> ref = taiheCb_->autoRef_.lock();
-        MEDIA_LOGD("CallBack %{public}s start", taiheCb_->callbackName_.c_str());
+        CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", taiheCb_->callbackName_.c_str());
         auto func = ref->callbackRef_;
+        CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
         std::shared_ptr<taihe::callback<void(double, double, double)>> cacheCallback =
             std::reinterpret_pointer_cast<taihe::callback<void(double, double, double)>>(func);
         (*cacheCallback)(static_cast<double>(taiheCb_->uuid_), static_cast<double>(taiheCb_->requestedOffset_),
@@ -157,8 +158,9 @@ void MediaSourceLoaderCallback::Close(int64_t uuid)
     MEDIA_LOGD("CallBack %{public}s start", taiheCb_->callbackName_.c_str());
     do {
         std::shared_ptr<AutoRef> ref = taiheCb_->autoRef_.lock();
-        MEDIA_LOGD("CallBack %{public}s start", taiheCb_->callbackName_.c_str());
+        CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", taiheCb_->callbackName_.c_str());
         auto func = ref->callbackRef_;
+        CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
         std::shared_ptr<taihe::callback<void(double)>> cacheCallback =
             std::reinterpret_pointer_cast<taihe::callback<void(double)>>(func);
         (*cacheCallback)(static_cast<double>(taiheCb_->uuid_));

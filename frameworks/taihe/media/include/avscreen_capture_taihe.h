@@ -108,6 +108,7 @@ public:
 
     using AvScreenCaptureTaskqFunc = RetInfo (AVScreenCaptureRecorderImpl::*)();
 private:
+    std::mutex mutex_;
     std::shared_ptr<ScreenCapture> screenCapture_ = nullptr;
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
     std::map<std::string, std::shared_ptr<AutoRef>> eventCbMap_;

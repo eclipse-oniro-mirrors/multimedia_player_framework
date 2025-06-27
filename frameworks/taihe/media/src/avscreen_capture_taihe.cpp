@@ -598,6 +598,7 @@ void AVScreenCaptureRecorderImpl::OffStateChange(
 
 void AVScreenCaptureRecorderImpl::SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     eventCbMap_[callbackName] = ref;
     CHECK_AND_RETURN_LOG(screenCaptureCb_ != nullptr, "screenCaptureCb_ is nullptr!");
     auto taiheCb = std::static_pointer_cast<AVScreenCaptureCallback>(screenCaptureCb_);
@@ -606,6 +607,7 @@ void AVScreenCaptureRecorderImpl::SetCallbackReference(const std::string &callba
 
 void AVScreenCaptureRecorderImpl::CancelCallbackReference(const std::string &callbackName)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_LOG(screenCaptureCb_ != nullptr, "screenCaptureCb_ is nullptr!");
     auto taiheCb = std::static_pointer_cast<AVScreenCaptureCallback>(screenCaptureCb_);
     taiheCb->CancelCallbackReference(callbackName);
