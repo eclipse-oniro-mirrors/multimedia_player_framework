@@ -24,6 +24,7 @@ namespace {
     static constexpr int32_t MAX_SOUND_BUFFER_SIZE = 1 * 1024 * 1024;
     static const std::string AUDIO_RAW_MIMETYPE_INFO = "audio/raw";
     static const std::string AUDIO_MPEG_MIMETYPE_INFO = "audio/mpeg";
+    static constexpr int32_t MAX_CODEC_BUFFER_SIZE = 5 * 1024 * 1024;
 }
 
 namespace OHOS {
@@ -335,7 +336,6 @@ void SoundDecoderCallback::DealBufferRawFile(MediaAVCodec::AVCodecBufferFlag buf
             MEDIA_LOGI("audio buffer copy failed:%{public}s", strerror(errno));
         } else {
             availableAudioBuffers_.push_back(std::make_shared<AudioBufferEntry>(buf, size));
-            bufferCond_.notify_all();
         }
     }
     currentSoundBufferSize_ += size;
@@ -373,6 +373,11 @@ void SoundDecoderCallback::OnOutputBufferAvailable(uint32_t index, AVCodecBuffer
             return;
         }
         int32_t size = info.size;
+        if (size <= 0 || size > MAX_CODEC_BUFFER_SIZE) {
+            MEDIA_LOGE("SoundDecoderCallback output size :%{public}d", size);
+            amutex_.unlock();
+            return;
+        }
         uint8_t *buf = new(std::nothrow) uint8_t[size];
         if (buf != nullptr) {
             if (memcpy_s(buf, size, buffer->GetBase(), info.size) != EOK) {
@@ -380,7 +385,6 @@ void SoundDecoderCallback::OnOutputBufferAvailable(uint32_t index, AVCodecBuffer
                 MEDIA_LOGI("audio buffer copy failed:%{public}s", strerror(errno));
             } else {
                 availableAudioBuffers_.push_back(std::make_shared<AudioBufferEntry>(buf, size));
-                bufferCond_.notify_all();
             }
         }
         currentSoundBufferSize_ += size;
