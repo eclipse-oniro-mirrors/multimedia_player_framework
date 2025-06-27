@@ -64,7 +64,7 @@ private:
     void AppendSrcMediaInfo(std::shared_ptr<Meta> meta);
     void AppendDstMediaInfo(std::shared_ptr<Meta> meta);
     int32_t GetRealPath(const std::string &url, std::string &realUrlPath) const;
-    Status ConfigureVideoEncoderFormat(const TransCoderParam &transCoderParam);
+    void ConfigureVideoEncoderFormat(const TransCoderParam &transCoderParam);
     Status ConfigureColorSpace(const TransCoderParam &transCoderParam);
     Status LinkAudioDecoderFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
     Status LinkAudioEncoderFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
@@ -75,8 +75,11 @@ private:
     Status SetSurfacePipeline(int32_t outputVideoWidth, int32_t outputVideoHeight);
     void HandleErrorEvent(int32_t errorCode);
     void HandleCompleteEvent();
+    void SkipAudioDecAndEnc();
     Status ConfigureVideoAudioMetaData();
-    Status ConfigureVideoWidthHeight(const TransCoderParam &transCoderParam);
+    void ConfigureVideoWidthHeight(const TransCoderParam &transCoderParam);
+    Status ConfigureAudioParam(const TransCoderParam &transCoderParam);
+    Status ConfigureVideoParam(const TransCoderParam &transCoderParam);
     Status ConfigureVideoBitrate();
     bool SetValueByType(const std::shared_ptr<Meta> &innerMeta, std::shared_ptr<Meta> &outputMeta);
     bool ProcessMetaKey(
@@ -88,6 +91,22 @@ private:
     void ConfigureDefaultParameter();
     void ConfigureVideoDefaultEncFormat();
     void ConfigureAudioDefaultEncFormat();
+
+    struct SkipProcessFilterFlag {
+        bool isSameAudioEncFmt = false;
+        bool isSameAudioBitrate = false;
+        bool isSameVideoResolution = false;
+        bool CanSkipAudioDecAndEncFilter()
+        {
+            return isSameAudioEncFmt && isSameAudioBitrate;
+        }
+        bool CanSkipVideoResizeFilter()
+        {
+            return isSameVideoResolution;
+        }
+    };
+
+    SkipProcessFilterFlag skipProcessFilterFlag_ {};
 
     int32_t appUid_{0};
     int32_t appPid_{0};
@@ -123,8 +142,8 @@ private:
     bool isVideoTrackLinked_ = false;
     int32_t inputVideoWidth_ = 0;
     int32_t inputVideoHeight_ = 0;
+    std::string inputAudioMimeType_;
     bool isExistVideoTrack_ = false;
-    bool isNeedVideoResizeFilter_ = false;
     bool isConfiguredVideoBitrate_ = false;
     std::atomic<int32_t> durationMs_{-1};
 

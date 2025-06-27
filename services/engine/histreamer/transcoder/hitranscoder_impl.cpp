@@ -28,10 +28,6 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN_SYSTEM_PLAYER, "HiTransCoder" };
-}
-
-namespace OHOS {
-namespace Media {
 constexpr int32_t REPORT_PROGRESS_INTERVAL = 100;
 constexpr int32_t TRANSCODER_COMPLETE_PROGRESS = 100;
 constexpr int32_t MINIMUM_WIDTH_HEIGHT = 240;
@@ -42,7 +38,12 @@ constexpr int32_t VIDEO_BITRATE_1M = 1024 * 1024;
 constexpr int32_t VIDEO_BITRATE_2M = 2 * VIDEO_BITRATE_1M;
 constexpr int32_t VIDEO_BITRATE_4M = 4 * VIDEO_BITRATE_1M;
 constexpr int32_t VIDEO_BITRATE_8M = 8 * VIDEO_BITRATE_1M;
+constexpr int32_t INVALID_AUDIO_BITRATE = INT32_MAX; // Invalid value defined in the napi and capi.
+constexpr int32_t DEFAULT_AUDIO_BITRATE = 48000;
+}
 
+namespace OHOS {
+namespace Media {
 static const std::unordered_set<std::string> AVMETA_KEY = {
     { Tag::MEDIA_ALBUM },
     { Tag::MEDIA_ALBUM_ARTIST },
@@ -298,10 +299,9 @@ void HiTransCoderImpl::ConfigureVideoDefaultEncFormat()
  
 void HiTransCoderImpl::ConfigureAudioDefaultEncFormat()
 {
-    std::string audioMime;
-    audioEncFormat_->GetData(Tag::MIME_TYPE, audioMime);
-    FALSE_RETURN_NOLOG(audioMime != Plugins::MimeType::AUDIO_AAC);
-    MEDIA_LOG_I("Set the default audioEnc format, " PUBLIC_LOG_S " to " PUBLIC_LOG_S, audioMime.c_str(),
+    audioEncFormat_->GetData(Tag::MIME_TYPE, inputAudioMimeType_);
+    FALSE_RETURN_NOLOG(inputAudioMimeType_ != Plugins::MimeType::AUDIO_AAC);
+    MEDIA_LOG_I("Set the default audioEnc format, " PUBLIC_LOG_S " to " PUBLIC_LOG_S, inputAudioMimeType_.c_str(),
         Plugins::MimeType::AUDIO_AAC);
     audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_AAC);
 }
@@ -412,7 +412,7 @@ int32_t HiTransCoderImpl::SetObs(const std::weak_ptr<ITransCoderEngineObs> &obs)
     return MSERR_OK;
 }
 
-Status HiTransCoderImpl::ConfigureVideoEncoderFormat(const TransCoderParam &transCoderParam)
+void HiTransCoderImpl::ConfigureVideoEncoderFormat(const TransCoderParam &transCoderParam)
 {
     VideoEnc videoEnc = static_cast<const VideoEnc&>(transCoderParam);
     MEDIA_LOG_I("HiTransCoderImpl::Configure videoEnc %{public}d", videoEnc.encFmt);
@@ -431,10 +431,9 @@ Status HiTransCoderImpl::ConfigureVideoEncoderFormat(const TransCoderParam &tran
         default:
             break;
     }
-    return Status::OK;
 }
 
-Status HiTransCoderImpl::ConfigureVideoWidthHeight(const TransCoderParam &transCoderParam)
+void HiTransCoderImpl::ConfigureVideoWidthHeight(const TransCoderParam &transCoderParam)
 {
     VideoRectangle videoRectangle = static_cast<const VideoRectangle&>(transCoderParam);
     if (videoRectangle.width != -1) {
@@ -443,7 +442,6 @@ Status HiTransCoderImpl::ConfigureVideoWidthHeight(const TransCoderParam &transC
     if (videoRectangle.height != -1) {
         videoEncFormat_->Set<Tag::VIDEO_HEIGHT>(videoRectangle.height);
     }
-    return Status::OK;
 }
 
 Status HiTransCoderImpl::ConfigureColorSpace(const TransCoderParam &transCoderParam)
@@ -486,16 +484,24 @@ Status HiTransCoderImpl::ConfigureVideoBitrate()
 
 int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
 {
-    MEDIA_LOG_I("HiTransCoderImpl::Configure()");
+    MEDIA_LOG_I("HiTransCoderImpl::Configure, type: " PUBLIC_LOG_U32, static_cast<uint32_t>(transCoderParam.type));
     MediaTrace trace("HiTransCoderImpl::Configure()");
+    Status ret = ConfigureAudioParam(transCoderParam);
+    FALSE_RETURN_V_NOLOG(ret == Status::OK, TransTranscoderStatus(ret));
+    ret = ConfigureVideoParam(transCoderParam);
+    return TransTranscoderStatus(ret);
+}
+
+Status HiTransCoderImpl::ConfigureVideoParam(const TransCoderParam &transCoderParam)
+{
     Status ret = Status::OK;
     switch (transCoderParam.type) {
         case TransCoderPublicParamType::VIDEO_ENC_FMT: {
-            ret = ConfigureVideoEncoderFormat(transCoderParam);
+            ConfigureVideoEncoderFormat(transCoderParam);
             break;
         }
         case TransCoderPublicParamType::VIDEO_RECTANGLE: {
-            ret = ConfigureVideoWidthHeight(transCoderParam);
+            ConfigureVideoWidthHeight(transCoderParam);
             if (!isConfiguredVideoBitrate_) {
                 ConfigureVideoBitrate();
             }
@@ -503,7 +509,7 @@ int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
         }
         case TransCoderPublicParamType::VIDEO_BITRATE: {
             VideoBitRate videoBitrate = static_cast<const VideoBitRate&>(transCoderParam);
-            FALSE_RETURN_V_MSG(videoBitrate.bitRate > 0, MSERR_OK, "Invalid video bitrate");
+            FALSE_RETURN_V_MSG(videoBitrate.bitRate > 0, Status::OK, "Invalid video bitrate");
             MEDIA_LOG_I("HiTransCoderImpl::Configure videoBitRate %{public}d", videoBitrate.bitRate);
             videoEncFormat_->Set<Tag::MEDIA_BITRATE>(videoBitrate.bitRate);
             isConfiguredVideoBitrate_ = true;
@@ -513,9 +519,21 @@ int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
             ret = ConfigureColorSpace(transCoderParam);
             break;
         }
+        default:
+            break;
+    }
+    return ret;
+}
+
+Status HiTransCoderImpl::ConfigureAudioParam(const TransCoderParam &transCoderParam)
+{
+    switch (transCoderParam.type) {
         case TransCoderPublicParamType::AUDIO_ENC_FMT: {
             AudioEnc audioEnc = static_cast<const AudioEnc&>(transCoderParam);
             MEDIA_LOG_I("HiTransCoderImpl::Configure audioEnc %{public}d", audioEnc.encFmt);
+            if (inputAudioMimeType_ == Plugins::MimeType::AUDIO_AAC) {
+                skipProcessFilterFlag_.isSameAudioEncFmt = true;
+            }
             audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_AAC);
             break;
         }
@@ -524,8 +542,15 @@ int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
             if (audioBitrate.bitRate <= 0) {
                 MEDIA_LOG_E("Invalid audioBitrate.bitRate %{public}d", audioBitrate.bitRate);
                 OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_PARAMETER_VERIFICATION_FAILED});
-                return MSERR_PARAMETER_VERIFICATION_FAILED;
+                return Status::ERROR_INVALID_PARAMETER;
             }
+            int64_t bitrate = -1;
+            audioEncFormat_->Get<Tag::MEDIA_BITRATE>(bitrate);
+            if (audioBitrate.bitRate == INVALID_AUDIO_BITRATE || audioBitrate.bitRate == bitrate) {
+                skipProcessFilterFlag_.isSameAudioBitrate = true;
+            }
+            audioBitrate.bitRate = audioBitrate.bitRate == INVALID_AUDIO_BITRATE ?
+                DEFAULT_AUDIO_BITRATE : audioBitrate.bitRate;
             MEDIA_LOG_I("HiTransCoderImpl::Configure audioBitrate %{public}d", audioBitrate.bitRate);
             audioEncFormat_->Set<Tag::MEDIA_BITRATE>(audioBitrate.bitRate);
             break;
@@ -533,7 +558,13 @@ int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
         default:
             break;
     }
-    return TransTranscoderStatus(ret);
+    return Status::OK;
+}
+
+void HiTransCoderImpl::SkipAudioDecAndEnc()
+{
+    FALSE_RETURN_NOLOG(demuxerFilter_ != nullptr);
+    (void)demuxerFilter_->SetSkippingAudioDecAndEnc();
 }
 
 int32_t HiTransCoderImpl::Prepare()
@@ -558,7 +589,10 @@ int32_t HiTransCoderImpl::Prepare()
             OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_PARAMETER_VERIFICATION_FAILED});
             return MSERR_PARAMETER_VERIFICATION_FAILED;
         }
-        isNeedVideoResizeFilter_ = width != inputVideoWidth_ || height != inputVideoHeight_;
+        skipProcessFilterFlag_.isSameVideoResolution = (width == inputVideoWidth_) && (height == inputVideoHeight_);
+    }
+    if (skipProcessFilterFlag_.CanSkipAudioDecAndEncFilter()) {
+        SkipAudioDecAndEnc();
     }
     Status ret = pipeline_->Prepare();
     if (ret != Status::OK) {
@@ -579,7 +613,7 @@ Status HiTransCoderImpl::SetSurfacePipeline(int32_t outputVideoWidth, int32_t ou
 {
     FALSE_RETURN_V_MSG_E(videoEncoderFilter_ != nullptr && videoDecoderFilter_ != nullptr,
         Status::ERROR_NULL_POINTER, "VideoDecoder setOutputSurface failed");
-    if (isNeedVideoResizeFilter_ && videoResizeFilter_ != nullptr) {
+    if (!skipProcessFilterFlag_.CanSkipVideoResizeFilter() && videoResizeFilter_ != nullptr) {
         sptr<Surface> resizeFilterSurface = videoResizeFilter_->GetInputSurface();
         FALSE_RETURN_V_MSG_E(resizeFilterSurface != nullptr, Status::ERROR_GET_INPUT_SURFACE_FAILED,
             "resizeFilterSurface is nullptr");
@@ -935,11 +969,12 @@ Status HiTransCoderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, co
                 if (filter->GetFilterType() == Pipeline::FilterType::FILTERTYPE_DEMUXER) {
                     FALSE_RETURN_V(!isAudioTrackLinked_, Status::OK);
                     isAudioTrackLinked_ = true;
-                    return LinkAudioDecoderFilter(filter, outType);
+                    FALSE_RETURN_V_NOLOG(skipProcessFilterFlag_.CanSkipAudioDecAndEncFilter(),
+                        LinkAudioDecoderFilter(filter, outType));
                 }
                 return LinkMuxerFilter(filter, outType);
             case Pipeline::StreamType::STREAMTYPE_RAW_VIDEO:
-                if (!isNeedVideoResizeFilter_ ||
+                if (skipProcessFilterFlag_.CanSkipVideoResizeFilter() ||
                     filter->GetFilterType() == Pipeline::FilterType::FILTERTYPE_VIDRESIZE) {
                     return LinkVideoEncoderFilter(filter, outType);
                 }

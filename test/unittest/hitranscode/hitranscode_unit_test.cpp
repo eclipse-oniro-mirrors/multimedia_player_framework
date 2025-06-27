@@ -780,8 +780,7 @@ HWTEST_F(HitranscodeUnitTest, SetInputFile_003, TestSize.Level0)
 HWTEST_F(HitranscodeUnitTest, ConfigureVideoEncoderFormat_001, TestSize.Level0)
 {
     VideoEnc videoEnc(OHOS::Media::VideoCodecFormat::H264);
-    Status ret = transcoder_->ConfigureVideoEncoderFormat(videoEnc);
-    EXPECT_EQ(ret, Status::OK);
+    transcoder_->ConfigureVideoEncoderFormat(videoEnc);
     
     std::string metaKey = Tag::MIME_TYPE;
     std::string strVal = "video/avc";
@@ -811,8 +810,7 @@ HWTEST_F(HitranscodeUnitTest, ConfigureVideoEncoderFormat_001, TestSize.Level0)
 HWTEST_F(HitranscodeUnitTest, ConfigureVideoEncoderFormat_002, TestSize.Level0)
 {
     VideoEnc videoEnc(OHOS::Media::VideoCodecFormat::MPEG4);
-    Status ret = transcoder_->ConfigureVideoEncoderFormat(videoEnc);
-    EXPECT_EQ(ret, Status::OK);
+    transcoder_->ConfigureVideoEncoderFormat(videoEnc);
     
     std::string metaKey = Tag::MIME_TYPE;
     std::string strVal = "video/mp4v-es";
@@ -830,8 +828,7 @@ HWTEST_F(HitranscodeUnitTest, ConfigureVideoEncoderFormat_002, TestSize.Level0)
 HWTEST_F(HitranscodeUnitTest, ConfigureVideoEncoderFormat_003, TestSize.Level0)
 {
     VideoEnc videoEnc(OHOS::Media::VideoCodecFormat::H265);
-    Status ret = transcoder_->ConfigureVideoEncoderFormat(videoEnc);
-    EXPECT_EQ(ret, Status::OK);
+    transcoder_->ConfigureVideoEncoderFormat(videoEnc);
     
     std::string metaKey = Tag::MIME_TYPE;
     std::string strVal = "video/hevc";
@@ -849,8 +846,7 @@ HWTEST_F(HitranscodeUnitTest, ConfigureVideoEncoderFormat_003, TestSize.Level0)
 HWTEST_F(HitranscodeUnitTest, ConfigureVideoEncoderFormat_004, TestSize.Level0)
 {
     VideoEnc videoEnc(OHOS::Media::VideoCodecFormat::VIDEO_DEFAULT);
-    Status ret = transcoder_->ConfigureVideoEncoderFormat(videoEnc);
-    EXPECT_EQ(ret, Status::OK);
+    transcoder_->ConfigureVideoEncoderFormat(videoEnc);
     
     std::string metaKey = Tag::MIME_TYPE;
     std::string outputStrVal;
@@ -958,8 +954,13 @@ HWTEST_F(HitranscodeUnitTest, ConfigureVideoBitrate_003, TestSize.Level0)
 HWTEST_F(HitranscodeUnitTest, ConfigureVideoWidthHeight_001, TestSize.Level0)
 {
     VideoRectangle videoRectangle(1920, 1080);
-    Status ret = transcoder_->ConfigureVideoWidthHeight(videoRectangle);
-    EXPECT_EQ(ret, Status::OK);
+    transcoder_->ConfigureVideoWidthHeight(videoRectangle);
+    int32_t width = -1;
+    int32_t height = -1;
+    transcoder_->videoEncFormat_->Get<Tag::VIDEO_WIDTH>(width);
+    transcoder_->videoEncFormat_->Get<Tag::VIDEO_HEIGHT>(height);
+    EXPECT_EQ(width, 1920);
+    EXPECT_EQ(height, 1080);
 }
 
 /**
@@ -970,9 +971,16 @@ HWTEST_F(HitranscodeUnitTest, ConfigureVideoWidthHeight_001, TestSize.Level0)
 */
 HWTEST_F(HitranscodeUnitTest, ConfigureVideoWidthHeight_002, TestSize.Level0)
 {
+    transcoder_->videoEncFormat_->Set<Tag::VIDEO_WIDTH>(240);
+    transcoder_->videoEncFormat_->Set<Tag::VIDEO_HEIGHT>(240);
     VideoRectangle videoRectangle(-1, -1);
-    Status ret = transcoder_->ConfigureVideoWidthHeight(videoRectangle);
-    EXPECT_EQ(ret, Status::OK);
+    transcoder_->ConfigureVideoWidthHeight(videoRectangle);
+    int32_t width = -1;
+    int32_t height = -1;
+    transcoder_->videoEncFormat_->Get<Tag::VIDEO_WIDTH>(width);
+    transcoder_->videoEncFormat_->Get<Tag::VIDEO_HEIGHT>(height);
+    EXPECT_EQ(width, 240);
+    EXPECT_EQ(height, 240);
 }
 
 /**
@@ -983,9 +991,16 @@ HWTEST_F(HitranscodeUnitTest, ConfigureVideoWidthHeight_002, TestSize.Level0)
 */
 HWTEST_F(HitranscodeUnitTest, ConfigureVideoWidthHeight_003, TestSize.Level0)
 {
+    transcoder_->videoEncFormat_->Set<Tag::VIDEO_WIDTH>(240);
+    transcoder_->videoEncFormat_->Set<Tag::VIDEO_HEIGHT>(240);
     VideoRectangle videoRectangle(1920, -1);
-    Status ret = transcoder_->ConfigureVideoWidthHeight(videoRectangle);
-    EXPECT_EQ(ret, Status::OK);
+    transcoder_->ConfigureVideoWidthHeight(videoRectangle);
+    int32_t width = -1;
+    int32_t height = -1;
+    transcoder_->videoEncFormat_->Get<Tag::VIDEO_WIDTH>(width);
+    transcoder_->videoEncFormat_->Get<Tag::VIDEO_HEIGHT>(height);
+    EXPECT_EQ(width, 1920);
+    EXPECT_EQ(height, 240);
 }
 
 /**
@@ -996,9 +1011,16 @@ HWTEST_F(HitranscodeUnitTest, ConfigureVideoWidthHeight_003, TestSize.Level0)
 */
 HWTEST_F(HitranscodeUnitTest, ConfigureVideoWidthHeight_004, TestSize.Level0)
 {
+    transcoder_->videoEncFormat_->Set<Tag::VIDEO_WIDTH>(240);
+    transcoder_->videoEncFormat_->Set<Tag::VIDEO_HEIGHT>(240);
     VideoRectangle videoRectangle(-1, 1080);
-    Status ret = transcoder_->ConfigureVideoWidthHeight(videoRectangle);
-    EXPECT_EQ(ret, Status::OK);
+    transcoder_->ConfigureVideoWidthHeight(videoRectangle);
+    int32_t width = -1;
+    int32_t height = -1;
+    transcoder_->videoEncFormat_->Get<Tag::VIDEO_WIDTH>(width);
+    transcoder_->videoEncFormat_->Get<Tag::VIDEO_HEIGHT>(height);
+    EXPECT_EQ(width, 240);
+    EXPECT_EQ(height, 1080);
 }
 
 /**
@@ -1111,7 +1133,7 @@ HWTEST_F(HitranscodeUnitTest, Configure_001, TestSize.Level0)
 
     AudioBitRate audioBitRate(0);
     ret = transcoder_->Configure(audioBitRate);
-    EXPECT_EQ(ret, MSERR_PARAMETER_VERIFICATION_FAILED);
+    EXPECT_EQ(ret, MSERR_INVALID_VAL);
 
     std::string url;
     InputUrl inputUrl(url);
