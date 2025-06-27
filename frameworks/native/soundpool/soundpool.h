@@ -76,6 +76,7 @@ private:
     static constexpr int32_t MIN_STREAM_PRIORITY = 0;
     int32_t apiVersion_ = 0;
     bool parallelStreamFlag_ = false;
+    bool isReleased_ = false;
 };
 } // namespace Media
 } // namespace OHOS

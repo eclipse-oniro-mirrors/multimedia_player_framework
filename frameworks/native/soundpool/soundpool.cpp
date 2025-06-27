@@ -41,7 +41,6 @@ std::shared_ptr<ISoundPool> SoundPoolFactory::CreateSoundPool(int maxStreams,
     CHECK_AND_RETURN_RET_LOG(apiVersion > 0 || apiVersion == FAULT_API_VERSION, nullptr, "invalid apiVersion");
     if (apiVersion > 0 && apiVersion < SOUNDPOOL_API_VERSION_ISOLATION) {
         MEDIA_LOGI("SoundPoolFactory::CreateSoundPool go old version");
-        SoundPoolManager::GetInstance().SetSoundPool(getpid(), impl);
         SoundPoolManager::GetInstance().GetSoundPool(getpid(), impl);
         CHECK_AND_RETURN_RET_LOG(impl != nullptr, nullptr, "failed to get SoundPool");
 
@@ -340,8 +339,11 @@ int32_t SoundPool::ReleaseInner()
         frameWriteCallback_.reset();
     }
     
-    if (apiVersion_ > 0 && apiVersion_ < SOUNDPOOL_API_VERSION_ISOLATION && !parallelStreamFlag_) {
+    if (apiVersion_ > 0 && apiVersion_ < SOUNDPOOL_API_VERSION_ISOLATION && !parallelStreamFlag_ &&
+        !isReleased_) {
         SoundPoolManager::GetInstance().Release(getpid());
+        isReleased_ = true;
+        MEDIA_LOGI("SoundPool::ReleaseInner old have released once");
     } else if (apiVersion_ == FAULT_API_VERSION || apiVersion_ >= SOUNDPOOL_API_VERSION_ISOLATION ||
         parallelStreamFlag_) {
         std::shared_ptr<SoundPool> sharedPtr(this, [](SoundPool*) {
