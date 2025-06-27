@@ -41,6 +41,15 @@ void PlayHiplayerImplUnitTest::SetUp(void)
 
 void PlayHiplayerImplUnitTest::TearDown(void)
 {
+    if (hiplayer_->demuxer_ != nullptr) {
+        if (hiplayer_->demuxer_->demuxer_ != nullptr) {
+            hiplayer_->demuxer_->demuxer_ = nullptr;
+        }
+        if (hiplayer_->demuxer_->interruptMonitor_ != nullptr) {
+            hiplayer_->demuxer_->interruptMonitor_ = nullptr;
+        }
+        hiplayer_->demuxer_ = nullptr;
+    }
     hiplayer_ = nullptr;
 }
 
@@ -391,6 +400,7 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_HandleVideoTrackChangeEvent_001, TestSi
     event.param = format;
     hiplayer_->HandleVideoTrackChangeEvent(event);
     EXPECT_NE(hiplayer_->isSeekClosest_.load(), true);
+    hiplayer_->demuxer_ = nullptr;
 #undef SUPPORT_VIDEO
 }
 
