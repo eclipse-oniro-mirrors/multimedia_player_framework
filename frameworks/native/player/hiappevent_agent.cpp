@@ -69,7 +69,7 @@ void HiAppEventAgent::WriteEndEvent(const std::string &transId,
     event.AddParam("api_name", apiName);
     event.AddParam("sdk_name", std::string(SDKNAME));
     event.AddParam("begin_time", startTime);
-    event.AddParam("end_time", time(nullptr));
+    event.AddParam("end_time", SteadyClock::GetCurrentTimeMs());
     event.AddParam("result", result);
     event.AddParam("error_code", errCode);
     event.AddParam("contents", apiName);
