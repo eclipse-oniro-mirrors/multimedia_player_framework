@@ -281,7 +281,7 @@ int32_t PlayerImpl::SetPlayRangeUsWithMode(int64_t start, int64_t end, PlayerSee
 int32_t PlayerImpl::Prepare()
 {
     int64_t startTime = SteadyClock::GetCurrentTimeMs();
-	prepareStartTimeMs_ = startTime;
+    prepareStartTimeMs_ = startTime;
     ScopedTimer timer("Prepare", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Prepare in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
@@ -309,7 +309,7 @@ int32_t PlayerImpl::SetRenderFirstFrame(bool display)
 int32_t PlayerImpl::PrepareAsync()
 {
     int64_t startTime = SteadyClock::GetCurrentTimeMs();
-	prepareStartTimeMs_ = startTime;
+    prepareStartTimeMs_ = startTime;
     ScopedTimer timer("PrepareAsync", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " PrepareAsync in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
@@ -598,7 +598,7 @@ int32_t PlayerImpl::GetVideoHeight()
     ScopedTimer timer("GetVideoHeight", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetVideoHeight in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-	LISTENER(return playerService_->GetVideoHeight(), "GetVideoHeight", false, TIME_OUT_SECOND);
+    LISTENER(return playerService_->GetVideoHeight(), "GetVideoHeight", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::SetPlaybackSpeed(PlaybackRateMode mode)
