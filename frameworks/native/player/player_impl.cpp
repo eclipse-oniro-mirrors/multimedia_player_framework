@@ -590,7 +590,7 @@ int32_t PlayerImpl::GetVideoWidth()
     ScopedTimer timer("GetVideoWidth", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetVideoWidth in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    LISTENER(return  ->GetVideoWidth(), "GetVideoWidth", false, TIME_OUT_SECOND);
+    LISTENER(return playerService_->GetVideoWidth(), "GetVideoWidth", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::GetVideoHeight()
