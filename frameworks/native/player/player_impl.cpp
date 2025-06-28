@@ -595,7 +595,6 @@ int32_t PlayerImpl::GetVideoWidth()
 
 int32_t PlayerImpl::GetVideoHeight()
 {
-    int64_t startTime = SteadyClock::GetCurrentTimeMs();
     ScopedTimer timer("GetVideoHeight", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetVideoHeight in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
