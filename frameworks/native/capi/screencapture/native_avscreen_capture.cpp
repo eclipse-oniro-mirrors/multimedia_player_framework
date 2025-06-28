@@ -592,16 +592,14 @@ void SetVideoCapInfo(OH_AVScreenCaptureConfig config, AVScreenCaptureConfig& con
 
 VideoCodecFormat ConvertOHVideoCodecFormat(OH_VideoCodecFormat ohVideoCodec)
 {
-    switch (ohVideoCodec) {
-        case OH_VideoCodecFormat::OH_VIDEO_DEFAULT:
-        case OH_VideoCodecFormat::OH_H264:
-            return VideoCodecFormat::H264;
-        case OH_VideoCodecFormat::OH_H265:
-            return VideoCodecFormat::H265;
-        case OH_VideoCodecFormat::OH_MPEG4:
-            return VideoCodecFormat::MPEG4;
-        default:
-            break;
+    static const std::map<OH_VideoCodecFormat, VideoCodecFormat> codecFormatMap = {
+        {OH_VideoCodecFormat::OH_VIDEO_DEFAULT, VideoCodecFormat::H264},
+        {OH_VideoCodecFormat::OH_H264, VideoCodecFormat::H264},
+        {OH_VideoCodecFormat::OH_H265, VideoCodecFormat::H265},
+        {OH_VideoCodecFormat::OH_MPEG4, VideoCodecFormat::MPEG4},
+    };
+    if (codecFormatMap.find(ohVideoCodec) != codecFormatMap.end()) {
+        return codecFormatMap.at(ohVideoCodec);
     }
     MEDIA_LOGE("videoCodec is invalid, value is: %{public}d", static_cast<int32_t>(ohVideoCodec));
     return VideoCodecFormat::VIDEO_CODEC_FORMAT_BUTT;
