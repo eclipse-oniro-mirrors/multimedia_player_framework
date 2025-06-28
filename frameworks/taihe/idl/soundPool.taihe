@@ -70,6 +70,7 @@ interface SoundPool {
     @gen_promise("release")
     ReleaseSync(): void;
 
+    @!sts_inject_into_interface("on(type: 'playFinishedWithStreamId' | 'playFinished' | 'error' | 'loadComplete', callback: Callback<int> | Callback<void> | ErrorCallback<BusinessError>): void;")
     @!sts_inject_into_interface("on(type: string, callback: (data: object)=> void): void;")
     @!sts_inject_into_class("""on(type: string, callback: object): void {
         if (type === "playFinishedWithStreamId") {
