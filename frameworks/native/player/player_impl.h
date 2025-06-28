@@ -118,6 +118,7 @@ private:
     HiviewDFX::HiTraceId traceId_;
     std::mutex cbMutex_;
     std::shared_ptr<HiAppEventAgent> hiAppEventAgent_ = nullptr;
+    int64_t prepareStartTimeMs_ = -1;
 };
 
 class PlayerImplCallback : public PlayerCallback {
