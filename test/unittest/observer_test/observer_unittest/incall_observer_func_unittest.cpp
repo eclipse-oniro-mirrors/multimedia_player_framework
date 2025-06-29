@@ -18,7 +18,6 @@
 #include "incall_observer.h"
 #include <cstdlib>
 #include "media_telephony_listener.h"
-#include "call_manager_base.h"
 
 using namespace std;
 using namespace testing::ext;
