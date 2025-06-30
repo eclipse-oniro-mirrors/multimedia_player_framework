@@ -455,6 +455,15 @@ Status HiTransCoderImpl::ConfigureColorSpace(const TransCoderParam &transCoderPa
     return Status::OK;
 }
 
+Status HiTransCoderImpl::ConfigureEnableBFrameEncoding(const TransCoderParam &transCoderParam)
+{
+    VideoEnableBFrameEncoding enableBFrameEncoding = static_cast<const VideoEnableBFrameEncoding&>(transCoderParam);
+    MEDIA_LOG_I("HiTranscoderImpl::ConfigureEnableBFrameEncoding %{public}d", static_cast<int32_t>(
+        enableBFrameEncoding.enableBFrame));
+    videoEncFormat_->Set<Tag::AV_TRANSCODER_ENABLE_B_FRAME>(enableBFrameEncoding.enableBFrame);
+    return Status::OK;
+}
+
 Status HiTransCoderImpl::ConfigureVideoBitrate()
 {
     int64_t videoBitrate = 0;
@@ -517,6 +526,10 @@ Status HiTransCoderImpl::ConfigureVideoParam(const TransCoderParam &transCoderPa
         }
         case TransCoderPublicParamType::COLOR_SPACE_FMT: {
             ret = ConfigureColorSpace(transCoderParam);
+            break;
+        }
+        case TransCoderPublicParamType::VIDEO_ENABLE_B_FRAME_ENCODING: {
+            ret = ConfigureEnableBFrameEncoding(transCoderParam);
             break;
         }
         default:
@@ -766,6 +779,9 @@ void HiTransCoderImpl::AppendDstMediaInfo(std::shared_ptr<Meta> meta)
     int32_t colorSpaceFormat = 0;
     videoEncFormat_->Get<Tag::AV_TRANSCODER_DST_COLOR_SPACE>(colorSpaceFormat);
     meta->SetData(Tag::AV_TRANSCODER_DST_COLOR_SPACE, colorSpaceFormat);
+    bool enableBFrame = false;
+    videoEncFormat_->Get<Tag::AV_TRANSCODER_ENABLE_B_FRAME>(enableBFrame);
+    meta->SetData(Tag::VIDEO_ENCODER_ENABLE_B_FRAME, enableBFrame);
     int32_t dstAudioSampleRate;
     audioEncFormat_->Get<Tag::AUDIO_SAMPLE_RATE>(dstAudioSampleRate);
     meta->SetData(Tag::AV_TRANSCODER_DST_AUDIO_SAMPLE_RATE, dstAudioSampleRate);

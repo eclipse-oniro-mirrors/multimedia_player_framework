@@ -80,6 +80,19 @@ public:
     virtual int32_t SetColorSpace(TranscoderColorSpace colorSpaceFormat) = 0;
 
     /**
+     * @brief Sets the B frame encoding to transcoder
+     *
+     * This function must be called after {@link SetOutputFormat} but before {@link Prepare}.
+     *
+     * @param enableBFrame Indicates whether to enable B frame encoding for reduce file size.
+     * The default value is false, which means B frame encoding cannot be enabled.
+     * @return Returns {@link MSERR_OK} if the setting is successful; returns an error code otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetEnableBFrame(bool enableBFrame) = 0;
+
+    /**
      * @brief Sets the encoder of the audio to transcoder.
      *
      * If this function is not called, the output file does not contain the audio track.

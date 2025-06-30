@@ -1010,5 +1010,51 @@ HWTEST_F(TransCoderUnitTest, transcoder_AudioVideoAbnormal_case_003, TestSize.Le
     close(dstFd);
     close(srcFd);
 }
+
+/**
+ * @tc.name: transcoder_SetEnableBFrame_001
+ * @tc.desc: transcode ChineseColor_H264_AAC_480p_15fps.mp4 with enable b frame encoding settings
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(TransCoderUnitTest, transcoder_SetEnableBFrame_001, TestSize.Level2)
+{
+    int32_t srcFd = open((TRANSCODER_ROOT_SRC + "ChineseColor_H264_AAC_480p_15fps.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(srcFd >= 0);
+    int64_t offset = TRANSCODER_FILE_OFFSET;
+    int64_t size = TRANSCODER_FILE_SIZE;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
+    int32_t dstFd = open((TRANSCODER_ROOT_DST + "ChineseColor_H264_AAC_480p_15fps_dst.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(dstFd >= 0);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
+    std::shared_ptr<TransCoderCallbackTest> cb = std::make_shared<TransCoderCallbackTest>();
+    EXPECT_EQ(MSERR_OK, transcoder_->SetTransCoderCallback(cb));
+    OutputFormatType format = FORMAT_MPEG_4;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFormat(format));
+    AudioCodecFormat encoderAudio = AAC_LC;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetAudioEncoder(encoderAudio));
+    EXPECT_EQ(MSERR_OK, transcoder_->SetAudioEncodingBitRate(TRASCODER_AUDIO_ENCODING_BIT_RATE));
+    VideoCodecFormat encoder = H264;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncoder(encoder));
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncodingBitRate(TRASCODER_VIDEO_ENCODING_BIT_RATE));
+    bool enableBFrame = true;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetEnableBFrame(enableBFrame));
+    int32_t videoWidth = -1;
+    int32_t videoHeight = -1;
+    if (access(VPE_LIB_PATH.c_str(), F_OK) == 0) {
+        videoWidth = TRANSCODER_BUFFER_WIDTH;
+        videoHeight = TRANSCODER_BUFFER_HEIGHT;
+    } else {
+        videoWidth = TRANSCODER_BUFFER_WIDTH_480P;
+        videoHeight = TRANSCODER_BUFFER_HEIGHT_480P;
+    }
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoSize(videoWidth, videoHeight));
+    EXPECT_EQ(MSERR_OK, transcoder_->Prepare());
+    EXPECT_EQ(MSERR_OK, transcoder_->Start());
+    EXPECT_EQ(MSERR_OK, transcoder_->Cancel());
+    EXPECT_EQ(MSERR_OK, transcoder_->Release());
+    close(dstFd);
+    close(srcFd);
+}
 } // namespace Media
 } // namespace OHOS

@@ -194,6 +194,25 @@ int32_t TransCoderServer::SetColorSpace(TranscoderColorSpace colorSpaceFormat)
     return result.Value();
 }
 
+int32_t TransCoderServer::SetEnableBFrame(bool enableBFrame)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(status_ == REC_CONFIGURED, MSERR_INVALID_OPERATION,
+        "invalid status, current status is %{public}s", GetStatusDescription(status_).c_str());
+    CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    config_.enableBFrame = enableBFrame;
+    VideoEnableBFrameEncoding videoEnableBFrameEncoding(enableBFrame);
+    MEDIA_LOGD("SetEnableBFrame: %{public}d", static_cast<int32_t>(enableBFrame));
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return transCoderEngine_->Configure(videoEnableBFrameEncoding);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
+}
+
 int32_t TransCoderServer::SetAudioEncoder(AudioCodecFormat encoder)
 {
     std::lock_guard<std::mutex> lock(mutex_);

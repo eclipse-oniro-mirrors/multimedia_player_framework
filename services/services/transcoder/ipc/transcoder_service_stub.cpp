@@ -67,6 +67,7 @@ int32_t TransCoderServiceStub::Init()
     recFuncs_[SET_AUDIO_ENCODER] = &TransCoderServiceStub::SetAudioEncoder;
     recFuncs_[SET_AUDIO_ENCODING_BIT_RATE] = &TransCoderServiceStub::SetAudioEncodingBitRate;
     recFuncs_[SET_COLOR_SPACE] = &TransCoderServiceStub::SetColorSpace;
+    recFuncs_[SET_ENABLE_B_FRAME] = &TransCoderServiceStub::SetEnableBFrame;
     recFuncs_[SET_OUTPUT_FORMAT] = &TransCoderServiceStub::SetOutputFormat;
     recFuncs_[SET_INPUT_FILE_FD] = &TransCoderServiceStub::SetInputFileFd;
     recFuncs_[SET_OUTPUT_FILE] = &TransCoderServiceStub::SetOutputFile;
@@ -161,6 +162,12 @@ int32_t TransCoderServiceStub::SetColorSpace(TranscoderColorSpace colorSpaceForm
 {
     CHECK_AND_RETURN_RET_LOG(transCoderServer_ != nullptr, MSERR_NO_MEMORY, "transcoder server is nullptr");
     return transCoderServer_->SetColorSpace(colorSpaceFormat);
+}
+
+int32_t TransCoderServiceStub::SetEnableBFrame(bool enableBFrame)
+{
+    CHECK_AND_RETURN_RET_LOG(transCoderServer_ != nullptr, MSERR_NO_MEMORY, "transcoder server is nullptr");
+    return transCoderServer_->SetEnableBFrame(enableBFrame);
 }
 
 int32_t TransCoderServiceStub::SetAudioEncoder(AudioCodecFormat encoder)
@@ -278,6 +285,13 @@ int32_t TransCoderServiceStub::SetColorSpace(MessageParcel &data, MessageParcel 
     int32_t format = data.ReadInt32();
     TranscoderColorSpace colorSpaceFormat = static_cast<TranscoderColorSpace>(format);
     reply.WriteInt32(SetColorSpace(colorSpaceFormat));
+    return MSERR_OK;
+}
+
+int32_t TransCoderServiceStub::SetEnableBFrame(MessageParcel &data, MessageParcel &reply)
+{
+    bool enableBFrame = data.ReadBool();
+    reply.WriteBool(SetEnableBFrame(enableBFrame));
     return MSERR_OK;
 }
 

@@ -91,6 +91,7 @@ private:
     void ConfigureDefaultParameter();
     void ConfigureVideoDefaultEncFormat();
     void ConfigureAudioDefaultEncFormat();
+    Status ConfigureEnableBFrameEncoding(const TransCoderParam &transCoderParam);
 
     struct SkipProcessFilterFlag {
         bool isSameAudioEncFmt = false;

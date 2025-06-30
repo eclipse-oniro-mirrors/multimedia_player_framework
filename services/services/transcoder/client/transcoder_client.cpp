@@ -117,6 +117,15 @@ int32_t TransCoderClient::SetColorSpace(TranscoderColorSpace colorSpaceFormat)
     return transCoderProxy_->SetColorSpace(colorSpaceFormat);
 }
 
+int32_t TransCoderClient::SetEnableBFrame(bool enableBFrame)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(transCoderProxy_ != nullptr, MSERR_NO_MEMORY, "transcoder service does not exist.");
+
+    MEDIA_LOGD("SetEnableBFrame, format(%{public}d)", static_cast<int32_t>(enableBFrame));
+    return transCoderProxy_->SetEnableBFrame(enableBFrame);
+}
+
 int32_t TransCoderClient::SetAudioEncoder(AudioCodecFormat encoder)
 {
     std::lock_guard<std::mutex> lock(mutex_);

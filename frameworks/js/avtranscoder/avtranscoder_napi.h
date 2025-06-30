@@ -110,6 +110,7 @@ struct AVTransCoderConfig {
     int32_t videoBitrate = AVTRANSCODER_DEFAULT_VIDEO_BIT_RATE;
     int32_t videoFrameWidth = AVTRANSCODER_DEFAULT_FRAME_HEIGHT;
     int32_t videoFrameHeight = AVTRANSCODER_DEFAULT_FRAME_WIDTH;
+    bool enableBFrame = false;
 };
 
 using RetInfo = std::pair<int32_t, std::string>;
