@@ -503,19 +503,40 @@ napi_value AVMetadataExtractorNapi::JsSetUrlSource(napi_env env, napi_callback_i
         = AVMetadataExtractorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(extractor != nullptr, result, "failed to GetJsInstanceWithParameter");
 
-    CHECK_AND_RETURN_RET_LOG(
-        extractor->state_ == HelperState::HELPER_STATE_IDLE, result, "Has set source once, unsupport set again");
-
+    auto asyncCtx = std::make_unique<AVMetadataExtractorAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx, result, "failed to GetAsyncContext");
+    asyncCtx->napi = extractor;
+    asyncCtx->innerHelper_ = extractor->helper_;
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
     napi_valuetype valueType = napi_undefined;
-    if (argCount < ARG_ONE || napi_typeof(env, args[ARG_ZERO], &valueType) != napi_ok || valueType != napi_string) {
-        return result;
+    if (extractor->state_ != HelperState::HELPER_STATE_IDLE) {
+        asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Has set source once, unsupport set again");
+    } else if (argCount < ARG_ONE || napi_typeof(env, args[ARG_ZERO], &valueType) != napi_ok
+        || valueType != napi_string) {
+        asyncCtx->SignError(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE, "The input param is not string value");
+    } else {
+        extractor->url_ = CommonNapi::GetStringArgument(env, args[ARG_ZERO]);
+        (void)CommonNapi::GetPropertyMap(env, args[1], extractor->header_);
     }
-
-    extractor->url_ = CommonNapi::GetStringArgument(env, args[ARG_ZERO]);
-    (void)CommonNapi::GetPropertyMap(env, args[1], extractor->header_);
-    auto res = extractor->helper_->SetUrlSource(extractor->url_, extractor->header_);
-    extractor->state_ = res == MSERR_OK ? HelperState::HELPER_STATE_RUNNABLE : HelperState::HELPER_ERROR;
-    extractor->helper_->SetAVMetadataCaller(AVMetadataCaller::AV_METADATA_EXTRACTOR);
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "JsSetUrlSource", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {
+        auto asyncCtx = reinterpret_cast<AVMetadataExtractorAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(asyncCtx && !asyncCtx->errFlag && asyncCtx->innerHelper_, "Invalid context.");
+        auto ret = asyncCtx->innerHelper_->SetUrlSource(asyncCtx->napi->url_, asyncCtx->napi->header_);
+        asyncCtx->napi->state_ = ret == MSERR_OK ? HelperState::HELPER_STATE_RUNNABLE : HelperState::HELPER_ERROR;
+        if (MSERR_USER_NO_PERMISSION == static_cast<MediaServiceErrCode>(ret)) {
+            auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
+            asyncCtx->SignError(errCode, MSErrorToString(static_cast<MediaServiceErrCode>(ret)));
+            return;
+        } else if (ret != MSERR_OK) {
+            asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "set source fail, invalid operation");
+            return;
+        }
+        asyncCtx->innerHelper_->SetAVMetadataCaller(AVMetadataCaller::AV_METADATA_EXTRACTOR);
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated);
+    asyncCtx.release();
     MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSetUrlSource Out", FAKE_POINTER(extractor));
     return result;
 }
