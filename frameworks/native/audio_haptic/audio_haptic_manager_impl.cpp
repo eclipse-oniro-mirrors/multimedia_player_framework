@@ -15,11 +15,6 @@
 
 #include "audio_haptic_manager_impl.h"
 
-#include <cstdint>
-#include <chrono>
-#include <unistd.h>
-#include <random>
-
 #include "audio_haptic_player_impl.h"
 
 #include "audio_haptic_log.h"

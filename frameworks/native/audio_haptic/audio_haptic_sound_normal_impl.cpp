@@ -32,7 +32,7 @@ namespace Media {
 const int32_t LOAD_WAIT_SECONDS = 2;
 
 AudioHapticSoundNormalImpl::AudioHapticSoundNormalImpl(const AudioSource& audioSource, const bool &muteAudio,
-    const AudioStandard::StreamUsage &streamUsage, const int32_t &audioHapticSyncId)
+    const AudioStandard::StreamUsage &streamUsage)
     : audioSource_(audioSource),
       muteAudio_(muteAudio),
       streamUsage_(streamUsage)

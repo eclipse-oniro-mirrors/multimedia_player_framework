@@ -14,6 +14,12 @@
  */
 
 #include "audio_haptic_player_impl.h"
+
+#include <cstdint>
+#include <chrono>
+#include <unistd.h>
+#include <random>
+
 #include "audio_haptic_sound_low_latency_impl.h"
 #include "audio_haptic_sound_normal_impl.h"
 
