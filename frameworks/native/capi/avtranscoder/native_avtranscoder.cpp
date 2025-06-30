@@ -774,21 +774,6 @@ OH_AVErrCode OH_AVTranscoderConfig_SetDstVideoResolution(OH_AVTranscoder_Config 
     return AV_ERR_OK;
 }
 
-OH_AVErrCode OH_AVTranscoderConfig_EnableBFrame(OH_AVTranscoder_Config *config, bool enabled)
-{
-    MEDIA_LOGI("OH_AVTranscoderConfig_EnableBFrame enter.");
-    CHECK_AND_RETURN_RET_LOG(config != nullptr, AV_ERR_INVALID_VAL,
-        "OH_AVTranscoderConfig_EnableBFrame is called, config is nullptr!");
-
-    NativeAVTranscoderConfig* nativeConfig = reinterpret_cast<NativeAVTranscoderConfig*>(config);
-    CHECK_AND_RETURN_RET_LOG(nativeConfig != nullptr, AV_ERR_INVALID_VAL,
-        "OH_AVTranscoderConfig_EnableBFrame is called, nativeConfig is nullptr!");
-
-    nativeConfig->enableBFrame = enabled;
-
-    return AV_ERR_OK;
-}
-
 OH_AVTranscoder *OH_AVTranscoder_Create()
 {
     MEDIA_LOGI("OH_AVTranscoder_Create enter.");
@@ -1048,4 +1033,19 @@ OH_AVErrCode OH_AVTranscoder_SetProgressUpdateCallback(
         "OH_AVTranscoder_SetProgressUpdateCallback is called, nativeTranscoderCallback is nullptr!");
 
     return nativeTranscoderCallback->SetOnProgressUpdateCallback(callback, userData);
+}
+
+OH_AVErrCode OH_AVTranscoderConfig_EnableBFrame(OH_AVTranscoder_Config *config, bool enabled)
+{
+    MEDIA_LOGI("OH_AVTranscoderConfig_EnableBFrame enter.");
+    CHECK_AND_RETURN_RET_LOG(config != nullptr, AV_ERR_INVALID_VAL,
+        "OH_AVTranscoderConfig_EnableBFrame is called, config is nullptr!");
+
+    NativeAVTranscoderConfig* nativeConfig = reinterpret_cast<NativeAVTranscoderConfig*>(config);
+    CHECK_AND_RETURN_RET_LOG(nativeConfig != nullptr, AV_ERR_INVALID_VAL,
+        "OH_AVTranscoderConfig_EnableBFrame is called, nativeConfig is nullptr!");
+
+    nativeConfig->enableBFrame = enabled;
+
+    return AV_ERR_OK;
 }
