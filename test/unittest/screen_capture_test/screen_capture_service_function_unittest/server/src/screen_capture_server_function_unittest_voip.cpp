@@ -262,7 +262,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneStream_001, TestSize.Leve
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
 
-
 HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneStream_002, TestSize.Level2)
 {
     SetValidConfig();

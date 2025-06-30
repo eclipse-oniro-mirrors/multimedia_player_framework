@@ -192,6 +192,31 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckScreenCaptureSessionIdLimit_002, 
 }
 
 /**
+ * @tc.name: CheckScreenCaptureSessionIdLimit_003
+ * @tc.desc: iterPtr == nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckScreenCaptureSessionIdLimit_003, TestSize.Level2)
+{
+    for (auto iter = ScreenCaptureServer::serverMap_.begin(); iter != ScreenCaptureServer::serverMap_.end();
+        iter++) {
+            std::weak_ptr<ScreenCaptureServer> wp;
+            (iter->second) = wp;
+        }
+    ASSERT_EQ(ScreenCaptureServer::CheckScreenCaptureSessionIdLimit(screenCaptureServer_->appInfo_.appUid), true);
+}
+
+/**
+ * @tc.name: CheckScreenCaptureSessionIdLimit_004
+ * @tc.desc: curAppUid != iterPtr->GetAppUid()
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckScreenCaptureSessionIdLimit_004, TestSize.Level2)
+{
+    ASSERT_EQ(ScreenCaptureServer::CheckScreenCaptureSessionIdLimit(screenCaptureServer_->appInfo_.appUid + 1), true);
+}
+
+/**
 * @tc.name: CheckScreenCaptureAppLimit_001
 * @tc.desc: CheckScreenCaptureAppLimit: true, appNum less than maxAppLimit_
 * @tc.type: FUNC
