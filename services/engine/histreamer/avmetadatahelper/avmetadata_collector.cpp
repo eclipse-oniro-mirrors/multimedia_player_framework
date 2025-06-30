@@ -30,6 +30,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "
 
 namespace OHOS {
 namespace Media {
+const int32_t FRAME_RATE_UNIT_MULTIPLE = 100; // the unit of frame rate is frames per 100s
 static constexpr int PICTURE_MAX_SIZE = 1024 * 1024;
 static constexpr int SECOND_DEVIDE_MS = 1000;
 
@@ -121,12 +122,114 @@ Status AVMetaDataCollector::GetVideoTrackId(uint32_t &trackId)
     return Status::ERROR_INVALID_DATA;
 }
 
+void AVMetaDataCollector::GetAudioTrackInfo(const std::shared_ptr<Meta> &trackInfo,
+    const std::string& mime, size_t index)
+{
+    MEDIA_LOGD("GetAudioTrackInfo in");
+    Format audioTrackInfo {};
+    audioTrackInfo.PutIntValue("track_index", static_cast<int32_t>(index));
+    audioTrackInfo.PutIntValue("track_type", static_cast<int32_t>(Plugins::MediaType::AUDIO));
+    audioTrackInfo.PutStringValue("codec_mime", mime);
+    int32_t audioChannels = 0;
+    trackInfo->GetData(Tag::AUDIO_CHANNEL_COUNT, audioChannels);
+    audioTrackInfo.PutIntValue("channel_count", audioChannels);
+    int32_t audioSampleRate = 0;
+    trackInfo->GetData(Tag::AUDIO_SAMPLE_RATE, audioSampleRate);
+    audioTrackInfo.PutIntValue("sample_rate", audioSampleRate);
+    trackInfoVec_.emplace_back(std::move(audioTrackInfo));
+}
+
+void AVMetaDataCollector::GetVideoTrackInfo(const std::shared_ptr<Meta> &trackInfo,
+    const std::string& mime, size_t index)
+{
+    MEDIA_LOGD("GetVideoTrackInfo in");
+    Format videoTrackInfo {};
+    videoTrackInfo.PutIntValue("track_index", index);
+    videoTrackInfo.PutIntValue("track_type", static_cast<int32_t>(Plugins::MediaType::VIDEO));
+    videoTrackInfo.PutStringValue("codec_mime", mime);
+    int32_t width = GetSarVideoWidth(trackInfo);
+    videoTrackInfo.PutIntValue("width", width);
+    int32_t height = GetSarVideoHeight(trackInfo);
+    videoTrackInfo.PutIntValue("height", height);
+    double frameRate = 0;
+    if (trackInfo->GetData(Tag::VIDEO_FRAME_RATE, frameRate)) {
+        videoTrackInfo.PutDoubleValue("frame_rate", frameRate * FRAME_RATE_UNIT_MULTIPLE);
+    }
+    bool isHdr = false;
+    trackInfo->GetData(Tag::VIDEO_IS_HDR_VIVID, isHdr);
+    videoTrackInfo.PutIntValue("hdr_type", static_cast<int32_t>(isHdr));
+    trackInfoVec_.emplace_back(std::move(videoTrackInfo));
+}
+
+void AVMetaDataCollector::GetSubtitleTrackInfo(const std::shared_ptr<Meta> &trackInfo,
+    const std::string& mime, size_t index)
+{
+    (void)trackInfo;
+    (void)mime;
+    MEDIA_LOGD("GetSubtitleTrackInfo in");
+    Format subtitleTrackInfo {};
+    subtitleTrackInfo.PutIntValue("track_index", index);
+    subtitleTrackInfo.PutIntValue("track_type", static_cast<int32_t>(Plugins::MediaType::SUBTITLE));
+    trackInfoVec_.emplace_back(std::move(subtitleTrackInfo));
+}
+
+void AVMetaDataCollector::GetOtherTrackInfo(const std::shared_ptr<Meta> &trackInfo, size_t index)
+{
+    MEDIA_LOGD("GetOtherTrackInfo in");
+    Format otherTrackInfo {};
+    otherTrackInfo.PutIntValue("track_index", index);
+    Plugins::MediaType mediaType = Plugins::MediaType::UNKNOWN;
+    trackInfo->GetData(Tag::MEDIA_TYPE, mediaType);
+    otherTrackInfo.PutIntValue("track_type", static_cast<int32_t>(mediaType));
+    trackInfoVec_.emplace_back(std::move(otherTrackInfo));
+}
+
+int32_t AVMetaDataCollector::GetSarVideoWidth(std::shared_ptr<Meta> trackInfo) const
+{
+    int32_t width = 0;
+    trackInfo->GetData(Tag::VIDEO_WIDTH, width);
+    double videoSar = 0;
+    bool ret = trackInfo->GetData(Tag::VIDEO_SAR, videoSar);
+    if (ret && videoSar < 1) {
+        width = static_cast<int32_t>(width * videoSar);
+    }
+    return width;
+}
+
+int32_t AVMetaDataCollector::GetSarVideoHeight(std::shared_ptr<Meta> trackInfo) const
+{
+    int32_t height = 0;
+    trackInfo->GetData(Tag::VIDEO_HEIGHT, height);
+    double videoSar = 0;
+    bool ret = trackInfo->GetData(Tag::VIDEO_SAR, videoSar);
+    if (ret && videoSar > 1) {
+        height = static_cast<int32_t>(height / videoSar);
+    }
+    return height;
+}
+
+bool AVMetaDataCollector::IsVideoMime(const std::string& mime) const
+{
+    return mime.find("video/") == 0;
+}
+
+bool AVMetaDataCollector::IsAudioMime(const std::string& mime) const
+{
+    return mime.find("audio/") == 0;
+}
+
+bool AVMetaDataCollector::IsSubtitleMime(const std::string& mime) const
+{
+    return mime == "application/x-subrip" || mime == "text/vtt";
+}
+
 std::shared_ptr<Meta> AVMetaDataCollector::GetAVMetadata()
 {
     if (collectedAVMetaData_ != nullptr) {
         return collectedAVMetaData_;
     }
     collectedAVMetaData_ = std::make_shared<Meta>();
+    trackInfoVec_.clear();
     ExtractMetadata();
     CHECK_AND_RETURN_RET_LOG(collectedMeta_.size() != 0, nullptr, "globalInfo or trackInfos are invalid.");
     for (const auto &[avKey, value] : collectedMeta_) {
@@ -157,6 +260,7 @@ std::shared_ptr<Meta> AVMetaDataCollector::GetAVMetadata()
             collectedAVMetaData_->SetData(AVMETA_KEY_TO_X_MAP.find(AV_KEY_CUSTOMINFO)->second, customInfo_);
         }
     }
+    collectedAVMetaData_->SetData("tracks", trackInfoVec_);
     return collectedAVMetaData_;
 }
 
@@ -198,6 +302,7 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
             ++imageTrackCount;
             continue;
         }
+        InitTracksInfoVector(meta, index);
         if (mime.find("video") == 0) {
             if (!isFirstVideoTrack) {
                 continue;
@@ -216,6 +321,21 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
         it++;
     }
     return metadata.tbl_;
+}
+
+void AVMetaDataCollector::InitTracksInfoVector(const std::shared_ptr<Meta> &meta, size_t index)
+{
+    std::string mime = "";
+    meta->GetData(Tag::MIME_TYPE, mime);
+    if (IsAudioMime(mime)) {
+        GetAudioTrackInfo(meta, mime, index);
+    } else if (IsVideoMime(mime)) {
+        GetVideoTrackInfo(meta, mime, index);
+    } else if (IsSubtitleMime(mime)) {
+        GetSubtitleTrackInfo(meta, mime, index);
+    } else {
+        GetOtherTrackInfo(meta, index);
+    }
 }
 
 std::shared_ptr<AVSharedMemory> AVMetaDataCollector::GetArtPicture()

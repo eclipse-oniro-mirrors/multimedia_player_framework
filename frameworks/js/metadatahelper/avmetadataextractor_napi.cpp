@@ -215,14 +215,8 @@ void AVMetadataExtractorNapi::ResolveMetadataComplete(napi_env env, napi_status 
     auto promiseCtx = static_cast<AVMetadataExtractorAsyncContext*>(data);
     CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
 
-    bool ret = true;
     napi_value result = nullptr;
-    napi_value location = nullptr;
-    napi_value customInfo = nullptr;
     napi_create_object(env, &result);
-    napi_create_object(env, &location);
-    napi_create_object(env, &customInfo);
-    std::shared_ptr<Meta> metadata = promiseCtx->metadata_;
     if (status != napi_ok || promiseCtx->errCode != napi_ok) {
         promiseCtx->status = promiseCtx->errCode == napi_ok ? MSERR_INVALID_VAL : promiseCtx->errCode;
         MEDIA_LOGI("Resolve meta data failed");
@@ -230,6 +224,22 @@ void AVMetadataExtractorNapi::ResolveMetadataComplete(napi_env env, napi_status 
         CommonCallbackRoutine(env, promiseCtx, result);
         return;
     }
+    HandleMetaDataResult(env, promiseCtx, result);
+    promiseCtx->status = ERR_OK;
+    CommonCallbackRoutine(env, promiseCtx, result);
+}
+
+void AVMetadataExtractorNapi::HandleMetaDataResult(napi_env env, AVMetadataExtractorAsyncContext* &promiseCtx,
+    napi_value &result)
+{
+    bool ret = true;
+    napi_value location = nullptr;
+    napi_value customInfo = nullptr;
+    napi_value tracks = nullptr;
+    napi_create_object(env, &location);
+    napi_create_object(env, &customInfo);
+    napi_get_undefined(env, &tracks);
+    std::shared_ptr<Meta> metadata = promiseCtx->metadata_;
     for (const auto &key : g_Metadata) {
         if (metadata->Find(key) == metadata->end()) {
             MEDIA_LOGE("failed to find key: %{public}s", key.c_str());
@@ -253,13 +263,21 @@ void AVMetadataExtractorNapi::ResolveMetadataComplete(napi_env env, napi_status 
             }
             continue;
         }
+        if (key == "tracks") {
+            std::vector<Format> trackInfoVec;
+            ret = metadata->GetData(key, trackInfoVec);
+            CHECK_AND_CONTINUE_LOG(ret, "GetData failed, key %{public}s", key.c_str());
+            promiseCtx->JsResult = std::make_unique<MediaJsResultArray>(trackInfoVec);
+            CHECK_AND_CONTINUE_LOG(promiseCtx->JsResult, "failed to GetJsResult");
+            promiseCtx->JsResult->GetJsResult(env, tracks);
+            continue;
+        }
         CHECK_AND_CONTINUE_LOG(CommonNapi::SetPropertyByValueType(env, result, metadata, key),
             "SetProperty failed, key: %{public}s", key.c_str());
     }
     napi_set_named_property(env, result, "location", location);
     napi_set_named_property(env, result, "customInfo", customInfo);
-    promiseCtx->status = ERR_OK;
-    CommonCallbackRoutine(env, promiseCtx, result);
+    napi_set_named_property(env, result, "tracks", tracks);
 }
 
 static std::unique_ptr<PixelMap> ConvertMemToPixelMap(std::shared_ptr<AVSharedMemory> sharedMemory)
