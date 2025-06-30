@@ -1142,7 +1142,10 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_057, TestSize.Leve
     audioHapticPlayerImpl->EnableHapticsInSilentMode(true);
     EXPECT_EQ(true, audioHapticVibrator_->enableInSilentMode_);
 
-    audioHapticPlayerImpl->isVibrationRunning_.store(true);
+    audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_RUNNING;
+    EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, audioHapticPlayerImpl->EnableHapticsInSilentMode(true));
+
+    audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_RELEASED;
     EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, audioHapticPlayerImpl->EnableHapticsInSilentMode(true));
 }
 

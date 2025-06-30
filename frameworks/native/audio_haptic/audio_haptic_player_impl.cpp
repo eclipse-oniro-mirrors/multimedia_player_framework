@@ -14,6 +14,12 @@
  */
 
 #include "audio_haptic_player_impl.h"
+
+#include <cstdint>
+#include <chrono>
+#include <unistd.h>
+#include <random>
+
 #include "audio_haptic_sound_low_latency_impl.h"
 #include "audio_haptic_sound_normal_impl.h"
 
@@ -29,6 +35,35 @@ namespace OHOS {
 namespace Media {
 const int32_t LOAD_WAIT_SECONDS = 2;
 const int32_t LOAD_WAIT_SECONDS_FOR_LOOP = 40;
+
+static int32_t GenerateSyncId()
+{
+    static constexpr uint8_t pidBits = 8;        // Number of bits allocated for the Process ID
+    static constexpr uint8_t randomBits = 8;     // Number of bits allocated for the random value
+    static constexpr uint8_t timeBits = 24;      // Number of bits allocated for the time difference
+
+    static constexpr uint32_t pidMask = (1 << pidBits) - 1;      // Mask for PID (0xFF for 8 bits)
+    static constexpr uint32_t randomMask = (1 << randomBits) - 1; // Mask for random value (0xFF for 8 bits)
+    static constexpr uint32_t timeMask = (1 << timeBits) - 1;    // Mask for time difference (0xFFFFFF for 24 bits)
+
+    static thread_local pid_t pid = getpid();
+    static thread_local auto startTime = std::chrono::steady_clock::now();
+    static thread_local std::mt19937 gen(std::random_device{}());
+    // Use constants to define the distribution range
+    static thread_local std::uniform_int_distribution<uint16_t> dist(0, randomMask);
+
+    auto now = std::chrono::steady_clock::now();
+    auto duration = now - startTime;
+    auto micros = std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
+
+    uint32_t pidUnsigned = static_cast<uint32_t>(pid);
+    uint64_t microsUnsigned = static_cast<uint64_t>(micros);
+
+    return
+        ((microsUnsigned & timeMask) << (pidBits + randomBits)) | // Shift time part by 16 bits (8+8)
+        ((pidUnsigned & pidMask) << randomBits) |                 // Shift PID part by 8 bits
+        (dist(gen) & randomMask);                                  // Random value occupies the lowest 8 bits
+}
 
 std::mutex AudioHapticPlayerFactory::createPlayerMutex_;
 
@@ -47,8 +82,7 @@ std::mutex AudioHapticSound::createAudioHapticSoundMutex_;
 
 std::shared_ptr<AudioHapticSound> AudioHapticSound::CreateAudioHapticSound(
     const AudioLatencyMode &latencyMode, const AudioSource& audioSource, const bool &muteAudio,
-    const AudioStandard::StreamUsage &streamUsage, const bool &parallelPlayFlag,
-    const int32_t &audioHapticSyncId)
+    const AudioStandard::StreamUsage &streamUsage, const bool &parallelPlayFlag)
 {
     if (latencyMode != AUDIO_LATENCY_MODE_NORMAL && latencyMode != AUDIO_LATENCY_MODE_FAST) {
         MEDIA_LOGE("Invalid param: the latency mode %{public}d is unsupported.", latencyMode);
@@ -60,11 +94,11 @@ std::shared_ptr<AudioHapticSound> AudioHapticSound::CreateAudioHapticSound(
     switch (latencyMode) {
         case AUDIO_LATENCY_MODE_NORMAL:
             audioHapticSound =
-                std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage, audioHapticSyncId);
+                std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
             break;
         case AUDIO_LATENCY_MODE_FAST:
             audioHapticSound = std::make_shared<AudioHapticSoundLowLatencyImpl>(
-                audioSource, muteAudio, streamUsage, parallelPlayFlag, audioHapticSyncId);
+                audioSource, muteAudio, streamUsage, parallelPlayFlag);
             break;
         default:
             MEDIA_LOGE("Invalid param: the latency mode %{public}d is unsupported.", latencyMode);
@@ -97,14 +131,13 @@ void AudioHapticPlayerImpl::SetPlayerParam(const AudioHapticPlayerParam &param)
     hapticSource_ = param.hapticSource;
     latencyMode_ = param.latencyMode;
     streamUsage_ = param.streamUsage;
-    audioHapticSyncId_ = param.audioHapticSyncId;
 }
 
 void AudioHapticPlayerImpl::LoadPlayer()
 {
     // Load audio player
     audioHapticSound_ = AudioHapticSound::CreateAudioHapticSound(
-        latencyMode_, audioSource_, muteAudio_, streamUsage_, parallelPlayFlag_, audioHapticSyncId_);
+        latencyMode_, audioSource_, muteAudio_, streamUsage_, parallelPlayFlag_);
     CHECK_AND_RETURN_LOG(audioHapticSound_ != nullptr, "Failed to create audio haptic sound instance");
     soundCallback_ = std::make_shared<AudioHapticSoundCallbackImpl>(shared_from_this());
     (void)audioHapticSound_->SetAudioHapticSoundCallback(soundCallback_);
@@ -155,6 +188,8 @@ int32_t AudioHapticPlayerImpl::Start()
         "Audio haptic vibrator is nullptr");
     CHECK_AND_RETURN_RET_LOG(audioHapticSound_ != nullptr, MSERR_INVALID_OPERATION,
         "Audio haptic sound is nullptr");
+
+    audioHapticSyncId_ = GenerateSyncId();
     
     if (playerState_ == AudioHapticPlayerState::STATE_RUNNING) {
         // stop vibrate
@@ -169,7 +204,7 @@ int32_t AudioHapticPlayerImpl::Start()
         ResetVibrateState();
         vibrateThread_ = std::make_shared<std::thread>([this] { StartVibrate(); });
     }
-    result = audioHapticSound_->StartSound();
+    result = audioHapticSound_->StartSound(audioHapticSyncId_);
     SendHapticPlayerEvent(MSERR_OK, "START_HAPTIC_PLAYER");
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result, "Failed to start sound.");
     MEDIA_LOGW("StartSound() has been executed successfully!");
@@ -302,8 +337,10 @@ int32_t AudioHapticPlayerImpl::EnableHapticsInSilentMode(bool enable)
 
     CHECK_AND_RETURN_RET_LOG(playerState_ != AudioHapticPlayerState::STATE_RELEASED, ERR_OPERATE_NOT_ALLOWED,
         "The audio haptic player has been released.");
+    CHECK_AND_RETURN_RET_LOG(playerState_ != AudioHapticPlayerState::STATE_RUNNING, ERR_OPERATE_NOT_ALLOWED,
+        "The audio haptic player is running.");
 
-    if (audioHapticVibrator_ == nullptr || isVibrationRunning_.load()) {
+    if (audioHapticVibrator_ == nullptr) {
         return ERR_OPERATE_NOT_ALLOWED;
     }
 
