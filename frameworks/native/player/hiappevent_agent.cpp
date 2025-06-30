@@ -20,16 +20,17 @@
 #ifdef SUPPORT_HIAPPEVENT
 #include "app_event.h"
 #include "app_event_processor_mgr.h"
+#include "osal/utils/steady_clock.h"
 #endif
 
 #ifdef SUPPORT_HIAPPEVENT
 namespace {
     constexpr auto KNAME = "ha_app_event";
     constexpr auto KAPPID = "com_hua" "wei_hmos_sdk_ocg";
-    constexpr auto SDKNAME = "MediaKit";
+    constexpr auto SDKNAME = "OS_AVPlayerKit";
     constexpr int32_t KTIMEOUT = 90;  // trigger interval in seconds
     constexpr int32_t KCONDROW = 30;  // trigger batch size
-    constexpr int64_t REPORT_INTERVAL = 1; // 1s
+    constexpr int64_t REPORT_INTERVAL = 1000; // 1s
     static int64_t g_processorId = -1;
     static std::mutex g_processorMutex;
 }
@@ -60,7 +61,7 @@ HiAppEventAgent::~HiAppEventAgent()
 
 #ifdef SUPPORT_HIAPPEVENT
 void HiAppEventAgent::WriteEndEvent(const std::string &transId,
-    const int errCode, const std::string& apiName, time_t startTime, HiviewDFX::HiTraceId traceId)
+    const int errCode, const std::string& apiName, int64_t startTime, HiviewDFX::HiTraceId traceId)
 {
     int result = errCode == MSERR_OK ? API_RESULT_SUCCESS : API_RESULT_FAILED;
     Event event("api_diagnostic", "api_exec_end", OHOS::HiviewDFX::HiAppEvent::BEHAVIOR);
@@ -68,7 +69,7 @@ void HiAppEventAgent::WriteEndEvent(const std::string &transId,
     event.AddParam("api_name", apiName);
     event.AddParam("sdk_name", std::string(SDKNAME));
     event.AddParam("begin_time", startTime);
-    event.AddParam("end_time", time(nullptr));
+    event.AddParam("end_time", SteadyClock::GetCurrentTimeMs());
     event.AddParam("result", result);
     event.AddParam("error_code", errCode);
     event.AddParam("contents", apiName);
@@ -115,7 +116,7 @@ int64_t HiAppEventAgent::AddProcessor()
 #endif
 
 void HiAppEventAgent::TraceApiEvent(
-    int errCode, const std::string& apiName, time_t startTime, HiviewDFX::HiTraceId traceId)
+    int errCode, const std::string& apiName, int64_t startTime, HiviewDFX::HiTraceId traceId)
 {
 #ifdef SUPPORT_HIAPPEVENT
     {
@@ -152,7 +153,7 @@ void HiAppEventAgent::TraceApiEvent(
 
 #ifdef SUPPORT_HIAPPEVENT
 void HiAppEventAgent::TraceApiEventAsync(
-    int errCode, const std::string& apiName, time_t startTime, HiviewDFX::HiTraceId traceId)
+    int errCode, const std::string& apiName, int64_t startTime, HiviewDFX::HiTraceId traceId)
 {
     std::string transId = GenerateTransId();
     WriteEndEvent(transId, errCode, apiName, startTime, traceId);
