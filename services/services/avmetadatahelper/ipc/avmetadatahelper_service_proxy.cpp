@@ -16,6 +16,7 @@
 #include "avmetadatahelper_service_proxy.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "media_parcel.h"
 #include "avsharedmemory_ipc.h"
 #include "surface_buffer.h"
 
@@ -203,6 +204,7 @@ std::shared_ptr<Meta> AVMetadataHelperServiceProxy::GetAVMetadata()
     MessageOption option;
     std::shared_ptr<Meta> metadata = std::make_shared<Meta>();
     std::shared_ptr<Meta> customInfo = std::make_shared<Meta>();
+    std::vector<Format> tracksVec;
 
     bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, metadata, "Failed to write descriptor!");
@@ -219,12 +221,22 @@ std::shared_ptr<Meta> AVMetadataHelperServiceProxy::GetAVMetadata()
     CHECK_AND_RETURN_RET_LOG(ret == true, metadata, "customInfo FromParcel failed");
 
     key = reply.ReadString();
+    if (key.compare("tracks") == 0) {
+        int32_t trackCnt = reply.ReadInt32();
+        for (int32_t i = 0; i < trackCnt; i++) {
+            Format trackInfo;
+            (void)MediaParcel::Unmarshalling(reply, trackInfo);
+            tracksVec.push_back(trackInfo);
+        }
+    }
+    key = reply.ReadString();
     if (key.compare("AVMetadata") == 0) {
         ret = metadata->FromParcel(reply);
     }
     CHECK_AND_RETURN_RET_LOG(ret == true, metadata, "metadata FromParcel failed");
 
     metadata->SetData("customInfo", customInfo);
+    metadata->SetData("tracks", tracksVec);
     return metadata;
 }
 

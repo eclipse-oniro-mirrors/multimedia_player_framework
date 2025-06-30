@@ -17,6 +17,7 @@
 #include "media_server_manager.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "media_parcel.h"
 #include "avsharedmemory_ipc.h"
 #include "media_data_source_proxy.h"
 #include "media_dfx.h"
@@ -342,6 +343,7 @@ int32_t AVMetadataHelperServiceStub::GetAVMetadata(MessageParcel &data, MessageP
     (void)data;
     bool ret = true;
     std::shared_ptr<Meta> customInfo = std::make_shared<Meta>();
+    std::vector<Format> tracksVec;
     auto metadata = GetAVMetadata();
     if (metadata == nullptr) {
         MEDIA_LOGE("metadata is null");
@@ -355,12 +357,24 @@ int32_t AVMetadataHelperServiceStub::GetAVMetadata(MessageParcel &data, MessageP
     ret &= reply.WriteString("customInfo");
     ret &= customInfo->ToParcel(reply);
     metadata->Remove("customInfo");
+
+    iter = metadata->Find("tracks");
+    if (iter != metadata->end()) {
+        ret &= metadata->GetData("tracks", tracksVec);
+    }
+    ret &= reply.WriteString("tracks");
+    ret &= reply.WriteInt32(static_cast<int32_t>(tracksVec.size()));
+    for (auto trackIter = tracksVec.begin(); trackIter != tracksVec.end(); trackIter++) {
+        (void)MediaParcel::Marshalling(reply, *trackIter);
+    }
+    metadata->Remove("tracks");
     ret &= reply.WriteString("AVMetadata");
     ret &= metadata->ToParcel(reply);
     if (!ret) {
         MEDIA_LOGE("GetAVMetadata ToParcel error");
     }
     metadata->SetData("customInfo", customInfo);
+    metadata->SetData("tracks", tracksVec);
     return MSERR_OK;
 }
 

@@ -126,6 +126,7 @@ static const std::vector<std::string> g_Metadata = {
     "latitude",
     "longitude",
     "customInfo",
+    "tracks",
 };
 
 enum HdrType : int32_t {
@@ -305,6 +306,11 @@ enum AVMetadataCode : int32_t {
      * Custom parameter key-value map
     */
     AV_KEY_CUSTOMINFO = 42,
+
+    /**
+     * Tracks info key-value map
+    */
+    AV_KEY_TRACKS = 43,
 };
 
 /**

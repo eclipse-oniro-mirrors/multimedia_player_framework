@@ -76,7 +76,10 @@ public:
     int32_t GetFrameIndexByTime(uint64_t timeUs, uint32_t &index);
     void Reset();
     void Destroy();
-
+    void GetAudioTrackInfo(const std::shared_ptr<Meta> &trackInfo, const std::string& mime, size_t index);
+    void GetVideoTrackInfo(const std::shared_ptr<Meta> &trackInfo, const std::string& mime, size_t index);
+    void GetSubtitleTrackInfo(const std::shared_ptr<Meta> &trackInfo, const std::string& mime, size_t index);
+    void GetOtherTrackInfo(const std::shared_ptr<Meta> &trackInfo, size_t index);
 private:
     std::shared_ptr<MediaDemuxer> mediaDemuxer_;
     std::unordered_map<int32_t, std::string> collectedMeta_ = {};
@@ -85,6 +88,7 @@ private:
     std::shared_ptr<Meta> collectedAVMetaData_;
     uint32_t videoTrackId_ = 0;
     std::atomic<bool> hasVideo_ = false;
+    std::vector<Format> trackInfoVec_;
 
     std::unordered_map<int32_t, std::string> GetMetadata(
         const std::shared_ptr<Meta> &globalInfo, const std::vector<std::shared_ptr<Meta>> &trackInfos);
@@ -96,6 +100,12 @@ private:
     bool SetStringByValueType(const std::shared_ptr<Meta> &innerMeta,
         Metadata &avmeta, int32_t avKey, std::string innerKey) const;
     Status GetVideoTrackId(uint32_t &trackId);
+    int32_t GetSarVideoWidth(std::shared_ptr<Meta> trackInfo) const;
+    int32_t GetSarVideoHeight(std::shared_ptr<Meta> trackInfo) const;
+    bool IsVideoMime(const std::string& mime) const;
+    bool IsAudioMime(const std::string& mime) const;
+    bool IsSubtitleMime(const std::string& mime) const;
+    void InitTracksInfoVector(const std::shared_ptr<Meta> &meta, size_t index);
 };
 }  // namespace Media
 }  // namespace OHOS

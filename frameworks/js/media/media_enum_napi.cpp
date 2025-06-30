@@ -20,6 +20,7 @@
 #include "media_errors.h"
 #include "player.h"
 #include "meta/video_types.h"
+#include "meta/media_types.h"
 #include "recorder.h"
 #include "avmetadatahelper.h"
 #include "avcodec_common.h"
@@ -140,9 +141,14 @@ static const std::vector<struct JsEnumInt> g_playbackSpeed = {
 };
 
 static const std::vector<struct JsEnumInt> g_mediaType = {
-    { "MEDIA_TYPE_AUD", MediaType::MEDIA_TYPE_AUD },
-    { "MEDIA_TYPE_VID", MediaType::MEDIA_TYPE_VID },
-    { "MEDIA_TYPE_SUBTITLE", MediaType::MEDIA_TYPE_SUBTITLE },
+    { "MEDIA_TYPE_UNSUPPORT", static_cast<int32_t>(Plugins::MediaType::UNKNOWN) },
+    { "MEDIA_TYPE_AUD", static_cast<int32_t>(Plugins::MediaType::AUDIO) },
+    { "MEDIA_TYPE_VID", static_cast<int32_t>(Plugins::MediaType::VIDEO) },
+    { "MEDIA_TYPE_SUBTITLE", static_cast<int32_t>(Plugins::MediaType::SUBTITLE) },
+    { "MEDIA_TYPE_ATTACHMENT", static_cast<int32_t>(Plugins::MediaType::ATTACHMENT) },
+    { "MEDIA_TYPE_DATA", static_cast<int32_t>(Plugins::MediaType::DATA) },
+    { "MEDIA_TYPE_TIMED_METADATA", static_cast<int32_t>(Plugins::MediaType::TIMEDMETA) },
+    { "MEDIA_TYPE_AUXILIARY", static_cast<int32_t>(Plugins::MediaType::AUXILIARY) },
 };
 
 static const std::vector<struct JsEnumInt> g_videoRecorderQualityLevel = {
