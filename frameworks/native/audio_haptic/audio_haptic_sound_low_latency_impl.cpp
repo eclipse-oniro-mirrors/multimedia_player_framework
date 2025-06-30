@@ -32,12 +32,11 @@ const int32_t MAX_SOUND_POOL_STREAMS = 1; // ensure that only one stream for sou
 const int32_t LOAD_WAIT_SECONDS = 2;
 
 AudioHapticSoundLowLatencyImpl::AudioHapticSoundLowLatencyImpl(const AudioSource& audioSource, const bool &muteAudio,
-    const AudioStandard::StreamUsage &streamUsage, const bool &parallelPlayFlag, const int32_t &audioHapticSyncId)
+    const AudioStandard::StreamUsage &streamUsage, const bool &parallelPlayFlag)
     : audioSource_(audioSource),
       muteAudio_(muteAudio),
       parallelPlayFlag_(parallelPlayFlag),
-      streamUsage_(streamUsage),
-      audioHapticSyncId_(audioHapticSyncId)
+      streamUsage_(streamUsage)
 {
 }
 
@@ -151,7 +150,7 @@ int32_t AudioHapticSoundLowLatencyImpl::PrepareSound()
     return MSERR_OK;
 }
 
-int32_t AudioHapticSoundLowLatencyImpl::StartSound()
+int32_t AudioHapticSoundLowLatencyImpl::StartSound(const int32_t &audioHapticSyncId)
 {
     MEDIA_LOGI("Enter StartSound with sound pool");
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
@@ -163,6 +162,7 @@ int32_t AudioHapticSoundLowLatencyImpl::StartSound()
     }
     CHECK_AND_RETURN_RET_LOG(soundPoolPlayer_ != nullptr, MSERR_INVALID_STATE, "Sound pool player instance is null");
 
+    audioHapticSyncId_ = audioHapticSyncId;
     PlayParams playParams {
         .loop = (loop_ ? -1 : 0),
         .rate = 0, // default AudioRendererRate::RENDER_RATE_NORMAL
@@ -170,7 +170,7 @@ int32_t AudioHapticSoundLowLatencyImpl::StartSound()
         .rightVolume = volume_ * (muteAudio_ ? 0 : 1),
         .priority = 0,
         .parallelPlayFlag = parallelPlayFlag_,
-        .audioHapticsSyncId = audioHapticSyncId_,
+        .audioHapticsSyncId = audioHapticSyncId,
     };
     streamID_ = soundPoolPlayer_->Play(soundID_, playParams);
     playerState_ = AudioHapticPlayerState::STATE_RUNNING;

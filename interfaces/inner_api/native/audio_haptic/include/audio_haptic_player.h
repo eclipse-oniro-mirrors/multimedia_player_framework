@@ -110,19 +110,16 @@ struct AudioHapticPlayerParam {
     HapticSource hapticSource;
     AudioLatencyMode latencyMode;
     AudioStandard::StreamUsage streamUsage;
-    int32_t audioHapticSyncId;
 
     AudioHapticPlayerParam() {};
     AudioHapticPlayerParam(const AudioHapticPlayerOptions &options,
         const AudioSource& audioSource, const HapticSource &hapticSource,
-        const AudioLatencyMode &latencyMode, const AudioStandard::StreamUsage &streamUsage,
-        int32_t audioHapticSyncId = 0)
+        const AudioLatencyMode &latencyMode, const AudioStandard::StreamUsage &streamUsage)
         : options(options),
           audioSource(audioSource),
           hapticSource(hapticSource),
           latencyMode(latencyMode),
-          streamUsage(streamUsage),
-          audioHapticSyncId(audioHapticSyncId) {};
+          streamUsage(streamUsage) {};
 };
 
 class AudioHapticPlayerCallback;

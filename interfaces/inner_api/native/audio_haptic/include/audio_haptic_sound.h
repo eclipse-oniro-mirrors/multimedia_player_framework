@@ -39,10 +39,10 @@ public:
 
     static std::shared_ptr<AudioHapticSound> CreateAudioHapticSound(const AudioLatencyMode &latencyMode,
         const AudioSource& audioSource, const bool &muteAudio, const AudioStandard::StreamUsage &streamUsage,
-        const bool &parallelPlayFlag = false, const int32_t &audioHapticSyncId = 0);
+        const bool &parallelPlayFlag = false);
 
     virtual int32_t PrepareSound() = 0;
-    virtual int32_t StartSound() = 0;
+    virtual int32_t StartSound(const int32_t &audioHapticSyncId = 0) = 0;
     virtual int32_t StopSound() = 0;
     virtual int32_t ReleaseSound() = 0;
     virtual int32_t SetVolume(float volume) = 0;

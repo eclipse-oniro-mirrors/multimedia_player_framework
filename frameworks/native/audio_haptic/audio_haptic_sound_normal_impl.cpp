@@ -35,8 +35,7 @@ AudioHapticSoundNormalImpl::AudioHapticSoundNormalImpl(const AudioSource& audioS
     const AudioStandard::StreamUsage &streamUsage, const int32_t &audioHapticSyncId)
     : audioSource_(audioSource),
       muteAudio_(muteAudio),
-      streamUsage_(streamUsage),
-      audioHapticSyncId_(audioHapticSyncId)
+      streamUsage_(streamUsage)
 {
 }
 
@@ -128,7 +127,6 @@ int32_t AudioHapticSoundNormalImpl::ResetAVPlayer()
     Format format;
     format.PutIntValue(PlayerKeys::CONTENT_TYPE, AudioStandard::CONTENT_TYPE_UNKNOWN);
     format.PutIntValue(PlayerKeys::STREAM_USAGE, streamUsage_);
-    format.PutIntValue(PlayerKeys::PLAYER_AUDIO_HAPTICS_SYNC_ID, audioHapticSyncId_);
     ret = avPlayer_->SetParameter(format);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Set stream usage to AVPlayer failed %{public}d", ret);
 
@@ -154,7 +152,7 @@ int32_t AudioHapticSoundNormalImpl::ResetAVPlayer()
 }
 
 
-int32_t AudioHapticSoundNormalImpl::StartSound()
+int32_t AudioHapticSoundNormalImpl::StartSound(const int32_t &audioHapticSyncId)
 {
     MEDIA_LOGI("StartSound with AVPlayer");
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
@@ -168,11 +166,18 @@ int32_t AudioHapticSoundNormalImpl::StartSound()
         return MSERR_START_FAILED;
     }
 
+    audioHapticSyncId_ = audioHapticSyncId;
     // Player doesn't support play in stopped state. Hence reinitialise player for making start<-->stop to work
     if (playerState_ == AudioHapticPlayerState::STATE_STOPPED || audioSource_ != configuredAudioSource_) {
         ResetAVPlayer();
     }
-    auto ret = avPlayer_->Play();
+
+    Format format;
+    format.PutIntValue(PlayerKeys::PLAYER_AUDIO_HAPTICS_SYNC_ID, audioHapticSyncId_);
+    auto ret = avPlayer_->SetParameter(format);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Set stream usage to AVPlayer failed %{public}d", ret);
+
+    ret = avPlayer_->Play();
     AudioHapticPlayerImpl::SendHapticPlayerEvent(ret, "AVPLAYER_START_FAILED");
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_START_FAILED, "Start failed %{public}d", ret);
 
