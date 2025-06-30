@@ -166,15 +166,17 @@ int32_t AudioHapticSoundNormalImpl::StartSound(const int32_t &audioHapticSyncId)
         return MSERR_START_FAILED;
     }
 
-    audioHapticSyncId_ = audioHapticSyncId;
+    int32_t ret = MSERR_OK;
     // Player doesn't support play in stopped state. Hence reinitialise player for making start<-->stop to work
     if (playerState_ == AudioHapticPlayerState::STATE_STOPPED || audioSource_ != configuredAudioSource_) {
-        ResetAVPlayer();
+        ret = ResetAVPlayer();
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ResetAVPlayer failed %{public}d", ret);
     }
 
+    audioHapticSyncId_ = audioHapticSyncId;
     Format format;
     format.PutIntValue(PlayerKeys::PLAYER_AUDIO_HAPTICS_SYNC_ID, audioHapticSyncId_);
-    auto ret = avPlayer_->SetParameter(format);
+    ret = avPlayer_->SetParameter(format);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Set stream usage to AVPlayer failed %{public}d", ret);
 
     ret = avPlayer_->Play();
