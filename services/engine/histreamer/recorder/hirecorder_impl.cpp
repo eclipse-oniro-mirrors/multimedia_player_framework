@@ -1129,16 +1129,18 @@ AudioRecorderChangeInfo HiRecorderImpl::ConvertCapturerChangeInfo(
     audioRecorderChangeInfo.inputDeviceInfo.macAddress = capturerChangeInfo.inputDeviceInfo.macAddress_;
     audioRecorderChangeInfo.inputDeviceInfo.channelIndexMasks =
         capturerChangeInfo.inputDeviceInfo.channelIndexMasks_;
-    for (auto item : capturerChangeInfo.inputDeviceInfo.audioStreamInfo_.channels) {
+    AudioStandard::DeviceStreamInfo audioStreamInfo = capturerChangeInfo.inputDeviceInfo.GetDeviceStreamInfo();
+    std::set<AudioStandard::AudioChannel> channelSet = audioStreamInfo.GetChannels();
+    for (auto item : channelSet) {
         audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.channels.insert(static_cast<int32_t>(item));
     }
-    for (auto item : capturerChangeInfo.inputDeviceInfo.audioStreamInfo_.samplingRate) {
+    for (auto item : audioStreamInfo.samplingRate) {
         audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.samplingRate.insert(static_cast<int32_t>(item));
     }
     audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.encoding =
-        capturerChangeInfo.inputDeviceInfo.audioStreamInfo_.encoding;
+        audioStreamInfo.encoding;
     audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.format =
-        capturerChangeInfo.inputDeviceInfo.audioStreamInfo_.format;
+        audioStreamInfo.format;
     return audioRecorderChangeInfo;
 }
 
