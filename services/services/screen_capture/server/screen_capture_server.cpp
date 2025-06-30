@@ -2940,6 +2940,13 @@ int32_t ScreenCaptureServer::SetMicrophoneOn()
             NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
             return ret;
         }
+    } else if (micAudioCapture_->GetAudioCapturerState() == CAPTURER_STOPED) {
+        ret = micAudioCapture_->Start(appInfo_);
+        if (ret != MSERR_OK) {
+            MEDIA_LOGE("micAudioCapture Start failed");
+            NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
+            return ret;
+        }
     } else if (micAudioCapture_->GetAudioCapturerState() != CAPTURER_RECORDING) {
         MEDIA_LOGE("AudioCapturerState invalid");
     }
