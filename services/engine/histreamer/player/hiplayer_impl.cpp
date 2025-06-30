@@ -3110,6 +3110,7 @@ void HiPlayerImpl::NotifyUpdateTrackInfo()
 void HiPlayerImpl::NotifySuperResolutionChanged(const Event& event)
 {
 #ifdef SUPPORT_VIDEO
+    MEDIA_LOG_D("NotifySuperResolutionChanged");
     int32_t enabled = AnyCast<bool>(event.param);
 
     Format format;
