@@ -30,7 +30,7 @@ public:
 
     // AudioHapticSound override
     int32_t PrepareSound() override;
-    int32_t StartSound(const int32_t &audioHapticSyncId) override;
+    int32_t StartSound(const int32_t &audioHapticSyncId = 0) override;
     int32_t StopSound() override;
     int32_t ReleaseSound() override;
     int32_t SetVolume(float volume) override;
