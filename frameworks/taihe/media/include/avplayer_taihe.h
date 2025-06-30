@@ -142,7 +142,7 @@ public:
     void GetPlayStrategy(AVPlayStrategyTmp &playStrategy, PlaybackStrategy strategy);
     void EnqueueMediaSourceTask(const std::shared_ptr<AVMediaSource> &mediaSource,
         const struct AVPlayStrategy &strategy);
-    void AddSubtitleFromFdSync(double fd, double offset, double length);
+    void AddSubtitleFromFdSync(double fd, optional_view<double> offset, optional_view<double> length);
     array<double> GetSelectedTracksSync();
     void SelectTrackSync(double index, ::taihe::optional_view<::ohos::multimedia::media::SwitchMode> mode);
     void DeselectTrackSync(double index);
