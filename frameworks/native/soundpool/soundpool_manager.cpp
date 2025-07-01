@@ -30,26 +30,17 @@ SoundPoolManager::~SoundPoolManager()
     soundPools_.clear();
 };
 
-
 int32_t SoundPoolManager::GetSoundPool(const pid_t pid, std::shared_ptr<SoundPool>& soundPool)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    auto it = soundPools_.find(pid);
-    it != soundPools_.end() ? soundPool = it->second : soundPool = nullptr;
-    return MSERR_OK;
-}
-
-int32_t SoundPoolManager::SetSoundPool(const pid_t pid, std::shared_ptr<SoundPool> soundPool)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     auto it = soundPools_.find(pid);
     if (it != soundPools_.end()) {
         MEDIA_LOGI("SoundPool have setted, use old object.");
+        soundPool = it->second;
         return MSERR_OK;
     }
     soundPool = std::make_shared<SoundPool>();
     soundPools_.emplace(pid, soundPool);
-
     return MSERR_OK;
 }
 

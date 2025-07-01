@@ -31,7 +31,6 @@ public:
     ~SoundPoolManager();
 
     int32_t GetSoundPool(const pid_t pid, std::shared_ptr<SoundPool>& soundPool);
-    int32_t SetSoundPool(const pid_t pid, std::shared_ptr<SoundPool> soundPool);
     int32_t Release(const pid_t pid);
 
     static SoundPoolManager& GetInstance()

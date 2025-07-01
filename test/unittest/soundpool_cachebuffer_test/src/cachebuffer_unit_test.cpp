@@ -92,8 +92,6 @@ HWTEST_F(CacheBufferUnitTest, soundpool_cacheBuffer_001, TestSize.Level0)
     MEDIA_LOGI("CacheBufferUnitTest soundpool_cacheBuffer_001 before");
     std::shared_ptr<SoundPool> impl;
     EXPECT_EQ(MSERR_OK, SoundPoolManager::GetInstance().GetSoundPool(getpid(), impl));
-    EXPECT_EQ(MSERR_OK, SoundPoolManager::GetInstance().SetSoundPool(getpid(), impl));
-    EXPECT_EQ(MSERR_OK, SoundPoolManager::GetInstance().SetSoundPool(getpid(), impl));
     EXPECT_EQ(MSERR_OK, SoundPoolManager::GetInstance().GetSoundPool(getpid(), impl));
     sleep(waitTime1);
     EXPECT_EQ(MSERR_OK, SoundPoolManager::GetInstance().Release(getpid()));
