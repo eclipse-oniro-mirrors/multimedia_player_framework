@@ -94,6 +94,15 @@ int32_t TransCoderImpl::SetColorSpace(TranscoderColorSpace colorSpaceFormat)
     return transCoderService_->SetColorSpace(colorSpaceFormat);
 }
 
+int32_t TransCoderImpl::SetEnableBFrame(bool enableBFrame)
+{
+    MEDIA_LOGI("TransCoderImpl:0x%{public}06" PRIXPTR " SetEnableBFrame in, enableBFrame is %{public}d",
+        FAKE_POINTER(this), static_cast<int32_t>(enableBFrame));
+    CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr, MSERR_INVALID_OPERATION,
+        "transcoder service does not exist..");
+    return transCoderService_->SetEnableBFrame(enableBFrame);
+}
+
 int32_t TransCoderImpl::SetAudioEncoder(AudioCodecFormat encoder)
 {
     MEDIA_LOGI("TransCoderImpl:0x%{public}06" PRIXPTR " SetAudioEncoder in, encoder is %{public}d",

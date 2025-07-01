@@ -49,6 +49,11 @@ int32_t MockAVTransCoder::SetColorSpace(TranscoderColorSpace colorSpaceFormat)
     return MSERR_OK;
 }
 
+int32_t MockAVTransCoder::SetEnableBFrame(bool enableBFrame)
+{
+    return MSERR_OK;
+}
+
 int32_t MockAVTransCoder::SetAudioEncoder(AudioCodecFormat encoder)
 {
     return MSERR_OK;

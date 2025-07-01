@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Huawei Device Co., Ltd.
+ * Copyright (C) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -110,6 +110,7 @@ struct AVTransCoderConfig {
     int32_t videoBitrate = AVTRANSCODER_DEFAULT_VIDEO_BIT_RATE;
     int32_t videoFrameWidth = AVTRANSCODER_DEFAULT_FRAME_HEIGHT;
     int32_t videoFrameHeight = AVTRANSCODER_DEFAULT_FRAME_WIDTH;
+    bool enableBFrame = false;
 };
 
 using RetInfo = std::pair<int32_t, std::string>;

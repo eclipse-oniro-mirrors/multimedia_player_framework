@@ -302,6 +302,7 @@ struct NativeAVTranscoderConfig : public OH_AVTranscoder_Config {
     int32_t videoBitrate = AVTRANSCODER_DEFAULT_VIDEO_BIT_RATE;
     int32_t videoFrameWidth = AVTRANSCODER_DEFAULT_FRAME_HEIGHT;
     int32_t videoFrameHeight = AVTRANSCODER_DEFAULT_FRAME_WIDTH;
+    bool enableBFrame = false;
 };
 
 struct NativeAVTranscoder : public OH_AVTranscoder {
@@ -511,6 +512,11 @@ OH_AVErrCode NativeAVTranscoder::AVTranscoderConfiguration(NativeAVTranscoderCon
     CHECK_AND_RETURN_RET_LOG(errorCode == MSERR_OK, GetOHAVErrCode(errorCode, "SetVideoEncodingBitRate"),
         "AVTranscoderConfiguration is called, SetVideoEncodingBitRate check failed, videoFrameWidth:%{public}d",
         config->videoBitrate);
+
+    errorCode = transcoder_->SetEnableBFrame(config->enableBFrame);
+    CHECK_AND_RETURN_RET_LOG(errorCode == MSERR_OK, GetOHAVErrCode(errorCode, "SetEnableBFrame"),
+        "AVTranscoderConfiguration is called, SetEnableBFrame check failed, enableBFrame:%{public}d",
+        static_cast<int32_t>(config->enableBFrame));
 
     return AV_ERR_OK;
 }
@@ -1031,7 +1037,15 @@ OH_AVErrCode OH_AVTranscoder_SetProgressUpdateCallback(
 
 OH_AVErrCode OH_AVTranscoderConfig_EnableBFrame(OH_AVTranscoder_Config *config, bool enabled)
 {
-    (void)config;
-    (void)enabled;
-    return AV_ERR_UNSUPPORT;
+    MEDIA_LOGI("OH_AVTranscoderConfig_EnableBFrame enter.");
+    CHECK_AND_RETURN_RET_LOG(config != nullptr, AV_ERR_INVALID_VAL,
+        "OH_AVTranscoderConfig_EnableBFrame is called, config is nullptr!");
+
+    NativeAVTranscoderConfig* nativeConfig = reinterpret_cast<NativeAVTranscoderConfig*>(config);
+    CHECK_AND_RETURN_RET_LOG(nativeConfig != nullptr, AV_ERR_INVALID_VAL,
+        "OH_AVTranscoderConfig_EnableBFrame is called, nativeConfig is nullptr!");
+
+    nativeConfig->enableBFrame = enabled;
+
+    return AV_ERR_OK;
 }

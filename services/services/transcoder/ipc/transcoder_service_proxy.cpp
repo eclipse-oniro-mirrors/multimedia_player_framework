@@ -121,6 +121,23 @@ int32_t TransCoderServiceProxy::SetColorSpace(TranscoderColorSpace colorSpaceFor
     return reply.ReadInt32();
 }
 
+int32_t TransCoderServiceProxy::SetEnableBFrame(bool enableBFrame)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(TransCoderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteBool(enableBFrame);
+    int error = Remote()->SendRequest(SET_ENABLE_B_FRAME, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetEnableBFrame failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
 int32_t TransCoderServiceProxy::SetAudioEncoder(AudioCodecFormat encoder)
 {
     MessageParcel data;

@@ -77,6 +77,12 @@ int32_t TranscoderMock::SetColorSpace(TranscoderColorSpace colorSpaceFormat)
     return transcoder_->SetColorSpace(colorSpaceFormat);
 }
 
+int32_t TranscoderMock::SetEnableBFrame(bool enableBFrame)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(transcoder_ != nullptr, MSERR_INVALID_OPERATION, "transcoder_ == nullptr");
+    return transcoder_->SetEnableBFrame(enableBFrame);
+}
+
 int32_t TranscoderMock::SetAudioEncoder(AudioCodecFormat encoder)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(transcoder_ != nullptr, MSERR_INVALID_OPERATION, "transcoder_ == nullptr");

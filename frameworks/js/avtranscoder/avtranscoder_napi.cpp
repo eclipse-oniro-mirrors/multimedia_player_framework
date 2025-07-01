@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Huawei Device Co., Ltd.
+ * Copyright (C) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -763,6 +763,8 @@ RetInfo AVTransCoderNapi::Configure(std::shared_ptr<AVTransCoderConfig> config)
     ret = transCoder_->SetVideoEncodingBitRate(config->videoBitrate);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoEncoderBitRate", "videoBitrate"));
 
+    ret = transCoder_->SetEnableBFrame(config->enableBFrame);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoEncodingEnableBFrame", "enableBFrame"));
     hasConfiged_ = true;
     return RetInfo(MSERR_EXT_API9_OK, "");
 }
@@ -866,6 +868,7 @@ int32_t AVTransCoderNapi::GetVideoConfig(std::unique_ptr<AVTransCoderAsyncContex
     (void)CommonNapi::GetPropertyInt32(env, args, "videoBitrate", config->videoBitrate);
     (void)CommonNapi::GetPropertyInt32(env, args, "videoFrameWidth", config->videoFrameWidth);
     (void)CommonNapi::GetPropertyInt32(env, args, "videoFrameHeight", config->videoFrameHeight);
+    (void)CommonNapi::GetPropertyBool(env, args, "enableBFrame", config->enableBFrame);
     return MSERR_OK;
 }
 
