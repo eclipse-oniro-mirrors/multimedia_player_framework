@@ -3427,7 +3427,8 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
     }
     completeState_.emplace_back(std::make_pair("VideoSink", false));
     initialAVStates_.emplace_back(std::make_pair(EventType::EVENT_VIDEO_RENDERING_START, false));
-    bool needInit = surface_ != nullptr && !isVideoMuted_ && mutedMediaType_ != OHOS::Media::MediaType::MEDIA_TYPE_VID;
+    bool needInit = isForceLoadVideo_ || (surface_ != nullptr && !isVideoMuted_
+            && mutedMediaType_ != OHOS::Media::MediaType::MEDIA_TYPE_VID);
     if (!needInit) {
         videoDecoder_->SetMediaMuted(true, false);
     }
