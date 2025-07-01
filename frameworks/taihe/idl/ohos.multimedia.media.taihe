@@ -271,7 +271,7 @@ interface AVPlayer {
     SetMediaSourceSync(src: MediaSource, strategy: Optional<PlaybackStrategy>): void;
 
     @gen_promise("addSubtitleFromFd")
-    AddSubtitleFromFdSync(fd: f64, offset: f64, length: f64): void;
+    AddSubtitleFromFdSync(fd: f64, offset: Optional<f64>, length: Optional<f64>): void;
 
     @gen_promise("addSubtitleFromUrl")
     AddSubtitleFromUrlSync(url: String): void;

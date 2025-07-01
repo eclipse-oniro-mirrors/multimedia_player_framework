@@ -848,12 +848,20 @@ void AVPlayerImpl::SetMediaSourceSync(weak::MediaSource src, optional_view<Playb
     EnqueueMediaSourceTask(mediaSource, strategyRes);
 }
 
-void AVPlayerImpl::AddSubtitleFromFdSync(double fd, double offset, double length)
+void AVPlayerImpl::AddSubtitleFromFdSync(double fd, optional_view<double> offset, optional_view<double> length)
 {
     MEDIA_LOGI("AddSubtitleAVFileDescriptor In");
-    auto task = std::make_shared<TaskHandler<void>>([this, fd, offset, length]() {
+    int64_t offsetLocal = -1;
+    int64_t lengthLocal = -1;
+    if (offset.has_value()) {
+        offsetLocal = static_cast<int64_t>(offset.value());
+    }
+    if (length.has_value()) {
+        lengthLocal = static_cast<int64_t>(length.value());
+    }
+    auto task = std::make_shared<TaskHandler<void>>([this, fd, offsetLocal, lengthLocal]() {
         if (player_ != nullptr) {
-            if (player_->AddSubSource(fd, offset, length) != MSERR_OK) {
+            if (player_->AddSubSource(fd, offsetLocal, lengthLocal) != MSERR_OK) {
                 OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "failed to AddSubtitleAVFileDescriptor");
             }
         }
