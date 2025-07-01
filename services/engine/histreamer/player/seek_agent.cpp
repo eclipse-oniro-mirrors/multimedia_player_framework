@@ -92,8 +92,8 @@ Status SeekAgent::Seek(int64_t seekPos, bool &timeout)
         AutoLock lock(targetArrivedLock_);
         demuxer_->ResumeForSeek();
         MEDIA_LOG_I("ResumeForSeek end");
-        isClosetSeekDone = targetArrivedCond_.WaitFor(lock, WAIT_MAX_MS,
-            [this] {return (isAudioTargetArrived_ && isVideoTargetArrived_) || isInterruptNeeded_;});
+        isClosetSeekDone = targetArrivedCond_.WaitFor(lock, WAIT_MAX_MS, [this] {return (isAudioTargetArrived_
+            && (isVideoTargetArrived_ || demuxer_->IsVideoMuted())) || isInterruptNeeded_;});
         MEDIA_LOG_I("Wait end");
     }
     MEDIA_LOG_I("PauseForSeek start");
