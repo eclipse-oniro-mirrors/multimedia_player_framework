@@ -87,10 +87,12 @@ typedef void (*OH_AVTranscoder_OnStateChange)(OH_AVTranscoder *transcoder, OH_AV
  * @brief Called when an error occurred during transcoding
  * @param {OH_AVTranscoder*} transcoder Pointer to an OH_AVTranscoder instance.
  * @param {int32_t} errorCode Error code.
- *         {@link AV_ERR_NO_MEMORY} if memery is insufficient.
+ *         {@link AV_ERR_NO_MEMORY} if memory is insufficient.
  *         {@link AV_ERR_IO} if IO access failed.
- *         {@link AV_ERR_INVALID_STATE} if The current state does not support this operation.
+ *         {@link AV_ERR_INVALID_STATE} if the current state does not support this operation.
  *         {@link AV_ERR_UNSUPPORT} if unsurpport function.
+ *         {@link AV_ERR_INVALID_VAL} if the parameter check failed.
+ *         {@link AV_ERR_OPERATE_NOT_PERMIT} if operation not allowed.
  * @param {const char*} errorMsg Error message.
  * @param {void*} userData Pointer to user specific data.
  * @since 20

@@ -200,10 +200,12 @@ static std::optional<std::string> IsValidState(OH_AVTranscoder_State state)
 
 static OH_AVErrCode GetOHAVErrCode(int32_t errCode, const std::string &errorMsg)
 {
-    MediaServiceExtErrCodeAPI9 extErrCodeAPI = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode));
+    MediaServiceErrCode serviceErrCode = static_cast<MediaServiceErrCode>(errCode);
+    MediaServiceExtErrCodeAPI9 extErrCodeAPI = MSErrorToExtErrorAPI9(serviceErrCode);
     OH_AVErrCode avErrorCode = ExtErrCodeAPIToAVErrCode(extErrCodeAPI);
-    std::string errorMsgExt = MSExtAVErrorToString(extErrCodeAPI) + errorMsg;
-    MEDIA_LOGE("errCode: %{public}d, errMsg: %{public}s check failed!", avErrorCode, errorMsgExt.c_str());
+    std::string errorMsgExt = MSExtAVErrorToString(extErrCodeAPI) + " " + MSErrorToString(serviceErrCode);
+    MEDIA_LOGE("%{public}s check failed! errCode: %{public}d, errMsg: %{public}s", errorMsg.c_str(), avErrorCode,
+        errorMsgExt.c_str());
     return avErrorCode;
 }
 
