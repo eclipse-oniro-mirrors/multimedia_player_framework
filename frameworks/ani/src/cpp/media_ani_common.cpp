@@ -59,14 +59,14 @@ ani_object CommonAni::CreateFormatBuffer(ani_env *env, Format &format)
     ani_class cls {};
     ani_method mapCtor {};
     ani_object mapObject {};
-    CHECK_AND_RETURN_RET_LOG(env->FindClass("Lescompat/Record;", &cls) == ANI_OK, nullptr,
-        "Can't find Lescompat/Record");
-    CHECK_AND_RETURN_RET_LOG(env->Class_FindMethod(cls, "<ctor>", "Lstd/core/Object;:V", &mapCtor) == ANI_OK,
-        nullptr, "Can't find method <ctor> in Lescompat/Record");
+    CHECK_AND_RETURN_RET_LOG(env->FindClass("escompat.Record", &cls) == ANI_OK, nullptr,
+        "Can't find escompat.Record");
+    CHECK_AND_RETURN_RET_LOG(env->Class_FindMethod(cls, "<ctor>", "C{std.core.Object}:", &mapCtor) == ANI_OK,
+        nullptr, "Can't find method <ctor> in escompat.Record");
     CHECK_AND_RETURN_RET_LOG(env->Object_New(cls, mapCtor, &mapObject, nullptr) == ANI_OK, nullptr, "New Map failed");
 
     ani_method setMethod {};
-    if (env->Class_FindMethod(cls, "$_set", "Lstd/core/Object;Lstd/core/Object;:V", &setMethod) != ANI_OK) {
+    if (env->Class_FindMethod(cls, "$_set", "C{std.core.Object}C{std.core.Object}:", &setMethod) != ANI_OK) {
         return mapObject;
     }
     for (auto &iter : format.GetFormatMap()) {

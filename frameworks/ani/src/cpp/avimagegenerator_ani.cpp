@@ -34,7 +34,7 @@ AVImageGeneratorAni::~AVImageGeneratorAni() {};
 
 ani_status AVImageGeneratorAni::AVImageGeneratorInit(ani_env *env)
 {
-    static const char *className = "L@ohos/multimedia/media/media/AVImageGeneratorHandle;";
+    static const char *className = "@ohos.multimedia.media.media.AVImageGeneratorHandle";
     ani_class cls;
     if (ANI_OK != env->FindClass(className, &cls)) {
         MEDIA_LOGE("Failed to find class: %{public}s", className);
@@ -44,7 +44,7 @@ ani_status AVImageGeneratorAni::AVImageGeneratorInit(ani_env *env)
     std::array methods = {
         ani_native_function {"fetchFrameByTimeAsync", nullptr,
             reinterpret_cast<void *>(AVImageGeneratorAni::FetchFrameByTime)},
-        ani_native_function {"releaseAsync", ":V", reinterpret_cast<void *>(AVImageGeneratorAni::Release)},
+        ani_native_function {"releaseAsync", ":", reinterpret_cast<void *>(AVImageGeneratorAni::Release)},
         ani_native_function {"setFdSrc", nullptr, reinterpret_cast<void *>(AVImageGeneratorAni::SetFdSrc)},
         ani_native_function {"getFdSrc", nullptr, reinterpret_cast<void *>(AVImageGeneratorAni::GetFdSrc)},
     };
@@ -60,7 +60,7 @@ ani_object AVImageGeneratorAni::Constructor([[maybe_unused]] ani_env *env)
 {
     auto nativeAVImageGenerator = std::make_unique<AVImageGeneratorAni>();
     nativeAVImageGenerator->helperPtr = AVMetadataHelperFactory::CreateAVMetadataHelper();
-    static const char *className = "L@ohos/multimedia/media/media/AVImageGeneratorHandle;";
+    static const char *className = "@ohos.multimedia.media.media.AVImageGeneratorHandle";
     ani_class cls;
     if (ANI_OK != env->FindClass(className, &cls)) {
         MEDIA_LOGE("Failed to find class: %{public}s", className);
@@ -69,7 +69,7 @@ ani_object AVImageGeneratorAni::Constructor([[maybe_unused]] ani_env *env)
     }
 
     ani_method ctor;
-    if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", "J:V", &ctor)) {
+    if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", "l:", &ctor)) {
         MEDIA_LOGE("Failed to find method: %{public}s", "ctor");
         ani_object nullobj = nullptr;
         return nullobj;
@@ -133,7 +133,7 @@ ani_object AVImageGeneratorAni::FetchFrameByTime(ani_env *env, ani_object object
 void AVImageGeneratorAni::ParseParamsInner(ani_env *env, ani_object param, int32_t &width, int32_t &height,
     int32_t &colorFormat)
 {
-    static const char *className = "L@ohos/multimedia/media/media/ParamsInner;";
+    static const char *className = "@ohos.multimedia.media.media.ParamsInner";
     ani_class cls;
     if (ANI_OK != env->FindClass(className, &cls)) {
         MEDIA_LOGE("Failed to find class: %{public}s", className);

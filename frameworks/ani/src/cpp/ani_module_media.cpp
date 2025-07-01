@@ -29,7 +29,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
         return (ani_status)ANI_ERROR;
     }
 
-    static const char *staticClassName = "L@ohos/multimedia/media/media;";
+    static const char *staticClassName = "@ohos.multimedia.media.media";
     ani_namespace staticNs;
     if (ANI_OK != env->FindNamespace(staticClassName, &staticNs)) {
         MEDIA_LOGE("Not found %{public}s", staticClassName);

@@ -31,12 +31,13 @@ ani_boolean MediaAniUtils::isArray(ani_env *env, ani_object object)
 {
     ani_boolean isArray = ANI_FALSE;
     ani_class cls {};
-    static const std::string className = "Lescompat/Array;";
-    CHECK_AND_RETURN_RET_LOG(ANI_OK == env->FindClass(className.c_str(), &cls), isArray, "Can't find Lescompat/Array");
+    static const std::string className = "escompat.Array";
+    CHECK_AND_RETURN_RET_LOG(ANI_OK == env->FindClass(className.c_str(), &cls), isArray,
+                             "Can't find escompat.Array");
 
     ani_static_method static_method {};
     CHECK_AND_RETURN_RET_LOG(ANI_OK == env->Class_FindStaticMethod(cls, "isArray", nullptr, &static_method), isArray,
-        "Can't find method isArray in Lescompat/Array.");
+        "Can't find method isArray in escompat.Array.");
 
     CHECK_AND_RETURN_RET_LOG(ANI_OK == env->Class_CallStaticMethod_Boolean(cls, static_method, &isArray, object),
         isArray, "Call method isArray failed.");
@@ -84,17 +85,17 @@ ani_status MediaAniUtils::GetString(ani_env *env, ani_object arg, std::string &s
 ani_status MediaAniUtils::ToAniInt32Array(ani_env *env, const std::vector<int32_t> &array, ani_object &aniArray)
 {
     ani_class cls {};
-    static const std::string className = "Lescompat/Array;";
+    static const std::string className = "escompat.Array";
     ani_status status = env->FindClass(className.c_str(), &cls);
     if (status != ANI_OK) {
-        MEDIA_LOGE("Can't find Lescompat/Array.");
+        MEDIA_LOGE("Can't find escompat.Array.");
         return status;
     }
 
     ani_method arrayConstructor {};
-    status = env->Class_FindMethod(cls, "<ctor>", "I:V", &arrayConstructor);
+    status = env->Class_FindMethod(cls, "<ctor>", "i:", &arrayConstructor);
     if (status != ANI_OK) {
-        MEDIA_LOGE("Can't find method <ctor> in Lescompat/Array.");
+        MEDIA_LOGE("Can't find method <ctor> in escompat.Array.");
         return status;
     }
     status = env->Object_New(cls, arrayConstructor, &aniArray, array.size());
@@ -104,9 +105,9 @@ ani_status MediaAniUtils::ToAniInt32Array(ani_env *env, const std::vector<int32_
     }
 
     ani_method setMethod {};
-    status = env->Class_FindMethod(cls, "$_set", "ILstd/core/Object;:V", &setMethod);
+    status = env->Class_FindMethod(cls, "$_set", "iC{std.core.Object}:", &setMethod);
     if (status != ANI_OK) {
-        MEDIA_LOGE("Can't find method $_set in Lescompat/Array.");
+        MEDIA_LOGE("Can't find method $_set in escompat.Array.");
         return status;
     }
 
@@ -136,17 +137,17 @@ ani_status MediaAniUtils::GetFloat(ani_env *env, ani_float arg, float &value)
 ani_status MediaAniUtils::ToAniFloatArray(ani_env *env, const std::vector<float> &array, ani_object &aniArray)
 {
     ani_class cls {};
-    static const std::string className = "Lescompat/Array;";
+    static const std::string className = "escompat.Array";
     ani_status status = env->FindClass(className.c_str(), &cls);
     if (status != ANI_OK) {
-        MEDIA_LOGE("Can't find Lescompat/Array.");
+        MEDIA_LOGE("Can't find escompat.Array.");
         return status;
     }
 
     ani_method arrayConstructor {};
-    status = env->Class_FindMethod(cls, "<ctor>", "I:V", &arrayConstructor);
+    status = env->Class_FindMethod(cls, "<ctor>", "i:", &arrayConstructor);
     if (status != ANI_OK) {
-        MEDIA_LOGE("Can't find method <ctor> in Lescompat/Array.");
+        MEDIA_LOGE("Can't find method <ctor> in escompat.Array.");
         return status;
     }
     status = env->Object_New(cls, arrayConstructor, &aniArray, array.size());
@@ -156,9 +157,9 @@ ani_status MediaAniUtils::ToAniFloatArray(ani_env *env, const std::vector<float>
     }
 
     ani_method setMethod {};
-    status = env->Class_FindMethod(cls, "$_set", "ILstd/core/Object;:V", &setMethod);
+    status = env->Class_FindMethod(cls, "$_set", "iC{std.core.Object}:", &setMethod);
     if (status != ANI_OK) {
-        MEDIA_LOGE("Can't find method $_set in Lescompat/Array.");
+        MEDIA_LOGE("Can't find method $_set in escompat.Array.");
         return status;
     }
 
@@ -203,7 +204,7 @@ ani_status MediaAniUtils::ToAniString(ani_env *env, const std::string &str, ani_
 
 ani_status MediaAniUtils::ToAniNumberObject(ani_env *env, int32_t src, ani_object &aniObj)
 {
-    static const char *className = "Lstd/core/Double;";
+    static const char *className = "std.core.Double";
     ani_class cls {};
     ani_status status = env->FindClass(className, &cls);
     if (status != ANI_OK) {
@@ -212,7 +213,7 @@ ani_status MediaAniUtils::ToAniNumberObject(ani_env *env, int32_t src, ani_objec
     }
 
     ani_method ctor {};
-    status = env->Class_FindMethod(cls, "<ctor>", "D:V", &ctor);
+    status = env->Class_FindMethod(cls, "<ctor>", "d:", &ctor);
     if (status != ANI_OK) {
         MEDIA_LOGE("Failed to find method: ctor");
         return status;
@@ -229,7 +230,7 @@ ani_status MediaAniUtils::ToAniNumberObject(ani_env *env, int32_t src, ani_objec
 ani_status MediaAniUtils::ParseAVDataSrcDescriptor(
     ani_env *env, ani_object src, AVDataSrcDescriptor &dataSrcDescriptor)
 {
-    static const char *className = "L@ohos/multimedia/media/media/AVDataSrcDescriptorHandle;";
+    static const char *className = "@ohos.multimedia.media.media.AVDataSrcDescriptorHandle";
     ani_class cls {};
     ani_status status = env->FindClass(className, &cls);
     if (status != ANI_OK) {
@@ -267,7 +268,7 @@ ani_status MediaAniUtils::ParseAVDataSrcDescriptor(
 
 ani_object MediaAniUtils::CreateAVDataSrcDescriptor(ani_env *env, AVDataSrcDescriptor &dataSrcDescriptor)
 {
-    static const char *className = "L@ohos/multimedia/media/media/AVDataSrcDescriptorHandle;";
+    static const char *className = "@ohos.multimedia.media.media.AVDataSrcDescriptorHandle";
     ani_class cls {};
     CHECK_AND_RETURN_RET_LOG(env->FindClass(className, &cls) == ANI_OK, nullptr,
         "Failed to find class: %{public}s", className);
@@ -295,7 +296,7 @@ ani_object MediaAniUtils::CreateAVDataSrcDescriptor(ani_env *env, AVDataSrcDescr
 ani_status MediaAniUtils::ParseAudioRendererInfo(ani_env *env, ani_object src,
     AudioStandard::AudioRendererInfo &audioRendererInfo)
 {
-    static const char *className = "L@ohos/multimedia/media/audio/AudioRendererInfo";
+    static const char *className = "@ohos.multimedia.media.audio.AudioRendererInfo";
     ani_class cls {};
     ani_status status = env->FindClass(className, &cls);
     CHECK_AND_RETURN_RET_LOG(status == ANI_OK, status, "Failed to find class: %{public}s", className);
@@ -327,7 +328,7 @@ ani_status MediaAniUtils::ParseAudioRendererInfo(ani_env *env, ani_object src,
 
 ani_object MediaAniUtils::CreateAudioRendererInfo(ani_env *env, AudioStandard::AudioRendererInfo &audioRendererInfo)
 {
-    static const char *className = "L@ohos/multimedia/media/audio/AudioRendererInfo";
+    static const char *className = "@ohos.multimedia.media.audio.AudioRendererInfo";
     ani_class cls {};
     CHECK_AND_RETURN_RET_LOG(env->FindClass(className, &cls) == ANI_OK, nullptr,
         "Failed to find class: %{public}s", className);
@@ -355,7 +356,7 @@ ani_object MediaAniUtils::CreateAudioRendererInfo(ani_env *env, AudioStandard::A
         nullptr, "Failed to find method: <set>rendererFlags");
     CHECK_AND_RETURN_RET_LOG(env->Object_CallMethod_Void(aniObject, rendererFlagsSetter,
         (ani_int)audioRendererInfo.rendererFlags) == ANI_OK, nullptr, "<set>rendererFlags fail");
-    
+
     ani_method volumeModeSetter {};
     CHECK_AND_RETURN_RET_LOG(env->Class_FindMethod(cls, "<set>volumeMode", nullptr, &volumeModeSetter) == ANI_OK,
         nullptr, "Failed to find method: <set>rendererFlags");
@@ -372,7 +373,7 @@ ani_status MediaAniUtils::ToAniEnum(ani_env *env, AudioStandard::InterruptMode v
     CHECK_AND_RETURN_RET_LOG(it != ANI_INTERRUPTMODE_INDEX_MAP.end(), ANI_INVALID_ARGS,
         "Unsupport enum: %{public}d", value);
     ani_int enumIndex = static_cast<ani_int>(it->second);
-    static const char *className = "L@ohos/multimedia/audio/audio/InterruptMode;";
+    static const char *className = "@ohos.multimedia.audio.audio.InterruptMode";
     ani_enum aniEnum {};
     ani_status status = env->FindEnum(className, &aniEnum);
     CHECK_AND_RETURN_RET_LOG(status == ANI_OK, status, "Find Enum Fail");
@@ -392,7 +393,7 @@ ani_status MediaAniUtils::GetObjectArray(ani_env *env, ani_object arg, std::vect
 
     for (ani_int i = 0; i < static_cast<ani_int>(length); i++) {
         ani_ref value {};
-        status = env->Object_CallMethodByName_Ref(arg, "$_get", "I:Lstd/core/Object;", &value, i);
+        status = env->Object_CallMethodByName_Ref(arg, "$_get", "i:C{std.core.Object}", &value, i);
         CHECK_AND_RETURN_RET_LOG(status == ANI_OK, status, "Call method $_get failed.");
         array.emplace_back(static_cast<ani_object>(value));
     }
@@ -421,7 +422,7 @@ ani_status MediaAniUtils::GetProperty(ani_env *env, ani_object arg, const std::s
 
 void MediaAniUtils::CreateError(ani_env *env, int32_t errCode, const std::string &errMsg, ani_object &errorObj)
 {
-    static const std::string className = "L@ohos/multimedia/media/MediaAniError;";
+    static const std::string className = "@ohos.multimedia.media.MediaAniError";
     ani_class cls;
     ani_status status = env->FindClass(className.c_str(), &cls);
     if (status != ANI_OK) {
@@ -430,7 +431,7 @@ void MediaAniUtils::CreateError(ani_env *env, int32_t errCode, const std::string
     }
 
     ani_method ctor;
-    if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", "DLstd/core/String;:V", &ctor)) {
+    if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", "dC{std.core.String}:", &ctor)) {
         MEDIA_LOGE("Can't find <ctor> from class %{public}s", className.c_str());
         return;
     }
@@ -449,7 +450,7 @@ void MediaAniUtils::CreateError(ani_env *env, int32_t errCode, const std::string
 
 ani_object MediaAniUtils::CreateAVFdSrcDescriptor(ani_env *env, AVFileDescriptor &fdSrcDescriptor)
 {
-    static const char *className = "L@ohos/multimedia/media/media/AVFileDescriptorHandle;";
+    static const char *className = "@ohos.multimedia.media.media.AVFileDescriptorHandle";
     ani_class cls {};
     CHECK_AND_RETURN_RET_LOG(env->FindClass(className, &cls) == ANI_OK, nullptr,
         "Failed to find class: %{public}s", className);

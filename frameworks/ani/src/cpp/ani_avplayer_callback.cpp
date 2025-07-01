@@ -301,7 +301,7 @@ public:
             auto fnObject = reinterpret_cast<ani_fn_object>(floatArrayRef->cb_);
 
             ani_class cls {};
-            static const std::string className = "Lescompat/Array;";
+            static const std::string className = "escompat.Array";
             floatArrayRef->env_->FindClass(className.c_str(), &cls);
             ani_string str = nullptr;
             const char *utf8String = std::to_string(trackInfo.size()).c_str();
@@ -380,7 +380,7 @@ public:
             ani_string arg1 = {};
             MediaAniUtils::ToAniString(stateChangeRef->env_, state, arg1);
 
-            static const char *className = "L@ohos/multimedia/media/media/StateChangeReason;";
+            static const char *className = "@ohos.multimedia.media.media.StateChangeReason";
             ani_enum_item aniEnumItem;
             ani_enum aniEnum {};
             if (ANI_OK != etsEnv->FindEnum(className, &aniEnum)) {

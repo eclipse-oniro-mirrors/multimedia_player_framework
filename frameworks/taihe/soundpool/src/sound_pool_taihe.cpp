@@ -49,7 +49,7 @@ SoundPoolImpl::SoundPoolImpl(int32_t maxStreams, uintptr_t audioRendererInfo)
 void SoundPoolImpl::ParseAudioRendererInfo(ani_env *env, ani_object src,
     OHOS::AudioStandard::AudioRendererInfo &audioRendererInfo)
 {
-    static const char *className = "L@ohos/multimedia/audio/audio/AudioRendererInfo";
+    static const char *className = "@ohos.multimedia.audio.audio.AudioRendererInfo";
     ani_class cls {};
     CHECK_AND_RETURN_LOG(env->FindClass(className, &cls), "Failed to find class: %{public}s", className);
     ani_method contentGetter {};
