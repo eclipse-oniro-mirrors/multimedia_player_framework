@@ -925,3 +925,115 @@ HWTEST_F(NativeAVTranscoderUnitTest, AVTranscoder_SetProgressUpdateCallback001, 
     ASSERT_EQ(errorCode, AV_ERR_INVALID_VAL);
     GTEST_LOG_(INFO) << "NativeAVTranscoderUnitTest: AVTranscoder_SetProgressUpdateCallback001 end";
 }
+
+/**
+ * @tc.name: AVTranscoder_OnError001
+ * @tc.desc: Verify that the error callback is invoked.
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeAVTranscoderUnitTest, AVTranscoder_OnError001, Level3)
+{
+    GTEST_LOG_(INFO) << "NativeAVTranscoderUnitTest: AVTranscoder_OnError001 start";
+    OH_AVTranscoder *transcoder = OH_AVTranscoder_Create();
+    ASSERT_NE(transcoder, nullptr);
+    MockUserData mockUserData;
+    InitAVTranscoderCallback(transcoder, mockUserData);
+    OH_AVTranscoder_Config *config = OH_AVTranscoderConfig_Create();
+    ASSERT_NE(config, nullptr);
+    OH_AVErrCode errorCode = OH_AVTranscoder_Prepare(transcoder, config);
+    ASSERT_EQ(errorCode, AV_ERR_INVALID_VAL);
+    errorCode = OH_AVTranscoderConfig_Release(config);
+    ASSERT_EQ(errorCode, AV_ERR_OK);
+    errorCode = OH_AVTranscoder_Release(transcoder);
+    ASSERT_EQ(errorCode, AV_ERR_OK);
+    GTEST_LOG_(INFO) << "NativeAVTranscoderUnitTest: AVTranscoder_OnError001 end";
+}
+
+/**
+ * @tc.name: AVTranscoder_OnError002
+ * @tc.desc: Verify that the error callback is not invoked.
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeAVTranscoderUnitTest, AVTranscoder_OnError002, Level3)
+{
+    GTEST_LOG_(INFO) << "NativeAVTranscoderUnitTest: AVTranscoder_OnError002 start";
+    OH_AVTranscoder *transcoder = OH_AVTranscoder_Create();
+    ASSERT_NE(transcoder, nullptr);
+    OH_AVTranscoder_Config *config = OH_AVTranscoderConfig_Create();
+    ASSERT_NE(config, nullptr);
+    OH_AVErrCode errorCode = OH_AVTranscoder_Prepare(transcoder, config);
+    ASSERT_EQ(errorCode, AV_ERR_INVALID_VAL);
+    errorCode = OH_AVTranscoderConfig_Release(config);
+    ASSERT_EQ(errorCode, AV_ERR_OK);
+    errorCode = OH_AVTranscoder_Release(transcoder);
+    ASSERT_EQ(errorCode, AV_ERR_OK);
+    GTEST_LOG_(INFO) << "NativeAVTranscoderUnitTest: AVTranscoder_OnError002 end";
+}
+
+/**
+ * @tc.name: AVTranscoder_OnError003
+ * @tc.desc: Verify that the error callback is invoked.
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeAVTranscoderUnitTest, AVTranscoder_OnError003, Level3)
+{
+    GTEST_LOG_(INFO) << "NativeAVTranscoderUnitTest: AVTranscoder_OnError003 start";
+    OH_AVTranscoder *transcoder = OH_AVTranscoder_Create();
+    ASSERT_NE(transcoder, nullptr);
+    MockUserData mockUserData;
+    InitAVTranscoderCallback(transcoder, mockUserData);
+    OH_AVTranscoder_Config *config = OH_AVTranscoderConfig_Create();
+    ASSERT_NE(config, nullptr);
+
+    int32_t srcFd = open(CHINESE_COLOR_MP4.c_str(), O_RDWR);
+    ASSERT_TRUE(srcFd >= ZERO);
+    OH_AVErrCode errorCode = OH_AVTranscoderConfig_SetSrcFD(config, srcFd,
+        TRANSCODER_FILE_OFFSET, TRANSCODER_FILE_SIZE);
+    ASSERT_EQ(errorCode, AV_ERR_OK);
+    errorCode = OH_AVTranscoder_Prepare(transcoder, config);
+    ASSERT_EQ(errorCode, AV_ERR_INVALID_VAL);
+
+    errorCode = OH_AVTranscoderConfig_Release(config);
+    ASSERT_EQ(errorCode, AV_ERR_OK);
+    errorCode = OH_AVTranscoder_Release(transcoder);
+    ASSERT_EQ(errorCode, AV_ERR_OK);
+    close(srcFd);
+    GTEST_LOG_(INFO) << "NativeAVTranscoderUnitTest: AVTranscoder_OnError003 end";
+}
+
+/**
+ * @tc.name: AVTranscoder_Complete002
+ * @tc.desc: Verify the regular transcoding process without callback.
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeAVTranscoderUnitTest, AVTranscoder_Complete002, Level3)
+{
+    GTEST_LOG_(INFO) << "NativeAVTranscoderUnitTest: AVTranscoder_Complete002 start";
+    OH_AVTranscoder *transcoder = OH_AVTranscoder_Create();
+    ASSERT_NE(transcoder, nullptr);
+
+    OH_AVTranscoder_Config *config = OH_AVTranscoderConfig_Create();
+    ASSERT_NE(config, nullptr);
+    int32_t srcFd = open(CHINESE_COLOR_MP4.c_str(), O_RDWR);
+    ASSERT_TRUE(srcFd >= ZERO);
+    int32_t dstFd = open(MOCK_OUTPUT_MP4.c_str(), O_RDWR);
+    ASSERT_TRUE(dstFd >= ZERO);
+
+    InitAVTranscoderConfig(config, srcFd, dstFd);
+
+    OH_AVErrCode errorCode{ AV_ERR_OK };
+    errorCode = OH_AVTranscoder_Prepare(transcoder, config);
+    ASSERT_EQ(errorCode, AV_ERR_OK);
+
+    errorCode = OH_AVTranscoder_Start(transcoder);
+    ASSERT_EQ(errorCode, AV_ERR_OK);
+
+    errorCode = OH_AVTranscoderConfig_Release(config);
+    ASSERT_EQ(errorCode, AV_ERR_OK);
+    errorCode = OH_AVTranscoder_Release(transcoder);
+    ASSERT_EQ(errorCode, AV_ERR_OK);
+
+    close(srcFd);
+    close(dstFd);
+    GTEST_LOG_(INFO) << "NativeAVTranscoderUnitTest: AVTranscoder_Complete002 end";
+}

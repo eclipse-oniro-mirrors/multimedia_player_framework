@@ -18,6 +18,9 @@
 using namespace OHOS;
 using namespace OHOS::Media;
 
+static const int32_t INVALID_TYPE = -1;
+static const int32_t TEST_EXTRA = 0;
+
 std::shared_ptr<TransCoder> TransCoderFactory::CreateTransCoder()
 {
     std::shared_ptr<MockAVTransCoder> transcoder = std::make_shared<MockAVTransCoder>();
@@ -66,31 +69,49 @@ int32_t MockAVTransCoder::SetAudioEncodingBitRate(int32_t bitRate)
 
 int32_t MockAVTransCoder::SetInputFile(int32_t fd, int64_t offset, int64_t size)
 {
+    if (fd < 0 && callback_ != nullptr) {
+        callback_->OnError(MSERR_SUPER_RESOLUTION_NOT_ENABLED, "mock");
+        return MSERR_INVALID_VAL;
+    }
     return MSERR_OK;
 }
 
 int32_t MockAVTransCoder::SetOutputFile(int32_t fd)
 {
+    if (fd < 0 && callback_ != nullptr) {
+        callback_->OnError(MSERR_INVALID_OPERATION, "mock");
+        return MSERR_INVALID_VAL;
+    }
     return MSERR_OK;
 }
 
 int32_t MockAVTransCoder::SetTransCoderCallback(const std::shared_ptr<TransCoderCallback> &callback)
 {
+    callback_ = callback;
     return MSERR_OK;
 }
 
 int32_t MockAVTransCoder::Prepare()
 {
+    if (callback_) {
+        callback_->OnInfo(TransCoderOnInfoType::INFO_TYPE_PROGRESS_UPDATE, TEST_EXTRA);
+    }
     return MSERR_OK;
 }
 
 int32_t MockAVTransCoder::Start()
 {
+    if (callback_) {
+        callback_->OnInfo(TransCoderOnInfoType::INFO_TYPE_TRANSCODER_COMPLETED, TEST_EXTRA);
+    }
     return MSERR_OK;
 }
 
 int32_t MockAVTransCoder::Pause()
 {
+    if (callback_) {
+        callback_->OnInfo(INVALID_TYPE, TEST_EXTRA);
+    }
     return MSERR_OK;
 }
 
