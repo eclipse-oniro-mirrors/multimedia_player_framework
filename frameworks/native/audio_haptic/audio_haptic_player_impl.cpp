@@ -190,8 +190,6 @@ int32_t AudioHapticPlayerImpl::Start()
         "Audio haptic sound is nullptr");
     CHECK_AND_RETURN_RET_LOG(playerState_ != AudioHapticPlayerState::STATE_RUNNING, result,
         "Audio haptic already running");
-    CHECK_AND_RETURN_RET_LOG(playerState_ != AudioHapticPlayerState::STATE_RUNNING, result,
-        "Audio haptic already running");
 
     // If DSP synchronization is supported, generate the syncId before starting
     if (isSupportDSPSync_) {

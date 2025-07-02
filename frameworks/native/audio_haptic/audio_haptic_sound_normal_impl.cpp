@@ -390,7 +390,7 @@ void AHSoundNormalCallback::OnInfo(Media::PlayerOnInfoType type, int32_t extra, 
         MEDIA_LOGI("OnInfo: first frame event reported from AVPlayer.");
         HandleAudioFirstFrameEvent(extra, infoBody);
     } else if (type == INFO_TYPE_EOS) {
-        HandleEOSEvent(extra, infoBody);    
+        HandleEOSEvent(extra, infoBody);
     } else {
         return;
     }
