@@ -348,6 +348,220 @@ HWTEST_F(AVMetaDataCollectorUnitTest, SetStringByValueType, TestSize.Level1)
     EXPECT_TRUE(ret);
 }
  
+/**
+ * @tc.name: GetVideoTrackInfo_001
+ * @tc.desc: GetVideoTrackInfo_001
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, GetVideoTrackInfo_001, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    std::string mime = "video/avc";
+    size_t index = 0;
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    double frameRate = 0;
+    bool ret = meta->GetData(Tag::VIDEO_FRAME_RATE, frameRate);
+    EXPECT_FALSE(ret);
+    avmetaDataCollector->GetVideoTrackInfo(meta, mime, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+}
+
+/**
+ * @tc.name: GetVideoTrackInfo_002
+ * @tc.desc: GetVideoTrackInfo_002
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, GetVideoTrackInfo_002, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    std::string mime = "video/avc";
+    size_t index = 0;
+    double rate = 1;
+    meta->SetData(Tag::VIDEO_FRAME_RATE, rate);
+    double frameRate = 0;
+    bool ret = meta->GetData(Tag::VIDEO_FRAME_RATE, frameRate);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(frameRate, rate);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->GetVideoTrackInfo(meta, mime, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+}
+
+/**
+ * @tc.name: GetSarVideoWidth_001
+ * @tc.desc: GetSarVideoWidth_001
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, GetSarVideoWidth_001, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    std::string mime = "video/avc";
+    meta->SetData(Tag::VIDEO_WIDTH, 100);
+    meta->SetData(Tag::VIDEO_HEIGHT, 100);
+    double videoSar = 0;
+    bool ret = meta->GetData(Tag::VIDEO_SAR, videoSar);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(avmetaDataCollector->GetSarVideoWidth(meta), 100);
+    EXPECT_EQ(avmetaDataCollector->GetSarVideoHeight(meta), 100);
+}
+
+/**
+ * @tc.name: GetSarVideoWidth_002
+ * @tc.desc: GetSarVideoWidth_002
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, GetSarVideoWidth_002, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    std::string mime = "video/avc";
+    meta->SetData(Tag::VIDEO_WIDTH, 100);
+    meta->SetData(Tag::VIDEO_HEIGHT, 100);
+    double sar = 2;
+    meta->SetData(Tag::VIDEO_SAR, sar);
+    double videoSar = 0;
+    bool ret = meta->GetData(Tag::VIDEO_SAR, videoSar);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(videoSar, sar);
+    EXPECT_EQ(avmetaDataCollector->GetSarVideoWidth(meta), 100);
+    EXPECT_EQ(avmetaDataCollector->GetSarVideoHeight(meta), 50);
+}
+
+/**
+ * @tc.name: GetSarVideoWidth_003
+ * @tc.desc: GetSarVideoWidth_003
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, GetSarVideoWidth_003, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    std::string mime = "video/avc";
+    meta->SetData(Tag::VIDEO_WIDTH, 100);
+    meta->SetData(Tag::VIDEO_HEIGHT, 100);
+    double sar = 0.5;
+    meta->SetData(Tag::VIDEO_SAR, sar);
+    double videoSar = 0;
+    bool ret = meta->GetData(Tag::VIDEO_SAR, videoSar);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(videoSar, sar);
+    EXPECT_EQ(avmetaDataCollector->GetSarVideoWidth(meta), 50);
+    EXPECT_EQ(avmetaDataCollector->GetSarVideoHeight(meta), 100);
+}
+
+/**
+ * @tc.name: GetSarVideoWidth_004
+ * @tc.desc: GetSarVideoWidth_004
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, GetSarVideoWidth_004, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    std::string mime = "video/avc";
+    meta->SetData(Tag::VIDEO_WIDTH, 100);
+    meta->SetData(Tag::VIDEO_HEIGHT, 100);
+    double sar = 1;
+    meta->SetData(Tag::VIDEO_SAR, sar);
+    double videoSar = 0;
+    bool ret = meta->GetData(Tag::VIDEO_SAR, videoSar);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(videoSar, sar);
+    EXPECT_EQ(avmetaDataCollector->GetSarVideoWidth(meta), 100);
+    EXPECT_EQ(avmetaDataCollector->GetSarVideoHeight(meta), 100);
+}
+
+/**
+ * @tc.name: InitTracksInfoVector_001
+ * @tc.desc: InitTracksInfoVector_001
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, InitTracksInfoVector_001, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MIME_TYPE, "audio/mpeg");
+    size_t index = 0;
+    std::string mime = "";
+    bool ret = meta->GetData(Tag::MIME_TYPE, mime);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(avmetaDataCollector->IsAudioMime(mime), true);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->InitTracksInfoVector(meta, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+}
+
+/**
+ * @tc.name: InitTracksInfoVector_002
+ * @tc.desc: InitTracksInfoVector_002
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, InitTracksInfoVector_002, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MIME_TYPE, "video/avc");
+    size_t index = 0;
+    std::string mime = "";
+    bool ret = meta->GetData(Tag::MIME_TYPE, mime);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(avmetaDataCollector->IsVideoMime(mime), true);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->InitTracksInfoVector(meta, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+}
+
+/**
+ * @tc.name: InitTracksInfoVector_003
+ * @tc.desc: InitTracksInfoVector_003
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, InitTracksInfoVector_003, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MIME_TYPE, "application/x-subrip");
+    size_t index = 0;
+    std::string mime = "";
+    bool ret = meta->GetData(Tag::MIME_TYPE, mime);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(avmetaDataCollector->IsSubtitleMime(mime), true);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->InitTracksInfoVector(meta, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+}
+
+/**
+ * @tc.name: InitTracksInfoVector_004
+ * @tc.desc: InitTracksInfoVector_004
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, InitTracksInfoVector_004, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MIME_TYPE, "text/vtt");
+    size_t index = 0;
+    std::string mime = "";
+    bool ret = meta->GetData(Tag::MIME_TYPE, mime);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(avmetaDataCollector->IsSubtitleMime(mime), true);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->InitTracksInfoVector(meta, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+}
+
+/**
+ * @tc.name: InitTracksInfoVector_005
+ * @tc.desc: InitTracksInfoVector_005
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, InitTracksInfoVector_005, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MIME_TYPE, "invalid");
+    size_t index = 0;
+    std::string mime = "";
+    bool ret = meta->GetData(Tag::MIME_TYPE, mime);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(avmetaDataCollector->IsSubtitleMime(mime), false);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->InitTracksInfoVector(meta, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+}
 }  // namespace Test
 }  // namespace Media
 }  // namespace OHOS
