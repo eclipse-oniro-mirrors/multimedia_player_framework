@@ -17,7 +17,7 @@
 #include <cstdint>
 #include "gl_utils.h"
 #ifdef USE_M133_SKIA
-#include "third_party/skia/third_party/externals/oboe/samples/RhythmGame/third_party/glm/gtc/matrix_transform.hpp"
+#include "samples/RhythmGame/third_party/glm/gtc/matrix_transform.hpp"
 #else
 #include "third_party/externals/oboe/samples/RhythmGame/third_party/glm/gtc/matrix_transform.hpp"
 #endif
