@@ -187,5 +187,18 @@ std::string LppAudioStreamerClient::GetStreamerId()
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, "", "player service does not exist..");
     return playerProxy_->GetStreamerId();
 }
+
+void LppAudioStreamerClient::MediaServerDied()
+{
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        playerProxy_ = nullptr;
+        listenerStub_ = nullptr;
+    }
+    if (callback_ != nullptr) {
+        callback_->OnError(MSERR_SERVICE_DIED,
+            "mediaserver is died, please create a new audio sink instance again");
+    }
+}
 }  // namespace Media
 }  // namespace OHOS

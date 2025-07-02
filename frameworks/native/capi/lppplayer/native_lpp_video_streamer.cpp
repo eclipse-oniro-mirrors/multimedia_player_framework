@@ -200,7 +200,8 @@ int32_t OH_LowPowerVideoSinkCallback::SetDataNeededListener(
 {
     CHECK_AND_RETURN_RET_LOG(onDataNeeded != nullptr, AV_ERR_INVALID_VAL, "onDataNeeded is nullptr");
     dataNeeededCallback_ = std::make_shared<NativeLowPowerVideoSinkDataNeeededCallback>(onDataNeeded, userData);
-    CHECK_AND_RETURN_RET_LOG(dataNeeededCallback_ != nullptr, AV_ERR_NO_MEMORY, "dataNeeededCallback_ is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(
+        dataNeeededCallback_ != nullptr, AV_ERR_OPERATE_NOT_PERMIT, "dataNeeededCallback_ is nullptr!");
     return AV_ERR_OK;
 }
 
@@ -208,7 +209,7 @@ int32_t OH_LowPowerVideoSinkCallback::SetErrorListener(OH_LowPowerVideoSink_OnEr
 {
     CHECK_AND_RETURN_RET_LOG(onError != nullptr, AV_ERR_INVALID_VAL, "onError is nullptr");
     errorCallback_ = std::make_shared<NativeLowPowerVideoSinkErrorCallback>(onError, userData);
-    CHECK_AND_RETURN_RET_LOG(errorCallback_ != nullptr, AV_ERR_NO_MEMORY, "errorCallback is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(errorCallback_ != nullptr, AV_ERR_OPERATE_NOT_PERMIT, "errorCallback is nullptr!");
     return AV_ERR_OK;
 }
 
@@ -217,7 +218,8 @@ int32_t OH_LowPowerVideoSinkCallback::SetTargetArrivedListener(
 {
     CHECK_AND_RETURN_RET_LOG(onTargetArrived != nullptr, AV_ERR_INVALID_VAL, "onTargetArrived is nullptr");
     targetArrivedCallback_ = std::make_shared<NativeLowPowerVideoSinkTargetArrivedCallback>(onTargetArrived, userData);
-    CHECK_AND_RETURN_RET_LOG(targetArrivedCallback_ != nullptr, AV_ERR_NO_MEMORY, "targetArrivedCallback_ is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(
+        targetArrivedCallback_ != nullptr, AV_ERR_OPERATE_NOT_PERMIT, "targetArrivedCallback_ is nullptr!");
     return AV_ERR_OK;
 }
 
@@ -226,7 +228,8 @@ int32_t OH_LowPowerVideoSinkCallback::SetRenderStartListener(
 {
     CHECK_AND_RETURN_RET_LOG(onRenderStarted != nullptr, AV_ERR_INVALID_VAL, "onRenderStarted is nullptr");
     renderStartedCallback_ = std::make_shared<NativeLowPowerVideoSinkRenderStartedCallback>(onRenderStarted, userData);
-    CHECK_AND_RETURN_RET_LOG(renderStartedCallback_ != nullptr, AV_ERR_NO_MEMORY, "renderStartedCallback_ is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(
+        renderStartedCallback_ != nullptr, AV_ERR_OPERATE_NOT_PERMIT, "renderStartedCallback_ is nullptr!");
     return AV_ERR_OK;
 }
 
@@ -234,7 +237,7 @@ int32_t OH_LowPowerVideoSinkCallback::SetEosListener(OH_LowPowerVideoSink_OnEos 
 {
     CHECK_AND_RETURN_RET_LOG(onEos != nullptr, AV_ERR_INVALID_VAL, "onEos is nullptr");
     eosCallback_ = std::make_shared<NativeLowPowerVideoSinkEosCallback>(onEos, userData);
-    CHECK_AND_RETURN_RET_LOG(eosCallback_ != nullptr, AV_ERR_NO_MEMORY, "eosCallback_ is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(eosCallback_ != nullptr, AV_ERR_OPERATE_NOT_PERMIT, "eosCallback_ is nullptr!");
     return AV_ERR_OK;
 }
 
@@ -243,7 +246,8 @@ int32_t OH_LowPowerVideoSinkCallback::SetStreamChangedListener(
 {
     CHECK_AND_RETURN_RET_LOG(onStreamChanged != nullptr, AV_ERR_INVALID_VAL, "onStreamChanged is nullptr");
     streamChangedCallback_ = std::make_shared<NativeLowPowerVideoSinkStreamChangedCallback>(onStreamChanged, userData);
-    CHECK_AND_RETURN_RET_LOG(streamChangedCallback_ != nullptr, AV_ERR_NO_MEMORY, "streamChangedCallback_ is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(
+        streamChangedCallback_ != nullptr, AV_ERR_OPERATE_NOT_PERMIT, "streamChangedCallback_ is nullptr!");
     return AV_ERR_OK;
 }
 
@@ -254,7 +258,7 @@ int32_t OH_LowPowerVideoSinkCallback::SetFirstFrameReadyListener(
     firstFrameReadyCallback_ =
         std::make_shared<NativeLowPowerVideoSinkFirstFrameReadyCallback>(onFirstFrameReady, userData);
     CHECK_AND_RETURN_RET_LOG(
-        firstFrameReadyCallback_ != nullptr, AV_ERR_NO_MEMORY, "firstFrameReadyCallback_ is nullptr!");
+        firstFrameReadyCallback_ != nullptr, AV_ERR_OPERATE_NOT_PERMIT, "firstFrameReadyCallback_ is nullptr!");
     return AV_ERR_OK;
 }
 
@@ -262,7 +266,13 @@ void OH_LowPowerVideoSinkCallback::OnError(int32_t errorCode, const std::string 
 {
     CHECK_AND_RETURN_LOG(lppVideoStreamer_ != nullptr, "lppVideoStreamer_ is nullptr");
     CHECK_AND_RETURN_LOG(errorCallback_ != nullptr, "errorCallback_ is nullptr");
-    errorCallback_->OnError(lppVideoStreamer_, LppMsErrToOHAvErr(errorCode), errorMsg.c_str());
+
+    OH_AVErrCode avErrorCode = LppMsErrToOHAvErr(errorCode);
+    MediaServiceExtErrCodeAPI9 errorCodeApi9 = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errorCode));
+    std::string errorMsgExt = MSExtAVErrorToString(errorCodeApi9) + errorMsg;
+    MEDIA_LOGE("LowPowerVideoSink errorCode: %{public}d, errorMsg: %{public}s", static_cast<int32_t>(avErrorCode),
+        errorMsgExt.c_str());
+    errorCallback_->OnError(lppVideoStreamer_, avErrorCode, errorMsgExt.c_str());
 }
 
 void OH_LowPowerVideoSinkCallback::OnInfo(VideoStreamerOnInfoType type, int32_t extra, const Format &infoBody)
@@ -275,6 +285,9 @@ void OH_LowPowerVideoSinkCallback::OnInfo(VideoStreamerOnInfoType type, int32_t 
             CHECK_AND_RETURN_LOG(dataNeeededCallback_ != nullptr, "dataNeeededCallback_ is nullptr");
             streamerObj = reinterpret_cast<LowPowerVideoSinkObject *>(lppVideoStreamer_);
             CHECK_AND_RETURN_LOG(streamerObj != nullptr, "streamerObj is nullptr");
+            CHECK_AND_RETURN_LOG(streamerObj->framePacket_ != nullptr &&
+                streamerObj->framePacket_->lppDataPacket_ != nullptr, "framePacket_ is nullptr");
+            streamerObj->framePacket_->lppDataPacket_->Enable();
             dataNeeededCallback_->OnDataNeeded(lppVideoStreamer_, streamerObj->framePacket_);
             break;
         case VIDEO_INFO_TYPE_LPP_FIRST_FRAME_READY:
@@ -318,10 +331,11 @@ OH_LowPowerVideoSink *OH_LowPowerVideoSink_CreateByMime(const char *mime)
     CHECK_AND_RETURN_RET_LOG(mime != nullptr, nullptr, "mime is nullptr");
     std::shared_ptr<VideoStreamer> player = VideoStreamerFactory::CreateByMime(std::string(mime));
     CHECK_AND_RETURN_RET_LOG(player != nullptr, nullptr, "create player failed!");
+    std::string streamerId = player->GetStreamerId();
 
     OHOS::sptr<LppDataPacket> lppDataPacket = OHOS::sptr<LppDataPacket>::MakeSptr();
     CHECK_AND_RETURN_RET_LOG(lppDataPacket != nullptr, nullptr, "create lppDataPacket failed!");
-    lppDataPacket->Init();
+    lppDataPacket->Init(streamerId);
 
     AVSamplesBufferObject* framePacket = new(std::nothrow) AVSamplesBufferObject(lppDataPacket);
     CHECK_AND_RETURN_RET_LOG(framePacket != nullptr, nullptr, "create framePacket failed!");
@@ -338,7 +352,7 @@ OH_AVErrCode OH_LowPowerVideoSink_Configure(OH_LowPowerVideoSink *streamer, cons
     LowPowerVideoSinkObject *streamerObj = reinterpret_cast<LowPowerVideoSinkObject *>(streamer);
 
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_STATE, "videoStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_VAL, "videoStreamer_ is nullptr");
     Format format_ = static_cast<Format>(format->format_);
     int32_t res = streamerObj->videoStreamer_->Configure(format_);
     return LppMsErrToOHAvErr(res);
@@ -351,7 +365,7 @@ OH_AVErrCode OH_LowPowerVideoSink_SetParameter(OH_LowPowerVideoSink *streamer, c
     CHECK_AND_RETURN_RET_LOG(format != nullptr, AV_ERR_INVALID_VAL, "format is nullptr");
     auto streamerObj = reinterpret_cast<LowPowerVideoSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_STATE, "videoStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_VAL, "videoStreamer_ is nullptr");
     auto format_ = static_cast<Format>(format->format_);
     int32_t res = streamerObj->videoStreamer_->SetParameter(format_);
     return LppMsErrToOHAvErr(res);
@@ -375,7 +389,7 @@ OH_AVErrCode OH_LowPowerVideoSink_SetVideoSurface(OH_LowPowerVideoSink *streamer
     window->surface->Disconnect();
     auto streamerObj = reinterpret_cast<LowPowerVideoSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_STATE, "videoStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_VAL, "videoStreamer_ is nullptr");
     int32_t res = streamerObj->videoStreamer_->SetOutputSurface(window->surface);
     return LppMsErrToOHAvErr(res);
 }
@@ -385,7 +399,7 @@ OH_AVErrCode OH_LowPowerVideoSink_Prepare(OH_LowPowerVideoSink *streamer)
     CHECK_AND_RETURN_RET_LOG(streamer != nullptr, AV_ERR_INVALID_VAL, "streamer is nullptr!");
     LowPowerVideoSinkObject *streamerObj = reinterpret_cast<LowPowerVideoSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_STATE, "videoStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_VAL, "videoStreamer_ is nullptr");
     int32_t res = streamerObj->videoStreamer_->Prepare();
     return LppMsErrToOHAvErr(res);
 }
@@ -395,7 +409,7 @@ OH_AVErrCode OH_LowPowerVideoSink_StartDecoder(OH_LowPowerVideoSink *streamer)
     CHECK_AND_RETURN_RET_LOG(streamer != nullptr, AV_ERR_INVALID_VAL, "streamer is nullptr!");
     auto streamerObj = reinterpret_cast<LowPowerVideoSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_STATE, "videoStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_VAL, "videoStreamer_ is nullptr");
     int32_t res = streamerObj->videoStreamer_->StartDecode();
     return LppMsErrToOHAvErr(res);
 }
@@ -406,7 +420,7 @@ OH_AVErrCode OH_LowPowerVideoSink_StartRenderer(OH_LowPowerVideoSink *streamer)
     CHECK_AND_RETURN_RET_LOG(streamer != nullptr, AV_ERR_INVALID_VAL, "streamer is nullptr!");
     auto streamerObj = reinterpret_cast<LowPowerVideoSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_STATE, "videoStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_VAL, "videoStreamer_ is nullptr");
     int32_t res = streamerObj->videoStreamer_->StartRender();
     return LppMsErrToOHAvErr(res);
 }
@@ -416,7 +430,7 @@ OH_AVErrCode OH_LowPowerVideoSink_Pause(OH_LowPowerVideoSink *streamer)
     CHECK_AND_RETURN_RET_LOG(streamer != nullptr, AV_ERR_INVALID_VAL, "streamer is nullptr!");
     auto streamerObj = reinterpret_cast<LowPowerVideoSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_STATE, "videoStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_VAL, "videoStreamer_ is nullptr");
     int32_t res = streamerObj->videoStreamer_->Pause();
     return LppMsErrToOHAvErr(res);
 }
@@ -426,7 +440,7 @@ OH_AVErrCode OH_LowPowerVideoSink_Resume(OH_LowPowerVideoSink *streamer)
     CHECK_AND_RETURN_RET_LOG(streamer != nullptr, AV_ERR_INVALID_VAL, "streamer is nullptr!");
     auto streamerObj = reinterpret_cast<LowPowerVideoSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_STATE, "videoStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_VAL, "videoStreamer_ is nullptr");
     int32_t res = streamerObj->videoStreamer_->Resume();
     return LppMsErrToOHAvErr(res);
 }
@@ -436,7 +450,7 @@ OH_AVErrCode OH_LowPowerVideoSink_Flush(OH_LowPowerVideoSink *streamer)
     CHECK_AND_RETURN_RET_LOG(streamer != nullptr, AV_ERR_INVALID_VAL, "streamer is nullptr!");
     auto streamerObj = reinterpret_cast<LowPowerVideoSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_STATE, "videoStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_VAL, "videoStreamer_ is nullptr");
     int32_t res = streamerObj->videoStreamer_->Flush();
     return LppMsErrToOHAvErr(res);
 }
@@ -446,7 +460,7 @@ OH_AVErrCode OH_LowPowerVideoSink_Stop(OH_LowPowerVideoSink *streamer)
     CHECK_AND_RETURN_RET_LOG(streamer != nullptr, AV_ERR_INVALID_VAL, "streamer is nullptr!");
     auto streamerObj = reinterpret_cast<LowPowerVideoSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_STATE, "videoStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_VAL, "videoStreamer_ is nullptr");
     int32_t res = streamerObj->videoStreamer_->Stop();
     return LppMsErrToOHAvErr(res);
 }
@@ -456,7 +470,7 @@ OH_AVErrCode OH_LowPowerVideoSink_Reset(OH_LowPowerVideoSink *streamer)
     CHECK_AND_RETURN_RET_LOG(streamer != nullptr, AV_ERR_INVALID_VAL, "streamer is nullptr!");
     auto streamerObj = reinterpret_cast<LowPowerVideoSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_STATE, "videoStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_VAL, "videoStreamer_ is nullptr");
     int32_t res = streamerObj->videoStreamer_->Reset();
     return LppMsErrToOHAvErr(res);
 }
@@ -466,7 +480,7 @@ OH_AVErrCode OH_LowPowerVideoSink_Destroy(OH_LowPowerVideoSink *streamer)
     CHECK_AND_RETURN_RET_LOG(streamer != nullptr, AV_ERR_INVALID_VAL, "streamer is nullptr!");
     auto streamerObj = reinterpret_cast<LowPowerVideoSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_STATE, "videoStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_VAL, "videoStreamer_ is nullptr");
     int32_t res = streamerObj->videoStreamer_->Release();
     MEDIA_LOGI("videostreamer release result is %{public}d", res);
     delete streamerObj->framePacket_;
@@ -481,7 +495,7 @@ OH_AVErrCode OH_LowPowerVideoSink_SetSyncAudioSink(
     CHECK_AND_RETURN_RET_LOG(audioStreamer != nullptr, AV_ERR_INVALID_VAL, "audioStreamer is nullptr!");
     auto streamerObj = reinterpret_cast<LowPowerVideoSinkObject *>(videoStreamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_STATE, "videoStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_VAL, "videoStreamer_ is nullptr");
     auto audioStreamerObj = reinterpret_cast<LowPowerAudioSinkObject *>(audioStreamer);
     CHECK_AND_RETURN_RET_LOG(audioStreamerObj != nullptr, AV_ERR_INVALID_VAL, "audioStreamerObj is nullptr");
     CHECK_AND_RETURN_RET_LOG(
@@ -496,7 +510,7 @@ OH_AVErrCode OH_LowPowerVideoSink_SetTargetStartFrame(OH_LowPowerVideoSink *stre
     CHECK_AND_RETURN_RET_LOG(streamer != nullptr, AV_ERR_INVALID_VAL, "streamer is nullptr!");
     auto streamerObj = reinterpret_cast<LowPowerVideoSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_STATE, "videoStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_VAL, "videoStreamer_ is nullptr");
     int32_t res = streamerObj->videoStreamer_->SetTargetStartFrame(framePts, timeoutMs);
     return LppMsErrToOHAvErr(res);
 }
@@ -506,7 +520,7 @@ OH_AVErrCode OH_LowPowerVideoSink_SetPlaybackSpeed(OH_LowPowerVideoSink *streame
     CHECK_AND_RETURN_RET_LOG(streamer != nullptr, AV_ERR_INVALID_VAL, "streamer is nullptr!");
     auto streamerObj = reinterpret_cast<LowPowerVideoSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_STATE, "videoStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_VAL, "videoStreamer_ is nullptr");
     int32_t res = streamerObj->videoStreamer_->SetPlaybackSpeed(speed);
     return LppMsErrToOHAvErr(res);
 }
@@ -517,13 +531,14 @@ OH_AVErrCode OH_LowPowerVideoSink_ReturnSamples(OH_LowPowerVideoSink *streamer, 
     CHECK_AND_RETURN_RET_LOG(frames != nullptr, AV_ERR_INVALID_VAL, "frames is nullptr");
     auto streamerObj = reinterpret_cast<LowPowerVideoSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_STATE, "videoStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_VAL, "videoStreamer_ is nullptr");
     AVSamplesBufferObject *framePacket = reinterpret_cast<AVSamplesBufferObject *>(frames);
     CHECK_AND_RETURN_RET_LOG(framePacket != nullptr, AV_ERR_INVALID_VAL, "framePacket is nullptr");
     CHECK_AND_RETURN_RET_LOG(framePacket->lppDataPacket_ != nullptr, AV_ERR_INVALID_VAL, "lppDataPacket is nullptr");
+    CHECK_AND_RETURN_RET_LOG(framePacket->lppDataPacket_->IsEnable(), AV_ERR_INVALID_VAL, "data packet is not in user");
+    framePacket->lppDataPacket_->Disable();
     int32_t res = streamerObj->videoStreamer_->ReturnFrames(framePacket->lppDataPacket_);
     CHECK_AND_RETURN_RET_LOG(res == MSERR_OK, LppMsErrToOHAvErr(res), "ReturnFrames failed");
-    framePacket->lppDataPacket_->Clear();
     return AV_ERR_OK;
 }
 
@@ -532,7 +547,7 @@ OH_AVErrCode OH_LowPowerVideoSink_RenderFirstFrame(OH_LowPowerVideoSink *streame
     CHECK_AND_RETURN_RET_LOG(streamer != nullptr, AV_ERR_INVALID_VAL, "streamer is nullptr!");
     LowPowerVideoSinkObject *streamerObj = reinterpret_cast<LowPowerVideoSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_STATE, "videoStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_VAL, "videoStreamer_ is nullptr");
     int32_t res = streamerObj->videoStreamer_->RenderFirstFrame();
     return LppMsErrToOHAvErr(res);
 }
@@ -544,7 +559,7 @@ OH_AVErrCode OH_LowPowerVideoSink_RegisterCallback(
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, AV_ERR_INVALID_VAL, "callback is nullptr!");
     auto streamerObj = reinterpret_cast<LowPowerVideoSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_STATE, "videoStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_VAL, "videoStreamer_ is nullptr");
     callback->SetLowPowerVideoSink(streamer);
     std::shared_ptr<VideoStreamerCallback> callbackPtr(callback);
     int32_t res = streamerObj->videoStreamer_->SetLppVideoStreamerCallback(callbackPtr);

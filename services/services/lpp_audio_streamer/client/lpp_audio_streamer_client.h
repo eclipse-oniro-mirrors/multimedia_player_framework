@@ -64,6 +64,8 @@ public:
 
     std::string GetStreamerId() override;
 
+    void MediaServerDied();
+
 private:
     int32_t CreateListenerObject();
 

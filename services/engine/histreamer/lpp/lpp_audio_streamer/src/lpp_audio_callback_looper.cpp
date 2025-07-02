@@ -40,7 +40,9 @@ LppAudioCallbackLooper::LppAudioCallbackLooper(std::string lppAudioStreamerId)
 
 LppAudioCallbackLooper::~LppAudioCallbackLooper()
 {
+    MEDIA_LOG_I("LppAudioCallbackLooper::~LppAudioCallbackLooper in");
     Stop();
+    MEDIA_LOG_I("LppAudioCallbackLooper::~LppAudioCallbackLooper out");
 }
 
 void LppAudioCallbackLooper::OnDataNeeded(const int32_t maxBufferSize)
@@ -59,7 +61,7 @@ void LppAudioCallbackLooper::OnPositionUpdated(const int64_t currentPositionMs)
     MEDIA_LOG_W("LppAudioCallbackLooper not support OnPositionUpdated, please call StartPositionUpdate");
     (void)currentPositionMs;
 }
-void LppAudioCallbackLooper::OnError(const LppErrCode errCode, const std::string &errMsg)
+void LppAudioCallbackLooper::OnError(const MediaServiceErrCode errCode, const std::string &errMsg)
 {
     MEDIA_LOG_I("LppAudioCallbackLooper::OnError" PUBLIC_LOG_S, errMsg.c_str());
     FALSE_RETURN_MSG(task_ != nullptr, "task_ is nullptr");

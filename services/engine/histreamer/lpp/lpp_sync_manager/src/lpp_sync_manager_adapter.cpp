@@ -18,6 +18,7 @@
 #include "lpp_sync_manager_adapter.h"
 #include "common/log.h"
 #include "media_errors.h"
+#include "media_lpp_errors.h"
 #include "media_utils.h"
 #include "surface_buffer.h"
 #include "media_dfx.h"
@@ -196,8 +197,7 @@ int32_t LppSyncManagerAdapter::Flush()
     MediaTrace trace("LppSyncManagerAdapter::Flush");
     MEDIA_LOG_I("Flush enter");
     FALSE_RETURN_V_MSG_E(syncMgrAdapter_ != nullptr, MSERR_UNKNOWN, "syncMgrAdapter_ is nullptr");
-    int32_t ret = syncMgrAdapter_->Flush();
-    FALSE_RETURN_V_MSG(ret == HDF_SUCCESS, MSERR_VID_RENDER_FAILED, "SyncMananger Flush failed, ret");
+    MEDIA_LOG_W("syncMgrAdapter_ flush not implememt!");
     return MSERR_OK;
 }
 
@@ -329,7 +329,15 @@ void LppSyncManagerAdapter::SetEventReceiver(std::shared_ptr<Media::Pipeline::Ev
 
 void LppSyncManagerAdapter::OnError(const int32_t errorCode, const std::string &errorMsg)
 {
-    MEDIA_LOG_W("OnError not implement");
+    MEDIA_LOG_I("OnError: %{public}d", errorCode);
+    MediaServiceErrCode msErrCode = HDIErrorToMSError(errorCode);
+    if (msErrCode == MSERR_OK) {
+        MEDIA_LOG_W("Hardware warning, errorMsg: %{public}s", errorMsg.c_str());
+        return;
+    }
+    FALSE_RETURN_MSG(eventReceiver_ != nullptr, "eventReceiver_ is nullptr");
+    std::pair<MediaServiceErrCode, std::string> errorPair(msErrCode, errorMsg);
+    eventReceiver_->OnEvent({"VideoDecoder", EventType::EVENT_ERROR, errorPair});
 }
 
 void LppSyncManagerAdapter::OnTargetArrived(const int64_t targetPts, const bool isTimeout)
@@ -371,7 +379,7 @@ int32_t LowPowerPlayerFactory::CreateLppSyncManagerAdapter(uint32_t &instanceId,
     MEDIA_LOG_I("CreateLppSyncManagerAdapter enter");
     auto syncAadapter = std::make_unique<LppSyncManagerAdapter>();
     int32_t ret = syncAadapter->LoadAdapter(instanceId);
-    FALSE_RETURN_V_MSG(ret == 0, MSERR_VID_RENDER_FAILED, "LoadAdapter failed");
+    FALSE_RETURN_V_MSG(ret == MSERR_OK, MSERR_VID_RENDER_FAILED, "LoadAdapter failed");
     adapter = std::move(syncAadapter);
     return MSERR_OK;
 }
@@ -381,9 +389,9 @@ int32_t LowPowerPlayerFactory::DestroyLppSyncManagerAdapter(const uint32_t insta
 {
     MediaTrace trace("LowPowerPlayerFactory::DestroyLppSyncManagerAdapter");
     MEDIA_LOG_I("DestroyLppSyncManagerAdapter enter");
-    FALSE_RETURN_V_MSG_E(adapter != nullptr, MSERR_UNKNOWN, "Adapter is nullptr");
+    FALSE_RETURN_V_MSG_E(adapter != nullptr, MSERR_INVALID_VAL, "Adapter is nullptr");
     int32_t ret = adapter->UnloadAdapter(instanceId);
-    FALSE_RETURN_V_MSG_E(ret == MSERR_OK, MSERR_UNKNOWN, "Failed to Destroy LoadAdapter");
+    FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "Failed to Destroy LoadAdapter");
     return MSERR_OK;
 }
 

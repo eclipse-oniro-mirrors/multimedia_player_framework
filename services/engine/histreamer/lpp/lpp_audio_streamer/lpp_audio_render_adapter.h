@@ -39,19 +39,14 @@ public:
     ~LppAudioRenderAdapter();
 
     int32_t Init();
-    void ReleaseRender();
     int32_t Prepare();
-    int32_t PrepareInputBufferQueue();
     int32_t Start();
     int32_t Stop();
     int32_t Reset();
     int32_t SetParameter(const Format &param);
     int32_t Pause();
-    int32_t PauseTransitent();
     int32_t Flush();
     int32_t Resume();
-    int32_t Write(const std::shared_ptr<AVBuffer> &input);
-    int32_t SetRequestDataCallback(const std::shared_ptr<AudioStandard::AudioRendererWriteCallback> &callback);
 
     int32_t Deinit();
     int32_t SetSpeed(float speed);
@@ -69,10 +64,13 @@ public:
         const OHOS::AudioStandard::StateChangeCmdType cmdType);
     void OnOutputDeviceChange(const AudioStandard::AudioDeviceDescriptor &deviceInfo,
         const AudioStandard::AudioStreamDeviceChangeReason reason);
+    void OnError(const AudioStandard::AudioErrors errorCode);
     void OnAudioPolicyServiceDied();
     void OnFirstFrameWriting(uint64_t latency);
 
 private:
+    void ReleaseRender();
+    int32_t PrepareInputBufferQueue();
     void HandleBufferAvailable();
     bool CheckBufferSize(size_t length);
     int32_t GetBufferDesc(AudioStandard::BufferDesc &bufDesc);

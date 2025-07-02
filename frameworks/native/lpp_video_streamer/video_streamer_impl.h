@@ -74,6 +74,8 @@ public:
 
     int32_t RenderFirstFrame() override;
 
+    std::string GetStreamerId() override;
+
 private:
     std::shared_ptr<VideoStreamerCallback> callback_;
     std::shared_ptr<ILppVideoStreamerService> streamerService_ = nullptr;

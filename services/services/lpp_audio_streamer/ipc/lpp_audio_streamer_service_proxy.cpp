@@ -237,10 +237,6 @@ int32_t LppAudioStreamerServiceProxy::ReturnFrames(sptr<LppDataPacket> framePack
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    MEDIA_LOGI("LppAudioStreamerServiceProxy ReturnFrames");
-    MEDIA_LOGD("LppAudioStreamerServiceProxy frame pts:%{public}" PRId64 ".", framePacket->pts_[0]);
-    MEDIA_LOGI("LppAudioStreamerServiceProxy GetCapacity  %{public}d", framePacket->memory_->GetCapacity());
-    MEDIA_LOGI("LppAudioStreamerServiceProxy GetSize  %{public}d", framePacket->memory_->GetSize());
     bool token = data.WriteInterfaceToken(LppAudioStreamerServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
     framePacket->WriteToMessageParcel(data);

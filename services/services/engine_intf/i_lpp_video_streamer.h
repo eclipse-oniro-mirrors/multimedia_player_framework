@@ -19,6 +19,7 @@
 #include <refbase.h>
 #include "format.h"
 #include "lpp_common.h"
+#include "media_lpp_errors.h"
 #ifndef SUPPORT_AUDIO_ONLY
 #include "surface.h"
 #endif
@@ -33,7 +34,7 @@ public:
     virtual ~ILppVideoStreamerEngineObs() = default;
     virtual void OnDataNeeded(const int32_t maxBufferSize, const int32_t maxFrameNum) = 0;
     virtual bool OnAnchorUpdateNeeded(int64_t &anchorPts, int64_t &anchorClk) = 0;
-    virtual void OnError(const LppErrCode errCode, const std::string &errMsg) = 0;
+    virtual void OnError(const MediaServiceErrCode errCode, const std::string &errMsg) = 0;
     virtual void OnEos() = 0;
     virtual void OnRenderStarted() = 0;
     virtual void OnTargetArrived(const int64_t targetPts, const bool isTimeout) = 0;

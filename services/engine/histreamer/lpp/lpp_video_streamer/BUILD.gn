@@ -22,6 +22,16 @@ config("media_engine_histreamer_lpp_video_streamer_config") {
     "MEDIA_OHOS",
   ]
 
+  if (player_framework_support_lowpower_av_sink) {
+    defines += [ "SUPPORT_LPP" ]
+    defines += [ "SUPPORT_LPP_AUDIO_STRAMER" ]
+    defines += [ "SUPPORT_LPP_VIDEO_STRAMER" ]
+  } else {
+    defines += [ "UNSUPPORT_LPP_AUDIO_STRAMER" ]
+    defines += [ "UNSUPPORT_LPP_VIDEO_STRAMER" ]
+    defines += [ "UNSUPPORT_LPP" ]
+  }
+
   cflags = [
     "-O2",
     "-fPIC",
@@ -50,11 +60,13 @@ ohos_static_library("media_engine_histreamer_lpp_video_streamer") {
     debug = false
   }
   sources = [
-    "//foundation/multimedia/player_framework/frameworks/native/common/lpp_common.cpp",
-    "hilpp_vstreamer_impl.cpp",
-    "lpp_video_data_manager.cpp",
-    "lpp_vdec_adapter.cpp",
-    "lpp_video_callback_looper.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/common/lpp_common.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/common/media_lpp_errors.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/common/media_errors.cpp",
+    "./src/hilpp_vstreamer_impl.cpp",
+    "./src/lpp_video_data_manager.cpp",
+    "./src/lpp_vdec_adapter.cpp",
+    "./src/lpp_video_callback_looper.cpp",
   ]
 
   configs = [

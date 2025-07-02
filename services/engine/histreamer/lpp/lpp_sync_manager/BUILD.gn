@@ -48,8 +48,8 @@ ohos_static_library("media_engine_histreamer_lpp_sync_manager") {
     debug = false
   }
   sources = [
-    "lpp_sync_manager.cpp",
-    "lpp_sync_manager_adapter.cpp",
+    "./src/lpp_sync_manager.cpp",
+    "./src/lpp_sync_manager_adapter.cpp",
   ]
 
   configs = [

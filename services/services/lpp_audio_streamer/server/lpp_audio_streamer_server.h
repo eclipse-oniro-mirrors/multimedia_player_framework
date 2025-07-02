@@ -20,6 +20,7 @@
 
 #include "i_lpp_audio_streamer_service.h"
 #include "i_lpp_audio_streamer.h"
+#include "media_errors.h"
 #include "nocopyable.h"
 
 namespace OHOS {
@@ -96,7 +97,6 @@ public:
 
 private:
     int32_t CreateStreamerEngine();
-    void EosPause();
     bool StateEnter(LppAudioState targetState, const std::string funcName = "");
     bool StateCheck(LppAudioState curState);
     bool ErrorCheck(int32_t errorCode);

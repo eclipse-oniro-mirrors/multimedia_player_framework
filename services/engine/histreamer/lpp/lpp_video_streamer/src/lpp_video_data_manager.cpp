@@ -61,6 +61,7 @@ LppVideoDataManager::LppVideoDataManager(const std::string &streamerId, bool isL
     std::string pktIn;
     auto ret = OHOS::system::GetStringParameter("debug.media_service.enable_video_lpp_packet_input", pktIn, "false");
     disablePacketInput_ = ret == 0 ? pktIn == "true" : false;
+    disablePacketInput_ |= !isLpp_;
     std::string enableDump;
     ret = OHOS::system::GetStringParameter("debug.media_service.enable_video_lpp_dump", enableDump, "false");
     dumpBufferNeeded_ = ret == 0 ? enableDump == "true" : false;
@@ -152,6 +153,7 @@ int32_t LppVideoDataManager::Reset()
 int32_t LppVideoDataManager::ProcessNewData(sptr<LppDataPacket> framePacket)
 {
     MEDIA_LOG_D("ProcessNewData, new datapacket arrived");
+    FALSE_RETURN_V_MSG(framePacket != nullptr, MSERR_INVALID_OPERATION, "framePacket is nullptr");
     std::unique_lock<std::mutex> lk(dataPacketMutex_);
     dataPacket_ = framePacket;
     isRequiringData_ = false;

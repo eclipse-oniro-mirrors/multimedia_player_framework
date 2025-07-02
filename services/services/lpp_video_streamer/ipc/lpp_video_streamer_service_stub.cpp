@@ -74,7 +74,6 @@ int32_t LppVideoStreamerServiceStub::Init()
     if (framePacket_ == nullptr) {
         framePacket_ = OHOS::sptr<LppDataPacket>::MakeSptr();
         CHECK_AND_RETURN_RET_LOG(framePacket_ != nullptr, MSERR_NO_MEMORY, "failed to create framePacket_");
-        framePacket_->Init();
     }
     SetPlayerFuncs();
     return MSERR_OK;
@@ -432,6 +431,7 @@ int32_t LppVideoStreamerServiceStub::SetPlaybackSpeed(MessageParcel &data, Messa
 int32_t LppVideoStreamerServiceStub::ReturnFrames(sptr<LppDataPacket> framePacket)
 {
     CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(framePacket != nullptr, MSERR_NO_MEMORY, "framePacket is nullptr");
     return lppVideoPlayerServer_->ReturnFrames(framePacket);
 }
 

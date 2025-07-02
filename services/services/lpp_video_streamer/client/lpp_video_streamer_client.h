@@ -76,6 +76,8 @@ public:
 
     int32_t RenderFirstFrame() override;
 
+    void MediaServerDied();
+
 private:
     int32_t CreateListenerObject();
 

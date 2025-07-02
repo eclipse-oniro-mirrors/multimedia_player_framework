@@ -258,6 +258,7 @@ int32_t LppVideoStreamerServer::ReturnFrames(sptr<LppDataPacket> framePacket)
 {
     MEDIA_LOGI("LppVideoStreamerServer ReturnFrames");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(framePacket != nullptr, MSERR_INVALID_OPERATION, "framePacket is nullptr");
     auto ret = streamerEngine_->ReturnFrames(framePacket);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "ReturnFrames Failed!");
     return ret;
@@ -312,15 +313,6 @@ int32_t LppVideoStreamerServer::RenderFirstFrame()
     return ret;
 }
 
-void LppVideoStreamerServer::EosPause()
-{
-    MEDIA_LOGI("LppVideoStreamerServer::EosPause");
-    CHECK_AND_RETURN_LOG(StateEnter(VideoState::EOS), "wrong state");
-    CHECK_AND_RETURN_LOG(streamerEngine_ != nullptr, "streamerEngine_ is nullptr");
-    auto ret = streamerEngine_->Pause();
-    CHECK_AND_RETURN_LOG(ErrorCheck(ret), "EosPause Failed!");
-}
-
 bool LppVideoStreamerServer::StateEnter(VideoState targetState, std::string funcName)
 {
     std::lock_guard<std::mutex> lock(stateMutex_);
@@ -368,16 +360,19 @@ bool LppVideoStreamerServer::OnAnchorUpdateNeeded(int64_t &anchorPts, int64_t &a
     return false;
 }
 
-void LppVideoStreamerServer::OnError(const LppErrCode errCode, const std::string &errMsg)
+void LppVideoStreamerServer::OnError(const MediaServiceErrCode errCode, const std::string &errMsg)
 {
-    MEDIA_LOGI("LppVideoStreamerServer::OnError");
+    CHECK_AND_RETURN_LOG(callback_ != nullptr, "callback_ is nullptr");
+    MEDIA_LOGE("LppVideoStreamerServer::OnError, errorCode: %{public}d, errorMsg: %{public}s",
+        static_cast<int32_t>(errCode), errMsg.c_str());
     StateEnter(VideoState::ERROR);
+    callback_->OnError(static_cast<int32_t>(errCode), errMsg);
 }
 
 void LppVideoStreamerServer::OnEos()
 {
     MEDIA_LOGI("LppVideoStreamerServer::OnEos");
-    EosPause();
+    CHECK_AND_RETURN_LOG(StateEnter(VideoState::EOS), "wrong state");
     CHECK_AND_RETURN_LOG(callback_ != nullptr, "callback_ is nullptr");
     Format infoBody;
     callback_->OnInfo(VIDEO_INFO_TYPE_LPP_EOS, 0, infoBody);

@@ -573,6 +573,27 @@ void MediaClient::AVScreenCaptureServerDied()
 #endif
 }
 
+void MediaClient::LppServerDied()
+{
+#ifdef SUPPORT_LPP_AUDIO_STRAMER
+    for (auto &it : lppAudioPlayerClientList_) {
+        auto audioStreamer = std::static_pointer_cast<LppAudioStreamerClient>(it);
+        if (audioStreamer != nullptr) {
+            audioStreamer->MediaServerDied();
+        }
+    }
+#endif
+
+#ifdef SUPPORT_LPP_VIDEO_STRAMER
+    for (auto &it : lppVideoStreamerClientList_) {
+        auto videoStreamer = std::static_pointer_cast<LppVideoStreamerClient>(it);
+        if (videoStreamer != nullptr) {
+            videoStreamer->MediaServerDied();
+        }
+    }
+#endif
+}
+
 void MediaClient::DoMediaServerDied()
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -593,6 +614,7 @@ void MediaClient::DoMediaServerDied()
     AVTranscoderServerDied();
     AVRecorderServerDied();
     AVScreenCaptureServerDied();
+    LppServerDied();
     mediaProxyUpdatedCondition_.notify_all();
 }
 

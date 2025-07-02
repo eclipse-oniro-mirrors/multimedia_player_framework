@@ -39,32 +39,29 @@
 namespace OHOS {
 namespace Media {
 
-const std::map<MediaServiceErrCode, OH_AVErrCode> MSERR_OHAVERR_MAP = {
-    {MSERR_OK, AV_ERR_OK},
+const std::map<MediaServiceExtErrCodeAPI9, OH_AVErrCode> MSERREXT_TO_OHAVERR_MAP = {
+    {MSERR_EXT_API9_OK, AV_ERR_OK},
+    {MSERR_EXT_API9_NO_PERMISSION, AV_ERR_OPERATE_NOT_PERMIT},
+    {MSERR_EXT_API9_PERMISSION_DENIED, AV_ERR_OPERATE_NOT_PERMIT},
+    {MSERR_EXT_API9_INVALID_PARAMETER, AV_ERR_INVALID_VAL},
+    {MSERR_EXT_API9_UNSUPPORT_CAPABILITY, AV_ERR_OPERATE_NOT_PERMIT},
+    {MSERR_EXT_API9_NO_MEMORY, AV_ERR_NO_MEMORY},
+    {MSERR_EXT_API9_OPERATE_NOT_PERMIT, AV_ERR_OPERATE_NOT_PERMIT},
+    {MSERR_EXT_API9_IO, AV_ERR_IO},
+    {MSERR_EXT_API9_TIMEOUT, AV_ERR_TIMEOUT},
+    {MSERR_EXT_API9_SERVICE_DIED, AV_ERR_SERVICE_DIED},
+    {MSERR_EXT_API9_UNSUPPORT_FORMAT, AV_ERR_UNSUPPORT},
+    {MSERR_EXT_API9_AUDIO_INTERRUPTED, AV_ERR_OPERATE_NOT_PERMIT},
+    {MSERR_EXT_API20_HARDWARE_FAILED, AV_ERR_HARDWARE_FAILED},
 };
 
-const std::map<MediaServiceErrCode, std::string> MSERRCODE_INFOS = {
-    {MSERR_OK, "no error"},
-};
-
-inline __attribute__((visibility("default"))) OH_AVErrCode LppMsErrToOHAvErr(MediaServiceErrCode code)
+inline __attribute__((visibility("default"))) OH_AVErrCode LppMsErrToOHAvErr(int32_t code)
 {
-    if (MSERR_OHAVERR_MAP.find(code) == MSERR_OHAVERR_MAP.end()) {
-        return AV_ERR_UNKNOWN;
+    MediaServiceExtErrCodeAPI9 errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(code));
+    if (MSERREXT_TO_OHAVERR_MAP.find(errCode) != MSERREXT_TO_OHAVERR_MAP.end()) {
+        return MSERREXT_TO_OHAVERR_MAP.at(errCode);
     }
-    return MSERR_OHAVERR_MAP.at(code);
-}
-inline __attribute__((visibility("default"))) std::string LppMsErrToErrMsg(MediaServiceErrCode code)
-{
-    if (MSERRCODE_INFOS.find(code) == MSERRCODE_INFOS.end()) {
-        return "error unknown";
-    }
-    return MSERRCODE_INFOS.at(code);
-}
-
-inline __attribute__((visibility("default"))) OH_AVErrCode LppMsErrToOHAvErr(int32_t errCode)
-{
-    return LppMsErrToOHAvErr(static_cast<MediaServiceErrCode>(errCode));
+    return AV_ERR_IO;
 }
 
 struct AVSamplesBufferObject : public OH_AVSamplesBuffer {

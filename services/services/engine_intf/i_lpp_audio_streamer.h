@@ -20,6 +20,7 @@
 #include <refbase.h>
 #include "format.h"
 #include "lpp_common.h"
+#include "media_errors.h"
 namespace OHOS {
 namespace Media {
 class ILppAudioStreamerEngineObs : public std::enable_shared_from_this<ILppAudioStreamerEngineObs> {
@@ -27,7 +28,7 @@ public:
     virtual ~ILppAudioStreamerEngineObs() = default;
     virtual void OnDataNeeded(const int32_t maxBufferSize) = 0;
     virtual void OnPositionUpdated(const int64_t currentPositionMs) = 0;
-    virtual void OnError(const LppErrCode errCode, const std::string &errMsg) = 0;
+    virtual void OnError(const MediaServiceErrCode errCode, const std::string &errMsg) = 0;
     virtual void OnEos() = 0;
     virtual void OnInterrupted(const int64_t forceType, const int64_t hint) = 0;
     virtual void OnDeviceChanged(const int64_t reason) = 0;
@@ -38,7 +39,7 @@ public:
     virtual ~ILppAudioStreamerEngine() = default;
     virtual int32_t Init(const std::string &mime) = 0;
     virtual int32_t SetObs(const std::weak_ptr<ILppAudioStreamerEngineObs> &obs) = 0;
-    virtual int32_t SetParameter(const Format &param) = 0;
+    virtual int32_t Configure(const Format &param) = 0;
     virtual int32_t Prepare() = 0;
     virtual int32_t Start() = 0;
     virtual int32_t Pause() = 0;

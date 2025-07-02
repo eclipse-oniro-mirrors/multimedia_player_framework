@@ -91,6 +91,17 @@ const std::map<MediaServiceErrCode, std::string> MSERRCODE_INFOS = {
     {MSERR_SUPER_RESOLUTION_NOT_ENABLED, "super resolution not enabled"},
     {MSERR_GET_INPUT_SURFACE_FAILED, "video encoder or resize get input surface failed"},
     {MSERR_SET_OUTPUT_SURFACE_FAILED, "video decoder or resize set output surface failed"},
+    {MSERR_DSS_THREAD_CREATION_FAILED, "DSS of the LPP thread creation failed"},
+    {MSERR_DSS_TASK_CREATION_FAILED, "DSS of the LPP task creation failed"},
+    {MSERR_DSS_STRAT_FAILED, "DSS of the LPP start failed"},
+    {MSERR_SHB_THREAD_CREATION_FAILED, "SHB of the LPP thread creation failed"},
+    {MSERR_SHB_INIT_FAILED, "SHB of the LPP init failed"},
+    {MSERR_SHB_MSG_QUE_CREATION_FAILED, "SHB of the LPP message queue creation failed"},
+    {MSERR_SHB_NO_MEMORY, "SHB of the LPP failed to allocate memory."},
+    {MSERR_SHB_CRASH_ERROR, "SHB of the LPP crash happend."},
+    {MSERR_RS_INIT_FAILED, "RS of the LPP init failed"},
+    {MSERR_RS_DATA_FALLBACK_FAILED, "RS of the LPP data fallback failed"},
+    {MSERR_HARDWARE_ERROR, "underlying hardware error happened"},
 };
 
 const std::map<MediaServiceErrCode, MediaServiceExtErrCode> MSERRCODE_TO_EXTERRORCODE = {
@@ -152,6 +163,17 @@ const std::map<MediaServiceErrCode, MediaServiceExtErrCode> MSERRCODE_TO_EXTERRO
     {MSERR_SUPER_RESOLUTION_NOT_ENABLED,        MSERR_EXT_UNKNOWN},
     {MSERR_GET_INPUT_SURFACE_FAILED,            MSERR_EXT_UNKNOWN},
     {MSERR_SET_OUTPUT_SURFACE_FAILED,           MSERR_EXT_UNKNOWN},
+    {MSERR_DSS_THREAD_CREATION_FAILED,          MSERR_EXT_UNKNOWN},
+    {MSERR_DSS_TASK_CREATION_FAILED,            MSERR_EXT_UNKNOWN},
+    {MSERR_DSS_STRAT_FAILED,                    MSERR_EXT_EXTEND_START},
+    {MSERR_SHB_THREAD_CREATION_FAILED,          MSERR_EXT_UNKNOWN},
+    {MSERR_SHB_INIT_FAILED,                     MSERR_EXT_UNKNOWN},
+    {MSERR_SHB_MSG_QUE_CREATION_FAILED,         MSERR_EXT_UNKNOWN},
+    {MSERR_SHB_NO_MEMORY,                       MSERR_EXT_NO_MEMORY},
+    {MSERR_SHB_CRASH_ERROR,                     MSERR_EXT_SERVICE_DIED},
+    {MSERR_RS_INIT_FAILED,                      MSERR_EXT_UNKNOWN},
+    {MSERR_RS_DATA_FALLBACK_FAILED,             MSERR_EXT_UNKNOWN},
+    {MSERR_HARDWARE_ERROR,                      MSERR_EXT_UNKNOWN},
 };
 
 const std::map<MediaServiceExtErrCode, std::string> MSEXTERRCODE_INFOS = {
@@ -236,6 +258,17 @@ const std::map<MediaServiceErrCode, MediaServiceExtErrCodeAPI9> MSERRCODE_TO_EXT
     {MSERR_SUPER_RESOLUTION_NOT_ENABLED,        MSERR_EXT_API16_SUPER_RESOLUTION_NOT_ENABLED},
     {MSERR_GET_INPUT_SURFACE_FAILED,            MSERR_EXT_API9_IO},
     {MSERR_SET_OUTPUT_SURFACE_FAILED,           MSERR_EXT_API9_IO},
+    {MSERR_DSS_THREAD_CREATION_FAILED,          MSERR_EXT_API20_HARDWARE_FAILED},
+    {MSERR_DSS_TASK_CREATION_FAILED,            MSERR_EXT_API20_HARDWARE_FAILED},
+    {MSERR_DSS_STRAT_FAILED,                    MSERR_EXT_API20_HARDWARE_FAILED},
+    {MSERR_SHB_THREAD_CREATION_FAILED,          MSERR_EXT_API20_HARDWARE_FAILED},
+    {MSERR_SHB_INIT_FAILED,                     MSERR_EXT_API20_HARDWARE_FAILED},
+    {MSERR_SHB_MSG_QUE_CREATION_FAILED,         MSERR_EXT_API20_HARDWARE_FAILED},
+    {MSERR_SHB_NO_MEMORY,                       MSERR_EXT_API9_NO_MEMORY},
+    {MSERR_SHB_CRASH_ERROR,                     MSERR_EXT_API20_HARDWARE_FAILED},
+    {MSERR_RS_INIT_FAILED,                      MSERR_EXT_API20_HARDWARE_FAILED},
+    {MSERR_RS_DATA_FALLBACK_FAILED,             MSERR_EXT_API20_HARDWARE_FAILED},
+    {MSERR_HARDWARE_ERROR,                      MSERR_EXT_API20_HARDWARE_FAILED},
 };
 
 const std::map<MediaServiceExtErrCodeAPI9, std::string> MSEXTERRCODE_API9_INFOS = {
@@ -263,6 +296,7 @@ const std::map<MediaServiceExtErrCodeAPI9, std::string> MSEXTERRCODE_API9_INFOS 
     {MSERR_EXT_API14_IO_SSL_SERVER_CERT_UNTRUSTED, "IO SSL Server Cert Untrusted: "},
     {MSERR_EXT_API14_IO_UNSUPPORTTED_REQUEST, "IO Unsupported Request: "},
     {MSERR_EXT_API16_SEEK_CONTINUOUS_UNSUPPORTED, "Seek continuous unsupported: "},
+    {MSERR_EXT_API20_HARDWARE_FAILED, "Hardware failed: "}
 };
 
 const std::set<MediaServiceErrCode> API14_EXT_IO_ERRORS = {
