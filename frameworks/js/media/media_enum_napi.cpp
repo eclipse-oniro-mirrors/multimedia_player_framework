@@ -141,7 +141,7 @@ static const std::vector<struct JsEnumInt> g_playbackSpeed = {
 };
 
 static const std::vector<struct JsEnumInt> g_mediaType = {
-    { "MEDIA_TYPE_UNSUPPORT", static_cast<int32_t>(Plugins::MediaType::UNKNOWN) },
+    { "MEDIA_TYPE_UNSUPPORTED", static_cast<int32_t>(Plugins::MediaType::UNKNOWN) },
     { "MEDIA_TYPE_AUD", static_cast<int32_t>(Plugins::MediaType::AUDIO) },
     { "MEDIA_TYPE_VID", static_cast<int32_t>(Plugins::MediaType::VIDEO) },
     { "MEDIA_TYPE_SUBTITLE", static_cast<int32_t>(Plugins::MediaType::SUBTITLE) },
