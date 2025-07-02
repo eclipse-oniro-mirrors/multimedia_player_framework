@@ -348,10 +348,12 @@ void AudioHapticSoundNormalImpl::NotifyInterruptEvent(AudioStandard::InterruptEv
     }
 }
 
-void AudioHapticSoundNormalImpl::NotifyEndOfStreamEvent()
+void AudioHapticSoundNormalImpl::NotifyEndOfStreamEvent(const bool &isLoop)
 {
     MEDIA_LOGI("NotifyEndOfStreamEvent");
-    playerState_ = AudioHapticPlayerState::STATE_STOPPED;
+    if (!isLoop) {
+        playerState_ = AudioHapticPlayerState::STATE_STOPPED;
+    }
     std::shared_ptr<AudioHapticSoundCallback> cb = audioHapticPlayerCallback_.lock();
     if (cb != nullptr) {
         MEDIA_LOGI("NotifyEndOfStreamEvent for audio haptic player");
@@ -387,6 +389,8 @@ void AHSoundNormalCallback::OnInfo(Media::PlayerOnInfoType type, int32_t extra, 
     } else if (type == INFO_TYPE_AUDIO_FIRST_FRAME) {
         MEDIA_LOGI("OnInfo: first frame event reported from AVPlayer.");
         HandleAudioFirstFrameEvent(extra, infoBody);
+    } else if (type == INFO_TYPE_EOS) {
+        HandleEOSEvent(extra, infoBody);    
     } else {
         return;
     }
@@ -430,8 +434,6 @@ void AHSoundNormalCallback::HandleStateChangeEvent(int32_t extra, const Format &
 
     if (avPlayerState == PLAYER_PREPARED) {
         soundNormalImpl->NotifyPreparedEvent();
-    } else if (avPlayerState == PLAYER_PLAYBACK_COMPLETE) {
-        soundNormalImpl->NotifyEndOfStreamEvent();
     }
 }
 
@@ -470,5 +472,18 @@ void AHSoundNormalCallback::HandleAudioFirstFrameEvent(int32_t extra, const Form
     }
     soundNormalImpl->NotifyFirstFrameEvent(latency);
 }
+
+void AHSoundNormalCallback::HandleEOSEvent(int32_t extra, const Format &infoBody)
+{
+    MEDIA_LOGI("AHSoundNormalCallback::HandleEOSEvent from AVPlayer");
+    
+    std::shared_ptr<AudioHapticSoundNormalImpl> soundNormalImpl = soundNormalImpl_.lock();
+    if (soundNormalImpl == nullptr) {
+        MEDIA_LOGE("The audio haptic player for normal mode has been released.");
+        return;
+    }
+    soundNormalImpl->NotifyEndOfStreamEvent(static_cast<bool>(extra));
+}
+
 } // namesapce AudioStandard
 } // namespace OHOS

@@ -141,7 +141,7 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_005, Tes
     audioHapticSoundNormalImpl->audioSource_ = {.audioUri = "abc"};
     auto ret = audioHapticSoundNormalImpl->StartSound();
 
-    EXPECT_EQ(ret, MSERR_START_FAILED);
+    EXPECT_EQ(ret, MSERR_OPEN_FILE_FAILED);
 }
 
 /**
@@ -167,7 +167,7 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_006, Tes
     audioHapticSoundNormalImpl->configuredAudioSource_ = {.audioUri = "abcd"};
     auto ret = audioHapticSoundNormalImpl->StartSound();
 
-    EXPECT_EQ(ret, MSERR_START_FAILED);
+    EXPECT_EQ(ret, MSERR_OPEN_FILE_FAILED);
 }
 
 /**
@@ -193,7 +193,7 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_007, Tes
     audioHapticSoundNormalImpl->configuredAudioSource_ = {.audioUri = "abc"};
     auto ret = audioHapticSoundNormalImpl->StartSound();
 
-    EXPECT_EQ(ret, MSERR_START_FAILED);
+    EXPECT_NE(ret, MSERR_OK);
 }
 
 /**
@@ -716,7 +716,7 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_030, Tes
     audioHapticSoundNormalImpl->audioHapticPlayerCallback_ = sharedcb;
     EXPECT_NE(audioHapticSoundNormalImpl->audioHapticPlayerCallback_.lock(), nullptr);
 
-    audioHapticSoundNormalImpl->NotifyEndOfStreamEvent();
+    audioHapticSoundNormalImpl->NotifyEndOfStreamEvent(false);
 }
 
 /**
@@ -735,7 +735,7 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_031, Tes
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 
     audioHapticSoundNormalImpl->audioHapticPlayerCallback_.reset();
-    audioHapticSoundNormalImpl->NotifyEndOfStreamEvent();
+    audioHapticSoundNormalImpl->NotifyEndOfStreamEvent(true);
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
 }
 

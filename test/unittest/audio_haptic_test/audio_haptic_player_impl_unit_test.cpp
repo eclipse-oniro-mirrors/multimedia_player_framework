@@ -935,9 +935,32 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_046, TestSize.Leve
 
     EXPECT_NE(audioHapticPlayerImpl, nullptr);
 
-    audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_NEW;
-
+    audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_STOPPED;
     audioHapticPlayerImpl->HandleEndOfStreamEvent();
+    EXPECT_EQ(audioHapticPlayerImpl->playerState_, AudioHapticPlayerState::STATE_STOPPED);
+
+    audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_NEW;
+    audioHapticPlayerImpl->HandleEndOfStreamEvent();
+    EXPECT_EQ(audioHapticPlayerImpl->playerState_, AudioHapticPlayerState::STATE_STOPPED);
+
+    int32_t syncId = 1;
+    audioHapticPlayerImpl->audioHapticSyncId_ = syncId;
+    audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_NEW;
+    audioHapticPlayerImpl->HandleEndOfStreamEvent();
+    EXPECT_EQ(audioHapticPlayerImpl->playerState_, AudioHapticPlayerState::STATE_STOPPED);
+    EXPECT_EQ(audioHapticPlayerImpl->audioHapticSyncId_, syncId);
+
+    audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_NEW;
+    audioHapticPlayerImpl->isSupportDSPSync_ = false;
+    audioHapticPlayerImpl->loop_ = true;
+    audioHapticPlayerImpl->HandleEndOfStreamEvent();
+    EXPECT_EQ(audioHapticPlayerImpl->playerState_, AudioHapticPlayerState::STATE_NEW);
+    EXPECT_EQ(audioHapticPlayerImpl->audioHapticSyncId_, syncId);
+
+    audioHapticPlayerImpl->isSupportDSPSync_ = true;
+    audioHapticPlayerImpl->HandleEndOfStreamEvent();
+    EXPECT_EQ(audioHapticPlayerImpl->playerState_, AudioHapticPlayerState::STATE_NEW);
+    EXPECT_EQ(audioHapticPlayerImpl->audioHapticSyncId_, ++syncId);
 }
 
 /**
@@ -1203,6 +1226,91 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_059, TestSize.Leve
     EXPECT_EQ(MSERR_INVALID_VAL, audioHapticPlayerImpl->SetHapticsRamp(1000, 50.0f, 101.0f));
     // test all params ok
     EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, audioHapticPlayerImpl->SetHapticsRamp(1000, 50.0f, 90.0f));
+}
+
+/**
+ * @tc.name  : Test SetHapticsFeature API
+ * @tc.number: AudioHapticPlayerImpl_060
+ * @tc.desc  : Test AudioHapticPlayerImpl::SetHapticsFeature()
+ */
+HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_060, TestSize.Level1)
+{
+    auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
+    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+
+    audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_RELEASED;
+    EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, audioHapticPlayerImpl->SetHapticsFeature(HapticsFeature::GENTLE_HAPTICS));
+
+    audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_STOPPED;
+    EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, audioHapticPlayerImpl->SetHapticsFeature(HapticsFeature::GENTLE_HAPTICS));
+
+    AudioHapticPlayerImpl audioHapticPlayerImpl2;
+    auto audioHapticVibrator_ = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl2);
+    audioHapticPlayerImpl->audioHapticVibrator_ = audioHapticVibrator_;
+    EXPECT_NE(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
+
+    audioHapticPlayerImpl->isGentle_.store(true);
+    EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, audioHapticPlayerImpl->SetHapticsFeature(HapticsFeature::GENTLE_HAPTICS));
+    
+    audioHapticPlayerImpl->isGentle_.store(false);
+    EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, audioHapticPlayerImpl->SetHapticsFeature(HapticsFeature::GENTLE_HAPTICS));
+}
+
+/**
+ * @tc.name  : Test AudioHapticPlayerImpl API
+ * @tc.number: AudioHapticPlayerImpl_061
+ * @tc.desc  : Test AudioHapticPlayerImpl::Start()
+ */
+HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_061, TestSize.Level1)
+{
+    auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
+    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    EXPECT_EQ(audioHapticPlayerImpl->audioHapticSyncId_, MSERR_OK);
+
+    AudioHapticPlayerImpl audioHapticPlayerImpl2;
+    audioHapticPlayerImpl->audioHapticVibrator_ = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl2);
+    EXPECT_NE(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
+    
+    AudioSource audioSource;
+    audioHapticPlayerImpl->audioHapticSound_ =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, false, AudioStandard::STREAM_USAGE_UNKNOWN);
+    EXPECT_NE(audioHapticPlayerImpl->audioHapticSound_, nullptr);
+
+    audioHapticPlayerImpl->vibrateThread_ = nullptr;
+    audioHapticPlayerImpl->isSupportDSPSync_ = true;
+    auto ret = audioHapticPlayerImpl->Start();
+    EXPECT_NE(ret, MSERR_OK);
+    EXPECT_NE(audioHapticPlayerImpl->audioHapticSyncId_, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test AudioHapticPlayerImpl API
+ * @tc.number: AudioHapticPlayerImpl_062
+ * @tc.desc  : Test AudioHapticPlayerImpl::NotifyFirstFrame()
+ */
+HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_062, TestSize.Level1)
+{
+    auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
+    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    
+    int32_t latency = 0;
+
+    audioHapticPlayerImpl->isSupportDSPSync_ = false;
+    audioHapticPlayerImpl->NotifyFirstFrame(latency);
+    EXPECT_EQ(audioHapticPlayerImpl->isFirstFrameAfterStart_.load(), true);
+
+    audioHapticPlayerImpl->isSupportDSPSync_ = true;
+    audioHapticPlayerImpl->latencyMode_ = AUDIO_LATENCY_MODE_NORMAL;
+    audioHapticPlayerImpl->NotifyFirstFrame(latency);
+    EXPECT_EQ(audioHapticPlayerImpl->isFirstFrameAfterStart_.load(), false);
+
+    audioHapticPlayerImpl->latencyMode_ = AUDIO_LATENCY_MODE_FAST;
+    audioHapticPlayerImpl->isFirstFrameAfterStart_ = true;
+    audioHapticPlayerImpl->NotifyFirstFrame(latency);
+    EXPECT_EQ(audioHapticPlayerImpl->isFirstFrameAfterStart_.load(), false);
+
+    audioHapticPlayerImpl->NotifyFirstFrame(latency);
+    EXPECT_EQ(audioHapticPlayerImpl->isFirstFrameAfterStart_.load(), false);
 }
 } // namespace Media
 } // namespace OHOS
