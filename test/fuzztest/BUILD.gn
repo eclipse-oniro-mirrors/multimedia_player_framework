@@ -28,6 +28,8 @@ group("fuzztest") {
     "avmetadata_fuzztest/avmetadatasetsource_fuzzer:AVmetadataSetSourceFuzzTest",
     "avmetadata_fuzztest/avmetadatastub_fuzzer:AVmetadataStubFuzzTest",
     "avmetadata_fuzztest/avmetadatastublocal_fuzzer:AVmetadataStubLocalFuzzTest",
+    "lowpoweravsink_fuzztest/lowpoweraudiosink_fuzzer:LowPowerAudioSinkFuzzTest",
+    "lowpoweravsink_fuzztest/lowpowervideosink_fuzzer:LowPowerVideoSinkFuzzTest",
     "player_fuzztest/playerapi_fuzzer:PlayerApiFuzzTest",
     "player_fuzztest/playerdatasrc_fuzzer:PlayerDataSrcFuzzTest",
     "player_fuzztest/playerfile_fuzzer:PlayerFileFuzzTest",
