@@ -3476,7 +3476,7 @@ int32_t HiPlayerImpl::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMut
                 videoDecoder_->Flush();
             }
         }
-        bool needReinit = !isMuted && surface_ != nullptr && ((!keepDecodingOnMute_ && isVideoMuted_ != isMuted) ||
+        bool needReinit = !isMuted && surface_ != nullptr && (isVideoMuted_ != isMuted ||
             (!isVideoDecoderInited_ && mutedMediaType_ == OHOS::Media::MediaType::MEDIA_TYPE_VID));
         isVideoMuted_ = isMuted;
         FALSE_RETURN_V_NOLOG(needReinit, MSERR_OK);
