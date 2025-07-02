@@ -82,7 +82,7 @@ private:
     std::mutex audioHapticPlayerLock_;
     HapticsMode hapticsMode_ = HapticsMode::HAPTICS_MODE_INVALID;
     std::atomic<int32_t> audioHapticSyncId_ = 0;
-    bool isSupportDSPSync_ = true;
+    bool isSupportDSPSync_ = false;
     std::atomic<bool> isFirstFrameAfterStart_ = true;
 
     // var for callback
