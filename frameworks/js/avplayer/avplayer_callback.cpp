@@ -1323,6 +1323,10 @@ int32_t AVPlayerCallback::SetDrmInfoData(const uint8_t *drmInfoAddr, int32_t inf
             ssConverter << std::hex << std::setfill('0') << std::setw(2) << singleUuid; // 2:w
             uuid = ssConverter.str();
         }
+        if (temp.psshLen <= 0 && temp.psshLen > DrmConstant::DRM_MAX_M3U8_DRM_PSSH_LEN) {
+            MEDIA_LOGW("drmInfoItem psshLen is invalid");
+            continue;
+        }
         std::vector<uint8_t> pssh(temp.pssh, temp.pssh + temp.psshLen);
         drmInfoMap.insert({ uuid, pssh });
     }
