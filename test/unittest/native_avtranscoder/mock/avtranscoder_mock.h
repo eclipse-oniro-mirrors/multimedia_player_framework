@@ -44,6 +44,9 @@ public:
     int32_t Resume() override;
     int32_t Cancel() override;
     int32_t Release() override;
+
+private:
+    std::shared_ptr<TransCoderCallback> callback_;
 };
 } // namespace Media
 } // namespace OHOS
