@@ -567,6 +567,21 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetDisplayIdSelected(OH_AVScreenC
  */
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForBFramesEncoding(
     OH_AVScreenCapture_CaptureStrategy *strategy, bool value);
+
+/**
+ * @brief set whether to pop up the screen capture Picker
+ * @param {OH_AVScreenCapture_CaptureStrategy*} strategy Pointer to an OH_AVScreenCapture_CaptureStrategy instance
+ * @param {bool} value
+ *          if set to false, it means that the APP don't need to pop up the Picker after screen capture starts;
+ *          if set to true, the Picker will pop up uniformly after screen capture starts;
+ *          if not set, it means using the system recommended behavior.
+ * @return Function result code.
+ *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
+ *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} strategy value is nullptr.
+ * @since 20
+ */
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForPickerPopUp(
+    OH_AVScreenCapture_CaptureStrategy *strategy, bool value);
 #ifdef __cplusplus
 }
 #endif

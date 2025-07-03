@@ -414,7 +414,7 @@ int32_t ScreenCaptureServer::RegisterWindowLifecycleListener(std::vector<int32_t
 {
     MEDIA_LOGI("RegisterWindowLifecycleListener start, windowIdListSize: %{public}d",
         static_cast<int32_t>(windowIdList.size()));
-    
+
     auto sceneSessionManager = SessionManagerLite::GetInstance().GetSceneSessionManagerLiteProxy();
     CHECK_AND_RETURN_RET_LOG(sceneSessionManager != nullptr, MSERR_INVALID_OPERATION,
         "sceneSessionManager is nullptr, RegisterWindowLifecycleListener failed.");
@@ -435,7 +435,7 @@ int32_t ScreenCaptureServer::RegisterWindowLifecycleListener(std::vector<int32_t
             MEDIA_LOGI("RegisterWindowLifecycleListener AddDeathRecipient success.");
         }
     }
-    
+
     if (windowLifecycleListener_ != nullptr) {
         MEDIA_LOGI("RegisterWindowLifecycleListener windowLifecycleListener already registered");
         return MSERR_OK;
@@ -445,7 +445,7 @@ int32_t ScreenCaptureServer::RegisterWindowLifecycleListener(std::vector<int32_t
     CHECK_AND_RETURN_RET_LOG(listener != nullptr, MSERR_INVALID_OPERATION,
         "create new windowLifecycleListener failed.");
     windowLifecycleListener_ = listener;
-    
+
     Rosen::WMError ret = sceneSessionManager->RegisterSessionLifecycleListenerByIds(windowLifecycleListener_,
         windowIdList);
     CHECK_AND_RETURN_RET_LOG(ret == Rosen::WMError::WM_OK, MSERR_INVALID_OPERATION,
@@ -510,7 +510,7 @@ int32_t ScreenCaptureServer::RegisterWindowInfoChangedListener()
         observedInfo, windowInfoChangedListener_);
     CHECK_AND_RETURN_RET_LOG(ret == Rosen::WMError::WM_OK, MSERR_INVALID_OPERATION,
         "RegisterWindowInfoChangedListener failed.");
-    
+
     MEDIA_LOGI("RegisterWindowInfoChangedListener end");
     return MSERR_OK;
 }
@@ -2322,8 +2322,8 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
     AAFwk::Want want;
     ErrCode ret = ERR_INVALID_VALUE;
 #ifdef PC_STANDARD
-    if (!isRegionCapture_ &&
-        (captureConfig_.captureMode == CAPTURE_SPECIFIED_SCREEN || CheckCaptureSpecifiedWindowForSelectWindow())) {
+    if (IsPickerPopUp()) {
+        isRegionCapture_ = false;
         AppExecFwk::ElementName element("",
             GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"],
             SELECT_ABILITY_NAME); // DeviceID
@@ -2814,6 +2814,18 @@ int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForWindowForHopper(sptr<Rose
     MEDIA_LOGI("MakeVirtualScreenMirror window screen success, screenId:%{public}" PRIu64, defaultDisplayId);
     displayScreenId_ = defaultDisplayId;
     return MSERR_OK;
+}
+
+bool ScreenCaptureServer::IsPickerPopUp()
+{
+    if (captureConfig_.strategy.pickerPopUp == AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_ENABLE) {
+        return true;
+    }
+    if (captureConfig_.strategy.pickerPopUp == AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_DISABLE) {
+        return false;
+    }
+    return !isRegionCapture_ &&
+           (captureConfig_.captureMode == CAPTURE_SPECIFIED_SCREEN || CheckCaptureSpecifiedWindowForSelectWindow());
 }
 #endif
 
@@ -3540,7 +3552,7 @@ int32_t ScreenCaptureServer::ResizeCanvas(int32_t width, int32_t height)
 
     return MSERR_OK;
 }
- 
+
 int32_t ScreenCaptureServer::UpdateSurface(sptr<Surface> surface)
 {
     if (!isSurfaceMode_) {
@@ -3554,12 +3566,12 @@ int32_t ScreenCaptureServer::UpdateSurface(sptr<Surface> surface)
         return MSERR_INVALID_OPERATION;
     }
     CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_INVALID_OPERATION, "UpdateSurface failed, invalid param");
- 
+
     auto res = ScreenManager::GetInstance().SetVirtualScreenSurface(virtualScreenId_, surface);
     MEDIA_LOGI("UpdateSurface, ret: %{public}d ", res);
     CHECK_AND_RETURN_RET_LOG(res == DMError::DM_OK, MSERR_UNSUPPORT, "UpdateSurface failed");
     surface_ = surface;
- 
+
     return MSERR_OK;
 }
 
@@ -3604,7 +3616,7 @@ int32_t ScreenCaptureServer::SetMaxVideoFrameRate(int32_t frameRate)
         MEDIA_LOGE("SetMaxVideoFrameRate frameRate is invalid, frameRate:%{public}d", frameRate);
         return MSERR_INVALID_VAL;
     }
-    
+
     uint32_t actualRefreshRate = 0;
     auto res = ScreenManager::GetInstance().SetVirtualScreenMaxRefreshRate(virtualScreenId_,
         static_cast<uint32_t>(frameRate), actualRefreshRate);
@@ -3865,8 +3877,7 @@ bool ScreenCaptureServer::DestroyPopWindow()
         return true;
     }
 #ifdef PC_STANDARD
-    if (!isRegionCapture_ &&
-        (captureConfig_.captureMode == CAPTURE_SPECIFIED_SCREEN || CheckCaptureSpecifiedWindowForSelectWindow())) {
+    if (IsPickerPopUp()) {
         MEDIA_LOGI("DestroyPopWindow end, type: picker, deviceType: PC.");
         ErrCode ret = ERR_INVALID_VALUE;
         AAFwk::Want want;
@@ -4008,9 +4019,10 @@ int32_t ScreenCaptureServer::SetScreenCaptureStrategy(ScreenCaptureStrategy stra
     CHECK_AND_RETURN_RET_LOG(captureState_ < AVScreenCaptureState::POPUP_WINDOW, MSERR_INVALID_STATE,
         "strategy can not be modified after screen capture started");
     MEDIA_LOGI("SetScreenCaptureStrategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d,"
-        "strategyForPrivacyMaskMode: %{public}d, canvasFollowRotation: %{public}d, enableBFrame: %{public}d",
+            "strategyForPrivacyMaskMode: %{public}d, canvasFollowRotation: %{public}d, enableBFrame: %{public}d,"
+            "pickerPopUp: %{public}d",
         strategy.enableDeviceLevelCapture, strategy.keepCaptureDuringCall, strategy.strategyForPrivacyMaskMode,
-        strategy.canvasFollowRotation, strategy.enableBFrame);
+        strategy.canvasFollowRotation, strategy.enableBFrame, static_cast<int32_t>(strategy.pickerPopUp));
     captureConfig_.strategy = strategy;
     return MSERR_OK;
 }

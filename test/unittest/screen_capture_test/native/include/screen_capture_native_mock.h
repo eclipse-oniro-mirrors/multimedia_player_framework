@@ -61,6 +61,7 @@ public:
     int32_t SetCanvasFollowRotationStrategy(bool value) override;
     int32_t StrategyForBFramesEncoding(bool value) override;
     int32_t StrategyForPrivacyMaskMode(int32_t value) override;
+    int32_t StrategyForPickerPopUp(bool value) override;
 private:
     std::shared_ptr<ScreenCapture> screenCapture_ = nullptr;
     std::shared_ptr<ScreenCaptureCallBack> cb_;

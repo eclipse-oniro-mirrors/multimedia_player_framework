@@ -116,6 +116,7 @@ public:
     virtual int32_t SetCanvasFollowRotationStrategy(bool value);
     virtual int32_t StrategyForBFramesEncoding(bool value);
     virtual int32_t StrategyForPrivacyMaskMode(int32_t value);
+    virtual int32_t StrategyForPickerPopUp(bool value);
 };
 
 class __attribute__((visibility("default"))) ScreenCaptureMockFactory {
