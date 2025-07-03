@@ -35,7 +35,7 @@ public:
 
     void OnDataNeeded(const int32_t maxBufferSize, const int32_t maxFrameNum) override;
     bool OnAnchorUpdateNeeded(int64_t &anchorPts, int64_t &anchorClk) override;
-    void OnError(const LppErrCode errCode, const std::string &errMsg) override;
+    void OnError(const MediaServiceErrCode errCode, const std::string &errMsg) override;
     void OnEos() override;
     void OnRenderStarted() override;
     void OnTargetArrived(const int64_t targetPts, const bool isTimeout) override;

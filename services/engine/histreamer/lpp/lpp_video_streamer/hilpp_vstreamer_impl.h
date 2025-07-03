@@ -14,6 +14,9 @@
  */
 #ifndef HILPP_VSTREAMER_IMPL_H
 #define HILPP_VSTREAMER_IMPL_H
+
+#include <mutex>
+
 #include "i_lpp_video_streamer.h"
 #include "i_lpp_sync_manager.h"
 #include "pipeline/pipeline.h"
@@ -61,6 +64,7 @@ private:
     void HandleRenderStartedEvent(const Event &event);
     void HandleCompleteEvent(const Event &event);
     void HandleResolutionChangeEvent(const Event &event);
+    void HandleErrorEvent(const Event &event);
     int32_t EosPause();
 
     bool isLpp_{false};
@@ -77,6 +81,8 @@ private:
     std::shared_ptr<Media::Pipeline::EventReceiver> eventReceiver_ {nullptr};
 
     bool isChannelSetDone_ {false};
+    bool isPaused_ {false};
+    std::mutex pauseMutex_ {};
 };
 }  // namespace Media
 }  // namespace OHOS

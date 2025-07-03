@@ -18,6 +18,7 @@
 #include "lpp_audio_render_adapter.h"
 #include "common/log.h"
 #include "media_errors.h"
+#include "media_lpp_errors.h"
 #include "audio_renderer.h"
 #include "audio_info.h"
 #include "audio_errors.h"
@@ -79,6 +80,7 @@ private:
 };
 
 class LppAudioRendererEventCallback : public AudioStandard::AudioRendererCallback,
+    public AudioStandard::AudioRendererErrorCallback,
     public AudioStandard::AudioRendererOutputDeviceChangeCallback,
     public AudioStandard::AudioRendererPolicyServiceDiedCallback,
     public AudioStandard::AudioRendererFirstFrameWritingCallback {
@@ -87,6 +89,7 @@ public:
     {
         audioRenderAdapter_ = audioRenderAdapter;
     }
+
     void OnInterrupt(const OHOS::AudioStandard::InterruptEvent &interruptEvent) override
     {
         MEDIA_LOG_I("OnInterrupt forceType is " PUBLIC_LOG_U32, static_cast<uint32_t>(interruptEvent.forceType));
@@ -94,11 +97,13 @@ public:
         FALSE_RETURN_MSG(audioRenderAdapter != nullptr, "invalid renderAdaptor");
         audioRenderAdapter->OnInterrupt(interruptEvent);
     }
+
     void OnStateChange(const OHOS::AudioStandard::RendererState state,
         const OHOS::AudioStandard::StateChangeCmdType cmdType) override
     {
         MEDIA_LOG_I("RenderState is " PUBLIC_LOG_U32, static_cast<uint32_t>(state));
     }
+
     void OnOutputDeviceChange(const AudioStandard::AudioDeviceDescriptor &deviceInfo,
         const AudioStandard::AudioStreamDeviceChangeReason reason) override
     {
@@ -107,6 +112,15 @@ public:
         FALSE_RETURN_MSG(audioRenderAdapter != nullptr, "invalid renderAdaptor");
         audioRenderAdapter->OnOutputDeviceChange(deviceInfo, reason);
     }
+
+    void OnError(const AudioStandard::AudioErrors errorCode) override
+    {
+        MEDIA_LOG_D("OnError, errorCode: %{public}d", static_cast<int32_t>(errorCode));
+        auto audioRenderAdapter = audioRenderAdapter_.lock();
+        FALSE_RETURN_MSG(audioRenderAdapter != nullptr, "invalid renderAdaptor");
+        audioRenderAdapter->OnError(errorCode);
+    }
+
     void OnAudioPolicyServiceDied() override
     {
         MEDIA_LOG_I("OnAudioPolicyServiceDied enter");
@@ -173,18 +187,19 @@ int32_t LppAudioRenderAdapter::Prepare()
 
     auto audioRendererDataCallback = std::make_shared<LppAudioRendererDataCallback>(weak_from_this());
     auto ret = audioRenderer_->SetRenderMode(AudioStandard::RENDER_MODE_CALLBACK);
-    FALSE_RETURN_V_MSG(ret == AudioStandard::SUCCESS, MSERR_AUD_RENDER_FAILED, "SetRenderMode fail.");
+    FALSE_RETURN_V_MSG(ret == AudioStandard::SUCCESS, AudioStandardStatusToMSError(ret), "SetRenderMode fail.");
     ret = audioRenderer_->SetRendererWriteCallback(audioRendererDataCallback);
-    FALSE_RETURN_V_MSG(ret == AudioStandard::SUCCESS, MSERR_AUD_RENDER_FAILED, "SetRenderWriteCallback fail.");
+    FALSE_RETURN_V_MSG(ret == AudioStandard::SUCCESS, AudioStandardStatusToMSError(ret),
+        "SetRenderWriteCallback fail.");
     ret = audioRenderer_->SetBufferDuration(CALLBACK_BUFFER_DURATION_IN_MILLISECONDS);
-    FALSE_RETURN_V_MSG(ret == AudioStandard::SUCCESS, MSERR_AUD_RENDER_FAILED, "SetBufferDuration fail.");
+    FALSE_RETURN_V_MSG(ret == AudioStandard::SUCCESS, AudioStandardStatusToMSError(ret), "SetBufferDuration fail.");
 
     auto audioRendererEventCallback = std::make_shared<LppAudioRendererEventCallback>(weak_from_this());
     ret = audioRenderer_->SetRendererCallback(audioRendererEventCallback);
     ret = audioRenderer_->RegisterOutputDeviceChangeWithInfoCallback(audioRendererEventCallback);
     ret = audioRenderer_->SetRendererFirstFrameWritingCallback(audioRendererEventCallback);
     ret = audioRenderer_->RegisterAudioPolicyServerDiedCb(getprocpid(), audioRendererEventCallback);
-    FALSE_RETURN_V_MSG(ret == AudioStandard::SUCCESS, MSERR_AUD_RENDER_FAILED, "SetEventCallback fail.");
+    FALSE_RETURN_V_MSG(ret == AudioStandard::SUCCESS, AudioStandardStatusToMSError(ret), "SetEventCallback fail.");
 
     return PrepareInputBufferQueue();
 }
@@ -195,7 +210,7 @@ int32_t LppAudioRenderAdapter::Start()
     FALSE_RETURN_V_MSG(audioRenderer_ != nullptr, MSERR_INVALID_OPERATION, "audioRenderer_ is nullptr");
     FALSE_RETURN_V_MSG(renderTask_ != nullptr, MSERR_INVALID_OPERATION, "renderTask_ is nullptr");
     bool ret = audioRenderer_->Start();
-    FALSE_RETURN_V_MSG(ret, MSERR_AUD_RENDER_FAILED, "AudioRenderer::Start failed");
+    FALSE_RETURN_V_MSG(ret, MSERR_START_FAILED, "AudioRenderer::Start failed");
     renderTask_->Start();
     MEDIA_LOG_I("AudioRenderer::Start end");
     return MSERR_OK;
@@ -210,7 +225,7 @@ int32_t LppAudioRenderAdapter::Pause()
     renderTask_->Pause();
     FALSE_RETURN_V_MSG(audioRenderer_->GetStatus() != AudioStandard::RendererState::RENDERER_PAUSED,
         MSERR_OK, "audio renderer no need pause");
-    FALSE_RETURN_V_MSG_W(audioRenderer_->Pause(), MSERR_AUD_RENDER_FAILED, "renderer pause fail.");
+    FALSE_RETURN_V_MSG_W(audioRenderer_->Pause(), MSERR_PAUSE_FAILED, "renderer pause fail.");
     return MSERR_OK;
 }
 
@@ -251,19 +266,19 @@ int32_t LppAudioRenderAdapter::Stop()
     if (audioRenderer_->GetStatus() == OHOS::AudioStandard::RENDERER_RUNNING) {
         MEDIA_LOG_I("pause entered.");
         res = audioRenderer_->Pause();
-        FALSE_RETURN_V_MSG(res, MSERR_AUD_RENDER_FAILED, "audioRenderer_ pause failed");
+        FALSE_RETURN_V_MSG(res, MSERR_PAUSE_FAILED, "audioRenderer_ pause failed");
     }
     FALSE_RETURN_V_MSG(audioRenderer_->GetStatus() != AudioStandard::RendererState::RENDERER_STOPPED, MSERR_OK,
         "AudioRenderer is already in stopped state.");
     res =  audioRenderer_->Stop();
-    FALSE_RETURN_V_MSG(res, MSERR_AUD_RENDER_FAILED, "audioRenderer_ Stop failed");
+    FALSE_RETURN_V_MSG(res, MSERR_STOP_FAILED, "audioRenderer_ Stop failed");
     ResetTimeInfo();
     return MSERR_OK;
 }
 
 int32_t LppAudioRenderAdapter::PrepareInputBufferQueue()
 {
-    FALSE_RETURN_V_MSG(inputBufferQueue_ == nullptr, MSERR_INVALID_OPERATION, "InputBufferQueue already create");
+    FALSE_RETURN_V_MSG(inputBufferQueue_ == nullptr, MSERR_NO_MEMORY, "InputBufferQueue already create");
     int32_t inputBufferSize = DEFAULT_BUFFER_QUEUE_SIZE;
     MemoryType memoryType = MemoryType::SHARED_MEMORY;
 #ifndef MEDIA_OHOS
@@ -271,7 +286,7 @@ int32_t LppAudioRenderAdapter::PrepareInputBufferQueue()
 #endif
     MEDIA_LOG_I("PrepareInputBufferQueue ");
     inputBufferQueue_ = AVBufferQueue::Create(inputBufferSize, memoryType, INPUT_BUFFER_QUEUE_NAME);
-    FALSE_RETURN_V_MSG(inputBufferQueue_ != nullptr, MSERR_UNKNOWN, "AudioRenderer::Start failed");
+    FALSE_RETURN_V_MSG(inputBufferQueue_ != nullptr, MSERR_NO_MEMORY, "AudioRenderer::Start failed");
     inputBufferQueueProducer_ = inputBufferQueue_->GetProducer();
     inputBufferQueueConsumer_ = inputBufferQueue_->GetConsumer();
     sptr<IConsumerListener> listener = new LppAudioRenderBufferListener(weak_from_this());
@@ -314,32 +329,12 @@ int32_t LppAudioRenderAdapter::SetParameter(const Format &params)
     return MSERR_OK;
 }
 
-int32_t LppAudioRenderAdapter::Write(const std::shared_ptr<AVBuffer> &input)
-{
-    MEDIA_LOG_I("Write entered");
-    return MSERR_OK;
-}
-
-int32_t LppAudioRenderAdapter::SetRequestDataCallback(
-    const std::shared_ptr<AudioStandard::AudioRendererWriteCallback> &callback)
-{
-    FALSE_RETURN_V_MSG(
-        callback != nullptr && audioRenderer_ != nullptr, MSERR_UNKNOWN, "audiorender callback set failed");
-    int32_t ret = 0;
-    ret = audioRenderer_->SetRenderMode(AudioStandard::RENDER_MODE_CALLBACK);
-    FALSE_RETURN_V_MSG(ret == MSERR_OK, MSERR_UNKNOWN, "audioRender_->SetRenderMode fail.");
-    ret = audioRenderer_->SetRendererWriteCallback(callback);
-    FALSE_RETURN_V_MSG(ret == MSERR_OK, MSERR_UNKNOWN, "audioRender_->SetRenderWriteCallback fail.");
-    audioRenderer_->SetBufferDuration(CALLBACK_BUFFER_DURATION_IN_MILLISECONDS);
-    return MSERR_OK;
-}
-
 int32_t LppAudioRenderAdapter::SetSpeed(float speed)
 {
     MEDIA_LOG_I("SetSpeed speed = " PUBLIC_LOG_F, speed);
-    FALSE_RETURN_V_MSG(audioRenderer_ != nullptr, MSERR_INVALID_OPERATION, "audiorender is nullptr");
+    FALSE_RETURN_V_MSG(audioRenderer_ != nullptr, MSERR_NO_MEMORY, "audiorender is nullptr");
     int32_t ret = audioRenderer_->SetSpeed(speed);
-    FALSE_RETURN_V_MSG(ret == OHOS::AudioStandard::SUCCESS, MSERR_AUD_RENDER_FAILED,
+    FALSE_RETURN_V_MSG(ret == OHOS::AudioStandard::SUCCESS, AudioStandardStatusToMSError(ret),
         "set speed failed with code " PUBLIC_LOG_D32, ret);
     return MSERR_OK;
 }
@@ -347,9 +342,9 @@ int32_t LppAudioRenderAdapter::SetSpeed(float speed)
 int32_t LppAudioRenderAdapter::SetVolume(const float volume)
 {
     MEDIA_LOG_D("SetVolume entered.");
-    FALSE_RETURN_V_MSG(audioRenderer_ != nullptr, MSERR_INVALID_OPERATION, "audiorender is nullptr");
+    FALSE_RETURN_V_MSG(audioRenderer_ != nullptr, MSERR_NO_MEMORY, "audiorender is nullptr");
     int32_t ret = audioRenderer_->SetVolume(volume);
-    FALSE_RETURN_V_MSG_E(ret == OHOS::AudioStandard::SUCCESS, MSERR_AUD_RENDER_FAILED,
+    FALSE_RETURN_V_MSG_E(ret == OHOS::AudioStandard::SUCCESS, AudioStandardStatusToMSError(ret),
         "set volume failed with code " PUBLIC_LOG_D32, ret);
     MEDIA_LOG_D("SetVolume succ");
     volume_ = volume;
@@ -358,11 +353,11 @@ int32_t LppAudioRenderAdapter::SetVolume(const float volume)
 
 int32_t LppAudioRenderAdapter::GetAudioPosition(timespec &time, uint32_t &framePosition)
 {
-    FALSE_RETURN_V_MSG(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED, "GetAudioPosition audioRender_ is nullptr");
+    FALSE_RETURN_V_MSG(audioRenderer_ != nullptr, MSERR_NO_MEMORY, "GetAudioPosition audioRender_ is nullptr");
     AudioStandard::Timestamp audioPositionTimestamp;
     int32_t ret = audioRenderer_->GetAudioTimestampInfo(
         audioPositionTimestamp, AudioStandard::Timestamp::Timestampbase::BOOTTIME);
-    FALSE_RETURN_V_MSG(ret == MSERR_OK, MSERR_AUD_RENDER_FAILED, "GetAudioPosition failed");
+    FALSE_RETURN_V_MSG(ret == MSERR_OK, AudioStandardStatusToMSError(ret), "GetAudioPosition failed");
     time = audioPositionTimestamp.time;
     int64_t currentRenderClockTime = time.tv_sec * SEC_TO_US + time.tv_nsec / US_TO_MS;  // convert to us
     MEDIA_LOG_I("BOOTTIME is " PUBLIC_LOG_D64, currentRenderClockTime);
@@ -759,6 +754,15 @@ void LppAudioRenderAdapter::OnOutputDeviceChange(const AudioStandard::AudioDevic
 {
     FALSE_RETURN_MSG(eventReceiver_ != nullptr, "eventReceiver_ is nullptr");
     eventReceiver_->OnEvent({"AudioRender", EventType::EVENT_AUDIO_DEVICE_CHANGE, static_cast<int64_t>(reason)});
+}
+
+void LppAudioRenderAdapter::OnError(const AudioStandard::AudioErrors errorCode)
+{
+    FALSE_RETURN_MSG(eventReceiver_ != nullptr, "eventReceiver_ is nullptr");
+    MediaServiceErrCode err = AudioStandardErrorToMSError(static_cast<int32_t>(errorCode));
+    std::string errMsg = MSErrorToString(err);
+    std::pair<MediaServiceErrCode, std::string> errPair = std::make_pair(err, errMsg);
+    eventReceiver_->OnEvent({"AudioRender", EventType::EVENT_ERROR, errPair});
 }
 
 void LppAudioRenderAdapter::OnAudioPolicyServiceDied()

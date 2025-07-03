@@ -37,7 +37,7 @@ public:
 
     void OnDataNeeded(const int32_t maxBufferSize) override;
     void OnPositionUpdated(const int64_t currentPositionMs) override;
-    void OnError(const LppErrCode errCode, const std::string &errMsg) override;
+    void OnError(const MediaServiceErrCode errCode, const std::string &errMsg) override;
     void OnEos() override;
     void OnInterrupted(const int64_t forceType, const int64_t hint) override;
     void OnDeviceChanged(const int64_t reason) override;

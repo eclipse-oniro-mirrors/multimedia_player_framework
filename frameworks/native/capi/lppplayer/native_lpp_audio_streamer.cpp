@@ -168,7 +168,7 @@ int32_t OH_LowPowerAudioSinkCallback::SetErrorListener(OH_LowPowerAudioSink_OnEr
 {
     CHECK_AND_RETURN_RET_LOG(onError != nullptr, AV_ERR_INVALID_VAL, "onError is nullptr");
     errorCallback_ = std::make_shared<NativeLowPowerAudioSinkErrorCallback>(onError, userData);
-    CHECK_AND_RETURN_RET_LOG(errorCallback_ != nullptr, AV_ERR_NO_MEMORY, "errorCallback_ is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(errorCallback_ != nullptr, AV_ERR_OPERATE_NOT_PERMIT, "errorCallback_ is nullptr!");
     return AV_ERR_OK;
 }
 
@@ -177,7 +177,8 @@ int32_t OH_LowPowerAudioSinkCallback::SetDataNeededListener(OH_LowPowerAudioSink
 {
     CHECK_AND_RETURN_RET_LOG(onDataNeeded != nullptr, AV_ERR_INVALID_VAL, "onDataNeeded is nullptr");
     dataNeeededCallback_ = std::make_shared<NativeLowPowerAudioSinkDataNeeededCallback>(onDataNeeded, userData);
-    CHECK_AND_RETURN_RET_LOG(dataNeeededCallback_ != nullptr, AV_ERR_NO_MEMORY, "dataNeeededCallback_ is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(
+        dataNeeededCallback_ != nullptr, AV_ERR_OPERATE_NOT_PERMIT, "dataNeeededCallback_ is nullptr!");
     return AV_ERR_OK;
 }
 
@@ -187,7 +188,7 @@ int32_t OH_LowPowerAudioSinkCallback::SetPositionUpdateListener(
     CHECK_AND_RETURN_RET_LOG(onPositionUpdated != nullptr, AV_ERR_INVALID_VAL, "onPositionUpdated is nullptr");
     positionUpdatedCallback_
         = std::make_shared<NativeLowPowerAudioSinkPositionUpdatedCallback>(onPositionUpdated, userData);
-    CHECK_AND_RETURN_RET_LOG(positionUpdatedCallback_ != nullptr, AV_ERR_NO_MEMORY,
+    CHECK_AND_RETURN_RET_LOG(positionUpdatedCallback_ != nullptr, AV_ERR_OPERATE_NOT_PERMIT,
         "positionUpdatedCallback_ is nullptr!");
     return AV_ERR_OK;
 }
@@ -197,7 +198,8 @@ int32_t OH_LowPowerAudioSinkCallback::SetInterruptListener(OH_LowPowerAudioSink_
 {
     CHECK_AND_RETURN_RET_LOG(onInterrupted != nullptr, AV_ERR_INVALID_VAL, "onInterrupted is nullptr");
     interruptCallback_ = std::make_shared<NativeLowPowerAudioSinkInterruptCallback>(onInterrupted, userData);
-    CHECK_AND_RETURN_RET_LOG(interruptCallback_ != nullptr, AV_ERR_NO_MEMORY, "interruptCallback_ is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(
+        interruptCallback_ != nullptr, AV_ERR_OPERATE_NOT_PERMIT, "interruptCallback_ is nullptr!");
     return AV_ERR_OK;
 }
 
@@ -205,7 +207,7 @@ int32_t OH_LowPowerAudioSinkCallback::SetEosListener(OH_LowPowerAudioSink_OnEos 
 {
     CHECK_AND_RETURN_RET_LOG(onEos != nullptr, AV_ERR_INVALID_VAL, "onEos is nullptr");
     eosCallback_ = std::make_shared<NativeLowPowerAudioSinkEosCallback>(onEos, userData);
-    CHECK_AND_RETURN_RET_LOG(eosCallback_ != nullptr, AV_ERR_NO_MEMORY, "eosCallback_ is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(eosCallback_ != nullptr, AV_ERR_OPERATE_NOT_PERMIT, "eosCallback_ is nullptr!");
     return AV_ERR_OK;
 }
 
@@ -214,15 +216,22 @@ int32_t OH_LowPowerAudioSinkCallback::SetDeviceChangeListener(OH_LowPowerAudioSi
 {
     CHECK_AND_RETURN_RET_LOG(onDeviceChanged != nullptr, AV_ERR_INVALID_VAL, "onDeviceChanged is nullptr");
     deviceChangeCallback_ = std::make_shared<NativeLowPowerAudioSinkDeviceChangeCallback>(onDeviceChanged, userData);
-    CHECK_AND_RETURN_RET_LOG(deviceChangeCallback_ != nullptr, AV_ERR_NO_MEMORY, "deviceChangeCallback_ is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(
+        deviceChangeCallback_ != nullptr, AV_ERR_OPERATE_NOT_PERMIT, "deviceChangeCallback_ is nullptr!");
     return AV_ERR_OK;
 }
 
 void OH_LowPowerAudioSinkCallback::OnError(int32_t errorCode, const std::string &errorMsg)
 {
-    CHECK_AND_RETURN_LOG(lppAudioStreamer_ != nullptr, "OnError lppAudioStreamer_ is nullptr");
-    CHECK_AND_RETURN_LOG(errorCallback_ != nullptr, "OnError errorCallback_ is nullptr");
-    errorCallback_->OnError(lppAudioStreamer_, LppMsErrToOHAvErr(errorCode), errorMsg.c_str());
+    CHECK_AND_RETURN_LOG(lppAudioStreamer_ != nullptr, "lppAudioStreamer_ is nullptr");
+    CHECK_AND_RETURN_LOG(errorCallback_ != nullptr, "errorCallback_ is nullptr");
+
+    OH_AVErrCode avErrorCode = LppMsErrToOHAvErr(errorCode);
+    MediaServiceExtErrCodeAPI9 errorCodeApi9 = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errorCode));
+    std::string errorMsgExt = MSExtAVErrorToString(errorCodeApi9) + errorMsg;
+    MEDIA_LOGE("LowPowerAudioSink errorCode: %{public}d, errorMsg: %{public}s", static_cast<int32_t>(avErrorCode),
+        errorMsgExt.c_str());
+    errorCallback_->OnError(lppAudioStreamer_, avErrorCode, errorMsgExt.c_str());
 }
 
 void OH_LowPowerAudioSinkCallback::OnInfo(AudioStreamerOnInfoType type, int32_t extra, const Format &infoBody)
@@ -235,6 +244,9 @@ void OH_LowPowerAudioSinkCallback::OnInfo(AudioStreamerOnInfoType type, int32_t 
             CHECK_AND_RETURN_LOG(dataNeeededCallback_ != nullptr, "dataNeeededCallback_ is nullptr");
             streamerObj = reinterpret_cast<LowPowerAudioSinkObject *>(lppAudioStreamer_);
             CHECK_AND_RETURN_LOG(streamerObj != nullptr, "streamerObj is nullptr");
+            CHECK_AND_RETURN_LOG(streamerObj->framePacket_ != nullptr &&
+                streamerObj->framePacket_->lppDataPacket_ != nullptr, "framePacket_ is nullptr");
+            streamerObj->framePacket_->lppDataPacket_->Enable();
             dataNeeededCallback_->OnDataNeeded(lppAudioStreamer_, streamerObj->framePacket_);
             break;
         case INFO_TYPE_LPP_AUDIO_EOS:
@@ -276,10 +288,11 @@ OH_LowPowerAudioSink *OH_LowPowerAudioSink_CreateByMime(const char * mime)
     CHECK_AND_RETURN_RET_LOG(mime != nullptr, nullptr, "mime is nullptr");
     std::shared_ptr<AudioStreamer> player = AudioStreamerFactory::CreateByMime(mime);
     CHECK_AND_RETURN_RET_LOG(player != nullptr, nullptr, "create player failed!");
+    std::string streamId = player->GetStreamerId();
 
     OHOS::sptr<LppDataPacket> lppDataPacket =  OHOS::sptr<LppDataPacket>::MakeSptr();
     CHECK_AND_RETURN_RET_LOG(lppDataPacket != nullptr, nullptr, "create lppDataPacket failed!");
-    lppDataPacket->Init();
+    lppDataPacket->Init(streamId);
 
     AVSamplesBufferObject* framePacket = new(std::nothrow) AVSamplesBufferObject(lppDataPacket);
     CHECK_AND_RETURN_RET_LOG(framePacket != nullptr, nullptr, "create framePacket failed!");
@@ -296,10 +309,10 @@ OH_AVErrCode OH_LowPowerAudioSink_Configure(OH_LowPowerAudioSink *streamer, cons
 
     struct LowPowerAudioSinkObject *streamerObj = reinterpret_cast<LowPowerAudioSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_STATE, "audioStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_VAL, "audioStreamer_ is nullptr");
 
     Format format_ = static_cast<Format>(format->format_);
-    int32_t res = streamerObj->audioStreamer_->SetParameter(format_);
+    int32_t res = streamerObj->audioStreamer_->Configure(format_);
     return LppMsErrToOHAvErr(res);
 }
 
@@ -311,7 +324,7 @@ OH_AVErrCode OH_LowPowerAudioSink_SetParameter(OH_LowPowerAudioSink *streamer, c
 
     struct LowPowerAudioSinkObject *streamerObj = reinterpret_cast<LowPowerAudioSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_STATE, "audioStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_VAL, "audioStreamer_ is nullptr");
 
     Format format_ = static_cast<Format>(format->format_);
     int32_t res = streamerObj->audioStreamer_->SetParameter(format_);
@@ -332,7 +345,7 @@ OH_AVErrCode OH_LowPowerAudioSink_Prepare(OH_LowPowerAudioSink *streamer)
     CHECK_AND_RETURN_RET_LOG(streamer != nullptr, AV_ERR_INVALID_VAL, "streamer is nullptr!");
     LowPowerAudioSinkObject *streamerObj = reinterpret_cast<LowPowerAudioSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_STATE, "audioStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_VAL, "audioStreamer_ is nullptr");
     int32_t res = streamerObj->audioStreamer_->Prepare();
     return LppMsErrToOHAvErr(res);
 }
@@ -343,7 +356,7 @@ OH_AVErrCode OH_LowPowerAudioSink_Start(OH_LowPowerAudioSink *streamer)
     CHECK_AND_RETURN_RET_LOG(streamer != nullptr, AV_ERR_INVALID_VAL, "streamer is nullptr!");
     LowPowerAudioSinkObject *streamerObj = reinterpret_cast<LowPowerAudioSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_STATE, "audioStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_VAL, "audioStreamer_ is nullptr");
     int32_t res = streamerObj->audioStreamer_->Start();
     return LppMsErrToOHAvErr(res);
 }
@@ -354,7 +367,7 @@ OH_AVErrCode OH_LowPowerAudioSink_Pause(OH_LowPowerAudioSink *streamer)
     CHECK_AND_RETURN_RET_LOG(streamer != nullptr, AV_ERR_INVALID_VAL, "streamer is nullptr!");
     LowPowerAudioSinkObject *streamerObj = reinterpret_cast<LowPowerAudioSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_STATE, "audioStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_VAL, "audioStreamer_ is nullptr");
     int32_t res = streamerObj->audioStreamer_->Pause();
     return LppMsErrToOHAvErr(res);
 }
@@ -365,7 +378,7 @@ OH_AVErrCode OH_LowPowerAudioSink_Resume(OH_LowPowerAudioSink *streamer)
     CHECK_AND_RETURN_RET_LOG(streamer != nullptr, AV_ERR_INVALID_VAL, "streamer is nullptr!");
     LowPowerAudioSinkObject *streamerObj = reinterpret_cast<LowPowerAudioSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_STATE, "audioStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_VAL, "audioStreamer_ is nullptr");
     int32_t res = streamerObj->audioStreamer_->Resume();
     return LppMsErrToOHAvErr(res);
 }
@@ -376,7 +389,7 @@ OH_AVErrCode OH_LowPowerAudioSink_Flush(OH_LowPowerAudioSink *streamer)
     CHECK_AND_RETURN_RET_LOG(streamer != nullptr, AV_ERR_INVALID_VAL, "streamer is nullptr!");
     LowPowerAudioSinkObject *streamerObj = reinterpret_cast<LowPowerAudioSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_STATE, "audioStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_VAL, "audioStreamer_ is nullptr");
     int32_t res = streamerObj->audioStreamer_->Flush();
     return LppMsErrToOHAvErr(res);
 }
@@ -387,7 +400,7 @@ OH_AVErrCode OH_LowPowerAudioSink_Stop(OH_LowPowerAudioSink *streamer)
     CHECK_AND_RETURN_RET_LOG(streamer != nullptr, AV_ERR_INVALID_VAL, "streamer is nullptr!");
     LowPowerAudioSinkObject *streamerObj = reinterpret_cast<LowPowerAudioSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_STATE, "audioStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_VAL, "audioStreamer_ is nullptr");
     int32_t res = streamerObj->audioStreamer_->Stop();
     return LppMsErrToOHAvErr(res);
 }
@@ -398,7 +411,7 @@ OH_AVErrCode OH_LowPowerAudioSink_Reset(OH_LowPowerAudioSink *streamer)
     CHECK_AND_RETURN_RET_LOG(streamer != nullptr, AV_ERR_INVALID_VAL, "streamer is nullptr!");
     LowPowerAudioSinkObject *streamerObj = reinterpret_cast<LowPowerAudioSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_STATE, "audioStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_VAL, "audioStreamer_ is nullptr");
     int32_t res = streamerObj->audioStreamer_->Reset();
     return LppMsErrToOHAvErr(res);
 }
@@ -409,7 +422,7 @@ OH_AVErrCode OH_LowPowerAudioSink_Destroy(OH_LowPowerAudioSink *streamer)
     CHECK_AND_RETURN_RET_LOG(streamer != nullptr, AV_ERR_INVALID_VAL, "streamer is nullptr!");
     LowPowerAudioSinkObject *streamerObj = reinterpret_cast<LowPowerAudioSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_STATE, "audioStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_VAL, "audioStreamer_ is nullptr");
     int32_t res = streamerObj->audioStreamer_->Release();
     MEDIA_LOGI("videostreamer release result is %{public}d", res);
     delete streamerObj->framePacket_;
@@ -423,7 +436,7 @@ OH_AVErrCode OH_LowPowerAudioSink_SetPlaybackSpeed(OH_LowPowerAudioSink *streame
     CHECK_AND_RETURN_RET_LOG(streamer != nullptr, AV_ERR_INVALID_VAL, "streamer is nullptr!");
     LowPowerAudioSinkObject *streamerObj = reinterpret_cast<LowPowerAudioSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_STATE, "audioStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_VAL, "audioStreamer_ is nullptr");
     int32_t res = streamerObj->audioStreamer_->SetPlaybackSpeed(speed);
     return LppMsErrToOHAvErr(res);
 }
@@ -434,7 +447,7 @@ OH_AVErrCode OH_LowPowerAudioSink_SetVolume(OH_LowPowerAudioSink *streamer, cons
     CHECK_AND_RETURN_RET_LOG(streamer != nullptr, AV_ERR_INVALID_VAL, "streamer is nullptr!");
     LowPowerAudioSinkObject *streamerObj = reinterpret_cast<LowPowerAudioSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_STATE, "audioStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_VAL, "audioStreamer_ is nullptr");
     int32_t res = streamerObj->audioStreamer_->SetVolume(volume);
     return LppMsErrToOHAvErr(res);
 }
@@ -445,14 +458,14 @@ OH_AVErrCode OH_LowPowerAudioSink_ReturnSamples(OH_LowPowerAudioSink *streamer, 
     CHECK_AND_RETURN_RET_LOG(streamer != nullptr, AV_ERR_INVALID_VAL, "streamer is nullptr!");
     LowPowerAudioSinkObject *streamerObj = reinterpret_cast<LowPowerAudioSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_STATE, "audioStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_VAL, "audioStreamer_ is nullptr");
     AVSamplesBufferObject *framePacket = reinterpret_cast<AVSamplesBufferObject *>(frames);
     CHECK_AND_RETURN_RET_LOG(framePacket != nullptr, AV_ERR_INVALID_VAL, "framePacket is nullptr");
-    CHECK_AND_RETURN_RET_LOG(framePacket->lppDataPacket_ != nullptr, AV_ERR_INVALID_VAL,
-        "lppDataPacket is nullptr");
+    CHECK_AND_RETURN_RET_LOG(framePacket->lppDataPacket_ != nullptr, AV_ERR_INVALID_VAL, "lppDataPacket is nullptr");
+    CHECK_AND_RETURN_RET_LOG(framePacket->lppDataPacket_->IsEnable(), AV_ERR_INVALID_VAL, "data packet is not in user");
+    framePacket->lppDataPacket_->Disable();
     int32_t res = streamerObj->audioStreamer_->ReturnFrames(framePacket->lppDataPacket_);
     CHECK_AND_RETURN_RET_LOG(res == MSERR_OK, LppMsErrToOHAvErr(res), "ReturnFrames failed");
-    framePacket->lppDataPacket_->Clear();
     return AV_ERR_OK;
 }
 
@@ -464,7 +477,7 @@ OH_AVErrCode OH_LowPowerAudioSink_RegisterCallback(
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, AV_ERR_INVALID_VAL, "callback is nullptr!");
     LowPowerAudioSinkObject *streamerObj = reinterpret_cast<LowPowerAudioSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_STATE, "audioStreamer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_VAL, "audioStreamer_ is nullptr");
     callback->SetLowPowerAudioSink(streamer);
     std::shared_ptr<AudioStreamerCallback> callbackPtr(callback);
     int32_t res = streamerObj->audioStreamer_->SetLppAudioStreamerCallback(callbackPtr);

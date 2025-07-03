@@ -115,18 +115,19 @@ std::string LppAudioStreamerServer::GetStreamerId()
 int32_t LppAudioStreamerServer::SetParameter(const Format &param)
 {
     MEDIA_LOGI("LppAudioStreamerServer SetParameter");
-    CHECK_AND_RETURN_RET_LOG(StateEnter(LppAudioState::INITIALIZED), MSERR_INVALID_OPERATION, "wrong state");
-    auto ret = Init(mime_);
-    CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
-    ret = streamerEngine_->SetParameter(param);
-    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), ret, "SetParameter Failed!");
-    return ret;
+    (void)param;
+    return MSERR_OK;
 }
 
 int32_t LppAudioStreamerServer::Configure(const Format &param)
 {
     MEDIA_LOGI("LppAudioStreamerServer Configure");
-    return MSERR_OK;
+    CHECK_AND_RETURN_RET_LOG(StateEnter(LppAudioState::INITIALIZED), MSERR_INVALID_OPERATION, "wrong state");
+    auto ret = Init(mime_);
+    CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
+    ret = streamerEngine_->Configure(param);
+    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), ret, "SetParameter Failed!");
+    return ret;
 }
 
 int32_t LppAudioStreamerServer::Prepare()
@@ -232,6 +233,7 @@ int32_t LppAudioStreamerServer::SetPlaybackSpeed(float speed)
 int32_t LppAudioStreamerServer::ReturnFrames(sptr<LppDataPacket> framePacket)
 {
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(framePacket != nullptr, MSERR_INVALID_OPERATION, "framePacket is nullptr");
     auto ret = streamerEngine_->ReturnFrames(framePacket);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "ReturnFrames Failed!");
     return MSERR_OK;
@@ -254,16 +256,7 @@ int32_t LppAudioStreamerServer::SetLppAudioStreamerCallback(const std::shared_pt
     return MSERR_OK;
 }
 
-void LppAudioStreamerServer::EosPause()
-{
-    MEDIA_LOGI("LppAudioStreamerServer::EosPause");
-    CHECK_AND_RETURN_LOG(StateEnter(LppAudioState::EOS), "wrong state");
-    CHECK_AND_RETURN_LOG(streamerEngine_ != nullptr, "streamerEngine_ is nullptr");
-    auto ret = streamerEngine_->Pause();
-    CHECK_AND_RETURN_LOG(ErrorCheck(ret), "EosPause Failed!");
-}
-
-bool LppAudioStreamerServer::StateEnter(LppAudioState targetState, std::string funcName)
+bool LppAudioStreamerServer::StateEnter(LppAudioState targetState, const std::string funcName)
 {
     std::lock_guard<std::mutex> lock(stateMutex_);
     MEDIA_LOGI("LppAudioStreamerServer::StateEnter state = %{public}d, targetState = %{public}d",
@@ -297,8 +290,10 @@ bool LppAudioStreamerServer::ErrorCheck(int32_t errorCode)
 void LppAudioStreamerServer::OnError(const LppErrCode errCode, const std::string &errMsg)
 {
     CHECK_AND_RETURN_LOG(lppAudioStreamerCb_ != nullptr, "lppAudioStreamerCb_ nullptr");
-    MEDIA_LOGE("LppAudioStreamerServer::OnError code %{public}d msg %{public}s", errCode, errMsg.c_str());
-    lppAudioStreamerCb_->OnError(errCode, errMsg);
+    MEDIA_LOGE("LppAudioStreamerServer::OnError, errorCode: %{public}d, errorMsg: %{public}s",
+        static_cast<int32_t>(errCode), errMsg.c_str());
+    StateEnter(LppAudioState::ERROR);
+    lppAudioStreamerCb_->OnError(static_cast<int32_t>(errCode), errMsg);
 }
 
 void LppAudioStreamerServer::OnDataNeeded(const int32_t maxBufferSize)
@@ -323,7 +318,7 @@ void LppAudioStreamerServer::OnPositionUpdated(const int64_t currentPositionMs)
 void LppAudioStreamerServer::OnEos()
 {
     MEDIA_LOGI("LppAudioStreamerServer::OnEos");
-    EosPause();
+    CHECK_AND_RETURN_LOG(StateEnter(LppAudioState::EOS), "wrong state");
     CHECK_AND_RETURN_LOG(lppAudioStreamerCb_ != nullptr, "lppAudioStreamerCb_ nullptr");
     Format infoBody;
     lppAudioStreamerCb_->OnInfo(INFO_TYPE_LPP_AUDIO_EOS, 0, infoBody);

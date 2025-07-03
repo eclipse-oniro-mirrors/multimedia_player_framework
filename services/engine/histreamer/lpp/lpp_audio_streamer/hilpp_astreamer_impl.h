@@ -35,7 +35,7 @@ public:
     ~HiLppAudioStreamerImpl() override;
     int32_t Init(const std::string &mime) override;
     int32_t SetObs(const std::weak_ptr<ILppAudioStreamerEngineObs> &obs) override;
-    int32_t SetParameter(const Format &param) override;
+    int32_t Configure(const Format &param) override;
     int32_t Prepare() override;
     int32_t Start() override;
     int32_t Pause() override;
@@ -58,6 +58,8 @@ private:
     void HandleCompleteEvent(const Event &event);
     void HandleInterruptEvent(const Event &event);
     void HandleDeviceChangeEvent(const Event &event);
+    int32_t EosPause();
+    void HandleErrorEvent(const Event &event);
 
     bool isLpp_{false};
     std::string streamerId_{};
@@ -69,6 +71,9 @@ private:
     std::string videoStreamerId_{};
     std::shared_ptr<ILppVideoStreamerEngine> videoStreamerEngine_{nullptr};
     std::shared_ptr<EventReceiver> eventReceiver_;
+
+    bool isPaused_ {false};
+    std::mutex pauseMutex_ {};
 };
 
 }  // namespace Media

@@ -83,6 +83,7 @@ private:
     void FlushTask();
     int64_t GeneratedJobIdx();
     bool IsJobFlushed(int64_t jobIdx);
+    void DumpBufferIfNeeded(const std::string &fileName, const std::shared_ptr<AVBuffer>& buffer);
 
     std::string streamerId_{};
     bool isLppEnabled_ {true};
@@ -109,6 +110,8 @@ private:
     std::atomic<int64_t> lastPts_ {0};
 
     std::atomic<bool> speed_ {1.0f};
+    bool dumpBufferNeeded_ {false};
+    std::string dumpFileNameOutput_ {};
 };
 
 }  // namespace Media

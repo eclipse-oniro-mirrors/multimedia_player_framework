@@ -18,6 +18,7 @@
 #include "lpp_video_callback_looper.h"
 #include <utility>
 #include "common/log.h"
+#include "media_errors.h"
 #include "osal/task/autolock.h"
 #include "osal/utils/steady_clock.h"
  
@@ -58,9 +59,13 @@ bool LppVideoCallbackLooper::OnAnchorUpdateNeeded(int64_t &anchorPts, int64_t &a
     return true;
 }
 
-void LppVideoCallbackLooper::OnError(const LppErrCode errCode, const std::string &errMsg)
+void LppVideoCallbackLooper::OnError(const MediaServiceErrCode errCode, const std::string &errMsg)
 {
-    MEDIA_LOG_I("LppVideoCallbackLooper::OnError errMsg: %{public}s", errMsg.c_str());
+    MEDIA_LOG_I("LppVideoCallbackLooper::OnError errorCode: %{public}d, errMsg: %{public}s",
+        static_cast<int32_t>(errCode), errMsg.c_str());
+    auto obs = obs_.lock();
+    FALSE_RETURN_MSG(obs != nullptr, "obs is nullptr");
+    obs->OnError(errCode, errMsg);
 }
 
 void LppVideoCallbackLooper::OnEos()

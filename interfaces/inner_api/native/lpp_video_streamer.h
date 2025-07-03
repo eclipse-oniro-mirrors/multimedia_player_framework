@@ -101,6 +101,8 @@ public:
     virtual std::shared_ptr<VideoStreamerCallback> GetLppVideoStreamerCallback() = 0;
 
     virtual int32_t RenderFirstFrame() = 0;
+
+    virtual std::string GetStreamerId() = 0;
 };
 
 class __attribute__((visibility("default"))) VideoStreamerFactory {

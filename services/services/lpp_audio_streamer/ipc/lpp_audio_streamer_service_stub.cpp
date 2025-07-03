@@ -73,7 +73,6 @@ int32_t LppAudioStreamerServiceStub::Init()
     if (framePacket_ == nullptr) {
         framePacket_ = OHOS::sptr<LppDataPacket>::MakeSptr();
         CHECK_AND_RETURN_RET_LOG(framePacket_ != nullptr, MSERR_NO_MEMORY, "failed to create framePacket_");
-        framePacket_->Init();
     }
     SetPlayerFuncs();
     return MSERR_OK;

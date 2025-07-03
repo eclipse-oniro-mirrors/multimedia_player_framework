@@ -40,23 +40,33 @@ public:
     bool ReadFromByteBuffer(uint8_t *buffer, int32_t capacity);
     bool IsEmpty();
     virtual bool WriteOneFrameToAVBuffer(std::shared_ptr<AVBuffer> &buffer);
-    int WriteOneFrameToAVBuffer(std::shared_ptr<AVBuffer> &avbuffer, int bufferOffset);
+    bool WriteOneFrameToAVBuffer(std::shared_ptr<AVBuffer> &avbuffer, int& offset);
     void Clear();
-    void Init();
+    void Init(std::string streamerId);
+    void Disable();
+    void Enable();
+    bool IsEnable();
+    void DumpAVBufferToFile(const std::string& para, const std::shared_ptr<AVBuffer>& buffer, const bool isClient);
 
 public:
     std::vector<uint32_t> flag_;
     std::vector<int64_t> pts_;
-    std::vector<int> size_;
+    std::vector<int32_t> size_;
+    std::shared_ptr<AVBuffer> buffer_ {nullptr};
     std::shared_ptr<AVMemory> memory_ {nullptr};
+    std::string streamerId_{};
+    bool dumpBufferNeeded_ {false};
+    std::string dumpFileNameInput_{};
 
 private:
+    void Init();
     bool WriteVector(MessageParcel &parcel);
     bool ReadVector(MessageParcel &parcel);
     bool IsEos();
     int dataOffset_ {0};
     size_t vectorReadIndex_ {0};
     uint32_t frameCount_ {0};
+    bool inUser_ {false};
 };
  
 } // namespace Media

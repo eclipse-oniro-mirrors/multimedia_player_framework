@@ -385,6 +385,7 @@ ohos_shared_library("lowpower_avsink") {
     "c_utils:utils",
     "graphic_surface:surface",
     "hilog:libhilog",
+    "init:libbegetutil",
     "ipc:ipc_core",
     "media_foundation:media_foundation",
     "image_framework:pixelmap",

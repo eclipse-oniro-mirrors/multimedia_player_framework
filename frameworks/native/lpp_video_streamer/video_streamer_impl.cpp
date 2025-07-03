@@ -255,5 +255,12 @@ int32_t VideoStreamerImpl::RenderFirstFrame()
     int32_t ret = streamerService_->RenderFirstFrame();
     return ret;
 }
+
+std::string VideoStreamerImpl::GetStreamerId()
+{
+    MEDIA_LOGI("VideoStreamerImpl:0x%{public}06" PRIXPTR " GetStreamerId in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(streamerService_ != nullptr, "", "player service does not exist..");
+    return streamerService_->GetStreamerId();
+}
 }  // namespace Media
 }  // namespace OHOS

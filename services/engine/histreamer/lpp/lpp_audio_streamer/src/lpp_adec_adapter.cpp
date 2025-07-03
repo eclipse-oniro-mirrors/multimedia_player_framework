@@ -16,6 +16,7 @@
 #include "avcodec_errors.h"
 #include "common/log.h"
 #include "media_errors.h"
+#include "media_lpp_errors.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "LppADec"};
@@ -86,7 +87,6 @@ public:
     {
         auto audioDecAdaptor = audioDecAdaptor_.lock();
         FALSE_RETURN_MSG(audioDecAdaptor != nullptr, "audioDecAdaptor is nullptr");
-        MEDIA_LOG_D("LppAudioDecProducerListener OnBufferAvailable");
         audioDecAdaptor->OnError(errorType, errorCode);
     }
 
@@ -121,27 +121,32 @@ LppAudioDecoderAdapter::~LppAudioDecoderAdapter()
 void LppAudioDecoderAdapter::OnError(CodecErrorType errorType, int32_t errorCode)
 {
     (void)errorType;
-    (void)errorCode;
+    MEDIA_LOG_I("LppAudioDecoderAdapter::OnError errorCode: %{public}d", errorCode);
+    FALSE_RETURN_MSG(eventReceiver_ != nullptr, "eventReceiver_ is nullptr");
+    MediaServiceErrCode err = AVCSErrorToMSError(errorCode);
+    std::string errMsg = MSErrorToString(err);
+    std::pair<MediaServiceErrCode, std::string> errPair = std::make_pair(err, errMsg);
+    eventReceiver_->OnEvent({"AudioDecoder", EventType::EVENT_ERROR, errPair});
 }
 
 int32_t LppAudioDecoderAdapter::SetParameter(const Format &params)
 {
     (void)params;
     std::shared_ptr<Meta> parameter = std::make_shared<Meta>();
-    MEDIA_LOG_D("SetParameter");
-    FALSE_RETURN_V_MSG(audiocodec_ != nullptr, MSERR_UNKNOWN, "audiocodec_ is nullptr");
+    MEDIA_LOG_I("SetParameter");
+    FALSE_RETURN_V_MSG(audiocodec_ != nullptr, MSERR_NO_MEMORY, "audiocodec_ is nullptr");
     int32_t ret = audiocodec_->SetParameter(parameter);
-    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, MSERR_UNKNOWN, "audiocodec_ SetParameter failed");
+    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, AVCSErrorToMSError(ret), "audiocodec_ SetParameter failed");
     return ret;
 }
 
 int32_t LppAudioDecoderAdapter::Init(const std::string &name)
 {
-    MEDIA_LOG_D("Init name is " PUBLIC_LOG_S, name.c_str());
+    MEDIA_LOG_I("Init name is " PUBLIC_LOG_S, name.c_str());
     audiocodec_ = std::make_shared<MediaCodec>();
-    FALSE_RETURN_V_MSG(audiocodec_ != nullptr, MSERR_UNKNOWN, "audiocodec_ create failed");
+    FALSE_RETURN_V_MSG(audiocodec_ != nullptr, MSERR_NO_MEMORY, "audiocodec_ create failed");
     auto ret = audiocodec_->Init(name, false);
-    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, MSERR_UNSUPPORT, "audiocodec_ Init failed");
+    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, AVCSErrorToMSError(ret), "audiocodec_ Init failed");
 
     decodertask_ = std::make_unique<Task>("LppADec", streamerId_, TaskType::SINGLETON, TaskPriority::NORMAL, false);
     FALSE_RETURN_V_MSG(decodertask_ != nullptr, MSERR_NO_MEMORY, "decodertask_ is nullptr");
@@ -154,21 +159,22 @@ int32_t LppAudioDecoderAdapter::Configure(const Format &params)
     FALSE_RETURN_V_MSG(audiocodec_ != nullptr, MSERR_INVALID_OPERATION, "audiocodec_ is nullptr");
     auto meta = const_cast<Format &>(params).GetMeta();
     auto ret = audiocodec_->Configure(meta);
-    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, MSERR_AUD_DEC_FAILED, "audiocodec_ Configure failed");
+    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, AVCSErrorToMSError(ret), "audiocodec_ Configure failed");
     auto decoderCallback = std::make_shared<AudioDecoderCallback>(weak_from_this());
     FALSE_RETURN_V_MSG(decoderCallback != nullptr, MSERR_NO_MEMORY, "decoderCallback create failed");
     ret = audiocodec_->SetCodecCallback(decoderCallback);
-    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, MSERR_AUD_DEC_FAILED, "audiocodec_ SetCodecCallback failed");
+    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, AVCSErrorToMSError(ret),
+        "audiocodec_ SetCodecCallback failed");
     return MSERR_OK;
 }
 
 int32_t LppAudioDecoderAdapter::SetOutputBufferQueue(const sptr<Media::AVBufferQueueProducer> &bufferQueueProducer)
 {
-    FALSE_RETURN_V(bufferQueueProducer != nullptr, MSERR_UNKNOWN);
+    FALSE_RETURN_V(bufferQueueProducer != nullptr, MSERR_NO_MEMORY);
     outputBufferQueueProducer_ = bufferQueueProducer;
-    FALSE_RETURN_V_MSG(audiocodec_ != nullptr, MSERR_UNKNOWN, "audiocodec_ is nullptr");
+    FALSE_RETURN_V_MSG(audiocodec_ != nullptr, MSERR_NO_MEMORY, "audiocodec_ is nullptr");
     int32_t ret = audiocodec_->SetOutputBufferQueue(bufferQueueProducer);
-    FALSE_RETURN_V_MSG(ret == MSERR_OK, MSERR_UNKNOWN, "audiocodec_ SetOutputBufferQueue failed");
+    FALSE_RETURN_V_MSG(ret == MSERR_OK, AVCSErrorToMSError(ret), "audiocodec_ SetOutputBufferQueue failed");
     return MSERR_OK;
 }
 
@@ -182,9 +188,9 @@ sptr<Media::AVBufferQueueProducer> LppAudioDecoderAdapter::GetInputBufferQueue()
 
 int32_t LppAudioDecoderAdapter::Prepare()
 {
-    FALSE_RETURN_V_MSG(audiocodec_ != nullptr, MSERR_UNKNOWN, "audiocodec_ is nullptr");
+    FALSE_RETURN_V_MSG(audiocodec_ != nullptr, MSERR_NO_MEMORY, "audiocodec_ is nullptr");
     int32_t ret = audiocodec_->Prepare();
-    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, MSERR_UNKNOWN, "audiocodec_ Prepare failed");
+    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, AVCSErrorToMSError(ret), "audiocodec_ Prepare failed");
 
     sptr<IConsumerListener> consumerListener =
         OHOS::sptr<LppAudioDecConsumerListener>::MakeSptr(weak_from_this());
@@ -207,10 +213,10 @@ int32_t LppAudioDecoderAdapter::Prepare()
 
 int32_t LppAudioDecoderAdapter::Start()
 {
-    FALSE_RETURN_V_MSG(audiocodec_ != nullptr, MSERR_UNKNOWN, "audiocodec_ is nullptr");
+    FALSE_RETURN_V_MSG(audiocodec_ != nullptr, MSERR_INVALID_OPERATION, "audiocodec_ is nullptr");
     FALSE_RETURN_V_MSG(decodertask_ != nullptr, MSERR_INVALID_OPERATION, "decodertask_ is nullptr");
     int32_t ret = audiocodec_->Start();
-    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, MSERR_UNKNOWN, "audiocodec_ Start failed");
+    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, AVCSErrorToMSError(ret), "audiocodec_ Start failed");
     decodertask_->Start();
     return MSERR_OK;
 }
@@ -233,9 +239,9 @@ int32_t LppAudioDecoderAdapter::Resume()
 
 int32_t LppAudioDecoderAdapter::Flush()
 {
-    FALSE_RETURN_V_MSG(audiocodec_ != nullptr, MSERR_UNKNOWN, "audiocodec_ is nullptr");
+    FALSE_RETURN_V_MSG(audiocodec_ != nullptr, MSERR_INVALID_OPERATION, "audiocodec_ is nullptr");
     int32_t ret = audiocodec_->Flush();
-    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, MSERR_AUD_DEC_FAILED, "audiocodec_ Flush failed");
+    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, AVCSErrorToMSError(ret), "audiocodec_ Flush failed");
     FlushTask();
     return MSERR_OK;
 }
@@ -246,7 +252,7 @@ int32_t LppAudioDecoderAdapter::Stop()
     FALSE_RETURN_V_MSG(decodertask_ != nullptr, MSERR_INVALID_OPERATION, "decodertask_ is nullptr");
     decodertask_->Stop();
     int32_t ret = audiocodec_->Stop();
-    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, MSERR_AUD_DEC_FAILED, "audiocodec_ Stop failed");
+    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, AVCSErrorToMSError(ret), "audiocodec_ Stop failed");
     return MSERR_OK;
 }
 

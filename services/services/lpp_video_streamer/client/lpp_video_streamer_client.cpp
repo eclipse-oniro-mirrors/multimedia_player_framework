@@ -231,5 +231,17 @@ int32_t LppVideoStreamerClient::RenderFirstFrame()
     return ret;
 }
 
+void LppVideoStreamerClient::MediaServerDied()
+{
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        playerProxy_ = nullptr;
+        listenerStub_ = nullptr;
+    }
+    if (callback_ != nullptr) {
+        callback_->OnError(MSERR_SERVICE_DIED,
+            "mediaserver is died, please create a new video sink instance again");
+    }
+}
 }  // namespace Media
 }  // namespace OHOS

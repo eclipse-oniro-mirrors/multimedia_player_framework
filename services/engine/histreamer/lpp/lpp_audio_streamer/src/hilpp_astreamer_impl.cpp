@@ -101,32 +101,32 @@ int32_t HiLppAudioStreamerImpl::SetLppVideoStreamerId(std::string videoStreamerI
     MEDIA_LOG_I("HiLppAudioStreamerImpl::videoStreamerId %{public}s", videoStreamerId.c_str());
     auto &lppEngineManager = ILppEngineManager::GetInstance();
     videoStreamerEngine_ = lppEngineManager.GetLppVideoInstance(videoStreamerId);
-    FALSE_RETURN_V_MSG(videoStreamerEngine_ != nullptr, MSERR_UNKNOWN, "videoStreamerEngine_ nullptr");
+    FALSE_RETURN_V_MSG(videoStreamerEngine_ != nullptr, MSERR_NO_MEMORY, "videoStreamerEngine_ nullptr");
     syncMgr_ = videoStreamerEngine_->GetLppSyncManager();
-    FALSE_RETURN_V_MSG(syncMgr_ != nullptr, MSERR_UNKNOWN, "syncMgr_ nullptr");
+    FALSE_RETURN_V_MSG(syncMgr_ != nullptr, MSERR_NO_MEMORY, "syncMgr_ nullptr");
     auto ret = syncMgr_->SetAudioIsLpp(isLpp_);
-    FALSE_RETURN_V_MSG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioIsLpp failed");
+    FALSE_RETURN_V_MSG(ret == MSERR_OK, MSERR_UNSUPPORT, "SetAudioIsLpp failed");
     return MSERR_OK;
 }
 
 int32_t HiLppAudioStreamerImpl::SetObs(const std::weak_ptr<ILppAudioStreamerEngineObs> &obs)
 {
     MEDIA_LOG_I("HiLppAudioStreamerImpl::SetObs");
-    FALSE_RETURN_V_MSG(callbackLooper_ != nullptr, MSERR_UNKNOWN, "callbackLooper_ nullptr");
+    FALSE_RETURN_V_MSG(callbackLooper_ != nullptr, MSERR_NO_MEMORY, "callbackLooper_ nullptr");
     callbackLooper_->StartWithLppAudioStreamerEngineObs(obs);
     return MSERR_OK;
 }
-int32_t HiLppAudioStreamerImpl::SetParameter(const Format &param)
+int32_t HiLppAudioStreamerImpl::Configure(const Format &param)
 {
     MEDIA_LOG_I("HiLppAudioStreamerImpl::SetParameter");
     FALSE_RETURN_V_MSG(aRender_ != nullptr && adec_ != nullptr && dataMgr_ != nullptr,
         MSERR_INVALID_OPERATION, "object is nullptr");
     auto ret = adec_->Configure(param);
-    FALSE_RETURN_V_MSG(ret == MSERR_OK, MSERR_UNKNOWN, "Configure failed");
+    FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "Configure failed");
     ret = aRender_->SetParameter(param);
-    FALSE_RETURN_V_MSG(ret == MSERR_OK, MSERR_UNKNOWN, "aRender_ SetParameter failed");
+    FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "aRender_ SetParameter failed");
     ret = aRender_->Init();
-    FALSE_RETURN_V_MSG(ret == MSERR_OK, MSERR_UNKNOWN, "aRender_ Init failed");
+    FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "aRender_ Init failed");
     return MSERR_OK;
 }
 
@@ -134,7 +134,7 @@ int32_t HiLppAudioStreamerImpl::Prepare()
 {
     MEDIA_LOG_I("HiLppAudioStreamerImpl::Prepare");
     eventReceiver_ = std::make_shared<LppAudioEventReceiver>(weak_from_this(), streamerId_);
-    FALSE_RETURN_V_MSG(eventReceiver_ != nullptr, MSERR_INVALID_OPERATION, "callbackLooper_ is nullptr");
+    FALSE_RETURN_V_MSG(eventReceiver_ != nullptr, MSERR_NO_MEMORY, "callbackLooper_ is nullptr");
     callbackLooper_->SetEngine(weak_from_this());
     FALSE_RETURN_V_MSG(aRender_ != nullptr && adec_ != nullptr && dataMgr_ != nullptr,
         MSERR_INVALID_OPERATION, "object is nullptr");
@@ -161,6 +161,10 @@ int32_t HiLppAudioStreamerImpl::Start()
     MEDIA_LOG_I("HiLppAudioStreamerImpl::Start");
     FALSE_RETURN_V_MSG(aRender_ != nullptr && adec_ != nullptr && dataMgr_ != nullptr,
         MSERR_INVALID_OPERATION, "object is nullptr");
+    {
+        std::lock_guard<std::mutex> lock(pauseMutex_);
+        isPaused_ = false;
+    }
     auto ret = aRender_->Start();
     FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "aRender_ Start failed");
     ret = adec_->Start();
@@ -175,6 +179,11 @@ int32_t HiLppAudioStreamerImpl::Pause()
 {
     MEDIA_LOG_I("HiLppAudioStreamerImpl::Pause");
     FALSE_RETURN_V_MSG(callbackLooper_ != nullptr, MSERR_INVALID_OPERATION, "callbackLooper_ is nullptr");
+    {
+        std::lock_guard<std::mutex> lock(pauseMutex_);
+        FALSE_RETURN_V_MSG(!isPaused_, MSERR_OK, "HiLppAudioStreamerImpl is EOS");
+        isPaused_ = true;
+    }
     callbackLooper_->StopPositionUpdate();
     FALSE_RETURN_V_MSG(aRender_ != nullptr && adec_ != nullptr && dataMgr_ != nullptr,
         MSERR_INVALID_OPERATION, "object is nullptr");
@@ -191,6 +200,10 @@ int32_t HiLppAudioStreamerImpl::Resume()
     MEDIA_LOG_I("HiLppAudioStreamerImpl::Resume");
     FALSE_RETURN_V_MSG(aRender_ != nullptr && adec_ != nullptr && dataMgr_ != nullptr && callbackLooper_ != nullptr,
         MSERR_INVALID_OPERATION, "object is nullptr");
+    {
+        std::lock_guard<std::mutex> lock(pauseMutex_);
+        isPaused_ = false;
+    }
     callbackLooper_->StartPositionUpdate();
     auto ret = aRender_->Resume();
     FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "aRender_ Resume failed");
@@ -222,7 +235,7 @@ int32_t HiLppAudioStreamerImpl::Stop()
         MSERR_INVALID_OPERATION, "object is nullptr");
     callbackLooper_->StopPositionUpdate();
     auto ret = aRender_->Stop();
-    FALSE_RETURN_V_MSG(ret == MSERR_OK, MSERR_UNKNOWN, "aRender_ Stop failed");
+    FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "aRender_ Stop failed");
     ret = adec_->Stop();
     FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "aRender_ Stop failed");
     ret = dataMgr_->Stop();
@@ -232,35 +245,36 @@ int32_t HiLppAudioStreamerImpl::Stop()
 int32_t HiLppAudioStreamerImpl::Reset()
 {
     MEDIA_LOG_I("HiLppAudioStreamerImpl::Reset");
-    FALSE_RETURN_V_MSG(aRender_ != nullptr, MSERR_UNKNOWN, "aRender_ nullptr");
-    FALSE_RETURN_V_MSG(dataMgr_ != nullptr, MSERR_UNKNOWN, "dataMgr_ nullptr");
+    FALSE_RETURN_V_MSG(aRender_ != nullptr, MSERR_INVALID_OPERATION, "aRender_ nullptr");
+    FALSE_RETURN_V_MSG(dataMgr_ != nullptr, MSERR_INVALID_OPERATION, "dataMgr_ nullptr");
     auto ret = aRender_->Reset();
-    FALSE_RETURN_V_MSG(ret == MSERR_OK, MSERR_UNKNOWN, "aRender_ Reset failed");
+    FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "aRender_ Reset failed");
     dataMgr_->Reset();
     return MSERR_OK;
 }
 int32_t HiLppAudioStreamerImpl::SetVolume(const float volume)
 {
     MEDIA_LOG_I("HiLppAudioStreamerImpl::SetVolume" PUBLIC_LOG_F, volume);
-    FALSE_RETURN_V_MSG(aRender_ != nullptr, MSERR_UNKNOWN, "aRender_ nullptr");
+    FALSE_RETURN_V_MSG(aRender_ != nullptr, MSERR_NO_MEMORY, "aRender_ nullptr");
     auto ret = aRender_->SetVolume(volume);
-    FALSE_RETURN_V_MSG(ret == MSERR_OK, MSERR_UNKNOWN, "aRender_ SetVolume failed");
+    FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "aRender_ SetVolume failed");
     return MSERR_OK;
 }
 int32_t HiLppAudioStreamerImpl::SetPlaybackSpeed(const float playbackSpeed)
 {
     MEDIA_LOG_I("HiLppAudioStreamerImpl::SetPlaybackSpeed" PUBLIC_LOG_F, playbackSpeed);
-    FALSE_RETURN_V_MSG(aRender_ != nullptr, MSERR_UNKNOWN, "aRender_ nullptr");
+    FALSE_RETURN_V_MSG(aRender_ != nullptr, MSERR_NO_MEMORY, "aRender_ nullptr");
     auto ret = aRender_->SetSpeed(playbackSpeed);
-    FALSE_RETURN_V_MSG(ret == MSERR_OK, MSERR_UNKNOWN, "aRender_ SetPlaybackSpeed failed");
+    FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "aRender_ SetPlaybackSpeed failed");
     return MSERR_OK;
 }
 
 int32_t HiLppAudioStreamerImpl::ReturnFrames(sptr<LppDataPacket> framePacket)
 {
     FALSE_RETURN_V_MSG(dataMgr_ != nullptr, MSERR_UNKNOWN, "dataMgr_ nullptr");
+    FALSE_RETURN_V_MSG(framePacket != nullptr, MSERR_UNKNOWN, "framePacket nullptr");
     auto ret = dataMgr_->ProcessNewData(framePacket);
-    FALSE_RETURN_V_MSG(ret == MSERR_OK, MSERR_UNKNOWN, "dataMgr_ ProcessNewData failed");
+    FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "dataMgr_ ProcessNewData failed");
     return MSERR_OK;
 }
 
@@ -286,6 +300,10 @@ void HiLppAudioStreamerImpl::OnEvent(const Event &event)
         }
         case EventType::EVENT_AUDIO_INTERRUPT: {
             HandleInterruptEvent(event);
+            break;
+        }
+        case EventType::EVENT_ERROR : {
+            HandleErrorEvent(event);
             break;
         }
         default:
@@ -314,6 +332,7 @@ void HiLppAudioStreamerImpl::HandleCompleteEvent(const Event &event)
 {
     FALSE_RETURN_MSG(callbackLooper_ != nullptr, "callbackLooper_ nullptr");
     (void)event;
+    FALSE_RETURN_MSG(EosPause() == MSERR_OK, "EosPause failed");
     callbackLooper_->OnEos();
 }
 
@@ -335,6 +354,38 @@ int32_t HiLppAudioStreamerImpl::GetCurrentPosition(int64_t &currentPosition)
 {
     FALSE_RETURN_V_MSG(aRender_ != nullptr, MSERR_INVALID_STATE, "aRender_ nullptr");
     return aRender_->GetCurrentPosition(currentPosition);
+}
+
+
+int32_t HiLppAudioStreamerImpl::EosPause()
+{
+    MEDIA_LOG_I("HiLppAudioStreamerImpl::EosPause");
+    FALSE_RETURN_V_MSG(callbackLooper_ != nullptr, MSERR_INVALID_OPERATION, "callbackLooper_ is nullptr");
+    {
+        std::lock_guard<std::mutex> lock(pauseMutex_);
+        FALSE_RETURN_V_MSG(!isPaused_, MSERR_OK, "HiLppAudioStreamerImpl is paused when eos, return OK");
+        isPaused_ = true;
+    }
+    callbackLooper_->StopPositionUpdate();
+    FALSE_RETURN_V_MSG(aRender_ != nullptr && adec_ != nullptr && dataMgr_ != nullptr,
+        MSERR_INVALID_OPERATION, "object is nullptr");
+    auto ret = dataMgr_->Pause();
+    FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "dataMgr_ Pause failed");
+    ret = adec_->Pause();
+    FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "adec_ Pause failed");
+    ret = aRender_->Pause();
+    FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "aRender_ Pause failed");
+    return MSERR_OK;
+}
+
+void HiLppAudioStreamerImpl::HandleErrorEvent(const Event &event)
+{
+    FALSE_RETURN_MSG(callbackLooper_ != nullptr, "callbackLooper_ nullptr");
+    std::pair<MediaServiceErrCode, std::string> errorPair =
+        AnyCast<std::pair<MediaServiceErrCode, std::string>>(event.param);
+    MEDIA_LOG_I("HiLppAudioStreamer errorcode: %{public}d, errorMsg: %{public}s",
+        static_cast<int32_t>(errorPair.first), errorPair.second.c_str());
+    callbackLooper_->OnError(errorPair.first, errorPair.second);
 }
 }  // namespace Media
 }  // namespace OHOS

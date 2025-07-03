@@ -68,7 +68,7 @@ int32_t LppAudioDataManager::Prepare()
 
 int32_t LppAudioDataManager::SetDecoderInputProducer(sptr<Media::AVBufferQueueProducer> producer)
 {
-    FALSE_RETURN_V_MSG(producer != nullptr, MSERR_INVALID_VAL, "producer is nullptr");
+    FALSE_RETURN_V_MSG(producer != nullptr, MSERR_NO_MEMORY, "producer is nullptr");
     inputProducer_ = producer;
 
     sptr<IProducerListener> producerListener =
@@ -129,6 +129,7 @@ int32_t LppAudioDataManager::Reset()
 int32_t LppAudioDataManager::ProcessNewData(sptr<LppDataPacket> framePacket)
 {
     MEDIA_LOG_D("ProcessNewData, new datapacket arrived");
+    FALSE_RETURN_V_MSG(framePacket != nullptr, MSERR_INVALID_OPERATION, "framePacket is nullptr");
     std::unique_lock<std::mutex> lk(dataPacketMutex_);
     dataPacket_ = framePacket;
     isRequiringData_ = false;

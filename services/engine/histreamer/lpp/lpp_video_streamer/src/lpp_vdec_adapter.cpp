@@ -15,11 +15,16 @@
 #include "lpp_vdec_adapter.h"
 #include "common/log.h"
 #include "media_errors.h"
+#include "media_lpp_errors.h"
 #include "i_lpp_video_streamer.h"
 #include "osal/utils/steady_clock.h"
+#include "osal/utils/dump_buffer.h"
+#include "param_wrapper.h"
+#include "syspara/parameters.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "LppVDec"};
+const std::string DUMP_PARAM = "a";
 constexpr int64_t US_TO_MS = 1000;
 constexpr int64_t SEC_TO_US = 1000 * 1000;
 static const int32_t MAX_ADVANCE_US = 80000; // max advance us at render time
@@ -63,8 +68,11 @@ public:
     }
     void OnError(MediaAVCodec::AVCodecErrorType errorType, int32_t errorCode)
     {
-        MEDIA_LOG_W("LppVideoDecoderCallback::OnError errorType=" PUBLIC_LOG_D32 " errorCode=" PUBLIC_LOG_D32,
+        auto videoDecAdapter = videoDecoderAdapter_.lock();
+        FALSE_RETURN_MSG(videoDecAdapter != nullptr, "videoDecAdapter is nullptr");
+        MEDIA_LOG_D("LppVideoDecoderCallback::OnError errorType=" PUBLIC_LOG_D32 " errorCode=" PUBLIC_LOG_D32,
             static_cast<int32_t>(errorType), errorCode);
+        videoDecAdapter->OnError(errorType, errorCode);
     }
     void OnOutputFormatChanged(const MediaAVCodec::Format &format)
     {
@@ -105,6 +113,10 @@ LppVideoDecoderAdapter::LppVideoDecoderAdapter(const std::string &streamerId, bo
     : streamerId_(streamerId), isLppEnabled_(isLpp)
 {
     MEDIA_LOG_I("LppVideoDecoderAdapter " PUBLIC_LOG_S " initialized.", streamerId_.c_str());
+    std::string enableDump;
+    auto ret = OHOS::system::GetStringParameter("debug.media_service.enable_video_lpp_dump", enableDump, "false");
+    dumpBufferNeeded_ = ret == 0 ? enableDump == "true" : false;
+    dumpFileNameOutput_ = streamerId_ + "_DUMP_OUTPUT.bin";
 }
 
 LppVideoDecoderAdapter::~LppVideoDecoderAdapter()
@@ -138,9 +150,10 @@ int32_t LppVideoDecoderAdapter::Configure(const Format &param)
     FALSE_RETURN_V_MSG(videoDecoder_ != nullptr, MSERR_INVALID_OPERATION, "videoDecoder_ nullptr");
     int32_t isHdrVivid = 0;
     bool getRes = param.GetIntValue(Tag::VIDEO_IS_HDR_VIVID, isHdrVivid);
-    FALSE_RETURN_V_MSG(!getRes || isHdrVivid == 0, MSERR_VID_DEC_FAILED, "HDRVivid not support");
+    bool enableHdrVivid = OHOS::system::GetBoolParameter("debug.media_service.enable_hdr_vivid", false);
+    FALSE_RETURN_V_MSG(!getRes || isHdrVivid == 0 || enableHdrVivid, MSERR_VID_DEC_FAILED, "HDRVivid not support");
     int32_t ret = videoDecoder_->Configure(param);
-    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, MSERR_VID_DEC_FAILED, "Configure failed");
+    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, AVCSErrorToMSError(ret), "Configure failed");
     return MSERR_OK;
 }
 
@@ -148,7 +161,7 @@ int32_t LppVideoDecoderAdapter::SetVideoSurface(sptr<Surface> surface)
 {
     FALSE_RETURN_V_MSG(videoDecoder_ != nullptr, MSERR_INVALID_OPERATION, "videoDecoder_ nullptr");
     int32_t ret = videoDecoder_->SetOutputSurface(surface);
-    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, MSERR_VID_DEC_FAILED, "SetVideoSurface failed");
+    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, AVCSErrorToMSError(ret), "SetVideoSurface failed");
     return MSERR_OK;
 }
 
@@ -156,7 +169,7 @@ int32_t LppVideoDecoderAdapter::Prepare()
 {
     FALSE_RETURN_V_MSG(videoDecoder_ != nullptr, MSERR_INVALID_OPERATION, "videoDecoder_ nullptr");
     int32_t ret = videoDecoder_->Prepare();
-    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, MSERR_VID_DEC_FAILED, "Prepare failed");
+    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, AVCSErrorToMSError(ret), "Prepare failed");
     ret = PrepareBufferQueue();
     FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "PrepareBufferQueue failed");
     return MSERR_OK;
@@ -168,8 +181,7 @@ int32_t LppVideoDecoderAdapter::StartDecode()
     FALSE_RETURN_V_MSG(decodertask_ != nullptr, MSERR_INVALID_OPERATION, "decodertask_ is nullptr");
     decodertask_->Start();
     int32_t ret = videoDecoder_->Start();
-    FALSE_RETURN_V_MSG(ret == MSERR_OK, MSERR_UNKNOWN, "StartDecode failed");
-    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, MSERR_VID_DEC_FAILED, "StartDecode failed");
+    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, AVCSErrorToMSError(ret), "StartDecode failed");
     return MSERR_OK;
 }
 
@@ -208,7 +220,6 @@ int32_t LppVideoDecoderAdapter::StartRender()
 
 int32_t LppVideoDecoderAdapter::Pause()
 {
-    FALSE_RETURN_V_MSG(videoDecoder_ != nullptr, MSERR_INVALID_OPERATION, "videoDecoder_ nullptr");
     FALSE_RETURN_V_MSG(decodertask_ != nullptr, MSERR_INVALID_OPERATION, "decodertask_ is nullptr");
     decodertask_->Pause();
     lastRenderTimeNs_.store(0);
@@ -218,7 +229,6 @@ int32_t LppVideoDecoderAdapter::Pause()
 
 int32_t LppVideoDecoderAdapter::Resume()
 {
-    FALSE_RETURN_V_MSG(videoDecoder_ != nullptr, MSERR_INVALID_OPERATION, "videoDecoder_ nullptr");
     FALSE_RETURN_V_MSG(decodertask_ != nullptr, MSERR_INVALID_OPERATION, "decodertask_ is nullptr");
     decodertask_->Start();
     return MSERR_OK;
@@ -228,7 +238,7 @@ int32_t LppVideoDecoderAdapter::Flush()
 {
     FALSE_RETURN_V_MSG(videoDecoder_ != nullptr, MSERR_INVALID_OPERATION, "videoDecoder_ nullptr");
     int32_t ret = videoDecoder_->Flush();
-    FALSE_RETURN_V_MSG(ret == MSERR_OK, MSERR_VID_DEC_FAILED, "Flush failed");
+    FALSE_RETURN_V_MSG(ret == MSERR_OK, AVCSErrorToMSError(ret), "Flush failed");
     FlushTask();
     lastRenderTimeNs_.store(0);
     lastPts_.store(0);
@@ -236,6 +246,15 @@ int32_t LppVideoDecoderAdapter::Flush()
         std::lock_guard lock(outputMutex_);
         firstFrameDecoded_ = false;
         firstFrameRenderred_ = false;
+        renderStarted_ = false;
+        outputBuffers_.clear();
+        if (inputBufferQueueConsumer_ != nullptr) {
+            for (auto &buffer : bufferVector_) {
+                inputBufferQueueConsumer_->DetachBuffer(buffer);
+            }
+            bufferVector_.clear();
+            inputBufferQueueConsumer_->SetQueueSize(0);
+        }
     }
     return MSERR_OK;
 }
@@ -244,7 +263,7 @@ int32_t LppVideoDecoderAdapter::Stop()
 {
     FALSE_RETURN_V_MSG(videoDecoder_ != nullptr, MSERR_INVALID_OPERATION, "videoDecoder_ nullptr");
     auto ret = videoDecoder_->Stop();
-    FALSE_RETURN_V_MSG(ret == MSERR_OK, MSERR_VID_DEC_FAILED, "Flush failed");
+    FALSE_RETURN_V_MSG(ret == MSERR_OK, AVCSErrorToMSError(ret), "Flush failed");
     return MSERR_OK;
 }
 
@@ -252,7 +271,7 @@ int32_t LppVideoDecoderAdapter::Reset()
 {
     FALSE_RETURN_V_MSG(videoDecoder_ != nullptr, MSERR_INVALID_OPERATION, "videoDecoder_ nullptr");
     auto ret = videoDecoder_->Reset();
-    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, MSERR_VID_DEC_FAILED, "Reset failed");
+    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, AVCSErrorToMSError(ret), "Reset failed");
     return MSERR_OK;
 }
 
@@ -260,7 +279,7 @@ int32_t LppVideoDecoderAdapter::SetParameter(const Format &param)
 {
     FALSE_RETURN_V_MSG(videoDecoder_ != nullptr, MSERR_INVALID_OPERATION, "videoDecoder_ nullptr");
     auto ret = videoDecoder_->SetParameter(param);
-    FALSE_RETURN_V_MSG(ret == MSERR_OK, MSERR_VID_DEC_FAILED, "SetParameter failed");
+    FALSE_RETURN_V_MSG(ret == MSERR_OK, AVCSErrorToMSError(ret), "SetParameter failed");
     return MSERR_OK;
 }
 
@@ -268,7 +287,7 @@ int32_t LppVideoDecoderAdapter::GetChannelId(int32_t &channelId)
 {
     FALSE_RETURN_V_MSG(videoDecoder_ != nullptr, MSERR_INVALID_OPERATION, "videoDecoder_ nullptr");
     auto ret = videoDecoder_->GetChannelId(channelId);
-    FALSE_RETURN_V_MSG(ret == MSERR_OK, MSERR_VID_DEC_FAILED, "GetChannelId failed");
+    FALSE_RETURN_V_MSG(ret == MSERR_OK, AVCSErrorToMSError(ret), "GetChannelId failed");
     return MSERR_OK;
 }
 
@@ -277,7 +296,7 @@ int32_t LppVideoDecoderAdapter::Release()
     MEDIA_LOG_I("Release");
     FALSE_RETURN_V_MSG(videoDecoder_ != nullptr, MSERR_INVALID_OPERATION, "Release failed");
     auto ret = videoDecoder_->Release();
-    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, MSERR_VID_DEC_FAILED, "Release failed");
+    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, AVCSErrorToMSError(ret), "Release failed");
     return MSERR_OK;
 }
 
@@ -332,14 +351,15 @@ void LppVideoDecoderAdapter::HandleQueueBufferAvailable()
     FALSE_RETURN_MSG_D(statusRes == Status::OK && tmpBuffer != nullptr && tmpBuffer->meta_ != nullptr,
         "AcquireBuffer failed");
 
-    uint32_t index;
+    int32_t index;
     bool getDataRes = tmpBuffer->meta_->GetData(Tag::REGULAR_TRACK_ID, index);
     FALSE_RETURN_MSG(getDataRes, "get index failed.");
     if ((tmpBuffer->flag_ & static_cast<uint32_t>(Plugins::AVBufferFlag::EOS)) > 0) {
         tmpBuffer->memory_->SetSize(0);
     }
-    int32_t res = videoDecoder_->QueueInputBuffer(index);
+    int32_t res = videoDecoder_->QueueInputBuffer(static_cast<uint32_t>(index));
     FALSE_RETURN_MSG(res == MediaAVCodec::AVCS_ERR_OK, "videoDecoder_ QueueInputBuffer failed");
+    DumpBufferIfNeeded(dumpFileNameOutput_, tmpBuffer);
     OnQueueBufferAvailable();
 }
 
@@ -349,7 +369,7 @@ void LppVideoDecoderAdapter::OnInputBufferAvailable(uint32_t index, std::shared_
     FALSE_RETURN_MSG(buffer != nullptr && buffer->meta_ != nullptr, "meta_ is nullptr.");
     FALSE_RETURN_MSG(inputBufferQueueConsumer_ != nullptr, "inputBufferQueueConsumer_ is nullptr.");
     std::lock_guard lock(inputMutex_);
-    buffer->meta_->SetData(Tag::REGULAR_TRACK_ID, index);
+    buffer->meta_->SetData(Tag::REGULAR_TRACK_ID, static_cast<int32_t>(index));
     if (inputBufferQueueConsumer_->IsBufferInQueue(buffer)) {
         inputBufferQueueConsumer_->ReleaseBuffer(buffer);
         return;
@@ -361,8 +381,9 @@ void LppVideoDecoderAdapter::OnInputBufferAvailable(uint32_t index, std::shared_
 
 void LppVideoDecoderAdapter::OnOutputBufferAvailable(uint32_t index, std::shared_ptr<AVBuffer> buffer)
 {
-    MEDIA_LOG_D("LppVideoDecoderAdapter::OnOutputBufferAvailable index=" PUBLIC_LOG_U32, index);
     FALSE_RETURN_MSG(buffer != nullptr, "buffer is nullptr.");
+    MEDIA_LOG_D("LppVideoDecoderAdapter::OnOutputBufferAvailable index=" PUBLIC_LOG_U32 " pts=" PUBLIC_LOG_D64,
+        index, buffer->pts_);
     bool needRenderCurrentFrame = false;
     {
         std::lock_guard lock(outputMutex_);
@@ -372,6 +393,7 @@ void LppVideoDecoderAdapter::OnOutputBufferAvailable(uint32_t index, std::shared
     }
     NotifyFirstFrameDecoded();
     FALSE_RETURN_NOLOG(needRenderCurrentFrame);
+    MEDIA_LOG_D("ScheduleRenderFrameJob when OnOutputBufferAvailable");
     ScheduleRenderFrameJob(index, buffer);
 }
 
@@ -415,6 +437,8 @@ bool LppVideoDecoderAdapter::HandleCommonFrame(uint32_t index, std::shared_ptr<A
     CalcPreFrameDiffTimeNs(buffer->pts_, diffTimeNs, isCalclated);
     int64_t currentTimeNs = GetSysTimeNs();
     int64_t renderTimeNs = diffTimeNs + currentTimeNs;
+    int64_t lastRenderTimeNs = lastRenderTimeNs_.load();
+    renderTimeNs = lastRenderTimeNs > 0 && renderTimeNs < lastRenderTimeNs ? lastRenderTimeNs + 1 : renderTimeNs;
     int64_t advanceTime = renderTimeNs > currentTimeNs ? renderTimeNs - currentTimeNs : 0;
     int64_t waitTimeNs = advanceTime > MAX_ADVANCE_US ? advanceTime - MAX_ADVANCE_US : 0;
     MEDIA_LOG_D("render common frame pts=" PUBLIC_LOG_U32 " renderTimeNs=" PUBLIC_LOG_D64 " diffTimeNs=" PUBLIC_LOG_D64
@@ -541,6 +565,13 @@ void LppVideoDecoderAdapter::OnOutputBufferUnbinded()
 
 void LppVideoDecoderAdapter::OnError(MediaAVCodec::AVCodecErrorType errorType, int32_t errorCode)
 {
+    (void)errorType;
+    MEDIA_LOG_I("LppVideoDecoderAdapter::OnError errorCode=" PUBLIC_LOG_D32, errorCode);
+    FALSE_RETURN_MSG(eventReceiver_ != nullptr, "eventReceiver_ is nullptr");
+    MediaServiceErrCode err = AVCSErrorToMSError(errorCode);
+    std::string errMsg = MSErrorToString(err);
+    std::pair<MediaServiceErrCode, std::string> errPair = std::make_pair(err, errMsg);
+    eventReceiver_->OnEvent({"VideoDecoder", EventType::EVENT_ERROR, errPair});
 }
 
 void LppVideoDecoderAdapter::OnOutputFormatChanged(const Format &format)
@@ -583,5 +614,12 @@ void LppVideoDecoderAdapter::SetPlaybackSpeed(float speed)
     MEDIA_LOG_I("LppVideoDecoderAdapter::SetPlaybackSpeed speed " PUBLIC_LOG_F, speed);
     speed_.store(speed);
 }
+
+void LppVideoDecoderAdapter::DumpBufferIfNeeded(const std::string &fileName, const std::shared_ptr<AVBuffer>& buffer)
+{
+    FALSE_RETURN_NOLOG(dumpBufferNeeded_);
+    DumpAVBufferToFile(DUMP_PARAM, fileName, buffer);
+}
+
 }  // namespace Media
 }  // namespace OHOS

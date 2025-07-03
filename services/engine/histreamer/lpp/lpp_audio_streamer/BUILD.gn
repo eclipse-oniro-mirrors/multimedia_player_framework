@@ -51,11 +51,11 @@ ohos_static_library("media_engine_histreamer_lpp_audio_streamer") {
     debug = false
   }
   sources = [
-    "hilpp_astreamer_impl.cpp",
-    "lpp_audio_data_manager.cpp",
-    "lpp_adec_adapter.cpp",
-    "lpp_audio_render_adapter.cpp",
-    "lpp_audio_callback_looper.cpp",
+    "./src/hilpp_astreamer_impl.cpp",
+    "./src/lpp_audio_data_manager.cpp",
+    "./src/lpp_adec_adapter.cpp",
+    "./src/lpp_audio_render_adapter.cpp",
+    "./src/lpp_audio_callback_looper.cpp",
   ]
 
   configs = [

@@ -106,6 +106,7 @@ private:
     void AVRecorderServerDied();
     void AVScreenCaptureServerDied();
     void AVCodecServerDied();
+    void LppServerDied();
     void CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility subSystemId,
                                     sptr<IRemoteObject> &object, std::unique_lock<std::mutex> &lock);
 
