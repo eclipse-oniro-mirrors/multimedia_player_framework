@@ -35,8 +35,8 @@ public:
     // TearDown: Called after each test cases
     void TearDown(void);
 protected:
-    void HandleBufferAvailableFunTest_0031();
-    void HandleBufferAvailableFunTest_0032();
+    void HandleBufferAvailableFunTest0031();
+    void HandleBufferAvailableFunTest0032();
     std::shared_ptr<LppAudioDataManager> audioDataMgr_ {nullptr};
     std::string streamerId_ {};
 };

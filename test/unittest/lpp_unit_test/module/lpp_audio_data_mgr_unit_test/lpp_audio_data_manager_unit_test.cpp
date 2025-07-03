@@ -269,7 +269,7 @@ HWTEST_F(LppAudioDataManagerUnitTest, HandleBufferAvailable_002, TestSize.Level1
     EXPECT_TRUE(pushBufferSuccess);
 }
 
-void HandleBufferAvailableFunTest_0031()
+void HandleBufferAvailableFunTest0031()
 {
     sptr<LppDataPacket> framePacket = sptr<LppDataPacket>::MakeSptr();
     framePacket->Init();
@@ -307,7 +307,7 @@ void HandleBufferAvailableFunTest_0031()
     EXPECT_EQ(audioDataMgr_->isRequiringData_, true);
 }
 
-void HandleBufferAvailableFunTest_0032()
+void HandleBufferAvailableFunTest0032()
 {
     framePacket = sptr<LppDataPacket>::MakeSptr();
     framePacket->Init();
