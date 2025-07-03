@@ -2450,6 +2450,12 @@ void HiPlayerImpl::OnEventContinue(const Event &event)
             HandleFlvAutoSelectBitRate(AnyCast<int32_t>(event.param));
             break;
         }
+        case EventType::EVENT_VIDEO_DECODER_RESTART: {
+            if (demuxer_ != nullptr) {
+                demuxer_->NotifyResumeUnMute();
+            }
+            break;
+        }
         default:
             break;
     }
