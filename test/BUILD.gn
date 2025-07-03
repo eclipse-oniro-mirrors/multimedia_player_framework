@@ -98,6 +98,21 @@ group("media_unit_test") {
         deps += [ "unittest/observer_test:incall_observer_unit_test" ]
       }
     }
+    if (player_framework_support_lowpower_av_sink) {
+      deps += [
+        "unittest/lpp_unit_test/common/lpp_common_unit_test:lpp_common_unit_test",
+        "unittest/lpp_unit_test/engine/lpp_video_callback_looper_unit_test:lpp_video_callback_looper_unit_test",
+        "unittest/lpp_unit_test/engine/lpp_video_stream_unit_test:lpp_video_stream_unit_test",
+        "unittest/lpp_unit_test/module/lpp_sync_mgr_adapter_unit_test:lpp_sync_mgr_adapter_unit_test",
+        "unittest/lpp_unit_test/module/lpp_sync_mgr_unit_test:lpp_sync_mgr_unit_test",
+        "unittest/lpp_unit_test/engine/lpp_astream_impl_unit_test:lpp_astream_impl_unit_test",
+        "unittest/lpp_unit_test/engine/lpp_audio_callback_looper_unit_test:lpp_audio_callback_looper_unit_test",
+        "unittest/lpp_unit_test/module/lpp_audio_data_mgr_unit_test:lpp_audio_data_mgr_unit_test",
+        "unittest/lpp_unit_test/module/lpp_audio_render_adapter_unit_test:lpp_audio_render_adapter_unit_test",
+        "unittest/lpp_unit_test/module/lpp_video_data_mgr_unit_test:lpp_video_data_mgr_unit_test",
+        "unittest/lpp_unit_test/module/lpp_video_dec_adapter_unit_test:lpp_video_dec_adapter_unit_test",
+      ]
+    }
   }
 }
 
