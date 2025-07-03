@@ -188,23 +188,24 @@ int32_t AudioHapticPlayerImpl::Start()
         "Audio haptic vibrator is nullptr");
     CHECK_AND_RETURN_RET_LOG(audioHapticSound_ != nullptr, MSERR_INVALID_OPERATION,
         "Audio haptic sound is nullptr");
+    CHECK_AND_RETURN_RET_LOG(playerState_ != AudioHapticPlayerState::STATE_RUNNING, result,
+        "Audio haptic already running");
 
-    audioHapticSyncId_ = GenerateSyncId();
-    
-    if (playerState_ == AudioHapticPlayerState::STATE_RUNNING) {
-        // stop vibrate
-        StopVibrate();
-        // stop sound
-        result = audioHapticSound_->StopSound();
-        CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result, "Failed to stop sound.");
-        playerState_ = AudioHapticPlayerState::STATE_STOPPED;
+    // If DSP synchronization is supported, generate the syncId before starting
+    if (isSupportDSPSync_) {
+        audioHapticSyncId_ = GenerateSyncId();
+        isFirstFrameAfterStart_ = true;
+        {
+            std::unique_lock<std::mutex> lockWait(waitStartVibrateMutex_);
+            canStartVibrate_ = true;
+        }
     }
     
     if (vibrateThread_ == nullptr) {
         ResetVibrateState();
         vibrateThread_ = std::make_shared<std::thread>([this] { StartVibrate(); });
     }
-    result = audioHapticSound_->StartSound(audioHapticSyncId_);
+    result = audioHapticSound_->StartSound(audioHapticSyncId_.load());
     SendHapticPlayerEvent(MSERR_OK, "START_HAPTIC_PLAYER");
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result, "Failed to start sound.");
     MEDIA_LOGW("StartSound() has been executed successfully!");
@@ -256,7 +257,7 @@ void AudioHapticPlayerImpl::ReleaseVibrator()
     {
         // When player is releasing，notify vibrate thread immediately
         std::lock_guard<std::mutex> lockVibrate(waitStartVibrateMutex_);
-        isAudioPlayFirstFrame_ = true;
+        canStartVibrate_ = true;
         isVibrationStopped_ = true;
         condStartVibrate_.notify_one();
     }
@@ -422,7 +423,7 @@ int32_t AudioHapticPlayerImpl::SetLoop(bool loop)
     CHECK_AND_RETURN_RET_LOG(playerState_ != AudioHapticPlayerState::STATE_RELEASED, ERR_OPERATE_NOT_ALLOWED,
         "The audio haptic player has been released.");
     int32_t result = MSERR_OK;
-    loop_ = loop;
+    loop_.store(loop);
     if (audioHapticSound_ == nullptr) {
         MEDIA_LOGW("Audio haptic sound is nullptr!");
         return result;
@@ -472,10 +473,11 @@ int32_t AudioHapticPlayerImpl::StartVibrate()
 
     MEDIA_LOGI("Enter StartVibrate()");
     std::unique_lock<std::mutex> lockWait(waitStartVibrateMutex_);
+    int32_t playedTimes = 0;
     do {
-        int32_t waitTime = loop_ ? LOAD_WAIT_SECONDS_FOR_LOOP : LOAD_WAIT_SECONDS;
+        int32_t waitTime = loop_.load() ? LOAD_WAIT_SECONDS_FOR_LOOP : LOAD_WAIT_SECONDS;
         bool waitResult = condStartVibrate_.wait_for(lockWait, std::chrono::seconds(waitTime),
-            [this]() { return isAudioPlayFirstFrame_ || isVibrationStopped_; });
+            [this]() { return canStartVibrate_ || isVibrationStopped_; });
         if (!waitResult) {
             MEDIA_LOGE("StartVibrate: Failed to start vibrate (time out).");
             SendHapticPlayerEvent(MSERR_INVALID_OPERATION, "VIBRATE_TIME_OUT");
@@ -487,23 +489,27 @@ int32_t AudioHapticPlayerImpl::StartVibrate()
             return MSERR_OK;
         }
 
-        isAudioPlayFirstFrame_ = false; // reset for next time.
-
-        int32_t hapticDelay = audioHapticVibrator_->GetDelayTime();
-        int32_t delay = (static_cast<int32_t>(this->audioLatency_) - hapticDelay) > 0 ?
-            static_cast<int32_t>(this->audioLatency_) - hapticDelay : 0;
-        waitResult = condStartVibrate_.wait_for(lockWait, std::chrono::milliseconds(delay),
-            [this]() { return isVibrationStopped_.load(); });
-        if (isVibrationStopped_) {
-            MEDIA_LOGI("StartVibrate: audio haptic player has been stopped.");
-            SendHapticPlayerEvent(MSERR_OK, "HAPTIC_PLAYER_STOP");
-            return MSERR_OK;
+        canStartVibrate_ = false; // reset for next time.
+        // If new synchronization is unsupported, SoundPool's looping subsequent plays require calibration delay
+        if (!isSupportDSPSync_ || (latencyMode_ == AUDIO_LATENCY_MODE_FAST && playedTimes > 0)) {
+            int32_t hapticDelay = audioHapticVibrator_->GetDelayTime();
+            int32_t delay = (static_cast<int32_t>(this->audioLatency_) - hapticDelay) > 0 ?
+                static_cast<int32_t>(this->audioLatency_) - hapticDelay : 0;
+            waitResult = condStartVibrate_.wait_for(lockWait, std::chrono::milliseconds(delay),
+                [this]() { return isVibrationStopped_.load(); });
+            if (isVibrationStopped_) {
+                MEDIA_LOGI("StartVibrate: audio haptic player has been stopped.");
+                SendHapticPlayerEvent(MSERR_OK, "HAPTIC_PLAYER_STOP");
+                return MSERR_OK;
+            }
         }
         MEDIA_LOGI("The first frame of audio is about to start. Triggering the vibration.");
         isVibrationRunning_.store(true);
+        audioHapticVibrator_->SetAudioHapticSyncId(audioHapticSyncId_.load());
         audioHapticVibrator_->StartVibrate(latencyMode_);
         isVibrationRunning_.store(false);
-    } while (loop_ && !isVibrationStopped_);
+        playedTimes++;
+    } while (loop_.load() && !isVibrationStopped_);
 
     SendHapticPlayerEvent(MSERR_OK, "START_VIBRATE");
     return MSERR_OK;
@@ -577,8 +583,24 @@ void AudioHapticPlayerImpl::HandleEndOfStreamEvent()
         MEDIA_LOGE("The audio haptic player has been released!");
         return;
     }
-    StopVibrate();
-    playerState_ = AudioHapticPlayerState::STATE_STOPPED;
+
+    if (playerState_ == AudioHapticPlayerState::STATE_STOPPED) {
+        MEDIA_LOGE("The audio haptic player has been stopped!");
+        return;
+    }
+
+    if (!loop_.load()) {
+        StopVibrate();
+        playerState_ = AudioHapticPlayerState::STATE_STOPPED;
+        return;
+    }
+
+    // Triggered only if new synchronization is supported.
+    // Low-latency path doesn't trigger EOS during looping; use normal path only.
+    if (isSupportDSPSync_) {
+        audioHapticSyncId_++;
+        NotifyStartVibrate(0);
+    }
 }
 
 void AudioHapticPlayerImpl::NotifyErrorEvent(int32_t errCode)
@@ -592,6 +614,25 @@ void AudioHapticPlayerImpl::NotifyErrorEvent(int32_t errCode)
     }
 }
 
+void AudioHapticPlayerImpl::NotifyFirstFrame(const uint64_t &latency)
+{
+    // If new synchronization is unsupported, the first frame callback triggers the vibration start.
+    if (!isSupportDSPSync_) {
+        NotifyStartVibrate(latency);
+        return;
+    }
+
+    // When new synchronization is supported, the fast path looping scenario first uses the new scheme.
+    // but reverts to the old one afterward.
+    if (latencyMode_ == AUDIO_LATENCY_MODE_FAST && !isFirstFrameAfterStart_.load()) {
+        NotifyStartVibrate(latency);
+    }
+
+    if (isFirstFrameAfterStart_.load()) {
+        isFirstFrameAfterStart_.store(false);
+    }
+}
+
 void AudioHapticPlayerImpl::NotifyStartVibrate(const uint64_t &latency)
 {
     if (isVibrationRunning_.load() &&
@@ -601,7 +642,7 @@ void AudioHapticPlayerImpl::NotifyStartVibrate(const uint64_t &latency)
         return;
     }
     std::lock_guard<std::mutex> lock(this->waitStartVibrateMutex_);
-    this->isAudioPlayFirstFrame_ = true;
+    this->canStartVibrate_ = true;
     this->audioLatency_ = latency;
     this->condStartVibrate_.notify_one();
 }
@@ -661,7 +702,8 @@ void AudioHapticSoundCallbackImpl::OnFirstFrameWriting(uint64_t latency)
         MEDIA_LOGE("The audio haptic player has been released.");
         return;
     }
-    player->NotifyStartVibrate(latency);
+
+    player->NotifyFirstFrame(latency);
 }
 } // namesapce AudioStandard
 } // namespace OHOS

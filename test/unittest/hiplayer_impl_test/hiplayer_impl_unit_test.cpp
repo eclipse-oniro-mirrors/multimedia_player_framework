@@ -1507,7 +1507,7 @@ HWTEST_F(HiplayerImplUnitTest, SetAudioHapticsSyncId_001, TestSize.Level0)
     Format format1;
     format1.PutIntValue(PlayerKeys::PLAYER_AUDIO_HAPTICS_SYNC_ID, 2); // call without
     hiplayer_->SetParameter(format1);
-    EXPECT_EQ(hiplayer_->audioHapticsSyncId_, 1); // Expect fail, no change
+    EXPECT_EQ(hiplayer_->audioHapticsSyncId_, 2); // Expect success
 
     Format format2;
     format2.PutIntValue(PlayerKeys::CONTENT_TYPE, AudioStandard::CONTENT_TYPE_UNKNOWN);

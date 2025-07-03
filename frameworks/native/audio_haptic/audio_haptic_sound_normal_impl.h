@@ -43,7 +43,7 @@ public:
     void NotifyErrorEvent(int32_t errorCode);
     void NotifyFirstFrameEvent(uint64_t latency);
     void NotifyInterruptEvent(AudioStandard::InterruptEvent &interruptEvent);
-    void NotifyEndOfStreamEvent();
+    void NotifyEndOfStreamEvent(const bool &isLoop);
 
 private:
     int32_t LoadAVPlayer();
@@ -88,6 +88,7 @@ private:
     void HandleStateChangeEvent(int32_t extra, const Format &infoBody);
     void HandleAudioInterruptEvent(int32_t extra, const Format &infoBody);
     void HandleAudioFirstFrameEvent(int32_t extra, const Format &infoBody);
+    void HandleEOSEvent(int32_t extra, const Format &infoBody);
 
     std::weak_ptr<AudioHapticSoundNormalImpl> soundNormalImpl_;
     AudioHapticPlayerState playerState_ = AudioHapticPlayerState::STATE_NEW;

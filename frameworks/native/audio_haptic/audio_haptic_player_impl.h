@@ -55,6 +55,7 @@ public:
     void NotifyEndOfStreamEvent();
     void NotifyErrorEvent(int32_t errCode);
     static void SendHapticPlayerEvent(const int32_t &errorCode, const std::string &strEvent);
+    void NotifyFirstFrame(const uint64_t &latency);
 
 private:
     // func for sound
@@ -76,11 +77,13 @@ private:
     AudioSource audioSource_;
     HapticSource hapticSource_;
     float volume_ = 1.0f;
-    bool loop_ = false;
+    std::atomic<bool> loop_ = false;
     AudioHapticPlayerState playerState_ = AudioHapticPlayerState::STATE_INVALID;
     std::mutex audioHapticPlayerLock_;
     HapticsMode hapticsMode_ = HapticsMode::HAPTICS_MODE_INVALID;
-    int32_t audioHapticSyncId_ = 0;
+    std::atomic<int32_t> audioHapticSyncId_ = 0;
+    bool isSupportDSPSync_ = false;
+    std::atomic<bool> isFirstFrameAfterStart_ = true;
 
     // var for callback
     std::weak_ptr<AudioHapticPlayerCallback> audioHapticPlayerCallback_;
@@ -92,7 +95,7 @@ private:
     std::shared_ptr<std::thread> vibrateThread_;
     std::mutex waitStartVibrateMutex_;
     std::condition_variable condStartVibrate_;
-    bool isAudioPlayFirstFrame_ = false;
+    bool canStartVibrate_ = false;
     std::atomic<bool> isVibrationStopped_ = false;
     std::atomic_bool isVibrationRunning_{false};
     std::atomic<bool> isGentle_ = false;

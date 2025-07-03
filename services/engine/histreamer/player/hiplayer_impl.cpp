@@ -862,6 +862,7 @@ int32_t HiPlayerImpl::Play()
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
         return TransStatus(Status::ERROR_INVALID_OPERATION);
     }
+    ApplyAudioHapticsSyncId();
     if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE || pipelineStates_ == PlayerStates::PLAYER_STOPPED) {
         isStreaming_ = true;
         ret = ((GetPlayRangeStartTime() > PLAY_RANGE_DEFAULT_VALUE) ?
@@ -1646,6 +1647,11 @@ int32_t HiPlayerImpl::SetLooping(bool loop)
 int32_t HiPlayerImpl::SetParameter(const Format& params)
 {
     MediaTrace trace("HiPlayerImpl::SetParameter");
+    if (params.ContainKey(PlayerKeys::PLAYER_AUDIO_HAPTICS_SYNC_ID)) {
+        int32_t syncId = DEFAULT_SYNC_ID;
+        params.GetIntValue(PlayerKeys::PLAYER_AUDIO_HAPTICS_SYNC_ID, syncId);
+        (void)SetAudioHapticsSyncId(syncId);
+    }
 #ifdef SUPPORT_VIDEO
     if (params.ContainKey(PlayerKeys::VIDEO_SCALE_TYPE)) {
         int32_t videoScaleType = 0;
@@ -1664,11 +1670,6 @@ int32_t HiPlayerImpl::SetParameter(const Format& params)
         params.GetIntValue(PlayerKeys::RENDERER_FLAG, rendererFlag);
         if (params.ContainKey(PlayerKeys::VOLUME_MODE)) {
             params.GetIntValue(PlayerKeys::VOLUME_MODE, volumeMode);
-        }
-        if (params.ContainKey(PlayerKeys::PLAYER_AUDIO_HAPTICS_SYNC_ID)) {
-            int32_t syncId = DEFAULT_SYNC_ID;
-            params.GetIntValue(PlayerKeys::PLAYER_AUDIO_HAPTICS_SYNC_ID, syncId);
-            SetAudioHapticsSyncId(syncId);
         }
         return SetAudioRendererInfo(contentType, streamUsage, rendererFlag, volumeMode);
     }
@@ -2807,6 +2808,9 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
     callbackLooper_.ReportRemainedMaxAmplitude();
     if (!singleLoop_.load()) {
         OnStateChanged(PlayerStateId::EOS);
+    } else {
+        audioHapticsSyncId_++;
+        ApplyAudioHapticsSyncId();
     }
     UpdatePlayTotalDuration();
     callbackLooper_.OnInfo(INFO_TYPE_EOS, static_cast<int32_t>(singleLoop_.load()), format);
@@ -3345,7 +3349,6 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
         SetDefaultAudioRenderInfo(trackInfos);
     }
     SetAudioRendererParameter();
-    ApplyAudioHapticsSyncId();
     audioSink_->SetSyncCenter(syncManager_);
 
     completeState_.emplace_back(std::make_pair("AudioSink", false));
