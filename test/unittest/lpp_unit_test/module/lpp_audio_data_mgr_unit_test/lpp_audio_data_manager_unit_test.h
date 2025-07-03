@@ -35,9 +35,11 @@ public:
     // TearDown: Called after each test cases
     void TearDown(void);
 protected:
+    void HandleBufferAvailableFunTest_003_1();
+    void HandleBufferAvailableFunTest_003_2();
     std::shared_ptr<LppAudioDataManager> audioDataMgr_ {nullptr};
     std::string streamerId_ {};
 };
 } // namespace Media
 } // namespace OHOS
-#endif // LPP_AUDIO_DATA_MANAGER_UNIT_TEST_H
+#endif // LPP_AUDIO_DATA_MANAGER_UNIT_TEST_H

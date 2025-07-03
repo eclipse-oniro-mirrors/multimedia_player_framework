@@ -269,31 +269,8 @@ HWTEST_F(LppAudioDataManagerUnitTest, HandleBufferAvailable_002, TestSize.Level1
     EXPECT_TRUE(pushBufferSuccess);
 }
 
-/**
-* @tc.name    : Test HandleBufferAvailable API
-* @tc.number  : HandleBufferAvailable_003
-* @tc.desc    : Test HandleBufferAvailable interface
-*/
-HWTEST_F(LppAudioDataManagerUnitTest, HandleBufferAvailable_003, TestSize.Level1)
+void HandleBufferAvailableFunTest_003_1()
 {
-    std::shared_ptr<OHOS::Media::MockEventReceiver> eventReceiver = std::make_shared<OHOS::Media::MockEventReceiver>();
-    bool onEventSuccess = false;
-    EXPECT_CALL(*eventReceiver, OnEvent(_)).WillRepeatedly(Invoke([&onEventSuccess](const Event &event) {
-        onEventSuccess = true;
-    }));
-    audioDataMgr_->SetEventReceiver(eventReceiver);
-    EXPECT_NE(audioDataMgr_->eventReceiver_, nullptr);
-
-    sptr<MockAVBufferQueueProducer> producer = sptr<MockAVBufferQueueProducer>::MakeSptr();
-    sptr<IBrokerListener> targetListener = nullptr;
-    EXPECT_CALL(*producer, SetBufferAvailableListener(_)).WillOnce(Return(Status::OK));
-    int32_t res = audioDataMgr_->SetDecoderInputProducer(producer);
-    EXPECT_EQ(res, 0);
-    audioDataMgr_->isRequiringData_ = false;
-    audioDataMgr_->dataPacket_ = nullptr;
-    audioDataMgr_->HandleBufferAvailable();
-    EXPECT_EQ(audioDataMgr_->isRequiringData_, true);
-
     sptr<LppDataPacket> framePacket = sptr<LppDataPacket>::MakeSptr();
     framePacket->Init();
     audioDataMgr_->dataPacket_ = framePacket;
@@ -328,7 +305,10 @@ HWTEST_F(LppAudioDataManagerUnitTest, HandleBufferAvailable_003, TestSize.Level1
     audioDataMgr_->dataPacket_->vectorReadIndex_ = 0;
     audioDataMgr_->HandleBufferAvailable();
     EXPECT_EQ(audioDataMgr_->isRequiringData_, true);
+}
 
+void HandleBufferAvailableFunTest_003_2()
+{
     framePacket = sptr<LppDataPacket>::MakeSptr();
     framePacket->Init();
     audioDataMgr_->dataPacket_ = framePacket;
@@ -373,5 +353,35 @@ HWTEST_F(LppAudioDataManagerUnitTest, HandleBufferAvailable_003, TestSize.Level1
     audioDataMgr_->HandleBufferAvailable();
     EXPECT_EQ(audioDataMgr_->isRequiringData_, true);
 }
+
+/**
+* @tc.name    : Test HandleBufferAvailable API
+* @tc.number  : HandleBufferAvailable_003
+* @tc.desc    : Test HandleBufferAvailable interface
+*/
+HWTEST_F(LppAudioDataManagerUnitTest, HandleBufferAvailable_003, TestSize.Level1)
+{
+    std::shared_ptr<OHOS::Media::MockEventReceiver> eventReceiver = std::make_shared<OHOS::Media::MockEventReceiver>();
+    bool onEventSuccess = false;
+    EXPECT_CALL(*eventReceiver, OnEvent(_)).WillRepeatedly(Invoke([&onEventSuccess](const Event &event) {
+        onEventSuccess = true;
+    }));
+    audioDataMgr_->SetEventReceiver(eventReceiver);
+    EXPECT_NE(audioDataMgr_->eventReceiver_, nullptr);
+
+    sptr<MockAVBufferQueueProducer> producer = sptr<MockAVBufferQueueProducer>::MakeSptr();
+    sptr<IBrokerListener> targetListener = nullptr;
+    EXPECT_CALL(*producer, SetBufferAvailableListener(_)).WillOnce(Return(Status::OK));
+    int32_t res = audioDataMgr_->SetDecoderInputProducer(producer);
+    EXPECT_EQ(res, 0);
+    audioDataMgr_->isRequiringData_ = false;
+    audioDataMgr_->dataPacket_ = nullptr;
+    audioDataMgr_->HandleBufferAvailable();
+    EXPECT_EQ(audioDataMgr_->isRequiringData_, true);
+
+    HandleBufferAvailableFunTest_003_1();
+
+    HandleBufferAvailableFunTest_003_2();
+}
 } // namespace Media
-} // namespace OHOS
+} // namespace OHOS
