@@ -247,6 +247,7 @@ int32_t CacheBuffer::DoPlay(const int32_t streamID)
         MEDIA_LOGI("CacheBuffer::DoPlay audioRenderer_ is nullptr, try again");
         PreparePlayInner(audioRendererInfo_, playParameters_);
     }
+    MEDIA_LOGI("CacheBuffer::DoPlay start, streamID:%{public}d", streamID);
     CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL, "Invalid audioRenderer.");
     size_t bufferSize;
     audioRenderer_->GetBufferSize(bufferSize);
@@ -312,6 +313,7 @@ void CacheBuffer::DealPlayParamsBeforePlay(const PlayParams &playParams)
     priority_ = playParams.priority;
     audioRenderer_->SetParallelPlayFlag(playParams.parallelPlayFlag);
     audioRenderer_->SetAudioHapticsSyncId(playParams.audioHapticsSyncId);
+    MEDIA_LOGI("CacheBuffer::DealPlayParamsBeforePlay end");
 }
 
 AudioStandard::AudioRendererRate CacheBuffer::CheckAndAlignRendererRate(const int32_t rate)
@@ -437,9 +439,9 @@ void CacheBuffer::OnStateChange(const AudioStandard::RendererState state,
 int32_t CacheBuffer::Stop(const int32_t streamID)
 {
     MediaTrace trace("CacheBuffer::Stop");
+    MEDIA_LOGI("CacheBuffer::Stop soundID_:%{public}d, streamID:%{public}d", soundID_, streamID_);
     std::lock_guard lock(cacheBufferLock_);
     CHECK_AND_RETURN_RET_LOG(streamID == streamID_, MSERR_INVALID_VAL, "Invalid streamID_.");
-    MEDIA_LOGI("CacheBuffer::Stop soundID_:%{public}d, streamID:%{public}d", soundID_, streamID_);
     if (audioRenderer_ != nullptr && isRunning_.load()) {
         isRunning_.store(false);
         SoundPoolXCollie soundPoolXCollie("audioRenderer::Pause or Stop time out",
@@ -468,6 +470,8 @@ int32_t CacheBuffer::Stop(const int32_t streamID)
             MEDIA_LOGI("cachebuffer cacheBufferCallback_ OnPlayFinished.");
             cacheBufferCallback_->OnPlayFinished(streamID_);
         }
+    } else {
+        MEDIA_LOGI("CacheBuffer::Stop isRunning_:%{public}d", isRunning_.load());
     }
     isReadyToStopAudioRenderer_.store(false);
     return MSERR_OK;
@@ -479,6 +483,7 @@ int32_t CacheBuffer::SetVolume(const int32_t streamID, const float leftVolume, c
     int32_t ret = MSERR_OK;
     if (streamID == streamID_) {
         if (audioRenderer_ != nullptr) {
+            MEDIA_LOGI("CacheBuffer::SetVolume start streamID:%{public}d", streamID_);
             // audio cannot support left & right volume, all use left volume.
             (void) rightVolume;
             ret = audioRenderer_->SetVolume(leftVolume);
@@ -493,6 +498,7 @@ int32_t CacheBuffer::SetRate(const int32_t streamID, const AudioStandard::AudioR
     int32_t ret = MSERR_OK;
     if (streamID == streamID_) {
         if (audioRenderer_ != nullptr) {
+            MEDIA_LOGI("CacheBuffer::SetRate start streamID:%{public}d", streamID_);
             ret = audioRenderer_->SetRenderRate(CheckAndAlignRendererRate(renderRate));
         }
     }
@@ -522,8 +528,8 @@ int32_t CacheBuffer::SetParallelPlayFlag(const int32_t streamID, const bool para
 {
     std::lock_guard lock(cacheBufferLock_);
     if (streamID == streamID_) {
-        MEDIA_LOGI("CacheBuffer parallelPlayFlag:%{public}d.", parallelPlayFlag);
         if (audioRenderer_ != nullptr) {
+            MEDIA_LOGI("CacheBuffer parallelPlayFlag:%{public}d.", parallelPlayFlag);
             audioRenderer_->SetParallelPlayFlag(parallelPlayFlag);
         }
     }
