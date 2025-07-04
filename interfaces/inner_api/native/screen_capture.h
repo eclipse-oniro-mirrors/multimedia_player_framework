@@ -154,6 +154,12 @@ enum AVScreenCaptureFillMode {
     SCALE_TO_FILL = 1,
 };
 
+enum class AVScreenCapturePickerPopUp : int32_t {
+    SCREEN_CAPTURE_PICKER_POPUP_DEFAULT = -1,
+    SCREEN_CAPTURE_PICKER_POPUP_DISABLE = 0,
+    SCREEN_CAPTURE_PICKER_POPUP_ENABLE = 1,
+};
+
 struct ScreenCaptureContentFilter {
     std::set<AVScreenCaptureFilterableAudioContent> filteredAudioContents;
     std::vector<uint64_t> windowIDsVec;
@@ -185,6 +191,7 @@ struct ScreenCaptureStrategy {
     bool canvasFollowRotation = false;
     bool enableBFrame = false;
     bool setByUser = false;
+    AVScreenCapturePickerPopUp pickerPopUp = AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_DEFAULT;
 };
 
 struct VideoCaptureInfo {

@@ -81,7 +81,7 @@ public:
     NativeScreenCaptureContentChangedCallback(OH_AVScreenCapture_OnCaptureContentChanged callback, void *userData)
         : callback_(callback), userData_(userData) {}
     virtual ~NativeScreenCaptureContentChangedCallback() = default;
-    
+
     void OnCaptureContentChanged(struct OH_AVScreenCapture *capture, AVScreenCaptureContentChangedEvent event,
         ScreenCaptureRect* area)
     {
@@ -90,7 +90,7 @@ public:
         callback_(capture, static_cast<OH_AVScreenCaptureContentChangedEvent>(event),
             area == nullptr ? nullptr : reinterpret_cast<OH_Rect*>(area), userData_);
     }
-    
+
 private:
     OH_AVScreenCapture_OnCaptureContentChanged callback_;
     void *userData_;
@@ -528,7 +528,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ContentFilter_AddAudioContent(
     CHECK_AND_RETURN_RET_LOG(filter != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input filter is nullptr!");
     struct ScreenCaptureContentFilterObject *contentFilterObj =
         reinterpret_cast<ScreenCaptureContentFilterObject *>(filter);
-    
+
     CHECK_AND_RETURN_RET_LOG(
         content >= OH_AVScreenCaptureFilterableAudioContent::OH_SCREEN_CAPTURE_NOTIFICATION_AUDIO ||
         content <= OH_AVScreenCaptureFilterableAudioContent::OH_SCREEN_CAPTURE_CURRENT_APP_AUDIO,
@@ -973,7 +973,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureContentChangedCallback(
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
     CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
         AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
-    
+
     OH_AVSCREEN_CAPTURE_ErrCode errCode = AVScreenCaptureSetCallback(capture, screenCaptureObj);
     CHECK_AND_RETURN_RET_LOG(errCode == AV_SCREEN_CAPTURE_ERR_OK, errCode, "SetCaptureContentChangedCallback is null");
 
@@ -1089,7 +1089,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ResizeCanvas(struct OH_AVScreenCa
 
     CHECK_AND_RETURN_RET_LOG(width > 0 && height > 0, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
                              "input width or height invalid!");
-    
+
     int32_t ret = screenCaptureObj->screenCapture_->ResizeCanvas(width, height);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
                              "ResizeCanvas failed!");
@@ -1131,7 +1131,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetMaxVideoFrameRate(struct OH_AV
                              AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
 
     CHECK_AND_RETURN_RET_LOG(frameRate > 0, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input frameRate invalid!");
-    
+
     int32_t ret = screenCaptureObj->screenCapture_->SetMaxVideoFrameRate(frameRate);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
                              "SetMaxVideoFrameRate failed!");
@@ -1222,7 +1222,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureArea(struct OH_AVScreen
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
     CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
         AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
-    
+
     CHECK_AND_RETURN_RET_LOG(displayId >= 0 && displayId < VIRTUAL_DISPLAY_ID_START,
         AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input displayId invalid");
     CHECK_AND_RETURN_RET_LOG(area != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input area is nullptr");
@@ -1233,7 +1233,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureArea(struct OH_AVScreen
     region.y = area->y;
     region.w = area->width;
     region.h = area->height;
-    
+
     int32_t ret = screenCaptureObj->screenCapture_->SetCaptureArea(displayId, region);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_INVALID_VAL,
         "SetCaptureArea failed!");
@@ -1325,5 +1325,18 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForBFramesEncoding(
     struct ScreenCaptureStrategyObject *strategyObj = reinterpret_cast<ScreenCaptureStrategyObject *>(strategy);
     CHECK_AND_RETURN_RET_LOG(strategyObj != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "strategyObj is nullptr");
     strategyObj->strategy.enableBFrame = value;
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}
+
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForPickerPopUp(
+    OH_AVScreenCapture_CaptureStrategy *strategy, bool value)
+{
+    MEDIA_LOGD("OH_AVScreenCapture_StrategyForPickerPopUp S");
+    CHECK_AND_RETURN_RET_LOG(strategy != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input strategy is nullptr!");
+    auto *strategyObj = reinterpret_cast<ScreenCaptureStrategyObject *>(strategy);
+    CHECK_AND_RETURN_RET_LOG(strategyObj != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "strategyObj is nullptr");
+    strategyObj->strategy.pickerPopUp = value ? AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_ENABLE
+        : AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_DISABLE;
+    MEDIA_LOGD("OH_AVScreenCapture_StrategyForPickerPopUp E");
     return AV_SCREEN_CAPTURE_ERR_OK;
 }

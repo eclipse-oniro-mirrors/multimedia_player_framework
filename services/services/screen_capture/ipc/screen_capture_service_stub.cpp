@@ -719,6 +719,7 @@ int32_t ScreenCaptureServiceStub::SetScreenCaptureStrategy(MessageParcel &data, 
     strategy.strategyForPrivacyMaskMode = data.ReadInt32();
     strategy.canvasFollowRotation = data.ReadBool();
     strategy.enableBFrame = data.ReadBool();
+    strategy.pickerPopUp = static_cast<AVScreenCapturePickerPopUp>(data.ReadInt32());
     int32_t ret = SetScreenCaptureStrategy(strategy);
     reply.WriteInt32(ret);
     return MSERR_OK;

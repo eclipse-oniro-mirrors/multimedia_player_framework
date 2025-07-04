@@ -223,6 +223,7 @@ private:
         std::vector<ScreenId> mirrorIds);
     int32_t MakeVirtualScreenMirrorForSpecifiedScreenForHopper(sptr<Rosen::Display> defaultDisplay,
         std::vector<ScreenId> mirrorIds);
+    bool IsPickerPopUp();
 #endif
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     int32_t TryStartNotification();

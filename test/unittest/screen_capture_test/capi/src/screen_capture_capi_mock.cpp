@@ -459,3 +459,10 @@ int32_t ScreenCaptureCapiMock::StrategyForPrivacyMaskMode(int32_t value)
         "OH_AVScreenCapture_StrategyForPrivacyMaskMode failed");
     return OH_AVScreenCapture_StrategyForPrivacyMaskMode(strategy_, value);
 }
+
+int32_t ScreenCaptureCapiMock::StrategyForPickerPopUp(bool value)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(strategy_ != nullptr, MSERR_UNKNOWN,
+        "OH_AVScreenCapture_CreateCaptureStrategy failed");
+    return OH_AVScreenCapture_StrategyForPickerPopUp(strategy_, value);
+}

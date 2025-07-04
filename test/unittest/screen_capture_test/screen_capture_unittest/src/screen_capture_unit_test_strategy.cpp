@@ -282,5 +282,77 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_strategy_for_maskmode_002, TestSi
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_strategy_for_maskmode_002 E");
 }
+
+/**
+ * @tc.name: screen_capture_strategy_for_picker_pop_up_001
+ * @tc.desc: setStrategyForPickerPopUp == true
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_strategy_for_picker_pop_up_001, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_strategy_for_picker_pop_up_001 S");
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_strategy_for_picker_pop_up_001.mp4", recorderInfo);
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo micCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT
+    };
+    config_.audioInfo.micCapInfo = micCapInfo;
+    AudioCaptureInfo innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->CreateCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->StrategyForPickerPopUp(true));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->ReleaseCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_strategy_for_picker_pop_up_001 E");
+}
+
+/**
+ * @tc.name: screen_capture_strategy_for_picker_pop_up_002
+ * @tc.desc: setStrategyForPickerPopUp == false
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_strategy_for_picker_pop_up_002, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_strategy_for_picker_pop_up_002 S");
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_strategy_for_picker_pop_up_002.mp4", recorderInfo);
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo micCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT
+    };
+    config_.audioInfo.micCapInfo = micCapInfo;
+    AudioCaptureInfo innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->CreateCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->StrategyForPickerPopUp(false));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->ReleaseCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_strategy_for_picker_pop_up_002 E");
+}
 } // namespace Media
 } // namespace OHOS
