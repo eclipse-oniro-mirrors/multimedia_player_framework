@@ -442,7 +442,7 @@ int32_t NativeAVPlayerCallback::GetDrmSystemInfos(const Format &infoBody,
     for (int32_t i = 0; i < infoCount; i++) {
         DrmInfoItem temp = drmInfos[i];
         std::vector<uint8_t> uuid(temp.uuid, temp.uuid + DrmConstant::DRM_MAX_M3U8_DRM_UUID_LEN);
-        if (temp.psshLen <= 0 && temp.psshLen > DrmConstant::DRM_MAX_M3U8_DRM_PSSH_LEN) {
+        if (temp.psshLen <= 0 || temp.psshLen > DrmConstant::DRM_MAX_M3U8_DRM_PSSH_LEN) {
             MEDIA_LOGW("drmInfoItem psshLen is invalid");
             continue;
         }
