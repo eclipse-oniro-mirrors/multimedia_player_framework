@@ -298,41 +298,41 @@ interface AVPlayer {
     @!sts_inject_into_interface("on(type: string, callback: (err: BusinessError<void>)=> void): void;")
     @!sts_inject_into_class("""on(type: string, callback: object): void {
         if (type === "stateChange") {
-            this.OnStateChange_inner(callback as (state: String, reason: StateChangeReason)=> void);
+            this.onStateChange(callback as (state: String, reason: StateChangeReason)=> void);
         } else if (type === "error") {
-            this.OnError_inner(callback as (err: BusinessError<void>)=> void);
+            this.onError(callback as (err: BusinessError<void>)=> void);
         } else if (type === "endOfStream") {
-            this.OnEndOfStream_inner(callback as (data:undefined)=> void);
+            this.onEndOfStream(callback as (data:undefined)=> void);
         } else if (type === "startRenderFrame") {
-            this.OnStartRenderFrame_inner(callback as (data:undefined)=> void);
+            this.onStartRenderFrame(callback as (data:undefined)=> void);
         } else if (type === "seekDone") {
-          this.OnSeekDone_inner(callback as (data: double)=> void);
+          this.onSeekDone(callback as (data: double)=> void);
         } else if (type === "durationUpdate") {
-          this.OnDurationUpdate_inner(callback as (data: double)=> void);
+          this.onDurationUpdate(callback as (data: double)=> void);
         } else if (type === "timeUpdate") {
-          this.OnTimeUpdate_inner(callback as (data: double)=> void);
+          this.onTimeUpdate(callback as (data: double)=> void);
         } else if (type === "volumeChange") {
-          this.OnVolumeChange_inner(callback as (data: double)=> void);
+          this.onVolumeChange(callback as (data: double)=> void);
         } else if (type === "speedDone") {
-          this.OnSpeedDone_inner(callback as (data: double)=> void);
+          this.onSpeedDone(callback as (data: double)=> void);
         } else if (type === "bitrateDone") {
-          this.OnBitrateDone_inner(callback as (data: double)=> void);
+          this.onBitrateDone(callback as (data: double)=> void);
         } else if (type === "availableBitrates") {
-          this.OnAvailableBitrates_inner(callback as (data: Array<double>)=> void);
+          this.onAvailableBitrates(callback as (data: Array<double>)=> void);
         } else if (type === "amplitudeUpdate") {
-          this.OnAmplitudeUpdate_inner(callback as (data: Array<double>)=> void);
+          this.onAmplitudeUpdate(callback as (data: Array<double>)=> void);
         } else if (type === "bufferingUpdate") {
-          this.OnBufferingUpdate_inner(callback as (infoType: BufferingInfoType, value: double)=> void);
+          this.onBufferingUpdate(callback as (infoType: BufferingInfoType, value: double)=> void);
         } else if (type === "videoSizeChange") {
-          this.OnVideoSizeChange_inner(callback as (width: double, height: double)=> void);
+          this.onVideoSizeChange(callback as (width: double, height: double)=> void);
         } else if (type === "trackChange") {
-          this.OnTrackChange_inner(callback as (index: double, isSelected: boolean)=> void);
+          this.onTrackChange(callback as (index: double, isSelected: boolean)=> void);
         } else if (type === "subtitleUpdate") {
-          this.OnSubtitleUpdate_inner(callback as (data: SubtitleInfo)=> void);
+          this.onSubtitleUpdate(callback as (data: SubtitleInfo)=> void);
         } else if (type === "superResolutionChanged") {
-          this.OnSuperResolutionChanged_inner(callback as (enabled: boolean)=> void);
+          this.onSuperResolutionChanged(callback as (enabled: boolean)=> void);
         } else if (type === "trackInfoUpdate") {
-          this.OnTrackInfoUpdate_inner(callback as (data: Array<Record<string, string | double>>)=> void);
+          this.onTrackInfoUpdate(callback as (data: Array<Record<string, string | double>>)=> void);
         } else {
             throw new Error(`Unknown type: ${type}`);
         }
@@ -359,7 +359,7 @@ interface AVPlayer {
     @!sts_inject_into_interface("on(type: string, payloadTypes: Array<double>, callback: (messages: Array<SeiMessage>, playbackPosition?: double)=> void): void;")
     @!sts_inject_into_class("""on(type: string, payloadTypes: Array<double>, callback: object): void {
         if (type === "seiMessageReceived") {
-            this.OnSeiMessageReceived_inner(payloadTypes as (Array<double>), callback as (messages: Array<SeiMessage>, playbackPosition?: double) => void);
+            this.onSeiMessageReceived(payloadTypes as (Array<double>), callback as (messages: Array<SeiMessage>, playbackPosition?: double) => void);
         } else {
         }
     }""")
@@ -370,41 +370,41 @@ interface AVPlayer {
     @!sts_inject_into_interface("off(type: string, callback?: (data: object)=> void): void;")
     @!sts_inject_into_class("""off(type: string, callback?: object): void {
         if (type === "error") {
-            this.OffError_inner(callback as (((err: BusinessError<void>)=> void) | undefined));
+            this.offError(callback as (((err: BusinessError<void>)=> void) | undefined));
         } else if (type === "stateChange") {
-            this.OffStateChange_inner(callback as (((state: String, reason: StateChangeReason)=> void)) | undefined);
+            this.offStateChange(callback as (((state: String, reason: StateChangeReason)=> void)) | undefined);
         } else if (type === "endOfStream") {
-          this.OffEndOfStream_inner(callback as (((data:undefined)=> void) | undefined));
+          this.offEndOfStream(callback as (((data:undefined)=> void) | undefined));
         } else if (type === "startRenderFrame") {
-          this.OffStartRenderFrame_inner(callback as (((data:undefined)=> void) | undefined));
+          this.offStartRenderFrame(callback as (((data:undefined)=> void) | undefined));
         } else if (type === "seekDone") {
-          this.OffSeekDone_inner(callback as (((data: double) => void) | undefined));
+          this.offSeekDone(callback as (((data: double) => void) | undefined));
         } else if (type === "durationUpdate") {
-          this.OffDurationUpdate_inner(callback as (((data: double) => void) | undefined));
+          this.offDurationUpdate(callback as (((data: double) => void) | undefined));
         } else if (type === "timeUpdate") {
-          this.OffTimeUpdate_inner(callback as (((data: double) => void) | undefined));
+          this.offTimeUpdate(callback as (((data: double) => void) | undefined));
         } else if (type === "volumeChange") {
-          this.OffVolumeChange_inner(callback as (((data: double) => void) | undefined));
+          this.offVolumeChange(callback as (((data: double) => void) | undefined));
         } else if (type === "speedDone") {
-          this.OffSpeedDone_inner(callback as (((data: double) => void) | undefined));
+          this.offSpeedDone(callback as (((data: double) => void) | undefined));
         } else if (type === "bitrateDone") {
-          this.OffBitrateDone_inner(callback as (((data: double) => void) | undefined));
+          this.offBitrateDone(callback as (((data: double) => void) | undefined));
         } else if (type === "availableBitrates") {
-          this.OffAvailableBitrates_inner(callback as (((data: Array<double>) => void) | undefined));
+          this.offAvailableBitrates(callback as (((data: Array<double>) => void) | undefined));
         } else if (type === "amplitudeUpdate") {
-          this.OffAmplitudeUpdate_inner(callback as (((data: Array<double>) => void) | undefined));
+          this.offAmplitudeUpdate(callback as (((data: Array<double>) => void) | undefined));
         } else if (type === "bufferingUpdate") {
-          this.OffBufferingUpdate_inner(callback as (((infoType: object, value: double) => void) | undefined));
+          this.offBufferingUpdate(callback as (((infoType: object, value: double) => void) | undefined));
         } else if (type === "videoSizeChange") {
-          this.OffVideoSizeChange_inner(callback as (((width: double, height: double) => void) | undefined));
+          this.offVideoSizeChange(callback as (((width: double, height: double) => void) | undefined));
         } else if (type === "trackChange") {
-          this.OffTrackChange_inner(callback as (((index: double, isSelected: boolean) => void) | undefined));
+          this.offTrackChange(callback as (((index: double, isSelected: boolean) => void) | undefined));
         } else if (type === "subtitleUpdate") {
-          this.OffSubtitleUpdate_inner(callback as (((data: object) => void) | undefined));
+          this.offSubtitleUpdate(callback as (((data: object) => void) | undefined));
         } else if (type === "superResolutionChanged") {
-          this.OffSuperResolutionChanged_inner(callback as (((enabled: boolean) => void) | undefined));
+          this.offSuperResolutionChanged(callback as (((enabled: boolean) => void) | undefined));
         } else if (type === "trackInfoUpdate") {
-          this.OffTrackInfoUpdate_inner(callback as (((data: Array<Record <string, double>>) => void) | undefined));
+          this.offTrackInfoUpdate(callback as (((data: Array<Record <string, double>>) => void) | undefined));
         } else {
           throw new Error(`Unknown type: ${type}`);
         }
@@ -431,7 +431,7 @@ interface AVPlayer {
     @!sts_inject_into_interface("off(type: string, payloadTypes: Array<double>, callback?: (messages: Array<SeiMessage>, playbackPosition?: double)=> void): void;")
     @!sts_inject_into_class("""off(type: string, payloadTypes: Array<double>, callback?: object): void {
         if (type === "seiMessageReceived") {
-            this.OffSeiMessageReceived_inner(payloadTypes as (Array<double>), callback as (((messages: Array<SeiMessage>, playbackPosition?: double) => void) | undefined));
+            this.offSeiMessageReceived(payloadTypes as (Array<double>), callback as (((messages: Array<SeiMessage>, playbackPosition?: double) => void) | undefined));
         } else {
         }
     }""")
@@ -510,7 +510,7 @@ interface VideoRecorder {
     @!sts_inject_into_interface("on(type: string, callback: (err: BusinessError<void>)=> void): void;")
     @!sts_inject_into_class("""on(type: string, callback: object): void {
         if (type === "error") {
-            this.OnError_inner(callback as (err: BusinessError<void>)=> void);
+            this.onError(callback as (err: BusinessError<void>)=> void);
         } else {
             throw new Error(`Unknown type: ${type}`);
         }
@@ -680,11 +680,11 @@ interface AVRecorder {
     @!sts_inject_into_interface("on(type: string, callback: (data: object)=> void): void;")
     @!sts_inject_into_class("""on(type: string, callback: object): void {
         if (type === "stateChange") {
-            this.OnStateChange_inner(callback as (state: String, reason: StateChangeReason)=> void);
+            this.onStateChange(callback as (state: String, reason: StateChangeReason)=> void);
         } else if (type === "error") {
-            this.OnError_inner(callback as (err: BusinessError<void>)=> void);
+            this.onError(callback as (err: BusinessError<void>)=> void);
         } else if (type === "photoAssetAvailable") {
-            this.OnPhotoAssetAvailable_inner(callback as (photoAsset: photoAccessHelper.PhotoAsset)=> void);
+            this.onPhotoAssetAvailable(callback as (photoAsset: photoAccessHelper.PhotoAsset)=> void);
         } else {
             throw new Error(`Unknown type: ${type}`);
         }
@@ -697,11 +697,11 @@ interface AVRecorder {
     @!sts_inject_into_interface("off(type: string, callback?: (data: object)=> void): void;")
     @!sts_inject_into_class("""off(type: string, callback?: object): void {
         if (type === "error") {
-            this.OffError_inner(callback as (((err: BusinessError<void>)=> void) | undefined));
+            this.offError(callback as (((err: BusinessError<void>)=> void) | undefined));
         } else if (type === "stateChange") {
-            this.OffStateChange_inner(callback as (((state: String, reason: StateChangeReason)=> void)) | undefined);
+            this.offStateChange(callback as (((state: String, reason: StateChangeReason)=> void)) | undefined);
         } else if (type === "photoAssetAvailable") {
-            this.OffPhotoAssetAvailable_inner(callback as (((photoAsset: photoAccessHelper.PhotoAsset)=> void)) | undefined);
+            this.offPhotoAssetAvailable(callback as (((photoAsset: photoAccessHelper.PhotoAsset)=> void)) | undefined);
         } else {
             throw new Error(`Unknown type: ${type}`);
         }
@@ -787,11 +787,11 @@ interface AVTranscoder {
     @!sts_inject_into_interface("on(type: string, callback: (data: object)=> void): void;")
     @!sts_inject_into_class("""on(type: string, callback: object): void {
         if (type === "complete") {
-            this.OnComplete_inner(callback as (data: undefined)=> void);
+            this.onComplete(callback as (data: undefined)=> void);
         } else if (type === "error") {
-            this.OnError_inner(callback as (err: BusinessError<void>)=> void);
+            this.onError(callback as (err: BusinessError<void>)=> void);
         } else if (type === "progressUpdate") {
-            this.OnProgressUpdate_inner(callback as (data: double)=> void);
+            this.onProgressUpdate(callback as (data: double)=> void);
         } else {
             throw new Error(`Unknown type: ${type}`);
         }
@@ -800,11 +800,11 @@ interface AVTranscoder {
     @!sts_inject_into_interface("off(type: string, callback?: (data: object)=> void): void;")
     @!sts_inject_into_class("""off(type: string, callback?: object): void {
         if (type === "complete") {
-            this.OffComplete_inner(callback as (((data: undefined)=> void) | undefined ));
+            this.offComplete(callback as (((data: undefined)=> void) | undefined ));
         } else if (type === "error") {
-            this.OffError_inner(callback as (((err: BusinessError<void>)=> void) | undefined ));
+            this.offError(callback as (((err: BusinessError<void>)=> void) | undefined ));
         } else if (type === "progressUpdate") {
-            this.OffProgressUpdate_inner(callback as (((data: double)=> void) | undefined ));
+            this.offProgressUpdate(callback as (((data: double)=> void) | undefined ));
         } else {
             throw new Error(`Unknown type: ${type}`);
         }
@@ -898,7 +898,7 @@ interface ScreenCaptureMonitor {
     @!sts_inject_into_interface("on(type: string, callback: (data: ScreenCaptureEvent)=> void): void;")
     @!sts_inject_into_class("""on(type: string, callback: object): void {
         if (type === "systemScreenRecorder") {
-            this.OnSystemScreenRecorder_inner(callback as (data: ScreenCaptureEvent)=> void);
+            this.onSystemScreenRecorder(callback as (data: ScreenCaptureEvent)=> void);
         } else {
             throw new Error(`Unknown type: ${type}`);
         }
@@ -907,7 +907,7 @@ interface ScreenCaptureMonitor {
     @!sts_inject_into_interface("off(type: string, callback?: (data: ScreenCaptureEvent)=> void): void;")
     @!sts_inject_into_class("""off(type: string, callback?: object): void {
         if (type === "systemScreenRecorder") {
-            this.OffSystemScreenRecorder_inner(callback as (((data: ScreenCaptureEvent)=> void) | undefined ));
+            this.offSystemScreenRecorder(callback as (((data: ScreenCaptureEvent)=> void) | undefined ));
         } else {
             throw new Error(`Unknown type: ${type}`);
         }
@@ -953,9 +953,9 @@ interface AVScreenCaptureRecorder {
     @!sts_inject_into_interface("on(type: string, callback: (data: object)=> void): void;")
     @!sts_inject_into_class("""on(type: string, callback: object): void {
         if (type === "stateChange") {
-            this.OnStateChange_inner(callback as (data: AVScreenCaptureStateCode)=> void);
+            this.onStateChange(callback as (data: AVScreenCaptureStateCode)=> void);
         } else if (type === "error") {
-            this.OnError_inner(callback as (err: BusinessError<void>)=> void);
+            this.onError(callback as (err: BusinessError<void>)=> void);
         } else {
             throw new Error(`Unknown type: ${type}`);
         }
@@ -964,9 +964,9 @@ interface AVScreenCaptureRecorder {
     @!sts_inject_into_interface("off(type: string, callback?: (data: object)=> void): void;")
     @!sts_inject_into_class("""off(type: string, callback?: object): void {
         if (type === "stateChange") {
-            this.OffStateChange_inner(callback as (((data: AVScreenCaptureStateCode)=> void) | undefined ));
+            this.offStateChange(callback as (((data: AVScreenCaptureStateCode)=> void) | undefined ));
         } else if (type === "error") {
-            this.OffError_inner(callback as (((err: BusinessError<void>)=> void) | undefined ));
+            this.offError(callback as (((err: BusinessError<void>)=> void) | undefined ));
         } else {
             throw new Error(`Unknown type: ${type}`);
         }
