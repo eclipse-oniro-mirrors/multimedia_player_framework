@@ -126,6 +126,7 @@ int32_t LppAudioStreamerServer::Configure(const Format &param)
     CHECK_AND_RETURN_RET_LOG(StateEnter(LppAudioState::INITIALIZED), MSERR_INVALID_OPERATION, "wrong state");
     auto ret = Init(mime_);
     CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), ret, "Init Failed!");
+    CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     ret = streamerEngine_->Configure(param);
     CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), ret, "SetParameter Failed!");
     return MSERR_OK;
