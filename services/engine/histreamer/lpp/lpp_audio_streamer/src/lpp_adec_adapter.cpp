@@ -134,7 +134,7 @@ int32_t LppAudioDecoderAdapter::SetParameter(const Format &params)
     (void)params;
     std::shared_ptr<Meta> parameter = std::make_shared<Meta>();
     MEDIA_LOG_I("SetParameter");
-    FALSE_RETURN_V_MSG(audiocodec_ != nullptr, MSERR_NO_MEMORY, "audiocodec_ is nullptr");
+    FALSE_RETURN_V_MSG(audiocodec_ != nullptr, MSERR_INVALID_OPERATION, "audiocodec_ is nullptr");
     int32_t ret = audiocodec_->SetParameter(parameter);
     FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, AVCSErrorToMSError(ret), "audiocodec_ SetParameter failed");
     return ret;
@@ -170,9 +170,9 @@ int32_t LppAudioDecoderAdapter::Configure(const Format &params)
 
 int32_t LppAudioDecoderAdapter::SetOutputBufferQueue(const sptr<Media::AVBufferQueueProducer> &bufferQueueProducer)
 {
-    FALSE_RETURN_V(bufferQueueProducer != nullptr, MSERR_NO_MEMORY);
+    FALSE_RETURN_V(bufferQueueProducer != nullptr, MSERR_INVALID_VAL);
     outputBufferQueueProducer_ = bufferQueueProducer;
-    FALSE_RETURN_V_MSG(audiocodec_ != nullptr, MSERR_NO_MEMORY, "audiocodec_ is nullptr");
+    FALSE_RETURN_V_MSG(audiocodec_ != nullptr, MSERR_INVALID_OPERATION, "audiocodec_ is nullptr");
     int32_t ret = audiocodec_->SetOutputBufferQueue(bufferQueueProducer);
     FALSE_RETURN_V_MSG(ret == MSERR_OK, AVCSErrorToMSError(ret), "audiocodec_ SetOutputBufferQueue failed");
     return MSERR_OK;
@@ -188,7 +188,7 @@ sptr<Media::AVBufferQueueProducer> LppAudioDecoderAdapter::GetInputBufferQueue()
 
 int32_t LppAudioDecoderAdapter::Prepare()
 {
-    FALSE_RETURN_V_MSG(audiocodec_ != nullptr, MSERR_NO_MEMORY, "audiocodec_ is nullptr");
+    FALSE_RETURN_V_MSG(audiocodec_ != nullptr, MSERR_INVALID_OPERATION, "audiocodec_ is nullptr");
     int32_t ret = audiocodec_->Prepare();
     FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, AVCSErrorToMSError(ret), "audiocodec_ Prepare failed");
 
@@ -198,7 +198,7 @@ int32_t LppAudioDecoderAdapter::Prepare()
     sptr<Media::AVBufferQueueConsumer> inputConsumer = audiocodec_->GetInputBufferQueueConsumer();
     FALSE_RETURN_V_MSG(inputConsumer != nullptr, MSERR_NO_MEMORY, "inputConsumer is nullptr");
     Status statusRes = inputConsumer->SetBufferAvailableListener(consumerListener);
-    FALSE_RETURN_V_MSG(statusRes == Status::OK, MSERR_NO_MEMORY, "SetBufferAvailableListener is failed");
+    FALSE_RETURN_V_MSG(statusRes == Status::OK, MSERR_INVALID_OPERATION, "SetBufferAvailableListener is failed");
 
     sptr<IProducerListener> producerListener =
         OHOS::sptr<LppAudioDecProducerListener>::MakeSptr(weak_from_this());
@@ -206,7 +206,7 @@ int32_t LppAudioDecoderAdapter::Prepare()
     sptr<Media::AVBufferQueueProducer> outputProducer = audiocodec_->GetOutputBufferQueueProducer();
     FALSE_RETURN_V_MSG(outputProducer != nullptr, MSERR_NO_MEMORY, "outputProducer is nullptr");
     statusRes = outputProducer->SetBufferAvailableListener(producerListener);
-    FALSE_RETURN_V_MSG(statusRes == Status::OK, MSERR_NO_MEMORY, "SetBufferAvailableListener is failed");
+    FALSE_RETURN_V_MSG(statusRes == Status::OK, MSERR_INVALID_OPERATION, "SetBufferAvailableListener is failed");
 
     return MSERR_OK;
 }
@@ -268,6 +268,7 @@ void LppAudioDecoderAdapter::OnBufferAvailable(bool isOutputBuffer)
 
 void LppAudioDecoderAdapter::HandleBufferAvailable(bool isOutputBuffer, bool isFlushed)
 {
+    FALSE_RETURN_MSG(audiocodec_ != nullptr, "audiocodec_ is nullptr");
     audiocodec_->ProcessInputBufferInner(isOutputBuffer, isFlushed);
 }
 

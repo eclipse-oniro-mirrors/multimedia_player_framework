@@ -109,25 +109,25 @@ int32_t HiLppVideoStreamerImpl::SetLppAudioStreamerId(std::string audioStreamerI
     auto &lppEngineManager = ILppEngineManager::GetInstance();
     audioStreamerEngine_ = lppEngineManager.GetLppAudioInstance(audioStreamerId);
     auto audioStreamerEngine = audioStreamerEngine_.lock();
-    FALSE_RETURN_V_MSG(audioStreamerEngine != nullptr, MSERR_UNKNOWN, "audioStreamerEngine nullptr");
+    FALSE_RETURN_V_MSG(audioStreamerEngine != nullptr, MSERR_INVALID_VAL, "audioStreamerEngine nullptr");
     return MSERR_OK;
 }
 
 int32_t HiLppVideoStreamerImpl::SetObs(const std::weak_ptr<ILppVideoStreamerEngineObs> &obs)
 {
     MEDIA_LOG_I("HiLppAudioStreamerImpl::SetObs");
-    FALSE_RETURN_V_MSG(callbackLooper_ != nullptr, MSERR_UNKNOWN, "callbackLooper_ nullptr");
+    FALSE_RETURN_V_MSG(callbackLooper_ != nullptr, MSERR_INVALID_OPERATION, "callbackLooper_ nullptr");
     callbackLooper_->StartWithLppVideoStreamerEngineObs(obs);
     return MSERR_OK;
 }
 
 int32_t HiLppVideoStreamerImpl::SetParameter(const Format &param)
 {
-    FALSE_RETURN_V_MSG(syncMgr_ != nullptr, MSERR_NO_MEMORY, "syncMgr_ nullptr");
+    FALSE_RETURN_V_MSG(syncMgr_ != nullptr, MSERR_INVALID_OPERATION, "syncMgr_ nullptr");
     std::map<std::string, std::string> parameters;
     auto ret = syncMgr_->SetParameter(parameters);
     FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "syncMgr_ SetParameter Failed!");
-    FALSE_RETURN_V_MSG(vdec_ != nullptr, MSERR_NO_MEMORY, "vdec_ nullptr");
+    FALSE_RETURN_V_MSG(vdec_ != nullptr, MSERR_INVALID_OPERATION, "vdec_ nullptr");
     ret = vdec_->SetParameter(param);
     FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "vdec_ SetParameter Failed!");
     return MSERR_OK;
@@ -135,7 +135,7 @@ int32_t HiLppVideoStreamerImpl::SetParameter(const Format &param)
 
 int32_t HiLppVideoStreamerImpl::Configure(const Format &param)
 {
-    FALSE_RETURN_V_MSG(vdec_ != nullptr, MSERR_NO_MEMORY, "vdec_ nullptr");
+    FALSE_RETURN_V_MSG(vdec_ != nullptr, MSERR_INVALID_OPERATION, "vdec_ nullptr");
     auto ret = vdec_->Configure(param);
     FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "vdec_ Configure Failed!");
     return MSERR_OK;
@@ -143,9 +143,9 @@ int32_t HiLppVideoStreamerImpl::Configure(const Format &param)
 
 int32_t HiLppVideoStreamerImpl::SetVideoSurface(sptr<Surface> surface)
 {
-    FALSE_RETURN_V_MSG(syncMgr_ != nullptr, MSERR_NO_MEMORY, "object is nullptr");
-    FALSE_RETURN_V_MSG(vdec_ != nullptr, MSERR_NO_MEMORY, "vdec_ nullptr");
-    FALSE_RETURN_V_MSG(surface != nullptr, MSERR_NO_MEMORY, "surface nullptr");
+    FALSE_RETURN_V_MSG(syncMgr_ != nullptr, MSERR_INVALID_OPERATION, "object is nullptr");
+    FALSE_RETURN_V_MSG(vdec_ != nullptr, MSERR_INVALID_OPERATION, "vdec_ nullptr");
+    FALSE_RETURN_V_MSG(surface != nullptr, MSERR_INVALID_VAL, "surface nullptr");
     surface_ = surface;
     int32_t ret = MSERR_OK;
     if (isLpp_) {
@@ -164,7 +164,7 @@ int32_t HiLppVideoStreamerImpl::Prepare()
     eventReceiver_ = std::make_shared<LppVideoEventReceiver>(weak_from_this(), streamerId_);
     FALSE_RETURN_V_MSG(eventReceiver_ != nullptr, MSERR_NO_MEMORY, "callbackLooper_ is nullptr");
     FALSE_RETURN_V_MSG(dataMgr_ != nullptr && vdec_ != nullptr && syncMgr_ != nullptr,
-        MSERR_NO_MEMORY, "object is nullptr");
+        MSERR_INVALID_OPERATION, "object is nullptr");
     dataMgr_->SetEventReceiver(eventReceiver_);
     vdec_->SetEventReceiver(eventReceiver_);
     syncMgr_->SetEventReceiver(eventReceiver_);
@@ -210,10 +210,10 @@ int32_t HiLppVideoStreamerImpl::StartDecode()
 int32_t HiLppVideoStreamerImpl::RenderFirstFrame()
 {
     MEDIA_LOG_I("HiLppVideoStreamerImpl::RenderFirstFrame");
-    FALSE_RETURN_V_MSG(vdec_ != nullptr, MSERR_NO_MEMORY, "vdec_ nullptr");
+    FALSE_RETURN_V_MSG(vdec_ != nullptr, MSERR_INVALID_OPERATION, "vdec_ nullptr");
     auto ret = vdec_->RenderFirstFrame();
-    FALSE_RETURN_V_MSG(vdec_ != nullptr, ret, "vdec_ nullptr");
-    return ret;
+    FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "vdec RenderFirstFrame failed");
+    return MSERR_OK;
 }
 
 int32_t HiLppVideoStreamerImpl::StartRender()
@@ -281,8 +281,8 @@ int32_t HiLppVideoStreamerImpl::Flush()
 int32_t HiLppVideoStreamerImpl::Stop()
 {
     MEDIA_LOG_I("HiLppVideoStreamerImpl::Stop");
-    FALSE_RETURN_V_MSG(vdec_ != nullptr, MSERR_NO_MEMORY, "vdec_ nullptr");
-    FALSE_RETURN_V_MSG(syncMgr_ != nullptr, MSERR_NO_MEMORY, "syncMgr_ nullptr");
+    FALSE_RETURN_V_MSG(vdec_ != nullptr, MSERR_INVALID_OPERATION, "vdec_ nullptr");
+    FALSE_RETURN_V_MSG(syncMgr_ != nullptr, MSERR_INVALID_OPERATION, "syncMgr_ nullptr");
     auto ret = syncMgr_->Stop();
     FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "syncMgr_ Stop failed");
     ret = vdec_->Stop();
@@ -292,9 +292,9 @@ int32_t HiLppVideoStreamerImpl::Stop()
 int32_t HiLppVideoStreamerImpl::Reset()
 {
     MEDIA_LOG_I("HiLppVideoStreamerImpl::Reset");
-    FALSE_RETURN_V_MSG(vdec_ != nullptr, MSERR_NO_MEMORY, "vdec_ nullptr");
-    FALSE_RETURN_V_MSG(syncMgr_ != nullptr, MSERR_NO_MEMORY, "syncMgr_ nullptr");
-    FALSE_RETURN_V_MSG(dataMgr_ != nullptr, MSERR_NO_MEMORY, "dataMgr_ nullptr");
+    FALSE_RETURN_V_MSG(vdec_ != nullptr, MSERR_INVALID_OPERATION, "vdec_ nullptr");
+    FALSE_RETURN_V_MSG(syncMgr_ != nullptr, MSERR_INVALID_OPERATION, "syncMgr_ nullptr");
+    FALSE_RETURN_V_MSG(dataMgr_ != nullptr, MSERR_INVALID_OPERATION, "dataMgr_ nullptr");
     auto ret = vdec_->Release();
     vdec_.reset();
     FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "vdec_ Release failed");

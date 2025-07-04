@@ -89,11 +89,11 @@ int32_t LppVideoStreamerServer::Init(const std::string &mime)
     CHECK_AND_RETURN_RET(streamerEngine_ == nullptr, MSERR_OK);
     mime_ = mime;
     auto ret = CreateStreamerEngine();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK && streamerEngine_ != nullptr, MSERR_INVALID_OPERATION,
-        "streamerEngine_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "CreateStreamerEngine failed");
+    CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     ret = streamerEngine_->Init(mime);
-    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), MSERR_INVALID_OPERATION, "Init Failed!");
-    return ret;
+    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), ret, "Init Failed!");
+    return MSERR_OK;
 }
 
 int32_t LppVideoStreamerServer::SetParameter(const Format &param)
@@ -101,8 +101,8 @@ int32_t LppVideoStreamerServer::SetParameter(const Format &param)
     MEDIA_LOGD("LppVideoStreamerServer SetParameter");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->SetParameter(param);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetParameter Failed!");
-    return ret;
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetParameter Failed!");
+    return MSERR_OK;
 }
 
 int32_t LppVideoStreamerServer::Configure(const Format &param)
@@ -110,10 +110,11 @@ int32_t LppVideoStreamerServer::Configure(const Format &param)
     MEDIA_LOGD("LppVideoStreamerServer Configure");
     CHECK_AND_RETURN_RET_LOG(StateEnter(VideoState::INITIALIZED), MSERR_INVALID_OPERATION, "wrong state");
     auto ret = Init(mime_);
+    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), ret, "Init Failed!");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     ret = streamerEngine_->Configure(param);
-    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), MSERR_INVALID_OPERATION, "Configure Failed!");
-    return ret;
+    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), ret, "Prepare Failed!");
+    return MSERR_OK;
 }
 
 int32_t LppVideoStreamerServer::Prepare()
@@ -139,8 +140,8 @@ int32_t LppVideoStreamerServer::StartDecode()
     CHECK_AND_RETURN_RET_LOG(StateEnter(VideoState::DECODING), MSERR_INVALID_OPERATION, "wrong state");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->StartDecode();
-    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), MSERR_INVALID_OPERATION, "StartDecode Failed!");
-    return ret;
+    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), ret, "StartDecode Failed!");
+    return MSERR_OK;
 }
 
 int32_t LppVideoStreamerServer::StartRender()
@@ -149,8 +150,8 @@ int32_t LppVideoStreamerServer::StartRender()
     CHECK_AND_RETURN_RET_LOG(StateEnter(VideoState::RENDERING, "StartRender"), MSERR_INVALID_OPERATION, "wrong state");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->StartRender();
-    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), MSERR_INVALID_OPERATION, "StartRender Failed!");
-    return ret;
+    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), ret, "StartRender Failed!");
+    return MSERR_OK;
 }
 
 
@@ -160,8 +161,8 @@ int32_t LppVideoStreamerServer::Pause()
     CHECK_AND_RETURN_RET_LOG(StateEnter(VideoState::PAUSED), MSERR_INVALID_OPERATION, "wrong state");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->Pause();
-    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), MSERR_INVALID_OPERATION, "Pause Failed!");
-    return ret;
+    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), ret, "Pause Failed!");
+    return MSERR_OK;
 }
 
 int32_t LppVideoStreamerServer::Resume()
@@ -170,8 +171,8 @@ int32_t LppVideoStreamerServer::Resume()
     CHECK_AND_RETURN_RET_LOG(StateEnter(VideoState::RENDERING, "Resume"), MSERR_INVALID_OPERATION, "wrong state");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->Resume();
-    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), MSERR_INVALID_OPERATION, "Resume Failed!");
-    return ret;
+    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), ret, "Resume Failed!");
+    return MSERR_OK;
 }
 
 int32_t LppVideoStreamerServer::Flush()
@@ -180,8 +181,8 @@ int32_t LppVideoStreamerServer::Flush()
     CHECK_AND_RETURN_RET_LOG(StateEnter(VideoState::READY, "Flush"), MSERR_INVALID_OPERATION, "wrong state");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->Flush();
-    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), MSERR_INVALID_OPERATION, "Flush Failed!");
-    return ret;
+    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), ret, "Flush Failed!");
+    return MSERR_OK;
 }
 
 int32_t LppVideoStreamerServer::Stop()
@@ -190,8 +191,8 @@ int32_t LppVideoStreamerServer::Stop()
     CHECK_AND_RETURN_RET_LOG(StateEnter(VideoState::STOPPED), MSERR_INVALID_OPERATION, "wrong state");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->Stop();
-    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), MSERR_INVALID_OPERATION, "Stop Failed!");
-    return ret;
+    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), ret, "Stop Failed!");
+    return MSERR_OK;
 }
 
 int32_t LppVideoStreamerServer::Reset()
@@ -218,8 +219,8 @@ int32_t LppVideoStreamerServer::SetOutputSurface(sptr<Surface> surface)
     MEDIA_LOGI("LppVideoStreamerServer SetOutputSurface");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->SetVideoSurface(surface);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetOutputSurface Failed!");
-    return ret;
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetOutputSurface Failed!");
+    return MSERR_OK;
 }
 
 int32_t LppVideoStreamerServer::SetSyncAudioStreamer(AudioStreamer *audioStreamer)
@@ -250,8 +251,8 @@ int32_t LppVideoStreamerServer::SetPlaybackSpeed(float speed)
     MEDIA_LOGI("LppVideoStreamerServer SetPlaybackSpeed");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->SetPlaybackSpeed(speed);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetPlaybackSpeed Failed!");
-    return ret;
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetPlaybackSpeed Failed!");
+    return MSERR_OK;
 }
 
 int32_t LppVideoStreamerServer::ReturnFrames(sptr<LppDataPacket> framePacket)
@@ -260,8 +261,8 @@ int32_t LppVideoStreamerServer::ReturnFrames(sptr<LppDataPacket> framePacket)
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     CHECK_AND_RETURN_RET_LOG(framePacket != nullptr, MSERR_INVALID_OPERATION, "framePacket is nullptr");
     auto ret = streamerEngine_->ReturnFrames(framePacket);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "ReturnFrames Failed!");
-    return ret;
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ReturnFrames Failed!");
+    return MSERR_OK;
 }
 
 int32_t LppVideoStreamerServer::RegisterCallback()
@@ -269,19 +270,19 @@ int32_t LppVideoStreamerServer::RegisterCallback()
     MEDIA_LOGI("LppVideoStreamerServer RegisterCallback");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->SetObs(weak_from_this());
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "RegisterCallback Failed!");
-    return ret;
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "RegisterCallback Failed!");
+    return MSERR_OK;
 }
 
 int32_t LppVideoStreamerServer::SetLppVideoStreamerCallback(const std::shared_ptr<VideoStreamerCallback> &callback)
 {
     MEDIA_LOGI("LppVideoStreamerServer SetLppVideoStreamerCallback");
-    CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_INVALID_OPERATION, "callback is nullptr");
+    CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_INVALID_VAL, "callback is nullptr");
     callback_ = callback;
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->SetObs(weak_from_this());
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetLppVideoStreamerCallback Failed!");
-    return ret;
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetLppVideoStreamerCallback Failed!");
+    return MSERR_OK;
 }
 
 int32_t LppVideoStreamerServer::SetLppAudioStreamerId(const std::string audioStreamId)
@@ -289,8 +290,8 @@ int32_t LppVideoStreamerServer::SetLppAudioStreamerId(const std::string audioStr
     MEDIA_LOGI("LppVideoStreamerServer SetLppAudioStreamerId");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->SetLppAudioStreamerId(audioStreamId);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetLppAudioStreamerId Failed!");
-    return ret;
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetLppAudioStreamerId Failed!");
+    return MSERR_OK;
 }
 
 std::string LppVideoStreamerServer::GetStreamerId()
@@ -337,7 +338,7 @@ bool LppVideoStreamerServer::StateCheck(VideoState curState)
 bool LppVideoStreamerServer::ErrorCheck(int32_t errorCode)
 {
     std::lock_guard<std::mutex> lock(stateMutex_);
-    if (errorCode != MSERR_OK && state_ != VideoState::ERROR) {
+    if (errorCode != MSERR_OK) {
         state_ = VideoState::ERROR;
         return false;
     }

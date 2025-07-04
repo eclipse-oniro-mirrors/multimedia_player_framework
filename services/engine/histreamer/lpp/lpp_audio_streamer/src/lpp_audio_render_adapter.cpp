@@ -180,7 +180,7 @@ int32_t LppAudioRenderAdapter::Prepare()
     auto types = AudioStandard::AudioRenderer::GetSupportedEncodingTypes();
     bool supportPCM =
         std::find(types.begin(), types.end(), AudioStandard::AudioEncodingType::ENCODING_PCM) != types.end();
-    FALSE_RETURN_V_MSG(supportPCM, MSERR_AUD_RENDER_FAILED, "audio renderer do not support pcm encoding");
+    FALSE_RETURN_V_MSG(supportPCM, MSERR_INVALID_VAL, "audio renderer do not support pcm encoding");
 
     renderTask_ = std::make_unique<Task>("LppARend", streamerId_, TaskType::SINGLETON, TaskPriority::NORMAL, false);
     FALSE_RETURN_V_MSG(renderTask_ != nullptr, MSERR_NO_MEMORY, "renderTask_ is nullptr");
@@ -235,7 +235,7 @@ int32_t LppAudioRenderAdapter::Resume()
     FALSE_RETURN_V_MSG(audioRenderer_ != nullptr, MSERR_INVALID_OPERATION, "audio renderer Start nullptr");
     FALSE_RETURN_V_MSG(renderTask_ != nullptr, MSERR_INVALID_OPERATION, "renderTask_ is nullptr");
     bool ret = audioRenderer_->Start();
-    FALSE_RETURN_V_MSG(ret, MSERR_AUD_RENDER_FAILED, "AudioRenderer::Start failed");
+    FALSE_RETURN_V_MSG(ret, MSERR_START_FAILED, "AudioRenderer::Start failed");
     renderTask_->Start();
     return MSERR_OK;
 }
@@ -278,7 +278,7 @@ int32_t LppAudioRenderAdapter::Stop()
 
 int32_t LppAudioRenderAdapter::PrepareInputBufferQueue()
 {
-    FALSE_RETURN_V_MSG(inputBufferQueue_ == nullptr, MSERR_NO_MEMORY, "InputBufferQueue already create");
+    FALSE_RETURN_V_MSG(inputBufferQueue_ == nullptr, MSERR_INVALID_OPERATION, "InputBufferQueue already create");
     int32_t inputBufferSize = DEFAULT_BUFFER_QUEUE_SIZE;
     MemoryType memoryType = MemoryType::SHARED_MEMORY;
 #ifndef MEDIA_OHOS
@@ -353,7 +353,7 @@ int32_t LppAudioRenderAdapter::SetVolume(const float volume)
 
 int32_t LppAudioRenderAdapter::GetAudioPosition(timespec &time, uint32_t &framePosition)
 {
-    FALSE_RETURN_V_MSG(audioRenderer_ != nullptr, MSERR_NO_MEMORY, "GetAudioPosition audioRender_ is nullptr");
+    FALSE_RETURN_V_MSG(audioRenderer_ != nullptr, MSERR_INVALID_OPERATION, "GetAudioPosition audioRender_ is nullptr");
     AudioStandard::Timestamp audioPositionTimestamp;
     int32_t ret = audioRenderer_->GetAudioTimestampInfo(
         audioPositionTimestamp, AudioStandard::Timestamp::Timestampbase::BOOTTIME);
@@ -362,7 +362,7 @@ int32_t LppAudioRenderAdapter::GetAudioPosition(timespec &time, uint32_t &frameP
     int64_t currentRenderClockTime = time.tv_sec * SEC_TO_US + time.tv_nsec / US_TO_MS;  // convert to us
     MEDIA_LOG_I("BOOTTIME is " PUBLIC_LOG_D64, currentRenderClockTime);
     framePosition = audioPositionTimestamp.framePosition;
-    return ret;
+    return MSERR_OK;
 }
 
 void LppAudioRenderAdapter::ReleaseCacheBuffer(bool isSwapBuffer)

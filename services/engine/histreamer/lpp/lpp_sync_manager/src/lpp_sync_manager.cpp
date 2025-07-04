@@ -68,7 +68,7 @@ int32_t LppSyncManager::SetVideoChannelId(const uint32_t channelId)
 {
     MEDIA_LOG_I("LppSyncManager::SetVideoChannelId Enter");
     FALSE_RETURN_V_NOLOG(videoIsLpp_, MSERR_OK);
-    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_NO_MEMORY, "adapter_ is nullptr");
+    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_INVALID_OPERATION, "adapter_ is nullptr");
     return adapter_->SetVideoChannelId(channelId);
 }
 
@@ -76,7 +76,7 @@ int32_t LppSyncManager::SetAudioChannelId(const uint32_t channelId)
 {
     MEDIA_LOG_I("LppSyncManager::SetAudioChannelId Enter");
     FALSE_RETURN_V_NOLOG(videoIsLpp_, MSERR_OK);
-    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_NO_MEMORY, "adapter_ is nullptr");
+    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_INVALID_OPERATION, "adapter_ is nullptr");
     auto ret = adapter_->SetAudioChannelId(channelId);
     FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "adapter_ SetAudioChannelId failed");
     return MSERR_OK;
@@ -93,7 +93,7 @@ int32_t LppSyncManager::StartRender()
 {
     MEDIA_LOG_I("LppSyncManager::StartRender Enter");
     FALSE_RETURN_V_NOLOG(videoIsLpp_, MSERR_OK);
-    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_NO_MEMORY, "adapter_ is nullptr");
+    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_INVALID_OPERATION, "adapter_ is nullptr");
     auto ret = adapter_->StartRender();
     FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "adapter_ StartRender failed");
     return MSERR_OK;
@@ -103,7 +103,7 @@ int32_t LppSyncManager::RenderNextFrame()
 {
     MEDIA_LOG_I("LppSyncManager::RenderNextFrame Enter");
     FALSE_RETURN_V_NOLOG(videoIsLpp_, MSERR_OK);
-    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_NO_MEMORY, "adapter_ is nullptr");
+    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_INVALID_OPERATION, "adapter_ is nullptr");
     auto ret = adapter_->RenderNextFrame();
     FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "adapter_ RenderNextFrame failed");
     return MSERR_OK;
@@ -113,7 +113,7 @@ int32_t LppSyncManager::Pause()
 {
     MEDIA_LOG_I("LppSyncManager::Pause Enter");
     FALSE_RETURN_V_NOLOG(videoIsLpp_, MSERR_OK);
-    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_NO_MEMORY, "adapter_ is nullptr");
+    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_INVALID_OPERATION, "adapter_ is nullptr");
     auto ret = adapter_->Pause();
     FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "adapter_ Pause failed");
     return MSERR_OK;
@@ -123,7 +123,7 @@ int32_t LppSyncManager::Resume()
 {
     MEDIA_LOG_I("LppSyncManager::Resume Enter");
     FALSE_RETURN_V_NOLOG(videoIsLpp_, MSERR_OK);
-    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_NO_MEMORY, "adapter_ is nullptr");
+    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_INVALID_OPERATION, "adapter_ is nullptr");
     auto ret = adapter_->Resume();
     FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "adapter_ Resume failed");
     return MSERR_OK;
@@ -134,7 +134,7 @@ int32_t LppSyncManager::Flush()
     MEDIA_LOG_I("LppSyncManager::Flush Enter");
     ResetTimeAnchor();
     FALSE_RETURN_V_NOLOG(videoIsLpp_, MSERR_OK);
-    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_NO_MEMORY, "adapter_ is nullptr");
+    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_INVALID_OPERATION, "adapter_ is nullptr");
     auto ret = adapter_->Flush();
     FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "adapter_ Flush failed");
     return MSERR_OK;
@@ -145,7 +145,7 @@ int32_t LppSyncManager::Stop()
     MEDIA_LOG_I("LppSyncManager::Stop Enter");
     ResetTimeAnchor();
     FALSE_RETURN_V_NOLOG(videoIsLpp_, MSERR_OK);
-    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_NO_MEMORY, "adapter_ is nullptr");
+    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_INVALID_OPERATION, "adapter_ is nullptr");
     auto ret = adapter_->Stop();
     FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "adapter_ Stop failed");
     return MSERR_OK;
@@ -156,7 +156,7 @@ int32_t LppSyncManager::Reset()
     MEDIA_LOG_I("LppSyncManager::Reset Enter");
     ResetTimeAnchor();
     FALSE_RETURN_V_NOLOG(videoIsLpp_, MSERR_OK);
-    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_NO_MEMORY, "adapter_ is nullptr");
+    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_INVALID_OPERATION, "adapter_ is nullptr");
     auto ret = adapter_->UnbindOutputBuffers();
     FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "adapter_ UnbindOutputBuffers failed");
     ret = adapter_->Reset();
@@ -172,7 +172,7 @@ int32_t LppSyncManager::SetTargetStartFrame(const uint64_t targetPts, uint32_t t
 {
     MEDIA_LOG_I("LppSyncManager::SetTargetStartFrame Enter");
     FALSE_RETURN_V_NOLOG(videoIsLpp_, MSERR_OK);
-    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_NO_MEMORY, "adapter_ is nullptr");
+    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_INVALID_OPERATION, "adapter_ is nullptr");
     auto ret = adapter_->SetTargetStartFrame(targetPts, timeoutMs);
     FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "adapter_ SetTargetStartFrame failed");
     return MSERR_OK;
@@ -182,7 +182,7 @@ int32_t LppSyncManager::SetPlaybackSpeed(float speed)
 {
     MEDIA_LOG_I("LppSyncManager::SetPlaybackSpeed speed " PUBLIC_LOG_F, speed);
     FALSE_RETURN_V_NOLOG(videoIsLpp_, MSERR_OK);
-    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_NO_MEMORY, "adapter_ is nullptr");
+    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_INVALID_OPERATION, "adapter_ is nullptr");
     auto ret = adapter_->SetPlaybackSpeed(speed);
     FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "adapter_ SetPlaybackSpeed failed");
     return MSERR_OK;
@@ -192,7 +192,7 @@ int32_t LppSyncManager::SetParameter(const std::map<std::string, std::string> &p
 {
     MEDIA_LOG_I("LppSyncManager::SetParameter Enter");
     FALSE_RETURN_V_NOLOG(videoIsLpp_, MSERR_OK);
-    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_NO_MEMORY, "adapter_ is nullptr");
+    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_INVALID_OPERATION, "adapter_ is nullptr");
     auto ret = adapter_->SetParameter(parameters);
     FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "adapter_ SetParameter failed");
     return MSERR_OK;
@@ -202,7 +202,7 @@ int32_t LppSyncManager::GetParameter(std::map<std::string, std::string> &paramet
 {
     MEDIA_LOG_I("LppSyncManager::GetParameter Enter");
     FALSE_RETURN_V_NOLOG(videoIsLpp_, MSERR_OK);
-    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_NO_MEMORY, "adapter_ is nullptr");
+    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_INVALID_OPERATION, "adapter_ is nullptr");
     auto ret = adapter_->GetParameter(parameters);
     FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "adapter_ GetParameter failed");
     return MSERR_OK;
@@ -221,7 +221,7 @@ int32_t LppSyncManager::UpdateTimeAnchor(const int64_t anchorPts, const int64_t 
         localAnchorClk_ = anchorClk;
     }
     FALSE_RETURN_V_NOLOG(videoIsLpp_, MSERR_OK);
-    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_NO_MEMORY, "adapter_ is nullptr");
+    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_INVALID_OPERATION, "adapter_ is nullptr");
     auto ret = adapter_->UpdateTimeAnchor(anchorPts, anchorClk);
     FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "adapter_ UpdateTimeAnchor failed");
     return MSERR_OK;
@@ -230,7 +230,7 @@ int32_t LppSyncManager::UpdateTimeAnchor(const int64_t anchorPts, const int64_t 
 int32_t LppSyncManager::BindOutputBuffers(const std::map<uint32_t, sptr<SurfaceBuffer>> &bufferMap)
 {
     MEDIA_LOG_I("LppSyncManager::BindOutputBuffers Enter");
-    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_NO_MEMORY, "adapter_ is nullptr");
+    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_INVALID_OPERATION, "adapter_ is nullptr");
     auto ret = adapter_->BindOutputBuffers(bufferMap);
     FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "adapter_ BindOutputBuffers failed");
     return MSERR_OK;
@@ -240,7 +240,7 @@ int32_t LppSyncManager::UnbindOutputBuffers()
 {
     MEDIA_LOG_I("LppSyncManager::UnbindOutputBuffers Enter");
     FALSE_RETURN_V_NOLOG(videoIsLpp_, MSERR_OK);
-    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_NO_MEMORY, "adapter_ is nullptr");
+    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_INVALID_OPERATION, "adapter_ is nullptr");
     auto ret = adapter_->UnbindOutputBuffers();
     FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "adapter_ UnbindOutputBuffers failed");
     return MSERR_OK;
@@ -250,7 +250,7 @@ int32_t LppSyncManager::GetShareBuffer(int32_t &fd)
 {
     MEDIA_LOG_I("LppSyncManager::GetShareBuffer Enter");
     FALSE_RETURN_V_NOLOG(videoIsLpp_, MSERR_OK);
-    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_NO_MEMORY, "adapter_ is nullptr");
+    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_INVALID_OPERATION, "adapter_ is nullptr");
     auto ret = adapter_->GetShareBuffer(fd);
     FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "adapter_ GetShareBuffer failed");
     return MSERR_OK;
@@ -260,7 +260,7 @@ int32_t LppSyncManager::SetTunnelId(uint64_t tunnelId)
 {
     MEDIA_LOG_I("LppSyncManager::SetTunnelId");
     FALSE_RETURN_V_NOLOG(videoIsLpp_, MSERR_OK);
-    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_NO_MEMORY, "adapter_ is nullptr");
+    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_INVALID_OPERATION, "adapter_ is nullptr");
     auto ret = adapter_->SetTunnelId(tunnelId);
     FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "adapter_ SetTunnelId failed");
     return MSERR_OK;
