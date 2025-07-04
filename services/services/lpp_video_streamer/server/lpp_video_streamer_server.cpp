@@ -113,7 +113,7 @@ int32_t LppVideoStreamerServer::Configure(const Format &param)
     CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), ret, "Init Failed!");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     ret = streamerEngine_->Configure(param);
-    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), ret, "Prepare Failed!");
+    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), ret, "Configure Failed!");
     return MSERR_OK;
 }
 
@@ -123,8 +123,8 @@ int32_t LppVideoStreamerServer::Prepare()
     CHECK_AND_RETURN_RET_LOG(StateEnter(VideoState::READY, "Prepare"), MSERR_INVALID_OPERATION, "wrong state");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->Prepare();
-    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), MSERR_INVALID_OPERATION, "Prepare Failed!");
-    return ret;
+    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), ret, "Prepare Failed!");
+    return MSERR_OK;
 }
 
 int32_t LppVideoStreamerServer::Start()
