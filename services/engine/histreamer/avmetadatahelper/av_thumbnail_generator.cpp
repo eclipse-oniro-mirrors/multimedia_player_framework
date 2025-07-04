@@ -291,6 +291,7 @@ std::shared_ptr<AVSharedMemory> AVThumbnailGenerator::FetchFrameAtTime(int64_t t
 void AVThumbnailGenerator::HandleFetchFrameAtTimeRes()
 {
     CHECK_AND_RETURN_RET_LOG(!readErrorFlag_.load(), PauseFetchFrame(), "ReadSample error, exit fetchFrame");
+    CHECK_AND_RETURN_RET_LOG(!stopProcessing_.load(), PauseFetchFrame(), "Destroy or Decoder error, exit fetchFrame");
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Fetch frame OK width:%{public}d, height:%{public}d",
             FAKE_POINTER(this), outputConfig_.dstWidth, outputConfig_.dstHeight);
     ConvertToAVSharedMemory();
@@ -336,6 +337,8 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
 void AVThumbnailGenerator::HandleFetchFrameYuvRes()
 {
     CHECK_AND_RETURN_RET_LOG(!readErrorFlag_.load(), HandleFetchFrameYuvFailed(), "ReadSample error, exit fetchFrame");
+    CHECK_AND_RETURN_RET_LOG(!stopProcessing_.load(), HandleFetchFrameYuvFailed(),
+                             "Destroy or Decoder error, exit fetchFrame");
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Fetch frame OK width:%{public}d, height:%{public}d",
                 FAKE_POINTER(this), outputConfig_.dstWidth, outputConfig_.dstHeight);
     avBuffer_ = GenerateAlignmentAvBuffer();
@@ -370,6 +373,8 @@ Status AVThumbnailGenerator::SeekToTime(int64_t timeMs, Plugins::SeekMode option
 
 void AVThumbnailGenerator::ConvertToAVSharedMemory()
 {
+    CHECK_AND_RETURN_LOG(avBuffer_ != nullptr && avBuffer_->memory_ != nullptr,
+        "ConvertToAVSharedMemory avBuffer_ is nullptr or avBuffer_->memory_ is nullptr.");
     auto surfaceBuffer = avBuffer_->memory_->GetSurfaceBuffer();
     if (surfaceBuffer != nullptr) {
         auto ret = GetYuvDataAlignStride(surfaceBuffer);
