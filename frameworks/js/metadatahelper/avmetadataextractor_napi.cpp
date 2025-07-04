@@ -526,16 +526,7 @@ napi_value AVMetadataExtractorNapi::JsSetUrlSource(napi_env env, napi_callback_i
     asyncCtx->napi = extractor;
     asyncCtx->innerHelper_ = extractor->helper_;
     asyncCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
-    napi_valuetype valueType = napi_undefined;
-    if (extractor->state_ != HelperState::HELPER_STATE_IDLE) {
-        asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Has set source once, unsupport set again");
-    } else if (argCount < ARG_ONE || napi_typeof(env, args[ARG_ZERO], &valueType) != napi_ok
-        || valueType != napi_string) {
-        asyncCtx->SignError(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE, "The input param is not string value");
-    } else {
-        extractor->url_ = CommonNapi::GetStringArgument(env, args[ARG_ZERO]);
-        (void)CommonNapi::GetPropertyMap(env, args[1], extractor->header_);
-    }
+    CheckParamsAndSignError(env, args, argCount, asyncCtx);
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsSetUrlSource", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {
@@ -557,6 +548,26 @@ napi_value AVMetadataExtractorNapi::JsSetUrlSource(napi_env env, napi_callback_i
     asyncCtx.release();
     MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSetUrlSource Out", FAKE_POINTER(extractor));
     return result;
+}
+
+void AVMetadataExtractorNapi::CheckParamsAndSignError(napi_env env, napi_value args[], size_t argCount,
+    std::unique_ptr<AVMetadataExtractorAsyncContext> &asyncCtx)
+{
+    napi_valuetype valueType = napi_undefined;
+    if (asyncCtx->napi->state_ != HelperState::HELPER_STATE_IDLE) {
+        asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Has set source once, unsupport set again");
+    } else if (argCount < ARG_ONE || napi_typeof(env, args[ARG_ZERO], &valueType) != napi_ok
+        || valueType != napi_string) {
+        asyncCtx->SignError(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE, "The input param is not string value");
+    } else {
+        asyncCtx->napi->url_ = CommonNapi::GetStringArgument(env, args[ARG_ZERO]);
+        if (asyncCtx->napi->url_.empty()
+            || (asyncCtx->napi->url_.find("http://") != 0 && asyncCtx->napi->url_.find("https://") != 0)) {
+            asyncCtx->SignError(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE, "The input param is not http/https address");
+        } else {
+            (void)CommonNapi::GetPropertyMap(env, args[ARG_ONE], asyncCtx->napi->header_);
+        }
+    }
 }
 
 napi_value AVMetadataExtractorNapi::JsSetAVFileDescriptor(napi_env env, napi_callback_info info)
