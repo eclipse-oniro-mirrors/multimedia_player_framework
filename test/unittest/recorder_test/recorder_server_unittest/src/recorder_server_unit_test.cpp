@@ -827,6 +827,41 @@ HWTEST_F(RecorderServerUnitTest, recorder_configure_021, TestSize.Level2)
 }
 
 /**
+ * @tc.name: recorder_configure_022
+ * @tc.desc: Stop releasing resource verification results
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, recorder_configure_022, TestSize.Level2)
+{
+    const int numMainResets = 5;
+    const int numThreads = 5;
+    const int numResetsPerThead = 5;
+    recorderServer_->Prepare();
+    std::this_thread::sleep_for(std::chrono::seconds(RECORDER_TIME));
+    recorderServer_->Pause();
+    recorderServer_->Resume();
+    for (int i = 0; i < numMainResets; ++i) {
+        recorderServer_->Reset();
+    }
+    std::vector<std::thread> resetTheads;
+    for (int i = 0; i < numThreads; ++i) {
+        resetTheads.emplace_back([=, recorderServer = recorderServer_]() {
+            for (int j = 0; j < numResetsPerThead; ++j) {
+                recorderServer->Reset();
+            }
+        });
+    }
+    for (auto& t : resetTheads) {
+        if (t.joinable()) {
+            t.join();
+        }
+    }
+    recorderServer_->Stop(false);
+    EXPECT_EQ(MSERR_OK, recorderServer_->Release());
+}
+
+/**
  * @tc.name: recorder_mp3_001
  * @tc.desc: record mp3
  * @tc.type: FUNC
