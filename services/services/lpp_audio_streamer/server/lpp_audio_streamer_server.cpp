@@ -90,6 +90,7 @@ int32_t LppAudioStreamerServer::Init(const std::string &mime)
     mime_ = mime;
     auto ret = CreateStreamerEngine();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "CreateStreamerEngine Failed!");
+    CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     ret = streamerEngine_->Init(mime);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Init Failed!");
     return ret;
