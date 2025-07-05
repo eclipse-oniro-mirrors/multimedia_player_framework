@@ -153,7 +153,7 @@ optional<string> VideoRecorderImpl::GetInputSurfaceSync()
 
 void VideoRecorderImpl::PrepareSync(VideoRecorderConfig const& config)
 {
-    MEDIA_LOGD("VideoRecorderNapi Prepare In");
+    MEDIA_LOGD("VideoRecorderImpl Prepare In");
     auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>();
     asyncCtx->taihe = this;
 
@@ -350,16 +350,16 @@ void VideoRecorderImpl::GetConfig(const VideoRecorderConfig &config, std::unique
 {
     int32_t audioSource = AUDIO_SOURCE_INVALID;
 
-    bool ret = static_cast<bool>(config.audioSourceType);
-    if (ret) {
-        properties.audioSourceType = static_cast<OHOS::Media::AudioSourceType>(audioSource);
+    if (config.audioSourceType.has_value()) {
+        properties.audioSourceType =
+            static_cast<OHOS::Media::AudioSourceType>(config.audioSourceType.value().get_value());
     } else {
+        properties.audioSourceType = static_cast<OHOS::Media::AudioSourceType>(audioSource);
         ctx->taihe->isPureVideo = true;
         MEDIA_LOGI("No audioSource Type input!");
     }
 
-    properties.videoSourceType =
-        static_cast<OHOS::Media::VideoSourceType>(static_cast<int32_t>(config.videoSourceType));
+    properties.videoSourceType = static_cast<OHOS::Media::VideoSourceType>(config.videoSourceType.get_value());
     if (config.rotation.has_value()) {
         properties.orientationHint = static_cast<int32_t>(config.rotation.value());
     }
