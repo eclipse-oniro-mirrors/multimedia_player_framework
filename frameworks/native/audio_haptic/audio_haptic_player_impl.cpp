@@ -20,6 +20,8 @@
 #include <unistd.h>
 #include <random>
 
+#include "parameter.h"
+
 #include "audio_haptic_sound_low_latency_impl.h"
 #include "audio_haptic_sound_normal_impl.h"
 
@@ -67,18 +69,18 @@ static int32_t GenerateSyncId()
 
 static bool IsSupportDSP(void)
 {
-    constexpr const char* SUPPORT_DSP_KEY = "const.multimedia.audio.support_hadware_audio_haptic_sync";
-    constexpr const uint32_t PARAM_TRUE_LEN = 4; // "true" 4bytes
-    constexpr const uint32_t PARAM_FALSE_LEN = 5; // "false" 5bytes
-    constexpr const char* PARAM_TRUE = "true";
-    constexpr const char* PARAM_FALSE = "false";
+    constexpr const char* supportDspKey = "const.multimedia.audio.support_hadware_audio_haptic_sync";
+    constexpr const uint32_t paramTrueLen = 4; // "true" 4bytes
+    constexpr const uint32_t paramFalseLen = 5; // "false" 5bytes
+    constexpr const char* paramTrue = "true";
+    constexpr const char* paramFalse = "false";
 
-    char result[PARAM_FALSE_LEN + 1] = {0};
+    char result[paramFalseLen + 1] = {0};
     //  Returns the number of bytes of the system parameter if the operation is successful.
-    int len = GetParameter(SUPPORT_DSP_KEY, PARAM_FALSE, result, PARAM_FALSE_LEN + 1);
-    CHECK_AND_RETURN_RET_LOG(len == PARAM_FALSE_LEN || len == PARAM_TRUE_LEN, false, "GetParameter len is invalid.");
+    int len = GetParameter(supportDspKey, paramFalse, result, paramFalseLen + 1);
+    CHECK_AND_RETURN_RET_LOG(len == paramFalseLen || len == paramTrueLen, false, "GetParameter len is invalid.");
 
-    if (strncmp(result, PARAM_TRUE, PARAM_TRUE_LEN) == 0) {
+    if (strncmp(result, paramTrue, paramTrueLen) == 0) {
         MEDIA_LOGW("AudioHapticPlayerImpl support DSP!");
         return true;
     }
