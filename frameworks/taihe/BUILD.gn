@@ -26,6 +26,7 @@ copy_taihe_idl("copy_media_taihe") {
     "//foundation/multimedia/player_framework/frameworks/taihe/idl/ohos.multimedia.media.context.taihe",
     "//foundation/multimedia/player_framework/frameworks/taihe/idl/ohos.multimedia.media.taihe",
   ]
+  deps = [ ":copy_soundpool_taihe" ]
 }
 
 ohos_taihe("run_media_taihe") {

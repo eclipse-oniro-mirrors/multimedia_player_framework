@@ -74,13 +74,13 @@ interface SoundPool {
     @!sts_inject_into_interface("on(type: string, callback: (data: object)=> void): void;")
     @!sts_inject_into_class("""on(type: string, callback: object): void {
         if (type === "playFinishedWithStreamId") {
-            this.OnPlayFinishedWithStreamId_inner(callback as (data: double)=> void);
+            this.onPlayFinishedWithStreamId(callback as (data: double)=> void);
         } else if (type === "error") {
-            this.OnError_inner(callback as (err: BusinessError<void>)=> void);
+            this.onError(callback as (err: BusinessError<void>)=> void);
         } else if (type === "loadComplete") {
-            this.OnLoadComplete_inner(callback as (data: double)=> void);
+            this.onLoadComplete(callback as (data: double)=> void);
         } else if (type === "playFinished") {
-            this.OnPlayFinished_inner(callback as (data: undefined)=> void);
+            this.onPlayFinished(callback as (data: undefined)=> void);
         } else {
             throw new Error(`Unknown type: ${type}`);
         }
@@ -89,13 +89,13 @@ interface SoundPool {
     @!sts_inject_into_interface("off(type: string): void;")
     @!sts_inject_into_class("""off(type: string): void {
         if (type === "playFinishedWithStreamId") {
-            this.OffPlayFinishedWithStreamId_inner();
+            this.offPlayFinishedWithStreamId();
         } else if (type === "error") {
-            this.OffError_inner();
+            this.offError();
         } else if (type === "loadComplete") {
-            this.OffLoadComplete_inner();
+            this.offLoadComplete();
         } else if (type === "playFinished") {
-            this.OffPlayFinished_inner();
+            this.offPlayFinished();
         } else {
             throw new Error(`Unknown type: ${type}`);
         }
