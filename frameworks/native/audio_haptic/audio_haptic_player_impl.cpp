@@ -65,6 +65,27 @@ static int32_t GenerateSyncId()
         (dist(gen) & randomMask);                                  // Random value occupies the lowest 8 bits
 }
 
+static bool IsSupportDSP(void)
+{
+    constexpr const char* SUPPORT_DSP_KEY = "const.multimedia.audio.support_hadware_audio_haptic_sync";
+    constexpr const uint32_t PARAM_TRUE_LEN = 4; // "true" 4bytes
+    constexpr const uint32_t PARAM_FALSE_LEN = 5; // "false" 5bytes
+    constexpr const char* PARAM_TRUE = "true";
+    constexpr const char* PARAM_FALSE = "false";
+
+    char result[PARAM_FALSE_LEN + 1] = {0};
+    //  Returns the number of bytes of the system parameter if the operation is successful.
+    int len = GetParameter(SUPPORT_DSP_KEY, PARAM_FALSE, result, PARAM_FALSE_LEN + 1);
+    CHECK_AND_RETURN_RET_LOG(len == PARAM_FALSE_LEN || len == PARAM_TRUE_LEN, false, "GetParameter len is invalid.");
+
+    if (strncmp(result, PARAM_TRUE, PARAM_TRUE_LEN) == 0) {
+        MEDIA_LOGW("AudioHapticPlayerImpl support DSP!");
+        return true;
+    }
+    MEDIA_LOGW("AudioHapticPlayerImpl doesn't support DSP!");
+    return false;
+}
+
 std::mutex AudioHapticPlayerFactory::createPlayerMutex_;
 
 std::shared_ptr<AudioHapticPlayer> AudioHapticPlayerFactory::CreateAudioHapticPlayer(
@@ -112,6 +133,7 @@ AudioHapticPlayerImpl::AudioHapticPlayerImpl()
       muteAudio_(false),
       muteHaptic_(false)
 {
+    isSupportDSPSync_ = IsSupportDSP();
 }
 
 AudioHapticPlayerImpl::~AudioHapticPlayerImpl()

@@ -686,7 +686,7 @@ int32_t AudioHapticVibratorImpl::PlayVibrationPattern(
     MEDIA_LOGI("AudioHapticVibratorImpl::PlayVibrationPattern.");
     patternStartTime_ = GetCurrentTimeMillis();
     vibrationTimeElapsed_ = vibratorPkg->patterns[patternIndex].time;
-    if (audioHapticSyncId_ > 0) {
+    if (audioHapticSyncId_ > 0 && !IsNonSync()) {
         result = Sensors::PlayPatternBySessionId(audioHapticSyncId_, vibratorPkg->patterns[patternIndex]);
     } else {
         result = Sensors::PlayPattern(vibratorPkg->patterns[patternIndex]);
@@ -835,6 +835,13 @@ bool AudioHapticVibratorImpl::IsHapticsCustomSupported()
     MEDIA_LOGI("AudioHapticVibratorImpl::IsHapticsCustomSupported: %{public}d", result);
 #endif
     return result;
+}
+
+bool AudioHapticVibratorImpl::IsNonSync()
+{
+    return audioHapticPlayer_.GetHapticsMode() == HapticsMode::HAPTICS_MODE_NON_SYNC ||
+        audioHapticPlayer_.GetHapticsMode() == HapticsMode::HAPTICS_MODE_NON_SYNC_ONCE ||
+        audioHapticPlayer_.GetHapticsMode() == HapticsMode::HAPTICS_MODE_NONE;
 }
 } // namesapce Media
 } // namespace OHOS

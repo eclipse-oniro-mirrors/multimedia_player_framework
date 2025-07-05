@@ -397,6 +397,9 @@ void CacheBuffer::DealWriteData(size_t length)
         }
         FadeInAudioBuffer(bufDesc);
         audioRenderer_->Enqueue(bufDesc);
+        if (cacheDataFrameIndex_ >= static_cast<size_t>(fullCacheData_->size)) {
+            audioRenderer_->ResetFirstFrameState();
+        }
     } else {
         MEDIA_LOGE("OnWriteData, cacheDataFrameIndex_: %{public}zu, length: %{public}zu,"
             " bufDesc.buffer:%{public}d, fullCacheData_:%{public}d, fullCacheData_->buffer:%{public}d,"
