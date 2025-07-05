@@ -830,11 +830,15 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_041, TestSize.
     EXPECT_NE(audioHapticVibratorImpl, nullptr);
     EXPECT_NE(g_vibrationPackage, nullptr);
     std::unique_lock<std::mutex> lock(vibrateMutex_);
+
     int32_t vibrateTime = 0;
+    audioHapticPlayerImpl.hapticsMode_ = HapticsMode::HAPTICS_MODE_NON_SYNC;
     int32_t result = audioHapticVibratorImpl->PlayVibrationPattern(g_vibrationPackage, TWO_INDEX, vibrateTime, lock);
     EXPECT_EQ(result, MSERR_OK);
+
     vibrateTime = PATTERN2_TIME_MS;
     audioHapticVibratorImpl->audioHapticSyncId_ = 1;
+    audioHapticPlayerImpl.hapticsMode_ = HapticsMode::HAPTICS_MODE_SYNC;
     result =
         audioHapticVibratorImpl->PlayVibrationPattern(g_vibrationPackage, ONE_INDEX, vibrateTime, lock);
     EXPECT_EQ(result, MSERR_OK);
@@ -910,6 +914,31 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_043, TestSize.
     audioHapticVibratorImpl->isRunning_.store(true);
     
     EXPECT_EQ(MSERR_OK, audioHapticVibratorImpl->SetHapticsFeature(HapticsFeature::GENTLE_HAPTICS));
+}
+
+/**
+ * @tc.name  : Test AudioHapticVibratorImpl API
+ * @tc.number: AudioHapticVibratorImpl_044
+ * @tc.desc  : Test AudioHapticVibratorImpl::IsNonSync()
+ */
+HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_044, TestSize.Level1)
+{
+    AudioHapticPlayerImpl audioHapticPlayerImpl;
+    auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
+    EXPECT_NE(audioHapticVibratorImpl, nullptr);
+    EXPECT_NE(g_vibrationPackage, nullptr);
+
+    audioHapticPlayerImpl.hapticsMode_ = HapticsMode::HAPTICS_MODE_NON_SYNC;
+    EXPECT_EQ(true, audioHapticVibratorImpl->IsNonSync());
+
+    audioHapticPlayerImpl.hapticsMode_ = HapticsMode::HAPTICS_MODE_NON_SYNC_ONCE;
+    EXPECT_EQ(true, audioHapticVibratorImpl->IsNonSync());
+
+    audioHapticPlayerImpl.hapticsMode_ = HapticsMode::HAPTICS_MODE_NONE;
+    EXPECT_EQ(true, audioHapticVibratorImpl->IsNonSync());
+
+    audioHapticPlayerImpl.hapticsMode_ = HapticsMode::HAPTICS_MODE_SYNC;
+    EXPECT_EQ(false, audioHapticVibratorImpl->IsNonSync());
 }
 } // namespace Media
 } // namespace OHOS

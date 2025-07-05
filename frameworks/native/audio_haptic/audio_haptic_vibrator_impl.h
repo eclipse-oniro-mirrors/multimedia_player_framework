@@ -73,6 +73,7 @@ private:
                                     std::unique_lock<std::mutex>& lock);
     int32_t SeekAndRestart();
     void ResumeModulePackge();
+    bool IsNonSync();
 
     AudioHapticPlayer &audioHapticPlayer_;
 

@@ -59,6 +59,7 @@ ohos_shared_library("audio_haptic") {
     "c_utils:utils",
     "graphic_surface:surface",
     "hilog:libhilog",
+    "init:libbegetutil",
     "ipc:ipc_core",
     "media_foundation:media_monitor_client",
     "media_foundation:media_monitor_common",
