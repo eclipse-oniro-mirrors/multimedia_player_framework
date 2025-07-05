@@ -830,11 +830,15 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_041, TestSize.
     EXPECT_NE(audioHapticVibratorImpl, nullptr);
     EXPECT_NE(g_vibrationPackage, nullptr);
     std::unique_lock<std::mutex> lock(vibrateMutex_);
+
     int32_t vibrateTime = 0;
+    audioHapticPlayerImpl.hapticsMode_ = HapticsMode::HAPTICS_MODE_NON_SYNC;
     int32_t result = audioHapticVibratorImpl->PlayVibrationPattern(g_vibrationPackage, TWO_INDEX, vibrateTime, lock);
     EXPECT_EQ(result, MSERR_OK);
+
     vibrateTime = PATTERN2_TIME_MS;
     audioHapticVibratorImpl->audioHapticSyncId_ = 1;
+    audioHapticPlayerImpl.hapticsMode_ = HapticsMode::HAPTICS_MODE_SYNC;
     result =
         audioHapticVibratorImpl->PlayVibrationPattern(g_vibrationPackage, ONE_INDEX, vibrateTime, lock);
     EXPECT_EQ(result, MSERR_OK);
