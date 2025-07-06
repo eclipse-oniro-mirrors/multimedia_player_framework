@@ -176,6 +176,7 @@ ohos_shared_library("media") {
     "audio_framework:audio_renderer",
     "av_codec:av_codec_client",
     "c_utils:utils",
+    "ets_runtime:libark_jsruntime",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
@@ -189,12 +190,6 @@ ohos_shared_library("media") {
     "qos_manager:qos",
     "window_manager:libdm",
   ]
-
-  if (defined(ark_hybrid) && ark_hybrid) {
-    external_deps += [ "runtime_core:libarkruntime" ]
-  } else {
-    external_deps += [ "ets_runtime:libark_jsruntime" ]
-  }
 
   if (player_framework_support_auto_create_file) {
     external_deps += [ "media_library:medialibrary_nutils" ]
