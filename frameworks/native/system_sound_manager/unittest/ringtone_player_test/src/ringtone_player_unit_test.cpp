@@ -321,5 +321,27 @@ HWTEST(RingtonePlayerUnitTest, Media_RingtonePlayer_016, TestSize.Level1)
     ringtonePlayerImpl_->NotifyInterruptEvent(interruptEvent);
     EXPECT_NE(ringtonePlayerImpl_, nullptr);
 }
+
+/**
+ * @tc.name  : Test MediaRingtonePlayer
+ * @tc.number: Media_RingtonePlayer_017
+ * @tc.desc  : Test Start. Returns State.
+ */
+HWTEST(RingtonePlayerUnitTest, Media_RingtonePlayer_017, TestSize.Level1)
+{
+    auto context_ = std::make_shared<ContextImpl>();
+    auto sysSoundMgr = std::make_shared<SystemSoundManagerImpl>();
+    RingtoneType type = RINGTONE_TYPE_SIM_CARD_0;
+    auto ringtonePlayerImpl_ = std::make_shared<RingtonePlayerImpl>(context_, *sysSoundMgr, type);
+
+    ringtonePlayerImpl_->ringtoneState_ = RingtoneState::STATE_RUNNING;
+    ringtonePlayerImpl_->NotifyEndofStreamEvent();
+    EXPECT_EQ(ringtonePlayerImpl_->ringtoneState_, RingtoneState::STATE_STOPPED);
+
+    ringtonePlayerImpl_.loop_ = true;
+    ringtonePlayerImpl_->ringtoneState_ = RingtoneState::STATE_RUNNING;
+    ringtonePlayerImpl_->NotifyEndofStreamEvent();
+    EXPECT_EQ(ringtonePlayerImpl_->ringtoneState_, RingtoneState::STATE_RUNNING);
+}
 }
 }
