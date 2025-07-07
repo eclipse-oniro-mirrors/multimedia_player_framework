@@ -101,6 +101,7 @@ const std::map<MediaServiceErrCode, std::string> MSERRCODE_INFOS = {
     {MSERR_SHB_CRASH_ERROR, "SHB of the LPP crash happend."},
     {MSERR_RS_INIT_FAILED, "RS of the LPP init failed"},
     {MSERR_RS_DATA_FALLBACK_FAILED, "RS of the LPP data fallback failed"},
+    {MSERR_LPP_INSTANCE_EXCEED_LIMIT, "LPP instance limit exceeded"},
     {MSERR_HARDWARE_ERROR, "underlying hardware error happened"},
 };
 
@@ -173,6 +174,7 @@ const std::map<MediaServiceErrCode, MediaServiceExtErrCode> MSERRCODE_TO_EXTERRO
     {MSERR_SHB_CRASH_ERROR,                     MSERR_EXT_SERVICE_DIED},
     {MSERR_RS_INIT_FAILED,                      MSERR_EXT_UNKNOWN},
     {MSERR_RS_DATA_FALLBACK_FAILED,             MSERR_EXT_UNKNOWN},
+    {MSERR_LPP_INSTANCE_EXCEED_LIMIT,           MSERR_EXT_UNKNOWN},
     {MSERR_HARDWARE_ERROR,                      MSERR_EXT_UNKNOWN},
 };
 
@@ -268,6 +270,7 @@ const std::map<MediaServiceErrCode, MediaServiceExtErrCodeAPI9> MSERRCODE_TO_EXT
     {MSERR_SHB_CRASH_ERROR,                     MSERR_EXT_API20_HARDWARE_FAILED},
     {MSERR_RS_INIT_FAILED,                      MSERR_EXT_API20_HARDWARE_FAILED},
     {MSERR_RS_DATA_FALLBACK_FAILED,             MSERR_EXT_API20_HARDWARE_FAILED},
+    {MSERR_LPP_INSTANCE_EXCEED_LIMIT,           MSERR_EXT_API20_HARDWARE_FAILED},
     {MSERR_HARDWARE_ERROR,                      MSERR_EXT_API20_HARDWARE_FAILED},
 };
 
