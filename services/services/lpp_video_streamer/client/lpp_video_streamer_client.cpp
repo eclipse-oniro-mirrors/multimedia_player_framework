@@ -188,7 +188,7 @@ int32_t LppVideoStreamerClient::RegisterCallback()
 int32_t LppVideoStreamerClient::SetLppVideoStreamerCallback(const std::shared_ptr<VideoStreamerCallback> &callback)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_NO_MEMORY, "input param callback is nullptr..");
+    CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_INVALID_VAL, "input param callback is nullptr..");
     CHECK_AND_RETURN_RET_LOG(listenerStub_ != nullptr, MSERR_NO_MEMORY, "listenerStub_ is nullptr..");
     callback_ = callback;
     listenerStub_->SetLppVideoStreamerCallback(callback);

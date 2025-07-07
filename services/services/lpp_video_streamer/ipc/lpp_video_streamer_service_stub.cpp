@@ -169,9 +169,8 @@ int LppVideoStreamerServiceStub::OnRemoteRequest(
 
 int32_t LppVideoStreamerServiceStub::Init(const std::string &mime)
 {
-    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
-    lppVideoPlayerServer_->Init(mime);
-    return MSERR_OK;
+    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
+    return lppVideoPlayerServer_->Init(mime);
 }
 
 int32_t LppVideoStreamerServiceStub::Init(MessageParcel &data, MessageParcel &reply)
@@ -183,9 +182,8 @@ int32_t LppVideoStreamerServiceStub::Init(MessageParcel &data, MessageParcel &re
 
 int32_t LppVideoStreamerServiceStub::SetParameter(const Format &param)
 {
-    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
-    lppVideoPlayerServer_->SetParameter(param);
-    return MSERR_OK;
+    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
+    return lppVideoPlayerServer_->SetParameter(param);
 }
 
 int32_t LppVideoStreamerServiceStub::SetParameter(MessageParcel &data, MessageParcel &reply)
@@ -200,9 +198,8 @@ int32_t LppVideoStreamerServiceStub::SetParameter(MessageParcel &data, MessagePa
 
 int32_t LppVideoStreamerServiceStub::Configure(const Format &param)
 {
-    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
-    lppVideoPlayerServer_->Configure(param);
-    return MSERR_OK;
+    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
+    return lppVideoPlayerServer_->Configure(param);
 }
 
 int32_t LppVideoStreamerServiceStub::Configure(MessageParcel &data, MessageParcel &reply)
@@ -217,7 +214,7 @@ int32_t LppVideoStreamerServiceStub::Configure(MessageParcel &data, MessageParce
 
 int32_t LppVideoStreamerServiceStub::Prepare()
 {
-    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     return lppVideoPlayerServer_->Prepare();
 }
 
@@ -230,7 +227,7 @@ int32_t LppVideoStreamerServiceStub::Prepare(MessageParcel &data, MessageParcel 
 
 int32_t LppVideoStreamerServiceStub::Start()
 {
-    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     return lppVideoPlayerServer_->Start();
 }
 
@@ -243,7 +240,7 @@ int32_t LppVideoStreamerServiceStub::Start(MessageParcel &data, MessageParcel &r
 
 int32_t LppVideoStreamerServiceStub::Pause()
 {
-    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     return lppVideoPlayerServer_->Pause();
 }
 
@@ -256,7 +253,7 @@ int32_t LppVideoStreamerServiceStub::Pause(MessageParcel &data, MessageParcel &r
 
 int32_t LppVideoStreamerServiceStub::Resume()
 {
-    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     return lppVideoPlayerServer_->Resume();
 }
 
@@ -269,7 +266,7 @@ int32_t LppVideoStreamerServiceStub::Resume(MessageParcel &data, MessageParcel &
 
 int32_t LppVideoStreamerServiceStub::Flush()
 {
-    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     return lppVideoPlayerServer_->Flush();
 }
 
@@ -282,7 +279,7 @@ int32_t LppVideoStreamerServiceStub::Flush(MessageParcel &data, MessageParcel &r
 
 int32_t LppVideoStreamerServiceStub::Stop()
 {
-    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     return lppVideoPlayerServer_->Stop();
 }
 
@@ -295,7 +292,7 @@ int32_t LppVideoStreamerServiceStub::Stop(MessageParcel &data, MessageParcel &re
 
 int32_t LppVideoStreamerServiceStub::Reset()
 {
-    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     return lppVideoPlayerServer_->Reset();
 }
 
@@ -308,7 +305,7 @@ int32_t LppVideoStreamerServiceStub::Reset(MessageParcel &data, MessageParcel &r
 
 int32_t LppVideoStreamerServiceStub::Release()
 {
-    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     lppVideoPlayerServer_->Release();
     lppVideoPlayerServer_ = nullptr;
     return MSERR_OK;
@@ -323,7 +320,7 @@ int32_t LppVideoStreamerServiceStub::Release(MessageParcel &data, MessageParcel 
 
 int32_t LppVideoStreamerServiceStub::SetVolume(float volume)
 {
-    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     return lppVideoPlayerServer_->SetVolume(volume);
 }
 
@@ -336,7 +333,7 @@ int32_t LppVideoStreamerServiceStub::SetVolume(MessageParcel &data, MessageParce
 
 int32_t LppVideoStreamerServiceStub::StartDecode()
 {
-    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     return lppVideoPlayerServer_->StartDecode();
 }
 
@@ -349,7 +346,7 @@ int32_t LppVideoStreamerServiceStub::StartDecode(MessageParcel &data, MessagePar
 
 int32_t LppVideoStreamerServiceStub::StartRender()
 {
-    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     return lppVideoPlayerServer_->StartRender();
 }
 
@@ -362,7 +359,7 @@ int32_t LppVideoStreamerServiceStub::StartRender(MessageParcel &data, MessagePar
 
 int32_t LppVideoStreamerServiceStub::SetOutputSurface(sptr<Surface> surface)
 {
-    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     return lppVideoPlayerServer_->SetOutputSurface(surface);
 }
 
@@ -383,13 +380,13 @@ int32_t LppVideoStreamerServiceStub::SetOutputSurface(MessageParcel &data, Messa
     (void)surface->SetUserData(surfaceFormat, format);
 
     bool ret = reply.WriteInt32(SetOutputSurface(surface));
-    CHECK_AND_RETURN_RET_LOG(ret, MSERR_NO_MEMORY, "Reply write failed");
+    CHECK_AND_RETURN_RET_LOG(ret, MSERR_INVALID_OPERATION, "Reply write failed");
     return MSERR_OK;
 }
 
 int32_t LppVideoStreamerServiceStub::SetSyncAudioStreamer(AudioStreamer *audioStreamer)
 {
-    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     return lppVideoPlayerServer_->SetSyncAudioStreamer(audioStreamer);
 }
 
@@ -402,7 +399,7 @@ int32_t LppVideoStreamerServiceStub::SetSyncAudioStreamer(MessageParcel &data, M
 
 int32_t LppVideoStreamerServiceStub::SetTargetStartFrame(const int64_t targetPts, const int timeoutMs)
 {
-    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     return lppVideoPlayerServer_->SetTargetStartFrame(targetPts, timeoutMs);
 }
 
@@ -417,7 +414,7 @@ int32_t LppVideoStreamerServiceStub::SetTargetStartFrame(MessageParcel &data, Me
 
 int32_t LppVideoStreamerServiceStub::SetPlaybackSpeed(float speed)
 {
-    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     return lppVideoPlayerServer_->SetPlaybackSpeed(speed);
 }
 
@@ -430,8 +427,8 @@ int32_t LppVideoStreamerServiceStub::SetPlaybackSpeed(MessageParcel &data, Messa
 
 int32_t LppVideoStreamerServiceStub::ReturnFrames(sptr<LppDataPacket> framePacket)
 {
-    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
-    CHECK_AND_RETURN_RET_LOG(framePacket != nullptr, MSERR_NO_MEMORY, "framePacket is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(framePacket != nullptr, MSERR_INVALID_VAL, "framePacket is nullptr");
     return lppVideoPlayerServer_->ReturnFrames(framePacket);
 }
 
@@ -446,7 +443,7 @@ int32_t LppVideoStreamerServiceStub::ReturnFrames(MessageParcel &data, MessagePa
 
 int32_t LppVideoStreamerServiceStub::RegisterCallback()
 {
-    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     return lppVideoPlayerServer_->RegisterCallback();
 }
 
@@ -482,7 +479,8 @@ int32_t LppVideoStreamerServiceStub::SetListenerObject(MessageParcel &data, Mess
 int32_t LppVideoStreamerServiceStub::SetLppVideoStreamerCallback()
 {
     MEDIA_LOGD("SetLppVideoStreamerCallback");
-    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY, "lppaudioplayer server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_INVALID_OPERATION,
+        "lppaudioplayer server is nullptr");
     return lppVideoPlayerServer_->SetLppVideoStreamerCallback(playerCallback_);
 }
 
@@ -509,7 +507,7 @@ int32_t LppVideoStreamerServiceStub::GetStreamerId(MessageParcel &data, MessageP
 
 int32_t LppVideoStreamerServiceStub::SetLppAudioStreamerId(std::string audioStreamId)
 {
-    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     return lppVideoPlayerServer_->SetLppAudioStreamerId(audioStreamId);
 }
 
@@ -523,7 +521,7 @@ int32_t LppVideoStreamerServiceStub::SetLppAudioStreamerId(MessageParcel &data, 
 int32_t LppVideoStreamerServiceStub::RenderFirstFrame()
 {
     MEDIA_LOGD("RenderFirstFrame");
-    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     return lppVideoPlayerServer_->RenderFirstFrame();
 }
 

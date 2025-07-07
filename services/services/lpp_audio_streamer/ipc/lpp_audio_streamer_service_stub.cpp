@@ -158,8 +158,8 @@ int LppAudioStreamerServiceStub::OnRemoteRequest(
 
 int32_t LppAudioStreamerServiceStub::Init(const std::string &mime)
 {
-    lppAudioPlayerServer_->Init(mime);
-    return MSERR_OK;
+    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
+    return lppAudioPlayerServer_->Init(mime);
 }
 
 int32_t LppAudioStreamerServiceStub::Init(MessageParcel &data, MessageParcel &reply)
@@ -173,8 +173,8 @@ int32_t LppAudioStreamerServiceStub::Init(MessageParcel &data, MessageParcel &re
 
 int32_t LppAudioStreamerServiceStub::SetParameter(const Format &param)
 {
-    lppAudioPlayerServer_->SetParameter(param);
-    return MSERR_OK;
+    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
+    return lppAudioPlayerServer_->SetParameter(param);
 }
 
 int32_t LppAudioStreamerServiceStub::SetParameter(MessageParcel &data, MessageParcel &reply)
@@ -190,8 +190,8 @@ int32_t LppAudioStreamerServiceStub::SetParameter(MessageParcel &data, MessagePa
 
 int32_t LppAudioStreamerServiceStub::Configure(const Format &param)
 {
-    lppAudioPlayerServer_->Configure(param);
-    return MSERR_OK;
+    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
+    return lppAudioPlayerServer_->Configure(param);
 }
 
 int32_t LppAudioStreamerServiceStub::Configure(MessageParcel &data, MessageParcel &reply)
@@ -207,7 +207,7 @@ int32_t LppAudioStreamerServiceStub::Configure(MessageParcel &data, MessageParce
 
 int32_t LppAudioStreamerServiceStub::Prepare()
 {
-    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     return lppAudioPlayerServer_->Prepare();
 }
 
@@ -220,7 +220,7 @@ int32_t LppAudioStreamerServiceStub::Prepare(MessageParcel &data, MessageParcel 
 
 int32_t LppAudioStreamerServiceStub::Start()
 {
-    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     return lppAudioPlayerServer_->Start();
 }
 
@@ -233,7 +233,7 @@ int32_t LppAudioStreamerServiceStub::Start(MessageParcel &data, MessageParcel &r
 
 int32_t LppAudioStreamerServiceStub::Pause()
 {
-    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     return lppAudioPlayerServer_->Pause();
 }
 
@@ -246,7 +246,7 @@ int32_t LppAudioStreamerServiceStub::Pause(MessageParcel &data, MessageParcel &r
 
 int32_t LppAudioStreamerServiceStub::Resume()
 {
-    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     return lppAudioPlayerServer_->Resume();
 }
 
@@ -259,7 +259,7 @@ int32_t LppAudioStreamerServiceStub::Resume(MessageParcel &data, MessageParcel &
 
 int32_t LppAudioStreamerServiceStub::Flush()
 {
-    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     return lppAudioPlayerServer_->Flush();
 }
 
@@ -272,7 +272,7 @@ int32_t LppAudioStreamerServiceStub::Flush(MessageParcel &data, MessageParcel &r
 
 int32_t LppAudioStreamerServiceStub::Stop()
 {
-    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     return lppAudioPlayerServer_->Stop();
 }
 
@@ -285,7 +285,7 @@ int32_t LppAudioStreamerServiceStub::Stop(MessageParcel &data, MessageParcel &re
 
 int32_t LppAudioStreamerServiceStub::Reset()
 {
-    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     return lppAudioPlayerServer_->Reset();
 }
 
@@ -298,7 +298,7 @@ int32_t LppAudioStreamerServiceStub::Reset(MessageParcel &data, MessageParcel &r
 
 int32_t LppAudioStreamerServiceStub::Release()
 {
-    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     lppAudioPlayerServer_->Release();
     lppAudioPlayerServer_ = nullptr;
     return MSERR_OK;
@@ -313,7 +313,7 @@ int32_t LppAudioStreamerServiceStub::Release(MessageParcel &data, MessageParcel 
 
 int32_t LppAudioStreamerServiceStub::SetVolume(float volume)
 {
-    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     return lppAudioPlayerServer_->SetVolume(volume);
 }
 
@@ -326,7 +326,7 @@ int32_t LppAudioStreamerServiceStub::SetVolume(MessageParcel &data, MessageParce
 
 int32_t LppAudioStreamerServiceStub::SetPlaybackSpeed(float speed)
 {
-    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     return lppAudioPlayerServer_->SetPlaybackSpeed(speed);
 }
 
@@ -339,7 +339,7 @@ int32_t LppAudioStreamerServiceStub::SetPlaybackSpeed(MessageParcel &data, Messa
 
 int32_t LppAudioStreamerServiceStub::ReturnFrames(sptr<LppDataPacket> framePacket)
 {
-    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     return lppAudioPlayerServer_->ReturnFrames(framePacket);
 }
 
@@ -353,7 +353,7 @@ int32_t LppAudioStreamerServiceStub::ReturnFrames(MessageParcel &data, MessagePa
 
 int32_t LppAudioStreamerServiceStub::RegisterCallback()
 {
-    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     return lppAudioPlayerServer_->RegisterCallback();
 }
 
@@ -389,7 +389,8 @@ int32_t LppAudioStreamerServiceStub::SetListenerObject(MessageParcel &data, Mess
 int32_t LppAudioStreamerServiceStub::SetLppAudioStreamerCallback()
 {
     MEDIA_LOGD("SetLppAudioStreamerCallback");
-    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_NO_MEMORY, "lppaudioplayer server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_INVALID_OPERATION,
+        "lppaudioplayer server is nullptr");
     return lppAudioPlayerServer_->SetLppAudioStreamerCallback(playerCallback_);
 }
 
@@ -402,7 +403,7 @@ int32_t LppAudioStreamerServiceStub::SetLppAudioStreamerCallback(MessageParcel &
 
 int32_t LppAudioStreamerServiceStub::SetLppVideoStreamerId(std::string videoStreamerId)
 {
-    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     return lppAudioPlayerServer_->SetLppVideoStreamerId(videoStreamerId);
 }
 

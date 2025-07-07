@@ -29,6 +29,7 @@ enum HDFErrCode : int32_t {
 
     HDF_ERR_SHB_TIME_ANCHOR_GIANT_GAP = 0x010001,
     HDF_ERR_SHB_SET_SPEED_ERR = 0x010002,
+    HDF_ERR_SHB_OUTPUT_BUFF_FOUND_ERR = 0x010003,
 #define HDF_ERR_SHB_START (0x01FF00)         /**< Defines the start of error codes. */
 #define HDF_ERR_SHB_NUM(v) (HDF_ERR_SHB_START + (v)) /**< Defines the error codes. */
     HDF_ERR_SHB_THREAD_CREATE_FAIL = HDF_ERR_SHB_NUM(1),
@@ -40,12 +41,15 @@ enum HDFErrCode : int32_t {
     HDF_ERR_SHB_RS_RINGBUFF_INIT_FAIL = HDF_ERR_SHB_NUM(7),
     HDF_ERR_SHB_RS_UPLOAD_DATA_FAIL = HDF_ERR_SHB_NUM(8),
     HDF_ERR_SHB_VDEC_RINGBUFF_INIT_FAIL = HDF_ERR_SHB_NUM(9),
+    HDF_ERR_SHB_SID_INVALID_ERR = HDF_ERR_SHB_NUM(10),
+    HDF_ERR_SHB_INVALID_BUFF_CNT = HDF_ERR_SHB_NUM(11),
 
 #define HDF_ERR_LPPDRV_START (0x020000)         /**< Defines the start of error codes. */
 #define HDF_ERR_LPPDRV_NUM(v) (HDF_ERR_LPPDRV_START + (v)) /**< Defines the error codes. */
     HDF_ERR_LPPDRV_STATE_MACH_ERR = HDF_ERR_LPPDRV_NUM(1),
     HDF_ERR_LPPDRV_MMAP_FAIL = HDF_ERR_LPPDRV_NUM(0x00FF01),
     HDF_ERR_LPPDRV_SHB_CRASH = HDF_ERR_LPPDRV_NUM(0x00FF02),
+    HDF_ERR_LPPDRV_INSTANCE_EXCEED_LIMIT = HDF_ERR_LPPDRV_NUM(0x00FF03),
 
 #define HDF_ERR_DSS_START (0x03FF00)         /**< Defines the start of error codes. */
 #define HDF_ERR_DSS_NUM(v) (HDF_ERR_DSS_START + (v)) /**< Defines the error codes. */

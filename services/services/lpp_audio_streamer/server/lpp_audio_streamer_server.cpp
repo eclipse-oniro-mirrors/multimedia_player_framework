@@ -89,6 +89,7 @@ int32_t LppAudioStreamerServer::Init(const std::string &mime)
     CHECK_AND_RETURN_RET(streamerEngine_ == nullptr, MSERR_OK);
     mime_ = mime;
     auto ret = CreateStreamerEngine();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "CreateStreamerEngine Failed!");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     ret = streamerEngine_->Init(mime);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Init Failed!");
@@ -101,7 +102,7 @@ int32_t LppAudioStreamerServer::SetLppVideoStreamerId(const std::string videoStr
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->SetLppVideoStreamerId(videoStreamId);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetLppVideoStreamerId Failed!");
-    return ret;
+    return MSERR_OK;
 }
 
 std::string LppAudioStreamerServer::GetStreamerId()
@@ -124,10 +125,11 @@ int32_t LppAudioStreamerServer::Configure(const Format &param)
     MEDIA_LOGI("LppAudioStreamerServer Configure");
     CHECK_AND_RETURN_RET_LOG(StateEnter(LppAudioState::INITIALIZED), MSERR_INVALID_OPERATION, "wrong state");
     auto ret = Init(mime_);
+    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), ret, "Init Failed!");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     ret = streamerEngine_->Configure(param);
     CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), ret, "SetParameter Failed!");
-    return ret;
+    return MSERR_OK;
 }
 
 int32_t LppAudioStreamerServer::Prepare()
@@ -136,7 +138,7 @@ int32_t LppAudioStreamerServer::Prepare()
     CHECK_AND_RETURN_RET_LOG(StateEnter(LppAudioState::READY, "Prepare"), MSERR_INVALID_OPERATION, "wrong state");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->Prepare();
-    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), MSERR_INVALID_OPERATION, "Prepare Failed!");
+    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), ret, "Prepare Failed!");
     return MSERR_OK;
 }
 
@@ -146,7 +148,7 @@ int32_t LppAudioStreamerServer::Start()
     CHECK_AND_RETURN_RET_LOG(StateEnter(LppAudioState::STARTING, "Start"), MSERR_INVALID_OPERATION, "wrong state");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->Start();
-    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), MSERR_INVALID_OPERATION, "Start Failed!");
+    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), ret, "Start Failed!");
     return MSERR_OK;
 }
 
@@ -156,7 +158,7 @@ int32_t LppAudioStreamerServer::Pause()
     CHECK_AND_RETURN_RET_LOG(StateEnter(LppAudioState::PAUSED), MSERR_INVALID_OPERATION, "wrong state");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->Pause();
-    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), MSERR_INVALID_OPERATION, "Pause Failed!");
+    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), ret, "Pause Failed!");
     return MSERR_OK;
 }
 
@@ -166,7 +168,7 @@ int32_t LppAudioStreamerServer::Resume()
     CHECK_AND_RETURN_RET_LOG(StateEnter(LppAudioState::STARTING, "Resume"), MSERR_INVALID_OPERATION, "wrong state");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->Resume();
-    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), MSERR_INVALID_OPERATION, "Resume Failed!");
+    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), ret, "Resume Failed!");
     return MSERR_OK;
 }
 
@@ -176,8 +178,7 @@ int32_t LppAudioStreamerServer::Flush()
     CHECK_AND_RETURN_RET_LOG(StateEnter(LppAudioState::READY, "Flush"), MSERR_INVALID_OPERATION, "wrong state");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->Flush();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Resume Failed!");
-    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), MSERR_INVALID_OPERATION, "Flush Failed!");
+    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), ret, "Flush Failed!");
     return MSERR_OK;
 }
 
@@ -187,8 +188,7 @@ int32_t LppAudioStreamerServer::Stop()
     CHECK_AND_RETURN_RET_LOG(StateEnter(LppAudioState::STOPPED), MSERR_INVALID_OPERATION, "wrong state");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->Stop();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Stop Failed!");
-    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), MSERR_INVALID_OPERATION, "Flush Failed!");
+    CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), ret, "Stop Failed!");
     return MSERR_OK;
 }
 
@@ -199,7 +199,7 @@ int32_t LppAudioStreamerServer::Reset()
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->Reset();
     streamerEngine_ = nullptr;
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Reset Failed!");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Reset Failed!");
     return MSERR_OK;
 }
 
@@ -217,7 +217,7 @@ int32_t LppAudioStreamerServer::SetVolume(float volume)
     MEDIA_LOGI("LppAudioStreamerServer SetVolume");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->SetVolume(volume);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetVolume Failed!");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetVolume Failed!");
     return MSERR_OK;
 }
 
@@ -226,16 +226,16 @@ int32_t LppAudioStreamerServer::SetPlaybackSpeed(float speed)
     MEDIA_LOGI("LppAudioStreamerServer SetPlaybackSpeed");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->SetPlaybackSpeed(speed);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetPlaybackSpeed Failed!");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetPlaybackSpeed Failed!");
     return MSERR_OK;
 }
 
 int32_t LppAudioStreamerServer::ReturnFrames(sptr<LppDataPacket> framePacket)
 {
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
-    CHECK_AND_RETURN_RET_LOG(framePacket != nullptr, MSERR_INVALID_OPERATION, "framePacket is nullptr");
+    CHECK_AND_RETURN_RET_LOG(framePacket != nullptr, MSERR_INVALID_VAL, "framePacket is nullptr");
     auto ret = streamerEngine_->ReturnFrames(framePacket);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "ReturnFrames Failed!");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ReturnFrames Failed!");
     return MSERR_OK;
 }
 
@@ -245,8 +245,8 @@ int32_t LppAudioStreamerServer::RegisterCallback()
     std::shared_ptr<ILppAudioStreamerEngineObs> obs = shared_from_this();
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->SetObs(obs);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "RegisterCallback Failed!");
-    return ret;
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "RegisterCallback Failed!");
+    return MSERR_OK;
 }
 
 int32_t LppAudioStreamerServer::SetLppAudioStreamerCallback(const std::shared_ptr<AudioStreamerCallback> &callback)
@@ -280,7 +280,7 @@ bool LppAudioStreamerServer::StateCheck(LppAudioState curState)
 bool LppAudioStreamerServer::ErrorCheck(int32_t errorCode)
 {
     std::lock_guard<std::mutex> lock(stateMutex_);
-    if (errorCode != MSERR_OK && state_ != LppAudioState::ERROR) {
+    if (errorCode != MSERR_OK) {
         state_ = LppAudioState::ERROR;
         return false;
     }

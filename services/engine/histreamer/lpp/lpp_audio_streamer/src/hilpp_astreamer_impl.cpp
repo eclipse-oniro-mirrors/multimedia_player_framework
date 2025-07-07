@@ -105,14 +105,14 @@ int32_t HiLppAudioStreamerImpl::SetLppVideoStreamerId(std::string videoStreamerI
     syncMgr_ = videoStreamerEngine_->GetLppSyncManager();
     FALSE_RETURN_V_MSG(syncMgr_ != nullptr, MSERR_NO_MEMORY, "syncMgr_ nullptr");
     auto ret = syncMgr_->SetAudioIsLpp(isLpp_);
-    FALSE_RETURN_V_MSG(ret == MSERR_OK, MSERR_UNSUPPORT, "SetAudioIsLpp failed");
+    FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "SetAudioIsLpp failed");
     return MSERR_OK;
 }
 
 int32_t HiLppAudioStreamerImpl::SetObs(const std::weak_ptr<ILppAudioStreamerEngineObs> &obs)
 {
     MEDIA_LOG_I("HiLppAudioStreamerImpl::SetObs");
-    FALSE_RETURN_V_MSG(callbackLooper_ != nullptr, MSERR_NO_MEMORY, "callbackLooper_ nullptr");
+    FALSE_RETURN_V_MSG(callbackLooper_ != nullptr, MSERR_INVALID_OPERATION, "callbackLooper_ nullptr");
     callbackLooper_->StartWithLppAudioStreamerEngineObs(obs);
     return MSERR_OK;
 }
@@ -148,7 +148,7 @@ int32_t HiLppAudioStreamerImpl::Prepare()
     ret = adec_->Prepare();
     FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "adec_ Prepare failed");
     sptr<Media::AVBufferQueueProducer> producer = adec_->GetInputBufferQueue();
-    FALSE_RETURN_V_MSG(producer != nullptr, MSERR_AUD_DEC_FAILED, "producer is nullptr");
+    FALSE_RETURN_V_MSG(producer != nullptr, MSERR_NO_MEMORY, "producer is nullptr");
     ret = dataMgr_->Prepare();
     FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "dataMgr_ Prepare failed");
     ret = dataMgr_->SetDecoderInputProducer(producer);
@@ -255,7 +255,7 @@ int32_t HiLppAudioStreamerImpl::Reset()
 int32_t HiLppAudioStreamerImpl::SetVolume(const float volume)
 {
     MEDIA_LOG_I("HiLppAudioStreamerImpl::SetVolume" PUBLIC_LOG_F, volume);
-    FALSE_RETURN_V_MSG(aRender_ != nullptr, MSERR_NO_MEMORY, "aRender_ nullptr");
+    FALSE_RETURN_V_MSG(aRender_ != nullptr, MSERR_INVALID_OPERATION, "aRender_ nullptr");
     auto ret = aRender_->SetVolume(volume);
     FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "aRender_ SetVolume failed");
     return MSERR_OK;
@@ -263,7 +263,7 @@ int32_t HiLppAudioStreamerImpl::SetVolume(const float volume)
 int32_t HiLppAudioStreamerImpl::SetPlaybackSpeed(const float playbackSpeed)
 {
     MEDIA_LOG_I("HiLppAudioStreamerImpl::SetPlaybackSpeed" PUBLIC_LOG_F, playbackSpeed);
-    FALSE_RETURN_V_MSG(aRender_ != nullptr, MSERR_NO_MEMORY, "aRender_ nullptr");
+    FALSE_RETURN_V_MSG(aRender_ != nullptr, MSERR_INVALID_OPERATION, "aRender_ nullptr");
     auto ret = aRender_->SetSpeed(playbackSpeed);
     FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "aRender_ SetPlaybackSpeed failed");
     return MSERR_OK;
@@ -271,8 +271,8 @@ int32_t HiLppAudioStreamerImpl::SetPlaybackSpeed(const float playbackSpeed)
 
 int32_t HiLppAudioStreamerImpl::ReturnFrames(sptr<LppDataPacket> framePacket)
 {
-    FALSE_RETURN_V_MSG(dataMgr_ != nullptr, MSERR_UNKNOWN, "dataMgr_ nullptr");
-    FALSE_RETURN_V_MSG(framePacket != nullptr, MSERR_UNKNOWN, "framePacket nullptr");
+    FALSE_RETURN_V_MSG(dataMgr_ != nullptr, MSERR_INVALID_OPERATION, "dataMgr_ nullptr");
+    FALSE_RETURN_V_MSG(framePacket != nullptr, MSERR_INVALID_VAL, "framePacket nullptr");
     auto ret = dataMgr_->ProcessNewData(framePacket);
     FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "dataMgr_ ProcessNewData failed");
     return MSERR_OK;
@@ -352,7 +352,7 @@ void HiLppAudioStreamerImpl::HandleDeviceChangeEvent(const Event &event)
 
 int32_t HiLppAudioStreamerImpl::GetCurrentPosition(int64_t &currentPosition)
 {
-    FALSE_RETURN_V_MSG(aRender_ != nullptr, MSERR_INVALID_STATE, "aRender_ nullptr");
+    FALSE_RETURN_V_MSG(aRender_ != nullptr, MSERR_INVALID_OPERATION, "aRender_ nullptr");
     return aRender_->GetCurrentPosition(currentPosition);
 }
 

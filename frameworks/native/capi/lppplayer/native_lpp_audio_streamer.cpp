@@ -570,7 +570,7 @@ OH_AVErrCode OH_AVSamplesBuffer_AppendOneBuffer(OH_AVSamplesBuffer *frames, OH_A
     CHECK_AND_RETURN_RET_LOG(framePacket != nullptr, AV_ERR_INVALID_VAL, "framePacket is nullptr!");
     CHECK_AND_RETURN_RET_LOG(framePacket->lppDataPacket_ != nullptr, AV_ERR_INVALID_VAL, "lppDataPacket is nullptr!");
     bool res = framePacket->lppDataPacket_->AppendOneBuffer(encodedBuffer->buffer_);
-    return res ? AV_ERR_OK : AV_ERR_UNKNOWN;
+    return res ? AV_ERR_OK : AV_ERR_INVALID_VAL;
 }
 
 int32_t OH_AVSamplesBuffer_GetRemainedCapacity(OH_AVSamplesBuffer *frames)

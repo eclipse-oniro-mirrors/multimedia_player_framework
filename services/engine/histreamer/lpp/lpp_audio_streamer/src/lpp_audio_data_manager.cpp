@@ -68,14 +68,14 @@ int32_t LppAudioDataManager::Prepare()
 
 int32_t LppAudioDataManager::SetDecoderInputProducer(sptr<Media::AVBufferQueueProducer> producer)
 {
-    FALSE_RETURN_V_MSG(producer != nullptr, MSERR_NO_MEMORY, "producer is nullptr");
+    FALSE_RETURN_V_MSG(producer != nullptr, MSERR_INVALID_VAL, "producer is nullptr");
     inputProducer_ = producer;
 
     sptr<IProducerListener> producerListener =
         OHOS::sptr<DecoderInputProducerListener>::MakeSptr(weak_from_this());
     FALSE_RETURN_V_MSG(producerListener != nullptr, MSERR_NO_MEMORY, "producerListener is nullptr");
     Status statusRes = inputProducer_->SetBufferAvailableListener(producerListener);
-    FALSE_RETURN_V_MSG(statusRes == Status::OK, MSERR_AUD_DEC_FAILED, "SetBufferAvailableListener is failed");
+    FALSE_RETURN_V_MSG(statusRes == Status::OK, MSERR_INVALID_OPERATION, "SetBufferAvailableListener is failed");
     return MSERR_OK;
 }
 
@@ -129,7 +129,7 @@ int32_t LppAudioDataManager::Reset()
 int32_t LppAudioDataManager::ProcessNewData(sptr<LppDataPacket> framePacket)
 {
     MEDIA_LOG_D("ProcessNewData, new datapacket arrived");
-    FALSE_RETURN_V_MSG(framePacket != nullptr, MSERR_INVALID_OPERATION, "framePacket is nullptr");
+    FALSE_RETURN_V_MSG(framePacket != nullptr, MSERR_INVALID_VAL, "framePacket is nullptr");
     std::unique_lock<std::mutex> lk(dataPacketMutex_);
     dataPacket_ = framePacket;
     isRequiringData_ = false;

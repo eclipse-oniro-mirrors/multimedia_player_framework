@@ -127,7 +127,7 @@ LppVideoDecoderAdapter::~LppVideoDecoderAdapter()
 int32_t LppVideoDecoderAdapter::Init(const std::string &mime, bool &switchToCommon)
 {
     videoDecoder_ = MediaAVCodec::VideoDecoderFactory::CreateByMime(mime);
-    FALSE_RETURN_V_MSG(videoDecoder_ != nullptr, MSERR_VID_DEC_FAILED, "videoDecoder_ nullptr");
+    FALSE_RETURN_V_MSG(videoDecoder_ != nullptr, MSERR_UNSUPPORT_VID_DEC_TYPE, "videoDecoder_ nullptr");
     if (isLppEnabled_) {
         MEDIA_LOG_I("LppVideoDecoderAdapter CreateByMime, try lpp enabled");
         int32_t ret = videoDecoder_->SetLowPowerPlayerMode(true);
@@ -312,13 +312,14 @@ int32_t LppVideoDecoderAdapter::PrepareBufferQueue()
     inputBufferQueue_ = AVBufferQueue::Create(0, MemoryType::UNKNOWN_MEMORY, VIDEO_INPUT_BUFFER_QUEUE_NAME, true);
     FALSE_RETURN_V_MSG(inputBufferQueue_ != nullptr, MSERR_NO_MEMORY, "inputBufferQueue_ is nullptr.");
     inputBufferQueueConsumer_ = inputBufferQueue_->GetConsumer();
-    FALSE_RETURN_V_MSG(inputBufferQueue_ != nullptr, MSERR_NO_MEMORY, "inputBufferQueueConsumer_ is nullptr.");
+    FALSE_RETURN_V_MSG(inputBufferQueueConsumer_ != nullptr, MSERR_AUD_DEC_FAILED,
+        "inputBufferQueueConsumer_ is nullptr.");
 
     sptr<IConsumerListener> consumerListener =
         OHOS::sptr<LppVideoDecConsumerListener>::MakeSptr(weak_from_this());
     FALSE_RETURN_V_MSG(consumerListener != nullptr, MSERR_NO_MEMORY, "consumerListener is nullptr");
     Status statusRes = inputBufferQueueConsumer_->SetBufferAvailableListener(consumerListener);
-    FALSE_RETURN_V_MSG(statusRes == Status::OK, MSERR_NO_MEMORY, "SetBufferAvailableListener is failed");
+    FALSE_RETURN_V_MSG(statusRes == Status::OK, MSERR_AUD_DEC_FAILED, "SetBufferAvailableListener is failed");
     return MSERR_OK;
 }
 
