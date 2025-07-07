@@ -58,13 +58,6 @@ struct DatabaseTool {
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = nullptr;
 };
 
-struct ParamsForWriteFile {
-    std::string dstPath;
-    off_t fileSize;
-    int32_t srcFd;
-    int32_t length;
-};
-
 class SystemSoundManagerImpl : public SystemSoundManager {
 public:
     SystemSoundManagerImpl();
@@ -114,8 +107,7 @@ public:
     std::string AddCustomizedToneByFd(const std::shared_ptr<AbilityRuntime::Context> &context,
         const std::shared_ptr<ToneAttrs> &toneAttrs, const int32_t &fd) override;
     std::string AddCustomizedToneByFdAndOffset(const std::shared_ptr<AbilityRuntime::Context> &context,
-        const std::shared_ptr<ToneAttrs> &toneAttrs, const int32_t &fd, const int32_t &offset,
-        const int32_t &length) override;
+        const std::shared_ptr<ToneAttrs> &toneAttrs, ParamsForAddCustomizedTone &paramsForAddCustomizedTone) override;
     int32_t RemoveCustomizedTone(const std::shared_ptr<AbilityRuntime::Context> &context,
         const std::string &uri) override;
     std::vector<std::pair<std::string, SystemSoundError>> RemoveCustomizedToneList(
@@ -165,6 +157,9 @@ private:
 
     int32_t AddCustomizedTone(const std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
         const std::shared_ptr<ToneAttrs> &toneAttrs);
+    std::string DealAddCustomizedToneError(int32_t &sert,
+        ParamsForAddCustomizedTone &paramsForAddCustomizedTone, const std::shared_ptr<ToneAttrs> &toneAttrs,
+        std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper);
     bool DeleteCustomizedTone(const std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
         const std::shared_ptr<ToneAttrs> &toneAttrs);
     int32_t WriteUriToDatabase(const std::string &key, const std::string &uri);

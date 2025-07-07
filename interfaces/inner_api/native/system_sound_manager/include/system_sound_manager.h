@@ -71,6 +71,14 @@ enum SystemSoundError {
     ERROR_INVALID_PARAM = 20700007,
 };
 
+struct ParamsForAddCustomizedTone {
+    std::string dstPath;
+    int32_t srcFd;
+    int32_t length;
+    int32_t offset;
+    bool duplicateFile;
+};
+
 class SystemSoundManager {
 public:
     virtual ~SystemSoundManager() = default;
@@ -306,7 +314,7 @@ public:
      */
     virtual std::string AddCustomizedToneByFdAndOffset(
         const std::shared_ptr<AbilityRuntime::Context> &context, const std::shared_ptr<ToneAttrs> &toneAttrs,
-            const int32_t &fd, const int32_t &offset, const int32_t &length) = 0;
+            ParamsForAddCustomizedTone &paramsForAddCustomizedTone) = 0;
 
     /**
      * @brief Remove customized tone in ringtone library.
