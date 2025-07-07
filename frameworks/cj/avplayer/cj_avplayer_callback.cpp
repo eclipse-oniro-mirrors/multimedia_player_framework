@@ -82,7 +82,7 @@ void CJAVPlayerCallback::OnAudioDeviceChangeCb(const int32_t extra, const Format
     Parcel parcel;
     parcel.WriteBuffer(parcelBuffer, parcelSize);
     AudioStandard::AudioDeviceDescriptor deviceInfo(AudioStandard::AudioDeviceDescriptor::DEVICE_INFO);
-    deviceInfo.Unmarshalling(parcel);
+    deviceInfo.UnmarshallingSelf(parcel);
 
     int32_t reason;
     infoBody.GetIntValue(PlayerKeys::AUDIO_DEVICE_CHANGE_REASON, reason);
