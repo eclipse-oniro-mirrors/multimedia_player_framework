@@ -338,7 +338,7 @@ HWTEST(RingtonePlayerUnitTest, Media_RingtonePlayer_017, TestSize.Level1)
     ringtonePlayerImpl_->NotifyEndofStreamEvent();
     EXPECT_EQ(ringtonePlayerImpl_->ringtoneState_, RingtoneState::STATE_STOPPED);
 
-    ringtonePlayerImpl_.loop_ = true;
+    ringtonePlayerImpl_->loop_ = true;
     ringtonePlayerImpl_->ringtoneState_ = RingtoneState::STATE_RUNNING;
     ringtonePlayerImpl_->NotifyEndofStreamEvent();
     EXPECT_EQ(ringtonePlayerImpl_->ringtoneState_, RingtoneState::STATE_RUNNING);
