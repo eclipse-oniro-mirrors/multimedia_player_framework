@@ -572,7 +572,9 @@ int32_t RingtonePlayerImpl::SetRingtonePlayerInterruptCallback(
 void RingtonePlayerImpl::NotifyEndofStreamEvent()
 {
     std::lock_guard<std::mutex> lock(playerMutex_);
-    ringtoneState_ = RingtoneState::STATE_STOPPED;
+    if (!loop_) {
+        ringtoneState_ = RingtoneState::STATE_STOPPED;
+    }
 }
 
 void RingtonePlayerImpl::NotifyInterruptEvent(const AudioStandard::InterruptEvent &interruptEvent)
