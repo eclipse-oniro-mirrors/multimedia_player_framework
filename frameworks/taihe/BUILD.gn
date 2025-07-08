@@ -44,7 +44,7 @@ copy_taihe_idl("copy_soundpool_taihe") {
 
 ohos_taihe("run_soundpool_taihe") {
   taihe_generated_file_path = "${taihe_generated_file_path_soundPool}"
-  deps = [ ":copy_soundpool_taihe" ]
+  deps = [ ":copy_media_taihe" ]
   outputs = [
     "$taihe_generated_file_path/src/soundPool.ani.cpp",
     "$taihe_generated_file_path/src/soundPool.abi.c",
