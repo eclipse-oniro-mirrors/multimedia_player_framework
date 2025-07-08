@@ -970,7 +970,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetInnerAudioBoxSelectedFromJson_001, 
 {
     Json::Value root;
     std::string content = "ghgh%^&%^$*^(}{^af&**)";
-    bool isInnerAudioBoxSelected = false;
+    bool isInnerAudioBoxSelected = true;
     screenCaptureServer_->GetBoxSelectedFromJson(root, content, "isInnerAudioBoxSelected", isInnerAudioBoxSelected);
     ASSERT_NE(screenCaptureServer_, nullptr);
     ASSERT_EQ(isInnerAudioBoxSelected, false);
@@ -990,7 +990,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetInnerAudioBoxSelectedFromJson_003, 
 {
     Json::Value root;
     std::string content = "{\"isInnerAudioBoxSelected\": \"abcd\"}";
-    bool isInnerAudioBoxSelected = false;
+    bool isInnerAudioBoxSelected = true;
     screenCaptureServer_->GetBoxSelectedFromJson(root, content, "isInnerAudioBoxSelected", isInnerAudioBoxSelected);
     ASSERT_NE(screenCaptureServer_, nullptr);
     ASSERT_EQ(isInnerAudioBoxSelected, false);
