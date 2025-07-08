@@ -1766,8 +1766,8 @@ napi_value SystemSoundManagerNapi::AddCustomizedTone(napi_env env, napi_callback
 void SystemSoundManagerNapi::AsyncAddCustomizedTone(napi_env env, void *data)
 {
     SystemSoundManagerAsyncContext *context = static_cast<SystemSoundManagerAsyncContext *>(data);
-    ParamsForAddCustomizedTone paramsForAddCustomizedTone =
-        { "", context->fd, context->length, context->offset, false };
+    ParamsForAddCustomizedTone paramsForAddCustomizedTone = { "", context->fd, context->length,
+        context->offset, false };
     if (context->objectInfo->sysSoundMgrClient_ == nullptr) {
         context->status = ERROR;
         context->errCode = NAPI_ERR_IO_ERROR;
@@ -1806,7 +1806,7 @@ void SystemSoundManagerNapi::DealErrorForAddCustomizedTone(std::string &uri, boo
     } else if (uri.empty()) {
         status = ERROR;
         errCode = NAPI_ERR_IO_ERROR;
-        errMessage = I/O error. Uri is empty, can not found.;
+        errMessage = "I/O error. Uri is empty, can not found.";
     } else if (uri == FILE_SIZE_EXCEEDS_LIMIT) {
         status = ERROR;
         errCode = ERROR_DATA_TOO_LARGE;
