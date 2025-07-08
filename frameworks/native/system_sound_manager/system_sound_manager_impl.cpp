@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1887,7 +1887,7 @@ void SystemSoundManagerImpl::GetCustomizedTone(const std::shared_ptr<ToneAttrs> 
 }
 
 int32_t SystemSoundManagerImpl::AddCustomizedTone(const std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
-    const std::shared_ptr<ToneAttrs> &toneAttrs)
+    const std::shared_ptr<ToneAttrs> &toneAttrs, int32_t &length)
 {
     MEDIA_LOGI("AddCustomizedTone: Start.");
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, ERROR, "Invalid dataShareHelper.");
@@ -1901,6 +1901,7 @@ int32_t SystemSoundManagerImpl::AddCustomizedTone(const std::shared_ptr<DataShar
     } else if (toneAttrs->GetMediaType() == ToneMediaType::MEDIA_TYPE_VID) {
         valuesBucket.Put(RINGTONE_COLUMN_MEDIA_TYPE, static_cast<int>(RINGTONE_MEDIA_TYPE_VIDEO));
     }
+    valuesBucket.Put(RINGTONE_COLUMN_SIZE, static_cast<int>(length));
     valuesBucket.Put(RINGTONE_COLUMN_MIME_TYPE, static_cast<string>(mimeType_));
     valuesBucket.Put(RINGTONE_COLUMN_SOURCE_TYPE, static_cast<int>(SOURCE_TYPE_CUSTOMISED));
     switch (category) {
@@ -1935,7 +1936,7 @@ int32_t SystemSoundManagerImpl::AddCustomizedTone(const std::shared_ptr<DataShar
 }
 
 bool SystemSoundManagerImpl::DeleteCustomizedTone(const std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
-    const std::shared_ptr<ToneAttrs> &toneAttrs)
+    const std::shared_ptr<ToneAttrs> &toneAttrs, int32_t &length)
 {
     MEDIA_LOGI("DeleteCustomizedTone: Start.");
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, ERROR, "Invalid dataShareHelper.");
@@ -1949,6 +1950,7 @@ bool SystemSoundManagerImpl::DeleteCustomizedTone(const std::shared_ptr<DataShar
     } else if (toneAttrs->GetMediaType() == ToneMediaType::MEDIA_TYPE_VID) {
         predicates.EqualTo(RINGTONE_COLUMN_MEDIA_TYPE, static_cast<int>(RINGTONE_MEDIA_TYPE_VIDEO));
     }
+    predicates.EqualTo(RINGTONE_COLUMN_SIZE, static_cast<int>(length));
     predicates.EqualTo(RINGTONE_COLUMN_MIME_TYPE, static_cast<string>(mimeType_));
     predicates.EqualTo(RINGTONE_COLUMN_SOURCE_TYPE, static_cast<int>(SOURCE_TYPE_CUSTOMISED));
     switch (category) {
@@ -2040,11 +2042,13 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(
         MediaTrace::TraceEnd("SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset", FAKE_POINTER(this));
         return "";
     }
-    int32_t sert = AddCustomizedTone(dataShareHelper, toneAttrs);
+    int32_t sert = AddCustomizedTone(dataShareHelper, toneAttrs, paramsForAddCustomizedTone.length);
     if (sert < 0) {
         SendCustomizedToneEvent(true, toneAttrs, paramsForAddCustomizedTone.length, mimeType_, ERROR);
         MediaTrace::TraceEnd("SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset", FAKE_POINTER(this));
-        return DealAddCustomizedToneError(sert, paramsForAddCustomizedTone, toneAttrs, dataShareHelper);
+        std::string result = DealAddCustomizedToneError(sert, paramsForAddCustomizedTone, toneAttrs, dataShareHelper);
+        dataShareHelper->Release();
+        return result;
     }
     std::string dstPath = RINGTONE_PATH_URI + RINGTONE_SLASH_CHAR + to_string(sert);
     paramsForAddCustomizedTone = { dstPath, srcFd, paramsForAddCustomizedTone.length };
@@ -2059,24 +2063,27 @@ std::string SystemSoundManagerImpl::DealAddCustomizedToneError(int32_t &sert,
         return FILE_COUNT_EXCEEDS_LIMIT;
     } else if (sert == NOT_ENOUGH_ROM) {
         return ROM_IS_INSUFFICIENT;
-    } else if (sert == FILE_EXIST) {
-        std::tuple<string, int64_t, SystemSoundError> resultOfOpen =
-            std::make_tuple(toneAttrs->GetUri(), INVALID_FD, ERROR_IO);
-        OpenOneFile(dataShareHelper, toneAttrs->GetUri(), resultOfOpen);
-        int64_t srcFd = std::get<PARAM1>(resultOfOpen);
-        off_t fileSize = 0;
-        if (srcFd < 0) {
-            MEDIA_LOGE("DealAddCustomizedToneError: open file error!");
-        } else {
-            fileSize = lseek(srcFd, 0, SEEK_END);
-            close(srcFd);
+    } else if (sert == FILE_EXIST && toneAttrs->GetMediaType() == ToneMediaType::MEDIA_TYPE_VID) {
+        DataShare::DatashareBusinessError businessError;
+        DataShare::DataSharePredicates queryPredicates;
+        queryPredicates.EqualTo(RINGTONE_COLUMN_TITLE, toneAttrs->GetTitle());
+        queryPredicates.EqualTo(RINGTONE_COLUMN_SIZE, paramsForAddCustomizedTone.length);
+        if (toneAttrs->GetCategory() == TONE_CATEGORY_RINGTONE) {
+            queryPredicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, TONE_TYPE_RINGTONE);
+        } else if (toneAttrs->GetCategory() == TONE_CATEGORY_CONTACTS) {
+            queryPredicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, TONE_TYPE_CONTACTS);
         }
-        if (fileSize != paramsForAddCustomizedTone.length) {
+        auto resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
+        auto results = make_unique<RingtoneFetchResult>(move(resultSet));
+        unique_ptr ringtoneAsset = results->GetFirstObject();
+        resultSet == nullptr ? : resultSet->Close();
+        if (ringtoneAsset == nullptr) {
             MEDIA_LOGE("DealAddCustomizedToneError: duplicate file!");
             paramsForAddCustomizedTone.duplicateFile = true;
+            return toneAttrs->GetUri();
+        } else {
+            return ringtoneAsset->GetPath();
         }
-        dataShareHelper->Release();
-        return toneAttrs->GetUri();
     }
     return "";
 }
@@ -2090,7 +2097,7 @@ std::string SystemSoundManagerImpl::CustomizedToneWriteFile(const std::shared_pt
     int32_t dstFd = dataShareHelper->OpenFile(ofUri, "rw");
     if (dstFd < 0) {
         MEDIA_LOGE("CustomizedToneWriteFile: Open error is %{public}s", strerror(errno));
-        DeleteCustomizedTone(dataShareHelper, toneAttrs);
+        DeleteCustomizedTone(dataShareHelper, toneAttrs, paramsForAddCustomizedTone.length);
         dataShareHelper->Release();
         SendCustomizedToneEvent(true, toneAttrs, paramsForAddCustomizedTone.length, mimeType_, ERROR);
         MediaTrace::TraceEnd("SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset", FAKE_POINTER(this));

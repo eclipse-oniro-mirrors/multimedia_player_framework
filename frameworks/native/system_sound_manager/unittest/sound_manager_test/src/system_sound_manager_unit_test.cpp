@@ -1044,11 +1044,11 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_AddCustomizedToneByFdAndOf
 HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_CustomizedToneWriteFile_001, TestSize.Level2)
 {
     AccessToken token;
-    std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared();
-    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    std::shared_ptr toneAttrs_ = std::make_shared("default",
+    std::shared_ptr<ToneAttrs> toneAttrs_ = std::make_shared<ToneAttrs>("default",
         "default", "default", CUSTOMISED, TONE_CATEGORY_RINGTONE);
     std::string audioUri = "/data/test/ringtone.ogg";
     int64_t srcFd = open(audioUri.c_str(), O_RDONLY);
@@ -1058,23 +1058,23 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_CustomizedToneWriteFile_00
     toneAttrs_->SetFileName("06172.mp4");
     ParamsForAddCustomizedTone paramsForAddCustomizedTone = { "", srcFd, 1024, 0, false };
     res = systemSoundManager_->CustomizedToneWriteFile(context_, dataShareHelper, toneAttrs_,
-    paramsForAddCustomizedTone);
+        paramsForAddCustomizedTone);
     EXPECT_EQ(res.empty(), true);
 }
-/**
 
-@tc.name : Test DealAddCustomizedToneError API
-@tc.number: Media_SoundManager_AddCustomizedToneByFdAndOffset_005
-@tc.desc : Test DealAddCustomizedToneError interface. Returns attributes of the default system tone.
-*/
+/**
+ * @tc.name : Test DealAddCustomizedToneError API
+ * @tc.number: Media_SoundManager_AddCustomizedToneByFdAndOffset_005
+ * @tc.desc : Test DealAddCustomizedToneError interface. Returns attributes of the default system tone.
+ */
 HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_DealAddCustomizedToneError_001, TestSize.Level2)
 {
     AccessToken token;
-    std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared();
-    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    std::shared_ptr toneAttrs_ = std::make_shared("default",
+    std::shared_ptr<ToneAttrs> toneAttrs_ = std::make_shared<ToneAttrs>("default",
         "default", "default", CUSTOMISED, TONE_CATEGORY_RINGTONE);
     std::string audioUri = "/data/test/ringtone.ogg";
     int64_t srcFd = open(audioUri.c_str(), O_RDONLY);
@@ -1085,19 +1085,23 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_DealAddCustomizedToneError
     ParamsForAddCustomizedTone paramsForAddCustomizedTone = { "", srcFd, 1024, 0, false };
     int32_t sert = -235;
     res = systemSoundManager_->DealAddCustomizedToneError(sert, paramsForAddCustomizedTone, toneAttrs_,
-    dataShareHelper);
+        dataShareHelper);
     EXPECT_EQ(res, FILE_COUNT_EXCEEDS_LIMIT);
     sert = -234;
     res = systemSoundManager_->DealAddCustomizedToneError(sert, paramsForAddCustomizedTone, toneAttrs_,
-    dataShareHelper);
+        dataShareHelper);
     EXPECT_EQ(res, ROM_IS_INSUFFICIENT);
     sert = -17;
     res = systemSoundManager_->DealAddCustomizedToneError(sert, paramsForAddCustomizedTone, toneAttrs_,
     dataShareHelper);
+    EXPECT_EQ(res, "/data/storage/el2/base/files/Ringtone/ringtones/06172.mp4");
+    res = systemSoundManager_->DealAddCustomizedToneError(sert, paramsForAddCustomizedTone, toneAttrs_,
+        dataShareHelper);
+    toneAttrs_->SetCategory(TONE_CATEGORY_CONTACTS);
+    res = systemSoundManager_->DealAddCustomizedToneError(sert, paramsForAddCustomizedTone, toneAttrs_,
+        dataShareHelper);
     EXPECT_EQ(res, "default");
 }
-
-
 
 /**
  * @tc.name  : Test AddCustomizedToneCheck API
@@ -1916,7 +1920,8 @@ HWTEST(SystemSoundManagerUnitTest, AddCustomizedTone_ShouldReturnError_WhenDataS
 
     std::shared_ptr<ToneAttrs> toneAttrs =
         std::make_shared<ToneAttrs>("default", "default", "default", CUSTOMISED, TONE_CATEGORY_RINGTONE);
-    EXPECT_EQ(systemSoundManagerImpl_->AddCustomizedTone(nullptr, toneAttrs), ERROR);
+    int32_t length = 0;
+    EXPECT_EQ(systemSoundManagerImpl_->AddCustomizedTone(nullptr, toneAttrs, length), ERROR);
 }
 
 /**
@@ -1935,15 +1940,16 @@ HWTEST(SystemSoundManagerUnitTest, AddCustomizedTone_ShouldReturnSuccess_WhenDat
 
     std::shared_ptr<ToneAttrs> toneAttrs =
         std::make_shared<ToneAttrs>("default", "default", "default", CUSTOMISED, TONE_CATEGORY_RINGTONE);
-    EXPECT_NE(systemSoundManagerImpl_->AddCustomizedTone(dataShareHelper, toneAttrs), SUCCESS);
+    int32_t length = 0;
+    EXPECT_NE(systemSoundManagerImpl_->AddCustomizedTone(dataShareHelper, toneAttrs, length), SUCCESS);
     toneAttrs->SetCategory(TONE_CATEGORY_TEXT_MESSAGE);
-    EXPECT_NE(systemSoundManagerImpl_->AddCustomizedTone(dataShareHelper, toneAttrs), SUCCESS);
+    EXPECT_NE(systemSoundManagerImpl_->AddCustomizedTone(dataShareHelper, toneAttrs, length), SUCCESS);
     toneAttrs->SetCategory(TONE_CATEGORY_NOTIFICATION);
-    EXPECT_NE(systemSoundManagerImpl_->AddCustomizedTone(dataShareHelper, toneAttrs), SUCCESS);
+    EXPECT_NE(systemSoundManagerImpl_->AddCustomizedTone(dataShareHelper, toneAttrs, length), SUCCESS);
     toneAttrs->SetCategory(TONE_CATEGORY_ALARM);
-    EXPECT_NE(systemSoundManagerImpl_->AddCustomizedTone(dataShareHelper, toneAttrs), SUCCESS);
+    EXPECT_NE(systemSoundManagerImpl_->AddCustomizedTone(dataShareHelper, toneAttrs, length), SUCCESS);
     toneAttrs->SetCategory(TONE_CATEGORY_DEFAULT);
-    EXPECT_NE(systemSoundManagerImpl_->AddCustomizedTone(dataShareHelper, toneAttrs), SUCCESS);
+    EXPECT_NE(systemSoundManagerImpl_->AddCustomizedTone(dataShareHelper, toneAttrs, length), SUCCESS);
 }
 
 /**
@@ -1967,11 +1973,14 @@ HWTEST(SystemSoundManagerUnitTest, AddCustomizedToneByFdAndOffset_TypeError_Test
     int32_t length = 1024;
     toneAttrs_->SetTitle("06172");
     toneAttrs_->SetFileName("06172");
-    EXPECT_EQ(
-        systemSoundManager_->AddCustomizedToneByFdAndOffset(context_, toneAttrs_, fd, offset, length), "TYPEERROR");
+    ParamsForAddCustomizedTone paramsForAddCustomizedTone = { "", fd, length, offset, false };
+    std::string result;
+    result = systemSoundManager_->AddCustomizedToneByFdAndOffset(context_, toneAttrs_, paramsForAddCustomizedTone);
+    EXPECT_EQ(result, "TYPEERROR");
     fd = -1;
-    EXPECT_EQ(
-        systemSoundManager_->AddCustomizedToneByFdAndOffset(context_, toneAttrs_, fd, offset, length), "TYPEERROR");
+    paramsForAddCustomizedTone = { "", fd, length, offset, false };
+    result = systemSoundManager_->AddCustomizedToneByFdAndOffset(context_, toneAttrs_, paramsForAddCustomizedTone);
+    EXPECT_EQ(result, "TYPEERROR");
 }
 
 /**
