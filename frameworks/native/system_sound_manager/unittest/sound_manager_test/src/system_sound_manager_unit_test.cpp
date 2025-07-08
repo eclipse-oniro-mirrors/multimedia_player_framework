@@ -921,13 +921,13 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_AddCustomizedToneByFdAndOf
     toneAttrs_->SetTitle("06173");
     toneAttrs_->SetFileName("06173");
     paramsForAddCustomizedTone = { "", fd, 0, 10, false };
-    systemSoundManager_->AddCustomizedToneByFdAndOffset(context_, toneAttrs_, fd, 10, 0);
+    systemSoundManager_->AddCustomizedToneByFdAndOffset(context_, toneAttrs_, paramsForAddCustomizedTone);
     EXPECT_NE(systemSoundManager_, nullptr);
 
     toneAttrs_->SetTitle("06174");
     toneAttrs_->SetFileName("06174");
     paramsForAddCustomizedTone = { "", fd, 1, 10, false };
-    systemSoundManager_->AddCustomizedToneByFdAndOffset(context_, toneAttrs_, fd, 10, 1);
+    systemSoundManager_->AddCustomizedToneByFdAndOffset(context_, toneAttrs_, paramsForAddCustomizedTone);
     EXPECT_NE(systemSoundManager_, nullptr);
     systemSoundManager_->Close(fd);
 }
@@ -955,14 +955,15 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_AddCustomizedToneByFdAndOf
         fileName, uri, PRE_INSTALLED, TONE_CATEGORY_RINGTONE);
     std::string res;
     ParamsForAddCustomizedTone paramsForAddCustomizedTone = { "", 1, 0, 10, false };
-    res = systemSoundManager_->AddCustomizedToneByFdAndOffset(context_, paramsForAddCustomizedTone);
+    res = systemSoundManager_->AddCustomizedToneByFdAndOffset(context_, toneAttrs_, paramsForAddCustomizedTone);
     EXPECT_NE(systemSoundManager_, nullptr);
 
     int fd = systemSoundManager_->OpenAlarmTone(context_, uri);
-    systemSoundManager_->AddCustomizedToneByFdAndOffset(context_, toneAttrs_, fd, 10, 0);
+    paramsForAddCustomizedTone = { "", fd, 0, 10, false };
+    systemSoundManager_->AddCustomizedToneByFdAndOffset(context_, toneAttrs_, paramsForAddCustomizedTone);
     EXPECT_NE(systemSoundManager_, nullptr);
-
-    systemSoundManager_->AddCustomizedToneByFdAndOffset(context_, toneAttrs_, fd, 10, 1);
+    paramsForAddCustomizedTone = { "", fd, 1, 10, false };
+    systemSoundManager_->AddCustomizedToneByFdAndOffset(context_, toneAttrs_, paramsForAddCustomizedTone);
     EXPECT_NE(systemSoundManager_, nullptr);
     systemSoundManager_->Close(fd);
 }

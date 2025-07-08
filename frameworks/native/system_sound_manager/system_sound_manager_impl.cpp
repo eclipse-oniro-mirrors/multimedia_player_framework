@@ -2074,8 +2074,8 @@ std::string SystemSoundManagerImpl::DealAddCustomizedToneError(int32_t &sert,
             queryPredicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, TONE_TYPE_CONTACTS);
         }
         auto resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
-        auto results = make_unique<RingtoneFetchResult>(move(resultSet));
-        unique_ptr ringtoneAsset = results->GetFirstObject();
+        auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
+        unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
         resultSet == nullptr ? : resultSet->Close();
         if (ringtoneAsset == nullptr) {
             MEDIA_LOGE("DealAddCustomizedToneError: duplicate file!");
