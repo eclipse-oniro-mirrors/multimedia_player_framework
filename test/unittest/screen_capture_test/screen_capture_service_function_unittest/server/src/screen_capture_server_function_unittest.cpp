@@ -2641,11 +2641,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UserSelected_001, TestSize.Level2)
     selectionInfo.selectType = 0;
     selectionInfo.displayId = 0;
     screenCaptureServer_->NotifyUserSelected(selectionInfo);
-    EXPECT_EQ(selectionInfo.displayId, 0);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, UserSelected_002, TestSize.Level2)
-{
     screenCaptureServer_->displayScreenId_ = 0;
     screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
     screenCaptureServer_->PostStartScreenCaptureSuccessAction();
