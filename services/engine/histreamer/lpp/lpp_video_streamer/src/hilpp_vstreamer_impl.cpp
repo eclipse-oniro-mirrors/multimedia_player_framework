@@ -123,12 +123,8 @@ int32_t HiLppVideoStreamerImpl::SetObs(const std::weak_ptr<ILppVideoStreamerEngi
 
 int32_t HiLppVideoStreamerImpl::SetParameter(const Format &param)
 {
-    FALSE_RETURN_V_MSG(syncMgr_ != nullptr, MSERR_INVALID_OPERATION, "syncMgr_ nullptr");
-    std::map<std::string, std::string> parameters;
-    auto ret = syncMgr_->SetParameter(parameters);
-    FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "syncMgr_ SetParameter Failed!");
     FALSE_RETURN_V_MSG(vdec_ != nullptr, MSERR_INVALID_OPERATION, "vdec_ nullptr");
-    ret = vdec_->SetParameter(param);
+    auto ret = vdec_->SetParameter(param);
     FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "vdec_ SetParameter Failed!");
     return MSERR_OK;
 }
