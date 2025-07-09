@@ -360,19 +360,19 @@ HWTEST(RingtonePlayerUnitTest, Media_RingtonePlayer_018, TestSize.Level1)
     auto player = ringtonePlayerImpl_->audioHapticManager_->CreatePlayer(sourceId, options);
 
     ringtonePlayerImpl_->ringtoneState_ = STATE_RELEASED;
-    int32_t result = ringtonePlayerImpl_->SetRingtoneHapticsFeature(RingtoneHapticsFeature::GENTLE_HAPTICS);
+    int32_t result = ringtonePlayerImpl_->SetRingtoneHapticsFeature(RingtoneHapticsFeature::RINGTONE_GENTLE_HAPTICS);
     EXPECT_EQ(result, MSERR_INVALID_OPERATION);
 
     ringtonePlayerImpl_->ringtoneState_ = STATE_INVALID;
-    result = ringtonePlayerImpl_->SetRingtoneHapticsFeature(RingtoneHapticsFeature::GENTLE_HAPTICS);
+    result = ringtonePlayerImpl_->SetRingtoneHapticsFeature(RingtoneHapticsFeature::RINGTONE_GENTLE_HAPTICS);
     EXPECT_EQ(result, MSERR_INVALID_VAL);
 
     ringtonePlayerImpl_->player_ = player;
-    result = ringtonePlayerImpl_->SetRingtoneHapticsFeature(RingtoneHapticsFeature::GENTLE_HAPTICS);
+    result = ringtonePlayerImpl_->SetRingtoneHapticsFeature(RingtoneHapticsFeature::RINGTONE_GENTLE_HAPTICS);
     EXPECT_EQ(result, MSERR_INVALID_VAL);
 
     ringtonePlayerImpl_->ringtoneState_ = STATE_NEW;
-    result = ringtonePlayerImpl_->SetRingtoneHapticsFeature(RingtoneHapticsFeature::GENTLE_HAPTICS);
+    result = ringtonePlayerImpl_->SetRingtoneHapticsFeature(RingtoneHapticsFeature::RINGTONE_GENTLE_HAPTICS);
     EXPECT_EQ(result, ERR_OPERATE_NOT_ALLOWED);
 }
 }

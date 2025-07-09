@@ -49,7 +49,7 @@ enum class HapticStartupMode {
 };
 
 enum RingtoneHapticsFeature {
-    GENTLE_HAPTICS
+    RINGTONE_GENTLE_HAPTICS
 };
 
 class RingtonePlayer {
