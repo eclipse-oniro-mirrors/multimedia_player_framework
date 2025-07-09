@@ -343,5 +343,37 @@ HWTEST(RingtonePlayerUnitTest, Media_RingtonePlayer_017, TestSize.Level1)
     ringtonePlayerImpl_->NotifyEndofStreamEvent();
     EXPECT_EQ(ringtonePlayerImpl_->ringtoneState_, RingtoneState::STATE_RUNNING);
 }
+
+/**
+ * @tc.name  : Test MediaRingtonePlayer
+ * @tc.number: Media_RingtonePlayer_018
+ * @tc.desc  : Test SetRingtoneHapticsFeature. Returns set result.
+ */
+HWTEST(RingtonePlayerUnitTest, Media_RingtonePlayer_018, TestSize.Level1)
+{
+    auto context_ = std::make_shared<ContextImpl>();
+    auto sysSoundMgr = std::make_shared<SystemSoundManagerImpl>();
+    RingtoneType type = RINGTONE_TYPE_SIM_CARD_0;
+    auto ringtonePlayerImpl_ = std::make_shared<RingtonePlayerImpl>(context_, *sysSoundMgr, type);
+    int32_t sourceId = 1;
+    AudioHapticPlayerOptions options = {false, false};
+    auto player = ringtonePlayerImpl_->audioHapticManager_->CreatePlayer(sourceId, options);
+
+    ringtonePlayerImpl_->ringtoneState_ = STATE_RELEASED;
+    int32_t result = ringtonePlayerImpl_->SetRingtoneHapticsFeature(RingtoneHapticsFeature::GENTLE_HAPTICS);
+    EXPECT_EQ(result, MSERR_INVALID_OPERATION);
+
+    ringtonePlayerImpl_->ringtoneState_ = STATE_INVALID;
+    result = ringtonePlayerImpl_->SetRingtoneHapticsFeature(RingtoneHapticsFeature::GENTLE_HAPTICS);
+    EXPECT_EQ(result, MSERR_INVALID_VAL);
+
+    ringtonePlayerImpl_->player_ = player;
+    result = ringtonePlayerImpl_->SetRingtoneHapticsFeature(RingtoneHapticsFeature::GENTLE_HAPTICS);
+    EXPECT_EQ(result, MSERR_INVALID_VAL);
+
+    ringtonePlayerImpl_->ringtoneState_ = STATE_NEW;
+    result = ringtonePlayerImpl_->SetRingtoneHapticsFeature(RingtoneHapticsFeature::GENTLE_HAPTICS);
+    EXPECT_EQ(result, ERR_OPERATE_NOT_ALLOWED);
+}
 }
 }
