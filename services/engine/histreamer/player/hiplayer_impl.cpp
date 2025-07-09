@@ -1094,6 +1094,11 @@ int32_t HiPlayerImpl::Stop()
     callbackLooper_.StopReportMediaProgress();
     StopFlvCheckLiveDelayTime();
     callbackLooper_.StopCollectMaxAmplitude();
+    if (draggingPlayerAgent_ != nullptr) {
+        draggingPlayerAgent_->Release();
+        draggingPlayerAgent_ = nullptr;
+    }
+
     // close demuxer first to avoid concurrent problem
     auto ret = Status::ERROR_UNKNOWN;
     if (pipeline_ != nullptr) {
