@@ -597,7 +597,7 @@ int32_t RingtonePlayerImpl::SetRingtoneHapticsFeature(const RingtoneHapticsFeatu
 
     HapticsFeature hapticsFeature = static_cast<HapticsFeature>(static_cast<int>(feature));
     int32_t ret = player_->SetHapticsFeature(hapticsFeature);
-    CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, ret, "SetRingtoneHapticsFeature error");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetRingtoneHapticsFeature error");
     
     return ret;
 }
