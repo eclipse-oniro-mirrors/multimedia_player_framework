@@ -23,7 +23,6 @@
 #include "ability_runtime/context/context.h"
 #include "uri.h"
 #include "want.h"
-
 #include "audio_utils.h"
 #include "access_token.h"
 #include <iostream>
@@ -56,13 +55,6 @@ struct DatabaseTool {
     bool isInitialized = false;
     bool isProxy = false;
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = nullptr;
-};
-
-struct ParamsForWriteFile {
-    std::string dstPath;
-    off_t fileSize;
-    int32_t srcFd;
-    int32_t length;
 };
 
 class SystemSoundManagerImpl : public SystemSoundManager {
@@ -114,8 +106,7 @@ public:
     std::string AddCustomizedToneByFd(const std::shared_ptr<AbilityRuntime::Context> &context,
         const std::shared_ptr<ToneAttrs> &toneAttrs, const int32_t &fd) override;
     std::string AddCustomizedToneByFdAndOffset(const std::shared_ptr<AbilityRuntime::Context> &context,
-        const std::shared_ptr<ToneAttrs> &toneAttrs, const int32_t &fd, const int32_t &offset,
-        const int32_t &length) override;
+        const std::shared_ptr<ToneAttrs> &toneAttrs, ParamsForAddCustomizedTone &paramsForAddCustomizedTone) override;
     int32_t RemoveCustomizedTone(const std::shared_ptr<AbilityRuntime::Context> &context,
         const std::string &uri) override;
     std::vector<std::pair<std::string, SystemSoundError>> RemoveCustomizedToneList(
@@ -164,9 +155,12 @@ private:
     std::string OpenCustomAudioUri(const std::string &customAudioUri);
 
     int32_t AddCustomizedTone(const std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
-        const std::shared_ptr<ToneAttrs> &toneAttrs);
+        const std::shared_ptr<ToneAttrs> &toneAttrs, int32_t &length);
+    std::string DealAddCustomizedToneError(int32_t &sert,
+        ParamsForAddCustomizedTone &paramsForAddCustomizedTone, const std::shared_ptr<ToneAttrs> &toneAttrs,
+        std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper);
     bool DeleteCustomizedTone(const std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
-        const std::shared_ptr<ToneAttrs> &toneAttrs);
+        const std::shared_ptr<ToneAttrs> &toneAttrs, int32_t &length);
     int32_t WriteUriToDatabase(const std::string &key, const std::string &uri);
     std::string GetUriFromDatabase(const std::string &key);
     std::string GetKeyForDatabase(const std::string &systemSoundType, int32_t type);
@@ -239,14 +233,13 @@ private:
         std::string mimeType, int result);
     std::string CustomizedToneWriteFile(const std::shared_ptr<AbilityRuntime::Context> &context,
         std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper, const std::shared_ptr<ToneAttrs> &toneAttrs,
-        ParamsForWriteFile &paramsForWriteFile);
+        ParamsForAddCustomizedTone &paramsForAddCustomizedTone);
     void OpenOneFile(std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
         const std::string &uri, std::tuple<std::string, int64_t, SystemSoundError> &resultOfOpen);
     int32_t DoRemove(std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper, const std::string &uri,
         off_t fileSize);
     std::string GetBundleName();
-    std::string AddCustomizedToneCheck(const std::shared_ptr<ToneAttrs> &toneAttrs, const int32_t &fd,
-        off_t &fileSize);
+    std::string AddCustomizedToneCheck(const std::shared_ptr<ToneAttrs> &toneAttrs, const int32_t &length);
     void SetToneAttrs(std::shared_ptr<ToneAttrs> &toneAttrs, const std::unique_ptr<RingtoneAsset> &ringtoneAsset);
 
     std::string systemSoundPath_ = "";

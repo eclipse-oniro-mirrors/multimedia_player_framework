@@ -851,7 +851,8 @@ HWTEST(SystemSoundManagerUnitNextTest, AddCustomizedTone_001, TestSize.Level0)
 
     std::shared_ptr<ToneAttrs> toneAttrs = std::make_shared<ToneAttrs>(
         "test_tone", "test_file", "test_uri", ToneCustomizedType::CUSTOMISED, TONE_CATEGORY_CONTACTS);
-    int32_t result = systemSoundManagerImpl_->AddCustomizedTone(dataShareHelper, toneAttrs);
+    int32_t length = 0;
+    int32_t result = systemSoundManagerImpl_->AddCustomizedTone(dataShareHelper, toneAttrs, length);
     EXPECT_EQ(result, TONE_CATEGORY);
 }
 
@@ -872,7 +873,8 @@ HWTEST(SystemSoundManagerUnitNextTest, AddCustomizedTone_002, TestSize.Level0)
 
     std::shared_ptr<ToneAttrs> toneAttrs = std::make_shared<ToneAttrs>(
         "test_tone", "test_file", "test_uri", ToneCustomizedType::CUSTOMISED, TONE_CATEGORY_INVALID);
-    int32_t result = systemSoundManagerImpl_->AddCustomizedTone(dataShareHelper, toneAttrs);
+    int32_t length = 0;
+    int32_t result = systemSoundManagerImpl_->AddCustomizedTone(dataShareHelper, toneAttrs, length);
     EXPECT_EQ(result, TONE_CATEGORY);
 }
 
@@ -896,8 +898,9 @@ HWTEST(SystemSoundManagerUnitNextTest, AddCustomizedToneByFdAndOffset_001, TestS
     int32_t fd = 123;
     int32_t offset = -1;
     int32_t length = 1024;
+    ParamsForAddCustomizedTone paramsForAddCustomizedTone = { "", fd, length, offset, false };
     std::string result = systemSoundManagerImpl_->AddCustomizedToneByFdAndOffset(context,
-        toneAttrs, fd, offset, length);
+        toneAttrs, paramsForAddCustomizedTone);
     EXPECT_EQ(result, "");
 }
 

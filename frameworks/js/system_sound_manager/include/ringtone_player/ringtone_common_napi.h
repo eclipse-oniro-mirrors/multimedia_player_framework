@@ -44,6 +44,7 @@ const std::string NAPI_ERR_INPUT_INVALID_INFO = "input parameter type or number 
 const std::string NAPI_ERR_URI_ERROR_INFO = "Tone type mismatch";
 const std::string NAPI_ERR_OPERATE_NOT_ALLOWED_INFO = "Operation is not allowed";
 const std::string NAPI_ERR_IO_ERROR_INFO = "I/O error";
+const std::string NAPI_ERR_IO_ERROR_DUPLICATE_FILE_NAME = "I/O error, duplicate file name";
 const std::string NAPI_ERR_INVALID_PARAM_INFO = "invalid parameter";
 const std::string NAPI_ERR_NO_MEMORY_INFO = "allocate memory failed";
 const std::string NAPI_ERR_SYSTEM_INFO = "system error";
