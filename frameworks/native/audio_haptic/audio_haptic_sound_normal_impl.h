@@ -48,6 +48,7 @@ public:
 private:
     int32_t LoadAVPlayer();
     int32_t ResetAVPlayer();
+    int32_t ReleaseSoundInternal();
     void ReleaseAVPlayer();
     int32_t OpenAudioSource();
 
