@@ -51,7 +51,7 @@ int32_t ScreenCaptureControllerImpl::GetAVScreenCaptureConfigurableParameters(
     MEDIA_LOGI("ScreenCaptureController::GetAVScreenCaptureConfigurableParameters start");
     std::shared_ptr<IScreenCaptureController> controllerClient =
         MediaServiceFactory::GetInstance().CreateScreenCaptureControllerClient();
-    CHECK_AND_RETURN_LOG(controllerClient != nullptr, MSREE_UNKNOWN,
+    CHECK_AND_RETURN_RET_LOG(controllerClient != nullptr, MSERR_UNKNOWN,
         "failed to CreateScreenCaptureControllerClient");
     int32_t ret = controllerClient->GetAVScreenCaptureConfigurableParameters(sessionId, resultStr);
     MEDIA_LOGI("ScreenCaptureController::GetAVScreenCaptureConfigurableParameters Report result: %{public}d", ret);

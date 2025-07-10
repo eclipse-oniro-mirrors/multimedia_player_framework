@@ -108,7 +108,7 @@ ohos_prebuilt_etc("screencapture_config_dac") {
 }
 
 ohos_prebuilt_etc("screen_capture_capsule_stop_live2_image") {
-  source = "image/capsult_stop_live2.svg"
+  source = "image/capsule_stop_live2.svg"
   subsystem_name = "multimedia"
   relative_install_dir = "screencapture"
   part_name = "player_framework"

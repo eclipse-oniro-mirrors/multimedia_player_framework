@@ -4226,16 +4226,16 @@ void ScreenCaptureServer::SystemPrivacyProtected(ScreenId& virtualScreenId, bool
 
 void ScreenCaptureServer::AppPrivacyProtected(ScreenId& virtualScreenId, bool appPrivacyProtectionSwitch)
 {
-    std::vector<ScreenId> screenIds;
-    screenIds.push_back(virtualScreenId);
-    MEDIA_LOGI("SystemPrivacyProtected virtualScreenId_: %{public}lu",
-        virtualScreenId);
-    auto ret = ScreenManager::GetInstance().SetScreenSkipProtectedWindow(screenIds, appPrivacyProtectionSwitch);
-    if (ret == DMError::DM_OK || ret == DMError::DM_ERROR_DEVICE_NOT_SUPPORT) {
-        MEDIA_LOGI("SystemPrivacyProtected SetScreenSkipProtectedWindow success");
-    } else {
-        MEDIA_LOGI("SystemPrivacyProtected SetScreenSkipProtectedWindow failed, ret: %{public}d", ret);
-    }
+    // std::vector<ScreenId> screenIds;
+    // screenIds.push_back(virtualScreenId);
+    // MEDIA_LOGI("SystemPrivacyProtected virtualScreenId_: %{public}lu",
+    //     virtualScreenId);
+    // auto ret = ScreenManager::GetInstance().SetScreenSkipProtectedWindow(screenIds, appPrivacyProtectionSwitch);
+    // if (ret == DMError::DM_OK || ret == DMError::DM_ERROR_DEVICE_NOT_SUPPORT) {
+    //     MEDIA_LOGI("SystemPrivacyProtected SetScreenSkipProtectedWindow success");
+    // } else {
+    //     MEDIA_LOGI("SystemPrivacyProtected SetScreenSkipProtectedWindow failed, ret: %{public}d", ret);
+    // }
     
 }
 

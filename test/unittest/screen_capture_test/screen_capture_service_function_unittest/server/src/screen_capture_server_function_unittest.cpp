@@ -2655,5 +2655,171 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetVirtualScreenAutoRotation_001, Test
     screenCaptureServer_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
     EXPECT_EQ(screenCaptureServer_->SetVirtualScreenAutoRotation(), MSERR_OK);
 }
+
+HWTEST_F(ScreenCaptureServerFunctionTest, GetValueFromJson_001, TestSize.Level2)
+{
+    Json::Value root;
+    std::string content = R"({"isEnable": "true"})";
+    std::strinf key = "isEnable";
+    bool value = false;
+    screenCaptureServer_->GetValueFromJson(root, content, key, value);
+    EXPECT_EQ(value, true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, GetValueFromJson_002, TestSize.Level2)
+{
+    Json::Value root;
+    std::string content = R"({"isEnable": "true"})";
+    std::strinf key = "Enable";
+    bool value = false;
+    screenCaptureServer_->GetValueFromJson(root, content, key, value);
+    EXPECT_EQ(value, false);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, GetValueFromJson_003, TestSize.Level2)
+{
+    Json::Value root;
+    std::string content = "";
+    std::strinf key = "Enable";
+    bool value = false;
+    screenCaptureServer_->GetValueFromJson(root, content, key, value);
+    EXPECT_EQ(value, false);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, GetValueFromJson_004, TestSize.Level2)
+{
+    Json::Value root;
+    std::string content = R"({"isEnable": "true"})";
+    std::strinf key = "isEnable";
+    bool value = false;
+    screenCaptureServer_->GetValueFromJson(root, content, key, value);
+    EXPECT_EQ(value, false);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SystemPrivacyProtected_001, TestSize.Level2)
+{
+    ScreenId virtualScreenId = 1;
+    bool systemPrivacyProtectionSwitch = true;
+    screenCaptureServer_->SystemPrivacyProtected(virtualScreenId, systemPrivacyProtectionSwitch);
+    EXPECT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::CREATED);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, GetLocalLiveViewContent_001, TestSize.Level2)
+{
+    std::string callingLabel_ = "TestApp";
+    screenCaptureServer_->callingLabel_ = callingLabel_;
+    auto result = screenCaptureServer_->GetLocalLiveViewContent();
+    std::string expectedTitle = "\"TestApp\" 正在使用屏幕";
+    EXPECT_EQ(result->GetText(), expectedTitle);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, GetLocalLiveViewContent_002, TestSize.Level2)
+{
+    std::string callingLabel_ = "TestApp";
+    screenCaptureServer_->callingLabel_ = callingLabel_;
+    screenCaptureServer_->SetDataType(DataType::ORIGINAL_STREAM);
+    auto result = screenCaptureServer_->GetLocalLiveViewContent();
+    std::string expectedTitle = "\"TestApp\" 正在使用屏幕";
+    EXPECT_EQ(result->GetTitle(), expectedTitle);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, GetLocalLiveViewContent_003, TestSize.Level2)
+{
+    std::string callingLabel_ = "TestApp";
+    screenCaptureServer_->callingLabel_ = callingLabel_;
+    screenCaptureServer_->systemPrivacyProtectionSwitch_ = true;
+    screenCaptureServer_->SetDataType(DataType::ORIGINAL_STREAM);
+    auto result = screenCaptureServer_->GetLocalLiveViewContent();
+    std::string expectedTitle = "\"TestApp\" 正在使用屏幕";
+    EXPECT_EQ(result->GetTitle(), expectedTitle);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, HandleStreamDataCase_001, TestSize.Level2)
+{
+    Json::Value root;
+    std::string content = R"(
+    {
+        "stopRecording": "true",
+        "appPrivacyProtectionSwitch": "true",
+        "systemPrivacyProtectionSwitch": "true"
+    }
+    )";
+    int32_t result = screenCaptureServer_->HandleStreamDataCase(root, content, screenCaptureServer_);
+    EXPECT_EQ(result, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, HandleStreamDataCase_002, TestSize.Level2)
+{
+    Json::Value root;
+    std::string content = R"(
+    {
+        "stopRecording": "false",
+        "appPrivacyProtectionSwitch": "true",
+        "systemPrivacyProtectionSwitch": "true"
+    }
+    )";
+    int32_t result = screenCaptureServer_->HandleStreamDataCase(root, content, screenCaptureServer_);
+    EXPECT_EQ(result, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, HandleStreamDataCase_003, TestSize.Level2)
+{
+    Json::Value root;
+    std::string content = R"(
+    {
+        "stopRecording": "false",
+        "appPrivacyProtectionSwitch": "true",
+        "systemPrivacyProtectionSwitch": "false"
+    }
+    )";
+    int32_t result = screenCaptureServer_->HandleStreamDataCase(root, content, screenCaptureServer_);
+    EXPECT_EQ(result, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, HandleStreamDataCase_004, TestSize.Level2)
+{
+    Json::Value root;
+    std::string content = R"(
+    {
+        "stopRecording": "false",
+        "appPrivacyProtectionSwitch": "false",
+        "systemPrivacyProtectionSwitch": "true"
+    }
+    )";
+    int32_t result = screenCaptureServer_->HandleStreamDataCase(root, content, screenCaptureServer_);
+    EXPECT_EQ(result, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, HandleStreamDataCase_005, TestSize.Level2)
+{
+    Json::Value root;
+    std::string content = R"(
+    {
+        "stopRecording": "false",
+        "appPrivacyProtectionSwitch": "false",
+        "systemPrivacyProtectionSwitch": "false"
+    }
+    )";
+    int32_t result = screenCaptureServer_->HandleStreamDataCase(root, content, screenCaptureServer_);
+    EXPECT_EQ(result, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, UpdateMicrophoneEnabled_001, TestSize.Level2)
+{
+    screenCaptureServer_->SetDataType(DataType::ORIGINAL_STREAM);
+    screenCaptureServer_->StartNotification();
+    screenCaptureServer_->isSystemUI2_ = true;
+    screenCaptureServer_->UpdateMicrophoneEnabled();
+    EXPECT_EQ(screenCaptureServer_->isSystemUI2_, true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, UpdateMicrophoneEnabled_002, TestSize.Level2)
+{
+    screenCaptureServer_->SetDataType(DataType::ORIGINAL_STREAM);
+    screenCaptureServer_->StartNotification();
+    screenCaptureServer_->isSystemUI2_ = false;
+    screenCaptureServer_->UpdateMicrophoneEnabled();
+    EXPECT_EQ(screenCaptureServer_->isSystemUI2_, false);
+}
 } // Media
 } // OHOS
