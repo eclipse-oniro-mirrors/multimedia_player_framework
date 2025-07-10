@@ -75,6 +75,29 @@ int32_t ScreenCaptureControllerProxy::ReportAVScreenCaptureUserChoice(int32_t se
     return reply.ReadInt32();
 }
 
+int32_t ScreenCaptureControllerProxy::GetAVScreenCaptureConfigurableParameters(int32_t sessionId,
+    std::string &resultStr)
+{
+    MEDIA_LOGI("ScreenCaptureControllerProxy::GetAVScreenCaptureConfigurableParameters start");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureControllerProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    token = data.WriteInt32(sessionId);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write sessionId!");
+
+    int error = Remote()->SendRequest(GET_CONFIG_PARAM, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "GetAVScreenCaptureConfigurableParameters failed, error: %{public}d", error);
+    int ret = reply.ReadInt32();
+    if (ret == MSERR_OK) {
+        resultStr = reply.ReadString();
+    }
+    return ret;
+}
 
 } // namespace Media
 } // namespace OHOS

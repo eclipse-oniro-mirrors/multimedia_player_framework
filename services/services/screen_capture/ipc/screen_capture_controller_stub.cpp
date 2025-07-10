@@ -57,6 +57,8 @@ int32_t ScreenCaptureControllerStub::Init()
         "failed to create screenCaptureControllerServer Service");
     screenCaptureControllerStubFuncs_[REPORT_USER_CHOICE] =
         &ScreenCaptureControllerStub::ReportAVScreenCaptureUserChoice;
+    screenCaptureControllerStubFuncs_[GET_CONFIG_PARAM] =
+        &ScreenCaptureControllerStub::GetAVScreenCaptureConfigurableParameters;
     screenCaptureControllerStubFuncs_[DESTROY] = &ScreenCaptureControllerStub::DestroyStub;
 
     return MSERR_OK;
@@ -128,6 +130,37 @@ int32_t ScreenCaptureControllerStub::ReportAVScreenCaptureUserChoice(MessageParc
     std::string choice = data.ReadString();
     int32_t ret = ReportAVScreenCaptureUserChoice(sessionId, choice);
     reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureControllerStub::GetAVScreenCaptureConfigurableParameters(int32_t sessionId, std::string &resultStr)
+{
+    MEDIA_LOGI("ScreenCaptureControllerStub::GetAVScreenCaptureConfigurableParameters start 2");
+    CHECK_AND_RETURN_RET_LOG(screenCaptureControllerServer_ != nullptr, false,
+        "screen capture controller server is nullptr");
+    int32_t appUid = IPCSkeleton::GetCallingUid();
+    std::string appName = GetClientBundleName(appUid);
+    if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
+            .compare(appName) != 0) {
+        MEDIA_LOGE("ScreenCaptureControllerStub called by app name %{public}s", appName.c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+    return screenCaptureControllerServer_->GetAVScreenCaptureConfigurableParameters(sessionId, resultStr);
+}
+
+int32_t ScreenCaptureControllerStub::GetAVScreenCaptureConfigurableParameters(MessageParcel &data, MessageParcel &reply)
+{
+    MEDIA_LOGI("ScreenCaptureControllerStub::GetAVScreenCaptureConfigurableParameters start 1");
+    CHECK_AND_RETURN_RET_LOG(screenCaptureControllerServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture controller server is nullptr");
+    (void)data;
+    int32_t sessionId = data.ReadInt32();
+    std::string resultStr;
+    int32_t ret = GetAVScreenCaptureConfigurableParameters(sessionId, resultStr);
+    MEDIA_LOGI("ScreenCaptureControllerStub::GetAVScreenCaptureConfigurableParameters start 1 resultStr: %{public}s",
+        resultStr.c_str());
+    reply.WriteInt32(ret);
+    reply.WriteString(resultStr);
     return MSERR_OK;
 }
 

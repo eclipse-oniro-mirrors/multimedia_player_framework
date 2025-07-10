@@ -20,6 +20,8 @@
 #include "media_log.h"
 #ifndef CROSS_PLATFORM
 #include "display_manager.h"
+#include "media_errors.h"
+#include "recorder_napi_utils.h"
 #endif
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "AVScreenCaptureNapi"};
@@ -49,7 +51,9 @@ napi_value AVScreenCaptureNapi::Init(napi_env env, napi_value exports)
 {
     napi_property_descriptor staticProperty[] = {
         DECLARE_NAPI_STATIC_FUNCTION("createAVScreenCaptureRecorder", JsCreateAVScreenRecorder),
-        DECLARE_NAPI_STATIC_FUNCTION("reportAVScreenCaptureUserChoice", JsReportAVScreenCaptureUserChoice)
+        DECLARE_NAPI_STATIC_FUNCTION("reportAVScreenCaptureUserChoice", JsReportAVScreenCaptureUserChoice),
+        DECLARE_NAPI_STATIC_FUNCTION("getAVScreenCaptureConfigurableParameters",
+            JsGetAVScreenCaptureConfigurableParameters)
     };
 
     napi_property_descriptor properties[] = {
@@ -258,6 +262,54 @@ napi_value AVScreenCaptureNapi::JsReportAVScreenCaptureUserChoice(napi_env env, 
     NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     asyncCtx.release();
 
+    MEDIA_LOGI("Js %{public}s End", opt.c_str());
+    return result;
+}
+
+napi_value AVScreenCaptureNapi::JsGetAVScreenCaptureConfigurableParameters(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVScreenCapture::JsGetAVScreenCaptureConfigurableParameters");
+    const std::string &opt = AVScreenCapturegOpt::GET_CONFIG_PARAMS;
+    MEDIA_LOGI("Js %{public}s Start", opt.c_str());
+
+    const int32_t maxParam = 1;
+    size_t argCount = maxParam;
+    napi_value args[maxParam] = { nullptr };
+    napi_value result = nullptr;
+    auto asyncCtx = std::make_unique<AVScreenCaptureAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+    napi_value jsThis = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, nullptr, "failed to napi_get_cb_info");
+    MEDIA_LOGI("argCount %{public}zu", argCount);
+    if (argCount < maxParam) {
+        CommonNapi::ThrowError(env, MSERR_EXT_API9_PERMISSION_DENIED, "parameter missing");
+    }
+    napi_valuetype valueType = napi_undefined;
+    if (napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
+        CommonNapi::ThrowError(env, MSERR_EXT_API9_PERMISSION_DENIED, "invalid parameter type");
+    }
+    int32_t sessionId;
+    status = napi_get_value_int32(env, args[0], &sessionId);
+    if (status != napi_ok) {
+        CommonNapi::ThrowError(env, MSERR_EXT_API9_PERMISSION_DENIED, "invalid parameter type");
+    }
+    if (!SystemPermission()) {
+        CommonNapi::ThrowError(env, MSERR_EXT_API9_PERMISSION_DENIED, "permission denied");
+    }
+    std::string resultStr = "";
+    asyncCtx->controller_ = ScreenCaptureControllerFactory::CreateScreenCaptureController();
+    if (asyncCtx->controller_ == nullptr) {
+        CommonNapi::ThrowError(env, MSERR_EXT_API9_PERMISSION_DENIED, "failed to create controller");
+    }
+    int32_t res = asyncCtx->controller_->GetAVScreenCaptureConfigurableParameters(sessionId, resultStr);
+    if (res != MSERR_OK) {
+        CommonNapi::ThrowError(env, MSERR_EXT_API20_SESSION_NOT_EXIST, "session dose not exist.");
+    }
+    napi_create_string_utf8(env, resultStr.c_str(), NAPI_AUTO_LENGTH, &result);
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
+    asyncCtx.release();
     MEDIA_LOGI("Js %{public}s End", opt.c_str());
     return result;
 }

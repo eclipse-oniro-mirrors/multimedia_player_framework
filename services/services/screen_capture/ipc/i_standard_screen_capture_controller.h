@@ -31,6 +31,7 @@ class IStandardScreenCaptureController : public IRemoteBroker {
 public:
     virtual ~IStandardScreenCaptureController() = default;
     virtual int32_t ReportAVScreenCaptureUserChoice(int32_t sessionId, std::string choice) = 0;
+    virtual int32_t GetAVScreenCaptureConfigurableParameters(int32_t sessionId, std::string &resultStr) = 0;
     virtual int32_t DestroyStub() = 0;
 
     /**
@@ -38,6 +39,7 @@ public:
      */
     enum ScreenCaptureControllerMsg {
         REPORT_USER_CHOICE,
+        GET_CONFIG_PARAM,
         DESTROY,
     };
 

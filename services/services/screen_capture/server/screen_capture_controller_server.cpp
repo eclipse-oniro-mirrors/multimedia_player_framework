@@ -56,5 +56,12 @@ int32_t ScreenCaptureControllerServer::ReportAVScreenCaptureUserChoice(int32_t s
     return ret;
 }
 
+int32_t ScreenCaptureControllerServer::GetAVScreenCaptureConfigurableParameters(int32_t sessionId,
+    std::string &resultStr)
+{
+    MEDIA_LOGI("ScreenCaptureControllerServer::GetAVScreenCaptureConfigurableParameters start");
+    int32_t ret = ScreenCaptureServer::GetAVScreenCaptureConfigurableParameters(sessionId, resultStr);
+    return ret;
+}
 } // namespace Media
 } // namespace OHOS
