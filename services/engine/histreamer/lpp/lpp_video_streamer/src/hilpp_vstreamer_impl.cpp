@@ -304,10 +304,7 @@ int32_t HiLppVideoStreamerImpl::Reset()
     FALSE_RETURN_V_MSG(syncMgr_ != nullptr, MSERR_INVALID_OPERATION, "syncMgr_ nullptr");
     FALSE_RETURN_V_MSG(dataMgr_ != nullptr, MSERR_INVALID_OPERATION, "dataMgr_ nullptr");
     FALSE_RETURN_V_MSG(surface_ != nullptr, MSERR_INVALID_OPERATION, "surface_ nullptr");
-    auto ret = vdec_->Release();
-    vdec_.reset();
-    FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "vdec_ Release failed");
-    ret = syncMgr_->Reset();
+    auto ret = syncMgr_->Reset();
     syncMgr_.reset();
     surface_->SetLppShareFd(shareBufferFd_, false);
     std::mutex surfaceBufferMutex;
