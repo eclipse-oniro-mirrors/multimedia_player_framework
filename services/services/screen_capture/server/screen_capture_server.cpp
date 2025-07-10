@@ -3480,7 +3480,11 @@ int32_t ScreenCaptureServer::SetCanvasRotationInner()
     CHECK_AND_RETURN_RET_LOG(virtualScreenId_ != SCREEN_ID_INVALID, MSERR_INVALID_VAL,
                              "SetCanvasRotation failed virtual screen not init");
     auto ret = ScreenManager::GetInstance().SetVirtualMirrorScreenCanvasRotation(virtualScreenId_, canvasRotation_);
-    CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNSUPPORT,
+    if (ret == DMError::DM_ERROR_DEVICE_NOT_SUPPORT) {
+        MEDIA_LOGE("SetVirtualMirrorScreenCanvasRotation failed, ret: %{public}d", ret);
+        return MSERR_UNSUPPORT;
+    }
+    CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_INVALID_OPERATION,
                              "SetVirtualMirrorScreenCanvasRotation failed, ret: %{public}d", ret);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " SetCanvasRotationInner OK.", FAKE_POINTER(this));
     return MSERR_OK;
@@ -3548,7 +3552,11 @@ int32_t ScreenCaptureServer::ResizeCanvas(int32_t width, int32_t height)
 
     auto resizeRet = ScreenManager::GetInstance().ResizeVirtualScreen(virtualScreenId_, width, height);
     MEDIA_LOGI("ScreenCaptureServer::ResizeCanvas, ResizeVirtualScreen end, ret: %{public}d ", resizeRet);
-    CHECK_AND_RETURN_RET_LOG(resizeRet == DMError::DM_OK, MSERR_UNSUPPORT, "ResizeVirtualScreen failed");
+    if (resizeRet == DMError::DM_ERROR_DEVICE_NOT_SUPPORT) {
+        MEDIA_LOGE("ResizeCanvas failed, resizeRet: %{public}d", resizeRet);
+        return MSERR_UNSUPPORT;
+    }
+    CHECK_AND_RETURN_RET_LOG(resizeRet == DMError::DM_OK, MSERR_INVALID_OPERATION, "ResizeVirtualScreen failed");
 
     return MSERR_OK;
 }
@@ -3597,7 +3605,11 @@ int32_t ScreenCaptureServer::SkipPrivacyModeInner()
                              "SkipPrivacyMode failed virtual screen not init");
     auto ret = Rosen::DisplayManager::GetInstance().SetVirtualScreenSecurityExemption(virtualScreenId_,
         appInfo_.appPid, skipPrivacyWindowIDsVec_);
-    CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNSUPPORT,
+    if (ret == DMError::DM_ERROR_DEVICE_NOT_SUPPORT) {
+        MEDIA_LOGE("SetVirtualScreenSecurityExemption failed, ret: %{public}d", ret);
+        return MSERR_UNSUPPORT;
+    }
+    CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_INVALID_OPERATION,
         "SkipPrivacyModeInner failed, ret: %{public}d", ret);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " SkipPrivacyModeInner OK.", FAKE_POINTER(this));
     return MSERR_OK;
@@ -3620,8 +3632,11 @@ int32_t ScreenCaptureServer::SetMaxVideoFrameRate(int32_t frameRate)
     uint32_t actualRefreshRate = 0;
     auto res = ScreenManager::GetInstance().SetVirtualScreenMaxRefreshRate(virtualScreenId_,
         static_cast<uint32_t>(frameRate), actualRefreshRate);
-
-    CHECK_AND_RETURN_RET_LOG(res == DMError::DM_OK, MSERR_UNSUPPORT, "SetMaxVideoFrameRate failed");
+    if (res == DMError::DM_ERROR_DEVICE_NOT_SUPPORT) {
+        MEDIA_LOGE("SetVirtualScreenMaxRefreshRate failed, res: %{public}d", res);
+        return MSERR_UNSUPPORT;
+    }
+    CHECK_AND_RETURN_RET_LOG(res == DMError::DM_OK, MSERR_INVALID_OPERATION, "SetMaxVideoFrameRate failed");
 
     MEDIA_LOGI("ScreenCaptureServer::SetMaxVideoFrameRate end, frameRate:%{public}d, actualRefreshRate:%{public}u",
         frameRate, actualRefreshRate);
