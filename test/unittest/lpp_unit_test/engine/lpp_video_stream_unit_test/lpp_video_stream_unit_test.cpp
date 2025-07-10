@@ -203,6 +203,7 @@ HWTEST_F(LppVideoStreamUnitTest, StartRender_002, TestSize.Level1)
     EXPECT_CALL(*syncMgr_, Stop()).WillOnce(Return(MSERR_OK));
     videoStreamImpl_->syncMgr_ = syncMgr_;
     videoStreamImpl_->isLpp_ = isLpp;
+    videoStreamImpl_->surface_ = Surface::CreateSurfaceAsConsumer();
     auto res = videoStreamImpl_->StartRender();
     EXPECT_EQ(res, MSERR_OK);
 }
@@ -225,4 +226,4 @@ HWTEST_F(LppVideoStreamUnitTest, OnEvent_001, TestSize.Level1)
     EXPECT_EQ(videoStreamImpl_->callbackLooper_, nullptr);
 }
 } // namespace Media
-} // namespace OHOS
+} // namespace OHOS
