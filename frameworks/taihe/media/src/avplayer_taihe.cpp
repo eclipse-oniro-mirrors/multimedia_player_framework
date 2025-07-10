@@ -1171,12 +1171,12 @@ void AVPlayerImpl::SetBitrate(double bitrate)
     MEDIA_LOGI("SelectBitrate In");
     if (bitrate < 0) {
         OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check the input bitrate");
-        return ;
+        return;
     }
-    if (IsControllable()) {
+    if (!IsControllable()) {
         OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not prepared/playing/paused/completed, unsupport select bitrate operation");
-        return ;
+        return;
     }
     auto task = std::make_shared<TaskHandler<void>>([this, bitrate]() {
         MEDIA_LOGI("0x%{public}06" PRIXPTR " SelectBitrate Task In", FAKE_POINTER(this));
