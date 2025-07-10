@@ -22,6 +22,7 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "HiLppVStreamer"};
+static constexpr int32_t SURFACE_CONSUME_WAIT_MS = 200;
 }
 
 namespace OHOS {
@@ -142,13 +143,22 @@ int32_t HiLppVideoStreamerImpl::SetVideoSurface(sptr<Surface> surface)
     FALSE_RETURN_V_MSG(syncMgr_ != nullptr, MSERR_INVALID_OPERATION, "object is nullptr");
     FALSE_RETURN_V_MSG(vdec_ != nullptr, MSERR_INVALID_OPERATION, "vdec_ nullptr");
     FALSE_RETURN_V_MSG(surface != nullptr, MSERR_INVALID_VAL, "surface nullptr");
-    surface_ = surface;
     int32_t ret = MSERR_OK;
+    bool isSwitchSurface = surface_ != nullptr;
+    if (isSwitchSurface && isLpp_) {
+        surface_->SetLppShareFd(shareBufferFd_, false);
+    }
     if (isLpp_) {
         MEDIA_LOG_I("surface->GetUniqueId() " PUBLIC_LOG_U64 " success", surface->GetUniqueId());
         ret = syncMgr_->SetTunnelId(surface->GetUniqueId());
         FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "syncMgr_ SetTunnelId Failed!");
     }
+    if (isSwitchSurface && isLpp_) {
+        ret = syncMgr_->GetShareBuffer(shareBufferFd_);
+        FALSE_RETURN_V_MSG(ret == MSERR_OK, MSERR_UNKNOWN, "syncMgr_ GetShareBuffer failed");
+        surface->SetLppShareFd(shareBufferFd_, true);
+    }
+    surface_ = surface;
     ret = vdec_->SetVideoSurface(surface);
     FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "syncMgr_ SetTunnelId Failed!");
     return MSERR_OK;
@@ -222,6 +232,8 @@ int32_t HiLppVideoStreamerImpl::StartRender()
         ret = syncMgr_->GetShareBuffer(shareBufferFd_);
         FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "syncMgr_ GetShareBuffer failed");
     }
+    FALSE_RETURN_V_MSG(surface_ != nullptr, MSERR_INVALID_OPERATION, "surface_ nullptr");
+    surface_->SetLppShareFd(shareBufferFd_, true);
     ret = vdec_->StartRender();
     FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "vdec_ StartRender failed");
     ret = syncMgr_->StartRender();
@@ -291,12 +303,32 @@ int32_t HiLppVideoStreamerImpl::Reset()
     FALSE_RETURN_V_MSG(vdec_ != nullptr, MSERR_INVALID_OPERATION, "vdec_ nullptr");
     FALSE_RETURN_V_MSG(syncMgr_ != nullptr, MSERR_INVALID_OPERATION, "syncMgr_ nullptr");
     FALSE_RETURN_V_MSG(dataMgr_ != nullptr, MSERR_INVALID_OPERATION, "dataMgr_ nullptr");
-    auto ret = vdec_->Release();
-    vdec_.reset();
-    FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "vdec_ Release failed");
-    ret = syncMgr_->Reset();
+    FALSE_RETURN_V_MSG(surface_ != nullptr, MSERR_INVALID_OPERATION, "surface_ nullptr");
+    auto ret = syncMgr_->Reset();
     syncMgr_.reset();
-    FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "syncMgr_ Reset failed");
+    surface_->SetLppShareFd(shareBufferFd_, false);
+    std::mutex surfaceBufferMutex;
+    std::condition_variable surfaceCond;
+    bool bufferConsumed = false;
+    OnReleaseFunc releaseCallback = [&surfaceBufferMutex, &surfaceCond, &bufferConsumed](sptr<SurfaceBuffer> &buffer) {
+        std::lock_guard<std::mutex> lock(surfaceBufferMutex);
+        if (bufferConsumed) {
+            return GSError::GSERROR_OK;
+        }
+        bufferConsumed = true;
+        surfaceCond.notify_all();
+        return GSError::GSERROR_OK;
+    };
+    surface_->RegisterReleaseListener(releaseCallback);
+    {
+        std::unique_lock<std::mutex> lock(surfaceBufferMutex);
+        bool waitRes = surfaceCond.wait_for(lock, std::chrono::milliseconds(SURFACE_CONSUME_WAIT_MS),
+            [&bufferConsumed]() { return bufferConsumed; });
+        FALSE_LOG_MSG(waitRes, "wait surface consumer timeout");
+    }
+    surface_->UnRegisterReleaseListener();
+    ret = vdec_->Release();
+    FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "vdec_ Release failed");
     dataMgr_->Reset();
     return MSERR_OK;
 }
