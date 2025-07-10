@@ -971,10 +971,10 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SetMediaMuted_001, TestSize.Level0)
 // @tc.desc     Test SetMediaMuted interface, 2.
 HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SetMediaMuted_002, TestSize.Level0)
 {
-    ASSERT_NE(hiplayer_, nullptr);
-    hiplayer_->videoDecoder_ = std::make_shared<MockDecoderSurfaceFilter>();
+    ASSERT_NE(hiplayer_, nullptr); 
     std::string name = "testname";
     FilterType type = FilterType::VIDEO_CAPTURE;
+    hiplayer_->videoDecoder_ = std::make_shared<DecoderSurfaceFilter>(name,type);
     hiplayer_->demuxer_ = std::make_shared<MockDemuxerFilter>(name, type);
     int32_t ret = hiplayer_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true);
     EXPECT_EQ(hiplayer_->isVideoMuted_, true);
