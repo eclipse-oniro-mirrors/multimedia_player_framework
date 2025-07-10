@@ -318,6 +318,7 @@ int32_t AudioHapticVibratorImpl::PreLoad(const HapticSource &hapticSource,
     if (result != 0) {
         return MSERR_UNSUPPORT_FILE;
     }
+    close(vibratorFD_->fd);
 #endif
     return MSERR_OK;
 }
