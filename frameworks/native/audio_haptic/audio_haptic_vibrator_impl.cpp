@@ -722,10 +722,12 @@ int32_t AudioHapticVibratorImpl::PlayVibrateForAVPlayer(const std::shared_ptr<Vi
         if (isStopped_) {
             return result;
         }
-        // get the audio time every second and handle the delay time
+        // get the audio time every second and handle the delay time unless DSP do sync work(syncId > 0)
         if (isNeedRestart_ || i + 1 >= vibratorPkg->patternNum) {
-            // need restart or the last pattern has been played, break.
             break;
+        }
+        if (audioHapticSyncId_ > 0) {
+            continue;
         }
         int32_t nextVibratorTime = vibratorPkg->patterns[i + 1].time;
         vibrateTime = audioHapticPlayer_.GetAudioCurrentTime() + PLAYER_BUFFER_TIME + GetDelayTime();
@@ -840,8 +842,7 @@ bool AudioHapticVibratorImpl::IsHapticsCustomSupported()
 bool AudioHapticVibratorImpl::IsNonSync()
 {
     return audioHapticPlayer_.GetHapticsMode() == HapticsMode::HAPTICS_MODE_NON_SYNC ||
-        audioHapticPlayer_.GetHapticsMode() == HapticsMode::HAPTICS_MODE_NON_SYNC_ONCE ||
-        audioHapticPlayer_.GetHapticsMode() == HapticsMode::HAPTICS_MODE_NONE;
+        audioHapticPlayer_.GetHapticsMode() == HapticsMode::HAPTICS_MODE_NON_SYNC_ONCE;
 }
 } // namesapce Media
 } // namespace OHOS
