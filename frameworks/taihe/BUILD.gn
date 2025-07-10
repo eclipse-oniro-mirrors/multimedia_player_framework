@@ -22,10 +22,8 @@ taihe_generated_file_path_media = "$taihe_file_path/out/$subsystem_name/$part_na
 taihe_generated_file_path_soundPool = "$taihe_file_path/out/$subsystem_name/$part_name/soundPool"
 
 copy_taihe_idl("copy_media_taihe") {
-  sources = [
-    "//foundation/multimedia/player_framework/frameworks/taihe/idl/ohos.multimedia.media.context.taihe",
-    "//foundation/multimedia/player_framework/frameworks/taihe/idl/ohos.multimedia.media.taihe",
-  ]
+  sources = [ "//foundation/multimedia/player_framework/frameworks/taihe/idl/ohos.multimedia.media.taihe",
+              "//foundation/multimedia/player_framework/frameworks/taihe/idl/ohos.multimedia.media.context.taihe", ]
   deps = [ ":copy_soundpool_taihe" ]
 }
 
@@ -77,15 +75,15 @@ taihe_shared_library("soundpool_taihe") {
   sources += [
     "media/src/media_taihe_utils.cpp",
     "soundpool/src/ani_constructor.cpp",
-    "soundpool/src/sound_pool_callback_taihe.cpp",
     "soundpool/src/sound_pool_taihe.cpp",
+    "soundpool/src/sound_pool_callback_taihe.cpp",
   ]
 
   deps = [
     ":run_soundpool_taihe",
-    "${multimedia_player_framework_path}/frameworks/native/soundpool:soundpool_client",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
+    "${multimedia_player_framework_path}/frameworks/native/soundpool:soundpool_client",
   ]
 
   external_deps = [
@@ -101,6 +99,7 @@ taihe_shared_library("soundpool_taihe") {
     "audio_framework:audio_renderer",
     "av_codec:av_codec_client",
     "c_utils:utils",
+    "ets_runtime:libark_jsruntime",
     "eventhandler:libeventhandler",
     "graphic_2d:2d_graphics",
     "hilog:libhilog",
@@ -114,11 +113,6 @@ taihe_shared_library("soundpool_taihe") {
     "runtime_core:ani",
     "window_manager:libdm",
   ]
-  if (defined(ark_hybrid) && ark_hybrid) {
-    external_deps += [ "runtime_core:libarkruntime" ]
-  } else {
-    external_deps += [ "ets_runtime:libark_jsruntime" ]
-  }
 }
 
 taihe_shared_library("media_taihe") {
@@ -180,6 +174,7 @@ taihe_shared_library("media_taihe") {
     "audio_framework:audio_renderer",
     "av_codec:av_codec_client",
     "c_utils:utils",
+    "ets_runtime:libark_jsruntime",
     "eventhandler:libeventhandler",
     "graphic_2d:2d_graphics",
     "hilog:libhilog",
@@ -193,11 +188,6 @@ taihe_shared_library("media_taihe") {
     "runtime_core:ani",
     "window_manager:libdm",
   ]
-  if (defined(ark_hybrid) && ark_hybrid) {
-    external_deps += [ "runtime_core:libarkruntime" ]
-  } else {
-    external_deps += [ "ets_runtime:libark_jsruntime" ]
-  }
 }
 
 generate_static_abc("media_taihe_abc") {
@@ -213,7 +203,9 @@ ohos_prebuilt_etc("media_taihe_etc") {
   module_install_dir = "framework"
   part_name = "$part_name"
   subsystem_name = "$subsystem_name"
-  deps = [ ":media_taihe_abc" ]
+  deps = [
+    ":media_taihe_abc"
+  ]
 }
 
 generate_static_abc("soundpool_taihe_abc") {
@@ -229,14 +221,16 @@ ohos_prebuilt_etc("soundpool_etc") {
   module_install_dir = "framework"
   part_name = "$part_name"
   subsystem_name = "$subsystem_name"
-  deps = [ ":soundpool_taihe_abc" ]
+  deps = [
+    ":soundpool_taihe_abc"
+  ]
 }
 
 group("player_framework_taihe") {
   deps = [
     ":media_taihe",
     ":media_taihe_etc",
-    ":soundpool_etc",
     ":soundpool_taihe",
+    ":soundpool_etc",
   ]
 }

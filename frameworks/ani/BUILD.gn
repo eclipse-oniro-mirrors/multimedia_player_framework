@@ -66,6 +66,7 @@ ohos_shared_library("media_ani") {
     "audio_framework:audio_renderer",
     "av_codec:av_codec_client",
     "c_utils:utils",
+    "ets_runtime:libark_jsruntime",
     "eventhandler:libeventhandler",
     "graphic_2d:2d_graphics",
     "hilog:libhilog",
@@ -79,11 +80,6 @@ ohos_shared_library("media_ani") {
     "runtime_core:ani",
     "window_manager:libdm",
   ]
-  if (defined(ark_hybrid) && ark_hybrid) {
-    external_deps += [ "runtime_core:libarkruntime" ]
-  } else {
-    external_deps += [ "ets_runtime:libark_jsruntime" ]
-  }
 
   subsystem_name = "multimedia"
   part_name = "player_framework"
