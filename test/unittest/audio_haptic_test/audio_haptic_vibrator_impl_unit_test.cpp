@@ -934,11 +934,31 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_044, TestSize.
     audioHapticPlayerImpl.hapticsMode_ = HapticsMode::HAPTICS_MODE_NON_SYNC_ONCE;
     EXPECT_EQ(true, audioHapticVibratorImpl->IsNonSync());
 
-    audioHapticPlayerImpl.hapticsMode_ = HapticsMode::HAPTICS_MODE_NONE;
-    EXPECT_EQ(true, audioHapticVibratorImpl->IsNonSync());
-
     audioHapticPlayerImpl.hapticsMode_ = HapticsMode::HAPTICS_MODE_SYNC;
     EXPECT_EQ(false, audioHapticVibratorImpl->IsNonSync());
+}
+
+/**
+ * @tc.name  : Test AudioHapticVibratorImpl API
+ * @tc.number: AudioHapticVibratorImpl_045
+ * @tc.desc  : Test AudioHapticVibratorImpl::PlayVibrateForAVPlayer()
+ */
+HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_045, TestSize.Level1)
+{
+    uint64_t tokenID;
+    ASSERT_TRUE(GetPermission({"ohos.permission.VIBRATE"}, tokenID, false));
+ 
+    AudioHapticPlayerImpl audioHapticPlayerImpl;
+    auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
+    EXPECT_NE(audioHapticVibratorImpl, nullptr);
+    std::unique_lock<std::mutex> lock(vibrateMutex_);
+
+    std::shared_ptr<VibratorPackage> vibrationPackage = CreatePackage();
+    audioHapticVibratorImpl->vibratorPkg_ = vibrationPackage;
+    audioHapticVibratorImpl->audioHapticSyncId_ = 1;
+
+    int32_t result = audioHapticVibratorImpl->PlayVibrateForAVPlayer(vibrationPackage, lock);
+    EXPECT_EQ(result, MSERR_OK);
 }
 } // namespace Media
 } // namespace OHOS

@@ -514,18 +514,19 @@ int32_t AudioHapticPlayerImpl::StartVibrate()
         }
 
         canStartVibrate_ = false; // reset for next time.
+        int32_t delayMS = 50; // audio haptics sync offset
         // If new synchronization is unsupported, SoundPool's looping subsequent plays require calibration delay
         if (!isSupportDSPSync_ || (latencyMode_ == AUDIO_LATENCY_MODE_FAST && playedTimes > 0)) {
             int32_t hapticDelay = audioHapticVibrator_->GetDelayTime();
-            int32_t delay = (static_cast<int32_t>(this->audioLatency_) - hapticDelay) > 0 ?
+            delayMS = (static_cast<int32_t>(this->audioLatency_) - hapticDelay) > 0 ?
                 static_cast<int32_t>(this->audioLatency_) - hapticDelay : 0;
-            waitResult = condStartVibrate_.wait_for(lockWait, std::chrono::milliseconds(delay),
-                [this]() { return isVibrationStopped_.load(); });
-            if (isVibrationStopped_) {
-                MEDIA_LOGI("StartVibrate: audio haptic player has been stopped.");
-                SendHapticPlayerEvent(MSERR_OK, "HAPTIC_PLAYER_STOP");
-                return MSERR_OK;
-            }
+        }
+        waitResult = condStartVibrate_.wait_for(lockWait, std::chrono::milliseconds(delayMS),
+            [this]() { return isVibrationStopped_.load(); });
+        if (isVibrationStopped_) {
+            MEDIA_LOGI("StartVibrate: audio haptic player has been stopped.");
+            SendHapticPlayerEvent(MSERR_OK, "HAPTIC_PLAYER_STOP");
+            return MSERR_OK;
         }
         MEDIA_LOGI("The first frame of audio is about to start. Triggering the vibration.");
         isVibrationRunning_.store(true);
