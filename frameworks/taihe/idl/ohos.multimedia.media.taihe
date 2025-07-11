@@ -1,0 +1,791 @@
+/*
+ * Copyright (C) 2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@!namespace("@ohos.multimedia.media", "media")
+
+@!sts_inject("""
+static { loadLibrary("media_taihe.z"); }
+""")
+
+@!sts_inject("""
+loadLibrary("soundpool_taihe.z");
+""")
+
+from soundPool use PlayParameters;
+from soundPool use SoundPool;
+
+struct AVFileDescriptor {
+    fd: i32;
+    offset: Optional<i64>;
+    length: Optional<i64>;
+}
+struct AVDataSrcDescriptor {
+    fileSize: i64;
+    callback: (buffer: @arraybuffer Array<u8>, length: i64, pos: Optional<i64>) => i32;
+}
+
+@gen_async("createAVImageGenerator")
+@gen_promise("createAVImageGenerator")  
+function CreateAVImageGeneratorSync(): AVImageGenerator;
+
+@gen_async("createAVPlayer")
+@gen_promise("createAVPlayer")
+function CreateAVPlayerSync(): AVPlayer;
+
+@gen_promise("getScreenCaptureMonitor")
+function GetScreenCaptureMonitorSync(): ScreenCaptureMonitor;
+
+@gen_async("createSoundPool")
+@gen_promise("createSoundPool")
+function CreateSoundPoolSync(maxStreams: i32, audioRendererInfo: @sts_type("audio.AudioRendererInfo") Opaque): SoundPool;
+
+@gen_async("createAVMetadataExtractor")
+@gen_promise("createAVMetadataExtractor")
+function CreateAVMetadataExtractorSync(): AVMetadataExtractor;
+
+@gen_promise("createAVTranscoder")
+function CreateAVTranscoderSync(): AVTranscoder;
+
+@gen_promise("createAVScreenCaptureRecorder")
+function CreateAVScreenCaptureRecorderSync(): AVScreenCaptureRecorder;
+
+enum HdrType: i32 {
+    AV_HDR_TYPE_NONE = 0,
+    AV_HDR_TYPE_VIVID = 1
+}
+
+struct Location {
+    latitude: f64;
+    longitude: f64;
+}
+
+struct MediaStream {	
+    url: String;
+    width: i64;
+    height: i64;
+    bitrate: i64;
+}
+
+struct AVMetadata {
+    album: Optional<String>;
+    albumArtist: Optional<String>;
+    artist: Optional<String>;
+    author: Optional<String>;
+    dateTime: Optional<String>;
+    dateTimeFormat: Optional<String>;
+    composer: Optional<String>;
+    duration: Optional<String>;
+    genre: Optional<String>;
+    hasAudio: Optional<String>;
+    hasVideo: Optional<String>;
+    mimeType: Optional<String>;
+    trackCount: Optional<String>;
+    sampleRate: Optional<String>;
+    title: Optional<String>;
+    videoHeight: Optional<String>;
+    videoWidth: Optional<String>;
+    videoOrientation: Optional<String>;
+    hdrType: Optional<HdrType>;
+    location: Optional<Location>;
+    customInfo: Optional<@record Map<String, String>>;
+}
+
+enum AVImageQueryOptions: i32 {
+    AV_IMAGE_QUERY_NEXT_SYNC = 0,
+    AV_IMAGE_QUERY_CLOSEST_SYNC = 2,
+    AV_IMAGE_QUERY_CLOSEST = 3
+}
+
+enum PixelFormat: i32 {
+    RGB_565 = 2,
+    RGBA_8888 = 3,
+    RGB_888 = 5,
+}
+
+struct PixelMapParams {
+    width: Optional<i32>;
+    height: Optional<i32>;
+    colorFormat: Optional<PixelFormat>;
+}
+
+interface AVMetadataExtractor {
+    @get GetFdSrc(): Optional<AVFileDescriptor>;
+    @set SetFdSrc(fdSrc: Optional<AVFileDescriptor>): void;
+
+    @get GetDataSrc(): Optional<AVDataSrcDescriptor>;
+    @set SetDataSrc(dataSrc: Optional<AVDataSrcDescriptor>): void;
+
+    @gen_async("release")
+    @gen_promise("release")
+    ReleaseSync(): void;
+
+    @gen_async("fetchMetadata")
+    @gen_promise("fetchMetadata")
+    FetchMetadataSync(): AVMetadata;
+}
+
+enum MediaDescriptionKey: String {
+    MD_KEY_TRACK_INDEX = "track_index",
+    MD_KEY_TRACK_TYPE = "track_type",
+    MD_KEY_CODEC_MIME = "codec_mime",
+    MD_KEY_DURATION = "duration",
+    MD_KEY_BITRATE = "bitrate",
+    MD_KEY_WIDTH = "width",
+    MD_KEY_HEIGHT = "height",
+    MD_KEY_FRAME_RATE = "frame_rate",
+    MD_KEY_AUD_CHANNEL_COUNT = "channel_count",
+    MD_KEY_AUD_SAMPLE_RATE = "sample_rate",
+    MD_KEY_AUD_SAMPLE_DEPTH = "sample_depth",
+    MD_KEY_LANGUAGE = "language",
+    MD_KEY_TRACK_NAME = "track_name",
+    MD_KEY_HDR_TYPE = "hdr_type",
+}
+
+union MediaDescriptionValue {
+    type_string: String;
+    type_int: i32;
+}
+
+enum SwitchMode: i32{
+    SMOOTH = 0,
+    SEGMENT = 1,
+    CLOSEST = 2,
+}
+
+interface AVPlayer {
+    @get GetUrl(): Optional<String>;
+    @set SetUrl(url: Optional<String>): void;
+
+    @get GetWidth(): i32;
+    @get GetHeight(): i32;
+    @get GetState(): String;
+    @get GetDuration(): i32;
+    @get GetCurrentTime(): i32;
+    SetVolume(volume: f64): void;
+    @get GetDataSrc(): Optional<AVDataSrcDescriptor>;
+    @set SetDataSrc(dataSrc: Optional<AVDataSrcDescriptor>): void;
+    @get GetSurfaceId(): Optional<String>;
+    @set SetSurfaceId(surfaceId: Optional<String>): void;
+    @get GetLoop(): bool;
+    @set SetLoop(loop: bool): void;
+    @get GetFdSrc(): Optional<AVFileDescriptor>;
+    @set SetFdSrc(fdSrc: Optional<AVFileDescriptor>): void;
+    SetSpeed(speed: PlaybackSpeed): void;
+    Seek(timeMs: i32, mode: Optional<SeekMode>): void;
+    @get GetVideoScaleType(): Optional<VideoScaleType>;
+    @set SetVideoScaleType(videoScaleType: Optional<VideoScaleType>): void;
+    IsSeekContinuousSupported() : bool;
+
+    @gen_async("getTrackDescription")
+    @gen_promise("getTrackDescription")
+    GetTrackDescriptionSync(): Array<@record Map<String, MediaDescriptionValue>>;
+
+    @gen_async("stop")
+    @gen_promise("stop")
+    StopSync(): void;
+
+    @gen_async("play")
+    @gen_promise("play")
+    PlaySync(): void;
+
+    @gen_async("reset")
+    @gen_promise("reset")
+    ResetSync(): void;
+
+    @gen_async("release")
+    @gen_promise("release")
+    ReleaseSync(): void;
+
+    @gen_async("pause")
+    @gen_promise("pause")
+    PauseSync(): void;
+
+    @gen_async("prepare")
+    @gen_promise("prepare")
+    PrepareSync(): void;
+
+    @!sts_inject_into_interface("on(type: string, callback: (state: String, reason: StateChangeReason)=> void): void;")
+    @!sts_inject_into_interface("on(type: string, callback: (err: BusinessError<void>)=> void): void;")
+    @!sts_inject_into_class("""on(type: string, callback: object): void {
+        if (type === "stateChange") {
+            this.onStateChange(callback as (state: String, reason: StateChangeReason)=> void);
+        } else if (type === "error") {
+            this.onError(callback as (err: BusinessError<void>)=> void);
+        } else if (type === "endOfStream"){
+            this.onEndOfStream(callback as (data:undefined)=> void);
+        } else if (type === "startRenderFrame"){
+            this.onStartRenderFrame(callback as (data:undefined)=> void);
+        } else if (type === "seekdone"){
+          this.onSeekDone(callback as (data: int)=> void);
+        } else if (type === "durationUpdate"){
+          this.onDurationUpdate(callback as (data: int)=> void);
+        } else if (type === "timeUpdate"){
+          this.onTimeUpdate(callback as (data: int)=> void);
+        } else if (type === "volumeChange"){
+          this.onVolumeChange(callback as (data: double)=> void);
+        } else if (type === "speedDone"){
+          this.onSpeedDone(callback as (data: int)=> void);
+        } else if (type === "bitrateDone"){
+          this.onBitrateDone(callback as (data: int)=> void);
+        } else if (type === "availableBitrates"){
+          this.onAvailableBitrates(callback as (data: Array<int>)=> void);
+        } else if (type === "amplitudeUpdate"){
+          this.onAmplitudeUpdate(callback as (data: Array<float>)=> void);
+        } else if (type === "bufferingUpdate"){
+          this.onBufferingUpdate(callback as (infoType: BufferingInfoType, value: int)=> void);
+        } else if (type === "videoSizeChange"){
+          this.onVideoSizeChange(callback as (width: int, height: int)=> void);
+        } else if (type === "trackChange"){
+          this.onTrackChange(callback as (index: int, isSelected: boolean)=> void);
+        } else if (type === "subtitleUpdate"){
+          this.onSubtitleUpdate(callback as (data: SubtitleInfo)=> void);
+        } else if (type === "superResolutionChanged"){
+          this.onSuperResolutionChanged(callback as (enabled: boolean)=> void);
+        } else if (type === "trackInfoUpdate"){
+          this.onTrackInfoUpdate(callback as (data: Array<Record<string, string | int>>)=> void);
+        } else {
+            throw new Error(`Unknown type: ${type}`);
+        }
+    }""")
+    OnError(callback: (err: @sts_type("BusinessError<void>") Opaque )=> void): void;
+    OnStateChange(callback: (state: String, reason: StateChangeReason)=> void): void;
+    OnEndOfStream(callback: (data: @sts_type("undefined") Opaque) => void): void;
+    OnStartRenderFrame(callback: (data: @sts_type("undefined") Opaque) => void): void;
+    OnSeekDone(callback: (data: i32) => void): void;
+    OnDurationUpdate(callback: (data: i32) => void): void;
+    OnTimeUpdate(callback: (data: i32) => void): void;
+    OnVolumeChange(callback: (data: f64) => void): void;
+    OnSpeedDone(callback: (data: i32) => void): void;
+    OnBitrateDone(callback: (data: i32) => void): void;
+    OnAvailableBitrates(callback: (data: Array<i32>) => void): void;
+    OnAmplitudeUpdate(callback: (data: Array<f32>) => void): void;
+    OnBufferingUpdate(callback: (infoType: BufferingInfoType, value: i32) => void): void;
+    OnVideoSizeChange(callback: (width: i32, height: i32) => void): void;
+    OnTrackChange(callback: (index: i32, isSelected: bool) => void): void;
+    OnSubtitleUpdate(callback: (data: SubtitleInfo) => void): void;
+    OnSuperResolutionChanged(callback: (enabled: bool) => void): void;
+    OnTrackInfoUpdate(callback: (data: Array<@record Map<String, MediaDescriptionValue>>) => void): void;
+
+    @!sts_inject_into_interface("on(type: string, payloadTypes: Array<int>, callback: (messages: Array<SeiMessage>, playbackPosition?: int)=> void): void;")
+    @!sts_inject_into_class("""on(type: string, payloadTypes: Array<int>, callback: object): void {
+        if (type === "seiMessageReceived") {
+            this.onSeiMessageReceived(payloadTypes as (Array<int>), callback as (messages: Array<SeiMessage>, playbackPosition?: int) => void);
+        } else {
+        }
+    }""")
+    OnSeiMessageReceived(payloadTypes: Array<i32>, callback: (messages: Array<SeiMessage>,
+        playbackPosition: Optional<i32>) => void): void;
+
+    @!sts_inject_into_interface("off(type: string, callback?: (state: string, reason: StateChangeReason)=> void): void;")
+    @!sts_inject_into_interface("off(type: string, callback?: (data: object)=> void): void;")
+    @!sts_inject_into_class("""off(type: string, callback?: object): void {
+        if (type === "error") {
+            this.offError(callback as (((err: BusinessError<void>)=> void) | undefined));
+        } else if (type === "stateChange"){
+            this.offStateChange(callback as (((state: String, reason: StateChangeReason)=> void)) | undefined);
+        } else if (type === "EndOfStream"){
+          this.offEndOfStream(callback as (((data:undefined)=> void) | undefined));
+        } else if (type === "StartRenderFrame"){
+          this.offStartRenderFrame(callback as (((data:undefined)=> void) | undefined));
+        } else if (type === "seekDone"){
+          this.offSeekDone(callback as (((data: int) => void) | undefined));
+        } else if (type === "durationUpdate"){
+          this.offDurationUpdate(callback as (((data: int) => void) | undefined));
+        } else if (type === "timeUpdate"){
+          this.offTimeUpdate(callback as (((data: int) => void) | undefined));
+        } else if (type === "volumeChange"){
+          this.offVolumeChange(callback as (((data: double) => void) | undefined));
+        } else if (type === "speedDone"){
+          this.offSpeedDone(callback as (((data: int) => void) | undefined));
+        } else if (type === "bitrateDone"){
+          this.offBitrateDone(callback as (((data: int) => void) | undefined));
+        } else if (type === "availableBitrates"){
+          this.offAvailableBitrates(callback as (((data: Array<int>) => void) | undefined));
+        } else if (type === "amplitudeUpdate"){
+          this.offAmplitudeUpdate(callback as (((data: Array<float>) => void) | undefined));
+        } else if (type === "bufferingUpdate"){
+          this.offBufferingUpdate(callback as (((infoType: object, value: int) => void) | undefined));
+        } else if (type === "videoSizeChange"){
+          this.offVideoSizeChange(callback as (((width: int, height: int) => void) | undefined));
+        } else if (type === "trackChange"){
+          this.offTrackChange(callback as (((index: int, isSelected: boolean) => void) | undefined));
+        } else if (type === "subtitleUpdate"){
+          this.offSubtitleUpdate(callback as (((data: object) => void) | undefined));
+        } else if (type === "superResolutionChanged"){
+          this.offSuperResolutionChanged(callback as (((enabled: boolean) => void) | undefined));
+        } else if (type === "trackInfoUpdate"){
+          this.offTrackInfoUpdate(callback as (((data: Array<Record <string, int>>) => void) | undefined));
+        } else {
+          throw new Error(`Unknown type: ${type}`);
+        }
+    }""")
+    OffError(callback: Optional<(err: @sts_type("BusinessError<void>") Opaque)=> void>): void;
+    OffStateChange(callback: Optional<(state: String, reason: StateChangeReason)=> void>): void;
+    OffEndOfStream(callback: Optional<(data: @sts_type("undefined") Opaque) => void>): void;
+    OffStartRenderFrame(callback: Optional<(data: @sts_type("undefined") Opaque) => void>): void;
+    OffSeekDone(callback: Optional<(data: i32) => void>): void;
+    OffDurationUpdate(callback: Optional<(data: i32) => void>): void;
+    OffTimeUpdate(callback: Optional<(data: i32) => void>): void;
+    OffVolumeChange(callback: Optional<(data: f64) => void>): void;
+    OffSpeedDone(callback: Optional<(data: i32) => void>): void; 
+    OffBitrateDone(callback: Optional<(data: i32) => void>): void;
+    OffAvailableBitrates(callback: Optional<(data: Array<i32>) => void>): void; 
+    OffAmplitudeUpdate(callback: Optional<(data: Array<f32>) => void>): void;
+    OffBufferingUpdate(callback: Optional<(infoType: BufferingInfoType, value: i32) => void>): void;
+    OffVideoSizeChange(callback: Optional<(width: i32, height: i32) => void>): void;
+    OffTrackChange(callback: Optional<(index: i32, isSelected: bool) => void>): void;
+    OffSubtitleUpdate(callback: Optional<(data: SubtitleInfo) => void>): void;
+    OffSuperResolutionChanged(callback: Optional<(enabled: bool) => void>): void;
+    OffTrackInfoUpdate(callback: Optional<(data: Array<@record Map<String, i32>>) => void>): void;
+
+    @!sts_inject_into_interface("off(type: string, payloadTypes: Array<int>, callback?: (messages: Array<SeiMessage>, playbackPosition?: int)=> void): void;")
+    @!sts_inject_into_class("""off(type: string, payloadTypes: Array<int>, callback?: object): void {
+        if (type === "seiMessageReceived") {
+            this.offSeiMessageReceived(payloadTypes as (Array<int>), callback as (((messages: Array<SeiMessage>, playbackPosition?: int) => void) | undefined));
+        } else {
+        }
+    }""")
+    OffSeiMessageReceived(payloadTypes: Array<i32>, callback: Optional<(messages: Array<SeiMessage>,
+        playbackPosition: Optional<i32>) => void>): void;
+}
+
+struct SeiMessage {
+    payloadType: i32;
+    payload: @arraybuffer Array<u8>;
+}
+
+enum SeekMode: i32{
+    SEEK_NEXT_SYNC = 0,
+    SEEK_PREV_SYNC = 1,
+    SEEK_CLOSEST = 2,
+    SEEK_CONTINUOUS = 3,
+}
+
+enum VideoScaleType: i32 {
+    VIDEO_SCALE_TYPE_FIT = 0,
+    VIDEO_SCALE_TYPE_FIT_CROP = 1,
+}
+
+enum VideoSourceType: i32 {
+    VIDEO_SOURCE_TYPE_SURFACE_YUV = 0,
+    VIDEO_SOURCE_TYPE_SURFACE_ES = 1,
+}
+
+enum StateChangeReason: i32 {
+    USER = 1,
+    BACKGROUND = 2,
+}
+
+struct SubtitleInfo {
+    duration: Optional<i32>;
+    startTime: Optional<i32>;
+    text: Optional<String>;
+}
+
+enum AudioSourceType: i32 {
+    AUDIO_SOURCE_TYPE_DEFAULT = 0,
+    AUDIO_SOURCE_TYPE_MIC = 1,
+    AUDIO_SOURCE_TYPE_VOICE_RECOGNITION = 2,
+    AUDIO_SOURCE_TYPE_VOICE_COMMUNICATION = 7,
+    AUDIO_SOURCE_TYPE_VOICE_MESSAGE = 10,
+    AUDIO_SOURCE_TYPE_CAMCORDER = 13,
+}
+
+enum CodecMimeType: String {
+    VIDEO_H263 = "video/h263",
+    VIDEO_AVC = "video/avc",
+    VIDEO_MPEG2 = "video/mpeg2",
+    VIDEO_MPEG4 = "video/mp4v-es",
+    VIDEO_VP8 = "video/x-vnd.on2.vp8",
+    AUDIO_AAC = "audio/mp4a-latm",
+    AUDIO_VORBIS = "audio/vorbis",
+    AUDIO_FLAC = "audio/flac",
+    VIDEO_HEVC = "video/hevc",
+    AUDIO_MP3 = "audio/mpeg",
+    AUDIO_G711MU = "audio/g711mu",
+}
+
+enum ContainerFormatType: String {
+    CFT_MPEG_4 = "mp4",
+    CFT_MPEG_4A = "m4a",
+    CFT_MP3 = "mp3",
+    CFT_WAV = "wav",
+}
+
+struct VideoRecorderProfile {
+    @readonly audioBitrate: i32;
+    @readonly audioChannels: i32;
+    @readonly audioCodec: CodecMimeType;
+    @readonly audioSampleRate: i32;
+    @readonly fileFormat: ContainerFormatType;
+    @readonly videoBitrate: i32;
+    @readonly videoCodec: CodecMimeType;
+    @readonly videoFrameWidth: i32;
+    @readonly videoFrameHeight: i32;
+    @readonly videoFrameRate: i32;
+}
+
+struct VideoRecorderConfig {
+    audioSourceType: Optional<AudioSourceType>;
+    videoSourceType: VideoSourceType;
+    profile: VideoRecorderProfile;
+    url: String;
+    rotation: Optional<i32>;
+    location: Optional<Location>;
+}
+
+interface AVImageGenerator {
+    @get GetFdSrc(): Optional<AVFileDescriptor>;
+    @set SetFdSrc(fdSrc: Optional<AVFileDescriptor>): void;
+
+    @gen_async("release")
+    @gen_promise("release")
+    ReleaseSync(): void;
+}
+
+enum PlaybackSpeed: i32 {
+    SPEED_FORWARD_0_75_X = 0,
+    SPEED_FORWARD_1_00_X = 1,
+    SPEED_FORWARD_1_25_X = 2,
+    SPEED_FORWARD_1_75_X = 3,
+    SPEED_FORWARD_2_00_X = 4,
+    SPEED_FORWARD_0_50_X = 5,
+    SPEED_FORWARD_1_50_X = 6,
+    SPEED_FORWARD_3_00_X = 7,
+    SPEED_FORWARD_0_25_X = 8,
+    SPEED_FORWARD_0_125_X = 9,
+}
+
+enum MediaType: i32 {
+    MEDIA_TYPE_AUD = 0,
+    MEDIA_TYPE_VID = 1,
+    MEDIA_TYPE_SUBTITLE = 2,
+}
+
+struct Range {
+    min: i32;
+    max: i32;
+}
+
+struct EncoderInfo {
+    mimeType: CodecMimeType;
+    type: String;
+    bitRate: Optional<Range>;
+    frameRate: Optional<Range>;
+    width: Optional<Range>;
+    height: Optional<Range>;
+    channels: Optional<Range>;
+    sampleRate: Optional<Array<i32>>;
+}
+
+enum BufferingInfoType: i32 {
+    BUFFERING_START = 1,
+    BUFFERING_END = 2,
+    BUFFERING_PERCENT = 3,
+    CACHED_DURATION = 4,
+}
+
+interface AVTranscoder {
+    @get GetFdSrc(): AVFileDescriptor;
+    @set SetFdSrc(fdSrc: AVFileDescriptor): void;
+
+    @get GetFdDst(): i32;
+    @set SetFdDst(fdDst: i32): void;
+
+    @gen_async("prepare")
+    @gen_promise("prepare")
+    PrepareSync(config: AVTranscoderConfig): void;
+
+    @gen_async("start")
+    @gen_promise("start")
+    StartSync(): void;
+
+    @gen_async("resume")
+    @gen_promise("resume")
+    ResumeSync(): void;
+
+    @gen_async("cancel")
+    @gen_promise("cancel")
+    CancelSync(): void;
+
+    @gen_async("pause")
+    @gen_promise("pause")
+    PauseSync(): void;
+
+    @gen_async("release")
+    @gen_promise("release")
+    ReleaseSync(): void;
+
+    @!sts_inject_into_interface("on(type: string, callback: (data: object)=> void): void;")
+    @!sts_inject_into_class("""on(type: string, callback: object): void {
+        if (type === "complete") {
+            this.onComplete(callback as (data: undefined)=> void);
+        } else if (type === "error") {
+            this.onError(callback as (err: BusinessError<void>)=> void);
+        } else if (type === "progressUpdate") {
+            this.onProgressUpdate(callback as (data: int)=> void);
+        } else {
+            throw new Error(`Unknown type: ${type}`);
+        }
+    }""")
+
+    @!sts_inject_into_interface("off(type: string, callback?: (data: object)=> void): void;")
+    @!sts_inject_into_class("""off(type: string, callback?: object): void {
+        if (type === "complete") {
+            this.offComplete(callback as (((data: undefined)=> void) | undefined ));
+        } else if (type === "error") {
+            this.offError(callback as (((err: BusinessError<void>)=> void) | undefined ));
+        } else if (type === "progressUpdate") {
+            this.offProgressUpdate(callback as (((data: int)=> void) | undefined ));
+        } else {
+            throw new Error(`Unknown type: ${type}`);
+        }
+    }""")
+
+    OnComplete(callback: (data: @sts_type("undefined") Opaque) => void): void;
+    OffComplete(callback: Optional<(data: @sts_type("undefined") Opaque) => void>);
+
+    OnError(callback: (err: @sts_type("BusinessError<void>") Opaque)=> void): void;
+    OffError(callback: Optional<(err: @sts_type("BusinessError<void>") Opaque)=> void>): void;
+
+    OnProgressUpdate(callback: (data: i32) => void): void;
+    OffProgressUpdate(callback: Optional<(data: i32) => void>);
+
+}
+
+struct AVTranscoderConfig {
+    audioBitrate: Optional<i32>;
+    audioCodec: Optional<CodecMimeType>;
+    fileFormat: ContainerFormatType;
+    videoBitrate: Optional<i32>;
+    videoCodec: Optional<CodecMimeType>;
+    videoFrameWidth: Optional<i32>;
+    videoFrameHeight: Optional<i32>;
+}
+
+enum AVScreenCaptureRecordPreset:i32 {
+    SCREEN_RECORD_PRESET_H264_AAC_MP4 = 0,
+    SCREEN_RECORD_PRESET_H265_AAC_MP4 = 1,
+}
+
+enum AVScreenCaptureFillMode:i32 {
+    PRESERVE_ASPECT_RATIO = 0,
+    SCALE_TO_FILL = 1,
+}
+
+struct AVScreenCaptureRecordConfig {
+    fd: i32;
+    frameWidth: Optional<i32>;
+    frameHeight: Optional<i32>;
+    videoBitrate: Optional<i32>;
+    audioSampleRate: Optional<i32>;
+    audioChannelCount: Optional<i32>;
+    audioBitrate: Optional<i32>;
+    preset: Optional<AVScreenCaptureRecordPreset>;
+    displayId: Optional<i32>;
+    fillMode: Optional<AVScreenCaptureFillMode>;
+}
+
+enum MetaSourceType: i32 {
+    VIDEO_MAKER_INFO = 0,
+}
+
+enum FileGenerationMode: i32 {
+    APP_CREATE = 0,
+    AUTO_CREATE_CAMERA_SCENE = 1,
+}
+
+struct AVRecorderConfig {
+    audioSourceType: Optional<AudioSourceType>;
+    videoSourceType: Optional<VideoSourceType>;
+    profile: AVRecorderProfile;
+    url: Optional<String>;
+    metaSourceTypes: Optional<Array<MetaSourceType>>;
+    fileGenerationMode: Optional<FileGenerationMode>;
+    rotation: Optional<i32>;
+    location: Optional<Location>;
+    metadata: Optional<AVMetadata>;
+    maxDuration: Optional<i32>;
+}
+
+struct AVRecorderProfile {
+    audioBitrate: Optional<i32>;
+    audioChannels: Optional<i32>;
+    audioCodec: Optional<CodecMimeType>;
+    audioSampleRate: Optional<i32>;
+    fileFormat: ContainerFormatType;
+    videoBitrate: Optional<i32>;
+    videoCodec: Optional<CodecMimeType>;
+    videoFrameWidth: Optional<i32>;
+    videoFrameHeight: Optional<i32>;
+    videoFrameRate: Optional<i32>;
+    isHdr: Optional<bool>;
+    enableTemporalScale: Optional<bool>;
+    enableStableQualityMode: Optional<bool>;
+}
+
+enum AudioEncoder: i32 {
+    DEFAULT = 0,
+    AMR_NB = 1,
+    AMR_WB = 2,
+    AAC_LC = 3,
+    HE_AAC = 4
+}
+
+enum AudioOutputFormat: i32 {
+    DEFAULT = 0,
+    MPEG_4 = 2,
+    AMR_NB = 3,
+    AMR_WB = 4,
+    AAC_ADTS = 6
+}
+
+struct AudioRecorderConfig {
+    audioEncoder: Optional<AudioEncoder>;
+    audioEncodeBitRate: Optional<i32>;
+    audioSampleRate: Optional<i32>;
+    numberOfChannels: Optional<i32>;
+    format: Optional<AudioOutputFormat>;
+    uri: String;
+    location: Optional<Location>;
+    audioEncoderMime: Optional<CodecMimeType>;
+    fileFormat: Optional<ContainerFormatType>;
+}
+
+interface AudioRecorder {
+    PrepareSync(config: AudioRecorderConfig): void;
+}
+
+interface AudioPlayer {
+    PlaySync(): void;
+}
+
+enum ScreenCaptureEvent: i32 {
+    SCREENCAPTURE_STARTED = 0,
+    SCREENCAPTURE_STOPPED = 1
+}
+
+interface ScreenCaptureMonitor {
+    @!sts_inject_into_interface("on(type: string, callback: (data: ScreenCaptureEvent)=> void): void;")
+    @!sts_inject_into_class("""on(type: string, callback: object): void {
+        if (type === "systemScreenRecorder") {
+            this.onSystemScreenRecorder(callback as (data: ScreenCaptureEvent)=> void);
+        } else {
+            throw new Error(`Unknown type: ${type}`);
+        }
+    }""")
+
+    @!sts_inject_into_interface("off(type: string, callback?: (data: ScreenCaptureEvent)=> void): void;")
+    @!sts_inject_into_class("""off(type: string, callback?: object): void {
+        if (type === "systemScreenRecorder") {
+            this.offSystemScreenRecorder(callback as (((data: ScreenCaptureEvent)=> void) | undefined ));
+        } else {
+            throw new Error(`Unknown type: ${type}`);
+        }
+    }""")
+
+    OnSystemScreenRecorder(callback: (data: ScreenCaptureEvent) => void): void;
+    OffSystemScreenRecorder(callback: Optional<(data: ScreenCaptureEvent) => void>): void;
+    @get GetisSystemScreenRecorderWorking(): bool;
+}
+enum AVScreenCaptureStateCode: i32 {
+    SCREENCAPTURE_STATE_STARTED = 0,
+    SCREENCAPTURE_STATE_CANCELED = 1,
+    SCREENCAPTURE_STATE_STOPPED_BY_USER = 2,
+    SCREENCAPTURE_STATE_INTERRUPTED_BY_OTHER = 3,
+    SCREENCAPTURE_STATE_STOPPED_BY_CALL = 4,
+    SCREENCAPTURE_STATE_MIC_UNAVAILABLE = 5,
+    SCREENCAPTURE_STATE_MIC_MUTED_BY_USER = 6,
+    SCREENCAPTURE_STATE_MIC_UNMUTED_BY_USER = 7,
+    SCREENCAPTURE_STATE_ENTER_PRIVATE_SCENE = 8,
+    SCREENCAPTURE_STATE_EXIT_PRIVATE_SCENE = 9,
+    SCREENCAPTURE_STATE_STOPPED_BY_USER_SWITCHES = 10,
+}
+
+interface AVScreenCaptureRecorder {
+    @gen_promise("init")
+    InitSync(config: AVScreenCaptureRecordConfig): void;
+
+    @gen_promise("startRecording")
+    StartRecordingSync(): void;
+
+    @gen_promise("stopRecording")
+    StopRecordingSync(): void;
+
+    @gen_promise("skipPrivacyMode")
+    SkipPrivacyModeSync(windowIDs: Array<f64>): void;
+
+    @gen_promise("setMicEnabled")
+    SetMicEnabledSync(enable: bool): void;
+
+    @gen_promise("release")
+    ReleaseSync(): void;
+
+    @!sts_inject_into_interface("on(type: string, callback: (data: object)=> void): void;")
+    @!sts_inject_into_class("""on(type: string, callback: object): void {
+        if (type === "stateChange") {
+            this.onStateChange(callback as (data: AVScreenCaptureStateCode)=> void);
+        } else if (type === "error") {
+            this.onError(callback as (err: BusinessError<void>)=> void);
+        } else {
+            throw new Error(`Unknown type: ${type}`);
+        }
+    }""")
+
+    @!sts_inject_into_interface("off(type: string, callback?: (data: object)=> void): void;")
+    @!sts_inject_into_class("""off(type: string, callback?: object): void {
+        if (type === "stateChange") {
+            this.offStateChange(callback as (((data: AVScreenCaptureStateCode)=> void) | undefined ));
+        } else if (type === "error") {
+            this.offError(callback as (((err: BusinessError<void>)=> void) | undefined ));
+        } else {
+            throw new Error(`Unknown type: ${type}`);
+        }
+    }""")
+
+    OnError(callback: (err: @sts_type("BusinessError<void>") Opaque)=> void): void;
+    OffError(callback: Optional<(err: @sts_type("BusinessError<void>") Opaque)=> void>): void;
+
+    OnStateChange(callback: (data: AVScreenCaptureStateCode) => void): void;
+    OffStateChange(callback: Optional<(data: AVScreenCaptureStateCode) => void>): void;
+}
+
+enum AVMimeTypes: String {
+    APPLICATION_M3U8 = "application/m3u8",
+}
+
+enum LoadingRequestError: i32 {
+    LOADING_ERROR_SUCCESS = 0,
+    LOADING_ERROR_NOT_READY = 1,
+    LOADING_ERROR_NO_RESOURCE = 2,
+    LOADING_ERROR_INVAID_HANDLE = 3,
+    LOADING_ERROR_ACCESS_DENIED = 4,
+    LOADING_ERROR_ACCESS_TIMEOUT = 5,
+    LOADING_ERROR_AUTHORIZE_FAILED = 6,
+}
+
+interface MediaSourceLoadingRequest {
+    @get GetUrl(): String;
+
+    @get GetHeader(): Optional<@record Map<String, String>>;
+
+    respondData(uuid: f64, offset: f64, buffer: @arraybuffer Array<u8>): i32;
+    respondHeader(uuid: f64, header: Optional<@record Map<String, String>>, redirectUrl: Optional<String>): void;
+    finishLoading(uuid: f64, state: LoadingRequestError): void;
+}
+
+interface MediaSource {
+    setMimeType(mimeType: AVMimeTypes): void;
+}
