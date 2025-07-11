@@ -93,9 +93,9 @@ int32_t ScreenCaptureControllerProxy::GetAVScreenCaptureConfigurableParameters(i
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "GetAVScreenCaptureConfigurableParameters failed, error: %{public}d", error);
     int ret = reply.ReadInt32();
-    if (ret == MSERR_OK) {
-        resultStr = reply.ReadString();
-    }
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
+        "GetAVScreenCaptureConfigurableParameters failed, ret: %{public}d", ret);
+    resultStr = reply.ReadString();
     return ret;
 }
 

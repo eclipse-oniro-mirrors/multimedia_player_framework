@@ -135,7 +135,7 @@ int32_t ScreenCaptureControllerStub::ReportAVScreenCaptureUserChoice(MessageParc
 
 int32_t ScreenCaptureControllerStub::GetAVScreenCaptureConfigurableParameters(int32_t sessionId, std::string &resultStr)
 {
-    MEDIA_LOGI("ScreenCaptureControllerStub::GetAVScreenCaptureConfigurableParameters start 2");
+    MEDIA_LOGI("ScreenCaptureControllerStub::GetAVScreenCaptureConfigurableParameters start");
     CHECK_AND_RETURN_RET_LOG(screenCaptureControllerServer_ != nullptr, false,
         "screen capture controller server is nullptr");
     int32_t appUid = IPCSkeleton::GetCallingUid();
@@ -150,14 +150,14 @@ int32_t ScreenCaptureControllerStub::GetAVScreenCaptureConfigurableParameters(in
 
 int32_t ScreenCaptureControllerStub::GetAVScreenCaptureConfigurableParameters(MessageParcel &data, MessageParcel &reply)
 {
-    MEDIA_LOGI("ScreenCaptureControllerStub::GetAVScreenCaptureConfigurableParameters start 1");
+    MEDIA_LOGI("ScreenCaptureControllerStub::GetAVScreenCaptureConfigurableParameters start");
     CHECK_AND_RETURN_RET_LOG(screenCaptureControllerServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture controller server is nullptr");
     (void)data;
     int32_t sessionId = data.ReadInt32();
     std::string resultStr;
     int32_t ret = GetAVScreenCaptureConfigurableParameters(sessionId, resultStr);
-    MEDIA_LOGI("ScreenCaptureControllerStub::GetAVScreenCaptureConfigurableParameters start 1 resultStr: %{public}s",
+    MEDIA_LOGI("ScreenCaptureControllerStub::GetAVScreenCaptureConfigurableParameters start resultStr: %{public}s",
         resultStr.c_str());
     reply.WriteInt32(ret);
     reply.WriteString(resultStr);

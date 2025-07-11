@@ -835,7 +835,7 @@ void ScreenCaptureServer::GetChoiceFromJson(Json::Value &root,
 }
 
 void ScreenCaptureServer::GetValueFromJson(Json::Value &root,
-    const std::string &content, std::string key, bool &value)
+    const std::string &content, const std::string key, bool &value)
 {
     value = false;
 
@@ -866,7 +866,7 @@ void ScreenCaptureServer::SetCaptureConfig(CaptureMode captureMode, int32_t miss
     }
 }
 
-void ScreenCaptureServer::PrepareSelectWindow(Json::Value &root, std::shared_ptr<ScreenCaptureServer> &server)
+void ScreenCaptureServer::PrepareSelectWindow(Json::Value &root)
 {
     if (root.type() != Json::objectValue) {
         return;
@@ -875,20 +875,20 @@ void ScreenCaptureServer::PrepareSelectWindow(Json::Value &root, std::shared_ptr
     if (!displayIdJson.isNull() && displayIdJson.isInt() && displayIdJson.asInt64() >= 0) {
         uint64_t displayId = static_cast<uint64_t>(displayIdJson.asInt64());
         MEDIA_LOGI("Report Select DisplayId: %{public}" PRIu64, displayId);
-        server->SetDisplayId(displayId);
+        SetDisplayId(displayId);
         // 手机模式 missionId displayId 均为-1
-        server->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_SCREEN, -1);
+        SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_SCREEN, -1);
     }
     const Json::Value missionIdJson = root["missionId"];
     if (!missionIdJson.isNull() && missionIdJson.isInt() && missionIdJson.asInt() >= 0) {
         int32_t missionId = missionIdJson.asInt();
         MEDIA_LOGI("Report Select MissionId: %{public}d", missionId);
-        server->SetMissionId(missionId);
-        server->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_WINDOW, missionId);
+        SetMissionId(missionId);
+        SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_WINDOW, missionId);
     }
     ScreenCaptureUserSelectionInfo selectionInfo = {0, static_cast<uint64_t>(0)};
-    server->PrepareUserSelectionInfo(selectionInfo);
-    server->NotifyUserSelected(selectionInfo);
+    PrepareUserSelectionInfo(selectionInfo);
+    NotifyUserSelected(selectionInfo);
 }
 
 int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &content)
@@ -900,64 +900,62 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
         "ReportAVScreenCaptureUserChoice failed to get instance, sessionId: %{public}d", sessionId);
     Json::Value root;
     if (server->captureState_ == AVScreenCaptureState::POPUP_WINDOW) {
-        return server->HandlePopupWindowCase(root, content, server);
+        return server->HandlePopupWindowCase(root, content);
     } else if (server->GetSCServerDataType() == DataType::ORIGINAL_STREAM &&
         server->captureState_ == AVScreenCaptureState::STARTED) {
-        return server->HandleStreamDataCase(root, content, server);
+        return server->HandleStreamDataCase(root, content);
     }
     return MSERR_UNKNOWN;
 }
 
-int32_t ScreenCaptureServer::HandlePopupWindowCase(Json::Value& root, const std::string &content,
-    std::shared_ptr<ScreenCaptureServer>& server)
+int32_t ScreenCaptureServer::HandlePopupWindowCase(Json::Value& root, const std::string &content)
 {
     MEDIA_LOGI("ReportAVScreenCaptureUserChoice captureState is %{public}d", AVScreenCaptureState::POPUP_WINDOW);
     std::string choice = "false";
     GetChoiceFromJson(root, content, std::string("choice"), choice);
-    GetValueFromJson(root, content, std::string("checkBoxSelected"), server->checkBoxSelected_);
+    GetValueFromJson(root, content, std::string("checkBoxSelected"), checkBoxSelected_);
     
-    server->systemPrivacyProtectionSwitch_ = server->checkBoxSelected_;
-    server->appPrivacyProtectionSwitch_ = server->checkBoxSelected_;
-    MEDIA_LOGI("ReportAVScreenCaptureUserChoice checkBoxSelected: %{public}d", server->checkBoxSelected_);
+    systemPrivacyProtectionSwitch_ = checkBoxSelected_;
+    appPrivacyProtectionSwitch_ = checkBoxSelected_;
+    MEDIA_LOGI("ReportAVScreenCaptureUserChoice checkBoxSelected: %{public}d", checkBoxSelected_);
 
     if (USER_CHOICE_ALLOW.compare(choice) == 0) {
-        PrepareSelectWindow(root, server);
-        int32_t ret = server->OnReceiveUserPrivacyAuthority(true);
+        PrepareSelectWindow(root);
+        int32_t ret = OnReceiveUserPrivacyAuthority(true);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret,
             "ReportAVScreenCaptureUserChoice user choice is true but start failed");
         MEDIA_LOGI("ReportAVScreenCaptureUserChoice user choice is true and start success");
         return MSERR_OK;
     } else if (USER_CHOICE_DENY.compare(choice) == 0) {
-        return server->OnReceiveUserPrivacyAuthority(false);
+        return OnReceiveUserPrivacyAuthority(false);
     } else {
         MEDIA_LOGW("ReportAVScreenCaptureUserChoice user choice is not support");
     }
     return MSERR_UNKNOWN;
 }
 
-int32_t ScreenCaptureServer::HandleStreamDataCase(Json::Value& root, const std::string &content,
-    std::shared_ptr<ScreenCaptureServer>& server)
+int32_t ScreenCaptureServer::HandleStreamDataCase(Json::Value& root, const std::string &content)
 {
     bool stopRecord = false;
     GetValueFromJson(root, content, std::string("stopRecording"), stopRecord);
     if (stopRecord) {
-        server->StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
+        StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
         MEDIA_LOGI("ReportAVScreenCaptureUserChoice user stop record");
         return MSERR_OK;
     }
 
     GetValueFromJson(root, content, std::string("appPrivacyProtectionSwitch"),
-        server->appPrivacyProtectionSwitch_);
+        appPrivacyProtectionSwitch_);
     GetValueFromJson(root, content, std::string("systemPrivacyProtectionSwitch"),
-        server->systemPrivacyProtectionSwitch_);
+        systemPrivacyProtectionSwitch_);
     
-    server->SystemPrivacyProtected(server->virtualScreenId_, server->systemPrivacyProtectionSwitch_);
-    server->AppPrivacyProtected(server->virtualScreenId_, server->appPrivacyProtectionSwitch_);
+    SystemPrivacyProtected(virtualScreenId_, systemPrivacyProtectionSwitch_);
+    AppPrivacyProtected(virtualScreenId_, appPrivacyProtectionSwitch_);
 
-    std::lock_guard<std::mutex> lock(server->mutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
     NotificationRequest request;
-    server->SetPublishRequest(server->GetLocalLiveViewContent(), server->notificationId_, request);
-    request.SetWantAgent(server->GetWantAgent(server->callingLabel_, server->sessionId_));
+    SetPublishRequest(GetLocalLiveViewContent(), notificationId_, request);
+    request.SetWantAgent(GetWantAgent(callingLabel_, sessionId_));
     return NotificationHelper::PublishNotification(request);
 }
 
@@ -2668,9 +2666,9 @@ NotificationTime ScreenCaptureServer::CreateCountTime()
 
 void ScreenCaptureServer::GetSystemUIFlag()
 {
-    const std::string dumpTag = "persist.systemui.live2";
+    const std::string systemUITag = "persist.systemui.live2";
     std::string systemUI2;
-    int32_t systemUIRes = OHOS::system::GetStringParameter(dumpTag, systemUI2, "false");
+    int32_t systemUIRes = OHOS::system::GetStringParameter(systemUITag, systemUI2, "false");
     if (systemUIRes != 0) {
         MEDIA_LOGI("Failed to get systemUI flag, Res: %{public}d", systemUIRes);
         isSystemUI2_ = false;
@@ -2840,6 +2838,7 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
         CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK || ret == DMError::DM_ERROR_DEVICE_NOT_SUPPORT, MSERR_UNKNOWN,
             "0x%{public}06" PRIXPTR " SetScreenSkipProtectedWindow failed, ret: %{public}d", FAKE_POINTER(this), ret);
         MEDIA_LOGI("0x%{public}06" PRIXPTR " SetScreenSkipProtectedWindow success", FAKE_POINTER(this));
+        AppPrivacyProtected(virtualScreenId_, true);
     }
 
     if (!showCursor_) {
@@ -4226,16 +4225,17 @@ void ScreenCaptureServer::SystemPrivacyProtected(ScreenId& virtualScreenId, bool
 
 void ScreenCaptureServer::AppPrivacyProtected(ScreenId& virtualScreenId, bool appPrivacyProtectionSwitch)
 {
-    // std::vector<ScreenId> screenIds;
-    // screenIds.push_back(virtualScreenId);
-    // MEDIA_LOGI("SystemPrivacyProtected virtualScreenId_: %{public}lu",
-    //     virtualScreenId);
-    // auto ret = ScreenManager::GetInstance().SetScreenSkipProtectedWindow(screenIds, appPrivacyProtectionSwitch);
-    // if (ret == DMError::DM_OK || ret == DMError::DM_ERROR_DEVICE_NOT_SUPPORT) {
-    //     MEDIA_LOGI("SystemPrivacyProtected SetScreenSkipProtectedWindow success");
-    // } else {
-    //     MEDIA_LOGI("SystemPrivacyProtected SetScreenSkipProtectedWindow failed, ret: %{public}d", ret);
-    // }
+    MEDIA_LOGI("AppPrivacyProtected virtualScreenId_: %{public}lu",
+        virtualScreenId);
+    std::vector<std::string> privacyWindowTags;
+    privacyWindowTags.put_back("TAG_SCREEN_PROTECTION_SENSITIVE_APP");
+    auto ret = ScreenManager::GetInstance().SetScreenPrivacyWindowTagSwitch(virtualScreenId,
+        privacyWindowTags, appPrivacyProtectionSwitch);
+    if (ret == DMError::DM_OK || ret == DMError::DM_ERROR_DEVICE_NOT_SUPPORT) {
+        MEDIA_LOGI("AppPrivacyProtected SetScreenSkipProtectedWindow success");
+    } else {
+        MEDIA_LOGI("AppPrivacyProtected SetScreenSkipProtectedWindow failed, ret: %{public}d", ret);
+    }
     
 }
 

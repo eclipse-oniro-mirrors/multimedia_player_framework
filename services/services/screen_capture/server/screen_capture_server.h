@@ -47,7 +47,6 @@ public:
     static int32_t GetAVScreenCaptureConfigurableParameters(int32_t sessionId, std::string &resultStr);
     static void GetChoiceFromJson(Json::Value &root, const std::string &content, std::string key, std::string &value);
     static void GetValueFromJson(Json::Value &root, const std::string &content, std::string key, bool &value);
-    static void PrepareSelectWindow(Json::Value &root, std::shared_ptr<ScreenCaptureServer> &server);
     static void AddScreenCaptureServerMap(int32_t sessionId, std::weak_ptr<ScreenCaptureServer> server);
     static void RemoveScreenCaptureServerMap(int32_t sessionId);
     static bool CheckScreenCaptureSessionIdLimit(int32_t curAppUid);
@@ -220,10 +219,10 @@ private:
     int32_t StartPrivacyWindow();
     void SetCaptureConfig(CaptureMode captureMode, int32_t missionId = -1); // -1 invalid
     ScreenScaleMode GetScreenScaleMode(const AVScreenCaptureFillMode &fillMode);
-    int32_t HandlePopupWindowCase(Json::Value& root, const std::string &content,
-        std::shared_ptr<ScreenCaptureServer>& server);
-    int32_t HandleStreamDataCase(Json::Value& root, const std::string &content,
-    std::shared_ptr<ScreenCaptureServer>& server);
+    int32_t HandlePopupWindowCase(Json::Value& root, const std::string &content);
+    int32_t HandleStreamDataCase(Json::Value& root, const std::string &content);
+    void PrepareSelectWindow(Json::Value &root);
+
 #ifdef PC_STANDARD
     bool CheckCaptureSpecifiedWindowForSelectWindow();
     void SendConfigToUIParams(AAFwk::Want& want);
