@@ -45,6 +45,22 @@ void ScreenCaptureControllerImpl::ReportAVScreenCaptureUserChoice(int32_t sessio
     controllerClient = nullptr;
 }
 
+int32_t ScreenCaptureControllerImpl::GetAVScreenCaptureConfigurableParameters(
+    int32_t sessionId, std::string &resultStr)
+{
+    MEDIA_LOGI("ScreenCaptureController::GetAVScreenCaptureConfigurableParameters start");
+    std::shared_ptr<IScreenCaptureController> controllerClient =
+        MediaServiceFactory::GetInstance().CreateScreenCaptureControllerClient();
+    CHECK_AND_RETURN_RET_LOG(controllerClient != nullptr, MSERR_UNKNOWN,
+        "failed to CreateScreenCaptureControllerClient");
+    int32_t ret = controllerClient->GetAVScreenCaptureConfigurableParameters(sessionId, resultStr);
+    MEDIA_LOGI("ScreenCaptureController::GetAVScreenCaptureConfigurableParameters Report result: %{public}d", ret);
+
+    (void)MediaServiceFactory::GetInstance().DestroyScreenCaptureControllerClient(controllerClient);
+    controllerClient = nullptr;
+    return ret;
+}
+
 ScreenCaptureControllerImpl::ScreenCaptureControllerImpl()
 {
     MEDIA_LOGD("ScreenCaptureControllerImpl:0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));

@@ -29,6 +29,7 @@ public:
     virtual ~ScreenCaptureControllerStub();
 
     int32_t ReportAVScreenCaptureUserChoice(int32_t sessionId, std::string choice) override;
+    int32_t GetAVScreenCaptureConfigurableParameters(int32_t sessionId, std::string &resultStr) override;
     int32_t DestroyStub() override;
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 
@@ -36,6 +37,7 @@ private:
     ScreenCaptureControllerStub();
     int32_t Init();
     int32_t ReportAVScreenCaptureUserChoice(MessageParcel &data, MessageParcel &reply);
+    int32_t GetAVScreenCaptureConfigurableParameters(MessageParcel &data, MessageParcel &reply);
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);
 
     std::mutex mutex_;

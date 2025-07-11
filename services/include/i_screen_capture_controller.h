@@ -24,6 +24,7 @@ namespace Media {
 class IScreenCaptureController {
 public:
     virtual int32_t ReportAVScreenCaptureUserChoice(int32_t sessionId, std::string choice) = 0;
+    virtual int32_t GetAVScreenCaptureConfigurableParameters(int32_t sessionId, std::string &resultStr) = 0;
 };
 } // namespace Media
 } // namespace OHOS

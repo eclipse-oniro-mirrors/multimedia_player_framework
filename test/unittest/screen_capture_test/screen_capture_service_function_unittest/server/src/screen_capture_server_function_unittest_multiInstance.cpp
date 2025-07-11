@@ -868,51 +868,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RemoveSaAppInfoMap_001, TestSize.Level
     ASSERT_EQ(ScreenCaptureServer::saUidAppUidMap_[saUid].second, 0);
 }
 
-/**
-* @tc.name: GetBoxSelectedFromJson_001
-* @tc.desc: content invalid
-* @tc.type: FUNC
-*/
-HWTEST_F(ScreenCaptureServerFunctionTest, GetBoxSelectedFromJson_001, TestSize.Level2)
-{
-    Json::Value root;
-    std::string content = "ghgh%^&%^$*^(}{^af&**)";
-    bool value = true;
-    screenCaptureServer_->GetBoxSelectedFromJson(root, content, "choice", value);
-    ASSERT_NE(screenCaptureServer_, nullptr);
-    ASSERT_EQ(value, false);
-}
-
-/**
-* @tc.name: GetBoxSelectedFromJson_002
-* @tc.desc: choice valid
-* @tc.type: FUNC
-*/
-HWTEST_F(ScreenCaptureServerFunctionTest, GetBoxSelectedFromJson_002, TestSize.Level2)
-{
-    Json::Value root;
-    std::string content = "{\"choice\": \"true\"}";
-    bool value = false;
-    screenCaptureServer_->GetBoxSelectedFromJson(root, content, "choice", value);
-    ASSERT_NE(screenCaptureServer_, nullptr);
-    ASSERT_EQ(value, true);
-}
-
-/**
-* @tc.name: GetBoxSelectedFromJson_003
-* @tc.desc: choice invalid
-* @tc.type: FUNC
-*/
-HWTEST_F(ScreenCaptureServerFunctionTest, GetBoxSelectedFromJson_003, TestSize.Level2)
-{
-    Json::Value root;
-    std::string content = "{\"choice\": \"abcd\"}";
-    bool value = true;
-    screenCaptureServer_->GetBoxSelectedFromJson(root, content, "choice", value);
-    ASSERT_NE(screenCaptureServer_, nullptr);
-    ASSERT_EQ(value, false);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, ProcessWindowIdList_001, TestSize.Level2)
 {
     screenCaptureServer_->windowIdList_ = {};
@@ -964,36 +919,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetDefaultDisplayIdOfWindows_001, Test
     screenCaptureServer_->curWindowInDisplayId_ = SCREEN_ID_INVALID;
     screenCaptureServer_->SetDefaultDisplayIdOfWindows();
     ASSERT_NE(screenCaptureServer_->GetCurDisplayId(), SCREEN_ID_INVALID);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, GetInnerAudioBoxSelectedFromJson_001, TestSize.Level2)
-{
-    Json::Value root;
-    std::string content = "ghgh%^&%^$*^(}{^af&**)";
-    bool isInnerAudioBoxSelected = true;
-    screenCaptureServer_->GetBoxSelectedFromJson(root, content, "isInnerAudioBoxSelected", isInnerAudioBoxSelected);
-    ASSERT_NE(screenCaptureServer_, nullptr);
-    ASSERT_EQ(isInnerAudioBoxSelected, false);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, GetInnerAudioBoxSelectedFromJson_002, TestSize.Level2)
-{
-    Json::Value root;
-    std::string content = "{\"isInnerAudioBoxSelected\": \"true\"}";
-    bool isInnerAudioBoxSelected = false;
-    screenCaptureServer_->GetBoxSelectedFromJson(root, content, "isInnerAudioBoxSelected", isInnerAudioBoxSelected);
-    ASSERT_NE(screenCaptureServer_, nullptr);
-    ASSERT_EQ(isInnerAudioBoxSelected, true);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, GetInnerAudioBoxSelectedFromJson_003, TestSize.Level2)
-{
-    Json::Value root;
-    std::string content = "{\"isInnerAudioBoxSelected\": \"abcd\"}";
-    bool isInnerAudioBoxSelected = true;
-    screenCaptureServer_->GetBoxSelectedFromJson(root, content, "isInnerAudioBoxSelected", isInnerAudioBoxSelected);
-    ASSERT_NE(screenCaptureServer_, nullptr);
-    ASSERT_EQ(isInnerAudioBoxSelected, false);
 }
 
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION

@@ -45,6 +45,8 @@
 #include <common/rs_common_def.h>
 #include "session_manager_lite.h"
 #include "window_manager_lite.h"
+#include "want_agent_info.h"
+#include "want_agent_helper.h"
 #ifdef PC_STANDARD
 #include <parameters.h>
 #endif
@@ -65,9 +67,11 @@ static const std::string M4A = "m4a";
 static const std::string USER_CHOICE_ALLOW = "true";
 static const std::string USER_CHOICE_DENY = "false";
 static const std::string CHECK_BOX_SELECTED = "true";
+static const std::string JSON_VALUE_TRUE = "true";
 static const std::string BUTTON_NAME_MIC = "mic";
 static const std::string BUTTON_NAME_STOP = "stop";
 static const std::string ICON_PATH_CAPSULE_STOP = "/etc/screencapture/capsule_stop.svg";
+static const std::string ICON_PATH_CAPSULE_STOP_2_0 = "/etc/screencapture/capsule_stop.svg";
 static const std::string ICON_PATH_NOTIFICATION = "/etc/screencapture/notification.png";
 static const std::string ICON_PATH_MIC = "/etc/screencapture/mic.svg";
 static const std::string ICON_PATH_MIC_OFF = "/etc/screencapture/mic_off.svg";
@@ -830,23 +834,26 @@ void ScreenCaptureServer::GetChoiceFromJson(Json::Value &root,
     }
 }
 
-void ScreenCaptureServer::GetBoxSelectedFromJson(Json::Value &root,
-    const std::string &content, std::string key, bool &checkBoxSelected)
+void ScreenCaptureServer::GetValueFromJson(Json::Value &root,
+    const std::string &content, const std::string key, bool &value)
 {
+    value = false;
+
     Json::Reader reader;
     bool parsingSuccessful = reader.parse(content, root);
-    checkBoxSelected = false;
     if (!parsingSuccessful || root.type() != Json::objectValue) {
         MEDIA_LOGE("Error parsing the string");
         return;
     }
     const Json::Value keyJson = root[key];
     if (!keyJson.isNull() && keyJson.isString()) {
-        if (CHECK_BOX_SELECTED.compare(keyJson.asString()) == 0) {
-            checkBoxSelected = true;
+        if (JSON_VALUE_TRUE.compare(keyJson.asString()) == 0) {
+            value = true;
+        } else {
+            value = false;
         }
     }
-    MEDIA_LOGI("GetBoxSelectedFromJson checkBoxSelected: %{public}d", checkBoxSelected);
+    MEDIA_LOGI("GetValueFromJson value: %{public}d", value);
 }
 
 void ScreenCaptureServer::SetCaptureConfig(CaptureMode captureMode, int32_t missionId)
@@ -859,7 +866,7 @@ void ScreenCaptureServer::SetCaptureConfig(CaptureMode captureMode, int32_t miss
     }
 }
 
-void ScreenCaptureServer::PrepareSelectWindow(Json::Value &root, std::shared_ptr<ScreenCaptureServer> &server)
+void ScreenCaptureServer::PrepareSelectWindow(Json::Value &root)
 {
     if (root.type() != Json::objectValue) {
         return;
@@ -868,20 +875,20 @@ void ScreenCaptureServer::PrepareSelectWindow(Json::Value &root, std::shared_ptr
     if (!displayIdJson.isNull() && displayIdJson.isInt() && displayIdJson.asInt64() >= 0) {
         uint64_t displayId = static_cast<uint64_t>(displayIdJson.asInt64());
         MEDIA_LOGI("Report Select DisplayId: %{public}" PRIu64, displayId);
-        server->SetDisplayId(displayId);
+        SetDisplayId(displayId);
         // 手机模式 missionId displayId 均为-1
-        server->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_SCREEN, -1);
+        SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_SCREEN, -1);
     }
     const Json::Value missionIdJson = root["missionId"];
     if (!missionIdJson.isNull() && missionIdJson.isInt() && missionIdJson.asInt() >= 0) {
         int32_t missionId = missionIdJson.asInt();
         MEDIA_LOGI("Report Select MissionId: %{public}d", missionId);
-        server->SetMissionId(missionId);
-        server->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_WINDOW, missionId);
+        SetMissionId(missionId);
+        SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_WINDOW, missionId);
     }
     ScreenCaptureUserSelectionInfo selectionInfo = {0, static_cast<uint64_t>(0)};
-    server->PrepareUserSelectionInfo(selectionInfo);
-    server->NotifyUserSelected(selectionInfo);
+    PrepareUserSelectionInfo(selectionInfo);
+    NotifyUserSelected(selectionInfo);
 }
 
 int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &content)
@@ -891,37 +898,81 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
     std::shared_ptr<ScreenCaptureServer> server = GetScreenCaptureServerByIdWithLock(sessionId);
     CHECK_AND_RETURN_RET_LOG(server != nullptr, MSERR_UNKNOWN,
         "ReportAVScreenCaptureUserChoice failed to get instance, sessionId: %{public}d", sessionId);
+    Json::Value root;
     if (server->captureState_ == AVScreenCaptureState::POPUP_WINDOW) {
-        MEDIA_LOGI("ReportAVScreenCaptureUserChoice captureState is %{public}d", AVScreenCaptureState::POPUP_WINDOW);
-        Json::Value root;
-        std::string choice = "false";
-        GetChoiceFromJson(root, content, std::string("choice"), choice);
-
-        GetBoxSelectedFromJson(root, content, std::string("checkBoxSelected"), server->checkBoxSelected_);
-        MEDIA_LOGI("ReportAVScreenCaptureUserChoice checkBoxSelected: %{public}d", server->checkBoxSelected_);
-
-        if (server->showShareSystemAudioBox_) {
-            GetBoxSelectedFromJson(root, content, std::string("isInnerAudioBoxSelected"),
-                server->isInnerAudioBoxSelected_);
-        }
-        MEDIA_LOGI("ReportAVScreenCaptureUserChoice showShareSystemAudioBox:%{public}d,"
-            "isInnerAudioBoxSelected:%{public}d", server->showShareSystemAudioBox_,
-            server->isInnerAudioBoxSelected_);
-
-        if (USER_CHOICE_ALLOW.compare(choice) == 0) {
-            PrepareSelectWindow(root, server);
-            int32_t ret = server->OnReceiveUserPrivacyAuthority(true);
-            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret,
-                "ReportAVScreenCaptureUserChoice user choice is true but start failed");
-            MEDIA_LOGI("ReportAVScreenCaptureUserChoice user choice is true and start success");
-            return MSERR_OK;
-        } else if (USER_CHOICE_DENY.compare(choice) == 0) {
-            return server->OnReceiveUserPrivacyAuthority(false);
-        } else {
-            MEDIA_LOGW("ReportAVScreenCaptureUserChoice user choice is not support");
-        }
+        return server->HandlePopupWindowCase(root, content);
+    } else if (server->GetSCServerDataType() == DataType::ORIGINAL_STREAM &&
+        server->captureState_ == AVScreenCaptureState::STARTED) {
+        return server->HandleStreamDataCase(root, content);
     }
     return MSERR_UNKNOWN;
+}
+
+int32_t ScreenCaptureServer::HandlePopupWindowCase(Json::Value& root, const std::string &content)
+{
+    MEDIA_LOGI("ReportAVScreenCaptureUserChoice captureState is %{public}d", AVScreenCaptureState::POPUP_WINDOW);
+    std::string choice = "false";
+    GetChoiceFromJson(root, content, std::string("choice"), choice);
+    GetValueFromJson(root, content, std::string("checkBoxSelected"), checkBoxSelected_);
+    
+    systemPrivacyProtectionSwitch_ = checkBoxSelected_;
+    appPrivacyProtectionSwitch_ = checkBoxSelected_;
+    MEDIA_LOGI("ReportAVScreenCaptureUserChoice checkBoxSelected: %{public}d", checkBoxSelected_);
+
+    if (USER_CHOICE_ALLOW.compare(choice) == 0) {
+        PrepareSelectWindow(root);
+        int32_t ret = OnReceiveUserPrivacyAuthority(true);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret,
+            "ReportAVScreenCaptureUserChoice user choice is true but start failed");
+        MEDIA_LOGI("ReportAVScreenCaptureUserChoice user choice is true and start success");
+        return MSERR_OK;
+    } else if (USER_CHOICE_DENY.compare(choice) == 0) {
+        return OnReceiveUserPrivacyAuthority(false);
+    } else {
+        MEDIA_LOGW("ReportAVScreenCaptureUserChoice user choice is not support");
+    }
+    return MSERR_UNKNOWN;
+}
+
+int32_t ScreenCaptureServer::HandleStreamDataCase(Json::Value& root, const std::string &content)
+{
+    bool stopRecord = false;
+    GetValueFromJson(root, content, std::string("stopRecording"), stopRecord);
+    if (stopRecord) {
+        StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
+        MEDIA_LOGI("ReportAVScreenCaptureUserChoice user stop record");
+        return MSERR_OK;
+    }
+
+    GetValueFromJson(root, content, std::string("appPrivacyProtectionSwitch"),
+        appPrivacyProtectionSwitch_);
+    GetValueFromJson(root, content, std::string("systemPrivacyProtectionSwitch"),
+        systemPrivacyProtectionSwitch_);
+    
+    SystemPrivacyProtected(virtualScreenId_, systemPrivacyProtectionSwitch_);
+    AppPrivacyProtected(virtualScreenId_, appPrivacyProtectionSwitch_);
+
+    std::lock_guard<std::mutex> lock(mutex_);
+    NotificationRequest request;
+    SetPublishRequest(GetLocalLiveViewContent(), notificationId_, request);
+    request.SetWantAgent(GetWantAgent(callingLabel_, sessionId_));
+    return NotificationHelper::PublishNotification(request);
+}
+
+int32_t ScreenCaptureServer::GetAVScreenCaptureConfigurableParameters(int32_t sessionId, std::string &resultStr)
+{
+    MEDIA_LOGI("GetAVScreenCaptureConfigurableParameters sessionId :%{public}d",
+        sessionId);
+    std::shared_ptr<ScreenCaptureServer> server = GetScreenCaptureServerByIdWithLock(sessionId);
+    CHECK_AND_RETURN_RET_LOG(server != nullptr, MSERR_UNKNOWN,
+        "GetAVScreenCaptureConfigurableParameters failed to get instance, sessionId: %{public}d", sessionId);
+    Json::Value root;
+    root["appPrivacyProtectionSwitch"] = server->appPrivacyProtectionSwitch_;
+    root["systemPrivacyProtectionSwitch"] = server->systemPrivacyProtectionSwitch_;
+    Json::FastWriter fastWriter;
+    resultStr = fastWriter.write(root);
+    MEDIA_LOGI("GetAVScreenCaptureConfigurableParameters res: %{public}s", resultStr.c_str());
+    return MSERR_OK;
 }
 
 int32_t ScreenCaptureServer::GetAppPid()
@@ -2377,6 +2428,11 @@ int32_t ScreenCaptureServer::StartNotification()
     request.SetRemoveAllowed(false);
     request.SetInProgress(true);
 
+    if (GetSCServerDataType() == DataType::ORIGINAL_STREAM) {
+        auto wantAgent = GetWantAgent(callingLabel_, sessionId_);
+        request.SetWantAgent(wantAgent);
+    }
+    MEDIA_LOGI("StartNotification, setWantAgent success");
     std::shared_ptr<PixelMap> pixelMapTotalSpr = GetPixelMap(ICON_PATH_NOTIFICATION);
     request.SetLittleIcon(pixelMapTotalSpr);
     request.SetBadgeIconStyle(NotificationRequest::BadgeStyle::LITTLE);
@@ -2391,8 +2447,10 @@ std::string ScreenCaptureServer::GetStringByResourceName(const char* name)
 {
     std::string resourceContext;
     CHECK_AND_RETURN_RET_LOG(resourceManager_ != nullptr, resourceContext, "resourceManager is null");
-    if (strcmp(name, NOTIFICATION_SCREEN_RECORDING_TITLE_ID) == 0) {
-        resourceManager_->GetStringByName(NOTIFICATION_SCREEN_RECORDING_TITLE_ID, resourceContext);
+    if (strcmp(name, NOTIFICATION_SCREEN_RECORDING_TITLE_ID) == 0 ||
+        strcmp(name, NOTIFICATION_SCREEN_RECORDING_PRIVACY_ON_ID) == 0 ||
+        strcmp(name, NOTIFICATION_SCREEN_RECORDING_PRIVACY_OFF_ID) == 0) {
+        resourceManager_->GetStringByName(name, resourceContext);
         MEDIA_LOGD("get NOTIFICATION_SCREEN_RECORDING_TITLE_ID: %{public}s", resourceContext.c_str());
     } else {
         MEDIA_LOGE("resource name is error.");
@@ -2442,25 +2500,29 @@ std::shared_ptr<NotificationLocalLiveViewContent> ScreenCaptureServer::GetLocalL
         liveViewText_ = recordingScreenTitleStr;
     }
     MEDIA_LOGD("GetLocalLiveViewContent liveViewText: %{public}s", liveViewText_.c_str());
-    localLiveViewContent->SetText(liveViewText_);
 
     auto capsule = NotificationCapsule();
-    capsule.SetBackgroundColor(BACK_GROUND_COLOR);
-    capsulePxSize_ = static_cast<int32_t>(capsuleVpSize_ * density_);
-    std::shared_ptr<PixelMap> pixelMapCapSpr = GetPixelMapSvg(ICON_PATH_CAPSULE_STOP, capsulePxSize_, capsulePxSize_);
-    capsule.SetIcon(pixelMapCapSpr);
+    SetupCapsule(capsule);
 
+    if (GetSCServerDataType() == DataType::ORIGINAL_STREAM) {
+        localLiveViewContent->SetTitle(liveViewText_);
+        if (!systemPrivacyProtectionSwitch_ && !appPrivacyProtectionSwitch_) {
+            liveViewSubText_ = GetStringByResourceName(NOTIFICATION_SCREEN_RECORDING_PRIVACY_OFF_ID);
+        } else {
+            liveViewSubText_ = GetStringByResourceName(NOTIFICATION_SCREEN_RECORDING_PRIVACY_ON_ID);
+        }
+        localLiveViewContent->SetText(liveViewSubText_);
+        MEDIA_LOGI("GetLocalLiveViewContentc additionalText: %{public}s", liveViewSubText_.c_str());
+        capsule.SetTitle(callingLabel_);
+    } else {
+        localLiveViewContent->SetText(liveViewText_);
+        auto countTime = CreateCountTime();
+        countTime.SetInitialTime(1);
+        localLiveViewContent->SetTime(countTime);
+        localLiveViewContent->addFlag(NotificationLocalLiveViewContent::LiveViewContentInner::TIME);
+    }
     localLiveViewContent->SetCapsule(capsule);
     localLiveViewContent->addFlag(NotificationLocalLiveViewContent::LiveViewContentInner::CAPSULE);
-
-    auto countTime = NotificationTime();
-    countTime.SetInitialTime(1);
-    countTime.SetIsCountDown(false);
-    countTime.SetIsPaused(false);
-    countTime.SetIsInTitle(true);
-
-    localLiveViewContent->SetTime(countTime);
-    localLiveViewContent->addFlag(NotificationLocalLiveViewContent::LiveViewContentInner::TIME);
 
     auto basicButton = NotificationLocalLiveViewButton();
     basicButton.addSingleButtonName(BUTTON_NAME_STOP);
@@ -2470,6 +2532,20 @@ std::shared_ptr<NotificationLocalLiveViewContent> ScreenCaptureServer::GetLocalL
     localLiveViewContent->SetButton(basicButton);
     localLiveViewContent->addFlag(NotificationLocalLiveViewContent::LiveViewContentInner::BUTTON);
     return localLiveViewContent;
+}
+
+void ScreenCaptureServer::SetupCapsule(NotificationCapsule& capsule)
+{
+    capsule.SetBackgroundColor(BACK_GROUND_COLOR);
+    capsulePxSize_ = static_cast<int32_t>(capsuleVpSize_ * density_);
+
+    std::shared_ptr<PixelMap> pixelMapCapSpr;
+    if (isSystemUI2_) {
+        pixelMapCapSpr = GetPixelMapSvg(ICON_PATH_CAPSULE_STOP_2_0, capsulePxSize_, capsulePxSize_);
+    } else {
+        pixelMapCapSpr = GetPixelMapSvg(ICON_PATH_CAPSULE_STOP, capsulePxSize_, capsulePxSize_);
+    }
+    capsule.SetIcon(pixelMapCapSpr);
 }
 
 std::shared_ptr<PixelMap> ScreenCaptureServer::GetPixelMap(std::string path)
@@ -2518,7 +2594,12 @@ void ScreenCaptureServer::UpdateMicrophoneEnabled()
     request.SetUnremovable(true);
     request.SetInProgress(true);
 
-    std::shared_ptr<PixelMap> pixelMapTotalSpr = GetPixelMap(ICON_PATH_CAPSULE_STOP);
+    std::shared_ptr<PixelMap> pixelMapTotalSpr;
+    if (isSystemUI2_) {
+        pixelMapTotalSpr = GetPixelMap(ICON_PATH_CAPSULE_STOP_2_0);
+    } else {
+        pixelMapTotalSpr = GetPixelMap(ICON_PATH_CAPSULE_STOP);
+    }
     request.SetLittleIcon(pixelMapTotalSpr);
     request.SetBadgeIconStyle(NotificationRequest::BadgeStyle::LITTLE);
 
@@ -2531,23 +2612,30 @@ void ScreenCaptureServer::UpdateMicrophoneEnabled()
 void ScreenCaptureServer::UpdateLiveViewContent()
 {
     localLiveViewContent_->SetType(1);
-    localLiveViewContent_->SetText(liveViewText_);
 
     auto capsule = NotificationCapsule();
     capsule.SetBackgroundColor(BACK_GROUND_COLOR);
-    std::shared_ptr<PixelMap> pixelMapCapSpr = GetPixelMap(ICON_PATH_CAPSULE_STOP);
+    std::shared_ptr<PixelMap> pixelMapCapSpr;
+    if (isSystemUI2_) {
+        pixelMapCapSpr = GetPixelMap(ICON_PATH_CAPSULE_STOP_2_0);
+    } else {
+        pixelMapCapSpr = GetPixelMap(ICON_PATH_CAPSULE_STOP);
+    }
     capsule.SetIcon(pixelMapCapSpr);
 
+    if (GetSCServerDataType() == DataType::ORIGINAL_STREAM) {
+        localLiveViewContent_->SetTitle(liveViewText_);
+        localLiveViewContent_->SetText(liveViewSubText_);
+        capsule.SetTitle(callingLabel_);
+    } else {
+        localLiveViewContent_->SetText(liveViewText_);
+        auto countTime = CreateCountTime();
+
+        localLiveViewContent_->SetTime(countTime);
+        localLiveViewContent_->addFlag(NotificationLocalLiveViewContent::LiveViewContentInner::TIME);
+    }
     localLiveViewContent_->SetCapsule(capsule);
     localLiveViewContent_->addFlag(NotificationLocalLiveViewContent::LiveViewContentInner::CAPSULE);
-
-    auto countTime = NotificationTime();
-    countTime.SetIsCountDown(false);
-    countTime.SetIsPaused(false);
-    countTime.SetIsInTitle(true);
-
-    localLiveViewContent_->SetTime(countTime);
-    localLiveViewContent_->addFlag(NotificationLocalLiveViewContent::LiveViewContentInner::TIME);
 
     auto basicButton = NotificationLocalLiveViewButton();
     basicButton.addSingleButtonName(BUTTON_NAME_MIC);
@@ -2567,6 +2655,29 @@ void ScreenCaptureServer::UpdateLiveViewContent()
     localLiveViewContent_->addFlag(NotificationLocalLiveViewContent::LiveViewContentInner::BUTTON);
 }
 
+NotificationTime ScreenCaptureServer::CreateCountTime()
+{
+    auto countTime = NotificationTime();
+    countTime.SetIsCountDown(false);
+    countTime.SetIsPaused(false);
+    countTime.SetIsInTitle(true);
+    return countTime;
+}
+
+void ScreenCaptureServer::GetSystemUIFlag()
+{
+    const std::string systemUITag = "persist.systemui.live2";
+    std::string systemUI2;
+    int32_t systemUIRes = OHOS::system::GetStringParameter(systemUITag, systemUI2, "false");
+    if (systemUIRes != 0) {
+        MEDIA_LOGI("Failed to get systemUI flag, Res: %{public}d", systemUIRes);
+        isSystemUI2_ = false;
+    } else {
+        isSystemUI2_ = (systemUI2 == "true");
+        MEDIA_LOGI("get systemUI flag, Res: %{public}d, isSystemUI2_: %{public}d", systemUIRes, isSystemUI2_);
+    }
+}
+
 void ScreenCaptureServer::GetDumpFlag()
 {
     const std::string dumpTag = "sys.media.screenCapture.dump.enable";
@@ -2583,6 +2694,7 @@ int32_t ScreenCaptureServer::StartScreenCapture(bool isPrivacyAuthorityEnabled)
     startTime_ = GetCurrentMillisecond();
     statisticalEventInfo_.enableMic = isMicrophoneSwitchTurnOn_;
     GetDumpFlag();
+    GetSystemUIFlag();
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartScreenCapture start, "
         "isPrivacyAuthorityEnabled:%{public}s, captureState:%{public}d.",
         FAKE_POINTER(this), isPrivacyAuthorityEnabled ? "true" : "false", captureState_);
@@ -2726,6 +2838,7 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
         CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK || ret == DMError::DM_ERROR_DEVICE_NOT_SUPPORT, MSERR_UNKNOWN,
             "0x%{public}06" PRIXPTR " SetScreenSkipProtectedWindow failed, ret: %{public}d", FAKE_POINTER(this), ret);
         MEDIA_LOGI("0x%{public}06" PRIXPTR " SetScreenSkipProtectedWindow success", FAKE_POINTER(this));
+        AppPrivacyProtected(virtualScreenId_, true);
     }
 
     if (!showCursor_) {
@@ -3844,6 +3957,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
     }
     CHECK_AND_RETURN_RET(captureState_ != AVScreenCaptureState::STOPPED, MSERR_OK);
     int32_t ret = MSERR_OK;
+    DestroyPrivacySheet();
     if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
         ret = StopScreenCaptureRecorder();
     } else if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
@@ -3883,6 +3997,32 @@ void ScreenCaptureServer::StopNotStartedScreenCapture(AVScreenCaptureStateCode s
     isSurfaceMode_ = false;
     surface_ = nullptr;
     SetErrorInfo(MSERR_OK, "normal stopped", StopReason::NORMAL_STOPPED, IsUserPrivacyAuthorityNeeded());
+}
+
+bool ScreenCaptureServer::DestroyPrivacySheet()
+{
+    // start ability, tell ability to destroy pop window
+    MEDIA_LOGI("DestroyPrivacySheet start.");
+    AAFwk::Want want;
+
+    std::string bundleName = GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"];
+    if (bundleName.empty()) {
+        MEDIA_LOGE("Failed to get screenrecorder bundlename.");
+        return false;
+    }
+    AppExecFwk::ElementName element("", bundleName, "PrivacyControlAbility");
+
+    want.SetElement(element);
+    want.SetParam("appLabel", callingLabel_);
+    want.SetParam("sessionId", sessionId_);
+    want.SetParam("terminateSelf", true);
+    ErrCode ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want);
+    MEDIA_LOGI("DestroyPrivacySheet StartAbility end %{public}d", ret);
+    if (ret != ERR_OK) {
+        MEDIA_LOGE("Failed to start ability to destroy privacy sheet, error code : %{public}d", ret);
+    }
+
+    return ret == ERR_OK;
 }
 
 bool ScreenCaptureServer::DestroyPopWindow()
@@ -4040,6 +4180,72 @@ int32_t ScreenCaptureServer::SetScreenCaptureStrategy(ScreenCaptureStrategy stra
         strategy.canvasFollowRotation, strategy.enableBFrame, static_cast<int32_t>(strategy.pickerPopUp));
     captureConfig_.strategy = strategy;
     return MSERR_OK;
+}
+
+std::shared_ptr<OHOS::AbilityRuntime::WantAgent::WantAgent> ScreenCaptureServer::GetWantAgent(
+    const std::string& callingLabel,
+    int32_t sessionId)
+{
+    MEDIA_LOGI("GetWantAgent, setWantAgent");
+    auto want = std::make_shared<AAFwk::Want>();
+    AppExecFwk::ElementName element("",
+        GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"],
+        "PrivacyControlAbility");
+    want->SetElement(element);
+    want->SetParam("appLabel", callingLabel);
+    want->SetParam("sessionId", sessionId);
+    std::vector<std::shared_ptr<AAFwk::Want>> wants;
+    wants.push_back(want);
+    MEDIA_LOGI("GetWantAgent, setWantAgent set all params");
+    std::vector<AbilityRuntime::WantAgent::WantAgentConstant::Flags> flags;
+    flags.push_back(AbilityRuntime::WantAgent::WantAgentConstant::Flags::UPDATE_PRESENT_FLAG);
+    AbilityRuntime::WantAgent::WantAgentInfo wantAgentInfo(0,
+        AbilityRuntime::WantAgent::WantAgentConstant::OperationType::START_ABILITY,
+        flags, wants, nullptr);
+    MEDIA_LOGI("GetWantAgent, setWantAgent create wantAgentInfo");
+    MEDIA_LOGI("GetWantAgent, setWantAgent get wantAgent");
+    return OHOS::AbilityRuntime::WantAgent::WantAgentHelper::GetWantAgent(wantAgentInfo);
+}
+
+void ScreenCaptureServer::SetPublishRequest(
+    const std::shared_ptr<NotificationLocalLiveViewContent>& localLiveViewContent,
+    int32_t notificationId, NotificationRequest& request)
+{
+    std::shared_ptr<NotificationContent> notificationContent =
+        std::make_shared<NotificationContent>(localLiveViewContent);
+
+        request.SetSlotType(NotificationConstant::SlotType::LIVE_VIEW);
+        request.SetNotificationId(notificationId);
+        request.SetContent(notificationContent);
+        request.SetCreatorUid(AV_SCREEN_CAPTURE_SESSION_UID);
+        request.SetOwnerUid(AV_SCREEN_CAPTURE_SESSION_UID);
+        request.SetUnremovable(true);
+        request.SetInProgress(true);
+}
+
+void ScreenCaptureServer::SystemPrivacyProtected(ScreenId& virtualScreenId, bool systemPrivacyProtectionSwitch)
+{
+    std::vector<ScreenId> screenIds;
+    screenIds.push_back(virtualScreenId);
+    auto ret = ScreenManager::GetInstance().SetScreenSkipProtectedWindow(screenIds, systemPrivacyProtectionSwitch);
+    if (ret == DMError::DM_OK || ret == DMError::DM_ERROR_DEVICE_NOT_SUPPORT) {
+        MEDIA_LOGI("SystemPrivacyProtected SetScreenSkipProtectedWindow success");
+    } else {
+        MEDIA_LOGI("SystemPrivacyProtected SetScreenSkipProtectedWindow failed, ret: %{public}d", ret);
+    }
+}
+
+void ScreenCaptureServer::AppPrivacyProtected(ScreenId& virtualScreenId, bool appPrivacyProtectionSwitch)
+{
+    std::vector<std::string> privacyWindowTags;
+    privacyWindowTags.push_back("TAG_SCREEN_PROTECTION_SENSITIVE_APP");
+    auto ret = ScreenManager::GetInstance().SetScreenPrivacyWindowTagSwitch(virtualScreenId,
+        privacyWindowTags, appPrivacyProtectionSwitch);
+    if (ret == DMError::DM_OK || ret == DMError::DM_ERROR_DEVICE_NOT_SUPPORT) {
+        MEDIA_LOGI("AppPrivacyProtected SetScreenSkipProtectedWindow success");
+    } else {
+        MEDIA_LOGI("AppPrivacyProtected SetScreenSkipProtectedWindow failed, ret: %{public}d", ret);
+    }
 }
 
 ScreenCaptureObserverCallBack::ScreenCaptureObserverCallBack(
