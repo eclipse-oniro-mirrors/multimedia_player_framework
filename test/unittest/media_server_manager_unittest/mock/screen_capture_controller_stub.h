@@ -34,7 +34,8 @@ public:
     virtual ~ScreenCaptureControllerStub() = default;
 
     MOCK_METHOD(int32_t, ReportAVScreenCaptureUserChoice, (int32_t sessionId, std::string choice), (override));
-    MOCK_METHOD(int32_t, GetAVScreenCaptureConfigurableParameters, (int32_t sessionId, std::string &resultStr), (override));
+    MOCK_METHOD(int32_t, GetAVScreenCaptureConfigurableParameters,
+        (int32_t sessionId, std::string &resultStr), (override));
     MOCK_METHOD(int32_t, DestroyStub, (), (override));
     MOCK_METHOD(int, OnRemoteRequest, (uint32_t code, MessageParcel &data,
         MessageParcel &reply, MessageOption &option), (override));
