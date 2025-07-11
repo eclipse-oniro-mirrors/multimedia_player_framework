@@ -242,6 +242,7 @@ int32_t SystemSoundVibrator::VibrateLoopFunc(std::unique_lock<std::mutex> &lock,
             []() { return !g_isRunning; });
         CHECK_AND_RETURN_RET_LOG(g_isRunning, result, "RunVibrationPatterns: Stop() is call when waiting");
     }
+    close(vibratorFd->fd);
 #endif
     return result;
 }
@@ -312,6 +313,7 @@ int32_t SystemSoundVibrator::GetVibratorDuration(const std::string &hapticUri)
         vibratorPkg.patterns[patternMaxIndex].events[eventMaxIndex].time +
         vibratorPkg.patterns[patternMaxIndex].events[eventMaxIndex].duration;
     Sensors::FreeVibratorPackage(vibratorPkg);
+    close(vibratorFD.fd);
 #endif
     return ret;
 }
