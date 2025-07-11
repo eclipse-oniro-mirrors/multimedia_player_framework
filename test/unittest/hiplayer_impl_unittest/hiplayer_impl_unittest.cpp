@@ -949,5 +949,53 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_EnableStartFrameRateOpt_001, TestSize.L
     hiplayer_->EnableStartFrameRateOpt(format1);
     EXPECT_EQ(hiplayer_->syncManager_->videoInitialFrameRate_, 0.01);
 }
+
+// @tc.name     Test SetMediaMuted API
+// @tc.number   PHIUT_SetMediaMuted_001
+// @tc.desc     Test SetMediaMuted interface, 1.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SetMediaMuted_001, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    hiplayer_->audioSink_ = nullptr;
+    int32_t ret = hiplayer_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_AUD, true);
+    EXPECT_NE(ret, MSERR_OK);
+
+    std::string name = "testname";
+    hiplayer_->audioSink_ = std::make_shared<AudioSinkFilter>(name);
+    ret = hiplayer_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_AUD, true);
+    EXPECT_NE(ret, MSERR_OK);
+}
+
+// @tc.name     Test SetMediaMuted API
+// @tc.number   PHIUT_SetMediaMuted_002
+// @tc.desc     Test SetMediaMuted interface, 2.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SetMediaMuted_002, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    hiplayer_->videoDecoder_ = std::make_shared<DecoderSurfaceFilter>(name, type);
+    hiplayer_->demuxer_ = std::make_shared<MockDemuxerFilter>(name, type);
+    int32_t ret = hiplayer_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true);
+    EXPECT_EQ(hiplayer_->isVideoMuted_, true);
+    EXPECT_EQ(ret, MSERR_OK);
+
+    hiplayer_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, false);
+    EXPECT_EQ(hiplayer_->isVideoMuted_, false);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+// @tc.name     Test SetMediaMuted API
+// @tc.number   PHIUT_SetMediaMuted_003
+// @tc.desc     Test SetMediaMuted interface, 3.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SetMediaMuted_003, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    int32_t ret = hiplayer_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_SUBTITLE, true);
+    EXPECT_NE(ret, MSERR_OK);
+
+    ret = hiplayer_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_SUBTITLE, false);
+    EXPECT_NE(ret, MSERR_OK);
+}
 } // namespace Media
 } // namespace OHOS
