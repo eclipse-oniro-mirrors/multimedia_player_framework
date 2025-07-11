@@ -2447,8 +2447,8 @@ std::string ScreenCaptureServer::GetStringByResourceName(const char* name)
 {
     std::string resourceContext;
     CHECK_AND_RETURN_RET_LOG(resourceManager_ != nullptr, resourceContext, "resourceManager is null");
-    if (strcmp(name, NOTIFICATION_SCREEN_RECORDING_TITLE_ID) == 0 || 
-        strcmp(name, NOTIFICATION_SCREEN_RECORDING_PRIVACY_ON_ID) == 0 || 
+    if (strcmp(name, NOTIFICATION_SCREEN_RECORDING_TITLE_ID) == 0 ||
+        strcmp(name, NOTIFICATION_SCREEN_RECORDING_PRIVACY_ON_ID) == 0 ||
         strcmp(name, NOTIFICATION_SCREEN_RECORDING_PRIVACY_OFF_ID) == 0) {
         resourceManager_->GetStringByName(name, resourceContext);
         MEDIA_LOGD("get NOTIFICATION_SCREEN_RECORDING_TITLE_ID: %{public}s", resourceContext.c_str());
@@ -3990,7 +3990,7 @@ bool ScreenCaptureServer::DestroyPrivacySheet()
     MEDIA_LOGI("DestroyPrivacySheet start.");
     AAFwk::Want want;
 
-    std::string bundleName = GetScreenCaptureCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"];
+    std::string bundleName = GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"];
     if (bundleName.empty()) {
         MEDIA_LOGE("Failed to get screenrecorder bundlename.");
         return false;
@@ -4175,10 +4175,10 @@ std::shared_ptr<OHOS::AbilityRuntime::WantAgent::WantAgent> ScreenCaptureServer:
     auto want = std::make_shared<AAFwk::Want>();
     AppExecFwk::ElementName element("",
         GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"],
-        "com.huawei.hmos.screenrecorder.PrivacyControlAbility"); //DeviceID
-    want.SetElement(element);
-    want.SetParam("appLabel", callingLabel);
-    want.SetParam("sessionId", sessionId);
+        "com.huawei.hmos.screenrecorder.PrivacyControlAbility");
+    want->SetElement(element);
+    want->SetParam("appLabel", callingLabel);
+    want->SetParam("sessionId", sessionId);
     std::vector<std::shared_ptr<AAFwk::Want>> wants;
     wants.push_back(want);
     MEDIA_LOGI("GetWantAgent, setWantAgent set all params");
@@ -4212,31 +4212,25 @@ void ScreenCaptureServer::SystemPrivacyProtected(ScreenId& virtualScreenId, bool
 {
     std::vector<ScreenId> screenIds;
     screenIds.push_back(virtualScreenId);
-    MEDIA_LOGI("SystemPrivacyProtected virtualScreenId_: %{public}lu",
-        virtualScreenId);
     auto ret = ScreenManager::GetInstance().SetScreenSkipProtectedWindow(screenIds, systemPrivacyProtectionSwitch);
     if (ret == DMError::DM_OK || ret == DMError::DM_ERROR_DEVICE_NOT_SUPPORT) {
         MEDIA_LOGI("SystemPrivacyProtected SetScreenSkipProtectedWindow success");
     } else {
         MEDIA_LOGI("SystemPrivacyProtected SetScreenSkipProtectedWindow failed, ret: %{public}d", ret);
     }
-    
 }
 
 void ScreenCaptureServer::AppPrivacyProtected(ScreenId& virtualScreenId, bool appPrivacyProtectionSwitch)
 {
-    MEDIA_LOGI("AppPrivacyProtected virtualScreenId_: %{public}lu",
-        virtualScreenId);
     std::vector<std::string> privacyWindowTags;
-    privacyWindowTags.put_back("TAG_SCREEN_PROTECTION_SENSITIVE_APP");
+    privacyWindowTags.push_back("TAG_SCREEN_PROTECTION_SENSITIVE_APP");
     auto ret = ScreenManager::GetInstance().SetScreenPrivacyWindowTagSwitch(virtualScreenId,
         privacyWindowTags, appPrivacyProtectionSwitch);
     if (ret == DMError::DM_OK || ret == DMError::DM_ERROR_DEVICE_NOT_SUPPORT) {
         MEDIA_LOGI("AppPrivacyProtected SetScreenSkipProtectedWindow success");
     } else {
         MEDIA_LOGI("AppPrivacyProtected SetScreenSkipProtectedWindow failed, ret: %{public}d", ret);
-    }
-    
+    }   
 }
 
 ScreenCaptureObserverCallBack::ScreenCaptureObserverCallBack(
