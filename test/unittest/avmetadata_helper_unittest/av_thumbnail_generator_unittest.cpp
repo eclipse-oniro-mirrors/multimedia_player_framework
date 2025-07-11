@@ -310,7 +310,7 @@ HWTEST_F(AVThumbnailGeneratorUnitTest, GenerateAlignmentAvBuffer, TestSize.Level
     ASSERT_NE(avThumbnailGenerator_, nullptr);
     auto mockSurfaceBuffer = new MockSurfaceBuffer();
     EXPECT_CALL(*(mockSurfaceBuffer), GetWidth()).WillRepeatedly(Return(NUM_TEST));
-    EXPECT_CALL(*(mockSurfaceBuffer), Alloc(_)).WillRepeatedly(Return(GSError::GSERROR_OK));
+    EXPECT_CALL(*(mockSurfaceBuffer), Alloc(_, _)).WillRepeatedly(Return(GSError::GSERROR_OK));
     EXPECT_CALL(*(mockSurfaceBuffer), GetHeight()).WillRepeatedly(Return(NUM_TEST));
     EXPECT_CALL(*(mockSurfaceBuffer), GetFormat()).
         WillRepeatedly(Return(static_cast<int32_t>(GraphicPixelFormat::GRAPHIC_PIXEL_FMT_YCBCR_P010)));
