@@ -2660,7 +2660,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetValueFromJson_001, TestSize.Level2)
 {
     Json::Value root;
     std::string content = R"({"isEnable": "true"})";
-    std::strinf key = "isEnable";
+    std::string key = "isEnable";
     bool value = false;
     screenCaptureServer_->GetValueFromJson(root, content, key, value);
     EXPECT_EQ(value, true);
@@ -2670,7 +2670,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetValueFromJson_002, TestSize.Level2)
 {
     Json::Value root;
     std::string content = R"({"isEnable": "true"})";
-    std::strinf key = "Enable";
+    std::string key = "Enable";
     bool value = false;
     screenCaptureServer_->GetValueFromJson(root, content, key, value);
     EXPECT_EQ(value, false);
@@ -2680,7 +2680,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetValueFromJson_003, TestSize.Level2)
 {
     Json::Value root;
     std::string content = "";
-    std::strinf key = "Enable";
+    std::string key = "Enable";
     bool value = false;
     screenCaptureServer_->GetValueFromJson(root, content, key, value);
     EXPECT_EQ(value, false);
@@ -2690,7 +2690,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetValueFromJson_004, TestSize.Level2)
 {
     Json::Value root;
     std::string content = R"({"isEnable": "true"})";
-    std::strinf key = "isEnable";
+    std::string key = "isEnable";
     bool value = false;
     screenCaptureServer_->GetValueFromJson(root, content, key, value);
     EXPECT_EQ(value, false);
@@ -2744,7 +2744,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleStreamDataCase_001, TestSize.Lev
         "systemPrivacyProtectionSwitch": "true"
     }
     )";
-    int32_t result = screenCaptureServer_->HandleStreamDataCase(root, content, screenCaptureServer_);
+    int32_t result = screenCaptureServer_->HandleStreamDataCase(root, content);
     EXPECT_EQ(result, MSERR_OK);
 }
 
@@ -2758,7 +2758,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleStreamDataCase_002, TestSize.Lev
         "systemPrivacyProtectionSwitch": "true"
     }
     )";
-    int32_t result = screenCaptureServer_->HandleStreamDataCase(root, content, screenCaptureServer_);
+    int32_t result = screenCaptureServer_->HandleStreamDataCase(root, content);
     EXPECT_EQ(result, MSERR_OK);
 }
 
@@ -2772,7 +2772,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleStreamDataCase_003, TestSize.Lev
         "systemPrivacyProtectionSwitch": "false"
     }
     )";
-    int32_t result = screenCaptureServer_->HandleStreamDataCase(root, content, screenCaptureServer_);
+    int32_t result = screenCaptureServer_->HandleStreamDataCase(root, content);
     EXPECT_EQ(result, MSERR_OK);
 }
 
@@ -2786,7 +2786,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleStreamDataCase_004, TestSize.Lev
         "systemPrivacyProtectionSwitch": "true"
     }
     )";
-    int32_t result = screenCaptureServer_->HandleStreamDataCase(root, content, screenCaptureServer_);
+    int32_t result = screenCaptureServer_->HandleStreamDataCase(root, content);
     EXPECT_EQ(result, MSERR_OK);
 }
 
@@ -2800,7 +2800,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleStreamDataCase_005, TestSize.Lev
         "systemPrivacyProtectionSwitch": "false"
     }
     )";
-    int32_t result = screenCaptureServer_->HandleStreamDataCase(root, content, screenCaptureServer_);
+    int32_t result = screenCaptureServer_->HandleStreamDataCase(root, content);
     EXPECT_EQ(result, MSERR_OK);
 }
 

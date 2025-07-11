@@ -3995,7 +3995,7 @@ bool ScreenCaptureServer::DestroyPrivacySheet()
         MEDIA_LOGE("Failed to get screenrecorder bundlename.");
         return false;
     }
-    AppExecFwk::ElementName element("", bundleName, "com.huawei.hmos.screenrecorder.PrivacyControlAbility");
+    AppExecFwk::ElementName element("", bundleName, "PrivacyControlAbility");
 
     want.SetElement(element);
     want.SetParam("appLabel", callingLabel_);
@@ -4175,7 +4175,7 @@ std::shared_ptr<OHOS::AbilityRuntime::WantAgent::WantAgent> ScreenCaptureServer:
     auto want = std::make_shared<AAFwk::Want>();
     AppExecFwk::ElementName element("",
         GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"],
-        "com.huawei.hmos.screenrecorder.PrivacyControlAbility");
+        "PrivacyControlAbility");
     want->SetElement(element);
     want->SetParam("appLabel", callingLabel);
     want->SetParam("sessionId", sessionId);
@@ -4230,7 +4230,7 @@ void ScreenCaptureServer::AppPrivacyProtected(ScreenId& virtualScreenId, bool ap
         MEDIA_LOGI("AppPrivacyProtected SetScreenSkipProtectedWindow success");
     } else {
         MEDIA_LOGI("AppPrivacyProtected SetScreenSkipProtectedWindow failed, ret: %{public}d", ret);
-    }   
+    }
 }
 
 ScreenCaptureObserverCallBack::ScreenCaptureObserverCallBack(

@@ -411,7 +411,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PostStartScreenCapture_002, TestSize.L
 HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_001, TestSize.Level2)
 {
     Json::Value root;
-    screenCaptureServer_->PrepareSelectWindow(root, screenCaptureServer_);
+    screenCaptureServer_->PrepareSelectWindow(root);
     ASSERT_NE(screenCaptureServer_, nullptr);
 }
 
@@ -421,7 +421,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_002, TestSize.Leve
     const std::string rawString = "{\"displayId\" : 1, \"missionId\" : 1}";
     Json::Reader reader;
     reader.parse(rawString, root);
-    screenCaptureServer_->PrepareSelectWindow(root, screenCaptureServer_);
+    screenCaptureServer_->PrepareSelectWindow(root);
     ASSERT_NE(screenCaptureServer_, nullptr);
 }
 
@@ -431,7 +431,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_003, TestSize.Leve
     const std::string rawString = "{\"displayId\" : -1, \"missionId\" : -1}";
     Json::Reader reader;
     reader.parse(rawString, root);
-    screenCaptureServer_->PrepareSelectWindow(root, screenCaptureServer_);
+    screenCaptureServer_->PrepareSelectWindow(root);
     ASSERT_NE(screenCaptureServer_, nullptr);
 }
 
@@ -441,7 +441,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_004, TestSize.Leve
     const std::string rawString = "{\"missionId\" : 1}";
     Json::Reader reader;
     reader.parse(rawString, root);
-    screenCaptureServer_->PrepareSelectWindow(root, screenCaptureServer_);
+    screenCaptureServer_->PrepareSelectWindow(root);
     ASSERT_NE(screenCaptureServer_, nullptr);
 }
 
@@ -451,7 +451,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_005, TestSize.Leve
     const std::string rawString = "{\"displayId\" : \"hello\", \"missionId\" : 1}";
     Json::Reader reader;
     reader.parse(rawString, root);
-    screenCaptureServer_->PrepareSelectWindow(root, screenCaptureServer_);
+    screenCaptureServer_->PrepareSelectWindow(root);
     ASSERT_NE(screenCaptureServer_, nullptr);
 }
 
@@ -461,7 +461,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_006, TestSize.Leve
     const std::string rawString = "{\"displayId\" : 1}";
     Json::Reader reader;
     reader.parse(rawString, root);
-    screenCaptureServer_->PrepareSelectWindow(root, screenCaptureServer_);
+    screenCaptureServer_->PrepareSelectWindow(root);
     ASSERT_NE(screenCaptureServer_, nullptr);
 }
 
@@ -471,7 +471,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_007, TestSize.Leve
     const std::string rawString = "{\"displayId\" : 1, \"missionId\" : \"hello\"}";
     Json::Reader reader;
     reader.parse(rawString, root);
-    screenCaptureServer_->PrepareSelectWindow(root, screenCaptureServer_);
+    screenCaptureServer_->PrepareSelectWindow(root);
     ASSERT_NE(screenCaptureServer_, nullptr);
 }
 
@@ -481,7 +481,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_008, TestSize.Leve
     const std::string rawString = "{\"displayId\" : 1, \"missionId\" : \"hello\"}";
     Json::Reader reader;
     reader.parse(rawString, root);
-    screenCaptureServer_->PrepareSelectWindow(root, screenCaptureServer_);
+    screenCaptureServer_->PrepareSelectWindow(root);
     ASSERT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_SCREEN);
 }
 
@@ -555,7 +555,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetDisplayIdOfWindows_002, TestSize.Le
 
 HWTEST_F(ScreenCaptureServerFunctionTest, GetAVScreenCaptureConfigurableParameters_001, TestSize.Level2)
 {
-    int32_t sessionId = screenCapture_->sessionId_;
+    int32_t sessionId = screenCaptureServer_->sessionId_;
     std::string resultStr;
     ASSERT_EQ(screenCaptureServer_->GetAVScreenCaptureConfigurableParameters(sessionId, resultStr), MSERR_OK);
     ASSERT_EQ(resultStr, "{\"appPrivacyProtectionSwitch\":false,\"systemPrivacyProtectionSwitch\":false}\n");
