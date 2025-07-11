@@ -247,7 +247,7 @@ ohos_unittest("recorder_server_unit_test") {
     "hitrace:hitrace_meter",
     "power_manager:powermgr_client",
     "qos_manager:qos",
-    "graphic_surface:surface",
+    "graphic_surface:sync_fence_static",
   ]
 
   if (defined(global_parts_info) &&
