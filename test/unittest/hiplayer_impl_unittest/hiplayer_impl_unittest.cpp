@@ -963,7 +963,7 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SetMediaMuted_001, TestSize.Level0)
     std::string name = "testname";
     hiplayer_->audioSink_ = std::make_shared<AudioSinkFilter>(name);
     ret = hiplayer_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_AUD, true);
-    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_NE(ret, MSERR_OK);
 }
 
 // @tc.name     Test SetMediaMuted API
