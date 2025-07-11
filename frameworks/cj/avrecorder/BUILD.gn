@@ -71,7 +71,6 @@ ohos_shared_library("cj_media_avrecorder_ffi") {
     "napi:cj_bind_native",
     "qos_manager:qos",
     "window_manager:libdm",
-    "graphic_surface:surface",
   ]
 
   if (player_framework_support_auto_create_file) {

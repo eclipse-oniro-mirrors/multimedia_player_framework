@@ -82,8 +82,7 @@ public:
     MOCK_METHOD(void, SetBufferHandle, (BufferHandle *handle), (override));
     MOCK_METHOD(BufferHandle*, GetBufferHandle, (), (const, override));
     MOCK_METHOD(void*, GetVirAddr, (), (override));
-    MOCK_METHOD(GSError, Alloc, (const BufferRequestConfig &config, const sptr<SurfaceBuffer>& previousBuffer),
-        (override));
+    MOCK_METHOD(GSError, Alloc, (const BufferRequestConfig &config), (override));
     MOCK_METHOD(GSError, Map, (), (override));
     MOCK_METHOD(GSError, Unmap, (), (override));
     MOCK_METHOD(GSError, FlushCache, (), (override));
