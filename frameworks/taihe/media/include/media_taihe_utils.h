@@ -30,7 +30,7 @@ namespace Media {
 using namespace taihe;
 using namespace ohos::multimedia::media;
 
-constexpr char CLASS_NAME_BUSINESSERROR[] = "L@ohos/base/BusinessError;";
+constexpr char CLASS_NAME_BUSINESSERROR[] = "@ohos.base.BusinessError";
 
 struct MediaKeySystemInfo {
     std::string uuid;

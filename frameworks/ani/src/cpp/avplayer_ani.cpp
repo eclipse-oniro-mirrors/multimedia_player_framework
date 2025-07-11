@@ -219,7 +219,7 @@ std::string AVPlayerAni::GetCurrentState()
 
 ani_status AVPlayerAni::AVPlayerAniInit(ani_env *env)
 {
-    static const char *className = "L@ohos/multimedia/media/media/AVPlayerHandle;";
+    static const char *className = "@ohos.multimedia.media.media.AVPlayerHandle";
     ani_class cls;
     if (ANI_OK != env->FindClass(className, &cls)) {
         MEDIA_LOGE("Failed to find class: %{public}s", className);
@@ -285,7 +285,7 @@ ani_object AVPlayerAni::Constructor([[maybe_unused]] ani_env *env)
     nativeAVPlayerAni->playerCb_ = std::make_shared<AniAVPlayerCallback>(env, nativeAVPlayerAni.get());
     (void)nativeAVPlayerAni->player_->SetPlayerCallback(nativeAVPlayerAni->playerCb_);
 
-    static const char *className = "L@ohos/multimedia/media/media/AVPlayerHandle;";
+    static const char *className = "@ohos.multimedia.media.media.AVPlayerHandle";
     ani_class cls;
     if (ANI_OK != env->FindClass(className, &cls)) {
         MEDIA_LOGE("Failed to find class: %{public}s", className);
@@ -293,7 +293,7 @@ ani_object AVPlayerAni::Constructor([[maybe_unused]] ani_env *env)
     }
 
     ani_method ctor;
-    if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", "J:V", &ctor)) {
+    if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", "l:", &ctor)) {
         MEDIA_LOGE("Failed to find method: %{public}s", "ctor");
         return nullptr;
     }
@@ -622,7 +622,7 @@ void AVPlayerAni::SetVolume(ani_env *env, ani_object object, ani_double volume)
         MEDIA_LOGI("SetVolume is processing, skip this task until onVolumeChangedCb");
     }
     aVPlayerAni->playerCb_->isSetVolume_ = true;
-    
+
     double volumeValue;
     ani_status status = MediaAniUtils::GetDouble(env, volume, volumeValue);
     if (status != ANI_OK || volumeValue < 0.0f || volumeValue > 1.0f) {
@@ -1465,16 +1465,16 @@ ani_string AVPlayerAni::GetUrl(ani_env *env, ani_object object)
 ani_status MediaAniResultArray::GetAniResult(ani_env *env, ani_object &result)
 {
     ani_class cls {};
-    static const std::string className = "Lescompat/Array;";
+    static const std::string className = "escompat.Array";
     ani_status status = env->FindClass(className.c_str(), &cls);
     if (status != ANI_OK) {
-        MEDIA_LOGE("Can't find Lescompat/Array");
+        MEDIA_LOGE("Can't find escompat.Array");
         return status;
     }
     ani_method arrayConstructor {};
-    status = env->Class_FindMethod(cls, "<ctor>", "I:V", &arrayConstructor);
+    status = env->Class_FindMethod(cls, "<ctor>", "i:", &arrayConstructor);
     if (status != ANI_OK) {
-        MEDIA_LOGE("Can't find method <ctor> in Lescompat/Array");
+        MEDIA_LOGE("Can't find method <ctor> in escompat.Array");
         return status;
     }
     status = env->Object_New(cls, arrayConstructor, &result, value_.size());
@@ -1483,9 +1483,9 @@ ani_status MediaAniResultArray::GetAniResult(ani_env *env, ani_object &result)
         return status;
     }
     ani_method setMethod {};
-    status = env->Class_FindMethod(cls, "$_set", "ILstd/core/Object;:V", &setMethod);
+    status = env->Class_FindMethod(cls, "$_set", "iC{std.core.Object}:", &setMethod);
     if (status != ANI_OK) {
-        MEDIA_LOGE("Can't find method $_set in Lescompat/Array.");
+        MEDIA_LOGE("Can't find method $_set in escompat.Array.");
         return status;
     }
     auto vecSize = value_.size();

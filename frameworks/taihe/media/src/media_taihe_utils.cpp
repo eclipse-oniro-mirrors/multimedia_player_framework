@@ -116,7 +116,7 @@ ani_object MediaTaiheUtils::ToBusinessError(ani_env *env, int32_t code, const st
     CHECK_AND_RETURN_RET_LOG(env->FindClass(CLASS_NAME_BUSINESSERROR, &cls) == ANI_OK, err,
         "find class %{public}s failed", CLASS_NAME_BUSINESSERROR);
     ani_method ctor {};
-    CHECK_AND_RETURN_RET_LOG(env->Class_FindMethod(cls, "<ctor>", ":V", &ctor) == ANI_OK, err,
+    CHECK_AND_RETURN_RET_LOG(env->Class_FindMethod(cls, "<ctor>", ":", &ctor) == ANI_OK, err,
         "find method BusinessError constructor failed");
     ani_object error {};
     CHECK_AND_RETURN_RET_LOG(env->Object_New(cls, ctor, &error) == ANI_OK, err,
@@ -136,7 +136,7 @@ ani_object MediaTaiheUtils::ToBusinessError(ani_env *env, int32_t code, const st
 ani_object MediaTaiheUtils::CreatePixelMap(ani_env *env, OHOS::Media::PixelMap &pixelMap)
 {
     ani_class cls {};
-    static const char *className = "L@ohos/multimedia/image/PixelMap;";
+    static const char *className = "@ohos.multimedia.image.PixelMap";
     CHECK_AND_RETURN_RET_LOG(env->FindClass(className, &cls) == ANI_OK, nullptr,
         "Failed to find class: %{public}s", className);
     ani_method ctorMethod {};
@@ -152,7 +152,7 @@ ani_object MediaTaiheUtils::CreatePixelMap(ani_env *env, OHOS::Media::PixelMap &
 ani_object MediaTaiheUtils::CreateMediaKeySystemInfo(ani_env *env, ANI::Media::MediaKeySystemInfo &mediaKeySystemInfo)
 {
     ani_class cls {};
-    static const char *className = "L@ohos/multimedia/drm/drm/MediaKeySystemInfo;";
+    static const char *className = "@ohos.multimedia.drm.drm.MediaKeySystemInfo";
     CHECK_AND_RETURN_RET_LOG(env->FindClass(className, &cls) == ANI_OK, nullptr,
         "Failed to find class: %{public}s", className);
     ani_method ctorMethod {};
@@ -167,25 +167,25 @@ ani_object MediaTaiheUtils::CreateMediaKeySystemInfo(ani_env *env, ANI::Media::M
         "Failed to find method: <set>uuid");
     CHECK_AND_RETURN_RET_LOG(env->Object_CallMethod_Void(aniObject, uuidSetter,
         ToAniString(env, mediaKeySystemInfo.uuid)) == ANI_OK, nullptr, "<set>uuid fail");
-    
+
     ani_class clsAry {};
-    static const std::string classNameAry = "Lescompat/Array;";
+    static const std::string classNameAry = "escompat.Array";
     if (env->FindClass(classNameAry.c_str(), &clsAry)) {
-        printf("Can't find Lescompat/Array.");
+        printf("Can't find escompat.Array.");
     }
 
     ani_method arrayConstructor {};
-    if (env->Class_FindMethod(clsAry, "<ctor>", "I:V", &arrayConstructor)) {
-        printf("Can't find method <ctor> in Lescompat/Array.");
+    if (env->Class_FindMethod(clsAry, "<ctor>", "i:", &arrayConstructor)) {
+        printf("Can't find method <ctor> in escompat.Array.");
     }
 
     if (env->Object_New(clsAry, arrayConstructor, &aniObject, mediaKeySystemInfo.pssh.size())) {
         printf("Call method <ctor> failed.");
     }
-    
+
     ani_method setMethod {};
-    if (env->Class_FindMethod(clsAry, "$_set", "ILstd/core/Object;:V", &setMethod)) {
-        printf("Can't find method $_set in Lescompat/Array.");
+    if (env->Class_FindMethod(clsAry, "$_set", "iC{std.core.Object}:", &setMethod)) {
+        printf("Can't find method $_set in escompat.Array.");
     }
     for (size_t i = 0; i < mediaKeySystemInfo.pssh.size(); i++) {
         ani_int aniInt = static_cast<ani_int>(mediaKeySystemInfo.pssh[i]);
