@@ -325,6 +325,12 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
 
 void AVMetaDataCollector::InitTracksInfoVector(const std::shared_ptr<Meta> &meta, size_t index)
 {
+    Plugins::MediaType mediaType;
+    bool hasMediaType = meta->GetData(Tag::MEDIA_TYPE, mediaType);
+    if (hasMediaType && mediaType == Plugins::MediaType::AUXILIARY) {
+        GetOtherTrackInfo(meta, index);
+        return;
+    }
     std::string mime = "";
     meta->GetData(Tag::MIME_TYPE, mime);
     if (IsAudioMime(mime)) {
