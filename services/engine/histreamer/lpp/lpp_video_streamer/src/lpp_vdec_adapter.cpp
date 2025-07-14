@@ -181,6 +181,12 @@ int32_t LppVideoDecoderAdapter::StartDecode()
     FALSE_RETURN_V_MSG(decodertask_ != nullptr, MSERR_INVALID_OPERATION, "decodertask_ is nullptr");
     decodertask_->Start();
     int32_t ret = videoDecoder_->Start();
+    firstStarted_ = true;
+    if (initTargetPts_ != -1) {
+        int32_t seekRes = SetTargetPts(initTargetPts_);
+        FALSE_RETURN_V_MSG(seekRes == MSERR_OK, seekRes, "Seek failed");
+        initTargetPts_ = -1;
+    }
     FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, AVCSErrorToMSError(ret), "StartDecode failed");
     return MSERR_OK;
 }
@@ -622,5 +628,18 @@ void LppVideoDecoderAdapter::DumpBufferIfNeeded(const std::string &fileName, con
     DumpAVBufferToFile(DUMP_PARAM, fileName, buffer);
 }
 
+int32_t LppVideoDecoderAdapter::SetTargetPts(int64_t targetPts)
+{
+    FALSE_RETURN_V_MSG(videoDecoder_ != nullptr, MSERR_INVALID_OPERATION, "videoDecoder_ nullptr");
+    if (!firstStarted_) {
+        initTargetPts_ = targetPts;
+        return MSERR_OK;
+    }
+    Format format;
+    format.PutLongValue("video_seek_pts", targetPts);
+    auto ret = videoDecoder_->SetParameter(format);
+    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, MSERR_VID_DEC_FAILED, "Seek failed");
+    return MSERR_OK;
+}
 }  // namespace Media
 }  // namespace OHOS

@@ -65,6 +65,7 @@ public:
     void SetEventReceiver(std::shared_ptr<Media::Pipeline::EventReceiver> eventReceiver);
     void SetSyncManager(std::shared_ptr<ILppSyncManager> syncMgr);
     void SetPlaybackSpeed(float speed);
+    int32_t SetTargetPts(int64_t targetPts);
 
 private:
     int32_t PrepareBufferQueue();
@@ -112,8 +113,11 @@ private:
     std::atomic<bool> speed_ {1.0f};
     bool dumpBufferNeeded_ {false};
     std::string dumpFileNameOutput_ {};
+
+    int64_t initTargetPts_ {-1};
+    bool firstStarted_ {false};
 };
 
 }  // namespace Media
 }  // namespace OHOS
-#endif
+#endif

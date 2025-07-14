@@ -348,7 +348,9 @@ int32_t HiLppVideoStreamerImpl::SetSyncAudioStreamer(int streamerId)
 }
 int32_t HiLppVideoStreamerImpl::SetTargetStartFrame(const int64_t targetPts, const int timeoutMs)
 {
-    FALSE_RETURN_V_MSG(syncMgr_ != nullptr, MSERR_UNKNOWN, "syncMgr_ nullptr");
+    FALSE_RETURN_V_MSG(syncMgr_ != nullptr && vdec_ != nullptr, MSERR_INVALID_OPERATION, "syncMgr_ nullptr");
+    int32_t ret = vdec_->SetTargetPts(targetPts);
+    FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "vdec_ SetTargetPts failed");
     syncMgr_->SetTargetStartFrame(targetPts, timeoutMs);
     return MSERR_OK;
 }
