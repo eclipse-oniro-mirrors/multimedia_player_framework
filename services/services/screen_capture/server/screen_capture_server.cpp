@@ -922,9 +922,9 @@ int32_t ScreenCaptureServer::HandlePopupWindowCase(Json::Value& root, const std:
     if (showShareSystemAudioBox_) {
         GetValueFromJson(root, content, std::string("isInnerAudioBoxSelected"), isInnerAudioBoxSelected_);
     }
-    MEDIA_LOGI("ReportAVScreenCaptureUserChoice showShareSystemAudioBox:%{public}d,",
-        "isInnerAudioBoxSelected:%{public}d", static_cast<int>(showShareSystemAudioBox_),
-        static_cast<int>(isInnerAudioBoxSelected_));
+    MEDIA_LOGI("ReportAVScreenCaptureUserChoice showShareSystemAudioBox:%{public}s,",
+        "isInnerAudioBoxSelected:%{public}s", showShareSystemAudioBox_ ? "true" : "false",
+        isInnerAudioBoxSelected_ ? "true" : "false");
 
     if (USER_CHOICE_ALLOW.compare(choice) == 0) {
         PrepareSelectWindow(root);
