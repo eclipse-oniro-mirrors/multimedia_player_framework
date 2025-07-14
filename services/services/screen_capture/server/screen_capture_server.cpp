@@ -666,8 +666,6 @@ bool ScreenCaptureServer::CanScreenCaptureInstanceBeCreate(int32_t appUid)
     MEDIA_LOGI("curAppUid: %{public}d", appUid);
     CHECK_AND_RETURN_RET_LOG(CheckScreenCaptureAppLimit(appUid), false,
         "CurScreenCaptureAppNum reach limit, cannot create more app.");
-    appVersion_ = GetApiInfo(appUid);
-    MEDIA_LOGI("curApp appVersion: %{public}d", appVersion_);
     return CheckScreenCaptureSessionIdLimit(appUid);
 }
 
@@ -680,6 +678,7 @@ std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::CreateScreenCaptureN
     std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
     CHECK_AND_RETURN_RET_LOG(server != nullptr, nullptr, "Failed to create ScreenCaptureServer.");
     server->SetSessionId(id);
+    server->GetAndSetAppVersion();
     AddScreenCaptureServerMap(id, server);
     return std::static_pointer_cast<IScreenCaptureService>(server);
 }
@@ -1085,6 +1084,12 @@ void ScreenCaptureServer::SetSessionId(int32_t sessionId)
 {
     sessionId_ = sessionId;
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " sessionId: %{public}d", FAKE_POINTER(this), sessionId_);
+}
+
+void ScreenCaptureServer::GetAndSetAppVersion()
+{
+    appVersion_ = GetApiInfo(appInfo_.appUid);
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " appVersion: %{public}d", FAKE_POINTER(this), appVersion_);
 }
 
 int32_t ScreenCaptureServer::SetCaptureMode(CaptureMode captureMode)
