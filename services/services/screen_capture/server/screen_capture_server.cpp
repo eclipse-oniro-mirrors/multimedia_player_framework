@@ -803,7 +803,6 @@ int32_t ScreenCaptureServer::SetAndCheckSaLimit(OHOS::AudioStandard::AppInfo &ap
     }
     MEDIA_LOGI("SetAndCheckSaLimit SUCCESS! appUid: %{public}d, saUid: %{public}d",
         appInfo.appUid, GetSCServerSaUid());
-        appVersion_ = GetApiInfo(appInfo_.appUid);
     return MSERR_OK;
 }
 
