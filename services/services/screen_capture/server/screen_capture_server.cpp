@@ -3596,7 +3596,7 @@ int32_t ScreenCaptureServer::SetCanvasRotationInner()
     CHECK_AND_RETURN_RET_LOG(virtualScreenId_ != SCREEN_ID_INVALID, MSERR_INVALID_VAL,
                              "SetCanvasRotation failed virtual screen not init");
     auto ret = ScreenManager::GetInstance().SetVirtualMirrorScreenCanvasRotation(virtualScreenId_, canvasRotation_);
-    if (appVersion_ == UNSUPPORT_ERROR_CODE_API_VERSION_ISOLATION &&
+    if (appVersion_ >= UNSUPPORT_ERROR_CODE_API_VERSION_ISOLATION &&
         ret == DMError::DM_ERROR_DEVICE_NOT_SUPPORT) {
         MEDIA_LOGE("SetVirtualMirrorScreenCanvasRotation failed, ret: %{public}d", ret);
         return MSERR_UNSUPPORT;
@@ -3669,7 +3669,7 @@ int32_t ScreenCaptureServer::ResizeCanvas(int32_t width, int32_t height)
 
     auto resizeRet = ScreenManager::GetInstance().ResizeVirtualScreen(virtualScreenId_, width, height);
     MEDIA_LOGI("ScreenCaptureServer::ResizeCanvas, ResizeVirtualScreen end, ret: %{public}d ", resizeRet);
-    if (appVersion_ == UNSUPPORT_ERROR_CODE_API_VERSION_ISOLATION &&
+    if (appVersion_ >= UNSUPPORT_ERROR_CODE_API_VERSION_ISOLATION &&
         resizeRet == DMError::DM_ERROR_DEVICE_NOT_SUPPORT) {
         MEDIA_LOGE("ResizeCanvas failed, resizeRet: %{public}d", resizeRet);
         return MSERR_UNSUPPORT;
@@ -3723,7 +3723,7 @@ int32_t ScreenCaptureServer::SkipPrivacyModeInner()
                              "SkipPrivacyMode failed virtual screen not init");
     auto ret = Rosen::DisplayManager::GetInstance().SetVirtualScreenSecurityExemption(virtualScreenId_,
         appInfo_.appPid, skipPrivacyWindowIDsVec_);
-    if (appVersion_ == UNSUPPORT_ERROR_CODE_API_VERSION_ISOLATION &&
+    if (appVersion_ >= UNSUPPORT_ERROR_CODE_API_VERSION_ISOLATION &&
         ret == DMError::DM_ERROR_DEVICE_NOT_SUPPORT) {
         MEDIA_LOGE("SetVirtualScreenSecurityExemption failed, ret: %{public}d", ret);
         return MSERR_UNSUPPORT;
@@ -3751,7 +3751,7 @@ int32_t ScreenCaptureServer::SetMaxVideoFrameRate(int32_t frameRate)
     uint32_t actualRefreshRate = 0;
     auto res = ScreenManager::GetInstance().SetVirtualScreenMaxRefreshRate(virtualScreenId_,
         static_cast<uint32_t>(frameRate), actualRefreshRate);
-    if (appVersion_ == UNSUPPORT_ERROR_CODE_API_VERSION_ISOLATION &&
+    if (appVersion_ >= UNSUPPORT_ERROR_CODE_API_VERSION_ISOLATION &&
         res == DMError::DM_ERROR_DEVICE_NOT_SUPPORT) {
         MEDIA_LOGE("SetVirtualScreenMaxRefreshRate failed, res: %{public}d", res);
         return MSERR_UNSUPPORT;
