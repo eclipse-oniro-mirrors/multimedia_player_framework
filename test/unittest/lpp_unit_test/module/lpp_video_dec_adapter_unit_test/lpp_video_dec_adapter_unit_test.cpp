@@ -245,7 +245,7 @@ HWTEST_F(LppVideoDecAdapterUnitTest, StartDecode_001, TestSize.Level1)
 HWTEST_F(LppVideoDecAdapterUnitTest, StartDecode_002, TestSize.Level1)
 {
     ASSERT_NE(nullptr, videoDecAdapter_);
-    videoDecAdapter_->decodertask_ 
+    videoDecAdapter_->decodertask_
         = std::make_unique<Task>("test_start_decode", streamerId_, TaskType::SINGLETON, TaskPriority::NORMAL, false);
     videoDecAdapter_->videoDecoder_ = videoDecoder_;
     videoDecAdapter_->initTargetPts_ = 3000;
