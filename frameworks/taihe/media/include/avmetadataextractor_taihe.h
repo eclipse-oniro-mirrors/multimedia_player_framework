@@ -31,18 +31,15 @@ using namespace ohos::multimedia::media;
 class AVMetadataExtractorImpl {
 public:
     AVMetadataExtractorImpl();
-    AVMetadataExtractorImpl(AVMetadataExtractorImpl *obj);
+    AVMetadataExtractorImpl(std::shared_ptr<OHOS::Media::AVMetadataHelper> avMetadataHelper);
     optional<AVFileDescriptor> GetFdSrc();
     void SetFdSrc(optional_view<AVFileDescriptor> fdSrc);
     optional<AVDataSrcDescriptor> GetDataSrc();
     void SetDataSrc(optional_view<AVDataSrcDescriptor> dataSrc);
-    AVMetadata FetchMetadataSync();
-    // ohos::multimedia::image::PixelMap FetchAlbumCoverSync();
+    optional<AVMetadata> FetchMetadataSync();
     void ReleaseSync();
-    int32_t GetFrameIndexByTimeSync(double timeUs);
-    double GetTimeByFrameIndexSync(int32_t index);
-    uintptr_t FetchAlbumCoverSync();
-    friend AVMetadataExtractor CreateAVMetadataExtractorSync();
+    double GetFrameIndexByTimeSync(double timeUs);
+    double GetTimeByFrameIndexSync(double index);
 private:
     std::shared_ptr<OHOS::Media::AVMetadataHelper> helper_;
     std::shared_ptr<OHOS::Media::HelperDataSourceCallback> dataSrcCb_ = nullptr;
@@ -52,6 +49,9 @@ private:
     uint64_t timeStamp_;
     uint32_t index_;
     std::shared_ptr<OHOS::Media::PixelMap> artPicture_ = nullptr;
+    void SetMetadataProperty(std::shared_ptr<OHOS::Media::Meta> metadata, AVMetadata &res);
+    bool SetPropertyByType(AVMetadata &res, std::shared_ptr<OHOS::Media::Meta> metadata, std::string key);
+    void SetDefaultMetadataProperty(AVMetadata &res);
 };
 } // namespace ANI::Media
 #endif // AVMETADATAEXTRACTOR_TAIHE_H

@@ -38,6 +38,7 @@ public:
     void SaveCallbackReference(const std::string &name, std::weak_ptr<AutoRef> ref);
     void ClearCallbackReference();
     void SendErrorCallback(int32_t errCode);
+    void SendStateCallback(const std::string &callbackName);
     std::shared_ptr<OHOS::AppExecFwk::EventHandler> mainHandler_ = nullptr;
 
 protected:
@@ -53,6 +54,7 @@ private:
         int32_t errorCode = MSERR_EXT_UNKNOWN;
     };
     void OnTaiheErrorCallBack(RecordTaiheCallback *taiheCb) const;
+    void OnTaiheStateCallBack(RecordTaiheCallback *taiheCb) const;
     std::mutex mutex_;
     std::map<std::string, std::weak_ptr<AutoRef>> refMap_;
     bool isVideo_ = false;

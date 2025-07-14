@@ -37,6 +37,7 @@ void AVTransCoderCallback::SendCompleteCallback()
     CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
     cb->autoRef = refMap_.at(AVTransCoderEvent::EVENT_COMPLETE);
     cb->callbackName = AVTransCoderEvent::EVENT_COMPLETE;
+    return OnTaiheCompleteCallBack(cb);
 }
 
 void AVTransCoderCallback::SendProgressUpdateCallback(int32_t progress)
@@ -105,6 +106,10 @@ void AVTransCoderCallback::SaveCallbackReference(const std::string &name, std::w
     std::lock_guard<std::mutex> lock(mutex_);
     refMap_[name] = ref;
     MEDIA_LOGI("Set callback type: %{public}s", name.c_str());
+    if (mainHandler_ == nullptr) {
+        std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::GetMainEventRunner();
+        mainHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
+    }
 }
 
 void AVTransCoderCallback::SendErrorCallback(MediaServiceExtErrCodeAPI9 errCode, const std::string &msg)
@@ -126,7 +131,11 @@ void AVTransCoderCallback::SendErrorCallback(MediaServiceExtErrCodeAPI9 errCode,
     auto task = [this, cb]() {
         this->OnTaiheErrorCallBack(cb);
     };
-    mainHandler_->PostTask(task, "OnError", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    bool ret = mainHandler_->PostTask(task, "OnError", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    if (!ret) {
+        MEDIA_LOGE("Failed to PostTask!");
+        delete cb;
+    }
 }
 
 void AVTransCoderCallback::OnTaiheErrorCallBack(AVTransCoderTaiheCallback *taiheCb) const
@@ -135,7 +144,9 @@ void AVTransCoderCallback::OnTaiheErrorCallBack(AVTransCoderTaiheCallback *taihe
     do {
         MEDIA_LOGD("OnTaiheErrorCallBack is called");
         std::shared_ptr<AutoRef> ref = taiheCb->autoRef.lock();
+        CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
         auto func = ref->callbackRef_;
+        CHECK_AND_BREAK_LOG(func != nullptr, "failed to get callback");
         auto err = MediaTaiheUtils::ToBusinessError(get_env(), taiheCb->errorCode, taiheCb->errorMsg);
         std::shared_ptr<taihe::callback<void(uintptr_t)>> cacheCallback =
             std::reinterpret_pointer_cast<taihe::callback<void(uintptr_t)>>(func);
@@ -153,9 +164,10 @@ void AVTransCoderCallback::OnTaiheProgressUpdateCallback(AVTransCoderTaiheCallba
         CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
 
         auto func = ref->callbackRef_;
-        std::shared_ptr<taihe::callback<void(int32_t)>> cacheCallback =
-            std::reinterpret_pointer_cast<taihe::callback<void(int32_t)>>(func);
-        (*cacheCallback)(static_cast<int32_t>(taiheCb->progress));
+        CHECK_AND_BREAK_LOG(func != nullptr, "failed to get callback");
+        std::shared_ptr<taihe::callback<void(double)>> cacheCallback =
+            std::reinterpret_pointer_cast<taihe::callback<void(double)>>(func);
+        (*cacheCallback)(static_cast<double>(taiheCb->progress));
     } while (0);
     delete taiheCb;
 }
@@ -169,6 +181,7 @@ void AVTransCoderCallback::OnTaiheCompleteCallBack(AVTransCoderTaiheCallback *ta
         CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
 
         auto func = ref->callbackRef_;
+        CHECK_AND_BREAK_LOG(func != nullptr, "failed to get callback");
         uintptr_t undefined = MediaTaiheUtils::GetUndefined(get_env());
         std::shared_ptr<taihe::callback<void(uintptr_t)>> cacheCallback =
             std::reinterpret_pointer_cast<taihe::callback<void(uintptr_t)>>(func);

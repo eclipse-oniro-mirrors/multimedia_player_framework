@@ -21,7 +21,6 @@
 #include "media_taihe_utils.h"
 
 using namespace ANI::Media;
-using DataSrcCallback = taihe::callback<int32_t(taihe::array_view<uint8_t>, int64_t, taihe::optional_view<int64_t>)>;
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_METADATA, "AVMetadataExtractorTaihe"};
@@ -30,11 +29,9 @@ namespace ANI::Media {
 
 AVMetadataExtractorImpl::AVMetadataExtractorImpl() {}
 
-AVMetadataExtractorImpl::AVMetadataExtractorImpl(AVMetadataExtractorImpl *obj)
+AVMetadataExtractorImpl::AVMetadataExtractorImpl(std::shared_ptr<OHOS::Media::AVMetadataHelper> avMetadataHelper)
 {
-    if (obj != nullptr) {
-        helper_ = obj->helper_;
-    }
+    helper_ = avMetadataHelper;
 }
 
 optional<AVFileDescriptor> AVMetadataExtractorImpl::GetFdSrc()
@@ -43,8 +40,8 @@ optional<AVFileDescriptor> AVMetadataExtractorImpl::GetFdSrc()
     MEDIA_LOGI("TaiheGetAVFileDescriptor In");
     AVFileDescriptor fdSrc;
     fdSrc.fd = fileDescriptor_.fd;
-    fdSrc.offset = optional<int64_t>(std::in_place_t{}, fileDescriptor_.offset);
-    fdSrc.length = optional<int64_t>(std::in_place_t{}, fileDescriptor_.length);
+    fdSrc.offset = optional<double>(std::in_place_t{}, fileDescriptor_.offset);
+    fdSrc.length = optional<double>(std::in_place_t{}, fileDescriptor_.length);
     MEDIA_LOGI("TaiheGetAVFileDescriptor Out");
     return optional<AVFileDescriptor>(std::in_place_t{}, fdSrc);
 }
@@ -85,28 +82,18 @@ optional<AVDataSrcDescriptor> AVMetadataExtractorImpl::GetDataSrc()
 {
     OHOS::Media::MediaTrace trace("AVMetadataExtractorTaihe::set dataSrc");
     MEDIA_LOGI("TaiheGetDataSrc In");
-    if (dataSrcCb_ == nullptr) {
-        std::shared_ptr<uintptr_t> ptr = std::make_shared<uintptr_t>();
-        int64_t errFileSize = -1;
-        auto errorCallback = std::reinterpret_pointer_cast<DataSrcCallback>(ptr);
-        set_business_error(OHOS::Media::MSERR_EXT_API9_OPERATE_NOT_PERMIT, "failed to check dataSrcCb_");
-        return optional<AVDataSrcDescriptor>(std::in_place_t{},
-            AVDataSrcDescriptor{std::move(errFileSize), std::move(*errorCallback)});
-    }
+    CHECK_AND_RETURN_RET_LOG(dataSrcCb_ != nullptr,
+        optional<AVDataSrcDescriptor>(std::nullopt), "failed to check dataSrcCb_");
+    
     int64_t fileSize;
     (void)dataSrcCb_->GetSize(fileSize);
     const std::string callbackName = "readAt";
     std::shared_ptr<uintptr_t> callback;
     int32_t ret = dataSrcCb_->GetCallback(callbackName, callback);
-    if (ret != OHOS::Media::MSERR_OK) {
-        std::shared_ptr<uintptr_t> ptr = std::make_shared<uintptr_t>();
-        int64_t errFileSize = -1;
-        auto errorCallback = std::reinterpret_pointer_cast<DataSrcCallback>(ptr);
-        set_business_error(OHOS::Media::MSERR_EXT_API9_OPERATE_NOT_PERMIT, "failed to GetCallback");
-        return optional<AVDataSrcDescriptor>(std::in_place_t{},
-            AVDataSrcDescriptor{std::move(errFileSize), std::move(*errorCallback)});
-    }
-    auto cacheCallback = std::reinterpret_pointer_cast<DataSrcCallback>(callback);
+    CHECK_AND_RETURN_RET_LOG(ret == OHOS::Media::MSERR_OK,
+        optional<AVDataSrcDescriptor>(std::nullopt), "failed to GetCallback");
+    
+    auto cacheCallback = std::reinterpret_pointer_cast<OHOS::Media::DataSrcCallback>(callback);
     AVDataSrcDescriptor fdSrc = AVDataSrcDescriptor{std::move(fileSize), std::move(*cacheCallback)};
     MEDIA_LOGI("TaiheGetDataSrc Out");
     return optional<AVDataSrcDescriptor>(std::in_place_t{}, fdSrc);
@@ -133,7 +120,7 @@ void AVMetadataExtractorImpl::SetDataSrc(optional_view<AVDataSrcDescriptor> data
         }
         MEDIA_LOGI("Recvive filesize is %{public}" PRId64 "", dataSrcDescriptor_.fileSize);
         dataSrcCb_ = std::make_shared<OHOS::Media::HelperDataSourceCallback>(env, dataSrcDescriptor_.fileSize);
-        auto callbackPtr = std::make_shared<DataSrcCallback>(dataSrc.value().callback);
+        auto callbackPtr = std::make_shared<OHOS::Media::DataSrcCallback>(dataSrc.value().callback);
         std::shared_ptr<uintptr_t> callback = std::reinterpret_pointer_cast<uintptr_t>(callbackPtr);
         dataSrcDescriptor_.callback = callback;
         std::shared_ptr<AutoRef> autoRef =
@@ -147,72 +134,156 @@ void AVMetadataExtractorImpl::SetDataSrc(optional_view<AVDataSrcDescriptor> data
     }
 }
 
-AVMetadata AVMetadataExtractorImpl::FetchMetadataSync()
+void AVMetadataExtractorImpl::SetDefaultMetadataProperty(AVMetadata &res)
 {
-    if (state_ != OHOS::Media::HelperState::HELPER_STATE_RUNNABLE) {
-        set_business_error(OHOS::Media::MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Can't fetchMetadata, please set source.");
-    }
-    AVMetadata res;
+    res.album = optional<string>(std::nullopt);
+    res.albumArtist = optional<string>(std::nullopt);
+    res.artist = optional<string>(std::nullopt);
+    res.author = optional<string>(std::nullopt);
+    res.dateTime = optional<string>(std::nullopt);
+    res.dateTimeFormat = optional<string>(std::nullopt);
+    res.composer = optional<string>(std::nullopt);
+    res.duration = optional<string>(std::nullopt);
+    res.genre = optional<string>(std::nullopt);
+    res.hasAudio = optional<string>(std::nullopt);
+    res.hasVideo = optional<string>(std::nullopt);
+    res.mimeType = optional<string>(std::nullopt);
+    res.trackCount = optional<string>(std::nullopt);
+    res.sampleRate = optional<string>(std::nullopt);
+    res.title = optional<string>(std::nullopt);
+    res.videoHeight = optional<string>(std::nullopt);
+    res.videoWidth = optional<string>(std::nullopt);
+    res.videoOrientation = optional<string>(std::nullopt);
+    res.hdrType = optional<HdrType>(std::nullopt);
+    res.location = optional<Location>(std::nullopt);
+    res.customInfo = optional<map<string, string>>(std::nullopt);
+}
 
-    std::shared_ptr<OHOS::Media::Meta> metadata = helper_->GetAVMetadata();
-    if (metadata == nullptr) {
-        MEDIA_LOGE("ResolveMetadata AVMetadata is nullptr");
-        set_business_error(OHOS::Media::MSERR_EXT_API9_UNSUPPORT_FORMAT, "ResolveMetadata fail, metadata is null!");
-        return res;
+bool AVMetadataExtractorImpl::SetPropertyByType(AVMetadata &res, std::shared_ptr<OHOS::Media::Meta> metadata,
+    std::string key)
+{
+    CHECK_AND_RETURN_RET(metadata != nullptr, false);
+    CHECK_AND_RETURN_RET(metadata->Find(key) != metadata->end(), false);
+
+    using StringMember = optional<string> AVMetadata::*;
+    const std::unordered_map<std::string, StringMember> stringKeyMap = {
+        {"album", &AVMetadata::album},
+        {"albumArtist", &AVMetadata::albumArtist},
+        {"artist", &AVMetadata::artist},
+        {"author", &AVMetadata::author},
+        {"dateTime", &AVMetadata::dateTime},
+        {"dateTimeFormat", &AVMetadata::dateTimeFormat},
+        {"composer", &AVMetadata::composer},
+        {"duration", &AVMetadata::duration},
+        {"genre", &AVMetadata::genre},
+        {"hasAudio", &AVMetadata::hasAudio},
+        {"hasVideo", &AVMetadata::hasVideo},
+        {"mimeType", &AVMetadata::mimeType},
+        {"trackCount", &AVMetadata::trackCount},
+        {"sampleRate", &AVMetadata::sampleRate},
+        {"title", &AVMetadata::title},
+        {"videoHeight", &AVMetadata::videoHeight},
+        {"videoWidth", &AVMetadata::videoWidth},
+        {"videoOrientation", &AVMetadata::videoOrientation}
+    };
+    bool ret = true;
+    OHOS::Media::AnyValueType type = metadata->GetValueType(key);
+    if (type == OHOS::Media::AnyValueType::STRING) {
+        std::string sValue;
+        ret = metadata->GetData(key, sValue);
+        CHECK_AND_RETURN_RET_LOG(ret, ret, "GetData failed, key %{public}s", key.c_str());
+        auto it = stringKeyMap.find(key);
+        if (it != stringKeyMap.end()) {
+            res.*(it->second) = optional<string>(std::in_place_t{}, sValue);
+        }
+    } else if (type == OHOS::Media::AnyValueType::INT32_T) {
+        int32_t value;
+        ret = metadata->GetData(key, value);
+        CHECK_AND_RETURN_RET_LOG(ret, ret, "GetData failed, key %{public}s", key.c_str());
+        if (key == "hdrType") {
+            HdrType::key_t key;
+            MediaTaiheUtils::GetEnumKeyByValue<HdrType>(value, key);
+            res.hdrType = optional<HdrType>(std::in_place_t{}, HdrType(key));
+        }
+    } else {
+        MEDIA_LOGE("not supported value type");
     }
+    return true;
+}
+
+void AVMetadataExtractorImpl::SetMetadataProperty(std::shared_ptr<OHOS::Media::Meta> metadata, AVMetadata &res)
+{
     Location loc;
     map<string, string> customInfo;
-    bool ret = true;
     for (const auto &key : OHOS::Media::g_Metadata) {
         if (metadata->Find(key) == metadata->end()) {
             MEDIA_LOGE("failed to find key: %{public}s", key.c_str());
             continue;
         }
-        if (key == "latitude") {
+        MEDIA_LOGE("success to find key: %{public}s", key.c_str());
+        if (key == "latitude" || key == "longitude") {
             int32_t value;
-            ret = metadata->GetData(key, value);
-            CHECK_AND_CONTINUE_LOG(ret, "GetData failed, key %{public}s", key.c_str());
-            loc.latitude = value;
+            CHECK_AND_CONTINUE_LOG(metadata->GetData(key, value), "GetData failed, key %{public}s", key.c_str());
+            if (key == "latitude") {
+                loc.latitude = value;
+            } else {
+                loc.longitude = value;
+            }
+            res.location = optional<Location>(std::in_place_t{}, loc);
             continue;
-        } else if (key == "longitude") {
-            int32_t value;
-            ret = metadata->GetData(key, value);
-            CHECK_AND_CONTINUE_LOG(ret, "GetData failed, key %{public}s", key.c_str());
-            loc.longitude = value;
-            continue;
-        } else if (key == "customInfo") {
+        }
+        if (key == "customInfo") {
             std::shared_ptr<OHOS::Media::Meta> customData = std::make_shared<OHOS::Media::Meta>();
-            ret = metadata->GetData(key, customData);
-            CHECK_AND_CONTINUE_LOG(ret, "GetData failed, key %{public}s", key.c_str());
+            CHECK_AND_CONTINUE_LOG(metadata->GetData(key, customData), "GetData failed, key %{public}s", key.c_str());
             for (auto iter = customData->begin(); iter != customData->end(); ++iter) {
                 OHOS::Media::AnyValueType type = customData->GetValueType(iter->first);
                 CHECK_AND_CONTINUE_LOG(type == OHOS::Media::AnyValueType::STRING, "key is not string");
                 std::string sValue;
-                ret = customData->GetData(iter->first, sValue);
-                CHECK_AND_CONTINUE_LOG(ret, "GetData failed, key %{public}s", iter->first.c_str());
+                CHECK_AND_CONTINUE_LOG(customData->GetData(iter->first, sValue), "GetData failed, key %{public}s",
+                    iter->first.c_str());
                 customInfo.emplace(iter->first, sValue);
             }
+            res.customInfo = optional<map<string, string>>(std::in_place_t{}, customInfo);
             continue;
         }
+        CHECK_AND_CONTINUE_LOG(SetPropertyByType(res, metadata, key),
+            "SetProperty failed, key: %{public}s", key.c_str());
     }
-    res.location = optional<Location>(std::in_place_t{}, loc);
-    res.customInfo = optional<map<string, string>>(std::in_place_t{}, customInfo);
-    return res;
 }
 
-AVMetadataExtractor CreateAVMetadataExtractorSync()
+optional<AVMetadata> AVMetadataExtractorImpl::FetchMetadataSync()
+{
+    OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::FetchMetadataSync");
+    MEDIA_LOGI("FetchMetadataSync In");
+    if (state_ != OHOS::Media::HelperState::HELPER_STATE_RUNNABLE) {
+        set_business_error(OHOS::Media::MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Can't fetchMetadata, please set source.");
+        return optional<AVMetadata>(std::nullopt);
+    }
+    CHECK_AND_RETURN_RET_LOG(helper_ != nullptr, optional<AVMetadata>(std::nullopt), "Invalid promiseCtx.");
+    std::shared_ptr<OHOS::Media::Meta> metadata = helper_->GetAVMetadata();
+    if (metadata == nullptr) {
+        MEDIA_LOGE("ResolveMetadata AVMetadata is nullptr");
+        set_business_error(OHOS::Media::MSERR_EXT_API9_UNSUPPORT_FORMAT, "ResolveMetadata fail, metadata is null!");
+        return optional<AVMetadata>(std::nullopt);
+    }
+    AVMetadata res;
+    SetDefaultMetadataProperty(res);
+    SetMetadataProperty(metadata, res);
+    return optional<AVMetadata>(std::in_place_t{}, res);
+}
+
+optional<AVMetadataExtractor> CreateAVMetadataExtractorSync()
 {
     OHOS::Media::MediaTrace trace("AVMetadataExtractor::CreateAVMetadataExtractor");
     MEDIA_LOGI("TaiheCreateAVMetadataExtractor In");
 
-    AVMetadataExtractorImpl *extractor = new AVMetadataExtractorImpl();
     std::shared_ptr<OHOS::Media::AVMetadataHelper> avMetadataHelper =
         OHOS::Media::AVMetadataHelperFactory::CreateAVMetadataHelper();
-    extractor->helper_ = avMetadataHelper;
-    CHECK_AND_RETURN_RET_LOG(extractor->helper_ != nullptr,
-        (make_holder<AVMetadataExtractorImpl, AVMetadataExtractor>(nullptr)), "failed to CreateMetadataHelper");
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelper != nullptr, optional<AVMetadataExtractor>(std::nullopt),
+        "failed to CreateMetadataHelper");
     MEDIA_LOGI("TaiheCreateAVMetadataExtractor Out");
-    return make_holder<AVMetadataExtractorImpl, AVMetadataExtractor>(extractor);
+    auto res = make_holder<AVMetadataExtractorImpl, AVMetadataExtractor>(avMetadataHelper);
+    return optional<AVMetadataExtractor>(std::in_place_t{}, res);
 }
 
 void AVMetadataExtractorImpl::ReleaseSync()
@@ -229,75 +300,46 @@ void AVMetadataExtractorImpl::ReleaseSync()
     helper_->Release();
 }
 
-int32_t AVMetadataExtractorImpl::GetFrameIndexByTimeSync(double timeUs)
+double AVMetadataExtractorImpl::GetFrameIndexByTimeSync(double timeUs)
 {
     OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::GetFrameIndexByTimeSync");
     timeStamp_ = static_cast<uint64_t>(timeUs);
     if (state_ != OHOS::Media::HelperState::HELPER_STATE_RUNNABLE) {
         set_business_error(OHOS::Media::MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Invalid state, please set source");
+        return -1;
     }
 
+    CHECK_AND_RETURN_RET_LOG(helper_ != nullptr, -1, "inner helper is null.");
     auto res = helper_->GetFrameIndexByTime(timeStamp_, index_);
     if (res != OHOS::Media::MSERR_EXT_API9_OK) {
         MEDIA_LOGE("GetFrameIndexByTimeSync get result SignError");
         set_business_error(OHOS::Media::MSERR_EXT_API9_UNSUPPORT_FORMAT, "Demuxer getFrameIndexByTime failed.");
+        return -1;
     }
-    return static_cast<uint32_t>(index_);
+    return static_cast<double>(index_);
 }
 
-double AVMetadataExtractorImpl::GetTimeByFrameIndexSync(int32_t index)
+double AVMetadataExtractorImpl::GetTimeByFrameIndexSync(double index)
 {
     OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::GetTimeByFrameIndexSync");
+    if (index < 0) {
+        set_business_error(OHOS::Media::MSERR_EXT_API9_INVALID_PARAMETER, "frame index is not valid");
+        return -1;
+    }
     index_ = static_cast<uint32_t>(index);
     if (state_ != OHOS::Media::HelperState::HELPER_STATE_RUNNABLE) {
         set_business_error(OHOS::Media::MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Invalid state, please set source");
+        return -1;
     }
 
+    CHECK_AND_RETURN_RET_LOG(helper_ != nullptr, -1, "inner helper is null.");
     auto res = helper_->GetTimeByFrameIndex(index_, timeStamp_);
     if (res != OHOS::Media::MSERR_EXT_API9_OK) {
         MEDIA_LOGE("GetTimeByFrameIndexSync get result SignError");
         set_business_error(OHOS::Media::MSERR_EXT_API9_UNSUPPORT_FORMAT, "Demuxer getTimeByFrameIndex failed.");
+        return -1;
     }
     return static_cast<double>(timeStamp_);
-}
-
-static std::unique_ptr<OHOS::Media::PixelMap> ConvertMemToPixelMap(
-    std::shared_ptr<OHOS::Media::AVSharedMemory> sharedMemory)
-{
-    CHECK_AND_RETURN_RET_LOG(sharedMemory != nullptr, nullptr, "SharedMem is nullptr");
-    MEDIA_LOGI("FetchArtPicture size: %{public}d", sharedMemory->GetSize());
-    OHOS::Media::SourceOptions sourceOptions;
-    uint32_t errorCode = 0;
-    std::unique_ptr<OHOS::Media::ImageSource> imageSource =
-        OHOS::Media::ImageSource::CreateImageSource(sharedMemory->GetBase(), sharedMemory->GetSize(),
-        sourceOptions, errorCode);
-    CHECK_AND_RETURN_RET_LOG(imageSource != nullptr, nullptr, "Failed to create imageSource.");
-    OHOS::Media::DecodeOptions decodeOptions;
-    std::unique_ptr<OHOS::Media::PixelMap> pixelMap = imageSource->CreatePixelMap(decodeOptions, errorCode);
-    CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Failed to decode imageSource");
-    return pixelMap;
-}
-
-uintptr_t AVMetadataExtractorImpl::FetchAlbumCoverSync()
-{
-    OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::FetchAlbumCoverSync");
-    MEDIA_LOGI("FetchAlbumCoverSync In");
-    if (state_ != OHOS::Media::HelperState::HELPER_STATE_RUNNABLE) {
-        set_business_error(OHOS::Media::MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Invalid state, please set source");
-    }
-
-    auto sharedMemory = helper_->FetchArtPicture();
-    artPicture_ = ConvertMemToPixelMap(sharedMemory);
-    if (artPicture_ == nullptr) {
-        set_business_error(OHOS::Media::MSERR_EXT_API9_UNSUPPORT_FORMAT, "Failed to fetchAlbumCover");
-    }
-
-    ani_env *env = taihe::get_env();
-    ani_object result = {};
-    result = MediaTaiheUtils::CreatePixelMap(env, *artPicture_);
-    MEDIA_LOGI("FetchAlbumCoverSync Out");
-
-    return reinterpret_cast<uintptr_t>(result);
 }
 } // namespace ANI::Media
 

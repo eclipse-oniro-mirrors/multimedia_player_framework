@@ -63,7 +63,11 @@ void AVScreenCaptureCallback::SendErrorCallback(int32_t errCode, const std::stri
     auto task = [this, cb]() {
         this->OnTaiheErrorCallBack(cb);
     };
-    mainHandler_->PostTask(task, "OnError", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    bool ret = mainHandler_->PostTask(task, "OnError", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    if (!ret) {
+        MEDIA_LOGE("Failed to PostTask!");
+        delete cb;
+    }
 }
 
 void AVScreenCaptureCallback::SendStateCallback(OHOS::Media::AVScreenCaptureStateCode stateCode)
@@ -82,7 +86,11 @@ void AVScreenCaptureCallback::SendStateCallback(OHOS::Media::AVScreenCaptureStat
     auto task = [this, cb]() {
         this->OnTaiheStateChangeCallBack(cb);
     };
-    mainHandler_->PostTask(task, "OnStateChange", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    bool ret = mainHandler_->PostTask(task, "OnStateChange", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    if (!ret) {
+        MEDIA_LOGE("Failed to PostTask!");
+        delete cb;
+    }
 }
 
 void AVScreenCaptureCallback::SaveCallbackReference(const std::string &name, std::weak_ptr<AutoRef> ref)
@@ -90,6 +98,10 @@ void AVScreenCaptureCallback::SaveCallbackReference(const std::string &name, std
     std::lock_guard<std::mutex> lock(mutex_);
     refMap_[name] = ref;
     MEDIA_LOGI("Set callback type: %{public}s", name.c_str());
+    if (mainHandler_ == nullptr) {
+        std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::GetMainEventRunner();
+        mainHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
+    }
 }
 
 void AVScreenCaptureCallback::CancelCallbackReference(const std::string &name)
@@ -108,7 +120,9 @@ void AVScreenCaptureCallback::OnTaiheErrorCallBack(AVScreenCaptureTaiheCallback 
     do {
         MEDIA_LOGD("OnTaiheErrorCallBack is called");
         std::shared_ptr<AutoRef> ref = taiheCb->autoRef.lock();
+        CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
         auto func = ref->callbackRef_;
+        CHECK_AND_BREAK_LOG(func != nullptr, "failed to get callback");
         auto err = MediaTaiheUtils::ToBusinessError(taihe::get_env(), 0, "OnErrorCallback is OK");
         std::shared_ptr<taihe::callback<void(uintptr_t)>> cacheCallback =
             std::reinterpret_pointer_cast<taihe::callback<void(uintptr_t)>>(func);
@@ -123,8 +137,9 @@ void AVScreenCaptureCallback::OnTaiheStateChangeCallBack(AVScreenCaptureTaiheCal
     do {
         MEDIA_LOGD("OnTaiheCaptureCallBack is called");
         std::shared_ptr<AutoRef> ref = taiheCb->autoRef.lock();
-
+        CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
         auto func = ref->callbackRef_;
+        CHECK_AND_BREAK_LOG(func != nullptr, "failed to get callback");
         std::shared_ptr<taihe::callback<void(ohos::multimedia::media::AVScreenCaptureStateCode)>> cacheCallback = std::
             reinterpret_pointer_cast<taihe::callback<void(ohos::multimedia::media::AVScreenCaptureStateCode)>>(func);
             (*cacheCallback)(static_cast<ohos::multimedia::media::AVScreenCaptureStateCode::key_t>(taiheCb->stateCode));

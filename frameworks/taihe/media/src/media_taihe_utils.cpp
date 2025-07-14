@@ -13,8 +13,13 @@
  * limitations under the License.
  */
 
+#include "avcodec_info.h"
 #include "media_taihe_utils.h"
 #include "media_log.h"
+#include "access_token.h"
+#include "accesstoken_kit.h"
+#include "ipc_skeleton.h"
+#include "tokenid_kit.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_RECORDER, "MediaTaiheUtils"};
@@ -27,6 +32,23 @@ static const std::map<OHOS::AudioStandard::InterruptMode, int32_t> TAIHE_INTERRU
     {OHOS::AudioStandard::InterruptMode::SHARE_MODE, 0},
     {OHOS::AudioStandard::InterruptMode::INDEPENDENT_MODE, 1},
 };
+
+const std::map<std::string, OHOS::Media::OutputFormatType> g_extensionToOutputFormat = {
+    { "mp4", OHOS::Media::OutputFormatType::FORMAT_MPEG_4 },
+    { "m4a", OHOS::Media::OutputFormatType::FORMAT_M4A },
+};
+
+const std::map<std::string_view, int32_t> g_mimeStrToCodecFormat = {
+    { OHOS::MediaAVCodec::CodecMimeType::AUDIO_AAC, OHOS::Media::AudioCodecFormat::AAC_LC },
+    { OHOS::MediaAVCodec::CodecMimeType::VIDEO_AVC, OHOS::Media::VideoCodecFormat::H264 },
+    { OHOS::MediaAVCodec::CodecMimeType::VIDEO_MPEG4, OHOS::Media::VideoCodecFormat::MPEG4 },
+};
+
+void MediaTaiheUtils::ThrowExceptionError(const std::string errMsg)
+{
+    MEDIA_LOGE("errMsg: %{public}s", errMsg.c_str());
+    taihe::set_error(errMsg);
+}
 
 string MediaTaiheUtils::ToTaiheString(const std::string &src)
 {
@@ -45,6 +67,29 @@ bool MediaTaiheUtils::GetEnumKeyByValue(int32_t value, typename EnumType::key_t 
     return false;
 }
 
+template <typename EnumTypeString>
+bool MediaTaiheUtils::GetEnumKeyByStringValue(::taihe::string_view value, typename EnumTypeString::key_t &key)
+{
+    for (size_t index = 0; index < std::size(EnumTypeString::table); ++index) {
+        if (EnumTypeString::table[index] == value) {
+            key = static_cast<typename EnumTypeString::key_t>(index);
+            return true;
+        }
+    }
+    return false;
+}
+
+template
+bool MediaTaiheUtils::GetEnumKeyByStringValue<ohos::multimedia::media::CodecMimeType>(::taihe::string_view value,
+    typename ohos::multimedia::media::CodecMimeType::key_t &key);
+
+template
+bool MediaTaiheUtils::GetEnumKeyByStringValue<ohos::multimedia::media::ContainerFormatType>(::taihe::string_view value,
+    typename ohos::multimedia::media::ContainerFormatType::key_t &key);
+
+template
+bool MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::media::HdrType>(int32_t value,
+    typename ohos::multimedia::media::HdrType::key_t &key);
 template
 bool MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::media::AudioSourceType>(int32_t value,
     typename ohos::multimedia::media::AudioSourceType::key_t &key);
@@ -68,22 +113,22 @@ ani_object MediaTaiheUtils::ToBusinessError(ani_env *env, int32_t code, const st
 {
     ani_object err {};
     ani_class cls {};
-    CHECK_AND_RETURN_RET_LOG(ANI_OK != env->FindClass(CLASS_NAME_BUSINESSERROR, &cls), err,
+    CHECK_AND_RETURN_RET_LOG(env->FindClass(CLASS_NAME_BUSINESSERROR, &cls) == ANI_OK, err,
         "find class %{public}s failed", CLASS_NAME_BUSINESSERROR);
     ani_method ctor {};
-    CHECK_AND_RETURN_RET_LOG(ANI_OK != env->Class_FindMethod(cls, "<ctor>", ":V", &ctor), err,
+    CHECK_AND_RETURN_RET_LOG(env->Class_FindMethod(cls, "<ctor>", ":", &ctor) == ANI_OK, err,
         "find method BusinessError constructor failed");
     ani_object error {};
-    CHECK_AND_RETURN_RET_LOG(ANI_OK != env->Object_New(cls, ctor, &error), err,
+    CHECK_AND_RETURN_RET_LOG(env->Object_New(cls, ctor, &error) == ANI_OK, err,
         "new object %{public}s failed", CLASS_NAME_BUSINESSERROR);
     CHECK_AND_RETURN_RET_LOG(
-        ANI_OK != env->Object_SetPropertyByName_Double(error, "code", static_cast<ani_double>(code)), err,
+        env->Object_SetPropertyByName_Double(error, "code", static_cast<ani_double>(code)) == ANI_OK, err,
         "set property BusinessError.code failed");
     ani_string messageRef {};
-    CHECK_AND_RETURN_RET_LOG(ANI_OK != env->String_NewUTF8(message.c_str(), message.size(), &messageRef), err,
+    CHECK_AND_RETURN_RET_LOG(env->String_NewUTF8(message.c_str(), message.size(), &messageRef) == ANI_OK, err,
         "new message string failed");
     CHECK_AND_RETURN_RET_LOG(
-        ANI_OK != env->Object_SetPropertyByName_Ref(error, "message", static_cast<ani_ref>(messageRef)), err,
+        env->Object_SetPropertyByName_Ref(error, "message", static_cast<ani_ref>(messageRef)) == ANI_OK, err,
         "set property BusinessError.message failed");
     return error;
 }
@@ -91,7 +136,7 @@ ani_object MediaTaiheUtils::ToBusinessError(ani_env *env, int32_t code, const st
 ani_object MediaTaiheUtils::CreatePixelMap(ani_env *env, OHOS::Media::PixelMap &pixelMap)
 {
     ani_class cls {};
-    static const char *className = "L@ohos/multimedia/image/PixelMap;";
+    static const char *className = "@ohos.multimedia.image.PixelMap";
     CHECK_AND_RETURN_RET_LOG(env->FindClass(className, &cls) == ANI_OK, nullptr,
         "Failed to find class: %{public}s", className);
     ani_method ctorMethod {};
@@ -107,7 +152,7 @@ ani_object MediaTaiheUtils::CreatePixelMap(ani_env *env, OHOS::Media::PixelMap &
 ani_object MediaTaiheUtils::CreateMediaKeySystemInfo(ani_env *env, ANI::Media::MediaKeySystemInfo &mediaKeySystemInfo)
 {
     ani_class cls {};
-    static const char *className = "L@ohos/multimedia/drm/drm/MediaKeySystemInfo;";
+    static const char *className = "@ohos.multimedia.drm.drm.MediaKeySystemInfo";
     CHECK_AND_RETURN_RET_LOG(env->FindClass(className, &cls) == ANI_OK, nullptr,
         "Failed to find class: %{public}s", className);
     ani_method ctorMethod {};
@@ -122,25 +167,25 @@ ani_object MediaTaiheUtils::CreateMediaKeySystemInfo(ani_env *env, ANI::Media::M
         "Failed to find method: <set>uuid");
     CHECK_AND_RETURN_RET_LOG(env->Object_CallMethod_Void(aniObject, uuidSetter,
         ToAniString(env, mediaKeySystemInfo.uuid)) == ANI_OK, nullptr, "<set>uuid fail");
-    
+
     ani_class clsAry {};
-    static const std::string classNameAry = "Lescompat/Array;";
+    static const std::string classNameAry = "escompat.Array";
     if (env->FindClass(classNameAry.c_str(), &clsAry)) {
-        printf("Can't find Lescompat/Array.");
+        printf("Can't find escompat.Array.");
     }
 
     ani_method arrayConstructor {};
-    if (env->Class_FindMethod(clsAry, "<ctor>", "I:V", &arrayConstructor)) {
-        printf("Can't find method <ctor> in Lescompat/Array.");
+    if (env->Class_FindMethod(clsAry, "<ctor>", "i:", &arrayConstructor)) {
+        printf("Can't find method <ctor> in escompat.Array.");
     }
 
     if (env->Object_New(clsAry, arrayConstructor, &aniObject, mediaKeySystemInfo.pssh.size())) {
         printf("Call method <ctor> failed.");
     }
-    
+
     ani_method setMethod {};
-    if (env->Class_FindMethod(clsAry, "$_set", "ILstd/core/Object;:V", &setMethod)) {
-        printf("Can't find method $_set in Lescompat/Array.");
+    if (env->Class_FindMethod(clsAry, "$_set", "iC{std.core.Object}:", &setMethod)) {
+        printf("Can't find method $_set in escompat.Array.");
     }
     for (size_t i = 0; i < mediaKeySystemInfo.pssh.size(); i++) {
         ani_int aniInt = static_cast<ani_int>(mediaKeySystemInfo.pssh[i]);
@@ -208,6 +253,84 @@ map<string, MediaDescriptionValue> MediaTaiheUtils::CreateFormatBuffer(OHOS::Med
         }
     }
     return description;
+}
+
+map<string, PlaybackInfoValue> MediaTaiheUtils::CreateFormatBufferByRef(OHOS::Media::Format &format)
+{
+    int32_t intValue = 0;
+    int64_t longValue = 0;
+    std::string strValue = "";
+    map<string, PlaybackInfoValue> playbackInfo;
+
+    for (auto &iter : format.GetFormatMap()) {
+        switch (format.GetValueType(std::string_view(iter.first))) {
+            case OHOS::Media::FORMAT_TYPE_INT32:
+                if (format.GetIntValue(iter.first, intValue)) {
+                    playbackInfo.emplace(iter.first, PlaybackInfoValue::make_type_int(intValue));
+                }
+                break;
+            case OHOS::Media::FORMAT_TYPE_INT64:
+                if (format.GetLongValue(iter.first, longValue)) {
+                    playbackInfo.emplace(iter.first, PlaybackInfoValue::make_type_int(longValue));
+                }
+                break;
+            case OHOS::Media::FORMAT_TYPE_STRING:
+                if (format.GetStringValue(iter.first, strValue)) {
+                    playbackInfo.emplace(iter.first, PlaybackInfoValue::make_type_string(strValue));
+                }
+                break;
+            default:
+                MEDIA_LOGE("format key: %{public}s", iter.first.c_str());
+                break;
+        }
+    }
+    return playbackInfo;
+}
+
+bool MediaTaiheUtils::IsSystemApp()
+{
+    uint64_t accessTokenIDEx = OHOS::IPCSkeleton::GetCallingFullTokenID();
+    bool isSystemApp = OHOS::Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIDEx);
+    return isSystemApp;
+}
+
+bool MediaTaiheUtils::SystemPermission()
+{
+    auto tokenId = OHOS::IPCSkeleton::GetCallingTokenID();
+    auto tokenType = OHOS::Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
+    if (tokenType == OHOS::Security::AccessToken::TOKEN_NATIVE ||
+        tokenType == OHOS::Security::AccessToken::TOKEN_SHELL) {
+        return true;
+    }
+    return IsSystemApp();
+}
+
+int32_t MediaTaiheUtils::MapExtensionNameToOutputFormat(const std::string &extension,
+    OHOS::Media::OutputFormatType &type)
+{
+    auto iter = g_extensionToOutputFormat.find(extension);
+    if (iter != g_extensionToOutputFormat.end()) {
+        type = iter->second;
+    }
+    return OHOS::Media::MSERR_INVALID_VAL;
+}
+
+int32_t MediaTaiheUtils::MapMimeToAudioCodecFormat(const std::string &mime, OHOS::Media::AudioCodecFormat &codecFormat)
+{
+    auto iter = g_mimeStrToCodecFormat.find(mime);
+    if (iter != g_mimeStrToCodecFormat.end()) {
+        codecFormat = static_cast<OHOS::Media::AudioCodecFormat>(iter->second);
+    }
+    return OHOS::Media::MSERR_INVALID_VAL;
+}
+
+int32_t MediaTaiheUtils::MapMimeToVideoCodecFormat(const std::string &mime, OHOS::Media::VideoCodecFormat &codecFormat)
+{
+    auto iter = g_mimeStrToCodecFormat.find(mime);
+    if (iter != g_mimeStrToCodecFormat.end()) {
+        codecFormat = static_cast<OHOS::Media::VideoCodecFormat>(iter->second);
+    }
+    return OHOS::Media::MSERR_INVALID_VAL;
 }
 }
 }
