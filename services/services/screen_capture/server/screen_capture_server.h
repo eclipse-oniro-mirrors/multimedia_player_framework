@@ -305,6 +305,7 @@ private:
     int32_t capsuleVpSize_ = 18;
     int32_t capsulePxSize_ = 0;
     int32_t saUid_ = -1;
+    int32_t appVersion_ = -1;
 
     /* used for both CAPTURE STREAM and CAPTURE FILE */
     OHOS::AudioStandard::AppInfo appInfo_;
