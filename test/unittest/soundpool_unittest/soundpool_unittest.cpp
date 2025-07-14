@@ -71,7 +71,7 @@ HWTEST_F(SoundPoolUnittest, CheckInitParam_002, TestSize.Level1)
     int maxStreams = NUM_TEST;
     AudioStandard::AudioRendererInfo audioRenderInfo;
     audioRenderInfo.rendererFlags = 1024;
-    auto ret = SoundPool::CheckInitParam(maxStreams, audioRenderInfo);
+    auto ret = soundPool_->CheckInitParam(maxStreams, audioRenderInfo);
     EXPECT_EQ(ret, false);
 }
 
@@ -86,7 +86,7 @@ HWTEST_F(SoundPoolUnittest, CheckInitParam_003, TestSize.Level1)
     int maxStreams = NUM_TEST;
     AudioStandard::AudioRendererInfo audioRenderInfo;
     audioRenderInfo.rendererFlags = 1025;
-    auto ret = SoundPool::CheckInitParam(maxStreams, audioRenderInfo);
+    auto ret = soundPool_->CheckInitParam(maxStreams, audioRenderInfo);
     EXPECT_EQ(ret, false);
 }
 
@@ -187,6 +187,78 @@ HWTEST_F(SoundPoolUnittest, GetSoundPoolInstance_001, TestSize.Level0)
     }
     auto ret = soundPoolManagerMulti->GetSoundPoolInstance(soundPool);
     EXPECT_EQ(ret, MSERR_INVALID_OPERATION);
+}
+
+/**
+ * @tc.name  : Test CheckRendererFlagsValid
+ * @tc.number: CheckRendererFlagsValid_001
+ * @tc.desc  : Test CheckRendererFlagsValid returns true when rendererFlags is 0
+ */
+HWTEST_F(SoundPoolUnittest, CheckRendererFlagsValid_001, TestSize.Level0)
+{
+    ASSERT_NE(soundPool_, nullptr);
+    AudioStandard::AudioRendererInfo audioRenderInfo;
+    audioRenderInfo.rendererFlags = 0;
+    auto ret = soundPool_->CheckRendererFlagsValid(audioRenderInfo);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.name  : Test CheckRendererFlagsValid
+ * @tc.number: CheckRendererFlagsValid_002
+ * @tc.desc  : Test CheckRendererFlagsValid returns true when rendererFlags is 1
+ */
+HWTEST_F(SoundPoolUnittest, CheckRendererFlagsValid_002, TestSize.Level0)
+{
+    ASSERT_NE(soundPool_, nullptr);
+    AudioStandard::AudioRendererInfo audioRenderInfo;
+    audioRenderInfo.rendererFlags = 1;
+    auto ret = soundPool_->CheckRendererFlagsValid(audioRenderInfo);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.name  : Test CheckRendererFlagsValid
+ * @tc.number: CheckRendererFlagsValid_003
+ * @tc.desc  : Test CheckRendererFlagsValid returns false when rendererFlags is AUDIO_FLAG_VKB_NORMAL
+               but the isBundleNameValid flag is false
+ */
+HWTEST_F(SoundPoolUnittest, CheckRendererFlagsValid_003, TestSize.Level0)
+{
+    ASSERT_NE(soundPool_, nullptr);
+    AudioStandard::AudioRendererInfo audioRenderInfo;
+    audioRenderInfo.rendererFlags = AudioStandard::AUDIO_FLAG_VKB_NORMAL;
+    auto ret = soundPool_->CheckRendererFlagsValid(audioRenderInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.name  : Test CheckRendererFlagsValid
+ * @tc.number: CheckRendererFlagsValid_004
+ * @tc.desc  : Test CheckRendererFlagsValid returns false when rendererFlags is AUDIO_FLAG_VKB_FAST
+               but the isBundleNameValid flag is false
+ */
+HWTEST_F(SoundPoolUnittest, CheckRendererFlagsValid_004, TestSize.Level0)
+{
+    ASSERT_NE(soundPool_, nullptr);
+    AudioStandard::AudioRendererInfo audioRenderInfo;
+    audioRenderInfo.rendererFlags = AudioStandard::AUDIO_FLAG_VKB_FAST;
+    auto ret = soundPool_->CheckRendererFlagsValid(audioRenderInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.name  : Test CheckRendererFlagsValid
+ * @tc.number: CheckRendererFlagsValid_005
+ * @tc.desc  : Test CheckRendererFlagsValid returns true when rendererFlags is AUDIO_FLAG_VKB_FAST
+ */
+HWTEST_F(SoundPoolUnittest, CheckRendererFlagsValid_005, TestSize.Level0)
+{
+    ASSERT_NE(soundPool_, nullptr);
+    AudioStandard::AudioRendererInfo audioRenderInfo;
+    audioRenderInfo.rendererFlags = -100;
+    auto ret = soundPool_->CheckRendererFlagsValid(audioRenderInfo);
+    EXPECT_EQ(ret, false);
 }
 }  // namespace Media
 }  // namespace OHOS
