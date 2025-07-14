@@ -2602,7 +2602,7 @@ void ScreenCaptureServer::UpdateMicrophoneEnabled()
     if (isSystemUI2_) {
         pixelMapTotalSpr = GetPixelMapSvg(ICON_PATH_CAPSULE_STOP_2_0, capsulePxSize_, capsulePxSize_);
     } else {
-        pixelMapTotalSpr = GetPixelMap(ICON_PATH_CAPSULE_STOP, capsulePxSize_, capsulePxSize_);
+        pixelMapTotalSpr = GetPixelMapSvg(ICON_PATH_CAPSULE_STOP, capsulePxSize_, capsulePxSize_);
     }
     request.SetLittleIcon(pixelMapTotalSpr);
     request.SetBadgeIconStyle(NotificationRequest::BadgeStyle::LITTLE);
@@ -2621,9 +2621,9 @@ void ScreenCaptureServer::UpdateLiveViewContent()
     capsule.SetBackgroundColor(BACK_GROUND_COLOR);
     std::shared_ptr<PixelMap> pixelMapCapSpr;
     if (isSystemUI2_) {
-        pixelMapCapSpr = GetPixelMap(ICON_PATH_CAPSULE_STOP_2_0, capsulePxSize_, capsulePxSize_);
+        pixelMapCapSpr = GetPixelMapSvg(ICON_PATH_CAPSULE_STOP_2_0, capsulePxSize_, capsulePxSize_);
     } else {
-        pixelMapCapSpr = GetPixelMap(ICON_PATH_CAPSULE_STOP, capsulePxSize_, capsulePxSize_);
+        pixelMapCapSpr = GetPixelMapSvg(ICON_PATH_CAPSULE_STOP, capsulePxSize_, capsulePxSize_);
     }
     capsule.SetIcon(pixelMapCapSpr);
 
