@@ -116,6 +116,7 @@ void PlayerServiceProxy::InitPlayerFuncsPart2()
     playerFuncs_[ENABLE_CAMERA_POSTPROCESSING] = "Player::EnableCameraPostprocessing";
     playerFuncs_[ENABLE_REPORT_MEDIA_PROGRESS] = "Player::EnableReportMediaProgress";
     playerFuncs_[ENABLE_REPORT_AUDIO_INTERRUPT] = "Player::EnableReportAudioInterrupt";
+    playerFuncs_[SET_CAMERA_POST_POSTPROCESSING] = "Player::SetCameraPostprocessing";
 }
 
 int32_t PlayerServiceProxy::SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -1227,6 +1228,7 @@ void PlayerServiceProxy::WritePlaybackStrategy(MessageParcel &data, const AVPlay
     (void)data.WriteBool(strategy.preferredHdr);
     (void)data.WriteBool(strategy.showFirstFrameOnPrepare);
     (void)data.WriteBool(strategy.enableSuperResolution);
+    (void)data.WriteBool(strategy.enableCameraPostprocessing);
     (void)data.WriteInt32(static_cast<int32_t>(strategy.mutedMediaType));
     (void)data.WriteString(strategy.preferredAudioLanguage);
     (void)data.WriteString(strategy.preferredSubtitleLanguage);
@@ -1265,6 +1267,23 @@ int32_t PlayerServiceProxy::EnableCameraPostprocessing()
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "EnableCameraPostprocessing failed, error: %{public}d", error);
  
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::SetCameraPostprocessing(bool isOpen)
+{
+    MediaTrace trace("Proxy::SetCameraPostprocessing");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteBool(isOpen);
+    int32_t error = SendRequest(SET_CAMERA_POST_POSTPROCESSING, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetCameraPostprocessing failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
 

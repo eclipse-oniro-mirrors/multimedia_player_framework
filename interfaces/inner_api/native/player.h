@@ -56,6 +56,7 @@ struct AVPlayStrategy {
     bool preferredHdr = false;
     bool showFirstFrameOnPrepare = false;
     bool enableSuperResolution = false;
+    bool enableCameraPostprocessing = false;
     OHOS::Media::MediaType mutedMediaType = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
     std::string preferredAudioLanguage = "";
     std::string preferredSubtitleLanguage = "";
@@ -1101,6 +1102,12 @@ public:
      */
     virtual int32_t EnableCameraPostprocessing()
     {
+        return 0;
+    }
+
+    virtual int32_t SetCameraPostprocessing(bool isOpen)
+    {
+        (void)isOpen;
         return 0;
     }
 

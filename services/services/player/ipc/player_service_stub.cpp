@@ -258,6 +258,8 @@ void PlayerServiceStub::FillPlayerFuncPart3()
         [this](MessageParcel &data, MessageParcel &reply) { return SetPlayerProducer(data, reply); } };
     playerFuncs_[FORCE_LOAD_VIDEO] = { "Player::ForceLoadVideo",
         [this](MessageParcel &data, MessageParcel &reply) { return ForceLoadVideo(data, reply); } };
+    playerFuncs_[SET_CAMERA_POST_POSTPROCESSING] = { "Player::SetCameraPostprocessing",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetCameraPostprocessing(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
@@ -1147,6 +1149,7 @@ void PlayerServiceStub::ReadPlayStrategyFromMessageParcel(MessageParcel &data, A
     strategy.preferredHdr = data.ReadBool();
     strategy.showFirstFrameOnPrepare = data.ReadBool();
     strategy.enableSuperResolution = data.ReadBool();
+    strategy.enableCameraPostprocessing = data.ReadBool();
     strategy.mutedMediaType = static_cast<OHOS::Media::MediaType>(data.ReadInt32());
     strategy.preferredAudioLanguage = data.ReadString();
     strategy.preferredSubtitleLanguage = data.ReadString();
@@ -1317,6 +1320,7 @@ int32_t PlayerServiceStub::SetPlaybackStrategy(MessageParcel &data, MessageParce
         .preferredHdr = data.ReadBool(),
         .showFirstFrameOnPrepare = data.ReadBool(),
         .enableSuperResolution = data.ReadBool(),
+        .enableCameraPostprocessing = data.ReadBool(),
         .mutedMediaType = static_cast<OHOS::Media::MediaType>(data.ReadInt32()),
         .preferredAudioLanguage = data.ReadString(),
         .preferredSubtitleLanguage = data.ReadString(),
@@ -1430,6 +1434,20 @@ int32_t PlayerServiceStub::EnableCameraPostprocessing()
     MediaTrace trace("Stub::EnableCameraPostprocessing");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->EnableCameraPostprocessing();
+}
+
+int32_t PlayerServiceStub::SetCameraPostprocessing(MessageParcel &data, MessageParcel &reply)
+{
+    bool isOpen = data.ReadBool();
+    reply.WriteInt32(SetCameraPostprocessing(isOpen));
+    return MSERR_OK;
+}
+ 
+int32_t PlayerServiceStub::SetCameraPostprocessing(bool isOpen)
+{
+    MediaTrace trace("Stub::SetCameraPostprocessing");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetCameraPostprocessing(isOpen);
 }
 
 int32_t PlayerServiceStub::EnableReportMediaProgress(bool enable)

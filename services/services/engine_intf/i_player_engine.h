@@ -353,6 +353,12 @@ public:
         return 0;
     }
 
+    virtual int32_t SetCameraPostprocessing(bool isOpen)
+    {
+        (void)isOpen;
+        return 0;
+    }
+
     virtual int32_t ForceLoadVideo(bool /* enabled */)
     {
         return 0;

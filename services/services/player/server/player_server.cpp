@@ -2394,6 +2394,14 @@ int32_t PlayerServer::EnableCameraPostprocessing()
     return playerEngine_->EnableCameraPostprocessing();
 }
 
+int32_t PlayerServer::SetCameraPostprocessing(bool isOpen)
+{
+    MediaTrace::TraceBegin("PlayerServer::SetCameraPostprocessing", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    return playerEngine_->SetCameraPostprocessing(isOpen);
+}
+
 int32_t PlayerServer::EnableReportMediaProgress(bool enable)
 {
     std::lock_guard<std::mutex> lock(mutex_);

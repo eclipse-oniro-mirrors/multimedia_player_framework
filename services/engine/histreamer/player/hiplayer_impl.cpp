@@ -427,6 +427,7 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     mutedMediaType_ = strategy.mutedMediaType;
     audioLanguage_ = strategy.preferredAudioLanguage;
     subtitleLanguage_ = strategy.preferredSubtitleLanguage;
+    enableCameraPostprocessing_ = strategy.enableCameraPostprocessing;
     videoPostProcessorType_ = strategy.enableSuperResolution ? VideoPostProcessorType::SUPER_RESOLUTION
                                 : VideoPostProcessorType::NONE;
     isPostProcessorOn_ = strategy.enableSuperResolution;
@@ -3516,6 +3517,7 @@ int32_t HiPlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     subtitleLanguage_ = playbackStrategy.preferredSubtitleLanguage;
     videoPostProcessorType_ = playbackStrategy.enableSuperResolution ? VideoPostProcessorType::SUPER_RESOLUTION
                                 : VideoPostProcessorType::NONE;
+    enableCameraPostprocessing_ = playbackStrategy.enableCameraPostprocessing;
     isPostProcessorOn_ = playbackStrategy.enableSuperResolution;
     keepDecodingOnMute_ = playbackStrategy.keepDecodingOnMute;
 
@@ -3887,6 +3889,17 @@ void HiPlayerImpl::ResetEnableCameraPostProcess()
     enableCameraPostprocessing_.store(false);
     FALSE_RETURN_NOLOG(fdsanFd_ != nullptr);
     fdsanFd_->Reset();
+}
+
+int32_t HiPlayerImpl::SetCameraPostprocessing(bool isOpen)
+{
+#ifdef SUPPORT_VIDEO
+    if (videoDecoder_ != nullptr) {
+        MEDIA_LOG_I("SetCameraPostprocessing enter");
+        videoDecoder_->SetCameraPostprocessingDirect(isOpen);
+    }
+#endif
+    return TransStatus(Status::OK);
 }
 
 void HiPlayerImpl::HandleMemoryUsageEvent(const DfxEvent &event)

@@ -1521,6 +1521,7 @@ void AVPlayerNapi::GetAVPlayStrategyFromStrategyTmp(AVPlayStrategy &strategy, co
     strategy.preferredHdr = strategyTmp.preferredHdr;
     strategy.showFirstFrameOnPrepare = strategyTmp.showFirstFrameOnPrepare;
     strategy.enableSuperResolution = strategyTmp.enableSuperResolution;
+    strategy.enableCameraPostprocessing = strategyTmp.enableCameraPostprocessing;
     strategy.mutedMediaType = static_cast<MediaType>(strategyTmp.mutedMediaType);
     strategy.preferredAudioLanguage = strategyTmp.preferredAudioLanguage;
     strategy.preferredSubtitleLanguage = strategyTmp.preferredSubtitleLanguage;
