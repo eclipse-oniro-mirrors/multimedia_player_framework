@@ -23,13 +23,15 @@ using namespace OHOS::Media;
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_RECORDER, "MediaSourceLoadingRequestTaihe"};
-constexpr int32_t FAILED_GET_BUFFER = 0;
 }
 
 namespace ANI::Media {
 MediaSourceLoadingRequestImpl::MediaSourceLoadingRequestImpl(uint64_t requestId)
 {
     request_ = RequestContainer::GetInstance().Find(requestId);
+    CHECK_AND_RETURN_LOG(request_ != nullptr, "failed to getRequest");
+    RequestContainer::GetInstance().Erase(requestId);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Constructor success", FAKE_POINTER(this));
 }
 
 string MediaSourceLoadingRequestImpl::GetUrl()
@@ -44,6 +46,9 @@ optional<map<string, string>> MediaSourceLoadingRequestImpl::GetHeader()
     MediaTrace trace("MediaSourceLoadingRequestTaihe::GetHeader");
     MEDIA_LOGI("GetHeader In");
     std::map<std::string, std::string> header = request_->GetHeader();
+    if (header.empty()) {
+        return optional<map<string, string>>(std::nullopt);
+    }
     map<string, string> taiheHeader;
     for (const auto& [key, value] : header) {
         taihe::string taiheKey(key);
@@ -53,7 +58,7 @@ optional<map<string, string>> MediaSourceLoadingRequestImpl::GetHeader()
     return optional<map<string, string>>(std::in_place_t{}, taiheHeader);
 }
 
-int32_t MediaSourceLoadingRequestImpl::respondData(double uuid, double offset, array_view<uint8_t> buffer)
+optional<double> MediaSourceLoadingRequestImpl::RespondData(double uuid, double offset, array_view<uint8_t> buffer)
 {
     MediaTrace trace("MediaSourceLoadingRequestTaihe::respondData");
     MEDIA_LOGI("respondData In");
@@ -62,14 +67,15 @@ int32_t MediaSourceLoadingRequestImpl::respondData(double uuid, double offset, a
 
     auto bufferInner = std::make_shared<AVSharedMemoryBase>(static_cast<int32_t>(arrayBufferSize),
         AVSharedMemory::FLAGS_READ_WRITE, "userBuffer");
-    CHECK_AND_RETURN_RET_LOG(bufferInner != nullptr, FAILED_GET_BUFFER, "get buffer fail");
+    CHECK_AND_RETURN_RET_LOG(bufferInner != nullptr, optional<double>(std::nullopt), "get buffer fail");
     bufferInner->Init();
     bufferInner->Write(static_cast<uint8_t *>(arrayBuffer), arrayBufferSize);
     MEDIA_LOGI("respondData getSize: %{public}d", bufferInner->GetSize());
-    return request_->RespondData(static_cast<int64_t>(uuid), static_cast<int64_t>(offset), bufferInner);
+    double res = request_->RespondData(uuid, offset, bufferInner);
+    return optional<double>(std::in_place_t{}, res);
 }
 
-void MediaSourceLoadingRequestImpl::respondHeader(double uuid, optional_view<map<string, string>> header,
+void MediaSourceLoadingRequestImpl::RespondHeader(double uuid, optional_view<map<string, string>> header,
     optional_view<string> redirectUrl)
 {
     MediaTrace trace("MediaSourceLoadingRequestTaihe::respondHeader");
@@ -86,15 +92,25 @@ void MediaSourceLoadingRequestImpl::respondHeader(double uuid, optional_view<map
     if (redirectUrl.has_value()) {
         redirectUrlStr = static_cast<std::string>(redirectUrl.value());
     }
-    request_->RespondHeader(static_cast<int64_t>(uuid), headerInner, redirectUrlStr);
+    request_->RespondHeader(uuid, headerInner, redirectUrlStr);
     MEDIA_LOGI("respondHeader redirectUrl %{private}s", redirectUrlStr.c_str());
 }
 
-void MediaSourceLoadingRequestImpl::finishLoading(double uuid, LoadingRequestError state)
+void MediaSourceLoadingRequestImpl::FinishLoading(double uuid, LoadingRequestError state)
 {
     MediaTrace trace("MediaSourceLoadingRequestTaihe::finishLoading");
     MEDIA_LOGI("finishLoading In");
     int32_t requestError = state.get_value();
-    request_->FinishLoading(static_cast<int64_t>(uuid), requestError);
+    request_->FinishLoading(uuid, requestError);
+}
+
+::ohos::multimedia::media::MediaSourceLoadingRequest MediaSourceLoadingRequestImpl::CreateLoadingRequest(
+    std::shared_ptr<LoadingRequest> request)
+{
+    MediaTrace trace("MediaSourceLoadingRequestImpl::CreateLoadingRequest");
+    MEDIA_LOGD("CreateLoadingRequest >>");
+    RequestContainer::GetInstance().Insert(request->GetUniqueId(), request);
+    return taihe::make_holder<MediaSourceLoadingRequestImpl,
+        ::ohos::multimedia::media::MediaSourceLoadingRequest>(request->GetUniqueId());
 }
 } // namespace ANI::Media

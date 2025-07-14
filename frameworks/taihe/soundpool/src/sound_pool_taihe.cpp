@@ -14,8 +14,11 @@
  */
 #include "sound_pool_taihe.h"
 #include "media_log.h"
+#include "ability.h"
+#include "ani_base_context.h"
 #include "media_errors.h"
 #include "media_dfx.h"
+#include "media_taihe_utils.h"
 #include "sound_pool_callback_taihe.h"
 
 namespace {
@@ -33,35 +36,36 @@ SoundPoolImpl::SoundPoolImpl(int32_t maxStreams, uintptr_t audioRendererInfo)
     SoundPoolImpl::ParseAudioRendererInfo(env, reinterpret_cast<ani_object>(audioRendererInfo),
         SoundPoolImpl::rendererInfo);
     soundPool_ = OHOS::Media::SoundPoolFactory::CreateSoundPool(maxStreams, SoundPoolImpl::rendererInfo);
-    callbackTaihe_ =  std::make_shared<SoundPoolCallBackTaihe>();
-    soundPool_->SetSoundPoolCallback(callbackTaihe_);
+    if (soundPool_ == nullptr) {
+        MEDIA_LOGE("failed to CreateSoundPool");
+        MediaTaiheUtils::ThrowExceptionError("failed to CreateSoundPool");
+        return;
+    } else {
+        callbackTaihe_ =  std::make_shared<SoundPoolCallBackTaihe>();
+        (void)soundPool_->SetSoundPoolCallback(callbackTaihe_);
+    }
 }
 
 void SoundPoolImpl::ParseAudioRendererInfo(ani_env *env, ani_object src,
     OHOS::AudioStandard::AudioRendererInfo &audioRendererInfo)
 {
-    static const char *className = "L@ohos/multimedia/audio/audio/AudioRendererInfo";
+    static const char *className = "@ohos.multimedia.audio.audio.AudioRendererInfo;";
     ani_class cls {};
-    CHECK_AND_RETURN_LOG(env->FindClass(className, &cls), "Failed to find class: %{public}s", className);
-    ani_method contentGetter {};
-    CHECK_AND_RETURN_LOG(env->Class_FindMethod(cls, "<get>content", nullptr, &contentGetter),
-        "Failed to find method: <get>content");
-    ani_int content {};
-    CHECK_AND_RETURN_LOG(env->Object_CallMethod_Int(src, contentGetter, &content), "<get>content fail");
-    audioRendererInfo.contentType = static_cast<OHOS::AudioStandard::ContentType>(content);
-
+    CHECK_AND_RETURN_LOG(env->FindClass(className, &cls) == ANI_OK, "Failed to find class: %{public}s", className);
     ani_method usageGetter {};
-    CHECK_AND_RETURN_LOG(env->Class_FindMethod(cls, "<get>usage", nullptr, &usageGetter),
+    CHECK_AND_RETURN_LOG(env->Class_FindMethod(cls, "<get>usage", nullptr, &usageGetter) == ANI_OK,
         "Failed to find method: <get>usage");
-    ani_int usage {};
-    CHECK_AND_RETURN_LOG(env->Object_CallMethod_Int(src, usageGetter, &usage), "<get>usage fail");
-    audioRendererInfo.streamUsage = static_cast<OHOS::AudioStandard::StreamUsage>(usage);
-
+    ani_enum_item usage {};
+    CHECK_AND_RETURN_LOG(env->Object_CallMethod_Ref(src, usageGetter,
+        reinterpret_cast<ani_ref*>(&usage)) == ANI_OK, "<get>usage fail");
+    ani_size index {};
+    env->EnumItem_GetIndex(usage, &index);
+    audioRendererInfo.streamUsage = static_cast<OHOS::AudioStandard::StreamUsage>(index);
     ani_method rendererFlagsGetter {};
-    CHECK_AND_RETURN_LOG(env->Class_FindMethod(cls, "<get>rendererFlags", nullptr, &rendererFlagsGetter),
+    CHECK_AND_RETURN_LOG(env->Class_FindMethod(cls, "<get>rendererFlags", nullptr, &rendererFlagsGetter) == ANI_OK,
         "Failed to find method: <get>rendererFlags");
     ani_int rendererFlags {};
-    CHECK_AND_RETURN_LOG(env->Object_CallMethod_Int(src, rendererFlagsGetter, &rendererFlags),
+    CHECK_AND_RETURN_LOG(env->Object_CallMethod_Int(src, rendererFlagsGetter, &rendererFlags) == ANI_OK,
         "<get>rendererFlags fail");
     audioRendererInfo.rendererFlags = static_cast<int32_t>(rendererFlags);
 }
@@ -89,24 +93,49 @@ RetInfo GetRetInfo(int32_t errCode, const std::string &operate, const std::strin
     return RetInfo(err, message);
 }
 
-SoundPool CreateSoundPoolSync(double maxStreams, uintptr_t audioRendererInfo)
+optional<SoundPool> CreateSoundPoolSync(double maxStreams, uintptr_t audioRendererInfo)
 {
-    return make_holder<SoundPoolImpl, SoundPool>(maxStreams, audioRendererInfo);
+    auto res = make_holder<SoundPoolImpl, SoundPool>(maxStreams, audioRendererInfo);
+    if (taihe::has_error()) {
+        MEDIA_LOGE("Create SoundPool failed!");
+        taihe::reset_error();
+        return optional<SoundPool>(std::nullopt);
+    }
+    return optional<SoundPool>(std::in_place, res);
 }
 
-int32_t SoundPoolImpl::PlaySync(int32_t soundID, optional_view<PlayParameters> params)
+double SoundPoolImpl::PlaySync(double soundID, optional_view<PlayParameters> params)
 {
     MediaTrace trace("SoundPool::TaihePlay");
     MEDIA_LOGI("SoundPoolTaihe::TaihePlay");
 
     soundId_ = soundID;
+    CHECK_AND_RETURN_RET(soundId_ > 0,
+        (SoundPoolAsyncSignError(MSERR_INVALID_VAL, "getplaysoundId", "soundId"), MSERR_INVALID_VAL));
     if (params.has_value()) {
         int32_t ret = ParserPlayOption(params.value());
-        MEDIA_LOGE("failed to SendEvent, ret = %{public}d", ret);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, 0, "failed to SendEvent, ret = %{public}d", ret);
     }
+    CHECK_AND_RETURN_RET_LOG(soundPool_ != nullptr, 0, "soundPool_ is nullptr!");
+    int32_t streamId = soundPool_->Play(soundId_, playParameters_);
+    if (streamId < 0) {
+        SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "play sound failed");
+    }
+    MEDIA_LOGI("The taihe thread of play finishes execution and returns, streamId: %{public}d", streamId);
+    return streamId;
+}
+
+double SoundPoolImpl::PlayWithoutParam(double soundID)
+{
+    MediaTrace trace("SoundPool::TaihePlayWithoutParam");
+    MEDIA_LOGI("SoundPoolTaihe::TaihePlayWithoutParam");
+    soundId_ = soundID;
+    CHECK_AND_RETURN_RET(soundId_ > 0,
+        (SoundPoolAsyncSignError(MSERR_INVALID_VAL, "getplaysoundId", "soundId"), MSERR_INVALID_VAL));
 
     if (soundPool_ == nullptr) {
         MEDIA_LOGE("soundPool_ is nullptr!");
+        return -1;
     }
     int32_t streamId = soundPool_->Play(soundId_, playParameters_);
     if (streamId < 0) {
@@ -116,10 +145,35 @@ int32_t SoundPoolImpl::PlaySync(int32_t soundID, optional_view<PlayParameters> p
     return streamId;
 }
 
-int32_t SoundPoolImpl::ParserPlayOption(const PlayParameters &params)
+double SoundPoolImpl::PlayWithParam(double soundID, PlayParameters const& params)
 {
+    MediaTrace trace("SoundPool::TaihePlayWithParam");
+    MEDIA_LOGI("SoundPoolTaihe::TaihePlayWithParam");
+        soundId_ = soundID;
     CHECK_AND_RETURN_RET(soundId_ > 0,
         (SoundPoolAsyncSignError(MSERR_INVALID_VAL, "getplaysoundId", "soundId"), MSERR_INVALID_VAL));
+    int32_t ret = ParserPlayOption(params);
+    MEDIA_LOGE("failed to SendEvent, ret = %{public}d", ret);
+
+    if (soundPool_ == nullptr) {
+        MEDIA_LOGE("soundPool_ is nullptr!");
+        return -1;
+    }
+    int32_t streamId = soundPool_->Play(soundId_, playParameters_);
+    if (streamId < 0) {
+        SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "play sound failed");
+    }
+    MEDIA_LOGI("The taihe thread of play finishes execution and returns, streamId: %{public}d", streamId);
+    return streamId;
+}
+
+static std::shared_ptr<OHOS::AbilityRuntime::Context> GetAbilityContext(ani_env *env)
+{
+    return nullptr;
+}
+
+int32_t SoundPoolImpl::ParserPlayOption(const PlayParameters &params)
+{
     if (params.loop.has_value()) {
         playParameters_.loop = static_cast<int32_t>(params.loop.value());
     }
@@ -138,6 +192,12 @@ int32_t SoundPoolImpl::ParserPlayOption(const PlayParameters &params)
     if (params.parallelPlayFlag.has_value()) {
         playParameters_.parallelPlayFlag = static_cast<bool>(params.parallelPlayFlag.value());
     }
+    std::shared_ptr<OHOS::AbilityRuntime::Context> abilityContext = GetAbilityContext(get_env());
+    if (abilityContext != nullptr) {
+        playParameters_.cacheDir = abilityContext->GetCacheDir();
+    } else {
+        playParameters_.cacheDir = "/data/storage/el2/base/temp";
+    }
     MEDIA_LOGI("playParameters_ loop:%{public}d, rate:%{public}d, leftVolume:%{public}f, rightvolume:%{public}f,"
         "priority:%{public}d, parallelPlayFlag:%{public}d", playParameters_.loop, playParameters_.rate,
         playParameters_.leftVolume, playParameters_.rightVolume, playParameters_.priority,
@@ -145,49 +205,67 @@ int32_t SoundPoolImpl::ParserPlayOption(const PlayParameters &params)
     return MSERR_OK;
 }
 
-int32_t SoundPoolImpl::LoadSync(string_view uri)
+double SoundPoolImpl::LoadSync(string_view uri)
 {
     MediaTrace trace("SoundPool::TaiheLoad");
     MEDIA_LOGI("SoundPoolNapi::TaiheLoad");
-    int32_t soundId;
-    std::string url = static_cast<std::string>(uri);
-    soundId = soundPool_->Load(url);
+    int32_t soundId = 0;
+    url_ = static_cast<std::string>(uri);
+    CHECK_AND_RETURN_RET(url_ != "",
+        (SoundPoolAsyncSignError(MSERR_OPEN_FILE_FAILED, "geturl", "url"), soundId));
+    soundId = soundPool_->Load(url_);
     if (soundId < 0) {
         SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "load sound failed");
     }
     return soundId;
 }
 
-int32_t SoundPoolImpl::LoadWithFdSync(int32_t fd, double offset, double length)
+double SoundPoolImpl::LoadWithFdSync(double fd, double offset, double length)
 {
     MediaTrace trace("SoundPool::TaiheLoad");
     MEDIA_LOGI("SoundPoolNapi::TaiheLoad");
-    int32_t soundId =
-        soundPool_->Load(fd, static_cast<int64_t>(offset), static_cast<int64_t>(length));
+    int32_t soundId = 0;
+    fd_ = fd;
+    CHECK_AND_RETURN_RET(fd_ > 0,
+        (SoundPoolAsyncSignError(MSERR_OPEN_FILE_FAILED, "getfd", "fd"), soundId));
+    offset_ = static_cast<int64_t>(offset);
+    CHECK_AND_RETURN_RET(offset_ >= 0,
+        (SoundPoolAsyncSignError(MSERR_OPEN_FILE_FAILED, "getoffset", "offset"), soundId));
+    length_ = static_cast<int64_t>(length);
+    CHECK_AND_RETURN_RET(length_ > 0,
+        (SoundPoolAsyncSignError(MSERR_OPEN_FILE_FAILED, "getlength", "length"), soundId));
+    soundId =
+        soundPool_->Load(fd, offset_, length_);
     if (soundId < 0) {
         SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "load sound failed");
     }
     return soundId;
 }
 
-void SoundPoolImpl::StopSync(int32_t streamID)
+void SoundPoolImpl::StopSync(double streamID)
 {
     MediaTrace trace("SoundPool::TaiheStop");
     MEDIA_LOGI("SoundPoolNapi::TaiheStop");
-    int32_t streamID_ = streamID;
+    streamId_ = streamID;
     CHECK_AND_RETURN_LOG(soundPool_ != nullptr, "soundPool_ is nullptr!");
-    int32_t ret = soundPool_->Stop(streamID_);
+    if (streamId_ <= 0) {
+        SignError(MSERR_EXT_API9_INVALID_PARAMETER, "stop streamId failed, invaild value");
+    }
+    int32_t ret = soundPool_->Stop(streamId_);
     if (ret != MSERR_OK) {
         SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "stop streamId failed");
     }
     MEDIA_LOGI("The taihe thread of stop finishes execution and returns");
 }
 
-void SoundPoolImpl::SetLoopSync(int32_t streamID, int32_t loop)
+void SoundPoolImpl::SetLoopSync(double streamID, double loop)
 {
     MediaTrace trace("SoundPool::TaiheSetLoop");
     MEDIA_LOGI("SoundPoolNapi::TaiheSetLoop");
     streamId_ = streamID;
+    if (streamId_ <= 0) {
+        SignError(MSERR_EXT_API9_INVALID_PARAMETER, "SetLoop streamId failed,invaild value");
+    }
     loop_ = loop;
     if (streamId_ > 0) {
         CHECK_AND_RETURN_LOG(soundPool_ != nullptr, "soundPool_ is nullptr!");
@@ -199,7 +277,7 @@ void SoundPoolImpl::SetLoopSync(int32_t streamID, int32_t loop)
     }
 }
 
-void SoundPoolImpl::SetPrioritySync(int32_t streamID, int32_t priority)
+void SoundPoolImpl::SetPrioritySync(double streamID, double priority)
 {
     MediaTrace trace("SoundPool::TaiheSetPriority");
     MEDIA_LOGI("SoundPoolNapi::TaiheSetPriority");
@@ -221,7 +299,7 @@ void SoundPoolImpl::SetPrioritySync(int32_t streamID, int32_t priority)
     }
 }
 
-void SoundPoolImpl::SetVolumeSync(int32_t streamID, double leftVolume, double rightVolume)
+void SoundPoolImpl::SetVolumeSync(double streamID, double leftVolume, double rightVolume)
 {
     MediaTrace trace("SoundPool::TaiheSetVolume");
     MEDIA_LOGI("SoundPoolNapi::TaiheSetVolume");
@@ -241,18 +319,21 @@ void SoundPoolImpl::SetVolumeSync(int32_t streamID, double leftVolume, double ri
     }
 }
 
-void SoundPoolImpl::UnloadSync(int32_t soundID)
+void SoundPoolImpl::UnloadSync(double soundID)
 {
     MediaTrace trace("SoundPool::TaiheUnload");
     MEDIA_LOGI("SoundPoolNapi::TaiheUnload");
-    int32_t soundID_ = soundID;
+    soundId_ = soundID;
     CHECK_AND_RETURN_LOG(soundPool_ != nullptr, "soundPool_ is nullptr!");
-    int32_t ret = soundPool_->Unload(soundID_);
+    if (soundId_ <= 0) {
+        SignError(MSERR_EXT_API9_IO, "unLoad failed,inavild value");
+    }
+    int32_t ret = soundPool_->Unload(soundId_);
     if (ret != MSERR_OK) {
         SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "unLoad soundID failed");
     }
     MEDIA_LOGI("The taihe thread of Unload finishes execution and returns, soundID: %{public}d",
-        soundID_);
+        soundId_);
 }
 
 void SoundPoolImpl::ReleaseSync()
@@ -293,14 +374,14 @@ void SoundPoolImpl::OffError()
     MEDIA_LOGI("OffError End");
 }
 
-void SoundPoolImpl::OnPlayFinishedWithStreamId(callback_view<void(int32_t)> callback)
+void SoundPoolImpl::OnPlayFinishedWithStreamId(callback_view<void(double)> callback)
 {
     MediaTrace trace("SoundPoolImpl::OnPlayFinishedWithStreamId");
     MEDIA_LOGI("OnPlayFinishedWithStreamId Start");
     std::string callbackName = SoundPoolEvent::EVENT_PLAY_FINISHED_WITH_STREAM_ID;
     ani_env *env = get_env();
-    std::shared_ptr<taihe::callback<void(int32_t)>> taiheCallback =
-            std::make_shared<taihe::callback<void(int32_t)>>(callback);
+    std::shared_ptr<taihe::callback<void(double)>> taiheCallback =
+            std::make_shared<taihe::callback<void(double)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
 
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
@@ -318,14 +399,14 @@ void SoundPoolImpl::OffPlayFinishedWithStreamId()
     MEDIA_LOGI("OffPlayFinishedWithStreamId End");
 }
 
-void SoundPoolImpl::OnLoadComplete(callback_view<void(int32_t)> callback)
+void SoundPoolImpl::OnLoadComplete(callback_view<void(double)> callback)
 {
     MediaTrace trace("SoundPoolImpl::OnLoadComplete");
     MEDIA_LOGI("OnLoadComplete Start");
     std::string callbackName = SoundPoolEvent::EVENT_LOAD_COMPLETED;
     ani_env *env = get_env();
-    std::shared_ptr<taihe::callback<void(int32_t)>> taiheCallback =
-            std::make_shared<taihe::callback<void(int32_t)>>(callback);
+    std::shared_ptr<taihe::callback<void(double)>> taiheCallback =
+            std::make_shared<taihe::callback<void(double)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
 
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);

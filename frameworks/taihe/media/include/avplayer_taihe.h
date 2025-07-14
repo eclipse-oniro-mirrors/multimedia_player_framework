@@ -15,6 +15,7 @@
 #ifndef AVPLAYER_TAIHE_H
 #define AVPLAYER_TAIHE_H
 
+#include <shared_mutex>
 #include "audio_info.h"
 #include "audio_effect.h"
 #include "avmetadatahelper.h"
@@ -47,6 +48,21 @@ struct AVPlayerContext {
     }
     std::shared_ptr<TaskHandler<TaskRet>> asyncTask = nullptr;
     std::vector<Format> trackInfoVec_;
+};
+struct AVPlayStrategyTmp {
+    uint32_t preferredWidth;
+    uint32_t preferredHeight;
+    uint32_t preferredBufferDuration;
+    bool preferredHdr;
+    bool showFirstFrameOnPrepare;
+    bool enableSuperResolution;
+    int32_t mutedMediaType = static_cast<int32_t>(OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT);
+    std::string preferredAudioLanguage;
+    std::string preferredSubtitleLanguage;
+    double preferredBufferDurationForPlaying;
+    double thresholdForAutoQuickPlay;
+    bool isSetBufferDurationForPlaying {true};
+    bool isSetThresholdForAutoQuickPlay {true};
 };
 namespace AVPlayerState {
     const std::string STATE_IDLE = "idle";
@@ -93,11 +109,11 @@ public:
     
     optional<string> GetUrl();
     void SetUrl(optional_view<string> url);
-    int32_t GetWidth();
-    int32_t GetHeight();
+    double GetWidth();
+    double GetHeight();
     string GetState();
-    int32_t GetDuration();
-    int32_t GetCurrentTime();
+    double GetDuration();
+    double GetCurrentTime();
     void SetVolume(double volume);
     optional<AVDataSrcDescriptor> GetDataSrc();
     void SetDataSrc(optional_view<AVDataSrcDescriptor> dataSrc);
@@ -108,43 +124,57 @@ public:
     optional<ohos::multimedia::media::AVFileDescriptor> GetFdSrc();
     void SetFdSrc(optional_view<ohos::multimedia::media::AVFileDescriptor> fdSrc);
     void SetSpeed(PlaybackSpeed speed);
-    void Seek(int32_t timeMs, optional_view<SeekMode> mode);
+    void Seek(double timeMs, optional_view<SeekMode> mode);
     optional<VideoScaleType> GetVideoScaleType();
     void SetVideoScaleType(optional_view<VideoScaleType> videoScaleType);
     bool IsSeekContinuousSupported();
     array<map<string, MediaDescriptionValue>> GetTrackDescriptionSync();
-    int32_t getPlaybackPosition();
-    void setBitrate(int32_t bitrate);
+    double GetPlaybackPosition();
+    void SetBitrate(double bitrate);
     void StopSync();
     void PlaySync();
     void ResetSync();
     void ReleaseSync();
     void PauseSync();
     void PrepareSync();
-    void AddSubtitleFromFdSync(int32_t fd, int64_t offset, int64_t length);
-    void DeselectTrackSync(int32_t index);
+    void SetMediaSourceSync(weak::MediaSource src, optional_view<PlaybackStrategy> strategy);
+    void GetDefaultStrategy(AVPlayStrategyTmp &strategy);
+    void GetPlayStrategy(AVPlayStrategyTmp &playStrategy, PlaybackStrategy strategy);
+    void EnqueueMediaSourceTask(const std::shared_ptr<AVMediaSource> &mediaSource,
+        const struct AVPlayStrategy &strategy);
+    void AddSubtitleFromFdSync(double fd, optional_view<double> offset, optional_view<double> length);
+    array<double> GetSelectedTracksSync();
+    void SelectTrackSync(double index, ::taihe::optional_view<::ohos::multimedia::media::SwitchMode> mode);
+    void DeselectTrackSync(double index);
     void AddSubtitleFromUrlSync(::taihe::string_view url);
+    map<string, PlaybackInfoValue> GetPlaybackInfoSync();
+    void SetVideoWindowSizeSync(double width, double height);
+    void SetSuperResolutionSync(bool enabled);
+    void SetPlaybackRangeSync(double startTimeMs, double endTimeMs,
+        optional_view<::ohos::multimedia::media::SeekMode> mode);
+    void SetMediaMutedSync(::ohos::multimedia::media::MediaType mediaType, bool muted);
+    void SetPlaybackStrategySync(::ohos::multimedia::media::PlaybackStrategy const& strategy);
     void OnError(callback_view<void(uintptr_t)> callback);
     void OnStateChange(callback_view<void(string_view, ohos::multimedia::media::StateChangeReason)> callback);
     void OnMediaKeySystemInfoUpdate(callback_view<void(uintptr_t)> callback);
     void OnEndOfStream(callback_view<void(uintptr_t)> callback);
     void OnStartRenderFrame(callback_view<void(uintptr_t)> callback);
-    void OnSeekDone(callback_view<void(int32_t)> callback);
-    void OnDurationUpdate(callback_view<void(int32_t)> callback);
-    void OnTimeUpdate(callback_view<void(int32_t)> callback);
+    void OnSeekDone(callback_view<void(double)> callback);
+    void OnDurationUpdate(callback_view<void(double)> callback);
+    void OnTimeUpdate(callback_view<void(double)> callback);
     void OnVolumeChange(callback_view<void(double)> callback);
-    void OnSpeedDone(callback_view<void(int32_t)> callback);
-    void OnBitrateDone(callback_view<void(int32_t)> callback);
-    void OnAvailableBitrates(callback_view<void(array_view<int32_t>)> callback);
-    void OnAmplitudeUpdate(callback_view<void(array_view<float>)> callback);
-    void OnBufferingUpdate(callback_view<void(ohos::multimedia::media::BufferingInfoType, int32_t)> callback);
-    void OnVideoSizeChange(callback_view<void(int32_t, int32_t)> callback);
-    void OnTrackChange(callback_view<void(int32_t, bool)> callback);
+    void OnSpeedDone(callback_view<void(double)> callback);
+    void OnBitrateDone(callback_view<void(double)> callback);
+    void OnAvailableBitrates(callback_view<void(array_view<double>)> callback);
+    void OnAmplitudeUpdate(callback_view<void(array_view<double>)> callback);
+    void OnBufferingUpdate(callback_view<void(ohos::multimedia::media::BufferingInfoType, double)> callback);
+    void OnVideoSizeChange(callback_view<void(double, double)> callback);
+    void OnTrackChange(callback_view<void(double, bool)> callback);
     void OnSubtitleUpdate(callback_view<void(SubtitleInfo const&)> callback);
     void OnSuperResolutionChanged(callback_view<void(bool)> callback);
     void OnTrackInfoUpdate(callback_view<void(array_view<map<string, MediaDescriptionValue>>)> callback);
-    void OnSeiMessageReceived(array_view<int32_t> payloadTypes,
-        callback_view<void(array_view<SeiMessage>, optional_view<int32_t>)> callback);
+    void OnSeiMessageReceived(array_view<double> payloadTypes,
+        callback_view<void(array_view<SeiMessage>, optional_view<double>)> callback);
 
     void OffError(optional_view<callback<void(uintptr_t)>> callback);
     void OffStateChange(optional_view<callback<void(string_view,
@@ -152,24 +182,23 @@ public:
     void OffMediaKeySystemInfoUpdate(optional_view<callback<void(uintptr_t)>> callback);
     void OffEndOfStream(optional_view<callback<void(uintptr_t)>> callback);
     void OffStartRenderFrame(optional_view<callback<void(uintptr_t)>> callback);
-    void OffSeekDone(optional_view<callback<void(int32_t)>> callback);
-    void OffDurationUpdate(optional_view<callback<void(int32_t)>> callback);
-    void OffTimeUpdate(optional_view<callback<void(int32_t)>> callback);
+    void OffSeekDone(optional_view<callback<void(double)>> callback);
+    void OffDurationUpdate(optional_view<callback<void(double)>> callback);
+    void OffTimeUpdate(optional_view<callback<void(double)>> callback);
     void OffVolumeChange(optional_view<callback<void(double)>> callback);
-    void OffSpeedDone(optional_view<callback<void(int32_t)>> callback);
-    void OffBitrateDone(optional_view<callback<void(int32_t)>> callback);
-    void OffAvailableBitrates(optional_view<callback<void(array_view<int32_t>)>> callback);
-    void OffAmplitudeUpdate(optional_view<callback<void(array_view<float>)>> callback);
+    void OffSpeedDone(optional_view<callback<void(double)>> callback);
+    void OffBitrateDone(optional_view<callback<void(double)>> callback);
+    void OffAvailableBitrates(optional_view<callback<void(array_view<double>)>> callback);
+    void OffAmplitudeUpdate(optional_view<callback<void(array_view<double>)>> callback);
     void OffBufferingUpdate(optional_view<callback<void(ohos::multimedia::media::BufferingInfoType,
-        int32_t)>> callback);
-    void OffVideoSizeChange(optional_view<callback<void(int32_t, int32_t)>> callback);
-    void OffTrackChange(optional_view<callback<void(int32_t, bool)>> callback);
+        double)>> callback);
+    void OffVideoSizeChange(optional_view<callback<void(double, double)>> callback);
+    void OffTrackChange(optional_view<callback<void(double, bool)>> callback);
     void OffSubtitleUpdate(optional_view<callback<void(SubtitleInfo const&)>> callback);
     void OffSuperResolutionChanged(optional_view<callback<void(bool)>> callback);
-    void OffTrackInfoUpdate(optional_view<callback<void(array_view<map<string, int32_t>>)>> callback);
-    void OffSeiMessageReceived(array_view<int32_t> payloadTypes,
-        optional_view<callback<void(array_view<SeiMessage>, optional_view<int32_t>)>> callback);
-    friend AVPlayer CreateAVPlayerSync();
+    void OffTrackInfoUpdate(optional_view<callback<void(array_view<map<string, double>>)>> callback);
+    void OffSeiMessageReceived(array_view<double> payloadTypes,
+        optional_view<callback<void(array_view<SeiMessage>, optional_view<double>)>> callback);
     bool GetIntArrayArgument(std::vector<int32_t> &vec, const std::vector<int32_t> &inputArray);
     void SeiMessageCallbackOff(std::string &callbackName, const std::vector<int32_t> &payloadTypes);
     void MaxAmplitudeCallbackOff(std::string callbackName);
@@ -186,6 +215,8 @@ public:
     void SetSource(std::string url);
     void SaveCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
     void QueueOnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg);
+    PlayerSwitchMode TransferSwitchMode(int32_t mode);
+    void GetAVPlayStrategyFromStrategyTmp(AVPlayStrategy &strategy, const AVPlayStrategyTmp &strategyTmp);
 private:
     static bool IsSystemApp();
     void ResetUserParameters();
@@ -197,16 +228,29 @@ private:
     std::shared_ptr<TaskHandler<TaskRet>> ResetTask();
     std::shared_ptr<TaskHandler<TaskRet>> ReleaseTask();
     static void SeekEnqueueTask(AVPlayerImpl *jsPlayer, int32_t time, int32_t mode);
+    static std::shared_ptr<AVMediaSource> GetAVMediaSource(weak::MediaSource src,
+        std::shared_ptr<AVMediaSourceTmp> &srcTmp);
     static PlayerSeekMode TransferSeekMode(int32_t mode);
+    void AddSubSource(std::string url);
     void SetSurface(const std::string &surfaceStr);
     void StartListenCurrentResource();
     void PauseListenCurrentResource();
     bool IsLiveSource() const;
     bool IsControllable();
+    bool CanSetSuperResolution();
+    bool CanSetPlayRange();
+    bool IsPalyingDurationValid(const AVPlayStrategyTmp &strategyTmp);
+    void AddMediaStreamToAVMediaSource(
+        const std::shared_ptr<AVMediaSourceTmp> &srcTmp, std::shared_ptr<AVMediaSource> &mediaSource);
+    bool IsLivingMaxDelayTimeValid(const AVPlayStrategyTmp &strategyTmp);
     std::string GetCurrentState();
-    std::shared_ptr<TaskHandler<TaskRet>> GetTrackDescriptionTask(const std::shared_ptr<AVPlayerContext> &Ctx);
-    map<string, MediaDescriptionValue> CreateFormatBuffer(Format &format);
-    void HandleSelectTrack(int32_t index, optional_view<::ohos::multimedia::media::SwitchMode> mode);
+    std::shared_ptr<TaskHandler<TaskRet>> GetTrackDescriptionTask(const std::unique_ptr<AVPlayerContext> &Ctx);
+    std::shared_ptr<TaskHandler<TaskRet>> SetVideoWindowSizeTask(int32_t width, int32_t height);
+    std::shared_ptr<TaskHandler<TaskRet>> SetSuperResolutionTask(bool enable);
+    std::shared_ptr<TaskHandler<TaskRet>> EqueueSetPlayRangeTask(int32_t start, int32_t end, int32_t mode);
+    std::shared_ptr<TaskHandler<TaskRet>> SetMediaMutedTask(::OHOS::Media::MediaType type, bool isMuted);
+    std::shared_ptr<TaskHandler<TaskRet>> SetPlaybackStrategyTask(AVPlayStrategy playStrategy);
+    void HandleSelectTrack(int32_t index, optional_view<SwitchMode> mode);
     void OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg);
     std::condition_variable stopTaskQueCond_;
     bool taskQueStoped_ = false;
@@ -241,7 +285,9 @@ private:
         OHOS::AudioStandard::StreamUsage::STREAM_USAGE_MEDIA,
         0
     };
-    OHOS::AudioStandard::InterruptMode interruptMode_ = OHOS::AudioStandard::InterruptMode::SHARE_MODE;
+    Format playbackInfo_;
+    int32_t index_ = -1;
+    int32_t mode_ = SWITCH_SMOOTH;
     std::mutex syncMutex_;
     bool getApiVersionFlag_ = true;
     bool calMaxAmplitude_ = false;

@@ -48,8 +48,10 @@ public:
         virtual void UvWork()
         {
             std::shared_ptr<AutoRef> ref = callback.lock();
-            CHECK_AND_RETURN_LOG(ref != nullptr, "ref is nullptr");
+            CHECK_AND_RETURN_LOG(ref != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
             auto func = ref->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             uintptr_t undefined = MediaTaiheUtils::GetUndefined(get_env());
             std::shared_ptr<taihe::callback<void(uintptr_t)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void(uintptr_t)>>(func);
@@ -69,8 +71,10 @@ public:
         void UvWork() override
         {
             std::shared_ptr<AutoRef> errorRef = callback.lock();
-            CHECK_AND_RETURN_LOG(errorRef != nullptr, "ref is nullptr");
+            CHECK_AND_RETURN_LOG(errorRef != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
             auto func = errorRef->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             auto err = MediaTaiheUtils::ToBusinessError(get_env(), errorCode, errorMsg);
             std::shared_ptr<taihe::callback<void(uintptr_t)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void(uintptr_t)>>(func);
@@ -83,10 +87,12 @@ public:
         void UvWork() override
         {
             std::shared_ptr<AutoRef> intRef = callback.lock();
-            CHECK_AND_RETURN_LOG(intRef != nullptr, "ref is nullptr");
+            CHECK_AND_RETURN_LOG(intRef != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
             auto func = intRef->callbackRef_;
-            std::shared_ptr<taihe::callback<void(int32_t)>> cacheCallback =
-                std::reinterpret_pointer_cast<taihe::callback<void(int32_t)>>(func);
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
+            std::shared_ptr<taihe::callback<void(double)>> cacheCallback =
+                std::reinterpret_pointer_cast<taihe::callback<void(double)>>(func);
             (*cacheCallback)(value);
         }
     };
@@ -96,13 +102,16 @@ public:
         void UvWork() override
         {
             std::shared_ptr<AutoRef> intVecRef = callback.lock();
-            CHECK_AND_RETURN_LOG(intVecRef != nullptr, "ref is nullptr");
+            CHECK_AND_RETURN_LOG(intVecRef != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
+            CHECK_AND_RETURN_LOG(valueVec.size() > 0, "valueVec is empty");
             int32_t firstValueAsDouble = static_cast<int32_t>(valueVec[0]);
             int32_t val = 0;
             auto func = intVecRef->callbackRef_;
-            std::shared_ptr<taihe::callback<void(ohos::multimedia::media::BufferingInfoType, int32_t)>>
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
+            std::shared_ptr<taihe::callback<void(ohos::multimedia::media::BufferingInfoType, double)>>
                 cacheCallback = std::reinterpret_pointer_cast<taihe::callback<void
-                    (ohos::multimedia::media::BufferingInfoType, int32_t)>>(func);
+                    (ohos::multimedia::media::BufferingInfoType, double)>>(func);
             ohos::multimedia::media::BufferingInfoType::key_t key;
             MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::media::BufferingInfoType>(firstValueAsDouble, key);
             (*cacheCallback)(ohos::multimedia::media::BufferingInfoType(key), val);
@@ -114,24 +123,29 @@ public:
         void UvWork() override
         {
             std::shared_ptr<AutoRef> intVecRef = callback.lock();
-            CHECK_AND_RETURN_LOG(intVecRef != nullptr, "ref is nullptr");
-            int32_t firstValueAsDouble = static_cast<int32_t>(valueVec[0]);
-            int32_t secondValueAsDouble = static_cast<int32_t>(valueVec[1]);
+            CHECK_AND_RETURN_LOG(intVecRef != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
+            CHECK_AND_RETURN_LOG(valueVec.size() > 1, "valueVec size is less than 2");
+            double firstValueAsDouble = static_cast<double>(valueVec[0]);
+            double secondValueAsDouble = static_cast<double>(valueVec[1]);
             auto func = intVecRef->callbackRef_;
-            std::shared_ptr<taihe::callback<void(int32_t, int32_t)>> cacheCallback =
-                std::reinterpret_pointer_cast<taihe::callback<void(int32_t, int32_t)>>(func);
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
+            std::shared_ptr<taihe::callback<void(double, double)>> cacheCallback =
+                std::reinterpret_pointer_cast<taihe::callback<void(double, double)>>(func);
             (*cacheCallback)(firstValueAsDouble, secondValueAsDouble);
         }
     };
     struct IntArray : public Base {
-        std::vector<int32_t> valueVec;
+        std::vector<double> valueVec;
         void UvWork() override
         {
             std::shared_ptr<AutoRef> intVecRef = callback.lock();
-            CHECK_AND_RETURN_LOG(intVecRef != nullptr, "ref is nullptr");
+            CHECK_AND_RETURN_LOG(intVecRef != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
             auto func = intVecRef->callbackRef_;
-            std::shared_ptr<taihe::callback<void(array_view<int32_t>)>> cacheCallback =
-                std::reinterpret_pointer_cast<taihe::callback<void(array_view<int32_t>)>>(func);
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
+            std::shared_ptr<taihe::callback<void(array_view<double>)>> cacheCallback =
+                std::reinterpret_pointer_cast<taihe::callback<void(array_view<double>)>>(func);
             (*cacheCallback)(valueVec);
         }
     };
@@ -140,9 +154,11 @@ public:
         double value = 0.0;
         void UvWork() override
         {
-            std::shared_ptr<AutoRef> stateChangeRef = callback.lock();
-            CHECK_AND_RETURN_LOG(stateChangeRef != nullptr, "ref is nullptr");
-            auto func = stateChangeRef->callbackRef_;
+            std::shared_ptr<AutoRef> doubleRef = callback.lock();
+            CHECK_AND_RETURN_LOG(doubleRef != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
+            auto func = doubleRef->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<void(double)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void(double)>>(func);
             (*cacheCallback)(value);
@@ -154,12 +170,14 @@ public:
         void UvWork() override
         {
             std::shared_ptr<AutoRef> floatArrayRef = callback.lock();
-            CHECK_AND_RETURN_LOG(floatArrayRef != nullptr, "ref is nullptr");
+            CHECK_AND_RETURN_LOG(floatArrayRef != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
             auto func = floatArrayRef->callbackRef_;
-            std::shared_ptr<taihe::callback<void(array_view<float>)>> cacheCallback =
-                std::reinterpret_pointer_cast<taihe::callback<void(array_view<float>)>>(func);
-            std::vector<float> floatVec(valueVec.begin(), valueVec.end());
-            (*cacheCallback)(array_view<float>(floatVec));
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
+            std::shared_ptr<taihe::callback<void(array_view<double>)>> cacheCallback =
+                std::reinterpret_pointer_cast<taihe::callback<void(array_view<double>)>>(func);
+            std::vector<double> floatVec(valueVec.begin(), valueVec.end());
+            (*cacheCallback)(array_view<double>(floatVec));
         }
     };
 
@@ -168,8 +186,10 @@ public:
         void UvWork() override
         {
             std::shared_ptr<AutoRef> floatArrayRef = callback.lock();
-            CHECK_AND_RETURN_LOG(floatArrayRef != nullptr, "ref is nullptr");
+            CHECK_AND_RETURN_LOG(floatArrayRef != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
             auto func = floatArrayRef->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<void(array_view<map<string, MediaDescriptionValue>>)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void
                     (array_view<map<string, MediaDescriptionValue>>)>>(func);
@@ -187,11 +207,12 @@ public:
         bool isSelect = false;
         void UvWork() override
         {
-            std::shared_ptr<AutoRef> intVecRef = callback.lock();
-            CHECK_AND_RETURN_LOG(intVecRef != nullptr, "ref is nullptr");
-            auto func = intVecRef->callbackRef_;
-            std::shared_ptr<taihe::callback<void(int32_t, bool)>> cacheCallback =
-                std::reinterpret_pointer_cast<taihe::callback<void(int32_t, bool)>>(func);
+            std::shared_ptr<AutoRef> trackChangeRef = callback.lock();
+            CHECK_AND_RETURN_LOG(trackChangeRef != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
+            auto func = trackChangeRef->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
+            std::shared_ptr<taihe::callback<void(double, bool)>> cacheCallback =
+                std::reinterpret_pointer_cast<taihe::callback<void(double, bool)>>(func);
             (*cacheCallback)(number, isSelect);
         }
     };
@@ -202,8 +223,12 @@ public:
         void UvWork() override
         {
             std::shared_ptr<AutoRef> stateChangeRef = callback.lock();
+            CHECK_AND_RETURN_LOG(stateChangeRef != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
+            auto func = stateChangeRef->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<StateChangeCallback>> cacheCallback =
-                std::reinterpret_pointer_cast<taihe::callback<StateChangeCallback>>(stateChangeRef->callbackRef_);
+                std::reinterpret_pointer_cast<taihe::callback<StateChangeCallback>>(func);
             ohos::multimedia::media::StateChangeReason::key_t key;
             MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::media::StateChangeReason>(reason, key);
             (*cacheCallback)(taihe::string_view(state), ohos::multimedia::media::StateChangeReason(key));
@@ -215,8 +240,10 @@ public:
         void UvWork() override
         {
             std::shared_ptr<AutoRef> boolRef = callback.lock();
-            CHECK_AND_RETURN_LOG(boolRef != nullptr, "ref is nullptr");
+            CHECK_AND_RETURN_LOG(boolRef != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
             auto func = boolRef->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<void(bool)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void(bool)>>(func);
             (*cacheCallback)(value);
@@ -224,16 +251,17 @@ public:
     };
 
     struct SeiInfoUpadte : public Base {
-        int32_t playbackPosition;
+        double playbackPosition;
         std::vector<Format> payloadGroup;
         void UvWork() override
         {
             std::shared_ptr<AutoRef> seiInfoRef = callback.lock();
-            CHECK_AND_RETURN_LOG(seiInfoRef != nullptr, "ref is nullptr");
+            CHECK_AND_RETURN_LOG(seiInfoRef != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
             auto func = seiInfoRef->callbackRef_;
-            std::shared_ptr<taihe::callback<void(array_view<SeiMessage>, optional_view<int32_t>)>> cacheCallback =
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
+            std::shared_ptr<taihe::callback<void(array_view<SeiMessage>, optional_view<double>)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void(array_view<SeiMessage>,
-                    optional_view<int32_t>)>>(func);
+                    optional_view<double>)>>(func);
             std::vector<SeiMessage> seiMessages;
             for (const auto& format : payloadGroup) {
                 uint8_t* bufferData = nullptr;
@@ -255,7 +283,7 @@ public:
                 seiMessages.push_back(seiMessage);
             }
             array_view<SeiMessage> seiMessageView(seiMessages);
-            (*cacheCallback)(seiMessageView, optional_view<int32_t>(&playbackPosition));
+            (*cacheCallback)(seiMessageView, optional_view<double>(&playbackPosition));
         }
     };
 
@@ -264,8 +292,11 @@ public:
         void UvWork() override
         {
             std::shared_ptr<AutoRef> mapRef = callback.lock();
-            CHECK_AND_RETURN_LOG(mapRef != nullptr, "ref is nullptr");
+            CHECK_AND_RETURN_LOG(mapRef != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
+
             auto func = mapRef->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<void(uintptr_t)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void(uintptr_t)>>(func);
             ANI::Media::MediaKeySystemInfo mediaKeySystemInfo;
@@ -284,31 +315,35 @@ public:
         void UvWork() override
         {
             std::shared_ptr<AutoRef> subtitleRef = callback.lock();
-            CHECK_AND_RETURN_LOG(subtitleRef != nullptr, "ref is nullptr");
+            CHECK_AND_RETURN_LOG(subtitleRef != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
             auto func = subtitleRef->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<void(::ohos::multimedia::media::SubtitleInfo const&)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void
                     (::ohos::multimedia::media::SubtitleInfo const&)>>(func);
             ::ohos::multimedia::media::SubtitleInfo subtitleInfo;
             subtitleInfo.text = ::taihe::optional<taihe::string>(std::in_place_t{}, valueMap.text);
-            subtitleInfo.startTime = taihe::optional<int>(std::in_place_t{}, valueMap.pts);
-            subtitleInfo.duration = taihe::optional<int>(std::in_place_t{}, valueMap.duration);
+            subtitleInfo.startTime = taihe::optional<double>(std::in_place_t{}, valueMap.pts);
+            subtitleInfo.duration = taihe::optional<double>(std::in_place_t{}, valueMap.duration);
             (*cacheCallback)(subtitleInfo);
         }
     };
 
-    static void CompleteCallback(AniCallback::Base *aniCb, const AVPlayerCallback *aVPlayerCallback)
+    static void CompleteCallback(AniCallback::Base *aniCb, std::shared_ptr<OHOS::AppExecFwk::EventHandler> mainHandler)
     {
+        CHECK_AND_RETURN_LOG(aniCb != nullptr, "aniCb is nullptr");
+        CHECK_AND_RETURN_LOG(mainHandler != nullptr, "callback failed, mainHandler is nullptr!");
         auto task = [aniCb]() {
             if (aniCb) {
                 aniCb->UvWork();
+                delete aniCb;
             }
         };
-        if (!aVPlayerCallback) {
-            MEDIA_LOGE("aVPlayerCallback is null");
-            return;
+        bool ret = mainHandler->PostTask(task, "On", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+        if (!ret) {
+            MEDIA_LOGE("Failed to PostTask!");
+            delete aniCb;
         }
-        aVPlayerCallback->mainHandler_->PostTask(task, "On", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
     }
 };
 
@@ -386,10 +421,6 @@ AVPlayerCallback::AVPlayerCallback(AVPlayerNotify *listener)
             [this](const int32_t extra, const Format &infoBody) { OnSetDecryptConfigDoneCb(extra, infoBody); } },
         { INFO_TYPE_MAX_AMPLITUDE_COLLECT,
              [this](const int32_t extra, const Format &infoBody) { OnMaxAmplitudeCollectedCb(extra, infoBody); } },
-        // { INFO_TYPE_INTERRUPT_EVENT,
-        //     [this](const int32_t extra, const Format &infoBody) { OnAudioInterruptCb(extra, infoBody); } },
-        // { INFO_TYPE_AUDIO_DEVICE_CHANGE,
-        //     [this](const int32_t extra, const Format &infoBody) { OnAudioDeviceChangeCb(extra, infoBody); } },
         { INFO_TYPE_DRM_INFO_UPDATED,
             [this](const int32_t extra, const Format &infoBody) { OnDrmInfoUpdatedCb(extra, infoBody); } },
         { INFO_TYPE_SUPER_RESOLUTION_CHANGED,
@@ -439,7 +470,7 @@ void AVPlayerCallback::OnStateChangeCb(const int32_t extra, const Format &infoBo
             cb->callbackName = AVPlayerEvent::EVENT_STATE_CHANGE;
             cb->state = stateStr;
             cb->reason = reason;
-            AniCallback::CompleteCallback(cb, this);
+            AniCallback::CompleteCallback(cb, mainHandler_);
         }
     }
 }
@@ -460,7 +491,7 @@ void AVPlayerCallback::OnSeekDoneCb(const int32_t extra, const Format &infoBody)
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_SEEK_DONE);
     cb->callbackName = AVPlayerEvent::EVENT_SEEK_DONE;
     cb->value = currentPositon;
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnSpeedDoneCb(const int32_t extra, const Format &infoBody)
@@ -480,7 +511,7 @@ void AVPlayerCallback::OnSpeedDoneCb(const int32_t extra, const Format &infoBody
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_SPEED_DONE);
     cb->callbackName = AVPlayerEvent::EVENT_SPEED_DONE;
     cb->value = speedMode;
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnBitRateDoneCb(const int32_t extra, const Format &infoBody)
@@ -500,7 +531,7 @@ void AVPlayerCallback::OnBitRateDoneCb(const int32_t extra, const Format &infoBo
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_BITRATE_DONE);
     cb->callbackName = AVPlayerEvent::EVENT_BITRATE_DONE;
     cb->value = bitRate;
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnPositionUpdateCb(const int32_t extra, const Format &infoBody)
@@ -525,7 +556,7 @@ void AVPlayerCallback::OnPositionUpdateCb(const int32_t extra, const Format &inf
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_TIME_UPDATE);
     cb->callbackName = AVPlayerEvent::EVENT_TIME_UPDATE;
     cb->value = position;
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnDurationUpdateCb(const int32_t extra, const Format &infoBody)
@@ -533,14 +564,15 @@ void AVPlayerCallback::OnDurationUpdateCb(const int32_t extra, const Format &inf
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isLoaded_.load(), "current source is unready");
     int32_t duration = extra;
-    MEDIA_LOGI("OnPositionUpdate %{public}d", duration);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnDurationUpdateCb is called, duration: %{public}d",
+        FAKE_POINTER(this), duration);
 
     if (listener_ != nullptr) {
         listener_->NotifyDuration(duration);
     }
 
     if (refMap_.find(AVPlayerEvent::EVENT_DURATION_UPDATE) == refMap_.end()) {
-        MEDIA_LOGW(" can not find timeupdate callback!");
+        MEDIA_LOGD("0x%{public}06" PRIXPTR " can not find duration update callback!", FAKE_POINTER(this));
         return;
     }
 
@@ -550,7 +582,7 @@ void AVPlayerCallback::OnDurationUpdateCb(const int32_t extra, const Format &inf
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_DURATION_UPDATE);
     cb->callbackName = AVPlayerEvent::EVENT_DURATION_UPDATE;
     cb->value = duration;
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnVolumeChangeCb(const int32_t extra, const Format &infoBody)
@@ -572,7 +604,7 @@ void AVPlayerCallback::OnVolumeChangeCb(const int32_t extra, const Format &infoB
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_VOLUME_CHANGE);
     cb->callbackName = AVPlayerEvent::EVENT_VOLUME_CHANGE;
     cb->value = static_cast<double>(volumeLevel);
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnBufferingUpdateCb(const int32_t extra, const Format &infoBody)
@@ -610,7 +642,7 @@ void AVPlayerCallback::OnBufferingUpdateCb(const int32_t extra, const Format &in
     cb->callbackName = AVPlayerEvent::EVENT_BUFFERING_UPDATE;
     cb->valueVec.push_back(bufferingType);
     cb->valueVec.push_back(val);
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnMessageCb(const int32_t extra, const Format &infoBody)
@@ -637,7 +669,7 @@ void AVPlayerCallback::OnStartRenderFrameCb() const
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_START_RENDER_FRAME);
     cb->callbackName = AVPlayerEvent::EVENT_START_RENDER_FRAME;
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnVideoSizeChangedCb(const int32_t extra, const Format &infoBody)
@@ -665,7 +697,7 @@ void AVPlayerCallback::OnVideoSizeChangedCb(const int32_t extra, const Format &i
     cb->callbackName = AVPlayerEvent::EVENT_VIDEO_SIZE_CHANGE;
     cb->valueVec.push_back(width);
     cb->valueVec.push_back(height);
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnBitRateCollectedCb(const int32_t extra, const Format &infoBody)
@@ -677,7 +709,7 @@ void AVPlayerCallback::OnBitRateCollectedCb(const int32_t extra, const Format &i
         return;
     }
 
-    std::vector<int32_t> bitrateVec;
+    std::vector<double> bitrateVec;
     if (infoBody.ContainKey(std::string(PlayerKeys::PLAYER_AVAILABLE_BITRATES))) {
         uint8_t *addr = nullptr;
         size_t size  = 0;
@@ -694,7 +726,7 @@ void AVPlayerCallback::OnBitRateCollectedCb(const int32_t extra, const Format &i
             MEDIA_LOGI("bitrate = %{public}u", bitrate);
             addr += sizeof(uint32_t);
             size -= sizeof(uint32_t);
-            bitrateVec.push_back(static_cast<int32_t>(bitrate));
+            bitrateVec.push_back(static_cast<double>(bitrate));
         }
     }
 
@@ -704,7 +736,7 @@ void AVPlayerCallback::OnBitRateCollectedCb(const int32_t extra, const Format &i
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_AVAILABLE_BITRATES);
     cb->callbackName = AVPlayerEvent::EVENT_AVAILABLE_BITRATES;
     cb->valueVec = bitrateVec;
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnTrackInfoUpdate(const int32_t extra, const Format &infoBody)
@@ -723,7 +755,7 @@ void AVPlayerCallback::OnTrackInfoUpdate(const int32_t extra, const Format &info
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_TRACK_INFO_UPDATE);
     cb->callbackName = AVPlayerEvent::EVENT_TRACK_INFO_UPDATE;
     cb->trackInfo = trackInfo;
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnTrackChangedCb(const int32_t extra, const Format &infoBody)
@@ -745,7 +777,7 @@ void AVPlayerCallback::OnTrackChangedCb(const int32_t extra, const Format &infoB
     cb->callbackName = AVPlayerEvent::EVENT_TRACKCHANGE;
     cb->number = index;
     cb->isSelect = isSelect ? true : false;
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnEosCb(const int32_t extra, const Format &infoBody)
@@ -764,7 +796,7 @@ void AVPlayerCallback::OnEosCb(const int32_t extra, const Format &infoBody)
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_END_OF_STREAM);
     cb->callbackName = AVPlayerEvent::EVENT_END_OF_STREAM;
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
@@ -815,7 +847,7 @@ void AVPlayerCallback::OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std
     cb->errorCode = errorCode;
     cb->errorMsg = message;
 
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnSetDecryptConfigDoneCb(const int32_t extra, const Format &infoBody)
@@ -832,7 +864,7 @@ void AVPlayerCallback::OnSetDecryptConfigDoneCb(const int32_t extra, const Forma
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_SET_DECRYPT_CONFIG_DONE);
     cb->callbackName = AVPlayerEvent::EVENT_SET_DECRYPT_CONFIG_DONE;
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnMaxAmplitudeCollectedCb(const int32_t extra, const Format &infoBody)
@@ -871,7 +903,7 @@ void AVPlayerCallback::OnMaxAmplitudeCollectedCb(const int32_t extra, const Form
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_AMPLITUDE_UPDATE);
     cb->callbackName = AVPlayerEvent::EVENT_AMPLITUDE_UPDATE;
     cb->valueVec = MaxAmplitudeVec;
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnDrmInfoUpdatedCb(const int32_t extra, const Format &infoBody)
@@ -907,7 +939,7 @@ void AVPlayerCallback::OnDrmInfoUpdatedCb(const int32_t extra, const Format &inf
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_DRM_INFO_UPDATE);
     cb->callbackName = AVPlayerEvent::EVENT_DRM_INFO_UPDATE;
     cb->infoMap = drmInfoMap;
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnSuperResolutionChangedCb(const int32_t extra, const Format &infoBody)
@@ -929,7 +961,7 @@ void AVPlayerCallback::OnSuperResolutionChangedCb(const int32_t extra, const For
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_SUPER_RESOLUTION_CHANGED);
     cb->callbackName = AVPlayerEvent::EVENT_SUPER_RESOLUTION_CHANGED;
     cb->value = enabled ? true : false;
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnSeiInfoCb(const int32_t extra, const Format &infoBody)
@@ -953,7 +985,7 @@ void AVPlayerCallback::OnSeiInfoCb(const int32_t extra, const Format &infoBody)
     cb->callbackName = AVPlayerEvent::EVENT_SEI_MESSAGE_INFO;
     cb->playbackPosition = playbackPosition;
     cb->payloadGroup = formatVec;
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 void AVPlayerCallback::OnSubtitleInfoCb(const int32_t extra, const Format &infoBody)
@@ -979,7 +1011,7 @@ void AVPlayerCallback::OnSubtitleInfoCb(const int32_t extra, const Format &infoB
     cb->valueMap.pts = pts;
     cb->valueMap.duration = duration;
 
-    AniCallback::CompleteCallback(cb, this);
+    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 int32_t AVPlayerCallback::SetDrmInfoData(const uint8_t *drmInfoAddr, int32_t infoCount,
@@ -1013,8 +1045,10 @@ void AVPlayerCallback::SaveCallbackReference(const std::string &name, std::weak_
 {
     std::lock_guard<std::mutex> lock(mutex_);
     refMap_[name] = ref;
-    std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::GetMainEventRunner();
-    mainHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
+    if (mainHandler_ == nullptr) {
+        std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::GetMainEventRunner();
+        mainHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
+    }
 }
 
 void AVPlayerCallback::ClearCallbackReference(const std::string &name)
@@ -1033,5 +1067,14 @@ void AVPlayerCallback::Pause()
     isLoaded_ = false;
 }
 
+void AVPlayerCallback::Release()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    Format infoBody;
+    AVPlayerCallback::OnStateChangeCb(PlayerStates::PLAYER_RELEASED, infoBody);
+    listener_ = nullptr;
+}
+
 } // namespace Media
-} // namespace OHOS
+} // namespace ANI

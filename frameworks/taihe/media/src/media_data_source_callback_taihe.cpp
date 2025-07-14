@@ -94,4 +94,4 @@ void MediaDataSourceCallback::ClearCallbackReference()
 }
 
 } // namespace Media
-} // namespace OHOS
+} // namespace ANI

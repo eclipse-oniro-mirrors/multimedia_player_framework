@@ -15,6 +15,7 @@
 
 #include "media_log.h"
 #include "media_dfx.h"
+#include "media_taihe_utils.h"
 #include "avcodec_info.h"
 #include "avtranscoder_callback_taihe.h"
 
@@ -62,6 +63,7 @@ AVTranscoderImpl::AVTranscoderImpl()
     transCoder_ = TransCoderFactory::CreateTransCoder();
     if (transCoder_ == nullptr) {
         MEDIA_LOGE("failed to CreateTransCoder");
+        MediaTaiheUtils::ThrowExceptionError("failed to CreateTransCoder");
         return;
     }
 
@@ -71,6 +73,7 @@ AVTranscoderImpl::AVTranscoderImpl()
     transCoderCb_ = std::make_shared<AVTransCoderCallback>();
     if (transCoderCb_ == nullptr) {
         MEDIA_LOGE("failed to CreateTransCoderCb");
+        MediaTaiheUtils::ThrowExceptionError("failed to CreateTransCoderCb");
         return;
     }
     (void)transCoder_->SetTransCoderCallback(transCoderCb_);
@@ -158,9 +161,15 @@ RetInfo AVTranscoderImpl::Release()
     return RetInfo(MSERR_EXT_API9_OK, "");
 }
 
-AVTranscoder CreateAVTranscoderSync()
+optional<AVTranscoder> CreateAVTranscoderSync()
 {
-    return make_holder<AVTranscoderImpl, AVTranscoder>();
+    auto res = make_holder<AVTranscoderImpl, AVTranscoder>();
+    if (taihe::has_error()) {
+        MEDIA_LOGE("Create AVPlayer failed!");
+        taihe::reset_error();
+        return optional<AVTranscoder>(std::nullopt);
+    }
+    return optional<AVTranscoder>(std::in_place, res);
 }
 
 RetInfo AVTranscoderImpl::SetOutputFile(int32_t fd)
@@ -170,21 +179,35 @@ RetInfo AVTranscoderImpl::SetOutputFile(int32_t fd)
     return RetInfo(MSERR_EXT_API9_OK, "");
 }
 
-int32_t AVTranscoderImpl::GetFdDst()
+double AVTranscoderImpl::GetFdDst()
 {
     MediaTrace trace("AVTranscoderImpl::get url");
     MEDIA_LOGD("TaiheGetUrl Out Current Url: %{public}s", srcUrl_.c_str());
     return dstFd_;
 }
 
-void AVTranscoderImpl::SetFdDst(int32_t fdDst)
+void AVTranscoderImpl::SetFdDst(double fdDst)
 {
     MediaTrace trace("AVTranscoderImpl::set fd");
+    auto asyncCtx = std::make_unique<AVTransCoderAsyncContext>();
+    CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
+    asyncCtx->avTransCoder = this;
+    CHECK_AND_RETURN_LOG(asyncCtx->avTransCoder != nullptr, "failed to GetJsInstanceAndArgs");
     dstFd_ = fdDst;
-    auto retInfo = SetOutputFile(dstFd_);
-    if (retInfo.first != MSERR_EXT_API9_OK) {
-        set_business_error(retInfo.first, retInfo.second);
+    auto task = std::make_shared<TaskHandler<void>>([taihe = asyncCtx->avTransCoder]() {
+        MEDIA_LOGI("JsSetSrcFd Task");
+        taihe->SetOutputFile(taihe->dstFd_);
+    });
+    (void)asyncCtx->avTransCoder->taskQue_->EnqueueTask(task);
+    if (asyncCtx->task_) {
+        auto result = asyncCtx->task_->GetResult();
+        if (result.Value().first != MSERR_EXT_API9_OK) {
+            asyncCtx->SignError(result.Value().first, result.Value().second);
+        }
     }
+    asyncCtx.release();
+
+    MEDIA_LOGI("TaiheSetDstFd Out");
 }
 
 ohos::multimedia::media::AVFileDescriptor AVTranscoderImpl::GetFdSrc()
@@ -192,8 +215,8 @@ ohos::multimedia::media::AVFileDescriptor AVTranscoderImpl::GetFdSrc()
     MediaTrace trace("AVTranscoderImpl::get url");
     ohos::multimedia::media::AVFileDescriptor fdSrc;
     fdSrc.fd = srcFd_.fd;
-    fdSrc.offset = optional<int64_t>(std::in_place_t{}, srcFd_.offset);
-    fdSrc.length = optional<int64_t>(std::in_place_t{}, srcFd_.length);
+    fdSrc.offset = optional<double>(std::in_place_t{}, srcFd_.offset);
+    fdSrc.length = optional<double>(std::in_place_t{}, srcFd_.length);
     MEDIA_LOGD("TaiheGetUrl Out Current Url: %{public}s", srcUrl_.c_str());
     return fdSrc;
 }
@@ -202,6 +225,10 @@ ohos::multimedia::media::AVFileDescriptor AVTranscoderImpl::GetFdSrc()
 void AVTranscoderImpl::SetFdSrc(ohos::multimedia::media::AVFileDescriptor const& fdSrc)
 {
     MediaTrace trace("AVTranscoderImpl::set fd");
+    auto asyncCtx = std::make_unique<AVTransCoderAsyncContext>();
+    CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
+    asyncCtx->avTransCoder = this;
+    CHECK_AND_RETURN_LOG(asyncCtx->avTransCoder != nullptr, "failed to GetJsInstanceAndArgs");
     srcFd_.fd = fdSrc.fd;
     if (fdSrc.offset.has_value()) {
         srcFd_.offset = fdSrc.offset.value();
@@ -210,8 +237,19 @@ void AVTranscoderImpl::SetFdSrc(ohos::multimedia::media::AVFileDescriptor const&
         srcFd_.length = fdSrc.length.value();
     }
 
-    auto result = SetInputFile(srcFd_.fd, srcFd_.offset, srcFd_.length);
-    set_business_error(result.first, result.second);
+    auto task = std::make_shared<TaskHandler<void>>([taihe = asyncCtx->avTransCoder]() {
+        MEDIA_LOGI("JsSetSrcFd Task");
+        taihe->SetInputFile(taihe->srcFd_.fd, taihe->srcFd_.offset, taihe->srcFd_.length);
+    });
+    (void)asyncCtx->avTransCoder->taskQue_->EnqueueTask(task);
+    if (asyncCtx->task_) {
+        auto result = asyncCtx->task_->GetResult();
+        if (result.Value().first != MSERR_EXT_API9_OK) {
+            asyncCtx->SignError(result.Value().first, result.Value().second);
+        }
+    }
+    asyncCtx.release();
+
     MEDIA_LOGI("TaiheSetSrcFd Out");
 }
 
@@ -244,6 +282,10 @@ int32_t AVTranscoderImpl::CheckRepeatOperation(const std::string &opt)
     CHECK_AND_RETURN_RET_LOG(taiheCb != nullptr, MSERR_INVALID_OPERATION, "taiheCb is nullptr!");
 
     std::string curState = taiheCb->GetState();
+    if (STATE_CTRL.find(curState) == STATE_CTRL.end()) {
+        MEDIA_LOGI("Invalid state: %{public}s.", curState.c_str());
+        return MSERR_INVALID_OPERATION;
+    }
     std::vector<std::string> repeatOpt = STATE_CTRL.at(curState);
     if (find(repeatOpt.begin(), repeatOpt.end(), opt) != repeatOpt.end()) {
         MEDIA_LOGI("Current state is %{public}s. Please do not call %{public}s again!",
@@ -261,6 +303,7 @@ void AVTranscoderImpl::PrepareSync(AVTranscoderConfig const& config)
     MEDIA_LOGI("Taihe %{public}s Start", opt.c_str());
 
     auto asyncCtx = std::make_unique<AVTransCoderAsyncContext>();
+    CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
     asyncCtx->avTransCoder = this;
     CHECK_AND_RETURN_LOG(asyncCtx->avTransCoder != nullptr, "failed to GetTaiheInstanceAndArgs");
     CHECK_AND_RETURN_LOG(asyncCtx->avTransCoder->taskQue_ != nullptr, "taskQue is nullptr!");
@@ -357,6 +400,7 @@ void AVTranscoderImpl::ExecuteByPromise(AVTranscoderImpl *taihe, const std::stri
 {
     MEDIA_LOGI("Taihe %{public}s Start", opt.c_str());
     auto asyncCtx = std::make_unique<AVTransCoderAsyncContext>();
+    CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
     asyncCtx->avTransCoder = this;
     CHECK_AND_RETURN_LOG(asyncCtx->avTransCoder != nullptr, "failed to GetTaiheInstanceAndArgs");
     CHECK_AND_RETURN_LOG(asyncCtx->avTransCoder->taskQue_ != nullptr, "taskQue is nullptr!");
@@ -466,15 +510,15 @@ void AVTranscoderImpl::OffComplete(optional_view<callback<void(uintptr_t)>> call
     MEDIA_LOGI("OffComplete End");
 }
 
-void AVTranscoderImpl::OnProgressUpdate(callback_view<void(int32_t)> callback)
+void AVTranscoderImpl::OnProgressUpdate(callback_view<void(double)> callback)
 {
     MediaTrace trace("AVTranscoderImpl::OnProgressUpdate");
     MEDIA_LOGI("OnProgressUpdate Start");
 
     std::string callbackName = STATE_PROGRESSUPDATE;
     ani_env *env = get_env();
-    std::shared_ptr<taihe::callback<void(int32_t)>> taiheCallback =
-            std::make_shared<taihe::callback<void(int32_t)>>(callback);
+    std::shared_ptr<taihe::callback<void(double)>> taiheCallback =
+            std::make_shared<taihe::callback<void(double)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
 
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
@@ -482,7 +526,7 @@ void AVTranscoderImpl::OnProgressUpdate(callback_view<void(int32_t)> callback)
     MEDIA_LOGI("OnProgressUpdate End");
 }
 
-void AVTranscoderImpl::OffProgressUpdate(optional_view<callback<void(int32_t)>> callback)
+void AVTranscoderImpl::OffProgressUpdate(optional_view<callback<void(double)>> callback)
 {
     MediaTrace trace("AVTranscoderImpl::OffProgressUpdate");
     MEDIA_LOGI("OffProgressUpdate Start");

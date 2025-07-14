@@ -90,19 +90,50 @@ int32_t HelperDataSourceCallback::ReadAt(const std::shared_ptr<AVSharedMemory> &
     CHECK_AND_RETURN_RET_LOG(cbWrap != nullptr, 0, "Failed to new HelperDataSourceTHCallbackWraper");
     cbWrap->cb_ = cb_;
 
-    auto ret = UvWork(cbWrap);
-    CHECK_AND_RETURN_RET_LOG(ret == ANI_OK, SOURCE_ERROR_IO,
-                             "Failed to SendEvent, ret = %{public}d", ret);
+    UvWork(cbWrap, mainHandler_);
     CANCEL_SCOPE_EXIT_GUARD(1);
     cb_->WaitResult();
     MEDIA_LOGD("HelperDataSourceCallback ReadAt out");
     return cb_->readSize_;
 }
 
-ani_status HelperDataSourceCallback::UvWork(HelperDataSourceTHCallbackWraper *cbWrap)
+void HelperDataSourceCallback::UvWork(HelperDataSourceTHCallbackWraper *cbWrap,
+    std::shared_ptr<OHOS::AppExecFwk::EventHandler> mainHandler)
 {
     MEDIA_LOGD("begin UvWork");
-    return ANI_OK;
+    CHECK_AND_RETURN_LOG(mainHandler != nullptr, "callback failed, mainHandler is nullptr!");
+    auto task = [cbWrap]() {
+        CHECK_AND_RETURN_LOG(cbWrap != nullptr, "MediaDataSourceTHCallbackWraper is nullptr");
+        std::shared_ptr<HelperDataSourceTHCallback> event = cbWrap->cb_.lock();
+        do {
+            CHECK_AND_BREAK_LOG(event != nullptr, "HelperDataSourceTHCallback is nullptr");
+            MEDIA_LOGD("length is %{public}u", event->length_);
+            std::shared_ptr<ANI::Media::AutoRef> ref = event->callback_.lock();
+            CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", event->callbackName_.c_str());
+
+            CHECK_AND_BREAK_LOG(event->memory_ != nullptr, "failed to checkout memory");
+            std::vector<uint8_t> dataVector(event->memory_->GetBase(), event->memory_->GetBase() + event->length_);
+
+            auto func = ref->callbackRef_;
+            CHECK_AND_BREAK_LOG(func != nullptr, "failed to get callback");
+            std::shared_ptr<DataSrcCallback> cacheCallback = std::reinterpret_pointer_cast<DataSrcCallback>(func);
+            taihe::optional_view posOption = taihe::optional_view<double>(std::nullopt);
+            if (event->pos_ != -1) {
+                double pos = static_cast<double>(event->pos_);
+                posOption = taihe::optional_view<double>(&pos);
+            }
+            event->readSize_ = (*cacheCallback)(dataVector, static_cast<double>(event->length_), posOption);
+            std::unique_lock<std::mutex> lock(event->mutexCond_);
+            event->setResult_ = true;
+            event->cond_.notify_all();
+        } while (0);
+        delete cbWrap;
+    };
+    bool ret = mainHandler->PostTask(task, "On", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    if (!ret) {
+        MEDIA_LOGE("Failed to PostTask!");
+        delete cbWrap;
+    }
 }
 
 int32_t HelperDataSourceCallback::ReadAt(int64_t pos, uint32_t length,
@@ -132,6 +163,10 @@ void HelperDataSourceCallback::SaveCallbackReference(const std::string &name, st
     MEDIA_LOGD("Add Callback: %{public}s", name.c_str());
     std::lock_guard<std::mutex> lock(mutex_);
     refMap_[name] = ref;
+    if (mainHandler_ == nullptr) {
+        std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::GetMainEventRunner();
+        mainHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
+    }
 }
 
 int32_t HelperDataSourceCallback::GetCallback(const std::string &name, std::shared_ptr<uintptr_t> &callback)
@@ -157,4 +192,4 @@ void HelperDataSourceCallback::ClearCallbackReference()
     }
 }
 } // namespace Media
-} // namespace OHOS
+} // namespace ANI

@@ -19,7 +19,6 @@
 #include <mutex>
 #include <ani.h>
 #include "media_errors.h"
-#include "event_handler.h"
 #include "player.h"
 #include "media_ani_common.h"
 #include "event_handler.h"
@@ -82,6 +81,7 @@ public:
     void ClearCallbackReference(const std::string &name);
     void Start();
     void Pause();
+    void Release();
     std::atomic<bool> isSetVolume_ = false;
     std::shared_ptr<OHOS::AppExecFwk::EventHandler> mainHandler_ = nullptr;
 private:

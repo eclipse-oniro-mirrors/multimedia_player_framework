@@ -66,6 +66,10 @@ void RecorderCallbackTaihe::SaveCallbackReference(const std::string &name, std::
 {
     std::lock_guard<std::mutex> lock(mutex_);
     refMap_[name] = ref;
+    if (mainHandler_ == nullptr) {
+        std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::GetMainEventRunner();
+        mainHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
+    }
 }
 
 void RecorderCallbackTaihe::SendErrorCallback(int32_t errCode)
@@ -89,7 +93,50 @@ void RecorderCallbackTaihe::SendErrorCallback(int32_t errCode)
     auto task = [this, cb]() {
         this->OnTaiheErrorCallBack(cb);
     };
-    mainHandler_->PostTask(task, "OnError", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    bool ret = mainHandler_->PostTask(task, "OnError", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    if (!ret) {
+        MEDIA_LOGE("Failed to PostTask!");
+        delete cb;
+    }
+}
+
+void RecorderCallbackTaihe::SendStateCallback(const std::string &callbackName)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (refMap_.find(callbackName) == refMap_.end()) {
+        MEDIA_LOGW("can not find %{public}s callback!", callbackName.c_str());
+        return;
+    }
+
+    RecordTaiheCallback *cb = new(std::nothrow) RecordTaiheCallback();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
+    cb->autoRef = refMap_.at(callbackName);
+    cb->callbackName = callbackName;
+
+    auto task = [this, cb]() {
+        this->OnTaiheStateCallBack(cb);
+    };
+    bool ret = mainHandler_->PostTask(task, "OnStatechange", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    if (!ret) {
+        MEDIA_LOGE("Failed to PostTask!");
+        delete cb;
+    }
+}
+
+void RecorderCallbackTaihe::OnTaiheStateCallBack(RecordTaiheCallback *taiheCb) const
+{
+    std::string request = taiheCb->callbackName;
+    do {
+        MEDIA_LOGD("OnTaiheStateCallBack is called");
+        std::shared_ptr<AutoRef> stateChangeRef = taiheCb->autoRef.lock();
+        CHECK_AND_BREAK_LOG(stateChangeRef != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
+        auto func = stateChangeRef->callbackRef_;
+        CHECK_AND_BREAK_LOG(func != nullptr, "failed to get callback");
+        std::shared_ptr<taihe::callback<void(taihe::string_view)>> cacheCallback =
+            std::reinterpret_pointer_cast<taihe::callback<void(taihe::string_view)>>(func);
+        (*cacheCallback)(taihe::string_view(request));
+    } while (0);
+    delete taiheCb;
 }
 
 void RecorderCallbackTaihe::OnTaiheErrorCallBack(RecordTaiheCallback *taiheCb) const
@@ -98,8 +145,9 @@ void RecorderCallbackTaihe::OnTaiheErrorCallBack(RecordTaiheCallback *taiheCb) c
     do {
         MEDIA_LOGD("OnTaiheErrorCallBack is called");
         std::shared_ptr<AutoRef> ref = taiheCb->autoRef.lock();
-
+        CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
         auto func = ref->callbackRef_;
+        CHECK_AND_BREAK_LOG(func != nullptr, "failed to get callback");
         auto err = MediaTaiheUtils::ToBusinessError(taihe::get_env(), 0, "OnErrorCallback is OK");
         std::shared_ptr<taihe::callback<void(uintptr_t)>> cacheCallback =
             std::reinterpret_pointer_cast<taihe::callback<void(uintptr_t)>>(func);

@@ -19,6 +19,7 @@
 #include "ohos.multimedia.media.impl.hpp"
 #include "taihe/runtime.hpp"
 #include "media_ani_common.h"
+#include "task_queue.h"
 #include "screen_capture.h"
 #include "screen_capture_controller.h"
 
@@ -55,6 +56,8 @@ enum AVScreenCaptureRecorderPreset: int32_t {
     SCREEN_RECORD_PRESET_H265_AAC_MP4 = 1
 };
 
+struct AVScreenCaptureAsyncContext;
+
 using RetInfo = std::pair<int32_t, std::string>;
 
 class AVScreenCaptureRecorderImpl {
@@ -78,26 +81,53 @@ public:
         int32_t &videoFrameWidth, int32_t &videoFrameHeight);
     OHOS::Media::AVScreenCaptureFillMode GetScreenCaptureFillMode(const int32_t &fillMode);
     VideoCodecFormat GetVideoCodecFormat(const int32_t &preset);
-    void AVScreenCaptureSignError(int32_t errCode, const std::string &operate,
-        const std::string &param, const std::string &add = "");
-    int32_t GetConfig(::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config);
-    int32_t GetAudioInfo(::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config);
-    int32_t GetVideoInfo(::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config);
-    int32_t GetRecorderInfo(::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config);
+    int32_t GetConfig(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
+        ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config);
+    int32_t GetAudioInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
+        ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config);
+    int32_t GetVideoInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
+        ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config);
+    int32_t GetRecorderInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
+        ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config);
     void OnError(callback_view<void(uintptr_t)> callback);
     void OffError(optional_view<callback<void(uintptr_t)>> callback);
 
+    void ExecuteByPromise(const std::string &opt);
+    std::shared_ptr<TaskHandler<RetInfo>> GetPromiseTask(AVScreenCaptureRecorderImpl *avtaihe, const std::string &opt);
+    static std::shared_ptr<TaskHandler<RetInfo>> GetInitTask(
+        const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx);
+    std::shared_ptr<TaskHandler<RetInfo>> GetSkipPrivacyModeTask(
+        const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const std::vector<uint64_t> windowIDsVec);
+    std::shared_ptr<TaskHandler<RetInfo>> GetSetMicrophoneEnableTask(
+        const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const bool enable);
     void OnStateChange(callback_view<void(ohos::multimedia::media::AVScreenCaptureStateCode)> callback);
     void OffStateChange(optional_view<callback<void(ohos::multimedia::media::AVScreenCaptureStateCode)>> callback);
 
     void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
     void CancelCallbackReference(const std::string &callbackName);
-    friend AVScreenCaptureRecorder CreateAVScreenCaptureRecorderSync();
+
+    using AvScreenCaptureTaskqFunc = RetInfo (AVScreenCaptureRecorderImpl::*)();
 private:
+    std::mutex mutex_;
     std::shared_ptr<ScreenCapture> screenCapture_ = nullptr;
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
     std::map<std::string, std::shared_ptr<AutoRef>> eventCbMap_;
+    std::unique_ptr<TaskQueue> taskQue_;
+    static std::map<std::string, AvScreenCaptureTaskqFunc> taskQFuncs_;
+};
+
+struct AVScreenCaptureAsyncContext {
+    explicit AVScreenCaptureAsyncContext() {}
+    ~AVScreenCaptureAsyncContext() = default;
+
+    void AVScreenCaptureSignError(int32_t errCode, const std::string &operate,
+        const std::string &param, const std::string &add = "");
+
+    AVScreenCaptureRecorderImpl *taihe = nullptr;
     OHOS::Media::AVScreenCaptureConfig config_;
+    std::shared_ptr<ScreenCaptureController> controller_ = nullptr;
+    std::string opt_ = "";
+    std::shared_ptr<TaskHandler<RetInfo>> task_ = nullptr;
 };
 }
 #endif // AVSCREEN_CAPTURE_TAIHE_H

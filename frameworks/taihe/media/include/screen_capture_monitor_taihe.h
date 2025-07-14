@@ -29,18 +29,15 @@ using namespace ohos::multimedia::media;
 class ScreenCaptureMonitorImpl {
 public:
     ScreenCaptureMonitorImpl();
-    ScreenCaptureMonitorImpl(ScreenCaptureMonitorImpl *obj);
-    bool IsSystemApp();
-    bool SystemPermission();
     bool GetisSystemScreenRecorderWorking();
     void OnSystemScreenRecorder(callback_view<void(ohos::multimedia::media::ScreenCaptureEvent)> callback);
     void OffSystemScreenRecorder(optional_view<callback<void(ohos::multimedia::media::ScreenCaptureEvent)>> callback);
 
     void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
     void CancelCallbackReference(const std::string &callbackName);
-    friend ohos::multimedia::media::ScreenCaptureMonitor GetScreenCaptureMonitorSync();
 
 private:
+    std::mutex mutex_;
     OHOS::sptr<OHOS::Media::ScreenCaptureMonitor::ScreenCaptureMonitorListener> monitorCb_ = nullptr;
     std::map<std::string, std::shared_ptr<AutoRef>> eventCbMap_;
 };
