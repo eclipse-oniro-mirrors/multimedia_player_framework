@@ -59,7 +59,7 @@ int32_t ScreenCaptureControllerServer::ReportAVScreenCaptureUserChoice(int32_t s
 int32_t ScreenCaptureControllerServer::GetAVScreenCaptureConfigurableParameters(int32_t sessionId,
     std::string &resultStr)
 {
-    MEDIA_LOGI("ScreenCaptureControllerServer::GetAVScreenCaptureConfigurableParameters start");
+    MEDIA_LOGD("ScreenCaptureControllerServer::GetAVScreenCaptureConfigurableParameters start");
     int32_t ret = ScreenCaptureServer::GetAVScreenCaptureConfigurableParameters(sessionId, resultStr);
     return ret;
 }

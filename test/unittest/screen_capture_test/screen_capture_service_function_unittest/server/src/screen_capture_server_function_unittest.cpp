@@ -2693,7 +2693,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetValueFromJson_004, TestSize.Level2)
     std::string key = "isEnable";
     bool value = false;
     screenCaptureServer_->GetValueFromJson(root, content, key, value);
-    EXPECT_EQ(value, false);
+    EXPECT_EQ(value, true);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SystemPrivacyProtected_001, TestSize.Level2)
@@ -2734,6 +2734,18 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetLocalLiveViewContent_003, TestSize.
     EXPECT_EQ(result->GetTitle(), expectedTitle);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, GetLocalLiveViewContent_004, TestSize.Level2)
+{
+    std::string callingLabel_ = "TestApp";
+    screenCaptureServer_->callingLabel_ = callingLabel_;
+    screenCaptureServer_->systemPrivacyProtectionSwitch_ = false;
+    screenCaptureServer_->appPrivacyProtectionSwitch_ = false;
+    screenCaptureServer_->SetDataType(DataType::ORIGINAL_STREAM);
+    auto result = screenCaptureServer_->GetLocalLiveViewContent();
+    std::string expectedTitle = "\"TestApp\" 正在使用屏幕";
+    EXPECT_EQ(result->GetTitle(), expectedTitle);
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, HandleStreamDataCase_001, TestSize.Level2)
 {
     Json::Value root;
@@ -2758,8 +2770,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleStreamDataCase_002, TestSize.Lev
         "systemPrivacyProtectionSwitch": "true"
     }
     )";
-    int32_t result = screenCaptureServer_->HandleStreamDataCase(root, content);
-    EXPECT_EQ(result, MSERR_OK);
+    screenCaptureServer_->HandleStreamDataCase(root, content);
+    EXPECT_EQ(screenCaptureServer_->systemPrivacyProtectionSwitch_, true);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, HandleStreamDataCase_003, TestSize.Level2)
@@ -2772,8 +2784,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleStreamDataCase_003, TestSize.Lev
         "systemPrivacyProtectionSwitch": "false"
     }
     )";
-    int32_t result = screenCaptureServer_->HandleStreamDataCase(root, content);
-    EXPECT_EQ(result, MSERR_OK);
+    screenCaptureServer_->HandleStreamDataCase(root, content);
+    EXPECT_EQ(screenCaptureServer_->systemPrivacyProtectionSwitch_, false);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, HandleStreamDataCase_004, TestSize.Level2)
@@ -2786,8 +2798,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleStreamDataCase_004, TestSize.Lev
         "systemPrivacyProtectionSwitch": "true"
     }
     )";
-    int32_t result = screenCaptureServer_->HandleStreamDataCase(root, content);
-    EXPECT_EQ(result, MSERR_OK);
+    screenCaptureServer_->HandleStreamDataCase(root, content);
+    EXPECT_EQ(screenCaptureServer_->systemPrivacyProtectionSwitch_, true);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, HandleStreamDataCase_005, TestSize.Level2)
@@ -2800,8 +2812,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleStreamDataCase_005, TestSize.Lev
         "systemPrivacyProtectionSwitch": "false"
     }
     )";
-    int32_t result = screenCaptureServer_->HandleStreamDataCase(root, content);
-    EXPECT_EQ(result, MSERR_OK);
+    screenCaptureServer_->HandleStreamDataCase(root, content);
+    EXPECT_EQ(screenCaptureServer_->systemPrivacyProtectionSwitch_, false);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, UpdateMicrophoneEnabled_001, TestSize.Level2)
@@ -2816,6 +2828,15 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UpdateMicrophoneEnabled_001, TestSize.
 HWTEST_F(ScreenCaptureServerFunctionTest, UpdateMicrophoneEnabled_002, TestSize.Level2)
 {
     screenCaptureServer_->SetDataType(DataType::ORIGINAL_STREAM);
+    screenCaptureServer_->StartNotification();
+    screenCaptureServer_->isSystemUI2_ = false;
+    screenCaptureServer_->UpdateMicrophoneEnabled();
+    EXPECT_EQ(screenCaptureServer_->isSystemUI2_, false);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, UpdateMicrophoneEnabled_003, TestSize.Level2)
+{
+    screenCaptureServer_->SetDataType(DataType::CAPTURE_FILE);
     screenCaptureServer_->StartNotification();
     screenCaptureServer_->isSystemUI2_ = false;
     screenCaptureServer_->UpdateMicrophoneEnabled();

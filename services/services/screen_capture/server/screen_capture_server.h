@@ -272,7 +272,7 @@ private:
     int32_t SetCaptureAreaInner(uint64_t displayId, OHOS::Rect area);
     bool CheckDisplayArea(uint64_t displayId, OHOS::Rect area);
     void PrepareUserSelectionInfo(ScreenCaptureUserSelectionInfo &selectionInfo);
-    void SetupCapsule(NotificationCapsule& capslue);
+    void SetupCapsule(NotificationCapsule& capsule);
 
 private:
     std::mutex mutex_;
