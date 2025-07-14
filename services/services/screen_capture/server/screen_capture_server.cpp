@@ -919,6 +919,11 @@ int32_t ScreenCaptureServer::HandlePopupWindowCase(Json::Value& root, const std:
     appPrivacyProtectionSwitch_ = checkBoxSelected_;
     MEDIA_LOGI("ReportAVScreenCaptureUserChoice checkBoxSelected: %{public}d", checkBoxSelected_);
 
+    GetValueFromJson(root, content, std::string("isInnerAudioBoxSelected"), isInnerAudioBoxSelected_);
+    MEDIA_LOGI("ReportAVScreenCaptureUserChoice showShareSystemAudioBox:%{public}d,",
+        "isInnerAudioBoxSelected:%{public}d", showShareSystemAudioBox_,
+        isInnerAudioBoxSelected_);
+
     if (USER_CHOICE_ALLOW.compare(choice) == 0) {
         PrepareSelectWindow(root);
         int32_t ret = OnReceiveUserPrivacyAuthority(true);
