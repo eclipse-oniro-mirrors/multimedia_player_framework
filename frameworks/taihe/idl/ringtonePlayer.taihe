@@ -1,0 +1,63 @@
+/*
+ * Copyright (C) 2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@!namespace("multimedia.ringtonePlayer")
+
+@!sts_inject("""
+import type { Callback, AsyncCallback } from '@ohos.base';
+import type audio from '@ohos.multimedia.audio';
+""")
+
+@!sts_inject("""
+{ loadLibrary("system_sound_manager_taihe.z"); }
+""")
+
+struct RingtoneOptions {
+  volume: f64;
+  loop: bool;
+}
+
+interface RingtonePlayer {
+  @get("state") GetState(): String;
+
+  @gen_async("getTitle")
+  @gen_promise("getTitle")
+  GetTitleSync(): String;
+
+  @gen_async("getAudioRendererInfo")
+  @gen_promise("getAudioRendererInfo")
+  GetAudioRendererInfoSync(): @sts_type("audio.AudioRendererInfo") Opaque;
+
+  @gen_async("configure")
+  @gen_promise("configure")
+  ConfigureSync(options: RingtoneOptions): void;
+
+  @gen_async("start")
+  @gen_promise("start")
+  StartSync(): void;
+
+  @gen_async("stop")
+  @gen_promise("stop")
+  StopSync(): void;
+
+  @gen_async("release")
+  @gen_promise("release")
+  ReleaseSync(): void;
+
+  @overload("on")
+  OnAudioInterrupt(type: String, callback: (data: @sts_type("audio.InterruptEvent") Opaque)=> void): void;
+  @overload("off")
+  OffAudioInterrupt(type: String): void;
+}

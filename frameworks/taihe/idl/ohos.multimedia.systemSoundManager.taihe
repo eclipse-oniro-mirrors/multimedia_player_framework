@@ -1,0 +1,171 @@
+/*
+ * Copyright (C) 2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@!namespace("@ohos.multimedia.systemSoundManager", "systemSoundManager")
+
+@!sts_inject("""
+{ loadLibrary("system_sound_manager_taihe.z"); }
+""")
+
+@!sts_inject("""
+const TONE_CATEGORY_RINGTONE: long = 1;
+const TONE_CATEGORY_TEXT_MESSAGE: long = 2;
+const TONE_CATEGORY_NOTIFICATION: long = 4;
+const TONE_CATEGORY_ALARM: long = 8;
+""")
+
+from ringtonePlayer use RingtonePlayer;
+from systemTonePlayer use SystemTonePlayer;
+
+enum RingtoneType: i32 {
+    RINGTONE_TYPE_SIM_CARD_0 = 0,
+    RINGTONE_TYPE_SIM_CARD_1 = 1,
+}
+
+enum SystemToneType: i32 {
+  SYSTEM_TONE_TYPE_SIM_CARD_0 = 0,
+  SYSTEM_TONE_TYPE_SIM_CARD_1 = 1,
+  SYSTEM_TONE_TYPE_NOTIFICATION = 32,
+}
+
+enum ToneHapticsMode: i32 {
+  NONE = 0,
+  SYNC = 1,
+  NON_SYNC = 2,
+}
+
+enum ToneCustomizedType: i32 {
+  PRE_INSTALLED = 0,
+  CUSTOMIZED = 1,
+}
+
+interface ToneAttrs {
+  GetTitle(): String;
+  SetTitle(title: String): void;
+  GetFileName(): String;
+  SetFileName(name: String): void;
+  GetUri(): String;
+  GetCustomizedType(): ToneCustomizedType;
+  SetCategory(category: i64): void;
+  GetCategory(): i64;
+  GetImplPtr(): i64;
+}
+
+enum ToneHapticsType: i32  {
+  CALL_SIM_CARD_0 = 0,
+  CALL_SIM_CARD_1 = 1,
+  TEXT_MESSAGE_SIM_CARD_0 = 20,
+  TEXT_MESSAGE_SIM_CARD_1 = 21,
+  NOTIFICATION = 40,
+}
+
+enum ToneHapticsFeature: i32 {
+  STANDARD = 0,
+  GENTLE = 1,
+}
+
+struct ToneHapticsSettings {
+  mode: ToneHapticsMode;
+  hapticsUri: Optional<String>;
+}
+
+interface ToneHapticsAttrs {
+  GetUri(): String;
+  GetTitle(): String;
+  GetFileName(): String;
+}
+
+interface SystemSoundManager {
+  @gen_promise("getSystemTonePlayer")
+  GetSystemTonePlayerSync(context: @sts_type("BaseContext") Opaque, type: SystemToneType): SystemTonePlayer;
+
+  @gen_promise("getSystemToneUri")
+  GetSystemToneUriSync(context: @sts_type("BaseContext") Opaque, type: SystemToneType): String;
+
+  @gen_promise("getToneHapticsSettings")
+  GetToneHapticsSettingsSync(context: @sts_type("BaseContext") Opaque, type: ToneHapticsType): ToneHapticsSettings;
+
+  @gen_promise("close")
+  CloseSync(fd: i32): void;
+
+  @gen_promise("getDefaultRingtoneAttrs")
+  GetDefaultRingtoneAttrsSync(context: @sts_type("BaseContext") Opaque, type: RingtoneType): ToneAttrs;
+
+  @gen_promise("getAlarmToneAttrList")
+  GetAlarmToneAttrListSync(context: @sts_type("BaseContext") Opaque): Array<ToneAttrs>;
+
+  @gen_promise("removeCustomizedTone")
+  RemoveCustomizedToneSync(context: @sts_type("BaseContext") Opaque, uri: String): void;
+
+  @gen_promise("getSystemToneAttrList")
+  GetSystemToneAttrListSync(context: @sts_type("BaseContext") Opaque, type: SystemToneType): Array<ToneAttrs>;
+
+  @gen_promise("addCustomizedTone")
+  AddCustomizedToneByUriSync(
+    context: @sts_type("BaseContext") Opaque, toneAttr: ToneAttrs, externalUri: String): String;
+
+  @gen_promise("addCustomizedTone")
+  AddCustomizedToneByFdSync(
+    context: @sts_type("BaseContext") Opaque, toneAttr: ToneAttrs, fd: i32, offset: Optional<i64>,
+    length: Optional<i64>): String;
+
+  @gen_promise("openAlarmTone")
+  OpenAlarmToneSync(context: @sts_type("BaseContext") Opaque, uri: String): i32;
+
+  @gen_promise("getDefaultSystemToneAttrs")
+  GetDefaultSystemToneAttrsSync(context: @sts_type("BaseContext") Opaque, type: SystemToneType): ToneAttrs;
+
+  @gen_promise("getRingtoneAttrList")
+  GetRingtoneAttrListSync(context: @sts_type("BaseContext") Opaque, type: RingtoneType): Array<ToneAttrs>;
+
+  @gen_promise("setAlarmToneUri")
+  SetAlarmToneUriSync(context: @sts_type("BaseContext") Opaque, uri: String): void;
+
+  @gen_promise("getAlarmToneUri")
+  GetAlarmToneUriSync(context: @sts_type("BaseContext") Opaque): String;
+
+  @gen_promise("getDefaultAlarmToneAttrs")
+  GetDefaultAlarmToneAttrsSync(context: @sts_type("BaseContext") Opaque): ToneAttrs;
+
+  @gen_promise("getToneHapticsList")
+  GetToneHapticsListSync(context: @sts_type("BaseContext") Opaque, isSynced: bool): Array<ToneHapticsAttrs>;
+
+  @gen_promise("setToneHapticsSettings")
+  SetToneHapticsSettingsSync(
+    context: @sts_type("BaseContext") Opaque, type: ToneHapticsType, settings: ToneHapticsSettings): void;
+
+  @gen_promise("getHapticsAttrsSyncedWithTone")
+  GetHapticsAttrsSyncedWithToneSync(
+    context: @sts_type("BaseContext") Opaque, toneUri: String): ToneHapticsAttrs;
+
+  @gen_promise("openToneHaptics")
+  OpenToneHapticsSync(context: @sts_type("BaseContext") Opaque, hapticsUri: String): i32;
+
+  @gen_promise("setSystemToneUri")
+  SetSystemToneUriSync(context: @sts_type("BaseContext") Opaque, uri: String, type: SystemToneType): void;
+
+  @gen_promise("getRingtonePlayer")
+  GetRingtonePlayerSync(
+    context: @sts_type("BaseContext") Opaque, type: RingtoneType): RingtonePlayer;
+
+  @gen_promise("getRingtoneUri")
+  GetRingtoneUriSync(context: @sts_type("BaseContext") Opaque, type: RingtoneType): String;
+
+  @gen_promise("setRingtoneUri")
+  SetRingtoneUriSync(context: @sts_type("BaseContext") Opaque, uri: String, type: RingtoneType): void;
+}
+
+function CreateCustomizedToneAttrs(): ToneAttrs;
+function GetSystemSoundManager(): SystemSoundManager;
