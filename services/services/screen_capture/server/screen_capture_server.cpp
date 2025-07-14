@@ -2530,7 +2530,7 @@ std::shared_ptr<NotificationLocalLiveViewContent> ScreenCaptureServer::GetLocalL
 
     auto basicButton = NotificationLocalLiveViewButton();
     basicButton.addSingleButtonName(BUTTON_NAME_STOP);
-    std::shared_ptr<PixelMap> pixelMapStopSpr = GetPixelMap(ICON_PATH_STOP, SVG_HEIGHT, SVG_WIDTH);
+    std::shared_ptr<PixelMap> pixelMapStopSpr = GetPixelMapSvg(ICON_PATH_STOP, SVG_HEIGHT, SVG_WIDTH);
     basicButton.addSingleButtonIcon(pixelMapStopSpr);
 
     localLiveViewContent->SetButton(basicButton);
@@ -2652,7 +2652,7 @@ void ScreenCaptureServer::UpdateLiveViewContent()
     }
 
     basicButton.addSingleButtonName(BUTTON_NAME_STOP);
-    std::shared_ptr<PixelMap> pixelMapStopSpr = GetPixelMap(ICON_PATH_STOP, SVG_HEIGHT, SVG_WIDTH);
+    std::shared_ptr<PixelMap> pixelMapStopSpr = GetPixelMapSvg(ICON_PATH_STOP, SVG_HEIGHT, SVG_WIDTH);
     basicButton.addSingleButtonIcon(pixelMapStopSpr);
 
     localLiveViewContent_->SetButton(basicButton);
