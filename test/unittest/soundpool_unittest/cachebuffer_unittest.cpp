@@ -74,7 +74,7 @@ HWTEST_F(SoundPoolCacheBufferUnitTest, CacheBuferDealPlayParamsBeforePlayUnittes
 /**
  * @tc.name  : Test CreateAudioRenderer
  * @tc.number: CreateAudioRenderer_001
- * @tc.desc  : Test return NORMAL_PLAY_RENDERER_FLAGS
+ * @tc.desc  : Test returns NORMAL_PLAY_RENDERER_FLAGS
  */
 HWTEST_F(SoundPoolCacheBufferUnitTest, CreateAudioRenderer_001, TestSize.Level0)
 {
@@ -91,7 +91,7 @@ HWTEST_F(SoundPoolCacheBufferUnitTest, CreateAudioRenderer_001, TestSize.Level0)
 /**
  * @tc.name  : Test CreateAudioRenderer
  * @tc.number: CreateAudioRenderer_002
- * @tc.desc  : Test return NORMAL_PLAY_RENDERER_FLAGS
+ * @tc.desc  : Test returns NORMAL_PLAY_RENDERER_FLAGS
  */
 HWTEST_F(SoundPoolCacheBufferUnitTest, CreateAudioRenderer_002, TestSize.Level0)
 {
@@ -108,7 +108,7 @@ HWTEST_F(SoundPoolCacheBufferUnitTest, CreateAudioRenderer_002, TestSize.Level0)
 /**
  * @tc.name  : Test CreateAudioRenderer
  * @tc.number: CreateAudioRenderer_003
- * @tc.desc  : Test return NORMAL_PLAY_RENDERER_FLAGS
+ * @tc.desc  : Test returns NORMAL_PLAY_RENDERER_FLAGS
  */
 HWTEST_F(SoundPoolCacheBufferUnitTest, CreateAudioRenderer_003, TestSize.Level0)
 {
