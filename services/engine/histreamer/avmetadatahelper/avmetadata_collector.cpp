@@ -446,7 +446,7 @@ void AVMetaDataCollector::FormatAVMeta(
     }
     FormatMimeType(avmeta, globalInfo);
     FormatDateTime(avmeta, globalInfo);
-    FormatVideoRotateOrientation(avmeta, globalInfo);
+    FormatVideoRotateOrientation(avmeta);
 }
 
 void AVMetaDataCollector::FormatMimeType(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo)
