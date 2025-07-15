@@ -52,18 +52,18 @@ static const std::unordered_map<Plugins::FileType, std::string> fileTypeMap = {
 };
 
 static const std::unordered_map<Plugins::VideoOrientationType, int32_t> videoOrientationTypeMap = {
-    { Plugins::VideoOrientationType::ROTATE_NONE, 1 },
-    { Plugins::VideoOrientationType::ROTATE_90, 6 },
-    { Plugins::VideoOrientationType::ROTATE_180, 3 },
-    { Plugins::VideoOrientationType::ROTATE_270, 5 },
-    { Plugins::VideoOrientationType::FLIP_H, 2 },
-    { Plugins::VideoOrientationType::FLIP_V, 4 },
-    { Plugins::VideoOrientationType::FLIP_H_ROT90, 7 },
-    { Plugins::VideoOrientationType::FLIP_V_ROT90, 5 },
-    { Plugins::VideoOrientationType::FLIP_H_ROT180, 4 },
-    { Plugins::VideoOrientationType::FLIP_V_ROT180, 2 },
-    { Plugins::VideoOrientationType::FLIP_H_ROT270, 5 },
-    { Plugins::VideoOrientationType::FLIP_V_ROT270, 7 },
+    { Plugins::VideoOrientationType::ROTATE_NONE, VideoRotateOrientationType::TOP_LEFT },
+    { Plugins::VideoOrientationType::ROTATE_90, VideoRotateOrientationType::RIGHT_TOP },
+    { Plugins::VideoOrientationType::ROTATE_180, VideoRotateOrientationType::BOTTOM_RIGHT },
+    { Plugins::VideoOrientationType::ROTATE_270, VideoRotateOrientationType::LEFT_BOTTOM },
+    { Plugins::VideoOrientationType::FLIP_H, VideoRotateOrientationType::TOP_RIGHT },
+    { Plugins::VideoOrientationType::FLIP_V, VideoRotateOrientationType::BOTTOM_LEFT },
+    { Plugins::VideoOrientationType::FLIP_H_ROT90, VideoRotateOrientationType::RIGHT_BOTTOM },
+    { Plugins::VideoOrientationType::FLIP_V_ROT90, VideoRotateOrientationType::LEFT_TOP },
+    { Plugins::VideoOrientationType::FLIP_H_ROT180, VideoRotateOrientationType::BOTTOM_LEFT },
+    { Plugins::VideoOrientationType::FLIP_V_ROT180, VideoRotateOrientationType::TOP_RIGHT },
+    { Plugins::VideoOrientationType::FLIP_H_ROT270, VideoRotateOrientationType::LEFT_TOP },
+    { Plugins::VideoOrientationType::FLIP_V_ROT270, VideoRotateOrientationType::RIGHT_BOTTOM },
 };
 
 static const std::unordered_map<int32_t, std::string> AVMETA_KEY_TO_X_MAP = {

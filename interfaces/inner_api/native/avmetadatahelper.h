@@ -377,7 +377,7 @@ enum VideoOrientationType : int32_t {
      */
     TOP_RIGHT,
     /**
-     * Rotation by 180 degrees
+     * Rotate clockwise by 180 degrees
      */
     BOTTOM_RIGHT,
     /**
@@ -385,19 +385,19 @@ enum VideoOrientationType : int32_t {
      */
     BOTTOM_LEFT,
     /**
-     * Flip horizontally and rotate 270 degrees
+     * Flip horizontally and rotate clockwise by 270 degrees
      */
     LEFT_TOP,
     /**
-     * Rotation by 90 degrees
+     * Rotate clockwise by 90 degrees
      */
     RIGHT_TOP,
     /**
-     * Flip horizontally and rotate 90 degrees
+     * Flip horizontally and rotate clockwise by 90 degrees
      */
     RIGHT_BOTTOM,
     /**
-     * Rotation by 270 degrees
+     * Rotate clockwise by 270 degrees
      */
     LEFT_BOTTOM,
 };

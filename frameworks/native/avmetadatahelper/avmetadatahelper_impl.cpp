@@ -925,7 +925,7 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameBase(int64_t timeUs, i
 
     DumpPixelMap(isDump_, pixelMap, DUMP_FILE_NAME_AFTER_SCLAE);
 
-    if (param.isSupportFlip && pixelMapInfo.orientation >= Plugins::VideoOrientationType::FLIP_H) {
+    if (param.isSupportFlip && VIDEOORIENTATIONTYPE_ROTATION_MAP.count(pixelMapInfo.orientation) > 0) {
         MEDIA_LOGI("Support flip");
         pixelMapInfo.orientation % FLIP_NUM == 0 ? pixelMap->flip(true, false) : pixelMap->flip(false, true);
         auto it = VIDEOORIENTATIONTYPE_ROTATION_MAP.find(pixelMapInfo.orientation);
