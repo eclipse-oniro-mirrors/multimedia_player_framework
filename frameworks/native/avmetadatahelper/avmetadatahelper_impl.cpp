@@ -54,8 +54,6 @@ constexpr uint8_t COLORPRIMARIES_OFFSET = 0;
 constexpr uint8_t TRANSFUNC_OFFSET = 8;
 constexpr uint8_t MATRIX_OFFSET = 16;
 constexpr uint8_t RANGE_OFFSET = 21;
-
-constexpr uint8_t FLIP_NUM = 2;
 }
 
 namespace OHOS {
@@ -110,6 +108,13 @@ static const std::unordered_map<unsigned int, ColorManager::ColorSpaceName> HDR_
     { CM_BT2020_PQ_FULL, ColorManager::ColorSpaceName::BT2020_PQ },
     { CM_BT2020_HLG_LIMIT, ColorManager::ColorSpaceName::BT2020_HLG_LIMIT },
     { CM_BT2020_PQ_LIMIT, ColorManager::ColorSpaceName::BT2020_PQ_LIMIT },
+};
+
+static const std::unordered_map<int32_t, pair<bool, bool>> VIDEOORIENTATIONTYPE_FLIP_MAP = {
+    { Plugins::VideoOrientationType::FLIP_H, {true, false} },
+    { Plugins::VideoOrientationType::FLIP_V, {false, true} },
+    { Plugins::VideoOrientationType::FLIP_H_ROT90, {true, false} },
+    { Plugins::VideoOrientationType::FLIP_V_ROT90, {false, true} },
 };
 
 static const std::unordered_map<int32_t, int32_t> VIDEOORIENTATIONTYPE_ROTATION_MAP = {
@@ -924,11 +929,14 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameBase(int64_t timeUs, i
     MEDIA_LOGI("Rotation is %{public}d, orientation is %{public}d", pixelMapInfo.rotation, pixelMapInfo.orientation);
     if (param.isSupportFlip && VIDEOORIENTATIONTYPE_ROTATION_MAP.count(pixelMapInfo.orientation) > 0) {
         MEDIA_LOGI("Support flip");
-        pixelMapInfo.orientation % FLIP_NUM == 0 ? pixelMap->flip(true, false) : pixelMap->flip(false, true);
-        auto it = VIDEOORIENTATIONTYPE_ROTATION_MAP.find(pixelMapInfo.orientation);
-        CHECK_AND_RETURN_RET_LOG(it != VIDEOORIENTATIONTYPE_ROTATION_MAP.end(), nullptr,
+        auto itFlip = VIDEOORIENTATIONTYPE_FLIP_MAP.find(pixelMapInfo.orientation);
+        CHECK_AND_RETURN_RET_LOG(itFlip != VIDEOORIENTATIONTYPE_FLIP_MAP.end(), nullptr,
+            "can't find mapped orientation name in VIDEOORIENTATIONTYPE_FLIP_MAP");
+        pixelMap->flip(itFlip.first, itFlip.second) : pixelMap->flip(itFlip.first, itFlip.second);
+        auto itRotate = VIDEOORIENTATIONTYPE_ROTATION_MAP.find(pixelMapInfo.orientation);
+        CHECK_AND_RETURN_RET_LOG(itRotate != VIDEOORIENTATIONTYPE_ROTATION_MAP.end(), nullptr,
             "can't find mapped orientation name in VIDEOORIENTATIONTYPE_ROTATION_MAP");
-        pixelMap->rotate(it->second);
+        pixelMap->rotate(itRotate->second);
     } else if (pixelMapInfo.rotation > 0) {
         MEDIA_LOGI("Not support flip");
         pixelMap->rotate(pixelMapInfo.rotation);
