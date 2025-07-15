@@ -92,6 +92,7 @@ static const int32_t WINDOW_INFO_LIST_SIZE = 1;
 
 static const auto NOTIFICATION_SUBSCRIBER = NotificationSubscriber();
 static constexpr int32_t AUDIO_CHANGE_TIME = 80000; // 80 ms
+static const int32_t UNSUPPORT_ERROR_CODE_API_VERSION_ISOLATION = 20;
 
 std::map<int32_t, std::weak_ptr<ScreenCaptureServer>> ScreenCaptureServer::serverMap_{};
 std::map<int32_t, std::pair<int32_t, int32_t>> ScreenCaptureServer::saUidAppUidMap_{};
@@ -677,6 +678,7 @@ std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::CreateScreenCaptureN
     std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
     CHECK_AND_RETURN_RET_LOG(server != nullptr, nullptr, "Failed to create ScreenCaptureServer.");
     server->SetSessionId(id);
+    server->GetAndSetAppVersion();
     AddScreenCaptureServerMap(id, server);
     return std::static_pointer_cast<IScreenCaptureService>(server);
 }
@@ -1089,6 +1091,18 @@ void ScreenCaptureServer::SetSessionId(int32_t sessionId)
 {
     sessionId_ = sessionId;
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " sessionId: %{public}d", FAKE_POINTER(this), sessionId_);
+}
+
+void ScreenCaptureServer::GetAndSetAppVersion()
+{
+    appVersion_ = GetApiInfo(appInfo_.appUid);
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " appVersion: %{public}d",
+        FAKE_POINTER(this), appVersion_);
+}
+
+bool ScreenCaptureServer::CheckAppVersionForUnsupport(DMError result)
+{
+    return appVersion_ >= UNSUPPORT_ERROR_CODE_API_VERSION_ISOLATION && result == DMError::DM_ERROR_DEVICE_NOT_SUPPORT;
 }
 
 int32_t ScreenCaptureServer::SetCaptureMode(CaptureMode captureMode)
@@ -3604,7 +3618,7 @@ int32_t ScreenCaptureServer::SetCanvasRotationInner()
     CHECK_AND_RETURN_RET_LOG(virtualScreenId_ != SCREEN_ID_INVALID, MSERR_INVALID_VAL,
                              "SetCanvasRotation failed virtual screen not init");
     auto ret = ScreenManager::GetInstance().SetVirtualMirrorScreenCanvasRotation(virtualScreenId_, canvasRotation_);
-    if (ret == DMError::DM_ERROR_DEVICE_NOT_SUPPORT) {
+    if (CheckAppVersionForUnsupport(ret)) {
         MEDIA_LOGE("SetVirtualMirrorScreenCanvasRotation failed, ret: %{public}d", ret);
         return MSERR_UNSUPPORT;
     }
@@ -3676,7 +3690,7 @@ int32_t ScreenCaptureServer::ResizeCanvas(int32_t width, int32_t height)
 
     auto resizeRet = ScreenManager::GetInstance().ResizeVirtualScreen(virtualScreenId_, width, height);
     MEDIA_LOGI("ScreenCaptureServer::ResizeCanvas, ResizeVirtualScreen end, ret: %{public}d ", resizeRet);
-    if (resizeRet == DMError::DM_ERROR_DEVICE_NOT_SUPPORT) {
+    if (CheckAppVersionForUnsupport(resizeRet)) {
         MEDIA_LOGE("ResizeCanvas failed, resizeRet: %{public}d", resizeRet);
         return MSERR_UNSUPPORT;
     }
@@ -3729,7 +3743,7 @@ int32_t ScreenCaptureServer::SkipPrivacyModeInner()
                              "SkipPrivacyMode failed virtual screen not init");
     auto ret = Rosen::DisplayManager::GetInstance().SetVirtualScreenSecurityExemption(virtualScreenId_,
         appInfo_.appPid, skipPrivacyWindowIDsVec_);
-    if (ret == DMError::DM_ERROR_DEVICE_NOT_SUPPORT) {
+    if (CheckAppVersionForUnsupport(ret)) {
         MEDIA_LOGE("SetVirtualScreenSecurityExemption failed, ret: %{public}d", ret);
         return MSERR_UNSUPPORT;
     }
@@ -3756,7 +3770,7 @@ int32_t ScreenCaptureServer::SetMaxVideoFrameRate(int32_t frameRate)
     uint32_t actualRefreshRate = 0;
     auto res = ScreenManager::GetInstance().SetVirtualScreenMaxRefreshRate(virtualScreenId_,
         static_cast<uint32_t>(frameRate), actualRefreshRate);
-    if (res == DMError::DM_ERROR_DEVICE_NOT_SUPPORT) {
+    if (CheckAppVersionForUnsupport(res)) {
         MEDIA_LOGE("SetVirtualScreenMaxRefreshRate failed, res: %{public}d", res);
         return MSERR_UNSUPPORT;
     }

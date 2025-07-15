@@ -101,6 +101,8 @@ public:
     int32_t SetCaptureArea(uint64_t displayId, OHOS::Rect area) override;
 
     void SetSessionId(int32_t sessionId);
+    void GetAndSetAppVersion();
+    bool CheckAppVersionForUnsupport(DMError result);
     int32_t OnReceiveUserPrivacyAuthority(bool isAllowed);
     int32_t StopScreenCaptureByEvent(AVScreenCaptureStateCode stateCode);
     std::shared_ptr<OHOS::AbilityRuntime::WantAgent::WantAgent> GetWantAgent(const std::string& callingLabel,
@@ -305,6 +307,7 @@ private:
     int32_t capsuleVpSize_ = 18;
     int32_t capsulePxSize_ = 0;
     int32_t saUid_ = -1;
+    int32_t appVersion_ = -1;
 
     /* used for both CAPTURE STREAM and CAPTURE FILE */
     OHOS::AudioStandard::AppInfo appInfo_;
