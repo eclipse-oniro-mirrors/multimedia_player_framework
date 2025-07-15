@@ -391,7 +391,7 @@ enum VideoOrientationType : int32_t {
     /**
      * Rotation by 90 degrees
      */
-    RIGHT_TOP
+    RIGHT_TOP,
     /**
      * Flip horizontally and rotate 90 degrees
      */
@@ -400,7 +400,7 @@ enum VideoOrientationType : int32_t {
      * Rotation by 270 degrees
      */
     LEFT_BOTTOM,
-}
+};
 
 /**
  * @brief Provides the definition of the returned pixelmap's configuration
@@ -422,7 +422,7 @@ struct PixelMapParams {
      */
     PixelFormat colorFormat = PixelFormat::RGB_565;
     /**
-     * Expected whether it supports flip, flase is the default value,
+     * Expected whether it supports flip, false is the default value,
      * indicating that flipping is not required, true indicates that flipping is required
      */
     bool isSupportFlip = false;

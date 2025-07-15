@@ -289,9 +289,9 @@ std::shared_ptr<Meta> AVThumbnailGenerator::GetVideoTrackInfo()
             MEDIA_LOGI("0x%{public}06" PRIXPTR " GetTrackInfo success trackIndex_:%{public}zu, trackMime_:%{public}s",
                        FAKE_POINTER(this), trackIndex_, trackMime_.c_str());
             if (trackInfos[index]->Get<Tag::VIDEO_ROTATION>(rotation_) &&
-                trackInfos[index]->Get<Tag::VIDEO_ORIENTATION>(orientaton_)) {
-                MEDIA_LOGI("rotation is %{public}d, orientaton is %{public}d", static_cast<int32_t>(rotation_),
-                    static_cast<int32_t>(orientaton_));
+                trackInfos[index]->Get<Tag::VIDEO_ORIENTATION_TYPE>(orientation_)) {
+                MEDIA_LOGI("rotation is %{public}d, orientation is %{public}d", static_cast<int32_t>(rotation_),
+                    static_cast<int32_t>(orientation_));
             }
             return trackInfos[trackIndex_];
         }

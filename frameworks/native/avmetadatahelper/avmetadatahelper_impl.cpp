@@ -54,6 +54,8 @@ constexpr uint8_t COLORPRIMARIES_OFFSET = 0;
 constexpr uint8_t TRANSFUNC_OFFSET = 8;
 constexpr uint8_t MATRIX_OFFSET = 16;
 constexpr uint8_t RANGE_OFFSET = 21;
+
+constexpr uint8_t FLIP_NUM = 2;
 }
 
 namespace OHOS {
@@ -113,12 +115,12 @@ static const std::unordered_map<unsigned int, ColorManager::ColorSpaceName> HDR_
 static const std::unordered_map<int32_t, int32_t> VIDEOORIENTATIONTYPE_ROTATION_MAP = {
     { Plugins::VideoOrientationType::FLIP_H, 0 },
     { Plugins::VideoOrientationType::FLIP_V, 0 },
-    { Plugins::VideoOrientationType::FLIP_H_ROT90, 0 },
-    { Plugins::VideoOrientationType::FLIP_V_ROT90, 0 },
-    { Plugins::VideoOrientationType::FLIP_H_ROT180, 0 },
-    { Plugins::VideoOrientationType::FLIP_V_ROT180, 0 },
-    { Plugins::VideoOrientationType::FLIP_H_ROT270, 0 },
-    { Plugins::VideoOrientationType::FLIP_V_ROT270, 0 },
+    { Plugins::VideoOrientationType::FLIP_H_ROT90, 90 },
+    { Plugins::VideoOrientationType::FLIP_V_ROT90, 90 },
+    { Plugins::VideoOrientationType::FLIP_H_ROT180, 180 },
+    { Plugins::VideoOrientationType::FLIP_V_ROT180, 180 },
+    { Plugins::VideoOrientationType::FLIP_H_ROT270, 270 },
+    { Plugins::VideoOrientationType::FLIP_V_ROT270, 270 },
 }
 
 struct PixelMapMemHolder {
@@ -925,7 +927,7 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameBase(int64_t timeUs, i
 
     if (param.isSupportFlip && pixelMapInfo.orientation >= Plugins::VideoOrientationType::FLIP_H) {
         MEDIA_LOGI("Support flip");
-        pixelMapInfo.orientation % 2 == 0 ? pixelMap->flip(true, false) : pixelMap->flip(false, true);
+        pixelMapInfo.orientation % FLIP_NUM == 0 ? pixelMap->flip(true, false) : pixelMap->flip(false, true);
         auto it = VIDEOORIENTATIONTYPE_ROTATION_MAP.find(pixelMapInfo.orientation);
         CHECK_AND_RETURN_RET_LOG(it != VIDEOORIENTATIONTYPE_ROTATION_MAP.end(), nullptr,
             "can't find mapped orientation name in VIDEOORIENTATIONTYPE_ROTATION_MAP");

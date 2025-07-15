@@ -51,7 +51,7 @@ static const std::unordered_map<Plugins::FileType, std::string> fileTypeMap = {
     { Plugins::FileType::MPEGPS, "mpg" }
 };
 
-static const std::unordered_map<Plugin::VideoOrientationType, int32_t> videoOrientationTypeMap = {
+static const std::unordered_map<Plugins::VideoOrientationType, int32_t> videoOrientationTypeMap = {
     { Plugins::VideoOrientationType::ROTATE_NONE, 1 },
     { Plugins::VideoOrientationType::ROTATE_90, 6 },
     { Plugins::VideoOrientationType::ROTATE_180, 3 },
@@ -61,10 +61,10 @@ static const std::unordered_map<Plugin::VideoOrientationType, int32_t> videoOrie
     { Plugins::VideoOrientationType::FLIP_H_ROT90, 7 },
     { Plugins::VideoOrientationType::FLIP_V_ROT90, 5 },
     { Plugins::VideoOrientationType::FLIP_H_ROT180, 4 },
-    { Plugins::VideoOrientationType::FLIP_V_ROT180, 3 },
+    { Plugins::VideoOrientationType::FLIP_V_ROT180, 2 },
     { Plugins::VideoOrientationType::FLIP_H_ROT270, 5 },
     { Plugins::VideoOrientationType::FLIP_V_ROT270, 7 },
-}
+};
 
 static const std::unordered_map<int32_t, std::string> AVMETA_KEY_TO_X_MAP = {
     { AV_KEY_ALBUM, Tag::MEDIA_ALBUM },
@@ -487,7 +487,8 @@ void AVMetaDataCollector::FormatDateTime(Metadata &avmeta, const std::shared_ptr
 
 void AVMetaDataCollector::FormatVideoRotateOrientation(Metadata &avmeta)
 {
-    int videoOrientationType = stoi(avmeta->GetMeta(AV_KEY_VIDEO_ROTATE_ORIENTATION));
+    Plugins::VideoOrientationType videoOrientationType =
+        static_cast<Plugins::VideoOrientationType>(stoi(avmeta.GetMeta(AV_KEY_VIDEO_ROTATE_ORIENTATION)));
     auto it = videoOrientationTypeMap.find(videoOrientationType);
     CHECK_AND_RETURN_LOG(it != videoOrientationTypeMap.end(),
         "can't find mapped videoOrientationType name in videoOrientationTypeMap");
