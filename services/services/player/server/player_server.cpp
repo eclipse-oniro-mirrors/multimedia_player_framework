@@ -930,28 +930,30 @@ int32_t PlayerServer::SetVolumeMode(int32_t mode)
 
 int32_t PlayerServer::SetVolume(float leftVolume, float rightVolume)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (lastOpStatus_ == PLAYER_STATE_ERROR) {
-        MEDIA_LOGE("Can not SetVolume, currentState is PLAYER_STATE_ERROR");
-        return MSERR_INVALID_OPERATION;
-    }
-    MEDIA_LOGD("PlayerServer SetVolume in leftVolume %{public}f %{public}f", leftVolume, rightVolume);
-    constexpr float maxVolume = 1.0f;
-    if ((leftVolume < 0) || (leftVolume > maxVolume) || (rightVolume < 0) || (rightVolume > maxVolume)) {
-        MEDIA_LOGE("SetVolume failed, the volume should be set to a value ranging from 0 to 5");
-        return MSERR_INVALID_OPERATION;
-    }
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (lastOpStatus_ == PLAYER_STATE_ERROR) {
+            MEDIA_LOGE("Can not SetVolume, currentState is PLAYER_STATE_ERROR");
+            return MSERR_INVALID_OPERATION;
+        }
+        MEDIA_LOGD("PlayerServer SetVolume in leftVolume %{public}f %{public}f", leftVolume, rightVolume);
+        constexpr float maxVolume = 1.0f;
+        if ((leftVolume < 0) || (leftVolume > maxVolume) || (rightVolume < 0) || (rightVolume > maxVolume)) {
+            MEDIA_LOGE("SetVolume failed, the volume should be set to a value ranging from 0 to 5");
+            return MSERR_INVALID_OPERATION;
+        }
 
-    config_.leftVolume = leftVolume;
-    config_.rightVolume = rightVolume;
-    if (IsEngineStarted()) {
-        auto task = std::make_shared<TaskHandler<void>>([this]() {
-            (void)playerEngine_->SetVolume(config_.leftVolume, config_.rightVolume);
-            taskMgr_.MarkTaskDone("volume done");
-        });
-        (void)taskMgr_.LaunchTask(task, PlayerServerTaskType::STATE_CHANGE, "volume");
-    } else {
-        MEDIA_LOGI("Waiting for the engine state is <prepared> to take effect");
+        config_.leftVolume = leftVolume;
+        config_.rightVolume = rightVolume;
+        if (IsEngineStarted()) {
+            auto task = std::make_shared<TaskHandler<void>>([this]() {
+                (void)playerEngine_->SetVolume(config_.leftVolume, config_.rightVolume);
+                taskMgr_.MarkTaskDone("volume done");
+            });
+            (void)taskMgr_.LaunchTask(task, PlayerServerTaskType::STATE_CHANGE, "volume");
+        } else {
+            MEDIA_LOGI("Waiting for the engine state is <prepared> to take effect");
+        }
     }
 
     Format format;
