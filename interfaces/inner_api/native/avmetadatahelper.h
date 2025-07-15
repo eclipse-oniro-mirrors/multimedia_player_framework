@@ -98,6 +98,7 @@ static const std::map<int32_t, const char*> g_MetadataCodeMap = {
     {37,    "videoWidth"},
     {38,    "videoOrientation"},
     {39,    "hdrType"},
+    {44,    "videoRotateOrientation"},
 };
 
 /**
@@ -283,7 +284,7 @@ enum AVMetadataCode : int32_t {
     AV_KEY_VIDEO_WIDTH = 37,
     /**
      * The metadata key to retrieve the information about the video
-     * orientation.
+     * rotation.
      */
     AV_KEY_VIDEO_ORIENTATION = 38,
     /**
@@ -311,6 +312,11 @@ enum AVMetadataCode : int32_t {
      * Tracks info key-value map
     */
     AV_KEY_TRACKS = 43,
+    /**
+     * The metadata key to retrieve the information about the video
+     * orientation.
+     */
+    AV_KEY_VIDEO_ROTATE_ORIENTATION = 44,
 };
 
 /**
@@ -357,6 +363,46 @@ enum FrameScaleMode : int32_t {
 };
 
 /**
+ * @brief Enumeration for video flip information.
+ * 
+ * This enum defines rotation and flip information of the video.
+ */
+enum VideoOrientationType : int32_t {
+    /**
+     * No rotation or default
+     */
+    TOP_LEFT = 1,
+    /**
+     * Flip horizontally
+     */
+    TOP_RIGHT,
+    /**
+     * Rotation by 180 degrees
+     */
+    BOTTOM_RIGHT,
+    /**
+     * Flip vertically
+     */
+    BOTTOM_LEFT,
+    /**
+     * Flip horizontally and rotate 270 degrees
+     */
+    LEFT_TOP,
+    /**
+     * Rotation by 90 degrees
+     */
+    RIGHT_TOP
+    /**
+     * Flip horizontally and rotate 90 degrees
+     */
+    RIGHT_BOTTOM,
+    /**
+     * Rotation by 270 degrees
+     */
+    LEFT_BOTTOM,
+}
+
+/**
  * @brief Provides the definition of the returned pixelmap's configuration
  */
 struct PixelMapParams {
@@ -375,6 +421,11 @@ struct PixelMapParams {
      * RGB_565, RGB_888, RGBA_8888 are supported.
      */
     PixelFormat colorFormat = PixelFormat::RGB_565;
+    /**
+     * Expected whether it supports flip, flase is the default value,
+     * indicating that flipping is not required, true indicates that flipping is required
+     */
+    bool isSupportFlip = false;
 };
 
 /**
