@@ -110,7 +110,7 @@ static const std::unordered_map<unsigned int, ColorManager::ColorSpaceName> HDR_
     { CM_BT2020_PQ_LIMIT, ColorManager::ColorSpaceName::BT2020_PQ_LIMIT },
 };
 
-static const std::unordered_map<int32_t, pair<bool, bool>> VIDEOORIENTATIONTYPE_FLIP_MAP = {
+static const std::unordered_map<int32_t, std::pair<bool, bool>> VIDEOORIENTATIONTYPE_FLIP_MAP = {
     { Plugins::VideoOrientationType::FLIP_H, {true, false} },
     { Plugins::VideoOrientationType::FLIP_V, {false, true} },
     { Plugins::VideoOrientationType::FLIP_H_ROT90, {true, false} },
@@ -932,7 +932,7 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameBase(int64_t timeUs, i
         auto itFlip = VIDEOORIENTATIONTYPE_FLIP_MAP.find(pixelMapInfo.orientation);
         CHECK_AND_RETURN_RET_LOG(itFlip != VIDEOORIENTATIONTYPE_FLIP_MAP.end(), nullptr,
             "can't find mapped orientation name in VIDEOORIENTATIONTYPE_FLIP_MAP");
-        pixelMap->flip(itFlip.first, itFlip.second) : pixelMap->flip(itFlip.first, itFlip.second);
+        pixelMap->flip(itFlip->second.first, itFlip->second.second);
         auto itRotate = VIDEOORIENTATIONTYPE_ROTATION_MAP.find(pixelMapInfo.orientation);
         CHECK_AND_RETURN_RET_LOG(itRotate != VIDEOORIENTATIONTYPE_ROTATION_MAP.end(), nullptr,
             "can't find mapped orientation name in VIDEOORIENTATIONTYPE_ROTATION_MAP");
