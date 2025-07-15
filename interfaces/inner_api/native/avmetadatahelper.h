@@ -367,7 +367,7 @@ enum FrameScaleMode : int32_t {
  *
  * This enum defines rotation and flip information of the video.
  */
-enum VideoOrientationType : int32_t {
+enum VideoRotateOrientationType : int32_t {
     /**
      * No rotation or default
      */
