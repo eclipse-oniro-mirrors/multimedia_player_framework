@@ -304,7 +304,7 @@ napi_value AVScreenCaptureNapi::JsGetAVScreenCaptureConfigurableParameters(napi_
     }
     int32_t res = asyncCtx->controller_->GetAVScreenCaptureConfigurableParameters(sessionId, resultStr);
     if (res != MSERR_OK) {
-        CommonNapi::ThrowError(env, MSERR_EXT_API20_SESSION_NOT_EXIST, "session dose not exist.");
+        CommonNapi::ThrowError(env, MSERR_EXT_API20_SESSION_NOT_EXIST, "session does not exist.");
     }
     napi_create_string_utf8(env, resultStr.c_str(), NAPI_AUTO_LENGTH, &result);
     napi_value resource = nullptr;

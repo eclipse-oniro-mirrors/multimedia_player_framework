@@ -71,11 +71,11 @@ static const std::string JSON_VALUE_TRUE = "true";
 static const std::string BUTTON_NAME_MIC = "mic";
 static const std::string BUTTON_NAME_STOP = "stop";
 static const std::string ICON_PATH_CAPSULE_STOP = "/etc/screencapture/capsule_stop.svg";
-static const std::string ICON_PATH_CAPSULE_STOP_2_0 = "/etc/screencapture/capsule_stop.svg";
+static const std::string ICON_PATH_CAPSULE_STOP_2_0 = "/etc/screencapture/capsule_stop_live2.svg";
 static const std::string ICON_PATH_NOTIFICATION = "/etc/screencapture/notification.png";
 static const std::string ICON_PATH_MIC = "/etc/screencapture/mic.svg";
 static const std::string ICON_PATH_MIC_OFF = "/etc/screencapture/mic_off.svg";
-static const std::string ICON_PATH_STOP = "/etc/screencapture/stop.png";
+static const std::string ICON_PATH_STOP = "/etc/screencapture/light.svg";
 static const std::string BACK_GROUND_COLOR = "#E84026";
 #ifdef PC_STANDARD
 static const std::string SELECT_ABILITY_NAME = "SelectWindowAbility";
@@ -918,6 +918,13 @@ int32_t ScreenCaptureServer::HandlePopupWindowCase(Json::Value& root, const std:
     systemPrivacyProtectionSwitch_ = checkBoxSelected_;
     appPrivacyProtectionSwitch_ = checkBoxSelected_;
     MEDIA_LOGI("ReportAVScreenCaptureUserChoice checkBoxSelected: %{public}d", checkBoxSelected_);
+
+    if (showShareSystemAudioBox_) {
+        GetValueFromJson(root, content, std::string("isInnerAudioBoxSelected"), isInnerAudioBoxSelected_);
+    }
+    MEDIA_LOGI("ReportAVScreenCaptureUserChoice showShareSystemAudioBox: %{public}d,"
+        "isInnerAudioBoxSelected: %{public}d", showShareSystemAudioBox_,
+        isInnerAudioBoxSelected_);
 
     if (USER_CHOICE_ALLOW.compare(choice) == 0) {
         PrepareSelectWindow(root);
@@ -2430,9 +2437,13 @@ int32_t ScreenCaptureServer::StartNotification()
 
     if (GetSCServerDataType() == DataType::ORIGINAL_STREAM) {
         auto wantAgent = GetWantAgent(callingLabel_, sessionId_);
-        request.SetWantAgent(wantAgent);
+        if (wantAgent != nullptr) {
+            request.SetWantAgent(wantAgent);
+            MEDIA_LOGI("StartNotification, setWantAgent success");
+        } else {
+            MEDIA_LOGE("StartNotification, GetWantAgent returned null pointer");
+        }
     }
-    MEDIA_LOGI("StartNotification, setWantAgent success");
     std::shared_ptr<PixelMap> pixelMapTotalSpr = GetPixelMap(ICON_PATH_NOTIFICATION);
     request.SetLittleIcon(pixelMapTotalSpr);
     request.SetBadgeIconStyle(NotificationRequest::BadgeStyle::LITTLE);
@@ -2526,7 +2537,7 @@ std::shared_ptr<NotificationLocalLiveViewContent> ScreenCaptureServer::GetLocalL
 
     auto basicButton = NotificationLocalLiveViewButton();
     basicButton.addSingleButtonName(BUTTON_NAME_STOP);
-    std::shared_ptr<PixelMap> pixelMapStopSpr = GetPixelMap(ICON_PATH_STOP);
+    std::shared_ptr<PixelMap> pixelMapStopSpr = GetPixelMapSvg(ICON_PATH_STOP, SVG_HEIGHT, SVG_WIDTH);
     basicButton.addSingleButtonIcon(pixelMapStopSpr);
 
     localLiveViewContent->SetButton(basicButton);
@@ -2596,9 +2607,9 @@ void ScreenCaptureServer::UpdateMicrophoneEnabled()
 
     std::shared_ptr<PixelMap> pixelMapTotalSpr;
     if (isSystemUI2_) {
-        pixelMapTotalSpr = GetPixelMap(ICON_PATH_CAPSULE_STOP_2_0);
+        pixelMapTotalSpr = GetPixelMapSvg(ICON_PATH_CAPSULE_STOP_2_0, capsulePxSize_, capsulePxSize_);
     } else {
-        pixelMapTotalSpr = GetPixelMap(ICON_PATH_CAPSULE_STOP);
+        pixelMapTotalSpr = GetPixelMapSvg(ICON_PATH_CAPSULE_STOP, capsulePxSize_, capsulePxSize_);
     }
     request.SetLittleIcon(pixelMapTotalSpr);
     request.SetBadgeIconStyle(NotificationRequest::BadgeStyle::LITTLE);
@@ -2617,9 +2628,9 @@ void ScreenCaptureServer::UpdateLiveViewContent()
     capsule.SetBackgroundColor(BACK_GROUND_COLOR);
     std::shared_ptr<PixelMap> pixelMapCapSpr;
     if (isSystemUI2_) {
-        pixelMapCapSpr = GetPixelMap(ICON_PATH_CAPSULE_STOP_2_0);
+        pixelMapCapSpr = GetPixelMapSvg(ICON_PATH_CAPSULE_STOP_2_0, capsulePxSize_, capsulePxSize_);
     } else {
-        pixelMapCapSpr = GetPixelMap(ICON_PATH_CAPSULE_STOP);
+        pixelMapCapSpr = GetPixelMapSvg(ICON_PATH_CAPSULE_STOP, capsulePxSize_, capsulePxSize_);
     }
     capsule.SetIcon(pixelMapCapSpr);
 
@@ -2648,7 +2659,7 @@ void ScreenCaptureServer::UpdateLiveViewContent()
     }
 
     basicButton.addSingleButtonName(BUTTON_NAME_STOP);
-    std::shared_ptr<PixelMap> pixelMapStopSpr = GetPixelMap(ICON_PATH_STOP);
+    std::shared_ptr<PixelMap> pixelMapStopSpr = GetPixelMapSvg(ICON_PATH_STOP, SVG_HEIGHT, SVG_WIDTH);
     basicButton.addSingleButtonIcon(pixelMapStopSpr);
 
     localLiveViewContent_->SetButton(basicButton);
