@@ -488,8 +488,8 @@ void AVMetaDataCollector::FormatDateTime(Metadata &avmeta, const std::shared_ptr
 void AVMetaDataCollector::FormatVideoRotateOrientation(Metadata &avmeta)
 {
     std::string videoRotateOrientationType = avmeta.GetMeta(AV_KEY_VIDEO_ROTATE_ORIENTATION);
-    MEDIA_LOGI("VideoRotateOrientationType is %{public}s", videoRotateOrientationType);
-    int32_t videoRotateOrientationTypeRet = Pligins::VideoOrientationType::ROTATE_NONE;
+    MEDIA_LOGI("VideoRotateOrientationType is %{public}s", videoRotateOrientationType.c_str());
+    int32_t videoRotateOrientationTypeRet = Plugins::VideoOrientationType::ROTATE_NONE;
     if (videoRotateOrientationType == "") {
         MEDIA_LOGE("videoRotateOrientationType is empty");
         avmeta.SetMeta(AV_KEY_VIDEO_ROTATE_ORIENTATION, std::to_string(VideoRotateOrientationType::TOP_LEFT));

@@ -927,7 +927,6 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0400, Level2)
     ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
     int64_t time = 0;
     PixelMapParams param;
-    param.isSupportFlip = true;
     auto pixelMap = helper->FetchFrameYuv(time, 0, param);
     ASSERT_EQ(pixelMap->GetWidth(), 640);
     ASSERT_EQ(pixelMap->GetHeight(), 274);
