@@ -1093,7 +1093,8 @@ void ScreenCaptureServer::GetAndSetAppVersion()
         FAKE_POINTER(this), appVersion_);
 }
 
-bool ScreenCaptureServer::CheckAppVersionForUnsupport(int32_t result) {
+bool ScreenCaptureServer::CheckAppVersionForUnsupport(DMError result)
+{
     return appVersion_ >= UNSUPPORT_ERROR_CODE_API_VERSION_ISOLATION && result == DMError::DM_ERROR_DEVICE_NOT_SUPPORT;
 }
 

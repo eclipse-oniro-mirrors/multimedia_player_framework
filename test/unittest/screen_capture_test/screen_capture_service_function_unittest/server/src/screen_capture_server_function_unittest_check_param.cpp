@@ -155,28 +155,28 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckDisplayArea_003, TestSize.Level2)
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckAppVersionForUnsupport_001, TestSize.Level2)
 {
     screenCaptureServer_->appVersion_ = 20;
-    bool ret = screenCaptureServer_->CheckAppVersionForUnsupport(801);
+    bool ret = screenCaptureServer_->CheckAppVersionForUnsupport(DMError::DM_ERROR_DEVICE_NOT_SUPPORT);
     EXPECT_EQ(ret, true);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckAppVersionForUnsupport_002, TestSize.Level2)
 {
     screenCaptureServer_->appVersion_ = 18;
-    bool ret = screenCaptureServer_->CheckAppVersionForUnsupport(801);
+    bool ret = screenCaptureServer_->CheckAppVersionForUnsupport(DMError::DM_ERROR_DEVICE_NOT_SUPPORT);
     EXPECT_EQ(ret, false);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckAppVersionForUnsupport_003, TestSize.Level2)
 {
     screenCaptureServer_->appVersion_ = 20;
-    bool ret = screenCaptureServer_->CheckAppVersionForUnsupport(202);
+    bool ret = screenCaptureServer_->CheckAppVersionForUnsupport(DMError::DM_OK);
     EXPECT_EQ(ret, false);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckAppVersionForUnsupport_004, TestSize.Level2)
 {
     screenCaptureServer_->appVersion_ = 18;
-    bool ret = screenCaptureServer_->CheckAppVersionForUnsupport(202);
+    bool ret = screenCaptureServer_->CheckAppVersionForUnsupport(DMError::DM_OK);
     EXPECT_EQ(ret, false);
 }
 } // Media
