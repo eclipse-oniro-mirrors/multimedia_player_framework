@@ -488,7 +488,7 @@ void AVMetaDataCollector::FormatDateTime(Metadata &avmeta, const std::shared_ptr
 void AVMetaDataCollector::FormatVideoRotateOrientation(Metadata &avmeta)
 {
     Plugins::VideoOrientationType videoOrientationType =
-        static_cast<Plugins::VideoOrientationType>(stoi(avmeta.GetMeta(AV_KEY_VIDEO_ROTATE_ORIENTATION)));
+        static_cast<Plugins::VideoOrientationType>(std::stoi(avmeta.GetMeta(AV_KEY_VIDEO_ROTATE_ORIENTATION)));
     auto it = videoOrientationTypeMap.find(videoOrientationType);
     CHECK_AND_RETURN_LOG(it != videoOrientationTypeMap.end(),
         "can't find mapped videoOrientationType name in videoOrientationTypeMap");

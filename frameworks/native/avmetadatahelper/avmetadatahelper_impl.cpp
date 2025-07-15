@@ -121,7 +121,7 @@ static const std::unordered_map<int32_t, int32_t> VIDEOORIENTATIONTYPE_ROTATION_
     { Plugins::VideoOrientationType::FLIP_V_ROT180, 180 },
     { Plugins::VideoOrientationType::FLIP_H_ROT270, 270 },
     { Plugins::VideoOrientationType::FLIP_V_ROT270, 270 },
-}
+};
 
 struct PixelMapMemHolder {
     bool isShmem;
