@@ -102,6 +102,7 @@ public:
 
     void SetSessionId(int32_t sessionId);
     void GetAndSetAppVersion();
+    bool CheckAppVersionForUnsupport(int32_t result);
     int32_t OnReceiveUserPrivacyAuthority(bool isAllowed);
     int32_t StopScreenCaptureByEvent(AVScreenCaptureStateCode stateCode);
     std::shared_ptr<OHOS::AbilityRuntime::WantAgent::WantAgent> GetWantAgent(const std::string& callingLabel,

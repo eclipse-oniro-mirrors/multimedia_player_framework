@@ -151,5 +151,33 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckDisplayArea_003, TestSize.Level2)
     bool ret = screenCaptureServer_->CheckDisplayArea(0, area);
     EXPECT_EQ(ret, false);
 }
+
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckAppVersionForUnsupport_001, TestSize.Level2)
+{
+    screenCaptureServer_->appVersion_ = 20;
+    bool ret = screenCaptureServer_->CheckAppVersionForUnsupport(801);
+    EXPECT_EQ(ret, true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckAppVersionForUnsupport_002, TestSize.Level2)
+{
+    screenCaptureServer_->appVersion_ = 18;
+    bool ret = screenCaptureServer_->CheckAppVersionForUnsupport(801);
+    EXPECT_EQ(ret, false);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckAppVersionForUnsupport_003, TestSize.Level2)
+{
+    screenCaptureServer_->appVersion_ = 20;
+    bool ret = screenCaptureServer_->CheckAppVersionForUnsupport(202);
+    EXPECT_EQ(ret, false);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckAppVersionForUnsupport_004, TestSize.Level2)
+{
+    screenCaptureServer_->appVersion_ = 18;
+    bool ret = screenCaptureServer_->CheckAppVersionForUnsupport(202);
+    EXPECT_EQ(ret, false);
+}
 } // Media
 } // OHOS
