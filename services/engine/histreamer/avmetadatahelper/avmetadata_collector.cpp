@@ -63,7 +63,7 @@ static const std::unordered_map<Plugin::VideoOrientationType, int32_t> videoOrie
     { Plugins::VideoOrientationType::FLIP_H_ROT180, 4 },
     { Plugins::VideoOrientationType::FLIP_V_ROT180, 3 },
     { Plugins::VideoOrientationType::FLIP_H_ROT270, 5 },
-    { Plugins::VideoOrientationType::FLIP_V_ROT270, 7 },S
+    { Plugins::VideoOrientationType::FLIP_V_ROT270, 7 },
 }
 
 static const std::unordered_map<int32_t, std::string> AVMETA_KEY_TO_X_MAP = {
@@ -485,10 +485,9 @@ void AVMetaDataCollector::FormatDateTime(Metadata &avmeta, const std::shared_ptr
         formattedDateTime.compare(date) != 0 ? formattedDateTime : TimeFormatUtils::FormatDataTimeByString(date));
 }
 
-void AVMetaDataCollector::FormatVideoRotateOrientation(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo)
+void AVMetaDataCollector::FormatVideoRotateOrientation(Metadata &avmeta)
 {
-    Plugins::VideoOrientationType videoOrientationType;
-    globalInfo->GetData(Tag::VIDEO_ORIENTATION_TYPE, videoOrientationType);
+    int videoOrientationType = stoi(avmeta->GetMeta(AV_KEY_VIDEO_ROTATE_ORIENTATION));
     auto it = videoOrientationTypeMap.find(videoOrientationType);
     CHECK_AND_RETURN_LOG(it != videoOrientationTypeMap.end(),
         "can't find mapped videoOrientationType name in videoOrientationTypeMap");
@@ -520,6 +519,11 @@ bool AVMetaDataCollector::SetStringByValueType(const std::shared_ptr<Meta> &inne
         Plugins::VideoRotation rotation;
         if (innerMeta->GetData(innerKey, rotation)) {
             avmeta.SetMeta(avKey, std::to_string(rotation));
+        }
+    } else if (Any::IsSameTypeWith<Plugins::VideoOrientationType>(type)) {
+        Plugins::VideoOrientationType orientation;
+        if (innerMeta->GetData(innerKey, orientation)) {
+            avmeta.SetMeta(avKey, std::to_string(orientation));
         }
     } else if (Any::IsSameTypeWith<int64_t>(type)) {
         int64_t duration;

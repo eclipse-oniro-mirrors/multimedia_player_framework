@@ -96,7 +96,7 @@ private:
     void FormatAVMeta(Metadata &avmeta, int32_t imageTrackCount, const std::shared_ptr<Meta> &globalInfo);
     void FormatMimeType(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo);
     void FormatDateTime(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo);
-    void FormatVideoRotateOrientation(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo);
+    void FormatVideoRotateOrientation(Metadata &avmeta);
     void SetEmptyStringIfNoData(Metadata &avmeta, int32_t avKey) const;
     bool SetStringByValueType(const std::shared_ptr<Meta> &innerMeta,
         Metadata &avmeta, int32_t avKey, std::string innerKey) const;
