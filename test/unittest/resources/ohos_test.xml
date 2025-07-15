@@ -562,6 +562,8 @@
             <option name="push" value="test_videofile/h264.flv -> /data/test" src="res"/>
             <option name="push" value="test_videofile/camera_info_parser.mp4 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/h264_double_video_audio.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/bird.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/bird_hf.mp4 -> /data/test" src="res"/>
         </preparer>
     </target>
     <target name="avmetadatahelper_unit_test">

@@ -115,12 +115,8 @@ static const std::unordered_map<unsigned int, ColorManager::ColorSpaceName> HDR_
 static const std::unordered_map<int32_t, int32_t> VIDEOORIENTATIONTYPE_ROTATION_MAP = {
     { Plugins::VideoOrientationType::FLIP_H, 0 },
     { Plugins::VideoOrientationType::FLIP_V, 0 },
-    { Plugins::VideoOrientationType::FLIP_H_ROT90, 90 },
-    { Plugins::VideoOrientationType::FLIP_V_ROT90, 90 },
-    { Plugins::VideoOrientationType::FLIP_H_ROT180, 180 },
-    { Plugins::VideoOrientationType::FLIP_V_ROT180, 180 },
-    { Plugins::VideoOrientationType::FLIP_H_ROT270, 270 },
-    { Plugins::VideoOrientationType::FLIP_V_ROT270, 270 },
+    { Plugins::VideoOrientationType::FLIP_H_ROT90, 270 },
+    { Plugins::VideoOrientationType::FLIP_V_ROT90, 270 },
 };
 
 struct PixelMapMemHolder {
@@ -925,6 +921,7 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameBase(int64_t timeUs, i
 
     DumpPixelMap(isDump_, pixelMap, DUMP_FILE_NAME_AFTER_SCLAE);
 
+    MEDIA_LOGI("Rotation is %{public}d, orientation is %{public}d", pixelMapInfo.rotation, pixelMapInfo.orientation);
     if (param.isSupportFlip && VIDEOORIENTATIONTYPE_ROTATION_MAP.count(pixelMapInfo.orientation) > 0) {
         MEDIA_LOGI("Support flip");
         pixelMapInfo.orientation % FLIP_NUM == 0 ? pixelMap->flip(true, false) : pixelMap->flip(false, true);

@@ -81,6 +81,7 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadata, TestSize.Level1)
     globalMeta->SetData(Tag::MEDIA_FILE_TYPE, Plugins::FileType::MP4);
  
     videoMeta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    videoMeta->SetData(Tag::VIDEO_ORIENTATION_TYPE, Plugins::VideoOrientationType::ROTATE_NONE);
     videoMeta->SetData(Tag::VIDEO_HEIGHT, "480");
     videoMeta->SetData(Tag::VIDEO_WIDTH, "720");
     videoMeta->SetData(Tag::MIME_TYPE, "video/mp4");
@@ -289,6 +290,19 @@ HWTEST_F(AVMetaDataCollectorUnitTest, FormatDateTime, TestSize.Level1)
     globalInfo->SetData(Tag::MEDIA_CREATION_TIME, "2022");
     avmetaDataCollector->FormatDateTime(avmeta, globalInfo);
     EXPECT_TRUE(avmeta.HasMeta(AV_KEY_DATE_TIME));
+}
+
+/**
+ * @tc.name: FormatVideoRotateOrientation
+ * @tc.desc: FormatVideoRotateOrientation
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, FormatVideoRotateOrientation, TestSize.Level1)
+{
+    Metadata avmeta;
+    avmeta.SetMeta(AV_KEY_VIDEO_ROTATE_ORIENTATION, "");
+    avmetaDataCollector->FormatVideoRotateOrientation(avmeta);
+    EXPECT_TRUE(avmeta.HasMeta(AV_KEY_VIDEO_ROTATE_ORIENTATION));
 }
  
 /**

@@ -53,17 +53,17 @@ static const std::unordered_map<Plugins::FileType, std::string> fileTypeMap = {
 
 static const std::unordered_map<Plugins::VideoOrientationType, int32_t> videoOrientationTypeMap = {
     { Plugins::VideoOrientationType::ROTATE_NONE, VideoRotateOrientationType::TOP_LEFT },
-    { Plugins::VideoOrientationType::ROTATE_90, VideoRotateOrientationType::RIGHT_TOP },
+    { Plugins::VideoOrientationType::ROTATE_90, VideoRotateOrientationType::LEFT_BOTTOM },
     { Plugins::VideoOrientationType::ROTATE_180, VideoRotateOrientationType::BOTTOM_RIGHT },
-    { Plugins::VideoOrientationType::ROTATE_270, VideoRotateOrientationType::LEFT_BOTTOM },
+    { Plugins::VideoOrientationType::ROTATE_270, VideoRotateOrientationType::RIGHT_TOP },
     { Plugins::VideoOrientationType::FLIP_H, VideoRotateOrientationType::TOP_RIGHT },
     { Plugins::VideoOrientationType::FLIP_V, VideoRotateOrientationType::BOTTOM_LEFT },
-    { Plugins::VideoOrientationType::FLIP_H_ROT90, VideoRotateOrientationType::RIGHT_BOTTOM },
-    { Plugins::VideoOrientationType::FLIP_V_ROT90, VideoRotateOrientationType::LEFT_TOP },
+    { Plugins::VideoOrientationType::FLIP_H_ROT90, VideoRotateOrientationType::LEFT_TOP },
+    { Plugins::VideoOrientationType::FLIP_V_ROT90, VideoRotateOrientationType::RIGHT_BOTTOM },
     { Plugins::VideoOrientationType::FLIP_H_ROT180, VideoRotateOrientationType::BOTTOM_LEFT },
     { Plugins::VideoOrientationType::FLIP_V_ROT180, VideoRotateOrientationType::TOP_RIGHT },
-    { Plugins::VideoOrientationType::FLIP_H_ROT270, VideoRotateOrientationType::LEFT_TOP },
-    { Plugins::VideoOrientationType::FLIP_V_ROT270, VideoRotateOrientationType::RIGHT_BOTTOM },
+    { Plugins::VideoOrientationType::FLIP_H_ROT270, VideoRotateOrientationType::RIGHT_BOTTOM },
+    { Plugins::VideoOrientationType::FLIP_V_ROT270, VideoRotateOrientationType::LEFT_TOP },
 };
 
 static const std::unordered_map<int32_t, std::string> AVMETA_KEY_TO_X_MAP = {
@@ -487,8 +487,17 @@ void AVMetaDataCollector::FormatDateTime(Metadata &avmeta, const std::shared_ptr
 
 void AVMetaDataCollector::FormatVideoRotateOrientation(Metadata &avmeta)
 {
+    std::string videoRotateOrientationType = avmeta.GetMeta(AV_KEY_VIDEO_ROTATE_ORIENTATION);
+    MEDIA_LOGI("VideoRotateOrientationType is %{public}s", videoRotateOrientationType);
+    int32_t videoRotateOrientationTypeRet = Pligins::VideoOrientationType::ROTATE_NONE;
+    if (videoRotateOrientationType == "") {
+        MEDIA_LOGE("videoRotateOrientationType is empty");
+        avmeta.SetMeta(AV_KEY_VIDEO_ROTATE_ORIENTATION, std::to_string(VideoRotateOrientationType::TOP_LEFT));
+        return;
+    }
+    videoRotateOrientationTypeRet = std::stoi(videoRotateOrientationType);
     Plugins::VideoOrientationType videoOrientationType =
-        static_cast<Plugins::VideoOrientationType>(std::stoi(avmeta.GetMeta(AV_KEY_VIDEO_ROTATE_ORIENTATION)));
+        static_cast<Plugins::VideoOrientationType>(videoRotateOrientationTypeRet);
     auto it = videoOrientationTypeMap.find(videoOrientationType);
     CHECK_AND_RETURN_LOG(it != videoOrientationTypeMap.end(),
         "can't find mapped videoOrientationType name in videoOrientationTypeMap");
