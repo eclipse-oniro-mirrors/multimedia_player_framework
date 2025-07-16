@@ -53,9 +53,9 @@ HWTEST_F(LppSyncManagerAdapterUnitTest, OnError_001, TestSize.Level0)
 {
     int32_t errorCode = HDF_ERR_OK;
     string str = "";
-    EXPECT_CALL(*mockEventReceiver_ , OnEvent(_)).Times(0);
+    EXPECT_CALL(*mockEventReceiver_, OnEvent(_)).Times(0);
     lppSyncManagerAdapter_->eventReceiver_ = mockEventReceiver_;
-    lppSyncManagerAdapter_->OnError(errorCode, str);   
+    lppSyncManagerAdapter_->OnError(errorCode, str);
 }
 
 /**
