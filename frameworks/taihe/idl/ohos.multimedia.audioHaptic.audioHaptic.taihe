@@ -1,0 +1,95 @@
+/*
+ * Copyright (C) 2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@!namespace("@ohos.multimedia.audioHaptic", "audioHaptic")
+
+@!sts_inject("""
+static { loadLibrary("audioHaptic_taihe.z"); }
+""")
+
+enum AudioLatencyMode: i32 {
+    AUDIO_LATENCY_MODE_NORMAL = 0,
+    AUDIO_LATENCY_MODE_FAST = 1
+}
+
+enum AudioHapticType: i32 {
+    AUDIO_HAPTIC_TYPE_AUDIO = 0,
+    AUDIO_HAPTIC_TYPE_HAPTIC = 1,
+}
+
+
+struct AudioHapticPlayerOptions {
+  muteAudio: Optional<bool>;
+  muteHaptics: Optional<bool>;
+}
+
+interface AudioHapticManager {
+    @gen_promise("registerSource")
+    RegisterSourceSync(audioUri: String, hapticUri: String): i32;
+
+    @gen_promise("unregisterSource")
+    UnregisterSourceSync(id: i32): void;
+
+    SetAudioLatencyMode(id: i32, latencyMode: AudioLatencyMode): void;
+
+    SetStreamUsage(id: i32, usage: @sts_type("audio.StreamUsage") Opaque): void;
+
+    @gen_promise("createPlayer")
+    CreatePlayerSync(id: i32, options: Optional<AudioHapticPlayerOptions>): AudioHapticPlayer;
+}
+
+interface AudioHapticPlayer {
+    IsMuted(type: AudioHapticType): bool;
+
+    @gen_promise("start")
+    StartSync(): void;
+    
+    @gen_promise("stop")
+    StopSync(): void;
+
+    @gen_promise("release")
+    ReleaseSync(): void;
+
+    @!sts_inject_into_interface("on(type: string, callback: (data: object)=> void): void;")
+    @!sts_inject_into_class("""on(type: string, callback: object): void {
+            if (type === 'audioInterrupt') {
+              this.onAudioInterrupt(callback as (data: audio.InterruptEvent)=> void);
+            } else if (type === 'endOfStream') {
+              this.onEndOfStream(callback as (data: undefined)=> void);
+            } else {
+              throw new Error(`Unknown type: ${type}`);
+            }
+          }
+    """)
+
+    @!sts_inject_into_interface("off(type: string, callback?: (data: object)=> void): void;")
+    @!sts_inject_into_class("""off(type: string, callback?: object): void {
+        if (type === 'audioInterrupt') {
+          this.offAudioInterrupt(callback as (((data: audio.InterruptEvent)=> void) | undefined ));
+        } else if (type === 'endOfStream') {
+          this.offEndOfStream(callback as (((data: undefined)=> void) | undefined ));
+        } else {
+          throw new Error(`Unknown type: ${type}`);
+        }
+    }""")
+
+    OnAudioInterrupt(callback: (data: @sts_type("audio.InterruptEvent") Opaque)=> void): void;
+    OffAudioInterrupt(callback: Optional<(data: @sts_type("audio.InterruptEvent") Opaque)=> void>): void;
+
+    OnEndOfStream(callback: (data: @sts_type("undefined") Opaque)=> void): void;
+    OffEndOfStream(callback: Optional<(data: @sts_type("undefined") Opaque)=> void>): void;
+}
+
+function GetAudioHapticManager(): AudioHapticManager;

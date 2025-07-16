@@ -234,5 +234,9 @@ group("player_framework_taihe") {
     ":media_taihe_etc",
     ":soundpool_taihe",
     ":soundpool_etc",
+    "./audioHaptic:audioHaptic_etc",
+    "./audioHaptic:audioHaptic_taihe",
+    "./system_sound_manager:system_sound_manager_taihe_etc",
+    "./system_sound_manager:system_sound_manager_taihe",
   ]
 }

@@ -1,0 +1,143 @@
+# Copyright (C) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("//build/ohos/ace/ace.gni")
+import("//foundation/multimedia/player_framework/config.gni")
+import("./../../../multimedia_player_framework_aafwk.gni")
+import("//build/config/components/ets_frontend/ets2abc_config.gni")
+import("//build/ohos/taihe_idl/taihe.gni")
+
+subsystem_name = "multimedia"
+part_name = "player_framework"
+taihe_generated_file_path = "$taihe_file_path/out/$subsystem_name/$part_name"
+
+copy_taihe_idl("copy_system_sound_manager_taihe") {
+  sources = [
+    "//foundation/multimedia/player_framework/frameworks/taihe/idl/ohos.multimedia.systemSoundManager.taihe",
+    "//foundation/multimedia/player_framework/frameworks/taihe/idl/ohos.multimedia.systemSoundManager.context.taihe",
+    "//foundation/multimedia/player_framework/frameworks/taihe/idl/systemTonePlayer.taihe",
+    "//foundation/multimedia/player_framework/frameworks/taihe/idl/ringtonePlayer.taihe"
+  ]
+}
+
+ohos_taihe("run_system_sound_manager_taihe") {
+  taihe_generated_file_path = "$taihe_generated_file_path"
+  deps = [ ":copy_system_sound_manager_taihe" ]
+  outputs = [
+    "$taihe_generated_file_path/src/ohos.multimedia.systemSoundManager.ani.cpp",
+    "$taihe_generated_file_path/src/ohos.multimedia.systemSoundManager.abi.c",
+    "$taihe_generated_file_path/src/systemTonePlayer.ani.cpp",
+    "$taihe_generated_file_path/src/systemTonePlayer.abi.c",
+    "$taihe_generated_file_path/src/ringtonePlayer.ani.cpp",
+    "$taihe_generated_file_path/src/ringtonePlayer.abi.c",
+  ]
+}
+
+taihe_shared_library("system_sound_manager_taihe") {
+  taihe_generated_file_path = "$taihe_generated_file_path"
+  subsystem_name = "$subsystem_name"
+  part_name = "$part_name"
+
+  stack_protector_ret = true
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  include_dirs = [
+    "./include",
+    "./include/ringtone_player",
+    "./include/system_tone_player",
+    "./include/tone_attrs",
+    "./include/tone_haptics_attrs",
+    "./../common",
+    "./../media/include",
+    "./../../native/system_sound_manager",
+    "./../../../interfaces/inner_api/native",
+    "./../../../interfaces/inner_api/native/system_sound_manager/include",
+    "./../../../services/utils/include",
+  ]
+
+  sources = get_target_outputs(":run_system_sound_manager_taihe")
+  sources += [
+    "./src/ani_constructor.cpp",
+    "./src/ringtone_player/ringtone_common_taihe.cpp",
+    "./src/ringtone_player/ringtone_player_callback_taihe.cpp",
+    "./src/ringtone_player/ringtone_player_taihe.cpp",
+    "./src/system_sound_manager_taihe.cpp",
+    "./src/system_sound_manager_taihe_ext.cpp",
+    "./src/system_tone_player/system_tone_callback_taihe.cpp",
+    "./src/system_tone_player/system_tone_player_taihe.cpp",
+    "./src/tone_attrs/tone_attrs_taihe.cpp",
+    "./src/tone_haptics_attrs/tone_haptics_attrs_taihe.cpp",
+    "./src/tone_haptics_attrs/tone_haptics_settings_taihe.cpp",
+    "./../common/common_taihe.cpp",
+  ]
+
+  deps = [
+    ":run_system_sound_manager_taihe",
+    "../../native/system_sound_manager:system_sound_client",
+  ]
+
+  external_deps = [
+    "ability_base:session_info",
+    "ability_base:want",
+    "ability_runtime:ability_manager",
+    "ability_runtime:abilitykit_native",
+    "ability_runtime:ani_base_context",
+    "ability_runtime:extensionkit_native",
+    "ability_runtime:napi_base_context",
+    "ability_runtime:wantagent_innerkits",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtokenid_sdk",
+    "audio_framework:audio_client",
+    "av_codec:av_codec_client",
+    "bundle_framework:appexecfwk_base",
+    "c_utils:utils",
+    "eventhandler:libeventhandler",
+    "graphic_surface:surface",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "libuv:uv",
+    "media_foundation:media_foundation",
+    "qos_manager:qos",
+    "resource_management:global_resmgr",
+  ]
+}
+
+generate_static_abc("system_sound_manager_taihe_abc") {
+  base_url = "$taihe_generated_file_path"
+  files = [
+    "$taihe_generated_file_path/@ohos.multimedia.systemSoundManager.ets",
+    "$taihe_generated_file_path/multimedia.ringtonePlayer.ets",
+    "$taihe_generated_file_path/multimedia.systemTonePlayer.ets",
+  ]
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/system_sound_manager_taihe_abc.abc"
+  dependencies = [ ":run_system_sound_manager_taihe" ]
+}
+
+ohos_prebuilt_etc("system_sound_manager_taihe_etc") {
+  source = "$target_out_dir/system_sound_manager_taihe_abc.abc"
+  module_install_dir = "framework"
+  part_name = "$part_name"
+  subsystem_name = "$subsystem_name"
+  deps = [
+    ":system_sound_manager_taihe_abc"
+  ]
+}
