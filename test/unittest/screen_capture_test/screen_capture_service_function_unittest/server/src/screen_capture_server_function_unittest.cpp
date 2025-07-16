@@ -2671,7 +2671,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetValueFromJson_002, TestSize.Level2)
     Json::Value root;
     std::string content = R"({"isEnable": "true"})";
     std::string key = "Enable";
-    bool value = false;
+    bool value = true;
     screenCaptureServer_->GetValueFromJson(root, content, key, value);
     EXPECT_EQ(value, false);
 }
@@ -2681,7 +2681,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetValueFromJson_003, TestSize.Level2)
     Json::Value root;
     std::string content = "";
     std::string key = "Enable";
-    bool value = false;
+    bool value = true;
     screenCaptureServer_->GetValueFromJson(root, content, key, value);
     EXPECT_EQ(value, false);
 }
