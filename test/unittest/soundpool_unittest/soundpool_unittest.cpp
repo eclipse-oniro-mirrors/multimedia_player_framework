@@ -71,7 +71,7 @@ HWTEST_F(SoundPoolUnittest, CheckInitParam_002, TestSize.Level1)
     int maxStreams = NUM_TEST;
     AudioStandard::AudioRendererInfo audioRenderInfo;
     audioRenderInfo.rendererFlags = 1024;
-    auto ret = soundPool_->CheckInitParam(maxStreams, audioRenderInfo);
+    auto ret = SoundPool::CheckInitParam(maxStreams, audioRenderInfo);
     EXPECT_EQ(ret, false);
 }
 
@@ -86,7 +86,7 @@ HWTEST_F(SoundPoolUnittest, CheckInitParam_003, TestSize.Level1)
     int maxStreams = NUM_TEST;
     AudioStandard::AudioRendererInfo audioRenderInfo;
     audioRenderInfo.rendererFlags = 1025;
-    auto ret = soundPool_->CheckInitParam(maxStreams, audioRenderInfo);
+    auto ret = SoundPool::CheckInitParam(maxStreams, audioRenderInfo);
     EXPECT_EQ(ret, false);
 }
 
