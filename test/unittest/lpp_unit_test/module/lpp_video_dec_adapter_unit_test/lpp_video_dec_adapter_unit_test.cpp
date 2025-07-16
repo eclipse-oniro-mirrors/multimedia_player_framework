@@ -285,5 +285,50 @@ HWTEST_F(LppVideoDecAdapterUnitTest, SetTargetPts_002, TestSize.Level1)
     int32_t res = videoDecAdapter_->SetTargetPts(3000);
     EXPECT_EQ(res, 0);
 }
+
+/**
+* @tc.name    : Test Flush API
+* @tc.number  : Flush_001
+* @tc.desc    : Test Flush interface
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(LppVideoDecAdapterUnitTest, Flush_001, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoDecAdapter_);
+    ASSERT_NE(nullptr, videoDecoder_);
+    ASSERT_NE(nullptr, inputBufferQueueConsumer_);
+    videoDecAdapter_->videoDecoder_ = videoDecoder_;
+    videoDecAdapter_->inputBufferQueueConsumer_ = inputBufferQueueConsumer_;
+    auto buffer = std::make_shared<AVBuffer>();
+    std::vector<std::shared_ptr<AVBuffer>> bufferVector_;
+    bufferVector_.push_back(buffer);
+    videoDecAdapter_->bufferVector_ = bufferVector_;
+    EXPECT_CALL(*inputBufferQueueConsumer_, DetachBuffer(buffer)).Times(1);
+    EXPECT_CALL(*inputBufferQueueConsumer_, SetQueueSize(0)).Times(1);
+    int32_t res = videoDecAdapter_->Flush();
+    EXPECT_EQ(res, MSERR_OK);
+}
+
+/**
+* @tc.name    : Test Flush API
+* @tc.number  : Flush_002
+* @tc.desc    : Test Flush interface
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(LppVideoDecAdapterUnitTest, Flush_002, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoDecAdapter_);
+    ASSERT_NE(nullptr, videoDecoder_);
+    videoDecAdapter_->videoDecoder_ = videoDecoder_;
+    videoDecAdapter_->inputBufferQueueConsumer_ = nullptr;
+    auto buffer = std::make_shared<AVBuffer>();
+    std::vector<std::shared_ptr<AVBuffer>> bufferVector_;
+    bufferVector_.push_back(buffer);
+    videoDecAdapter_->bufferVector_ = bufferVector_;
+    EXPECT_CALL(*inputBufferQueueConsumer_, DetachBuffer(buffer)).Times(0);
+    EXPECT_CALL(*inputBufferQueueConsumer_, SetQueueSize(0)).Times(0);
+    int32_t res = videoDecAdapter_->Flush();
+    EXPECT_EQ(res, MSERR_OK);
+}
 } // namespace Media
 } // namespace OHOS
