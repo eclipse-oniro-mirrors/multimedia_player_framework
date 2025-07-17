@@ -32,8 +32,6 @@ const int32_t  NAPI_ERR_PARAM_OUT_OF_RANGE = 5400108;
 const int32_t  NAPI_ERR_PERMISSION_DENIED = 202;
 const int32_t  NAPI_ERR_NOT_SUPPORTED = 801;
 
-const std::string NAPI_ERR_PERMISSION_DENIED_INFO = "Caller is not a system application";
-
 /* Constants for array index */
 const int32_t PARAM0 = 0;
 const int32_t PARAM1 = 1;
