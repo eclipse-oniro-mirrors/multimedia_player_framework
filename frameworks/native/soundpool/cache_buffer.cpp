@@ -397,7 +397,9 @@ void CacheBuffer::DealWriteData(size_t length)
         }
         FadeInAudioBuffer(bufDesc);
         audioRenderer_->Enqueue(bufDesc);
-        if (cacheDataFrameIndex_ >= static_cast<size_t>(fullCacheData_->size)) {
+        if (cacheDataFrameIndex_ >= static_cast<size_t>(fullCacheData_->size) &&
+            (loop_ < 0 || havePlayedCount_ < loop_)) {
+            MEDIA_LOGI("DealWriteData ResetFirstFrameState when looping");
             audioRenderer_->ResetFirstFrameState();
         }
     } else {

@@ -379,7 +379,7 @@ int32_t AudioHapticPlayerImpl::SetHapticIntensity(float intensity)
 
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
     CHECK_AND_RETURN_RET_LOG(playerState_ != AudioHapticPlayerState::STATE_RELEASED, ERR_OPERATE_NOT_ALLOWED,
-        "The audio haptic player has been released."); 
+        "The audio haptic player has been released.");
     CHECK_AND_RETURN_RET_LOG(audioHapticVibrator_ != nullptr && audioHapticVibrator_->IsHapticsCustomSupported(),
         NOT_SUPPORTED_CODE, "Function is not supported in current device");
 
