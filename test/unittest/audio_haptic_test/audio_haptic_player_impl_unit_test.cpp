@@ -534,6 +534,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_024, TestSize.Leve
 
     EXPECT_NE(audioHapticPlayerImpl, nullptr);
 
+    float intensity = NUM_1;
     auto ret = audioHapticPlayerImpl->SetHapticIntensity(intensity);
     EXPECT_EQ(ret, NOT_SUPPORTED_CODE);
 }
