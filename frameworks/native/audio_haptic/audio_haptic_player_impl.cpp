@@ -376,14 +376,18 @@ int32_t AudioHapticPlayerImpl::EnableHapticsInSilentMode(bool enable)
 int32_t AudioHapticPlayerImpl::SetHapticIntensity(float intensity)
 {
     MEDIA_LOGI("AudioHapticPlayerImpl::SetHapticIntensity %{public}f", intensity);
+
+    std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
     CHECK_AND_RETURN_RET_LOG(playerState_ != AudioHapticPlayerState::STATE_RELEASED, ERR_OPERATE_NOT_ALLOWED,
         "The audio haptic player has been released.");
+    CHECK_AND_RETURN_RET_LOG(audioHapticVibrator_ != nullptr && audioHapticVibrator_->IsHapticsCustomSupported(),
+        NOT_SUPPORTED_CODE, "Function is not supported in current device");
+
     if (intensity < 1.0f || intensity > 100.0f) {
         MEDIA_LOGE("SetHapticIntensity: the intensity value is invalid.");
         return MSERR_INVALID_VAL;
     }
 
-    std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
     return audioHapticVibrator_->SetHapticIntensity(intensity);
 }
 
@@ -415,7 +419,8 @@ int32_t AudioHapticPlayerImpl::SetHapticsRamp(int32_t duration, float startInten
     CHECK_AND_RETURN_RET_LOG(!isRamp_.load(), ERR_OPERATE_NOT_ALLOWED, "already ramp");
     CHECK_AND_RETURN_RET_LOG(playerState_ != AudioHapticPlayerState::STATE_RUNNING, ERR_OPERATE_NOT_ALLOWED,
         "can't set when playing haptics");
-    CHECK_AND_RETURN_RET_LOG(audioHapticVibrator_ != nullptr, ERR_OPERATE_NOT_ALLOWED, "must set before play haptics");
+    CHECK_AND_RETURN_RET_LOG(audioHapticVibrator_ != nullptr && audioHapticVibrator_->IsHapticsCustomSupported(),
+        NOT_SUPPORTED_CODE, "Function is not supported in current device");
 
     // duration not less than 100ms
     if (duration < 100) {

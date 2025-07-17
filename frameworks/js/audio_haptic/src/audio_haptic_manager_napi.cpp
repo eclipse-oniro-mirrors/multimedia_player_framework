@@ -217,12 +217,6 @@ napi_value AudioHapticManagerNapi::RegisterSourceFromFd(napi_env env, napi_callb
         return promise;
     }
 
-    if (!AudioHapticCommonNapi::VerifySelfSystemPermission()) {
-        AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred,
-            NAPI_ERR_PERMISSION_DENIED, NAPI_ERR_PERMISSION_DENIED_INFO);
-        return promise;
-    }
-
     AudioHapticFileDescriptor audioFd;
     if (GetAudioHapticFileDescriptorValue(env, asyncContext->argv[PARAM0], audioFd) != SUCCESS) {
         AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID, "Invalid first parameter");

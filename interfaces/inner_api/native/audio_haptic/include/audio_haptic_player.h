@@ -25,6 +25,7 @@ namespace Media {
 constexpr int32_t FILE_DESCRIPTOR_ZERO = 0;
 constexpr int32_t FILE_DESCRIPTOR_INVALID = -1;
 const int32_t ERR_OPERATE_NOT_ALLOWED = 5400102;
+const int32_t NOT_SUPPORTED_CODE = 801;
 
 enum AudioHapticType {
     AUDIO_HAPTIC_TYPE_AUDIO = 0,
