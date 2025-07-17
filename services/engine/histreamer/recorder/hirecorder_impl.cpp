@@ -895,7 +895,11 @@ void HiRecorderImpl::ConfigureVidEncBitrateMode()
     if (enableStableQualityMode_) {
         MEDIA_LOG_I("enableStableQualityMode: true, SQR mode in!");
         videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(Plugins::VideoEncodeBitrateMode::SQR);
-        userMeta_->SetData("com.openharmony.encParam", "video_encode_bitrate_mode=SQR:bitrate=30000000");
+        int64_t vidBitRate = -1;
+        videoEncFormat_->Get<Tag::MEDIA_BITRATE>(vidBitRate);
+        FALSE_RETURN_MSG(vidBitRate != -1, "Get vidBitRate fail!");
+        std::string vidEncParamValue = "video_encode_bitrate_mode=SQR:bitrate=" + std::to_string(vidBitRate);
+        userMeta_->SetData("com.openharmony.encParam", vidEncParamValue);
     } else {
         MEDIA_LOG_I("enableStableQualityMode: false, VBR mode in!");
         videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(Plugins::VideoEncodeBitrateMode::VBR);
