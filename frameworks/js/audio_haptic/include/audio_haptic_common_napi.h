@@ -30,6 +30,7 @@ const int32_t  NAPI_ERR_SERVICE_DIED = 5400105;
 const int32_t  NAPI_ERR_UNSUPPORTED_FORMAT = 5400106;
 const int32_t  NAPI_ERR_PARAM_OUT_OF_RANGE = 5400108;
 const int32_t  NAPI_ERR_PERMISSION_DENIED = 202;
+const int32_t  NAPI_ERR_NOT_SUPPORTED = 801;
 
 const std::string NAPI_ERR_PERMISSION_DENIED_INFO = "Caller is not a system application";
 
@@ -61,6 +62,7 @@ public:
     static std::string GetStringArgument(napi_env env, napi_value value);
     static void PromiseReject(napi_env env, napi_deferred deferred,
         const int32_t &errCode, const std::string &errMessage);
+    static void PromiseReject(napi_env env, napi_deferred deferred, int32_t errCode);
     static bool InitPromiseFunc(napi_env env, napi_callback_info info,
         AsyncContext* asyncContext, napi_value* promise, size_t paramLength);
     static bool VerifySelfSystemPermission();

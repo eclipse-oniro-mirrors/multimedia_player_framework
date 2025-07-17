@@ -534,10 +534,8 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_024, TestSize.Leve
 
     EXPECT_NE(audioHapticPlayerImpl, nullptr);
 
-    float intensity = NUM_1;
-
     auto ret = audioHapticPlayerImpl->SetHapticIntensity(intensity);
-    EXPECT_EQ(ret, MSERR_INVALID_VAL);
+    EXPECT_EQ(ret, NOT_SUPPORTED_CODE);
 }
 
 /**
@@ -572,8 +570,15 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_026, TestSize.Leve
 
     EXPECT_NE(audioHapticPlayerImpl, nullptr);
 
-    float intensity = NUM_4;
+    AudioHapticPlayerImpl audioHapticPlayerImpl2;
+    audioHapticPlayerImpl->audioHapticVibrator_ = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl2);
+    EXPECT_NE(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
 
+    float intensity = NUM_1;
+    auto ret = audioHapticPlayerImpl->SetHapticIntensity(intensity);
+    EXPECT_EQ(ret, MSERR_INVALID_VAL);
+
+    float intensity = NUM_4;
     auto ret = audioHapticPlayerImpl->SetHapticIntensity(intensity);
     EXPECT_EQ(ret, MSERR_INVALID_VAL);
 }
@@ -1207,7 +1212,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_059, TestSize.Leve
     EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, audioHapticPlayerImpl->SetHapticsRamp(50, 1.0f, 50.0f));
 
     audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_RUNNING;
-    EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, audioHapticPlayerImpl->SetHapticsRamp(50, 1.0f, 50.0f));
+    EXPECT_EQ(NOT_SUPPORTED_CODE, audioHapticPlayerImpl->SetHapticsRamp(50, 1.0f, 50.0f));
 
     AudioHapticPlayerImpl audioHapticPlayerImpl2;
     auto audioHapticVibrator_ = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl2);

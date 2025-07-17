@@ -29,10 +29,12 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, 
 namespace OHOS {
 namespace Media {
 const std::string NAPI_ERR_INPUT_INVALID_INFO = "input parameter check failed";
-const std::string NAPI_ERR_OPERATE_NOT_ALLOWED_INFO = "operate not allowed";
+const std::string NAPI_ERR_OPERATE_NOT_ALLOWED_INFO = "Operate not permit in current state";
 const std::string NAPI_ERR_IO_ERROR_INFO = "input or output error";
 const std::string NAPI_ERR_SERVICE_DIED_INFO = "service died";
 const std::string NAPI_ERR_UNSUPPORTED_FORMAT_INFO = "unsupport format";
+const std::string NAPI_ERR_PARAM_OUT_OF_RANGE_INFO = "Parameter out of range";
+const std::string NAPI_ERR_NOT_SUPPORTED_INFO = "Function is not supported in current device";
 
 void AudioHapticCommonNapi::ThrowError(napi_env env, int32_t code)
 {
@@ -57,6 +59,12 @@ void AudioHapticCommonNapi::PromiseReject(napi_env env, napi_deferred deferred,
     napi_reject_deferred(env, deferred, error);
 }
 
+void AudioHapticCommonNapi::PromiseReject(napi_env env, napi_deferred deferred, int32_t errCode)
+{
+    std::string messageValue = AudioHapticCommonNapi::GetMessageByCode(errCode);
+    AudioHapticCommonNapi::PromiseReject(env, deferred, errCode, messageValue);
+}
+
 bool AudioHapticCommonNapi::InitNormalFunc(napi_env env, napi_callback_info info,
     void** native, napi_value* argv, size_t paramLength)
 {
@@ -65,7 +73,7 @@ bool AudioHapticCommonNapi::InitNormalFunc(napi_env env, napi_callback_info info
     napi_status status = napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr);
     if (status != napi_ok || thisVar == nullptr) {
         MEDIA_LOGE("napi_get_cb_info fail");
-        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_SERVICE_DIED, "napi_get_cb_info fail");
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_SERVICE_DIED, NAPI_ERR_SERVICE_DIED_INFO);
         return false;
     }
 
@@ -79,7 +87,7 @@ bool AudioHapticCommonNapi::InitNormalFunc(napi_env env, napi_callback_info info
     status = napi_unwrap(env, thisVar, native);
     if (status != napi_ok || *native == nullptr) {
         MEDIA_LOGE("Failed to unwrap object");
-        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_OPERATE_NOT_ALLOWED, "Failed to unwrap object");
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_SERVICE_DIED, NAPI_ERR_SERVICE_DIED_INFO);
         return false;
     }
     return true;
@@ -89,7 +97,7 @@ bool AudioHapticCommonNapi::InitPromiseFunc(napi_env env, napi_callback_info inf
     AsyncContext* asyncContext, napi_value* promise, size_t paramLength)
 {
     if (asyncContext == nullptr) {
-        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_SERVICE_DIED, "error create promise");
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_SERVICE_DIED, NAPI_ERR_SERVICE_DIED_INFO);
         return false;
     }
     napi_create_promise(env, &asyncContext->deferred, promise);
@@ -99,7 +107,7 @@ bool AudioHapticCommonNapi::InitPromiseFunc(napi_env env, napi_callback_info inf
     if (status != napi_ok || thisVar == nullptr) {
         MEDIA_LOGE("napi_get_cb_info fail");
         AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred,
-            NAPI_ERR_SERVICE_DIED, "napi_get_cb_info fail");
+            NAPI_ERR_SERVICE_DIED, NAPI_ERR_SERVICE_DIED_INFO);
         return false;
     }
 
@@ -113,7 +121,7 @@ bool AudioHapticCommonNapi::InitPromiseFunc(napi_env env, napi_callback_info inf
     if (status != napi_ok) {
         MEDIA_LOGE("Failed to unwrap object");
         AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred,
-            NAPI_ERR_SERVICE_DIED, "Failed to unwrap object");
+            NAPI_ERR_SERVICE_DIED, NAPI_ERR_SERVICE_DIED_INFO);
         return false;
     }
     return true;
@@ -143,6 +151,12 @@ std::string AudioHapticCommonNapi::GetMessageByCode(int32_t &code)
             break;
         case NAPI_ERR_UNSUPPORTED_FORMAT:
             errMessage = NAPI_ERR_UNSUPPORTED_FORMAT_INFO;
+            break;
+        case NAPI_ERR_PARAM_OUT_OF_RANGE:
+            errMessage = NAPI_ERR_PARAM_OUT_OF_RANGE_INFO;
+            break;
+        case NAPI_ERR_NOT_SUPPORTED:
+            errMessage = NAPI_ERR_NOT_SUPPORTED_INFO;
             break;
         default:
             errMessage = NAPI_ERR_OPERATE_NOT_ALLOWED_INFO;
