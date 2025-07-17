@@ -948,7 +948,7 @@ int32_t ScreenCaptureServer::HandleStreamDataCase(Json::Value& root, const std::
     bool stopRecord = false;
     GetValueFromJson(root, content, std::string("stopRecording"), stopRecord);
     if (stopRecord) {
-        StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
+        StopScreenCaptureByEvent(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER);
         MEDIA_LOGI("ReportAVScreenCaptureUserChoice user stop record");
         return MSERR_OK;
     }
