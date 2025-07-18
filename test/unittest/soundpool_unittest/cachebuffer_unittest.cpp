@@ -50,7 +50,7 @@ void SoundPoolCacheBufferUnitTest::TearDown(void)
 HWTEST_F(SoundPoolCacheBufferUnitTest, CacheBuferDealPlayParamsBeforePlayUnittest_001, TestSize.Level0)
 {
     ASSERT_NE(cacheBuffer_, nullptr);
-    auto audioRenderer = std::make_unique<MockAudioRenderer>();
+    auto audioRenderer = std::make_unique<MockAudioRender>();
     EXPECT_CALL(*(audioRenderer), SetRenderRate(_)).Times(1).WillRepeatedly(testing::Return(0));
     EXPECT_CALL(*(audioRenderer), SetVolume(_)).Times(1).WillRepeatedly(testing::Return(0));
     EXPECT_CALL(*(audioRenderer), SetOffloadAllowed(_)).Times(1).WillRepeatedly(testing::Return(0));
