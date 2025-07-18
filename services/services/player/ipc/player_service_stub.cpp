@@ -1112,6 +1112,7 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
         if (fd != -1) {
             (void)::close(fd);
         }
+        return ret;
     }
 
     struct AVPlayStrategy strategy;
