@@ -117,7 +117,7 @@ HWTEST_F(SoundPoolStreamUnitTest, StreamCreateAudioRendererUnittest_001, TestSiz
 HWTEST_F(SoundPoolStreamUnitTest, StreamDoPlayUnittest_001, TestSize.Level0)
 {
     ASSERT_NE(stream_, nullptr);
-    auto audioRenderer = std::make_unique<MockAudioRenderer>();
+    auto audioRenderer = std::make_unique<MockAudioRender>();
     EXPECT_CALL(*(audioRenderer), GetBufferSize(_)).WillRepeatedly(testing::Return(0));
     EXPECT_CALL(*(audioRenderer), SetRenderMode(_)).WillRepeatedly(testing::Return(0));
     EXPECT_CALL(*(audioRenderer), SetRenderRate(_)).WillRepeatedly(testing::Return(0));
@@ -146,7 +146,7 @@ HWTEST_F(SoundPoolStreamUnitTest, StreamDoPlayUnittest_001, TestSize.Level0)
 HWTEST_F(SoundPoolStreamUnitTest, StreamDoPlayUnittest_002, TestSize.Level0)
 {
     ASSERT_NE(stream_, nullptr);
-    auto audioRenderer = std::make_unique<MockAudioRenderer>();
+    auto audioRenderer = std::make_unique<MockAudioRender>();
     EXPECT_CALL(*(audioRenderer), GetBufferSize(_)).WillRepeatedly(testing::Return(0));
     EXPECT_CALL(*(audioRenderer), SetRenderMode(_)).WillRepeatedly(testing::Return(0));
     EXPECT_CALL(*(audioRenderer), SetRenderRate(_)).WillRepeatedly(testing::Return(0));
@@ -176,11 +176,11 @@ HWTEST_F(SoundPoolStreamUnitTest, StreamStopUnittest_001, TestSize.Level0)
 {
     ASSERT_NE(stream_, nullptr);
     stream_->isRunning_.store(true);
-    stream_->audioRenderer_ = std::make_unique<MockAudioRenderer>();
+    stream_->audioRenderer_ = std::make_unique<MockAudioRender>();
     auto callBack = std::make_shared<MockISoundPoolCallback>();
     EXPECT_CALL(*callBack, OnPlayFinished(_)).WillRepeatedly(testing::Return());
     stream_->callback_ = callBack;
-    auto audioRenderer = std::make_unique<MockAudioRenderer>();
+    auto audioRenderer = std::make_unique<MockAudioRender>();
     EXPECT_CALL(*audioRenderer, IsFastRenderer()).WillRepeatedly(testing::Return(true));
     EXPECT_CALL(*audioRenderer, Pause(_)).WillRepeatedly(testing::Return(false));
     EXPECT_CALL(*audioRenderer, Flush()).WillRepeatedly(testing::Return(false));
@@ -196,7 +196,7 @@ HWTEST_F(SoundPoolStreamUnitTest, StreamAddStopTaskUnittest_001, TestSize.Level0
 {
     ASSERT_NE(stream_, nullptr);
     stream_->streamCallback_ = nullptr;
-    auto audioRenderer = std::make_unique<MockAudioRenderer>();
+    auto audioRenderer = std::make_unique<MockAudioRender>();
     EXPECT_CALL(*audioRenderer, IsFastRenderer()).WillRepeatedly(testing::Return(true));
     stream_->audioRenderer_ = std::move(audioRenderer);
     stream_->AddStopTask();
@@ -208,7 +208,7 @@ HWTEST_F(SoundPoolStreamUnitTest, StreamAddStopTaskUnittest_001, TestSize.Level0
 HWTEST_F(SoundPoolStreamUnitTest, StreamDealPlayParamsBeforePlayUnittest_001, TestSize.Level2)
 {
     ASSERT_NE(stream_, nullptr);
-    auto audioRenderer = std::make_unique<MockAudioRenderer>();
+    auto audioRenderer = std::make_unique<MockAudioRender>();
     EXPECT_CALL(*(audioRenderer), SetRenderRate(_)).Times(1).WillRepeatedly(testing::Return(0));
     EXPECT_CALL(*(audioRenderer), SetVolume(_)).Times(1).WillRepeatedly(testing::Return(0));
     EXPECT_CALL(*(audioRenderer), SetOffloadAllowed(_)).Times(1).WillRepeatedly(testing::Return(0));
@@ -239,7 +239,7 @@ HWTEST_F(SoundPoolStreamUnitTest, StreamDoPlayUnittest_003, TestSize.Level0)
     ASSERT_EQ(true, stream_->manager_.expired());
     stream_->fullCacheData_ = std::make_shared<AudioBufferEntry>(nullptr, 0);
     ASSERT_NE(nullptr, stream_->fullCacheData_);
-    auto audioRenderer = std::make_unique<MockAudioRenderer>();
+    auto audioRenderer = std::make_unique<MockAudioRender>();
     EXPECT_CALL(*(audioRenderer), GetBufferSize(_)).Times(2).WillRepeatedly(testing::Return(0));
     EXPECT_CALL(*(audioRenderer), SetRenderMode(_)).WillOnce(testing::Return(0));
     EXPECT_CALL(*(audioRenderer), SetRenderRate(_)).WillOnce(testing::Return(0));
@@ -273,7 +273,7 @@ HWTEST_F(SoundPoolStreamUnitTest, StreamDoPlayUnittest_004, TestSize.Level0)
     ASSERT_EQ(true, stream_->manager_.expired());
     stream_->fullCacheData_ = std::make_shared<AudioBufferEntry>(nullptr, 0);
     ASSERT_NE(nullptr, stream_->fullCacheData_);
-    auto audioRenderer = std::make_unique<MockAudioRenderer>();
+    auto audioRenderer = std::make_unique<MockAudioRender>();
     EXPECT_CALL(*(audioRenderer), GetBufferSize(_)).Times(2).WillRepeatedly(testing::Return(0));
     EXPECT_CALL(*(audioRenderer), SetRenderMode(_)).WillOnce(testing::Return(0));
     EXPECT_CALL(*(audioRenderer), SetRenderRate(_)).WillOnce(testing::Return(0));
