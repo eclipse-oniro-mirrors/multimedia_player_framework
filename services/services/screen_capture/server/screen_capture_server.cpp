@@ -2855,7 +2855,7 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
     virtualScreenId_ = ScreenManager::GetInstance().CreateVirtualScreen(virScrOption);
     CHECK_AND_RETURN_RET_LOG(virtualScreenId_ >= 0, MSERR_UNKNOWN, "CreateVirtualScreen failed, invalid screenId");
     SetVirtualScreenAutoRotation();
-    if (captureConfig_.dataType == DataType::ORIGINAL_STREAM && checkBoxSelected_) {
+    if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
         if (checkBoxSelected_) {
             MEDIA_LOGI("CreateVirtualScreen checkBoxSelected: %{public}d", checkBoxSelected_);
             std::vector<ScreenId> screenIds;
