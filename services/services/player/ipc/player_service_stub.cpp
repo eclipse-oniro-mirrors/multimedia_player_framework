@@ -1107,7 +1107,9 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
     }
 
     int32_t ret = ReadMediaStreamListFromMessageParcel(data, mediaSource);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ReadMediaStreamListFromMessageParcel failed");
+    CHECK_AND_RETURN_RET_LOG(
+        mimeType == AVMimeType::APPLICATION_M3U8 || ret == MSERR_OK, ret,
+        "ReadMediaStreamListFromMessageParcel failed");
 
     struct AVPlayStrategy strategy;
     ReadPlayStrategyFromMessageParcel(data, strategy);
