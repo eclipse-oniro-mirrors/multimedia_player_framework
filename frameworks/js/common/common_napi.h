@@ -388,6 +388,7 @@ struct AVPlayStrategyTmp {
     bool preferredHdr;
     bool showFirstFrameOnPrepare;
     bool enableSuperResolution;
+    bool enableCameraPostprocessing {false};
     int32_t mutedMediaType = static_cast<int32_t>(MediaType::MEDIA_TYPE_MAX_COUNT);
     std::string preferredAudioLanguage;
     std::string preferredSubtitleLanguage;

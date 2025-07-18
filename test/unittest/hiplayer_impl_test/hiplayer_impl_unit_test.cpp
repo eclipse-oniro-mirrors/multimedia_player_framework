@@ -1200,6 +1200,14 @@ HWTEST_F(HiplayerImplUnitTest, TestSetSuperResolution_002, TestSize.Level0)
     EXPECT_EQ(ret, TransStatus(Status::OK));
 }
 
+HWTEST_F(HiplayerImplUnitTest, SetCameraPostprocessing_001, TestSize.Level0)
+{
+    auto ret = hiplayer_->SetCameraPostprocessing(true);
+    EXPECT_EQ(ret, MSERR_OK);
+    ret = hiplayer_->SetCameraPostprocessing(false);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
 HWTEST_F(HiplayerImplUnitTest, TestSetVideoWindowSize_001, TestSize.Level0)
 {
     int32_t width = 0;
