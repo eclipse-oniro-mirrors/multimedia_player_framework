@@ -37,6 +37,8 @@ namespace OHOS {
 namespace Media {
 const int32_t LOAD_WAIT_SECONDS = 2;
 const int32_t LOAD_WAIT_SECONDS_FOR_LOOP = 40;
+const int32_t NORMAL_LOOP_FIRST_WAIT_MS = 80;
+const int32_t NORMAL_LOOP_FOLLOW_WAIT_MS = 40;
 
 static int32_t GenerateSyncId()
 {
@@ -218,11 +220,6 @@ int32_t AudioHapticPlayerImpl::Start()
     // If DSP synchronization is supported, generate the syncId before starting
     if (isSupportDSPSync_) {
         audioHapticSyncId_ = GenerateSyncId();
-        isFirstFrameAfterStart_ = true;
-        {
-            std::unique_lock<std::mutex> lockWait(waitStartVibrateMutex_);
-            canStartVibrate_ = true;
-        }
     }
     
     if (vibrateThread_ == nullptr) {
@@ -492,6 +489,16 @@ int32_t AudioHapticPlayerImpl::GetAudioCurrentTime()
     return audioHapticSound_->GetAudioCurrentTime();
 }
 
+int32_t AudioHapticPlayerImpl::GetDelayTime(int32_t playedTimes)
+{
+    // normal mode needs to calc waiting time, fast mode start vib immediatelly
+    if (latencyMode_ == AUDIO_LATENCY_MODE_NORMAL) {
+        return playedTimes > 0 ? NORMAL_LOOP_FOLLOW_WAIT_MS : NORMAL_LOOP_FIRST_WAIT_MS;
+    }
+
+    return 0;
+}
+
 int32_t AudioHapticPlayerImpl::StartVibrate()
 {
     if (muteHaptic_) {
@@ -519,9 +526,9 @@ int32_t AudioHapticPlayerImpl::StartVibrate()
         }
 
         canStartVibrate_ = false; // reset for next time.
-        int32_t delayMS = 50; // audio haptics sync offset
-        // If new synchronization is unsupported, SoundPool's looping subsequent plays require calibration delay
-        if (!isSupportDSPSync_ || (latencyMode_ == AUDIO_LATENCY_MODE_FAST && playedTimes > 0)) {
+        int32_t delayMS = GetDelayTime(playedTimes); // audio haptics sync offset
+        // If new synchronization is unsupported, use old solution
+        if (!isSupportDSPSync_) {
             int32_t hapticDelay = audioHapticVibrator_->GetDelayTime();
             delayMS = (static_cast<int32_t>(this->audioLatency_) - hapticDelay) > 0 ?
                 static_cast<int32_t>(this->audioLatency_) - hapticDelay : 0;
@@ -629,7 +636,6 @@ void AudioHapticPlayerImpl::HandleEndOfStreamEvent()
     // Low-latency path doesn't trigger EOS during looping; use normal path only.
     if (isSupportDSPSync_) {
         audioHapticSyncId_++;
-        NotifyStartVibrate(0);
     }
 }
 
@@ -646,21 +652,7 @@ void AudioHapticPlayerImpl::NotifyErrorEvent(int32_t errCode)
 
 void AudioHapticPlayerImpl::NotifyFirstFrame(const uint64_t &latency)
 {
-    // If new synchronization is unsupported, the first frame callback triggers the vibration start.
-    if (!isSupportDSPSync_) {
-        NotifyStartVibrate(latency);
-        return;
-    }
-
-    // When new synchronization is supported, the fast path looping scenario first uses the new scheme.
-    // but reverts to the old one afterward.
-    if (latencyMode_ == AUDIO_LATENCY_MODE_FAST && !isFirstFrameAfterStart_.load()) {
-        NotifyStartVibrate(latency);
-    }
-
-    if (isFirstFrameAfterStart_.load()) {
-        isFirstFrameAfterStart_.store(false);
-    }
+    NotifyStartVibrate(latency);
 }
 
 void AudioHapticPlayerImpl::NotifyStartVibrate(const uint64_t &latency)
