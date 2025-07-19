@@ -81,14 +81,10 @@ RecorderServer::~RecorderServer()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        auto task = std::make_shared<TaskHandler<void>>([&, this] {
-            recorderEngine_ = nullptr;
+        recorderEngine_ = nullptr;
 #ifdef SUPPORT_POWER_MANAGER
-            syncCallback_ = nullptr;
+        syncCallback_ = nullptr;
 #endif
-        });
-        (void)taskQue_.EnqueueTask(task);
-        (void)task->GetResult();
         taskQue_.Stop();
     }
 }
