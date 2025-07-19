@@ -2083,7 +2083,9 @@ void ScreenCaptureServer::OnReceiveEvent(const EventFwk::CommonEventData &data)
     MEDIA_LOGI("ScreenCaptureServer::OnReceiveEvent");
     NotificationRequest request;
     SetPublishRequest(GetLocalLiveViewContent(), notificationId_, request);
-    request.SetWantAgent(GetWantAgent(callingLabel_, sessionId_));
+    if (GetSCServerDataType() == DataType::ORIGINAL_STREAM) {
+        request.SetWantAgent(GetWantAgent(callingLabel_, sessionId_));
+    }
     NotificationHelper::PublishNotification(request);
 }
 
@@ -2300,6 +2302,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
         ", isSurfaceMode:%{public}d, dataType:%{public}d", appInfo_.appUid, appInfo_.appPid, isPrivacyAuthorityEnabled,
         isSurfaceMode_, captureConfig_.dataType);
     MediaTrace trace("ScreenCaptureServer::StartScreenCaptureInner");
+    PublishStartRecordEvent();
     int32_t ret = RegisterServerCallbacks();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "RegisterServerCallbacks failed");
 
@@ -2351,6 +2354,15 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
 
     MEDIA_LOGI("StartScreenCaptureInner E, appUid:%{public}d, appPid:%{public}d", appInfo_.appUid, appInfo_.appPid);
     return ret;
+}
+
+void ScreenCaptureServer::PublishStartRecordEvent()
+{
+    AAFwk::Want want;
+    want.SetAction("custom.usual.event.START_RECORD");
+    EventFwk::CommonEventData commonData {want};
+    EventFwk::CommonEventManager::PublishCommonEvent(commonData);
+    MEDIA_LOGI("custom.usual.event.START_RECORD publish");
 }
 
 bool ScreenCaptureServer::IsTelInCallSkipList()
