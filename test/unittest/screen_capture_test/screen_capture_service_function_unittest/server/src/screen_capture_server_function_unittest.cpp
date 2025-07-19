@@ -2842,5 +2842,35 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UpdateMicrophoneEnabled_003, TestSize.
     screenCaptureServer_->UpdateMicrophoneEnabled();
     EXPECT_EQ(screenCaptureServer_->isSystemUI2_, false);
 }
+
+HWTEST_F(ScreenCaptureServerFunctionTest, HandleOriginalStreamPrivacy_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.dataType = DataType::INVAILD;
+    screenCaptureServer_->HandleOriginalStreamPrivacy();
+    EXPECT_EQ(screenCaptureServer_->checkBoxSelected_, false);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, HandleOriginalStreamPrivacy_002, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
+    screenCaptureServer_->checkBoxSelected_ = true;
+    screenCaptureServer_->HandleOriginalStreamPrivacy();
+    EXPECT_EQ(screenCaptureServer_->checkBoxSelected_, true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, HandleOriginalStreamPrivacy_003, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
+    screenCaptureServer_->checkBoxSelected_ = false;
+    screenCaptureServer_->HandleOriginalStreamPrivacy();
+    EXPECT_EQ(screenCaptureServer_->checkBoxSelected_, false);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, RegisterLanguageSwitchListener_001, TestSize.Level2)
+{
+    screenCaptureServer_->RegisterLanguageSwitchListener();
+    screenCaptureServer_->UnRegisterLanguageSwitchListener();
+    EXPECT_NE(screenCaptureServer_->subscriber_, nullptr);
+}
 } // Media
 } // OHOS

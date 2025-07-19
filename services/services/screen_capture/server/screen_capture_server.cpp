@@ -47,6 +47,7 @@
 #include "window_manager_lite.h"
 #include "want_agent_info.h"
 #include "want_agent_helper.h"
+#include "common_event_manager.h"
 #ifdef PC_STANDARD
 #include <parameters.h>
 #endif
@@ -2019,6 +2020,7 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
     }
     RegisterPrivateWindowListener();
     RegisterScreenConnectListener();
+    RegisterLanguageSwitchListener();
     if (captureConfig_.captureMode == CAPTURE_SPECIFIED_WINDOW && missionIds_.size() == 1) {
         SetWindowIdList(missionIds_.front());
         SetDefaultDisplayIdOfWindows();
@@ -2055,6 +2057,47 @@ int32_t ScreenCaptureServer::TryNotificationOnPostStartScreenCapture()
     return MSERR_OK;
 }
 #endif
+
+void ScreenCaptureServer::RegisterLanguageSwitchListener()
+{
+    MEDIA_LOGI("ScreenCaptureServer::RegisterLanguageSwitchListener");
+    if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
+            .compare(appName_) == 0) {
+        return;
+    }
+    EventFwk::MatchingSkills matchingSkills;
+    matchingSkills.AddEvent("usual.event.LOCALE_CHANGED");
+    EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+    auto onReceiveEvent = std::bind(&ScreenCaptureServer::OnReceiveEvent, this, std::placeholders::_1);
+    subscriber_ = std::make_shared<ScreenCaptureSubscriber>(
+        subscribeInfo, onReceiveEvent);
+    if (subscriber_ == nullptr) {
+        MEDIA_LOGE("RegisterLanguageSwitchListener subscriber_ is null");
+        return;
+    }
+    EventFwk::CommonEventManager::SubscribeCommonEvent(subscriber_);
+}
+
+void ScreenCaptureServer::OnReceiveEvent(const EventFwk::CommonEventData &data)
+{
+    MEDIA_LOGI("ScreenCaptureServer::OnReceiveEvent");
+    NotificationRequest request;
+    SetPublishRequest(GetLocalLiveViewContent(), notificationId_, request);
+    if (GetSCServerDataType() == DataType::ORIGINAL_STREAM) {
+        request.SetWantAgent(GetWantAgent(callingLabel_, sessionId_));
+    }
+    NotificationHelper::PublishNotification(request);
+}
+
+void ScreenCaptureServer::UnRegisterLanguageSwitchListener()
+{
+    MEDIA_LOGI("ScreenCaptureServer::UnRegisterLanguageSwitchListener");
+    if (subscriber_ == nullptr) {
+        MEDIA_LOGE("UnRegisterLanguageSwitchListener subscriber_ is null");
+        return;
+    }
+    EventFwk::CommonEventManager::UnSubscribeCommonEvent(subscriber_);
+}
 
 int32_t ScreenCaptureServer::InitAudioCap(AudioCaptureInfo audioInfo)
 {
@@ -2259,6 +2302,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
         ", isSurfaceMode:%{public}d, dataType:%{public}d", appInfo_.appUid, appInfo_.appPid, isPrivacyAuthorityEnabled,
         isSurfaceMode_, captureConfig_.dataType);
     MediaTrace trace("ScreenCaptureServer::StartScreenCaptureInner");
+    PublishStartRecordEvent();
     int32_t ret = RegisterServerCallbacks();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "RegisterServerCallbacks failed");
 
@@ -2310,6 +2354,15 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
 
     MEDIA_LOGI("StartScreenCaptureInner E, appUid:%{public}d, appPid:%{public}d", appInfo_.appUid, appInfo_.appPid);
     return ret;
+}
+
+void ScreenCaptureServer::PublishStartRecordEvent()
+{
+    AAFwk::Want want;
+    want.SetAction("custom.usual.event.START_RECORD");
+    EventFwk::CommonEventData commonData {want};
+    EventFwk::CommonEventManager::PublishCommonEvent(commonData);
+    MEDIA_LOGI("custom.usual.event.START_RECORD publish");
 }
 
 bool ScreenCaptureServer::IsTelInCallSkipList()
@@ -2855,17 +2908,8 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
     virtualScreenId_ = ScreenManager::GetInstance().CreateVirtualScreen(virScrOption);
     CHECK_AND_RETURN_RET_LOG(virtualScreenId_ >= 0, MSERR_UNKNOWN, "CreateVirtualScreen failed, invalid screenId");
     SetVirtualScreenAutoRotation();
-    if (captureConfig_.dataType == DataType::ORIGINAL_STREAM && checkBoxSelected_) {
-        MEDIA_LOGI("CreateVirtualScreen checkBoxSelected: %{public}d", checkBoxSelected_);
-        std::vector<ScreenId> screenIds;
-        screenIds.push_back(virtualScreenId_);
-        auto ret = ScreenManager::GetInstance().SetScreenSkipProtectedWindow(screenIds, true);
-        CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK || ret == DMError::DM_ERROR_DEVICE_NOT_SUPPORT, MSERR_UNKNOWN,
-            "0x%{public}06" PRIXPTR " SetScreenSkipProtectedWindow failed, ret: %{public}d", FAKE_POINTER(this), ret);
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " SetScreenSkipProtectedWindow success", FAKE_POINTER(this));
-        AppPrivacyProtected(virtualScreenId_, true);
-    }
-
+    CHECK_AND_RETURN_RET_LOG(HandleOriginalStreamPrivacy() == MSERR_OK,
+        MSERR_UNKNOWN, "SetScreenSkipProtectedWindow failed");
     if (!showCursor_) {
         MEDIA_LOGI("CreateVirtualScreen without cursor");
         int32_t ret = ShowCursorInner();
@@ -2875,6 +2919,26 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
     }
     MEDIA_LOGI("CreateVirtualScreen success, screenId: %{public}" PRIu64, virtualScreenId_);
     return PrepareVirtualScreenMirror();
+}
+
+int32_t ScreenCaptureServer::HandleOriginalStreamPrivacy()
+{
+    if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
+        if (checkBoxSelected_) {
+            MEDIA_LOGI("CreateVirtualScreen checkBoxSelected: %{public}d", checkBoxSelected_);
+            std::vector<ScreenId> screenIds;
+            screenIds.push_back(virtualScreenId_);
+            auto ret = ScreenManager::GetInstance().SetScreenSkipProtectedWindow(screenIds, true);
+            CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK || ret == DMError::DM_ERROR_DEVICE_NOT_SUPPORT,
+                MSERR_UNKNOWN, "0x%{public}06" PRIXPTR " SetScreenSkipProtectedWindow failed, ret: %{public}d",
+                FAKE_POINTER(this), ret);
+            MEDIA_LOGI("0x%{public}06" PRIXPTR " SetScreenSkipProtectedWindow success", FAKE_POINTER(this));
+            AppPrivacyProtected(virtualScreenId_, true);
+        } else {
+            AppPrivacyProtected(virtualScreenId_, false);
+        }
+    }
+    return MSERR_OK;
 }
 
 int32_t ScreenCaptureServer::PrepareVirtualScreenMirror()
@@ -4006,6 +4070,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
     ScreenManager::GetInstance().UnregisterScreenListener(screenConnectListener_);
     UnRegisterWindowLifecycleListener();
     UnRegisterWindowInfoChangedListener();
+    UnRegisterLanguageSwitchListener();
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopScreenCaptureInner end.", FAKE_POINTER(this));
     return ret;
 }
@@ -4246,6 +4311,9 @@ void ScreenCaptureServer::SetPublishRequest(
         request.SetOwnerUid(AV_SCREEN_CAPTURE_SESSION_UID);
         request.SetUnremovable(true);
         request.SetInProgress(true);
+        std::shared_ptr<PixelMap> pixelMapTotalSpr = GetPixelMap(ICON_PATH_NOTIFICATION);
+        request.SetLittleIcon(pixelMapTotalSpr);
+        request.SetBadgeIconStyle(NotificationRequest::BadgeStyle::LITTLE);
 }
 
 void ScreenCaptureServer::SystemPrivacyProtected(ScreenId& virtualScreenId, bool systemPrivacyProtectionSwitch)

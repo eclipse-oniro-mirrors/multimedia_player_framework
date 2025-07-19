@@ -308,6 +308,7 @@ ohos_shared_library("media_service") {
       "access_token:libtokensetproc_shared",
       "audio_framework:audio_capturer",
       "audio_framework:audio_client",
+      "common_event_service:cesfwk_core",
       "distributed_notification_service:ans_innerkits",
       "graphic_surface:sync_fence",
       "relational_store:native_rdb",
