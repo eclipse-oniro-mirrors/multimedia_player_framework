@@ -2866,11 +2866,11 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleOriginalStreamPrivacy_003, TestS
     EXPECT_EQ(screenCaptureServer_->checkBoxSelected_, false);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, HandleOriginalStreamPrivacy_001, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, RegisterLanguageSwitchListener_001, TestSize.Level2)
 {
     screenCaptureServer_->RegisterLanguageSwitchListener();
     screenCaptureServer_->UnRegisterLanguageSwitchListener();
-    EXPECT_EQ(screenCaptureServer_->subscriber_, nullptr);
+    EXPECT_NE(screenCaptureServer_->subscriber_, nullptr);
 }
 } // Media
 } // OHOS

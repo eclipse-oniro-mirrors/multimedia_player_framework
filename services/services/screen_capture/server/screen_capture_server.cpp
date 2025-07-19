@@ -2071,7 +2071,7 @@ void ScreenCaptureServer::RegisterLanguageSwitchListener()
     subscriber_ = std::make_shared<ScreenCaptureSubscriber>(
         subscribeInfo, onReceiveEvent);
     if (subscriber_ == nullptr) {
-        MEDIA_LOGE("subscriber_ is null");
+        MEDIA_LOGE("RegisterLanguageSwitchListener subscriber_ is null");
         return;
     }
     EventFwk::CommonEventManager::SubscribeCommonEvent(subscriber_);
@@ -2089,6 +2089,10 @@ void ScreenCaptureServer::OnReceiveEvent(const EventFwk::CommonEventData &data)
 void ScreenCaptureServer::UnRegisterLanguageSwitchListener()
 {
     MEDIA_LOGI("ScreenCaptureServer::UnRegisterLanguageSwitchListener");
+    if (subscriber_ == nullptr) {
+        MEDIA_LOGE("UnRegisterLanguageSwitchListener subscriber_ is null");
+        return;
+    }
     EventFwk::CommonEventManager::UnSubscribeCommonEvent(subscriber_);
 }
 
