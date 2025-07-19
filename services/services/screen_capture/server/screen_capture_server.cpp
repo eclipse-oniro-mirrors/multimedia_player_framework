@@ -2020,10 +2020,7 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
     }
     RegisterPrivateWindowListener();
     RegisterScreenConnectListener();
-    if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
-            .compare(appName_) != 0) {
-        RegisterLanguageSwitchListener();
-    }
+    RegisterLanguageSwitchListener();
     if (captureConfig_.captureMode == CAPTURE_SPECIFIED_WINDOW && missionIds_.size() == 1) {
         SetWindowIdList(missionIds_.front());
         SetDefaultDisplayIdOfWindows();
@@ -2064,6 +2061,10 @@ int32_t ScreenCaptureServer::TryNotificationOnPostStartScreenCapture()
 void ScreenCaptureServer::RegisterLanguageSwitchListener()
 {
     MEDIA_LOGI("ScreenCaptureServer::RegisterLanguageSwitchListener");
+    if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
+            .compare(appName_) == 0) {
+        return;
+    }
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent("usual.event.LOCALE_CHANGED");
     EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
