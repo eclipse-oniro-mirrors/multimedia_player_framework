@@ -182,6 +182,31 @@ HWTEST_F(PlayerServiceStubTest, SetMediaSource_004, TestSize.Level1)
 }
 
 /**
+ * @tc.name  : SetMediaSource_005
+ * @tc.number: SetMediaSource_005
+ * @tc.desc  : FUNC
+ */
+HWTEST_F(PlayerServiceStubTest, SetMediaSource_005, TestSize.Level1)
+{
+    sptr<PlayerServiceStub> playerServiceStub = PlayerServiceStub::Create();
+    EXPECT_NE(playerServiceStub, nullptr);
+
+    MessageParcel data;
+    MessageParcel reply;
+    std::string url = "fd://abc";
+    data.WriteString(url);
+    auto headerSize = 0;
+    data.WriteUint32(headerSize);
+    std::string mimeType = "application";
+    data.WriteString(mimeType);
+    data.WriteUint32(11);
+
+    int ret = playerServiceStub->SetMediaSource(data, reply);
+    EXPECT_EQ(ret, MSERR_INVALID_OPERATION);
+    playerServiceStub = nullptr;
+}
+
+/**
  * @tc.name  : Freeze_001
  * @tc.number: Freeze_001
  * @tc.desc  : FUNC
