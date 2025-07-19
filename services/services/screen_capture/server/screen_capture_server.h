@@ -275,7 +275,10 @@ private:
     bool CheckDisplayArea(uint64_t displayId, OHOS::Rect area);
     void PrepareUserSelectionInfo(ScreenCaptureUserSelectionInfo &selectionInfo);
     void SetupCapsule(NotificationCapsule& capsule);
-
+    void RegisterLanguageSwitchListener();
+    void OnReceiveEvent(const EventFwk::CommonEventData &data);
+    void UnRegisterLanguageSwitchListener();
+    void HandleOriginalStreamPrivacy();
 private:
     std::mutex mutex_;
     std::mutex cbMutex_;
@@ -362,6 +365,7 @@ private:
     Global::Resource::ResourceManager *resourceManager_ = nullptr;
     Global::Resource::ResConfig *resConfig_ = nullptr;
     OHOS::sptr<Rosen::ScreenManager::IScreenListener> screenConnectListener_ = nullptr;
+    std::shared_ptr<ScreenCaptureSubscriber> subscriber_ = nullptr;
 #ifdef SUPPORT_CALL
     std::atomic<bool> isInTelCall_ = false;
     std::atomic<bool> isInTelCallAudio_ = false;

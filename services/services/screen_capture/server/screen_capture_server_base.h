@@ -65,6 +65,7 @@
 #include "i_input_device_listener.h"
 #include "input_manager.h"
 #include "session_lifecycle_listener_stub.h"
+#include "common_event_manager.h"
 
 namespace OHOS {
 namespace Media {
@@ -384,6 +385,27 @@ public:
 
 private:
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
+};
+
+class ScreenCaptureSubscriber : public EventFwk::CommonEventSubscriber {
+public:
+    ScreenCaptureSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo,
+        const std::function<void(const EventFwk::CommonEventData &)> &callback)
+        : EventFwk::CommonEventSubscriber(subscribeInfo), callback_(callback)
+    {}
+
+    ~ScreenCaptureSubscriber()
+    {}
+
+    void OnReceiveEvent(const EventFwk::CommonEventData &data) override
+    {
+        if (callback_ != nullptr) {
+            callback_(data);
+        }
+    }
+
+private:
+    std::function<void(const EventFwk::CommonEventData &)> callback_;
 };
 } // namespace Media
 } // namespace OHOS
