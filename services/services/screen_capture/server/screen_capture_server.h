@@ -278,7 +278,7 @@ private:
     void RegisterLanguageSwitchListener();
     void OnReceiveEvent(const EventFwk::CommonEventData &data);
     void UnRegisterLanguageSwitchListener();
-    void HandleOriginalStreamPrivacy();
+    int32_t HandleOriginalStreamPrivacy();
 private:
     std::mutex mutex_;
     std::mutex cbMutex_;

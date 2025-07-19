@@ -2895,8 +2895,10 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
     virtualScreenId_ = ScreenManager::GetInstance().CreateVirtualScreen(virScrOption);
     CHECK_AND_RETURN_RET_LOG(virtualScreenId_ >= 0, MSERR_UNKNOWN, "CreateVirtualScreen failed, invalid screenId");
     SetVirtualScreenAutoRotation();
-    HandleOriginalStreamPrivacy();
-
+    int32_t privacyRet = HandleOriginalStreamPrivacy();
+    if (privacyRet != MSERR_OK) {
+        return privacyRet;
+    }
     if (!showCursor_) {
         MEDIA_LOGI("CreateVirtualScreen without cursor");
         int32_t ret = ShowCursorInner();
@@ -2908,7 +2910,7 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
     return PrepareVirtualScreenMirror();
 }
 
-void ScreenCaptureServer::HandleOriginalStreamPrivacy()
+int32_t ScreenCaptureServer::HandleOriginalStreamPrivacy()
 {
     if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
         if (checkBoxSelected_) {
@@ -2925,6 +2927,7 @@ void ScreenCaptureServer::HandleOriginalStreamPrivacy()
             AppPrivacyProtected(virtualScreenId_, false);
         }
     }
+    return MSERR_OK;
 }
 
 int32_t ScreenCaptureServer::PrepareVirtualScreenMirror()
