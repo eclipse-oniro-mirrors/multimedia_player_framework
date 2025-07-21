@@ -645,7 +645,7 @@ int32_t HiPlayerImpl::PrepareAsync()
     DoSetMediaSource(ret);
     if (mutedMediaType_ == OHOS::Media::MediaType::MEDIA_TYPE_VID) {
         MEDIA_LOG_I("HiPlayerImpl::PrepareAsync, do setMute true");
-        demuxer_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true, keepDecodingOnMute_);
+        demuxer_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true);
     }
     if (ret != Status::OK && !isInterruptNeeded_.load()) {
         OnEvent({"engine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_CONTAINER_TYPE});
@@ -3484,13 +3484,10 @@ int32_t HiPlayerImpl::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMut
         return res == Status::OK ? MSERR_OK : MSERR_INVALID_OPERATION;
     } else if (mediaType == OHOS::Media::MediaType::MEDIA_TYPE_VID) {
         if (demuxer_ != nullptr) {
-            demuxer_->SetMediaMuted(mediaType, isMuted, keepDecodingOnMute_);
+            demuxer_->SetMediaMuted(mediaType, isMuted);
         }
         if (videoDecoder_ != nullptr) {
             videoDecoder_->SetMediaMuted(isMuted, true);
-            if (isMuted) {
-                videoDecoder_->Flush();
-            }
         }
         bool needReinit = !isMuted && surface_ != nullptr && (isVideoMuted_ != isMuted ||
             (!isVideoDecoderInited_ && mutedMediaType_ == OHOS::Media::MediaType::MEDIA_TYPE_VID));
@@ -4025,7 +4022,7 @@ Status HiPlayerImpl::InitVideoDecoder()
 void HiPlayerImpl::ReleaseVideoDecoderOnMuted()
 {
     if (videoDecoder_ != nullptr) {
-        videoDecoder_->ReleaseOnMuted();
+        videoDecoder_->ReleaseOnMuted(!keepDecodingOnMute_);
     }
 }
 }  // namespace Media
