@@ -157,9 +157,7 @@ int32_t LppSyncManager::Reset()
     ResetTimeAnchor();
     FALSE_RETURN_V_NOLOG(videoIsLpp_, MSERR_OK);
     FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_INVALID_OPERATION, "adapter_ is nullptr");
-    auto ret = adapter_->UnbindOutputBuffers();
-    FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "adapter_ UnbindOutputBuffers failed");
-    ret = adapter_->Reset();
+    auto ret = adapter_->Reset();
     FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "adapter_ Reset failed");
     MEDIA_LOG_I("DestroyLppSyncManagerAdapter in");
     ret = LowPowerPlayerFactory::DestroyLppSyncManagerAdapter(adapterId_, std::move(adapter_));
