@@ -19,6 +19,7 @@
 #include "avsharedmemory_ipc.h"
 #include "avmetadatahelper_impl.h"
 #include "gmock/gmock.h"
+#include "sync_fence.h"
 
 namespace OHOS {
 namespace Media {
@@ -143,6 +144,8 @@ public:
     MOCK_METHOD(bool, GetCropMetadata, (OHOS::Rect& crop), (override));
     MOCK_METHOD(OH_NativeBuffer*, SurfaceBufferToNativeBuffer, (), (override));
     MOCK_METHOD(BufferRequestConfig, GetBufferRequestConfig, (), (const, override));
+    MOCK_METHOD(sptr<SyncFence>, GetSyncFence, (), (const, override));
+    MOCK_METHOD(void, SetAndMergeSyncFence, (const sptr<SyncFence>& syncFence), (override));
 };
 }
 }
