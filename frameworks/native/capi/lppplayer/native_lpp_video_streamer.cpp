@@ -277,7 +277,7 @@ void OH_LowPowerVideoSinkCallback::OnError(int32_t errorCode, const std::string 
 
 void OH_LowPowerVideoSinkCallback::OnInfo(VideoStreamerOnInfoType type, int32_t extra, const Format &infoBody)
 {
-    MEDIA_LOGI("OnInfo() is called, VideoStreamerOnInfoType: %{public}d, extra: %{public}d", type, extra);
+    MEDIA_LOGD("OnInfo() is called, VideoStreamerOnInfoType: %{public}d, extra: %{public}d", type, extra);
     CHECK_AND_RETURN_LOG(lppVideoStreamer_ != nullptr, "lppVideoStreamer_ is nullptr");
     LowPowerVideoSinkObject *streamerObj = nullptr;
     switch (type) {

@@ -356,7 +356,7 @@ int32_t HiLppVideoStreamerImpl::SetTargetStartFrame(const int64_t targetPts, con
 }
 int32_t HiLppVideoStreamerImpl::ReturnFrames(sptr<LppDataPacket> framePacket)
 {
-    MEDIA_LOG_I("HiLppVideoStreamerImpl::ReturnFrames");
+    MEDIA_LOG_D("HiLppVideoStreamerImpl::ReturnFrames");
     FALSE_RETURN_V_MSG(dataMgr_ != nullptr, MSERR_INVALID_OPERATION, "dataMgr_ nullptr");
     FALSE_RETURN_V_MSG(framePacket != nullptr, MSERR_INVALID_OPERATION, "framePacket nullptr");
     auto ret = dataMgr_->ProcessNewData(framePacket);

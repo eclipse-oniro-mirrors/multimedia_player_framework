@@ -419,7 +419,7 @@ bool LppVideoDecoderAdapter::HandleEosFrame(uint32_t index, std::shared_ptr<AVBu
     int64_t waitTime = lastRenderTimeNs_.load() == 0 ? 0 : (GetSysTimeNs() - lastRenderTimeNs_.load()) / US_TO_MS;
     waitTime = waitTime >= 0 ? waitTime : 0;
     int64_t jobIdx = GeneratedJobIdx();
-    FALSE_RETURN_V_MSG(decodertask_ != nullptr, MSERR_INVALID_OPERATION, "decodertask_ is nullptr");
+    FALSE_RETURN_V_MSG(decodertask_ != nullptr, false, "decodertask_ is nullptr");
     decodertask_->SubmitJob([this, jobIdx] {
             FALSE_RETURN_MSG(!IsJobFlushed(jobIdx), "video eos job is flushed");
             FALSE_RETURN_MSG(eventReceiver_ != nullptr, "eventReceiver_ is nullptr");

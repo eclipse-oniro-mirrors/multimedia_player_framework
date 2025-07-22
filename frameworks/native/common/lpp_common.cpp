@@ -280,7 +280,7 @@ bool LppDataPacket::IsEos()
 void LppDataPacket::DumpAVBufferToFile(
     const std::string &para, const std::shared_ptr<AVBuffer> &buffer, const bool isClient)
 {
-    FALSE_RETURN_MSG(dumpBufferNeeded_, "not need dumpBuffer");
+    FALSE_RETURN_NOLOG(dumpBufferNeeded_);
     MEDIA_LOG_D("dump avbuffer to %{public}s", dumpFileNameInput_.c_str());
     if (buffer == nullptr || buffer->memory_ == nullptr) {
         MEDIA_LOG_E("buffer or memory is nullptr.");
