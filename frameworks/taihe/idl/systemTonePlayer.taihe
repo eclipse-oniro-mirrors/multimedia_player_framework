@@ -16,6 +16,10 @@
 @!namespace("multimedia.systemTonePlayer")
 
 @!sts_inject("""
+import { BusinessError } from '@ohos.base';
+""")
+
+@!sts_inject("""
 { loadLibrary("system_sound_manager_taihe.z"); }
 """)
 
