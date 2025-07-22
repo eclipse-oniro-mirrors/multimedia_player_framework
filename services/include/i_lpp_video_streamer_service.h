@@ -68,7 +68,7 @@ public:
 
     virtual int32_t RegisterCallback() = 0;
 
-    virtual int32_t SetLppVideoStreamerCallback(const std::shared_ptr<VideoStreamerCallback> &callback);
+    virtual int32_t SetLppVideoStreamerCallback(const std::shared_ptr<VideoStreamerCallback> &callback) = 0;
 
     virtual int32_t SetLppAudioStreamerId(const std::string audioStreamId) = 0;
 
