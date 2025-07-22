@@ -236,7 +236,7 @@ void OH_LowPowerAudioSinkCallback::OnError(int32_t errorCode, const std::string 
 
 void OH_LowPowerAudioSinkCallback::OnInfo(AudioStreamerOnInfoType type, int32_t extra, const Format &infoBody)
 {
-    MEDIA_LOGI("OnInfo() is called, AudioStreamerOnInfoType: %{public}d, extra: %{public}d", type, extra);
+    MEDIA_LOGD("OnInfo() is called, AudioStreamerOnInfoType: %{public}d, extra: %{public}d", type, extra);
     CHECK_AND_RETURN_LOG(lppAudioStreamer_ != nullptr, "lppAudioStreamer_ is nullptr");
     LowPowerAudioSinkObject *streamerObj = nullptr;
     switch (type) {
