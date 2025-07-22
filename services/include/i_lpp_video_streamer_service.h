@@ -28,9 +28,9 @@ public:
 
     // virtual int32_t SetSource(const std::string &url) = 0;
 
-    virtual int32_t Init(const std::string &mime);
+    virtual int32_t Init(const std::string &mime) = 0;
 
-    virtual int32_t SetParameter(const Format &param);
+    virtual int32_t SetParameter(const Format &param) = 0;
 
     virtual int32_t Configure(const Format &param) = 0;
 
