@@ -20,6 +20,7 @@
 #include "audio_effect.h"
 #include "avmetadatahelper.h"
 #include "avplayer_callback_taihe.h"
+#include "common_taihe.h"
 #include "ohos.multimedia.media.proj.hpp"
 #include "ohos.multimedia.media.impl.hpp"
 #include "player.h"
@@ -64,17 +65,6 @@ struct AVPlayStrategyTmp {
     bool isSetBufferDurationForPlaying {true};
     bool isSetThresholdForAutoQuickPlay {true};
 };
-namespace AVPlayerState {
-    const std::string STATE_IDLE = "idle";
-    const std::string STATE_INITIALIZED = "initialized";
-    const std::string STATE_PREPARED = "prepared";
-    const std::string STATE_PLAYING = "playing";
-    const std::string STATE_PAUSED = "paused";
-    const std::string STATE_STOPPED = "stopped";
-    const std::string STATE_RELEASED = "released";
-    const std::string STATE_ERROR = "error";
-    const std::string STATE_COMPLETED = "completed";
-}
 
 namespace AVPlayerEvent {
     const std::string EVENT_STATE_CHANGE = "stateChange";

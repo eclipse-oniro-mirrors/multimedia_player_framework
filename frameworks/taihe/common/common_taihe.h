@@ -17,10 +17,21 @@
 #define COMMON_TAIHE_H
 
 #include "audio_info.h"
-#include "media_ani_common.h"
 #include "taihe/runtime.hpp"
 
 namespace ANI::Media {
+
+namespace AVPlayerState {
+    const std::string STATE_IDLE = "idle";
+    const std::string STATE_INITIALIZED = "initialized";
+    const std::string STATE_PREPARED = "prepared";
+    const std::string STATE_PLAYING = "playing";
+    const std::string STATE_PAUSED = "paused";
+    const std::string STATE_STOPPED = "stopped";
+    const std::string STATE_RELEASED = "released";
+    const std::string STATE_ERROR = "error";
+    const std::string STATE_COMPLETED = "completed";
+}
 
 class CommonTaihe {
 public:
@@ -45,6 +56,23 @@ public:
     ani_enum_item &aniEnumItem);
     static ani_object CreateAudioRendererInfo(ani_env *env,
     std::unique_ptr<OHOS::AudioStandard::AudioRendererInfo> &audioRendererInfo);
+};
+
+struct AutoRef {
+    AutoRef(ani_env *env, std::shared_ptr<uintptr_t> callback)
+        : env_(env)
+    {
+        if (callback != nullptr) {
+            callbackRef_ = callback;
+        }
+    }
+    ~AutoRef()
+    {
+        env_ = nullptr;
+        callbackRef_ = nullptr;
+    }
+    ani_env* env_ = nullptr;
+    std::shared_ptr<uintptr_t> callbackRef_;
 };
 
 } // namespace ANI::Media
