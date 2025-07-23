@@ -319,7 +319,7 @@ napi_value AVScreenCaptureNapi::ThrowCustomError(napi_env env, int32_t errorCode
     napi_value message = nullptr;
     napi_value error = nullptr;
     napi_value codeValue = nullptr;
-    napi_value proName = nullptr;
+    napi_value propName = nullptr;
 
     napi_create_string_utf8(env, errorMessage, NAPI_AUTO_LENGTH, &message);
     napi_create_error(env, nullptr, message, &error);
