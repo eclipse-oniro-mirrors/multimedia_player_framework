@@ -283,28 +283,28 @@ napi_value AVScreenCaptureNapi::JsGetAVScreenCaptureConfigurableParameters(napi_
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, nullptr, "failed to napi_get_cb_info");
     MEDIA_LOGI("argCount %{public}zu", argCount);
     if (argCount < maxParam) {
-        CommonNapi::ThrowError(env, MSERR_EXT_API9_PERMISSION_DENIED, "parameter missing");
+        ThrowCustomError(env, MSERR_EXT_API9_PERMISSION_DENIED, "parameter missing");
     }
     napi_valuetype valueType = napi_undefined;
     if (napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
-        CommonNapi::ThrowError(env, MSERR_EXT_API9_PERMISSION_DENIED, "invalid parameter type");
+        ThrowCustomError(env, MSERR_EXT_API9_PERMISSION_DENIED, "invalid parameter type");
     }
     int32_t sessionId;
     status = napi_get_value_int32(env, args[0], &sessionId);
     if (status != napi_ok) {
-        CommonNapi::ThrowError(env, MSERR_EXT_API9_PERMISSION_DENIED, "invalid parameter type");
+        ThrowCustomError(env, MSERR_EXT_API9_PERMISSION_DENIED, "invalid parameter type");
     }
     if (!SystemPermission()) {
-        CommonNapi::ThrowError(env, MSERR_EXT_API9_PERMISSION_DENIED, "permission denied");
+        ThrowCustomError(env, MSERR_EXT_API9_PERMISSION_DENIED, "permission denied");
     }
     std::string resultStr = "";
     asyncCtx->controller_ = ScreenCaptureControllerFactory::CreateScreenCaptureController();
     if (asyncCtx->controller_ == nullptr) {
-        CommonNapi::ThrowError(env, MSERR_EXT_API9_PERMISSION_DENIED, "failed to create controller");
+        ThrowCustomError(env, MSERR_EXT_API9_PERMISSION_DENIED, "failed to create controller");
     }
     int32_t res = asyncCtx->controller_->GetAVScreenCaptureConfigurableParameters(sessionId, resultStr);
     if (res != MSERR_OK) {
-        CommonNapi::ThrowError(env, MSERR_EXT_API20_SESSION_NOT_EXIST, "session does not exist.");
+        ThrowCustomError(env, MSERR_EXT_API20_SESSION_NOT_EXIST, "session does not exist.");
     }
     napi_create_string_utf8(env, resultStr.c_str(), NAPI_AUTO_LENGTH, &result);
     napi_value resource = nullptr;
@@ -312,6 +312,22 @@ napi_value AVScreenCaptureNapi::JsGetAVScreenCaptureConfigurableParameters(napi_
     asyncCtx.release();
     MEDIA_LOGI("Js %{public}s End", opt.c_str());
     return result;
+}
+
+napi_value AVScreenCaptureNapi::ThrowCustomError(napi_env env, int32_t errorCode, const char* errorMessage)
+{
+    napi_value message = nullptr;
+    napi_value error = nullptr;
+    napi_value codeValue = nullptr;
+    napi_value proName = nullptr;
+
+    napi_create_string_utf8(env, errorMessage, NAPI_AUTO_LENGTH, &message);
+    napi_create_error(env, nullptr, message, &error);
+    napi_create_int32(env, errorCode, &codeValue);
+    napi_create_string_utf8(env, "code", NAPI_AUTO_LENGTH, &propName);
+    napi_set_property(env, error, propName, codeValue);
+    napi_throw(env, error);
+    return nullptr;
 }
 
 void AVScreenCaptureNapi::AsyncJsReportAVScreenCaptureUserChoice(napi_env env, void* data)
