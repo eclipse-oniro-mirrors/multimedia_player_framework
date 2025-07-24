@@ -227,8 +227,8 @@ void SoundPoolCallBackTaihe::OnTaiheloadCompletedCallBack(SoundPoolTaiheCallBack
         CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
         auto func = ref->callbackRef_;
         CHECK_AND_BREAK_LOG(func != nullptr, "%{public}s failed to get callback", request.c_str());
-        std::shared_ptr<taihe::callback<void(double)>> cacheCallback =
-            std::reinterpret_pointer_cast<taihe::callback<void(double)>>(func);
+        std::shared_ptr<taihe::callback<void(int32_t)>> cacheCallback =
+            std::reinterpret_pointer_cast<taihe::callback<void(int32_t)>>(func);
         (*cacheCallback)(taiheCb->loadSoundId);
     } while (0);
     delete taiheCb;
@@ -244,8 +244,8 @@ void SoundPoolCallBackTaihe::OnTaiheplayCompletedCallBack(SoundPoolTaiheCallBack
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
             auto func = ref->callbackRef_;
             CHECK_AND_BREAK_LOG(func != nullptr, "%{public}s failed to get callback", request.c_str());
-            std::shared_ptr<taihe::callback<void(double)>> cacheCallback =
-                std::reinterpret_pointer_cast<taihe::callback<void(double)>>(func);
+            std::shared_ptr<taihe::callback<void(int32_t)>> cacheCallback =
+                std::reinterpret_pointer_cast<taihe::callback<void(int32_t)>>(func);
             (*cacheCallback)(taiheCb->playFinishedStreamID);
         } else if (request == SoundPoolEvent::EVENT_PLAY_FINISHED) {
             MEDIA_LOGD("OnTaiheloadCompletedCallBack is called");

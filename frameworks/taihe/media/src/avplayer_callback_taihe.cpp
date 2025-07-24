@@ -40,6 +40,54 @@ OHOS::AudioStandard::InterruptEvent interruptEvent_ = OHOS::AudioStandard::Inter
 
 class AniCallback {
 public:
+
+    static ohos::multimedia::audio::AudioDeviceDescriptor GetDeviceInfo(
+        OHOS::AudioStandard::AudioDeviceDescriptor deviceInfo)
+    {
+        ohos::multimedia::audio::DeviceRole::key_t deviceRoleKey;
+        MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::DeviceRole>(
+            deviceInfo.deviceRole_, deviceRoleKey);
+        ohos::multimedia::audio::DeviceType::key_t deviceTypeKey;
+        MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::DeviceType>(
+            deviceInfo.deviceType_, deviceTypeKey);
+        taihe::string name = MediaTaiheUtils::ToTaiheString(deviceInfo.deviceName_);
+        taihe::string address = MediaTaiheUtils::ToTaiheString(deviceInfo.macAddress_);
+        std::vector<int32_t> samplingRateVec(
+            deviceInfo.audioStreamInfo_.samplingRate.begin(),
+            deviceInfo.audioStreamInfo_.samplingRate.end());
+        std::vector<int32_t> channelsVec(deviceInfo.audioStreamInfo_.channels.begin(),
+            deviceInfo.audioStreamInfo_.channels.end());
+        taihe::string networkId = MediaTaiheUtils::ToTaiheString(deviceInfo.networkId_);
+        taihe::string displayName = MediaTaiheUtils::ToTaiheString(
+            deviceInfo.displayName_);
+        ohos::multimedia::audio::AudioEncodingType::key_t audioEncodingTypeKey;
+        MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::AudioEncodingType>(
+            deviceInfo.audioStreamInfo_.encoding, audioEncodingTypeKey);
+        std::vector<int32_t> channelMasks;
+        channelMasks.push_back(deviceInfo.channelMasks_);
+        std::vector<ohos::multimedia::audio::AudioEncodingType> audioEncodingType;
+        audioEncodingType.push_back(audioEncodingTypeKey);
+
+        ohos::multimedia::audio::AudioDeviceDescriptor descriptor {
+            std::move(ohos::multimedia::audio::DeviceRole(deviceRoleKey)),
+            std::move(ohos::multimedia::audio::DeviceType(deviceTypeKey)),
+            std::move(deviceInfo.deviceId_),
+            std::move(name),
+            std::move(address),
+            array<int32_t>(samplingRateVec),
+            array<int32_t>(channelsVec),
+            array<int32_t>(channelMasks),
+            std::move(networkId),
+            std::move(deviceInfo.interruptGroupId_),
+            std::move(deviceInfo.volumeGroupId_),
+            std::move(displayName),
+            optional<::taihe::array<ohos::multimedia::audio::AudioEncodingType>>(
+                std::in_place_t{}, array<ohos::multimedia::audio::AudioEncodingType>(audioEncodingType)),
+            optional<bool>(std::nullopt),
+            optional<int32_t>(std::nullopt),
+        };
+        return descriptor;
+    }
     struct Base {
         std::weak_ptr<AutoRef> callback;
         std::string callbackName = "unknown";
@@ -91,8 +139,8 @@ public:
                 "%{public}s AutoRef is nullptr", callbackName.c_str());
             auto func = intRef->callbackRef_;
             CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
-            std::shared_ptr<taihe::callback<void(double)>> cacheCallback =
-                std::reinterpret_pointer_cast<taihe::callback<void(double)>>(func);
+            std::shared_ptr<taihe::callback<void(int32_t)>> cacheCallback =
+                std::reinterpret_pointer_cast<taihe::callback<void(int32_t)>>(func);
             (*cacheCallback)(value);
         }
     };
@@ -109,9 +157,9 @@ public:
             int32_t val = 0;
             auto func = intVecRef->callbackRef_;
             CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
-            std::shared_ptr<taihe::callback<void(ohos::multimedia::media::BufferingInfoType, double)>>
+            std::shared_ptr<taihe::callback<void(ohos::multimedia::media::BufferingInfoType, int32_t)>>
                 cacheCallback = std::reinterpret_pointer_cast<taihe::callback<void
-                    (ohos::multimedia::media::BufferingInfoType, double)>>(func);
+                    (ohos::multimedia::media::BufferingInfoType, int32_t)>>(func);
             ohos::multimedia::media::BufferingInfoType::key_t key;
             MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::media::BufferingInfoType>(firstValueAsDouble, key);
             (*cacheCallback)(ohos::multimedia::media::BufferingInfoType(key), val);
@@ -126,17 +174,15 @@ public:
             CHECK_AND_RETURN_LOG(intVecRef != nullptr,
                 "%{public}s AutoRef is nullptr", callbackName.c_str());
             CHECK_AND_RETURN_LOG(valueVec.size() > 1, "valueVec size is less than 2");
-            double firstValueAsDouble = static_cast<double>(valueVec[0]);
-            double secondValueAsDouble = static_cast<double>(valueVec[1]);
             auto func = intVecRef->callbackRef_;
             CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
-            std::shared_ptr<taihe::callback<void(double, double)>> cacheCallback =
-                std::reinterpret_pointer_cast<taihe::callback<void(double, double)>>(func);
-            (*cacheCallback)(firstValueAsDouble, secondValueAsDouble);
+            std::shared_ptr<taihe::callback<void(int32_t, int32_t)>> cacheCallback =
+                std::reinterpret_pointer_cast<taihe::callback<void(int32_t, int32_t)>>(func);
+            (*cacheCallback)(valueVec[0], valueVec[1]);
         }
     };
     struct IntArray : public Base {
-        std::vector<double> valueVec;
+        std::vector<int32_t> valueVec;
         void UvWork() override
         {
             std::shared_ptr<AutoRef> intVecRef = callback.lock();
@@ -144,8 +190,8 @@ public:
                 "%{public}s AutoRef is nullptr", callbackName.c_str());
             auto func = intVecRef->callbackRef_;
             CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
-            std::shared_ptr<taihe::callback<void(array_view<double>)>> cacheCallback =
-                std::reinterpret_pointer_cast<taihe::callback<void(array_view<double>)>>(func);
+            std::shared_ptr<taihe::callback<void(array_view<int32_t>)>> cacheCallback =
+                std::reinterpret_pointer_cast<taihe::callback<void(array_view<int32_t>)>>(func);
             (*cacheCallback)(valueVec);
         }
     };
@@ -211,8 +257,8 @@ public:
             CHECK_AND_RETURN_LOG(trackChangeRef != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
             auto func = trackChangeRef->callbackRef_;
             CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
-            std::shared_ptr<taihe::callback<void(double, bool)>> cacheCallback =
-                std::reinterpret_pointer_cast<taihe::callback<void(double, bool)>>(func);
+            std::shared_ptr<taihe::callback<void(int32_t, bool)>> cacheCallback =
+                std::reinterpret_pointer_cast<taihe::callback<void(int32_t, bool)>>(func);
             (*cacheCallback)(number, isSelect);
         }
     };
@@ -251,7 +297,7 @@ public:
     };
 
     struct SeiInfoUpadte : public Base {
-        double playbackPosition;
+        int32_t playbackPosition;
         std::vector<Format> payloadGroup;
         void UvWork() override
         {
@@ -259,9 +305,9 @@ public:
             CHECK_AND_RETURN_LOG(seiInfoRef != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
             auto func = seiInfoRef->callbackRef_;
             CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
-            std::shared_ptr<taihe::callback<void(array_view<SeiMessage>, optional_view<double>)>> cacheCallback =
+            std::shared_ptr<taihe::callback<void(array_view<SeiMessage>, optional_view<int32_t>)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void(array_view<SeiMessage>,
-                    optional_view<double>)>>(func);
+                    optional_view<int32_t>)>>(func);
             std::vector<SeiMessage> seiMessages;
             for (const auto& format : payloadGroup) {
                 uint8_t* bufferData = nullptr;
@@ -283,10 +329,84 @@ public:
                 seiMessages.push_back(seiMessage);
             }
             array_view<SeiMessage> seiMessageView(seiMessages);
-            (*cacheCallback)(seiMessageView, optional_view<double>(&playbackPosition));
+            (*cacheCallback)(seiMessageView, optional_view<int32_t>(&playbackPosition));
+        }
+    };
+    struct PropertyInt : public Base {
+        std::map<std::string, int32_t> valueMap;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> propertyIntRef = callback.lock();
+            CHECK_AND_RETURN_LOG(propertyIntRef != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            auto func = propertyIntRef->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
+            std::shared_ptr<taihe::callback<void(ohos::multimedia::audio::InterruptEvent const&)>> cacheCallback =
+                std::reinterpret_pointer_cast<taihe::callback<void(
+                    ohos::multimedia::audio::InterruptEvent const&)>>(func);
+
+            ohos::multimedia::audio::InterruptType::key_t eventTypeKey;
+            MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::InterruptType>(interruptEvent_.eventType,
+                eventTypeKey);
+            valueMap["eventType"] = static_cast<int32_t>(eventTypeKey);
+
+            ohos::multimedia::audio::InterruptForceType::key_t forceTypeKey;
+            MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::InterruptForceType>(interruptEvent_.forceType,
+                forceTypeKey);
+
+            valueMap["forceType"] = static_cast<int32_t>(forceTypeKey);
+            ohos::multimedia::audio::InterruptHint::key_t hintTypeKey;
+            MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::InterruptHint>(interruptEvent_.hintType,
+                hintTypeKey);
+
+            valueMap["hintType"] = static_cast<int32_t>(hintTypeKey);
+
+            ohos::multimedia::audio::InterruptEvent interruptEvent = {
+                .eventType = ohos::multimedia::audio::InterruptType(static_cast<
+                    ohos::multimedia::audio::InterruptType::key_t>(valueMap["eventType"])),
+                .forceType = ohos::multimedia::audio::InterruptForceType(static_cast<
+                    ohos::multimedia::audio::InterruptForceType::key_t>(valueMap["forceType"])),
+                .hintType = ohos::multimedia::audio::InterruptHint(static_cast<
+                    ohos::multimedia::audio::InterruptHint::key_t>(valueMap["hintType"])),
+            };
+
+            (*cacheCallback)(interruptEvent);
         }
     };
 
+    struct DeviceChangeAni : public Base {
+        OHOS::AudioStandard::AudioDeviceDescriptor deviceInfo =
+            OHOS::AudioStandard::AudioDeviceDescriptor(OHOS::AudioStandard::AudioDeviceDescriptor::DEVICE_INFO);
+        int32_t reason;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> deviceChangeRef = callback.lock();
+            CHECK_AND_RETURN_LOG(deviceChangeRef != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            auto func = deviceChangeRef->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
+            std::shared_ptr<taihe::callback<void(ohos::multimedia::audio::AudioStreamDeviceChangeInfo const&)>>
+                cacheCallback = std::reinterpret_pointer_cast<
+                    taihe::callback<void(ohos::multimedia::audio::AudioStreamDeviceChangeInfo const&)>>(func);
+
+            std::vector<ohos::multimedia::audio::AudioDeviceDescriptor> audioDeviceDescriptor;
+            audioDeviceDescriptor.push_back(GetDeviceInfo(deviceInfo));
+
+            ohos::multimedia::audio::AudioStreamDeviceChangeReason::key_t changeReasonKey;
+            MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::AudioStreamDeviceChangeReason>(
+                reason, changeReasonKey);
+            ohos::multimedia::audio::AudioStreamDeviceChangeReason changeReason =
+                static_cast<ohos::multimedia::audio::AudioStreamDeviceChangeReason>(changeReasonKey);
+
+            ohos::multimedia::audio::AudioStreamDeviceChangeInfo audioStreamDeviceChangeInfo = {
+                array<ohos::multimedia::audio::AudioDeviceDescriptor>(audioDeviceDescriptor),
+                std::move(changeReason),
+            };
+
+            (*cacheCallback)(audioStreamDeviceChangeInfo);
+        }
+    };
     struct ObjectArray : public Base {
         std::multimap<std::string, std::vector<uint8_t>> infoMap;
         void UvWork() override
@@ -297,12 +417,17 @@ public:
 
             auto func = mapRef->callbackRef_;
             CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
-            std::shared_ptr<taihe::callback<void(uintptr_t)>> cacheCallback =
-                std::reinterpret_pointer_cast<taihe::callback<void(uintptr_t)>>(func);
-            ANI::Media::MediaKeySystemInfo mediaKeySystemInfo;
-            ani_object aniObject = MediaTaiheUtils::CreateMediaKeySystemInfo(get_env(), mediaKeySystemInfo);
-            uintptr_t objectArray = reinterpret_cast<uintptr_t>(&aniObject);
-            (*cacheCallback)(objectArray);
+            std::shared_ptr<taihe::callback<void(array_view<MediaKeySystemInfo> data)>> cacheCallback =
+                std::reinterpret_pointer_cast<taihe::callback<void(array_view<MediaKeySystemInfo> data)>>(func);
+            std::vector<MediaKeySystemInfo> infoArray;
+            for (auto item : infoMap) {
+                MediaKeySystemInfo info{
+                    item.first,
+                    array<uint8_t>(copy_data_t{}, item.second.data(), item.second.size())
+                };
+                infoArray.push_back(info);
+            }
+            (*cacheCallback)(array<MediaKeySystemInfo>(copy_data_t{}, infoArray.data(), infoArray.size()));
         }
     };
 
@@ -323,8 +448,8 @@ public:
                     (::ohos::multimedia::media::SubtitleInfo const&)>>(func);
             ::ohos::multimedia::media::SubtitleInfo subtitleInfo;
             subtitleInfo.text = ::taihe::optional<taihe::string>(std::in_place_t{}, valueMap.text);
-            subtitleInfo.startTime = taihe::optional<double>(std::in_place_t{}, valueMap.pts);
-            subtitleInfo.duration = taihe::optional<double>(std::in_place_t{}, valueMap.duration);
+            subtitleInfo.startTime = taihe::optional<int>(std::in_place_t{}, valueMap.pts);
+            subtitleInfo.duration = taihe::optional<int>(std::in_place_t{}, valueMap.duration);
             (*cacheCallback)(subtitleInfo);
         }
     };
@@ -429,6 +554,10 @@ AVPlayerCallback::AVPlayerCallback(AVPlayerNotify *listener)
             [this](const int32_t extra, const Format &infoBody) { OnSeiInfoCb(extra, infoBody); } },
         { INFO_TYPE_SUBTITLE_UPDATE_INFO,
             [this](const int32_t extra, const Format &infoBody) { OnSubtitleInfoCb(extra, infoBody); } },
+        { INFO_TYPE_INTERRUPT_EVENT,
+            [this](const int32_t extra, const Format &infoBody) { OnAudioInterruptCb(extra, infoBody); } },
+        { INFO_TYPE_AUDIO_DEVICE_CHANGE,
+            [this](const int32_t extra, const Format &infoBody) { OnAudioDeviceChangeCb(extra, infoBody); } },
     };
 }
 
@@ -709,7 +838,7 @@ void AVPlayerCallback::OnBitRateCollectedCb(const int32_t extra, const Format &i
         return;
     }
 
-    std::vector<double> bitrateVec;
+    std::vector<int32_t> bitrateVec;
     if (infoBody.ContainKey(std::string(PlayerKeys::PLAYER_AVAILABLE_BITRATES))) {
         uint8_t *addr = nullptr;
         size_t size  = 0;
@@ -726,7 +855,7 @@ void AVPlayerCallback::OnBitRateCollectedCb(const int32_t extra, const Format &i
             MEDIA_LOGI("bitrate = %{public}u", bitrate);
             addr += sizeof(uint32_t);
             size -= sizeof(uint32_t);
-            bitrateVec.push_back(static_cast<double>(bitrate));
+            bitrateVec.push_back(static_cast<int32_t>(bitrate));
         }
     }
 
@@ -1010,6 +1139,67 @@ void AVPlayerCallback::OnSubtitleInfoCb(const int32_t extra, const Format &infoB
     cb->valueMap.text = text;
     cb->valueMap.pts = pts;
     cb->valueMap.duration = duration;
+
+    AniCallback::CompleteCallback(cb, mainHandler_);
+}
+
+void AVPlayerCallback::OnAudioInterruptCb(const int32_t extra, const Format &infoBody)
+{
+    (void)extra;
+    CHECK_AND_RETURN_LOG(isLoaded_.load(), "current source is unready");
+    if (refMap_.find(AVPlayerEvent::EVENT_AUDIO_INTERRUPT) == refMap_.end()) {
+        MEDIA_LOGI("can not find audio interrupt callback!");
+        return;
+    }
+
+    AniCallback::PropertyInt *cb = new(std::nothrow) AniCallback::PropertyInt();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new PropertyInt");
+
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_AUDIO_INTERRUPT);
+    cb->callbackName = AVPlayerEvent::EVENT_AUDIO_INTERRUPT;
+    int32_t eventType = 0;
+    int32_t forceType = 0;
+    int32_t hintType = 0;
+    (void)infoBody.GetIntValue(PlayerKeys::AUDIO_INTERRUPT_TYPE, eventType);
+    (void)infoBody.GetIntValue(PlayerKeys::AUDIO_INTERRUPT_FORCE, forceType);
+    (void)infoBody.GetIntValue(PlayerKeys::AUDIO_INTERRUPT_HINT, hintType);
+    MEDIA_LOGI("OnAudioInterruptCb is called, eventType = %{public}d, forceType = %{public}d, hintType = %{public}d",
+        eventType, forceType, hintType);
+    // ohos.multimedia.audio.d.ts interface InterruptEvent
+    cb->valueMap["eventType"] = eventType;
+    cb->valueMap["forceType"] = forceType;
+    cb->valueMap["hintType"] = hintType;
+    AniCallback::CompleteCallback(cb, mainHandler_);
+}
+
+void AVPlayerCallback::OnAudioDeviceChangeCb(const int32_t extra, const Format &infoBody)
+{
+    (void)extra;
+    CHECK_AND_RETURN_LOG(isLoaded_.load(), "current source is unready");
+    if (refMap_.find(AVPlayerEvent::EVENT_AUDIO_DEVICE_CHANGE) == refMap_.end()) {
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " can not find audio AudioDeviceChange callback!", FAKE_POINTER(this));
+        return;
+    }
+
+    AniCallback::DeviceChangeAni *cb = new(std::nothrow) AniCallback::DeviceChangeAni();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new DeviceChangeTaihe");
+
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_AUDIO_DEVICE_CHANGE);
+    cb->callbackName = AVPlayerEvent::EVENT_AUDIO_DEVICE_CHANGE;
+
+    uint8_t *parcelBuffer = nullptr;
+    size_t parcelSize;
+    infoBody.GetBuffer(PlayerKeys::AUDIO_DEVICE_CHANGE, &parcelBuffer, parcelSize);
+    OHOS::Parcel parcel;
+    parcel.WriteBuffer(parcelBuffer, parcelSize);
+    OHOS::AudioStandard::AudioDeviceDescriptor deviceInfo(OHOS::AudioStandard::AudioDeviceDescriptor::DEVICE_INFO);
+    deviceInfo.Unmarshalling(parcel);
+
+    int32_t reason;
+    infoBody.GetIntValue(PlayerKeys::AUDIO_DEVICE_CHANGE_REASON, reason);
+
+    cb->deviceInfo = deviceInfo;
+    cb->reason = reason;
 
     AniCallback::CompleteCallback(cb, mainHandler_);
 }

@@ -37,9 +37,10 @@ public:
     optional<AVDataSrcDescriptor> GetDataSrc();
     void SetDataSrc(optional_view<AVDataSrcDescriptor> dataSrc);
     optional<AVMetadata> FetchMetadataSync();
+    ohos::multimedia::image::image::PixelMap FetchAlbumCoverSync();
     void ReleaseSync();
-    double GetFrameIndexByTimeSync(double timeUs);
-    double GetTimeByFrameIndexSync(double index);
+    int32_t GetFrameIndexByTimeSync(double timeUs);
+    double GetTimeByFrameIndexSync(int32_t index);
 private:
     std::shared_ptr<OHOS::Media::AVMetadataHelper> helper_;
     std::shared_ptr<OHOS::Media::HelperDataSourceCallback> dataSrcCb_ = nullptr;

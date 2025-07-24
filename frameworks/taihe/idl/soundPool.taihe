@@ -19,52 +19,58 @@
 import { BusinessError, ErrorCallback, AsyncCallback, Callback } from '@ohos.base';
 """)
 
+use ohos.multimedia.audio as audio;
+
 struct PlayParameters {
-  loop: Optional<f64>;
-  rate: Optional<f64>;
+  loop: Optional<i32>;
+  rate: Optional<i32>;
   leftVolume: Optional<f64>;
   rightVolume: Optional<f64>;
-  priority: Optional<f64>;
+  priority: Optional<i32>;
   parallelPlayFlag: Optional<bool>;
 }
 
 interface SoundPool {
     @gen_async("load")
     @gen_promise("load")
-    LoadSync(uri: String): f64;
+    LoadSync(uri: String): i32;
 
     @gen_async("load")
     @gen_promise("load")
-    LoadWithFdSync(fd: f64, offset: f64, length: f64): f64;
+    LoadWithFdSync(fd: i32, offset: f64, length: f64): i32;
 
     @gen_promise("play")
-    PlaySync(soundID: f64, params: Optional<PlayParameters>): f64;
+    PlaySync(soundID: i32, params: Optional<PlayParameters>): i32;
 
     @gen_async("play")
-    PlayWithoutParam(soundID: f64): f64;
+    PlayWithoutParam(soundID: i32): i32;
 
     @gen_async("play")
-    PlayWithParam(soundID: f64, params: PlayParameters): f64;
+    PlayWithParam(soundID: i32, params: PlayParameters): i32;
 
     @gen_async("stop")
     @gen_promise("stop")
-    StopSync(streamID: f64): void;
+    StopSync(streamID: i32): void;
 
     @gen_async("setLoop")
     @gen_promise("setLoop")
-    SetLoopSync(streamID: f64, loop: f64): void;
+    SetLoopSync(streamID: i32, loop: i32): void;
+
+    @gen_async("setRate")
+    @gen_promise("setRate")
+    SetRateSync(streamID: i32, rate: audio.AudioRendererRate): void;
 
     @gen_async("setPriority")
     @gen_promise("setPriority")
-    SetPrioritySync(streamID: f64, priority: f64): void;
+    SetPrioritySync(streamID: i32, priority: i32): void;
 
     @gen_async("setVolume")
     @gen_promise("setVolume")
-    SetVolumeSync(streamID: f64, leftVolume: f64, rightVolume: f64): void;
+    SetVolumeSync(streamID: i32, leftVolume: f64, rightVolume: f64): void;
 
     @gen_async("unload")
     @gen_promise("unload")
-    UnloadSync(soundID: f64): void;
+    UnloadSync(soundID: i32): void;
 
     @gen_async("release")
     @gen_promise("release")
@@ -73,11 +79,11 @@ interface SoundPool {
     @!sts_inject_into_interface("on(type: string, callback: (data: object)=> void): void;")
     @!sts_inject_into_class("""on(type: string, callback: object): void {
         if (type === "playFinishedWithStreamId") {
-            this.onPlayFinishedWithStreamId(callback as (data: double)=> void);
+            this.onPlayFinishedWithStreamId(callback as (data: int)=> void);
         } else if (type === "error") {
             this.onError(callback as (err: BusinessError<void>)=> void);
         } else if (type === "loadComplete") {
-            this.onLoadComplete(callback as (data: double)=> void);
+            this.onLoadComplete(callback as (data: int)=> void);
         } else if (type === "playFinished") {
             this.onPlayFinished(callback as (data: undefined)=> void);
         } else {
@@ -103,10 +109,10 @@ interface SoundPool {
     OnError(callback: (err: @sts_type("BusinessError<void>") Opaque)=> void): void;
     OffError(): void;
 
-    OnPlayFinishedWithStreamId(callback: (data: f64) => void): void;
+    OnPlayFinishedWithStreamId(callback: (data: i32) => void): void;
     OffPlayFinishedWithStreamId();
 
-    OnLoadComplete(callback: (data: f64) => void): void;
+    OnLoadComplete(callback: (data: i32) => void): void;
     OffLoadComplete();
 
     OnPlayFinished(callback: (data: @sts_type("undefined") Opaque) => void): void;

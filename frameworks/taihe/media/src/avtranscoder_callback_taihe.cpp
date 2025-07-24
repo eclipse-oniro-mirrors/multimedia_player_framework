@@ -165,9 +165,9 @@ void AVTransCoderCallback::OnTaiheProgressUpdateCallback(AVTransCoderTaiheCallba
 
         auto func = ref->callbackRef_;
         CHECK_AND_BREAK_LOG(func != nullptr, "failed to get callback");
-        std::shared_ptr<taihe::callback<void(double)>> cacheCallback =
-            std::reinterpret_pointer_cast<taihe::callback<void(double)>>(func);
-        (*cacheCallback)(static_cast<double>(taiheCb->progress));
+        std::shared_ptr<taihe::callback<void(int32_t)>> cacheCallback =
+            std::reinterpret_pointer_cast<taihe::callback<void(int32_t)>>(func);
+        (*cacheCallback)(static_cast<int32_t>(taiheCb->progress));
     } while (0);
     delete taiheCb;
 }

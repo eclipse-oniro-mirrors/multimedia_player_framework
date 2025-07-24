@@ -18,6 +18,7 @@
 #include "media_errors.h"
 #include "media_dfx.h"
 #include "fd_utils.h"
+#include "pixel_map_taihe.h"
 
 using namespace ANI::Media;
 
@@ -39,8 +40,8 @@ optional<AVFileDescriptor> AVImageGeneratorImpl::GetFdSrc()
     MEDIA_LOGI("GetFdSrc In");
     AVFileDescriptor fdSrc;
     fdSrc.fd = fileDescriptor_.fd;
-    fdSrc.offset = optional<double>(std::in_place_t{}, fileDescriptor_.offset);
-    fdSrc.length = optional<double>(std::in_place_t{}, fileDescriptor_.length);
+    fdSrc.offset = optional<int64_t>(std::in_place_t{}, fileDescriptor_.offset);
+    fdSrc.length = optional<int64_t>(std::in_place_t{}, fileDescriptor_.length);
     MEDIA_LOGI("GetFdSrc Out");
     return optional<AVFileDescriptor>(std::in_place_t{}, fdSrc);
 }
@@ -53,7 +54,7 @@ void AVImageGeneratorImpl::SetFdSrc(optional_view<AVFileDescriptor> fdSrc)
     CHECK_AND_RETURN_LOG(state_ == OHOS::Media::HelperState::HELPER_STATE_IDLE,
         "Has set source once, unsupport set again");
     CHECK_AND_RETURN_LOG(helper_ != nullptr, "Invalid AVImageGenerator.");
-    
+
     if (fdSrc.has_value()) {
         fileDescriptor_.fd = fdSrc.value().fd;
         if (fdSrc.value().offset.has_value()) {
@@ -78,6 +79,38 @@ void AVImageGeneratorImpl::SetFdSrc(optional_view<AVFileDescriptor> fdSrc)
         OHOS::Media::HelperState::HELPER_STATE_RUNNABLE : OHOS::Media::HelperState::HELPER_ERROR;
     MEDIA_LOGI("SetFdSrc Out");
     return;
+}
+
+::ohos::multimedia::image::image::PixelMap AVImageGeneratorImpl::FetchFrameByTimeSync(int64_t timeUs,
+    ::ohos::multimedia::media::AVImageQueryOptions options, ::ohos::multimedia::media::PixelMapParams const& param)
+{
+    OHOS::Media::MediaTrace trace("AVImageGeneratorTaihe::FetchFrameByTimeSync");
+    MEDIA_LOGI("FetchFrameByTimeSync  in");
+    AVImageGeneratorImpl *taihe = this;
+    if (taihe->state_ != OHOS::Media::HelperState::HELPER_STATE_RUNNABLE) {
+        set_business_error(OHOS::Media::MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "Current state is not runnable, can't fetchFrame.");
+    }
+    timeUs_ = timeUs;
+    option_ = options;
+    if (param.height.has_value() && param.width.has_value() && param.colorFormat.has_value()) {
+        param_.dstWidth = static_cast<int32_t>(param.width.value());
+        param_.dstHeight = static_cast<int32_t>(param.height.value());
+        OHOS::Media::PixelFormat colorFormat = OHOS::Media::PixelFormat::RGBA_8888;
+        int32_t formatVal = 3;
+        formatVal = static_cast<int32_t>(param.colorFormat.value());
+        colorFormat = static_cast<OHOS::Media::PixelFormat>(formatVal);
+        if (colorFormat != OHOS::Media::PixelFormat::RGB_565 && colorFormat !=
+            OHOS::Media::PixelFormat::RGB_888 &&
+            colorFormat != OHOS::Media::PixelFormat::RGBA_8888) {
+            set_business_error(OHOS::Media::MSERR_INVALID_VAL, "formatVal is invalid");
+        }
+        param_.colorFormat = colorFormat;
+    }
+
+    auto pixelMap = helper_->FetchFrameYuv(timeUs_, option_, param_);
+    pixel_ = pixelMap;
+    return Image::PixelMapImpl::CreatePixelMap(pixel_);
 }
 
 void AVImageGeneratorImpl::ReleaseSync()

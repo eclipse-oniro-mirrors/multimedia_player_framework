@@ -58,7 +58,7 @@ optional<map<string, string>> MediaSourceLoadingRequestImpl::GetHeader()
     return optional<map<string, string>>(std::in_place_t{}, taiheHeader);
 }
 
-optional<double> MediaSourceLoadingRequestImpl::RespondData(double uuid, double offset, array_view<uint8_t> buffer)
+optional<int32_t> MediaSourceLoadingRequestImpl::RespondData(double uuid, double offset, array_view<uint8_t> buffer)
 {
     MediaTrace trace("MediaSourceLoadingRequestTaihe::respondData");
     MEDIA_LOGI("respondData In");
@@ -67,12 +67,12 @@ optional<double> MediaSourceLoadingRequestImpl::RespondData(double uuid, double 
 
     auto bufferInner = std::make_shared<AVSharedMemoryBase>(static_cast<int32_t>(arrayBufferSize),
         AVSharedMemory::FLAGS_READ_WRITE, "userBuffer");
-    CHECK_AND_RETURN_RET_LOG(bufferInner != nullptr, optional<double>(std::nullopt), "get buffer fail");
+    CHECK_AND_RETURN_RET_LOG(bufferInner != nullptr, optional<int32_t>(std::nullopt), "get buffer fail");
     bufferInner->Init();
     bufferInner->Write(static_cast<uint8_t *>(arrayBuffer), arrayBufferSize);
     MEDIA_LOGI("respondData getSize: %{public}d", bufferInner->GetSize());
-    double res = request_->RespondData(uuid, offset, bufferInner);
-    return optional<double>(std::in_place_t{}, res);
+    int32_t res = request_->RespondData(uuid, offset, bufferInner);
+    return optional<int32_t>(std::in_place_t{}, res);
 }
 
 void MediaSourceLoadingRequestImpl::RespondHeader(double uuid, optional_view<map<string, string>> header,

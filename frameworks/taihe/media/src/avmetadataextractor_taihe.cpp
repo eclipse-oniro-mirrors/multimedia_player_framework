@@ -15,6 +15,7 @@
 
 #include "avmetadataextractor_taihe.h"
 #include "media_log.h"
+#include "pixel_map_taihe.h"
 #include "media_errors.h"
 #include "media_dfx.h"
 #include "image_source.h"
@@ -40,8 +41,8 @@ optional<AVFileDescriptor> AVMetadataExtractorImpl::GetFdSrc()
     MEDIA_LOGI("TaiheGetAVFileDescriptor In");
     AVFileDescriptor fdSrc;
     fdSrc.fd = fileDescriptor_.fd;
-    fdSrc.offset = optional<double>(std::in_place_t{}, fileDescriptor_.offset);
-    fdSrc.length = optional<double>(std::in_place_t{}, fileDescriptor_.length);
+    fdSrc.offset = optional<int64_t>(std::in_place_t{}, fileDescriptor_.offset);
+    fdSrc.length = optional<int64_t>(std::in_place_t{}, fileDescriptor_.length);
     MEDIA_LOGI("TaiheGetAVFileDescriptor Out");
     return optional<AVFileDescriptor>(std::in_place_t{}, fdSrc);
 }
@@ -84,7 +85,7 @@ optional<AVDataSrcDescriptor> AVMetadataExtractorImpl::GetDataSrc()
     MEDIA_LOGI("TaiheGetDataSrc In");
     CHECK_AND_RETURN_RET_LOG(dataSrcCb_ != nullptr,
         optional<AVDataSrcDescriptor>(std::nullopt), "failed to check dataSrcCb_");
-    
+
     int64_t fileSize;
     (void)dataSrcCb_->GetSize(fileSize);
     const std::string callbackName = "readAt";
@@ -92,7 +93,7 @@ optional<AVDataSrcDescriptor> AVMetadataExtractorImpl::GetDataSrc()
     int32_t ret = dataSrcCb_->GetCallback(callbackName, callback);
     CHECK_AND_RETURN_RET_LOG(ret == OHOS::Media::MSERR_OK,
         optional<AVDataSrcDescriptor>(std::nullopt), "failed to GetCallback");
-    
+
     auto cacheCallback = std::reinterpret_pointer_cast<OHOS::Media::DataSrcCallback>(callback);
     AVDataSrcDescriptor fdSrc = AVDataSrcDescriptor{std::move(fileSize), std::move(*cacheCallback)};
     MEDIA_LOGI("TaiheGetDataSrc Out");
@@ -286,6 +287,42 @@ optional<AVMetadataExtractor> CreateAVMetadataExtractorSync()
     return optional<AVMetadataExtractor>(std::in_place_t{}, res);
 }
 
+static std::unique_ptr<OHOS::Media::PixelMap> ConvertMemToPixelMap(
+    std::shared_ptr<OHOS::Media::AVSharedMemory> sharedMemory)
+{
+    CHECK_AND_RETURN_RET_LOG(sharedMemory != nullptr, nullptr, "SharedMem is nullptr");
+    MEDIA_LOGI("FetchArtPicture size: %{public}d", sharedMemory->GetSize());
+    OHOS::Media::SourceOptions sourceOptions;
+    uint32_t errorCode = 0;
+    std::unique_ptr<OHOS::Media::ImageSource> imageSource =
+        OHOS::Media::ImageSource::CreateImageSource(sharedMemory->GetBase(), sharedMemory->GetSize(),
+            sourceOptions, errorCode);
+    CHECK_AND_RETURN_RET_LOG(imageSource != nullptr, nullptr, "Failed to create imageSource.");
+    OHOS::Media::DecodeOptions decodeOptions;
+    std::unique_ptr<OHOS::Media::PixelMap> pixelMap = imageSource->CreatePixelMap(decodeOptions, errorCode);
+    CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Failed to decode imageSource");
+    return pixelMap;
+}
+
+ohos::multimedia::image::image::PixelMap AVMetadataExtractorImpl::FetchAlbumCoverSync()
+{
+    OHOS::Media::MediaTrace trace("AVMetadataExtractorTaihe::fetchArtPicture");
+    MEDIA_LOGI("TaiheFetchArtPicture In");
+
+    if (state_ != OHOS::Media::HelperState::HELPER_STATE_RUNNABLE) {
+        set_business_error(OHOS::Media::MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "Can't fetchAlbumCover, please set fdSrc or dataSrc.");
+    }
+
+    MEDIA_LOGI("TaiheFetchArtPicture task start");
+    auto sharedMemory = helper_->FetchArtPicture();
+    std::shared_ptr<OHOS::Media::PixelMap> artPicture = ConvertMemToPixelMap(sharedMemory);
+    if (artPicture == nullptr) {
+        set_business_error(OHOS::Media::MSERR_EXT_API9_UNSUPPORT_FORMAT, "Failed to fetchAlbumCover");
+    }
+    return Image::PixelMapImpl::CreatePixelMap(artPicture);
+}
+
 void AVMetadataExtractorImpl::ReleaseSync()
 {
     OHOS::Media::MediaTrace trace("AVMetadataExtractorTaihe::release");
@@ -300,7 +337,7 @@ void AVMetadataExtractorImpl::ReleaseSync()
     helper_->Release();
 }
 
-double AVMetadataExtractorImpl::GetFrameIndexByTimeSync(double timeUs)
+int32_t AVMetadataExtractorImpl::GetFrameIndexByTimeSync(double timeUs)
 {
     OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::GetFrameIndexByTimeSync");
     timeStamp_ = static_cast<uint64_t>(timeUs);
@@ -316,10 +353,10 @@ double AVMetadataExtractorImpl::GetFrameIndexByTimeSync(double timeUs)
         set_business_error(OHOS::Media::MSERR_EXT_API9_UNSUPPORT_FORMAT, "Demuxer getFrameIndexByTime failed.");
         return -1;
     }
-    return static_cast<double>(index_);
+    return static_cast<int32_t>(index_);
 }
 
-double AVMetadataExtractorImpl::GetTimeByFrameIndexSync(double index)
+double AVMetadataExtractorImpl::GetTimeByFrameIndexSync(int32_t index)
 {
     OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::GetTimeByFrameIndexSync");
     if (index < 0) {

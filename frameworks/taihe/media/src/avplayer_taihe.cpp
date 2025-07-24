@@ -18,6 +18,9 @@
 #include "media_errors.h"
 #include "media_taihe_utils.h"
 #include "media_dfx.h"
+#ifdef SUPPORT_AVPLAYER_DRM
+#include "key_session_taihe.h"
+#endif
 #ifdef SUPPORT_VIDEO
 #include "surface_utils.h"
 #endif
@@ -29,7 +32,7 @@
 #endif
 
 using namespace ANI::Media;
-using DataSrcCallback = taihe::callback<double(taihe::array_view<uint8_t>, double, taihe::optional_view<double>)>;
+using DataSrcCallback = taihe::callback<int32_t(taihe::array_view<uint8_t>, int64_t, taihe::optional_view<int64_t>)>;
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_METADATA, "AVPlayerTaihe"};
@@ -109,7 +112,60 @@ void AVPlayerImpl::SetUrl(optional_view<string> url)
     MEDIA_LOGI("0x%{public}06" PRIXPTR " SetUrl Out", FAKE_POINTER(this));
 }
 
-double AVPlayerImpl::GetWidth()
+optional<ohos::multimedia::audio::AudioEffectMode> AVPlayerImpl::GetAudioEffectMode()
+{
+    MediaTrace trace("AVPlayerImpl::GetAudioEffectMode");
+    MEDIA_LOGI("TaiheGetAudioEffectMode In");
+    ohos::multimedia::audio::AudioEffectMode::key_t audioEffectModeKey;
+    MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::AudioEffectMode>(audioEffectMode_, audioEffectModeKey);
+    ::ohos::multimedia::audio::AudioEffectMode changeReason =
+    static_cast<::ohos::multimedia::audio::AudioEffectMode>(audioEffectModeKey);
+    ::ohos::multimedia::audio::AudioEffectMode audioEffectMode = {
+        changeReason,
+    };
+
+    return optional<ohos::multimedia::audio::AudioEffectMode>(std::in_place_t{}, audioEffectMode);
+}
+
+void AVPlayerImpl::SetAudioEffectMode(optional_view<ohos::multimedia::audio::AudioEffectMode> audioEffectMode)
+{
+    MediaTrace trace("AVPlayerImpl::SetAudioEffectMode");
+    MEDIA_LOGI("TaiheSetAudioEffectMode In");
+
+    if (!IsControllable()) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed, unsupport audio effect mode operation");
+        return;
+    }
+    if (audioEffectMode.has_value()) {
+        int32_t effectMode = static_cast<int32_t>(audioEffectMode.value());
+        if (effectMode > OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT ||
+            effectMode < OHOS::AudioStandard::AudioEffectMode::EFFECT_NONE) {
+            OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
+                "invalid audioEffectMode, please check the input audio effect Mode");
+            return;
+        }
+        if (audioEffectMode_ == effectMode) {
+            MEDIA_LOGI("Same effectMode parameter");
+            return;
+        }
+        audioEffectMode_ = effectMode;
+        auto task = std::make_shared<TaskHandler<void>>([this, effectMode]() {
+            MEDIA_LOGI("TaiheSetAudioEffectMode Task in");
+            if (player_ != nullptr) {
+                Format format;
+                (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, effectMode);
+                (void)player_->SetParameter(format);
+            }
+            MEDIA_LOGI("TaiheSetAudioEffectMode Task out");
+        });
+        (void)taskQue_->EnqueueTask(task);
+    }
+    MEDIA_LOGI("TaiheSetAudioEffectMode Out");
+    return;
+}
+
+int32_t AVPlayerImpl::GetWidth()
 {
     MediaTrace trace("AVPlayerImpl::get width");
     MEDIA_LOGI("TaiheGetWidth");
@@ -122,7 +178,7 @@ double AVPlayerImpl::GetWidth()
     return width;
 }
 
-double AVPlayerImpl::GetHeight()
+int32_t AVPlayerImpl::GetHeight()
 {
     MediaTrace trace("AVPlayerImpl::get height");
     MEDIA_LOGI("TaiheGetHeight");
@@ -147,7 +203,7 @@ string AVPlayerImpl::GetState()
     return curState;
 }
 
-double AVPlayerImpl::GetDuration()
+int32_t AVPlayerImpl::GetDuration()
 {
     MediaTrace trace("AVPlayerImpl::get duration");
     MEDIA_LOGD("TaiheGetDuration In");
@@ -162,7 +218,7 @@ double AVPlayerImpl::GetDuration()
     return duration;
 }
 
-double AVPlayerImpl::GetCurrentTime()
+int32_t AVPlayerImpl::GetCurrentTime()
 {
     MediaTrace trace("AVPlayerImpl::get currentTime");
     MEDIA_LOGD("TaiheGetCurrentTime In");
@@ -214,6 +270,163 @@ void AVPlayerImpl::SetVolume(double volume)
     (void)taskQue_->EnqueueTask(task);
     MEDIA_LOGI("TaiheSetVolume Out");
     return;
+}
+
+optional<ohos::multimedia::audio::AudioRendererInfo> AVPlayerImpl::GetAudioRendererInfo()
+{
+    MediaTrace trace("AVPlayerImpl::get audioRendererInfo");
+    MEDIA_LOGI("TaiheGetAudioRendererInfo In");
+    ohos::multimedia::audio::StreamUsage::key_t streamUsageKey;
+    MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::StreamUsage>(audioRendererInfo_.streamUsage,
+        streamUsageKey);
+    ohos::multimedia::audio::StreamUsage streamUsage = ohos::multimedia::audio::StreamUsage(streamUsageKey);
+    int32_t rendererFlags = audioRendererInfo_.rendererFlags;
+    ohos::multimedia::audio::AudioVolumeMode::key_t volumeModeKey;
+    MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::AudioVolumeMode>(audioRendererInfo_.volumeMode,
+        volumeModeKey);
+    ohos::multimedia::audio::AudioVolumeMode volumeMode = ohos::multimedia::audio::AudioVolumeMode(volumeModeKey);
+
+    ohos::multimedia::audio::AudioRendererInfo result = {
+        std::move(streamUsage), std::move(rendererFlags),
+        optional<ohos::multimedia::audio::AudioVolumeMode>(std::in_place_t{}, volumeMode)
+    };
+    MEDIA_LOGI("GetAudioRendererInfo Out");
+
+    return optional<ohos::multimedia::audio::AudioRendererInfo>(std::in_place_t{}, result);
+}
+
+bool AVPlayerImpl::HandleParameter(ohos::multimedia::audio::AudioRendererInfo src,
+    OHOS::AudioStandard::AudioRendererInfo &audioRendererInfo)
+{
+    int32_t content = OHOS::AudioStandard::CONTENT_TYPE_UNKNOWN;
+    int32_t usage = -1;
+    int32_t rendererFlags = -1;
+    int32_t volumeMode = -1;
+    std::vector<int32_t> contents = {
+        OHOS::AudioStandard::CONTENT_TYPE_UNKNOWN, OHOS::AudioStandard::CONTENT_TYPE_SPEECH,
+        OHOS::AudioStandard::CONTENT_TYPE_MUSIC, OHOS::AudioStandard::CONTENT_TYPE_MOVIE,
+        OHOS::AudioStandard::CONTENT_TYPE_SONIFICATION, OHOS::AudioStandard::CONTENT_TYPE_RINGTONE
+    };
+    std::vector<int32_t> usages = {
+        OHOS::AudioStandard::STREAM_USAGE_UNKNOWN, OHOS::AudioStandard::STREAM_USAGE_MEDIA,
+        OHOS::AudioStandard::STREAM_USAGE_MUSIC, OHOS::AudioStandard::STREAM_USAGE_VOICE_COMMUNICATION,
+        OHOS::AudioStandard::STREAM_USAGE_VOICE_ASSISTANT, OHOS::AudioStandard::STREAM_USAGE_ALARM,
+        OHOS::AudioStandard::STREAM_USAGE_VOICE_MESSAGE, OHOS::AudioStandard::STREAM_USAGE_NOTIFICATION_RINGTONE,
+        OHOS::AudioStandard::STREAM_USAGE_RINGTONE, OHOS::AudioStandard::STREAM_USAGE_NOTIFICATION,
+        OHOS::AudioStandard::STREAM_USAGE_ACCESSIBILITY, OHOS::AudioStandard::STREAM_USAGE_SYSTEM,
+        OHOS::AudioStandard::STREAM_USAGE_MOVIE, OHOS::AudioStandard::STREAM_USAGE_GAME,
+        OHOS::AudioStandard::STREAM_USAGE_AUDIOBOOK, OHOS::AudioStandard::STREAM_USAGE_NAVIGATION,
+        OHOS::AudioStandard::STREAM_USAGE_DTMF, OHOS::AudioStandard::STREAM_USAGE_ENFORCED_TONE,
+        OHOS::AudioStandard::STREAM_USAGE_ULTRASONIC, OHOS::AudioStandard::STREAM_USAGE_VIDEO_COMMUNICATION
+    };
+    std::vector<int32_t> systemUsages = { OHOS::AudioStandard::STREAM_USAGE_VOICE_CALL_ASSISTANT };
+    usages.insert(usages.end(), systemUsages.begin(), systemUsages.end());
+
+    usage = src.usage.get_value();
+    rendererFlags = src.rendererFlags;
+    if (src.volumeMode.has_value()) {
+        volumeMode = src.volumeMode.value();
+    }
+
+    if (std::find(systemUsages.begin(), systemUsages.end(), usage) != systemUsages.end() && !IsSystemApp()) {
+        MEDIA_LOGI("The caller is not a system app, usage = %{public}d", usage);
+        return false;
+    }
+    if (std::find(contents.begin(), contents.end(), content) == contents.end() ||
+        std::find(usages.begin(), usages.end(), usage) == usages.end()) {
+        return false;
+    }
+
+    if (audioRendererInfo.contentType != content ||
+        audioRendererInfo.streamUsage != usage) {
+        audioEffectMode_ = OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT;
+    }
+
+    audioRendererInfo =  OHOS::AudioStandard::AudioRendererInfo {
+        static_cast< OHOS::AudioStandard::ContentType>(content),
+        static_cast< OHOS::AudioStandard::StreamUsage>(usage), rendererFlags,
+        static_cast< OHOS::AudioStandard::AudioVolumeMode>(volumeMode)
+    };
+    return true;
+}
+
+void AVPlayerImpl::SetAudioRendererInfo(optional_view<ohos::multimedia::audio::AudioRendererInfo> audioRendererInfo)
+{
+    MediaTrace trace("AVPlayerImpl::set audioRendererInfo");
+    MEDIA_LOGI("TaiheSetAudioRendererInfo In");
+
+    if (GetCurrentState() != AVPlayerState::STATE_INITIALIZED) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not initialized, unsupport to set audio renderer info");
+        return;
+    }
+
+    if (audioRendererInfo.has_value()) {
+        if (!HandleParameter(audioRendererInfo.value(), audioRendererInfo_)) {
+            set_business_error(MSERR_EXT_API9_INVALID_PARAMETER,
+                "invalid parameters, please check the input audio renderer info");
+            return;
+        }
+        auto task = std::make_shared<TaskHandler<void>>([this]() {
+            MEDIA_LOGI("SetAudioRendererInfo Task");
+            if (player_ != nullptr) {
+                Format format;
+                (void)format.PutIntValue(PlayerKeys::CONTENT_TYPE, audioRendererInfo_.contentType);
+                (void)format.PutIntValue(PlayerKeys::STREAM_USAGE, audioRendererInfo_.streamUsage);
+                (void)format.PutIntValue(PlayerKeys::RENDERER_FLAG, audioRendererInfo_.rendererFlags);
+                (void)format.PutIntValue(PlayerKeys::VOLUME_MODE, audioRendererInfo_.volumeMode);
+                (void)player_->SetParameter(format);
+            }
+        });
+        (void)taskQue_->EnqueueTask(task);
+    } else {
+        set_business_error(MSERR_EXT_API9_INVALID_PARAMETER,
+            "invalid parameters, please check the input");
+    }
+    MEDIA_LOGI("SetAudioRendererInfo Out");
+}
+
+optional<::ohos::multimedia::audio::InterruptMode> AVPlayerImpl::GetAudioInterruptMode()
+{
+    MediaTrace trace("AVPlayerImpl::get audioInterruptMode");
+    MEDIA_LOGI("TaiheGetAudioInterruptMode In");
+    ohos::multimedia::audio::InterruptMode::key_t interruptModeKey;
+    MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::InterruptMode>(interruptMode_, interruptModeKey);
+    ::ohos::multimedia::audio::InterruptMode changeReason =
+    static_cast<::ohos::multimedia::audio::InterruptMode>(interruptModeKey);
+    ::ohos::multimedia::audio::InterruptMode interruptMode = {
+        changeReason,
+    };
+
+    return optional<ohos::multimedia::audio::InterruptMode>(std::in_place_t{}, interruptMode);
+}
+
+void AVPlayerImpl::SetAudioInterruptMode(::ohos::multimedia::audio::InterruptMode audioInterruptMode)
+{
+    MediaTrace trace("AVPlayerImpl::set audioInterruptMode");
+    MEDIA_LOGI("TaiheSetAudioInterruptMode In");
+    if (!IsControllable()) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed, unsupport audio interrupt operation");
+        return;
+    }
+        int32_t interruptMode = audioInterruptMode;
+        if (interruptMode < OHOS::AudioStandard::InterruptMode::SHARE_MODE ||
+            interruptMode > OHOS::AudioStandard::InterruptMode::INDEPENDENT_MODE) {
+                OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
+                    "invalid parameters, please check the input interrupt Mode");
+                return;
+        }
+        interruptMode_ = static_cast<OHOS::AudioStandard::InterruptMode>(interruptMode);
+        auto task = std::make_shared<TaskHandler<void>>([this]() {
+            if (player_ != nullptr) {
+                Format format;
+                (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_MODE, interruptMode_);
+                (void)player_->SetParameter(format);
+            }
+        });
+        (void)taskQue_->EnqueueTask(task);
+        MEDIA_LOGI("TaiheSetAudioInterruptMode Out");
 }
 
 optional<AVDataSrcDescriptor> AVPlayerImpl::GetDataSrc()
@@ -423,8 +636,8 @@ optional<ohos::multimedia::media::AVFileDescriptor> AVPlayerImpl::GetFdSrc()
 
     ohos::multimedia::media::AVFileDescriptor fdSrc;
     fdSrc.fd = fileDescriptor_.fd;
-    fdSrc.offset = optional<double>(std::in_place_t{}, fileDescriptor_.offset);
-    fdSrc.length = optional<double>(std::in_place_t{}, fileDescriptor_.length);
+    fdSrc.offset = optional<int64_t>(std::in_place_t{}, fileDescriptor_.offset);
+    fdSrc.length = optional<int64_t>(std::in_place_t{}, fileDescriptor_.length);
     MEDIA_LOGI("TaiheGetAVFileDescriptor Out");
     return optional<ohos::multimedia::media::AVFileDescriptor>(std::in_place_t{}, fdSrc);
 }
@@ -547,7 +760,7 @@ void AVPlayerImpl::SeekEnqueueTask(AVPlayerImpl *taihePlayer, int32_t time, int3
     MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheSeek Out", FAKE_POINTER(taihePlayer));
 }
 
-void AVPlayerImpl::Seek(double timeMs, optional_view<SeekMode> mode)
+void AVPlayerImpl::Seek(int32_t timeMs, optional_view<SeekMode> mode)
 {
     MediaTrace trace("AVPlayerImpl::seek");
     MEDIA_LOGI("TaiheSeek in");
@@ -721,7 +934,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerImpl::StopTask()
     return task;
 }
 
-std::shared_ptr<AVMediaSource> AVPlayerImpl::GetAVMediaSource(weak::MediaSource src,
+std::shared_ptr<AVMediaSource> AVPlayerImpl::GetAVMediaSource(ohos::multimedia::media::weak::MediaSource src,
     std::shared_ptr<AVMediaSourceTmp> &srcTmp)
 {
     std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(srcTmp->url, srcTmp->header);
@@ -795,9 +1008,11 @@ void AVPlayerImpl::GetPlayStrategy(AVPlayStrategyTmp &playStrategy, PlaybackStra
     }
     if (strategy.preferredBufferDurationForPlaying.has_value()) {
         playStrategy.preferredBufferDurationForPlaying = strategy.preferredBufferDurationForPlaying.value();
+        playStrategy.isSetBufferDurationForPlaying = true;
     }
     if (strategy.thresholdForAutoQuickPlay.has_value()) {
         playStrategy.thresholdForAutoQuickPlay = strategy.thresholdForAutoQuickPlay.value();
+        playStrategy.isSetThresholdForAutoQuickPlay = true;
     }
 }
 
@@ -812,7 +1027,8 @@ void AVPlayerImpl::EnqueueMediaSourceTask(const std::shared_ptr<AVMediaSource> &
     (void)taskQue_->EnqueueTask(task);
 }
 
-void AVPlayerImpl::SetMediaSourceSync(weak::MediaSource src, optional_view<PlaybackStrategy> strategy)
+void AVPlayerImpl::SetMediaSourceSync(ohos::multimedia::media::weak::MediaSource src,
+    optional_view<PlaybackStrategy> strategy)
 {
     MediaTrace trace("AVPlayerImpl::setMediaSource");
     MEDIA_LOGI("SetMediaSourceSync In");
@@ -848,7 +1064,7 @@ void AVPlayerImpl::SetMediaSourceSync(weak::MediaSource src, optional_view<Playb
     EnqueueMediaSourceTask(mediaSource, strategyRes);
 }
 
-void AVPlayerImpl::AddSubtitleFromFdSync(double fd, optional_view<double> offset, optional_view<double> length)
+void AVPlayerImpl::AddSubtitleFromFdSync(int32_t fd, optional_view<int64_t> offset, optional_view<int64_t> length)
 {
     MEDIA_LOGI("AddSubtitleAVFileDescriptor In");
     int64_t offsetLocal = -1;
@@ -935,7 +1151,7 @@ map<string, PlaybackInfoValue> AVPlayerImpl::GetPlaybackInfoSync()
     return MediaTaiheUtils::CreateFormatBufferByRef(playbackInfo);
 }
 
-void AVPlayerImpl::DeselectTrackSync(double index)
+void AVPlayerImpl::DeselectTrackSync(int32_t index)
 {
     MediaTrace trace("AVPlayerImpl::deselectTrack");
     MEDIA_LOGI("deselectTrack In");
@@ -959,7 +1175,7 @@ void AVPlayerImpl::DeselectTrackSync(double index)
     MEDIA_LOGI("deselectTrack Out");
 }
 
-void AVPlayerImpl::SelectTrackSync(double index, optional_view<SwitchMode> mode)
+void AVPlayerImpl::SelectTrackSync(int32_t index, optional_view<SwitchMode> mode)
 {
     MediaTrace trace("AVPlayerImpl::selectTrack");
     MEDIA_LOGI("SelectTrack In");
@@ -968,7 +1184,7 @@ void AVPlayerImpl::SelectTrackSync(double index, optional_view<SwitchMode> mode)
             "current state is not prepared/playing/paused/completed, unsupport selectTrack operation");
         return;
     }
-    
+
     HandleSelectTrack(index, mode);
 
     auto task = std::make_shared<TaskHandler<void>>([this, index = index_, mode = mode_]() {
@@ -1024,7 +1240,7 @@ PlayerSwitchMode AVPlayerImpl::TransferSwitchMode(int32_t mode)
     return switchMode;
 }
 
-array<double> AVPlayerImpl::GetSelectedTracksSync()
+array<int32_t> AVPlayerImpl::GetSelectedTracksSync()
 {
     MediaTrace trace("AVPlayerImpl::get selected tracks");
     MEDIA_LOGI("TaiheGetSelectedTracks In");
@@ -1052,10 +1268,10 @@ array<double> AVPlayerImpl::GetSelectedTracksSync()
             "current state unsupport get current selections");
     }
     MEDIA_LOGI("TaiheGetSelectedTracks Out");
-    return array<double>(copy_data_t{}, trackIndex.data(), trackIndex.size());
+    return array<int32_t>(copy_data_t{}, trackIndex.data(), trackIndex.size());
 }
 
-void AVPlayerImpl::SetVideoWindowSizeSync(double width, double height)
+void AVPlayerImpl::SetVideoWindowSizeSync(int32_t width, int32_t height)
 {
     MediaTrace trace("AVPlayerImpl::setVideoWindowSize");
     MEDIA_LOGI("TaiheSetVideoWindowSize In");
@@ -1142,7 +1358,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerImpl::SetSuperResolutionTask(bool 
     return task;
 }
 
-double AVPlayerImpl::GetPlaybackPosition()
+int32_t AVPlayerImpl::GetPlaybackPosition()
 {
     MediaTrace trace("AVPlayerImpl::get playbackPosition");
     MEDIA_LOGD("getPlaybackPosition In");
@@ -1165,7 +1381,7 @@ double AVPlayerImpl::GetPlaybackPosition()
     return playbackPosition;
 }
 
-void AVPlayerImpl::SetBitrate(double bitrate)
+void AVPlayerImpl::SetBitrate(int32_t bitrate)
 {
     MediaTrace trace("AVPlayerImpl::setBitrate");
     MEDIA_LOGI("SelectBitrate In");
@@ -1190,7 +1406,7 @@ void AVPlayerImpl::SetBitrate(double bitrate)
     MEDIA_LOGI("0x%{public}06" PRIXPTR " SelectBitrate Out", FAKE_POINTER(this));
 }
 
-void AVPlayerImpl::SetPlaybackRangeSync(double startTimeMs, double endTimeMs,
+void AVPlayerImpl::SetPlaybackRangeSync(int32_t startTimeMs, int32_t endTimeMs,
     optional_view<::ohos::multimedia::media::SeekMode> mode)
 {
     MediaTrace trace("AVPlayerImpl::setPlaybackRange");
@@ -1215,6 +1431,57 @@ void AVPlayerImpl::SetPlaybackRangeSync(double startTimeMs, double endTimeMs,
     }
     promiseCtx->CheckTaskResult();
     MEDIA_LOGI("0x%{public}06" PRIXPTR " taiheSetPlaybackRange Out", FAKE_POINTER(this));
+}
+
+#ifdef SUPPORT_AVPLAYER_DRM
+void AVPlayerImpl::SetDecryptionConfig(ohos::multimedia::drm::weak::MediaKeySession mediaKeySession,
+    bool secureVideoPath)
+{
+    MediaTrace trace("AVPlayerImpl::SetDecryptionConfig");
+    MEDIA_LOGI("SetDecryptionConfig In");
+    OHOS::DrmStandard::MediaKeySessionImpl* keySessionImpl =
+        reinterpret_cast<OHOS::DrmStandard::MediaKeySessionImpl*>(mediaKeySession->GetMediaKeySessionNative());
+    if (keySessionImpl != nullptr) {
+        OHOS::sptr<OHOS::DrmStandard::IMediaKeySessionService> keySessionServiceProxy =
+            keySessionImpl->GetMediaKeySessionServiceProxy();
+        MEDIA_LOGD("And it's count is: %{public}d", keySessionServiceProxy->GetSptrRefCount());
+        {
+            std::lock_guard<std::mutex> lock(syncMutex_);
+            CHECK_AND_RETURN_LOG((player_ != nullptr), "SetDecryptConfig player_ nullptr");
+            (void)player_->SetDecryptConfig(keySessionServiceProxy, secureVideoPath);
+        }
+    } else {
+        MEDIA_LOGE("SetDecryptConfig keySessionImpl is nullptr!");
+    }
+}
+#else
+void AVPlayerImpl::SetDecryptionConfig(weak::MediaKeySession mediaKeySession, bool secureVideoPath)
+{
+    MEDIA_LOGI("SetDecryptConfig is not surpport.");
+    (void)mediaKeySession;
+    (void)secureVideoPath;
+    return nullptr;
+}
+#endif
+
+array<MediaKeySystemInfo> AVPlayerImpl::GetMediaKeySystemInfos()
+{
+    MediaTrace trace("AVPlayerImpl::GetMediaKeySystemInfos");
+    std::vector<MediaKeySystemInfo> infoArray;
+    
+    MEDIA_LOGI("GetMediaKeySystemInfos In");
+
+    CHECK_AND_RETURN_RET_LOG(!localDrmInfos_.empty(), array<MediaKeySystemInfo>(copy_data_t{},
+        infoArray.data(), infoArray.size()), "localDrmInfo is empty");
+
+    for (auto item : localDrmInfos_) {
+        MediaKeySystemInfo info{
+            item.first,
+            array<uint8_t>(copy_data_t{}, item.second.data(), item.second.size())
+        };
+        infoArray.push_back(info);
+    }
+    return array<MediaKeySystemInfo>(copy_data_t{}, infoArray.data(), infoArray.size());
 }
 
 std::shared_ptr<TaskHandler<TaskRet>> AVPlayerImpl::EqueueSetPlayRangeTask(int32_t start, int32_t end, int32_t mode)
@@ -1773,6 +2040,26 @@ void AVPlayerImpl::OnError(callback_view<void(uintptr_t)> callback)
     return;
 }
 
+void AVPlayerImpl::OnMediaKeySystemInfoUpdate(callback_view<void(array_view<MediaKeySystemInfo> data)> callback)
+{
+    MediaTrace trace("AVPlayerImpl::OnMediaKeySystemInfoUpdate");
+    MEDIA_LOGD("TaiheOnMediaKeySystemInfoUpdate In");
+    
+    if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to on event");
+        return;
+    }
+    ani_env *env = taihe::get_env();
+    std::shared_ptr<taihe::callback<void(array_view<MediaKeySystemInfo> data)>> taiheCallback =
+        std::make_shared<taihe::callback<void(array_view<MediaKeySystemInfo> data)>>(callback);
+    std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
+    std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
+    SaveCallbackReference(AVPlayerEvent::EVENT_DRM_INFO_UPDATE, autoRef);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR
+        " TaiheOnMediaKeySystemInfoUpdate callbackName: mediaKeySystemInfoUpdate success", FAKE_POINTER(this));
+    return;
+}
+
 void AVPlayerImpl::OnStateChange(callback_view<void(string_view, ohos::multimedia::media::StateChangeReason)> callback)
 {
     MediaTrace trace("AVPlayerImpl::OnStateChange");
@@ -1791,24 +2078,43 @@ void AVPlayerImpl::OnStateChange(callback_view<void(string_view, ohos::multimedi
     return;
 }
 
-void AVPlayerImpl::OnMediaKeySystemInfoUpdate(callback_view<void(uintptr_t)> callback)
+void AVPlayerImpl::OnAudioInterrupt(callback_view<void(::ohos::multimedia::audio::InterruptEvent const&)> callback)
 {
-    MediaTrace trace("AVPlayerImpl::OnMediaKeySystemInfoUpdate");
-    MEDIA_LOGD("OnMediaKeySystemInfoUpdate In");
+    MediaTrace trace("AVPlayerImpl::OnAudioInterrupt");
+    MEDIA_LOGD("TaiheOnAudioInterrupt In");
 
     if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
         OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to on event");
         return;
     }
-
     ani_env *env = taihe::get_env();
-    std::shared_ptr<taihe::callback<void(uintptr_t)>> taiheCallback =
-            std::make_shared<taihe::callback<void(uintptr_t)>>(callback);
+    std::shared_ptr<taihe::callback<void(::ohos::multimedia::audio::InterruptEvent const&)>> taiheCallback =
+            std::make_shared<taihe::callback<void(::ohos::multimedia::audio::InterruptEvent const&)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
-    SaveCallbackReference(AVPlayerEvent::EVENT_DRM_INFO_UPDATE, autoRef);
+    SaveCallbackReference(AVPlayerEvent::EVENT_AUDIO_INTERRUPT, autoRef);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheOnAudioInterrupt callbackName: audioInterrupt success",
+        FAKE_POINTER(this));
+    return;
+}
+void AVPlayerImpl::OnAudioOutputDeviceChangeWithInfo(callback_view<void(
+    ::ohos::multimedia::audio::AudioStreamDeviceChangeInfo const&)> callback)
+{
+    MediaTrace trace("AVPlayerImpl::OnAudioOutputDeviceChangeWithInfo");
+    MEDIA_LOGD("TaiheOnAudioOutputDeviceChangeWithInfo In");
+
+    if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to on event");
+        return;
+    }
+    ani_env *env = taihe::get_env();
+    std::shared_ptr<taihe::callback<void(ohos::multimedia::audio::AudioStreamDeviceChangeInfo const&)>> taiheCallback =
+        std::make_shared<taihe::callback<void(ohos::multimedia::audio::AudioStreamDeviceChangeInfo const&)>>(callback);
+    std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
+    std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
+    SaveCallbackReference(AVPlayerEvent::EVENT_AUDIO_DEVICE_CHANGE, autoRef);
     MEDIA_LOGI("0x%{public}06" PRIXPTR
-        " TaiheOnMediaKeySystemInfoUpdate callbackName: mediaKeySystemInfoUpdate success", FAKE_POINTER(this));
+        " TaiheOnAudioOutputDeviceChangeWithInfo callbackName: audioOutputDeviceChange success", FAKE_POINTER(this));
     return;
 }
 
@@ -1850,7 +2156,7 @@ void AVPlayerImpl::OnStartRenderFrame(callback_view<void(uintptr_t)> callback)
     return;
 }
 
-void AVPlayerImpl::OnSeekDone(callback_view<void(double)> callback)
+void AVPlayerImpl::OnSeekDone(callback_view<void(int32_t)> callback)
 {
     MediaTrace trace("AVPlayerImpl::OnSeekDone");
     MEDIA_LOGD("TaiheOnSeekDone In");
@@ -1860,8 +2166,8 @@ void AVPlayerImpl::OnSeekDone(callback_view<void(double)> callback)
         return;
     }
     ani_env *env = taihe::get_env();
-    std::shared_ptr<taihe::callback<void(double)>> taiheCallback =
-            std::make_shared<taihe::callback<void(double)>>(callback);
+    std::shared_ptr<taihe::callback<void(int32_t)>> taiheCallback =
+            std::make_shared<taihe::callback<void(int32_t)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SaveCallbackReference(AVPlayerEvent::EVENT_SEEK_DONE, autoRef);
@@ -1869,7 +2175,7 @@ void AVPlayerImpl::OnSeekDone(callback_view<void(double)> callback)
     return;
 }
 
-void AVPlayerImpl::OnDurationUpdate(callback_view<void(double)> callback)
+void AVPlayerImpl::OnDurationUpdate(callback_view<void(int32_t)> callback)
 {
     MediaTrace trace("AVPlayerImpl::OnDurationUpdate");
     MEDIA_LOGD("TaiheOnDurationUpdate In");
@@ -1879,8 +2185,8 @@ void AVPlayerImpl::OnDurationUpdate(callback_view<void(double)> callback)
         return;
     }
     ani_env *env = taihe::get_env();
-    std::shared_ptr<taihe::callback<void(double)>> taiheCallback =
-            std::make_shared<taihe::callback<void(double)>>(callback);
+    std::shared_ptr<taihe::callback<void(int32_t)>> taiheCallback =
+            std::make_shared<taihe::callback<void(int32_t)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SaveCallbackReference(AVPlayerEvent::EVENT_DURATION_UPDATE, autoRef);
@@ -1889,7 +2195,7 @@ void AVPlayerImpl::OnDurationUpdate(callback_view<void(double)> callback)
     return;
 }
 
-void AVPlayerImpl::OnTimeUpdate(callback_view<void(double)> callback)
+void AVPlayerImpl::OnTimeUpdate(callback_view<void(int32_t)> callback)
 {
     MediaTrace trace("AVPlayerImpl::OnTimeUpdate");
     MEDIA_LOGD("TaiheOnTimeUpdate In");
@@ -1899,8 +2205,8 @@ void AVPlayerImpl::OnTimeUpdate(callback_view<void(double)> callback)
         return;
     }
     ani_env *env = taihe::get_env();
-    std::shared_ptr<taihe::callback<void(double)>> taiheCallback =
-            std::make_shared<taihe::callback<void(double)>>(callback);
+    std::shared_ptr<taihe::callback<void(int32_t)>> taiheCallback =
+            std::make_shared<taihe::callback<void(int32_t)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SaveCallbackReference(AVPlayerEvent::EVENT_TIME_UPDATE, autoRef);
@@ -1927,7 +2233,7 @@ void AVPlayerImpl::OnVolumeChange(callback_view<void(double)> callback)
     return;
 }
 
-void AVPlayerImpl::OnSpeedDone(callback_view<void(double)> callback)
+void AVPlayerImpl::OnSpeedDone(callback_view<void(int32_t)> callback)
 {
     MediaTrace trace("AVPlayerImpl::OnSpeedDone");
     MEDIA_LOGD("TaiheOnSpeedDone In");
@@ -1937,8 +2243,8 @@ void AVPlayerImpl::OnSpeedDone(callback_view<void(double)> callback)
         return;
     }
     ani_env *env = taihe::get_env();
-    std::shared_ptr<taihe::callback<void(double)>> taiheCallback =
-            std::make_shared<taihe::callback<void(double)>>(callback);
+    std::shared_ptr<taihe::callback<void(int32_t)>> taiheCallback =
+            std::make_shared<taihe::callback<void(int32_t)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SaveCallbackReference(AVPlayerEvent::EVENT_SPEED_DONE, autoRef);
@@ -1946,7 +2252,7 @@ void AVPlayerImpl::OnSpeedDone(callback_view<void(double)> callback)
     return;
 }
 
-void AVPlayerImpl::OnBitrateDone(callback_view<void(double)> callback)
+void AVPlayerImpl::OnBitrateDone(callback_view<void(int32_t)> callback)
 {
     MediaTrace trace("AVPlayerImpl::OnBitrateDone");
     MEDIA_LOGD("TaiheOnBitrateDone In");
@@ -1956,8 +2262,8 @@ void AVPlayerImpl::OnBitrateDone(callback_view<void(double)> callback)
         return;
     }
     ani_env *env = taihe::get_env();
-    std::shared_ptr<taihe::callback<void(double)>> taiheCallback =
-            std::make_shared<taihe::callback<void(double)>>(callback);
+    std::shared_ptr<taihe::callback<void(int32_t)>> taiheCallback =
+            std::make_shared<taihe::callback<void(int32_t)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SaveCallbackReference(AVPlayerEvent::EVENT_BITRATE_DONE, autoRef);
@@ -1965,7 +2271,7 @@ void AVPlayerImpl::OnBitrateDone(callback_view<void(double)> callback)
     return;
 }
 
-void AVPlayerImpl::OnAvailableBitrates(callback_view<void(array_view<double>)> callback)
+void AVPlayerImpl::OnAvailableBitrates(callback_view<void(array_view<int32_t>)> callback)
 {
     MediaTrace trace("AVPlayerImpl::OnBitrateDone");
     MEDIA_LOGD("TaiheOnBitrateDone In");
@@ -1975,8 +2281,8 @@ void AVPlayerImpl::OnAvailableBitrates(callback_view<void(array_view<double>)> c
         return;
     }
     ani_env *env = taihe::get_env();
-    std::shared_ptr<taihe::callback<void(array_view<double>)>> taiheCallback =
-            std::make_shared<taihe::callback<void(array_view<double>)>>(callback);
+    std::shared_ptr<taihe::callback<void(array_view<int32_t>)>> taiheCallback =
+            std::make_shared<taihe::callback<void(array_view<int32_t>)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SaveCallbackReference(AVPlayerEvent::EVENT_AVAILABLE_BITRATES, autoRef);
@@ -1993,6 +2299,10 @@ void AVPlayerImpl::OnAmplitudeUpdate(callback_view<void(array_view<double>)> cal
         OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to on event");
         return;
     }
+    calMaxAmplitude_ = true;
+    if (player_ != nullptr) {
+        (void)player_->SetMaxAmplitudeCbStatus(calMaxAmplitude_);
+    }
     ani_env *env = taihe::get_env();
     std::shared_ptr<taihe::callback<void(array_view<double>)>> taiheCallback =
             std::make_shared<taihe::callback<void(array_view<double>)>>(callback);
@@ -2004,14 +2314,18 @@ void AVPlayerImpl::OnAmplitudeUpdate(callback_view<void(array_view<double>)> cal
     return;
 }
 
-void AVPlayerImpl::OnBufferingUpdate(callback_view<void(ohos::multimedia::media::BufferingInfoType, double)> callback)
+void AVPlayerImpl::OnBufferingUpdate(callback_view<void(ohos::multimedia::media::BufferingInfoType, int32_t)> callback)
 {
     MediaTrace trace("AVPlayerImpl::OnBufferingUpdate");
     MEDIA_LOGD("TaiheOnBufferingUpdate In");
 
+    if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to on event");
+        return;
+    }
     ani_env *env = taihe::get_env();
-    std::shared_ptr<taihe::callback<void(ohos::multimedia::media::BufferingInfoType, double)>> taiheCallback =
-            std::make_shared<taihe::callback<void(ohos::multimedia::media::BufferingInfoType, double)>>(callback);
+    std::shared_ptr<taihe::callback<void(ohos::multimedia::media::BufferingInfoType, int32_t)>> taiheCallback =
+            std::make_shared<taihe::callback<void(ohos::multimedia::media::BufferingInfoType, int32_t)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SaveCallbackReference(AVPlayerEvent::EVENT_BUFFERING_UPDATE, autoRef);
@@ -2020,7 +2334,7 @@ void AVPlayerImpl::OnBufferingUpdate(callback_view<void(ohos::multimedia::media:
     return;
 }
 
-void AVPlayerImpl::OnVideoSizeChange(callback_view<void(double, double)> callback)
+void AVPlayerImpl::OnVideoSizeChange(callback_view<void(int32_t, int32_t)> callback)
 {
     MediaTrace trace("AVPlayerImpl::OnVideoSizeChange");
     MEDIA_LOGD("TaiheOnVideoSizeChange In");
@@ -2030,8 +2344,8 @@ void AVPlayerImpl::OnVideoSizeChange(callback_view<void(double, double)> callbac
         return;
     }
     ani_env *env = taihe::get_env();
-    std::shared_ptr<taihe::callback<void(double, double)>> taiheCallback =
-            std::make_shared<taihe::callback<void(double, double)>>(callback);
+    std::shared_ptr<taihe::callback<void(int32_t, int32_t)>> taiheCallback =
+            std::make_shared<taihe::callback<void(int32_t, int32_t)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SaveCallbackReference(AVPlayerEvent::EVENT_VIDEO_SIZE_CHANGE, autoRef);
@@ -2040,7 +2354,7 @@ void AVPlayerImpl::OnVideoSizeChange(callback_view<void(double, double)> callbac
     return;
 }
 
-void AVPlayerImpl::OnTrackChange(callback_view<void(double, bool)> callback)
+void AVPlayerImpl::OnTrackChange(callback_view<void(int32_t, bool)> callback)
 {
     MediaTrace trace("AVPlayerImpl::OnTrackChange");
     MEDIA_LOGD("TaiheOnTrackChange In");
@@ -2050,8 +2364,8 @@ void AVPlayerImpl::OnTrackChange(callback_view<void(double, bool)> callback)
         return;
     }
     ani_env *env = taihe::get_env();
-    std::shared_ptr<taihe::callback<void(double, bool)>> taiheCallback =
-            std::make_shared<taihe::callback<void(double, bool)>>(callback);
+    std::shared_ptr<taihe::callback<void(int32_t, bool)>> taiheCallback =
+            std::make_shared<taihe::callback<void(int32_t, bool)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SaveCallbackReference(AVPlayerEvent::EVENT_TRACKCHANGE, autoRef);
@@ -2064,6 +2378,10 @@ void AVPlayerImpl::OnSubtitleUpdate(callback_view<void(::ohos::multimedia::media
     MediaTrace trace("AVPlayerImpl::OnSubtitleUpdate");
     MEDIA_LOGD("TaiheOnSubtitleUpdate In");
 
+    if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to on event");
+        return;
+    }
     ani_env *env = taihe::get_env();
     std::shared_ptr<taihe::callback<void(::ohos::multimedia::media::SubtitleInfo const&)>> taiheCallback =
             std::make_shared<taihe::callback<void(::ohos::multimedia::media::SubtitleInfo const&)>>(callback);
@@ -2116,8 +2434,8 @@ void AVPlayerImpl::OnTrackInfoUpdate(callback_view<void(array_view<map<string, M
     return;
 }
 
-void AVPlayerImpl::OnSeiMessageReceived(array_view<double> payloadTypes,
-    callback_view<void(array_view<SeiMessage>, optional_view<double>)> callback)
+void AVPlayerImpl::OnSeiMessageReceived(array_view<int32_t> payloadTypes,
+    callback_view<void(array_view<SeiMessage>, optional_view<int32_t>)> callback)
 {
     MediaTrace trace("AVPlayerImpl::OnSeiMessageReceived");
     MEDIA_LOGD("TaiheOnSeiMessageReceived In");
@@ -2126,9 +2444,9 @@ void AVPlayerImpl::OnSeiMessageReceived(array_view<double> payloadTypes,
         OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to on event");
         return;
     }
-    bool seiMessageCallbackflag_ = true;
+    seiMessageCallbackflag_ = true;
 
-    if (player_ != nullptr && seiMessageCallbackflag_) {
+    if (player_ != nullptr) {
         MEDIA_LOGI("seiMessageCallbackflag_ = %{public}d", seiMessageCallbackflag_);
         std::vector<int32_t> payloadTypesInt;
         payloadTypesInt.reserve(payloadTypes.size());
@@ -2138,8 +2456,8 @@ void AVPlayerImpl::OnSeiMessageReceived(array_view<double> payloadTypes,
         player_->SetSeiMessageCbStatus(seiMessageCallbackflag_, payloadTypesInt);
     }
     ani_env *env = taihe::get_env();
-    std::shared_ptr<taihe::callback<void(array_view<SeiMessage>, optional_view<double>)>> taiheCallback =
-            std::make_shared<taihe::callback<void(array_view<SeiMessage>, optional_view<double>)>>(callback);
+    std::shared_ptr<taihe::callback<void(array_view<SeiMessage>, optional_view<int32_t>)>> taiheCallback =
+            std::make_shared<taihe::callback<void(array_view<SeiMessage>, optional_view<int32_t>)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SaveCallbackReference(AVPlayerEvent::EVENT_SEI_MESSAGE_INFO, autoRef);
@@ -2162,6 +2480,22 @@ void AVPlayerImpl::OffError(optional_view<callback<void(uintptr_t)>> callback)
     MEDIA_LOGI("OffError End");
 }
 
+void AVPlayerImpl::OffMediaKeySystemInfoUpdate(optional_view<callback<void(
+    array_view<MediaKeySystemInfo> data)>> callback)
+{
+    MediaTrace trace("AVPlayerImpl::OffMediaKeySystemInfoUpdate");
+    MEDIA_LOGD("OffMediaKeySystemInfoUpdate In");
+
+    if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        return;
+    }
+
+    std::string callbackName = "mediaKeySystemInfoUpdate";
+    MaxAmplitudeCallbackOff(callbackName);
+    ClearCallbackReference(callbackName);
+    MEDIA_LOGI("OffMediaKeySystemInfoUpdate End");
+}
+
 void AVPlayerImpl::OffStateChange(optional_view<callback<void(string_view,
     ohos::multimedia::media::StateChangeReason)>> callback)
 {
@@ -2178,19 +2512,36 @@ void AVPlayerImpl::OffStateChange(optional_view<callback<void(string_view,
     MEDIA_LOGI("OffStateChange End");
 }
 
-void AVPlayerImpl::OffMediaKeySystemInfoUpdate(optional_view<callback<void(uintptr_t)>> callback)
+void AVPlayerImpl::OffAudioInterrupt(optional_view<callback<void(
+    ::ohos::multimedia::audio::InterruptEvent const&)>> callback)
 {
-    MediaTrace trace("AVPlayerImpl::OffMediaKeySystemInfoUpdate");
-    MEDIA_LOGD("OffMediaKeySystemInfoUpdate In");
+    MediaTrace trace("AVPlayerImpl::OffAudioInterrupt");
+    MEDIA_LOGD("OffAudioInterrupt In");
 
     if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
         return;
     }
 
-    std::string callbackName = "mediaKeySystemInfoUpdate";
+    std::string callbackName = "audioInterrupt";
     MaxAmplitudeCallbackOff(callbackName);
     ClearCallbackReference(callbackName);
-    MEDIA_LOGI("OffMediaKeySystemInfoUpdate End");
+    MEDIA_LOGI("OffAudioInterrupt End");
+}
+
+void AVPlayerImpl::OffAudioOutputDeviceChangeWithInfo(::taihe::optional_view<::taihe::callback<void
+    (::ohos::multimedia::audio::AudioStreamDeviceChangeInfo const&)>> callback)
+{
+    MediaTrace trace("AVPlayerImpl::OffAudioOutputDeviceChangeWithInfo");
+    MEDIA_LOGD("OffAudioOutputDeviceChangeWithInfo In");
+
+    if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        return;
+    }
+
+    std::string callbackName = "audioOutputDeviceChange";
+    MaxAmplitudeCallbackOff(callbackName);
+    ClearCallbackReference(callbackName);
+    MEDIA_LOGI("OffAudioOutputDeviceChangeWithInfo End");
 }
 
 void AVPlayerImpl::OffEndOfStream(optional_view<callback<void(uintptr_t)>> callback)
@@ -2221,7 +2572,7 @@ void AVPlayerImpl::OffStartRenderFrame(optional_view<callback<void(uintptr_t)>> 
     ClearCallbackReference(callbackName);
     MEDIA_LOGI("OffStartRenderFrame End");
 }
-void AVPlayerImpl::OffSeekDone(optional_view<callback<void(double)>> callback)
+void AVPlayerImpl::OffSeekDone(optional_view<callback<void(int32_t)>> callback)
 {
     MediaTrace trace("AVPlayerImpl::OffSeekDone");
     MEDIA_LOGD("OffSeekDone In");
@@ -2235,7 +2586,7 @@ void AVPlayerImpl::OffSeekDone(optional_view<callback<void(double)>> callback)
     ClearCallbackReference(callbackName);
     MEDIA_LOGI("OffSeekDone End");
 }
-void AVPlayerImpl::OffDurationUpdate(optional_view<callback<void(double)>> callback)
+void AVPlayerImpl::OffDurationUpdate(optional_view<callback<void(int32_t)>> callback)
 {
     MediaTrace trace("AVPlayerImpl::OffDurationUpdate");
     MEDIA_LOGD("OffDurationUpdate In");
@@ -2249,7 +2600,7 @@ void AVPlayerImpl::OffDurationUpdate(optional_view<callback<void(double)>> callb
     ClearCallbackReference(callbackName);
     MEDIA_LOGI("OffDurationUpdate End");
 }
-void AVPlayerImpl::OffTimeUpdate(optional_view<callback<void(double)>> callback)
+void AVPlayerImpl::OffTimeUpdate(optional_view<callback<void(int32_t)>> callback)
 {
     MediaTrace trace("AVPlayerImpl::OffTimeUpdate");
     MEDIA_LOGD("OffTimeUpdate In");
@@ -2277,7 +2628,7 @@ void AVPlayerImpl::OffVolumeChange(optional_view<callback<void(double)>> callbac
     ClearCallbackReference(callbackName);
     MEDIA_LOGI("OffVolumeChange End");
 }
-void AVPlayerImpl::OffSpeedDone(optional_view<callback<void(double)>> callback)
+void AVPlayerImpl::OffSpeedDone(optional_view<callback<void(int32_t)>> callback)
 {
     MediaTrace trace("AVPlayerImpl::OffSpeedDone");
     MEDIA_LOGD("OffSpeedDone In");
@@ -2291,7 +2642,7 @@ void AVPlayerImpl::OffSpeedDone(optional_view<callback<void(double)>> callback)
     ClearCallbackReference(callbackName);
     MEDIA_LOGI("OffSpeedDone End");
 }
-void AVPlayerImpl::OffBitrateDone(optional_view<callback<void(double)>> callback)
+void AVPlayerImpl::OffBitrateDone(optional_view<callback<void(int32_t)>> callback)
 {
     MediaTrace trace("AVPlayerImpl::OffBitrateDone");
     MEDIA_LOGD("OffBitrateDone In");
@@ -2305,7 +2656,7 @@ void AVPlayerImpl::OffBitrateDone(optional_view<callback<void(double)>> callback
     ClearCallbackReference(callbackName);
     MEDIA_LOGI("OffBitrateDone End");
 }
-void AVPlayerImpl::OffAvailableBitrates(optional_view<callback<void(array_view<double>)>> callback)
+void AVPlayerImpl::OffAvailableBitrates(optional_view<callback<void(array_view<int32_t>)>> callback)
 {
     MediaTrace trace("AVPlayerImpl::OffAvailableBitrates");
     MEDIA_LOGD("OffAvailableBitrates In");
@@ -2335,7 +2686,7 @@ void AVPlayerImpl::OffAmplitudeUpdate(optional_view<callback<void(array_view<dou
 }
 
 void AVPlayerImpl::OffBufferingUpdate(optional_view<callback<void(ohos::multimedia::media::BufferingInfoType,
-    double)>> callback)
+    int32_t)>> callback)
 {
     MediaTrace trace("AVPlayerImpl::OffBufferingUpdate");
     MEDIA_LOGD("OffBufferingUpdate In");
@@ -2349,7 +2700,7 @@ void AVPlayerImpl::OffBufferingUpdate(optional_view<callback<void(ohos::multimed
     ClearCallbackReference(callbackName);
     MEDIA_LOGI("OffBufferingUpdate End");
 }
-void AVPlayerImpl::OffVideoSizeChange(optional_view<callback<void(double, double)>> callback)
+void AVPlayerImpl::OffVideoSizeChange(optional_view<callback<void(int32_t, int32_t)>> callback)
 {
     MediaTrace trace("AVPlayerImpl::OffVideoSizeChange");
     MEDIA_LOGD("OffVideoSizeChange In");
@@ -2364,7 +2715,7 @@ void AVPlayerImpl::OffVideoSizeChange(optional_view<callback<void(double, double
     MEDIA_LOGI("OffVideoSizeChange End");
 }
 
-void AVPlayerImpl::OffTrackChange(optional_view<callback<void(double, bool)>> callback)
+void AVPlayerImpl::OffTrackChange(optional_view<callback<void(int32_t, bool)>> callback)
 {
     MediaTrace trace("AVPlayerImpl::OffTrackChange");
     MEDIA_LOGD("OffTrackChange In");
@@ -2408,7 +2759,7 @@ void AVPlayerImpl::OffSuperResolutionChanged(optional_view<callback<void(bool)>>
     ClearCallbackReference(callbackName);
     MEDIA_LOGI("OffSuperResolutionChanged End");
 }
-void AVPlayerImpl::OffTrackInfoUpdate(optional_view<callback<void(array_view<map<string, double>>)>> callback)
+void AVPlayerImpl::OffTrackInfoUpdate(optional_view<callback<void(array_view<map<string, int32_t>>)>> callback)
 {
     MediaTrace trace("AVPlayerImpl::OffTrackInfoUpdate");
     MEDIA_LOGD("OffTrackInfoUpdate In");
@@ -2423,9 +2774,9 @@ void AVPlayerImpl::OffTrackInfoUpdate(optional_view<callback<void(array_view<map
     MEDIA_LOGI("OffTrackInfoUpdate End");
 }
 
-void AVPlayerImpl::OffSeiMessageReceived(array_view<double> payloadTypes,
+void AVPlayerImpl::OffSeiMessageReceived(array_view<int32_t> payloadTypes,
     optional_view<callback<void(array_view<::ohos::multimedia::media::SeiMessage>,
-    optional_view<double>)>> callback)
+    optional_view<int32_t>)>> callback)
 {
     MediaTrace trace("AVPlayerImpl::OffSeiMessageReceived");
     MEDIA_LOGD("OffSeiMessageReceived In");

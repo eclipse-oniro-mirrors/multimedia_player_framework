@@ -23,7 +23,7 @@
 
 namespace OHOS {
 namespace Media {
-using DataSrcCallback = taihe::callback<double(taihe::array_view<uint8_t>, double, taihe::optional_view<double>)>;
+using DataSrcCallback = taihe::callback<int32_t(taihe::array_view<uint8_t>, int64_t, taihe::optional_view<int64_t>)>;
 
 struct HelperDataSourceTHCallback {
     HelperDataSourceTHCallback(const std::string &callbackName, const std::shared_ptr<AVSharedMemory> &mem,

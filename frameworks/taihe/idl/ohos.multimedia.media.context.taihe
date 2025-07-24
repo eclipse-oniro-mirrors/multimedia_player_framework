@@ -17,6 +17,7 @@
 
 @!sts_inject("""
 import audio from '@ohos.multimedia.audio';
+import drm from '@ohos.multimedia.drm';
 import { BusinessError, ErrorCallback, AsyncCallback, Callback } from '@ohos.base';
 import photoAccessHelper from '@ohos.file.photoAccessHelper';
 """)
