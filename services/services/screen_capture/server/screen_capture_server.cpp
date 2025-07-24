@@ -618,13 +618,13 @@ SCWindowInfoChangedListener::SCWindowInfoChangedListener(std::weak_ptr<ScreenCap
 }
 
 void SCWindowInfoChangedListener::OnWindowInfoChanged(
-    const std::vector<std::unordered_map<WindowInfoKey, std::any>>& windowInfoList)
+    const std::vector<std::unordered_map<WindowInfoKey, WindowChangeInfoType>>& windowInfoList)
 {
     MEDIA_LOGI("SCWindowInfoChangedListener::OnWindowInfoChanged start.");
     auto SCServer = screenCaptureServer_.lock();
     CHECK_AND_RETURN_LOG(SCServer != nullptr, "screenCaptureServer is nullptr");
 
-    std::vector<std::unordered_map<WindowInfoKey, std::any>> myWindowInfoList = windowInfoList;
+    std::vector<std::unordered_map<WindowInfoKey, WindowChangeInfoType>> myWindowInfoList = windowInfoList;
     if (myWindowInfoList.size() < WINDOW_INFO_LIST_SIZE ||
         SCServer->GetWindowIdList().size() < WINDOW_INFO_LIST_SIZE) {
         MEDIA_LOGI("myWindowInfoList or windowIdList is invalid.");
@@ -634,7 +634,7 @@ void SCWindowInfoChangedListener::OnWindowInfoChanged(
     MEDIA_LOGI("OnWindowInfoChanged: the displayId of interestWindowId changed!");
     auto iter = myWindowInfoList.front().find(WindowInfoKey::DISPLAY_ID);
     if (iter != myWindowInfoList.front().end()) {
-        uint64_t displayId = std::any_cast<uint64_t>(iter->second);
+        uint64_t displayId = std::get<uint64_t>(iter->second);
         MEDIA_LOGI("OnWindowInfoChanged: the curDisplayId: %{public}" PRIu64, displayId);
         SCServer->SetCurDisplayId(displayId);
         if (displayId == SCServer->GetDefaultDisplayId()) {

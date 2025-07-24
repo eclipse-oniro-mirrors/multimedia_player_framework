@@ -1070,7 +1070,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnWindowInfoChanged_001, TestSize.Leve
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
     sptr<SCWindowInfoChangedListener> listener(new (std::nothrow) SCWindowInfoChangedListener(screenCaptureServer));
     screenCaptureServer_->windowInfoChangedListener_ = listener;
-    std::vector<std::unordered_map<WindowInfoKey, std::any>> myWindowInfoList;
+    std::vector<std::unordered_map<WindowInfoKey, WindowChangeInfoType>> myWindowInfoList;
     screenCaptureServer_->windowIdList_ = {};
     screenCaptureServer_->windowInfoChangedListener_->OnWindowInfoChanged(myWindowInfoList);
     ASSERT_NE(screenCaptureServer_, nullptr);
@@ -1085,8 +1085,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnWindowInfoChanged_002, TestSize.Leve
     screenCaptureServer_->curWindowInDisplayId_ = 0;
     screenCaptureServer_->displayScreenId_ = 1;
     screenCaptureServer_->windowInfoChangedListener_->AddInterestInfo(Rosen::WindowInfoKey::DISPLAY_ID);
-    std::vector<std::unordered_map<WindowInfoKey, std::any>> myWindowInfoList;
-    std::unordered_map<WindowInfoKey, std::any> myWindowInfo;
+    std::vector<std::unordered_map<WindowInfoKey, WindowChangeInfoType>> myWindowInfoList;
+    std::unordered_map<WindowInfoKey, WindowChangeInfoType> myWindowInfo;
     myWindowInfo[WindowInfoKey::DISPLAY_ID] = static_cast<uint64_t>(1);
     myWindowInfoList.push_back(myWindowInfo);
     screenCaptureServer_->windowInfoChangedListener_->OnWindowInfoChanged(myWindowInfoList);
@@ -1103,8 +1103,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnWindowInfoChanged_003, TestSize.Leve
     screenCaptureServer_->curWindowInDisplayId_ = 0;
     screenCaptureServer_->displayScreenId_ = 999;
     screenCaptureServer_->windowInfoChangedListener_->AddInterestInfo(Rosen::WindowInfoKey::DISPLAY_ID);
-    std::vector<std::unordered_map<WindowInfoKey, std::any>> myWindowInfoList;
-    std::unordered_map<WindowInfoKey, std::any> myWindowInfo;
+    std::vector<std::unordered_map<WindowInfoKey, WindowChangeInfoType>> myWindowInfoList;
+    std::unordered_map<WindowInfoKey, WindowChangeInfoType> myWindowInfo;
     myWindowInfo[WindowInfoKey::DISPLAY_ID] = static_cast<uint64_t>(1);
     myWindowInfoList.push_back(myWindowInfo);
     screenCaptureServer_->windowInfoChangedListener_->OnWindowInfoChanged(myWindowInfoList);
@@ -1119,8 +1119,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnWindowInfoChanged_004, TestSize.Leve
     screenCaptureServer_->windowInfoChangedListener_ = listener;
     screenCaptureServer_->SetWindowIdList(80);
     screenCaptureServer_->curWindowInDisplayId_ = 0;
-    std::vector<std::unordered_map<WindowInfoKey, std::any>> myWindowInfoList;
-    std::unordered_map<WindowInfoKey, std::any> myWindowInfo;
+    std::vector<std::unordered_map<WindowInfoKey, WindowChangeInfoType>> myWindowInfoList;
+    std::unordered_map<WindowInfoKey, WindowChangeInfoType> myWindowInfo;
     myWindowInfoList.push_back(myWindowInfo);
     screenCaptureServer_->windowInfoChangedListener_->OnWindowInfoChanged(myWindowInfoList);
     ASSERT_EQ(screenCaptureServer_->curWindowInDisplayId_, 0);
