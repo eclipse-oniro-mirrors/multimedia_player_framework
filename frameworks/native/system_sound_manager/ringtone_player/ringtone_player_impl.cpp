@@ -602,6 +602,38 @@ int32_t RingtonePlayerImpl::SetRingtoneHapticsFeature(const RingtoneHapticsFeatu
     return ret;
 }
 
+int32_t RingtonePlayerImpl::SetRingtoneHapticsRamp(int32_t duration, float startIntensity, float endIntensity)
+{
+    MEDIA_LOGI("RingtonePlayerImpl::SetRingtoneHapticsRamp %{public}d, %{public}f, %{public}f",
+        duration, startIntensity, endIntensity);
+
+    std::lock_guard<std::mutex> lock(playerMutex_);
+    CHECK_AND_RETURN_RET_LOG(ringtoneState_ != STATE_RELEASED, MSERR_INVALID_OPERATION,
+        "ringtone player has been released.");
+    CHECK_AND_RETURN_RET_LOG(player_ != nullptr && ringtoneState_ != STATE_INVALID, MSERR_INVALID_VAL, "no player_");
+
+    // duration not less than 100ms
+    if (duration < 100) {
+        MEDIA_LOGE("RingtonePlayerImpl::SetRingtoneHapticsRamp: the duration value is invalid.");
+        return MSERR_INVALID_VAL;
+    }
+
+    if (startIntensity < 1.0f || startIntensity > 100.0f) {
+        MEDIA_LOGE("RingtonePlayerImpl::SetRingtoneHapticsRamp: the startIntensity value is invalid.");
+        return MSERR_INVALID_VAL;
+    }
+
+    if (endIntensity < 1.0f || endIntensity > 100.0f) {
+        MEDIA_LOGE("RingtonePlayerImpl::SetRingtoneHapticsRamp: the endIntensity value is invalid.");
+        return MSERR_INVALID_VAL;
+    }
+
+    int32_t result = player_->SetHapticsRamp(duration, startIntensity, endIntensity);
+    CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result, "RingtonePlayerImpl::SetRingtoneHapticsRamp error");
+
+    return result;
+}
+
 // Callback class symbols
 RingtonePlayerCallback::RingtonePlayerCallback(RingtonePlayerImpl &ringtonePlayerImpl)
     : ringtonePlayerImpl_(ringtonePlayerImpl) {}
