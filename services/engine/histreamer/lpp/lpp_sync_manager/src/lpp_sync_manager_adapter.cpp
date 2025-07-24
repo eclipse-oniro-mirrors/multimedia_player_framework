@@ -197,7 +197,8 @@ int32_t LppSyncManagerAdapter::Flush()
     MediaTrace trace("LppSyncManagerAdapter::Flush");
     MEDIA_LOG_I("Flush enter");
     FALSE_RETURN_V_MSG_E(syncMgrAdapter_ != nullptr, MSERR_INVALID_OPERATION, "syncMgrAdapter_ is nullptr");
-    MEDIA_LOG_W("syncMgrAdapter_ flush not implememt!");
+    int32_t ret = syncMgrAdapter_->Flush();
+    FALSE_RETURN_V_MSG(ret == HDF_SUCCESS, MSERR_HARDWARE_ERROR, "SyncMananger Flush failed");
     return MSERR_OK;
 }
 

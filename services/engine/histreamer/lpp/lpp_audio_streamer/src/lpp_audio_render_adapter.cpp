@@ -651,7 +651,8 @@ void LppAudioRenderAdapter::UpdateTimeAnchor(int64_t bufferPts)
     FALSE_RETURN_MSG(ret == MSERR_OK, "GetAudioPosition failed");
     anchorClock_ = time.tv_sec * SEC_TO_US + time.tv_nsec / US_TO_MS;  // convert to us
     anchorPts_ = startPts_ + static_cast<int64_t>(position) * SEC_TO_US / sampleRate_;
-    MEDIA_LOG_I("anchorPts_ is " PUBLIC_LOG_D64 " and anchorClock_ is " PUBLIC_LOG_D64, anchorPts_, anchorClock_);
+    MEDIA_LOG_I("anchorPts is " PUBLIC_LOG_D64 " and anchorClock is " PUBLIC_LOG_D64 " and startPts is " PUBLIC_LOG_D64,
+        anchorPts_, anchorClock_, startPts_);
     lastReportedClockTime_ = nowClockTime;
     FALSE_RETURN_MSG(eventReceiver_ != nullptr, "eventReceiver_ is nullptr");
     std::pair<int64_t, int64_t> anchor {anchorPts_, anchorClock_};
