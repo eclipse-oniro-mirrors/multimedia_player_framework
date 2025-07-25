@@ -103,7 +103,6 @@ ohos_fuzztest("ScreenCaptureServerStartCaseFuzzTest") {
     "$MEDIA_ROOT_DIR/services/services:media_service",
     "$MEDIA_ROOT_DIR/services/utils:media_service_utils",
   ]
-  public_deps = [ "$MEDIA_ROOT_DIR/services/services:media_service" ]
   external_deps = [
     "ability_base:base",
     "ability_base:want",

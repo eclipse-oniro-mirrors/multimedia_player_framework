@@ -236,8 +236,6 @@ ohos_unittest("screen_capture_server_function_unit_test") {
     debug = false
   }
 
-  public_deps = [ "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service" ]
-
   configs = [
     ":screen_capture_test_config",
     "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx_public_config",
@@ -248,6 +246,7 @@ ohos_unittest("screen_capture_server_function_unit_test") {
     "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_dfx",
     "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service",
   ]
 
   if (player_framework_support_screen_capture) {
