@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "avplayer_taihe.h"
+#include "common_taihe.h"
 #include "ringtone_player_taihe.h"
 #include "system_sound_log.h"
 

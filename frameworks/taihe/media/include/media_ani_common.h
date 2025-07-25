@@ -15,6 +15,7 @@
 #ifndef MEDIA_ANI_COMMON_H
 #define MEDIA_ANI_COMMON_H
 
+#include "common_taihe.h"
 #include "ohos.multimedia.media.proj.hpp"
 #include "ohos.multimedia.media.impl.hpp"
 #include "taihe/runtime.hpp"
@@ -22,23 +23,6 @@
 
 namespace ANI {
 namespace Media {
-
-struct AutoRef {
-    AutoRef(ani_env *env, std::shared_ptr<uintptr_t> callback)
-        : env_(env)
-    {
-        if (callback != nullptr) {
-            callbackRef_ = callback;
-        }
-    }
-    ~AutoRef()
-    {
-        env_ = nullptr;
-        callbackRef_ = nullptr;
-    }
-    ani_env* env_ = nullptr;
-    std::shared_ptr<uintptr_t> callbackRef_;
-};
 
 struct DataSrcDescriptor {
     int64_t fileSize = 0;

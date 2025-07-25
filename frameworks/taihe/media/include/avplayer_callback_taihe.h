@@ -20,15 +20,15 @@
 #include <ani.h>
 #include "media_errors.h"
 #include "player.h"
-#include "media_ani_common.h"
 #include "event_handler.h"
 #include "audio_info.h"
 #include "audio_effect.h"
 #include "audio_device_descriptor.h"
+#include "common_taihe.h"
+
 namespace ANI {
 namespace Media {
 using namespace OHOS::Media;
-using namespace ohos::multimedia::media;
 
 extern OHOS::AudioStandard::InterruptEvent interruptEvent_;
 class AVPlayerNotify {
