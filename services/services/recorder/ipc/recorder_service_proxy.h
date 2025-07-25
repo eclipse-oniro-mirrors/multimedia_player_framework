@@ -78,6 +78,7 @@ public:
     int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer) override;
     int32_t SetUserMeta(const std::shared_ptr<Meta> &userMeta) override;
     int32_t SetWillMuteWhenInterrupted(bool muteWhenInterrupted) override;
+    int32_t TransmitQos(QOS::QosLevel level) override;
 private:
     static inline BrokerDelegator<RecorderServiceProxy> delegator_;
 };

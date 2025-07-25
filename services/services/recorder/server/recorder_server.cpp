@@ -33,9 +33,14 @@
 #ifdef SUPPORT_POWER_MANAGER
 #include "shutdown/shutdown_priority.h"
 #endif
+#include "res_type.h"
+#include "res_sched_client.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_RECORDER, "RecorderServer"};
+    constexpr uint32_t THREAD_PRIORITY_41 = 7;
+    constexpr uint32_t RES_TYPE = OHOS::ResourceSchedule::ResType::RES_TYPE_THREAD_QOS_CHANGE;
+    constexpr int64_t RES_VALUE = 0;
     const std::map<OHOS::Media::RecorderServer::RecStatus, std::string> RECORDER_STATE_MAP = {
         {OHOS::Media::RecorderServer::REC_INITIALIZED, "initialized"},
         {OHOS::Media::RecorderServer::REC_CONFIGURED, "configured"},
@@ -1178,6 +1183,32 @@ int32_t RecorderServer::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->SetUserMeta(userMeta);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
+}
+
+int32_t RecorderServer::TransmitQos(QOS::QosLevel level)
+{
+    MEDIA_LOGI("TransmitQos in");
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("TransmitQos %{public}d", (int32_t)level);
+    clientQos_ = level;
+
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        MEDIA_LOGI("clientQos_ %{public}d", (int32_t)clientQos_);
+        if (clientQos_ == QOS::QosLevel::QOS_USER_INTERACTIVE) {
+            MEDIA_LOGI("RES_TYPE_THREAD_QOS_CHANGE");
+            std::unordered_map<std::string, std::string> mapPayload;
+            mapPayload["bundleName"] = "media_service";
+            mapPayload["pid"] = std::to_string(getpid());
+            mapPayload[std::to_string(gettid())] = std::to_string(THREAD_PRIORITY_41);
+            OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(RES_TYPE, RES_VALUE, mapPayload);
+        }
+        return MSERR_OK;
     });
     int32_t ret = taskQue_.EnqueueTask(task);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");

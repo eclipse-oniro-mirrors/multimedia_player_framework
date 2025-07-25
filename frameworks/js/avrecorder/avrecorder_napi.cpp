@@ -266,6 +266,12 @@ napi_value AVRecorderNapi::JsPrepare(napi_env env, napi_callback_info info)
 
     if (asyncCtx->napi->CheckStateMachine(opt) == MSERR_OK) {
         if (asyncCtx->napi->GetConfig(asyncCtx, env, args[0]) == MSERR_OK) {
+            QOS::QosLevel level;
+            GetThreadQos(level);
+            MEDIA_LOGI("GetThreadQos %{public}d", (int32_t)level);
+            if (level == QOS::QosLevel::QOS_USER_INTERACTIVE) {
+                asyncCtx->napi->taskQue_->SetQos(level);
+            }
             asyncCtx->task_ = AVRecorderNapi::GetPrepareTask(asyncCtx);
             (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
         }
@@ -285,6 +291,7 @@ napi_value AVRecorderNapi::JsPrepare(napi_env env, napi_callback_info info)
                 asyncCtx->SignError(result.Value().first, result.Value().second);
             }
         }
+        asyncCtx->napi->taskQue_->ResetQos();
         MEDIA_LOGI("The js thread of prepare finishes execution and returns");
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));

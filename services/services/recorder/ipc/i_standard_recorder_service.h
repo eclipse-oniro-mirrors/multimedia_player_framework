@@ -21,6 +21,7 @@
 #include "iremote_proxy.h"
 #include "iremote_stub.h"
 #include "recorder.h"
+#include "qos.h"
 
 namespace OHOS {
 namespace Media {
@@ -98,6 +99,7 @@ public:
     virtual int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer) = 0;
     virtual int32_t SetUserMeta(const std::shared_ptr<Meta> &userMeta) = 0;
     virtual int32_t SetWillMuteWhenInterrupted(bool muteWhenInterrupted) = 0;
+    virtual int32_t TransmitQos(QOS::QosLevel level) = 0;
     /**
      * IPC code ID
      */
@@ -154,6 +156,7 @@ public:
         SET_WATERMARK,
         SET_USERMETA,
         SET_INTERRUPT_STRATEGY,
+        TRANSMIT_QOS,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardRecorderService");

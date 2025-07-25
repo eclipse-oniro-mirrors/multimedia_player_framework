@@ -40,6 +40,12 @@ RecorderClient::RecorderClient(const sptr<IStandardRecorderService> &ipcProxy)
     : recorderProxy_(ipcProxy)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    QOS::QosLevel level;
+    GetThreadQos(level);
+    MEDIA_LOGI("GetThreadQos %{public}d", (int32_t)level);
+    if (level == QOS::QosLevel::QOS_USER_INTERACTIVE) {
+        recorderProxy_->TransmitQos(level);
+    }
 }
 
 RecorderClient::~RecorderClient()
@@ -563,6 +569,15 @@ int32_t RecorderClient::SetWillMuteWhenInterrupted(bool muteWhenInterrupted)
 
     MEDIA_LOGD("SetWillMuteWhenInterrupted");
     return recorderProxy_->SetWillMuteWhenInterrupted(muteWhenInterrupted);
+}
+
+int32_t RecorderClient::TransmitQos(QOS::QosLevel level)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+
+    MEDIA_LOGD("TransmitQos");
+    return recorderProxy_->TransmitQos(level);
 }
 } // namespace Media
 } // namespace OHOS

@@ -17,6 +17,7 @@
 #include "recorder_listener_stub.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "qos.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_RECORDER, "RecorderServiceProxy"};
@@ -1021,6 +1022,25 @@ int32_t RecorderServiceProxy::SetWillMuteWhenInterrupted(bool muteWhenInterrupte
     int error = Remote()->SendRequest(SET_INTERRUPT_STRATEGY, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetWillMuteWhenInterrupted failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
+int32_t RecorderServiceProxy::TransmitQos(QOS::QosLevel level)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+    
+    token = data.WriteInt32(static_cast<int32_t>(level));
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
+    int error = Remote()->SendRequest(TRANSMIT_QOS, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "TransmitQos failed, error: %{public}d", error);
 
     return reply.ReadInt32();
 }
