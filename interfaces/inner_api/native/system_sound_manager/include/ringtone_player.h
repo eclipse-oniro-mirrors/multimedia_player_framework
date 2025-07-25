@@ -151,6 +151,9 @@ public:
     /**
      * @brief Set the ringtone player haptics's ramp
      *
+     * @param duration haptics ramp duration, not less than 100ms
+     * @param startIntensity start intensity, value range (1.0f, 100.0f]
+     * @param endIntensity start intensity, value range (1.0f, 100.0f]
      * @return Returns {@link MSERR_OK} if the haptics's ramp set successfully;
      * returns an error code defined in {@link media_errors.h} otherwise.
      * @since 1.0
