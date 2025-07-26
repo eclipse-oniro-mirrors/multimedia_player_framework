@@ -88,6 +88,27 @@ bool MediaTaiheUtils::GetEnumKeyByStringValue<ohos::multimedia::media::Container
     typename ohos::multimedia::media::ContainerFormatType::key_t &key);
 
 template
+bool MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::AudioEncodingType>(int32_t value,
+    typename ohos::multimedia::audio::AudioEncodingType::key_t &key);
+template
+bool MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::DeviceType>(int32_t value,
+    typename ohos::multimedia::audio::DeviceType::key_t &key);
+template
+bool MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::DeviceRole>(int32_t value,
+    typename ohos::multimedia::audio::DeviceRole::key_t &key);
+template
+bool MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::SourceType>(int32_t value,
+    typename ohos::multimedia::audio::SourceType::key_t &key);
+template
+bool MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::AudioState>(int32_t value,
+    typename ohos::multimedia::audio::AudioState::key_t &key);
+template
+bool MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::StreamUsage>(int32_t value,
+    typename ohos::multimedia::audio::StreamUsage::key_t &key);
+template
+bool MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::AudioVolumeMode>(int32_t value,
+    typename ohos::multimedia::audio::AudioVolumeMode::key_t &key);
+template
 bool MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::media::HdrType>(int32_t value,
     typename ohos::multimedia::media::HdrType::key_t &key);
 template
@@ -108,6 +129,25 @@ template
 bool MediaTaiheUtils::GetEnumKeyByValue<StateChangeReason>(int32_t value, typename StateChangeReason::key_t &key);
 template
 bool MediaTaiheUtils::GetEnumKeyByValue<BufferingInfoType>(int32_t value, typename BufferingInfoType::key_t &key);
+template
+bool MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::AudioEffectMode>(int32_t value,
+    typename ohos::multimedia::audio::AudioEffectMode::key_t &key);
+template
+bool MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::InterruptType>(int32_t value,
+    typename ohos::multimedia::audio::InterruptType::key_t &key);
+template
+bool MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::InterruptForceType>(int32_t value,
+    typename ohos::multimedia::audio::InterruptForceType::key_t &key);
+template
+bool MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::InterruptHint>(int32_t value,
+    typename ohos::multimedia::audio::InterruptHint::key_t &key);
+template
+bool MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::AudioStreamDeviceChangeReason>(int32_t value,
+    typename ohos::multimedia::audio::AudioStreamDeviceChangeReason::key_t &key);
+template
+bool MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::InterruptMode>(int32_t value,
+    typename ohos::multimedia::audio::InterruptMode::key_t &key);
+
 
 ani_object MediaTaiheUtils::ToBusinessError(ani_env *env, int32_t code, const std::string &message)
 {
@@ -146,53 +186,6 @@ ani_object MediaTaiheUtils::CreatePixelMap(ani_env *env, OHOS::Media::PixelMap &
     CHECK_AND_RETURN_RET_LOG(env->Object_New(cls, ctorMethod, &aniObject) == ANI_OK,
         nullptr, "Call method <ctor> failed.");
 
-    return aniObject;
-}
-
-ani_object MediaTaiheUtils::CreateMediaKeySystemInfo(ani_env *env, ANI::Media::MediaKeySystemInfo &mediaKeySystemInfo)
-{
-    ani_class cls {};
-    static const char *className = "@ohos.multimedia.drm.drm.MediaKeySystemInfo";
-    CHECK_AND_RETURN_RET_LOG(env->FindClass(className, &cls) == ANI_OK, nullptr,
-        "Failed to find class: %{public}s", className);
-    ani_method ctorMethod {};
-    CHECK_AND_RETURN_RET_LOG(env->Class_FindMethod(cls, "<ctor>", nullptr, &ctorMethod) == ANI_OK, nullptr,
-        "Failed to find method: <ctor>");
-    ani_object aniObject {};
-    CHECK_AND_RETURN_RET_LOG(env->Object_New(cls, ctorMethod, &aniObject) == ANI_OK, nullptr,
-        "Call method <ctor> failed.");
-
-    ani_method uuidSetter {};
-    CHECK_AND_RETURN_RET_LOG(env->Class_FindMethod(cls, "<set>uuid", nullptr, &uuidSetter) == ANI_OK, nullptr,
-        "Failed to find method: <set>uuid");
-    CHECK_AND_RETURN_RET_LOG(env->Object_CallMethod_Void(aniObject, uuidSetter,
-        ToAniString(env, mediaKeySystemInfo.uuid)) == ANI_OK, nullptr, "<set>uuid fail");
-
-    ani_class clsAry {};
-    static const std::string classNameAry = "escompat.Array";
-    if (env->FindClass(classNameAry.c_str(), &clsAry)) {
-        printf("Can't find escompat.Array.");
-    }
-
-    ani_method arrayConstructor {};
-    if (env->Class_FindMethod(clsAry, "<ctor>", "i:", &arrayConstructor)) {
-        printf("Can't find method <ctor> in escompat.Array.");
-    }
-
-    if (env->Object_New(clsAry, arrayConstructor, &aniObject, mediaKeySystemInfo.pssh.size())) {
-        printf("Call method <ctor> failed.");
-    }
-
-    ani_method setMethod {};
-    if (env->Class_FindMethod(clsAry, "$_set", "iC{std.core.Object}:", &setMethod)) {
-        printf("Can't find method $_set in escompat.Array.");
-    }
-    for (size_t i = 0; i < mediaKeySystemInfo.pssh.size(); i++) {
-        ani_int aniInt = static_cast<ani_int>(mediaKeySystemInfo.pssh[i]);
-        if (env->Object_CallMethod_Void(aniObject, setMethod, (ani_int)i, aniInt)) {
-            printf("Call method $_set failed.");
-        }
-    }
     return aniObject;
 }
 

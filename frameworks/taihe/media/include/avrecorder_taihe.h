@@ -23,6 +23,7 @@
 #include "media_core.h"
 #include "media_errors.h"
 #include "media_ani_common.h"
+#include "pixel_map.h"
 
 namespace ANI::Media {
 using namespace taihe;
@@ -184,12 +185,12 @@ public:
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     int32_t IsWatermarkSupported(bool &isWatermarkSupported);
 
-    void UpdateRotationSync(double rotation);
+    void UpdateRotationSync(int32_t rotation);
     int32_t GetRotation(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, int32_t rotation);
     std::shared_ptr<TaskHandler<RetInfo>> GetSetOrientationHintTask(
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
 
-    double GetAudioCapturerMaxAmplitudeSync();
+    int32_t GetAudioCapturerMaxAmplitudeSync();
     std::shared_ptr<TaskHandler<RetInfo>> GetMaxAmplitudeTask(
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     int32_t GetMaxAmplitude(int32_t &maxAmplitude);
@@ -206,6 +207,31 @@ public:
     void GetVideoEncoderInfo(EncoderCapabilityData encoderCapData,
         std::vector<::ohos::multimedia::media::EncoderInfo> &TaiheEncoderInfos);
     ::ohos::multimedia::media::Range GetRange(int32_t min, int32_t max);
+
+    void SetWatermarkSync(::ohos::multimedia::image::image::weak::PixelMap watermark,
+    ::ohos::multimedia::media::WatermarkConfig const& config);
+    std::shared_ptr<TaskHandler<RetInfo>> SetWatermarkTask(const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
+    int32_t SetWatermark(std::shared_ptr<PixelMap> &pixelMap,
+        std::shared_ptr<WatermarkConfig> &watermarkConfig);
+    int32_t ConfigAVBufferMeta(std::shared_ptr<PixelMap> &pixelMap,
+        std::shared_ptr<WatermarkConfig> &watermarkConfig, std::shared_ptr<Meta> &meta);
+    int32_t GetWatermarkParameter(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
+        ::ohos::multimedia::image::image::weak::PixelMap watermark,
+        ::ohos::multimedia::media::WatermarkConfig const& config);
+    int32_t GetWatermark(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
+        ::ohos::multimedia::image::image::weak::PixelMap watermark);
+    int32_t GetWatermarkConfig(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
+        ::ohos::multimedia::media::WatermarkConfig const& config);
+
+    optional<::ohos::multimedia::audio::AudioCapturerChangeInfo> GetCurrentAudioCapturerInfoSync();
+    std::shared_ptr<TaskHandler<RetInfo>> GetCurrentCapturerChangeInfoTask(
+        const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
+    int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo);
+    ::ohos::multimedia::audio::AudioDeviceDescriptor GetDeviceInfo(
+        const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
+    void GetAudioCapturerChangeInfo(const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
+        ::ohos::multimedia::audio::AudioCapturerChangeInfo &res);
+    ::ohos::multimedia::audio::AudioCapturerChangeInfo GetAudioDefaultInfo();
 
     int32_t GetConfig(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
         ohos::multimedia::media::AVRecorderConfig const& config);
@@ -255,10 +281,14 @@ public:
     void ErrorCallback(int32_t errCode, const std::string &operate, const std::string &add);
     void OnError(callback_view<void(uintptr_t)> callback);
     void OnStateChange(callback_view<void(string_view, ohos::multimedia::media::StateChangeReason)> callback);
+    void OnAudioCapturerChange(
+        ::taihe::callback_view<void(::ohos::multimedia::audio::AudioCapturerChangeInfo const&)> callback);
     void OnPhotoAssetAvailable(callback_view<void(uintptr_t)> callback);
     void OffError(optional_view<callback<void(uintptr_t)>> callback);
     void OffStateChange(optional_view<callback<void(string_view,
                         ohos::multimedia::media::StateChangeReason)>> callback);
+    void OffAudioCapturerChange(::taihe::optional_view<::taihe::callback<void(
+        ::ohos::multimedia::audio::AudioCapturerChangeInfo const&)>> callback);
     void OffPhotoAssetAvailable(optional_view<callback<void(uintptr_t)>> callback);
 private:
     OHOS::sptr<OHOS::Surface> surface_ = nullptr;
@@ -295,6 +325,7 @@ struct AVRecorderAsyncContext {
     std::vector<EncoderCapabilityData> encoderInfo_;
     OHOS::Media::MetaSourceType metaType_ = OHOS::Media::MetaSourceType::VIDEO_META_SOURCE_INVALID;
     std::shared_ptr<WatermarkConfig> watermarkConfig_ = nullptr;
+    std::shared_ptr<PixelMap> pixelMap_ = nullptr;
     bool isWatermarkSupported_ = false;
 };
 

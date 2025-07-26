@@ -18,6 +18,7 @@
 #include "media_log.h"
 #include "avrecorder_callback_taihe.h"
 #include "media_taihe_utils.h"
+#include "media_library_comm_ani.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_RECORDER, "AVRecorderCallback"};
@@ -27,6 +28,9 @@ using namespace OHOS::Media;
 
 namespace ANI {
 namespace Media {
+#ifdef SUPPORT_RECORDER_CREATE_FILE
+const int32_t CAMERA_SHOT_TYPE = 1; // CameraShotType VIDEO
+#endif
 AVRecorderCallback::AVRecorderCallback()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR "Instances create", FAKE_POINTER(this));
@@ -120,6 +124,86 @@ void AVRecorderCallback::OnTaiheStateCallBack(AVRecordTaiheCallback *taiheCb) co
     }
 }
 
+#ifdef SUPPORT_RECORDER_CREATE_FILE
+void AVRecorderCallback::OnTaihePhotoAssertAvailableCallback(AVRecordTaiheCallback *taiheCb) const
+{
+    auto task = [event = taiheCb]() {
+        do {
+            std::string request = event->callbackName;
+            std::shared_ptr<AutoRef> ref = event->autoRef.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr, "ref is nullptr");
+            auto func = ref->callbackRef_;
+            std::shared_ptr<taihe::callback<void(uintptr_t)>> cacheCallback =
+                std::reinterpret_pointer_cast<taihe::callback<void(uintptr_t)>>(func);
+            ani_object aniObject = MediaLibraryCommAni::CreatePhotoAssetAni(
+                taihe::get_env(), event->uri, CAMERA_SHOT_TYPE);
+            uintptr_t photoAssetPtr = reinterpret_cast<uintptr_t>(&aniObject);
+            (*cacheCallback)(photoAssetPtr);
+        } while (0);
+        delete event;
+    };
+    mainHandler_->PostTask(task, "OnPhotoAssetAvailable", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+}
+#endif
+
+void AVRecorderCallback::OnTaiheAudioCaptureChangeCallback(AVRecordTaiheCallback *taiheCb) const
+{
+    MEDIA_LOGI("AVRecorderCallback OnTaiheAudioCaptureChangeCallback is start");
+    auto task = [this, event = taiheCb]() {
+        std::string request = event->callbackName;
+        do {
+            MEDIA_LOGD("OnTaiheAudioCaptureChangeCallback is called");
+            std::shared_ptr<AutoRef> errorRef = event->autoRef.lock();
+            CHECK_AND_RETURN_LOG(errorRef != nullptr, "ref is nullptr");
+            auto func = errorRef->callbackRef_;
+
+            std::shared_ptr<taihe::callback<void(
+                ::ohos::multimedia::audio::AudioCapturerChangeInfo const&)>> cacheCallback =
+                std::reinterpret_pointer_cast<taihe::callback<void(
+                    ::ohos::multimedia::audio::AudioCapturerChangeInfo const&)>>(func);
+            (*cacheCallback)(this->GetAudioCapturerChangeInfo(event));
+        } while (0);
+        delete event;
+    };
+    mainHandler_->PostTask(task, "OnAudioCapturerChange", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+}
+
+void AVRecorderCallback::SendAudioCaptureChangeCallback(const OHOS::Media::AudioRecorderChangeInfo
+    &audioRecorderChangeInfo)
+{
+    MEDIA_LOGI("AVRecorderCallback SendAudioCaptureChangeCallback is start");
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (refMap_.find(AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE) == refMap_.end()) {
+        MEDIA_LOGW("can not find audioCaptureChange callback");
+        return;
+    }
+
+    AVRecordTaiheCallback *cb = new(std::nothrow) AVRecordTaiheCallback();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
+    cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE);
+    cb->callbackName = AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE;
+    cb->audioRecorderChangeInfo = audioRecorderChangeInfo;
+    OnTaiheAudioCaptureChangeCallback(cb);
+}
+
+void AVRecorderCallback::SendPhotoAssertAvailableCallback(const std::string &uri)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (refMap_.find(AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE) == refMap_.end()) {
+        MEDIA_LOGW("can not find PhotoAssertAvailable callback");
+        return;
+    }
+
+    AVRecordTaiheCallback *cb = new(std::nothrow) AVRecordTaiheCallback();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
+    cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE);
+    cb->callbackName = AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE;
+    cb->uri = uri;
+#ifdef SUPPORT_RECORDER_CREATE_FILE
+    OnTaihePhotoAssertAvailableCallback(cb);
+#endif
+}
+
 void AVRecorderCallback::SaveCallbackReference(const std::string &name, std::weak_ptr<AutoRef> ref)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -182,6 +266,96 @@ void AVRecorderCallback::OnInfo(int32_t type, int32_t extra)
         MEDIA_LOGI("OnInfo() type = MAX_DURATION_REACHED, type: %{public}d, extra: %{public}d", type, extra);
         SendStateCallback(AVRecorderState::STATE_STOPPED, OHOS::Media::StateChangeReason::BACKGROUND);
     }
+}
+
+void AVRecorderCallback::OnAudioCaptureChange(const OHOS::Media::AudioRecorderChangeInfo &audioRecorderChangeInfo)
+{
+    MEDIA_LOGI("OnAudioCaptureChange() is called");
+    MEDIA_LOGI("AVRecorderCallback OnAudioCaptureChange is start");
+    SendAudioCaptureChangeCallback(audioRecorderChangeInfo);
+}
+
+void AVRecorderCallback::OnPhotoAssertAvailable(const std::string &uri)
+{
+    MEDIA_LOGI("OnPhotoAssertAvailable() is called");
+    SendPhotoAssertAvailableCallback(uri);
+}
+
+::ohos::multimedia::audio::AudioCapturerChangeInfo AVRecorderCallback::GetAudioCapturerChangeInfo(
+    AVRecordTaiheCallback *taiheCb) const
+{
+    ohos::multimedia::audio::AudioState::key_t audioStateKey;
+    MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::AudioState>(
+        taiheCb->audioRecorderChangeInfo.capturerState, audioStateKey);
+    ohos::multimedia::audio::SourceType::key_t sourceTypeKey;
+    MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::SourceType>(
+        taiheCb->audioRecorderChangeInfo.capturerInfo.sourceType, sourceTypeKey);
+
+    ::ohos::multimedia::audio::AudioCapturerInfo audioCapturerInfo {
+        std::move(::ohos::multimedia::audio::SourceType(sourceTypeKey)),
+        taiheCb->audioRecorderChangeInfo.capturerInfo.capturerFlags
+    };
+
+    std::vector<::ohos::multimedia::audio::AudioDeviceDescriptor> audioDeviceDescriptor;
+    audioDeviceDescriptor.push_back(GetDeviceInfo(taiheCb));
+    ::ohos::multimedia::audio::AudioCapturerChangeInfo audioCapturerChangeInfo {
+        std::move(taiheCb->audioRecorderChangeInfo.sessionId), std::move(taiheCb->audioRecorderChangeInfo.clientUID),
+        std::move(audioCapturerInfo),
+        std::move(::ohos::multimedia::audio::AudioState(audioStateKey)),
+        array<::ohos::multimedia::audio::AudioDeviceDescriptor>(audioDeviceDescriptor),
+        optional<bool>(std::in_place_t{}, taiheCb->audioRecorderChangeInfo.muted)
+    };
+    return audioCapturerChangeInfo;
+}
+
+::ohos::multimedia::audio::AudioDeviceDescriptor AVRecorderCallback::GetDeviceInfo(
+    AVRecordTaiheCallback *taiheCb) const
+{
+    ohos::multimedia::audio::DeviceRole::key_t deviceRoleKey;
+    MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::DeviceRole>(
+        taiheCb->audioRecorderChangeInfo.inputDeviceInfo.deviceRole, deviceRoleKey);
+    ohos::multimedia::audio::DeviceType::key_t deviceTypeKey;
+    MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::DeviceType>(
+        taiheCb->audioRecorderChangeInfo.inputDeviceInfo.deviceType, deviceTypeKey);
+    taihe::string name = MediaTaiheUtils::ToTaiheString(taiheCb->audioRecorderChangeInfo.inputDeviceInfo.deviceName);
+    taihe::string address =
+        MediaTaiheUtils::ToTaiheString(taiheCb->audioRecorderChangeInfo.inputDeviceInfo.macAddress);
+    std::vector<int32_t> samplingRateVec(
+        taiheCb->audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.samplingRate.begin(),
+        taiheCb->audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.samplingRate.end());
+    std::vector<int32_t> channelsVec(taiheCb->audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.channels.begin(),
+        taiheCb->audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.channels.end());
+    taihe::string networkId =
+        MediaTaiheUtils::ToTaiheString(taiheCb->audioRecorderChangeInfo.inputDeviceInfo.networkId);
+    taihe::string displayName = MediaTaiheUtils::ToTaiheString(
+        taiheCb->audioRecorderChangeInfo.inputDeviceInfo.displayName);
+    ohos::multimedia::audio::AudioEncodingType::key_t audioEncodingTypeKey;
+    MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::AudioEncodingType>(
+        taiheCb->audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.encoding, audioEncodingTypeKey);
+    std::vector<int32_t> channelMasks;
+    channelMasks.push_back(taiheCb->audioRecorderChangeInfo.inputDeviceInfo.channelMasks);
+    std::vector<::ohos::multimedia::audio::AudioEncodingType> audioEncodingType;
+    audioEncodingType.push_back(audioEncodingTypeKey);
+
+    ::ohos::multimedia::audio::AudioDeviceDescriptor descriptor {
+        std::move(::ohos::multimedia::audio::DeviceRole(deviceRoleKey)),
+        std::move(::ohos::multimedia::audio::DeviceType(deviceTypeKey)),
+        std::move(taiheCb->audioRecorderChangeInfo.inputDeviceInfo.deviceId),
+        std::move(name),
+        std::move(address),
+        array<int32_t>(samplingRateVec),
+        array<int32_t>(channelsVec),
+        array<int32_t>(channelMasks),
+        std::move(networkId),
+        std::move(taiheCb->audioRecorderChangeInfo.inputDeviceInfo.interruptGroupId),
+        std::move(taiheCb->audioRecorderChangeInfo.inputDeviceInfo.volumeGroupId),
+        std::move(displayName),
+        optional<::taihe::array<::ohos::multimedia::audio::AudioEncodingType>>(
+            std::in_place_t{}, array<::ohos::multimedia::audio::AudioEncodingType>(audioEncodingType)),
+        optional<bool>(std::nullopt),
+        optional<int32_t>(std::nullopt),
+    };
+    return descriptor;
 }
 }
 }

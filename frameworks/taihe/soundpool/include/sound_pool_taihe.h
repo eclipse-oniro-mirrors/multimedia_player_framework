@@ -35,24 +35,25 @@ class SoundPoolImpl {
 public:
     SoundPoolImpl(int32_t maxStreams, uintptr_t audioRendererInfo);
 
-    double LoadSync(string_view uri);
-    double LoadWithFdSync(double fd, double offset, double length);
-    double PlaySync(double soundID, optional_view<PlayParameters> params);
-    double PlayWithoutParam(double soundID);
-    double PlayWithParam(double soundID, PlayParameters const& params);
-    void StopSync(double streamID);
-    void UnloadSync(double soundID);
+    int32_t LoadSync(string_view uri);
+    int32_t LoadWithFdSync(int32_t fd, double offset, double length);
+    int32_t PlaySync(int32_t soundID, optional_view<PlayParameters> params);
+    int32_t PlayWithoutParam(int32_t soundID);
+    int32_t PlayWithParam(int32_t soundID, PlayParameters const& params);
+    void StopSync(int32_t streamID);
+    void UnloadSync(int32_t soundID);
     void ReleaseSync();
-    void SetLoopSync(double streamID, double loop);
-    void SetPrioritySync(double streamID, double priority);
-    void SetVolumeSync(double streamID, double leftVolume, double rightVolume);
+    void SetLoopSync(int32_t streamID, int32_t loop);
+    void SetPrioritySync(int32_t streamID, int32_t priority);
+    void SetRateSync(int32_t streamID, ::ohos::multimedia::audio::AudioRendererRate rate);
+    void SetVolumeSync(int32_t streamID, double leftVolume, double rightVolume);
     void OnError(callback_view<void(uintptr_t)> callback);
     void OffError();
 
-    void OnPlayFinishedWithStreamId(callback_view<void(double)> callback);
+    void OnPlayFinishedWithStreamId(callback_view<void(int32_t)> callback);
     void OffPlayFinishedWithStreamId();
 
-    void OnLoadComplete(callback_view<void(double)> callback);
+    void OnLoadComplete(callback_view<void(int32_t)> callback);
     void OffLoadComplete();
 
     void OnPlayFinished(callback_view<void(uintptr_t)> callback);
@@ -88,6 +89,7 @@ private:
     int32_t priority_ = 0;
     float leftVolume_ = 0.0f;
     float rightVolume_ = 0.0f;
+    OHOS::AudioStandard::AudioRendererRate renderRate_ = OHOS::AudioStandard::AudioRendererRate::RENDER_RATE_NORMAL;
 };
 
 struct SoundPoolAsyncContext {

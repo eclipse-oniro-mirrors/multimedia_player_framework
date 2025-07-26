@@ -117,8 +117,8 @@ public:
 
     ohos::multimedia::media::AVFileDescriptor GetFdSrc();
     void SetFdSrc(ohos::multimedia::media::AVFileDescriptor const& fdSrc);
-    double GetFdDst();
-    void SetFdDst(double fdDst);
+    int32_t GetFdDst();
+    void SetFdDst(int32_t fdDst);
     void PrepareSync(AVTranscoderConfig const& config);
     RetInfo Start();
     RetInfo Pause();
@@ -156,8 +156,8 @@ public:
     void OnError(callback_view<void(uintptr_t)> callback);
     void OffError(optional_view<callback<void(uintptr_t)>> callback);
 
-    void OnProgressUpdate(callback_view<void(double)> callback);
-    void OffProgressUpdate(optional_view<callback<void(double)>> callback);
+    void OnProgressUpdate(callback_view<void(int32_t)> callback);
+    void OffProgressUpdate(optional_view<callback<void(int32_t)>> callback);
 
     using AvTransCoderTaskqFunc = RetInfo (AVTranscoderImpl::*)();
 private:

@@ -31,9 +31,10 @@ using namespace OHOS::Media;
 
 class MediaSourceImpl {
 public:
-    static std::shared_ptr<AVMediaSourceTmp> GetMediaSource(weak::MediaSource mediaSource);
+    static std::shared_ptr<AVMediaSourceTmp> GetMediaSource(ohos::multimedia::media::weak::MediaSource mediaSource);
     static std::shared_ptr<AVMediaSourceTmp> GetMediaSource(MediaSourceImpl *mediaSourceImpl);
-    static std::shared_ptr<MediaSourceLoaderCallback> GetSourceLoader(weak::MediaSource mediaSource);
+    static std::shared_ptr<MediaSourceLoaderCallback> GetSourceLoader(
+        ohos::multimedia::media::weak::MediaSource mediaSource);
     MediaSourceImpl(string_view url, optional_view<map<string, string>> headers);
     MediaSourceImpl(array_view<::ohos::multimedia::media::MediaStream> streams);
     int64_t GetImplPtr();

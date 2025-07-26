@@ -160,22 +160,22 @@ void MediaSourceImpl::SetMediaResourceLoaderDelegate(::ohos::multimedia::media::
     mediaSourceLoaderCb_ = std::make_shared<MediaSourceLoaderCallback>();
     CHECK_AND_RETURN_LOG(mediaSourceLoaderCb_ != nullptr, "Cb_ is nullptr");
     ani_env *env = get_env();
-    std::shared_ptr<taihe::callback<double(ohos::multimedia::media::weak::MediaSourceLoadingRequest)>>
+    std::shared_ptr<taihe::callback<int64_t(ohos::multimedia::media::weak::MediaSourceLoadingRequest)>>
         taiheCallbackOpen = std::make_shared<taihe::callback<
-        double(ohos::multimedia::media::weak::MediaSourceLoadingRequest)>>(resourceLoader.open);
+        int64_t(ohos::multimedia::media::weak::MediaSourceLoadingRequest)>>(resourceLoader.open);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallbackOpen);
 
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     mediaSourceLoaderCb_->SaveCallbackReference(FunctionName::SOURCE_OPEN, autoRef);
 
-    std::shared_ptr<taihe::callback<void(double, double, double)>> taiheCallbackRead =
-        std::make_shared<taihe::callback<void(double, double, double)>>(resourceLoader.read);
+    std::shared_ptr<taihe::callback<void(int64_t, int64_t, int64_t)>> taiheCallbackRead =
+        std::make_shared<taihe::callback<void(int64_t, int64_t, int64_t)>>(resourceLoader.read);
     cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallbackRead);
     autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     mediaSourceLoaderCb_->SaveCallbackReference(FunctionName::SOURCE_READ, autoRef);
 
-    std::shared_ptr<taihe::callback<void(double)>> taiheCallbackClose =
-        std::make_shared<taihe::callback<void(double)>>(resourceLoader.close);
+    std::shared_ptr<taihe::callback<void(int64_t)>> taiheCallbackClose =
+        std::make_shared<taihe::callback<void(int64_t)>>(resourceLoader.close);
     cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallbackClose);
     autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     mediaSourceLoaderCb_->SaveCallbackReference(FunctionName::SOURCE_CLOSE, autoRef);

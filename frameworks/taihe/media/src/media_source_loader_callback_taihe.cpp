@@ -87,12 +87,11 @@ int64_t MediaSourceLoaderCallback::Open(std::shared_ptr<LoadingRequest> &request
         CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", taiheCb_->callbackName_.c_str());
         auto func = ref->callbackRef_;
         CHECK_AND_BREAK_LOG(func != nullptr, "failed to get callback");
-        std::shared_ptr<taihe::callback<
-            double(::ohos::multimedia::media::weak::MediaSourceLoadingRequest)>> cacheCallback =
-            std::reinterpret_pointer_cast<taihe::callback<double
-            (::ohos::multimedia::media::weak::MediaSourceLoadingRequest)>>(func);
+        std::shared_ptr<callback<int64_t(ohos::multimedia::media::weak::MediaSourceLoadingRequest)>> cacheCallback =
+            std::reinterpret_pointer_cast<callback<int64_t(ohos::multimedia::media::weak::MediaSourceLoadingRequest)>>
+                (func);
         taiheCb_->uuid_ = (*cacheCallback)(static_cast<
-            ::ohos::multimedia::media::weak::MediaSourceLoadingRequest>(
+            ohos::multimedia::media::weak::MediaSourceLoadingRequest>(
             MediaSourceLoadingRequestImpl::CreateLoadingRequest(taiheCb_->request_)));
         std::unique_lock<std::mutex> lock(taiheCb_->mutexCond_);
         taiheCb_->setResult_ = true;
@@ -130,10 +129,9 @@ void MediaSourceLoaderCallback::Read(int64_t uuid, int64_t requestedOffset, int6
         CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", taiheCb_->callbackName_.c_str());
         auto func = ref->callbackRef_;
         CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
-        std::shared_ptr<taihe::callback<void(double, double, double)>> cacheCallback =
-            std::reinterpret_pointer_cast<taihe::callback<void(double, double, double)>>(func);
-        (*cacheCallback)(static_cast<double>(taiheCb_->uuid_), static_cast<double>(taiheCb_->requestedOffset_),
-            static_cast<double>(taiheCb_->requestedLength_));
+        std::shared_ptr<taihe::callback<void(int64_t, int64_t, int64_t)>> cacheCallback =
+            std::reinterpret_pointer_cast<taihe::callback<void(int64_t, int64_t, int64_t)>>(func);
+        (*cacheCallback)(taiheCb_->uuid_, taiheCb_->requestedOffset_, taiheCb_->requestedLength_);
     } while (0);
 }
 
@@ -161,9 +159,9 @@ void MediaSourceLoaderCallback::Close(int64_t uuid)
         CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", taiheCb_->callbackName_.c_str());
         auto func = ref->callbackRef_;
         CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
-        std::shared_ptr<taihe::callback<void(double)>> cacheCallback =
-            std::reinterpret_pointer_cast<taihe::callback<void(double)>>(func);
-        (*cacheCallback)(static_cast<double>(taiheCb_->uuid_));
+        std::shared_ptr<taihe::callback<void(int64_t)>> cacheCallback =
+            std::reinterpret_pointer_cast<taihe::callback<void(int64_t)>>(func);
+        (*cacheCallback)(taiheCb_->uuid_);
     } while (0);
 }
 

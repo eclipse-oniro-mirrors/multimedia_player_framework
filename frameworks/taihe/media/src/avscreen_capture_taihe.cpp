@@ -68,12 +68,12 @@ optional<AVScreenCaptureRecorder> CreateAVScreenCaptureRecorderSync()
     return optional<AVScreenCaptureRecorder>(std::in_place, res);
 }
 
-void ReportAVScreenCaptureUserChoiceSync(double sessionId, string_view choice)
+void ReportAVScreenCaptureUserChoiceSync(int32_t sessionId, string_view choice)
 {
     MediaTrace trace("AVScreenCapture::TaiheReportAVScreenCaptureUserChoice");
     const std::string &opt = AVScreenCapturegOpt::REPORT_USER_CHOICE;
     MEDIA_LOGI("Taihe %{public}s Start", opt.c_str());
-    MEDIA_LOGI("TaiheReportAVScreenCaptureUserChoice sessionId: %{public}f, choice: %{public}s",
+    MEDIA_LOGI("TaiheReportAVScreenCaptureUserChoice sessionId: %{public}d, choice: %{public}s",
         sessionId, static_cast<std::string>(choice).c_str());
     auto asyncCtx = std::make_unique<AVScreenCaptureAsyncContext>();
     CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
@@ -450,7 +450,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureRecorderImpl::GetSkipPrivac
     });
 }
 
-void AVScreenCaptureRecorderImpl::SkipPrivacyModeSync(::taihe::array_view<double> windowIDs)
+void AVScreenCaptureRecorderImpl::SkipPrivacyModeSync(::taihe::array_view<int32_t> windowIDs)
 {
     MediaTrace trace("AVScreenCapture::TaiheSkipPrivacyMode");
     const std::string &option = AVScreenCapturegOpt::SKIP_PRIVACY_MODE;

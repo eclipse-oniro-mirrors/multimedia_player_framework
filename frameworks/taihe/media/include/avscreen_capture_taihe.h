@@ -66,7 +66,7 @@ public:
     void InitSync(::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config);
     void StartRecordingSync();
     void StopRecordingSync();
-    void SkipPrivacyModeSync(::taihe::array_view<double> windowIDs);
+    void SkipPrivacyModeSync(::taihe::array_view<int32_t> windowIDs);
     void SetMicEnabledSync(bool enable);
     void ReleaseSync();
 

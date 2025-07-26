@@ -71,6 +71,8 @@ public:
     void OnMaxAmplitudeCollectedCb(const int32_t extra, const Format &infoBody);
     void OnTrackInfoUpdate(const int32_t extra, const Format &infoBody);
     void OnTrackChangedCb(const int32_t extra, const Format &infoBody);
+    void OnAudioInterruptCb(const int32_t extra, const Format &infoBody);
+    void OnAudioDeviceChangeCb(const int32_t extra, const Format &infoBody);
     void OnDrmInfoUpdatedCb(const int32_t extra, const Format &infoBody);
     void OnSuperResolutionChangedCb(const int32_t extra, const Format &infoBody);
     void OnSeiInfoCb(const int32_t extra, const Format &infoBody);
