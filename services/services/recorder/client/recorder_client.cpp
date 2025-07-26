@@ -42,7 +42,7 @@ RecorderClient::RecorderClient(const sptr<IStandardRecorderService> &ipcProxy)
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
     QOS::QosLevel level;
     GetThreadQos(level);
-    MEDIA_LOGI("GetThreadQos %{public}d", (int32_t)level);
+    MEDIA_LOGI("GetThreadQos %{public}d", static_cast<int32_t>(level));
     if (level == QOS::QosLevel::QOS_USER_INTERACTIVE) {
         recorderProxy_->TransmitQos(level);
     }

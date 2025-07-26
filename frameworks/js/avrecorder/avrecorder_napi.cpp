@@ -268,7 +268,7 @@ napi_value AVRecorderNapi::JsPrepare(napi_env env, napi_callback_info info)
         if (asyncCtx->napi->GetConfig(asyncCtx, env, args[0]) == MSERR_OK) {
             QOS::QosLevel level;
             GetThreadQos(level);
-            MEDIA_LOGI("GetThreadQos %{public}d", (int32_t)level);
+            MEDIA_LOGI("GetThreadQos %{public}d", static_cast<int32_t>(level));
             if (level == QOS::QosLevel::QOS_USER_INTERACTIVE) {
                 asyncCtx->napi->taskQue_->SetQos(level);
             }
