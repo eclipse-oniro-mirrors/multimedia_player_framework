@@ -45,6 +45,7 @@ constexpr int32_t NUM_ZERO = 0;
 constexpr int32_t NUM_ONE = 0;
 constexpr int32_t NUM_TWO = 0;
 constexpr int32_t NUM_THREE = 0;
+constexpr int32_t PATTERNDURATION_TIME_MS = 800; //ms
 
 void CopyEvent(const VibratorEvent &strongEvent, VibratorEvent &weakEvent)
 {
@@ -702,7 +703,7 @@ int32_t AudioHapticVibratorImpl::PlayVibrationPattern(
 
     // last pattern need to wait
     if (patternIndex == vibratorPkg->patternNum - 1) {
-        int32_t lastPatternDuration = vibratorPkg->patterns[patternIndex].patternDuration;
+        int32_t lastPatternDuration = vibratorPkg->patterns[patternIndex].patternDuration + PATTERNDURATION_TIME_MS;
         (void)vibrateCV_.wait_for(lock, std::chrono::milliseconds(lastPatternDuration),
             [this]() { return isStopped_ || isNeedRestart_; });
         CHECK_AND_RETURN_RET_LOG(!isStopped_ && !isNeedRestart_, result,
