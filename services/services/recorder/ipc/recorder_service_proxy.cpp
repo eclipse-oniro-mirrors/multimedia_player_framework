@@ -17,7 +17,6 @@
 #include "recorder_listener_stub.h"
 #include "media_log.h"
 #include "media_errors.h"
-#include "qos.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_RECORDER, "RecorderServiceProxy"};
