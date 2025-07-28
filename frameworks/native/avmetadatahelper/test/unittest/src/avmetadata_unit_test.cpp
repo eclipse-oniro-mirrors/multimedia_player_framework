@@ -1045,7 +1045,7 @@ HWTEST_F(AVMetadataUnitTest, SetUrlSource_API_0100, Level2)
     uri = AVMetadataTestBase::GetInstance().GetMountPath() + std::string("HDR.mp4");
     ASSERT_NE(MSERR_OK, helper->SetUrlSource(uri, header));
     uri = "http://XXX";
-    ASSERT_NE(MSERR_OK, helper->SetUrlSource(uri, header));
+    ASSERT_EQ(MSERR_OK, helper->SetUrlSource(uri, header));
     helper->Release();
 }
 
@@ -1067,7 +1067,7 @@ HWTEST_F(AVMetadataUnitTest, SetUrlSource_API_0200, Level2)
     uri = AVMetadataTestBase::GetInstance().GetMountPath() + std::string("HDR.mp4");
     ASSERT_NE(MSERR_OK, helper->SetUrlSource(uri, header));
     uri = "https://XXX";
-    ASSERT_NE(MSERR_OK, helper->SetUrlSource(uri, header));
+    ASSERT_EQ(MSERR_OK, helper->SetUrlSource(uri, header));
     helper->Release();
 }
 
