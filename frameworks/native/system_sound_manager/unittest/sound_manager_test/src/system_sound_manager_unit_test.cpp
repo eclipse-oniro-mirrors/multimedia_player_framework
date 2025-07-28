@@ -207,6 +207,29 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetAlarmToneUri_001, TestS
 }
 
 /**
+ * @tc.name  : Test GetAlarmToneAttrs API
+ * @tc.number: Media_SoundManager_GetAlarmToneAttrs_001
+ * @tc.desc  : Test GetAlarmToneAttrs interface. Returns attributes of the default system tone.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetAlarmToneAttrs_001, TestSize.Level2)
+{
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+    bool isProxy = false;
+    DatabaseTool databaseTool = {true, isProxy, nullptr};
+    ToneAttrs toneAttrs_ = systemSoundManager_->GetAlarmToneAttrs(context_);
+    EXPECT_EQ(toneAttrs_.GetUri().empty(), false);
+    toneAttrs_ = systemSoundManager_->GetAlarmToneAttrs(databaseTool);
+    EXPECT_EQ(toneAttrs_.GetUri().empty(), true);
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
+        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    databaseTool = {true, isProxy, dataShareHelper};
+    toneAttrs_ = systemSoundManager_->GetAlarmToneAttrs(databaseTool);
+    EXPECT_EQ(toneAttrs_.GetUri().empty(), false);
+    dataShareHelper->Release();
+}
+
+/**
  * @tc.name  : Test SetAlarmToneUri API
  * @tc.number: Media_SoundManager_SetAlarmToneUri_001
  * @tc.desc  : Test SetAlarmToneUri interface. Returns attributes of the default system tone.
@@ -558,11 +581,11 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetHapticsUriByStyle_001, 
     std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
         std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
     EXPECT_NE(systemSoundManagerImpl_, nullptr);
-
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
+        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     EXPECT_NE(dataShareHelper, nullptr);
 
-    DatabaseTool databaseTool = {false, false, dataShareHelper};
+    DatabaseTool databaseTool = {true, false, dataShareHelper};
     std::string hapticsUri = systemSoundManagerImpl_->GetHapticsUriByStyle(databaseTool, "test",
         HapticsStyle::HAPTICS_STYLE_GENTLE);
     EXPECT_EQ(hapticsUri.empty(), true);
@@ -891,6 +914,82 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetSystemToneUri_001, Test
     int SYSTEM_TONE_TYPE_SIM_CARD_DEFAULT = 2;
     systemSoundManager_->GetSystemToneUri(context_, static_cast<SystemToneType>(SYSTEM_TONE_TYPE_SIM_CARD_DEFAULT));
     EXPECT_NE(systemSoundManager_, nullptr);
+}
+
+/**
+ * @tc.name  : Test GetSystemToneAttrs API
+ * @tc.number: Media_SoundManager_GetSystemToneAttrs_001
+ * @tc.desc  : Test GetSystemToneAttrs interface.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetSystemToneAttrs_001, TestSize.Level2)
+{
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    bool isProxy = false;
+    DatabaseTool databaseTool = {true, isProxy, nullptr};
+    ToneAttrs toneAttrs_ = systemSoundManager_->GetSystemToneAttrs(databaseTool, SYSTEM_TONE_TYPE_SIM_CARD_0);
+    EXPECT_EQ(toneAttrs_.GetUri().empty(), true);
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
+        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    databaseTool = {true, isProxy, dataShareHelper};
+    toneAttrs_ = systemSoundManager_->GetSystemToneAttrs(databaseTool, static_cast<SystemToneType>(2));
+    EXPECT_EQ(toneAttrs_.GetUri().empty(), false);
+}
+
+/**
+ * @tc.name  : Test GetSystemToneAttrs API
+ * @tc.number: Media_SoundManager_GetSystemToneAttrs_002
+ * @tc.desc  : Test GetSystemToneAttrs interface.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetSystemToneAttrs_002, TestSize.Level2)
+{
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    bool isProxy = true;
+    DatabaseTool databaseTool = {true, isProxy, nullptr};
+    ToneAttrs toneAttrs_ = systemSoundManager_->GetSystemToneAttrs(databaseTool, SYSTEM_TONE_TYPE_NOTIFICATION);
+    EXPECT_EQ(toneAttrs_.GetUri().empty(), true);
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
+        SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID);
+    databaseTool = {true, isProxy, dataShareHelper};
+    toneAttrs_ = systemSoundManager_->GetSystemToneAttrs(databaseTool, static_cast<SystemToneType>(2));
+    EXPECT_EQ(toneAttrs_.GetUri().empty(), false);
+}
+
+/**
+ * @tc.name  : Test GetSystemToneAttrs API
+ * @tc.number: Media_SoundManager_GetSystemToneAttrs_003
+ * @tc.desc  : Test GetSystemToneAttrs interface.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetSystemToneAttrs_003, TestSize.Level2)
+{
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    bool isProxy = false;
+    DatabaseTool databaseTool = {true, isProxy, nullptr};
+    ToneAttrs toneAttrs_ = systemSoundManager_->GetSystemToneAttrs(databaseTool, SYSTEM_TONE_TYPE_NOTIFICATION);
+    EXPECT_EQ(toneAttrs_.GetUri().empty(), true);
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
+        SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID);
+    databaseTool = {true, isProxy, dataShareHelper};
+    toneAttrs_ = systemSoundManager_->GetSystemToneAttrs(databaseTool, static_cast<SystemToneType>(2));
+    EXPECT_EQ(toneAttrs_.GetUri().empty(), false);
+}
+
+/**
+ * @tc.name  : Test GetSystemToneAttrs API
+ * @tc.number: Media_SoundManager_GetSystemToneAttrs_004
+ * @tc.desc  : Test GetSystemToneAttrs interface.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetSystemToneAttrs_004, TestSize.Level2)
+{
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    bool isProxy = true;
+    DatabaseTool databaseTool = {true, isProxy, nullptr};
+    ToneAttrs toneAttrs_ = systemSoundManager_->GetSystemToneAttrs(databaseTool, SYSTEM_TONE_TYPE_SIM_CARD_0);
+    EXPECT_EQ(toneAttrs_.GetUri().empty(), true);
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
+        SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID);
+    databaseTool = {true, isProxy, dataShareHelper};
+    toneAttrs_ = systemSoundManager_->GetSystemToneAttrs(databaseTool, static_cast<SystemToneType>(2));
+    EXPECT_EQ(toneAttrs_.GetUri().empty(), false);
 }
 
 /**
@@ -1561,6 +1660,68 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_OpenToneUri_001, TestSize.
         std::string uri = vec[0]->GetUri();
         fd = systemSoundManager_->OpenToneUri(context_, uri, ToneType::TONE_TYPE_ALARM);
     }
+    EXPECT_NE(systemSoundManager_, nullptr);
+}
+
+/**
+ * @tc.name  : Test OpenToneUri API
+ * @tc.number: Media_SoundManager_OpenToneUri_002
+ * @tc.desc  : Test OpenToneUri interface. Returns attributes of the default system tone.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_OpenToneUri_002, TestSize.Level2)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+    int fd = systemSoundManager_->OpenToneUri(context_, "test", ToneType::TONE_TYPE_ALARM);
+    EXPECT_LT(fd, 0);
+    auto vec = systemSoundManager_->GetAlarmToneAttrList(context_);
+    if (vec.size() > 0) {
+        std::string uri = vec[0]->GetUri();
+        fd = systemSoundManager_->OpenToneUri(context_, uri, ToneType::TONE_TYPE_ALARM);
+    }
+    EXPECT_NE(systemSoundManager_, nullptr);
+}
+
+/**
+ * @tc.name  : Test OpenToneUri
+ * @tc.number: Media_SoundManager_OpenToneUri_003
+ * @tc.desc  : Test OpenToneUri interface. Returns attributes of the default system tone.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_OpenToneUri_003, TestSize.Level2)
+{
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+    bool isProxy = false;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
+        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
+    int fd = systemSoundManager_->OpenToneUri(databaseTool, "test", ToneType::TONE_TYPE_ALARM);
+    EXPECT_LT(fd, 0);
+    ToneAttrs toneAttrs_ = systemSoundManager_->GetAlarmToneAttrs(context_);
+    std::string uri = toneAttrs_.GetUri();
+    fd = systemSoundManager_->OpenToneUri(context_, uri, ToneType::TONE_TYPE_ALARM);
+
+    EXPECT_NE(systemSoundManager_, nullptr);
+}
+
+/**
+ * @tc.name  : Test OpenToneUri
+ * @tc.number: Media_SoundManager_OpenToneUri_004
+ * @tc.desc  : Test OpenToneUri interface. Returns attributes of the default system tone.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_OpenToneUri_004, TestSize.Level2)
+{
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+    bool isProxy = true;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
+        SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID);
+    DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
+    int fd = systemSoundManager_->OpenToneUri(databaseTool, "test", ToneType::TONE_TYPE_ALARM);
+    EXPECT_LT(fd, 0);
+    ToneAttrs toneAttrs_ = systemSoundManager_->GetAlarmToneAttrs(context_);
+    std::string uri = toneAttrs_.GetUri();
+    fd = systemSoundManager_->OpenToneUri(context_, uri, ToneType::TONE_TYPE_ALARM);
     EXPECT_NE(systemSoundManager_, nullptr);
 }
 
