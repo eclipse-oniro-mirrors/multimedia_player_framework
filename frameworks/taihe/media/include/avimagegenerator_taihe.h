@@ -40,10 +40,6 @@ private:
     std::shared_ptr<OHOS::Media::AVMetadataHelper> helper_;
     struct OHOS::Media::AVFileDescriptor fileDescriptor_;
     OHOS::Media::HelperState state_ { OHOS::Media::HelperState::HELPER_STATE_IDLE };
-    std::shared_ptr<OHOS::Media::PixelMap> pixel_ = nullptr;
-    int64_t timeUs_ = 0;
-    int32_t option_ = 0;
-    OHOS::Media::PixelMapParams param_;
 };
 } // namespace ANI::Media
 #endif // AVIMAGEGENERATOR_TAIHE_H

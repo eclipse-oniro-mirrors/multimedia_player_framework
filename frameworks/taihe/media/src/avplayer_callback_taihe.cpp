@@ -329,7 +329,7 @@ public:
                 seiMessages.push_back(seiMessage);
             }
             array_view<SeiMessage> seiMessageView(seiMessages);
-            (*cacheCallback)(seiMessageView, optional_view<int32_t>(&playbackPosition));
+            (*cacheCallback)(seiMessageView, optional<int32_t>::make(playbackPosition));
         }
     };
     struct PropertyInt : public Base {
@@ -345,22 +345,6 @@ public:
             std::shared_ptr<taihe::callback<void(ohos::multimedia::audio::InterruptEvent const&)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void(
                     ohos::multimedia::audio::InterruptEvent const&)>>(func);
-
-            ohos::multimedia::audio::InterruptType::key_t eventTypeKey;
-            MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::InterruptType>(interruptEvent_.eventType,
-                eventTypeKey);
-            valueMap["eventType"] = static_cast<int32_t>(eventTypeKey);
-
-            ohos::multimedia::audio::InterruptForceType::key_t forceTypeKey;
-            MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::InterruptForceType>(interruptEvent_.forceType,
-                forceTypeKey);
-
-            valueMap["forceType"] = static_cast<int32_t>(forceTypeKey);
-            ohos::multimedia::audio::InterruptHint::key_t hintTypeKey;
-            MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::InterruptHint>(interruptEvent_.hintType,
-                hintTypeKey);
-
-            valueMap["hintType"] = static_cast<int32_t>(hintTypeKey);
 
             ohos::multimedia::audio::InterruptEvent interruptEvent = {
                 .eventType = ohos::multimedia::audio::InterruptType(static_cast<
