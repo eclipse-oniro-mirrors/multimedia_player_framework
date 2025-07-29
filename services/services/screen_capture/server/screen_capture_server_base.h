@@ -381,7 +381,8 @@ class SCWindowInfoChangedListener : public Rosen::IWindowInfoChangedListener {
 public:
     explicit SCWindowInfoChangedListener(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
     ~SCWindowInfoChangedListener() override = default;
-    void OnWindowInfoChanged(const std::vector<std::unordered_map<WindowInfoKey, std::any>>& windowInfoList) override;
+    void OnWindowInfoChanged(const std::vector<std::unordered_map<WindowInfoKey,
+        WindowChangeInfoType>>& windowInfoList) override;
 
 private:
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
