@@ -286,11 +286,9 @@ void SeekContinuousDelegator::Release()
     if (draggingPlayer_ != nullptr) {
         draggingPlayer_->Release();
     }
-    if (draggingPlayer_ != nullptr) {
+    if (demuxer_ != nullptr) {
         auto res = demuxer_->PauseDragging();
         FALSE_LOG_MSG(res == Status::OK, "PauseDragging failed");
-    }
-    if (demuxer_ != nullptr) {
         demuxer_->DeregisterVideoStreamReadyCallback();
     }
     if (decoder_ != nullptr) {
