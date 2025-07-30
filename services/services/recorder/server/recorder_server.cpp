@@ -1195,13 +1195,12 @@ int32_t RecorderServer::TransmitQos(QOS::QosLevel level)
 {
     MEDIA_LOGI("TransmitQos in");
     std::lock_guard<std::mutex> lock(mutex_);
-    MEDIA_LOGI("TransmitQos %{public}d", (int32_t)level);
+    MEDIA_LOGI("TransmitQos %{public}d", static_cast<int32_t>(level));
     clientQos_ = level;
 
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
-        MEDIA_LOGI("clientQos_ %{public}d", (int32_t)clientQos_);
+        MEDIA_LOGI("clientQos_ %{public}d", static_cast<int32_t>(clientQos_));
         if (clientQos_ == QOS::QosLevel::QOS_USER_INTERACTIVE) {
-            MEDIA_LOGI("RES_TYPE_THREAD_QOS_CHANGE");
             std::unordered_map<std::string, std::string> mapPayload;
             mapPayload["bundleName"] = "media_service";
             mapPayload["pid"] = std::to_string(getpid());
