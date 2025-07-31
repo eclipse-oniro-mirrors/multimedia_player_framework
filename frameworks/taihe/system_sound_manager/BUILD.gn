@@ -26,8 +26,22 @@ copy_taihe_idl("copy_system_sound_manager_taihe") {
   sources = [
     "//foundation/multimedia/player_framework/frameworks/taihe/idl/ohos.multimedia.systemSoundManager.taihe",
     "//foundation/multimedia/player_framework/frameworks/taihe/idl/ohos.multimedia.systemSoundManager.context.taihe",
+  ]
+  deps = [
+    ":copy_system_tone_player_taihe",
+    ":copy_ringtone_player_taihe",
+  ]
+}
+
+copy_taihe_idl("copy_system_tone_player_taihe") {
+  sources = [
     "//foundation/multimedia/player_framework/frameworks/taihe/idl/systemTonePlayer.taihe",
-    "//foundation/multimedia/player_framework/frameworks/taihe/idl/ringtonePlayer.taihe"
+  ]
+}
+
+copy_taihe_idl("copy_ringtone_player_taihe") {
+  sources = [
+    "//foundation/multimedia/player_framework/frameworks/taihe/idl/ringtonePlayer.taihe",
   ]
 }
 
