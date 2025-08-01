@@ -3004,6 +3004,7 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
     }
     
     MEDIA_LOG_D_SHORT("NotifySeekDone seekPos: %{public}d", seekPos);
+    syncManager_->UpdataPausedMediaTime(seekPos);
     callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, seekPos, format);
     callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, seekPos, format);
 }
