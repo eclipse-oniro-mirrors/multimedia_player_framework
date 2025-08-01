@@ -51,6 +51,21 @@ static const std::unordered_map<Plugins::FileType, std::string> fileTypeMap = {
     { Plugins::FileType::MPEGPS, "mpg" }
 };
 
+static const std::unordered_map<Plugins::VideoOrientationType, int32_t> videoOrientationTypeMap = {
+    { Plugins::VideoOrientationType::ROTATE_NONE, VideoRotateOrientationType::TOP_LEFT },
+    { Plugins::VideoOrientationType::ROTATE_90, VideoRotateOrientationType::LEFT_BOTTOM },
+    { Plugins::VideoOrientationType::ROTATE_180, VideoRotateOrientationType::BOTTOM_RIGHT },
+    { Plugins::VideoOrientationType::ROTATE_270, VideoRotateOrientationType::RIGHT_TOP },
+    { Plugins::VideoOrientationType::FLIP_H, VideoRotateOrientationType::TOP_RIGHT },
+    { Plugins::VideoOrientationType::FLIP_V, VideoRotateOrientationType::BOTTOM_LEFT },
+    { Plugins::VideoOrientationType::FLIP_H_ROT90, VideoRotateOrientationType::LEFT_TOP },
+    { Plugins::VideoOrientationType::FLIP_V_ROT90, VideoRotateOrientationType::RIGHT_BOTTOM },
+    { Plugins::VideoOrientationType::FLIP_H_ROT180, VideoRotateOrientationType::BOTTOM_LEFT },
+    { Plugins::VideoOrientationType::FLIP_V_ROT180, VideoRotateOrientationType::TOP_RIGHT },
+    { Plugins::VideoOrientationType::FLIP_H_ROT270, VideoRotateOrientationType::RIGHT_BOTTOM },
+    { Plugins::VideoOrientationType::FLIP_V_ROT270, VideoRotateOrientationType::LEFT_TOP },
+};
+
 static const std::unordered_map<int32_t, std::string> AVMETA_KEY_TO_X_MAP = {
     { AV_KEY_ALBUM, Tag::MEDIA_ALBUM },
     { AV_KEY_ALBUM_ARTIST, Tag::MEDIA_ALBUM_ARTIST },
@@ -70,6 +85,7 @@ static const std::unordered_map<int32_t, std::string> AVMETA_KEY_TO_X_MAP = {
     { AV_KEY_VIDEO_HEIGHT, Tag::VIDEO_HEIGHT },
     { AV_KEY_VIDEO_WIDTH, Tag::VIDEO_WIDTH },
     { AV_KEY_VIDEO_ORIENTATION, Tag::VIDEO_ROTATION },
+    { AV_KEY_VIDEO_ROTATE_ORIENTATION, Tag::VIDEO_ORIENTATION_TYPE },
     { AV_KEY_VIDEO_IS_HDR_VIVID, Tag::VIDEO_IS_HDR_VIVID },
     { AV_KEY_LOCATION_LONGITUDE, Tag::MEDIA_LONGITUDE},
     { AV_KEY_LOCATION_LATITUDE, Tag::MEDIA_LATITUDE},
@@ -430,6 +446,7 @@ void AVMetaDataCollector::FormatAVMeta(
     }
     FormatMimeType(avmeta, globalInfo);
     FormatDateTime(avmeta, globalInfo);
+    FormatVideoRotateOrientation(avmeta);
 }
 
 void AVMetaDataCollector::FormatMimeType(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo)
@@ -468,6 +485,25 @@ void AVMetaDataCollector::FormatDateTime(Metadata &avmeta, const std::shared_ptr
         formattedDateTime.compare(date) != 0 ? formattedDateTime : TimeFormatUtils::FormatDataTimeByString(date));
 }
 
+void AVMetaDataCollector::FormatVideoRotateOrientation(Metadata &avmeta)
+{
+    std::string videoRotateOrientationType = avmeta.GetMeta(AV_KEY_VIDEO_ROTATE_ORIENTATION);
+    MEDIA_LOGI("VideoRotateOrientationType is %{public}s", videoRotateOrientationType.c_str());
+    int32_t videoRotateOrientationTypeRet = Plugins::VideoOrientationType::ROTATE_NONE;
+    if (videoRotateOrientationType == "") {
+        MEDIA_LOGE("videoRotateOrientationType is empty");
+        avmeta.SetMeta(AV_KEY_VIDEO_ROTATE_ORIENTATION, std::to_string(VideoRotateOrientationType::TOP_LEFT));
+        return;
+    }
+    videoRotateOrientationTypeRet = std::stoi(videoRotateOrientationType);
+    Plugins::VideoOrientationType videoOrientationType =
+        static_cast<Plugins::VideoOrientationType>(videoRotateOrientationTypeRet);
+    auto it = videoOrientationTypeMap.find(videoOrientationType);
+    CHECK_AND_RETURN_LOG(it != videoOrientationTypeMap.end(),
+        "can't find mapped videoOrientationType name in videoOrientationTypeMap");
+    avmeta.SetMeta(AV_KEY_VIDEO_ROTATE_ORIENTATION, std::to_string(it->second));
+}
+
 void AVMetaDataCollector::SetEmptyStringIfNoData(Metadata &avmeta, int32_t avKey) const
 {
     if (!avmeta.HasMeta(avKey)) {
@@ -493,6 +529,11 @@ bool AVMetaDataCollector::SetStringByValueType(const std::shared_ptr<Meta> &inne
         Plugins::VideoRotation rotation;
         if (innerMeta->GetData(innerKey, rotation)) {
             avmeta.SetMeta(avKey, std::to_string(rotation));
+        }
+    } else if (Any::IsSameTypeWith<Plugins::VideoOrientationType>(type)) {
+        Plugins::VideoOrientationType orientation;
+        if (innerMeta->GetData(innerKey, orientation)) {
+            avmeta.SetMeta(avKey, std::to_string(orientation));
         }
     } else if (Any::IsSameTypeWith<int64_t>(type)) {
         int64_t duration;
