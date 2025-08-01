@@ -118,12 +118,10 @@ optional<ohos::multimedia::audio::AudioEffectMode> AVPlayerImpl::GetAudioEffectM
     MEDIA_LOGI("TaiheGetAudioEffectMode In");
     ohos::multimedia::audio::AudioEffectMode::key_t audioEffectModeKey;
     MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::AudioEffectMode>(audioEffectMode_, audioEffectModeKey);
-    ::ohos::multimedia::audio::AudioEffectMode changeReason =
-    static_cast<::ohos::multimedia::audio::AudioEffectMode>(audioEffectModeKey);
-    ::ohos::multimedia::audio::AudioEffectMode audioEffectMode = {
-        changeReason,
-    };
+    ohos::multimedia::audio::AudioEffectMode audioEffectMode = ohos::multimedia::audio::AudioEffectMode(
+        audioEffectModeKey);
 
+    MEDIA_LOGI("TaiheGetAudioEffectMode Out");
     return optional<ohos::multimedia::audio::AudioEffectMode>(std::in_place_t{}, audioEffectMode);
 }
 
@@ -137,30 +135,32 @@ void AVPlayerImpl::SetAudioEffectMode(optional_view<ohos::multimedia::audio::Aud
             "current state is not prepared/playing/paused/completed, unsupport audio effect mode operation");
         return;
     }
+    int32_t effectMode = OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT;
     if (audioEffectMode.has_value()) {
-        int32_t effectMode = static_cast<int32_t>(audioEffectMode.value());
-        if (effectMode > OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT ||
-            effectMode < OHOS::AudioStandard::AudioEffectMode::EFFECT_NONE) {
-            OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
-                "invalid audioEffectMode, please check the input audio effect Mode");
-            return;
-        }
-        if (audioEffectMode_ == effectMode) {
-            MEDIA_LOGI("Same effectMode parameter");
-            return;
-        }
-        audioEffectMode_ = effectMode;
-        auto task = std::make_shared<TaskHandler<void>>([this, effectMode]() {
-            MEDIA_LOGI("TaiheSetAudioEffectMode Task in");
-            if (player_ != nullptr) {
-                Format format;
-                (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, effectMode);
-                (void)player_->SetParameter(format);
-            }
-            MEDIA_LOGI("TaiheSetAudioEffectMode Task out");
-        });
-        (void)taskQue_->EnqueueTask(task);
+        effectMode = static_cast<int32_t>(audioEffectMode.value());
     }
+    if (effectMode > OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT ||
+        effectMode < OHOS::AudioStandard::AudioEffectMode::EFFECT_NONE) {
+        OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
+            "invalid audioEffectMode, please check the input audio effect Mode");
+        return;
+    }
+    if (audioEffectMode_ == effectMode) {
+        MEDIA_LOGI("Same effectMode parameter");
+        return;
+    }
+    audioEffectMode_ = effectMode;
+    auto task = std::make_shared<TaskHandler<void>>([this, effectMode]() {
+        MEDIA_LOGI("TaiheSetAudioEffectMode Task in");
+        if (player_ != nullptr) {
+            Format format;
+            (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, effectMode);
+            (void)player_->SetParameter(format);
+        }
+        MEDIA_LOGI("TaiheSetAudioEffectMode Task out");
+    });
+    (void)taskQue_->EnqueueTask(task);
+    
     MEDIA_LOGI("TaiheSetAudioEffectMode Out");
     return;
 }

@@ -37,7 +37,14 @@ void AVTransCoderCallback::SendCompleteCallback()
     CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
     cb->autoRef = refMap_.at(AVTransCoderEvent::EVENT_COMPLETE);
     cb->callbackName = AVTransCoderEvent::EVENT_COMPLETE;
-    return OnTaiheCompleteCallBack(cb);
+    auto task = [this, cb]() {
+        this->OnTaiheCompleteCallBack(cb);
+    };
+    bool ret = mainHandler_->PostTask(task, "OnComplete", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    if (!ret) {
+        MEDIA_LOGE("Failed to PostTask!");
+        delete cb;
+    }
 }
 
 void AVTransCoderCallback::SendProgressUpdateCallback(int32_t progress)
@@ -52,6 +59,16 @@ void AVTransCoderCallback::SendProgressUpdateCallback(int32_t progress)
     cb->autoRef = refMap_.at(AVTransCoderEvent::EVENT_PROGRESS_UPDATE);
     cb->callbackName = AVTransCoderEvent::EVENT_PROGRESS_UPDATE;
     cb->progress = progress;
+
+    auto task = [this, cb]() {
+        this->OnTaiheProgressUpdateCallback(cb);
+    };
+    bool ret = mainHandler_->PostTask(task, "OnProgressUpdate",
+        0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    if (!ret) {
+        MEDIA_LOGE("Failed to PostTask!");
+        delete cb;
+    }
 }
 
 void AVTransCoderCallback::OnError(int32_t errCode, const std::string &errorMsg)

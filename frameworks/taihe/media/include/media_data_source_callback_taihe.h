@@ -16,6 +16,7 @@
 #define MEDIA_DATA_SOURCE_CALLBACK_TAIHE_H
 
 #include <mutex>
+#include "event_handler.h"
 #include "media_ani_common.h"
 #include "media_data_source.h"
 
@@ -42,6 +43,10 @@ struct MediaDataSourceTHCallback {
     bool isExit_ = false;
 };
 
+struct MediaDataSourceTHCallbackWraper {
+    std::weak_ptr<MediaDataSourceTHCallback> cb_;
+};
+
 class MediaDataSourceCallback : public OHOS::Media::IMediaDataSource, public OHOS::NoCopyable {
 public:
     MediaDataSourceCallback(int64_t fileSize);
@@ -54,12 +59,14 @@ public:
 
     int32_t ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<OHOS::Media::AVSharedMemory> &mem) override;
     int32_t ReadAt(uint32_t length, const std::shared_ptr<OHOS::Media::AVSharedMemory> &mem) override;
+    std::shared_ptr<OHOS::AppExecFwk::EventHandler> mainHandler_ = nullptr;
 private:
+    void UvWork(MediaDataSourceTHCallbackWraper *cbWrap);
     std::mutex mutex_;
     std::map<std::string, std::shared_ptr<AutoRef>> refMap_;
     int64_t size_ = -1;
     std::shared_ptr<MediaDataSourceTHCallback> cb_ = nullptr;
 };
 } // namespace Media
-} // namespace OHOS
+} // namespace ANI
 #endif // MEDIA_DATA_SOURCE_CALLBACK_TAIHE_H

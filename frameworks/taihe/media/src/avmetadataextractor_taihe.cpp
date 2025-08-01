@@ -337,7 +337,7 @@ void AVMetadataExtractorImpl::ReleaseSync()
     helper_->Release();
 }
 
-int32_t AVMetadataExtractorImpl::GetFrameIndexByTimeSync(double timeUs)
+int32_t AVMetadataExtractorImpl::GetFrameIndexByTimeSync(int64_t timeUs)
 {
     OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::GetFrameIndexByTimeSync");
     timeStamp_ = static_cast<uint64_t>(timeUs);
@@ -356,7 +356,7 @@ int32_t AVMetadataExtractorImpl::GetFrameIndexByTimeSync(double timeUs)
     return static_cast<int32_t>(index_);
 }
 
-double AVMetadataExtractorImpl::GetTimeByFrameIndexSync(int32_t index)
+int64_t AVMetadataExtractorImpl::GetTimeByFrameIndexSync(int32_t index)
 {
     OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::GetTimeByFrameIndexSync");
     if (index < 0) {
@@ -376,7 +376,7 @@ double AVMetadataExtractorImpl::GetTimeByFrameIndexSync(int32_t index)
         set_business_error(OHOS::Media::MSERR_EXT_API9_UNSUPPORT_FORMAT, "Demuxer getTimeByFrameIndex failed.");
         return -1;
     }
-    return static_cast<double>(timeStamp_);
+    return static_cast<int64_t>(timeStamp_);
 }
 } // namespace ANI::Media
 

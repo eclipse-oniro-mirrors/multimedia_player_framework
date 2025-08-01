@@ -99,8 +99,8 @@ private:
     OHOS::sptr<OHOS::Surface> surface_;
     std::shared_ptr<RecorderCallback> callback_ = nullptr;
     std::map<std::string, std::shared_ptr<AutoRef>> refMap_;
-    int32_t videoSourceID;
-    int32_t audioSourceID;
+    int32_t videoSourceID = 0;
+    int32_t audioSourceID = 0;
 };
 
 struct VideoRecorderAsyncContext {
@@ -113,15 +113,6 @@ struct VideoRecorderAsyncContext {
     std::string errMessage = "";
     bool delFlag = true;
     VideoRecorderImpl *taihe = nullptr;
-};
-
-class VideoRecorderConfigImpl {
-public:
-    VideoRecorderConfigImpl();
-    std::string GetUrl();
-    void SetUrl(string_view url);
-
-private:
 };
 
 } // namespace Media

@@ -56,7 +56,7 @@ function GetScreenCaptureMonitorSync(): Optional<ScreenCaptureMonitor>;
 
 @gen_async("createSoundPool")
 @gen_promise("createSoundPool")
-function CreateSoundPoolSync(maxStreams: i32, audioRendererInfo: @sts_type("audio.AudioRendererInfo") Opaque): Optional<SoundPool>;
+function CreateSoundPoolSync(maxStreams: i32, audioRendererInfo: audio.AudioRendererInfo): Optional<SoundPool>;
 
 @gen_async("createVideoRecorder")
 @gen_promise("createVideoRecorder")
