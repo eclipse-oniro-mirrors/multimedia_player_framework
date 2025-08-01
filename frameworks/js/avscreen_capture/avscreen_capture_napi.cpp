@@ -115,7 +115,7 @@ napi_value AVScreenCaptureNapi::Constructor(napi_env env, napi_callback_info inf
         MEDIA_LOGE("failed to CreateScreenCaptureCb");
         return result;
     }
-      
+
     (void)jsScreenCapture->screenCapture_->SetScreenCaptureCallback(jsScreenCapture->screenCaptureCb_);
 
     status = napi_wrap(env, jsThis, reinterpret_cast<void *>(jsScreenCapture),
@@ -189,7 +189,7 @@ RetInfo GetReturnInfo(int32_t errCode, const std::string &operate, const std::st
     MEDIA_LOGE("failed to %{public}s, param %{public}s, errCode = %{public}d",
         operate.c_str(), param.c_str(), errCode);
     MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode));
-    
+
     std::string message;
     if (err == MSERR_EXT_API9_INVALID_PARAMETER) {
         message = MSExtErrorAPI9ToString(err, param, "") + add;
@@ -828,8 +828,8 @@ int32_t AVScreenCaptureNapi::GetVideoCaptureInfo(std::unique_ptr<AVScreenCapture
     ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "fillMode", fillMode);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, (asyncCtx->AVScreenCaptureSignError(
         ret, "getScreenCaptureFillMode", "screenCaptureFillMode"), ret));
-    videoConfig.screenCaptureFillMode = GetScreenCaptureFillMode(fillMode);
-    MEDIA_LOGI("input screenCaptureFillMode %{public}d", videoConfig.screenCaptureFillMode);
+    SetScreenCaptureFillMode(asyncCtx->config_.strategy, fillMode);
+    MEDIA_LOGI("input screenCaptureFillMode %{public}d", asyncCtx->config_.strategy.fillMode);
     return MSERR_OK;
 }
 
@@ -979,21 +979,23 @@ VideoCodecFormat AVScreenCaptureNapi::GetVideoCodecFormat(const int32_t &preset)
     return codecFormat;
 }
 
-AVScreenCaptureFillMode AVScreenCaptureNapi::GetScreenCaptureFillMode(const int32_t &fillMode)
+int32_t AVScreenCaptureNapi::SetScreenCaptureFillMode(ScreenCaptureStrategy &strategy, const int32_t &fillMode)
 {
-    MEDIA_LOGI("AVScreenCaptureNapi::GetScreenCaptureFillMode in!");
+    MEDIA_LOGI("AVScreenCaptureNapi::SetScreenCaptureFillMode in!");
     const std::map<int32_t, AVScreenCaptureFillMode> intToFillMode = {
         { 0, AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO },
         { 1, AVScreenCaptureFillMode::SCALE_TO_FILL }
     };
-    AVScreenCaptureFillMode screenCaptureFillMode = AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO;
     auto iter = intToFillMode.find(fillMode);
+    int32_t ret = MSERR_INVALID_VAL;
     if (iter != intToFillMode.end()) {
-        screenCaptureFillMode = iter->second;
+        strategy.fillMode = iter->second;
+        strategy.setByUser = true;
+        ret = MSERR_OK;
     }
-    MEDIA_LOGI("AVScreenCaptureNapi::GetScreenCaptureFillMode succeed, screenCaptureFillMode: %{public}d",
-        screenCaptureFillMode);
-    return screenCaptureFillMode;
+    MEDIA_LOGI("AVScreenCaptureNapi::SetScreenCaptureFillMode succeed, screenCaptureFillMode: %{public}d",
+        static_cast<int32_t>(strategy.fillMode));
+    return ret;
 }
 
 void AVScreenCaptureNapi::ErrorCallback(int32_t errCode, const std::string &operate, const std::string &add)
@@ -1052,7 +1054,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureNapi::GetPromiseTask(
         auto memberFunc = itFunc->second;
         CHECK_AND_RETURN_RET_LOG(memberFunc != nullptr, ret, "memberFunc is nullptr!");
         ret = (napi->*memberFunc)();
-        
+
         MEDIA_LOGI("%{public}s End", option.c_str());
         return ret;
     });

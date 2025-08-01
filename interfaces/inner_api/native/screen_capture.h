@@ -149,7 +149,7 @@ enum AVScreenCaptureParamValidationState : int32_t {
     VALIDATION_INVALID,
 };
 
-enum AVScreenCaptureFillMode {
+enum AVScreenCaptureFillMode : int32_t {
     PRESERVE_ASPECT_RATIO = 0,
     SCALE_TO_FILL = 1,
 };
@@ -192,6 +192,7 @@ struct ScreenCaptureStrategy {
     bool enableBFrame = false;
     bool setByUser = false;
     AVScreenCapturePickerPopUp pickerPopUp = AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_DEFAULT;
+    AVScreenCaptureFillMode fillMode = AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO;
 };
 
 struct VideoCaptureInfo {
@@ -201,7 +202,6 @@ struct VideoCaptureInfo {
     int32_t videoFrameHeight = 0;
     VideoSourceType videoSource = VideoSourceType::VIDEO_SOURCE_BUTT;
     AVScreenCaptureParamValidationState state = AVScreenCaptureParamValidationState::VALIDATION_IGNORE;
-    AVScreenCaptureFillMode screenCaptureFillMode = AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO;
 };
 
 struct VideoEncInfo {

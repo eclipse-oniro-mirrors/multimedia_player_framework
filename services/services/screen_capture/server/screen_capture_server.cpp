@@ -917,7 +917,7 @@ int32_t ScreenCaptureServer::HandlePopupWindowCase(Json::Value& root, const std:
     std::string choice = "false";
     GetChoiceFromJson(root, content, std::string("choice"), choice);
     GetValueFromJson(root, content, std::string("checkBoxSelected"), checkBoxSelected_);
-    
+
     systemPrivacyProtectionSwitch_ = checkBoxSelected_;
     appPrivacyProtectionSwitch_ = checkBoxSelected_;
     MEDIA_LOGI("ReportAVScreenCaptureUserChoice checkBoxSelected: %{public}d", checkBoxSelected_);
@@ -958,7 +958,7 @@ int32_t ScreenCaptureServer::HandleStreamDataCase(Json::Value& root, const std::
         appPrivacyProtectionSwitch_);
     GetValueFromJson(root, content, std::string("systemPrivacyProtectionSwitch"),
         systemPrivacyProtectionSwitch_);
-    
+
     SystemPrivacyProtected(virtualScreenId_, systemPrivacyProtectionSwitch_);
     AppPrivacyProtected(virtualScreenId_, appPrivacyProtectionSwitch_);
 
@@ -1408,9 +1408,8 @@ int32_t ScreenCaptureServer::CheckAudioCapInfo(AudioCaptureInfo &audioCapInfo)
 int32_t ScreenCaptureServer::CheckVideoCapInfo(VideoCaptureInfo &videoCapInfo)
 {
     MEDIA_LOGD("CheckVideoCapInfo start, videoFrameWidth:%{public}d, videoFrameHeight:%{public}d, "
-        "videoSource:%{public}d, state:%{public}d, screenCaptureFillMode:%{public}d.", videoCapInfo.videoFrameWidth,
-        videoCapInfo.videoFrameHeight, videoCapInfo.videoSource, videoCapInfo.state,
-        videoCapInfo.screenCaptureFillMode);
+        "videoSource:%{public}d, state:%{public}d.", videoCapInfo.videoFrameWidth,
+        videoCapInfo.videoFrameHeight, videoCapInfo.videoSource, videoCapInfo.state);
     if (videoCapInfo.videoFrameWidth == 0 && videoCapInfo.videoFrameHeight == 0) {
         MEDIA_LOGD("videoCap IGNORED width:%{public}d, height:%{public}d, source:%{public}d, state:%{public}d",
             videoCapInfo.videoFrameWidth, videoCapInfo.videoFrameHeight, videoCapInfo.videoSource, videoCapInfo.state);
@@ -3868,7 +3867,7 @@ int32_t ScreenCaptureServer::SetScreenScaleMode()
     CHECK_AND_RETURN_RET_LOG(virtualScreenId_ != SCREEN_ID_INVALID, MSERR_INVALID_VAL,
                              "SetScreenScaleMode failed virtual screen not init");
     auto ret = ScreenManager::GetInstance().SetVirtualMirrorScreenScaleMode(
-        virtualScreenId_, GetScreenScaleMode(captureConfig_.videoInfo.videoCapInfo.screenCaptureFillMode));
+        virtualScreenId_, GetScreenScaleMode(captureConfig_.strategy.fillMode));
     if (ret != DMError::DM_OK) {
         MEDIA_LOGW("SetScreenScaleMode failed, ret: %{public}d", ret);
         return static_cast<int32_t>(ret);
@@ -4264,10 +4263,11 @@ int32_t ScreenCaptureServer::SetScreenCaptureStrategy(ScreenCaptureStrategy stra
     CHECK_AND_RETURN_RET_LOG(captureState_ < AVScreenCaptureState::POPUP_WINDOW, MSERR_INVALID_STATE,
         "strategy can not be modified after screen capture started");
     MEDIA_LOGI("SetScreenCaptureStrategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d,"
-            "strategyForPrivacyMaskMode: %{public}d, canvasFollowRotation: %{public}d, enableBFrame: %{public}d,"
-            "pickerPopUp: %{public}d",
+               "strategyForPrivacyMaskMode: %{public}d, canvasFollowRotation: %{public}d, enableBFrame: %{public}d,"
+               "pickerPopUp: %{public}d, fillMode: %{public}d",
         strategy.enableDeviceLevelCapture, strategy.keepCaptureDuringCall, strategy.strategyForPrivacyMaskMode,
-        strategy.canvasFollowRotation, strategy.enableBFrame, static_cast<int32_t>(strategy.pickerPopUp));
+        strategy.canvasFollowRotation, strategy.enableBFrame, static_cast<int32_t>(strategy.pickerPopUp),
+        static_cast<int32_t>(strategy.fillMode));
     captureConfig_.strategy = strategy;
     return MSERR_OK;
 }

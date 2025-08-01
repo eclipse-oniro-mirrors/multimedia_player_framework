@@ -140,7 +140,7 @@ private:
     static int32_t CheckAudioSampleRate(const int32_t &audioSampleRate);
     static int32_t CheckAudioChannelCount(const int32_t &audioChannelCount);
     static napi_status GetWindowIDsVectorParams(std::vector<uint64_t> &windowIDsVec, napi_env env, napi_value* args);
-    static AVScreenCaptureFillMode GetScreenCaptureFillMode(const int32_t &fillMode);
+    static int32_t SetScreenCaptureFillMode(ScreenCaptureStrategy &strategy, const int32_t &fillMode);
     static napi_value ThrowCustomError(napi_env env, int32_t errorCode, const char* errorMessage);
 
     AVScreenCaptureNapi();

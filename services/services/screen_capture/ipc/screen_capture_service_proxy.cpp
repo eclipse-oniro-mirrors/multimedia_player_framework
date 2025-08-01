@@ -190,7 +190,7 @@ int32_t ScreenCaptureServiceProxy::SetAndCheckSaLimit(OHOS::AudioStandard::AppIn
     int error = Remote()->SendRequest(SET_CHECK_SA_LIMIT, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetAndCheckSaLimit failed, error: %{public}d", error);
-        
+
     return reply.ReadInt32();
 }
 
@@ -275,7 +275,7 @@ int32_t ScreenCaptureServiceProxy::InitVideoCap(VideoCaptureInfo videoInfo)
         }
     }
     token = data.WriteInt32(videoInfo.videoFrameWidth) && data.WriteInt32(videoInfo.videoFrameHeight) &&
-            data.WriteInt32(videoInfo.videoSource) && data.WriteInt32(videoInfo.screenCaptureFillMode);
+            data.WriteInt32(videoInfo.videoSource);
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write videoinfo!");
 
     int error = Remote()->SendRequest(INIT_VIDEO_CAP, data, reply, option);
@@ -543,28 +543,28 @@ int32_t ScreenCaptureServiceProxy::ShowCursor(bool showCursor)
                              "ShowCursor failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
- 
+
 int32_t ScreenCaptureServiceProxy::UpdateSurface(sptr<Surface> surface)
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
- 
+
     bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
- 
+
     CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_INVALID_VAL, "surface is nullptr");
     sptr<IBufferProducer> producer = surface->GetProducer();
     CHECK_AND_RETURN_RET_LOG(producer != nullptr, MSERR_INVALID_VAL, "producer is nullptr");
- 
+
     sptr<IRemoteObject> object = producer->AsObject();
     bool res = data.WriteRemoteObject(object);
     CHECK_AND_RETURN_RET_LOG(res, MSERR_INVALID_OPERATION, "UpdateSurface failed to write remote object!");
- 
+
     int error = Remote()->SendRequest(UPDATE_SURFACE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(
         error == MSERR_OK, MSERR_INVALID_OPERATION, "UpdateSurface failed, error: %{public}d", error);
- 
+
     return reply.ReadInt32();
 }
 
@@ -635,7 +635,8 @@ int32_t ScreenCaptureServiceProxy::SetScreenCaptureStrategy(ScreenCaptureStrateg
 
     token = data.WriteBool(strategy.enableDeviceLevelCapture) && data.WriteBool(strategy.keepCaptureDuringCall) &&
             data.WriteInt32(strategy.strategyForPrivacyMaskMode) && data.WriteBool(strategy.canvasFollowRotation) &&
-            data.WriteBool(strategy.enableBFrame) && data.WriteInt32(static_cast<int32_t>(strategy.pickerPopUp));
+            data.WriteBool(strategy.enableBFrame) && data.WriteInt32(static_cast<int32_t>(strategy.pickerPopUp)) &&
+            data.WriteInt32(static_cast<int32_t>(strategy.fillMode));
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write strategy!");
 
     int error = Remote()->SendRequest(SET_STRATEGY, data, reply, option);

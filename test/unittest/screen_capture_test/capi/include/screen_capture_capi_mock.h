@@ -71,6 +71,7 @@ public:
     int32_t StrategyForBFramesEncoding(bool value) override;
     int32_t StrategyForPrivacyMaskMode(int32_t value) override;
     int32_t StrategyForPickerPopUp(bool value) override;
+    int32_t StrategyForFillMode(AVScreenCaptureFillMode value) override;
 private:
     static void SetScreenCaptureCallback(OH_AVScreenCapture *screencapture,
         std::shared_ptr<ScreenCaptureCallbackMock> cb);
