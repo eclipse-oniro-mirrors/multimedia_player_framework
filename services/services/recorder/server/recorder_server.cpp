@@ -38,9 +38,10 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_RECORDER, "RecorderServer"};
-    constexpr uint32_t THREAD_PRIORITY_41 = 7;
+    constexpr uint32_t THREAD_PRIORITY_41 = 7; // evevate priority for avRecorder
     constexpr uint32_t RES_TYPE = OHOS::ResourceSchedule::ResType::RES_TYPE_THREAD_QOS_CHANGE;
     constexpr int64_t RES_VALUE = 0;
+    const std::string PAYLOAD_BUNDLE_NAME_VAL = "media_service";
     const std::map<OHOS::Media::RecorderServer::RecStatus, std::string> RECORDER_STATE_MAP = {
         {OHOS::Media::RecorderServer::REC_INITIALIZED, "initialized"},
         {OHOS::Media::RecorderServer::REC_CONFIGURED, "configured"},
@@ -1193,16 +1194,13 @@ int32_t RecorderServer::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
 
 int32_t RecorderServer::TransmitQos(QOS::QosLevel level)
 {
-    MEDIA_LOGI("TransmitQos in");
+    MEDIA_LOGI("TransmitQos in %{public}d", static_cast<int32_t>(level));
     std::lock_guard<std::mutex> lock(mutex_);
-    MEDIA_LOGI("TransmitQos %{public}d", static_cast<int32_t>(level));
     clientQos_ = level;
-
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
-        MEDIA_LOGI("clientQos_ %{public}d", static_cast<int32_t>(clientQos_));
         if (clientQos_ == QOS::QosLevel::QOS_USER_INTERACTIVE) {
             std::unordered_map<std::string, std::string> mapPayload;
-            mapPayload["bundleName"] = "media_service";
+            mapPayload["bundleName"] = PAYLOAD_BUNDLE_NAME_VAL;
             mapPayload["pid"] = std::to_string(getpid());
             mapPayload[std::to_string(gettid())] = std::to_string(THREAD_PRIORITY_41);
             OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(RES_TYPE, RES_VALUE, mapPayload);
