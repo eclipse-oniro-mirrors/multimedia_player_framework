@@ -2043,7 +2043,7 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(
     }
     std::string dstPath = RINGTONE_PATH_URI + RINGTONE_SLASH_CHAR + to_string(sert);
     paramsForAddCustomizedTone = { dstPath, srcFd, paramsForAddCustomizedTone.length };
-    return CustomizedToneWriteFile(context, dataShareHelper, toneAttrs, paramsForAddCustomizedTone);
+    return CustomizedToneWriteFile(dataShareHelper, toneAttrs, paramsForAddCustomizedTone);
 }
 
 std::string SystemSoundManagerImpl::DealAddCustomizedToneError(int32_t &sert,
@@ -2079,7 +2079,7 @@ std::string SystemSoundManagerImpl::DealAddCustomizedToneError(int32_t &sert,
     return "";
 }
 
-std::string SystemSoundManagerImpl::CustomizedToneWriteFile(const std::shared_ptr<AbilityRuntime::Context> &context,
+std::string SystemSoundManagerImpl::CustomizedToneWriteFile(
     std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper, const std::shared_ptr<ToneAttrs> &toneAttrs,
     ParamsForAddCustomizedTone &paramsForAddCustomizedTone)
 {
