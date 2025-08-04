@@ -221,8 +221,6 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_SEEKDONE = 1,
     /* return the message when speeding done. */
     INFO_TYPE_SPEEDDONE,
-    /* return the message when speeding done. */
-    INFO_TYPE_RATEDONE,
     /* return the message when select bitrate done */
     INFO_TYPE_BITRATEDONE,
     /* return the message when playback is end of steam. */
@@ -287,6 +285,8 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_SUPER_RESOLUTION_CHANGED,
     /* return the auto select flv live bitrate. internal info type, not open to northbound interfaces. */
     INFO_TYPE_FLV_AUTO_SELECT_BITRATE,
+    /* return the message when speeding done. */
+    INFO_TYPE_RATEDONE,
 };
 
 enum PlayerStates : int32_t {
