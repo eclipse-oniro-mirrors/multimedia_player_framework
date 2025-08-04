@@ -2057,6 +2057,7 @@ std::string SystemSoundManagerImpl::DealAddCustomizedToneError(int32_t &sert,
     } else if (sert == FILE_EXIST && toneAttrs->GetMediaType() == ToneMediaType::MEDIA_TYPE_VID) {
         DataShare::DatashareBusinessError businessError;
         DataShare::DataSharePredicates queryPredicates;
+        queryPredicates.EqualTo(RINGTONE_COLUMN_DISPLAY_NAME, toneAttrs->GetFileName());
         queryPredicates.EqualTo(RINGTONE_COLUMN_TITLE, toneAttrs->GetTitle());
         queryPredicates.EqualTo(RINGTONE_COLUMN_SIZE, paramsForAddCustomizedTone.length);
         if (toneAttrs->GetCategory() == TONE_CATEGORY_RINGTONE) {
@@ -2069,7 +2070,7 @@ std::string SystemSoundManagerImpl::DealAddCustomizedToneError(int32_t &sert,
         unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
         resultSet == nullptr ? : resultSet->Close();
         if (ringtoneAsset == nullptr) {
-            MEDIA_LOGE("DealAddCustomizedToneError: duplicate file!");
+            MEDIA_LOGE("DealAddCustomizedToneError: duplicate file name!");
             paramsForAddCustomizedTone.duplicateFile = true;
             return toneAttrs->GetUri();
         } else {
