@@ -466,6 +466,7 @@ Status AVMetadataHelperImpl::GetColorSpace(sptr<SurfaceBuffer> &surfaceBuffer, P
         MEDIA_LOGW("cant find colorSpace");
         return Status::ERROR_UNKNOWN;
     }
+    CHECK_AND_RETURN_RET_LOG(!colorSpaceInfoVec.empty(), Status::ERROR_UNKNOWN, "colorSpaceInfoVec is empty");
     auto outColor = reinterpret_cast<CM_ColorSpaceInfo *>(colorSpaceInfoVec.data());
     CHECK_AND_RETURN_RET_LOG(outColor != nullptr, Status::ERROR_UNKNOWN, "colorSpaceInfoVec init failed");
     auto colorSpaceInfo = outColor[0];
