@@ -371,10 +371,10 @@ OH_AVErrCode OH_LowPowerVideoSink_SetParameter(OH_LowPowerVideoSink *streamer, c
     return LppMsErrToOHAvErr(res);
 }
 
-OH_AVErrCode OH_LowPowerVideoSink_GetParameter(OH_LowPowerVideoSink *streamer, const OH_AVFormat *format)
+OH_AVErrCode OH_LowPowerVideoSink_GetParameter(OH_LowPowerVideoSink *sink, OH_AVFormat *format)
 {
     MEDIA_LOGD("OH_LowPowerVideoSink_GetParameter");
-    (void)streamer;
+    (void)sink;
     (void)format;
     return AV_ERR_OK;
 }
