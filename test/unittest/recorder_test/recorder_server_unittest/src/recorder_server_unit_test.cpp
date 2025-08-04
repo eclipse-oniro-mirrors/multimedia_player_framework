@@ -864,7 +864,7 @@ HWTEST_F(RecorderServerUnitTest, recorder_configure_022, TestSize.Level2)
 
 /**
  * @tc.name: recorder_configure_023
- * @tc.desc:  evevate priority for avRecorder TransmitQos
+ * @tc.desc: evevate priority for avRecorder TransmitQos
  * @tc.type: FUNC
  * @tc.require:
  */
