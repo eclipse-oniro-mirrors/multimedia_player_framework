@@ -90,6 +90,7 @@ public:
     MOCK_METHOD(int32_t, SetWatermark, (std::shared_ptr<AVBuffer> &waterMarkBuffer), (override));
     MOCK_METHOD(int32_t, SetUserMeta, (const std::shared_ptr<Meta> &userMeta), (override));
     MOCK_METHOD(int32_t, SetWillMuteWhenInterrupted, (bool muteWhenInterrupted), (override));
+    MOCK_METHOD(int32_t, TransmitQos, (QOS::QosLevel level), (override));
     MOCK_METHOD(int32_t, DoIpcAbnormality, (), (override));
     MOCK_METHOD(int32_t, DoIpcRecovery, (bool fromMonitor), (override));
     MOCK_METHOD(int32_t, SetListenerObjectInner, (MessageParcel &data, MessageParcel &reply));

@@ -122,6 +122,7 @@ public:
     int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer) override;
     int32_t SetUserMeta(const std::shared_ptr<Meta> &userMeta) override;
     int32_t SetWillMuteWhenInterrupted(bool muteWhenInterrupted) override;
+    int32_t TransmitQos(QOS::QosLevel level) override;
 
     // IRecorderEngineObs override
     void OnError(ErrorType errorType, int32_t errorCode) override;
@@ -197,6 +198,7 @@ private:
         int32_t startLatency = -1;
     } statisticalEventInfo_;
     int64_t startTime_ = 0;
+    QOS::QosLevel clientQos_ = QOS::QosLevel::QOS_BACKGROUND;
 #ifdef SUPPORT_POWER_MANAGER
     sptr<SaveDocumentSyncCallback> syncCallback_ = nullptr;
     PowerMgr::ShutdownClient &shutdownClient_ = PowerMgr::ShutdownClient::GetInstance();

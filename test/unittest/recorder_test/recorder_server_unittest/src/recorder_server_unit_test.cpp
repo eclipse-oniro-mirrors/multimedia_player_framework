@@ -861,6 +861,26 @@ HWTEST_F(RecorderServerUnitTest, recorder_configure_022, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, recorderServer_->Release());
 }
 
+
+/**
+ * @tc.name: recorder_configure_023
+ * @tc.desc: evevate priority for avRecorder TransmitQos
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, recorder_configure_023, TestSize.Level2)
+{
+    EXPECT_NE(MSERR_OK, recorderServer_->TransmitQos(QOS::QosLevel::QOS_USER_INTERACTIVE));
+    EXPECT_NE(MSERR_OK, recorderServer_->Prepare());
+    EXPECT_NE(MSERR_OK, recorderServer_->Start());
+    sleep(RECORDER_TIME);
+    EXPECT_NE(MSERR_OK, recorderServer_->Pause());
+    EXPECT_NE(MSERR_OK, recorderServer_->Resume());
+    EXPECT_NE(MSERR_OK, recorderServer_->Stop(false));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Reset());
+    EXPECT_EQ(MSERR_OK, recorderServer_->Release());
+}
+
 /**
  * @tc.name: recorder_mp3_001
  * @tc.desc: record mp3

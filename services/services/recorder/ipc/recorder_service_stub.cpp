@@ -170,6 +170,8 @@ void RecorderServiceStub::FillRecFuncPart3()
         [this](MessageParcel &data, MessageParcel &reply) { return SetWillMuteWhenInterrupted(data, reply); };
     recFuncs_[SET_VIDEO_ENABLE_B_FRAME] =
         [this](MessageParcel &data, MessageParcel &reply) { return SetVideoEnableBFrame(data, reply); };
+    recFuncs_[TRANSMIT_QOS] =
+        [this](MessageParcel &data, MessageParcel &reply) { return TransmitQos(data, reply); };
 }
 
 int32_t RecorderServiceStub::DestroyStub()
@@ -534,6 +536,12 @@ int32_t RecorderServiceStub::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
     return recorderServer_->SetUserMeta(userMeta);
+}
+
+int32_t RecorderServiceStub::TransmitQos(QOS::QosLevel level)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->TransmitQos(level);
 }
 
 int32_t RecorderServiceStub::DoIpcAbnormality()
@@ -990,6 +998,7 @@ int32_t RecorderServiceStub::IsWatermarkSupported(MessageParcel &data, MessagePa
     CHECK_AND_RETURN_RET_LOG(reply.WriteInt32(ret), MSERR_INVALID_OPERATION, "reply write failed");
     return MSERR_OK;
 }
+
 int32_t RecorderServiceStub::SetWatermark(MessageParcel &data, MessageParcel &reply)
 {
     std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
@@ -1014,6 +1023,13 @@ int32_t RecorderServiceStub::SetWillMuteWhenInterrupted(MessageParcel &data, Mes
     bool muteWhenInterrupted = data.ReadBool();
     reply.WriteInt32(SetWillMuteWhenInterrupted(muteWhenInterrupted));
     return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::TransmitQos(MessageParcel &data, MessageParcel &reply)
+{
+    (void)reply;
+    QOS::QosLevel level = static_cast<QOS::QosLevel>(data.ReadInt32());
+    return TransmitQos(level);
 }
 } // namespace Media
 } // namespace OHOS
