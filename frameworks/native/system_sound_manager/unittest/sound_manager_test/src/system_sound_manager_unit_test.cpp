@@ -1046,7 +1046,6 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_CustomizedToneWriteFile_00
 {
     AccessToken token;
     std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
-    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     std::shared_ptr<ToneAttrs> toneAttrs_ = std::make_shared<ToneAttrs>("default",
@@ -1058,7 +1057,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_CustomizedToneWriteFile_00
     toneAttrs_->SetTitle("06172");
     toneAttrs_->SetFileName("06172.mp4");
     ParamsForAddCustomizedTone paramsForAddCustomizedTone = { "", srcFd, 1024, 0, false };
-    res = systemSoundManager_->CustomizedToneWriteFile(context_, dataShareHelper, toneAttrs_,
+    res = systemSoundManager_->CustomizedToneWriteFile(dataShareHelper, toneAttrs_,
         paramsForAddCustomizedTone);
     EXPECT_EQ(res.empty(), true);
 }

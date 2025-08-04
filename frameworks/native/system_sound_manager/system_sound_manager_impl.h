@@ -231,9 +231,8 @@ private:
     int32_t SetExtRingToneUri(const std::string &uri, const std::string &title, int32_t toneType);
     void SendCustomizedToneEvent(bool flag, const std::shared_ptr<ToneAttrs> &toneAttrs, off_t fileSize,
         std::string mimeType, int result);
-    std::string CustomizedToneWriteFile(const std::shared_ptr<AbilityRuntime::Context> &context,
-        std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper, const std::shared_ptr<ToneAttrs> &toneAttrs,
-        ParamsForAddCustomizedTone &paramsForAddCustomizedTone);
+    std::string CustomizedToneWriteFile(std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
+        const std::shared_ptr<ToneAttrs> &toneAttrs, ParamsForAddCustomizedTone &paramsForAddCustomizedTone);
     void OpenOneFile(std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
         const std::string &uri, std::tuple<std::string, int64_t, SystemSoundError> &resultOfOpen);
     int32_t DoRemove(std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper, const std::string &uri,
