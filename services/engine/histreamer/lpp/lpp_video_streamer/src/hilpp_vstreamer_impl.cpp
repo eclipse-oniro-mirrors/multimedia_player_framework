@@ -304,9 +304,9 @@ int32_t HiLppVideoStreamerImpl::Reset()
     FALSE_RETURN_V_MSG(syncMgr_ != nullptr, MSERR_INVALID_OPERATION, "syncMgr_ nullptr");
     FALSE_RETURN_V_MSG(dataMgr_ != nullptr, MSERR_INVALID_OPERATION, "dataMgr_ nullptr");
     FALSE_RETURN_V_MSG(surface_ != nullptr, MSERR_INVALID_OPERATION, "surface_ nullptr");
+    surface_->SetLppShareFd(shareBufferFd_, false);
     auto ret = syncMgr_->Reset();
     syncMgr_.reset();
-    surface_->SetLppShareFd(shareBufferFd_, false);
     std::mutex surfaceBufferMutex;
     std::condition_variable surfaceCond;
     bool bufferConsumed = false;

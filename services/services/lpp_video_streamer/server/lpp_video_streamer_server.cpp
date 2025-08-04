@@ -198,6 +198,7 @@ int32_t LppVideoStreamerServer::Stop()
 int32_t LppVideoStreamerServer::Reset()
 {
     MEDIA_LOGI("LppVideoStreamerServer Reset");
+    Stop();
     CHECK_AND_RETURN_RET_LOG(StateEnter(VideoState::CREATED), MSERR_INVALID_OPERATION, "wrong state");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_OK, "streamerEngine_ is nullptr");
     streamerEngine_->Reset();
