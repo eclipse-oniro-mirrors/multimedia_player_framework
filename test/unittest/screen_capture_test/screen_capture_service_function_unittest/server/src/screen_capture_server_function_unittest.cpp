@@ -2623,6 +2623,18 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetCaptureArea_002, TestSize.Level2)
     EXPECT_EQ(ret, MSERR_OK);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, SetCaptureArea_003, TestSize.Level2)
+{
+    OHOS::Rect area;
+    area.x = 2147483647;
+    area.y = 2147483647;
+    area.w = 720;
+    area.h = 1280;
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    int32_t ret = screenCaptureServer_->SetCaptureArea(0, area);
+    EXPECT_EQ(ret, MSERR_INVALID_VAL);
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, SetCaptureAreaInner_001, TestSize.Level2)
 {
     OHOS::Rect area;

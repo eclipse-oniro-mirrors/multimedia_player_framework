@@ -3441,7 +3441,7 @@ bool ScreenCaptureServer::CheckDisplayArea(uint64_t displayId, OHOS::Rect area)
     auto screenWidth = targetDisplay->GetWidth();
     auto screenHeight = targetDisplay->GetHeight();
     MEDIA_LOGI("CheckDisplayArea display with width: %{public}d, height:%{public}d", screenWidth, screenHeight);
-    if (area.x + area.w > screenWidth || area.y + area.h > screenHeight) {
+    if (static_cast<int64_t>(area.x) + area.w > screenWidth || static_cast<int64_t>(area.y) + area.h > screenHeight) {
         MEDIA_LOGE("CheckDisplayArea input area out of range");
         return false;
     }
