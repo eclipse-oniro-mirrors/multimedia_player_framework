@@ -34,7 +34,8 @@ Stream::Stream(const Format &trackFormat, const int32_t &soundID, const int32_t 
 {
     MEDIA_LOGI("Construction Stream soundID:%{public}d, streamID:%{public}d", soundID, streamID);
     int32_t sampleFormat;
-    trackFormat_.GetIntValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_AUDIO_SAMPLE_FORMAT, sampleFormat);
+    bool res = trackFormat_.GetIntValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_AUDIO_SAMPLE_FORMAT, sampleFormat);
+    CHECK_AND_RETURN_LOG(res == true, "Stream::Stream trackFormat_.GetIntValue error, res:%{public}d", res);
     sampleFormat_ = static_cast<AudioStandard::AudioSampleFormat>(sampleFormat);
 }
 
