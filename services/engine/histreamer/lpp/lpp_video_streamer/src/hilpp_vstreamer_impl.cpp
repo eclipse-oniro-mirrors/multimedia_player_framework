@@ -154,6 +154,7 @@ int32_t HiLppVideoStreamerImpl::SetVideoSurface(sptr<Surface> surface)
         FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "syncMgr_ SetTunnelId Failed!");
     }
     if (isSwitchSurface && isLpp_) {
+        surface->SetSurfaceSourceType(OH_SURFACE_SOURCE_LOWPOWERVIDEO);
         ret = syncMgr_->GetShareBuffer(shareBufferFd_);
         FALSE_RETURN_V_MSG(ret == MSERR_OK, MSERR_UNKNOWN, "syncMgr_ GetShareBuffer failed");
         surface->SetLppShareFd(shareBufferFd_, true);
