@@ -209,15 +209,12 @@ int32_t StreamIDManager::SetPlay(const int32_t soundID, const int32_t streamID, 
     int32_t result = freshCacheBuffer->PreparePlay(audioRendererInfo_, playParameters);
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, MSERR_INVALID_VAL, "Invalid PreparePlay");
     int32_t tempMaxStream = maxStreams_;
-    streamIDManagerLock_.lock();
     MEDIA_LOGI("StreamIDManager cur task num:%{public}zu, maxStreams_:%{public}d",
         playingStreamIDs_.size(), maxStreams_);
     if (playingStreamIDs_.size() < static_cast<size_t>(tempMaxStream)) {
-        streamIDManagerLock_.unlock();
         AddPlayTask(streamID, playParameters);
     } else {
         int32_t playingStreamID = playingStreamIDs_.back();
-        streamIDManagerLock_.unlock();
         std::shared_ptr<CacheBuffer> playingCacheBuffer;
         {
             std::lock_guard lock(streamIDManagerLock_);
@@ -488,15 +485,12 @@ void StreamIDManager::OnPlayFinished()
             }
         }
     }
-    streamIDManagerLock_.lock();
     if (!willPlayStreamInfos_.empty()) {
         MEDIA_LOGI("StreamIDManager OnPlayFinished will play streams non empty, get the front.");
         StreamIDAndPlayParamsInfo willPlayStreamInfo =  willPlayStreamInfos_.front();
-        willPlayStreamInfos_.pop_front();
-        streamIDManagerLock_.unlock();
         AddPlayTask(willPlayStreamInfo.streamID, willPlayStreamInfo.playParameters);
-    } else {
-        streamIDManagerLock_.unlock();
+        std::lock_guard lock(streamIDManagerLock_);
+        willPlayStreamInfos_.pop_front();
     }
 }
 
