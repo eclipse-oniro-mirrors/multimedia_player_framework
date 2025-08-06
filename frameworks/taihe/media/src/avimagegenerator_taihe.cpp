@@ -81,8 +81,8 @@ void AVImageGeneratorImpl::SetFdSrc(optional_view<AVFileDescriptor> fdSrc)
     return;
 }
 
-::ohos::multimedia::image::image::PixelMap AVImageGeneratorImpl::FetchFrameByTimeSync(int64_t timeUs,
-    ::ohos::multimedia::media::AVImageQueryOptions options, ::ohos::multimedia::media::PixelMapParams const& param)
+optional<::ohos::multimedia::image::image::PixelMap> AVImageGeneratorImpl::FetchFrameByTimeSync(int64_t timeUs,
+    AVImageQueryOptions options, PixelMapParams const& param)
 {
     OHOS::Media::MediaTrace trace("AVImageGeneratorTaihe::FetchFrameByTimeSync");
     MEDIA_LOGI("FetchFrameByTimeSync  in");
@@ -90,6 +90,7 @@ void AVImageGeneratorImpl::SetFdSrc(optional_view<AVFileDescriptor> fdSrc)
     if (taihe->state_ != OHOS::Media::HelperState::HELPER_STATE_RUNNABLE) {
         set_business_error(OHOS::Media::MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "Current state is not runnable, can't fetchFrame.");
+        return optional<::ohos::multimedia::image::image::PixelMap>(std::nullopt);
     }
     OHOS::Media::PixelMapParams pixelMapParams;
     if (param.height.has_value()) {
@@ -106,12 +107,14 @@ void AVImageGeneratorImpl::SetFdSrc(optional_view<AVFileDescriptor> fdSrc)
             OHOS::Media::PixelFormat::RGB_888 &&
             colorFormat != OHOS::Media::PixelFormat::RGBA_8888) {
             set_business_error(OHOS::Media::MSERR_INVALID_VAL, "formatVal is invalid");
+            return optional<::ohos::multimedia::image::image::PixelMap>(std::nullopt);
         }
     }
     pixelMapParams.colorFormat = colorFormat;
     auto pixelMap = helper_->FetchFrameYuv(timeUs, options.get_value(), pixelMapParams);
     MEDIA_LOGI("FetchFrameByTimeSync Out");
-    return Image::PixelMapImpl::CreatePixelMap(pixelMap);
+    return optional<::ohos::multimedia::image::image::PixelMap>(std::in_place_t{},
+        Image::PixelMapImpl::CreatePixelMap(pixelMap));
 }
 
 void AVImageGeneratorImpl::ReleaseSync()
