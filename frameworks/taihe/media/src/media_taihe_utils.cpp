@@ -173,22 +173,6 @@ ani_object MediaTaiheUtils::ToBusinessError(ani_env *env, int32_t code, const st
     return error;
 }
 
-ani_object MediaTaiheUtils::CreatePixelMap(ani_env *env, OHOS::Media::PixelMap &pixelMap)
-{
-    ani_class cls {};
-    static const char *className = "@ohos.multimedia.image.PixelMap";
-    CHECK_AND_RETURN_RET_LOG(env->FindClass(className, &cls) == ANI_OK, nullptr,
-        "Failed to find class: %{public}s", className);
-    ani_method ctorMethod {};
-    CHECK_AND_RETURN_RET_LOG(env->Class_FindMethod(cls, "<ctor>", nullptr, &ctorMethod) == ANI_OK, nullptr,
-        "Failed to find method: <ctor>");
-    ani_object aniObject {};
-    CHECK_AND_RETURN_RET_LOG(env->Object_New(cls, ctorMethod, &aniObject) == ANI_OK,
-        nullptr, "Call method <ctor> failed.");
-
-    return aniObject;
-}
-
 ani_string MediaTaiheUtils::ToAniString(ani_env *env, const std::string &str)
 {
     ani_string aniString;

@@ -137,7 +137,7 @@ void AVRecorderImpl::PrepareSync(ohos::multimedia::media::AVRecorderConfig const
             (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
         }
     } else {
-            SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
+        SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
     }
 
     if (asyncCtx->task_) {

@@ -56,7 +56,7 @@ function GetScreenCaptureMonitorSync(): Optional<ScreenCaptureMonitor>;
 
 @gen_async("createSoundPool")
 @gen_promise("createSoundPool")
-function CreateSoundPoolSync(maxStreams: i32, audioRendererInfo: @sts_type("audio.AudioRendererInfo") Opaque): Optional<SoundPool>;
+function CreateSoundPoolSync(maxStreams: i32, audioRendererInfo: audio.AudioRendererInfo): Optional<SoundPool>;
 
 @gen_async("createVideoRecorder")
 @gen_promise("createVideoRecorder")
@@ -169,7 +169,7 @@ interface AVMetadataExtractor {
 
     @gen_async("fetchAlbumCover")
     @gen_promise("fetchAlbumCover")
-    FetchAlbumCoverSync(): image.PixelMap;
+    FetchAlbumCoverSync(): Optional<image.PixelMap>;
 
     @gen_promise("getFrameIndexByTime")
     GetFrameIndexByTimeSync(timeUs: i64): i32;
@@ -650,7 +650,7 @@ interface AVImageGenerator {
 
     @gen_async("fetchFrameByTime")
     @gen_promise("fetchFrameByTime")
-    FetchFrameByTimeSync(timeUs: i64, options: AVImageQueryOptions, param: PixelMapParams): image.PixelMap;
+    FetchFrameByTimeSync(timeUs: i64, options: AVImageQueryOptions, param: PixelMapParams): Optional<image.PixelMap>;
 
     @gen_async("release")
     @gen_promise("release")

@@ -33,17 +33,13 @@ public:
     AVImageGeneratorImpl(std::shared_ptr<OHOS::Media::AVMetadataHelper> avMetadataHelper);
     optional<AVFileDescriptor> GetFdSrc();
     void SetFdSrc(optional_view<AVFileDescriptor> fdSrc);
-    ::ohos::multimedia::image::image::PixelMap FetchFrameByTimeSync(int64_t timeUs,
-        ::ohos::multimedia::media::AVImageQueryOptions options, ::ohos::multimedia::media::PixelMapParams const& param);
+    optional<::ohos::multimedia::image::image::PixelMap> FetchFrameByTimeSync(int64_t timeUs,
+        AVImageQueryOptions options, PixelMapParams const& param);
     void ReleaseSync();
 private:
     std::shared_ptr<OHOS::Media::AVMetadataHelper> helper_;
     struct OHOS::Media::AVFileDescriptor fileDescriptor_;
     OHOS::Media::HelperState state_ { OHOS::Media::HelperState::HELPER_STATE_IDLE };
-    std::shared_ptr<OHOS::Media::PixelMap> pixel_ = nullptr;
-    int64_t timeUs_ = 0;
-    int32_t option_ = 0;
-    OHOS::Media::PixelMapParams param_;
 };
 } // namespace ANI::Media
 #endif // AVIMAGEGENERATOR_TAIHE_H
