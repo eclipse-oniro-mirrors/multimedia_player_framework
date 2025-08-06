@@ -33,8 +33,8 @@ public:
     AVImageGeneratorImpl(std::shared_ptr<OHOS::Media::AVMetadataHelper> avMetadataHelper);
     optional<AVFileDescriptor> GetFdSrc();
     void SetFdSrc(optional_view<AVFileDescriptor> fdSrc);
-    ::ohos::multimedia::image::image::PixelMap FetchFrameByTimeSync(int64_t timeUs,
-        ::ohos::multimedia::media::AVImageQueryOptions options, ::ohos::multimedia::media::PixelMapParams const& param);
+    optional<::ohos::multimedia::image::image::PixelMap> FetchFrameByTimeSync(int64_t timeUs,
+        AVImageQueryOptions options, PixelMapParams const& param);
     void ReleaseSync();
 private:
     std::shared_ptr<OHOS::Media::AVMetadataHelper> helper_;

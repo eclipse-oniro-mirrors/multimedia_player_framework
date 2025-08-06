@@ -37,7 +37,7 @@ public:
     optional<AVDataSrcDescriptor> GetDataSrc();
     void SetDataSrc(optional_view<AVDataSrcDescriptor> dataSrc);
     optional<AVMetadata> FetchMetadataSync();
-    ohos::multimedia::image::image::PixelMap FetchAlbumCoverSync();
+    optional<ohos::multimedia::image::image::PixelMap> FetchAlbumCoverSync();
     void ReleaseSync();
     int32_t GetFrameIndexByTimeSync(int64_t timeUs);
     int64_t GetTimeByFrameIndexSync(int32_t index);
