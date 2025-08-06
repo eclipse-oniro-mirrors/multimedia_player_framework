@@ -21,6 +21,7 @@
 #include "media_errors.h"
 #include "directory_ex.h"
 #include "recorder.h"
+#include "test_template.h"
 
 using namespace std;
 using namespace OHOS;
@@ -59,7 +60,10 @@ bool RecorderSetVideoEncoderFuzzer::RecorderSetVideoEncoderFuzz(uint8_t *data, s
             MPEG4,
             VIDEO_CODEC_FORMAT_BUTT,
         };
-        g_videoRecorderConfig.videoSourceId = *reinterpret_cast<int32_t *>(data);
+        g_baseFuzzData = data;
+        g_baseFuzzSize = size;
+        g_baseFuzzPos = 0;
+        g_videoRecorderConfig.videoSourceId = GetData<int32_t>();
         int32_t reproducibleRandom = abs((data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3]));
         int32_t videoFormat = (reproducibleRandom) % (videoCodecFormatList);
         g_videoRecorderConfig.videoFormat = videoCodecFormats[videoFormat];

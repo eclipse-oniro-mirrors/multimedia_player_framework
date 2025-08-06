@@ -21,6 +21,7 @@
 #include "media_errors.h"
 #include "directory_ex.h"
 #include "recorder.h"
+#include "test_template.h"
 
 using namespace std;
 using namespace OHOS;
@@ -52,8 +53,10 @@ bool RecorderSetAudioSourceFuzzer::FuzzRecorderSetAudioSource(uint8_t *data, siz
         AUDIO_SOURCE_DEFAULT,
         AUDIO_MIC,
     };
-
-    int32_t sourcesubscript = *reinterpret_cast<int32_t *>(data) % (audioSourceTypesList);
+    g_baseFuzzData = data;
+    g_baseFuzzSize = size;
+    g_baseFuzzPos = 0;
+    int32_t sourcesubscript = GetData<int32_t>() % (audioSourceTypesList);
 
     g_videoRecorderConfig.aSource = AudioSourceType[sourcesubscript];
     

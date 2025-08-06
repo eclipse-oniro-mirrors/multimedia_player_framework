@@ -21,6 +21,7 @@
 #include "media_errors.h"
 #include "directory_ex.h"
 #include "recorder.h"
+#include "test_template.h"
 
 using namespace std;
 using namespace OHOS;
@@ -59,8 +60,10 @@ bool RecorderSetAudioEncodingBitRateFuzzer::FuzzRecorderSetAudioEncodingBitRate(
         TestRecorder::SetAudioEncoder(g_videoRecorderConfig);
         TestRecorder::SetAudioSampleRate(g_videoRecorderConfig);
         TestRecorder::SetAudioChannels(g_videoRecorderConfig);
-
-        g_videoRecorderConfig.audioSourceId = *reinterpret_cast<int32_t *>(data);
+        g_baseFuzzData = data;
+        g_baseFuzzSize = size;
+        g_baseFuzzPos = 0;
+        g_videoRecorderConfig.audioSourceId = GetData<int32_t>();
 
         TestRecorder::SetAudioEncodingBitRate(g_videoRecorderConfig);
         TestRecorder::SetMaxDuration(g_videoRecorderConfig);
