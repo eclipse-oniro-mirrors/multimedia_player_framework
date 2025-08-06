@@ -125,7 +125,6 @@ void DfxAgent::ReportEosSeek0Event(int32_t appUid)
     FALSE_RETURN(dfxTask_ != nullptr);
     dfxTask_->SubmitJobOnce([appUid, appName = appName_] {
         FALSE_RETURN(g_appUidSet.IsAppFirstEvent(appUid));
-        MEDIA_LOG_I("EOS_SEEK_0 event reported, appName = %{public}s appUid = %{public}d", appName.c_str(), appUid);
         HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::MULTI_MEDIA,
             "EOS_SEEK_0",
             OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
