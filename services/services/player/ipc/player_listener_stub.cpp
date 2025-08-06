@@ -76,7 +76,11 @@ int PlayerListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
 
 void PlayerListenerStub::OnError(PlayerErrorType errorType, int32_t errorCode)
 {
-    std::shared_ptr<PlayerCallback> cb = callback_.lock();
+    std::shared_ptr<PlayerCallback> cb;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        cb = callback_.lock();
+    }
     CHECK_AND_RETURN(cb != nullptr);
     (void)errorType;
     auto errorMsg = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
@@ -102,7 +106,11 @@ void PlayerListenerStub::OnMonitor(PlayerOnInfoType type, int32_t extra, const F
 __attribute__((no_sanitize("cfi"))) void PlayerListenerStub::OnInfo(PlayerOnInfoType type,
     int32_t extra, const Format &infoBody)
 {
-    std::shared_ptr<PlayerCallback> cb = callback_.lock();
+    std::shared_ptr<PlayerCallback> cb;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        cb = callback_.lock();
+    }
     CHECK_AND_RETURN(cb != nullptr);
 
     if (type == INFO_TYPE_STATE_CHANGE && extra != lastStateExtra_) {
@@ -118,13 +126,18 @@ __attribute__((no_sanitize("cfi"))) void PlayerListenerStub::OnInfo(PlayerOnInfo
 
 void PlayerListenerStub::OnError(int32_t errorCode, const std::string &errorMsg)
 {
-    std::shared_ptr<PlayerCallback> cb = callback_.lock();
+    std::shared_ptr<PlayerCallback> cb;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        cb = callback_.lock();
+    }
     CHECK_AND_RETURN(cb != nullptr);
     cb->OnError(errorCode, errorMsg);
 }
 
 void PlayerListenerStub::SetPlayerCallback(const std::weak_ptr<PlayerCallback> &callback)
 {
+    std::lock_guard<std::mutex> lock(callbackMutex_);
     callback_ = callback;
 }
 
