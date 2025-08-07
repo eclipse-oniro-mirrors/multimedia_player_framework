@@ -466,8 +466,7 @@ OH_AVErrCode Configure(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
     recorderObj->recorder_->SetMaxDuration(config->maxDuration);
 
     CHECK_AND_RETURN_RET_LOG(IsLocationValid(config->metadata.location), AV_ERR_INVALID_VAL,
-        "Invalid latitude or longitude! Latitude: %{public}.6f, Longitude: %{public}.6f",
-        config->metadata.location.latitude, config->metadata.location.longitude);
+        "Invalid latitude or longitude");
     recorderObj->recorder_->SetLocation(config->metadata.location.latitude, config->metadata.location.longitude);
 
     if (config->metadata.genre != nullptr && config->metadata.genre[0] != '\0') {
