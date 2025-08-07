@@ -2128,7 +2128,7 @@ HWTEST(SystemSoundManagerUnitTest, StartVibratorForRingtone_001, TestSize.Level0
     int32_t result = systemSoundVibrator.StartVibratorForRingtone(hapticUri);
     EXPECT_EQ(result, ERR_OK);
     hapticUri = "testUri";
-    systemSoundVibrator.g_vibrateThread = sta::make_shared<std::thread>([] {});
+    systemSoundVibrator.g_vibrateThread = std::make_shared<std::thread>([] {});
     result = systemSoundVibrator.StartVibratorForRingtone(hapticUri);
     EXPECT_EQ(result, MSERR_INVALID_OPERATION);
     systemSoundVibrator.g_isRunning = true;
@@ -2137,59 +2137,59 @@ HWTEST(SystemSoundManagerUnitTest, StartVibratorForRingtone_001, TestSize.Level0
 }
 
 /**
- * @tc.name  : VibratorForRingtone
- * @tc.number: VibratorForRingtone_001
- * @tc.desc  : Test VibratorForRingtone when change hapticUri
+ * @tc.name  : VibrateForRingtone
+ * @tc.number: VibrateForRingtone_001
+ * @tc.desc  : TestVibrateForRingtone when change hapticUri
  */
-HWTEST(SystemSoundManagerUnitTest, VibratorForRingtone_001, TestSize.Level0)
+HWTEST(SystemSoundManagerUnitTest, VibrateForRingtone_001, TestSize.Level0)
 {
     SystemSoundVibrator systemSoundVibrator;
     std::string hapticUri = "/system/media/ringtones/ringtone.ogg";
     systemSoundVibrator.g_isRunning = true;
-    int32_t result = systemSoundVibrator.VibratorForRingtone(hapticUri);
+    int32_t result = systemSoundVibrator.VibrateForRingtone(hapticUri);
     EXPECT_EQ(result, MSERR_OPEN_FILE_FAILED);
 }
 
 /**
- * @tc.name  : VibratorForRingtone
- * @tc.number: VibratorForRingtone_002
- * @tc.desc  : Test VibratorForRingtone when change hapticUri
+ * @tc.name  : VibrateForRingtone
+ * @tc.number: VibrateForRingtone_002
+ * @tc.desc  : Test VibrateForRingtone when change hapticUri
  */
-HWTEST(SystemSoundManagerUnitTest, VibratorForRingtone_002, TestSize.Level0)
+HWTEST(SystemSoundManagerUnitTest, VibrateForRingtone_002, TestSize.Level0)
 {
     SystemSoundVibrator systemSoundVibrator;
     std::string hapticUri = "";
     systemSoundVibrator.g_isRunning = true;
-    int32_t result = systemSoundVibrator.VibratorForRingtone(hapticUri);
+    int32_t result = systemSoundVibrator.VibrateForRingtone(hapticUri);
     EXPECT_EQ(result, MSERR_OPEN_FILE_FAILED);
 }
 
 /**
- * @tc.name  : VibratorForRingtone
- * @tc.number: VibratorForRingtone_003
- * @tc.desc  : Test VibratorForRingtone when change hapticUri
+ * @tc.name  : VibrateForRingtone
+ * @tc.number: VibrateForRingtone_003
+ * @tc.desc  : Test VibrateForRingtone when change hapticUri
  */
-HWTEST(SystemSoundManagerUnitTest, VibratorForRingtone_003, TestSize.Level0)
+HWTEST(SystemSoundManagerUnitTest, VibrateForRingtone_003, TestSize.Level0)
 {
     SystemSoundVibrator systemSoundVibrator;
     std::string hapticUri = "";
     systemSoundVibrator.g_isRunning = false;
-    int32_t result = systemSoundVibrator.VibratorForRingtone(hapticUri);
+    int32_t result = systemSoundVibrator.VibrateForRingtone(hapticUri);
     EXPECT_EQ(result, MSERR_INVALID_OPERATION);
 }
 
 /**
- * @tc.name  : VibratorLoopFunc
- * @tc.number: VibratorLoopFunc_001
- * @tc.desc  : Test VibratorLoopFunc when change hapticUri
+ * @tc.name  : VibrateLoopFunc
+ * @tc.number: VibrateLoopFunc_001
+ * @tc.desc  : Test VibrateLoopFunc when change hapticUri
  */
-HWTEST(SystemSoundManagerUnitTest, VibratorLoopFunc_001, TestSize.Level0)
+HWTEST(SystemSoundManagerUnitTest, VibrateLoopFunc_001, TestSize.Level0)
 {
     SystemSoundVibrator systemSoundVibrator;
     std::unique_lock<std::mutex> lock(SystemSoundVibrator::g_vibrateMutex);
     int32_t fd = 0;
     systemSoundVibrator.g_isRunning = true;
-    int32_t result = systemSoundVibrator.VibratorLoopFunc(lock, fd);
+    int32_t result = systemSoundVibrator.VibrateLoopFunc(lock, fd);
     EXPECT_EQ(result, MSERR_UNSUPPORT_FILE);
 }
 
