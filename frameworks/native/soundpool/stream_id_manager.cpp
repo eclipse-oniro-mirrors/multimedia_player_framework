@@ -225,7 +225,7 @@ int32_t StreamIDManager::SetPlay(const int32_t soundID, const int32_t streamID, 
         MEDIA_LOGI("StreamIDManager fresh sound priority:%{public}d, playing stream priority:%{public}d",
             freshCacheBuffer->GetPriority(), playingCacheBuffer->GetPriority());
         if (freshCacheBuffer->GetPriority() >= playingCacheBuffer->GetPriority()) {
-            MEDIA_LOGI("StreamIDManager stop playing low priority sound:%{public}d.", playingStreamID);
+            MEDIA_LOGI("StreamIDManager stop playing low priority sound:%{public}d", playingStreamID);
             playingCacheBuffer->Stop(playingStreamID);
             MEDIA_LOGI("StreamIDManager to playing fresh streamID:%{public}d.", streamID);
             AddPlayTask(streamID, playParameters);
@@ -336,20 +336,17 @@ int32_t StreamIDManager::DoPlay(const int32_t streamID)
     }
     CHECK_AND_RETURN_RET_LOG(cacheBuffer.get() != nullptr, MSERR_INVALID_VAL, "cachebuffer invalid.");
     if (cacheBuffer->DoPlay(streamID) == MSERR_OK) {
-        MEDIA_LOGI("StreamIDManager::DoPlay success soundID:%{public}d, streamID:%{public}d",
-            cacheBuffer->GetSoundID(), streamID);
+        MEDIA_LOGI("StreamIDManager::DoPlay success streamID:%{public}d", streamID);
         return MSERR_OK;
     }
-    MEDIA_LOGI("StreamIDManager::DoPlay failed soundID:%{public}d, streamID:%{public}d",
-        cacheBuffer->GetSoundID(), streamID);
+    MEDIA_LOGI("StreamIDManager::DoPlay failed streamID:%{public}d", streamID);
     {
         std::lock_guard lock(streamIDManagerLock_);
         for (int32_t i = 0; i < static_cast<int32_t>(playingStreamIDs_.size()); i++) {
             int32_t playingStreamID = playingStreamIDs_[i];
             std::shared_ptr<CacheBuffer> playingCacheBuffer = FindCacheBuffer(playingStreamID);
             if (playingCacheBuffer != nullptr && !playingCacheBuffer->IsRunning()) {
-                MEDIA_LOGI("StreamIDManager::DoPlay fail, erase playingStreamID:%{public}d, soundID:%{public}d",
-                    playingStreamID, playingCacheBuffer->GetSoundID());
+                MEDIA_LOGI("StreamIDManager::DoPlay fail erase playingStreamID:%{public}d", playingStreamID);
                 playingStreamIDs_.erase(playingStreamIDs_.begin() + i);
                 i--;
             }
@@ -478,8 +475,7 @@ void StreamIDManager::OnPlayFinished()
             int32_t playingStreamID = playingStreamIDs_[i];
             std::shared_ptr<CacheBuffer> playingCacheBuffer = FindCacheBuffer(playingStreamID);
             if (playingCacheBuffer != nullptr && !playingCacheBuffer->IsRunning()) {
-                MEDIA_LOGI("StreamIDManager::OnPlayFinished erase playingStreamID:%{public}d, soundID:%{public}d",
-                    playingStreamID, playingCacheBuffer->GetSoundID());
+                MEDIA_LOGI("StreamIDManager::OnPlayFinished erase playingStreamID:%{public}d", playingStreamID);
                 playingStreamIDs_.erase(playingStreamIDs_.begin() + i);
                 i--;
             }
