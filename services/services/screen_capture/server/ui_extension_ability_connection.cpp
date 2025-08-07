@@ -31,6 +31,8 @@ namespace Media {
 void UIExtensionAbilityConnection::OnAbilityConnectDone(const AppExecFwk::ElementName &element,
     const sptr<IRemoteObject> &remoteObject, int32_t resultCode)
 {
+    CHECK_AND_RETURN_LOG(status_ == ConnectStatus::UNKNOWN, "status is not UNKNOWN");
+    status_ = ConnectStatus::STARTING;
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -46,6 +48,12 @@ void UIExtensionAbilityConnection::OnAbilityConnectDone(const AppExecFwk::Elemen
     data.WriteString16(Str8ToStr16(commandStr_));
     MEDIA_LOGI("UIExtensionAbilityConnection::OnAbilityConnectDone start");
     remoteObject->SendRequest(IAbilityConnection::ON_ABILITY_CONNECT_DONE, data, reply, option);
+    if (status_ == ConnectStatus::STARTING) {
+        status_ = ConnectStatus::STARTED;
+    } else if (status_ == ConnectStatus::CLOSING) {
+        status_ = ConnectStatus::STARTED;
+        CloseDialog();
+    }
     MEDIA_LOGI("UIExtensionAbilityConnection::OnAbilityConnectDone end");
 }
 
@@ -57,12 +65,19 @@ void UIExtensionAbilityConnection::OnAbilityDisconnectDone(const AppExecFwk::Ele
 
 bool UIExtensionAbilityConnection::CloseDialog()
 {
+    if (status_ != ConnectStatus::STARTED) {
+        status_ = ConnectStatus::CLOSING;
+        MEDIA_LOGI("UIExtensionAbilityConnection::CloseDialog status is not STARTED");
+        return true;
+    }
+    status_ = ConnectStatus::CLOSING;
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
     if (remoteObject_ != nullptr) {
         MEDIA_LOGI("UIExtensionAbilityConnection::CloseDialog send close request.");
         remoteObject_->SendRequest(CLOSE_CONNECTION, data, reply, option);
+        status_ = ConnectStatus::CLOSED;
         return reply.ReadInt32() == 0;
     }
     return true;
