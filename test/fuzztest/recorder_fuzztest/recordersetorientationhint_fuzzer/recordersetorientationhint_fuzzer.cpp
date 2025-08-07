@@ -20,6 +20,7 @@
 #include "media_errors.h"
 #include "directory_ex.h"
 #include "recorder.h"
+#include "test_template.h"
 
 using namespace std;
 using namespace OHOS;
@@ -52,8 +53,10 @@ bool RecorderSetOrientationHintFuzzer::FuzzRecorderSetOrientationHint(uint8_t *d
         TestRecorder::SetOutputFormat(g_videoRecorderConfig);
         TestRecorder::CameraServicesForVideo(g_videoRecorderConfig);
         recorder->SetLocation(0.0, 0);
-        
-        int32_t rotationValue = *reinterpret_cast<int32_t *>(data);
+        g_baseFuzzData = data;
+        g_baseFuzzSize = size;
+        g_baseFuzzPos = 0;
+        int32_t rotationValue = GetData<int32_t>();
 
         recorder->SetOrientationHint(rotationValue);
         TestRecorder::Prepare(g_videoRecorderConfig);

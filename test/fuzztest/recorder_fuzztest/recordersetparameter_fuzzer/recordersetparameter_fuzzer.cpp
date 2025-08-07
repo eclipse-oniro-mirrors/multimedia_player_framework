@@ -22,6 +22,7 @@
 #include "directory_ex.h"
 #include "player.h"
 #include "recorder.h"
+#include "test_template.h"
 
 using namespace std;
 using namespace OHOS;
@@ -57,7 +58,10 @@ bool RecorderSetParameterFuzzer::FuzzRecorderSetParameter(uint8_t *data, size_t 
         TestRecorder::SetRecorderCallback(g_videoRecorderConfig);
 
         Format format;
-        int32_t intValue = *reinterpret_cast<int32_t *>(data);
+        g_baseFuzzData = data;
+        g_baseFuzzSize = size;
+        g_baseFuzzPos = 0;
+        int32_t intValue = GetData<int32_t>();
         format.PutIntValue("video_scale_type", intValue);
 
         TestRecorder::SetParameter(g_videoRecorderConfig.dataSourceId, format, g_videoRecorderConfig);

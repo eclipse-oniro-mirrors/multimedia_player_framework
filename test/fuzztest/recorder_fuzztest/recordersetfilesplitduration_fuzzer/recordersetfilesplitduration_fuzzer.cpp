@@ -20,6 +20,7 @@
 #include "media_errors.h"
 #include "directory_ex.h"
 #include "recorder.h"
+#include "test_template.h"
 
 using namespace std;
 using namespace OHOS;
@@ -69,7 +70,10 @@ bool RecorderSetFileSplitDurationFuzzer::FuzzRecorderSetFileSplitDuration(uint8_
             FileSplitType::FILE_SPLIT_NORMAL,
             FileSplitType::FILE_SPLIT_BUTT,
         };
-        int32_t  indexValue = *reinterpret_cast<int32_t *>(data) % (fileSplitTypeList);
+        g_baseFuzzData = data;
+        g_baseFuzzSize = size;
+        g_baseFuzzPos = 0;
+        int32_t  indexValue = GetData<int32_t>() % (fileSplitTypeList);
 
         TestRecorder::SetFileSplitDuration(fileSplitType[indexValue],
             timestampValue, durationValue, g_videoRecorderConfig);
