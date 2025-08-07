@@ -18,6 +18,8 @@
 #include "context_impl.h"
 #include "tone_attrs.h"
 #include "system_sound_manager_utils.h"
+#include "system_sound_vibrator.h"
+#include "media_core.h"
 
 using namespace OHOS::AbilityRuntime;
 using namespace testing::ext;
@@ -2096,6 +2098,131 @@ HWTEST(SystemSoundManagerUnitTest, GetDefaultNonSyncedHapticsUri_003, TestSize.L
 
     // Assert
     EXPECT_EQ(result, "");
+}
+
+/**
+ * @tc.name  : StartVibratorForSystemTone
+ * @tc.number: StartVibratorForSystemTone_001
+ * @tc.desc  : Test StartVibratorForSystemTone when change hapticUri
+ */
+HWTEST(SystemSoundManagerUnitTest, StartVibratorForSystemTone_001, TestSize.Level0)
+{
+    SystemSoundVibrator systemSoundVibrator;
+    std::string hapticUri = "/system/media/ringtones/ringtone.ogg";
+    int32_t result = systemSoundVibrator.StartVibratorForSystemTone(hapticUri);
+    EXPECT_EQ(result, MSERR_OPEN_FILE_FAILED);
+    hapticUri = "";
+    result = systemSoundVibrator.StartVibratorForSystemTone(hapticUri);
+    EXPECT_EQ(result, MSERR_OPEN_FILE_FAILED);
+}
+
+/**
+ * @tc.name  : StartVibratorForRingtone
+ * @tc.number: StartVibratorForRingtone_001
+ * @tc.desc  : Test StartVibratorForRingtone when change hapticUri
+ */
+HWTEST(SystemSoundManagerUnitTest, StartVibratorForRingtone_001, TestSize.Level0)
+{
+    SystemSoundVibrator systemSoundVibrator;
+    std::string hapticUri = "";
+    int32_t result = systemSoundVibrator.StartVibratorForRingtone(hapticUri);
+    EXPECT_EQ(result, ERR_OK);
+    hapticUri = "testUri";
+    systemSoundVibrator.g_vibrateThread = std::make_shared<std::thread>([] {});
+    result = systemSoundVibrator.StartVibratorForRingtone(hapticUri);
+    EXPECT_EQ(result, MSERR_INVALID_OPERATION);
+    systemSoundVibrator.g_isRunning = true;
+    result = systemSoundVibrator.StartVibratorForRingtone(hapticUri);
+    EXPECT_EQ(result, MSERR_INVALID_OPERATION);
+}
+
+/**
+ * @tc.name  : VibrateForRingtone
+ * @tc.number: VibrateForRingtone_001
+ * @tc.desc  : TestVibrateForRingtone when change hapticUri
+ */
+HWTEST(SystemSoundManagerUnitTest, VibrateForRingtone_001, TestSize.Level0)
+{
+    SystemSoundVibrator systemSoundVibrator;
+    std::string hapticUri = "/system/media/ringtones/ringtone.ogg";
+    systemSoundVibrator.g_isRunning = true;
+    int32_t result = systemSoundVibrator.VibrateForRingtone(hapticUri);
+    EXPECT_EQ(result, MSERR_OPEN_FILE_FAILED);
+}
+
+/**
+ * @tc.name  : VibrateForRingtone
+ * @tc.number: VibrateForRingtone_002
+ * @tc.desc  : Test VibrateForRingtone when change hapticUri
+ */
+HWTEST(SystemSoundManagerUnitTest, VibrateForRingtone_002, TestSize.Level0)
+{
+    SystemSoundVibrator systemSoundVibrator;
+    std::string hapticUri = "";
+    systemSoundVibrator.g_isRunning = true;
+    int32_t result = systemSoundVibrator.VibrateForRingtone(hapticUri);
+    EXPECT_EQ(result, MSERR_OPEN_FILE_FAILED);
+}
+
+/**
+ * @tc.name  : VibrateForRingtone
+ * @tc.number: VibrateForRingtone_003
+ * @tc.desc  : Test VibrateForRingtone when change hapticUri
+ */
+HWTEST(SystemSoundManagerUnitTest, VibrateForRingtone_003, TestSize.Level0)
+{
+    SystemSoundVibrator systemSoundVibrator;
+    std::string hapticUri = "";
+    systemSoundVibrator.g_isRunning = false;
+    int32_t result = systemSoundVibrator.VibrateForRingtone(hapticUri);
+    EXPECT_EQ(result, MSERR_INVALID_OPERATION);
+}
+
+/**
+ * @tc.name  : VibrateLoopFunc
+ * @tc.number: VibrateLoopFunc_001
+ * @tc.desc  : Test VibrateLoopFunc when change hapticUri
+ */
+HWTEST(SystemSoundManagerUnitTest, VibrateLoopFunc_001, TestSize.Level0)
+{
+    SystemSoundVibrator systemSoundVibrator;
+    std::unique_lock<std::mutex> lock(SystemSoundVibrator::g_vibrateMutex);
+    int32_t fd = 0;
+    systemSoundVibrator.g_isRunning = true;
+    int32_t result = systemSoundVibrator.VibrateLoopFunc(lock, fd);
+    EXPECT_EQ(result, MSERR_UNSUPPORT_FILE);
+}
+
+/**
+ * @tc.name  : StopVibrator
+ * @tc.number: StopVibrator_001
+ * @tc.desc  : Test StopVibrator when change hapticUri
+ */
+HWTEST(SystemSoundManagerUnitTest, StopVibrator_001, TestSize.Level0)
+{
+    SystemSoundVibrator systemSoundVibrator;
+    systemSoundVibrator.g_isRunning = true;
+    int32_t result = systemSoundVibrator.StopVibrator();
+    EXPECT_EQ(result, MSERR_EXT_API9_NO_PERMISSION);
+
+    result = systemSoundVibrator.StopVibrator();
+    EXPECT_EQ(result, MSERR_EXT_API9_NO_PERMISSION);
+}
+
+/**
+ * @tc.name  : GetVibratorDuration
+ * @tc.number: GetVibratorDuration_001
+ * @tc.desc  : Test GetVibratorDuration when change hapticUri
+ */
+HWTEST(SystemSoundManagerUnitTest, GetVibratorDuration_001, TestSize.Level0)
+{
+    SystemSoundVibrator systemSoundVibrator;
+    std::string hapticUri = "/system/media/ringtones/ringtone.ogg";
+    int32_t result = systemSoundVibrator.GetVibratorDuration(hapticUri);
+    EXPECT_EQ(result, MSERR_OPEN_FILE_FAILED);
+    hapticUri = "";
+    result = systemSoundVibrator.GetVibratorDuration(hapticUri);
+    EXPECT_EQ(result, MSERR_OPEN_FILE_FAILED);
 }
 } // namespace Media
 } // namespace OHOS
