@@ -212,6 +212,7 @@ void CJAVPlayer::SetDataSrc(CAVDataSrcDescriptor dataSrcDescriptor)
         if (player_->SetSource(dataSrcCb_) != MSERR_OK) {
             OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "player SetSource DataSrc failed");
         } else {
+            std::lock_guard<std::mutex> lock(taskMutex_);
             state_ = PlayerStates::PLAYER_INITIALIZED;
         }
         int64_t fileSize;
