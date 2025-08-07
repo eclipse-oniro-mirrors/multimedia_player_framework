@@ -209,6 +209,7 @@ int32_t LppVideoStreamerServer::Reset()
 int32_t LppVideoStreamerServer::Release()
 {
     MEDIA_LOGI("LppVideoStreamerServer Release");
+    Reset();
     StateEnter(VideoState::RELEASED);
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_OK, "streamerEngine_ is nullptr");
     streamerEngine_ = nullptr;
