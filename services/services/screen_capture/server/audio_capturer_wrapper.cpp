@@ -311,8 +311,6 @@ int32_t AudioCapturerWrapper::CaptureAudio()
         CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_OK, "CaptureAudio buffer is no memory, stop capture"
             " %{public}s", name.c_str());
         audioBuffer = std::make_shared<AudioBuffer>(buffer, 0, 0, audioInfo_.audioSource);
-        CHECK_AND_RETURN_RET_LOG(audioBuffer != nullptr, MSERR_OK, "CaptureAudio make_shared AudioBuffer failed"
-            " %{public}s", name.c_str());
         if (GetCaptureAudioBuffer(audioBuffer, bufferLen) != MSERR_OK) {
             continue;
         }
@@ -378,7 +376,6 @@ int32_t AudioCapturerWrapper::AddBufferFrom(int64_t timeWindow, int64_t bufferSi
         uint8_t *cacheAudioData = static_cast<uint8_t *>(malloc(bufferSize));
         CHECK_AND_RETURN_RET_LOG(cacheAudioData != nullptr, MSERR_OK, "AddBuffer cacheAudioData no memory");
         audioBuffer = std::make_shared<AudioBuffer>(cacheAudioData, 0, 0, audioInfo_.audioSource);
-        CHECK_AND_RETURN_RET_LOG(audioBuffer != nullptr, MSERR_OK, "AddBuffer make AudioBuffer failed");
         memset_s(audioBuffer->buffer, bufferSize, 0, bufferSize);
         audioBuffer->length = bufferSize;
         int64_t startTime = fromTime + (diffCount - 1) * AUDIO_CAPTURE_READ_FRAME_TIME;
