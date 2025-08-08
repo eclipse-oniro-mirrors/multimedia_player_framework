@@ -158,7 +158,6 @@ int32_t PlayerImpl::SetSource(const std::string &url)
 {
     int64_t startTime = SteadyClock::GetCurrentTimeMs();
     ScopedTimer timer("SetSource url", OVERTIME_WARNING_MS);
-    MEDIA_LOGD("PlayerImpl:0x%{private}06" PRIXPTR " SetSource in(url): %{private}s", FAKE_POINTER(this), url.c_str());
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty..");
     int32_t ret = MSERR_OK;
