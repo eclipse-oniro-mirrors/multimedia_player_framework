@@ -137,12 +137,17 @@ void AVRecorderCallback::OnTaihePhotoAssertAvailableCallback(AVRecordTaiheCallba
                 std::reinterpret_pointer_cast<taihe::callback<void(uintptr_t)>>(func);
             ani_object aniObject = MediaLibraryCommAni::CreatePhotoAssetAni(
                 taihe::get_env(), event->uri, CAMERA_SHOT_TYPE);
-            uintptr_t photoAssetPtr = reinterpret_cast<uintptr_t>(&aniObject);
+            uintptr_t photoAssetPtr = reinterpret_cast<uintptr_t>(aniObject);
             (*cacheCallback)(photoAssetPtr);
         } while (0);
         delete event;
     };
-    mainHandler_->PostTask(task, "OnPhotoAssetAvailable", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    bool ret = mainHandler_->PostTask(task, "OnPhotoAssetAvailable",
+        0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    if (!ret) {
+        MEDIA_LOGE("Failed to PostTask!");
+        delete taiheCb;
+    }
 }
 #endif
 
@@ -165,7 +170,12 @@ void AVRecorderCallback::OnTaiheAudioCaptureChangeCallback(AVRecordTaiheCallback
         } while (0);
         delete event;
     };
-    mainHandler_->PostTask(task, "OnAudioCapturerChange", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    bool ret = mainHandler_->PostTask(task, "OnAudioCapturerChange",
+        0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    if (!ret) {
+        MEDIA_LOGE("Failed to PostTask!");
+        delete taiheCb;
+    }
 }
 
 void AVRecorderCallback::SendAudioCaptureChangeCallback(const OHOS::Media::AudioRecorderChangeInfo

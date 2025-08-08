@@ -462,7 +462,7 @@ void AVScreenCaptureRecorderImpl::SkipPrivacyModeSync(::taihe::array_view<int32_
     CHECK_AND_RETURN_LOG(asyncCtx->taihe->taskQue_ != nullptr, "taskQue is nullptr!");
 
     std::vector<uint64_t> windowIDsVec;
-    for (int i = 0; i < windowIDs.size(); i++) {
+    for (size_t i = 0; i < windowIDs.size(); i++) {
         int32_t tempValue = windowIDs[i];
         if (tempValue >= 0) {
             windowIDsVec.push_back(static_cast<uint64_t>(tempValue));

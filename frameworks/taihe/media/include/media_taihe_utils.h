@@ -42,7 +42,6 @@ public:
     template <typename EnumTypeString>
     static bool GetEnumKeyByStringValue(::taihe::string_view value, typename EnumTypeString::key_t &key);
     static ani_object ToBusinessError(ani_env *env, int32_t code, const std::string &message);
-    static ani_object CreatePixelMap(ani_env *env, OHOS::Media::PixelMap &pixelMap);
     static ani_string ToAniString(ani_env *env, const std::string &str);
     static uintptr_t GetUndefined(ani_env* env);
     static map<string, MediaDescriptionValue> CreateFormatBuffer(OHOS::Media::Format &format);

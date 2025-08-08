@@ -304,7 +304,7 @@ static std::unique_ptr<OHOS::Media::PixelMap> ConvertMemToPixelMap(
     return pixelMap;
 }
 
-ohos::multimedia::image::image::PixelMap AVMetadataExtractorImpl::FetchAlbumCoverSync()
+optional<ohos::multimedia::image::image::PixelMap> AVMetadataExtractorImpl::FetchAlbumCoverSync()
 {
     OHOS::Media::MediaTrace trace("AVMetadataExtractorTaihe::fetchArtPicture");
     MEDIA_LOGI("TaiheFetchArtPicture In");
@@ -312,6 +312,7 @@ ohos::multimedia::image::image::PixelMap AVMetadataExtractorImpl::FetchAlbumCove
     if (state_ != OHOS::Media::HelperState::HELPER_STATE_RUNNABLE) {
         set_business_error(OHOS::Media::MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "Can't fetchAlbumCover, please set fdSrc or dataSrc.");
+        return optional<ohos::multimedia::image::image::PixelMap>(std::nullopt);
     }
 
     MEDIA_LOGI("TaiheFetchArtPicture task start");
@@ -319,8 +320,10 @@ ohos::multimedia::image::image::PixelMap AVMetadataExtractorImpl::FetchAlbumCove
     std::shared_ptr<OHOS::Media::PixelMap> artPicture = ConvertMemToPixelMap(sharedMemory);
     if (artPicture == nullptr) {
         set_business_error(OHOS::Media::MSERR_EXT_API9_UNSUPPORT_FORMAT, "Failed to fetchAlbumCover");
+        return optional<ohos::multimedia::image::image::PixelMap>(std::nullopt);
     }
-    return Image::PixelMapImpl::CreatePixelMap(artPicture);
+    return optional<ohos::multimedia::image::image::PixelMap>(std::in_place_t{},
+        Image::PixelMapImpl::CreatePixelMap(artPicture));
 }
 
 void AVMetadataExtractorImpl::ReleaseSync()
@@ -337,7 +340,7 @@ void AVMetadataExtractorImpl::ReleaseSync()
     helper_->Release();
 }
 
-int32_t AVMetadataExtractorImpl::GetFrameIndexByTimeSync(double timeUs)
+int32_t AVMetadataExtractorImpl::GetFrameIndexByTimeSync(int64_t timeUs)
 {
     OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::GetFrameIndexByTimeSync");
     timeStamp_ = static_cast<uint64_t>(timeUs);
@@ -356,7 +359,7 @@ int32_t AVMetadataExtractorImpl::GetFrameIndexByTimeSync(double timeUs)
     return static_cast<int32_t>(index_);
 }
 
-double AVMetadataExtractorImpl::GetTimeByFrameIndexSync(int32_t index)
+int64_t AVMetadataExtractorImpl::GetTimeByFrameIndexSync(int32_t index)
 {
     OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::GetTimeByFrameIndexSync");
     if (index < 0) {
@@ -376,7 +379,7 @@ double AVMetadataExtractorImpl::GetTimeByFrameIndexSync(int32_t index)
         set_business_error(OHOS::Media::MSERR_EXT_API9_UNSUPPORT_FORMAT, "Demuxer getTimeByFrameIndex failed.");
         return -1;
     }
-    return static_cast<double>(timeStamp_);
+    return static_cast<int64_t>(timeStamp_);
 }
 } // namespace ANI::Media
 

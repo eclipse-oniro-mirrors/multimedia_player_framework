@@ -29,9 +29,9 @@ public:
     MediaSourceLoadingRequestImpl(uint64_t requestId);
     string GetUrl();
     optional<map<string, string>> GetHeader();
-    optional<int32_t> RespondData(double uuid, double offset, array_view<uint8_t> buffer);
-    void RespondHeader(double uuid, optional_view<map<string, string>> header, optional_view<string> redirectUrl);
-    void FinishLoading(double uuid, LoadingRequestError state);
+    optional<int32_t> RespondData(int64_t uuid, int64_t offset, array_view<uint8_t> buffer);
+    void RespondHeader(int64_t uuid, optional_view<map<string, string>> header, optional_view<string> redirectUrl);
+    void FinishLoading(int64_t uuid, LoadingRequestError state);
     static ::ohos::multimedia::media::MediaSourceLoadingRequest CreateLoadingRequest(
         std::shared_ptr<OHOS::Media::LoadingRequest> request);
 private:

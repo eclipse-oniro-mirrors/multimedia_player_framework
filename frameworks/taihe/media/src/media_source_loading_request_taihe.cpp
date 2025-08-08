@@ -58,7 +58,7 @@ optional<map<string, string>> MediaSourceLoadingRequestImpl::GetHeader()
     return optional<map<string, string>>(std::in_place_t{}, taiheHeader);
 }
 
-optional<int32_t> MediaSourceLoadingRequestImpl::RespondData(double uuid, double offset, array_view<uint8_t> buffer)
+optional<int32_t> MediaSourceLoadingRequestImpl::RespondData(int64_t uuid, int64_t offset, array_view<uint8_t> buffer)
 {
     MediaTrace trace("MediaSourceLoadingRequestTaihe::respondData");
     MEDIA_LOGI("respondData In");
@@ -75,7 +75,7 @@ optional<int32_t> MediaSourceLoadingRequestImpl::RespondData(double uuid, double
     return optional<int32_t>(std::in_place_t{}, res);
 }
 
-void MediaSourceLoadingRequestImpl::RespondHeader(double uuid, optional_view<map<string, string>> header,
+void MediaSourceLoadingRequestImpl::RespondHeader(int64_t uuid, optional_view<map<string, string>> header,
     optional_view<string> redirectUrl)
 {
     MediaTrace trace("MediaSourceLoadingRequestTaihe::respondHeader");
@@ -96,7 +96,7 @@ void MediaSourceLoadingRequestImpl::RespondHeader(double uuid, optional_view<map
     MEDIA_LOGI("respondHeader redirectUrl %{private}s", redirectUrlStr.c_str());
 }
 
-void MediaSourceLoadingRequestImpl::FinishLoading(double uuid, LoadingRequestError state)
+void MediaSourceLoadingRequestImpl::FinishLoading(int64_t uuid, LoadingRequestError state)
 {
     MediaTrace trace("MediaSourceLoadingRequestTaihe::finishLoading");
     MEDIA_LOGI("finishLoading In");

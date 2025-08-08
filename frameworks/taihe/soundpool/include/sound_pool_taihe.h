@@ -33,10 +33,10 @@ struct SoundPoolAsyncContext;
 
 class SoundPoolImpl {
 public:
-    SoundPoolImpl(int32_t maxStreams, uintptr_t audioRendererInfo);
+    SoundPoolImpl(int32_t maxStreams, ohos::multimedia::audio::AudioRendererInfo const& audioRendererInfo);
 
     int32_t LoadSync(string_view uri);
-    int32_t LoadWithFdSync(int32_t fd, double offset, double length);
+    int32_t LoadWithFdSync(int32_t fd, int64_t offset, int64_t length);
     int32_t PlaySync(int32_t soundID, optional_view<PlayParameters> params);
     int32_t PlayWithoutParam(int32_t soundID);
     int32_t PlayWithParam(int32_t soundID, PlayParameters const& params);
@@ -59,15 +59,13 @@ public:
     void OnPlayFinished(callback_view<void(uintptr_t)> callback);
     void OffPlayFinished();
 
-    int32_t ParserPlayOption(const PlayParameters &params);
+    int32_t ParserPlayOption(const PlayParameters &params, PlayParams &playParameters);
     void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
     void CancelCallbackReference(const std::string &callbackName);
     void CancelCallback(std::shared_ptr<ISoundPoolCallback> callback);
     void SignError(int32_t code, const std::string &message, bool del = true);
     void SoundPoolAsyncSignError(int32_t errCode, const std::string &operate,
         const std::string &param, const std::string &add = "");
-    static void ParseAudioRendererInfo(ani_env *env, ani_object src,
-        OHOS::AudioStandard::AudioRendererInfo &audioRendererInfo);
 private:
     bool errFlag = false;
     int32_t errCode = 0;
@@ -78,39 +76,6 @@ private:
     std::shared_ptr<ISoundPool> soundPool_;
     std::shared_ptr<ISoundPoolCallback> callbackTaihe_;
     std::map<std::string, std::shared_ptr<AutoRef>> eventCbMap_;
-    PlayParams playParameters_;
-    std::string url_ = "";
-    int32_t fd_ = 0;
-    int64_t offset_ = 0;
-    int64_t length_ = 0;
-    int32_t soundId_ = 0;
-    int32_t streamId_ = 0;
-    int32_t loop_ = 0;
-    int32_t priority_ = 0;
-    float leftVolume_ = 0.0f;
-    float rightVolume_ = 0.0f;
-    OHOS::AudioStandard::AudioRendererRate renderRate_ = OHOS::AudioStandard::AudioRendererRate::RENDER_RATE_NORMAL;
-};
-
-struct SoundPoolAsyncContext {
-    explicit SoundPoolAsyncContext() {}
-    ~SoundPoolAsyncContext() = default;
-    void SoundPoolAsyncSignError(int32_t errCode, const std::string &operate,
-        const std::string &param, const std::string &add = "");
-    SoundPoolImpl *taihe = nullptr;
-    std::shared_ptr<ISoundPool> soundPool_;
-    std::shared_ptr<ISoundPoolCallback> callbackTaihe_;
-    std::string url_ = "";
-    int32_t fd_ = 0;
-    int64_t offset_ = 0;
-    int64_t length_ = 0;
-    int32_t soundId_ = 0;
-    PlayParams playParameters_;
-    int32_t streamId_ = 0;
-    int32_t loop_ = 0;
-    int32_t priority_ = 0;
-    float leftVolume_ = 0.0f;
-    float rightVolume_ = 0.0f;
 };
 } // namespace Media
 } // namespace ANI
