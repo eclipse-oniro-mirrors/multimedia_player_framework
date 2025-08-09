@@ -289,6 +289,7 @@ std::string AVMetadataExtractorNapi::StringifyMeta(const Any& value)
         { "int32_t", [](const Any& value) {return std::to_string(AnyCast<int32_t>(value)); } },
         { "uint32_t", [](const Any& value) {return std::to_string(AnyCast<uint32_t>(value)); } },
         { "int64_t", [](const Any& value) {return std::to_string(AnyCast<int64_t>(value)); } },
+        { "uint64_t", [](const Any& value) {return std::to_string(AnyCast<uint64_t>(value)); } },
         { "float", [](const Any& value) {return std::to_string(AnyCast<float>(value)); } },
         { "double", [](const Any& value) {return std::to_string(AnyCast<double>(value)); } },
         { "std::string", [](const Any& value) {return AnyCast<std::string>(value); } }
@@ -296,8 +297,8 @@ std::string AVMetadataExtractorNapi::StringifyMeta(const Any& value)
     std::string valueType(value.TypeName());
     auto it = valueType2ConvertFunc.find(valueType);
     CHECK_AND_RETURN_RET_LOG(it != valueType2ConvertFunc.end(), "",
-        "can't find mapped valueType in valueType2ConvertFunc, valueType is %{public}s", valueTpype.c_str());
-    std::function<std::string(const Any&) func = it->second;
+        "can't find mapped valueType in valueType2ConvertFunc, valueType is %{public}s", valueType.c_str());
+    std::function<std::string(const Any&)> func = it->second;
     return func(value);
 }
 
