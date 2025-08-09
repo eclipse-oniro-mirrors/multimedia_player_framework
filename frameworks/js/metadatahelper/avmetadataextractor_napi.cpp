@@ -256,8 +256,7 @@ void AVMetadataExtractorNapi::HandleMetaDataResult(napi_env env, AVMetadataExtra
             ret = metadata->GetData(key, customData);
             CHECK_AND_CONTINUE_LOG(ret, "GetData failed, key %{public}s", key.c_str());
             for (auto iter = customData->begin(); iter != customData->end(); ++iter) {
-                AnyValueType type = customData->GetValueType(iter->first);
-                iter->second = (type != AnyValueType::STRING) ? std::to_string(it->second) : iter->second;
+                customData->SetData(iter->first, StringifyMeta(iter->second));
                 CHECK_AND_CONTINUE_LOG(CommonNapi::SetPropertyByValueType(env, customInfo, customData, iter->first),
                     "SetProperty failed, key: %{public}s", key.c_str());
             }
@@ -278,6 +277,25 @@ void AVMetadataExtractorNapi::HandleMetaDataResult(napi_env env, AVMetadataExtra
     napi_set_named_property(env, result, "location", location);
     napi_set_named_property(env, result, "customInfo", customInfo);
     napi_set_named_property(env, result, "tracks", tracks);
+}
+
+std::string AVMetadataExtractorNapi::StringifyMeta(Any value)
+{
+    std::string ret = "";
+    if (Any::IsSameTypeWith<int32_t>(value)) {
+        ret = std::to_string(AnyCast<int32_t>(value));
+    } else if (Any::IsSameTypeWith<int64_t>(value)) {
+        ret = std::to_string(AnyCast<int64_t>(value));
+    } else if (Any::IsSameTypeWith<float>(value)) {
+        ret = std::to_string(AnyCast<float>(value));
+    } else if (Any::IsSameTypeWith<double>(value)) {
+        ret = std::to_string(AnyCast<double>(value));
+    } else if (Any::IsSameTypeWith<std::string>(value)) {
+        ret = sAnyCast<int32_t>(value);
+    } else {
+        MEDIA_LOGI("value type is invalid")
+    }
+    return ret;
 }
 
 static std::unique_ptr<PixelMap> ConvertMemToPixelMap(std::shared_ptr<AVSharedMemory> sharedMemory)
