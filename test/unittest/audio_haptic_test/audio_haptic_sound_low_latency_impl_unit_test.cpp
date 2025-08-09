@@ -24,6 +24,7 @@ const int32_t MAX_SOUND_POOL_STREAMS = 1;
 const float NUM1 = -1.0f;
 const float NUM2 = 2.0f;
 const float NUM3 = 0.5f;
+const std::string AUDIO_TEST_URI = "ringtone.ogg";
 
 void AudioHapticSoundLowLatencyImplUnitTest::SetUpTestCase(void) {}
 
@@ -904,6 +905,31 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     EXPECT_NE(aHSoundFirstFrameCallback->soundLowLatencyImpl_.lock(), nullptr);
 
     aHSoundFirstFrameCallback->OnFirstAudioFrameWritingCallback(latency);
+}
+
+/**
+ * @tc.name  : Test AudioHapticSoundLowLatencyImpl API
+ * @tc.number: AudioHapticSoundLowLatencyImpl_035
+ * @tc.desc  : Test AudioHapticSoundLowLatencyImpl::OpenAudioSource()
+ */
+HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_035, TestSize.Level1)
+{
+    int32_t fd = open(AUDIO_TEST_URI.c_str(), O_RDONLY);
+    ASSERT_NE(-1, fd);
+    AudioSource audioSource = {.fd = fd};
+    bool muteAudio = false;
+    AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
+    bool parallelPlayFlag = true;
+    auto audioHapticSoundLowLatencyImpl =
+        std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
+
+    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+
+    audioHapticSoundLowLatencyImpl->fileDes_ = -1;
+    auto ret = audioHapticSoundLowLatencyImpl->OpenAudioSource();
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_GT(audioHapticSoundLowLatencyImpl->audioSource_.length, 0);
+    close(fd);
 }
 } // namespace Media
 } // namespace OHOS

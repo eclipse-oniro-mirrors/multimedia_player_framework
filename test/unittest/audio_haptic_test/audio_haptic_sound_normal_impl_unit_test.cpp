@@ -22,6 +22,7 @@ static float g_nuM1 = -1.0f;
 static float g_nuM2 = 2.0f;
 static float g_nuM3 = 0.5f;
 static int32_t g_nuM4 = -1;
+const std::string AUDIO_TEST_URI = "ringtone.ogg";
 
 void AudioHapticSoundNormalImplUnitTest::SetUpTestCase(void) {}
 
@@ -737,6 +738,31 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_031, Tes
     audioHapticSoundNormalImpl->audioHapticPlayerCallback_.reset();
     audioHapticSoundNormalImpl->NotifyEndOfStreamEvent(true);
     EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+}
+
+/**
+ * @tc.name  : Test AudioHapticSoundNormalImpl API
+ * @tc.number: AudioHapticSoundNormalImpl_032
+ * @tc.desc  : Test AudioHapticSoundNormalImpl::OpenAudioSource()
+ */
+HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_032, TestSize.Level1)
+{
+    int32_t fd = open(AUDIO_TEST_URI.c_str(), O_RDONLY);
+    ASSERT_NE(-1, fd);
+
+    AudioSource audioSource = {.fd = fd};
+    bool muteAudio = false;
+    AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
+    auto audioHapticSoundNormalImpl =
+        std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
+
+    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+
+    audioHapticSoundNormalImpl->->fileDes_ = -1;
+    auto ret = audioHapticSoundNormalImpl->OpenAudioSource();
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_GT(audioHapticSoundNormalImpl->audioSource_.length, 0);
+    close(fd);
 }
 
 /**
