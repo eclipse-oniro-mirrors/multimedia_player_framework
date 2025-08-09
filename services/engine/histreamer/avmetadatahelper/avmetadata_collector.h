@@ -101,8 +101,8 @@ private:
     bool SetStringByValueType(const std::shared_ptr<Meta> &innerMeta,
         Metadata &avmeta, int32_t avKey, std::string innerKey) const;
     Status GetVideoTrackId(uint32_t &trackId);
-    int32_t GetSarVideoWidth(std::shared_ptr<Meta> trackInfo, int32_t originWidth) const;
-    int32_t GetSarVideoHeight(std::shared_ptr<Meta> trackInfo, int32_t originHeight) const;
+    int32_t GetSarVideoWidth(std::shared_ptr<Meta> trackInfo, int32_t originalWidth) const;
+    int32_t GetSarVideoHeight(std::shared_ptr<Meta> trackInfo, int32_t originalHeight) const;
     bool IsVideoMime(const std::string& mime) const;
     bool IsAudioMime(const std::string& mime) const;
     bool IsSubtitleMime(const std::string& mime) const;
