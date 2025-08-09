@@ -160,8 +160,8 @@ void AVMetaDataCollector::GetAudioTrackInfo(const std::shared_ptr<Meta> &trackIn
     audioTrackInfo.PutLongValue("bitrate", audioBitrate);
 
     int32_t sampleDepth = 0;
-    bool isHasData trackInfo->GetData(Tag::AUDIO_BITS_PER_CODED_SAMPLE, sampleDepth);
-    if (!isHadData || sampleDepth <= 0) {
+    bool isHasData = trackInfo->GetData(Tag::AUDIO_BITS_PER_CODED_SAMPLE, sampleDepth);
+    if (!isHasData || sampleDepth <= 0) {
         trackInfo->GetData(Tag::AUDIO_BITS_PER_RAW_SAMPLE, sampleDepth);
     }
     audioTrackInfo.PutLongValue("sample_depth", sampleDepth);
