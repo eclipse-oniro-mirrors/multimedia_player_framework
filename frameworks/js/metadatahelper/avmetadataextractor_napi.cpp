@@ -282,10 +282,20 @@ void AVMetadataExtractorNapi::HandleMetaDataResult(napi_env env, AVMetadataExtra
 std::string AVMetadataExtractorNapi::StringifyMeta(Any value)
 {
     std::string ret = "";
-    if (Any::IsSameTypeWith<int32_t>(value)) {
+    if (Any::IsSameTypeWith<bool>(value)) {
+        ret = std::to_string(AnyCast<bool>(value));
+    } else if (Any::IsSameTypeWith<int8_t>(value)) {
+        ret = std::to_string(AnyCast<int8_t>(value));
+    } else if (Any::IsSameTypeWith<uint8_t>(value)) {
+        ret = std::to_string(AnyCast<uint8_t>(value));
+    } else if (Any::IsSameTypeWith<int32_t>(value)) {
         ret = std::to_string(AnyCast<int32_t>(value));
+    } else if (Any::IsSameTypeWith<uint32_t>(value)) {
+        ret = std::to_string(AnyCast<uint32_t>(value));
     } else if (Any::IsSameTypeWith<int64_t>(value)) {
         ret = std::to_string(AnyCast<int64_t>(value));
+    } else if (Any::IsSameTypeWith<uint64_t>(value)) {
+        ret = std::to_string(AnyCast<uint64_t>(value));
     } else if (Any::IsSameTypeWith<float>(value)) {
         ret = std::to_string(AnyCast<float>(value));
     } else if (Any::IsSameTypeWith<double>(value)) {
