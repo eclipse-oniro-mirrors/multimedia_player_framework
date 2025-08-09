@@ -303,7 +303,7 @@ std::string AVMetadataExtractorNapi::StringifyMeta(Any value)
     } else if (Any::IsSameTypeWith<std::string>(value)) {
         ret = AnyCast<std::string>(value);
     } else {
-        MEDIA_LOGE("value type is invalid")
+        MEDIA_LOGE("value type is invalid");
     }
     return ret;
 }
