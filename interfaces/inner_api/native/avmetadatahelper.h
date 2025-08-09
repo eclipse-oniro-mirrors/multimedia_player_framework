@@ -99,6 +99,10 @@ static const std::map<int32_t, const char*> g_MetadataCodeMap = {
     {38,    "videoOrientation"},
     {39,    "hdrType"},
     {44,    "videoRotateOrientation"},
+    {45,    "videoFrameRate"},
+    {46,    "audioSampleRate"},
+    {47,    "audioChannelCount"},
+    {48,    "mediaBitRate"},
 };
 
 /**
@@ -128,6 +132,10 @@ static const std::vector<std::string> g_Metadata = {
     "longitude",
     "customInfo",
     "tracks",
+    "videoFrameRate",
+    "audioSampleRate",
+    "audioChannelCount",
+    "mediaBitRate",
 };
 
 enum HdrType : int32_t {
@@ -284,7 +292,7 @@ enum AVMetadataCode : int32_t {
     AV_KEY_VIDEO_WIDTH = 37,
     /**
      * The metadata key to retrieve the information about the video
-     * rotation.
+     * rotation(Only contains rotation information, does not contain orientation information).
      */
     AV_KEY_VIDEO_ORIENTATION = 38,
     /**
@@ -314,9 +322,25 @@ enum AVMetadataCode : int32_t {
     AV_KEY_TRACKS = 43,
     /**
      * The metadata key to retrieve the information about the video
-     * orientation.
+     * orientation(Only contains orientation information, does not contain rotation information).
      */
     AV_KEY_VIDEO_ROTATE_ORIENTATION = 44,
+    /**
+     * The metadata key to retrieve the information about the video frame rate.
+     */
+    AV_KEY_VIDEO_FRAME_RATE = 45,
+    /**
+     * The metadata key to retrieve the information about the audio sample rate.
+     */
+    AV_KEY_AUDIO_SAMPLE_RATE = 46,
+    /**
+     * The metadata key to retrieve the information about the audio channel count.
+     */
+    AV_KEY_AUDIO_CHANNEL_COUNT = 47,
+    /**
+     * The metadata key to retrieve the information about the audio bitrate.
+     */
+    AV_KEY_AUDIO_BITRATE = 48,
 };
 
 /**
