@@ -256,7 +256,8 @@ void AVMetadataExtractorNapi::HandleMetaDataResult(napi_env env, AVMetadataExtra
             ret = metadata->GetData(key, customData);
             CHECK_AND_CONTINUE_LOG(ret, "GetData failed, key %{public}s", key.c_str());
             for (auto iter = customData->begin(); iter != customData->end(); ++iter) {
-                iter->second = std::to_string(it->second)
+                AnyValueType type = customData->GetValueType(iter->first);
+                iter->second = (type != AnyValueType::STRING) ? std::to_string(it->second) : iter->second;
                 CHECK_AND_CONTINUE_LOG(CommonNapi::SetPropertyByValueType(env, customInfo, customData, iter->first),
                     "SetProperty failed, key: %{public}s", key.c_str());
             }
