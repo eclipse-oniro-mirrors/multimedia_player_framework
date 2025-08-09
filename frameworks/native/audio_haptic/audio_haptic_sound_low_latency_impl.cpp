@@ -110,12 +110,6 @@ int32_t AudioHapticSoundLowLatencyImpl::OpenAudioSource()
     MEDIA_LOGI("AudioHapticSoundLowLatencyImpl::OpenAudioSource fileDes_: %{public}d", fileDes_);
     CHECK_AND_RETURN_RET_LOG(fileDes_ > FILE_DESCRIPTOR_INVALID, MSERR_OPEN_FILE_FAILED,
         "AudioHapticSoundLowLatencyImpl::OpenAudioSource: Failed to open the audio source for sound pool.");
-    if (audioSource_.length == 0) {
-        struct stat64 statbuf = { 0 };
-        CHECK_AND_RETURN_RET_LOG(fstat64(fileDes_, &statbuf) == 0, MSERR_OPEN_FILE_FAILED,
-            "AudioHapticSoundLowLatencyImpl::OpenAudioSource: Failed to open the audio source for sound pool.");
-        audioSource_.length = statbuf.st_size;
-    }
     return MSERR_OK;
 }
 
@@ -135,7 +129,13 @@ int32_t AudioHapticSoundLowLatencyImpl::PrepareSound()
     result = OpenAudioSource();
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result, "Failed to open audio source.");
 
-    int32_t soundID = soundPoolPlayer_->Load(fileDes_, audioSource_.offset, audioSource_.length);
+    int32_t soundID = -1;
+    if (!audioSource_.audioUri.empty()) {
+        std::string uri = "fd://" + std::to_string(fileDes_);
+        soundID = soundPoolPlayer_->Load(uri);
+    } else {
+        soundID = soundPoolPlayer_->Load(fileDes_, audioSource_.offset, audioSource_.length);
+    }
     if (soundID < 0) {
         MEDIA_LOGE("Prepare: Failed to load soundPool uri.");
         return MSERR_OPEN_FILE_FAILED;

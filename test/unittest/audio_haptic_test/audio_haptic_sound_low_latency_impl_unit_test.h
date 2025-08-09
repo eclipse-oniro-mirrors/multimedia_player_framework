@@ -21,7 +21,6 @@
 #include "audio_haptic_sound_normal_impl.h"
 #include "audio_haptic_player_impl.h"
 #include <fcntl.h>
-#include <unistd.h>
 
 namespace OHOS {
 namespace Media {
