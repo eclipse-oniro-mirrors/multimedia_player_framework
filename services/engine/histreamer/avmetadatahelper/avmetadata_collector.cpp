@@ -91,10 +91,6 @@ static const std::unordered_map<int32_t, std::string> AVMETA_KEY_TO_X_MAP = {
     { AV_KEY_LOCATION_LATITUDE, Tag::MEDIA_LATITUDE},
     { AV_KEY_CUSTOMINFO, "customInfo"},
     { AV_KEY_DATE_TIME_ISO8601, "ISO8601 time"},
-    { AV_KEY_VIDEO_FRAME_RATE, Tag::VIDEO_FRAME_RATE},
-    { AV_KEY_AUDIO_SAMPLE_RATE, Tag::AUDIO_SAMPLE_RATE},
-    { AV_KEY_AUDIO_CHANNEL_COUNT, Tag::AUDIO_CHANNEL_COUNT},
-    { AV_KEY_AUDIO_BITRATE, Tag::MEDIA_BITRATE},
 };
 
 AVMetaDataCollector::AVMetaDataCollector(std::shared_ptr<MediaDemuxer> &mediaDemuxer) : mediaDemuxer_(mediaDemuxer)
@@ -561,11 +557,6 @@ bool AVMetaDataCollector::SetStringByValueType(const std::shared_ptr<Meta> &inne
         if (innerMeta->GetData(innerKey, orientation)) {
             avmeta.SetMeta(avKey, std::to_string(orientation));
         }
-    } else if (Any::IsSameTypeWith<int32_t>(type)) {
-        int32_t value;
-        if (innerMeta->GetData(innerKey, value)) {
-            avmeta.SetMeta(avKey, std::to_string(value));
-        }
     } else if (Any::IsSameTypeWith<int64_t>(type)) {
         int64_t duration;
         if (innerMeta->GetData(innerKey, duration)) {
@@ -578,11 +569,6 @@ bool AVMetaDataCollector::SetStringByValueType(const std::shared_ptr<Meta> &inne
         }
     } else if (Any::IsSameTypeWith<float>(type)) {
         float value;
-        if (innerMeta->GetData(innerKey, value) && collectedAVMetaData_ != nullptr) {
-            collectedAVMetaData_->SetData(innerKey, value);
-        }
-    } else if (Any::IsSameTypeWith<double>(type)) {
-        double value;
         if (innerMeta->GetData(innerKey, value) && collectedAVMetaData_ != nullptr) {
             collectedAVMetaData_->SetData(innerKey, value);
         }
