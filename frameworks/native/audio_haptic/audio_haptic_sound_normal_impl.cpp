@@ -114,7 +114,7 @@ int32_t AudioHapticSoundNormalImpl::OpenAudioSource()
         struct stat64 statbuf = { 0 };
         CHECK_AND_RETURN_RET_LOG(fstat64(fileDes_, &statbuf) == 0, MSERR_OPEN_FILE_FAILED,
             "AudioHapticSoundNormalImpl::OpenAudioSource: Failed to open the audio source for avplayer.");
-        audioSource_.lengt = statbuf.st_size;
+        audioSource_.length = statbuf.st_size;
     }
     return MSERR_OK;
 }
