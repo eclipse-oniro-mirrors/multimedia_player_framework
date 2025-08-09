@@ -303,8 +303,8 @@ private:
     Global::Resource::ResourceManager *resourceManager_ = nullptr;
     Global::Resource::ResConfig *resConfig_ = nullptr;
     OHOS::sptr<Rosen::ScreenManager::IScreenListener> screenConnectListener_ = nullptr;
-    int32_t apiVersion_ = -1;
 #ifdef SUPPORT_CALL
+    int32_t apiVersion_ = -1;
     std::atomic<bool> isInTelCall_ = false;
     std::atomic<bool> isInTelCallAudio_ = false;
 #endif
