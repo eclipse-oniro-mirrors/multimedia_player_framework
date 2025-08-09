@@ -291,9 +291,9 @@ std::string AVMetadataExtractorNapi::StringifyMeta(Any value)
     } else if (Any::IsSameTypeWith<double>(value)) {
         ret = std::to_string(AnyCast<double>(value));
     } else if (Any::IsSameTypeWith<std::string>(value)) {
-        ret = sAnyCast<int32_t>(value);
+        ret = AnyCast<std::string>(value);
     } else {
-        MEDIA_LOGI("value type is invalid")
+        MEDIA_LOGE("value type is invalid")
     }
     return ret;
 }

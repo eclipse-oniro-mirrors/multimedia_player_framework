@@ -61,7 +61,7 @@ private:
     static void CommonCallbackRoutine(
         napi_env env, AVMetadataExtractorAsyncContext *&asyncContext, const napi_value &valueParam);
     static void HandleMetaDataResult(napi_env env, AVMetadataExtractorAsyncContext* &promiseCtx, napi_value &result);
-    std::string StringifyMeta(Any value);
+    static std::string StringifyMeta(Any value);
     static void ResolveMetadataComplete(napi_env env, napi_status status, void *data);
     static void GetTimeByFrameIndexComplete(napi_env env, napi_status status, void *data);
     static void GetFrameIndexByTimeComplete(napi_env env, napi_status status, void *data);
