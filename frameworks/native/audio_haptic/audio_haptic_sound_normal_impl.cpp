@@ -110,6 +110,12 @@ int32_t AudioHapticSoundNormalImpl::OpenAudioSource()
     MEDIA_LOGI("fileDes_ == %{public}d", fileDes_);
     CHECK_AND_RETURN_RET_LOG(fileDes_ > FILE_DESCRIPTOR_INVALID, MSERR_OPEN_FILE_FAILED,
         "Prepare: Invalid fileDes for avplayer.");
+    if (audioSource_.length == 0) {
+        struct stat64 statbuf = { 0 };
+        CHECK_AND_RETURN_RET_LOG(fstat64(fileDes_, &statbuf) == 0, MSERR_OPEN_FILE_FAILED,
+            "AudioHapticSoundNormalImpl::OpenAudioSource: Failed to open the audio source for avplayer.");
+        audioSource_.lengt = statbuf.st_size;
+    }
     return MSERR_OK;
 }
 
