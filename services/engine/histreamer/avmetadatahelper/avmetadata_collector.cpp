@@ -226,7 +226,7 @@ void AVMetaDataCollector::GetOtherTrackInfo(const std::shared_ptr<Meta> &trackIn
 
 int32_t AVMetaDataCollector::GetSarVideoWidth(std::shared_ptr<Meta> trackInfo, int32_t originWidth) const
 {
-    int32_t width = 0;
+    int32_t width = originWidth;
     double videoSar = 0;
     bool ret = trackInfo->GetData(Tag::VIDEO_SAR, videoSar);
     if (ret && videoSar < 1) {
@@ -237,7 +237,7 @@ int32_t AVMetaDataCollector::GetSarVideoWidth(std::shared_ptr<Meta> trackInfo, i
 
 int32_t AVMetaDataCollector::GetSarVideoHeight(std::shared_ptr<Meta> trackInfo, int32_t originHeight) const
 {
-    int32_t height = 0;
+    int32_t height = originHeight;
     double videoSar = 0;
     bool ret = trackInfo->GetData(Tag::VIDEO_SAR, videoSar);
     if (ret && videoSar > 1) {
