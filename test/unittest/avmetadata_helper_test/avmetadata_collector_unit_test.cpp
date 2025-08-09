@@ -623,6 +623,7 @@ HWTEST_F(AVMetaDataCollectorUnitTest, InitTracksInfoVector_008, TestSize.Level1)
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::MEDIA_TYPE, Plugins::MediaType::TIMEDMETA);
     meta->SetData(Tag::AUDIO_BITS_PER_CODED_SAMPLE, -1);
+    meta->SetData(Tag::AUDIO_BITS_PER_RAW_SAMPLE, 16);
     size_t index = 0;
     Plugins::MediaType mediaType;
     bool ret = meta->GetData(Tag::MEDIA_TYPE, mediaType);

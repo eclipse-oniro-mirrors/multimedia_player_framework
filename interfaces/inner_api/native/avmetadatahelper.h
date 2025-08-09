@@ -284,7 +284,7 @@ enum AVMetadataCode : int32_t {
     AV_KEY_VIDEO_WIDTH = 37,
     /**
      * The metadata key to retrieve the information about the video
-     * rotation(Only contains rotation information, does not contain orientation information).
+     * rotation(rotation angles only).
      */
     AV_KEY_VIDEO_ORIENTATION = 38,
     /**
@@ -314,7 +314,7 @@ enum AVMetadataCode : int32_t {
     AV_KEY_TRACKS = 43,
     /**
      * The metadata key to retrieve the information about the video
-     * orientation(Only contains orientation information, does not contain rotation information).
+     * orientation(rotation and flip info).
      */
     AV_KEY_VIDEO_ROTATE_ORIENTATION = 44,
 };

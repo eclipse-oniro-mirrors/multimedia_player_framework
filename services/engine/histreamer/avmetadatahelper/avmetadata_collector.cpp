@@ -164,7 +164,9 @@ void AVMetaDataCollector::GetAudioTrackInfo(const std::shared_ptr<Meta> &trackIn
     if (!isHasData || sampleDepth <= 0) {
         trackInfo->GetData(Tag::AUDIO_BITS_PER_RAW_SAMPLE, sampleDepth);
     }
-    audioTrackInfo.PutLongValue("sample_depth", sampleDepth);
+    if (sampleDepth > 0) {
+        audioTrackInfo.PutLongValue("sample_depth", sampleDepth);
+    }
 
     trackInfoVec_.emplace_back(std::move(audioTrackInfo));
 }
@@ -180,13 +182,13 @@ void AVMetaDataCollector::GetVideoTrackInfo(const std::shared_ptr<Meta> &trackIn
 
     int32_t originWidth = 0;
     trackInfo->GetData(Tag::VIDEO_WIDTH, originWidth);
-    videoTrackInfo.PutIntValue("origin_width", originWidth);
+    videoTrackInfo.PutIntValue("original_width", originWidth);
     int32_t width = GetSarVideoWidth(trackInfo, originWidth);
     videoTrackInfo.PutIntValue("width", width);
 
     int32_t originHeight = 0;
     trackInfo->GetData(Tag::VIDEO_HEIGHT, originHeight);
-    videoTrackInfo.PutIntValue("origin_height", originHeight);
+    videoTrackInfo.PutIntValue("original_height", originHeight);
     int32_t height = GetSarVideoHeight(trackInfo, originHeight);
     videoTrackInfo.PutIntValue("height", height);
 
