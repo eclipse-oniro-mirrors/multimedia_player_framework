@@ -415,8 +415,8 @@ HWTEST_F(AVMetaDataCollectorUnitTest, GetSarVideoWidth_001, TestSize.Level1)
     double videoSar = 0;
     bool ret = meta->GetData(Tag::VIDEO_SAR, videoSar);
     EXPECT_FALSE(ret);
-    EXPECT_EQ(avmetaDataCollector->GetSarVideoWidth(meta), 100);
-    EXPECT_EQ(avmetaDataCollector->GetSarVideoHeight(meta), 100);
+    EXPECT_EQ(avmetaDataCollector->GetSarVideoWidth(meta, 100), 100);
+    EXPECT_EQ(avmetaDataCollector->GetSarVideoHeight(meta, 100), 100);
 }
 
 /**
@@ -436,8 +436,8 @@ HWTEST_F(AVMetaDataCollectorUnitTest, GetSarVideoWidth_002, TestSize.Level1)
     bool ret = meta->GetData(Tag::VIDEO_SAR, videoSar);
     EXPECT_TRUE(ret);
     EXPECT_EQ(videoSar, sar);
-    EXPECT_EQ(avmetaDataCollector->GetSarVideoWidth(meta), 100);
-    EXPECT_EQ(avmetaDataCollector->GetSarVideoHeight(meta), 50);
+    EXPECT_EQ(avmetaDataCollector->GetSarVideoWidth(meta, 100), 100);
+    EXPECT_EQ(avmetaDataCollector->GetSarVideoHeight(meta, 100), 50);
 }
 
 /**
@@ -457,8 +457,8 @@ HWTEST_F(AVMetaDataCollectorUnitTest, GetSarVideoWidth_003, TestSize.Level1)
     bool ret = meta->GetData(Tag::VIDEO_SAR, videoSar);
     EXPECT_TRUE(ret);
     EXPECT_EQ(videoSar, sar);
-    EXPECT_EQ(avmetaDataCollector->GetSarVideoWidth(meta), 50);
-    EXPECT_EQ(avmetaDataCollector->GetSarVideoHeight(meta), 100);
+    EXPECT_EQ(avmetaDataCollector->GetSarVideoWidth(meta, 100), 50);
+    EXPECT_EQ(avmetaDataCollector->GetSarVideoHeight(meta, 100), 100);
 }
 
 /**
@@ -478,8 +478,8 @@ HWTEST_F(AVMetaDataCollectorUnitTest, GetSarVideoWidth_004, TestSize.Level1)
     bool ret = meta->GetData(Tag::VIDEO_SAR, videoSar);
     EXPECT_TRUE(ret);
     EXPECT_EQ(videoSar, sar);
-    EXPECT_EQ(avmetaDataCollector->GetSarVideoWidth(meta), 100);
-    EXPECT_EQ(avmetaDataCollector->GetSarVideoHeight(meta), 100);
+    EXPECT_EQ(avmetaDataCollector->GetSarVideoWidth(meta, 100), 100);
+    EXPECT_EQ(avmetaDataCollector->GetSarVideoHeight(meta, 100), 100);
 }
 
 /**
@@ -604,6 +604,44 @@ HWTEST_F(AVMetaDataCollectorUnitTest, InitTracksInfoVector_007, TestSize.Level1)
 {
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::MEDIA_TYPE, Plugins::MediaType::TIMEDMETA);
+    size_t index = 0;
+    Plugins::MediaType mediaType;
+    bool ret = meta->GetData(Tag::MEDIA_TYPE, mediaType);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->InitTracksInfoVector(meta, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+}
+
+/**
+ * @tc.name: InitTracksInfoVector_008
+ * @tc.desc: InitTracksInfoVector_008
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, InitTracksInfoVector_008, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_TYPE, Plugins::MediaType::TIMEDMETA);
+    meta->SetData(Tag::AUDIO_BITS_PER_CODED_SAMPLE, -1);
+    size_t index = 0;
+    Plugins::MediaType mediaType;
+    bool ret = meta->GetData(Tag::MEDIA_TYPE, mediaType);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->InitTracksInfoVector(meta, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+}
+
+/**
+ * @tc.name: InitTracksInfoVector_009
+ * @tc.desc: InitTracksInfoVector_009
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, InitTracksInfoVector_009, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_TYPE, Plugins::MediaType::TIMEDMETA);
+    meta->SetData(Tag::AUDIO_BITS_PER_CODED_SAMPLE, 16);
     size_t index = 0;
     Plugins::MediaType mediaType;
     bool ret = meta->GetData(Tag::MEDIA_TYPE, mediaType);
