@@ -153,7 +153,7 @@ int32_t SoundParser::DoDemuxer(MediaAVCodec::Format *trackFormat)
     return MSERR_OK;
 }
 
-int32_t SoundParser::DoDecode(MediaAVCodec::Format trackFormat)
+int32_t SoundParser::DoDecode(MediaAVCodec::Format &trackFormat)
 {
     MediaTrace trace("SoundParser::DoDecode");
     MEDIA_LOGI("SoundParser::DoDecode start, soundID:%{public}d", soundID_);
