@@ -256,9 +256,10 @@ void AVMetadataExtractorNapi::HandleMetaDataResult(napi_env env, AVMetadataExtra
             ret = metadata->GetData(key, customData);
             CHECK_AND_CONTINUE_LOG(ret, "GetData failed, key %{public}s", key.c_str());
             for (auto iter = customData->begin(); iter != customData->end(); ++iter) {
-                customData->SetData(iter->first, StringifyMeta(iter->second));
-                CHECK_AND_CONTINUE_LOG(CommonNapi::SetPropertyByValueType(env, customInfo, customData, iter->first),
-                    "SetProperty failed, key: %{public}s", key.c_str());
+                std::string curKey = iter->first;
+                std::string curValue = StringifyMeta(iter->second);
+                CHECK_AND_CONTINUE_LOG(CommonNapi::SetPropertyString(env, customInfo, curKey, curValue),
+                    "SetPropertyString failed, key: %{public}s", key.c_str());
             }
             continue;
         }
@@ -279,33 +280,25 @@ void AVMetadataExtractorNapi::HandleMetaDataResult(napi_env env, AVMetadataExtra
     napi_set_named_property(env, result, "tracks", tracks);
 }
 
-std::string AVMetadataExtractorNapi::StringifyMeta(Any value)
+std::string AVMetadataExtractorNapi::StringifyMeta(const Any& value)
 {
-    std::string ret = "";
-    if (Any::IsSameTypeWith<bool>(value)) {
-        ret = std::to_string(AnyCast<bool>(value));
-    } else if (Any::IsSameTypeWith<int8_t>(value)) {
-        ret = std::to_string(AnyCast<int8_t>(value));
-    } else if (Any::IsSameTypeWith<uint8_t>(value)) {
-        ret = std::to_string(AnyCast<uint8_t>(value));
-    } else if (Any::IsSameTypeWith<int32_t>(value)) {
-        ret = std::to_string(AnyCast<int32_t>(value));
-    } else if (Any::IsSameTypeWith<uint32_t>(value)) {
-        ret = std::to_string(AnyCast<uint32_t>(value));
-    } else if (Any::IsSameTypeWith<int64_t>(value)) {
-        ret = std::to_string(AnyCast<int64_t>(value));
-    } else if (Any::IsSameTypeWith<uint64_t>(value)) {
-        ret = std::to_string(AnyCast<uint64_t>(value));
-    } else if (Any::IsSameTypeWith<float>(value)) {
-        ret = std::to_string(AnyCast<float>(value));
-    } else if (Any::IsSameTypeWith<double>(value)) {
-        ret = std::to_string(AnyCast<double>(value));
-    } else if (Any::IsSameTypeWith<std::string>(value)) {
-        ret = AnyCast<std::string>(value);
-    } else {
-        MEDIA_LOGE("value type is invalid");
-    }
-    return ret;
+    static const std::unordered_map<std::string, std::function<std::string(const Any&)>> valueType2ConvertFunc = {
+        { "bool", [](const Any& value) {return std::to_string(AnyCast<bool>(value)); } },
+        { "int8_t", [](const Any& value) {return std::to_string(AnyCast<int8_t>(value)); } },
+        { "uint8_t", [](const Any& value) {return std::to_string(AnyCast<uint8_t>(value)); } },
+        { "int32_t", [](const Any& value) {return std::to_string(AnyCast<int32_t>(value)); } },
+        { "uint32_t", [](const Any& value) {return std::to_string(AnyCast<uint32_t>(value)); } },
+        { "int64_t", [](const Any& value) {return std::to_string(AnyCast<int64_t>(value)); } },
+        { "float", [](const Any& value) {return std::to_string(AnyCast<float>(value)); } },
+        { "double", [](const Any& value) {return std::to_string(AnyCast<double>(value)); } },
+        { "std::string", [](const Any& value) {return AnyCast<std::string>(value); } }
+    };
+    std::string valueType(value.TypeName());
+    auto it = valueType2ConvertFunc.find(valueType);
+    CHECK_AND_RETURN_RET_LOG(it != valueType2ConvertFunc.end(), "",
+        "can't find mapped valueType in valueType2ConvertFunc, valueType is %{public}s", valueTpype.c_str());
+    std::function<std::string(const Any&) func = it->second;
+    return func(value);
 }
 
 static std::unique_ptr<PixelMap> ConvertMemToPixelMap(std::shared_ptr<AVSharedMemory> sharedMemory)
