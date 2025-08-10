@@ -69,7 +69,7 @@ std::shared_ptr<IRecorderService> RecorderServer::Create()
 {
     std::shared_ptr<RecorderServer> server = std::make_shared<RecorderServer>();
     int32_t ret = server->Init();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to init RecorderServer");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to init RecorderServer, ret: %{public}d", ret);
     return server;
 }
 
@@ -598,16 +598,17 @@ int32_t RecorderServer::SetMetaConfigs(int32_t sourceId)
 {
     MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetMetaConfigs in, sourceId(%{public}d)",
         FAKE_POINTER(this), sourceId);
-    CHECK_AND_RETURN_RET_LOG(SetMetaMimeType(sourceId, Plugins::MimeType::TIMED_METADATA) == MSERR_OK,
-        MSERR_EXT_OPERATE_NOT_PERMIT, "set meta mime type failed");
+    int32_t ret = SetMetaMimeType(sourceId, Plugins::MimeType::TIMED_METADATA);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_EXT_OPERATE_NOT_PERMIT,
+        "set meta mime type failed, ret: %{public}d", ret);
     if (config_.metaSource == MetaSourceType::VIDEO_META_MAKER_INFO) {
-        CHECK_AND_RETURN_RET_LOG(
-            SetMetaTimedKey(sourceId, VID_DEBUG_INFO_KEY) == MSERR_OK, MSERR_EXT_OPERATE_NOT_PERMIT,
-            "set meta key failed");
+        ret = SetMetaTimedKey(sourceId, VID_DEBUG_INFO_KEY);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_EXT_OPERATE_NOT_PERMIT,
+            "set meta key failed, ret: %{public}d", ret);
         auto sourceTrackMime = GetVideoMime(config_.videoCodec);
-        CHECK_AND_RETURN_RET_LOG(
-            SetMetaSourceTrackMime(sourceId, sourceTrackMime) == MSERR_OK,
-            MSERR_EXT_OPERATE_NOT_PERMIT, "set meta source track mime failed");
+        ret = SetMetaSourceTrackMime(sourceId, sourceTrackMime);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_EXT_OPERATE_NOT_PERMIT,
+            "set meta source track mime failed, ret: %{public}d", ret);
     }
     return MSERR_OK;
 }
