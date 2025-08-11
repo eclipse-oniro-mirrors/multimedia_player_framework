@@ -52,6 +52,204 @@ void AudioHapticManagerImplUnitTest::SetUp(void) {}
 void AudioHapticManagerImplUnitTest::TearDown(void) {}
 
 /**
+ * @tc.name  : Test AudioHapticManagerImpl RegisterSourceFromFd API
+ * @tc.number: AudioHapticManagerImpl_RegisterSourceFromFd_003
+ * @tc.desc  : Test AudioHapticManagerImpl RegisterSourceFromFd interface
+ */
+HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_RegisterSourceFromFd_003, TestSize.Level0)
+{
+    EXPECT_NE(g_audioHapticManagerImpl, nullptr);
+    std::string audioUri = AUDIO_TEST_URI;
+    std::string hapticUri = HAPTIC_TEST_URI;
+
+    int32_t audioFd = open(audioUri.c_str(), O_RDONLY);
+    EXPECT_NE(-1, audioFd);
+    struct stat64 audioBuff = { 0 };
+    int ret = fstat64(audioFd, &audioBuff);
+    EXPECT_EQ(0, ret);
+    AudioHapticFileDescriptor audioFile;
+    audioFile.fd = audioFd;
+    audioFile.offset = 0;
+    audioFile.length = audioBuff.st_size;
+
+    int32_t hapticDd = open(hapticUri.c_str(), O_RDONLY);
+    EXPECT_NE(-1, hapticDd);
+    struct stat64 hatpicBuff = { 0 };
+    ret = fstat64(hapticDd, &hatpicBuff);
+    EXPECT_EQ(0, ret);
+    AudioHapticFileDescriptor hapticFile;
+    hapticFile.fd = hapticDd;
+    hapticFile.offset = 0;
+    hapticFile.length = hatpicBuff.st_size;
+
+    g_audioHapticManagerImpl->curPlayerCount_ = 128;
+    int32_t result = g_audioHapticManagerImpl->RegisterSourceFromFd(audioFile, hapticFile);
+    EXPECT_EQ(result, INVALID_SOURCE_ID);
+    close(audioFd);
+    close(hapticDd);
+}
+
+/**
+ * @tc.name  : Test AudioHapticManagerImpl RegisterSourceFromFd API
+ * @tc.number: AudioHapticManagerImpl_RegisterSourceFromFd_004
+ * @tc.desc  : Test AudioHapticManagerImpl RegisterSourceFromFd interface
+ */
+HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_RegisterSourceFromFd_004, TestSize.Level0)
+{
+    EXPECT_NE(g_audioHapticManagerImpl, nullptr);
+    std::string audioUri = AUDIO_TEST_URI;
+    std::string hapticUri = HAPTIC_TEST_URI;
+
+    int32_t audioFd = open(audioUri.c_str(), O_RDONLY);
+    EXPECT_NE(-1, audioFd);
+    struct stat64 audioBuff = { 0 };
+    int ret = fstat64(audioFd, &audioBuff);
+    EXPECT_EQ(0, ret);
+    AudioHapticFileDescriptor audioFile;
+    audioFile.fd = FILE_DESCRIPTOR_INVALID;
+    audioFile.offset = 0;
+    audioFile.length = audioBuff.st_size;
+
+    int32_t hapticDd = open(hapticUri.c_str(), O_RDONLY);
+    EXPECT_NE(-1, hapticDd);
+    struct stat64 hatpicBuff = { 0 };
+    ret = fstat64(hapticDd, &hatpicBuff);
+    EXPECT_EQ(0, ret);
+    AudioHapticFileDescriptor hapticFile;
+    hapticFile.fd = hapticDd;
+    hapticFile.offset = 0;
+    hapticFile.length = hatpicBuff.st_size;
+
+    g_audioHapticManagerImpl->curPlayerCount_ = 0;
+    int32_t result = g_audioHapticManagerImpl->RegisterSourceFromFd(audioFile, hapticFile);
+    EXPECT_EQ(result, INVALID_SOURCE_ID);
+    close(audioFd);
+    close(hapticDd);
+}
+
+/**
+ * @tc.name  : Test AudioHapticManagerImpl RegisterSourceFromFd API
+ * @tc.number: AudioHapticManagerImpl_RegisterSourceFromFd_005
+ * @tc.desc  : Test AudioHapticManagerImpl RegisterSourceFromFd interface
+ */
+HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_RegisterSourceFromFd_005, TestSize.Level0)
+{
+    EXPECT_NE(g_audioHapticManagerImpl, nullptr);
+    std::string audioUri = AUDIO_TEST_URI;
+    std::string hapticUri = HAPTIC_TEST_URI;
+
+    int32_t audioFd = open(audioUri.c_str(), O_RDONLY);
+    EXPECT_NE(-1, audioFd);
+    struct stat64 audioBuff = { 0 };
+    int ret = fstat64(audioFd, &audioBuff);
+    EXPECT_EQ(0, ret);
+    AudioHapticFileDescriptor audioFile;
+    audioFile.fd = audioFd;
+    audioFile.offset = 0;
+    audioFile.length = audioBuff.st_size;
+
+    int32_t hapticDd = open(hapticUri.c_str(), O_RDONLY);
+    EXPECT_NE(-1, hapticDd);
+    struct stat64 hatpicBuff = { 0 };
+    ret = fstat64(hapticDd, &hatpicBuff);
+    EXPECT_EQ(0, ret);
+    AudioHapticFileDescriptor hapticFile;
+    hapticFile.fd = FILE_DESCRIPTOR_INVALID;
+    hapticFile.offset = 0;
+    hapticFile.length = hatpicBuff.st_size;
+
+    g_audioHapticManagerImpl->curPlayerCount_ = 0;
+    int32_t result = g_audioHapticManagerImpl->RegisterSourceFromFd(audioFile, hapticFile);
+    EXPECT_EQ(result, INVALID_SOURCE_ID);
+    close(audioFd);
+    close(hapticDd);
+}
+
+/**
+ * @tc.name  : Test AudioHapticManagerImpl RegisterSourceFromFd API
+ * @tc.number: AudioHapticManagerImpl_RegisterSourceFromFd_006
+ * @tc.desc  : Test AudioHapticManagerImpl RegisterSourceFromFd interface
+ */
+HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_RegisterSourceFromFd_006, TestSize.Level0)
+{
+    EXPECT_NE(g_audioHapticManagerImpl, nullptr);
+    std::string audioUri = AUDIO_TEST_URI;
+    std::string hapticUri = HAPTIC_TEST_URI;
+
+    int32_t audioFd = open(audioUri.c_str(), O_RDONLY);
+    EXPECT_NE(-1, audioFd);
+    struct stat64 audioBuff = { 0 };
+    int ret = fstat64(audioFd, &audioBuff);
+    EXPECT_EQ(0, ret);
+    AudioHapticFileDescriptor audioFile;
+    audioFile.fd = audioFd;
+    audioFile.offset = 0;
+    audioFile.length = audioBuff.st_size;
+
+    int32_t hapticDd = open(hapticUri.c_str(), O_RDONLY);
+    EXPECT_NE(-1, hapticDd);
+    struct stat64 hatpicBuff = { 0 };
+    ret = fstat64(hapticDd, &hatpicBuff);
+    EXPECT_EQ(0, ret);
+    AudioHapticFileDescriptor hapticFile;
+    hapticFile.fd = hapticDd;
+    hapticFile.offset = 0;
+    hapticFile.length = hatpicBuff.st_size;
+    g_audioHapticManagerImpl->curPlayerCount_ = 0;
+
+    int32_t result = g_audioHapticManagerImpl->RegisterSourceFromFd(audioFile, hapticFile);
+    EXPECT_NE(result, INVALID_SOURCE_ID);
+    EXPECT_EQ(g_audioHapticManagerImpl->curPlayerCount_, 1);
+    close(audioFd);
+    close(hapticDd);
+}
+
+/**
+* @tc.name  : Test AudioHapticManagerImpl RegisterSourceWithEffectId API
+* @tc.number: AudioHapticManagerImpl_RegisterSourceWithEffectId_002
+* @tc.desc  : Test AudioHapticManagerImpl RegisterSourceWithEffectId interface
+*/
+HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_RegisterSourceWithEffectId_002, TestSize.Level1)
+{
+    EXPECT_NE(g_audioHapticManagerImpl, nullptr);
+    std::string emptyEffectID = "";
+    std::string validAudioUri = "valid_audio_uri";
+    int32_t result = g_audioHapticManagerImpl->RegisterSourceWithEffectId(validAudioUri, emptyEffectID);
+    EXPECT_EQ(result, INVALID_SOURCE_ID);
+}
+
+/**
+* @tc.name  : Test AudioHapticManagerImpl RegisterSourceWithEffectId API
+* @tc.number: AudioHapticManagerImpl_RegisterSourceWithEffectId_003
+* @tc.desc  : Test AudioHapticManagerImpl RegisterSourceWithEffectId interface
+*/
+HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_RegisterSourceWithEffectId_003, TestSize.Level1)
+{
+    EXPECT_NE(g_audioHapticManagerImpl, nullptr);
+    std::string validEffectID = "valid_effect_id";
+    std::string validAudioUri = "valid_audio_uri";
+    g_audioHapticManagerImpl->curPlayerCount_ = 128;
+    int32_t result = g_audioHapticManagerImpl->RegisterSourceWithEffectId(validAudioUri, validEffectID);
+    EXPECT_EQ(result, INVALID_SOURCE_ID);
+}
+
+/**
+* @tc.name  : Test AudioHapticManagerImpl RegisterSourceWithEffectId API
+* @tc.number: AudioHapticManagerImpl_RegisterSourceWithEffectId_004
+* @tc.desc  : Test AudioHapticManagerImpl RegisterSourceWithEffectId interface
+*/
+HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_RegisterSourceWithEffectId_004, TestSize.Level1)
+{
+    EXPECT_NE(g_audioHapticManagerImpl, nullptr);
+    std::string validEffectID = "valid_effect_id";
+    std::string validAudioUri = "valid_audio_uri";
+    g_audioHapticManagerImpl->curPlayerCount_ = 0;
+    int32_t result = g_audioHapticManagerImpl->RegisterSourceWithEffectId(validAudioUri, validEffectID);
+    EXPECT_NE(result, INVALID_SOURCE_ID);
+    EXPECT_EQ(g_audioHapticManagerImpl->curPlayerCount_, 1);
+}
+
+/**
 * @tc.name  : Test AudioHapticManagerImpl RegisterSource API
 * @tc.number: AudioHapticManagerImpl_RegisterSource_001
 * @tc.desc  : Test AudioHapticManagerImpl RegisterSource interface

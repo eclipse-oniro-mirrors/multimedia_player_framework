@@ -58,6 +58,68 @@ static std::shared_ptr<DataShare::DataShareHelper> CreateDataShareHelper(int32_t
 }
 
 /**
+ * @tc.name  : Test SystemSoundManagerImpl API
+ * @tc.number: SystemSoundManagerImpl_OpenCustomAudioUri_001
+ * @tc.desc  : Test OpenCustomAudioUri interface
+ */
+HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_OpenCustomAudioUri_001, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    EXPECT_NE(systemSoundManagerImpl_, nullptr);
+
+    std::string customAudioUri = RINGTONE_COLUMN_DATA;
+    std::string result = systemSoundManagerImpl_->OpenCustomAudioUri(customAudioUri);
+    EXPECT_EQ(result, customAudioUri);
+}
+
+/**
+ * @tc.name  : Test SystemSoundManagerImpl API
+ * @tc.number: SystemSoundManagerImpl_GetFirstNonSyncedHapticsUri_001
+ * @tc.desc  : Test GetFirstNonSyncedHapticsUri interface
+ */
+HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_GetFirstNonSyncedHapticsUri_001, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    EXPECT_NE(systemSoundManagerImpl_, nullptr);
+
+    std::string result = systemSoundManagerImpl_->GetFirstNonSyncedHapticsUri();
+    EXPECT_NE(result, "");
+}
+
+/**
+ * @tc.name  : Test SystemSoundManagerImpl API
+ * @tc.number: SystemSoundManagerImpl_RemoveSourceTypeForRingTone_001
+ * @tc.desc  : Test RemoveSourceTypeForRingTone interface
+ */
+HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_RemoveSourceTypeForRingTone_001, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    EXPECT_NE(systemSoundManagerImpl_, nullptr);
+
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    EXPECT_NE(dataShareHelper, nullptr);
+
+    RingtoneType ringtoneType = RingtoneType::RINGTONE_TYPE_SIM_CARD_0;
+    SourceType sourceType = SourceType::SOURCE_TYPE_CUSTOMISED;
+
+    int32_t result =
+        systemSoundManagerImpl_->RemoveSourceTypeForRingTone(dataShareHelper, ringtoneType, sourceType);
+
+    ringtoneType = RingtoneType::RINGTONE_TYPE_SIM_CARD_1;
+    result = systemSoundManagerImpl_->RemoveSourceTypeForRingTone(dataShareHelper, ringtoneType, sourceType);
+
+    RingtoneType invalidType = static_cast<RingtoneType>(99); // 99 is an invalid type
+    result = systemSoundManagerImpl_->RemoveSourceTypeForRingTone(dataShareHelper, invalidType, sourceType);
+    EXPECT_EQ(result, 0);
+}
+
+/**
  * @tc.name  : Test GetDefaultRingtoneAttrs API
  * @tc.number: Media_SoundManager_GetDefaultRingtoneAttrs_001
  * @tc.desc  : Test GetDefaultRingtoneAttrs interface. Returns attributes of the default ringtone on success.
