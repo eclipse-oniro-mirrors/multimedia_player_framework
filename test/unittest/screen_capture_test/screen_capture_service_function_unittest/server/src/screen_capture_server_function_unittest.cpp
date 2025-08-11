@@ -370,7 +370,6 @@ void ScreenCaptureServerFunctionTest::SetSCInnerAudioCaptureAndPushData(std::sha
         screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, screenCaptureServer_->screenCaptureCb_,
         std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
-    screenCaptureServer_->innerAudioCapture_->isRunning_.store(true);
     screenCaptureServer_->innerAudioCapture_->availBuffers_.push_back(innerAudioBuffer);
 }
 
@@ -380,7 +379,6 @@ void ScreenCaptureServerFunctionTest::SetSCMicAudioCaptureAndPushData(std::share
         screenCaptureServer_->captureConfig_.audioInfo.micCapInfo, screenCaptureServer_->screenCaptureCb_,
         std::string("OS_MicAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->micAudioCapture_->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
-    screenCaptureServer_->micAudioCapture_->isRunning_.store(true);
     screenCaptureServer_->micAudioCapture_->availBuffers_.push_back(micAudioBuffer);
 }
 
@@ -1286,7 +1284,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReadAtMicMode_002, TestSize.Level2)
         screenCaptureServer_->captureConfig_.audioInfo.micCapInfo, screenCaptureServer_->screenCaptureCb_,
         std::string("OS_MicAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->micAudioCapture_->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
-    screenCaptureServer_->micAudioCapture_->isRunning_.store(true);
     screenCaptureServer_->micAudioCapture_->availBuffers_.push_back(micAudioBuffer);
     AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->ReadAtMicMode(buffer, bufferSize);
     MEDIA_LOGI("ReadAtMicMode ret: %{public}d", static_cast<int32_t>(ret));
@@ -2337,14 +2334,14 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ResizeCanvas_006, TestSize.Level2)
     int ret = screenCaptureServer_->ResizeCanvas(580, 4321);
     ASSERT_EQ(ret, MSERR_INVALID_VAL);
 }
- 
+
 HWTEST_F(ScreenCaptureServerFunctionTest, UpdateSurface_001, TestSize.Level2)
 {
     screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
     int ret = screenCaptureServer_->UpdateSurface(nullptr);
     ASSERT_EQ(ret, MSERR_INVALID_OPERATION);
 }
- 
+
 HWTEST_F(ScreenCaptureServerFunctionTest, UpdateSurface_002, TestSize.Level2)
 {
     screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
@@ -2352,7 +2349,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UpdateSurface_002, TestSize.Level2)
     int ret = screenCaptureServer_->UpdateSurface(nullptr);
     ASSERT_EQ(ret, MSERR_INVALID_OPERATION);
 }
- 
+
 HWTEST_F(ScreenCaptureServerFunctionTest, UpdateSurface_003, TestSize.Level2)
 {
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
