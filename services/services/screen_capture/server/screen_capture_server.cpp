@@ -2301,7 +2301,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
         ", isSurfaceMode:%{public}d, dataType:%{public}d", appInfo_.appUid, appInfo_.appPid, isPrivacyAuthorityEnabled,
         isSurfaceMode_, captureConfig_.dataType);
     MediaTrace trace("ScreenCaptureServer::StartScreenCaptureInner");
-    PublishStartRecordEvent();
+    PublishScreenCaptureEvent("start");
     int32_t ret = RegisterServerCallbacks();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "RegisterServerCallbacks failed");
 
@@ -2356,13 +2356,24 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
     return ret;
 }
 
-void ScreenCaptureServer::PublishStartRecordEvent()
+void ScreenCaptureServer::PublishScreenCaptureEvent(const std::string& state)
 {
     AAFwk::Want want;
-    want.SetAction("custom.usual.event.START_RECORD");
+    want.SetAction("usual.event.SCREEN_CAPTURE");
+    want.SetParam("screenCaptureState", state);
+    want.SetParam("screenCaptureUid", appInfo_.appUid);
+    want.SetParam("screenCaptureSessionId", sessionId_);
+    if (captureConfig_.dataType == DataType::ORIGINAL_STREAM){
+        want.SetParam("screenCaptureType", std::string("originalStream"));
+    }else if (captureConfig_.dataType == DataType::CAPTURE_FILE){
+        want.SetParam("screenCaptureType", std::string("captureFile"));
+    }
+    EventFwk::CommonEventPublishInfo commonEventPublishInfo;
+    std::vector<std::string> subscriberPermissions = {"ohos.permission.CAPTURE_SCREEN"};
+    commonEventPublishInfo.SetSubscriberPermissions(subscriberPermissions);
     EventFwk::CommonEventData commonData {want};
-    EventFwk::CommonEventManager::PublishCommonEvent(commonData);
-    MEDIA_LOGI("custom.usual.event.START_RECORD publish");
+    EventFwk::CommonEventManager::PublishCommonEvent(commonData, CommonEventPublishInfo);
+    MEDIA_LOGI("ohos.permission.CAPTURE_SCREEN publish, uid: %{public}d, type: %{public}d, sessionId: %{public}d", appInfo_.appUid, captureConfig_.dataType, sessionId_);
 }
 
 bool ScreenCaptureServer::IsTelInCallSkipList()
@@ -4070,6 +4081,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
     UnRegisterWindowLifecycleListener();
     UnRegisterWindowInfoChangedListener();
     UnRegisterLanguageSwitchListener();
+    PublishScreenCaptureEvent("stop");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopScreenCaptureInner end.", FAKE_POINTER(this));
     return ret;
 }
