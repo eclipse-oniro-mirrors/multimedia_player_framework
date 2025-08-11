@@ -30,7 +30,7 @@ bool CreateCString(std::string value, char** result)
     if (*result == nullptr) {
         return false;
     }
-    if (memcpy_s(*result, value.size() + 1, value.c_str(), value.size()) != 0) {
+    if (memcpy_s(*result, (value.size() + 1) * sizeof(char), value.c_str(), value.size()) != 0) {
         MEDIA_LOGE("Failed to create string.");
         free(*result);
         return false;
@@ -46,6 +46,7 @@ bool CreateMapPair(std::string key, std::string value, char** keyPtr, char** val
     ret = CreateCString(value, valuePtr);
     if (ret == false) {
         free(*keyPtr);
+        keyPtr = nullptr;
     }
     return ret;
 }
