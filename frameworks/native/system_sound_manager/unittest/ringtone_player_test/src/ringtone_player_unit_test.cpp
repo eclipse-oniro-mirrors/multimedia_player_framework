@@ -129,7 +129,7 @@ HWTEST(RingtonePlayerUnitTest, StartForNoRing_002, TestSize.Level1)
     auto sysSoundMgr = std::make_shared<SystemSoundManagerImpl>();
     RingtoneType type = RINGTONE_TYPE_SIM_CARD_0;
     auto ringtonePlayerImpl_ = std::make_shared<RingtonePlayerImpl>(context_, *sysSoundMgr, type);
-    ringtonePlayerImpl_->audioRenderer_ = 
+    ringtonePlayerImpl_->audioRenderer_ =
     AudioStandard::AudioRenderer::Create(
         AudioStandard::AudioStreamType::STREAM_VOICE_RING);
     int32_t result = ringtonePlayerImpl_->StartForNoRing(HapticStartupMode::DEFAULT);
