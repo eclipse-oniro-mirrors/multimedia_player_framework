@@ -27,6 +27,114 @@ void RingtonePlayerUnitTest::TearDownTestCase(void) {}
 void RingtonePlayerUnitTest::SetUp(void) {}
 void RingtonePlayerUnitTest::TearDown(void) {}
 
+/**
+ * @tc.name  : Test MediaRingtonePlayer
+ * @tc.number: NeedToVibrate_001
+ * @tc.desc  : Test NeedToVibrate interface.
+ */
+HWTEST(RingtonePlayerUnitTest, NeedToVibrate_001, TestSize.Level1)
+{
+    auto context_ = std::make_shared<ContextImpl>();
+    auto sysSoundMgr = std::make_shared<SystemSoundManagerImpl>();
+    RingtoneType type = RINGTONE_TYPE_SIM_CARD_0;
+    auto ringtonePlayerImpl_ = std::make_shared<RingtonePlayerImpl>(context_, *sysSoundMgr, type);
+    ToneHapticsSettings settings;
+    settings.mode = NONE;
+    settings.hapticsUri = "";
+    bool result = ringtonePlayerImpl_->NeedToVibrate(settings);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.name  : Test MediaRingtonePlayer
+ * @tc.number: NeedToVibrate_002
+ * @tc.desc  : Test NeedToVibrate interface.
+ */
+HWTEST(RingtonePlayerUnitTest, NeedToVibrate_002, TestSize.Level1)
+{
+    auto context_ = std::make_shared<ContextImpl>();
+    auto sysSoundMgr = std::make_shared<SystemSoundManagerImpl>();
+    sysSoundMgr->ringerMode_ = AudioStandard::AudioRingerMode::RINGER_MODE_SILENT;
+    RingtoneType type = RINGTONE_TYPE_SIM_CARD_0;
+    auto ringtonePlayerImpl_ = std::make_shared<RingtonePlayerImpl>(context_, *sysSoundMgr, type);
+    ToneHapticsSettings settings;
+    settings.mode = ToneHapticsMode::SYNC;
+    settings.hapticsUri = "hapticsUri";
+    bool result = ringtonePlayerImpl_->NeedToVibrate(settings);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.name  : Test MediaRingtonePlayer
+ * @tc.number: NeedToVibrate_003
+ * @tc.desc  : Test NeedToVibrate interface.
+ */
+HWTEST(RingtonePlayerUnitTest, NeedToVibrate_003, TestSize.Level1)
+{
+    auto context_ = std::make_shared<ContextImpl>();
+    auto sysSoundMgr = std::make_shared<SystemSoundManagerImpl>();
+    sysSoundMgr->ringerMode_ = AudioStandard::AudioRingerMode::RINGER_MODE_NORMAL;
+    RingtoneType type = RINGTONE_TYPE_SIM_CARD_0;
+    auto ringtonePlayerImpl_ = std::make_shared<RingtonePlayerImpl>(context_, *sysSoundMgr, type);
+    ToneHapticsSettings settings;
+    settings.mode = ToneHapticsMode::SYNC;
+    settings.hapticsUri = "hapticsUri";
+    bool result = ringtonePlayerImpl_->NeedToVibrate(settings);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.name  : Test MediaRingtonePlayer
+ * @tc.number: NeedToVibrate_004
+ * @tc.desc  : Test NeedToVibrate interface.
+ */
+HWTEST(RingtonePlayerUnitTest, NeedToVibrate_004, TestSize.Level1)
+{
+    auto context_ = std::make_shared<ContextImpl>();
+    auto sysSoundMgr = std::make_shared<SystemSoundManagerImpl>();
+    sysSoundMgr->ringerMode_ = AudioStandard::AudioRingerMode::RINGER_MODE_VIBRATE;
+    RingtoneType type = RINGTONE_TYPE_SIM_CARD_0;
+    auto ringtonePlayerImpl_ = std::make_shared<RingtonePlayerImpl>(context_, *sysSoundMgr, type);
+    ToneHapticsSettings settings;
+    settings.mode = ToneHapticsMode::SYNC;
+    settings.hapticsUri = "hapticsUri";
+    bool result = ringtonePlayerImpl_->NeedToVibrate(settings);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.name  : Test MediaRingtonePlayer
+ * @tc.number: StartForNoRing_001
+ * @tc.desc  : Test StartForNoRing interface.
+ */
+HWTEST(RingtonePlayerUnitTest, StartForNoRing_001, TestSize.Level1)
+{
+    auto context_ = std::make_shared<ContextImpl>();
+    auto sysSoundMgr = std::make_shared<SystemSoundManagerImpl>();
+    RingtoneType type = RINGTONE_TYPE_SIM_CARD_0;
+    auto ringtonePlayerImpl_ = std::make_shared<RingtonePlayerImpl>(context_, *sysSoundMgr, type);
+    ringtonePlayerImpl_->audioRenderer_ = nullptr;
+    int32_t result = ringtonePlayerImpl_->StartForNoRing(HapticStartupMode::FAST);
+    EXPECT_EQ(result, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test MediaRingtonePlayer
+ * @tc.number: StartForNoRing_002
+ * @tc.desc  : Test StartForNoRing interface.
+ */
+HWTEST(RingtonePlayerUnitTest, StartForNoRing_002, TestSize.Level1)
+{
+    auto context_ = std::make_shared<ContextImpl>();
+    auto sysSoundMgr = std::make_shared<SystemSoundManagerImpl>();
+    RingtoneType type = RINGTONE_TYPE_SIM_CARD_0;
+    auto ringtonePlayerImpl_ = std::make_shared<RingtonePlayerImpl>(context_, *sysSoundMgr, type);
+    ringtonePlayerImpl_->audioRenderer_ =
+    AudioStandard::AudioRenderer::Create(
+        AudioStandard::AudioStreamType::STREAM_VOICE_RING);
+    int32_t result = ringtonePlayerImpl_->StartForNoRing(HapticStartupMode::DEFAULT);
+    EXPECT_EQ(result, MSERR_OK);
+}
 
 /**
  * @tc.name  : Test MediaRingtonePlayer
