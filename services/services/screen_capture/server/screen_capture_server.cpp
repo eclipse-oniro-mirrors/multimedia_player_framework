@@ -2369,8 +2369,7 @@ void ScreenCaptureServer::PublishScreenCaptureEvent(const std::string& state)
         want.SetParam("screenCaptureType", std::string("captureFile"));
     }
     EventFwk::CommonEventPublishInfo commonEventPublishInfo;
-    std::vector<std::string> subscriberPermissions = {"ohos.permission.CAPTURE_SCREEN"};
-    commonEventPublishInfo.SetSubscriberPermissions(subscriberPermissions);
+    commonEventPublishInfo.SetSubscriberType(EventFwk::SubscriberType::SYSTEM_SUBSCRIBER_TYPE);
     EventFwk::CommonEventData commonData {want};
     EventFwk::CommonEventManager::PublishCommonEvent(commonData, commonEventPublishInfo);
     MEDIA_LOGI("ohos.permission.CAPTURE_SCREEN publish, uid: %{public}d, type: %{public}d, sessionId: %{public}d", appInfo_.appUid, captureConfig_.dataType, sessionId_);
