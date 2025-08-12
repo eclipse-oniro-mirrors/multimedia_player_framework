@@ -160,6 +160,17 @@ public:
      * @version 1.0
      */
     virtual int32_t SetRingtoneHapticsRamp(int32_t duration, float startIntensity, float endIntensity) = 0;
+
+    /**
+     * @brief Set the ringtone player audio's volume
+     *
+     * @param volume. start intensity, value range [0.00f, 1.00f]
+     * @return Returns {@link MSERR_OK} if the audio's volume set successfully;
+     * returns an error code defined in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetVolume(float volume) = 0;
 };
 
 

@@ -634,6 +634,25 @@ int32_t RingtonePlayerImpl::SetRingtoneHapticsRamp(int32_t duration, float start
     return result;
 }
 
+int32_t RingtonePlayerImpl::SetVolume(float volume)
+{
+    MEDIA_LOGI("RingtonePlayerImpl::SetVolume %{public}f", volume);
+
+    std::lock_guard<std::mutex> lock(playerMutex_);
+    CHECK_AND_RETURN_RET_LOG(ringtoneState_ != STATE_RELEASED, MSERR_INVALID_OPERATION,
+        "ringtone player has been released.");
+    CHECK_AND_RETURN_RET_LOG(player_ != nullptr && ringtoneState_ != STATE_INVALID, MSERR_INVALID_VAL, "no player_");
+
+    if (volume < 0.0f || volume > 1.0f) {
+        MEDIA_LOGE("SetVolume: the volume value is invalid.");
+        return MSERR_INVALID_VAL;
+    }
+
+    int32_t result = player_->SetVolume(volume);
+    CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result, "RingtonePlayerImpl::SetVolume error");
+    return result;
+}
+
 // Callback class symbols
 RingtonePlayerCallback::RingtonePlayerCallback(RingtonePlayerImpl &ringtonePlayerImpl)
     : ringtonePlayerImpl_(ringtonePlayerImpl) {}

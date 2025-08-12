@@ -53,6 +53,7 @@ public:
         const std::shared_ptr<RingtonePlayerInterruptCallback> &interruptCallback) override;
     int32_t SetRingtoneHapticsFeature(const RingtoneHapticsFeature &feature) override;
     int32_t SetRingtoneHapticsRamp(int32_t duration, float startIntensity, float endIntensity) override;
+    int32_t SetVolume(float volume) override;
 
 private:
     void InitPlayer(std::string &audioUri, ToneHapticsSettings &settings, AudioHapticPlayerOptions options);
