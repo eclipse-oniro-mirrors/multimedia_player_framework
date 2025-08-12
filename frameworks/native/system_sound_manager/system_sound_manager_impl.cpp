@@ -1117,6 +1117,7 @@ std::string SystemSoundManagerImpl::GetShotToneUriByType(const DatabaseTool &dat
     ToneAttrs toneAttrs = GetShotToneAttrsByType(databaseTool, type);
     return toneAttrs.GetUri();
 }
+
 ToneAttrs SystemSoundManagerImpl::GetShotToneAttrsByType(const DatabaseTool &databaseTool, const std::string &type)
 {
     ToneAttrs toneAttrs = { "", "", "", CUSTOMISED, TONE_CATEGORY_TEXT_MESSAGE };
