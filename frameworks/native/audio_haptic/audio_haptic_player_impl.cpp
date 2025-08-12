@@ -144,7 +144,6 @@ AudioHapticPlayerImpl::~AudioHapticPlayerImpl()
 {
     if (playerState_ != AudioHapticPlayerState::STATE_RELEASED) {
         ReleaseVibrator();
-        ReleaseSound();
     }
 }
 
