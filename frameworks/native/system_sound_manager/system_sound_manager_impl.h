@@ -126,7 +126,9 @@ public:
     std::string GetRingtoneTitle(const std::string &ringtoneUri);
     std::string GetRingtoneUri(const DatabaseTool &databaseTool, RingtoneType ringtoneType);
     ToneAttrs GetRingtoneAttrs(const DatabaseTool &databaseTool, RingtoneType ringtoneType);
-    std::string GetSystemToneUri(const DatabaseTool &databaseTool, SystemToneType systemToneType);
+    ToneAttrs GetSystemToneAttrs(SystemToneType systemToneType);
+    ToneAttrs GetSystemToneAttrs(const DatabaseTool &databaseTool, SystemToneType systemToneType);
+    ToneAttrs GetAlarmToneAttrs(const std::shared_ptr<AbilityRuntime::Context> &context);
     std::string OpenAudioUri(const DatabaseTool &databaseTool, const std::string &audioUri);
     std::string OpenHapticsUri(const DatabaseTool &databaseTool, const std::string &hapticsUri);
     std::string GetHapticsUriByStyle(const DatabaseTool &databaseTool,
@@ -178,11 +180,18 @@ private:
     int32_t UpdateRingtoneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, const int32_t &toneId,
         RingtoneType ringtoneType, const int32_t &num);
     std::string GetShotToneUriByType(const DatabaseTool &databaseTool, const std::string &type);
+    ToneAttrs GetShotToneAttrsByType(const DatabaseTool &databaseTool, const std::string &type);
     std::string GetNotificationToneUriByType(const DatabaseTool &databaseTool);
+    ToneAttrs GetNotificationToneAttrsByType(const DatabaseTool &databaseTool);
     std::string GetPresetShotToneUriByType(const DatabaseTool &databaseTool, const std::string &type);
+    ToneAttrs GetPresetShotToneAttrsByType(const DatabaseTool &databaseTool, const std::string &type);
     std::string GetPresetNotificationToneUri(const DatabaseTool &databaseTool);
+    ToneAttrs GetPresetNotificationToneAttrs(const DatabaseTool &databaseTool);
+    ToneAttrs GetAlarmToneAttrs(const DatabaseTool &databaseTool);
     int32_t UpdateShotToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, const int32_t &toneId,
         SystemToneType systemToneType, const int32_t &num);
+    int32_t OpenToneUri(const DatabaseTool &databaseTool, const std::string &uri, int32_t toneType);
+    int32_t OpenCustomToneUri(const std::string &customAudioUri, int32_t toneType);
     int32_t UpdateNotificatioToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         const int32_t &toneId);
     int32_t UpdataeAlarmToneUri(const std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,

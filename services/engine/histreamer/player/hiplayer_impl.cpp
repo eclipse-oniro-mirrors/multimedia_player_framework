@@ -143,7 +143,7 @@ public:
 
     Status OnCallback(const std::shared_ptr<Filter>& filter, FilterCallBackCommand cmd, StreamType outType) override
     {
-        MEDIA_LOG_D_SHORT("PlayerFilterCallback OnCallback.");
+        MEDIA_LOG_D("PlayerFilterCallback OnCallback.");
         std::shared_lock<std::shared_mutex> lk(cbMutex_);
         FALSE_RETURN_V(hiPlayerImpl_ != nullptr, Status::OK); // hiPlayerImpl_ is destructed
         return hiPlayerImpl_->OnCallback(filter, cmd, outType);

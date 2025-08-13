@@ -23,6 +23,13 @@
 #include "message_parcel.h"
 #include "nocopyable.h"
 
+enum class ConnectStatus {
+    UNKNOWN = 0,
+    STARTING,
+    STARTED,
+    CLOSING,
+    CLOSED
+};
 
 namespace OHOS {
 namespace Media {
@@ -38,6 +45,7 @@ public:
 
 private:
     std::string commandStr_;
+    std::atomic<ConnectStatus> status_{ConnectStatus::UNKNOWN};
     sptr<IRemoteObject> remoteObject_ = nullptr;
 };
 } // namespace Media

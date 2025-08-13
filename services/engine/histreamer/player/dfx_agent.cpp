@@ -197,7 +197,7 @@ void DfxAgent::UpdateDfxInfo(const DfxEvent &event)
     auto data = AnyCast<MainPerfData>(event.param);
     perfDataMap_.insert_or_assign(event.callerName, data);
     FALSE_RETURN_NOLOG(needPrintPerfLog_);
-    MEDIA_LOG_W("%{public}s", GetPerfStr(true).c_str());
+    MEDIA_LOG_D("%{public}s", GetPerfStr(true).c_str());
 }
 
 std::string DfxAgent::GetPerfStr(const bool needWaitAllData)
