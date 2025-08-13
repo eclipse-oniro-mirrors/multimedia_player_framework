@@ -493,7 +493,7 @@ void AVMetaDataCollector::FormatVideoRotateOrientation(Metadata &avmeta)
     int32_t videoRotateOrientationTypeRet = Plugins::VideoOrientationType::ROTATE_NONE;
     if (videoRotateOrientationType.size() > NUMBER_OF_CHARACTERS_IN_VALID_VIDEOROTATEORIENTATIONTYPE ||
         !IsAllDigits(videoRotateOrientationType)) {
-        MEDIA_LOGE("videoRotateOrientationType is empty");
+        MEDIA_LOGE("videoRotateOrientationType is invalid");
         avmeta.SetMeta(AV_KEY_VIDEO_ROTATE_ORIENTATION, std::to_string(VideoRotateOrientationType::TOP_LEFT));
         return;
     }
