@@ -577,7 +577,6 @@ OH_AVErrCode OH_LowPowerVideoSinkCallback_Destroy(OH_LowPowerVideoSinkCallback *
 {
     MEDIA_LOGD("OH_OH_LowPowerVideoSinkCallback_Destroy");
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, AV_ERR_INVALID_VAL, "callback is nullptr!");
-    delete callback;
     return AV_ERR_OK;
 }
 
