@@ -109,7 +109,7 @@ SystemTonePlayerImpl::SystemTonePlayerImpl(const shared_ptr<Context> &context,
     audioHapticManager_ = AudioHapticManagerFactory::CreateAudioHapticManager();
     CHECK_AND_RETURN_LOG(audioHapticManager_ != nullptr, "Failed to get audio haptic manager");
 
-    std::string systemToneUri = systemSoundMgr_.GetSystemToneUri(databaseTool_, systemToneType_);
+    std::string systemToneUri = systemSoundMgr_.GetSystemToneAttrs(databaseTool_, systemToneType_).GetUri();
     InitPlayer(systemToneUri);
     ReleaseDatabaseTool();
 }
@@ -380,7 +380,7 @@ int32_t SystemTonePlayerImpl::Prepare()
         MEDIA_LOGE("The database tool is not ready!");
         return ERRCODE_IOERROR;
     }
-    std::string audioUri = systemSoundMgr_.GetSystemToneUri(databaseTool_, systemToneType_);
+    std::string audioUri = systemSoundMgr_.GetSystemToneAttrs(databaseTool_, systemToneType_).GetUri();
     int32_t result = InitPlayer(audioUri);
     ReleaseDatabaseTool();
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result,
