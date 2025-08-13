@@ -142,14 +142,14 @@ void HiPlayerCallbackLooper::ManualReportMediaProgressOnce()
 
 void HiPlayerCallbackLooper::StopReportMediaProgress()
 {
-    MEDIA_LOG_I("HiPlayerCallbackLooper StopReportMediaProgress");
+    MEDIA_LOG_D("HiPlayerCallbackLooper StopReportMediaProgress");
     OHOS::Media::AutoLock lock(loopMutex_);
     reportMediaProgress_ = false;
 }
 
 void HiPlayerCallbackLooper::StopCollectMaxAmplitude()
 {
-    MEDIA_LOG_I("HiPlayerCallbackLooper StopCollectMaxAmplitude");
+    MEDIA_LOG_D("HiPlayerCallbackLooper StopCollectMaxAmplitude");
     OHOS::Media::AutoLock lock(loopMutex_);
     collectMaxAmplitude_ = false;
 }
@@ -191,7 +191,7 @@ void HiPlayerCallbackLooper::DoReportMediaProgress()
             MEDIA_LOG_D("EVENT_AUDIO_PROGRESS position updated: " PUBLIC_LOG_D32, currentPositionMs);
             obs->OnInfo(INFO_TYPE_POSITION_UPDATE, currentPositionMs, format);
         } else {
-            MEDIA_LOG_W("get player engine current time error");
+            MEDIA_LOG_D("get player engine current time error");
         }
     }
     isDropMediaProgress_ = false;
@@ -326,7 +326,7 @@ void HiPlayerCallbackLooper::DoReportInfo(const Any& info)
             MEDIA_LOG_E_SHORT("DoReportInfo error, ptr is nullptr");
             return;
         }
-        MEDIA_LOG_I("Report info, info type: " PUBLIC_LOG_D32 " info value: " PUBLIC_LOG_D32,
+        MEDIA_LOG_D("Report info, info type: " PUBLIC_LOG_D32 " info value: " PUBLIC_LOG_D32,
             static_cast<int32_t>(std::get<TUPLE_POS_0>(*ptr)), static_cast<int32_t>(std::get<TUPLE_POS_1>(*ptr)));
         obs->OnInfo(std::get<TUPLE_POS_0>(*ptr), std::get<TUPLE_POS_1>(*ptr), std::get<TUPLE_POS_2>(*ptr));
     }
