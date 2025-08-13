@@ -108,17 +108,12 @@ public:
 class __attribute__((visibility("default"))) VideoStreamerFactory {
 public:
 #ifdef UNSUPPORT_LPP_AUDIO_STRAMER
-    static std::shared_ptr<VideoStreamer> CreatePlayer()
-    {
-        return nullptr;
-    }
     static std::shared_ptr<VideoStreamer> CreateByMime(const std::string &mime)
     {
         (void)mime;
         return nullptr;
     }
 #else
-    static std::shared_ptr<VideoStreamer> CreatePlayer();
     static std::shared_ptr<VideoStreamer> CreateByMime(const std::string &mime);
 #endif
 private:
