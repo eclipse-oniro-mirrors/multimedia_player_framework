@@ -33,6 +33,7 @@ namespace Media {
 const int32_t FRAME_RATE_UNIT_MULTIPLE = 100; // the unit of frame rate is frames per 100s
 static constexpr int PICTURE_MAX_SIZE = 1024 * 1024;
 static constexpr int SECOND_DEVIDE_MS = 1000;
+const int32_t NUMBER_OF_CHARACTERS_IN_VALID_VIDEOROTATEORIENTATIONTYPE = 2;
 
 static const std::unordered_map<Plugins::FileType, std::string> fileTypeMap = {
     { Plugins::FileType::UNKNOW, "uknown" },
@@ -490,7 +491,8 @@ void AVMetaDataCollector::FormatVideoRotateOrientation(Metadata &avmeta)
     std::string videoRotateOrientationType = avmeta.GetMeta(AV_KEY_VIDEO_ROTATE_ORIENTATION);
     MEDIA_LOGI("VideoRotateOrientationType is %{public}s", videoRotateOrientationType.c_str());
     int32_t videoRotateOrientationTypeRet = Plugins::VideoOrientationType::ROTATE_NONE;
-    if (videoRotateOrientationType == "") {
+    if (videoRotateOrientationType.size() > NUMBER_OF_CHARACTERS_IN_VALID_VIDEOROTATEORIENTATIONTYPE ||
+        !IsAllDigits(videoRotateOrientationType)) {
         MEDIA_LOGE("videoRotateOrientationType is empty");
         avmeta.SetMeta(AV_KEY_VIDEO_ROTATE_ORIENTATION, std::to_string(VideoRotateOrientationType::TOP_LEFT));
         return;
@@ -502,6 +504,16 @@ void AVMetaDataCollector::FormatVideoRotateOrientation(Metadata &avmeta)
     CHECK_AND_RETURN_LOG(it != videoOrientationTypeMap.end(),
         "can't find mapped videoOrientationType name in videoOrientationTypeMap");
     avmeta.SetMeta(AV_KEY_VIDEO_ROTATE_ORIENTATION, std::to_string(it->second));
+}
+
+bool AVMetaDataCollector::IsAllDigits(const std::string& str)
+{
+    if (str.empty()) {
+        return false;
+    }
+    return std::all_of(str.begin(), str.end(), [](char c) {
+        return c >= '0' && c <= '9';
+    });
 }
 
 void AVMetaDataCollector::SetEmptyStringIfNoData(Metadata &avmeta, int32_t avKey) const

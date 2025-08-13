@@ -27,6 +27,8 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_METADATA,
 
 namespace OHOS {
 namespace Media {
+const int16_t MAX_TRACK_COUNT = 32767;
+
 AVMetadataHelperServiceProxy::AVMetadataHelperServiceProxy(const sptr<IRemoteObject> &impl)
     : IRemoteProxy<IStandardAVMetadataHelperService>(impl)
 {
@@ -223,6 +225,7 @@ std::shared_ptr<Meta> AVMetadataHelperServiceProxy::GetAVMetadata()
     key = reply.ReadString();
     if (key.compare("tracks") == 0) {
         int32_t trackCnt = reply.ReadInt32();
+        CHECK_AND_RETURN_RET_LOG(trackCnt <= MAX_TRACK_COUNT, metadata, "trackCnt is invalid");
         for (int32_t i = 0; i < trackCnt; i++) {
             Format trackInfo;
             (void)MediaParcel::Unmarshalling(reply, trackInfo);

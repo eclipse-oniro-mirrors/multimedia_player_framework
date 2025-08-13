@@ -303,6 +303,14 @@ HWTEST_F(AVMetaDataCollectorUnitTest, FormatVideoRotateOrientation, TestSize.Lev
     avmeta.SetMeta(AV_KEY_VIDEO_ROTATE_ORIENTATION, "");
     avmetaDataCollector->FormatVideoRotateOrientation(avmeta);
     EXPECT_TRUE(avmeta.HasMeta(AV_KEY_VIDEO_ROTATE_ORIENTATION));
+
+    avmeta.SetMeta(AV_KEY_VIDEO_ROTATE_ORIENTATION, "a");
+    avmetaDataCollector->FormatVideoRotateOrientation(avmeta);
+    EXPECT_TRUE(avmeta.HasMeta(AV_KEY_VIDEO_ROTATE_ORIENTATION));
+
+    avmeta.SetMeta(AV_KEY_VIDEO_ROTATE_ORIENTATION, "12345");
+    avmetaDataCollector->FormatVideoRotateOrientation(avmeta);
+    EXPECT_TRUE(avmeta.HasMeta(AV_KEY_VIDEO_ROTATE_ORIENTATION));
 }
  
 /**
