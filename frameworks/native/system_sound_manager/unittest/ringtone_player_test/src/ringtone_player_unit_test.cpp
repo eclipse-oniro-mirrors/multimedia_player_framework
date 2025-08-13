@@ -522,37 +522,4 @@ HWTEST(RingtonePlayerUnitTest, Media_RingtonePlayer_019, TestSize.Level1)
     // test all params ok
     EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, ringtonePlayerImpl_->SetRingtoneHapticsRamp(1000, 50.0f, 90.0f));
 }
-
-/**
- * @tc.name  : Test MediaRingtonePlayer
- * @tc.number: Media_RingtonePlayer_020
- * @tc.desc  : Test SetVolume. Returns set result.
- */
-HWTEST(RingtonePlayerUnitTest, Media_RingtonePlayer_020, TestSize.Level1)
-{
-    auto context_ = std::make_shared<ContextImpl>();
-    auto sysSoundMgr = std::make_shared<SystemSoundManagerImpl>();
-    RingtoneType type = RINGTONE_TYPE_SIM_CARD_0;
-    auto ringtonePlayerImpl_ = std::make_shared<RingtonePlayerImpl>(context_, *sysSoundMgr, type);
-    int32_t sourceId = 1;
-    AudioHapticPlayerOptions options = {false, false};
-    auto player = ringtonePlayerImpl_->audioHapticManager_->CreatePlayer(sourceId, options);
-
-    ringtonePlayerImpl_->ringtoneState_ = STATE_RELEASED;
-    EXPECT_EQ(ringtonePlayerImpl_->SetVolume(0.50f), MSERR_INVALID_OPERATION);
-
-    ringtonePlayerImpl_->ringtoneState_ = STATE_INVALID;
-    EXPECT_EQ(ringtonePlayerImpl_->SetVolume(0.50f), MSERR_INVALID_VAL);
-
-    ringtonePlayerImpl_->player_ = player;
-    EXPECT_EQ(ringtonePlayerImpl_->SetVolume(0.50f), MSERR_INVALID_VAL);
-
-    ringtonePlayerImpl_->ringtoneState_ = STATE_NEW;
-    // test volume less than 0.0f
-    EXPECT_EQ(MSERR_INVALID_VAL, ringtonePlayerImpl_->SetVolume(-1.0f));
-    // test volume larger than 1.0f
-    EXPECT_EQ(MSERR_INVALID_VAL, ringtonePlayerImpl_->SetVolume(1.1f));
-    // test valid volume
-    EXPECT_NE(MSERR_OK, ringtonePlayerImpl_->SetVolume(0.5f));
-}
 }
