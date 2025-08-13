@@ -2359,7 +2359,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
 void ScreenCaptureServer::PublishScreenCaptureEvent(const std::string& state)
 {
     AAFwk::Want want;
-    want.SetAction("usual.event.SCREEN_CAPTURE");
+    want.SetAction("usual.event.SCREEN_SHARE");
     want.SetParam("screenCaptureState", state);
     want.SetParam("screenCaptureUid", appInfo_.appUid);
     want.SetParam("screenCaptureSessionId", sessionId_);
@@ -2372,7 +2372,7 @@ void ScreenCaptureServer::PublishScreenCaptureEvent(const std::string& state)
     commonEventPublishInfo.SetSubscriberType(EventFwk::SubscriberType::SYSTEM_SUBSCRIBER_TYPE);
     EventFwk::CommonEventData commonData {want};
     EventFwk::CommonEventManager::PublishCommonEvent(commonData, commonEventPublishInfo);
-    MEDIA_LOGI("ohos.permission.CAPTURE_SCREEN publish, uid: %{public}d, type: %{public}d, sessionId: %{public}d", appInfo_.appUid, captureConfig_.dataType, sessionId_);
+    MEDIA_LOGI("ohos.permission.SHARE_SCREEN publish, uid: %{public}d, type: %{public}d, sessionId: %{public}d", appInfo_.appUid, captureConfig_.dataType, sessionId_);
 }
 
 bool ScreenCaptureServer::IsTelInCallSkipList()
