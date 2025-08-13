@@ -162,7 +162,6 @@ namespace OHOS {
 #define CHECK_AND_CONTINUE(cond)                                       \
     if (1) {                                                           \
         if (!(cond)) {                                                 \
-            MEDIA_LOGE_NO_RELEASE("%{public}s, check failed!", #cond); \
             continue;                                                  \
         }                                                              \
     } else                                                             \
