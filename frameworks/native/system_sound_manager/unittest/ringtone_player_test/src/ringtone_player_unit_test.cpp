@@ -523,3 +523,4 @@ HWTEST(RingtonePlayerUnitTest, Media_RingtonePlayer_019, TestSize.Level1)
     EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, ringtonePlayerImpl_->SetRingtoneHapticsRamp(1000, 50.0f, 90.0f));
 }
 }
+}
