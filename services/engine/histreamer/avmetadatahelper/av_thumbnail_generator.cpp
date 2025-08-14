@@ -227,7 +227,8 @@ void AVThumbnailGenerator::AcquireAvailableInputBuffer()
     if (fileType_ == FileType::AVI) {
         GetInputBufferDts(filledInputBuffer);
     }
-    CHECK_AND_RETURN_LOG(filledInputBuffer->meta_ != nullptr, "filledInputBuffer meta is nullptr.");
+    CHECK_AND_RETURN_LOG(filledInputBuffer != nullptr && filledInputBuffer->meta_ != nullptr,
+        "filledInputBuffer is invalid.");
     uint32_t index;
     CHECK_AND_RETURN_LOG(filledInputBuffer->meta_->GetData(Tag::BUFFER_INDEX, index), "get index failed.");
 
@@ -271,6 +272,7 @@ std::shared_ptr<Meta> AVThumbnailGenerator::GetVideoTrackInfo()
     size_t trackCount = trackInfos.size();
     CHECK_AND_RETURN_RET_LOG(trackCount > 0, nullptr, "GetTargetTrackInfo trackCount is invalid");
     for (size_t index = 0; index < trackCount; index++) {
+        CHECK_AND_CONTINUE_LOG(trackInfos[index] != nullptr, "trackInfos[%{public}lu] is nullptr", index);
         if (!(trackInfos[index]->GetData(Tag::MIME_TYPE, trackMime_))) {
             MEDIA_LOGW("GetTargetTrackInfo get mime type failed %{public}s", trackMime_.c_str());
             continue;
@@ -433,6 +435,7 @@ void AVThumbnailGenerator::OnOutputBufferAvailable(uint32_t index, std::shared_p
     if (fileType_ == FileType::AVI) {
         SetDecoderOutputBufferPts(buffer);
     }
+    CHECK_AND_RETURN_LOG(buffer != nullptr, "buffer is nullptr");
     MEDIA_LOGD("OnOutputBufferAvailable index:%{public}u , pts %{public}" PRId64, index, buffer->pts_);
     CHECK_AND_RETURN_LOG(videoDecoder_ != nullptr, "Video decoder not exist");
     bool isEosBuffer = buffer->flag_ & (uint32_t)(AVBufferFlag::EOS);
@@ -572,7 +575,7 @@ void AVThumbnailGenerator::HandleFetchFrameYuvRes()
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Fetch frame OK width:%{public}d, height:%{public}d",
                 FAKE_POINTER(this), outputConfig_.dstWidth, outputConfig_.dstHeight);
     avBuffer_ = GenerateAlignmentAvBuffer();
-    if (avBuffer_ != nullptr) {
+    if (avBuffer_ != nullptr && avBuffer_->meta != nullptr) {
         avBuffer_->meta_->Set<Tag::VIDEO_WIDTH>(width_);
         avBuffer_->meta_->Set<Tag::VIDEO_HEIGHT>(height_);
         avBuffer_->meta_->Set<Tag::VIDEO_ROTATION>(rotation_);
@@ -582,6 +585,7 @@ void AVThumbnailGenerator::HandleFetchFrameYuvRes()
 
 void AVThumbnailGenerator::HandleFetchFrameYuvFailed()
 {
+    CHECK_AND_RETURN_LOG(videoDecoder_ != nullptr, "videoDecoder_ is nullptr");
     videoDecoder_->ReleaseOutputBuffer(bufferIndex_, false);
     PauseFetchFrame();
 }
@@ -734,7 +738,8 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::GenerateAvBufferFromFCodec()
     avBufferConfig.memoryType = MemoryType::SHARED_MEMORY;
     avBufferConfig.memoryFlag = MemoryFlag::MEMORY_READ_WRITE;
     std::shared_ptr<AVBuffer> targetAvBuffer = AVBuffer::CreateAVBuffer(avBufferConfig);
-    CHECK_AND_RETURN_RET_LOG(targetAvBuffer != nullptr, nullptr, "Create avBuffer failed");
+    CHECK_AND_RETURN_RET_LOG(targetAvBuffer != nullptr && targetAvBuffer->memory_ != nullptr, nullptr,
+        "Create avBuffer failed");
     targetAvBuffer->memory_->Write(avBuffer_->memory_->GetAddr(), avBuffer_->memory_->GetSize(), 0);
     return targetAvBuffer;
 }
