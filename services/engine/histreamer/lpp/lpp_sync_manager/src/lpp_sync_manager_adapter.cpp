@@ -344,7 +344,9 @@ void LppSyncManagerAdapter::OnError(const int32_t errorCode, const std::string &
 void LppSyncManagerAdapter::OnTargetArrived(const int64_t targetPts, const bool isTimeout)
 {
     MEDIA_LOG_I("OnTargetArrived enter");
-    MediaTrace trace("LppSyncManagerAdapter::OnTargetArrived");
+    FALSE_RETURN_MSG(eventReceiver_ != nullptr, "eventReceiver_ is nullptr");
+    std::pair<int64_t, bool> targetArrivedPair(targetPts, isTimeout);
+    eventReceiver_->OnEvent({"VideoDecoder", EventType::EVENT_VIDEO_TARGET_ARRIVED, targetArrivedPair});
 }
 
 void LppSyncManagerAdapter::OnRenderStarted()
