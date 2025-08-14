@@ -2019,10 +2019,7 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "src type should be MediaSource.");
         return result;
     }
-    if (napi_typeof(env, args[1], &valueType) != napi_ok || valueType != napi_object) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "strategy type should be PlaybackStrategy.");
-        return result;
-    } else if (argCount > MAX_ARG_COUNTS || napi_typeof(env, args[1], &valueType) != napi_ok) {
+    if (argCount > MAX_ARG_COUNTS) { // api allow one param
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check");
         return result;
     }
