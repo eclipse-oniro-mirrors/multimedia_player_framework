@@ -455,31 +455,28 @@ void AVThumbnailGenerator::OnOutputBufferAvailable(uint32_t index, std::shared_p
         avBuffer_ = buffer;
         return;
     }
-    if (isAvailableFrame) {
-        {
-            std::unique_lock<std::mutex> lock(mutex_);
-            hasFetchedFrame_ = true;
-        }
-        if (isClosest && avBuffer_ != nullptr) {
-            int64_t preDiff = seekTime_ - avBuffer_->pts_;
-            int64_t nextDiff = buffer->pts_ - seekTime_;
-            if (preDiff > nextDiff && !(buffer->flag_ & (uint32_t)(AVBufferFlag::EOS))) {
-                videoDecoder_->ReleaseOutputBuffer(bufferIndex_, false);
-                bufferIndex_ = index;
-                avBuffer_ = buffer;
-            } else {
-                videoDecoder_->ReleaseOutputBuffer(index, false);
-            }
-        } else {
+    
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        hasFetchedFrame_ = true;
+    }
+    if (isClosest && avBuffer_ != nullptr) {
+        int64_t preDiff = seekTime_ - avBuffer_->pts_;
+        int64_t nextDiff = buffer->pts_ - seekTime_;
+        if (preDiff > nextDiff && !(buffer->flag_ & (uint32_t)(AVBufferFlag::EOS))) {
+            videoDecoder_->ReleaseOutputBuffer(bufferIndex_, false);
             bufferIndex_ = index;
             avBuffer_ = buffer;
+        } else {
+            videoDecoder_->ReleaseOutputBuffer(index, false);
         }
-        MEDIA_LOGI("dstTime %{public}" PRId64 " resTime %{public}" PRId64, seekTime_, buffer->pts_);
-        cond_.notify_all();
-        PauseFetchFrame();
-        return;
+    } else {
+        bufferIndex_ = index;
+        avBuffer_ = buffer;
     }
-    videoDecoder_->ReleaseOutputBuffer(index, false);
+    MEDIA_LOGI("dstTime %{public}" PRId64 " resTime %{public}" PRId64, seekTime_, buffer->pts_);
+    cond_.notify_all();
+    PauseFetchFrame();
 }
 
 std::shared_ptr<AVSharedMemory> AVThumbnailGenerator::FetchFrameAtTime(int64_t timeUs, int32_t option,
