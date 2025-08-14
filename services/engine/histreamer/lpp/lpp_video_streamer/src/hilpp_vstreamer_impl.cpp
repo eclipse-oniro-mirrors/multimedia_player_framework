@@ -394,6 +394,10 @@ void HiLppVideoStreamerImpl::OnEvent(const Event &event)
             HandleResolutionChangeEvent(event);
             break;
         }
+        case EventType::EVENT_VIDEO_TARGET_ARRIVED : {
+            HandleTargetArrivedEvent(event);
+            break;
+        }
         case EventType::EVENT_ERROR : {
             HandleErrorEvent(event);
             break;
@@ -437,6 +441,14 @@ void HiLppVideoStreamerImpl::HandleResolutionChangeEvent(const Event &event)
     FALSE_RETURN_MSG(callbackLooper_ != nullptr, "callbackLooper_ nullptr");
     Format format = AnyCast<Format>(event.param);
     callbackLooper_->OnStreamChanged(format);
+}
+
+void HiLppVideoStreamerImpl::HandleTargetArrivedEvent(const Event &event)
+{
+    FALSE_RETURN_MSG(callbackLooper_ != nullptr, "callbackLooper_ nullptr");
+    std::pair<int64_t, bool> targetArrivedPair =
+        AnyCast<std::pair<int64_t, bool>>(event.param);
+    callbackLooper_->OnTargetArrived(targetArrivedPair.first, targetArrivedPair.second);
 }
 
 void HiLppVideoStreamerImpl::HandleErrorEvent(const Event &event)

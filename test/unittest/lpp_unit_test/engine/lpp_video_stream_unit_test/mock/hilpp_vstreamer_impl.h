@@ -61,6 +61,7 @@ private:
     void HandleRenderStartedEvent(const Event &event);
     void HandleCompleteEvent(const Event &event);
     void HandleResolutionChangeEvent(const Event &event);
+    void HandleTargetArrivedEvent(const Event &event);
     int32_t EosPause();
     void HandleErrorEvent(const Event &event);
 

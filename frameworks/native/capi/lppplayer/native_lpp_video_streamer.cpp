@@ -511,6 +511,11 @@ OH_AVErrCode OH_LowPowerVideoSink_SetTargetStartFrame(OH_LowPowerVideoSink *stre
     auto streamerObj = reinterpret_cast<LowPowerVideoSinkObject *>(streamer);
     CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
     CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_VAL, "videoStreamer_ is nullptr");
+    std::shared_ptr<VideoStreamerCallback> cb = streamerObj->videoStreamer_->GetLppVideoStreamerCallback();
+    CHECK_AND_RETURN_RET_LOG(cb != nullptr, AV_ERR_INVALID_VAL, "VideoStreamerCallback is nullptr");
+    OH_LowPowerVideoSinkCallback *callback = static_cast<OH_LowPowerVideoSinkCallback*>(cb.get());
+    CHECK_AND_RETURN_RET_LOG(callback != nullptr, AV_ERR_INVALID_VAL, "callback is nullptr");
+    callback->SetTargetArrivedListener(onTargetArrived, userData);
     int32_t res = streamerObj->videoStreamer_->SetTargetStartFrame(framePts, timeoutMs);
     return LppMsErrToOHAvErr(res);
 }
