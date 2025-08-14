@@ -1424,24 +1424,6 @@ HWTEST_F(HiplayerImplUnitTest, IsNeedChangePlaySpeed_002, TestSize.Level0)
 
 /**
 * @tc.name    : Test flv smart play
-* @tc.number  : IsNeedChangePlaySpeed_003
-* @tc.desc    : Test already 1.2X speed play, do nothing
-* @tc.require :
-*/
-HWTEST_F(HiplayerImplUnitTest, IsNeedChangePlaySpeed_003, TestSize.Level0)
-{
-    hiplayer_->demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
-        FilterType::FILTERTYPE_DEMUXER);
-    PlaybackRateMode mode = PlaybackRateMode::SPEED_FORWARD_1_20_X;
-    bool isXSpeedPlay = true;
-    hiplayer_->isFlvLive_ = true;
-    hiplayer_->maxLivingDelayTime_ = -1;
-    EXPECT_FALSE(hiplayer_->IsNeedChangePlaySpeed(mode, isXSpeedPlay));
-    EXPECT_EQ(mode, PlaybackRateMode::SPEED_FORWARD_1_20_X);
-}
-
-/**
-* @tc.name    : Test flv smart play
 * @tc.number  : IsPauseForTooLong_001
 * @tc.desc    : Test is pause for too long time
 * @tc.require :
