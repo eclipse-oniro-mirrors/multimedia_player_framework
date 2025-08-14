@@ -50,7 +50,7 @@ void AudioCapturerCallbackImpl::OnStateChange(const CapturerState state)
 int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (isRunning_.load()) {
+    if (IsRecording()) {
         MEDIA_LOGE("Start failed, is running, threadName:%{public}s", threadName_.c_str());
         return MSERR_UNKNOWN;
     }
@@ -90,7 +90,6 @@ int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
     }
     MEDIA_LOGI("0x%{public}06" PRIXPTR "Start success, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
 
-    isRunning_.store(true);
     audioCapturer_ = audioCapturer;
     readAudioLoop_ = std::make_unique<std::thread>([this] { this->CaptureAudio(); });
     captureState_.store(CAPTURER_RECORDING);
@@ -100,11 +99,11 @@ int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
 int32_t AudioCapturerWrapper::Stop()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (captureState_.load() == AudioCapturerWrapperState::CAPTURER_STOPED) {
+    if (IsStop()) {
         return MSERR_OK;
     }
+    captureState_.store(AudioCapturerWrapperState::CAPTURER_STOPPING);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Stop S, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
-    isRunning_.store(false);
     if (readAudioLoop_ != nullptr && readAudioLoop_->joinable()) {
         readAudioLoop_->join();
         readAudioLoop_.reset();
@@ -305,7 +304,7 @@ int32_t AudioCapturerWrapper::CaptureAudio()
         bufferLen > 0, MSERR_NO_MEMORY, "CaptureAudio GetBufferSize failed");
     std::shared_ptr<AudioBuffer> audioBuffer;
     while (true) {
-        CHECK_AND_RETURN_RET_LOG(isRunning_.load(), MSERR_OK, "CaptureAudio is not running, stop capture %{public}s",
+        CHECK_AND_RETURN_RET_LOG(IsRecording(), MSERR_OK, "CaptureAudio is not running, stop capture %{public}s",
             name.c_str());
         uint8_t *buffer = static_cast<uint8_t *>(malloc(bufferLen));
         CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_OK, "CaptureAudio buffer is no memory, stop capture"
@@ -316,7 +315,7 @@ int32_t AudioCapturerWrapper::CaptureAudio()
         }
         {
             std::unique_lock<std::mutex> lock(bufferMutex_);
-            CHECK_AND_RETURN_RET_LOG(isRunning_.load(), MSERR_OK, "CaptureAudio is not running, ignore and stop"
+            CHECK_AND_RETURN_RET_LOG(IsRecording(), MSERR_OK, "CaptureAudio is not running, ignore and stop"
                 " %{public}s", name.c_str());
             if (availBuffers_.size() > MAX_AUDIO_BUFFER_SIZE) {
                 PartiallyPrintLog(__LINE__, "consume slow, drop audio frame" + name);
@@ -328,7 +327,7 @@ int32_t AudioCapturerWrapper::CaptureAudio()
             availBuffers_.push_back(audioBuffer);
         }
         bufferCond_.notify_all();
-        CHECK_AND_RETURN_RET_LOG(isRunning_.load(), MSERR_OK, "CaptureAudio is not running, ignore and stop"
+        CHECK_AND_RETURN_RET_LOG(IsRecording(), MSERR_OK, "CaptureAudio is not running, ignore and stop"
             " %{public}s", name.c_str());
         CHECK_AND_RETURN_RET_LOG(screenCaptureCb_ != nullptr, MSERR_OK,
             "no consumer, will drop audio frame %{public}s", name.c_str());
@@ -343,7 +342,7 @@ int32_t AudioCapturerWrapper::UseUpAllLeftBufferUntil(int64_t audioTime)
 {
     using namespace std::chrono_literals;
     std::unique_lock<std::mutex> lock(bufferMutex_);
-    CHECK_AND_RETURN_RET(isRunning_.load(), MSERR_OK);
+    CHECK_AND_RETURN_RET(IsRecording(), MSERR_OK);
     MEDIA_LOGD("0x%{public}06" PRIXPTR " UseUpBufUntil S, name:%{public}s", FAKE_POINTER(this), threadName_.c_str());
     if (!bufferCond_.wait_for(lock, std::chrono::milliseconds(STOP_WAIT_TIMEOUT_IN_MS),
         [this, audioTime]() {
@@ -365,7 +364,7 @@ int32_t AudioCapturerWrapper::AddBufferFrom(int64_t timeWindow, int64_t bufferSi
 {
     using namespace std::chrono_literals;
     std::unique_lock<std::mutex> lock(bufferMutex_);
-    CHECK_AND_RETURN_RET(isRunning_.load(), MSERR_OK);
+    CHECK_AND_RETURN_RET(IsRecording(), MSERR_OK);
     CHECK_AND_RETURN_RET_LOG(bufferSize > 0 && bufferSize < MAX_AUDIO_BUFFER_LEN, MSERR_UNKNOWN,
         "bufferSize invalid %{public}" PRId64, bufferSize);
     MEDIA_LOGD("0x%{public}06" PRIXPTR " AddBufferFrom S, name:%{public}s", FAKE_POINTER(this), threadName_.c_str());
@@ -393,7 +392,7 @@ int32_t AudioCapturerWrapper::DropBufferUntil(int64_t audioTime)
 {
     using namespace std::chrono_literals;
     std::unique_lock<std::mutex> lock(bufferMutex_);
-    CHECK_AND_RETURN_RET(isRunning_.load(), MSERR_OK);
+    CHECK_AND_RETURN_RET(IsRecording(), MSERR_OK);
     MEDIA_LOGD("0x%{public}06" PRIXPTR " DropBufferUntil S, name:%{public}s", FAKE_POINTER(this), threadName_.c_str());
     while (!availBuffers_.empty()) {
         if (availBuffers_.front() != nullptr && availBuffers_.front()->timestamp < audioTime) {
@@ -425,7 +424,7 @@ int32_t AudioCapturerWrapper::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &a
 {
     using namespace std::chrono_literals;
     std::unique_lock<std::mutex> lock(bufferMutex_);
-    CHECK_AND_RETURN_RET_LOG(isRunning_.load(), MSERR_UNKNOWN, "AcquireAudioBuffer failed, not running");
+    CHECK_AND_RETURN_RET_LOG(IsRecording(), MSERR_UNKNOWN, "AcquireAudioBuffer failed, not running");
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Acquire Buffer S, name:%{public}s", FAKE_POINTER(this), threadName_.c_str());
 
     if (!bufferCond_.wait_for(lock, std::chrono::milliseconds(OPERATION_TIMEOUT_IN_MS),
@@ -452,7 +451,7 @@ int32_t AudioCapturerWrapper::GetBufferSize(size_t &size)
     std::unique_lock<std::mutex> lock(bufferMutex_);
     MEDIA_LOGD("0x%{public}06" PRIXPTR " GetBufferSize Buffer S, name:%{public}s",
         FAKE_POINTER(this), threadName_.c_str());
-    if (!isRunning_.load()) {
+    if (!IsRecording()) {
         MEDIA_LOGD("GetBufferSize failed, not running, name:%{public}s", threadName_.c_str());
         return MSERR_UNKNOWN;
     }
@@ -468,7 +467,7 @@ int32_t AudioCapturerWrapper::ReleaseAudioBuffer()
     using namespace std::chrono_literals;
     std::unique_lock<std::mutex> lock(bufferMutex_);
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Release Buffer S, name:%{public}s", FAKE_POINTER(this), threadName_.c_str());
-    CHECK_AND_RETURN_RET_LOG(isRunning_.load(), MSERR_UNKNOWN, "ReleaseAudioBuffer failed, not running");
+    CHECK_AND_RETURN_RET_LOG(IsRecording(), MSERR_UNKNOWN, "ReleaseAudioBuffer failed, not running");
     CHECK_AND_RETURN_RET_LOG(!availBuffers_.empty(), MSERR_UNKNOWN, "ReleaseAudioBuffer failed, no frame to release");
     MEDIA_LOGD("0x%{public}06" PRIXPTR " ABuffer release name:%{public}s time: %{public}" PRId64,
         FAKE_POINTER(this), threadName_.c_str(), availBuffers_.front()->timestamp);
@@ -510,6 +509,17 @@ void MicAudioCapturerWrapper::OnStartFailed(ScreenCaptureErrorType errorType, in
     if (screenCaptureCb_ != nullptr) {
         screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
     }
+}
+
+bool AudioCapturerWrapper::IsRecording()
+{
+    return captureState_.load() == AudioCapturerWrapperState::CAPTURER_RECORDING;
+}
+
+bool AudioCapturerWrapper::IsStop()
+{
+    return captureState_.load() == AudioCapturerWrapperState::CAPTURER_STOPPING ||
+           captureState_.load() == AudioCapturerWrapperState::CAPTURER_STOPED;
 }
 } // namespace Media
 } // namespace OHOS

@@ -1007,12 +1007,12 @@ bool ScreenCaptureServer::IsMicrophoneSwitchTurnOn()
 
 bool ScreenCaptureServer::IsMicrophoneCaptureRunning()
 {
-    return micAudioCapture_ && micAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING;
+    return micAudioCapture_ && micAudioCapture_->IsRecording();
 }
 
 bool ScreenCaptureServer::IsInnerCaptureRunning()
 {
-    return innerAudioCapture_ && innerAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING;
+    return innerAudioCapture_ && innerAudioCapture_->IsRecording();
 }
 
 bool ScreenCaptureServer::IsSCRecorderFileWithVideo()
@@ -3498,14 +3498,14 @@ int32_t ScreenCaptureServer::SetMicrophoneOn()
             ret = StartFileMicAudioCapture();
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartFileMicAudioCapture failed");
         }
-    } else if (micAudioCapture_->GetAudioCapturerState() == AudioCapturerWrapperState::CAPTURER_STOPED) {
+    } else if (micAudioCapture_->IsStop()) {
         ret = micAudioCapture_->Start(appInfo_); // Resume
         if (ret != MSERR_OK) {
             MEDIA_LOGE("micAudioCapture Resume failed");
             NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
             return ret;
         }
-    } else if (micAudioCapture_->GetAudioCapturerState() != CAPTURER_RECORDING) {
+    } else if (!micAudioCapture_->IsRecording()) {
         MEDIA_LOGE("AudioCapturerState invalid");
     }
     return MSERR_OK;
@@ -3533,7 +3533,7 @@ int32_t ScreenCaptureServer::OnSpeakerAliveStatusChanged(bool speakerAliveStatus
     int32_t ret = MSERR_UNKNOWN;
     CHECK_AND_RETURN_RET_LOG(innerAudioCapture_, MSERR_UNKNOWN, "innerAudioCapture_ is nullptr");
     if (!speakerAliveStatus && recorderFileAudioType_ == AVScreenCaptureMixMode::MIX_MODE &&
-        innerAudioCapture_->GetAudioCapturerState() == CAPTURER_STOPED) { // back to headset
+        innerAudioCapture_->IsStop()) { // back to headset
         ret = innerAudioCapture_->Start(appInfo_); // Resume
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Resume failed");
     }
@@ -3566,8 +3566,7 @@ int32_t ScreenCaptureServer::OnVoIPStatusChanged(bool isInVoIPCall)
     MEDIA_LOGI("OnVoIPStatusChanged, isInVoIPCall:%{public}d", isInVoIPCall);
     if (isInVoIPCall) {
         CHECK_AND_RETURN_RET_LOG(innerAudioCapture_, MSERR_UNKNOWN, "innerAudioCapture is nullptr");
-        if (recorderFileAudioType_ == AVScreenCaptureMixMode::MIX_MODE &&
-            innerAudioCapture_->GetAudioCapturerState() == CAPTURER_STOPED) {
+        if (recorderFileAudioType_ == AVScreenCaptureMixMode::MIX_MODE && innerAudioCapture_->IsStop()) {
             int32_t ret = innerAudioCapture_->Start(appInfo_); // Resume
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "OnVoIPStatusChanged innerAudioCapture Resume failed");
         }
@@ -3640,8 +3639,7 @@ int32_t ScreenCaptureServer::OnTelCallStop()
     }
     if (micAudioCapture_) {
         micAudioCapture_->SetIsInTelCall(false);
-        if (isMicrophoneSwitchTurnOn_ && micAudioCapture_->GetAudioCapturerState() ==
-            AudioCapturerWrapperState::CAPTURER_STOPED) {
+        if (isMicrophoneSwitchTurnOn_ && micAudioCapture_->IsStop()) {
             ret = micAudioCapture_->Start(appInfo_); // Resume
             if (ret != MSERR_OK) {
                 MEDIA_LOGE("micAudioCapture Resume failed");
