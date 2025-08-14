@@ -572,7 +572,7 @@ void AVThumbnailGenerator::HandleFetchFrameYuvRes()
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Fetch frame OK width:%{public}d, height:%{public}d",
                 FAKE_POINTER(this), outputConfig_.dstWidth, outputConfig_.dstHeight);
     avBuffer_ = GenerateAlignmentAvBuffer();
-    if (avBuffer_ != nullptr && avBuffer_->meta != nullptr) {
+    if (avBuffer_ != nullptr && avBuffer_->meta_ != nullptr) {
         avBuffer_->meta_->Set<Tag::VIDEO_WIDTH>(width_);
         avBuffer_->meta_->Set<Tag::VIDEO_HEIGHT>(height_);
         avBuffer_->meta_->Set<Tag::VIDEO_ROTATION>(rotation_);
