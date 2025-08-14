@@ -272,7 +272,7 @@ std::shared_ptr<Meta> AVThumbnailGenerator::GetVideoTrackInfo()
     size_t trackCount = trackInfos.size();
     CHECK_AND_RETURN_RET_LOG(trackCount > 0, nullptr, "GetTargetTrackInfo trackCount is invalid");
     for (size_t index = 0; index < trackCount; index++) {
-        CHECK_AND_CONTINUE_LOG(trackInfos[index] != nullptr, "trackInfos[%{public}lu] is nullptr", index);
+        CHECK_AND_CONTINUE_LOG(trackInfos[index] != nullptr, "trackInfos[%{public}zu] is nullptr", index);
         if (!(trackInfos[index]->GetData(Tag::MIME_TYPE, trackMime_))) {
             MEDIA_LOGW("GetTargetTrackInfo get mime type failed %{public}s", trackMime_.c_str());
             continue;
