@@ -452,7 +452,7 @@ void AVMetaDataCollector::FormatAVMeta(
 
 void AVMetaDataCollector::FormatMimeType(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo)
 {
-    Plugins::FileType fileType;
+    Plugins::FileType fileType = Plugins::FileType::UNKNOW;
     globalInfo->GetData(Tag::MEDIA_FILE_TYPE, fileType);
     CHECK_AND_RETURN_LOG(fileType != Plugins::FileType::UNKNOW, "unknown file type");
     if (fileTypeMap.find(fileType) == fileTypeMap.end()) {
