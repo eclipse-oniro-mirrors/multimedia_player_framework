@@ -1646,7 +1646,6 @@ int32_t ScreenCaptureServer::OnReceiveUserPrivacyAuthority(bool isAllowed)
         screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_CANCELED);
         return MSERR_UNKNOWN;
     }
-    captureState_ = AVScreenCaptureState::STARTING;
     int32_t ret = OnStartScreenCapture();
     PostStartScreenCapture(ret == MSERR_OK);
     return ret;
@@ -1859,6 +1858,7 @@ int32_t ScreenCaptureServer::OnStartScreenCapture()
 {
     MediaTrace trace("ScreenCaptureServer::OnStartScreenCapture");
     MEDIA_LOGI("OnStartScreenCapture start, dataType:%{public}d", captureConfig_.dataType);
+    captureState_ = AVScreenCaptureState::STARTING;
     int32_t ret = MSERR_UNSUPPORT;
     if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
         ret = StartScreenCaptureStream();
