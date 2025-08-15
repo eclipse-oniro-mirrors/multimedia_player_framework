@@ -417,9 +417,11 @@ int32_t SoundDecoderCallback::ReCombineCacheData()
             }
             copyIndex += bufferEntry->size;
             remainBufferSize -= bufferEntry->size;
-        } else {
+        } else if (bufferEntry != nullptr) {
             MEDIA_LOGE("ReCombineCacheData, bufferEntry size:%{public}d, buffer:%{public}d",
                 bufferEntry->size, bufferEntry->buffer != nullptr);
+        } else {
+            MEDIA_LOGE("ReCombineCacheData, bufferEntry is null !");
         }
     }
     MEDIA_LOGI("ReCombine finish copyIndex:%{public}d, remainSize:%{public}d", copyIndex, remainBufferSize);

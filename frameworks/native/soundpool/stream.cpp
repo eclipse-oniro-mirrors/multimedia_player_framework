@@ -404,12 +404,16 @@ void Stream::DealWriteData(size_t length)
             cacheDataFrameIndex_ += copyLength;
         }
         audioRenderer_->Enqueue(bufDesc);
+    } else if (fullCacheData_ != nullptr) {
+        MEDIA_LOGE("Stream OnWriteData, cacheDataFrameIndex_: %{public}zu, length: %{public}zu,"
+            " bufDesc.buffer:%{public}d, fullCacheData_:1, fullCacheData_->buffer:%{public}d,"
+            " streamID_:%{public}d",
+            cacheDataFrameIndex_, length, bufDesc.buffer != nullptr,
+            fullCacheData_->buffer != nullptr, streamID_);
     } else {
         MEDIA_LOGE("Stream OnWriteData, cacheDataFrameIndex_: %{public}zu, length: %{public}zu,"
-            " bufDesc.buffer:%{public}d, fullCacheData_:%{public}d, fullCacheData_->buffer:%{public}d,"
-            " streamID_:%{public}d",
-            cacheDataFrameIndex_, length, bufDesc.buffer != nullptr, fullCacheData_ != nullptr,
-            fullCacheData_->buffer != nullptr, streamID_);
+            " bufDesc.buffer:%{public}d, fullCacheData_:0, streamID_:%{public}d",
+            cacheDataFrameIndex_, length, bufDesc.buffer != nullptr, streamID_);
     }
 }
 
