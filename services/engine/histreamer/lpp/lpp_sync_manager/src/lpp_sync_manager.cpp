@@ -37,7 +37,7 @@ int32_t LppSyncManager::Init()
 {
     MEDIA_LOG_I("LppSyncManager::Init");
     FALSE_RETURN_V_MSG_W(videoIsLpp_, MSERR_OK, "videoIsLpp_ is false, not create adapter");
-    int32_t ret = LowPowerPlayerFactory::CreateLppSyncManagerAdapter(adapterId_, adapter_);
+    int32_t ret = LowPowerPlayerFactory::CreateLppSyncManagerAdapter(adapter_);
     FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "create lpp sync manager failed");
     ret = adapter_->Init();
     FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "SyncMananger RegisterCallback failed");
@@ -47,8 +47,7 @@ int32_t LppSyncManager::Init()
 LppSyncManager::~LppSyncManager()
 {
     FALSE_RETURN_MSG_W(videoIsLpp_ && adapter_ != nullptr, "videoIsLpp_ is false, not destroy adapter");
-    int32_t ret = LowPowerPlayerFactory::DestroyLppSyncManagerAdapter(adapterId_, std::move(adapter_));
-    adapterId_ = 0;
+    int32_t ret = LowPowerPlayerFactory::DestroyLppSyncManagerAdapter(std::move(adapter_));
     adapter_ = nullptr;
     FALSE_RETURN_MSG(ret == MSERR_OK, "LppSyncManager destroy failed");
 }
@@ -160,7 +159,7 @@ int32_t LppSyncManager::Reset()
     auto ret = adapter_->Reset();
     FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "adapter_ Reset failed");
     MEDIA_LOG_I("DestroyLppSyncManagerAdapter in");
-    ret = LowPowerPlayerFactory::DestroyLppSyncManagerAdapter(adapterId_, std::move(adapter_));
+    ret = LowPowerPlayerFactory::DestroyLppSyncManagerAdapter(std::move(adapter_));
     MEDIA_LOG_I("DestroyLppSyncManagerAdapter out");
     FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "LppSyncManager destroy failed");
     return MSERR_OK;
