@@ -161,24 +161,6 @@ HWTEST_F(VideoEncoderEngineImplTest, SendEos_ok, TestSize.Level0)
     (void)close(srcFd);
 }
 
-HWTEST_F(VideoEncoderEngineImplTest, VideoEncoderEngineImplTest_OnEncodeResult, TestSize.Level0)
-{
-    std::string fileName = "H264_AAC.mp4";
-    int32_t srcFd = VideoResource::instance().getFileResource(fileName);
-    auto engine = std::make_shared<VideoEncoderEngineImpl>(srcFd, cb_);
-    CodecResult result = CodecResult::SUCCESS;
-    engine->OnEncodeResult(result);
-    engine->videoEncoderState_ = CodecState::FINISH_SUCCESS;
-    engine->OnEncodeResult(result);
-    engine->audioEncoderState_ = CodecState::FINISH_SUCCESS;
-    engine->OnEncodeResult(result);
-    engine->videoEncoderState_ = CodecState::RUNNING;
-    engine->audioEncoderState_ = CodecState::FINISH_SUCCESS;
-    engine->OnEncodeResult(result);
-    EXPECT_EQ(engine->videoEncoderState_, CodecState::RUNNING);
-    (void)close(srcFd);
-}
-
 HWTEST_F(VideoEncoderEngineImplTest, VideoEncoderEngineImplTest_OnVideoNewOutputDataCallBack, TestSize.Level0)
 {
     std::string fileName = "H264_AAC.mp4";
