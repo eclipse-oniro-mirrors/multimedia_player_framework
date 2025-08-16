@@ -159,6 +159,7 @@ public:
     int32_t EnableReportMediaProgress(bool enable) override;
     int32_t EnableReportAudioInterrupt(bool enable) override;
     int32_t ForceLoadVideo(bool status) override;
+    int32_t SetLoudnessGain(float loudnessGain) override;
 
 protected:
     class BaseState;

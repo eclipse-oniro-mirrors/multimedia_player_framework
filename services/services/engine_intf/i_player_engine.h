@@ -366,6 +366,12 @@ public:
     {
         return ;
     }
+    
+    virtual int32_t SetLoudnessGain(float loudnessGain)
+    {
+        (void)loudnessGain;
+        return 0;
+    }
 };
 } // namespace Media
 } // namespace OHOS

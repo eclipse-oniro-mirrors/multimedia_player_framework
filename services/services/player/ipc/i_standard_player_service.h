@@ -193,6 +193,12 @@ public:
         return 0;
     }
 
+    virtual int32_t SetLoudnessGain(float loudnessGain)
+    {
+        (void)loudnessGain;
+        return 0;
+    }
+
     /**
      * IPC code ID
      */
@@ -258,6 +264,7 @@ public:
         ENABLE_REPORT_MEDIA_PROGRESS,
         ENABLE_REPORT_AUDIO_INTERRUPT,
         FORCE_LOAD_VIDEO,
+        SET_LOUDNESSGAIN,
         MAX_IPC_ID,                   // all IPC codes should be added before MAX_IPC_ID
     };
 

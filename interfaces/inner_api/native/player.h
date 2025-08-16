@@ -1108,6 +1108,12 @@ public:
     {
         return 0;
     }
+
+    virtual int32_t SetLoudnessGain(float loudnessGain)
+    {
+        (void)loudnessGain;
+        return 0;
+    }
 };
 
 class __attribute__((visibility("default"))) PlayerFactory {

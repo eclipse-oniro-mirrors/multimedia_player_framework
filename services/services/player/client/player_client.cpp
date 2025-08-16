@@ -562,5 +562,12 @@ int32_t PlayerClient::ForceLoadVideo(bool status)
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerProxy_->ForceLoadVideo(status);
 }
+
+int32_t PlayerClient::SetLoudnessGain(float loudnessGain)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->SetLoudnessGain(loudnessGain);
+}
 } // namespace Media
 } // namespace OHOS
