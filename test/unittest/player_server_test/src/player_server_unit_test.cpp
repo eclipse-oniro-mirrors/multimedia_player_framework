@@ -5565,5 +5565,44 @@ HWTEST_F(PlayerServerUnitTest, Player_UnFreeze_002, TestSize.Level1)
     EXPECT_EQ(MSERR_OK, player_->UnFreeze());
     sleep(1);
 }
+
+/**
+ * @tc.name  : Test SetLoudnessGain API
+ * @tc.number: Player_SetLoudnessGain_002
+ * @tc.desc  : Test Player loudnessGain < -90.0 || loudnessGain > 24.0
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetLoudnessGain_001, TestSize.Level1)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->SetLoudnessGain(-90.1));
+    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->SetLoudnessGain(24.1));
+}
+
+/**
+ * @tc.name  : Test SetLoudnessGain API
+ * @tc.number: Player_SetLoudnessGain_002
+ * @tc.desc  : Test Player state
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetLoudnessGain_002, TestSize.Level1)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->SetLoudnessGain(11.0));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    ASSERT_EQ(MSERR_OK, player_->SetLoudnessGain(12.0));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    ASSERT_EQ(MSERR_OK, player_->SetLoudnessGain(13.0));
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    ASSERT_EQ(MSERR_OK, player_->SetLoudnessGain(14.0));
+    int32_t duration = 0;
+    ASSERT_EQ(MSERR_OK, player_->GetDuration(duration));
+    ASSERT_EQ(MSERR_OK, player_->Seek(duration, PlayerSeekMode::SEEK_NEXT_SYNC));
+    ASSERT_EQ(MSERR_OK, player_->Play());
+    sleep(1);
+    ASSERT_EQ(false, player_->IsPlaying());
+    ASSERT_EQ(PlayerStates::PLAYER_PLAYBACK_COMPLETE, player_->GetState());
+    ASSERT_EQ(MSERR_OK, player_->SetLoudnessGain(15.0));
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+    ASSERT_EQ(MSERR_OK, player_->SetLoudnessGain(16.0));
+}
 } // namespace Media
 } // namespace OHOS

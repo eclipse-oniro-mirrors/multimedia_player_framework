@@ -842,5 +842,11 @@ int32_t PlayerServerMock::EnableReportMediaProgress(bool enable)
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     return player_->EnableReportMediaProgress(enable);
 }
+
+int32_t PlayerServerMock::SetLoudnessGain(float loudnessGain)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->SetLoudnessGain(loudnessGain);
+}
 } // namespace Media
 } // namespace OHOS
