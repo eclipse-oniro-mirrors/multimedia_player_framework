@@ -426,6 +426,12 @@ struct PixelMapParams {
      * indicating that flipping is not required, true indicates that flipping is required
      */
     bool isSupportFlip = false;
+    /**
+     * Expected whether to use default colorSpace, true is the default value,
+     * indicating that use BT2020_HLG when the colorSpace cannot be matched in the colorSpace map,
+     * otherwise, use BT709_LIMIT.
+     */
+    bool convertColorSpace = true;
 };
 
 /**
