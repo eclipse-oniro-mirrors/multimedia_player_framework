@@ -174,6 +174,7 @@ bool LppDataPacket::WriteToByteBuffer(std::shared_ptr<AVBuffer> &avBuffer)
     avBuffer->memory_->SetSize(offset);
     CHECK_AND_RETURN_RET_LOG(frameCount_ > 0, false, "LppDataPacket isEmpty..");
     uint8_t *buffer = avBuffer->memory_->GetAddr();
+    CHECK_AND_RETURN_RET_LOG(avBuffer->memory_->GetCapacity() >= sizeof(uint32_t), false, "not enough capacity");
     int32_t ret = memcpy_s(buffer, sizeof(uint32_t), &frameCount_, sizeof(uint32_t));
     CHECK_AND_RETURN_RET_LOG(ret == 0, false, "memcopy error");
     avBuffer->flag_ |= MediaAVCodec::AVCODEC_BUFFER_FLAG_MUL_FRAME;
@@ -310,7 +311,7 @@ void LppDataPacket::DumpAVBufferToFile(
     }
     size_t ret =
         fwrite(reinterpret_cast<const char *>(buffer->memory_->GetAddr()), DUMP_DATA_UNIT, bufferSize, dumpFile);
-    if (ret < 0) {
+    if (ret != bufferSize) {
         MEDIA_LOG_W("dump is fail.");
     }
     std::fclose(dumpFile);
