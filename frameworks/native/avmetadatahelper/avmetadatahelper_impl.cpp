@@ -531,8 +531,7 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapFromSurfaceBuffer(
     CHECK_AND_RETURN_RET_LOG(surfaceBuffer != nullptr, nullptr, "surfaceBuffer is nullptr");
     auto getColorSpaceInfoRes = convertColorSpace_ ? GetColorSpace(surfaceBuffer, pixelMapInfo) :
         GetColorSpaceWithDefaultValue(surfaceBuffer, pixelMapInfo);
-    InitializationOptions options = { .size = { .width = pixelMapInfo.width,
-                                                .height = pixelMapInfo.height } };
+    InitializationOptions options = { .size = { .width = pixelMapInfo.width, .height = pixelMapInfo.height } };
     bool isHdr = pixelMapInfo.isHdr;
     options.srcPixelFormat = isHdr ? PixelFormat::YCBCR_P010 : PixelFormat::NV12;
     options.pixelFormat = isHdr ? PixelFormat::YCBCR_P010 : PixelFormat::NV12;
