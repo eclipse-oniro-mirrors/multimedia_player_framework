@@ -489,7 +489,7 @@ Status AVMetadataHelperImpl::GetColorSpace(sptr<SurfaceBuffer> &surfaceBuffer, P
     auto it = SDR_COLORSPACE_MAP.find(type);
     CHECK_AND_RETURN_RET_LOG(it != SDR_COLORSPACE_MAP.end(), Status::ERROR_UNKNOWN,
         "can't find mapped colorSpace name in sdr map");
-    MEDIA_LOGI("video is hdr, colorspace info is [%{public}d, %{public}d]", it->first, it->second);
+    MEDIA_LOGI("video is sdr, colorspace info is [%{public}d, %{public}d]", it->first, it->second);
     pixelMapInfo.colorSpaceName = it->second;
     return Status::OK;
 }
@@ -515,11 +515,11 @@ Status AVMetadataHelperImpl::GetColorSpaceWithDefaultValue(sptr<SurfaceBuffer> &
     pixelMapInfo.primaries = colorSpaceInfo.primaries;
     MEDIA_LOGI("colorSpaceTypeWithDefaultValue is %{public}u", type);
 
-    // using SDR_COLORSPACE_MAP for colorsapce query when convertColorSpace_ is false
+    // using SDR_COLORSPACE_MAP for colorspace query when convertColorSpace_ is false
     // do not distinguish between SDR and HDR
     auto it = SDR_COLORSPACE_MAP.find(type);
     CHECK_AND_RETURN_RET_LOG(it != SDR_COLORSPACE_MAP.end(), Status::ERROR_UNKNOWN,
-        "can't find mapped colorSpace name in sdr map");
+        "can't find mapped colorSpace name in colorSpace map");
     MEDIA_LOGI("colorSpaceWithDefaultValue info is [%{public}d, %{public}d]", it->first, it->second);
     pixelMapInfo.colorSpaceName = it->second;
     return Status::OK;
@@ -569,7 +569,7 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapFromSurfaceBuffer(
         ref->IncStrongRef(ref);
         if (isHdr) {
             ColorManager::ColorSpaceName defaultColorSpaceName = convertColorSpace_ ?
-                ColorManger::BT2020_HLG : ColorManager::ColorSpaceName::BT709_LIMIT;
+                ColorManager::BT2020_HLG : ColorManager::ColorSpaceName::BT709_LIMIT;
             pixelMap->SetHdrType(ImageHdrType::HDR_VIVID_SINGLE);
             pixelMap->InnerSetColorSpace(OHOS::ColorManager::ColorSpace(
                 getColorSpaceInfoRes == Status::OK ? pixelMapInfo.colorSpaceName : defaultColorSpaceName));
