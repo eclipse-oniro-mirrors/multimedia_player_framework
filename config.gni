@@ -247,3 +247,4 @@ MEDIA_DRM_ROOT_DIR = "//foundation/multimedia/drm_framework"
 
 # Fuzz test output path.
 MODULE_OUTPUT_PATH = "player_framework/player_framework"
+MODULE_SCREENCAPTURE_OUTPUT_PATH = "player_framework/ScreenCapture"

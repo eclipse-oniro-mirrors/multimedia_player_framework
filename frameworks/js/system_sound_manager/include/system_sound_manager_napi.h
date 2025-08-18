@@ -140,6 +140,8 @@ private:
     static void CloseAsyncCallbackComp(napi_env env, napi_status status, void* data);
     static napi_value AddCustomizedTone(napi_env env, napi_callback_info info);
     static void AsyncAddCustomizedTone(napi_env env, void *data);
+    static void DealErrorForAddCustomizedTone(std::string &uri, bool &status, int32_t &errCode,
+        std::string &errMessage, bool &duplicateFile);
     static void AddCustomizedToneAsyncCallbackComp(napi_env env, napi_status status, void* data);
     static napi_value RemoveCustomizedTone(napi_env env, napi_callback_info info);
     static void AsyncRemoveCustomizedTone(napi_env env, void *data);

@@ -45,10 +45,11 @@ public:
 
 enum AudioCapturerWrapperState : int32_t {
     CAPTURER_UNKNOWN = -1,
-    CAPTURER_RECORDING = 0,
-    CAPTURER_PAUSED = 1,
-    CAPTURER_STOPED = 2,
-    CAPTURER_RELEASED = 3,
+    CAPTURER_RECORDING,
+    CAPTURER_PAUSED,
+    CAPTURER_STOPPING,
+    CAPTURER_STOPED,
+    CAPTURER_RELEASED,
 };
 
 class AudioCapturerWrapper {
@@ -76,6 +77,8 @@ public:
     int32_t DropBufferUntil(int64_t audioTime);
     int32_t AddBufferFrom(int64_t timeWindow, int64_t bufferSize, int64_t fromTime);
     void SetIsMute(bool isMute);
+    bool IsRecording();
+    bool IsStop();
 
 protected:
     virtual void OnStartFailed(ScreenCaptureErrorType errorType, int32_t errorCode);
@@ -93,7 +96,6 @@ protected:
 
 private:
     std::mutex mutex_;
-    std::atomic<bool> isRunning_ = false;
     AudioCaptureInfo audioInfo_;
     std::string threadName_;
     std::unique_ptr<std::thread> readAudioLoop_ = nullptr;

@@ -50,7 +50,7 @@ void SoundPoolCacheBufferUnitTest::TearDown(void)
 HWTEST_F(SoundPoolCacheBufferUnitTest, CacheBuferDealPlayParamsBeforePlayUnittest_001, TestSize.Level0)
 {
     ASSERT_NE(cacheBuffer_, nullptr);
-    auto audioRenderer = std::make_unique<MockAudioRenderer>();
+    auto audioRenderer = std::make_unique<MockAudioRender>();
     EXPECT_CALL(*(audioRenderer), SetRenderRate(_)).Times(1).WillRepeatedly(testing::Return(0));
     EXPECT_CALL(*(audioRenderer), SetVolume(_)).Times(1).WillRepeatedly(testing::Return(0));
     EXPECT_CALL(*(audioRenderer), SetOffloadAllowed(_)).Times(1).WillRepeatedly(testing::Return(0));
@@ -69,6 +69,56 @@ HWTEST_F(SoundPoolCacheBufferUnitTest, CacheBuferDealPlayParamsBeforePlayUnittes
     cacheBuffer_->DealPlayParamsBeforePlay(playParameters);
     ASSERT_EQ(cacheBuffer_->loop_, playParameters.loop);
     ASSERT_EQ(cacheBuffer_->priority_, playParameters.priority);
+}
+
+/**
+ * @tc.name  : Test CreateAudioRenderer
+ * @tc.number: CreateAudioRenderer_001
+ * @tc.desc  : Test returns NORMAL_PLAY_RENDERER_FLAGS
+ */
+HWTEST_F(SoundPoolCacheBufferUnitTest, CreateAudioRenderer_001, TestSize.Level0)
+{
+    ASSERT_NE(cacheBuffer_, nullptr);
+    AudioStandard::AudioRendererInfo info;
+    PlayParams playParams;
+    cacheBuffer_->rendererFlags_ = AudioStandard::AUDIO_FLAG_VKB_FAST;
+
+    cacheBuffer_->CreateAudioRenderer(info, playParams);
+
+    EXPECT_EQ(cacheBuffer_->rendererFlags_, CacheBuffer::NORMAL_PLAY_RENDERER_FLAGS);
+}
+
+/**
+ * @tc.name  : Test CreateAudioRenderer
+ * @tc.number: CreateAudioRenderer_002
+ * @tc.desc  : Test returns NORMAL_PLAY_RENDERER_FLAGS
+ */
+HWTEST_F(SoundPoolCacheBufferUnitTest, CreateAudioRenderer_002, TestSize.Level0)
+{
+    ASSERT_NE(cacheBuffer_, nullptr);
+    AudioStandard::AudioRendererInfo info;
+    PlayParams playParams;
+    cacheBuffer_->rendererFlags_ = AudioStandard::AUDIO_FLAG_VKB_NORMAL;
+
+    cacheBuffer_->CreateAudioRenderer(info, playParams);
+
+    EXPECT_EQ(cacheBuffer_->rendererFlags_, CacheBuffer::NORMAL_PLAY_RENDERER_FLAGS);
+}
+
+/**
+ * @tc.name  : Test CreateAudioRenderer
+ * @tc.number: CreateAudioRenderer_003
+ * @tc.desc  : Test returns NORMAL_PLAY_RENDERER_FLAGS
+ */
+HWTEST_F(SoundPoolCacheBufferUnitTest, CreateAudioRenderer_003, TestSize.Level0)
+{
+    ASSERT_NE(cacheBuffer_, nullptr);
+    AudioStandard::AudioRendererInfo info;
+    PlayParams playParams;
+
+    cacheBuffer_->CreateAudioRenderer(info, playParams);
+
+    EXPECT_EQ(cacheBuffer_->rendererFlags_, CacheBuffer::NORMAL_PLAY_RENDERER_FLAGS);
 }
 } // namespace Media
 } // namespace OHOS

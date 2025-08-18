@@ -230,7 +230,6 @@ int32_t CacheBuffer::PreparePlayInner(const AudioStandard::AudioRendererInfo &au
 int32_t CacheBuffer::PreparePlay(const AudioStandard::AudioRendererInfo &audioRendererInfo,
     const PlayParams &playParams)
 {
-    MEDIA_LOGI("CacheBuffer::PreparePlay");
     std::lock_guard lock(cacheBufferLock_);
     playParameters_ = playParams;
     audioRendererInfo_ = audioRendererInfo;
@@ -251,9 +250,8 @@ int32_t CacheBuffer::DoPlay(const int32_t streamID)
     CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL, "Invalid audioRenderer.");
     size_t bufferSize;
     audioRenderer_->GetBufferSize(bufferSize);
-    MEDIA_LOGI("CacheBuffer::DoPlay, soundID_:%{public}d, streamID_:%{public}d, bufferSize:%{public}zu,"
-        "  cacheDataFrameIndex_:%{public}zu, cacheDataTotalSize_:%{public}zu",
-        soundID_, streamID_, bufferSize, cacheDataFrameIndex_, cacheDataTotalSize_);
+    MEDIA_LOGI("CacheBuffer::DoPlay, streamID_:%{public}d, bufferSize:%{public}zu, cacheDataFrameIndex_:%{public}zu,"
+        " cacheDataTotalSize_:%{public}zu", streamID_, bufferSize, cacheDataFrameIndex_, cacheDataTotalSize_);
     audioRenderer_->SetSourceDuration(sourceDurationMs_);
 
     cacheDataFrameIndex_ = 0;
@@ -269,7 +267,7 @@ int32_t CacheBuffer::DoPlay(const int32_t streamID)
     } else {
         soundPoolXCollie.CancelXCollieTimer();
     }
-    MEDIA_LOGI("CacheBuffer::DoPlay success, soundID_:%{public}d, streamID:%{public}d", soundID_, streamID);
+    MEDIA_LOGI("CacheBuffer::DoPlay success, streamID:%{public}d", streamID);
     return MSERR_OK;
 }
 
@@ -278,22 +276,22 @@ int32_t CacheBuffer::HandleRendererNotStart(const int32_t streamID)
     OHOS::AudioStandard::RendererState state = audioRenderer_->GetStatus();
     if (state == OHOS::AudioStandard::RendererState::RENDERER_RUNNING) {
         MEDIA_LOGI("CacheBuffer::HandleRendererNotStart audioRenderer has started,"
-            " soundID_:%{public}d, streamID:%{public}d", soundID_, streamID);
+            " streamID:%{public}d", streamID);
         isRunning_.store(true);
         if (callback_ != nullptr) {
             MEDIA_LOGI("CacheBuffer::HandleRendererNotStart callback_ OnPlayFinished,"
-                " soundID_:%{public}d, streamID:%{public}d", soundID_, streamID);
+                "streamID:%{public}d", streamID);
             callback_->OnPlayFinished(streamID_);
         }
         isNeedFadeIn_ = true;
         return MSERR_OK;
     } else {
         MEDIA_LOGE("CacheBuffer::HandleRendererNotStart audioRenderer start failed,"
-            " soundID_:%{public}d, streamID:%{public}d", soundID_, streamID);
+            "streamID:%{public}d", streamID);
         isRunning_.store(false);
         if (callback_ != nullptr) {
             MEDIA_LOGI("CacheBuffer::HandleRendererNotStart doPlay failed, call callback,"
-                " soundID_:%{public}d, streamID:%{public}d", soundID_, streamID);
+                "streamID:%{public}d", streamID);
             callback_->OnError(MSERR_INVALID_VAL);
             SoundPoolUtils::ErrorInfo errorInfo{MSERR_INVALID_VAL, soundID_,
                 streamID_, ERROR_TYPE::PLAY_ERROR, callback_};
@@ -347,16 +345,14 @@ void CacheBuffer::OnWriteData(size_t length)
         return;
     }
     CHECK_AND_RETURN_LOG(isReadyToStopAudioRenderer_.load() == false,
-        "CacheBuffer::OnWriteData is ready To stop AudioRenderer, soundID_:%{public}d,"
-        " streamID:%{public}d", soundID_, streamID_);
+        "CacheBuffer::OnWriteData is ready To stop AudioRenderer, streamID:%{public}d", streamID_);
     std::lock_guard lock(cacheBufferLock_);
     CHECK_AND_RETURN_LOG(fullCacheData_ != nullptr, "fullCacheData_ is nullptr");
     if (cacheDataFrameIndex_ >= static_cast<size_t>(fullCacheData_->size)) {
         if (loop_ >= 0 && havePlayedCount_ >= loop_) {
             MEDIA_LOGI("CacheBuffer stream write finish, cacheDataFrameIndex_:%{public}zu,"
-                " havePlayedCount_:%{public}d, loop:%{public}d, soundID_:%{public}d,"
-                " streamID_:%{public}d, length: %{public}zu",
-                cacheDataFrameIndex_, havePlayedCount_, loop_, soundID_, streamID_, length);
+                " havePlayedCount_:%{public}d, loop:%{public}d, streamID_:%{public}d, length: %{public}zu",
+                cacheDataFrameIndex_, havePlayedCount_, loop_, streamID_, length);
             int32_t streamIDStop = streamID_;
             ThreadPool::Task cacheBufferStopTask = [this, streamIDStop] { this->Stop(streamIDStop); };
             if (auto ptr = cacheBufferStopThreadPool_.lock()) {
@@ -397,34 +393,39 @@ void CacheBuffer::DealWriteData(size_t length)
         }
         FadeInAudioBuffer(bufDesc);
         audioRenderer_->Enqueue(bufDesc);
-        if (cacheDataFrameIndex_ >= static_cast<size_t>(fullCacheData_->size)) {
+        if (cacheDataFrameIndex_ >= static_cast<size_t>(fullCacheData_->size) &&
+            (loop_ < 0 || havePlayedCount_ < loop_)) {
+            MEDIA_LOGI("DealWriteData ResetFirstFrameState when looping");
             audioRenderer_->ResetFirstFrameState();
         }
+    } else if (fullCacheData_ != nullptr) {
+        MEDIA_LOGE("OnWriteData, cacheDataFrameIndex_: %{public}zu, length: %{public}zu,"
+            " bufDesc.buffer:%{public}d, fullCacheData_:1, fullCacheData_->buffer:%{public}d,"
+            " streamID_:%{public}d",
+            cacheDataFrameIndex_, length, bufDesc.buffer != nullptr,
+            fullCacheData_->buffer != nullptr, streamID_);
     } else {
         MEDIA_LOGE("OnWriteData, cacheDataFrameIndex_: %{public}zu, length: %{public}zu,"
-            " bufDesc.buffer:%{public}d, fullCacheData_:%{public}d, fullCacheData_->buffer:%{public}d,"
-            " soundID_:%{public}d, streamID_:%{public}d",
-            cacheDataFrameIndex_, length, bufDesc.buffer != nullptr, fullCacheData_ != nullptr,
-            fullCacheData_->buffer != nullptr, soundID_, streamID_);
+            " bufDesc.buffer:%{public}d, fullCacheData_:0, streamID_:%{public}d",
+            cacheDataFrameIndex_, length, bufDesc.buffer != nullptr, streamID_);
     }
 }
 
 void CacheBuffer::OnFirstFrameWriting(uint64_t latency)
 {
-    MEDIA_LOGI("CacheBuffer::OnFirstFrameWriting, soundID_:%{public}d, streamID_:%{public}d", soundID_, streamID_);
+    MEDIA_LOGI("CacheBuffer::OnFirstFrameWriting, streamID_:%{public}d", streamID_);
     CHECK_AND_RETURN_LOG(frameWriteCallback_ != nullptr, "frameWriteCallback is null.");
     frameWriteCallback_->OnFirstAudioFrameWritingCallback(latency);
 }
 
 void CacheBuffer::OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent)
 {
-    MEDIA_LOGI("CacheBuffer::OnInterrupt, soundID_:%{public}d, streamID_:%{public}d,"
-        " eventType:%{public}d, forceType:%{public}d, hintType:%{public}d",
-        soundID_, streamID_, interruptEvent.eventType, interruptEvent.forceType, interruptEvent.hintType);
+    MEDIA_LOGI("CacheBuffer::OnInterrupt, streamID_:%{public}d, eventType:%{public}d, forceType:%{public}d,"
+        "hintType:%{public}d", streamID_, interruptEvent.eventType, interruptEvent.forceType,
+        interruptEvent.hintType);
     if (interruptEvent.hintType == AudioStandard::InterruptHint::INTERRUPT_HINT_PAUSE ||
         interruptEvent.hintType == AudioStandard::InterruptHint::INTERRUPT_HINT_STOP) {
-        MEDIA_LOGI("CacheBuffer::OnInterrupt, interrupt cacheBuffer, soundID_:%{public}d,"
-            " streamID_:%{public}d", soundID_, streamID_);
+        MEDIA_LOGI("CacheBuffer::OnInterrupt, interrupt cacheBuffer, streamID_:%{public}d", streamID_);
         int32_t streamIDInterrupt = streamID_;
         ThreadPool::Task cacheBufferInterruptTask = [this, streamIDInterrupt] { this->Stop(streamIDInterrupt); };
         if (auto ptr = cacheBufferStopThreadPool_.lock()) {
@@ -442,7 +443,7 @@ void CacheBuffer::OnStateChange(const AudioStandard::RendererState state,
 int32_t CacheBuffer::Stop(const int32_t streamID)
 {
     MediaTrace trace("CacheBuffer::Stop");
-    MEDIA_LOGI("CacheBuffer::Stop soundID_:%{public}d, streamID:%{public}d", soundID_, streamID_);
+    MEDIA_LOGI("CacheBuffer::Stop streamID:%{public}d", streamID_);
     std::lock_guard lock(cacheBufferLock_);
     CHECK_AND_RETURN_RET_LOG(streamID == streamID_, MSERR_INVALID_VAL, "Invalid streamID_.");
     if (audioRenderer_ != nullptr && isRunning_.load()) {
@@ -552,7 +553,7 @@ int32_t CacheBuffer::Release()
         isRunning_.store(false);
     }
 
-    MEDIA_LOGI("CacheBuffer::Release start, soundID_:%{public}d, streamID:%{public}d", soundID_, streamID_);
+    MEDIA_LOGI("CacheBuffer::Release start, streamID:%{public}d", streamID_);
     // Use audioRenderer to release and don't lock, so it will not cause dead lock. if here locked, audioRenderer
     // will wait callback thread stop, and the callback thread can't get the lock, it will cause dead lock
     if (audioRenderer != nullptr) {
@@ -577,7 +578,7 @@ int32_t CacheBuffer::Release()
     if (callback_ != nullptr) callback_.reset();
     if (cacheBufferCallback_ != nullptr) cacheBufferCallback_.reset();
     if (frameWriteCallback_ != nullptr) frameWriteCallback_.reset();
-    MEDIA_LOGI("CacheBuffer::Release end, soundID_:%{public}d, streamID:%{public}d", soundID_, streamID_);
+    MEDIA_LOGI("CacheBuffer::Release end, streamID:%{public}d", streamID_);
     return MSERR_OK;
 }
 
@@ -608,11 +609,10 @@ void CacheBuffer::FadeInAudioBuffer(const AudioStandard::BufferDesc &bufDesc)
 {
     if (isNeedFadeIn_) {
         isNeedFadeIn_ = false;
-        MEDIA_LOGI("CacheBuffer::FadeInAudioBuffer, soundID_:%{public}d, streamID:%{public}d", soundID_, streamID_);
+        MEDIA_LOGI("CacheBuffer::FadeInAudioBuffer, streamID:%{public}d", streamID_);
         int32_t ret = AudioStandard::AudioRenderer::FadeInAudioBuffer(bufDesc, sampleFormat_, audioChannel_);
         if (ret != AudioStandard::SUCCESS) {
-            MEDIA_LOGW("CacheBuffer::FadeInAudioBuffer failed ret: %{public}d, soundID_:%{public}d,"
-                " streamID:%{public}d", ret, soundID_, streamID_);
+            MEDIA_LOGW("CacheBuffer::FadeInAudioBuffer failed ret: %{public}d, streamID:%{public}d", ret, streamID_);
         }
     }
 }

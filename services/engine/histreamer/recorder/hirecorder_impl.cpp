@@ -30,14 +30,14 @@ public:
     explicit RecorderEventReceiver(HiRecorderImpl *hiRecorderImpl)
     {
         MEDIA_LOG_I("RecorderEventReceiver ctor called.");
-        std::unique_lock<std::shared_mutex> lk(cbMutex_);
+        std::lock_guard<std::recursive_mutex> lock(cbMutex_);
         hiRecorderImpl_ = hiRecorderImpl;
     }
 
     void OnEvent(const Event &event) override
     {
         MEDIA_LOG_D("RecorderEventReceiver OnEvent.");
-        std::shared_lock<std::shared_mutex> lk(cbMutex_);
+        std::lock_guard<std::recursive_mutex> lock(cbMutex_);
         FALSE_RETURN_MSG(hiRecorderImpl_ != nullptr, "hiRecorderImpl_ is nullptr");
         hiRecorderImpl_->OnEvent(event);
     }
@@ -45,12 +45,12 @@ public:
     void NotifyRelease() override
     {
         MEDIA_LOG_D("RecorderEventReceiver NotifyRelease.");
-        std::unique_lock<std::shared_mutex> lk(cbMutex_);
+        std::lock_guard<std::recursive_mutex> lock(cbMutex_);
         hiRecorderImpl_ = nullptr;
     }
 
 private:
-    std::shared_mutex cbMutex_ {};
+    std::recursive_mutex cbMutex_ {};
     HiRecorderImpl *hiRecorderImpl_;
 };
 
@@ -59,7 +59,7 @@ public:
     explicit RecorderFilterCallback(HiRecorderImpl *hiRecorderImpl)
     {
         MEDIA_LOG_I("RecorderFilterCallback ctor called.");
-        std::unique_lock<std::shared_mutex> lk(cbMutex_);
+        std::lock_guard<std::recursive_mutex> lock(cbMutex_);
         hiRecorderImpl_ = hiRecorderImpl;
     }
 
@@ -67,7 +67,7 @@ public:
         Pipeline::StreamType outType) override
     {
         MEDIA_LOG_D("RecorderFilterCallback OnCallBack.");
-        std::shared_lock<std::shared_mutex> lk(cbMutex_);
+        std::lock_guard<std::recursive_mutex> lock(cbMutex_);
         FALSE_RETURN_V_MSG(hiRecorderImpl_ != nullptr, Status::OK, "hiRecorderImpl_ is nullptr");
         return hiRecorderImpl_->OnCallback(filter, cmd, outType);
     }
@@ -75,12 +75,12 @@ public:
     void NotifyRelease() override
     {
         MEDIA_LOG_D("RecorderFilterCallback NotifyRelease.");
-        std::unique_lock<std::shared_mutex> lk(cbMutex_);
+        std::lock_guard<std::recursive_mutex> lock(cbMutex_);
         hiRecorderImpl_ = nullptr;
     }
 
 private:
-    std::shared_mutex cbMutex_ {};
+    std::recursive_mutex cbMutex_ {};
     HiRecorderImpl *hiRecorderImpl_;
 };
 
@@ -89,14 +89,14 @@ public:
     explicit CapturerInfoChangeCallback(HiRecorderImpl *hiRecorderImpl)
     {
         MEDIA_LOG_I("CapturerInfoChangeCallback ctor called.");
-        std::unique_lock<std::shared_mutex> lk(cbMutex_);
+        std::lock_guard<std::recursive_mutex> lock(cbMutex_);
         hiRecorderImpl_ = hiRecorderImpl;
     }
 
     void OnStateChange(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo)
     {
         MEDIA_LOG_I("CapturerInfoChangeCallback hiRecorderImpl_->OnAudioCaptureChange start.");
-        std::shared_lock<std::shared_mutex> lk(cbMutex_);
+        std::lock_guard<std::recursive_mutex> lock(cbMutex_);
         FALSE_RETURN_MSG(hiRecorderImpl_ != nullptr, "hiRecorderImpl_ is nullptr");
         hiRecorderImpl_->OnAudioCaptureChange(capturerChangeInfo);
     }
@@ -104,13 +104,13 @@ public:
     void NotifyRelease()
     {
         MEDIA_LOG_D("CapturerInfoChangeCallback NotifyRelease.");
-        std::unique_lock<std::shared_mutex> lk(cbMutex_);
+        std::lock_guard<std::recursive_mutex> lock(cbMutex_);
         hiRecorderImpl_ = nullptr;
     }
 
 private:
     HiRecorderImpl *hiRecorderImpl_;
-    std::shared_mutex cbMutex_ {};
+    std::recursive_mutex cbMutex_ {};
 };
 
 static inline MetaSourceType GetMetaSourceType(int32_t sourceId)
@@ -895,7 +895,11 @@ void HiRecorderImpl::ConfigureVidEncBitrateMode()
     if (enableStableQualityMode_) {
         MEDIA_LOG_I("enableStableQualityMode: true, SQR mode in!");
         videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(Plugins::VideoEncodeBitrateMode::SQR);
-        userMeta_->SetData("com.openharmony.encParam", "video_encode_bitrate_mode=SQR:bitrate=30000000");
+        int64_t vidBitRate = -1;
+        videoEncFormat_->Get<Tag::MEDIA_BITRATE>(vidBitRate);
+        FALSE_RETURN_MSG(vidBitRate != -1, "Get vidBitRate fail!");
+        std::string vidEncParamValue = "video_encode_bitrate_mode=SQR:bitrate=" + std::to_string(vidBitRate);
+        userMeta_->SetData("com.openharmony.encParam", vidEncParamValue);
     } else {
         MEDIA_LOG_I("enableStableQualityMode: false, VBR mode in!");
         videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(Plugins::VideoEncodeBitrateMode::VBR);

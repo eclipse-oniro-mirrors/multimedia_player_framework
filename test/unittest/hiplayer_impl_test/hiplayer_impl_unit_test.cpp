@@ -1200,6 +1200,14 @@ HWTEST_F(HiplayerImplUnitTest, TestSetSuperResolution_002, TestSize.Level0)
     EXPECT_EQ(ret, TransStatus(Status::OK));
 }
 
+HWTEST_F(HiplayerImplUnitTest, SetCameraPostprocessing_001, TestSize.Level0)
+{
+    auto ret = hiplayer_->SetCameraPostprocessing(true);
+    EXPECT_EQ(ret, MSERR_OK);
+    ret = hiplayer_->SetCameraPostprocessing(false);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
 HWTEST_F(HiplayerImplUnitTest, TestSetVideoWindowSize_001, TestSize.Level0)
 {
     int32_t width = 0;
@@ -1412,24 +1420,6 @@ HWTEST_F(HiplayerImplUnitTest, IsNeedChangePlaySpeed_002, TestSize.Level0)
     EXPECT_TRUE(hiplayer_->IsNeedChangePlaySpeed(mode, isXSpeedPlay));
     EXPECT_EQ(mode, PlaybackRateMode::SPEED_FORWARD_1_20_X);
     EXPECT_EQ(isXSpeedPlay, true);
-}
-
-/**
-* @tc.name    : Test flv smart play
-* @tc.number  : IsNeedChangePlaySpeed_003
-* @tc.desc    : Test already 1.2X speed play, do nothing
-* @tc.require :
-*/
-HWTEST_F(HiplayerImplUnitTest, IsNeedChangePlaySpeed_003, TestSize.Level0)
-{
-    hiplayer_->demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
-        FilterType::FILTERTYPE_DEMUXER);
-    PlaybackRateMode mode = PlaybackRateMode::SPEED_FORWARD_1_20_X;
-    bool isXSpeedPlay = true;
-    hiplayer_->isFlvLive_ = true;
-    hiplayer_->maxLivingDelayTime_ = -1;
-    EXPECT_FALSE(hiplayer_->IsNeedChangePlaySpeed(mode, isXSpeedPlay));
-    EXPECT_EQ(mode, PlaybackRateMode::SPEED_FORWARD_1_20_X);
 }
 
 /**

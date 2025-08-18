@@ -21,6 +21,7 @@
 #include "refbase.h"
 #include "surface.h"
 #include "media_data_source.h"
+#include "qos.h"
 
 namespace OHOS {
 namespace Media {
@@ -630,6 +631,7 @@ public:
 
     virtual int32_t SetUserMeta(const std::shared_ptr<Meta> &userMeta) = 0;
     virtual int32_t SetWillMuteWhenInterrupted(bool muteWhenInterrupted) = 0;
+    virtual int32_t TransmitQos(QOS::QosLevel level) = 0;
 };
 } // namespace Media
 } // namespace OHOS

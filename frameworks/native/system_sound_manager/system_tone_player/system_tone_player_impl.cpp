@@ -109,7 +109,7 @@ SystemTonePlayerImpl::SystemTonePlayerImpl(const shared_ptr<Context> &context,
     audioHapticManager_ = AudioHapticManagerFactory::CreateAudioHapticManager();
     CHECK_AND_RETURN_LOG(audioHapticManager_ != nullptr, "Failed to get audio haptic manager");
 
-    std::string systemToneUri = systemSoundMgr_.GetSystemToneUri(databaseTool_, systemToneType_);
+    std::string systemToneUri = systemSoundMgr_.GetSystemToneAttrs(databaseTool_, systemToneType_).GetUri();
     InitPlayer(systemToneUri);
     ReleaseDatabaseTool();
 }
@@ -380,7 +380,7 @@ int32_t SystemTonePlayerImpl::Prepare()
         MEDIA_LOGE("The database tool is not ready!");
         return ERRCODE_IOERROR;
     }
-    std::string audioUri = systemSoundMgr_.GetSystemToneUri(databaseTool_, systemToneType_);
+    std::string audioUri = systemSoundMgr_.GetSystemToneAttrs(databaseTool_, systemToneType_).GetUri();
     int32_t result = InitPlayer(audioUri);
     ReleaseDatabaseTool();
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result,
@@ -660,7 +660,6 @@ int32_t SystemTonePlayerImpl::GetHapticsFeature(ToneHapticsFeature &feature)
 
 bool SystemTonePlayerImpl::IsStreamIdExist(int32_t streamId)
 {
-    MEDIA_LOGI("Query streamId: %{public}d", streamId);
     std::lock_guard<std::mutex> lock(systemTonePlayerMutex_);
     return (playerMap_.count(streamId) != 0 && playerMap_[streamId] != nullptr) ||
         callbackThreadIdMap_.count(streamId) != 0;
@@ -797,7 +796,6 @@ void SystemTonePlayerImpl::CreateCallbackThread(int32_t delayTime)
     delayTime = std::max(delayTime, DEFAULT_DELAY);
     std::weak_ptr<SystemTonePlayerImpl> systemTonePlayerImpl = shared_from_this();
     std::thread t = std::thread([systemTonePlayerImpl, streamId = streamId_, delayTime]() {
-        MEDIA_LOGI("CreateCallbackThread: streamId %{public}d, delayTime %{public}d", streamId, delayTime);
         this_thread::sleep_for(std::chrono::milliseconds(delayTime));
         std::shared_ptr<SystemTonePlayerImpl> player = systemTonePlayerImpl.lock();
         if (player == nullptr) {
@@ -824,13 +822,11 @@ void SystemTonePlayerImpl::DeleteCallbackThreadId(int32_t streamId)
 
 void SystemTonePlayerImpl::DeleteAllCallbackThreadId()
 {
-    MEDIA_LOGI("Delete all callback thread id!");
     callbackThreadIdMap_.clear();
 }
 
 bool SystemTonePlayerImpl::IsExitCallbackThreadId(int32_t streamId)
 {
-    MEDIA_LOGI("Query streamId: %{public}d", streamId);
     std::lock_guard<std::mutex> lock(systemTonePlayerMutex_);
     return callbackThreadIdMap_.count(streamId) != 0 && callbackThreadIdMap_[streamId] == std::this_thread::get_id();
 }

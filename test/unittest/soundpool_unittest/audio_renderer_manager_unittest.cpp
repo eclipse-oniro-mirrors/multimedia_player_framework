@@ -36,7 +36,7 @@ HWTEST_F(AudioRendererManagerUnittest, AudioRendererManagerRemoveOldAudioRendere
 {
     AudioRendererManager& testPtr = AudioRendererManager::GetInstance();
     ASSERT_NE(&testPtr, nullptr);
-    auto mockAudioRenderer = std::make_unique<MockAudioRenderer>();
+    auto mockAudioRenderer = std::make_unique<MockAudioRender>();
     EXPECT_CALL(*(mockAudioRenderer), Release()).WillRepeatedly(Return(false));
     std::unique_ptr<AudioStandard::AudioRenderer> audioRenderer = std::move(mockAudioRenderer);
     testPtr.audioRendererVector_.push_back(

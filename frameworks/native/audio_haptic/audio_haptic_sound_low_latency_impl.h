@@ -45,6 +45,7 @@ public:
 
 private:
     int32_t LoadSoundPoolPlayer();
+    int32_t ReleaseSoundInternal();
     void ReleaseSoundPoolPlayer();
     int32_t OpenAudioSource();
 

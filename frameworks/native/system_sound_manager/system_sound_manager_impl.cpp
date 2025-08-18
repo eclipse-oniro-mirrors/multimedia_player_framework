@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -659,7 +659,6 @@ ToneAttrs SystemSoundManagerImpl::GetRingtoneAttrsByType(const DatabaseTool &dat
     }
     Uri queryUri(ringtoneLibraryUri);
     auto resultSet = databaseTool.dataShareHelper->Query(queryUri, queryPredicates, COLUMNS, &businessError);
-    MEDIA_LOGI("GetRingtoneAttrsByType: dataShareHelper->Query: errCode %{public}d", businessError.GetCode());
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     if (results == nullptr) {
         MEDIA_LOGE("GetRingtoneAttrsByType: results is nullptr!");
@@ -705,7 +704,6 @@ std::string SystemSoundManagerImpl::GetPresetRingToneUriByType(const DatabaseToo
     }
     Uri queryUri(ringtoneLibraryUri);
     auto resultSet = databaseTool.dataShareHelper->Query(queryUri, queryPredicates, COLUMNS, &businessError);
-    MEDIA_LOGI("dataShareHelper->Query: errCode %{public}d", businessError.GetCode());
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     CHECK_AND_RETURN_RET_LOG(results != nullptr, uri, "query failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
@@ -741,7 +739,6 @@ ToneAttrs SystemSoundManagerImpl::GetPresetRingToneAttrByType(const DatabaseTool
     }
     Uri queryUri(ringtoneLibraryUri);
     auto resultSet = databaseTool.dataShareHelper->Query(queryUri, queryPredicates, COLUMNS, &businessError);
-    MEDIA_LOGI("GetPresetRingToneAttrByType: dataShareHelper->Query: errCode %{public}d", businessError.GetCode());
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     if (results == nullptr) {
         MEDIA_LOGE("GetPresetRingToneAttrByType: query failed, ringtone library error!");
@@ -1116,9 +1113,17 @@ int32_t SystemSoundManagerImpl::SetSystemToneUri(const shared_ptr<Context> &cont
 
 std::string SystemSoundManagerImpl::GetShotToneUriByType(const DatabaseTool &databaseTool, const std::string &type)
 {
+    MEDIA_LOGI("Enter the GetShotToneUriByType interface.");
+    ToneAttrs toneAttrs = GetShotToneAttrsByType(databaseTool, type);
+    return toneAttrs.GetUri();
+}
+
+ToneAttrs SystemSoundManagerImpl::GetShotToneAttrsByType(const DatabaseTool &databaseTool, const std::string &type)
+{
+    ToneAttrs toneAttrs = { "", "", "", CUSTOMISED, TONE_CATEGORY_TEXT_MESSAGE };
     if (!databaseTool.isInitialized || databaseTool.dataShareHelper == nullptr) {
         MEDIA_LOGE("The database tool is not ready!");
-        return "";
+        return toneAttrs;
     }
 
     std::string uri = "";
@@ -1139,21 +1144,38 @@ std::string SystemSoundManagerImpl::GetShotToneUriByType(const DatabaseTool &dat
     auto resultSet = databaseTool.dataShareHelper->Query(queryUri, queryPredicates, COLUMNS, &businessError);
     MEDIA_LOGI("dataShareHelper->Query: errCode %{public}d", businessError.GetCode());
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
-    CHECK_AND_RETURN_RET_LOG(results != nullptr, uri, "query failed, ringtone library error.");
+    CHECK_AND_RETURN_RET_LOG(results != nullptr, toneAttrs, "query failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
     if (ringtoneAsset != nullptr) {
-        uri = ringtoneAsset->GetPath();
+        toneAttrs.SetCategory(ringtoneAsset->GetToneType());
+        toneAttrs.SetFileName(ringtoneAsset->GetDisplayName());
+        toneAttrs.SetTitle(ringtoneAsset->GetTitle());
+        toneAttrs.SetUri(ringtoneAsset->GetPath());
+        if (ringtoneAsset->GetMediaType() == RINGTONE_MEDIA_TYPE_VIDEO) {
+            toneAttrs.SetMediaType(ToneMediaType::MEDIA_TYPE_VID);
+        } else {
+            toneAttrs.SetMediaType(ToneMediaType::MEDIA_TYPE_AUD);
+        }
     }
     resultSet == nullptr ? : resultSet->Close();
-    return uri;
+    return toneAttrs;
 }
 
 std::string SystemSoundManagerImpl::GetPresetShotToneUriByType(const DatabaseTool &databaseTool,
     const std::string &type)
 {
+    MEDIA_LOGI("Enter the GetPresetShotToneUriByType interface.");
+    ToneAttrs toneAttrs = GetPresetShotToneAttrsByType(databaseTool, type);
+    return toneAttrs.GetUri();
+}
+
+ToneAttrs SystemSoundManagerImpl::GetPresetShotToneAttrsByType(const DatabaseTool &databaseTool,
+    const std::string &type)
+{
+    ToneAttrs toneAttrs = { "", "", "", CUSTOMISED, TONE_CATEGORY_TEXT_MESSAGE};
     if (!databaseTool.isInitialized || databaseTool.dataShareHelper == nullptr) {
         MEDIA_LOGE("The database tool is not ready!");
-        return "";
+        return toneAttrs;
     }
 
     std::string uri = "";
@@ -1174,20 +1196,36 @@ std::string SystemSoundManagerImpl::GetPresetShotToneUriByType(const DatabaseToo
     auto resultSet = databaseTool.dataShareHelper->Query(queryUri, queryPredicates, COLUMNS, &businessError);
     MEDIA_LOGI("dataShareHelper->Query: errCode %{public}d", businessError.GetCode());
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
-    CHECK_AND_RETURN_RET_LOG(results != nullptr, uri, "query failed, ringtone library error.");
+    CHECK_AND_RETURN_RET_LOG(results != nullptr, toneAttrs, "query failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
     if (ringtoneAsset != nullptr) {
-        uri = ringtoneAsset->GetPath();
+        toneAttrs.SetUri(ringtoneAsset->GetPath());
+        toneAttrs.SetTitle(ringtoneAsset->GetTitle());
+        toneAttrs.SetFileName(ringtoneAsset->GetDisplayName());
+        toneAttrs.SetCategory(ringtoneAsset->GetToneType());
+        if (ringtoneAsset->GetMediaType() == RINGTONE_MEDIA_TYPE_VIDEO) {
+            toneAttrs.SetMediaType(ToneMediaType::MEDIA_TYPE_VID);
+        } else {
+            toneAttrs.SetMediaType(ToneMediaType::MEDIA_TYPE_AUD);
+        }
     }
     resultSet == nullptr ? : resultSet->Close();
-    return uri;
+    return toneAttrs;
 }
 
 std::string SystemSoundManagerImpl::GetNotificationToneUriByType(const DatabaseTool &databaseTool)
 {
+    MEDIA_LOGI("Enter the GetNotificationToneUriByType interface.");
+    ToneAttrs toneAttrs = GetNotificationToneAttrsByType(databaseTool);
+    return toneAttrs.GetUri();
+}
+
+ToneAttrs SystemSoundManagerImpl::GetNotificationToneAttrsByType(const DatabaseTool &databaseTool)
+{
+    ToneAttrs toneAttrs = { "", "", "", CUSTOMISED, TONE_CATEGORY_NOTIFICATION };
     if (!databaseTool.isInitialized || databaseTool.dataShareHelper == nullptr) {
         MEDIA_LOGE("The database tool is not ready!");
-        return "";
+        return toneAttrs;
     }
 
     std::string uri = "";
@@ -1208,20 +1246,36 @@ std::string SystemSoundManagerImpl::GetNotificationToneUriByType(const DatabaseT
     auto resultSet = databaseTool.dataShareHelper->Query(queryUri, queryPredicates, COLUMNS, &businessError);
     MEDIA_LOGI("dataShareHelper->Query: errCode %{public}d", businessError.GetCode());
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
-    CHECK_AND_RETURN_RET_LOG(results != nullptr, uri, "query failed, ringtone library error.");
+    CHECK_AND_RETURN_RET_LOG(results != nullptr, toneAttrs, "query failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
     if (ringtoneAsset != nullptr) {
-        uri = ringtoneAsset->GetPath();
+        toneAttrs.SetUri(ringtoneAsset->GetPath());
+        toneAttrs.SetTitle(ringtoneAsset->GetTitle());
+        toneAttrs.SetFileName(ringtoneAsset->GetDisplayName());
+        toneAttrs.SetCategory(ringtoneAsset->GetToneType());
+        if (ringtoneAsset->GetMediaType() == RINGTONE_MEDIA_TYPE_VIDEO) {
+            toneAttrs.SetMediaType(ToneMediaType::MEDIA_TYPE_VID);
+        } else {
+            toneAttrs.SetMediaType(ToneMediaType::MEDIA_TYPE_AUD);
+        }
     }
     resultSet == nullptr ? : resultSet->Close();
-    return uri;
+    return toneAttrs;
 }
 
 std::string SystemSoundManagerImpl::GetPresetNotificationToneUri(const DatabaseTool &databaseTool)
 {
+    MEDIA_LOGI("Enter the GetPresetNotificationToneUri interface.");
+    ToneAttrs toneAttrs = GetPresetNotificationToneAttrs(databaseTool);
+    return toneAttrs.GetUri();
+}
+
+ToneAttrs SystemSoundManagerImpl::GetPresetNotificationToneAttrs(const DatabaseTool &databaseTool)
+{
+    ToneAttrs toneAttrs = { "", "", "", CUSTOMISED, TONE_CATEGORY_NOTIFICATION };
     if (!databaseTool.isInitialized || databaseTool.dataShareHelper == nullptr) {
         MEDIA_LOGE("The database tool is not ready!");
-        return "";
+        return toneAttrs;
     }
 
     std::string uri = "";
@@ -1242,20 +1296,38 @@ std::string SystemSoundManagerImpl::GetPresetNotificationToneUri(const DatabaseT
     auto resultSet = databaseTool.dataShareHelper->Query(queryUri, queryPredicates, COLUMNS, &businessError);
     MEDIA_LOGI("dataShareHelper->Query: errCode %{public}d", businessError.GetCode());
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
-    CHECK_AND_RETURN_RET_LOG(results != nullptr, uri, "query failed, ringtone library error.");
+    CHECK_AND_RETURN_RET_LOG(results != nullptr, toneAttrs, "query failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
     if (ringtoneAsset != nullptr) {
-        uri = ringtoneAsset->GetPath();
+        toneAttrs.SetUri(ringtoneAsset->GetPath());
+        toneAttrs.SetTitle(ringtoneAsset->GetTitle());
+        toneAttrs.SetFileName(ringtoneAsset->GetDisplayName());
+        toneAttrs.SetCategory(ringtoneAsset->GetToneType());
+        if (ringtoneAsset->GetMediaType() == RINGTONE_MEDIA_TYPE_VIDEO) {
+            toneAttrs.SetMediaType(ToneMediaType::MEDIA_TYPE_VID);
+        } else {
+            toneAttrs.SetMediaType(ToneMediaType::MEDIA_TYPE_AUD);
+        }
     }
     resultSet == nullptr ? : resultSet->Close();
-    return uri;
+    return toneAttrs;
 }
 
 std::string SystemSoundManagerImpl::GetSystemToneUri(const std::shared_ptr<AbilityRuntime::Context> &context,
     SystemToneType systemToneType)
 {
-    CHECK_AND_RETURN_RET_LOG(IsSystemToneTypeValid(systemToneType), "", "Invalid system tone type");
-    std::string systemToneUri = "";
+    MEDIA_LOGI("Enter the GetSystemToneUri interface.");
+    ToneAttrs toneAttrs = GetSystemToneAttrs(systemToneType);
+    return toneAttrs.GetUri();
+}
+
+ToneAttrs SystemSoundManagerImpl::GetSystemToneAttrs(SystemToneType systemToneType)
+{
+    MEDIA_LOGI("GetSystemToneAttrs: Start, systemToneType: %{public}d", systemToneType);
+    int32_t category = systemToneType == SYSTEM_TONE_TYPE_NOTIFICATION ?
+        TONE_CATEGORY_NOTIFICATION : TONE_CATEGORY_TEXT_MESSAGE;
+    ToneAttrs toneAttrs = { "", "", "", CUSTOMISED, category };
+    CHECK_AND_RETURN_RET_LOG(IsSystemToneTypeValid(systemToneType), toneAttrs, "Invalid system tone type");
 
     Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
     int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
@@ -1266,51 +1338,55 @@ std::string SystemSoundManagerImpl::GetSystemToneUri(const std::shared_ptr<Abili
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = isProxy ?
         SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID) :
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, "",
+    CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, toneAttrs,
         "Failed to CreateDataShareHelper! datashare or ringtone library error.");
     DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
-    systemToneUri = GetSystemToneUri(databaseTool, systemToneType);
+    toneAttrs = GetSystemToneAttrs(databaseTool, systemToneType);
     dataShareHelper->Release();
-    MEDIA_LOGI("Finish to get system tone uri: type %{public}d, uri %{public}s", systemToneType, systemToneUri.c_str());
-    return systemToneUri;
+    MEDIA_LOGI("Finish to get system tone uri: type %{public}d, uri %{public}s", systemToneType,
+        toneAttrs.GetUri().c_str());
+    return toneAttrs;
 }
 
-std::string SystemSoundManagerImpl::GetSystemToneUri(const DatabaseTool &databaseTool, SystemToneType systemToneType)
+ToneAttrs SystemSoundManagerImpl::GetSystemToneAttrs(const DatabaseTool &databaseTool, SystemToneType systemToneType)
 {
+    int32_t category = systemToneType == SYSTEM_TONE_TYPE_NOTIFICATION ?
+        TONE_CATEGORY_NOTIFICATION : TONE_CATEGORY_TEXT_MESSAGE;
+    ToneAttrs toneAttrs = { "", "", "", CUSTOMISED, category};
     if (!databaseTool.isInitialized || databaseTool.dataShareHelper == nullptr) {
         MEDIA_LOGE("The database tool is not ready!");
-        return "";
+        return toneAttrs;
     }
 
-    std::string systemToneUri = "";
     switch (systemToneType) {
         case SYSTEM_TONE_TYPE_SIM_CARD_0:
         case SYSTEM_TONE_TYPE_SIM_CARD_1:
-            systemToneUri = GetShotToneUriByType(databaseTool, to_string(systemTypeMap_[systemToneType]));
-            if (systemToneUri.empty()) {
-                systemToneUri = GetShotToneUriByType(databaseTool, to_string(RING_TONE_TYPE_SIM_CARD_BOTH));
+            toneAttrs = GetShotToneAttrsByType(databaseTool, to_string(systemTypeMap_[systemToneType]));
+            if (toneAttrs.GetUri().empty()) {
+                toneAttrs = GetShotToneAttrsByType(databaseTool, to_string(RING_TONE_TYPE_SIM_CARD_BOTH));
             }
-            if (systemToneUri.empty()) {
-                systemToneUri = GetPresetShotToneUriByType(databaseTool, to_string(systemTypeMap_[systemToneType]));
+            if (toneAttrs.GetUri().empty()) {
+                toneAttrs = GetPresetShotToneAttrsByType(databaseTool, to_string(systemTypeMap_[systemToneType]));
             }
-            if (systemToneUri.empty()) {
-                systemToneUri = GetPresetShotToneUriByType(databaseTool, to_string(RING_TONE_TYPE_SIM_CARD_BOTH));
+            if (toneAttrs.GetUri().empty()) {
+                toneAttrs = GetPresetShotToneAttrsByType(databaseTool, to_string(RING_TONE_TYPE_SIM_CARD_BOTH));
             }
             break;
         case SYSTEM_TONE_TYPE_NOTIFICATION:
-            systemToneUri = GetNotificationToneUriByType(databaseTool);
-            if (systemToneUri.empty()) {
-                systemToneUri = GetPresetNotificationToneUri(databaseTool);
+            toneAttrs = GetNotificationToneAttrsByType(databaseTool);
+            if (toneAttrs.GetUri().empty()) {
+                toneAttrs = GetNotificationToneAttrsByType(databaseTool);
             }
             break;
         default:
             break;
     }
-    if (systemToneUri.empty()) {
-        MEDIA_LOGI("No system tone uri for type %{public}d. Return NO_SYSTEM_SOUND", systemToneType);
-        return NO_SYSTEM_SOUND;
+    if (toneAttrs.GetUri().empty()) {
+        MEDIA_LOGI("GetSystemToneAttrs: No system tone uri for type %{public}d. Return NO_SYSTEM_SOUND",
+            systemToneType);
+        toneAttrs.SetUri(NO_SYSTEM_SOUND);
     }
-    return systemToneUri;
+    return toneAttrs;
 }
 
 std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultRingtoneAttrs(
@@ -1516,8 +1592,7 @@ int32_t SystemSoundManagerImpl::SetAlarmToneUri(const std::shared_ptr<AbilityRun
     const std::string &uri)
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
-    MEDIA_LOGI("SetAlarmToneUri: alarm type %{public}d",
-        SystemSoundManagerUtils::GetTypeForSystemSoundUri(uri));
+    MEDIA_LOGI("SetAlarmToneUri: Alarm type %{public}d", SystemSoundManagerUtils::GetTypeForSystemSoundUri(uri));
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, ERROR, "Create dataShare failed.");
@@ -1579,48 +1654,79 @@ int32_t SystemSoundManagerImpl::UpdataeAlarmToneUri(
 
 std::string SystemSoundManagerImpl::GetAlarmToneUri(const std::shared_ptr<AbilityRuntime::Context> &context)
 {
-    int32_t count = 2;
-    std::string alarmToneUri = "";
+    MEDIA_LOGI("Enter the GetAlarmToneUri interface.");
+    ToneAttrs toneAttrs = GetAlarmToneAttrs(context);
+    std::string alarmToneUri = toneAttrs.GetUri();
+    MEDIA_LOGI("GetAlarmToneUri: alarm type %{public}d",
+        SystemSoundManagerUtils::GetTypeForSystemSoundUri(alarmToneUri));
+    return alarmToneUri;
+}
+
+ToneAttrs SystemSoundManagerImpl::GetAlarmToneAttrs(const std::shared_ptr<AbilityRuntime::Context> &context)
+{
+    MEDIA_LOGI("GetAlarmToneAttrs: Start.");
     std::lock_guard<std::mutex> lock(uriMutex_);
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
-        SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID);
-    CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, alarmToneUri,
-        "Create dataShare failed, datashare or ringtone library error.");
-    DataShare::DatashareBusinessError businessError;
-    DataShare::DataSharePredicates queryPredicates;
-    queryPredicates.EqualTo(RINGTONE_COLUMN_ALARM_TONE_TYPE, to_string(ALARM_TONE_TYPE));
-    Uri RINGTONEURI_PROXY(RINGTONE_LIBRARY_PROXY_DATA_URI_TONE_FILES + "&user=" +
-        std::to_string(SystemSoundManagerUtils::GetCurrentUserId()));
-    auto resultSet = dataShareHelper->Query(RINGTONEURI_PROXY, queryPredicates, COLUMNS, &businessError);
-    int32_t errCode = businessError.GetCode();
+    ToneAttrs toneAttrs = { "", "", "", CUSTOMISED, TONE_CATEGORY_ALARM };
     Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
     int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
         "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    MEDIA_LOGI("GetAlarmToneUri:errCode:%{public}d, result :%{public}d", errCode, result);
-    if (errCode != 0 || result != Security::AccessToken::PermissionState::PERMISSION_GRANTED ||
-        !SystemSoundManagerUtils::GetScannerFirstParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, RINGTONEPARA_SIZE) ||
-        !SystemSoundManagerUtils::CheckCurrentUser()) {
-        dataShareHelper = SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-        CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, alarmToneUri, "Invalid dataShare.");
-        resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
+    bool isProxy = (result == Security::AccessToken::PermissionState::PERMISSION_GRANTED &&
+        SystemSoundManagerUtils::GetScannerFirstParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, RINGTONEPARA_SIZE) &&
+        SystemSoundManagerUtils::CheckCurrentUser()) ? true : false;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = isProxy ?
+        SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID) :
+        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, toneAttrs,
+        "Failed to CreateDataShareHelper! datashare or ringtone library error.");
+    DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
+    toneAttrs = GetAlarmToneAttrs(databaseTool);
+    MEDIA_LOGI("GetAlarmToneUri: alarm uri %{public}s", toneAttrs.GetUri().c_str());
+    dataShareHelper->Release();
+    return toneAttrs;
+}
+
+ToneAttrs SystemSoundManagerImpl::GetAlarmToneAttrs(const DatabaseTool &databaseTool)
+{
+    int32_t count = 2;
+    ToneAttrs toneAttrs = { "", "", "", CUSTOMISED, TONE_CATEGORY_ALARM };
+    if (!databaseTool.isInitialized || databaseTool.dataShareHelper == nullptr) {
+        MEDIA_LOGE("The database tool is not ready!");
+        return toneAttrs;
     }
+    DataShare::DatashareBusinessError businessError;
+    DataShare::DataSharePredicates queryPredicates;
+    queryPredicates.EqualTo(RINGTONE_COLUMN_ALARM_TONE_TYPE, to_string(ALARM_TONE_TYPE));
+    std::string ringtoneLibraryUri = "";
+    if (databaseTool.isProxy) {
+        ringtoneLibraryUri = RINGTONE_LIBRARY_PROXY_DATA_URI_TONE_FILES +
+            "&user=" + std::to_string(SystemSoundManagerUtils::GetCurrentUserId());
+    } else {
+        ringtoneLibraryUri = RINGTONE_PATH_URI;
+    }
+    Uri queryUri(ringtoneLibraryUri);
+    auto resultSet = databaseTool.dataShareHelper->Query(queryUri, queryPredicates, COLUMNS, &businessError);
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
-    CHECK_AND_RETURN_RET_LOG(results != nullptr, alarmToneUri, "query failed, ringtone library error.");
+    CHECK_AND_RETURN_RET_LOG(results != nullptr, toneAttrs, "query failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
     while ((ringtoneAsset != nullptr) && (SOURCE_TYPE_CUSTOMISED !=
         ringtoneAsset->GetAlarmtoneSourceType()) && (results->GetCount() == count)) {
         ringtoneAsset = results->GetNextObject();
     }
     if (ringtoneAsset != nullptr) {
-        alarmToneUri = ringtoneAsset->GetPath();
-        MEDIA_LOGI("GetAlarmToneUri: alarm type %{public}d",
-            SystemSoundManagerUtils::GetTypeForSystemSoundUri(alarmToneUri));
+        toneAttrs.SetCategory(ringtoneAsset->GetToneType());
+        toneAttrs.SetFileName(ringtoneAsset->GetDisplayName());
+        toneAttrs.SetTitle(ringtoneAsset->GetTitle());
+        toneAttrs.SetUri(ringtoneAsset->GetPath());
+        if (ringtoneAsset->GetMediaType() == RINGTONE_MEDIA_TYPE_VIDEO) {
+            toneAttrs.SetMediaType(ToneMediaType::MEDIA_TYPE_VID);
+        } else {
+            toneAttrs.SetMediaType(ToneMediaType::MEDIA_TYPE_AUD);
+        }
     } else {
-        MEDIA_LOGE("GetAlarmToneUri: no alarmtone in the ringtone library!");
+        MEDIA_LOGE("GetAlarmToneAttrs: no alarmtone in the ringtone library!");
     }
     resultSet == nullptr ? : resultSet->Close();
-    dataShareHelper->Release();
-    return alarmToneUri;
+    return toneAttrs;
 }
 
 std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultAlarmToneAttrs(
@@ -1692,7 +1798,6 @@ std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetAlarmToneAttr
     Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
     int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
         "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    MEDIA_LOGI("GetAlarmToneAttrList: errCode:%{public}d, result :%{public}d ",  errCode, result);
     if (errCode != 0 || result != Security::AccessToken::PermissionState::PERMISSION_GRANTED ||
         !SystemSoundManagerUtils::GetScannerFirstParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, RINGTONEPARA_SIZE) ||
         !SystemSoundManagerUtils::CheckCurrentUser()) {
@@ -1728,32 +1833,89 @@ int32_t SystemSoundManagerImpl::OpenAlarmTone(const std::shared_ptr<AbilityRunti
 int32_t SystemSoundManagerImpl::OpenToneUri(const std::shared_ptr<AbilityRuntime::Context> &context,
     const std::string &uri, int32_t toneType)
 {
+    MEDIA_LOGI("Enter the OpenToneUri interface.");
     std::lock_guard<std::mutex> lock(uriMutex_);
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
+    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
+    int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
+        "ohos.permission.ACCESS_CUSTOM_RINGTONE");
+    bool isProxy = (result == Security::AccessToken::PermissionState::PERMISSION_GRANTED &&
+        SystemSoundManagerUtils::GetScannerFirstParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, RINGTONEPARA_SIZE) &&
+        SystemSoundManagerUtils::CheckCurrentUser()) ? true : false;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = isProxy ?
+        SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID) :
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, ERROR, "Create dataShare failed, datashare or library error.");
-    DataShare::DatashareBusinessError businessError;
-    DataShare::DataSharePredicates queryPredicates;
-    DataShare::DataSharePredicates queryPredicatesByUri;
-    queryPredicatesByUri.EqualTo(RINGTONE_COLUMN_DATA, uri);
-    auto resultSetByUri = dataShareHelper->Query(RINGTONEURI, queryPredicatesByUri, COLUMNS, &businessError);
-    auto resultsByUri = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSetByUri));
-    unique_ptr<RingtoneAsset> ringtoneAssetByUri = resultsByUri->GetFirstObject();
-    if (ringtoneAssetByUri == nullptr) {
-        MEDIA_LOGE("OpenToneUri: tone of uri is not in the ringtone library!");
-        resultSetByUri == nullptr ? : resultSetByUri->Close();
-        dataShareHelper->Release();
+    CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, ERROR,
+        "Failed to CreateDataShareHelper! datashare or ringtone library error.");
+    DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
+    int32_t ret = OpenToneUri(databaseTool, uri, toneType);
+    MEDIA_LOGI("Open tone uri: open result : %{public}d, type %{public}d, uri %{public}s,",
+        ret, toneType, uri.c_str());
+    dataShareHelper->Release();
+    return ret;
+}
+
+int32_t SystemSoundManagerImpl::OpenToneUri(const DatabaseTool &databaseTool,
+    const std::string &uri, int32_t toneType)
+{
+    if (!databaseTool.isInitialized || databaseTool.dataShareHelper == nullptr) {
+        MEDIA_LOGE("The database tool is not ready!");
         return ERROR;
     }
-    resultSetByUri == nullptr ? : resultSetByUri->Close();
-    queryPredicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, toneType);
-    auto resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
+    if (SystemSoundManagerUtils::VerifyCustomPath(uri)) {
+        MEDIA_LOGI("The audio uri is custom path.");
+        return OpenCustomToneUri(uri, toneType);
+    }
+    DataShare::DatashareBusinessError businessError;
+    DataShare::DataSharePredicates queryPredicates;
+    std::vector<std::string> args = {uri, to_string(toneType)};
+    queryPredicates.SetWhereClause(RINGTONE_COLUMN_DATA + " = ? AND " + RINGTONE_COLUMN_TONE_TYPE + " = ? ");
+    queryPredicates.SetWhereArgs(args);
+    std::string ringtoneLibraryUri = "";
+    if (databaseTool.isProxy) {
+        ringtoneLibraryUri = RINGTONE_LIBRARY_PROXY_DATA_URI_TONE_FILES +
+            "&user=" + std::to_string(SystemSoundManagerUtils::GetCurrentUserId());
+    } else {
+        ringtoneLibraryUri = RINGTONE_PATH_URI;
+    }
+    Uri queryUri(ringtoneLibraryUri);
+    auto resultSet = databaseTool.dataShareHelper->Query(queryUri, queryPredicates, COLUMNS, &businessError);
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     CHECK_AND_RETURN_RET_LOG(results != nullptr, ERROR, "query failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
-    while ((ringtoneAsset != nullptr) && (uri != ringtoneAsset->GetPath())) {
-        ringtoneAsset = results->GetNextObject();
+    if (ringtoneAsset == nullptr) {
+        MEDIA_LOGE("OpenTone: tone of uri failed!");
+        resultSet == nullptr ? : resultSet->Close();
+        return TYPEERROR;
     }
+    int32_t fd  = 0;
+    if (databaseTool.isProxy) {
+        std::string absFilePath;
+        PathToRealPath(uri, absFilePath);
+        fd = open(absFilePath.c_str(), O_RDONLY);
+    } else {
+        string uriStr = RINGTONE_PATH_URI + RINGTONE_SLASH_CHAR + to_string(ringtoneAsset->GetId());
+        Uri ofUri(uriStr);
+        fd = databaseTool.dataShareHelper->OpenFile(ofUri, "r");
+    }
+    resultSet == nullptr ? : resultSet->Close();
+    return fd > 0 ? fd : ERROR;
+}
+
+int32_t SystemSoundManagerImpl::OpenCustomToneUri(const std::string &customAudioUri, int32_t toneType)
+{
+    DataShare::DatashareBusinessError businessError;
+    DataShare::DataSharePredicates queryPredicates;
+    std::vector<std::string> args = {customAudioUri, to_string(toneType)};
+    queryPredicates.SetWhereClause(RINGTONE_COLUMN_DATA + " = ? AND " + RINGTONE_COLUMN_TONE_TYPE + " = ? ");
+    queryPredicates.SetWhereArgs(args);
+    Uri ringtonePathUri(RINGTONE_PATH_URI);
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
+        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, ERROR, "Invalid dataShare");
+    auto resultSet = dataShareHelper->Query(ringtonePathUri, queryPredicates, COLUMNS, &businessError);
+    auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
+    CHECK_AND_RETURN_RET_LOG(results != nullptr, ERROR, "query failed, ringtone library error.");
+    unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
     if (ringtoneAsset != nullptr) {
         string uriStr = RINGTONE_PATH_URI + RINGTONE_SLASH_CHAR + to_string(ringtoneAsset->GetId());
         Uri ofUri(uriStr);
@@ -1762,7 +1924,7 @@ int32_t SystemSoundManagerImpl::OpenToneUri(const std::shared_ptr<AbilityRuntime
         dataShareHelper->Release();
         return fd > 0 ? fd : ERROR;
     }
-    MEDIA_LOGE("OpenTone: tone of uri failed!");
+    MEDIA_LOGE("Open custom audio uri failed!");
     resultSet == nullptr ? : resultSet->Close();
     dataShareHelper->Release();
     return TYPEERROR;
@@ -1866,7 +2028,8 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByFd(const std::shared_ptr<
     const std::shared_ptr<ToneAttrs> &toneAttrs, const int32_t &fd)
 {
     MEDIA_LOGI("AddCustomizedToneByFd: Start.");
-    return AddCustomizedToneByFdAndOffset(context, toneAttrs, fd, 0, INT_MAX);
+    ParamsForAddCustomizedTone paramsForAddCustomizedTone = { "", fd, INT_MAX, 0, false };
+    return AddCustomizedToneByFdAndOffset(context, toneAttrs, paramsForAddCustomizedTone);
 }
 
 void SystemSoundManagerImpl::GetCustomizedTone(const std::shared_ptr<ToneAttrs> &toneAttrs)
@@ -1886,7 +2049,7 @@ void SystemSoundManagerImpl::GetCustomizedTone(const std::shared_ptr<ToneAttrs> 
 }
 
 int32_t SystemSoundManagerImpl::AddCustomizedTone(const std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
-    const std::shared_ptr<ToneAttrs> &toneAttrs)
+    const std::shared_ptr<ToneAttrs> &toneAttrs, int32_t &length)
 {
     MEDIA_LOGI("AddCustomizedTone: Start.");
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, ERROR, "Invalid dataShareHelper.");
@@ -1900,6 +2063,7 @@ int32_t SystemSoundManagerImpl::AddCustomizedTone(const std::shared_ptr<DataShar
     } else if (toneAttrs->GetMediaType() == ToneMediaType::MEDIA_TYPE_VID) {
         valuesBucket.Put(RINGTONE_COLUMN_MEDIA_TYPE, static_cast<int>(RINGTONE_MEDIA_TYPE_VIDEO));
     }
+    valuesBucket.Put(RINGTONE_COLUMN_SIZE, static_cast<int>(length));
     valuesBucket.Put(RINGTONE_COLUMN_MIME_TYPE, static_cast<string>(mimeType_));
     valuesBucket.Put(RINGTONE_COLUMN_SOURCE_TYPE, static_cast<int>(SOURCE_TYPE_CUSTOMISED));
     switch (category) {
@@ -1934,7 +2098,7 @@ int32_t SystemSoundManagerImpl::AddCustomizedTone(const std::shared_ptr<DataShar
 }
 
 bool SystemSoundManagerImpl::DeleteCustomizedTone(const std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
-    const std::shared_ptr<ToneAttrs> &toneAttrs)
+    const std::shared_ptr<ToneAttrs> &toneAttrs, int32_t &length)
 {
     MEDIA_LOGI("DeleteCustomizedTone: Start.");
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, ERROR, "Invalid dataShareHelper.");
@@ -1948,6 +2112,7 @@ bool SystemSoundManagerImpl::DeleteCustomizedTone(const std::shared_ptr<DataShar
     } else if (toneAttrs->GetMediaType() == ToneMediaType::MEDIA_TYPE_VID) {
         predicates.EqualTo(RINGTONE_COLUMN_MEDIA_TYPE, static_cast<int>(RINGTONE_MEDIA_TYPE_VIDEO));
     }
+    predicates.EqualTo(RINGTONE_COLUMN_SIZE, static_cast<int>(length));
     predicates.EqualTo(RINGTONE_COLUMN_MIME_TYPE, static_cast<string>(mimeType_));
     predicates.EqualTo(RINGTONE_COLUMN_SOURCE_TYPE, static_cast<int>(SOURCE_TYPE_CUSTOMISED));
     switch (category) {
@@ -1976,7 +2141,7 @@ bool SystemSoundManagerImpl::DeleteCustomizedTone(const std::shared_ptr<DataShar
 }
 
 std::string SystemSoundManagerImpl::AddCustomizedToneCheck(const std::shared_ptr<ToneAttrs> &toneAttrs,
-    const int32_t &fd, off_t &fileSize)
+    const int32_t &length)
 {
     std::string result = "TYPEERROR";
     if (toneAttrs == nullptr) {
@@ -1985,9 +2150,7 @@ std::string SystemSoundManagerImpl::AddCustomizedToneCheck(const std::shared_ptr
     }
     GetCustomizedTone(toneAttrs);
     if (toneAttrs->GetMediaType() == ToneMediaType::MEDIA_TYPE_VID) {
-        fileSize = lseek(fd, 0, SEEK_END);
-        lseek(fd, 0, SEEK_SET);
-        if (fileSize > MAX_FILE_SIZE_200M) {
+        if (length > MAX_FILE_SIZE_200M) {
             MEDIA_LOGE("AddCustomizedToneCheck: The file size exceeds 200M.");
             return FILE_SIZE_EXCEEDS_LIMIT;
         }
@@ -2013,76 +2176,102 @@ std::string SystemSoundManagerImpl::AddCustomizedToneCheck(const std::shared_ptr
 
 std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(
     const std::shared_ptr<AbilityRuntime::Context> &context, const std::shared_ptr<ToneAttrs> &toneAttrs,
-    const int32_t &fd, const int32_t &offset, const int32_t &length)
+    ParamsForAddCustomizedTone &paramsForAddCustomizedTone)
 {
     MEDIA_LOGI("AddCustomizedToneByFdAndOffset: Start.");
     MediaTrace::TraceBegin("SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset", FAKE_POINTER(this));
-    std::string result = "TYPEERROR";
     off_t fileSize = 0;
-    std::string checkResult = AddCustomizedToneCheck(toneAttrs, fd, fileSize);
+    std::string checkResult = AddCustomizedToneCheck(toneAttrs, paramsForAddCustomizedTone.length);
     if (!checkResult.empty()) {
         SendCustomizedToneEvent(true, toneAttrs, fileSize, mimeType_, ERROR);
         MediaTrace::TraceEnd("SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset", FAKE_POINTER(this));
         return checkResult;
     }
     std::lock_guard<std::mutex> lock(uriMutex_);
-    int32_t srcFd = fd;
-    off_t lseekResult = lseek(srcFd, offset, SEEK_SET);
+    int32_t srcFd = paramsForAddCustomizedTone.srcFd;
+    off_t lseekResult = lseek(srcFd, paramsForAddCustomizedTone.offset, SEEK_SET);
     if (srcFd < 0 || lseekResult == -1) {
         MEDIA_LOGE("AddCustomizedToneByFdAndOffset: fd is error");
-        result.clear();
-        SendCustomizedToneEvent(true, toneAttrs, fileSize, mimeType_, ERROR);
+        SendCustomizedToneEvent(true, toneAttrs, paramsForAddCustomizedTone.length, mimeType_, ERROR);
         MediaTrace::TraceEnd("SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset", FAKE_POINTER(this));
-        return result;
+        return "";
     }
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     if (dataShareHelper == nullptr) {
         MEDIA_LOGE("AddCustomizedToneByFdAndOffset: Create dataShare failed, datashare or ringtone library error.");
-        result.clear();
-        SendCustomizedToneEvent(true, toneAttrs, fileSize, mimeType_, ERROR);
+        SendCustomizedToneEvent(true, toneAttrs, paramsForAddCustomizedTone.length, mimeType_, ERROR);
         MediaTrace::TraceEnd("SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset", FAKE_POINTER(this));
+        return "";
+    }
+    int32_t sert = AddCustomizedTone(dataShareHelper, toneAttrs, paramsForAddCustomizedTone.length);
+    if (sert < 0) {
+        SendCustomizedToneEvent(true, toneAttrs, paramsForAddCustomizedTone.length, mimeType_, ERROR);
+        MediaTrace::TraceEnd("SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset", FAKE_POINTER(this));
+        std::string result = DealAddCustomizedToneError(sert, paramsForAddCustomizedTone, toneAttrs, dataShareHelper);
+        dataShareHelper->Release();
         return result;
     }
-    int32_t sert = AddCustomizedTone(dataShareHelper, toneAttrs);
-    if (sert < 0) {
-        dataShareHelper->Release();
-        SendCustomizedToneEvent(true, toneAttrs, fileSize, mimeType_, ERROR);
-        MediaTrace::TraceEnd("SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset", FAKE_POINTER(this));
-        if (sert == VIDEOS_NUM_EXCEEDS_SPECIFICATION) {
-            return FILE_COUNT_EXCEEDS_LIMIT;
-        } else if (sert == NOT_ENOUGH_ROM) {
-            return ROM_IS_INSUFFICIENT;
-        } else if (sert == FILE_EXIST) {
-            return toneAttrs->GetUri();
-        }
-    }
     std::string dstPath = RINGTONE_PATH_URI + RINGTONE_SLASH_CHAR + to_string(sert);
-    ParamsForWriteFile paramsForWriteFile = { dstPath, fileSize, srcFd, length };
-    return CustomizedToneWriteFile(context, dataShareHelper, toneAttrs, paramsForWriteFile);
+    paramsForAddCustomizedTone = { dstPath, srcFd, paramsForAddCustomizedTone.length };
+    return CustomizedToneWriteFile(dataShareHelper, toneAttrs, paramsForAddCustomizedTone);
 }
 
-std::string SystemSoundManagerImpl::CustomizedToneWriteFile(const std::shared_ptr<AbilityRuntime::Context> &context,
+std::string SystemSoundManagerImpl::DealAddCustomizedToneError(int32_t &sert,
+    ParamsForAddCustomizedTone &paramsForAddCustomizedTone, const std::shared_ptr<ToneAttrs> &toneAttrs,
+    std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper)
+{
+    if (sert == VIDEOS_NUM_EXCEEDS_SPECIFICATION) {
+        return FILE_COUNT_EXCEEDS_LIMIT;
+    } else if (sert == NOT_ENOUGH_ROM) {
+        return ROM_IS_INSUFFICIENT;
+    } else if (sert == FILE_EXIST && toneAttrs->GetMediaType() == ToneMediaType::MEDIA_TYPE_VID) {
+        DataShare::DatashareBusinessError businessError;
+        DataShare::DataSharePredicates queryPredicates;
+        queryPredicates.EqualTo(RINGTONE_COLUMN_DISPLAY_NAME, toneAttrs->GetFileName());
+        queryPredicates.EqualTo(RINGTONE_COLUMN_TITLE, toneAttrs->GetTitle());
+        queryPredicates.EqualTo(RINGTONE_COLUMN_SIZE, paramsForAddCustomizedTone.length);
+        if (toneAttrs->GetCategory() == TONE_CATEGORY_RINGTONE) {
+            queryPredicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, TONE_TYPE_RINGTONE);
+        } else if (toneAttrs->GetCategory() == TONE_CATEGORY_CONTACTS) {
+            queryPredicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, TONE_TYPE_CONTACTS);
+        }
+        auto resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
+        auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
+        unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
+        resultSet == nullptr ? : resultSet->Close();
+        if (ringtoneAsset == nullptr) {
+            MEDIA_LOGE("DealAddCustomizedToneError: duplicate file name!");
+            paramsForAddCustomizedTone.duplicateFile = true;
+            return toneAttrs->GetUri();
+        } else {
+            return ringtoneAsset->GetPath();
+        }
+    }
+    return "";
+}
+
+std::string SystemSoundManagerImpl::CustomizedToneWriteFile(
     std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper, const std::shared_ptr<ToneAttrs> &toneAttrs,
-    ParamsForWriteFile &paramsForWriteFile)
+    ParamsForAddCustomizedTone &paramsForAddCustomizedTone)
 {
     MEDIA_LOGI("CustomizedToneWriteFile: Start.");
-    Uri ofUri(paramsForWriteFile.dstPath);
+    Uri ofUri(paramsForAddCustomizedTone.dstPath);
     int32_t dstFd = dataShareHelper->OpenFile(ofUri, "rw");
     if (dstFd < 0) {
         MEDIA_LOGE("CustomizedToneWriteFile: Open error is %{public}s", strerror(errno));
-        DeleteCustomizedTone(dataShareHelper, toneAttrs);
+        DeleteCustomizedTone(dataShareHelper, toneAttrs, paramsForAddCustomizedTone.length);
         dataShareHelper->Release();
-        SendCustomizedToneEvent(true, toneAttrs, paramsForWriteFile.fileSize, mimeType_, ERROR);
+        SendCustomizedToneEvent(true, toneAttrs, paramsForAddCustomizedTone.length, mimeType_, ERROR);
         MediaTrace::TraceEnd("SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset", FAKE_POINTER(this));
         return "";
     }
     MEDIA_LOGI("CustomizedToneWriteFile: OpenFile success, begin write file.");
     char buffer[4096];
-    int32_t len = paramsForWriteFile.length;
+    int32_t len = paramsForAddCustomizedTone.length;
     memset_s(buffer, sizeof(buffer), 0, sizeof(buffer));
     int32_t bytesRead = 0;
-    while ((bytesRead = read(paramsForWriteFile.srcFd, buffer, sizeof(buffer))) > 0 && len > 0) {
+    while ((bytesRead = read(paramsForAddCustomizedTone.srcFd, buffer, sizeof(buffer))) > 0 && len > 0) {
         int32_t bytesWritten = write(dstFd, buffer, (bytesRead < len) ? bytesRead : len);
         memset_s(buffer, sizeof(buffer), 0, sizeof(buffer));
         if (bytesWritten == -1) {
@@ -2093,7 +2282,7 @@ std::string SystemSoundManagerImpl::CustomizedToneWriteFile(const std::shared_pt
     MEDIA_LOGI("CustomizedToneWriteFile: Write file end.");
     close(dstFd);
     dataShareHelper->Release();
-    SendCustomizedToneEvent(true, toneAttrs, paramsForWriteFile.fileSize, mimeType_, SUCCESS);
+    SendCustomizedToneEvent(true, toneAttrs, paramsForAddCustomizedTone.length, mimeType_, SUCCESS);
     MediaTrace::TraceEnd("SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset", FAKE_POINTER(this));
     return toneAttrs->GetUri();
 }
@@ -2294,7 +2483,7 @@ std::string SystemSoundManagerImpl::GetCurrentToneUri(const DatabaseTool &databa
     if (ConvertToRingtoneType(toneHapticsType, ringtoneType)) {
         currentToneUri = GetRingtoneUri(databaseTool, ringtoneType);
     } else if (ConvertToSystemToneType(toneHapticsType, systemToneType)) {
-        currentToneUri = GetSystemToneUri(databaseTool, systemToneType);
+        currentToneUri = GetSystemToneAttrs(databaseTool, systemToneType).GetUri();
     } else {
         MEDIA_LOGE("Invalid tone haptics type");
     }
@@ -2375,7 +2564,6 @@ std::unique_ptr<SimcardSettingAsset> SystemSoundManagerImpl::GetSimcardSettingAs
     Uri queryUri(ringtoneLibraryUri);
     auto resultSet = databaseTool.dataShareHelper->Query(queryUri,
         queryPredicates, SETTING_TABLE_COLUMNS, &businessError);
-    MEDIA_LOGI("dataShareHelper->Query: errCode %{public}d", businessError.GetCode());
     auto results = make_unique<RingtoneFetchResult<SimcardSettingAsset>>(move(resultSet));
     unique_ptr<SimcardSettingAsset> simcardSettingAsset = results->GetFirstObject();
     return simcardSettingAsset;
@@ -3011,8 +3199,6 @@ std::string SystemSoundManagerImpl::OpenAudioUri(const DatabaseTool &databaseToo
     }
     Uri queryUri(ringtoneLibraryUri);
     auto resultSet = databaseTool.dataShareHelper->Query(queryUri, queryPredicates, columns, &businessError);
-    MEDIA_LOGI("dataShareHelper->Query: errCode %{public}d", businessError.GetCode());
-
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
     if (ringtoneAsset == nullptr) {
@@ -3091,7 +3277,6 @@ std::string SystemSoundManagerImpl::OpenHapticsUri(const DatabaseTool &databaseT
     }
     Uri queryUri(vibrateFilesUri);
     auto resultSet = databaseTool.dataShareHelper->Query(queryUri, queryPredicates, columns, &businessError);
-    MEDIA_LOGI("dataShareHelper->Query: errCode %{public}d", businessError.GetCode());
     auto results = make_unique<RingtoneFetchResult<VibrateAsset>>(move(resultSet));
     unique_ptr<VibrateAsset> vibrateAssetByUri = results->GetFirstObject();
     if (vibrateAssetByUri == nullptr) {

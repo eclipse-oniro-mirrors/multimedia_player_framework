@@ -181,7 +181,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperPause_003, TestSiz
         std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_->bundleName_ = ScreenRecorderBundleName;
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
-    screenCaptureServer_->innerAudioCapture_->isRunning_.store(true);
+    screenCaptureServer_->innerAudioCapture_->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
     sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Stop(), MSERR_OK);
 }
@@ -357,7 +357,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperAcquireAudioBuffer
     screenCaptureServer_->innerAudioCapture_ = std::make_shared<AudioCapturerWrapper>(
         screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, screenCaptureServer_->screenCaptureCb_,
         std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
-    screenCaptureServer_->innerAudioCapture_->isRunning_ = true;
+    screenCaptureServer_->innerAudioCapture_->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
     std::shared_ptr<AudioBuffer> audioBuffer;
     ASSERT_NE(screenCaptureServer_->innerAudioCapture_->AcquireAudioBuffer(audioBuffer), MSERR_OK);
 }
@@ -373,7 +373,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperAcquireAudioBuffer
     screenCaptureServer_->innerAudioCapture_ = std::make_shared<AudioCapturerWrapper>(
         screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, screenCaptureServer_->screenCaptureCb_,
         std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
-    screenCaptureServer_->innerAudioCapture_->isRunning_ = true;
     screenCaptureServer_->innerAudioCapture_->captureState_ = AudioCapturerWrapperState::CAPTURER_RELEASED;
     std::shared_ptr<AudioBuffer> audioBuffer;
     ASSERT_NE(screenCaptureServer_->innerAudioCapture_->AcquireAudioBuffer(audioBuffer), MSERR_OK);

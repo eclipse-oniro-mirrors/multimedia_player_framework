@@ -26,7 +26,7 @@
         "SystemCapability.Multimedia.Media.VideoRecorder",
         "SystemCapability.Multimedia.Media.AVPlayer",
         "SystemCapability.Multimedia.Media.AVRecorder",
-        "SystemCapability.Multimedia.Media.LowPowerAVSink"
+        "SystemCapability.Multimedia.Media.LowPowerAVSink = false"
       ],
       "features": [
         "player_framework_support_player",

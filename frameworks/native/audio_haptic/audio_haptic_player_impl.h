@@ -67,6 +67,7 @@ private:
     void StopVibrate();
     void ResetVibrateState();
     void ReleaseVibrator();
+    int32_t GetDelayTime(int32_t playedTimes);
 
     // var for all
     AudioLatencyMode latencyMode_;
@@ -83,7 +84,6 @@ private:
     HapticsMode hapticsMode_ = HapticsMode::HAPTICS_MODE_INVALID;
     std::atomic<int32_t> audioHapticSyncId_ = 0;
     bool isSupportDSPSync_ = false;
-    std::atomic<bool> isFirstFrameAfterStart_ = true;
 
     // var for callback
     std::weak_ptr<AudioHapticPlayerCallback> audioHapticPlayerCallback_;

@@ -148,7 +148,7 @@ napi_value AudioHapticPlayerNapi::IsHapticsRampSupported(napi_env env, napi_call
     napi_get_undefined(env, &result);
 
     if (!AudioHapticCommonNapi::VerifySelfSystemPermission()) {
-        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_PERMISSION_DENIED, NAPI_ERR_PERMISSION_DENIED_INFO);
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_PERMISSION_DENIED);
         return result;
     }
 
@@ -161,7 +161,7 @@ napi_value AudioHapticPlayerNapi::IsHapticsRampSupported(napi_env env, napi_call
     auto *audioHapticPlayerNapi = reinterpret_cast<AudioHapticPlayerNapi *>(native);
     if (audioHapticPlayerNapi == nullptr || audioHapticPlayerNapi->audioHapticPlayer_ == nullptr) {
         MEDIA_LOGE("IsHapticsIntensityAdjustmentSupported: unwrap failure!");
-        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_SERVICE_DIED, "unwrap failure");
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_SERVICE_DIED);
         return result;
     }
     bool isSupported = audioHapticPlayerNapi->audioHapticPlayer_->IsHapticsRampSupported();
@@ -177,7 +177,7 @@ napi_value AudioHapticPlayerNapi::IsHapticsIntensityAdjustmentSupported(napi_env
     napi_get_undefined(env, &result);
 
     if (!AudioHapticCommonNapi::VerifySelfSystemPermission()) {
-        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_PERMISSION_DENIED, NAPI_ERR_PERMISSION_DENIED_INFO);
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_PERMISSION_DENIED);
         return result;
     }
 
@@ -190,7 +190,7 @@ napi_value AudioHapticPlayerNapi::IsHapticsIntensityAdjustmentSupported(napi_env
     auto *audioHapticPlayerNapi = reinterpret_cast<AudioHapticPlayerNapi *>(native);
     if (audioHapticPlayerNapi == nullptr || audioHapticPlayerNapi->audioHapticPlayer_ == nullptr) {
         MEDIA_LOGE("IsHapticsIntensityAdjustmentSupported: unwrap failure!");
-        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_SERVICE_DIED, "unwrap failure");
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_SERVICE_DIED);
         return result;
     }
     bool isSupported = audioHapticPlayerNapi->audioHapticPlayer_->IsHapticsIntensityAdjustmentSupported();
@@ -205,7 +205,7 @@ napi_value AudioHapticPlayerNapi::EnableHapticsInSilentMode(napi_env env, napi_c
     napi_get_undefined(env, &result);
 
     if (!AudioHapticCommonNapi::VerifySelfSystemPermission()) {
-        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_PERMISSION_DENIED, NAPI_ERR_PERMISSION_DENIED_INFO);
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_PERMISSION_DENIED);
         return result;
     }
 
@@ -218,7 +218,7 @@ napi_value AudioHapticPlayerNapi::EnableHapticsInSilentMode(napi_env env, napi_c
     auto *audioHapticPlayerNapi = reinterpret_cast<AudioHapticPlayerNapi *>(native);
     if (audioHapticPlayerNapi == nullptr || audioHapticPlayerNapi->audioHapticPlayer_ == nullptr) {
         MEDIA_LOGE("EnableHapticsInSilentMode: unwrap failure!");
-        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_SERVICE_DIED, "unwrap failure");
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_SERVICE_DIED);
         return result;
     }
 
@@ -230,7 +230,7 @@ napi_value AudioHapticPlayerNapi::EnableHapticsInSilentMode(napi_env env, napi_c
 
     int32_t ret = audioHapticPlayerNapi->audioHapticPlayer_->EnableHapticsInSilentMode(enable);
     if (ret == NAPI_ERR_OPERATE_NOT_ALLOWED) {
-        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_OPERATE_NOT_ALLOWED, "operate not allowed");
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_OPERATE_NOT_ALLOWED);
         return result;
     }
     return result;
@@ -309,8 +309,7 @@ bool AudioHapticPlayerNapi::JudgeVolume(napi_env env, std::unique_ptr<VolumeCont
     }
     if (!IsLegalVolumeOrIntensity(volume)) {
         MEDIA_LOGE("SetVolume: the param is invalid");
-        AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred,
-            NAPI_ERR_PARAM_OUT_OF_RANGE, "The value ranges from 0.00 to 1.00");
+        AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred, NAPI_ERR_PARAM_OUT_OF_RANGE);
         return false;
     }
 
@@ -328,8 +327,7 @@ bool AudioHapticPlayerNapi::JudgeIntensity(napi_env env, std::unique_ptr<Vibrati
     }
     if (!IsLegalVolumeOrIntensity(intensity)) {
         MEDIA_LOGE("SetIntensity: the param is invalid");
-        AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred,
-            NAPI_ERR_PARAM_OUT_OF_RANGE, "The value ranges from 0.00 to 1.00");
+        AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred, NAPI_ERR_PARAM_OUT_OF_RANGE);
         return false;
     }
 
@@ -415,8 +413,7 @@ napi_value AudioHapticPlayerNapi::SetHapticsIntensity(napi_env env, napi_callbac
         return promise;
     }
     if (!AudioHapticCommonNapi::VerifySelfSystemPermission()) {
-        AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred,
-            NAPI_ERR_PERMISSION_DENIED, NAPI_ERR_PERMISSION_DENIED_INFO);
+        AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred, NAPI_ERR_PERMISSION_DENIED);
         return promise;
     }
     if (!JudgeIntensity(env, asyncContext)) {
@@ -443,8 +440,7 @@ napi_value AudioHapticPlayerNapi::SetHapticsIntensity(napi_env env, napi_callbac
                     napi_get_undefined(env, &result);
                     napi_resolve_deferred(env, context->deferred, result);
                 } else {
-                    AudioHapticCommonNapi::PromiseReject(env, context->deferred,
-                        context->result, "Failed to set SetVibrationIntensity");
+                    AudioHapticCommonNapi::PromiseReject(env, context->deferred, context->result);
                 }
             }
             napi_delete_async_work(env, context->work);
@@ -523,8 +519,7 @@ napi_value AudioHapticPlayerNapi::SetHapticsRamp(napi_env env, napi_callback_inf
         return promise;
     }
     if (!AudioHapticCommonNapi::VerifySelfSystemPermission()) {
-        AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred,
-            NAPI_ERR_PERMISSION_DENIED, NAPI_ERR_PERMISSION_DENIED_INFO);
+        AudioHapticCommonNapi::PromiseReject(env, asyncContext->deferred, NAPI_ERR_PERMISSION_DENIED);
         return promise;
     }
     if (!JudgeRamp(env, asyncContext)) {
@@ -549,8 +544,7 @@ napi_value AudioHapticPlayerNapi::SetHapticsRamp(napi_env env, napi_callback_inf
                     napi_get_undefined(env, &result);
                     napi_resolve_deferred(env, context->deferred, result);
                 } else {
-                    AudioHapticCommonNapi::PromiseReject(env, context->deferred,
-                        context->result, "Failed to set haptics ramp");
+                    AudioHapticCommonNapi::PromiseReject(env, context->deferred, context->result);
                 }
             }
             napi_delete_async_work(env, context->work);
@@ -598,8 +592,7 @@ napi_value AudioHapticPlayerNapi::SetLoop(napi_env env, napi_callback_info info)
                     napi_get_undefined(env, &result);
                     napi_resolve_deferred(env, context->deferred, result);
                 } else {
-                    AudioHapticCommonNapi::PromiseReject(env, context->deferred,
-                        context->result, "Failed to set loop");
+                    AudioHapticCommonNapi::PromiseReject(env, context->deferred, context->result);
                 }
             }
             napi_delete_async_work(env, context->work);

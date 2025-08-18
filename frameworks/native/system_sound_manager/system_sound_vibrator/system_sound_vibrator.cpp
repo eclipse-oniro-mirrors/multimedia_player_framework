@@ -33,6 +33,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, 
 namespace OHOS {
 namespace Media {
 const std::string PREFIX = "fd://";
+constexpr int32_t PATTERNDURATION_TIME_MS = 800; //ms
 
 #ifdef SUPPORT_VIBRATOR
 const std::unordered_map<VibrationType, VibratorUsage> VIBRATOR_USAGE_MAP = {
@@ -237,11 +238,13 @@ int32_t SystemSoundVibrator::VibrateLoopFunc(std::unique_lock<std::mutex> &lock,
                 "Failed to PlayPattern for NonSyncVibration. Error %{public}d", result);
         }
         // wait for the last pattern
-        int32_t lastPatternDuration = vibratorPkg->patterns[vibratorPkg->patternNum - 1].patternDuration;
+        int32_t lastPatternDuration = vibratorPkg->patterns[vibratorPkg->patternNum - 1].patternDuration +
+            PATTERNDURATION_TIME_MS;
         (void)g_vibrateCV.wait_for(lock, std::chrono::milliseconds(lastPatternDuration),
             []() { return !g_isRunning; });
         CHECK_AND_RETURN_RET_LOG(g_isRunning, result, "RunVibrationPatterns: Stop() is call when waiting");
     }
+    close(vibratorFd->fd);
 #endif
     return result;
 }
@@ -312,6 +315,7 @@ int32_t SystemSoundVibrator::GetVibratorDuration(const std::string &hapticUri)
         vibratorPkg.patterns[patternMaxIndex].events[eventMaxIndex].time +
         vibratorPkg.patterns[patternMaxIndex].events[eventMaxIndex].duration;
     Sensors::FreeVibratorPackage(vibratorPkg);
+    close(vibratorFD.fd);
 #endif
     return ret;
 }

@@ -158,7 +158,6 @@ int32_t PlayerImpl::SetSource(const std::string &url)
 {
     int64_t startTime = SteadyClock::GetCurrentTimeMs();
     ScopedTimer timer("SetSource url", OVERTIME_WARNING_MS);
-    MEDIA_LOGD("PlayerImpl:0x%{private}06" PRIXPTR " SetSource in(url): %{private}s", FAKE_POINTER(this), url.c_str());
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty..");
     int32_t ret = MSERR_OK;
@@ -922,6 +921,14 @@ int32_t PlayerImpl::EnableCameraPostprocessing()
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_OK, "SetReopenFd failed.");
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
     LISTENER(return playerService_->EnableCameraPostprocessing(), "EnableCameraPostprocessing", false, TIME_OUT_SECOND);
+}
+
+int32_t PlayerImpl::SetCameraPostprocessing(bool isOpen)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR "SetCameraPostprocessing  in", FAKE_POINTER(this));
+    ScopedTimer timer("SetCameraPostprocessing", OVERTIME_WARNING_MS);
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    LISTENER(return playerService_->SetCameraPostprocessing(isOpen), "SetCameraPostprocessing", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes)

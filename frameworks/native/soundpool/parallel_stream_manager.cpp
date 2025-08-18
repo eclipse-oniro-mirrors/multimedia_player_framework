@@ -295,13 +295,11 @@ int32_t ParallelStreamManager::DoPlay(int32_t streamID)
     }
 
     if (stream->DoPlay() == MSERR_OK) {
-        MEDIA_LOGI("ParallelStreamManager::DoPlay success soundID:%{public}d,"
-            " streamID:%{public}d", stream->GetSoundID(), streamID);
+        MEDIA_LOGI("ParallelStreamManager::DoPlay success streamID:%{public}d", streamID);
         return MSERR_OK;
     }
     
-    MEDIA_LOGE("ParallelStreamManager::DoPlay failed soundID:%{public}d,"
-        " streamID:%{public}d", stream->GetSoundID(), streamID);
+    MEDIA_LOGE("ParallelStreamManager::DoPlay failed streamID:%{public}d", streamID);
     {
         std::lock_guard lock(parallelStreamManagerLock_);
         for (auto it = playingStream_.begin(); it != playingStream_.end();) {

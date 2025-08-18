@@ -34,7 +34,8 @@ Stream::Stream(const Format &trackFormat, const int32_t &soundID, const int32_t 
 {
     MEDIA_LOGI("Construction Stream soundID:%{public}d, streamID:%{public}d", soundID, streamID);
     int32_t sampleFormat;
-    trackFormat_.GetIntValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_AUDIO_SAMPLE_FORMAT, sampleFormat);
+    bool res = trackFormat_.GetIntValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_AUDIO_SAMPLE_FORMAT, sampleFormat);
+    CHECK_AND_RETURN_LOG(res == true, "Stream::Stream trackFormat_.GetIntValue error, res:%{public}d", res);
     sampleFormat_ = static_cast<AudioStandard::AudioSampleFormat>(sampleFormat);
 }
 
@@ -254,8 +255,7 @@ int32_t Stream::DoPlay()
     std::lock_guard lock(streamLock_);
     PreparePlay();
     if (fullCacheData_ == nullptr || audioRenderer_ == nullptr) {
-        MEDIA_LOGE("Stream::DoPlay failed, cacheData or audioRender nullptr,"
-            " soundID:%{public}d, streamID:%{public}d", soundID_, streamID_);
+        MEDIA_LOGE("Stream::DoPlay failed, cacheData or audioRender nullptr, streamID:%{public}d", streamID_);
         if (callback_ != nullptr) {
             callback_->OnError(MSERR_INVALID_VAL);
             SoundPoolUtils::ErrorInfo errorInfo{MSERR_INVALID_VAL, soundID_,
@@ -280,8 +280,7 @@ int32_t Stream::DoPlay()
         });
     if (!audioRenderer_->Start()) {
         soundPoolXCollie.CancelXCollieTimer();
-        MEDIA_LOGE("Stream::DoPlay audioRenderer start failed, soundID:%{public}d,"
-            " streamID:%{public}d", soundID_, streamID_);
+        MEDIA_LOGE("Stream::DoPlay audioRenderer start failed, streamID:%{public}d", streamID_);
         isRunning_.store(false);
         if (callback_ != nullptr) {
             MEDIA_LOGE("Stream::DoPlay failed, call callback, streamID:%{public}d", streamID_);
@@ -296,7 +295,7 @@ int32_t Stream::DoPlay()
         return MSERR_INVALID_VAL;
     }
     soundPoolXCollie.CancelXCollieTimer();
-    MEDIA_LOGI("Stream::DoPlay success, soundID:%{public}d, streamID:%{public}d", soundID_, streamID_);
+    MEDIA_LOGI("Stream::DoPlay success, streamID:%{public}d", streamID_);
     return MSERR_OK;
 }
 
@@ -304,7 +303,7 @@ int32_t Stream::Stop()
 {
     MediaTrace trace("Stream::Stop");
     std::lock_guard lock(streamLock_);
-    MEDIA_LOGI("Stream::Stop start, soundID:%{public}d, streamID:%{public}d", soundID_, streamID_);
+    MEDIA_LOGI("Stream::Stop start streamID:%{public}d", streamID_);
     if (audioRenderer_ != nullptr && isRunning_.load()) {
         isRunning_.store(false);
         SoundPoolXCollie soundPoolXCollie("Stream audioRenderer::Pause or Stop time out",
@@ -334,7 +333,7 @@ int32_t Stream::Stop()
             streamCallback_->OnPlayFinished(streamID_);
         }
     }
-    MEDIA_LOGI("Stream::Stop end, soundID:%{public}d, streamID:%{public}d", soundID_, streamID_);
+    MEDIA_LOGI("Stream::Stop end streamID:%{public}d", streamID_);
     return MSERR_OK;
 }
 
@@ -343,7 +342,7 @@ void Stream::OnWriteData(size_t length)
     CHECK_AND_RETURN_LOG(audioRenderer_ != nullptr, "audioRenderer is nullptr");
     CHECK_AND_RETURN_LOG(isRunning_.load() == true, "audioRenderer is stop");
     CHECK_AND_RETURN_LOG(startStopFlag_.load() == false,
-        "Stream::OnWriteData has start stop, soundID:%{public}d, streamID:%{public}d", soundID_, streamID_);
+        "Stream::OnWriteData has start stop, streamID:%{public}d", streamID_);
     if (cacheDataFrameIndex_ >= static_cast<size_t>(fullCacheData_->size)) {
         streamLock_.lock();
         if (loop_ >= 0 && havePlayedCount_ >= loop_) {
@@ -405,31 +404,34 @@ void Stream::DealWriteData(size_t length)
             cacheDataFrameIndex_ += copyLength;
         }
         audioRenderer_->Enqueue(bufDesc);
+    } else if (fullCacheData_ != nullptr) {
+        MEDIA_LOGE("Stream OnWriteData, cacheDataFrameIndex_: %{public}zu, length: %{public}zu,"
+            " bufDesc.buffer:%{public}d, fullCacheData_:1, fullCacheData_->buffer:%{public}d,"
+            " streamID_:%{public}d",
+            cacheDataFrameIndex_, length, bufDesc.buffer != nullptr,
+            fullCacheData_->buffer != nullptr, streamID_);
     } else {
         MEDIA_LOGE("Stream OnWriteData, cacheDataFrameIndex_: %{public}zu, length: %{public}zu,"
-            " bufDesc.buffer:%{public}d, fullCacheData_:%{public}d, fullCacheData_->buffer:%{public}d,"
-            " soundID:%{public}d, streamID_:%{public}d",
-            cacheDataFrameIndex_, length, bufDesc.buffer != nullptr, fullCacheData_ != nullptr,
-            fullCacheData_->buffer != nullptr, soundID_, streamID_);
+            " bufDesc.buffer:%{public}d, fullCacheData_:0, streamID_:%{public}d",
+            cacheDataFrameIndex_, length, bufDesc.buffer != nullptr, streamID_);
     }
 }
 
 void Stream::OnFirstFrameWriting(uint64_t latency)
 {
-    MEDIA_LOGI("Stream::OnFirstFrameWriting, soundID:%{public}d, streamID:%{public}d", soundID_, streamID_);
+    MEDIA_LOGI("Stream::OnFirstFrameWriting, streamID_:%{public}d", streamID_);
     CHECK_AND_RETURN_LOG(frameWriteCallback_ != nullptr, "frameWriteCallback is null.");
     frameWriteCallback_->OnFirstAudioFrameWritingCallback(latency);
 }
 
 void Stream::OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent)
 {
-    MEDIA_LOGI("Stream::OnInterrupt, soundID:%{public}d, streamID_:%{public}d, eventType:%{public}d,"
-        " forceType:%{public}d, hintType:%{public}d", soundID_, streamID_, interruptEvent.eventType,
-        interruptEvent.forceType, interruptEvent.hintType);
+    MEDIA_LOGI("Stream::OnInterrupt, streamID_:%{public}d, eventType:%{public}d, forceType:%{public}d,"
+        "hintType:%{public}d", streamID_, interruptEvent.eventType, interruptEvent.forceType,
+        interruptEvent.hintType);
     if (interruptEvent.hintType == AudioStandard::InterruptHint::INTERRUPT_HINT_PAUSE ||
         interruptEvent.hintType == AudioStandard::InterruptHint::INTERRUPT_HINT_STOP) {
-        MEDIA_LOGI("Stream::OnInterrupt, interrupt Stream, soundID:%{public}d,"
-            " streamID:%{public}d", soundID_, streamID_);
+        MEDIA_LOGI("Stream::OnInterrupt, interrupt Stream, streamID_:%{public}d", streamID_);
         AddStopTask();
     }
 }

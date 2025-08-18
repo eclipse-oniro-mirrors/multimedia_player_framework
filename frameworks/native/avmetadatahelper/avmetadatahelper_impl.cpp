@@ -110,6 +110,20 @@ static const std::unordered_map<unsigned int, ColorManager::ColorSpaceName> HDR_
     { CM_BT2020_PQ_LIMIT, ColorManager::ColorSpaceName::BT2020_PQ_LIMIT },
 };
 
+static const std::unordered_map<int32_t, std::pair<bool, bool>> VIDEOORIENTATIONTYPE_FLIP_MAP = {
+    { Plugins::VideoOrientationType::FLIP_H, {true, false} },
+    { Plugins::VideoOrientationType::FLIP_V, {false, true} },
+    { Plugins::VideoOrientationType::FLIP_H_ROT90, {true, false} },
+    { Plugins::VideoOrientationType::FLIP_V_ROT90, {false, true} },
+};
+
+static const std::unordered_map<int32_t, int32_t> VIDEOORIENTATIONTYPE_ROTATION_MAP = {
+    { Plugins::VideoOrientationType::FLIP_H, 0 },
+    { Plugins::VideoOrientationType::FLIP_V, 0 },
+    { Plugins::VideoOrientationType::FLIP_H_ROT90, 270 },
+    { Plugins::VideoOrientationType::FLIP_V_ROT90, 270 },
+};
+
 struct PixelMapMemHolder {
     bool isShmem;
     std::shared_ptr<AVSharedMemory> shmem;
@@ -372,6 +386,11 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapYuv(const std::sha
     Plugins::VideoRotation rotation = Plugins::VideoRotation::VIDEO_ROTATION_0;
     bufferMeta->Get<Tag::VIDEO_ROTATION>(rotation);
     pixelMapInfo.rotation = static_cast<int32_t>(rotation);
+
+    Plugins::VideoOrientationType orientation = Plugins::VideoOrientationType::ROTATE_NONE;
+    bufferMeta->Get<Tag::VIDEO_ORIENTATION_TYPE>(orientation);
+    pixelMapInfo.orientation = static_cast<int32_t>(orientation);
+
     bufferMeta->Get<Tag::VIDEO_IS_HDR_VIVID>(pixelMapInfo.isHdr);
 
     if (pixelMapInfo.pixelFormat == PixelFormat::UNKNOWN) {
@@ -447,6 +466,7 @@ Status AVMetadataHelperImpl::GetColorSpace(sptr<SurfaceBuffer> &surfaceBuffer, P
         MEDIA_LOGW("cant find colorSpace");
         return Status::ERROR_UNKNOWN;
     }
+    CHECK_AND_RETURN_RET_LOG(!colorSpaceInfoVec.empty(), Status::ERROR_UNKNOWN, "colorSpaceInfoVec is empty");
     auto outColor = reinterpret_cast<CM_ColorSpaceInfo *>(colorSpaceInfoVec.data());
     CHECK_AND_RETURN_RET_LOG(outColor != nullptr, Status::ERROR_UNKNOWN, "colorSpaceInfoVec init failed");
     auto colorSpaceInfo = outColor[0];
@@ -907,7 +927,19 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameBase(int64_t timeUs, i
 
     DumpPixelMap(isDump_, pixelMap, DUMP_FILE_NAME_AFTER_SCLAE);
 
-    if (pixelMapInfo.rotation > 0) {
+    MEDIA_LOGI("Rotation is %{public}d, orientation is %{public}d", pixelMapInfo.rotation, pixelMapInfo.orientation);
+    if (param.isSupportFlip && VIDEOORIENTATIONTYPE_ROTATION_MAP.count(pixelMapInfo.orientation) > 0) {
+        MEDIA_LOGI("Support flip");
+        auto itFlip = VIDEOORIENTATIONTYPE_FLIP_MAP.find(pixelMapInfo.orientation);
+        CHECK_AND_RETURN_RET_LOG(itFlip != VIDEOORIENTATIONTYPE_FLIP_MAP.end(), nullptr,
+            "can't find mapped orientation name in VIDEOORIENTATIONTYPE_FLIP_MAP");
+        pixelMap->flip(itFlip->second.first, itFlip->second.second);
+        auto itRotate = VIDEOORIENTATIONTYPE_ROTATION_MAP.find(pixelMapInfo.orientation);
+        CHECK_AND_RETURN_RET_LOG(itRotate != VIDEOORIENTATIONTYPE_ROTATION_MAP.end(), nullptr,
+            "can't find mapped orientation name in VIDEOORIENTATIONTYPE_ROTATION_MAP");
+        pixelMap->rotate(itRotate->second);
+    } else if (pixelMapInfo.rotation > 0) {
+        MEDIA_LOGI("Not support flip");
         pixelMap->rotate(pixelMapInfo.rotation);
     }
 

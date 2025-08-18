@@ -40,6 +40,8 @@ int32_t SoundPoolManager::GetSoundPool(const pid_t pid, std::shared_ptr<SoundPoo
         return MSERR_OK;
     }
     soundPool = std::make_shared<SoundPool>();
+    CHECK_AND_RETURN_RET_LOG(soundPool != nullptr, MSERR_INVALID_VAL,
+        "SoundPoolManager::GetSoundPool invalid soundPool");
     soundPools_.emplace(pid, soundPool);
     return MSERR_OK;
 }

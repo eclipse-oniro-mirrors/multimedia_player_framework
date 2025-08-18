@@ -33,9 +33,15 @@
 #ifdef SUPPORT_POWER_MANAGER
 #include "shutdown/shutdown_priority.h"
 #endif
+#include "res_type.h"
+#include "res_sched_client.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_RECORDER, "RecorderServer"};
+    constexpr uint32_t THREAD_PRIORITY_41 = 7; // evevate priority for avRecorder
+    constexpr uint32_t RES_TYPE = OHOS::ResourceSchedule::ResType::RES_TYPE_THREAD_QOS_CHANGE;
+    constexpr int64_t RES_VALUE = 0;
+    const std::string PAYLOAD_BUNDLE_NAME_VAL = "media_service";
     const std::map<OHOS::Media::RecorderServer::RecStatus, std::string> RECORDER_STATE_MAP = {
         {OHOS::Media::RecorderServer::REC_INITIALIZED, "initialized"},
         {OHOS::Media::RecorderServer::REC_CONFIGURED, "configured"},
@@ -63,7 +69,7 @@ std::shared_ptr<IRecorderService> RecorderServer::Create()
 {
     std::shared_ptr<RecorderServer> server = std::make_shared<RecorderServer>();
     int32_t ret = server->Init();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to init RecorderServer");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to init RecorderServer, ret: %{public}d", ret);
     return server;
 }
 
@@ -81,14 +87,10 @@ RecorderServer::~RecorderServer()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        auto task = std::make_shared<TaskHandler<void>>([&, this] {
-            recorderEngine_ = nullptr;
+        recorderEngine_ = nullptr;
 #ifdef SUPPORT_POWER_MANAGER
-            syncCallback_ = nullptr;
+        syncCallback_ = nullptr;
 #endif
-        });
-        (void)taskQue_.EnqueueTask(task);
-        (void)task->GetResult();
         taskQue_.Stop();
     }
 }
@@ -596,16 +598,17 @@ int32_t RecorderServer::SetMetaConfigs(int32_t sourceId)
 {
     MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetMetaConfigs in, sourceId(%{public}d)",
         FAKE_POINTER(this), sourceId);
-    CHECK_AND_RETURN_RET_LOG(SetMetaMimeType(sourceId, Plugins::MimeType::TIMED_METADATA) == MSERR_OK,
-        MSERR_EXT_OPERATE_NOT_PERMIT, "set meta mime type failed");
+    int32_t ret = SetMetaMimeType(sourceId, Plugins::MimeType::TIMED_METADATA);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_EXT_OPERATE_NOT_PERMIT,
+        "set meta mime type failed, ret: %{public}d", ret);
     if (config_.metaSource == MetaSourceType::VIDEO_META_MAKER_INFO) {
-        CHECK_AND_RETURN_RET_LOG(
-            SetMetaTimedKey(sourceId, VID_DEBUG_INFO_KEY) == MSERR_OK, MSERR_EXT_OPERATE_NOT_PERMIT,
-            "set meta key failed");
+        ret = SetMetaTimedKey(sourceId, VID_DEBUG_INFO_KEY);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_EXT_OPERATE_NOT_PERMIT,
+            "set meta key failed, ret: %{public}d", ret);
         auto sourceTrackMime = GetVideoMime(config_.videoCodec);
-        CHECK_AND_RETURN_RET_LOG(
-            SetMetaSourceTrackMime(sourceId, sourceTrackMime) == MSERR_OK,
-            MSERR_EXT_OPERATE_NOT_PERMIT, "set meta source track mime failed");
+        ret = SetMetaSourceTrackMime(sourceId, sourceTrackMime);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_EXT_OPERATE_NOT_PERMIT,
+            "set meta source track mime failed, ret: %{public}d", ret);
     }
     return MSERR_OK;
 }
@@ -1182,6 +1185,28 @@ int32_t RecorderServer::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->SetUserMeta(userMeta);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
+}
+
+int32_t RecorderServer::TransmitQos(QOS::QosLevel level)
+{
+    MEDIA_LOGI("TransmitQos in %{public}d", static_cast<int32_t>(level));
+    std::lock_guard<std::mutex> lock(mutex_);
+    clientQos_ = level;
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        if (clientQos_ == QOS::QosLevel::QOS_USER_INTERACTIVE) {
+            std::unordered_map<std::string, std::string> mapPayload;
+            mapPayload["bundleName"] = PAYLOAD_BUNDLE_NAME_VAL;
+            mapPayload["pid"] = std::to_string(getpid());
+            mapPayload[std::to_string(gettid())] = std::to_string(THREAD_PRIORITY_41);
+            OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(RES_TYPE, RES_VALUE, mapPayload);
+        }
+        return MSERR_OK;
     });
     int32_t ret = taskQue_.EnqueueTask(task);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");

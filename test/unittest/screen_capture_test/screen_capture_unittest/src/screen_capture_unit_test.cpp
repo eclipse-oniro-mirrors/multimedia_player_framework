@@ -2402,5 +2402,51 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_update_surface, Test
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_with_surface_update_surface after");
 }
 
+/**
+ * @tc.name: screen_capture_specified_window_file_01
+ * @tc.desc: do screencapture
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_config_paramer_01, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_config_paramer_01 before");
+    std::shared_ptr<ScreenCaptureController> controller =
+        ScreenCaptureControllerFactory::CreateScreenCaptureController();
+    int32_t sessionId = 0;
+    std::string resultStr = "";
+    controller->GetAVScreenCaptureConfigurableParameters(sessionId, resultStr);
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_specified_window_file_01.mp4", recorderInfo);
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::ALL_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+    config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
+    std::shared_ptr<OHOS::AAFwk::AbilityManagerClient> client_ = OHOS::AAFwk::AbilityManagerClient::GetInstance();
+    std::string deviceId = "";
+    std::vector<OHOS::AAFwk::MissionInfo> missionInfos;
+    auto result = client_->GetMissionInfos(deviceId, 20, missionInfos);
+    MEDIA_LOGI("screen_capture_specified_window_file_01 missionInfos size:%{public}s, result:%{public}d",
+        std::to_string(missionInfos.size()).c_str(), result);
+    for (OHOS::AAFwk::MissionInfo info : missionInfos) {
+        MEDIA_LOGI("screen_capture_specified_window_file_01 missionId : %{public}d", info.id);
+    }
+    if (missionInfos.size() > 0) {
+        config_.videoInfo.videoCapInfo.taskIDs.push_back(missionInfos[0].id);
+    } else {
+        MEDIA_LOGE("screen_capture_specified_window_file_01 GetMissionInfos failed");
+    }
+
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_file_01 after");
+}
 } // namespace Media
 } // namespace OHOS

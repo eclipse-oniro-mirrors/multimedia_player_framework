@@ -930,28 +930,30 @@ int32_t PlayerServer::SetVolumeMode(int32_t mode)
 
 int32_t PlayerServer::SetVolume(float leftVolume, float rightVolume)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (lastOpStatus_ == PLAYER_STATE_ERROR) {
-        MEDIA_LOGE("Can not SetVolume, currentState is PLAYER_STATE_ERROR");
-        return MSERR_INVALID_OPERATION;
-    }
-    MEDIA_LOGD("PlayerServer SetVolume in leftVolume %{public}f %{public}f", leftVolume, rightVolume);
-    constexpr float maxVolume = 1.0f;
-    if ((leftVolume < 0) || (leftVolume > maxVolume) || (rightVolume < 0) || (rightVolume > maxVolume)) {
-        MEDIA_LOGE("SetVolume failed, the volume should be set to a value ranging from 0 to 5");
-        return MSERR_INVALID_OPERATION;
-    }
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (lastOpStatus_ == PLAYER_STATE_ERROR) {
+            MEDIA_LOGE("Can not SetVolume, currentState is PLAYER_STATE_ERROR");
+            return MSERR_INVALID_OPERATION;
+        }
+        MEDIA_LOGD("PlayerServer SetVolume in leftVolume %{public}f %{public}f", leftVolume, rightVolume);
+        constexpr float maxVolume = 1.0f;
+        if ((leftVolume < 0) || (leftVolume > maxVolume) || (rightVolume < 0) || (rightVolume > maxVolume)) {
+            MEDIA_LOGE("SetVolume failed, the volume should be set to a value ranging from 0 to 5");
+            return MSERR_INVALID_OPERATION;
+        }
 
-    config_.leftVolume = leftVolume;
-    config_.rightVolume = rightVolume;
-    if (IsEngineStarted()) {
-        auto task = std::make_shared<TaskHandler<void>>([this]() {
-            (void)playerEngine_->SetVolume(config_.leftVolume, config_.rightVolume);
-            taskMgr_.MarkTaskDone("volume done");
-        });
-        (void)taskMgr_.LaunchTask(task, PlayerServerTaskType::STATE_CHANGE, "volume");
-    } else {
-        MEDIA_LOGI("Waiting for the engine state is <prepared> to take effect");
+        config_.leftVolume = leftVolume;
+        config_.rightVolume = rightVolume;
+        if (IsEngineStarted()) {
+            auto task = std::make_shared<TaskHandler<void>>([this]() {
+                (void)playerEngine_->SetVolume(config_.leftVolume, config_.rightVolume);
+                taskMgr_.MarkTaskDone("volume done");
+            });
+            (void)taskMgr_.LaunchTask(task, PlayerServerTaskType::STATE_CHANGE, "volume");
+        } else {
+            MEDIA_LOGI("Waiting for the engine state is <prepared> to take effect");
+        }
     }
 
     Format format;
@@ -1495,7 +1497,7 @@ int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
         std::lock_guard<std::mutex> surfaceLock(surfaceMutex_);
         surface_ = surface;
     }
-    CHECK_AND_RETURN_RET_LOG(switchSurface || playerEngine_ != nullptr, MSERR_OK,
+    CHECK_AND_RETURN_RET_LOG(switchSurface && playerEngine_ != nullptr, MSERR_OK,
         "current state: %{public}s, playerEngine == nullptr: %{public}d, can not SetVideoSurface",
         GetStatusDescription(lastOpStatus_).c_str(), playerEngine_ == nullptr);
     auto task = std::make_shared<TaskHandler<void>>([this]() {
@@ -2392,6 +2394,14 @@ int32_t PlayerServer::EnableCameraPostprocessing()
         "can not enable camera postProcessor, current state is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     return playerEngine_->EnableCameraPostprocessing();
+}
+
+int32_t PlayerServer::SetCameraPostprocessing(bool isOpen)
+{
+    MediaTrace::TraceBegin("PlayerServer::SetCameraPostprocessing", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    return playerEngine_->SetCameraPostprocessing(isOpen);
 }
 
 int32_t PlayerServer::EnableReportMediaProgress(bool enable)

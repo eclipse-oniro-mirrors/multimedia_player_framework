@@ -68,7 +68,8 @@ public:
     MOCK_METHOD(void, SetEventReceiver, (std::shared_ptr<Media::Pipeline::EventReceiver> eventReceiver));
     MOCK_METHOD(void, SetSyncManager, (std::shared_ptr<ILppSyncManager> syncMgr));
     MOCK_METHOD(void, SetPlaybackSpeed, (float speed));
+    MOCK_METHOD(int32_t, SetTargetPts, (int64_t targetPts));
 };
 }  // namespace Media
 }  // namespace OHOS
-#endif
+#endif

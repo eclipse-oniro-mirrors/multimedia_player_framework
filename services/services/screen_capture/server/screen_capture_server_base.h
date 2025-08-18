@@ -65,6 +65,7 @@
 #include "i_input_device_listener.h"
 #include "input_manager.h"
 #include "session_lifecycle_listener_stub.h"
+#include "common_event_manager.h"
 
 namespace OHOS {
 namespace Media {
@@ -380,10 +381,32 @@ class SCWindowInfoChangedListener : public Rosen::IWindowInfoChangedListener {
 public:
     explicit SCWindowInfoChangedListener(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
     ~SCWindowInfoChangedListener() override = default;
-    void OnWindowInfoChanged(const std::vector<std::unordered_map<WindowInfoKey, std::any>>& windowInfoList) override;
+    void OnWindowInfoChanged(const std::vector<std::unordered_map<WindowInfoKey,
+        WindowChangeInfoType>>& windowInfoList) override;
 
 private:
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
+};
+
+class ScreenCaptureSubscriber : public EventFwk::CommonEventSubscriber {
+public:
+    ScreenCaptureSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo,
+        const std::function<void(const EventFwk::CommonEventData &)> &callback)
+        : EventFwk::CommonEventSubscriber(subscribeInfo), callback_(callback)
+    {}
+
+    ~ScreenCaptureSubscriber()
+    {}
+
+    void OnReceiveEvent(const EventFwk::CommonEventData &data) override
+    {
+        if (callback_ != nullptr) {
+            callback_(data);
+        }
+    }
+
+private:
+    std::function<void(const EventFwk::CommonEventData &)> callback_;
 };
 } // namespace Media
 } // namespace OHOS

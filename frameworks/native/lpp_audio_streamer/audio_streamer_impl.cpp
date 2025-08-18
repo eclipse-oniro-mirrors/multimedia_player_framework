@@ -166,7 +166,7 @@ int32_t AudioStreamerImpl::SetPlaybackSpeed(float speed)
 
 int32_t AudioStreamerImpl::ReturnFrames(sptr<LppDataPacket> framePacket)
 {
-    MEDIA_LOGI("AudioStreamerImpl ReturnFrames");
+    MEDIA_LOGD("AudioStreamerImpl ReturnFrames");
     CHECK_AND_RETURN_RET_LOG(enableLppSink_, MSERR_UNSUPPORT, "Lpp is disabled");
     CHECK_AND_RETURN_RET_LOG(streamerService_ != nullptr, MSERR_SERVICE_DIED, "service died");
     int32_t ret = streamerService_->ReturnFrames(framePacket);

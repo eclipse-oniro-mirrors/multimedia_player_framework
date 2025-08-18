@@ -44,10 +44,9 @@ public:
     static std::shared_ptr<IScreenCaptureService> CreateScreenCaptureNewInstance();
     static int32_t ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &content);
     static int32_t GetRunningScreenCaptureInstancePid(std::list<int32_t> &pidList);
+    static int32_t GetAVScreenCaptureConfigurableParameters(int32_t sessionId, std::string &resultStr);
     static void GetChoiceFromJson(Json::Value &root, const std::string &content, std::string key, std::string &value);
-    static void GetBoxSelectedFromJson(Json::Value &root, const std::string &content, std::string key,
-        bool &checkBoxSelected);
-    static void PrepareSelectWindow(Json::Value &root, std::shared_ptr<ScreenCaptureServer> &server);
+    static void GetValueFromJson(Json::Value &root, const std::string &content, std::string key, bool &value);
     static void AddScreenCaptureServerMap(int32_t sessionId, std::weak_ptr<ScreenCaptureServer> server);
     static void RemoveScreenCaptureServerMap(int32_t sessionId);
     static bool CheckScreenCaptureSessionIdLimit(int32_t curAppUid);
@@ -102,8 +101,16 @@ public:
     int32_t SetCaptureArea(uint64_t displayId, OHOS::Rect area) override;
 
     void SetSessionId(int32_t sessionId);
+    void GetAndSetAppVersion();
+    bool CheckAppVersionForUnsupport(DMError result);
     int32_t OnReceiveUserPrivacyAuthority(bool isAllowed);
     int32_t StopScreenCaptureByEvent(AVScreenCaptureStateCode stateCode);
+    std::shared_ptr<OHOS::AbilityRuntime::WantAgent::WantAgent> GetWantAgent(const std::string& callingLabel,
+        int32_t sessionId);
+    void SetPublishRequest(const std::shared_ptr<NotificationLocalLiveViewContent>& localLiveViewContent,
+        int32_t notificationId, NotificationRequest& request);
+    void SystemPrivacyProtected(ScreenId& virtualScreenId, bool systemPrivacyProtectionSwitch);
+    void AppPrivacyProtected(ScreenId& virtualScreenId, bool appPrivacyProtectionSwitch);
 #ifdef SUPPORT_CALL
     int32_t TelCallStateUpdated(bool isInTelCall);
     int32_t TelCallAudioStateUpdated(bool isInTelCallAudio);
@@ -188,6 +195,7 @@ private:
     void CloseFd();
     void ReleaseInner();
     void GetDumpFlag();
+    void GetSystemUIFlag();
     int32_t SetMicrophoneOn();
     int32_t SetMicrophoneOff();
 
@@ -213,6 +221,10 @@ private:
     int32_t StartPrivacyWindow();
     void SetCaptureConfig(CaptureMode captureMode, int32_t missionId = -1); // -1 invalid
     ScreenScaleMode GetScreenScaleMode(const AVScreenCaptureFillMode &fillMode);
+    int32_t HandlePopupWindowCase(Json::Value& root, const std::string &content);
+    int32_t HandleStreamDataCase(Json::Value& root, const std::string &content);
+    void PrepareSelectWindow(Json::Value &root);
+
 #ifdef PC_STANDARD
     bool CheckCaptureSpecifiedWindowForSelectWindow();
     void SendConfigToUIParams(AAFwk::Want& want);
@@ -232,6 +244,7 @@ private:
     int32_t StartNotification();
     std::shared_ptr<NotificationLocalLiveViewContent> GetLocalLiveViewContent();
     void UpdateLiveViewContent();
+    NotificationTime CreateCountTime();
     std::shared_ptr<PixelMap> GetPixelMap(std::string path);
     std::shared_ptr<PixelMap> GetPixelMapSvg(std::string path, int32_t width, int32_t height);
     void ResSchedReportData(int64_t value, std::unordered_map<std::string, std::string> payload);
@@ -251,6 +264,7 @@ private:
     int32_t OnTelCallStop();
 #endif
     bool DestroyPopWindow();
+    bool DestroyPrivacySheet();
     void StopNotStartedScreenCapture(AVScreenCaptureStateCode stateCode);
     int32_t RegisterWindowLifecycleListener(std::vector<int32_t> windowIdList);
     int32_t UnRegisterWindowLifecycleListener();
@@ -260,7 +274,12 @@ private:
     int32_t SetCaptureAreaInner(uint64_t displayId, OHOS::Rect area);
     bool CheckDisplayArea(uint64_t displayId, OHOS::Rect area);
     void PrepareUserSelectionInfo(ScreenCaptureUserSelectionInfo &selectionInfo);
-
+    void SetupCapsule(NotificationCapsule& capsule);
+    void RegisterLanguageSwitchListener();
+    void OnReceiveEvent(const EventFwk::CommonEventData &data);
+    void UnRegisterLanguageSwitchListener();
+    int32_t HandleOriginalStreamPrivacy();
+    void PublishStartRecordEvent();
 private:
     std::mutex mutex_;
     std::mutex cbMutex_;
@@ -275,6 +294,8 @@ private:
     bool checkBoxSelected_ = false;
     bool showShareSystemAudioBox_ = false;
     bool isInnerAudioBoxSelected_ = true;
+    bool appPrivacyProtectionSwitch_ = true;
+    bool systemPrivacyProtectionSwitch_ = true;
     std::vector<uint64_t> surfaceIdList_ = {};
     std::vector<uint8_t> surfaceTypeList_ = {};
     std::atomic<bool> stopAcquireAudioBufferFromAudio_ = false;
@@ -284,11 +305,13 @@ private:
     int32_t notificationId_ = 0;
     std::string callingLabel_;
     std::string liveViewText_;
+    std::string liveViewSubText_;
     std::atomic<int32_t> micCount_{0};
     float density_ = 0.0f;
     int32_t capsuleVpSize_ = 18;
     int32_t capsulePxSize_ = 0;
     int32_t saUid_ = -1;
+    int32_t appVersion_ = -1;
 
     /* used for both CAPTURE STREAM and CAPTURE FILE */
     OHOS::AudioStandard::AppInfo appInfo_;
@@ -301,6 +324,7 @@ private:
     sptr<OHOS::Surface> consumer_ = nullptr;
     bool isConsumerStart_ = false;
     bool isDump_ = false;
+    bool isSystemUI2_ = false;
     ScreenId virtualScreenId_ = SCREEN_ID_INVALID;
     ScreenId displayScreenId_ = SCREEN_ID_INVALID;
     std::vector<uint64_t> missionIds_;
@@ -342,6 +366,7 @@ private:
     Global::Resource::ResourceManager *resourceManager_ = nullptr;
     Global::Resource::ResConfig *resConfig_ = nullptr;
     OHOS::sptr<Rosen::ScreenManager::IScreenListener> screenConnectListener_ = nullptr;
+    std::shared_ptr<ScreenCaptureSubscriber> subscriber_ = nullptr;
 #ifdef SUPPORT_CALL
     std::atomic<bool> isInTelCall_ = false;
     std::atomic<bool> isInTelCallAudio_ = false;
@@ -373,6 +398,10 @@ private:
     static constexpr int32_t AV_SCREEN_CAPTURE_SESSION_UID = 1013;
     static constexpr const char* NOTIFICATION_SCREEN_RECORDING_TITLE_ID = "notification_screen_recording_title";
     static constexpr const char* QUOTATION_MARKS_STRING = "\"";
+    static constexpr const char* NOTIFICATION_SCREEN_RECORDING_PRIVACY_ON_ID =
+        "notification_screen_recording_privacy_on";
+    static constexpr const char* NOTIFICATION_SCREEN_RECORDING_PRIVACY_OFF_ID =
+        "notification_screen_recording_privacy_off";
     static constexpr int64_t MAX_INNER_AUDIO_TIMEOUT_IN_NS = 2000000000; // 2s
     static constexpr int64_t AUDIO_INTERVAL_IN_NS = 20000000; // 20ms
     static constexpr int64_t NEG_AUDIO_INTERVAL_IN_NS = -20000000; // 20ms

@@ -143,7 +143,7 @@ public:
 
     Status OnCallback(const std::shared_ptr<Filter>& filter, FilterCallBackCommand cmd, StreamType outType) override
     {
-        MEDIA_LOG_D_SHORT("PlayerFilterCallback OnCallback.");
+        MEDIA_LOG_D("PlayerFilterCallback OnCallback.");
         std::shared_lock<std::shared_mutex> lk(cbMutex_);
         FALSE_RETURN_V(hiPlayerImpl_ != nullptr, Status::OK); // hiPlayerImpl_ is destructed
         return hiPlayerImpl_->OnCallback(filter, cmd, outType);
@@ -427,6 +427,7 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     mutedMediaType_ = strategy.mutedMediaType;
     audioLanguage_ = strategy.preferredAudioLanguage;
     subtitleLanguage_ = strategy.preferredSubtitleLanguage;
+    enableCameraPostprocessing_ = strategy.enableCameraPostprocessing;
     videoPostProcessorType_ = strategy.enableSuperResolution ? VideoPostProcessorType::SUPER_RESOLUTION
                                 : VideoPostProcessorType::NONE;
     isPostProcessorOn_ = strategy.enableSuperResolution;
@@ -644,7 +645,7 @@ int32_t HiPlayerImpl::PrepareAsync()
     DoSetMediaSource(ret);
     if (mutedMediaType_ == OHOS::Media::MediaType::MEDIA_TYPE_VID) {
         MEDIA_LOG_I("HiPlayerImpl::PrepareAsync, do setMute true");
-        demuxer_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true, keepDecodingOnMute_);
+        demuxer_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true);
     }
     if (ret != Status::OK && !isInterruptNeeded_.load()) {
         OnEvent({"engine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_CONTAINER_TYPE});
@@ -1094,6 +1095,11 @@ int32_t HiPlayerImpl::Stop()
     callbackLooper_.StopReportMediaProgress();
     StopFlvCheckLiveDelayTime();
     callbackLooper_.StopCollectMaxAmplitude();
+    if (draggingPlayerAgent_ != nullptr) {
+        draggingPlayerAgent_->Release();
+        draggingPlayerAgent_ = nullptr;
+    }
+
     // close demuxer first to avoid concurrent problem
     auto ret = Status::ERROR_UNKNOWN;
     if (pipeline_ != nullptr) {
@@ -2998,6 +3004,7 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
     }
     
     MEDIA_LOG_D_SHORT("NotifySeekDone seekPos: %{public}d", seekPos);
+    syncManager_->UpdataPausedMediaTime(seekPos);
     callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, seekPos, format);
     callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, seekPos, format);
 }
@@ -3478,13 +3485,10 @@ int32_t HiPlayerImpl::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMut
         return res == Status::OK ? MSERR_OK : MSERR_INVALID_OPERATION;
     } else if (mediaType == OHOS::Media::MediaType::MEDIA_TYPE_VID) {
         if (demuxer_ != nullptr) {
-            demuxer_->SetMediaMuted(mediaType, isMuted, keepDecodingOnMute_);
+            demuxer_->SetMediaMuted(mediaType, isMuted);
         }
         if (videoDecoder_ != nullptr) {
             videoDecoder_->SetMediaMuted(isMuted, true);
-            if (isMuted) {
-                videoDecoder_->Flush();
-            }
         }
         bool needReinit = !isMuted && surface_ != nullptr && (isVideoMuted_ != isMuted ||
             (!isVideoDecoderInited_ && mutedMediaType_ == OHOS::Media::MediaType::MEDIA_TYPE_VID));
@@ -3511,6 +3515,7 @@ int32_t HiPlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     subtitleLanguage_ = playbackStrategy.preferredSubtitleLanguage;
     videoPostProcessorType_ = playbackStrategy.enableSuperResolution ? VideoPostProcessorType::SUPER_RESOLUTION
                                 : VideoPostProcessorType::NONE;
+    enableCameraPostprocessing_ = playbackStrategy.enableCameraPostprocessing;
     isPostProcessorOn_ = playbackStrategy.enableSuperResolution;
     keepDecodingOnMute_ = playbackStrategy.keepDecodingOnMute;
 
@@ -3884,6 +3889,17 @@ void HiPlayerImpl::ResetEnableCameraPostProcess()
     fdsanFd_->Reset();
 }
 
+int32_t HiPlayerImpl::SetCameraPostprocessing(bool isOpen)
+{
+#ifdef SUPPORT_VIDEO
+    if (videoDecoder_ != nullptr) {
+        MEDIA_LOG_I("SetCameraPostprocessing enter");
+        videoDecoder_->SetCameraPostprocessingDirect(isOpen);
+    }
+#endif
+    return TransStatus(Status::OK);
+}
+
 void HiPlayerImpl::HandleMemoryUsageEvent(const DfxEvent &event)
 {
     lock_guard<std::mutex> lock(memoryReportMutex_);
@@ -4007,7 +4023,7 @@ Status HiPlayerImpl::InitVideoDecoder()
 void HiPlayerImpl::ReleaseVideoDecoderOnMuted()
 {
     if (videoDecoder_ != nullptr) {
-        videoDecoder_->ReleaseOnMuted();
+        videoDecoder_->ReleaseOnMuted(!keepDecodingOnMute_);
     }
 }
 

@@ -416,7 +416,7 @@ int32_t LppAudioStreamerServiceStub::SetLppVideoStreamerId(MessageParcel &data, 
 
 std::string LppAudioStreamerServiceStub::GetStreamerId()
 {
-    MEDIA_LOGD("GetStreamerId");
+    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, "", "player server is nullptr");
     return lppAudioPlayerServer_->GetStreamerId();
 }
 

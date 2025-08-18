@@ -45,6 +45,7 @@ constexpr int32_t NUM_ZERO = 0;
 constexpr int32_t NUM_ONE = 0;
 constexpr int32_t NUM_TWO = 0;
 constexpr int32_t NUM_THREE = 0;
+constexpr int32_t PATTERNDURATION_TIME_MS = 800; //ms
 
 void CopyEvent(const VibratorEvent &strongEvent, VibratorEvent &weakEvent)
 {
@@ -318,6 +319,7 @@ int32_t AudioHapticVibratorImpl::PreLoad(const HapticSource &hapticSource,
     if (result != 0) {
         return MSERR_UNSUPPORT_FILE;
     }
+    close(vibratorFD_->fd);
 #endif
     return MSERR_OK;
 }
@@ -386,9 +388,13 @@ int32_t AudioHapticVibratorImpl::SetHapticsRamp(int32_t duration, float startInt
     // duration not less than 100ms and not larger than haptics package duration
     auto lastPattern = vibratorPkg_->patterns[vibratorPkg_->patternNum - 1];
     auto packageDuration = lastPattern.time + lastPattern.patternDuration;
-    if (duration < DURATION_AT_LEAST || duration > packageDuration) {
+    int32_t actualDuration = duration;
+    if (duration > packageDuration) {
+        actualDuration = packageDuration;
+    }
+    if (actualDuration < DURATION_AT_LEAST) {
         MEDIA_LOGE("AudioHapticVibratorImpl::SetHapticsRamp error, duration %{public}d, packageDuration %{public}d",
-            duration, packageDuration);
+            actualDuration, packageDuration);
         return MSERR_INVALID_VAL;
     }
 
@@ -405,7 +411,7 @@ int32_t AudioHapticVibratorImpl::SetHapticsRamp(int32_t duration, float startInt
     // four points will be enough
     int32_t numPoints = 4;
     VibratorCurvePoint points[numPoints];
-    int32_t timeInterval = duration / numPoints;
+    int32_t timeInterval = actualDuration / numPoints;
     int32_t intensityStep = (endIntensity - startIntensity) / numPoints;
 
     for (int i = 0; i < numPoints; ++i) {
@@ -531,7 +537,6 @@ int32_t AudioHapticVibratorImpl::PlayVibrateForSoundPool(
             seekVibratorPkg_ = nullptr;
         }
     }
-    ResumeModulePackge();
 #endif
     return result;
 }
@@ -565,6 +570,7 @@ int32_t AudioHapticVibratorImpl::StartVibrateForSoundPool()
     }
     isRunning_.store(true);
     result = PlayVibrateForSoundPool(vibratorPkg_, lock);
+    ResumeModulePackge();
     isRunning_.store(false);
     isIntensityChanged_.store(false);
 #endif
@@ -596,7 +602,6 @@ int32_t AudioHapticVibratorImpl::RunVibrationPatterns(const std::shared_ptr<Vibr
             seekVibratorPkg_ = nullptr;
         }
     }
-    ResumeModulePackge();
 #endif
     return result;
 }
@@ -620,6 +625,7 @@ int32_t AudioHapticVibratorImpl::StartNonSyncVibration()
         vibrationTimeElapsed_ = 0;
         patternStartTime_ = GetCurrentTimeMillis();
         result = RunVibrationPatterns(vibratorPkg_, lock);
+        ResumeModulePackge();
         if (result != MSERR_OK) {
             MEDIA_LOGI("StartNonSyncVibration: RunVibrationPatterns fail.");
             return result;
@@ -647,6 +653,7 @@ int32_t AudioHapticVibratorImpl::StartNonSyncOnceVibration()
     }
     isRunning_ = true;
     result = RunVibrationPatterns(vibratorPkg_, lock);
+    ResumeModulePackge();
     isRunning_ = false;
     isIntensityChanged_ = false;
     if (result != MSERR_OK) {
@@ -696,7 +703,7 @@ int32_t AudioHapticVibratorImpl::PlayVibrationPattern(
 
     // last pattern need to wait
     if (patternIndex == vibratorPkg->patternNum - 1) {
-        int32_t lastPatternDuration = vibratorPkg->patterns[patternIndex].patternDuration;
+        int32_t lastPatternDuration = vibratorPkg->patterns[patternIndex].patternDuration + PATTERNDURATION_TIME_MS;
         (void)vibrateCV_.wait_for(lock, std::chrono::milliseconds(lastPatternDuration),
             [this]() { return isStopped_ || isNeedRestart_; });
         CHECK_AND_RETURN_RET_LOG(!isStopped_ && !isNeedRestart_, result,
@@ -722,10 +729,12 @@ int32_t AudioHapticVibratorImpl::PlayVibrateForAVPlayer(const std::shared_ptr<Vi
         if (isStopped_) {
             return result;
         }
-        // get the audio time every second and handle the delay time
+        // get the audio time every second and handle the delay time unless DSP do sync work(syncId > 0)
         if (isNeedRestart_ || i + 1 >= vibratorPkg->patternNum) {
-            // need restart or the last pattern has been played, break.
             break;
+        }
+        if (audioHapticSyncId_ > 0) {
+            continue;
         }
         int32_t nextVibratorTime = vibratorPkg->patterns[i + 1].time;
         vibrateTime = audioHapticPlayer_.GetAudioCurrentTime() + PLAYER_BUFFER_TIME + GetDelayTime();
@@ -753,7 +762,6 @@ int32_t AudioHapticVibratorImpl::PlayVibrateForAVPlayer(const std::shared_ptr<Vi
             seekVibratorPkg_ = nullptr;
         }
     }
-    ResumeModulePackge();
 #endif
     return result;
 }
@@ -774,6 +782,7 @@ int32_t AudioHapticVibratorImpl::StartVibrateForAVPlayer()
     }
     isRunning_.store(true);
     result = PlayVibrateForAVPlayer(vibratorPkg_, lock);
+    ResumeModulePackge();
     isRunning_.store(false);
     isIntensityChanged_.store(false);
 #endif
@@ -840,8 +849,7 @@ bool AudioHapticVibratorImpl::IsHapticsCustomSupported()
 bool AudioHapticVibratorImpl::IsNonSync()
 {
     return audioHapticPlayer_.GetHapticsMode() == HapticsMode::HAPTICS_MODE_NON_SYNC ||
-        audioHapticPlayer_.GetHapticsMode() == HapticsMode::HAPTICS_MODE_NON_SYNC_ONCE ||
-        audioHapticPlayer_.GetHapticsMode() == HapticsMode::HAPTICS_MODE_NONE;
+        audioHapticPlayer_.GetHapticsMode() == HapticsMode::HAPTICS_MODE_NON_SYNC_ONCE;
 }
 } // namesapce Media
 } // namespace OHOS

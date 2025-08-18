@@ -174,7 +174,6 @@ ohos_unittest("avmetadatahelper_unit_test") {
     "resource_schedule_service:ressched_client",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "state_registry:tel_state_registry_api",
     "window_manager:libwm",
   ]
 

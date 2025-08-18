@@ -153,7 +153,7 @@ int32_t SoundParser::DoDemuxer(MediaAVCodec::Format *trackFormat)
     return MSERR_OK;
 }
 
-int32_t SoundParser::DoDecode(MediaAVCodec::Format trackFormat)
+int32_t SoundParser::DoDecode(MediaAVCodec::Format &trackFormat)
 {
     MediaTrace trace("SoundParser::DoDecode");
     MEDIA_LOGI("SoundParser::DoDecode start, soundID:%{public}d", soundID_);
@@ -179,7 +179,6 @@ int32_t SoundParser::DoDecode(MediaAVCodec::Format trackFormat)
         CHECK_AND_RETURN_RET_LOG(ret == 0, MSERR_INVALID_VAL, "Failed to Start audioDecorder.");
         MEDIA_LOGI("SoundParser::DoDecode, audioDec_ started, soundID:%{public}d", soundID_);
     }
-    MEDIA_LOGI("SoundParser::DoDecode end, soundID:%{public}d", soundID_);
     return MSERR_OK;
 }
 
@@ -418,9 +417,11 @@ int32_t SoundDecoderCallback::ReCombineCacheData()
             }
             copyIndex += bufferEntry->size;
             remainBufferSize -= bufferEntry->size;
-        } else {
+        } else if (bufferEntry != nullptr) {
             MEDIA_LOGE("ReCombineCacheData, bufferEntry size:%{public}d, buffer:%{public}d",
                 bufferEntry->size, bufferEntry->buffer != nullptr);
+        } else {
+            MEDIA_LOGE("ReCombineCacheData, bufferEntry is null !");
         }
     }
     MEDIA_LOGI("ReCombine finish copyIndex:%{public}d, remainSize:%{public}d", copyIndex, remainBufferSize);

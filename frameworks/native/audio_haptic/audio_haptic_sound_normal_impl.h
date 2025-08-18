@@ -48,6 +48,7 @@ public:
 private:
     int32_t LoadAVPlayer();
     int32_t ResetAVPlayer();
+    int32_t ReleaseSoundInternal();
     void ReleaseAVPlayer();
     int32_t OpenAudioSource();
 
@@ -57,7 +58,7 @@ private:
     float volume_ = 1.0f;
     bool loop_ = false;
     AudioSource configuredAudioSource_;
-    AudioHapticPlayerState playerState_ = AudioHapticPlayerState::STATE_NEW;
+    std::atomic<AudioHapticPlayerState> playerState_ = AudioHapticPlayerState::STATE_NEW;
 
     std::weak_ptr<AudioHapticSoundCallback> audioHapticPlayerCallback_;
 
