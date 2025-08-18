@@ -568,11 +568,9 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapFromSurfaceBuffer(
         RefBase *ref = reinterpret_cast<RefBase *>(nativeBuffer);
         ref->IncStrongRef(ref);
         if (isHdr) {
-            ColorManager::ColorSpaceName defaultColorSpaceName = convertColorSpace_ ?
-                ColorManager::BT2020_HLG : ColorManager::ColorSpaceName::BT709_LIMIT;
             pixelMap->SetHdrType(ImageHdrType::HDR_VIVID_SINGLE);
             pixelMap->InnerSetColorSpace(OHOS::ColorManager::ColorSpace(
-                getColorSpaceInfoRes == Status::OK ? pixelMapInfo.colorSpaceName : defaultColorSpaceName));
+                getColorSpaceInfoRes == Status::OK ? pixelMapInfo.colorSpaceName : ColorManager::BT2020_HLG));
         }
         pixelMap->SetPixelsAddr(surfaceBuffer->GetVirAddr(), surfaceBuffer.GetRefPtr(), surfaceBuffer->GetSize(),
                                 AllocatorType::DMA_ALLOC, FreeSurfaceBuffer);
