@@ -1187,7 +1187,7 @@ napi_value AVPlayerNapi::JsAddSubtitleAVFileDescriptor(napi_env env, napi_callba
     int32_t subtitleFd = -1;
     napi_status status = napi_get_value_int32(env, args[0], &subtitleFd);
     if (status != napi_ok) {
-        MEDIA_LOGE("JsAddSubtitleAVFileDescriptor status_offset != napi_ok");
+        MEDIA_LOGE("JsAddSubtitleAVFileDescriptor status != napi_ok");
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
             "invalid parameters, please check JsAddSubtitleAVFileDescriptor");
         return result;
@@ -1203,7 +1203,7 @@ napi_value AVPlayerNapi::JsAddSubtitleAVFileDescriptor(napi_env env, napi_callba
     int64_t length = -1;
     napi_status status_length = napi_get_value_int64(env, args[2], &length);
     if (status_length != napi_ok) {
-        MEDIA_LOGE("JsAddSubtitleAVFileDescriptor status_offset != napi_ok");
+        MEDIA_LOGE("JsAddSubtitleAVFileDescriptor status_length != napi_ok");
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
             "invalid parameters, please check JsAddSubtitleAVFileDescriptor");
         return result;
