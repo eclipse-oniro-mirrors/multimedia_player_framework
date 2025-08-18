@@ -50,8 +50,8 @@ public:
     int32_t SetParameter(const std::map<std::string, std::string> &parameters);
     int32_t GetParameter(std::map<std::string, std::string> &parameters);
     int32_t UpdateTimeAnchor(const int64_t anchorPts, const int64_t anchorClk);
-    int32_t LoadAdapter(uint32_t &instanceId);
-    int32_t UnloadAdapter(uint32_t instanceId);
+    int32_t LoadAdapter();
+    int32_t UnloadAdapter();
     int32_t BindOutputBuffers(const std::map<uint32_t, sptr<SurfaceBuffer>> &bufferMap);
     int32_t UnbindOutputBuffers();
     int32_t GetShareBuffer(int32_t &fd);
@@ -71,9 +71,8 @@ private:
 
 class LowPowerPlayerFactory {
 public:
-    static int32_t CreateLppSyncManagerAdapter(uint32_t &instanceId, std::shared_ptr<LppSyncManagerAdapter> &adapter);
-    static int32_t DestroyLppSyncManagerAdapter(
-        const uint32_t instanceId, std::shared_ptr<LppSyncManagerAdapter> adapter);
+    static int32_t CreateLppSyncManagerAdapter(std::shared_ptr<LppSyncManagerAdapter> &adapter);
+    static int32_t DestroyLppSyncManagerAdapter(std::shared_ptr<LppSyncManagerAdapter> adapter);
 };
 
 }  // namespace Media

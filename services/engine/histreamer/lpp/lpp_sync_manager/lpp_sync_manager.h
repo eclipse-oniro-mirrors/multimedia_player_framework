@@ -54,7 +54,6 @@ public:
 private:
     void ResetTimeAnchor();
 
-    uint32_t adapterId_ {0};
     std::string videoStreamerId_ {};
     std::shared_ptr<LppSyncManagerAdapter> adapter_ {nullptr};
     bool videoIsLpp_ {true};
