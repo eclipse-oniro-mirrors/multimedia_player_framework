@@ -2365,14 +2365,14 @@ void ScreenCaptureServer::PublishScreenCaptureEvent(const std::string& state)
     want.SetParam("screenCaptureSessionId", sessionId_);
     if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
         want.SetParam("screenCaptureType", std::string("originalStream"));
-    }else if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
+    } else if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
         want.SetParam("screenCaptureType", std::string("captureFile"));
     }
     EventFwk::CommonEventPublishInfo commonEventPublishInfo;
     commonEventPublishInfo.SetSubscriberType(EventFwk::SubscriberType::SYSTEM_SUBSCRIBER_TYPE);
     EventFwk::CommonEventData commonData {want};
     EventFwk::CommonEventManager::PublishCommonEvent(commonData, commonEventPublishInfo);
-    MEDIA_LOGI("ohos.permission.SHARE_SCREEN publish, uid: %{public}d, type: %{public}d, sessionId: %{public}d", 
+    MEDIA_LOGI("ohos.permission.SHARE_SCREEN publish, uid: %{public}d, type: %{public}d, sessionId: %{public}d",
         appInfo_.appUid, captureConfig_.dataType, sessionId_);
 }
 
