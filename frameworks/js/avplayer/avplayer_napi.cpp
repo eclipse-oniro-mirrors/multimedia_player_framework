@@ -3497,11 +3497,11 @@ void AVPlayerNapi::NotifyPosition(int32_t position)
 
 void AVPlayerNapi::NotifyState(PlayerStates state)
 {
-    std::lock_guard<std::mutex> lock(taskMutex_);
     if (state == PlayerStates::PLAYER_INITIALIZED) {
         static constexpr int32_t waitForSetStateChangeCbUs = 3000;
         usleep(waitForSetStateChangeCbUs);
     }
+    std::lock_guard<std::mutex> lock(taskMutex_);
     if (state_ != state) {
         state_ = state;
         MEDIA_LOGI("0x%{public}06" PRIXPTR " notify %{public}s", FAKE_POINTER(this), GetCurrentState().c_str());
