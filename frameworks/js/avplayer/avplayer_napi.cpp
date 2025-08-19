@@ -3499,7 +3499,7 @@ void AVPlayerNapi::NotifyState(PlayerStates state)
 {
     std::lock_guard<std::mutex> lock(taskMutex_);
     if (state == PlayerStates::PLAYER_INITIALIZED) {
-        static constexpr waitForSetStateChangeCbUs = 3000;
+        static constexpr int32_t waitForSetStateChangeCbUs = 3000;
         usleep(waitForSetStateChangeCbUs);
     }
     if (state_ != state) {
