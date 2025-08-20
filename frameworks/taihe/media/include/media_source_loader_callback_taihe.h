@@ -16,6 +16,7 @@
 #define MEDIA_SOURCE_LOADER_CALLBACK_TAIHE_H
 
 #include <mutex>
+#include "event_handler.h"
 #include "media_source.h"
 #include "media_ani_common.h"
 #include "loading_request.h"
@@ -54,6 +55,7 @@ public:
     void SaveCallbackReference(const std::string &name, std::shared_ptr<AutoRef> ref);
     void ClearCallbackReference();
     void WaitResult();
+    std::shared_ptr<OHOS::AppExecFwk::EventHandler> mainHandler_ = nullptr;
 
 private:
     std::mutex mutex_;
