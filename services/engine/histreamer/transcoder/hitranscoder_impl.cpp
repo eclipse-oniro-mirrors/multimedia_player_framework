@@ -69,6 +69,7 @@ static const std::unordered_set<std::string> AVMETA_KEY = {
     { Tag::AUDIO_SAMPLE_FORMAT },
     { Tag::AUDIO_BITS_PER_CODED_SAMPLE },
     { Tag::AUDIO_BITS_PER_RAW_SAMPLE },
+    { Tag::MEDIA_AIGC },
     { "customInfo" },
 };
 
