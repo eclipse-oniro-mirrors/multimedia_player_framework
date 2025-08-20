@@ -21,7 +21,7 @@
 
 namespace OHOS {
 namespace Media {
-class MockILppAudioStreamerEngine : public ILppAudioStreamerEngine, 
+class MockILppAudioStreamerEngine : public ILppAudioStreamerEngine,
                                     public std::enable_shared_from_this<MockILppAudioStreamerEngine>{
 public:
     MOCK_METHOD(int32_t, Init, (const std::string &mime), ());

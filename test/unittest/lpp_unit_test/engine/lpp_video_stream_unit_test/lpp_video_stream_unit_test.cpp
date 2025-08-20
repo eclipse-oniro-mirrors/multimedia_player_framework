@@ -482,9 +482,6 @@ HWTEST_F(LppVideoStreamUnitTest, Reset_002, TestSize.Level1)
 {
     ASSERT_NE(nullptr, videoStreamImpl_);
     videoStreamImpl_->vdec_ = nullptr;
-    // videoStreamImpl_->dataMgr_ = nullptr;
-    // videoStreamImpl_->syncMgr_ = nullptr;
-    // videoStreamImpl_->surface_ = nullptr;
 
     EXPECT_CALL(*syncMgr_, Reset()).Times(0);
     EXPECT_CALL(*vdec_, Release()).Times(0);
@@ -649,29 +646,6 @@ HWTEST_F(LppVideoStreamUnitTest, Configure_001, TestSize.Level1)
     auto ret = videoStreamImpl_->Configure(params);
     EXPECT_EQ(ret, MSERR_OK);
 }
-
-// /**
-// * @tc.name    : Test ReturnFrames API
-// * @tc.number  : ReturnFrames_001
-// * @tc.desc    : Test ReturnFrames interface with valid frame packet
-// * @tc.require : issueI5NZAQ
-// */
-// HWTEST_F(LppVideoStreamUnitTest, ReturnFrames_001, TestSize.Level1)
-// {
-//     ASSERT_NE(nullptr, videoStreamImpl_);
-
-//     // 创建一个有效的LppDataPacket
-//     auto framePacket = std::make_shared<MockLppDataPacket>();
-
-//     // 预期dataMgr_正确处理数据包
-//     EXPECT_CALL(*dataMgr_, ProcessNewData(framePacket)).WillOnce(Return(MSERR_OK));
-
-//     // 调用ReturnFrames方法
-//     auto ret = videoStreamImpl_->ReturnFrames(framePacket);
-
-//     // 验证返回值为MSERR_OK
-//     EXPECT_EQ(ret, MSERR_OK);
-// }
 
 /**
  * @tc.name    : Test GetLppSyncManager API
