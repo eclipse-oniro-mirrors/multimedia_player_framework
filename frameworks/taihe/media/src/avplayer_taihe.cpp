@@ -2792,10 +2792,7 @@ void AVPlayerImpl::OffSeiMessageReceived(optional_view<array<int32_t>> payloadTy
             MEDIA_LOGD("The array is empty, no processing is performed.");
             return;
         } else {
-            std::vector<int32_t> payloadTypeVec(
-                payloadTypes.value().begin(), 
-                payloadTypes.value().end()
-            );
+            std::vector<int32_t> payloadTypeVec(payloadTypes.value().begin(), payloadTypes.value().end());
             SeiMessageCallbackOff(callbackName, payloadTypeVec);
             ClearCallbackReference(callbackName);
             MEDIA_LOGI("0x%{public}06" PRIXPTR " OffSeiMessageReceived success", FAKE_POINTER(this));

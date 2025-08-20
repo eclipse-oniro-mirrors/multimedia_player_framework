@@ -89,11 +89,9 @@ int64_t MediaSourceLoaderCallback::Open(std::shared_ptr<LoadingRequest> &request
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", taiheCb->callbackName_.c_str());
             auto func = ref->callbackRef_;
             CHECK_AND_BREAK_LOG(func != nullptr, "failed to get callback");
-            std::shared_ptr<callback<int64_t(ohos::multimedia::media::weak::MediaSourceLoadingRequest)>> cacheCallback =
-                std::reinterpret_pointer_cast<callback<int64_t(ohos::multimedia::media::weak::MediaSourceLoadingRequest)>>
-                    (func);
-            taiheCb->uuid_ = (*cacheCallback)(static_cast<
-                ohos::multimedia::media::weak::MediaSourceLoadingRequest>(
+            std::shared_ptr<callback<int64_t(weak::MediaSourceLoadingRequest)>> cacheCallback =
+                std::reinterpret_pointer_cast<callback<int64_t(weak::MediaSourceLoadingRequest)>>(func);
+            taiheCb->uuid_ = (*cacheCallback)(static_cast<weak::MediaSourceLoadingRequest>(
                 MediaSourceLoadingRequestImpl::CreateLoadingRequest(taiheCb->request_)));
             std::unique_lock<std::mutex> lock(taiheCb->mutexCond_);
             taiheCb->setResult_ = true;
@@ -104,7 +102,11 @@ int64_t MediaSourceLoaderCallback::Open(std::shared_ptr<LoadingRequest> &request
         std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::GetMainEventRunner();
         mainHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
     }
-    mainHandler_->PostTask(task, "Open", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    bool ret = mainHandler_->PostTask(task, "Open", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    if (!ret) {
+        MEDIA_LOGE("Failed to execute libuv work queue");
+        return taiheCb_->uuid_;
+    }
     taiheCb_->WaitResult();
     MEDIA_LOGI("MediaSourceLoaderCallback open out");
     return taiheCb_->uuid_;
@@ -148,7 +150,10 @@ void MediaSourceLoaderCallback::Read(int64_t uuid, int64_t requestedOffset, int6
         std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::GetMainEventRunner();
         mainHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
     }
-    mainHandler_->PostTask(task, "Read", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    bool ret = mainHandler_->PostTask(task, "Read", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    if (!ret) {
+        MEDIA_LOGE("Failed to execute libuv work queue");
+    }
 }
 
 void MediaSourceLoaderCallback::Close(int64_t uuid)
@@ -186,7 +191,10 @@ void MediaSourceLoaderCallback::Close(int64_t uuid)
         std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::GetMainEventRunner();
         mainHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
     }
-    mainHandler_->PostTask(task, "Close", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    bool ret = mainHandler_->PostTask(task, "Close", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    if (!ret) {
+        MEDIA_LOGE("Failed to execute libuv work queue");
+    }
 }
 
 void MediaSourceLoaderCallback::SaveCallbackReference(const std::string &name, std::shared_ptr<AutoRef> ref)
