@@ -167,5 +167,125 @@ HWTEST_F(LppVideoCallbackLooperUnitTest, Stop_002, TestSize.Level1)
     callbackLooper_->Stop();
     EXPECT_EQ(callbackLooper_->taskStarted_, false);
 }
+
+/**
+ * @tc.name    : Test OnError API
+ * @tc.number  : OnError_001
+ * @tc.desc    : Test OnError interface in normal case
+ * @tc.require : issueI5NZAQ
+ */
+HWTEST_F(LppVideoCallbackLooperUnitTest, OnError_001, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, callbackLooper_);
+    ASSERT_NE(nullptr, engineObs_);
+    callbackLooper_->StartWithLppVideoStreamerEngineObs(engineObs_);
+
+    MediaServiceErrCode errCode = MediaServiceErrCode::MSERR_UNKNOWN;
+    std::string errMsg = "Test MSERR_UNKNOWN";
+
+    EXPECT_CALL(*engineObs_, OnError(errCode, errMsg)).Times(1);
+    callbackLooper_->OnError(errCode, errMsg);
+}
+
+/**
+ * @tc.name    : Test OnAnchorUpdateNeeded API
+ * @tc.number  : OnAnchorUpdateNeeded_001
+ * @tc.desc    : Test OnAnchorUpdateNeeded interface in normal case
+ * @tc.require : issueI5NZAQ
+ */
+HWTEST_F(LppVideoCallbackLooperUnitTest, OnAnchorUpdateNeeded_001, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, callbackLooper_);
+
+    int64_t anchorPts = 0;
+    int64_t anchorClk = 0;
+
+    bool result = callbackLooper_->OnAnchorUpdateNeeded(anchorPts, anchorClk);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.name    : Test OnEos API
+ * @tc.number  : OnEos_001
+ * @tc.desc    : Test OnEos interface in normal case
+ * @tc.require : issueI5NZAQ
+ */
+HWTEST_F(LppVideoCallbackLooperUnitTest, OnEos_001, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, callbackLooper_);
+    ASSERT_NE(nullptr, engineObs_);
+    callbackLooper_->StartWithLppVideoStreamerEngineObs(engineObs_);
+    EXPECT_CALL(*engineObs_, OnEos()).Times(1);
+
+    callbackLooper_->OnEos();
+}
+
+/**
+ * @tc.name    : Test OnRenderStarted API
+ * @tc.number  : OnRenderStarted_001
+ * @tc.desc    : Test OnRenderStarted interface in normal case
+ * @tc.require : issueI5NZAQ
+ */
+HWTEST_F(LppVideoCallbackLooperUnitTest, OnRenderStarted_001, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, callbackLooper_);
+    ASSERT_NE(nullptr, engineObs_);
+    callbackLooper_->StartWithLppVideoStreamerEngineObs(engineObs_);
+    EXPECT_CALL(*engineObs_, OnRenderStarted()).Times(1);
+
+    callbackLooper_->OnRenderStarted();
+}
+
+/**
+ * @tc.name    : Test OnFirstFrameReady API
+ * @tc.number  : OnFirstFrameReady_001
+ * @tc.desc    : Test OnFirstFrameReady interface in normal case
+ * @tc.require : issueI5NZAQ
+ */
+HWTEST_F(LppVideoCallbackLooperUnitTest, OnFirstFrameReady_001, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, callbackLooper_);
+    ASSERT_NE(nullptr, engineObs_);
+    callbackLooper_->StartWithLppVideoStreamerEngineObs(engineObs_);
+    EXPECT_CALL(*engineObs_, OnFirstFrameReady()).Times(1);
+
+    callbackLooper_->OnFirstFrameReady();
+}
+
+/**
+ * @tc.name    : Test OnStreamChanged API
+ * @tc.number  : OnStreamChanged_001
+ * @tc.desc    : Test OnStreamChanged interface in normal case
+ * @tc.require : issueI5NZAQ
+ */
+HWTEST_F(LppVideoCallbackLooperUnitTest, OnStreamChanged_001, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, callbackLooper_);
+    ASSERT_NE(nullptr, engineObs_);
+    callbackLooper_->StartWithLppVideoStreamerEngineObs(engineObs_);
+
+    Format format;
+    EXPECT_CALL(*engineObs_, OnStreamChanged(_)).Times(1);
+
+    callbackLooper_->OnStreamChanged(format);
+}
+
+/**
+ * @tc.name    : Test Reset API
+ * @tc.number  : Reset_001
+ * @tc.desc    : Test Reset interface in normal case
+ * @tc.require : issueI5NZAQ
+ */
+HWTEST_F(LppVideoCallbackLooperUnitTest, Reset_001, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, callbackLooper_);
+    ASSERT_NE(nullptr, engineObs_);
+
+    callbackLooper_->StartWithLppVideoStreamerEngineObs(engineObs_);
+    EXPECT_TRUE(callbackLooper_->taskStarted_);
+
+    callbackLooper_->Reset();
+    EXPECT_FALSE(callbackLooper_->taskStarted_);
+}
 } // namespace Media
-} // namespace OHOS
+} // namespace OHOS
