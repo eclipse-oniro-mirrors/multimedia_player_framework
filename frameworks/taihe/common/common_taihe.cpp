@@ -126,7 +126,7 @@ ani_object CommonTaihe::ToBusinessError(ani_env *env, int32_t code, const std::s
     CHECK_AND_RETURN_RET_LOG(ANI_OK == env->Object_New(cls, ctor, &error), err,
         "new object %{public}s failed", CLASS_NAME_BUSINESSERROR);
     CHECK_AND_RETURN_RET_LOG(
-        ANI_OK == env->Object_SetPropertyByName_Double(error, "code", static_cast<ani_double>(code)), err,
+        ANI_OK == env->Object_SetPropertyByName_Int(error, "code", static_cast<ani_int>(code)), err,
         "set property BusinessError.code failed");
     ani_string messageRef {};
     CHECK_AND_RETURN_RET_LOG(ANI_OK == env->String_NewUTF8(message.c_str(), message.size(), &messageRef), err,
