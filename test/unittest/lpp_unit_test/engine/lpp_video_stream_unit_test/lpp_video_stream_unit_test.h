@@ -19,6 +19,10 @@
 #include "gtest/gtest.h"
 #include "hilpp_vstreamer_impl.h"
 #include "lpp_sync_manager.h"
+#include "lpp_common.h"
+#include "lpp_video_callback_looper.h"
+#include "mock_avbuffer_queue_producer.h"
+#include "mock_i_lpp_audio_streamer.h"
 
 namespace OHOS {
 namespace Media {
@@ -37,8 +41,9 @@ protected:
     std::shared_ptr<LppVideoDecoderAdapter> vdec_ {nullptr};
     std::shared_ptr<LppVideoDataManager> dataMgr_ {nullptr};
     std::shared_ptr<LppSyncManager> syncMgr_ {nullptr};
+    std::shared_ptr<LppVideoCallbackLooper> callbackLooper_ {nullptr};
     std::string streamerId_ {};
 };
 } // namespace Media
 } // namespace OHOS
-#endif // LPP_VIDEO_STREAM_UNIT_TEST_H
+#endif // LPP_VIDEO_STREAM_UNIT_TEST_H
