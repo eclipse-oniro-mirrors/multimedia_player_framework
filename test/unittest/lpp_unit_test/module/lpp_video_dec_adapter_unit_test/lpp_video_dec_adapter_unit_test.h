@@ -19,6 +19,7 @@
 #include "gtest/gtest.h"
 #include "lpp_vdec_adapter.h"
 #include "lpp_sync_manager.h"
+#include "avcodec_common.h"
 #include "mock_event_receiver.h"
 #include "avbuffer_consumer_mock.h"
 
@@ -43,4 +44,4 @@ protected:
 };
 } // namespace Media
 } // namespace OHOS
-#endif // LPP_VIDEO_DEC_ADAPTER_UNIT_TEST_H
+#endif // LPP_VIDEO_DEC_ADAPTER_UNIT_TEST_H
