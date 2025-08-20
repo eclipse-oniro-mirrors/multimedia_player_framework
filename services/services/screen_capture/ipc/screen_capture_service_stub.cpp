@@ -50,7 +50,7 @@ ScreenCaptureServiceStub::~ScreenCaptureServiceStub()
 
 int32_t ScreenCaptureServiceStub::Init()
 {
-    std::shared_lock<std::shared_mutex> write_lock(&m: rw_lock_);
+    std::shared_lock<std::shared_mutex> write_lock(rw_lock_);
     screenCaptureServer_ = ScreenCaptureServer::Create();
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_NO_MEMORY,
         "failed to create ScreenCaptureServer Service");
@@ -91,7 +91,7 @@ int32_t ScreenCaptureServiceStub::Init()
 
 int32_t ScreenCaptureServiceStub::DestroyStub()
 {
-    std::unique_lock<std::shared_mutex> write_lock(&m: rw_lock_);
+    std::unique_lock<std::shared_mutex> write_lock(rw_lock_);
     screenCaptureServer_ = nullptr;
     MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::SCREEN_CAPTURE, AsObject());
     return MSERR_OK;
@@ -127,7 +127,7 @@ int ScreenCaptureServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data
 
 int32_t ScreenCaptureServiceStub::SetCaptureMode(CaptureMode captureMode)
 {
-    std::shared_lock<std::shared_mutex> read_lock(&m: rw_lock_);
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     return screenCaptureServer_->SetCaptureMode(captureMode);
@@ -135,7 +135,7 @@ int32_t ScreenCaptureServiceStub::SetCaptureMode(CaptureMode captureMode)
 
 int32_t ScreenCaptureServiceStub::SetDataType(DataType dataType)
 {
-    std::shared_lock<std::shared_mutex> read_lock(&m: rw_lock_);
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     return screenCaptureServer_->SetDataType(dataType);
@@ -143,7 +143,7 @@ int32_t ScreenCaptureServiceStub::SetDataType(DataType dataType)
 
 int32_t ScreenCaptureServiceStub::SetRecorderInfo(RecorderInfo recorderInfo)
 {
-    std::shared_lock<std::shared_mutex> read_lock(&m: rw_lock_);
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     return screenCaptureServer_->SetRecorderInfo(recorderInfo);
@@ -151,7 +151,7 @@ int32_t ScreenCaptureServiceStub::SetRecorderInfo(RecorderInfo recorderInfo)
 
 int32_t ScreenCaptureServiceStub::SetOutputFile(int32_t fd)
 {
-    std::shared_lock<std::shared_mutex> read_lock(&m: rw_lock_);
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     return screenCaptureServer_->SetOutputFile(fd);
@@ -159,7 +159,7 @@ int32_t ScreenCaptureServiceStub::SetOutputFile(int32_t fd)
 
 int32_t ScreenCaptureServiceStub::SetAndCheckLimit()
 {
-    std::shared_lock<std::shared_mutex> read_lock(&m: rw_lock_);
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     return screenCaptureServer_->SetAndCheckLimit();
@@ -167,7 +167,7 @@ int32_t ScreenCaptureServiceStub::SetAndCheckLimit()
 
 int32_t ScreenCaptureServiceStub::SetAndCheckSaLimit(OHOS::AudioStandard::AppInfo &appInfo)
 {
-    std::shared_lock<std::shared_mutex> read_lock(&m: rw_lock_);
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     return screenCaptureServer_->SetAndCheckSaLimit(appInfo);
@@ -175,7 +175,7 @@ int32_t ScreenCaptureServiceStub::SetAndCheckSaLimit(OHOS::AudioStandard::AppInf
 
 int32_t ScreenCaptureServiceStub::InitAudioEncInfo(AudioEncInfo audioEncInfo)
 {
-    std::shared_lock<std::shared_mutex> read_lock(&m: rw_lock_);
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     return screenCaptureServer_->InitAudioEncInfo(audioEncInfo);
@@ -183,7 +183,7 @@ int32_t ScreenCaptureServiceStub::InitAudioEncInfo(AudioEncInfo audioEncInfo)
 
 int32_t ScreenCaptureServiceStub::InitAudioCap(AudioCaptureInfo audioInfo)
 {
-    std::shared_lock<std::shared_mutex> read_lock(&m: rw_lock_);
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     return screenCaptureServer_->InitAudioCap(audioInfo);
@@ -191,7 +191,7 @@ int32_t ScreenCaptureServiceStub::InitAudioCap(AudioCaptureInfo audioInfo)
 
 int32_t ScreenCaptureServiceStub::InitVideoEncInfo(VideoEncInfo videoEncInfo)
 {
-    std::shared_lock<std::shared_mutex> read_lock(&m: rw_lock_);
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     return screenCaptureServer_->InitVideoEncInfo(videoEncInfo);
@@ -199,7 +199,7 @@ int32_t ScreenCaptureServiceStub::InitVideoEncInfo(VideoEncInfo videoEncInfo)
 
 int32_t ScreenCaptureServiceStub::InitVideoCap(VideoCaptureInfo videoInfo)
 {
-    std::shared_lock<std::shared_mutex> read_lock(&m: rw_lock_);
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     return screenCaptureServer_->InitVideoCap(videoInfo);
@@ -207,7 +207,7 @@ int32_t ScreenCaptureServiceStub::InitVideoCap(VideoCaptureInfo videoInfo)
 
 int32_t ScreenCaptureServiceStub::StartScreenCapture(bool isPrivacyAuthorityEnabled)
 {
-    std::shared_lock<std::shared_mutex> read_lock(&m: rw_lock_);
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     return screenCaptureServer_->StartScreenCapture(isPrivacyAuthorityEnabled);
@@ -215,7 +215,7 @@ int32_t ScreenCaptureServiceStub::StartScreenCapture(bool isPrivacyAuthorityEnab
 
 int32_t ScreenCaptureServiceStub::StartScreenCaptureWithSurface(sptr<Surface> surface, bool isPrivacyAuthorityEnabled)
 {
-    std::shared_lock<std::shared_mutex> read_lock(&m: rw_lock_);
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
 
@@ -224,7 +224,7 @@ int32_t ScreenCaptureServiceStub::StartScreenCaptureWithSurface(sptr<Surface> su
 
 int32_t ScreenCaptureServiceStub::UpdateSurface(sptr<Surface> surface)
 {
-    std::shared_lock<std::shared_mutex> read_lock(&m: rw_lock_);
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE, "screen capture server is nullptr");
 
     return screenCaptureServer_->UpdateSurface(surface);
@@ -232,7 +232,7 @@ int32_t ScreenCaptureServiceStub::UpdateSurface(sptr<Surface> surface)
 
 int32_t ScreenCaptureServiceStub::StopScreenCapture()
 {
-    std::shared_lock<std::shared_mutex> read_lock(&m: rw_lock_);
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     return screenCaptureServer_->StopScreenCapture();
@@ -248,7 +248,7 @@ int32_t ScreenCaptureServiceStub::SetListenerObject(const sptr<IRemoteObject> &o
     std::shared_ptr<ScreenCaptureCallBack> callback = std::make_shared<ScreenCaptureListenerCallback>(listener);
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_NO_MEMORY, "failed to new ScreenCaptureCallBack");
 
-    std::shared_lock<std::shared_mutex> read_lock(&m: rw_lock_);
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_NO_MEMORY, "screen capture server is nullptr");
     (void)screenCaptureServer_->SetScreenCaptureCallback(callback);
     return MSERR_OK;
@@ -256,7 +256,7 @@ int32_t ScreenCaptureServiceStub::SetListenerObject(const sptr<IRemoteObject> &o
 
 int32_t ScreenCaptureServiceStub::ExcludeContent(ScreenCaptureContentFilter &contentFilter)
 {
-    std::shared_lock<std::shared_mutex> read_lock(&m: rw_lock_);
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     return screenCaptureServer_->ExcludeContent(contentFilter);
@@ -264,7 +264,7 @@ int32_t ScreenCaptureServiceStub::ExcludeContent(ScreenCaptureContentFilter &con
 
 int32_t ScreenCaptureServiceStub::SetMicrophoneEnabled(bool isMicrophone)
 {
-    std::shared_lock<std::shared_mutex> read_lock(&m: rw_lock_);
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     return screenCaptureServer_->SetMicrophoneEnabled(isMicrophone);
@@ -272,7 +272,7 @@ int32_t ScreenCaptureServiceStub::SetMicrophoneEnabled(bool isMicrophone)
 
 int32_t ScreenCaptureServiceStub::SetCanvasRotation(bool canvasRotation)
 {
-    std::shared_lock<std::shared_mutex> read_lock(&m: rw_lock_);
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
                              "screen capture server is nullptr");
     return screenCaptureServer_->SetCanvasRotation(canvasRotation);
@@ -280,7 +280,7 @@ int32_t ScreenCaptureServiceStub::SetCanvasRotation(bool canvasRotation)
 
 int32_t ScreenCaptureServiceStub::ShowCursor(bool showCursor)
 {
-    std::shared_lock<std::shared_mutex> read_lock(&m: rw_lock_);
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
                              "screen capture server is nullptr");
     return screenCaptureServer_->ShowCursor(showCursor);
@@ -288,7 +288,7 @@ int32_t ScreenCaptureServiceStub::ShowCursor(bool showCursor)
 
 int32_t ScreenCaptureServiceStub::ResizeCanvas(int32_t width, int32_t height)
 {
-    std::shared_lock<std::shared_mutex> read_lock(&m: rw_lock_);
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
                              "screen capture server is nullptr");
     return screenCaptureServer_->ResizeCanvas(width, height);
@@ -296,7 +296,7 @@ int32_t ScreenCaptureServiceStub::ResizeCanvas(int32_t width, int32_t height)
 
 int32_t ScreenCaptureServiceStub::SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec)
 {
-    std::shared_lock<std::shared_mutex> read_lock(&m: rw_lock_);
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
                              "screen capture server is nullptr");
     return screenCaptureServer_->SkipPrivacyMode(windowIDsVec);
@@ -304,7 +304,7 @@ int32_t ScreenCaptureServiceStub::SkipPrivacyMode(std::vector<uint64_t> &windowI
 
 int32_t ScreenCaptureServiceStub::SetMaxVideoFrameRate(int32_t frameRate)
 {
-    std::shared_lock<std::shared_mutex> read_lock(&m: rw_lock_);
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
                              "screen capture server is nullptr");
     return screenCaptureServer_->SetMaxVideoFrameRate(frameRate);
@@ -313,7 +313,7 @@ int32_t ScreenCaptureServiceStub::SetMaxVideoFrameRate(int32_t frameRate)
 int32_t ScreenCaptureServiceStub::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer,
                                                      AudioCaptureSourceType type)
 {
-    std::shared_lock<std::shared_mutex> read_lock(&m: rw_lock_);
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     return screenCaptureServer_->AcquireAudioBuffer(audioBuffer, type);
@@ -322,7 +322,7 @@ int32_t ScreenCaptureServiceStub::AcquireAudioBuffer(std::shared_ptr<AudioBuffer
 int32_t ScreenCaptureServiceStub::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence,
                                                      int64_t &timestamp, OHOS::Rect &damage)
 {
-    std::shared_lock<std::shared_mutex> read_lock(&m: rw_lock_);
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     return screenCaptureServer_->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage);
@@ -330,7 +330,7 @@ int32_t ScreenCaptureServiceStub::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &
 
 int32_t ScreenCaptureServiceStub::ReleaseAudioBuffer(AudioCaptureSourceType type)
 {
-    std::shared_lock<std::shared_mutex> read_lock(&m: rw_lock_);
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     return screenCaptureServer_->ReleaseAudioBuffer(type);
@@ -338,7 +338,7 @@ int32_t ScreenCaptureServiceStub::ReleaseAudioBuffer(AudioCaptureSourceType type
 
 int32_t ScreenCaptureServiceStub::ReleaseVideoBuffer()
 {
-    std::shared_lock<std::shared_mutex> read_lock(&m: rw_lock_);
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     return screenCaptureServer_->ReleaseVideoBuffer();
@@ -346,7 +346,7 @@ int32_t ScreenCaptureServiceStub::ReleaseVideoBuffer()
 
 int32_t ScreenCaptureServiceStub::SetScreenCaptureStrategy(ScreenCaptureStrategy strategy)
 {
-    std::shared_lock<std::shared_mutex> read_lock(&m: rw_lock_);
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     return screenCaptureServer_->SetScreenCaptureStrategy(strategy);
@@ -354,7 +354,7 @@ int32_t ScreenCaptureServiceStub::SetScreenCaptureStrategy(ScreenCaptureStrategy
 
 int32_t ScreenCaptureServiceStub::SetCaptureArea(uint64_t displayId, OHOS::Rect area)
 {
-    std::shared_lock<std::shared_mutex> read_lock(&m: rw_lock_);
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     return screenCaptureServer_->SetCaptureArea(displayId, area);
@@ -719,7 +719,7 @@ int32_t ScreenCaptureServiceStub::SetListenerObject(MessageParcel &data, Message
 
 void ScreenCaptureServiceStub::Release()
 {
-    std::shared_lock<std::shared_mutex> read_lock(&m: rw_lock_);
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_LOG(screenCaptureServer_ != nullptr, "screen capture server is nullptr");
     return screenCaptureServer_->Release();
 }
