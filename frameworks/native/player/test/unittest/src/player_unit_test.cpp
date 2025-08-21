@@ -4741,5 +4741,201 @@ HWTEST_F(PlayerUnitTest, Player_EnableReportMediaProgress_004, TestSize.Level0)
     ASSERT_EQ(MSERR_OK, player_->EnableReportMediaProgress(true));
     EXPECT_EQ(MSERR_OK, player_->Play());
 }
+
+/**
+ * @tc.name  : Test SetPlayRangeWithMode [0, 600] SEEK_PREVIOUS_SYNC
+ * @tc.number: Player_SetPlayRangeWithMode_001
+ * @tc.desc  : Test Player SetPlayRangeWithMode interface with valid range and mode
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlayRangeWithMode_001, TestSize.Level0)
+{
+    int32_t duration = 0;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    
+    // 首次设置范围：[0, 600]，使用默认模式SEEK_PREVIOUS_SYNC
+    EXPECT_EQ(MSERR_OK, player_->SetPlayRangeWithMode(0, 600));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_TRUE(player_->IsPlaying());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    
+    // 调整范围：[0, duration]，使用支持的SEEK_CLOSEST模式
+    EXPECT_EQ(MSERR_OK, player_->SetPlayRangeWithMode(0, duration, SEEK_CLOSEST));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_TRUE(player_->IsPlaying());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+}
+
+/**
+ * @tc.name  : Test SetPlayRangeWithMode [1000, 5000] SEEK_CLOSEST
+ * @tc.number: Player_SetPlayRangeWithMode_002
+ * @tc.desc  : Test Player SetPlayRangeWithMode in playing state
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlayRangeWithMode_002, TestSize.Level0)
+{
+    int32_t duration = 0;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_TRUE(player_->IsPlaying());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    
+    // 在暂停状态下设置范围，使用SEEK_CLOSEST模式
+    EXPECT_EQ(MSERR_OK, player_->SetPlayRangeWithMode(1000, 5000, SEEK_CLOSEST));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_TRUE(player_->IsPlaying());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+}
+
+/**
+ * @tc.name  : Test SetPlayRangeWithMode [-2, -1] SEEK_PREVIOUS_SYNC
+ * @tc.number: Player_SetPlayRangeWithMode_003
+ * @tc.desc  : Test Player SetPlayRangeWithMode with negative range
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlayRangeWithMode_003, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    
+    // 测试负数值范围
+    ASSERT_NE(MSERR_OK, player_->SetPlayRangeWithMode(-2, -1, SEEK_PREVIOUS_SYNC));
+}
+
+/**
+ * @tc.name  : Test SetPlayRangeWithMode [100, 20] SEEK_CLOSEST
+ * @tc.number: Player_SetPlayRangeWithMode_004
+ * @tc.desc  : Test Player SetPlayRangeWithMode with start > end
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlayRangeWithMode_004, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    
+    // 测试起始时间大于结束时间
+    ASSERT_NE(MSERR_OK, player_->SetPlayRangeWithMode(100, 20, SEEK_CLOSEST));
+}
+
+/**
+ * @tc.name  : Test SetPlayRangeWithMode [0, 600] SEEK_NEXT_SYNC
+ * @tc.number: Player_SetPlayRangeWithMode_005
+ * @tc.desc  : Test Player SetPlayRangeWithMode with unsupported mode
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlayRangeWithMode_005, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    
+    // 测试不支持的SEEK_NEXT_SYNC模式
+    ASSERT_NE(MSERR_OK, player_->SetPlayRangeWithMode(0, 600, SEEK_NEXT_SYNC));
+}
+
+/**
+ * @tc.name  : Test SetPlayRangeWithMode [duration+1, duration+2]
+ * @tc.number: Player_SetPlayRangeWithMode_006
+ * @tc.desc  : Test Player SetPlayRangeWithMode beyond media duration
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlayRangeWithMode_006, TestSize.Level0)
+{
+    int32_t duration = 0;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_TRUE(player_->IsPlaying());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    
+    // 测试范围超出媒体总时长
+    int32_t start = duration + 1;
+    int32_t end = duration + 2;
+    ASSERT_NE(MSERR_OK, player_->SetPlayRangeWithMode(start, end, SEEK_PREVIOUS_SYNC));
+}
+
+/**
+ * @tc.name  : Test SetPlayRangeWithMode before SetSource
+ * @tc.number: Player_SetPlayRangeWithMode_007
+ * @tc.desc  : Test Player SetPlayRangeWithMode without SetSource
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlayRangeWithMode_007, TestSize.Level0)
+{
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    
+    // 测试未设置媒体源时调用接口
+    ASSERT_NE(MSERR_OK, player_->SetPlayRangeWithMode(0, 600, SEEK_PREVIOUS_SYNC));
+}
+
+/**
+ * @tc.name  : Test SetPlayRangeUsWithMode [0, 600000] SEEK_PREVIOUS_SYNC
+ * @tc.number: Player_SetPlayRangeUsWithMode_001
+ * @tc.desc  : Test Player SetPlayRangeUsWithMode interface with valid range and default mode
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlayRangeUsWithMode_001, TestSize.Level0)
+{
+    int32_t duration = 0; // 单位：毫秒，需转换为微秒使用
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    
+    // 首次设置范围：[0微秒, 600000微秒（600毫秒）]，使用默认模式SEEK_PREVIOUS_SYNC
+    EXPECT_EQ(MSERR_OK, player_->SetPlayRangeUsWithMode(0, 600000));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration)); // 获取总时长（毫秒）
+    int64_t durationUs = static_cast<int64_t>(duration) * 1000; // 转换为微秒
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_TRUE(player_->IsPlaying());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    
+    // 调整范围：[0微秒, 总时长微秒]，使用支持的SEEK_CLOSEST模式
+    EXPECT_EQ(MSERR_OK, player_->SetPlayRangeUsWithMode(0, durationUs, SEEK_CLOSEST));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_TRUE(player_->IsPlaying());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+}
+
+/**
+ * @tc.name  : Test SetPlayRangeUsWithMode [1000000, 5000000] SEEK_CLOSEST
+ * @tc.number: Player_SetPlayRangeUsWithMode_002
+ * @tc.desc  : Test Player SetPlayRangeUsWithMode in paused state
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlayRangeUsWithMode_002, TestSize.Level0)
+{
+    int32_t duration = 0;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_TRUE(player_->IsPlaying());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    
+    // 在暂停状态下设置范围：[1000000微秒（1秒）, 5000000微秒（5秒）]，使用SEEK_CLOSEST模式
+    EXPECT_EQ(MSERR_OK, player_->SetPlayRangeUsWithMode(1000000, 5000000, SEEK_CLOSEST));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_TRUE(player_->IsPlaying());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+}
 } // namespace Media
 } // namespace OHOS
