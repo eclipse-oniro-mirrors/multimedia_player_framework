@@ -4937,5 +4937,167 @@ HWTEST_F(PlayerUnitTest, Player_SetPlayRangeUsWithMode_002, TestSize.Level0)
     EXPECT_TRUE(player_->IsPlaying());
     EXPECT_EQ(MSERR_OK, player_->Pause());
 }
+
+/**
+ * @tc.name  : Test EnableReportMediaProgress API
+ * @tc.number: Player_GetPlayerPids_001
+ * @tc.desc  : Test Player GetPlayerPids
+ * */
+HWTEST_F(PlayerUnitTest, Player_GetPlayerPids_001, TestSize.Level0)
+{
+    auto ret = PlayerFactory::GetPlayerPids();
+    EXPECT_TRUE(ret.empty());
+}
+
+/**
+ * @tc.name  : Test SetPlaybackRate API
+ * @tc.number: Player_SetPlaybackRate_003
+ * @tc.desc  : Test Player SetPlaybackRate
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlaybackRate_003, TestSize.Level2)
+{
+    int32_t duration = 0;
+    float playbackRate1 = 2.5f;
+    float playbackRate2 = 1.25f;
+    float playbackRate3 = 1.0f;
+    float playbackRate4 = 4.0f;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    EXPECT_NE(MSERR_OK, player_->SetPlaybackRate(playbackRate1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_NE(MSERR_OK, player_->SetPlaybackRate(playbackRate1));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->SetPlaybackRate(playbackRate1));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->SetPlaybackRate(playbackRate1));
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->SetPlaybackRate(playbackRate2));
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_CLOSEST));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->SetPlaybackRate(playbackRate2));
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+    EXPECT_NE(MSERR_OK, player_->SetPlaybackRate(playbackRate3));
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_NE(MSERR_INVALID_VAL, player_->SetPlaybackRate(playbackRate4));
+}
+
+/**
+ * @tc.name  : Test SetPlaybackStrategy
+ * @tc.number: Player_SetPlaybackStrategy_003
+ * @tc.desc  : Test Player SetPlaybackStrategy
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlaybackStrategy_003, TestSize.Level0)
+{
+    AVPlayStrategy playbackStrategy = {
+        .preferredHdr = true
+    };
+    ASSERT_NE(MSERR_OK, player_->SetPlaybackStrategy(playbackStrategy));
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    ASSERT_EQ(MSERR_OK, player_->SetPlaybackStrategy(playbackStrategy));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+}
+
+/**
+ * @tc.name  : Test SetMediaMuted
+ * @tc.number: Player_SetMediaMuted_003
+ * @tc.desc  : Test Player SetMediaMuted
+ */
+HWTEST_F(PlayerUnitTest, Player_SetMediaMuted_003, TestSize.Level0)
+{
+    ASSERT_NE(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true));
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    ASSERT_EQ(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, false));
+    ASSERT_EQ(MSERR_OK, player_->PrepareAsync());
+    ASSERT_EQ(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true));
+    ASSERT_EQ(MSERR_OK, player_->Play());
+    ASSERT_EQ(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, false));
+    ASSERT_EQ(MSERR_OK, player_->Stop());
+    ASSERT_EQ(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true));
+    ASSERT_EQ(MSERR_OK, player_->Play());
+}
+
+
+/**
+ * @tc.name  : Test SetVolumeMode API
+ * @tc.number: Player_SetVolumeMode_002
+ * @tc.desc  : Test Player SetVolumeMode
+ */
+HWTEST_F(PlayerUnitTest, Player_SetVolumeMode_002, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    Format format;
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    int32_t contentType = 1;
+    int32_t streamUsage = 1;
+    int32_t rendererFlags = 0;
+    int32_t mode = 1;
+    int32_t mode2 =10;
+    (void)format.PutIntValue(PlayerKeys::CONTENT_TYPE, contentType);
+    (void)format.PutIntValue(PlayerKeys::STREAM_USAGE, streamUsage);
+    (void)format.PutIntValue(PlayerKeys::RENDERER_FLAG, rendererFlags);
+    EXPECT_EQ(MSERR_OK, player_->SetParameter(format));
+    EXPECT_EQ(MSERR_OK, player_->SetVolumeMode(mode));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->SetVolumeMode(mode2));
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
+
+/**
+ * @tc.name  : Test ReleaseClientListener API
+ * @tc.number: Player_ReleaseClientListener_002
+ * @tc.desc  : Test Player ReleaseClientListener API
+ */
+HWTEST_F(PlayerUnitTest, Player_ReleaseClientListener_002, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+
+    player_->ReleaseClientListener();
+    EXPECT_EQ(MSERR_SERVICE_DIED, player_->SetSource(VIDEO_FILE1));
+
+    // re-create player
+    player_ = std::make_shared<PlayerMock>(callback_);
+    ASSERT_NE(nullptr, player_);
+    EXPECT_TRUE(player_->CreatePlayer());
+    EXPECT_EQ(MSERR_OK, player_->SetPlayerCallback(callback_));
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
+
+/**
+ * @tc.name  : Test Player SetRenderFirstFrame API
+ * @tc.number: Player_SetRenderFirstFrame_002
+ * @tc.desc  : Test Player Play->SetRenderFirstFrame
+ */
+HWTEST_F(PlayerUnitTest, Player_SetRenderFirstFrame_002, TestSize.Level2)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->SetRenderFirstFrame(true));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+}
 } // namespace Media
 } // namespace OHOS
