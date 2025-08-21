@@ -260,6 +260,8 @@ void PlayerServiceStub::FillPlayerFuncPart3()
         [this](MessageParcel &data, MessageParcel &reply) { return ForceLoadVideo(data, reply); } };
     playerFuncs_[SET_CAMERA_POST_POSTPROCESSING] = { "Player::SetCameraPostprocessing",
         [this](MessageParcel &data, MessageParcel &reply) { return SetCameraPostprocessing(data, reply); } };
+    playerFuncs_[GET_GLOBAL_INFO] = { "Player::GetGlobalInfo",
+        [this](MessageParcel &data, MessageParcel &reply) { return GetGlobalInfo(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
@@ -1494,6 +1496,25 @@ int32_t PlayerServiceStub::ForceLoadVideo(bool status)
 int32_t PlayerServiceStub::ForceLoadVideo(MessageParcel &data, MessageParcel &reply)
 {
     reply.WriteInt32(ForceLoadVideo(data.ReadBool()));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::GetGlobalInfo(std::shared_ptr<Meta> &globalInfo)
+{
+    MediaTrace trace("PlayerServiceStub::GetGlobalInfo");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->GetGlobalInfo(globalInfo);
+}
+
+int32_t PlayerServiceStub::GetGlobalInfo(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    std::shared_ptr<Meta> globalInfo;
+    int32_t ret = GetGlobalInfo(globalInfo);
+    CHECK_AND_RETURN_RET_LOG(globalInfo != nullptr, MSERR_INVALID_VAL, "globalInfo is nullptr");
+    globalInfo->ToParcel(reply);
+    reply.WriteInt32(ret);
+ 
     return MSERR_OK;
 }
 } // namespace Media

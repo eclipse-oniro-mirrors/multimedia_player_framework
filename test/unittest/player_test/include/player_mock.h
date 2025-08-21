@@ -178,6 +178,7 @@ public:
     int32_t EnableReportMediaProgress(bool enable);
     void ReleaseClientListener();
     int32_t EnableReportAudioInterrupt(bool enable);
+    int32_t GetGlobalInfo(std::shared_ptr<Meta> &globalInfo);
 private:
     void SeekPrepare(int32_t &mseconds, PlayerSeekMode &mode);
     std::shared_ptr<Player> player_ = nullptr;

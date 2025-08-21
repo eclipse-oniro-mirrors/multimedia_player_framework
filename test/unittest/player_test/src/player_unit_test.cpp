@@ -4741,5 +4741,21 @@ HWTEST_F(PlayerUnitTest, Player_EnableReportMediaProgress_004, TestSize.Level0)
     ASSERT_EQ(MSERR_OK, player_->EnableReportMediaProgress(true));
     EXPECT_EQ(MSERR_OK, player_->Play());
 }
+
+/**
+ * @tc.name  : Test GetGlobalInfo API
+ * @tc.number: Player_GetGlobalInfo_001
+ * @tc.desc  : Test Player GetGlobalInfo
+ */
+HWTEST_F(PlayerUnitTest, Player_GetGlobalInfo_001, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->GetGlobalInfo());
+}
 } // namespace Media
 } // namespace OHOS

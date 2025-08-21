@@ -372,6 +372,12 @@ public:
     {
         return ;
     }
+
+    virtual int32_t GetGlobalInfo(std::shared_ptr<Meta> &globalInfo)
+    {
+        (void)globalInfo;
+        return 0;
+    }
 };
 } // namespace Media
 } // namespace OHOS

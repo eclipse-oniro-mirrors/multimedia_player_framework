@@ -4026,5 +4026,14 @@ void HiPlayerImpl::ReleaseVideoDecoderOnMuted()
         videoDecoder_->ReleaseOnMuted(!keepDecodingOnMute_);
     }
 }
+
+int32_t HiPlayerImpl::GetGlobalInfo(std::shared_ptr<Meta> &globalInfo)
+{
+    MEDIA_LOG_D("GetGlobalInfo in");
+    FALSE_RETURN_V(demuxer_ != nullptr, TransStatus(Status::ERROR_NULL_POINTER));
+    globalInfo = demuxer_->GetGlobalInfo();
+    FALSE_RETURN_V(globalInfo != nullptr, TransStatus(Status::ERROR_NULL_POINTER));
+    return TransStatus(Status::OK);
+}
 }  // namespace Media
 }  // namespace OHOS
