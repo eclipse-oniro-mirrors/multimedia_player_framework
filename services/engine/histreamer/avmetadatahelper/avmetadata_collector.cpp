@@ -147,12 +147,28 @@ void AVMetaDataCollector::GetAudioTrackInfo(const std::shared_ptr<Meta> &trackIn
     audioTrackInfo.PutIntValue("track_index", static_cast<int32_t>(index));
     audioTrackInfo.PutIntValue("track_type", static_cast<int32_t>(Plugins::MediaType::AUDIO));
     audioTrackInfo.PutStringValue("codec_mime", mime);
+
     int32_t audioChannels = 0;
     trackInfo->GetData(Tag::AUDIO_CHANNEL_COUNT, audioChannels);
     audioTrackInfo.PutIntValue("channel_count", audioChannels);
+
     int32_t audioSampleRate = 0;
     trackInfo->GetData(Tag::AUDIO_SAMPLE_RATE, audioSampleRate);
     audioTrackInfo.PutIntValue("sample_rate", audioSampleRate);
+
+    int64_t audioBitrate = 0;
+    trackInfo->GetData(Tag::MEDIA_BITRATE, audioBitrate);
+    audioTrackInfo.PutLongValue("bitrate", audioBitrate);
+
+    int32_t sampleDepth = 0;
+    bool isHasData = trackInfo->GetData(Tag::AUDIO_BITS_PER_CODED_SAMPLE, sampleDepth);
+    if (!isHasData || sampleDepth <= 0) {
+        trackInfo->GetData(Tag::AUDIO_BITS_PER_RAW_SAMPLE, sampleDepth);
+    }
+    if (sampleDepth > 0) {
+        audioTrackInfo.PutLongValue("sample_depth", sampleDepth);
+    }
+
     trackInfoVec_.emplace_back(std::move(audioTrackInfo));
 }
 
@@ -164,14 +180,24 @@ void AVMetaDataCollector::GetVideoTrackInfo(const std::shared_ptr<Meta> &trackIn
     videoTrackInfo.PutIntValue("track_index", index);
     videoTrackInfo.PutIntValue("track_type", static_cast<int32_t>(Plugins::MediaType::VIDEO));
     videoTrackInfo.PutStringValue("codec_mime", mime);
-    int32_t width = GetSarVideoWidth(trackInfo);
+
+    int32_t originalWidth = 0;
+    trackInfo->GetData(Tag::VIDEO_WIDTH, originalWidth);
+    videoTrackInfo.PutIntValue("original_width", originalWidth);
+    int32_t width = GetSarVideoWidth(trackInfo, originalWidth);
     videoTrackInfo.PutIntValue("width", width);
-    int32_t height = GetSarVideoHeight(trackInfo);
+
+    int32_t originalHeight = 0;
+    trackInfo->GetData(Tag::VIDEO_HEIGHT, originalHeight);
+    videoTrackInfo.PutIntValue("original_height", originalHeight);
+    int32_t height = GetSarVideoHeight(trackInfo, originalHeight);
     videoTrackInfo.PutIntValue("height", height);
+
     double frameRate = 0;
     if (trackInfo->GetData(Tag::VIDEO_FRAME_RATE, frameRate)) {
         videoTrackInfo.PutDoubleValue("frame_rate", frameRate * FRAME_RATE_UNIT_MULTIPLE);
     }
+    
     bool isHdr = false;
     trackInfo->GetData(Tag::VIDEO_IS_HDR_VIVID, isHdr);
     videoTrackInfo.PutIntValue("hdr_type", static_cast<int32_t>(isHdr));
@@ -201,26 +227,24 @@ void AVMetaDataCollector::GetOtherTrackInfo(const std::shared_ptr<Meta> &trackIn
     trackInfoVec_.emplace_back(std::move(otherTrackInfo));
 }
 
-int32_t AVMetaDataCollector::GetSarVideoWidth(std::shared_ptr<Meta> trackInfo) const
+int32_t AVMetaDataCollector::GetSarVideoWidth(std::shared_ptr<Meta> trackInfo, int32_t originalWidth) const
 {
-    int32_t width = 0;
-    trackInfo->GetData(Tag::VIDEO_WIDTH, width);
+    int32_t width = originalWidth;
     double videoSar = 0;
     bool ret = trackInfo->GetData(Tag::VIDEO_SAR, videoSar);
     if (ret && videoSar < 1) {
-        width = static_cast<int32_t>(width * videoSar);
+        width = static_cast<int32_t>(originalWidth * videoSar);
     }
     return width;
 }
 
-int32_t AVMetaDataCollector::GetSarVideoHeight(std::shared_ptr<Meta> trackInfo) const
+int32_t AVMetaDataCollector::GetSarVideoHeight(std::shared_ptr<Meta> trackInfo, int32_t originalHeight) const
 {
-    int32_t height = 0;
-    trackInfo->GetData(Tag::VIDEO_HEIGHT, height);
+    int32_t height = originalHeight;
     double videoSar = 0;
     bool ret = trackInfo->GetData(Tag::VIDEO_SAR, videoSar);
     if (ret && videoSar > 1) {
-        height = static_cast<int32_t>(height / videoSar);
+        height = static_cast<int32_t>(originalHeight / videoSar);
     }
     return height;
 }
