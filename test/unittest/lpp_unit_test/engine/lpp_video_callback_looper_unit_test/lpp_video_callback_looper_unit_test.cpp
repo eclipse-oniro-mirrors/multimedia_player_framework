@@ -168,4 +168,4 @@ HWTEST_F(LppVideoCallbackLooperUnitTest, Stop_002, TestSize.Level1)
     EXPECT_EQ(callbackLooper_->taskStarted_, false);
 }
 } // namespace Media
-} // namespace OHOS
+} // namespace OHOS
