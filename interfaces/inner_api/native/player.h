@@ -22,6 +22,7 @@
 #include "surface.h"
 #endif
 #include "meta/format.h"
+#include "meta/meta.h"
 #include "media_data_source.h"
 #include "loading_request.h"
 #include "media_source.h"
@@ -1113,6 +1114,12 @@ public:
 
     virtual int32_t ForceLoadVideo(bool /* status */)
     {
+        return 0;
+    }
+
+    virtual int32_t GetGlobalInfo(std::shared_ptr<Meta> &globalInfo)
+    {
+        (void)globalInfo;
         return 0;
     }
 };

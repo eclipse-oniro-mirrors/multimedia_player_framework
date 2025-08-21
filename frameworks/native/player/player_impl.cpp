@@ -1046,5 +1046,17 @@ void PlayerImplCallback::OnError(int32_t errorCode, const std::string &errorMsg)
     playerCb->OnError(errorCode, errorMsg);
 }
 
+int32_t PlayerImpl::GetGlobalInfo(std::shared_ptr<Meta> &globalInfo)
+{
+    int64_t startTime = SteadyClock::GetCurrentTimeMs();
+    ScopedTimer timer("GetGlobalInfo", OVERTIME_WARNING_MS);
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetGlobalInfo in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    int32_t ret = MSERR_OK;
+    LISTENER(ret = playerService_->GetGlobalInfo(globalInfo), "GetGlobalInfo", false, TIME_OUT_SECOND);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
+    hiAppEventAgent_->TraceApiEvent(ret, "GetGlobalInfo", startTime, traceId_);
+    return ret;
+}
 } // namespace Media
 } // namespace OHOS
