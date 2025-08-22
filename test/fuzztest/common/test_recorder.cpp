@@ -467,35 +467,42 @@ void TestRecorder::CloseFile()
     }
 }
 
-void TestRecorder::IsWatermarkSupported(bool isWatermarkSupported)
-{
-    recorder->IsWatermarkSupported(isWatermarkSupported);
-}
 void TestRecorder::SetVideoIsHdr(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
 {
-    recorder->SetVideoIsHdr(recorderConfig);
+    recorder->SetVideoIsHdr(recorderConfig.videoSourceId, recorderConfig.enabletype);
 }
+
 void TestRecorder::SetVideoEnableTemporalScale(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
 {
-    recorder->SetVideoEnableTemporalScale(recorderConfig);
+    recorder->SetVideoEnableTemporalScale(recorderConfig.videoSourceId, recorderConfig.enabletype);
 }
+
 void TestRecorder::SetVideoEnableStableQualityMode(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
 {
-    recorder->SetVideoEnableStableQualityMode(recorderConfig);
+    recorder->SetVideoEnableStableQualityMode(recorderConfig.videoSourceId, recorderConfig.enabletype);
 }
+
 void TestRecorder::SetVideoEnableBFrame(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
 {
-    recorder->SetVideoEnableBFrame(recorderConfig);
+    recorder->SetVideoEnableBFrame(recorderConfig.videoSourceId, recorderConfig.enabletype);
 }
+
 void TestRecorder::SetMetaConfigs(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
 {
-    recorder->SetMetaConfigs(recorderConfig);
+    recorder->SetMetaConfigs(recorderConfig.videoSourceId);
 }
+
 void TestRecorder::SetMaxFileSize(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
 {
-    recorder->SetMaxFileSize(recorderConfig);
+    recorder->SetMaxFileSize(recorderConfig.size);
 }
+
 void TestRecorder::SetWillMuteWhenInterrupted(bool muteWhenInterrupted)
 {
     recorder->SetWillMuteWhenInterrupted(muteWhenInterrupted);
+}
+
+void TestRecorder::IsWatermarkSupported(bool isWatermarkSupported)
+{
+    recorder->IsWatermarkSupported(isWatermarkSupported);
 }
