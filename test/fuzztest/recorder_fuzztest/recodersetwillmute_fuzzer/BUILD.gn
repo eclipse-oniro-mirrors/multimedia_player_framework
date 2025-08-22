@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Copyright (c) 2022 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -27,10 +27,6 @@ ohos_fuzztest("RecorderSetWillMuteFuzzTest") {
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_ROOT_DIR/services/utils/include",
     "$MEDIA_ROOT_DIR/test/fuzztest/common/",
-    "../../../../services/services/recorder/ipc",
-    "../../../../services/services/sa_media/ipc",
-    "../../../../services/services/sa_media/server",
-    "../../../../services/services/sa_media/server_manager",
   ]
   cflags = [
     "-std=c++17",
@@ -56,23 +52,21 @@ ohos_fuzztest("RecorderSetWillMuteFuzzTest") {
   ]
   if (player_framework_support_recorder) {
     sources = [
-      "../../../../test/fuzztest/common/stub_common.cpp",
+      "$MEDIA_ROOT_DIR/test/fuzztest/common/aw_common.cpp",
+      "$MEDIA_ROOT_DIR/test/fuzztest/common/test_recorder.cpp",
       "recodersetwillmute_fuzzer.cpp",
     ]
   }
   deps = [
-    "../../../../services/services:media_service",
-    "../../../../services/utils:media_service_utils",
+    "$MEDIA_ROOT_DIR/interfaces/inner_api/native:media_client",
   ]
   external_deps = [
     "c_utils:utils",
+    "graphic_2d:librender_service_client",
     "graphic_surface:surface",
+    "graphic_surface:sync_fence",
     "hilog:libhilog",
-    "ipc:ipc_single",
-    "media_foundation:media_foundation",
-    "safwk:system_ability_fwk",
-    "samgr:samgr_proxy",
+    "player_framework:media_client",
+    "graphic_2d:librender_service_client",
   ]
-
-  part_name = "player_framework"
 }
