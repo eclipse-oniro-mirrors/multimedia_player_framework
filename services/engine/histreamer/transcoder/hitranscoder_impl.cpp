@@ -249,7 +249,7 @@ void HiTransCoderImpl::ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta
     isExistVideoTrack_ = false;
     (void)SetValueByType(globalInfo, muxerFormat_);
     if (muxerFormat_->Find(Tag::MEDIA_AIGC) != muxerFormat_->end()) {
-        MEDIA_LOG_W("muxerFormat_ Find MEDIA_AIGC", index);
+        MEDIA_LOG_W("muxerFormat_ Find MEDIA_AIGC");
         int32_t moovFront = 1;
         muxerFormat_->SetData(Tag::MEDIA_ENABLE_MOOV_FRONT, moovFront);
     }
