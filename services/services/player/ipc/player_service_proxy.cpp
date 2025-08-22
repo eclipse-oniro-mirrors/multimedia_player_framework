@@ -129,7 +129,9 @@ int32_t PlayerServiceProxy::SendRequest(uint32_t code, MessageParcel &data, Mess
     }
 
     int32_t error = -1;
-    error = Remote()->SendRequest(code, data, reply, option);
+    const sptr<IRemoteObject> remoteObject = Remote();
+    CHECK_AND_RETURN_RET_LOG(remoteObject != nullptr, error, "Remote is null");
+    error = remoteObject->SendRequest(code, data, reply, option);
     return error;
 }
 
