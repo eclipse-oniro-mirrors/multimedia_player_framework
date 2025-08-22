@@ -466,3 +466,36 @@ void TestRecorder::CloseFile()
         file->close();
     }
 }
+
+void TestRecorder::IsWatermarkSupported(bool isWatermarkSupported)
+{
+    recorder->IsWatermarkSupported(isWatermarkSupported);
+}
+void TestRecorder::SetVideoIsHdr(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
+{
+    recorder->SetVideoIsHdr(recorderConfig);
+}
+void TestRecorder::SetVideoEnableTemporalScale(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
+{
+    recorder->SetVideoEnableTemporalScale(recorderConfig);
+}
+void TestRecorder::SetVideoEnableStableQualityMode(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
+{
+    recorder->SetVideoEnableStableQualityMode(recorderConfig);
+}
+void TestRecorder::SetVideoEnableBFrame(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
+{
+    recorder->SetVideoEnableBFrame(recorderConfig);
+}
+void TestRecorder::SetMetaConfigs(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
+{
+    recorder->SetMetaConfigs(recorderConfig);
+}
+void TestRecorder::SetMaxFileSize(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
+{
+    recorder->SetMaxFileSize(recorderConfig);
+}
+void TestRecorder::SetWillMuteWhenInterrupted(bool muteWhenInterrupted)
+{
+    recorder->SetWillMuteWhenInterrupted(muteWhenInterrupted);
+}
