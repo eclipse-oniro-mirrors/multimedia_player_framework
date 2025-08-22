@@ -69,7 +69,12 @@ MediaServerManager &MediaServerManager::GetInstance()
 int32_t WriteInfo(int32_t fd, std::string &dumpString, std::vector<Dumper> dumpers, bool needDetail)
 {
     int32_t i = 0;
+    std::map<pid_t,int32_t> pidCount;
+    std::string dumpString1 = dumpString;
     for (auto iter : dumpers) {
+        if (fd == -1){
+            pidCount[iter.pid_]++;
+        }
         dumpString += "-----#" + std::to_string(i) + ": ";
         dumpString += "pid = ";
         dumpString += std::to_string(iter.pid_);
@@ -100,6 +105,12 @@ int32_t WriteInfo(int32_t fd, std::string &dumpString, std::vector<Dumper> dumpe
         write(fd, dumpString.c_str(), dumpString.size());
     } else {
         MEDIA_LOGD("%{public}s", dumpString.c_str());
+        for (const auto& pair : pidCount){
+            dumpString1 += "-----#: ";
+            dumpString1 += "pid = " + std::to_string(pair.first) + ", insNum: ";
+            dumpString1 += std::to_string(pair.second) + "\n";
+        }
+        MEDIA_LOGI("%{public}s", dumpString1.c_str());
     }
     dumpString.clear();
 
