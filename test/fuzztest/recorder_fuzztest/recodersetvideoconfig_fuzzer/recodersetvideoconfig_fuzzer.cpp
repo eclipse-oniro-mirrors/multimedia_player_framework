@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "recoderservicesset_fuzzer.h"
+#include "recodersetvideoconfig_fuzzer.h"
 #include <iostream>
 #include <cmath>
 #include "aw_common.h"
