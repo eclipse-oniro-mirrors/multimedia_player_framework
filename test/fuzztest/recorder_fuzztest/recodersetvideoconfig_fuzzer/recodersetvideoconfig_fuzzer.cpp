@@ -31,15 +31,15 @@ using namespace RecorderTestParam;
 
 namespace OHOS {
 namespace Media {
-RecorderServicesSetFuzzer::RecorderServicesSetFuzzer()
+RecorderSetVideoConfigFuzzer::RecorderSetVideoConfigFuzzer()
 {
 }
 
-RecorderServicesSetFuzzer::~RecorderServicesSetFuzzer()
+RecorderSetVideoConfigFuzzer::~RecorderSetVideoConfigFuzzer()
 {
 }
 
-bool RecorderServicesSetFuzzer::FuzzRecorderServicesSet(uint8_t *data, size_t size)
+bool RecorderSetVideoConfigFuzzer::FuzzRecorderSetVideoConfig(uint8_t *data, size_t size)
 {
     constexpr uint32_t recorderTime = 5;
     RETURN_IF(TestRecorder::CreateRecorder(), false);
@@ -76,7 +76,7 @@ bool RecorderServicesSetFuzzer::FuzzRecorderServicesSet(uint8_t *data, size_t si
 }
 }
 
-bool FuzzTestRecorderServicesSet(uint8_t *data, size_t size)
+bool FuzzTestRecorderSetVideoConfig(uint8_t *data, size_t size)
 {
     if (data == nullptr) {
         return true;
@@ -85,8 +85,8 @@ bool FuzzTestRecorderServicesSet(uint8_t *data, size_t size)
     if (size < sizeof(int32_t)) {
         return true;
     }
-    RecorderServicesSetFuzzer testRecorder;
-    return testRecorder.FuzzRecorderServicesSet(data, size);
+    RecorderSetVideoConfigFuzzer testRecorder;
+    return testRecorder.FuzzRecorderSetVideoConfig(data, size);
 }
 }
 
@@ -94,6 +94,6 @@ bool FuzzTestRecorderServicesSet(uint8_t *data, size_t size)
 extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
 {
     /* Run your code on data */
-    OHOS::FuzzTestRecorderServicesSet(data, size);
+    OHOS::FuzzTestRecorderSetVideoConfig(data, size);
     return 0;
 }
