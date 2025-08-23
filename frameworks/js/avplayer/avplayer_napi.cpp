@@ -3660,5 +3660,67 @@ napi_value AVPlayerNapi::JsIsSeekContinuousSupported(napi_env env, napi_callback
     }
     return result;
 }
+
+napi_value AVPlayerNapi::JsSetLoudnessGain(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::JsSetLoudnessGain");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsSetLoudnessGain in");
+
+    auto promiseCtx = std::make_unique<AVPlayerContext>(env);
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+    promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
+
+    napi_valuetype valueType = napi_undefined;
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "loudness is not number");
+        return result;
+    }
+
+    double loudnessGain = 0.0f;
+    napi_status = napi_get_value_double(env, args[0], &loudnessGain);
+    if (status != napi_ok || loudnessGain < -90.0f || loudnessGain > 24.0f) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, check loudnessGain");
+        return result;
+    }
+
+    if (!jsPlayer->CanSetLoudnessGain()) {
+      jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed/stopped, unsupport audio effect mode operation");
+        return result;
+    }
+#ifdef SUPPORT_JSSTACK
+    HiviewDFX::ReportXPowerJsStackSysEvent(env, "LOUDNESSGAIN_CHANGE", "SRC=Media");
+#endif
+    auto task = std::make_shared<TaskHandler<void>>([jsPlayer, loudnessGain]() {
+        MEDIA_LOGD("SetLoudnessGain Task");
+        if (jsPlayer->player_ != nullptr) {
+            if (jsPlayer->player_->SetLoudnessGain(loudnessGain)) {
+                jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                    "unsupport stream type");
+            }
+            
+        }
+    });
+    (void)jsPlayer->taskQue_->EnqueueTask(task);
+    MEDIA_LOGI("JsSetLoudnessGain out");
+    return result;
+}
+
+bool AVPlayerNapi::CanSetLoudnessGain()
+{
+    auto state = GetCurrentState();
+    if (state == AVPlayerState::STATE_COMPLETED || state == AVPlayerState::STATE_PREPARED ||
+        state == AVPlayerState::STATE_PLAYING || state == AVPlayerState::STATE_PAUSED ||
+        state == AVPlayerState::STATE_STOPPED) {
+        return true;
+    }
+    return false;
+}
 } // namespace Media
 } // namespace OHOS

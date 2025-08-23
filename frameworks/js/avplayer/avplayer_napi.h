@@ -131,6 +131,10 @@ private:
      */
     static napi_value JsSetPlaybackRate(napi_env env, napi_callback_info info);
     /**
+     * setLoudnessGain(loudness: double): void
+     */
+    static napi_value JsSetLoudnessGain(napi_env env, napi_callback_info info);
+    /**
      * setVolume(vol: number): void
      */
     static napi_value JsSetVolume(napi_env env, napi_callback_info info);
@@ -350,6 +354,7 @@ private:
     std::string GetCurrentState();
     bool IsControllable();
     bool CanSetPlayRange();
+    bool CanSetLoudnessGain();
     bool CanSetSuperResolution();
     bool IsVideoWindowSizeValid(int32_t width, int32_t height);
     bool CanCameraPostprocessing();
