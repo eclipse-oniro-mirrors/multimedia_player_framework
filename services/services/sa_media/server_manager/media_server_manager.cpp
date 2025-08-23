@@ -73,7 +73,11 @@ int32_t WriteInfo(int32_t fd, std::string &dumpString, std::vector<Dumper> dumpe
     std::string dumpString1 = dumpString;
     for (auto iter : dumpers) {
         if (fd == -1) {
-            pidCount[iter.pid_]++;
+            if (pidCount.find(iter.pid_) != pidCount.end()){
+                pidCount[iter.pid_]++;
+            }else{
+                pidCount[iter.pid_] = 1;
+            }
         }
         dumpString += "-----#" + std::to_string(i) + ": ";
         dumpString += "pid = ";
