@@ -106,8 +106,7 @@ int32_t WriteInfo(int32_t fd, std::string &dumpString, std::vector<Dumper> dumpe
         write(fd, dumpString.c_str(), dumpString.size());
     } else {
         MEDIA_LOGD("%{public}s", dumpString.c_str());
-        for (const auto& pair : pidCount)
-        {
+        for (const auto& pair : pidCount) {
             dumpString1 += "-----#: ";
             dumpString1 += "pid = " + std::to_string(pair.first) + ", insNum: ";
             dumpString1 += std::to_string(pair.second) + "\n";
