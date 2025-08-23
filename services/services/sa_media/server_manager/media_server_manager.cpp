@@ -70,12 +70,12 @@ int32_t WriteInfo(int32_t fd, std::string &dumpString, std::vector<Dumper> dumpe
 {
     int32_t i = 0;
     std::map<pid_t, int32_t> pidCount;
-    std::string dumpString1 = dumpString;
+    std::string dumpGroupInfoLog = dumpString;
     for (auto iter : dumpers) {
         if (fd == -1) {
             if (pidCount.find(iter.pid_) != pidCount.end()){
                 pidCount[iter.pid_]++;
-            }else{
+            } else {
                 pidCount[iter.pid_] = 1;
             }
         }
@@ -110,11 +110,11 @@ int32_t WriteInfo(int32_t fd, std::string &dumpString, std::vector<Dumper> dumpe
     } else {
         MEDIA_LOGD("%{public}s", dumpString.c_str());
         for (const auto& pair : pidCount) {
-            dumpString1 += "-----#: ";
-            dumpString1 += "pid = " + std::to_string(pair.first) + ", insNum: ";
-            dumpString1 += std::to_string(pair.second) + "\n";
+            dumpGroupInfoLog += "-----#: ";
+            dumpGroupInfoLog += "pid = " + std::to_string(pair.first) + ", insNum: ";
+            dumpGroupInfoLog += std::to_string(pair.second) + "\n";
         }
-        MEDIA_LOGI("%{public}s", dumpString1.c_str());
+        MEDIA_LOGI("%{public}s", dumpGroupInfoLog.c_str());
     }
     dumpString.clear();
 
