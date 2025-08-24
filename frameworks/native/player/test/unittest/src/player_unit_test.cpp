@@ -5099,5 +5099,188 @@ HWTEST_F(PlayerUnitTest, Player_SetRenderFirstFrame_002, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
 }
+
+/**
+ * @tc.name  : Test GetApiVersion for valid version
+ * @tc.number: Player_GetApiVersion_001
+ * @tc.desc  : Test GetApiVersion returns valid api version successfully
+ */
+HWTEST_F(PlayerUnitTest, Player_GetApiVersion_001, TestSize.Level0)
+{
+    // 初始化播放器并设置媒体源（接口无明确要求，但保持与其他用例一致的环境）
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    
+    // 调用接口获取API版本
+    int32_t apiVersion = -1;
+    EXPECT_EQ(MSERR_OK, player_->GetApiVersion(apiVersion));
+    
+    // 验证版本号为有效正值（通常API版本从1.0开始，此处假设为非负数）
+    EXPECT_GE(apiVersion, 0);
+}
+
+/**
+ * @tc.name  : Test GetApiVersion with invalid parameter
+ * @tc.number: Player_GetApiVersion_004
+ * @tc.desc  : Test GetApiVersion handles invalid parameter (theoretically impossible for reference)
+ */
+HWTEST_F(PlayerUnitTest, Player_GetApiVersion_002, TestSize.Level0)
+{
+    // 注意：接口参数为引用类型，无法直接传递nullptr
+    // 此用例仅作演示：若接口设计为指针类型，验证无效参数处理
+    // 实际对于引用参数，可测试参数未初始化的场景（但引用必须初始化）
+    int32_t uninitializedVersion;  // 未初始化的变量
+    EXPECT_EQ(MSERR_OK, player_->GetApiVersion(uninitializedVersion));
+    EXPECT_EQ(uninitializedVersion, 1);  // 无论输入是否初始化，输出应正确
+}
+
+/**
+ * @tc.name  : Test IsSeekContinuousSupported with supported video in prepared state
+ * @tc.number: Player_IsSeekContinuousSupported_001
+ * @tc.desc  : Test returns true when video supports SeekContinuous (prepared state)
+ */
+HWTEST_F(PlayerUnitTest, Player_IsSeekContinuousSupported_001, TestSize.Level0)
+{
+    // 使用支持连续seek的视频（如示例中的VIDEO_FILE1）
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    
+    // 验证支持连续seek时返回true
+    EXPECT_TRUE(player_->IsSeekContinuousSupported());
+}
+
+/**
+ * @tc.name  : Test IsSeekContinuousSupported with supported video in playing state
+ * @tc.number: Player_IsSeekContinuousSupported_002
+ * @tc.desc  : Test returns true when video supports SeekContinuous (playing state)
+ */
+HWTEST_F(PlayerUnitTest, Player_IsSeekContinuousSupported_002, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    
+    // 播放中验证支持状态
+    EXPECT_TRUE(player_->IsSeekContinuousSupported());
+}
+
+/**
+ * @tc.name  : Test IsSeekContinuousSupported with supported mkv video
+ * @tc.number: Player_IsSeekContinuousSupported_003
+ * @tc.desc  : Test returns true for mkv video that supports SeekContinuous
+ */
+HWTEST_F(PlayerUnitTest, Player_IsSeekContinuousSupported_003, TestSize.Level0)
+{
+    // 参考示例中对mkv格式的测试（VIDEO_FILE3）
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE3));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    
+    EXPECT_TRUE(player_->IsSeekContinuousSupported());
+}
+
+/**
+ * @tc.name  : Test Player GetPlaybackPosition API
+ * @tc.number: Player_GetPlaybackPosition_001
+ * @tc.desc  : Test GetPlaybackPosition when player is playing
+ */
+HWTEST_F(PlayerUnitTest, Player_GetPlaybackPosition_001, TestSize.Level2)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_TRUE(player_->IsPlaying());
+    
+    int32_t position = -1;
+    EXPECT_EQ(MSERR_OK, player_->GetPlaybackPosition(position));
+    EXPECT_GE(position, 0);  // 播放中位置应大于等于0
+    
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
+
+/**
+ * @tc.name  : Test Player GetPlaybackPosition API
+ * @tc.number: Player_GetPlaybackPosition_002
+ * @tc.desc  : Test GetPlaybackPosition when player is paused
+ */
+HWTEST_F(PlayerUnitTest, Player_GetPlaybackPosition_002, TestSize.Level2)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);  // 播放2秒后暂停
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    
+    int32_t position = -1;
+    EXPECT_EQ(MSERR_OK, player_->GetPlaybackPosition(position));
+    EXPECT_GE(position, PLAYING_TIME_2_SEC * 1000);  // 位置应不小于2秒(2000ms)
+    
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
+
+/**
+ * @tc.name  : Test Player GetPlaybackPosition API
+ * @tc.number: Player_GetPlaybackPosition_003
+ * @tc.desc  : Test GetPlaybackPosition when player is not prepared
+ */
+HWTEST_F(PlayerUnitTest, Player_GetPlaybackPosition_003, TestSize.Level2)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    // 未调用Prepare/PrepareAsync，直接获取位置
+    int32_t position = -1;
+    EXPECT_NE(MSERR_OK, player_->GetPlaybackPosition(position));
+}
+
+/**
+ * @tc.name  : Test Player GetPlaybackPosition API
+ * @tc.number: Player_GetPlaybackPosition_004
+ * @tc.desc  : Test GetPlaybackPosition after seek operation
+ */
+HWTEST_F(PlayerUnitTest, Player_GetPlaybackPosition_004, TestSize.Level2)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    
+    const int32_t seekTime = 5000;  // 5秒
+    EXPECT_EQ(MSERR_OK, player_->Seek(seekTime, SEEK_NEXT_SYNC));
+    
+    int32_t position = -1;
+    EXPECT_EQ(MSERR_OK, player_->GetPlaybackPosition(position));
+    EXPECT_NEAR(position, seekTime, 1000);  // 允许1秒误差
+    
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
+
+/**
+ * @tc.name  : Test Player GetPlaybackPosition API
+ * @tc.number: Player_GetPlaybackPosition_005
+ * @tc.desc  : Test GetPlaybackPosition with null source
+ */
+HWTEST_F(PlayerUnitTest, Player_GetPlaybackPosition_005, TestSize.Level2)
+{
+    // 未设置任何媒体源
+    int32_t position = -1;
+    EXPECT_NE(MSERR_OK, player_->GetPlaybackPosition(position));
+}
 } // namespace Media
 } // namespace OHOS
