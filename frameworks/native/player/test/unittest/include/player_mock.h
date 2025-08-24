@@ -114,6 +114,9 @@ public:
     int32_t TrackInfoUpdateSync();
     std::string SubtitleTextUpdate(std::string text);
     PlayerStates GetState();
+    int32_t GetApiVersion(int32_t &apiVersion);
+    bool IsSeekContinuousSupported();
+    int32_t GetPlaybackPosition(int32_t &playbackPosition);
 private:
     void HandleTrackChangeCallback(int32_t extra, const Format &infoBody);
     void HandleSubtitleCallback(int32_t extra, const Format &infoBody);
