@@ -1008,7 +1008,7 @@ int32_t PlayerImpl::ForceLoadVideo(bool status)
 int32_t PlayerImpl::SetLoudnessGain(float loudnessGain)
 {
     ScopedTimer timer("SetLoudnessGain", OVERTIME_WARNING_MS);
-    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetLoudnessGain(%{public}f) in",FAKE_POINTER(this), loudnessGain);
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetLoudnessGain(%{public}f) in", FAKE_POINTER(this), loudnessGain);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     LISTENER(return playerService_->SetLoudnessGain(loudnessGain), "SetLoudnessGain", false, TIME_OUT_SECOND);
 }
