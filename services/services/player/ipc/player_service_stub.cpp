@@ -1511,6 +1511,7 @@ int32_t PlayerServiceStub::SetLoudnessGain(float loudnessGain)
 int32_t PlayerServiceStub::SetLoudnessGain(MessageParcel &data, MessageParcel &reply)
 {
     reply.WriteInt32(SetLoudnessGain(data.ReadFloat()));
+    return MSERR_OK;
 }
 
 int32_t PlayerServiceStub::GetGlobalInfo(std::shared_ptr<Meta> &globalInfo)
