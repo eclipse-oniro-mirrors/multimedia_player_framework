@@ -2774,31 +2774,37 @@ void AVPlayerImpl::OffTrackInfoUpdate(optional_view<callback<void(array_view<map
     MEDIA_LOGI("OffTrackInfoUpdate End");
 }
 
-void AVPlayerImpl::OffSeiMessageReceived(array_view<int32_t> payloadTypes,
+void AVPlayerImpl::OffSeiMessageReceived(optional_view<array<int32_t>> payloadTypes,
     optional_view<callback<void(array_view<::ohos::multimedia::media::SeiMessage>,
     optional_view<int32_t>)>> callback)
 {
     MediaTrace trace("AVPlayerImpl::OffSeiMessageReceived");
-    MEDIA_LOGD("OffSeiMessageReceived In");
+    MEDIA_LOGI("OffSeiMessageReceived In");
 
     if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
         return;
     }
 
     std::string callbackName = "seiMessageReceived";
-    std::vector<int32_t> payloadTypeVec;
-    payloadTypeVec.reserve(payloadTypes.size());
-    for (int32_t value : payloadTypes) {
-        payloadTypeVec.push_back(static_cast<int32_t>(value));
-    }
-    if (!payloadTypes.empty()) {
-        SeiMessageCallbackOff(callbackName, payloadTypeVec);
+
+    if (payloadTypes.has_value()) {
+        if (payloadTypes.value().size() == 0) {
+            MEDIA_LOGD("The array is empty, no processing is performed.");
+            return;
+        } else {
+            std::vector<int32_t> payloadTypeVec(payloadTypes.value().begin(), payloadTypes.value().end());
+            SeiMessageCallbackOff(callbackName, payloadTypeVec);
+            ClearCallbackReference(callbackName);
+            MEDIA_LOGI("0x%{public}06" PRIXPTR " OffSeiMessageReceived success", FAKE_POINTER(this));
+            return;
+        }
+    } else {
+        SeiMessageCallbackOff(callbackName, {});
         ClearCallbackReference(callbackName);
         MEDIA_LOGI("0x%{public}06" PRIXPTR " OffSeiMessageReceived success", FAKE_POINTER(this));
         return;
     }
 
-    SeiMessageCallbackOff(callbackName, payloadTypeVec);
     MEDIA_LOGI("OffSeiMessageReceived End");
     return;
 }

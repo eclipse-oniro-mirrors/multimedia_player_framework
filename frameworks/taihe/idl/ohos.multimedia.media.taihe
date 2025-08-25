@@ -384,7 +384,6 @@ interface AVPlayer {
     @!sts_inject_into_class("""on(type: string, payloadTypes: Array<int>, callback: object): void {
         if (type === "seiMessageReceived") {
             this.onSeiMessageReceived(payloadTypes as (Array<int>), callback as (messages: Array<SeiMessage>, playbackPosition?: int) => void);
-        } else {
         }
     }""")
     OnSeiMessageReceived(payloadTypes: Array<i32>, callback: (messages: Array<SeiMessage>,
@@ -461,14 +460,13 @@ interface AVPlayer {
     OffAudioInterrupt(callback: Optional<(data: audio.InterruptEvent) => void>): void;
     OffAudioOutputDeviceChangeWithInfo(callback: Optional<(data: audio.AudioStreamDeviceChangeInfo) => void>): void;
 
-    @!sts_inject_into_interface("off(type: string, payloadTypes: Array<int>, callback?: (messages: Array<SeiMessage>, playbackPosition?: int)=> void): void;")
-    @!sts_inject_into_class("""off(type: string, payloadTypes: Array<int>, callback?: object): void {
+    @!sts_inject_into_interface("off(type: string, payloadTypes?: Array<int>, callback?: (messages: Array<SeiMessage>, playbackPosition?: int)=> void): void;")
+    @!sts_inject_into_class("""off(type: string, payloadTypes?: Array<int>, callback?: object): void {
         if (type === "seiMessageReceived") {
-            this.offSeiMessageReceived(payloadTypes as (Array<int>), callback as (((messages: Array<SeiMessage>, playbackPosition?: int) => void) | undefined));
-        } else {
+            this.offSeiMessageReceived(payloadTypes as (Array<int> | undefined), callback as (((messages: Array<SeiMessage>, playbackPosition?: int) => void) | undefined));
         }
     }""")
-    OffSeiMessageReceived(payloadTypes: Array<i32>, callback: Optional<(messages: Array<SeiMessage>,
+    OffSeiMessageReceived(payloadTypes: Optional<Array<i32>>, callback: Optional<(messages: Array<SeiMessage>,
         playbackPosition: Optional<i32>) => void>): void;
 }
 
