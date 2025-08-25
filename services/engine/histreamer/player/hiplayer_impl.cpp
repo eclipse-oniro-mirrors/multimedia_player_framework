@@ -4016,11 +4016,7 @@ int32_t HiPlayerImpl::SetLoudnessGain(float loudnessGain)
     MEDIA_LOG_D("SetLoudnessGain in");
     FALSE_RETURN_V_MSG_E(audioSink_ != nullptr, (int32_t)TransStatus(Status::ERROR_INVALID_OPERATION),
         "SetLoudnessGain failed, audio sink is nullptr");
-    Status ret = audioSink_->SetLoudnessGain(loudnessGain);
-    if (ret != Status::OK) {
-        MEDIA_LOG_E("SetLoudnessGain failed with error " PUBLIC_LOG_D32, static_cast<int>(ret));
-    }
-    return TransStatus(ret);
+    return TransStatus(audioSink_->SetLoudnessGain(loudnessGain));
 }
 }  // namespace Media
 }  // namespace OHOS
