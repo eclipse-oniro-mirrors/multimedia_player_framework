@@ -871,5 +871,22 @@ int32_t PlayerMock::SetPlayRangeUsWithMode(int64_t start, int64_t end, PlayerSee
     (void)mode;
     return 0;
 }
+
+bool PlayerMock::IsSeekContinuousSupported()
+{
+    return false;
+}
+
+int32_t PlayerMock::GetApiVersion(int32_t &apiVersion)
+{
+    (void)apiVersion;
+    return 0;
+}
+
+int32_t PlayerMock::GetPlaybackPosition(int32_t &playbackPosition)
+{
+    playbackPosition = 0;
+    return 0;
+}
 } // namespace Media
 } // namespace OHOS
