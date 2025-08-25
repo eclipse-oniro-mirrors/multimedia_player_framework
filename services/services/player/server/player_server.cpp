@@ -2458,5 +2458,15 @@ int32_t PlayerServer::SetLoudnessGain(float loudnessGain)
     MEDIA_LOGW("SetLoudnessGain called in invalid state");
     return MSERR_INVALID_OPERATION;
 }
+
+int32_t PlayerServer::GetGlobalInfo(std::shared_ptr<Meta> &globalInfo)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    MEDIA_LOGI("PlayerServer GetGlobalInfo in");
+    int32_t ret = playerEngine_->GetGlobalInfo(globalInfo);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "get global info failed");
+    return MSERR_OK;
+}
 } // namespace Media
 } // namespace OHOS

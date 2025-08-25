@@ -199,6 +199,7 @@ public:
     int32_t NotifyMemoryExchange(bool status) override;
     void SetEosInLoopForFrozen(bool status) override;
     int32_t SetLoudnessGain(float loudnessGain) override;
+    int32_t GetGlobalInfo(std::shared_ptr<Meta> &globalInfo) override;
 
 private:
     enum HiplayerSvpMode : int32_t {

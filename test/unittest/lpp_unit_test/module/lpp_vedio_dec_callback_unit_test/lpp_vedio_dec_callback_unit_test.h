@@ -12,20 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LPP_VIDEO_DEC_ADAPTER_UNIT_TEST_H
-#define LPP_VIDEO_DEC_ADAPTER_UNIT_TEST_H
+#ifndef LPP_VIDEO_DEC_CALLBACK_UNIT_TEST_H
+#define LPP_VIDEO_DEC_CALLBACK_UNIT_TEST_H
 
 #include <gmock/gmock.h>
 #include "gtest/gtest.h"
+
 #include "lpp_vdec_adapter.h"
-#include "lpp_sync_manager.h"
+#include "lpp_vdec_adapter.cpp"
 #include "avcodec_common.h"
-#include "mock_event_receiver.h"
-#include "avbuffer_consumer_mock.h"
 
 namespace OHOS {
 namespace Media {
-class LppVideoDecAdapterUnitTest : public testing::Test {
+class LppVideoDecCallbackUnitTest : public testing::Test {
 public:
     // SetUpTestCase: Called before all test cases
     static void SetUpTestCase(void);
@@ -36,12 +35,11 @@ public:
     // TearDown: Called after each test cases
     void TearDown(void);
 protected:
-    std::shared_ptr<LppVideoDecoderAdapter> videoDecAdapter_ {nullptr};
-    std::shared_ptr<MediaAVCodec::AVCodecVideoDecoder> videoDecoder_ {nullptr};
-    sptr<Media::MockAVBufferQueueConsumer> inputBufferQueueConsumer_;
+    std::shared_ptr<LppVideoDecoderAdapter> videoDecAdapter_;
+    std::shared_ptr<LppVideoDecoderCallback> callback_;
     std::string streamerId_ = "Lpp_V";
     bool isLpp_ = true;
 };
 } // namespace Media
 } // namespace OHOS
-#endif // LPP_VIDEO_DEC_ADAPTER_UNIT_TEST_H
+#endif // LPP_VIDEO_DEC_CALLBACK_UNIT_TEST_H

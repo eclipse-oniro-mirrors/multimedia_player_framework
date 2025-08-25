@@ -66,10 +66,29 @@ MediaServerManager &MediaServerManager::GetInstance()
     return instance;
 }
 
+void ConsoleInfo(std::map<pid_t, int32_t> &pidCount, std::string &dumpGroupInfoLog)
+{
+    for (const auto& pair : pidCount) {
+            dumpGroupInfoLog += "-----#: ";
+            dumpGroupInfoLog += "pid = " + std::to_string(pair.first) + ", insNum: ";
+            dumpGroupInfoLog += std::to_string(pair.second) + "\n";
+        }
+    MEDIA_LOGI("%{public}s", dumpGroupInfoLog.c_str());
+}
+
 int32_t WriteInfo(int32_t fd, std::string &dumpString, std::vector<Dumper> dumpers, bool needDetail)
 {
     int32_t i = 0;
+    std::map<pid_t, int32_t> pidCount;
+    std::string dumpGroupInfoLog = dumpString;
     for (auto iter : dumpers) {
+        if (fd == -1) {
+            if (pidCount.find(iter.pid_) != pidCount.end()) {
+                pidCount[iter.pid_]++;
+            } else {
+                pidCount[iter.pid_] = 1;
+            }
+        }
         dumpString += "-----#" + std::to_string(i) + ": ";
         dumpString += "pid = ";
         dumpString += std::to_string(iter.pid_);
@@ -100,6 +119,7 @@ int32_t WriteInfo(int32_t fd, std::string &dumpString, std::vector<Dumper> dumpe
         write(fd, dumpString.c_str(), dumpString.size());
     } else {
         MEDIA_LOGD("%{public}s", dumpString.c_str());
+        ConsoleInfo(pidCount, dumpGroupInfoLog);
     }
     dumpString.clear();
 

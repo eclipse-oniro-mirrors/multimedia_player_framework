@@ -4034,5 +4034,14 @@ int32_t HiPlayerImpl::SetLoudnessGain(float loudnessGain)
         "SetLoudnessGain failed, audio sink is nullptr");
     return TransStatus(audioSink_->SetLoudnessGain(loudnessGain));
 }
+
+int32_t HiPlayerImpl::GetGlobalInfo(std::shared_ptr<Meta> &globalInfo)
+{
+    MEDIA_LOG_D("GetGlobalInfo in");
+    FALSE_RETURN_V(demuxer_ != nullptr, TransStatus(Status::ERROR_NULL_POINTER));
+    globalInfo = demuxer_->GetGlobalInfo();
+    FALSE_RETURN_V(globalInfo != nullptr, TransStatus(Status::ERROR_NULL_POINTER));
+    return TransStatus(Status::OK);
+}
 }  // namespace Media
 }  // namespace OHOS

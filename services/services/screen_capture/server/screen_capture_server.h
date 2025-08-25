@@ -279,7 +279,7 @@ private:
     void OnReceiveEvent(const EventFwk::CommonEventData &data);
     void UnRegisterLanguageSwitchListener();
     int32_t HandleOriginalStreamPrivacy();
-    void PublishStartRecordEvent();
+    void PublishScreenCaptureEvent(const std::string& state);
 private:
     std::mutex mutex_;
     std::mutex cbMutex_;

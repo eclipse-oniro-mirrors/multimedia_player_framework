@@ -803,6 +803,10 @@ void AVPlayerCallback::OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std
 
 void AVPlayerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
+    if (type == INFO_TYPE_STATE_CHANGE && extra == static_cast<int32_t>(PlayerStates::PLAYER_INITIALIZED)) {
+        static constexpr int32_t waitForSetStateChangeCbUs = 3000;
+        usleep(waitForSetStateChangeCbUs);
+    }
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGD("OnInfo is called, PlayerOnInfoType: %{public}d", type);
     if (onInfoFuncs_.count(type) > 0) {

@@ -117,6 +117,7 @@ void PlayerServiceProxy::InitPlayerFuncsPart2()
     playerFuncs_[ENABLE_REPORT_MEDIA_PROGRESS] = "Player::EnableReportMediaProgress";
     playerFuncs_[ENABLE_REPORT_AUDIO_INTERRUPT] = "Player::EnableReportAudioInterrupt";
     playerFuncs_[SET_CAMERA_POST_POSTPROCESSING] = "Player::SetCameraPostprocessing";
+    playerFuncs_[GET_GLOBAL_INFO] = "Player::GetGlobalInfo";
 }
 
 int32_t PlayerServiceProxy::SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -128,7 +129,9 @@ int32_t PlayerServiceProxy::SendRequest(uint32_t code, MessageParcel &data, Mess
     }
 
     int32_t error = -1;
-    error = Remote()->SendRequest(code, data, reply, option);
+    const sptr<IRemoteObject> remoteObject = Remote();
+    CHECK_AND_RETURN_RET_LOG(remoteObject != nullptr, error, "Remote is null");
+    error = remoteObject->SendRequest(code, data, reply, option);
     return error;
 }
 
@@ -1351,6 +1354,26 @@ int32_t PlayerServiceProxy::SetLoudnessGain(float loudnessGain)
     int32_t error = SendRequest(SET_LOUDNESSGAIN, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetLoudnessGain failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+int32_t PlayerServiceProxy::GetGlobalInfo(std::shared_ptr<Meta> &globalInfo)
+{
+    MediaTrace trace("PlayerServiceProxy::GetGlobalInfo");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+ 
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+ 
+    globalInfo = std::make_shared<Meta>();
+    CHECK_AND_RETURN_RET_LOG(globalInfo != nullptr, MSERR_INVALID_VAL, "GlobalInfo is nullptr!");
+
+    int32_t error = SendRequest(GET_GLOBAL_INFO, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "GetGlobalInfo failed, error: %{public}d", error);
+    globalInfo->FromParcel(reply);
+ 
     return reply.ReadInt32();
 }
 } // namespace Media

@@ -577,5 +577,13 @@ int32_t PlayerClient::SetLoudnessGain(float loudnessGain)
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerProxy_->SetLoudnessGain(loudnessGain);
 }
+
+int32_t PlayerClient::GetGlobalInfo(std::shared_ptr<Meta> &globalInfo)
+{
+    MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " GetGlobalInfo in", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->GetGlobalInfo(globalInfo);
+}
 } // namespace Media
 } // namespace OHOS

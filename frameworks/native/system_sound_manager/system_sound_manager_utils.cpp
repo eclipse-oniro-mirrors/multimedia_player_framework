@@ -150,9 +150,7 @@ bool SystemSoundManagerUtils::CheckCurrentUser()
         ids += " ";
     }
     ids += std::to_string(currentUserId);
-    int result = SetParameter(RINGTONE_PARAMETER_SCANNER_USERID_KEY, ids.c_str());
-    MEDIA_LOGI("CheckCurrentUser End. SetParameter result: %{public}d ,CurrentUserIds: %{private}s .",
-        result, ids.c_str());
+    MEDIA_LOGI("CheckCurrentUser End. SetParameter CurrentUserIds: %{private}s .", ids.c_str());
     return false;
 }
 

@@ -855,5 +855,21 @@ void PlayerMock::ReleaseClientListener()
     UNITTEST_CHECK_AND_RETURN_LOG(player_ != nullptr, "player_ == nullptr");
     player_->ReleaseClientListener();
 }
+
+int32_t PlayerMock::SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode)
+{
+    (void)start;
+    (void)end;
+    (void)mode;
+    return 0;
+}
+
+int32_t PlayerMock::SetPlayRangeUsWithMode(int64_t start, int64_t end, PlayerSeekMode mode)
+{
+    (void)start;
+    (void)end;
+    (void)mode;
+    return 0;
+}
 } // namespace Media
 } // namespace OHOS

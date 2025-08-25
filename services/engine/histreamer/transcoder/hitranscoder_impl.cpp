@@ -27,7 +27,7 @@
 #include "osal/task/pipeline_threadpool.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN_SYSTEM_PLAYER, "HiTransCoder" };
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "HiTransCoder" };
 constexpr int32_t REPORT_PROGRESS_INTERVAL = 100;
 constexpr int32_t TRANSCODER_COMPLETE_PROGRESS = 100;
 constexpr int32_t MINIMUM_WIDTH_HEIGHT = 240;
@@ -69,6 +69,7 @@ static const std::unordered_set<std::string> AVMETA_KEY = {
     { Tag::AUDIO_SAMPLE_FORMAT },
     { Tag::AUDIO_BITS_PER_CODED_SAMPLE },
     { Tag::AUDIO_BITS_PER_RAW_SAMPLE },
+    { Tag::MEDIA_AIGC },
     { "customInfo" },
 };
 
