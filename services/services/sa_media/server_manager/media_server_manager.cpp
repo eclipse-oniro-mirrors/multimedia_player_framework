@@ -124,7 +124,7 @@ int32_t WriteInfo(int32_t fd, std::string &dumpString, std::vector<Dumper> dumpe
     dumpString.clear();
 
     return OHOS::NO_ERROR;
-} 
+}
 
 int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &args)
 {
