@@ -199,7 +199,7 @@ public:
     void OffSubtitleUpdate(optional_view<callback<void(SubtitleInfo const&)>> callback);
     void OffSuperResolutionChanged(optional_view<callback<void(bool)>> callback);
     void OffTrackInfoUpdate(optional_view<callback<void(array_view<map<string, int32_t>>)>> callback);
-    void OffSeiMessageReceived(array_view<int32_t> payloadTypes,
+    void OffSeiMessageReceived(optional_view<array<int32_t>> payloadTypes,
         optional_view<callback<void(array_view<SeiMessage>, optional_view<int32_t>)>> callback);
     void OffAudioInterrupt(optional_view<callback<void(::ohos::multimedia::audio::InterruptEvent const&)>> callback);
     void OffAudioOutputDeviceChangeWithInfo(optional_view<callback<void(
