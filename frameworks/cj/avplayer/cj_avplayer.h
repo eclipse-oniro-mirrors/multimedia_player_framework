@@ -188,7 +188,7 @@ private:
         OHOS::AudioStandard::ContentType::CONTENT_TYPE_MUSIC, OHOS::AudioStandard::StreamUsage::STREAM_USAGE_MEDIA, 0};
     int32_t audioEffectMode_ = OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT;
     std::mutex mutex_;
-    std::mutex taskMutex_;
+    std::recursive_mutex taskMutex_;
     PlayerStates state_ = PLAYER_IDLE;
     std::condition_variable stateChangeCond_;
     int32_t width_ = 0;

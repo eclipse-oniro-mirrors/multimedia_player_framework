@@ -42,7 +42,7 @@ AudioHapticSoundNormalImpl::AudioHapticSoundNormalImpl(const AudioSource& audioS
 AudioHapticSoundNormalImpl::~AudioHapticSoundNormalImpl()
 {
     if (avPlayer_ != nullptr) {
-        ReleaseAVPlayer();
+        (void)ReleaseSoundInternal();
     }
 }
 
@@ -205,6 +205,12 @@ int32_t AudioHapticSoundNormalImpl::StopSound()
 int32_t AudioHapticSoundNormalImpl::ReleaseSound()
 {
     MEDIA_LOGI("ReleaseSound with AVPlayer");
+    return ReleaseSoundInternal();
+}
+
+int32_t AudioHapticSoundNormalImpl::ReleaseSoundInternal()
+{
+    MEDIA_LOGI("Enter ReleaseSoundInternal().");
     {
         std::lock_guard<std::mutex> lockPrepare(prepareMutex_);
         isReleased_ = true;

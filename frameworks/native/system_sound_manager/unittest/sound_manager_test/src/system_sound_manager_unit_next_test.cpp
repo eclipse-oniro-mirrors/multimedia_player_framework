@@ -728,10 +728,10 @@ HWTEST(SystemSoundManagerUnitNextTest, GetPresetNotificationToneUri_003, TestSiz
 
 /**
  * @tc.name  : GetSystemToneUri_NotInitialized
- * @tc.number: GetSystemToneUri_001
+ * @tc.number: GetSystemToneAttrs_001
  * @tc.desc  : Test GetSystemToneUri when databaseTool is not initialized
  */
-HWTEST(SystemSoundManagerUnitNextTest, GetSystemToneUri_001, TestSize.Level0)
+HWTEST(SystemSoundManagerUnitNextTest, GetSystemToneAttrs_001, TestSize.Level0)
 {
     auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
     std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
@@ -742,16 +742,17 @@ HWTEST(SystemSoundManagerUnitNextTest, GetSystemToneUri_001, TestSize.Level0)
     databaseTool.isInitialized = false;
     databaseTool.dataShareHelper = nullptr;
     SystemToneType systemToneType = SYSTEM_TONE_TYPE_SIM_CARD_0;
-    std::string result = systemSoundManagerImpl_->GetSystemToneUri(databaseTool, systemToneType);
+    ToneAttrs toneAttrs_ = systemSoundManagerImpl_->GetSystemToneAttrs(databaseTool, systemToneType);
+    std::string result = toneAttrs_.GetUri();
     EXPECT_EQ(result, "");
 }
 
 /**
  * @tc.name  : GetSystemToneUri_DataShareHelperNull
- * @tc.number: GetSystemToneUri_002
+ * @tc.number: GetSystemToneAttrs_002
  * @tc.desc  : Test GetSystemToneUri when dataShareHelper is null
  */
-HWTEST(SystemSoundManagerUnitNextTest, GetSystemToneUri_002, TestSize.Level0)
+HWTEST(SystemSoundManagerUnitNextTest, GetSystemToneAttrs_002, TestSize.Level0)
 {
     auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
     std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
@@ -762,7 +763,8 @@ HWTEST(SystemSoundManagerUnitNextTest, GetSystemToneUri_002, TestSize.Level0)
     databaseTool.isInitialized = true;
     databaseTool.dataShareHelper = nullptr;
     SystemToneType systemToneType = SYSTEM_TONE_TYPE_SIM_CARD_0;
-    std::string result = systemSoundManagerImpl_->GetSystemToneUri(databaseTool, systemToneType);
+    ToneAttrs toneAttrs_ = systemSoundManagerImpl_->GetSystemToneAttrs(databaseTool, systemToneType);
+    std::string result = toneAttrs_.GetUri();
     EXPECT_EQ(result, "");
 }
 
@@ -851,7 +853,8 @@ HWTEST(SystemSoundManagerUnitNextTest, AddCustomizedTone_001, TestSize.Level0)
 
     std::shared_ptr<ToneAttrs> toneAttrs = std::make_shared<ToneAttrs>(
         "test_tone", "test_file", "test_uri", ToneCustomizedType::CUSTOMISED, TONE_CATEGORY_CONTACTS);
-    int32_t result = systemSoundManagerImpl_->AddCustomizedTone(dataShareHelper, toneAttrs);
+    int32_t length = 0;
+    int32_t result = systemSoundManagerImpl_->AddCustomizedTone(dataShareHelper, toneAttrs, length);
     EXPECT_EQ(result, TONE_CATEGORY);
 }
 
@@ -872,7 +875,8 @@ HWTEST(SystemSoundManagerUnitNextTest, AddCustomizedTone_002, TestSize.Level0)
 
     std::shared_ptr<ToneAttrs> toneAttrs = std::make_shared<ToneAttrs>(
         "test_tone", "test_file", "test_uri", ToneCustomizedType::CUSTOMISED, TONE_CATEGORY_INVALID);
-    int32_t result = systemSoundManagerImpl_->AddCustomizedTone(dataShareHelper, toneAttrs);
+    int32_t length = 0;
+    int32_t result = systemSoundManagerImpl_->AddCustomizedTone(dataShareHelper, toneAttrs, length);
     EXPECT_EQ(result, TONE_CATEGORY);
 }
 
@@ -896,8 +900,9 @@ HWTEST(SystemSoundManagerUnitNextTest, AddCustomizedToneByFdAndOffset_001, TestS
     int32_t fd = 123;
     int32_t offset = -1;
     int32_t length = 1024;
+    ParamsForAddCustomizedTone paramsForAddCustomizedTone = { "", fd, length, offset, false };
     std::string result = systemSoundManagerImpl_->AddCustomizedToneByFdAndOffset(context,
-        toneAttrs, fd, offset, length);
+        toneAttrs, paramsForAddCustomizedTone);
     EXPECT_EQ(result, "");
 }
 

@@ -65,5 +65,15 @@ int32_t ScreenCaptureControllerClient::ReportAVScreenCaptureUserChoice(int32_t s
     return screenCaptureControllerProxy_->ReportAVScreenCaptureUserChoice(sessionId, choice);
 }
 
+int32_t ScreenCaptureControllerClient::GetAVScreenCaptureConfigurableParameters(int32_t sessionId,
+    std::string &resultStr)
+{
+    MEDIA_LOGI("ScreenCaptureControllerClient::GetAVScreenCaptureConfigurableParameters start");
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureControllerProxy_ != nullptr,
+        MSERR_SERVICE_DIED, "proxy does not exist.");
+    return screenCaptureControllerProxy_->GetAVScreenCaptureConfigurableParameters(sessionId, resultStr);
+}
+
 } // namespace Media
 } // namespace OHOS

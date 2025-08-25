@@ -20,6 +20,8 @@
 #include "media_log.h"
 #ifndef CROSS_PLATFORM
 #include "display_manager.h"
+#include "media_errors.h"
+#include "recorder_napi_utils.h"
 #endif
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "AVScreenCaptureNapi"};
@@ -49,7 +51,9 @@ napi_value AVScreenCaptureNapi::Init(napi_env env, napi_value exports)
 {
     napi_property_descriptor staticProperty[] = {
         DECLARE_NAPI_STATIC_FUNCTION("createAVScreenCaptureRecorder", JsCreateAVScreenRecorder),
-        DECLARE_NAPI_STATIC_FUNCTION("reportAVScreenCaptureUserChoice", JsReportAVScreenCaptureUserChoice)
+        DECLARE_NAPI_STATIC_FUNCTION("reportAVScreenCaptureUserChoice", JsReportAVScreenCaptureUserChoice),
+        DECLARE_NAPI_STATIC_FUNCTION("getAVScreenCaptureConfigurableParameters",
+            JsGetAVScreenCaptureConfigurableParameters)
     };
 
     napi_property_descriptor properties[] = {
@@ -111,7 +115,7 @@ napi_value AVScreenCaptureNapi::Constructor(napi_env env, napi_callback_info inf
         MEDIA_LOGE("failed to CreateScreenCaptureCb");
         return result;
     }
-      
+
     (void)jsScreenCapture->screenCapture_->SetScreenCaptureCallback(jsScreenCapture->screenCaptureCb_);
 
     status = napi_wrap(env, jsThis, reinterpret_cast<void *>(jsScreenCapture),
@@ -185,7 +189,7 @@ RetInfo GetReturnInfo(int32_t errCode, const std::string &operate, const std::st
     MEDIA_LOGE("failed to %{public}s, param %{public}s, errCode = %{public}d",
         operate.c_str(), param.c_str(), errCode);
     MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode));
-    
+
     std::string message;
     if (err == MSERR_EXT_API9_INVALID_PARAMETER) {
         message = MSExtErrorAPI9ToString(err, param, "") + add;
@@ -260,6 +264,70 @@ napi_value AVScreenCaptureNapi::JsReportAVScreenCaptureUserChoice(napi_env env, 
 
     MEDIA_LOGI("Js %{public}s End", opt.c_str());
     return result;
+}
+
+napi_value AVScreenCaptureNapi::JsGetAVScreenCaptureConfigurableParameters(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVScreenCapture::JsGetAVScreenCaptureConfigurableParameters");
+    const std::string &opt = AVScreenCapturegOpt::GET_CONFIG_PARAMS;
+    MEDIA_LOGI("Js %{public}s Start", opt.c_str());
+
+    const int32_t maxParam = 1;
+    size_t argCount = maxParam;
+    napi_value args[maxParam] = { nullptr };
+    napi_value result = nullptr;
+    auto asyncCtx = std::make_unique<AVScreenCaptureAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+    napi_value jsThis = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, nullptr, "failed to napi_get_cb_info");
+    MEDIA_LOGI("argCount %{public}zu", argCount);
+    if (argCount < maxParam) {
+        ThrowCustomError(env, MSERR_EXT_API9_PERMISSION_DENIED, "parameter missing");
+    }
+    napi_valuetype valueType = napi_undefined;
+    if (napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
+        ThrowCustomError(env, MSERR_EXT_API9_PERMISSION_DENIED, "invalid parameter type");
+    }
+    int32_t sessionId;
+    status = napi_get_value_int32(env, args[0], &sessionId);
+    if (status != napi_ok) {
+        ThrowCustomError(env, MSERR_EXT_API9_PERMISSION_DENIED, "invalid parameter type");
+    }
+    if (!SystemPermission()) {
+        ThrowCustomError(env, MSERR_EXT_API9_PERMISSION_DENIED, "permission denied");
+    }
+    std::string resultStr = "";
+    asyncCtx->controller_ = ScreenCaptureControllerFactory::CreateScreenCaptureController();
+    if (asyncCtx->controller_ == nullptr) {
+        ThrowCustomError(env, MSERR_EXT_API9_PERMISSION_DENIED, "failed to create controller");
+    }
+    int32_t res = asyncCtx->controller_->GetAVScreenCaptureConfigurableParameters(sessionId, resultStr);
+    if (res != MSERR_OK) {
+        ThrowCustomError(env, MSERR_EXT_API20_SESSION_NOT_EXIST, "session does not exist.");
+    }
+    napi_create_string_utf8(env, resultStr.c_str(), NAPI_AUTO_LENGTH, &result);
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
+    asyncCtx.release();
+    MEDIA_LOGI("Js %{public}s End", opt.c_str());
+    return result;
+}
+
+napi_value AVScreenCaptureNapi::ThrowCustomError(napi_env env, int32_t errorCode, const char* errorMessage)
+{
+    napi_value message = nullptr;
+    napi_value error = nullptr;
+    napi_value codeValue = nullptr;
+    napi_value propName = nullptr;
+
+    napi_create_string_utf8(env, errorMessage, NAPI_AUTO_LENGTH, &message);
+    napi_create_error(env, nullptr, message, &error);
+    napi_create_int32(env, errorCode, &codeValue);
+    napi_create_string_utf8(env, "code", NAPI_AUTO_LENGTH, &propName);
+    napi_set_property(env, error, propName, codeValue);
+    napi_throw(env, error);
+    return nullptr;
 }
 
 void AVScreenCaptureNapi::AsyncJsReportAVScreenCaptureUserChoice(napi_env env, void* data)
@@ -760,8 +828,8 @@ int32_t AVScreenCaptureNapi::GetVideoCaptureInfo(std::unique_ptr<AVScreenCapture
     ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "fillMode", fillMode);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, (asyncCtx->AVScreenCaptureSignError(
         ret, "getScreenCaptureFillMode", "screenCaptureFillMode"), ret));
-    videoConfig.screenCaptureFillMode = GetScreenCaptureFillMode(fillMode);
-    MEDIA_LOGI("input screenCaptureFillMode %{public}d", videoConfig.screenCaptureFillMode);
+    SetScreenCaptureFillMode(asyncCtx->config_.strategy, fillMode);
+    MEDIA_LOGI("input screenCaptureFillMode %{public}d", asyncCtx->config_.strategy.fillMode);
     return MSERR_OK;
 }
 
@@ -911,21 +979,23 @@ VideoCodecFormat AVScreenCaptureNapi::GetVideoCodecFormat(const int32_t &preset)
     return codecFormat;
 }
 
-AVScreenCaptureFillMode AVScreenCaptureNapi::GetScreenCaptureFillMode(const int32_t &fillMode)
+int32_t AVScreenCaptureNapi::SetScreenCaptureFillMode(ScreenCaptureStrategy &strategy, const int32_t &fillMode)
 {
-    MEDIA_LOGI("AVScreenCaptureNapi::GetScreenCaptureFillMode in!");
+    MEDIA_LOGI("AVScreenCaptureNapi::SetScreenCaptureFillMode in!");
     const std::map<int32_t, AVScreenCaptureFillMode> intToFillMode = {
         { 0, AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO },
         { 1, AVScreenCaptureFillMode::SCALE_TO_FILL }
     };
-    AVScreenCaptureFillMode screenCaptureFillMode = AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO;
     auto iter = intToFillMode.find(fillMode);
+    int32_t ret = MSERR_INVALID_VAL;
     if (iter != intToFillMode.end()) {
-        screenCaptureFillMode = iter->second;
+        strategy.fillMode = iter->second;
+        strategy.setByUser = true;
+        ret = MSERR_OK;
     }
-    MEDIA_LOGI("AVScreenCaptureNapi::GetScreenCaptureFillMode succeed, screenCaptureFillMode: %{public}d",
-        screenCaptureFillMode);
-    return screenCaptureFillMode;
+    MEDIA_LOGI("AVScreenCaptureNapi::SetScreenCaptureFillMode succeed, screenCaptureFillMode: %{public}d",
+        static_cast<int32_t>(strategy.fillMode));
+    return ret;
 }
 
 void AVScreenCaptureNapi::ErrorCallback(int32_t errCode, const std::string &operate, const std::string &add)
@@ -984,7 +1054,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureNapi::GetPromiseTask(
         auto memberFunc = itFunc->second;
         CHECK_AND_RETURN_RET_LOG(memberFunc != nullptr, ret, "memberFunc is nullptr!");
         ret = (napi->*memberFunc)();
-        
+
         MEDIA_LOGI("%{public}s End", option.c_str());
         return ret;
     });

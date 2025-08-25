@@ -408,6 +408,8 @@
             <option name="shell" value="touch /data/test/media/screen_capture_strategy_for_maskmode_002.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_strategy_picker_popup_001.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_strategy_picker_popup_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_strategy_fill_mode_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_strategy_fill_mode_002.mp4"/>
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>
     </target>
@@ -499,6 +501,8 @@
             <option name="shell" value="touch /data/test/media/screen_capture_strategy_for_maskmode_002.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_strategy_for_picker_pop_up_001.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_strategy_for_picker_pop_up_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_strategy_for_fill_mode_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_strategy_for_fill_mode_002.mp4"/>
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>
     </target>
@@ -562,6 +566,7 @@
             <option name="push" value="test_videofile/h264.flv -> /data/test" src="res"/>
             <option name="push" value="test_videofile/camera_info_parser.mp4 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/h264_double_video_audio.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/SDR_HF.mp4 -> /data/test" src="res"/>
         </preparer>
     </target>
     <target name="avmetadatahelper_unit_test">

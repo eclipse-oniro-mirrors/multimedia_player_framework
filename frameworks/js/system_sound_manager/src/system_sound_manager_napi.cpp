@@ -1765,8 +1765,9 @@ napi_value SystemSoundManagerNapi::AddCustomizedTone(napi_env env, napi_callback
 
 void SystemSoundManagerNapi::AsyncAddCustomizedTone(napi_env env, void *data)
 {
-    std::string result = "TYPEERROR";
     SystemSoundManagerAsyncContext *context = static_cast<SystemSoundManagerAsyncContext *>(data);
+    ParamsForAddCustomizedTone paramsForAddCustomizedTone = { "", context->fd, context->length,
+        context->offset, false };
     if (context->objectInfo->sysSoundMgrClient_ == nullptr) {
         context->status = ERROR;
         context->errCode = NAPI_ERR_IO_ERROR;
@@ -1778,8 +1779,7 @@ void SystemSoundManagerNapi::AsyncAddCustomizedTone(napi_env env, void *data)
     } else if (context->fd > 0) {
         if (context->offset >= 0 && context->length >= 0) {
             context->uri = context->objectInfo->sysSoundMgrClient_->AddCustomizedToneByFdAndOffset(
-                context->abilityContext_, context->toneAttrsNapi->GetToneAttrs(),
-                context->fd, context->offset, context->length);
+                context->abilityContext_, context->toneAttrsNapi->GetToneAttrs(), paramsForAddCustomizedTone);
             context->status = SUCCESS;
         } else if (context->offset == 0 && context->length == 0) {
             context->uri = context->objectInfo->sysSoundMgrClient_->AddCustomizedToneByFd(
@@ -1791,26 +1791,38 @@ void SystemSoundManagerNapi::AsyncAddCustomizedTone(napi_env env, void *data)
     } else {
         context->status = ERROR;
     }
-    if (context->uri == result) {
-        context->status = ERROR;
-        context->errCode = NAPI_ERR_OPERATE_NOT_ALLOWED;
-        context->errMessage = NAPI_ERR_OPERATE_NOT_ALLOWED_INFO;
-    } else if (context->uri.empty()) {
-        context->status = ERROR;
-        context->errCode = NAPI_ERR_IO_ERROR;
-        context->errMessage = "I/O error. Uri is empty, can not found.";
-    } else if (context->uri == FILE_SIZE_EXCEEDS_LIMIT) {
-        context->status = ERROR;
-        context->errCode = ERROR_DATA_TOO_LARGE;
-        context->errMessage = NAPI_ERR_DATA_TOO_LARGE_INFO;
-    } else if (context->uri == FILE_COUNT_EXCEEDS_LIMIT) {
-        context->status = ERROR;
-        context->errCode = ERROR_TOO_MANY_FILES;
-        context->errMessage = NAPI_ERR_TOO_MANY_FILES_INFO;
-    } else if (context->uri == ROM_IS_INSUFFICIENT) {
-        context->status = ERROR;
-        context->errCode = ERROR_INSUFFICIENT_ROM;
-        context->errMessage = NAPI_ERR_INSUFFICIENT_ROM_INFO;
+    DealErrorForAddCustomizedTone(context->uri, context->status, context->errCode, context->errMessage,
+        paramsForAddCustomizedTone.duplicateFile);
+}
+
+void SystemSoundManagerNapi::DealErrorForAddCustomizedTone(std::string &uri, bool &status, int32_t &errCode,
+    std::string &errMessage, bool &duplicateFile)
+{
+    std::string result = "TYPEERROR";
+    if (uri == result) {
+        status = ERROR;
+        errCode = NAPI_ERR_OPERATE_NOT_ALLOWED;
+        errMessage = NAPI_ERR_OPERATE_NOT_ALLOWED_INFO;
+    } else if (uri.empty()) {
+        status = ERROR;
+        errCode = NAPI_ERR_IO_ERROR;
+        errMessage = "I/O error. Uri is empty, can not found.";
+    } else if (uri == FILE_SIZE_EXCEEDS_LIMIT) {
+        status = ERROR;
+        errCode = ERROR_DATA_TOO_LARGE;
+        errMessage = NAPI_ERR_DATA_TOO_LARGE_INFO;
+    } else if (uri == FILE_COUNT_EXCEEDS_LIMIT) {
+        status = ERROR;
+        errCode = ERROR_TOO_MANY_FILES;
+        errMessage = NAPI_ERR_TOO_MANY_FILES_INFO;
+    } else if (uri == ROM_IS_INSUFFICIENT) {
+        status = ERROR;
+        errCode = ERROR_INSUFFICIENT_ROM;
+        errMessage = NAPI_ERR_INSUFFICIENT_ROM_INFO;
+    } else if (duplicateFile) {
+        status = ERROR;
+        errCode = NAPI_ERR_IO_ERROR;
+        errMessage = NAPI_ERR_IO_ERROR_DUPLICATE_FILE_NAME;
     }
 }
 
@@ -1823,7 +1835,11 @@ void SystemSoundManagerNapi::AddCustomizedToneAsyncCallbackComp(napi_env env, na
         napi_create_string_utf8(env, context->uri.c_str(), NAPI_AUTO_LENGTH, &result[PARAM1]);
     } else {
         result[PARAM0] = AsyncThrowErrorAndReturn(env, context->errMessage, context->errCode);
-        napi_get_undefined(env, &result[PARAM1]);
+        if (context->uri.empty()) {
+            napi_get_undefined(env, &result[PARAM1]);
+        } else {
+            napi_create_string_utf8(env, context->uri.c_str(), NAPI_AUTO_LENGTH, &result[PARAM1]);
+        }
     }
 
     if (context->deferred) {

@@ -24,6 +24,7 @@ namespace Media {
 class ScreenCaptureControllerImpl : public ScreenCaptureController, public NoCopyable {
 public:
     void ReportAVScreenCaptureUserChoice(int32_t sessionId, std::string choice) override;
+    int32_t GetAVScreenCaptureConfigurableParameters(int32_t sessionId, std::string &resultStr) override;
     ScreenCaptureControllerImpl();
     ~ScreenCaptureControllerImpl();
 };

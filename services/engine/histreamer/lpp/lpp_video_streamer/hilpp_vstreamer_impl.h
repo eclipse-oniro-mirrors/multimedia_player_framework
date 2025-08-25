@@ -64,13 +64,14 @@ private:
     void HandleRenderStartedEvent(const Event &event);
     void HandleCompleteEvent(const Event &event);
     void HandleResolutionChangeEvent(const Event &event);
+    void HandleTargetArrivedEvent(const Event &event);
     void HandleErrorEvent(const Event &event);
     int32_t EosPause();
 
     bool isLpp_{false};
     std::string streamerId_{};
     int32_t channelId_{};
-    int32_t shareBufferFd_{};
+    int32_t shareBufferFd_{-1};
     sptr<Surface> surface_{nullptr};
     std::shared_ptr<LppVideoDataManager> dataMgr_{nullptr};
     std::shared_ptr<LppVideoDecoderAdapter> vdec_{nullptr};

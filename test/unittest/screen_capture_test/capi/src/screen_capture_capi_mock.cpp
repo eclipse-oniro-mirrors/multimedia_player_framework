@@ -313,7 +313,7 @@ int32_t ScreenCaptureCapiMock::ResizeCanvas(int32_t width, int32_t height)
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
     return OH_AVScreenCapture_ResizeCanvas(screenCapture_, width, height);
 }
- 
+
 int32_t ScreenCaptureCapiMock::UpdateSurface(const std::any& surface)
 {
     return MSERR_OK;
@@ -465,4 +465,10 @@ int32_t ScreenCaptureCapiMock::StrategyForPickerPopUp(bool value)
     UNITTEST_CHECK_AND_RETURN_RET_LOG(strategy_ != nullptr, MSERR_UNKNOWN,
         "OH_AVScreenCapture_CreateCaptureStrategy failed");
     return OH_AVScreenCapture_StrategyForPickerPopUp(strategy_, value);
+}
+
+int32_t ScreenCaptureCapiMock::StrategyForFillMode(AVScreenCaptureFillMode value)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(strategy_ != nullptr, MSERR_UNKNOWN, "strategy_ == nullptr");
+    return OH_AVScreenCapture_StrategyForFillMode(strategy_, static_cast<OH_AVScreenCapture_FillMode>(value));
 }

@@ -29,6 +29,7 @@ namespace Media {
 namespace AVScreenCapturegOpt {
 const std::string INIT = "Init";
 const std::string REPORT_USER_CHOICE = "ReportAVScreenCaptureUserChoice";
+const std::string GET_CONFIG_PARAMS = "GetAVScreenCaptureConfigurableParameters";
 const std::string START_RECORDING = "StartRecording";
 const std::string STOP_RECORDING = "StopRecording";
 const std::string SKIP_PRIVACY_MODE = "SkipPrivacyMode";
@@ -75,6 +76,10 @@ private:
      * reportAVScreenCaptureUserChoice(sessionId: number, choice: string): Promise<void>
      */
     static napi_value JsReportAVScreenCaptureUserChoice(napi_env env, napi_callback_info info);
+    /**
+     * getAVScreenCaptureConfigurableParameters(sessionId: number): Promise<string>
+     */
+    static napi_value JsGetAVScreenCaptureConfigurableParameters(napi_env env, napi_callback_info info);
     /**
      * init(config: AVScreenCaptureRecordConfig): Promise<void>
      */
@@ -135,7 +140,8 @@ private:
     static int32_t CheckAudioSampleRate(const int32_t &audioSampleRate);
     static int32_t CheckAudioChannelCount(const int32_t &audioChannelCount);
     static napi_status GetWindowIDsVectorParams(std::vector<uint64_t> &windowIDsVec, napi_env env, napi_value* args);
-    static AVScreenCaptureFillMode GetScreenCaptureFillMode(const int32_t &fillMode);
+    static int32_t SetScreenCaptureFillMode(ScreenCaptureStrategy &strategy, const int32_t &fillMode);
+    static napi_value ThrowCustomError(napi_env env, int32_t errorCode, const char* errorMessage);
 
     AVScreenCaptureNapi();
     ~AVScreenCaptureNapi();

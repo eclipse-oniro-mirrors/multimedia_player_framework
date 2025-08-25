@@ -540,6 +540,14 @@ int32_t PlayerClient::EnableCameraPostprocessing()
     return playerProxy_->EnableCameraPostprocessing();
 }
 
+int32_t PlayerClient::SetCameraPostprocessing(bool isOpen)
+{
+    MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " SetCameraPostprocessing in", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->SetCameraPostprocessing(isOpen);
+}
+
 int32_t PlayerClient::EnableReportMediaProgress(bool enable)
 {
     MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " EnableReportMediaProgress in", FAKE_POINTER(this));

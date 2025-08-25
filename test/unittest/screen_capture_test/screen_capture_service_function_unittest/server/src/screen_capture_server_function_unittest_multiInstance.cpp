@@ -868,51 +868,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RemoveSaAppInfoMap_001, TestSize.Level
     ASSERT_EQ(ScreenCaptureServer::saUidAppUidMap_[saUid].second, 0);
 }
 
-/**
-* @tc.name: GetBoxSelectedFromJson_001
-* @tc.desc: content invalid
-* @tc.type: FUNC
-*/
-HWTEST_F(ScreenCaptureServerFunctionTest, GetBoxSelectedFromJson_001, TestSize.Level2)
-{
-    Json::Value root;
-    std::string content = "ghgh%^&%^$*^(}{^af&**)";
-    bool value = true;
-    screenCaptureServer_->GetBoxSelectedFromJson(root, content, "choice", value);
-    ASSERT_NE(screenCaptureServer_, nullptr);
-    ASSERT_EQ(value, false);
-}
-
-/**
-* @tc.name: GetBoxSelectedFromJson_002
-* @tc.desc: choice valid
-* @tc.type: FUNC
-*/
-HWTEST_F(ScreenCaptureServerFunctionTest, GetBoxSelectedFromJson_002, TestSize.Level2)
-{
-    Json::Value root;
-    std::string content = "{\"choice\": \"true\"}";
-    bool value = false;
-    screenCaptureServer_->GetBoxSelectedFromJson(root, content, "choice", value);
-    ASSERT_NE(screenCaptureServer_, nullptr);
-    ASSERT_EQ(value, true);
-}
-
-/**
-* @tc.name: GetBoxSelectedFromJson_003
-* @tc.desc: choice invalid
-* @tc.type: FUNC
-*/
-HWTEST_F(ScreenCaptureServerFunctionTest, GetBoxSelectedFromJson_003, TestSize.Level2)
-{
-    Json::Value root;
-    std::string content = "{\"choice\": \"abcd\"}";
-    bool value = true;
-    screenCaptureServer_->GetBoxSelectedFromJson(root, content, "choice", value);
-    ASSERT_NE(screenCaptureServer_, nullptr);
-    ASSERT_EQ(value, false);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, ProcessWindowIdList_001, TestSize.Level2)
 {
     screenCaptureServer_->windowIdList_ = {};
@@ -964,36 +919,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetDefaultDisplayIdOfWindows_001, Test
     screenCaptureServer_->curWindowInDisplayId_ = SCREEN_ID_INVALID;
     screenCaptureServer_->SetDefaultDisplayIdOfWindows();
     ASSERT_NE(screenCaptureServer_->GetCurDisplayId(), SCREEN_ID_INVALID);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, GetInnerAudioBoxSelectedFromJson_001, TestSize.Level2)
-{
-    Json::Value root;
-    std::string content = "ghgh%^&%^$*^(}{^af&**)";
-    bool isInnerAudioBoxSelected = false;
-    screenCaptureServer_->GetBoxSelectedFromJson(root, content, "isInnerAudioBoxSelected", isInnerAudioBoxSelected);
-    ASSERT_NE(screenCaptureServer_, nullptr);
-    ASSERT_EQ(isInnerAudioBoxSelected, false);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, GetInnerAudioBoxSelectedFromJson_002, TestSize.Level2)
-{
-    Json::Value root;
-    std::string content = "{\"isInnerAudioBoxSelected\": \"true\"}";
-    bool isInnerAudioBoxSelected = false;
-    screenCaptureServer_->GetBoxSelectedFromJson(root, content, "isInnerAudioBoxSelected", isInnerAudioBoxSelected);
-    ASSERT_NE(screenCaptureServer_, nullptr);
-    ASSERT_EQ(isInnerAudioBoxSelected, true);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, GetInnerAudioBoxSelectedFromJson_003, TestSize.Level2)
-{
-    Json::Value root;
-    std::string content = "{\"isInnerAudioBoxSelected\": \"abcd\"}";
-    bool isInnerAudioBoxSelected = false;
-    screenCaptureServer_->GetBoxSelectedFromJson(root, content, "isInnerAudioBoxSelected", isInnerAudioBoxSelected);
-    ASSERT_NE(screenCaptureServer_, nullptr);
-    ASSERT_EQ(isInnerAudioBoxSelected, false);
 }
 
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
@@ -1145,7 +1070,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnWindowInfoChanged_001, TestSize.Leve
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
     sptr<SCWindowInfoChangedListener> listener(new (std::nothrow) SCWindowInfoChangedListener(screenCaptureServer));
     screenCaptureServer_->windowInfoChangedListener_ = listener;
-    std::vector<std::unordered_map<WindowInfoKey, std::any>> myWindowInfoList;
+    std::vector<std::unordered_map<WindowInfoKey, WindowChangeInfoType>> myWindowInfoList;
     screenCaptureServer_->windowIdList_ = {};
     screenCaptureServer_->windowInfoChangedListener_->OnWindowInfoChanged(myWindowInfoList);
     ASSERT_NE(screenCaptureServer_, nullptr);
@@ -1160,8 +1085,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnWindowInfoChanged_002, TestSize.Leve
     screenCaptureServer_->curWindowInDisplayId_ = 0;
     screenCaptureServer_->displayScreenId_ = 1;
     screenCaptureServer_->windowInfoChangedListener_->AddInterestInfo(Rosen::WindowInfoKey::DISPLAY_ID);
-    std::vector<std::unordered_map<WindowInfoKey, std::any>> myWindowInfoList;
-    std::unordered_map<WindowInfoKey, std::any> myWindowInfo;
+    std::vector<std::unordered_map<WindowInfoKey, WindowChangeInfoType>> myWindowInfoList;
+    std::unordered_map<WindowInfoKey, WindowChangeInfoType> myWindowInfo;
     myWindowInfo[WindowInfoKey::DISPLAY_ID] = static_cast<uint64_t>(1);
     myWindowInfoList.push_back(myWindowInfo);
     screenCaptureServer_->windowInfoChangedListener_->OnWindowInfoChanged(myWindowInfoList);
@@ -1178,8 +1103,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnWindowInfoChanged_003, TestSize.Leve
     screenCaptureServer_->curWindowInDisplayId_ = 0;
     screenCaptureServer_->displayScreenId_ = 999;
     screenCaptureServer_->windowInfoChangedListener_->AddInterestInfo(Rosen::WindowInfoKey::DISPLAY_ID);
-    std::vector<std::unordered_map<WindowInfoKey, std::any>> myWindowInfoList;
-    std::unordered_map<WindowInfoKey, std::any> myWindowInfo;
+    std::vector<std::unordered_map<WindowInfoKey, WindowChangeInfoType>> myWindowInfoList;
+    std::unordered_map<WindowInfoKey, WindowChangeInfoType> myWindowInfo;
     myWindowInfo[WindowInfoKey::DISPLAY_ID] = static_cast<uint64_t>(1);
     myWindowInfoList.push_back(myWindowInfo);
     screenCaptureServer_->windowInfoChangedListener_->OnWindowInfoChanged(myWindowInfoList);
@@ -1194,8 +1119,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnWindowInfoChanged_004, TestSize.Leve
     screenCaptureServer_->windowInfoChangedListener_ = listener;
     screenCaptureServer_->SetWindowIdList(80);
     screenCaptureServer_->curWindowInDisplayId_ = 0;
-    std::vector<std::unordered_map<WindowInfoKey, std::any>> myWindowInfoList;
-    std::unordered_map<WindowInfoKey, std::any> myWindowInfo;
+    std::vector<std::unordered_map<WindowInfoKey, WindowChangeInfoType>> myWindowInfoList;
+    std::unordered_map<WindowInfoKey, WindowChangeInfoType> myWindowInfo;
     myWindowInfoList.push_back(myWindowInfo);
     screenCaptureServer_->windowInfoChangedListener_->OnWindowInfoChanged(myWindowInfoList);
     ASSERT_EQ(screenCaptureServer_->curWindowInDisplayId_, 0);

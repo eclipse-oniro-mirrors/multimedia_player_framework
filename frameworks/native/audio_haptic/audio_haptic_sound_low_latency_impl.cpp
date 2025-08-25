@@ -43,7 +43,7 @@ AudioHapticSoundLowLatencyImpl::AudioHapticSoundLowLatencyImpl(const AudioSource
 AudioHapticSoundLowLatencyImpl::~AudioHapticSoundLowLatencyImpl()
 {
     if (soundPoolPlayer_ != nullptr) {
-        ReleaseSoundPoolPlayer();
+        (void)ReleaseSoundInternal();
     }
 }
 
@@ -129,7 +129,13 @@ int32_t AudioHapticSoundLowLatencyImpl::PrepareSound()
     result = OpenAudioSource();
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result, "Failed to open audio source.");
 
-    int32_t soundID = soundPoolPlayer_->Load(fileDes_, audioSource_.offset, audioSource_.length);
+    int32_t soundID = -1;
+    if (!audioSource_.audioUri.empty()) {
+        std::string uri = "fd://" + std::to_string(fileDes_);
+        soundID = soundPoolPlayer_->Load(uri);
+    } else {
+        soundID = soundPoolPlayer_->Load(fileDes_, audioSource_.offset, audioSource_.length);
+    }
     if (soundID < 0) {
         MEDIA_LOGE("Prepare: Failed to load soundPool uri.");
         return MSERR_OPEN_FILE_FAILED;
@@ -193,6 +199,12 @@ int32_t AudioHapticSoundLowLatencyImpl::StopSound()
 int32_t AudioHapticSoundLowLatencyImpl::ReleaseSound()
 {
     MEDIA_LOGI("Enter ReleaseSound with sound pool");
+    return ReleaseSoundInternal();
+}
+
+int32_t AudioHapticSoundLowLatencyImpl::ReleaseSoundInternal()
+{
+    MEDIA_LOGI("Enter ReleaseSoundInternal().");
     {
         std::lock_guard<std::mutex> lockPrepare(prepareMutex_);
         isReleased_ = true;

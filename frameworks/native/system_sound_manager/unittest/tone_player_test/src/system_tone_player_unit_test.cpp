@@ -29,6 +29,40 @@ void SystemTonePlayerUnitTest::TearDown(void) {}
 
 /**
  * @tc.name  : Test MediaTonePlayer
+ * @tc.number: InitPlayer_001
+ * @tc.desc  : Test InitPlayer interface.
+ */
+HWTEST(SystemTonePlayerUnitTest, InitPlayer_001, TestSize.Level1)
+{
+    auto context_ = std::make_shared<ContextImpl>();
+    auto systemSoundMgr_ = std::make_shared<SystemSoundManagerImpl>();
+    SystemToneType systemToneType = SYSTEM_TONE_TYPE_SIM_CARD_0;
+    auto systemTonePlayerImpl_ = std::make_shared<SystemTonePlayerImpl>(context_, *systemSoundMgr_, systemToneType);
+
+    std::string audioUri = NO_SYSTEM_SOUND;
+    int32_t temp = systemTonePlayerImpl_->InitPlayer(audioUri);
+    EXPECT_EQ(temp, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test MediaTonePlayer
+ * @tc.number: InitPlayer_002
+ * @tc.desc  : Test InitPlayer interface.
+ */
+HWTEST(SystemTonePlayerUnitTest, InitPlayer_002, TestSize.Level1)
+{
+    auto context_ = std::make_shared<ContextImpl>();
+    auto systemSoundMgr_ = std::make_shared<SystemSoundManagerImpl>();
+    SystemToneType systemToneType = SYSTEM_TONE_TYPE_SIM_CARD_0;
+    auto systemTonePlayerImpl_ = std::make_shared<SystemTonePlayerImpl>(context_, *systemSoundMgr_, systemToneType);
+
+    std::string audioUri = NO_RING_SOUND;
+    int32_t temp = systemTonePlayerImpl_->InitPlayer(audioUri);
+    EXPECT_EQ(temp, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test MediaTonePlayer
  * @tc.number: Media_TonePlayert_001
  * @tc.desc  : Test CreatePlayerWithOptions. Returns MSERR_OK.
  */

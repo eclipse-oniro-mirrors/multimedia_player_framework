@@ -42,6 +42,7 @@ void LppVideoDecAdapterUnitTest::TearDown(void)
     inputBufferQueueConsumer_ = nullptr;
     videoDecoder_ = nullptr;
     videoDecAdapter_ = nullptr;
+    PipeLineThreadPool::GetInstance().DestroyThread(streamerId_);
 }
 
 /**
@@ -216,5 +217,118 @@ HWTEST_F(LppVideoDecAdapterUnitTest, OnInputBufferAvailable_002, TestSize.Level1
     videoDecAdapter_->OnInputBufferAvailable(index, buffer);
     EXPECT_EQ(videoDecAdapter_->bufferVector_.size(), 0);
 }
+
+/**
+* @tc.name    : Test StartDecode API
+* @tc.number  : StartDecode_001
+* @tc.desc    : Test StartDecode interface
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(LppVideoDecAdapterUnitTest, StartDecode_001, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoDecAdapter_);
+    videoDecAdapter_->decodertask_
+        = std::make_unique<Task>("test_start_decode", streamerId_, TaskType::SINGLETON, TaskPriority::NORMAL, false);
+    videoDecAdapter_->videoDecoder_ = videoDecoder_;
+    videoDecAdapter_->initTargetPts_ = -1;
+    EXPECT_CALL(*videoDecoder_, Start()).WillOnce(Return(MediaAVCodec::AVCS_ERR_OK));
+    int32_t res = videoDecAdapter_->StartDecode();
+    EXPECT_EQ(res, 0);
+}
+
+/**
+* @tc.name    : Test StartDecode API
+* @tc.number  : StartDecode_002
+* @tc.desc    : Test StartDecode interface
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(LppVideoDecAdapterUnitTest, StartDecode_002, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoDecAdapter_);
+    videoDecAdapter_->decodertask_
+        = std::make_unique<Task>("test_start_decode", streamerId_, TaskType::SINGLETON, TaskPriority::NORMAL, false);
+    videoDecAdapter_->videoDecoder_ = videoDecoder_;
+    videoDecAdapter_->initTargetPts_ = 3000;
+    EXPECT_CALL(*videoDecoder_, Start()).WillOnce(Return(MediaAVCodec::AVCS_ERR_OK));
+    EXPECT_CALL(*videoDecoder_, SetParameter(_)).WillOnce(Return(MediaAVCodec::AVCS_ERR_OK));
+    int32_t res = videoDecAdapter_->StartDecode();
+    EXPECT_EQ(res, 0);
+}
+
+/**
+* @tc.name    : Test SetTargetPts API
+* @tc.number  : SetTargetPts_001
+* @tc.desc    : Test SetTargetPts interface
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(LppVideoDecAdapterUnitTest, SetTargetPts_001, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoDecAdapter_);
+    videoDecAdapter_->firstStarted_ = false;
+    videoDecAdapter_->videoDecoder_ = videoDecoder_;
+    int32_t res = videoDecAdapter_->SetTargetPts(3000);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+* @tc.name    : Test SetTargetPts API
+* @tc.number  : SetTargetPts_002
+* @tc.desc    : Test SetTargetPts interface
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(LppVideoDecAdapterUnitTest, SetTargetPts_002, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoDecAdapter_);
+    videoDecAdapter_->firstStarted_ = true;
+    videoDecAdapter_->videoDecoder_ = videoDecoder_;
+    EXPECT_CALL(*videoDecoder_, SetParameter(_)).WillOnce(Return(MediaAVCodec::AVCS_ERR_OK));
+    int32_t res = videoDecAdapter_->SetTargetPts(3000);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+* @tc.name    : Test Flush API
+* @tc.number  : Flush_001
+* @tc.desc    : Test Flush interface
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(LppVideoDecAdapterUnitTest, Flush_001, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoDecAdapter_);
+    ASSERT_NE(nullptr, videoDecoder_);
+    ASSERT_NE(nullptr, inputBufferQueueConsumer_);
+    videoDecAdapter_->videoDecoder_ = videoDecoder_;
+    videoDecAdapter_->inputBufferQueueConsumer_ = inputBufferQueueConsumer_;
+    auto buffer = std::make_shared<AVBuffer>();
+    std::vector<std::shared_ptr<AVBuffer>> bufferVector_;
+    bufferVector_.push_back(buffer);
+    videoDecAdapter_->bufferVector_ = bufferVector_;
+    EXPECT_CALL(*inputBufferQueueConsumer_, DetachBuffer(buffer)).Times(1);
+    EXPECT_CALL(*inputBufferQueueConsumer_, SetQueueSize(0)).Times(1);
+    int32_t res = videoDecAdapter_->Flush();
+    EXPECT_EQ(res, MSERR_OK);
+}
+
+/**
+* @tc.name    : Test Flush API
+* @tc.number  : Flush_002
+* @tc.desc    : Test Flush interface
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(LppVideoDecAdapterUnitTest, Flush_002, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoDecAdapter_);
+    ASSERT_NE(nullptr, videoDecoder_);
+    videoDecAdapter_->videoDecoder_ = videoDecoder_;
+    videoDecAdapter_->inputBufferQueueConsumer_ = nullptr;
+    auto buffer = std::make_shared<AVBuffer>();
+    std::vector<std::shared_ptr<AVBuffer>> bufferVector_;
+    bufferVector_.push_back(buffer);
+    videoDecAdapter_->bufferVector_ = bufferVector_;
+    EXPECT_CALL(*inputBufferQueueConsumer_, DetachBuffer(buffer)).Times(0);
+    EXPECT_CALL(*inputBufferQueueConsumer_, SetQueueSize(0)).Times(0);
+    int32_t res = videoDecAdapter_->Flush();
+    EXPECT_EQ(res, MSERR_OK);
+}
 } // namespace Media
-} // namespace OHOS
+} // namespace OHOS

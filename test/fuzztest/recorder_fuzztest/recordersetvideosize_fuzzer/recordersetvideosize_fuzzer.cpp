@@ -21,6 +21,7 @@
 #include "media_errors.h"
 #include "directory_ex.h"
 #include "recorder.h"
+#include "test_template.h"
 
 using namespace std;
 using namespace OHOS;
@@ -52,8 +53,10 @@ bool RecorderSetVideoSizeFuzzer::RecorderSetVideoSizeFuzz(uint8_t *data, size_t 
         TestRecorder::SetVideoSource(g_videoRecorderConfig);
         TestRecorder::SetOutputFormat(g_videoRecorderConfig);
         TestRecorder::SetVideoEncoder(g_videoRecorderConfig);
-
-        g_videoRecorderConfig.videoSourceId = *reinterpret_cast<int32_t *>(data);
+        g_baseFuzzData = data;
+        g_baseFuzzSize = size;
+        g_baseFuzzPos = 0;
+        g_videoRecorderConfig.videoSourceId = GetData<int32_t>();
 
         TestRecorder::SetVideoSize(g_videoRecorderConfig);
         TestRecorder::SetVideoFrameRate(g_videoRecorderConfig);

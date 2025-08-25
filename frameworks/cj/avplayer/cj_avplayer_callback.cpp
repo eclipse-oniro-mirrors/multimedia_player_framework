@@ -175,6 +175,7 @@ void CJAVPlayerCallback::OnStateChangeCb(const int32_t extra, const Format &info
         listener_->NotifyState(state);
     }
 
+    std::lock_guard<std::mutex> lock(mutex_);
     if (state_ != state) {
         state_ = state;
         std::string stateStr;

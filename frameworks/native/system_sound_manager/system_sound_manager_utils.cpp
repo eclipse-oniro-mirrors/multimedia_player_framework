@@ -118,7 +118,6 @@ bool SystemSoundManagerUtils::VerifyCustomPath(const std::string &audioUri)
 
 bool SystemSoundManagerUtils::IdExists(const std::string &ids, int32_t id)
 {
-    MEDIA_LOGI("IdExists Start.");
     if (ids.empty()) {
         return false;
     }
@@ -140,11 +139,9 @@ bool SystemSoundManagerUtils::IdExists(const std::string &ids, int32_t id)
 
 bool SystemSoundManagerUtils::CheckCurrentUser()
 {
-    MEDIA_LOGI("CheckCurrentUser Start.");
     char paramValue[RINGTONEPARA_SIZE] = {0};
     GetParameter(RINGTONE_PARAMETER_SCANNER_USERID_KEY, "", paramValue, RINGTONEPARA_SIZE);
     std::string ids(paramValue);
-    MEDIA_LOGI("GetParameter end, paramValue: %{private}s .", ids.c_str());
     int32_t currentUserId = GetCurrentUserId();
     if (IdExists(ids, currentUserId)) {
         return true;

@@ -236,7 +236,7 @@ void OH_LowPowerAudioSinkCallback::OnError(int32_t errorCode, const std::string 
 
 void OH_LowPowerAudioSinkCallback::OnInfo(AudioStreamerOnInfoType type, int32_t extra, const Format &infoBody)
 {
-    MEDIA_LOGI("OnInfo() is called, AudioStreamerOnInfoType: %{public}d, extra: %{public}d", type, extra);
+    MEDIA_LOGD("OnInfo() is called, AudioStreamerOnInfoType: %{public}d, extra: %{public}d", type, extra);
     CHECK_AND_RETURN_LOG(lppAudioStreamer_ != nullptr, "lppAudioStreamer_ is nullptr");
     LowPowerAudioSinkObject *streamerObj = nullptr;
     switch (type) {
@@ -331,10 +331,10 @@ OH_AVErrCode OH_LowPowerAudioSink_SetParameter(OH_LowPowerAudioSink *streamer, c
     return LppMsErrToOHAvErr(res);
 }
 
-OH_AVErrCode OH_LowPowerAudioSink_GetParameter(OH_LowPowerAudioSink *streamer, const OH_AVFormat *format)
+OH_AVErrCode OH_LowPowerAudioSink_GetParameter(OH_LowPowerAudioSink *sink, OH_AVFormat *format)
 {
     MEDIA_LOGD("OH_LowPowerAudioSink_GetParameter");
-    (void)streamer;
+    (void)sink;
     (void)format;
     return AV_ERR_OK;
 }
@@ -497,7 +497,6 @@ OH_AVErrCode OH_LowPowerAudioSinkCallback_Destroy(OH_LowPowerAudioSinkCallback *
 {
     MEDIA_LOGD("OH_LowPowerAudioSinkCallback_Destroy");
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, AV_ERR_INVALID_VAL, "callback is nullptr!");
-    delete callback;
     return AV_ERR_OK;
 }
 

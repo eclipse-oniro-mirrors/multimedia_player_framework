@@ -48,6 +48,10 @@ enum class HapticStartupMode {
     FAST = 1,
 };
 
+enum RingtoneHapticsFeature {
+    RINGTONE_GENTLE_HAPTICS
+};
+
 class RingtonePlayer {
 public:
     virtual ~RingtonePlayer() = default;
@@ -133,6 +137,29 @@ public:
      */
     virtual int32_t SetRingtonePlayerInterruptCallback
         (const std::shared_ptr<RingtonePlayerInterruptCallback> &interruptCallback) = 0;
+
+    /**
+     * @brief Set the ringtone player haptics's feature
+     *
+     * @return Returns {@link MSERR_OK} if the haptics's feature set successfully;
+     * returns an error code defined in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetRingtoneHapticsFeature(const RingtoneHapticsFeature &feature) = 0;
+
+    /**
+     * @brief Set the ringtone player haptics's ramp
+     *
+     * @param duration haptics ramp duration, not less than 100ms
+     * @param startIntensity start intensity, value range (1.0f, 100.0f]
+     * @param endIntensity start intensity, value range (1.0f, 100.0f]
+     * @return Returns {@link MSERR_OK} if the haptics's ramp set successfully;
+     * returns an error code defined in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetRingtoneHapticsRamp(int32_t duration, float startIntensity, float endIntensity) = 0;
 };
 
 

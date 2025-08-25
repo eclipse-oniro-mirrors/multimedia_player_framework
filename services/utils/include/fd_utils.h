@@ -73,10 +73,10 @@ private:
             MEDIA_LOGW("Getxattr value failed, errno is %{public}s", std::strerror(errno));
             return false;
         }
-        std::string location(value, static_cast<size_t>(size));
-        MEDIA_LOGD("Getxattr value, location is %{public}s", location.c_str());
+        std::string local(value, static_cast<size_t>(size));
+        MEDIA_LOGD("Getxattr value, local is %{public}s", local.c_str());
 
-        return location == LOCAL;
+        return local == LOCAL;
     }
 #endif
 

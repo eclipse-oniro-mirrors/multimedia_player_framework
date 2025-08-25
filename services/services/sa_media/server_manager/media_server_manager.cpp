@@ -99,7 +99,7 @@ int32_t WriteInfo(int32_t fd, std::string &dumpString, std::vector<Dumper> dumpe
     if (fd != -1) {
         write(fd, dumpString.c_str(), dumpString.size());
     } else {
-        MEDIA_LOGI_NO_RELEASE("%{public}s", dumpString.c_str());
+        MEDIA_LOGD("%{public}s", dumpString.c_str());
     }
     dumpString.clear();
 

@@ -176,6 +176,12 @@ public:
         return 0;
     }
 
+    virtual int32_t SetCameraPostprocessing(bool isOpen)
+    {
+        (void)isOpen;
+        return 0;
+    }
+
     virtual int32_t EnableReportMediaProgress(bool enable)
     {
         (void)enable;
@@ -265,6 +271,7 @@ public:
         ENABLE_REPORT_AUDIO_INTERRUPT,
         FORCE_LOAD_VIDEO,
         SET_LOUDNESSGAIN,
+        SET_CAMERA_POST_POSTPROCESSING,
         MAX_IPC_ID,                   // all IPC codes should be added before MAX_IPC_ID
     };
 

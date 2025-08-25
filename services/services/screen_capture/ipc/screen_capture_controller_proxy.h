@@ -26,6 +26,7 @@ public:
     virtual ~ScreenCaptureControllerProxy();
 
     int32_t ReportAVScreenCaptureUserChoice(int32_t sessionId, std::string choice) override;
+    int32_t GetAVScreenCaptureConfigurableParameters(int32_t sessionId, std::string &resultStr) override;
     int32_t DestroyStub() override;
 
 private:

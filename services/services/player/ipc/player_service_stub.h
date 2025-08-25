@@ -106,6 +106,7 @@ public:
     uint32_t GetMemoryUsage();
     int32_t SetReopenFd(int32_t fd) override;
     int32_t EnableCameraPostprocessing() override;
+    int32_t SetCameraPostprocessing(bool isOpen) override;
     int32_t EnableReportMediaProgress(bool enable) override;
     int32_t EnableReportAudioInterrupt(bool enable) override;
     bool isFrozen_ = false;
@@ -184,6 +185,7 @@ private:
     int32_t SetStartFrameRateOptEnabled(MessageParcel &data, MessageParcel &reply);
     int32_t SetReopenFd(MessageParcel &data, MessageParcel &reply);
     int32_t EnableCameraPostprocessing(MessageParcel &data, MessageParcel &reply);
+    int32_t SetCameraPostprocessing(MessageParcel &data, MessageParcel &reply);
     int32_t EnableReportMediaProgress(MessageParcel &data, MessageParcel &reply);
     int32_t EnableReportAudioInterrupt(MessageParcel &data, MessageParcel &reply);
     int32_t ForceLoadVideo(MessageParcel &data, MessageParcel &reply);

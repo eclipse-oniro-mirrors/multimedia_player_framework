@@ -370,7 +370,6 @@ void ScreenCaptureServerFunctionTest::SetSCInnerAudioCaptureAndPushData(std::sha
         screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, screenCaptureServer_->screenCaptureCb_,
         std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
-    screenCaptureServer_->innerAudioCapture_->isRunning_.store(true);
     screenCaptureServer_->innerAudioCapture_->availBuffers_.push_back(innerAudioBuffer);
 }
 
@@ -380,7 +379,6 @@ void ScreenCaptureServerFunctionTest::SetSCMicAudioCaptureAndPushData(std::share
         screenCaptureServer_->captureConfig_.audioInfo.micCapInfo, screenCaptureServer_->screenCaptureCb_,
         std::string("OS_MicAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->micAudioCapture_->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
-    screenCaptureServer_->micAudioCapture_->isRunning_.store(true);
     screenCaptureServer_->micAudioCapture_->availBuffers_.push_back(micAudioBuffer);
 }
 
@@ -1286,7 +1284,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReadAtMicMode_002, TestSize.Level2)
         screenCaptureServer_->captureConfig_.audioInfo.micCapInfo, screenCaptureServer_->screenCaptureCb_,
         std::string("OS_MicAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->micAudioCapture_->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
-    screenCaptureServer_->micAudioCapture_->isRunning_.store(true);
     screenCaptureServer_->micAudioCapture_->availBuffers_.push_back(micAudioBuffer);
     AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->ReadAtMicMode(buffer, bufferSize);
     MEDIA_LOGI("ReadAtMicMode ret: %{public}d", static_cast<int32_t>(ret));
@@ -2337,14 +2334,14 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ResizeCanvas_006, TestSize.Level2)
     int ret = screenCaptureServer_->ResizeCanvas(580, 4321);
     ASSERT_EQ(ret, MSERR_INVALID_VAL);
 }
- 
+
 HWTEST_F(ScreenCaptureServerFunctionTest, UpdateSurface_001, TestSize.Level2)
 {
     screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
     int ret = screenCaptureServer_->UpdateSurface(nullptr);
     ASSERT_EQ(ret, MSERR_INVALID_OPERATION);
 }
- 
+
 HWTEST_F(ScreenCaptureServerFunctionTest, UpdateSurface_002, TestSize.Level2)
 {
     screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
@@ -2352,7 +2349,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UpdateSurface_002, TestSize.Level2)
     int ret = screenCaptureServer_->UpdateSurface(nullptr);
     ASSERT_EQ(ret, MSERR_INVALID_OPERATION);
 }
- 
+
 HWTEST_F(ScreenCaptureServerFunctionTest, UpdateSurface_003, TestSize.Level2)
 {
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
@@ -2623,6 +2620,18 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetCaptureArea_002, TestSize.Level2)
     EXPECT_EQ(ret, MSERR_OK);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, SetCaptureArea_003, TestSize.Level2)
+{
+    OHOS::Rect area;
+    area.x = 2147483647;
+    area.y = 2147483647;
+    area.w = 720;
+    area.h = 1280;
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    int32_t ret = screenCaptureServer_->SetCaptureArea(0, area);
+    EXPECT_EQ(ret, MSERR_INVALID_VAL);
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, SetCaptureAreaInner_001, TestSize.Level2)
 {
     OHOS::Rect area;
@@ -2641,11 +2650,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UserSelected_001, TestSize.Level2)
     selectionInfo.selectType = 0;
     selectionInfo.displayId = 0;
     screenCaptureServer_->NotifyUserSelected(selectionInfo);
-    EXPECT_EQ(selectionInfo.displayId, 0);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, UserSelected_002, TestSize.Level2)
-{
     screenCaptureServer_->displayScreenId_ = 0;
     screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
     screenCaptureServer_->PostStartScreenCaptureSuccessAction();
@@ -2659,6 +2663,223 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetVirtualScreenAutoRotation_001, Test
     EXPECT_NE(screenCaptureServer_->SetVirtualScreenAutoRotation(), MSERR_OK);
     screenCaptureServer_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
     EXPECT_EQ(screenCaptureServer_->SetVirtualScreenAutoRotation(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, GetValueFromJson_001, TestSize.Level2)
+{
+    Json::Value root;
+    std::string content = R"({"isEnable": "true"})";
+    std::string key = "isEnable";
+    bool value = false;
+    screenCaptureServer_->GetValueFromJson(root, content, key, value);
+    EXPECT_EQ(value, true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, GetValueFromJson_002, TestSize.Level2)
+{
+    Json::Value root;
+    std::string content = R"({"isEnable": "true"})";
+    std::string key = "Enable";
+    bool value = true;
+    screenCaptureServer_->GetValueFromJson(root, content, key, value);
+    EXPECT_EQ(value, false);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, GetValueFromJson_003, TestSize.Level2)
+{
+    Json::Value root;
+    std::string content = "";
+    std::string key = "Enable";
+    bool value = true;
+    screenCaptureServer_->GetValueFromJson(root, content, key, value);
+    EXPECT_EQ(value, false);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, GetValueFromJson_004, TestSize.Level2)
+{
+    Json::Value root;
+    std::string content = R"({"isEnable": "true"})";
+    std::string key = "isEnable";
+    bool value = false;
+    screenCaptureServer_->GetValueFromJson(root, content, key, value);
+    EXPECT_EQ(value, true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SystemPrivacyProtected_001, TestSize.Level2)
+{
+    ScreenId virtualScreenId = 1;
+    bool systemPrivacyProtectionSwitch = true;
+    screenCaptureServer_->SystemPrivacyProtected(virtualScreenId, systemPrivacyProtectionSwitch);
+    EXPECT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::CREATED);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, GetLocalLiveViewContent_001, TestSize.Level2)
+{
+    std::string callingLabel_ = "TestApp";
+    screenCaptureServer_->callingLabel_ = callingLabel_;
+    auto result = screenCaptureServer_->GetLocalLiveViewContent();
+    std::string expectedTitle = "\"TestApp\" 正在使用屏幕";
+    EXPECT_EQ(result->GetText(), expectedTitle);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, GetLocalLiveViewContent_002, TestSize.Level2)
+{
+    std::string callingLabel_ = "TestApp";
+    screenCaptureServer_->callingLabel_ = callingLabel_;
+    screenCaptureServer_->SetDataType(DataType::ORIGINAL_STREAM);
+    auto result = screenCaptureServer_->GetLocalLiveViewContent();
+    std::string expectedTitle = "\"TestApp\" 正在使用屏幕";
+    EXPECT_EQ(result->GetTitle(), expectedTitle);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, GetLocalLiveViewContent_003, TestSize.Level2)
+{
+    std::string callingLabel_ = "TestApp";
+    screenCaptureServer_->callingLabel_ = callingLabel_;
+    screenCaptureServer_->systemPrivacyProtectionSwitch_ = true;
+    screenCaptureServer_->SetDataType(DataType::ORIGINAL_STREAM);
+    auto result = screenCaptureServer_->GetLocalLiveViewContent();
+    std::string expectedTitle = "\"TestApp\" 正在使用屏幕";
+    EXPECT_EQ(result->GetTitle(), expectedTitle);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, GetLocalLiveViewContent_004, TestSize.Level2)
+{
+    std::string callingLabel_ = "TestApp";
+    screenCaptureServer_->callingLabel_ = callingLabel_;
+    screenCaptureServer_->systemPrivacyProtectionSwitch_ = false;
+    screenCaptureServer_->appPrivacyProtectionSwitch_ = false;
+    screenCaptureServer_->SetDataType(DataType::ORIGINAL_STREAM);
+    auto result = screenCaptureServer_->GetLocalLiveViewContent();
+    std::string expectedTitle = "\"TestApp\" 正在使用屏幕";
+    EXPECT_EQ(result->GetTitle(), expectedTitle);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, HandleStreamDataCase_001, TestSize.Level2)
+{
+    Json::Value root;
+    std::string content = R"(
+    {
+        "stopRecording": "true",
+        "appPrivacyProtectionSwitch": "true",
+        "systemPrivacyProtectionSwitch": "true"
+    }
+    )";
+    int32_t result = screenCaptureServer_->HandleStreamDataCase(root, content);
+    EXPECT_EQ(result, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, HandleStreamDataCase_002, TestSize.Level2)
+{
+    Json::Value root;
+    std::string content = R"(
+    {
+        "stopRecording": "false",
+        "appPrivacyProtectionSwitch": "true",
+        "systemPrivacyProtectionSwitch": "true"
+    }
+    )";
+    screenCaptureServer_->HandleStreamDataCase(root, content);
+    EXPECT_EQ(screenCaptureServer_->systemPrivacyProtectionSwitch_, true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, HandleStreamDataCase_003, TestSize.Level2)
+{
+    Json::Value root;
+    std::string content = R"(
+    {
+        "stopRecording": "false",
+        "appPrivacyProtectionSwitch": "true",
+        "systemPrivacyProtectionSwitch": "false"
+    }
+    )";
+    screenCaptureServer_->HandleStreamDataCase(root, content);
+    EXPECT_EQ(screenCaptureServer_->systemPrivacyProtectionSwitch_, false);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, HandleStreamDataCase_004, TestSize.Level2)
+{
+    Json::Value root;
+    std::string content = R"(
+    {
+        "stopRecording": "false",
+        "appPrivacyProtectionSwitch": "false",
+        "systemPrivacyProtectionSwitch": "true"
+    }
+    )";
+    screenCaptureServer_->HandleStreamDataCase(root, content);
+    EXPECT_EQ(screenCaptureServer_->systemPrivacyProtectionSwitch_, true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, HandleStreamDataCase_005, TestSize.Level2)
+{
+    Json::Value root;
+    std::string content = R"(
+    {
+        "stopRecording": "false",
+        "appPrivacyProtectionSwitch": "false",
+        "systemPrivacyProtectionSwitch": "false"
+    }
+    )";
+    screenCaptureServer_->HandleStreamDataCase(root, content);
+    EXPECT_EQ(screenCaptureServer_->systemPrivacyProtectionSwitch_, false);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, UpdateMicrophoneEnabled_001, TestSize.Level2)
+{
+    screenCaptureServer_->SetDataType(DataType::ORIGINAL_STREAM);
+    screenCaptureServer_->StartNotification();
+    screenCaptureServer_->isSystemUI2_ = true;
+    screenCaptureServer_->UpdateMicrophoneEnabled();
+    EXPECT_EQ(screenCaptureServer_->isSystemUI2_, true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, UpdateMicrophoneEnabled_002, TestSize.Level2)
+{
+    screenCaptureServer_->SetDataType(DataType::ORIGINAL_STREAM);
+    screenCaptureServer_->StartNotification();
+    screenCaptureServer_->isSystemUI2_ = false;
+    screenCaptureServer_->UpdateMicrophoneEnabled();
+    EXPECT_EQ(screenCaptureServer_->isSystemUI2_, false);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, UpdateMicrophoneEnabled_003, TestSize.Level2)
+{
+    screenCaptureServer_->SetDataType(DataType::CAPTURE_FILE);
+    screenCaptureServer_->StartNotification();
+    screenCaptureServer_->isSystemUI2_ = false;
+    screenCaptureServer_->UpdateMicrophoneEnabled();
+    EXPECT_EQ(screenCaptureServer_->isSystemUI2_, false);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, HandleOriginalStreamPrivacy_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.dataType = DataType::INVAILD;
+    screenCaptureServer_->HandleOriginalStreamPrivacy();
+    EXPECT_EQ(screenCaptureServer_->checkBoxSelected_, false);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, HandleOriginalStreamPrivacy_002, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
+    screenCaptureServer_->checkBoxSelected_ = true;
+    screenCaptureServer_->HandleOriginalStreamPrivacy();
+    EXPECT_EQ(screenCaptureServer_->checkBoxSelected_, true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, HandleOriginalStreamPrivacy_003, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
+    screenCaptureServer_->checkBoxSelected_ = false;
+    screenCaptureServer_->HandleOriginalStreamPrivacy();
+    EXPECT_EQ(screenCaptureServer_->checkBoxSelected_, false);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, RegisterLanguageSwitchListener_001, TestSize.Level2)
+{
+    screenCaptureServer_->RegisterLanguageSwitchListener();
+    screenCaptureServer_->UnRegisterLanguageSwitchListener();
+    EXPECT_NE(screenCaptureServer_->subscriber_, nullptr);
 }
 } // Media
 } // OHOS

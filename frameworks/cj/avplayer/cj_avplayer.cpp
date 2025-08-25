@@ -72,17 +72,19 @@ bool CJAVPlayer::Constructor()
 
 void CJAVPlayer::NotifyDuration(int32_t duration)
 {
+    std::lock_guard<std::recursive_mutex> lock(taskMutex_);
     duration_ = duration;
 }
 
 void CJAVPlayer::NotifyPosition(int32_t position)
 {
+    std::lock_guard<std::recursive_mutex> lock(taskMutex_);
     position_ = position;
 }
 
 void CJAVPlayer::NotifyState(PlayerStates state)
 {
-    std::lock_guard<std::mutex> lock(taskMutex_);
+    std::lock_guard<std::recursive_mutex> lock(taskMutex_);
     if (state_ != state) {
         state_ = state;
         MEDIA_LOGI("0x%{public}06" PRIXPTR " notify %{public}s", FAKE_POINTER(this), GetCurrentState().c_str());
@@ -92,6 +94,7 @@ void CJAVPlayer::NotifyState(PlayerStates state)
 
 void CJAVPlayer::NotifyVideoSize(int32_t width, int32_t height)
 {
+    std::lock_guard<std::recursive_mutex> lock(taskMutex_);
     width_ = width;
     height_ = height;
 }
@@ -212,6 +215,7 @@ void CJAVPlayer::SetDataSrc(CAVDataSrcDescriptor dataSrcDescriptor)
         if (player_->SetSource(dataSrcCb_) != MSERR_OK) {
             OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "player SetSource DataSrc failed");
         } else {
+            std::lock_guard<std::recursive_mutex> lock(taskMutex_);
             state_ = PlayerStates::PLAYER_INITIALIZED;
         }
         int64_t fileSize;
@@ -420,6 +424,7 @@ int32_t CJAVPlayer::GetCurrentTime()
 
     int32_t currentTime = -1;
     if (IsControllable()) {
+        std::lock_guard<std::recursive_mutex> lock(taskMutex_);
         currentTime = position_;
     }
 
@@ -439,6 +444,7 @@ int32_t CJAVPlayer::GetDuration()
 
     int32_t duration = -1;
     if (IsControllable() && !IsLiveSource()) {
+        std::lock_guard<std::recursive_mutex> lock(taskMutex_);
         duration = duration_;
     }
 
@@ -451,6 +457,7 @@ int32_t CJAVPlayer::GetWidth()
 {
     int32_t width = 0;
     if (IsControllable()) {
+        std::lock_guard<std::recursive_mutex> lock(taskMutex_);
         width = width_;
     }
     return width;
@@ -460,6 +467,7 @@ int32_t CJAVPlayer::GetHeight()
 {
     int32_t height = 0;
     if (IsControllable()) {
+        std::lock_guard<std::recursive_mutex> lock(taskMutex_);
         height = height_;
     }
     return height;
@@ -468,7 +476,7 @@ int32_t CJAVPlayer::GetHeight()
 int32_t CJAVPlayer::PrepareTask()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Prepare Task In", FAKE_POINTER(this));
-    std::unique_lock<std::mutex> lock(taskMutex_);
+    std::unique_lock<std::recursive_mutex> lock(taskMutex_);
     auto state = GetCurrentState();
     if (state == AVPlayerState::STATE_INITIALIZED || state == AVPlayerState::STATE_STOPPED) {
         int32_t ret = player_->PrepareAsync();
@@ -505,7 +513,7 @@ int32_t CJAVPlayer::Prepare()
 int32_t CJAVPlayer::PlayTask()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Play Task In", FAKE_POINTER(this));
-    std::unique_lock<std::mutex> lock(taskMutex_);
+    std::unique_lock<std::recursive_mutex> lock(taskMutex_);
     auto state = GetCurrentState();
     if (state == AVPlayerState::STATE_PREPARED || state == AVPlayerState::STATE_PAUSED ||
         state == AVPlayerState::STATE_COMPLETED) {
@@ -544,7 +552,7 @@ int32_t CJAVPlayer::Play()
 int32_t CJAVPlayer::PauseTask()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Pause Task In", FAKE_POINTER(this));
-    std::unique_lock<std::mutex> lock(taskMutex_);
+    std::unique_lock<std::recursive_mutex> lock(taskMutex_);
     auto state = GetCurrentState();
     if (state == AVPlayerState::STATE_PLAYING) {
         int32_t ret = player_->Pause();
@@ -576,7 +584,7 @@ int32_t CJAVPlayer::Pause()
 int32_t CJAVPlayer::StopTask()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Stop Task In", FAKE_POINTER(this));
-    std::unique_lock<std::mutex> lock(taskMutex_);
+    std::unique_lock<std::recursive_mutex> lock(taskMutex_);
     if (IsControllable()) {
         int32_t ret = player_->Stop();
         if (ret != MSERR_OK) {
@@ -612,7 +620,7 @@ int32_t CJAVPlayer::ResetTask()
     ResetUserParameters();
     {
         isInterrupted_.store(false);
-        std::unique_lock<std::mutex> lock(taskMutex_);
+        std::unique_lock<std::recursive_mutex> lock(taskMutex_);
         if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
             return MSERR_EXT_API9_OPERATE_NOT_PERMIT;
         } else if (GetCurrentState() == AVPlayerState::STATE_IDLE) {
@@ -1426,6 +1434,7 @@ std::string CJAVPlayer::GetCurrentState()
         {PLAYER_STATE_ERROR, AVPlayerState::STATE_ERROR},
     };
 
+    std::lock_guard<std::recursive_mutex> lock(taskMutex_);
     if (stateMap.find(state_) != stateMap.end()) {
         curState = stateMap.at(state_);
     }
@@ -1471,7 +1480,7 @@ void CJAVPlayer::SetSource(std::string url)
 
 void CJAVPlayer::EnqueueNetworkTask(const std::string url)
 {
-    std::unique_lock<std::mutex> lock(taskMutex_);
+    std::unique_lock<std::recursive_mutex> lock(taskMutex_);
     auto state = GetCurrentState();
     if (state != AVPlayerState::STATE_IDLE) {
         OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set url");
@@ -1488,7 +1497,7 @@ void CJAVPlayer::EnqueueNetworkTask(const std::string url)
 
 void CJAVPlayer::EnqueueFdTask(const int32_t fd)
 {
-    std::unique_lock<std::mutex> lock(taskMutex_);
+    std::unique_lock<std::recursive_mutex> lock(taskMutex_);
     auto state = GetCurrentState();
     if (state != AVPlayerState::STATE_IDLE) {
         OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set source fd");
@@ -1535,6 +1544,7 @@ void CJAVPlayer::PauseListenCurrentResource()
 
 void CJAVPlayer::ResetUserParameters()
 {
+    std::lock_guard<std::recursive_mutex> lock(taskMutex_);
     url_.clear();
     fileDescriptor_.fd = 0;
     fileDescriptor_.offset = 0;

@@ -292,5 +292,11 @@ int32_t ScreenCaptureNativeMock::StrategyForPickerPopUp(bool value)
     strategy_.pickerPopUp = static_cast<AVScreenCapturePickerPopUp>(value);
     return MSERR_OK;
 }
+
+int32_t ScreenCaptureNativeMock::StrategyForFillMode(AVScreenCaptureFillMode value)
+{
+    strategy_.fillMode = value;
+    return MSERR_OK;
+}
 } // namespace Media
 } // namespace OHOS

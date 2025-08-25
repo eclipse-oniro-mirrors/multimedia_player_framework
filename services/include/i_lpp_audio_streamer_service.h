@@ -29,7 +29,7 @@ public:
 
     virtual int32_t Init(const std::string &mime) = 0;
 
-    virtual int32_t SetParameter(const Format &param);
+    virtual int32_t SetParameter(const Format &param) = 0;
 
     virtual int32_t Configure(const Format &param) = 0;
 
@@ -57,7 +57,7 @@ public:
 
     virtual int32_t RegisterCallback() = 0;
 
-    virtual int32_t SetLppAudioStreamerCallback(const std::shared_ptr<AudioStreamerCallback> &callback);
+    virtual int32_t SetLppAudioStreamerCallback(const std::shared_ptr<AudioStreamerCallback> &callback) = 0;
 
     virtual int32_t SetLppVideoStreamerId(const std::string videoStreamId) = 0;
 

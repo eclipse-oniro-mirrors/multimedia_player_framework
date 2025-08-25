@@ -126,10 +126,10 @@ Status AVMetadataHelperImpl::SetSourceInternel(const std::string &uri, bool isFo
     CHECK_AND_RETURN_RET_LOG(!isForFrameConvert, SetSourceForFrameConvert(uri), "SetSource for frame convert");
     Reset();
     mediaDemuxer_ = std::make_shared<MediaDemuxer>();
-    mediaDemuxer_->SetEnableOnlineFdCache(false);
-    mediaDemuxer_->SetPlayerId(groupId_);
     CHECK_AND_RETURN_RET_LOG(
         mediaDemuxer_ != nullptr, Status::ERROR_INVALID_DATA, "SetSourceInternel demuxer is nullptr");
+    mediaDemuxer_->SetEnableOnlineFdCache(false);
+    mediaDemuxer_->SetPlayerId(groupId_);
     if (interruptMonitor_) {
         interruptMonitor_->RegisterListener(mediaDemuxer_);
         interruptMonitor_->SetInterruptState(isInterruptNeeded_.load());
@@ -157,10 +157,10 @@ Status AVMetadataHelperImpl::SetSourceInternel(const std::shared_ptr<IMediaDataS
 {
     Reset();
     mediaDemuxer_ = std::make_shared<MediaDemuxer>();
-    mediaDemuxer_->SetEnableOnlineFdCache(false);
-    mediaDemuxer_->SetPlayerId(groupId_);
     CHECK_AND_RETURN_RET_LOG(
         mediaDemuxer_ != nullptr, Status::ERROR_INVALID_DATA, "SetSourceInternel demuxer is nullptr");
+    mediaDemuxer_->SetEnableOnlineFdCache(false);
+    mediaDemuxer_->SetPlayerId(groupId_);
     if (interruptMonitor_) {
         interruptMonitor_->RegisterListener(mediaDemuxer_);
     }

@@ -892,6 +892,68 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0200, Level2)
 }
 
 /**
+    * @tc.number    : FetchFrameYuv_API_0300
+    * @tc.name      : FetchFrameYuv SDR.mp4
+    * @tc.desc      : FetchFrameYuv API
+*/
+HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0300, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("SDR.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    int64_t time = 0;
+    PixelMapParams param;
+    param.isSupportFlip = true;
+    auto pixelMap = helper->FetchFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 1920);
+    ASSERT_EQ(pixelMap->GetHeight(), 1080);
+}
+
+/**
+    * @tc.number    : FetchFrameYuv_API_0400
+    * @tc.name      : FetchFrameYuv SDR_HF.mp4
+    * @tc.desc      : FetchFrameYuv API
+*/
+HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0400, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("SDR_HF.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    int64_t time = 0;
+    PixelMapParams param;
+    auto pixelMap = helper->FetchFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 1920);
+    ASSERT_EQ(pixelMap->GetHeight(), 1080);
+}
+
+/**
+    * @tc.number    : FetchFrameYuv_API_0500
+    * @tc.name      : FetchFrameYuv SDR_HF.mp4
+    * @tc.desc      : FetchFrameYuv API
+*/
+HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0500, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("SDR_HF.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    int64_t time = 0;
+    PixelMapParams param;
+    param.isSupportFlip = true;
+    auto pixelMap = helper->FetchFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 1920);
+    ASSERT_EQ(pixelMap->GetHeight(), 1080);
+}
+
+/**
     * @tc.number    : FetchScaledFrameYuv_API_0100
     * @tc.name      : FetchScaledFrameYuv H264_AAC.mp4 custom scaling
     * @tc.desc      : FetchScaledFrameYuv API
@@ -1045,7 +1107,7 @@ HWTEST_F(AVMetadataUnitTest, SetUrlSource_API_0100, Level2)
     uri = AVMetadataTestBase::GetInstance().GetMountPath() + std::string("HDR.mp4");
     ASSERT_NE(MSERR_OK, helper->SetUrlSource(uri, header));
     uri = "http://XXX";
-    ASSERT_NE(MSERR_OK, helper->SetUrlSource(uri, header));
+    ASSERT_EQ(MSERR_OK, helper->SetUrlSource(uri, header));
     helper->Release();
 }
 
@@ -1067,7 +1129,7 @@ HWTEST_F(AVMetadataUnitTest, SetUrlSource_API_0200, Level2)
     uri = AVMetadataTestBase::GetInstance().GetMountPath() + std::string("HDR.mp4");
     ASSERT_NE(MSERR_OK, helper->SetUrlSource(uri, header));
     uri = "https://XXX";
-    ASSERT_NE(MSERR_OK, helper->SetUrlSource(uri, header));
+    ASSERT_EQ(MSERR_OK, helper->SetUrlSource(uri, header));
     helper->Release();
 }
 

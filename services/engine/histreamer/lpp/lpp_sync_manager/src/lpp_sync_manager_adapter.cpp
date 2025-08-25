@@ -98,25 +98,23 @@ LppSyncManagerAdapter::~LppSyncManagerAdapter()
     MEDIA_LOG_I("~LppSyncManagerAdapter dtor called.");
 }
 
-int32_t LppSyncManagerAdapter::LoadAdapter(uint32_t &instanceId)
+int32_t LppSyncManagerAdapter::LoadAdapter()
 {
     MediaTrace trace("LppSyncManagerAdapter::LoadAdapter");
     MEDIA_LOG_I("LoadAdapter enter");
     factory_ = PlayerHDI::ILowPowerPlayerFactory::Get(true);
     FALSE_RETURN_V_MSG_E(factory_ != nullptr, MSERR_NO_MEMORY, "syncMgrfactory is nullptr");
-    int32_t ret = factory_->CreateSyncMgr(syncMgrAdapter_, instanceId);
+    int32_t ret = factory_->CreateSyncMgr(syncMgrAdapter_);
     FALSE_RETURN_V_MSG(ret == HDF_SUCCESS && syncMgrAdapter_ != nullptr, MSERR_NO_MEMORY,
         "Create SyncMgrAdapter failed");
     return MSERR_OK;
 }
 
-int32_t LppSyncManagerAdapter::UnloadAdapter(uint32_t instanceId)
+int32_t LppSyncManagerAdapter::UnloadAdapter()
 {
     MediaTrace trace("LppSyncManagerAdapter::UnloadAdapter");
     MEDIA_LOG_I("UnloadAdapter enter");
     FALSE_RETURN_V_MSG_E(factory_ != nullptr, MSERR_INVALID_OPERATION, "syncMgrfactory is nullptr");
-    int32_t ret = factory_->DestroySyncMgr(instanceId);
-    FALSE_RETURN_V_MSG(ret == HDF_SUCCESS, MSERR_HARDWARE_ERROR, "Destroy SyncMgrAdapter failed, ret");
     factory_ = nullptr;
     syncMgrAdapter_ = nullptr;
     return MSERR_OK;
@@ -197,7 +195,8 @@ int32_t LppSyncManagerAdapter::Flush()
     MediaTrace trace("LppSyncManagerAdapter::Flush");
     MEDIA_LOG_I("Flush enter");
     FALSE_RETURN_V_MSG_E(syncMgrAdapter_ != nullptr, MSERR_INVALID_OPERATION, "syncMgrAdapter_ is nullptr");
-    MEDIA_LOG_W("syncMgrAdapter_ flush not implememt!");
+    int32_t ret = syncMgrAdapter_->Flush();
+    FALSE_RETURN_V_MSG(ret == HDF_SUCCESS, MSERR_HARDWARE_ERROR, "SyncMananger Flush failed");
     return MSERR_OK;
 }
 
@@ -343,7 +342,9 @@ void LppSyncManagerAdapter::OnError(const int32_t errorCode, const std::string &
 void LppSyncManagerAdapter::OnTargetArrived(const int64_t targetPts, const bool isTimeout)
 {
     MEDIA_LOG_I("OnTargetArrived enter");
-    MediaTrace trace("LppSyncManagerAdapter::OnTargetArrived");
+    FALSE_RETURN_MSG(eventReceiver_ != nullptr, "eventReceiver_ is nullptr");
+    std::pair<int64_t, bool> targetArrivedPair(targetPts, isTimeout);
+    eventReceiver_->OnEvent({"VideoDecoder", EventType::EVENT_VIDEO_TARGET_ARRIVED, targetArrivedPair});
 }
 
 void LppSyncManagerAdapter::OnRenderStarted()
@@ -372,25 +373,23 @@ void LppSyncManagerAdapter::OnFirstFrameReady()
     eventReceiver_->OnEvent({"VideoDecoder", EventType::EVENT_FIRST_FRAME_READY, MSERR_OK});
 }
 
-int32_t LowPowerPlayerFactory::CreateLppSyncManagerAdapter(uint32_t &instanceId,
-    std::shared_ptr<LppSyncManagerAdapter> &adapter)
+int32_t LowPowerPlayerFactory::CreateLppSyncManagerAdapter(std::shared_ptr<LppSyncManagerAdapter> &adapter)
 {
     MediaTrace trace("LowPowerPlayerFactory::CreateLppSyncManagerAdapter");
     MEDIA_LOG_I("CreateLppSyncManagerAdapter enter");
     auto syncAadapter = std::make_unique<LppSyncManagerAdapter>();
-    int32_t ret = syncAadapter->LoadAdapter(instanceId);
+    int32_t ret = syncAadapter->LoadAdapter();
     FALSE_RETURN_V_MSG(ret == MSERR_OK, MSERR_HARDWARE_ERROR, "LoadAdapter failed");
     adapter = std::move(syncAadapter);
     return MSERR_OK;
 }
 
-int32_t LowPowerPlayerFactory::DestroyLppSyncManagerAdapter(const uint32_t instanceId,
-    std::shared_ptr<LppSyncManagerAdapter> adapter)
+int32_t LowPowerPlayerFactory::DestroyLppSyncManagerAdapter(std::shared_ptr<LppSyncManagerAdapter> adapter)
 {
     MediaTrace trace("LowPowerPlayerFactory::DestroyLppSyncManagerAdapter");
     MEDIA_LOG_I("DestroyLppSyncManagerAdapter enter");
     FALSE_RETURN_V_MSG_E(adapter != nullptr, MSERR_INVALID_VAL, "Adapter is nullptr");
-    int32_t ret = adapter->UnloadAdapter(instanceId);
+    int32_t ret = adapter->UnloadAdapter();
     FALSE_RETURN_V_MSG_E(ret == MSERR_OK, MSERR_HARDWARE_ERROR, "Failed to Destroy LoadAdapter");
     return MSERR_OK;
 }

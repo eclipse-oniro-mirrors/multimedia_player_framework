@@ -19,6 +19,8 @@
 #include <gmock/gmock.h>
 #include "avsharedmemory_ipc.h"
 #include "avmetadatahelper_impl.h"
+#include "sync_fence.h"
+
 namespace OHOS {
 namespace Media {
 class AVMetadataUnittest : public testing::Test {
@@ -82,7 +84,8 @@ public:
     MOCK_METHOD(void, SetBufferHandle, (BufferHandle *handle), (override));
     MOCK_METHOD(BufferHandle*, GetBufferHandle, (), (const, override));
     MOCK_METHOD(void*, GetVirAddr, (), (override));
-    MOCK_METHOD(GSError, Alloc, (const BufferRequestConfig &config), (override));
+    MOCK_METHOD(GSError, Alloc, (const BufferRequestConfig &config, const sptr<SurfaceBuffer>& previousBuffer),
+        (override));
     MOCK_METHOD(GSError, Map, (), (override));
     MOCK_METHOD(GSError, Unmap, (), (override));
     MOCK_METHOD(GSError, FlushCache, (), (override));
@@ -96,6 +99,8 @@ public:
     MOCK_METHOD(bool, GetCropMetadata, (OHOS::Rect& crop), (override));
     MOCK_METHOD(OH_NativeBuffer*, SurfaceBufferToNativeBuffer, (), (override));
     MOCK_METHOD(BufferRequestConfig, GetBufferRequestConfig, (), (const, override));
+    MOCK_METHOD(sptr<SyncFence>, GetSyncFence, (), (const, override));
+    MOCK_METHOD(void, SetAndMergeSyncFence, (const sptr<SyncFence>& syncFence), (override));
 };
 }
 }

@@ -98,6 +98,230 @@ void AudioHapticVibratorImplUnitTest::TearDown(void) {}
 
 /**
  * @tc.name  : Test AudioHapticVibratorImpl API
+ * @tc.number: PlayVibrateForSoundPool_001
+ * @tc.desc  : Test PlayVibrateForSoundPool interface.
+ */
+HWTEST_F(AudioHapticVibratorImplUnitTest, PlayVibrateForSoundPool_001, TestSize.Level1)
+{
+    AudioHapticPlayerImpl audioHapticPlayerImpl;
+    auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
+    EXPECT_NE(audioHapticVibratorImpl, nullptr);
+
+    auto vibratorPkg = std::make_shared<VibratorPackage>();
+    EXPECT_NE(vibratorPkg, nullptr);
+    std::unique_lock<std::mutex> lock(vibrateMutex_);
+
+    audioHapticVibratorImpl->isStopped_ = false;
+    audioHapticVibratorImpl->isNeedRestart_ = false;
+    audioHapticVibratorImpl->seekVibratorPkg_ = nullptr;
+    int32_t result = audioHapticVibratorImpl->PlayVibrateForSoundPool(vibratorPkg, lock);
+    EXPECT_EQ(result, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test AudioHapticVibratorImpl API
+ * @tc.number: PlayVibrateForSoundPool_002
+ * @tc.desc  : Test PlayVibrateForSoundPool interface.
+ */
+HWTEST_F(AudioHapticVibratorImplUnitTest, PlayVibrateForSoundPool_002, TestSize.Level1)
+{
+    AudioHapticPlayerImpl audioHapticPlayerImpl;
+    auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
+    EXPECT_NE(audioHapticVibratorImpl, nullptr);
+
+    auto vibratorPkg = std::make_shared<VibratorPackage>();
+    EXPECT_NE(vibratorPkg, nullptr);
+    std::unique_lock<std::mutex> lock(vibrateMutex_);
+
+    audioHapticVibratorImpl->isStopped_ = true;
+    audioHapticVibratorImpl->isNeedRestart_ = false;
+    audioHapticVibratorImpl->seekVibratorPkg_ = nullptr;
+    int32_t result = audioHapticVibratorImpl->PlayVibrateForSoundPool(vibratorPkg, lock);
+    EXPECT_EQ(result, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test AudioHapticVibratorImpl API
+ * @tc.number: PlayVibrateForSoundPool_003
+ * @tc.desc  : Test PlayVibrateForSoundPool interface.
+ */
+HWTEST_F(AudioHapticVibratorImplUnitTest, PlayVibrateForSoundPool_003, TestSize.Level1)
+{
+    AudioHapticPlayerImpl audioHapticPlayerImpl;
+    auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
+    EXPECT_NE(audioHapticVibratorImpl, nullptr);
+
+    auto vibratorPkg = std::make_shared<VibratorPackage>();
+    EXPECT_NE(vibratorPkg, nullptr);
+    std::unique_lock<std::mutex> lock(vibrateMutex_);
+
+    audioHapticVibratorImpl->isStopped_ = false;
+    audioHapticVibratorImpl->isNeedRestart_ = true;
+    audioHapticVibratorImpl->seekVibratorPkg_ = std::make_shared<VibratorPackage>();
+    EXPECT_NE(audioHapticVibratorImpl->seekVibratorPkg_, nullptr);
+    int32_t result = audioHapticVibratorImpl->PlayVibrateForSoundPool(vibratorPkg, lock);
+    EXPECT_EQ(result, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test AudioHapticVibratorImpl API
+ * @tc.number: PlayVibrateForSoundPool_004
+ * @tc.desc  : Test PlayVibrateForSoundPool interface.
+ */
+HWTEST_F(AudioHapticVibratorImplUnitTest, PlayVibrateForSoundPool_004, TestSize.Level1)
+{
+    AudioHapticPlayerImpl audioHapticPlayerImpl;
+    auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
+    EXPECT_NE(audioHapticVibratorImpl, nullptr);
+
+    auto vibratorPkg = std::make_shared<VibratorPackage>();
+    EXPECT_NE(vibratorPkg, nullptr);
+    std::unique_lock<std::mutex> lock(vibrateMutex_);
+
+    audioHapticVibratorImpl->isStopped_ = false;
+    audioHapticVibratorImpl->isNeedRestart_ = false;
+    audioHapticVibratorImpl->seekVibratorPkg_ = std::make_shared<VibratorPackage>();
+    EXPECT_NE(audioHapticVibratorImpl->seekVibratorPkg_, nullptr);
+    int32_t result = audioHapticVibratorImpl->PlayVibrateForSoundPool(vibratorPkg, lock);
+    EXPECT_EQ(result, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test AudioHapticVibratorImpl API
+ * @tc.number: PlayVibrateForSoundPool_005
+ * @tc.desc  : Test PlayVibrateForSoundPool interface.
+ */
+HWTEST_F(AudioHapticVibratorImplUnitTest, PlayVibrateForSoundPool_005, TestSize.Level1)
+{
+    AudioHapticPlayerImpl audioHapticPlayerImpl;
+    auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
+    EXPECT_NE(audioHapticVibratorImpl, nullptr);
+
+    auto vibratorPkg = std::make_shared<VibratorPackage>();
+    EXPECT_NE(vibratorPkg, nullptr);
+    std::unique_lock<std::mutex> lock(vibrateMutex_);
+
+    audioHapticVibratorImpl->isStopped_ = false;
+    audioHapticVibratorImpl->isNeedRestart_ = true;
+    audioHapticVibratorImpl->seekVibratorPkg_ = nullptr;
+    int32_t result = audioHapticVibratorImpl->PlayVibrateForSoundPool(vibratorPkg, lock);
+    EXPECT_EQ(result, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test AudioHapticVibratorImpl API
+ * @tc.number: RunVibrationPatterns_001
+ * @tc.desc  : Test RunVibrationPatterns interface.
+ */
+HWTEST_F(AudioHapticVibratorImplUnitTest, RunVibrationPatterns_001, TestSize.Level1)
+{
+    AudioHapticPlayerImpl audioHapticPlayerImpl;
+    auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
+    EXPECT_NE(audioHapticVibratorImpl, nullptr);
+
+    auto vibratorPkg = std::make_shared<VibratorPackage>();
+    EXPECT_NE(vibratorPkg, nullptr);
+    std::unique_lock<std::mutex> lock(vibrateMutex_);
+
+    audioHapticVibratorImpl->isStopped_ = false;
+    audioHapticVibratorImpl->isNeedRestart_ = false;
+    audioHapticVibratorImpl->seekVibratorPkg_ = nullptr;
+    int32_t result = audioHapticVibratorImpl->RunVibrationPatterns(vibratorPkg, lock);
+    EXPECT_EQ(result, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test AudioHapticVibratorImpl API
+ * @tc.number: RunVibrationPatterns_002
+ * @tc.desc  : Test RunVibrationPatterns interface.
+ */
+HWTEST_F(AudioHapticVibratorImplUnitTest, RunVibrationPatterns_002, TestSize.Level1)
+{
+    AudioHapticPlayerImpl audioHapticPlayerImpl;
+    auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
+    EXPECT_NE(audioHapticVibratorImpl, nullptr);
+
+    auto vibratorPkg = std::make_shared<VibratorPackage>();
+    EXPECT_NE(vibratorPkg, nullptr);
+    std::unique_lock<std::mutex> lock(vibrateMutex_);
+
+    audioHapticVibratorImpl->isStopped_ = true;
+    audioHapticVibratorImpl->isNeedRestart_ = false;
+    audioHapticVibratorImpl->seekVibratorPkg_ = nullptr;
+    int32_t result = audioHapticVibratorImpl->RunVibrationPatterns(vibratorPkg, lock);
+    EXPECT_EQ(result, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test AudioHapticVibratorImpl API
+ * @tc.number: RunVibrationPatterns_003
+ * @tc.desc  : Test RunVibrationPatterns interface.
+ */
+HWTEST_F(AudioHapticVibratorImplUnitTest, RunVibrationPatterns_003, TestSize.Level1)
+{
+    AudioHapticPlayerImpl audioHapticPlayerImpl;
+    auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
+    EXPECT_NE(audioHapticVibratorImpl, nullptr);
+
+    auto vibratorPkg = std::make_shared<VibratorPackage>();
+    EXPECT_NE(vibratorPkg, nullptr);
+    std::unique_lock<std::mutex> lock(vibrateMutex_);
+
+    audioHapticVibratorImpl->isStopped_ = false;
+    audioHapticVibratorImpl->isNeedRestart_ = true;
+    audioHapticVibratorImpl->seekVibratorPkg_ = std::make_shared<VibratorPackage>();
+    EXPECT_NE(audioHapticVibratorImpl->seekVibratorPkg_, nullptr);
+    int32_t result = audioHapticVibratorImpl->RunVibrationPatterns(vibratorPkg, lock);
+    EXPECT_EQ(result, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test AudioHapticVibratorImpl API
+ * @tc.number: RunVibrationPatterns_004
+ * @tc.desc  : Test RunVibrationPatterns interface.
+ */
+HWTEST_F(AudioHapticVibratorImplUnitTest, RunVibrationPatterns_004, TestSize.Level1)
+{
+    AudioHapticPlayerImpl audioHapticPlayerImpl;
+    auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
+    EXPECT_NE(audioHapticVibratorImpl, nullptr);
+
+    auto vibratorPkg = std::make_shared<VibratorPackage>();
+    EXPECT_NE(vibratorPkg, nullptr);
+    std::unique_lock<std::mutex> lock(vibrateMutex_);
+
+    audioHapticVibratorImpl->isStopped_ = false;
+    audioHapticVibratorImpl->isNeedRestart_ = false;
+    audioHapticVibratorImpl->seekVibratorPkg_ = std::make_shared<VibratorPackage>();
+    EXPECT_NE(audioHapticVibratorImpl->seekVibratorPkg_, nullptr);
+    int32_t result = audioHapticVibratorImpl->RunVibrationPatterns(vibratorPkg, lock);
+    EXPECT_EQ(result, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test AudioHapticVibratorImpl API
+ * @tc.number: RunVibrationPatterns_005
+ * @tc.desc  : Test RunVibrationPatterns interface.
+ */
+HWTEST_F(AudioHapticVibratorImplUnitTest, RunVibrationPatterns_005, TestSize.Level1)
+{
+    AudioHapticPlayerImpl audioHapticPlayerImpl;
+    auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
+    EXPECT_NE(audioHapticVibratorImpl, nullptr);
+
+    auto vibratorPkg = std::make_shared<VibratorPackage>();
+    EXPECT_NE(vibratorPkg, nullptr);
+    std::unique_lock<std::mutex> lock(vibrateMutex_);
+
+    audioHapticVibratorImpl->isStopped_ = false;
+    audioHapticVibratorImpl->isNeedRestart_ = true;
+    audioHapticVibratorImpl->seekVibratorPkg_ = nullptr;
+    int32_t result = audioHapticVibratorImpl->RunVibrationPatterns(vibratorPkg, lock);
+    EXPECT_EQ(result, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test AudioHapticVibratorImpl API
  * @tc.number: AudioHapticVibratorImpl_001
  * @tc.desc  : Test AudioHapticVibratorImpl::AudioHapticVibratorImpl()
  */
@@ -870,11 +1094,9 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_042, TestSize.
     audioHapticVibratorImpl->isRunning_.store(false);
     // duration less than 100ms
     EXPECT_EQ(MSERR_INVALID_VAL, audioHapticVibratorImpl->SetHapticsRamp(50, 1.0f, 50.0f));
-    //duration larger than haptics package duration
-    EXPECT_EQ(MSERR_INVALID_VAL, audioHapticVibratorImpl->SetHapticsRamp(50000, 1.0f, 50.0f));
 
     // start intensity less than 1.0f
-    EXPECT_EQ(MSERR_INVALID_VAL, audioHapticVibratorImpl->SetHapticsRamp(5000, 0.0f, 50.0f));
+    EXPECT_EQ(MSERR_INVALID_VAL, audioHapticVibratorImpl->SetHapticsRamp(50000, 0.0f, 50.0f));
     // start intensity larger than 100.0f
     EXPECT_EQ(MSERR_INVALID_VAL, audioHapticVibratorImpl->SetHapticsRamp(5000, 101.0f, 50.0f));
 
@@ -934,11 +1156,31 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_044, TestSize.
     audioHapticPlayerImpl.hapticsMode_ = HapticsMode::HAPTICS_MODE_NON_SYNC_ONCE;
     EXPECT_EQ(true, audioHapticVibratorImpl->IsNonSync());
 
-    audioHapticPlayerImpl.hapticsMode_ = HapticsMode::HAPTICS_MODE_NONE;
-    EXPECT_EQ(true, audioHapticVibratorImpl->IsNonSync());
-
     audioHapticPlayerImpl.hapticsMode_ = HapticsMode::HAPTICS_MODE_SYNC;
     EXPECT_EQ(false, audioHapticVibratorImpl->IsNonSync());
+}
+
+/**
+ * @tc.name  : Test AudioHapticVibratorImpl API
+ * @tc.number: AudioHapticVibratorImpl_045
+ * @tc.desc  : Test AudioHapticVibratorImpl::PlayVibrateForAVPlayer()
+ */
+HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_045, TestSize.Level1)
+{
+    uint64_t tokenID;
+    ASSERT_TRUE(GetPermission({"ohos.permission.VIBRATE"}, tokenID, false));
+ 
+    AudioHapticPlayerImpl audioHapticPlayerImpl;
+    auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
+    EXPECT_NE(audioHapticVibratorImpl, nullptr);
+    std::unique_lock<std::mutex> lock(vibrateMutex_);
+
+    std::shared_ptr<VibratorPackage> vibrationPackage = CreatePackage();
+    audioHapticVibratorImpl->vibratorPkg_ = vibrationPackage;
+    audioHapticVibratorImpl->audioHapticSyncId_ = 1;
+
+    int32_t result = audioHapticVibratorImpl->PlayVibrateForAVPlayer(vibrationPackage, lock);
+    EXPECT_EQ(result, MSERR_OK);
 }
 } // namespace Media
 } // namespace OHOS

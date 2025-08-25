@@ -60,6 +60,7 @@ public:
 private:
     struct PixelMapInfo {
         int32_t rotation = 0;
+        int32_t orientation = 0;
         PixelFormat pixelFormat = PixelFormat::NV12;
         bool isHdr = false;
         int32_t width = 0;

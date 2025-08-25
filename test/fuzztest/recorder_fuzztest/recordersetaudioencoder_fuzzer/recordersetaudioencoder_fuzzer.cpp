@@ -21,6 +21,7 @@
 #include "media_errors.h"
 #include "directory_ex.h"
 #include "recorder.h"
+#include "test_template.h"
 
 using namespace std;
 using namespace OHOS;
@@ -63,7 +64,10 @@ bool RecorderSetAudioEncoderFuzzer::FuzzRecorderSetAudioEncoder(uint8_t *data, s
             AAC_LC,
             AUDIO_CODEC_FORMAT_BUTT,
         };
-        int32_t audioFormat = *reinterpret_cast<int32_t *>(data) % (audioCodecFormatList);
+        g_baseFuzzData = data;
+        g_baseFuzzSize = size;
+        g_baseFuzzPos = 0;
+        int32_t audioFormat = GetData<int32_t>() % (audioCodecFormatList);
         g_videoRecorderConfig.audioFormat = audioCodecFormat[audioFormat];
 
         TestRecorder::SetAudioEncoder(g_videoRecorderConfig);

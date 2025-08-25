@@ -497,6 +497,24 @@ typedef enum OH_AVScreenCaptureContentChangedEvent_Enum {
 } OH_AVScreenCaptureContentChangedEvent;
 
 /**
+ * @brief content fill mode.
+ *
+ * @since 20
+ */
+typedef enum OH_AVScreenCapture_FillMode {
+    /**
+     * Keep the original image aspect ratio to match the target
+     * image size. If the ratio is inconsistent, there may be black edges.
+     */
+    OH_SCREENCAPTURE_FILLMODE_ASPECT_SCALE_FIT = 0,
+    /**
+     * The image is stretched to match the target output size.
+     * If the ratios are inconsistent, the image will be deformed.
+     */
+    OH_SCREENCAPTURE_FILLMODE_SCALE_TO_FILL = 1,
+} OH_AVScreenCapture_FillMode;
+
+/**
  * @brief When state of OH_AVScreenCapture is changed, the function pointer will be called.
  * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
  * @param capture Pointer to an OH_AVScreenCapture instance

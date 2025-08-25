@@ -47,7 +47,7 @@ public:
         CHECK_AND_RETURN_RET_LOG(memory != nullptr, MSERR_NO_MEMORY, "memory is nullptr");
         CacheFlag flag;
         if (caches_ != nullptr && caches_ == memory.get() && uniqueSharedMemoryID_ == memory->GetSharedMemoryID()) {
-            MEDIA_LOGI("HIT_CACHE");
+            MEDIA_LOGD("HIT_CACHE ");
             flag = CacheFlag::HIT_CACHE;
             parcel.WriteUint8(static_cast<uint8_t>(flag));
             return MSERR_OK;

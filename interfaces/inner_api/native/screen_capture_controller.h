@@ -26,6 +26,7 @@ namespace Media {
 class ScreenCaptureController {
 public:
     virtual void ReportAVScreenCaptureUserChoice(int32_t sessionId, std::string choice) = 0;
+    virtual int32_t GetAVScreenCaptureConfigurableParameters(int32_t sessionId, std::string &resultStr) = 0;
     virtual ~ScreenCaptureController() = default;
 };
 
