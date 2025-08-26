@@ -4239,7 +4239,6 @@ void ScreenCaptureServer::SetupPublishRequest(NotificationRequest &request)
     request.SetRemoveAllowed(false);
     request.SetSlotType(NotificationConstant::SlotType::LIVE_VIEW);
     request.SetUnremovable(true);
-    std::shared_ptr<PixelMap> pixelMapTotalSpr = GetPixelMap(ICON_PATH_NOTIFICATION);
     request.SetLittleIcon(GetPixelMap(ICON_PATH_NOTIFICATION));
     if (GetSCServerDataType() == DataType::ORIGINAL_STREAM) {
         request.SetWantAgent(GetWantAgent(callingLabel_, sessionId_));
