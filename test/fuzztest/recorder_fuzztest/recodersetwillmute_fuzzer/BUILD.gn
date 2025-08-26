@@ -18,7 +18,7 @@ import("//foundation/multimedia/player_framework/config.gni")
 MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
 
 ##############################fuzztest##########################################
-ohos_fuzztest("RecorderSetWillMuteFuzzTest") {
+ohos_fuzztest("RecoderSetWillMuteFuzzTest") {
   module_out_path = "$MODULE_SCREENCAPTURE_OUTPUT_PATH/recorder"
   fuzz_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/recorder_fuzztest/recodersetwillmute_fuzzer"
   resource_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/resource/ohos_test.xml"
