@@ -3690,7 +3690,7 @@ napi_value AVPlayerNapi::JsSetLoudnessGain(napi_env env, napi_callback_info info
     }
 
     if (!jsPlayer->CanSetLoudnessGain()) {
-      jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not prepared/playing/paused/completed/stopped, unsupport audio effect mode operation");
         return result;
     }
@@ -3699,12 +3699,9 @@ napi_value AVPlayerNapi::JsSetLoudnessGain(napi_env env, napi_callback_info info
 #endif
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer, loudnessGain]() {
         MEDIA_LOGD("SetLoudnessGain Task");
-        if (jsPlayer->player_ != nullptr) {
-            if (jsPlayer->player_->SetLoudnessGain(loudnessGain)) {
-                jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                    "unsupport stream type");
-            }
-            
+        if (jsPlayer->player_ != nullptr && jsPlayer->player_->SetLoudnessGain(loudnessGain)) {
+            jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "unsupport stream type");            
         }
     });
     (void)jsPlayer->taskQue_->EnqueueTask(task);
