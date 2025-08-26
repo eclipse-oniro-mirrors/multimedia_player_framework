@@ -107,8 +107,6 @@ public:
     int32_t StopScreenCaptureByEvent(AVScreenCaptureStateCode stateCode);
     std::shared_ptr<OHOS::AbilityRuntime::WantAgent::WantAgent> GetWantAgent(const std::string& callingLabel,
         int32_t sessionId);
-    void SetPublishRequest(const std::shared_ptr<NotificationLocalLiveViewContent>& localLiveViewContent,
-        int32_t notificationId, NotificationRequest& request);
     void SystemPrivacyProtected(ScreenId& virtualScreenId, bool systemPrivacyProtectionSwitch);
     void AppPrivacyProtected(ScreenId& virtualScreenId, bool appPrivacyProtectionSwitch);
 #ifdef SUPPORT_CALL
@@ -242,9 +240,10 @@ private:
     int32_t TryNotificationOnPostStartScreenCapture();
 #endif
     int32_t StartNotification();
-    std::shared_ptr<NotificationLocalLiveViewContent> GetLocalLiveViewContent();
+    void SetupPublishRequest(NotificationRequest &request);
+    void InitLiveViewContent();
     void UpdateLiveViewContent();
-    NotificationTime CreateCountTime();
+    void UpdateLiveViewPrivacy();
     std::shared_ptr<PixelMap> GetPixelMap(std::string path);
     std::shared_ptr<PixelMap> GetPixelMapSvg(std::string path, int32_t width, int32_t height);
     void ResSchedReportData(int64_t value, std::unordered_map<std::string, std::string> payload);
@@ -274,7 +273,6 @@ private:
     int32_t SetCaptureAreaInner(uint64_t displayId, OHOS::Rect area);
     bool CheckDisplayArea(uint64_t displayId, OHOS::Rect area);
     void PrepareUserSelectionInfo(ScreenCaptureUserSelectionInfo &selectionInfo);
-    void SetupCapsule(NotificationCapsule& capsule);
     void RegisterLanguageSwitchListener();
     void OnReceiveEvent(const EventFwk::CommonEventData &data);
     void UnRegisterLanguageSwitchListener();
