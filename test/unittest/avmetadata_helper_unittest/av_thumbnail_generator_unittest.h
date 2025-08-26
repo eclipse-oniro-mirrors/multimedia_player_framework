@@ -76,7 +76,7 @@ public:
     MOCK_METHOD(sptr<BufferExtraData>, GetExtraData, (), (const, override));
     MOCK_METHOD(GSError, WriteToMessageParcel, (MessageParcel &parcel), (override));
     MOCK_METHOD(GSError, ReadFromMessageParcel, (MessageParcel &parcel, std::function<int(MessageParcel &,
-        std::function<int(Parcel &)>readFdDefaultFunc)>readSafeFdFunc),(override));
+        std::function<int(Parcel &)>readFdDefaultFunc)>readSafeFdFunc), (override));
     MOCK_METHOD(void, SetSurfaceBufferColorGamut, (const GraphicColorGamut& colorGamut), (override));
     MOCK_METHOD(void, SetSurfaceBufferTransform, (const GraphicTransformType& transform), (override));
     MOCK_METHOD(void, SetSurfaceBufferWidth, (int32_t width), (override));
