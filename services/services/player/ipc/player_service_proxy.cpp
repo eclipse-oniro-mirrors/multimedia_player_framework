@@ -1340,6 +1340,22 @@ int32_t PlayerServiceProxy::ForceLoadVideo(bool status)
     return reply.ReadInt32();
 }
 
+int32_t PlayerServiceProxy::SetLoudnessGain(float loudnessGain)
+{
+    MediaTrace trace("PlayerServiceProxy::SetLoudnessGain");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteFloat(loudnessGain);
+    int32_t error = SendRequest(SET_LOUDNESSGAIN, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetLoudnessGain failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
 int32_t PlayerServiceProxy::GetGlobalInfo(std::shared_ptr<Meta> &globalInfo)
 {
     MediaTrace trace("PlayerServiceProxy::GetGlobalInfo");

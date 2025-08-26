@@ -2439,6 +2439,26 @@ int32_t PlayerServer::ForceLoadVideo(bool status)
     return MSERR_OK;
 }
 
+int32_t PlayerServer::SetLoudnessGain(float loudnessGain)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine is nullptr");
+    constexpr float maxLoudnessGain = 24.0f;
+    constexpr float minLoudnessGain = -90.0f;
+    if ((loudnessGain < minLoudnessGain) || (loudnessGain > maxLoudnessGain)) {
+        MEDIA_LOGE("SetLoudnessGain failed, the loudnessGain should be set to a value ranging from -90 to 24");
+        return MSERR_INVALID_OPERATION;
+    }
+    
+    if (GetCurrState() == preparedState_ || GetCurrState() == playingState_ ||
+        GetCurrState() == pausedState_ || GetCurrState() == playbackCompletedState_ ||
+        GetCurrState() == stoppedState_) {
+        return playerEngine_->SetLoudnessGain(loudnessGain);
+    }
+    MEDIA_LOGW("SetLoudnessGain called in invalid state");
+    return MSERR_INVALID_OPERATION;
+}
+
 int32_t PlayerServer::GetGlobalInfo(std::shared_ptr<Meta> &globalInfo)
 {
     std::lock_guard<std::mutex> lock(mutex_);

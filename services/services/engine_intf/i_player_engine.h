@@ -372,7 +372,13 @@ public:
     {
         return ;
     }
-
+    
+    virtual int32_t SetLoudnessGain(float loudnessGain)
+    {
+        (void)loudnessGain;
+        return 0;
+    }
+    
     virtual int32_t GetGlobalInfo(std::shared_ptr<Meta> &globalInfo)
     {
         (void)globalInfo;

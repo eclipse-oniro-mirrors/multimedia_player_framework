@@ -4027,6 +4027,14 @@ void HiPlayerImpl::ReleaseVideoDecoderOnMuted()
     }
 }
 
+int32_t HiPlayerImpl::SetLoudnessGain(float loudnessGain)
+{
+    MEDIA_LOG_D("SetLoudnessGain in");
+    FALSE_RETURN_V_MSG_E(audioSink_ != nullptr, (int32_t)TransStatus(Status::ERROR_INVALID_OPERATION),
+        "SetLoudnessGain failed, audio sink is nullptr");
+    return TransStatus(audioSink_->SetLoudnessGain(loudnessGain));
+}
+
 int32_t HiPlayerImpl::GetGlobalInfo(std::shared_ptr<Meta> &globalInfo)
 {
     MEDIA_LOG_D("GetGlobalInfo in");

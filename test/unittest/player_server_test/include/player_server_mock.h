@@ -173,6 +173,7 @@ public:
     int32_t SetDeviceChangeCbStatus(bool status);
     int32_t SetRenderFirstFrame(bool display);
     int32_t EnableReportMediaProgress(bool enable);
+    int32_t SetLoudnessGain(float loudnessGain);
 private:
     void SeekPrepare(int32_t &mseconds, PlayerSeekMode &mode);
     std::shared_ptr<IPlayerService> player_ = nullptr;

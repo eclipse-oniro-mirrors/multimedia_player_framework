@@ -100,6 +100,7 @@ public:
     int32_t SetCameraPostprocessing(bool isOpen) override;
     void TraceApiEvent(int errCode, const std::string& message, time_t startTime);
     int32_t ForceLoadVideo(bool status) override;
+    int32_t SetLoudnessGain(float loudnessGain) override;
     int32_t GetGlobalInfo(std::shared_ptr<Meta> &globalInfo) override;
 private:
     void ResetSeekVariables();

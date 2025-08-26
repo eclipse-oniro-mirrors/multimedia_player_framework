@@ -258,6 +258,8 @@ void PlayerServiceStub::FillPlayerFuncPart3()
         [this](MessageParcel &data, MessageParcel &reply) { return SetPlayerProducer(data, reply); } };
     playerFuncs_[FORCE_LOAD_VIDEO] = { "Player::ForceLoadVideo",
         [this](MessageParcel &data, MessageParcel &reply) { return ForceLoadVideo(data, reply); } };
+    playerFuncs_[SET_LOUDNESSGAIN] = { "Player::SetLoudnessGain",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetLoudnessGain(data, reply); } };
     playerFuncs_[SET_CAMERA_POST_POSTPROCESSING] = { "Player::SetCameraPostprocessing",
         [this](MessageParcel &data, MessageParcel &reply) { return SetCameraPostprocessing(data, reply); } };
     playerFuncs_[GET_GLOBAL_INFO] = { "Player::GetGlobalInfo",
@@ -1496,6 +1498,19 @@ int32_t PlayerServiceStub::ForceLoadVideo(bool status)
 int32_t PlayerServiceStub::ForceLoadVideo(MessageParcel &data, MessageParcel &reply)
 {
     reply.WriteInt32(ForceLoadVideo(data.ReadBool()));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetLoudnessGain(float loudnessGain)
+{
+    MediaTrace trace("PlayerServiceStub::SetLoudnessGain");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetLoudnessGain(loudnessGain);
+}
+
+int32_t PlayerServiceStub::SetLoudnessGain(MessageParcel &data, MessageParcel &reply)
+{
+    reply.WriteInt32(SetLoudnessGain(data.ReadFloat()));
     return MSERR_OK;
 }
 

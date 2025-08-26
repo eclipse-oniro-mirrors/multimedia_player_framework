@@ -1416,3 +1416,13 @@ OH_AVErrCode OH_AVPlayer_SetOnInfoCallback(OH_AVPlayer *player, OH_AVPlayerOnInf
     MEDIA_LOGD("OH_AVPlayer_SetOnInfoCallback success E");
     return AV_ERR_OK;
 }
+
+OH_AVErrCode OH_AVPlayer_SetLoudnessGain(OH_AVPlayer *player, float loudnessGain)
+{
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+    int32_t ret = playerObj->player_->SetLoudnessGain(loudnessGain);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_STATE, "player SetLoudnessGain failed");
+    return AV_ERR_OK;
+}
