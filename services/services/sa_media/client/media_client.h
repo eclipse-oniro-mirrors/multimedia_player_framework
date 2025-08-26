@@ -56,7 +56,7 @@ public:
     int32_t ProxyForFreeze(const std::set<int32_t> &pidList, bool isProxy) override;
     int32_t ResetAllProxy() override;
     sptr<IStandardMonitorService> GetMonitorProxy() override;
-    void ReleaseClientListener() override;
+    bool ReleaseClientListener() override;
     bool CanKillMediaService() override;
 #ifdef SUPPORT_RECORDER
     std::shared_ptr<IRecorderService> CreateRecorderService() override;

@@ -94,7 +94,7 @@ bool MediaClient::CanKillMediaService()
     return false;
 }
 
-void MediaClient::ReleaseClientListener() {}
+bool MediaClient::ReleaseClientListener() { return true; }
 
 std::vector<pid_t> MediaClient::GetPlayerPids()
 {
