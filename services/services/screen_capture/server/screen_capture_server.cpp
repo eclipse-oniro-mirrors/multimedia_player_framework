@@ -2581,7 +2581,7 @@ void ScreenCaptureServer::UpdateLiveViewContent()
         pixelMapCapSpr = GetPixelMapSvg(ICON_PATH_CAPSULE_STOP, capsulePxSize_, capsulePxSize_);
     }
     capsule.SetIcon(pixelMapCapSpr);
-    CHECK_AND_RETURN_LOG(localLiveViewContent_ != nullptr, "liveViewSubText is null");
+    CHECK_AND_RETURN_LOG(localLiveViewContent_ != nullptr, "localLiveViewContent_ is null");
     if (GetSCServerDataType() == DataType::ORIGINAL_STREAM) {
         localLiveViewContent_->SetTitle(liveViewText_);
         UpdateLiveViewPrivacy();
