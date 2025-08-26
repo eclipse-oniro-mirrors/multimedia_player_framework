@@ -2602,7 +2602,7 @@ void ScreenCaptureServer::UpdateLiveViewContent()
 
 void ScreenCaptureServer::UpdateLiveViewPrivacy()
 {
-    CHECK_AND_RETURN_LOG(localLiveViewContent_ != nullptr, "liveViewSubText is null");
+    CHECK_AND_RETURN_LOG(localLiveViewContent_ != nullptr, "localLiveViewContent_ is null");
     if (!systemPrivacyProtectionSwitch_ && !appPrivacyProtectionSwitch_) {
         liveViewSubText_ = GetStringByResourceName(NOTIFICATION_SCREEN_RECORDING_PRIVACY_OFF_ID);
     } else {
