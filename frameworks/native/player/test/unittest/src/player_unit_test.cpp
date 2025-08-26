@@ -5282,5 +5282,203 @@ HWTEST_F(PlayerUnitTest, Player_GetPlaybackPosition_005, TestSize.Level2)
     int32_t position = -1;
     EXPECT_NE(MSERR_OK, player_->GetPlaybackPosition(position));
 }
+
+/**
+ * @tc.name  : Test SetSeiMessageCbStatus API - Basic functionality
+ * @tc.number: Player_SetSeiMessageCbStatus_001
+ * @tc.desc  : Test SetSeiMessageCbStatus basic enable/disable functionality
+ */
+HWTEST_F(PlayerUnitTest, Player_SetSeiMessageCbStatus_001, TestSize.Level0)
+{
+    std::vector<int32_t> payloadTypes = {1, 2, 3, 4, 5};
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    ASSERT_EQ(MSERR_OK, player_->SetSeiMessageCbStatus(true, payloadTypes));
+    ASSERT_EQ(MSERR_OK, player_->SetSeiMessageCbStatus(false, payloadTypes));
+    std::vector<int32_t> newPayloadTypes = {6, 7, 8};
+    ASSERT_EQ(MSERR_OK, player_->SetSeiMessageCbStatus(true, newPayloadTypes));
+}
+
+/**
+ * @tc.name  : Test SetSeiMessageCbStatus API - Empty payload types
+ * @tc.number: Player_SetSeiMessageCbStatus_002
+ * @tc.desc  : Test SetSeiMessageCbStatus with empty payload types vector
+ */
+HWTEST_F(PlayerUnitTest, Player_SetSeiMessageCbStatus_002, TestSize.Level1)
+{
+    std::vector<int32_t> emptyPayloadTypes = {};
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    ASSERT_EQ(MSERR_OK, player_->SetSeiMessageCbStatus(true, emptyPayloadTypes));
+    ASSERT_EQ(MSERR_OK, player_->SetSeiMessageCbStatus(false, emptyPayloadTypes));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
+
+/**
+ * @tc.name  : Test SetSeiMessageCbStatus API - Large payload types
+ * @tc.number: Player_SetSeiMessageCbStatus_00
+ * @tc.desc  : Test SetSeiMessageCbStatus with large number of payload types
+ */
+HWTEST_F(PlayerUnitTest, Player_SetSeiMessageCbStatus_003, TestSize.Level1)
+{
+    std::vector<int32_t> largePayloadTypes = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    ASSERT_EQ(MSERR_OK, player_->SetSeiMessageCbStatus(true, largePayloadTypes));
+    ASSERT_EQ(MSERR_OK, player_->SetSeiMessageCbStatus(false, largePayloadTypes));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
+
+/**
+ * @tc.name  : Test SetSuperResolution API - Basic functionality
+ * @tc.number: Player_SetSuperResolution_001
+ * @tc.desc  : Test SetSuperResolution basic enable/disable functionality
+ */
+HWTEST_F(PlayerUnitTest, Player_SetSuperResolution_001, TestSize.Level0)
+{
+    AVPlayStrategy playbackStrategy = {
+        .enableSuperResolution = true
+    };
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    ASSERT_EQ(MSERR_OK, player_->SetPlaybackStrategy(playbackStrategy));
+    ASSERT_EQ(MSERR_OK, player_->SetSuperResolution(true));
+    ASSERT_EQ(MSERR_OK, player_->SetSuperResolution(false));
+    ASSERT_EQ(MSERR_OK, player_->SetSuperResolution(true));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
+
+/**
+ * @tc.name  : Test SetSuperResolution API - Multiple enable/disable cycles
+ * @tc.number: Player_SetSuperResolution_002
+ * @tc.desc  : Test SetSuperResolution with multiple enable/disable cycles
+ */
+HWTEST_F(PlayerUnitTest, Player_SetSuperResolution_002, TestSize.Level1)
+{
+    AVPlayStrategy playbackStrategy = {
+        .enableSuperResolution = true
+    };
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    ASSERT_EQ(MSERR_OK, player_->SetPlaybackStrategy(playbackStrategy));
+    ASSERT_EQ(MSERR_OK, player_->SetSuperResolution(true));
+    ASSERT_EQ(MSERR_OK, player_->SetSuperResolution(false));
+    ASSERT_EQ(MSERR_OK, player_->SetSuperResolution(true));
+    ASSERT_EQ(MSERR_OK, player_->SetSuperResolution(false));
+    ASSERT_EQ(MSERR_OK, player_->SetSuperResolution(true));
+    ASSERT_EQ(MSERR_OK, player_->SetSuperResolution(false));
+    ASSERT_EQ(MSERR_OK, player_->SetSuperResolution(true));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
+
+/**
+ * @tc.name  : Test SetSuperResolution API - Without super resolution enabled
+ * @tc.number: Player_SetSuperResolution_003
+ * @tc.desc  : Test SetSuperResolution when super resolution is not enabled in strategy
+ */
+HWTEST_F(PlayerUnitTest, Player_SetSuperResolution_003, TestSize.Level1)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    ASSERT_EQ(MSERR_SUPER_RESOLUTION_NOT_ENABLED, player_->SetSuperResolution(true));
+    ASSERT_EQ(MSERR_SUPER_RESOLUTION_NOT_ENABLED, player_->SetSuperResolution(false));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
+
+/**
+ * @tc.name  : Test SetVideoWindowSize API - Basic functionality
+ * @tc.number: Player_SetVideoWindowSize_001
+ * @tc.desc  : Test SetVideoWindowSize basic functionality with common resolutions
+ */
+HWTEST_F(PlayerUnitTest, Player_SetVideoWindowSize_001, TestSize.Level0)
+{
+    AVPlayStrategy playbackStrategy = {
+        .enableSuperResolution = true
+    };
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    ASSERT_EQ(MSERR_OK, player_->SetPlaybackStrategy(playbackStrategy));
+    ASSERT_EQ(MSERR_OK, player_->SetVideoWindowSize(1920, 1080)); // Full HD
+    ASSERT_EQ(MSERR_OK, player_->SetVideoWindowSize(1280, 720));  // HD
+    ASSERT_EQ(MSERR_OK, player_->SetVideoWindowSize(800, 600));   // SVGA
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
+
+/**
+ * @tc.name  : Test SetVideoWindowSize API - Extreme resolutions
+ * @tc.number: Player_SetVideoWindowSize_002
+ * @tc.desc  : Test SetVideoWindowSize with extreme resolution values
+ */
+HWTEST_F(PlayerUnitTest, Player_SetVideoWindowSize_002, TestSize.Level1)
+{
+    AVPlayStrategy playbackStrategy = {
+        .enableSuperResolution = true
+    };
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    ASSERT_EQ(MSERR_OK, player_->SetPlaybackStrategy(playbackStrategy));
+    ASSERT_EQ(MSERR_OK, player_->SetVideoWindowSize(3840, 2160)); // 4K
+    ASSERT_EQ(MSERR_OK, player_->SetVideoWindowSize(320, 240));   // QVGA
+    ASSERT_EQ(MSERR_OK, player_->SetVideoWindowSize(160, 120));   // QQVGA
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
+
+/**
+ * @tc.name  : Test SetVideoWindowSize API - Non-standard aspect ratios
+ * @tc.number: Player_SetVideoWindowSize_003
+ * @tc.desc  : Test SetVideoWindowSize with non-standard aspect ratios
+ */
+HWTEST_F(PlayerUnitTest, Player_SetVideoWindowSize_003, TestSize.Level1)
+{
+    AVPlayStrategy playbackStrategy = {
+        .enableSuperResolution = true
+    };
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    ASSERT_EQ(MSERR_OK, player_->SetPlaybackStrategy(playbackStrategy));
+    ASSERT_EQ(MSERR_OK, player_->SetVideoWindowSize(1920, 1440)); // 4:3
+    ASSERT_EQ(MSERR_OK, player_->SetVideoWindowSize(1440, 1080)); // 4:3
+    ASSERT_EQ(MSERR_OK, player_->SetVideoWindowSize(960, 720));   // 4:3
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
 } // namespace Media
 } // namespace OHOS
