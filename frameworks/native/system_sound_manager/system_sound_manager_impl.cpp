@@ -28,6 +28,7 @@
 #include "tokenid_kit.h"
 #include "token_setproc.h"
 #include "ringtone_proxy_uri.h"
+#include "ringtone_check_utils.h"
 
 #include "system_sound_log.h"
 #include "media_errors.h"
@@ -1847,9 +1848,10 @@ int32_t SystemSoundManagerImpl::OpenToneUri(const std::shared_ptr<AbilityRuntime
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, ERROR,
         "Failed to CreateDataShareHelper! datashare or ringtone library error.");
     DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
-    int32_t ret = OpenToneUri(databaseTool, uri, toneType);
-    MEDIA_LOGI("Open tone uri: open result : %{public}d, type %{public}d, uri %{public}s,",
-        ret, toneType, uri.c_str());
+    std::string newAudioUri = RingtoneCheckUtils::GetCustomRingtoneCurrentPath(uri);
+    int32_t ret = OpenToneUri(databaseTool, newAudioUri, toneType);
+    MEDIA_LOGI("Open tone uri: open result : %{public}d, type %{public}d, newAudioUri %{public}s,",
+        ret, toneType, newAudioUri.c_str());
     dataShareHelper->Release();
     return ret;
 }
