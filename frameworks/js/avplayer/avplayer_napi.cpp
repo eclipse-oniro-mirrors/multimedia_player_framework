@@ -98,6 +98,7 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("on", JsSetOnCallback),
         DECLARE_NAPI_FUNCTION("off", JsClearOnCallback),
         DECLARE_NAPI_FUNCTION("setVolume", JsSetVolume),
+        DECLARE_NAPI_FUNCTION("setLoudnessGain", JsSetLoudnessGain),
         DECLARE_NAPI_FUNCTION("setSpeed", JsSetSpeed),
         DECLARE_NAPI_FUNCTION("setPlaybackRate", JsSetPlaybackRate),
         DECLARE_NAPI_FUNCTION("setMediaSource", JsSetMediaSource),
