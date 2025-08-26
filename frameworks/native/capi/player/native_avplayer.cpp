@@ -1423,6 +1423,6 @@ OH_AVErrCode OH_AVPlayer_SetLoudnessGain(OH_AVPlayer *player, float loudnessGain
     struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
     CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
     int32_t ret = playerObj->player_->SetLoudnessGain(loudnessGain);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player SetLoudnessGain failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_STATE, "player SetLoudnessGain failed");
     return AV_ERR_OK;
 }
