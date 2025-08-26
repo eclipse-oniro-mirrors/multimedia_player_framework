@@ -888,5 +888,11 @@ int32_t PlayerMock::GetPlaybackPosition(int32_t &playbackPosition)
     playbackPosition = 0;
     return 0;
 }
+
+int32_t PlayerMock::SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->SetSeiMessageCbStatus(status, payloadTypes);
+}
 } // namespace Media
 } // namespace OHOS
