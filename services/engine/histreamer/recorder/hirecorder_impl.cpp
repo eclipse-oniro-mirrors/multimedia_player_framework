@@ -158,7 +158,7 @@ int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId
     sourceId = INVALID_SOURCE_ID;
     FALSE_RETURN_V(source != VideoSourceType::VIDEO_SOURCE_BUTT,
         (int32_t)Status::ERROR_INVALID_PARAMETER);
-    FALSE_RETURN_V(videoCount_ < static_cast<int32_t>(VIDEO_SOURCE_MAX_COUNT),
+    FALSE_RETURN_V(videoCount_ < static_cast<uint32_t>(VIDEO_SOURCE_MAX_COUNT),
         (int32_t)Status::ERROR_INVALID_OPERATION);
     auto tempSourceId = SourceIdGenerator::GenerateVideoSourceId(videoCount_);
     Status ret;
@@ -239,7 +239,7 @@ int32_t HiRecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId
         static_cast<int32_t>(source));
     sourceId = INVALID_SOURCE_ID;
     FALSE_RETURN_V(CheckAudioSourceType(source), (int32_t)Status::ERROR_INVALID_PARAMETER);
-    FALSE_RETURN_V(audioCount_ < static_cast<int32_t>(AUDIO_SOURCE_MAX_COUNT),
+    FALSE_RETURN_V(audioCount_ < static_cast<uint32_t>(AUDIO_SOURCE_MAX_COUNT),
         (int32_t)Status::ERROR_INVALID_OPERATION);
     auto tempSourceId = SourceIdGenerator::GenerateAudioSourceId(audioCount_);
 
@@ -255,7 +255,7 @@ int32_t HiRecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId
     MEDIA_LOG_I("SetAudioSource success.");
     audioCount_++;
     audioSourceId_ = tempSourceId;
-    sourceId = static_cast<int32_t>(audioSourceId_);
+    sourceId = audioSourceId_;
     OnStateChanged(StateId::RECORDING_SETTING);
 
     return (int32_t)ret;
@@ -277,7 +277,7 @@ int32_t HiRecorderImpl::SetAudioDataSource(const std::shared_ptr<IAudioDataSourc
     MEDIA_LOG_I(PUBLIC_LOG_S "SetAudioSource success.", avRecorderTag_.c_str());
     audioCount_++;
     audioSourceId_ = tempSourceId;
-    sourceId = static_cast<int32_t>(audioSourceId_);
+    sourceId = audioSourceId_;
     OnStateChanged(StateId::RECORDING_SETTING);
 
     return (int32_t)ret;
@@ -1088,10 +1088,8 @@ void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
 
 bool HiRecorderImpl::CheckParamType(int32_t sourceId, const RecorderParam &recParam)
 {
-    FALSE_RETURN_V((SourceIdGenerator::IsAudio(sourceId) && recParam.IsAudioParam() &&
-        static_cast<int32_t>(audioSourceId_) == sourceId) ||
-        (SourceIdGenerator::IsVideo(sourceId) && recParam.IsVideoParam() &&
-        static_cast<int32_t>(videoSourceId_) == sourceId) ||
+    FALSE_RETURN_V((SourceIdGenerator::IsAudio(sourceId) && recParam.IsAudioParam() && audioSourceId_ == sourceId) ||
+        (SourceIdGenerator::IsVideo(sourceId) && recParam.IsVideoParam() && videoSourceId_ == sourceId) ||
         (SourceIdGenerator::IsMeta(sourceId) && recParam.IsMetaParam() &&
         (GetMetaSourceType(sourceId) > VIDEO_META_SOURCE_INVALID &&
         GetMetaSourceType(sourceId) < VIDEO_META_SOURCE_BUTT)) ||
