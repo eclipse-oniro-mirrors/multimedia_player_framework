@@ -75,7 +75,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_045, TestSize.Level2)
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPoolParallel_);
     ASSERT_TRUE(cb != nullptr);
     int32_t ret = soundPoolParallel_->SetSoundPoolCallback(cb);
-   ASSERT_TRUE(ret == 0);
+    ASSERT_TRUE(ret == 0);
     // test invalid path
     std::string fileName = "/data/test/test_05.mp3";
     fds_[loadNum_] = open(fileName.c_str(), O_RDWR);
@@ -291,7 +291,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_053, TestSize.Level2)
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPoolParallel_);
     ASSERT_TRUE(cb != nullptr);
     int32_t ret = soundPoolParallel_->SetSoundPoolCallback(cb);
-   ASSERT_TRUE(ret == 0);
+    ASSERT_TRUE(ret == 0);
     std::string fileName = "/data/test/test_05.mp3";
     fds_[loadNum_] = open(fileName.c_str(), O_RDWR);
     std::string url = "fd://" + std::to_string(fds_[loadNum_]);
