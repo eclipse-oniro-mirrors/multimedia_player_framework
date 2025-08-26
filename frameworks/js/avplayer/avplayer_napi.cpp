@@ -3694,9 +3694,7 @@ napi_value AVPlayerNapi::JsSetLoudnessGain(napi_env env, napi_callback_info info
             "current state is not prepared/playing/paused/completed/stopped, unsupport audio effect mode operation");
         return result;
     }
-#ifdef SUPPORT_JSSTACK
-    HiviewDFX::ReportXPowerJsStackSysEvent(env, "LOUDNESSGAIN_CHANGE", "SRC=Media");
-#endif
+
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer, loudnessGain]() {
         MEDIA_LOGD("SetLoudnessGain Task");
         if (jsPlayer->player_ != nullptr && jsPlayer->player_->SetLoudnessGain(loudnessGain)) {
