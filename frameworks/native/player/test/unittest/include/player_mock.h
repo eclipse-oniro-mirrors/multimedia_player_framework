@@ -185,6 +185,7 @@ public:
     bool IsSeekContinuousSupported();
     int32_t GetPlaybackPosition(int32_t &playbackPosition);
     int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes);
+    int32_t SetStartFrameRateOptEnabled(bool enabled);
 private:
     void SeekPrepare(int32_t &mseconds, PlayerSeekMode &mode);
     std::shared_ptr<Player> player_ = nullptr;
