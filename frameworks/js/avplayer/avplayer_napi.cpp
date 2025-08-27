@@ -3699,8 +3699,7 @@ napi_value AVPlayerNapi::JsSetLoudnessGain(napi_env env, napi_callback_info info
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer, loudnessGain]() {
         MEDIA_LOGD("SetLoudnessGain Task");
         if (jsPlayer->player_ != nullptr && jsPlayer->player_->SetLoudnessGain(loudnessGain)) {
-            jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                "unsupport stream type");            
+            jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "unsupport stream type");
         }
     });
     (void)jsPlayer->taskQue_->EnqueueTask(task);
