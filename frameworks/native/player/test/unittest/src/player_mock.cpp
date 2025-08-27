@@ -894,5 +894,11 @@ int32_t PlayerMock::SetSeiMessageCbStatus(bool status, const std::vector<int32_t
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     return player_->SetSeiMessageCbStatus(status, payloadTypes);
 }
+
+int32_t PlayerMock::SetStartFrameRateOptEnabled(bool enabled)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->SetStartFrameRateOptEnabled(enabled);
+}
 } // namespace Media
 } // namespace OHOS
