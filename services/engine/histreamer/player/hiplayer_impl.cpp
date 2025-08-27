@@ -3024,6 +3024,8 @@ void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
             std::unique_lock<std::mutex> freezeLock(freezeMutex_);
             isHintPauseReceived_ = true;
             Status ret = Status::OK;
+            audioSink_->Pause();
+            audioSink_->cacheBuffer();
             ret = pipeline_->Pause();
             syncManager_->Pause();
             if (ret != Status::OK) {
