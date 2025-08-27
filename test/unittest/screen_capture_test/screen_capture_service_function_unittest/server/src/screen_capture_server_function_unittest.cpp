@@ -2713,46 +2713,80 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SystemPrivacyProtected_001, TestSize.L
     EXPECT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::CREATED);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, GetLocalLiveViewContent_001, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, InitLiveViewContent_001, TestSize.Level2)
 {
     std::string callingLabel_ = "TestApp";
     screenCaptureServer_->callingLabel_ = callingLabel_;
-    auto result = screenCaptureServer_->GetLocalLiveViewContent();
+    screenCaptureServer_->InitLiveViewContent();
+    auto result = screenCaptureServer_->localLiveViewContent_;
     std::string expectedTitle = "\"TestApp\" 正在使用屏幕";
     EXPECT_EQ(result->GetText(), expectedTitle);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, GetLocalLiveViewContent_002, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, InitLiveViewContent_002, TestSize.Level2)
 {
     std::string callingLabel_ = "TestApp";
     screenCaptureServer_->callingLabel_ = callingLabel_;
     screenCaptureServer_->SetDataType(DataType::ORIGINAL_STREAM);
-    auto result = screenCaptureServer_->GetLocalLiveViewContent();
+    screenCaptureServer_->InitLiveViewContent();
+    auto result = screenCaptureServer_->localLiveViewContent_;
     std::string expectedTitle = "\"TestApp\" 正在使用屏幕";
     EXPECT_EQ(result->GetTitle(), expectedTitle);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, GetLocalLiveViewContent_003, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, InitLiveViewContent_003, TestSize.Level2)
 {
     std::string callingLabel_ = "TestApp";
     screenCaptureServer_->callingLabel_ = callingLabel_;
     screenCaptureServer_->systemPrivacyProtectionSwitch_ = true;
     screenCaptureServer_->SetDataType(DataType::ORIGINAL_STREAM);
-    auto result = screenCaptureServer_->GetLocalLiveViewContent();
+    screenCaptureServer_->InitLiveViewContent();
+    auto result = screenCaptureServer_->localLiveViewContent_;
     std::string expectedTitle = "\"TestApp\" 正在使用屏幕";
     EXPECT_EQ(result->GetTitle(), expectedTitle);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, GetLocalLiveViewContent_004, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, InitLiveViewContent_004, TestSize.Level2)
 {
     std::string callingLabel_ = "TestApp";
     screenCaptureServer_->callingLabel_ = callingLabel_;
     screenCaptureServer_->systemPrivacyProtectionSwitch_ = false;
     screenCaptureServer_->appPrivacyProtectionSwitch_ = false;
     screenCaptureServer_->SetDataType(DataType::ORIGINAL_STREAM);
-    auto result = screenCaptureServer_->GetLocalLiveViewContent();
+    screenCaptureServer_->InitLiveViewContent();
+    auto result = screenCaptureServer_->localLiveViewContent_;
     std::string expectedTitle = "\"TestApp\" 正在使用屏幕";
     EXPECT_EQ(result->GetTitle(), expectedTitle);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetupPublishRequestTest_001, TestSize.Level2)
+{
+    NotificationRequest request;
+    screenCaptureServer_->SetupPublishRequest(request);
+    EXPECT_EQ(request.GetBadgeIconStyle(), NotificationRequest::BadgeStyle::LITTLE);
+    EXPECT_EQ(request.GetCreatorUid(), screenCaptureServer_->AV_SCREEN_CAPTURE_SESSION_UID);
+    EXPECT_EQ(request.GetSlotType(), NotificationConstant::SlotType::LIVE_VIEW);
+    EXPECT_EQ(request.GetNotificationId(), screenCaptureServer_->notificationId_);
+    EXPECT_EQ(request.IsInProgress(), true);
+    EXPECT_EQ(request.GetOwnerUid(), screenCaptureServer_->AV_SCREEN_CAPTURE_SESSION_UID);
+    EXPECT_EQ(request.IsRemoveAllowed(), false);
+    EXPECT_EQ(request.IsUnremovable(), true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, UpdateLiveViewContent_001, TestSize.Level2)
+{
+    SetValidConfig();
+    screenCaptureServer_->InitLiveViewContent();
+    screenCaptureServer_->UpdateLiveViewContent();
+    EXPECT_EQ(screenCaptureServer_->localLiveViewContent_->GetText(), screenCaptureServer_->liveViewText_);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, UpdateLiveViewPrivacy_001, TestSize.Level2)
+{
+    SetValidConfig();
+    screenCaptureServer_->InitLiveViewContent();
+    screenCaptureServer_->UpdateLiveViewPrivacy();
+    EXPECT_EQ(screenCaptureServer_->localLiveViewContent_->GetText(), "隐私保护中，点击查看更多");
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, HandleStreamDataCase_001, TestSize.Level2)

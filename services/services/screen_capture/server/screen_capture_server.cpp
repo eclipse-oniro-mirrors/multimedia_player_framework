@@ -84,8 +84,6 @@ static const int32_t SELECT_WINDOW_MISSION_ID_NUM_MAX = 2;
 #endif
 static const int32_t SVG_HEIGHT = 80;
 static const int32_t SVG_WIDTH = 80;
-static const int32_t MICROPHONE_OFF = 0;
-static const int32_t MICROPHONE_STATE_COUNT = 2;
 static const int32_t WINDOW_INFO_LIST_SIZE = 1;
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     static const int32_t NOTIFICATION_MAX_TRY_NUM = 3;
@@ -964,8 +962,8 @@ int32_t ScreenCaptureServer::HandleStreamDataCase(Json::Value& root, const std::
 
     std::lock_guard<std::mutex> lock(mutex_);
     NotificationRequest request;
-    SetPublishRequest(GetLocalLiveViewContent(), notificationId_, request);
-    request.SetWantAgent(GetWantAgent(callingLabel_, sessionId_));
+    UpdateLiveViewPrivacy();
+    SetupPublishRequest(request);
     return NotificationHelper::PublishNotification(request);
 }
 
@@ -2081,10 +2079,8 @@ void ScreenCaptureServer::OnReceiveEvent(const EventFwk::CommonEventData &data)
 {
     MEDIA_LOGI("ScreenCaptureServer::OnReceiveEvent");
     NotificationRequest request;
-    SetPublishRequest(GetLocalLiveViewContent(), notificationId_, request);
-    if (GetSCServerDataType() == DataType::ORIGINAL_STREAM) {
-        request.SetWantAgent(GetWantAgent(callingLabel_, sessionId_));
-    }
+    UpdateLiveViewContent();
+    SetupPublishRequest(request);
     NotificationHelper::PublishNotification(request);
 }
 
@@ -2496,39 +2492,13 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
 int32_t ScreenCaptureServer::StartNotification()
 {
     int32_t result = NotificationHelper::SubscribeLocalLiveViewNotification(NOTIFICATION_SUBSCRIBER);
-    MEDIA_LOGD("Screencapture service PublishNotification, result %{public}d", result);
+    MEDIA_LOGD("StartNotification, result %{public}d", result);
     NotificationRequest request;
-    localLiveViewContent_ = GetLocalLiveViewContent();
-
-    std::shared_ptr<NotificationContent> content =
-        std::make_shared<NotificationContent>(localLiveViewContent_);
-
-    request.SetSlotType(NotificationConstant::SlotType::LIVE_VIEW);
+    InitLiveViewContent();
     notificationId_ = sessionId_;
-    request.SetNotificationId(notificationId_);
-    request.SetContent(content);
-    request.SetCreatorUid(AV_SCREEN_CAPTURE_SESSION_UID);
-    request.SetOwnerUid(AV_SCREEN_CAPTURE_SESSION_UID);
-    request.SetUnremovable(true);
-    request.SetRemoveAllowed(false);
-    request.SetInProgress(true);
-
-    if (GetSCServerDataType() == DataType::ORIGINAL_STREAM) {
-        auto wantAgent = GetWantAgent(callingLabel_, sessionId_);
-        if (wantAgent != nullptr) {
-            request.SetWantAgent(wantAgent);
-            MEDIA_LOGI("StartNotification, setWantAgent success");
-        } else {
-            MEDIA_LOGE("StartNotification, GetWantAgent returned null pointer");
-        }
-    }
-    std::shared_ptr<PixelMap> pixelMapTotalSpr = GetPixelMap(ICON_PATH_NOTIFICATION);
-    request.SetLittleIcon(pixelMapTotalSpr);
-    request.SetBadgeIconStyle(NotificationRequest::BadgeStyle::LITTLE);
-
+    SetupPublishRequest(request);
     result = NotificationHelper::PublishNotification(request);
-    MEDIA_LOGI("Screencapture service UpdateMicrophoneEnabled uid %{public}d, result %{public}d",
-        AV_SCREEN_CAPTURE_SESSION_UID, result);
+    MEDIA_LOGI("StartNotification uid %{public}d, result %{public}d", AV_SCREEN_CAPTURE_SESSION_UID, result);
     return result;
 }
 
@@ -2574,11 +2544,23 @@ void ScreenCaptureServer::InitResourceManager()
     RefreshResConfig();
 }
 
-std::shared_ptr<NotificationLocalLiveViewContent> ScreenCaptureServer::GetLocalLiveViewContent()
+void ScreenCaptureServer::InitLiveViewContent()
 {
-    std::shared_ptr<NotificationLocalLiveViewContent> localLiveViewContent =
+    localLiveViewContent_ =
         std::make_shared<NotificationLocalLiveViewContent>();
-    localLiveViewContent->SetType(1);
+    localLiveViewContent_->SetType(1);
+    UpdateLiveViewContent();
+    localLiveViewContent_->addFlag(NotificationLocalLiveViewContent::LiveViewContentInner::CAPSULE);
+    NotificationLocalLiveViewButton basicButton;
+    basicButton.addSingleButtonName(BUTTON_NAME_STOP);
+    std::shared_ptr<PixelMap> pixelMapStopSpr = GetPixelMapSvg(ICON_PATH_STOP, SVG_HEIGHT, SVG_WIDTH);
+    basicButton.addSingleButtonIcon(pixelMapStopSpr);
+    localLiveViewContent_->SetButton(basicButton);
+    localLiveViewContent_->addFlag(NotificationLocalLiveViewContent::LiveViewContentInner::BUTTON);
+}
+
+void ScreenCaptureServer::UpdateLiveViewContent()
+{
     InitResourceManager();
     std::string recordingScreenTitleStr = GetStringByResourceName(NOTIFICATION_SCREEN_RECORDING_TITLE_ID);
     std::string from = "%s";
@@ -2588,46 +2570,10 @@ std::shared_ptr<NotificationLocalLiveViewContent> ScreenCaptureServer::GetLocalL
         recordingScreenTitleStr.replace(startPos, from.length(), to);
         liveViewText_ = recordingScreenTitleStr;
     }
-    MEDIA_LOGD("GetLocalLiveViewContent liveViewText: %{public}s", liveViewText_.c_str());
-
-    auto capsule = NotificationCapsule();
-    SetupCapsule(capsule);
-
-    if (GetSCServerDataType() == DataType::ORIGINAL_STREAM) {
-        localLiveViewContent->SetTitle(liveViewText_);
-        if (!systemPrivacyProtectionSwitch_ && !appPrivacyProtectionSwitch_) {
-            liveViewSubText_ = GetStringByResourceName(NOTIFICATION_SCREEN_RECORDING_PRIVACY_OFF_ID);
-        } else {
-            liveViewSubText_ = GetStringByResourceName(NOTIFICATION_SCREEN_RECORDING_PRIVACY_ON_ID);
-        }
-        localLiveViewContent->SetText(liveViewSubText_);
-        MEDIA_LOGI("GetLocalLiveViewContentc additionalText: %{public}s", liveViewSubText_.c_str());
-        capsule.SetTitle(callingLabel_);
-    } else {
-        localLiveViewContent->SetText(liveViewText_);
-        auto countTime = CreateCountTime();
-        countTime.SetInitialTime(1);
-        localLiveViewContent->SetTime(countTime);
-        localLiveViewContent->addFlag(NotificationLocalLiveViewContent::LiveViewContentInner::TIME);
-    }
-    localLiveViewContent->SetCapsule(capsule);
-    localLiveViewContent->addFlag(NotificationLocalLiveViewContent::LiveViewContentInner::CAPSULE);
-
-    auto basicButton = NotificationLocalLiveViewButton();
-    basicButton.addSingleButtonName(BUTTON_NAME_STOP);
-    std::shared_ptr<PixelMap> pixelMapStopSpr = GetPixelMapSvg(ICON_PATH_STOP, SVG_HEIGHT, SVG_WIDTH);
-    basicButton.addSingleButtonIcon(pixelMapStopSpr);
-
-    localLiveViewContent->SetButton(basicButton);
-    localLiveViewContent->addFlag(NotificationLocalLiveViewContent::LiveViewContentInner::BUTTON);
-    return localLiveViewContent;
-}
-
-void ScreenCaptureServer::SetupCapsule(NotificationCapsule& capsule)
-{
+    MEDIA_LOGD("UpdateLiveViewContent liveViewText: %{public}s", liveViewText_.c_str());
+    NotificationCapsule capsule;
     capsule.SetBackgroundColor(BACK_GROUND_COLOR);
     capsulePxSize_ = static_cast<int32_t>(capsuleVpSize_ * density_);
-
     std::shared_ptr<PixelMap> pixelMapCapSpr;
     if (isSystemUI2_) {
         pixelMapCapSpr = GetPixelMapSvg(ICON_PATH_CAPSULE_STOP_2_0, capsulePxSize_, capsulePxSize_);
@@ -2635,6 +2581,34 @@ void ScreenCaptureServer::SetupCapsule(NotificationCapsule& capsule)
         pixelMapCapSpr = GetPixelMapSvg(ICON_PATH_CAPSULE_STOP, capsulePxSize_, capsulePxSize_);
     }
     capsule.SetIcon(pixelMapCapSpr);
+    CHECK_AND_RETURN_LOG(localLiveViewContent_ != nullptr, "localLiveViewContent_ is null");
+    if (GetSCServerDataType() == DataType::ORIGINAL_STREAM) {
+        localLiveViewContent_->SetTitle(liveViewText_);
+        UpdateLiveViewPrivacy();
+        MEDIA_LOGI("UpdateLiveViewContent additionalText: %{public}s", liveViewSubText_.c_str());
+        capsule.SetTitle(callingLabel_);
+    } else {
+        localLiveViewContent_->SetText(liveViewText_);
+        NotificationTime countTime;
+        countTime.SetIsCountDown(false);
+        countTime.SetIsPaused(false);
+        countTime.SetIsInTitle(true);
+        countTime.SetInitialTime(1);
+        localLiveViewContent_->SetTime(countTime);
+        localLiveViewContent_->addFlag(NotificationLocalLiveViewContent::LiveViewContentInner::TIME);
+    }
+    localLiveViewContent_->SetCapsule(capsule);
+}
+
+void ScreenCaptureServer::UpdateLiveViewPrivacy()
+{
+    CHECK_AND_RETURN_LOG(localLiveViewContent_ != nullptr, "localLiveViewContent_ is null");
+    if (!systemPrivacyProtectionSwitch_ && !appPrivacyProtectionSwitch_) {
+        liveViewSubText_ = GetStringByResourceName(NOTIFICATION_SCREEN_RECORDING_PRIVACY_OFF_ID);
+    } else {
+        liveViewSubText_ = GetStringByResourceName(NOTIFICATION_SCREEN_RECORDING_PRIVACY_ON_ID);
+    }
+    localLiveViewContent_->SetText(liveViewSubText_);
 }
 
 std::shared_ptr<PixelMap> ScreenCaptureServer::GetPixelMap(std::string path)
@@ -2696,61 +2670,6 @@ void ScreenCaptureServer::UpdateMicrophoneEnabled()
     MEDIA_LOGI("Screencapture service UpdateMicrophoneEnabled uid %{public}d, result %{public}d",
         AV_SCREEN_CAPTURE_SESSION_UID, result);
     micCount_.store(micCount_.load() + 1);
-}
-
-void ScreenCaptureServer::UpdateLiveViewContent()
-{
-    localLiveViewContent_->SetType(1);
-
-    auto capsule = NotificationCapsule();
-    capsule.SetBackgroundColor(BACK_GROUND_COLOR);
-    std::shared_ptr<PixelMap> pixelMapCapSpr;
-    if (isSystemUI2_) {
-        pixelMapCapSpr = GetPixelMapSvg(ICON_PATH_CAPSULE_STOP_2_0, capsulePxSize_, capsulePxSize_);
-    } else {
-        pixelMapCapSpr = GetPixelMapSvg(ICON_PATH_CAPSULE_STOP, capsulePxSize_, capsulePxSize_);
-    }
-    capsule.SetIcon(pixelMapCapSpr);
-
-    if (GetSCServerDataType() == DataType::ORIGINAL_STREAM) {
-        localLiveViewContent_->SetTitle(liveViewText_);
-        localLiveViewContent_->SetText(liveViewSubText_);
-        capsule.SetTitle(callingLabel_);
-    } else {
-        localLiveViewContent_->SetText(liveViewText_);
-        auto countTime = CreateCountTime();
-
-        localLiveViewContent_->SetTime(countTime);
-        localLiveViewContent_->addFlag(NotificationLocalLiveViewContent::LiveViewContentInner::TIME);
-    }
-    localLiveViewContent_->SetCapsule(capsule);
-    localLiveViewContent_->addFlag(NotificationLocalLiveViewContent::LiveViewContentInner::CAPSULE);
-
-    auto basicButton = NotificationLocalLiveViewButton();
-    basicButton.addSingleButtonName(BUTTON_NAME_MIC);
-    if (micCount_.load() % MICROPHONE_STATE_COUNT == MICROPHONE_OFF) {
-        std::shared_ptr<PixelMap> pixelMapSpr = GetPixelMapSvg(ICON_PATH_MIC_OFF, SVG_HEIGHT, SVG_WIDTH);
-        basicButton.addSingleButtonIcon(pixelMapSpr);
-    } else {
-        std::shared_ptr<PixelMap> pixelMapSpr = GetPixelMapSvg(ICON_PATH_MIC, SVG_HEIGHT, SVG_WIDTH);
-        basicButton.addSingleButtonIcon(pixelMapSpr);
-    }
-
-    basicButton.addSingleButtonName(BUTTON_NAME_STOP);
-    std::shared_ptr<PixelMap> pixelMapStopSpr = GetPixelMapSvg(ICON_PATH_STOP, SVG_HEIGHT, SVG_WIDTH);
-    basicButton.addSingleButtonIcon(pixelMapStopSpr);
-
-    localLiveViewContent_->SetButton(basicButton);
-    localLiveViewContent_->addFlag(NotificationLocalLiveViewContent::LiveViewContentInner::BUTTON);
-}
-
-NotificationTime ScreenCaptureServer::CreateCountTime()
-{
-    auto countTime = NotificationTime();
-    countTime.SetIsCountDown(false);
-    countTime.SetIsPaused(false);
-    countTime.SetIsInTitle(true);
-    return countTime;
 }
 
 void ScreenCaptureServer::GetSystemUIFlag()
@@ -4307,23 +4226,24 @@ std::shared_ptr<OHOS::AbilityRuntime::WantAgent::WantAgent> ScreenCaptureServer:
     return OHOS::AbilityRuntime::WantAgent::WantAgentHelper::GetWantAgent(wantAgentInfo);
 }
 
-void ScreenCaptureServer::SetPublishRequest(
-    const std::shared_ptr<NotificationLocalLiveViewContent>& localLiveViewContent,
-    int32_t notificationId, NotificationRequest& request)
+void ScreenCaptureServer::SetupPublishRequest(NotificationRequest &request)
 {
     std::shared_ptr<NotificationContent> notificationContent =
-        std::make_shared<NotificationContent>(localLiveViewContent);
-
-        request.SetSlotType(NotificationConstant::SlotType::LIVE_VIEW);
-        request.SetNotificationId(notificationId);
-        request.SetContent(notificationContent);
-        request.SetCreatorUid(AV_SCREEN_CAPTURE_SESSION_UID);
-        request.SetOwnerUid(AV_SCREEN_CAPTURE_SESSION_UID);
-        request.SetUnremovable(true);
-        request.SetInProgress(true);
-        std::shared_ptr<PixelMap> pixelMapTotalSpr = GetPixelMap(ICON_PATH_NOTIFICATION);
-        request.SetLittleIcon(pixelMapTotalSpr);
-        request.SetBadgeIconStyle(NotificationRequest::BadgeStyle::LITTLE);
+        std::make_shared<NotificationContent>(localLiveViewContent_);
+    request.SetBadgeIconStyle(NotificationRequest::BadgeStyle::LITTLE);
+    request.SetContent(notificationContent);
+    request.SetCreatorUid(AV_SCREEN_CAPTURE_SESSION_UID);
+    request.SetInProgress(true);
+    request.SetNotificationId(notificationId_);
+    request.SetOwnerUid(AV_SCREEN_CAPTURE_SESSION_UID);
+    request.SetRemoveAllowed(false);
+    request.SetSlotType(NotificationConstant::SlotType::LIVE_VIEW);
+    request.SetUnremovable(true);
+    request.SetLittleIcon(GetPixelMap(ICON_PATH_NOTIFICATION));
+    if (GetSCServerDataType() == DataType::ORIGINAL_STREAM) {
+        request.SetWantAgent(GetWantAgent(callingLabel_, sessionId_));
+        MEDIA_LOGI("SetupPublishRequest, setWantAgent success");
+    }
 }
 
 void ScreenCaptureServer::SystemPrivacyProtected(ScreenId& virtualScreenId, bool systemPrivacyProtectionSwitch)
