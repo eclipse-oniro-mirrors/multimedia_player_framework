@@ -18,7 +18,9 @@
 #include "media_log.h"
 #include "avrecorder_callback_taihe.h"
 #include "media_taihe_utils.h"
+#ifdef SUPPORT_RECORDER_CREATE_FILE
 #include "media_library_comm_ani.h"
+#endif
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_RECORDER, "AVRecorderCallback"};
