@@ -3357,5 +3357,44 @@ std::string SystemSoundManagerImpl::GetBundleName()
     MEDIA_LOGI("GetBundleName: bundleName is %{public}s", bundleName.c_str());
     return bundleName;
 }
+
+std::vector<ToneInfo> SystemSoundManagerImpl::GetCurrentToneInfos()
+{
+    std::vector<ToneInfo> toneInfos = {};
+    ToneAttrs toneAttrs = { "", "", "", CUSTOMISED, TONE_CATEGORY_INVALID };
+    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
+    int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
+        "ohos.permission.ACCESS_CUSTOM_RINGTONE");
+    bool isProxy = (result == Security::AccessToken::PermissionState::PERMISSION_GRANTED &&
+        SystemSoundManagerUtils::GetScannerFirstParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, RINGTONEPARA_SIZE) &&
+        SystemSoundManagerUtils::CheckCurrentUser()) ? true : false;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = isProxy ?
+        SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID) :
+        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, toneInfos,
+        "Failed to CreateDataShareHelper! datashare or ringtone library error.");
+    DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
+    toneAttrs = GetRingtoneAttrs(databaseTool, RINGTONE_TYPE_SIM_CARD_0);
+    toneInfos.push_back({EXT_TYPE_RINGTONE_ONE, toneAttrs.GetUri(), toneAttrs.GetTitle()});
+
+    toneAttrs = GetRingtoneAttrs(databaseTool, RINGTONE_TYPE_SIM_CARD_1);
+    toneInfos.push_back({EXT_TYPE_RINGTONE_TWO, toneAttrs.GetUri(), toneAttrs.GetTitle()});
+
+    toneAttrs = GetSystemToneAttrs(databaseTool, SYSTEM_TONE_TYPE_SIM_CARD_0);
+    toneInfos.push_back({EXT_TYPE_MESSAGETONE_ONE, toneAttrs.GetUri(), toneAttrs.GetTitle()});
+
+    toneAttrs = GetSystemToneAttrs(databaseTool, SYSTEM_TONE_TYPE_SIM_CARD_1);
+    toneInfos.push_back({EXT_TYPE_MESSAGETONE_TWO, toneAttrs.GetUri(), toneAttrs.GetTitle()});
+
+    toneAttrs = GetSystemToneAttrs(databaseTool, SYSTEM_TONE_TYPE_NOTIFICATION);
+    toneInfos.push_back({EXT_TYPE_NOTIFICATION, toneAttrs.GetUri(), toneAttrs.GetTitle()});
+
+    toneAttrs = GetAlarmToneAttrs(databaseTool);
+    toneInfos.push_back({EXT_TYPE_ALARMTONE, toneAttrs.GetUri(), toneAttrs.GetTitle()});
+
+    dataShareHelper->Release();
+    MEDIA_LOGI("Finish to get tone infos!");
+    return toneInfos;
+}
 } // namesapce Media
 } // namespace OHOS
