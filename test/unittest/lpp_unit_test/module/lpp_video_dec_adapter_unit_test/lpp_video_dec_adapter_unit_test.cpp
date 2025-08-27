@@ -42,7 +42,6 @@ void LppVideoDecAdapterUnitTest::TearDown(void)
     inputBufferQueueConsumer_ = nullptr;
     videoDecoder_ = nullptr;
     videoDecAdapter_ = nullptr;
-    PipeLineThreadPool::GetInstance().DestroyThread(streamerId_);
 }
 
 /**
@@ -303,6 +302,7 @@ HWTEST_F(LppVideoDecAdapterUnitTest, Flush_001, TestSize.Level1)
     std::vector<std::shared_ptr<AVBuffer>> bufferVector_;
     bufferVector_.push_back(buffer);
     videoDecAdapter_->bufferVector_ = bufferVector_;
+    EXPECT_CALL(*videoDecoder_, Flush()).Times(1);
     EXPECT_CALL(*inputBufferQueueConsumer_, DetachBuffer(buffer)).Times(1);
     EXPECT_CALL(*inputBufferQueueConsumer_, SetQueueSize(0)).Times(1);
     int32_t res = videoDecAdapter_->Flush();
@@ -325,6 +325,7 @@ HWTEST_F(LppVideoDecAdapterUnitTest, Flush_002, TestSize.Level1)
     std::vector<std::shared_ptr<AVBuffer>> bufferVector_;
     bufferVector_.push_back(buffer);
     videoDecAdapter_->bufferVector_ = bufferVector_;
+    EXPECT_CALL(*videoDecoder_, Flush()).Times(1);
     EXPECT_CALL(*inputBufferQueueConsumer_, DetachBuffer(buffer)).Times(0);
     EXPECT_CALL(*inputBufferQueueConsumer_, SetQueueSize(0)).Times(0);
     int32_t res = videoDecAdapter_->Flush();
@@ -571,7 +572,9 @@ HWTEST_F(LppVideoDecAdapterUnitTest, OnQueueBufferAvailable_001, TestSize.Level1
     videoDecAdapter_->decodertask_ =
         std::make_unique<Task>("test_start_decode", streamerId_, TaskType::SINGLETON, TaskPriority::NORMAL, false);
 
+    ASSERT_NE(nullptr, videoDecAdapter_->decodertask_);
     videoDecAdapter_->OnQueueBufferAvailable();
+    EXPECT_NE(nullptr, videoDecAdapter_->decodertask_);
 }
 
 /**
@@ -597,26 +600,6 @@ HWTEST_F(LppVideoDecAdapterUnitTest, OnOutputBufferAvailable_001, TestSize.Level
 
     EXPECT_FALSE(videoDecAdapter_->outputBuffers_.empty());
     EXPECT_EQ(videoDecAdapter_->outputBuffers_.size(), 1);
-}
-
-/**
- * @tc.name    : Test ScheduleRenderFrameJob API
- * @tc.number  : ScheduleRenderFrameJob_001
- * @tc.desc    : Test ScheduleRenderFrameJob interface in normal case
- * @tc.require : issueI5NZAQ
- */
-HWTEST_F(LppVideoDecAdapterUnitTest, ScheduleRenderFrameJob_001, TestSize.Level1)
-{
-    ASSERT_NE(nullptr, videoDecAdapter_);
-    videoDecAdapter_->decodertask_ =
-        std::make_unique<Task>("test_start_decode", streamerId_, TaskType::SINGLETON, TaskPriority::NORMAL, false);
-    videoDecAdapter_->videoDecoder_ = videoDecoder_;
-
-    uint32_t index = 1;
-    std::shared_ptr<AVBuffer> buffer = std::make_shared<AVBuffer>();
-    buffer->pts_ = 12345;
-
-    videoDecAdapter_->ScheduleRenderFrameJob(index, buffer);
 }
 
 /**
@@ -820,11 +803,11 @@ HWTEST_F(LppVideoDecAdapterUnitTest, OnError_001, TestSize.Level1)
     ASSERT_NE(nullptr, videoDecAdapter_);
     std::shared_ptr<MockEventReceiver> eventRec = std::make_shared<MockEventReceiver>();
     ASSERT_NE(nullptr, eventRec);
-    EXPECT_CALL(*eventRec, OnEvent(_)).WillOnce(Return());
     videoDecAdapter_->SetEventReceiver(eventRec);
+
     MediaAVCodec::AVCodecErrorType errorType = MediaAVCodec::AVCodecErrorType::AVCODEC_ERROR_INTERNAL;
     int32_t errorCode = MediaAVCodec::AVCodecErrorType::AVCODEC_ERROR_INTERNAL;
-
+    EXPECT_CALL(*eventRec, OnEvent(_)).Times(1);
     videoDecAdapter_->OnError(errorType, errorCode);
 }
 
@@ -838,14 +821,13 @@ HWTEST_F(LppVideoDecAdapterUnitTest, OnOutputFormatChanged_001, TestSize.Level1)
 {
     ASSERT_NE(nullptr, videoDecAdapter_);
     std::shared_ptr<MockEventReceiver> eventRec = std::make_shared<MockEventReceiver>();
-    ASSERT_NE(nullptr, eventRec);
     EXPECT_CALL(*eventRec, OnEvent(_)).WillOnce(Return());
     videoDecAdapter_->SetEventReceiver(eventRec);
 
     Format format;
     format.PutIntValue("width", 1920);
     format.PutIntValue("height", 1080);
-
+    EXPECT_CALL(*eventRec, OnEvent(_)).Times(1);
     videoDecAdapter_->OnOutputFormatChanged(format);
 }
 
@@ -863,6 +845,41 @@ HWTEST_F(LppVideoDecAdapterUnitTest, GeneratedJobIdx_001, TestSize.Level1)
     int64_t jobIdx = videoDecAdapter_->GeneratedJobIdx();
 
     EXPECT_EQ(jobIdx, 1);
+}
+ 
+/**
+* @tc.name    : Test LppVideoDecoderCallback API
+* @tc.number  : Callback_001
+* @tc.desc    : Test LppVideoDecoderCallback interface
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(LppVideoDecAdapterUnitTest, Callback_001, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoDecAdapter_);
+    std::shared_ptr<LppVideoDecoderCallback> callback = std::make_shared<LppVideoDecoderCallback>(videoDecAdapter_);
+    ASSERT_NE(nullptr, callback);
+
+    MediaAVCodec::AVCodecErrorType errorType = MediaAVCodec::AVCodecErrorType::AVCODEC_ERROR_FRAMEAORK_FAILED;
+    int32_t errorCode = 1001;
+    EXPECT_NE(callback->videoDecoderAdapter_.lock(), nullptr);
+    callback->OnError(errorType, errorCode);
+ 
+    MediaAVCodec::Format format;
+    EXPECT_NE(callback->videoDecoderAdapter_.lock(), nullptr);
+    callback->OnOutputFormatChanged(format);
+ 
+    auto buffer = std::make_shared<AVBuffer>();
+    EXPECT_NE(callback->videoDecoderAdapter_.lock(), nullptr);
+    callback->OnInputBufferAvailable(0, buffer);
+    EXPECT_NE(callback->videoDecoderAdapter_.lock(), nullptr);
+    callback->OnOutputBufferAvailable(0, buffer);
+
+    std::map<uint32_t, sptr<SurfaceBuffer>> bufferMap = {};
+    EXPECT_NE(callback->videoDecoderAdapter_.lock(), nullptr);
+    callback->OnOutputBufferBinded(bufferMap);
+
+    EXPECT_NE(callback->videoDecoderAdapter_.lock(), nullptr);
+    callback->OnOutputBufferUnbinded();
 }
 } // namespace Media
 } // namespace OHOS

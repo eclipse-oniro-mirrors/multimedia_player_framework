@@ -115,7 +115,6 @@ group("media_unit_test") {
         "unittest/lpp_unit_test/module/lpp_audio_render_adapter_unit_test:lpp_audio_render_adapter_unit_test",
         "unittest/lpp_unit_test/module/lpp_video_data_mgr_unit_test:lpp_video_data_mgr_unit_test",
         "unittest/lpp_unit_test/module/lpp_video_dec_adapter_unit_test:lpp_video_dec_adapter_unit_test",
-        "unittest/lpp_unit_test/module/lpp_vedio_dec_callback_unit_test:lpp_vedio_dec_callback_unit_test",
         "unittest/lpp_unit_test/engine/lpp_engine_manager_unit_test:lpp_engine_manager_unit_test",
         "unittest/lpp_unit_test/engine/lpp_sync_manager_adapter_unit_test:lpp_sync_manager_adapter_unit_test",        
       ]

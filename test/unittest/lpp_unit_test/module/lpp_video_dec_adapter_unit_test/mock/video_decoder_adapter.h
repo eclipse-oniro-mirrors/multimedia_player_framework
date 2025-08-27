@@ -72,4 +72,4 @@ private:
 };
 } // namespace MediaAVCodec
 } // namespace OHOS
-#endif // MOCK_VDEC_ADAPTER_H
+#endif // MOCK_VDEC_ADAPTER_H
