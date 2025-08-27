@@ -2842,7 +2842,7 @@ void HiPlayerImpl::HandleDrmInfoUpdatedEvent(const Event& event)
         MEDIA_LOG_E("HandleDrmInfoUpdatedEvent info count is invalid");
         return;
     }
-    DrmInfoItem *drmInfoArray = new(std:nothrow) DrmInfoItem[infoCount];
+    DrmInfoItem *drmInfoArray = new(std::nothrow) DrmInfoItem[infoCount];
     if (drmInfoArray == nullptr) {
         MEDIA_LOG_E("HandleDrmInfoUpdatedEvent new drm info failed");
         return;
