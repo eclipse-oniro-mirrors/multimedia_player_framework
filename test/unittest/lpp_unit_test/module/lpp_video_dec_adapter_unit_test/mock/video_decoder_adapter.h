@@ -40,12 +40,12 @@ public:
     MOCK_METHOD(int32_t, ReleaseOutputBuffer, (uint32_t index, bool render));
     MOCK_METHOD(int32_t, RenderOutputBufferAtTime, (uint32_t index, int64_t renderTimestampNs));
     MOCK_METHOD(int32_t, SetParameter, (const Format &format));
-    MOCK_METHOD(int32_t, SetCallback, (const std::shared_ptr<AVCodecCallback> &callback));
-    int32_t SetCallback(const std::shared_ptr<MediaCodecCallback> &callback)
+    int32_t SetCallback(const std::shared_ptr<AVCodecCallback> &callback)
     {
         (void)callback;
-        return MediaAVCodec::AVCS_ERR_OK;
+        return 0;
     }
+    MOCK_METHOD(int32_t, SetCallback, (const std::shared_ptr<MediaCodecCallback> &callback));
     MOCK_METHOD(int32_t, GetChannelId, (int32_t &channelId));
     int32_t SetLowPowerPlayerMode(bool isLpp)
     {
@@ -64,7 +64,8 @@ public:
     static std::shared_ptr<AVCodecVideoDecoder> CreateByMime(const std::string &mime)
     {
         (void)mime;
-        return std::make_shared<AVCodecVideoDecoder>();
+        static std::shared_ptr<AVCodecVideoDecoder> instance = std::make_shared<AVCodecVideoDecoder>();
+        return instance;
     }
 private:
     VideoDecoderFactory() = default;
@@ -72,4 +73,4 @@ private:
 };
 } // namespace MediaAVCodec
 } // namespace OHOS
-#endif // MOCK_VDEC_ADAPTER_H
+#endif // MOCK_VDEC_ADAPTER_H

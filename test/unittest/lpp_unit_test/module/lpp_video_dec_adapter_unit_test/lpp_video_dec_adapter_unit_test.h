@@ -19,6 +19,7 @@
 #include "gtest/gtest.h"
 #include "lpp_vdec_adapter.h"
 #include "lpp_sync_manager.h"
+#include "lpp_vdec_adapter.cpp"
 #include "avcodec_common.h"
 #include "mock_event_receiver.h"
 #include "avbuffer_consumer_mock.h"

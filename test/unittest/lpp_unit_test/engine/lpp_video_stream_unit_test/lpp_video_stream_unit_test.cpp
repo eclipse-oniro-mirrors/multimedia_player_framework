@@ -42,6 +42,10 @@ void LppVideoStreamUnitTest::SetUp(void)
 
 void LppVideoStreamUnitTest::TearDown(void)
 {
+    videoStreamImpl_->vdec_ = nullptr;
+    videoStreamImpl_->dataMgr_ = nullptr;
+    videoStreamImpl_->syncMgr_ = nullptr;
+    videoStreamImpl_->callbackLooper_ = nullptr;
     videoStreamImpl_ = nullptr;
     dataMgr_ = nullptr;
     vdec_ = nullptr;
@@ -61,15 +65,12 @@ HWTEST_F(LppVideoStreamUnitTest, SetVideoSurface_001, TestSize.Level0)
     bool isLpp = true;
     ASSERT_NE(nullptr, vdec_);
     EXPECT_CALL(*vdec_, SetVideoSurface(_)).WillRepeatedly(Return(MSERR_OK));
-    EXPECT_CALL(*vdec_, Stop()).WillOnce(Return(MSERR_OK));
-    EXPECT_CALL(*vdec_, Release()).WillOnce(Return(MSERR_OK));
     videoStreamImpl_->vdec_ = vdec_;
     ASSERT_NE(nullptr, dataMgr_);
     videoStreamImpl_->dataMgr_ = dataMgr_;
     ASSERT_NE(nullptr, syncMgr_);
     videoStreamImpl_->syncMgr_ = syncMgr_;
     EXPECT_CALL(*syncMgr_, SetTunnelId(_)).WillRepeatedly(Return(MSERR_INVALID_VAL));
-    EXPECT_CALL(*syncMgr_, Stop()).WillOnce(Return(MSERR_OK));
     videoStreamImpl_->isLpp_ = isLpp;
     sptr<Surface> surface = Surface::CreateSurfaceAsConsumer();
     auto res = videoStreamImpl_->SetVideoSurface(surface);
@@ -88,13 +89,10 @@ HWTEST_F(LppVideoStreamUnitTest, SetVideoSurface_002, TestSize.Level1)
     bool isLpp = false;
     ASSERT_NE(nullptr, vdec_);
     EXPECT_CALL(*vdec_, SetVideoSurface(_)).WillRepeatedly(Return(MSERR_OK));
-    EXPECT_CALL(*vdec_, Stop()).WillOnce(Return(MSERR_OK));
-    EXPECT_CALL(*vdec_, Release()).WillOnce(Return(MSERR_OK));
     videoStreamImpl_->vdec_ = vdec_;
     ASSERT_NE(nullptr, dataMgr_);
     videoStreamImpl_->dataMgr_ = dataMgr_;
     ASSERT_NE(nullptr, syncMgr_);
-    EXPECT_CALL(*syncMgr_, Stop()).WillOnce(Return(MSERR_OK));
     videoStreamImpl_->syncMgr_ = syncMgr_;
     videoStreamImpl_->isLpp_ = isLpp;
     sptr<Surface> surface = Surface::CreateSurfaceAsConsumer();
@@ -114,14 +112,11 @@ HWTEST_F(LppVideoStreamUnitTest, StartDecode_001, TestSize.Level0)
     bool isLpp = true;
     ASSERT_NE(nullptr, vdec_);
     EXPECT_CALL(*vdec_, StartDecode).WillRepeatedly(Return(MSERR_OK));
-    EXPECT_CALL(*vdec_, Stop()).WillOnce(Return(MSERR_OK));
-    EXPECT_CALL(*vdec_, Release()).WillOnce(Return(MSERR_OK));
     videoStreamImpl_->vdec_ = vdec_;
     ASSERT_NE(nullptr, dataMgr_);
     EXPECT_CALL(*dataMgr_, StartDecode).WillRepeatedly(Return(MSERR_OK));
     videoStreamImpl_->dataMgr_ = dataMgr_;
     ASSERT_NE(nullptr, syncMgr_);
-    EXPECT_CALL(*syncMgr_, Stop()).WillOnce(Return(MSERR_OK));
     videoStreamImpl_->syncMgr_ = syncMgr_;
     videoStreamImpl_->isLpp_ = isLpp;
     videoStreamImpl_->isChannelSetDone_ = true;
@@ -142,14 +137,11 @@ HWTEST_F(LppVideoStreamUnitTest, StartDecode_002, TestSize.Level1)
     ASSERT_NE(nullptr, vdec_);
     EXPECT_CALL(*vdec_, StartDecode).WillRepeatedly(Return(MSERR_OK));
     EXPECT_CALL(*vdec_, SetChannelIdDone).WillRepeatedly(Return());
-    EXPECT_CALL(*vdec_, Stop()).WillOnce(Return(MSERR_OK));
-    EXPECT_CALL(*vdec_, Release()).WillOnce(Return(MSERR_OK));
     videoStreamImpl_->vdec_ = vdec_;
     ASSERT_NE(nullptr, dataMgr_);
     EXPECT_CALL(*dataMgr_, StartDecode).WillRepeatedly(Return(MSERR_OK));
     videoStreamImpl_->dataMgr_ = dataMgr_;
     ASSERT_NE(nullptr, syncMgr_);
-    EXPECT_CALL(*syncMgr_, Stop()).WillOnce(Return(MSERR_OK));
     videoStreamImpl_->syncMgr_ = syncMgr_;
     videoStreamImpl_->isLpp_ = isLpp;
     videoStreamImpl_->isChannelSetDone_ = true;
@@ -168,14 +160,11 @@ HWTEST_F(LppVideoStreamUnitTest, StartRender_001, TestSize.Level1)
     ASSERT_NE(nullptr, videoStreamImpl_);
     bool isLpp = true;
     ASSERT_NE(nullptr, vdec_);
-    EXPECT_CALL(*vdec_, Stop()).WillOnce(Return(MSERR_OK));
-    EXPECT_CALL(*vdec_, Release()).WillOnce(Return(MSERR_OK));
     videoStreamImpl_->vdec_ = vdec_;
     ASSERT_NE(nullptr, dataMgr_);
     videoStreamImpl_->dataMgr_ = dataMgr_;
     ASSERT_NE(nullptr, syncMgr_);
     EXPECT_CALL(*syncMgr_, GetShareBuffer(_)).WillRepeatedly(Return(MSERR_UNKNOWN));
-    EXPECT_CALL(*syncMgr_, Stop()).WillOnce(Return(MSERR_OK));
     videoStreamImpl_->syncMgr_ = syncMgr_;
     videoStreamImpl_->isLpp_ = isLpp;
     auto res = videoStreamImpl_->StartRender();
@@ -194,15 +183,12 @@ HWTEST_F(LppVideoStreamUnitTest, StartRender_002, TestSize.Level1)
     bool isLpp = false;
     ASSERT_NE(nullptr, vdec_);
     EXPECT_CALL(*vdec_, StartRender).WillRepeatedly(Return(MSERR_OK));
-    EXPECT_CALL(*vdec_, Stop()).WillOnce(Return(MSERR_OK));
-    EXPECT_CALL(*vdec_, Release()).WillOnce(Return(MSERR_OK));
     videoStreamImpl_->vdec_ = vdec_;
     ASSERT_NE(nullptr, dataMgr_);
     videoStreamImpl_->dataMgr_ = dataMgr_;
     ASSERT_NE(nullptr, syncMgr_);
     EXPECT_CALL(*syncMgr_, GetShareBuffer(_)).WillRepeatedly(Return(MSERR_UNKNOWN));
     EXPECT_CALL(*syncMgr_, StartRender).WillRepeatedly(Return(MSERR_OK));
-    EXPECT_CALL(*syncMgr_, Stop()).WillOnce(Return(MSERR_OK));
     videoStreamImpl_->syncMgr_ = syncMgr_;
     videoStreamImpl_->isLpp_ = isLpp;
     videoStreamImpl_->surface_ = Surface::CreateSurfaceAsConsumer();
@@ -247,6 +233,9 @@ HWTEST_F(LppVideoStreamUnitTest, Prepare_001, TestSize.Level1)
     videoStreamImpl_->dataMgr_ = dataMgr_;
     videoStreamImpl_->syncMgr_ = syncMgr_;
 
+    EXPECT_CALL(*vdec_, SetEventReceiver(_)).WillOnce(Return());
+    EXPECT_CALL(*dataMgr_, SetEventReceiver(_)).WillOnce(Return());
+    EXPECT_CALL(*syncMgr_, SetEventReceiver(_)).WillOnce(Return());
     EXPECT_CALL(*vdec_, Prepare()).WillOnce(Return(MSERR_OK));
     EXPECT_CALL(*dataMgr_, Prepare()).WillOnce(Return(MSERR_OK));
     EXPECT_CALL(*syncMgr_, Prepare()).WillOnce(Return(MSERR_OK));
@@ -270,10 +259,8 @@ HWTEST_F(LppVideoStreamUnitTest, Prepare_001, TestSize.Level1)
 HWTEST_F(LppVideoStreamUnitTest, Prepare_002, TestSize.Level1)
 {
     ASSERT_NE(nullptr, videoStreamImpl_);
-
-    std::string audioStreamerId = "1";
-    auto &lppEngineManager = ILppEngineManager::GetInstance();
-    videoStreamImpl_->audioStreamerEngine_ = lppEngineManager.GetLppAudioInstance(audioStreamerId);
+    auto mockEngine = std::make_shared<MockILppAudioStreamerEngine>();
+    videoStreamImpl_->audioStreamerEngine_ = std::weak_ptr<ILppAudioStreamerEngine>(mockEngine);
 
     bool isLpp = true;
     videoStreamImpl_->isLpp_ = isLpp;
@@ -582,20 +569,6 @@ HWTEST_F(LppVideoStreamUnitTest, SetTargetStartFrame_002, TestSize.Level1)
 }
 
 /**
- * @tc.name    : Test Init API
- * @tc.number  : Init_001
- * @tc.desc    : Test Init interface with valid mime type
- * @tc.require : issueI5NZAQ
- */
-HWTEST_F(LppVideoStreamUnitTest, Init_001, TestSize.Level1)
-{
-    ASSERT_NE(nullptr, videoStreamImpl_);
-    std::string validMime = "video/avc";
-    auto ret = videoStreamImpl_->Init(validMime);
-    EXPECT_EQ(ret, MSERR_OK);
-}
-
-/**
  * @tc.name    : Test GetStreamerId API
  * @tc.number  : GetStreamerId_001
  * @tc.desc    : Test GetStreamerId interface
@@ -604,7 +577,8 @@ HWTEST_F(LppVideoStreamUnitTest, Init_001, TestSize.Level1)
 HWTEST_F(LppVideoStreamUnitTest, GetStreamerId_001, TestSize.Level1)
 {
     ASSERT_NE(nullptr, videoStreamImpl_);
-
+    auto &lppEngineManager = ILppEngineManager::GetInstance();
+    EXPECT_CALL(lppEngineManager, AddLppVideoInstance(_, _)).WillOnce(Return());
     std::string streamerId = videoStreamImpl_->GetStreamerId();
     EXPECT_NE(streamerId.find("LppV_"), std::string::npos);
 }
