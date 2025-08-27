@@ -39,6 +39,7 @@ config("lpp_video_dec_adapter_unit_test_config") {
     "$MEDIA_PLAYER_ROOT_DIR/services/dfx",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/lpp/lpp_video_streamer/src",
   ]
   defines = []
 
@@ -53,7 +54,6 @@ ohos_unittest("lpp_video_dec_adapter_unit_test") {
 
   if (player_framework_support_lowpower_av_sink) {
     sources += [
-      "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/lpp/lpp_video_streamer/src/lpp_vdec_adapter.cpp",
       "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/common/media_errors.cpp",
       "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/common/media_lpp_errors.cpp",
       "lpp_video_dec_adapter_unit_test.cpp",

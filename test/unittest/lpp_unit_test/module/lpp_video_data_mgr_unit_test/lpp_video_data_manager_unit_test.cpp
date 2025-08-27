@@ -511,6 +511,7 @@ HWTEST_F(LppVideoDataManagerUnitTest, SetDecoderInputProducer_001, TestSize.Leve
 {
     ASSERT_NE(nullptr, videoDataMgr_);
     sptr<MockAVBufferQueueProducer> producer = sptr<MockAVBufferQueueProducer>::MakeSptr();
+    EXPECT_CALL(*producer, SetBufferAvailableListener(_)).WillOnce(Return(Status::OK));
     EXPECT_NE(nullptr, producer);
     EXPECT_EQ(videoDataMgr_->SetDecoderInputProducer(producer), MSERR_OK);
     EXPECT_NE(videoDataMgr_->inputProducer_, nullptr);
