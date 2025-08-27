@@ -82,6 +82,14 @@ public:
         RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
     void SetParameter(int32_t sourceId, const Format &format, RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
     void CloseFile();
+    void IsWatermarkSupported(bool isWatermarkSupported);
+    void SetVideoIsHdr(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void SetVideoEnableTemporalScale(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void SetVideoEnableStableQualityMode(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void SetVideoEnableBFrame(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void SetMetaConfigs(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void SetMaxFileSize(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void SetWillMuteWhenInterrupted(bool muteWhenInterrupted);
 
 private:
     std::atomic<bool> isExit_ { false };
