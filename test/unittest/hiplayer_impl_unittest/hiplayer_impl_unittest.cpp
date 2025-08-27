@@ -454,7 +454,7 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsInValidSeekTime_001, TestSize.Level0)
     hiplayer_->startTimeWithMode_ = -1;
     int32_t seekPos = 1;
     auto mockPipeline = std::make_shared<MockPipeline>();
-    EXPECT_CALL(*mockPipeline, SetPlayRange(_,_)).WillRepeatedly(Return(Status::OK));
+    EXPECT_CALL(*mockPipeline, SetPlayRange(_, _)).WillRepeatedly(Return(Status::OK));
     hiplayer_->pipeline_ = mockPipeline;
     auto ret = hiplayer_->IsInValidSeekTime(seekPos);
     EXPECT_EQ(ret, false);
@@ -507,7 +507,7 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SelectBitRate_002, TestSize.Level0)
     std::string name = "testname";
     FilterType type = FilterType::VIDEO_CAPTURE;
     auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
-    EXPECT_CALL(*mockDemuxer, SelectBitRate(_,_)).WillRepeatedly(Return(Status::ERROR_INVALID_OPERATION));
+    EXPECT_CALL(*mockDemuxer, SelectBitRate(_, _)).WillRepeatedly(Return(Status::ERROR_INVALID_OPERATION));
     hiplayer_->demuxer_ = mockDemuxer;
     uint32_t bitRate = 0;
     bool isAutoSelect = false;
