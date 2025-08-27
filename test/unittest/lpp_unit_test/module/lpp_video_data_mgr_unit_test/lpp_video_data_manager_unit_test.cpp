@@ -484,8 +484,8 @@ HWTEST_F(LppVideoDataManagerUnitTest, Stop_001, TestSize.Level0)
     ASSERT_NE(nullptr, videoDataMgr_);
     EXPECT_EQ(videoDataMgr_->Prepare(), MSERR_OK);
     EXPECT_EQ(videoDataMgr_->StartDecode(), MSERR_OK);
-    EXPECT_EQ(videoDataMgr_->Stop(), MSERR_OK);
     EXPECT_NE(videoDataMgr_->dataTask_, nullptr);
+    EXPECT_EQ(videoDataMgr_->Stop(), MSERR_OK);
 }
 
 /**
@@ -512,7 +512,6 @@ HWTEST_F(LppVideoDataManagerUnitTest, SetDecoderInputProducer_001, TestSize.Leve
     ASSERT_NE(nullptr, videoDataMgr_);
     sptr<MockAVBufferQueueProducer> producer = sptr<MockAVBufferQueueProducer>::MakeSptr();
     EXPECT_CALL(*producer, SetBufferAvailableListener(_)).WillOnce(Return(Status::OK));
-    EXPECT_NE(nullptr, producer);
     EXPECT_EQ(videoDataMgr_->SetDecoderInputProducer(producer), MSERR_OK);
     EXPECT_NE(videoDataMgr_->inputProducer_, nullptr);
 }

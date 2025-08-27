@@ -40,12 +40,12 @@ public:
     MOCK_METHOD(int32_t, ReleaseOutputBuffer, (uint32_t index, bool render));
     MOCK_METHOD(int32_t, RenderOutputBufferAtTime, (uint32_t index, int64_t renderTimestampNs));
     MOCK_METHOD(int32_t, SetParameter, (const Format &format));
-    int32_t SetCallback(const std::shared_ptr<AVCodecCallback> &callback)
+    MOCK_METHOD(int32_t, SetCallback, (const std::shared_ptr<AVCodecCallback> &callback));
+    int32_t SetCallback(const std::shared_ptr<MediaCodecCallback> &callback)
     {
         (void)callback;
-        return 0;
+        return MediaAVCodec::AVCS_ERR_OK;
     }
-    MOCK_METHOD(int32_t, SetCallback, (const std::shared_ptr<MediaCodecCallback> &callback));
     MOCK_METHOD(int32_t, GetChannelId, (int32_t &channelId));
     int32_t SetLowPowerPlayerMode(bool isLpp)
     {

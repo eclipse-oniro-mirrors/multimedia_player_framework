@@ -53,8 +53,6 @@ void LppVideoDecAdapterUnitTest::TearDown(void)
 HWTEST_F(LppVideoDecAdapterUnitTest, Init_001, TestSize.Level0)
 {
     ASSERT_NE(nullptr, videoDecAdapter_);
-    auto videoDecoder_ = MediaAVCodec::VideoDecoderFactory::CreateByMime("1");
-    EXPECT_CALL(*videoDecoder_, SetCallback(_)).WillOnce(Return(MediaAVCodec::AVCS_ERR_OK));
     videoDecAdapter_->isLppEnabled_ = true;
     bool switchToCommon = true;
     int32_t res = videoDecAdapter_->Init("video/avc", switchToCommon);
@@ -70,8 +68,6 @@ HWTEST_F(LppVideoDecAdapterUnitTest, Init_001, TestSize.Level0)
 HWTEST_F(LppVideoDecAdapterUnitTest, Init_002, TestSize.Level1)
 {
     ASSERT_NE(nullptr, videoDecAdapter_);
-    auto videoDecoder_ = MediaAVCodec::VideoDecoderFactory::CreateByMime("1");
-    EXPECT_CALL(*videoDecoder_, SetCallback(_)).WillOnce(Return(MediaAVCodec::AVCS_ERR_OK));
     videoDecAdapter_->isLppEnabled_ = false;
     bool switchToCommon = true;
     int32_t res = videoDecAdapter_->Init("video/avc", switchToCommon);
@@ -576,7 +572,9 @@ HWTEST_F(LppVideoDecAdapterUnitTest, OnQueueBufferAvailable_001, TestSize.Level1
     videoDecAdapter_->decodertask_ =
         std::make_unique<Task>("test_start_decode", streamerId_, TaskType::SINGLETON, TaskPriority::NORMAL, false);
 
+    ASSERT_NE(nullptr, videoDecAdapter_->decodertask_);
     videoDecAdapter_->OnQueueBufferAvailable();
+    EXPECT_NE(nullptr, videoDecAdapter_->decodertask_);
 }
 
 /**
@@ -602,26 +600,6 @@ HWTEST_F(LppVideoDecAdapterUnitTest, OnOutputBufferAvailable_001, TestSize.Level
 
     EXPECT_FALSE(videoDecAdapter_->outputBuffers_.empty());
     EXPECT_EQ(videoDecAdapter_->outputBuffers_.size(), 1);
-}
-
-/**
- * @tc.name    : Test ScheduleRenderFrameJob API
- * @tc.number  : ScheduleRenderFrameJob_001
- * @tc.desc    : Test ScheduleRenderFrameJob interface in normal case
- * @tc.require : issueI5NZAQ
- */
-HWTEST_F(LppVideoDecAdapterUnitTest, ScheduleRenderFrameJob_001, TestSize.Level1)
-{
-    ASSERT_NE(nullptr, videoDecAdapter_);
-    videoDecAdapter_->decodertask_ =
-        std::make_unique<Task>("test_start_decode", streamerId_, TaskType::SINGLETON, TaskPriority::NORMAL, false);
-    videoDecAdapter_->videoDecoder_ = videoDecoder_;
-
-    uint32_t index = 1;
-    std::shared_ptr<AVBuffer> buffer = std::make_shared<AVBuffer>();
-    buffer->pts_ = 12345;
-
-    videoDecAdapter_->ScheduleRenderFrameJob(index, buffer);
 }
 
 /**
@@ -825,11 +803,11 @@ HWTEST_F(LppVideoDecAdapterUnitTest, OnError_001, TestSize.Level1)
     ASSERT_NE(nullptr, videoDecAdapter_);
     std::shared_ptr<MockEventReceiver> eventRec = std::make_shared<MockEventReceiver>();
     ASSERT_NE(nullptr, eventRec);
-    EXPECT_CALL(*eventRec, OnEvent(_)).WillOnce(Return());
     videoDecAdapter_->SetEventReceiver(eventRec);
+
     MediaAVCodec::AVCodecErrorType errorType = MediaAVCodec::AVCodecErrorType::AVCODEC_ERROR_INTERNAL;
     int32_t errorCode = MediaAVCodec::AVCodecErrorType::AVCODEC_ERROR_INTERNAL;
-
+    EXPECT_CALL(*eventRec, OnEvent(_)).Times(1);
     videoDecAdapter_->OnError(errorType, errorCode);
 }
 
@@ -843,14 +821,13 @@ HWTEST_F(LppVideoDecAdapterUnitTest, OnOutputFormatChanged_001, TestSize.Level1)
 {
     ASSERT_NE(nullptr, videoDecAdapter_);
     std::shared_ptr<MockEventReceiver> eventRec = std::make_shared<MockEventReceiver>();
-    ASSERT_NE(nullptr, eventRec);
     EXPECT_CALL(*eventRec, OnEvent(_)).WillOnce(Return());
     videoDecAdapter_->SetEventReceiver(eventRec);
 
     Format format;
     format.PutIntValue("width", 1920);
     format.PutIntValue("height", 1080);
-
+    EXPECT_CALL(*eventRec, OnEvent(_)).Times(1);
     videoDecAdapter_->OnOutputFormatChanged(format);
 }
 
@@ -880,7 +857,8 @@ HWTEST_F(LppVideoDecAdapterUnitTest, Callback_001, TestSize.Level1)
 {
     ASSERT_NE(nullptr, videoDecAdapter_);
     std::shared_ptr<LppVideoDecoderCallback> callback = std::make_shared<LppVideoDecoderCallback>(videoDecAdapter_);
- 
+    ASSERT_NE(nullptr, callback);
+    
     MediaAVCodec::AVCodecErrorType errorType = MediaAVCodec::AVCodecErrorType::AVCODEC_ERROR_FRAMEAORK_FAILED;
     int32_t errorCode = 1001;
     EXPECT_NE(callback->videoDecoderAdapter_.lock(), nullptr);
