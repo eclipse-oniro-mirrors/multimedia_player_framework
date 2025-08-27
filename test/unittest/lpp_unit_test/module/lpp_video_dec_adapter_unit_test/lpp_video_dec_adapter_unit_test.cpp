@@ -858,7 +858,7 @@ HWTEST_F(LppVideoDecAdapterUnitTest, Callback_001, TestSize.Level1)
     ASSERT_NE(nullptr, videoDecAdapter_);
     std::shared_ptr<LppVideoDecoderCallback> callback = std::make_shared<LppVideoDecoderCallback>(videoDecAdapter_);
     ASSERT_NE(nullptr, callback);
-    
+
     MediaAVCodec::AVCodecErrorType errorType = MediaAVCodec::AVCodecErrorType::AVCODEC_ERROR_FRAMEAORK_FAILED;
     int32_t errorCode = 1001;
     EXPECT_NE(callback->videoDecoderAdapter_.lock(), nullptr);
@@ -873,11 +873,11 @@ HWTEST_F(LppVideoDecAdapterUnitTest, Callback_001, TestSize.Level1)
     callback->OnInputBufferAvailable(0, buffer);
     EXPECT_NE(callback->videoDecoderAdapter_.lock(), nullptr);
     callback->OnOutputBufferAvailable(0, buffer);
-    
+
     std::map<uint32_t, sptr<SurfaceBuffer>> bufferMap = {};
     EXPECT_NE(callback->videoDecoderAdapter_.lock(), nullptr);
     callback->OnOutputBufferBinded(bufferMap);
-    
+
     EXPECT_NE(callback->videoDecoderAdapter_.lock(), nullptr);
     callback->OnOutputBufferUnbinded();
 }
