@@ -64,8 +64,7 @@ public:
     static std::shared_ptr<AVCodecVideoDecoder> CreateByMime(const std::string &mime)
     {
         (void)mime;
-        static std::shared_ptr<AVCodecVideoDecoder> instance = std::make_shared<AVCodecVideoDecoder>();
-        return instance;
+        return std::make_shared<AVCodecVideoDecoder>();
     }
 private:
     VideoDecoderFactory() = default;
