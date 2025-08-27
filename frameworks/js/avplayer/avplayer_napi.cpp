@@ -3684,7 +3684,7 @@ napi_value AVPlayerNapi::JsSetLoudnessGain(napi_env env, napi_callback_info info
     }
 
     double loudnessGain = 0.0f;
-    napi_status = napi_get_value_double(env, args[0], &loudnessGain);
+    napi_status status = napi_get_value_double(env, args[0], &loudnessGain);
     if (status != napi_ok || loudnessGain < -90.0f || loudnessGain > 24.0f) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, check loudnessGain");
         return result;
