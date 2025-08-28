@@ -3024,8 +3024,7 @@ void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
             std::unique_lock<std::mutex> freezeLock(freezeMutex_);
             isHintPauseReceived_ = true;
             Status ret = Status::OK;
-            audioSink_->Pause();
-            audioSink_->cacheBuffer();
+            CacheBuffer();
             ret = pipeline_->Pause();
             syncManager_->Pause();
             if (ret != Status::OK) {
@@ -4044,6 +4043,16 @@ int32_t HiPlayerImpl::GetGlobalInfo(std::shared_ptr<Meta> &globalInfo)
     globalInfo = demuxer_->GetGlobalInfo();
     FALSE_RETURN_V(globalInfo != nullptr, TransStatus(Status::ERROR_NULL_POINTER));
     return TransStatus(Status::OK);
+}
+
+void HiPlayerImpl::CacheBuffer()
+{
+    FALSE_RETURN(demuxer_ != nullptr && !demuxer_->IsAudioDemuxDecodeAsync() && audioSink_ != nullptr);
+    Status ret = Status::OK;
+    audioSink_->Pause();
+    ret = audioSink_->CacheBuffer();
+    FALSE_RETURN(ret != Status::OK);
+    UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
 }
 }  // namespace Media
 }  // namespace OHOS
