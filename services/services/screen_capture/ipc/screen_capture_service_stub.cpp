@@ -50,7 +50,7 @@ ScreenCaptureServiceStub::~ScreenCaptureServiceStub()
 
 int32_t ScreenCaptureServiceStub::Init()
 {
-    std::shared_lock<std::shared_mutex> write_lock(rw_lock_);
+    std::unique_lock<std::shared_mutex> write_lock(rw_lock_);
     screenCaptureServer_ = ScreenCaptureServer::Create();
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_NO_MEMORY,
         "failed to create ScreenCaptureServer Service");

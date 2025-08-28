@@ -41,6 +41,7 @@ private:
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);
 
     std::mutex mutex_;
+    mutable std::shared_mutex rw_lock_;
     std::shared_ptr<IScreenCaptureController> screenCaptureControllerServer_ = nullptr;
     using screenCaptureControllerStubFuncs =
         int32_t(ScreenCaptureControllerStub::*)(MessageParcel &data, MessageParcel &reply);
