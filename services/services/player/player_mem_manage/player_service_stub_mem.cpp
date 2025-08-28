@@ -57,6 +57,7 @@ sptr<PlayerServiceStub> PlayerServiceStubMem::Create()
 
 PlayerServiceStubMem::PlayerServiceStubMem()
 {
+    memRecallStruct_.signAddr = nullptr;
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 

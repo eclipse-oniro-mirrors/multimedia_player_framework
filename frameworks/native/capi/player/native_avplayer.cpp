@@ -458,7 +458,7 @@ int32_t NativeAVPlayerCallback::GetDrmSystemInfos(const Format &infoBody,
         CHECK_AND_RETURN_RET_LOG((err == 0 && ret == 0), AV_ERR_INVALID_VAL, "cast drmInfos nullptr");
         mediaKeySystemInfo->psshInfo[index++].dataLen = static_cast<int32_t>(item.second.size());
     }
-    mediaKeySystemInfo->psshCount = index;
+    mediaKeySystemInfo->psshCount = static_cast<unsigned int>(index);
     return AV_ERR_OK;
 }
 #endif
