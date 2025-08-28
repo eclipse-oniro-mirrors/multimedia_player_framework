@@ -60,7 +60,7 @@ public:
     MOCK_METHOD(int32_t, DestroyScreenCaptureControllerClient,
         (std::shared_ptr<IScreenCaptureController> controller), (override));
     MOCK_METHOD(std::shared_ptr<IStandardMonitorService>, GetMonitorProxy, (), (override));
-    MOCK_METHOD(void, ReleaseClientListener, (), (override));
+    MOCK_METHOD(bool, ReleaseClientListener, (), (override));
     MOCK_METHOD(bool, CanKillMediaService, (), (override));
     MOCK_METHOD(std::vector<pid_t>, GetPlayerPids, (), (override));
     MOCK_METHOD(int32_t, ProxyForFreeze, (const std::set<int32_t>& pidList, bool isProxy), (override));

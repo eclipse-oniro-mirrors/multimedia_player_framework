@@ -60,6 +60,9 @@ constexpr int32_t RETRY_TIME = 3;
 #endif
 constexpr size_t MAX_PID_LIST_SIZE = 1000;
 constexpr uint32_t MAX_WAIT_TIME = 5000;
+constexpr int32_t POWERMGR_UID = 5528;
+constexpr int32_t RETYR_WAIT_TIME = 5;
+constexpr int32_t MAX_RETYR = 20;
 std::shared_ptr<MediaClient> g_mediaClientInstance;
 std::once_flag onceFlag_;
 
@@ -109,14 +112,34 @@ bool MediaClient::IsAlived()
     return (mediaProxy_ != nullptr) ? true : false;
 }
 
-void MediaClient::ReleaseClientListener()
+bool MediaClient::ReleaseClientListener()
 {
     // there exist non-const methods of the sptr mediaProxy_, possible data-race.
     if (mediaProxy_ == nullptr) {
-        return;
+        MEDIA_LOGE("mediaProxy is nullptr");
+        return false;
     }
+    MEDIA_LOGI("ReleaseClientListener start");
     mediaProxy_->ReleaseClientListener();
     DoMediaServerDied(); // remove death recipient as well. Otherwise getting proxy after re-dlopen causes mem leak.
+    // Special handling for powermgr UID to ensure proper resource release
+    if (getuid() == POWERMGR_UID) {
+        int32_t retry = 0;
+        // Retry mechanism to wait for listenerStub_ reference count to decrease,
+        // 1 means no one reference for media_service,
+        // listenerStub_ will be decrease 0 after dlclose.
+        while (listenerStub_ != nullptr && listenerStub_->GetSptrRefCount() > 1 && retry < MAX_RETYR) {
+            retry++;
+            std::this_thread::sleep_for(std::chrono::milliseconds(RETYR_WAIT_TIME));
+        }
+        // Log warning and return false if reference count remains high after retries
+        if (listenerStub_ != nullptr && listenerStub_->GetSptrRefCount() > 1) {
+            MEDIA_LOGW("ListenerStub not release! count:%{public}d", listenerStub_->GetSptrRefCount());
+            return false;
+        }
+    }
+    MEDIA_LOGI("ReleaseClientListener end");
+    return true;
 }
 
 void MediaClient::CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility subSystemId,

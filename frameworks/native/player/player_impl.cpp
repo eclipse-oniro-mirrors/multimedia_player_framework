@@ -976,11 +976,11 @@ int32_t PlayerImpl::EnableReportAudioInterrupt(bool enable)
     return ret;
 }
 
-void PlayerImpl::ReleaseClientListener()
+bool PlayerImpl::ReleaseClientListener()
 {
     ScopedTimer timer("ReleaseClientListener", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " ReleaseClientListener in", FAKE_POINTER(this));
-    MediaServiceFactory::GetInstance().ReleaseClientListener(); // not related to playerService_ thus no XCollie
+    return MediaServiceFactory::GetInstance().ReleaseClientListener(); // not related to playerService_ thus no XCollie
 }
 
 int32_t PlayerImpl::SetStartFrameRateOptEnabled(bool enabled)

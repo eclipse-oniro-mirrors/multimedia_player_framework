@@ -51,7 +51,7 @@ public:
     int32_t DestroyScreenCaptureMonitorService(std::shared_ptr<IScreenCaptureMonitorService>) override { return 0; }
     std::shared_ptr<IScreenCaptureController> CreateScreenCaptureControllerClient() override { return nullptr; }
     int32_t DestroyScreenCaptureControllerClient(std::shared_ptr<IScreenCaptureController>) override { return 0; }
-    void ReleaseClientListener() override {}
+    bool ReleaseClientListener() override { return true; }
     bool CanKillMediaService() override { return false; }
     std::vector<pid_t> GetPlayerPids() override { return {}; }
     int32_t ProxyForFreeze(const std::set<int32_t>&, bool) override { return 0; }

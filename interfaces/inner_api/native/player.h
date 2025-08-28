@@ -849,7 +849,7 @@ public:
         return 0;
     }
 
-    virtual void ReleaseClientListener() = 0;
+    virtual bool ReleaseClientListener() = 0;
 
     /**
      * @brief Enables render video first frame of the media playback.
