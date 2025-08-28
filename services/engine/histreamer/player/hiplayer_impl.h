@@ -324,6 +324,7 @@ private:
     void ApplyAudioHapticsSyncId();
     void DoInitDemuxer();
     void ReleaseVideoDecoderOnMuted();
+    void CacheBuffer();
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
