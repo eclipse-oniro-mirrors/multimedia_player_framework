@@ -295,6 +295,7 @@ int32_t AudioHapticManagerNapi::GetAudioHapticFileDescriptorValue(napi_env env, 
     AudioHapticFileDescriptor& audioHapticFd)
 {
     napi_value property = nullptr;
+    bool exists = false;
     napi_valuetype valueType = napi_undefined;
     napi_typeof(env, object, &valueType);
     CHECK_AND_RETURN_RET_LOG(valueType == napi_object, ERROR, "type mismatch");
@@ -303,14 +304,21 @@ int32_t AudioHapticManagerNapi::GetAudioHapticFileDescriptorValue(napi_env env, 
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, ERROR, "No property: fd");
     status = napi_get_value_int32(env, property, &(audioHapticFd.fd));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, ERROR, "Invalid value: fd");
-    if (napi_get_named_property(env, object, "length", &property) == napi_ok) {
-        status = napi_get_value_int64(env, property, &(audioHapticFd.length));
-        CHECK_AND_RETURN_RET_LOG(status == napi_ok, ERROR, "Invalid value: length");
+    
+    if (napi_has_named_property(env, object, "length", &exists) == napi_ok && exists) {
+        if (napi_get_named_property(env, object, "length", &property) == napi_ok) {
+            status = napi_get_value_int64(env, property, &(audioHapticFd.length));
+            CHECK_AND_RETURN_RET_LOG(status == napi_ok, ERROR, "Invalid value: length");
+        }
     }
-    if (napi_get_named_property(env, object, "offset", &property) == napi_ok) {
-        status = napi_get_value_int64(env, property, &(audioHapticFd.offset));
-        CHECK_AND_RETURN_RET_LOG(status == napi_ok, ERROR, "Invalid value: offset");
+    
+    if (napi_has_named_property(env, object, "offset", &exists) == napi_ok && exists) {
+        if (napi_get_named_property(env, object, "offset", &property) == napi_ok) {
+            status = napi_get_value_int64(env, property, &(audioHapticFd.offset));
+            CHECK_AND_RETURN_RET_LOG(status == napi_ok, ERROR, "Invalid value: offset");
+        }
     }
+
     return SUCCESS;
 }
 
