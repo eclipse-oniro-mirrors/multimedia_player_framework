@@ -145,6 +145,7 @@ public:
         const std::string &uri, int32_t toneType) override;
     std::vector<std::tuple<std::string, int64_t, SystemSoundError>> OpenToneList(
         const std::vector<std::string> &uriList, SystemSoundError &errCode) override;
+    std::vector<ToneInfo> GetCurrentToneInfos() override;
 
 private:
     void InitDefaultUriMap();

@@ -79,6 +79,12 @@ struct ParamsForAddCustomizedTone {
     bool duplicateFile;
 };
 
+struct ToneInfo {
+    int32_t type;
+    std::string uri;
+    std::string title;
+};
+
 class SystemSoundManager {
 public:
     virtual ~SystemSoundManager() = default;
@@ -422,6 +428,13 @@ public:
      */
     virtual std::vector<std::tuple<std::string, int64_t, SystemSoundError>> OpenToneList(
         const std::vector<std::string> &uriList, SystemSoundError &errCode) = 0;
+
+    /**
+     * @brief Get the tone infos.
+     *
+     * @return Returns ToneInfo vector.
+     */
+    virtual std::vector<ToneInfo> GetCurrentToneInfos() = 0;
 };
 
 class __attribute__((visibility("default"))) SystemSoundManagerFactory {

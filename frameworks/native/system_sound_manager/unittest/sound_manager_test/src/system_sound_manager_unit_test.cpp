@@ -1789,6 +1789,20 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_OpenToneUri_004, TestSize.
 }
 
 /**
+ * @tc.name  : Test GetCurrentToneInfos API
+ * @tc.number: Media_SoundManager_GetCurrentToneInfos_001
+ * @tc.desc  : Test GetCurrentToneInfos interface. Returns toneInfo vector.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetCurrentToneInfos_001, TestSize.Level2)
+{
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManager = std::make_shared<SystemSoundManagerImpl>();
+    bool isProxy = false;
+    DatabaseTool databaseTool = {true, isProxy, nullptr};
+    std::vector<ToneInfo> toneInfos = systemSoundManager->GetCurrentToneInfos();
+    EXPECT_EQ(toneInfos.empty(), false);
+}
+
+/**
  * @tc.name  : GetDefaultRingtoneUri_ShouldReturnUri_WhenTypeIsValid
  * @tc.number: GetDefaultRingtoneUri_ShouldReturnUri_WhenTypeIsValid_001
  * @tc.desc  : Test GetDefaultRingtoneUri method when ringtone type is valid.
