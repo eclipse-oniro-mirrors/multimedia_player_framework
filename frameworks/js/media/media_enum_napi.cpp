@@ -409,7 +409,9 @@ static const std::vector<struct JsEnumString> g_mediaDescriptionKey = {
     { "MD_KEY_LANGUAGE", "language" },
     { "MD_KEY_AUD_SAMPLE_DEPTH", "sample_depth" },
     { "MD_KEY_TRACK_NAME", "track_name" },
-    { "MD_KEY_HDR_TYPE", "hdr_type" }
+    { "MD_KEY_HDR_TYPE", "hdr_type" },
+    { "MD_KEY_ORIGINAL_WIDTH", "original_width" },
+    { "MD_KEY_ORIGINAL_HEIGHT", "original_height" },
 };
 
 static const std::vector<struct JsEnumInt> g_screenCaptureRecordPreset = {
