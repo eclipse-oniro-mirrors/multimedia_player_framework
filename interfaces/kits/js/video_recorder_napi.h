@@ -109,8 +109,8 @@ private:
     sptr<Surface> surface_;
     std::string currentStates_ = VideoRecorderState::STATE_IDLE;
     bool isPureVideo = false;
-    int32_t videoSourceID;
-    int32_t audioSourceID;
+    int32_t videoSourceID = 0;
+    int32_t audioSourceID = 0;
 };
 
 struct VideoRecorderAsyncContext : public MediaAsyncContext {
