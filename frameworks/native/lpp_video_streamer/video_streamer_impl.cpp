@@ -262,5 +262,15 @@ std::string VideoStreamerImpl::GetStreamerId()
     CHECK_AND_RETURN_RET_LOG(streamerService_ != nullptr, "", "player service does not exist..");
     return streamerService_->GetStreamerId();
 }
+
+int32_t VideoStreamerImpl::GetLatestPts(int64_t &pts)
+{
+    MEDIA_LOGI("VideoStreamerImpl GetLatestPts");
+    CHECK_AND_RETURN_RET_LOG(streamerService_ != nullptr, MSERR_SERVICE_DIED,
+        "GetLatestPts player service does not exist.");
+    int32_t ret = streamerService_->GetLatestPts(pts);
+    pts = (ret == MSERR_OK) ? pts : 0;
+    return ret;
+}
 }  // namespace Media
 }  // namespace OHOS

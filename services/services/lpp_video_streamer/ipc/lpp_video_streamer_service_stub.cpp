@@ -82,6 +82,7 @@ int32_t LppVideoStreamerServiceStub::Init()
 void LppVideoStreamerServiceStub::SetPlayerFuncs()
 {
     FillPlayerFuncPart1();
+    FillPlayerFuncPart2();
 }
 
 void LppVideoStreamerServiceStub::FillPlayerFuncPart1()
@@ -134,6 +135,12 @@ void LppVideoStreamerServiceStub::FillPlayerFuncPart1()
         [this](MessageParcel &data, MessageParcel &reply) { return GetStreamerId(data, reply); }};
     playerFuncs_[RENDER_FIRST_FRAME] = {"Player::RenderFirstFrame",
         [this](MessageParcel &data, MessageParcel &reply) { return RenderFirstFrame(data, reply); }};
+}
+
+void LppVideoStreamerServiceStub::FillPlayerFuncPart2()
+{
+    playerFuncs_[GET_LATEST_PTS] = {"Player::GetLatestPts",
+        [this](MessageParcel &data, MessageParcel &reply) { return GetLatestPts(data, reply); }};
 }
 
 int LppVideoStreamerServiceStub::OnRemoteRequest(
@@ -532,5 +539,22 @@ int32_t LppVideoStreamerServiceStub::RenderFirstFrame(MessageParcel &data, Messa
     return MSERR_OK;
 }
 
+int32_t LppVideoStreamerServiceStub::GetLatestPts(int64_t &pts)
+{
+    MEDIA_LOGI("LppVideoStreamerServiceStub::GetLatestPts");
+    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
+    return lppVideoPlayerServer_->GetLatestPts(pts);
+}
+
+int32_t LppVideoStreamerServiceStub::GetLatestPts(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    int64_t pts = 0;
+    int32_t ret = GetLatestPts(pts);
+    MEDIA_LOGI("LppVideoStreamerServiceStub::GetLatestPts %{public}d %{public}ld", ret, pts);
+    reply.WriteInt32(ret);
+    reply.WriteInt64(pts);
+    return MSERR_OK;
+}
 }  // namespace Media
 }  // namespace OHOS

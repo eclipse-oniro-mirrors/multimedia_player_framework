@@ -49,7 +49,8 @@ public:
     MOCK_METHOD(int32_t, SetTunnelId, (uint64_t tunnelId));
     MOCK_METHOD(int32_t, SetAudioIsLpp, (bool isLpp));
     MOCK_METHOD(void, SetEventReceiver, (std::shared_ptr<Media::Pipeline::EventReceiver> eventReceiver));
+    MOCK_METHOD(int32_t, GetLatestPts, (int64_t &pts));
 };
 }
 }
-#endif
+#endif

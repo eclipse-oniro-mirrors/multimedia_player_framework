@@ -263,6 +263,16 @@ int32_t LppSyncManager::SetTunnelId(uint64_t tunnelId)
     return MSERR_OK;
 }
 
+int32_t LppSyncManager::GetLatestPts(int64_t &pts)
+{
+    MEDIA_LOG_I("LppSyncManager::GetLatestPts");
+    FALSE_RETURN_V_NOLOG(videoIsLpp_, MSERR_UNKNOWN);
+    FALSE_RETURN_V_MSG_E(adapter_ != nullptr, MSERR_INVALID_OPERATION, "adapter_ is nullptr");
+    auto ret = adapter_->GetLatestPts(pts);
+    FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "adapter_ GetLatestPts failed");
+    return MSERR_OK;
+}
+
 int32_t LppSyncManager::SetAudioIsLpp(bool isLpp)
 {
     audioIsLpp_ = isLpp;

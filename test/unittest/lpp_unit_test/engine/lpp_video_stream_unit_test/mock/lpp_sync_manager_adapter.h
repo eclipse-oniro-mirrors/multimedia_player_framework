@@ -51,6 +51,7 @@ public:
     MOCK_METHOD(int32_t, GetShareBuffer, (int32_t& fd));
     MOCK_METHOD(int32_t, SetTunnelId, (uint64_t tunnelId));
     MOCK_METHOD(void, SetEventReceiver, (std::shared_ptr<Media::Pipeline::EventReceiver> eventReceiver));
+    MOCK_METHOD(int32_t, GetLatestPts, (int64_t &pts));
 };
 
 class LowPowerPlayerFactory {
@@ -72,4 +73,4 @@ public:
 };
 }  // namespace Media
 }  // namespace OHOS
-#endif  // LPP_SYNC_MANAGER_ADAPTER_H
+#endif  // LPP_SYNC_MANAGER_ADAPTER_H

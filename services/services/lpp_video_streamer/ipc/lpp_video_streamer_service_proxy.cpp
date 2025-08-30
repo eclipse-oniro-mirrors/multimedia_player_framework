@@ -429,5 +429,24 @@ int32_t LppVideoStreamerServiceProxy::RenderFirstFrame()
     return reply.ReadInt32();
 }
 
+int32_t LppVideoStreamerServiceProxy::GetLatestPts(int64_t &pts)
+{
+    MEDIA_LOGI("LppVideoStreamerServiceProxy GetLatestPts");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(LppVideoStreamerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    int32_t error = Remote()->SendRequest(GET_LATEST_PTS, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(
+        error == MSERR_OK, MSERR_INVALID_OPERATION, "GetLatestPts SendRequest failed, error: %{public}d", error);
+    int32_t ret = reply.ReadInt32();
+    pts = reply.ReadInt64();
+    CHECK_AND_RETURN_RET_LOG(
+        ret == MSERR_OK, MSERR_INVALID_OPERATION, "GetLatestPts failed, error: %{public}d", ret);
+    return ret;
+}
 }  // namespace Media
 }  // namespace OHOS
