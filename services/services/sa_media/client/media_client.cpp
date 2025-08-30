@@ -435,6 +435,16 @@ int32_t MediaClient::DestroyLppAudioStreamerService(std::shared_ptr<ILppAudioStr
 #endif
 
 #ifdef SUPPORT_LPP_VIDEO_STRAMER
+LppAvCapabilityInfo *MediaClient::GetLppCapacity()
+{
+    MEDIA_LOGI("MediaClient::GetLppCapacity");
+    LppAvCapabilityInfo *lppAvCapabilityInfo = new LppAvCapabilityInfo();
+    CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "MediaServer Is Not Alived");
+    int32_t ret = mediaProxy_->GetLppCapacity(*lppAvCapabilityInfo);
+    CHECK_AND_RETURN_RET_LOG(ret == 0, nullptr, "MediaClient::GetLppCapacityfailed");
+    return lppAvCapabilityInfo;
+}
+
 std::shared_ptr<ILppVideoStreamerService> MediaClient::CreateLppVideoStreamerService()
 {
     MEDIA_LOGI("CreateLppVideoStreamerService start");

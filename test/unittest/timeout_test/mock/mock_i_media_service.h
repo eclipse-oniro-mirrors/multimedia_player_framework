@@ -71,6 +71,7 @@ public:
     MOCK_METHOD(std::shared_ptr<ILppVideoStreamerService>, CreateLppVideoStreamerService, (), (override));
     MOCK_METHOD(int32_t,
         DestroyLppVideoStreamerService, (std::shared_ptr<ILppVideoStreamerService> lppAudioPlayer), (override));
+    MOCK_METHOD(LppAvCapabilityInfo*, GetLppCapacity, (), (override));
 #endif
 
     MOCK_METHOD(sptr<IStandardMonitorService>, GetMonitorProxy, (), (override));

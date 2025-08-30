@@ -319,7 +319,14 @@ ohos_shared_library("media_service") {
       "window_manager:session_manager_lite",
     ]
   }
-
+  
+  if (player_framework_support_lowpower_av_sink) {
+    external_deps += [
+      "drivers_interface_lpplayer:liblow_power_player_proxy_1.0",
+      "hdf_core:libhdi",
+    ]
+  }
+  
   if (player_framework_support_avsession_background) {
     sources += [ "player/avsession_background/avsession_background.cpp" ]
     external_deps += [

@@ -634,6 +634,7 @@ OH_AVErrCode OH_LowPowerVideoSinkCallback_SetStreamChangedListener(
     int32_t res = callback->SetStreamChangedListener(onStreamChanged, userData);
     return LppMsErrToOHAvErr(res);
 }
+
 OH_AVErrCode OH_LowPowerVideoSinkCallback_SetFirstFrameDecodedListener(OH_LowPowerVideoSinkCallback *callback,
     OH_LowPowerVideoSink_OnFirstFrameDecoded onFirstFrameDecoded, void *userData)
 {
@@ -642,4 +643,19 @@ OH_AVErrCode OH_LowPowerVideoSinkCallback_SetFirstFrameDecodedListener(OH_LowPow
     CHECK_AND_RETURN_RET_LOG(onFirstFrameDecoded != nullptr, AV_ERR_INVALID_VAL, "onFirstFrameDecoded is nullptr!");
     int32_t res = callback->SetFirstFrameReadyListener(onFirstFrameDecoded, userData);
     return LppMsErrToOHAvErr(res);
+}
+
+OH_LowPowerAVSink_Capability *OH_LowPowerAVSink_GetCapability()
+{
+    MEDIA_LOGD("OH_LowPowerAVSink_GetCapability");
+    LppAvCapabilityInfo *info = VideoStreamerFactory::GetLppCapacity();
+    CHECK_AND_RETURN_RET_LOG(info != nullptr, nullptr, "info is nullptr!");
+    std::shared_ptr<LppAvCapabilityInfo> sharedPtr(info);
+    info = nullptr;
+    CHECK_AND_RETURN_RET_LOG(sharedPtr != nullptr, nullptr, "sharedPtr is nullptr!");
+    LowPowerAVSinkCapabilityObject *object = new(std::nothrow) LowPowerAVSinkCapabilityObject(sharedPtr);
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "object is nullptr!");
+    MEDIA_LOGI("OH_LowPowerAVSink_Capability *OH_LowPowerAVSink_GetCapability() %{public}zu %{public}zu",
+        object->lppCapibility_->videoCap_.size(), object->lppCapibility_->audioCap_.size());
+    return object;
 }

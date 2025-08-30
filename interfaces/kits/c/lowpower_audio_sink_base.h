@@ -59,7 +59,7 @@ typedef struct OH_LowPowerAudioSink OH_LowPowerAudioSink;
  * @since 20
  */
 typedef struct OH_LowPowerAudioSinkCallback OH_LowPowerAudioSinkCallback;
- 
+
 /**
  * @brief When an error occurs in the running of the OH_LowPowerAudioSink instance, the function pointer will be called
  * to report specific error information.

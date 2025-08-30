@@ -82,6 +82,12 @@ int32_t MediaClient::DestroyLppVideoStreamerService(std::shared_ptr<ILppVideoStr
 {
     return 0;
 }
+
+LppAvCapabilityInfo* MediaClient::GetLppCapacity()
+{
+    LppAvCapabilityInfo *lppAvCapabilityInfo = new LppAvCapabilityInfo();
+    return lppAvCapabilityInfo;
+}
 #endif
 
 sptr<IStandardMonitorService> MediaClient::GetMonitorProxy()

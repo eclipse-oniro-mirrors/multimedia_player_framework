@@ -102,7 +102,7 @@ public:
     void OnTargetArrived(const int64_t targetPts, const bool isTimeout) override;
     void OnFirstFrameReady() override;
     void OnStreamChanged(Format &format) override;
-
+    
 private:
     int32_t CreateStreamerEngine();
     bool StateEnter(VideoState targetState, const std::string funcName = "");

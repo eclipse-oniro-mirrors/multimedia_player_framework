@@ -42,6 +42,7 @@ public:
     std::vector<pid_t> GetPlayerPids();
     int32_t FreezeStubForPids(const std::set<int32_t> &pidList, bool isProxy);
     int32_t ResetAllProxy();
+    int32_t GetLppCapacity(LppAvCapabilityInfo &lppAvCapability);
 private:
     static inline BrokerDelegator<MediaServiceProxyFuzzer> delegator_;
 };

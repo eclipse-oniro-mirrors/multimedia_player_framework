@@ -34,6 +34,13 @@ std::shared_ptr<VideoStreamer> VideoStreamerFactory::CreateByMime(const std::str
     return impl;
 }
 
+LppAvCapabilityInfo *VideoStreamerFactory::GetLppCapacity()
+{
+    LppAvCapabilityInfo *lppAvCapability = MediaServiceFactory::GetInstance().GetLppCapacity();
+    CHECK_AND_RETURN_RET_LOG(lppAvCapability != nullptr, nullptr, "VideoStreamerFactory::failed to GetLppCapacity");
+    return lppAvCapability;
+}
+
 int32_t VideoStreamerImpl::Init(const std::string &mime)
 {
     MEDIA_LOGI("VideoStreamerImpl Init, mime %{public}s", mime.c_str());

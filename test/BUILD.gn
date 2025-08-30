@@ -125,7 +125,5 @@ group("media_unit_test") {
 group("media_fuzz_test") {
   testonly = true
   deps = []
-  if (player_framework_support_test) {
     deps += [ "fuzztest:fuzztest" ]
-  }
 }

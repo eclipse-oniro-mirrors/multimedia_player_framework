@@ -50,4 +50,4 @@ ohos_unittest("lpp_video_streamer_unit_test") {
 
   resource_config_file =
       "$MEDIA_PLAYER_ROOT_DIR/test/unittest/resources/ohos_test.xml"
-}
+}

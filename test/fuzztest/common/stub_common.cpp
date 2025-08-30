@@ -84,5 +84,11 @@ int32_t MediaServiceProxyFuzzer::ResetAllProxy()
 {
     return 0;
 }
+
+int32_t MediaServiceProxyFuzzer::GetLppCapacity(LppAvCapabilityInfo &lppAvCapability)
+{
+    (void)lppAvCapability;
+    return 0;
+}
 }
 }
