@@ -52,7 +52,6 @@ ScreenCaptureControllerStub::~ScreenCaptureControllerStub()
 int32_t ScreenCaptureControllerStub::Init()
 {
     MEDIA_LOGI("ScreenCaptureControllerStub::Init() start");
-    std::unique_lock<std::shared_mutex> write_lock(rw_lock_);
     screenCaptureControllerServer_ = ScreenCaptureControllerServer::Create();
     CHECK_AND_RETURN_RET_LOG(screenCaptureControllerServer_ != nullptr, MSERR_NO_MEMORY,
         "failed to create screenCaptureControllerServer Service");
@@ -80,6 +79,7 @@ int ScreenCaptureControllerStub::OnRemoteRequest(uint32_t code, MessageParcel &d
     if (itFunc != screenCaptureControllerStubFuncs_.end()) {
         auto memberFunc = itFunc->second;
         if (memberFunc != nullptr) {
+            std::lock_guard<std::mutex> lock(mutex_);
             int32_t ret = (this->*memberFunc)(data, reply);
             if (ret != MSERR_OK) {
                 MEDIA_LOGE("Calling memberFunc is failed.");
@@ -94,7 +94,6 @@ int ScreenCaptureControllerStub::OnRemoteRequest(uint32_t code, MessageParcel &d
 
 int32_t ScreenCaptureControllerStub::DestroyStub()
 {
-    std::unique_lock<std::shared_mutex> write_lock(rw_lock_);
     screenCaptureControllerServer_ = nullptr;
     MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::SCREEN_CAPTURE_CONTROLLER, AsObject());
     return MSERR_OK;
@@ -110,7 +109,6 @@ int32_t ScreenCaptureControllerStub::DestroyStub(MessageParcel &data, MessagePar
 int32_t ScreenCaptureControllerStub::ReportAVScreenCaptureUserChoice(int32_t sessionId, std::string choice)
 {
     MEDIA_LOGI("ScreenCaptureControllerStub::ReportAVScreenCaptureUserChoice start 2");
-    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureControllerServer_ != nullptr, false,
         "screen capture controller server is nullptr");
     int32_t appUid = IPCSkeleton::GetCallingUid();
@@ -139,7 +137,6 @@ int32_t ScreenCaptureControllerStub::ReportAVScreenCaptureUserChoice(MessageParc
 int32_t ScreenCaptureControllerStub::GetAVScreenCaptureConfigurableParameters(int32_t sessionId, std::string &resultStr)
 {
     MEDIA_LOGI("ScreenCaptureControllerStub::GetAVScreenCaptureConfigurableParameters start");
-    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureControllerServer_ != nullptr, false,
         "screen capture controller server is nullptr");
     int32_t appUid = IPCSkeleton::GetCallingUid();

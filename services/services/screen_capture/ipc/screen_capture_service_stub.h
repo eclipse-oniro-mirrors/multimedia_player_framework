@@ -96,7 +96,6 @@ private:
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);
 
     std::mutex mutex_;
-    mutable std::shared_mutex rw_lock_;
     std::shared_ptr<IScreenCaptureService> screenCaptureServer_ = nullptr;
     using screenCaptureStubFuncs = int32_t(ScreenCaptureServiceStub::*)(MessageParcel &data, MessageParcel &reply);
     std::map<uint32_t, screenCaptureStubFuncs> screenCaptureStubFuncs_;
