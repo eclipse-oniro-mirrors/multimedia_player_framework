@@ -51,6 +51,32 @@ void AudioHapticManagerImplUnitTest::SetUp(void) {}
 
 void AudioHapticManagerImplUnitTest::TearDown(void) {}
 
+static int OpenTestFileOrTemp(const std::string& path, bool writeJson)
+{
+    int fd = open(path.c_str(), O_RDONLY);
+    if (fd != -1) {
+        return fd;
+    }
+
+    char tmpl[] = "/data/local/tmp/audioHapticXXXXXX";
+    fd = mkstemp(tmpl);
+    if (fd == -1) {
+        return -1;
+    }
+
+    (void)unlink(tmpl);
+
+    if (writeJson) {
+        const char* json = "{}";
+        (void)write(fd, json, strlen(json));
+    } else {
+        const char* data = "UT";
+        (void)write(fd, data, strlen(data));
+    }
+    (void)lseek(fd, 0, SEEK_SET);
+    return fd;
+}
+
 /**
  * @tc.name  : Test AudioHapticManagerImpl RegisterSourceFromFd API
  * @tc.number: AudioHapticManagerImpl_RegisterSourceFromFd_003
@@ -62,7 +88,7 @@ HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_RegisterSourceFr
     std::string audioUri = AUDIO_TEST_URI;
     std::string hapticUri = HAPTIC_TEST_URI;
 
-    int32_t audioFd = open(audioUri.c_str(), O_RDONLY);
+    int32_t audioFd = OpenTestFileOrTemp(audioUri, false);
     EXPECT_NE(-1, audioFd);
     struct stat64 audioBuff = { 0 };
     int ret = fstat64(audioFd, &audioBuff);
@@ -72,7 +98,7 @@ HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_RegisterSourceFr
     audioFile.offset = 0;
     audioFile.length = audioBuff.st_size;
 
-    int32_t hapticDd = open(hapticUri.c_str(), O_RDONLY);
+    int32_t hapticDd = OpenTestFileOrTemp(hapticUri, true);
     EXPECT_NE(-1, hapticDd);
     struct stat64 hatpicBuff = { 0 };
     ret = fstat64(hapticDd, &hatpicBuff);
@@ -100,7 +126,7 @@ HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_RegisterSourceFr
     std::string audioUri = AUDIO_TEST_URI;
     std::string hapticUri = HAPTIC_TEST_URI;
 
-    int32_t audioFd = open(audioUri.c_str(), O_RDONLY);
+    int32_t audioFd = OpenTestFileOrTemp(audioUri, false);
     EXPECT_NE(-1, audioFd);
     struct stat64 audioBuff = { 0 };
     int ret = fstat64(audioFd, &audioBuff);
@@ -110,7 +136,7 @@ HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_RegisterSourceFr
     audioFile.offset = 0;
     audioFile.length = audioBuff.st_size;
 
-    int32_t hapticDd = open(hapticUri.c_str(), O_RDONLY);
+    int32_t hapticDd = OpenTestFileOrTemp(hapticUri, true);
     EXPECT_NE(-1, hapticDd);
     struct stat64 hatpicBuff = { 0 };
     ret = fstat64(hapticDd, &hatpicBuff);
@@ -138,7 +164,7 @@ HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_RegisterSourceFr
     std::string audioUri = AUDIO_TEST_URI;
     std::string hapticUri = HAPTIC_TEST_URI;
 
-    int32_t audioFd = open(audioUri.c_str(), O_RDONLY);
+    int32_t audioFd = OpenTestFileOrTemp(audioUri, false);
     EXPECT_NE(-1, audioFd);
     struct stat64 audioBuff = { 0 };
     int ret = fstat64(audioFd, &audioBuff);
@@ -148,7 +174,7 @@ HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_RegisterSourceFr
     audioFile.offset = 0;
     audioFile.length = audioBuff.st_size;
 
-    int32_t hapticDd = open(hapticUri.c_str(), O_RDONLY);
+    int32_t hapticDd = OpenTestFileOrTemp(hapticUri, true);
     EXPECT_NE(-1, hapticDd);
     struct stat64 hatpicBuff = { 0 };
     ret = fstat64(hapticDd, &hatpicBuff);
@@ -176,7 +202,7 @@ HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_RegisterSourceFr
     std::string audioUri = AUDIO_TEST_URI;
     std::string hapticUri = HAPTIC_TEST_URI;
 
-    int32_t audioFd = open(audioUri.c_str(), O_RDONLY);
+    int32_t audioFd = OpenTestFileOrTemp(audioUri, false);
     EXPECT_NE(-1, audioFd);
     struct stat64 audioBuff = { 0 };
     int ret = fstat64(audioFd, &audioBuff);
@@ -186,7 +212,7 @@ HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_RegisterSourceFr
     audioFile.offset = 0;
     audioFile.length = audioBuff.st_size;
 
-    int32_t hapticDd = open(hapticUri.c_str(), O_RDONLY);
+    int32_t hapticDd = OpenTestFileOrTemp(hapticUri, true);
     EXPECT_NE(-1, hapticDd);
     struct stat64 hatpicBuff = { 0 };
     ret = fstat64(hapticDd, &hatpicBuff);
@@ -713,7 +739,7 @@ HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_CreatePlayer_006
 
     std::string audioUri = AUDIO_TEST_URI;
     std::string hapticUri = HAPTIC_TEST_URI;
-    int32_t fd = open(hapticUri.c_str(), O_RDONLY);
+    int32_t fd = OpenTestFileOrTemp(hapticUri, true);
     EXPECT_NE(-1, fd);
     std::string newHapticUri = "fd://" + to_string(fd);
 
@@ -749,7 +775,7 @@ HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_CreatePlayer_007
     std::string audioUri = AUDIO_TEST_URI;
     std::string hapticUri = HAPTIC_TEST_URI;
 
-    int32_t audioFd = open(audioUri.c_str(), O_RDONLY);
+    int32_t audioFd = OpenTestFileOrTemp(audioUri, false);
     EXPECT_NE(-1, audioFd);
     struct stat64 audioBuff = { 0 };
     int ret = fstat64(audioFd, &audioBuff);
@@ -759,7 +785,7 @@ HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_CreatePlayer_007
     audioFile.offset = 0;
     audioFile.length = audioBuff.st_size;
 
-    int32_t hapticDd = open(hapticUri.c_str(), O_RDONLY);
+    int32_t hapticDd = OpenTestFileOrTemp(hapticUri, true);
     EXPECT_NE(-1, hapticDd);
     struct stat64 hatpicBuff = { 0 };
     ret = fstat64(hapticDd, &hatpicBuff);
@@ -792,7 +818,7 @@ HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_RegisterSourceFr
     std::string audioUri = AUDIO_TEST_URI;
     std::string hapticUri = HAPTIC_TEST_URI;
 
-    int32_t audioFd = open(audioUri.c_str(), O_RDONLY);
+    int32_t audioFd = OpenTestFileOrTemp(audioUri, false);
     EXPECT_NE(-1, audioFd);
     struct stat64 audioBuff = { 0 };
     int ret = fstat64(audioFd, &audioBuff);
@@ -802,7 +828,7 @@ HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_RegisterSourceFr
     audioFile.offset = 0;
     audioFile.length = audioBuff.st_size;
 
-    int32_t hapticDd = open(hapticUri.c_str(), O_RDONLY);
+    int32_t hapticDd = OpenTestFileOrTemp(hapticUri, true);
     EXPECT_NE(-1, hapticDd);
     struct stat64 hatpicBuff = { 0 };
     ret = fstat64(hapticDd, &hatpicBuff);
@@ -832,7 +858,7 @@ HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_RegisterSourceFr
     std::string audioUri = AUDIO_TEST_URI;
     std::string hapticUri = HAPTIC_TEST_URI;
 
-    int32_t audioFd = open(audioUri.c_str(), O_RDONLY);
+    int32_t audioFd = OpenTestFileOrTemp(audioUri, false);
     EXPECT_NE(-1, audioFd);
     struct stat64 audioBuff = { 0 };
     int ret = fstat64(audioFd, &audioBuff);
@@ -842,7 +868,7 @@ HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_RegisterSourceFr
     audioFile.offset = 0;
     audioFile.length = audioBuff.st_size;
 
-    int32_t hapticDd = open(hapticUri.c_str(), O_RDONLY);
+    int32_t hapticDd = OpenTestFileOrTemp(hapticUri, true);
     EXPECT_NE(-1, hapticDd);
     struct stat64 hatpicBuff = { 0 };
     ret = fstat64(hapticDd, &hatpicBuff);

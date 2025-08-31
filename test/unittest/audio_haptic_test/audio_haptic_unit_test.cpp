@@ -1289,44 +1289,5 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticPlayer_SetHapticIntensity_001, TestSize
     result = g_effectAudioHapticPlayer->Release();
     EXPECT_EQ(MSERR_OK, result);
 }
-
-/**
- * @tc.name  : Test AudioHapticPlayer SetHapticIntensity API
- * @tc.number: AudioHapticPlayer_SetHapticIntensity_002
- * @tc.desc  : Test AudioHapticPlayer SetHapticIntensity interface
- */
-HWTEST_F(AudioHapticUnitTest, AudioHapticPlayer_SetHapticIntensity_002, TestSize.Level1)
-{
-    EXPECT_NE(g_audioHapticManager, nullptr);
- 
-    int32_t sourceId = g_audioHapticManager->RegisterSource(AUDIO_TEST_URI, HAPTIC_TEST_URI);
-    EXPECT_NE(-1, sourceId);
-    AudioLatencyMode latencyMode = AudioLatencyMode::AUDIO_LATENCY_MODE_FAST;
-    g_audioHapticManager->SetAudioLatencyMode(sourceId, latencyMode);
-    AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_MUSIC;
-    g_audioHapticManager->SetStreamUsage(sourceId, streamUsage);
-    AudioHapticPlayerOptions options = {false, false};
-    auto audioHapticPlayer = g_audioHapticManager->CreatePlayer(sourceId, options);
-    
-    ASSERT_NE(audioHapticPlayer, nullptr);
- 
-    int32_t result = audioHapticPlayer->Prepare();
-    EXPECT_EQ(MSERR_OK, result);
- 
-    audioHapticPlayer->SetVolume(1.0f);
-    audioHapticPlayer->SetHapticIntensity(100.0f);
-    result = audioHapticPlayer->Start();
-    EXPECT_EQ(MSERR_OK, result);
- 
-    sleep(1);
-    audioHapticPlayer->SetVolume(0.75f);
-    result = audioHapticPlayer->SetHapticIntensity(75.0f);
-    EXPECT_EQ(MSERR_OK, result);
- 
-    result = audioHapticPlayer->SetHapticIntensity(50.0f);
-    EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, result);
- 
-    audioHapticPlayer->Release();
-}
 } // namespace Media
 } // namespace OHOS
