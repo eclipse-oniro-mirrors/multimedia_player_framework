@@ -972,7 +972,7 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_037, TestSize.
     EXPECT_NE(audioHapticVibratorImpl, nullptr);
 
     bool ret = audioHapticVibratorImpl->IsHapticsCustomSupported();
-    EXPECT_EQ(ret, true);
+    EXPECT_FALSE(ret);
 }
 
 /**

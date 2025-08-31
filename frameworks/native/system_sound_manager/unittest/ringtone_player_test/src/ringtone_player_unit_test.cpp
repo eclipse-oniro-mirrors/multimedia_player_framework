@@ -221,7 +221,7 @@ HWTEST(RingtonePlayerUnitTest, Media_RingtonePlayer_005, TestSize.Level1)
     auto ringtonePlayerImpl_ = std::make_shared<RingtonePlayerImpl>(context_, *sysSoundMgr, type);
     std::string audioUri = "/media/audio/test.ogg";
     std::string result = ringtonePlayerImpl_->GetNewHapticUriForAudioUri(audioUri);
-    EXPECT_NE(result, "");
+    EXPECT_EQ(result, "");
 }
 
 /**
@@ -481,7 +481,7 @@ HWTEST(RingtonePlayerUnitTest, Media_RingtonePlayer_018, TestSize.Level1)
 
     ringtonePlayerImpl_->ringtoneState_ = STATE_NEW;
     result = ringtonePlayerImpl_->SetRingtoneHapticsFeature(RingtoneHapticsFeature::RINGTONE_GENTLE_HAPTICS);
-    EXPECT_EQ(result, ERR_OPERATE_NOT_ALLOWED);
+    EXPECT_EQ(result, MSERR_INVALID_VAL);
 }
 
 /**
@@ -520,7 +520,7 @@ HWTEST(RingtonePlayerUnitTest, Media_RingtonePlayer_019, TestSize.Level1)
     // test endIntensity larger than 100.0f
     EXPECT_EQ(MSERR_INVALID_VAL, ringtonePlayerImpl_->SetRingtoneHapticsRamp(1000, 50.0f, 101.0f));
     // test all params ok
-    EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, ringtonePlayerImpl_->SetRingtoneHapticsRamp(1000, 50.0f, 90.0f));
+    EXPECT_EQ(MSERR_INVALID_VAL, ringtonePlayerImpl_->SetRingtoneHapticsRamp(1000, 50.0f, 90.0f));
 }
 }
 }

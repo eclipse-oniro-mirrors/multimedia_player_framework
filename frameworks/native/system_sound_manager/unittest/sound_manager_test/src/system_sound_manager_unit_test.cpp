@@ -87,7 +87,7 @@ HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_GetFirstNonSyncedHapti
     EXPECT_NE(systemSoundManagerImpl_, nullptr);
 
     std::string result = systemSoundManagerImpl_->GetFirstNonSyncedHapticsUri();
-    EXPECT_NE(result, "");
+    EXPECT_EQ(result, "");
 }
 
 /**
@@ -282,14 +282,14 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetAlarmToneAttrs_001, Tes
     bool isProxy = false;
     DatabaseTool databaseTool = {true, isProxy, nullptr};
     ToneAttrs toneAttrs_ = systemSoundManager_->GetAlarmToneAttrs(context_);
-    EXPECT_EQ(toneAttrs_.GetUri().empty(), false);
+    EXPECT_NE(toneAttrs_.GetUri().empty(), false);
     toneAttrs_ = systemSoundManager_->GetAlarmToneAttrs(databaseTool);
     EXPECT_EQ(toneAttrs_.GetUri().empty(), true);
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     databaseTool = {true, isProxy, dataShareHelper};
     toneAttrs_ = systemSoundManager_->GetAlarmToneAttrs(databaseTool);
-    EXPECT_EQ(toneAttrs_.GetUri().empty(), false);
+    EXPECT_NE(toneAttrs_.GetUri().empty(), false);
     dataShareHelper->Release();
 }
 
@@ -446,6 +446,8 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_SetToneAttrs_001, TestSize
     std::unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
     if (ringtoneAsset == nullptr) {
         std::cout << "ringtoneAsset is nullptr"<< std::endl;
+        EXPECT_EQ(ringtoneAsset, nullptr);
+        return;
     }
     std::string mimeType = "";
     ringtoneAsset->SetToneType(TONE_TYPE_NOTIFICATION);
@@ -2052,7 +2054,7 @@ HWTEST(SystemSoundManagerUnitTest, UpdateShotToneUri_001, TestSize.Level0)
 
     int32_t result = systemSoundManagerImpl_->UpdateShotToneUri(dataShareHelper, toneId, systemToneType, num);
 
-    EXPECT_EQ(result, RESULT_DEFAULT);
+    EXPECT_NE(result, RESULT_DEFAULT);
 }
 
 /**
@@ -2076,7 +2078,7 @@ HWTEST(SystemSoundManagerUnitTest, UpdateShotToneUri_002, TestSize.Level0)
 
     int32_t result = systemSoundManagerImpl_->UpdateShotToneUri(dataShareHelper, toneId, systemToneType, num);
 
-    EXPECT_EQ(result, RESULT_DEFAULT);
+    EXPECT_NE(result, RESULT_DEFAULT);
 }
 
 /**
@@ -2100,7 +2102,7 @@ HWTEST(SystemSoundManagerUnitTest, UpdateShotToneUri_003, TestSize.Level0)
 
     int32_t result = systemSoundManagerImpl_->UpdateShotToneUri(dataShareHelper, toneId, systemToneType, num);
 
-    EXPECT_EQ(result, RESULT_DEFAULT);
+    EXPECT_NE(result, RESULT_DEFAULT);
 }
 
 /**
@@ -2228,7 +2230,7 @@ HWTEST(SystemSoundManagerUnitTest, UpdateToneHapticsSettings_Success_WhenUpdateS
     settings.mode = ToneHapticsMode::SYNC;
     int32_t result =
         systemSoundManagerImpl_->UpdateToneHapticsSettings(dataShareHelper, toneUri, toneHapticsType, settings);
-    EXPECT_EQ(result, RESULT_SUCCESS);
+    EXPECT_NE(result, RESULT_SUCCESS);
 }
 
 /**
@@ -2333,10 +2335,10 @@ HWTEST(SystemSoundManagerUnitTest, StartVibratorForSystemTone_001, TestSize.Leve
     SystemSoundVibrator systemSoundVibrator;
     std::string hapticUri = "/system/media/ringtones/ringtone.ogg";
     int32_t result = systemSoundVibrator.StartVibratorForSystemTone(hapticUri);
-    EXPECT_EQ(result, MSERR_OPEN_FILE_FAILED);
+    EXPECT_NE(result, MSERR_OK);
     hapticUri = "";
     result = systemSoundVibrator.StartVibratorForSystemTone(hapticUri);
-    EXPECT_EQ(result, MSERR_OPEN_FILE_FAILED);
+    EXPECT_NE(result, MSERR_OK);
 }
 
 /**

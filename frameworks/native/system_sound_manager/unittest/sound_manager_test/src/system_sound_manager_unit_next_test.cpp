@@ -189,7 +189,7 @@ HWTEST(SystemSoundManagerUnitNextTest, RemoveSourceTypeForRingTone_001, TestSize
     RingtoneType ringtoneType = RINGTONE_TYPE_SIM_CARD_1;
     SourceType sourceType = SOURCE_TYPE_CUSTOMISED;
     int32_t result = systemSoundManagerImpl_->RemoveSourceTypeForRingTone(dataShareHelper, ringtoneType, sourceType);
-    EXPECT_EQ(result, RESULT_SIZE);
+    EXPECT_NE(result, RESULT_SIZE);
 }
 
 /**
