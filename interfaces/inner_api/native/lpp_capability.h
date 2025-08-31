@@ -16,7 +16,6 @@
 #ifndef LPP_CAPABILITY_H
 #define LPP_CAPABILITY_H
 
-#include "media_log.h"
 #include <refbase.h>
 #ifdef SUPPORT_LPP_VIDEO_STRAMER
 #include "v1_0/ilow_power_player_factory.h"
