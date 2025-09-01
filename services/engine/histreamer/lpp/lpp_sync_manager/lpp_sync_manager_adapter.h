@@ -56,6 +56,8 @@ public:
     int32_t UnbindOutputBuffers();
     int32_t GetShareBuffer(int32_t &fd);
     int32_t SetTunnelId(uint64_t tunnelId);
+    int32_t GetLatestPts(int64_t &pts);
+
     void OnError(const int32_t errorCode, const std::string &errorMsg);
     void OnTargetArrived(const int64_t targetPts, const bool isTimeout);
     void OnRenderStarted();

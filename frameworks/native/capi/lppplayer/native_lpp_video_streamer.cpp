@@ -634,6 +634,7 @@ OH_AVErrCode OH_LowPowerVideoSinkCallback_SetStreamChangedListener(
     int32_t res = callback->SetStreamChangedListener(onStreamChanged, userData);
     return LppMsErrToOHAvErr(res);
 }
+
 OH_AVErrCode OH_LowPowerVideoSinkCallback_SetFirstFrameDecodedListener(OH_LowPowerVideoSinkCallback *callback,
     OH_LowPowerVideoSink_OnFirstFrameDecoded onFirstFrameDecoded, void *userData)
 {
@@ -641,5 +642,16 @@ OH_AVErrCode OH_LowPowerVideoSinkCallback_SetFirstFrameDecodedListener(OH_LowPow
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, AV_ERR_INVALID_VAL, "callback is nullptr!");
     CHECK_AND_RETURN_RET_LOG(onFirstFrameDecoded != nullptr, AV_ERR_INVALID_VAL, "onFirstFrameDecoded is nullptr!");
     int32_t res = callback->SetFirstFrameReadyListener(onFirstFrameDecoded, userData);
+    return LppMsErrToOHAvErr(res);
+}
+
+OH_AVErrCode OH_LowPowerVideoSink_GetLatestPts(OH_LowPowerVideoSink *streamer, int64_t *pts)
+{
+    MEDIA_LOGD("OH_LowPowerVideoSink_GetLatestPts");
+    CHECK_AND_RETURN_RET_LOG(streamer != nullptr, AV_ERR_INVALID_VAL, "streamer is nullptr!");
+    LowPowerVideoSinkObject *streamerObj = reinterpret_cast<LowPowerVideoSinkObject *>(streamer);
+    CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_VAL, "videoStreamer_ is nullptr");
+    int32_t res = streamerObj->videoStreamer_->GetLatestPts(*pts);
     return LppMsErrToOHAvErr(res);
 }

@@ -76,6 +76,8 @@ public:
 
     int32_t RenderFirstFrame() override;
 
+    int32_t GetLatestPts(int64_t &pts) override;
+
     void MediaServerDied();
 
 private:

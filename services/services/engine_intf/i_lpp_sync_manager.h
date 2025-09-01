@@ -50,6 +50,7 @@ public:
     virtual int32_t SetTunnelId(uint64_t tunnelId) = 0;
     virtual int32_t SetAudioIsLpp(bool isLpp) = 0;
     virtual void SetEventReceiver(std::shared_ptr<Media::Pipeline::EventReceiver> eventReceiver) = 0;
+    virtual int32_t GetLatestPts(int64_t &pts) = 0;
 };
 
 }
