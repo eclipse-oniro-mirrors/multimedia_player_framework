@@ -383,6 +383,7 @@ void ScreenCaptureServer::SetDefaultDisplayIdOfWindows()
 
     uint64_t defaultDisplayId = defaultDisplay->GetScreenId();
     std::unordered_map<uint64_t, uint64_t> windowDisplayIdMap;
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     auto ret = WindowManager::GetInstance().GetDisplayIdByWindowId(missionIds_, windowDisplayIdMap);
     CHECK_AND_RETURN_LOG(ret == Rosen::WMError::WM_OK, "SetDefaultDisplayIdOfWindows GetDisplayIdByWindowId failed");
     MEDIA_LOGI("SetDefaultDisplayIdOfWindows GetDisplayIdByWindowId ret: %{public}d", ret);
@@ -1047,6 +1048,7 @@ void ScreenCaptureServer::SetDisplayId(uint64_t displayId)
 
 void ScreenCaptureServer::SetMissionId(uint64_t missionId)
 {
+    std::unique_lock<std::shared_mutex> write_lock(rw_lock_);
     missionIds_.emplace_back(missionId);
 }
 
@@ -2020,6 +2022,7 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
     RegisterPrivateWindowListener();
     RegisterScreenConnectListener();
     RegisterLanguageSwitchListener();
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     if (captureConfig_.captureMode == CAPTURE_SPECIFIED_WINDOW && missionIds_.size() == 1) {
         SetWindowIdList(missionIds_.front());
         SetDefaultDisplayIdOfWindows();
@@ -2908,6 +2911,7 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
                    display->GetHeight(), display->GetVirtualPixelRatio());
         virScrOption.density_ = display->GetVirtualPixelRatio();
     }
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     if (missionIds_.size() > 0 && captureConfig_.captureMode == CAPTURE_SPECIFIED_WINDOW) {
         virScrOption.missionIds_ = missionIds_;
     } else if (captureConfig_.videoInfo.videoCapInfo.taskIDs.size() > 0 &&
@@ -2987,6 +2991,7 @@ int32_t ScreenCaptureServer::PrepareVirtualScreenMirror()
 uint64_t ScreenCaptureServer::GetDisplayIdOfWindows(uint64_t displayId)
 {
     uint64_t defaultDisplayIdValue = displayId;
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     if (missionIds_.size() > 0) {
         std::unordered_map<uint64_t, uint64_t> windowDisplayIdMap;
         auto ret = WindowManager::GetInstance().GetDisplayIdByWindowId(missionIds_, windowDisplayIdMap);
@@ -3207,6 +3212,7 @@ VirtualScreenOption ScreenCaptureServer::InitVirtualScreenOption(const std::stri
     MediaTrace trace("ScreenCaptureServer::InitVirtualScreenOption");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " InitVirtualScreenOption start, name:%{public}s.",
         FAKE_POINTER(this), name.c_str());
+    std::unique_lock<std::shared_mutex> write_lock(rw_lock_);
     VirtualScreenOption virScrOption = {
         .name_ = name,
         .width_ = captureConfig_.videoInfo.videoCapInfo.videoFrameWidth,

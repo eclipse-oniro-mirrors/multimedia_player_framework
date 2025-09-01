@@ -284,6 +284,7 @@ private:
     std::mutex mutex_;
     std::mutex cbMutex_;
     std::mutex inCallMutex_;
+    mutable std::shared_mutex rw_lock_;
     std::shared_ptr<ScreenCaptureObserverCallBack> screenCaptureObserverCb_ = nullptr;
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
     bool canvasRotation_ = false;
