@@ -707,9 +707,15 @@ int32_t AVMetadataExtractorNapi::GetFetchFrameArgs(std::unique_ptr<AVMetadataExt
         return MSERR_INVALID_VAL;
     }
 
+    bool autoFlip = false;
+    if (!CommonNapi::GetPropertyBool(env, params, "autoFlip", autoFlip)) {
+        MEDIA_LOGW("failed to get autoFlip");
+    }
+
     asyncCtx->param_.dstWidth = width;
     asyncCtx->param_.dstHeight = height;
     asyncCtx->param_.colorFormat = colorFormat;
+    asyncCtx->param_.isSupportFlip = autoFlip;
     return MSERR_OK;
 }
 
