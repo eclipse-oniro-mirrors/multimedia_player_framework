@@ -386,7 +386,8 @@ void ScreenCaptureServer::SetDefaultDisplayIdOfWindows()
     {
         std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
         auto ret = WindowManager::GetInstance().GetDisplayIdByWindowId(missionIds_, windowDisplayIdMap);
-        CHECK_AND_RETURN_LOG(ret == Rosen::WMError::WM_OK, "SetDefaultDisplayIdOfWindows GetDisplayIdByWindowId failed");
+        CHECK_AND_RETURN_LOG(ret == Rosen::WMError::WM_OK,
+            "SetDefaultDisplayIdOfWindows GetDisplayIdByWindowId failed");
         MEDIA_LOGI("SetDefaultDisplayIdOfWindows GetDisplayIdByWindowId ret: %{public}d", ret);
     }
     for (const auto& pair : windowDisplayIdMap) {
