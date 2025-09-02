@@ -2006,7 +2006,7 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
         MEDIA_LOGI("PostStartScreenCaptureSuccessAction START.");
         PostStartScreenCaptureSuccessAction();
     } else {
-        PostStartScreenCaptureFaile();
+        PostStartScreenCaptureFail();
         return;
     }
     RegisterPrivateWindowListener();
