@@ -161,6 +161,7 @@ private:
     bool IsFirstStartPidInstance(int32_t pid);
     bool FirstPidUpdatePrivacyUsingPermissionState(int32_t pid);
     void PostStartScreenCapture(bool isSuccess);
+    void PostStartScreenCaptureFaile();
     void PostStartScreenCaptureSuccessAction();
     int32_t InitRecorderInfo(std::shared_ptr<IRecorderService> &recorder, AudioCaptureInfo audioInfo);
     int32_t InitRecorderMix();
