@@ -2021,7 +2021,7 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " PostStartScreenCapture end.", FAKE_POINTER(this));
 }
 
-void ScreenCaptureServer::PostStartScreenCaptureFaile()
+void ScreenCaptureServer::PostStartScreenCaptureFail()
 {
     MEDIA_LOGE("PostStartScreenCapture handle failure");
     if (isPrivacyAuthorityEnabled_) {
