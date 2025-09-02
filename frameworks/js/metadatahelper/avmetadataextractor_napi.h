@@ -100,8 +100,8 @@ struct AVMetadataExtractorAsyncContext : public MediaAsyncContext {
     int32_t status = 0;
     int32_t option = 0;
     int64_t timeUs = 0;
-    uint64_t timeStamp_;
-    uint32_t index_;
+    uint64_t timeStamp_ = 0;
+    uint32_t index_ = 0;
     PixelMapParams param_;
 };
 }  // namespace Media
