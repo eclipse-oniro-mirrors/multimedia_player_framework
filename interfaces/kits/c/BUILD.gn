@@ -93,6 +93,13 @@ ohos_shared_library("native_avscreen_capture") {
     "qos_manager:qos",
     "window_manager:libdm",
   ]
+
+  if (player_framework_support_lowpower_av_sink) {
+    external_deps += [
+      "drivers_interface_lpplayer:liblow_power_player_proxy_1.0",
+    ]
+  }
+
   output_extension = "so"
   subsystem_name = "multimedia"
   part_name = "player_framework"
@@ -133,6 +140,13 @@ ohos_shared_library("avplayer") {
     "samgr:samgr_proxy",
     "window_manager:libdm",
   ]
+
+  if (player_framework_support_lowpower_av_sink) {
+    external_deps += [
+      "drivers_interface_lpplayer:liblow_power_player_proxy_1.0",
+    ]
+  }
+
   if (player_framework_support_drm) {
     public_external_deps = [
       "drm_framework:drm_framework",
@@ -187,6 +201,12 @@ ohos_shared_library("avrecorder") {
     "window_manager:libdm",
   ]
 
+  if (player_framework_support_lowpower_av_sink) {
+    external_deps += [
+      "drivers_interface_lpplayer:liblow_power_player_proxy_1.0",
+    ]
+  }
+
   if (player_framework_support_auto_create_file) {
     external_deps += [
       "media_library:media_library",
@@ -240,6 +260,12 @@ ohos_shared_library("avimage_generator") {
     "window_manager:libdm",
   ]
 
+  if (player_framework_support_lowpower_av_sink) {
+    external_deps += [
+      "drivers_interface_lpplayer:liblow_power_player_proxy_1.0",
+    ]
+  }
+
   innerapi_tags = [ "ndk" ]
 
   output_extension = "so"
@@ -287,6 +313,13 @@ ohos_shared_library("avmetadata_extractor") {
     "samgr:samgr_proxy",
     "window_manager:libdm",
   ]
+
+  if (player_framework_support_lowpower_av_sink) {
+    external_deps += [
+      "drivers_interface_lpplayer:liblow_power_player_proxy_1.0",
+    ]
+  }
+  
   if (player_framework_support_drm) {
     public_external_deps = [
       "drm_framework:drm_framework",
@@ -391,6 +424,13 @@ ohos_shared_library("lowpower_avsink") {
     "image_framework:pixelmap",
     "hisysevent:libhisysevent",
   ]
+
+  if (player_framework_support_lowpower_av_sink) {
+    external_deps += [
+      "drivers_interface_lpplayer:liblow_power_player_proxy_1.0",
+    ]
+  }
+
   innerapi_tags = [ "ndk" ]
   output_extension = "so"
   subsystem_name = "multimedia"

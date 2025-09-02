@@ -76,6 +76,25 @@ std::vector<pid_t> MediaServiceProxy::GetPlayerPids()
     return res;
 }
 
+int32_t MediaServiceProxy::GetLppCapacity(LppAvCapabilityInfo &lppAvCapability)
+{
+    MEDIA_LOGI("MediaServiceProxy::GetLppCapacity");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    int32_t error = -1;
+    bool token = data.WriteInterfaceToken(MediaServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, error, "Failed to write descriptor!");
+    error = Remote()->SendRequest(MediaServiceMsg::GET_LPP_CAPABILITY, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, error, "Failed to SendRequest");
+    int32_t ret = reply.ReadInt32();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Fail to MediaServiceProxy::GetLppCapacity");
+    lppAvCapability = LppAvCapabilityInfo::Unmarshalling(reply);
+    MEDIA_LOGI("MediaServiceProxy::GetLppCapacity %{public}zu %{public}zu",
+        lppAvCapability.videoCap_.size(), lppAvCapability.audioCap_.size());
+    return ret;
+}
+
 sptr<IRemoteObject> MediaServiceProxy::GetSubSystemAbility(IStandardMediaService::MediaSystemAbility subSystemId,
     const sptr<IRemoteObject> &listener)
 {

@@ -35,6 +35,7 @@
 #include "lpp_video_streamer.h"
 #include "lpp_common.h"
 #include "native_window.h"
+#include "lpp_capability.h"
 
 namespace OHOS {
 namespace Media {
@@ -92,6 +93,15 @@ struct LowPowerVideoSinkObject : public OH_LowPowerVideoSink {
 
     const std::shared_ptr<VideoStreamer> videoStreamer_ = nullptr;
     AVSamplesBufferObject *framePacket_ = nullptr;
+};
+
+struct LowPowerAVSinkCapabilityObject : public OH_LowPowerAVSink_Capability {
+    explicit LowPowerAVSinkCapabilityObject(std::shared_ptr<LppAvCapabilityInfo> lppCapibility)
+        : lppCapibility_(lppCapibility)
+    {}
+    ~LowPowerAVSinkCapabilityObject()  = default;
+    
+    std::shared_ptr<LppAvCapabilityInfo> lppCapibility_ = nullptr;
 };
 }  // namespace Media
 }  // namespace OHOS

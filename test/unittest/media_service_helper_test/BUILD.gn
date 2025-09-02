@@ -67,6 +67,12 @@ ohos_unittest("media_service_helper_unit_test") {
     "ipc:ipc_single",
   ]
 
+  if (player_framework_support_lowpower_av_sink) {
+    external_deps += [
+      "drivers_interface_lpplayer:liblow_power_player_proxy_1.0",
+    ]
+  }
+
   if (defined(global_parts_info) &&
       defined(global_parts_info.multimedia_histreamer_ext)) {
     defines = [ "SUBSCRIBE_HISTREAMER_EXT" ]

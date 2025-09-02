@@ -94,6 +94,7 @@ public:
 #ifdef SUPPORT_LPP_VIDEO_STRAMER
     std::shared_ptr<ILppVideoStreamerService> CreateLppVideoStreamerService() override;
     int32_t DestroyLppVideoStreamerService(std::shared_ptr<ILppVideoStreamerService> lppAudioPlayer) override;
+    LppAvCapabilityInfo *GetLppCapacity() override;
 #endif
 
 private:

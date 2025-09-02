@@ -484,7 +484,6 @@ OH_AVErrCode OH_LowPowerVideoSinkCallback_SetFirstFrameDecodedListener(
  */
 OH_AVErrCode OH_LowPowerVideoSinkCallback_SetEosListener(OH_LowPowerVideoSinkCallback* callback,
     OH_LowPowerVideoSink_OnEos onEos, void* userData);
- 
 #ifdef __cplusplus
 }
 #endif
