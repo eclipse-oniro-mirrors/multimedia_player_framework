@@ -102,6 +102,8 @@ public:
     virtual int32_t RenderFirstFrame() = 0;
 
     virtual std::string GetStreamerId() = 0;
+
+    virtual int32_t GetLatestPts(int64_t &pts) = 0;
 };
 
 class __attribute__((visibility("default"))) VideoStreamerFactory {

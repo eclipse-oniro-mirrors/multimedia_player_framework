@@ -321,6 +321,14 @@ int32_t LppSyncManagerAdapter::SetTunnelId(uint64_t tunnelId)
     return MSERR_OK;
 }
 
+int32_t LppSyncManagerAdapter::GetLatestPts(int64_t &pts)
+{
+    MediaTrace trace("LppSyncManagerAdapter::GetLatestPts");
+    MEDIA_LOG_I("GetLatestPts enter");
+    FALSE_RETURN_V_MSG_E(syncMgrAdapter_ != nullptr, MSERR_INVALID_OPERATION, "syncMgrAdapter_ is nullptr");
+    return syncMgrAdapter_->GetLatestPts(pts);
+}
+
 void LppSyncManagerAdapter::SetEventReceiver(std::shared_ptr<Media::Pipeline::EventReceiver> eventReceiver)
 {
     eventReceiver_ = eventReceiver;

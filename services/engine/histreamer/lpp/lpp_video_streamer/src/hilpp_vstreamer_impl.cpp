@@ -131,6 +131,13 @@ int32_t HiLppVideoStreamerImpl::SetParameter(const Format &param)
     return MSERR_OK;
 }
 
+int32_t HiLppVideoStreamerImpl::GetLatestPts(int64_t &pts)
+{
+    MEDIA_LOG_I("HiLppVideoStreamerImpl::GetLatestPts");
+    FALSE_RETURN_V_MSG(vdec_ != nullptr, MSERR_INVALID_OPERATION, "vdec_ nullptr");
+    return syncMgr_->GetLatestPts(pts);
+}
+
 int32_t HiLppVideoStreamerImpl::Configure(const Format &param)
 {
     FALSE_RETURN_V_MSG(vdec_ != nullptr, MSERR_INVALID_OPERATION, "vdec_ nullptr");

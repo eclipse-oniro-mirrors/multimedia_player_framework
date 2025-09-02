@@ -243,5 +243,15 @@ void LppVideoStreamerClient::MediaServerDied()
             "mediaserver is died, please create a new video sink instance again");
     }
 }
+
+int32_t LppVideoStreamerClient::GetLatestPts(int64_t &pts)
+{
+    MEDIA_LOGI("LppVideoStreamerClient GetLatestPts");
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED,
+        "LppVideoStreamerClient GetLatestPts player service does not exist.");
+    int32_t ret = playerProxy_->GetLatestPts(pts);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "LppVideoStreamerClient GetLatestPts failed.");
+    return MSERR_OK;
+}
 }  // namespace Media
 }  // namespace OHOS

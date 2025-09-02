@@ -94,6 +94,8 @@ public:
 
     int32_t RenderFirstFrame() override;
 
+    int32_t GetLatestPts(int64_t &pts) override;
+
     void OnDataNeeded(const int32_t maxBufferSize, const int32_t maxFrameNum) override;
     bool OnAnchorUpdateNeeded(int64_t &anchorPts, int64_t &anchorClk) override;
     void OnError(const MediaServiceErrCode errCode, const std::string &errMsg) override;

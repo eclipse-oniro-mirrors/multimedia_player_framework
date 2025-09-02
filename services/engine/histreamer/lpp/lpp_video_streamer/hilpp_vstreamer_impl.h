@@ -55,6 +55,7 @@ public:
     std::string GetStreamerId() override;
     std::shared_ptr<ILppSyncManager> GetLppSyncManager() override;
     int32_t RenderFirstFrame() override;
+    int32_t GetLatestPts(int64_t &pts) override;
     void OnEvent(const Event &event);
 
 private:
