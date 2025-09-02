@@ -1393,6 +1393,7 @@ void PlayerServer::HandleEos()
 
         auto cancelTask = std::make_shared<TaskHandler<void>>([this]() {
             MEDIA_LOGI("Interrupted seek action");
+            CHECK_AND_RETURN_LOG(playerEngine_ != nullptr, "PlayerEngine is null.");
             playerEngine_->SetEosInLoopForFrozen(false);
             taskMgr_.MarkTaskDone("interrupted seek done");
             disableNextSeekDone_ = false;
