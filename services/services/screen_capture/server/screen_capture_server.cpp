@@ -383,10 +383,12 @@ void ScreenCaptureServer::SetDefaultDisplayIdOfWindows()
 
     uint64_t defaultDisplayId = defaultDisplay->GetScreenId();
     std::unordered_map<uint64_t, uint64_t> windowDisplayIdMap;
-    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
-    auto ret = WindowManager::GetInstance().GetDisplayIdByWindowId(missionIds_, windowDisplayIdMap);
-    CHECK_AND_RETURN_LOG(ret == Rosen::WMError::WM_OK, "SetDefaultDisplayIdOfWindows GetDisplayIdByWindowId failed");
-    MEDIA_LOGI("SetDefaultDisplayIdOfWindows GetDisplayIdByWindowId ret: %{public}d", ret);
+    {
+        std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
+        auto ret = WindowManager::GetInstance().GetDisplayIdByWindowId(missionIds_, windowDisplayIdMap);
+        CHECK_AND_RETURN_LOG(ret == Rosen::WMError::WM_OK, "SetDefaultDisplayIdOfWindows GetDisplayIdByWindowId failed");
+        MEDIA_LOGI("SetDefaultDisplayIdOfWindows GetDisplayIdByWindowId ret: %{public}d", ret);
+    }
     for (const auto& pair : windowDisplayIdMap) {
         MEDIA_LOGD("SetDefaultDisplayIdOfWindows 0x%{public}06" PRIXPTR " WindowId:%{public}" PRIu64
             " in DisplayId:%{public}" PRIu64, FAKE_POINTER(this), pair.first, pair.second);
