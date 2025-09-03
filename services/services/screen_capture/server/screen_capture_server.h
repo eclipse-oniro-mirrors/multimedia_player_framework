@@ -159,6 +159,7 @@ private:
     bool IsFirstStartPidInstance(int32_t pid);
     bool FirstPidUpdatePrivacyUsingPermissionState(int32_t pid);
     void PostStartScreenCapture(bool isSuccess);
+    void PostStartScreenCaptureFail();
     void PostStartScreenCaptureSuccessAction();
     int32_t InitRecorderInfo(std::shared_ptr<IRecorderService> &recorder, AudioCaptureInfo audioInfo);
     int32_t InitRecorderMix();
@@ -282,6 +283,7 @@ private:
     std::mutex mutex_;
     std::mutex cbMutex_;
     std::mutex inCallMutex_;
+    mutable std::shared_mutex rw_lock_;
     std::shared_ptr<ScreenCaptureObserverCallBack> screenCaptureObserverCb_ = nullptr;
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
     bool canvasRotation_ = false;

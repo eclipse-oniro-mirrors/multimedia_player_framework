@@ -79,6 +79,7 @@ int ScreenCaptureControllerStub::OnRemoteRequest(uint32_t code, MessageParcel &d
     if (itFunc != screenCaptureControllerStubFuncs_.end()) {
         auto memberFunc = itFunc->second;
         if (memberFunc != nullptr) {
+            std::lock_guard<std::mutex> lock(mutex_);
             int32_t ret = (this->*memberFunc)(data, reply);
             if (ret != MSERR_OK) {
                 MEDIA_LOGE("Calling memberFunc is failed.");

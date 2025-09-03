@@ -381,9 +381,13 @@ void ScreenCaptureServer::SetDefaultDisplayIdOfWindows()
 
     uint64_t defaultDisplayId = defaultDisplay->GetScreenId();
     std::unordered_map<uint64_t, uint64_t> windowDisplayIdMap;
-    auto ret = WindowManager::GetInstance().GetDisplayIdByWindowId(missionIds_, windowDisplayIdMap);
-    CHECK_AND_RETURN_LOG(ret == Rosen::WMError::WM_OK, "SetDefaultDisplayIdOfWindows GetDisplayIdByWindowId failed");
-    MEDIA_LOGI("SetDefaultDisplayIdOfWindows GetDisplayIdByWindowId ret: %{public}d", ret);
+    {
+        std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
+        auto ret = WindowManager::GetInstance().GetDisplayIdByWindowId(missionIds_, windowDisplayIdMap);
+        CHECK_AND_RETURN_LOG(ret == Rosen::WMError::WM_OK,
+            "SetDefaultDisplayIdOfWindows GetDisplayIdByWindowId failed");
+        MEDIA_LOGI("SetDefaultDisplayIdOfWindows GetDisplayIdByWindowId ret: %{public}d", ret);
+    }
     for (const auto& pair : windowDisplayIdMap) {
         MEDIA_LOGD("SetDefaultDisplayIdOfWindows 0x%{public}06" PRIXPTR " WindowId:%{public}" PRIu64
             " in DisplayId:%{public}" PRIu64, FAKE_POINTER(this), pair.first, pair.second);
@@ -1045,6 +1049,7 @@ void ScreenCaptureServer::SetDisplayId(uint64_t displayId)
 
 void ScreenCaptureServer::SetMissionId(uint64_t missionId)
 {
+    std::unique_lock<std::shared_mutex> write_lock(rw_lock_);
     missionIds_.emplace_back(missionId);
 }
 
@@ -2002,28 +2007,34 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
         MEDIA_LOGI("PostStartScreenCaptureSuccessAction START.");
         PostStartScreenCaptureSuccessAction();
     } else {
-        MEDIA_LOGE("PostStartScreenCapture handle failure");
-        if (isPrivacyAuthorityEnabled_) {
-            screenCaptureCb_->OnError(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL,
-                AVScreenCaptureErrorCode::SCREEN_CAPTURE_ERR_UNKNOWN);
-        }
-        StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
-        isPrivacyAuthorityEnabled_ = false;
-        isSurfaceMode_ = false;
-        captureState_ = AVScreenCaptureState::STOPPED;
-        SetErrorInfo(MSERR_UNKNOWN, "PostStartScreenCapture handle failure",
-            StopReason::POST_START_SCREENCAPTURE_HANDLE_FAILURE, IsUserPrivacyAuthorityNeeded());
+        PostStartScreenCaptureFail();
         return;
     }
     RegisterPrivateWindowListener();
     RegisterScreenConnectListener();
     RegisterLanguageSwitchListener();
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     if (captureConfig_.captureMode == CAPTURE_SPECIFIED_WINDOW && missionIds_.size() == 1) {
         SetWindowIdList(missionIds_.front());
         SetDefaultDisplayIdOfWindows();
         RegisterWindowRelatedListener();
     }
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " PostStartScreenCapture end.", FAKE_POINTER(this));
+}
+
+void ScreenCaptureServer::PostStartScreenCaptureFail()
+{
+    MEDIA_LOGE("PostStartScreenCapture handle failure");
+    if (isPrivacyAuthorityEnabled_) {
+        screenCaptureCb_->OnError(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL,
+            AVScreenCaptureErrorCode::SCREEN_CAPTURE_ERR_UNKNOWN);
+    }
+    StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
+    isPrivacyAuthorityEnabled_ = false;
+    isSurfaceMode_ = false;
+    captureState_ = AVScreenCaptureState::STOPPED;
+    SetErrorInfo(MSERR_UNKNOWN, "PostStartScreenCapture handle failure",
+        StopReason::POST_START_SCREENCAPTURE_HANDLE_FAILURE, IsUserPrivacyAuthorityNeeded());
 }
 
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
@@ -2827,6 +2838,7 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
                    display->GetHeight(), display->GetVirtualPixelRatio());
         virScrOption.density_ = display->GetVirtualPixelRatio();
     }
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     if (missionIds_.size() > 0 && captureConfig_.captureMode == CAPTURE_SPECIFIED_WINDOW) {
         virScrOption.missionIds_ = missionIds_;
     } else if (captureConfig_.videoInfo.videoCapInfo.taskIDs.size() > 0 &&
@@ -2906,6 +2918,7 @@ int32_t ScreenCaptureServer::PrepareVirtualScreenMirror()
 uint64_t ScreenCaptureServer::GetDisplayIdOfWindows(uint64_t displayId)
 {
     uint64_t defaultDisplayIdValue = displayId;
+    std::shared_lock<std::shared_mutex> read_lock(rw_lock_);
     if (missionIds_.size() > 0) {
         std::unordered_map<uint64_t, uint64_t> windowDisplayIdMap;
         auto ret = WindowManager::GetInstance().GetDisplayIdByWindowId(missionIds_, windowDisplayIdMap);
@@ -3126,6 +3139,7 @@ VirtualScreenOption ScreenCaptureServer::InitVirtualScreenOption(const std::stri
     MediaTrace trace("ScreenCaptureServer::InitVirtualScreenOption");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " InitVirtualScreenOption start, name:%{public}s.",
         FAKE_POINTER(this), name.c_str());
+    std::unique_lock<std::shared_mutex> write_lock(rw_lock_);
     VirtualScreenOption virScrOption = {
         .name_ = name,
         .width_ = captureConfig_.videoInfo.videoCapInfo.videoFrameWidth,
