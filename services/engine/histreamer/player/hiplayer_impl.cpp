@@ -2787,6 +2787,8 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
     MEDIA_LOG_D_SHORT("HandleCompleteEvent");
     AutoLock lock(handleCompleteMutex_);
     FALSE_RETURN_NOLOG(curState_ != PlayerStateId::STOPPED && HandleEosFlagState(event));
+    FALSE_RETURN_MSG(syncManager_ != nullptr, "syncManager_ is nullptr");
+    syncManager_->ReportStreamEos();
     FALSE_RETURN_MSG(!inEosPlayingSeekContinuous_, "Skip complete event in seek continous!");
     std::unique_lock<std::mutex> freezeLock(freezeMutex_);
     MEDIA_LOG_I("OnComplete looping: " PUBLIC_LOG_D32 ".", singleLoop_.load());
