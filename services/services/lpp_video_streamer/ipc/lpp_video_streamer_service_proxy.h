@@ -74,6 +74,8 @@ public:
 
     std::string GetStreamerId() override;
 
+    int32_t GetLatestPts(int64_t &pts) override;
+
     int32_t RenderFirstFrame() override;
 private:
     static inline BrokerDelegator<LppVideoStreamerServiceProxy> delegator_;

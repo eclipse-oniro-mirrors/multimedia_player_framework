@@ -87,4 +87,4 @@ ohos_fuzztest("LowPowerVideoSinkFuzzTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
-}
+}

@@ -58,6 +58,8 @@ void MediaServiceStub::Init()
         [this](MessageParcel &data, MessageParcel &reply) { return HandleFreezeStubForPids(data, reply); };
     mediaFuncs_[RESET_ALL_PROXY] =
         [this](MessageParcel &data, MessageParcel &reply) { return HandleResetAllProxy(data, reply); };
+    mediaFuncs_[GET_LPP_CAPABILITY] =
+        [this] (MessageParcel &data, MessageParcel &reply) { return GetLppCapacityStub(data, reply); };
 }
 
 int32_t MediaServiceStub::HandleFreezeStubForPids(MessageParcel &data, MessageParcel &reply)
@@ -199,6 +201,17 @@ int32_t MediaServiceStub::ReleaseClientListenerStub(MessageParcel &data, Message
     return MSERR_OK;
 }
 
+int32_t MediaServiceStub::GetLppCapacityStub(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    LppAvCapabilityInfo info;
+    int32_t ret = GetLppCapacity(info);
+    CHECK_AND_RETURN_RET_LOG(ret == 0, ret, "Failed to write descriptor!");
+    reply.WriteInt32(ret);
+    info.Marshalling(reply);
+    return MSERR_OK;
+}
+
 int32_t MediaServiceStub::GetPlayerPidsStub(MessageParcel &data, MessageParcel &reply)
 {
     (void)data;
@@ -220,6 +233,20 @@ void MediaServiceStub::ReleaseClientListener()
 std::vector<pid_t> MediaServiceStub::GetPlayerPids()
 {
     return MediaServerManager::GetInstance().GetPlayerPids();
+}
+
+int32_t MediaServiceStub::GetLppCapacity(LppAvCapabilityInfo &lppAvCapability)
+{
+    MEDIA_LOGI("MediaServiceStub::GetLppCapacity");
+    #ifdef SUPPORT_LPP_VIDEO_STRAMER
+    int32_t ret = MediaServerManager::GetInstance().GetLppCapacity(lppAvCapability);
+    #else
+    int32_t ret = MSERR_UNKNOWN;
+    #endif
+    MEDIA_LOGI("MediaServiceStub::GetLppCapacity %{public}u %{public}u",
+        lppAvCapability.videoCap_.size(), lppAvCapability.audioCap_.size());
+    CHECK_AND_RETURN_RET_LOG(ret == 0, MSERR_UNKNOWN, "MediaServiceStub::GetLppCapacity GetLppCapacity");
+    return ret;
 }
 
 int32_t MediaServiceStub::GetSystemAbility(MessageParcel &data, MessageParcel &reply)

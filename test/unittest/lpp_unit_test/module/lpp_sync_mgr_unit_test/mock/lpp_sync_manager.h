@@ -49,7 +49,7 @@ public:
     int32_t SetTunnelId(uint64_t tunnelId);
     int32_t SetAudioIsLpp(bool isLpp);
     void SetEventReceiver(std::shared_ptr<Media::Pipeline::EventReceiver> eventReceiver);
-
+    int32_t GetLatestPts(int64_t &pts);
 private:
     void ResetTimeAnchor();
 
@@ -68,4 +68,4 @@ private:
 }  // namespace Media
 }  // namespace OHOS
 
-#endif
+#endif

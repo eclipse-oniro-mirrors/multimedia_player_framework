@@ -287,6 +287,15 @@ int32_t LppVideoStreamerServer::SetLppVideoStreamerCallback(const std::shared_pt
     return MSERR_OK;
 }
 
+int32_t LppVideoStreamerServer::GetLatestPts(int64_t &pts)
+{
+    MEDIA_LOGI("LppVideoStreamerServer GetLatestPts");
+    CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
+    auto ret = streamerEngine_->GetLatestPts(pts);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "GetLatestPts Failed!");
+    return ret;
+}
+
 int32_t LppVideoStreamerServer::SetLppAudioStreamerId(const std::string audioStreamId)
 {
     MEDIA_LOGI("LppVideoStreamerServer SetLppAudioStreamerId");

@@ -50,6 +50,7 @@ public:
     int32_t SetTunnelId(uint64_t tunnelId) override;
     int32_t SetAudioIsLpp(bool isLpp) override;
     void SetEventReceiver(std::shared_ptr<Media::Pipeline::EventReceiver> eventReceiver) override;
+    int32_t GetLatestPts(int64_t &pts) override;
 
 private:
     void ResetTimeAnchor();

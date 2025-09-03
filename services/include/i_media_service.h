@@ -234,6 +234,8 @@ public:
     virtual std::shared_ptr<ILppVideoStreamerService> CreateLppVideoStreamerService() = 0;
 
     virtual int32_t DestroyLppVideoStreamerService(std::shared_ptr<ILppVideoStreamerService> lppVideoPlayer) = 0;
+
+    virtual LppAvCapabilityInfo *GetLppCapacity() = 0;
 #endif
 
     /**

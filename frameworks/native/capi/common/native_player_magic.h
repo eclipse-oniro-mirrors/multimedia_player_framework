@@ -90,4 +90,8 @@ struct OH_AVSamplesBuffer : public OHOS::RefBase {
     virtual ~OH_AVSamplesBuffer() = default;
 };
 
+struct OH_LowPowerAVSink_Capability : public OHOS::RefBase {
+    OH_LowPowerAVSink_Capability() = default;
+    virtual ~OH_LowPowerAVSink_Capability() = default;
+};
 #endif // NATIVE_SCREEN_CAPTURE_MAGIC_H

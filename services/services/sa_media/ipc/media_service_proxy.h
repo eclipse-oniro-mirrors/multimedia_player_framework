@@ -40,6 +40,7 @@ public:
 
     int32_t ResetAllProxy() override;
 
+    int32_t GetLppCapacity(LppAvCapabilityInfo &lppAvCapability) override;
 private:
     bool IsGetSubSystemAbilityASync() const;
     static inline BrokerDelegator<MediaServiceProxy> delegator_;

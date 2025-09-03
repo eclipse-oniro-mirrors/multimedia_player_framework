@@ -98,6 +98,7 @@ int32_t AVMetadataHelperServiceStub::Init()
 
 int32_t AVMetadataHelperServiceStub::DestroyStub()
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     helperCallback_ = nullptr;
     avMetadateHelperServer_ = nullptr;
     MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::AVMETADATAHELPER, AsObject());
@@ -222,12 +223,14 @@ std::shared_ptr<AVBuffer> AVMetadataHelperServiceStub::FetchFrameYuv(int64_t tim
 
 void AVMetadataHelperServiceStub::Release()
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_LOG(avMetadateHelperServer_ != nullptr, "avmetadatahelper server is nullptr");
     return avMetadateHelperServer_->Release();
 }
 
 int32_t AVMetadataHelperServiceStub::SetHelperCallback()
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     MEDIA_LOGD("SetHelperCallback");
     CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, MSERR_NO_MEMORY, "metadata server is nullptr");
     return avMetadateHelperServer_->SetHelperCallback(helperCallback_);

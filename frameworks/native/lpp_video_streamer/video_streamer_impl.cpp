@@ -34,6 +34,13 @@ std::shared_ptr<VideoStreamer> VideoStreamerFactory::CreateByMime(const std::str
     return impl;
 }
 
+LppAvCapabilityInfo *VideoStreamerFactory::GetLppCapacity()
+{
+    LppAvCapabilityInfo *lppAvCapability = MediaServiceFactory::GetInstance().GetLppCapacity();
+    CHECK_AND_RETURN_RET_LOG(lppAvCapability != nullptr, nullptr, "VideoStreamerFactory::failed to GetLppCapacity");
+    return lppAvCapability;
+}
+
 int32_t VideoStreamerImpl::Init(const std::string &mime)
 {
     MEDIA_LOGI("VideoStreamerImpl Init, mime %{public}s", mime.c_str());
@@ -261,6 +268,16 @@ std::string VideoStreamerImpl::GetStreamerId()
     MEDIA_LOGI("VideoStreamerImpl:0x%{public}06" PRIXPTR " GetStreamerId in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(streamerService_ != nullptr, "", "player service does not exist..");
     return streamerService_->GetStreamerId();
+}
+
+int32_t VideoStreamerImpl::GetLatestPts(int64_t &pts)
+{
+    MEDIA_LOGI("VideoStreamerImpl GetLatestPts");
+    CHECK_AND_RETURN_RET_LOG(streamerService_ != nullptr, MSERR_SERVICE_DIED,
+        "GetLatestPts player service does not exist.");
+    int32_t ret = streamerService_->GetLatestPts(pts);
+    pts = (ret == MSERR_OK) ? pts : 0;
+    return ret;
 }
 }  // namespace Media
 }  // namespace OHOS
