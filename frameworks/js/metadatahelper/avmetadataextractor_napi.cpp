@@ -240,12 +240,15 @@ void AVMetadataExtractorNapi::HandleMetaDataResult(napi_env env, AVMetadataExtra
     napi_create_object(env, &customInfo);
     napi_get_undefined(env, &tracks);
     std::shared_ptr<Meta> metadata = promiseCtx->metadata_;
+    static const std::string fastSpac = {" "};
+    std::string succeedFoundKey = {};
+    std::string failedFoundKey = {};
     for (const auto &key : g_Metadata) {
         if (metadata->Find(key) == metadata->end()) {
-            MEDIA_LOGE("failed to find key: %{public}s", key.c_str());
+            failedFoundKey += (fastSpac + key);
             continue;
         }
-        MEDIA_LOGE("success to find key: %{public}s", key.c_str());
+        succeedFoundKey += (fastSpac + key);
         if (key == "latitude" || key == "longitude") {
             CHECK_AND_CONTINUE_LOG(CommonNapi::SetPropertyByValueType(env, location, metadata, key),
                 "SetProperty failed, key: %{public}s", key.c_str());
@@ -275,6 +278,8 @@ void AVMetadataExtractorNapi::HandleMetaDataResult(napi_env env, AVMetadataExtra
         CHECK_AND_CONTINUE_LOG(CommonNapi::SetPropertyByValueType(env, result, metadata, key),
             "SetProperty failed, key: %{public}s", key.c_str());
     }
+    MEDIA_LOGE("success to find key:%{public}s; failed to find key:%{public}s",
+        succeedFoundKey.c_str(), failedFoundKey.c_str());
     napi_set_named_property(env, result, "location", location);
     napi_set_named_property(env, result, "customInfo", customInfo);
     napi_set_named_property(env, result, "tracks", tracks);
