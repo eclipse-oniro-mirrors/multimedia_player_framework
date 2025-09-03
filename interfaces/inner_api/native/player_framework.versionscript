@@ -28,6 +28,8 @@
       *OHOS::Media::ScreenCaptureFactory::CreateScreenCaptureMonitor*;
       *OHOS::Media::ScreenCaptureControllerFactory::CreateScreenCaptureController*;
       *OHOS::Media::AudioStreamerFactory::CreateByMime*;
+      *OHOS::Media::VideoStreamerFactory::CreatePlayer*;
+      *OHOS::Media::VideoStreamerFactory::GetLppCapacity*;
       *OHOS::Media::VideoStreamerFactory::CreateByMime*;
       *OHOS::Media::Format::*;
       *OHOS::Media::VideoCaps::*;

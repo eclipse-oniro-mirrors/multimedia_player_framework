@@ -22,10 +22,9 @@
 #include "meta/format.h"
 #include "lpp_audio_streamer.h"
 #include "lpp_common.h"
-
+#include "lpp_capability.h"
 namespace OHOS {
 namespace Media {
-
 class VideoStreamerKeys {
 public:
     static constexpr std::string_view LPP_CURRENT_POSITION = "current_position";
@@ -103,6 +102,8 @@ public:
     virtual int32_t RenderFirstFrame() = 0;
 
     virtual std::string GetStreamerId() = 0;
+
+    virtual int32_t GetLatestPts(int64_t &pts) = 0;
 };
 
 class __attribute__((visibility("default"))) VideoStreamerFactory {
@@ -113,9 +114,15 @@ public:
         (void)mime;
         return nullptr;
     }
+    static LppAvCapabilityInfo *GetLppCapacity()
+    {
+        return nullptr;
+    }
 #else
     static std::shared_ptr<VideoStreamer> CreateByMime(const std::string &mime);
+    static LppAvCapabilityInfo *GetLppCapacity();
 #endif
+    
 private:
     VideoStreamerFactory() = default;
     ~VideoStreamerFactory() = default;

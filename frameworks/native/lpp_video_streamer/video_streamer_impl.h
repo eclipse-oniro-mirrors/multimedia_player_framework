@@ -76,6 +76,8 @@ public:
 
     std::string GetStreamerId() override;
 
+    int32_t GetLatestPts(int64_t &pts) override;
+
 private:
     std::shared_ptr<VideoStreamerCallback> callback_;
     std::shared_ptr<ILppVideoStreamerService> streamerService_ = nullptr;

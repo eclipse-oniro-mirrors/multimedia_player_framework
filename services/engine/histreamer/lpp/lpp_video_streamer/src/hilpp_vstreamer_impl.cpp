@@ -85,6 +85,7 @@ int32_t HiLppVideoStreamerImpl::Init(const std::string &mime)
     vdec_ = std::make_shared<LppVideoDecoderAdapter>(streamerId_, isLpp_);
     bool switchToCommon = false;
     auto ret = vdec_->Init(mime, switchToCommon);
+    FALSE_RETURN_V_MSG(switchToCommon == false, AV_ERR_UNSUPPORT, "lpp is not support");
     FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "vdec_ init failed");
     FALSE_LOG_MSG_W(!switchToCommon, "switch isLpp_ to false");
     isLpp_ = isLpp_ ? !switchToCommon : isLpp_;
@@ -128,6 +129,13 @@ int32_t HiLppVideoStreamerImpl::SetParameter(const Format &param)
     auto ret = vdec_->SetParameter(param);
     FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "vdec_ SetParameter Failed!");
     return MSERR_OK;
+}
+
+int32_t HiLppVideoStreamerImpl::GetLatestPts(int64_t &pts)
+{
+    MEDIA_LOG_I("HiLppVideoStreamerImpl::GetLatestPts");
+    FALSE_RETURN_V_MSG(vdec_ != nullptr, MSERR_INVALID_OPERATION, "vdec_ nullptr");
+    return syncMgr_->GetLatestPts(pts);
 }
 
 int32_t HiLppVideoStreamerImpl::Configure(const Format &param)

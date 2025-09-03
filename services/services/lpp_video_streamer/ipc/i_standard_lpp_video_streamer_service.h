@@ -80,6 +80,8 @@ public:
 
     virtual int32_t RenderFirstFrame() = 0;
 
+    virtual int32_t GetLatestPts(int64_t &pts) = 0;
+
     /**
      * IPC code ID
      */
@@ -109,6 +111,7 @@ public:
         GET_STREAM_ID,
         SET_AUDIO_STREAMER_ID,
         RENDER_FIRST_FRAME,
+        GET_LATEST_PTS,
         MAX_IPC_ID,                   // all IPC codes should be added before MAX_IPC_ID
     };
 

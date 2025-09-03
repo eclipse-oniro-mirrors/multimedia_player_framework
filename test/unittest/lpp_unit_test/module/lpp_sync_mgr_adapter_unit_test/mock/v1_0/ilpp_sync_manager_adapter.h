@@ -51,9 +51,10 @@ public:
     MOCK_METHOD(int32_t, UnbindOutputBuffers, ());
     MOCK_METHOD(int32_t, GetShareBuffer, (int& fd));
     MOCK_METHOD(int32_t, SetTunnelId, (uint64_t tunnelId));
+    MOCK_METHOD(int32_t, GetLatestPts, (int64_t &pts));
 };
 } // V1_0
 } // LowPowerPlayer
 } // HDI
 } // OHOS
-#endif  // OHOS_HDI_LOW_POWER_PLAYER_V1_0_ILPPSYNCMANAGERADAPTER_H
+#endif  // OHOS_HDI_LOW_POWER_PLAYER_V1_0_ILPPSYNCMANAGERADAPTER_H

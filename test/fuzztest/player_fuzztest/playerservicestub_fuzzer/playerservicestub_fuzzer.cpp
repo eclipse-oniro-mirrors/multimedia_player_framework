@@ -100,6 +100,11 @@ public:
         return 0;
     }
 
+    int32_t GetLppCapacity(LppAvCapabilityInfo &lppAvCapability)
+    {
+        (void)lppAvCapability;
+        return 0;
+    }
 private:
     static inline BrokerDelegator<MediaServiceProxyFuzzer> delegator_;
 };

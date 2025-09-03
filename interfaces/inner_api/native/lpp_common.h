@@ -27,7 +27,7 @@ enum LppErrCode : int32_t {
     LPP_ERROR_OK = 0,
     LPP_ERROR_UNKONWN,
 };
- 
+
 class LppDataPacket : public OHOS::RefBase {
 public:
     

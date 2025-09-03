@@ -52,7 +52,8 @@ public:
     MOCK_METHOD(int32_t, SetTunnelId, (uint64_t tunnelId), (override));
     MOCK_METHOD(int32_t, SetAudioIsLpp, (bool isLpp), (override));
     MOCK_METHOD(void, SetEventReceiver, (std::shared_ptr<Pipeline::EventReceiver> eventReceiver), (override));
+    MOCK_METHOD(int32_t, GetLatestPts, (int64_t &pts), (override));
 };
 }  // namespace Media
 }  // namespace OHOS
-#endif
+#endif

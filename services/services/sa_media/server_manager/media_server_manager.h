@@ -25,10 +25,11 @@
 #include "nocopyable.h"
 #include "osal/task/task.h"
 #include <set>
-
+#include "lpp_capability.h"
 namespace OHOS {
 namespace Media {
 using DumperEntry = std::function<int32_t(int32_t)>;
+
 struct Dumper {
     pid_t pid_;
     pid_t uid_;
@@ -79,6 +80,10 @@ public:
 #endif
     bool CanKillMediaService();
     std::vector<pid_t> GetPlayerPids();
+#ifdef SUPPORT_LPP_VIDEO_STRAMER
+    int32_t GetLppCapacity(LppAvCapabilityInfo &lppAvCapability);
+#endif
+
 private:
     MediaServerManager();
 #ifdef SUPPORT_PLAYER

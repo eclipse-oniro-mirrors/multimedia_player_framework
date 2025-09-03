@@ -20,6 +20,7 @@
 #include "iremote_broker.h"
 #include "iremote_proxy.h"
 #include "iremote_stub.h"
+#include "lpp_capability.h"
 #include <set>
 
 namespace OHOS {
@@ -81,6 +82,8 @@ public:
 
     virtual int32_t ResetAllProxy() = 0;
 
+    virtual int32_t GetLppCapacity(LppAvCapabilityInfo &lppAvCapability) = 0;
+
     /**
      * IPC code ID
      */
@@ -92,6 +95,8 @@ public:
         GET_PLAYER_PIDS = 4,
         FREEZE = 5,
         RESET_ALL_PROXY = 6,
+        GET_RAMAINED_CAPACITY = 7,
+        GET_LPP_CAPABILITY = 8,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardMediaService");

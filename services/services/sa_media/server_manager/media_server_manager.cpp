@@ -50,6 +50,10 @@
 #include "player_xcollie.h"
 #include "client/memory_collector_client.h"
 #include <set>
+#ifdef SUPPORT_LPP_VIDEO_STRAMER
+#include "v1_0/ilow_power_player_factory.h"
+namespace PlayerHDI = OHOS::HDI::LowPowerPlayer::V1_0;
+#endif
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaServerManager"};
@@ -550,6 +554,19 @@ sptr<IRemoteObject> MediaServerManager::CreateLppAudioPlayerStubObject()
 #endif
  
 #ifdef SUPPORT_LPP_VIDEO_STRAMER
+int32_t MediaServerManager::GetLppCapacity(LppAvCapabilityInfo &lppAvCapability)
+{
+    auto factory = PlayerHDI::ILowPowerPlayerFactory::Get(true);
+    CHECK_AND_RETURN_RET_LOG(factory != nullptr, UNKNOWN_ERROR, "MediaServerManager::GetLppCapacity is failed");
+    PlayerHDI::LppAVCap lppAVCap;
+    int32_t ret = factory->GetAVCapability(lppAVCap);
+    MEDIA_LOGI("MediaServerManager::GetLppCapacity %{public}lu %{public}lu",
+        lppAVCap.videoCap.size(), lppAVCap.audioCap.size());
+    CHECK_AND_RETURN_RET_LOG(ret == 0, ret, "FAILED MediaServerManager::GetLppCapacity");
+    lppAvCapability.SetLppAvCapabilityInfo(lppAVCap);
+    return ret;
+}
+
 sptr<IRemoteObject> MediaServerManager::CreateLppVideoPlayerStubObject()
 {
     MEDIA_LOGI("CreateLppVideoPlayerStubObject start");
@@ -557,20 +574,20 @@ sptr<IRemoteObject> MediaServerManager::CreateLppVideoPlayerStubObject()
     
     CHECK_AND_RETURN_RET_LOG(lppVideoPlayerStub != nullptr, nullptr,
         "failed to create LppVideoStreamerServiceStub");
- 
+
     sptr<IRemoteObject> object = lppVideoPlayerStub->AsObject();
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr,
         "failed to create LppVideoStreamerServiceStub");
- 
+
     pid_t pid = IPCSkeleton::GetCallingPid();
     lppVideoPlayerStubMap_[object] = pid;
- 
+
     Dumper dumper;
     dumper.pid_ = pid;
     dumper.uid_ = IPCSkeleton::GetCallingUid();
     dumper.remoteObject_ = object;
     dumperTbl_[StubType::LPP_VIDEO_PLAYER].emplace_back(dumper);
- 
+
     MEDIA_LOGD("The number of lppvideo player services(%{public}zu) pid(%{public}d).",
         lppVideoPlayerStubMap_.size(), pid);
     (void)Dump(-1, std::vector<std::u16string>());
