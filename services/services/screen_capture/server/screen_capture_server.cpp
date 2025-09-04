@@ -3969,7 +3969,7 @@ void ScreenCaptureServer::SetSystemScreenRecorderStatus(bool status)
 
 int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode stateCode)
 {
-    std::unique_lock<std::mutex> lock(innermutex_);
+    std::unique_lock<std::mutex> lock(innerMutex_);
     MediaTrace trace("ScreenCaptureServer::StopScreenCaptureInner");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopScreenCaptureInner start, stateCode:%{public}d.",
         FAKE_POINTER(this), stateCode);
