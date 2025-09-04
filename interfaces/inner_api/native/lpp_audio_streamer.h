@@ -80,6 +80,8 @@ public:
 
     virtual int32_t SetVolume(float volume) = 0;
 
+    virtual int32_t SetLoudnessGain(const float loudnessGain) = 0;
+
     virtual int32_t SetPlaybackSpeed(float speed) = 0;
 
     virtual int32_t ReturnFrames(sptr<LppDataPacket> framePacket) = 0;

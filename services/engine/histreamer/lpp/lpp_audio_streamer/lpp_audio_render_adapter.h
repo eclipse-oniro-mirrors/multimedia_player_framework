@@ -51,6 +51,7 @@ public:
     int32_t Deinit();
     int32_t SetSpeed(float speed);
     int32_t SetVolume(const float volume);
+    int32_t SetLoudnessGain(const float loudnessGain);
     int32_t GetCurrentPosition(int64_t &currentPositionMs);
 
     void OnWriteData(size_t length);
@@ -127,6 +128,7 @@ private:
     std::shared_ptr<EventReceiver> eventReceiver_ {nullptr};
     float speed_ {1.0f};
     float volume_ = {1.0f};
+    float loudnessGain_ = {0.0f};
 };
 }  // namespace Media
 }  // namespace OHOS

@@ -215,6 +215,23 @@ int32_t LppAudioStreamerServiceProxy::SetVolume(float volume)
     return reply.ReadInt32();
 }
 
+int32_t LppAudioStreamerServiceProxy::SetLoudnessGain(const float loudnessGain)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(LppAudioStreamerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteFloat(loudnessGain);
+
+    int32_t error = Remote()->SendRequest(SET_LOUDNESS_GAIN, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetLoudnessGain failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
 int32_t LppAudioStreamerServiceProxy::SetPlaybackSpeed(float speed)
 {
     MessageParcel data;
@@ -228,7 +245,7 @@ int32_t LppAudioStreamerServiceProxy::SetPlaybackSpeed(float speed)
 
     int32_t error = Remote()->SendRequest(SET_PLAYBACK_SPEED, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
-        "SetVolume failed, error: %{public}d", error);
+        "SetPlaybackSpeed failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
 

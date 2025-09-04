@@ -39,6 +39,7 @@ public:
     MOCK_METHOD(int32_t, Deinit, ());
     MOCK_METHOD(int32_t, SetSpeed, (float speed));
     MOCK_METHOD(int32_t, SetVolume, (const float volume));
+    MOCK_METHOD(int32_t, SetLoudnessGain, (const float loudnessGain));
     MOCK_METHOD(int32_t, GetCurrentPosition, (int64_t &currentPosition));
 
     MOCK_METHOD(void, OnWriteData, (size_t length));
@@ -57,4 +58,4 @@ public:
 };
 }  // namespace Media
 }  // namespace OHOS
-#endif
+#endif

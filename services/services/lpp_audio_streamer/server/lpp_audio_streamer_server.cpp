@@ -29,6 +29,8 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "LppAudioStreamerServer"};
+constexpr float MAX_LOUDNESS_GAIN = 24.0f;
+constexpr float MIN_LOUDNESS_GAIN = -90.0f;
 }
 
 namespace OHOS {
@@ -218,6 +220,24 @@ int32_t LppAudioStreamerServer::SetVolume(float volume)
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->SetVolume(volume);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetVolume Failed!");
+    return MSERR_OK;
+}
+
+int32_t LppAudioStreamerServer::SetLoudnessGain(const float loudnessGain)
+{
+    {
+        std::lock_guard<std::mutex> lock(stateMutex_);
+        CHECK_AND_RETURN_RET_LOG(state_ != LppAudioState::ERROR && state_ != LppAudioState::RELEASED,
+            MSERR_INVALID_OPERATION,
+            "wrong state");
+    }
+    CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
+    if ((loudnessGain < MIN_LOUDNESS_GAIN) || (loudnessGain > MAX_LOUDNESS_GAIN)) {
+        MEDIA_LOGE("SetLoudnessGain failed, the loudnessGain should be set to a value ranging from -90 to 24");
+        return MSERR_INVALID_OPERATION;
+    }
+    auto ret = streamerEngine_->SetLoudnessGain(loudnessGain);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "loudnessGain Failed!");
     return MSERR_OK;
 }
 

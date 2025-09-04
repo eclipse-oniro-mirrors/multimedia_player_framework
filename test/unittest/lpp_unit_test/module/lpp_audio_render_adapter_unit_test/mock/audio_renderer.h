@@ -162,6 +162,7 @@ public:
     MOCK_METHOD(bool, Stop, ());
     MOCK_METHOD(int32_t, SetSpeed, (float speed));
     MOCK_METHOD(int32_t, SetVolume, (float volume));
+    MOCK_METHOD(int32_t, SetLoudnessGain, (float loudnessGain));
     MOCK_METHOD(int32_t, GetAudioTimestampInfo, (Timestamp &timestamp, Timestamp::Timestampbase base));
     MOCK_METHOD(int32_t, GetBufferDesc, (BufferDesc &bufDesc));
     MOCK_METHOD(int32_t, Enqueue, (BufferDesc &bufDesc));

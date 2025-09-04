@@ -52,6 +52,8 @@ public:
 
     int32_t SetVolume(float volume) override;
 
+    int32_t SetLoudnessGain(const float loudnessGain) override;
+
     int32_t SetPlaybackSpeed(float speed) override;
 
     int32_t ReturnFrames(sptr<LppDataPacket> framePacket) override;

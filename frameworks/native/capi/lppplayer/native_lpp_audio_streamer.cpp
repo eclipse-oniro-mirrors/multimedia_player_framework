@@ -452,6 +452,18 @@ OH_AVErrCode OH_LowPowerAudioSink_SetVolume(OH_LowPowerAudioSink *streamer, cons
     return LppMsErrToOHAvErr(res);
 }
 
+
+OH_AVErrCode OH_LowPowerAudioSink_SetLoudnessGain(OH_LowPowerAudioSink* streamer, float loudnessGain)
+{
+    MEDIA_LOGD("OH_LowPowerAudioSink_SetLoudnessGain");
+    CHECK_AND_RETURN_RET_LOG(streamer != nullptr, AV_ERR_INVALID_VAL, "streamer is nullptr!");
+    LowPowerAudioSinkObject *streamerObj = reinterpret_cast<LowPowerAudioSinkObject *>(streamer);
+    CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_VAL, "audioStreamer_ is nullptr");
+    int32_t res = streamerObj->audioStreamer_->SetLoudnessGain(loudnessGain);
+    return LppMsErrToOHAvErr(res);
+}
+
 OH_AVErrCode OH_LowPowerAudioSink_ReturnSamples(OH_LowPowerAudioSink *streamer, OH_AVSamplesBuffer *frames)
 {
     MEDIA_LOGD("OH_LowPowerAudioSink_ReturnSamples");

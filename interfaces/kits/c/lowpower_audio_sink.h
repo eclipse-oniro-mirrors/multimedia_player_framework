@@ -238,6 +238,20 @@ OH_AVErrCode OH_LowPowerAudioSink_Destroy(OH_LowPowerAudioSink* sink);
  * @since 20
  */
 OH_AVErrCode OH_LowPowerAudioSink_SetVolume(OH_LowPowerAudioSink* sink, const float volume);
+
+/**
+ * @brief Set the loudness gain for lowpower audio sink.
+ *
+ * @param {OH_LowPowerAudioSink*} sink Pointer to an OH_LowPowerAudioSink instance.
+ * @param {float} loudnessGain Loudness gain to set which changes from -90.0 to 24.0, expressing in dB.
+ * The default loudness gain is 0.0dB.
+ * @return Returns AV_ERR_OK if the gain is set successfully;
+ * otherwise, returns a specific error code as defined in {@link OH_AVErrCode}
+ * {@link AV_ERR_INVALID_VAL} the sink is nullptr or loudnessGain is out of valid range.
+ * {@link AV_ERR_SERVICE_DIED} media service is died.
+ * @since 21
+ */
+OH_AVErrCode OH_LowPowerAudioSink_SetLoudnessGain(OH_LowPowerAudioSink* sink, float loudnessGain);
  
 /**
  * @brief Set playback speed for the lowpower audio sink.

@@ -351,6 +351,18 @@ int32_t LppAudioRenderAdapter::SetVolume(const float volume)
     return MSERR_OK;
 }
 
+int32_t LppAudioRenderAdapter::SetLoudnessGain(const float loudnessGain)
+{
+    MEDIA_LOG_D("SetLoudnessGain entered.");
+    FALSE_RETURN_V_MSG(audioRenderer_ != nullptr, MSERR_NO_MEMORY, "audiorender is nullptr");
+    int32_t ret = audioRenderer_->SetLoudnessGain(loudnessGain);
+    FALSE_RETURN_V_MSG_E(ret == OHOS::AudioStandard::SUCCESS, AudioStandardStatusToMSError(ret),
+        "set loudnessGain failed with code " PUBLIC_LOG_D32, ret);
+    MEDIA_LOG_D("SetLoudnessGain succ");
+    loudnessGain_ = loudnessGain;
+    return MSERR_OK;
+}
+
 int32_t LppAudioRenderAdapter::GetAudioPosition(timespec &time, uint32_t &framePosition)
 {
     FALSE_RETURN_V_MSG(audioRenderer_ != nullptr, MSERR_INVALID_OPERATION, "GetAudioPosition audioRender_ is nullptr");

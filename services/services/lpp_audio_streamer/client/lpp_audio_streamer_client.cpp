@@ -129,6 +129,13 @@ int32_t LppAudioStreamerClient::SetVolume(float volume)
     return playerProxy_->SetVolume(volume);
 }
 
+int32_t LppAudioStreamerClient::SetLoudnessGain(const float loudnessGain)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->SetLoudnessGain(loudnessGain);
+}
+
 int32_t LppAudioStreamerClient::SetPlaybackSpeed(float speed)
 {
     std::lock_guard<std::mutex> lock(mutex_);
