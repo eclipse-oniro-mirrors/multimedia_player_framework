@@ -54,6 +54,8 @@ public:
 
     int32_t SetVolume(float volume) override;
 
+    int32_t SetLoudnessGain(const float loudnessGain) override;
+
     int32_t SetPlaybackSpeed(float speed) override;
 
     int32_t ReturnFrames(sptr<LppDataPacket> framePacket) override;
@@ -88,6 +90,7 @@ public:
     int32_t Reset(MessageParcel &data, MessageParcel &reply);
     int32_t Release(MessageParcel &data, MessageParcel &reply);
     int32_t SetVolume(MessageParcel &data, MessageParcel &reply);
+    int32_t SetLoudnessGain(MessageParcel &data, MessageParcel &reply);
     int32_t SetPlaybackSpeed(MessageParcel &data, MessageParcel &reply);
     int32_t ReturnFrames(MessageParcel &data, MessageParcel &reply);
     int32_t RegisterCallback(MessageParcel &data, MessageParcel &reply);

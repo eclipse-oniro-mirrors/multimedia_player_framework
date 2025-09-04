@@ -254,12 +254,22 @@ int32_t HiLppAudioStreamerImpl::Reset()
 }
 int32_t HiLppAudioStreamerImpl::SetVolume(const float volume)
 {
-    MEDIA_LOG_I("HiLppAudioStreamerImpl::SetVolume" PUBLIC_LOG_F, volume);
+    MEDIA_LOG_D("HiLppAudioStreamerImpl::SetVolume" PUBLIC_LOG_F, volume);
     FALSE_RETURN_V_MSG(aRender_ != nullptr, MSERR_INVALID_OPERATION, "aRender_ nullptr");
     auto ret = aRender_->SetVolume(volume);
     FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "aRender_ SetVolume failed");
     return MSERR_OK;
 }
+
+int32_t HiLppAudioStreamerImpl::SetLoudnessGain(const float loudnessGain)
+{
+    MEDIA_LOG_D("SetLoudnessGain " PUBLIC_LOG_F, loudnessGain);
+    FALSE_RETURN_V_MSG(aRender_ != nullptr, MSERR_INVALID_OPERATION, "aRender_ nullptr");
+    auto ret = aRender_->SetLoudnessGain(loudnessGain);
+    FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "aRender_ SetLoudnessGain failed");
+    return MSERR_OK;
+}
+
 int32_t HiLppAudioStreamerImpl::SetPlaybackSpeed(const float playbackSpeed)
 {
     MEDIA_LOG_I("HiLppAudioStreamerImpl::SetPlaybackSpeed" PUBLIC_LOG_F, playbackSpeed);

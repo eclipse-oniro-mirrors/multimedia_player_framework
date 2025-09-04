@@ -54,6 +54,8 @@ public:
 
     virtual int32_t SetVolume(float volume) = 0;
 
+    virtual int32_t SetLoudnessGain(const float loudnessGain) = 0;
+
     virtual int32_t SetPlaybackSpeed(float speed) = 0;
 
     virtual int32_t ReturnFrames(sptr<LppDataPacket> framePacket) = 0;
@@ -91,6 +93,7 @@ public:
         SET_LISTENER_OBJ,
         SET_VIDOE_STREAMER_ID,
         GET_STREAM_ID,
+        SET_LOUDNESS_GAIN,
         MAX_IPC_ID,                   // all IPC codes should be added before MAX_IPC_ID
     };
 

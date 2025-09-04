@@ -123,6 +123,8 @@ void LppAudioStreamerServiceStub::FillPlayerFuncPart1()
         [this](MessageParcel &data, MessageParcel &reply) { return SetLppVideoStreamerId(data, reply); }};
     playerFuncs_[GET_STREAM_ID] = {"Player::GetStreamerId",
         [this](MessageParcel &data, MessageParcel &reply) { return GetStreamerId(data, reply); }};
+    playerFuncs_[SET_LOUDNESS_GAIN] = {"Player::SetLoudnessGain",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetLoudnessGain(data, reply); }};
 }
 
 int LppAudioStreamerServiceStub::OnRemoteRequest(
@@ -321,6 +323,19 @@ int32_t LppAudioStreamerServiceStub::SetVolume(MessageParcel &data, MessageParce
 {
     float volume = data.ReadFloat();
     reply.WriteInt32(SetVolume(volume));
+    return MSERR_OK;
+}
+
+int32_t LppAudioStreamerServiceStub::SetLoudnessGain(const float loudnessGain)
+{
+    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
+    return lppAudioPlayerServer_->SetLoudnessGain(loudnessGain);
+}
+
+int32_t LppAudioStreamerServiceStub::SetLoudnessGain(MessageParcel &data, MessageParcel &reply)
+{
+    float loudnessGain = data.ReadFloat();
+    reply.WriteInt32(SetLoudnessGain(loudnessGain));
     return MSERR_OK;
 }
 

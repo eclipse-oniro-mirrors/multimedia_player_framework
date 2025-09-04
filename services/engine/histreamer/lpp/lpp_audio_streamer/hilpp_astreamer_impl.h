@@ -44,6 +44,7 @@ public:
     int32_t Stop() override;
     int32_t Reset() override;
     int32_t SetVolume(const float volume) override;
+    int32_t SetLoudnessGain(const float loudnessGain) override;
     int32_t SetPlaybackSpeed(const float playbackSpeed) override;
     int32_t ReturnFrames(sptr<LppDataPacket> framePacket) override;
     int32_t SetLppVideoStreamerId(std::string videoStreamerId) override;

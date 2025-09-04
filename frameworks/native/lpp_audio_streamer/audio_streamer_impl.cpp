@@ -155,6 +155,15 @@ int32_t AudioStreamerImpl::SetVolume(float volume)
     return ret;
 }
 
+int32_t AudioStreamerImpl::SetLoudnessGain(const float loudnessGain)
+{
+    MEDIA_LOGD("SetLoudnessGain");
+    CHECK_AND_RETURN_RET_LOG(enableLppSink_, MSERR_UNSUPPORT, "Lpp is disabled");
+    CHECK_AND_RETURN_RET_LOG(streamerService_ != nullptr, MSERR_SERVICE_DIED, "service died");
+    int32_t ret = streamerService_->SetLoudnessGain(loudnessGain);
+    return ret;
+}
+
 int32_t AudioStreamerImpl::SetPlaybackSpeed(float speed)
 {
     MEDIA_LOGI("AudioStreamerImpl SetPlaybackSpeed");
