@@ -466,7 +466,7 @@ void AVMetaDataCollector::FormatAVMeta(
     Metadata &avmeta, int32_t imageTrackCount, const std::shared_ptr<Meta> &globalInfo)
 {
     std::string str = avmeta.GetMeta(AV_KEY_NUM_TRACKS);
-    if (!str.empty()) {
+    if (IsAllDigits(str)) {
         avmeta.SetMeta(AV_KEY_NUM_TRACKS, std::to_string(std::stoi(str) - imageTrackCount));
     }
     FormatMimeType(avmeta, globalInfo);
