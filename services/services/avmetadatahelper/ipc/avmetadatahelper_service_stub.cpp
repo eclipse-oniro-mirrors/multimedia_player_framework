@@ -238,7 +238,6 @@ int32_t AVMetadataHelperServiceStub::SetHelperCallback()
 
 int32_t AVMetadataHelperServiceStub::SetListenerObject(const sptr<IRemoteObject> &object)
 {
-    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "set listener object is nullptr");
 
     sptr<IStandardHelperListener> listener = iface_cast<IStandardHelperListener>(object);
