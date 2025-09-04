@@ -50,6 +50,7 @@ public:
     MOCK_METHOD(int32_t, Stop, ());
     MOCK_METHOD(int32_t, Reset, ());
     MOCK_METHOD(int32_t, SetVolume, (const float volume));
+    MOCK_METHOD(int32_t, SetLoudnessGain, (const float loudnessGain));
     MOCK_METHOD(int32_t, SetPlaybackSpeed, (const float playbackSpeed));
     MOCK_METHOD(int32_t, ReturnFrames, (sptr<LppDataPacket> framePacket));
     MOCK_METHOD(int32_t, SetLppVideoStreamerId, (std::string videoStreamerId));
@@ -58,4 +59,4 @@ public:
 };
 } // namespace Media
 } // namespace OHOS
-#endif // I_LPP_AUDIO_STREAMER_H
+#endif // I_LPP_AUDIO_STREAMER_H

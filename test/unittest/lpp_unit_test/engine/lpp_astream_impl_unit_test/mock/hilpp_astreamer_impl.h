@@ -46,6 +46,7 @@ public:
     int32_t Stop();
     int32_t Reset();
     int32_t SetVolume(const float volume);
+    int32_t SetLoudnessGain(const float loudnessGain);
     int32_t SetPlaybackSpeed(const float playbackSpeed);
     int32_t ReturnFrames(sptr<LppDataPacket> framePacket);
     int32_t SetLppVideoStreamerId(std::string videoStreamerId);
@@ -79,4 +80,4 @@ private:
 };
 }  // namespace Media
 }  // namespace OHOS
-#endif
+#endif

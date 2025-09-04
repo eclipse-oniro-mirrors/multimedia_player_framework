@@ -46,6 +46,7 @@ public:
     virtual int32_t Stop() = 0;
     virtual int32_t Reset() = 0;
     virtual int32_t SetVolume(const float volume) = 0;
+    virtual int32_t SetLoudnessGain(const float loudnessGain) = 0;
     virtual int32_t SetPlaybackSpeed(const float playbackSpeed) = 0;
     virtual int32_t ReturnFrames(sptr<LppDataPacket> framePacket) = 0;
     virtual int32_t SetLppVideoStreamerId(std::string videoStreamerId) = 0;
@@ -54,4 +55,4 @@ public:
 };
 } // namespace Media
 } // namespace OHOS
-#endif // I_LPP_AUDIO_STREAMER_H
+#endif // I_LPP_AUDIO_STREAMER_H

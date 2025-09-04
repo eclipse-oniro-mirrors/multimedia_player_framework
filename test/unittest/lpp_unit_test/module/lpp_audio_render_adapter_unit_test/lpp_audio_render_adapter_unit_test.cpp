@@ -483,5 +483,20 @@ HWTEST_F(LppAudioRenderAdapterUnitTest, FillAudioBuffer_001, TestSize.Level0)
     renderAdapter_->FillAudioBuffer(bufferSize, bufferDesc, bufferPts);
     EXPECT_EQ(bufferPts, 0);
 }
+
+/**
+* @tc.name    : Test LoudnessGain API
+* @tc.number  : LoudnessGain_001
+* @tc.desc    : Test LoudnessGain
+*/
+HWTEST_F(LppAudioRenderAdapterUnitTest, LoudnessGain_001, TestSize.Level0)
+{
+    EXPECT_CALL(*(renderAdapter_->audioRenderer_), SetLoudnessGain(_)).WillRepeatedly(Return(AudioStandard::SUCCESS));
+    int32_t ret = renderAdapter_->SetLoudnessGain(0);
+    EXPECT_EQ(ret, MediaServiceErrCode::MSERR_OK);
+    EXPECT_CALL(*(renderAdapter_->audioRenderer_), SetLoudnessGain(_)).WillRepeatedly(Return(AudioStandard::ERROR));
+    ret = renderAdapter_->SetLoudnessGain(0);
+    EXPECT_EQ(ret, MediaServiceErrCode::MSERR_AUD_RENDER_FAILED);
+}
 } // namespace Media
-} // namespace OHOS
+} // namespace OHOS
