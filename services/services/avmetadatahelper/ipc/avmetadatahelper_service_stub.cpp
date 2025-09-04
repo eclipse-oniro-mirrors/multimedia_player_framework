@@ -246,6 +246,7 @@ int32_t AVMetadataHelperServiceStub::SetListenerObject(const sptr<IRemoteObject>
     std::shared_ptr<HelperCallback> callback = std::make_shared<HelperListenerCallback>(listener);
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_NO_MEMORY, "failed to new HelperListenerCallback");
 
+    std::unique_lock<std::mutex> lock(mutex_);
     helperCallback_ = callback;
     return MSERR_OK;
 }
