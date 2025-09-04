@@ -304,7 +304,7 @@ public:
 private:
     OH_AVDataSourceExt* dataSourceExt_ = nullptr;
     void* userData_ = nullptr;
-}
+};
 
 void PlayerObject::StartListenCurrentResource()
 {
