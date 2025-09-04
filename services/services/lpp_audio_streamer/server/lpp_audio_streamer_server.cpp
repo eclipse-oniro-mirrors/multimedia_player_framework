@@ -29,8 +29,8 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "LppAudioStreamerServer"};
-constexpr float maxLoudnessGain = 24.0f;
-constexpr float minLoudnessGain = -90.0f;
+constexpr float MAX_LOUDNESS_GAIN = 24.0f;
+constexpr float MIN_LOUDNESS_GAIN = -90.0f;
 }
 
 namespace OHOS {
@@ -232,7 +232,7 @@ int32_t LppAudioStreamerServer::SetLoudnessGain(const float loudnessGain)
             "wrong state");
     }
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
-    if ((loudnessGain < minLoudnessGain) || (loudnessGain > maxLoudnessGain)) {
+    if ((loudnessGain < MIN_LOUDNESS_GAIN) || (loudnessGain > MAX_LOUDNESS_GAIN)) {
         MEDIA_LOGE("SetLoudnessGain failed, the loudnessGain should be set to a value ranging from -90 to 24");
         return MSERR_INVALID_OPERATION;
     }
