@@ -44,6 +44,7 @@
 #include "native_averrors.h"
 #include "avplayer_base.h"
 #include "native_audiostream_base.h"
+#include "native_avcodec_base.h"
 
 
 #ifdef __cplusplus
@@ -587,6 +588,18 @@ OH_AVErrCode OH_AVPlayer_SetOnErrorCallback(OH_AVPlayer *player, OH_AVPlayerOnEr
  * @since 21
  */
 OH_AVErrCode OH_AVPlayer_SetLoudnessGain(OH_AVPlayer *player, float loudnessGain);
+
+/**
+ * @brief Set the media source of the player. The data of this media source is provided by the application.
+ * @param {OH_AVPlayer*} player Pointer to an OH_AVPlayer instance
+ * @param {OH_AVDataSourceExt*} datasrc Pointer to an OH_AVDataSourceExt instance
+ * @param {void*} userData The handle passed in by the user is used to pass in the callback
+ * @return Function result code.
+ *         {@link AV_ERR_OK} if the execution is successful.
+ *         {@link AV_ERR_INVALID_VAL} if input player is nullptr or player setDataSource failed.
+ * @since 21
+ */
+OH_AVErrCode OH_AVPlayer_SetDataSource(OH_AVPlayer *player, OH_AVDataSourceExt* datasrc, void* userData);
 
 #ifdef __cplusplus
 }
