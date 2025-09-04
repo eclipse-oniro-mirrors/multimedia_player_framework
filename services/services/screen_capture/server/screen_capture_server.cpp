@@ -3950,7 +3950,6 @@ int32_t ScreenCaptureServer::StopScreenCaptureByEvent(AVScreenCaptureStateCode s
         MEDIA_LOGI("StopScreenCaptureByEvent repeat, capture is STOPPED.");
         return MSERR_OK;
     }
-    std::lock_guard<std::mutex> lock(mutex_);
     return StopScreenCaptureInner(stateCode);
 }
 
@@ -3970,6 +3969,7 @@ void ScreenCaptureServer::SetSystemScreenRecorderStatus(bool status)
 
 int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode stateCode)
 {
+    std::unique_lock<std::mutex> lock(innermutex_);
     MediaTrace trace("ScreenCaptureServer::StopScreenCaptureInner");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopScreenCaptureInner start, stateCode:%{public}d.",
         FAKE_POINTER(this), stateCode);
@@ -4006,7 +4006,9 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
 #endif
     AccountObserver::GetInstance().UnregisterAccountObserverCallBack(screenCaptureObserverCb_);
     if (screenCaptureObserverCb_) {
+        lock.unlock();
         screenCaptureObserverCb_->Release();
+        lock.lock();
     }
     ScreenManager::GetInstance().UnregisterScreenListener(screenConnectListener_);
     UnRegisterWindowLifecycleListener();

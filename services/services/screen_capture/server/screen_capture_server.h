@@ -282,6 +282,7 @@ private:
 private:
     std::mutex mutex_;
     std::mutex cbMutex_;
+    std::mutex innerMutex_;
     std::mutex inCallMutex_;
     mutable std::shared_mutex rw_lock_;
     std::shared_ptr<ScreenCaptureObserverCallBack> screenCaptureObserverCb_ = nullptr;
