@@ -279,7 +279,7 @@ public:
     int32_t ReadAt(const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos = -1)
     {
         if (mem == nullptr || dataSourceExt_ == nullptr) {
-            MEDIA_LOGI("NativeAVDataSource ReadAt mem or dataSourceExt_ is nullptr");
+            MEDIA_LOGE("NativeAVDataSource ReadAt mem or dataSourceExt_ is nullptr");
             return 0;
         }
         std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer(
@@ -292,7 +292,7 @@ public:
     int32_t GetSize(int64_t &size)
     {
         if (dataSourceExt_ == nullptr) {
-            MEDIA_LOGI("NativeAVDataSource GetSize dataSourceExt_ is nullptr");
+            MEDIA_LOGE("NativeAVDataSource GetSize dataSourceExt_ is nullptr");
             return 0;
         }
         size = dataSourceExt_->size;
