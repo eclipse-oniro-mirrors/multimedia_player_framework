@@ -129,6 +129,16 @@ FFI_EXPORT int32_t FfiAVMetadataExtractorSetDataSrc(int64_t id, CAVDataSrcDescri
     return instance->SetAVDataSrcDescriptor(data);
 }
 
+FFI_EXPORT int64_t FfiAVMetadataExtractorFetchFrameByTime(
+    int64_t id, int64_t timeUs, int32_t option, CPixelMapParams param)
+{
+    auto instance = FFI::FFIData::GetData<CJAVMetadataExtractorImpl>(id);
+    if (instance == nullptr) {
+        return 0;
+    }
+    return instance->FetchFrameByTime(timeUs, option, param);
+}
+
 FFI_EXPORT int32_t FfiAVMetadataExtractorRelease(int64_t id)
 {
     auto instance = FFI::FFIData::GetData<CJAVMetadataExtractorImpl>(id);

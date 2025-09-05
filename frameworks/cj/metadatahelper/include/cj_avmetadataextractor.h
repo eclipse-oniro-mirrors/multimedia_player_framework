@@ -40,6 +40,7 @@ public:
     int32_t GetAVFileDescriptor(CAVFileDescriptor* file);
     int32_t SetAVDataSrcDescriptor(CAVDataSrcDescriptor data);
     int32_t GetAVDataSrcDescriptor(CAVDataSrcDescriptor* data);
+    int64_t FetchFrameByTime(int64_t timeUs, int32_t option, const CPixelMapParams& param);
     void Release();
 private:
     std::shared_ptr<AVMetadataHelper> helper_ = nullptr;

@@ -343,6 +343,30 @@ int32_t CJAVMetadataExtractorImpl::GetAVDataSrcDescriptor(CAVDataSrcDescriptor* 
     return MSERR_OK;
 }
 
+int64_t CJAVMetadataExtractorImpl::FetchFrameByTime(int64_t timeUs, int32_t option, const CPixelMapParams& param)
+{
+    if (state_ != HelperState::HELPER_STATE_RUNNABLE) {
+        MEDIA_LOGE("Current state is not runnable, can't fetchFrame.");
+        return 0;
+    }
+    if (helper_ == nullptr) {
+        MEDIA_LOGE("Invalid CJAVMetadataExtractorImpl.");
+        return 0;
+    }
+    auto pixelMap = helper_->FetchScaledFrameYuv(timeUs, option,
+        PixelMapParams{param.width, param.height, PixelFormat::RGBA_8888});
+    if (pixelMap == nullptr) {
+        MEDIA_LOGE("Failed to fetchFrameByTime.");
+        return 0;
+    }
+    auto result = FFI::FFIData::Create<PixelMapImpl>(move(pixelMap));
+    if (result == nullptr) {
+        MEDIA_LOGE("Create PixelMap failed.");
+        return 0;
+    }
+    return result->GetID();
+}
+
 void CJAVMetadataExtractorImpl::Release()
 {
     if (state_ == HelperState::HELPER_STATE_RELEASED) {
