@@ -94,10 +94,12 @@ private:
 
     void FormatColorSpaceInfo(OHOS::HDI::Display::Graphic::Common::V1_0::CM_ColorSpaceInfo &colorSpaceInfo);
     Status GetColorSpace(sptr<SurfaceBuffer> &surfaceBuffer, PixelMapInfo &pixelMapInfo);
+    Status GetColorSpaceWithDefaultValue(sptr<SurfaceBuffer> &surfaceBuffer, PixelMapInfo &pixelMapInfo);
 
     std::shared_ptr<IAVMetadataHelperService> avMetadataHelperService_ = nullptr;
     int32_t rotation_ = 0;
     bool isDump_ = false;
+    bool convertColorSpace_ = true;
     static std::chrono::milliseconds cloneTimestamp;
     static std::chrono::milliseconds batchHandleTimestamp;
     void ReportSceneCode(Scene scene);

@@ -482,12 +482,45 @@ Status AVMetadataHelperImpl::GetColorSpace(sptr<SurfaceBuffer> &surfaceBuffer, P
         auto it = HDR_COLORSPACE_MAP.find(type);
         CHECK_AND_RETURN_RET_LOG(it != HDR_COLORSPACE_MAP.end(), Status::ERROR_UNKNOWN,
             "can't find mapped colorSpace name in hdr map");
+        MEDIA_LOGI("video is hdr, colorspace info is [%{public}d, %{public}d]", it->first, it->second);
         pixelMapInfo.colorSpaceName = it->second;
         return Status::OK;
     }
     auto it = SDR_COLORSPACE_MAP.find(type);
     CHECK_AND_RETURN_RET_LOG(it != SDR_COLORSPACE_MAP.end(), Status::ERROR_UNKNOWN,
         "can't find mapped colorSpace name in sdr map");
+    MEDIA_LOGI("video is sdr, colorspace info is [%{public}d, %{public}d]", it->first, it->second);
+    pixelMapInfo.colorSpaceName = it->second;
+    return Status::OK;
+}
+
+Status AVMetadataHelperImpl::GetColorSpaceWithDefaultValue(sptr<SurfaceBuffer> &surfaceBuffer,
+                                                           PixelMapInfo &pixelMapInfo)
+{
+    std::vector<uint8_t> colorSpaceInfoVec;
+    if (surfaceBuffer->GetMetadata(ATTRKEY_COLORSPACE_INFO, colorSpaceInfoVec) != GSERROR_OK) {
+        MEDIA_LOGW("cant find colorSpace");
+        return Status::ERROR_UNKNOWN;
+    }
+    CHECK_AND_RETURN_RET_LOG(!colorSpaceInfoVec.empty(), Status::ERROR_UNKNOWN, "colorSpaceInfoVec is empty");
+    auto outColor = reinterpret_cast<CM_ColorSpaceInfo *>(colorSpaceInfoVec.data());
+    CHECK_AND_RETURN_RET_LOG(outColor != nullptr, Status::ERROR_UNKNOWN, "colorSpaceInfoVec init failed");
+    auto colorSpaceInfo = outColor[0];
+    FormatColorSpaceInfo(colorSpaceInfo);
+    pixelMapInfo.srcRange = colorSpaceInfo.range == CM_Range::RANGE_FULL ? 1 : 0;
+    auto type = ((static_cast<unsigned int>(colorSpaceInfo.primaries) << COLORPRIMARIES_OFFSET) +
+                 (static_cast<unsigned int>(colorSpaceInfo.transfunc) << TRANSFUNC_OFFSET) +
+                 (static_cast<unsigned int>(colorSpaceInfo.matrix) << MATRIX_OFFSET) +
+                 (static_cast<unsigned int>(colorSpaceInfo.range) << RANGE_OFFSET));
+    pixelMapInfo.primaries = colorSpaceInfo.primaries;
+    MEDIA_LOGI("colorSpaceTypeWithDefaultValue is %{public}u", type);
+
+    // using SDR_COLORSPACE_MAP for colorspace query when convertColorSpace_ is false
+    // do not distinguish between SDR and HDR
+    auto it = SDR_COLORSPACE_MAP.find(type);
+    CHECK_AND_RETURN_RET_LOG(it != SDR_COLORSPACE_MAP.end(), Status::ERROR_UNKNOWN,
+        "can't find mapped colorSpace name in colorSpace map");
+    MEDIA_LOGI("colorSpaceWithDefaultValue info is [%{public}d, %{public}d]", it->first, it->second);
     pixelMapInfo.colorSpaceName = it->second;
     return Status::OK;
 }
@@ -496,9 +529,9 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapFromSurfaceBuffer(
                                                                                 PixelMapInfo &pixelMapInfo)
 {
     CHECK_AND_RETURN_RET_LOG(surfaceBuffer != nullptr, nullptr, "surfaceBuffer is nullptr");
-    auto getColorSpaceInfoRes = GetColorSpace(surfaceBuffer, pixelMapInfo);
-    InitializationOptions options = { .size = { .width = pixelMapInfo.width,
-                                                .height = pixelMapInfo.height } };
+    auto getColorSpaceInfoRes = convertColorSpace_ ? GetColorSpace(surfaceBuffer, pixelMapInfo) :
+        GetColorSpaceWithDefaultValue(surfaceBuffer, pixelMapInfo);
+    InitializationOptions options = { .size = { .width = pixelMapInfo.width, .height = pixelMapInfo.height } };
     bool isHdr = pixelMapInfo.isHdr;
     options.srcPixelFormat = isHdr ? PixelFormat::YCBCR_P010 : PixelFormat::NV12;
     options.pixelFormat = isHdr ? PixelFormat::YCBCR_P010 : PixelFormat::NV12;
@@ -918,6 +951,7 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameBase(int64_t timeUs, i
     DumpAVBuffer(isDump_, frameBuffer, DUMP_FILE_NAME_AVBUFFER);
 
     PixelMapInfo pixelMapInfo = { .pixelFormat = param.colorFormat };
+    convertColorSpace_ = param.convertColorSpace;
     auto pixelMap = CreatePixelMapYuv(frameBuffer, pixelMapInfo);
     CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "convert to pixelMap failed");
 
