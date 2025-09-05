@@ -596,7 +596,7 @@ OH_AVErrCode OH_AVPlayer_SetLoudnessGain(OH_AVPlayer *player, float loudnessGain
  * @param {void*} userData The handle passed in by the user is used to pass in the callback
  * @return Function result code.
  *         {@link AV_ERR_OK} if the execution is successful.
- *         {@link AV_ERR_INVALID_VAL} if input player is nullptr or player setDataSource failed.
+ *         {@link AV_ERR_INVALID_VAL} if input player is nullptr or datasrc is nullptr.
  * @since 21
  */
 OH_AVErrCode OH_AVPlayer_SetDataSource(OH_AVPlayer *player, OH_AVDataSourceExt* datasrc, void* userData);
