@@ -269,6 +269,51 @@ private:
     Player_MediaKeySystemInfoCallback drmsysteminfocallback_ = nullptr;
 };
 
+class NativeAVDataSource : public OHOS::Media::IMediaDataSource {
+public:
+    NativeAVDataSource(OH_AVDataSourceExt* dataSourceExt, void* userData)
+        : dataSourceExt_(dataSourceExt), userData_(userData) {}
+    
+    virtual ~NativeAVDataSource() = default;
+
+    int32_t ReadAt(const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos = -1)
+    {
+        if (mem == nullptr || dataSourceExt_ == nullptr) {
+            MEDIA_LOGE("NativeAVDataSource ReadAt mem or dataSourceExt_ is nullptr");
+            return 0;
+        }
+        std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer(
+            mem->GetBase(), mem->GetSize(), mem->GetSize()
+        );
+        OH_AVBuffer avBuffer(buffer);
+        return dataSourceExt_->readAt(&avBuffer, length, pos, userData_);
+    }
+
+    int32_t GetSize(int64_t &size)
+    {
+        if (dataSourceExt_ == nullptr) {
+            MEDIA_LOGE("NativeAVDataSource GetSize dataSourceExt_ is nullptr");
+            return 0;
+        }
+        size = dataSourceExt_->size;
+        return 0;
+    }
+
+    int32_t ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
+    {
+        return ReadAt(mem, length, pos);
+    }
+
+    int32_t ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
+    {
+        return ReadAt(mem, length);
+    }
+
+private:
+    OH_AVDataSourceExt* dataSourceExt_ = nullptr;
+    void* userData_ = nullptr;
+};
+
 void PlayerObject::StartListenCurrentResource()
 {
     if (callback_ != nullptr) {
@@ -1424,5 +1469,19 @@ OH_AVErrCode OH_AVPlayer_SetLoudnessGain(OH_AVPlayer *player, float loudnessGain
     CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
     int32_t ret = playerObj->player_->SetLoudnessGain(loudnessGain);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_STATE, "player SetLoudnessGain failed");
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVPlayer_SetDataSource(OH_AVPlayer *player, OH_AVDataSourceExt* datasrc, void* userData)
+{
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+    CHECK_AND_RETURN_RET_LOG(datasrc != nullptr, AV_ERR_INVALID_VAL, "datasrc is null");
+    CHECK_AND_RETURN_RET_LOG(datasrc->readAt != nullptr, AV_ERR_INVALID_VAL, "datasrc readAt is null");
+    playerObj->StartListenCurrentResource();
+    std::shared_ptr<IMediaDataSource> avDataSource = std::make_shared<NativeAVDataSource>(datasrc, userData);
+    int32_t ret = playerObj->player_->SetSource(avDataSource);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player setDataSource failed");
     return AV_ERR_OK;
 }
