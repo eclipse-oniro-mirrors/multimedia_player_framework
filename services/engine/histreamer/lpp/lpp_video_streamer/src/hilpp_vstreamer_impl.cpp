@@ -85,7 +85,6 @@ int32_t HiLppVideoStreamerImpl::Init(const std::string &mime)
     vdec_ = std::make_shared<LppVideoDecoderAdapter>(streamerId_, isLpp_);
     bool switchToCommon = false;
     auto ret = vdec_->Init(mime, switchToCommon);
-    FALSE_RETURN_V_MSG(switchToCommon == false, AV_ERR_UNSUPPORT, "lpp is not support");
     FALSE_RETURN_V_MSG(ret == MSERR_OK, ret, "vdec_ init failed");
     FALSE_LOG_MSG_W(!switchToCommon, "switch isLpp_ to false");
     isLpp_ = isLpp_ ? !switchToCommon : isLpp_;
