@@ -243,7 +243,7 @@ int32_t MediaServiceStub::GetLppCapacity(LppAvCapabilityInfo &lppAvCapability)
     #else
     int32_t ret = MSERR_UNKNOWN;
     #endif
-    MEDIA_LOGI("MediaServiceStub::GetLppCapacity %{public}u %{public}u",
+    MEDIA_LOGI("MediaServiceStub::GetLppCapacity %{public}zu %{public}zu",
         lppAvCapability.videoCap_.size(), lppAvCapability.audioCap_.size());
     CHECK_AND_RETURN_RET_LOG(ret == 0, MSERR_UNKNOWN, "MediaServiceStub::GetLppCapacity GetLppCapacity");
     return ret;
