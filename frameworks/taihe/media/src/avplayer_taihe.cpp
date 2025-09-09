@@ -1829,10 +1829,7 @@ void AVPlayerImpl::ResetSync()
         }
         isLiveStream_ = false;
     }
-    auto t1 = std::thread([context]() {
-        context->CheckTaskResult();
-    });
-    t1.detach();
+    context->CheckTaskResult();
     MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheReset Out", FAKE_POINTER(this));
 }
 
