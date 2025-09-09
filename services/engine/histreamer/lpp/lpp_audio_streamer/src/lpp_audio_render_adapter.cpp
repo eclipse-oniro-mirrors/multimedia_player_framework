@@ -209,6 +209,7 @@ int32_t LppAudioRenderAdapter::Start()
     MEDIA_LOG_D("Start entered.");
     FALSE_RETURN_V_MSG(audioRenderer_ != nullptr, MSERR_INVALID_OPERATION, "audioRenderer_ is nullptr");
     FALSE_RETURN_V_MSG(renderTask_ != nullptr, MSERR_INVALID_OPERATION, "renderTask_ is nullptr");
+    anchorPts_ = Plugins::HST_TIME_NONE;
     bool ret = audioRenderer_->Start();
     FALSE_RETURN_V_MSG(ret, MSERR_START_FAILED, "AudioRenderer::Start failed");
     renderTask_->Start();
