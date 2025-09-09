@@ -5236,7 +5236,9 @@ int32_t AudioDataSource::LostFrameNum(const int64_t &timestamp)
 
 void AudioDataSource::FillLostBuffer(const int64_t &lostNum, const int64_t &timestamp, const uint32_t &bufferSize)
 {
-    MEDIA_LOGI("AudioDataSource::FillLostBuffer: lostNum=%{public}ld, timestamp=%{public}ld bufferSize=%{public}d",
+    CHECK_AND_RETURN_LOG(bufferSize > 0, "AudioDataSource::FillLostBuffer: bufferSize is invalid");
+    MEDIA_LOGI("AudioDataSource::FillLostBuffer: lostNum=%{public}" PRId64 ", timestamp=%{public}" PRId64
+               ", bufferSize=%{public}" PRId32,
         lostNum, timestamp, bufferSize);
     auto pts = timestamp;
     for (int64_t i = 0; i < lostNum; i++) {
