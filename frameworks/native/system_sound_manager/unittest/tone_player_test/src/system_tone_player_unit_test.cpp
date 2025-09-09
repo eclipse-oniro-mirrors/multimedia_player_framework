@@ -165,8 +165,8 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_006, TestSize.Level1
     hapticsUriMap[ToneHapticsFeature::STANDARD] = "test1";
     hapticsUriMap[ToneHapticsFeature::GENTLE] = "test2";
     systemTonePlayerImpl_->GetNewHapticUriForAudioUri(audioUri, hapticsUriMap);
-    EXPECT_NE(hapticsUriMap[ToneHapticsFeature::STANDARD], "");
-    EXPECT_NE(hapticsUriMap[ToneHapticsFeature::GENTLE], "");
+    EXPECT_TRUE(hapticsUriMap[ToneHapticsFeature::STANDARD].find("Rise.json") != std::string::npos);
+    EXPECT_TRUE(hapticsUriMap[ToneHapticsFeature::GENTLE].find("Rise.json") != std::string::npos);
 }
 
 /**
