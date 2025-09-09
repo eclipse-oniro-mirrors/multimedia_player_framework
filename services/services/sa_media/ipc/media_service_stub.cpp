@@ -206,7 +206,7 @@ int32_t MediaServiceStub::GetLppCapacityStub(MessageParcel &data, MessageParcel 
     (void)data;
     LppAvCapabilityInfo info;
     int32_t ret = GetLppCapacity(info);
-    CHECK_AND_RETURN_RET_LOG(ret == 0, ret, "Failed to write descriptor!");
+    TRUE_LOG(ret == 0, MEDIA_LOGW, "GetLppCapacity failed");
     reply.WriteInt32(ret);
     info.Marshalling(reply);
     return MSERR_OK;
