@@ -359,7 +359,8 @@ int32_t RingtonePlayerImpl::Configure(const float &volume, const bool &loop)
 
     std::lock_guard<std::mutex> lock(playerMutex_);
 
-    if (configuredUri_ == NO_RING_SOUND && ringtoneState_ == STATE_RUNNING) {
+    if (configuredUri_ == NO_RING_SOUND && ringtoneState_ == STATE_RUNNING &&
+        std::abs(volume - 0.0f) <= std::numeric_limits<float>::epsilon()) {
         MEDIA_LOGI("Set volume to 0.0 for NO_RING_SOUND. Stop vibrator!");
         SystemSoundVibrator::StopVibrator();
         return MSERR_OK;
