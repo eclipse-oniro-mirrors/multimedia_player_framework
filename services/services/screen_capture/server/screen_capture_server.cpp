@@ -5255,7 +5255,7 @@ AudioDataSourceReadAtActionState AudioDataSource::ReadAt(std::shared_ptr<AVBuffe
         if (lostNum >= FILL_LOST_FRAME_COUNT_THRESHOLD) {
             FillLostBuffer(lostNum, audioBuffer.timestamp, length);
         }
-        audioBuffer.WriteTo(buffer->memory_, length);
+        audioBufferQ_.front().WriteTo(buffer->memory_, length);
         audioBufferQ_.pop_front();
         writedFrameTime_ += FILL_AUDIO_FRAME_DURATION_IN_NS;
         return AudioDataSourceReadAtActionState::OK;
