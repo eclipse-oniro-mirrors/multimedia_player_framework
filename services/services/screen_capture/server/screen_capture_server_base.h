@@ -332,8 +332,8 @@ private:
     static constexpr int64_t NEG_AUDIO_INTERVAL_IN_NS = -21333334; // 20ms
     static constexpr int64_t SEC_TO_NS = 1000000000; // 1s
     static constexpr int64_t MAX_MIC_BEFORE_INNER_TIME_IN_NS = 40000000; // 40ms
-    static constexpr int64_t FILL_AUDIO_FRAME_DURATION_IN_NS = 20000000; // 20ms
-    static constexpr int64_t FILL_LOST_FRAME_COUNT_THRESHOLD = 5;
+    static constexpr int32_t FILL_AUDIO_FRAME_DURATION_IN_NS = 20000000; // 20ms
+    static constexpr int32_t FILL_LOST_FRAME_COUNT_THRESHOLD = 5;
 };
 
 class PrivateWindowListenerInScreenCapture : public DisplayManager::IPrivateWindowListener {
