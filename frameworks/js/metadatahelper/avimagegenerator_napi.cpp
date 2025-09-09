@@ -204,9 +204,15 @@ int32_t AVImageGeneratorNapi::GetFetchFrameArgs(std::unique_ptr<AVImageGenerator
         return MSERR_INVALID_VAL;
     }
 
+    bool autoFlip = false;
+    if (!CommonNapi::GetPropertyBool(env, params, "autoFlip", autoFlip)) {
+        MEDIA_LOGW("failed to get autoFlip");
+    }
+
     asyncCtx->param_.dstWidth = width;
     asyncCtx->param_.dstHeight = height;
     asyncCtx->param_.colorFormat = colorFormat;
+    asyncCtx->param_.isSupportFlip = autoFlip;
     return MSERR_OK;
 }
 
@@ -285,12 +291,17 @@ int32_t AVImageGeneratorNapi::GetFetchScaledFrameArgs(std::unique_ptr<AVImageGen
             MEDIA_LOGW("User has not set height");
         }
     }
+    bool autoFlip = false;
+    if (!CommonNapi::GetPropertyBool(env, outputSize, "autoFlip", autoFlip)) {
+        MEDIA_LOGW("failed to get autoFlip");
+    }
 
     asyncCtx->param_.dstWidth = width;
     asyncCtx->param_.dstHeight = height;
     asyncCtx->param_.colorFormat = PixelFormat::UNKNOWN;
-    MEDIA_LOGI("searchMode=%{public}d width=%{public}d height=%{public}d GetFetchScaledFrameArgs",
-        asyncCtx->option_, width, height);
+    asyncCtx->param_.isSupportFlip = autoFlip;
+    MEDIA_LOGI("searchMode=%{public}d width=%{public}d height=%{public}d autoFlip=%{public}d GetFetchScaledFrameArgs",
+        asyncCtx->option_, width, height, autoFlip);
     return MSERR_OK;
 }
 
