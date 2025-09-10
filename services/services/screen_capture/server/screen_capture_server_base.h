@@ -229,6 +229,17 @@ private:
 };
 
 class AudioDataSource : public IAudioDataSource {
+    class CacheBuffer {
+    private:
+        std::shared_ptr<AudioBuffer> refBuf_{nullptr};
+        std::unique_ptr<uint8_t> buf_{nullptr};
+    public:
+        CacheBuffer() = delete;
+        explicit CacheBuffer(const std::shared_ptr<AudioBuffer> &buf);
+        CacheBuffer(uint8_t *buf, const int64_t &timestamp);
+        int64_t timestamp{0};
+        void WriteTo(const std::shared_ptr<AVMemory> &avMem, const uint32_t &len);
+    };
 public:
     AudioDataSource(AVScreenCaptureMixMode type, ScreenCaptureServer* screenCaptureServer) : type_(type),
         screenCaptureServer_(screenCaptureServer) {}
@@ -292,7 +303,11 @@ public:
     ScreenCaptureServer* GetScreenCaptureServer();
 private:
     void MixAudio(char** srcData, char* mixData, int channels, int bufferSize);
-
+    AudioDataSourceReadAtActionState ReadAudioBuffer(std::shared_ptr<AVBuffer> &buffer, const uint32_t &length);
+    int32_t LostFrameNum(const int64_t &timestamp);
+    void FillLostBuffer(const int64_t &lostNum, const int64_t &timestamp, const uint32_t &bufferSize);
+    int64_t writedFrameTime_{0};
+    std::deque<CacheBuffer> audioBufferQ_;
     int32_t appPid_ { 0 };
     std::string appName_;
     bool speakerAliveStatus_ = true;
@@ -317,6 +332,8 @@ private:
     static constexpr int64_t NEG_AUDIO_INTERVAL_IN_NS = -21333334; // 20ms
     static constexpr int64_t SEC_TO_NS = 1000000000; // 1s
     static constexpr int64_t MAX_MIC_BEFORE_INNER_TIME_IN_NS = 40000000; // 40ms
+    static constexpr int32_t FILL_AUDIO_FRAME_DURATION_IN_NS = 20000000; // 20ms
+    static constexpr int32_t FILL_LOST_FRAME_COUNT_THRESHOLD = 5;
 };
 
 class PrivateWindowListenerInScreenCapture : public DisplayManager::IPrivateWindowListener {
