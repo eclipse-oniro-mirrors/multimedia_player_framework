@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <memory>
 #include "avmetadatahelper.h"
+#include "cj_common_ffi.h"
 #include "cj_helperdatasourcecallback.h"
 #include "ffi_remote_data.h"
 #include "image_source.h"
@@ -40,7 +41,7 @@ public:
     int32_t GetAVFileDescriptor(CAVFileDescriptor* file);
     int32_t SetAVDataSrcDescriptor(CAVDataSrcDescriptor data);
     int32_t GetAVDataSrcDescriptor(CAVDataSrcDescriptor* data);
-    int64_t FetchFrameByTime(int64_t timeUs, int32_t option, const CPixelMapParams& param);
+    RetDataI64 FetchFrameByTime(int64_t timeUs, int32_t option, const CPixelMapParams& param);
     void Release();
 private:
     std::shared_ptr<AVMetadataHelper> helper_ = nullptr;

@@ -343,28 +343,28 @@ int32_t CJAVMetadataExtractorImpl::GetAVDataSrcDescriptor(CAVDataSrcDescriptor* 
     return MSERR_OK;
 }
 
-int64_t CJAVMetadataExtractorImpl::FetchFrameByTime(int64_t timeUs, int32_t option, const CPixelMapParams& param)
+RetDataI64 CJAVMetadataExtractorImpl::FetchFrameByTime(int64_t timeUs, int32_t option, const CPixelMapParams& param)
 {
     if (state_ != HelperState::HELPER_STATE_RUNNABLE) {
         MEDIA_LOGE("Current state is not runnable, can't fetchFrame.");
-        return 0;
+        return {.code = MSERR_EXT_API9_OPERATE_NOT_PERMIT, .data = 0};
     }
     if (helper_ == nullptr) {
         MEDIA_LOGE("Invalid CJAVMetadataExtractorImpl.");
-        return 0;
+        return {.code = MSERR_EXT_API9_OPERATE_NOT_PERMIT, .data = 0};
     }
     auto pixelMap = helper_->FetchScaledFrameYuv(timeUs, option,
         PixelMapParams{param.width, param.height, PixelFormat::RGBA_8888});
     if (pixelMap == nullptr) {
         MEDIA_LOGE("Failed to fetchFrameByTime.");
-        return 0;
+        return {.code = MSERR_EXT_API9_UNSUPPORT_FORMAT, .data =0};
     }
     auto result = FFI::FFIData::Create<PixelMapImpl>(move(pixelMap));
     if (result == nullptr) {
         MEDIA_LOGE("Create PixelMap failed.");
-        return 0;
+        return {.code = MSERR_UNKNOWN, .data = 0};
     }
-    return result->GetID();
+    return {.code = MSERR_OK, .data = result->GetID()};
 }
 
 void CJAVMetadataExtractorImpl::Release()
