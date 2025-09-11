@@ -367,7 +367,7 @@ int32_t CreateMediaInfo(CallType callType, int32_t uid, uint64_t instanceId)
 {
     MEDIA_LOG_I("CreateMediaInfo uid is: %{public}" PRId32, uid);
     int32_t curInsNumber = 0;
-    {   
+    {
         std::lock_guard<std::mutex> lock(collectMut_);
         auto instanceIdMap = idMap_.find(instanceId);
         if (instanceIdMap != idMap_.end()) {
@@ -419,7 +419,7 @@ void GetMaxInstanceNumber(CallType callType, int32_t uid, uint64_t instanceId, i
             MEDIA_LOG_I("CreateMediaInfo: Successfully created new maxInsNumber for uid.");
         }
     } else {
-        mediaInfoMap_[callType][uid] = curInsNumber;
+        mediaMaxInstanceNumberMap_[callType][uid] = curInsNumber;
         MEDIA_LOG_I("CreateMediaInfo: Successfully created new maxInsNumber for callType and uid ");
     }
 }
