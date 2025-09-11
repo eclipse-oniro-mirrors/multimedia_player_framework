@@ -491,7 +491,6 @@ void UpdateMaxInsNumberMap(CallType callType)
     MEDIA_LOG_I("UpdateMaxInsNumberMap start.");
     auto ctUidToMediaInfo = mediaInfoMap_.find(callType);
     if (ctUidToMediaInfo == mediaInfoMap_.end()) {
-        infoMap.clear();
         return;
     }
 
