@@ -206,7 +206,8 @@ void SystemTonePlayerCallbackNapi::OnJsCallbackPlayFinished(std::shared_ptr<Syst
         napi_env env = event->callback->env_;
         napi_ref callback = event->callback->cb_;
         napi_handle_scope scope = nullptr;
-        napi_open_handle_scope(env, &scope);
+        napi_status status = napi_open_handle_scope(env, &scope);
+        CHECK_AND_RETURN_LOG(status == napi_ok && scope != nullptr, "open handle scope failed!");
         MEDIA_LOGI("JsCallBack %{public}s, uv_queue_work start", request.c_str());
         do {
             napi_value jsCallback = nullptr;
@@ -261,7 +262,8 @@ void SystemTonePlayerCallbackNapi::OnJsCallbackError(std::shared_ptr<SystemToneP
         napi_env env = event->callback->env_;
         napi_ref callback = event->callback->cb_;
         napi_handle_scope scope = nullptr;
-        napi_open_handle_scope(env, &scope);
+        napi_status status = napi_open_handle_scope(env, &scope);
+        CHECK_AND_RETURN_LOG(status == napi_ok && scope != nullptr, "open handle scope failed!");
         MEDIA_LOGI("JsCallBack %{public}s, uv_queue_work start", request.c_str());
         do {
             napi_value jsCallback = nullptr;
