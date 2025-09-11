@@ -488,7 +488,7 @@ int32_t ReportMediaInfo(uint64_t instanceId)
 
 void UpdateMaxInsNumberMap(CallType callType)
 {
-    MEDIA_LOG_I("ResetMaxInsNumberMap start.");
+    MEDIA_LOG_I("UpdateMaxInsNumberMap start.");
     auto ctUidToMediaInfo = mediaInfoMap_.find(callType);
     if (ctUidToMediaInfo == mediaInfoMap_.end()) {
         infoMap.clear();
@@ -511,7 +511,7 @@ void UpdateMaxInsNumberMap(CallType callType)
     for (int32_t uid : keysToRemove) {
         infoMap.erase(uid);
     }
-    MEDIA_LOG_I("ResetMaxInsNumberMap end.");
+    MEDIA_LOG_I("UpdateMaxInsNumberMap end.");
 }
 
 uint64_t GetMediaInfoContainInstanceNum()
