@@ -38,10 +38,12 @@ namespace {
 
     std::mutex collectMut_;
     std::mutex reportMut_;
+    std::mutex maxReportMut_;
     std::map<OHOS::Media::CallType,
         std::map<int32_t, std::list<std::pair<uint64_t, std::shared_ptr<OHOS::Media::Meta>>>>> mediaInfoMap_;
     std::map<OHOS::Media::CallType,
         std::map<int32_t, std::list<std::pair<uint64_t, std::shared_ptr<OHOS::Media::Meta>>>>> reportMediaInfoMap_;
+    std::map<OHOS::Media::CallType, std::map<int32_t, int32_t>> mediaMaxInstanceNumberMap_;
     std::map<uint64_t, std::pair<OHOS::Media::CallType, int32_t>> idMap_;
     std::chrono::system_clock::time_point currentTime_ = std::chrono::system_clock::now();
     bool g_reachMaxMapSize {false};
@@ -53,10 +55,10 @@ namespace {
         std::pair<uint64_t, std::shared_ptr<OHOS::Media::Meta>> metaAppIdPair;
         {
             std::lock_guard<std::mutex> lock(collectMut_);
-            MEDIA_LOG_I("CollectReportMediaInfo, instanceId is %{public}" PRIu64, instanceId);
+            MEDIA_LOG_I("CollectReportMediaInfo in.");
             auto idMapIt = idMap_.find(instanceId);
             if (idMapIt == idMap_.end()) {
-                MEDIA_LOG_W("Not found instanceId in idMap, instanceId is : %{public}" PRIu64, instanceId);
+                MEDIA_LOG_W("Not found instanceId in idMap");
                 return false;
             }
             ct = idMapIt->second.first;
@@ -111,6 +113,7 @@ namespace {
         auto currentTime = std::chrono::system_clock::now();
         currentTime_ = currentTime;
         reportMediaInfoMap_.clear();
+        UpdateMaxInsNumberMap(OHOS::Media::CallType::AVPLAYER);
         return OHOS::Media::MSERR_OK;
     }
 }
@@ -221,6 +224,10 @@ void MediaEvent::CommonStatisicsEventWrite(CallType callType, OHOS::HiviewDFX::H
         }
         eventInfoJson["appName"] = GetClientBundleName(kv.first);
         eventInfoJson["mediaEvents"] = mediaEvents;
+        {
+            std::lock_guard<std::mutex> lock(maxReportMut_);
+            eventInfoJson["maxInstanceNum"] = mediaMaxInstanceNumberMap_[callType][kv.first];
+        }
         jsonArray.push_back(eventInfoJson);
         infoArr.push_back(jsonArray.dump());
     }
@@ -358,34 +365,63 @@ void FaultScreenCaptureEventWrite(const std::string& appName, uint64_t instanceI
 
 int32_t CreateMediaInfo(CallType callType, int32_t uid, uint64_t instanceId)
 {
-    MEDIA_LOG_I("CreateMediaInfo uid is: %{public}" PRId32 " instanceId is: %{public}" PRIu64, uid, instanceId);
-    std::lock_guard<std::mutex> lock(collectMut_);
-    auto instanceIdMap = idMap_.find(instanceId);
-    if (instanceIdMap != idMap_.end()) {
-        MEDIA_LOG_I("instanceId already exists id idMap_");
-        return MSERR_INVALID_VAL;
-    } else {
-        MEDIA_LOG_I("CreateMediaInfo not found instanceId in idMap_, add the instanceId to idMap_");
-        std::pair<CallType, int32_t> insertToMapPair(callType, uid);
-        idMap_[instanceId] = insertToMapPair;
-    }
-    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
-    std::pair<uint64_t, std::shared_ptr<Meta>> metaAppIdPair(instanceId, meta);
-    auto ctUidToMediaInfo = mediaInfoMap_.find(callType);
-    if (ctUidToMediaInfo != mediaInfoMap_.end()) {
-        auto it = ctUidToMediaInfo->second.find(uid);
-        if (it != ctUidToMediaInfo->second.end()) {
-            it->second.push_back(metaAppIdPair);
-            MEDIA_LOG_I("CreateMediaInfo: Successfully inserted metaAppIdPair for uid ");
+    MEDIA_LOG_I("CreateMediaInfo uid is: %{public}" PRId32, uid);
+    int32_t curInsNumber = 0;
+    {
+        std::lock_guard<std::mutex> lock(collectMut_);
+        auto instanceIdMap = idMap_.find(instanceId);
+        if (instanceIdMap != idMap_.end()) {
+            MEDIA_LOG_I("instanceId already exists id idMap_");
+            return MSERR_INVALID_VAL;
         } else {
-            ctUidToMediaInfo->second[uid].push_back(metaAppIdPair);
-            MEDIA_LOG_I("CreateMediaInfo: Successfully created new list for uid and inserted metaAppIdPair.");
+            MEDIA_LOG_I("CreateMediaInfo not found instanceId in idMap_, add the instanceId to idMap_");
+            std::pair<CallType, int32_t> insertToMapPair(callType, uid);
+            idMap_[instanceId] = insertToMapPair;
+        }
+        std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+        std::pair<uint64_t, std::shared_ptr<Meta>> metaAppIdPair(instanceId, meta);
+        auto ctUidToMediaInfo = mediaInfoMap_.find(callType);
+        if (ctUidToMediaInfo != mediaInfoMap_.end()) {
+            auto it = ctUidToMediaInfo->second.find(uid);
+            if (it != ctUidToMediaInfo->second.end()) {
+                it->second.push_back(metaAppIdPair);
+                curInsNumber = it->second.size();
+                MEDIA_LOG_I("CreateMediaInfo: Successfully inserted metaAppIdPair for uid ");
+            } else {
+                ctUidToMediaInfo->second[uid].push_back(metaAppIdPair);
+                curInsNumber = 1;
+                MEDIA_LOG_I("CreateMediaInfo: Successfully created new list for uid and inserted metaAppIdPair.");
+            }
+        } else {
+            mediaInfoMap_[callType][uid].push_back(metaAppIdPair);
+            curInsNumber = 1;
+            MEDIA_LOG_I("CreateMediaInfo: Successfully created new list for callType and uid ");
+        }
+    }
+    GetMaxInstanceNumber(callType, uid, instanceId, curInsNumber);
+    return MSERR_OK;
+}
+
+void GetMaxInstanceNumber(CallType callType, int32_t uid, uint64_t instanceId, int32_t curInsNumber)
+{
+    std::lock_guard<std::mutex> lock(maxReportMut_);
+    auto ctUidToMaxInsNum = mediaMaxInstanceNumberMap_.find(callType);
+    if (ctUidToMaxInsNum != mediaMaxInstanceNumberMap_.end()) {
+        auto it = ctUidToMaxInsNum->second.find(uid);
+        if (it != ctUidToMaxInsNum->second.end()) {
+            int32_t curMaxInsNumber = it->second;
+            if (curMaxInsNumber < curInsNumber) {
+                it->second = curInsNumber;
+            }
+            MEDIA_LOG_I("CreateMediaInfo: Successfully update maxInsNumber for uid ");
+        } else {
+            ctUidToMaxInsNum->second[uid] = curInsNumber;
+            MEDIA_LOG_I("CreateMediaInfo: Successfully created new maxInsNumber for uid.");
         }
     } else {
-        mediaInfoMap_[callType][uid].push_back(metaAppIdPair);
-        MEDIA_LOG_I("CreateMediaInfo: Successfully created new list for callType and uid ");
+        mediaMaxInstanceNumberMap_[callType][uid] = curInsNumber;
+        MEDIA_LOG_I("CreateMediaInfo: Successfully created new maxInsNumber for callType and uid ");
     }
-    return MSERR_OK;
 }
 
 int32_t AppendMediaInfo(const std::shared_ptr<Meta>& meta, uint64_t instanceId)
@@ -398,7 +434,7 @@ int32_t AppendMediaInfo(const std::shared_ptr<Meta>& meta, uint64_t instanceId)
     std::lock_guard<std::mutex> lock(collectMut_);
     auto idMapIt = idMap_.find(instanceId);
     if (idMapIt == idMap_.end()) {
-        MEDIA_LOG_I("Not found instanceId when append meta, instanceId is : %{public}" PRIu64, instanceId);
+        MEDIA_LOG_I("Not found instanceId when append meta");
         return MSERR_INVALID_VAL;
     }
     CallType ct = idMapIt->second.first;
@@ -429,8 +465,7 @@ int32_t AppendMediaInfo(const std::shared_ptr<Meta>& meta, uint64_t instanceId)
 
 int32_t ReportMediaInfo(uint64_t instanceId)
 {
-    MEDIA_LOG_I("Report.");
-    MEDIA_LOG_I("Delete media info instanceId is: %{public}" PRIu64, instanceId);
+    MEDIA_LOG_I("Report: Delete media info instanceId.");
     if (!CollectReportMediaInfo(instanceId)) {
         MEDIA_LOG_I("Collect media info fail.");
         return MSERR_INVALID_OPERATION;
@@ -449,6 +484,33 @@ int32_t ReportMediaInfo(uint64_t instanceId)
         return StatisticsEventReport();
     }
     return MSERR_OK;
+}
+
+void UpdateMaxInsNumberMap(CallType callType)
+{
+    MEDIA_LOG_I("UpdateMaxInsNumberMap start.");
+    auto ctUidToMediaInfo = mediaInfoMap_.find(callType);
+    if (ctUidToMediaInfo == mediaInfoMap_.end()) {
+        return;
+    }
+
+    auto& infoMap = mediaMaxInstanceNumberMap_.find(callType)->second;
+    std::vector<int32_t> keysToRemove;
+    for (auto &info : infoMap) {
+        int32_t uid = info.first;
+        int32_t& maxNum = info.second;
+        auto it = ctUidToMediaInfo->second.find(uid);
+        if (it != ctUidToMediaInfo->second.end()) {
+            maxNum = it->second.size();
+        } else {
+            maxNum = 0;
+            keysToRemove.push_back(uid);
+        }
+    }
+    for (int32_t uid : keysToRemove) {
+        infoMap.erase(uid);
+    }
+    MEDIA_LOG_I("UpdateMaxInsNumberMap end.");
 }
 
 uint64_t GetMediaInfoContainInstanceNum()
