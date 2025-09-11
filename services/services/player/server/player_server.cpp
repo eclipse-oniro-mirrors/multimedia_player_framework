@@ -74,7 +74,7 @@ std::shared_ptr<IPlayerService> PlayerServer::Create()
 PlayerServer::PlayerServer()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
-    instanceId_ = HiviewDFX::HiTraceChain::GetId().GetChainId();
+    instanceId_ = FAKE_POINTER(this);
 }
 
 PlayerServer::~PlayerServer()
@@ -242,7 +242,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     playerEngine_->SetInstancdId(instanceId_);
     playerEngine_->SetApiVersion(apiVersion_.load());
     playerEngine_->SetIsCalledBySystemApp(isCalledBySystemApp_);
-    MEDIA_LOGI("Setted InstanceId %{public}" PRIu64, instanceId_);
+    MEDIA_LOGI("Setted InstanceId");
     if (dataSrc_ != nullptr) {
         ret = playerEngine_->SetSource(dataSrc_);
     } else if (mediaSource_ != nullptr) {
@@ -907,6 +907,8 @@ int32_t PlayerServer::Release()
     if (lastOpStatus_ != PLAYER_IDLE) {
         (void)OnReset();
     }
+    ReportMediaInfo(instanceId_);
+    GetMediaInfoContainInstanceNum();
 #ifdef SUPPORT_VIDEO
     if (surface_ != nullptr) {
         surface_ = nullptr;
@@ -1025,8 +1027,7 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
 
 int32_t PlayerServer::HandleSeek(int32_t mSeconds, PlayerSeekMode mode)
 {
-    MEDIA_LOGI("KPI-TRACE: PlayerServer HandleSeek in, mSeconds: %{public}d, mSeconds: %{public}d, "
-        "instanceId: %{public}" PRIu64 "", mSeconds, mode, instanceId_);
+    MEDIA_LOGI("KPI-TRACE: PlayerServer HandleSeek in, mSeconds: %{public}d, mSeconds: %{public}d", mSeconds, mode);
     ExitSeekContinous(false);
     int32_t ret = playerEngine_->Seek(mSeconds, mode);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Seek Failed!");
@@ -2264,8 +2265,7 @@ int32_t PlayerServer::SeekContinous(int32_t mSeconds)
 
 int32_t PlayerServer::HandleSeekContinous(int32_t mSeconds, int64_t batchNo)
 {
-    MEDIA_LOGI("KPI-TRACE: PlayerServer HandleSeek in, mSeconds: %{public}d, "
-        "instanceId: %{public}" PRIu64 "", mSeconds, instanceId_);
+    MEDIA_LOGI("KPI-TRACE: PlayerServer HandleSeek in, mSeconds: %{public}d,", mSeconds);
     int32_t ret = playerEngine_->SeekContinous(mSeconds, batchNo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Seek Failed!");
     MEDIA_LOGI("PlayerServer HandleSeek end");

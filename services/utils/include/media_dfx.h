@@ -95,6 +95,8 @@ __attribute__((visibility("default"))) int32_t CreateMediaInfo(CallType callType
 __attribute__((visibility("default"))) int32_t AppendMediaInfo(const std::shared_ptr<Meta>& meta, uint64_t instanceId);
 __attribute__((visibility("default"))) int32_t ReportMediaInfo(uint64_t instanceId);
 __attribute__((visibility("default"))) uint64_t GetMediaInfoContainInstanceNum();
+__attribute__((visibility("default"))) int32_t GetMediaInfoInstanceNum(CallType callType, int32_t uid);
+__attribute__((visibility("default"))) void UpdateMaxInsNumberMap(CallType callType);
 
 class __attribute__((visibility("default"))) MediaTrace : public NoCopyable {
 public:

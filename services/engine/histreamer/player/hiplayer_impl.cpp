@@ -1130,8 +1130,6 @@ int32_t HiPlayerImpl::Stop()
         AppendPlayerMediaInfo();
     }
     OnStateChanged(PlayerStateId::STOPPED);
-    ReportMediaInfo(instanceId_);
-    GetMediaInfoContainInstanceNum();
     return TransStatus(ret);
 }
 
