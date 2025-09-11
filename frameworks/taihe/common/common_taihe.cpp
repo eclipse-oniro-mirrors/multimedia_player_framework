@@ -24,14 +24,14 @@
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "CommonTaihe"};
 
-constexpr char CLASS_NAME_BUSINESSERROR[] = "L@ohos/base/BusinessError;";
-constexpr char CLASS_NAME_INTERRUPTEVENT[] = "L@ohos/multimedia/audio/_taihe_InterruptEvent_inner;";
-constexpr char CLASS_NAME_INTERRUPTTYPE[] = "L@ohos/multimedia/audio/_taihe_InterruptType_inner;";
-constexpr char CLASS_NAME_INTERRUPTHINT[] = "L@ohos/multimedia/audio/_taihe_InterruptHint_inner;";
-constexpr char CLASS_NAME_INTERRUPTFORCETYPE[] = "L@ohos/multimedia/audio/_taihe_InterruptForceType_inner;";
-constexpr char CLASS_NAME_AUDIORENDERERINFO[] = "L@ohos/multimedia/audio/audio/_taihe_AudioRendererInfo_inner;";
-constexpr char CLASS_NAME_STREAMUSAGE[] = "L@ohos/multimedia/audio/audio/StreamUsage;";
-constexpr char CLASS_NAME_VOLUMEMODE[] = "L@ohos/multimedia/audio/audio/AudioVolumeMode;";
+constexpr char CLASS_NAME_BUSINESSERROR[] = "@ohos.base.BusinessError";
+constexpr char CLASS_NAME_INTERRUPTEVENT[] = "@ohos.multimedia.audio._taihe_InterruptEvent_inner";
+constexpr char CLASS_NAME_INTERRUPTTYPE[] = "@ohos.multimedia.audio._taihe_InterruptType_inner";
+constexpr char CLASS_NAME_INTERRUPTHINT[] = "@ohos.multimedia.audio._taihe_InterruptHint_inner";
+constexpr char CLASS_NAME_INTERRUPTFORCETYPE[] = "@ohos.multimedia.audio._taihe_InterruptForceType_inner";
+constexpr char CLASS_NAME_AUDIORENDERERINFO[] = "@ohos.multimedia.audio.audio._taihe_AudioRendererInfo_inner";
+constexpr char CLASS_NAME_STREAMUSAGE[] = "@ohos.multimedia.audio.audio.StreamUsage";
+constexpr char CLASS_NAME_VOLUMEMODE[] = "@ohos.multimedia.audio.audio.AudioVolumeMode";
 
 static const std::map<OHOS::AudioStandard::InterruptType, int32_t> ANI_INTERRUPTTYPE_INDEX_MAP = {
     {OHOS::AudioStandard::InterruptType::INTERRUPT_TYPE_BEGIN, 1},
@@ -120,7 +120,7 @@ ani_object CommonTaihe::ToBusinessError(ani_env *env, int32_t code, const std::s
     CHECK_AND_RETURN_RET_LOG(ANI_OK == env->FindClass(CLASS_NAME_BUSINESSERROR, &cls), err,
         "find class %{public}s failed", CLASS_NAME_BUSINESSERROR);
     ani_method ctor {};
-    CHECK_AND_RETURN_RET_LOG(ANI_OK == env->Class_FindMethod(cls, "<ctor>", ":V", &ctor), err,
+    CHECK_AND_RETURN_RET_LOG(ANI_OK == env->Class_FindMethod(cls, "<ctor>", ":", &ctor), err,
         "find method BusinessError constructor failed");
     ani_object error {};
     CHECK_AND_RETURN_RET_LOG(ANI_OK == env->Object_New(cls, ctor, &error), err,
@@ -220,7 +220,7 @@ ani_object CommonTaihe::ToAudioStandardInterruptEvent(ani_env *env,
     CHECK_AND_RETURN_RET_LOG(ANI_OK == env->FindClass(CLASS_NAME_INTERRUPTEVENT, &cls), interruptEventObj,
         "find class %{public}s failed", CLASS_NAME_INTERRUPTEVENT);
     ani_method ctor {};
-    CHECK_AND_RETURN_RET_LOG(ANI_OK == env->Class_FindMethod(cls, "<ctor>", ":V", &ctor), interruptEventObj,
+    CHECK_AND_RETURN_RET_LOG(ANI_OK == env->Class_FindMethod(cls, "<ctor>", ":", &ctor), interruptEventObj,
         "find method AudioStandardInterruptEvent constructor failed");
     CHECK_AND_RETURN_RET_LOG(ANI_OK == env->Object_New(cls, ctor, &interruptEventObj), interruptEventObj,
         "new object %{public}s failed", CLASS_NAME_INTERRUPTEVENT);
@@ -284,7 +284,7 @@ ani_object CommonTaihe::CreateAudioRendererInfo(ani_env *env,
     CHECK_AND_RETURN_RET_LOG(env->FindClass(CLASS_NAME_AUDIORENDERERINFO, &cls) == ANI_OK, nullptr,
         "Failed to find class: %{public}s", CLASS_NAME_AUDIORENDERERINFO);
     ani_method ctorMethod {};
-    CHECK_AND_RETURN_RET_LOG(env->Class_FindMethod(cls, "<ctor>", ":V", &ctorMethod) == ANI_OK, nullptr,
+    CHECK_AND_RETURN_RET_LOG(env->Class_FindMethod(cls, "<ctor>", ":", &ctorMethod) == ANI_OK, nullptr,
         "Failed to find method: <ctor>");
 
     ani_object aniObject {};
