@@ -76,7 +76,8 @@ void AudioHapticPlayerCallbackNapi::RemoveCallbackReference(const std::string &c
 static void SetValueInt32(const napi_env& env, const std::string& fieldStr, const int intValue, napi_value& result)
 {
     napi_handle_scope scope = nullptr;
-    napi_open_handle_scope(env, &scope);
+    napi_status status = napi_open_handle_scope(env, &scope);
+    CHECK_AND_RETURN_LOG(status == napi_ok && scope != nullptr, "open handle scope failed!");
 
     napi_value value = nullptr;
     napi_create_int32(env, intValue, &value);
@@ -126,7 +127,8 @@ void AudioHapticPlayerCallbackNapi::OnInterruptJsCallback(std::unique_ptr<AudioH
         napi_env env = event->callback->env_;
         napi_ref callback = event->callback->cb_;
         napi_handle_scope scope = nullptr;
-        napi_open_handle_scope(env, &scope);
+        napi_status status = napi_open_handle_scope(env, &scope);
+        CHECK_AND_RETURN_LOG(status == napi_ok && scope != nullptr, "open handle scope failed!");
         MEDIA_LOGI("AudioHapticPlayerJsCallback: %{public}s JsCallBack, uv_queue_work start", request.c_str());
         do {
             CHECK_AND_BREAK_LOG(event != nullptr, "event is nullptr");
@@ -192,7 +194,8 @@ void AudioHapticPlayerCallbackNapi::OnEndOfStreamJsCallback(std::unique_ptr<Audi
         napi_env env = event->callback->env_;
         napi_ref callback = event->callback->cb_;
         napi_handle_scope scope = nullptr;
-        napi_open_handle_scope(env, &scope);
+        napi_status status = napi_open_handle_scope(env, &scope);
+        CHECK_AND_RETURN_LOG(status == napi_ok && scope != nullptr, "open handle scope failed!");
         MEDIA_LOGI("OnEndOfStreamJsCallback: %{public}s JsCallBack, uv_queue_work start", request.c_str());
         do {
             CHECK_AND_BREAK_LOG(event != nullptr, "event is nullptr");
