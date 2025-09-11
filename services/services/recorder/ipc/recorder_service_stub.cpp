@@ -567,7 +567,12 @@ int32_t RecorderServiceStub::SetListenerObject(MessageParcel &data, MessageParce
 
 int32_t RecorderServiceStub::SetVideoSource(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t source = data.ReadInt32();
+    int32_t source = 0;
+
+    if (!(data.ReadInt32(source))) {
+        return MSERR_INVALID_VAL;
+    }
+
     VideoSourceType sourceType = static_cast<VideoSourceType>(source);
     int32_t sourceId = 0;
     int32_t ret = SetVideoSource(sourceType, sourceId);
@@ -578,8 +583,13 @@ int32_t RecorderServiceStub::SetVideoSource(MessageParcel &data, MessageParcel &
 
 int32_t RecorderServiceStub::SetVideoEncoder(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t sourceId = data.ReadInt32();
-    int32_t encoder = data.ReadInt32();
+    int32_t sourceId = 0;
+    int32_t encoder = 0;
+
+    if (!(data.ReadInt32(sourceId) && data.ReadInt32(encoder))) {
+        return MSERR_INVALID_VAL;
+    }
+
     VideoCodecFormat codecFormat = static_cast<VideoCodecFormat>(encoder);
     reply.WriteInt32(SetVideoEncoder(sourceId, codecFormat));
     return MSERR_OK;
@@ -587,64 +597,104 @@ int32_t RecorderServiceStub::SetVideoEncoder(MessageParcel &data, MessageParcel 
 
 int32_t RecorderServiceStub::SetVideoSize(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t sourceId = data.ReadInt32();
-    int32_t width = data.ReadInt32();
-    int32_t height = data.ReadInt32();
+    int32_t sourceId = 0;
+    int32_t width = 0;
+    int32_t height = 0;
+
+    if (!(data.ReadInt32(sourceId) && data.ReadInt32(width) && data.ReadInt32(height))) {
+        return MSERR_INVALID_VAL;
+    }
+
     reply.WriteInt32(SetVideoSize(sourceId, width, height));
     return MSERR_OK;
 }
 
 int32_t RecorderServiceStub::SetVideoFrameRate(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t sourceId = data.ReadInt32();
-    int32_t frameRate = data.ReadInt32();
+    int32_t sourceId = 0;
+    int32_t frameRate = 0;
+
+    if (!(data.ReadInt32(sourceId) && data.ReadInt32(frameRate))) {
+        return MSERR_INVALID_VAL;
+    }
+
     reply.WriteInt32(SetVideoFrameRate(sourceId, frameRate));
     return MSERR_OK;
 }
 
 int32_t RecorderServiceStub::SetVideoEncodingBitRate(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t sourceId = data.ReadInt32();
-    int32_t rate = data.ReadInt32();
+    int32_t sourceId = 0;
+    int32_t rate = 0;
+
+    if (!(data.ReadInt32(sourceId) && data.ReadInt32(rate))) {
+        return MSERR_INVALID_VAL;
+    }
+
     reply.WriteInt32(SetVideoEncodingBitRate(sourceId, rate));
     return MSERR_OK;
 }
 
 int32_t RecorderServiceStub::SetVideoIsHdr(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t sourceId = data.ReadInt32();
-    bool isHdr = data.ReadBool();
+    int32_t sourceId = 0;
+    bool isHdr = false;
+
+    if (!(data.ReadInt32(sourceId) && data.ReadBool(isHdr))) {
+        return MSERR_INVALID_VAL;
+    }
+
     reply.WriteInt32(SetVideoIsHdr(sourceId, isHdr));
     return MSERR_OK;
 }
 
 int32_t RecorderServiceStub::SetVideoEnableTemporalScale(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t sourceId = data.ReadInt32();
-    bool enableTemporalScale = data.ReadBool();
+    int32_t sourceId = 0;
+    bool enableTemporalScale = false;
+
+    if (!(data.ReadInt32(sourceId) && data.ReadBool(enableTemporalScale))) {
+        return MSERR_INVALID_VAL;
+    }
+
     reply.WriteInt32(SetVideoEnableTemporalScale(sourceId, enableTemporalScale));
     return MSERR_OK;
 }
 
 int32_t RecorderServiceStub::SetVideoEnableStableQualityMode(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t sourceId = data.ReadInt32();
-    bool enableStableQualityMode = data.ReadBool();
+    int32_t sourceId = 0;
+    bool enableStableQualityMode = false;
+
+    if (!(data.ReadInt32(sourceId) && data.ReadBool(enableStableQualityMode))) {
+        return MSERR_INVALID_VAL;
+    }
+
     reply.WriteInt32(SetVideoEnableStableQualityMode(sourceId, enableStableQualityMode));
     return MSERR_OK;
 }
 
 int32_t RecorderServiceStub::SetVideoEnableBFrame(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t sourceId = data.ReadInt32();
-    bool enableBFrame = data.ReadBool();
+    int32_t sourceId = 0;
+    bool enableBFrame = false;
+
+    if (!(data.ReadInt32(sourceId) && data.ReadBool(enableBFrame))) {
+        return MSERR_INVALID_VAL;
+    }
+
     reply.WriteInt32(SetVideoEnableBFrame(sourceId, enableBFrame));
     return MSERR_OK;
 }
 
 int32_t RecorderServiceStub::SetMetaConfigs(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t sourceId = data.ReadInt32();
+    int32_t sourceId = 0;
+
+    if (!(data.ReadInt32(sourceId))) {
+        return MSERR_INVALID_VAL;
+    }
+
     int32_t ret = SetMetaConfigs(sourceId);
     reply.WriteInt32(ret);
     return MSERR_OK;
@@ -652,7 +702,12 @@ int32_t RecorderServiceStub::SetMetaConfigs(MessageParcel &data, MessageParcel &
 
 int32_t RecorderServiceStub::SetMetaSource(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t source = data.ReadInt32();
+    int32_t source = 0;
+
+    if (!(data.ReadInt32(source))) {
+        return MSERR_INVALID_VAL;
+    }
+
     MetaSourceType sourceType = static_cast<MetaSourceType>(source);
     int32_t sourceId = 0;
     int32_t ret = SetMetaSource(sourceType, sourceId);
@@ -663,7 +718,12 @@ int32_t RecorderServiceStub::SetMetaSource(MessageParcel &data, MessageParcel &r
 
 int32_t RecorderServiceStub::SetMetaMimeType(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t sourceId = data.ReadInt32();
+    int32_t sourceId = 0;
+
+    if (!(data.ReadInt32(sourceId))) {
+        return MSERR_INVALID_VAL;
+    }
+
     const char *mimetypeCString = data.ReadCString();
     CHECK_AND_RETURN_RET_LOG(mimetypeCString != nullptr, MSERR_INVALID_OPERATION,
         "SetMetaMimeType: data.ReadCString() returned nullptr for mimeType!");
@@ -674,7 +734,12 @@ int32_t RecorderServiceStub::SetMetaMimeType(MessageParcel &data, MessageParcel 
 
 int32_t RecorderServiceStub::SetMetaTimedKey(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t sourceId = data.ReadInt32();
+    int32_t sourceId = 0;
+
+    if (!(data.ReadInt32(sourceId))) {
+        return MSERR_INVALID_VAL;
+    }
+
     const char *timedKeyCString = data.ReadCString();
     CHECK_AND_RETURN_RET_LOG(timedKeyCString != nullptr, MSERR_INVALID_OPERATION,
         "SetMetaTimedKey: data.ReadCString() returned nullptr for timedKey!");
@@ -685,7 +750,12 @@ int32_t RecorderServiceStub::SetMetaTimedKey(MessageParcel &data, MessageParcel 
 
 int32_t RecorderServiceStub::SetMetaSourceTrackMime(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t sourceId = data.ReadInt32();
+    int32_t sourceId = 0;
+
+    if (!(data.ReadInt32(sourceId))) {
+        return MSERR_INVALID_VAL;
+    }
+
     const char *srcTrackMimeCString = data.ReadCString();
     CHECK_AND_RETURN_RET_LOG(srcTrackMimeCString != nullptr, MSERR_INVALID_OPERATION,
         "srcTrackMime: data.ReadCString() returned nullptr for srcTrackMime!");
@@ -696,7 +766,12 @@ int32_t RecorderServiceStub::SetMetaSourceTrackMime(MessageParcel &data, Message
 
 int32_t RecorderServiceStub::GetSurface(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t sourceId = data.ReadInt32();
+    int32_t sourceId = 0;
+
+    if (!(data.ReadInt32(sourceId))) {
+        return MSERR_INVALID_VAL;
+    }
+
     sptr<OHOS::Surface> surface = GetSurface(sourceId);
     if (surface != nullptr && surface->GetProducer() != nullptr) {
         sptr<IRemoteObject> object = surface->GetProducer()->AsObject();
@@ -707,7 +782,12 @@ int32_t RecorderServiceStub::GetSurface(MessageParcel &data, MessageParcel &repl
 
 int32_t RecorderServiceStub::GetMetaSurface(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t sourceId = data.ReadInt32();
+    int32_t sourceId = 0;
+
+    if (!(data.ReadInt32(sourceId))) {
+        return MSERR_INVALID_VAL;
+    }
+
     sptr<OHOS::Surface> surface = GetMetaSurface(sourceId);
     if (surface != nullptr && surface->GetProducer() != nullptr) {
         sptr<IRemoteObject> object = surface->GetProducer()->AsObject();
@@ -727,8 +807,13 @@ int32_t RecorderServiceStub::SetAudioSource(MessageParcel &data, MessageParcel &
 
 int32_t RecorderServiceStub::SetAudioEncoder(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t sourceId = data.ReadInt32();
-    int32_t format = data.ReadInt32();
+    int32_t sourceId = 0;
+    int32_t format = 0;
+
+    if (!(data.ReadInt32(sourceId) && data.ReadInt32(format))) {
+        return MSERR_INVALID_VAL;
+    }
+
     AudioCodecFormat encoderFormat = static_cast<AudioCodecFormat>(format);
     reply.WriteInt32(SetAudioEncoder(sourceId, encoderFormat));
     return MSERR_OK;
@@ -736,31 +821,51 @@ int32_t RecorderServiceStub::SetAudioEncoder(MessageParcel &data, MessageParcel 
 
 int32_t RecorderServiceStub::SetAudioSampleRate(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t sourceId = data.ReadInt32();
-    int32_t rate = data.ReadInt32();
+    int32_t sourceId = 0;
+    int32_t rate = 0;
+
+    if (!(data.ReadInt32(sourceId) && data.ReadInt32(rate))) {
+        return MSERR_INVALID_VAL;
+    }
+
     reply.WriteInt32(SetAudioSampleRate(sourceId, rate));
     return MSERR_OK;
 }
 
 int32_t RecorderServiceStub::SetAudioChannels(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t sourceId = data.ReadInt32();
-    int32_t num = data.ReadInt32();
+    int32_t sourceId = 0;
+    int32_t num = 0;
+
+    if (!(data.ReadInt32(sourceId) && data.ReadInt32(num))) {
+        return MSERR_INVALID_VAL;
+    }
+
     reply.WriteInt32(SetAudioChannels(sourceId, num));
     return MSERR_OK;
 }
 
 int32_t RecorderServiceStub::SetAudioEncodingBitRate(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t sourceId = data.ReadInt32();
-    int32_t bitRate = data.ReadInt32();
+    int32_t sourceId = 0;
+    int32_t bitRate = 0;
+
+    if (!(data.ReadInt32(sourceId) && data.ReadInt32(bitRate))) {
+        return MSERR_INVALID_VAL;
+    }
+
     reply.WriteInt32(SetAudioEncodingBitRate(sourceId, bitRate));
     return MSERR_OK;
 }
 
 int32_t RecorderServiceStub::SetDataSource(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t type = data.ReadInt32();
+    int32_t type = 0;
+
+    if (!(data.ReadInt32(type))) {
+        return MSERR_INVALID_VAL;
+    }
+
     int32_t sourceId = 0;
     DataSourceType dataType = static_cast<DataSourceType>(type);
     int32_t ret = SetDataSource(dataType, sourceId);
@@ -771,14 +876,24 @@ int32_t RecorderServiceStub::SetDataSource(MessageParcel &data, MessageParcel &r
 
 int32_t RecorderServiceStub::SetMaxDuration(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t duration = data.ReadInt32();
+    int32_t duration = 0;
+
+    if (!(data.ReadInt32(duration))) {
+        return MSERR_INVALID_VAL;
+    }
+
     reply.WriteInt32(SetMaxDuration(duration));
     return MSERR_OK;
 }
 
 int32_t RecorderServiceStub::SetOutputFormat(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t type = data.ReadInt32();
+    int32_t type = 0;
+
+    if (!(data.ReadInt32(type))) {
+        return MSERR_INVALID_VAL;
+    }
+
     OutputFormatType formatType = static_cast<OutputFormatType>(type);
     reply.WriteInt32(SetOutputFormat(formatType));
     return MSERR_OK;
@@ -794,7 +909,12 @@ int32_t RecorderServiceStub::SetOutputFile(MessageParcel &data, MessageParcel &r
 
 int32_t RecorderServiceStub::SetFileGenerationMode(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t mode = data.ReadInt32();
+    int32_t mode = 0;
+
+    if (!(data.ReadInt32(mode))) {
+        return MSERR_INVALID_VAL;
+    }
+
     reply.WriteInt32(SetFileGenerationMode(static_cast<FileGenerationMode>(mode)));
     return MSERR_OK;
 }
@@ -802,8 +922,13 @@ int32_t RecorderServiceStub::SetFileGenerationMode(MessageParcel &data, MessageP
 int32_t RecorderServiceStub::SetLocation(MessageParcel &data, MessageParcel &reply)
 {
     (void)reply;
-    float latitude = data.ReadFloat();
-    float longitude = data.ReadFloat();
+    float latitude = 0;
+    float longitude = 0;
+
+    if (!(data.ReadFloat(latitude) && data.ReadFloat(longitude))) {
+        return MSERR_INVALID_VAL;
+    }
+
     SetLocation(latitude, longitude);
     return MSERR_OK;
 }
@@ -811,7 +936,12 @@ int32_t RecorderServiceStub::SetLocation(MessageParcel &data, MessageParcel &rep
 int32_t RecorderServiceStub::SetOrientationHint(MessageParcel &data, MessageParcel &reply)
 {
     (void)reply;
-    int32_t rotation = data.ReadInt32();
+    int32_t rotation = 0;
+
+    if (!(data.ReadInt32(rotation))) {
+        return MSERR_INVALID_VAL;
+    }
+
     return SetOrientationHint(rotation);
 }
 
@@ -830,7 +960,12 @@ int32_t RecorderServiceStub::SetUserCustomInfo(MessageParcel &data, MessageParce
 int32_t RecorderServiceStub::SetGenre(MessageParcel &data, MessageParcel &reply)
 {
     (void)reply;
-    std::string genre = data.ReadString();
+    std::string genre = std::string();
+
+    if (!(data.ReadString(genre))) {
+        return MSERR_INVALID_VAL;
+    }
+
     reply.WriteInt32(SetGenre(genre));
     return MSERR_OK;
 }
@@ -865,7 +1000,12 @@ int32_t RecorderServiceStub::Resume(MessageParcel &data, MessageParcel &reply)
 
 int32_t RecorderServiceStub::Stop(MessageParcel &data, MessageParcel &reply)
 {
-    bool block = data.ReadBool();
+    bool block = false;
+
+    if (!(data.ReadBool(block))) {
+        return MSERR_INVALID_VAL;
+    }
+
     reply.WriteInt32(Stop(block));
     audioSourceType_ = AUDIO_SOURCE_INVALID;
     return MSERR_OK;
@@ -1020,7 +1160,12 @@ int32_t RecorderServiceStub::SetUserMeta(MessageParcel &data, MessageParcel &rep
 
 int32_t RecorderServiceStub::SetWillMuteWhenInterrupted(MessageParcel &data, MessageParcel &reply)
 {
-    bool muteWhenInterrupted = data.ReadBool();
+    bool muteWhenInterrupted = false;
+
+    if (!(data.ReadBool(muteWhenInterrupted))) {
+        return MSERR_INVALID_VAL;
+    }
+
     reply.WriteInt32(SetWillMuteWhenInterrupted(muteWhenInterrupted));
     return MSERR_OK;
 }
@@ -1028,8 +1173,14 @@ int32_t RecorderServiceStub::SetWillMuteWhenInterrupted(MessageParcel &data, Mes
 int32_t RecorderServiceStub::TransmitQos(MessageParcel &data, MessageParcel &reply)
 {
     (void)reply;
-    QOS::QosLevel level = static_cast<QOS::QosLevel>(data.ReadInt32());
-    return TransmitQos(level);
+    int32_t level = 0;
+
+    if (!(data.ReadInt32(level))) {
+        return MSERR_INVALID_VAL;
+    }
+
+    QOS::QosLevel qosLevel = static_cast<QOS::QosLevel>(level);
+    return TransmitQos(qosLevel);
 }
 } // namespace Media
 } // namespace OHOS
