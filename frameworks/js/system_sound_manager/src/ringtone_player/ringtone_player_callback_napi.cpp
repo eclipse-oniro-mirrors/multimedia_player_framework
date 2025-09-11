@@ -70,7 +70,8 @@ void RingtonePlayerCallbackNapi::RemoveCallbackReference(const std::string &call
 static void SetValueInt32(const napi_env& env, const std::string& fieldStr, const int intValue, napi_value& result)
 {
     napi_handle_scope scope = nullptr;
-    napi_open_handle_scope(env, &scope);
+    napi_status status = napi_open_handle_scope(env, &scope);
+    CHECK_AND_RETURN_LOG(status == napi_ok && scope != nullptr, "open handle scope failed!");
 
     napi_value value = nullptr;
     napi_create_int32(env, intValue, &value);
@@ -120,7 +121,8 @@ void RingtonePlayerCallbackNapi::OnJsCallbackInterrupt(std::unique_ptr<RingtoneP
         napi_env env = event->callback->env_;
         napi_ref callback = event->callback->cb_;
         napi_handle_scope scope = nullptr;
-        napi_open_handle_scope(env, &scope);
+        napi_status status = napi_open_handle_scope(env, &scope);
+        CHECK_AND_RETURN_LOG(status == napi_ok && scope != nullptr, "open handle scope failed!");
         MEDIA_LOGI("RingtonePlayerCallbackNapi: JsCallBack %{public}s, uv_queue_work start", request.c_str());
         do {
             napi_value jsCallback = nullptr;
