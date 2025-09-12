@@ -47,39 +47,38 @@ constexpr int32_t NUM_TWO = 0;
 constexpr int32_t NUM_THREE = 0;
 constexpr int32_t PATTERNDURATION_TIME_MS = 800; //ms
 
+void CopyPoint(const VibratorCurvePoint &strongPoint, VibratorCurvePoint &weakPoint)
+{
+    weakPoint.time = strongPoint.time;
+    weakPoint.intensity = strongPoint.intensity;
+    weakPoint.frequency = strongPoint.frequency;
+}
+
 void CopyEvent(const VibratorEvent &strongEvent, VibratorEvent &weakEvent)
 {
     // Copy event type
     weakEvent.type = strongEvent.type;
     // Copy event time
     weakEvent.time = strongEvent.time;
-    // Copy event frequency
-    weakEvent.frequency = strongEvent.frequency;
+    // Copy event frequency to 33
+    weakEvent.frequency = 33;
     // Copy event index
     weakEvent.index = strongEvent.index;
-    // Modify intensity to 60% of the original and round to the nearest integer
-    weakEvent.intensity = static_cast<int32_t>(std::round(strongEvent.intensity * SIXTY_PERCENT));
+    // intensity keep same
+    weakEvent.intensity = strongEvent.intensity;
+    // duration keep same
+    weakEvent.duration = strongEvent.duration;
 
-    if (weakEvent.type == EVENT_TYPE_CONTINUOUS) {
-        // Modify duration to 50% of the original, but not less than 50ms
-        weakEvent.duration = std::max(50, strongEvent.duration / HALF);
-
-        // Handle pointNum and points
-        if (strongEvent.pointNum != 0) {
-            // Set new pointNum to 4
-            weakEvent.pointNum = 4;
-
-            // Allocate new points array
-            weakEvent.points = new VibratorCurvePoint[weakEvent.pointNum];
-
-            // Set four points based on duration
-            int32_t duration = weakEvent.duration;
-            weakEvent.points[NUM_ZERO] = { 0, 100, 0 };
-            weakEvent.points[NUM_ONE] = { 1, 100, 0 };
-            weakEvent.points[NUM_TWO] = { duration -1, 100, 0 };
-            weakEvent.points[NUM_THREE] = { duration, 0, 0 };
+    // Handle pointNum and points
+    if (strongEvent.pointNum > 0 && strongEvent.points != nullptr) {
+        // Allocate new points array
+        weakEvent.points = new VibratorCurvePoint[strongEvent.pointNum];
+        
+        for (int32_t i = 0; i < strongEvent.pointNum; ++i) {
+            CopyPoint(strongEvent.points[i], weakEvent.points[i]);
         }
     }
+
 }
 
 void CopyPattern(const VibratorPattern &strongPattern, VibratorPattern &weakPattern)
