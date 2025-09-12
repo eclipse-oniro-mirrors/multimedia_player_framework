@@ -38,13 +38,8 @@ constexpr int32_t PLAYER_BUFFER_TIME = 30; // ms
 constexpr int32_t PATTERN_DEFAULT_COUNT = 10;
 constexpr int32_t PATTERN_MAX_COUNT = 200;
 constexpr int32_t WAIT_VIBRATOR_CANCEL_TIME_MS = 50; // ms
-constexpr float SIXTY_PERCENT = 0.6f;
-constexpr int32_t HALF = 2;
 constexpr int32_t DURATION_AT_LEAST = 100; // ms
-constexpr int32_t NUM_ZERO = 0;
-constexpr int32_t NUM_ONE = 0;
-constexpr int32_t NUM_TWO = 0;
-constexpr int32_t NUM_THREE = 0;
+constexpr int32_t FREQUENCY_THIRTY_THREE = 33;
 constexpr int32_t PATTERNDURATION_TIME_MS = 800; //ms
 
 void CopyPoint(const VibratorCurvePoint &strongPoint, VibratorCurvePoint &weakPoint)
@@ -61,7 +56,7 @@ void CopyEvent(const VibratorEvent &strongEvent, VibratorEvent &weakEvent)
     // Copy event time
     weakEvent.time = strongEvent.time;
     // Copy event frequency to 33
-    weakEvent.frequency = 33;
+    weakEvent.frequency = FREQUENCY_THIRTY_THREE;
     // Copy event index
     weakEvent.index = strongEvent.index;
     // intensity keep same
