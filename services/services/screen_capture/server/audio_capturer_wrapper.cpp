@@ -67,6 +67,7 @@ int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
             .compare(bundleName_) == 0) {
         std::vector<SourceType> targetSources = {
             SourceType::SOURCE_TYPE_MIC,
+            SourceType::SOURCE_TYPE_VOICE_CALL,
             SourceType::SOURCE_TYPE_VOICE_RECOGNITION,
             SourceType::SOURCE_TYPE_VOICE_MESSAGE,
             SourceType::SOURCE_TYPE_CAMCORDER
