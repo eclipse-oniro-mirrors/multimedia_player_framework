@@ -73,7 +73,6 @@ void CopyEvent(const VibratorEvent &strongEvent, VibratorEvent &weakEvent)
             CopyPoint(strongEvent.points[i], weakEvent.points[i]);
         }
     }
-
 }
 
 void CopyPattern(const VibratorPattern &strongPattern, VibratorPattern &weakPattern)
