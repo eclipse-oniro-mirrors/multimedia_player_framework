@@ -133,7 +133,12 @@ int32_t HiLppVideoStreamerImpl::SetParameter(const Format &param)
 int32_t HiLppVideoStreamerImpl::GetLatestPts(int64_t &pts)
 {
     MEDIA_LOG_I("HiLppVideoStreamerImpl::GetLatestPts");
-    FALSE_RETURN_V_MSG(vdec_ != nullptr, MSERR_INVALID_OPERATION, "vdec_ nullptr");
+    if (!isLpp_) {
+        FALSE_RETURN_V_MSG(vdec_ != nullptr, MSERR_INVALID_OPERATION, "vdec_ nullptr");
+        pts = vdec_->GetLastCommonPts();
+        return MSERR_OK;
+    }
+    FALSE_RETURN_V_MSG(syncMgr_ != nullptr, MSERR_INVALID_OPERATION, "syncMgr_ nullptr");
     return syncMgr_->GetLatestPts(pts);
 }
 
