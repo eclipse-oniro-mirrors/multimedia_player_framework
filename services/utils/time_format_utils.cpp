@@ -41,6 +41,7 @@ std::string TimeFormatUtils::FormatDateTimeByTimeZone(const std::string &iso8601
 
     std::istringstream iss(iso8601Str);
     std::tm tm;
+    tm.tm_isdst = -1;
     if (!(iss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%S"))) {
         return iso8601Str;  // cant prase time
     }
@@ -77,6 +78,11 @@ std::string TimeFormatUtils::FormatDateTimeByTimeZone(const std::string &iso8601
     }
     auto localTime =
         std::chrono::system_clock::from_time_t(std::mktime(&tm)) + std::chrono::seconds(timezone - diffTime);
+    return FormatLocalTime(localTime);
+}
+
+std::string TimeFormatUtils::FormatLocalTime(std::chrono::system_clock::time_point localTime)
+{
     std::time_t localTimeT = std::chrono::system_clock::to_time_t(localTime);
     std::tm *localTmPtr = std::localtime(&localTimeT);
     if (localTmPtr == nullptr) {
