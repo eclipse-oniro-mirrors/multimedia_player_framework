@@ -66,6 +66,7 @@ public:
     void SetSyncManager(std::shared_ptr<ILppSyncManager> syncMgr);
     void SetPlaybackSpeed(float speed);
     int32_t SetTargetPts(int64_t targetPts);
+    int64_t GetLastCommonPts();
 
 private:
     int32_t PrepareBufferQueue();
@@ -109,6 +110,7 @@ private:
 
     std::atomic<int64_t> lastRenderTimeNs_ {0};
     std::atomic<int64_t> lastPts_ {0};
+    std::atomic<int64_t> lastCommonPts_ {0};
 
     std::atomic<bool> speed_ {1.0f};
     bool dumpBufferNeeded_ {false};
