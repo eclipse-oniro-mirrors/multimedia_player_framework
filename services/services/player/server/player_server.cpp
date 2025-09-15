@@ -1031,7 +1031,7 @@ int32_t PlayerServer::HandleSeek(int32_t mSeconds, PlayerSeekMode mode)
     ExitSeekContinous(false);
     int32_t ret = playerEngine_->Seek(mSeconds, mode);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Seek Failed!");
-    MEDIA_LOGI("PlayerServer HandleSeek end");
+    MEDIA_LOGD("PlayerServer HandleSeek end");
     return MSERR_OK;
 }
 
@@ -2252,7 +2252,7 @@ int32_t PlayerServer::SeekContinous(int32_t mSeconds)
         MEDIA_LOGI("PlayerServer::Seek start");
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
         (void)currState->SeekContinous(mSeconds, seekContinousBatchNo);
-        MEDIA_LOGI("PlayerServer::SeekContinous end");
+        MEDIA_LOGD("PlayerServer::SeekContinous end");
         taskMgr_.MarkTaskDone("seek continous done");
     });
 
@@ -2268,7 +2268,7 @@ int32_t PlayerServer::HandleSeekContinous(int32_t mSeconds, int64_t batchNo)
     MEDIA_LOGI("KPI-TRACE: PlayerServer HandleSeek in, mSeconds: %{public}d,", mSeconds);
     int32_t ret = playerEngine_->SeekContinous(mSeconds, batchNo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Seek Failed!");
-    MEDIA_LOGI("PlayerServer HandleSeek end");
+    MEDIA_LOGD("PlayerServer HandleSeek end");
     return MSERR_OK;
 }
 
