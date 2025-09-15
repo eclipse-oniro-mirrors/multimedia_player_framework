@@ -72,11 +72,14 @@ MediaServerManager &MediaServerManager::GetInstance()
 
 void ConsoleInfo(std::map<pid_t, int32_t> &pidCount, std::string &dumpGroupInfoLog)
 {
+    if (pidCount.empty()) {
+        return;
+    }
     for (const auto& pair : pidCount) {
-            dumpGroupInfoLog += "-----#: ";
-            dumpGroupInfoLog += "pid = " + std::to_string(pair.first) + ", insNum: ";
-            dumpGroupInfoLog += std::to_string(pair.second) + "\n";
-        }
+        dumpGroupInfoLog += "-----#: ";
+        dumpGroupInfoLog += "pid = " + std::to_string(pair.first) + ", insNum: ";
+        dumpGroupInfoLog += std::to_string(pair.second) + "\n";
+    }
     MEDIA_LOGI("%{public}s", dumpGroupInfoLog.c_str());
 }
 
