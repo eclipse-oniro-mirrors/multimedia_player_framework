@@ -488,12 +488,14 @@ int32_t PlayerClient::SetDeviceChangeCbStatus(bool status)
 
 int32_t PlayerClient::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_INVALID_VAL, "playerProxy_ not exist");
     return playerProxy_->SetPlaybackStrategy(playbackStrategy);
 }
 
 int32_t PlayerClient::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_INVALID_VAL, "playerProxy_ not exist");
     return playerProxy_->SetMediaMuted(mediaType, isMuted);
 }
