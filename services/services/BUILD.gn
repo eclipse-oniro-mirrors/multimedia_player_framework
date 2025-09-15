@@ -248,6 +248,10 @@ ohos_shared_library("media_service") {
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
   ]
 
+  if (ohos_indep_compiler_enable) {
+    include_dirs = ["//binarys/third_party/icu/innerapis/shared_icuuc/includes/common"]
+  }
+
   external_deps = [
     "ability_runtime:ability_connect_callback_stub",
     "access_token:libaccesstoken_sdk",
