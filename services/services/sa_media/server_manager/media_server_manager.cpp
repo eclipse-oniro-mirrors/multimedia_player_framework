@@ -72,9 +72,6 @@ MediaServerManager &MediaServerManager::GetInstance()
 
 void ConsoleInfo(std::map<pid_t, int32_t> &pidCount, std::string &dumpGroupInfoLog)
 {
-    if (pidCount.empty()) {
-        return;
-    }
     for (const auto& pair : pidCount) {
         dumpGroupInfoLog += "-----#: ";
         dumpGroupInfoLog += "pid = " + std::to_string(pair.first) + ", insNum: ";
@@ -141,36 +138,36 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
         argSets.insert(args[index]);
     }
 
-    dumpString += "------------------PlayerServer------------------\n";
+    dumpString += "--PlayerServer--\n";
     auto ret = WriteInfo(fd, dumpString, dumperTbl_[StubType::PLAYER],
         argSets.find(u"player") != argSets.end());
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to write PlayerServer information");
 
-    dumpString += "------------------RecorderServer------------------\n";
+    dumpString += "--RecorderServer--\n";
     ret =  WriteInfo(fd, dumpString, dumperTbl_[StubType::RECORDER],
         argSets.find(u"recorder") != argSets.end());
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to write RecorderServer information");
 
-    dumpString += "------------------CodecServer------------------\n";
+    dumpString += "--CodecServer--\n";
     ret = WriteInfo(fd, dumpString, dumperTbl_[StubType::AVCODEC],
         argSets.find(u"codec") != argSets.end());
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to write CodecServer information");
 
-    dumpString += "------------------AVMetaServer------------------\n";
+    dumpString += "--AVMetaServer--\n";
     ret = WriteInfo(fd, dumpString, dumperTbl_[StubType::AVMETADATAHELPER], false);
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to write AVMetaServer information");
     
-    dumpString += "------------------TranscoderServer------------------\n";
+    dumpString += "--TranscoderServer--\n";
     ret = WriteInfo(fd, dumpString, dumperTbl_[StubType::TRANSCODER],
         argSets.find(u"transcoder") != argSets.end());
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to write Transcoder information");
 
-    dumpString += "------------------ScreenCaptureServer------------------\n";
+    dumpString += "--ScreenCaptureServer--\n";
     ret = WriteInfo(fd, dumpString, dumperTbl_[StubType::SCREEN_CAPTURE],
         argSets.find(u"screencapture") != argSets.end());
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
