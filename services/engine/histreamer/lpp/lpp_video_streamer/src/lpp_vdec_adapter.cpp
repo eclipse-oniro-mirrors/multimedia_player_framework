@@ -420,6 +420,7 @@ bool LppVideoDecoderAdapter::HandleEosFrame(uint32_t index, std::shared_ptr<AVBu
     waitTime = waitTime >= 0 ? waitTime : 0;
     int64_t jobIdx = GeneratedJobIdx();
     FALSE_RETURN_V_MSG(decodertask_ != nullptr, false, "decodertask_ is nullptr");
+    lastCommonPts_.store(buffer->pts_);
     decodertask_->SubmitJob([this, jobIdx] {
             FALSE_RETURN_MSG(!IsJobFlushed(jobIdx), "video eos job is flushed");
             FALSE_RETURN_MSG(eventReceiver_ != nullptr, "eventReceiver_ is nullptr");
@@ -433,6 +434,11 @@ bool LppVideoDecoderAdapter::HandleEosFrame(uint32_t index, std::shared_ptr<AVBu
             eventReceiver_->OnEvent({"VideoDecoder", EventType::EVENT_COMPLETE, MSERR_OK});
         }, waitTime, false);
     return true;
+}
+
+int64_t LppVideoDecoderAdapter::GetLastCommonPts() {
+    MEDIA_LOG_D("GetLastCommonPts" PUBLIC_LOG_D64, lastCommonPts_.load());
+    return lastCommonPts_.load();
 }
 
 bool LppVideoDecoderAdapter::HandleCommonFrame(uint32_t index, std::shared_ptr<AVBuffer> buffer)
