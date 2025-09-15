@@ -919,6 +919,7 @@ int32_t ScreenCaptureServer::HandlePopupWindowCase(Json::Value& root, const std:
     std::string choice = "false";
     GetChoiceFromJson(root, content, std::string("choice"), choice);
     GetValueFromJson(root, content, std::string("checkBoxSelected"), checkBoxSelected_);
+    MEDIA_LOGI("getjson");
 
     systemPrivacyProtectionSwitch_ = checkBoxSelected_;
     appPrivacyProtectionSwitch_ = checkBoxSelected_;
