@@ -1314,5 +1314,43 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_062, TestSize.Leve
     EXPECT_EQ(audioHapticPlayerImpl->GetDelayTime(0), 80);
     EXPECT_EQ(audioHapticPlayerImpl->GetDelayTime(0), 40);
 }
+
+/**
+ * @tc.name  : Test AudioHapticPlayerImpl API
+ * @tc.number: AudioHapticPlayerImpl_063
+ * @tc.desc  : Test AudioHapticPlayerImpl::ReleaseVibratorInternal()
+ */
+HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_063, TestSize.Level1)
+{
+    auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
+
+    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+
+    AudioHapticPlayerImpl audioHapticPlayerImpl2;
+    audioHapticPlayerImpl->audioHapticVibrator_ = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl2);
+    EXPECT_NE(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
+
+    audioHapticPlayerImpl->vibrateThread_ = std::make_shared<std::thread>();
+    EXPECT_NE(audioHapticPlayerImpl->vibrateThread_, nullptr);
+
+    audioHapticPlayerImpl->ReleaseVibratorInternal();
+}
+
+/**
+ * @tc.name  : Test AudioHapticPlayerImpl API
+ * @tc.number: AudioHapticPlayerImpl_064
+ * @tc.desc  : Test AudioHapticPlayerImpl::ReleaseVibratorInternal()
+ */
+HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_064, TestSize.Level1)
+{
+    auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
+
+    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+
+    audioHapticPlayerImpl->audioHapticVibrator_ = nullptr;
+    audioHapticPlayerImpl->vibrateThread_ = nullptr;
+
+    audioHapticPlayerImpl->ReleaseVibratorInternal();
+}
 } // namespace Media
 } // namespace OHOS

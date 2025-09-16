@@ -259,7 +259,7 @@ int32_t AudioHapticPlayerImpl::Release()
 
     CHECK_AND_RETURN_RET_LOG(audioHapticVibrator_ != nullptr, MSERR_INVALID_OPERATION,
         "Audio haptic vibrator is nullptr");
-    ReleaseVibrator();
+    ReleaseVibratorInternal();
 
     CHECK_AND_RETURN_RET_LOG(audioHapticSound_ != nullptr, MSERR_INVALID_OPERATION,
         "Audio haptic sound is nullptr");
@@ -269,7 +269,7 @@ int32_t AudioHapticPlayerImpl::Release()
     return MSERR_OK;
 }
 
-void AudioHapticPlayerImpl::ReleaseVibrator()
+void AudioHapticPlayerImpl::ReleaseVibratorInternal()
 {
     if (audioHapticVibrator_ != nullptr) {
         audioHapticVibrator_->StopVibrate();
@@ -289,6 +289,12 @@ void AudioHapticPlayerImpl::ReleaseVibrator()
         (void)audioHapticVibrator_->Release();
         audioHapticVibrator_ = nullptr;
     }
+}
+
+void AudioHapticPlayerImpl::ReleaseVibrator()
+{
+    std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
+    ReleaseVibratorInternal();
 }
 
 void AudioHapticPlayerImpl::ReleaseSound()
