@@ -69,6 +69,7 @@ public:
     MOCK_METHOD(void, SetSyncManager, (std::shared_ptr<ILppSyncManager> syncMgr));
     MOCK_METHOD(void, SetPlaybackSpeed, (float speed));
     MOCK_METHOD(int32_t, SetTargetPts, (int64_t targetPts));
+    MOCK_METHOD(int64_t, GetLastCommonPts, ());
 };
 }  // namespace Media
 }  // namespace OHOS

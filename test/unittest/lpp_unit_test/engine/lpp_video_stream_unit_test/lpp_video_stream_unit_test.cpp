@@ -774,5 +774,40 @@ HWTEST_F(LppVideoStreamUnitTest, EosPause_001, TestSize.Level1)
 
     EXPECT_EQ(ret, MSERR_OK);
 }
+
+/**
+* @tc.name    : Test GetLatestPts API
+* @tc.number  : GetLatestPts_001
+* @tc.desc    : Test GetLatestPts interface
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(LppVideoStreamUnitTest, GetLatestPts_001, TestSize.Level0)
+{
+    ASSERT_NE(nullptr, videoStreamImpl_);
+    videoStreamImpl_->isLpp_ = true;
+    videoStreamImpl_->syncMgr_ = syncMgr_;
+    EXPECT_CALL(*syncMgr_, GetLatestPts(_)).WillOnce(Return(MSERR_OK));
+    int64_t pts = 0;
+    auto res = videoStreamImpl_->GetLatestPts(pts);
+    EXPECT_EQ(res, MSERR_OK);
+}
+ 
+/**
+* @tc.name    : Test GetLatestPts API
+* @tc.number  : GetLatestPts_002
+* @tc.desc    : Test GetLatestPts interface
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(LppVideoStreamUnitTest, GetLatestPts_002, TestSize.Level0)
+{
+    ASSERT_NE(nullptr, videoStreamImpl_);
+    videoStreamImpl_->isLpp_ = false;
+    videoStreamImpl_->vdec_ = vdec_;
+    EXPECT_CALL(*vdec_, GetLastCommonPts()).WillOnce(Return(MSERR_OK));
+ 
+    int64_t pts = 0;
+    auto res = videoStreamImpl_->GetLatestPts(pts);
+    EXPECT_EQ(res, 0);
+}
 } // namespace Media
 } // namespace OHOS
