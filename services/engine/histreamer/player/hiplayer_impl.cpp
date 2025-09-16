@@ -1328,10 +1328,9 @@ void HiPlayerImpl::NotifySeek(Status rtv, bool flag, int64_t seekPos)
         Format format;
         callbackLooper_.OnError(PLAYER_ERROR, MSERR_DATA_SOURCE_IO_ERROR);
         callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, -1, format);
-    }  else if (flag) {
-        // only notify seekDone for external call.
-        NotifySeekDone(seekPos);
+        return;
     }
+    flag ? NotifySeekDone(seekPos) : NotifyBufferEnd();
 }
 
 int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
@@ -2990,23 +2989,26 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
                 return !syncManager_->InSeeking();
             });
     }
-    auto startTime = std::chrono::steady_clock::now();
-    demuxer_->WaitForBufferingEnd();
-    auto endTime = std::chrono::steady_clock::now();
-    auto waitTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
-    MEDIA_LOG_D_SHORT("NotifySeekDone WaitForBufferingEnd: %{public}d ms", static_cast<int32_t>(waitTime));
-    if (isSeekClosest_.load()) {
-        isSeekClosest_.store(false);
-        if (isBufferingStartNotified_.load()) {
-            MEDIA_LOG_I_SHORT("SEEK_CLOSEST BUFFERING_END PLAYING");
-            NotifyBufferingEnd(NOTIFY_BUFFERING_END_PARAM);
-        }
-    }
+    NotifyBufferEnd();
     
     MEDIA_LOG_D_SHORT("NotifySeekDone seekPos: %{public}d", seekPos);
     syncManager_->UpdataPausedMediaTime(seekPos);
     callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, seekPos, format);
     callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, seekPos, format);
+}
+
+void HiPlayerImpl::NotifyBufferEnd()
+{
+    auto startTime = std::chrono::steady_clock::now();
+    demuxer_->WaitForBufferingEnd();
+    auto endTime = std::chrono::steady_clock::now();
+    auto waitTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+    MEDIA_LOG_D_SHORT("NotifyBufferEnd WaitForBufferingEnd: %{public}d ms", static_cast<int32_t>(waitTime));
+    FALSE_RETURN(isSeekClosest_);
+    isSeekClosest_.store(false);
+    FALSE_RETURN(isBufferingStartNotified_);
+    MEDIA_LOG_I_SHORT("SEEK_CLOSEST BUFFERING_END PLAYING");
+    NotifyBufferingEnd(NOTIFY_BUFFERING_END_PARAM);
 }
 
 void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
