@@ -17,6 +17,7 @@
 #define TIME_FORMAT_UTILS
 
 #include <string>
+#include <chrono>
 
 namespace OHOS {
 namespace Media {
@@ -31,6 +32,7 @@ public:
 
     static std::string __attribute__((visibility("default"))) FormatDateTimeByTimeZone(const std::string &iso8601Str);
     static std::string __attribute__((visibility("default"))) FormatDataTimeByString(const std::string &dataTime);
+    static std::string FormatLocalTime(std::chrono::system_clock::time_point localTime);
 };
 }  // namespace Media
 }  // namespace OHOS
