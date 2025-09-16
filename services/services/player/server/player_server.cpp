@@ -1031,7 +1031,7 @@ int32_t PlayerServer::HandleSeek(int32_t mSeconds, PlayerSeekMode mode)
     ExitSeekContinous(false);
     int32_t ret = playerEngine_->Seek(mSeconds, mode);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Seek Failed!");
-    MEDIA_LOGI("PlayerServer HandleSeek end");
+    MEDIA_LOGD("PlayerServer HandleSeek end");
     return MSERR_OK;
 }
 

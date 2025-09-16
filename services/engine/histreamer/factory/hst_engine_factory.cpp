@@ -81,7 +81,7 @@ int32_t HstEngineFactory::Score(Scene scene, const int32_t& appUid, const std::s
 std::unique_ptr<IRecorderEngine> HstEngineFactory::CreateRecorderEngine(
     int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId)
 {
-    MEDIA_LOG_D("CreateRecorderEngine enter.");
+    MEDIA_LOG_D("CreateRecorderEngine enter");
     auto recorder = std::unique_ptr<HiRecorderImpl>(new (std::nothrow) HiRecorderImpl(
         appUid, appPid, appTokenId, appFullTokenId));
     if (recorder && recorder->Init() == 0) {

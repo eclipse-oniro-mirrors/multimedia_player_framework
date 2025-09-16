@@ -1145,13 +1145,13 @@ void HiPlayerImpl::ResetPlayRangeParameter()
 
 void HiPlayerImpl::UpdatePlayStatistics()
 {
-    MEDIA_LOG_D_SHORT("HiPlayerImpl UpdatePlayStatistics");
+    MEDIA_LOG_D("HiPlayerImpl UpdatePlayStatistics");
     playStatisticalInfo_.isDrmProtected = isDrmProtected_;
     if (demuxer_ != nullptr) {
         DownloadInfo downLoadInfo;
         auto ret = demuxer_->GetDownloadInfo(downLoadInfo);
         if (ret == Status::OK) {
-            MEDIA_LOG_D_SHORT("GetDownloadInfo success");
+            MEDIA_LOG_D("GetDownloadInfo success");
             playStatisticalInfo_.avgDownloadRate = downLoadInfo.avgDownloadRate;
             playStatisticalInfo_.avgDownloadSpeed = downLoadInfo.avgDownloadSpeed;
             playStatisticalInfo_.totalDownLoadBits = downLoadInfo.totalDownLoadBits;
@@ -1166,7 +1166,7 @@ void HiPlayerImpl::UpdatePlayStatistics()
         auto ret = videoDecoder_->GetLagInfo(playStatisticalInfo_.lagTimes, playStatisticalInfo_.maxLagDuration,
             playStatisticalInfo_.avgLagDuration);
         if (ret == Status::OK) {
-            MEDIA_LOG_I("GetLagInfo success");
+            MEDIA_LOG_D("GetLagInfo success");
         } else {
             MEDIA_LOG_E("GetLagInfo failed with error " PUBLIC_LOG_D32, ret);
         }
