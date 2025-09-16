@@ -5279,7 +5279,7 @@ AudioDataSourceReadAtActionState AudioDataSource::ReadAt(std::shared_ptr<AVBuffe
         return AudioDataSourceReadAtActionState::OK;
     }
     const auto &ret = ReadAudioBuffer(buffer, length);
-    CHECK_AND_RETURN_RET(ret == AudioDataSourceReadAtActionState::OK, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret == AudioDataSourceReadAtActionState::OK, ret);
     if (!audioBufferQ_.empty()) {
         return ReadAt(buffer, length);
     }
