@@ -436,7 +436,8 @@ bool LppVideoDecoderAdapter::HandleEosFrame(uint32_t index, std::shared_ptr<AVBu
     return true;
 }
 
-int64_t LppVideoDecoderAdapter::GetLastCommonPts() {
+int64_t LppVideoDecoderAdapter::GetLastCommonPts()
+{
     MEDIA_LOG_D("GetLastCommonPts" PUBLIC_LOG_D64, lastCommonPts_.load());
     return lastCommonPts_.load();
 }
