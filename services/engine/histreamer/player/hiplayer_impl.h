@@ -325,6 +325,7 @@ private:
     void DoInitDemuxer();
     void ReleaseVideoDecoderOnMuted();
     void CacheBuffer();
+    void NotifyBufferEnd();
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
