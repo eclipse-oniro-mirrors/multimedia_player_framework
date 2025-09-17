@@ -67,6 +67,7 @@ private:
     void StopVibrate();
     void ResetVibrateState();
     void ReleaseVibrator();
+    void ReleaseVibratorInternal();
     int32_t GetDelayTime(int32_t playedTimes);
 
     // var for all
