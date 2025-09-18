@@ -480,7 +480,7 @@ void AVMetaDataCollector::FormatAVMeta(
 void AVMetaDataCollector::FormatDuration(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo)
 {
     std::string duration = avmeta.GetMeta(AV_KEY_DURATION);
-    CHECK_AND_RETURN_LOG(IsAllDigits(duration), "duration is %{public}s, it is invalid", duration.c_str());
+    CHECK_AND_RETURN_LOG(IsValidNumber(duration), "duration is %{public}s, it is invalid", duration.c_str());
     avmeta.SetMeta(AV_KEY_DURATION, std::to_string(std::stoi(duration) / SECOND_DEVIDE_MS));
 }
 
@@ -548,6 +548,16 @@ bool AVMetaDataCollector::IsAllDigits(const std::string& str)
     return std::all_of(str.begin(), str.end(), [](char c) {
         return c >= '0' && c <= '9';
     });
+}
+
+bool AVMetadataCollector::IsValidNumber(const std::string& str)
+{
+    if (str.empty() || std::all_of(str.begin(), str.end(), [](char c) { return std::isspace(c); })) {
+        return false;
+    }
+
+    static const std::regex pattern(R"(^[+-]?(\d+\.?\d*|\.\d+)$)");
+    return std::regex_match(str, pattern);
 }
 
 void AVMetaDataCollector::SetEmptyStringIfNoData(Metadata &avmeta, int32_t avKey) const
