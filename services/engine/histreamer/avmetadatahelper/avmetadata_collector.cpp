@@ -551,13 +551,9 @@ bool AVMetaDataCollector::IsAllDigits(const std::string& str)
     });
 }
 
-bool AVMetadataCollector::IsValidNumber(const std::string& str)
+bool AVMetaDataCollector::IsValidNumber(const std::string& str)
 {
-    if (str.empty() || std::all_of(str.begin(), str.end(), [](char c) { return std::isspace(c); })) {
-        return false;
-    };
-
-    static const std::regex pattern(R"(^[+-]?(\d+\.?\d*|\.\d+)$)");
+    static const std::regex pattern(R"(^[+-]?(\d+\.?\d*)$)");
     return std::regex_match(str, pattern);
 }
 
