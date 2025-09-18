@@ -16,6 +16,7 @@
 #include "avmetadata_collector.h"
 
 #include <string>
+#include <regex>
 
 #include "avmetadatahelper.h"
 #include "buffer/avsharedmemorybase.h"
