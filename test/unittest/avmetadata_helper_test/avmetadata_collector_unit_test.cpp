@@ -253,6 +253,35 @@ HWTEST_F(AVMetaDataCollectorUnitTest, GetFrameIndexByTime, TestSize.Level1)
     ret = avmetaDataCollector->GetFrameIndexByTime(timeUs, index);
     EXPECT_EQ(ret, MSERR_OK);
 }
+
+/**
+ * @tc.name: FormatDuration
+ * @tc.desc: FormatDuration
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, FormatDuration, TestSize.Level1)
+{
+    Metadata avmeta;
+    avmeta->SetData(AV_KEY_DURATION, "12000");
+    avmetaDataCollector->FormatDuration(avmeta, globalInfo);
+    std::string duration = avmeta.GetMeta(AV_KEY_DURATION);
+    EXPECT_EQ(duration, "12");
+
+    avmeta->SetData(AV_KEY_DURATION, "");
+    avmetaDataCollector->FormatDuration(avmeta, globalInfo);
+    duration = avmeta.GetMeta(AV_KEY_DURATION);
+    EXPECT_EQ(duration, "")
+
+    avmeta->SetData(AV_KEY_DURATION, " ");
+    avmetaDataCollector->FormatDuration(avmeta, globalInfo);
+    duration = avmeta.GetMeta(AV_KEY_DURATION);
+    EXPECT_EQ(duration, " ")
+
+    avmeta->SetData(AV_KEY_DURATION, "-12000");
+    avmetaDataCollector->FormatDuration(avmeta, globalInfo);
+    duration = avmeta.GetMeta(AV_KEY_DURATION);
+    EXPECT_EQ(duration, "-12")
+}
  
 /**
  * @tc.name: FormatMimeType

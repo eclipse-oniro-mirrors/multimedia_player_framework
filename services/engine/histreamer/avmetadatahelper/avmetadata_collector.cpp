@@ -472,13 +472,13 @@ void AVMetaDataCollector::FormatAVMeta(
     if (IsAllDigits(str)) {
         avmeta.SetMeta(AV_KEY_NUM_TRACKS, std::to_string(std::stoi(str) - imageTrackCount));
     }
-    FormatDuration(avmeta, globalInfo);
+    FormatDuration(avmeta);
     FormatMimeType(avmeta, globalInfo);
     FormatDateTime(avmeta, globalInfo);
     FormatVideoRotateOrientation(avmeta);
 }
 
-void AVMetaDataCollector::FormatDuration(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo)
+void AVMetaDataCollector::FormatDuration(Metadata &avmeta)
 {
     std::string duration = avmeta.GetMeta(AV_KEY_DURATION);
     CHECK_AND_RETURN_LOG(IsValidNumber(duration), "duration is %{public}s, it is invalid", duration.c_str());
