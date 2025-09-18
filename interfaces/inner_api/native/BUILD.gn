@@ -80,8 +80,11 @@ config("media_client_base_config") {
     "-Wformat=2",
     "-Wfloat-equal",
     "-Wdate-time",
+    "-Werror",
+    "-Wextra",
+    "-Wimplicit-fallthrough",
     "-Wsign-compare",
-    "-Who-unused-but-set-variable",
+    "-Wunused-parameter",
   ]
 
   if (target_cpu == "arm") {

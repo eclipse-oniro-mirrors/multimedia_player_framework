@@ -246,21 +246,27 @@ public:
     }
     virtual int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted)
     {
+        (void)mediaType;
+        (void)isMuted;
         return 0;
     }
 
     virtual int32_t SetSuperResolution(bool enabled)
     {
+        (void)enabled;
         return 0;
     }
 
     virtual int32_t SetVideoWindowSize(int32_t width, int32_t height)
     {
+        (void)width;
+        (void)height;
         return 0;
     }
 
     virtual int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     {
+        (void)playbackStrategy;
         return 0;
     }
     virtual int32_t SeekContinous(int32_t mSeconds, int64_t seekContinousBatchNo)
@@ -278,6 +284,7 @@ public:
 
     virtual int32_t SetMaxAmplitudeCbStatus(bool status)
     {
+        (void)status;
         return 0;
     }
 
@@ -295,6 +302,8 @@ public:
 
     virtual int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes)
     {
+        (void)status;
+        (void)payloadTypes;
         return 0;
     }
 
