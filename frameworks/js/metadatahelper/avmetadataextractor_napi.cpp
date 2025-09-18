@@ -232,7 +232,6 @@ void AVMetadataExtractorNapi::ResolveMetadataComplete(napi_env env, napi_status 
 void AVMetadataExtractorNapi::HandleMetaDataResult(napi_env env, AVMetadataExtractorAsyncContext* &promiseCtx,
     napi_value &result)
 {
-    bool ret = true;
     napi_value location = nullptr;
     napi_value customInfo = nullptr;
     napi_value tracks = nullptr;
@@ -300,9 +299,9 @@ bool AVMetadataExtractorNapi::ParseMetadataOfTracks(napi_env env, napi_value &tr
 {
     std::vector<Format> trackInfoVec;
     bool ret = metadata->GetData(key, trackInfoVec);
-    CHECK_AND_RETURN_RET_LOG(ret, "GetData failed, key %{public}s", key.c_str());
+    CHECK_AND_RETURN_RET_LOG(ret, false, "GetData failed, key %{public}s", key.c_str());
     promiseCtx->JsResult = std::make_unique<MediaJsResultArray>(trackInfoVec);
-    CHECK_AND_RETURN_RET_LOG(promiseCtx->JsResult, "failed to GetJsResult");
+    CHECK_AND_RETURN_RET_LOG(promiseCtx->JsResult, false, "failed to GetJsResult");
     promiseCtx->JsResult->GetJsResult(env, tracks);
     return true;
 }

@@ -61,12 +61,13 @@ private:
     static void CommonCallbackRoutine(
         napi_env env, AVMetadataExtractorAsyncContext *&asyncContext, const napi_value &valueParam);
     static void HandleMetaDataResult(napi_env env, AVMetadataExtractorAsyncContext* &promiseCtx, napi_value &result);
-    bool ParseMetadataOfLocation(napi_env env, napi_value &location, std::shared_ptr<Meta> &metadata, std::string key);
-    bool ParseMetadataOfCustomInfo(napi_env env, napi_value &customInfo, std::shared_ptr<Meta> &metadata,
+    static bool ParseMetadataOfLocation(napi_env env, napi_value &location, std::shared_ptr<Meta> &metadata,
         std::string key);
-    bool ParseMetadataOfTracks(napi_env env, napi_value &tracks, std::shared_ptr<Meta> &metadata, std::string key,
-        AVMetadataExtractorAsyncContext* &promiseCtx);
-    bool ParseMetadataOfGltfOffset(napi_env env, napi_value &gltfOffset, napi_value &result,
+    static bool ParseMetadataOfCustomInfo(napi_env env, napi_value &customInfo, std::shared_ptr<Meta> &metadata,
+        std::string key);
+    static bool ParseMetadataOfTracks(napi_env env, napi_value &tracks, std::shared_ptr<Meta> &metadata,
+        std::string key, AVMetadataExtractorAsyncContext* &promiseCtx);
+    static bool ParseMetadataOfGltfOffset(napi_env env, napi_value &gltfOffset, napi_value &result,
         std::shared_ptr<Meta> &metadata, std::string key);
     static std::string StringifyMeta(const Any& value);
     static void ResolveMetadataComplete(napi_env env, napi_status status, void *data);
