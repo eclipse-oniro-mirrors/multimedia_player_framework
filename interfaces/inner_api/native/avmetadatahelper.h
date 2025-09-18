@@ -99,6 +99,7 @@ static const std::map<int32_t, const char*> g_MetadataCodeMap = {
     {38,    "videoOrientation"},
     {39,    "hdrType"},
     {44,    "videoRotateOrientation"},
+    {45,    "gltf_offset"},
 };
 
 /**
@@ -128,6 +129,7 @@ static const std::vector<std::string> g_Metadata = {
     "longitude",
     "customInfo",
     "tracks",
+    "gltf_offset",
 };
 
 enum HdrType : int32_t {
@@ -292,22 +294,18 @@ enum AVMetadataCode : int32_t {
      * is HDR or not.
      */
     AV_KEY_VIDEO_IS_HDR_VIVID = 39,
-
     /**
      * The metadata key to retrieve the information about the location longitude
     */
     AV_KEY_LOCATION_LONGITUDE = 40,
-
     /**
      * The metadata key to retrieve the information about the location latitude
     */
     AV_KEY_LOCATION_LATITUDE = 41,
-
     /**
      * Custom parameter key-value map
     */
     AV_KEY_CUSTOMINFO = 42,
-
     /**
      * Tracks info key-value map
     */
@@ -317,6 +315,10 @@ enum AVMetadataCode : int32_t {
      * orientation(rotation and flip info).
      */
     AV_KEY_VIDEO_ROTATE_ORIENTATION = 44,
+    /**
+     * The metadata key to retrieve the information about the offset of the 3DGS video.
+     */
+    AV_KEY_GLTF_OFFSET = 45,
 };
 
 /**

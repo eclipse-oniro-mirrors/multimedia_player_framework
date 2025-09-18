@@ -88,10 +88,11 @@ static const std::unordered_map<int32_t, std::string> AVMETA_KEY_TO_X_MAP = {
     { AV_KEY_VIDEO_ORIENTATION, Tag::VIDEO_ROTATION },
     { AV_KEY_VIDEO_ROTATE_ORIENTATION, Tag::VIDEO_ORIENTATION_TYPE },
     { AV_KEY_VIDEO_IS_HDR_VIVID, Tag::VIDEO_IS_HDR_VIVID },
-    { AV_KEY_LOCATION_LONGITUDE, Tag::MEDIA_LONGITUDE},
-    { AV_KEY_LOCATION_LATITUDE, Tag::MEDIA_LATITUDE},
-    { AV_KEY_CUSTOMINFO, "customInfo"},
-    { AV_KEY_DATE_TIME_ISO8601, "ISO8601 time"},
+    { AV_KEY_LOCATION_LONGITUDE, Tag::MEDIA_LONGITUDE },
+    { AV_KEY_LOCATION_LATITUDE, Tag::MEDIA_LATITUDE },
+    { AV_KEY_CUSTOMINFO, "customInfo" },
+    { AV_KEY_DATE_TIME_ISO8601, "ISO8601 time" },
+    { AV_KEY_GLTF_OFFSET, Tag::GLTF_OFFSET },
 };
 
 AVMetaDataCollector::AVMetaDataCollector(std::shared_ptr<MediaDemuxer> &mediaDemuxer) : mediaDemuxer_(mediaDemuxer)
@@ -325,6 +326,7 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
         globalInfo != nullptr && trackInfos.size() != 0, {}, "globalInfo or trackInfos are invalid.");
 
     Metadata metadata;
+    metadata.SetMeta(AV_KEY_GLTF_OFFSET, "-1");
     ConvertToAVMeta(globalInfo, metadata);
 
     int32_t imageTrackCount = 0;
@@ -469,9 +471,17 @@ void AVMetaDataCollector::FormatAVMeta(
     if (IsAllDigits(str)) {
         avmeta.SetMeta(AV_KEY_NUM_TRACKS, std::to_string(std::stoi(str) - imageTrackCount));
     }
+    FormatDuration(avmeta, globalInfo);
     FormatMimeType(avmeta, globalInfo);
     FormatDateTime(avmeta, globalInfo);
     FormatVideoRotateOrientation(avmeta);
+}
+
+void AVMetaDataCollector::FormatDuration(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo)
+{
+    std::string duration = avmeta.GetMeta(AV_KEY_DURATION);
+    CHECK_AND_RETURN_LOG(IsAllDigits(duration), "duration is %{public}s, it is invalid", duration.c_str());
+    avmeta.SetMeta(AV_KEY_DURATION, std::to_string(std::stoi(duration) / SECOND_DEVIDE_MS));
 }
 
 void AVMetaDataCollector::FormatMimeType(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo)
@@ -572,9 +582,9 @@ bool AVMetaDataCollector::SetStringByValueType(const std::shared_ptr<Meta> &inne
             avmeta.SetMeta(avKey, std::to_string(orientation));
         }
     } else if (Any::IsSameTypeWith<int64_t>(type)) {
-        int64_t duration;
-        if (innerMeta->GetData(innerKey, duration)) {
-            avmeta.SetMeta(avKey, std::to_string(duration / SECOND_DEVIDE_MS));
+        int64_t value;
+        if (innerMeta->GetData(innerKey, value)) {
+            avmeta.SetMeta(avKey, std::to_string(value));
         }
     } else if (Any::IsSameTypeWith<bool>(type)) {
         bool isTrue;
