@@ -553,7 +553,7 @@ bool AVMetaDataCollector::IsAllDigits(const std::string& str)
 
 bool AVMetaDataCollector::IsValidNumber(const std::string& str)
 {
-    static const std::regex pattern(R"(^[+-]?(\d+\.?\d*)$)");
+    static const std::regex pattern(R"(^[+-]?(\d+)$)");
     return std::regex_match(str, pattern);
 }
 
