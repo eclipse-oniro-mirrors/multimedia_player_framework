@@ -94,10 +94,12 @@ private:
         const std::shared_ptr<Meta> &globalInfo, const std::vector<std::shared_ptr<Meta>> &trackInfos);
     void ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta, Metadata &avmeta) const;
     void FormatAVMeta(Metadata &avmeta, int32_t imageTrackCount, const std::shared_ptr<Meta> &globalInfo);
+    void FormatDuration(Metadata &avmeta);
     void FormatMimeType(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo);
     void FormatDateTime(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo);
     void FormatVideoRotateOrientation(Metadata &avmeta);
     bool IsAllDigits(const std::string& str);
+    bool IsValidNumber(const std::string& str);
     void SetEmptyStringIfNoData(Metadata &avmeta, int32_t avKey) const;
     bool SetStringByValueType(const std::shared_ptr<Meta> &innerMeta,
         Metadata &avmeta, int32_t avKey, std::string innerKey) const;

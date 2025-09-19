@@ -232,13 +232,14 @@ void AVMetadataExtractorNapi::ResolveMetadataComplete(napi_env env, napi_status 
 void AVMetadataExtractorNapi::HandleMetaDataResult(napi_env env, AVMetadataExtractorAsyncContext* &promiseCtx,
     napi_value &result)
 {
-    bool ret = true;
     napi_value location = nullptr;
     napi_value customInfo = nullptr;
     napi_value tracks = nullptr;
+    napi_value gltfOffset = nullptr;
     napi_create_object(env, &location);
     napi_create_object(env, &customInfo);
     napi_get_undefined(env, &tracks);
+    napi_get_undefined(env, &gltfOffset);
     std::shared_ptr<Meta> metadata = promiseCtx->metadata_;
     std::string notFoundKey = {};
     for (const auto &key : g_Metadata) {
@@ -246,31 +247,22 @@ void AVMetadataExtractorNapi::HandleMetaDataResult(napi_env env, AVMetadataExtra
             notFoundKey += (std::string{" "} + key);
             continue;
         }
+
         if (key == "latitude" || key == "longitude") {
-            CHECK_AND_CONTINUE_LOG(CommonNapi::SetPropertyByValueType(env, location, metadata, key),
+            CHECK_AND_CONTINUE_LOG(ParseMetadataOfLocation(env, location, metadata, key),
                 "SetProperty failed, key: %{public}s", key.c_str());
             continue;
         }
         if (key == "customInfo") {
-            std::shared_ptr<Meta> customData = std::make_shared<Meta>();
-            ret = metadata->GetData(key, customData);
-            CHECK_AND_CONTINUE_LOG(ret, "GetData failed, key %{public}s", key.c_str());
-            for (auto iter = customData->begin(); iter != customData->end(); ++iter) {
-                std::string curKey = iter->first;
-                std::string curValue = StringifyMeta(iter->second);
-                CHECK_AND_CONTINUE_LOG(CommonNapi::SetPropertyString(env, customInfo, curKey, curValue),
-                    "SetPropertyString failed, key: %{public}s", key.c_str());
-            }
+            CHECK_AND_CONTINUE(ParseMetadataOfCustomInfo(env, customInfo, metadata, key));
             continue;
         }
         if (key == "tracks") {
-            std::vector<Format> trackInfoVec;
-            ret = metadata->GetData(key, trackInfoVec);
-            CHECK_AND_CONTINUE_LOG(ret, "GetData failed, key %{public}s", key.c_str());
-            promiseCtx->JsResult = std::make_unique<MediaJsResultArray>(trackInfoVec);
-            CHECK_AND_CONTINUE_LOG(promiseCtx->JsResult, "failed to GetJsResult");
-            promiseCtx->JsResult->GetJsResult(env, tracks);
+            CHECK_AND_CONTINUE(ParseMetadataOfTracks(env, tracks, metadata, key, promiseCtx));
             continue;
+        }
+        if (key == "gltf_offset") {
+            CHECK_AND_CONTINUE(ParseMetadataOfGltfOffset(env, result, gltfOffset, metadata, key));
         }
         CHECK_AND_CONTINUE_LOG(CommonNapi::SetPropertyByValueType(env, result, metadata, key),
             "SetProperty failed, key: %{public}s", key.c_str());
@@ -279,6 +271,53 @@ void AVMetadataExtractorNapi::HandleMetaDataResult(napi_env env, AVMetadataExtra
     napi_set_named_property(env, result, "location", location);
     napi_set_named_property(env, result, "customInfo", customInfo);
     napi_set_named_property(env, result, "tracks", tracks);
+}
+
+bool AVMetadataExtractorNapi::ParseMetadataOfLocation(napi_env env, napi_value &location,
+    std::shared_ptr<Meta> &metadata, std::string key)
+{
+    return CommonNapi::SetPropertyByValueType(env, location, metadata, key);
+}
+
+bool AVMetadataExtractorNapi::ParseMetadataOfCustomInfo(napi_env env, napi_value &customInfo,
+    std::shared_ptr<Meta> &metadata, std::string key)
+{
+    std::shared_ptr<Meta> customData = std::make_shared<Meta>();
+    bool ret = metadata->GetData(key, customData);
+    CHECK_AND_RETURN_RET_LOG(ret, false, "GetData failed, key %{public}s", key.c_str());
+    for (auto iter = customData->begin(); iter != customData->end(); ++iter) {
+        std::string curKey = iter->first;
+        std::string curValue = StringifyMeta(iter->second);
+        CHECK_AND_CONTINUE_LOG(CommonNapi::SetPropertyString(env, customInfo, curKey, curValue),
+            "SetPropertyString failed, key: %{public}s", key.c_str());
+    }
+    return true;
+}
+
+bool AVMetadataExtractorNapi::ParseMetadataOfTracks(napi_env env, napi_value &tracks,
+    std::shared_ptr<Meta> &metadata, std::string key, AVMetadataExtractorAsyncContext* &promiseCtx)
+{
+    std::vector<Format> trackInfoVec;
+    bool ret = metadata->GetData(key, trackInfoVec);
+    CHECK_AND_RETURN_RET_LOG(ret, false, "GetData failed, key %{public}s", key.c_str());
+    promiseCtx->JsResult = std::make_unique<MediaJsResultArray>(trackInfoVec);
+    CHECK_AND_RETURN_RET_LOG(promiseCtx->JsResult, false, "failed to GetJsResult");
+    promiseCtx->JsResult->GetJsResult(env, tracks);
+    return true;
+}
+
+bool AVMetadataExtractorNapi::ParseMetadataOfGltfOffset(napi_env env, napi_value &gltfOffset, napi_value &result,
+    std::shared_ptr<Meta> &metadata, std::string key)
+{
+    std::string value;
+    bool ret = metadata->GetData(key, value);
+    CHECK_AND_RETURN_RET_LOG(ret, false, "GetData failed, key %{public}s", key.c_str());
+    MEDIA_LOGI("gltf_offset is %{public}s", value.c_str());
+    if (value == "-1") {
+        napi_set_named_property(env, result, "gltf_offset", gltfOffset);
+        return false;
+    }
+    return true;
 }
 
 std::string AVMetadataExtractorNapi::StringifyMeta(const Any& value)
