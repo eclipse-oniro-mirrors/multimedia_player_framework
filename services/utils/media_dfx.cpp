@@ -226,7 +226,12 @@ void MediaEvent::CommonStatisicsEventWrite(CallType callType, OHOS::HiviewDFX::H
         eventInfoJson["mediaEvents"] = mediaEvents;
         {
             std::lock_guard<std::mutex> lock(maxReportMut_);
-            eventInfoJson["maxInstanceNum"] = mediaMaxInstanceNumberMap_[callType][kv.first];
+            auto it = mediaMaxInstanceNumberMap_[callType].find(kv.first);
+            if (it != mediaMaxInstanceNumberMap_[callType].end()) {
+                eventInfoJson["maxInstanceNum"] = it->second;
+            } else {
+                eventInfoJson["maxInstanceNum"] = 0;
+            }
         }
         jsonArray.push_back(eventInfoJson);
         infoArr.push_back(jsonArray.dump());
@@ -385,7 +390,8 @@ int32_t CreateMediaInfo(CallType callType, int32_t uid, uint64_t instanceId)
             auto it = ctUidToMediaInfo->second.find(uid);
             if (it != ctUidToMediaInfo->second.end()) {
                 it->second.push_back(metaAppIdPair);
-                curInsNumber = it->second.size();
+                auto sizeVal = it->second.size();
+                curInsNumber = static_cast<int32_t>(sizeVal);
                 MEDIA_LOG_I("CreateMediaInfo: Successfully inserted metaAppIdPair for uid ");
             } else {
                 ctUidToMediaInfo->second[uid].push_back(metaAppIdPair);
@@ -494,14 +500,20 @@ void UpdateMaxInsNumberMap(CallType callType)
         return;
     }
 
-    auto& infoMap = mediaMaxInstanceNumberMap_.find(callType)->second;
+    std::lock_guard<std::mutex> lock(maxReportMut_);
+    auto ctUidToMaxInsNum = mediaMaxInstanceNumberMap_.find(callType);
+    if (ctUidToMaxInsNum == mediaMaxInstanceNumberMap_.end()) {
+        return;
+    }
+    auto& infoMap = ctUidToMaxInsNum->second;
     std::vector<int32_t> keysToRemove;
     for (auto &info : infoMap) {
         int32_t uid = info.first;
         int32_t& maxNum = info.second;
         auto it = ctUidToMediaInfo->second.find(uid);
         if (it != ctUidToMediaInfo->second.end()) {
-            maxNum = it->second.size();
+            auto sizeVal = it->second.size();
+            maxNum = static_cast<int32_t>(sizeVal);
         } else {
             maxNum = 0;
             keysToRemove.push_back(uid);
