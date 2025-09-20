@@ -374,7 +374,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_001, TestS
 {
     screenCaptureServer_->appInfo_.appUid = ScreenCaptureServer::ROOT_UID;
     screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
-    ASSERT_NE(screenCaptureServer_->RequestUserPrivacyAuthority(), MSERR_OK);
+    bool isSkip = false;
+    ASSERT_NE(screenCaptureServer_->RequestUserPrivacyAuthority(isSkip), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_002, TestSize.Level2)
@@ -382,14 +383,16 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_002, TestS
     screenCaptureServer_->appInfo_.appUid = ScreenCaptureServer::ROOT_UID;
     screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
     screenCaptureServer_->appName_ = ScreenRecorderBundleName;
-    ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(), MSERR_OK);
+    bool isSkip = false;
+    ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(isSkip), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_003, TestSize.Level2)
 {
     screenCaptureServer_->appInfo_.appUid = ScreenCaptureServer::ROOT_UID + 1;
     screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
-    ASSERT_NE(screenCaptureServer_->RequestUserPrivacyAuthority(), MSERR_OK);
+    bool isSkip = false;
+    ASSERT_NE(screenCaptureServer_->RequestUserPrivacyAuthority(isSkip), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_004, TestSize.Level2)
@@ -397,7 +400,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_004, TestS
     screenCaptureServer_->appInfo_.appUid = ScreenCaptureServer::ROOT_UID + 1;
     screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
     screenCaptureServer_->appName_ = ScreenRecorderBundleName;
-    ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(), MSERR_OK);
+    bool isSkip = false;
+    ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(isSkip), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, PostStartScreenCapture_001, TestSize.Level2)
