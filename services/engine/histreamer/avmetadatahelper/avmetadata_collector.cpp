@@ -481,10 +481,7 @@ void AVMetaDataCollector::FormatAVMeta(
 void AVMetaDataCollector::FormatDuration(Metadata &avmeta)
 {
     std::string durationStr = avmeta.GetMeta(AV_KEY_DURATION);
-    static std::stringstream ss;
-    ss.clear();
-    ss.str("");
-    ss << durationStr;
+    std::stringstream ss(durationStr);
     int64_t duration = 0;
     ss >> duration;
     avmeta.SetMeta(AV_KEY_DURATION, std::to_string(duration / SECOND_DEVIDE_MS));
