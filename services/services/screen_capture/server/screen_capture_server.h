@@ -216,13 +216,14 @@ private:
     bool IsUserPrivacyAuthorityNeeded();
     bool UpdatePrivacyUsingPermissionState(VideoPermissionState state);
     bool CheckPrivacyWindowSkipPermission();
-    int32_t RequestUserPrivacyAuthority();
+    int32_t RequestUserPrivacyAuthority(bool &isSkipPrivacyWindow);
     int32_t StartPrivacyWindow();
     void SetCaptureConfig(CaptureMode captureMode, int32_t missionId = -1); // -1 invalid
     ScreenScaleMode GetScreenScaleMode(const AVScreenCaptureFillMode &fillMode);
     int32_t HandlePopupWindowCase(Json::Value& root, const std::string &content);
     int32_t HandleStreamDataCase(Json::Value& root, const std::string &content);
     void PrepareSelectWindow(Json::Value &root);
+    bool IsSkipPrivacyWindow();
 
 #ifdef PC_STANDARD
     bool CheckCaptureSpecifiedWindowForSelectWindow();
@@ -235,6 +236,7 @@ private:
     int32_t MakeVirtualScreenMirrorForSpecifiedScreenForHopper(sptr<Rosen::Display> defaultDisplay,
         std::vector<ScreenId> mirrorIds);
     bool IsPickerPopUp();
+    bool CheckCustScrRecPermission();
 #endif
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     int32_t TryStartNotification();
