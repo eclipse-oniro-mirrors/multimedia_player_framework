@@ -74,6 +74,7 @@ public:
 
     void UnmarshallingSelf(Parcel &parcel)
     {
+        const uint32_t MAX_SIZE = 1000;
         mime_ = parcel.ReadString();
         minWidth_ = parcel.ReadUint32();
         minHeight_ = parcel.ReadUint32();
@@ -83,6 +84,9 @@ public:
         maxInstance_ = parcel.ReadUint32();
         isSupportDRM_ = parcel.ReadBool();
         uint32_t typeSize = parcel.ReadUint32();
+        if (typeSize > MAX_SIZE) {
+            typeSize = MAX_SIZE;
+        }
         for (uint32_t i = 0; i < typeSize; i++) {
             supportHDRTypes_.push_back(parcel.ReadUint32());
         }
