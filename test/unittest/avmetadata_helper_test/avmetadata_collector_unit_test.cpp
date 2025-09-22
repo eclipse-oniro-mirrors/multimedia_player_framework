@@ -270,12 +270,12 @@ HWTEST_F(AVMetaDataCollectorUnitTest, FormatDuration, TestSize.Level1)
     avmeta.SetMeta(AV_KEY_DURATION, "");
     avmetaDataCollector->FormatDuration(avmeta);
     duration = avmeta.GetMeta(AV_KEY_DURATION);
-    EXPECT_EQ(duration, "");
+    EXPECT_EQ(duration, "0");
 
     avmeta.SetMeta(AV_KEY_DURATION, " ");
     avmetaDataCollector->FormatDuration(avmeta);
     duration = avmeta.GetMeta(AV_KEY_DURATION);
-    EXPECT_EQ(duration, " ");
+    EXPECT_EQ(duration, "0");
 
     avmeta.SetMeta(AV_KEY_DURATION, "-12000");
     avmetaDataCollector->FormatDuration(avmeta);
