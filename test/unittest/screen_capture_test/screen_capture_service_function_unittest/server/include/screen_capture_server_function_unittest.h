@@ -106,6 +106,13 @@ private:
                 .resDeviceID = { "local" },
                 .grantStatus = { Security::AccessToken::PermissionState::PERMISSION_GRANTED },
                 .grantFlags = { 1 }
+            },
+            {
+                .permissionName = "ohos.permission.TIMEOUT_SCREENOFF_DISABLE_LOCK",
+                .isGeneral = true,
+                .resDeviceID = { "local" },
+                .grantStatus = { Security::AccessToken::PermissionState::PERMISSION_GRANTED },
+                .grantFlags = { 1 }
             }
         }
     };

@@ -307,6 +307,7 @@ void ScreenCaptureUnitTest::SetAccessTokenPermission()
     permission.push_back("ohos.permission.MICROPHONE");
     permission.push_back("ohos.permission.READ_MEDIA");
     permission.push_back("ohos.permission.WRITE_MEDIA");
+    permission.push_back("ohos.permission.TIMEOUT_SCREENOFF_DISABLE_LOCK");
     uint64_t tokenId = 0;
 
     auto perms = std::make_unique<const char* []>(permission.size());
@@ -377,6 +378,13 @@ void ScreenCaptureUnitTest::SetHapPermission()
             },
             {
                 .permissionName = "ohos.permission.KEEP_BACKGROUND_RUNNING",
+                .isGeneral = true,
+                .resDeviceID = { "local" },
+                .grantStatus = { PermissionState::PERMISSION_GRANTED },
+                .grantFlags = { 1 }
+            },
+            {
+                .permissionName = "ohos.permission.TIMEOUT_SCREENOFF_DISABLE_LOCK",
                 .isGeneral = true,
                 .resDeviceID = { "local" },
                 .grantStatus = { PermissionState::PERMISSION_GRANTED },

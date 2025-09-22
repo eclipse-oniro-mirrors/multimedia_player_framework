@@ -237,6 +237,7 @@ private:
         std::vector<ScreenId> mirrorIds);
     bool IsPickerPopUp();
     bool CheckCustScrRecPermission();
+    void SetTimeoutScreenoffDisableLock(bool lockScreen);
 #endif
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     int32_t TryStartNotification();

@@ -49,6 +49,7 @@
 #include "want_agent_helper.h"
 #include "common_event_manager.h"
 #ifdef PC_STANDARD
+#include "power_mgr_client.h"
 #include <parameters.h>
 #endif
 
@@ -2859,6 +2860,11 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
         }
     }
     MEDIA_LOGI("CreateVirtualScreen success, screenId: %{public}" PRIu64, virtualScreenId_);
+
+#ifdef PC_STANDARD
+    SetTimeoutScreenoffDisableLock(false);
+#endif
+
     return PrepareVirtualScreenMirror();
 }
 
@@ -2981,6 +2987,27 @@ bool ScreenCaptureServer::IsPickerPopUp()
     }
     return !isRegionCapture_ &&
            (captureConfig_.captureMode == CAPTURE_SPECIFIED_SCREEN || CheckCaptureSpecifiedWindowForSelectWindow());
+}
+
+void ScreenCaptureServer::SetTimeoutScreenoffDisableLock(bool lockScreen)
+{
+    MEDIA_LOGI("SetTimeoutScreenoffDisableLock Start lockScreen %{public}d", lockScreen);
+        int result = Security::AccessToken::AccessTokenKit::VerifyAccessToken(appInfo_.appTokenId,
+        "ohos.permission.TIMEOUT_SCREENOFF_DISABLE_LOCK");
+    if (result != Security::AccessToken::PERMISSION_GRANTED) {
+        MEDIA_LOGI("user have not the TIMEOUT_SCREENOFF_DISABLE_LOCK!");
+        return;
+    }
+
+    MEDIA_LOGI("SetTimeoutScreenoffDisableLock PowerMgrClient::LockScreenAfterTimingOutWithAppid begin");
+    auto powerErrors = OHOS::PowerMgr::PowerMgrClient::GetInstance()
+                                .LockScreenAfterTimingOutWithAppid(appInfo_.appTokenId, lockScreen);
+    MEDIA_LOGI("SetTimeoutScreenoffDisableLock PowerMgrClient::LockScreenAfterTimingOutWithAppid end");
+    if (powerErrors == OHOS::PowerMgr::PowerErrors::ERR_OK) {
+        MEDIA_LOGI("SetTimeoutScreenoffDisableLock success");
+    } else {
+        MEDIA_LOGE("SetTimeoutScreenoffDisableLock error %{public}d", powerErrors);
+    }
 }
 #endif
 
@@ -3127,6 +3154,11 @@ void ScreenCaptureServer::DestroyVirtualScreen()
             ScreenManager::GetInstance().StopMirror(screenIds);
         }
         ScreenManager::GetInstance().DestroyVirtualScreen(virtualScreenId_);
+
+#ifdef PC_STANDARD
+        SetTimeoutScreenoffDisableLock(true);
+#endif
+
         virtualScreenId_ = SCREEN_ID_INVALID;
         isConsumerStart_ = false;
     }
