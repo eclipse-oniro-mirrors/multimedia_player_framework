@@ -54,6 +54,10 @@ constexpr uint8_t COLORPRIMARIES_OFFSET = 0;
 constexpr uint8_t TRANSFUNC_OFFSET = 8;
 constexpr uint8_t MATRIX_OFFSET = 16;
 constexpr uint8_t RANGE_OFFSET = 21;
+constexpr uint16_t SURFACE_MAX_WIDTH = 7680;
+constexpr uint16_t SURFACE_MAX_HEIGHT = 7680;
+constexpr uint8_t MAX_BYTES_PER_PIXEL = 4;
+constexpr uint16_t MAX_STRIDE = SURFACE_MAX_WIDTH * MAX_BYTES_PER_PIXEL;
 }
 
 namespace OHOS {
@@ -187,6 +191,11 @@ static PixelMapMemHolder *CreatePixelMapData(const std::shared_ptr<AVSharedMemor
         delete holder;
     };
 
+    CHECK_AND_RETURN_RET_LOG(frame.width_ > 0 && frame.width_ <= SURFACE_MAX_WIDTH, nullptr, "width info wrong");
+    CHECK_AND_RETURN_RET_LOG(frame.height_ > 0 && frame.height_ <= SURFACE_MAX_HEIGHT, nullptr, "height info wrong");
+    CHECK_AND_RETURN_RET_LOG(frame.bytesPerPixel_ > 0 && frame.bytesPerPixel_ <= MAX_BYTES_PER_PIXEL, nullptr,
+        "bytesPerPixel info wrong");
+    CHECK_AND_RETURN_RET_LOG(frame.stride_ > 0 && frame.stride_ <= MAX_STRIDE, nullptr, "stride info wrong");
     int32_t minStride = frame.width_ * frame.bytesPerPixel_;
     CHECK_AND_RETURN_RET_LOG(minStride <= frame.stride_, nullptr, "stride info wrong");
 
@@ -591,6 +600,7 @@ int32_t AVMetadataHelperImpl::CopySurfaceBufferToPixelMap(sptr<SurfaceBuffer> &s
     int32_t stride = surfaceBuffer->GetStride();
 
     CHECK_AND_RETURN_RET(width > 0 && height > 0 && stride > 0, MSERR_INVALID_VAL);
+    CHECK_AND_RETURN_RET(pixelMapInfo.outputHeight > 0, MSERR_INVALID_VAL);
 
     static int32_t uvDivBase = 2;
     CHECK_AND_RETURN_RET(INT64_MAX - (static_cast<int64_t>(stride) * pixelMapInfo.outputHeight)
@@ -614,8 +624,11 @@ int32_t AVMetadataHelperImpl::CopySurfaceBufferToPixelMap(sptr<SurfaceBuffer> &s
         srcPtr += stride;
         dstPtr += lineByteCount;
     }
- 
-    srcPtr = static_cast<uint8_t *>(surfaceBuffer->GetVirAddr()) + stride * pixelMapInfo.outputHeight;
+    
+    int64_t yOffset = static_cast<int64_t>(stride) * pixelMapInfo.outputHeight;
+    CHECK_AND_RETURN_RET(yOffset > 0, MSERR_INVALID_VAL);
+    CHECK_AND_RETURN_RET(yOffset < static_cast<int64_t>(surfaceBuffer->GetSize()), MSERR_INVALID_VAL);
+    srcPtr = static_cast<uint8_t *>(surfaceBuffer->GetVirAddr()) + yOffset;
  
     // copy src UV component to dst, height(UV) = height(Y) / 2
     for (int32_t uv = 0; uv < height / 2; uv++) {
