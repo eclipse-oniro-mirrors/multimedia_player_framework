@@ -128,7 +128,9 @@
           "memmgr",
           "memmgr_override",
           "efficiency_manager",
-          "hiappevent"
+          "hiappevent",
+          "drivers_interface_lpplayer",
+          "runtime_core"
         ],
         "third_party": [
           "bounds_checking_function"
@@ -140,7 +142,8 @@
           "fwk_group": [
             "//foundation/multimedia/player_framework/interfaces/kits/js:napi_packages",
             "//foundation/multimedia/player_framework/interfaces/kits/c:capi_packages",
-            "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client"
+            "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
+            "//foundation/multimedia/player_framework/frameworks/taihe:player_framework_taihe"
           ],
           "service_group": [
             "//foundation/multimedia/player_framework/services:media_services_package",
@@ -229,7 +232,13 @@
             "type": "so",
             "name": "//foundation/multimedia/player_framework/frameworks/cj/avplayer:cj_avplayer_ffi",
             "header": {
-              "header_files": [],
+              "header_files": [
+                "cj_avplayer_ffi.h",
+                "cj_avplayer_callback.h",
+                "cj_avplayer_utils.h",
+                "cj_avplayer.h",
+                "cj_media_data_source_callback.h"
+              ],
               "header_base": "//foundation/multimedia/player_framework/frameworks/cj/avplayer"
             }
           },
@@ -237,7 +246,11 @@
             "type": "so",
             "name": "//foundation/multimedia/player_framework/frameworks/cj/soundpool:cj_soundpool_ffi",
             "header": {
-              "header_files": [],
+              "header_files": [
+                "soundpool_ffi.h",
+                "cj_soundpool_callback.h",
+                "cj_soundpool.h"
+              ],
               "header_base": "//foundation/multimedia/player_framework/frameworks/cj/soundpool/include"
             }
           },
@@ -245,7 +258,13 @@
             "type": "so",
             "name": "//foundation/multimedia/player_framework/frameworks/cj/metadatahelper:cj_metadatahelper_ffi",
             "header": {
-              "header_files": [],
+              "header_files": [
+                "cj_avimagegenerator.h",
+                "cj_avmetadataextractor.h",
+                "cj_helperdatasourcecallback.h",
+                "metadatahelper_ffi.h",
+                "metadatahelper_util.h"
+              ],
               "header_base": "//foundation/multimedia/player_framework/frameworks/cj/metadatahelper/include"
             }
           },
@@ -253,7 +272,11 @@
             "type": "so",
             "name": "//foundation/multimedia/player_framework/frameworks/cj/audio_haptic:cj_audiohaptic_ffi",
             "header": {
-              "header_files": [],
+              "header_files": [
+                "cj_audio_haptic_ffi.h",
+                "cj_audio_haptic_manager.h",
+                "cj_audio_haptic_player.h"
+              ],
               "header_base": "//foundation/multimedia/player_framework/frameworks/cj/audio_haptic/include"
             }
           },
@@ -261,7 +284,11 @@
             "type": "so",
             "name": "//foundation/multimedia/player_framework/frameworks/cj/avscreen_capture:cj_avscreen_capture_ffi",
             "header": {
-              "header_files": [],
+              "header_files": [
+                "avscreen_capture_ffi.h",
+                "cj_avscreen_capture_callback.h",
+                "cj_avscreen_capture.h"
+              ],
               "header_base": "//foundation/multimedia/player_framework/frameworks/cj/avscreen_capture/include"
             }
           },
@@ -269,7 +296,11 @@
             "type": "so",
             "name": "//foundation/multimedia/player_framework/frameworks/cj/avtranscoder:cj_avtranscoder_ffi",
             "header": {
-              "header_files": [],
+              "header_files": [
+                "avtranscoder_ffi.h",
+                "cj_avtranscoder_callback.h",
+                "cj_avtranscoder.h"
+              ],
               "header_base": "//foundation/multimedia/player_framework/frameworks/cj/avtranscoder/include"
             }
           },
@@ -277,7 +308,11 @@
             "type": "so",
             "name": "//foundation/multimedia/player_framework/frameworks/cj/avrecorder:cj_media_avrecorder_ffi",
             "header": {
-              "header_files": [],
+              "header_files": [
+                "avrecorder_ffi.h",
+                "cj_avrecorder_callback.h",
+                "cj_avrecorder.h"
+              ],
               "header_base": "//foundation/multimedia/player_framework/frameworks/cj/avrecorder"
             }
           }
