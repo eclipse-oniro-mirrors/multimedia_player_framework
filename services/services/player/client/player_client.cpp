@@ -69,14 +69,15 @@ int32_t PlayerClient::CreateListenerObject()
 
 void PlayerClient::MediaServerDied()
 {
+    std::shared_ptr<PlayerCallback> callback;
     {
         std::lock_guard<std::mutex> lock(mutex_);
         playerProxy_ = nullptr;
         listenerStub_ = nullptr;
+        callback = callback_;
     }
     
-    if (callback_ != nullptr) {
-        std::shared_ptr<PlayerCallback> callback = callback_;
+    if (callback != nullptr) {
         callback->OnError(MSERR_SERVICE_DIED,
             "mediaserver is died, please create a new playback instance again");
     }
