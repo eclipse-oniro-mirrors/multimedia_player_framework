@@ -30,7 +30,9 @@ namespace OHOS {
 namespace Media {
 TaskQueue::~TaskQueue()
 {
+    MEDIA_LOGD("~TaskQueue in [%{public}s], tid_: (%{public}d)", name_.c_str(), tid_);
     (void)Stop();
+    MEDIA_LOGD("~TaskQueue out [%{public}s], tid_: (%{public}d)", name_.c_str(), tid_);
 }
 
 int32_t TaskQueue::Start()
@@ -55,7 +57,16 @@ int32_t TaskQueue::Stop() noexcept
     }
 
     if (std::this_thread::get_id() == thread_->get_id()) {
-        MEDIA_LOGI("Stop at the task thread, reject");
+        isExit_ = true;
+        auto t = std::move(thread_);
+        lock.unlock();
+
+        if (t != nullptr && t->joinable()) {
+            t->detach();
+        }
+
+        MEDIA_LOGW("Stop at the task thread, set isExit true, detach thread: [%{public}s], tid_: (%{public}d)",
+            name_.c_str(), tid_);
         return MSERR_INVALID_OPERATION;
     }
 
@@ -68,6 +79,8 @@ int32_t TaskQueue::Stop() noexcept
     if (t != nullptr && t->joinable()) {
         t->join();
     }
+    MEDIA_LOGI("Stop at the other thread, set isExit true, join thread: [%{public}s], tid_: (%{public}d)",
+        name_.c_str(), tid_);
 
     lock.lock();
     CancelNotExecutedTaskLocked();
