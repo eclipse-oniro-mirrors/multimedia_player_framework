@@ -46,6 +46,7 @@ ohos_unittest("avmetadata_unittest") {
     "//foundation/multimedia/player_framework/services/services/screen_capture_monitor/server",
     "//foundation/multimedia/player_framework/services/services/transcoder/client",
     "//foundation/multimedia/player_framework/services/services/transcoder/ipc",
+    "//foundation/multimedia/player_framework/services/services/engine_intf",
     "//foundation/multimedia/player_framework/services/utils/include",
     "//foundation/multimedia/player_framework/frameworks/native/avmetadatahelper",
     "//foundation/multimedia/player_framework/frameworks/native/media_source_loading_request",
@@ -130,6 +131,10 @@ ohos_unittest("avmetadata_unittest") {
     "state_registry:tel_state_registry_api",
     "window_manager:libwm",
   ]
+
+  if (player_framework_support_drm) {
+    external_deps += [ "drm_framework:drm_framework" ]
+  }
 
   deps = [
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",

@@ -46,7 +46,7 @@ ohos_shared_library("media_service_utils") {
 
   include_dirs = [
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
+    "//foundation/multimedia/player_framework/services/services/engine_intf",
   ]
 
   defines = [ "MEDIA_OHOS" ]
