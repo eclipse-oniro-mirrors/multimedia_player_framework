@@ -3182,7 +3182,6 @@ VirtualScreenOption ScreenCaptureServer::InitVirtualScreenOption(const std::stri
     MediaTrace trace("ScreenCaptureServer::InitVirtualScreenOption");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " InitVirtualScreenOption start, name:%{public}s.",
         FAKE_POINTER(this), name.c_str());
-    std::unique_lock<std::shared_mutex> write_lock(rw_lock_);
     VirtualScreenOption virScrOption = {
         .name_ = name,
         .width_ = captureConfig_.videoInfo.videoCapInfo.videoFrameWidth,
