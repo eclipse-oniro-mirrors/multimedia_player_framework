@@ -69,6 +69,7 @@ class MockContext : public AbilityRuntime::Context {
         std::string GetGroupDir(std::string groupId) override { return ""; }
         std::string GetDistributedFilesDir() override { return ""; }
         std::string GetCloudFileDir() override { return ""; }
+        std::string GetLogFileDir() override { return ""; }
         sptr<IRemoteObject> GetToken() override { return nullptr; }
         void SetToken(const sptr<IRemoteObject> &token) override {}
         void SwitchArea(int mode) override {}
