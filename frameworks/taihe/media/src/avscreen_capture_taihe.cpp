@@ -297,8 +297,8 @@ int32_t AVScreenCaptureRecorderImpl::GetVideoInfo(std::unique_ptr<AVScreenCaptur
     if (config.fillMode.has_value()) {
         fillMode = config.fillMode.value().get_value();
     }
-    videoConfig.screenCaptureFillMode = GetScreenCaptureFillMode(fillMode);
-    MEDIA_LOGI("input screenCaptureFillMode %{public}d", videoConfig.screenCaptureFillMode);
+    asyncCtx->config_.strategy.fillMode = GetScreenCaptureFillMode(fillMode);
+    MEDIA_LOGI("input screenCaptureFillMode %{public}d", asyncCtx->config_.strategy.fillMode);
     return MSERR_OK;
 }
 
