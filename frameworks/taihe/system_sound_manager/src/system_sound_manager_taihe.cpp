@@ -311,8 +311,8 @@ void SystemSoundManagerImpl::RemoveCustomizedToneSync(uintptr_t context, ::taihe
             return ERR_URI;
         }
         if (offsetInput >= 0 && lengthInput >= 0) {
-            ParamsForAddCustomizedTone paramsForAddCustomizedTone = { "", static_cast<int32_t>(fd), lengthInput,
-        offsetInput, false };
+            OHOS::Media::ParamsForAddCustomizedTone paramsForAddCustomizedTone = { "", static_cast<int32_t>(fd),
+                lengthInput, offsetInput, false };
             uri = sysSoundMgrClient_->AddCustomizedToneByFdAndOffset(
                 abilityContext, toneAttrsImplPtr->GetToneAttrs(), paramsForAddCustomizedTone);
         } else if (offsetInput == 0 && lengthInput == 0) {

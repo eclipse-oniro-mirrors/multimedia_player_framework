@@ -53,16 +53,16 @@ public:
         taihe::string name = MediaTaiheUtils::ToTaiheString(deviceInfo.deviceName_);
         taihe::string address = MediaTaiheUtils::ToTaiheString(deviceInfo.macAddress_);
         std::vector<int32_t> samplingRateVec(
-            deviceInfo.audioStreamInfo_.front.samplingRate.begin(),
-            deviceInfo.audioStreamInfo_.front.samplingRate.end());
-        std::vector<int32_t> channelsVec(deviceInfo.audioStreamInfo_.front.channelLayout.begin(),
-            deviceInfo.audioStreamInfo_.front.channelLayout.end());
+            deviceInfo.audioStreamInfo_.front().samplingRate.begin(),
+            deviceInfo.audioStreamInfo_.front().samplingRate.end());
+        std::vector<int32_t> channelsVec(deviceInfo.audioStreamInfo_.front().channelLayout.begin(),
+            deviceInfo.audioStreamInfo_.front().channelLayout.end());
         taihe::string networkId = MediaTaiheUtils::ToTaiheString(deviceInfo.networkId_);
         taihe::string displayName = MediaTaiheUtils::ToTaiheString(
             deviceInfo.displayName_);
         ohos::multimedia::audio::AudioEncodingType::key_t audioEncodingTypeKey;
         MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::AudioEncodingType>(
-            deviceInfo.audioStreamInfo_.front.encoding, audioEncodingTypeKey);
+            deviceInfo.audioStreamInfo_.front().encoding, audioEncodingTypeKey);
         std::vector<int32_t> channelMasks;
         channelMasks.push_back(deviceInfo.channelMasks_);
         std::vector<ohos::multimedia::audio::AudioEncodingType> audioEncodingType;
