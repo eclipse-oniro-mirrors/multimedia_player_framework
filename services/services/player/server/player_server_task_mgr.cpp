@@ -95,7 +95,8 @@ int32_t PlayerServerTaskMgr::LaunchTask(const std::shared_ptr<ITaskHandler> &tas
             FAKE_POINTER(this), currTwoPhaseTaskName_.c_str(), taskName.c_str());
     } else {
         MEDIA_LOGI("0x%{public}06" PRIXPTR " task[%{public}s] is in processing, the new task[%{public}s], 
-            num:%{public}u", FAKE_POINTER(this), currTwoPhaseTaskName_.c_str(), taskName.c_str(), pendingTwoPhaseTasks_.size());
+            num:%{public}u", FAKE_POINTER(this), currTwoPhaseTaskName_.c_str(), taskName.c_str(), 
+            pendingTwoPhaseTasks_.size());
     }
     
     pendingTwoPhaseTasks_.push_back({ type, task, nullptr, taskName });
