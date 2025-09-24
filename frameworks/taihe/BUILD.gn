@@ -19,15 +19,21 @@ import("./../../multimedia_player_framework_aafwk.gni")
 
 subsystem_name = "multimedia"
 part_name = "player_framework"
-taihe_generated_file_path_media = "$taihe_file_path/out/$subsystem_name/$part_name/media"
-taihe_generated_file_path_soundPool = "$taihe_file_path/out/$subsystem_name/$part_name/soundPool"
+taihe_generated_file_path_media =
+    "$taihe_file_path/out/$subsystem_name/$part_name/media"
+taihe_generated_file_path_soundPool =
+    "$taihe_file_path/out/$subsystem_name/$part_name/soundPool"
 
 copy_taihe_idl("copy_media_taihe") {
-  sources = [ "//foundation/multimedia/player_framework/frameworks/taihe/idl/ohos.multimedia.media.taihe",
-              "//foundation/multimedia/player_framework/frameworks/taihe/idl/ohos.multimedia.media.context.taihe", ]
+  sources = [
+    "//foundation/multimedia/player_framework/frameworks/taihe/idl/ohos.multimedia.media.context.taihe",
+    "//foundation/multimedia/player_framework/frameworks/taihe/idl/ohos.multimedia.media.taihe",
+  ]
   deps = [ ":copy_soundpool_taihe" ]
-  external_deps = [ "image_framework:copy_image_taihe",
-                    "audio_framework:copy_taihe",]
+  external_deps = [
+    "audio_framework:copy_taihe",
+    "image_framework:copy_image_taihe",
+  ]
   if (player_framework_support_drm) {
     external_deps += [ "drm_framework:copy_drm_taihe" ]
   }
@@ -82,15 +88,15 @@ taihe_shared_library("soundpool_taihe") {
   sources += [
     "media/src/media_taihe_utils.cpp",
     "soundpool/src/ani_constructor.cpp",
-    "soundpool/src/sound_pool_taihe.cpp",
     "soundpool/src/sound_pool_callback_taihe.cpp",
+    "soundpool/src/sound_pool_taihe.cpp",
   ]
 
   deps = [
     ":run_soundpool_taihe",
+    "${multimedia_player_framework_path}/frameworks/native/soundpool:soundpool_client",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
-    "${multimedia_player_framework_path}/frameworks/native/soundpool:soundpool_client",
   ]
 
   external_deps = [
@@ -133,7 +139,7 @@ taihe_shared_library("media_taihe") {
     cfi_cross_dso = true
     debug = false
   }
-  
+
   taihe_generated_file_path = "${taihe_generated_file_path_media}"
   subsystem_name = "$subsystem_name"
   part_name = "$part_name"
@@ -148,26 +154,26 @@ taihe_shared_library("media_taihe") {
   sources = get_target_outputs(":run_media_taihe")
   sources += [
     "media/src/ani_constructor.cpp",
-    "media/src/avmetadataextractor_taihe.cpp",
-    "media/src/video_recorder_taihe.cpp",
-    "media/src/media_taihe_utils.cpp",
-    "media/src/recoder_callback_taihe.cpp",
-    "media/src/helper_data_source_callback_taihe.cpp",
-    "media/src/media_data_source_callback_taihe.cpp",
     "media/src/avimagegenerator_taihe.cpp",
-    "media/src/screen_capture_monitor_taihe.cpp",
-    "media/src/avrecorder_taihe.cpp",
-    "media/src/avtranscoder_taihe.cpp",
-    "media/src/avtranscoder_callback_taihe.cpp",
+    "media/src/avmetadataextractor_taihe.cpp",
     "media/src/avplayer_callback_taihe.cpp",
     "media/src/avplayer_taihe.cpp",
-    "media/src/screen_capture_monitor_callback_taihe.cpp",
-    "media/src/avscreen_capture_taihe.cpp",
-    "media/src/avscreen_capture_callback_taihe.cpp",
     "media/src/avrecorder_callback_taihe.cpp",
-    "media/src/media_source_taihe.cpp",
-    "media/src/media_source_loading_request_taihe.cpp",
+    "media/src/avrecorder_taihe.cpp",
+    "media/src/avscreen_capture_callback_taihe.cpp",
+    "media/src/avscreen_capture_taihe.cpp",
+    "media/src/avtranscoder_callback_taihe.cpp",
+    "media/src/avtranscoder_taihe.cpp",
+    "media/src/helper_data_source_callback_taihe.cpp",
+    "media/src/media_data_source_callback_taihe.cpp",
     "media/src/media_source_loader_callback_taihe.cpp",
+    "media/src/media_source_loading_request_taihe.cpp",
+    "media/src/media_source_taihe.cpp",
+    "media/src/media_taihe_utils.cpp",
+    "media/src/recoder_callback_taihe.cpp",
+    "media/src/screen_capture_monitor_callback_taihe.cpp",
+    "media/src/screen_capture_monitor_taihe.cpp",
+    "media/src/video_recorder_taihe.cpp",
   ]
 
   deps = [
@@ -209,7 +215,7 @@ taihe_shared_library("media_taihe") {
   }
 
   if (player_framework_support_auto_create_file) {
-    external_deps += ["media_library:medialibrary_ani_utils"]
+    external_deps += [ "media_library:medialibrary_ani_utils" ]
   }
 }
 
@@ -226,9 +232,7 @@ ohos_prebuilt_etc("media_taihe_etc") {
   module_install_dir = "framework"
   part_name = "$part_name"
   subsystem_name = "$subsystem_name"
-  deps = [
-    ":media_taihe_abc"
-  ]
+  deps = [ ":media_taihe_abc" ]
 }
 
 generate_static_abc("soundpool_taihe_abc") {
@@ -244,20 +248,18 @@ ohos_prebuilt_etc("soundpool_etc") {
   module_install_dir = "framework"
   part_name = "$part_name"
   subsystem_name = "$subsystem_name"
-  deps = [
-    ":soundpool_taihe_abc"
-  ]
+  deps = [ ":soundpool_taihe_abc" ]
 }
 
 group("player_framework_taihe") {
   deps = [
     ":media_taihe",
     ":media_taihe_etc",
-    ":soundpool_taihe",
     ":soundpool_etc",
+    ":soundpool_taihe",
     "./audioHaptic:audioHaptic_etc",
     "./audioHaptic:audioHaptic_taihe",
-    "./system_sound_manager:system_sound_manager_taihe_etc",
     "./system_sound_manager:system_sound_manager_taihe",
+    "./system_sound_manager:system_sound_manager_taihe_etc",
   ]
 }
