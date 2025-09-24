@@ -27,6 +27,7 @@
 #include "player_xcollie.h"
 #include "string_ex.h"
 #include "uri_helper.h"
+#include "scoped_timer.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerServiceProxy"};
@@ -37,6 +38,7 @@ namespace Media {
 namespace {
     constexpr int MAX_TRACKCNT = 1000;
     constexpr size_t MAX_PAYLOAD_TYPES_SIZE = 100;
+    constexpr size_t SEND_REQUEST_WARNING_MS = 1000;
 }
 
 PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
@@ -128,6 +130,7 @@ int32_t PlayerServiceProxy::SendRequest(uint32_t code, MessageParcel &data, Mess
         funcName = itFunc->second;
     }
 
+    ScopedTimer timer("SendRequest "+ funcName, SEND_REQUEST_WARNING_MS);
     int32_t error = -1;
     const sptr<IRemoteObject> remoteObject = Remote();
     CHECK_AND_RETURN_RET_LOG(remoteObject != nullptr, error, "Remote is null");
