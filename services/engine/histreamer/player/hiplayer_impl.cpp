@@ -4056,5 +4056,11 @@ void HiPlayerImpl::CacheBuffer()
     FALSE_RETURN(ret != Status::OK);
     UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
 }
+
+void HiPlayerImpl::CleanUnusedListener()
+{
+    FALSE_RETURN(interruptMonitor_ != nullptr);
+    interruptMonitor_->CleanUnusedListener();
+}
 }  // namespace Media
 }  // namespace OHOS

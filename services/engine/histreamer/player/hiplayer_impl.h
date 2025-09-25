@@ -326,6 +326,7 @@ private:
     void ReleaseVideoDecoderOnMuted();
     void CacheBuffer();
     void NotifyBufferEnd();
+    void CleanUnusedListener();
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
