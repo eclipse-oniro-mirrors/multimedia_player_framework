@@ -1664,7 +1664,6 @@ int32_t ScreenCaptureServer::StartAudioCapture()
             MEDIA_LOGE("StartAudioCapture StartStreamMicAudioCapture failed");
         }
     }
-    PublishScreenCaptureEvent("start");
     ret = StartStreamInnerAudioCapture();
     if (ret != MSERR_OK) {
         MEDIA_LOGE("StartStreamInnerAudioCapture failed");
