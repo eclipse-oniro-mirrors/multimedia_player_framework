@@ -340,16 +340,7 @@ void ScreenCaptureUnitTest::SetAccessTokenPermission()
     }
 }
 
-void ScreenCaptureUnitTest::SetHapPermission()
-{
-    HapInfoParams info = {
-        .userID = 100, // 100 UserID
-        .bundleName = "com.ohos.test.screencapturetdd",
-        .instIndex = 0, // 0 index
-        .appIDDesc = "com.ohos.test.screencapturetdd",
-        .isSystemApp = true
-    };
-
+HapPolicyParams SetHapPolicyParams(){
     HapPolicyParams policy = {
         .apl = APL_SYSTEM_BASIC,
         .domain = "test.domain.screencapturetdd",
@@ -392,6 +383,20 @@ void ScreenCaptureUnitTest::SetHapPermission()
             }
         }
     };
+    return policy;
+}
+
+void ScreenCaptureUnitTest::SetHapPermission()
+{
+    HapInfoParams info = {
+        .userID = 100, // 100 UserID
+        .bundleName = "com.ohos.test.screencapturetdd",
+        .instIndex = 0, // 0 index
+        .appIDDesc = "com.ohos.test.screencapturetdd",
+        .isSystemApp = true
+    };
+
+    HapPolicyParams policy = SetHapPolicyParams();
     AccessTokenIDEx tokenIdEx = { 0 };
     tokenIdEx = AccessTokenKit::AllocHapToken(info, policy);
     int ret = SetSelfTokenID(tokenIdEx.tokenIDEx);
