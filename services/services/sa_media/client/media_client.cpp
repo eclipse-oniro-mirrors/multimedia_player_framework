@@ -18,6 +18,7 @@
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
 #include "ipc_skeleton.h"
+#include "accesstoken_kit.h"
 #include "i_standard_monitor_service.h"
 #include "monitor_client.h"
 #include <thread>
@@ -46,6 +47,7 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "player_xcollie.h"
+#include "media_utils.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaClient"};
@@ -257,8 +259,16 @@ std::shared_ptr<IPlayerService> MediaClient::CreatePlayerService()
     CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER, object, lock);
 #else
     CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "media service does not exist.");
-    object = mediaProxy_->GetSubSystemAbilityWithTimeOut(
-        IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER, listenerStub_->AsObject(), MAX_WAIT_TIME);
+    auto playerAbility = IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER;
+    std::string bundleName = GetClientBundleName(getuid());
+    bool isSysAppGallery = false;
+    if (bundleName.find("appgallery") != std::string::npos) {
+        uint64_t tokenId = IPCSkeleton::GetCallingFullTokenID();
+        isSysAppGallery = Security::AccessToken::AccessTokenKit::IsSystemAppByFullTokenID(tokenId);
+    }
+    object = isSysAppGallery?
+        mediaProxy_ -> GetSubSystemAbility(playerAbility, listenerStub_->AsObject())
+        : mediaProxy_ ->GetSubSystemAbilityWithTimeOut(playerAbility, listenerStub_->AsObject(), MAX_WAIT_TIME);
 #endif
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "player proxy object is nullptr.");
 

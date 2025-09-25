@@ -86,6 +86,8 @@ int32_t PlayerServiceStub::Freeze()
         int32_t ret = MSERR_OK;
         CHECK_AND_RETURN_RET_LOG(!isFrozen_, ret, "can not freeze");
         (void)DisableMonitor(appPid_);
+        CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr,
+            static_cast<int32_t>(MSERR_NO_MEMORY), "player server is nullptr");
         ret = playerServer_->Freeze();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Freeze failed");
         isFrozen_ = true;

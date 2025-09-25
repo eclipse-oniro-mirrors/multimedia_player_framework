@@ -859,7 +859,7 @@ HWTEST_F(LppVideoDecAdapterUnitTest, Callback_001, TestSize.Level1)
     std::shared_ptr<LppVideoDecoderCallback> callback = std::make_shared<LppVideoDecoderCallback>(videoDecAdapter_);
     ASSERT_NE(nullptr, callback);
 
-    MediaAVCodec::AVCodecErrorType errorType = MediaAVCodec::AVCodecErrorType::AVCODEC_ERROR_FRAMEAORK_FAILED;
+    MediaAVCodec::AVCodecErrorType errorType = MediaAVCodec::AVCodecErrorType::AVCODEC_ERROR_FRAMEWORK_FAILED;
     int32_t errorCode = 1001;
     EXPECT_NE(callback->videoDecoderAdapter_.lock(), nullptr);
     callback->OnError(errorType, errorCode);

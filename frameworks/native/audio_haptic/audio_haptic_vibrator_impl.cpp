@@ -352,16 +352,23 @@ int32_t AudioHapticVibratorImpl::SetHapticsFeature(const HapticsFeature &feature
     }
     if (feature == HapticsFeature::GENTLE_HAPTICS) {
         auto gentlePkg = std::make_shared<VibratorPackage>();
-        convertToWeakVibratorPackage(vibratorPkg_, gentlePkg);
-        std::swap(vibratorPkg_, gentlePkg);
-
-        if (isRunning_) {
-            result = SeekAndRestart();
+        if (modulatePkg_ != nullptr) {
+            convertToWeakVibratorPackage(modulatePkg_, gentlePkg);
+            Sensors::FreeVibratorPackage(*modulatePkg_);
+            modulatePkg_ = nullptr;
+        } else {
+            convertToWeakVibratorPackage(vibratorPkg_, gentlePkg);
         }
+
+        std::swap(vibratorPkg_, gentlePkg);
 
         if (gentlePkg != nullptr) {
             Sensors::FreeVibratorPackage(*gentlePkg);
             gentlePkg = nullptr;
+        }
+
+        if (isRunning_) {
+            result = SeekAndRestart();
         }
     }
 #endif

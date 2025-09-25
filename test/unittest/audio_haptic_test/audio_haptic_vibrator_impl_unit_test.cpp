@@ -1133,8 +1133,16 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_043, TestSize.
     EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, audioHapticVibratorImpl->SetHapticsFeature(HapticsFeature::GENTLE_HAPTICS));
 
     audioHapticVibratorImpl->vibratorPkg_ = g_vibrationPackage2;
+    EXPECT_EQ(MSERR_OK, audioHapticVibratorImpl->SetHapticsFeature(HapticsFeature::GENTLE_HAPTICS));
+
     audioHapticVibratorImpl->isRunning_.store(true);
-    
+    EXPECT_EQ(MSERR_OK, audioHapticVibratorImpl->SetHapticsFeature(HapticsFeature::GENTLE_HAPTICS));
+
+    audioHapticVibratorImpl->modulatePkg_ = audioHapticVibratorImpl->vibratorPkg_;
+    EXPECT_EQ(MSERR_OK, audioHapticVibratorImpl->SetHapticsFeature(HapticsFeature::GENTLE_HAPTICS));
+
+    audioHapticVibratorImpl->modulatePkg_ = audioHapticVibratorImpl->vibratorPkg_;
+    audioHapticVibratorImpl->isRunning_.store(false);
     EXPECT_EQ(MSERR_OK, audioHapticVibratorImpl->SetHapticsFeature(HapticsFeature::GENTLE_HAPTICS));
 }
 

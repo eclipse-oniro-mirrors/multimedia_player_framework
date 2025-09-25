@@ -78,9 +78,11 @@ static const std::string ICON_PATH_MIC = "/etc/screencapture/mic.svg";
 static const std::string ICON_PATH_MIC_OFF = "/etc/screencapture/mic_off.svg";
 static const std::string ICON_PATH_STOP = "/etc/screencapture/light.svg";
 static const std::string BACK_GROUND_COLOR = "#E84026";
+static const std::string SYS_SCR_RECR_KEY = "const.multimedia.screencapture.screenrecorderbundlename";
 #ifdef PC_STANDARD
 static const std::string SELECT_ABILITY_NAME = "SelectWindowAbility";
 static const int32_t SELECT_WINDOW_MISSION_ID_NUM_MAX = 2;
+static const std::string PERM_CUST_SCR_REC = "ohos.permission.CUSTOM_SCREEN_RECORDING";
 #endif
 static const int32_t SVG_HEIGHT = 80;
 static const int32_t SVG_WIDTH = 80;
@@ -1604,20 +1606,19 @@ bool ScreenCaptureServer::CheckPrivacyWindowSkipPermission()
     return false;
 }
 
-int32_t ScreenCaptureServer::RequestUserPrivacyAuthority()
+int32_t ScreenCaptureServer::RequestUserPrivacyAuthority(bool &isSkipPrivacyWindow)
 {
     MediaTrace trace("ScreenCaptureServer::RequestUserPrivacyAuthority");
     // If Root is treated as whitelisted, how to guarantee RequestUserPrivacyAuthority function by TDD cases.
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " RequestUserPrivacyAuthority start.", FAKE_POINTER(this));
 
     if (isPrivacyAuthorityEnabled_) {
-        if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
-                .compare(appName_) != 0) {
-            return StartPrivacyWindow();
-        } else {
-            MEDIA_LOGI("ScreenCaptureServer::RequestUserPrivacyAuthority support screenrecorder");
+        isSkipPrivacyWindow = IsSkipPrivacyWindow();
+        if (isSkipPrivacyWindow) {
+            MEDIA_LOGI("ScreenCaptureServer::RequestUserPrivacyAuthority skip privacy window");
             return MSERR_OK;
         }
+        return StartPrivacyWindow();
     }
 
     MEDIA_LOGI("privacy notification window not support, go on to check CAPTURE_SCREEN permission");
@@ -2336,7 +2337,8 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
         showSensitiveCheckBox_, checkBoxSelected_);
 
     if (!isScreenCaptureAuthority_ && IsUserPrivacyAuthorityNeeded()) {
-        ret = RequestUserPrivacyAuthority();
+        bool isSkipPrivacyWindow = false;
+        ret = RequestUserPrivacyAuthority(isSkipPrivacyWindow);
         if (ret != MSERR_OK) {
             captureState_ = AVScreenCaptureState::STOPPED;
             SetErrorInfo(ret, "StartScreenCaptureInner RequestUserPrivacyAuthority failed",
@@ -2345,9 +2347,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
             return ret;
         }
 
-        if (isPrivacyAuthorityEnabled_ &&
-            GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
-                .compare(appName_) != 0) {
+        if (isPrivacyAuthorityEnabled_ && !isSkipPrivacyWindow) {
             MEDIA_LOGI("Wait for user interactions to ALLOW/DENY capture");
             return MSERR_OK;
         }
@@ -2936,6 +2936,17 @@ uint64_t ScreenCaptureServer::GetDisplayIdOfWindows(uint64_t displayId)
 }
 
 #ifdef PC_STANDARD
+bool ScreenCaptureServer::CheckCustScrRecPermission()
+{
+    MEDIA_LOGI("Verify custom screen recording permission");
+    CHECK_AND_RETURN_RET_LOG(Security::AccessToken::AccessTokenKit::VerifyAccessToken(
+        appInfo_.appTokenId, PERM_CUST_SCR_REC) == Security::AccessToken::PERMISSION_GRANTED,
+        false, "Verify custom screen recording failed");
+    auto ret = PrivacyKit::AddPermissionUsedRecord(appInfo_.appTokenId, PERM_CUST_SCR_REC, 1, 0);
+    TRUE_LOG(ret != 0, MEDIA_LOGE, "Add screen capture record error: %{public}d", ret);
+    return true;
+}
+
 bool ScreenCaptureServer::IsHopper()
 {
     std::string foldScreenFlag = system::GetParameter("const.window.foldscreen.type", "0,0,0,0");
@@ -4285,6 +4296,16 @@ void ScreenCaptureServer::AppPrivacyProtected(ScreenId& virtualScreenId, bool ap
     } else {
         MEDIA_LOGI("AppPrivacyProtected SetScreenSkipProtectedWindow failed, ret: %{public}d", ret);
     }
+}
+
+bool ScreenCaptureServer::IsSkipPrivacyWindow()
+{
+#ifdef PC_STANDARD
+    return (GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_ || CheckCustScrRecPermission()) &&
+           !IsPickerPopUp();
+#else
+    return GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_;
+#endif
 }
 
 ScreenCaptureObserverCallBack::ScreenCaptureObserverCallBack(

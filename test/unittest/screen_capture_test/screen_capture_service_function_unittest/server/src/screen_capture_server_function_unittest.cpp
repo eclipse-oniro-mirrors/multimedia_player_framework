@@ -2915,5 +2915,28 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RegisterLanguageSwitchListener_001, Te
     screenCaptureServer_->UnRegisterLanguageSwitchListener();
     EXPECT_NE(screenCaptureServer_->subscriber_, nullptr);
 }
+
+#ifdef PC_STANDARD
+HWTEST_F(ScreenCaptureServerFunctionTest, IsSkipPrivacyWindow_001, TestSize.Level2)
+{
+    screenCaptureServer_->appName_ =
+        GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"];
+    EXPECT_EQ(screenCaptureServer_->IsSkipPrivacyWindow(), true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, IsSkipPrivacyWindow_002, TestSize.Level2)
+{
+    screenCaptureServer_->appName_ = "";
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
+    EXPECT_EQ(screenCaptureServer_->IsSkipPrivacyWindow(), false);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckCustScrRecPermission_001, TestSize.Level2)
+{
+    screenCaptureServer_->appName_ = "";
+    screenCaptureServer_->appInfo_.appTokenId = ScreenCaptureServer::ROOT_UID;
+    EXPECT_EQ(screenCaptureServer_->CheckCustScrRecPermission(), false);
+}
+#endif
 } // Media
 } // OHOS
