@@ -26,7 +26,7 @@
         "SystemCapability.Multimedia.Media.VideoRecorder",
         "SystemCapability.Multimedia.Media.AVPlayer",
         "SystemCapability.Multimedia.Media.AVRecorder",
-        "SystemCapability.Multimedia.Media.LowPowerAVSink = false"
+        "SystemCapability.Multimedia.Media.LowPowerAVSink"
       ],
       "features": [
         "player_framework_support_player",
@@ -128,7 +128,9 @@
           "memmgr",
           "memmgr_override",
           "efficiency_manager",
-          "hiappevent"
+          "hiappevent",
+          "drivers_interface_lpplayer",
+          "runtime_core"
         ],
         "third_party": [
           "bounds_checking_function"
@@ -140,7 +142,8 @@
           "fwk_group": [
             "//foundation/multimedia/player_framework/interfaces/kits/js:napi_packages",
             "//foundation/multimedia/player_framework/interfaces/kits/c:capi_packages",
-            "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client"
+            "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
+            "//foundation/multimedia/player_framework/frameworks/taihe:player_framework_taihe"
           ],
           "service_group": [
             "//foundation/multimedia/player_framework/services:media_services_package",
