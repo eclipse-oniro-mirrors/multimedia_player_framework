@@ -1664,6 +1664,7 @@ int32_t ScreenCaptureServer::StartAudioCapture()
             MEDIA_LOGE("StartAudioCapture StartStreamMicAudioCapture failed");
         }
     }
+    PublishScreenCaptureEvent("start");
     ret = StartStreamInnerAudioCapture();
     if (ret != MSERR_OK) {
         MEDIA_LOGE("StartStreamInnerAudioCapture failed");
@@ -1864,6 +1865,7 @@ int32_t ScreenCaptureServer::OnStartScreenCapture()
     MEDIA_LOGI("OnStartScreenCapture start, dataType:%{public}d", captureConfig_.dataType);
     captureState_ = AVScreenCaptureState::STARTING;
     int32_t ret = MSERR_UNSUPPORT;
+    PublishScreenCaptureEvent("start");
     if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
         ret = StartScreenCaptureStream();
     } else if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
@@ -2309,7 +2311,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
         ", isSurfaceMode:%{public}d, dataType:%{public}d", appInfo_.appUid, appInfo_.appPid, isPrivacyAuthorityEnabled,
         isSurfaceMode_, captureConfig_.dataType);
     MediaTrace trace("ScreenCaptureServer::StartScreenCaptureInner");
-    PublishScreenCaptureEvent("start");
+    
     int32_t ret = RegisterServerCallbacks();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "RegisterServerCallbacks failed");
 
