@@ -340,7 +340,8 @@ void ScreenCaptureUnitTest::SetAccessTokenPermission()
     }
 }
 
-HapPolicyParams SetHapPolicyParams(){
+HapPolicyParams SetHapPolicyParams()
+{
     HapPolicyParams policy = {
         .apl = APL_SYSTEM_BASIC,
         .domain = "test.domain.screencapturetdd",
