@@ -856,49 +856,46 @@ void PlayerMock::ReleaseClientListener()
     player_->ReleaseClientListener();
 }
 
-int32_t PlayerMock::SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode)
+int32_t PlayerMock::GetGlobalInfo(std::shared_ptr<Meta> &globalInfo)
 {
-    (void)start;
-    (void)end;
-    (void)mode;
-    return 0;
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->GetGlobalInfo(globalInfo);
 }
 
 int32_t PlayerMock::SetPlayRangeUsWithMode(int64_t start, int64_t end, PlayerSeekMode mode)
 {
-    (void)start;
-    (void)end;
-    (void)mode;
-    return 0;
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->SetPlayRangeUsWithMode(start, end, mode);
 }
 
 bool PlayerMock::IsSeekContinuousSupported()
 {
-    return false;
-}
-
-int32_t PlayerMock::GetApiVersion(int32_t &apiVersion)
-{
-    (void)apiVersion;
-    return 0;
-}
-
-int32_t PlayerMock::GetPlaybackPosition(int32_t &playbackPosition)
-{
-    playbackPosition = 0;
-    return 0;
-}
-
-int32_t PlayerMock::SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes)
-{
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
-    return player_->SetSeiMessageCbStatus(status, payloadTypes);
+    return player_->IsSeekContinuousSupported();
 }
 
 int32_t PlayerMock::SetStartFrameRateOptEnabled(bool enabled)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     return player_->SetStartFrameRateOptEnabled(enabled);
+}
+
+int32_t PlayerMock::EnableCameraPostprocessing()
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->EnableCameraPostprocessing();
+}
+
+int32_t PlayerMock::SetCameraPostprocessing(bool isOpen)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->SetCameraPostprocessing(isOpen);
+}
+
+int32_t PlayerMock::ForceLoadVideo(bool status)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->ForceLoadVideo(status);
 }
 } // namespace Media
 } // namespace OHOS

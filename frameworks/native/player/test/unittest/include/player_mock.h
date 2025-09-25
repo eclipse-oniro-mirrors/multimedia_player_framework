@@ -179,13 +179,14 @@ public:
     int32_t EnableReportMediaProgress(bool enable);
     void ReleaseClientListener();
     int32_t EnableReportAudioInterrupt(bool enable);
-    int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode = SEEK_PREVIOUS_SYNC);
-    int32_t SetPlayRangeUsWithMode(int64_t start, int64_t end, PlayerSeekMode mode = SEEK_PREVIOUS_SYNC);
-    int32_t GetApiVersion(int32_t &apiVersion);
+    int32_t GetGlobalInfo(std::shared_ptr<Meta> &globalInfo);
+    int32_t SetPlayRangeUsWithMode(int64_t start, int64_t end,
+        PlayerSeekMode mode = SEEK_PREVIOUS_SYNC);
     bool IsSeekContinuousSupported();
-    int32_t GetPlaybackPosition(int32_t &playbackPosition);
-    int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes);
     int32_t SetStartFrameRateOptEnabled(bool enabled);
+    int32_t EnableCameraPostprocessing();
+    int32_t SetCameraPostprocessing(bool isOpen);
+    int32_t ForceLoadVideo(bool status);
 private:
     void SeekPrepare(int32_t &mseconds, PlayerSeekMode &mode);
     std::shared_ptr<Player> player_ = nullptr;
