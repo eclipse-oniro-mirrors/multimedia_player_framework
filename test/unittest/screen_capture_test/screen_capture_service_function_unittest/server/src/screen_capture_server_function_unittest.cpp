@@ -2916,7 +2916,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RegisterLanguageSwitchListener_001, Te
     EXPECT_NE(screenCaptureServer_->subscriber_, nullptr);
 }
 
-#ifdef PC_STANDARD
 HWTEST_F(ScreenCaptureServerFunctionTest, IsSkipPrivacyWindow_001, TestSize.Level2)
 {
     screenCaptureServer_->appName_ =
@@ -2925,6 +2924,15 @@ HWTEST_F(ScreenCaptureServerFunctionTest, IsSkipPrivacyWindow_001, TestSize.Leve
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, IsSkipPrivacyWindow_002, TestSize.Level2)
+{
+    screenCaptureServer_->appName_ =
+        GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"];
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
+    EXPECT_EQ(screenCaptureServer_->IsSkipPrivacyWindow(), true);
+}
+
+#ifdef PC_STANDARD
+HWTEST_F(ScreenCaptureServerFunctionTest, IsSkipPrivacyWindow_003, TestSize.Level2)
 {
     screenCaptureServer_->appName_ = "";
     screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;

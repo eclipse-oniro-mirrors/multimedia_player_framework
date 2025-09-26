@@ -4301,8 +4301,8 @@ void ScreenCaptureServer::AppPrivacyProtected(ScreenId& virtualScreenId, bool ap
 bool ScreenCaptureServer::IsSkipPrivacyWindow()
 {
 #ifdef PC_STANDARD
-    return (GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_ || CheckCustScrRecPermission()) &&
-           !IsPickerPopUp();
+    return GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_ ||
+           (CheckCustScrRecPermission() && !IsPickerPopUp());
 #else
     return GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_;
 #endif
