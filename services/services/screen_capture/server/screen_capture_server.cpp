@@ -2992,7 +2992,7 @@ bool ScreenCaptureServer::IsPickerPopUp()
 void ScreenCaptureServer::SetTimeoutScreenoffDisableLock(bool lockScreen)
 {
     MEDIA_LOGI("SetTimeoutScreenoffDisableLock Start lockScreen %{public}d", lockScreen);
-        int result = Security::AccessToken::AccessTokenKit::VerifyAccessToken(appInfo_.appTokenId,
+    int result = Security::AccessToken::AccessTokenKit::VerifyAccessToken(appInfo_.appTokenId,
         "ohos.permission.TIMEOUT_SCREENOFF_DISABLE_LOCK");
     if (result != Security::AccessToken::PERMISSION_GRANTED) {
         MEDIA_LOGI("user have not the TIMEOUT_SCREENOFF_DISABLE_LOCK!");
