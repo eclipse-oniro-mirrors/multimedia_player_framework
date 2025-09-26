@@ -38,6 +38,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTUR
 typedef struct NativeWindow OHNativeWindow;
 
 using namespace OHOS::Media;
+std::mutex bufferMutex_;
 static std::queue<OH_NativeBuffer*> referencedBuffer_;
 class NativeScreenCaptureCallback;
 struct ScreenCaptureUserSelectionObject;
@@ -814,6 +815,7 @@ OH_NativeBuffer* OH_AVScreenCapture_AcquireVideoBuffer(struct OH_AVScreenCapture
 
     OH_NativeBuffer* nativebuffer = sufacebuffer->SurfaceBufferToNativeBuffer();
     OH_NativeBuffer_Reference(nativebuffer);
+    std::unique_lock<std::mutex> lock(bufferMutex_);
     referencedBuffer_.push(nativebuffer);
     MEDIA_LOGD("return and reference the nativebuffer");
 
@@ -834,6 +836,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ReleaseVideoBuffer(struct OH_AVSc
     }
 
     if (!referencedBuffer_.empty()) {
+        std::unique_lock<std::mutex> lock(bufferMutex_);
         OH_NativeBuffer* nativebuffer = referencedBuffer_.front();
         OH_NativeBuffer_Unreference(nativebuffer);
         referencedBuffer_.pop();

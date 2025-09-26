@@ -213,7 +213,7 @@ bool ScreenCaptureServer::CheckScreenCaptureSessionIdLimit(int32_t curAppUid)
     int32_t countForUid = 0;
     MEDIA_LOGI("CheckScreenCaptureSessionIdLimit start. curAppUid: %{public}d.", curAppUid);
     {
-        std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
+        std::shared_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
         for (auto iter = ScreenCaptureServer::serverMap_.begin(); iter != ScreenCaptureServer::serverMap_.end();
             iter++) {
                 auto iterPtr = (iter->second).lock();
@@ -270,7 +270,7 @@ bool ScreenCaptureServer::CheckScreenCaptureAppLimit(int32_t curAppUid)
     std::set<int32_t> appSet;
     CountScreenCaptureAppNum(appSet);
     MEDIA_LOGI("appSet.size(): %{public}d", static_cast<int32_t>(appSet.size()));
-    if (static_cast<int32_t>(appSet.size()) > ScreenCaptureServer::maxAppLimit_) {
+    if (static_cast<uint64_t>(appSet.size()) > ScreenCaptureServer::maxAppLimit_) {
         return false;
     }
     return true;
@@ -638,9 +638,14 @@ void SCWindowInfoChangedListener::OnWindowInfoChanged(
     MEDIA_LOGI("OnWindowInfoChanged: the displayId of interestWindowId changed!");
     auto iter = myWindowInfoList.front().find(WindowInfoKey::DISPLAY_ID);
     if (iter != myWindowInfoList.front().end()) {
-        uint64_t displayId = std::get<uint64_t>(iter->second);
-        MEDIA_LOGI("OnWindowInfoChanged: the curDisplayId: %{public}" PRIu64, displayId);
-        SCServer->SetCurDisplayId(displayId);
+        try {
+            uint64_t displayId = std::get<uint64_t>(iter->second);
+            MEDIA_LOGI("OnWindowInfoChanged: the curDisplayId: %{public}" PRIu64, displayId);
+            SCServer->SetCurDisplayId(displayId);
+        } catch (const std::bad_variant_access& e) {
+            MEDIA_LOGW("OnWindowInfoChanged: Failed to get uint64_t from variant: %s", e.what());
+        }
+        
         if (displayId == SCServer->GetDefaultDisplayId()) {
             MEDIA_LOGI("OnWindowInfoChanged: window back to initial display!");
             if (SCServer->GetWindowIdList().size() > 0) {

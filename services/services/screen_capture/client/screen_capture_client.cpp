@@ -64,6 +64,7 @@ ScreenCaptureClient::~ScreenCaptureClient()
     if (screenCaptureProxy_ != nullptr) {
         (void)screenCaptureProxy_->DestroyStub();
     }
+    delete listenerStub_;
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
@@ -83,6 +84,7 @@ void ScreenCaptureClient::MediaServerDied()
     std::lock_guard<std::mutex> lock(mutex_);
     screenCaptureProxy_ = nullptr;
     listenerStub_ = nullptr;
+    delete listenerStub_;
     if (callback_ != nullptr) {
         callback_->OnError(SCREEN_CAPTURE_ERROR_INTERNAL, MSERR_SERVICE_DIED);
     }
