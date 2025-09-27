@@ -353,7 +353,7 @@ private:
     static std::shared_ptr<TaskHandler<RetInfo>> SetWillMuteWhenInterruptedTask(
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, bool enable);
     static int32_t GetAudioCodecFormat(const std::string &mime, AudioCodecFormat &codecFormat);
-    static int32_t GetAudioAacProfile(const int_32 &mime, AacProfile &aacProfile);
+    static int32_t GetAudioAacProfile(const int32_t &mime, AacProfile &aacProfile);
     static int32_t GetVideoCodecFormat(const std::string &mime, VideoCodecFormat &codecFormat);
     static int32_t GetOutputFormat(const std::string &extension, OutputFormatType &type);
 
