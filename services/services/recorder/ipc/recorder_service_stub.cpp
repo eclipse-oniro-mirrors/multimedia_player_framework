@@ -90,6 +90,8 @@ void RecorderServiceStub::FillRecFuncPart1()
         [this](MessageParcel &data, MessageParcel &reply) { return SetAudioChannels(data, reply); };
     recFuncs_[SET_AUDIO_ENCODING_BIT_RATE] =
         [this](MessageParcel &data, MessageParcel &reply) { return SetAudioEncodingBitRate(data, reply); };
+    recFuncs_[SET_AUDIO_AACPROFILE] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetAudioAacProfile(data, reply); };
     recFuncs_[SET_DATA_SOURCE] =
         [this](MessageParcel &data, MessageParcel &reply) { return SetDataSource(data, reply); };
     recFuncs_[SET_MAX_DURATION] =
@@ -378,6 +380,12 @@ int32_t RecorderServiceStub::SetAudioEncodingBitRate(int32_t sourceId, int32_t b
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
     return recorderServer_->SetAudioEncodingBitRate(sourceId, bitRate);
+}
+
+int32_t RecorderServiceStub::SetAudioAacProfile(int32_t sourceId, AacProfile aacProfile)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->SetAudioAacProfile(sourceId, aacProfile);
 }
 
 int32_t RecorderServiceStub::SetDataSource(DataSourceType dataType, int32_t &sourceId)
@@ -855,6 +863,20 @@ int32_t RecorderServiceStub::SetAudioEncodingBitRate(MessageParcel &data, Messag
     }
 
     reply.WriteInt32(SetAudioEncodingBitRate(sourceId, bitRate));
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::SetAudioAacProfile(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t sourceId = 0;
+    int32_t format = data.ReadInt32();
+    AacProfile aacProfile = static_cast<AacProfile>(format);
+
+    if (!(data.ReadInt32(sourceId) && data.ReadInt32(bitRate))) {
+        return MSERR_INVALID_VAL;
+    }
+
+    reply.WriteInt32(SetAudioAacProfile(sourceId, aacProfile));
     return MSERR_OK;
 }
 

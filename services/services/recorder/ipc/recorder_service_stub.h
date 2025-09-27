@@ -57,6 +57,7 @@ public:
     int32_t SetAudioSampleRate(int32_t sourceId, int32_t rate) override;
     int32_t SetAudioChannels(int32_t sourceId, int32_t num) override;
     int32_t SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRate) override;
+    int32_t SetAudioAacProfile(int32_t sourceId, int32_t aacProfile) override;
     int32_t SetDataSource(DataSourceType dataType, int32_t &sourceId) override;
     int32_t SetUserCustomInfo(Meta &userCustomInfo) override;
     int32_t SetGenre(std::string &genre) override;
@@ -114,6 +115,7 @@ private:
     int32_t SetAudioSampleRate(MessageParcel &data, MessageParcel &reply);
     int32_t SetAudioChannels(MessageParcel &data, MessageParcel &reply);
     int32_t SetAudioEncodingBitRate(MessageParcel &data, MessageParcel &reply);
+    int32_t SetAudioAacProfile(MessageParcel &data, MessageParcel &reply);
     int32_t SetDataSource(MessageParcel &data, MessageParcel &reply);
     int32_t SetMaxDuration(MessageParcel &data, MessageParcel &reply);
     int32_t SetOutputFormat(MessageParcel &data, MessageParcel &reply);

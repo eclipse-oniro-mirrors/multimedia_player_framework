@@ -120,6 +120,20 @@ enum VideoCodecFormat : int32_t {
 };
 
 /**
+ * @brief Enumerates audio aac formats.
+ *
+ * @since 22
+ * @version 6.0
+ */
+enum class AacProfile : int32_t {
+    AAC_LC = 0,
+    
+    AAC_HE = 1,
+    
+    AAC_H2_V2 = 2,
+};
+
+/**
  * @brief Enumerates audio codec formats.
  *
  * @since 3.1

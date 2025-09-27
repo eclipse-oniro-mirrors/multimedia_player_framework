@@ -594,6 +594,26 @@ int32_t RecorderServer::SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRat
     return result.Value();
 }
 
+int32_t RecorderServer::SetAudioAacProfile(int32_t sourceId, AacProfile aacProfile)
+{
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetAudioAacProfile in, sourceId(%{public}d), "
+        "aacProfile(%{public}d)", FAKE_POINTER(this), sourceId, aacProfile);
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    config_.aacProfile = aacProfile;
+    AacEnc aacEnc(aacProfile);
+    // 64000 audiobitrate from audioencorder
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->Configure(sourceId, aacEnc);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
+}
+
 int32_t RecorderServer::SetMetaConfigs(int32_t sourceId)
 {
     MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetMetaConfigs in, sourceId(%{public}d)",

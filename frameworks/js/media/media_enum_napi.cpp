@@ -349,6 +349,12 @@ static const std::vector<struct JsEnumString> g_avMimeTypes = {
     { "APPLICATION_M3U8", "application/m3u8" },
 };
 
+static const std::vector<struct JsEnumInt> g_aacProfile = {
+    { "AAC_LC", 0 },
+    { "AAC_HE", 1 },
+    { "AAC_HE_V2", 2 },
+};
+
 static const std::vector<struct JsEnumString> g_playbackInfoKey = {
     { "SERVER_IP_ADDRESS", "server_ip_address" },
     { "AVG_DOWNLOAD_RATE", "average_download_rate" },
@@ -482,6 +488,7 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_
     { "ScreenCaptureEvent", g_screenCaptureMonitorEvent },
     { "AVScreenCaptureFillMode", g_screenCaptureFillMode},
     { "ErrorType", g_soundpoolErrorType },
+    { "AacProfile", g_aacProfile }, 
 };
 
 static const std::map<std::string_view, const std::vector<struct JsEnumString>&> g_stringEnumClassMap = {

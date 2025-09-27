@@ -345,6 +345,21 @@ public:
      */
     virtual int32_t SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRate) = 0;
 
+     /**
+     * @brief Sets an audio encoder for recording.
+     *
+     * If this function is not called, the output file default AAC_LC.
+     * This function must be called after {@link SetAudioSource} but before {@link Prepare}.
+     *
+     * @param sourceId Indicates the audio source ID, which can be obtained from {@link SetAudioSource}.
+     * @param encoder Indicates the audio encoder to set.
+     * @return Returns {@link SUCCESS} if the setting is successful; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetAudioAacProfile(int32_t sourceId, AacProfile aacProfile) = 0;
+
     /**
      * @brief Sets a data source for recording.
      *
