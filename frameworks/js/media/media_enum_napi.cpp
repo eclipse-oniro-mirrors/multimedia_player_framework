@@ -488,7 +488,7 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_
     { "ScreenCaptureEvent", g_screenCaptureMonitorEvent },
     { "AVScreenCaptureFillMode", g_screenCaptureFillMode},
     { "ErrorType", g_soundpoolErrorType },
-    { "AacProfile", g_aacProfile }, 
+    { "AacProfile", g_aacProfile },
 };
 
 static const std::map<std::string_view, const std::vector<struct JsEnumString>&> g_stringEnumClassMap = {
