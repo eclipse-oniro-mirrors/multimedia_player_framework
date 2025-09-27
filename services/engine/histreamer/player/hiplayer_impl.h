@@ -200,6 +200,7 @@ public:
     void SetEosInLoopForFrozen(bool status) override;
     int32_t SetLoudnessGain(float loudnessGain) override;
     int32_t GetGlobalInfo(std::shared_ptr<Meta> &globalInfo) override;
+    void CleanUnusedListener();
 
 private:
     enum HiplayerSvpMode : int32_t {

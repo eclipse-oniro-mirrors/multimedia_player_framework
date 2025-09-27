@@ -1506,5 +1506,20 @@ HWTEST_F(HiplayerImplUnitTest, SetAudioHapticsSyncId_001, TestSize.Level0)
     hiplayer_->SetParameter(format2);
     EXPECT_EQ(hiplayer_->audioHapticsSyncId_, 0); // Expect success
 }
+
+/**
+* @tc.name    : Clean unused listener
+* @tc.number  : CleanUnusedListener_001
+* @tc.desc    : Clean unused listener
+* @tc.require :
+*/
+HWTEST_F(HiplayerImplUnitTest, CleanUnusedListener_001, TestSize.Level0)
+{
+    int32_t ret = hiplayer_->SetSource(VIDEO_FILE1);
+    EXPECT_EQ(MSERR_OK, ret);
+    hiplayer_->pipelineStates_ = PlayerStates::PLAYER_STOPPED;
+    EXPECT_EQ(MSERR_OK, hiplayer_->PrepareAsync());
+    hiplayer_->CleanUnusedListener();
+}
 } // namespace Media
 } // namespace OHOS
