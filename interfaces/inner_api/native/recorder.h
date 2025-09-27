@@ -683,7 +683,7 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual int32_t SetAudioEncoder(int32_t sourceId, AudioCodecFormat encoder) = 0;
+    virtual int32_t SetAudioAacProfile(int32_t sourceId, AacProfile aacProfile) = 0;
 
     /**
      * @brief Sets the audio sampling rate for recording.
