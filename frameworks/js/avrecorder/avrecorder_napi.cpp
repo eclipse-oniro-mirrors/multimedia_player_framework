@@ -2260,7 +2260,8 @@ RetInfo AVRecorderNapi::SetProfile(std::shared_ptr<AVRecorderConfig> config)
         ret = recorder_->SetAudioEncodingBitRate(audioSourceID_, profile.audioBitrate);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetAudioEncodingBitRate", "audioBitrate"));
 
-        if (profile.audioCodecFormat == AudioCodecFormat::AUDIO_DEFAULT || profile.audioCodecFormat == AudioCodecFormat::AAC_LC) {
+        if (profile.audioCodecFormat == AudioCodecFormat::AUDIO_DEFAULT ||
+            profile.audioCodecFormat == AudioCodecFormat::AAC_LC) {
             ret = recorder_->SetAudioAacProfile(audioSourceID_, profile.aacProfile);
             CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetAudioAacProfile", "audioAacProfile"));
         }
