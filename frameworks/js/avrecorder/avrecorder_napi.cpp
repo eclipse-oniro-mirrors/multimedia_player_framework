@@ -1912,7 +1912,7 @@ int32_t AVRecorderNapi::GetAudioProfile(std::unique_ptr<AVRecorderAsyncContext> 
         (asyncCtx->AVRecorderSignError(ret, "GetaudioChannels", "audioChannels"), ret));
     CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "audioSampleRate", profile.audioSampleRate),
         (asyncCtx->AVRecorderSignError(ret, "GetaudioSampleRate", "audioSampleRate"), ret));
-    int32_t ret = MSERR_OK;
+    ret = MSERR_OK;
     int aacProfile = 0;
     CommonNapi::GetPropertyInt32(env, item, "aacProfile", aacProfile);
     ret = AVRecorderNapi::GetAudioCodecFormat(aacProfile, profile.aacProfile);
