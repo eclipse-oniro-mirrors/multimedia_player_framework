@@ -170,7 +170,7 @@ struct AVRecorderProfile {
     bool enableBFrame = false;
     VideoCodecFormat videoCodecFormat = VideoCodecFormat::VIDEO_DEFAULT;
 
-    AacProfile aacProfile = AacProfile::AAC_L;
+    AacProfile aacProfile = AacProfile::AAC_LC;
     OutputFormatType fileFormat = OutputFormatType::FORMAT_DEFAULT;
 };
 
