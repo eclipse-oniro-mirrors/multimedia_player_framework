@@ -2020,7 +2020,7 @@ void AVRecorderNapi::MediaProfileLog(bool isVideo, AVRecorderProfile &profile)
         return;
     }
     MEDIA_LOGI("audioBitrate %{public}d, audioChannels %{public}d, audioCodecFormat %{public}d,"
-        " audioSampleRate %{public}d!, audioaac", profile.audioBitrate, profile.audioChannels,
+        " audioSampleRate %{public}d, audioaac %{public}d!", profile.audioBitrate, profile.audioChannels,
         profile.audioCodecFormat, profile.audioSampleRate, profile.aacProfile);
 }
 
