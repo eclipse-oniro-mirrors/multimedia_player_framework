@@ -130,7 +130,7 @@ enum class AacProfile : int32_t {
     
     AAC_HE = 1,
     
-    AAC_H2_V2 = 2,
+    AAC_HE_V2 = 2,
 };
 
 /**
