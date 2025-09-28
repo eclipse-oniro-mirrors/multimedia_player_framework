@@ -869,12 +869,12 @@ int32_t RecorderServiceStub::SetAudioEncodingBitRate(MessageParcel &data, Messag
 int32_t RecorderServiceStub::SetAudioAacProfile(MessageParcel &data, MessageParcel &reply)
 {
     int32_t sourceId = 0;
-    int32_t format = data.ReadInt32();
-    AacProfile aacProfile = static_cast<AacProfile>(format);
+    int32_t format = 0;
 
-    if (!(data.ReadInt32(sourceId) && data.ReadInt32(bitRate))) {
+    if (!(data.ReadInt32(sourceId) && data.ReadInt32(format))) {
         return MSERR_INVALID_VAL;
     }
+    AacProfile aacProfile = static_cast<AacProfile>(format);
 
     reply.WriteInt32(SetAudioAacProfile(sourceId, aacProfile));
     return MSERR_OK;

@@ -57,7 +57,7 @@ public:
     int32_t SetAudioSampleRate(int32_t sourceId, int32_t rate) override;
     int32_t SetAudioChannels(int32_t sourceId, int32_t num) override;
     int32_t SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRate) override;
-    int32_t SetAudioAacProfile(int32_t sourceId, int32_t aacProfile) override;
+    int32_t SetAudioAacProfile(int32_t sourceId, AacProfile aacProfile) override;
     int32_t SetDataSource(DataSourceType dataType, int32_t &sourceId) override;
     int32_t SetUserCustomInfo(Meta &userCustomInfo) override;
     int32_t SetGenre(std::string &genre) override;
