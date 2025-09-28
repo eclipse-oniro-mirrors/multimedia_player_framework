@@ -73,6 +73,42 @@ bool TranscoderServiceStubFuzzer::FuzzTranscoderOnRemoteRequest(uint8_t *data, s
 
     return true;
 }
+
+bool TranscoderServiceStubFuzzer::FuzzTranscoderOnRemoteRequestByOrder(uint8_t *data, size_t size)
+{
+    if (data == nullptr || size < sizeof(int64_t)) {
+        return true;
+    }
+    std::shared_ptr<MediaServer> mediaServer =
+        std::make_shared<MediaServer>(SYSTEM_ABILITY_ID, RUN_ON_CREATE);
+    sptr<IRemoteObject> listener = new(std::nothrow) MediaListenerStubFuzzer();
+    sptr<IRemoteObject> transcoder = mediaServer->GetSubSystemAbility(
+        IStandardMediaService::MediaSystemAbility::MEDIA_TRANSCODER, listener);
+    if (transcoder == nullptr) {
+        return false;
+    }
+
+    sptr<IRemoteStub<IStandardTransCoderService>> transcoderStub =
+        iface_cast<IRemoteStub<IStandardTransCoderService>>(transcoder);
+    if (transcoderStub == nullptr) {
+        return false;
+    }
+
+    vector<uint32_t> code_vec = {10, 11, 0, 8, 1, 3, 4, 5, 2, 6, 7, 12, 13, 14, 15, 16, 17, 18};
+    for (uint32_t i = 0; i < code_vec.size(); i++) {
+        uint32_t code = code_vec[i];
+        MessageParcel msg;
+        msg.WriteInterfaceToken(transcoderStub->GetDescriptor());
+        msg.WriteBuffer(data, size);
+        msg.RewindRead(0);
+        MessageParcel reply;
+        MessageOption option;
+        transcoderStub->OnRemoteRequest(code, msg, reply, option);
+    }
+
+    return true;
+}
+
 }
 
 bool FuzzTestTranscoderOnRemoteRequest(uint8_t *data, size_t size)
@@ -87,6 +123,20 @@ bool FuzzTestTranscoderOnRemoteRequest(uint8_t *data, size_t size)
     TranscoderServiceStubFuzzer testTranscoder;
     return testTranscoder.FuzzTranscoderOnRemoteRequest(data, size);
 }
+
+bool FuzzTestTranscoderOnRemoteRequestByOrder(uint8_t *data, size_t size)
+{
+    if (data == nullptr) {
+        return true;
+    }
+
+    if (size < sizeof(int32_t)) {
+        return true;
+    }
+    TranscoderServiceStubFuzzer testTranscoder;
+    return testTranscoder.FuzzTranscoderOnRemoteRequestByOrder(data, size);
+}
+
 }
 
 /* Fuzzer entry point */
@@ -94,5 +144,6 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
 {
     /* Run your code on data */
     OHOS::FuzzTestTranscoderOnRemoteRequest(data, size);
+    OHOS::FuzzTestTranscoderOnRemoteRequestByOrder(data, size);
     return 0;
 }

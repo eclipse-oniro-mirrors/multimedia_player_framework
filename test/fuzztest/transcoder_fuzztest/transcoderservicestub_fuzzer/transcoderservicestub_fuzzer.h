@@ -32,8 +32,10 @@ public:
     TranscoderServiceStubFuzzer();
     ~TranscoderServiceStubFuzzer();
     bool FuzzTranscoderOnRemoteRequest(uint8_t *data, size_t size);
+    bool FuzzTranscoderOnRemoteRequestByOrder(uint8_t *data, size_t size);
 };
 }
 bool FuzzTestTranscoderOnRemoteRequest(uint8_t *data, size_t size);
+bool FuzzTestTranscoderOnRemoteRequestByOrder(uint8_t *data, size_t size);
 }
 #endif // TRANSCODERSERVICESTUB_FUZZER
