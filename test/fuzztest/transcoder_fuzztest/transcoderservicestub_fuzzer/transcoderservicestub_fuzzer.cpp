@@ -94,9 +94,9 @@ bool TranscoderServiceStubFuzzer::FuzzTranscoderOnRemoteRequestByOrder(uint8_t *
         return false;
     }
 
-    vector<uint32_t> code_vec = {10,11,0,8,1,3,4,5,2,6,7,12,13,14,15,16,17,18};
+    vector<uint32_t> code_vec = {10, 11, 0, 8, 1, 3, 4, 5, 2, 6, 7, 12, 13, 14, 15, 16, 17, 18};
     for (uint32_t i = 0; i < code_vec.size(); i++) {
-        uint32_t code=code_vec[i];
+        uint32_t code = code_vec[i];
         MessageParcel msg;
         msg.WriteInterfaceToken(transcoderStub->GetDescriptor());
         msg.WriteBuffer(data, size);
