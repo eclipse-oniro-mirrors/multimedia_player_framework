@@ -1915,7 +1915,7 @@ int32_t AVRecorderNapi::GetAudioProfile(std::unique_ptr<AVRecorderAsyncContext> 
     ret = MSERR_OK;
     int aacProfile = 0;
     CommonNapi::GetPropertyInt32(env, item, "aacProfile", aacProfile);
-    ret = AVRecorderNapi::GetAudioCodecFormat(aacProfile, profile.aacProfile);
+    ret = AVRecorderNapi::GetAudioAacProfile(aacProfile, profile.aacProfile);
     CHECK_AND_RETURN_RET(ret == MSERR_OK,
         (asyncCtx->AVRecorderSignError(ret, "GetAudioCodecFormat", "aacProfile"), ret));
     MediaProfileLog(false, profile);
