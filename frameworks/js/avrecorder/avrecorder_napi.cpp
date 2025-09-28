@@ -2266,7 +2266,6 @@ RetInfo AVRecorderNapi::SetProfile(std::shared_ptr<AVRecorderConfig> config)
             ret = recorder_->SetAudioAacProfile(audioSourceID_, profile.aacProfile);
             CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetAudioAacProfile", "audioAacProfile"));
         }
-        ret = recorder_->Set
     }
 
     if (config->withVideo) {
