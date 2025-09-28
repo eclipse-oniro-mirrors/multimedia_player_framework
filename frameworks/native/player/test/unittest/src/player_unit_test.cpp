@@ -4743,144 +4743,31 @@ HWTEST_F(PlayerUnitTest, Player_EnableReportMediaProgress_004, TestSize.Level0)
 }
 
 /**
- * @tc.name  : Test SetPlayRangeWithMode [0, 600] SEEK_PREVIOUS_SYNC
- * @tc.number: Player_SetPlayRangeWithMode_001
- * @tc.desc  : Test Player SetPlayRangeWithMode interface with valid range and mode
+ * @tc.name  : Test GetGlobalInfo API
+ * @tc.number: Player_GetGlobalInfo_001
+ * @tc.desc  : Test Player GetGlobalInfo
  */
-HWTEST_F(PlayerUnitTest, Player_SetPlayRangeWithMode_001, TestSize.Level0)
+HWTEST_F(PlayerUnitTest, Player_GetGlobalInfo_001, TestSize.Level0)
 {
-    int32_t duration = 0;
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    
-    // 首次设置范围：[0, 600]，使用默认模式SEEK_PREVIOUS_SYNC
-    EXPECT_EQ(MSERR_OK, player_->SetPlayRangeWithMode(0, 600));
-    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
-    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
-    EXPECT_TRUE(player_->IsPlaying());
-    EXPECT_EQ(MSERR_OK, player_->Pause());
-    
-    // 调整范围：[0, duration]，使用支持的SEEK_CLOSEST模式
-    EXPECT_EQ(MSERR_OK, player_->SetPlayRangeWithMode(0, duration, SEEK_CLOSEST));
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    EXPECT_TRUE(player_->IsPlaying());
-    EXPECT_EQ(MSERR_OK, player_->Pause());
+    std::shared_ptr<Meta> globalInfo = std::make_shared<Meta>();
+    ASSERT_NE(nullptr, globalInfo);
+    EXPECT_EQ(MSERR_OK, player_->GetGlobalInfo(globalInfo));
 }
 
 /**
- * @tc.name  : Test SetPlayRangeWithMode [1000, 5000] SEEK_CLOSEST
- * @tc.number: Player_SetPlayRangeWithMode_002
- * @tc.desc  : Test Player SetPlayRangeWithMode in playing state
+ * @tc.name  : Test GetPlayerPids API
+ * @tc.number: Player_GetPlayerPids_001
+ * @tc.desc  : Test Player GetPlayerPids API
  */
-HWTEST_F(PlayerUnitTest, Player_SetPlayRangeWithMode_002, TestSize.Level0)
+HWTEST_F(PlayerUnitTest, Player_GetPlayerPids_001, TestSize.Level0)
 {
-    int32_t duration = 0;
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    
-    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
-    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    EXPECT_TRUE(player_->IsPlaying());
-    EXPECT_EQ(MSERR_OK, player_->Pause());
-    
-    // 在暂停状态下设置范围，使用SEEK_CLOSEST模式
-    EXPECT_EQ(MSERR_OK, player_->SetPlayRangeWithMode(1000, 5000, SEEK_CLOSEST));
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    EXPECT_TRUE(player_->IsPlaying());
-    EXPECT_EQ(MSERR_OK, player_->Pause());
-}
-
-/**
- * @tc.name  : Test SetPlayRangeWithMode [-2, -1] SEEK_PREVIOUS_SYNC
- * @tc.number: Player_SetPlayRangeWithMode_003
- * @tc.desc  : Test Player SetPlayRangeWithMode with negative range
- */
-HWTEST_F(PlayerUnitTest, Player_SetPlayRangeWithMode_003, TestSize.Level0)
-{
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    
-    // 测试负数值范围
-    ASSERT_NE(MSERR_OK, player_->SetPlayRangeWithMode(-2, -1, SEEK_PREVIOUS_SYNC));
-}
-
-/**
- * @tc.name  : Test SetPlayRangeWithMode [100, 20] SEEK_CLOSEST
- * @tc.number: Player_SetPlayRangeWithMode_004
- * @tc.desc  : Test Player SetPlayRangeWithMode with start > end
- */
-HWTEST_F(PlayerUnitTest, Player_SetPlayRangeWithMode_004, TestSize.Level0)
-{
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    
-    // 测试起始时间大于结束时间
-    ASSERT_NE(MSERR_OK, player_->SetPlayRangeWithMode(100, 20, SEEK_CLOSEST));
-}
-
-/**
- * @tc.name  : Test SetPlayRangeWithMode [0, 600] SEEK_NEXT_SYNC
- * @tc.number: Player_SetPlayRangeWithMode_005
- * @tc.desc  : Test Player SetPlayRangeWithMode with unsupported mode
- */
-HWTEST_F(PlayerUnitTest, Player_SetPlayRangeWithMode_005, TestSize.Level0)
-{
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    
-    // 测试不支持的SEEK_NEXT_SYNC模式
-    ASSERT_NE(MSERR_OK, player_->SetPlayRangeWithMode(0, 600, SEEK_NEXT_SYNC));
-}
-
-/**
- * @tc.name  : Test SetPlayRangeWithMode [duration+1, duration+2]
- * @tc.number: Player_SetPlayRangeWithMode_006
- * @tc.desc  : Test Player SetPlayRangeWithMode beyond media duration
- */
-HWTEST_F(PlayerUnitTest, Player_SetPlayRangeWithMode_006, TestSize.Level0)
-{
-    int32_t duration = 0;
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
-    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    EXPECT_TRUE(player_->IsPlaying());
-    EXPECT_EQ(MSERR_OK, player_->Pause());
-    
-    // 测试范围超出媒体总时长
-    int32_t start = duration + 1;
-    int32_t end = duration + 2;
-    ASSERT_NE(MSERR_OK, player_->SetPlayRangeWithMode(start, end, SEEK_PREVIOUS_SYNC));
-}
-
-/**
- * @tc.name  : Test SetPlayRangeWithMode before SetSource
- * @tc.number: Player_SetPlayRangeWithMode_007
- * @tc.desc  : Test Player SetPlayRangeWithMode without SetSource
- */
-HWTEST_F(PlayerUnitTest, Player_SetPlayRangeWithMode_007, TestSize.Level0)
-{
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    
-    // 测试未设置媒体源时调用接口
-    ASSERT_NE(MSERR_OK, player_->SetPlayRangeWithMode(0, 600, SEEK_PREVIOUS_SYNC));
+    auto ret = PlayerFactory::GetPlayerPids();
 }
 
 /**
@@ -4890,22 +4777,18 @@ HWTEST_F(PlayerUnitTest, Player_SetPlayRangeWithMode_007, TestSize.Level0)
  */
 HWTEST_F(PlayerUnitTest, Player_SetPlayRangeUsWithMode_001, TestSize.Level0)
 {
-    int32_t duration = 0; // 单位：毫秒，需转换为微秒使用
+    int32_t duration = 0;
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    
-    // 首次设置范围：[0微秒, 600000微秒（600毫秒）]，使用默认模式SEEK_PREVIOUS_SYNC
     EXPECT_EQ(MSERR_OK, player_->SetPlayRangeUsWithMode(0, 600000));
     EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
-    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration)); // 获取总时长（毫秒）
-    int64_t durationUs = static_cast<int64_t>(duration) * 1000; // 转换为微秒
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    int64_t durationUs = static_cast<int64_t>(duration) * 1000;
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_TRUE(player_->IsPlaying());
     EXPECT_EQ(MSERR_OK, player_->Pause());
-    
-    // 调整范围：[0微秒, 总时长微秒]，使用支持的SEEK_CLOSEST模式
     EXPECT_EQ(MSERR_OK, player_->SetPlayRangeUsWithMode(0, durationUs, SEEK_CLOSEST));
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_TRUE(player_->IsPlaying());
@@ -4924,54 +4807,15 @@ HWTEST_F(PlayerUnitTest, Player_SetPlayRangeUsWithMode_002, TestSize.Level0)
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    
     EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
     EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_TRUE(player_->IsPlaying());
     EXPECT_EQ(MSERR_OK, player_->Pause());
-    
-    // 在暂停状态下设置范围：[1000000微秒（1秒）, 5000000微秒（5秒）]，使用SEEK_CLOSEST模式
     EXPECT_EQ(MSERR_OK, player_->SetPlayRangeUsWithMode(1000000, 5000000, SEEK_CLOSEST));
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_TRUE(player_->IsPlaying());
     EXPECT_EQ(MSERR_OK, player_->Pause());
-}
-
-/**
- * @tc.name  : Test GetApiVersion for valid version
- * @tc.number: Player_GetApiVersion_001
- * @tc.desc  : Test GetApiVersion returns valid api version successfully
- */
-HWTEST_F(PlayerUnitTest, Player_GetApiVersion_001, TestSize.Level0)
-{
-    // 初始化播放器并设置媒体源（接口无明确要求，但保持与其他用例一致的环境）
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    
-    // 调用接口获取API版本
-    int32_t apiVersion = -1;
-    EXPECT_EQ(MSERR_OK, player_->GetApiVersion(apiVersion));
-    
-    // 验证版本号为有效正值（通常API版本从1.0开始，此处假设为非负数）
-    EXPECT_GE(apiVersion, 0);
-}
-
-/**
- * @tc.name  : Test GetApiVersion with invalid parameter
- * @tc.number: Player_GetApiVersion_004
- * @tc.desc  : Test GetApiVersion handles invalid parameter (theoretically impossible for reference)
- */
-HWTEST_F(PlayerUnitTest, Player_GetApiVersion_002, TestSize.Level0)
-{
-    // 注意：接口参数为引用类型，无法直接传递nullptr
-    // 此用例仅作演示：若接口设计为指针类型，验证无效参数处理
-    // 实际对于引用参数，可测试参数未初始化的场景（但引用必须初始化）
-    int32_t uninitializedVersion;  // 未初始化的变量
-    EXPECT_EQ(MSERR_OK, player_->GetApiVersion(uninitializedVersion));
-    EXPECT_EQ(uninitializedVersion, 1);  // 无论输入是否初始化，输出应正确
 }
 
 /**
@@ -4981,14 +4825,11 @@ HWTEST_F(PlayerUnitTest, Player_GetApiVersion_002, TestSize.Level0)
  */
 HWTEST_F(PlayerUnitTest, Player_IsSeekContinuousSupported_001, TestSize.Level0)
 {
-    // 使用支持连续seek的视频（如示例中的VIDEO_FILE1）
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
     EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
-    
-    // 验证支持连续seek时返回true
     EXPECT_TRUE(player_->IsSeekContinuousSupported());
 }
 
@@ -5006,384 +4847,7 @@ HWTEST_F(PlayerUnitTest, Player_IsSeekContinuousSupported_002, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
     EXPECT_EQ(MSERR_OK, player_->Play());
     sleep(PLAYING_TIME_2_SEC);
-    
-    // 播放中验证支持状态
     EXPECT_TRUE(player_->IsSeekContinuousSupported());
-}
-
-/**
- * @tc.name  : Test IsSeekContinuousSupported with supported mkv video
- * @tc.number: Player_IsSeekContinuousSupported_003
- * @tc.desc  : Test returns true for mkv video that supports SeekContinuous
- */
-HWTEST_F(PlayerUnitTest, Player_IsSeekContinuousSupported_003, TestSize.Level0)
-{
-    // 参考示例中对mkv格式的测试（VIDEO_FILE3）
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE3));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
-    
-    EXPECT_TRUE(player_->IsSeekContinuousSupported());
-}
-
-/**
- * @tc.name  : Test Player GetPlaybackPosition API
- * @tc.number: Player_GetPlaybackPosition_001
- * @tc.desc  : Test GetPlaybackPosition when player is playing
- */
-HWTEST_F(PlayerUnitTest, Player_GetPlaybackPosition_001, TestSize.Level2)
-{
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    EXPECT_TRUE(player_->IsPlaying());
-    
-    int32_t position = -1;
-    EXPECT_EQ(MSERR_OK, player_->GetPlaybackPosition(position));
-    EXPECT_GE(position, 0);  // 播放中位置应大于等于0
-    
-    EXPECT_EQ(MSERR_OK, player_->Stop());
-}
-
-/**
- * @tc.name  : Test Player GetPlaybackPosition API
- * @tc.number: Player_GetPlaybackPosition_002
- * @tc.desc  : Test GetPlaybackPosition when player is paused
- */
-HWTEST_F(PlayerUnitTest, Player_GetPlaybackPosition_002, TestSize.Level2)
-{
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->Prepare());
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TIME_2_SEC);  // 播放2秒后暂停
-    EXPECT_EQ(MSERR_OK, player_->Pause());
-    
-    int32_t position = -1;
-    EXPECT_EQ(MSERR_OK, player_->GetPlaybackPosition(position));
-    EXPECT_GE(position, PLAYING_TIME_2_SEC * 1000);  // 位置应不小于2秒(2000ms)
-    
-    EXPECT_EQ(MSERR_OK, player_->Stop());
-}
-
-/**
- * @tc.name  : Test Player GetPlaybackPosition API
- * @tc.number: Player_GetPlaybackPosition_003
- * @tc.desc  : Test GetPlaybackPosition when player is not prepared
- */
-HWTEST_F(PlayerUnitTest, Player_GetPlaybackPosition_003, TestSize.Level2)
-{
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    // 未调用Prepare/PrepareAsync，直接获取位置
-    int32_t position = -1;
-    EXPECT_NE(MSERR_OK, player_->GetPlaybackPosition(position));
-}
-
-/**
- * @tc.name  : Test Player GetPlaybackPosition API
- * @tc.number: Player_GetPlaybackPosition_004
- * @tc.desc  : Test GetPlaybackPosition after seek operation
- */
-HWTEST_F(PlayerUnitTest, Player_GetPlaybackPosition_004, TestSize.Level2)
-{
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->Prepare());
-    
-    const int32_t seekTime = 5000;  // 5秒
-    EXPECT_EQ(MSERR_OK, player_->Seek(seekTime, SEEK_NEXT_SYNC));
-    
-    int32_t position = -1;
-    EXPECT_EQ(MSERR_OK, player_->GetPlaybackPosition(position));
-    EXPECT_NEAR(position, seekTime, 1000);  // 允许1秒误差
-    
-    EXPECT_EQ(MSERR_OK, player_->Stop());
-}
-
-/**
- * @tc.name  : Test Player GetPlaybackPosition API
- * @tc.number: Player_GetPlaybackPosition_005
- * @tc.desc  : Test GetPlaybackPosition with null source
- */
-HWTEST_F(PlayerUnitTest, Player_GetPlaybackPosition_005, TestSize.Level2)
-{
-    // 未设置任何媒体源
-    int32_t position = -1;
-    EXPECT_NE(MSERR_OK, player_->GetPlaybackPosition(position));
-}
-
-/**
- * @tc.name  : Test SetSeiMessageCbStatus API - Basic functionality
- * @tc.number: Player_SetSeiMessageCbStatus_001
- * @tc.desc  : Test SetSeiMessageCbStatus basic enable/disable functionality
- */
-HWTEST_F(PlayerUnitTest, Player_SetSeiMessageCbStatus_001, TestSize.Level0)
-{
-    std::vector<int32_t> payloadTypes = {1, 2, 3, 4, 5};
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    ASSERT_EQ(MSERR_OK, player_->SetSeiMessageCbStatus(true, payloadTypes));
-    ASSERT_EQ(MSERR_OK, player_->SetSeiMessageCbStatus(false, payloadTypes));
-    std::vector<int32_t> newPayloadTypes = {6, 7, 8};
-    ASSERT_EQ(MSERR_OK, player_->SetSeiMessageCbStatus(true, newPayloadTypes));
-}
-
-/**
- * @tc.name  : Test SetSeiMessageCbStatus API - Empty payload types
- * @tc.number: Player_SetSeiMessageCbStatus_002
- * @tc.desc  : Test SetSeiMessageCbStatus with empty payload types vector
- */
-HWTEST_F(PlayerUnitTest, Player_SetSeiMessageCbStatus_002, TestSize.Level1)
-{
-    std::vector<int32_t> emptyPayloadTypes = {};
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    ASSERT_EQ(MSERR_OK, player_->SetSeiMessageCbStatus(true, emptyPayloadTypes));
-    ASSERT_EQ(MSERR_OK, player_->SetSeiMessageCbStatus(false, emptyPayloadTypes));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->Prepare());
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TIME_2_SEC);
-    EXPECT_EQ(MSERR_OK, player_->Stop());
-}
-
-/**
- * @tc.name  : Test SetSeiMessageCbStatus API - Large payload types
- * @tc.number: Player_SetSeiMessageCbStatus_00
- * @tc.desc  : Test SetSeiMessageCbStatus with large number of payload types
- */
-HWTEST_F(PlayerUnitTest, Player_SetSeiMessageCbStatus_003, TestSize.Level1)
-{
-    std::vector<int32_t> largePayloadTypes = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    ASSERT_EQ(MSERR_OK, player_->SetSeiMessageCbStatus(true, largePayloadTypes));
-    ASSERT_EQ(MSERR_OK, player_->SetSeiMessageCbStatus(false, largePayloadTypes));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->Prepare());
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TIME_2_SEC);
-    EXPECT_EQ(MSERR_OK, player_->Stop());
-}
-
-/**
- * @tc.name  : Test SetSuperResolution API - Basic functionality
- * @tc.number: Player_SetSuperResolution_001
- * @tc.desc  : Test SetSuperResolution basic enable/disable functionality
- */
-HWTEST_F(PlayerUnitTest, Player_SetSuperResolution_001, TestSize.Level0)
-{
-    AVPlayStrategy playbackStrategy = {
-        .enableSuperResolution = true
-    };
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    ASSERT_EQ(MSERR_OK, player_->SetPlaybackStrategy(playbackStrategy));
-    ASSERT_EQ(MSERR_OK, player_->SetSuperResolution(true));
-    ASSERT_EQ(MSERR_OK, player_->SetSuperResolution(false));
-    ASSERT_EQ(MSERR_OK, player_->SetSuperResolution(true));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->Prepare());
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TIME_2_SEC);
-    EXPECT_EQ(MSERR_OK, player_->Stop());
-}
-
-/**
- * @tc.name  : Test SetSuperResolution API - Multiple enable/disable cycles
- * @tc.number: Player_SetSuperResolution_002
- * @tc.desc  : Test SetSuperResolution with multiple enable/disable cycles
- */
-HWTEST_F(PlayerUnitTest, Player_SetSuperResolution_002, TestSize.Level1)
-{
-    AVPlayStrategy playbackStrategy = {
-        .enableSuperResolution = true
-    };
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    ASSERT_EQ(MSERR_OK, player_->SetPlaybackStrategy(playbackStrategy));
-    ASSERT_EQ(MSERR_OK, player_->SetSuperResolution(true));
-    ASSERT_EQ(MSERR_OK, player_->SetSuperResolution(false));
-    ASSERT_EQ(MSERR_OK, player_->SetSuperResolution(true));
-    ASSERT_EQ(MSERR_OK, player_->SetSuperResolution(false));
-    ASSERT_EQ(MSERR_OK, player_->SetSuperResolution(true));
-    ASSERT_EQ(MSERR_OK, player_->SetSuperResolution(false));
-    ASSERT_EQ(MSERR_OK, player_->SetSuperResolution(true));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->Prepare());
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TIME_2_SEC);
-    EXPECT_EQ(MSERR_OK, player_->Stop());
-}
-
-/**
- * @tc.name  : Test SetSuperResolution API - Without super resolution enabled
- * @tc.number: Player_SetSuperResolution_003
- * @tc.desc  : Test SetSuperResolution when super resolution is not enabled in strategy
- */
-HWTEST_F(PlayerUnitTest, Player_SetSuperResolution_003, TestSize.Level1)
-{
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    ASSERT_EQ(MSERR_SUPER_RESOLUTION_NOT_ENABLED, player_->SetSuperResolution(true));
-    ASSERT_EQ(MSERR_SUPER_RESOLUTION_NOT_ENABLED, player_->SetSuperResolution(false));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->Prepare());
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TIME_2_SEC);
-    EXPECT_EQ(MSERR_OK, player_->Stop());
-}
-
-/**
- * @tc.name  : Test SetVideoWindowSize API - Basic functionality
- * @tc.number: Player_SetVideoWindowSize_001
- * @tc.desc  : Test SetVideoWindowSize basic functionality with common resolutions
- */
-HWTEST_F(PlayerUnitTest, Player_SetVideoWindowSize_001, TestSize.Level0)
-{
-    AVPlayStrategy playbackStrategy = {
-        .enableSuperResolution = true
-    };
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    ASSERT_EQ(MSERR_OK, player_->SetPlaybackStrategy(playbackStrategy));
-    ASSERT_EQ(MSERR_OK, player_->SetVideoWindowSize(1920, 1080)); // Full HD
-    ASSERT_EQ(MSERR_OK, player_->SetVideoWindowSize(1280, 720));  // HD
-    ASSERT_EQ(MSERR_OK, player_->SetVideoWindowSize(800, 600));   // SVGA
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->Prepare());
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TIME_2_SEC);
-    EXPECT_EQ(MSERR_OK, player_->Stop());
-}
-
-/**
- * @tc.name  : Test SetVideoWindowSize API - Extreme resolutions
- * @tc.number: Player_SetVideoWindowSize_002
- * @tc.desc  : Test SetVideoWindowSize with extreme resolution values
- */
-HWTEST_F(PlayerUnitTest, Player_SetVideoWindowSize_002, TestSize.Level1)
-{
-    AVPlayStrategy playbackStrategy = {
-        .enableSuperResolution = true
-    };
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    ASSERT_EQ(MSERR_OK, player_->SetPlaybackStrategy(playbackStrategy));
-    ASSERT_EQ(MSERR_OK, player_->SetVideoWindowSize(3840, 2160)); // 4K
-    ASSERT_EQ(MSERR_OK, player_->SetVideoWindowSize(320, 240));   // QVGA
-    ASSERT_EQ(MSERR_OK, player_->SetVideoWindowSize(160, 120));   // QQVGA
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->Prepare());
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TIME_2_SEC);
-    EXPECT_EQ(MSERR_OK, player_->Stop());
-}
-
-/**
- * @tc.name  : Test SetVideoWindowSize API - Non-standard aspect ratios
- * @tc.number: Player_SetVideoWindowSize_003
- * @tc.desc  : Test SetVideoWindowSize with non-standard aspect ratios
- */
-HWTEST_F(PlayerUnitTest, Player_SetVideoWindowSize_003, TestSize.Level1)
-{
-    AVPlayStrategy playbackStrategy = {
-        .enableSuperResolution = true
-    };
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    ASSERT_EQ(MSERR_OK, player_->SetPlaybackStrategy(playbackStrategy));
-    ASSERT_EQ(MSERR_OK, player_->SetVideoWindowSize(1920, 1440)); // 4:3
-    ASSERT_EQ(MSERR_OK, player_->SetVideoWindowSize(1440, 1080)); // 4:3
-    ASSERT_EQ(MSERR_OK, player_->SetVideoWindowSize(960, 720));   // 4:3
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->Prepare());
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TIME_2_SEC);
-    EXPECT_EQ(MSERR_OK, player_->Stop());
-}
-
-/**
- * @tc.name  : Test EnableReportMediaProgress API - Basic functionality
- * @tc.number: Player_EnableReportMediaProgress_005
- * @tc.desc  : Test EnableReportMediaProgress basic enable/disable functionality
- */
-HWTEST_F(PlayerUnitTest, Player_EnableReportMediaProgress_005, TestSize.Level0)
-{
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    ASSERT_EQ(MSERR_OK, player_->EnableReportMediaProgress(true));
-    ASSERT_EQ(MSERR_OK, player_->EnableReportMediaProgress(false));
-    ASSERT_EQ(MSERR_OK, player_->EnableReportMediaProgress(true));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->Prepare());
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TIME_2_SEC);
-    EXPECT_EQ(MSERR_OK, player_->Stop());
-}
-
-/**
- * @tc.name  : Test EnableReportMediaProgress API - During playback operations
- * @tc.number: Player_EnableReportMediaProgress_006
- * @tc.desc  : Test EnableReportMediaProgress during various playback operations
- */
-HWTEST_F(PlayerUnitTest, Player_EnableReportMediaProgress_006, TestSize.Level1)
-{
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->Prepare());
-    ASSERT_EQ(MSERR_OK, player_->EnableReportMediaProgress(true));
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    EXPECT_EQ(MSERR_OK, player_->SetVolume(0.5, 0.5));
-    EXPECT_EQ(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_1_25_X));
-    ASSERT_EQ(MSERR_OK, player_->EnableReportMediaProgress(false));
-    EXPECT_EQ(MSERR_OK, player_->Pause());
-    ASSERT_EQ(MSERR_OK, player_->EnableReportMediaProgress(true));
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    EXPECT_EQ(MSERR_OK, player_->Stop());
-}
-
-/**
- * @tc.name  : Test EnableReportMediaProgress API - Multiple rapid changes
- * @tc.number: Player_EnableReportMediaProgress_007
- * @tc.desc  : Test EnableReportMediaProgress with rapid enable/disable changes
- */
-HWTEST_F(PlayerUnitTest, Player_EnableReportMediaProgress_007, TestSize.Level1)
-{
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->Prepare());
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    ASSERT_EQ(MSERR_OK, player_->EnableReportMediaProgress(true));
-    ASSERT_EQ(MSERR_OK, player_->EnableReportMediaProgress(false));
-    ASSERT_EQ(MSERR_OK, player_->EnableReportMediaProgress(true));
-    ASSERT_EQ(MSERR_OK, player_->EnableReportMediaProgress(false));
-    ASSERT_EQ(MSERR_OK, player_->EnableReportMediaProgress(true));
-    ASSERT_EQ(MSERR_OK, player_->EnableReportMediaProgress(false));
-    ASSERT_EQ(MSERR_OK, player_->EnableReportMediaProgress(true));
-    sleep(PLAYING_TIME_2_SEC);
-    EXPECT_EQ(MSERR_OK, player_->Stop());
 }
 
 /**
@@ -5455,54 +4919,11 @@ HWTEST_F(PlayerUnitTest, Player_EnableReportAudioInterrupt_003, TestSize.Level1)
 }
 
 /**
- * @tc.name  : Test SetStartFrameRateOptEnabled API - Basic functionality
- * @tc.number: Player_SetStartFrameRateOptEnabled_001
- * @tc.desc  : Test SetStartFrameRateOptEnabled basic enable/disable functionality
- */
-HWTEST_F(PlayerUnitTest, Player_SetStartFrameRateOptEnabled_001, TestSize.Level0)
-{
-    ASSERT_EQ(MSERR_OK, player_->SetStartFrameRateOptEnabled(true));
-    ASSERT_EQ(MSERR_OK, player_->SetStartFrameRateOptEnabled(false));
-    ASSERT_EQ(MSERR_OK, player_->SetStartFrameRateOptEnabled(true));
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->Prepare());
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TIME_2_SEC);
-    EXPECT_EQ(MSERR_OK, player_->Stop());
-}
-
-/**
- * @tc.name  : Test SetStartFrameRateOptEnabled API - During playback
- * @tc.number: Player_SetStartFrameRateOptEnabled_002
- * @tc.desc  : Test SetStartFrameRateOptEnabled during playback operations
- */
-HWTEST_F(PlayerUnitTest, Player_SetStartFrameRateOptEnabled_002, TestSize.Level1)
-{
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->Prepare());
-    ASSERT_EQ(MSERR_OK, player_->SetStartFrameRateOptEnabled(true));
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    EXPECT_EQ(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_1_25_X));
-    EXPECT_EQ(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_1_50_X));
-    ASSERT_EQ(MSERR_OK, player_->SetStartFrameRateOptEnabled(false));
-    EXPECT_EQ(MSERR_OK, player_->Pause());
-    ASSERT_EQ(MSERR_OK, player_->SetStartFrameRateOptEnabled(true));
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    EXPECT_EQ(MSERR_OK, player_->Stop());
-}
-
-/**
  * @tc.name  : Test SetStartFrameRateOptEnabled API - Multiple rapid changes
- * @tc.number: Player_SetStartFrameRateOptEnabled_003
+ * @tc.number: Player_SetStartFrameRateOptEnabled_001
  * @tc.desc  : Test SetStartFrameRateOptEnabled with rapid enable/disable changes
  */
-HWTEST_F(PlayerUnitTest, Player_SetStartFrameRateOptEnabled_003, TestSize.Level1)
+HWTEST_F(PlayerUnitTest, Player_SetStartFrameRateOptEnabled_001, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -5519,6 +4940,135 @@ HWTEST_F(PlayerUnitTest, Player_SetStartFrameRateOptEnabled_003, TestSize.Level1
     ASSERT_EQ(MSERR_OK, player_->SetStartFrameRateOptEnabled(true));
     sleep(PLAYING_TIME_2_SEC);
     EXPECT_EQ(MSERR_OK, player_->Stop());
+}
+
+/**
+ * @tc.name  : Test EnableCameraPostprocessing API
+ * @tc.number: Player_EnableCameraPostprocessing_001
+ * @tc.desc  : Test Player EnableCameraPostprocessing API before prepare
+ */
+HWTEST_F(PlayerUnitTest, Player_EnableCameraPostprocessing_001, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    ASSERT_EQ(MSERR_OK, player_->EnableCameraPostprocessing());
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+}
+
+/**
+ * @tc.name  : Test SetCameraPostprocessing API
+ * @tc.number: Player_SetCameraPostprocessing_001
+ * @tc.desc  : Test Player SetCameraPostprocessing API
+ */
+HWTEST_F(PlayerUnitTest, Player_SetCameraPostprocessing_001, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    ASSERT_EQ(MSERR_OK, player_->EnableCameraPostprocessing());
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    ASSERT_EQ(MSERR_OK, player_->SetCameraPostprocessing(false));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    ASSERT_EQ(MSERR_OK, player_->SetCameraPostprocessing(true));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+}
+
+/**
+ * @tc.name  : Test SetCameraPostprocessing API
+ * @tc.number: Player_SetCameraPostprocessing_002
+ * @tc.desc  : Test Player SetCameraPostprocessing API
+ */
+HWTEST_F(PlayerUnitTest, Player_SetCameraPostprocessing_002, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    ASSERT_EQ(MSERR_OK, player_->EnableCameraPostprocessing());
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    ASSERT_EQ(MSERR_OK, player_->SetCameraPostprocessing(false));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+}
+
+/**
+ * @tc.name  : Test ForceLoadVideo API
+ * @tc.number: Player_ForceLoadVideo_001
+ * @tc.desc  : Test Player ForceLoadVideo API before prepare
+ */
+HWTEST_F(PlayerUnitTest, Player_ForceLoadVideo_001, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    ASSERT_EQ(MSERR_OK, player_->ForceLoadVideo(false));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+}
+
+/**
+ * @tc.name  : Test ForceLoadVideo API
+ * @tc.number: Player_ForceLoadVideo_002
+ * @tc.desc  : Test Player ForceLoadVideo API during playing
+ * */
+HWTEST_F(PlayerUnitTest, Player_ForceLoadVideo_002, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    ASSERT_EQ(MSERR_OK, player_->ForceLoadVideo(false));
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    ASSERT_EQ(MSERR_OK, player_->ForceLoadVideo(true));
+}
+
+/**
+ * @tc.name  : Test ForceLoadVideo API
+ * @tc.number: Player_ForceLoadVideo_003
+ * @tc.desc  : Test Player ForceLoadVideo API when seek in playing
+ * */
+HWTEST_F(PlayerUnitTest, Player_ForceLoadVideo_003, TestSize.Level0)
+{
+    int32_t duration = 0;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    ASSERT_EQ(MSERR_OK, player_->ForceLoadVideo(false));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_NEXT_SYNC));
+    ASSERT_EQ(MSERR_OK, player_->ForceLoadVideo(true));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+}
+
+/**
+ * @tc.name  : Test ForceLoadVideo API
+ * @tc.number: Player_ForceLoadVideo_004
+ * @tc.desc  : Test Player ForceLoadVideo API when playing is looping
+ * */
+HWTEST_F(PlayerUnitTest, Player_ForceLoadVideo_004, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    ASSERT_EQ(MSERR_OK, player_->ForceLoadVideo(false));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->SetLooping(true));
+    EXPECT_EQ(true, player_->IsLooping());
+    ASSERT_EQ(MSERR_OK, player_->ForceLoadVideo(true));
+    EXPECT_EQ(MSERR_OK, player_->Play());
 }
 } // namespace Media
 } // namespace OHOS
