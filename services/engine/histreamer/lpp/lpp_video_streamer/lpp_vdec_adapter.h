@@ -112,7 +112,7 @@ private:
     std::atomic<int64_t> lastPts_ {0};
     std::atomic<int64_t> lastCommonPts_ {0};
 
-    std::atomic<bool> speed_ {1.0f};
+    std::atomic<float> speed_ {1.0f};
     bool dumpBufferNeeded_ {false};
     std::string dumpFileNameOutput_ {};
 
