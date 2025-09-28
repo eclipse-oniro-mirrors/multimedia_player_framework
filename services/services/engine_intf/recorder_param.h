@@ -153,6 +153,11 @@ struct AudEnc : public RecorderParam {
     AudioCodecFormat encFmt;
 };
 
+struct AacEnc : public RecorderParam {
+    explicit AacEnc(AacProfile fmt) : RecorderParam(RecorderPublicParamType::AUD_AAC_FMT), encFmt(fmt) {}
+    AacProfile encFmt;
+};
+
 struct AudSampleRate : public RecorderParam {
     explicit AudSampleRate(int32_t sr) : RecorderParam(RecorderPublicParamType::AUD_SAMPLERATE), sampleRate(sr) {}
     int32_t sampleRate;

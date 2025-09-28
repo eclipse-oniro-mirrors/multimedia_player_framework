@@ -1114,7 +1114,8 @@ void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
 
 bool HiRecorderImpl::CheckParamType(int32_t sourceId, const RecorderParam &recParam)
 {
-    FALSE_RETURN_V((SourceIdGenerator::IsAudio(sourceId) && recParam.IsAudioParam() && audioSourceId_ == sourceId) ||
+    FALSE_RETURN_V((recParam.type == RecorderPublicParamType::AUD_AAC_FMT) ||
+        (SourceIdGenerator::IsAudio(sourceId) && recParam.IsAudioParam() && audioSourceId_ == sourceId) ||
         (SourceIdGenerator::IsVideo(sourceId) && recParam.IsVideoParam() && videoSourceId_ == sourceId) ||
         (SourceIdGenerator::IsMeta(sourceId) && recParam.IsMetaParam() &&
         (GetMetaSourceType(sourceId) > VIDEO_META_SOURCE_INVALID &&
