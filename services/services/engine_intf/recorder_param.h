@@ -71,6 +71,7 @@ enum RecorderPublicParamType : uint32_t {
     GENRE_INFO,
 
     PUBLIC_PARAM_TYPE_END,
+    AUD_AAC_FMT,
 };
 
 /*
