@@ -79,8 +79,8 @@ static const std::string ICON_PATH_MIC_OFF = "/etc/screencapture/mic_off.svg";
 static const std::string ICON_PATH_STOP = "/etc/screencapture/light.svg";
 static const std::string BACK_GROUND_COLOR = "#E84026";
 static const std::string SYS_SCR_RECR_KEY = "const.multimedia.screencapture.screenrecorderbundlename";
-static const std::string VIRTUAL_SCREENNAME_SCREEN_CAPTRURE = "screeen_capture";
-static const std::string VIRTUAL_SCREENNAME_SCREEN_CAPTRURE_FILE = "screeen_capture_file";
+static const std::string VIRTUAL_SCREENAME_SCREEN_CAPTRURE = "screeen_capture";
+static const std::string VIRTUAL_SCREENAME_SCREEN_CAPTRURE_FILE = "screeen_capture_file";
 #ifdef PC_STANDARD
 static const std::string SELECT_ABILITY_NAME = "SelectWindowAbility";
 static const int32_t SELECT_WINDOW_MISSION_ID_NUM_MAX = 2;
@@ -897,7 +897,7 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
 
     Json::Value root;
 #ifdef PC_STANDARD
-    if (server->isPresentPicker && server->captureState_ == AVScreenCaptureState::STARTED) {
+    if (server->isPresentPicker_ && server->captureState_ == AVScreenCaptureState::STARTED) {
         return server->HandlePresentPickerWindowCase(root, content);
     }
 #endif
@@ -968,7 +968,7 @@ int32_t ScreenCaptureServer::HandleStreamDataCase(Json::Value& root, const std::
     return NotificationHelper::PublishNotification(request);
 }
 
-int32_t ScreenCaptureServer::HandlePresentPickerWindowCase(Json::Value root, const std::string &content)
+int32_t ScreenCaptureServer::HandlePresentPickerWindowCase(Json::Value& root, const std::string &content)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     std::string choice = "false";
@@ -993,14 +993,14 @@ int32_t ScreenCaptureServer::HandlePresentPickerWindowCase(Json::Value root, con
     }
     missionIds_.clear();
     HandleSetDisplayIdAndMissionId(root);
-    DestoryVirtualScreen();
+    DestroyVirtualScreen();
     int32_t ret = MSERR_OK;
     if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
         sptr<OHOS::Surface> consumerSurface = isSurfaceMode_ ? surface_ : producerSurface_;
-        ret = CreateVirtualScreen(VIRTUAL_SCREENNAME_SCREEN_CAPTRURE, consumerSurface);
+        ret = CreateVirtualScreen(VIRTUAL_SCREENAME_SCREEN_CAPTRURE, consumerSurface);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "CreateVirtualScreen surface failed, ret: %{public}d", ret);
     } else if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
-        ret = CreateVirtualScreen(VIRTUAL_SCREENNAME_SCREEN_CAPTRURE_FILE, consumer_);
+        ret = CreateVirtualScreen(VIRTUAL_SCREENAME_SCREEN_CAPTRURE_FILE, consumer_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "CreateVirtualScreen file failed, ret: %{public}d", ret);
     } else {
         MEDIA_LOGE("HandlePresentPickerWindowCase dataType is invalid");
@@ -1039,10 +1039,10 @@ int32_t ScreenCaptureServer::PresentPicker()
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " PresentPicker start.", FAKE_POINTER(this));
     MediaTrace trace("ScreenCaptureServer::PresentPicker");
     std::lock_guard<std::mutex> lock(mutex_);
-    isPresentPicker = true;
+    isPresentPicker_ = true;
     int32_t ret = StartPrivacyWindow();
     return ret;
-#else
+#endif
     return MSERR_INVALID_OPERATION;
 }
 
@@ -2871,13 +2871,13 @@ int32_t ScreenCaptureServer::StartStreamHomeVideoCapture()
     MEDIA_LOGI("ScreenCaptureServer consumer_ BUFFER_USAGE_CPU_READ BUFFER_USAGE_MEM_MMZ_CACHE E");
     auto producer = consumer_->GetProducer();
     CHECK_AND_RETURN_RET_LOG(producer != nullptr, MSERR_UNKNOWN, "GetProducer failed");
-    auto producerSurface = OHOS::Surface::CreateSurfaceAsProducer(producer);
-    CHECK_AND_RETURN_RET_LOG(producerSurface != nullptr, MSERR_UNKNOWN, "CreateSurfaceAsProducer failed");
+    producerSurface_ = OHOS::Surface::CreateSurfaceAsProducer(producer);
+    CHECK_AND_RETURN_RET_LOG(producerSurface_ != nullptr, MSERR_UNKNOWN, "CreateSurfaceAsProducer failed");
     surfaceCb_ = OHOS::sptr<ScreenCapBufferConsumerListener>::MakeSptr(consumer_, screenCaptureCb_);
     CHECK_AND_RETURN_RET_LOG(surfaceCb_ != nullptr, MSERR_UNKNOWN, "MakeSptr surfaceCb_ failed");
     consumer_->RegisterConsumerListener(surfaceCb_);
-    MEDIA_LOGD("StartStreamHomeVideoCapture producerSurface: %{public}" PRIu64, producerSurface->GetUniqueId());
-    int32_t ret = CreateVirtualScreen(virtualScreenName, producerSurface);
+    MEDIA_LOGD("StartStreamHomeVideoCapture producerSurface_: %{public}" PRIu64, producerSurface_->GetUniqueId());
+    int32_t ret = CreateVirtualScreen(virtualScreenName, producerSurface_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "create virtual screen without input surface failed");
     CANCEL_SCOPE_EXIT_GUARD(0);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartStreamHomeVideoCapture OK.", FAKE_POINTER(this));
@@ -4255,6 +4255,7 @@ int32_t ScreenCaptureServer::StopScreenCapture()
 
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances StopScreenCapture E", FAKE_POINTER(this));
     isScreenCaptureAuthority_ = false;
+    isPresentPicker_ = false;
     return ret;
 }
 

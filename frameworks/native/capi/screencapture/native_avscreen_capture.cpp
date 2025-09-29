@@ -774,7 +774,6 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_PresentPicker(struct OH_AVScreenC
         return AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT;
     }
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT, "PresentPicker failed!");
-    screenCaptureObj->isStart = false;
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
 

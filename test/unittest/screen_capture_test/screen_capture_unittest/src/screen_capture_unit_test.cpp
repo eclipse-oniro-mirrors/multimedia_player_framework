@@ -2449,6 +2449,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_config_paramer_01, TestSize.Level
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_file_01 after");
 }
 
+#ifdef PC_STANDARD
 /**
  * @tc.name: screen_capture_presentPicker_test01
  * @tc.desc: do screencapture PresentPicker
@@ -2517,5 +2518,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_presentPicker_test02, TestSize.Le
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_presentPicker_test02 after");
 }
+#endif
 } // namespace Media
 } // namespace OHOS

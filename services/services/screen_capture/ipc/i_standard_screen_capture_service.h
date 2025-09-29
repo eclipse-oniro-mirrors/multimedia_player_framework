@@ -45,6 +45,7 @@ public:
     virtual int32_t StartScreenCapture(bool isPrivacyAuthorityEnabled = false) = 0;
     virtual int32_t StartScreenCaptureWithSurface(sptr<Surface> surface, bool isPrivacyAuthorityEnabled = false) = 0;
     virtual int32_t StopScreenCapture() = 0;
+    virtual int32_t PresentPicker() = 0;
     virtual int32_t SetMicrophoneEnabled(bool isMicrophone) = 0;
     virtual int32_t SetCanvasRotation(bool canvasRotation) = 0;
     virtual int32_t ShowCursor(bool showCursor) = 0;
