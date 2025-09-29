@@ -154,6 +154,7 @@ private:
     RetInfo StartRecording();
     RetInfo StopRecording();
     RetInfo Release();
+    RetInfo PresentPicker();
 
     void ErrorCallback(int32_t errCode, const std::string &operate, const std::string &add = "");
     void StateCallback(const AVScreenCaptureStateCode &stateCode);
