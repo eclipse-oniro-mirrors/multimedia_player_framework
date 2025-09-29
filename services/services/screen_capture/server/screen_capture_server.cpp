@@ -1009,7 +1009,7 @@ int32_t ScreenCaptureServer::HandlePresentPickerWindowCase(Json::Value& root, co
     return ret;
 }
 
-Void ScreenCaptureServer::HandleSetDisplayIdAndMissionId(Json::Value &root)
+void ScreenCaptureServer::HandleSetDisplayIdAndMissionId(Json::Value &root)
 {
     MEDIA_LOGI("ScreenCaptureServer::HandleSetDisplayIdAndMissionId start");
     const Json::Value displayIdJson = root["displayId"];
