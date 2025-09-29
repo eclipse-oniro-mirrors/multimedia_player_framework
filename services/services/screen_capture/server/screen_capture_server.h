@@ -329,7 +329,7 @@ private:
     AVScreenCaptureDataMode dataMode_ = AVScreenCaptureDataMode::BUFFER_MODE;
     StatisticalEventInfo statisticalEventInfo_;
     sptr<OHOS::Surface> consumer_ = nullptr;
-    sptr<OHOS::Surface> produceSurface_ = nullptr;
+    sptr<OHOS::Surface> producerSurface_ = nullptr;
     bool isConsumerStart_ = false;
     bool isDump_ = false;
     bool isSystemUI2_ = false;

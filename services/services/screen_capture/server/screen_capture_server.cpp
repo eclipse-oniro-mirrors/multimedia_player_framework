@@ -1031,7 +1031,7 @@ Void ScreenCaptureServer::HandleSetDisplayIdAndMissionId(Json::Value &root)
 
 int32_t ScreenCaptureServer::PresentPicker()
 {
-#ifdef PC_STANDARD 
+#ifdef PC_STANDARD
     if (captureState_ != AVScreenCaptureState::STARTED) {
         MEDIA_LOGE("PresentPicker captureState_ is not STARTED, not allowed.");
         return MSERR_INVALID_OPERATION;
