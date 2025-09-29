@@ -1521,5 +1521,105 @@ HWTEST_F(HiplayerImplUnitTest, CleanUnusedListener_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, hiplayer_->PrepareAsync());
     hiplayer_->CleanUnusedListener();
 }
+
+/**
+* @tc.name    : Test SetBuffering API
+* @tc.number  : SetBuffering_001
+* @tc.desc    : Test SetBuffering interface, return MSERR_OK.
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, SetBuffering_001, TestSize.Level0)
+{
+    // 1. Set up the test environment
+    std::string name = "builtin.player.demuxer";
+    std::shared_ptr<DemuxerFilterMock> demuxerMock =
+        std::make_shared<DemuxerFilterMock>(name, FilterType::FILTERTYPE_DEMUXER);
+    hiplayer_->demuxer_ = demuxerMock;
+    hiplayer_->audioSink_ = FilterFactory::Instance().CreateFilter<AudioSinkFilter>("player.audiosink",
+        FilterType::FILTERTYPE_ASINK);
+ 
+    hiplayer_->videoDecoder_ = FilterFactory::Instance().CreateFilter<DecoderSurfaceFilter>("player.videodecoder",
+        FilterType::FILTERTYPE_VDEC);
+ 
+    // 2. Call the function to be tested
+    int32_t ret = hiplayer_->SetBuffering(true);
+ 
+    // 3. Verify the result
+    EXPECT_EQ(ret, MSERR_OK);
+}
+ 
+/**
+* @tc.name    : Test SetBuffering API
+* @tc.number  : SetBuffering_002
+* @tc.desc    : Test SetBuffering interface, return MSERR_OK.
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, SetBuffering_002, TestSize.Level0)
+{
+    // 1. Set up the test environment
+    std::string name = "builtin.player.demuxer";
+    std::shared_ptr<DemuxerFilterMock> demuxerMock =
+        std::make_shared<DemuxerFilterMock>(name, FilterType::FILTERTYPE_DEMUXER);
+    hiplayer_->demuxer_ = demuxerMock;
+    hiplayer_->audioSink_ = nullptr;
+ 
+    hiplayer_->videoDecoder_ = FilterFactory::Instance().CreateFilter<DecoderSurfaceFilter>("player.videodecoder",
+        FilterType::FILTERTYPE_VDEC);
+ 
+    // 2. Call the function to be tested
+    int32_t ret = hiplayer_->SetBuffering(true);
+ 
+    // 3. Verify the result
+    EXPECT_EQ(ret, MSERR_OK);
+}
+ 
+/**
+* @tc.name    : Test SetBuffering API
+* @tc.number  : SetBuffering_003
+* @tc.desc    : Test SetBuffering interface, return MSERR_OK.
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, SetBuffering_003, TestSize.Level0)
+{
+    // 1. Set up the test environment
+    std::string name = "builtin.player.demuxer";
+    std::shared_ptr<DemuxerFilterMock> demuxerMock =
+        std::make_shared<DemuxerFilterMock>(name, FilterType::FILTERTYPE_DEMUXER);
+    hiplayer_->demuxer_ = demuxerMock;
+    hiplayer_->audioSink_ = nullptr;
+ 
+    hiplayer_->videoDecoder_ = nullptr;
+ 
+    // 2. Call the function to be tested
+    int32_t ret = hiplayer_->SetBuffering(true);
+ 
+    // 3. Verify the result
+    EXPECT_EQ(ret, MSERR_OK);
+}
+ 
+/**
+* @tc.name    : Test SetBuffering API
+* @tc.number  : SetBuffering_004
+* @tc.desc    : Test SetBuffering interface, return MSERR_OK.
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, SetBuffering_004, TestSize.Level0)
+{
+    // 1. Set up the test environment
+    std::string name = "builtin.player.demuxer";
+    std::shared_ptr<DemuxerFilterMock> demuxerMock =
+        std::make_shared<DemuxerFilterMock>(name, FilterType::FILTERTYPE_DEMUXER);
+    hiplayer_->demuxer_ = demuxerMock;
+    hiplayer_->audioSink_ = FilterFactory::Instance().CreateFilter<AudioSinkFilter>("player.audiosink",
+        FilterType::FILTERTYPE_ASINK);
+ 
+    hiplayer_->videoDecoder_ = nullptr;
+ 
+    // 2. Call the function to be tested
+    int32_t ret = hiplayer_->SetBuffering(true);
+ 
+    // 3. Verify the result
+    EXPECT_EQ(ret, MSERR_OK);
+}
 } // namespace Media
 } // namespace OHOS
