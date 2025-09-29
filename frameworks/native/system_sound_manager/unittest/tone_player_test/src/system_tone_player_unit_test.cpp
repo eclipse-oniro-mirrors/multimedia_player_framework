@@ -690,7 +690,7 @@ HWTEST(SystemTonePlayerUnitTest, RegisterSource_001, TestSize.Level1)
     std::string hapticUri = "/data/test/ringtone.json";
     int32_t res = systemTonePlayerImpl_->RegisterSource(audioUri, hapticUri);
     EXPECT_NE(res, 0);
-    std::string audioUri = "no_system_sound";
+    audioUri = "no_system_sound";
     res = systemTonePlayerImpl_->RegisterSource(audioUri, hapticUri);
     EXPECT_NE(res, 0);
 }
