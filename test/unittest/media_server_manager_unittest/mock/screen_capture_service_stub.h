@@ -49,6 +49,7 @@ public:
     MOCK_METHOD(int32_t, StartScreenCaptureWithSurface, (sptr<Surface> surface,
         bool isPrivacyAuthorityEnabled), (override));
     MOCK_METHOD(int32_t, StopScreenCapture, (), (override));
+    MOCK_METHOD(int32_t, PresentPicker, (), (override));
     MOCK_METHOD(int32_t, AcquireAudioBuffer, (std::shared_ptr<AudioBuffer> &audioBuffer,
         AudioCaptureSourceType type), (override));
     MOCK_METHOD(int32_t, AcquireVideoBuffer, (sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence,
