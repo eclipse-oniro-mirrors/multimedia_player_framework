@@ -744,7 +744,16 @@ int32_t SystemTonePlayerImpl::RegisterSource(const std::string &audioUri, const 
 {
     string newAudioUri = systemSoundMgr_.OpenAudioUri(databaseTool_, audioUri);
     string newHapticUri = systemSoundMgr_.OpenHapticsUri(databaseTool_, hapticUri);
-
+    if (newAudioUri.find(FDHEAD) == std::string::npos && newAudioUri != NO_SYSTEM_SOUND) {
+        MEDIA_LOGI("Failed to open systemtone file, select to open default systemtone and play.");
+        std::string uri = "";
+        std::shared_ptr<ToneAttrs> systemtoneAttrs =
+            systemSoundMgr_.GetDefaultSystemToneAttrs(context_, systemToneType_);
+        if (systemtoneAttrs != nullptr) {
+            uri = systemtoneAttrs->GetUri();
+        }
+        newAudioUri = systemSoundMgr_.OpenAudioUri(databaseTool_, uri);
+    }
     int32_t sourceId = audioHapticManager_->RegisterSource(newAudioUri, newHapticUri);
 
     if (newAudioUri.find(FDHEAD) != std::string::npos) {

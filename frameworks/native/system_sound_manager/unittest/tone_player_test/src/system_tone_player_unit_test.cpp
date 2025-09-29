@@ -674,5 +674,25 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_035, TestSize.Level1
     systemTonePlayerImpl_->DeletePlayer(2);
     EXPECT_NE(systemTonePlayerImpl_, nullptr);
 }
+
+/**
+ * @tc.name  : Test MediaTonePlayer
+ * @tc.number: Media_RegisterSource_001
+ * @tc.desc  : Test DeletePlayer.
+ */
+HWTEST(SystemTonePlayerUnitTest, RegisterSource_001, TestSize.Level1)
+{
+    auto context_ = std::make_shared<ContextImpl>();
+    auto systemSoundMgr_ = std::make_shared<SystemSoundManagerImpl>();
+    SystemToneType systemToneType = SYSTEM_TONE_TYPE_SIM_CARD_0;
+    auto systemTonePlayerImpl_ = std::make_shared<SystemTonePlayerImpl>(context_, *systemSoundMgr_, systemToneType);
+    std::string audioUri = "/data/test/ringtone.ogg";
+    std::string hapticUri = "/data/test/ringtone.json";
+    int32_t res = systemTonePlayerImpl_->RegisterSource(audioUri, hapticUri);
+    EXPECT_NE(res, 0);
+    audioUri = "no_system_sound";
+    res = systemTonePlayerImpl_->RegisterSource(audioUri, hapticUri);
+    EXPECT_NE(res, 0);
+}
 } // namespace Media
 } // namespace OHOS
