@@ -659,7 +659,8 @@ void SCWindowInfoChangedListener::OnWindowInfoChanged(
                 AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE, nullptr);
         }
     } else {
-        MEDIA_LOGI("OnWindowInfoChanged myWindowInfoList cannot find DISPLAY_ID_KEY or iter->second is not of type uint64_t");
+        MEDIA_LOGI("OnWindowInfoChanged myWindowInfoList cannot find DISPLAY_ID_KEY
+            or iter->second is not of type uint64_t");
     }
 }
 
