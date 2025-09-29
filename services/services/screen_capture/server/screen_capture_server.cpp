@@ -638,12 +638,12 @@ void SCWindowInfoChangedListener::OnWindowInfoChanged(
     MEDIA_LOGI("OnWindowInfoChanged: the displayId of interestWindowId changed!");
     auto iter = myWindowInfoList.front().find(WindowInfoKey::DISPLAY_ID);
     if (iter != myWindowInfoList.front().end()) {
-        try {
+        if(std::holds_alternative<uint64_t>(iter->second)) {
             uint64_t displayId = std::get<uint64_t>(iter->second);
             MEDIA_LOGI("OnWindowInfoChanged: the curDisplayId: %{public}" PRIu64, displayId);
             SCServer->SetCurDisplayId(displayId);
-        } catch (const std::bad_variant_access& e) {
-            MEDIA_LOGW("OnWindowInfoChanged: Failed to get uint64_t from variant: %s", e.what());
+        } else {
+            MEDIA_LOGW("OnWindowInfoChanged: iter->second is not of type uint64_t");
         }
         
         if (displayId == SCServer->GetDefaultDisplayId()) {

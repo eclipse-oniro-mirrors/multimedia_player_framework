@@ -77,7 +77,7 @@ bool UIExtensionAbilityConnection::CloseDialog()
     if (remoteObject_ != nullptr) {
         MEDIA_LOGI("UIExtensionAbilityConnection::CloseDialog send close request.");
         int32_t ret = remoteObject_->SendRequest(CLOSE_CONNECTION, data, reply, option);
-        if (ret == MESSGE_OK) {
+        if (ret == MESSAGE_OK) {
             status_ = ConnectStatus::CLOSED;
             return reply.ReadInt32() == 0;
         } else {
