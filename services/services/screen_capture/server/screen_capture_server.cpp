@@ -637,33 +637,29 @@ void SCWindowInfoChangedListener::OnWindowInfoChanged(
 
     MEDIA_LOGI("OnWindowInfoChanged: the displayId of interestWindowId changed!");
     auto iter = myWindowInfoList.front().find(WindowInfoKey::DISPLAY_ID);
-    if (iter != myWindowInfoList.front().end()) {
-        if (std::holds_alternative<uint64_t>(iter->second)) {
-            uint64_t displayId = std::get<uint64_t>(iter->second);
-            MEDIA_LOGI("OnWindowInfoChanged: the curDisplayId: %{public}" PRIu64, displayId);
-            SCServer->SetCurDisplayId(displayId);
-            if (displayId == SCServer->GetDefaultDisplayId()) {
-                MEDIA_LOGI("OnWindowInfoChanged: window back to initial display!");
-                if (SCServer->GetWindowIdList().size() > 0) {
-                    WindowInfoOption windowInfoOption;
-                    std::vector<sptr<WindowInfo>> infos;
-                    windowInfoOption.windowId = SCServer->GetWindowIdList().front();
-                    Rosen::WMError ret = Rosen::WindowManager::GetInstance().ListWindowInfo(windowInfoOption, infos);
-                    CHECK_AND_RETURN_LOG(ret == Rosen::WMError::WM_OK && infos.size() > 0, "ListWindowInfo failed.");
-                    SCServer->NotifyCaptureContentChanged(
-                        AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE,
-                        reinterpret_cast<ScreenCaptureRect*>(&(infos.front()->windowLayoutInfo.rect)));
-                }
-            } else {
-                MEDIA_LOGI("OnWindowInfoChanged: window switched to new display!");
+    if (iter != myWindowInfoList.front().end() && std::holds_alternative<uint64_t>(iter->second)) {
+        uint64_t displayId = std::get<uint64_t>(iter->second);
+        MEDIA_LOGI("OnWindowInfoChanged: the curDisplayId: %{public}" PRIu64, displayId);
+        SCServer->SetCurDisplayId(displayId);
+        if (displayId == SCServer->GetDefaultDisplayId()) {
+            MEDIA_LOGI("OnWindowInfoChanged: window back to initial display!");
+            if (SCServer->GetWindowIdList().size() > 0) {
+                WindowInfoOption windowInfoOption;
+                std::vector<sptr<WindowInfo>> infos;
+                windowInfoOption.windowId = SCServer->GetWindowIdList().front();
+                Rosen::WMError ret = Rosen::WindowManager::GetInstance().ListWindowInfo(windowInfoOption, infos);
+                CHECK_AND_RETURN_LOG(ret == Rosen::WMError::WM_OK && infos.size() > 0, "ListWindowInfo failed.");
                 SCServer->NotifyCaptureContentChanged(
-                    AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE, nullptr);
+                    AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE,
+                    reinterpret_cast<ScreenCaptureRect*>(&(infos.front()->windowLayoutInfo.rect)));
             }
         } else {
-            MEDIA_LOGW("OnWindowInfoChanged: iter->second is not of type uint64_t");
+            MEDIA_LOGI("OnWindowInfoChanged: window switched to new display!");
+            SCServer->NotifyCaptureContentChanged(
+                AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE, nullptr);
         }
     } else {
-        MEDIA_LOGI("OnWindowInfoChanged myWindowInfoList cannot find DISPLAY_ID_KEY");
+        MEDIA_LOGI("OnWindowInfoChanged myWindowInfoList cannot find DISPLAY_ID_KEY or iter->second is not of type uint64_t");
     }
 }
 
