@@ -81,6 +81,7 @@ public:
     int32_t StartScreenCapture(bool isPrivacyAuthorityEnabled) override;
     int32_t StartScreenCaptureWithSurface(sptr<Surface> surface, bool isPrivacyAuthorityEnabled) override;
     int32_t StopScreenCapture() override;
+    int32_t PresentPicker() override;
     int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBack> &callback) override;
     int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type) override;
     int32_t AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence,
@@ -211,6 +212,7 @@ private:
     int32_t SetVirtualScreenAutoRotation();
     int32_t PrepareVirtualScreenMirror();
     void DestroyVirtualScreen();
+    void HandleSetDisplayIdAndMissionId(Json::Value &root);
 
     bool CheckScreenCapturePermission();
     bool IsUserPrivacyAuthorityNeeded();
@@ -222,6 +224,7 @@ private:
     ScreenScaleMode GetScreenScaleMode(const AVScreenCaptureFillMode &fillMode);
     int32_t HandlePopupWindowCase(Json::Value& root, const std::string &content);
     int32_t HandleStreamDataCase(Json::Value& root, const std::string &content);
+    int32_t HandlePresentPickerWindowCase(Json::Value& root, const std::string &content);
     void PrepareSelectWindow(Json::Value &root);
     bool IsSkipPrivacyWindow();
 
@@ -319,12 +322,14 @@ private:
     /* used for both CAPTURE STREAM and CAPTURE FILE */
     OHOS::AudioStandard::AppInfo appInfo_;
     bool isScreenCaptureAuthority_ = false;
+    bool isPresentPicker_ = false;
     std::string appName_ = "";
     AVScreenCaptureConfig captureConfig_;
     AVScreenCaptureAvType avType_ = AVScreenCaptureAvType::INVALID_TYPE;
     AVScreenCaptureDataMode dataMode_ = AVScreenCaptureDataMode::BUFFER_MODE;
     StatisticalEventInfo statisticalEventInfo_;
     sptr<OHOS::Surface> consumer_ = nullptr;
+    sptr<OHOS::Surface> produceSurface_ = nullptr;
     bool isConsumerStart_ = false;
     bool isDump_ = false;
     bool isSystemUI2_ = false;

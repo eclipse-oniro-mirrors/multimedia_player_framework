@@ -228,12 +228,18 @@ int32_t ScreenCaptureClient::StartScreenCaptureWithSurface(sptr<Surface> surface
     return screenCaptureProxy_->StartScreenCaptureWithSurface(surface, isPrivacyAuthorityEnabled);
 }
 
-
 int32_t ScreenCaptureClient::StopScreenCapture()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
     return screenCaptureProxy_->StopScreenCapture();
+}
+
+int32_t ScreenCaptureClient::PresentPicker()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
+    return screenCaptureProxy_->PresentPicker();
 }
 
 int32_t ScreenCaptureClient::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type)

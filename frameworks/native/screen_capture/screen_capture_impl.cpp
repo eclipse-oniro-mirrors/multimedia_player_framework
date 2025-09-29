@@ -390,6 +390,14 @@ int32_t ScreenCaptureImpl::StopScreenRecording()
     }
 }
 
+int32_t ScreenCaptureImpl::PresentPicker()
+{
+    MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " PresentPicker in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_UNKNOWN,
+        "screen capture service does not exist.");
+    return screenCaptureService_->PresentPicker();
+}
+
 int32_t ScreenCaptureImpl::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audiobuffer, AudioCaptureSourceType type)
 {
     MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " AcquireAudioBuffer in", FAKE_POINTER(this));

@@ -42,6 +42,7 @@ public:
     int32_t StartScreenCapture(bool isPrivacyAuthorityEnabled) override;
     int32_t StartScreenCaptureWithSurface(sptr<Surface> surface, bool isPrivacyAuthorityEnabled) override;
     int32_t StopScreenCapture() override;
+    int32_t PresentPicker() override;
     int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type) override;
     int32_t AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence,
                                int64_t &timestamp, OHOS::Rect &damage) override;
@@ -76,6 +77,7 @@ private:
     int32_t StartScreenCapture(MessageParcel &data, MessageParcel &reply);
     int32_t StartScreenCaptureWithSurface(MessageParcel &data, MessageParcel &reply);
     int32_t StopScreenCapture(MessageParcel &data, MessageParcel &reply);
+    int32_t PresentPicker(MessageParcel &data, MessageParcel &reply);
     int32_t SetListenerObject(MessageParcel &data, MessageParcel &reply);
     int32_t AcquireAudioBuffer(MessageParcel &data, MessageParcel &reply);
     int32_t AcquireVideoBuffer(MessageParcel &data, MessageParcel &reply);

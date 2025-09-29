@@ -96,6 +96,7 @@ public:
         SET_STRATEGY = 27,
         UPDATE_SURFACE = 28,
         SET_CAPTURE_AREA = 29,
+        PRESENT_PICKER = 30,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardScreenCaptureService");

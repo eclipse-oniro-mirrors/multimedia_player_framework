@@ -84,6 +84,7 @@ int32_t ScreenCaptureServiceStub::Init()
     screenCaptureStubFuncs_[SET_STRATEGY] = &ScreenCaptureServiceStub::SetScreenCaptureStrategy;
     screenCaptureStubFuncs_[UPDATE_SURFACE] = &ScreenCaptureServiceStub::UpdateSurface;
     screenCaptureStubFuncs_[SET_CAPTURE_AREA] = &ScreenCaptureServiceStub::SetCaptureArea;
+    screenCaptureStubFuncs_[PRESENT_PICKER] = &ScreenCaptureServiceStub::PresentPicker;
 
     return MSERR_OK;
 }
@@ -220,6 +221,13 @@ int32_t ScreenCaptureServiceStub::StopScreenCapture()
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     return screenCaptureServer_->StopScreenCapture();
+}
+
+int32_t ScreenCaptureServiceStub::PresentPicker()
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    return screenCaptureServer_->PresentPicker();
 }
 
 int32_t ScreenCaptureServiceStub::SetListenerObject(const sptr<IRemoteObject> &object)
@@ -613,6 +621,16 @@ int32_t ScreenCaptureServiceStub::StopScreenCapture(MessageParcel &data, Message
         "screen capture server is nullptr");
     (void)data;
     int32_t ret = StopScreenCapture();
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServiceStub::PresentPicker(MessageParcel &data, MessageParcel &reply)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    (void)data;
+    int32_t ret = PresentPicker();
     reply.WriteInt32(ret);
     return MSERR_OK;
 }

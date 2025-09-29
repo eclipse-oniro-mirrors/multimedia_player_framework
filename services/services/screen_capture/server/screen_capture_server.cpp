@@ -79,6 +79,8 @@ static const std::string ICON_PATH_MIC_OFF = "/etc/screencapture/mic_off.svg";
 static const std::string ICON_PATH_STOP = "/etc/screencapture/light.svg";
 static const std::string BACK_GROUND_COLOR = "#E84026";
 static const std::string SYS_SCR_RECR_KEY = "const.multimedia.screencapture.screenrecorderbundlename";
+static const std::string VIRTUAL_SCREENNAME_SCREEN_CAPTRURE = "screeen_capture";
+static const std::string VIRTUAL_SCREENNAME_SCREEN_CAPTRURE_FILE = "screeen_capture_file";
 #ifdef PC_STANDARD
 static const std::string SELECT_ABILITY_NAME = "SelectWindowAbility";
 static const int32_t SELECT_WINDOW_MISSION_ID_NUM_MAX = 2;
@@ -878,21 +880,7 @@ void ScreenCaptureServer::PrepareSelectWindow(Json::Value &root)
     if (root.type() != Json::objectValue) {
         return;
     }
-    const Json::Value displayIdJson = root["displayId"];
-    if (!displayIdJson.isNull() && displayIdJson.isInt() && displayIdJson.asInt64() >= 0) {
-        uint64_t displayId = static_cast<uint64_t>(displayIdJson.asInt64());
-        MEDIA_LOGI("Report Select DisplayId: %{public}" PRIu64, displayId);
-        SetDisplayId(displayId);
-        // 手机模式 missionId displayId 均为-1
-        SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_SCREEN, -1);
-    }
-    const Json::Value missionIdJson = root["missionId"];
-    if (!missionIdJson.isNull() && missionIdJson.isInt() && missionIdJson.asInt() >= 0) {
-        int32_t missionId = missionIdJson.asInt();
-        MEDIA_LOGI("Report Select MissionId: %{public}d", missionId);
-        SetMissionId(missionId);
-        SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_WINDOW, missionId);
-    }
+    HandleSetDisplayIdAndMissionId(root);
     ScreenCaptureUserSelectionInfo selectionInfo = {0, static_cast<uint64_t>(0)};
     PrepareUserSelectionInfo(selectionInfo);
     NotifyUserSelected(selectionInfo);
@@ -905,7 +893,14 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
     std::shared_ptr<ScreenCaptureServer> server = GetScreenCaptureServerByIdWithLock(sessionId);
     CHECK_AND_RETURN_RET_LOG(server != nullptr, MSERR_UNKNOWN,
         "ReportAVScreenCaptureUserChoice failed to get instance, sessionId: %{public}d", sessionId);
+    MEDIA_LOGI("ReportAVScreenCaptureUserChoice captureState_ is %{public}d", server->captureState_);
+
     Json::Value root;
+#ifdef PC_STANDARD
+    if (server->isPresentPicker && server->captureState_ == AVScreenCaptureState::STARTED) {
+        return server->HandlePresentPickerWindowCase(root, content);
+    }
+#endif
     if (server->captureState_ == AVScreenCaptureState::POPUP_WINDOW) {
         return server->HandlePopupWindowCase(root, content);
     } else if (server->GetSCServerDataType() == DataType::ORIGINAL_STREAM &&
@@ -971,6 +966,84 @@ int32_t ScreenCaptureServer::HandleStreamDataCase(Json::Value& root, const std::
     UpdateLiveViewPrivacy();
     SetupPublishRequest(request);
     return NotificationHelper::PublishNotification(request);
+}
+
+int32_t ScreenCaptureServer::HandlePresentPickerWindowCase(Json::Value root, const std::string &content)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    std::string choice = "false";
+    GetChoiceFromJson(root, content, std::string("choice"), choice);
+    GetValueFromJson(root, content, std::string("checkBoxSelected"), checkBoxSelected_);
+    systemPrivacyProtectionSwitch_ = checkBoxSelected_;
+    appPrivacyProtectionSwitch_ = checkBoxSelected_;
+    if (showShareSystemAudioBox_) {
+        GetValueFromJson(root, content, std::string("isInnerAudioBoxSelected"), isInnerAudioBoxSelected_);
+    }
+    MEDIA_LOGI("HandlePresentPickerWindowCase showShareSystemAudioBox: %{public}d, isInnerAudioBoxSelected: %{public}d,"
+        " dataType: %{public}d, choice: %{public}s,  mode: %{public}d", showShareSystemAudioBox_,
+        isInnerAudioBoxSelected_, captureConfig_.dataType, choice.c_str(), captureConfig_.captureMode);
+
+    if (USER_CHOICE_ALLOW.compare(choice) != 0) {
+        MEDIA_LOGI("ReportAVScreenCaptureUserChoice user choice is not allow or deny");
+        return MSERR_OK;
+    }
+    if (root.type() != Json::objectValue) {
+        MEDIA_LOGE("HandlePresentPickerWindowCase error parsing");
+        return MSERR_INVALID_VAL;
+    }
+    missionIds_.clear();
+    HandleSetDisplayIdAndMissionId(root);
+    DestoryVirtualScreen();
+    int32_t ret = MSERR_OK;
+    if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
+        sptr<OHOS::Surface> consumerSurface = isSurfaceMode_ ? surface_ : producerSurface_;
+        ret = CreateVirtualScreen(VIRTUAL_SCREENNAME_SCREEN_CAPTRURE, consumerSurface);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "CreateVirtualScreen surface failed, ret: %{public}d", ret);
+    } else if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
+        ret = CreateVirtualScreen(VIRTUAL_SCREENNAME_SCREEN_CAPTRURE_FILE, consumer_);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "CreateVirtualScreen file failed, ret: %{public}d", ret);
+    } else {
+        MEDIA_LOGE("HandlePresentPickerWindowCase dataType is invalid");
+        return MSERR_UNKNOWN;
+    }
+    return ret;
+}
+
+Void ScreenCaptureServer::HandleSetDisplayIdAndMissionId(Json::Value &root)
+{
+    MEDIA_LOGI("ScreenCaptureServer::HandleSetDisplayIdAndMissionId start");
+    const Json::Value displayIdJson = root["displayId"];
+    if (!displayIdJson.isNull() && displayIdJson.isInt() && displayIdJson.asInt64() >= 0) {
+        uint64_t displayId = static_cast<uint64_t>(displayIdJson.asInt64());
+        MEDIA_LOGI("Report Select DisplayId: %{public}" PRIu64, displayId);
+        SetDisplayId(displayId);
+        // 手机模式 missionId displayId 均为-1
+        SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_SCREEN, -1);
+    }
+    const Json::Value missionIdJson = root["missionId"];
+    if (!missionIdJson.isNull() && missionIdJson.isInt() && missionIdJson.asInt() >= 0) {
+        int32_t missionId = missionIdJson.asInt();
+        MEDIA_LOGI("Report Select MissionId: %{public}d", missionId);
+        SetMissionId(missionId);
+        SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_WINDOW, missionId);
+    }
+}
+
+int32_t ScreenCaptureServer::PresentPicker()
+{
+#ifdef PC_STANDARD 
+    if (captureState_ != AVScreenCaptureState::STARTED) {
+        MEDIA_LOGE("PresentPicker captureState_ is not STARTED, not allowed.");
+        return MSERR_INVALID_OPERATION;
+    }
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " PresentPicker start.", FAKE_POINTER(this));
+    MediaTrace trace("ScreenCaptureServer::PresentPicker");
+    std::lock_guard<std::mutex> lock(mutex_);
+    isPresentPicker = true;
+    int32_t ret = StartPrivacyWindow();
+    return ret;
+#else
+    return MSERR_INVALID_OPERATION;
 }
 
 int32_t ScreenCaptureServer::GetAVScreenCaptureConfigurableParameters(int32_t sessionId, std::string &resultStr)
