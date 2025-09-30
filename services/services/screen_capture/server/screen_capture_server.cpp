@@ -1985,13 +1985,13 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
 {
     CHECK_AND_RETURN(screenCaptureCb_ != nullptr);
     MediaTrace trace("ScreenCaptureServer::PostStartScreenCapture.");
-#ifdef PC_STANDARD
-    SetTimeoutScreenoffDisableLock(false);
-#endif
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " PostStartScreenCapture start, isSuccess:%{public}s, "
         "dataType:%{public}d.", FAKE_POINTER(this), isSuccess ? "true" : "false", captureConfig_.dataType);
     if (isSuccess) {
         MEDIA_LOGI("PostStartScreenCapture handle success");
+#ifdef PC_STANDARD
+        SetTimeoutScreenoffDisableLock(false);
+#endif
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
         if (isPrivacyAuthorityEnabled_ &&
             GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
