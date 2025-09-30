@@ -1985,6 +1985,9 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
 {
     CHECK_AND_RETURN(screenCaptureCb_ != nullptr);
     MediaTrace trace("ScreenCaptureServer::PostStartScreenCapture.");
+#ifdef PC_STANDARD
+    SetTimeoutScreenoffDisableLock(false);
+#endif
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " PostStartScreenCapture start, isSuccess:%{public}s, "
         "dataType:%{public}d.", FAKE_POINTER(this), isSuccess ? "true" : "false", captureConfig_.dataType);
     if (isSuccess) {
@@ -2860,11 +2863,6 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
         }
     }
     MEDIA_LOGI("CreateVirtualScreen success, screenId: %{public}" PRIu64, virtualScreenId_);
-
-#ifdef PC_STANDARD
-    SetTimeoutScreenoffDisableLock(false);
-#endif
-
     return PrepareVirtualScreenMirror();
 }
 
@@ -2998,11 +2996,8 @@ void ScreenCaptureServer::SetTimeoutScreenoffDisableLock(bool lockScreen)
         MEDIA_LOGI("user have not the TIMEOUT_SCREENOFF_DISABLE_LOCK!");
         return;
     }
-
-    MEDIA_LOGI("SetTimeoutScreenoffDisableLock PowerMgrClient::LockScreenAfterTimingOutWithAppid begin");
     auto powerErrors = OHOS::PowerMgr::PowerMgrClient::GetInstance()
-                                .LockScreenAfterTimingOutWithAppid(appInfo_.appTokenId, lockScreen);
-    MEDIA_LOGI("SetTimeoutScreenoffDisableLock PowerMgrClient::LockScreenAfterTimingOutWithAppid end");
+                                .LockScreenAfterTimingOutWithAppid(sessionId_, lockScreen);
     if (powerErrors == OHOS::PowerMgr::PowerErrors::ERR_OK) {
         MEDIA_LOGI("SetTimeoutScreenoffDisableLock success");
     } else {
@@ -3154,11 +3149,6 @@ void ScreenCaptureServer::DestroyVirtualScreen()
             ScreenManager::GetInstance().StopMirror(screenIds);
         }
         ScreenManager::GetInstance().DestroyVirtualScreen(virtualScreenId_);
-
-#ifdef PC_STANDARD
-        SetTimeoutScreenoffDisableLock(true);
-#endif
-
         virtualScreenId_ = SCREEN_ID_INVALID;
         isConsumerStart_ = false;
     }
@@ -4161,6 +4151,9 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
     MediaTrace trace("ScreenCaptureServer::PostStopScreenCapture");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " PostStopScreenCapture start, stateCode:%{public}d.",
         FAKE_POINTER(this), stateCode);
+#ifdef PC_STANDARD
+    SetTimeoutScreenoffDisableLock(true);
+#endif
     SetSystemScreenRecorderStatus(false);
     ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureFinished(appInfo_.appPid);
     if (screenCaptureCb_ != nullptr && stateCode != AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID) {
