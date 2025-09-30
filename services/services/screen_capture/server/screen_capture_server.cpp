@@ -84,6 +84,7 @@ static const std::string SYS_SCR_RECR_KEY = "const.multimedia.screencapture.scre
 static const std::string SELECT_ABILITY_NAME = "SelectWindowAbility";
 static const int32_t SELECT_WINDOW_MISSION_ID_NUM_MAX = 2;
 static const std::string PERM_CUST_SCR_REC = "ohos.permission.CUSTOM_SCREEN_RECORDING";
+static const std::string TIMEOUT_SCREENOFF_DISABLE_LOCK = "ohos.permission.TIMEOUT_SCREENOFF_DISABLE_LOCK";
 #endif
 static const int32_t SVG_HEIGHT = 80;
 static const int32_t SVG_WIDTH = 80;
@@ -2991,7 +2992,7 @@ void ScreenCaptureServer::SetTimeoutScreenoffDisableLock(bool lockScreen)
 {
     MEDIA_LOGI("SetTimeoutScreenoffDisableLock Start lockScreen %{public}d", lockScreen);
     int result = Security::AccessToken::AccessTokenKit::VerifyAccessToken(appInfo_.appTokenId,
-        "ohos.permission.TIMEOUT_SCREENOFF_DISABLE_LOCK");
+        TIMEOUT_SCREENOFF_DISABLE_LOCK);
     if (result != Security::AccessToken::PERMISSION_GRANTED) {
         MEDIA_LOGI("user have not the TIMEOUT_SCREENOFF_DISABLE_LOCK!");
         return;
