@@ -897,7 +897,7 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
 
     Json::Value root;
 #ifdef PC_STANDARD
-    if (server->isPresentPicker_ && server->captureState_ == AVScreenCaptureState::STARTED) {
+    if (IsPickerPopUp() && server->isPresentPicker_ && server->captureState_ == AVScreenCaptureState::STARTED) {
         return server->HandlePresentPickerWindowCase(root, content);
     }
 #endif
@@ -1032,16 +1032,19 @@ void ScreenCaptureServer::HandleSetDisplayIdAndMissionId(Json::Value &root)
 int32_t ScreenCaptureServer::PresentPicker()
 {
 #ifdef PC_STANDARD
-    if (captureState_ != AVScreenCaptureState::STARTED) {
-        MEDIA_LOGE("PresentPicker captureState_ is not STARTED, not allowed.");
-        return MSERR_INVALID_OPERATION;
+    if (IsPickerPopUp()) {
+        if (captureState_ != AVScreenCaptureState::STARTED) {
+            MEDIA_LOGE("PresentPicker captureState_ is not STARTED, not allowed.");
+            return MSERR_INVALID_OPERATION;
+        }
+        MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " PresentPicker start.", FAKE_POINTER(this));
+        MediaTrace trace("ScreenCaptureServer::PresentPicker");
+        std::lock_guard<std::mutex> lock(mutex_);
+        isPresentPicker_ = true;
+        int32_t ret = StartPrivacyWindow();
+        return ret;
     }
-    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " PresentPicker start.", FAKE_POINTER(this));
-    MediaTrace trace("ScreenCaptureServer::PresentPicker");
-    std::lock_guard<std::mutex> lock(mutex_);
-    isPresentPicker_ = true;
-    int32_t ret = StartPrivacyWindow();
-    return ret;
+    return MSERR_INVALID_OPERATION;
 #endif
     return MSERR_INVALID_OPERATION;
 }
