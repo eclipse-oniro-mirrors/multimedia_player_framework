@@ -696,7 +696,7 @@ RetInfo AVScreenCaptureNapi::StopRecording()
 RetInfo AVScreenCaptureNapi::PresentPicker()
 {
     if (screenCapture_ == nullptr) {
-        return RetInfo(MSERR_EXT_API9_IO, "screenCapture is null");
+        return RetInfo(MSERR_EXT_API9_IO, "screenCapture_ is null");
     }
     int32_t ret = screenCapture_->PresentPicker();
     CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(ret, "PresentPicker", ""));
