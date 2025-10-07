@@ -49,6 +49,7 @@
 #include "want_agent_helper.h"
 #include "common_event_manager.h"
 #ifdef PC_STANDARD
+#include "power_mgr_client.h"
 #include <parameters.h>
 #endif
 
@@ -83,6 +84,7 @@ static const std::string SYS_SCR_RECR_KEY = "const.multimedia.screencapture.scre
 static const std::string SELECT_ABILITY_NAME = "SelectWindowAbility";
 static const int32_t SELECT_WINDOW_MISSION_ID_NUM_MAX = 2;
 static const std::string PERM_CUST_SCR_REC = "ohos.permission.CUSTOM_SCREEN_RECORDING";
+static const std::string TIMEOUT_SCREENOFF_DISABLE_LOCK = "ohos.permission.TIMEOUT_SCREENOFF_DISABLE_LOCK";
 #endif
 static const int32_t SVG_HEIGHT = 80;
 static const int32_t SVG_WIDTH = 80;
@@ -1989,6 +1991,9 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
         "dataType:%{public}d.", FAKE_POINTER(this), isSuccess ? "true" : "false", captureConfig_.dataType);
     if (isSuccess) {
         MEDIA_LOGI("PostStartScreenCapture handle success");
+#ifdef PC_STANDARD
+        SetTimeoutScreenoffDisableLock(false);
+#endif
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
         if (isPrivacyAuthorityEnabled_ &&
             GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
@@ -2983,6 +2988,24 @@ bool ScreenCaptureServer::IsPickerPopUp()
     return !isRegionCapture_ &&
            (captureConfig_.captureMode == CAPTURE_SPECIFIED_SCREEN || CheckCaptureSpecifiedWindowForSelectWindow());
 }
+
+void ScreenCaptureServer::SetTimeoutScreenoffDisableLock(bool lockScreen)
+{
+    MEDIA_LOGI("SetTimeoutScreenoffDisableLock Start lockScreen %{public}d", lockScreen);
+    int result = Security::AccessToken::AccessTokenKit::VerifyAccessToken(appInfo_.appTokenId,
+        TIMEOUT_SCREENOFF_DISABLE_LOCK);
+    if (result != Security::AccessToken::PERMISSION_GRANTED) {
+        MEDIA_LOGI("user have not the TIMEOUT_SCREENOFF_DISABLE_LOCK!");
+        return;
+    }
+    auto powerErrors = OHOS::PowerMgr::PowerMgrClient::GetInstance()
+                                .LockScreenAfterTimingOutWithAppid(sessionId_, lockScreen);
+    if (powerErrors == OHOS::PowerMgr::PowerErrors::ERR_OK) {
+        MEDIA_LOGI("SetTimeoutScreenoffDisableLock success");
+    } else {
+        MEDIA_LOGE("SetTimeoutScreenoffDisableLock error %{public}d", powerErrors);
+    }
+}
 #endif
 
 int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForWindow(sptr<Rosen::Display> defaultDisplay,
@@ -3151,7 +3174,6 @@ VirtualScreenOption ScreenCaptureServer::InitVirtualScreenOption(const std::stri
     MediaTrace trace("ScreenCaptureServer::InitVirtualScreenOption");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " InitVirtualScreenOption start, name:%{public}s.",
         FAKE_POINTER(this), name.c_str());
-    std::unique_lock<std::shared_mutex> write_lock(rw_lock_);
     VirtualScreenOption virScrOption = {
         .name_ = name,
         .width_ = captureConfig_.videoInfo.videoCapInfo.videoFrameWidth,
@@ -4131,6 +4153,9 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
     MediaTrace trace("ScreenCaptureServer::PostStopScreenCapture");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " PostStopScreenCapture start, stateCode:%{public}d.",
         FAKE_POINTER(this), stateCode);
+#ifdef PC_STANDARD
+    SetTimeoutScreenoffDisableLock(true);
+#endif
     SetSystemScreenRecorderStatus(false);
     ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureFinished(appInfo_.appPid);
     if (screenCaptureCb_ != nullptr && stateCode != AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID) {

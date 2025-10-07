@@ -307,6 +307,7 @@ void ScreenCaptureUnitTest::SetAccessTokenPermission()
     permission.push_back("ohos.permission.MICROPHONE");
     permission.push_back("ohos.permission.READ_MEDIA");
     permission.push_back("ohos.permission.WRITE_MEDIA");
+    permission.push_back("ohos.permission.TIMEOUT_SCREENOFF_DISABLE_LOCK");
     uint64_t tokenId = 0;
 
     auto perms = std::make_unique<const char* []>(permission.size());
@@ -339,16 +340,8 @@ void ScreenCaptureUnitTest::SetAccessTokenPermission()
     }
 }
 
-void ScreenCaptureUnitTest::SetHapPermission()
+HapPolicyParams SetHapPolicyParams()
 {
-    HapInfoParams info = {
-        .userID = 100, // 100 UserID
-        .bundleName = "com.ohos.test.screencapturetdd",
-        .instIndex = 0, // 0 index
-        .appIDDesc = "com.ohos.test.screencapturetdd",
-        .isSystemApp = true
-    };
-
     HapPolicyParams policy = {
         .apl = APL_SYSTEM_BASIC,
         .domain = "test.domain.screencapturetdd",
@@ -381,9 +374,30 @@ void ScreenCaptureUnitTest::SetHapPermission()
                 .resDeviceID = { "local" },
                 .grantStatus = { PermissionState::PERMISSION_GRANTED },
                 .grantFlags = { 1 }
+            },
+            {
+                .permissionName = "ohos.permission.TIMEOUT_SCREENOFF_DISABLE_LOCK",
+                .isGeneral = true,
+                .resDeviceID = { "local" },
+                .grantStatus = { PermissionState::PERMISSION_GRANTED },
+                .grantFlags = { 1 }
             }
         }
     };
+    return policy;
+}
+
+void ScreenCaptureUnitTest::SetHapPermission()
+{
+    HapInfoParams info = {
+        .userID = 100, // 100 UserID
+        .bundleName = "com.ohos.test.screencapturetdd",
+        .instIndex = 0, // 0 index
+        .appIDDesc = "com.ohos.test.screencapturetdd",
+        .isSystemApp = true
+    };
+
+    HapPolicyParams policy = SetHapPolicyParams();
     AccessTokenIDEx tokenIdEx = { 0 };
     tokenIdEx = AccessTokenKit::AllocHapToken(info, policy);
     int ret = SetSelfTokenID(tokenIdEx.tokenIDEx);
