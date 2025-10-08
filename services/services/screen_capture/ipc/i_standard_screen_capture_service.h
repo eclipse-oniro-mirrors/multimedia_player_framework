@@ -58,6 +58,7 @@ public:
     virtual int32_t ReleaseAudioBuffer(AudioCaptureSourceType type) = 0;
     virtual int32_t ReleaseVideoBuffer() = 0;
     virtual int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) = 0;
+    virtual int32_t SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config) = 0;
     virtual int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) = 0;
     virtual int32_t UpdateSurface(sptr<Surface> surface) = 0;
     virtual int32_t SetCaptureArea(uint64_t displayId, OHOS::Rect area) = 0;
@@ -96,6 +97,7 @@ public:
         SET_STRATEGY = 27,
         UPDATE_SURFACE = 28,
         SET_CAPTURE_AREA = 29,
+        SET_HIGH_LIGHT_MODE = 30,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardScreenCaptureService");

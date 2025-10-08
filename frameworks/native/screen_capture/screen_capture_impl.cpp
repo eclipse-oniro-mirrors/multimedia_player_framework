@@ -430,6 +430,14 @@ int32_t ScreenCaptureImpl::ReleaseVideoBuffer()
     return screenCaptureService_->ReleaseVideoBuffer();
 }
 
+int32_t ScreenCaptureImpl::SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config)
+{
+    MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " SetCaptureAreaHighlight in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_NO_MEMORY,
+        "screen capture service does not exist.");
+    return screenCaptureService_->SetCaptureAreaHighlight(config);
+}
+
 int32_t ScreenCaptureImpl::SetScreenCaptureStrategy(ScreenCaptureStrategy strategy)
 {
     MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " SetScreenCaptureStrategy in", FAKE_POINTER(this));

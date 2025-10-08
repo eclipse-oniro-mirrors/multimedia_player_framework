@@ -472,3 +472,19 @@ int32_t ScreenCaptureCapiMock::StrategyForFillMode(AVScreenCaptureFillMode value
     UNITTEST_CHECK_AND_RETURN_RET_LOG(strategy_ != nullptr, MSERR_UNKNOWN, "strategy_ == nullptr");
     return OH_AVScreenCapture_StrategyForFillMode(strategy_, static_cast<OH_AVScreenCapture_FillMode>(value));
 }
+
+OH_AVScreenCaptureHighlightConfig ScreenCaptureCapiMock::HighlightConfigConvert(AVScreenCaptureHighlightConfig config)
+{
+    OH_AVScreenCaptureHighlightConfig highlightConfig;
+    highlightConfig.lineThickness = config.lineThickness;
+    highlightConfig.lineColor = config.lineColor;
+    highlightConfig.mode = static_cast<OH_ScreenCaptureHighlightMode>(config.mode);
+    return highlightConfig;
+}
+
+int32_t ScreenCaptureCapiMock::SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_UNKNOWN, "screenCapture_ == nullptr");
+    OH_AVScreenCaptureHighlightConfig highlightConfig = HighlightConfigConvert(config);
+    return OH_AVScreenCapture_SetCaptureAreaHighlight(screenCapture_, highlightConfig);
+}
