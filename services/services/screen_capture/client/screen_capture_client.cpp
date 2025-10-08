@@ -45,7 +45,7 @@ ScreenCaptureClient::ScreenCaptureClient(const sptr<IStandardScreenCaptureServic
 int32_t ScreenCaptureClient::CreateListenerObject()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    listenerStub_.reset(new(std::nothrow) ScreenCaptureListenerStub());
+    listenerStub_ = new(std::nothrow) ScreenCaptureListenerStub();
     CHECK_AND_RETURN_RET_LOG(listenerStub_ != nullptr, MSERR_NO_MEMORY,
         "failed to new ScreenCaptureListenerStub object");
     CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY,

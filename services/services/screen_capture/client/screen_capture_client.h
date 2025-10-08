@@ -64,7 +64,7 @@ public:
 
 private:
     sptr<IStandardScreenCaptureService> screenCaptureProxy_ = nullptr;
-    std::unique_ptr<ScreenCaptureListenerStub> listenerStub_ = nullptr;
+    sptr<ScreenCaptureListenerStub> listenerStub_ = nullptr;
     std::shared_ptr<ScreenCaptureCallBack> callback_ = nullptr;
     std::mutex mutex_;
 };
