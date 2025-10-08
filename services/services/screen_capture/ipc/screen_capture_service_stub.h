@@ -60,6 +60,7 @@ public:
     int32_t SetPickerMode(PickerMode pickerMode) override;
     int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) override;
     int32_t UpdateSurface(sptr<Surface> surface) override;
+    int32_t SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config) override;
     int32_t SetCaptureArea(uint64_t displayId, OHOS::Rect area) override;
 
 private:
@@ -93,6 +94,7 @@ private:
     int32_t ExcludePickerWindows(MessageParcel &data, MessageParcel &reply);
     int32_t SetPickerMode(MessageParcel &data, MessageParcel &reply);
     int32_t SetScreenCaptureStrategy(MessageParcel &data, MessageParcel &reply);
+    int32_t SetCaptureAreaHighlight(MessageParcel &data, MessageParcel &reply);
     int32_t UpdateSurface(MessageParcel &data, MessageParcel &reply);
     int32_t SetCaptureArea(MessageParcel &data, MessageParcel &reply);
 

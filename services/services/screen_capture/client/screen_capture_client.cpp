@@ -295,6 +295,13 @@ int32_t ScreenCaptureClient::SetScreenCaptureStrategy(ScreenCaptureStrategy stra
     CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
     return screenCaptureProxy_->SetScreenCaptureStrategy(strategy);
 }
+
+int32_t ScreenCaptureClient::SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
+    return screenCaptureProxy_->SetCaptureAreaHighlight(config);
+}
  
 int32_t ScreenCaptureClient::UpdateSurface(sptr<Surface> surface)
 {

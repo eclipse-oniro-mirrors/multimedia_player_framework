@@ -86,6 +86,7 @@ int32_t ScreenCaptureServiceStub::Init()
     screenCaptureStubFuncs_[SET_STRATEGY] = &ScreenCaptureServiceStub::SetScreenCaptureStrategy;
     screenCaptureStubFuncs_[UPDATE_SURFACE] = &ScreenCaptureServiceStub::UpdateSurface;
     screenCaptureStubFuncs_[SET_CAPTURE_AREA] = &ScreenCaptureServiceStub::SetCaptureArea;
+    screenCaptureStubFuncs_[SET_HIGH_LIGHT_MODE] = &ScreenCaptureServiceStub::SetCaptureAreaHighlight;
 
     return MSERR_OK;
 }
@@ -337,6 +338,13 @@ int32_t ScreenCaptureServiceStub::SetScreenCaptureStrategy(ScreenCaptureStrategy
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     return screenCaptureServer_->SetScreenCaptureStrategy(strategy);
+}
+
+int32_t ScreenCaptureServiceStub::SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    return screenCaptureServer_->SetCaptureAreaHighlight(config);
 }
 
 int32_t ScreenCaptureServiceStub::SetCaptureArea(uint64_t displayId, OHOS::Rect area)
@@ -751,6 +759,19 @@ int32_t ScreenCaptureServiceStub::DestroyStub(MessageParcel &data, MessageParcel
 {
     (void)data;
     reply.WriteInt32(DestroyStub());
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServiceStub::SetCaptureAreaHighlight(MessageParcel &data, MessageParcel &reply)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    AVScreenCaptureHighlightConfig config;
+    config.lineThickness = data.ReadUint32();
+    config.lineColor = data.ReadUint32();
+    config.mode = static_cast<ScreenCaptureHighlightMode>(data.ReadInt32());
+    int32_t ret = SetCaptureAreaHighlight(config);
+    reply.WriteInt32(ret);
     return MSERR_OK;
 }
 

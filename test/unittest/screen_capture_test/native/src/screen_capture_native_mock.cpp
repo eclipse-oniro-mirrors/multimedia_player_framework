@@ -314,5 +314,10 @@ int32_t ScreenCaptureNativeMock::StrategyForFillMode(AVScreenCaptureFillMode val
     strategy_.fillMode = value;
     return MSERR_OK;
 }
+
+int32_t ScreenCaptureNativeMock::SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config)
+{
+    return MSERR_OK;
+}
 } // namespace Media
 } // namespace OHOS

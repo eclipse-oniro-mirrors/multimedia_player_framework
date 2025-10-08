@@ -99,6 +99,7 @@ public:
     int32_t ExcludePickerWindows(std::vector<int32_t> &windowIDsVec) override;
     int32_t SetPickerMode(PickerMode pickerMode) override;
     int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) override;
+    int32_t SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config) override;
     int32_t UpdateSurface(sptr<Surface> surface) override;
     int32_t SetCaptureArea(uint64_t displayId, OHOS::Rect area) override;
 
@@ -167,6 +168,10 @@ private:
     int32_t InitRecorderMix();
     int32_t InitRecorderInner();
     int32_t InitRecorder();
+    OutlineShape ConvertToOutlineShape(ScreenCaptureHighlightMode mode);
+    void UpdateHighlightOutline(bool isStarted);
+    void SetHighlightConfigForWindowManager(bool isStarted,
+        Rosen::OutlineParams &outlineParams);
     int32_t StartScreenCaptureFile();
     int32_t StartScreenCaptureStream();
     int32_t StartAudioCapture();

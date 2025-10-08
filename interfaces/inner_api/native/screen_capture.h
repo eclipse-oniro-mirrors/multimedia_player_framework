@@ -166,6 +166,11 @@ enum class PickerMode : int32_t {
     SCREEN_AND_WINDOW = 2,
 };
 
+enum class ScreenCaptureHighlightMode : int32_t {
+    HIGHLIGHT_MODE_CLOSED = 0,
+    HIGHLIGHT_MODE_CORNER_WRAP = 1,
+};
+
 struct ScreenCaptureContentFilter {
     std::set<AVScreenCaptureFilterableAudioContent> filteredAudioContents;
     std::vector<uint64_t> windowIDsVec;
@@ -201,6 +206,12 @@ struct ScreenCaptureStrategy {
     AVScreenCaptureFillMode fillMode = AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO;
 };
 
+struct AVScreenCaptureHighlightConfig {
+    uint32_t lineThickness = 0;
+    uint32_t lineColor = 0;
+    ScreenCaptureHighlightMode mode = ScreenCaptureHighlightMode::HIGHLIGHT_MODE_CLOSED;
+};
+
 struct VideoCaptureInfo {
     uint64_t displayId = 0;
     std::list<int32_t> taskIDs;
@@ -234,6 +245,7 @@ struct AVScreenCaptureConfig {
     VideoInfo videoInfo;
     RecorderInfo recorderInfo;
     ScreenCaptureStrategy strategy;
+    AVScreenCaptureHighlightConfig highlightConfig;
 };
 
 struct AudioBuffer {
@@ -342,6 +354,7 @@ public:
     virtual int32_t ExcludePickerWindows(std::vector<int32_t> &windowIDsVec) = 0;
     virtual int32_t SetPickerMode(PickerMode pickerMode) = 0;
     virtual int32_t SetPrivacyAuthorityEnabled() = 0;
+    virtual int32_t SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config) = 0;
     virtual int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) = 0;
     virtual int32_t UpdateSurface(sptr<Surface> surface) = 0;
     virtual int32_t SetCaptureArea(uint64_t displayId, Rect area) = 0;

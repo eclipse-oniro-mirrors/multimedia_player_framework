@@ -70,6 +70,7 @@ public:
     MOCK_METHOD(int32_t, SetScreenCaptureStrategy, (ScreenCaptureStrategy strategy), (override));
     MOCK_METHOD(int32_t, UpdateSurface, (sptr<Surface> surface), (override));
     MOCK_METHOD(int32_t, SetCaptureArea, (uint64_t displayId, OHOS::Rect area), (override));
+    MOCK_METHOD(int32_t, SetCaptureAreaHighlight, (AVScreenCaptureHighlightConfig config), (override));
     MOCK_METHOD(int32_t, SetCaptureModeInner, (MessageParcel &data, MessageParcel &reply));
     MOCK_METHOD(int32_t, SetDataTypeInner, (MessageParcel &data, MessageParcel &reply));
     MOCK_METHOD(int32_t, SetRecorderInfoInner, (MessageParcel &data, MessageParcel &reply));
@@ -98,6 +99,7 @@ public:
     MOCK_METHOD(int32_t, SetScreenCaptureStrategyInner, (MessageParcel &data, MessageParcel &reply));
     MOCK_METHOD(int32_t, UpdateSurfaceInner, (MessageParcel &data, MessageParcel &reply));
     MOCK_METHOD(int32_t, SetCaptureAreaInner, (MessageParcel &data, MessageParcel &reply));
+    MOCK_METHOD(int32_t, SetCaptureAreaHighlightInner, (MessageParcel &data, MessageParcel &reply));
     MOCK_METHOD(int32_t, ReleaseInner, (MessageParcel &data, MessageParcel &reply));
     MOCK_METHOD(int32_t, DestroyStubInner, (MessageParcel &data, MessageParcel &reply));
 };
