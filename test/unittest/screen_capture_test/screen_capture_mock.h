@@ -80,6 +80,7 @@ public:
     virtual int32_t StopScreenCapture() = 0;
     virtual int32_t StartScreenRecording() = 0;
     virtual int32_t StopScreenRecording() = 0;
+    virtual int32_t PresentPicker() = 0;
     virtual int32_t Release() = 0;
     virtual int32_t SetMicrophoneEnabled(bool isMicrophone) = 0;
     virtual int32_t SetCanvasRotation(bool canvasRotation) = 0;

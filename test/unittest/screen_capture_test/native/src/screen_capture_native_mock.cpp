@@ -161,6 +161,12 @@ int32_t ScreenCaptureNativeMock::Release()
     return screenCapture_->Release();
 }
 
+int32_t ScreenCaptureNativeMock::PresentPicker()
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    return screenCapture_->PresentPicker();
+}
+
 int32_t ScreenCaptureNativeMock::SetMicrophoneEnabled(bool isMicrophone)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");

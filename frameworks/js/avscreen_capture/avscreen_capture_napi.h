@@ -37,6 +37,7 @@ const std::string SET_MIC_ENABLE = "SetMicrophoneEnable";
 const std::string RELEASE = "Release";
 const std::string EXCLUDE_PICKER_WINDOWS = "ExcludePickerWindows";
 const std::string SET_PICKER_MODE = "SetPickerMode";
+const std::string PRESENT_PICKER = "PresentPicker";
 }
 constexpr int32_t AVSCREENCAPTURE_DEFAULT_AUDIO_BIT_RATE = 96000;
 constexpr int32_t AVSCREENCAPTURE_DEFAULT_AUDIO_CHANNELS = 2;
@@ -94,6 +95,10 @@ private:
      * stopRecording(): Promise<void>
      */
     static napi_value JsStopRecording(napi_env env, napi_callback_info info);
+    /**
+     * PresentPicker(): Promise<void>
+     */
+    static napi_value JsPresentPicker(napi_env env, napi_callback_info info);
     /**
      * skipPrivacyMode(windowIDs: Array<number>): Promise<void>
      */
@@ -164,6 +169,7 @@ private:
     RetInfo StartRecording();
     RetInfo StopRecording();
     RetInfo Release();
+    RetInfo PresentPicker();
 
     void ErrorCallback(int32_t errCode, const std::string &operate, const std::string &add = "");
     void StateCallback(const AVScreenCaptureStateCode &stateCode);

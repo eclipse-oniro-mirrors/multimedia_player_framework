@@ -638,6 +638,21 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForFillMode(
  */
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureAreaHighlight(struct OH_AVScreenCapture *capture,
     OH_AVScreenCaptureHighlightConfig config);
+
+/**
+ * @brief Displays system-level picker for screen capture source selection
+ * @details Activates system visual picker with two usage scenarios:
+ *          1. Initial capture configuration: Select source before starting capture
+ *          2. Dynamic source switching: Change capture target during active capture
+ * @param capture [in] Initialized screen capture instance
+ * @return Operation status codes:
+ *         - AV_SCREEN_CAPTURE_ERR_OK(0): Picker activated successfully
+ *         - AV_SCREEN_CAPTURE_ERR_INVALID_VAL: Null pointer or uninitialized instance
+ *         - AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT: Permission denied or system restriction
+ *         - AV_SCREEN_CAPTURE_ERR_SERVICE_DIED: System UI service unavailable
+ * @since 22
+ */
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_PresentPicker(struct OH_AVScreenCapture *capture);
 #ifdef __cplusplus
 }
 #endif

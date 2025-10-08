@@ -35,6 +35,7 @@ std::map<std::string, AVScreenCaptureNapi::AvScreenCaptureTaskqFunc> AVScreenCap
     {AVScreenCapturegOpt::START_RECORDING, &AVScreenCaptureNapi::StartRecording},
     {AVScreenCapturegOpt::STOP_RECORDING, &AVScreenCaptureNapi::StopRecording},
     {AVScreenCapturegOpt::RELEASE, &AVScreenCaptureNapi::Release},
+    {AVScreenCapturegOpt::PRESENT_PICKER, &AVScreenCaptureNapi::PresentPicker},
 };
 
 AVScreenCaptureNapi::AVScreenCaptureNapi()
@@ -67,6 +68,7 @@ napi_value AVScreenCaptureNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("off", JsCancelEventCallback),
         DECLARE_NAPI_FUNCTION("excludePickerWindows", JsExcludePickerWindows),
         DECLARE_NAPI_FUNCTION("setPickerMode", JsSetPickerMode),
+        DECLARE_NAPI_FUNCTION("presentPicker", JsPresentPicker),
     };
 
     napi_value constructor = nullptr;
@@ -404,6 +406,12 @@ napi_value AVScreenCaptureNapi::JsStopRecording(napi_env env, napi_callback_info
 {
     MediaTrace trace("AVScreenCapture::JsStopRecording");
     return ExecuteByPromise(env, info,  AVScreenCapturegOpt::STOP_RECORDING);
+}
+
+napi_value AVScreenCaptureNapi::JsPresentPicker(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVScreenCapture::JsPresentPicker");
+    return ExecuteByPromise(env, info,  AVScreenCapturegOpt::PRESENT_PICKER);
 }
 
 napi_status AVScreenCaptureNapi::GetWindowIDsVectorParams(std::vector<uint64_t> &windowIDsVec, napi_env env,
@@ -836,6 +844,16 @@ RetInfo AVScreenCaptureNapi::StopRecording()
 {
     int32_t ret = screenCapture_->StopScreenRecording();
     CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(ret, "StopRecording", ""));
+    return RetInfo(MSERR_EXT_API9_OK, "");
+}
+
+RetInfo AVScreenCaptureNapi::PresentPicker()
+{
+    if (screenCapture_ == nullptr) {
+        return RetInfo(MSERR_EXT_API9_IO, "screenCapture_ is null");
+    }
+    int32_t ret = screenCapture_->PresentPicker();
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(ret, "PresentPicker", ""));
     return RetInfo(MSERR_EXT_API9_OK, "");
 }
 

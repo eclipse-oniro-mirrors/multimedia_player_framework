@@ -45,6 +45,7 @@ public:
     virtual int32_t StartScreenCapture(bool isPrivacyAuthorityEnabled = false) = 0;
     virtual int32_t StartScreenCaptureWithSurface(sptr<Surface> surface, bool isPrivacyAuthorityEnabled = false) = 0;
     virtual int32_t StopScreenCapture() = 0;
+    virtual int32_t PresentPicker() = 0;
     virtual int32_t SetMicrophoneEnabled(bool isMicrophone) = 0;
     virtual int32_t SetCanvasRotation(bool canvasRotation) = 0;
     virtual int32_t ShowCursor(bool showCursor) = 0;
@@ -100,8 +101,9 @@ public:
         UPDATE_SURFACE = 28,
         SET_CAPTURE_AREA = 29,
         SET_HIGH_LIGHT_MODE = 30,
-        EXCLUDE_PICKER_WINDOWS = 31,
-        SET_PICKER_MODE = 32,
+        PRESENT_PICKER = 31,
+        EXCLUDE_PICKER_WINDOWS = 32,
+        SET_PICKER_MODE = 33,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardScreenCaptureService");
