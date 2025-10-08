@@ -640,6 +640,25 @@ int32_t ScreenCaptureServiceProxy::SetMaxVideoFrameRate(int32_t frameRate)
     return reply.ReadInt32();
 }
 
+int32_t ScreenCaptureServiceProxy::SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    token = data.WriteUint32(config.lineThickness) && data.WriteUint32(config.lineColor) &&
+            data.WriteInt32(static_cast<int32_t>(config.mode));
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write config!");
+
+    int error = Remote()->SendRequest(SET_HIGH_LIGHT_MODE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+                             "SetCaptureAreaHighlight failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
 int32_t ScreenCaptureServiceProxy::SetScreenCaptureStrategy(ScreenCaptureStrategy strategy)
 {
     MessageParcel data;

@@ -64,6 +64,7 @@ public:
     int32_t StrategyForPrivacyMaskMode(int32_t value) override;
     int32_t StrategyForPickerPopUp(bool value) override;
     int32_t StrategyForFillMode(AVScreenCaptureFillMode value) override;
+    int32_t SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config) override;
 private:
     std::shared_ptr<ScreenCapture> screenCapture_ = nullptr;
     std::shared_ptr<ScreenCaptureCallBack> cb_;

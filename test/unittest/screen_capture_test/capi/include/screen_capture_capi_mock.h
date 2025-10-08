@@ -73,6 +73,7 @@ public:
     int32_t StrategyForPrivacyMaskMode(int32_t value) override;
     int32_t StrategyForPickerPopUp(bool value) override;
     int32_t StrategyForFillMode(AVScreenCaptureFillMode value) override;
+    int32_t SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config) override;
 private:
     static void SetScreenCaptureCallback(OH_AVScreenCapture *screencapture,
         std::shared_ptr<ScreenCaptureCallbackMock> cb);
@@ -90,6 +91,7 @@ private:
         event, OH_Rect* area, void *userData);
     static void OnDisplaySelected(struct OH_AVScreenCapture *capture, uint64_t displayId, void *userData);
     OH_AVScreenCaptureConfig Convert(AVScreenCaptureConfig config);
+    OH_AVScreenCaptureHighlightConfig HighlightConfigConvert(AVScreenCaptureHighlightConfig config);
 
     int32_t GetCaptureContentChangeCallback(const bool isCaptureContentChangeCallbackEnabled);
 

@@ -32,6 +32,12 @@
 namespace {
 constexpr int MAX_WINDOWS_LEN = 1000;
 constexpr int VIRTUAL_DISPLAY_ID_START = 1000;
+constexpr uint32_t MIN_LINE_THICKNESS = 1;
+constexpr uint32_t MAX_LINE_THICKNESS = 8;
+constexpr uint32_t MIN_LINE_COLOR_RGB = 0x000000;
+constexpr uint32_t MAX_LINE_COLOR_RGB = 0xffffff;
+constexpr uint32_t MIN_LINE_COLOR_ARGB = 0xff000000;
+constexpr uint32_t MAX_LINE_COLOR_ARGB = 0xffffffff;
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "NativeScreenCapture"};
 }
 
@@ -641,6 +647,15 @@ AVScreenCaptureConfig OH_AVScreenCapture_Convert(OH_AVScreenCaptureConfig config
     return config_;
 }
 
+AVScreenCaptureHighlightConfig OH_AVCaptureArea_Convert(OH_AVScreenCaptureHighlightConfig config)
+{
+    AVScreenCaptureHighlightConfig highlightConfig;
+    highlightConfig.lineThickness = config.lineThickness;
+    highlightConfig.lineColor = config.lineColor;
+    highlightConfig.mode = static_cast<ScreenCaptureHighlightMode>(config.mode);
+    return highlightConfig;
+}
+
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_Init(struct OH_AVScreenCapture *capture, OH_AVScreenCaptureConfig config)
 {
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
@@ -1233,6 +1248,30 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ReleaseCaptureStrategy(OH_AVScree
     CHECK_AND_RETURN_RET_LOG(strategy != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input strategy is nullptr!");
     struct ScreenCaptureStrategyObject *strategyObj = reinterpret_cast<ScreenCaptureStrategyObject *>(strategy);
     delete strategyObj;
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}
+
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureAreaHighlight(struct OH_AVScreenCapture *capture,
+    OH_AVScreenCaptureHighlightConfig config)
+{
+    CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr");
+
+    struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
+        AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture is nullptr");
+
+    CHECK_AND_RETURN_RET_LOG(config.mode == OH_ScreenCaptureHighlightMode::OH_HIGHLIGHT_MODE_CLOSED ||
+        config.mode == OH_ScreenCaptureHighlightMode::OH_HIGHLIGHT_MODE_CORNER_WRAP,
+        AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input highlight mode is invalid");
+    CHECK_AND_RETURN_RET_LOG(config.lineThickness >= MIN_LINE_THICKNESS && config.lineThickness <= MAX_LINE_THICKNESS,
+        AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input lineThickness is invalid");
+    CHECK_AND_RETURN_RET_LOG((config.lineColor >= MIN_LINE_COLOR_RGB) && (config.lineColor <= MAX_LINE_COLOR_RGB) ||
+        (config.lineColor >= MIN_LINE_COLOR_ARGB) && (config.lineColor <= MAX_LINE_COLOR_ARGB),
+        AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input lineColor is invalid");
+
+    AVScreenCaptureHighlightConfig highlightConfig = OH_AVCaptureArea_Convert(config);
+    int32_t ret = screenCaptureObj->screenCapture_->SetCaptureAreaHighlight(highlightConfig);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_INVALID_STATE, "SetCaptureAreaHighlight failed");
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
 

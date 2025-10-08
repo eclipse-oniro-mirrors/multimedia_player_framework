@@ -119,6 +119,7 @@ public:
     virtual int32_t StrategyForPrivacyMaskMode(int32_t value);
     virtual int32_t StrategyForPickerPopUp(bool value);
     virtual int32_t StrategyForFillMode(AVScreenCaptureFillMode value);
+    virtual int32_t SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config);
 };
 
 class __attribute__((visibility("default"))) ScreenCaptureMockFactory {

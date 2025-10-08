@@ -60,6 +60,7 @@ public:
     void Release() override;
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
     int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) override;
+    int32_t SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config) override;
     int32_t UpdateSurface(sptr<Surface> surface) override;
     int32_t SetCaptureArea(uint64_t displayId, OHOS::Rect area) override;
 

@@ -49,6 +49,7 @@
 #include "want_agent_helper.h"
 #include "common_event_manager.h"
 #ifdef PC_STANDARD
+#include "power_mgr_client.h"
 #include <parameters.h>
 #endif
 
@@ -85,10 +86,14 @@ static const std::string VIRTUAL_SCREENAME_SCREEN_CAPTRURE_FILE = "screeen_captu
 static const std::string SELECT_ABILITY_NAME = "SelectWindowAbility";
 static const int32_t SELECT_WINDOW_MISSION_ID_NUM_MAX = 2;
 static const std::string PERM_CUST_SCR_REC = "ohos.permission.CUSTOM_SCREEN_RECORDING";
+static const std::string TIMEOUT_SCREENOFF_DISABLE_LOCK = "ohos.permission.TIMEOUT_SCREENOFF_DISABLE_LOCK";
 #endif
 static const int32_t SVG_HEIGHT = 80;
 static const int32_t SVG_WIDTH = 80;
 static const int32_t WINDOW_INFO_LIST_SIZE = 1;
+static const int32_t MEDIA_SERVICE_SA_ID = 3002;
+static const uint32_t MIN_LINE_WIDTH = 1;
+static const uint32_t MAX_LINE_WIDTH = 8;
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     static const int32_t NOTIFICATION_MAX_TRY_NUM = 3;
 #endif
@@ -1967,6 +1972,68 @@ int32_t ScreenCaptureServer::OnStartScreenCapture()
     return ret;
 }
 
+void ScreenCaptureServer::UpdateHighlightOutline(bool isStarted)
+{
+    MEDIA_LOGI("UpdateHighlightOutline enter");
+    if (captureConfig_.captureMode == CaptureMode::CAPTURE_SPECIFIED_WINDOW &&
+        (captureConfig_.highlightConfig.lineThickness >= MIN_LINE_WIDTH &&
+        captureConfig_.highlightConfig.lineThickness <= MAX_LINE_WIDTH)) {
+        Rosen::OutlineParams outlineParams;
+        outlineParams.type_ = OutlineType::OUTLINE_FOR_WINDOW;
+        SetHighlightConfigForWindowManager(isStarted, outlineParams);
+        auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        sptr<IRemoteObject> media_server = samgr->GetSystemAbility(MEDIA_SERVICE_SA_ID);
+        Rosen::WMError res = WindowManager::GetInstance().UpdateOutline(media_server, outlineParams);
+        if (res == Rosen::WMError::WM_OK) {
+            MEDIA_LOGI("UpdateHighlightOutline sussess");
+        } else {
+            MEDIA_LOGE("UpdateHighlightOutline failed:%{public}d", res);
+        }
+    }
+}
+
+void ScreenCaptureServer::SetHighlightConfigForWindowManager(bool isStarted,
+    Rosen::OutlineParams &outlineParams)
+{
+    MEDIA_LOGI("SetHighlightConfigForWindowManager enter");
+    if (isStarted) {
+        outlineParams.persistentIds_.reserve(missionIds_.size());
+        std::transform(missionIds_.begin(), missionIds_.end(), std::back_inserter(outlineParams.persistentIds_),
+            [](uint64_t id) {
+                uint64_t maxInt32 = std::numeric_limits<int32_t>::max();
+                if (id > maxInt32) {
+                    MEDIA_LOGE("SetHighlightConfigForWindowManager, windowId is an incorrect value");
+                }
+                return static_cast<int32_t>(id);
+            });
+        outlineParams.outlineStyleParams_.outlineColor_ = captureConfig_.highlightConfig.lineColor;
+        outlineParams.outlineStyleParams_.outlineWidth_ = captureConfig_.highlightConfig.lineThickness;
+        outlineParams.outlineStyleParams_.outlineShape_ =
+            ConvertToOutlineShape(captureConfig_.highlightConfig.mode);
+    } else {
+        outlineParams.persistentIds_.clear();
+        outlineParams.outlineStyleParams_.outlineColor_ = OUTLINE_COLOR_DEFAULT;
+        outlineParams.outlineStyleParams_.outlineWidth_ = OUTLINE_WIDTH_DEFAULT;
+        outlineParams.outlineStyleParams_.outlineShape_ = OutlineShape::OUTLINE_SHAPE_FOUR_CORNERS;
+    }
+    MEDIA_LOGI("SetHighlightConfigForWindowManager, isStarted:%{public}s, lineColor:0x%{public}x,"
+        " lineThickness:%{public}dvp, mode:%{public}d", isStarted ? "true" : "false",
+        outlineParams.outlineStyleParams_.outlineColor_, outlineParams.outlineStyleParams_.outlineWidth_,
+        outlineParams.outlineStyleParams_.outlineShape_);
+}
+
+OutlineShape ScreenCaptureServer::ConvertToOutlineShape(ScreenCaptureHighlightMode mode)
+{
+    switch (mode) {
+        case ScreenCaptureHighlightMode::HIGHLIGHT_MODE_CLOSED:
+            return OutlineShape::OUTLINE_SHAPE_RECTANGLE;
+        case ScreenCaptureHighlightMode::HIGHLIGHT_MODE_CORNER_WRAP:
+            return OutlineShape::OUTLINE_SHAPE_FOUR_CORNERS;
+        default:
+            return OutlineShape::OUTLINE_SHAPE_END;
+    }
+}
+
 void ScreenCaptureServer::ResSchedReportData(int64_t value, std::unordered_map<std::string, std::string> payload)
 {
     payload["uid"] = std::to_string(appInfo_.appUid);
@@ -2075,6 +2142,9 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
         "dataType:%{public}d.", FAKE_POINTER(this), isSuccess ? "true" : "false", captureConfig_.dataType);
     if (isSuccess) {
         MEDIA_LOGI("PostStartScreenCapture handle success");
+#ifdef PC_STANDARD
+        SetTimeoutScreenoffDisableLock(false);
+#endif
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
         if (isPrivacyAuthorityEnabled_ &&
             GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
@@ -2093,6 +2163,7 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
             return;
         }
         MEDIA_LOGI("PostStartScreenCaptureSuccessAction START.");
+        UpdateHighlightOutline(true);
         PostStartScreenCaptureSuccessAction();
     } else {
         PostStartScreenCaptureFail();
@@ -3069,6 +3140,24 @@ bool ScreenCaptureServer::IsPickerPopUp()
     return !isRegionCapture_ &&
            (captureConfig_.captureMode == CAPTURE_SPECIFIED_SCREEN || CheckCaptureSpecifiedWindowForSelectWindow());
 }
+
+void ScreenCaptureServer::SetTimeoutScreenoffDisableLock(bool lockScreen)
+{
+    MEDIA_LOGI("SetTimeoutScreenoffDisableLock Start lockScreen %{public}d", lockScreen);
+    int result = Security::AccessToken::AccessTokenKit::VerifyAccessToken(appInfo_.appTokenId,
+        TIMEOUT_SCREENOFF_DISABLE_LOCK);
+    if (result != Security::AccessToken::PERMISSION_GRANTED) {
+        MEDIA_LOGI("user have not the TIMEOUT_SCREENOFF_DISABLE_LOCK!");
+        return;
+    }
+    auto powerErrors = OHOS::PowerMgr::PowerMgrClient::GetInstance()
+                                .LockScreenAfterTimingOutWithAppid(sessionId_, lockScreen);
+    if (powerErrors == OHOS::PowerMgr::PowerErrors::ERR_OK) {
+        MEDIA_LOGI("SetTimeoutScreenoffDisableLock success");
+    } else {
+        MEDIA_LOGE("SetTimeoutScreenoffDisableLock error %{public}d", powerErrors);
+    }
+}
 #endif
 
 int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForWindow(sptr<Rosen::Display> defaultDisplay,
@@ -3237,7 +3326,6 @@ VirtualScreenOption ScreenCaptureServer::InitVirtualScreenOption(const std::stri
     MediaTrace trace("ScreenCaptureServer::InitVirtualScreenOption");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " InitVirtualScreenOption start, name:%{public}s.",
         FAKE_POINTER(this), name.c_str());
-    std::unique_lock<std::shared_mutex> write_lock(rw_lock_);
     VirtualScreenOption virScrOption = {
         .name_ = name,
         .width_ = captureConfig_.videoInfo.videoCapInfo.videoFrameWidth,
@@ -4217,7 +4305,11 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
     MediaTrace trace("ScreenCaptureServer::PostStopScreenCapture");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " PostStopScreenCapture start, stateCode:%{public}d.",
         FAKE_POINTER(this), stateCode);
+#ifdef PC_STANDARD
+    SetTimeoutScreenoffDisableLock(true);
+#endif
     SetSystemScreenRecorderStatus(false);
+    UpdateHighlightOutline(false);
     ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureFinished(appInfo_.appPid);
     if (screenCaptureCb_ != nullptr && stateCode != AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID) {
         screenCaptureCb_->OnStateChange(stateCode);
@@ -4234,7 +4326,6 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
 #endif
     isPrivacyAuthorityEnabled_ = false;
     isRegionCapture_ = false;
-
     if (!LastPidUpdatePrivacyUsingPermissionState(appInfo_.appPid)) {
         MEDIA_LOGE("UpdatePrivacyUsingPermissionState STOP failed, dataType:%{public}d", captureConfig_.dataType);
     }
@@ -4299,6 +4390,15 @@ void ScreenCaptureServer::ReleaseInner()
     skipPrivacyWindowIDsVec_.clear();
     SetMetaDataReport();
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner E", FAKE_POINTER(this));
+}
+
+int32_t ScreenCaptureServer::SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("SetCaptureAreaHighlight lineColor: 0x%{public}x, lineThickness: %{public}dvp, mode: %{public}d",
+        config.lineColor, config.lineThickness, static_cast<int32_t>(config.mode));
+    captureConfig_.highlightConfig = config;
+    return MSERR_OK;
 }
 
 int32_t ScreenCaptureServer::SetScreenCaptureStrategy(ScreenCaptureStrategy strategy)
