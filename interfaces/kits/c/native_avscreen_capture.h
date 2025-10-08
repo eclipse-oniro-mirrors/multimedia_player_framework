@@ -594,6 +594,18 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForPickerPopUp(
  */
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForFillMode(
     OH_AVScreenCapture_CaptureStrategy *strategy, OH_AVScreenCapture_FillMode mode);
+
+/**
+ * @brief set the highlight style of recording area.
+ * @param {OH_AVScreenCapture*} capture Pointer to OH_AVScreenCapture which want to set highlight style.
+ * @param {OH_AVScreenCaptureHighlightConfig} config the highlight parameters are to be set for this screen capture.
+ * @return Function result code.
+ *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
+ *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} input capture is nullptr or config is invalid.
+ * @since 22
+ */
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureAreaHighlight(struct OH_AVScreenCapture *capture,
+    OH_AVScreenCaptureHighlightConfig config);
 #ifdef __cplusplus
 }
 #endif

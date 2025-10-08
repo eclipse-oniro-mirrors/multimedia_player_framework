@@ -154,6 +154,17 @@ enum AVScreenCaptureFillMode {
     SCALE_TO_FILL = 1,
 };
 
+enum class ScreenCaptureHighlightMode : int32_t {
+    HIGHLIGHT_MODE_CLOSED = 0,
+    HIGHLIGHT_MODE_CORNER_WRAP = 1,
+};
+
+struct AVScreenCaptureHighlightConfig {
+    uint32_t lineThickness = 0;
+    uint32_t lineColor = 0;
+    ScreenCaptureHighlightMode mode = ScreenCaptureHighlightMode::HIGHLIGHT_MODE_CLOSED;
+};
+
 struct ScreenCaptureContentFilter {
     std::set<AVScreenCaptureFilterableAudioContent> filteredAudioContents;
     std::vector<uint64_t> windowIDsVec;
@@ -219,6 +230,7 @@ struct AVScreenCaptureConfig {
     VideoInfo videoInfo;
     RecorderInfo recorderInfo;
     ScreenCaptureStrategy strategy;
+    AVScreenCaptureHighlightConfig highlightConfig;
 };
 
 struct AudioBuffer {
@@ -328,6 +340,7 @@ public:
     virtual int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) = 0;
     virtual int32_t UpdateSurface(sptr<Surface> surface) = 0;
     virtual int32_t SetCaptureArea(uint64_t displayId, Rect area) = 0;
+    virtual int32_t SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config) = 0;
 };
 
 class __attribute__((visibility("default"))) ScreenCaptureFactory {
