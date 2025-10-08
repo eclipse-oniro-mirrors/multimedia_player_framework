@@ -46,6 +46,8 @@ public:
     int32_t ReleaseVideoBuffer() override;
     int32_t ExcludeWindowContent(int32_t *windowIDs, int32_t windowCount) override;
     int32_t ExcludeAudioContent(AVScreenCaptureFilterableAudioContent audioType) override;
+    int32_t SetPickerMode(PickerMode pickerMode) override;
+    int32_t ExcludePickerWindows(int32_t *windowIDsVec, uint32_t windowCount) override;
     bool IsStateChangeCallbackEnabled() override
     {
         return isStateChangeCallbackEnabled_;

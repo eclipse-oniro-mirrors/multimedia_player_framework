@@ -160,6 +160,12 @@ enum class AVScreenCapturePickerPopUp : int32_t {
     SCREEN_CAPTURE_PICKER_POPUP_ENABLE = 1,
 };
 
+enum class PickerMode : int32_t {
+    WINDOW_ONLY = 0,
+    SCREEN_ONLY = 1,
+    SCREEN_AND_WINDOW = 2,
+};
+
 struct ScreenCaptureContentFilter {
     std::set<AVScreenCaptureFilterableAudioContent> filteredAudioContents;
     std::vector<uint64_t> windowIDsVec;
@@ -333,6 +339,8 @@ public:
     virtual int32_t Release() = 0;
     virtual int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBack> &callback) = 0;
     virtual int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) = 0;
+    virtual int32_t ExcludePickerWindows(std::vector<int32_t> &windowIDsVec) = 0;
+    virtual int32_t SetPickerMode(PickerMode pickerMode) = 0;
     virtual int32_t SetPrivacyAuthorityEnabled() = 0;
     virtual int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) = 0;
     virtual int32_t UpdateSurface(sptr<Surface> surface) = 0;

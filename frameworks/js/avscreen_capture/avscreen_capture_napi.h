@@ -35,6 +35,8 @@ const std::string STOP_RECORDING = "StopRecording";
 const std::string SKIP_PRIVACY_MODE = "SkipPrivacyMode";
 const std::string SET_MIC_ENABLE = "SetMicrophoneEnable";
 const std::string RELEASE = "Release";
+const std::string EXCLUDE_PICKER_WINDOWS = "ExcludePickerWindows";
+const std::string SET_PICKER_MODE = "SetPickerMode";
 }
 constexpr int32_t AVSCREENCAPTURE_DEFAULT_AUDIO_BIT_RATE = 96000;
 constexpr int32_t AVSCREENCAPTURE_DEFAULT_AUDIO_CHANNELS = 2;
@@ -97,6 +99,14 @@ private:
      */
     static napi_value JsSkipPrivacyMode(napi_env env, napi_callback_info info);
     /**
+     * excludePickerWindows(excludedWindows: Array<number>): Promise<void>
+     */
+    static napi_value JsExcludePickerWindows(napi_env env, napi_callback_info info);
+    /**
+     * setPickerMode(pickerMode: PickerMode): Promise<void>
+     */
+    static napi_value JsSetPickerMode(napi_env env, napi_callback_info info);
+    /**
      * setMicrophoneEnabled(enable: boolean): Promise<void>
      */
     static napi_value JsSetMicrophoneEnabled(napi_env env, napi_callback_info info);
@@ -125,6 +135,10 @@ private:
         const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const bool enable);
     static std::shared_ptr<TaskHandler<RetInfo>> GetSkipPrivacyModeTask(
         const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const std::vector<uint64_t> windowIDsVec);
+    static std::shared_ptr<TaskHandler<RetInfo>> GetExcludePickerWindowsTask(
+        const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const std::vector<int32_t> windowIDsVec);
+    static std::shared_ptr<TaskHandler<RetInfo>> GetSetPickerModeTask(
+        const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const PickerMode pickerMode);
     static int32_t GetPropertyInt32(napi_env env, napi_value configObj, const std::string &type, int32_t &result);
     static int32_t CheckVideoCodecFormat(const int32_t &preset);
     static int32_t CheckVideoFrameFormat(const int32_t &frameWidth, const int32_t &frameHeight,
@@ -140,6 +154,7 @@ private:
     static int32_t CheckAudioSampleRate(const int32_t &audioSampleRate);
     static int32_t CheckAudioChannelCount(const int32_t &audioChannelCount);
     static napi_status GetWindowIDsVectorParams(std::vector<uint64_t> &windowIDsVec, napi_env env, napi_value* args);
+    static napi_status GetInt32VectorParams(std::vector<int32_t> &vec, napi_env env, napi_value* args);
     static int32_t SetScreenCaptureFillMode(ScreenCaptureStrategy &strategy, const int32_t &fillMode);
     static napi_value ThrowCustomError(napi_env env, int32_t errorCode, const char* errorMessage);
 

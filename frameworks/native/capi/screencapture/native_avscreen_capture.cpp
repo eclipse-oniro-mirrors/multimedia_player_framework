@@ -641,6 +641,51 @@ AVScreenCaptureConfig OH_AVScreenCapture_Convert(OH_AVScreenCaptureConfig config
     return config_;
 }
 
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ExcludePickerWindows(
+    struct OH_AVScreenCapture *capture, const int32_t *excludedWindowIDs, uint32_t windowCount)
+{
+#ifdef PC_STANDARD
+    CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
+    struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
+        AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture is null");
+
+    CHECK_AND_RETURN_RET_LOG(!(excludedWindowIDs == nullptr && windowCount > 0),
+        AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input excludedWindowIDs invalid, nullptr but size is not 0!");
+
+    std::vector<int32_t> vec;
+    for (uint32_t i = 0; i < windowCount; i++) {
+        if (static_cast<int32_t>(*(excludedWindowIDs + i)) > 0) {
+            vec.push_back(static_cast<int32_t>(*(excludedWindowIDs + i)));
+        }
+    }
+
+    int32_t ret = screenCaptureObj->screenCapture_->ExcludePickerWindows(vec);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "ExcludePickerWindows failed!");
+    return AV_SCREEN_CAPTURE_ERR_OK;
+#else
+    return AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT;
+#endif
+}
+
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetPickerMode(
+    struct OH_AVScreenCapture *capture, OH_CapturePickerMode pickerMode)
+{
+#ifdef PC_STANDARD
+    CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
+    struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
+        AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture is null");
+
+    PickerMode mode = static_cast<PickerMode>(pickerMode);
+    int32_t ret = screenCaptureObj->screenCapture_->SetPickerMode(mode);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "SetPickerMode failed!");
+    return AV_SCREEN_CAPTURE_ERR_OK;
+#else
+    return AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT;
+#endif
+}
+
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_Init(struct OH_AVScreenCapture *capture, OH_AVScreenCaptureConfig config)
 {
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");

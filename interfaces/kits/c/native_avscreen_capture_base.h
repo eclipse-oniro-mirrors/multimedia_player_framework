@@ -515,6 +515,22 @@ typedef enum OH_AVScreenCapture_FillMode {
 } OH_AVScreenCapture_FillMode;
 
 /**
+ * @brief Capture source selector display mode enumeration
+ *
+ * @since 22
+ */
+typedef enum OH_CapturePickerMode {
+    /** Show application window options only */
+    OH_CAPTURE_PICKER_MODE_WINDOW_ONLY = 0,
+
+    /** Show physical screen options only */
+    OH_CAPTURE_PICKER_MODE_SCREEN_ONLY = 1,
+
+    /** Show both screen and window options (default mode) */
+    OH_CAPTURE_PICKER_MODE_SCREEN_AND_WINDOW = 2,
+} OH_CapturePickerMode;
+
+/**
  * @brief When state of OH_AVScreenCapture is changed, the function pointer will be called.
  * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
  * @param capture Pointer to an OH_AVScreenCapture instance

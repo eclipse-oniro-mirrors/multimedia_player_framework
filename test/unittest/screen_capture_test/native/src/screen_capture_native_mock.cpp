@@ -247,6 +247,22 @@ int32_t ScreenCaptureNativeMock::ExcludeAudioContent(AVScreenCaptureFilterableAu
     return screenCapture_->ExcludeContent(filter);
 }
 
+int32_t ScreenCaptureNativeMock::SetPickerMode(PickerMode pickerMode)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    return screenCapture_->SetPickerMode(pickerMode);
+}
+
+int32_t ScreenCaptureNativeMock::ExcludePickerWindows(int32_t *windowIDsVec, uint32_t windowCount)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    std::vector<int32_t> vec;
+    for (uint32_t i = 0; i < windowCount; i++) {
+        vec.push_back(static_cast<int32_t>(*(windowIDsVec + i)));
+    }
+    return screenCapture_->ExcludePickerWindows(vec);
+}
+
 int32_t ScreenCaptureNativeMock::CreateCaptureStrategy()
 {
     return MSERR_OK;

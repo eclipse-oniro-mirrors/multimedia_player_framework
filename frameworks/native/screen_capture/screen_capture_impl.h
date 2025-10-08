@@ -51,6 +51,8 @@ public:
     int32_t Release() override;
     int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBack> &callback) override;
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
+    int32_t ExcludePickerWindows(std::vector<int32_t> &windowIDsVec) override;
+    int32_t SetPickerMode(PickerMode pickerMode) override;
     int32_t SetPrivacyAuthorityEnabled() override;
     int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) override;
     int32_t UpdateSurface(sptr<Surface> surface) override;

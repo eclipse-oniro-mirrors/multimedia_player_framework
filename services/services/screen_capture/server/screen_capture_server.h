@@ -96,6 +96,8 @@ public:
     int32_t SetMaxVideoFrameRate(int32_t frameRate) override;
     void Release() override;
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
+    int32_t ExcludePickerWindows(std::vector<int32_t> &windowIDsVec) override;
+    int32_t SetPickerMode(PickerMode pickerMode) override;
     int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) override;
     int32_t UpdateSurface(sptr<Surface> surface) override;
     int32_t SetCaptureArea(uint64_t displayId, OHOS::Rect area) override;
@@ -371,6 +373,10 @@ private:
     Global::Resource::ResConfig *resConfig_ = nullptr;
     OHOS::sptr<Rosen::ScreenManager::IScreenListener> screenConnectListener_ = nullptr;
     std::shared_ptr<ScreenCaptureSubscriber> subscriber_ = nullptr;
+
+    /* used for customize picker */
+    std::vector<int32_t> excludedWindowIDsVec_;
+    PickerMode pickerMode_ = PickerMode::SCREEN_AND_WINDOW;
 #ifdef SUPPORT_CALL
     std::atomic<bool> isInTelCall_ = false;
     std::atomic<bool> isInTelCallAudio_ = false;
@@ -387,6 +393,8 @@ private:
     static int32_t CheckVideoEncInfo(VideoEncInfo &videoEncInfo);
     static int32_t CheckCaptureMode(CaptureMode captureMode);
     static int32_t CheckDataType(DataType dataType);
+
+    static std::string JoinInt32Vector(const std::vector<int32_t>& vec, const std::string& separator = ",");
 
 private:
     static constexpr int32_t ROOT_UID = 0;

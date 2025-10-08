@@ -2469,7 +2469,8 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
     comStr += "\"}";
 
     AAFwk::Want want;
-    ErrCode ret = ERR_INVALID_VALUE;
+    ErrCode ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,
+        nullptr, -1);
 #ifdef PC_STANDARD
     if (IsPickerPopUp()) {
         isRegionCapture_ = false;
@@ -2483,6 +2484,8 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
         want.SetParam("showSensitiveCheckBox", showSensitiveCheckBox_);
         want.SetParam("checkBoxSelected", checkBoxSelected_);
         want.SetParam("showShareSystemAudioBox", showShareSystemAudioBox_);
+        want.SetParam("excludedWindowIDs", ScreenCaptureServer::JoinInt32Vector(excludedWindowIDsVec_));
+        want.SetParam("pickerMode", static_cast<int>(pickerMode_));
         SendConfigToUIParams(want);
         ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want);
         MEDIA_LOGI("StartAbility end %{public}d, DeviceType : PC", ret);
@@ -2491,19 +2494,31 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
         want.SetElementName(GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionbundlename"],
             GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionabilityname"]);
         connection_ = sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(comStr));
-        ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,
-            nullptr, -1);
         MEDIA_LOGI("ConnectServiceExtensionAbility end %{public}d, DeviceType : PC", ret);
     }
 #else
     want.SetElementName(GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionbundlename"],
                         GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionabilityname"]);
     connection_ = sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(comStr));
-    ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,
-        nullptr, -1);
     MEDIA_LOGI("ConnectServiceExtensionAbility end %{public}d, Device : Phone", ret);
 #endif
     return ret;
+}
+
+std::string ScreenCaptureServer::JoinInt32Vector(const std::vector<int32_t>& vec, const std::string& separator)
+{
+    if (vec.empty()) {
+        return "";
+    }
+
+    std::ostringstream oss;
+    oss << vec[0];
+
+    for (size_t i = 1; i < vec.size(); ++i) {
+        oss << separator << vec[i];
+    }
+
+    return oss.str();
 }
 
 int32_t ScreenCaptureServer::StartNotification()
@@ -3359,6 +3374,34 @@ int32_t ScreenCaptureServer::ExcludeContent(ScreenCaptureContentFilter &contentF
             "ExcludeContent failed, UpdateAudioCapturerConfig failed");
     }
     return ret;
+}
+
+int32_t ScreenCaptureServer::ExcludePickerWindows(std::vector<int32_t> &windowIDsVec)
+{
+#ifdef PC_STANDARD
+    MEDIA_LOGD("ScreenCaptureServer::ExcludePickerWindows start");
+    excludedWindowIDsVec_.clear();
+    for (auto id : windowIDsVec) {
+        excludedWindowIDsVec_.push_back(id);
+    }
+    MEDIA_LOGD("ScreenCaptureServer::ExcludePickerWindows end");
+    return MSERR_OK;
+#else
+    (void)windowIDsVec;
+    return MSERR_INVALID_OPERATION;
+#endif
+}
+
+int32_t ScreenCaptureServer::SetPickerMode(PickerMode pickerMode)
+{
+#ifdef PC_STANDARD
+    MEDIA_LOGD("ScreenCaptureServer::SetPickerMode");
+    pickerMode_ = pickerMode;
+    return MSERR_OK;
+#else
+    (void)pickerMode;
+    return MSERR_INVALID_OPERATION;
+#endif
 }
 
 int32_t ScreenCaptureServer::SetCaptureArea(uint64_t displayId, OHOS::Rect area)
