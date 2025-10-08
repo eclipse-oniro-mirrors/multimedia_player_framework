@@ -42,6 +42,7 @@ public:
     virtual int32_t StartScreenCapture(bool isPrivacyAuthorityEnabled = false) = 0;
     virtual int32_t StartScreenCaptureWithSurface(sptr<Surface> surface, bool isPrivacyAuthorityEnabled = false) = 0;
     virtual int32_t StopScreenCapture() = 0;
+    virtual int32_t PresentPicker() = 0;
     virtual int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type) = 0;
     virtual int32_t AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfacebuffer, int32_t &fence,
                                        int64_t &timestamp, OHOS::Rect &damage) = 0;

@@ -2449,6 +2449,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_config_paramer_01, TestSize.Level
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_file_01 after");
 }
 
+
 /**
  * @tc.name: screen_capture_set_highligt_for_area_001
  * @tc.desc: do screencapture
@@ -2524,5 +2525,76 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_set_highligt_for_area_002, TestSi
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_set_highligt_for_area_002 after");
 }
+
+#ifdef PC_STANDARD
+/**
+ * @tc.name: screen_capture_presentPicker_test01
+ * @tc.desc: do screencapture PresentPicker
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_presentPicker_test01, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_presentPicker_test01 before");
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_presentPicker_test01.mp4", recorderInfo);
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo micCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::MIC
+    };
+    config_.audioInfo.micCapInfo = micCapInfo;
+    AudioCaptureInfo innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
+    EXPECT_EQ(MSERR_OK, screenCapture_->PresentPicker());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_presentPicker_test01 after");
+}
+
+
+/**
+ * @tc.name: screen_capture_presentPicker_test02
+ * @tc.desc: do screencapture PresentPicker
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_presentPicker_test02, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_presentPicker_test02 before");
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_presentPicker_test02.mp4", recorderInfo);
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo micCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::MIC
+    };
+    config_.audioInfo.micCapInfo = micCapInfo;
+    AudioCaptureInfo innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
+    EXPECT_NE(MSERR_OK, screenCapture_->PresentPicker());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_presentPicker_test02 after");
+}
+#endif
 } // namespace Media
 } // namespace OHOS

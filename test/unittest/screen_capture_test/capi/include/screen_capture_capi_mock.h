@@ -34,6 +34,7 @@ public:
     int32_t StartScreenRecording() override;
     int32_t StopScreenRecording() override;
     int32_t Release() override;
+    int32_t PresentPicker() override;
     int32_t SetMicrophoneEnabled(bool isMicrophone) override;
     int32_t SetCanvasRotation(bool canvasRotation) override;
     int32_t ResizeCanvas(int32_t width, int32_t height) override;
