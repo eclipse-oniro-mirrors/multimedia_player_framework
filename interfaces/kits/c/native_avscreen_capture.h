@@ -311,6 +311,38 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ExcludeContent(struct OH_AVScreen
     struct OH_AVScreenCapture_ContentFilter *filter);
 
 /**
+  * @brief Configures exclusion list for system-level picker window
+  * @details Filters specified windows before displaying the system-level picker.
+  *          Excluded windows will not appear in the selection list.
+  * @param capture [in] Screen capture handle created via OH_AVScreenCapture_Create
+  * @param excludedWindowIDs [in] Array of window IDs to exclude (process-local)
+  * @param windowCount [in] Number of excluded windows
+  * @return Operation status codes:
+  *         - AV_SCREEN_CAPTURE_ERR_OK: Success
+  *         - AV_SCREEN_CAPTURE_ERR_INVALID_VAL: Invalid parameters
+  *             (null pointer/cross-process window IDs)
+  *         - AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT: Insufficient permissions
+  * @since 22
+  */
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ExcludePickerWindows(
+    struct OH_AVScreenCapture *capture, const int32_t *excludedWindowIDs, uint32_t windowCount);
+
+/**
+  * @brief Sets the mode for the system-level screen capture picker
+  * @details Defines the content type displayed in the system-level picker.
+  *          Mode changes take effect upon the next call to function PresentPicker.
+  * @param capture [in] Pointer to the screen capture instance created via OH_AVScreenCapture_Create
+  * @param pickerMode [in] Picker display mode (see OH_CapturePickerMode enum)
+  * @return Operation status codes:
+  *         - AV_SCREEN_CAPTURE_ERR_OK: Mode configuration succeeded
+  *         - AV_SCREEN_CAPTURE_ERR_INVALID_VAL: Invalid mode value or null pointer
+  *         - AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT: Ongoing capture session exists
+  * @since 22
+  */
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetPickerMode(
+    struct OH_AVScreenCapture *capture, OH_CapturePickerMode pickerMode);
+
+/**
  * @brief Add Window content to the screen capture content filter
  * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
  * @param filter Pointer to an OH_AVScreenCapture_ContentFilter instance

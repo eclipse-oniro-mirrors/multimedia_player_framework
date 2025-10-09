@@ -94,6 +94,8 @@ public:
     virtual int32_t ReleaseVideoBuffer() = 0;
     virtual int32_t ExcludeWindowContent(int32_t *windowIDs, int32_t windowCount) = 0;
     virtual int32_t ExcludeAudioContent(AVScreenCaptureFilterableAudioContent audioType) = 0;
+    virtual int32_t SetPickerMode(PickerMode pickerMode) = 0;
+    virtual int32_t ExcludePickerWindows(int32_t *windowIDsVec, uint32_t windowCount) = 0;
     virtual bool IsErrorCallbackEnabled()
     {
         return false;

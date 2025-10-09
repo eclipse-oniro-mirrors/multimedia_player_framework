@@ -2449,6 +2449,35 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_config_paramer_01, TestSize.Level
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_file_01 after");
 }
 
+#ifdef PC_STANDARD
+/**
+ * @tc.name: screen_capture_set_picker_mode_01
+ * @tc.desc: set picker mode
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_set_picker_mode_01, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_set_picker_mode_01 before");
+    PickerMode pickerMode = PickerMode::WINDOW_ONLY;
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetPickerMode(pickerMode));
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_set_picker_mode_01 after");
+}
+
+/**
+ * @tc.name: screen_capture_exclude_picker_windows_01
+ * @tc.desc: exclude picker windows
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_picker_windows_01, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_picker_windows_01 before");
+    std::vector<int32_t> windowIDs = {100, 101, 102};
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludePickerWindows(windowIDs.data(), windowIDs.size()));
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_picker_windows_01 after");
+}
+#endif
 
 /**
  * @tc.name: screen_capture_set_highligt_for_area_001
@@ -2560,7 +2589,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_presentPicker_test01, TestSize.Le
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_presentPicker_test01 after");
 }
-
 
 /**
  * @tc.name: screen_capture_presentPicker_test02

@@ -506,6 +506,44 @@ int32_t ScreenCaptureServiceProxy::ExcludeContent(ScreenCaptureContentFilter &co
     return reply.ReadInt32();
 }
 
+int32_t ScreenCaptureServiceProxy::ExcludePickerWindows(std::vector<int32_t> &windowIDsVec)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+    token = data.WriteUint64(windowIDsVec.size());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write windowIDsVec size!");
+    for (const auto &element : windowIDsVec) {
+        token = data.WriteInt32(element);
+        CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write windowIDsVec");
+    }
+
+    int error = Remote()->SendRequest(EXCLUDE_PICKER_WINDOWS, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "ExcludePickerWindows failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
+int32_t ScreenCaptureServiceProxy::SetPickerMode(PickerMode pickerMode)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+    token = data.WriteInt32(static_cast<int32_t>(pickerMode));
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write pickerMode!");
+
+    int error = Remote()->SendRequest(SET_PICKER_MODE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetPickerMode failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
 int32_t ScreenCaptureServiceProxy::SetMicrophoneEnabled(bool isMicrophone)
 {
     MessageParcel data;

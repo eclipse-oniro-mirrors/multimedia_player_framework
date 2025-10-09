@@ -416,6 +416,18 @@ int32_t ScreenCaptureCapiMock::ExcludeAudioContent(AVScreenCaptureFilterableAudi
     return OH_AVScreenCapture_ExcludeContent(screenCapture_, contentFilter_);
 }
 
+int32_t ScreenCaptureCapiMock::SetPickerMode(PickerMode pickerMode)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    return OH_AVScreenCapture_SetPickerMode(screenCapture_, static_cast<OH_CapturePickerMode>(pickerMode));
+}
+
+int32_t ScreenCaptureCapiMock::ExcludePickerWindows(int32_t *windowIDsVec, uint32_t windowCount)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    return OH_AVScreenCapture_ExcludePickerWindows(screenCapture_, windowIDsVec, windowCount);
+}
+
 int32_t ScreenCaptureCapiMock::CreateCaptureStrategy()
 {
     strategy_ = OH_AVScreenCapture_CreateCaptureStrategy();

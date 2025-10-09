@@ -60,6 +60,8 @@ public:
     virtual int32_t ReleaseVideoBuffer() = 0;
     virtual int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) = 0;
     virtual int32_t SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config) = 0;
+    virtual int32_t ExcludePickerWindows(std::vector<int32_t> &windowIDsVec) = 0;
+    virtual int32_t SetPickerMode(PickerMode pickerMode) = 0;
     virtual int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) = 0;
     virtual int32_t UpdateSurface(sptr<Surface> surface) = 0;
     virtual int32_t SetCaptureArea(uint64_t displayId, OHOS::Rect area) = 0;
@@ -100,6 +102,8 @@ public:
         SET_CAPTURE_AREA = 29,
         SET_HIGH_LIGHT_MODE = 30,
         PRESENT_PICKER = 31,
+        EXCLUDE_PICKER_WINDOWS = 32,
+        SET_PICKER_MODE = 33,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardScreenCaptureService");

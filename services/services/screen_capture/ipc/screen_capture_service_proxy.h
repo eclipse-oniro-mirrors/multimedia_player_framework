@@ -54,6 +54,8 @@ public:
     int32_t SetMaxVideoFrameRate(int32_t frameRate) override;
     int32_t SetListenerObject(const sptr<IRemoteObject> &object) override;
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
+    int32_t ExcludePickerWindows(std::vector<int32_t> &windowIDsVec) override;
+    int32_t SetPickerMode(PickerMode pickerMode) override;
     int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) override;
     int32_t SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config) override;
     int32_t UpdateSurface(sptr<Surface> surface) override;

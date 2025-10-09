@@ -66,6 +66,8 @@ public:
         const std::shared_ptr<ScreenCaptureCallBack> &callback), (override));
     MOCK_METHOD(void, Release, (), (override));
     MOCK_METHOD(int32_t, ExcludeContent, (ScreenCaptureContentFilter &contentFilter), (override));
+    MOCK_METHOD(int32_t, ExcludePickerWindows, (std::vector<int32_t> &windowIDsVec), (override));
+    MOCK_METHOD(int32_t, SetPickerMode, (PickerMode pickerMode), (override));
     MOCK_METHOD(int32_t, SetScreenCaptureStrategy, (ScreenCaptureStrategy strategy), (override));
     MOCK_METHOD(int32_t, UpdateSurface, (sptr<Surface> surface), (override));
     MOCK_METHOD(int32_t, SetCaptureArea, (uint64_t displayId, OHOS::Rect area), (override));

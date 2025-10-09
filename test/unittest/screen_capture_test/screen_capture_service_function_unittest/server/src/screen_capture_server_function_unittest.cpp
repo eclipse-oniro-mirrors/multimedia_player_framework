@@ -2945,6 +2945,20 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckCustScrRecPermission_001, TestSiz
     screenCaptureServer_->appInfo_.appTokenId = ScreenCaptureServer::ROOT_UID;
     EXPECT_EQ(screenCaptureServer_->CheckCustScrRecPermission(), false);
 }
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetPickerMode_001, TestSize.Level2)
+{
+    PickerMode pickerMode = PickerMode::SCREEN_ONLY;
+    screenCaptureServer_->SetPickerMode(pickerMode);
+    EXPECT_EQ(screenCaptureServer_->pickerMode_, pickerMode);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ExcludePickerWindows_001, TestSize.Level2)
+{
+    std::vector<int> excludedWindowIDsVec = {100, 101, 102};
+    screenCaptureServer_->ExcludePickerWindows(excludedWindowIDsVec);
+    EXPECT_EQ(screenCaptureServer_->excludedWindowIDsVec_, excludedWindowIDsVec);
+}
 #endif
 } // Media
 } // OHOS

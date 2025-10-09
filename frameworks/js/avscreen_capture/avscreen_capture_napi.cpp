@@ -66,6 +66,8 @@ napi_value AVScreenCaptureNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("release", JsRelease),
         DECLARE_NAPI_FUNCTION("on", JsSetEventCallback),
         DECLARE_NAPI_FUNCTION("off", JsCancelEventCallback),
+        DECLARE_NAPI_FUNCTION("excludePickerWindows", JsExcludePickerWindows),
+        DECLARE_NAPI_FUNCTION("setPickerMode", JsSetPickerMode),
         DECLARE_NAPI_FUNCTION("presentPicker", JsPresentPicker),
     };
 
@@ -436,6 +438,27 @@ napi_status AVScreenCaptureNapi::GetWindowIDsVectorParams(std::vector<uint64_t> 
     return napi_ok;
 }
 
+napi_status AVScreenCaptureNapi::GetInt32VectorParams(std::vector<int32_t> &vec, napi_env env, napi_value* args)
+{
+    uint32_t array_length;
+    napi_status status = napi_get_array_length(env, args[0], &array_length);
+    if (status != napi_ok) {
+        return status;
+    }
+    for (uint32_t i = 0; i < array_length; i++) {
+        napi_value temp;
+        status = napi_get_element(env, args[0], i, &temp);
+        int32_t tempValue = -1;
+        if (status == napi_ok) {
+            status = napi_get_value_int32(env, temp, &tempValue);
+        }
+        if (status == napi_ok) {
+            vec.push_back(tempValue);
+        }
+    }
+    return napi_ok;
+}
+
 napi_value AVScreenCaptureNapi::JsSkipPrivacyMode(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVScreenCapture::JsSkipPrivacyMode");
@@ -531,6 +554,107 @@ napi_value AVScreenCaptureNapi::JsSetMicrophoneEnabled(napi_env env, napi_callba
     NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     asyncCtx.release();
 
+    MEDIA_LOGI("Js %{public}s End", opt.c_str());
+    return result;
+}
+
+napi_value AVScreenCaptureNapi::JsExcludePickerWindows(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVScreenCapture::JsExcludePickerWindows");
+    const std::string &opt = AVScreenCapturegOpt::EXCLUDE_PICKER_WINDOWS;
+    MEDIA_LOGI("Js %{public}s Start", opt.c_str());
+
+    const int32_t paramsCount = 1;
+    size_t argCount = paramsCount;
+    napi_value args[paramsCount] = { nullptr };
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    auto asyncCtx = std::make_unique<AVScreenCaptureAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+    asyncCtx->napi = AVScreenCaptureNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi->taskQue_ != nullptr, result, "taskQue is nullptr!");
+
+    std::vector<int32_t> windowIDsVec;
+    napi_get_cb_info(env, info, &argCount, args, nullptr, nullptr);
+    napi_status status = GetInt32VectorParams(windowIDsVec, env, args);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, (asyncCtx->AVScreenCaptureSignError(MSERR_EXT_API9_INVALID_PARAMETER,
+        "ExcludePickerWindows", "ExcludePickerWindows get value failed"), result), "failed to GetInt32VectorParams");
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
+    asyncCtx->task_ = AVScreenCaptureNapi::GetExcludePickerWindowsTask(asyncCtx, windowIDsVec);
+
+    (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        AVScreenCaptureAsyncContext* asyncCtx = reinterpret_cast<AVScreenCaptureAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
+        if (asyncCtx->task_) {
+            auto result = asyncCtx->task_->GetResult();
+            if (result.Value().first != MSERR_EXT_API9_OK) {
+                asyncCtx->SignError(result.Value().first, result.Value().second);
+            }
+        }
+        MEDIA_LOGI("The js thread of ExcludePickerWindows finishes execution and returns");
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
+    asyncCtx.release();
+    MEDIA_LOGI("Js %{public}s End", opt.c_str());
+    return result;
+}
+
+napi_value AVScreenCaptureNapi::JsSetPickerMode(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVScreenCapture::JsSetPickerMode");
+    const std::string &opt = AVScreenCapturegOpt::SET_PICKER_MODE;
+    MEDIA_LOGI("Js %{public}s Start", opt.c_str());
+
+    const int32_t paramsCount = 1;
+    size_t argCount = paramsCount;
+    napi_value args[paramsCount] = { nullptr };
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    auto asyncCtx = std::make_unique<AVScreenCaptureAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+    asyncCtx->napi = AVScreenCaptureNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi->taskQue_ != nullptr, result, "taskQue is nullptr!");
+
+    napi_valuetype valueType = napi_undefined;
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
+        asyncCtx->AVScreenCaptureSignError(MSERR_EXT_API9_INVALID_PARAMETER, "SetPickerMode",
+            "SetPickerMode input is not number");
+        return result;
+    }
+    int32_t mode;
+    napi_status status = napi_get_value_int32(env, args[0], &mode);
+    if (status != napi_ok) {
+        asyncCtx->AVScreenCaptureSignError(MSERR_EXT_API9_INVALID_PARAMETER, "SetPickerMode",
+            "SetPickerMode get value failed");
+        return result;
+    }
+
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
+    asyncCtx->task_ = AVScreenCaptureNapi::GetSetPickerModeTask(asyncCtx, static_cast<PickerMode>(mode));
+    (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        AVScreenCaptureAsyncContext* asyncCtx = reinterpret_cast<AVScreenCaptureAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
+        if (asyncCtx->task_) {
+            auto result = asyncCtx->task_->GetResult();
+            if (result.Value().first != MSERR_EXT_API9_OK) {
+                asyncCtx->SignError(result.Value().first, result.Value().second);
+            }
+        }
+        MEDIA_LOGI("The js thread of SetPickerMode finishes execution and returns");
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
+    asyncCtx.release();
     MEDIA_LOGI("Js %{public}s End", opt.c_str());
     return result;
 }
@@ -637,6 +761,36 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureNapi::GetSkipPrivacyModeTas
         CHECK_AND_RETURN_RET(napi != nullptr && napi->screenCapture_ != nullptr,
             GetReturnInfo(MSERR_INVALID_OPERATION, option, ""));
         int32_t ret = napi->screenCapture_->SkipPrivacyMode(const_cast<std::vector<uint64_t> &>(windowIDsVec));
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(MSERR_UNKNOWN, option, ""));
+        MEDIA_LOGI("%{public}s End", option.c_str());
+        return RetInfo(MSERR_EXT_API9_OK, "");
+    });
+}
+
+std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureNapi::GetExcludePickerWindowsTask(
+    const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const std::vector<int32_t> windowIDsVec)
+{
+    return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, windowIDsVec]() {
+        const std::string &option = AVScreenCapturegOpt::EXCLUDE_PICKER_WINDOWS;
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+        CHECK_AND_RETURN_RET(napi != nullptr && napi->screenCapture_ != nullptr,
+            GetReturnInfo(MSERR_INVALID_OPERATION, option, ""));
+        int32_t ret = napi->screenCapture_->ExcludePickerWindows(const_cast<std::vector<int32_t> &>(windowIDsVec));
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(MSERR_UNKNOWN, option, ""));
+        MEDIA_LOGI("%{public}s End", option.c_str());
+        return RetInfo(MSERR_EXT_API9_OK, "");
+    });
+}
+
+std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureNapi::GetSetPickerModeTask(
+    const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const PickerMode pickerMode)
+{
+    return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, pickerMode]() {
+        const std::string &option = AVScreenCapturegOpt::SET_PICKER_MODE;
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+        CHECK_AND_RETURN_RET(napi != nullptr && napi->screenCapture_ != nullptr,
+            GetReturnInfo(MSERR_INVALID_OPERATION, option, ""));
+        int32_t ret = napi->screenCapture_->SetPickerMode(pickerMode);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(MSERR_UNKNOWN, option, ""));
         MEDIA_LOGI("%{public}s End", option.c_str());
         return RetInfo(MSERR_EXT_API9_OK, "");
