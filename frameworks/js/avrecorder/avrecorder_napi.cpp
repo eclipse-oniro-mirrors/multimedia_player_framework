@@ -1788,7 +1788,7 @@ int32_t AVRecorderNapi::CheckRepeatOperation(const std::string &opt)
 int32_t AVRecorderNapi::GetAudioAacProfile(const int32_t &mime, AacProfile &aacProfile)
 {
     if (mime >= static_cast<int32_t>(AacProfile::AAC_LC) &&
-        mime <= static_cast<int32_t>(AacProfile::AAC_HE_V2)) {
+        mime < static_cast<int32_t>(AacProfile::VIDEO_CODEC_FORMAT_BUTT)) {
         aacProfile = static_cast<AacProfile>(mime);
     } else {
         aacProfile = AacProfile::AAC_LC;
@@ -1912,7 +1912,6 @@ int32_t AVRecorderNapi::GetAudioProfile(std::unique_ptr<AVRecorderAsyncContext> 
         (asyncCtx->AVRecorderSignError(ret, "GetaudioChannels", "audioChannels"), ret));
     CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "audioSampleRate", profile.audioSampleRate),
         (asyncCtx->AVRecorderSignError(ret, "GetaudioSampleRate", "audioSampleRate"), ret));
-    ret = MSERR_OK;
     int aacProfile = 0;
     CommonNapi::GetPropertyInt32(env, item, "aacProfile", aacProfile);
     ret = AVRecorderNapi::GetAudioAacProfile(aacProfile, profile.aacProfile);
@@ -2020,7 +2019,7 @@ void AVRecorderNapi::MediaProfileLog(bool isVideo, AVRecorderProfile &profile)
         return;
     }
     MEDIA_LOGI("audioBitrate %{public}d, audioChannels %{public}d, audioCodecFormat %{public}d,"
-        " audioSampleRate %{public}d, audioaac %{public}d!", profile.audioBitrate, profile.audioChannels,
+        " audioSampleRate %{public}d, aacProfile %{public}d!", profile.audioBitrate, profile.audioChannels,
         profile.audioCodecFormat, profile.audioSampleRate, profile.aacProfile);
 }
 

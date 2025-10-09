@@ -797,6 +797,7 @@ void HiRecorderImpl::ConfigureAudio(const RecorderParam &recParam)
 
 void HiRecorderImpl::ConfigureAudioAacProfile(const RecorderParam &recParam)
 {
+    MEDIA_LOG_I("ConfigureAudioAacProfile enter.");
     AacEnc aacEnc = static_cast<const AacEnc&>(recParam);
     switch (aacEnc.encFmt) {
         case OHOS::Media::AacProfile::AAC_LC:

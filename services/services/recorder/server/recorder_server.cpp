@@ -603,7 +603,6 @@ int32_t RecorderServer::SetAudioAacProfile(int32_t sourceId, AacProfile aacProfi
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     config_.aacProfile = aacProfile;
     AacEnc aacEnc(aacProfile);
-    // 64000 audiobitrate from audioencorder
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(sourceId, aacEnc);
     });

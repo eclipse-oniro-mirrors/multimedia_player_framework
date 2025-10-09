@@ -672,16 +672,12 @@ public:
     virtual int32_t SetAudioEncoder(int32_t sourceId, AudioCodecFormat encoder) = 0;
 
     /**
-     * @brief Sets an audio encoder for recording.
-     *
-     * If this function is not called, the output file defualt AAC_LC.
-     * This function must be called after {@link SetOutputFormat} but before {@link Prepare}.
-     *
-     * @param sourceId Indicates the audio source ID, which can be obtained from {@link SetAudioSource}.
-     * @param encoder Indicates the audio encoder to set.
-     * @return Returns {@link MSERR_OK} if the setting is successful; returns an error code otherwise.
-     * @since 1.0
-     * @version 1.0
+     *AAC profile for AAC audio encoder If not set, use AAC_LC profile as default
+     * @type { ?AacProfile }
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     * @atomicservice
+     * @since 22
+     * @arkts 1.1&1.2
      */
     virtual int32_t SetAudioAacProfile(int32_t sourceId, AacProfile aacProfile) = 0;
 
