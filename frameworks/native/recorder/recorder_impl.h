@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 #ifndef RECORDER_IMPL_H
 #define RECORDER_IMPL_H
 
