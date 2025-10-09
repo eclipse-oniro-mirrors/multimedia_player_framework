@@ -100,6 +100,7 @@ static const std::map<int32_t, const char*> g_MetadataCodeMap = {
     {39,    "hdrType"},
     {44,    "videoRotateOrientation"},
     {45,    "gltf_offset"},
+    {46,    "transfer_characteristics"},
 };
 
 /**
@@ -319,6 +320,10 @@ enum AVMetadataCode : int32_t {
      * The metadata key to retrieve the information about the offset of the 3DGS video.
      */
     AV_KEY_GLTF_OFFSET = 45,
+    /**
+     * The metadata key to retrieve the information about the transfer_characteristic of the video.
+     */
+    AV_KEY_VIDEO_COLOR_TRC = 46,
 };
 
 /**
