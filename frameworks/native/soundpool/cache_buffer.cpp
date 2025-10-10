@@ -347,7 +347,14 @@ void CacheBuffer::OnWriteData(size_t length)
     CHECK_AND_RETURN_LOG(isReadyToStopAudioRenderer_.load() == false,
         "CacheBuffer::OnWriteData is ready To stop AudioRenderer, streamID:%{public}d", streamID_);
     std::lock_guard lock(cacheBufferLock_);
-    CHECK_AND_RETURN_LOG(fullCacheData_ != nullptr, "fullCacheData_ is nullptr");
+    if (fullCacheData_ == nullptr) {
+        MEDIA_LOGE("fullCacheData_ is nullptr.");
+        if (audioRenderer_ != nullptr) {
+            MEDIA_LOGI("audioRenderer_ will be stopped.");
+            audioRenderer_->Stop();
+        }
+        return;
+    }
     if (cacheDataFrameIndex_ >= static_cast<size_t>(fullCacheData_->size)) {
         if (loop_ >= 0 && havePlayedCount_ >= loop_) {
             MEDIA_LOGI("CacheBuffer stream write finish, cacheDataFrameIndex_:%{public}zu,"
