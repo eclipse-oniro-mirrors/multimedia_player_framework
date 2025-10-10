@@ -459,6 +459,13 @@ void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta
         if (innerKey.compare("customInfo") == 0) {
             continue;
         }
+        if (innerKey.compare("transfer_characteristics") == 0) {
+            Plugins::TransferCharacteristic trc;
+            if (innerMeta->GetData(innerKey, trc)) {
+                avmeta.SetMeta(avKey, std::to_string(static_cast<int32_t>(trc)));
+            }
+            continue;
+        }
         if (!SetStringByValueType(innerMeta, avmeta, avKey, innerKey)) {
             break;
         }
@@ -600,13 +607,6 @@ bool AVMetaDataCollector::SetStringByValueType(const std::shared_ptr<Meta> &inne
         if (innerMeta->GetData(innerKey, value) && collectedAVMetaData_ != nullptr) {
             collectedAVMetaData_->SetData(innerKey, value);
         }
-    } else if (Any::IsSameTypeWith<Plugins::TransferCharacteristic>(type)) {
-        Plugins::TransferCharacteristic trc;
-        if (innerMeta->GetData(innerKey, trc)) {
-            avmeta.SetMeta(avKey, std::to_string(static_cast<int32_t>(trc)));
-            MEDIA_LOGI("set transfer_characteristics success, key: %{public}s, value: %{public}s",
-                innerKey.c_str(), std::to_string(static_cast<int32_t>(trc)).c_str());
-        }        
     } else {
         MEDIA_LOGE("not found type matched with innerKey: %{public}s", innerKey.c_str());
         return false;
