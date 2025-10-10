@@ -52,6 +52,7 @@ public:
     virtual int32_t SetAudioSampleRate(int32_t sourceId, int32_t rate) = 0;
     virtual int32_t SetAudioChannels(int32_t sourceId, int32_t num) = 0;
     virtual int32_t SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRate) = 0;
+    virtual int32_t SetAudioAacProfile(int32_t sourceId, AacProfile aacProfile) = 0;
     virtual int32_t SetDataSource(DataSourceType dataType, int32_t &sourceId) = 0;
     virtual int32_t SetUserCustomInfo(Meta &userCustomInfo) = 0;
     virtual int32_t SetGenre(std::string &genre) = 0;
@@ -157,6 +158,7 @@ public:
         SET_USERMETA,
         SET_INTERRUPT_STRATEGY,
         TRANSMIT_QOS,
+        SET_AUDIO_AACPROFILE,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardRecorderService");

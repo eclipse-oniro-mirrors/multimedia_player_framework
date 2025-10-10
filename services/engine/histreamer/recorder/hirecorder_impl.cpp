@@ -309,6 +309,7 @@ int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recPara
         case RecorderPublicParamType::AUD_CHANNEL:
         case RecorderPublicParamType::AUD_BITRATE:
         case RecorderPublicParamType::AUD_ENC_FMT:
+        case RecorderPublicParamType::AUD_AAC_FMT:
             ConfigureAudio(recParam);
             break;
         case RecorderPublicParamType::VID_CAPTURERATE:
@@ -784,9 +785,35 @@ void HiRecorderImpl::ConfigureAudio(const RecorderParam &recParam)
             ConfigureAudioCodecFormat(recParam);
             break;
         }
+        case RecorderPublicParamType::AUD_AAC_FMT: {
+            ConfigureAudioAacProfile(recParam);
+            break;
+        }
         default: {
             break;
         }
+    }
+}
+
+void HiRecorderImpl::ConfigureAudioAacProfile(const RecorderParam &recParam)
+{
+    MEDIA_LOG_I("ConfigureAudioAacProfile enter.");
+    AacEnc aacEnc = static_cast<const AacEnc&>(recParam);
+    switch (aacEnc.encFmt) {
+        case OHOS::Media::AacProfile::AAC_LC:
+            audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_AAC);
+            audioEncFormat_->Set<Tag::MEDIA_PROFILE>(Plugins::AACProfile::AAC_PROFILE_LC);
+            break;
+        case OHOS::Media::AacProfile::AAC_HE:
+            audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_AAC);
+            audioEncFormat_->Set<Tag::MEDIA_PROFILE>(Plugins::AACProfile::AAC_PROFILE_HE);
+            break;
+        case OHOS::Media::AacProfile::AAC_HE_V2:
+            audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_AAC);
+            audioEncFormat_->Set<Tag::MEDIA_PROFILE>(Plugins::AACProfile::AAC_PROFILE_HE_V2);
+            break;
+        default:
+            break;
     }
 }
 
@@ -1088,7 +1115,8 @@ void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
 
 bool HiRecorderImpl::CheckParamType(int32_t sourceId, const RecorderParam &recParam)
 {
-    FALSE_RETURN_V((SourceIdGenerator::IsAudio(sourceId) && recParam.IsAudioParam() && audioSourceId_ == sourceId) ||
+    FALSE_RETURN_V((recParam.type == RecorderPublicParamType::AUD_AAC_FMT) ||
+        (SourceIdGenerator::IsAudio(sourceId) && recParam.IsAudioParam() && audioSourceId_ == sourceId) ||
         (SourceIdGenerator::IsVideo(sourceId) && recParam.IsVideoParam() && videoSourceId_ == sourceId) ||
         (SourceIdGenerator::IsMeta(sourceId) && recParam.IsMetaParam() &&
         (GetMetaSourceType(sourceId) > VIDEO_META_SOURCE_INVALID &&

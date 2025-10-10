@@ -487,6 +487,25 @@ int32_t RecorderServiceProxy::SetAudioEncodingBitRate(int32_t sourceId, int32_t 
     return reply.ReadInt32();
 }
 
+int32_t RecorderServiceProxy::SetAudioAacProfile(int32_t sourceId, AacProfile aacProfile)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    token = data.WriteInt32(sourceId) && data.WriteInt32(static_cast<int32_t>(aacProfile));
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
+    int error = Remote()->SendRequest(SET_AUDIO_AACPROFILE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetAudioAacProfile failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
 int32_t RecorderServiceProxy::SetDataSource(DataSourceType dataType, int32_t &sourceId)
 {
     MessageParcel data;

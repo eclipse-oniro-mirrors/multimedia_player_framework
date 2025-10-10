@@ -71,6 +71,7 @@ enum RecorderPublicParamType : uint32_t {
     GENRE_INFO,
 
     PUBLIC_PARAM_TYPE_END,
+    AUD_AAC_FMT,
 };
 
 /*
@@ -150,6 +151,11 @@ struct CaptureRate : public RecorderParam {
 struct AudEnc : public RecorderParam {
     explicit AudEnc(AudioCodecFormat fmt) : RecorderParam(RecorderPublicParamType::AUD_ENC_FMT), encFmt(fmt) {}
     AudioCodecFormat encFmt;
+};
+
+struct AacEnc : public RecorderParam {
+    explicit AacEnc(AacProfile fmt) : RecorderParam(RecorderPublicParamType::AUD_AAC_FMT), encFmt(fmt) {}
+    AacProfile encFmt;
 };
 
 struct AudSampleRate : public RecorderParam {

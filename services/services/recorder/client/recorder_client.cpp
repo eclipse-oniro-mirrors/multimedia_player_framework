@@ -292,6 +292,15 @@ int32_t RecorderClient::SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRat
     return recorderProxy_->SetAudioEncodingBitRate(sourceId, bitRate);
 }
 
+int32_t RecorderClient::SetAudioAacProfile(int32_t sourceId, AacProfile aacProfile)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+
+    MEDIA_LOGD("SetAudioAacProfile sourceId(%{public}d), aacProfile(%{public}d)", sourceId, aacProfile);
+    return recorderProxy_->SetAudioAacProfile(sourceId, aacProfile);
+}
+
 int32_t RecorderClient::SetDataSource(DataSourceType dataType, int32_t &sourceId)
 {
     std::lock_guard<std::mutex> lock(mutex_);

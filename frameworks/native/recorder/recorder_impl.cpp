@@ -212,6 +212,14 @@ int32_t RecorderImpl::SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRate)
     return recorderService_->SetAudioEncodingBitRate(sourceId, bitRate);
 }
 
+int32_t RecorderImpl::SetAudioAacProfile(int32_t sourceId, AacProfile aacProfile)
+{
+    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetAudioAacProfile in, sourceId is %{public}d, "
+        "aacProfile is %{public}d", FAKE_POINTER(this), sourceId, aacProfile);
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    return recorderService_->SetAudioAacProfile(sourceId, aacProfile);
+}
+
 int32_t RecorderImpl::SetMetaSource(MetaSourceType source, int32_t &sourceId)
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetMetaSource in, source is %{public}d, sourceId is %{public}d",

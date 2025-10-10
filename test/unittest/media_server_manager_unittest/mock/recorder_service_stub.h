@@ -59,6 +59,7 @@ public:
     MOCK_METHOD(sptr<OHOS::Surface>, GetMetaSurface, (int32_t sourceId), (override));
     MOCK_METHOD(int32_t, SetAudioSource, (AudioSourceType source, int32_t &sourceId), (override));
     MOCK_METHOD(int32_t, SetAudioEncoder, (int32_t sourceId, AudioCodecFormat encoder), (override));
+    MOCK_METHOD(int32_t, SetAudioAacProfile, (int32_t sourceId, AacProfile aacProfile), (override));
     MOCK_METHOD(int32_t, SetAudioSampleRate, (int32_t sourceId, int32_t rate), (override));
     MOCK_METHOD(int32_t, SetAudioChannels, (int32_t sourceId, int32_t num), (override));
     MOCK_METHOD(int32_t, SetAudioEncodingBitRate, (int32_t sourceId, int32_t bitRate), (override));

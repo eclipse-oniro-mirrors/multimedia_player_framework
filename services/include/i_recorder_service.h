@@ -346,6 +346,16 @@ public:
     virtual int32_t SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRate) = 0;
 
     /**
+     *AAC profile for AAC audio encoder If not set, use AAC_LC profile as default
+     * @type { ?AacProfile }
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     * @atomicservice
+     * @since 22
+     * @arkts 1.1&1.2
+     */
+    virtual int32_t SetAudioAacProfile(int32_t sourceId, AacProfile aacProfile) = 0;
+
+    /**
      * @brief Sets a data source for recording.
      *
      * If this function is not called, the output file does not contain the data track.

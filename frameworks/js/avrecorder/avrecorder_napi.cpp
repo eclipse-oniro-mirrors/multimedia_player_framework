@@ -1785,6 +1785,18 @@ int32_t AVRecorderNapi::CheckRepeatOperation(const std::string &opt)
     return MSERR_OK;
 }
 
+int32_t AVRecorderNapi::GetAudioAacProfile(const int32_t &mime, AacProfile &aacProfile)
+{
+    if (mime >= static_cast<int32_t>(AacProfile::AAC_LC) &&
+        mime < static_cast<int32_t>(AacProfile::VIDEO_CODEC_FORMAT_BUTT)) {
+        aacProfile = static_cast<AacProfile>(mime);
+    } else {
+        aacProfile = AacProfile::AAC_LC;
+    }
+
+    return MSERR_OK;
+}
+
 int32_t AVRecorderNapi::GetAudioCodecFormat(const std::string &mime, AudioCodecFormat &codecFormat)
 {
     MEDIA_LOGI("mime %{public}s", mime.c_str());
@@ -1900,6 +1912,11 @@ int32_t AVRecorderNapi::GetAudioProfile(std::unique_ptr<AVRecorderAsyncContext> 
         (asyncCtx->AVRecorderSignError(ret, "GetaudioChannels", "audioChannels"), ret));
     CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "audioSampleRate", profile.audioSampleRate),
         (asyncCtx->AVRecorderSignError(ret, "GetaudioSampleRate", "audioSampleRate"), ret));
+    int aacProfile = 0;
+    CommonNapi::GetPropertyInt32(env, item, "aacProfile", aacProfile);
+    ret = AVRecorderNapi::GetAudioAacProfile(aacProfile, profile.aacProfile);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK,
+        (asyncCtx->AVRecorderSignError(ret, "GetAudioCodecFormat", "aacProfile"), ret));
     MediaProfileLog(false, profile);
     return ret;
 }
@@ -2002,8 +2019,8 @@ void AVRecorderNapi::MediaProfileLog(bool isVideo, AVRecorderProfile &profile)
         return;
     }
     MEDIA_LOGI("audioBitrate %{public}d, audioChannels %{public}d, audioCodecFormat %{public}d,"
-        " audioSampleRate %{public}d!", profile.audioBitrate, profile.audioChannels,
-        profile.audioCodecFormat, profile.audioSampleRate);
+        " audioSampleRate %{public}d, aacProfile %{public}d!", profile.audioBitrate, profile.audioChannels,
+        profile.audioCodecFormat, profile.audioSampleRate, profile.aacProfile);
 }
 
 int32_t AVRecorderNapi::GetConfig(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args)
@@ -2242,6 +2259,12 @@ RetInfo AVRecorderNapi::SetProfile(std::shared_ptr<AVRecorderConfig> config)
 
         ret = recorder_->SetAudioEncodingBitRate(audioSourceID_, profile.audioBitrate);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetAudioEncodingBitRate", "audioBitrate"));
+
+        if (profile.audioCodecFormat == AudioCodecFormat::AUDIO_DEFAULT ||
+            profile.audioCodecFormat == AudioCodecFormat::AAC_LC) {
+            ret = recorder_->SetAudioAacProfile(audioSourceID_, profile.aacProfile);
+            CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetAudioAacProfile", "audioAacProfile"));
+        }
     }
 
     if (config->withVideo) {

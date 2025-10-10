@@ -672,6 +672,16 @@ public:
     virtual int32_t SetAudioEncoder(int32_t sourceId, AudioCodecFormat encoder) = 0;
 
     /**
+     *AAC profile for AAC audio encoder If not set, use AAC_LC profile as default
+     * @type { ?AacProfile }
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     * @atomicservice
+     * @since 22
+     * @arkts 1.1&1.2
+     */
+    virtual int32_t SetAudioAacProfile(int32_t sourceId, AacProfile aacProfile) = 0;
+
+    /**
      * @brief Sets the audio sampling rate for recording.
      *
      * This function must be called after {@link SetOutputFormat} but before {@link Prepare}.
