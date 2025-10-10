@@ -327,7 +327,9 @@ int32_t LppVideoStreamerServiceProxy::ReturnFrames(sptr<LppDataPacket> framePack
     bool token = data.WriteInterfaceToken(LppVideoStreamerServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
     framePacket->WriteToMessageParcel(data);
-    Remote()->SendRequest(RETURN_FRAMES, data, reply, option);
+    int32_t error = Remote()->SendRequest(RETURN_FRAMES, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(
+        error == MSERR_OK, MSERR_INVALID_OPERATION, "ReturnFrames failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
 
@@ -340,7 +342,9 @@ int32_t LppVideoStreamerServiceProxy::RegisterCallback()
     bool token = data.WriteInterfaceToken(LppVideoStreamerServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    Remote()->SendRequest(REGISTER_CALLBACK, data, reply, option);
+    int32_t error = Remote()->SendRequest(REGISTER_CALLBACK, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(
+        error == MSERR_OK, MSERR_INVALID_OPERATION, "RegisterCallback failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
 
