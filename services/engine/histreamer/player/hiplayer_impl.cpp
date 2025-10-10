@@ -1057,6 +1057,7 @@ int32_t HiPlayerImpl::PauseDemuxer()
 {
     MediaTrace trace("HiPlayerImpl::PauseDemuxer");
     MEDIA_LOG_I("PauseDemuxer in");
+    SetBuffering(true);
     callbackLooper_.StopReportMediaProgress();
     callbackLooper_.StopCollectMaxAmplitude();
     StopFlvCheckLiveDelayTime();
@@ -1071,12 +1072,24 @@ int32_t HiPlayerImpl::ResumeDemuxer()
     MEDIA_LOG_I("ResumeDemuxer in");
     FALSE_RETURN_V_MSG_E(pipelineStates_ != PlayerStates::PLAYER_STATE_ERROR,
         TransStatus(Status::OK), "PLAYER_STATE_ERROR not allow ResumeDemuxer");
+    SetBuffering(false);
     callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
     StartFlvCheckLiveDelayTime();
     callbackLooper_.StartCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
     syncManager_->Resume();
     Status ret = demuxer_->ResumeDemuxerReadLoop();
     return TransStatus(ret);
+}
+
+int32_t HiPlayerImpl::SetBuffering(bool isBuffering)
+{
+    if (audioSink_ != nullptr) {
+        audioSink_->SetBuffering(isBuffering);
+    }
+    if (videoDecoder_ != nullptr) {
+        videoDecoder_->SetBuffering(isBuffering);
+    }
+    return TransStatus(Status::OK);
 }
 
 int64_t HiPlayerImpl::GetCurrentMillisecond()

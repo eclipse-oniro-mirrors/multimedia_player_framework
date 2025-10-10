@@ -201,6 +201,7 @@ public:
     int32_t SetLoudnessGain(float loudnessGain) override;
     int32_t GetGlobalInfo(std::shared_ptr<Meta> &globalInfo) override;
     void CleanUnusedListener();
+    int32_t SetBuffering(bool isBuffering);
 
 private:
     enum HiplayerSvpMode : int32_t {

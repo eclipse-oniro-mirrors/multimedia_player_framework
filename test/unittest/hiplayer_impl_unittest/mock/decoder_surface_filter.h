@@ -123,6 +123,7 @@ public:
     MOCK_METHOD(Status, SetCameraPostprocessing, (bool enable), ());
     MOCK_METHOD(void, NotifyPause, (), ());
     MOCK_METHOD(void, NotifyMemoryExchange, (bool exchangeFlag), ());
+    MOCK_METHOD(void, SetBuffering, (bool isBuffering), ());
 };
 } // namespace Pipeline
 } // namespace Media
