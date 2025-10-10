@@ -133,6 +133,9 @@ public:
     std::string OpenHapticsUri(const DatabaseTool &databaseTool, const std::string &hapticsUri);
     std::string GetHapticsUriByStyle(const DatabaseTool &databaseTool,
         const std::string &standardHapticsUri, HapticsStyle hapticsStyle);
+    int32_t GetGentleHapticsAttr(const DatabaseTool &databaseTool,
+            const std::string &standardHapticsUri, std::string &hapticsTitle,
+            std::string &hapticsFileName, std::string &hapticsUri);
     int32_t GetToneHapticsSettings(const DatabaseTool &databaseTool, const std::string &toneUri,
         ToneHapticsType toneHapticsType, ToneHapticsSettings &settings);
     int32_t GetHapticsAttrsSyncedWithTone(const std::string &toneUri,
@@ -250,7 +253,9 @@ private:
     std::string GetBundleName();
     std::string AddCustomizedToneCheck(const std::shared_ptr<ToneAttrs> &toneAttrs, const int32_t &length);
     void SetToneAttrs(std::shared_ptr<ToneAttrs> &toneAttrs, const std::unique_ptr<RingtoneAsset> &ringtoneAsset);
-
+    DataShare::DataSharePredicates CreateVibrationListQueryPredicates(bool isSynced);
+    DataShare::DataSharePredicates CreateVibrateQueryPredicates(const std::string &displayName, int32_t vibrateType);
+    
     std::string systemSoundPath_ = "";
     std::mutex uriMutex_;
     std::mutex playerMutex_;

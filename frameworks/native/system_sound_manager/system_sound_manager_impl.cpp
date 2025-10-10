@@ -2090,6 +2090,10 @@ int32_t SystemSoundManagerImpl::AddCustomizedTone(const std::shared_ptr<DataShar
             valuesBucket.Put(RINGTONE_COLUMN_TONE_TYPE, static_cast<int>(TONE_TYPE_CONTACTS));
             MEDIA_LOGI("displayName : %{public}s", displayName_.c_str());
             break;
+        case TONE_CATEGORY_NOTIFICATION_APP:
+            toneAttrs->SetUri(RINGTONE_CUSTOMIZED_NOTIFICATIONS_PATH + RINGTONE_SLASH_CHAR + displayName_);
+            valuesBucket.Put(RINGTONE_COLUMN_TONE_TYPE, static_cast<int>(TONE_TYPE_NOTIFICATION_APP));
+            break;
         default:
             break;
     }
@@ -2132,6 +2136,9 @@ bool SystemSoundManagerImpl::DeleteCustomizedTone(const std::shared_ptr<DataShar
             break;
         case TONE_CATEGORY_CONTACTS:
             predicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, static_cast<int>(TONE_TYPE_CONTACTS));
+            break;
+        case TONE_CATEGORY_NOTIFICATION_APP:
+            predicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, static_cast<int>(TONE_TYPE_NOTIFICATION_APP));
             break;
         default:
             break;
@@ -2364,6 +2371,8 @@ void SystemSoundManagerImpl::SetToneAttrs(std::shared_ptr<ToneAttrs> &toneAttrs,
         toneAttrs->SetCategory(TONE_CATEGORY_ALARM);
     } else if (toneType == TONE_TYPE_CONTACTS) {
         toneAttrs->SetCategory(TONE_CATEGORY_CONTACTS);
+    } else if (toneType == TONE_TYPE_NOTIFICATION_APP) {
+        toneAttrs->SetCategory(TONE_CATEGORY_NOTIFICATION_APP);
     }
     if (ringtoneAsset->GetMediaType() == RINGTONE_MEDIA_TYPE_VIDEO) {
         toneAttrs->SetMediaType(ToneMediaType::MEDIA_TYPE_VID);
@@ -2810,17 +2819,8 @@ int32_t SystemSoundManagerImpl::SetToneHapticsSettings(std::shared_ptr<DataShare
     return UNSUPPORTED_ERROR;
 }
 
-int32_t SystemSoundManagerImpl::GetToneHapticsList(const std::shared_ptr<AbilityRuntime::Context> &context,
-    bool isSynced, std::vector<std::shared_ptr<ToneHapticsAttrs>> &toneHapticsAttrsArray)
+DataShare::DataSharePredicates SystemSoundManagerImpl::CreateVibrationListQueryPredicates(bool isSynced)
 {
-#ifdef SUPPORT_VIBRATOR
-    MEDIA_LOGI("GetToneHapticsList: get vibration list, type : %{public}s.", isSynced ? "sync" : "non sync");
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
-        SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID);
-    CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, IO_ERROR,
-        "Create dataShare failed, datashare or ringtone library error.");
-
-    DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
     queryPredicates.BeginWrap();
     queryPredicates.EqualTo(VIBRATE_COLUMN_VIBRATE_TYPE, VIBRATE_TYPE_STANDARD);
@@ -2833,7 +2833,22 @@ int32_t SystemSoundManagerImpl::GetToneHapticsList(const std::shared_ptr<Ability
     queryPredicates.EndWrap();
     queryPredicates.And();
     queryPredicates.EqualTo(VIBRATE_COLUMN_PLAY_MODE,
-        std::to_string(isSynced ? VIBRATE_PLAYMODE_SYNC : VIBRATE_PLAYMODE_CLASSIC));
+    std::to_string(isSynced ? VIBRATE_PLAYMODE_SYNC : VIBRATE_PLAYMODE_CLASSIC));
+    return queryPredicates;
+}
+
+int32_t SystemSoundManagerImpl::GetToneHapticsList(const std::shared_ptrAbilityRuntime::Context &context,
+    bool isSynced, std::vector<std::shared_ptr> &toneHapticsAttrsArray)
+{
+#ifdef SUPPORT_VIBRATOR
+    MEDIA_LOGI("GetToneHapticsList: get vibration list, type : %{public}s.", isSynced ? "sync" : "non sync");
+    std::shared_ptrDataShare::DataShareHelper dataShareHelper =
+    SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID);
+        CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, IO_ERROR,
+        "Create dataShare failed, datashare or ringtone library error.");
+    DataShare::DatashareBusinessError businessError;
+    DataShare::DataSharePredicates queryPredicates = CreateVibrationListQueryPredicates(isSynced);
+
     Uri VIBRATEURI_PROXY(RINGTONE_LIBRARY_PROXY_DATA_URI_VIBATE_FILES + "&user=" +
         std::to_string(SystemSoundManagerUtils::GetCurrentUserId()));
     auto resultSet = dataShareHelper->Query(VIBRATEURI_PROXY, queryPredicates, VIBRATE_TABLE_COLUMNS, &businessError);
@@ -2846,22 +2861,29 @@ int32_t SystemSoundManagerImpl::GetToneHapticsList(const std::shared_ptr<Ability
         resultSet = dataShareHelper->Query(VIBRATEURI, queryPredicates, VIBRATE_TABLE_COLUMNS, &businessError);
     }
     auto results = make_unique<RingtoneFetchResult<VibrateAsset>>(move(resultSet));
-
     toneHapticsAttrsArray.clear();
     unique_ptr<VibrateAsset> vibrateAsset = results->GetFirstObject();
+    std::string gentleTitle;
+    std::string gentleName;
+    std::string gentleUri;
+    DatabaseTool databaseTool = {true, false, dataShareHelper};
     if (vibrateAsset == nullptr) {
         MEDIA_LOGE("GetToneHapticsList: get %{public}s vibration list fail!", isSynced ? "sync" : "non sync");
     } else {
         while (vibrateAsset != nullptr) {
+            result = GetGentleHapticsAttr(databaseTool, vibrateAsset->GetPath(), gentleTitle, gentleName, gentleUri);
+            if (result != 0) {
+                MEDIA_LOGW("GetHapticsAttrsSyncedWithTone: get gentle haptics attrs fail");
+            }
             auto toneHapticsAttrs = std::make_shared<ToneHapticsAttrs>(vibrateAsset->GetTitle(),
-                vibrateAsset->GetDisplayName(), vibrateAsset->GetPath());
+                vibrateAsset->GetDisplayName(), vibrateAsset->GetPath(), gentleTitle, gentleName, gentleUri);
             toneHapticsAttrsArray.push_back(toneHapticsAttrs);
             vibrateAsset = results->GetNextObject();
         }
     }
-
     dataShareHelper->Release();
     return toneHapticsAttrsArray.empty() ? IO_ERROR : SUCCESS;
+
 #endif
     return UNSUPPORTED_ERROR;
 }
@@ -2953,8 +2975,20 @@ int32_t SystemSoundManagerImpl::GetHapticsAttrsSyncedWithTone(const std::shared_
     return UNSUPPORTED_ERROR;
 }
 
+DataShare::DataSharePredicates SystemSoundManagerImpl::CreateVibrateQueryPredicates(
+    const std::string &displayName, int32_t vibrateType)
+{
+    DataShare::DataSharePredicates vibrateQueryPredicates;
+    vibrateQueryPredicates.EqualTo(VIBRATE_COLUMN_DISPLAY_NAME, ConvertToHapticsFileName(displayName));
+    vibrateQueryPredicates.And();
+    vibrateQueryPredicates.EqualTo(VIBRATE_COLUMN_VIBRATE_TYPE, vibrateType);
+    vibrateQueryPredicates.And();
+    vibrateQueryPredicates.EqualTo(VIBRATE_COLUMN_PLAY_MODE, VIBRATE_PLAYMODE_SYNC);
+    return vibrateQueryPredicates;
+}
+    
 int32_t SystemSoundManagerImpl::GetHapticsAttrsSyncedWithTone(const std::string &toneUri,
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, std::shared_ptr<ToneHapticsAttrs> &toneHapticsAttrs)
+    std::shared_ptrDataShare::DataShareHelper dataShareHelper, std::shared_ptr &toneHapticsAttrs)
 {
 #ifdef SUPPORT_VIBRATOR
     MEDIA_LOGI("GetHapticsAttrsSyncedWithTone: get %{public}s sync vibration.", toneUri.c_str());
@@ -2962,22 +2996,15 @@ int32_t SystemSoundManagerImpl::GetHapticsAttrsSyncedWithTone(const std::string 
         MEDIA_LOGE("GetHapticsAttrsSyncedWithTone: param fail");
         return IO_ERROR;
     }
-
-    unique_ptr<RingtoneAsset> ringtoneAsset = IsPresetRingtone(dataShareHelper, toneUri);
+    unique_ptr ringtoneAsset = IsPresetRingtone(dataShareHelper, toneUri);
     if (ringtoneAsset == nullptr) {
         MEDIA_LOGE("GetHapticsAttrsSyncedWithTone: toneUri[%{public}s] is not presetRingtone!", toneUri.c_str());
         return OPERATION_ERROR;
     }
-
     DataShare::DatashareBusinessError businessError;
-    DataShare::DataSharePredicates vibrateQueryPredicates;
-    vibrateQueryPredicates.EqualTo(VIBRATE_COLUMN_DISPLAY_NAME,
-        ConvertToHapticsFileName(ringtoneAsset->GetDisplayName()));
-    vibrateQueryPredicates.And();
-    vibrateQueryPredicates.EqualTo(VIBRATE_COLUMN_VIBRATE_TYPE,
-        GetStandardVibrateType(ringtoneAsset->GetToneType()));
-    vibrateQueryPredicates.And();
-    vibrateQueryPredicates.EqualTo(VIBRATE_COLUMN_PLAY_MODE, VIBRATE_PLAYMODE_SYNC);
+    DataShare::DataSharePredicates vibrateQueryPredicates = CreateVibrateQueryPredicates(
+        ringtoneAsset->GetDisplayName(), GetStandardVibrateType(ringtoneAsset->GetToneType()));
+    
     Uri VIBRATEURI_PROXY(RINGTONE_LIBRARY_PROXY_DATA_URI_VIBATE_FILES + "&user=" +
         std::to_string(SystemSoundManagerUtils::GetCurrentUserId()));
     auto vibrateResultSet = dataShareHelper->Query(VIBRATEURI_PROXY, vibrateQueryPredicates, VIBRATE_TABLE_COLUMNS,
@@ -2985,25 +3012,32 @@ int32_t SystemSoundManagerImpl::GetHapticsAttrsSyncedWithTone(const std::string 
     Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
     int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
         "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    MEDIA_LOGI("systemsoundmanagerimpl  result :%{public}d ",  result);
+    MEDIA_LOGI("systemsoundmanagerimpl result :%{public}d ", result);
     if (result != Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
         dataShareHelper = SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
         CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, IO_ERROR,
-            "Invalid dataShare, datashare or ringtone library error.");
+            "Invalid dataShare, datashare or ringtone lib error");
         vibrateResultSet = dataShareHelper->Query(VIBRATEURI, vibrateQueryPredicates,
             VIBRATE_TABLE_COLUMNS, &businessError);
     }
     auto vibrateResults = make_unique<RingtoneFetchResult<VibrateAsset>>(move(vibrateResultSet));
-
     unique_ptr<VibrateAsset> vibrateAsset = vibrateResults->GetFirstObject();
     if (vibrateAsset == nullptr) {
         MEDIA_LOGE("GetHapticsAttrsSyncedWithTone: toneUri[%{public}s] is not sync vibration!", toneUri.c_str());
         return IO_ERROR;
     }
-
+    std::string gentleTitle;
+    std::string gentleName;
+    std::string gentleUri;
+    DatabaseTool databaseTool = {true, false, dataShareHelper};
+    result = GetGentleHapticsAttr(databaseTool, vibrateAsset->GetPath(), gentleTitle, gentleName, gentleUri);
+    if (result != 0) {
+        MEDIA_LOGW("GetHapticsAttrsSyncedWithTone: get gentle haptics attrs fail");
+    }
     toneHapticsAttrs = std::make_shared<ToneHapticsAttrs>(vibrateAsset->GetTitle(), vibrateAsset->GetDisplayName(),
-        vibrateAsset->GetPath());
+        vibrateAsset->GetPath(), gentleTitle, gentleName, gentleUri);
     return SUCCESS;
+    
 #endif
     return UNSUPPORTED_ERROR;
 }
@@ -3113,6 +3147,56 @@ std::string SystemSoundManagerImpl::GetHapticsUriByStyle(const DatabaseTool &dat
     resultSetByDisplayName == nullptr ? : resultSetByDisplayName->Close();
     MEDIA_LOGI("get style vibration %{public}s!", hapticsUri.c_str());
     return hapticsUri;
+}
+
+int32_t SystemSoundManagerImpl::GetGentleHapticsAttr(const DatabaseTool &databaseTool,
+    const std::string &standardHapticsUri, std::string &hapticsTitle,
+    std::string &hapticsFileName, std::string &hapticsUri)
+{
+    if (!databaseTool.isInitialized || databaseTool.dataShareHelper == nullptr) {
+        MEDIA_LOGE("The database tool is not ready!");
+        return IO_ERROR;
+    }
+    if (standardHapticsUri.empty()) {
+        MEDIA_LOGE("The standardHapticsUri is empty!");
+        return IO_ERROR;
+    }
+    std::string vibrateFilesUri = databaseTool.isProxy ? (RINGTONE_LIBRARY_PROXY_DATA_URI_VIBATE_FILES +
+        "&user=" + std::to_string(SystemSoundManagerUtils::GetCurrentUserId())) : VIBRATE_PATH_URI;
+    Uri queryUri(vibrateFilesUri);
+    DataShare::DatashareBusinessError businessError;
+    DataShare::DataSharePredicates queryPredicatesByUri;
+    queryPredicatesByUri.EqualTo(VIBRATE_COLUMN_DATA, standardHapticsUri);
+    auto resultSetByUri = databaseTool.dataShareHelper->Query(queryUri, queryPredicatesByUri,
+        VIBRATE_TABLE_COLUMNS, &businessError);
+    auto resultsByUri = make_unique<RingtoneFetchResult>(move(resultSetByUri));
+    unique_ptr vibrateAssetByUri = resultsByUri->GetFirstObject();
+    CHECK_AND_RETURN_RET_LOG(vibrateAssetByUri != nullptr, OPERATION_ERROR, "vibrateAssetByUri is nullptr.");
+    int vibrateType = 0;
+    bool getResult = GetVibrateTypeByStyle(vibrateAssetByUri->GetVibrateType(),
+    HapticsStyle::HAPTICS_STYLE_GENTLE, vibrateType);
+    resultSetByUri == nullptr ? : resultSetByUri->Close();
+    if (!getResult) {
+        return IO_ERROR;
+    }
+    DataShare::DataSharePredicates queryPredicatesByDisplayName;
+    queryPredicatesByDisplayName.EqualTo(VIBRATE_COLUMN_DISPLAY_NAME, vibrateAssetByUri->GetDisplayName());
+    queryPredicatesByDisplayName.And();
+    queryPredicatesByDisplayName.EqualTo(VIBRATE_COLUMN_PLAY_MODE, vibrateAssetByUri->GetPlayMode());
+    queryPredicatesByDisplayName.And();
+    queryPredicatesByDisplayName.EqualTo(VIBRATE_COLUMN_VIBRATE_TYPE, vibrateType);
+    auto resultSetByDisplayName = databaseTool.dataShareHelper->Query(queryUri, queryPredicatesByDisplayName,
+    VIBRATE_TABLE_COLUMNS, &businessError);
+    auto resultsByDisplayName = make_unique<RingtoneFetchResult>(move(resultSetByDisplayName));
+    unique_ptr vibrateAssetByDisplayName = resultsByDisplayName->GetFirstObject();
+    CHECK_AND_RETURN_RET_LOG(vibrateAssetByDisplayName != nullptr, OPERATION_ERROR, "vibrateAssetByDisplayName null.");
+    hapticsTitle = vibrateAssetByDisplayName->GetTitle();
+    hapticsFileName = vibrateAssetByDisplayName->GetDisplayName();
+    hapticsUri = vibrateAssetByDisplayName->GetPath();
+    resultSetByDisplayName == nullptr ? : resultSetByDisplayName->Close();
+    MEDIA_LOGI("GetGentleHapticsAttr: title=%{public}s, name=%{public}s, uri=%{public}s",
+    hapticsTitle.c_str(), hapticsFileName.c_str(), hapticsUri.c_str());
+    return SUCCESS;
 }
 
 void SystemSoundManagerImpl::SetExtRingtoneUri(const std::string &uri, const std::string &title,

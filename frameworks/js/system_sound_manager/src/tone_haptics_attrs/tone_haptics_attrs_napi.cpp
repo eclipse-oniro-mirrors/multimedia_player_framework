@@ -49,6 +49,9 @@ napi_value ToneHapticsAttrsNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getUri", GetUri),
         DECLARE_NAPI_FUNCTION("getTitle", GetTitle),
         DECLARE_NAPI_FUNCTION("getFileName", GetFileName),
+        DECLARE_NAPI_FUNCTION("getGentleUri", GetGentleUri),
+        DECLARE_NAPI_FUNCTION("getGentleTitle", GetGentleTitle),
+        DECLARE_NAPI_FUNCTION("getGentleFileName", GetGentleFileName),
     };
 
     status = napi_define_class(env, TONE_HAPTICS_ATTRS_NAPI_CLASS_NAME.c_str(), NAPI_AUTO_LENGTH,
@@ -207,5 +210,81 @@ napi_value ToneHapticsAttrsNapi::GetFileName(napi_env env, napi_callback_info in
         NAPI_AUTO_LENGTH, &result);
     return result;
 }
+
+napi_value ToneHapticsAttrsNapi::GetGentleUri(napi_env env, napi_callback_info info)
+{
+    ToneHapticsAttrsNapi toneHapticsAttrsNapi = nullptr;
+    napi_value jsThis = nullptr;
+    size_t argc = 0;
+    CHECK_AND_RETURN_RET_LOG(VerifySelfSystemPermission(),
+        ThrowErrorAndReturn(env, NAPI_ERR_PERMISSION_DENIED_INFO, NAPI_ERR_PERMISSION_DENIED),
+        "No system permission");
+
+    napi_status status = napi_get_cb_info(env, info, &argc, nullptr, &jsThis, nullptr);
+    CHECK_AND_RETURN_RET_LOG((status == napi_ok) && (jsThis != nullptr), nullptr, "jsThis is nullptr");
+    napi_unwrap(env, jsThis, reinterpret_cast<void*>(&toneHapticsAttrsNapi));
+    CHECK_AND_RETURN_RET_LOG(toneHapticsAttrsNapi != nullptr, nullptr, "toneAttrsNapi is nullptr");
+    CHECK_AND_RETURN_RET_LOG(toneHapticsAttrsNapi->toneHapticsAttrs_ != nullptr, nullptr,
+        "toneHapticsAttrs_ is nullptr");
+    napi_value result;
+    std::string gentleUri = toneHapticsAttrsNapi->toneHapticsAttrs_->GetGentleUri();
+    if (!gentleUri.empty()) {
+        napi_create_string_utf8(env, gentleUri.c_str(), NAPI_AUTO_LENGTH, &result);
+    } else {
+        napi_get_undefined(env, &result);
+    }
+    return result;
+}
+
+napi_value ToneHapticsAttrsNapi::GetGentleTitle(napi_env env, napi_callback_info info)
+{
+    ToneHapticsAttrsNapi *toneHapticsAttrsNapi = nullptr;
+    napi_value jsThis = nullptr;
+    size_t argc = 0;
+    CHECK_AND_RETURN_RET_LOG(VerifySelfSystemPermission(),
+        ThrowErrorAndReturn(env, NAPI_ERR_PERMISSION_DENIED_INFO, NAPI_ERR_PERMISSION_DENIED),
+        "No system permission");
+
+    napi_status status = napi_get_cb_info(env, info, &argc, nullptr, &jsThis, nullptr);
+    CHECK_AND_RETURN_RET_LOG((status == napi_ok) && (jsThis != nullptr), nullptr, "jsThis is nullptr");
+    napi_unwrap(env, jsThis, reinterpret_cast<void**>(&toneHapticsAttrsNapi));
+    CHECK_AND_RETURN_RET_LOG(toneHapticsAttrsNapi != nullptr, nullptr, "toneAttrsNapi is nullptr");
+    CHECK_AND_RETURN_RET_LOG(toneHapticsAttrsNapi->toneHapticsAttrs_ != nullptr, nullptr,
+        "toneHapticsAttrs_ is nullptr");
+    napi_value result;
+    std::string gentleTitle = toneHapticsAttrsNapi->toneHapticsAttrs_->GetGentleTitle();
+    if (!gentleTitle.empty()) {
+        napi_create_string_utf8(env, gentleTitle.c_str(), NAPI_AUTO_LENGTH, &result);
+    } else {
+        napi_get_undefined(env, &result);
+    }
+    return result;
+}
+
+napi_value ToneHapticsAttrsNapi::GetGentleFileName(napi_env env, napi_callback_info info)
+{
+    ToneHapticsAttrsNapi *toneHapticsAttrsNapi = nullptr;
+    napi_value jsThis = nullptr;
+    size_t argc = 0;
+    CHECK_AND_RETURN_RET_LOG(VerifySelfSystemPermission(),
+        ThrowErrorAndReturn(env, NAPI_ERR_PERMISSION_DENIED_INFO, NAPI_ERR_PERMISSION_DENIED),
+        "No system permission");
+
+    napi_status status = napi_get_cb_info(env, info, &argc, nullptr, &jsThis, nullptr);
+    CHECK_AND_RETURN_RET_LOG((status == napi_ok) && (jsThis != nullptr), nullptr, "jsThis is nullptr");
+    napi_unwrap(env, jsThis, reinterpret_cast<void**>(&toneHapticsAttrsNapi));
+    CHECK_AND_RETURN_RET_LOG(toneHapticsAttrsNapi != nullptr, nullptr, "toneAttrsNapi is nullptr");
+    CHECK_AND_RETURN_RET_LOG(toneHapticsAttrsNapi->toneHapticsAttrs_ != nullptr, nullptr,
+        "toneHapticsAttrs_ is nullptr");
+    napi_value result;
+    std::string gentleFileName = toneHapticsAttrsNapi->toneHapticsAttrs_->GetGentleFileName().c_str();
+    if (!gentleFileName.empty()) {
+        napi_create_string_utf8(env, gentleFileName.c_str(), NAPI_AUTO_LENGTH, &result);
+    } else {
+        napi_get_undefined(env, &result);
+    }
+    return result;
+}
+
 } // namespace Media
 } // namespace OHOS

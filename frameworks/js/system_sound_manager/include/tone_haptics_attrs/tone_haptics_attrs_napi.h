@@ -44,6 +44,9 @@ private:
     static napi_value GetUri(napi_env env, napi_callback_info info);
     static napi_value GetTitle(napi_env env, napi_callback_info info);
     static napi_value GetFileName(napi_env env, napi_callback_info info);
+    static napi_value GetGentleUri(napi_env env, napi_callback_info info);
+    static napi_value GetGentleTitle(napi_env env, napi_callback_info info);
+    static napi_value GetGentleFileName(napi_env env, napi_callback_info info);
 
     napi_env env_;
     std::shared_ptr<ToneHapticsAttrs> toneHapticsAttrs_;
