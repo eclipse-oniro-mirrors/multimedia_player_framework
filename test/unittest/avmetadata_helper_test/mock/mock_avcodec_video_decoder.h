@@ -47,6 +47,8 @@ public:
 
     MOCK_METHOD(int32_t, GetOutputFormat, (Format &format), ());
 
+    MOCK_METHOD(int32_t, GetCodecInfo, (Format &format), ());
+
     MOCK_METHOD(int32_t, ReleaseOutputBuffer, (uint32_t index, bool render), ());
 
     MOCK_METHOD(int32_t, RenderOutputBufferAtTime, (uint32_t index, int64_t renderTimestampNs), ());
