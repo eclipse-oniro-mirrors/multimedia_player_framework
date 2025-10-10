@@ -961,6 +961,7 @@ int32_t HiPlayerImpl::Freeze(bool &isNoNeedToFreeze)
     callbackLooper_.StopReportMediaProgress();
     StopFlvCheckLiveDelayTime();
     callbackLooper_.StopCollectMaxAmplitude();
+    CacheBuffer();
     Status ret = Status::OK;
     ret = demuxer_->Freeze();
     syncManager_->Pause();
