@@ -3180,17 +3180,17 @@ std::string SystemSoundManagerImpl::OpenAudioUri(const DatabaseTool &databaseToo
         MEDIA_LOGE("The database tool is not ready!");
         return "";
     }
-
-    if (SystemSoundManagerUtils::VerifyCustomPath(audioUri)) {
+    std::string uri = RingtoneCheckUtils::GetCustomRingtoneCurrentPath(audioUri);
+    if (SystemSoundManagerUtils::VerifyCustomPath(uri)) {
         MEDIA_LOGI("The audio uri is custom path.");
-        return OpenCustomAudioUri(audioUri);
+        return OpenCustomAudioUri(uri);
     }
 
-    std::string newAudioUri = audioUri;
+    std::string newAudioUri = uri;
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
     vector<string> columns = {{RINGTONE_COLUMN_TONE_ID}, {RINGTONE_COLUMN_DATA}};
-    queryPredicates.EqualTo(RINGTONE_COLUMN_DATA, audioUri);
+    queryPredicates.EqualTo(RINGTONE_COLUMN_DATA, uri);
 
     std::string ringtoneLibraryUri = "";
     if (databaseTool.isProxy) {
@@ -3204,13 +3204,14 @@ std::string SystemSoundManagerImpl::OpenAudioUri(const DatabaseTool &databaseToo
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
     if (ringtoneAsset == nullptr) {
-        MEDIA_LOGE("The ringtoneAsset is nullptr!");
+        MEDIA_LOGE("The ringtoneAsset is nullptr! audioUri : %{public}s, uri : %{public}s, isProxy : %{public}d",
+            audioUri.c_str(), uri.c_str(), databaseTool.isProxy);
         return newAudioUri;
     }
     int32_t fd  = 0;
     if (databaseTool.isProxy) {
         std::string absFilePath;
-        PathToRealPath(audioUri, absFilePath);
+        PathToRealPath(uri, absFilePath);
         fd = open(absFilePath.c_str(), O_RDONLY);
     } else {
         string uriStr = RINGTONE_PATH_URI + RINGTONE_SLASH_CHAR + to_string(ringtoneAsset->GetId());
