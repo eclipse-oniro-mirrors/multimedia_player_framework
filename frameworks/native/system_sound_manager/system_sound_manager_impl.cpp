@@ -2091,7 +2091,7 @@ int32_t SystemSoundManagerImpl::AddCustomizedTone(const std::shared_ptr<DataShar
             MEDIA_LOGI("displayName : %{public}s", displayName_.c_str());
             break;
         case TONE_CATEGORY_NOTIFICATION_APP:
-            toneAttrs->SetUri(RINGTONE_CUSTOMIZED_NOTIFICATIONS_PATH + RINGTONE_SLASH_CHAR + displayName_);
+            toneAttrs->SetUri(RINGTONE_CUSTOMIZED_APP_NOTIFICATIONS_PATH + RINGTONE_SLASH_CHAR + displayName_);
             valuesBucket.Put(RINGTONE_COLUMN_TONE_TYPE, static_cast<int>(TONE_TYPE_NOTIFICATION_APP));
             break;
         default:
