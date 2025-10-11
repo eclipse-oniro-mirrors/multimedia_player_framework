@@ -234,6 +234,7 @@ private:
     int32_t HandlePresentPickerWindowCase(Json::Value& root, const std::string &content);
     void PrepareSelectWindow(Json::Value &root);
     bool IsSkipPrivacyWindow();
+    std::string BuildCommandString();
 
 #ifdef PC_STANDARD
     bool CheckCaptureSpecifiedWindowForSelectWindow();

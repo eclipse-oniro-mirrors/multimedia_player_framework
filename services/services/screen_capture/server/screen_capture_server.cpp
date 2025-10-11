@@ -2606,7 +2606,7 @@ void ScreenCaptureServer::SendConfigToUIParams(AAFwk::Want& want)
 }
 #endif
 
-int32_t ScreenCaptureServer::StartPrivacyWindow()
+std::string ScreenCaptureServer::BuildCommandString()
 {
     std::string comStr = "{\"ability.want.params.uiExtensionType\":\"sys/commonUI\",\"sessionId\":\"";
     comStr += std::to_string(sessionId_);
@@ -2619,10 +2619,15 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
     comStr += "\",\"checkBoxSelected\":\"";
     comStr += std::to_string(checkBoxSelected_);
     comStr += "\"}";
+    return comStr;
+}
+
+int32_t ScreenCaptureServer::StartPrivacyWindow()
+{
+    std::string comStr = BuildCommandString();
 
     AAFwk::Want want;
-    ErrCode ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,
-        nullptr, -1);
+    ErrCode ret = ERR_INVALID_VALUE;
 #ifdef PC_STANDARD
     if (IsPickerPopUp()) {
         isRegionCapture_ = false;
@@ -2646,12 +2651,16 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
         want.SetElementName(GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionbundlename"],
             GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionabilityname"]);
         connection_ = sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(comStr));
+        ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,
+            nullptr, -1);
         MEDIA_LOGI("ConnectServiceExtensionAbility end %{public}d, DeviceType : PC", ret);
     }
 #else
     want.SetElementName(GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionbundlename"],
                         GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionabilityname"]);
     connection_ = sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(comStr));
+    ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,
+        nullptr, -1);
     MEDIA_LOGI("ConnectServiceExtensionAbility end %{public}d, Device : Phone", ret);
 #endif
     return ret;
