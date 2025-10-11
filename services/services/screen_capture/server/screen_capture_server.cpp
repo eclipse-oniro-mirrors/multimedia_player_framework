@@ -1001,7 +1001,7 @@ int32_t ScreenCaptureServer::HandlePresentPickerWindowCase(Json::Value& root, co
     MEDIA_LOGI("HandlePresentPickerWindowCase showShareSystemAudioBox: %{public}d, isInnerAudioBoxSelected: %{public}d,"
         " dataType: %{public}d, choice: %{public}s, mode: %{public}d", showShareSystemAudioBox_,
         isInnerAudioBoxSelected_, captureConfig_.dataType, choice.c_str(), captureConfig_.captureMode);
-
+    isPresentPickerPopWindow_ = false;
     if (choice != USER_CHOICE_ALLOW) {
         MEDIA_LOGI("ReportAVScreenCaptureUserChoice user choice is not allow or deny");
         return MSERR_OK;
@@ -1027,6 +1027,7 @@ void ScreenCaptureServer::HandleSetDisplayIdAndMissionId(Json::Value &root)
 {
     MEDIA_LOGI("ScreenCaptureServer::HandleSetDisplayIdAndMissionId start");
     missionIds_.clear();
+    UpdateHighlightOutline(false);
     const Json::Value displayIdJson = root["displayId"];
     if (!displayIdJson.isNull() && displayIdJson.isInt() && displayIdJson.asInt64() >= 0) {
         uint64_t displayId = static_cast<uint64_t>(displayIdJson.asInt64());
@@ -1041,6 +1042,8 @@ void ScreenCaptureServer::HandleSetDisplayIdAndMissionId(Json::Value &root)
         SetMissionId(missionId);
         SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_WINDOW, missionId);
     }
+    UpdateHighlightOutline(true);
+    MEDIA_LOGI("ScreenCaptureServer::HandleSetDisplayIdAndMissionId end");
 }
 
 int32_t ScreenCaptureServer::PresentPicker()
@@ -1058,6 +1061,7 @@ int32_t ScreenCaptureServer::PresentPicker()
     MediaTrace trace("ScreenCaptureServer::PresentPicker");
     std::lock_guard<std::mutex> lock(mutex_);
     isPresentPicker_ = true;
+    isPresentPickerPopWindow_ = true;
     int32_t ret = StartPrivacyWindow();
     return ret;
 #endif
@@ -4215,6 +4219,10 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
         return MSERR_OK;
     }
     CHECK_AND_RETURN_RET(captureState_ != AVScreenCaptureState::STOPPED, MSERR_OK);
+    if (isPresentPickerPopWindow_) {
+        DestroyPopWindow();
+        isPresentPickerPopWindow_ = false;
+    }
     int32_t ret = MSERR_OK;
     DestroyPrivacySheet();
     if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
@@ -4239,13 +4247,18 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
         screenCaptureObserverCb_->Release();
         lock.lock();
     }
+    StopScreenCaptureInnerUnBind();
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopScreenCaptureInner end.", FAKE_POINTER(this));
+    return ret;
+}
+
+void ScreenCaptureServer::StopScreenCaptureInnerUnBind()
+{
     ScreenManager::GetInstance().UnregisterScreenListener(screenConnectListener_);
     UnRegisterWindowLifecycleListener();
     UnRegisterWindowInfoChangedListener();
     UnRegisterLanguageSwitchListener();
     PublishScreenCaptureEvent("stop");
-    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopScreenCaptureInner end.", FAKE_POINTER(this));
-    return ret;
 }
 
 void ScreenCaptureServer::StopNotStartedScreenCapture(AVScreenCaptureStateCode stateCode)
@@ -4290,7 +4303,7 @@ bool ScreenCaptureServer::DestroyPrivacySheet()
 
 bool ScreenCaptureServer::DestroyPopWindow()
 {
-    if (captureState_ != AVScreenCaptureState::POPUP_WINDOW) {
+    if (captureState_ != AVScreenCaptureState::POPUP_WINDOW && !isPresentPickerPopWindow_) {
         MEDIA_LOGI("window not pop up, no need to destroy.");
         return true;
     }
@@ -4403,6 +4416,7 @@ int32_t ScreenCaptureServer::StopScreenCapture()
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances StopScreenCapture E", FAKE_POINTER(this));
     isScreenCaptureAuthority_ = false;
     isPresentPicker_ = false;
+    isPresentPickerPopWindow_ = false;
     return ret;
 }
 
