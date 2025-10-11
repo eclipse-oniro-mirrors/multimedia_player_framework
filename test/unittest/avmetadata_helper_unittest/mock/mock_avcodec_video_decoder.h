@@ -46,6 +46,8 @@ public:
     MOCK_METHOD(int32_t, QueueInputBuffer, (uint32_t index), ());
  
     MOCK_METHOD(int32_t, GetOutputFormat, (Format &format), ());
+
+    MOCK_METHOD(int32_t, GetCodecInfo, (Format &format), ());
  
     MOCK_METHOD(int32_t, ReleaseOutputBuffer, (uint32_t index, bool render), ());
  
