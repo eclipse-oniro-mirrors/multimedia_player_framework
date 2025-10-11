@@ -94,6 +94,7 @@ static const std::unordered_map<int32_t, std::string> AVMETA_KEY_TO_X_MAP = {
     { AV_KEY_CUSTOMINFO, "customInfo" },
     { AV_KEY_DATE_TIME_ISO8601, "ISO8601 time" },
     { AV_KEY_GLTF_OFFSET, Tag::GLTF_OFFSET },
+    { AV_KEY_VIDEO_COLOR_TRC, Tag::VIDEO_COLOR_TRC },
 };
 
 AVMetaDataCollector::AVMetaDataCollector(std::shared_ptr<MediaDemuxer> &mediaDemuxer) : mediaDemuxer_(mediaDemuxer)
@@ -456,6 +457,13 @@ void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta
 {
     for (const auto &[avKey, innerKey] : AVMETA_KEY_TO_X_MAP) {
         if (innerKey.compare("customInfo") == 0) {
+            continue;
+        }
+        if (innerKey.compare("transfer_characteristics") == 0) {
+            Plugins::TransferCharacteristic trc;
+            if (innerMeta->GetData(innerKey, trc)) {
+                avmeta.SetMeta(avKey, std::to_string(static_cast<int32_t>(trc)));
+            }
             continue;
         }
         if (!SetStringByValueType(innerMeta, avmeta, avKey, innerKey)) {
