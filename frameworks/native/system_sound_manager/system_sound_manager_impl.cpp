@@ -2092,7 +2092,7 @@ int32_t SystemSoundManagerImpl::AddCustomizedTone(const std::shared_ptr<DataShar
             break;
         case TONE_CATEGORY_NOTIFICATION_APP:
             toneAttrs->SetUri(RINGTONE_CUSTOMIZED_APP_NOTIFICATIONS_PATH + RINGTONE_SLASH_CHAR + displayName_);
-            valuesBucket.Put(RINGTONE_COLUMN_TONE_TYPE, static_cast<int>(TONE_TYPE_NOTIFICATION_APP));
+            valuesBucket.Put(RINGTONE_COLUMN_TONE_TYPE, static_cast<int>(TONE_TYPE_APP_NOTIFICATION));
             break;
         default:
             break;
@@ -2138,7 +2138,7 @@ bool SystemSoundManagerImpl::DeleteCustomizedTone(const std::shared_ptr<DataShar
             predicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, static_cast<int>(TONE_TYPE_CONTACTS));
             break;
         case TONE_CATEGORY_NOTIFICATION_APP:
-            predicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, static_cast<int>(TONE_TYPE_NOTIFICATION_APP));
+            predicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, static_cast<int>(TONE_TYPE_APP_NOTIFICATION));
             break;
         default:
             break;
@@ -2371,7 +2371,7 @@ void SystemSoundManagerImpl::SetToneAttrs(std::shared_ptr<ToneAttrs> &toneAttrs,
         toneAttrs->SetCategory(TONE_CATEGORY_ALARM);
     } else if (toneType == TONE_TYPE_CONTACTS) {
         toneAttrs->SetCategory(TONE_CATEGORY_CONTACTS);
-    } else if (toneType == TONE_TYPE_NOTIFICATION_APP) {
+    } else if (toneType == TONE_TYPE_APP_NOTIFICATION) {
         toneAttrs->SetCategory(TONE_CATEGORY_NOTIFICATION_APP);
     }
     if (ringtoneAsset->GetMediaType() == RINGTONE_MEDIA_TYPE_VIDEO) {
