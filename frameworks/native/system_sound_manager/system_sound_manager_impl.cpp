@@ -2833,7 +2833,7 @@ DataShare::DataSharePredicates SystemSoundManagerImpl::CreateVibrationListQueryP
     queryPredicates.EndWrap();
     queryPredicates.And();
     queryPredicates.EqualTo(VIBRATE_COLUMN_PLAY_MODE,
-    std::to_string(isSynced ? VIBRATE_PLAYMODE_SYNC : VIBRATE_PLAYMODE_CLASSIC));
+        std::to_string(isSynced ? VIBRATE_PLAYMODE_SYNC : VIBRATE_PLAYMODE_CLASSIC));
     return queryPredicates;
 }
 
