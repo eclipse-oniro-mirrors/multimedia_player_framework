@@ -2592,7 +2592,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetHapticsAttrsSyncedWithT
     std::shared_ptr<ToneHapticsAttrs> toneHapticsAttrs;
     bool isProxy = false;
     DatabaseTool databaseTool = {true, isProxy, nullptr};
-    std::string systemToneUri = systemSoundManager_->GetPresetNotificationToneUri(databaseTool);        
+    std::string systemToneUri = systemSoundManager_->GetPresetNotificationToneUri(databaseTool);
     systemSoundManager_->GetHapticsAttrsSyncedWithTone(systemToneUri, dataShareHelper, toneHapticsAttrs);
  
     dataShareHelper->Release();
