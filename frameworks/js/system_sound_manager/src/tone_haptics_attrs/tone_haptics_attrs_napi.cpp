@@ -277,7 +277,7 @@ napi_value ToneHapticsAttrsNapi::GetGentleFileName(napi_env env, napi_callback_i
     CHECK_AND_RETURN_RET_LOG(toneHapticsAttrsNapi->toneHapticsAttrs_ != nullptr, nullptr,
         "toneHapticsAttrs_ is nullptr");
     napi_value result;
-    std::string gentleFileName = toneHapticsAttrsNapi->toneHapticsAttrs_->GetGentleFileName().c_str();
+    std::string gentleFileName = toneHapticsAttrsNapi->toneHapticsAttrs_->GetGentleFileName();
     if (!gentleFileName.empty()) {
         napi_create_string_utf8(env, gentleFileName.c_str(), NAPI_AUTO_LENGTH, &result);
     } else {
