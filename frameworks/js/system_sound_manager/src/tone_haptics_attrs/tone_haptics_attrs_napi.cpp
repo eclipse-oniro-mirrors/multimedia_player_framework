@@ -213,7 +213,7 @@ napi_value ToneHapticsAttrsNapi::GetFileName(napi_env env, napi_callback_info in
 
 napi_value ToneHapticsAttrsNapi::GetGentleUri(napi_env env, napi_callback_info info)
 {
-    ToneHapticsAttrsNapi toneHapticsAttrsNapi = nullptr;
+    ToneHapticsAttrsNapi *toneHapticsAttrsNapi = nullptr;
     napi_value jsThis = nullptr;
     size_t argc = 0;
     CHECK_AND_RETURN_RET_LOG(VerifySelfSystemPermission(),
@@ -222,7 +222,7 @@ napi_value ToneHapticsAttrsNapi::GetGentleUri(napi_env env, napi_callback_info i
 
     napi_status status = napi_get_cb_info(env, info, &argc, nullptr, &jsThis, nullptr);
     CHECK_AND_RETURN_RET_LOG((status == napi_ok) && (jsThis != nullptr), nullptr, "jsThis is nullptr");
-    napi_unwrap(env, jsThis, reinterpret_cast<void*>(&toneHapticsAttrsNapi));
+    napi_unwrap(env, jsThis, reinterpret_cast<void**>(&toneHapticsAttrsNapi));
     CHECK_AND_RETURN_RET_LOG(toneHapticsAttrsNapi != nullptr, nullptr, "toneAttrsNapi is nullptr");
     CHECK_AND_RETURN_RET_LOG(toneHapticsAttrsNapi->toneHapticsAttrs_ != nullptr, nullptr,
         "toneHapticsAttrs_ is nullptr");
