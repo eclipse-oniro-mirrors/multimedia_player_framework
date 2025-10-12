@@ -186,6 +186,7 @@ private:
     int32_t StartStreamVideoCapture();
     int32_t StartStreamHomeVideoCapture();
     int32_t StopScreenCaptureInner(AVScreenCaptureStateCode stateCode);
+    void StopScreenCaptureInnerUnBind();
     bool IsLastStartedPidInstance(int32_t pid);
     bool LastPidUpdatePrivacyUsingPermissionState(int32_t pid);
     void PostStopScreenCapture(AVScreenCaptureStateCode stateCode);
@@ -332,6 +333,7 @@ private:
     OHOS::AudioStandard::AppInfo appInfo_;
     bool isScreenCaptureAuthority_ = false;
     bool isPresentPicker_ = false;
+    bool isPresentPickerPopWindow_ = false;
     std::string appName_ = "";
     AVScreenCaptureConfig captureConfig_;
     AVScreenCaptureAvType avType_ = AVScreenCaptureAvType::INVALID_TYPE;
