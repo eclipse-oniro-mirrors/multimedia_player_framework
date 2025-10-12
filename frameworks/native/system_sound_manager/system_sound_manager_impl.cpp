@@ -3009,22 +3009,23 @@ int32_t SystemSoundManagerImpl::GetHapticsAttrsSyncedWithTone(const std::string 
         std::to_string(SystemSoundManagerUtils::GetCurrentUserId()));
     auto vibrateResultSet = dataShareHelper->Query(VIBRATEURI_PROXY, vibrateQueryPredicates, VIBRATE_TABLE_COLUMNS,
         &businessError);
-    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
-    int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
-        "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    MEDIA_LOGI("systemsoundmanagerimpl result :%{public}d ", result);
-    if (result != Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
-        dataShareHelper = SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-        CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, IO_ERROR,
-            "Invalid dataShare, datashare or ringtone lib error");
-        vibrateResultSet = dataShareHelper->Query(VIBRATEURI, vibrateQueryPredicates,
-            VIBRATE_TABLE_COLUMNS, &businessError);
-    }
-    auto vibrateResults = make_unique<RingtoneFetchResult<VibrateAsset>>(move(vibrateResultSet));
-    unique_ptr<VibrateAsset> vibrateAsset = vibrateResults->GetFirstObject();
-    if (vibrateAsset == nullptr) {
-        MEDIA_LOGE("GetHapticsAttrsSyncedWithTone: toneUri[%{public}s] is not sync vibration!", toneUri.c_str());
-        return IO_ERROR;
+    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();	
+    int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,	
+        "ohos.permission.ACCESS_CUSTOM_RINGTONE");	
+    MEDIA_LOGI("systemsoundmanagerimpl  result :%{public}d ",  result);	
+    if (result != Security::AccessToken::PermissionState::PERMISSION_GRANTED) {	
+        dataShareHelper = SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);	
+        CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, IO_ERROR,	
+            "Invalid dataShare, datashare or ringtone library error.");	
+        vibrateResultSet = dataShareHelper->Query(VIBRATEURI, vibrateQueryPredicates,	
+            VIBRATE_TABLE_COLUMNS, &businessError);	
+    }	
+    auto vibrateResults = make_unique<RingtoneFetchResult<VibrateAsset>>(move(vibrateResultSet));	
+
+    unique_ptr<VibrateAsset> vibrateAsset = vibrateResults->GetFirstObject();	
+    if (vibrateAsset == nullptr) {	
+        MEDIA_LOGE("GetHapticsAttrsSyncedWithTone: toneUri[%{public}s] is not sync vibration!", toneUri.c_str());	
+        return IO_ERROR;	
     }
     std::string gentleTitle;
     std::string gentleName;
