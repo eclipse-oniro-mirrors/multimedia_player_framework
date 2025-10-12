@@ -2845,7 +2845,7 @@ int32_t SystemSoundManagerImpl::GetToneHapticsList(const std::shared_ptrAbilityR
     std::shared_ptrDataShare::DataShareHelper dataShareHelper =
     SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID);
         CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, IO_ERROR,
-        "Create dataShare failed, datashare or ringtone library error.");
+            "Create dataShare failed, datashare or ringtone library error.");
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates = CreateVibrationListQueryPredicates(isSynced);
 
@@ -3186,7 +3186,7 @@ int32_t SystemSoundManagerImpl::GetGentleHapticsAttr(const DatabaseTool &databas
     queryPredicatesByDisplayName.And();
     queryPredicatesByDisplayName.EqualTo(VIBRATE_COLUMN_VIBRATE_TYPE, vibrateType);
     auto resultSetByDisplayName = databaseTool.dataShareHelper->Query(queryUri, queryPredicatesByDisplayName,
-    VIBRATE_TABLE_COLUMNS, &businessError);
+        VIBRATE_TABLE_COLUMNS, &businessError);
     auto resultsByDisplayName = make_unique<RingtoneFetchResult>(move(resultSetByDisplayName));
     unique_ptr vibrateAssetByDisplayName = resultsByDisplayName->GetFirstObject();
     CHECK_AND_RETURN_RET_LOG(vibrateAssetByDisplayName != nullptr, OPERATION_ERROR, "vibrateAssetByDisplayName null.");
