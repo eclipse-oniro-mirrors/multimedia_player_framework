@@ -620,7 +620,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetToneHapticsList_002, Te
  */
 HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetGentleHapticsAttr_001, TestSize.Level2)
 {
-    std::shared_ptr systemSoundManager_ = std::make_shared();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
     bool isProxy = false;
     DatabaseTool databaseTool = {true, isProxy, nullptr};
     std::string gentleTitle;
@@ -639,10 +639,10 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetGentleHapticsAttr_001, 
  */
 HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetGentleHapticsAttr_002, TestSize.Level2)
 {
-    std::shared_ptr systemSoundManager_ = std::make_shared();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
     bool isProxy = false;
-    std::shared_ptrDataShare::DataShareHelper dataShareHelper =
-    SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
+        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
 
     std::string gentleTitle;
