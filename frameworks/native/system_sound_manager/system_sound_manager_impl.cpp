@@ -3195,7 +3195,7 @@ int32_t SystemSoundManagerImpl::GetGentleHapticsAttr(const DatabaseTool &databas
     hapticsUri = vibrateAssetByDisplayName->GetPath();
     resultSetByDisplayName == nullptr ? : resultSetByDisplayName->Close();
     MEDIA_LOGI("GetGentleHapticsAttr: title=%{public}s, name=%{public}s, uri=%{public}s",
-    hapticsTitle.c_str(), hapticsFileName.c_str(), hapticsUri.c_str());
+        hapticsTitle.c_str(), hapticsFileName.c_str(), hapticsUri.c_str());
     return SUCCESS;
 }
 
