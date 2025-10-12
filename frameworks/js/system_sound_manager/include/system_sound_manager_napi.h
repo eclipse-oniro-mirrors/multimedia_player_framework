@@ -88,6 +88,7 @@ private:
     static napi_value CreateToneCategoryNotificationObject(napi_env env);
     static napi_value CreateToneCategoryContactsObject(napi_env env);
     static napi_value CreateToneCategoryAlarmObject(napi_env env);
+    static napi_value CreateToneCategoryNotificationAppObject(napi_env env);
     static napi_value CreateToneHapticsTypeObject(napi_env env);
     static napi_value CreateToneHapticsModeObject(napi_env env);
     static std::shared_ptr<AbilityRuntime::Context> GetAbilityContext(napi_env env, napi_value contextArg);

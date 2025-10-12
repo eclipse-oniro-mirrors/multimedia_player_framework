@@ -34,8 +34,9 @@ struct ToneHapticsSettings {
 
 class ToneHapticsAttrs {
 public:
-    ToneHapticsAttrs(std::string title, std::string fileName, std::string uri) : title_(title),
-        fileName_(fileName), uri_(uri) {}
+    ToneHapticsAttrs(std::string title, std::string fileName, std::string uri, std::string gentleTitle,
+        std::string gentleFileName, std::string gentleUri) : title_(title), fileName_(fileName), uri_(uri),
+        gentleTitle_(gentleTitle), gentleFileName_(gentleFileName), gentleUri_(gentleUri) {}
     ~ToneHapticsAttrs() = default;
     /**
      * @brief Returns the title of the tone haptics attrs.
@@ -58,11 +59,28 @@ public:
     {
         return uri_;
     }
-
+    std::string GetGentleTitle() const
+    {
+        return gentleTitle_;
+    }
+ 
+    std::string GetGentleFileName() const
+    {
+        return gentleFileName_;
+    }
+ 
+    std::string GetGentleUri() const
+    {
+        return gentleUri_;
+    }
+ 
 private:
     std::string title_ = "title_test";
     std::string fileName_ = "fileName_test";
     std::string uri_ = "uri_test";
+    std::string gentleTitle_ = "";
+    std::string gentleFileName_ = "";
+    std::string gentleUri_ = "";
 };
 } // Media
 } // OHOS

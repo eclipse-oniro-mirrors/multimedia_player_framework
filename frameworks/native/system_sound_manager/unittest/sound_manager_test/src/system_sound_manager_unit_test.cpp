@@ -455,6 +455,8 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_SetToneAttrs_001, TestSize
     ASSERT_NO_THROW(systemSoundManager_->SetToneAttrs(toneAttrs, ringtoneAsset));
     ringtoneAsset->SetToneType(TONE_TYPE_CONTACTS);
     ASSERT_NO_THROW(systemSoundManager_->SetToneAttrs(toneAttrs, ringtoneAsset));
+    ringtoneAsset->SetToneType(TONE_TYPE_APP_NOTIFICATION);
+    ASSERT_NO_THROW(systemSoundManager_->SetToneAttrs(toneAttrs, ringtoneAsset));
 }
 
 /**
@@ -592,7 +594,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetToneHapticsList_001, Te
     std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
 
     std::vector<std::shared_ptr<ToneHapticsAttrs>> toneHapticsAttrsArray;
-    systemSoundManager_->GetToneHapticsList(context_, false, toneHapticsAttrsArray);
+    systemSoundManager_->GetToneHapticsList(context_, true, toneHapticsAttrsArray);
     EXPECT_NE(systemSoundManager_, nullptr);
 }
 
@@ -609,6 +611,47 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetToneHapticsList_002, Te
     std::vector<std::shared_ptr<ToneHapticsAttrs>> toneHapticsAttrsArray;
     systemSoundManager_->GetToneHapticsList(context_, false, toneHapticsAttrsArray);
     EXPECT_NE(systemSoundManager_, nullptr);
+}
+
+/**
+ * @tc.name : Test GetGentleHapticsAttr API
+ * @tc.number: Media_SoundManager_GetGentleHapticsAttr_001
+ *@tc.desc : Test GetGentleHapticsAttr interface. Returns gentle haptics attr.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetGentleHapticsAttr_001, TestSize.Level2)
+{
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    bool isProxy = false;
+    DatabaseTool databaseTool = {true, isProxy, nullptr};
+    std::string gentleTitle;
+    std::string gentleName;
+    std::string gentleUri;
+    std::string systemToneUri = systemSoundManager_->GetPresetNotificationToneUri(databaseTool);
+    int32_t result = systemSoundManager_->GetGentleHapticsAttr(databaseTool, systemToneUri,
+    gentleTitle, gentleName, gentleUri);
+    EXPECT_NE(result, NO_ERROR);
+}
+
+/**
+ * @tc.name : Test GetGentleHapticsAttr API
+ * @tc.number: Media_SoundManager_GetGentleHapticsAttr_002
+ * @tc.desc : Test GetGentleHapticsAttr interface. Returns gentle haptics attr.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetGentleHapticsAttr_002, TestSize.Level2)
+{
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    bool isProxy = false;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
+        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
+
+    std::string gentleTitle;
+    std::string gentleName;
+    std::string gentleUri;
+    std::string systemToneUri;
+    int32_t result = systemSoundManager_->GetGentleHapticsAttr(databaseTool, systemToneUri,
+    gentleTitle, gentleName, gentleUri);
+    EXPECT_NE(result, NO_ERROR);
 }
 
 /**
@@ -630,6 +673,54 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_OpenToneHaptics_001, TestS
         fd = systemSoundManager_->OpenToneHaptics(context_, uri);
         EXPECT_GT(fd, 0);
     }
+    EXPECT_NE(systemSoundManager_, nullptr);
+}
+
+/**
+ * @tc.name  : Test GetGentleTitle API
+ * @tc.number: Media_SoundManager_GetGentleTitle_001
+ * @tc.desc  : Test GetGentleTitle interface. Returns gentle title of the tone haptics.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetGentleTitle_001, TestSize.Level2)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+ 
+    std::vector<std::shared_ptr<ToneHapticsAttrs>> toneHapticsAttrsArray;
+    systemSoundManager_->GetToneHapticsList(context_, false, toneHapticsAttrsArray);
+    std::string gentleTitle = toneHapticsAttrsArray[0]->GetGentleTitle();
+    EXPECT_NE(systemSoundManager_, nullptr);
+}
+ 
+/**
+ * @tc.name  : Test GetGentleFileName API
+ * @tc.number: Media_SoundManager_GetGentleFileName_001
+ * @tc.desc  : Test GetGentleFileName interface. Returns gentle file name of the tone haptics.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetGentleFileName_001, TestSize.Level2)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+ 
+    std::vector<std::shared_ptr<ToneHapticsAttrs>> toneHapticsAttrsArray;
+    systemSoundManager_->GetToneHapticsList(context_, false, toneHapticsAttrsArray);
+    std::string gentleFileName = toneHapticsAttrsArray[0]->GetGentleFileName();
+    EXPECT_NE(systemSoundManager_, nullptr);
+}
+ 
+/**
+ * @tc.name  : Test GetGentleUri API
+ * @tc.number: Media_SoundManager_GetGentleUri_001
+ * @tc.desc  : Test GetGentleUri interface. Returns gentle uri of the tone haptics.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetGentleUri_001, TestSize.Level2)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+ 
+    std::vector<std::shared_ptr<ToneHapticsAttrs>> toneHapticsAttrsArray;
+    systemSoundManager_->GetToneHapticsList(context_, false, toneHapticsAttrsArray);
+    std::string gentleUri = toneHapticsAttrsArray[0]->GetGentleUri();
     EXPECT_NE(systemSoundManager_, nullptr);
 }
 
@@ -1164,6 +1255,9 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_AddCustomizedToneByFdAndOf
     res = systemSoundManager_->AddCustomizedToneByFdAndOffset(context_, toneAttrs_, paramsForAddCustomizedTone);
     EXPECT_EQ(res.empty(), true);
     toneAttrs_->SetCategory(TONE_CATEGORY_CONTACTS);
+    res = systemSoundManager_->AddCustomizedToneByFdAndOffset(context_, toneAttrs_, paramsForAddCustomizedTone);
+    EXPECT_EQ(res.empty(), true);
+    toneAttrs_->SetCategory(TONE_CATEGORY_NOTIFICATION_APP);
     res = systemSoundManager_->AddCustomizedToneByFdAndOffset(context_, toneAttrs_, paramsForAddCustomizedTone);
     EXPECT_EQ(res.empty(), true);
 }
@@ -2189,6 +2283,8 @@ HWTEST(SystemSoundManagerUnitTest, AddCustomizedTone_ShouldReturnSuccess_WhenDat
     EXPECT_NE(systemSoundManagerImpl_->AddCustomizedTone(dataShareHelper, toneAttrs, length), SUCCESS);
     toneAttrs->SetCategory(TONE_CATEGORY_DEFAULT);
     EXPECT_NE(systemSoundManagerImpl_->AddCustomizedTone(dataShareHelper, toneAttrs, length), SUCCESS);
+    toneAttrs->SetCategory(TONE_CATEGORY_NOTIFICATION_APP);
+    EXPECT_NE(systemSoundManagerImpl_->AddCustomizedTone(dataShareHelper, toneAttrs, length), SUCCESS);
 }
 
 /**
@@ -2460,6 +2556,46 @@ HWTEST(SystemSoundManagerUnitTest, GetVibratorDuration_001, TestSize.Level0)
     hapticUri = "";
     result = systemSoundVibrator.GetVibratorDuration(hapticUri);
     EXPECT_EQ(result, MSERR_OPEN_FILE_FAILED);
+}
+
+/**
+ * @tc.name  : Test GetHapticsAttrsSyncedWithTone API
+ * @tc.number: Media_SoundManager_GetHapticsAttrsSyncedWithTone_001
+ * @tc.desc  : Test GetHapticsAttrsSyncedWithTone interface. Returns attributes of the default system tone.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetHapticsAttrsSyncedWithTone_001, TestSize.Level2)
+{
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
+        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    std::shared_ptr<ToneHapticsAttrs> toneHapticsAttrs;
+    bool isProxy = false;
+    DatabaseTool databaseTool = {true, isProxy, nullptr};
+    std::string systemToneUri = systemSoundManager_->GetPresetNotificationToneUri(databaseTool);
+    systemSoundManager_->GetHapticsAttrsSyncedWithTone(systemToneUri, dataShareHelper, toneHapticsAttrs);
+ 
+    dataShareHelper->Release();
+}
+ 
+/**
+ * @tc.name  : Test GetHapticsAttrsSyncedWithTone API
+ * @tc.number: Media_SoundManager_GetHapticsAttrsSyncedWithTone_002
+ * @tc.desc  : Test GetHapticsAttrsSyncedWithTone interface. Returns attributes of the default system tone.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetHapticsAttrsSyncedWithTone_002, TestSize.Level2)
+{
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
+        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    std::shared_ptr<ToneHapticsAttrs> toneHapticsAttrs;
+    bool isProxy = false;
+    DatabaseTool databaseTool = {true, isProxy, nullptr};
+    std::string systemToneUri = systemSoundManager_->GetPresetNotificationToneUri(databaseTool);
+    systemSoundManager_->GetHapticsAttrsSyncedWithTone(systemToneUri, dataShareHelper, toneHapticsAttrs);
+ 
+    dataShareHelper->Release();
 }
 } // namespace Media
 } // namespace OHOS
