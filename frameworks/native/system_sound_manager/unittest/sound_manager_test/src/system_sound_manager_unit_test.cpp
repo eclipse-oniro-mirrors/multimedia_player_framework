@@ -455,7 +455,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_SetToneAttrs_001, TestSize
     ASSERT_NO_THROW(systemSoundManager_->SetToneAttrs(toneAttrs, ringtoneAsset));
     ringtoneAsset->SetToneType(TONE_TYPE_CONTACTS);
     ASSERT_NO_THROW(systemSoundManager_->SetToneAttrs(toneAttrs, ringtoneAsset));
-    ringtoneAsset->SetToneType(TONE_TYPE_NOTIFICATION_APP);
+    ringtoneAsset->SetToneType(TONE_TYPE_APP_NOTIFICATION);
     ASSERT_NO_THROW(systemSoundManager_->SetToneAttrs(toneAttrs, ringtoneAsset));
 }
 
