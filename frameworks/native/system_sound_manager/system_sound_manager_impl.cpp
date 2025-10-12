@@ -2837,15 +2837,15 @@ DataShare::DataSharePredicates SystemSoundManagerImpl::CreateVibrationListQueryP
     return queryPredicates;
 }
 
-int32_t SystemSoundManagerImpl::GetToneHapticsList(const std::shared_ptrAbilityRuntime::Context &context,
-    bool isSynced, std::vector<std::shared_ptr> &toneHapticsAttrsArray)
+int32_t SystemSoundManagerImpl::GetToneHapticsList(const std::shared_ptr<AbilityRuntime::Context> &context,
+    bool isSynced, std::vector<std::shared_ptr<ToneHapticsAttrs>> &toneHapticsAttrsArray)
 {
 #ifdef SUPPORT_VIBRATOR
     MEDIA_LOGI("GetToneHapticsList: get vibration list, type : %{public}s.", isSynced ? "sync" : "non sync");
-    std::shared_ptrDataShare::DataShareHelper dataShareHelper =
-    SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID);
-        CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, IO_ERROR,
-            "Create dataShare failed, datashare or ringtone library error.");
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
+        SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID);
+    CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, IO_ERROR,
+        "Create dataShare failed, datashare or ringtone library error.");
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates = CreateVibrationListQueryPredicates(isSynced);
 
@@ -2988,7 +2988,7 @@ DataShare::DataSharePredicates SystemSoundManagerImpl::CreateVibrateQueryPredica
 }
     
 int32_t SystemSoundManagerImpl::GetHapticsAttrsSyncedWithTone(const std::string &toneUri,
-    std::shared_ptrDataShare::DataShareHelper dataShareHelper, std::shared_ptr &toneHapticsAttrs)
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, std::shared_ptr<ToneHapticsAttrs> &toneHapticsAttrs)
 {
 #ifdef SUPPORT_VIBRATOR
     MEDIA_LOGI("GetHapticsAttrsSyncedWithTone: get %{public}s sync vibration.", toneUri.c_str());
@@ -2996,7 +2996,7 @@ int32_t SystemSoundManagerImpl::GetHapticsAttrsSyncedWithTone(const std::string 
         MEDIA_LOGE("GetHapticsAttrsSyncedWithTone: param fail");
         return IO_ERROR;
     }
-    unique_ptr ringtoneAsset = IsPresetRingtone(dataShareHelper, toneUri);
+    unique_ptr<RingtoneAsset> ringtoneAsset = IsPresetRingtone(dataShareHelper, toneUri);
     if (ringtoneAsset == nullptr) {
         MEDIA_LOGE("GetHapticsAttrsSyncedWithTone: toneUri[%{public}s] is not presetRingtone!", toneUri.c_str());
         return OPERATION_ERROR;
@@ -3169,8 +3169,8 @@ int32_t SystemSoundManagerImpl::GetGentleHapticsAttr(const DatabaseTool &databas
     queryPredicatesByUri.EqualTo(VIBRATE_COLUMN_DATA, standardHapticsUri);
     auto resultSetByUri = databaseTool.dataShareHelper->Query(queryUri, queryPredicatesByUri,
         VIBRATE_TABLE_COLUMNS, &businessError);
-    auto resultsByUri = make_unique<RingtoneFetchResult>(move(resultSetByUri));
-    unique_ptr vibrateAssetByUri = resultsByUri->GetFirstObject();
+    auto resultsByUri = make_unique<RingtoneFetchResult<VibrateAsset>>(move(resultSetByUri));
+    unique_ptr<VibrateAsset> vibrateAssetByUri = resultsByUri->GetFirstObject();
     CHECK_AND_RETURN_RET_LOG(vibrateAssetByUri != nullptr, OPERATION_ERROR, "vibrateAssetByUri is nullptr.");
     int vibrateType = 0;
     bool getResult = GetVibrateTypeByStyle(vibrateAssetByUri->GetVibrateType(),
@@ -3187,8 +3187,8 @@ int32_t SystemSoundManagerImpl::GetGentleHapticsAttr(const DatabaseTool &databas
     queryPredicatesByDisplayName.EqualTo(VIBRATE_COLUMN_VIBRATE_TYPE, vibrateType);
     auto resultSetByDisplayName = databaseTool.dataShareHelper->Query(queryUri, queryPredicatesByDisplayName,
         VIBRATE_TABLE_COLUMNS, &businessError);
-    auto resultsByDisplayName = make_unique<RingtoneFetchResult>(move(resultSetByDisplayName));
-    unique_ptr vibrateAssetByDisplayName = resultsByDisplayName->GetFirstObject();
+    auto resultsByDisplayName = make_unique<RingtoneFetchResult<VibrateAsset>>(move(resultSetByDisplayName));
+    unique_ptr<VibrateAsset> vibrateAssetByDisplayName = resultsByDisplayName->GetFirstObject();
     CHECK_AND_RETURN_RET_LOG(vibrateAssetByDisplayName != nullptr, OPERATION_ERROR, "vibrateAssetByDisplayName null.");
     hapticsTitle = vibrateAssetByDisplayName->GetTitle();
     hapticsFileName = vibrateAssetByDisplayName->GetDisplayName();
