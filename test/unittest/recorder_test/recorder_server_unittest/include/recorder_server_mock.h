@@ -28,6 +28,7 @@
 #include "nocopyable.h"
 #include "recorder_server.h"
 
+
 namespace OHOS {
 namespace Media {
 namespace RecorderTestParam {
