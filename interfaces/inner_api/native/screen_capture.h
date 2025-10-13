@@ -164,6 +164,8 @@ enum class PickerMode : int32_t {
     WINDOW_ONLY = 0,
     SCREEN_ONLY = 1,
     SCREEN_AND_WINDOW = 2,
+
+    // 注意：新增枚举值时，请在当前注释行上方新增，并更新下方的边界值（边界值用于枚举值合法性判断）。
     MIN_VAL = WINDOW_ONLY,
     MAX_VAL = SCREEN_AND_WINDOW,
 };
