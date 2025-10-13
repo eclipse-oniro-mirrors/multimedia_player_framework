@@ -256,7 +256,8 @@ HWTEST_F(RecorderServerUnitTest, recorder_SetAacProfile_Error_001, TestSize.Leve
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
     EXPECT_NE(MSERR_OK,
-              recorderServer_->SetAidopAacProfile(g_videoRecorderConfig.audioSourceId, g_videoRecorderConfig.aacProfile));
+              recorderServer_->SetAidopAacProfile(g_videoRecorderConfig.audioSourceId,
+              g_videoRecorderConfig.aacProfile));
     close(g_videoRecorderConfig.outputFd);
 }
 
@@ -275,7 +276,8 @@ HWTEST_F(RecorderServerUnitTest, recorder_SetAacProfile_Error_002, TestSize.Leve
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
     EXPECT_NE(MSERR_OK,
-              recorderServer_->SetAidopAacProfile(g_videoRecorderConfig.audioSourceId, g_videoRecorderConfig.aacProfile));
+              recorderServer_->SetAidopAacProfile(g_videoRecorderConfig.audioSourceId,
+              g_videoRecorderConfig.aacProfile));
     close(g_videoRecorderConfig.outputFd);
 }
 
@@ -294,7 +296,8 @@ HWTEST_F(RecorderServerUnitTest, recorder_SetAacProfile_Error_003, TestSize.Leve
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
     EXPECT_NE(MSERR_OK,
-              recorderServer_->SetAidopAacProfile(g_videoRecorderConfig.audioSourceId, g_videoRecorderConfig.aacProfile));
+              recorderServer_->SetAidopAacProfile(g_videoRecorderConfig.audioSourceId,
+              g_videoRecorderConfig.aacProfile));
     close(g_videoRecorderConfig.outputFd);
 }
 
