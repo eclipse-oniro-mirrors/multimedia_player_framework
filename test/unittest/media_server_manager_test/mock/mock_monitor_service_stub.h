@@ -25,36 +25,8 @@ namespace Media {
 
 class MockMonitorServiceStub : public MonitorServiceStub {
 public:
-    class MockIRemoteObject : public IRemoteObject {
-    public:
-        virtual ~MockIRemoteObject() = default;
-        int32_t GetObjectRefCount() override
-        {
-            return 0;
-        }
-        int SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override
-        {
-            return 0;
-        }
-        bool AddDeathRecipient(const sptr<DeathRecipient> &recipient) override
-        {
-            return true;
-        }
-        bool RemoveDeathRecipient(const sptr<DeathRecipient> &recipient) override
-        {
-            return true;
-        }
-        int Dump(int fd, const std::vector<std::u16string> &args) override
-        {
-            return 0;
-        }
-    };
     MockMonitorServiceStub() = default;
     ~MockMonitorServiceStub() override = default;
-    sptr<IRemoteObject> AsObject() override
-    {
-        return new MockIRemoteObject();
-    }
 
     MOCK_METHOD(sptr<MonitorServiceStub>, GetInstance, (), ());
 };
