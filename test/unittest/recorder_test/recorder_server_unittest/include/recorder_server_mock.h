@@ -127,6 +127,7 @@ public:
     OHOS::sptr<OHOS::Surface> GetSurface(int32_t sourceId);
     OHOS::sptr<OHOS::Surface> GetMetaSurface(int32_t sourceId);
     int32_t SetAudioEncoder(int32_t sourceId, AudioCodecFormat encoder);
+    int32_t SetAudioAacProfile(int32_t sourceId, AacProfile aacProfile);
     int32_t SetAudioSampleRate(int32_t sourceId, int32_t rate);
     int32_t SetAudioChannels(int32_t sourceId, int32_t num);
     int32_t SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRate);
