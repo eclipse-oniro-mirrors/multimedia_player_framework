@@ -5647,6 +5647,7 @@ HWTEST_F(PlayerServerUnitTest, Player_GetTrackDescription_001, TestSize.Level1)
     ASSERT_EQ(MSERR_OK, player_->GetTrackDescription(format, 0));
     EXPECT_EQ(MSERR_OK, player_->Play());
     ASSERT_EQ(MSERR_OK, player_->GetTrackDescription(format, 0));
+    ASSERT_NE(MSERR_OK, player_->GetTrackDescription(format, -2));
     EXPECT_EQ(MSERR_OK, player_->Pause());
     ASSERT_EQ(MSERR_OK, player_->GetTrackDescription(format, 0));
     int32_t duration = 0;

@@ -2476,7 +2476,7 @@ int32_t PlayerServer::GetMediaDescription(Format &format)
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
     if (GetCurrState() != preparedState_ && GetCurrState() != playingState_ &&
         GetCurrState() != pausedState_ && GetCurrState() != playbackCompletedState_ &&
-        GetCurrState() != stoppedState_ && GetCurrState() != initializedState_) {
+        GetCurrState() != stoppedState_) {
         MEDIA_LOGW("GetMediaDescription called in invalid state");
         return MSERR_INVALID_OPERATION;
     }
@@ -2489,7 +2489,7 @@ int32_t PlayerServer::GetTrackDescription(Format &format, uint32_t trackIndex)
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
     if (GetCurrState() != preparedState_ && GetCurrState() != playingState_ &&
         GetCurrState() != pausedState_ && GetCurrState() != playbackCompletedState_ &&
-        GetCurrState() != stoppedState_ && GetCurrState() != initializedState_) {
+        GetCurrState() != stoppedState_) {
         MEDIA_LOGW("GetTrackDescription called in invalid state");
         return MSERR_INVALID_OPERATION;
     }
