@@ -101,6 +101,7 @@ namespace RecorderTestParam {
         VideoSourceType vSource = VIDEO_SOURCE_SURFACE_ES;
         VideoCodecFormat videoFormat = H264;
         MetaSourceType metaSourceType = MetaSourceType::VIDEO_META_SOURCE_INVALID;
+        AacProfile aacProfile = AacProfile::AAC_LC;
         bool enableTemporalScale = false;
         bool enableStableQualityMode = false;
         bool enableBFrame = false;
