@@ -164,6 +164,8 @@ enum class PickerMode : int32_t {
     WINDOW_ONLY = 0,
     SCREEN_ONLY = 1,
     SCREEN_AND_WINDOW = 2,
+    MIN_VAL = WINDOW_ONLY,
+    MAX_VAL = SCREEN_AND_WINDOW,
 };
 
 enum class ScreenCaptureHighlightMode : int32_t {
