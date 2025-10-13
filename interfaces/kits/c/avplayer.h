@@ -601,6 +601,43 @@ OH_AVErrCode OH_AVPlayer_SetLoudnessGain(OH_AVPlayer *player, float loudnessGain
  */
 OH_AVErrCode OH_AVPlayer_SetDataSource(OH_AVPlayer *player, OH_AVDataSourceExt* datasrc, void* userData);
 
+/**
+ * @brief Get the player media source info.
+ *
+ * This function can be used after media source is set and player is in
+ * initialized/prepared/playing/paused/completed/stopped state.
+ * It should be noted that the life cycle of the OH_AVFormat instance pointed to by the return value * needs
+ * to be manually released by the caller.
+ *
+ * @param player Pointer to an OH_AVPlayer instance
+ * @return Returns the player's source media info if the execution is successful, otherwise returns nullptr.
+ * Possible failure causes:
+ *   1. player is invaild.
+ *   2. player's media source is invalid.
+ * @since 22
+ */
+OH_AVFormat *OH_AVPlayer_GetMediaDescription(OH_AVPlayer *player);
+
+/**
+ * @brief Get the track info of player media source by the index.
+ *
+ * This function can be used after media source is set and player is in
+ * initialized/prepared/playing/paused/completed/stopped state.
+ * It should be noted that the life cycle of the OH_AVFormat instance pointed to by the return value * needs
+ * to be manually released by the caller.
+ *
+ * @param player Pointer to an OH_AVPlayer instance
+ * @param index Indicates tracks array index.
+ * @return Returns one track info of player media source by the index if the execution is successful,
+ * otherwise returns nullptr.
+ * Possible failure causes:
+ *   1. player is invaild.
+ *   2. player's media source is invalid.
+ *   3. index is out of tracks array's bounds.
+ * @since 22
+ */
+OH_AVFormat *OH_AVPlayer_GetTrackDescription(OH_AVPlayer *player, uint32_t index);
+
 #ifdef __cplusplus
 }
 #endif

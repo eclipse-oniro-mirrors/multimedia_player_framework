@@ -266,6 +266,10 @@ void PlayerServiceStub::FillPlayerFuncPart3()
         [this](MessageParcel &data, MessageParcel &reply) { return SetCameraPostprocessing(data, reply); } };
     playerFuncs_[GET_GLOBAL_INFO] = { "Player::GetGlobalInfo",
         [this](MessageParcel &data, MessageParcel &reply) { return GetGlobalInfo(data, reply); } };
+    playerFuncs_[GET_MEDIA_DESCRIPTION] = { "Player::GET_MEDIA_DESCRIPTION",
+        [this](MessageParcel &data, MessageParcel &reply) { return GetMediaDescription(data, reply); } };
+    playerFuncs_[GET_TRACK_DESCRIPTION] = { "Player::GET_TRACK_DESCRIPTION",
+        [this](MessageParcel &data, MessageParcel &reply) { return GetTrackDescription(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
@@ -1533,6 +1537,40 @@ int32_t PlayerServiceStub::GetGlobalInfo(MessageParcel &data, MessageParcel &rep
     reply.WriteInt32(ret);
  
     return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::GetMediaDescription(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    Format format;
+    (void)MediaParcel::Unmarshalling(data, format);
+    int32_t ret = GetMediaDescription(format);
+    (void)MediaParcel::Marshalling(reply, format);
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::GetMediaDescription(Format &format)
+{
+    MediaTrace trace("PlayerServiceStub::GetMediaDescription");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->GetMediaDescription(format);
+}
+
+int32_t PlayerServiceStub::GetTrackDescription(MessageParcel &data, MessageParcel &reply)
+{
+    Format format;
+    int32_t ret = GetTrackDescription(format, data.ReadUint32());
+    (void)MediaParcel::Marshalling(reply, format);
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::GetTrackDescription(Format &format, uint32_t trackIndex)
+{
+    MediaTrace trace("PlayerServiceStub::GetTrackDescription");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->GetTrackDescription(format, trackIndex);
 }
 } // namespace Media
 } // namespace OHOS

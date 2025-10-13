@@ -5604,5 +5604,61 @@ HWTEST_F(PlayerServerUnitTest, Player_SetLoudnessGain_002, TestSize.Level1)
     EXPECT_EQ(MSERR_OK, player_->Stop());
     ASSERT_EQ(MSERR_OK, player_->SetLoudnessGain(16.0));
 }
+
+/**
+ * @tc.name  : Test GetMediaDescription API
+ * @tc.number: GetMediaDescription
+ * @tc.desc  : Test Player state
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetMediaDescription_001, TestSize.Level1)
+{
+    Format format;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    ASSERT_NE(MSERR_OK, player_->GetMediaDescription(format));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    ASSERT_EQ(MSERR_OK, player_->GetMediaDescription(format));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    ASSERT_EQ(MSERR_OK, player_->GetMediaDescription(format));
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    ASSERT_EQ(MSERR_OK, player_->GetMediaDescription(format));
+    int32_t duration = 0;
+    ASSERT_EQ(MSERR_OK, player_->GetDuration(duration));
+    ASSERT_EQ(MSERR_OK, player_->Seek(duration, PlayerSeekMode::SEEK_NEXT_SYNC));
+    ASSERT_EQ(MSERR_OK, player_->Play());
+    sleep(1);
+    ASSERT_EQ(false, player_->IsPlaying());
+    ASSERT_EQ(PlayerStates::PLAYER_PLAYBACK_COMPLETE, player_->GetState());
+    ASSERT_EQ(MSERR_OK, player_->GetMediaDescription(format));
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+    ASSERT_EQ(MSERR_OK, player_->GetMediaDescription(format));
+}
+
+/**
+ * @tc.name  : Test GetTrackDescription API
+ * @tc.number: Player_GetTrackDescription_001
+ * @tc.desc  : Test Player state
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetTrackDescription_001, TestSize.Level1)
+{
+    Format format;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    ASSERT_NE(MSERR_OK, player_->GetTrackDescription(format, 0));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    ASSERT_EQ(MSERR_OK, player_->GetTrackDescription(format, 0));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    ASSERT_EQ(MSERR_OK, player_->GetTrackDescription(format, 0));
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    ASSERT_EQ(MSERR_OK, player_->GetTrackDescription(format, 0));
+    int32_t duration = 0;
+    ASSERT_EQ(MSERR_OK, player_->GetDuration(duration));
+    ASSERT_EQ(MSERR_OK, player_->Seek(duration, PlayerSeekMode::SEEK_NEXT_SYNC));
+    ASSERT_EQ(MSERR_OK, player_->Play());
+    sleep(1);
+    ASSERT_EQ(false, player_->IsPlaying());
+    ASSERT_EQ(PlayerStates::PLAYER_PLAYBACK_COMPLETE, player_->GetState());
+    ASSERT_EQ(MSERR_OK, player_->GetTrackDescription(format, 0));
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+    ASSERT_EQ(MSERR_OK, player_->GetTrackDescription(format, 0));
+}
 } // namespace Media
 } // namespace OHOS

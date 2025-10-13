@@ -202,6 +202,7 @@ public:
     int32_t GetGlobalInfo(std::shared_ptr<Meta> &globalInfo) override;
     void CleanUnusedListener();
     int32_t SetBuffering(bool isBuffering);
+    int32_t GetMediaDescription(Format &format) override;
 
 private:
     enum HiplayerSvpMode : int32_t {

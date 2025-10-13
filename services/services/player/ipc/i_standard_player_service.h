@@ -210,6 +210,19 @@ public:
         (void)globalInfo;
         return 0;
     }
+    
+    virtual int32_t GetMediaDescription(Format &format)
+    {
+        (void)format;
+        return 0;
+    }
+
+    virtual int32_t GetTrackDescription(Format &format, uint32_t trackIndex)
+    {
+        (void)format;
+        (void)trackIndex;
+        return 0;
+    }
 
     /**
      * IPC code ID
@@ -278,6 +291,8 @@ public:
         FORCE_LOAD_VIDEO,
         SET_LOUDNESSGAIN,
         SET_CAMERA_POST_POSTPROCESSING,
+        GET_MEDIA_DESCRIPTION,
+        GET_TRACK_DESCRIPTION,
         MAX_IPC_ID,                   // all IPC codes should be added before MAX_IPC_ID
         GET_GLOBAL_INFO,
     };

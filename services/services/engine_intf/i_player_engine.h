@@ -393,6 +393,12 @@ public:
         (void)globalInfo;
         return 0;
     }
+    
+    virtual int32_t GetMediaDescription(Format &format)
+    {
+        (void)format;
+        return 0;
+    }
 };
 } // namespace Media
 } // namespace OHOS

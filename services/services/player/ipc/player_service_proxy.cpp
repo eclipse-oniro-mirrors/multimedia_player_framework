@@ -1379,5 +1379,38 @@ int32_t PlayerServiceProxy::GetGlobalInfo(std::shared_ptr<Meta> &globalInfo)
  
     return reply.ReadInt32();
 }
+
+int32_t PlayerServiceProxy::GetMediaDescription(Format &format)
+{
+    MediaTrace trace("PlayerServiceProxy::GetMediaDescription");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+    int32_t error = SendRequest(GET_MEDIA_DESCRIPTION, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "GetMediaDescription failed, error: %{public}d", error);
+    MediaParcel::Unmarshalling(reply, format);
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::GetTrackDescription(Format &format, uint32_t trackIndex)
+{
+    MediaTrace trace("PlayerServiceProxy::GetTrackDescription");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+    data.WriteUint32(trackIndex);
+    int32_t error = SendRequest(GET_TRACK_DESCRIPTION, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "GetTrackDescription failed, error: %{public}d", error);
+    MediaParcel::Unmarshalling(reply, format);
+    return reply.ReadInt32();
+}
 } // namespace Media
 } // namespace OHOS

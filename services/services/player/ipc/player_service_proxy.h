@@ -93,6 +93,8 @@ public:
     int32_t ForceLoadVideo(bool status) override;
     int32_t SetLoudnessGain(float loudnessGain) override;
     int32_t GetGlobalInfo(std::shared_ptr<Meta> &globalInfo) override;
+    int32_t GetMediaDescription(Format &format) override;
+    int32_t GetTrackDescription(Format &format, uint32_t trackIndex) override;
 private:
     int32_t SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option);
     void InitPlayerFuncsPart1();
