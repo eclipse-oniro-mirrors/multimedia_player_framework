@@ -242,6 +242,63 @@ HWTEST_F(RecorderServerUnitTest, recorder_SetAudioEncoder_Error_001, TestSize.Le
 }
 
 /**
+ * @tc.name: recorder_SetAacProfile_Error_001
+ * @tc.desc: record audio with SetAacProfile
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, recorder_SetAacProfile_Error_001, TestSize.Level2)
+{
+    g_videoRecorderConfig.audioSourceId = 0;
+    g_videoRecorderConfig.aacProfile = AacProfile::AAC_LC;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT +
+            "recorder_video_SetAudioEncoder_Error_001.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_NE(MSERR_OK,
+              recorderServer_->SetAidopAacProfile(g_videoRecorderConfig.audioSourceId, g_videoRecorderConfig.aacProfile));
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_SetAacProfile_Error_002
+ * @tc.desc: record audio with SetAacProfile
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, recorder_SetAacProfile_Error_002, TestSize.Level2)
+{
+    g_videoRecorderConfig.audioSourceId = 0;
+    g_videoRecorderConfig.aacProfile = AacProfile::AAC_HE;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT +
+            "recorder_video_SetAudioEncoder_Error_001.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_NE(MSERR_OK,
+              recorderServer_->SetAidopAacProfile(g_videoRecorderConfig.audioSourceId, g_videoRecorderConfig.aacProfile));
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_SetAacProfile_Error_003
+ * @tc.desc: record audio with SetAacProfile
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, recorder_SetAacProfile_Error_003, TestSize.Level2)
+{
+    g_videoRecorderConfig.audioSourceId = 0;
+    g_videoRecorderConfig.aacProfile = AacProfile::AAC_HE_V2;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT +
+            "recorder_video_SetAudioEncoder_Error_001.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_NE(MSERR_OK,
+              recorderServer_->SetAidopAacProfile(g_videoRecorderConfig.audioSourceId, g_videoRecorderConfig.aacProfile));
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
  * @tc.name: recorder_GetSurface_Error_001
  * @tc.desc: record video with GetSurface
  * @tc.type: FUNC
