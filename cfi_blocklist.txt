@@ -1,2 +1,2 @@
 src:*frameworks/native/capi/*
-src:*test/unittest/*
+src:*foundation/multimedia/player_framework/test/unittest/*:*
