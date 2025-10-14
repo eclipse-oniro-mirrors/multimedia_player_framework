@@ -349,6 +349,11 @@ int32_t PlayerServer::PreparedState::PauseDemuxer()
     return server_.HandlePauseDemuxer();
 }
 
+int32_t PlayerServer::PreparedState::ResumeDemuxer()
+{
+    return server_.HandleResumeDemuxer();
+}
+
 int32_t PlayerServer::PlayingState::Play()
 {
     (void)server_.taskMgr_.MarkTaskDone("double play");
