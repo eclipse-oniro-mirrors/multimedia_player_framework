@@ -28,7 +28,8 @@ enum ScreenCaptureMonitorErrorType : int32_t {
 
 enum ScreenCaptureMonitorEvent : int32_t {
     SCREENCAPTURE_STARTED = 0,
-    SCREENCAPTURE_STOPPED = 1
+    SCREENCAPTURE_STOPPED = 1,
+    SCREENCAPTURE_DIED = 2,
 };
 
 class ScreenCaptureMonitor {
@@ -42,6 +43,7 @@ public:
     public:
         virtual void OnScreenCaptureStarted(int32_t pid) = 0;
         virtual void OnScreenCaptureFinished(int32_t pid) = 0;
+        virtual void OnScreenCaptureDied() {};
     };
 
     std::list<int32_t> IsScreenCaptureWorking()
@@ -76,6 +78,13 @@ public:
          * @version 1.0
          */
         virtual void OnScreenCaptureFinished(int32_t pid) = 0;
+
+        /**
+         * @brief Notify when screen capture died.
+         * @since 1.0
+         * @version 1.0
+         */
+        virtual void OnScreenCaptureDied() {};
     };
 
     std::list<int32_t> IsScreenCaptureWorking();
@@ -83,6 +92,7 @@ public:
     void UnregisterScreenCaptureMonitorListener(sptr<ScreenCaptureMonitorListener> listener);
     bool IsSystemScreenRecorder(int32_t pid);
     bool IsSystemScreenRecorderWorking();
+    virtual void ScreenCaptureMonitorServiceDied() {};
     virtual ~ScreenCaptureMonitor() = default;
 #endif
 };

@@ -33,6 +33,7 @@ public:
     bool IsSystemScreenRecorder(int32_t pid);
     bool IsSystemScreenRecorderWorking();
     int32_t Init();
+    void ScreenCaptureMonitorServiceDied();
 private:
     std::shared_ptr<IScreenCaptureMonitorService> screenCaptureMonitorService_ = nullptr;
 };

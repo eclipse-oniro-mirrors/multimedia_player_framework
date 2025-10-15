@@ -98,6 +98,24 @@ void ScreenCaptureMonitorCallback::OnScreenCaptureFinished(int32_t pid)
     return OnJsCaptureCallBack(cb);
 }
 
+void ScreenCaptureMonitorCallback::OnScreenCaptureDied()
+{
+    MEDIA_LOGI("ScreenCaptureMonitorCallback::OnScreenCaptureDied S");
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (refMap_.find(EVENT_SYSTEM_SCREEN_RECORD) == refMap_.end()) {
+        MEDIA_LOGW("can not find systemScreenRecorder callback!");
+        return;
+    }
+
+    ScreenCaptureMonitorJsCallback *cb = new(std::nothrow) ScreenCaptureMonitorJsCallback();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
+    cb->autoRef = refMap_.at(EVENT_SYSTEM_SCREEN_RECORD);
+    cb->callbackName = EVENT_SYSTEM_SCREEN_RECORD;
+    cb->captureEvent = ScreenCaptureMonitorEvent::SCREENCAPTURE_DIED;
+    MEDIA_LOGI("ScreenCaptureMonitorCallback::OnScreenCaptureDied E");
+    return OnJsCaptureCallBack(cb);
+}
+
 void ScreenCaptureMonitorCallback::OnJsCaptureCallBack(ScreenCaptureMonitorJsCallback *jsCb) const
 {
     ON_SCOPE_EXIT(0) {
@@ -106,6 +124,10 @@ void ScreenCaptureMonitorCallback::OnJsCaptureCallBack(ScreenCaptureMonitorJsCal
 
     auto task = [jsCb]() {
         std::string request = jsCb->callbackName;
+        if (jsCb->captureEvent == ScreenCaptureMonitorEvent::SCREENCAPTURE_DIED) {
+            MEDIA_LOGI("ScreenCaptureMonitorCallback::ScreenCaptureMonitorServiceDied S");
+            ScreenCaptureMonitor::GetInstance()->ScreenCaptureMonitorServiceDied();
+        }
         do {
             std::shared_ptr<AutoRef> ref = jsCb->autoRef.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());

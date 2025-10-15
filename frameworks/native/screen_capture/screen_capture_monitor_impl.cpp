@@ -115,6 +115,15 @@ bool ScreenCaptureMonitorImpl::IsSystemScreenRecorderWorking()
     return screenCaptureMonitorService_->IsSystemScreenRecorderWorking();
 }
 
+void ScreenCaptureMonitorImpl::ScreenCaptureMonitorServiceDied()
+{
+    if (screenCaptureMonitorService_ != nullptr) {
+        (void)MediaServiceFactory::GetInstance().DestroyScreenCaptureMonitorService(screenCaptureMonitorService_);
+        screenCaptureMonitorService_ = nullptr;
+    }
+    MEDIA_LOGD("ScreenCaptureMonitorImpl:0x%{public}06" PRIXPTR " ScreenCaptureMonitorServiceDied", FAKE_POINTER(this));
+}
+
 ScreenCaptureMonitorImpl::ScreenCaptureMonitorImpl()
 {
     MEDIA_LOGD("ScreenCaptureMonitorImpl:0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
@@ -122,11 +131,8 @@ ScreenCaptureMonitorImpl::ScreenCaptureMonitorImpl()
 
 ScreenCaptureMonitorImpl::~ScreenCaptureMonitorImpl()
 {
-    if (screenCaptureMonitorService_ != nullptr) {
-        (void)MediaServiceFactory::GetInstance().DestroyScreenCaptureMonitorService(screenCaptureMonitorService_);
-        screenCaptureMonitorService_ = nullptr;
-    }
     MEDIA_LOGD("ScreenCaptureMonitorImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+    ScreenCaptureMonitorServiceDied();
 }
 } // namespace Media
 } // namespace OHOS
