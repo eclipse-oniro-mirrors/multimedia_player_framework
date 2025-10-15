@@ -58,6 +58,12 @@ void ScreenCaptureMonitorClient::MediaServerDied()
     std::lock_guard<std::mutex> lock(mutex_);
     screenCaptureMonitorProxy_ = nullptr;
     listenerStub_ = nullptr;
+    for (const auto &it : screenCaptureMonitorClientCallbacks_) {
+        if (it != nullptr) {
+            MEDIA_LOGE("ScreenCaptureMonitorClient::MediaServerDied start");
+            it->OnScreenCaptureDied();
+        }
+    }
 }
 
 int32_t ScreenCaptureMonitorClient::CreateListenerObject()

@@ -38,6 +38,7 @@ private:
     };
     void OnScreenCaptureStarted(int32_t pid) override;
     void OnScreenCaptureFinished(int32_t pid) override;
+    void OnScreenCaptureDied() override;
     void OnJsCaptureCallBack(ScreenCaptureMonitorJsCallback *jsCb) const;
 
     napi_env env_ = nullptr;
