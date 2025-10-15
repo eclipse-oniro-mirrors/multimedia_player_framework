@@ -543,7 +543,8 @@ int32_t ScreenCaptureServiceStub::InitVideoCap(MessageParcel &data, MessageParce
     size = size >= MAX_WINDOWS_LEN ? MAX_WINDOWS_LEN : size;
     if (size > 0) {
         uint32_t availableBytes = data.GetWritePosition() - data.GetReadPosition();
-        CHECK_AND_RETURN_RET_LOG(availableBytes >= static_cast<uint32_t>((size + 3) * sizeof(int32_t)),
+        int32_t availableNum = size + 3; // size + 3 data items remaining
+        CHECK_AND_RETURN_RET_LOG(availableBytes >= static_cast<uint32_t>((availableNum) * sizeof(int32_t)),
             MSERR_INVALID_STATE, "Insufficient remaining data.");
         for (auto i = 0; i < size; i++) {
             int32_t missionId = data.ReadInt32();
