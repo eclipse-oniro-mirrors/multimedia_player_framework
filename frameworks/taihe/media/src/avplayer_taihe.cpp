@@ -1455,12 +1455,13 @@ void AVPlayerImpl::SetDecryptionConfig(ohos::multimedia::drm::weak::MediaKeySess
     }
 }
 #else
-void AVPlayerImpl::SetDecryptionConfig(weak::MediaKeySession mediaKeySession, bool secureVideoPath)
+void AVPlayerImpl::SetDecryptionConfig(ohos::multimedia::drm::weak::MediaKeySession mediaKeySession,
+    bool secureVideoPath)
 {
     MEDIA_LOGI("SetDecryptConfig is not surpport.");
     (void)mediaKeySession;
     (void)secureVideoPath;
-    return nullptr;
+    return;
 }
 #endif
 

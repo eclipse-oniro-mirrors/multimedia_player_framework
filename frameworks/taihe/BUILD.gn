@@ -30,6 +30,9 @@ copy_taihe_idl("copy_media_taihe") {
                     "audio_framework:copy_taihe",]
   if (player_framework_support_drm) {
     external_deps += [ "drm_framework:copy_drm_taihe" ]
+  } else {
+    sources += [
+      "//foundation/multimedia/player_framework/frameworks/taihe/idl/ohos.multimedia.drm.taihe" ]
   }
 }
 
@@ -40,6 +43,11 @@ ohos_taihe("run_media_taihe") {
     "$taihe_generated_file_path/src/ohos.multimedia.media.ani.cpp",
     "$taihe_generated_file_path/src/ohos.multimedia.media.abi.c",
   ]
+  if (!player_framework_support_drm) {
+    outputs += [
+      "$taihe_generated_file_path/src/ohos.multimedia.drm.abi.c",
+      "$taihe_generated_file_path/src/ohos.multimedia.drm.ani.cpp"]
+  }
 }
 
 copy_taihe_idl("copy_soundpool_taihe") {
