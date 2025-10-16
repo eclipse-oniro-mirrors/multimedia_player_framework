@@ -113,6 +113,8 @@ public:
     int32_t ForceLoadVideo(bool status) override;
     int32_t SetLoudnessGain(float loudnessGain) override;
     int32_t GetGlobalInfo(std::shared_ptr<Meta> &globalInfo) override;
+    int32_t GetMediaDescription(Format &format) override;
+    int32_t GetTrackDescription(Format &format, uint32_t trackIndex) override;
 protected:
     PlayerServiceStub();
     virtual int32_t Init();
@@ -192,6 +194,8 @@ private:
     int32_t ForceLoadVideo(MessageParcel &data, MessageParcel &reply);
     int32_t SetLoudnessGain(MessageParcel &data, MessageParcel &reply);
     int32_t GetGlobalInfo(MessageParcel &data, MessageParcel &reply);
+    int32_t GetMediaDescription(MessageParcel &data, MessageParcel &reply);
+    int32_t GetTrackDescription(MessageParcel &data, MessageParcel &reply);
 
     int32_t ReadMediaStreamListFromMessageParcel(
         MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource);

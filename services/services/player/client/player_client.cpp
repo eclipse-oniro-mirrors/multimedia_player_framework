@@ -590,5 +590,17 @@ int32_t PlayerClient::GetGlobalInfo(std::shared_ptr<Meta> &globalInfo)
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerProxy_->GetGlobalInfo(globalInfo);
 }
+
+int32_t PlayerClient::GetMediaDescription(Format &format)
+{
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->GetMediaDescription(format);
+}
+
+int32_t PlayerClient::GetTrackDescription(Format &format, uint32_t trackIndex)
+{
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->GetTrackDescription(format, trackIndex);
+}
 } // namespace Media
 } // namespace OHOS

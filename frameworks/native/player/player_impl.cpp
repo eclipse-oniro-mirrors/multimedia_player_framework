@@ -1013,6 +1013,20 @@ int32_t PlayerImpl::SetLoudnessGain(float loudnessGain)
     LISTENER(return playerService_->SetLoudnessGain(loudnessGain), "SetLoudnessGain", false, TIME_OUT_SECOND);
 }
 
+int32_t PlayerImpl::GetMediaDescription(Format &format)
+{
+    MEDIA_LOGI("PlayerImpl:0x%{public}06" PRIXPTR " GetMediaDescription", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    return playerService_->GetMediaDescription(format);
+}
+
+int32_t PlayerImpl::GetTrackDescription(Format &format, uint32_t trackIndex)
+{
+    MEDIA_LOGI("PlayerImpl:0x%{public}06" PRIXPTR " GetTrackDescription", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    return playerService_->GetTrackDescription(format, trackIndex);
+}
+
 PlayerImplCallback::PlayerImplCallback(const std::shared_ptr<PlayerCallback> playerCb,
     std::shared_ptr<PlayerImpl> player)
 {

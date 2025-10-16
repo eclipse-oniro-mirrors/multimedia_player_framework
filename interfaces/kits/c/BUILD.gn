@@ -145,6 +145,7 @@ ohos_shared_library("avplayer") {
     "media_foundation:media_foundation",
     "samgr:samgr_proxy",
     "window_manager:libdm",
+    "media_foundation:native_media_core",
   ]
 
   if (player_framework_support_lowpower_av_sink) {

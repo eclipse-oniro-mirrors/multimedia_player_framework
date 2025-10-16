@@ -2469,5 +2469,43 @@ int32_t PlayerServer::GetGlobalInfo(std::shared_ptr<Meta> &globalInfo)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "get global info failed");
     return MSERR_OK;
 }
+
+int32_t PlayerServer::GetMediaDescription(Format &format)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    if (GetCurrState() != preparedState_ && GetCurrState() != playingState_ &&
+        GetCurrState() != pausedState_ && GetCurrState() != playbackCompletedState_ &&
+        GetCurrState() != stoppedState_) {
+        MEDIA_LOGW("GetMediaDescription called in invalid state");
+        return MSERR_INVALID_OPERATION;
+    }
+    return playerEngine_->GetMediaDescription(format);
+}
+
+int32_t PlayerServer::GetTrackDescription(Format &format, uint32_t trackIndex)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    if (GetCurrState() != preparedState_ && GetCurrState() != playingState_ &&
+        GetCurrState() != pausedState_ && GetCurrState() != playbackCompletedState_ &&
+        GetCurrState() != stoppedState_) {
+        MEDIA_LOGW("GetTrackDescription called in invalid state");
+        return MSERR_INVALID_OPERATION;
+    }
+    std::vector<Format> trackInfo;
+    playerEngine_->GetVideoTrackInfo(trackInfo);
+    playerEngine_->GetAudioTrackInfo(trackInfo);
+    playerEngine_->GetSubtitleTrackInfo(trackInfo);
+    for (const auto& item: trackInfo) {
+        int32_t index = -1;
+        item.GetIntValue("track_index", index);
+        if (index == trackIndex) {
+            format = item;
+            return MSERR_OK;
+        }
+    }
+    return MSERR_INVALID_OPERATION;
+}
 } // namespace Media
 } // namespace OHOS

@@ -1128,6 +1128,19 @@ public:
         (void)globalInfo;
         return 0;
     }
+    
+    virtual int32_t GetMediaDescription(Format &format)
+    {
+        (void)format;
+        return 0;
+    }
+
+    virtual int32_t GetTrackDescription(Format &format, uint32_t trackIndex)
+    {
+        (void)format;
+        (void)trackIndex;
+        return 0;
+    }
 };
 
 class __attribute__((visibility("default"))) PlayerFactory {

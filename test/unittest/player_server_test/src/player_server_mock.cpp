@@ -848,5 +848,17 @@ int32_t PlayerServerMock::SetLoudnessGain(float loudnessGain)
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     return player_->SetLoudnessGain(loudnessGain);
 }
+
+int32_t PlayerServerMock::GetMediaDescription(Format &format)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->GetMediaDescription(format);
+}
+
+int32_t PlayerServerMock::GetTrackDescription(Format &format, uint32_t trackIndex)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->GetTrackDescription(format, trackIndex);
+}
 } // namespace Media
 } // namespace OHOS

@@ -4097,5 +4097,13 @@ void HiPlayerImpl::CleanUnusedListener()
     FALSE_RETURN(interruptMonitor_ != nullptr);
     interruptMonitor_->CleanUnusedListener();
 }
+
+int32_t HiPlayerImpl::GetMediaDescription(Format &format)
+{
+    FALSE_RETURN_V_MSG_E(demuxer_ != nullptr, TransStatus(Status::ERROR_NULL_POINTER), "demuxer_ is null");
+    std::shared_ptr<Meta> globalMeta = demuxer_->GetGlobalMetaInfo();
+    format.SetMeta(globalMeta);
+    return TransStatus(Status::OK);
+}
 }  // namespace Media
 }  // namespace OHOS
