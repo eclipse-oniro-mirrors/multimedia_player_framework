@@ -268,7 +268,7 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
     std::lock_guard<std::mutex> lock(mutex_);
     bool isEmpty = GetStubMapCount();
 
-    auto res = CreateStubObject1(type);
+    auto res = CreateStubObjectByType(type);
 
     if (isEmpty && !GetStubMapCount()) {
         SetCritical(true);
