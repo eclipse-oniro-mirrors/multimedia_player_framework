@@ -539,6 +539,16 @@ void PlayerServer::PausedState::HandleEos()
     server_.HandleEos();
 }
 
+int32_t PlayerServer::PausedState::PauseDemuxer()
+{
+    return server_.HandlePauseDemuxer();
+}
+
+int32_t PlayerServer::PausedState::ResumeDemuxer()
+{
+    return server_.HandleResumeDemuxer();
+}
+
 int32_t PlayerServer::StoppedState::Prepare()
 {
     server_.ChangeState(server_.preparingState_);
