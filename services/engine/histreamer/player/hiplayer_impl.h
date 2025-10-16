@@ -328,6 +328,7 @@ private:
     void ReleaseVideoDecoderOnMuted();
     void CacheBuffer();
     void NotifyBufferEnd();
+    void OnHwDecoderSwitch();
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
@@ -501,6 +502,8 @@ private:
     bool isForceLoadVideo_ {false};
     bool keepDecodingOnMute_ = false;
     bool isVideoMuted_ = false;
+    bool isNeedSwDecoder_ = false;
+    bool notNotifyForSw_ = false;
     bool isVideoDecoderInited_ = false;
 };
 } // namespace Media

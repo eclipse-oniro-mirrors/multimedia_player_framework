@@ -633,13 +633,17 @@ int32_t HiPlayerImpl::PrepareAsync()
 {
     MediaTrace trace("HiPlayerImpl::PrepareAsync");
     MEDIA_LOG_D("HiPlayerImpl PrepareAsync");
-    if (!(pipelineStates_ == PlayerStates::PLAYER_INITIALIZED || pipelineStates_ == PlayerStates::PLAYER_STOPPED)) {
+    if (!(pipelineStates_ == PlayerStates::PLAYER_INITIALIZED || pipelineStates_ == PlayerStates::PLAYER_STOPPED) &&
+        !isNeedSwDecoder_) {
         CollectionErrorInfo(MSERR_INVALID_OPERATION, "PrepareAsync pipelineStates not initialized or stopped");
         return MSERR_INVALID_OPERATION;
     }
-    auto ret = Init();
-    if (ret != Status::OK || isInterruptNeeded_.load()) {
-        return HandleErrorRet(Status::ERROR_UNSUPPORTED_FORMAT, "PrepareAsync error: init error");
+    auto ret = Status::OK;
+    if (!isNeedSwDecoder_) {
+        ret = Init();
+        if (ret != Status::OK || isInterruptNeeded_.load()) {
+            return HandleErrorRet(Status::ERROR_UNSUPPORTED_FORMAT, "PrepareAsync error: init error");
+        }
     }
     isBufferingEnd_ = false;
     DoSetMediaSource(ret);
@@ -756,6 +760,11 @@ void HiPlayerImpl::UpdatePlayerStateAndNotify()
     NotifyResolutionChange();
     NotifyPositionUpdate();
     DoInitializeForHttp();
+    if (notNotifyForSw_) {
+        MEDIA_LOG_I("need to Swdecoder");
+        notNotifyForSw_ = false;
+        return;
+    }
     OnStateChanged(PlayerStateId::READY);
 }
 
@@ -2473,9 +2482,20 @@ void HiPlayerImpl::OnEventContinue(const Event &event)
             }
             break;
         }
+        case EventType::EVENT_HW_DECODER_UNSUPPORT_CAP: {
+            OnHwDecoderSwitch();
+            break;
+        }
         default:
             break;
     }
+}
+
+void HiPlayerImpl::OnHwDecoderSwitch()
+{
+    isNeedSwDecoder_ = true;
+    notNotifyForSw_ = true;
+    PrepareAsync();
 }
 
 void HiPlayerImpl::HandleSeiInfoEvent(const Event &event)
@@ -4005,6 +4025,7 @@ Status HiPlayerImpl::InitVideoDecoder()
         FilterType::FILTERTYPE_VDEC);
     FALSE_RETURN_V(videoDecoder_ != nullptr, Status::ERROR_NULL_POINTER);
     videoDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
+    videoDecoder_->SetIsSwDecoder(isNeedSwDecoder_);
     SetPostProcessor();
     interruptMonitor_->RegisterListener(videoDecoder_);
     videoDecoder_->SetSyncCenter(syncManager_);
