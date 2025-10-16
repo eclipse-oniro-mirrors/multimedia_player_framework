@@ -266,9 +266,18 @@ int32_t MediaServerManager::ResetAllProxy()
 sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (GetStubMapCount() == 0) {
+    bool isEmpty = GetStubMapCount();
+
+    auto res = CreateStubObject1(type);
+
+    if (isEmpty && !GetStubMapCount()) {
         SetCritical(true);
     }
+    return res;
+}
+
+sptr<IRemoteObject> MediaServerManager::CreateStubObjectByType(StubType type)
+{
     switch (type) {
 #ifdef SUPPORT_RECORDER
         case RECORDER:
@@ -861,7 +870,7 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
             break;
         }
     }
-    if (GetStubMapCount() == 0) {
+    if (GetStubMapCount()) {
         SetCritical(false);
     }
 #ifdef SUPPORT_START_STOP_ON_DEMAND
@@ -1039,7 +1048,7 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
     DestroyAVScreenCaptureStubForPid(pid);
     DestroyLppAudioPlayerStubForPid(pid);
     DestroyLppVideoPlayerStubForPid(pid);
-    if (GetStubMapCount() == 0) {
+    if (GetStubMapCount()) {
         SetCritical(false);
     }
     MonitorServiceStub::GetInstance()->OnClientDie(pid);
@@ -1171,13 +1180,13 @@ void MediaServerManager::SetCritical(bool critical)
     }
 }
 
-int32_t MediaServerManager::GetStubMapCount()
+bool MediaServerManager::GetStubMapCount()
 {
-    return static_cast<int32_t>(recorderStubMap_.size() + transCoderStubMap_.size() + playerStubMap_.size() +
-            pidToPlayerStubMap_.size() + avMetadataHelperStubMap_.size() + avCodecListStubMap_.size() +
-            avCodecStubMap_.size() + recorderProfilesStubMap_.size() +
-            screenCaptureStubMap_.size() + screenCaptureControllerStubMap_.size() +
-            lppAudioPlayerStubMap_.size() + lppVideoPlayerStubMap_.size());
+    return recorderStubMap_.empty() && transCoderStubMap_.empty() && playerStubMap_.empty() &&
+            pidToPlayerStubMap_.empty() && avMetadataHelperStubMap_.empty() && avCodecListStubMap_.empty() &&
+            avCodecStubMap_.empty() && recorderProfilesStubMap_.empty() &&
+            screenCaptureStubMap_.empty() && screenCaptureControllerStubMap_.empty() &&
+            lppAudioPlayerStubMap_.empty() && lppVideoPlayerStubMap_.empty();
 }
 
 void MediaServerManager::NotifyMemMgrLoaded()
