@@ -131,7 +131,8 @@ private:
     void ReleaseMemoryReportTask();
     bool GetMemUsageForPlayer();
     void ReportAppMemoryUsage();
-
+    void SetCritical(bool critical);
+    int32_t GetStubMapCount();
     std::atomic<bool> isMemMgrLoaded_ {false};
 
     class AsyncExecutor {

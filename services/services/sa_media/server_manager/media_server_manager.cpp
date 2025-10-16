@@ -49,6 +49,8 @@
 #include "service_dump_manager.h"
 #include "player_xcollie.h"
 #include "client/memory_collector_client.h"
+#include "system_ability_definition.h"
+#include "mem_mgr_client.h"
 #include <set>
 #ifdef SUPPORT_LPP_VIDEO_STRAMER
 #include "v1_0/ilow_power_player_factory.h"
@@ -264,6 +266,9 @@ int32_t MediaServerManager::ResetAllProxy()
 sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    if (GetStubMapCount() == 0) {
+        SetCritical(true);
+    }
     switch (type) {
 #ifdef SUPPORT_RECORDER
         case RECORDER:
@@ -856,6 +861,9 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
             break;
         }
     }
+    if (GetStubMapCount() == 0) {
+        SetCritical(false);
+    }
 #ifdef SUPPORT_START_STOP_ON_DEMAND
     UpdateAllInstancesReleasedTime();
 #endif
@@ -1031,6 +1039,9 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
     DestroyAVScreenCaptureStubForPid(pid);
     DestroyLppAudioPlayerStubForPid(pid);
     DestroyLppVideoPlayerStubForPid(pid);
+    if (GetStubMapCount() == 0) {
+        SetCritical(false);
+    }
     MonitorServiceStub::GetInstance()->OnClientDie(pid);
     executor_.Clear();
 #ifdef SUPPORT_START_STOP_ON_DEMAND
@@ -1148,6 +1159,25 @@ void MediaServerManager::ReportAppMemoryUsage()
         memList.emplace_back(memoryCaller);
     }
     memoryCollector->SetSplitMemoryValue(memList);
+}
+
+void MediaServerManager::SetCritical(bool critical)
+{
+    auto ret = Memory::MemMgrClient::GetInstance().SetCritical(getpid(), critical, PLAYER_DISTRIBUTED_SERVICE_ID);
+    if (ret == 0) {
+        MEDIA_LOGI("MediaServerManager::SetCritical set critical to %{public}d success.", critical);
+    } else {
+        MEDIA_LOGE("MediaServerManager::SetCritical set critical to %{public}d fail.", critical);
+    }
+}
+
+int32_t MediaServerManager::GetStubMapCount()
+{
+    return static_cast<int32_t>(recorderStubMap_.size() + transCoderStubMap_.size() + playerStubMap_.size() +
+            pidToPlayerStubMap_.size() + avMetadataHelperStubMap_.size() + avCodecListStubMap_.size() +
+            avCodecStubMap_.size() + recorderProfilesStubMap_.size() +
+            screenCaptureStubMap_.size() + screenCaptureControllerStubMap_.size() +
+            lppAudioPlayerStubMap_.size() + lppVideoPlayerStubMap_.size());
 }
 
 void MediaServerManager::NotifyMemMgrLoaded()
