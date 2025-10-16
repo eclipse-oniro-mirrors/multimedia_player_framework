@@ -684,6 +684,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetPickerMode(
         AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture is null");
 
     PickerMode mode = static_cast<PickerMode>(pickerMode);
+    CHECK_AND_RETURN_RET_LOG(mode >= PickerMode::MIN_VAL && mode <= PickerMode::MAX_VAL,
+        AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "pickerMode is invalid!");
+
     int32_t ret = screenCaptureObj->screenCapture_->SetPickerMode(mode);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT, "SetPickerMode failed!");
     return AV_SCREEN_CAPTURE_ERR_OK;
