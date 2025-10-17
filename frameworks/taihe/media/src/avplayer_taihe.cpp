@@ -2808,7 +2808,7 @@ void AVPlayerImpl::OffSubtitleUpdate(optional_view<callback<void(SubtitleInfo co
     MEDIA_LOGI("OffSubtitleUpdate End");
 }
 
-void AVPlayerImpl::OffPlaybackRateDone(optional_view<callback<void(int32_t)>> callback)
+void AVPlayerImpl::OffPlaybackRateDone(optional_view<callback<void(double)>> callback)
 {
     MediaTrace trace("AVPlayerImpl::OffPlaybackRateDone");
     MEDIA_LOGD("OffPlaybackRateDone In");
