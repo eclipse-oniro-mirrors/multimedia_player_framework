@@ -167,7 +167,7 @@ void SoundPoolCallBackTaihe::SaveCallbackReference(const std::string &name, std:
     }
 }
 
-void SoundPoolCallBackTaihe::SendErrorCallback(const Format &errorInfo)
+void SoundPoolCallBackTaihe::SendErrorCallback(int32_t errCode, const std::string &msg)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (refMap_.find(SoundPoolEvent::EVENT_ERROR) == refMap_.end()) {
@@ -191,7 +191,7 @@ void SoundPoolCallBackTaihe::SendErrorCallback(const Format &errorInfo)
     }
 }
 
-void SoundPoolCallBackTaihe::SendErrorOccurredCallback(int32_t errCode, const std::string &msg)
+void SoundPoolCallBackTaihe::SendErrorOccurredCallback(const Format &errorInfo)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (refMap_.find(SoundPoolEvent::EVENT_ERROR_OCCURRED) == refMap_.end()) {
