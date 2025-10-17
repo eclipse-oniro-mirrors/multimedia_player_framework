@@ -445,7 +445,7 @@ void SoundPoolImpl::OnErrorOccurred(callback_view<void(uintptr_t)> callback)
     MEDIA_LOGI("OnErrorOccurred End");
 }
 
-void SoundPoolImpl::OffErrorOccurred()
+void SoundPoolImpl::OffErrorOccurred(optional_view<callback<void(uintptr_t)>> callback)
 {
     MediaTrace trace("SoundPoolImpl::OffErrorOccurred");
     MEDIA_LOGI("OffErrorOccurred Start");
