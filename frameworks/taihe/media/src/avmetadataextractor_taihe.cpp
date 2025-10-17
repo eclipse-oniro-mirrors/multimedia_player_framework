@@ -125,7 +125,7 @@ void AVMetadataExtractorImpl::SetUrlSourceSync(::taihe::string_view url, optiona
     if (res == OHOS::Media::MSERR_OK) {
         state_ = OHOS::Media::HelperState::HELPER_STATE_RUNNABLE;
     } else {
-        state_ = OHOS::Media::HelperState::HELPER_STATE_ERROR;
+        state_ = OHOS::Media::HelperState::HELPER_ERROR;
     }
     helper_->SetAVMetadataCaller(OHOS::Media::AVMetadataCaller::AV_METADATA_EXTRACTOR);
     MEDIA_LOGI("TaiheSetUrlSource Out");
