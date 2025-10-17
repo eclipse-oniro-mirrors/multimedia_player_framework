@@ -36,7 +36,7 @@ enum ErrorType: i32 {
 }
 
 struct ErrorInfo {
-    errorCode: @sts_type("BusinessError<coid>") Opaque;
+    errorCode: @sts_type("BusinessError<void>") Opaque;
     errorType: Optional<ErrorType>;
     soundId: Optional<i32>;
     streamId: Optional<i32>;
