@@ -78,7 +78,7 @@ ani_object SoundPoolCallBackTaihe::ToErrorInfo(ani_env *env, int32_t code, const
         env->Object_SetPropertyByName_Int(error, "soundId", static_cast<ani_int>(loadSoundId)) == ANI_OK, err,
         "set property ErrorInfo.soundId failed");
     CHECK_AND_RETURN_RET_LOG(
-        env->Object_SetPropertyByName_Int(error, "streamId", static_cast<ani_ref>(playFinishedStreamID)) == ANI_OK, err,
+        env->Object_SetPropertyByName_Int(error, "streamId", static_cast<ani_int>(playFinishedStreamID)) == ANI_OK, err,
         "set property ErrorInfo.streamId failed");
     CHECK_AND_RETURN_RET_LOG(
         env->Object_SetPropertyByName_Ref(error, "errorType", static_cast<ani_ref>(errorType)) == ANI_OK, err,
