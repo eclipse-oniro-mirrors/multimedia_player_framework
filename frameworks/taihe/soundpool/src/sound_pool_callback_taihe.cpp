@@ -202,7 +202,7 @@ void SoundPoolCallBackTaihe::SendErrorOccurredCallback(const Format &errorInfo)
     SoundPoolTaiheCallBack *cb = new(std::nothrow) SoundPoolTaiheCallBack();
     CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
     int32_t errorCode;
-    std:string msg;
+    std::string msg;
     errorInfo.GetIntValue(SoundPoolKeys::ERROR_CODE, errorCode);
     errorInfo.GetStringValue(SoundPoolKeys::ERROR_MESSAGE, msg);
     if (errorInfo.ContainKey(SoundPoolKeys::STREAM_ID)) {
