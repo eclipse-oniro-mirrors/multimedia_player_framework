@@ -79,7 +79,7 @@ ani_object SoundPoolCallBackTaihe::ToErrorInfo(ani_env *env, int32_t code, const
         "set property ErrorInfo.soundId failed");
     CHECK_AND_RETURN_RET_LOG(
         env->Object_SetPropertyByName_Int(error, "streamId", static_cast<ani_ref>(playFinishedStreamID)) == ANI_OK, err,
-        "set property ErrorInfo.streamId failed");3
+        "set property ErrorInfo.streamId failed");
     CHECK_AND_RETURN_RET_LOG(
         env->Object_SetPropertyByName_Ref(error, "errorType", static_cast<ani_ref>(errorType)) == ANI_OK, err,
         "set property ErrorInfo.errorType failed");
@@ -227,7 +227,8 @@ void SoundPoolCallBackTaihe::SendErrorOccurredCallback(int32_t errCode, const st
     auto task = [this, cb]() {
         this->OnTaiheErrorOccurredCallBack(cb);
     };
-    bool ret = mainHandler_->PostTask(task, "OnErrorOccurred", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    bool ret = mainHandler_->PostTask(task, "OnErrorOccurred", 0,
+        OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
     if (!ret) {
         MEDIA_LOGE("Failed to PostTask!");
         delete cb;
