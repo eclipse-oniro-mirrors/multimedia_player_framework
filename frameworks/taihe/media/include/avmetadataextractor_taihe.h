@@ -42,7 +42,7 @@ public:
     int32_t GetFrameIndexByTimeSync(int64_t timeUs);
     int64_t GetTimeByFrameIndexSync(int32_t index);
     void SetUrlSourceSync(::taihe::string_view url, optional_view<map<string, string>> header);
-    ::ohos::multimedia::image::image::PixelMap FetchFrameByTimeSync(int32_t timeUs,
+    ::ohos::multimedia::image::image::PixelMap FetchFrameByTimeSync(int64_t timeUs,
         ::ohos::multimedia::media::AVImageQueryOptions options, ::ohos::multimedia::media::PixelMapParams const& param);
 private:
     std::shared_ptr<OHOS::Media::AVMetadataHelper> helper_;
