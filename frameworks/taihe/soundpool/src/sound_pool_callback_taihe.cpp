@@ -57,6 +57,35 @@ ani_object SoundPoolCallBackTaihe::ToBusinessError(ani_env *env, int32_t code, c
     return error;
 }
 
+ani_object SoundPoolCallBackTaihe::ToErrorInfo(ani_env *env, int32_t code, const std::string &message,
+    int32_t playFinishedStreamID, int32_t loadSoundId, ERROR_TYPE errorType) const
+{
+    ani_object err {};
+    ani_class cls {};
+    CHECK_AND_RETURN_RET_LOG(env->FindClass(CLASS_NAME_ERRORINFO, &cls) == ANI_OK, err,
+        "find class %{public}s failed", CLASS_NAME_ERRORINFO);
+    ani_method ctor {};
+    CHECK_AND_RETURN_RET_LOG(env->Class_FindMethod(cls, "<ctor>", ":V", &ctor) == ANI_OK, err,
+        "find method ErrorInfo constructor failed");
+    ani_object error {};
+    CHECK_AND_RETURN_RET_LOG(env->Object_New(cls, ctor, &error) == ANI_OK, err,
+        "new object %{public}s failed", CLASS_NAME_ERRORINFO);
+    auto errorCode = ToBusinessError(taihe::get_env(), code, message);
+    CHECK_AND_RETURN_RET_LOG(
+        env->Object_SetPropertyByName_Ref(error, "errorCode", static_cast<ani_ref>(errorCode)) == ANI_OK, err,
+        "set property ErrorInfo.errorCode failed");
+    CHECK_AND_RETURN_RET_LOG(
+        env->Object_SetPropertyByName_Int(error, "soundId", static_cast<ani_int>(loadSoundId)) == ANI_OK, err,
+        "set property ErrorInfo.soundId failed");
+    CHECK_AND_RETURN_RET_LOG(
+        env->Object_SetPropertyByName_Int(error, "streamId", static_cast<ani_ref>(playFinishedStreamID)) == ANI_OK, err,
+        "set property ErrorInfo.streamId failed");3
+    CHECK_AND_RETURN_RET_LOG(
+        env->Object_SetPropertyByName_Ref(error, "errorType", static_cast<ani_ref>(errorType)) == ANI_OK, err,
+        "set property ErrorInfo.errorType failed");
+    return error;
+}
+
 void SoundPoolCallBackTaihe::OnLoadCompleted(int32_t soundId)
 {
     MEDIA_LOGI("OnLoadCompleted recived soundId:%{public}d", soundId);
@@ -81,6 +110,31 @@ void SoundPoolCallBackTaihe::OnError(int32_t errorCode)
         SendErrorCallback(MSERR_EXT_API9_SERVICE_DIED, "releated server died");
     } else {
         SendErrorCallback(MSERR_EXT_API9_IO, "IO error happened.");
+    }
+}
+
+void SoundPoolCallBackTaihe::OnErrorOccurred(Format &errorInfo)
+{
+    MEDIA_LOGI("OnErrorOccurred recived");
+    int32_t errorCode;
+    errorInfo.GetIntValue(SoundPoolKeys::ERROR_CODE, errorCode);
+    if (errorCode == MSERR_INVALID_OPERATION) {
+        errorInfo.PutIntValue(SoundPoolKeys::ERROR_CODE, MSERR_EXT_API9_OPERATE_NOT_PERMIT);
+        errorInfo.PutStringValue(SoundPoolKeys::ERROR_MESSAGE,
+            "The soundpool timed out. Please confirm that the input stream is normal.");
+        SendErrorInfoCallback(errorInfo);
+    } else if (errorCode == MSERR_NO_MEMORY) {
+        errorInfo.PutIntValue(SoundPoolKeys::ERROR_CODE, MSERR_EXT_API9_NO_MEMORY);
+        errorInfo.PutStringValue(SoundPoolKeys::ERROR_MESSAGE, "soundpool memery error.");
+        SendErrorInfoCallback(errorInfo);
+    } else if (errorCode == MSERR_SERVICE_DIED) {
+        errorInfo.PutIntValue(SoundPoolKeys::ERROR_CODE, MSERR_EXT_API9_SERVICE_DIED);
+        errorInfo.PutStringValue(SoundPoolKeys::ERROR_MESSAGE, "releated server died");
+        SendErrorInfoCallback(errorInfo);
+    } else {
+        errorInfo.PutIntValue(SoundPoolKeys::ERROR_CODE, MSERR_EXT_API9_IO);
+        errorInfo.PutStringValue(SoundPoolKeys::ERROR_MESSAGE, "IO error happened.");
+        SendErrorInfoCallback(errorInfo);
     }
 }
 
@@ -131,6 +185,49 @@ void SoundPoolCallBackTaihe::SendErrorCallback(int32_t errCode, const std::strin
         this->OnTaiheErrorCallBack(cb);
     };
     bool ret = mainHandler_->PostTask(task, "OnError", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    if (!ret) {
+        MEDIA_LOGE("Failed to PostTask!");
+        delete cb;
+    }
+}
+
+void SoundPoolCallBackTaihe::SendErrorOccurredCallback(int32_t errCode, const std::string &msg)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (refMap_.find(SoundPoolEvent::EVENT_ERROR_OCCURRED) == refMap_.end()) {
+        MEDIA_LOGW("can not find error callback!");
+        return;
+    }
+
+    SoundPoolTaiheCallBack *cb = new(std::nothrow) SoundPoolTaiheCallBack();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
+    int32_t errorCode;
+    std:string msg;
+    errorInfo.GetIntValue(SoundPoolKeys::ERROR_CODE, errorCode);
+    errorInfo.GetStringValue(SoundPoolKeys::ERROR_MESSAGE, msg);
+    if (errorInfo.ContainKey(SoundPoolKeys::STREAM_ID)) {
+        int32_t streamId;
+        errorInfo.GetIntValue(SoundPoolKeys::STREAM_ID, streamId);
+        cb->playFinishedStreamID = streamId;
+    }
+    if (errorInfo.ContainKey(SoundPoolKeys::ERROR_TYPE_FLAG)) {
+        int32_t errorType;
+        errorInfo.GetIntValue(SoundPoolKeys::ERROR_TYPE_FLAG, errorType);
+        cb->errorType = static_cast<ERROR_TYPE>(errorType);
+    }
+    if (errorInfo.ContainKey(SoundPoolKeys::STREAM_ID)) {
+        int32_t soundId;
+        errorInfo.GetIntValue(SoundPoolKeys::STREAM_ID, soundId);
+        cb->loadSoundId = soundId;
+    }
+    cb->autoRef = refMap_.at(SoundPoolEvent::EVENT_ERROR_OCCURRED);
+    cb->callbackName = SoundPoolEvent::EVENT_ERROR_OCCURRED;
+    cb->errorCode = errCode;
+    cb->errorMsg = msg;
+    auto task = [this, cb]() {
+        this->OnTaiheErrorOccurredCallBack(cb);
+    };
+    bool ret = mainHandler_->PostTask(task, "OnErrorOccurred", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
     if (!ret) {
         MEDIA_LOGE("Failed to PostTask!");
         delete cb;
@@ -215,6 +312,24 @@ void SoundPoolCallBackTaihe::OnTaiheErrorCallBack(SoundPoolTaiheCallBack *taiheC
             std::reinterpret_pointer_cast<taihe::callback<void(uintptr_t)>>(func);
         (*cacheCallback)(reinterpret_cast<uintptr_t>(err));
     } while (0);
+    delete taiheCb;
+}
+
+void SoundPoolCallBackTaihe::OnTaiheErrorOccurredCallBack(SoundPoolTaiheCallBack *taiheCb) const
+{
+    std::string request = taiheCb->callbackName;
+    MEDIA_LOGI("errorOccurredCallback event: errorMsg %{public}s, errorCode %{public}d, soundId %{public}d,"
+        "streamId %{public}d", event->errorMsg.c_str(), event->errorCode, event->loadSoundId,
+        event->playFinishedStreamID);
+    std::shared_ptr<AutoRef> ref = taiheCb->autoRef.lock();
+    CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
+    auto func = ref->callbackRef_;
+    CHECK_AND_BREAK_LOG(func != nullptr, "%{public}s failed to get callback", request.c_str());
+    auto err = ToErrorInfo(taihe::get_env(), taiheCb->errorCode, taiheCb->errorMsg,
+        taiheCb->playFinishedStreamID, taiheCb->loadSoundId, taiheCb->errorType);
+    std::shared_ptr<taihe::callback<void(uintptr_t)>> cacheCallback =
+        std::reinterpret_pointer_cast<taihe::callback<void(uintptr_t)>>(func);
+    (*cacheCallback)(reinterpret_cast<uintptr_t>(err));
     delete taiheCb;
 }
 

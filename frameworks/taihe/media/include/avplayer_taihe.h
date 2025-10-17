@@ -92,6 +92,7 @@ namespace AVPlayerEvent {
     const std::string EVENT_AMPLITUDE_UPDATE = "amplitudeUpdate";
     const std::string EVENT_SUPER_RESOLUTION_CHANGED = "superResolutionChanged";
     const std::string EVENT_SEI_MESSAGE_INFO = "seiMessageReceived";
+    const std::string EVENT_RATE_DONE = "playbackRateDone";
 }
 
 class AVPlayerImpl : public AVPlayerNotify {
@@ -172,6 +173,7 @@ public:
     void OnSubtitleUpdate(callback_view<void(SubtitleInfo const&)> callback);
     void OnSuperResolutionChanged(callback_view<void(bool)> callback);
     void OnTrackInfoUpdate(callback_view<void(array_view<map<string, MediaDescriptionValue>>)> callback);
+    void OnPlaybackRateDone(callback_view<void(double)> callback);
     void OnSeiMessageReceived(array_view<int32_t> payloadTypes,
         callback_view<void(array_view<SeiMessage>, optional_view<int32_t>)> callback);
     void OnAudioInterrupt(callback_view<void(ohos::multimedia::audio::InterruptEvent const&)> callback);
@@ -201,6 +203,7 @@ public:
     void OffTrackInfoUpdate(optional_view<callback<void(array_view<map<string, int32_t>>)>> callback);
     void OffSeiMessageReceived(optional_view<array<int32_t>> payloadTypes,
         optional_view<callback<void(array_view<SeiMessage>, optional_view<int32_t>)>> callback);
+    void OffPlaybackRateDone(optional_view<callback<void(double)>> callback);
     void OffAudioInterrupt(optional_view<callback<void(::ohos::multimedia::audio::InterruptEvent const&)>> callback);
     void OffAudioOutputDeviceChangeWithInfo(optional_view<callback<void(
         ::ohos::multimedia::audio::AudioStreamDeviceChangeInfo const&)>> callback);
@@ -222,6 +225,7 @@ public:
     void QueueOnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg);
     PlayerSwitchMode TransferSwitchMode(int32_t mode);
     void GetAVPlayStrategyFromStrategyTmp(AVPlayStrategy &strategy, const AVPlayStrategyTmp &strategyTmp);
+    void SetPlaybackRate(double rate);
 private:
     static bool IsSystemApp();
     void ResetUserParameters();
@@ -245,6 +249,7 @@ private:
     bool IsLiveSource() const;
     bool IsControllable();
     bool CanSetSuperResolution();
+    bool IsRateValid(double rate);
     bool CanSetPlayRange();
     bool IsPalyingDurationValid(const AVPlayStrategyTmp &strategyTmp);
     void AddMediaStreamToAVMediaSource(

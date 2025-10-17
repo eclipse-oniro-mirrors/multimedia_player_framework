@@ -520,6 +520,8 @@ AVPlayerCallback::AVPlayerCallback(AVPlayerNotify *listener)
              [this](const int32_t extra, const Format &infoBody) { OnBitRateCollectedCb(extra, infoBody); } },
         { INFO_TYPE_EOS,
             [this](const int32_t extra, const Format &infoBody) { OnEosCb(extra, infoBody); } },
+        { INFO_TYPE_RATEDONE,
+            [this](const int32_t extra, const Format &infoBody) {OnPlaybackRateDoneCb(extra, infoBody); } },
         { INFO_TYPE_IS_LIVE_STREAM,
             [this](const int32_t extra, const Format &infoBody) {NotifyIsLiveStream(extra, infoBody); } },
         { INFO_TYPE_TRACKCHANGE,
@@ -644,6 +646,27 @@ void AVPlayerCallback::OnBitRateDoneCb(const int32_t extra, const Format &infoBo
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_BITRATE_DONE);
     cb->callbackName = AVPlayerEvent::EVENT_BITRATE_DONE;
     cb->value = bitRate;
+    AniCallback::CompleteCallback(cb, mainHandler_);
+}
+
+void AVPlayerCallback::OnPlaybackRateDoneCb(const int32_t extra, const Format &infoBody)
+{
+    (void)infoBody;
+    CHECK_AND_RETURN_LOG(isLoaded_.load(), "current source is unready");
+    float speedRate = 0.0f;
+    (void)infoBody.GetFloatValue(PlayerKeys::PLAYER_PLAYBACK_RATE, speedRate);
+    MEDIA_LOGI("OnPlaybackRateDoneCb is called, speedRate: %{public}f", speedRate);
+    if (refMap_.find(AVPlayerEvent::EVENT_RATE_DONE) == refMap_.end()) {
+        MEDIA_LOGW(" can not find ratedone callback!");
+        return;
+    }
+
+    AniCallback::Double *cb = new(std::nothrow) AniCallback::Double();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new float");
+
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_RATE_DONE);
+    cb->callbackName = AVPlayerEvent::EVENT_RATE_DONE;
+    cb->value = static_cast<double>(speedRate);
     AniCallback::CompleteCallback(cb, mainHandler_);
 }
 

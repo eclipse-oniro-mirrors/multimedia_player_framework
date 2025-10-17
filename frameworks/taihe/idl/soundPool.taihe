@@ -30,6 +30,18 @@ struct PlayParameters {
   parallelPlayFlag: Optional<bool>;
 }
 
+enum ErrorType: i32 {
+    LOAD_ERROR = 1,
+    PLAY_ERROR = 2
+}
+
+struct ErrorInfo {
+    errorCode: @sts_type("BusinessError<coid>") Opaque;
+    errorType: Optional<ErrorType>;
+    soundId: Optional<i32>;
+    streamId: Optional<i32>;
+}
+
 interface SoundPool {
     @gen_async("load")
     @gen_promise("load")
@@ -86,6 +98,8 @@ interface SoundPool {
             this.onLoadComplete(callback as (data: int)=> void);
         } else if (type === "playFinished") {
             this.onPlayFinished(callback as (data: undefined)=> void);
+        } else if (type === "errorOccurred") {
+            this.onErrorOccurred(callback as (data: ErrorInfo)=> void);
         } else {
             throw new Error(`Unknown type: ${type}`);
         }
@@ -106,6 +120,14 @@ interface SoundPool {
         }
     }""")
 
+    @!sts_inject_into_interface("off(type: string, callback?: (data: object)=> void): void;")
+    @!sts_inject_into_class("""off(type: string, callback?: object): void {
+        if (type === "errorOccurred") {
+            this.offErrorOccurred(callback as (((data: ErrorInfo)=> void) | undefined));
+        } else {
+        }
+    }""")
+
     OnError(callback: (err: @sts_type("BusinessError<void>") Opaque)=> void): void;
     OffError(): void;
 
@@ -117,4 +139,7 @@ interface SoundPool {
 
     OnPlayFinished(callback: (data: @sts_type("undefined") Opaque) => void): void;
     OffPlayFinished();
+
+    OnErrorOccurred(callback: (data: @sts_type("ErrorInfo") Opaque) => void): void;
+    OffErrorOccurred(callback: Optional<(data: @sts_type("ErrorInfo") Opaque) => void>): void;
 }

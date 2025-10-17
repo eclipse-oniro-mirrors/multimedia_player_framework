@@ -1406,6 +1406,40 @@ void AVPlayerImpl::SetBitrate(int32_t bitrate)
     MEDIA_LOGI("0x%{public}06" PRIXPTR " SelectBitrate Out", FAKE_POINTER(this));
 }
 
+void AVPlayerImpl::SetPlaybackRate(double rate)
+{
+    MediaTrace trace("AVPlayerImpl::setRate");
+    MEDIA_LOGI("TaiheSetRate In");
+
+    if (IsLiveSource()) {
+        OnErrorCb(MSERR_EXT_API9_OPERATD_NOT_PERMIT, "The stream is live stream, not support rate");
+        return;
+    }
+    if (!IsRateValid(rate)) {
+        OnErrorCb(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
+            "invalid parameters, please check the rate");
+        return;
+    }
+    if (!IsControllable()) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed, unsupport rate operation");
+        return;
+    }
+    auto task = std::make_shared<TaskHandler<void>>([this, rate]() {
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheSetRate Task In", FAKE_POINTER(this));
+        if (player_ != nullptr) {
+            (void)player_->SetPlaybackRate(static_cast<float>(rate));
+        }
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheSetRate Task Out", FAKE_POINTER(this));
+    });
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheSetRate EnqueueTask In", FAKE_POINTER(this));
+    if (player_ != nullptr) {
+        (void)taskQue_->EnqueueTask(task);
+    }
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheSetRate Out", FAKE_POINTER(this));
+    return;
+}
+
 void AVPlayerImpl::SetPlaybackRangeSync(int32_t startTimeMs, int32_t endTimeMs,
     optional_view<::ohos::multimedia::media::SeekMode> mode)
 {
@@ -1609,6 +1643,17 @@ bool AVPlayerImpl::IsLivingMaxDelayTimeValid(const AVPlayStrategyTmp &strategyTm
         strategyTmp.thresholdForAutoQuickPlay < strategyTmp.preferredBufferDurationForPlaying) {
             return false;
         }
+    return true;
+}
+
+bool AVPlayerImpl::IsRateValid(double rate)
+{
+    const double minRate = 0.125f;
+    const double maxRate = 4.0f;
+    const double eps = 1e-15;
+    if ((rate < minRate - eps) || (rate > maxRate + eps)) {
+        retirn false;
+    }
     return true;
 }
 
@@ -2391,6 +2436,26 @@ void AVPlayerImpl::OnSubtitleUpdate(callback_view<void(::ohos::multimedia::media
     return;
 }
 
+void AVPlayerImpl::OnPlaybackRateDone(callback_view<void(double)> callback)
+{
+    MediaTrace trace("AVPlayerImpl::OnPlaybackRateDone");
+    MEDIA_LOGD("TaiheOnPlaybackRateDone In");
+
+    if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to on event");
+        return;
+    }
+    ani_env *env = taihe::get_env();
+    std::shared_ptr<taihe::callback<void(double)>> taiheCallback =
+            std::make_shared<taihe::callback<void(double)>>(callback);
+    std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
+    std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
+    SaveCallbackReference(AVPlayerEvent::EVENT_RATE_DONE, autoRef);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR "
+        TaiheOnPlaybackRateDone callbackName: playbackRateDone success", FAKE_POINTER(this));
+    return;
+}
+
 void AVPlayerImpl::OnSuperResolutionChanged(callback_view<void(bool)> callback)
 {
     MediaTrace trace("AVPlayerImpl::OnSuperResolutionChanged");
@@ -2741,6 +2806,21 @@ void AVPlayerImpl::OffSubtitleUpdate(optional_view<callback<void(SubtitleInfo co
     MaxAmplitudeCallbackOff(callbackName);
     ClearCallbackReference(callbackName);
     MEDIA_LOGI("OffSubtitleUpdate End");
+}
+
+void AVPlayerImpl::OffPlaybackRateDone(optional_view<callback<void(int32_t)>> callback)
+{
+    MediaTrace trace("AVPlayerImpl::OffPlaybackRateDone");
+    MEDIA_LOGD("OffPlaybackRateDone In");
+
+    if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        return;
+    }
+
+    std::string callbackName = "playbackRateDone";
+    MaxAmplitudeCallbackOff(callbackName);
+    ClearCallbackReference(callbackName);
+    MEDIA_LOGI("OffPlaybackRateDone End");
 }
 
 void AVPlayerImpl::OffSuperResolutionChanged(optional_view<callback<void(bool)>> callback)
