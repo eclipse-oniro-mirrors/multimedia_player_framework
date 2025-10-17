@@ -122,19 +122,19 @@ void SoundPoolCallBackTaihe::OnErrorOccurred(Format &errorInfo)
         errorInfo.PutIntValue(SoundPoolKeys::ERROR_CODE, MSERR_EXT_API9_OPERATE_NOT_PERMIT);
         errorInfo.PutStringValue(SoundPoolKeys::ERROR_MESSAGE,
             "The soundpool timed out. Please confirm that the input stream is normal.");
-        SendErrorInfoCallback(errorInfo);
+        SendErrorOccurredCallback(errorInfo);
     } else if (errorCode == MSERR_NO_MEMORY) {
         errorInfo.PutIntValue(SoundPoolKeys::ERROR_CODE, MSERR_EXT_API9_NO_MEMORY);
         errorInfo.PutStringValue(SoundPoolKeys::ERROR_MESSAGE, "soundpool memery error.");
-        SendErrorInfoCallback(errorInfo);
+        SendErrorOccurredCallback(errorInfo);
     } else if (errorCode == MSERR_SERVICE_DIED) {
         errorInfo.PutIntValue(SoundPoolKeys::ERROR_CODE, MSERR_EXT_API9_SERVICE_DIED);
         errorInfo.PutStringValue(SoundPoolKeys::ERROR_MESSAGE, "releated server died");
-        SendErrorInfoCallback(errorInfo);
+        SendErrorOccurredCallback(errorInfo);
     } else {
         errorInfo.PutIntValue(SoundPoolKeys::ERROR_CODE, MSERR_EXT_API9_IO);
         errorInfo.PutStringValue(SoundPoolKeys::ERROR_MESSAGE, "IO error happened.");
-        SendErrorInfoCallback(errorInfo);
+        SendErrorOccurredCallback(errorInfo);
     }
 }
 
