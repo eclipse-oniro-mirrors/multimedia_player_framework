@@ -500,8 +500,6 @@ AVPlayerCallback::AVPlayerCallback(AVPlayerNotify *listener)
             [this](const int32_t extra, const Format &infoBody) { OnStateChangeCb(extra, infoBody); } },
         { INFO_TYPE_VOLUME_CHANGE,
             [this](const int32_t extra, const Format &infoBody) { OnVolumeChangeCb(extra, infoBody); } },
-        { INFO_TYPE_SEEKDONE,
-            [this](const int32_t extra, const Format &infoBody) { OnSeekDoneCb(extra, infoBody); } },
         { INFO_TYPE_SPEEDDONE,
             [this](const int32_t extra, const Format &infoBody) { OnSpeedDoneCb(extra, infoBody); } },
         { INFO_TYPE_BITRATEDONE,
@@ -517,9 +515,7 @@ AVPlayerCallback::AVPlayerCallback(AVPlayerNotify *listener)
         { INFO_TYPE_RESOLUTION_CHANGE,
             [this](const int32_t extra, const Format &infoBody) { OnVideoSizeChangedCb(extra, infoBody); } },
         { INFO_TYPE_BITRATE_COLLECT,
-             [this](const int32_t extra, const Format &infoBody) { OnBitRateCollectedCb(extra, infoBody); } },
-        { INFO_TYPE_EOS,
-            [this](const int32_t extra, const Format &infoBody) { OnEosCb(extra, infoBody); } },
+            [this](const int32_t extra, const Format &infoBody) { OnBitRateCollectedCb(extra, infoBody); } },
         { INFO_TYPE_RATEDONE,
             [this](const int32_t extra, const Format &infoBody) {OnPlaybackRateDoneCb(extra, infoBody); } },
         { INFO_TYPE_IS_LIVE_STREAM,
@@ -528,7 +524,7 @@ AVPlayerCallback::AVPlayerCallback(AVPlayerNotify *listener)
              [this](const int32_t extra, const Format &infoBody) { OnTrackChangedCb(extra, infoBody); } },
         { INFO_TYPE_TRACK_INFO_UPDATE,
             [this](const int32_t extra, const Format &infoBody) { OnTrackInfoUpdate(extra, infoBody); } },
-         { INFO_TYPE_SET_DECRYPT_CONFIG_DONE,
+        { INFO_TYPE_SET_DECRYPT_CONFIG_DONE,
             [this](const int32_t extra, const Format &infoBody) { OnSetDecryptConfigDoneCb(extra, infoBody); } },
         { INFO_TYPE_MAX_AMPLITUDE_COLLECT,
              [this](const int32_t extra, const Format &infoBody) { OnMaxAmplitudeCollectedCb(extra, infoBody); } },
@@ -544,6 +540,8 @@ AVPlayerCallback::AVPlayerCallback(AVPlayerNotify *listener)
             [this](const int32_t extra, const Format &infoBody) { OnAudioInterruptCb(extra, infoBody); } },
         { INFO_TYPE_AUDIO_DEVICE_CHANGE,
             [this](const int32_t extra, const Format &infoBody) { OnAudioDeviceChangeCb(extra, infoBody); } },
+        { INFO_TYPE_EOS, [this](const int32_t extra, const Format &infoBody) { OnEosCb(extra, infoBody); } },
+        { INFO_TYPE_SEEKDONE, [this](const int32_t extra, const Format &infoBody) { OnSeekDoneCb(extra, infoBody); } },
     };
 }
 
