@@ -173,6 +173,12 @@ int32_t RecorderServerMock::SetAudioEncoder(int32_t sourceId, AudioCodecFormat e
     return recorder_->SetAudioEncoder(sourceId, encoder);
 }
 
+int32_t RecorderServerMock::SetAudioAacProfile(int32_t sourceId, AacProfile aacProfile)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
+    return recorder_->SetAudioAacProfile(sourceId, aacProfile);
+}
+
 int32_t RecorderServerMock::SetAudioSampleRate(int32_t sourceId, int32_t rate)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
