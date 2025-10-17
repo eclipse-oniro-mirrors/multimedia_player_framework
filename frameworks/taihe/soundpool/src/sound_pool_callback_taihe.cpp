@@ -215,14 +215,14 @@ void SoundPoolCallBackTaihe::SendErrorOccurredCallback(const Format &errorInfo)
         errorInfo.GetIntValue(SoundPoolKeys::ERROR_TYPE_FLAG, errorType);
         cb->errorType = static_cast<ERROR_TYPE>(errorType);
     }
-    if (errorInfo.ContainKey(SoundPoolKeys::STREAM_ID)) {
+    if (errorInfo.ContainKey(SoundPoolKeys::SOUND_ID)) {
         int32_t soundId;
-        errorInfo.GetIntValue(SoundPoolKeys::STREAM_ID, soundId);
+        errorInfo.GetIntValue(SoundPoolKeys::SOUND_ID, soundId);
         cb->loadSoundId = soundId;
     }
     cb->autoRef = refMap_.at(SoundPoolEvent::EVENT_ERROR_OCCURRED);
     cb->callbackName = SoundPoolEvent::EVENT_ERROR_OCCURRED;
-    cb->errorCode = errCode;
+    cb->errorCode = errorCode;
     cb->errorMsg = msg;
     auto task = [this, cb]() {
         this->OnTaiheErrorOccurredCallBack(cb);
@@ -320,12 +320,12 @@ void SoundPoolCallBackTaihe::OnTaiheErrorOccurredCallBack(SoundPoolTaiheCallBack
 {
     std::string request = taiheCb->callbackName;
     MEDIA_LOGI("errorOccurredCallback event: errorMsg %{public}s, errorCode %{public}d, soundId %{public}d,"
-        "streamId %{public}d", event->errorMsg.c_str(), event->errorCode, event->loadSoundId,
-        event->playFinishedStreamID);
+        "streamId %{public}d", taiheCb->errorMsg.c_str(), taiheCb->errorCode, taiheCb->loadSoundId,
+        taiheCb->playFinishedStreamID);
     std::shared_ptr<AutoRef> ref = taiheCb->autoRef.lock();
-    CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
+    CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
     auto func = ref->callbackRef_;
-    CHECK_AND_BREAK_LOG(func != nullptr, "%{public}s failed to get callback", request.c_str());
+    CHECK_AND_RETURN_LOG(func != nullptr, "%{public}s failed to get callback", request.c_str());
     auto err = ToErrorInfo(taihe::get_env(), taiheCb->errorCode, taiheCb->errorMsg,
         taiheCb->playFinishedStreamID, taiheCb->loadSoundId, taiheCb->errorType);
     std::shared_ptr<taihe::callback<void(uintptr_t)>> cacheCallback =
