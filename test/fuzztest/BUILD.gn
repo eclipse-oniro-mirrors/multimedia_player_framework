@@ -56,6 +56,7 @@ group("fuzztest") {
     "recorder_fuzztest/recordersetvideoframerate_fuzzer:RecorderSetVideoFrameRateFuzzTest",
     "recorder_fuzztest/recordersetvideosize_fuzzer:RecorderSetVideoSizeFuzzTest",
     "recorder_fuzztest/recordersetvideosource_fuzzer:RecorderSetVideoSourceFuzzTest",
+    "recorder_fuzztest/recorderservicestubfunctions_fuzzer:RecorderServiceStubFunctionsFuzzTest",
     "transcoder_fuzztest/transcoderservicestub_fuzzer:TranscoderServiceStubFuzzTest",
     "transcoder_fuzztest/transcoderstub_fuzzer:TranscoderStubFuzzTest",
   ]
@@ -113,6 +114,7 @@ group("fuzztest") {
       "screen_capture_fuzztest/screencapturevideoframeratefile_fuzzer:ScreenCaptureVideoFrameRateFileFuzzTest",
       "screen_capture_fuzztest/screencapturevideoframewidth_fuzzer:ScreenCaptureVideoFrameWidthFuzzTest",
       "screen_capture_fuzztest/screencapturevideosourcetype_fuzzer:ScreenCaptureVideoSourceTypeFuzzTest",
+      "screen_capture_fuzztest/avscreencaptureservicestub_fuzzer:AvScreenCaptureServiceStubFuzzTest",
     ]
   }
 }
