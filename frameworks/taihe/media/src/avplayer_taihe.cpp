@@ -1412,7 +1412,7 @@ void AVPlayerImpl::SetPlaybackRate(double rate)
     MEDIA_LOGI("TaiheSetRate In");
 
     if (IsLiveSource()) {
-        OnErrorCb(MSERR_EXT_API9_OPERATD_NOT_PERMIT, "The stream is live stream, not support rate");
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "The stream is live stream, not support rate");
         return;
     }
     if (!IsRateValid(rate)) {
@@ -1652,7 +1652,7 @@ bool AVPlayerImpl::IsRateValid(double rate)
     const double maxRate = 4.0f;
     const double eps = 1e-15;
     if ((rate < minRate - eps) || (rate > maxRate + eps)) {
-        retirn false;
+        return false;
     }
     return true;
 }
@@ -2451,8 +2451,8 @@ void AVPlayerImpl::OnPlaybackRateDone(callback_view<void(double)> callback)
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SaveCallbackReference(AVPlayerEvent::EVENT_RATE_DONE, autoRef);
-    MEDIA_LOGI("0x%{public}06" PRIXPTR "
-        TaiheOnPlaybackRateDone callbackName: playbackRateDone success", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR "TaiheOnPlaybackRateDone callbackName: playbackRateDone success",
+        FAKE_POINTER(this));
     return;
 }
 
