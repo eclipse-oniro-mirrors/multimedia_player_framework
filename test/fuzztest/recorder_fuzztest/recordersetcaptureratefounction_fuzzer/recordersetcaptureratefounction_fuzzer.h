@@ -24,14 +24,14 @@
 #include <fcntl.h>
 #include "test_recorder.h"
 
-#define FUZZ_PROJECT_NAME "recordersetcapturerate_fuzzer"
+#define FUZZ_PROJECT_NAME "recordersetcaptureratefounc_fuzzer"
 
 namespace OHOS {
 namespace Media {
-class RecorderSetCaptureRateFuzzer : public TestRecorder {
+class RecorderSetCaptureRateFouncFuzzer : public TestRecorder {
 public:
-    RecorderSetCaptureRateFuzzer();
-    ~RecorderSetCaptureRateFuzzer();
+    RecorderSetCaptureRateFouncFuzzer();
+    ~RecorderSetCaptureRateFouncFuzzer();
     bool FuzzRecorderSetCaptureRate(uint8_t *data, size_t size);
 };
 }
