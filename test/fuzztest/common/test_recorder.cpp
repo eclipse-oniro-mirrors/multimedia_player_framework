@@ -318,9 +318,43 @@ void TestRecorder::SetParameter(int32_t sourceId, const Format &format, VideoRec
     recorder->SetParameter(sourceId, format);
 }
 
-void TestRecorder::SetParametertmp(int32_t sourceId, const Format &format, VideoRecorderConfig_ &recorderConfig)
+void TestRecorder::SetVideoIsHdr(int32_t sourceId, bool isHdr)
 {
-    recorder->SetParameter(sourceId, format);
+    recorder->SetVideoIsHdr(sourceId, isHdr);
+}
+void TestRecorder::SetVideoEnableTemporalScale(int32_t sourceId, bool enableTemporalScale)
+{
+    recorder->SetVideoEnableTemporalScale(sourceId, enableTemporalScale);
+}
+void TestRecorder::SetVideoEnableStableQualityMode(int32_t sourceId, bool enableStableQualityMode)
+{
+    recorder->SetVideoEnableStableQualityMode(sourceId, enableStableQualityMode);
+}
+void TestRecorder::SetVideoEnableBFrame(int32_t sourceId, bool enableBFrame)
+{
+    recorder->SetVideoEnableBFrame(sourceId, enableBFrame);
+}
+void TestRecorder::GetMetaSurface(int32_t sourceId)
+{
+    recorder->GetMetaSurface(sourceId);
+}
+void TestRecorder::SetMetaConfigs(int32_t sourceId)
+{
+    recorder->SetMetaConfigs(sourceId);
+}
+void TestRecorder::IsWatermarkSupported(bool &isWatermarkSupported)
+{
+    recorder->IsWatermarkSupported(isWatermarkSupported);
+}
+
+void TestRecorder::SetWillMuteWhenInterrupted(bool muteWhenInterrupted)
+{
+    recorder->SetWillMuteWhenInterrupted(muteWhenInterrupted);
+}
+
+void TestRecorder::GetMaxAmplitude()
+{
+    recorder->GetMaxAmplitude();
 }
 
 bool TestRecorder::RequesetBuffer(const std::string &recorderType, VideoRecorderConfig_ &recorderConfig)
