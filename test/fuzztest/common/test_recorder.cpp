@@ -318,6 +318,11 @@ void TestRecorder::SetParameter(int32_t sourceId, const Format &format, VideoRec
     recorder->SetParameter(sourceId, format);
 }
 
+void TestRecorder::SetParametertmp(int32_t sourceId, const Format &format, VideoRecorderConfig_ &recorderConfig)
+{
+    recorder->SetParameter(sourceId, format);
+}
+
 bool TestRecorder::RequesetBuffer(const std::string &recorderType, VideoRecorderConfig_ &recorderConfig)
 {
     if (recorderType != PURE_AUDIO) {
