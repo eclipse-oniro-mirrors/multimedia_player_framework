@@ -133,7 +133,7 @@ private:
     bool GetMemUsageForPlayer();
     void ReportAppMemoryUsage();
     void SetCritical(bool critical);
-    bool GetStubMapCount();
+    bool GetStubMapCountIsEmpty();
     std::atomic<bool> isMemMgrLoaded_ {false};
 
     class AsyncExecutor {

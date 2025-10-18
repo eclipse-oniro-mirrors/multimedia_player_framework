@@ -266,13 +266,12 @@ int32_t MediaServerManager::ResetAllProxy()
 sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    bool isEmpty = GetStubMapCount();
+    bool isEmpty = GetStubMapCountIsEmpty();
 
     auto res = CreateStubObjectByType(type);
 
-    if (isEmpty && !GetStubMapCount()) {
-        SetCritical(true);
-    }
+    CHECK_AND_RETURN_RET_NOLOG((isEmpty && !GetStubMapCountIsEmpty()), res);
+    SetCritical(true);
     return res;
 }
 
@@ -870,12 +869,11 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
             break;
         }
     }
-    if (GetStubMapCount()) {
-        SetCritical(false);
-    }
 #ifdef SUPPORT_START_STOP_ON_DEMAND
     UpdateAllInstancesReleasedTime();
 #endif
+    CHECK_AND_RETURN_NOLOG(GetStubMapCountIsEmpty());
+    SetCritical(false);
 }
 
 void MediaServerManager::DestroyAVScreenCaptureStubForPid(pid_t pid)
@@ -1048,14 +1046,14 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
     DestroyAVScreenCaptureStubForPid(pid);
     DestroyLppAudioPlayerStubForPid(pid);
     DestroyLppVideoPlayerStubForPid(pid);
-    if (GetStubMapCount()) {
-        SetCritical(false);
-    }
     MonitorServiceStub::GetInstance()->OnClientDie(pid);
     executor_.Clear();
 #ifdef SUPPORT_START_STOP_ON_DEMAND
     UpdateAllInstancesReleasedTime();
 #endif
+
+    CHECK_AND_RETURN_NOLOG(GetStubMapCountIsEmpty());
+    SetCritical(false);
 }
 
 std::vector<pid_t> MediaServerManager::GetPlayerPids()
@@ -1173,14 +1171,11 @@ void MediaServerManager::ReportAppMemoryUsage()
 void MediaServerManager::SetCritical(bool critical)
 {
     auto ret = Memory::MemMgrClient::GetInstance().SetCritical(getpid(), critical, PLAYER_DISTRIBUTED_SERVICE_ID);
-    if (ret == 0) {
-        MEDIA_LOGI("MediaServerManager::SetCritical set critical to %{public}d success.", critical);
-    } else {
-        MEDIA_LOGE("MediaServerManager::SetCritical set critical to %{public}d fail.", critical);
-    }
+    CHECK_AND_RETURN_LOG(ret == 0,"MediaServerManager::SetCritical set critical to %{public}d fail.", critical);
+    MEDIA_LOGI("MediaServerManager::SetCritical set critical to %{public}d success.", critical);
 }
 
-bool MediaServerManager::GetStubMapCount()
+bool MediaServerManager::GetStubMapCountIsEmpty()
 {
     return recorderStubMap_.empty() && transCoderStubMap_.empty() && playerStubMap_.empty() &&
             pidToPlayerStubMap_.empty() && avMetadataHelperStubMap_.empty() && avCodecListStubMap_.empty() &&
