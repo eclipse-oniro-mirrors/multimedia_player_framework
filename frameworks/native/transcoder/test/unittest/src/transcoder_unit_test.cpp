@@ -349,7 +349,177 @@ HWTEST_F(TransCoderUnitTest, transcoder_SetColorSpace_004, TestSize.Level2)
     close(dstFd);
     close(srcFd);
 }
+
+/**
+ * @tc.name: transcoder_SetColorSpace_005
+ * @tc.desc: transcode ChineseColor_H264_AAC_480p_15fps.mp4 with different color space settings
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(TransCoderUnitTest, transcoder_SetColorSpace_005, TestSize.Level2)
+{
+    int32_t srcFd = open((TRANSCODER_ROOT_SRC + "ChineseColor_H264_AAC_480p_15fps.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(srcFd >= 0);
+    int64_t offset = TRANSCODER_FILE_OFFSET;
+    int64_t size = TRANSCODER_FILE_SIZE;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
+    int32_t dstFd = open((TRANSCODER_ROOT_DST + "ChineseColor_H264_AAC_480p_15fps_dst.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(dstFd >= 0);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
+    std::shared_ptr<TransCoderCallbackTest> cb = std::make_shared<TransCoderCallbackTest>();
+    EXPECT_EQ(MSERR_OK, transcoder_->SetTransCoderCallback(cb));
+    OutputFormatType format = FORMAT_MPEG_4;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFormat(format));
+    TranscoderColorSpace colorSpaceFmt = TRANSCODER_COLORSPACE_BT709_LIMIT;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetColorSpace(colorSpaceFmt));
+    VideoCodecFormat encoder = H264;
+    if (access(HEVC_LIB_PATH.c_str(), F_OK) == 0) {
+        encoder = H265;
+    }
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncoder(encoder));
+    int32_t videoWidth = -1;
+    int32_t videoHeight = -1;
+    if (access(VPE_LIB_PATH.c_str(), F_OK) == 0) {
+        videoWidth = TRANSCODER_BUFFER_WIDTH;
+        videoHeight = TRANSCODER_BUFFER_HEIGHT;
+    } else {
+        videoWidth = TRANSCODER_BUFFER_WIDTH_480p;
+        videoHeight = TRANSCODER_BUFFER_HEIGHT_480p;
+    }
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoSize(videoWidth, videoHeight));
  
+    EXPECT_EQ(MSERR_OK, transcoder_->Prepare());
+    EXPECT_EQ(MSERR_OK, transcoder_->Start());
+    EXPECT_EQ(MSERR_OK, transcoder_->Cancel());
+    EXPECT_EQ(MSERR_OK, transcoder_->Release());
+    close(dstFd);
+    close(srcFd);
+}
+ 
+/**
+ * @tc.name: transcoder_SetColorSpace_006
+ * @tc.desc: transcode ChineseColor_H264_AAC_480p_15fps.mp4 with different color space settings
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(TransCoderUnitTest, transcoder_SetColorSpace_006, TestSize.Level2)
+{
+    int32_t srcFd = open((TRANSCODER_ROOT_SRC + "ChineseColor_H264_AAC_480p_15fps.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(srcFd >= 0);
+    int64_t offset = TRANSCODER_FILE_OFFSET;
+    int64_t size = TRANSCODER_FILE_SIZE;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
+    int32_t dstFd = open((TRANSCODER_ROOT_DST + "ChineseColor_H264_AAC_480p_15fps_dst.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(dstFd >= 0);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
+    std::shared_ptr<TransCoderCallbackTest> cb = std::make_shared<TransCoderCallbackTest>();
+    EXPECT_EQ(MSERR_OK, transcoder_->SetTransCoderCallback(cb));
+    OutputFormatType format = FORMAT_MPEG_4;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFormat(format));
+    TranscoderColorSpace colorSpaceFmt = TRANSCODER_COLORSPACE_P3_FULL;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetColorSpace(colorSpaceFmt));
+    VideoCodecFormat encoder = H264;
+    if (access(HEVC_LIB_PATH.c_str(), F_OK) == 0) {
+        encoder = H265;
+    }
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncoder(encoder));
+    int32_t videoWidth = -1;
+    int32_t videoHeight = -1;
+    if (access(VPE_LIB_PATH.c_str(), F_OK) == 0) {
+        videoWidth = TRANSCODER_BUFFER_WIDTH;
+        videoHeight = TRANSCODER_BUFFER_HEIGHT;
+    } else {
+        videoWidth = TRANSCODER_BUFFER_WIDTH_480p;
+        videoHeight = TRANSCODER_BUFFER_HEIGHT_480p;
+    }
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoSize(videoWidth, videoHeight));
+ 
+    EXPECT_EQ(MSERR_OK, transcoder_->Prepare());
+    EXPECT_EQ(MSERR_OK, transcoder_->Start());
+    EXPECT_EQ(MSERR_OK, transcoder_->Cancel());
+    EXPECT_EQ(MSERR_OK, transcoder_->Release());
+    close(dstFd);
+    close(srcFd);
+}
+ 
+/**
+ * @tc.name: transcoder_SetColorSpace_007
+ * @tc.desc: transcode ChineseColor_H264_AAC_480p_15fps.mp4 with different color space settings
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(TransCoderUnitTest, transcoder_SetColorSpace_007, TestSize.Level2)
+{
+    int32_t srcFd = open((TRANSCODER_ROOT_SRC + "ChineseColor_H264_AAC_480p_15fps.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(srcFd >= 0);
+    int64_t offset = TRANSCODER_FILE_OFFSET;
+    int64_t size = TRANSCODER_FILE_SIZE;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
+    int32_t dstFd = open((TRANSCODER_ROOT_DST + "ChineseColor_H264_AAC_480p_15fps_dst.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(dstFd >= 0);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
+    std::shared_ptr<TransCoderCallbackTest> cb = std::make_shared<TransCoderCallbackTest>();
+    EXPECT_EQ(MSERR_OK, transcoder_->SetTransCoderCallback(cb));
+    OutputFormatType format = FORMAT_MPEG_4;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFormat(format));
+    TranscoderColorSpace colorSpaceFmt = TRANSCODER_COLORSPACE_BT709_LIMIT;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetColorSpace(colorSpaceFmt));
+    VideoCodecFormat encoder = H264;
+    if (access(HEVC_LIB_PATH.c_str(), F_OK) == 0) {
+        encoder = H265;
+    }
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncoder(encoder));
+    int32_t videoWidth = TRANSCODER_BUFFER_WIDTH_480p;
+    int32_t videoHeight = TRANSCODER_BUFFER_HEIGHT_480p;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoSize(videoWidth, videoHeight));
+ 
+    EXPECT_EQ(MSERR_OK, transcoder_->Prepare());
+    EXPECT_EQ(MSERR_OK, transcoder_->Start());
+    EXPECT_EQ(MSERR_OK, transcoder_->Cancel());
+    EXPECT_EQ(MSERR_OK, transcoder_->Release());
+    close(dstFd);
+    close(srcFd);
+}
+ 
+/**
+ * @tc.name: transcoder_SetColorSpace_008
+ * @tc.desc: transcode ChineseColor_H264_AAC_480p_15fps.mp4 with different color space settings
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(TransCoderUnitTest, transcoder_SetColorSpace_008, TestSize.Level2)
+{
+    int32_t srcFd = open((TRANSCODER_ROOT_SRC + "ChineseColor_H264_AAC_480p_15fps.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(srcFd >= 0);
+    int64_t offset = TRANSCODER_FILE_OFFSET;
+    int64_t size = TRANSCODER_FILE_SIZE;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
+    int32_t dstFd = open((TRANSCODER_ROOT_DST + "ChineseColor_H264_AAC_480p_15fps_dst.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(dstFd >= 0);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
+    std::shared_ptr<TransCoderCallbackTest> cb = std::make_shared<TransCoderCallbackTest>();
+    EXPECT_EQ(MSERR_OK, transcoder_->SetTransCoderCallback(cb));
+    OutputFormatType format = FORMAT_MPEG_4;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFormat(format));
+    TranscoderColorSpace colorSpaceFmt = TRANSCODER_COLORSPACE_P3_FULL;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetColorSpace(colorSpaceFmt));
+    VideoCodecFormat encoder = H264;
+    if (access(HEVC_LIB_PATH.c_str(), F_OK) == 0) {
+        encoder = H265;
+    }
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncoder(encoder));
+    int32_t videoWidth = TRANSCODER_BUFFER_WIDTH_480p;
+    int32_t videoHeight = TRANSCODER_BUFFER_HEIGHT_480p;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoSize(videoWidth, videoHeight));
+ 
+    EXPECT_EQ(MSERR_OK, transcoder_->Prepare());
+    EXPECT_EQ(MSERR_OK, transcoder_->Start());
+    EXPECT_EQ(MSERR_OK, transcoder_->Cancel());
+    EXPECT_EQ(MSERR_OK, transcoder_->Release());
+    close(dstFd);
+    close(srcFd);
+}
+
 /**
  * @tc.name: transcoder_SetColorSpace_010
  * @tc.desc: transcode ChineseColor_H264_AAC_480p_15fps.mp4 with different color space settings
@@ -433,6 +603,342 @@ HWTEST_F(TransCoderUnitTest, transcoder_SetColorSpace_012, TestSize.Level2)
     close(dstFd);
     close(srcFd);
 }
+
+/**
+ * @tc.name: transcoder_SetColorSpace_013
+ * @tc.desc: transcode ChineseColor_H264_AAC_480p_15fps.mp4 with different color space settings
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(TransCoderUnitTest, transcoder_SetColorSpace_013, TestSize.Level2)
+{
+    int32_t srcFd = open((TRANSCODER_ROOT_SRC + "ChineseColor_H264_AAC_480p_15fps.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(srcFd >= 0);
+    int64_t offset = TRANSCODER_FILE_OFFSET;
+    int64_t size = TRANSCODER_FILE_SIZE;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
+    int32_t dstFd = open((TRANSCODER_ROOT_DST + "ChineseColor_H264_AAC_480p_15fps_dst.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(dstFd >= 0);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
+    OutputFormatType format = FORMAT_MPEG_4;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFormat(format));
+    TranscoderColorSpace colorSpaceFmt = TRANSCODER_COLORSPACE_NONE;
+    EXPECT_EQ(MSERR_INVALID_VAL, transcoder_->SetColorSpace(colorSpaceFmt));
+    int32_t videoWidth = -1;
+    int32_t videoHeight = -1;
+    if (access(VPE_LIB_PATH.c_str(), F_OK) == 0) {
+        videoWidth = TRANSCODER_BUFFER_WIDTH;
+        videoHeight = TRANSCODER_BUFFER_HEIGHT;
+    } else {
+        videoWidth = TRANSCODER_BUFFER_WIDTH_480p;
+        videoHeight = TRANSCODER_BUFFER_HEIGHT_480p;
+    }
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoSize(videoWidth, videoHeight));
+ 
+    EXPECT_EQ(MSERR_OK, transcoder_->Prepare());
+    EXPECT_EQ(MSERR_OK, transcoder_->Start());
+    EXPECT_EQ(MSERR_OK, transcoder_->Release());
+    close(dstFd);
+    close(srcFd);
+}
+ 
+/**
+ * @tc.name: transcoder_SetColorSpace_014
+ * @tc.desc: transcode ChineseColor_H264_AAC_480p_15fps.mp4 with different color space settings
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(TransCoderUnitTest, transcoder_SetColorSpace_014, TestSize.Level2)
+{
+    int32_t srcFd = open((TRANSCODER_ROOT_SRC + "ChineseColor_H264_AAC_480p_15fps.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(srcFd >= 0);
+    int64_t offset = TRANSCODER_FILE_OFFSET;
+    int64_t size = TRANSCODER_FILE_SIZE;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
+    int32_t dstFd = open((TRANSCODER_ROOT_DST + "ChineseColor_H264_AAC_480p_15fps_dst.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(dstFd >= 0);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
+    OutputFormatType format = FORMAT_MPEG_4;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFormat(format));
+    TranscoderColorSpace colorSpaceFmt = TRANSCODER_COLORSPACE_BT601_EBU_FULL;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetColorSpace(colorSpaceFmt));
+    int32_t videoWidth = -1;
+    int32_t videoHeight = -1;
+    if (access(VPE_LIB_PATH.c_str(), F_OK) == 0) {
+        videoWidth = TRANSCODER_BUFFER_WIDTH;
+        videoHeight = TRANSCODER_BUFFER_HEIGHT;
+    } else {
+        videoWidth = TRANSCODER_BUFFER_WIDTH_480p;
+        videoHeight = TRANSCODER_BUFFER_HEIGHT_480p;
+    }
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoSize(videoWidth, videoHeight));
+    EXPECT_EQ(MSERR_OK, transcoder_->Prepare());
+    EXPECT_EQ(MSERR_OK, transcoder_->Start());
+    EXPECT_EQ(MSERR_OK, transcoder_->Release());
+    close(dstFd);
+    close(srcFd);
+}
+ 
+/**
+ * @tc.name: transcoder_SetColorSpace_015
+ * @tc.desc: transcode ChineseColor_H264_AAC_480p_15fps.mp4 with different color space settings
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(TransCoderUnitTest, transcoder_SetColorSpace_015, TestSize.Level2)
+{
+    int32_t srcFd = open((TRANSCODER_ROOT_SRC + "ChineseColor_H264_AAC_480p_15fps.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(srcFd >= 0);
+    int64_t offset = TRANSCODER_FILE_OFFSET;
+    int64_t size = TRANSCODER_FILE_SIZE;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
+    int32_t dstFd = open((TRANSCODER_ROOT_DST + "ChineseColor_H264_AAC_480p_15fps_dst.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(dstFd >= 0);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
+    OutputFormatType format = FORMAT_MPEG_4;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFormat(format));
+    TranscoderColorSpace colorSpaceFmt = TRANSCODER_COLORSPACE_BT601_SMPTE_C_FULL;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetColorSpace(colorSpaceFmt));
+    int32_t videoWidth = -1;
+    int32_t videoHeight = -1;
+    if (access(VPE_LIB_PATH.c_str(), F_OK) == 0) {
+        videoWidth = TRANSCODER_BUFFER_WIDTH;
+        videoHeight = TRANSCODER_BUFFER_HEIGHT;
+    } else {
+        videoWidth = TRANSCODER_BUFFER_WIDTH_480p;
+        videoHeight = TRANSCODER_BUFFER_HEIGHT_480p;
+    }
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoSize(videoWidth, videoHeight));
+    EXPECT_EQ(MSERR_OK, transcoder_->Prepare());
+    EXPECT_EQ(MSERR_OK, transcoder_->Start());
+    EXPECT_EQ(MSERR_OK, transcoder_->Release());
+    close(dstFd);
+    close(srcFd);
+}
+
+/**
+ * @tc.name: transcoder_SetColorSpace_016
+ * @tc.desc: transcode ChineseColor_H264_AAC_480p_15fps.mp4 with different color space settings
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(TransCoderUnitTest, transcoder_SetColorSpace_016, TestSize.Level2)
+{
+    int32_t srcFd = open((TRANSCODER_ROOT_SRC + "ChineseColor_H264_AAC_480p_15fps.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(srcFd >= 0);
+    int64_t offset = TRANSCODER_FILE_OFFSET;
+    int64_t size = TRANSCODER_FILE_SIZE;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
+    int32_t dstFd = open((TRANSCODER_ROOT_DST + "ChineseColor_H264_AAC_480p_15fps_dst.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(dstFd >= 0);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
+    OutputFormatType format = FORMAT_MPEG_4;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFormat(format));
+    TranscoderColorSpace colorSpaceFmt = TRANSCODER_COLORSPACE_NONE;
+    EXPECT_EQ(MSERR_INVALID_VAL, transcoder_->SetColorSpace(colorSpaceFmt));
+    VideoCodecFormat encoder = H264;
+    if (access(HEVC_LIB_PATH.c_str(), F_OK) == 0) {
+        encoder = H265;
+    }
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncoder(encoder));
+    EXPECT_EQ(MSERR_OK, transcoder_->Prepare());
+    EXPECT_EQ(MSERR_OK, transcoder_->Start());
+    EXPECT_EQ(MSERR_OK, transcoder_->Release());
+    close(dstFd);
+    close(srcFd);
+}
+ 
+/**
+ * @tc.name: transcoder_SetColorSpace_017
+ * @tc.desc: transcode ChineseColor_H264_AAC_480p_15fps.mp4 with different color space settings
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(TransCoderUnitTest, transcoder_SetColorSpace_017, TestSize.Level2)
+{
+    int32_t srcFd = open((TRANSCODER_ROOT_SRC + "ChineseColor_H264_AAC_480p_15fps.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(srcFd >= 0);
+    int64_t offset = TRANSCODER_FILE_OFFSET;
+    int64_t size = TRANSCODER_FILE_SIZE;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
+    int32_t dstFd = open((TRANSCODER_ROOT_DST + "ChineseColor_H264_AAC_480p_15fps_dst.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(dstFd >= 0);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
+    OutputFormatType format = FORMAT_MPEG_4;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFormat(format));
+    TranscoderColorSpace colorSpaceFmt = TRANSCODER_COLORSPACE_BT601_EBU_FULL;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetColorSpace(colorSpaceFmt));
+    VideoCodecFormat encoder = H264;
+    if (access(HEVC_LIB_PATH.c_str(), F_OK) == 0) {
+        encoder = H265;
+    }
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncoder(encoder));
+    EXPECT_EQ(MSERR_OK, transcoder_->Prepare());
+    EXPECT_EQ(MSERR_OK, transcoder_->Start());
+    EXPECT_EQ(MSERR_OK, transcoder_->Release());
+    close(dstFd);
+    close(srcFd);
+}
+ 
+/**
+ * @tc.name: transcoder_SetColorSpace_018
+ * @tc.desc: transcode ChineseColor_H264_AAC_480p_15fps.mp4 with different color space settings
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(TransCoderUnitTest, transcoder_SetColorSpace_018, TestSize.Level2)
+{
+    int32_t srcFd = open((TRANSCODER_ROOT_SRC + "ChineseColor_H264_AAC_480p_15fps.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(srcFd >= 0);
+    int64_t offset = TRANSCODER_FILE_OFFSET;
+    int64_t size = TRANSCODER_FILE_SIZE;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
+    int32_t dstFd = open((TRANSCODER_ROOT_DST + "ChineseColor_H264_AAC_480p_15fps_dst.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(dstFd >= 0);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
+    OutputFormatType format = FORMAT_MPEG_4;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFormat(format));
+    TranscoderColorSpace colorSpaceFmt = TRANSCODER_COLORSPACE_BT601_SMPTE_C_FULL;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetColorSpace(colorSpaceFmt));
+    VideoCodecFormat encoder = H264;
+    if (access(HEVC_LIB_PATH.c_str(), F_OK) == 0) {
+        encoder = H265;
+    }
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncoder(encoder));
+    EXPECT_EQ(MSERR_OK, transcoder_->Prepare());
+    EXPECT_EQ(MSERR_OK, transcoder_->Start());
+    EXPECT_EQ(MSERR_OK, transcoder_->Release());
+    close(dstFd);
+    close(srcFd);
+}
+
+/**
+ * @tc.name: transcoder_SetColorSpace_019
+ * @tc.desc: transcode ChineseColor_H264_AAC_480p_15fps.mp4 with different color space settings
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(TransCoderUnitTest, transcoder_SetColorSpace_019, TestSize.Level2)
+{
+    int32_t srcFd = open((TRANSCODER_ROOT_SRC + "ChineseColor_H264_AAC_480p_15fps.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(srcFd >= 0);
+    int64_t offset = TRANSCODER_FILE_OFFSET;
+    int64_t size = TRANSCODER_FILE_SIZE;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
+    int32_t dstFd = open((TRANSCODER_ROOT_DST + "ChineseColor_H264_AAC_480p_15fps_dst.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(dstFd >= 0);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
+    OutputFormatType format = FORMAT_MPEG_4;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFormat(format));
+    TranscoderColorSpace colorSpaceFmt = TRANSCODER_COLORSPACE_NONE;
+    EXPECT_EQ(MSERR_INVALID_VAL, transcoder_->SetColorSpace(colorSpaceFmt));
+    VideoCodecFormat encoder = H264;
+    if (access(HEVC_LIB_PATH.c_str(), F_OK) == 0) {
+        encoder = H265;
+    }
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncoder(encoder));
+    int32_t videoWidth = -1;
+    int32_t videoHeight = -1;
+    if (access(VPE_LIB_PATH.c_str(), F_OK) == 0) {
+        videoWidth = TRANSCODER_BUFFER_WIDTH;
+        videoHeight = TRANSCODER_BUFFER_HEIGHT;
+    } else {
+        videoWidth = TRANSCODER_BUFFER_WIDTH_480p;
+        videoHeight = TRANSCODER_BUFFER_HEIGHT_480p;
+    }
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoSize(videoWidth, videoHeight));
+ 
+    EXPECT_EQ(MSERR_OK, transcoder_->Prepare());
+    EXPECT_EQ(MSERR_OK, transcoder_->Start());
+    EXPECT_EQ(MSERR_OK, transcoder_->Release());
+    close(dstFd);
+    close(srcFd);
+}
+ 
+/**
+ * @tc.name: transcoder_SetColorSpace_020
+ * @tc.desc: transcode ChineseColor_H264_AAC_480p_15fps.mp4 with different color space settings
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(TransCoderUnitTest, transcoder_SetColorSpace_020, TestSize.Level2)
+{
+    int32_t srcFd = open((TRANSCODER_ROOT_SRC + "ChineseColor_H264_AAC_480p_15fps.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(srcFd >= 0);
+    int64_t offset = TRANSCODER_FILE_OFFSET;
+    int64_t size = TRANSCODER_FILE_SIZE;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
+    int32_t dstFd = open((TRANSCODER_ROOT_DST + "ChineseColor_H264_AAC_480p_15fps_dst.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(dstFd >= 0);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
+    OutputFormatType format = FORMAT_MPEG_4;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFormat(format));
+    TranscoderColorSpace colorSpaceFmt = TRANSCODER_COLORSPACE_BT601_EBU_FULL;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetColorSpace(colorSpaceFmt));
+    VideoCodecFormat encoder = H264;
+    if (access(HEVC_LIB_PATH.c_str(), F_OK) == 0) {
+        encoder = H265;
+    }
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncoder(encoder));
+    int32_t videoWidth = -1;
+    int32_t videoHeight = -1;
+    if (access(VPE_LIB_PATH.c_str(), F_OK) == 0) {
+        videoWidth = TRANSCODER_BUFFER_WIDTH;
+        videoHeight = TRANSCODER_BUFFER_HEIGHT;
+    } else {
+        videoWidth = TRANSCODER_BUFFER_WIDTH_480p;
+        videoHeight = TRANSCODER_BUFFER_HEIGHT_480p;
+    }
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoSize(videoWidth, videoHeight));
+    EXPECT_EQ(MSERR_OK, transcoder_->Prepare());
+    EXPECT_EQ(MSERR_OK, transcoder_->Start());
+    EXPECT_EQ(MSERR_OK, transcoder_->Release());
+    close(dstFd);
+    close(srcFd);
+}
+ 
+/**
+ * @tc.name: transcoder_SetColorSpace_021
+ * @tc.desc: transcode ChineseColor_H264_AAC_480p_15fps.mp4 with different color space settings
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(TransCoderUnitTest, transcoder_SetColorSpace_021, TestSize.Level2)
+{
+    int32_t srcFd = open((TRANSCODER_ROOT_SRC + "ChineseColor_H264_AAC_480p_15fps.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(srcFd >= 0);
+    int64_t offset = TRANSCODER_FILE_OFFSET;
+    int64_t size = TRANSCODER_FILE_SIZE;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
+    int32_t dstFd = open((TRANSCODER_ROOT_DST + "ChineseColor_H264_AAC_480p_15fps_dst.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(dstFd >= 0);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
+    OutputFormatType format = FORMAT_MPEG_4;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFormat(format));
+    TranscoderColorSpace colorSpaceFmt = TRANSCODER_COLORSPACE_BT601_SMPTE_C_FULL;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetColorSpace(colorSpaceFmt));
+    VideoCodecFormat encoder = H264;
+    if (access(HEVC_LIB_PATH.c_str(), F_OK) == 0) {
+        encoder = H265;
+    }
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncoder(encoder));
+    int32_t videoWidth = -1;
+    int32_t videoHeight = -1;
+    if (access(VPE_LIB_PATH.c_str(), F_OK) == 0) {
+        videoWidth = TRANSCODER_BUFFER_WIDTH;
+        videoHeight = TRANSCODER_BUFFER_HEIGHT;
+    } else {
+        videoWidth = TRANSCODER_BUFFER_WIDTH_480p;
+        videoHeight = TRANSCODER_BUFFER_HEIGHT_480p;
+    }
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoSize(videoWidth, videoHeight));
+    EXPECT_EQ(MSERR_OK, transcoder_->Prepare());
+    EXPECT_EQ(MSERR_OK, transcoder_->Start());
+    EXPECT_EQ(MSERR_OK, transcoder_->Release());
+    close(dstFd);
+    close(srcFd);
+}
+
 
 /**
  * @tc.name: transcoder_AudioVideo_001
@@ -925,7 +1431,7 @@ HWTEST_F(TransCoderUnitTest, transcoder_AudioVideoAbnormal_case_003, TestSize.Le
 
 /**
  * @tc.name: transcoder_SetEnableBFrame_001
- * @tc.desc: transcode ChineseColor_H264_AAC_480p_15fps.mp4 with enable b frame encoding settings
+ * @tc.desc: transcode ChineseColor_H264_AAC_480p_15fps.mp4 with enable b frame encoding settings H265 pause and resume
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -961,5 +1467,114 @@ HWTEST_F(TransCoderUnitTest, transcoder_SetEnableBFrame_001, TestSize.Level2)
     close(dstFd);
     close(srcFd);
 }
+
+/**
+ * @tc.name: transcoder_SetEnableBFrame_002
+ * @tc.desc: transcode ChineseColor_H264_AAC_480p_15fps.mp4 with enable b frame encoding settings H265
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(TransCoderUnitTest, transcoder_SetEnableBFrame_002, TestSize.Level2)
+{
+    int32_t srcFd = open((TRANSCODER_ROOT_SRC + "ChineseColor_H264_AAC_480p_15fps.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(srcFd >= 0);
+    int64_t offset = TRANSCODER_FILE_OFFSET;
+    int64_t size = TRANSCODER_FILE_SIZE;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
+    int32_t dstFd = open((TRANSCODER_ROOT_DST + "ChineseColor_H264_AAC_480p_15fps_dst.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(dstFd >= 0);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
+    std::shared_ptr<TransCoderCallbackTest> cb = std::make_shared<TransCoderCallbackTest>();
+    EXPECT_EQ(MSERR_OK, transcoder_->SetTransCoderCallback(cb));
+    OutputFormatType format = FORMAT_MPEG_4;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFormat(format));
+    VideoCodecFormat encoder = H264;
+    if (access(HEVC_LIB_PATH.c_str(), F_OK) == 0) {
+        encoder = H265;
+    }
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncoder(encoder));
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncodingBitRate(TRASCODER_VIDEO_ENCODING_BIT_RATE));
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoSize(TRANSCODER_BUFFER_WIDTH, TRANSCODER_BUFFER_HEIGHT));
+    bool enableBFrame = true;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetEnableBFrame(enableBFrame));
+    EXPECT_EQ(MSERR_OK, transcoder_->Prepare());
+    EXPECT_EQ(MSERR_OK, transcoder_->Start());
+    EXPECT_EQ(MSERR_OK, transcoder_->Cancel());
+    EXPECT_EQ(MSERR_OK, transcoder_->Release());
+    close(dstFd);
+    close(srcFd);
+}
+
+/**
+ * @tc.name: transcoder_SetEnableBFrame_003
+ * @tc.desc: transcode ChineseColor_H264_AAC_480p_15fps.mp4 with enable b frame encoding settings H264 pause and resume
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(TransCoderUnitTest, transcoder_SetEnableBFrame_003, TestSize.Level2)
+{
+    int32_t srcFd = open((TRANSCODER_ROOT_SRC + "ChineseColor_H264_AAC_480p_15fps.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(srcFd >= 0);
+    int64_t offset = TRANSCODER_FILE_OFFSET;
+    int64_t size = TRANSCODER_FILE_SIZE;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
+    int32_t dstFd = open((TRANSCODER_ROOT_DST + "ChineseColor_H264_AAC_480p_15fps_dst.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(dstFd >= 0);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
+    std::shared_ptr<TransCoderCallbackTest> cb = std::make_shared<TransCoderCallbackTest>();
+    EXPECT_EQ(MSERR_OK, transcoder_->SetTransCoderCallback(cb));
+    OutputFormatType format = FORMAT_MPEG_4;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFormat(format));
+    VideoCodecFormat encoder = H264;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncoder(encoder));
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncodingBitRate(TRASCODER_VIDEO_ENCODING_BIT_RATE));
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoSize(TRANSCODER_BUFFER_WIDTH, TRANSCODER_BUFFER_HEIGHT));
+    bool enableBFrame = true;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetEnableBFrame(enableBFrame));
+    EXPECT_EQ(MSERR_OK, transcoder_->Prepare());
+    EXPECT_EQ(MSERR_OK, transcoder_->Start());
+    EXPECT_EQ(MSERR_OK, transcoder_->Pause());
+    EXPECT_EQ(MSERR_OK, transcoder_->Resume());
+    EXPECT_EQ(MSERR_OK, transcoder_->Cancel());
+    EXPECT_EQ(MSERR_OK, transcoder_->Release());
+    close(dstFd);
+    close(srcFd);
+}
+
+/**
+ * @tc.name: transcoder_SetEnableBFrame_004
+ * @tc.desc: transcode ChineseColor_H264_AAC_480p_15fps.mp4 with enable b frame encoding settings H264
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(TransCoderUnitTest, transcoder_SetEnableBFrame_004, TestSize.Level2)
+{
+    int32_t srcFd = open((TRANSCODER_ROOT_SRC + "ChineseColor_H264_AAC_480p_15fps.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(srcFd >= 0);
+    int64_t offset = TRANSCODER_FILE_OFFSET;
+    int64_t size = TRANSCODER_FILE_SIZE;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
+    int32_t dstFd = open((TRANSCODER_ROOT_DST + "ChineseColor_H264_AAC_480p_15fps_dst.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(dstFd >= 0);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
+    std::shared_ptr<TransCoderCallbackTest> cb = std::make_shared<TransCoderCallbackTest>();
+    EXPECT_EQ(MSERR_OK, transcoder_->SetTransCoderCallback(cb));
+    OutputFormatType format = FORMAT_MPEG_4;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFormat(format));
+    VideoCodecFormat encoder = H264;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncoder(encoder));
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncodingBitRate(TRASCODER_VIDEO_ENCODING_BIT_RATE));
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoSize(TRANSCODER_BUFFER_WIDTH, TRANSCODER_BUFFER_HEIGHT));
+    bool enableBFrame = true;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetEnableBFrame(enableBFrame));
+    EXPECT_EQ(MSERR_OK, transcoder_->Prepare());
+    EXPECT_EQ(MSERR_OK, transcoder_->Start());
+    EXPECT_EQ(MSERR_OK, transcoder_->Cancel());
+    EXPECT_EQ(MSERR_OK, transcoder_->Release());
+    close(dstFd);
+    close(srcFd);
+}
+
+
 } // namespace Media
 } // namespace OHOS
