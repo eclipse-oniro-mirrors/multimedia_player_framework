@@ -59,7 +59,7 @@ bool RecorderSetCaptureRateFouncFuzzer::FuzzRecorderSetCaptureRate(uint8_t *data
     bool whenInterrupted = GetData<bool>();
     TestRecorder::SetVideoIsHdr(g_videoRecorderConfig.audioSourceId, isHdr);
     TestRecorder::SetVideoEnableTemporalScale(g_videoRecorderConfig.audioSourceId, temporalScale);
-    TestRecorder::SetVideoEnableStableQualityMode(g_videoRecorderConfig.audioSourceId, qualityMode );
+    TestRecorder::SetVideoEnableStableQualityMode(g_videoRecorderConfig.audioSourceId, qualityMode);
     TestRecorder::SetVideoEnableBFrame(g_videoRecorderConfig.audioSourceId, enableBFrame);
 
     TestRecorder::GetMetaSurface(g_videoRecorderConfig.audioSourceId);
