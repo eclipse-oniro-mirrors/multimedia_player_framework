@@ -81,7 +81,15 @@ public:
     void SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration,
         RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
     void SetParameter(int32_t sourceId, const Format &format, RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
-    void SetParametertmp(int32_t sourceId, const Format &format, RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void SetVideoIsHdr(int32_t sourceId, bool isHdr);
+    void SetVideoEnableTemporalScale(int32_t sourceId, bool enableTemporalScale);
+    void SetVideoEnableStableQualityMode(int32_t sourceId, bool enableStableQualityMode);
+    void SetVideoEnableBFrame(int32_t sourceId, bool enableBFrame);
+    void GetMetaSurface(int32_t sourceId);
+    void GetMaxAmplitude();
+    void SetMetaConfigs(int32_t sourceId);
+    void IsWatermarkSupported(bool &isWatermarkSupported);
+    void SetWillMuteWhenInterrupted(bool muteWhenInterrupted);
     void CloseFile();
 
 private:
