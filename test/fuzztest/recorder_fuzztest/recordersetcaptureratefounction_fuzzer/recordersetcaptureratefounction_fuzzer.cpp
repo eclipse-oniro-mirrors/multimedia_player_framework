@@ -40,7 +40,6 @@ RecorderSetCaptureRateFouncFuzzer::~RecorderSetCaptureRateFouncFuzzer()
 
 bool RecorderSetCaptureRateFouncFuzzer::FuzzRecorderSetCaptureRate(uint8_t *data, size_t size)
 {
-    constexpr int32_t audioMaxFileSize = 5000;
     RETURN_IF(TestRecorder::CreateRecorder(), false);
 
     static VideoRecorderConfig_ g_videoRecorderConfig;
