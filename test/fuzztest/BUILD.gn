@@ -57,6 +57,7 @@ group("fuzztest") {
     "recorder_fuzztest/recordersetvideosize_fuzzer:RecorderSetVideoSizeFuzzTest",
     "recorder_fuzztest/recordersetvideosource_fuzzer:RecorderSetVideoSourceFuzzTest",
     "recorder_fuzztest/recorderservicestubfunctions_fuzzer:RecorderServiceStubFunctionsFuzzTest",
+    "recorder_fuzztest/recordersetcaptureratefounction_fuzzer:RecorderSetCaptureRateFouncTionFuzzTest",
     "transcoder_fuzztest/transcoderservicestub_fuzzer:TranscoderServiceStubFuzzTest",
     "transcoder_fuzztest/transcoderstub_fuzzer:TranscoderStubFuzzTest",
   ]
