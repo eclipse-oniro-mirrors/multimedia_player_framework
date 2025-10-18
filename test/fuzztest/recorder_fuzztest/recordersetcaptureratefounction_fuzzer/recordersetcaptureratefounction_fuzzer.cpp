@@ -30,15 +30,15 @@ using namespace RecorderTestParam;
 
 namespace OHOS {
 namespace Media {
-RecorderSetCaptureRateFuzzer::RecorderSetCaptureRateFuzzer()
+RecorderSetCaptureRateFouncFuzzer::RecorderSetCaptureRateFouncFuzzer()
 {
 }
 
-RecorderSetCaptureRateFuzzer::~RecorderSetCaptureRateFuzzer()
+RecorderSetCaptureRateFouncFuzzer::~RecorderSetCaptureRateFouncFuzzer()
 {
 }
 
-bool RecorderSetCaptureRateFuzzer::FuzzRecorderSetCaptureRate(uint8_t *data, size_t size)
+bool RecorderSetCaptureRateFouncFuzzer::FuzzRecorderSetCaptureRate(uint8_t *data, size_t size)
 {
     constexpr int32_t audioMaxFileSize = 5000;
     RETURN_IF(TestRecorder::CreateRecorder(), false);
@@ -81,7 +81,7 @@ bool FuzzTestRecorderSetCaptureRate(uint8_t *data, size_t size)
     if (size < sizeof(double)) {
         return true;
     }
-    RecorderSetCaptureRateFuzzer testRecorder;
+    RecorderSetCaptureRateFouncFuzzer testRecorder;
     return testRecorder.FuzzRecorderSetCaptureRate(data, size);
 }
 }
