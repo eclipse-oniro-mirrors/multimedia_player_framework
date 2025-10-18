@@ -52,9 +52,22 @@ bool RecorderSetCaptureRateFuzzer::FuzzRecorderSetCaptureRate(uint8_t *data, siz
     g_baseFuzzData = data;
     g_baseFuzzSize = size;
     g_baseFuzzPos = 0;
-    TestRecorder::SetCaptureRate(g_videoRecorderConfig, GetData<double>());
-    TestRecorder::SetMaxFileSize(audioMaxFileSize, g_videoRecorderConfig);
-    TestRecorder::SetNextOutputFile(g_videoRecorderConfig);
+    bool isHdr = GetData<bool>();
+    bool temporalScale = GetData<bool>();
+    bool qualityMode = GetData<bool>();
+    bool enableBFrame = GetData<bool>();
+    bool isWatermark = GetData<bool>();
+    bool whenInterrupted = GetData<bool>();
+    TestRecorder::SetVideoIsHdr(g_videoRecorderConfig.audioSourceId, isHdr);
+    TestRecorder::SetVideoEnableTemporalScale(g_videoRecorderConfig.audioSourceId, temporalScale);
+    TestRecorder::SetVideoEnableStableQualityMode(g_videoRecorderConfig.audioSourceId, QualityMode);
+    TestRecorder::SetVideoEnableBFrame(g_videoRecorderConfig.audioSourceId, enableBFrame);
+
+    TestRecorder::GetMetaSurface(g_videoRecorderConfig.audioSourceId);
+    TestRecorder::SetMetaConfigs(g_videoRecorderConfig.audioSourceId);
+    TestRecorder::GetMaxAmplitude();
+    TestRecorder::IsWatermarkSupported(isWatermark);
+    TestRecorder::SetWillMuteWhenInterrupted(whenInterrupted);
     return true;
 }
 }
