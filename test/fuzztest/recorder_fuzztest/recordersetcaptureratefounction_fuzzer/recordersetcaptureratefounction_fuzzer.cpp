@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "recordersetcapturerate_fuzzer.h"
+#include "recordersetcaptureratefounction_fuzzer.h"
 #include <iostream>
 #include "aw_common.h"
 #include "string_ex.h"
