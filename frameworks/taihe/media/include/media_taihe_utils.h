@@ -33,6 +33,7 @@ using namespace taihe;
 using namespace ohos::multimedia::media;
 
 constexpr char CLASS_NAME_BUSINESSERROR[] = "@ohos.base.BusinessError";
+constexpr char CLASS_NAME_ERRORINFO[] = "Lmultimedia/soundPool/_taihe_ErrorInfo_inner;";
 class MediaTaiheUtils {
 public:
     static string ToTaiheString(const std::string &src);

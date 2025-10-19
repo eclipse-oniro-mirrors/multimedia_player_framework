@@ -56,6 +56,7 @@ public:
     void OnStateChangeCb(const int32_t extra, const Format &infoBody);
     void OnSeekDoneCb(const int32_t extra, const Format &infoBody);
     void OnSpeedDoneCb(const int32_t extra, const Format &infoBody);
+    void OnPlaybackRateDoneCb(const int32_t extra, const Format &infoBody);
     void OnBitRateDoneCb(const int32_t extra, const Format &infoBody);
     void OnVolumeChangeCb(const int32_t extra, const Format &infoBody);
     void OnPositionUpdateCb(const int32_t extra, const Format &infoBody);
