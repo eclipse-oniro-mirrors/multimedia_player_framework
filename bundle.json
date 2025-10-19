@@ -126,7 +126,6 @@
           "image_effect",
           "jsoncpp",
           "memmgr",
-          "memmgr_override",
           "efficiency_manager",
           "hiappevent",
           "drivers_interface_lpplayer",
