@@ -110,16 +110,13 @@ bool ScreenCaptureAudioCapturerWrapperFuzzer::FuzzScreenAudioCapturerWrapper(uin
     audioCapturerWrapper->RelativeSleep(1);
     audioCapturerWrapper->PartiallyPrintLog(1, "CaptureAudio read audio buffer failed ");
     audioCapturerWrapper->PartiallyPrintLog(1, "CaptureAudio read audio buffer failed ");
-    audioCapturerWrapper->PartiallyPrintLog(1, "CaptureAudio read audio buffer failed ");
-    audioCapturerWrapper->PartiallyPrintLog(1, "CaptureAudio read audio buffer failed ");
     audioCapturerWrapper->SetIsMute(true);
     audioCapturerWrapper->SetIsInTelCall(false);
     audioCapturerWrapper->UseUpAllLeftBufferUntil(1);
     size_t  buffersize = 1;
     int64_t currentAudioTime;
     uint8_t *buffer = (uint8_t *)malloc(buffersize);
-    shared_ptr<AudioBuffer> audioBuffer = make_shared<AudioBuffer>(buffer, 0, 0,
-            AudioCaptureSourceType::ALL_PLAYBACK);
+    shared_ptr<AudioBuffer> audioBuffer = make_shared<AudioBuffer>(buffer, 0, 0, AudioCaptureSourceType::ALL_PLAYBACK);
     audioCapturerWrapper->GetBufferSize(buffersize);
     audioCapturerWrapper->AddBufferFrom(1, buffersize, 1);
     audioCapturerWrapper->AcquireAudioBuffer(audioBuffer);
@@ -129,7 +126,6 @@ bool ScreenCaptureAudioCapturerWrapperFuzzer::FuzzScreenAudioCapturerWrapper(uin
     audioCapturerWrapper->IsRecording();
     audioCapturerWrapper->IsStop();
     audioCapturerWrapper->Stop();
-
     audioCapturerWrapper->SetIsInTelCall(true);
     audioCapturerWrapper->SetIsInVoIPCall(true);
     audioCapturerWrapper->Start(appInfo);
