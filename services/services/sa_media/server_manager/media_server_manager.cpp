@@ -1171,7 +1171,7 @@ void MediaServerManager::ReportAppMemoryUsage()
 void MediaServerManager::SetCritical(bool critical)
 {
     auto ret = Memory::MemMgrClient::GetInstance().SetCritical(getpid(), critical, PLAYER_DISTRIBUTED_SERVICE_ID);
-    CHECK_AND_RETURN_LOG(ret == 0,"MediaServerManager::SetCritical set critical to %{public}d fail.", critical);
+    CHECK_AND_RETURN_LOG(ret == 0, "MediaServerManager::SetCritical set critical to %{public}d fail.", critical);
     MEDIA_LOGI("MediaServerManager::SetCritical set critical to %{public}d success.", critical);
 }
 
