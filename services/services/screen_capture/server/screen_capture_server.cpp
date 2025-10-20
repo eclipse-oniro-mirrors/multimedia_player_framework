@@ -220,7 +220,7 @@ bool ScreenCaptureServer::CheckScreenCaptureSessionIdLimit(int32_t curAppUid)
     int32_t countForUid = 0;
     MEDIA_LOGI("CheckScreenCaptureSessionIdLimit start. curAppUid: %{public}d.", curAppUid);
     {
-        std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
+        std::shared_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
         for (auto iter = ScreenCaptureServer::serverMap_.begin(); iter != ScreenCaptureServer::serverMap_.end();
             iter++) {
                 auto iterPtr = (iter->second).lock();
@@ -644,7 +644,7 @@ void SCWindowInfoChangedListener::OnWindowInfoChanged(
 
     MEDIA_LOGI("OnWindowInfoChanged: the displayId of interestWindowId changed!");
     auto iter = myWindowInfoList.front().find(WindowInfoKey::DISPLAY_ID);
-    if (iter != myWindowInfoList.front().end()) {
+    if (iter != myWindowInfoList.front().end() && std::holds_alternative<uint64_t>(iter->second)) {
         uint64_t displayId = std::get<uint64_t>(iter->second);
         MEDIA_LOGI("OnWindowInfoChanged: the curDisplayId: %{public}" PRIu64, displayId);
         SCServer->SetCurDisplayId(displayId);
