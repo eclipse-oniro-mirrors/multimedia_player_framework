@@ -101,18 +101,18 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadata, TestSize.Level1)
 }
  
 /**
- * @tc.name: GetAVMetadata
- * @tc.desc: GetAVMetadata
+ * @tc.name: GetAVMetadata_001
+ * @tc.desc: GetAVMetadata_001
  * @tc.type: FUNC
  */
-HWTEST_F(AVMetaDataCollectorUnitTest, GetAVMetadata, TestSize.Level1)
+HWTEST_F(AVMetaDataCollectorUnitTest, GetAVMetadata_001, TestSize.Level1)
 {
     avmetaDataCollector->collectedMeta_ = {
-        {AV_KEY_ALBUM, "media"},
-        {AV_KEY_LOCATION_LATITUDE, "test"},
-        {AV_KEY_LOCATION_LONGITUDE, "test"},
-        {AV_KEY_VIDEO_IS_HDR_VIVID, "yes"},
-        {10086, "test"},
+        { AV_KEY_ALBUM, "media" },
+        { AV_KEY_LOCATION_LATITUDE, "test" },
+        { AV_KEY_LOCATION_LONGITUDE, "test" },
+        { AV_KEY_VIDEO_IS_HDR_VIVID, "yes" },
+        { 10086, "test" },
     };
     std::shared_ptr<Meta> customerInfo = std::make_shared<Meta>();
     EXPECT_CALL(*mediaDemuxer, GetUserMeta()).WillRepeatedly(Return(nullptr));
@@ -128,6 +128,72 @@ HWTEST_F(AVMetaDataCollectorUnitTest, GetAVMetadata, TestSize.Level1)
     EXPECT_CALL(*mediaDemuxer, Reset());
     avmetaDataCollector->Reset();
     EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() == 0);
+}
+
+/**
+ * @tc.name: GetAVMetadata_002
+ * @tc.desc: GetAVMetadata_002
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, GetAVMetadata_002, TestSize.Level1)
+{
+    avmetaDataCollector->collectedMeta_ = {
+        { AV_KEY_VIDEO_IS_HDR_VIVID, "yes" }
+    };
+    avmetaDataCollector->collectedAVMetaData_ = nullptr;
+
+    std::shared_ptr<Meta> customerInfo = std::make_shared<Meta>();
+    EXPECT_CALL(*mediaDemuxer, GetUserMeta()).WillRepeatedly(Return(nullptr));
+    auto meta = avmetaDataCollector->GetAVMetadata();
+    EXPECT_TRUE(meta != nullptr);
+
+    int32_t hdr = -1;
+    meta->GetData("hdrType", hdr);
+    EXPECT_EQ(hdr, static_cast<int32_t>(HdrType::AV_HDR_TYPE_VIVID));
+}
+
+
+/**
+ * @tc.name: GetAVMetadata_003
+ * @tc.desc: GetAVMetadata_003
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, GetAVMetadata_003, TestSize.Level1)
+{
+    avmetaDataCollector->collectedMeta_ = {
+        { AV_KEY_VIDEO_IS_HDR_VIVID, "no" }
+    };
+    avmetaDataCollector->collectedAVMetaData_ = nullptr;
+
+    std::shared_ptr<Meta> customerInfo = std::make_shared<Meta>();
+    EXPECT_CALL(*mediaDemuxer, GetUserMeta()).WillRepeatedly(Return(nullptr));
+    auto meta = avmetaDataCollector->GetAVMetadata();
+    EXPECT_TRUE(meta != nullptr);
+
+    int32_t hdr = -1;
+    meta->GetData("hdrType", hdr);
+    EXPECT_EQ(hdr, static_cast<int32_t>(HdrType::AV_HDR_TYPE_NONE));
+}
+
+/**
+ * @tc.name: GetAVMetadata_004
+ * @tc.desc: GetAVMetadata_004
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, GetAVMetadata_004, TestSize.Level1)
+{
+    avmetaDataCollector->collectedMeta_ = {
+        { AV_KEY_LOCATION_LATITUDE, "39.9" },
+        { AV_KEY_LOCATION_LONGITUDE, "116.4" }
+    };
+    avmetaDataCollector->collectedAVMetaData_ = nullptr;
+    auto meta = avmetaDataCollector->GetAVMetadata();
+    EXPECT_TRUE(meta != nullptr);
+
+    std::string latitude;
+    std::string longitude;
+    EXPECT_FALSE(meta->GetData("latitude", latitude));
+    EXPECT_FALSE(meta->GetData("longitude", longitude));
 }
  
 /**
@@ -308,17 +374,114 @@ HWTEST_F(AVMetaDataCollectorUnitTest, FormatMimeType, TestSize.Level1)
 }
  
 /**
- * @tc.name: FormatDateTime
- * @tc.desc: FormatDateTime
+ * @tc.name: FormatDateTime_001
+ * @tc.desc: FormatDateTime_001
  * @tc.type: FUNC
  */
-HWTEST_F(AVMetaDataCollectorUnitTest, FormatDateTime, TestSize.Level1)
+HWTEST_F(AVMetaDataCollectorUnitTest, FormatDateTime_001, TestSize.Level1)
 {
     Metadata avmeta;
     std::shared_ptr<Meta> globalInfo = make_shared<Meta>();
-    globalInfo->SetData(Tag::MEDIA_CREATION_TIME, "2022");
+    std::string inputDate = "2022";
+    globalInfo->SetData(Tag::MEDIA_CREATION_TIME, inputDate);
     avmetaDataCollector->FormatDateTime(avmeta, globalInfo);
     EXPECT_TRUE(avmeta.HasMeta(AV_KEY_DATE_TIME));
+}
+
+/**
+ * @tc.name: FormatDateTime_002
+ * @tc.desc: FormatDateTime_002
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, FormatDateTime_002, TestSize.Level1)
+{
+    Metadata avmeta;
+    std::shared_ptr<Meta> globalInfo = make_shared<Meta>();
+    std::string inputDate = "20250101";
+    globalInfo->SetData(Tag::MEDIA_CREATION_TIME, inputDate);
+    avmetaDataCollector->FormatDateTime(avmeta, globalInfo);
+    std::string formattedDate = avmeta.GetMeta(AV_KEY_DATE_TIME);
+    EXPECT_EQ(formattedDate, inputDate);
+}
+
+/**
+ * @tc.name: FormatDateTime_003
+ * @tc.desc: FormatDateTime_003
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, FormatDateTime_003, TestSize.Level1)
+{
+    Metadata avmeta;
+    std::shared_ptr<Meta> globalInfo = make_shared<Meta>();
+    std::string inputDate = "2025-01-01";
+    globalInfo->SetData(Tag::MEDIA_CREATION_TIME, inputDate);
+    avmetaDataCollector->FormatDateTime(avmeta, globalInfo);
+    std::string formattedDate = avmeta.GetMeta(AV_KEY_DATE_TIME);
+    EXPECT_EQ(formattedDate, inputDate);
+}
+
+/**
+ * @tc.name: FormatDateTime_004
+ * @tc.desc: FormatDateTime_004
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, FormatDateTime_004, TestSize.Level1)
+{
+    Metadata avmeta;
+    std::shared_ptr<Meta> globalInfo = make_shared<Meta>();
+    std::string inputDate = "20250101T120000";
+    globalInfo->SetData(Tag::MEDIA_CREATION_TIME, inputDate);
+    avmetaDataCollector->FormatDateTime(avmeta, globalInfo);
+    std::string formattedDate = avmeta.GetMeta(AV_KEY_DATE_TIME);
+    EXPECT_EQ(formattedDate, inputDate);
+}
+
+/**
+ * @tc.name: FormatDateTime_005
+ * @tc.desc: FormatDateTime_005
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, FormatDateTime_005, TestSize.Level1)
+{
+    Metadata avmeta;
+    std::shared_ptr<Meta> globalInfo = make_shared<Meta>();
+    std::string inputDate = "just-a-string";
+    globalInfo->SetData(Tag::MEDIA_CREATION_TIME, inputDate);
+    avmetaDataCollector->FormatDateTime(avmeta, globalInfo);
+    std::string formattedDate = avmeta.GetMeta(AV_KEY_DATE_TIME);
+    EXPECT_EQ(formattedDate, inputDate);
+}
+
+/**
+ * @tc.name: FormatDateTime_006
+ * @tc.desc: FormatDateTime_006
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, FormatDateTime_006, TestSize.Level1)
+{
+    Metadata avmeta;
+    std::shared_ptr<Meta> globalInfo = make_shared<Meta>();
+    std::string inputDate = "2025-01-01T";
+    globalInfo->SetData(Tag::MEDIA_CREATION_TIME, inputDate);
+    avmetaDataCollector->FormatDateTime(avmeta, globalInfo);
+    std::string formattedDate = avmeta.GetMeta(AV_KEY_DATE_TIME);
+    EXPECT_EQ(formattedDate, inputDate);
+}
+
+/**
+ * @tc.name: FormatDateTime_007
+ * @tc.desc: FormatDateTime_007
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, FormatDateTime_007, TestSize.Level1)
+{
+    Metadata avmeta;
+    std::shared_ptr<Meta> globalInfo = make_shared<Meta>();
+    std::string inputDate = "2025-01-01T12:00:00Z";
+    globalInfo->SetData(Tag::MEDIA_CREATION_TIME, inputDate);
+    avmetaDataCollector->FormatDateTime(avmeta, globalInfo);
+    std::string formattedDate = avmeta.GetMeta(AV_KEY_DATE_TIME);
+    EXPECT_NE(formattedDate, inputDate);
 }
 
 /**
@@ -343,11 +506,11 @@ HWTEST_F(AVMetaDataCollectorUnitTest, FormatVideoRotateOrientation, TestSize.Lev
 }
  
 /**
- * @tc.name: ConvertToAVMeta
- * @tc.desc: ConvertToAVMeta
+ * @tc.name: ConvertToAVMeta_001
+ * @tc.desc: ConvertToAVMeta_001
  * @tc.type: FUNC
  */
-HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta, TestSize.Level1)
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_001, TestSize.Level1)
 {
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::MEDIA_ALBUM, "media");
@@ -375,7 +538,147 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta, TestSize.Level1)
     avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
     EXPECT_FALSE(avmeta.tbl_.size() == 0);
 }
+
+/**
+ * @tc.name: ConvertToAVMeta_002
+ * @tc.desc: ConvertToAVMeta_002
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_002, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_ALBUM, "album_test");
+    meta->SetData(Tag::MEDIA_ALBUM_ARTIST, "album_artist_test");
+    meta->SetData(Tag::MEDIA_ARTIST, "artist_test");
+    meta->SetData(Tag::MEDIA_AUTHOR, "author_test");
+    meta->SetData(Tag::MEDIA_COMPOSER, "测试");
+    int64_t duration = 10030000;
+    meta->SetData(Tag::MEDIA_DURATION, duration);
+    meta->SetData(Tag::MEDIA_GENRE, "Lyrical");
+    bool hasAudio = true;
+    meta->SetData(Tag::MEDIA_HAS_AUDIO, hasAudio);
+    meta->SetData(Tag::MEDIA_HAS_VIDEO, "yes");
+    meta->SetData(Tag::MIME_TYPE, "video/mp4");
+    meta->SetData(Tag::MEDIA_TRACK_COUNT, "2");
+    int32_t rate = 44100;
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, rate);
+    meta->SetData(Tag::MEDIA_TITLE, "test");
+    meta->SetData(Tag::VIDEO_HEIGHT, "480");
+    meta->SetData(Tag::VIDEO_WIDTH, "720");
+    meta->SetData(Tag::MEDIA_DATE, "2022");
+    meta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    meta->SetData(Tag::VIDEO_COLOR_TRC, Plugins::TransferCharacteristic::HLG);
  
+    Metadata avmeta;
+    avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
+    EXPECT_FALSE(avmeta.tbl_.size() == 0);
+}
+
+/**
+ * @tc.name: IsAllDigits_001
+ * @tc.desc: IsAllDigits_001
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, IsAllDigits_001, TestSize.Level1)
+{
+    std::string str = "";
+    bool result = avmetaDataCollector->IsAllDigits(str);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.name: IsAllDigits_002
+ * @tc.desc: IsAllDigits_002
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, IsAllDigits_002, TestSize.Level1)
+{
+    std::string str = "1234567890";
+    bool result = avmetaDataCollector->IsAllDigits(str);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.name: IsAllDigits_003
+ * @tc.desc: IsAllDigits_003
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, IsAllDigits_003, TestSize.Level1)
+{
+    std::string str = "123abc456";
+    bool result = avmetaDataCollector->IsAllDigits(str);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.name: IsAllDigits_004
+ * @tc.desc: IsAllDigits_004
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, IsAllDigits_004, TestSize.Level1)
+{
+    EXPECT_FALSE(avmetaDataCollector->IsAllDigits("123!456"));
+    EXPECT_FALSE(avmetaDataCollector->IsAllDigits("123@456"));
+    EXPECT_FALSE(avmetaDataCollector->IsAllDigits("123#456"));
+    EXPECT_FALSE(avmetaDataCollector->IsAllDigits("123$456"));
+    EXPECT_FALSE(avmetaDataCollector->IsAllDigits("123.456"));
+    EXPECT_FALSE(avmetaDataCollector->IsAllDigits("123 456"));
+    EXPECT_FALSE(avmetaDataCollector->IsAllDigits("123\t456"));
+    EXPECT_FALSE(avmetaDataCollector->IsAllDigits("123\n456"));
+}
+
+/**
+ * @tc.name: IsAllDigits_005
+ * @tc.desc: IsAllDigits_005
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, IsAllDigits_005, TestSize.Level1)
+{
+    EXPECT_TRUE(avmetaDataCollector->IsAllDigits("0"));
+    EXPECT_TRUE(avmetaDataCollector->IsAllDigits("9"));
+}
+
+/**
+ * @tc.name: IsAllDigits_006
+ * @tc.desc: IsAllDigits_006
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, IsAllDigits_006, TestSize.Level1)
+{
+    EXPECT_FALSE(avmetaDataCollector->IsAllDigits("-123"));
+    EXPECT_FALSE(avmetaDataCollector->IsAllDigits("+123"));
+    EXPECT_FALSE(avmetaDataCollector->IsAllDigits("-"));
+    EXPECT_FALSE(avmetaDataCollector->IsAllDigits("+"));
+}
+
+/**
+ * @tc.name: IsAllDigits_007
+ * @tc.desc: IsAllDigits_007
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, IsAllDigits_007, TestSize.Level1)
+{
+    EXPECT_FALSE(avmetaDataCollector->IsAllDigits(" 123"));
+    EXPECT_FALSE(avmetaDataCollector->IsAllDigits("123 "));
+    EXPECT_FALSE(avmetaDataCollector->IsAllDigits(" 123 "));
+}
+
+/**
+ * @tc.name: SetEmptyStringIfNoData
+ * @tc.desc: SetEmptyStringIfNoData
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, SetEmptyStringIfNoData, TestSize.Level1)
+{
+    Metadata avmeta;
+    int32_t avKey = 100001;
+    EXPECT_FALSE(avmeta.HasMeta(avKey));
+    avmetaDataCollector->SetEmptyStringIfNoData(avmeta, avKey);
+    EXPECT_TRUE(avmeta.HasMeta(avKey));
+    std::string value = avmeta.GetMeta(avKey);
+    EXPECT_EQ(value, "");
+}
+
 /**
  * @tc.name: SetStringByValueType
  * @tc.desc: SetStringByValueType
