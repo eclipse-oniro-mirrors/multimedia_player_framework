@@ -148,12 +148,13 @@ public:
         return 0;
     }
     virtual int32_t SetAudioRendererInfo(const int32_t contentType, const int32_t streamUsage,
-        const int32_t rendererFlag, const int32_t volumeMode)
+        const int32_t rendererFlag, const int32_t privacyType)
     {
         (void)contentType;
         (void)streamUsage;
         (void)rendererFlag;
         (void)volumeMode;
+        (void)privacyType;
         return 0;
     }
     virtual int32_t SetAudioInterruptMode(const int32_t interruptMode)
