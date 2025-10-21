@@ -2403,7 +2403,7 @@ int32_t HiPlayerImpl::SetPrivacyType(const int32_t privacyType)
     MEDIA_LOG_D("SetPrivacyType, privacyType is: %{public}d", privacyType);
     privacyType_ = std::make_shared<Meta>();
 
-    privacyType_->SetData(Tag::PRIVACY_TYPE, privacyType);
+    privacyType_->SetData("PRIVACY_TYPE", privacyType);
     if (audioSink_ != nullptr) {
         audioSink_->SetParameter(privacyType_);
     }
