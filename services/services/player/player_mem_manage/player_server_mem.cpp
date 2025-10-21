@@ -559,9 +559,6 @@ void PlayerServerMem::SaveParameter(const Format &param)
     if (param.ContainKey(PlayerKeys::AUDIO_INTERRUPT_MODE)) {
         param.GetIntValue(PlayerKeys::AUDIO_INTERRUPT_MODE, recoverConfig_.interruptMode);
     }
-    if (param.ContainKey(PlayerKeys::PRIVACY_TYPE)) {
-        param.GetIntValue(PlayerKeys::PRIVACY_TYPE, recoverConfig_.privacyType);
-    }
 }
 
 int32_t PlayerServerMem::SetSaveParameter()
@@ -574,8 +571,7 @@ int32_t PlayerServerMem::SetSaveParameter()
     }
     if (recoverConfig_.contentType != -1 && recoverConfig_.streamUsage != -1) {
         ret = playerEngine_->SetAudioRendererInfo(recoverConfig_.contentType,
-            recoverConfig_.streamUsage, recoverConfig_.rendererFlag, recoverConfig_.volumeMode,
-            recoverConfig_.privacyType);
+            recoverConfig_.streamUsage, recoverConfig_.rendererFlag, recoverConfig_.volumeMode);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "failed to SetAudioRendererInfo");
     }
     if (recoverConfig_.interruptMode != -1) {
