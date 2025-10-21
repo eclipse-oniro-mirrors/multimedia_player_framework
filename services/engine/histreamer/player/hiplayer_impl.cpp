@@ -1690,12 +1690,17 @@ int32_t HiPlayerImpl::SetParameter(const Format& params)
         int32_t streamUsage;
         int32_t rendererFlag;
         int32_t volumeMode = volumeMode_;
+        int32_t privacyType = 0;
         MEDIA_LOG_I("volumeMode_ = %{public}d", volumeMode_);
         params.GetIntValue(PlayerKeys::CONTENT_TYPE, contentType);
         params.GetIntValue(PlayerKeys::STREAM_USAGE, streamUsage);
         params.GetIntValue(PlayerKeys::RENDERER_FLAG, rendererFlag);
         if (params.ContainKey(PlayerKeys::VOLUME_MODE)) {
             params.GetIntValue(PlayerKeys::VOLUME_MODE, volumeMode);
+        }
+        if (params.ContainKey(PlayerKeys::PRIVACY_TYPE)) {
+            params.GetIntValue(PlayerKeys::PRIVACY_TYPE, privacyType);
+            SetPrivacyType(privacyType);
         }
         return SetAudioRendererInfo(contentType, streamUsage, rendererFlag, volumeMode);
     }
@@ -2389,6 +2394,18 @@ int32_t HiPlayerImpl::SetAudioRendererInfo(const int32_t contentType, const int3
     audioRenderInfo_->SetData(Tag::AUDIO_RENDER_INFO, audioRenderInfo);
     if (audioSink_ != nullptr) {
         audioSink_->SetParameter(audioRenderInfo_);
+    }
+    return TransStatus(Status::OK);
+}
+
+int32_t HiPlayerImpl::SetPrivacyType(const int32_t privacyType)
+{
+    MEDIA_LOG_D("SetPrivacyType, privacyType is: %{public}d", privacyType);
+    privacyType_ = std::make_shared<Meta>();
+
+    privacyType_->SetData(Tag::PRIVACY_TYPE, privacyType);
+    if (audioSink_ != nullptr) {
+        audioSink_->SetParameter(privacyType_);
     }
     return TransStatus(Status::OK);
 }
