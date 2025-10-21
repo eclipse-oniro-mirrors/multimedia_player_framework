@@ -353,12 +353,6 @@ ohos_shared_library("media_service") {
     ]
   }
 
-  if (use_memmgr_plugin) {
-    external_deps += [ "memmgr_override:memmgrclient" ]
-  } else if (use_memmgr) {
-    external_deps += [ "memmgr:memmgrclient" ]
-  }
-
   if (player_framework_support_drm) {
     external_deps += [ "drm_framework:drm_framework" ]
   }
