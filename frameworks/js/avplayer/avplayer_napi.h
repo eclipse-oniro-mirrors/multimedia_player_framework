@@ -466,6 +466,7 @@ private:
     bool isForceLoadVideo_ = false;
     bool hasSetStateChangeCb_ = false;
     int32_t mutedMediaType_ = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
+    int32_t privacyType_ = 0;
 };
 } // namespace Media
 } // namespace OHOS
