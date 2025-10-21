@@ -2670,7 +2670,7 @@ napi_value AVPlayerNapi::JsSetPrivacyType(napi_env env, napi_callback_info info)
     }
 
     int32_t privacyType = 0;
-    (void)CommonNapi::GetPropertyInt32(env, args, "privacyType", privacyType);
+    (void)CommonNapi::GetPropertyInt32(env, args[0], "privacyType", privacyType);
     jsPlayer->privacyType_ = privacyType;
 
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer]() {
