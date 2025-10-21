@@ -137,7 +137,6 @@ private:
         int32_t videoIndex = 0;
         int32_t textIndex = 0;
         int32_t volumeMode = 0;
-        int32_t privacyType = 0;
     } recoverConfig_;
     struct PlayerServerConfig {
         bool errorCbOnce = false;
