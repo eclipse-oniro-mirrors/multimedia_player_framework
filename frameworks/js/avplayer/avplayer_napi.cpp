@@ -2671,13 +2671,13 @@ napi_value AVPlayerNapi::JsSetPrivacyType(napi_env env, napi_callback_info info)
 
     int32_t privacyType = 0;
     (void)CommonNapi::GetPropertyInt32(env, args, "privacyType", privacyType);
-    jsPlayer->privacyType = privacyType;
+    jsPlayer->privacyType_ = privacyType;
 
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer]() {
         MEDIA_LOGI("SetPrivacyType Task");
         if (jsPlayer->player_ != nullptr) {
             Format format;
-            (void)format.PutIntValue(PlayerKeys::PRIVACY_TYPE, jsPlayer->privacyType);
+            (void)format.PutIntValue(PlayerKeys::PRIVACY_TYPE, jsPlayer->privacyType_);
             (void)jsPlayer->player_->SetParameter(format);
         }
     });
@@ -2719,7 +2719,7 @@ napi_value AVPlayerNapi::JsGetPrivacyType(napi_env env, napi_callback_info info)
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
 
-    int32_t privacyType = static_cast<int32_t>(jsPlayer->privacyType);
+    int32_t privacyType = static_cast<int32_t>(jsPlayer->privacyType_);
    
     (void)napi_create_object(env, &result);
     CommonNapi::SetPropertyInt32(env, result, "privacyType", privacyType);
