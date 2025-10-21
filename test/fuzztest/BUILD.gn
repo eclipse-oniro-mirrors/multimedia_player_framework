@@ -116,6 +116,7 @@ group("fuzztest") {
       "screen_capture_fuzztest/screencapturevideoframewidth_fuzzer:ScreenCaptureVideoFrameWidthFuzzTest",
       "screen_capture_fuzztest/screencapturevideosourcetype_fuzzer:ScreenCaptureVideoSourceTypeFuzzTest",
       "screen_capture_fuzztest/avscreencaptureservicestub_fuzzer:AvScreenCaptureServiceStubFuzzTest",
+      "screen_capture_fuzztest/screencaptureaudiocapturerwrapper_fuzzer:ScreenCaptureAudioCapturerWrapperFuzzTest",
     ]
   }
 }
