@@ -192,6 +192,9 @@ private:
     static napi_value JsGetAudioRendererInfo(napi_env env, napi_callback_info info);
     static napi_value JsSetAudioRendererInfo(napi_env env, napi_callback_info info);
 
+    static napi_value JsGetPrivacyType(napi_env env, napi_callback_info info);
+    static napi_value JsSetPrivacyType(napi_env env, napi_callback_info info);
+
     /**
      * audioEffectMode ?: audio.AudioEffectMode;
      */
