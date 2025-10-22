@@ -1678,6 +1678,11 @@ int32_t HiPlayerImpl::SetParameter(const Format& params)
         params.GetIntValue(PlayerKeys::PLAYER_AUDIO_HAPTICS_SYNC_ID, syncId);
         (void)SetAudioHapticsSyncId(syncId);
     }
+    int32_t privacyType = 0;
+    if (params.ContainKey(PlayerKeys::PRIVACY_TYPE)) {
+        params.GetIntValue(PlayerKeys::PRIVACY_TYPE, privacyType);
+        SetPrivacyType(privacyType);
+    }
 #ifdef SUPPORT_VIDEO
     if (params.ContainKey(PlayerKeys::VIDEO_SCALE_TYPE)) {
         int32_t videoScaleType = 0;
@@ -1690,17 +1695,12 @@ int32_t HiPlayerImpl::SetParameter(const Format& params)
         int32_t streamUsage;
         int32_t rendererFlag;
         int32_t volumeMode = volumeMode_;
-        int32_t privacyType = 0;
         MEDIA_LOG_I("volumeMode_ = %{public}d", volumeMode_);
         params.GetIntValue(PlayerKeys::CONTENT_TYPE, contentType);
         params.GetIntValue(PlayerKeys::STREAM_USAGE, streamUsage);
         params.GetIntValue(PlayerKeys::RENDERER_FLAG, rendererFlag);
         if (params.ContainKey(PlayerKeys::VOLUME_MODE)) {
             params.GetIntValue(PlayerKeys::VOLUME_MODE, volumeMode);
-        }
-        if (params.ContainKey(PlayerKeys::PRIVACY_TYPE)) {
-            params.GetIntValue(PlayerKeys::PRIVACY_TYPE, privacyType);
-            SetPrivacyType(privacyType);
         }
         return SetAudioRendererInfo(contentType, streamUsage, rendererFlag, volumeMode);
     }
