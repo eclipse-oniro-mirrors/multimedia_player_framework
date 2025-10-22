@@ -84,6 +84,7 @@ ohos_unittest("hiplayer_impl_unittest") {
     cfi = true
     cfi_cross_dso = true
     debug = false
+    blocklist = "$MEDIA_PLAYER_ROOT_DIR/cfi_blocklist.txt"
   }
 
   external_deps = [
