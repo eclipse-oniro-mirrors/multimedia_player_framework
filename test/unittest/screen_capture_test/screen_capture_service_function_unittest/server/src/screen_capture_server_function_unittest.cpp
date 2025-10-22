@@ -2069,6 +2069,16 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartFileInnerAudioCapture_002, TestSi
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, StartFileInnerAudioCapture_003, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetValidConfigFile(recorderInfo);
+    screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
+        AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    auto ret = screenCaptureServer_->StartFileInnerAudioCapture();
+    EXPECT_EQ(ret, MSERR_UNKNOWN);
+}
+
 #ifdef SUPPORT_CALL
 HWTEST_F(ScreenCaptureServerFunctionTest, StopAndRelease_001, TestSize.Level2)
 {
@@ -2960,5 +2970,39 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ExcludePickerWindows_001, TestSize.Lev
     EXPECT_EQ(screenCaptureServer_->excludedWindowIDsVec_, excludedWindowIDsVec);
 }
 #endif
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnSpeakerAliveStatusChanged_001, TestSize.Level2)
+{
+    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
+    SetSCInnerAudioCaptureAndPushData(nullptr);
+    screenCaptureServer_->innerAudioCapture_->captureState_ = AudioCapturerWrapperState::CAPTURER_STOPED;
+    auto ret = screenCaptureServer_->OnSpeakerAliveStatusChanged(false);
+    EXPECT_NE(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnSpeakerAliveStatusChanged_002, TestSize.Level2)
+{
+    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIC_MODE;
+    SetSCInnerAudioCaptureAndPushData(nullptr);
+    screenCaptureServer_->innerAudioCapture_->captureState_ = AudioCapturerWrapperState::CAPTURER_STOPED;
+    auto ret = screenCaptureServer_->OnSpeakerAliveStatusChanged(false);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnSpeakerAliveStatusChanged_003, TestSize.Level2)
+{
+    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
+    SetSCInnerAudioCaptureAndPushData(nullptr);
+    auto ret = screenCaptureServer_->OnSpeakerAliveStatusChanged(false);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnSpeakerAliveStatusChanged_004, TestSize.Level2)
+{
+    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
+    SetSCInnerAudioCaptureAndPushData(nullptr);
+    auto ret = screenCaptureServer_->OnSpeakerAliveStatusChanged(true);
+    EXPECT_EQ(ret, MSERR_OK);
+}
 } // Media
 } // OHOS
