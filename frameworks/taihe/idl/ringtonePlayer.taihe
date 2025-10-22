@@ -56,8 +56,6 @@ interface RingtonePlayer {
   @gen_promise("release")
   ReleaseSync(): void;
 
-  @overload("on")
-  OnAudioInterrupt(type: String, callback: (data: @sts_type("audio.InterruptEvent") Opaque)=> void): void;
-  @overload("off")
-  OffAudioInterrupt(type: String): void;
+  OnAudioInterrupt(callback: (data: @sts_type("audio.InterruptEvent") Opaque)=> void): void;
+  OffAudioInterrupt(): void;
 }

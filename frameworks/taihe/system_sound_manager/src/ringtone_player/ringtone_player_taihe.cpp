@@ -139,15 +139,14 @@ void RingtonePlayerImpl::ReleaseSync()
     }
 }
 
-void RingtonePlayerImpl::OnAudioInterrupt(::taihe::string_view type,
-    ::taihe::callback_view<void(uintptr_t)> callback)
+void RingtonePlayerImpl::OnAudioInterrupt(::taihe::callback_view<void(uintptr_t)> callback)
 {
-    MEDIA_LOGI("RingtonePlayerNapi: On callbackName: %{public}s", type.c_str());
+    MEDIA_LOGI("RingtonePlayerNapi: On callbackName: %{public}s", AUDIO_INTERRUPT_CALLBACK_NAME.c_str());
     if (ringtonePlayer_ == nullptr) {
         ThrowError(TAIHE_ERR_NO_MEMORY, "no memory");
         return;
     }
-    std::string cbName = std::string(type);
+    std::string cbName = AUDIO_INTERRUPT_CALLBACK_NAME;
     if (!cbName.compare(AUDIO_INTERRUPT_CALLBACK_NAME)) {
         if (callbackTaihe_ == nullptr) {
             ThrowError(TAIHE_ERR_NO_MEMORY, "no memory");
@@ -171,14 +170,14 @@ void RingtonePlayerImpl::OnAudioInterrupt(::taihe::string_view type,
     }
 }
 
-void RingtonePlayerImpl::OffAudioInterrupt(::taihe::string_view type)
+void RingtonePlayerImpl::OffAudioInterrupt()
 {
-    MEDIA_LOGI("Off callbackName: %{public}s", type.c_str());
+    MEDIA_LOGI("Off callbackName: %{public}s", AUDIO_INTERRUPT_CALLBACK_NAME.c_str());
     if (ringtonePlayer_ == nullptr) {
         ThrowError(TAIHE_ERR_NO_MEMORY, "no memory");
         return;
     }
-    std::string cbName = std::string(type);
+    std::string cbName = AUDIO_INTERRUPT_CALLBACK_NAME;
     if (!cbName.compare(AUDIO_INTERRUPT_CALLBACK_NAME)) {
         if (callbackTaihe_ == nullptr) {
             ThrowError("ringtonePlayerCallbackTaihe is nullptr");
