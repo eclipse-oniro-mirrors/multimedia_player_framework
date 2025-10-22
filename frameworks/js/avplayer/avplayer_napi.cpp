@@ -2670,14 +2670,18 @@ napi_value AVPlayerNapi::JsSetPrivacyType(napi_env env, napi_callback_info info)
     }
 
     int32_t privacyType = 0;
-    (void)CommonNapi::GetPropertyInt32(env, args[0], "privacyType", privacyType);
+    napi_status status = napi_get_value_int32(env, args[0], &privacyType);
+    if (status != napi_ok || privacyType < 0) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check the input privacyType");
+        return result;
+    }
     jsPlayer->privacyType_ = privacyType;
 
-    auto task = std::make_shared<TaskHandler<void>>([jsPlayer]() {
+    auto task = std::make_shared<TaskHandler<void>>([jsPlayer, privacyType]() {
         MEDIA_LOGI("SetPrivacyType Task");
         if (jsPlayer->player_ != nullptr) {
             Format format;
-            (void)format.PutIntValue(PlayerKeys::PRIVACY_TYPE, jsPlayer->privacyType_);
+            (void)format.PutIntValue(PlayerKeys::PRIVACY_TYPE, privacyType);
             (void)jsPlayer->player_->SetParameter(format);
         }
     });
