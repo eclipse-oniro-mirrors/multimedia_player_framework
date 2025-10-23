@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -107,20 +107,20 @@ bool ScreenCaptureAudioCapturerWrapperFuzzer::FuzzScreenAudioCapturerWrapper(uin
     contentFilter.filteredAudioContents.insert(AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_CURRENT_APP_AUDIO);
     audioCapturerWrapper->UpdateAudioCapturerConfig(contentFilter);
     audioCapturerWrapper->GetAudioCapturerState();
+    int32_t value = (*reinterpret_cast<int32_t *>(data)) % 100;
     audioCapturerWrapper->RelativeSleep(1);
     audioCapturerWrapper->PartiallyPrintLog(1, "CaptureAudio read audio buffer failed ");
     audioCapturerWrapper->PartiallyPrintLog(1, "CaptureAudio read audio buffer failed ");
     audioCapturerWrapper->SetIsMute(true);
-    audioCapturerWrapper->SetIsInTelCall(false);
-    audioCapturerWrapper->UseUpAllLeftBufferUntil(1);
+    audioCapturerWrapper->UseUpAllLeftBufferUntil(value);
     size_t  buffersize = 1;
     int64_t currentAudioTime;
     uint8_t *buffer = (uint8_t *)malloc(buffersize);
     shared_ptr<AudioBuffer> audioBuffer = make_shared<AudioBuffer>(buffer, 0, 0, AudioCaptureSourceType::ALL_PLAYBACK);
     audioCapturerWrapper->GetBufferSize(buffersize);
-    audioCapturerWrapper->AddBufferFrom(1, buffersize, 1);
+    audioCapturerWrapper->AddBufferFrom(value, value, value);
     audioCapturerWrapper->AcquireAudioBuffer(audioBuffer);
-    audioCapturerWrapper->DropBufferUntil(1);
+    audioCapturerWrapper->DropBufferUntil(value);
     audioCapturerWrapper->GetCurrentAudioTime(currentAudioTime);
     audioCapturerWrapper->ReleaseAudioBuffer();
     audioCapturerWrapper->IsRecording();
