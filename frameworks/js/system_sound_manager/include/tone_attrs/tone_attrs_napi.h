@@ -25,6 +25,11 @@ namespace OHOS {
 namespace Media {
     static const std::string TONE_ATTRS_NAPI_CLASS_NAME = "ToneAttrs";
 
+static const std::map<std::string, int32_t> toneMediaTypeMap = {
+    {"AUDIO", static_cast<int32_t>(ToneMediaType::MEDIA_TYPE_AUD)},
+    {"VIDEO", static_cast<int32_t>(ToneMediaType::MEDIA_TYPE_VID)}
+};
+
 class ToneAttrsNapi {
 public:
 
@@ -50,10 +55,15 @@ private:
     static napi_value GetCategory(napi_env env, napi_callback_info info);
     static napi_value SetMediaType(napi_env env, napi_callback_info info);
     static napi_value GetMediaType(napi_env env, napi_callback_info info);
+    static napi_status AddNamedProperty(napi_env env, napi_value object, const std::string name, int32_t enumValue);
+    static napi_value CreateToneMediaTypeObject(napi_env env);
+    static napi_status ToneStaticProperties(napi_env env, napi_value exports);
+    static napi_status ToneAttrsProperties(napi_env env, napi_value &ctorObj);
 
     napi_env env_;
     std::shared_ptr<ToneAttrs> toneAttrs_;
     static thread_local napi_ref sConstructor_;
+    static thread_local napi_ref toneMediaType_;
     static std::shared_ptr<ToneAttrs> sToneAttrs_;
 };
 } // namespace Media
