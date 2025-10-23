@@ -113,7 +113,8 @@ napi_value ToneAttrsNapi::Init(napi_env env, napi_value exports)
     return exports;
 }
 
-napi_status ToneAttrsNapi::ToneAttrsProperties(napi_env env, napi_value &ctorObj) {
+napi_status ToneAttrsNapi::ToneAttrsProperties(napi_env env, napi_value &ctorObj)
+{
     napi_property_descriptor tone_attrs_prop[] = {
         DECLARE_NAPI_FUNCTION("getTitle", GetTitle),
         DECLARE_NAPI_FUNCTION("setTitle", SetTitle),
