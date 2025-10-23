@@ -2722,13 +2722,10 @@ napi_value AVPlayerNapi::JsGetPrivacyType(napi_env env, napi_callback_info info)
 
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
-
-    int32_t privacyType = static_cast<int32_t>(jsPlayer->privacyType_);
-   
-    (void)napi_create_object(env, &result);
-    CommonNapi::SetPropertyInt32(env, result, "privacyType", privacyType);
+    napi_value value = nullptr;
+    (void)napi_create_int32(env, static_cast<int32_t>(jsPlayer->privacyType_), &value);
     MEDIA_LOGI("JsGetPrivacyType Out");
-    return result;
+    return value;
 }
 
 napi_value AVPlayerNapi::JsGetCurrentTime(napi_env env, napi_callback_info info)
