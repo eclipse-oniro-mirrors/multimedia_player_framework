@@ -95,6 +95,7 @@ static const std::unordered_map<int32_t, std::string> AVMETA_KEY_TO_X_MAP = {
     { AV_KEY_DATE_TIME_ISO8601, "ISO8601 time" },
     { AV_KEY_GLTF_OFFSET, Tag::GLTF_OFFSET },
     { AV_KEY_VIDEO_COLOR_TRC, Tag::VIDEO_COLOR_TRC },
+    { AV_KEY_VIDEO_DESCRIPTION, Tag::MEDIA_DESCRIPTION },
 };
 
 AVMetaDataCollector::AVMetaDataCollector(std::shared_ptr<MediaDemuxer> &mediaDemuxer) : mediaDemuxer_(mediaDemuxer)
