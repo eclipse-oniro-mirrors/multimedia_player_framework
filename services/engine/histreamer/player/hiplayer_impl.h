@@ -386,6 +386,7 @@ private:
     std::shared_ptr<Meta> audioRenderInfo_{nullptr};
     std::shared_ptr<Meta> audioInterruptMode_{nullptr};
     std::shared_ptr<Meta> privacyType_{nullptr};
+    int32_t audioPrivacyType_ = 0;
     int32_t volumeMode_ = 0;
     bool isStreaming_{false};
 
