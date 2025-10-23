@@ -211,7 +211,7 @@ HWTEST_F(AVMetaDataCollectorUnitTest, GetAVMetadata_005, TestSize.Level1)
     EXPECT_TRUE(meta != nullptr);
 
     std::string description;
-    EXPECT_FALSE(meta->GetData("description", description));
+    EXPECT_TRUE(meta->GetData("description", description));
 }
  
 /**
