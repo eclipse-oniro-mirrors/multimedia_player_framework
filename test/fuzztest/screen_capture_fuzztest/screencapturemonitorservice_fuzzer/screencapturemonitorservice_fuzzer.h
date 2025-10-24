@@ -28,7 +28,7 @@
 
 namespace OHOS {
 namespace Media {
-class ScreenCaptureMonitorListenerTest : public ScreenCaptureMonitor::ScreenCaptureMonitorListener{
+class ScreenCaptureMonitorListenerTest : public ScreenCaptureMonitor::ScreenCaptureMonitorListener {
 public:
     ScreenCaptureMonitorListenerTest();
     ~ScreenCaptureMonitorListenerTest();
