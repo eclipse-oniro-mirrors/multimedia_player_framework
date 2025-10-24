@@ -72,7 +72,6 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzAvScreenCaptureServiceStub(uint8_t *d
     int32_t width = GetData<int32_t>();
     int32_t height = GetData<int32_t>();
     screen_capture_Stub->ResizeCanvas(width, height);
-    screen_capture_Stub->ReleaseVideoBuffer();
     FuzzExcludeContent(screen_capture_Stub, data, size);
     FuzzSetMicrophoneEnabled(screen_capture_Stub, data, size);
     FuzzSetCanvasRotation(screen_capture_Stub, data, size);
