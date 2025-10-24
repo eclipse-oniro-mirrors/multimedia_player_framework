@@ -65,32 +65,14 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzAvScreenCaptureServiceStub(uint8_t *d
     if (screen_capture_Stub == nullptr) {
         return false;
     }
-    screen_capture_Stub->SetMicrophoneEnabled(true);
-    screen_capture_Stub->SetCanvasRotation(true);
-    int32_t fd = GetData<int32_t>();
-    screen_capture_Stub->SetOutputFile(fd);
-    screen_capture_Stub->SetAndCheckLimit();
-    screen_capture_Stub->SetAndCheckLimit();
-    screen_capture_Stub->ShowCursor(true);
-    int32_t frameRate = GetData<int32_t>();
-    screen_capture_Stub->SetMaxVideoFrameRate(frameRate);
-
     screen_capture_Stub->StartScreenCapture(true);
     sleep(recorderTime);
     screen_capture_Stub->StopScreenCapture();
     screen_capture_Stub->Release();
-
     int32_t width = GetData<int32_t>();
     int32_t height = GetData<int32_t>();
     screen_capture_Stub->ResizeCanvas(width, height);
     screen_capture_Stub->ReleaseVideoBuffer();
-    CaptureMode captureMode = CaptureMode::CAPTURE_HOME_SCREEN;
-    screen_capture_Stub->SetCaptureMode(captureMode);
-    DataType dataType = DataType::ORIGINAL_STREAM;
-    screen_capture_Stub->SetDataType(dataType);
-    AudioCaptureSourceType audioCaptureSourceType = AudioCaptureSourceType::MIC;
-    screen_capture_Stub->ReleaseAudioBuffer(audioCaptureSourceType);
-
     FuzzExcludeContent(screen_capture_Stub, data, size);
     FuzzSetMicrophoneEnabled(screen_capture_Stub, data, size);
     FuzzSetCanvasRotation(screen_capture_Stub, data, size);
@@ -147,6 +129,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzSetMicrophoneEnabled(
     MessageParcel option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::SET_MIC_ENABLE,
         msg, reply, option);
+    screen_capture_Stub->SetMicrophoneEnabled(true);
     return true;
 }
 
@@ -161,6 +144,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzSetCanvasRotation(
     MessageParcel option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::SET_SCREEN_ROTATION,
         msg, reply, option);
+    screen_capture_Stub->SetCanvasRotation(true);
     return true;
 }
 
@@ -175,6 +159,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzShowCursor(
     MessageParcel option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::SHOW_CURSOR,
         msg, reply, option);
+    screen_capture_Stub->ShowCursor(true);
     return true;
 }
 
@@ -217,6 +202,8 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzSetMaxVideoFrameRate(
     MessageParcel option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::SET_MAX_FRAME_RATE,
         msg, reply, option);
+    int32_t frameRate = GetData<int32_t>();
+    screen_capture_Stub->SetMaxVideoFrameRate(frameRate);
     return true;
 }
 
@@ -281,6 +268,8 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzSetOutputFile(
     MessageParcel option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::SET_OUTPUT_FILE,
         msg, reply, option);
+    int32_t fd = GetData<int32_t>();
+    screen_capture_Stub->SetOutputFile(fd);
     return true;
 }
 
@@ -295,6 +284,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzSetAndCheckLimit(
     MessageParcel option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::SET_CHECK_LIMIT,
         msg, reply, option);
+    screen_capture_Stub->SetAndCheckLimit();
     return true;
 }
 
@@ -399,8 +389,8 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzStartScreenCaptureWithSurface(
     msg.RewindRead(0);
     MessageParcel reply;
     MessageParcel option;
-    screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::START_SCREEN_CAPTURE_WITH_SURFACE,
-        msg, reply, option);
+    screen_capture_Stub->OnRemoteRequest(
+        IStandardScreenCaptureService::ScreenCaptureServiceMsg::START_SCREEN_CAPTURE_WITH_SURFACE, msg, reply, option);
     return true;
 }
 
@@ -471,6 +461,8 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzReleaseAudioBuffer(
     MessageParcel option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::RELEASE_AUDIO_BUF,
         msg, reply, option);
+    AudioCaptureSourceType audioCaptureSourceType = AudioCaptureSourceType::MIC;
+    screen_capture_Stub->ReleaseAudioBuffer(audioCaptureSourceType);
     return true;
 }
 
@@ -485,6 +477,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzReleaseVideoBuffer(
     MessageParcel option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::RELEASE_VIDEO_BUF,
         msg, reply, option);
+    screen_capture_Stub->ReleaseVideoBuffer();
     return true;
 }
 

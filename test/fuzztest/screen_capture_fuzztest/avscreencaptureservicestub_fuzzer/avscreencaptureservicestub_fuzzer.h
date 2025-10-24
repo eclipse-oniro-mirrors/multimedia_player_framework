@@ -31,33 +31,60 @@ public:
     AvScreenCaptureServiceStubFuzzer();
     ~AvScreenCaptureServiceStubFuzzer();
     bool FuzzAvScreenCaptureServiceStub(uint8_t *data, size_t size);
-    bool FuzzExcludeContent(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub, uint8_t *data, size_t size);
-    bool FuzzSetMicrophoneEnabled(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub, uint8_t *data, size_t size);
-    bool FuzzSetCanvasRotation(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub, uint8_t *data, size_t size);
-    bool FuzzShowCursor(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub, uint8_t *data, size_t size);
-    bool FuzzResizeCanvas(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub, uint8_t *data, size_t size);
-    bool FuzzSkipPrivacyMode(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub, uint8_t *data, size_t size);
-    bool FuzzSetMaxVideoFrameRate(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub, uint8_t *data, size_t size);
-    bool FuzzSetCaptureMode(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub, uint8_t *data, size_t size);
-    bool FuzzSetDataType(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub, uint8_t *data, size_t size);
-    bool FuzzSetRecorderInfo(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub, uint8_t *data, size_t size);
-    bool FuzzSetOutputFile(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub, uint8_t *data, size_t size);
-    bool FuzzSetAndCheckLimit(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub, uint8_t *data, size_t size);
-    bool FuzzSetAndCheckSaLimit(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub, uint8_t *data, size_t size);
-    bool FuzzInitAudioEncInfo(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub, uint8_t *data, size_t size);
-    bool FuzzInitAudioCap(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub, uint8_t *data, size_t size);
-    bool FuzzInitVideoEncInfo(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub, uint8_t *data, size_t size);
-    bool FuzzInitVideoCap(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub, uint8_t *data, size_t size);
-    bool FuzzStartScreenCapture(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub, uint8_t *data, size_t size);
-    bool FuzzStartScreenCaptureWithSurface(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub, uint8_t *data, size_t size);
-    bool FuzzUpdateSurface(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub, uint8_t *data, size_t size);
-    bool FuzzStopScreenCapture(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub, uint8_t *data, size_t size);
-    bool FuzzAcquireAudioBuffer(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub, uint8_t *data, size_t size);
-    bool FuzzAcquireVideoBuffer(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub, uint8_t *data, size_t size);
-    bool FuzzReleaseAudioBuffer(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub, uint8_t *data, size_t size);
-    bool FuzzReleaseVideoBuffer(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub, uint8_t *data, size_t size);
-    bool FuzzSetScreenCaptureStrategy(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub, uint8_t *data, size_t size);
-    bool FuzzSetCaptureArea(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub, uint8_t *data, size_t size);
+    bool FuzzExcludeContent(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
+                            uint8_t *data, size_t size);
+    bool FuzzSetMicrophoneEnabled(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
+                            uint8_t *data, size_t size);
+    bool FuzzSetCanvasRotation(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
+                            uint8_t *data, size_t size);
+    bool FuzzShowCursor(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
+                            uint8_t *data, size_t size);
+    bool FuzzResizeCanvas(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
+                            uint8_t *data, size_t size);
+    bool FuzzSkipPrivacyMode(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
+                            uint8_t *data, size_t size);
+    bool FuzzSetMaxVideoFrameRate(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
+                            uint8_t *data, size_t size);
+    bool FuzzSetCaptureMode(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
+                            uint8_t *data, size_t size);
+    bool FuzzSetDataType(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
+                            uint8_t *data, size_t size);
+    bool FuzzSetRecorderInfo(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
+                            uint8_t *data, size_t size);
+    bool FuzzSetOutputFile(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
+                            uint8_t *data, size_t size);
+    bool FuzzSetAndCheckLimit(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
+                            uint8_t *data, size_t size);
+    bool FuzzSetAndCheckSaLimit(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
+                            uint8_t *data, size_t size);
+    bool FuzzInitAudioEncInfo(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
+                            uint8_t *data, size_t size);
+    bool FuzzInitAudioCap(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
+                            uint8_t *data, size_t size);
+    bool FuzzInitVideoEncInfo(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
+                            uint8_t *data, size_t size);
+    bool FuzzInitVideoCap(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
+                            uint8_t *data, size_t size);
+    bool FuzzStartScreenCapture(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
+                            uint8_t *data, size_t size);
+    bool FuzzStartScreenCaptureWithSurface(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
+                            uint8_t *data, size_t size);
+    bool FuzzUpdateSurface(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
+                            uint8_t *data, size_t size);
+    bool FuzzStopScreenCapture(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
+                            uint8_t *data, size_t size);
+    bool FuzzAcquireAudioBuffer(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
+                            uint8_t *data, size_t size);
+    bool FuzzAcquireVideoBuffer(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
+                            uint8_t *data, size_t size);
+    bool FuzzReleaseAudioBuffer(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
+                            uint8_t *data, size_t size);
+    bool FuzzReleaseVideoBuffer(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
+                            uint8_t *data, size_t size);
+    bool FuzzSetScreenCaptureStrategy(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
+                            uint8_t *data, size_t size);
+    bool FuzzSetCaptureArea(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
+                            uint8_t *data, size_t size);
     sptr<IRemoteStub<IStandardScreenCaptureService>> GetScreenCaptureStub();
 };
 } // namespace Media
