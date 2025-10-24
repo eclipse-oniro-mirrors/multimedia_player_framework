@@ -1678,6 +1678,10 @@ int32_t HiPlayerImpl::SetParameter(const Format& params)
         params.GetIntValue(PlayerKeys::PLAYER_AUDIO_HAPTICS_SYNC_ID, syncId);
         (void)SetAudioHapticsSyncId(syncId);
     }
+
+    if (params.ContainKey(PlayerKeys::PRIVACY_TYPE)) {
+        params.GetIntValue(PlayerKeys::PRIVACY_TYPE, audioPrivacyType_);
+    }
 #ifdef SUPPORT_VIDEO
     if (params.ContainKey(PlayerKeys::VIDEO_SCALE_TYPE)) {
         int32_t videoScaleType = 0;
@@ -2389,6 +2393,18 @@ int32_t HiPlayerImpl::SetAudioRendererInfo(const int32_t contentType, const int3
     audioRenderInfo_->SetData(Tag::AUDIO_RENDER_INFO, audioRenderInfo);
     if (audioSink_ != nullptr) {
         audioSink_->SetParameter(audioRenderInfo_);
+    }
+    return TransStatus(Status::OK);
+}
+
+int32_t HiPlayerImpl::SetPrivacyType(const int32_t privacyType)
+{
+    MEDIA_LOG_D("SetPrivacyType, privacyType is: %{public}d", privacyType);
+    privacyType_ = std::make_shared<Meta>();
+
+    privacyType_->SetData("PRIVACY_TYPE", privacyType);
+    if (audioSink_ != nullptr) {
+        audioSink_->SetParameter(privacyType_);
     }
     return TransStatus(Status::OK);
 }
@@ -3399,6 +3415,7 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
         SetDefaultAudioRenderInfo(trackInfos);
     }
     SetAudioRendererParameter();
+    SetPrivacyType(audioPrivacyType_);
     audioSink_->SetSyncCenter(syncManager_);
 
     completeState_.emplace_back(std::make_pair("AudioSink", false));
