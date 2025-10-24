@@ -18,13 +18,12 @@ import("//foundation/multimedia/player_framework/config.gni")
 MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
 
 ##############################fuzztest##########################################
-ohos_fuzztest("ScreenCaptureAudioCapturerWrapperFuzzTest") {
+ohos_fuzztest("ScreenCaptureMonitorServiceFuzzTest") {
   module_out_path = "$MODULE_SCREENCAPTURE_OUTPUT_PATH/screen_capture"
-  fuzz_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/screen_capture_fuzztest/screencaptureaudiocapturerwrapper_fuzzer"
+  fuzz_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/screen_capture_fuzztest/screencapturemonitorservice_fuzzer"
   resource_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/resource/ohos_test.xml"
 
   include_dirs = [
-    "./",
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_ROOT_DIR/services/services/sa_media/ipc",
     "$MEDIA_ROOT_DIR/services/services/sa_media/server",
@@ -44,10 +43,11 @@ ohos_fuzztest("ScreenCaptureAudioCapturerWrapperFuzzTest") {
     "$MEDIA_ROOT_DIR/services/services/recorder/server",
     "$MEDIA_ROOT_DIR/services/services/avmetadatahelper/ipc",
     "$MEDIA_ROOT_DIR/services/services/avmetadatahelper/server",
-    "avcodec/ipc",
-    "avcodec/server",
-    "avcodeclist/ipc",
-    "avcodeclist/server",
+    "../../../../services/services/screen_capture_monitor/ipc",
+    "../../../../services/services/sa_media/ipc",
+    "../../../../services/services/sa_media/server",
+    "../../../../services/services/sa_media/server_manager",
+    "../../../../services/include",
     "$MEDIA_ROOT_DIR/services/services/recorder_profiles/ipc",
     "$MEDIA_ROOT_DIR/services/services/recorder_profiles/server",
     "$MEDIA_ROOT_DIR/services/services/screen_capture/server",
@@ -66,7 +66,6 @@ ohos_fuzztest("ScreenCaptureAudioCapturerWrapperFuzzTest") {
     "$MEDIA_ROOT_DIR/services/engine/common/recorder_profiles",
     "$MEDIA_ROOT_DIR/test/fuzztest/common/",
     "$MEDIA_ROOT_DIR/test/unittest/common/include",
-    "$MEDIA_ROOT_DIR/test/unittest/screen_capture_test/screen_capture_service_function_unittest/server/include",
   ]
   cflags = [
     "-std=c++17",
@@ -92,16 +91,14 @@ ohos_fuzztest("ScreenCaptureAudioCapturerWrapperFuzzTest") {
     "-Dprivate=public",
     "-Dprotected=public",
   ]
-  if (player_framework_support_screen_capture) {
+if (player_framework_support_screen_capture) {
     sources = [
-      "$MEDIA_ROOT_DIR/test/fuzztest/common/test_screen_capture.cpp",
-      "screencaptureaudiocapturerwrapper_fuzzer.cpp",
+      "screencapturemonitorservice_fuzzer.cpp",
     ]
   }
   deps = [
-    "$MEDIA_ROOT_DIR/interfaces/inner_api/native:media_client",
-    "$MEDIA_ROOT_DIR/services/services:media_service",
-    "$MEDIA_ROOT_DIR/services/utils:media_service_utils",
+    "../../../../services/services:media_service",
+    "../../../../services/utils:media_service_utils",
   ]
   external_deps = [
     "ability_base:base",
