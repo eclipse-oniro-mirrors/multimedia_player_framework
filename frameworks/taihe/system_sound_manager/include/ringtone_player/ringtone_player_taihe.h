@@ -44,8 +44,8 @@ public:
     void StartSync();
     void StopSync();
     void ReleaseSync();
-    void OnAudioInterrupt(::taihe::string_view type, ::taihe::callback_view<void(uintptr_t)> callback);
-    void OffAudioInterrupt(::taihe::string_view type);
+    void OnAudioInterrupt(::taihe::callback_view<void(uintptr_t)> callback);
+    void OffAudioInterrupt();
 
 private:
     std::shared_ptr<OHOS::Media::RingtonePlayer> ringtonePlayer_;

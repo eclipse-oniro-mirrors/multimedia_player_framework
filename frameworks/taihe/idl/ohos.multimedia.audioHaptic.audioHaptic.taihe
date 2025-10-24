@@ -62,29 +62,6 @@ interface AudioHapticPlayer {
     @gen_promise("release")
     ReleaseSync(): void;
 
-    @!sts_inject_into_interface("on(type: string, callback: (data: object)=> void): void;")
-    @!sts_inject_into_class("""on(type: string, callback: object): void {
-            if (type === 'audioInterrupt') {
-              this.onAudioInterrupt(callback as (data: audio.InterruptEvent)=> void);
-            } else if (type === 'endOfStream') {
-              this.onEndOfStream(callback as (data: undefined)=> void);
-            } else {
-              throw new Error(`Unknown type: ${type}`);
-            }
-          }
-    """)
-
-    @!sts_inject_into_interface("off(type: string, callback?: (data: object)=> void): void;")
-    @!sts_inject_into_class("""off(type: string, callback?: object): void {
-        if (type === 'audioInterrupt') {
-          this.offAudioInterrupt(callback as (((data: audio.InterruptEvent)=> void) | undefined ));
-        } else if (type === 'endOfStream') {
-          this.offEndOfStream(callback as (((data: undefined)=> void) | undefined ));
-        } else {
-          throw new Error(`Unknown type: ${type}`);
-        }
-    }""")
-
     OnAudioInterrupt(callback: (data: @sts_type("audio.InterruptEvent") Opaque)=> void): void;
     OffAudioInterrupt(callback: Optional<(data: @sts_type("audio.InterruptEvent") Opaque)=> void>): void;
 
