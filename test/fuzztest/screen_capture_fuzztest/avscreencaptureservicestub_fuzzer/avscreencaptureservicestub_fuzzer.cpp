@@ -112,7 +112,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzExcludeContent(
     msg.WriteBuffer(data, size);
     msg.RewindRead(0);
     MessageParcel reply;
-    MessageParcel option;
+    MessageOption option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::EXCLUDE_CONTENT,
         msg, reply, option);
     return true;
@@ -126,7 +126,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzSetMicrophoneEnabled(
     msg.WriteBuffer(data, size);
     msg.RewindRead(0);
     MessageParcel reply;
-    MessageParcel option;
+    MessageOption option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::SET_MIC_ENABLE,
         msg, reply, option);
     screen_capture_Stub->SetMicrophoneEnabled(true);
@@ -141,7 +141,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzSetCanvasRotation(
     msg.WriteBuffer(data, size);
     msg.RewindRead(0);
     MessageParcel reply;
-    MessageParcel option;
+    MessageOption option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::SET_SCREEN_ROTATION,
         msg, reply, option);
     screen_capture_Stub->SetCanvasRotation(true);
@@ -156,7 +156,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzShowCursor(
     msg.WriteBuffer(data, size);
     msg.RewindRead(0);
     MessageParcel reply;
-    MessageParcel option;
+    MessageOption option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::SHOW_CURSOR,
         msg, reply, option);
     screen_capture_Stub->ShowCursor(true);
@@ -171,7 +171,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzResizeCanvas(
     msg.WriteBuffer(data, size);
     msg.RewindRead(0);
     MessageParcel reply;
-    MessageParcel option;
+    MessageOption option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::RESIZE_CANVAS,
         msg, reply, option);
     return true;
@@ -185,7 +185,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzSkipPrivacyMode(
     msg.WriteBuffer(data, size);
     msg.RewindRead(0);
     MessageParcel reply;
-    MessageParcel option;
+    MessageOption option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::SKIP_PRIVACY,
         msg, reply, option);
     return true;
@@ -199,7 +199,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzSetMaxVideoFrameRate(
     msg.WriteBuffer(data, size);
     msg.RewindRead(0);
     MessageParcel reply;
-    MessageParcel option;
+    MessageOption option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::SET_MAX_FRAME_RATE,
         msg, reply, option);
     int32_t frameRate = GetData<int32_t>();
@@ -215,7 +215,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzSetCaptureMode(
     msg.WriteBuffer(data, size);
     msg.RewindRead(0);
     MessageParcel reply;
-    MessageParcel option;
+    MessageOption option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::SET_CAPTURE_MODE,
         msg, reply, option);
     CaptureMode captureMode = CaptureMode::CAPTURE_HOME_SCREEN;
@@ -231,7 +231,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzSetDataType(
     msg.WriteBuffer(data, size);
     msg.RewindRead(0);
     MessageParcel reply;
-    MessageParcel option;
+    MessageOption option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::SET_DATA_TYPE,
         msg, reply, option);
     DataType dataType = DataType::ORIGINAL_STREAM;
@@ -247,7 +247,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzSetRecorderInfo(
     msg.WriteBuffer(data, size);
     msg.RewindRead(0);
     MessageParcel reply;
-    MessageParcel option;
+    MessageOption option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::SET_RECORDER_INFO,
         msg, reply, option);
     RecorderInfo recorderInfo;
@@ -265,7 +265,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzSetOutputFile(
     msg.WriteBuffer(data, size);
     msg.RewindRead(0);
     MessageParcel reply;
-    MessageParcel option;
+    MessageOption option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::SET_OUTPUT_FILE,
         msg, reply, option);
     int32_t fd = GetData<int32_t>();
@@ -281,7 +281,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzSetAndCheckLimit(
     msg.WriteBuffer(data, size);
     msg.RewindRead(0);
     MessageParcel reply;
-    MessageParcel option;
+    MessageOption option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::SET_CHECK_LIMIT,
         msg, reply, option);
     screen_capture_Stub->SetAndCheckLimit();
@@ -296,7 +296,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzSetAndCheckSaLimit(
     msg.WriteBuffer(data, size);
     msg.RewindRead(0);
     MessageParcel reply;
-    MessageParcel option;
+    MessageOption option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::SET_CHECK_SA_LIMIT,
         msg, reply, option);
     OHOS::AudioStandard::AppInfo appInfo;
@@ -316,7 +316,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzInitAudioEncInfo(
     msg.WriteBuffer(data, size);
     msg.RewindRead(0);
     MessageParcel reply;
-    MessageParcel option;
+    MessageOption option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::INIT_AUDIO_ENC_INFO,
         msg, reply, option);
     AudioEncInfo audioEncInfo;
@@ -332,7 +332,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzInitAudioCap(
     msg.WriteBuffer(data, size);
     msg.RewindRead(0);
     MessageParcel reply;
-    MessageParcel option;
+    MessageOption option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::INIT_AUDIO_CAP,
         msg, reply, option);
     return true;
@@ -346,7 +346,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzInitVideoEncInfo(
     msg.WriteBuffer(data, size);
     msg.RewindRead(0);
     MessageParcel reply;
-    MessageParcel option;
+    MessageOption option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::INIT_VIDEO_ENC_INFO,
         msg, reply, option);
     return true;
@@ -360,7 +360,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzInitVideoCap(
     msg.WriteBuffer(data, size);
     msg.RewindRead(0);
     MessageParcel reply;
-    MessageParcel option;
+    MessageOption option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::INIT_VIDEO_CAP,
         msg, reply, option);
     return true;
@@ -374,7 +374,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzStartScreenCapture(
     msg.WriteBuffer(data, size);
     msg.RewindRead(0);
     MessageParcel reply;
-    MessageParcel option;
+    MessageOption option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::START_SCREEN_CAPTURE,
         msg, reply, option);
     return true;
@@ -388,7 +388,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzStartScreenCaptureWithSurface(
     msg.WriteBuffer(data, size);
     msg.RewindRead(0);
     MessageParcel reply;
-    MessageParcel option;
+    MessageOption option;
     screen_capture_Stub->OnRemoteRequest(
         IStandardScreenCaptureService::ScreenCaptureServiceMsg::START_SCREEN_CAPTURE_WITH_SURFACE, msg, reply, option);
     return true;
@@ -402,7 +402,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzUpdateSurface(
     msg.WriteBuffer(data, size);
     msg.RewindRead(0);
     MessageParcel reply;
-    MessageParcel option;
+    MessageOption option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::UPDATE_SURFACE,
         msg, reply, option);
     return true;
@@ -416,7 +416,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzStopScreenCapture(
     msg.WriteBuffer(data, size);
     msg.RewindRead(0);
     MessageParcel reply;
-    MessageParcel option;
+    MessageOption option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::STOP_SCREEN_CAPTURE,
         msg, reply, option);
     return true;
@@ -430,7 +430,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzAcquireAudioBuffer(
     msg.WriteBuffer(data, size);
     msg.RewindRead(0);
     MessageParcel reply;
-    MessageParcel option;
+    MessageOption option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::ACQUIRE_AUDIO_BUF,
         msg, reply, option);
     return true;
@@ -444,7 +444,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzAcquireVideoBuffer(
     msg.WriteBuffer(data, size);
     msg.RewindRead(0);
     MessageParcel reply;
-    MessageParcel option;
+    MessageOption option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::ACQUIRE_VIDEO_BUF,
         msg, reply, option);
     return true;
@@ -458,7 +458,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzReleaseAudioBuffer(
     msg.WriteBuffer(data, size);
     msg.RewindRead(0);
     MessageParcel reply;
-    MessageParcel option;
+    MessageOption option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::RELEASE_AUDIO_BUF,
         msg, reply, option);
     AudioCaptureSourceType audioCaptureSourceType = AudioCaptureSourceType::MIC;
@@ -474,7 +474,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzReleaseVideoBuffer(
     msg.WriteBuffer(data, size);
     msg.RewindRead(0);
     MessageParcel reply;
-    MessageParcel option;
+    MessageOption option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::RELEASE_VIDEO_BUF,
         msg, reply, option);
     screen_capture_Stub->ReleaseVideoBuffer();
@@ -489,7 +489,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzSetScreenCaptureStrategy(
     msg.WriteBuffer(data, size);
     msg.RewindRead(0);
     MessageParcel reply;
-    MessageParcel option;
+    MessageOption option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::SET_STRATEGY,
         msg, reply, option);
     return true;
@@ -503,7 +503,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzSetCaptureArea(
     msg.WriteBuffer(data, size);
     msg.RewindRead(0);
     MessageParcel reply;
-    MessageParcel option;
+    MessageOption option;
     screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::SET_CAPTURE_AREA,
         msg, reply, option);
     return true;
