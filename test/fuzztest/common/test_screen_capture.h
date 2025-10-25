@@ -59,6 +59,10 @@ public:
     int32_t ReleaseAudioBuffer(AudioCaptureSourceType type);
     int32_t ReleaseVideoBuffer();
     int32_t UpdateSurface(sptr<Surface> surface);
+    int32_t SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config);
+    int32_t PresentPicker();
+    int32_t SetPickerMode(PickerMode pickerMode);
+    int32_t ExcludePickerWindows(std::vector<int32_t> &windowIDsVec);
 };
 
 class TestScreenCaptureCallbackTest : public ScreenCaptureCallBack, public NoCopyable {

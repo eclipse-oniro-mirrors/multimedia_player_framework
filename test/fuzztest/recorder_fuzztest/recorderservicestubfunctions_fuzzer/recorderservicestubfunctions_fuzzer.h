@@ -34,6 +34,8 @@ public:
     sptr<IRemoteStub<IStandardRecorderService>> GetRecorderStub();
     void SetRecorderConfig(const sptr<IRemoteStub<IStandardRecorderService>> recorderStub);
     void GetRecorderConfig(const sptr<IRemoteStub<IStandardRecorderService>> recorderStub);
+    void RecorderOnRemoteRequest(const sptr<IRemoteStub<IStandardRecorderService>> recorderStub,
+        uint8_t *data, size_t size);
 };
 }
 bool FuzzTestRecorderServiceStubFunctions(uint8_t *data, size_t size);
