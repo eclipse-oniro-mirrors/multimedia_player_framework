@@ -86,6 +86,12 @@ public:
     bool FuzzSetCaptureArea(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
                             uint8_t *data, size_t size);
     sptr<IRemoteStub<IStandardScreenCaptureService>> GetScreenCaptureStub();
+    void FuzzSetCaptureAreaHighlightStub(sptr<IRemoteStub<IStandardScreenCaptureService>> screencaptureStub);
+    void FuzzSetCapturePresentPickerStub(sptr<IRemoteStub<IStandardScreenCaptureService>> screencaptureStub);
+    void FuzzSetCapturePickerModeStub(sptr<IRemoteStub<IStandardScreenCaptureService>> screencaptureStub);
+    void FuzzExcludePickerWindowsStub(sptr<IRemoteStub<IStandardScreenCaptureService>> screencaptureStub);
+    void PrepareFuzzData(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
+                            uint8_t *data, size_t size);
 };
 } // namespace Media
 bool FuzzTestAvScreenCaptureServiceStub(uint8_t *data, size_t size);
