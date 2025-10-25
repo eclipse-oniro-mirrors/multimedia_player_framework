@@ -29,6 +29,7 @@ namespace SoundPoolEvent {
     const std::string EVENT_PLAY_FINISHED = "playFinished";
     const std::string EVENT_PLAY_FINISHED_WITH_STREAM_ID = "playFinishedWithStreamId";
     const std::string EVENT_ERROR = "error";
+    const std::string EVENT_ERROR_OCCURRED = "errorOccurred";
 }
 
 class SoundPoolCallBackTaihe : public OHOS::Media::ISoundPoolCallback {
@@ -37,21 +38,26 @@ public:
     void CancelCallbackReference(const std::string &name);
     void ClearCallbackReference();
     void SendErrorCallback(int32_t errCode, const std::string &msg);
+    void SendErrorOccurredCallback(const Format &errorInfo);
     void SendLoadCompletedCallback(int32_t soundId);
     void SendPlayCompletedCallback(int32_t streamID);
     ani_object ToBusinessError(ani_env *env, int32_t code, const std::string &message) const;
+    ani_object ToErrorInfo(ani_env *env, int32_t code, const std::string &message,
+        int32_t playFinishedStreamID, int32_t loadSoundId, ERROR_TYPE errorType) const;
     uintptr_t GetUndefined(ani_env* env) const;
     std::shared_ptr<OHOS::AppExecFwk::EventHandler> mainHandler_ = nullptr;
 protected:
     void OnLoadCompleted(int32_t soundId) override;
     void OnPlayFinished(int32_t streamID) override;
     void OnError(int32_t errorCode) override;
+    void OnErrorOccurred(Format &errorInfo) override;
 
 private:
     struct SoundPoolTaiheCallBack {
         void RunJsErrorCallBackTask(SoundPoolTaiheCallBack *event);
         void RunJsloadCompletedCallBackTask(SoundPoolTaiheCallBack *event);
         void RunJsplayCompletedCallBackTask(SoundPoolTaiheCallBack *event);
+        void RunJsErrorOccurredCallBackTask(SoundPoolTaiheCallBack *event);
         
         std::weak_ptr<AutoRef> autoRef;
         std::string callbackName = "unknown";
@@ -60,8 +66,10 @@ private:
         int32_t reason = 1;
         int32_t loadSoundId = 0;
         int32_t playFinishedStreamID = 0;
+        ERROR_TYPE errorType = ERROR_TYPE::LOAD_ERROR;
     };
     void OnTaiheErrorCallBack(SoundPoolTaiheCallBack *jsCb) const;
+    void OnTaiheErrorOccurredCallBack(SoundPoolTaiheCallBack *jsCb) const;
     void OnTaiheloadCompletedCallBack(SoundPoolTaiheCallBack *jsCb) const;
     void OnTaiheplayCompletedCallBack(SoundPoolTaiheCallBack *jsCb) const;
     std::mutex mutex_;

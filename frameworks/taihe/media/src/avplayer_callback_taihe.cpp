@@ -500,8 +500,6 @@ AVPlayerCallback::AVPlayerCallback(AVPlayerNotify *listener)
             [this](const int32_t extra, const Format &infoBody) { OnStateChangeCb(extra, infoBody); } },
         { INFO_TYPE_VOLUME_CHANGE,
             [this](const int32_t extra, const Format &infoBody) { OnVolumeChangeCb(extra, infoBody); } },
-        { INFO_TYPE_SEEKDONE,
-            [this](const int32_t extra, const Format &infoBody) { OnSeekDoneCb(extra, infoBody); } },
         { INFO_TYPE_SPEEDDONE,
             [this](const int32_t extra, const Format &infoBody) { OnSpeedDoneCb(extra, infoBody); } },
         { INFO_TYPE_BITRATEDONE,
@@ -517,16 +515,16 @@ AVPlayerCallback::AVPlayerCallback(AVPlayerNotify *listener)
         { INFO_TYPE_RESOLUTION_CHANGE,
             [this](const int32_t extra, const Format &infoBody) { OnVideoSizeChangedCb(extra, infoBody); } },
         { INFO_TYPE_BITRATE_COLLECT,
-             [this](const int32_t extra, const Format &infoBody) { OnBitRateCollectedCb(extra, infoBody); } },
-        { INFO_TYPE_EOS,
-            [this](const int32_t extra, const Format &infoBody) { OnEosCb(extra, infoBody); } },
+            [this](const int32_t extra, const Format &infoBody) { OnBitRateCollectedCb(extra, infoBody); } },
+        { INFO_TYPE_RATEDONE,
+            [this](const int32_t extra, const Format &infoBody) {OnPlaybackRateDoneCb(extra, infoBody); } },
         { INFO_TYPE_IS_LIVE_STREAM,
             [this](const int32_t extra, const Format &infoBody) {NotifyIsLiveStream(extra, infoBody); } },
         { INFO_TYPE_TRACKCHANGE,
              [this](const int32_t extra, const Format &infoBody) { OnTrackChangedCb(extra, infoBody); } },
         { INFO_TYPE_TRACK_INFO_UPDATE,
             [this](const int32_t extra, const Format &infoBody) { OnTrackInfoUpdate(extra, infoBody); } },
-         { INFO_TYPE_SET_DECRYPT_CONFIG_DONE,
+        { INFO_TYPE_SET_DECRYPT_CONFIG_DONE,
             [this](const int32_t extra, const Format &infoBody) { OnSetDecryptConfigDoneCb(extra, infoBody); } },
         { INFO_TYPE_MAX_AMPLITUDE_COLLECT,
              [this](const int32_t extra, const Format &infoBody) { OnMaxAmplitudeCollectedCb(extra, infoBody); } },
@@ -542,6 +540,8 @@ AVPlayerCallback::AVPlayerCallback(AVPlayerNotify *listener)
             [this](const int32_t extra, const Format &infoBody) { OnAudioInterruptCb(extra, infoBody); } },
         { INFO_TYPE_AUDIO_DEVICE_CHANGE,
             [this](const int32_t extra, const Format &infoBody) { OnAudioDeviceChangeCb(extra, infoBody); } },
+        { INFO_TYPE_EOS, [this](const int32_t extra, const Format &infoBody) { OnEosCb(extra, infoBody); } },
+        { INFO_TYPE_SEEKDONE, [this](const int32_t extra, const Format &infoBody) { OnSeekDoneCb(extra, infoBody); } },
     };
 }
 
@@ -644,6 +644,27 @@ void AVPlayerCallback::OnBitRateDoneCb(const int32_t extra, const Format &infoBo
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_BITRATE_DONE);
     cb->callbackName = AVPlayerEvent::EVENT_BITRATE_DONE;
     cb->value = bitRate;
+    AniCallback::CompleteCallback(cb, mainHandler_);
+}
+
+void AVPlayerCallback::OnPlaybackRateDoneCb(const int32_t extra, const Format &infoBody)
+{
+    (void)infoBody;
+    CHECK_AND_RETURN_LOG(isLoaded_.load(), "current source is unready");
+    float speedRate = 0.0f;
+    (void)infoBody.GetFloatValue(PlayerKeys::PLAYER_PLAYBACK_RATE, speedRate);
+    MEDIA_LOGI("OnPlaybackRateDoneCb is called, speedRate: %{public}f", speedRate);
+    if (refMap_.find(AVPlayerEvent::EVENT_RATE_DONE) == refMap_.end()) {
+        MEDIA_LOGW(" can not find ratedone callback!");
+        return;
+    }
+
+    AniCallback::Double *cb = new(std::nothrow) AniCallback::Double();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new float");
+
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_RATE_DONE);
+    cb->callbackName = AVPlayerEvent::EVENT_RATE_DONE;
+    cb->value = static_cast<double>(speedRate);
     AniCallback::CompleteCallback(cb, mainHandler_);
 }
 

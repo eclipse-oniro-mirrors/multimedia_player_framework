@@ -56,6 +56,8 @@ group("fuzztest") {
     "recorder_fuzztest/recordersetvideoframerate_fuzzer:RecorderSetVideoFrameRateFuzzTest",
     "recorder_fuzztest/recordersetvideosize_fuzzer:RecorderSetVideoSizeFuzzTest",
     "recorder_fuzztest/recordersetvideosource_fuzzer:RecorderSetVideoSourceFuzzTest",
+    "recorder_fuzztest/recorderservicestubfunctions_fuzzer:RecorderServiceStubFunctionsFuzzTest",
+    "recorder_fuzztest/recordersetcaptureratefounction_fuzzer:RecorderSetCaptureRateFouncTionFuzzTest",
     "transcoder_fuzztest/transcoderservicestub_fuzzer:TranscoderServiceStubFuzzTest",
     "transcoder_fuzztest/transcoderstub_fuzzer:TranscoderStubFuzzTest",
   ]
@@ -72,6 +74,7 @@ group("fuzztest") {
       "screen_capture_fuzztest/screencapturecontrollerservicestub_fuzzer:ScreenCaptureControllerServiceStubFuzzTest",
       "screen_capture_fuzztest/screencapturedatatype_fuzzer:ScreenCaptureDataTypeFuzzTest",
       "screen_capture_fuzztest/screencapturefileformatfile_fuzzer:ScreenCaptureFileFormatFileFuzzTest",
+      "screen_capture_fuzztest/screencapturemonitorservice_fuzzer:ScreenCaptureMonitorServiceFuzzTest",
       "screen_capture_fuzztest/screencapturemonitorservicestub_fuzzer:ScreenCaptureMonitorServiceStubFuzzTest",
       "screen_capture_fuzztest/screencapturendkacquireaudiobuffer_fuzzer:ScreenCaptureNdkAcquireAudioBufferFuzzTest",
       "screen_capture_fuzztest/screencapturendkacquirevideobuffer_fuzzer:ScreenCaptureNdkAcquireVideoBufferFuzzTest",
@@ -113,6 +116,8 @@ group("fuzztest") {
       "screen_capture_fuzztest/screencapturevideoframeratefile_fuzzer:ScreenCaptureVideoFrameRateFileFuzzTest",
       "screen_capture_fuzztest/screencapturevideoframewidth_fuzzer:ScreenCaptureVideoFrameWidthFuzzTest",
       "screen_capture_fuzztest/screencapturevideosourcetype_fuzzer:ScreenCaptureVideoSourceTypeFuzzTest",
+      "screen_capture_fuzztest/avscreencaptureservicestub_fuzzer:AvScreenCaptureServiceStubFuzzTest",
+      "screen_capture_fuzztest/screencaptureaudiocapturerwrapper_fuzzer:ScreenCaptureAudioCapturerWrapperFuzzTest",
     ]
   }
 }

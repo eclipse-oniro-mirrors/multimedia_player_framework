@@ -44,6 +44,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTUR
 typedef struct NativeWindow OHNativeWindow;
 
 using namespace OHOS::Media;
+std::mutex g_bufferMutex;
 static std::queue<OH_NativeBuffer*> referencedBuffer_;
 class NativeScreenCaptureCallback;
 struct ScreenCaptureUserSelectionObject;
@@ -684,6 +685,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetPickerMode(
         AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture is null");
 
     PickerMode mode = static_cast<PickerMode>(pickerMode);
+    CHECK_AND_RETURN_RET_LOG(mode >= PickerMode::MIN_VAL && mode <= PickerMode::MAX_VAL,
+        AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "pickerMode is invalid!");
+
     int32_t ret = screenCaptureObj->screenCapture_->SetPickerMode(mode);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT, "SetPickerMode failed!");
     return AV_SCREEN_CAPTURE_ERR_OK;
@@ -892,6 +896,7 @@ OH_NativeBuffer* OH_AVScreenCapture_AcquireVideoBuffer(struct OH_AVScreenCapture
 
     OH_NativeBuffer* nativebuffer = sufacebuffer->SurfaceBufferToNativeBuffer();
     OH_NativeBuffer_Reference(nativebuffer);
+    std::unique_lock<std::mutex> lock(g_bufferMutex);
     referencedBuffer_.push(nativebuffer);
     MEDIA_LOGD("return and reference the nativebuffer");
 
@@ -912,6 +917,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ReleaseVideoBuffer(struct OH_AVSc
     }
 
     if (!referencedBuffer_.empty()) {
+        std::unique_lock<std::mutex> lock(g_bufferMutex);
         OH_NativeBuffer* nativebuffer = referencedBuffer_.front();
         OH_NativeBuffer_Unreference(nativebuffer);
         referencedBuffer_.pop();

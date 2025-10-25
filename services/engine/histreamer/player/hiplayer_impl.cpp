@@ -633,13 +633,17 @@ int32_t HiPlayerImpl::PrepareAsync()
 {
     MediaTrace trace("HiPlayerImpl::PrepareAsync");
     MEDIA_LOG_D("HiPlayerImpl PrepareAsync");
-    if (!(pipelineStates_ == PlayerStates::PLAYER_INITIALIZED || pipelineStates_ == PlayerStates::PLAYER_STOPPED)) {
+    if (!(pipelineStates_ == PlayerStates::PLAYER_INITIALIZED || pipelineStates_ == PlayerStates::PLAYER_STOPPED) &&
+        !isNeedSwDecoder_) {
         CollectionErrorInfo(MSERR_INVALID_OPERATION, "PrepareAsync pipelineStates not initialized or stopped");
         return MSERR_INVALID_OPERATION;
     }
-    auto ret = Init();
-    if (ret != Status::OK || isInterruptNeeded_.load()) {
-        return HandleErrorRet(Status::ERROR_UNSUPPORTED_FORMAT, "PrepareAsync error: init error");
+    auto ret = Status::OK;
+    if (!isNeedSwDecoder_) {
+        ret = Init();
+        if (ret != Status::OK || isInterruptNeeded_.load()) {
+            return HandleErrorRet(Status::ERROR_UNSUPPORTED_FORMAT, "PrepareAsync error: init error");
+        }
     }
     isBufferingEnd_ = false;
     DoSetMediaSource(ret);
@@ -756,6 +760,11 @@ void HiPlayerImpl::UpdatePlayerStateAndNotify()
     NotifyResolutionChange();
     NotifyPositionUpdate();
     DoInitializeForHttp();
+    if (notNotifyForSw_) {
+        MEDIA_LOG_I("need to Swdecoder");
+        notNotifyForSw_ = false;
+        return;
+    }
     OnStateChanged(PlayerStateId::READY);
 }
 
@@ -1058,12 +1067,12 @@ int32_t HiPlayerImpl::PauseDemuxer()
 {
     MediaTrace trace("HiPlayerImpl::PauseDemuxer");
     MEDIA_LOG_I("PauseDemuxer in");
-    SetBuffering(true);
     callbackLooper_.StopReportMediaProgress();
     callbackLooper_.StopCollectMaxAmplitude();
     StopFlvCheckLiveDelayTime();
     syncManager_->Pause();
     Status ret = demuxer_->PauseDemuxerReadLoop();
+    SetBuffering(true);
     return TransStatus(ret);
 }
 
@@ -1073,12 +1082,12 @@ int32_t HiPlayerImpl::ResumeDemuxer()
     MEDIA_LOG_I("ResumeDemuxer in");
     FALSE_RETURN_V_MSG_E(pipelineStates_ != PlayerStates::PLAYER_STATE_ERROR,
         TransStatus(Status::OK), "PLAYER_STATE_ERROR not allow ResumeDemuxer");
-    SetBuffering(false);
     callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
     StartFlvCheckLiveDelayTime();
     callbackLooper_.StartCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
     syncManager_->Resume();
     Status ret = demuxer_->ResumeDemuxerReadLoop();
+    SetBuffering(false);
     return TransStatus(ret);
 }
 
@@ -1668,6 +1677,10 @@ int32_t HiPlayerImpl::SetParameter(const Format& params)
         int32_t syncId = DEFAULT_SYNC_ID;
         params.GetIntValue(PlayerKeys::PLAYER_AUDIO_HAPTICS_SYNC_ID, syncId);
         (void)SetAudioHapticsSyncId(syncId);
+    }
+
+    if (params.ContainKey(PlayerKeys::PRIVACY_TYPE)) {
+        params.GetIntValue(PlayerKeys::PRIVACY_TYPE, audioPrivacyType_);
     }
 #ifdef SUPPORT_VIDEO
     if (params.ContainKey(PlayerKeys::VIDEO_SCALE_TYPE)) {
@@ -2384,6 +2397,18 @@ int32_t HiPlayerImpl::SetAudioRendererInfo(const int32_t contentType, const int3
     return TransStatus(Status::OK);
 }
 
+int32_t HiPlayerImpl::SetPrivacyType(const int32_t privacyType)
+{
+    MEDIA_LOG_D("SetPrivacyType, privacyType is: %{public}d", privacyType);
+    privacyType_ = std::make_shared<Meta>();
+
+    privacyType_->SetData("PRIVACY_TYPE", privacyType);
+    if (audioSink_ != nullptr) {
+        audioSink_->SetParameter(privacyType_);
+    }
+    return TransStatus(Status::OK);
+}
+
 int32_t HiPlayerImpl::SetAudioInterruptMode(const int32_t interruptMode)
 {
     MEDIA_LOG_I("SetAudioInterruptMode in");
@@ -2473,9 +2498,20 @@ void HiPlayerImpl::OnEventContinue(const Event &event)
             }
             break;
         }
+        case EventType::EVENT_HW_DECODER_UNSUPPORT_CAP: {
+            OnHwDecoderSwitch();
+            break;
+        }
         default:
             break;
     }
+}
+
+void HiPlayerImpl::OnHwDecoderSwitch()
+{
+    isNeedSwDecoder_ = true;
+    notNotifyForSw_ = true;
+    PrepareAsync();
 }
 
 void HiPlayerImpl::HandleSeiInfoEvent(const Event &event)
@@ -3379,6 +3415,7 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
         SetDefaultAudioRenderInfo(trackInfos);
     }
     SetAudioRendererParameter();
+    SetPrivacyType(audioPrivacyType_);
     audioSink_->SetSyncCenter(syncManager_);
 
     completeState_.emplace_back(std::make_pair("AudioSink", false));
@@ -4005,6 +4042,7 @@ Status HiPlayerImpl::InitVideoDecoder()
         FilterType::FILTERTYPE_VDEC);
     FALSE_RETURN_V(videoDecoder_ != nullptr, Status::ERROR_NULL_POINTER);
     videoDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
+    videoDecoder_->SetIsSwDecoder(isNeedSwDecoder_);
     SetPostProcessor();
     interruptMonitor_->RegisterListener(videoDecoder_);
     videoDecoder_->SetSyncCenter(syncManager_);

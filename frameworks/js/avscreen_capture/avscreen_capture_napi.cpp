@@ -788,6 +788,8 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureNapi::GetSetPickerModeTask(
     return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, pickerMode]() {
         const std::string &option = AVScreenCapturegOpt::SET_PICKER_MODE;
         MEDIA_LOGI("%{public}s Start", option.c_str());
+        CHECK_AND_RETURN_RET(pickerMode >= PickerMode::MIN_VAL && pickerMode <= PickerMode::MAX_VAL,
+            GetReturnInfo(MSERR_INVALID_VAL, option, "pickerMode"));
         CHECK_AND_RETURN_RET(napi != nullptr && napi->screenCapture_ != nullptr,
             GetReturnInfo(MSERR_INVALID_OPERATION, option, ""));
         int32_t ret = napi->screenCapture_->SetPickerMode(pickerMode);

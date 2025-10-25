@@ -100,7 +100,7 @@ int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
 int32_t AudioCapturerWrapper::Stop()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (IsStop()) {
+    if (IsStop() || captureState_.load() == AudioCapturerWrapperState::CAPTURER_UNKNOWN) {
         return MSERR_OK;
     }
     captureState_.store(AudioCapturerWrapperState::CAPTURER_STOPPING);
@@ -519,8 +519,9 @@ bool AudioCapturerWrapper::IsRecording()
 
 bool AudioCapturerWrapper::IsStop()
 {
-    return captureState_.load() == AudioCapturerWrapperState::CAPTURER_STOPPING ||
-           captureState_.load() == AudioCapturerWrapperState::CAPTURER_STOPED;
+    auto state = captureState_.load();
+    return state == AudioCapturerWrapperState::CAPTURER_STOPPING ||
+        state == AudioCapturerWrapperState::CAPTURER_STOPED;
 }
 } // namespace Media
 } // namespace OHOS

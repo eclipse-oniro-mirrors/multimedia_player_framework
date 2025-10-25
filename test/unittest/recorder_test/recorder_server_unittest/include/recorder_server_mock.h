@@ -101,6 +101,7 @@ namespace RecorderTestParam {
         VideoSourceType vSource = VIDEO_SOURCE_SURFACE_ES;
         VideoCodecFormat videoFormat = H264;
         MetaSourceType metaSourceType = MetaSourceType::VIDEO_META_SOURCE_INVALID;
+        AacProfile aacProfile = AacProfile::AAC_LC;
         bool enableTemporalScale = false;
         bool enableStableQualityMode = false;
         bool enableBFrame = false;
@@ -126,6 +127,7 @@ public:
     OHOS::sptr<OHOS::Surface> GetSurface(int32_t sourceId);
     OHOS::sptr<OHOS::Surface> GetMetaSurface(int32_t sourceId);
     int32_t SetAudioEncoder(int32_t sourceId, AudioCodecFormat encoder);
+    int32_t SetAudioAacProfile(int32_t sourceId, AacProfile aacProfile);
     int32_t SetAudioSampleRate(int32_t sourceId, int32_t rate);
     int32_t SetAudioChannels(int32_t sourceId, int32_t num);
     int32_t SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRate);

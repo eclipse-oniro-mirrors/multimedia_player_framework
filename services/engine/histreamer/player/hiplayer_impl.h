@@ -255,6 +255,7 @@ private:
     bool IsValidPlayRange(int64_t start, int64_t end) const;
     int32_t GetRealPath(const std::string &url, std::string &realUrlPath) const;
     int32_t HandleErrorRet(Status ret, const std::string& errMsg);
+    int32_t SetPrivacyType(const int32_t privacyType);
     void SetDefaultAudioRenderInfo(const std::vector<std::shared_ptr<Meta>> &trackInfos);
     void AppendPlayerMediaInfo();
     int64_t GetCurrentMillisecond();
@@ -329,6 +330,7 @@ private:
     void ReleaseVideoDecoderOnMuted();
     void CacheBuffer();
     void NotifyBufferEnd();
+    void OnHwDecoderSwitch();
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
@@ -383,6 +385,8 @@ private:
 
     std::shared_ptr<Meta> audioRenderInfo_{nullptr};
     std::shared_ptr<Meta> audioInterruptMode_{nullptr};
+    std::shared_ptr<Meta> privacyType_{nullptr};
+    int32_t audioPrivacyType_ = 0;
     int32_t volumeMode_ = 0;
     bool isStreaming_{false};
 
@@ -502,6 +506,8 @@ private:
     bool isForceLoadVideo_ {false};
     bool keepDecodingOnMute_ = false;
     bool isVideoMuted_ = false;
+    bool isNeedSwDecoder_ = false;
+    bool notNotifyForSw_ = false;
     bool isVideoDecoderInited_ = false;
 };
 } // namespace Media

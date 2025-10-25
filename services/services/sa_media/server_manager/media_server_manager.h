@@ -111,6 +111,7 @@ private:
     sptr<IRemoteObject> CreateLppVideoPlayerStubObject();
 #endif
     sptr<IRemoteObject> GetMonitorStubObject();
+    sptr<IRemoteObject> CreateStubObjectByType(StubType type);
 
     void DestroyAVCodecStub(StubType type, sptr<IRemoteObject> object, pid_t pid);
     void DestroyAVPlayerStub(StubType type, sptr<IRemoteObject> object, pid_t pid);
@@ -131,7 +132,8 @@ private:
     void ReleaseMemoryReportTask();
     bool GetMemUsageForPlayer();
     void ReportAppMemoryUsage();
-
+    void SetCritical(bool critical);
+    bool GetStubMapCountIsEmpty();
     std::atomic<bool> isMemMgrLoaded_ {false};
 
     class AsyncExecutor {

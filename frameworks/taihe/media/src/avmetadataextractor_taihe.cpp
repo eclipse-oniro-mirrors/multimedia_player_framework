@@ -100,6 +100,37 @@ optional<AVDataSrcDescriptor> AVMetadataExtractorImpl::GetDataSrc()
     return optional<AVDataSrcDescriptor>(std::in_place_t{}, fdSrc);
 }
 
+void AVMetadataExtractorImpl::SetUrlSourceSync(::taihe::string_view url, optional_view<map<string, string>> header)
+{
+    OHOS::Media::MediaTrace trace("AVMetadataExtractorTaihe::setUrlSource");
+    MEDIA_LOGI("TaiheSetUrlSource In");
+
+    if (state_ != OHOS::Media::HelperState::HELPER_STATE_IDLE) {
+        MEDIA_LOGE("Has set source once, unsupport set again");
+        return;
+    }
+    if (helper_ == nullptr) {
+        MEDIA_LOGE("Invalid AVMetadataExtractorTaihe.");
+        return;
+    }
+
+    std::string url_(url);
+    std::map<std::string, std::string> header_;
+    if (header.has_value()) {
+        for (const auto& pair : header.value()) {
+            header_[std::string(pair.first)] = std::string(pair.second);
+        }
+    }
+    auto res = helper_->SetUrlSource(url_, header_);
+    if (res == OHOS::Media::MSERR_OK) {
+        state_ = OHOS::Media::HelperState::HELPER_STATE_RUNNABLE;
+    } else {
+        state_ = OHOS::Media::HelperState::HELPER_ERROR;
+    }
+    helper_->SetAVMetadataCaller(OHOS::Media::AVMetadataCaller::AV_METADATA_EXTRACTOR);
+    MEDIA_LOGI("TaiheSetUrlSource Out");
+}
+
 void AVMetadataExtractorImpl::SetDataSrc(optional_view<AVDataSrcDescriptor> dataSrc)
 {
     OHOS::Media::MediaTrace trace("AVMetadataExtractorTaihe::set dataSrc");
@@ -380,6 +411,41 @@ int64_t AVMetadataExtractorImpl::GetTimeByFrameIndexSync(int32_t index)
         return -1;
     }
     return static_cast<int64_t>(timeStamp_);
+}
+
+optional<::ohos::multimedia::image::image::PixelMap> AVMetadataExtractorImpl::FetchFrameByTimeSync(int64_t timeUs,
+    AVImageQueryOptions options, PixelMapParams const& param)
+{
+    OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::TaiheFetchFrameAtTime");
+    MEDIA_LOGI("TaiheFetchFrameAtTime  in");
+    if (state_ != OHOS::Media::HelperState::HELPER_STATE_RUNNABLE) {
+        set_business_error(OHOS::Media::MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "Current state is not runnable, can't fetchFrame.");
+        return optional<::ohos::multimedia::image::image::PixelMap>(std::nullopt);
+    }
+    OHOS::Media::PixelMapParams pixelMapParams;
+    if (param.height.has_value()) {
+        pixelMapParams.dstHeight = param.height.value();
+    }
+    if (param.width.has_value()) {
+        pixelMapParams.dstWidth = param.width.value();
+    }
+    OHOS::Media::PixelFormat colorFormat = OHOS::Media::PixelFormat::RGBA_8888;
+    if (param.colorFormat.has_value()) {
+        int32_t formatVal = static_cast<int32_t>(param.colorFormat.value());
+        colorFormat = static_cast<OHOS::Media::PixelFormat>(formatVal);
+        if (colorFormat != OHOS::Media::PixelFormat::RGB_565 && colorFormat !=
+            OHOS::Media::PixelFormat::RGB_888 &&
+            colorFormat != OHOS::Media::PixelFormat::RGBA_8888) {
+            set_business_error(OHOS::Media::MSERR_INVALID_VAL, "formatVal is invalid");
+            return optional<::ohos::multimedia::image::image::PixelMap>(std::nullopt);
+        }
+    }
+    pixelMapParams.colorFormat = colorFormat;
+    auto pixelMap = helper_->FetchScaledFrameYuv(timeUs, options.get_value(), pixelMapParams);
+    MEDIA_LOGI("TaiheFetchFrameByTime Out");
+    return optional<::ohos::multimedia::image::image::PixelMap>(std::in_place_t{},
+        Image::PixelMapImpl::CreatePixelMap(pixelMap));
 }
 } // namespace ANI::Media
 

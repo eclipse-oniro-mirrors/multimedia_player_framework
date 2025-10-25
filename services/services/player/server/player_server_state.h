@@ -112,6 +112,7 @@ public:
     int32_t SeekContinous(int32_t mSeconds, int64_t batchNo) override;
     int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
     int32_t PauseDemuxer() override;
+    int32_t ResumeDemuxer() override;
 
 protected:
     void HandleStateChange(int32_t newState) override;
@@ -159,6 +160,8 @@ public:
     int32_t SetPlaybackRate(float rate) override;
     int32_t SeekContinous(int32_t mSeconds, int64_t batchNo) override;
     int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
+    int32_t PauseDemuxer() override;
+    int32_t ResumeDemuxer() override;
 
 protected:
     void HandleStateChange(int32_t newState) override;

@@ -349,6 +349,11 @@ int32_t PlayerServer::PreparedState::PauseDemuxer()
     return server_.HandlePauseDemuxer();
 }
 
+int32_t PlayerServer::PreparedState::ResumeDemuxer()
+{
+    return server_.HandleResumeDemuxer();
+}
+
 int32_t PlayerServer::PlayingState::Play()
 {
     (void)server_.taskMgr_.MarkTaskDone("double play");
@@ -532,6 +537,16 @@ void PlayerServer::PausedState::HandleStateChange(int32_t newState)
 void PlayerServer::PausedState::HandleEos()
 {
     server_.HandleEos();
+}
+
+int32_t PlayerServer::PausedState::PauseDemuxer()
+{
+    return server_.HandlePauseDemuxer();
+}
+
+int32_t PlayerServer::PausedState::ResumeDemuxer()
+{
+    return server_.HandleResumeDemuxer();
 }
 
 int32_t PlayerServer::StoppedState::Prepare()

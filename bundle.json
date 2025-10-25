@@ -126,11 +126,11 @@
           "image_effect",
           "jsoncpp",
           "memmgr",
-          "memmgr_override",
           "efficiency_manager",
           "hiappevent",
           "drivers_interface_lpplayer",
-          "runtime_core"
+          "runtime_core",
+          "json"
         ],
         "third_party": [
           "bounds_checking_function"

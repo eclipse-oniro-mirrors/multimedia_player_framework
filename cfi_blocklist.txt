@@ -1,2 +1,2 @@
 src:*frameworks/native/capi/*
-src:*test/unittest/*
+src:*third_party/googletest/*:*

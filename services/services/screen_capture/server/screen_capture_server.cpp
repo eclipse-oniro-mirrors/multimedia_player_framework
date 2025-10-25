@@ -220,7 +220,7 @@ bool ScreenCaptureServer::CheckScreenCaptureSessionIdLimit(int32_t curAppUid)
     int32_t countForUid = 0;
     MEDIA_LOGI("CheckScreenCaptureSessionIdLimit start. curAppUid: %{public}d.", curAppUid);
     {
-        std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
+        std::shared_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
         for (auto iter = ScreenCaptureServer::serverMap_.begin(); iter != ScreenCaptureServer::serverMap_.end();
             iter++) {
                 auto iterPtr = (iter->second).lock();
@@ -644,7 +644,7 @@ void SCWindowInfoChangedListener::OnWindowInfoChanged(
 
     MEDIA_LOGI("OnWindowInfoChanged: the displayId of interestWindowId changed!");
     auto iter = myWindowInfoList.front().find(WindowInfoKey::DISPLAY_ID);
-    if (iter != myWindowInfoList.front().end()) {
+    if (iter != myWindowInfoList.front().end() && std::holds_alternative<uint64_t>(iter->second)) {
         uint64_t displayId = std::get<uint64_t>(iter->second);
         MEDIA_LOGI("OnWindowInfoChanged: the curDisplayId: %{public}" PRIu64, displayId);
         SCServer->SetCurDisplayId(displayId);
@@ -1825,21 +1825,20 @@ int32_t ScreenCaptureServer::StartFileInnerAudioCapture()
         "innerCapInfo.state:%{public}d.",
         FAKE_POINTER(this), captureConfig_.dataType, captureConfig_.audioInfo.innerCapInfo.state);
     CHECK_AND_RETURN_RET(!IsInnerCaptureRunning(), MSERR_OK); // prevent repeat start
-    std::shared_ptr<AudioCapturerWrapper> innerCapture;
     if (captureConfig_.audioInfo.innerCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
         MediaTrace trace("ScreenCaptureServer::StartFileInnerAudioCaptureInner");
-        innerCapture = std::make_shared<AudioCapturerWrapper>(captureConfig_.audioInfo.innerCapInfo, screenCaptureCb_,
+        std::lock_guard<std::mutex> lock(innerAudioMutex_);
+        innerAudioCapture_ = std::make_shared<AudioCapturerWrapper>(
+            captureConfig_.audioInfo.innerCapInfo, screenCaptureCb_,
             std::string(GenerateThreadNameByPrefix("OS_FInnAd")), contentFilter_);
-        int32_t ret = innerCapture->Start(appInfo_);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartFileInnerAudioCapture failed");
-        if (audioSource_ && audioSource_->GetSpeakerAliveStatus() && !audioSource_->GetIsInVoIPCall() &&
-            IsMicrophoneCaptureRunning()) { // skip only when speaker on, voip off, mic on
-            ret = innerCapture->Stop(); // pause
-            MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " inner stop optimise.", FAKE_POINTER(this));
-            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartFileInnerAudioCapture pause failed");
+        int32_t ret = MSERR_UNKNOWN;
+        CHECK_AND_RETURN_RET_LOG(audioSource_ != nullptr, ret, "audioSource_ is nullptr");
+        if (!audioSource_->GetSpeakerAliveStatus() || audioSource_->GetIsInVoIPCall() ||
+            !IsMicrophoneCaptureRunning()) {
+            ret = innerAudioCapture_->Start(appInfo_);
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartFileInnerAudioCapture failed");
         }
     }
-    innerAudioCapture_ = innerCapture;
     if (showShareSystemAudioBox_ && !isInnerAudioBoxSelected_ && innerAudioCapture_) {
         MEDIA_LOGI("StartFileInnerAudioCapture set isMute");
         innerAudioCapture_->SetIsMute(true);
@@ -3717,6 +3716,7 @@ int32_t ScreenCaptureServer::SetMicrophoneOff()
 int32_t ScreenCaptureServer::OnSpeakerAliveStatusChanged(bool speakerAliveStatus)
 {
     int32_t ret = MSERR_UNKNOWN;
+    std::lock_guard<std::mutex> lock(innerAudioMutex_);
     CHECK_AND_RETURN_RET_LOG(innerAudioCapture_, MSERR_UNKNOWN, "innerAudioCapture_ is nullptr");
     if (!speakerAliveStatus && recorderFileAudioType_ == AVScreenCaptureMixMode::MIX_MODE &&
         innerAudioCapture_->IsStop()) { // back to headset

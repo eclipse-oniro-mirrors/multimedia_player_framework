@@ -176,6 +176,13 @@ interface AVMetadataExtractor {
 
     @gen_promise("getTimeByFrameIndex")
     GetTimeByFrameIndexSync(index: i32): i64;
+
+    @gen_promise("setUrlSource")
+    SetUrlSourceSync(url: String, header: Optional<@record Map<String, String>>): void;
+
+    @gen_async("fetchFrameByTime")
+    @gen_promise("fetchFrameByTime")
+    FetchFrameByTimeSync(timeUs: i64, options: AVImageQueryOptions, param: PixelMapParams): Optional<image.PixelMap>;
 }
 
 enum MediaDescriptionKey: String {
@@ -354,6 +361,8 @@ interface AVPlayer {
           this.onAudioInterrupt(callback as (interruptEvent: audio.InterruptEvent)=> void);
         } else if (type === "audioOutputDeviceChangeWithInfo"){
           this.onAudioOutputDeviceChangeWithInfo(callback as (audioStreamDeviceChangeInfo: audio.AudioStreamDeviceChangeInfo)=> void);
+        } else if (type === "playbackRateDone"){
+          this.onPlaybackRateDone(callback as (rate: double)=> void);
         } else {
             throw new Error(`Unknown type: ${type}`);
         }
@@ -379,6 +388,7 @@ interface AVPlayer {
     OnTrackInfoUpdate(callback: (data: Array<@record Map<String, MediaDescriptionValue>>) => void): void;
     OnAudioInterrupt(callback: (data: audio.InterruptEvent) => void): void;
     OnAudioOutputDeviceChangeWithInfo(callback: (data: audio.AudioStreamDeviceChangeInfo) => void): void;
+    OnPlaybackRateDone(callback: (rate: f64) => void): void;
 
     @!sts_inject_into_interface("on(type: string, payloadTypes: Array<int>, callback: (messages: Array<SeiMessage>, playbackPosition?: int)=> void): void;")
     @!sts_inject_into_class("""on(type: string, payloadTypes: Array<int>, callback: object): void {
@@ -434,6 +444,8 @@ interface AVPlayer {
           this.offAudioInterrupt(callback as (((interruptEvent: audio.InterruptEvent)=> void) | undefined));
         } else if (type === "audioOutputDeviceChangeWithInfo"){
           this.offAudioOutputDeviceChangeWithInfo(callback as (((audioStreamDeviceChangeInfo: audio.AudioStreamDeviceChangeInfo)=> void) | undefined));
+        } else if (type === "playbackRateDone"){
+          this.offPlaybackRateDone(callback as (((rate: double)=> void) | undefined));
         } else {
           throw new Error(`Unknown type: ${type}`);
         }
@@ -459,6 +471,7 @@ interface AVPlayer {
     OffTrackInfoUpdate(callback: Optional<(data: Array<@record Map<String, i32>>) => void>): void;
     OffAudioInterrupt(callback: Optional<(data: audio.InterruptEvent) => void>): void;
     OffAudioOutputDeviceChangeWithInfo(callback: Optional<(data: audio.AudioStreamDeviceChangeInfo) => void>): void;
+    OffPlaybackRateDone(callback: Optional<(rate: f64) => void>): void;
 
     @!sts_inject_into_interface("off(type: string, payloadTypes?: Array<int>, callback?: (messages: Array<SeiMessage>, playbackPosition?: int)=> void): void;")
     @!sts_inject_into_class("""off(type: string, payloadTypes?: Array<int>, callback?: object): void {
@@ -468,6 +481,7 @@ interface AVPlayer {
     }""")
     OffSeiMessageReceived(payloadTypes: Optional<Array<i32>>, callback: Optional<(messages: Array<SeiMessage>,
         playbackPosition: Optional<i32>) => void>): void;
+    SetPlaybackRate(rate: f64): void;
 }
 
 struct SeiMessage {

@@ -49,6 +49,8 @@
 #include "service_dump_manager.h"
 #include "player_xcollie.h"
 #include "client/memory_collector_client.h"
+#include "system_ability_definition.h"
+#include "mem_mgr_client.h"
 #include <set>
 #ifdef SUPPORT_LPP_VIDEO_STRAMER
 #include "v1_0/ilow_power_player_factory.h"
@@ -264,6 +266,17 @@ int32_t MediaServerManager::ResetAllProxy()
 sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    bool isEmpty = GetStubMapCountIsEmpty();
+
+    auto res = CreateStubObjectByType(type);
+
+    CHECK_AND_RETURN_RET_NOLOG((isEmpty && !GetStubMapCountIsEmpty()), res);
+    SetCritical(true);
+    return res;
+}
+
+sptr<IRemoteObject> MediaServerManager::CreateStubObjectByType(StubType type)
+{
     switch (type) {
 #ifdef SUPPORT_RECORDER
         case RECORDER:
@@ -859,6 +872,8 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
 #ifdef SUPPORT_START_STOP_ON_DEMAND
     UpdateAllInstancesReleasedTime();
 #endif
+    CHECK_AND_RETURN_NOLOG(GetStubMapCountIsEmpty());
+    SetCritical(false);
 }
 
 void MediaServerManager::DestroyAVScreenCaptureStubForPid(pid_t pid)
@@ -1036,6 +1051,9 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
 #ifdef SUPPORT_START_STOP_ON_DEMAND
     UpdateAllInstancesReleasedTime();
 #endif
+
+    CHECK_AND_RETURN_NOLOG(GetStubMapCountIsEmpty());
+    SetCritical(false);
 }
 
 std::vector<pid_t> MediaServerManager::GetPlayerPids()
@@ -1148,6 +1166,22 @@ void MediaServerManager::ReportAppMemoryUsage()
         memList.emplace_back(memoryCaller);
     }
     memoryCollector->SetSplitMemoryValue(memList);
+}
+
+void MediaServerManager::SetCritical(bool critical)
+{
+    auto ret = Memory::MemMgrClient::GetInstance().SetCritical(getpid(), critical, PLAYER_DISTRIBUTED_SERVICE_ID);
+    CHECK_AND_RETURN_LOG(ret == 0, "MediaServerManager::SetCritical set critical to %{public}d fail.", critical);
+    MEDIA_LOGI("MediaServerManager::SetCritical set critical to %{public}d success.", critical);
+}
+
+bool MediaServerManager::GetStubMapCountIsEmpty()
+{
+    return recorderStubMap_.empty() && transCoderStubMap_.empty() && playerStubMap_.empty() &&
+            pidToPlayerStubMap_.empty() && avMetadataHelperStubMap_.empty() && avCodecListStubMap_.empty() &&
+            avCodecStubMap_.empty() && recorderProfilesStubMap_.empty() &&
+            screenCaptureStubMap_.empty() && screenCaptureControllerStubMap_.empty() &&
+            lppAudioPlayerStubMap_.empty() && lppVideoPlayerStubMap_.empty();
 }
 
 void MediaServerManager::NotifyMemMgrLoaded()
