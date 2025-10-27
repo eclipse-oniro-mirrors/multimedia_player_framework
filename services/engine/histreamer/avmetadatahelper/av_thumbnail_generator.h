@@ -72,10 +72,13 @@ private:
     std::mutex mutex_;
     std::mutex queueMutex_;
     std::mutex dtsQueMutex_;
+    std::mutex onErrorMutex_;
+    std::mutex readTaskMutex_;
     FileType fileType_ = FileType::UNKNOW;
     std::deque<int64_t> inputBufferDtsQue_;
     std::condition_variable cond_;
     std::condition_variable bufferAvailableCond_;
+    std::condition_variable readTaskAvailableCond_;
     std::atomic<uint32_t> bufferIndex_;
     std::shared_ptr<AVBuffer> avBuffer_;
     sptr<SurfaceBuffer> surfaceBuffer_;
@@ -85,10 +88,11 @@ private:
     std::shared_ptr<Media::AVBufferQueue> inputBufferQueue_;
     sptr<Media::AVBufferQueueProducer> inputBufferQueueProducer_;
     sptr<Media::AVBufferQueueConsumer> inputBufferQueueConsumer_;
-    std::unique_ptr<Task> readTask_;
+    std::unique_ptr<Task> readTask_ = nullptr;
     std::vector<std::shared_ptr<AVBuffer>> bufferVector_;
 
-    Status InitDecoder();
+    Status InitDecoder(const std::string& codecName = "");
+    void SwitchToSoftWareDecoder();
     std::shared_ptr<Meta> GetVideoTrackInfo();
     void SetDemuxerOutputBufferPts(std::shared_ptr<AVBuffer> &outputBuffer);
     void GetInputBufferDts(std::shared_ptr<AVBuffer> &inputBuffer);
@@ -108,6 +112,9 @@ private:
     double frameRate_ { 0.0 };
     Plugins::SeekMode seekMode_ {};
     int64_t duration_ = 0;
+    bool hasReceivedCodecErrCodeOfUnsupported_ = false;
+    int64_t currentFetchFrameYuvTimeUs_ = 0;
+    int32_t currentFetchFrameYuvOption_ = 0;
 
     std::shared_ptr<AVBuffer> GenerateAlignmentAvBuffer();
     std::shared_ptr<AVBuffer> GenerateAvBufferFromFCodec();

@@ -15,6 +15,9 @@
 
 #include "av_thumbnail_generator.h"
 
+#include "avcodec_errors.h"
+#include "avcodec_info.h"
+#include "avcodec_list.h"
 #include "buffer/avbuffer_common.h"
 #include "common/media_source.h"
 #include "ibuffer_consumer_listener.h"
@@ -130,6 +133,15 @@ AVThumbnailGenerator::~AVThumbnailGenerator()
 void AVThumbnailGenerator::OnError(MediaAVCodec::AVCodecErrorType errorType, int32_t errorCode)
 {
     MEDIA_LOGE("OnError errorType:%{public}d, errorCode:%{public}d", static_cast<int32_t>(errorType), errorCode);
+    if (errorCode == MediaAVCodec::AVCodecServicErrCode::AVCS_ERR_UNSUPPORT_CODEC_SPECIFICATION) {
+        std::unique_lock<std::mutex> lock(onErrorMutex_);
+        if (hasReceivedCodecErrCodeOfUnsupported_ == true) {
+            return;
+        }
+        hasReceivedCodecErrCodeOfUnsupported_ = true;
+        SwitchToSoftWareDecoder();
+        return;
+    }
     {
         std::scoped_lock lock(mutex_, queueMutex_);
         stopProcessing_ = true;
@@ -138,7 +150,7 @@ void AVThumbnailGenerator::OnError(MediaAVCodec::AVCodecErrorType errorType, int
     bufferAvailableCond_.notify_all();
 }
 
-Status AVThumbnailGenerator::InitDecoder()
+Status AVThumbnailGenerator::InitDecoder(const std::string& codecName)
 {
     MEDIA_LOGD("Init decoder start.");
     if (videoDecoder_ != nullptr) {
@@ -156,7 +168,8 @@ Status AVThumbnailGenerator::InitDecoder()
     callerInfo->SetData(Media::Tag::AV_CODEC_FORWARD_CALLER_UID, appUid_);
     callerInfo->SetData(Media::Tag::AV_CODEC_FORWARD_CALLER_PROCESS_NAME, appName_);
     format.SetMeta(callerInfo);
-    ret = MediaAVCodec::VideoDecoderFactory::CreateByMime(trackMime_, format, videoDecoder_);
+    ret = codecName == "" ? MediaAVCodec::VideoDecoderFactory::CreateByMime(trackMime_, format, videoDecoder_) :
+        MediaAVCodec::VideoDecoderFactory::CreateByName(codecName, format, videoDecoder_);
     MEDIA_LOGI("VideoDecoderAdapter::Init CreateByMime errorCode %{public}d", ret);
     CHECK_AND_RETURN_RET_LOG(videoDecoder_ != nullptr, Status::ERROR_NO_MEMORY, "Create videoDecoder_ is nullptr");
     MEDIA_LOGI("appUid: %{public}d, appPid: %{public}d, appName: %{public}s", appUid_, appPid_, appName_.c_str());
@@ -183,6 +196,45 @@ Status AVThumbnailGenerator::InitDecoder()
     return Status::OK;
 }
 
+void AVThumbnailGenerator::SwitchToSoftWareDecoder()
+{
+    CHECK_AND_RETURN_LOG(videoDecoder_ != nullptr, "videoDecoder_ is nullptr");
+    Format format;
+    videoDecoder_->GetCodecInfo(format);
+    int32_t isHardWareDecoder = 0;
+    format.GetIntValue(Media::Tag::MEDIA_IS_HARDWARE, isHardWareDecoder);
+    if (isHardWareDecoder == static_cast<int32_t>(true)) {
+        videoDecoder_->Stop();
+        videoDecoder_->Release();
+        videoDecoder_ = nullptr;
+        std::shared_ptr<MediaAVCodec::AVCodecList> codeclist = MediaAVCodec::AVCodecListFactory::CreateACCodecList();
+        CHECK_AND_RETURN_LOGT(codeclist != nullptr, "CreateAVCodecList failed, codeclist is nullptr.");
+        MediaAVCodec::CapabilityData *capabilityData = codeclist->GetCapability(
+            std::string(MediaAVCodec::CodecMimeType::VIDEO_AVC), false,
+            MediaAVCodec::AVCodecCategory::AVCODEC_SOFTWARE);
+        CHECK_AND_RETURN_LOG(capabilityData != nullptr, "GetCapability failed, capabilityData is nullptr.");
+        const std::string codecName = capabilityData->codecName;
+        CHECK_AND_RETURN_LOG(!codecName.empty(), "codecName is empty");
+        FlushBufferQueue();
+        {
+            std::scoped_lock lock(mutex_, queueMutex_);
+            stopProcessing_ = true;
+        }
+        inputBufferQueue_ = nullptr;
+        bufferAvailableCond_.notify_all();
+        Init();
+        {
+            std::scoped_lock lock(mutex_, queueMutex_);
+            hasFetchedFrame_ = false;
+        }
+        auto res = SeekToTime(Plugins::Us2Ms(currentFetchFrameYuvTimeUs_),
+            static_cast<Plugins::SeekMode>(currentFetchFrameYuvOption_), currentFetchFrameYuvTimeUs_);
+        CHECK_AND_RETURN_LOG(res == Status::OK, "Seek failed.");
+        CHECK_AND_RETURN_LOG(InitDecoder(codecName) == Status::OK, "Failed to create software decoder.");
+    }
+
+}
+
 int32_t AVThumbnailGenerator::Init()
 {
     CHECK_AND_RETURN_RET_LOG(inputBufferQueue_ == nullptr, MSERR_OK, "InputBufferQueue already create");
@@ -201,11 +253,15 @@ int32_t AVThumbnailGenerator::Init()
     CHECK_AND_RETURN_RET_LOG(listener != nullptr, MSERR_NO_MEMORY, "listener is nullptr");
     inputBufferQueueConsumer_->SetBufferAvailableListener(listener);
 
-    readTask_ = std::make_unique<Task>(std::string("AVThumbReadLoop"));
-    CHECK_AND_RETURN_RET_LOG(readTask_ != nullptr, MSERR_NO_MEMORY, "Task is nullptr");
+    {
+        std::unique_lock<std::mutex> lock(readTaskMutex_);
+        readTaskAvailableCond_.wait(lock, [this]() { return readTask_ == nullptr; });
+        readTask_ = std::make_unique<Task>(std::string("AVThumbReadLoop"));
+        CHECK_AND_RETURN_RET_LOG(readTask_ != nullptr, MSERR_NO_MEMORY, "Task is nullptr");
 
-    readTask_->RegisterJob([this] {return ReadLoop();});
-    readTask_->Start();
+        readTask_->RegisterJob([this] {return ReadLoop();});
+        readTask_->Start();
+    }
 
     return MSERR_OK;
 }
@@ -411,6 +467,9 @@ int64_t AVThumbnailGenerator::StopTask()
 {
     if (readTask_ != nullptr) {
         readTask_->Stop();
+        stopProcessing_ = false;
+        readTask_ = nullptr;
+        readTaskAvailableCond_.notify_all();
     }
     return 0;
 }
@@ -541,6 +600,8 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
     isBufferAvailable_ = false;
     outputConfig_ = param;
     seekTime_ = timeUs;
+    currentFetchFrameYuvTimeUs_ = timeUs;
+    currentFetchFrameYuvOption_ = option;
     trackInfo_ = GetVideoTrackInfo();
     CHECK_AND_RETURN_RET_LOG(trackInfo_ != nullptr, nullptr, "FetchFrameAtTime trackInfo_ is nullptr.");
     mediaDemuxer_->SelectTrack(trackIndex_);
@@ -804,6 +865,10 @@ void AVThumbnailGenerator::Reset()
     FlushBufferQueue();
 
     hasFetchedFrame_ = false;
+    {
+        std::unique_lock<std::mutex> lock(onErrorMutex_);
+        hasReceivedCodecErrCodeOfUnsupported_ = false;
+    }
     fileType_ = FileType::UNKNOW;
     trackInfo_ = nullptr;
 }
