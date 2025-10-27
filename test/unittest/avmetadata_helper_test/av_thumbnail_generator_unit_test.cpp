@@ -411,12 +411,12 @@ HWTEST_F(AVThumbnailGeneratorUnitTest, SwitchToSoftWareDecoder, TestSize.Level1)
     auto mockAVCodecVideoDecoder = std::make_shared<MediaAVCodec::MockAVCodecVideoDecoder>();
     avThumbnailGenerator_->videoDecoder_ = mockAVCodecVideoDecoder;
     avThumbnailGenerator_->trackMime_ = "video/avc";
-    avThumbnailGenerator_->trackInfo_-> = "video/avc";
+
     Format format;
     format.PutIntValue(Media::Tag::MEDIA_IS_HARDWARE, 1);
     EXPECT_CALL(*(mockAVCodecVideoDecoder), GetCodecInfo).WillOnce(Return(format));
-    avThumbnailGenerator_->SwitchToSoftWareDecoder();
-    ASSERT_NE(avThumbnailGenerator_->videoDecoder_, nullptr);
+    avThumbnailGenerator_->SwitchToSoftWareDecoder(Tag::MIME_TYPE, "video/avc");
+    EXPECT_EQ(avThumbnailGenerator_->videoDecoder_, nullptr);
 }
 }  // namespace Test
 }  // namespace Media
