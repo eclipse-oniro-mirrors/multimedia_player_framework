@@ -232,7 +232,6 @@ void AVThumbnailGenerator::SwitchToSoftWareDecoder()
         CHECK_AND_RETURN_LOG(res == Status::OK, "Seek failed.");
         CHECK_AND_RETURN_LOG(InitDecoder(codecName) == Status::OK, "Failed to create software decoder.");
     }
-
 }
 
 int32_t AVThumbnailGenerator::Init()
