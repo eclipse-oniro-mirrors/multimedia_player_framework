@@ -135,13 +135,12 @@ void AVThumbnailGenerator::OnError(MediaAVCodec::AVCodecErrorType errorType, int
     MEDIA_LOGE("OnError errorType:%{public}d, errorCode:%{public}d", static_cast<int32_t>(errorType), errorCode);
     if (errorCode == MediaAVCodec::AVCodecServiceErrCode::AVCS_ERR_UNSUPPORTED_CODEC_SPECIFICATION) {
         std::unique_lock<std::mutex> lock(onErrorMutex_);
-        if (hasReceivedCodecErrCodeOfUnsupported_ == true) {
-            return;
-        }
+        CHECK_AND_RETURN_LOG(!hasReceivedCodecErrCodeOfUnsupported_, "hasReceivedCodecErrCodeOfUnsupported_ is true");
         hasReceivedCodecErrCodeOfUnsupported_ = true;
         SwitchToSoftWareDecoder();
         return;
     }
+
     {
         std::scoped_lock lock(mutex_, queueMutex_);
         stopProcessing_ = true;
@@ -198,7 +197,8 @@ Status AVThumbnailGenerator::InitDecoder(const std::string& codecName)
 
 void AVThumbnailGenerator::SwitchToSoftWareDecoder()
 {
-    CHECK_AND_RETURN_LOG(videoDecoder_ != nullptr, "videoDecoder_ is nullptr");
+    CHECK_AND_RETURN_LOG(videoDecoder_ != nullptr || !trackMime_.empty(),
+        "videoDecoder_ is nullptr or trackMime_ is empty");
     Format format;
     videoDecoder_->GetCodecInfo(format);
     int32_t isHardWareDecoder = 0;
@@ -209,8 +209,7 @@ void AVThumbnailGenerator::SwitchToSoftWareDecoder()
         videoDecoder_ = nullptr;
         std::shared_ptr<MediaAVCodec::AVCodecList> codeclist = MediaAVCodec::AVCodecListFactory::CreateAVCodecList();
         CHECK_AND_RETURN_LOG(codeclist != nullptr, "CreateAVCodecList failed, codeclist is nullptr.");
-        MediaAVCodec::CapabilityData *capabilityData = codeclist->GetCapability(
-            std::string(MediaAVCodec::CodecMimeType::VIDEO_AVC), false,
+        MediaAVCodec::CapabilityData *capabilityData = codeclist->GetCapability(trackMime_, false,
             MediaAVCodec::AVCodecCategory::AVCODEC_SOFTWARE);
         CHECK_AND_RETURN_LOG(capabilityData != nullptr, "GetCapability failed, capabilityData is nullptr.");
         const std::string codecName = capabilityData->codecName;
@@ -949,10 +948,6 @@ void AVThumbnailGenerator::Destroy()
         stopProcessing_ = true;
     }
     bufferAvailableCond_.notify_all();
-
-    if (readTask_ != nullptr) {
-        readTask_->Stop();
-    }
 
     if (videoDecoder_ != nullptr) {
         videoDecoder_->Stop();
