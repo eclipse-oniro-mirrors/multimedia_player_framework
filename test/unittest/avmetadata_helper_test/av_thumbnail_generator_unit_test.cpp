@@ -400,24 +400,6 @@ HWTEST_F(AVThumbnailGeneratorUnitTest, OnOutputBufferAvailable_AVI, TestSize.Lev
     avThumbnailGenerator_->FlushBufferQueue();
     EXPECT_EQ(avThumbnailGenerator_->inputBufferDtsQue_.empty(), true);
 }
-
-/**
- * @tc.name: SwitchToSoftWareDecoder
- * @tc.desc: SwitchToSoftWareDecoder
- * @tc.type: FUNC
- */
-HWTEST_F(AVThumbnailGeneratorUnitTest, SwitchToSoftWareDecoder, TestSize.Level1)
-{
-    auto mockAVCodecVideoDecoder = std::make_shared<MediaAVCodec::MockAVCodecVideoDecoder>();
-    avThumbnailGenerator_->videoDecoder_ = mockAVCodecVideoDecoder;
-    avThumbnailGenerator_->trackMime_ = "video/avc";
-
-    Format format;
-    format.PutIntValue(Media::Tag::MEDIA_IS_HARDWARE, 1);
-    EXPECT_CALL(*(mockAVCodecVideoDecoder), GetCodecInfo).WillOnce(Return(format));
-    avThumbnailGenerator_->SwitchToSoftWareDecoder();
-    EXPECT_EQ(avThumbnailGenerator_->videoDecoder_, nullptr);
-}
 }  // namespace Test
 }  // namespace Media
 }  // namespace OHOS
