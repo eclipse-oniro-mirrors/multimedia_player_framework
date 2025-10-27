@@ -134,9 +134,12 @@ void AVThumbnailGenerator::OnError(MediaAVCodec::AVCodecErrorType errorType, int
 {
     MEDIA_LOGE("OnError errorType:%{public}d, errorCode:%{public}d", static_cast<int32_t>(errorType), errorCode);
     if (errorCode == MediaAVCodec::AVCodecServiceErrCode::AVCS_ERR_UNSUPPORTED_CODEC_SPECIFICATION) {
-        std::unique_lock<std::mutex> lock(onErrorMutex_);
-        CHECK_AND_RETURN_LOG(!hasReceivedCodecErrCodeOfUnsupported_, "hasReceivedCodecErrCodeOfUnsupported_ is true");
-        hasReceivedCodecErrCodeOfUnsupported_ = true;
+        {
+            std::unique_lock<std::mutex> lock(onErrorMutex_);
+            CHECK_AND_RETURN_LOG(!hasReceivedCodecErrCodeOfUnsupported_, "hasReceivedCodecErrCodeOfUnsupported_ is true");
+            hasReceivedCodecErrCodeOfUnsupported_ = true;
+        }
+
         {
             std::scoped_lock lock(mutex_, queueMutex_);
             stopProcessing_ = true;
@@ -259,7 +262,7 @@ int32_t AVThumbnailGenerator::Init()
     CHECK_AND_RETURN_RET_LOG(readTask_ != nullptr, MSERR_NO_MEMORY, "Task is nullptr");
     readTask_->RegisterJob([this] {return ReadLoop();});
     readTask_->Start();
-    
+
     return MSERR_OK;
 }
 
@@ -621,7 +624,7 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
             SwitchToSoftWareDecoder();
             {
                 std::unique_lock fetchFrameLock(mutex_);
-                fetchFrameRes = cond_.wait_for(lock, std::chrono::seconds(MAX_WAIT_TIME_SECOND),
+                fetchFrameRes = cond_.wait_for(fetchFrameLock, std::chrono::seconds(MAX_WAIT_TIME_SECOND),
                     [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); });
             }
         }
