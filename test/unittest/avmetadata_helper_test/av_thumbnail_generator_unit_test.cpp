@@ -415,7 +415,7 @@ HWTEST_F(AVThumbnailGeneratorUnitTest, SwitchToSoftWareDecoder, TestSize.Level1)
     Format format;
     format.PutIntValue(Media::Tag::MEDIA_IS_HARDWARE, 1);
     EXPECT_CALL(*(mockAVCodecVideoDecoder), GetCodecInfo).WillOnce(Return(format));
-    avThumbnailGenerator_->SwitchToSoftWareDecoder(Tag::MIME_TYPE, "video/avc");
+    avThumbnailGenerator_->SwitchToSoftWareDecoder();
     EXPECT_EQ(avThumbnailGenerator_->videoDecoder_, nullptr);
 }
 }  // namespace Test
