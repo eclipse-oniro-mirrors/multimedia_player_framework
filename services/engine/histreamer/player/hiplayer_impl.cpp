@@ -4034,6 +4034,7 @@ void HiPlayerImpl::DoInitDemuxer()
         ScopedTimer timer("Demuxer Init", DEMUXER_INIT_WARNING_MS);
         demuxer_->Init(playerEventReceiver_, playerFilterCallback_, interruptMonitor_);
     }
+    (void)demuxer_->SetPlayerMode();
 }
 
 Status HiPlayerImpl::InitVideoDecoder()
