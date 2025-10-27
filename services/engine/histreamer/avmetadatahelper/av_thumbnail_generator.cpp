@@ -133,7 +133,7 @@ AVThumbnailGenerator::~AVThumbnailGenerator()
 void AVThumbnailGenerator::OnError(MediaAVCodec::AVCodecErrorType errorType, int32_t errorCode)
 {
     MEDIA_LOGE("OnError errorType:%{public}d, errorCode:%{public}d", static_cast<int32_t>(errorType), errorCode);
-    if (errorCode == MediaAVCodec::AVCodecServicErrCode::AVCS_ERR_UNSUPPORT_CODEC_SPECIFICATION) {
+    if (errorCode == MediaAVCodec::AVCodecServiceErrCode::AVCS_ERR_UNSUPPORTED_CODEC_SPECIFICATION) {
         std::unique_lock<std::mutex> lock(onErrorMutex_);
         if (hasReceivedCodecErrCodeOfUnsupported_ == true) {
             return;
@@ -207,8 +207,8 @@ void AVThumbnailGenerator::SwitchToSoftWareDecoder()
         videoDecoder_->Stop();
         videoDecoder_->Release();
         videoDecoder_ = nullptr;
-        std::shared_ptr<MediaAVCodec::AVCodecList> codeclist = MediaAVCodec::AVCodecListFactory::CreateACCodecList();
-        CHECK_AND_RETURN_LOGT(codeclist != nullptr, "CreateAVCodecList failed, codeclist is nullptr.");
+        std::shared_ptr<MediaAVCodec::AVCodecList> codeclist = MediaAVCodec::AVCodecListFactory::CreateAVCodecList();
+        CHECK_AND_RETURN_LOG(codeclist != nullptr, "CreateAVCodecList failed, codeclist is nullptr.");
         MediaAVCodec::CapabilityData *capabilityData = codeclist->GetCapability(
             std::string(MediaAVCodec::CodecMimeType::VIDEO_AVC), false,
             MediaAVCodec::AVCodecCategory::AVCODEC_SOFTWARE);
