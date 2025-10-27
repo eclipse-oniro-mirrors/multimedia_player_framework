@@ -137,7 +137,16 @@ void AVThumbnailGenerator::OnError(MediaAVCodec::AVCodecErrorType errorType, int
         std::unique_lock<std::mutex> lock(onErrorMutex_);
         CHECK_AND_RETURN_LOG(!hasReceivedCodecErrCodeOfUnsupported_, "hasReceivedCodecErrCodeOfUnsupported_ is true");
         hasReceivedCodecErrCodeOfUnsupported_ = true;
-        SwitchToSoftWareDecoder();
+        {
+            std::scoped_lock lock(mutex_, queueMutex_);
+            stopProcessing_ = true;
+        }
+        bufferAvailableCond_.notify_all();
+        {
+            std::unique_lock<std::mutex> readTaskLock(readTaskMutex_);
+            readTaskAvailableCond_.wait(readTaskLock, [this]() { return readTask_ == nullptr; });
+        }
+        cond_.notify_all();
         return;
     }
 
@@ -215,15 +224,10 @@ void AVThumbnailGenerator::SwitchToSoftWareDecoder()
         const std::string codecName = capabilityData->codecName;
         CHECK_AND_RETURN_LOG(!codecName.empty(), "codecName is empty");
         FlushBufferQueue();
-        {
-            std::scoped_lock lock(mutex_, queueMutex_);
-            stopProcessing_ = true;
-        }
         inputBufferQueue_ = nullptr;
-        bufferAvailableCond_.notify_all();
         Init();
         {
-            std::scoped_lock lock(mutex_, queueMutex_);
+            std::unique_lock lock(queueMutex_);
             hasFetchedFrame_ = false;
         }
         auto res = SeekToTime(Plugins::Us2Ms(currentFetchFrameYuvTimeUs_),
@@ -251,16 +255,11 @@ int32_t AVThumbnailGenerator::Init()
     CHECK_AND_RETURN_RET_LOG(listener != nullptr, MSERR_NO_MEMORY, "listener is nullptr");
     inputBufferQueueConsumer_->SetBufferAvailableListener(listener);
 
-    {
-        std::unique_lock<std::mutex> lock(readTaskMutex_);
-        readTaskAvailableCond_.wait(lock, [this]() { return readTask_ == nullptr; });
-        readTask_ = std::make_unique<Task>(std::string("AVThumbReadLoop"));
-        CHECK_AND_RETURN_RET_LOG(readTask_ != nullptr, MSERR_NO_MEMORY, "Task is nullptr");
-
-        readTask_->RegisterJob([this] {return ReadLoop();});
-        readTask_->Start();
-    }
-
+    readTask_ = std::make_unique<Task>(std::string("AVThumbReadLoop"));
+    CHECK_AND_RETURN_RET_LOG(readTask_ != nullptr, MSERR_NO_MEMORY, "Task is nullptr");
+    readTask_->RegisterJob([this] {return ReadLoop();});
+    readTask_->Start();
+    
     return MSERR_OK;
 }
 
@@ -465,7 +464,6 @@ int64_t AVThumbnailGenerator::StopTask()
 {
     if (readTask_ != nullptr) {
         readTask_->Stop();
-        stopProcessing_ = false;
         readTask_ = nullptr;
         readTaskAvailableCond_.notify_all();
     }
@@ -596,6 +594,7 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
     readErrorFlag_ = false;
     hasFetchedFrame_ = false;
     isBufferAvailable_ = false;
+    hasReceivedCodecErrCodeOfUnsupported_ = false;
     outputConfig_ = param;
     seekTime_ = timeUs;
     currentFetchFrameYuvTimeUs_ = timeUs;
@@ -610,10 +609,22 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
     bool fetchFrameRes = false;
     {
         std::unique_lock<std::mutex> lock(mutex_);
-
         // wait up to 3s to fetch frame AVSharedMemory at time.
         fetchFrameRes = cond_.wait_for(lock, std::chrono::seconds(MAX_WAIT_TIME_SECOND),
             [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); });
+    }
+
+    {
+        std::unique_lock retryLock(onErrorMutex_);
+        if (hasReceivedCodecErrCodeOfUnsupported_) {
+            stopProcessing_ = false;
+            SwitchToSoftWareDecoder();
+            {
+                std::unique_lock fetchFrameLock(mutex_);
+                fetchFrameRes = cond_.wait_for(lock, std::chrono::seconds(MAX_WAIT_TIME_SECOND),
+                    [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); });
+            }
+        }
     }
     if (fetchFrameRes) {
         HandleFetchFrameYuvRes();
@@ -863,10 +874,7 @@ void AVThumbnailGenerator::Reset()
     FlushBufferQueue();
 
     hasFetchedFrame_ = false;
-    {
-        std::unique_lock<std::mutex> lock(onErrorMutex_);
-        hasReceivedCodecErrCodeOfUnsupported_ = false;
-    }
+    hasReceivedCodecErrCodeOfUnsupported_ = false;
     fileType_ = FileType::UNKNOW;
     trackInfo_ = nullptr;
 }
