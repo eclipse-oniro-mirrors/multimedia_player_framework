@@ -136,7 +136,8 @@ void AVThumbnailGenerator::OnError(MediaAVCodec::AVCodecErrorType errorType, int
     if (errorCode == MediaAVCodec::AVCodecServiceErrCode::AVCS_ERR_UNSUPPORTED_CODEC_SPECIFICATION) {
         {
             std::unique_lock<std::mutex> lock(onErrorMutex_);
-            CHECK_AND_RETURN_LOG(!hasReceivedCodecErrCodeOfUnsupported_, "hasReceivedCodecErrCodeOfUnsupported_ is true");
+            CHECK_AND_RETURN_LOG(!hasReceivedCodecErrCodeOfUnsupported_,
+                "hasReceivedCodecErrCodeOfUnsupported_ is true");
             hasReceivedCodecErrCodeOfUnsupported_ = true;
         }
 
