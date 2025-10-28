@@ -34,18 +34,87 @@ namespace OHOS {
 namespace Media {
 
 thread_local napi_ref ToneAttrsNapi::sConstructor_ = nullptr;
+thread_local napi_ref ToneAttrsNapi::toneMediaType_ = nullptr;
 std::shared_ptr<ToneAttrs> ToneAttrsNapi::sToneAttrs_ = nullptr;
 
 ToneAttrsNapi::ToneAttrsNapi() : env_(nullptr) {}
 
 ToneAttrsNapi::~ToneAttrsNapi() = default;
 
-napi_value ToneAttrsNapi::Init(napi_env env, napi_value exports)
+napi_status ToneAttrsNapi::AddNamedProperty(napi_env env, napi_value object, const std::string name,
+    int32_t enumValue)
 {
     napi_status status;
+    napi_value napiValue;
+ 
+    status = napi_create_int32(env, enumValue, &napiValue);
+    if (status == napi_ok) {
+        status = napi_set_named_property(env, object, name.c_str(), napiValue);
+    }
+ 
+    return status;
+}
+ 
+napi_value ToneAttrsNapi::CreateToneMediaTypeObject(napi_env env)
+{
+    napi_value result = nullptr;
+    napi_status status;
+    std::string propName;
+    int32_t refCount = 1;
+ 
+    status = napi_create_object(env, &result);
+    if (status == napi_ok) {
+        for (auto &iter: toneMediaTypeMap) {
+            propName = iter.first;
+            status = AddNamedProperty(env, result, propName, iter.second);
+            if (status != napi_ok) {
+                MEDIA_LOGE("CreateToneMediaTypeObject: Failed to add named prop!");
+                break;
+            }
+            propName.clear();
+        }
+        if (status == napi_ok) {
+            status = napi_create_reference(env, result, refCount, &toneMediaType_);
+            if (status == napi_ok) {
+                return result;
+            }
+        }
+    }
+    napi_get_undefined(env, &result);
+ 
+    return result;
+}
+
+napi_value ToneAttrsNapi::Init(napi_env env, napi_value exports)
+{
     napi_value ctorObj;
     int32_t refCount = 1;
+ 
+    napi_status status = ToneAttrsProperties(env, ctorObj);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+ 
+    status = napi_create_reference(env, ctorObj, refCount, &sConstructor_);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+ 
+    status = napi_set_named_property(env, exports, TONE_ATTRS_NAPI_CLASS_NAME.c_str(), ctorObj);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+ 
+    status = ToneStaticProperties(env, exports);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+ 
+    return exports;
+}
 
+napi_status ToneAttrsNapi::ToneAttrsProperties(napi_env env, napi_value &ctorObj)
+{
     napi_property_descriptor tone_attrs_prop[] = {
         DECLARE_NAPI_FUNCTION("getTitle", GetTitle),
         DECLARE_NAPI_FUNCTION("setTitle", SetTitle),
@@ -58,20 +127,19 @@ napi_value ToneAttrsNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("setMediaType", SetMediaType),
         DECLARE_NAPI_FUNCTION("getMediaType", GetMediaType),
     };
+ 
+    return napi_define_class(env, TONE_ATTRS_NAPI_CLASS_NAME.c_str(), NAPI_AUTO_LENGTH,
+        Construct, nullptr, sizeof(tone_attrs_prop) / sizeof(tone_attrs_prop[0]), tone_attrs_prop, &ctorObj);
+}
 
-    status = napi_define_class(env, TONE_ATTRS_NAPI_CLASS_NAME.c_str(), NAPI_AUTO_LENGTH,
-        Construct, nullptr, sizeof(tone_attrs_prop) / sizeof(tone_attrs_prop[0]),
-        tone_attrs_prop, &ctorObj);
-    if (status == napi_ok) {
-        if (napi_create_reference(env, ctorObj, refCount, &sConstructor_) == napi_ok) {
-            status = napi_set_named_property(env, exports, TONE_ATTRS_NAPI_CLASS_NAME.c_str(), ctorObj);
-            if (status == napi_ok) {
-                return exports;
-            }
-        }
-    }
-
-    return nullptr;
+napi_status ToneAttrsNapi::ToneStaticProperties(napi_env env, napi_value exports)
+{
+    napi_property_descriptor tone_static_prop[] = {
+        DECLARE_NAPI_PROPERTY("MediaType", CreateToneMediaTypeObject(env)),
+    };
+ 
+    return napi_define_properties(env, exports,
+        sizeof(tone_static_prop) / sizeof(tone_static_prop[0]), tone_static_prop);
 }
 
 napi_value ToneAttrsNapi::Construct(napi_env env, napi_callback_info info)
