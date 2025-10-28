@@ -991,6 +991,135 @@ HWTEST_F(AVMetaDataCollectorUnitTest, InitTracksInfoVector_009, TestSize.Level1)
     avmetaDataCollector->InitTracksInfoVector(meta, index);
     EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
 }
+
+/**
+ * @tc.name: InitTracksInfoVector_010
+ * @tc.desc: InitTracksInfoVector_010
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, InitTracksInfoVector_010, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_TYPE, Plugins::MediaType::AUXILIARY);
+    meta->SetData(Tag::AUDIO_BITS_PER_CODED_SAMPLE, 12);
+    size_t index = 0;
+    Plugins::MediaType mediaType;
+    bool ret = meta->GetData(Tag::MEDIA_TYPE, mediaType);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->InitTracksInfoVector(meta, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+}
+
+/**
+ * @tc.name: InitTracksInfoVector_011
+ * @tc.desc: InitTracksInfoVector_011
+ * @tc.type: FUNC
+ */
+ HWTEST_F(AVMetaDataCollectorUnitTest, InitTracksInfoVector_011, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_TYPE, Plugins::MediaType::AUXILIARY);
+    meta->SetData(Tag::AUDIO_BITS_PER_CODED_SAMPLE, 6);
+    size_t index = 0;
+    Plugins::MediaType mediaType;
+    bool ret = meta->GetData(Tag::MEDIA_TYPE, mediaType);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->InitTracksInfoVector(meta, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+}
+
+/**
+ * @tc.name: InitTracksInfoVector_012
+ * @tc.desc: InitTracksInfoVector_012
+ * @tc.type: FUNC
+ */
+ HWTEST_F(AVMetaDataCollectorUnitTest, InitTracksInfoVector_012, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_TYPE, Plugins::MediaType::ATTACHMENT);
+    size_t index = 0;
+    Plugins::MediaType mediaType;
+    bool ret = meta->GetData(Tag::MEDIA_TYPE, mediaType);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->InitTracksInfoVector(meta, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+}
+
+/**
+ * @tc.name: InitTracksInfoVector_013
+ * @tc.desc: InitTracksInfoVector_013
+ * @tc.type: FUNC
+ */
+ HWTEST_F(AVMetaDataCollectorUnitTest, InitTracksInfoVector_013, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_TYPE, Plugins::MediaType::DATA);
+    size_t index = 0;
+    Plugins::MediaType mediaType;
+    bool ret = meta->GetData(Tag::MEDIA_TYPE, mediaType);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->InitTracksInfoVector(meta, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+}
+
+/**
+ * @tc.name: InitTracksInfoVector_014
+ * @tc.desc: InitTracksInfoVector_014
+ * @tc.type: FUNC
+ */
+ HWTEST_F(AVMetaDataCollectorUnitTest, InitTracksInfoVector_014, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_TYPE, Plugins::MediaType::SUBTITLE);
+    size_t index = 0;
+    Plugins::MediaType mediaType;
+    bool ret = meta->GetData(Tag::MEDIA_TYPE, mediaType);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->InitTracksInfoVector(meta, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+}
+
+/**
+ * @tc.name: InitTracksInfoVector_015
+ * @tc.desc: InitTracksInfoVector_015
+ * @tc.type: FUNC
+ */
+ HWTEST_F(AVMetaDataCollectorUnitTest, InitTracksInfoVector_015, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_TYPE, Plugins::MediaType::VIDEO);
+    size_t index = 0;
+    Plugins::MediaType mediaType;
+    bool ret = meta->GetData(Tag::MEDIA_TYPE, mediaType);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->InitTracksInfoVector(meta, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+}
+
+/**
+ * @tc.name: InitTracksInfoVector_016
+ * @tc.desc: InitTracksInfoVector_016
+ * @tc.type: FUNC
+ */
+ HWTEST_F(AVMetaDataCollectorUnitTest, InitTracksInfoVector_016, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_TYPE, Plugins::MediaType::AUDIO);
+    size_t index = 0;
+    Plugins::MediaType mediaType;
+    bool ret = meta->GetData(Tag::MEDIA_TYPE, mediaType);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->InitTracksInfoVector(meta, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+}
+
 }  // namespace Test
 }  // namespace Media
 }  // namespace OHOS
