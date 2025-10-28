@@ -25,7 +25,6 @@
 namespace ANI::Media {
 using namespace taihe;
 using namespace ohos::multimedia::systemSoundManager;
-static const std::string TONE_HAPTICS_SETTINGS_NAPI_CLASS_NAME = "ToneHapticsSettings";
 
 class ToneHapticsSettingsTaihe {
 public:
