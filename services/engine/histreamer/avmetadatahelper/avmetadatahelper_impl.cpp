@@ -25,7 +25,7 @@
 #include "pts_and_index_conversion.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "AVMetadataHelperImpl" };
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "MetaHelperImpl" };
 }
 
 namespace OHOS {

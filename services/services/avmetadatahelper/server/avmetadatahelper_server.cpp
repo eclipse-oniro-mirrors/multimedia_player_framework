@@ -38,7 +38,7 @@ static const std::unordered_map<int32_t, std::string> STATUS_TO_STATUS_DESCRIPTI
 
 std::shared_ptr<IAVMetadataHelperService> AVMetadataHelperServer::Create()
 {
-    std::shared_ptr<AVMetadataHelperServer> server = std::make_shared<AVMetadataHelperServer>();
+    std::shared_ptr<AVMetadataHelperServer> server = std::make_shared<MetaHelperServer>();
     CHECK_AND_RETURN_RET_LOG(server != nullptr, nullptr, "Failed to new AVMetadataHelperServer");
     return server;
 }
