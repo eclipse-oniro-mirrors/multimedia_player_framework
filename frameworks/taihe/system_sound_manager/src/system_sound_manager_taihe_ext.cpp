@@ -393,7 +393,7 @@ static ani_status GetAniIndexByValue(ani_env *env, OHOS::Media::SystemSoundError
     ani_object aniObjectTuple2 {};
     int32_t systemSoundErrorIndex = 0;
     for (const auto& removeResult : removeResultArray) {
-        if(ANI_OK != GetAniIndexByValue(env, std::get<PARAM1>(removeResult), systemSoundErrorIndex)) {
+        if (ANI_OK != GetAniIndexByValue(env, std::get<PARAM1>(removeResult), systemSoundErrorIndex)) {
             CommonTaihe::ThrowError(TAIHE_ERR_SYSTEM, TAIHE_ERR_SYSTEM_INFO);
             return ::taihe::array<uintptr_t>(results);
         }
@@ -444,7 +444,7 @@ static ani_status GetAniIndexByValue(ani_env *env, OHOS::Media::SystemSoundError
     ani_object aniObjectTuple3 {};
     int32_t systemSoundErrorIndex = 0;
     for (const auto& openToneResult : openToneResultArray) {
-        if(ANI_OK != GetAniIndexByValue(env, std::get<PARAM2>(openToneResult), systemSoundErrorIndex)) {
+        if (ANI_OK != GetAniIndexByValue(env, std::get<PARAM2>(openToneResult), systemSoundErrorIndex)) {
             MEDIA_LOGE("GetAniIndexByValue failed");
             CommonTaihe::ThrowError(TAIHE_ERR_SYSTEM, TAIHE_ERR_SYSTEM_INFO);
             return ::taihe::array<uintptr_t>(results);
