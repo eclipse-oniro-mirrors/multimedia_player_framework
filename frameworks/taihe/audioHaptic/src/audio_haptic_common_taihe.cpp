@@ -15,13 +15,10 @@
 
 #include "audio_haptic_common_taihe.h"
 
-namespace {
-const std::string NAPI_ERR_INPUT_INVALID_INFO = "input parameter check failed";
-const std::string NAPI_ERR_OPERATE_NOT_ALLOWED_INFO = "operate not allowed";
-const std::string NAPI_ERR_IO_ERROR_INFO = "input or output error";
-const std::string NAPI_ERR_SERVICE_DIED_INFO = "service died";
-const std::string NAPI_ERR_UNSUPPORTED_FORMAT_INFO = "unsupport format";
-}
+#include "access_token.h"
+#include "accesstoken_kit.h"
+#include "ipc_skeleton.h"
+#include "tokenid_kit.h"
 
 namespace ANI::Media {
 
@@ -33,28 +30,43 @@ AudioHapticCommonTaihe::~AudioHapticCommonTaihe()
 {
 }
 
+bool AudioHapticCommonTaihe::VerifySelfSystemPermission()
+{
+    OHOS::Security::AccessToken::FullTokenID selfTokenID = OHOS::IPCSkeleton::GetSelfTokenID();
+    return OHOS::Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(selfTokenID);
+}
+
 std::string AudioHapticCommonTaihe::GetMessageByCode(int32_t &code)
 {
     std::string errMessage;
     switch (code) {
-        case NAPI_ERR_INPUT_INVALID:
-            errMessage = NAPI_ERR_INPUT_INVALID_INFO;
+        case TAIHE_ERR_INPUT_INVALID:
+            errMessage = TAIHE_ERR_INPUT_INVALID_INFO;
             break;
-        case NAPI_ERR_OPERATE_NOT_ALLOWED:
-            errMessage = NAPI_ERR_OPERATE_NOT_ALLOWED_INFO;
+        case TAIHE_ERR_OPERATE_NOT_ALLOWED:
+            errMessage = TAIHE_ERR_OPERATE_NOT_ALLOWED_INFO;
             break;
-        case NAPI_ERR_IO_ERROR:
-            errMessage = NAPI_ERR_IO_ERROR_INFO;
+        case TAIHE_ERR_IO_ERROR:
+            errMessage = TAIHE_ERR_IO_ERROR_INFO;
             break;
-        case NAPI_ERR_SERVICE_DIED:
-            errMessage = NAPI_ERR_SERVICE_DIED_INFO;
+        case TAIHE_ERR_SERVICE_DIED:
+            errMessage = TAIHE_ERR_SERVICE_DIED_INFO;
             break;
-        case NAPI_ERR_UNSUPPORTED_FORMAT:
-            errMessage = NAPI_ERR_UNSUPPORTED_FORMAT_INFO;
+        case TAIHE_ERR_UNSUPPORTED_FORMAT:
+            errMessage = TAIHE_ERR_UNSUPPORTED_FORMAT_INFO;
+            break;
+        case TAIHE_ERR_PARAM_OUT_OF_RANGE:
+            errMessage = TAIHE_ERR_PARAM_OUT_OF_RANGE_INFO;
+            break;
+        case TAIHE_ERR_NOT_SUPPORTED:
+            errMessage = TAIHE_ERR_NOT_SUPPORTED_INFO;
+            break;
+        case TAIHE_ERR_PERMISSION_DENIED:
+            errMessage = TAIHE_ERR_PERMISSION_DENIED_INFO;
             break;
         default:
-            errMessage = NAPI_ERR_OPERATE_NOT_ALLOWED_INFO;
-            code = NAPI_ERR_OPERATE_NOT_ALLOWED;
+            errMessage = TAIHE_ERR_OPERATE_NOT_ALLOWED_INFO;
+            code = TAIHE_ERR_OPERATE_NOT_ALLOWED;
             break;
     }
     return errMessage;

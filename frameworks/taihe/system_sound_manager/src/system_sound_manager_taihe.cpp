@@ -40,7 +40,7 @@ namespace ANI::Media {
 std::shared_ptr<OHOS::AbilityRuntime::Context> SystemSoundManagerImpl::GetAbilityContext(
     ani_env* env, uintptr_t contextArg)
 {
-    MEDIA_LOGI("SystemSoundManagerNapi::GetAbilityContext");
+    MEDIA_LOGI("SystemSoundManagerTaihe::GetAbilityContext");
 
     MEDIA_LOGI("GetAbilityContext: Getting context with stage model");
     auto context = OHOS::AbilityRuntime::GetStageModeContext(env, reinterpret_cast<ani_object>(contextArg));
@@ -146,7 +146,7 @@ ToneAttrsTaihe SystemSoundManagerImpl::GetDefaultRingtoneAttrsSync(uintptr_t con
 
     std::shared_ptr<OHOS::AbilityRuntime::Context> abilityContext = GetAbilityContext(get_env(), context);
     int32_t typeInner = type.get_value();
-    if (abilityContext == nullptr && (typeInner !=  CARD_0 || typeInner !=  CARD_1)) {
+    if (abilityContext == nullptr && (typeInner != CARD_0 || typeInner != CARD_1)) {
         MEDIA_LOGE("invalid arguments");
         CommonTaihe::ThrowError(TAIHE_ERR_INPUT_INVALID, TAIHE_ERR_INPUT_INVALID_INFO);
         return make_holder<ToneAttrsImpl, ToneAttrsTaihe>();

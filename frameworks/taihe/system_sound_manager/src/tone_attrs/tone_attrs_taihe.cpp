@@ -165,4 +165,36 @@ int64_t ToneAttrsImpl::GetCategory()
     return toneAttrs_->GetCategory();
 }
 
+void ToneAttrsImpl::SetMediaType(::ohos::multimedia::systemSoundManager::MediaType type)
+{
+    CHECK_AND_RETURN_LOG(CheckPermission(), "No system permission");
+
+    bool isMediaTypeValid = false;
+    int32_t toneAttrsMediaType = type.get_value();
+    if (toneAttrsMediaType == static_cast<int32_t>(OHOS::Media::ToneMediaType::MEDIA_TYPE_AUD) ||
+        toneAttrsMediaType == static_cast<int32_t>(OHOS::Media::ToneMediaType::MEDIA_TYPE_VID)) {
+        isMediaTypeValid = true;
+    }
+    if (!isMediaTypeValid) {
+        CommonTaihe::ThrowError(TAIHE_ERR_INPUT_INVALID, TAIHE_ERR_INPUT_INVALID_INFO);
+        MEDIA_LOGE("invalid arguments");
+        return;
+    }
+    CHECK_AND_RETURN_LOG(CheckNativeToneAttrs(), "toneAttrs_ is nullptr");
+
+    toneAttrs_->SetMediaType(static_cast<OHOS::Media::ToneMediaType>(type.get_value()));
+}
+
+::ohos::multimedia::systemSoundManager::MediaType ToneAttrsImpl::GetMediaType()
+{
+    ::ohos::multimedia::systemSoundManager::MediaType result =
+    ::ohos::multimedia::systemSoundManager::MediaType::from_value(0);
+
+    CHECK_AND_RETURN_RET_LOG(CheckPermission(), result, "No system permission");
+    CHECK_AND_RETURN_RET_LOG(CheckNativeToneAttrs(), result, "toneAttrs_ is nullptr");
+
+    return ::ohos::multimedia::systemSoundManager::MediaType::from_value(
+        static_cast<int32_t>(toneAttrs_->GetMediaType()));
+}
+
 } // namespace ANI::Media

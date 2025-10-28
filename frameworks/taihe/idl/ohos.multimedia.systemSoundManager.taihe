@@ -24,6 +24,7 @@ const TONE_CATEGORY_RINGTONE: long = 1;
 const TONE_CATEGORY_TEXT_MESSAGE: long = 2;
 const TONE_CATEGORY_NOTIFICATION: long = 4;
 const TONE_CATEGORY_ALARM: long = 8;
+const TONE_CATEGORY_CONTACTS: long = 16;
 """)
 
 from ringtonePlayer use RingtonePlayer;
@@ -51,6 +52,11 @@ enum ToneCustomizedType: i32 {
   CUSTOMIZED = 1,
 }
 
+enum MediaType: i32 {
+  AUDIO = 0,
+  VIDEO = 1,
+}
+
 interface ToneAttrs {
   GetTitle(): String;
   SetTitle(title: String): void;
@@ -61,6 +67,8 @@ interface ToneAttrs {
   SetCategory(category: i64): void;
   GetCategory(): i64;
   GetImplPtr(): i64;
+  SetMediaType(type: MediaType): void;
+  GetMediaType(): MediaType;
 }
 
 enum ToneHapticsType: i32  {
@@ -85,6 +93,17 @@ interface ToneHapticsAttrs {
   GetUri(): String;
   GetTitle(): String;
   GetFileName(): String;
+}
+
+enum SystemSoundError: i32  {
+  ERROR_IO = 5400103,
+  ERROR_OK = 20700000,
+  ERROR_TYPE_MISMATCH = 20700001,
+  ERROR_UNSUPPORTED_OPERATION = 20700003,
+  ERROR_DATA_TOO_LARGE = 20700004,
+  ERROR_TOO_MANY_FILES = 20700005,
+  ERROR_INSUFFICIENT_ROM = 20700006,
+  ERROR_INVALID_PARAM = 20700007,
 }
 
 interface SystemSoundManager {
@@ -165,6 +184,16 @@ interface SystemSoundManager {
 
   @gen_promise("setRingtoneUri")
   SetRingtoneUriSync(context: @sts_type("BaseContext") Opaque, uri: String, type: RingtoneType): void;
+
+  @gen_promise("getCurrentRingtoneAttribute")
+  GetCurrentRingtoneAttributeSync(type: RingtoneType): ToneAttrs;
+
+  @gen_promise("removeCustomizedToneList")
+  RemoveCustomizedToneListSync(uriList: Array<String>): Array<@sts_type("[string, SystemSoundError]") Opaque>;
+
+  @gen_promise("openToneList")
+  OpenToneListSync(uriList: Array<String>): Array<@sts_type("[string, long, SystemSoundError]") Opaque>;
+
 }
 
 function CreateCustomizedToneAttrs(): ToneAttrs;

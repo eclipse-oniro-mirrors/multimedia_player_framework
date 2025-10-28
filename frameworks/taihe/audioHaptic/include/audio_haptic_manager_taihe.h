@@ -38,11 +38,15 @@ public:
     void UnregisterSourceSync(int32_t id);
     void SetAudioLatencyMode(int32_t id, AudioLatencyMode latencyMode);
     void SetStreamUsage(int32_t id, uintptr_t usage);
+    int32_t RegisterSourceFromFdSync(AudioHapticFileDescriptor const& audioFd,
+        AudioHapticFileDescriptor const& hapticFd);
     AudioHapticPlayer CreatePlayerSync(int32_t id, optional_view<AudioHapticPlayerOptions> options);
 
 private:
     bool IsLegalAudioLatencyMode(int32_t latencyMode);
     bool IsLegalAudioStreamUsage(int32_t streamUsage);
+    static int32_t GetAudioHapticFileDescriptorValue(AudioHapticFileDescriptor const & audioFd,
+        OHOS::Media::AudioHapticFileDescriptor& audioHapticFd);
     void CreatePlayerExecute(std::unique_ptr<AudioHapticManagerTaiheContext> &taiheContext);
     AudioHapticPlayer CreatePlayerComplete(std::unique_ptr<AudioHapticManagerTaiheContext> &taiheContext);
 

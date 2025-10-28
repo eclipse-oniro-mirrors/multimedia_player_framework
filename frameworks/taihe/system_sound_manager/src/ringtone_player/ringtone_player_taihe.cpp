@@ -60,7 +60,7 @@ RingtonePlayerImpl::RingtonePlayerImpl(std::shared_ptr<OHOS::Media::RingtonePlay
         callbackTaihe_ = std::make_shared<RingtonePlayerCallbackTaihe>();
         CHECK_AND_RETURN_LOG(callbackTaihe_ != nullptr, "No memory");
         int32_t ret = ringtonePlayer_->SetRingtonePlayerInterruptCallback(callbackTaihe_);
-        MEDIA_LOGI("AudioRendererNapi::Construct SetRendererCallback %{public}s",
+        MEDIA_LOGI("AudioRendererTaihe::Construct SetRendererCallback %{public}s",
             ret == 0 ? "succeess" : "failed");
     }
 }
@@ -141,7 +141,7 @@ void RingtonePlayerImpl::ReleaseSync()
 
 void RingtonePlayerImpl::OnAudioInterrupt(::taihe::callback_view<void(uintptr_t)> callback)
 {
-    MEDIA_LOGI("RingtonePlayerNapi: On callbackName: %{public}s", AUDIO_INTERRUPT_CALLBACK_NAME.c_str());
+    MEDIA_LOGI("RingtonePlayerTaihe: On callbackName: %{public}s", AUDIO_INTERRUPT_CALLBACK_NAME.c_str());
     if (ringtonePlayer_ == nullptr) {
         ThrowError(TAIHE_ERR_NO_MEMORY, "no memory");
         return;

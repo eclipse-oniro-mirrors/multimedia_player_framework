@@ -38,6 +38,13 @@ public:
     void StartSync();
     void StopSync();
     void ReleaseSync();
+    void SetVolumeSync(double volume);
+    void SetHapticsIntensitySync(double intensity);
+    void EnableHapticsInSilentMode(bool enable);
+    bool IsHapticsIntensityAdjustmentSupported();
+    void SetLoopSync(bool loop);
+    void SetHapticsRampSync(int32_t duration, double startIntensity, double endIntensity);
+    bool IsHapticsRampSupported();
     void OnAudioInterrupt(callback_view<void(uintptr_t)> callback);
     void OffAudioInterrupt(optional_view<callback<void(uintptr_t)>> callback);
     void OnEndOfStream(callback_view<void(uintptr_t)> callback);
@@ -45,6 +52,10 @@ public:
 
 private:
     bool IsLegalAudioHapticType(int32_t audioHapticType);
+    bool IsLegalVolumeOrIntensity(double volume);
+    bool JudgeVolume(double &volume);
+    bool JudgeIntensity(double &intensity);
+    bool JudgeRamp(int duration, double &startIntensity, double &endIntensity);
     bool RegisterCallback(const std::string &callbackName, callback_view<void(uintptr_t)> callback);
     bool UnregisterCallback(const std::string &callbackName);
 

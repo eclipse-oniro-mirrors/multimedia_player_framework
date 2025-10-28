@@ -36,6 +36,7 @@ using ToneHapticsAttrsTaihe = ::ohos::multimedia::systemSoundManager::ToneHaptic
 using ToneHapticsSettings = ::ohos::multimedia::systemSoundManager::ToneHapticsSettings;
 using ToneHapticsTypeTaihe = ::ohos::multimedia::systemSoundManager::ToneHapticsType;
 using WeakToneAttrsTaihe = ::ohos::multimedia::systemSoundManager::weak::ToneAttrs;
+using SystemSoundErrorTaihe = ::ohos::multimedia::systemSoundManager::SystemSoundError;
 
 class SystemSoundManagerImpl {
 public:
@@ -72,6 +73,9 @@ public:
     ::ringtonePlayer::RingtonePlayer GetRingtonePlayerSync(uintptr_t context, RingtoneTypeTaihe type);
     ::taihe::string GetRingtoneUriSync(uintptr_t context, RingtoneTypeTaihe type);
     void SetRingtoneUriSync(uintptr_t context, ::taihe::string_view uri, RingtoneTypeTaihe type);
+    ToneAttrsTaihe GetCurrentRingtoneAttributeSync(RingtoneTypeTaihe type);
+    ::taihe::array<uintptr_t> RemoveCustomizedToneListSync(::taihe::array_view<::taihe::string> uriList);
+    ::taihe::array<uintptr_t> OpenToneListSync(::taihe::array_view<::taihe::string> uriList);
 
     friend SystemSoundManagerTaihe GetSystemSoundManager();
 
