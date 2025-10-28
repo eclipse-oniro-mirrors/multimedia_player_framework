@@ -195,6 +195,24 @@ HWTEST_F(AVMetaDataCollectorUnitTest, GetAVMetadata_004, TestSize.Level1)
     EXPECT_FALSE(meta->GetData("latitude", latitude));
     EXPECT_FALSE(meta->GetData("longitude", longitude));
 }
+
+/**
+ * @tc.name: GetAVMetadata_005
+ * @tc.desc: GetAVMetadata_005
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, GetAVMetadata_005, TestSize.Level1)
+{
+    avmetaDataCollector->collectedMeta_ = {
+        { AV_KEY_VIDEO_DESCRIPTION, "video_description" },
+    };
+    avmetaDataCollector->collectedAVMetaData_ = nullptr;
+    auto meta = avmetaDataCollector->GetAVMetadata();
+    EXPECT_TRUE(meta != nullptr);
+
+    std::string description;
+    EXPECT_TRUE(meta->GetData("description", description));
+}
  
 /**
  * @tc.name: GetArtPicture
