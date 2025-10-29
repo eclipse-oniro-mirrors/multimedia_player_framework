@@ -179,6 +179,12 @@ int32_t ScreenCaptureNativeMock::SetCanvasRotation(bool canvasRotation)
     return screenCapture_->SetCanvasRotation(canvasRotation);
 }
 
+int32_t ScreenCaptureNativeMock::ShowCursor(bool showCursor)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    return screenCapture_->ShowCursor(showCursor);
+}
+
 int32_t ScreenCaptureNativeMock::ResizeCanvas(int32_t width, int32_t height)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
@@ -219,6 +225,12 @@ sptr<OHOS::SurfaceBuffer> ScreenCaptureNativeMock::AcquireVideoBuffer(int32_t &f
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, nullptr, "screenCapture_ == nullptr");
     return screenCapture_->AcquireVideoBuffer(fence, timestamp, damage);
+}
+
+int32_t ScreenCaptureNativeMock::SetCaptureArea(uint64_t displayId, OHOS::Rect &area)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    return screenCapture_->SetCaptureArea(displayId, area);
 }
 
 int32_t ScreenCaptureNativeMock::ReleaseAudioBuffer(AudioCaptureSourceType type)

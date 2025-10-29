@@ -84,12 +84,14 @@ public:
     virtual int32_t Release() = 0;
     virtual int32_t SetMicrophoneEnabled(bool isMicrophone) = 0;
     virtual int32_t SetCanvasRotation(bool canvasRotation) = 0;
+    virtual int32_t ShowCursor(bool showCursor) = 0;
     virtual int32_t SkipPrivacyMode(int32_t *windowIDs, int32_t windowCount) = 0;
     virtual int32_t ResizeCanvas(int32_t width, int32_t height) = 0;
     virtual int32_t UpdateSurface(const std::any& surface) = 0;
     virtual int32_t SetMaxVideoFrameRate(int32_t frameRate) = 0;
     virtual int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type) = 0;
     virtual sptr<OHOS::SurfaceBuffer> AcquireVideoBuffer(int32_t &fence, int64_t &timestamp, OHOS::Rect &damage) = 0;
+    virtual int32_t SetCaptureArea(uint64_t displayId, OHOS::Rect &area) = 0;
     virtual int32_t ReleaseAudioBuffer(AudioCaptureSourceType type) = 0;
     virtual int32_t ReleaseVideoBuffer() = 0;
     virtual int32_t ExcludeWindowContent(int32_t *windowIDs, int32_t windowCount) = 0;

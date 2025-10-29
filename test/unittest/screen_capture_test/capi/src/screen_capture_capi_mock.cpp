@@ -314,6 +314,12 @@ int32_t ScreenCaptureCapiMock::SetCanvasRotation(bool canvasRotation)
     return OH_AVScreenCapture_SetCanvasRotation(screenCapture_, canvasRotation);
 }
 
+int32_t ScreenCaptureCapiMock::ShowCursor(bool showCursor)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    return OH_AVScreenCapture_ShowCursor(screenCapture_, showCursor);
+}
+
 int32_t ScreenCaptureCapiMock::ResizeCanvas(int32_t width, int32_t height)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
@@ -374,6 +380,18 @@ sptr<OHOS::SurfaceBuffer> ScreenCaptureCapiMock::AcquireVideoBuffer(int32_t &fen
         surfacebuffer =  OHOS::SurfaceBuffer::NativeBufferToSurfaceBuffer(buffer);
     }
     return surfacebuffer;
+}
+
+int32_t ScreenCaptureCapiMock::SetCaptureArea(uint64_t displayId, OHOS::Rect &area)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    OH_Rect area_ = {
+        .x = area.x,
+        .y = area.y,
+        .width = area.w,
+        .height = area.h,
+    };
+    return OH_AVScreenCapture_SetCaptureArea(screenCapture_, displayId, &area_);
 }
 
 int32_t ScreenCaptureCapiMock::ReleaseAudioBuffer(OHOS::Media::AudioCaptureSourceType type)
