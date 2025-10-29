@@ -688,10 +688,8 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_SetCaptureArea_01, Test
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
     sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->SetCaptureArea(0, area));
-    showCursor = false;
     EXPECT_EQ(MSERR_OK, screenCapture_->SetCaptureArea(0, area));
     sleep(RECORDER_TIME);
-    showCursor = true;
     EXPECT_EQ(MSERR_OK, screenCapture_->SetCaptureArea(0, area));
     sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
