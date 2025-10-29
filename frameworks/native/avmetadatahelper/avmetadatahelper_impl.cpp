@@ -34,7 +34,7 @@
 #include "metadata_convertor.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "AVMetadatahelperImpl" };
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "MetaHelperImpl" };
 constexpr int32_t SCENE_CODE_EFFECTIVE_DURATION_MS = 20000;
 static constexpr char PERFORMANCE_STATS[] = "PERFORMANCE";
 static std::atomic<uint32_t> concurrentWorkCount_ = 0;
@@ -289,7 +289,7 @@ int32_t AVMetadataHelperImpl::SaveDataToFile(const std::string &fileName, const 
     std::string verifiedPath(realPath);
     std::ofstream outFile(verifiedPath.append("/" + fileName), std::ofstream::out);
     if (!outFile.is_open()) {
-        MEDIA_LOGI("SaveDataToFile write error, path=%{public}s", verifiedPath.c_str());
+        MEDIA_LOGW("SaveDataToFile write error, path=%{public}s", verifiedPath.c_str());
         return MSERR_UNKNOWN;
     }
 
@@ -303,7 +303,7 @@ void AVMetadataHelperImpl::InitDumpFlag()
     std::string dumpEnable;
     int32_t dumpRes = OHOS::system::GetStringParameter(dumpTag, dumpEnable, "false");
     isDump_ = (dumpEnable == "true");
-    MEDIA_LOGI("get dump flag, dumpRes: %{public}d, isDump_: %{public}d", dumpRes, isDump_);
+    MEDIA_LOGD("get dump flag, dumpRes: %{public}d, isDump_: %{public}d", dumpRes, isDump_);
 }
 
 int32_t AVMetadataHelperImpl::DumpPixelMap(bool isDump, std::shared_ptr<PixelMap> pixelMap,
