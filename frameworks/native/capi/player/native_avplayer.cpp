@@ -62,6 +62,10 @@ const char* OH_PLAYER_TRACK_IS_SELECT = PlayerKeys::PLAYER_IS_SELECT.data();
 const char* OH_PLAYER_SUBTITLE_TEXT = PlayerKeys::SUBTITLE_TEXT.data();
 const char* OH_PLAYER_SUBTITLE_PTS = PlayerKeys::SUBTITLE_PTS.data();
 const char* OH_PLAYER_SUBTITLE_DURATION = PlayerKeys::SUBTITLE_DURATION.data();
+const char* OH_PLAYER_MD_KEY_HAS_VIDEO = PlayerKeys::PLAYER_HAS_VIDEO.data();
+const char* OH_PLAYER_MD_KEY_HAS_AUDIO = PlayerKeys::PLAYER_HAS_AUDIO.data();
+const char* OH_PLAYER_MD_KEY_HAS_SUBTITLE = PlayerKeys::PLAYER_HAS_SUBTITLE.data();
+const char* OH_PLAYER_MD_KEY_TRACK_INDEX = PlayerKeys::PLAYER_TRACK_INDEX.data();
 
 typedef struct PlayerErrorCodeApi9Convert {
     MediaServiceExtErrCodeAPI9 errorCodeApi9;

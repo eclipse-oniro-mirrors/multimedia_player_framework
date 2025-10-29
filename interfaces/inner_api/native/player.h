@@ -171,6 +171,9 @@ public:
     static constexpr std::string_view SEI_PLAYBACK_POSITION = "sei_playbackPosition";
     static constexpr std::string_view SUPER_RESOLUTION_ENABLED = "super_resolution_enabled";
     static constexpr std::string_view PLAYER_AUDIO_HAPTICS_SYNC_ID = "audio_haptic_sync_id";
+    static constexpr std::string_view PLAYER_HAS_VIDEO = "has_video";
+    static constexpr std::string_view PLAYER_HAS_AUDIO = "has_audio";
+    static constexpr std::string_view PLAYER_HAS_SUBTITLE = "has_subtitle";
 };
 
 class PlaybackInfoKey {
