@@ -177,15 +177,6 @@ void AVMetaDataCollector::GetAudioTrackInfo(const std::shared_ptr<Meta> &trackIn
         std::string stringTrackIds = VectorToString(trackIds);
         audioTrackInfo.PutStringValue("ref_track_ids",stringTrackIds);
     }
-
-    Plugins::MediaType mediaType = Plugins::MediaType::UNKNOW;
-    trackInfo->GetData(Tag::MEDIA_TYPE, mediaType);
-    if (mediaType == Plugins::MediaType::AUXILIARY || mediaType == Plugins::MediaType::TIMEDMETA) {
-        std::string referenceType ="";
-        if (trackInfo->GetData(Tag::TRACK_REFERENCE_TYPE, referenceType)) {
-            audioTrackInfo.PutStringValue("track_ref_type",referenceType);
-        }
-    }
     
     trackInfoVec_.emplace_back(std::move(audioTrackInfo));
 }
@@ -224,15 +215,6 @@ void AVMetaDataCollector::GetVideoTrackInfo(const std::shared_ptr<Meta> &trackIn
     if (trackInfo->GetData(Tag::REFERENCE_TRACK_IDS, trackIds)) {
         std::string stringTrackIds = VectorToString(trackIds);
         videoTrackInfo.PutStringValue("ref_track_ids",stringTrackIds);
-    }
-
-    Plugins::MediaType mediaType = Plugins::MediaType::UNKNOW;
-    trackInfo->GetData(Tag::MEDIA_TYPE, mediaType);
-    if (mediaType == Plugins::MediaType::AUXILIARY || mediaType == Plugins::MediaType::TIMEDMETA) {
-        std::string referenceType ="";
-        if (trackInfo->GetData(Tag::TRACK_REFERENCE_TYPE, referenceType)) {
-            videoTrackInfo.PutStringValue("track_ref_type",referenceType);
-        }
     }
     
     trackInfoVec_.emplace_back(std::move(videoTrackInfo));
