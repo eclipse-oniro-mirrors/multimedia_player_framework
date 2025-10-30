@@ -264,7 +264,7 @@ std::string AVMetaDataCollector::VectorToString(const std::vector<int32_t> &vec)
         if (i != 0) {
             ss << ",";
         }
-        ss <<vec[i];
+        ss << vec[i];
     }
     return ss.str();
 }
