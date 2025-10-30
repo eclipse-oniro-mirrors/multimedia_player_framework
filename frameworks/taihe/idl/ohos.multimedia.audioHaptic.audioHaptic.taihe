@@ -35,6 +35,12 @@ struct AudioHapticPlayerOptions {
   muteHaptics: Optional<bool>;
 }
 
+struct AudioHapticFileDescriptor {
+  fd: i32;
+  length: Optional<i64>;
+  offset: Optional<i64>;
+}
+
 interface AudioHapticManager {
     @gen_promise("registerSource")
     RegisterSourceSync(audioUri: String, hapticUri: String): i32;
@@ -48,6 +54,9 @@ interface AudioHapticManager {
 
     @gen_promise("createPlayer")
     CreatePlayerSync(id: i32, options: Optional<AudioHapticPlayerOptions>): AudioHapticPlayer;
+
+    @gen_promise("registerSourceFromFd")
+    RegisterSourceFromFdSync(audioFd: AudioHapticFileDescriptor, hapticFd: AudioHapticFileDescriptor): i32;
 }
 
 interface AudioHapticPlayer {
@@ -62,28 +71,23 @@ interface AudioHapticPlayer {
     @gen_promise("release")
     ReleaseSync(): void;
 
-    @!sts_inject_into_interface("on(type: string, callback: (data: object)=> void): void;")
-    @!sts_inject_into_class("""on(type: string, callback: object): void {
-            if (type === 'audioInterrupt') {
-              this.onAudioInterrupt(callback as (data: audio.InterruptEvent)=> void);
-            } else if (type === 'endOfStream') {
-              this.onEndOfStream(callback as (data: undefined)=> void);
-            } else {
-              throw new Error(`Unknown type: ${type}`);
-            }
-          }
-    """)
+    @gen_promise("setVolume")
+    SetVolumeSync(volume: f64): void;
 
-    @!sts_inject_into_interface("off(type: string, callback?: (data: object)=> void): void;")
-    @!sts_inject_into_class("""off(type: string, callback?: object): void {
-        if (type === 'audioInterrupt') {
-          this.offAudioInterrupt(callback as (((data: audio.InterruptEvent)=> void) | undefined ));
-        } else if (type === 'endOfStream') {
-          this.offEndOfStream(callback as (((data: undefined)=> void) | undefined ));
-        } else {
-          throw new Error(`Unknown type: ${type}`);
-        }
-    }""")
+    @gen_promise("setHapticsIntensity")
+    SetHapticsIntensitySync(intensity: f64): void;
+
+    EnableHapticsInSilentMode(enable: bool): void;
+
+    IsHapticsIntensityAdjustmentSupported(): bool;
+
+    @gen_promise("setLoop")
+    SetLoopSync(loop: bool): void;
+
+    @gen_promise("setHapticsRamp")
+    SetHapticsRampSync(duration: i32, startIntensity: f64, endIntensity: f64): void;
+
+    IsHapticsRampSupported(): bool;
 
     OnAudioInterrupt(callback: (data: @sts_type("audio.InterruptEvent") Opaque)=> void): void;
     OffAudioInterrupt(callback: Optional<(data: @sts_type("audio.InterruptEvent") Opaque)=> void>): void;

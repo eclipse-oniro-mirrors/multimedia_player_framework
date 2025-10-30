@@ -44,6 +44,8 @@ public:
     ::ohos::multimedia::systemSoundManager::ToneCustomizedType GetCustomizedType();
     void SetCategory(int64_t category);
     int64_t GetCategory();
+    void SetMediaType(::ohos::multimedia::systemSoundManager::MediaType type);
+    ::ohos::multimedia::systemSoundManager::MediaType GetMediaType();
 
     bool CheckNativeToneAttrs();
     bool CheckPermission();

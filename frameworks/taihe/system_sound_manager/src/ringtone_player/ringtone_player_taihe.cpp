@@ -60,7 +60,7 @@ RingtonePlayerImpl::RingtonePlayerImpl(std::shared_ptr<OHOS::Media::RingtonePlay
         callbackTaihe_ = std::make_shared<RingtonePlayerCallbackTaihe>();
         CHECK_AND_RETURN_LOG(callbackTaihe_ != nullptr, "No memory");
         int32_t ret = ringtonePlayer_->SetRingtonePlayerInterruptCallback(callbackTaihe_);
-        MEDIA_LOGI("AudioRendererNapi::Construct SetRendererCallback %{public}s",
+        MEDIA_LOGI("AudioRendererTaihe::Construct SetRendererCallback %{public}s",
             ret == 0 ? "succeess" : "failed");
     }
 }
@@ -139,15 +139,14 @@ void RingtonePlayerImpl::ReleaseSync()
     }
 }
 
-void RingtonePlayerImpl::OnAudioInterrupt(::taihe::string_view type,
-    ::taihe::callback_view<void(uintptr_t)> callback)
+void RingtonePlayerImpl::OnAudioInterrupt(::taihe::callback_view<void(uintptr_t)> callback)
 {
-    MEDIA_LOGI("RingtonePlayerNapi: On callbackName: %{public}s", type.c_str());
+    MEDIA_LOGI("RingtonePlayerTaihe: On callbackName: %{public}s", AUDIO_INTERRUPT_CALLBACK_NAME.c_str());
     if (ringtonePlayer_ == nullptr) {
         ThrowError(TAIHE_ERR_NO_MEMORY, "no memory");
         return;
     }
-    std::string cbName = std::string(type);
+    std::string cbName = AUDIO_INTERRUPT_CALLBACK_NAME;
     if (!cbName.compare(AUDIO_INTERRUPT_CALLBACK_NAME)) {
         if (callbackTaihe_ == nullptr) {
             ThrowError(TAIHE_ERR_NO_MEMORY, "no memory");
@@ -171,14 +170,14 @@ void RingtonePlayerImpl::OnAudioInterrupt(::taihe::string_view type,
     }
 }
 
-void RingtonePlayerImpl::OffAudioInterrupt(::taihe::string_view type)
+void RingtonePlayerImpl::OffAudioInterrupt()
 {
-    MEDIA_LOGI("Off callbackName: %{public}s", type.c_str());
+    MEDIA_LOGI("Off callbackName: %{public}s", AUDIO_INTERRUPT_CALLBACK_NAME.c_str());
     if (ringtonePlayer_ == nullptr) {
         ThrowError(TAIHE_ERR_NO_MEMORY, "no memory");
         return;
     }
-    std::string cbName = std::string(type);
+    std::string cbName = AUDIO_INTERRUPT_CALLBACK_NAME;
     if (!cbName.compare(AUDIO_INTERRUPT_CALLBACK_NAME)) {
         if (callbackTaihe_ == nullptr) {
             ThrowError("ringtonePlayerCallbackTaihe is nullptr");
