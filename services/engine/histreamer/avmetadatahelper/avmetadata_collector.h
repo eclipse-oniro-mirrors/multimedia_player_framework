@@ -109,6 +109,7 @@ private:
     bool IsAudioMime(const std::string& mime) const;
     bool IsSubtitleMime(const std::string& mime) const;
     void InitTracksInfoVector(const std::shared_ptr<Meta> &meta, size_t index);
+    std::string VectorToString(const std::vector<int32_t> &vec) const;
 };
 }  // namespace Media
 }  // namespace OHOS

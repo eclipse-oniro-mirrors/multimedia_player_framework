@@ -172,7 +172,13 @@ void AVMetaDataCollector::GetAudioTrackInfo(const std::shared_ptr<Meta> &trackIn
     if (sampleDepth > 0) {
         audioTrackInfo.PutLongValue("sample_depth", sampleDepth);
     }
-
+    
+    std::vector<int32_t> trackIds;
+    if (trackInfo->GetData(Tag::REFERENCE_TRACK_IDS, trackIds)) {
+        std::string stringTrackIds = VectorToString(trackIds);
+        audioTrackInfo.PutStringValue("ref_track_ids", stringTrackIds);
+    }
+    
     trackInfoVec_.emplace_back(std::move(audioTrackInfo));
 }
 
@@ -205,6 +211,13 @@ void AVMetaDataCollector::GetVideoTrackInfo(const std::shared_ptr<Meta> &trackIn
     bool isHdr = false;
     trackInfo->GetData(Tag::VIDEO_IS_HDR_VIVID, isHdr);
     videoTrackInfo.PutIntValue("hdr_type", static_cast<int32_t>(isHdr));
+
+    std::vector<int32_t> trackIds;
+    if (trackInfo->GetData(Tag::REFERENCE_TRACK_IDS, trackIds)) {
+        std::string stringTrackIds = VectorToString(trackIds);
+        videoTrackInfo.PutStringValue("ref_track_ids", stringTrackIds);
+    }
+    
     trackInfoVec_.emplace_back(std::move(videoTrackInfo));
 }
 
@@ -228,7 +241,33 @@ void AVMetaDataCollector::GetOtherTrackInfo(const std::shared_ptr<Meta> &trackIn
     Plugins::MediaType mediaType = Plugins::MediaType::UNKNOWN;
     trackInfo->GetData(Tag::MEDIA_TYPE, mediaType);
     otherTrackInfo.PutIntValue("track_type", static_cast<int32_t>(mediaType));
+
+    std::vector<int32_t> trackIds;
+    if (trackInfo->GetData(Tag::REFERENCE_TRACK_IDS, trackIds)) {
+        std::string stringTrackIds = VectorToString(trackIds);
+        otherTrackInfo.PutStringValue("ref_track_ids", stringTrackIds);
+    }
+
+    if (mediaType == Plugins::MediaType::AUXILIARY || mediaType == Plugins::MediaType::TIMEDMETA) {
+        std::string referenceType = "";
+        if (trackInfo->GetData(Tag::TRACK_REFERENCE_TYPE, referenceType)) {
+            otherTrackInfo.PutStringValue("track_ref_type", referenceType);
+        }
+    }
+
     trackInfoVec_.emplace_back(std::move(otherTrackInfo));
+}
+
+std::string AVMetaDataCollector::VectorToString(const std::vector<int32_t> &vec) const
+{
+    std::stringstream ss;
+    for (size_t i = 0; i < vec.size(); i++) {
+        if (i != 0) {
+            ss << ",";
+        }
+        ss << vec[i];
+    }
+    return ss.str();
 }
 
 int32_t AVMetaDataCollector::GetSarVideoWidth(std::shared_ptr<Meta> trackInfo, int32_t originalWidth) const
