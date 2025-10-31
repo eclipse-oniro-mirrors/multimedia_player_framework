@@ -210,7 +210,7 @@ Status AVThumbnailGenerator::InitDecoder(const std::string& codecName)
 
 void AVThumbnailGenerator::SwitchToSoftWareDecoder()
 {
-    CHECK_AND_RETURN_LOG(videoDecoder_ != nullptr || !trackMime_.empty(),
+    CHECK_AND_RETURN_LOG(videoDecoder_ != nullptr && !trackMime_.empty(),
         "videoDecoder_ is nullptr or trackMime_ is empty");
     Format format;
     videoDecoder_->GetCodecInfo(format);
