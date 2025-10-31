@@ -183,6 +183,8 @@ private:
         RingtoneType ringtoneType, SourceType sourceType);
     int32_t UpdateRingtoneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, const int32_t &toneId,
         RingtoneType ringtoneType, const int32_t &num);
+    int32_t SetSystemToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const std::string &uri, SystemToneType systemToneType);
     std::string GetShotToneUriByType(const DatabaseTool &databaseTool, const std::string &type);
     ToneAttrs GetShotToneAttrsByType(const DatabaseTool &databaseTool, const std::string &type);
     std::string GetNotificationToneUriByType(const DatabaseTool &databaseTool);
@@ -215,6 +217,8 @@ private:
     std::unique_ptr<SimcardSettingAsset> GetSimcardSettingAssetByToneHapticsType(const DatabaseTool &databaseTool,
         ToneHapticsType toneHapticsType);
 
+    std::string GetHapticsUriByStyle(const DatabaseTool &databaseTool,
+        const std::string &standardHapticsUri, HapticsStyle hapticsStyle, const std::string &vibrateFilesUri);
     std::string GetToneSyncedHapticsUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         const std::string &toneUri);
     std::string GetDefaultNonSyncedHapticsUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
