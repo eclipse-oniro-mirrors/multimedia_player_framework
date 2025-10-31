@@ -673,7 +673,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_SetCaptureArea_01, Test
     SetRecorderInfo("screen_capture_save_file_SetCaptureArea_01.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
     AudioCaptureInfo innerCapInfo = {
-            .audioSampleRate = 16000,
+            .audioSampleRate = 17000,
             .audioChannels = 2,
             .audioSource = AudioCaptureSourceType::APP_PLAYBACK
     };
