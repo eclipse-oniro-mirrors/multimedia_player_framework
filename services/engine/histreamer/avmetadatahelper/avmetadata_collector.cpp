@@ -568,7 +568,7 @@ void AVMetaDataCollector::FormatDateTime(Metadata &avmeta, const std::shared_ptr
     }
     avmeta.SetMeta(AV_KEY_DATE_TIME, formattedDateTime);
     avmeta.SetMeta(AV_KEY_DATE_TIME_FORMAT,
-        formattedDateTime.compare(date) != 0 ? formattedDateTime : TimeFormatUtils::FormatDataTimeByString(date));
+        formattedDateTime.compare(date) != 0 ? formattedDateTime : TimeFormatUtils::FormatDateTimeByString(date));
 }
 
 void AVMetaDataCollector::FormatVideoRotateOrientation(Metadata &avmeta)

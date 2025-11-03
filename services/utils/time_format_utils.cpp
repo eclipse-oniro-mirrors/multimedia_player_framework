@@ -94,7 +94,7 @@ std::string TimeFormatUtils::FormatLocalTime(std::chrono::system_clock::time_poi
     return oss.str();
 }
 
-std::string TimeFormatUtils::FormatDataTimeByString(const std::string &dataTime)
+std::string TimeFormatUtils::FormatDateTimeByString(const std::string &dataTime)
 {
     if (dataTime.compare("") == 0) {
         return dataTime;
@@ -118,7 +118,7 @@ std::string TimeFormatUtils::FormatDataTimeByString(const std::string &dataTime)
         } else if (data.find_first_of("-") == data.find_last_of("-")) {
             data += "-01";
         }
-        if (time.find(":") == data.npos) {
+        if (time.find(":") == time.npos) {
             time += ":00:00";
         } else if (time.find_first_of(":") == time.find_last_of(":")) {
             time += ":00";
@@ -126,7 +126,7 @@ std::string TimeFormatUtils::FormatDataTimeByString(const std::string &dataTime)
             time = time.substr(0, time.find("."));
         }
     }
-    MEDIA_LOGD("FormatDataTimeByString is: %{public}s%{public}s", data.c_str(), time.c_str());
+    MEDIA_LOGD("FormatDateTimeByString is: %{public}s%{public}s", data.c_str(), time.c_str());
     return data + time;
 }
 }  // namespace Media

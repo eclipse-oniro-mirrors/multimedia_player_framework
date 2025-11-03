@@ -31,7 +31,7 @@ public:
     static constexpr size_t standardTimeStrSize = 8;
 
     static std::string __attribute__((visibility("default"))) FormatDateTimeByTimeZone(const std::string &iso8601Str);
-    static std::string __attribute__((visibility("default"))) FormatDataTimeByString(const std::string &dataTime);
+    static std::string __attribute__((visibility("default"))) FormatDateTimeByString(const std::string &dataTime);
     static std::string FormatLocalTime(std::chrono::system_clock::time_point localTime);
 };
 }  // namespace Media
