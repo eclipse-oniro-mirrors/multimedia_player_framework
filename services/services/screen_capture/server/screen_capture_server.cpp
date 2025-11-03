@@ -3173,17 +3173,15 @@ void ScreenCaptureServer::SetTimeoutScreenoffDisableLock(bool lockScreen)
     MEDIA_LOGI("SetTimeoutScreenoffDisableLock Start lockScreen %{public}d", lockScreen);
     int result = Security::AccessToken::AccessTokenKit::VerifyAccessToken(appInfo_.appTokenId,
         TIMEOUT_SCREENOFF_DISABLE_LOCK);
-    if (result != Security::AccessToken::PERMISSION_GRANTED) {
-        MEDIA_LOGI("user have not the TIMEOUT_SCREENOFF_DISABLE_LOCK!");
-        return;
-    }
+    CHECK_AND_RETURN_LOG(result == Security::AccessToken::PERMISSION_GRANTED,
+        "user have not the TIMEOUT_SCREENOFF_DISABLE_LOCK!");
     auto powerErrors = OHOS::PowerMgr::PowerMgrClient::GetInstance()
                                 .LockScreenAfterTimingOutWithAppid(sessionId_, lockScreen);
-    if (powerErrors == OHOS::PowerMgr::PowerErrors::ERR_OK) {
-        MEDIA_LOGI("SetTimeoutScreenoffDisableLock success");
-    } else {
-        MEDIA_LOGE("SetTimeoutScreenoffDisableLock error %{public}d", powerErrors);
-    }
+    CHECK_AND_RETURN_LOG(powerErrors == OHOS::PowerMgr::PowerErrors::ERR_OK,
+        "SetTimeoutScreenoffDisableLock error %{public}d", powerErrors);
+    MEDIA_LOGI("SetTimeoutScreenoffDisableLock success");
+    CHECK_AND_RETURN_NOLOG(!lockScreen);
+    Rosen::DisplayManager::GetInstance().DisablePowerOffRenderControl(virtualScreenId_);
 }
 #endif
 
