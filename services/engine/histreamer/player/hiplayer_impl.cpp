@@ -4104,7 +4104,6 @@ void HiPlayerImpl::CacheBuffer()
 {
     FALSE_RETURN(demuxer_ != nullptr && !demuxer_->IsAudioDemuxDecodeAsync() && audioSink_ != nullptr);
     Status ret = Status::OK;
-    audioSink_->Pause();
     ret = audioSink_->CacheBuffer();
     FALSE_RETURN(ret != Status::OK);
     UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
