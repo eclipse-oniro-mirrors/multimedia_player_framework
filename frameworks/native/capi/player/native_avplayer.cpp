@@ -1496,12 +1496,11 @@ OH_AVFormat *OH_AVPlayer_GetMediaDescription(OH_AVPlayer *player)
     CHECK_AND_RETURN_RET_LOG(player != nullptr, nullptr, "SetOnInfo input player is nullptr!");
 
     OHOS::Media::Format format;
-    OH_AVFormat *avFormat = OH_AVFormat_Create();
-    CHECK_AND_RETURN_RET_LOG(avFormat != nullptr, nullptr, "Format is nullptr!");
-
     struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
     CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, nullptr, "player_ is null");
     playerObj->player_->GetMediaDescription(format);
+    OH_AVFormat *avFormat = OH_AVFormat_Create();
+    CHECK_AND_RETURN_RET_LOG(avFormat != nullptr, nullptr, "Format is nullptr!");
     avFormat->format_ = format;
     return avFormat;
 }
@@ -1512,13 +1511,12 @@ OH_AVFormat *OH_AVPlayer_GetTrackDescription(OH_AVPlayer *player, uint32_t index
     CHECK_AND_RETURN_RET_LOG(player != nullptr, nullptr, "SetOnInfo input player is nullptr!");
 
     OHOS::Media::Format format;
-    OH_AVFormat *avFormat = OH_AVFormat_Create();
-    CHECK_AND_RETURN_RET_LOG(avFormat != nullptr, nullptr, "Format is nullptr!");
-
     struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
     CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, nullptr, "player_ is null");
     int32_t ret = playerObj->player_->GetTrackDescription(format, index);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "player GetTrackDescription failed");
+    OH_AVFormat *avFormat = OH_AVFormat_Create();
+    CHECK_AND_RETURN_RET_LOG(avFormat != nullptr, nullptr, "Format is nullptr!");
     avFormat->format_ = format;
     return avFormat;
 }
