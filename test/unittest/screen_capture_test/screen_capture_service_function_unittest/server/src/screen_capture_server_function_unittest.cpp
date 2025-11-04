@@ -946,7 +946,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, MixAudio_003, TestSize.Level2)
     srcData[0] = innerBuffer;
     srcData[1] = micBuffer;
     char mixData[bufferSize] = {0};
-    screenCaptureServer_->audioSource_->MixAudio(srcData, mixData, 0, bufferSize, bufferSize, bufferSize);
+    screenCaptureServer_->audioSource_->MixAudio(srcData, mixData, 0, bufferSize, bufferSize);
     ASSERT_EQ(mixData[0], 0);
 }
 
