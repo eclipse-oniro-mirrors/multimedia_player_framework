@@ -94,29 +94,29 @@ std::string TimeFormatUtils::FormatLocalTime(std::chrono::system_clock::time_poi
     return oss.str();
 }
 
-std::string TimeFormatUtils::FormatDateTimeByString(const std::string &dataTime)
+std::string TimeFormatUtils::FormatDateTimeByString(const std::string &dateTime)
 {
-    if (dataTime.compare("") == 0) {
-        return dataTime;
+    if (dateTime.compare("") == 0) {
+        return dateTime;
     }
-    std::string::size_type position = dataTime.find(" ");
-    std::string data = "";
+    std::string::size_type position = dateTime.find(" ");
+    std::string date = "";
     std::string time = "";
     if (position == dataTime.npos) {
-        data = dataTime;
-        if (data.find("-") == data.npos) {
-            data += "-01-01";
-        } else if (data.find_first_of("-") == data.find_last_of("-")) {
-            data += "-01";
+        date = dateTime;
+        if (date.find("-") == date.npos) {
+            date += "-01-01";
+        } else if (date.find_first_of("-") == date.find_last_of("-")) {
+            date += "-01";
         }
         time += " 00:00:00";
     } else {
-        data = dataTime.substr(0, position);
+        date = dataTime.substr(0, position);
         time = dataTime.substr(position);
-        if (data.find("-") == data.npos) {
-            data += "-01-01";
-        } else if (data.find_first_of("-") == data.find_last_of("-")) {
-            data += "-01";
+        if (date.find("-") == date.npos) {
+            date += "-01-01";
+        } else if (date.find_first_of("-") == date.find_last_of("-")) {
+            date += "-01";
         }
         if (time.find(":") == time.npos) {
             time += ":00:00";
@@ -126,8 +126,8 @@ std::string TimeFormatUtils::FormatDateTimeByString(const std::string &dataTime)
             time = time.substr(0, time.find("."));
         }
     }
-    MEDIA_LOGD("FormatDateTimeByString is: %{public}s%{public}s", data.c_str(), time.c_str());
-    return data + time;
+    MEDIA_LOGD("FormatDateTimeByString is: %{public}s%{public}s", date.c_str(), time.c_str());
+    return date + time;
 }
 }  // namespace Media
 }  // namespace OHOS
