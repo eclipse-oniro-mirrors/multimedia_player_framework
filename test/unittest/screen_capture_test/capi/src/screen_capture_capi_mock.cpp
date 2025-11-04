@@ -195,8 +195,8 @@ int32_t ScreenCaptureCapiMock::GetCaptureContentChangeCallback(const bool isCapt
 }
 
 int32_t ScreenCaptureCapiMock::SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallbackMock>& callback,
-    const bool isErrorCallbackEnabled, const bool isDataCallbackEnabled, const bool isStateChangeCallbackEnabled,
-    const bool isCaptureContentChangeCallbackEnabled)
+    const bool isErrorCallbackEnabled, const bool isDataCallbackEnabled, const bool isDisplayChangeCallbackEnabled,
+    const bool isStateChangeCallbackEnabled, const bool isCaptureContentChangeCallbackEnabled)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
     if (callback == nullptr) {
@@ -228,6 +228,15 @@ int32_t ScreenCaptureCapiMock::SetScreenCaptureCallback(const std::shared_ptr<Sc
         ret = OH_AVScreenCapture_SetDataCallback(screenCapture_, ScreenCaptureCapiMock::OnBufferAvailable, this);
         if (ret != AV_SCREEN_CAPTURE_ERR_OK) {
             MEDIA_LOGE("ScreenCaptureCapiMock SetDataCallback failed, ret: %{public}d", ret);
+            return MSERR_UNKNOWN;
+        }
+    }
+    if (isDisplayChangeCallbackEnabled) {
+        MEDIA_LOGD("ScreenCaptureCapiMock SetDisplayCallback");
+        isDisplayChangeCallbackEnabled_ = isDisplayChangeCallbackEnabled;
+        ret = OH_AVScreenCapture_SetDisplayCallback(screenCapture_, ScreenCaptureCapiMock::OnDisplaySelected, this);
+        if (ret != AV_SCREEN_CAPTURE_ERR_OK) {
+            MEDIA_LOGE("ScreenCaptureCapiMock SetDisplayCallback failed, ret: %{public}d", ret);
             return MSERR_UNKNOWN;
         }
     }
