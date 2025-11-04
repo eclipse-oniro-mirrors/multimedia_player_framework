@@ -102,7 +102,7 @@ std::string TimeFormatUtils::FormatDateTimeByString(const std::string &dateTime)
     std::string::size_type position = dateTime.find(" ");
     std::string date = "";
     std::string time = "";
-    if (position == dataTime.npos) {
+    if (position == dateTime.npos) {
         date = dateTime;
         if (date.find("-") == date.npos) {
             date += "-01-01";
@@ -111,8 +111,8 @@ std::string TimeFormatUtils::FormatDateTimeByString(const std::string &dateTime)
         }
         time += " 00:00:00";
     } else {
-        date = dataTime.substr(0, position);
-        time = dataTime.substr(position);
+        date = dateTime.substr(0, position);
+        time = dateTime.substr(position);
         if (date.find("-") == date.npos) {
             date += "-01-01";
         } else if (date.find_first_of("-") == date.find_last_of("-")) {
