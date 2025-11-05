@@ -1139,11 +1139,26 @@ HWTEST_F(AVMetaDataCollectorUnitTest, InitTracksInfoVector_010, TestSize.Level1)
 }
 
 /**
- * @tc.name: GetAudioTrackInfo_001
- * @tc.desc: Test GetAudioTrackInfo with basic audio metadata
+ * @tc.name: GetAudioTrackInfo_SampleRate_001
+ * @tc.desc: Test GetAudioTrackInfo with common audio sample rate - 44100 Hz
  * @tc.type: FUNC
  */
-
+HWTEST_F(AVMetaDataCollectorUnitTest, GetAudioTrackInfo_SampleRate_001, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    std::string mime = "audio/mpeg";
+    size_t index = 0;
+    
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, 44100);
+    
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->GetAudioTrackInfo(meta, mime, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+    auto& trackInfo = avmetaDataCollector->trackInfoVec_.back();
+    int32_t sampleRate = 0;
+    trackInfo.GetIntValue("sample_rate", sampleRate);
+    EXPECT_EQ(sampleRate, 44100);
+}
 }  // namespace Test
 }  // namespace Media
 }  // namespace OHOS
