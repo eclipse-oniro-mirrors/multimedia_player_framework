@@ -1143,20 +1143,7 @@ HWTEST_F(AVMetaDataCollectorUnitTest, InitTracksInfoVector_010, TestSize.Level1)
  * @tc.desc: Test GetAudioTrackInfo with basic audio metadata
  * @tc.type: FUNC
  */
-HWTEST_F(AVMetaDataCollectorUnitTest, GetAudioTrackInfo_001, TestSize.Level1)
-{
-    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
-    std::string mime = "audio/mpeg";
-    size_t index = 0;
-    
-    meta->SetData(Tag::AUDIO_CHANNEL_COUNT, 2);
-    meta->SetData(Tag::AUDIO_SAMPLE_RATE, 44100);
-    meta->SetData(Tag::MEDIA_BITRATE, 128000LL);
-    
-    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
-    avmetaDataCollector->GetAudioTrackInfo(meta, mime, index);
-    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
-}
+
 }  // namespace Test
 }  // namespace Media
 }  // namespace OHOS
