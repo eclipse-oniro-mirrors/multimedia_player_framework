@@ -195,8 +195,8 @@ int32_t ScreenCaptureCapiMock::GetCaptureContentChangeCallback(const bool isCapt
 }
 
 int32_t ScreenCaptureCapiMock::SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallbackMock>& callback,
-    const bool isErrorCallbackEnabled, const bool isDataCallbackEnabled,
-    const bool isStateChangeCallbackEnabled, const bool isCaptureContentChangeCallbackEnabled)
+    const bool isErrorCallbackEnabled, const bool isDataCallbackEnabled, const bool isStateChangeCallbackEnabled,
+    const bool isCaptureContentChangeCallbackEnabled)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
     if (callback == nullptr) {
