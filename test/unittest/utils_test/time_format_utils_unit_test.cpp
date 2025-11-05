@@ -108,68 +108,68 @@ HWTEST_F(TimeFormatUtilsUnitTest, FormatDateTimeByTimeZone_011, TestSize.Level0)
     EXPECT_EQ(TimeFormatUtils::FormatDateTimeByTimeZone(iso8601Str), iso8601Str);
 }
 
-// Scenario1: Test when dataTime is empty
-HWTEST_F(TimeFormatUtilsUnitTest, FormatDataTimeByString_001, TestSize.Level0)
+// Scenario1: Test when dateTime is empty
+HWTEST_F(TimeFormatUtilsUnitTest, FormatDateTimeByString_001, TestSize.Level0)
 {
-    std::string dataTime = "";
+    std::string dateTime = "";
     std::string expected = "";
-    EXPECT_EQ(TimeFormatUtils::FormatDataTimeByString(dataTime), expected);
+    EXPECT_EQ(TimeFormatUtils::FormatDateTimeByString(dateTime), expected);
 }
 
-// Scenario2: Test when dataTime does not contain space and does not contain '-'
-HWTEST_F(TimeFormatUtilsUnitTest, FormatDataTimeByString_002, TestSize.Level0)
+// Scenario2: Test when dateTime does not contain space and does not contain '-'
+HWTEST_F(TimeFormatUtilsUnitTest, FormatDateTimeByString_002, TestSize.Level0)
 {
-    std::string dataTime = "2022";
+    std::string dateTime = "2022";
     std::string expected = "2022-01-01 00:00:00";
-    EXPECT_EQ(TimeFormatUtils::FormatDataTimeByString(dataTime), expected);
+    EXPECT_EQ(TimeFormatUtils::FormatDateTimeByString(dateTime), expected);
 }
 
-// Scenario3: Test when dataTime contains space but does not contain '-'
-HWTEST_F(TimeFormatUtilsUnitTest, FormatDataTimeByString_003, TestSize.Level0)
+// Scenario3: Test when dateTime contains space but does not contain '-'
+HWTEST_F(TimeFormatUtilsUnitTest, FormatDateTimeByString_003, TestSize.Level0)
 {
-    std::string dataTime = "2022 12";
+    std::string dateTime = "2022 12";
     std::string expected = "2022-01-01 12:00:00";
-    EXPECT_EQ(TimeFormatUtils::FormatDataTimeByString(dataTime), expected);
+    EXPECT_EQ(TimeFormatUtils::FormatDateTimeByString(dateTime), expected);
 }
 
-// Scenario4: Test when dataTime contains space and contains '-'
-HWTEST_F(TimeFormatUtilsUnitTest, FormatDataTimeByString_004, TestSize.Level0)
+// Scenario4: Test when dateTime contains space and contains '-'
+HWTEST_F(TimeFormatUtilsUnitTest, FormatDateTimeByString_004, TestSize.Level0)
 {
-    std::string dataTime = "2022-12-25 12:34:56";
+    std::string dateTime = "2022-12-25 12:34:56";
     std::string expected = "2022-12-25 12:34:56";
-    EXPECT_EQ(TimeFormatUtils::FormatDataTimeByString(dataTime), expected);
+    EXPECT_EQ(TimeFormatUtils::FormatDateTimeByString(dateTime), expected);
 }
 
-// Scenario5: Test when dataTime contains '-' but does not contain ':'
-HWTEST_F(TimeFormatUtilsUnitTest, FormatDataTimeByString_005, TestSize.Level0)
+// Scenario5: Test when dateTime contains '-' but does not contain ':'
+HWTEST_F(TimeFormatUtilsUnitTest, FormatDateTimeByString_005, TestSize.Level0)
 {
-    std::string dataTime = "2022-12-25";
+    std::string dateTime = "2022-12-25";
     std::string expected = "2022-12-25 00:00:00";
-    EXPECT_EQ(TimeFormatUtils::FormatDataTimeByString(dataTime), expected);
+    EXPECT_EQ(TimeFormatUtils::FormatDateTimeByString(dateTime), expected);
 }
 
-// Scenario6: Test when dataTime contains '-' and contains ':'
-HWTEST_F(TimeFormatUtilsUnitTest, FormatDataTimeByString_006, TestSize.Level0)
+// Scenario6: Test when dateTime contains '-' and contains ':'
+HWTEST_F(TimeFormatUtilsUnitTest, FormatDateTimeByString_006, TestSize.Level0)
 {
-    std::string dataTime = "2022-12-25 12:34:56.789";
+    std::string dateTime = "2022-12-25 12:34:56.789";
     std::string expected = "2022-12-25 12:34:56";
-    EXPECT_EQ(TimeFormatUtils::FormatDataTimeByString(dataTime), expected);
+    EXPECT_EQ(TimeFormatUtils::FormatDateTimeByString(dateTime), expected);
 }
 
-// Scenario6: Test when dataTime first '-' =  last '-'
-HWTEST_F(TimeFormatUtilsUnitTest, FormatDataTimeByString_007, TestSize.Level0)
+// Scenario6: Test when dateTime first '-' =  last '-'
+HWTEST_F(TimeFormatUtilsUnitTest, FormatDateTimeByString_007, TestSize.Level0)
 {
-    std::string dataTime = "2022-12";
+    std::string dateTime = "2022-12";
     std::string expected = "2022-12-01 00:00:00";
-    EXPECT_EQ(TimeFormatUtils::FormatDataTimeByString(dataTime), expected);
+    EXPECT_EQ(TimeFormatUtils::FormatDateTimeByString(dateTime), expected);
 }
 
-// Scenario6: Test when dataTime first '-' =  last '-'
-HWTEST_F(TimeFormatUtilsUnitTest, FormatDataTimeByString_008, TestSize.Level0)
+// Scenario6: Test when dateTime first '-' =  last '-'
+HWTEST_F(TimeFormatUtilsUnitTest, FormatDateTimeByString_008, TestSize.Level0)
 {
-    std::string dataTime = "2022-12 12:00";
+    std::string dateTime = "2022-12 12:00";
     std::string expected = "2022-12-01 12:00:00";
-    EXPECT_EQ(TimeFormatUtils::FormatDataTimeByString(dataTime), expected);
+    EXPECT_EQ(TimeFormatUtils::FormatDateTimeByString(dateTime), expected);
 }
 } // namespace Media
 } // namespace OHOS
