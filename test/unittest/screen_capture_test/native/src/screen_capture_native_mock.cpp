@@ -86,13 +86,12 @@ ScreenCaptureNativeMock::~ScreenCaptureNativeMock()
 
 int32_t ScreenCaptureNativeMock::SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallbackMock>& callback,
     const bool isErrorCallbackEnabled, const bool isDataCallbackEnabled, const bool isStateChangeCallbackEnabled,
-    const bool isDisplayChangeCallbackEnabled, const bool isCaptureContentChangeCallbackEnabled)
+    const bool isCaptureContentChangeCallbackEnabled)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
     (void)isErrorCallbackEnabled; // Inner is not support to set New ErrorCallback
     (void)isDataCallbackEnabled; // Inner is not support to set New DataCallback
     isStateChangeCallbackEnabled_ = isStateChangeCallbackEnabled;
-    isDisplayChangeCallbackEnabled_ = isDisplayChangeCallbackEnabled;
     isCaptureContentChangeCallbackEnabled_ = isCaptureContentChangeCallbackEnabled;
     if (callback != nullptr) {
         cb_ = std::make_shared<ScreenCaptureNativeCallbackMock>(callback, screenCapture_);

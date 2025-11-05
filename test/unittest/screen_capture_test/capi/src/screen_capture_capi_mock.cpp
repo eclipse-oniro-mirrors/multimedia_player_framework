@@ -217,29 +217,28 @@ int32_t ScreenCaptureCapiMock::SetScreenCaptureCallback(const std::shared_ptr<Sc
         MEDIA_LOGD("ScreenCaptureCapiMock SetErrorCallback");
         isErrorCallbackEnabled_ = isErrorCallbackEnabled;
         ret = OH_AVScreenCapture_SetErrorCallback(screenCapture_, ScreenCaptureCapiMock::OnErrorNew, this);
-        UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == AV_SCREEN_CAPTURE_ERR_OK, MSERR_UNKNOWN,
-            "ScreenCaptureCapiMock SetErrorCallback failed, ret: %d", ret);
+        if (ret != AV_SCREEN_CAPTURE_ERR_OK) {	
+            MEDIA_LOGE("ScreenCaptureCapiMock SetErrorCallback failed, ret: %{public}d", ret);	
+            return MSERR_UNKNOWN;
+        }
     }
     if (isDataCallbackEnabled) {
         MEDIA_LOGD("ScreenCaptureCapiMock SetDataCallback");
         isDataCallbackEnabled_ = isDataCallbackEnabled;
         ret = OH_AVScreenCapture_SetDataCallback(screenCapture_, ScreenCaptureCapiMock::OnBufferAvailable, this);
-        UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == AV_SCREEN_CAPTURE_ERR_OK, MSERR_UNKNOWN,
-            "ScreenCaptureCapiMock SetErrorCallback failed, ret: %d", ret);
-    }
-    if (isDisplayChangeCallbackEnabled) {
-        MEDIA_LOGD("ScreenCaptureCapiMock SetDisplayCallback");
-        isDisplayChangeCallbackEnabled_ = isDisplayChangeCallbackEnabled;
-        ret = OH_AVScreenCapture_SetDisplayCallback(screenCapture_, ScreenCaptureCapiMock::OnDisplaySelected, this);
-        UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == AV_SCREEN_CAPTURE_ERR_OK, MSERR_UNKNOWN,
-            "ScreenCaptureCapiMock SetErrorCallback failed, ret: %d", ret);
+        if (ret != AV_SCREEN_CAPTURE_ERR_OK) {	
+            MEDIA_LOGE("ScreenCaptureCapiMock SetDataCallback failed, ret: %{public}d", ret);	
+            return MSERR_UNKNOWN;	
+        }
     }
     if (isStateChangeCallbackEnabled) {
         MEDIA_LOGD("ScreenCaptureCapiMock SetStateCallback");
         isStateChangeCallbackEnabled_ = isStateChangeCallbackEnabled;
         ret = OH_AVScreenCapture_SetStateCallback(screenCapture_, ScreenCaptureCapiMock::OnStateChange, this);
-        UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == AV_SCREEN_CAPTURE_ERR_OK, MSERR_UNKNOWN,
-            "ScreenCaptureCapiMock SetErrorCallback failed, ret: %d", ret);
+        if (ret != AV_SCREEN_CAPTURE_ERR_OK) {	
+            MEDIA_LOGE("ScreenCaptureCapiMock SetStateCallback failed, ret: %{public}d", ret);	
+            return MSERR_UNKNOWN;
+        }
     }
 
     return GetCaptureContentChangeCallback(isCaptureContentChangeCallbackEnabled);

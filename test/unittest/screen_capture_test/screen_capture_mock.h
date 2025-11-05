@@ -73,8 +73,7 @@ public:
     virtual ~ScreenCaptureMock() = default;
     virtual int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallbackMock>& callback,
         const bool isErrorCallbackEnabled = false, const bool isDataCallbackEnabled = false,
-        const bool isStateChangeCallbackEnabled = false, const bool isDisplayChangeCallbackEnabled = false,
-        const bool isCaptureContentChangeCallbackEnabled = false) = 0;
+        const bool isStateChangeCallbackEnabled = false, const bool isCaptureContentChangeCallbackEnabled = false) = 0;
     virtual int32_t Init(AVScreenCaptureConfig config) = 0;
     virtual int32_t StartScreenCapture() = 0;
     virtual int32_t StartScreenCaptureWithSurface(const std::any& value) = 0;

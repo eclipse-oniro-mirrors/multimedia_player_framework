@@ -2594,7 +2594,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_presentPicker_test01, TestSize.Le
  * @tc.name: screen_capture_presentPicker_test02
  * @tc.desc: do screencapture PresentPicker
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require:
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_presentPicker_test02, TestSize.Level2)
 {
