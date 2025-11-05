@@ -26,7 +26,8 @@ public:
     ~ScreenCaptureNativeMock();
     int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallbackMock>& callback,
         const bool isErrorCallbackEnabled, const bool isDataCallbackEnabled,
-        const bool isStateChangeCallbackEnabled, const bool isCaptureContentChangeCallbackEnabled) override;
+        const bool isStateChangeCallbackEnabled, const bool isDisplayChangeCallbackEnabled,
+        const bool isCaptureContentChangeCallbackEnabled) override;
     int32_t Init(AVScreenCaptureConfig config) override;
     int32_t StartScreenCapture() override;
     int32_t StartScreenCaptureWithSurface(const std::any& value) override;
@@ -73,6 +74,7 @@ private:
     std::shared_ptr<ScreenCapture> screenCapture_ = nullptr;
     std::shared_ptr<ScreenCaptureCallBack> cb_;
     bool isStateChangeCallbackEnabled_ = false;
+    bool isDisplayChangeCallbackEnabled_ = false;
     bool isCaptureContentChangeCallbackEnabled_ = false;
     ScreenCaptureStrategy strategy_;
 };
