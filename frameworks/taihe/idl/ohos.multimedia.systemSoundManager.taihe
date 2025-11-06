@@ -25,6 +25,7 @@ const TONE_CATEGORY_TEXT_MESSAGE: long = 2;
 const TONE_CATEGORY_NOTIFICATION: long = 4;
 const TONE_CATEGORY_ALARM: long = 8;
 const TONE_CATEGORY_CONTACTS: long = 16;
+const TONE_CATEGORY_NOTIFICATION_APP: long = 32;
 """)
 
 from ringtonePlayer use RingtonePlayer;
