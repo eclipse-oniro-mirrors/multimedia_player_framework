@@ -387,7 +387,7 @@ interface AVPlayer {
         }
     }""")
     OnSeiMessageReceived(payloadTypes: Array<i32>, callback: (messages: Array<SeiMessage>,
-        playbackPosition: Optional<i32>) => void): void;
+        @optional playbackPosition: Optional<i32>) => void): void;
 
     @!sts_inject_into_interface("off(type: string, callback?: (state: string, reason: StateChangeReason)=> void): void;")
     @!sts_inject_into_interface("off(type: string, callback?: (data: object)=> void): void;")
@@ -467,7 +467,7 @@ interface AVPlayer {
         }
     }""")
     OffSeiMessageReceived(payloadTypes: Optional<Array<i32>>, callback: Optional<(messages: Array<SeiMessage>,
-        playbackPosition: Optional<i32>) => void>): void;
+        @optional playbackPosition: Optional<i32>) => void>): void;
 }
 
 struct SeiMessage {
