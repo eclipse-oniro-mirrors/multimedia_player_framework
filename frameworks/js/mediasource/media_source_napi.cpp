@@ -31,8 +31,10 @@ thread_local napi_ref MediaSourceNapi::constructor_ = nullptr;
 napi_value MediaSourceNapi::Init(napi_env env, napi_value exports)
 {
     napi_property_descriptor staticProperty[] = {
-        {"createMediaSourceWithUrl", nullptr, JsCreateMediaSourceWithUrl, nullptr, nullptr, nullptr, napi_writable, nullptr },
-        {"createMediaSourceWithStreamData", nullptr, JsCreateMediaSourceWithStreamData, nullptr, nullptr, nullptr, napi_writable, nullptr },
+        {"createMediaSourceWithUrl", nullptr, JsCreateMediaSourceWithUrl,
+            nullptr, nullptr, nullptr, napi_writable, nullptr },
+        {"createMediaSourceWithStreamData", nullptr, JsCreateMediaSourceWithStreamData,
+            nullptr, nullptr, nullptr, napi_writable, nullptr },
     };
 
     napi_property_descriptor properties[] = {
