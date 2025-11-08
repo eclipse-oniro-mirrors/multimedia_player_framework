@@ -3285,7 +3285,6 @@ int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForSpecifiedScreenForHopper(
     return MSERR_UNKNOWN;
 }
 #endif
-//test
 int32_t ScreenCaptureServer::MakeVirtualScreenMirror()
 {
     MediaTrace trace("ScreenCaptureServer::MakeVirtualScreenMirror");
