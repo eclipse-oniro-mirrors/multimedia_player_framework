@@ -735,8 +735,8 @@ int32_t ScreenCaptureServiceStub::ReleaseAudioBuffer(MessageParcel &data, Messag
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     AudioCaptureSourceType type = static_cast<AudioCaptureSourceType>(data.ReadInt32());
-    CHECK_AND_RETURN_RET_LOG(type >= AudioCaptureSourceType::SCREEN_CAPTURE_ERR_BASE
-        && type <= SCREEN_CAPTURE_ERR_EXTEND_START, MSERR_INVALID_VAL, "type is invalid value");
+    CHECK_AND_RETURN_RET_LOG(type >= AudioCaptureSourceType::SOURCE_INVALID
+        && type <= AudioCaptureSourceType::APP_PLAYBACK, MSERR_INVALID_VAL, "type is invalid value");
     int32_t ret = ReleaseAudioBuffer(type);
     reply.WriteInt32(ret);
     return MSERR_OK;

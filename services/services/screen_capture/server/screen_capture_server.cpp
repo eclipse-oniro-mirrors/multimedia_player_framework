@@ -101,7 +101,8 @@ static const uint32_t MAX_LINE_WIDTH = 8;
 static const auto NOTIFICATION_SUBSCRIBER = NotificationSubscriber();
 static constexpr int32_t AUDIO_CHANGE_TIME = 80000; // 80 ms
 static const int32_t UNSUPPORT_ERROR_CODE_API_VERSION_ISOLATION = 20;
-
+std::map<int32_t, std::weak_ptr<ScreenCaptureServer>> ScreenCaptureServer::serverMap_{};
+std::map<int32_t, std::pair<int32_t, int32_t>> ScreenCaptureServer::saUidAppUidMap_{};
 const int32_t ScreenCaptureServer::maxSessionId_ = 16;
 const int32_t ScreenCaptureServer::maxAppLimit_ = 4;
 UniqueIDGenerator ScreenCaptureServer::gIdGenerator_(ScreenCaptureServer::maxSessionId_);
@@ -1175,8 +1176,6 @@ void ScreenCaptureServer::SetMetaDataReport()
 ScreenCaptureServer::ScreenCaptureServer()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " ScreenCaptureServer Instances create", FAKE_POINTER(this));
-    std::map<int32_t, std::weak_ptr<ScreenCaptureServer>> ScreenCaptureServer::serverMap_{};
-    std::map<int32_t, std::pair<int32_t, int32_t>> ScreenCaptureServer::saUidAppUidMap_{};
     InitAppInfo();
     instanceId_ = OHOS::HiviewDFX::HiTraceChain::GetId().GetChainId();
     CreateMediaInfo(SCREEN_CAPTRUER, IPCSkeleton::GetCallingUid(), instanceId_);
