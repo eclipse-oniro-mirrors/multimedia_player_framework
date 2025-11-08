@@ -101,6 +101,7 @@ static const uint32_t MAX_LINE_WIDTH = 8;
 static const auto NOTIFICATION_SUBSCRIBER = NotificationSubscriber();
 static constexpr int32_t AUDIO_CHANGE_TIME = 80000; // 80 ms
 static const int32_t UNSUPPORT_ERROR_CODE_API_VERSION_ISOLATION = 20;
+
 std::map<int32_t, std::weak_ptr<ScreenCaptureServer>> ScreenCaptureServer::serverMap_{};
 std::map<int32_t, std::pair<int32_t, int32_t>> ScreenCaptureServer::saUidAppUidMap_{};
 const int32_t ScreenCaptureServer::maxSessionId_ = 16;
@@ -3284,6 +3285,7 @@ int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForSpecifiedScreenForHopper(
     return MSERR_UNKNOWN;
 }
 #endif
+
 int32_t ScreenCaptureServer::MakeVirtualScreenMirror()
 {
     MediaTrace trace("ScreenCaptureServer::MakeVirtualScreenMirror");

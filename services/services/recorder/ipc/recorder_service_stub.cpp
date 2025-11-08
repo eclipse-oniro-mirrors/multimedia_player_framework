@@ -597,6 +597,7 @@ int32_t RecorderServiceStub::SetVideoEncoder(MessageParcel &data, MessageParcel 
     if (!(data.ReadInt32(sourceId) && data.ReadInt32(encoder))) {
         return MSERR_INVALID_VAL;
     }
+    
     VideoCodecFormat codecFormat = static_cast<VideoCodecFormat>(encoder);
     reply.WriteInt32(SetVideoEncoder(sourceId, codecFormat));
     return MSERR_OK;
