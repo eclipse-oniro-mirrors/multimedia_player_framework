@@ -30,7 +30,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTUR
 
 namespace OHOS {
 namespace Media {
-std::shared_ptr<ScreenCaptureMonitorServer> screenCaptureMonitorServer = nullptr;
+static std::shared_ptr<ScreenCaptureMonitorServer> screenCaptureMonitorServer = nullptr;
 std::shared_ptr<ScreenCaptureMonitorServer> ScreenCaptureMonitorServer::GetInstance()
 {
     if (!screenCaptureMonitorServer) {

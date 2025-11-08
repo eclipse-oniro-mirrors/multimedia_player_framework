@@ -265,15 +265,11 @@ int32_t ScreenCaptureServiceProxy::InitVideoCap(VideoCaptureInfo videoInfo)
     token = data.WriteUint64(videoInfo.displayId) && data.WriteInt32(videoInfo.taskIDs.size());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write displayid and taskId size!");
     // write list data
-    int count = 0;
-    for (int32_t taskID : videoInfo.taskIDs) {
-        token = data.WriteInt32(taskID);
-        CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write video taskIDs!");
-        count++;
-        if (count >= MAX_WINDOWS_LEN) {
-            break;
-        }
-    }
+    std::vector<int32_t> tempVec = {};
+    tempVec.assign(videoInfo.taskIDs.begin(), videoInfo.taskIDs.end());
+    token = data.WriteInt32Vector(tempVec);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write video taskIds!");
+
     token = data.WriteInt32(videoInfo.videoFrameWidth) && data.WriteInt32(videoInfo.videoFrameHeight) &&
             data.WriteInt32(videoInfo.videoSource);
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write videoinfo!");
@@ -646,8 +642,6 @@ int32_t ScreenCaptureServiceProxy::SkipPrivacyMode(std::vector<uint64_t> &window
     MessageParcel reply;
     MessageOption option;
 
-    CHECK_AND_RETURN_RET_LOG(windowIDsVec.size() <= static_cast<size_t>(std::numeric_limits<int32_t>::max()),
-        MSERR_INVALID_OPERATION, "Integer overflow!");
     bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
     token = data.WriteInt32(static_cast<int32_t>(windowIDsVec.size()));

@@ -102,8 +102,6 @@ static const auto NOTIFICATION_SUBSCRIBER = NotificationSubscriber();
 static constexpr int32_t AUDIO_CHANGE_TIME = 80000; // 80 ms
 static const int32_t UNSUPPORT_ERROR_CODE_API_VERSION_ISOLATION = 20;
 
-std::map<int32_t, std::weak_ptr<ScreenCaptureServer>> ScreenCaptureServer::serverMap_{};
-std::map<int32_t, std::pair<int32_t, int32_t>> ScreenCaptureServer::saUidAppUidMap_{};
 const int32_t ScreenCaptureServer::maxSessionId_ = 16;
 const int32_t ScreenCaptureServer::maxAppLimit_ = 4;
 UniqueIDGenerator ScreenCaptureServer::gIdGenerator_(ScreenCaptureServer::maxSessionId_);
@@ -220,7 +218,7 @@ bool ScreenCaptureServer::CheckScreenCaptureSessionIdLimit(int32_t curAppUid)
     int32_t countForUid = 0;
     MEDIA_LOGI("CheckScreenCaptureSessionIdLimit start. curAppUid: %{public}d.", curAppUid);
     {
-        std::shared_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
+        std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
         for (auto iter = ScreenCaptureServer::serverMap_.begin(); iter != ScreenCaptureServer::serverMap_.end();
             iter++) {
                 auto iterPtr = (iter->second).lock();
@@ -431,7 +429,8 @@ int32_t ScreenCaptureServer::RegisterWindowLifecycleListener(std::vector<int32_t
 {
     MEDIA_LOGI("RegisterWindowLifecycleListener start, windowIdListSize: %{public}d",
         static_cast<int32_t>(windowIdList.size()));
-
+    CHECK_AND_RETURN_RET_LOG(static_cast<int32_t>(windowIdList.size()) != 0, MSERR_OK,
+        "windowIdList is empty");
     auto sceneSessionManager = SessionManagerLite::GetInstance().GetSceneSessionManagerLiteProxy();
     CHECK_AND_RETURN_RET_LOG(sceneSessionManager != nullptr, MSERR_INVALID_OPERATION,
         "sceneSessionManager is nullptr, RegisterWindowLifecycleListener failed.");
@@ -644,7 +643,7 @@ void SCWindowInfoChangedListener::OnWindowInfoChanged(
 
     MEDIA_LOGI("OnWindowInfoChanged: the displayId of interestWindowId changed!");
     auto iter = myWindowInfoList.front().find(WindowInfoKey::DISPLAY_ID);
-    if (iter != myWindowInfoList.front().end() && std::holds_alternative<uint64_t>(iter->second)) {
+    if (iter != myWindowInfoList.front().end()) {
         uint64_t displayId = std::get<uint64_t>(iter->second);
         MEDIA_LOGI("OnWindowInfoChanged: the curDisplayId: %{public}" PRIu64, displayId);
         SCServer->SetCurDisplayId(displayId);
@@ -1176,6 +1175,8 @@ void ScreenCaptureServer::SetMetaDataReport()
 ScreenCaptureServer::ScreenCaptureServer()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " ScreenCaptureServer Instances create", FAKE_POINTER(this));
+    std::map<int32_t, std::weak_ptr<ScreenCaptureServer>> ScreenCaptureServer::serverMap_{};
+    std::map<int32_t, std::pair<int32_t, int32_t>> ScreenCaptureServer::saUidAppUidMap_{};
     InitAppInfo();
     instanceId_ = OHOS::HiviewDFX::HiTraceChain::GetId().GetChainId();
     CreateMediaInfo(SCREEN_CAPTRUER, IPCSkeleton::GetCallingUid(), instanceId_);

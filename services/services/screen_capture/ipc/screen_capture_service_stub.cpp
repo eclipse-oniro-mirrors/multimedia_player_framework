@@ -603,16 +603,10 @@ int32_t ScreenCaptureServiceStub::InitVideoCap(MessageParcel &data, MessageParce
     int32_t size = data.ReadInt32();
     size = size >= MAX_WINDOWS_LEN ? MAX_WINDOWS_LEN : size;
     if (size > 0) {
-        uint32_t availableBytes = data.GetWritePosition() - data.GetReadPosition();
-        int32_t availableNum = size + 3; // size + 3 data items remaining
-        CHECK_AND_RETURN_RET_LOG(availableBytes >= static_cast<uint32_t>((availableNum) * sizeof(int32_t)),
-            MSERR_INVALID_STATE, "Insufficient remaining data.");
-        for (auto i = 0; i < size; i++) {
-            int32_t missionId = data.ReadInt32();
-            if (missionId >= 0) {
-                videoInfo.taskIDs.push_back(missionId);
-            }
-        }
+        std::vector<int32_t> tempVec = {};
+        bool token = data.ReadInt32Vector(&tempVec);
+        CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to read video taskIds!");
+        videoInfo.taskIDs.assign(tempVec.begin(), tempVec.end());
     }
     videoInfo.videoFrameWidth = data.ReadInt32();
     videoInfo.videoFrameHeight = data.ReadInt32();
@@ -741,6 +735,8 @@ int32_t ScreenCaptureServiceStub::ReleaseAudioBuffer(MessageParcel &data, Messag
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     AudioCaptureSourceType type = static_cast<AudioCaptureSourceType>(data.ReadInt32());
+    CHECK_AND_RETURN_RET_LOG(type >= AudioCaptureSourceType::SCREEN_CAPTURE_ERR_BASE
+        && type <= SCREEN_CAPTURE_ERR_EXTEND_START, MSERR_INVALID_VAL, "type is invalid value");
     int32_t ret = ReleaseAudioBuffer(type);
     reply.WriteInt32(ret);
     return MSERR_OK;
