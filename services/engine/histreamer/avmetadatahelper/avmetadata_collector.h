@@ -79,7 +79,7 @@ public:
     void GetAudioTrackInfo(const std::shared_ptr<Meta> &trackInfo, const std::string& mime, size_t index);
     void GetVideoTrackInfo(const std::shared_ptr<Meta> &trackInfo, const std::string& mime, size_t index);
     void GetSubtitleTrackInfo(const std::shared_ptr<Meta> &trackInfo, const std::string& mime, size_t index);
-    void GetOtherTrackInfo(const std::shared_ptr<Meta> &trackInfo, const std::string& mime, size_t index);
+    void GetOtherTrackInfo(const std::shared_ptr<Meta> &trackInfo, size_t index);
 private:
     std::shared_ptr<MediaDemuxer> mediaDemuxer_;
     std::unordered_map<int32_t, std::string> collectedMeta_ = {};

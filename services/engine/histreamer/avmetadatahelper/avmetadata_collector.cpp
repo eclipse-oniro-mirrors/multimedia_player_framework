@@ -235,10 +235,11 @@ void AVMetaDataCollector::GetSubtitleTrackInfo(const std::shared_ptr<Meta> &trac
     trackInfoVec_.emplace_back(std::move(subtitleTrackInfo));
 }
 
-void AVMetaDataCollector::GetOtherTrackInfo(const std::shared_ptr<Meta> &trackInfo, 
-    const std::string& mime, size_t index)
+void AVMetaDataCollector::GetOtherTrackInfo(const std::shared_ptr<Meta> &trackInfo, size_t index)
 {
     MEDIA_LOGD("GetOtherTrackInfo in");
+    std::string mime = "";
+    trackInfo->GetData(Tag::MIME_TYPE, mime);
     Format otherTrackInfo {};
     otherTrackInfo.PutIntValue("track_index", index);
     Plugins::MediaType mediaType = Plugins::MediaType::UNKNOWN;
@@ -408,14 +409,14 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
 
 void AVMetaDataCollector::InitTracksInfoVector(const std::shared_ptr<Meta> &meta, size_t index)
 {
-    std::string mime = "";
-    meta->GetData(Tag::MIME_TYPE, mime);
     Plugins::MediaType mediaType;
     bool hasMediaType = meta->GetData(Tag::MEDIA_TYPE, mediaType);
     if (hasMediaType && mediaType == Plugins::MediaType::AUXILIARY) {
-        GetOtherTrackInfo(meta, mime, index);
+        GetOtherTrackInfo(meta, index);
         return;
     }
+    std::string mime = "";
+    meta->GetData(Tag::MIME_TYPE, mime);
     if (IsAudioMime(mime)) {
         GetAudioTrackInfo(meta, mime, index);
     } else if (IsVideoMime(mime)) {
@@ -423,7 +424,7 @@ void AVMetaDataCollector::InitTracksInfoVector(const std::shared_ptr<Meta> &meta
     } else if (IsSubtitleMime(mime)) {
         GetSubtitleTrackInfo(meta, mime, index);
     } else {
-        GetOtherTrackInfo(meta, mime, index);
+        GetOtherTrackInfo(meta, index);
     }
 }
 
