@@ -265,11 +265,15 @@ int32_t ScreenCaptureServiceProxy::InitVideoCap(VideoCaptureInfo videoInfo)
     token = data.WriteUint64(videoInfo.displayId) && data.WriteInt32(videoInfo.taskIDs.size());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write displayid and taskId size!");
     // write list data
-    std::vector<int32_t> tempVec = {};
-    tempVec.assign(videoInfo.taskIDs.begin(), videoInfo.taskIDs.end());
-    token = data.WriteInt32Vector(tempVec);
-    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write video taskIds!");
-
+    int count = 0;	
+    for (int32_t taskID : videoInfo.taskIDs) {	
+        token = data.WriteInt32(taskID);	
+        CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write video taskIDs!");	
+        count++;	
+        if (count >= MAX_WINDOWS_LEN) {
+            break;
+        }
+    }
     token = data.WriteInt32(videoInfo.videoFrameWidth) && data.WriteInt32(videoInfo.videoFrameHeight) &&
             data.WriteInt32(videoInfo.videoSource);
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write videoinfo!");

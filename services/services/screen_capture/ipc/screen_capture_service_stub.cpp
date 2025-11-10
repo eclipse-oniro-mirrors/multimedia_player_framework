@@ -603,10 +603,12 @@ int32_t ScreenCaptureServiceStub::InitVideoCap(MessageParcel &data, MessageParce
     int32_t size = data.ReadInt32();
     size = size >= MAX_WINDOWS_LEN ? MAX_WINDOWS_LEN : size;
     if (size > 0) {
-        std::vector<int32_t> tempVec = {};
-        bool token = data.ReadInt32Vector(&tempVec);
-        CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to read video taskIds!");
-        videoInfo.taskIDs.assign(tempVec.begin(), tempVec.end());
+        for (auto i = 0; i < size; i++) {
+            int32_t missionId = data.ReadInt32();
+            if (missionId >= 0) {
+                videoInfo.taskIDs.push_back(missionId);
+            }
+        }
     }
     videoInfo.videoFrameWidth = data.ReadInt32();
     videoInfo.videoFrameHeight = data.ReadInt32();
