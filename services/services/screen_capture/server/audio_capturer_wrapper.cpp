@@ -92,8 +92,8 @@ int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
     MEDIA_LOGI("0x%{public}06" PRIXPTR "Start success, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
 
     audioCapturer_ = audioCapturer;
-    readAudioLoop_ = std::make_unique<std::thread>([this] { this->CaptureAudio(); });
     captureState_.store(CAPTURER_RECORDING);
+    readAudioLoop_ = std::make_unique<std::thread>([this] { this->CaptureAudio(); });
     return MSERR_OK;
 }
 
