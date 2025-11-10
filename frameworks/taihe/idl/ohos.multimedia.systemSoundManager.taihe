@@ -25,6 +25,7 @@ const TONE_CATEGORY_TEXT_MESSAGE: int = 2;
 const TONE_CATEGORY_NOTIFICATION: int = 4;
 const TONE_CATEGORY_ALARM: int = 8;
 const TONE_CATEGORY_CONTACTS: int = 16;
+const TONE_CATEGORY_NOTIFICATION_APP: int = 32;
 """)
 
 from ringtonePlayer use RingtonePlayer;
