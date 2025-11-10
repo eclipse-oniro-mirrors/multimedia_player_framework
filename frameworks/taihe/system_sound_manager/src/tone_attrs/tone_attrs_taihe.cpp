@@ -137,7 +137,7 @@ void ToneAttrsImpl::SetFileName(::taihe::string_view name)
     return ::ohos::multimedia::systemSoundManager::ToneCustomizedType::from_value(toneAttrs_->GetCustomizedType());
 }
 
-void ToneAttrsImpl::SetCategory(int64_t category)
+void ToneAttrsImpl::SetCategory(int32_t category)
 {
     CHECK_AND_RETURN_LOG(CheckPermission(), "No system permission");
 
@@ -157,7 +157,7 @@ void ToneAttrsImpl::SetCategory(int64_t category)
     toneAttrs_->SetCategory(category);
 }
 
-int64_t ToneAttrsImpl::GetCategory()
+int32_t ToneAttrsImpl::GetCategory()
 {
     CHECK_AND_RETURN_RET_LOG(CheckPermission(), 0, "No system permission");
     CHECK_AND_RETURN_RET_LOG(CheckNativeToneAttrs(), 0, "toneAttrs_ is nullptr");
