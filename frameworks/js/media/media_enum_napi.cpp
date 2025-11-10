@@ -420,6 +420,7 @@ static const std::vector<struct JsEnumString> g_mediaDescriptionKey = {
     { "MD_KEY_ORIGINAL_HEIGHT", "original_height" },
     {"MD_KEY_REFERENCE_TRACK_IDS", "ref_track_ids"},
     {"MD_KEY_TRACK_REFERENCE_TYPE", "track_ref_type"},
+    {"MD_KEY_MIME_TYPE", "mime_type"},
 };
 
 static const std::vector<struct JsEnumInt> g_screenCaptureRecordPreset = {

@@ -182,8 +182,6 @@ static void FreeSurfaceBuffer(void *addr, void *context, uint32_t size)
     ref->DecStrongRef(ref);
 }
 
-// test 
-
 static PixelMapMemHolder *CreatePixelMapData(const std::shared_ptr<AVSharedMemory> &mem, const OutputFrame &frame)
 {
     PixelMapMemHolder *holder = new (std::nothrow) PixelMapMemHolder;
