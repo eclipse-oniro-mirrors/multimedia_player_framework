@@ -30,19 +30,17 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTUR
 
 namespace OHOS {
 namespace Media {
-static std::shared_ptr<ScreenCaptureMonitorServer> screenCaptureMonitorServer = nullptr;
+
 std::shared_ptr<ScreenCaptureMonitorServer> ScreenCaptureMonitorServer::GetInstance()
 {
-    if (!screenCaptureMonitorServer) {
-        screenCaptureMonitorServer = std::make_shared<ScreenCaptureMonitorServer>();
-        int32_t ret = screenCaptureMonitorServer->Init();
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to init ScreenCaptureMonitorServer");
-    }
+    static std::shared_ptr<ScreenCaptureMonitorServer> screenCaptureMonitorServer;
     return screenCaptureMonitorServer;
 }
 
 ScreenCaptureMonitorServer::ScreenCaptureMonitorServer()
 {
+    int32_t ret = screenCaptureMonitorServer->Init();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to init ScreenCaptureMonitorServer");
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
