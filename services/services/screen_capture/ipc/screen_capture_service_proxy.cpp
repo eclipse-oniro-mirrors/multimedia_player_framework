@@ -268,7 +268,7 @@ int32_t ScreenCaptureServiceProxy::InitVideoCap(VideoCaptureInfo videoInfo)
     int count = 0;
     for (int32_t taskID : videoInfo.taskIDs) {
         token = data.WriteInt32(taskID);
-        CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write video taskIDs!");	
+        CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write video taskIDs!");
         count++;
         if (count >= MAX_WINDOWS_LEN) {
             break;
