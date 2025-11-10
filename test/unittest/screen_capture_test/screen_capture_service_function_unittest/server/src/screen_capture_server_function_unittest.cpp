@@ -952,7 +952,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, MixAudio_003, TestSize.Level2)
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ScreenConnectListenerInScreenCapture_001, TestSize.Level2)
 {
-    screenCaptureServer_->displayScreenId_ = 1; // 1 display screen id
+    screenCaptureServer_->SetDisplayScreenId(1); // 1 display screen id
     screenCaptureServer_->RegisterScreenConnectListener();
     uint64_t screenId = 1; // 1 disconnect screen id
     screenCaptureServer_->screenConnectListener_->OnConnect(screenId);
@@ -963,7 +963,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ScreenConnectListenerInScreenCapture_0
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ScreenConnectListenerInScreenCapture_002, TestSize.Level2)
 {
-    screenCaptureServer_->displayScreenId_ = 2;  // 2 display screen id
+    screenCaptureServer_->SetDisplayScreenId(2);  // 2 display screen id
     screenCaptureServer_->RegisterScreenConnectListener();
     uint64_t screenId = 1; // 1 disconnect screen id
     screenCaptureServer_->screenConnectListener_->OnConnect(screenId);
@@ -2658,9 +2658,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UserSelected_001, TestSize.Level2)
 {
     ScreenCaptureUserSelectionInfo selectionInfo;
     selectionInfo.selectType = 0;
-    selectionInfo.displayId = 0;
+    selectionInfo.displayIds = {0};
     screenCaptureServer_->NotifyUserSelected(selectionInfo);
-    screenCaptureServer_->displayScreenId_ = 0;
+    screenCaptureServer_->SetDisplayScreenId(0);
     screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
     screenCaptureServer_->PostStartScreenCaptureSuccessAction();
     EXPECT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::STARTED);
@@ -2668,7 +2668,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UserSelected_001, TestSize.Level2)
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SetVirtualScreenAutoRotation_001, TestSize.Level2)
 {
-    screenCaptureServer_->displayScreenId_ = 0;
+    screenCaptureServer_->SetDisplayScreenId(0);
     screenCaptureServer_->captureConfig_.dataType = DataType::CAPTURE_FILE;
     EXPECT_NE(screenCaptureServer_->SetVirtualScreenAutoRotation(), MSERR_OK);
     screenCaptureServer_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
@@ -3003,6 +3003,107 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnSpeakerAliveStatusChanged_004, TestS
     SetSCInnerAudioCaptureAndPushData(nullptr);
     auto ret = screenCaptureServer_->OnSpeakerAliveStatusChanged(true);
     EXPECT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ParseDisplayId_001, TestSize.Level2)
+{
+    std::string jsonStr = R"({"displayId":1})";
+    Json::Reader reader;
+    Json::Value root;
+    ASSERT_EQ(reader.parse(jsonStr, root), true);
+    screenCaptureServer_->ParseDisplayId(root["displayId"]);
+    ASSERT_EQ(screenCaptureServer_->displayIds_.size(), 1);
+    EXPECT_EQ(screenCaptureServer_->displayIds_.front(), 1);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ParseDisplayId_002, TestSize.Level2)
+{
+    std::string jsonStr = R"({"displayId":[1,2]})";
+    Json::Reader reader;
+    Json::Value root;
+    ASSERT_EQ(reader.parse(jsonStr, root), true);
+    screenCaptureServer_->ParseDisplayId(root["displayId"]);
+    ASSERT_EQ(screenCaptureServer_->displayIds_.size(), 2);
+    EXPECT_EQ(screenCaptureServer_->displayIds_.front(), 1);
+    EXPECT_EQ(screenCaptureServer_->displayIds_.back(), 2);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ParseDisplayId_003, TestSize.Level2)
+{
+    std::string jsonStr = R"({"displayId":[1,-1,2]})";
+    Json::Reader reader;
+    Json::Value root;
+    ASSERT_EQ(reader.parse(jsonStr, root), true);
+    screenCaptureServer_->ParseDisplayId(root["displayId"]);
+    ASSERT_EQ(screenCaptureServer_->displayIds_.size(), 2);
+    EXPECT_EQ(screenCaptureServer_->displayIds_.front(), 1);
+    EXPECT_EQ(screenCaptureServer_->displayIds_.back(), 2);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ParseDisplayId_004, TestSize.Level2)
+{
+    std::string jsonStr = R"({"displayId":[]})";
+    Json::Reader reader;
+    Json::Value root;
+    ASSERT_EQ(reader.parse(jsonStr, root), true);
+    screenCaptureServer_->ParseDisplayId(root["displayId"]);
+    EXPECT_EQ(screenCaptureServer_->displayIds_.size(), 0);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ParseDisplayId_005, TestSize.Level2)
+{
+    std::string jsonStr = R"({"displayId":-1})";
+    Json::Reader reader;
+    Json::Value root;
+    ASSERT_EQ(reader.parse(jsonStr, root), true);
+    screenCaptureServer_->ParseDisplayId(root["displayId"]);
+    EXPECT_EQ(screenCaptureServer_->displayIds_.size(), 0);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, HandleSetDisplayIdAndMissionId_001, TestSize.Level2)
+{
+    std::string jsonStr = R"({"displayId":1, "missionId":1})";
+    Json::Reader reader;
+    Json::Value root;
+    ASSERT_EQ(reader.parse(jsonStr, root), true);
+    screenCaptureServer_->HandleSetDisplayIdAndMissionId(root);
+    ASSERT_EQ(screenCaptureServer_->displayIds_.size(), 1);
+    EXPECT_EQ(screenCaptureServer_->displayIds_.front(), 1);
+    EXPECT_EQ(screenCaptureServer_->missionIds_.size(), 1);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, MakeVirtualScreenMirrorForSpecifiedScreen_001, TestSize.Level2)
+{
+    auto defaultDisplay = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
+    std::vector<ScreenId> mirrorIds{0};
+    EXPECT_EQ(screenCaptureServer_->MakeVirtualScreenMirrorForSpecifiedScreen(defaultDisplay, mirrorIds),
+        MSERR_UNKNOWN);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, MakeVirtualScreenMirrorForSpecifiedScreen_002, TestSize.Level2)
+{
+    auto defaultDisplay = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
+    std::vector<ScreenId> mirrorIds{0};
+    screenCaptureServer_->displayIds_ = {0};
+    EXPECT_EQ(screenCaptureServer_->MakeVirtualScreenMirrorForSpecifiedScreen(defaultDisplay, mirrorIds),
+        MSERR_UNKNOWN);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, MakeVirtualScreenMirrorForSpecifiedScreen_003, TestSize.Level2)
+{
+    auto defaultDisplay = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
+    std::vector<ScreenId> mirrorIds{0};
+    screenCaptureServer_->displayIds_ = {333};
+    EXPECT_EQ(screenCaptureServer_->MakeVirtualScreenMirrorForSpecifiedScreen(defaultDisplay, mirrorIds),
+        MSERR_UNKNOWN);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetDisplayScreenId_001, TestSize.Level2)
+{
+    std::vector<uint64_t> displayIds = {0, 1, 2, 3};
+    screenCaptureServer_->SetDisplayScreenId(std::move(displayIds));
+    EXPECT_TRUE(screenCaptureServer_->displayIds_.empty());
+    EXPECT_EQ(screenCaptureServer_->displayScreenIds_.size(), 4);
 }
 } // Media
 } // OHOS

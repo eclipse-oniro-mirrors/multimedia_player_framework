@@ -128,6 +128,9 @@ public:
     void OnDMPrivateWindowChange(bool hasPrivate);
     void SetMissionId(uint64_t missionId);
     void SetDisplayId(uint64_t displayId);
+    void SetDisplayId(std::vector<uint64_t> &&displayIds);
+    void SetDisplayScreenId(uint64_t displayId);
+    void SetDisplayScreenId(std::vector<uint64_t> &&displayIds);
     bool IsTelInCallSkipList();
     int32_t GetAppPid();
     int32_t GetAppUid();
@@ -153,7 +156,7 @@ public:
     std::vector<int32_t> GetWindowIdList();
     void OnSceneSessionManagerDied(const wptr<IRemoteObject>& remote);
     void SetDefaultDisplayIdOfWindows();
-    uint64_t GetDefaultDisplayId();
+    bool IsCaptureScreen(uint64_t displayId);
     void SetCurDisplayId(uint64_t displayId);
     uint64_t GetCurDisplayId();
 private:
@@ -209,17 +212,18 @@ private:
 
     VirtualScreenOption InitVirtualScreenOption(const std::string &name, sptr<OHOS::Surface> consumer);
     int32_t GetMissionIds(std::vector<uint64_t> &missionIds);
-    int32_t MakeVirtualScreenMirrorForWindow(sptr<Rosen::Display> defaultDisplay,
-        std::vector<ScreenId> mirrorIds);
-    int32_t MakeVirtualScreenMirrorForHomeScreen(sptr<Rosen::Display> defaultDisplay,
-         std::vector<ScreenId> mirrorIds);
-    int32_t MakeVirtualScreenMirrorForSpecifiedScreen(sptr<Rosen::Display> defaultDisplay,
-        std::vector<ScreenId> mirrorIds);
+    int32_t MakeVirtualScreenMirrorForWindow(const sptr<Rosen::Display> &defaultDisplay,
+        std::vector<ScreenId> &mirrorIds);
+    int32_t MakeVirtualScreenMirrorForHomeScreen(const sptr<Rosen::Display> &defaultDisplay,
+        std::vector<ScreenId> &mirrorIds);
+    int32_t MakeVirtualScreenMirrorForSpecifiedScreen(const sptr<Rosen::Display> &defaultDisplay,
+        std::vector<ScreenId> &mirrorIds);
     int32_t MakeVirtualScreenMirror();
     int32_t CreateVirtualScreen(const std::string &name, sptr<OHOS::Surface> consumer);
     int32_t SetVirtualScreenAutoRotation();
     int32_t PrepareVirtualScreenMirror();
     void DestroyVirtualScreen();
+    void ParseDisplayId(const Json::Value &displayIdJson);
     void HandleSetDisplayIdAndMissionId(Json::Value &root);
 
     bool CheckScreenCapturePermission();
@@ -241,12 +245,12 @@ private:
     bool CheckCaptureSpecifiedWindowForSelectWindow();
     void SendConfigToUIParams(AAFwk::Want& want);
     bool IsHopper();
-    int32_t MakeVirtualScreenMirrorForWindowForHopper(sptr<Rosen::Display> defaultDisplay,
-        std::vector<ScreenId> mirrorIds);
-    int32_t MakeVirtualScreenMirrorForHomeScreenForHopper(sptr<Rosen::Display> defaultDisplay,
-        std::vector<ScreenId> mirrorIds);
-    int32_t MakeVirtualScreenMirrorForSpecifiedScreenForHopper(sptr<Rosen::Display> defaultDisplay,
-        std::vector<ScreenId> mirrorIds);
+    int32_t MakeVirtualScreenMirrorForWindowForHopper(const sptr<Rosen::Display> &defaultDisplay,
+        std::vector<ScreenId> &mirrorIds);
+    int32_t MakeVirtualScreenMirrorForHomeScreenForHopper(const sptr<Rosen::Display> &defaultDisplay,
+        std::vector<ScreenId> &mirrorIds);
+    int32_t MakeVirtualScreenMirrorForSpecifiedScreenForHopper(const sptr<Rosen::Display> &defaultDisplay,
+        std::vector<ScreenId> &mirrorIds);
     bool IsPickerPopUp();
     bool CheckCustScrRecPermission();
     void SetTimeoutScreenoffDisableLock(bool lockScreen);
@@ -345,7 +349,8 @@ private:
     bool isDump_ = false;
     bool isSystemUI2_ = false;
     ScreenId virtualScreenId_ = SCREEN_ID_INVALID;
-    ScreenId displayScreenId_ = SCREEN_ID_INVALID;
+    std::vector<ScreenId> displayScreenIds_;
+    std::vector<ScreenId> displayIds_;
     std::vector<uint64_t> missionIds_;
     std::vector<int32_t> windowIdList_ = {};
     ScreenId curWindowInDisplayId_ = SCREEN_ID_INVALID;
@@ -407,8 +412,6 @@ private:
     static int32_t CheckVideoEncInfo(VideoEncInfo &videoEncInfo);
     static int32_t CheckCaptureMode(CaptureMode captureMode);
     static int32_t CheckDataType(DataType dataType);
-
-    static std::string JoinInt32Vector(const std::vector<int32_t>& vec, const std::string& separator = ",");
 
 private:
     static constexpr int32_t ROOT_UID = 0;

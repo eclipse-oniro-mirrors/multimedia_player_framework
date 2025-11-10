@@ -116,6 +116,18 @@ std::shared_mutex ScreenCaptureServer::mutexServerMapRWGlobal_;
 std::shared_mutex ScreenCaptureServer::mutexListRWGlobal_;
 std::shared_mutex ScreenCaptureServer::mutexSaAppInfoMapGlobal_;
 
+template <typename T> static std::string JoinVector(const std::vector<T> &vec, const std::string_view &separator = ",")
+{
+    std::ostringstream oss;
+    for (size_t i = 0; i < vec.size(); ++i) {
+        oss << vec[i];
+        if (i < vec.size() - 1) {
+            oss << separator;
+        }
+    }
+    return oss.str();
+}
+
 void NotificationSubscriber::OnConnected()
 {
     MEDIA_LOGI("NotificationSubscriber OnConnected");
@@ -179,11 +191,10 @@ void ScreenConnectListenerForSC::OnConnect(Rosen::ScreenId screenId)
 
 void ScreenConnectListenerForSC::OnDisconnect(Rosen::ScreenId screenId)
 {
-    MEDIA_LOGI("ScreenConnectListenerForSC OnDisconnect screenId: %{public}" PRIu64 "screenId_: %{public}" PRIu64,
-        screenId, screenId_);
+    MEDIA_LOGI("ScreenConnectListenerForSC OnDisconnect screenId: %{public}" PRIu64, screenId);
     auto callbackPtr = screenCaptureServer_.lock();
-    if (callbackPtr && screenId == screenId_) {
-        MEDIA_LOGI("ScreenConnectListenerForSC OnDisconnect NotifyCaptureContentChanged: %{public}" PRIu64, screenId_);
+    if (callbackPtr && std::find(screenIds_.begin(), screenIds_.end(), screenId) != screenIds_.end()) {
+        MEDIA_LOGI("ScreenConnectListenerForSC OnDisconnect NotifyCaptureContentChanged: %{public}" PRIu64, screenId);
         callbackPtr->NotifyCaptureContentChanged(
             AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_UNAVAILABLE, nullptr);
     }
@@ -367,9 +378,9 @@ std::vector<int32_t> ScreenCaptureServer::GetWindowIdList()
     return windowIdList_;
 }
 
-uint64_t ScreenCaptureServer::GetDefaultDisplayId()
+bool ScreenCaptureServer::IsCaptureScreen(uint64_t displayId)
 {
-    return displayScreenId_;
+    return std::find(displayScreenIds_.begin(), displayScreenIds_.end(), displayId) != displayScreenIds_.end();
 }
 
 void ScreenCaptureServer::SetCurDisplayId(uint64_t displayId)
@@ -402,9 +413,9 @@ void ScreenCaptureServer::SetDefaultDisplayIdOfWindows()
             " in DisplayId:%{public}" PRIu64, FAKE_POINTER(this), pair.first, pair.second);
             defaultDisplayId = pair.second;
     }
-    displayScreenId_ = defaultDisplayId;
-    SetCurDisplayId(displayScreenId_);
-    MEDIA_LOGI("SetDefaultDisplayIdOfWindows End. defaultDisplayId: %{public}" PRIu64, displayScreenId_);
+    SetDisplayScreenId(defaultDisplayId);
+    SetCurDisplayId(defaultDisplayId);
+    MEDIA_LOGI("SetDefaultDisplayIdOfWindows End. defaultDisplayId: %{public}" PRIu64, defaultDisplayId);
 }
 
 void ScreenCaptureServer::OnSceneSessionManagerDied(const wptr<IRemoteObject>& remote)
@@ -587,7 +598,7 @@ void SCWindowLifecycleListener::OnLifecycleEvent(SessionLifecycleEvent event, co
     switch (event) {
         case SessionLifecycleEvent::FOREGROUND: {
             MEDIA_LOGI("OnLifecycleEvent: SessionLifecycleEvent::FOREGROUND");
-            if (SCServer->GetCurDisplayId() == SCServer->GetDefaultDisplayId() &&
+            if (SCServer->IsCaptureScreen(SCServer->GetCurDisplayId()) &&
                 SCServer->GetWindowIdList().size() > 0) {
                 WindowInfoOption windowInfoOption;
                 std::vector<sptr<WindowInfo>> infos;
@@ -602,7 +613,7 @@ void SCWindowLifecycleListener::OnLifecycleEvent(SessionLifecycleEvent event, co
         }
         case SessionLifecycleEvent::BACKGROUND: {
             MEDIA_LOGI("OnLifecycleEvent: SessionLifecycleEvent::BACKGROUND");
-            if (SCServer->GetCurDisplayId() == SCServer->GetDefaultDisplayId()) {
+            if (!SCServer->IsCaptureScreen(SCServer->GetCurDisplayId())) {
                 SCServer->NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE,
                     nullptr);
             }
@@ -648,7 +659,7 @@ void SCWindowInfoChangedListener::OnWindowInfoChanged(
         uint64_t displayId = std::get<uint64_t>(iter->second);
         MEDIA_LOGI("OnWindowInfoChanged: the curDisplayId: %{public}" PRIu64, displayId);
         SCServer->SetCurDisplayId(displayId);
-        if (displayId == SCServer->GetDefaultDisplayId()) {
+        if (SCServer->IsCaptureScreen(displayId)) {
             MEDIA_LOGI("OnWindowInfoChanged: window back to initial display!");
             if (SCServer->GetWindowIdList().size() > 0) {
                 WindowInfoOption windowInfoOption;
@@ -885,14 +896,7 @@ void ScreenCaptureServer::PrepareSelectWindow(Json::Value &root)
     if (root.type() != Json::objectValue) {
         return;
     }
-    const Json::Value displayIdJson = root["displayId"];
-    if (!displayIdJson.isNull() && displayIdJson.isInt() && displayIdJson.asInt64() >= 0) {
-        uint64_t displayId = static_cast<uint64_t>(displayIdJson.asInt64());
-        MEDIA_LOGI("Report Select DisplayId: %{public}" PRIu64, displayId);
-        SetDisplayId(displayId);
-        // 手机模式 missionId displayId 均为-1
-        SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_SCREEN, -1);
-    }
+    ParseDisplayId(root["displayId"]);
     const Json::Value missionIdJson = root["missionId"];
     if (!missionIdJson.isNull() && missionIdJson.isInt() && missionIdJson.asInt() >= 0) {
         int32_t missionId = missionIdJson.asInt();
@@ -900,7 +904,7 @@ void ScreenCaptureServer::PrepareSelectWindow(Json::Value &root)
         SetMissionId(missionId);
         SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_WINDOW, missionId);
     }
-    ScreenCaptureUserSelectionInfo selectionInfo = {0, static_cast<uint64_t>(0)};
+    ScreenCaptureUserSelectionInfo selectionInfo;
     PrepareUserSelectionInfo(selectionInfo);
     NotifyUserSelected(selectionInfo);
 }
@@ -1023,18 +1027,39 @@ int32_t ScreenCaptureServer::HandlePresentPickerWindowCase(Json::Value& root, co
     return ret;
 }
 
-void ScreenCaptureServer::HandleSetDisplayIdAndMissionId(Json::Value &root)
+void ScreenCaptureServer::ParseDisplayId(const Json::Value &displayIdJson)
 {
-    MEDIA_LOGI("ScreenCaptureServer::HandleSetDisplayIdAndMissionId start");
-    missionIds_.clear();
-    UpdateHighlightOutline(false);
-    const Json::Value displayIdJson = root["displayId"];
-    if (!displayIdJson.isNull() && displayIdJson.isInt() && displayIdJson.asInt64() >= 0) {
-        uint64_t displayId = static_cast<uint64_t>(displayIdJson.asInt64());
+    if (displayIdJson.isNull()) {
+        displayIds_.clear();
+        return;
+    }
+    if (displayIdJson.isUInt64()) {
+        auto displayId = static_cast<uint64_t>(displayIdJson.asUInt64());
         MEDIA_LOGI("Report Select DisplayId: %{public}" PRIu64, displayId);
         SetDisplayId(displayId);
         SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_SCREEN, -1);
+        return;
     }
+    if (displayIdJson.isArray()) {
+        std::vector<uint64_t> displayIds;
+        for (const auto &idJson : displayIdJson) {
+            if (!idJson.isUInt64()) {
+                continue;
+            }
+            displayIds.emplace_back(static_cast<uint64_t>(idJson.asUInt64()));
+        }
+        SetDisplayId(std::move(displayIds));
+        return;
+    }
+    displayIds_.clear();
+}
+
+void ScreenCaptureServer::HandleSetDisplayIdAndMissionId(Json::Value &root)
+{
+    MEDIA_LOGI("HandleSetDisplayIdAndMissionId start");
+    missionIds_.clear();
+    UpdateHighlightOutline(false);
+    ParseDisplayId(root["displayId"]);
     const Json::Value missionIdJson = root["missionId"];
     if (!missionIdJson.isNull() && missionIdJson.isInt() && missionIdJson.asInt() >= 0) {
         int32_t missionId = missionIdJson.asInt();
@@ -1043,7 +1068,7 @@ void ScreenCaptureServer::HandleSetDisplayIdAndMissionId(Json::Value &root)
         SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_WINDOW, missionId);
     }
     UpdateHighlightOutline(true);
-    MEDIA_LOGI("ScreenCaptureServer::HandleSetDisplayIdAndMissionId end");
+    MEDIA_LOGI("HandleSetDisplayIdAndMissionId end");
 }
 
 int32_t ScreenCaptureServer::PresentPicker()
@@ -1141,7 +1166,24 @@ bool ScreenCaptureServer::IsStopAcquireAudioBufferFlag()
 
 void ScreenCaptureServer::SetDisplayId(uint64_t displayId)
 {
-    captureConfig_.videoInfo.videoCapInfo.displayId = displayId;
+    displayIds_.clear();
+    displayIds_.emplace_back(displayId);
+}
+
+void ScreenCaptureServer::SetDisplayId(std::vector<uint64_t> &&displayIds)
+{
+    displayIds_ = std::move(displayIds);
+}
+
+void ScreenCaptureServer::SetDisplayScreenId(uint64_t displayId)
+{
+    displayScreenIds_.clear();
+    displayScreenIds_.emplace_back(displayId);
+}
+
+void ScreenCaptureServer::SetDisplayScreenId(std::vector<uint64_t> &&displayIds)
+{
+    displayScreenIds_ = std::move(displayIds);
 }
 
 void ScreenCaptureServer::SetMissionId(uint64_t missionId)
@@ -2054,9 +2096,10 @@ void ScreenCaptureServer::RegisterPrivateWindowListener()
 
 void ScreenCaptureServer::RegisterScreenConnectListener()
 {
+    CHECK_AND_RETURN_LOG(!displayScreenIds_.empty(), "RegisterScreenConnectListener empty screenId");
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer(shared_from_this());
-    screenConnectListener_ = sptr<ScreenConnectListenerForSC>::MakeSptr(displayScreenId_, screenCaptureServer);
-    MEDIA_LOGI("RegisterScreenConnectListener screenId: %{public}" PRIu64, displayScreenId_);
+    screenConnectListener_ = sptr<ScreenConnectListenerForSC>::MakeSptr(displayScreenIds_, screenCaptureServer);
+    MEDIA_LOGI("RegisterScreenConnectListener screenId: %{public}" PRIu64, displayScreenIds_.front());
     ScreenManager::GetInstance().RegisterScreenListener(screenConnectListener_);
 }
 
@@ -2072,8 +2115,8 @@ void ScreenCaptureServer::PostStartScreenCaptureSuccessAction()
     SetSystemScreenRecorderStatus(true);
     ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureStarted(appInfo_.appPid);
     NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STARTED);
-    if (displayScreenId_ != SCREEN_ID_INVALID) {
-        NotifyDisplaySelected(displayScreenId_);
+    if (!displayScreenIds_.empty() && displayScreenIds_.front() != SCREEN_ID_INVALID) {
+        NotifyDisplaySelected(displayScreenIds_.front());
     }
 }
 
@@ -2121,18 +2164,18 @@ void ScreenCaptureServer::PrepareUserSelectionInfo(ScreenCaptureUserSelectionInf
         selectionInfo.selectType = SELECT_TYPE_WINDOW;
         sptr<Rosen::Display> defaultDisplay = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
         CHECK_AND_RETURN_LOG(defaultDisplay != nullptr, "PrepareUserSelectionInfo GetDefaultDisplaySync failed");
-        selectionInfo.displayId = GetDisplayIdOfWindows(defaultDisplay->GetScreenId());
+        selectionInfo.displayIds = {GetDisplayIdOfWindows(defaultDisplay->GetScreenId())};
     } else {
         selectionInfo.selectType = SELECT_TYPE_SCREEN;
-        selectionInfo.displayId = captureConfig_.videoInfo.videoCapInfo.displayId;
+        selectionInfo.displayIds = displayIds_;
     }
 }
 
 void ScreenCaptureServer::NotifyUserSelected(ScreenCaptureUserSelectionInfo selectionInfo)
 {
     if (screenCaptureCb_ != nullptr) {
-        MEDIA_LOGI("NotifyUserSelected displayId: %{public}" PRIu64 ", selectType: %{public}d",
-            selectionInfo.displayId, selectionInfo.selectType);
+        MEDIA_LOGI("NotifyUserSelected displayId size: %{public}zu, selectType: %{public}d",
+            selectionInfo.displayIds.size(), selectionInfo.selectType);
         screenCaptureCb_->OnUserSelected(selectionInfo);
     }
 }
@@ -2310,6 +2353,7 @@ int32_t ScreenCaptureServer::InitVideoCap(VideoCaptureInfo videoInfo)
     int ret = CheckVideoCapInfo(videoInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitVideoCap CheckVideoCapInfo failed");
     captureConfig_.videoInfo.videoCapInfo = videoInfo;
+    SetDisplayId(videoInfo.displayId);
     avType_ = (avType_ == AVScreenCaptureAvType::AUDIO_TYPE) ? AVScreenCaptureAvType::AV_TYPE :
         AVScreenCaptureAvType::VIDEO_TYPE;
     statisticalEventInfo_.videoResolution = std::to_string(videoInfo.videoFrameWidth) + " * " +
@@ -2589,12 +2633,20 @@ bool ScreenCaptureServer::CheckCaptureSpecifiedWindowForSelectWindow()
     return false;
 }
 
-void ScreenCaptureServer::SendConfigToUIParams(AAFwk::Want& want)
+void ScreenCaptureServer::SendConfigToUIParams(AAFwk::Want &want)
 {
-    want.SetParam("displayId", static_cast<int32_t>(captureConfig_.videoInfo.videoCapInfo.displayId));
+    if (displayIds_.size() > 1) {
+        const auto &displayStr = JoinVector(displayIds_);
+        MEDIA_LOGI("SendConfigToUIParams displayId: %{public}s", displayStr.c_str());
+        want.SetParam("displayIds", displayStr);
+    } else if (!displayIds_.empty() && displayIds_.front() <= std::numeric_limits<int>::max()) {
+        MEDIA_LOGI("SendConfigToUIParams displayId: %{public}" PRIu64, displayIds_.front());
+        want.SetParam("displayId", static_cast<int>(displayIds_.front()));
+    } else {
+        MEDIA_LOGI("SendConfigToUIParams displayId undefined");
+    }
     if (captureConfig_.captureMode == CAPTURE_SPECIFIED_SCREEN) {
-        MEDIA_LOGI("CAPTURE_SPECIFIED_SCREEN, displayId: %{public}" PRId64 " missionId is dropped.",
-            captureConfig_.videoInfo.videoCapInfo.displayId);
+        MEDIA_LOGI("CAPTURE_SPECIFIED_SCREEN, missionId is dropped.");
         captureConfig_.videoInfo.videoCapInfo.taskIDs = {};
         want.SetParam("missionId", -1); // -1 无效值
     } else if (CheckCaptureSpecifiedWindowForSelectWindow() &&
@@ -2644,7 +2696,7 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
         want.SetParam("showSensitiveCheckBox", showSensitiveCheckBox_);
         want.SetParam("checkBoxSelected", checkBoxSelected_);
         want.SetParam("showShareSystemAudioBox", showShareSystemAudioBox_);
-        want.SetParam("excludedWindowIDs", ScreenCaptureServer::JoinInt32Vector(excludedWindowIDsVec_));
+        want.SetParam("excludedWindowIDs", JoinVector(excludedWindowIDsVec_));
         want.SetParam("pickerMode", static_cast<int>(pickerMode_));
         SendConfigToUIParams(want);
         ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want);
@@ -2667,22 +2719,6 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
     MEDIA_LOGI("ConnectServiceExtensionAbility end %{public}d, Device : Phone", ret);
 #endif
     return ret;
-}
-
-std::string ScreenCaptureServer::JoinInt32Vector(const std::vector<int32_t>& vec, const std::string& separator)
-{
-    if (vec.empty()) {
-        return "";
-    }
-
-    std::ostringstream oss;
-    oss << vec[0];
-
-    for (size_t i = 1; i < vec.size(); ++i) {
-        oss << separator << vec[i];
-    }
-
-    return oss.str();
 }
 
 int32_t ScreenCaptureServer::StartNotification()
@@ -3143,16 +3179,17 @@ bool ScreenCaptureServer::IsHopper()
     return foldScreenFlag[0] == '5';
 }
 
-int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForWindowForHopper(sptr<Rosen::Display> defaultDisplay,
-    std::vector<ScreenId> mirrorIds)
+int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForWindowForHopper(const sptr<Rosen::Display> &defaultDisplay,
+    std::vector<ScreenId> &mirrorIds)
 {
     ScreenId mirrorGroup = defaultDisplay->GetScreenId();
     uint64_t defaultDisplayId = GetDisplayIdOfWindows(defaultDisplay->GetScreenId());
-    DMError ret = ScreenManager::GetInstance().MakeMirrorForRecord(defaultDisplayId, mirrorIds, mirrorGroup);
+    std::vector<uint64_t> displayIds = {defaultDisplayId};
+    DMError ret = ScreenManager::GetInstance().MakeMirrorForRecord(displayIds, mirrorIds, mirrorGroup);
     CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
-        "MakeVirtualScreenMirror failed, captureMode:%{public}d, ret:%{public}d", captureConfig_.captureMode, ret);
-    MEDIA_LOGI("MakeVirtualScreenMirror window screen success, screenId:%{public}" PRIu64, defaultDisplayId);
-    displayScreenId_ = defaultDisplayId;
+        "MakeMirrorRecord failed, captureMode:%{public}d, ret:%{public}d", captureConfig_.captureMode, ret);
+    MEDIA_LOGI("MakeMirrorRecord window screen success, screenId:%{public}" PRIu64, defaultDisplayId);
+    SetDisplayScreenId(std::move(displayIds));
     return MSERR_OK;
 }
 
@@ -3185,8 +3222,8 @@ void ScreenCaptureServer::SetTimeoutScreenoffDisableLock(bool lockScreen)
 }
 #endif
 
-int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForWindow(sptr<Rosen::Display> defaultDisplay,
-    std::vector<ScreenId> mirrorIds)
+int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForWindow(const sptr<Rosen::Display> &defaultDisplay,
+    std::vector<ScreenId> &mirrorIds)
 {
     ScreenId mirrorGroup = defaultDisplay->GetScreenId();
     uint64_t defaultDisplayId = GetDisplayIdOfWindows(defaultDisplay->GetScreenId());
@@ -3194,92 +3231,89 @@ int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForWindow(sptr<Rosen::Displa
     CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
         "MakeVirtualScreenMirror failed, captureMode:%{public}d, ret:%{public}d", captureConfig_.captureMode, ret);
     MEDIA_LOGI("MakeVirtualScreenMirror window screen success, screenId:%{public}" PRIu64, defaultDisplayId);
-    displayScreenId_ = defaultDisplayId;
+    SetDisplayScreenId(defaultDisplayId);
     return MSERR_OK;
 }
 
-int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForHomeScreen(sptr<Rosen::Display> defaultDisplay,
-    std::vector<ScreenId> mirrorIds)
+int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForHomeScreen(const sptr<Rosen::Display> &defaultDisplay,
+    std::vector<ScreenId> &mirrorIds)
 {
     ScreenId mirrorGroup = defaultDisplay->GetScreenId();
     MEDIA_LOGI("MakeVirtualScreenMirror DefaultDisplay, screenId:%{public}" PRIu64, mirrorGroup);
     DMError ret = ScreenManager::GetInstance().MakeMirror(defaultDisplay->GetScreenId(), mirrorIds, mirrorGroup);
     CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
         "MakeVirtualScreenMirror failed, captureMode:%{public}d, ret:%{public}d", captureConfig_.captureMode, ret);
-    displayScreenId_ = defaultDisplay->GetScreenId();
+    SetDisplayScreenId(defaultDisplay->GetScreenId());
     MEDIA_LOGI("MakeVirtualScreenMirror default screen success, screenId:%{public}" PRIu64,
         defaultDisplay->GetScreenId());
     return MSERR_OK;
 }
 
 #ifdef PC_STANDARD
-int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForHomeScreenForHopper(sptr<Rosen::Display> defaultDisplay,
-    std::vector<ScreenId> mirrorIds)
+int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForHomeScreenForHopper(const sptr<Rosen::Display> &defaultDisplay,
+    std::vector<ScreenId> &mirrorIds)
 {
-    ScreenId mirrorGroup = defaultDisplay->GetScreenId();
-    MEDIA_LOGI("MakeVirtualScreenMirror DefaultDisplay, screenId:%{public}" PRIu64, mirrorGroup);
-    DMError ret = ScreenManager::GetInstance().MakeMirrorForRecord(defaultDisplay->GetScreenId(), mirrorIds,
-        mirrorGroup);
+    ScreenId mirrorGroup = 0;
+    std::vector<ScreenId> displayIds{defaultDisplay->GetScreenId()};
+    MEDIA_LOGI("MakeMirrorRecord DefaultDisplay, screenId:%{public}" PRIu64, displayIds[0]);
+    DMError ret = ScreenManager::GetInstance().MakeMirrorForRecord(displayIds, mirrorIds, mirrorGroup);
     CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
-        "MakeMirrorForRecord failed, captureMode:%{public}d, ret:%{public}d", captureConfig_.captureMode, ret);
-    displayScreenId_ = defaultDisplay->GetScreenId();
-    MEDIA_LOGI("MakeVirtualScreenMirror default screen success, screenId:%{public}" PRIu64,
-        defaultDisplay->GetScreenId());
+        "MakeMirrorRecord failed, captureMode:%{public}d, ret:%{public}d", captureConfig_.captureMode, ret);
+    SetDisplayScreenId(std::move(displayIds));
+    MEDIA_LOGI("MakeMirrorRecord default screen success, screenId:%{public}" PRIu64, displayScreenIds_[0]);
     return MSERR_OK;
 }
 #endif
 
-int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForSpecifiedScreen(sptr<Rosen::Display> defaultDisplay,
-    std::vector<ScreenId> mirrorIds)
+int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForSpecifiedScreen(const sptr<Rosen::Display> &defaultDisplay,
+    std::vector<ScreenId> &mirrorIds)
 {
     std::vector<sptr<Screen>> screens;
     DMError ret = ScreenManager::GetInstance().GetAllScreens(screens);
-    CHECK_AND_RETURN_RET_LOG(screens.size() > 0, MSERR_UNKNOWN,
+    CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK && !screens.empty() && !displayIds_.empty(), MSERR_UNKNOWN,
         "MakeVirtualScreenMirror failed to GetAllScreens, ret:%{public}d", ret);
-    for (uint32_t i = 0; i < screens.size() ; i++) {
-        if (screens[i]->GetId() == captureConfig_.videoInfo.videoCapInfo.displayId) {
-            ScreenId mirrorGroup = defaultDisplay->GetScreenId();
-            ret = ScreenManager::GetInstance().MakeMirror(screens[i]->GetId(), mirrorIds, mirrorGroup);
-            CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
-                "MakeVirtualScreenMirror failed to MakeMirror for CAPTURE_SPECIFIED_SCREEN, ret:%{public}d", ret);
-            displayScreenId_ = screens[i]->GetId();
-            MEDIA_LOGI("MakeVirtualScreenMirror extend screen success, screenId:%{public}" PRIu64,
-                captureConfig_.videoInfo.videoCapInfo.displayId);
-            return MSERR_OK;
+    for (auto &screen : screens) {
+        if (screen->GetId() != displayIds_.front()) {
+            continue;
         }
+        ScreenId mirrorGroup = defaultDisplay->GetScreenId();
+        ret = ScreenManager::GetInstance().MakeMirror(screen->GetId(), mirrorIds, mirrorGroup);
+        CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
+            "MakeVirtualScreenMirror failed to MakeMirror for CAPTURE_SPECIFIED_SCREEN, ret:%{public}d", ret);
+        SetDisplayScreenId(screen->GetId());
+        MEDIA_LOGI("MakeVirtualScreenMirror extend screen success, screenId:%{public}" PRIu64, screen->GetId());
+        return MSERR_OK;
     }
-    MEDIA_LOGE("MakeVirtualScreenMirror failed to find screenId:%{public}" PRIu64,
-        captureConfig_.videoInfo.videoCapInfo.displayId);
+    MEDIA_LOGE("MakeVirtualScreenMirror failed to find screenId:%{public}" PRIu64, displayIds_.front());
     FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNKNOWN,
         "MakeVirtualScreenMirror failed to find screenId");
     return MSERR_UNKNOWN;
 }
 
 #ifdef PC_STANDARD
-int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForSpecifiedScreenForHopper(sptr<Rosen::Display> defaultDisplay,
-    std::vector<ScreenId> mirrorIds)
+int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForSpecifiedScreenForHopper(
+    const sptr<Rosen::Display> &defaultDisplay, std::vector<ScreenId> &mirrorIds)
 {
     std::vector<Rosen::DisplayId> allDisplayIds = Rosen::DisplayManager::GetInstance().GetAllDisplayIds();
-    CHECK_AND_RETURN_RET_LOG(allDisplayIds.size() > 0, MSERR_UNKNOWN,
-        "MakeVirtualScreenMirror failed to GetAllDisplayIds, allDisplayIds is empty");
-    for (uint32_t i = 0; i < allDisplayIds.size() ; i++) {
-        if (allDisplayIds[i] == captureConfig_.videoInfo.videoCapInfo.displayId) {
-            ScreenId mirrorGroup = defaultDisplay->GetScreenId();
-            DMError ret = ScreenManager::GetInstance().MakeMirrorForRecord(allDisplayIds[i], mirrorIds, mirrorGroup);
-            CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
-                "MakeVirtualScreenMirror failed to MakeMirrorForRecord for CAPTURE_SPECIFIED_SCREEN, ret:%{public}d",
-                ret);
-            displayScreenId_ = allDisplayIds[i];
-            MEDIA_LOGI("MakeVirtualScreenMirrorForHopper extend screen success, displayId:%{public}" PRIu64,
-                captureConfig_.videoInfo.videoCapInfo.displayId);
-            return MSERR_OK;
-        }
+    CHECK_AND_RETURN_RET_LOG(!allDisplayIds.empty() && !displayIds_.empty(), MSERR_UNKNOWN,
+        "MakeMirrorRecord failed to GetAllDisplayIds, allDisplayIds is empty");
+    std::vector<uint64_t> displayIds;
+    std::copy_if(displayIds_.begin(), displayIds_.end(), std::back_inserter(displayIds), [&](uint64_t displayId) {
+        return std::find(allDisplayIds.begin(), allDisplayIds.end(), displayId) != allDisplayIds.end();
+    });
+    if (displayIds.empty()) {
+        MEDIA_LOGE("MakeMirrorRecord failed to find displayId:%{public}" PRIu64, displayIds_.front());
+        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNKNOWN,
+            "MakeMirrorRecord failed to find valid displayId");
+        return MSERR_UNKNOWN;
     }
-    MEDIA_LOGE("MakeVirtualScreenMirror failed to find displayId:%{public}" PRIu64,
-        captureConfig_.videoInfo.videoCapInfo.displayId);
-    FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNKNOWN,
-        "MakeVirtualScreenMirror failed to find displayId");
-    return MSERR_UNKNOWN;
+    ScreenId mirrorGroup{0};
+    DMError ret = ScreenManager::GetInstance().MakeMirrorForRecord(displayIds, mirrorIds, mirrorGroup);
+    CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
+        "MakeMirrorRecord failed for CAPTURE_SPECIFIED_SCREEN, ret:%{public}d", ret);
+    MEDIA_LOGI("MakeMirrorRecord extend screen success, displayId:%{public}" PRIu64, displayIds.front());
+    SetDisplayScreenId(std::move(displayIds));
+    return MSERR_OK;
 }
 #endif
 
@@ -3600,16 +3634,16 @@ int32_t ScreenCaptureServer::SetCaptureAreaInner(uint64_t displayId, OHOS::Rect 
         displayId, regionAreaIn, regionScreenId, regionAreaOut);
     CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_INVALID_OPERATION,
         "GetScreenAreaOfDisplayArea error: %{public}d", ret);
-    MEDIA_LOGI("SetCaptureAreaInner after, displayId: %{public}" PRIu64, regionScreenId);
-    MEDIA_LOGI("SetCaptureAreaInner after, x:%{public}d, y:%{public}d, w:%{public}d, h:%{public}d",
-        regionAreaOut.posX_, regionAreaOut.posY_, regionAreaOut.width_, regionAreaOut.height_);
+    MEDIA_LOGI("SetCaptureAreaInner after, displayId: %{public}" PRIu64
+        " x:%{public}d, y:%{public}d, w:%{public}d, h:%{public}d",
+        regionScreenId, regionAreaOut.posX_, regionAreaOut.posY_, regionAreaOut.width_, regionAreaOut.height_);
 
     std::vector<ScreenId> mirrorIds;
     mirrorIds.push_back(virtualScreenId_);
-    ret = ScreenManager::GetInstance().MakeMirror(regionScreenId, mirrorIds, regionAreaOut, regionScreenId);
-    CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
-        "MakeMirror with region error: %{public}d", ret);
-    displayScreenId_ = displayId;
+    ScreenId screenGroupId{0};
+    ret = ScreenManager::GetInstance().MakeMirror(regionScreenId, mirrorIds, regionAreaOut, screenGroupId);
+    CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN, "MakeMirror with region error: %{public}d", ret);
+    SetDisplayScreenId(regionScreenId);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " SetCaptureAreaInner end, state:%{public}d.",
         FAKE_POINTER(this), captureState_);
     return MSERR_OK;

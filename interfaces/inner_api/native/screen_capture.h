@@ -285,7 +285,7 @@ typedef struct ScreenCaptureRect {
 
 struct ScreenCaptureUserSelectionInfo {
     int32_t selectType;
-    uint64_t displayId;
+    std::vector<uint64_t> displayIds;
 };
 
 class ScreenCaptureCallBack {
