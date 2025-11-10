@@ -358,13 +358,14 @@ private:
 
 class ScreenConnectListenerForSC : public Rosen::ScreenManager::IScreenListener {
 public:
-    explicit ScreenConnectListenerForSC(uint64_t screenId, std::weak_ptr<ScreenCaptureServer> screenCaptureServer)
-        : screenId_(screenId), screenCaptureServer_(screenCaptureServer) {}
-    void OnConnect(Rosen::ScreenId screenId);
-    void OnDisconnect(Rosen::ScreenId screenId);
-    void OnChange(Rosen::ScreenId screenId);
+    explicit ScreenConnectListenerForSC(std::vector<uint64_t> screenIds,
+        std::weak_ptr<ScreenCaptureServer> screenCaptureServer)
+        : screenIds_(std::move(screenIds)), screenCaptureServer_(std::move(screenCaptureServer)) {}
+    void OnConnect(Rosen::ScreenId screenId) override;
+    void OnDisconnect(Rosen::ScreenId screenId) override;
+    void OnChange(Rosen::ScreenId screenId) override;
 private:
-    uint64_t screenId_ = SCREEN_ID_INVALID;
+    std::vector<uint64_t> screenIds_;
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
 };
 
