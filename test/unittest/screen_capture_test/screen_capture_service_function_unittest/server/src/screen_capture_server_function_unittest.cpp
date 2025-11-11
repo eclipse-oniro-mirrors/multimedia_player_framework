@@ -907,7 +907,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, MixAudio_001, TestSize.Level2)
     srcData[0] = innerBuffer;
     srcData[1] = micBuffer;
     char mixData[bufferSize] = {0};
-    screenCaptureServer_->audioSource_->MixAudio(srcData, mixData, channels, bufferSize);
+    screenCaptureServer_->audioSource_->MixAudio(srcData, mixData, channels, bufferSize, bufferSize);
     ASSERT_EQ(mixData[0], 0);
 }
 
@@ -926,7 +926,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, MixAudio_002, TestSize.Level2)
     srcData[0] = innerBuffer;
     srcData[1] = micBuffer;
     char mixData[bufferSize] = {0};
-    screenCaptureServer_->audioSource_->MixAudio(srcData, mixData, channels, bufferSize);
+    screenCaptureServer_->audioSource_->MixAudio(srcData, mixData, channels, bufferSize, bufferSize);
     ASSERT_EQ(mixData[1], maxChar);
 }
 
@@ -946,7 +946,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, MixAudio_003, TestSize.Level2)
     srcData[0] = innerBuffer;
     srcData[1] = micBuffer;
     char mixData[bufferSize] = {0};
-    screenCaptureServer_->audioSource_->MixAudio(srcData, mixData, 0, bufferSize);
+    screenCaptureServer_->audioSource_->MixAudio(srcData, mixData, 0, bufferSize, bufferSize);
     ASSERT_EQ(mixData[0], 0);
 }
 

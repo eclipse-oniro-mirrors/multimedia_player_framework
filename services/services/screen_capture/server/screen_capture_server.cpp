@@ -761,8 +761,7 @@ bool ScreenCaptureServer::CheckSaUid(int32_t saUid, int32_t appUid)
     std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexSaAppInfoMapGlobal_);
     if (ScreenCaptureServer::saUidAppUidMap_.find(saUid) != ScreenCaptureServer::saUidAppUidMap_.end()) {
         if (ScreenCaptureServer::saUidAppUidMap_[saUid].first != appUid ||
-            (ScreenCaptureServer::saUidAppUidMap_[saUid].first == appUid &&
-            ScreenCaptureServer::saUidAppUidMap_[saUid].second >= ScreenCaptureServer::maxSessionPerUid_)) {
+            ScreenCaptureServer::saUidAppUidMap_[saUid].second >= ScreenCaptureServer::maxSessionPerUid_) {
                 MEDIA_LOGI("saUid Invalid! saUid: %{public}d linked with appUid: %{public}d, curAppUid: %{public}d",
                     saUid, ScreenCaptureServer::saUidAppUidMap_[saUid].first, appUid);
                 return false;
@@ -4470,7 +4469,7 @@ void ScreenCaptureServer::ReleaseInner()
 {
     MediaTrace trace("ScreenCaptureServer::ReleaseInner");
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner S", FAKE_POINTER(this));
-    if (captureState_ != AVScreenCaptureState::STOPPED) {
+    {
         std::lock_guard<std::mutex> lock(mutex_);
         if (captureState_ != AVScreenCaptureState::STOPPED) {
             StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
@@ -5452,12 +5451,14 @@ AudioDataSourceReadAtActionState AudioDataSource::MixModeBufferWrite(std::shared
 {
     HandleBufferTimeStamp(innerAudioBuffer, micAudioBuffer);
     if (innerAudioBuffer && innerAudioBuffer->buffer && micAudioBuffer && micAudioBuffer->buffer) {
-        char* mixData = new char[innerAudioBuffer->length];
+        char* mixData = new (std::nothrow) char[innerAudioBuffer->length];
+        CHECK_AND_RETURN_RET_LOG(mixData != nullptr, AudioDataSourceReadAtActionState::RETRY_SKIP,
+            "mixData memory allocation failed");
         char* srcData[2] = {nullptr};
         srcData[0] = reinterpret_cast<char*>(innerAudioBuffer->buffer);
         srcData[1] = reinterpret_cast<char*>(micAudioBuffer->buffer);
         int channels = 2;
-        MixAudio(srcData, mixData, channels, innerAudioBuffer->length);
+        MixAudio(srcData, mixData, channels, innerAudioBuffer->length, micAudioBuffer->length);
         MEDIA_LOGD("ABuffer write mix mix cur:%{public}" PRId64 " mic:%{public}" PRId64 " last: %{public}" PRId64,
             innerAudioBuffer->timestamp, micAudioBuffer->timestamp, lastWriteAudioFramePts_.load());
         lastWriteAudioFramePts_.store(innerAudioBuffer->timestamp);
@@ -5517,7 +5518,7 @@ int32_t AudioDataSource::GetSize(int64_t &size)
     return ret;
 }
 
-void AudioDataSource::MixAudio(char** srcData, char* mixData, int channels, int bufferSize)
+void AudioDataSource::MixAudio(char** srcData, char* mixData, int channels, int bufferSize, int micBufferSize)
 {
     MEDIA_LOGD("AudioDataSource MixAudio");
     int const max = 32767;
@@ -5532,6 +5533,7 @@ void AudioDataSource::MixAudio(char** srcData, char* mixData, int channels, int 
     for (totalNum = 0; totalNum < bufferSize / channels; totalNum++) {
         int temp = 0;
         for (int channelNum = 0; channelNum < channels; channelNum++) {
+            CHECK_AND_CONTINUE(!(channelNum == 1 && micBufferSize <= totalNum * channels));
             temp += *reinterpret_cast<short*>(srcData[channelNum] + totalNum * channels);
         }
         int32_t output = static_cast<int32_t>(temp * coefficient);
