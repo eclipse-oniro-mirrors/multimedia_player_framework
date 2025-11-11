@@ -33,7 +33,8 @@ namespace Media {
 
 std::shared_ptr<ScreenCaptureMonitorServer> ScreenCaptureMonitorServer::GetInstance()
 {
-    static std::shared_ptr<ScreenCaptureMonitorServer> screenCaptureMonitorServer;
+    static std::shared_ptr<ScreenCaptureMonitorServer> screenCaptureMonitorServer
+        = std::make_shared<ScreenCaptureMonitorServer>();
     return screenCaptureMonitorServer;
 }
 
