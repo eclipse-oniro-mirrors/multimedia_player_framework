@@ -20,12 +20,12 @@
 """)
 
 @!sts_inject("""
-const TONE_CATEGORY_RINGTONE: long = 1;
-const TONE_CATEGORY_TEXT_MESSAGE: long = 2;
-const TONE_CATEGORY_NOTIFICATION: long = 4;
-const TONE_CATEGORY_ALARM: long = 8;
-const TONE_CATEGORY_CONTACTS: long = 16;
-const TONE_CATEGORY_NOTIFICATION_APP: long = 32;
+const TONE_CATEGORY_RINGTONE: int = 1;
+const TONE_CATEGORY_TEXT_MESSAGE: int = 2;
+const TONE_CATEGORY_NOTIFICATION: int = 4;
+const TONE_CATEGORY_ALARM: int = 8;
+const TONE_CATEGORY_CONTACTS: int = 16;
+const TONE_CATEGORY_NOTIFICATION_APP: int = 32;
 """)
 
 from ringtonePlayer use RingtonePlayer;
@@ -65,8 +65,8 @@ interface ToneAttrs {
   SetFileName(name: String): void;
   GetUri(): String;
   GetCustomizedType(): ToneCustomizedType;
-  SetCategory(category: i64): void;
-  GetCategory(): i64;
+  SetCategory(category: i32): void;
+  GetCategory(): i32;
   GetImplPtr(): i64;
   SetMediaType(type: MediaType): void;
   GetMediaType(): MediaType;

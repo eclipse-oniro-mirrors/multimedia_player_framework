@@ -42,8 +42,8 @@ public:
     void SetFileName(::taihe::string_view name);
     ::taihe::string GetUri();
     ::ohos::multimedia::systemSoundManager::ToneCustomizedType GetCustomizedType();
-    void SetCategory(int64_t category);
-    int64_t GetCategory();
+    void SetCategory(int32_t category);
+    int32_t GetCategory();
     void SetMediaType(::ohos::multimedia::systemSoundManager::MediaType type);
     ::ohos::multimedia::systemSoundManager::MediaType GetMediaType();
 
