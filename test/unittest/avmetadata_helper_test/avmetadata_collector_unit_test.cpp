@@ -1795,6 +1795,119 @@ HWTEST_F(AVMetaDataCollectorUnitTest, GetVideoTrackInfo_Dimensions_001, TestSize
     EXPECT_EQ(width, 1920);
     EXPECT_EQ(height, 1080);
 }
+
+/**
+ * @tc.name: VectorToString_001
+ * @tc.desc: Test VectorToString with specific values
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, VectorToString_001, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_TYPE, Plugins::MediaType::AUXILIARY);
+    std::string refTracktype = "";
+    meta->SetData(Tag::TRACK_REF_TYPE, refTracktype);
+    std::vector<int> vectest = {1, 3, 5};
+    std::string strtest;
+    strtest = avmetaDataCollector->VectorToString(vectest);
+    EXPECT_EQ(strtest, "1,3,5");
+    size_t index = 0;
+    std::string result;
+    bool ret = meta->GetData(Tag::TRACK_REF_TYPE, result);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->InitTracksInfoVector(meta, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+}
+
+/**
+ * @tc.name: VectorToString_002
+ * @tc.desc: Test VectorToString with specific values
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, VectorToString_002, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_TYPE, Plugins::MediaType::AUXILIARY);
+    std::string refTracktype = "";
+    meta->SetData(Tag::TRACK_REF_TYPE, refTracktype);
+    std::vector<int> vectest = {2};
+    std::string strtest;
+    strtest = avmetaDataCollector->VectorToString(vectest);
+    EXPECT_EQ(strtest, "2");
+    size_t index = 0;
+    std::string result;
+    bool ret = meta->GetData(Tag::TRACK_REF_TYPE, result);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->InitTracksInfoVector(meta, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+}
+
+/**
+ * @tc.name: VectorToString_003
+ * @tc.desc: Test VectorToString with specific values
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, VectorToString_003, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_TYPE, Plugins::MediaType::AUXILIARY);
+    std::string refTracktype = "";
+    meta->SetData(Tag::TRACK_REF_TYPE, refTracktype);
+    std::vector<int> vectest;
+    std::string strtest;
+    strtest = avmetaDataCollector->VectorToString(vectest);
+    EXPECT_EQ(strtest, "");
+    size_t index = 0;
+    std::string result;
+    bool ret = meta->GetData(Tag::TRACK_REF_TYPE, result);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->InitTracksInfoVector(meta, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+}
+
+/**
+ * @tc.name: InitTracksInfoVector_022
+ * @tc.desc: InitTracksInfoVector_022
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, InitTracksInfoVector_022, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_TYPE, Plugins::MediaType::AUXILIARY);
+    std::string refTracktype = "cdsc";
+    meta->SetData(Tag::TRACK_REF_TYPE, refTracktype);
+
+    size_t index = 0;
+    std::string result;
+    bool ret = meta->GetData(Tag::TRACK_REF_TYPE, result);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->InitTracksInfoVector(meta, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+}
+
+/**
+ * @tc.name: InitTracksInfoVector_023
+ * @tc.desc: InitTracksInfoVector_023
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, InitTracksInfoVector_023, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    std::string refTrackIds = "2";
+    meta->SetData(Tag::REF_TRACK_IDS, refTrackIds);
+
+    size_t index = 0;
+    std::string result;
+    bool ret = meta->GetData(Tag::REF_TRACK_IDS, result);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->InitTracksInfoVector(meta, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+}
 }  // namespace Test
 }  // namespace Media
 }  // namespace OHOS
