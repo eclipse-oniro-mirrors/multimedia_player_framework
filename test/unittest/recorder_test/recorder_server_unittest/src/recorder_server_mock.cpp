@@ -326,7 +326,6 @@ int32_t RecorderServerMock::RequesetBuffer(const std::string &recorderType, Vide
     if (recorderType != PURE_AUDIO) {
         producerSurface_ = recorder_->GetSurface(recorderConfig.videoSourceId);
         UNITTEST_CHECK_AND_RETURN_RET_LOG(producerSurface_ != nullptr, MSERR_INVALID_OPERATION, "GetSurface failed ");
-
     }
     return MSERR_OK;
 }
