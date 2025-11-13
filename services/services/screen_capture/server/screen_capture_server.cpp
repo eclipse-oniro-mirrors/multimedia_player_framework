@@ -431,8 +431,6 @@ int32_t ScreenCaptureServer::RegisterWindowLifecycleListener(std::vector<int32_t
 {
     MEDIA_LOGI("RegisterWindowLifecycleListener start, windowIdListSize: %{public}d",
         static_cast<int32_t>(windowIdList.size()));
-    CHECK_AND_RETURN_RET_LOG(static_cast<int32_t>(windowIdList.size()) != 0, MSERR_OK,
-        "windowIdList is empty");
     auto sceneSessionManager = SessionManagerLite::GetInstance().GetSceneSessionManagerLiteProxy();
     CHECK_AND_RETURN_RET_LOG(sceneSessionManager != nullptr, MSERR_INVALID_OPERATION,
         "sceneSessionManager is nullptr, RegisterWindowLifecycleListener failed.");

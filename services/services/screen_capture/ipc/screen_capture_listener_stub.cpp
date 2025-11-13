@@ -38,9 +38,6 @@ int32_t ScreenCaptureListenerStub::OnCaptureContentChangedStub(MessageParcel &da
     (void) reply;
     AVScreenCaptureContentChangedEvent event =
         static_cast<AVScreenCaptureContentChangedEvent>(data.ReadInt32());
-    CHECK_AND_RETURN_RET_LOG(event >= AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE
-        && event <= AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_UNAVAILABLE, MSERR_INVALID_VAL,
-        "CaptureContentChanged event invalid");
     bool isAreaExist = data.ReadBool();
     if (isAreaExist) {
         ScreenCaptureRect area = { 0, 0, 0, 0 };
