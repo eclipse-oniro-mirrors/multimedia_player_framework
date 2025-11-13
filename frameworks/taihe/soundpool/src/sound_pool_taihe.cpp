@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Huawei Device Co., Ltd.
+ * Copyright (C) 2025 Huawei Device Co., Ltd. 2025-2025. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -44,6 +44,25 @@ SoundPoolImpl::SoundPoolImpl(int32_t maxStreams, ohos::multimedia::audio::AudioR
     }
 }
 
+SoundPoolImpl::SoundPoolImpl(int32_t maxStreams, ohos::multimedia::audio::AudioRendererInfo const& audioRendererInfo,
+    const bool isParallel)
+{
+    OHOS::AudioStandard::AudioRendererInfo rendererInfo;
+    rendererInfo.streamUsage = static_cast<OHOS::AudioStandard::StreamUsage>(audioRendererInfo.usage.get_value());
+    rendererInfo.rendererFlags = audioRendererInfo.rendererFlags;
+    soundPool_ = isParallel
+        ? OHOS::Media::SoundPoolFactory::CreateParallelSoundPool(maxStreams, rendererInfo)
+        : OHOS::Media::SoundPoolFactory::CreateSoundPool(maxStreams, rendererInfo);
+    if (soundPool_ == nullptr) {
+        MEDIA_LOGE("failed to CreateSoundPool");
+        MediaTaiheUtils::ThrowExceptionError("failed to CreateSoundPool");
+        return;
+    } else {
+        callbackTaihe_ =  std::make_shared<SoundPoolCallBackTaihe>();
+        (void)soundPool_->SetSoundPoolCallback(callbackTaihe_);
+    }
+}
+
 RetInfo GetRetInfo(int32_t errCode, const std::string &operate, const std::string &param, const std::string &add = "")
 {
     MEDIA_LOGE("failed to %{public}s, param %{public}s, errCode = %{public}d", operate.c_str(), param.c_str(), errCode);
@@ -70,9 +89,25 @@ RetInfo GetRetInfo(int32_t errCode, const std::string &operate, const std::strin
 optional<SoundPool> CreateSoundPoolSync(int32_t maxStreams,
     ohos::multimedia::audio::AudioRendererInfo const& audioRendererInfo)
 {
-    auto res = make_holder<SoundPoolImpl, SoundPool>(maxStreams, audioRendererInfo);
+    auto res = make_holder<SoundPoolImpl, SoundPool>(maxStreams, audioRendererInfo, false);
     if (taihe::has_error()) {
         MEDIA_LOGE("Create SoundPool failed!");
+        taihe::reset_error();
+        return optional<SoundPool>(std::nullopt);
+    }
+    return optional<SoundPool>(std::in_place, res);
+}
+
+optional<SoundPool> CreateParallelSoundPoolSync(int32_t maxStreams,
+    ohos::multimedia::audio::AudioRendererInfo const& audioRendererInfo)
+{
+    if (!MediaTaiheUtils::IsSystemApp()) {
+        MEDIA_LOGE("Create Parallel SoundPool failed! Not system app.");
+        return optional<SoundPool>(std::nullopt);
+    }
+    auto res = make_holder<SoundPoolImpl, SoundPool>(maxStreams, audioRendererInfo, true);
+    if (taihe::has_error()) {
+        MEDIA_LOGE("Create Parallel SoundPool failed!");
         taihe::reset_error();
         return optional<SoundPool>(std::nullopt);
     }
@@ -499,3 +534,4 @@ void SoundPoolImpl::SoundPoolAsyncSignError(int32_t errCode, const std::string &
 }
 
 TH_EXPORT_CPP_API_CreateSoundPoolSync(ANI::Media::CreateSoundPoolSync);
+TH_EXPORT_CPP_API_CreateParallelSoundPoolSync(ANI::Media::CreateParallelSoundPoolSync);
