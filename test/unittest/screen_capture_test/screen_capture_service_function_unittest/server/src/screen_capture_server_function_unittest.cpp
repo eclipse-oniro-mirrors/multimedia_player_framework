@@ -3010,7 +3010,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ParseDisplayId_001, TestSize.Level2)
     std::string jsonStr = R"({"displayId":1})";
     Json::Reader reader;
     Json::Value root;
-    ASSERT_EQ(reader.parse(jsonStr, root), true);
+    ASSERT_TRUE(reader.parse(jsonStr, root));
     screenCaptureServer_->ParseDisplayId(root["displayId"]);
     ASSERT_EQ(screenCaptureServer_->displayIds_.size(), 1);
     EXPECT_EQ(screenCaptureServer_->displayIds_.front(), 1);
@@ -3021,7 +3021,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ParseDisplayId_002, TestSize.Level2)
     std::string jsonStr = R"({"displayId":[1,2]})";
     Json::Reader reader;
     Json::Value root;
-    ASSERT_EQ(reader.parse(jsonStr, root), true);
+    ASSERT_TRUE(reader.parse(jsonStr, root));
     screenCaptureServer_->ParseDisplayId(root["displayId"]);
     ASSERT_EQ(screenCaptureServer_->displayIds_.size(), 2);
     EXPECT_EQ(screenCaptureServer_->displayIds_.front(), 1);
@@ -3033,7 +3033,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ParseDisplayId_003, TestSize.Level2)
     std::string jsonStr = R"({"displayId":[1,-1,2]})";
     Json::Reader reader;
     Json::Value root;
-    ASSERT_EQ(reader.parse(jsonStr, root), true);
+    ASSERT_TRUE(reader.parse(jsonStr, root));
     screenCaptureServer_->ParseDisplayId(root["displayId"]);
     ASSERT_EQ(screenCaptureServer_->displayIds_.size(), 2);
     EXPECT_EQ(screenCaptureServer_->displayIds_.front(), 1);
@@ -3045,7 +3045,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ParseDisplayId_004, TestSize.Level2)
     std::string jsonStr = R"({"displayId":[]})";
     Json::Reader reader;
     Json::Value root;
-    ASSERT_EQ(reader.parse(jsonStr, root), true);
+    ASSERT_TRUE(reader.parse(jsonStr, root));
     screenCaptureServer_->ParseDisplayId(root["displayId"]);
     EXPECT_EQ(screenCaptureServer_->displayIds_.size(), 0);
 }
@@ -3055,7 +3055,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ParseDisplayId_005, TestSize.Level2)
     std::string jsonStr = R"({"displayId":-1})";
     Json::Reader reader;
     Json::Value root;
-    ASSERT_EQ(reader.parse(jsonStr, root), true);
+    ASSERT_TRUE(reader.parse(jsonStr, root));
     screenCaptureServer_->ParseDisplayId(root["displayId"]);
     EXPECT_EQ(screenCaptureServer_->displayIds_.size(), 0);
 }
@@ -3065,7 +3065,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleSetDisplayIdAndMissionId_001, Te
     std::string jsonStr = R"({"displayId":1, "missionId":1})";
     Json::Reader reader;
     Json::Value root;
-    ASSERT_EQ(reader.parse(jsonStr, root), true);
+    ASSERT_TRUE(reader.parse(jsonStr, root));
     screenCaptureServer_->HandleSetDisplayIdAndMissionId(root);
     ASSERT_EQ(screenCaptureServer_->displayIds_.size(), 1);
     EXPECT_EQ(screenCaptureServer_->displayIds_.front(), 1);
