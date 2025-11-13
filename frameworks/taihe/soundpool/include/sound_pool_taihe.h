@@ -33,7 +33,6 @@ struct SoundPoolAsyncContext;
 
 class SoundPoolImpl {
 public:
-    SoundPoolImpl(int32_t maxStreams, ohos::multimedia::audio::AudioRendererInfo const& audioRendererInfo);
     SoundPoolImpl(int32_t maxStreams, ohos::multimedia::audio::AudioRendererInfo const& audioRendererInfo,
         const bool isParallel);
 
