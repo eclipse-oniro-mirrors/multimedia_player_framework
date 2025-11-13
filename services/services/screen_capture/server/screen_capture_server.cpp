@@ -1048,6 +1048,7 @@ void ScreenCaptureServer::ParseDisplayId(const Json::Value &displayIdJson)
             displayIds.emplace_back(static_cast<uint64_t>(idJson.asUInt64()));
         }
         SetDisplayId(std::move(displayIds));
+        SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_SCREEN, -1);
         return;
     }
     displayIds_.clear();
@@ -2637,7 +2638,7 @@ void ScreenCaptureServer::SendConfigToUIParams(AAFwk::Want &want)
     if (displayIds_.size() > 1) {
         const auto &displayStr = JoinVector(displayIds_);
         MEDIA_LOGI("SendConfigToUIParams displayId: %{public}s", displayStr.c_str());
-        want.SetParam("displayIds", displayStr);
+        want.SetParam("displayId", displayStr);
     } else if (!displayIds_.empty() && displayIds_.front() <= std::numeric_limits<int>::max()) {
         MEDIA_LOGI("SendConfigToUIParams displayId: %{public}" PRIu64, displayIds_.front());
         want.SetParam("displayId", static_cast<int>(displayIds_.front()));
