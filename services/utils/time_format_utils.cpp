@@ -33,6 +33,9 @@ namespace OHOS {
 namespace Media {
 std::string TimeFormatUtils::FormatDateTimeByTimeZone(const std::string &iso8601Str)
 {
+    if (iso8601Str.empty()) {
+        return iso8601Str;
+    }
     std::regex pattern(R"((\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(.\d{1,6})?(((\+|-)\d{4})|Z)?)");
     std::smatch match;
     if (!std::regex_match(iso8601Str, match, pattern)) {

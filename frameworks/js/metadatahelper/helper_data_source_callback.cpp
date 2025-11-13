@@ -187,10 +187,14 @@ void HelperDataSourceCallback::SaveCallbackReference(const std::string &name, st
 int32_t HelperDataSourceCallback::GetCallback(const std::string &name, napi_value *callback)
 {
     (void)name;
-    if (refMap_.find(HELPER_READAT_CALLBACK_NAME) == refMap_.end()) {
-        return MSERR_INVALID_VAL;
+    std::shared_ptr<AutoRef> ref;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (refMap_.find(HELPER_READAT_CALLBACK_NAME) == refMap_.end()) {
+            return MSERR_INVALID_VAL;
+        }
+        ref = refMap_.at(HELPER_READAT_CALLBACK_NAME);
     }
-    auto ref = refMap_.at(HELPER_READAT_CALLBACK_NAME);
     napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, callback);
     CHECK_AND_RETURN_RET(nstatus == napi_ok && callback != nullptr, MSERR_INVALID_OPERATION);
     return MSERR_OK;
