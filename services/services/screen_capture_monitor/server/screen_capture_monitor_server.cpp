@@ -35,11 +35,9 @@ std::shared_ptr<ScreenCaptureMonitorServer> ScreenCaptureMonitorServer::GetInsta
 {
     if (!screenCaptureMonitorServer) {
         screenCaptureMonitorServer = std::make_shared<ScreenCaptureMonitorServer>();
-        int32_t ret = Init();
+        int32_t ret = screenCaptureMonitorServer->Init();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to init ScreenCaptureMonitorServer");
     }
-    static std::shared_ptr<ScreenCaptureMonitorServer> screenCaptureMonitorServer
-        = std::make_shared<ScreenCaptureMonitorServer>();
     return screenCaptureMonitorServer;
 }
 
