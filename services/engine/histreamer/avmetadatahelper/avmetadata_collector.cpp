@@ -203,6 +203,10 @@ void AVMetaDataCollector::GetVideoTrackInfo(const std::shared_ptr<Meta> &trackIn
     int32_t height = GetSarVideoHeight(trackInfo, originalHeight);
     videoTrackInfo.PutIntValue("height", height);
 
+    int64_t videoBitrate = 0;
+    trackInfo->GetData(Tag::MEDIA_BITRATE, videoBitrate);
+    videoTrackInfo.PutLongValue("bitrate", videoBitrate);
+
     double frameRate = 0;
     if (trackInfo->GetData(Tag::VIDEO_FRAME_RATE, frameRate)) {
         videoTrackInfo.PutDoubleValue("frame_rate", frameRate * FRAME_RATE_UNIT_MULTIPLE);
