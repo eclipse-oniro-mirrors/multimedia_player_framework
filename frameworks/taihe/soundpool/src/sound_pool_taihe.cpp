@@ -28,22 +28,6 @@ namespace {
 namespace ANI {
 namespace Media {
 
-SoundPoolImpl::SoundPoolImpl(int32_t maxStreams, ohos::multimedia::audio::AudioRendererInfo const& audioRendererInfo)
-{
-    OHOS::AudioStandard::AudioRendererInfo rendererInfo;
-    rendererInfo.streamUsage = static_cast<OHOS::AudioStandard::StreamUsage>(audioRendererInfo.usage.get_value());
-    rendererInfo.rendererFlags = audioRendererInfo.rendererFlags;
-    soundPool_ = OHOS::Media::SoundPoolFactory::CreateSoundPool(maxStreams, rendererInfo);
-    if (soundPool_ == nullptr) {
-        MEDIA_LOGE("failed to CreateSoundPool");
-        MediaTaiheUtils::ThrowExceptionError("failed to CreateSoundPool");
-        return;
-    } else {
-        callbackTaihe_ =  std::make_shared<SoundPoolCallBackTaihe>();
-        (void)soundPool_->SetSoundPoolCallback(callbackTaihe_);
-    }
-}
-
 SoundPoolImpl::SoundPoolImpl(int32_t maxStreams, ohos::multimedia::audio::AudioRendererInfo const& audioRendererInfo,
     const bool isParallel)
 {
