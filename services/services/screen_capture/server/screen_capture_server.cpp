@@ -431,9 +431,11 @@ int32_t ScreenCaptureServer::RegisterWindowLifecycleListener(std::vector<int32_t
 {
     MEDIA_LOGI("RegisterWindowLifecycleListener start, windowIdListSize: %{public}d",
         static_cast<int32_t>(windowIdList.size()));
+    
     auto sceneSessionManager = SessionManagerLite::GetInstance().GetSceneSessionManagerLiteProxy();
     CHECK_AND_RETURN_RET_LOG(sceneSessionManager != nullptr, MSERR_INVALID_OPERATION,
         "sceneSessionManager is nullptr, RegisterWindowLifecycleListener failed.");
+    
     if (!lifecycleListenerDeathRecipient_) {
         MEDIA_LOGD("RegisterWindowLifecycleListener lifecycleListenerDeathRecipient_ is nullptr");
         auto task = [weakThis = weak_from_this()] (const wptr<IRemoteObject>& remote) {
