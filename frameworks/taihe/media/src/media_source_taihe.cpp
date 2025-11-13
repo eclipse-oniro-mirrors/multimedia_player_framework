@@ -77,7 +77,7 @@ MediaSourceImpl::MediaSourceImpl(array_view<::ohos::multimedia::media::MediaStre
             mediaStream.bitrate);
         mediaSource_->AddAVPlayMediaStreamTmp(mediaStream);
     }
-    MEDIA_LOGD("TaiheCreateMediaSourceWithStreamData get mediaStreamVec length=%{public}lu", streams.size());
+    MEDIA_LOGD("TaiheCreateMediaSourceWithStreamData get mediaStreamVec length=%{public}zu", streams.size());
 }
 
 int64_t MediaSourceImpl::GetImplPtr()
