@@ -1869,6 +1869,30 @@ HWTEST_F(AVMetaDataCollectorUnitTest, VectorToString_003, TestSize.Level1)
 }
 
 /**
+ * @tc.name: VectorToString_004
+ * @tc.desc: Test VectorToString with specific values
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, VectorToString_004, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_TYPE, Plugins::MediaType::AUXILIARY);
+    std::string refTracktype = "";
+    meta->SetData(Tag::TRACK_REF_TYPE, refTracktype);
+    std::vector<int> vectest;
+    std::string strtest={12,14,15};
+    strtest = avmetaDataCollector->VectorToString(vectest);
+    EXPECT_EQ(strtest, "12,14,15");
+    size_t index = 0;
+    std::string result;
+    bool ret = meta->GetData(Tag::TRACK_REF_TYPE, result);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->InitTracksInfoVector(meta, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+}
+
+/**
  * @tc.name: InitTracksInfoVector_022
  * @tc.desc: InitTracksInfoVector_022
  * @tc.type: FUNC
@@ -1884,6 +1908,8 @@ HWTEST_F(AVMetaDataCollectorUnitTest, InitTracksInfoVector_022, TestSize.Level1)
     std::string result;
     bool ret = meta->GetData(Tag::TRACK_REF_TYPE, result);
     EXPECT_TRUE(ret);
+    ret = meta->GetData(Tag::TRACK_REF_TYPE, result);
+    EXPECT_TRUE(ret);
     EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
     avmetaDataCollector->InitTracksInfoVector(meta, index);
     EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
@@ -1897,12 +1923,61 @@ HWTEST_F(AVMetaDataCollectorUnitTest, InitTracksInfoVector_022, TestSize.Level1)
 HWTEST_F(AVMetaDataCollectorUnitTest, InitTracksInfoVector_023, TestSize.Level1)
 {
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
-    std::string refTrackIds = "2";
+    std::string refTrackIds = "23,34";
     meta->SetData(Tag::REF_TRACK_IDS, refTrackIds);
-
+    std::string refTrackType = "vdep";
+    meta->SetData(Tag::TRACK_REF_TYPE, refTrackType);
     size_t index = 0;
     std::string result;
     bool ret = meta->GetData(Tag::REF_TRACK_IDS, result);
+    EXPECT_TRUE(ret);
+    ret = meta->GetData(Tag::TRACK_REF_TYPE, result);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->InitTracksInfoVector(meta, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+}
+
+/**
+ * @tc.name: InitTracksInfoVector_024
+ * @tc.desc: InitTracksInfoVector_024
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, InitTracksInfoVector_024, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    std::string refTrackIds = "";
+    meta->SetData(Tag::REF_TRACK_IDS, refTrackIds);
+    std::string refTrackType = "vdep";
+    meta->SetData(Tag::TRACK_REF_TYPE, refTrackType);
+    size_t index = 0;
+    std::string result;
+    bool ret = meta->GetData(Tag::REF_TRACK_IDS, result);
+    EXPECT_TRUE(ret);
+    ret = meta->GetData(Tag::TRACK_REF_TYPE, result);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->InitTracksInfoVector(meta, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+}
+
+/**
+ * @tc.name: InitTracksInfoVector_025
+ * @tc.desc: InitTracksInfoVector_025
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, InitTracksInfoVector_025, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    std::string refTrackIds = "2";
+    meta->SetData(Tag::REF_TRACK_IDS, refTrackIds);
+    std::string refTrackType = "auxl";
+    meta->SetData(Tag::TRACK_REF_TYPE, refTrackType);
+    size_t index = 0;
+    std::string result;
+    bool ret = meta->GetData(Tag::REF_TRACK_IDS, result);
+    EXPECT_TRUE(ret);
+    ret = meta->GetData(Tag::TRACK_REF_TYPE, result);
     EXPECT_TRUE(ret);
     EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
     avmetaDataCollector->InitTracksInfoVector(meta, index);
