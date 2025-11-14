@@ -1359,6 +1359,7 @@ void HiPlayerImpl::NotifySeek(Status rtv, bool flag, int64_t seekPos)
 int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
 {
     MediaTrace trace("HiPlayerImpl::Seek.");
+    AutoLock lock(handleCompleteMutex_);
     if (IsInValidSeekTime(mSeconds)) {
         MEDIA_LOG_E("Current seek time is not at playRange");
         auto errCode = TransStatus(Status::ERROR_INVALID_PARAMETER);
