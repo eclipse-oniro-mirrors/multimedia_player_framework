@@ -262,7 +262,7 @@ bool UriHelper::ParseFdUri(std::string_view uri)
             "Invalid fd url");
         std::string_view sizeStr = uri.substr(delim2 + delim2Len);
         CHECK_AND_RETURN_RET_LOG(StrToInt(sizeStr, size_), false, "Invalid fd url");
-        MEDIA_LOGI("UriHelper ParseFdUri try close fd, fd is %{public}d, Set fd: %{public}d", fd_, fd);
+        MEDIA_LOGD("UriHelper ParseFdUri try close fd, fd is %{public}d, Set fd: %{public}d", fd_, fd);
         if (fd_ >= 0) {
             close(fd_);
             fd_ = -1;
