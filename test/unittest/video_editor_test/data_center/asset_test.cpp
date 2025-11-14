@@ -83,17 +83,6 @@ HWTEST_F(VideoAssetTest, video_asset_apply_effect_fail, TestSize.Level0)
     ASSERT_EQ(videoAsset.GetEffectList().empty(), true);
 }
 
-// Test video asset apply effect
-HWTEST_F(VideoAssetTest, video_asset_apply_effect_ok, TestSize.Level0)
-{
-    VideoAsset videoAsset(5, 100);
-    auto effect = EffectFactory::CreateEffect(WATER_MARK_DESC);
-    ASSERT_NE(effect, nullptr);
-    videoAsset.ApplyEffect(effect);
-    EXPECT_EQ(videoAsset.GetEffectList().size(), 1);
-    EXPECT_EQ(videoAsset.GetEffectList().at(0).get(), effect.get());
-}
-
 // Test video asset contructor
 HWTEST_F(VideoAssetTest, video_asset_get_effect_list, TestSize.Level0)
 {

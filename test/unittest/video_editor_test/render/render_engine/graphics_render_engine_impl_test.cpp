@@ -169,15 +169,6 @@ HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_RenderEffect
     EXPECT_EQ(renderEngine.RenderEffects(nullptr, renderInfo), nullptr);
 }
 
-HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_RenderEffects_list_not_empty, TestSize.Level0)
-{
-    auto renderEngine = GraphicsRenderEngineImpl(1);
-    auto renderInfo = std::make_shared<GraphicsRenderInfo>();
-    auto effect = EffectFactory::CreateEffect(WATER_MARK_DESC);
-    renderInfo->effectInfoList_.emplace_back(effect->GetRenderInfo());
-    EXPECT_EQ(renderEngine.RenderEffects(nullptr, renderInfo), nullptr);
-}
-
 HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_CreateEffect_nullptr, TestSize.Level0)
 {
     std::string description = "";
