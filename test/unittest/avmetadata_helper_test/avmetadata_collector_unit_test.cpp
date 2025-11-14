@@ -1880,7 +1880,7 @@ HWTEST_F(AVMetaDataCollectorUnitTest, VectorToString_004, TestSize.Level1)
     std::string refTracktype = "";
     meta->SetData(Tag::TRACK_REF_TYPE, refTracktype);
     std::vector<int> vectest;
-    std::string strtest={12,14,15};
+    std::string strtest={12, 14, 15};
     strtest = avmetaDataCollector->VectorToString(vectest);
     EXPECT_EQ(strtest, "12,14,15");
     size_t index = 0;
