@@ -3126,8 +3126,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetDisplayScreenId_001, TestSize.Level
     EXPECT_EQ(screenCaptureServer_->displayScreenIds_.size(), 4);
 }
 
-class ScreenCaptureMonitorServiceStubTest : public testing::Test
-{
+class ScreenCaptureMonitorServiceStubTest : public testing::Test {
 protected:
 void SetUp() override
 {
@@ -3141,7 +3140,8 @@ void TearDown() override
 }
 
     sptr<ScreenCaptureMonitorServiceStub> screenCaptureMonitorServiceStub_;
-}
+};
+
 HWTEST_F(ScreenCaptureMonitorServiceStubTest, CloseListenerObject_001, TestSize.Level2)
 {
     int32_t result = screenCaptureMonitorServiceStub_->CloseListenerObject();
