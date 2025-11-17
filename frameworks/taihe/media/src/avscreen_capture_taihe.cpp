@@ -84,7 +84,7 @@ void ReportAVScreenCaptureUserChoiceSync(int32_t sessionId, string_view choice)
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
 }
 
-string GetAVScreenCaptureconfigurableParametersSync(int32_t sessionId)
+string GetAVScreenCaptureConfigurableParametersSync(int32_t sessionId)
 {
     MediaTrace trace("AVScreenCapture::TaiheGetAVScreenCaptureconfigurableParameters");
     const std::string &opt = AVScreenCapturegOpt::GET_CONFIG_PARAMS;
@@ -97,7 +97,7 @@ string GetAVScreenCaptureconfigurableParametersSync(int32_t sessionId)
     }
     std::string resultStr = "";
     asyncCtx->controller_ = ScreenCaptureControllerFactory::CreateScreenCaptureController();
-    asyncCtx->controller_->GetAVScreenCaptureconfigurableParameters(sessionId, resultStr);
+    asyncCtx->controller_->GetAVScreenCaptureConfigurableParameters(sessionId, resultStr);
     asyncCtx.release();
 
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
@@ -645,4 +645,4 @@ void AVScreenCaptureAsyncContext::AVScreenCaptureSignError(int32_t errCode, cons
 
 TH_EXPORT_CPP_API_CreateAVScreenCaptureRecorderSync(CreateAVScreenCaptureRecorderSync);
 TH_EXPORT_CPP_API_ReportAVScreenCaptureUserChoiceSync(ReportAVScreenCaptureUserChoiceSync);
-TH_EXPORT_CPP_API_GetAVScreenCaptureconfigurableParametersSync(GetAVScreenCaptureconfigurableParametersSync);
+TH_EXPORT_CPP_API_GetAVScreenCaptureConfigurableParametersSync(GetAVScreenCaptureConfigurableParametersSync);

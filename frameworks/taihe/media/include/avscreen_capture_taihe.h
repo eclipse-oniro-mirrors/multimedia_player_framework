@@ -92,7 +92,7 @@ public:
         ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config);
     void OnError(callback_view<void(uintptr_t)> callback);
     void OffError(optional_view<callback<void(uintptr_t)>> callback);
-    ::taihe::string GetAVScreenCaptureconfigurableParametersSync(int32_t sessionId);
+    ::taihe::string GetAVScreenCaptureConfigurableParametersSync(int32_t sessionId);
     void ExecuteByPromise(const std::string &opt);
     std::shared_ptr<TaskHandler<RetInfo>> GetPromiseTask(AVScreenCaptureRecorderImpl *avtaihe, const std::string &opt);
     static std::shared_ptr<TaskHandler<RetInfo>> GetInitTask(
