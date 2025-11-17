@@ -2489,6 +2489,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetSystemScreenRecorderStatus_003, Tes
 
 HWTEST_F(ScreenCaptureServerFunctionTest, IsSystemScreenRecorder_001, TestSize.Level2)
 {
+    auto screenCaptureMonitorServer = ScreenCaptureMonitorServer::GetInstance();
+    screenCaptureMonitorServer->RegisterScreenCaptureMonitorListener(nullptr);
+    screenCaptureMonitorServer->UnregisterScreenCaptureMonitorListener(nullptr);
     ScreenCaptureServer::systemScreenRecorderPid_ = -1;
     bool ret = ScreenCaptureMonitor::GetInstance()->IsSystemScreenRecorder(15000);
     ASSERT_EQ(ret, false);
@@ -3121,6 +3124,53 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetDisplayScreenId_001, TestSize.Level
     screenCaptureServer_->SetDisplayScreenId(std::move(displayIds));
     EXPECT_TRUE(screenCaptureServer_->displayIds_.empty());
     EXPECT_EQ(screenCaptureServer_->displayScreenIds_.size(), 4);
+}
+
+class ScreenCaptureMonitorServiceStubTest : public testing::Test
+{
+protected:
+void SetUp() override
+{
+    screenCaptureMonitorServiceStub_ = ScreenCaptureMonitorServiceStub::Create();
+    ASSERT_NE(screenCaptureMonitorServiceStub_, nullptr);
+}
+
+void TearDown() override
+{
+    screenCaptureMonitorServiceStub_ = nullptr;
+}
+
+    sptr<ScreenCaptureMonitorServiceStub> screenCaptureMonitorServiceStub_;
+}
+HWTEST_F(ScreenCaptureMonitorServiceStubTest, CloseListenerObject_001, TestSize.Level2)
+{
+    int32_t result = screenCaptureMonitorServiceStub_->CloseListenerObject();
+    EXPECT_EQ(result, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureMonitorServiceStubTest, IsScreenCaptureWorking_001, TestSize.Level2)
+{
+    std::list<int32_t> pidList = screenCaptureMonitorServiceStub_->IsScreenCaptureWorking();
+    EXPECT_TRUE(pidList.empty());
+}
+
+HWTEST_F(ScreenCaptureMonitorServiceStubTest, IsSystemScreenRecorder_001, TestSize.Level2)
+{
+    int32_t pid = 1234;
+    bool isSystem = screenCaptureMonitorServiceStub_->IsSystemScreenRecorder(pid);
+    EXPECT_TRUE(!isSystem);
+}
+
+HWTEST_F(ScreenCaptureMonitorServiceStubTest, IsSystemScreenRecorderWorking_001, TestSize.Level2)
+{
+    bool isSystemWorking = screenCaptureMonitorServiceStub_->IsSystemScreenRecorderWorking();
+    EXPECT_TRUE(!isSystemWorking);
+}
+
+HWTEST_F(ScreenCaptureMonitorServiceStubTest, DestroyStub_001, TestSize.Level2)
+{
+    int32_t result = screenCaptureMonitorServiceStub_->DestroyStub();
+    EXPECT_EQ(result, MSERR_OK);
 }
 } // Media
 } // OHOS
