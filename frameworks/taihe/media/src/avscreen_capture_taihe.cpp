@@ -97,7 +97,13 @@ string GetAVScreenCaptureConfigurableParametersSync(int32_t sessionId)
     }
     std::string resultStr = "";
     asyncCtx->controller_ = ScreenCaptureControllerFactory::CreateScreenCaptureController();
-    asyncCtx->controller_->GetAVScreenCaptureConfigurableParameters(sessionId, resultStr);
+    if (asyncCtx->controller_ == nullptr) {
+        set_business_error(MSERR_EXT_API9_PERMISSION_DENIED, "failed to create controller.");
+    }
+    int32_t res = asyncCtx->controller_->GetAVScreenCaptureConfigurableParameters(sessionId, resultStr);
+    if (res != MSERR_OK) {
+        set_business_error(MSERR_EXT_API20_SESSION_NOT_EXIST, "session does not exist.");
+    }
     asyncCtx.release();
 
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
