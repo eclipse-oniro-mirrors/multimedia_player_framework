@@ -198,12 +198,12 @@ int32_t ScreenCaptureMonitorServiceStub::IsSystemScreenRecorder(MessageParcel &d
 
 int32_t ScreenCaptureMonitorServiceStub::IsSystemScreenRecorderWorking(MessageParcel &data, MessageParcel &reply)
 {
-    MEDIA_LOGD("ScreenCaptureMonitorServiceStub::IsSystemScreenRecorder pid start.");
+    MEDIA_LOGD("ScreenCaptureMonitorServiceStub::IsSystemScreenRecorderWorking pid start.");
     (void)data;
 
     bool isSystemWorking = IsSystemScreenRecorderWorking();
     reply.WriteBool(isSystemWorking);
-    MEDIA_LOGD("ScreenCaptureMonitorServiceStub::IsSystemScreenRecorder pid end.");
+    MEDIA_LOGD("ScreenCaptureMonitorServiceStub::IsSystemScreenRecorderWorking pid end.");
     return MSERR_OK;
 }
 } // namespace Media

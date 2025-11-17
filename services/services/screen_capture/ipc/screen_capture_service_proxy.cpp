@@ -646,8 +646,6 @@ int32_t ScreenCaptureServiceProxy::SkipPrivacyMode(std::vector<uint64_t> &window
     MessageParcel reply;
     MessageOption option;
 
-    CHECK_AND_RETURN_RET_LOG(windowIDsVec.size() <= static_cast<size_t>(std::numeric_limits<int32_t>::max()),
-        MSERR_INVALID_OPERATION, "Integer overflow!");
     bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
     token = data.WriteInt32(static_cast<int32_t>(windowIDsVec.size()));
