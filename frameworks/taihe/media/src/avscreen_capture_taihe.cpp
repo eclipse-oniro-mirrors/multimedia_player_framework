@@ -84,6 +84,26 @@ void ReportAVScreenCaptureUserChoiceSync(int32_t sessionId, string_view choice)
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
 }
 
+string GetAVScreenCaptureconfigurableParametersSync(int32_t sessionId)
+{
+    MediaTrace trace("AVScreenCapture::TaiheGetAVScreenCaptureconfigurableParameters");
+    const std::string &opt = AVScreenCapturegOpt::GET_CONFIG_PARAMS;
+    MEDIA_LOGI("Taihe %{public}s Start", opt.c_str());
+    MEDIA_LOGI("TaiheGetAVScreenCaptureconfigurableParameters sessionId: %{public}d", sessionId);
+    auto asyncCtx = std::make_unique<AVScreenCaptureAsyncContext>();
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, "", "failed to get AsyncContext");
+    if (!MediaTaiheUtils::SystemPermission()) {
+        set_business_error(MSERR_EXT_API9_PERMISSION_DENIED, "permission denied");
+    }
+    std::string resultStr = "";
+    asyncCtx->controller_ = ScreenCaptureControllerFactory::CreateScreenCaptureController();
+    asyncCtx->controller_->GetAVScreenCaptureconfigurableParameters(sessionId, resultStr);
+    asyncCtx.release();
+
+    MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
+    return MediaTaiheUtils::ToTaiheString(resultStr);
+}
+
 RetInfo GetReturnInfo(int32_t errCode, const std::string &operate, const std::string &param,
     const std::string &add = "")
 {
@@ -625,3 +645,4 @@ void AVScreenCaptureAsyncContext::AVScreenCaptureSignError(int32_t errCode, cons
 
 TH_EXPORT_CPP_API_CreateAVScreenCaptureRecorderSync(CreateAVScreenCaptureRecorderSync);
 TH_EXPORT_CPP_API_ReportAVScreenCaptureUserChoiceSync(ReportAVScreenCaptureUserChoiceSync);
+TH_EXPORT_CPP_API_GetAVScreenCaptureconfigurableParametersSync(GetAVScreenCaptureconfigurableParametersSync);

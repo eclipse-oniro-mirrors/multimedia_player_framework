@@ -30,6 +30,7 @@ using namespace OHOS::Media;
 namespace AVScreenCapturegOpt {
     const std::string INIT = "Init";
     const std::string REPORT_USER_CHOICE = "ReportAVScreenCaptureUserChoice";
+    const std::string GET_CONFIG_PARAMS = "GetAVScreenCaptureconfigurableParameters";
     const std::string START_RECORDING = "StartRecording";
     const std::string STOP_RECORDING = "StopRecording";
     const std::string SKIP_PRIVACY_MODE = "SkipPrivacyMode";
@@ -91,7 +92,7 @@ public:
         ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config);
     void OnError(callback_view<void(uintptr_t)> callback);
     void OffError(optional_view<callback<void(uintptr_t)>> callback);
-
+    ::taihe::string GetAVScreenCaptureconfigurableParametersSync(int32_t sessionId);
     void ExecuteByPromise(const std::string &opt);
     std::shared_ptr<TaskHandler<RetInfo>> GetPromiseTask(AVScreenCaptureRecorderImpl *avtaihe, const std::string &opt);
     static std::shared_ptr<TaskHandler<RetInfo>> GetInitTask(
