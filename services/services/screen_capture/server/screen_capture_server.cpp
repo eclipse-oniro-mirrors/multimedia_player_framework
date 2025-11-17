@@ -450,7 +450,6 @@ int32_t ScreenCaptureServer::RegisterWindowLifecycleListener(std::vector<int32_t
             MEDIA_LOGI("RegisterWindowLifecycleListener AddDeathRecipient success.");
         }
     }
-
     if (windowLifecycleListener_ != nullptr) {
         MEDIA_LOGI("RegisterWindowLifecycleListener windowLifecycleListener already registered");
         return MSERR_OK;
