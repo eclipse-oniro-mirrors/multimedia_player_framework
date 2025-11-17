@@ -88,8 +88,8 @@ string GetAVScreenCaptureConfigurableParametersSync(int32_t sessionId)
 {
     MediaTrace trace("AVScreenCapture::TaiheGetAVScreenCaptureconfigurableParameters");
     const std::string &opt = AVScreenCapturegOpt::GET_CONFIG_PARAMS;
-    MEDIA_LOGI("Taihe %{public}s Start", opt.c_str());
-    MEDIA_LOGI("TaiheGetAVScreenCaptureconfigurableParameters sessionId: %{public}d", sessionId);
+    MEDIA_LOGI("Taihe %{public}s Start. TaiheGetAVScreenCaptureconfigurableParameters sessionId: %{public}d",
+        opt.c_str(), sessionId);
     auto asyncCtx = std::make_unique<AVScreenCaptureAsyncContext>();
     CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, "", "failed to get AsyncContext");
     if (!MediaTaiheUtils::SystemPermission()) {
