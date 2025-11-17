@@ -119,8 +119,10 @@ HWTEST_F(InCallObserverInnerUnitTest, OnCallStateUpdated_01, TestSize.Level1)
 {
     ASSERT_FALSE(InCallObserver::GetInstance().IsInCall(true));
     InCallObserver::GetInstance().OnCallStateUpdated(true);
+    std::this_thread::sleep_for(std::chrono::milliseconds(2));
     ASSERT_TRUE(InCallObserver::GetInstance().IsInCall(false));
     InCallObserver::GetInstance().OnCallStateUpdated(false);
+    std::this_thread::sleep_for(std::chrono::milliseconds(2));
     ASSERT_FALSE(InCallObserver::GetInstance().IsInCall(false));
 }
 
@@ -168,6 +170,7 @@ HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_02, TestSize.Level1)
     ASSERT_TRUE(InCallObserver::GetInstance().RegisterInCallObserverCallBack(inCallObserverCallBack));
     ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(true));
     ASSERT_TRUE(InCallObserver::GetInstance().IsInCall(false));
+    std::this_thread::sleep_for(std::chrono::milliseconds(2));
     ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(false));
     ASSERT_FALSE(InCallObserver::GetInstance().IsInCall(false));
     sleep(3); // 3 second

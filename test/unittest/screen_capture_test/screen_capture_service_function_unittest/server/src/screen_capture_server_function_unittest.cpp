@@ -15,6 +15,7 @@
 
 #include <unistd.h>
 #include <sys/stat.h>
+#include <gtest/gtest.h>
 #include "screen_capture_server_function_unittest.h"
 #include "ui_extension_ability_connection.h"
 #include "image_source.h"
@@ -27,6 +28,8 @@
 #include "media_dfx.h"
 #include "scope_guard.h"
 #include "param_wrapper.h"
+#include "screen_capture_monitor_service_stub.h"
+#include "screen_capture_monitor_listener_proxy.h"
 
 using namespace testing::ext;
 using namespace OHOS::Media::ScreenCaptureTestParam;
@@ -898,16 +901,21 @@ HWTEST_F(ScreenCaptureServerFunctionTest, MixAudio_001, TestSize.Level2)
         AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
     const int channels = 2;
     const int bufferSize = 10;
-    const char minChar = (char)-128;
-    char innerBuffer[bufferSize] = {minChar, minChar, minChar, minChar, minChar, minChar, minChar, minChar,
+    const char minChar = -128;
+    uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    uint8_t innerBufferValue[bufferSize] = {minChar, minChar, minChar, minChar, minChar, minChar, minChar, minChar,
         minChar, minChar};
-    char micBuffer[bufferSize] = {minChar, minChar, minChar, minChar, minChar, minChar, minChar, minChar,
+    uint8_t micBufferValue[bufferSize] = {minChar, minChar, minChar, minChar, minChar, minChar, minChar, minChar,
         minChar, minChar};
-    char* srcData[channels] = {nullptr};
-    srcData[0] = innerBuffer;
-    srcData[1] = micBuffer;
+    memcpy_s(innerBuffer, bufferSize, innerBufferValue, bufferSize);
+    memcpy_s(micBuffer, bufferSize, micBufferValue, bufferSize);
+    std::shared_ptr<AudioBuffer> innerAudioBuffer = std::make_shared<AudioBuffer>(innerBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    std::shared_ptr<AudioBuffer> micAudioBuffer = std::make_shared<AudioBuffer>(micBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
     char mixData[bufferSize] = {0};
-    screenCaptureServer_->audioSource_->MixAudio(srcData, mixData, channels, bufferSize, bufferSize);
+    screenCaptureServer_->audioSource_->MixAudio(innerAudioBuffer, micAudioBuffer, mixData, channels);
     ASSERT_EQ(mixData[0], 0);
 }
 
@@ -917,16 +925,21 @@ HWTEST_F(ScreenCaptureServerFunctionTest, MixAudio_002, TestSize.Level2)
         AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
     const int channels = 2;
     const int bufferSize = 10;
-    const char maxChar = (char)127;
-    char innerBuffer[bufferSize] = {maxChar, maxChar, maxChar, maxChar, maxChar, maxChar, maxChar, maxChar,
+    const char maxChar = 127;
+    uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    uint8_t innerBufferValue[bufferSize] = {maxChar, maxChar, maxChar, maxChar, maxChar, maxChar, maxChar, maxChar,
         maxChar, maxChar};
-    char micBuffer[bufferSize] = {maxChar, maxChar, maxChar, maxChar, maxChar, maxChar, maxChar, maxChar,
+    uint8_t micBufferValue[bufferSize] = {maxChar, maxChar, maxChar, maxChar, maxChar, maxChar, maxChar, maxChar,
         maxChar, maxChar};
-    char* srcData[channels] = {nullptr};
-    srcData[0] = innerBuffer;
-    srcData[1] = micBuffer;
+    memcpy_s(innerBuffer, bufferSize, innerBufferValue, bufferSize);
+    memcpy_s(micBuffer, bufferSize, micBufferValue, bufferSize);
+    std::shared_ptr<AudioBuffer> innerAudioBuffer = std::make_shared<AudioBuffer>(innerBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    std::shared_ptr<AudioBuffer> micAudioBuffer = std::make_shared<AudioBuffer>(micBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
     char mixData[bufferSize] = {0};
-    screenCaptureServer_->audioSource_->MixAudio(srcData, mixData, channels, bufferSize, bufferSize);
+    screenCaptureServer_->audioSource_->MixAudio(innerAudioBuffer, micAudioBuffer, mixData, channels);
     ASSERT_EQ(mixData[1], maxChar);
 }
 
@@ -935,18 +948,22 @@ HWTEST_F(ScreenCaptureServerFunctionTest, MixAudio_003, TestSize.Level2)
 {
     screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
         AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
-    const int channels = 2;
     const int bufferSize = 10;
-    const char maxChar = (char)127;
-    char innerBuffer[bufferSize] = {maxChar, maxChar, maxChar, maxChar, maxChar, maxChar, maxChar, maxChar,
+    const char maxChar = 127;
+    uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    uint8_t innerBufferValue[bufferSize] = {maxChar, maxChar, maxChar, maxChar, maxChar, maxChar, maxChar, maxChar,
         maxChar, maxChar};
-    char micBuffer[bufferSize] = {maxChar, maxChar, maxChar, maxChar, maxChar, maxChar, maxChar, maxChar,
+    uint8_t micBufferValue[bufferSize] = {maxChar, maxChar, maxChar, maxChar, maxChar, maxChar, maxChar, maxChar,
         maxChar, maxChar};
-    char* srcData[channels] = {nullptr};
-    srcData[0] = innerBuffer;
-    srcData[1] = micBuffer;
+    memcpy_s(innerBuffer, bufferSize, innerBufferValue, bufferSize);
+    memcpy_s(micBuffer, bufferSize, micBufferValue, bufferSize);
+    std::shared_ptr<AudioBuffer> innerAudioBuffer = std::make_shared<AudioBuffer>(innerBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    std::shared_ptr<AudioBuffer> micAudioBuffer = std::make_shared<AudioBuffer>(micBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
     char mixData[bufferSize] = {0};
-    screenCaptureServer_->audioSource_->MixAudio(srcData, mixData, 0, bufferSize, bufferSize);
+    screenCaptureServer_->audioSource_->MixAudio(innerAudioBuffer, micAudioBuffer, mixData, 0);
     ASSERT_EQ(mixData[0], 0);
 }
 

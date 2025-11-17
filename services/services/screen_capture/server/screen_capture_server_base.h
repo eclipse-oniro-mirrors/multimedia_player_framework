@@ -302,7 +302,8 @@ public:
         std::shared_ptr<AudioBuffer> &micAudioBuffer);
     ScreenCaptureServer* GetScreenCaptureServer();
 private:
-    void MixAudio(char** srcData, char* mixData, int channels, int bufferSize, int micBufferSize);
+    void MixAudio(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
+        std::shared_ptr<AudioBuffer> &micAudioBuffer, char* mixData, int channels);
     AudioDataSourceReadAtActionState ReadAudioBuffer(std::shared_ptr<AVBuffer> &buffer, const uint32_t &length);
     int32_t LostFrameNum(const int64_t &timestamp);
     void FillLostBuffer(const int64_t &lostNum, const int64_t &timestamp, const uint32_t &bufferSize);

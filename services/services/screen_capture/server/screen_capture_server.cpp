@@ -5455,11 +5455,8 @@ AudioDataSourceReadAtActionState AudioDataSource::MixModeBufferWrite(std::shared
         char* mixData = new (std::nothrow) char[innerAudioBuffer->length];
         CHECK_AND_RETURN_RET_LOG(mixData != nullptr, AudioDataSourceReadAtActionState::RETRY_SKIP,
             "mixData memory allocation failed");
-        char* srcData[2] = {nullptr};
-        srcData[0] = reinterpret_cast<char*>(innerAudioBuffer->buffer);
-        srcData[1] = reinterpret_cast<char*>(micAudioBuffer->buffer);
         int channels = 2;
-        MixAudio(srcData, mixData, channels, innerAudioBuffer->length, micAudioBuffer->length);
+        MixAudio(innerAudioBuffer, micAudioBuffer, mixData, channels);
         MEDIA_LOGD("ABuffer write mix mix cur:%{public}" PRId64 " mic:%{public}" PRId64 " last: %{public}" PRId64,
             innerAudioBuffer->timestamp, micAudioBuffer->timestamp, lastWriteAudioFramePts_.load());
         lastWriteAudioFramePts_.store(innerAudioBuffer->timestamp);
@@ -5519,7 +5516,8 @@ int32_t AudioDataSource::GetSize(int64_t &size)
     return ret;
 }
 
-void AudioDataSource::MixAudio(char** srcData, char* mixData, int channels, int bufferSize, int micBufferSize)
+void AudioDataSource::MixAudio(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
+    std::shared_ptr<AudioBuffer> &micAudioBuffer, char* mixData, int channels)
 {
     MEDIA_LOGD("AudioDataSource MixAudio");
     int const max = 32767;
@@ -5528,13 +5526,16 @@ void AudioDataSource::MixAudio(char** srcData, char* mixData, int channels, int 
     int const doubleChannels = 2;
     double coefficient = 1;
     int totalNum = 0;
+    char* srcData[2] = {nullptr};
+    srcData[0] = reinterpret_cast<char*>(innerAudioBuffer->buffer);
+    srcData[1] = reinterpret_cast<char*>(micAudioBuffer->buffer);
     if (channels == 0) {
         return;
     }
-    for (totalNum = 0; totalNum < bufferSize / channels; totalNum++) {
+    for (totalNum = 0; totalNum < innerAudioBuffer->length / channels; totalNum++) {
         int temp = 0;
         for (int channelNum = 0; channelNum < channels; channelNum++) {
-            CHECK_AND_CONTINUE(!(channelNum == 1 && micBufferSize <= totalNum * channels));
+            CHECK_AND_CONTINUE(!(channelNum == 1 && micAudioBuffer->length <= totalNum * channels));
             temp += *reinterpret_cast<short*>(srcData[channelNum] + totalNum * channels);
         }
         int32_t output = static_cast<int32_t>(temp * coefficient);
