@@ -1025,10 +1025,6 @@ int32_t ScreenCaptureServer::HandlePresentPickerWindowCase(Json::Value& root, co
 
 void ScreenCaptureServer::ParseDisplayId(const Json::Value &displayIdJson)
 {
-    if (displayIdJson.isNull()) {
-        displayIds_.clear();
-        return;
-    }
     if (displayIdJson.isUInt64()) {
         auto displayId = static_cast<uint64_t>(displayIdJson.asUInt64());
         MEDIA_LOGI("Report Select DisplayId: %{public}" PRIu64, displayId);
@@ -1048,7 +1044,6 @@ void ScreenCaptureServer::ParseDisplayId(const Json::Value &displayIdJson)
         SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_SCREEN, -1);
         return;
     }
-    displayIds_.clear();
 }
 
 void ScreenCaptureServer::HandleSetDisplayIdAndMissionId(Json::Value &root)
