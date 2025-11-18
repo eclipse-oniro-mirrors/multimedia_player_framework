@@ -4956,7 +4956,8 @@ bool AudioDataSource::HasSpeakerStream(
             changeInfo->outputDeviceInfo.deviceType_ == DEVICE_TYPE_BLUETOOTH_SCO ||
             changeInfo->outputDeviceInfo.deviceType_ == DEVICE_TYPE_BLUETOOTH_A2DP ||
             changeInfo->outputDeviceInfo.deviceType_ == DEVICE_TYPE_USB_HEADSET ||
-            changeInfo->outputDeviceInfo.deviceType_ == DEVICE_TYPE_USB_ARM_HEADSET) {
+            changeInfo->outputDeviceInfo.deviceType_ == DEVICE_TYPE_USB_ARM_HEADSET ||
+            changeInfo->outputDeviceInfo.deviceType_ == DEVICE_TYPE_NEARLINK) {
             headSetCount++;
         }
         changeInfoIndex++;
