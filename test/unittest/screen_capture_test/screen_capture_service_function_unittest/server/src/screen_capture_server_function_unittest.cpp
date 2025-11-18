@@ -3056,8 +3056,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ParseDisplayId_005, TestSize.Level2)
     Json::Reader reader;
     Json::Value root;
     ASSERT_TRUE(reader.parse(jsonStr, root));
+    screenCaptureServer_->displayIds_ = {2};
     screenCaptureServer_->ParseDisplayId(root["displayId"]);
-    EXPECT_EQ(screenCaptureServer_->displayIds_.size(), 0);
+    ASSERT_EQ(screenCaptureServer_->displayIds_.size(), 1);
+    EXPECT_EQ(screenCaptureServer_->displayIds_.front(), 2);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, HandleSetDisplayIdAndMissionId_001, TestSize.Level2)
