@@ -1769,7 +1769,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleMicBeforeInnerSync_001, TestSize
     SetSCMicAudioCaptureAndPushData(micAudioBuffer);
     SetSCInnerAudioCaptureAndPushData(innerAudioBuffer);
     std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
-    AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->HandleMicBeforeInnerSync(buffer,
+    AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->InnerMicAudioSync(buffer,
         bufferSize, innerAudioBuffer, micAudioBuffer);
     MEDIA_LOGI("HandleMicBeforeInnerSync_001 ret: %{public}d", static_cast<int32_t>(ret));
     ASSERT_NE(ret, AudioDataSourceReadAtActionState::OK);
@@ -1808,7 +1808,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleMicBeforeInnerSync_002, TestSize
     SetSCInnerAudioCaptureAndPushData(innerAudioBuffer);
     std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
     screenCaptureServer_->micAudioCapture_ = nullptr;
-    AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->HandleMicBeforeInnerSync(buffer,
+    AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->InnerMicAudioSync(buffer,
         bufferSize, innerAudioBuffer, micAudioBuffer);
     MEDIA_LOGI("HandleMicBeforeInnerSync_002 ret: %{public}d", static_cast<int32_t>(ret));
     ASSERT_NE(ret, AudioDataSourceReadAtActionState::OK);
@@ -1849,7 +1849,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleMicBeforeInnerSync_003, TestSize
     uint8_t data[bufferSize];
     std::shared_ptr<AVMemory> bufferMem = AVMemory::CreateAVMemory(data, bufferSize, bufferSize);
     buffer->memory_ = bufferMem;
-    AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->HandleMicBeforeInnerSync(buffer,
+    AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->InnerMicAudioSync(buffer,
         bufferSize, innerAudioBuffer, micAudioBuffer);
     MEDIA_LOGI("HandleMicBeforeInnerSync_003 ret: %{public}d", static_cast<int32_t>(ret));
     ASSERT_EQ(ret, AudioDataSourceReadAtActionState::OK);
