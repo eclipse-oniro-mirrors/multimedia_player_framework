@@ -3159,6 +3159,8 @@ HWTEST_F(ScreenCaptureMonitorServiceStubTest, IsSystemScreenRecorder_001, TestSi
     int32_t pid = 1234;
     bool isSystem = screenCaptureMonitorServiceStub_->IsSystemScreenRecorder(pid);
     EXPECT_TRUE(!isSystem);
+    isSystem = screenCaptureMonitorServiceStub_->IsSystemScreenRecorder(-1);
+    EXPECT_TRUE(!isSystem);
 }
 
 HWTEST_F(ScreenCaptureMonitorServiceStubTest, IsSystemScreenRecorderWorking_001, TestSize.Level2)
