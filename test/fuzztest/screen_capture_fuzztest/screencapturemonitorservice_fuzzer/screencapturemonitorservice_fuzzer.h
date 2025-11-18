@@ -34,6 +34,7 @@ public:
     ~ScreenCaptureMonitorListenerTest();
     void OnScreenCaptureStarted(int32_t pid) override;
     void OnScreenCaptureFinished(int32_t pid) override;
+    void OnScreenCaptureDied() override;
 };
 class ScreenCaptureMonitorServiceFuzzer {
 public:

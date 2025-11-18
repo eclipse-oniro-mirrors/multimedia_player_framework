@@ -29,12 +29,14 @@ public:
     virtual ~IStandardScreenCaptureMonitorListener() = default;
     virtual void OnScreenCaptureStarted(int32_t pid) = 0;
     virtual void OnScreenCaptureFinished(int32_t pid) = 0;
+    virtual void OnScreenCaptureDied() = 0;
     /**
      * IPC code ID
      */
     enum ScreenCaptureMonitorListenerMsg {
         ON_SCREEN_CAPTURE_STARTED = 1,
         ON_SCREEN_CAPTURE_FINISHED = 2,
+        ON_SCREEN_CAPTURE_DIED = 3,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardScreenCaptureMonitorListener");

@@ -1054,6 +1054,12 @@ void ScreenCaptureMonitorListenerMock::OnScreenCaptureFinished(int32_t pid)
     stateFlag_ = 2; // 2 finish
 }
 
+void ScreenCaptureMonitorListenerMock::OnScreenCaptureDied()
+{
+    MEDIA_LOGI("OnScreenCaptureDied name %{public}s", name_.c_str());
+    stateFlag_ = 3; // 3 error
+}
+
 void ScreenCaptureUnitTest::BeforeScreenCaptureSpecifiedWindowCbCase07(void)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_07 before");

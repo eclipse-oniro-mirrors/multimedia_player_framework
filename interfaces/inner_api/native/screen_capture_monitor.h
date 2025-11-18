@@ -43,7 +43,7 @@ public:
     public:
         virtual void OnScreenCaptureStarted(int32_t pid) = 0;
         virtual void OnScreenCaptureFinished(int32_t pid) = 0;
-        virtual void OnScreenCaptureDied() {};
+        virtual void OnScreenCaptureDied() = 0;
     };
 
     std::list<int32_t> IsScreenCaptureWorking()
@@ -84,7 +84,7 @@ public:
          * @since 1.0
          * @version 1.0
          */
-        virtual void OnScreenCaptureDied() {};
+        virtual void OnScreenCaptureDied() = 0;
     };
 
     std::list<int32_t> IsScreenCaptureWorking();
