@@ -42,6 +42,10 @@ void ScreenCaptureMonitorListenerTest::OnScreenCaptureFinished(int32_t pid)
     (void)pid;
 }
 
+void ScreenCaptureMonitorListenerTest::OnScreenCaptureDied()
+{
+}
+
 ScreenCaptureMonitorServiceFuzzer::ScreenCaptureMonitorServiceFuzzer()
 {
 }

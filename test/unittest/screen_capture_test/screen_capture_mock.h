@@ -64,6 +64,7 @@ public:
     ~ScreenCaptureMonitorListenerMock() = default;
     void OnScreenCaptureStarted(int32_t pid) override;
     void OnScreenCaptureFinished(int32_t pid) override;
+    void OnScreenCaptureDied() override;
     int stateFlag_ = 0;
     std::string name_ = "ScreenCaptureMonitor";
 };

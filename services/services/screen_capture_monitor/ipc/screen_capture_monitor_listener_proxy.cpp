@@ -62,6 +62,19 @@ void ScreenCaptureMonitorListenerProxy::OnScreenCaptureFinished(int32_t pid)
     CHECK_AND_RETURN_LOG(error == MSERR_OK, "on error failed, error: %{public}d", error);
 }
 
+void ScreenCaptureMonitorListenerProxy::OnScreenCaptureDied()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureMonitorListenerProxy::GetDescriptor());
+    CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
+
+    int error = Remote()->SendRequest(ScreenCaptureMonitorListenerMsg::ON_SCREEN_CAPTURE_DIED, data, reply, option);
+    CHECK_AND_RETURN_LOG(error == MSERR_OK, "on error failed, error: %{public}d", error);
+}
+
 ScreenCaptureMonitorListenerCallback::ScreenCaptureMonitorListenerCallback(
     const sptr<IStandardScreenCaptureMonitorListener> &listener) : listener_(listener)
 {
@@ -86,6 +99,14 @@ void ScreenCaptureMonitorListenerCallback::OnScreenCaptureFinished(int32_t pid)
     MEDIA_LOGI("OnScreenCaptureFinished");
     if (listener_ != nullptr) {
         listener_->OnScreenCaptureFinished(pid);
+    }
+}
+
+void ScreenCaptureMonitorListenerCallback::OnScreenCaptureDied()
+{
+    MEDIA_LOGI("OnScreenCaptureDied");
+    if (listener_ != nullptr) {
+        listener_->OnScreenCaptureDied();
     }
 }
 } // namespace Media
