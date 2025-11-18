@@ -5118,29 +5118,16 @@ AudioDataSourceReadAtActionState AudioDataSource::WriteMixAudio(std::shared_ptr<
     return MixModeBufferWrite(innerAudioBuffer, micAudioBuffer, bufferMem);
 }
 
-AudioDataSourceReadAtActionState AudioDataSource::HandleMicBeforeInnerSync(std::shared_ptr<AVBuffer> &buffer,
-    uint32_t length, std::shared_ptr<AudioBuffer> &innerAudioBuffer, std::shared_ptr<AudioBuffer> &micAudioBuffer)
-{
-    int64_t timeDiff = innerAudioBuffer->timestamp - micAudioBuffer->timestamp;
-    if (timeDiff > MAX_MIC_BEFORE_INNER_TIME_IN_NS) {
-        // Drop mic data Before 40ms
-        if (micAudioBuffer && screenCaptureServer_->GetMicAudioCapture()) {
-            screenCaptureServer_->GetMicAudioCapture()->DropBufferUntil(innerAudioBuffer->timestamp);
-            MEDIA_LOGI("mic before inner timeDiff: %{public}" PRId64 " DropBufferUntil inner time: %{public}" PRId64
-                " lastAudioPts: %{public}" PRId64, timeDiff,
-                innerAudioBuffer->timestamp, lastWriteAudioFramePts_.load());
-        }
-        return AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG;
-    }
-    return WriteMicAudio(buffer, length, micAudioBuffer);
-}
-
 AudioDataSourceReadAtActionState AudioDataSource::InnerMicAudioSync(std::shared_ptr<AVBuffer> &buffer,
     uint32_t length, std::shared_ptr<AudioBuffer> &innerAudioBuffer, std::shared_ptr<AudioBuffer> &micAudioBuffer)
 {
     int64_t timeWindow = micAudioBuffer->timestamp - innerAudioBuffer->timestamp;
     if (timeWindow <= NEG_AUDIO_INTERVAL_IN_NS) { // mic before inner
-        return HandleMicBeforeInnerSync(buffer, length, innerAudioBuffer, micAudioBuffer);
+        auto count = screenCaptureServer_->GetMicAudioCapture()->DropBufferUntil(innerAudioBuffer->timestamp);
+        MEDIA_LOGI("mic before inner timeDiff: %{public}" PRId64 " DropBufferUntil inner time: %{public}" PRId64
+                   " lastAudioPts: %{public}" PRId64 " count: %{public}" PRId32,
+                   timeWindow, innerAudioBuffer->timestamp, lastWriteAudioFramePts_.load(), count);
+        return AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG;
     }
     if (timeWindow > NEG_AUDIO_INTERVAL_IN_NS && timeWindow < AUDIO_INTERVAL_IN_NS) { // Write mix
         return WriteMixAudio(buffer, length, innerAudioBuffer, micAudioBuffer);

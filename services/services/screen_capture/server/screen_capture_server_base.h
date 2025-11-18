@@ -256,8 +256,6 @@ public:
         std::shared_ptr<AudioBuffer> &innerAudioBuffer, std::shared_ptr<AudioBuffer> &micAudioBuffer);
     AudioDataSourceReadAtActionState ReadWriteAudioBufferMixCore(std::shared_ptr<AVBuffer> &buffer, uint32_t length,
         std::shared_ptr<AudioBuffer> &innerAudioBuffer, std::shared_ptr<AudioBuffer> &micAudioBuffer);
-    AudioDataSourceReadAtActionState HandleMicBeforeInnerSync(std::shared_ptr<AVBuffer> &buffer, uint32_t length,
-        std::shared_ptr<AudioBuffer> &innerAudioBuffer, std::shared_ptr<AudioBuffer> &micAudioBuffer);
     AudioDataSourceReadAtActionState InnerMicAudioSync(std::shared_ptr<AVBuffer> &buffer, uint32_t length,
         std::shared_ptr<AudioBuffer> &innerAudioBuffer, std::shared_ptr<AudioBuffer> &micAudioBuffer);
     AudioDataSourceReadAtActionState VideoAudioSyncMixMode(std::shared_ptr<AVBuffer> &buffer, uint32_t length,
