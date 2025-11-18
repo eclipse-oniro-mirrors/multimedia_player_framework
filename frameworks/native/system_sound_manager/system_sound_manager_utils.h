@@ -39,6 +39,7 @@ public:
     static bool GetScannerFirstParameter(const char* key, int32_t maxSize);
     static int32_t GetTypeForSystemSoundUri(const std::string &audioUri);
     static std::string GetErrorReason(const int32_t &errorCode);
+    static std::string GetTonePlaybackErrorReason(const int32_t &errorCode);
 };
 
 class __attribute__((visibility("default"))) MediaTrace : public NoCopyable {
