@@ -153,7 +153,8 @@ napi_status HelperDataSourceCallback::UvWork(HelperDataSourceJsCallbackWraper *c
         } while (0);
         delete cbWrap;
     };
-    return napi_send_event(env_, task, napi_eprio_immediate);
+    std::string taskname = "UvWork";
+    return napi_send_event(env_, task, napi_eprio_immediate, taskname.c_str());
 }
 
 int32_t HelperDataSourceCallback::ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
