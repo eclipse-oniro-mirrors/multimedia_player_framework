@@ -27,7 +27,7 @@ public:
     int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallbackMock>& callback,
         const bool isErrorCallbackEnabled, const bool isDataCallbackEnabled,
         const bool isStateChangeCallbackEnabled, const bool isCaptureContentChangeCallbackEnabled) override;
-    int32_t SetDisplayChangeCallback() override;
+    int32_t SetDisplayCallback() override;
     int32_t Init(AVScreenCaptureConfig config) override;
     int32_t Init(OHOS::AudioStandard::AppInfo &appInfo) override;
     int32_t StartScreenCapture() override;

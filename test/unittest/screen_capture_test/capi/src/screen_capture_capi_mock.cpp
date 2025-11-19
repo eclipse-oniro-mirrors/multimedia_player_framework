@@ -244,12 +244,12 @@ int32_t ScreenCaptureCapiMock::SetScreenCaptureCallback(const std::shared_ptr<Sc
     return GetCaptureContentChangeCallback(isCaptureContentChangeCallbackEnabled);
 }
 
-int32_t ScreenCaptureCapiMock::SetDisplayChangeCallback()
+int32_t ScreenCaptureCapiMock::SetDisplayCallback()
 {
-    MEDIA_LOGD("ScreenCaptureCapiMock SetDisplayChangeCallback");
+    MEDIA_LOGD("ScreenCaptureCapiMock SetDisplayCallback");
     int32_t ret = OH_AVScreenCapture_SetDisplayCallback(screenCapture_, ScreenCaptureCapiMock::OnDisplaySelected, this);
     if (ret != AV_SCREEN_CAPTURE_ERR_OK) {
-        MEDIA_LOGE("ScreenCaptureCapiMock SetDisplayChangeCallback failed, ret: %{public}d", ret);
+        MEDIA_LOGE("ScreenCaptureCapiMock SetDisplayCallback failed, ret: %{public}d", ret);
         return MSERR_UNKNOW;
     }
     return AV_SCREEN_CAPTURE_ERR_OK;

@@ -100,7 +100,7 @@ int32_t ScreenCaptureNativeMock::SetScreenCaptureCallback(const std::shared_ptr<
     return MSERR_INVALID_OPERATION;
 }
 
-int32_t ScreenCaptureCapiMock::SetDisplayChangeCallback()
+int32_t ScreenCaptureCapiMock::SetDisplayCallback()
 {
     return MSERR_OK;
 }
