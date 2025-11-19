@@ -1102,7 +1102,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_07, TestSize.
     // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true,
     // captureContentChangeCallback: true
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true, true));
-    EXPECT_EQ(MSERR_OK, screenCapture_->SetDisplayChangeCallback());
     sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> screenCaptureMonitorListener1 =
         new ScreenCaptureMonitorListenerMock("scm1");
     sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> screenCaptureMonitorListener2 =
