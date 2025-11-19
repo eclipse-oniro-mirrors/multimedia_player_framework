@@ -448,6 +448,22 @@ struct PixelMapParams {
 };
 
 /**
+ * @brief Provides the definition of the returned pixelmap's configuration
+ */
+struct OutputSize {
+    /**
+     * Expected pixelmap's width, -1 means to keep consistent with the
+     * original dimensions of the given video resource.
+     */
+    int32_t dstWidth = -1;
+    /**
+     * Expected pixelmap's width, -1 means to keep consistent with the
+     * original dimensions of the given video resource.
+     */
+    int32_t dstHeight = -1;
+};
+
+/**
  * @brief Provides the callback interfaces to notify client about errors or infos.
  */
 class HelperCallback {

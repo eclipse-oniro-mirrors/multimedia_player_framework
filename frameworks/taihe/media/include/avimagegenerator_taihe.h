@@ -35,6 +35,8 @@ public:
     void SetFdSrc(optional_view<AVFileDescriptor> fdSrc);
     optional<::ohos::multimedia::image::image::PixelMap> FetchFrameByTimeSync(int64_t timeUs,
         AVImageQueryOptions options, PixelMapParams const& param);
+    optional<::ohos::multimedia::image::image::PixelMap> FetchScaledFrameByTimeSync(int64_t timeUs,
+        AVImageQueryOptions options, optional_view<OutputSize> param);
     void ReleaseSync();
 private:
     std::shared_ptr<OHOS::Media::AVMetadataHelper> helper_;
