@@ -758,6 +758,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_01, TestSize.
     // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true,
     // captureContentChangeCallback: true
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true, true));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetDisplayChangeCallback());
 
     screenCapture_->SetMicrophoneEnabled(true); // Enable Mic
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
@@ -811,6 +812,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_02, TestSize.
     // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true,
     // captureContentChangeCallback: true
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true, true));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetDisplayChangeCallback());
 
     screenCapture_->SetMicrophoneEnabled(false); // Enable Mic
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
@@ -861,6 +863,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_03, TestSize.
     // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true,
     // captureContentChangeCallback: true
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true, true));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetDisplayChangeCallback());
 
     screenCapture_->SetMicrophoneEnabled(true); // Enable Mic
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
@@ -917,6 +920,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_04, TestSize.
     // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true,
     // captureContentChangeCallback: true
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true, true));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetDisplayChangeCallback());
 
     screenCapture_->SetMicrophoneEnabled(true); // Enable Mic
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
@@ -972,6 +976,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_05, TestSize.
     // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true,
     // captureContentChangeCallback: true
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true, true));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetDisplayChangeCallback());
 
     screenCapture_->SetMicrophoneEnabled(true); // Enable Mic
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
@@ -1030,6 +1035,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_06, TestSize.
     // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true,
     // captureContentChangeCallback: true
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true, true));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetDisplayChangeCallback());
 
     screenCapture_->SetMicrophoneEnabled(true); // Enable Mic
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
@@ -1096,6 +1102,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_07, TestSize.
     // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true,
     // captureContentChangeCallback: true
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true, true));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetDisplayChangeCallback());
     sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> screenCaptureMonitorListener1 =
         new ScreenCaptureMonitorListenerMock("scm1");
     sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> screenCaptureMonitorListener2 =
@@ -1144,6 +1151,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_cb_01, TestSize.Level2)
     // callback enabled: errorCallback: true, dataCallback: false, stateChangeCallback: true,
     // captureContentChangeCallback: true
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, false, true, true));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetDisplayChangeCallback());
 
     screenCapture_->SetMicrophoneEnabled(true); // Enable Mic
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));

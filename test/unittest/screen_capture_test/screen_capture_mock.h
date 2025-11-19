@@ -74,7 +74,9 @@ public:
     virtual int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallbackMock>& callback,
         const bool isErrorCallbackEnabled = false, const bool isDataCallbackEnabled = false,
         const bool isStateChangeCallbackEnabled = false, const bool isCaptureContentChangeCallbackEnabled = false) = 0;
+    virtual int32_t SetDisplayChangeCallback() = 0;
     virtual int32_t Init(AVScreenCaptureConfig config) = 0;
+    virtual int32_t Init(OHOS::AudioStandard::AppInfo &appInfo) = 0;
     virtual int32_t StartScreenCapture() = 0;
     virtual int32_t StartScreenCaptureWithSurface(const std::any& value) = 0;
     virtual int32_t StopScreenCapture() = 0;

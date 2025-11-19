@@ -498,6 +498,39 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_SetCaptureArea_01, Test
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_SetCaptureArea_01 after");
 }
 
+/**
+ * @tc.name: screen_capture_save_file_set_and_check_sa_limit
+ * @tc.desc: do screencapture
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_set_and_check_sa_limit, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_set_and_check_sa_limit before");
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_save_file_set_and_check_sa_limit.mp4", recorderInfo);
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+    OHOS::AudioStandard::AppInfo appInfo;
+    appInfo.appUid = 0;
+    appInfo.appPid = 0;
+    appInfo.appTokenId = 0;
+    appInfo.appFullTokenId = 0;
+
+    EXPECT_EQ(MSERR_INVALID_OPERATION, screenCapture_->Init(appInfo));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_set_and_check_sa_limit after");
+}
+
 
 } // namespace Media
 } // namespace OHOS
