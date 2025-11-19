@@ -32,6 +32,12 @@ const std::string RESUME_CALLBACK_NAME = "resume";
 const std::string STOP_CALLBACK_NAME = "stop";
 const std::string RESET_CALLBACK_NAME = "reset";
 const std::string RELEASE_CALLBACK_NAME = "release";
+
+namespace RecorderCallbackNapiTask {
+const std::string ON_JS_STATE_CALLBACK = "RecorderCallbackNapi::OnJsStateCallBack";
+const std::string ON_JS_ERROR_CALLBACK = "RecorderCallbackNapi::OnJsErrorCallBack";
+}
+
 class RecorderCallbackNapi : public RecorderCallback {
 public:
     explicit RecorderCallbackNapi(napi_env env, bool isVideo);

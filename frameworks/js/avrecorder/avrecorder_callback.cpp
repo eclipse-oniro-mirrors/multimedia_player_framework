@@ -222,7 +222,8 @@ void AVRecorderCallback::OnJsStateCallBack(AVRecordJsCallback *jsCb) const
         } while (0);
         delete event;
     };
-    auto ret = napi_send_event(env_, task, napi_eprio_immediate);
+    auto ret = napi_send_event(env_, task, napi_eprio_immediate,
+        AVRecorderCallbackNapiTask::ON_JS_STATE_CALLBACK.c_str());
     CHECK_AND_RETURN_LOG(ret == napi_status::napi_ok, "failed to napi_send_event task");
 
     CANCEL_SCOPE_EXIT_GUARD(0);
@@ -263,7 +264,8 @@ void AVRecorderCallback::OnJsPhotoAssertAvailableCallback(AVRecordJsCallback *js
         } while (0);
         delete event;
     };
-    auto ret = napi_send_event(env_, task, napi_eprio_immediate);
+    auto ret = napi_send_event(env_, task, napi_eprio_immediate,
+        AVRecorderCallbackNapiTask::ON_JS_PHOTO_ASSERT_AVAILABLE_CALLBACK.c_str());
     CHECK_AND_RETURN_LOG(ret == napi_status::napi_ok, "failed to napi_send_event task");
 
     CANCEL_SCOPE_EXIT_GUARD(0);
@@ -304,7 +306,8 @@ void AVRecorderCallback::OnJsAudioCaptureChangeCallback(AVRecordJsCallback *jsCb
         } while (0);
         delete event;
     };
-    auto ret = napi_send_event(env_, task, napi_eprio_immediate);
+    auto ret = napi_send_event(env_, task, napi_eprio_immediate,
+        AVRecorderCallbackNapiTask::ON_JS_AUDIO_CAPTURE_CHANGE_CALLBACK.c_str());
     CHECK_AND_RETURN_LOG(ret == napi_status::napi_ok, "failed to napi_send_event task");
 
     CANCEL_SCOPE_EXIT_GUARD(0);
@@ -350,7 +353,8 @@ void AVRecorderCallback::OnJsErrorCallBack(AVRecordJsCallback *jsCb) const
         } while (0);
         delete event;
     };
-    auto ret = napi_send_event(env_, task, napi_eprio_immediate);
+    auto ret = napi_send_event(env_, task, napi_eprio_immediate,
+        AVRecorderCallbackNapiTask::ON_JS_ERROR_CALLBACK.c_str());
     CHECK_AND_RETURN_LOG(ret == napi_status::napi_ok, "failed to napi_send_event task");
 
     CANCEL_SCOPE_EXIT_GUARD(0);
