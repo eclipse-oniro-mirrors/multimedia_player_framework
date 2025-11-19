@@ -250,7 +250,7 @@ int32_t ScreenCaptureCapiMock::SetDisplayCallback()
     int32_t ret = OH_AVScreenCapture_SetDisplayCallback(screenCapture_, ScreenCaptureCapiMock::OnDisplaySelected, this);
     if (ret != AV_SCREEN_CAPTURE_ERR_OK) {
         MEDIA_LOGE("ScreenCaptureCapiMock SetDisplayCallback failed, ret: %{public}d", ret);
-        return MSERR_UNKNOW;
+        return MSERR_UNKNOWN;
     }
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
