@@ -91,19 +91,24 @@ string GetAVScreenCaptureConfigurableParametersSync(int32_t sessionId)
     MEDIA_LOGI("Taihe %{public}s Start. TaiheGetAVScreenCaptureconfigurableParameters sessionId: %{public}d",
         opt.c_str(), sessionId);
     auto asyncCtx = std::make_unique<AVScreenCaptureAsyncContext>();
-    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, "", "failed to get AsyncContext");
+
+    auto res = ::taihe::string("");
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, res, "failed to get AsyncContext");
     if (!MediaTaiheUtils::SystemPermission()) {
         set_business_error(MSERR_EXT_API9_PERMISSION_DENIED, "permission denied");
+        return res;
     }
     std::string resultStr = "";
     asyncCtx->controller_ = ScreenCaptureControllerFactory::CreateScreenCaptureController();
     if (asyncCtx->controller_ == nullptr) {
         set_business_error(MSERR_EXT_API9_PERMISSION_DENIED, "failed to create controller.");
+        return res;
     }
     
-    int32_t res = asyncCtx->controller_->GetAVScreenCaptureConfigurableParameters(sessionId, resultStr);
-    if (res != MSERR_OK) {
+    int32_t ret = asyncCtx->controller_->GetAVScreenCaptureConfigurableParameters(sessionId, resultStr);
+    if (ret != MSERR_OK) {
         set_business_error(MSERR_EXT_API20_SESSION_NOT_EXIST, "session does not exist.");
+        return res;
     }
     asyncCtx.release();
 
