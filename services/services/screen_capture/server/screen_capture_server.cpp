@@ -5526,13 +5526,14 @@ void AudioDataSource::MixAudio(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
     int const doubleChannels = 2;
     double coefficient = 1;
     int totalNum = 0;
-    char* srcData[2] = {nullptr};
-    srcData[0] = reinterpret_cast<char*>(innerAudioBuffer->buffer);
-    srcData[1] = reinterpret_cast<char*>(micAudioBuffer->buffer);
+    char* srcData[2] = {
+        reinterpret_cast<char*>(innerAudioBuffer->buffer),
+        reinterpret_cast<char*>(micAudioBuffer->buffer)
+    };
     if (channels == 0) {
         return;
     }
-    for (totalNum = 0; totalNum < innerAudioBuffer->length / channels; totalNum++) {
+    for (totalNum = 0; totalNum < innerAudioBuffer->length / 2; totalNum++) {
         int temp = 0;
         for (int channelNum = 0; channelNum < channels; channelNum++) {
             CHECK_AND_CONTINUE(!(channelNum == 1 && micAudioBuffer->length <= totalNum * channels));
