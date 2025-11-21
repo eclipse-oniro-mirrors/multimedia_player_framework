@@ -94,6 +94,7 @@ static const int32_t WINDOW_INFO_LIST_SIZE = 1;
 static const int32_t MEDIA_SERVICE_SA_ID = 3002;
 static const uint32_t MIN_LINE_WIDTH = 1;
 static const uint32_t MAX_LINE_WIDTH = 8;
+static const uint32_t SHORT_TO_CHAR_RATIO = 2;
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     static const int32_t NOTIFICATION_MAX_TRY_NUM = 3;
 #endif
@@ -5533,8 +5534,8 @@ void AudioDataSource::MixAudio(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
     if (channels == 0) {
         return;
     }
-    int shortToCharRatio = 2;
-    for (totalNum = 0; totalNum < innerAudioBuffer->length / shortToCharRatio; totalNum++) {
+
+    for (totalNum = 0; totalNum < innerAudioBuffer->length / SHORT_TO_CHAR_RATIO; totalNum++) {
         int temp = 0;
         for (int channelNum = 0; channelNum < channels; channelNum++) {
             CHECK_AND_CONTINUE(!(channelNum == 1 && micAudioBuffer->length <= totalNum * channels));
