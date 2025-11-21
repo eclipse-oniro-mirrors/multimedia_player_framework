@@ -146,6 +146,11 @@ struct PixelMapParams {
     colorFormat: Optional<PixelFormat>;
 }
 
+struct OutputSize {
+    width: Optional<i32>;
+    height: Optional<i32>;
+}
+
 struct PlaybackStrategy {
     preferredWidth: Optional<i32>;
     preferredHeight: Optional<i32>;
@@ -671,6 +676,9 @@ interface AVImageGenerator {
     @gen_async("fetchFrameByTime")
     @gen_promise("fetchFrameByTime")
     FetchFrameByTimeSync(timeUs: i64, options: AVImageQueryOptions, param: PixelMapParams): Optional<image.PixelMap>;
+
+    @gen_promise("fetchScaledFrameByTime")
+    FetchScaledFrameByTimeSync(timeUs: i64, options: AVImageQueryOptions, @optional param: Optional<OutputSize>): Optional<image.PixelMap>;
 
     @gen_async("release")
     @gen_promise("release")
