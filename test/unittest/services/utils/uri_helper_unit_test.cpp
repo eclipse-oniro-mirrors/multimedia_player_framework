@@ -173,7 +173,7 @@ HWTEST_F(UriHelperUnitTest, GetProtocolFromURL_002, TestSize.Level0)
  * @tc.desc: protocol not exist
  * @tc.type: FUNC
  */
-HWTEST_F(UriHelperUnitTest, GetProtocolFromURL_002, TestSize.Level0)
+HWTEST_F(UriHelperUnitTest, GetProtocolFromURL_003, TestSize.Level0)
 {
     EXPECT_EQ(UriHelper::GetProtocolFromURL("example.com"), "");
     EXPECT_EQ(UriHelper::GetProtocolFromURL("://example.com:8080"), "");
