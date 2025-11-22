@@ -89,6 +89,7 @@
           "input",
           "hicollie",
           "media_foundation",
+          "netmanager_base",
           "drivers_interface_display",
           "openmax",
           "hdf_core",

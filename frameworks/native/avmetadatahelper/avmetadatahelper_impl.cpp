@@ -32,6 +32,7 @@
 #include "param_wrapper.h"
 #include "hdr_type.h"
 #include "metadata_convertor.h"
+#include "uri_helper.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "MetaHelperImpl" };
@@ -775,6 +776,21 @@ int32_t AVMetadataHelperImpl::SetUrlSource(const std::string &uri, const std::ma
     CHECK_AND_RETURN_RET_LOG(!uri.empty(), MSERR_INVALID_VAL, "uri is empty.");
     CHECK_AND_RETURN_RET_LOG((uri.find("http://") == 0 || uri.find("https://") == 0),
         MSERR_INVALID_VAL, "uri is error.");
+
+    bool isComponentCfg = false;
+    std:string protocol = UriHelper::GetProtocolFromURL(uri);
+    int32_t ret = OHOS::NetManagerStandard::NetworkSecurityConfig::GetInstance()
+        .IsCleartextCfgByComponent("Media Kit", isComponentCfg);
+    MEDIA_LOGD("Media Kit, ret: %{public}d, isComponentCfg: %{public}d, protocol: %{public}s",
+        ret, isComponentCfg, protocol.c_str());
+    if (isComponentCfg && protocol == "http") {
+        bool isCleartextPermitted = true;
+        std::string hostname = UriHelper::GetHostnameFromURL(uri);
+        OHOS::NetManagerStandard::NetworkSecurityConfig::GetInstance().isCleartextPermitted(hostname, isCleartextPermitted);
+        CHECK_AND_RETURN_RET_LOG(isCleartextPermitted, MSERR_INVALID_VAL,
+            "blocked insecure HTTP request to %{public}s, use HTTPS instead for secure communication!", uri.c_str());
+    }
+
     concurrentWorkCount_++;
     ReportSceneCode(AV_META_SCENE_BATCH_HANDLE);
     auto res = avMetadataHelperService_->SetUrlSource(uri, header);

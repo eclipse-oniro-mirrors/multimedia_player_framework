@@ -62,6 +62,123 @@ HWTEST_F(UriHelperUnitTest, UriHelper_004, TestSize.Level0)
     ASSERT_EQ(uriHelper.formattedUri_, "http");
 }
 
+/**
+ * @tc.name: GetHostnameFromURL_001
+ * @tc.desc: empty input
+ * @tc.type: FUNC
+ */
+HWTEST_F(UriHelperUnitTest, GetHostnameFromURL_001, TestSize.Level0)
+{
+    std::string url = "";
+    std::string expected = "";
+    EXPECT_EQ(UriHelper::GetHostnameFromURL(url), expected);
+}
+
+/**
+ * @tc.name: GetHostnameFromURL_002
+ * @tc.desc: normal with protocol
+ * @tc.type: FUNC
+ */
+HWTEST_F(UriHelperUnitTest, GetHostnameFromURL_002, TestSize.Level0)
+{
+    EXPECT_EQ(UriHelper::GetHostnameFromURL("http://example.com"), "example.com");
+    EXPECT_EQ(UriHelper::GetHostnameFromURL("https://example.com:8080"), "example.com");
+    EXPECT_EQ(UriHelper::GetHostnameFromURL("http://example.com/path"), "example.com");
+    EXPECT_EQ(UriHelper::GetHostnameFromURL("https://example.com?query=1"), "example.com");
+    EXPECT_EQ(UriHelper::GetHostnameFromURL("https://example.com/path?x=1"), "example.com");
+}
+
+/**
+ * @tc.name: GetHostnameFromURL_003
+ * @tc.desc: no protocol
+ * @tc.type: FUNC
+ */
+HWTEST_F(UriHelperUnitTest, GetHostnameFromURL_003, TestSize.Level0)
+{
+    EXPECT_EQ(UriHelper::GetHostnameFromURL("example.com"), "example.com");
+    EXPECT_EQ(UriHelper::GetHostnameFromURL("//example.com/path"), "example.com");
+    EXPECT_EQ(UriHelper::GetHostnameFromURL("///example.com/path"), "example.com");
+    EXPECT_EQ(UriHelper::GetHostnameFromURL("a"), "a");
+}
+
+/**
+ * @tc.name: GetHostnameFromURL_004
+ * @tc.desc: edge case
+ * @tc.type: FUNC
+ */
+HWTEST_F(UriHelperUnitTest, GetHostnameFromURL_004, TestSize.Level0)
+{
+    EXPECT_EQ(UriHelper::GetHostnameFromURL("http://"), "");
+    EXPECT_EQ(UriHelper::GetHostnameFromURL("http:///"), "");
+    EXPECT_EQ(UriHelper::GetHostnameFromURL("example.com:colon"), "example.com");
+}
+
+/**
+ * @tc.name: GetHostnameFromURL_005
+ * @tc.desc: back slash handling
+ * @tc.type: FUNC
+ */
+HWTEST_F(UriHelperUnitTest, GetHostnameFromURL_005, TestSize.Level0)
+{
+    EXPECT_EQ(UriHelper::GetHostnameFromURL("\\\\server\\path"), "server");
+    EXPECT_EQ(UriHelper::GetHostnameFromURL("http:\\\\example.com\\path"), "example.com");
+}
+
+/**
+ * @tc.name: GetHostnameFromURL_006
+ * @tc.desc: user password not handled
+ * @tc.type: FUNC
+ */
+HWTEST_F(UriHelperUnitTest, GetHostnameFromURL_006, TestSize.Level0)
+{
+    EXPECT_EQ(UriHelper::GetHostnameFromURL("https://user:password@example.com:8080/path"), "user");
+}
+
+/**
+ * @tc.name: GetHostnameFromURL_007
+ * @tc.desc: file protocol
+ * @tc.type: FUNC
+ */
+HWTEST_F(UriHelperUnitTest, GetHostnameFromURL_007, TestSize.Level0)
+{
+    EXPECT_EQ(UriHelper::GetHostnameFromURL("file:///C:Users/test"), "C");
+}
+
+/**
+ * @tc.name: GetProtocolFromURL_001
+ * @tc.desc: empty input
+ * @tc.type: FUNC
+ */
+HWTEST_F(UriHelperUnitTest, GetProtocolFromURL_001, TestSize.Level0)
+{
+    std::string url = "";
+    std::string expected = "";
+    EXPECT_EQ(UriHelper::GetProtocolFromURL(url), expected);
+}
+
+/**
+ * @tc.name: GetProtocolFromURL_002
+ * @tc.desc: protocol exist
+ * @tc.type: FUNC
+ */
+HWTEST_F(UriHelperUnitTest, GetProtocolFromURL_002, TestSize.Level0)
+{
+    EXPECT_EQ(UriHelper::GetProtocolFromURL("http://example.com"), "http");
+    EXPECT_EQ(UriHelper::GetProtocolFromURL("https://example.com:8080"), "https");
+    EXPECT_EQ(UriHelper::GetProtocolFromURL("ftp://files.example.net"), "ftp");
+}
+
+/**
+ * @tc.name: GetProtocolFromURL_003
+ * @tc.desc: protocol not exist
+ * @tc.type: FUNC
+ */
+HWTEST_F(UriHelperUnitTest, GetProtocolFromURL_002, TestSize.Level0)
+{
+    EXPECT_EQ(UriHelper::GetProtocolFromURL("example.com"), "");
+    EXPECT_EQ(UriHelper::GetProtocolFromURL("://example.com:8080"), "");
+}
+
 }  // namespace Test
 }  // namespace Media
 }  // namespace OHOS
