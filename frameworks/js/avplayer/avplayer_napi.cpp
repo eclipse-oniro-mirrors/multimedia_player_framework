@@ -84,7 +84,6 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
     };
 
     napi_property_descriptor properties[] = {
-        DECLARE_NAPI_FUNCTION("prepare", JsPrepare),
         DECLARE_NAPI_FUNCTION("play", JsPlay),
         DECLARE_NAPI_FUNCTION("pause", JsPause),
         DECLARE_NAPI_FUNCTION("stop", JsStop),
@@ -110,7 +109,6 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getCurrentTrack", JsGetCurrentTrack),
         DECLARE_NAPI_FUNCTION("addSubtitleUrl", JsAddSubtitleUrl),
         DECLARE_NAPI_FUNCTION("addSubtitleFdSrc", JsAddSubtitleAVFileDescriptor),
-        DECLARE_NAPI_FUNCTION("addSubtitleFromUrl", JsAddSubtitleUrl),
         DECLARE_NAPI_FUNCTION("addSubtitleFromFd", JsAddSubtitleAVFileDescriptor),
         DECLARE_NAPI_FUNCTION("setDecryptionConfig", JsSetDecryptConfig),
         DECLARE_NAPI_FUNCTION("getMediaKeySystemInfos", JsGetMediaKeySystemInfos),
@@ -120,6 +118,9 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("isSeekContinuousSupported", JsIsSeekContinuousSupported),
         DECLARE_NAPI_FUNCTION("getPlaybackPosition", JsGetPlaybackPosition),
         DECLARE_NAPI_FUNCTION("forceLoadVideo", JsForceLoadVideo),
+
+        DECLARE_NAPI_WRITABLE_FUNCTION("prepare", JsPrepare),
+        DECLARE_NAPI_WRITABLE_FUNCTION("addSubtitleFromUrl", JsAddSubtitleUrl),
 
         DECLARE_NAPI_GETTER_SETTER("url", JsGetUrl, JsSetUrl),
         DECLARE_NAPI_GETTER_SETTER("fdSrc", JsGetAVFileDescriptor, JsSetAVFileDescriptor),
