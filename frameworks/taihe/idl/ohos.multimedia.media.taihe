@@ -190,8 +190,7 @@ interface AVMetadataExtractor {
     @gen_promise("getTimeByFrameIndex")
     GetTimeByFrameIndexSync(index: i32): i64;
 
-    @gen_promise("setUrlSource")
-    SetUrlSourceSync(url: String, header: Optional<@record Map<String, String>>): void;
+    SetUrlSource(url: String, @optional header: Optional<@record Map<String, String>>): void;
 
     @gen_async("fetchFrameByTime")
     @gen_promise("fetchFrameByTime")

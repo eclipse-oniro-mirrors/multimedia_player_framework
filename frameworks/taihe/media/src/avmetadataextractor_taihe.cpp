@@ -100,7 +100,7 @@ optional<AVDataSrcDescriptor> AVMetadataExtractorImpl::GetDataSrc()
     return optional<AVDataSrcDescriptor>(std::in_place_t{}, fdSrc);
 }
 
-void AVMetadataExtractorImpl::SetUrlSourceSync(::taihe::string_view url, optional_view<map<string, string>> header)
+void AVMetadataExtractorImpl::SetUrlSource(::taihe::string_view url, optional_view<map<string, string>> header)
 {
     OHOS::Media::MediaTrace trace("AVMetadataExtractorTaihe::setUrlSource");
     MEDIA_LOGI("TaiheSetUrlSource In");
@@ -416,9 +416,10 @@ int64_t AVMetadataExtractorImpl::GetTimeByFrameIndexSync(int32_t index)
 optional<::ohos::multimedia::image::image::PixelMap> AVMetadataExtractorImpl::FetchFrameByTimeSync(int64_t timeUs,
     AVImageQueryOptions options, PixelMapParams const& param)
 {
-    OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::TaiheFetchFrameAtTime");
-    MEDIA_LOGI("TaiheFetchFrameAtTime  in");
-    if (state_ != OHOS::Media::HelperState::HELPER_STATE_RUNNABLE) {
+    OHOS::Media::MediaTrace trace("AVMetadataExtractorTaihe::TaiheFetchFrameAtTime");
+    MEDIA_LOGI("TaiheFetchFrameAtTime in");
+    AVMetadataExtractorImpl *taihe = this;
+    if (taihe->state_ != OHOS::Media::HelperState::HELPER_STATE_RUNNABLE) {
         set_business_error(OHOS::Media::MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "Current state is not runnable, can't fetchFrame.");
         return optional<::ohos::multimedia::image::image::PixelMap>(std::nullopt);
