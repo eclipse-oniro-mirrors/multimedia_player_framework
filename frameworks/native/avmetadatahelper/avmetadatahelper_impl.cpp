@@ -778,7 +778,7 @@ int32_t AVMetadataHelperImpl::SetUrlSource(const std::string &uri, const std::ma
         MSERR_INVALID_VAL, "uri is error.");
 
     bool isComponentCfg = false;
-    std:string protocol = UriHelper::GetProtocolFromURL(uri);
+    std::string protocol = UriHelper::GetProtocolFromURL(uri);
     int32_t ret = OHOS::NetManagerStandard::NetworkSecurityConfig::GetInstance()
         .IsCleartextCfgByComponent("Media Kit", isComponentCfg);
     MEDIA_LOGD("Media Kit, ret: %{public}d, isComponentCfg: %{public}d, protocol: %{public}s",
@@ -786,7 +786,8 @@ int32_t AVMetadataHelperImpl::SetUrlSource(const std::string &uri, const std::ma
     if (isComponentCfg && protocol == "http") {
         bool isCleartextPermitted = true;
         std::string hostname = UriHelper::GetHostnameFromURL(uri);
-        OHOS::NetManagerStandard::NetworkSecurityConfig::GetInstance().isCleartextPermitted(hostname, isCleartextPermitted);
+        OHOS::NetManagerStandard::NetworkSecurityConfig::GetInstance()
+            .IsCleartextPermitted(hostname, isCleartextPermitted);
         CHECK_AND_RETURN_RET_LOG(isCleartextPermitted, MSERR_INVALID_VAL,
             "blocked insecure HTTP request to %{public}s, use HTTPS instead for secure communication!", uri.c_str());
     }
