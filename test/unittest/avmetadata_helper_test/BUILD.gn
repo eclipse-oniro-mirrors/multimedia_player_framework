@@ -133,6 +133,7 @@ ohos_unittest("avmetadata_helper_unit_test") {
     "libxml2:libxml2",
     "media_foundation:media_foundation",
     "memmgr:memmgrclient",
+    "netmanager_base:net_security_config_if",
     "napi:ace_napi",
     "os_account:os_account_innerkits",
     "qos_manager:concurrent_task_client",

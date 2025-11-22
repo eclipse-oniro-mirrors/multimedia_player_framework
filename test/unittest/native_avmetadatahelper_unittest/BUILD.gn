@@ -122,6 +122,7 @@ ohos_unittest("avmetadata_unittest") {
     "media_foundation:media_foundation",
     "memmgr:memmgrclient",
     "napi:ace_napi",
+    "netmanager_base:net_security_config_if",
     "os_account:os_account_innerkits",
     "qos_manager:concurrent_task_client",
     "qos_manager:qos",
