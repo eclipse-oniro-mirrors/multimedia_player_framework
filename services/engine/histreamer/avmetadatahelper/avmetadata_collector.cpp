@@ -151,6 +151,7 @@ void AVMetaDataCollector::GetAudioTrackInfo(const std::shared_ptr<Meta> &trackIn
     audioTrackInfo.PutIntValue("track_index", static_cast<int32_t>(index));
     audioTrackInfo.PutIntValue("track_type", static_cast<int32_t>(Plugins::MediaType::AUDIO));
     audioTrackInfo.PutStringValue("codec_mime", mime);
+    audioTrackInfo.PutStringValue("mime_type", mime);
 
     int32_t audioChannels = 0;
     trackInfo->GetData(Tag::AUDIO_CHANNEL_COUNT, audioChannels);
@@ -190,6 +191,7 @@ void AVMetaDataCollector::GetVideoTrackInfo(const std::shared_ptr<Meta> &trackIn
     videoTrackInfo.PutIntValue("track_index", index);
     videoTrackInfo.PutIntValue("track_type", static_cast<int32_t>(Plugins::MediaType::VIDEO));
     videoTrackInfo.PutStringValue("codec_mime", mime);
+    videoTrackInfo.PutStringValue("mime_type", mime);
 
     int32_t originalWidth = 0;
     trackInfo->GetData(Tag::VIDEO_WIDTH, originalWidth);
@@ -240,11 +242,15 @@ void AVMetaDataCollector::GetSubtitleTrackInfo(const std::shared_ptr<Meta> &trac
 void AVMetaDataCollector::GetOtherTrackInfo(const std::shared_ptr<Meta> &trackInfo, size_t index)
 {
     MEDIA_LOGD("GetOtherTrackInfo in");
+    std::string mime = "";
+    trackInfo->GetData(Tag::MIME_TYPE, mime);
     Format otherTrackInfo {};
     otherTrackInfo.PutIntValue("track_index", index);
     Plugins::MediaType mediaType = Plugins::MediaType::UNKNOWN;
     trackInfo->GetData(Tag::MEDIA_TYPE, mediaType);
     otherTrackInfo.PutIntValue("track_type", static_cast<int32_t>(mediaType));
+    otherTrackInfo.PutStringValue("codec_mime", mime);
+    otherTrackInfo.PutStringValue("mime_type", mime);
 
     std::vector<int32_t> trackIds;
     if (trackInfo->GetData(Tag::REFERENCE_TRACK_IDS, trackIds)) {
@@ -382,15 +388,8 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
         std::shared_ptr<Meta> meta = trackInfos[index];
         CHECK_AND_RETURN_RET_LOG(meta != nullptr, metadata.tbl_, "meta is invalid, index: %zu", index);
 
-        // skip the image track
         std::string mime;
         meta->Get<Tag::MIME_TYPE>(mime);
-        int32_t imageTypeLength = 5;
-        if (mime.substr(0, imageTypeLength).compare("image") == 0) {
-            MEDIA_LOGI("0x%{public}06" PRIXPTR " skip image track", FAKE_POINTER(this));
-            ++imageTrackCount;
-            continue;
-        }
         InitTracksInfoVector(meta, index);
         if (mime.find("video") == 0) {
             if (!isFirstVideoTrack) {
@@ -520,10 +519,6 @@ void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta
 void AVMetaDataCollector::FormatAVMeta(
     Metadata &avmeta, int32_t imageTrackCount, const std::shared_ptr<Meta> &globalInfo)
 {
-    std::string str = avmeta.GetMeta(AV_KEY_NUM_TRACKS);
-    if (IsAllDigits(str)) {
-        avmeta.SetMeta(AV_KEY_NUM_TRACKS, std::to_string(std::stoi(str) - imageTrackCount));
-    }
     FormatDuration(avmeta);
     FormatMimeType(avmeta, globalInfo);
     FormatDateTime(avmeta, globalInfo);
