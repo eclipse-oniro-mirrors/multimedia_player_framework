@@ -61,7 +61,7 @@ public:
     void OffPlayFinished();
 
     void OnErrorOccurred(callback_view<void(uintptr_t)> callback);
-    void OffErrorOccurred(optional_view<callback<void(uintptr_t)>> callback);
+    void OffErrorOccurred(optional_view<taihe::callback<void(uintptr_t)>> callback);
 
     int32_t ParserPlayOption(const PlayParameters &params, PlayParams &playParameters);
     void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
