@@ -40,7 +40,7 @@ public:
     void SetStreamUsage(int32_t id, uintptr_t usage);
     int32_t RegisterSourceFromFdSync(AudioHapticFileDescriptor const& audioFd,
         AudioHapticFileDescriptor const& hapticFd);
-    AudioHapticPlayer CreatePlayerSync(int32_t id, optional_view<AudioHapticPlayerOptions> options);
+    AudioHapticPlayerOrNull CreatePlayerSync(int32_t id, optional_view<AudioHapticPlayerOptions> options);
 
 private:
     bool IsLegalAudioLatencyMode(int32_t latencyMode);
@@ -48,7 +48,7 @@ private:
     static int32_t GetAudioHapticFileDescriptorValue(AudioHapticFileDescriptor const & audioFd,
         OHOS::Media::AudioHapticFileDescriptor& audioHapticFd);
     void CreatePlayerExecute(std::unique_ptr<AudioHapticManagerTaiheContext> &taiheContext);
-    AudioHapticPlayer CreatePlayerComplete(std::unique_ptr<AudioHapticManagerTaiheContext> &taiheContext);
+    AudioHapticPlayerOrNull CreatePlayerComplete(std::unique_ptr<AudioHapticManagerTaiheContext> &taiheContext);
 
     std::shared_ptr<OHOS::Media::AudioHapticManager> audioHapticMgrClient_ = nullptr;
 };

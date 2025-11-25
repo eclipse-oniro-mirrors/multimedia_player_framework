@@ -101,23 +101,23 @@ string SystemSoundManagerImpl::GetSystemToneUriSync(uintptr_t context, SystemTon
     return uri;
 }
 
-::systemTonePlayer::SystemTonePlayer SystemSoundManagerImpl::GetSystemTonePlayerSync(uintptr_t context,
-    SystemToneTypeTaihe type)
+SystemTonePlayerOrNull SystemSoundManagerImpl::GetSystemTonePlayerSync(uintptr_t context, SystemToneTypeTaihe type)
 {
     auto abilityContext = GetAbilityContext(get_env(), context);
     int32_t systemToneType = type.get_value();
     if (sysSoundMgrClient_ == nullptr) {
         CommonTaihe::ThrowError(TAIHE_ERR_IO_ERROR, TAIHE_ERR_IO_ERROR_INFO);
-        return make_holder<SystemTonePlayerImpl, ::systemTonePlayer::SystemTonePlayer>();
+        return SystemTonePlayerOrNull::make_type_null();
     }
     std::shared_ptr<OHOS::Media::SystemTonePlayer> systemTonePlayer = sysSoundMgrClient_->GetSystemTonePlayer(
         abilityContext, static_cast<OHOS::Media::SystemToneType>(systemToneType));
     if (systemTonePlayer == nullptr) {
         MEDIA_LOGE("Failed to get system tone player!");
         CommonTaihe::ThrowError("GetSystemTonePlayer Error: Operation is not supported or failed");
-        return make_holder<SystemTonePlayerImpl, ::systemTonePlayer::SystemTonePlayer>();
+        return SystemTonePlayerOrNull::make_type_null();
     }
-    return SystemTonePlayerImpl::GetSystemTonePlayerInstance(systemTonePlayer);
+    return SystemTonePlayerOrNull::make_type_systemTonePlayer(SystemTonePlayerImpl::GetSystemTonePlayerInstance(
+        systemTonePlayer));
 }
 
 void SystemSoundManagerImpl::CloseSync(int32_t fd)
@@ -501,7 +501,7 @@ void SystemSoundManagerImpl::SetSystemToneUriSync(uintptr_t context, ::taihe::st
         abilityContext, std::string(uri), static_cast<OHOS::Media::SystemToneType>(type.get_value()));
 }
 
-::ringtonePlayer::RingtonePlayer SystemSoundManagerImpl::GetRingtonePlayerSync(
+RingtonePlayerOrNull SystemSoundManagerImpl::GetRingtonePlayerSync(
     uintptr_t context, RingtoneTypeTaihe type)
 {
     std::shared_ptr<OHOS::AbilityRuntime::Context> abilityContext = GetAbilityContext(get_env(), context);
@@ -509,20 +509,21 @@ void SystemSoundManagerImpl::SetSystemToneUriSync(uintptr_t context, ::taihe::st
     if (abilityContext == nullptr) {
         MEDIA_LOGE("invalid arguments");
         CommonTaihe::ThrowError(TAIHE_ERR_INPUT_INVALID, TAIHE_ERR_INPUT_INVALID_INFO);
-        return make_holder<RingtonePlayerImpl, ::ringtonePlayer::RingtonePlayer>();
+        return RingtonePlayerOrNull::make_type_null();
     }
     if (sysSoundMgrClient_ == nullptr) {
         CommonTaihe::ThrowError(TAIHE_ERR_IO_ERROR, TAIHE_ERR_IO_ERROR_INFO);
-        return make_holder<RingtonePlayerImpl, ::ringtonePlayer::RingtonePlayer>();
+        return RingtonePlayerOrNull::make_type_null();
     }
 
     std::shared_ptr<OHOS::Media::RingtonePlayer> ringtonePlayer = sysSoundMgrClient_->GetRingtonePlayer(
         abilityContext, static_cast<OHOS::Media::RingtoneType>(typeInner));
     if (ringtonePlayer == nullptr) {
         CommonTaihe::ThrowError("GetRingtonePlayer Error: Operation is not supported or failed");
-        return make_holder<RingtonePlayerImpl, ::ringtonePlayer::RingtonePlayer>();
+        return RingtonePlayerOrNull::make_type_null();
     }
-    return make_holder<RingtonePlayerImpl, ::ringtonePlayer::RingtonePlayer>(ringtonePlayer);
+    return RingtonePlayerOrNull::make_type_ringtonePlayer(make_holder<RingtonePlayerImpl,
+        ::ringtonePlayer::RingtonePlayer>(ringtonePlayer));
 }
 
 ::taihe::string SystemSoundManagerImpl::GetRingtoneUriSync(uintptr_t context, RingtoneTypeTaihe type)
