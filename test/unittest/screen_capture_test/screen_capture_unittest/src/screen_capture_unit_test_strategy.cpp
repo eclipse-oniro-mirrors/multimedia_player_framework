@@ -516,6 +516,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_set_and_check_sa_limit,
         .audioSource = AudioCaptureSourceType::APP_PLAYBACK
     };
     config_.audioInfo.innerCapInfo = innerCapInfo;
+    
     OHOS::AudioStandard::AppInfo appInfo;
     appInfo.appUid = 0;
     appInfo.appPid = 0;
