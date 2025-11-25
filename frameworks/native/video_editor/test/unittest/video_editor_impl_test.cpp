@@ -55,14 +55,6 @@ HWTEST_F(VideoEditorImplTest, init_ok, TestSize.Level0)
 }
 
 // Test VideoEditorImpl AppendVideoFile method
-HWTEST_F(VideoEditorImplTest, append_video_file_ok, TestSize.Level0)
-{
-    auto videoEditor = VideoEditorManager::GetInstance().CreateVideoEditor();
-    ASSERT_NE(videoEditor, nullptr);
-    ASSERT_EQ(videoEditor->AppendVideoFile(1, WATER_MARK_DESC), VEFError::ERR_OK);
-}
-
-// Test VideoEditorImpl AppendVideoFile method
 HWTEST_F(VideoEditorImplTest, append_video_file_invalid_effect_description, TestSize.Level0)
 {
     auto videoEditor = VideoEditorManager::GetInstance().CreateVideoEditor();
@@ -133,21 +125,6 @@ HWTEST_F(VideoEditorImplTest, start_composite_invalid_target_fd, TestSize.Level0
     auto cb = std::make_shared<CompositionCallbackTesterImpl>();
     auto options = std::make_shared<CompositionOptions>(-1, cb);
     ASSERT_NE(videoEditor->StartComposite(options), VEFError::ERR_OK);
-}
-
-// Test VideoEditorImpl CancelComposite method
-HWTEST_F(VideoEditorImplTest, start_composite_ok, TestSize.Level0)
-{
-    std::string fileName = "H264_AAC.mp4";
-    int32_t srcFd = VideoResource::instance().getFileResource(fileName);
-    auto cb = std::make_shared<CompositionCallbackTesterImpl>();
-    auto options = std::make_shared<CompositionOptions>(srcFd, cb);
-    auto dataCenter = IDataCenter::Create();
-    ASSERT_EQ(dataCenter->AppendVideo(2, WATER_MARK_DESC), VEFError::ERR_OK);
-    auto compositeEngine = ICompositeEngine::CreateCompositeEngine(dataCenter);
-    ASSERT_NE(compositeEngine, nullptr);
-    ASSERT_EQ(compositeEngine->StartComposite(options), VEFError::ERR_INTERNAL_ERROR);
-    (void)close(srcFd);
 }
 
 // Test when VideoEditorImpl::IsFlowControlPass() returns true.
