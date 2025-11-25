@@ -1697,6 +1697,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_with_surface_cb_0
     // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true,
     // captureContentChangeCallback: true
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true, true));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetDisplayCallback());
 
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     vector<int> windowIds = {1, 3, 5};
@@ -1816,6 +1817,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_with_surface_cb_0
     // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true,
     // captureContentChangeCallback: true
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true, true));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetDisplayCallback());
 
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     vector<int> windowIds = {1, 3, 5};
@@ -1878,6 +1880,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_with_surface_cb_0
     // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true,
     // captureContentChangeCallback: true
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true, true));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetDisplayCallback());
 
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCaptureWithSurface(consumer));
@@ -1938,6 +1941,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_with_surface_cb_0
     // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true,
     // captureContentChangeCallback: true
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true, true));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetDisplayCallback());
 
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     vector<int> windowIds = {1, 3, 5};

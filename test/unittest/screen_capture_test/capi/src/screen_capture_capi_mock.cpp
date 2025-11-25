@@ -244,6 +244,17 @@ int32_t ScreenCaptureCapiMock::SetScreenCaptureCallback(const std::shared_ptr<Sc
     return GetCaptureContentChangeCallback(isCaptureContentChangeCallbackEnabled);
 }
 
+int32_t ScreenCaptureCapiMock::SetDisplayCallback()
+{
+    MEDIA_LOGD("ScreenCaptureCapiMock SetDisplayCallback");
+    int32_t ret = OH_AVScreenCapture_SetDisplayCallback(screenCapture_, ScreenCaptureCapiMock::OnDisplaySelected, this);
+    if (ret != AV_SCREEN_CAPTURE_ERR_OK) {
+        MEDIA_LOGE("ScreenCaptureCapiMock SetDisplayCallback failed, ret: %{public}d", ret);
+        return MSERR_UNKNOWN;
+    }
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}
+
 int32_t ScreenCaptureCapiMock::StartScreenCapture()
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
@@ -263,6 +274,11 @@ int32_t ScreenCaptureCapiMock::Init(AVScreenCaptureConfig config)
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
     OH_AVScreenCaptureConfig tempConfig = Convert(config);
     return OH_AVScreenCapture_Init(screenCapture_, tempConfig);
+}
+
+int32_t ScreenCaptureCapiMock::Init(OHOS::AudioStandard::AppInfo &appInfo)
+{
+    return MSERR_INVALID_OPERATION;
 }
 
 int32_t ScreenCaptureCapiMock::StopScreenCapture()

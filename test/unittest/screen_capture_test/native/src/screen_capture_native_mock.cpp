@@ -100,6 +100,11 @@ int32_t ScreenCaptureNativeMock::SetScreenCaptureCallback(const std::shared_ptr<
     return MSERR_INVALID_OPERATION;
 }
 
+int32_t ScreenCaptureNativeMock::SetDisplayCallback()
+{
+    return MSERR_OK;
+}
+
 int32_t ScreenCaptureNativeMock::StartScreenCapture()
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
@@ -125,6 +130,12 @@ int32_t ScreenCaptureNativeMock::Init(AVScreenCaptureConfig config)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
     return screenCapture_->Init(config);
+}
+
+int32_t ScreenCaptureNativeMock::Init(OHOS::AudioStandard::AppInfo &appInfo)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    return screenCapture_->Init(appInfo);
 }
 
 int32_t ScreenCaptureNativeMock::StopScreenCapture()
