@@ -381,7 +381,6 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
     metadata.SetMeta(AV_KEY_GLTF_OFFSET, "-1");
     ConvertToAVMeta(globalInfo, metadata);
 
-    int32_t imageTrackCount = 0;
     size_t trackCount = trackInfos.size();
     bool isFirstVideoTrack = true;
     for (size_t index = 0; index < trackCount; index++) {
@@ -401,7 +400,7 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
         CHECK_AND_CONTINUE(meta->GetData(Tag::MEDIA_TYPE, mediaType));
         ConvertToAVMeta(meta, metadata);
     }
-    FormatAVMeta(metadata, imageTrackCount, globalInfo);
+    FormatAVMeta(metadata, globalInfo);
     auto it = metadata.tbl_.begin();
     while (it != metadata.tbl_.end()) {
         MEDIA_LOGD("metadata tbl, key: %{public}d, keyName: %{public}s, val: %{public}s", it->first,
@@ -516,8 +515,7 @@ void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta
     }
 }
 
-void AVMetaDataCollector::FormatAVMeta(
-    Metadata &avmeta, int32_t imageTrackCount, const std::shared_ptr<Meta> &globalInfo)
+void AVMetaDataCollector::FormatAVMeta(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo)
 {
     FormatDuration(avmeta);
     FormatMimeType(avmeta, globalInfo);
