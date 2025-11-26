@@ -600,8 +600,8 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_002, TestSize.Level1)
 HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadataFromImageTrack_001, TestSize.Level1)
 {
     std::shared_ptr<Meta> imageTrackMetadata = std::make_shared<Meta>();
-    meta->SetData(Tag::VIDEO_WIDTH, "720");
-    meta->SetData(Tag::VIDEO_HEIGHT, "480");
+    imageTrackMetadata->SetData(Tag::VIDEO_WIDTH, "720");
+    imageTrackMetadata->SetData(Tag::VIDEO_HEIGHT, "480");
     std::vector<std::shared_ptr<Meta>> trackInfos = { imageTrackMetadata };
  
     Metadata metadata;
@@ -621,8 +621,8 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadataFromImageTrack_001, TestSiz
 HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadataFromImageTrack_002, TestSize.Level1)
 {
     std::shared_ptr<Meta> imageTrackMetadata = std::make_shared<Meta>();
-    meta->SetData(Tag::VIDEO_WIDTH, "");
-    meta->SetData(Tag::VIDEO_HEIGHT, "480");
+    imageTrackMetadata->SetData(Tag::VIDEO_WIDTH, "");
+    imageTrackMetadata->SetData(Tag::VIDEO_HEIGHT, "480");
     std::vector<std::shared_ptr<Meta>> trackInfos = { imageTrackMetadata };
  
     Metadata metadata;
@@ -642,8 +642,8 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadataFromImageTrack_002, TestSiz
 HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadataFromImageTrack_003, TestSize.Level1)
 {
     std::shared_ptr<Meta> imageTrackMetadata = std::make_shared<Meta>();
-    meta->SetData(Tag::VIDEO_WIDTH, "720");
-    meta->SetData(Tag::VIDEO_HEIGHT, "");
+    imageTrackMetadata->SetData(Tag::VIDEO_WIDTH, "720");
+    imageTrackMetadata->SetData(Tag::VIDEO_HEIGHT, "");
     std::vector<std::shared_ptr<Meta>> trackInfos = { imageTrackMetadata };
  
     Metadata metadata;
@@ -663,8 +663,8 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadataFromImageTrack_003, TestSiz
 HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadataFromImageTrack_004, TestSize.Level1)
 {
     std::shared_ptr<Meta> imageTrackMetadata = std::make_shared<Meta>();
-    meta->SetData(Tag::VIDEO_WIDTH, "");
-    meta->SetData(Tag::VIDEO_HEIGHT, "");
+    imageTrackMetadata->SetData(Tag::VIDEO_WIDTH, "");
+    imageTrackMetadata->SetData(Tag::VIDEO_HEIGHT, "");
     std::vector<std::shared_ptr<Meta>> trackInfos = { imageTrackMetadata };
  
     Metadata metadata;
