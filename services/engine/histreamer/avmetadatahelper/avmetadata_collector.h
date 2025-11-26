@@ -110,6 +110,8 @@ private:
     bool IsSubtitleMime(const std::string& mime) const;
     void InitTracksInfoVector(const std::shared_ptr<Meta> &meta, size_t index);
     std::string VectorToString(const std::vector<int32_t> &vec) const;
+    void ExtraMetadataFromImageTrack(Metadata &metadata, const std::vector<std::shared_ptr<Meta>> &trackInfos,
+        size_t index);
 };
 }  // namespace Media
 }  // namespace OHOS

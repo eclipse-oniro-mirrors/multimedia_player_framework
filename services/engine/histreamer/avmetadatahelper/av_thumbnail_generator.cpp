@@ -334,6 +334,11 @@ std::shared_ptr<Meta> AVThumbnailGenerator::GetVideoTrackInfo()
             MEDIA_LOGW("GetTargetTrackInfo get mime type failed %{public}s", trackMime_.c_str());
             continue;
         }
+        bool isCover = trackInfos[index]->Find(Tag::MEDIA_COVER) != trackInfos[index]->end();
+        MEDIA_LOGI("isCover is %{public}d", isCover);
+        if (!isCover && trackMime_.find("image/jpeg") == 0) {
+            trackMime_ = "video/mjpeg";
+        }
         if (trackMime_.find("video/") == 0) {
             Plugins::MediaType mediaType;
             CHECK_AND_RETURN_RET_LOG(trackInfos[index]->GetData(Tag::MEDIA_TYPE, mediaType), nullptr,

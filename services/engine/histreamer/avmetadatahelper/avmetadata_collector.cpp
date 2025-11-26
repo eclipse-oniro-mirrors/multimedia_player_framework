@@ -379,9 +379,9 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
 
     Metadata metadata;
     metadata.SetMeta(AV_KEY_GLTF_OFFSET, "-1");
+    metadata.SetMeta(AV_KEY_VIDEO_ORIENTATION,std::to_string(VideoOrientationType::ROTATE_NONE));
     ConvertToAVMeta(globalInfo, metadata);
 
-    int32_t imageTrackCount = 0;
     size_t trackCount = trackInfos.size();
     bool isFirstVideoTrack = true;
     for (size_t index = 0; index < trackCount; index++) {
@@ -390,6 +390,11 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
 
         std::string mime;
         meta->Get<Tag::MIME_TYPE>(mime);
+        static const int32_t imageTypeLength = 5;
+        if (mime.substr(0, imageTypeLength).compare("image") == 0) {
+            ExtractMetadataFromImageTrack(metadata, trackInfos, index);
+            continue;
+        }
         InitTracksInfoVector(meta, index);
         if (mime.find("video") == 0) {
             if (!isFirstVideoTrack) {
@@ -401,7 +406,7 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
         CHECK_AND_CONTINUE(meta->GetData(Tag::MEDIA_TYPE, mediaType));
         ConvertToAVMeta(meta, metadata);
     }
-    FormatAVMeta(metadata, imageTrackCount, globalInfo);
+    FormatAVMeta(metadata, globalInfo);
     auto it = metadata.tbl_.begin();
     while (it != metadata.tbl_.end()) {
         MEDIA_LOGD("metadata tbl, key: %{public}d, keyName: %{public}s, val: %{public}s", it->first,
@@ -516,8 +521,26 @@ void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta
     }
 }
 
-void AVMetaDataCollector::FormatAVMeta(
-    Metadata &avmeta, int32_t imageTrackCount, const std::shared_ptr<Meta> &globalInfo)
+void AVMetadataCollector::ExtraMetadataFromImageTrack(Metadata &metadata,
+    const std::vector<std::shared_ptr<Meta>> &trackInfos, size_t index)
+{
+    MEDIA_LOGI("0x%{public}06" PRIXPTR "Only extract track data from image track", FAKE_POINTER(this));
+    std::string existingVideoWidth = metadata.GetMeta(AV_KEY_VIDEO_WIDTH);
+    std::string existingVideoHeight = metadata.GetMeta(AV_KEY_VIDEO_HEIGHT);
+    int32_t videoWidth = 0;
+    int32_t videoHeight = 0;
+    trackInfos[index]->GetData(Tag::VIDEO_WIDTH, videoWidth);
+    trackInfos[index]->GetData(Tag::VIDEO_HEIGHT, videoHeight);
+    if (existingVideoWidth == "") {
+        metadata.SetMeta(AV_KEY_VIDEO_WIDTH, std::to_string(videoWidth));
+    }
+    if (existingVideoHeight == "") {
+        metadata.SetMeta(AV_KEY_VIDEO_HEIGHT, std::to_string(videoHeight));
+    }
+    InitTrackInfoVector(trackInfos[index], index);
+}
+
+void AVMetaDataCollector::FormatAVMeta(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo)
 {
     FormatDuration(avmeta);
     FormatMimeType(avmeta, globalInfo);
