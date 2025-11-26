@@ -522,7 +522,7 @@ void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta
     }
 }
 
-void AVMetadataCollector::ExtractMetadataFromImageTrack(Metadata &metadata,
+void AVMetaDataCollector::ExtractMetadataFromImageTrack(Metadata &metadata,
     const std::vector<std::shared_ptr<Meta>> &trackInfos, size_t index)
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Only extract track data from image track", FAKE_POINTER(this));
