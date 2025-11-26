@@ -672,8 +672,8 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadataFromImageTrack_004, TestSiz
     metadata.SetMeta(AV_KEY_VIDEO_HEIGHT, "");
 
     avmetaDataCollector->ExtractMetadataFromImageTrack(metadata, trackInfos, 0);
-    EXPECT_TRUE(metadata.GetMeta(AV_KEY_VIDEO_WIDTH) =="720");
-    EXPECT_TRUE(metadata.GetMeta(AV_KEY_VIDEO_HEIGHT) =="480");
+    EXPECT_TRUE(metadata.GetMeta(AV_KEY_VIDEO_WIDTH) == "720");
+    EXPECT_TRUE(metadata.GetMeta(AV_KEY_VIDEO_HEIGHT) == "480");
 }
 
 /**

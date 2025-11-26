@@ -391,11 +391,11 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
         std::string mime;
         meta->Get<Tag::MIME_TYPE>(mime);
         static const int32_t imageTypeLength = 5;
+        InitTracksInfoVector(meta, index);
         if (mime.substr(0, imageTypeLength).compare("image") == 0) {
             ExtractMetadataFromImageTrack(metadata, trackInfos, index);
             continue;
         }
-        InitTracksInfoVector(meta, index);
         if (mime.find("video") == 0) {
             if (!isFirstVideoTrack) {
                 continue;
@@ -537,7 +537,6 @@ void AVMetaDataCollector::ExtractMetadataFromImageTrack(Metadata &metadata,
     if (existingVideoHeight == "") {
         metadata.SetMeta(AV_KEY_VIDEO_HEIGHT, std::to_string(videoHeight));
     }
-    InitTracksInfoVector(trackInfos[index], index);
 }
 
 void AVMetaDataCollector::FormatAVMeta(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo)
