@@ -740,10 +740,8 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StartScreenCapture(struct OH_AVSc
     int32_t ret = SetPrivacyAuthorityEnabled(screenCaptureObj);
     CHECK_AND_RETURN_RET(ret == AV_SCREEN_CAPTURE_ERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT);
     ret = screenCaptureObj->screenCapture_->StartScreenCapture();
-    if (ret == MSERR_UNSUPPORT) {
-        MEDIA_LOGE("StartScreenCapture failed, ret: %{public}d", ret);
-        return AV_SCREEN_CAPTURE_ERR_UNSUPPORT;
-    }
+    CHECK_AND_RETURN_RET_LOG(ret != MSERR_UNSUPPORT, AV_SCREEN_CAPTURE_ERR_UNSUPPORT,
+        "StartScreenCapture failed, ret: %{public}d", ret);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT, "StartScreenCapture failed!");
     screenCaptureObj->isStart = true;
     return AV_SCREEN_CAPTURE_ERR_OK;
@@ -764,10 +762,8 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StartScreenCaptureWithSurface(str
     int32_t ret = SetPrivacyAuthorityEnabled(screenCaptureObj);
     CHECK_AND_RETURN_RET(ret == AV_SCREEN_CAPTURE_ERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT);
     ret = screenCaptureObj->screenCapture_->StartScreenCaptureWithSurface(window->surface);
-    if (ret == MSERR_UNSUPPORT) {
-        MEDIA_LOGE("StartScreenCaptureWithSurface failed, ret: %{public}d", ret);
-        return AV_SCREEN_CAPTURE_ERR_UNSUPPORT;
-    }
+    CHECK_AND_RETURN_RET_LOG(ret != MSERR_UNSUPPORT, AV_SCREEN_CAPTURE_ERR_UNSUPPORT,
+        "StartScreenCaptureWithSurface failed, ret: %{public}d", ret);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT, "StartScreenCapture failed!");
     screenCaptureObj->isStart = true;
     return AV_SCREEN_CAPTURE_ERR_OK;
@@ -799,10 +795,8 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StartScreenRecording(struct OH_AV
     int32_t ret = SetPrivacyAuthorityEnabled(screenCaptureObj);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT);
     ret = screenCaptureObj->screenCapture_->StartScreenRecording();
-    if (ret == MSERR_UNSUPPORT) {
-        MEDIA_LOGE("StartScreenRecording failed, ret: %{public}d", ret);
-        return AV_SCREEN_CAPTURE_ERR_UNSUPPORT;
-    }
+    CHECK_AND_RETURN_RET_LOG(ret != MSERR_UNSUPPORT, AV_SCREEN_CAPTURE_ERR_UNSUPPORT,
+        "StartScreenRecording failed, ret: %{public}d", ret);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT, "StartScreenRecording failed!");
     screenCaptureObj->isStart = true;
     return AV_SCREEN_CAPTURE_ERR_OK;
@@ -986,10 +980,8 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_Release(struct OH_AVScreenCapture
         int32_t ret = screenCaptureObj->screenCapture_->Release();
         delete capture;
         capture = nullptr;
-        if (ret != MSERR_OK) {
-            MEDIA_LOGE("screen capture Release failed!");
-            return AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT;
-        }
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
+            "screen capture Release failed!");
     } else {
         MEDIA_LOGD("screen capture is nullptr!");
     }
@@ -1135,10 +1127,8 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCanvasRotation(struct OH_AVScr
                              AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
 
     int32_t ret = screenCaptureObj->screenCapture_->SetCanvasRotation(canvasRotation);
-    if (ret == MSERR_UNSUPPORT) {
-        MEDIA_LOGE("SetCanvasRotation failed, ret: %{public}d", ret);
-        return AV_SCREEN_CAPTURE_ERR_UNSUPPORT;
-    }
+    CHECK_AND_RETURN_RET_LOG(ret != MSERR_UNSUPPORT, AV_SCREEN_CAPTURE_ERR_UNSUPPORT,
+        "SetCanvasRotation failed, ret: %{public}d", ret);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
                              "SetCanvasRotation failed!");
 
@@ -1154,10 +1144,8 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ShowCursor(struct OH_AVScreenCapt
     CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
                              AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
     int32_t ret = screenCaptureObj->screenCapture_->ShowCursor(showCursor);
-    if (ret == MSERR_UNSUPPORT) {
-        MEDIA_LOGE("ShowCursor failed, ret: %{public}d", ret);
-        return AV_SCREEN_CAPTURE_ERR_UNSUPPORT;
-    }
+    CHECK_AND_RETURN_RET_LOG(ret != MSERR_UNSUPPORT, AV_SCREEN_CAPTURE_ERR_UNSUPPORT,
+        "ShowCursor failed, ret: %{public}d", ret);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
                              "ShowCursor failed!");
 
@@ -1195,10 +1183,8 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ResizeCanvas(struct OH_AVScreenCa
                              "input width or height invalid!");
 
     int32_t ret = screenCaptureObj->screenCapture_->ResizeCanvas(width, height);
-    if (ret == MSERR_UNSUPPORT) {
-        MEDIA_LOGE("ResizeCanvas failed, ret: %{public}d", ret);
-        return AV_SCREEN_CAPTURE_ERR_UNSUPPORT;
-    }
+    CHECK_AND_RETURN_RET_LOG(ret != MSERR_UNSUPPORT, AV_SCREEN_CAPTURE_ERR_UNSUPPORT,
+        "ResizeCanvas failed, ret: %{public}d", ret);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
                              "ResizeCanvas failed!");
 
@@ -1224,10 +1210,8 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SkipPrivacyMode(struct OH_AVScree
     }
     CHECK_AND_RETURN_RET_LOG(vec.size() >= 0, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input window content invalid!");
     int32_t ret = screenCaptureObj->screenCapture_->SkipPrivacyMode(vec);
-    if (ret == MSERR_UNSUPPORT) {
-        MEDIA_LOGE("SkipPrivacyMode failed, ret: %{public}d", ret);
-        return AV_SCREEN_CAPTURE_ERR_UNSUPPORT;
-    }
+    CHECK_AND_RETURN_RET_LOG(ret != MSERR_UNSUPPORT, AV_SCREEN_CAPTURE_ERR_UNSUPPORT,
+        "SkipPrivacyMode failed, ret: %{public}d", ret);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
                              "SkipPrivacyMode failed!");
     return AV_SCREEN_CAPTURE_ERR_OK;
@@ -1245,10 +1229,8 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetMaxVideoFrameRate(struct OH_AV
     CHECK_AND_RETURN_RET_LOG(frameRate > 0, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input frameRate invalid!");
 
     int32_t ret = screenCaptureObj->screenCapture_->SetMaxVideoFrameRate(frameRate);
-    if (ret == MSERR_UNSUPPORT) {
-        MEDIA_LOGE("SetMaxVideoFrameRate failed, ret: %{public}d", ret);
-        return AV_SCREEN_CAPTURE_ERR_UNSUPPORT;
-    }
+    CHECK_AND_RETURN_RET_LOG(ret != MSERR_UNSUPPORT, AV_SCREEN_CAPTURE_ERR_UNSUPPORT,
+        "SetMaxVideoFrameRate failed, ret: %{public}d", ret);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
                              "SetMaxVideoFrameRate failed!");
 
