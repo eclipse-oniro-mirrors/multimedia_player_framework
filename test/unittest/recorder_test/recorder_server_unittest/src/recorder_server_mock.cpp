@@ -332,6 +332,25 @@ int32_t RecorderServerMock::RequesetBuffer(const std::string &recorderType, Vide
     if (recorderType != PURE_AUDIO) {
         producerSurface_ = recorder_->GetSurface(recorderConfig.videoSourceId);
         UNITTEST_CHECK_AND_RETURN_RET_LOG(producerSurface_ != nullptr, MSERR_INVALID_OPERATION, "GetSurface failed ");
+
+        if (recorderConfig.vSource == VIDEO_SOURCE_SURFACE_ES) {
+            cout << "es source stream, get from file" << endl;
+            int32_t ret = GetStubFile();
+            UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "GetStubFile failed ");
+            camereHDIThread_.reset(new(std::nothrow) std::thread(&RecorderServerMock::HDICreateESBuffer, this));
+        } else {
+            if (recorderConfig.videoFormat == H264) {
+                g_yuvRequestConfig.format = OHOS::HDI::Display::Composer::V1_2::PixelFormat::PIXEL_FMT_YCBCR_420_SP;
+            } else {
+                g_yuvRequestConfig.format = OHOS::HDI::Display::Composer::V1_2::PixelFormat::PIXEL_FMT_YCRCB_420_SP;
+            }
+            if (recorderType == PURE_ERROR) {
+                camereHDIThread_.reset(new (std::nothrow)
+                                           std::thread(&RecorderServerMock::HDICreateYUVBufferError, this));
+            } else {
+                camereHDIThread_.reset(new(std::nothrow) std::thread(&RecorderServerMock::HDICreateYUVBuffer, this));
+            }
+        }
     }
     return MSERR_OK;
 }
