@@ -18,6 +18,7 @@
 
 #include "screen_capture_server_base.h"
 #include "ui_extension_ability_connection.h"
+#include "audio_data_source.h"
 
 namespace OHOS {
 namespace Media {
