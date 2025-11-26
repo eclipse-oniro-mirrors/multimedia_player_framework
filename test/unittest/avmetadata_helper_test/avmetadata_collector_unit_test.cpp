@@ -608,9 +608,9 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadataFromImageTrack_001, TestSiz
     metadata.SetMeta(AV_KEY_VIDEO_WIDTH, "1920");
     metadata.SetMeta(AV_KEY_VIDEO_HEIGHT, "1080");
 
-    avmetaDataCollector->ExtractMetadataFromImageTrack(metadata, imageTrackMetadata, 0);
+    avmetaDataCollector->ExtractMetadataFromImageTrack(metadata, trackInfos, 0);
     EXPECT_TRUE(metadata.GetMeta(AV_KEY_VIDEO_WIDTH) =="720");
-    EXPECT_TRUE(metadata.GetMeta(VIDEO_HEIGHT) =="480");
+    EXPECT_TRUE(metadata.GetMeta(AV_KEY_VIDEO_HEIGHT) =="480");
 }
 
 /**
@@ -629,9 +629,9 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadataFromImageTrack_002, TestSiz
     metadata.SetMeta(AV_KEY_VIDEO_WIDTH, "1920");
     metadata.SetMeta(AV_KEY_VIDEO_HEIGHT, "1080");
 
-    avmetaDataCollector->ExtractMetadataFromImageTrack(metadata, imageTrackMetadata, 0);
+    avmetaDataCollector->ExtractMetadataFromImageTrack(metadata, trackInfos, 0);
     EXPECT_TRUE(metadata.GetMeta(AV_KEY_VIDEO_WIDTH) =="1920");
-    EXPECT_TRUE(metadata.GetMeta(VIDEO_HEIGHT) =="480");
+    EXPECT_TRUE(metadata.GetMeta(AV_KEY_VIDEO_HEIGHT) =="480");
 }
 
 /**
@@ -650,9 +650,9 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadataFromImageTrack_003, TestSiz
     metadata.SetMeta(AV_KEY_VIDEO_WIDTH, "1920");
     metadata.SetMeta(AV_KEY_VIDEO_HEIGHT, "1080");
 
-    avmetaDataCollector->ExtractMetadataFromImageTrack(metadata, imageTrackMetadata, 0);
+    avmetaDataCollector->ExtractMetadataFromImageTrack(metadata, trackInfos, 0);
     EXPECT_TRUE(metadata.GetMeta(AV_KEY_VIDEO_WIDTH) =="720");
-    EXPECT_TRUE(metadata.GetMeta(VIDEO_HEIGHT) =="1080");
+    EXPECT_TRUE(metadata.GetMeta(AV_KEY_VIDEO_HEIGHT) =="1080");
 }
 
 /**
@@ -671,9 +671,9 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadataFromImageTrack_004, TestSiz
     metadata.SetMeta(AV_KEY_VIDEO_WIDTH, "1920");
     metadata.SetMeta(AV_KEY_VIDEO_HEIGHT, "1080");
 
-    avmetaDataCollector->ExtractMetadataFromImageTrack(metadata, imageTrackMetadata, 0);
+    avmetaDataCollector->ExtractMetadataFromImageTrack(metadata, trackInfos, 0);
     EXPECT_TRUE(metadata.GetMeta(AV_KEY_VIDEO_WIDTH) =="1920");
-    EXPECT_TRUE(metadata.GetMeta(VIDEO_HEIGHT) =="1080");
+    EXPECT_TRUE(metadata.GetMeta(AV_KEY_VIDEO_HEIGHT) =="1080");
 }
 
 /**
