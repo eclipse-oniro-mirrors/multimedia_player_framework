@@ -515,7 +515,8 @@ void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta
     }
 }
 
-void AVMetaDataCollector::FormatAVMeta(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo)
+void AVMetaDataCollector::FormatAVMeta(	
+    Metadata &avmeta, int32_t imageTrackCount, const std::shared_ptr<Meta> &globalInfo)
 {
     FormatDuration(avmeta);
     FormatMimeType(avmeta, globalInfo);
