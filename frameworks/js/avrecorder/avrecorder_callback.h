@@ -24,6 +24,13 @@
 
 namespace OHOS {
 namespace Media {
+namespace AVRecorderCallbackNapiTask {
+const std::string ON_JS_STATE_CALLBACK = "AVRecorderCallback::OnJsStateCallBack";
+const std::string ON_JS_PHOTO_ASSERT_AVAILABLE_CALLBACK = "AVRecorderCallback::OnJsPhotoAssertAvailableCallback";
+const std::string ON_JS_AUDIO_CAPTURE_CHANGE_CALLBACK = "AVRecorderCallback::OnJsAudioCaptureChangeCallback";
+const std::string ON_JS_ERROR_CALLBACK = "AVRecorderCallback::OnJsErrorCallBack";
+}
+
 class AVRecorderCallback : public RecorderCallback {
 public:
     explicit AVRecorderCallback(napi_env env);

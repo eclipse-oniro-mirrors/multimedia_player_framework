@@ -23,6 +23,9 @@
 
 namespace OHOS {
 namespace Media {
+namespace ScreenCaptureMonitorCallbackNapiTask {
+const std::string ON_JS_CAPTURE_CALLBACK = "ScreenCaptureMonitorCallback::OnJsCaptureCallBack";
+}
 
 class ScreenCaptureMonitorCallback : public ScreenCaptureMonitor::ScreenCaptureMonitorListener {
 public:

@@ -132,7 +132,8 @@ void RecorderCallbackNapi::OnJsStateCallBack(RecordJsCallback *jsCb) const
         } while (0);
         delete event;
     };
-    auto ret = napi_send_event(env_, task, napi_eprio_immediate);
+    auto ret = napi_send_event(env_, task, napi_eprio_immediate,
+        RecorderCallbackNapiTask::ON_JS_STATE_CALLBACK.c_str());
     CHECK_AND_RETURN_LOG(ret == napi_status::napi_ok, "failed to napi_send_event task");
 }
 
@@ -174,7 +175,8 @@ void RecorderCallbackNapi::OnJsErrorCallBack(RecordJsCallback *jsCb) const
         } while (0);
         delete event;
     };
-    auto ret = napi_send_event(env_, task, napi_eprio_immediate);
+    auto ret = napi_send_event(env_, task, napi_eprio_immediate,
+        RecorderCallbackNapiTask::ON_JS_ERROR_CALLBACK.c_str());
     CHECK_AND_RETURN_LOG(ret == napi_status::napi_ok, "failed to napi_send_event task");
 }
 } // namespace Media
