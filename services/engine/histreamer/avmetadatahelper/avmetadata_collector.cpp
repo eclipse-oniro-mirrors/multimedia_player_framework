@@ -380,6 +380,7 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
     Metadata metadata;
     metadata.SetMeta(AV_KEY_GLTF_OFFSET, "-1");
     metadata.SetMeta(AV_KEY_VIDEO_ORIENTATION,std::to_string(VideoOrientationType::ROTATE_NONE));
+    metadata.SetMeta(AV_KEY_VIDEO_ORIENTATION,std::to_string(VideoOrientationType::ROTATE_NONE));
     ConvertToAVMeta(globalInfo, metadata);
 
     size_t trackCount = trackInfos.size();
@@ -521,7 +522,7 @@ void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta
     }
 }
 
-void AVMetadataCollector::ExtraMetadataFromImageTrack(Metadata &metadata,
+void AVMetadataCollector::ExtractMetadataFromImageTrack(Metadata &metadata,
     const std::vector<std::shared_ptr<Meta>> &trackInfos, size_t index)
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR "Only extract track data from image track", FAKE_POINTER(this));
@@ -537,7 +538,7 @@ void AVMetadataCollector::ExtraMetadataFromImageTrack(Metadata &metadata,
     if (existingVideoHeight == "") {
         metadata.SetMeta(AV_KEY_VIDEO_HEIGHT, std::to_string(videoHeight));
     }
-    InitTrackInfoVector(trackInfos[index], index);
+    InitTracksInfoVector(trackInfos[index], index);
 }
 
 void AVMetaDataCollector::FormatAVMeta(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo)
