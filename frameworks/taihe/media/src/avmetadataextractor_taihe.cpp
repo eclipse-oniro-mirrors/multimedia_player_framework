@@ -267,6 +267,7 @@ void AVMetadataExtractorImpl::SetMetadataProperty(std::shared_ptr<OHOS::Media::M
         if (key == "customInfo") {
             std::shared_ptr<OHOS::Media::Meta> customData = std::make_shared<OHOS::Media::Meta>();
             CHECK_AND_CONTINUE_LOG(metadata->GetData(key, customData), "GetData failed, key %{public}s", key.c_str());
+            CHECK_AND_CONTINUE_LOG(customData != nullptr, "customData is nullptr");
             for (auto iter = customData->begin(); iter != customData->end(); ++iter) {
                 OHOS::Media::AnyValueType type = customData->GetValueType(iter->first);
                 CHECK_AND_CONTINUE_LOG(type == OHOS::Media::AnyValueType::STRING, "key is not string");
