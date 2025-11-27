@@ -57,7 +57,7 @@ ani_object SoundPoolCallBackTaihe::ToBusinessError(ani_env *env, int32_t code, c
     return error;
 }
 
-ani_object ToErrorInfo(ani_env *env, int32_t code, const std::string &message,
+ani_object ToErrorInfo(ani_env *env, const std::pair<int32_t, std::string>& errorPair,
     ERROR_TYPE errorType, int32_t soundId, int32_t streamId) const;
 {
     ani_object err {};
@@ -70,7 +70,7 @@ ani_object ToErrorInfo(ani_env *env, int32_t code, const std::string &message,
     ani_object errorInfo {};
     CHECK_AND_RETURN_RET_LOG(env->Object_New(cls, ctor, &errorInfo) == ANI_OK, err,
         "new object %{public}s failed", CLASS_NAME_ERRORINFO);
-    ani_object errorCode = ToBusinessError(taihe::get_env(), code, message);
+    ani_object errorCode = ToBusinessError(taihe::get_env(), errorPair.first, errorPair.second);
     CHECK_AND_RETURN_RET_LOG(
         env->Object_SetPropertyByName_Ref(errorInfo, "errorCode", static_cast<ani_ref>(errorCode)) == ANI_OK, err,
         "set property ErrorInfo.errorCode failed");
@@ -82,11 +82,11 @@ ani_object ToErrorInfo(ani_env *env, int32_t code, const std::string &message,
         "set property ErrorInfo.errorType failed");
     ani_object soundIdObj = IntToObject(env, soundId);
     CHECK_AND_RETURN_RET_LOG(
-        env->Object_SetPropertyByName_Ref(errorInfo, "soundId", static_cast<ani_ref>(soundId)) == ANI_OK, err,
+        env->Object_SetPropertyByName_Ref(errorInfo, "soundId", static_cast<ani_ref>(soundIdObj)) == ANI_OK, err,
         "set property ErrorInfo.soundId failed");
     ani_object streamIdObj = IntToObject(env, streamId);
     CHECK_AND_RETURN_RET_LOG(
-        env->Object_SetPropertyByName_Ref(errorInfo, "streamId", static_cast<ani_ref>(streamId)) == ANI_OK, err,
+        env->Object_SetPropertyByName_Ref(errorInfo, "streamId", static_cast<ani_ref>(streamIdObj)) == ANI_OK, err,
         "set property ErrorInfo.streamId failed");
     return errorInfo;
 }
@@ -98,7 +98,7 @@ ani_status SoundPoolCallBackTaihe::ToAniEnum(ani_env *env, ERROR_TYPE errorType,
     CHECK_AND_RETURN_RET_LOG(env->FindEnum(ENUM_NAME_ERRORTYPE, &aniEnum) == ANI_OK,
         ANI_ERROR, "Find Enum failed");
     CHECK_AND_RETURN_RET_LOG(env->Enum_GetEnumItemByIndex(aniEnum, enumIndex, &aniEnumItem) == ANI_OK,
-        ANI_ERROR, "Find Enum failed");
+        ANI_ERROR, "Find Enum item failed");
     return ANI_OK;
 }
 
@@ -107,11 +107,11 @@ ani_status SoundPoolCallBackTaihe::IntToAniObject(ani_env *env, int32_t value) c
     static constexpr const char *className = "std.core.Int";
     ani_object err {};
     ani_class cls {};
-    CHECK_AND_RETURN_RET_LOG(env->FindClass(CLASS_NAME_ERRORINFO, &cls) == ANI_OK, err,
+    CHECK_AND_RETURN_RET_LOG(env->FindClass(className, &cls) == ANI_OK, err,
         "find class %{public}s failed", "std.core.Int");
     ani_method ctor {};
-    CHECK_AND_RETURN_RET_LOG(env->Class_FindMethod(cls, "<ctor>", ":", &ctor) == ANI_OK, err,
-        "find method ErrorInfo constructor failed");
+    CHECK_AND_RETURN_RET_LOG(env->Class_FindMethod(cls, "<ctor>", "i:", &ctor) == ANI_OK, err,
+        "find method std.core.Int constructor failed");
     ani_object intObject {};
     CHECK_AND_RETURN_RET_LOG(env->Object_New(cls, ctor, &intObject, static_cast<ani_int>(value)) == ANI_OK, err,
         "new object %{public}s failed", "std.core.Int");
@@ -230,7 +230,6 @@ void SoundPoolCallBackTaihe::SendErrorOccurredCallback(const Format &errorInfo)
         MEDIA_LOGW("can not find error callback!");
         return;
     }
-
     SoundPoolTaiheCallBack *cb = new(std::nothrow) SoundPoolTaiheCallBack();
     CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
     int32_t errorCode;
@@ -358,8 +357,9 @@ void SoundPoolCallBackTaihe::OnTaiheErrorOccurredCallBack(SoundPoolTaiheCallBack
     CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
     auto func = ref->callbackRef_;
     CHECK_AND_RETURN_LOG(func != nullptr, "%{public}s failed to get callback", request.c_str());
-    auto err = ToErrorInfo(taihe::get_env(), taiheCb->errorCode, taiheCb->errorMsg, taiheCb->errorType,
-        taiheCb->loadSoundId, taiheCb->playFinishedStreamID);
+    auto errorPair = std::make_pair(taiheCb->errorCode, taiheCb->errorMsg);
+    auto err = ToErrorInfo(taihe::get_env(), errorPair, taiheCb->errorType, taiheCb->loadSoundId,
+        taiheCb->playFinishedStreamID);
     std::shared_ptr<taihe::callback<void(uintptr_t)>> cacheCallback =
         std::reinterpret_pointer_cast<taihe::callback<void(uintptr_t)>>(func);
     (*cacheCallback)(reinterpret_cast<uintptr_t>(err));
