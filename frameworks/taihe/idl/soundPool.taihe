@@ -49,10 +49,10 @@ class _taihe_ErrorInfo_inject implements ErrorInfo {
     soundId: (number | undefined);
     streamId: (number | undefined);
     constructor(
-        errorCode: BusinessError<void>;
-        errorType: (ErrorType | undefined);
-        soundId: (number | undefined);
-        streamId: (number | undefined);
+        errorCode: BusinessError<void>,
+        errorType: (ErrorType | undefined),
+        soundId: (number | undefined),
+        streamId: (number | undefined),
     )
     {
         this.errorCode = errorCode;
