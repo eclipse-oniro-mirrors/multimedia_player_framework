@@ -57,7 +57,7 @@ ani_object SoundPoolCallBackTaihe::ToBusinessError(ani_env *env, int32_t code, c
     return error;
 }
 
-ani_object ToErrorInfo(ani_env *env, const std::pair<int32_t, std::string>& errorPair,
+ani_object SoundPoolCallBackTaihe::ToErrorInfo(ani_env *env, const std::pair<int32_t, std::string>& errorPair,
     ERROR_TYPE errorType, int32_t soundId, int32_t streamId) const
 {
     ani_object err {};
@@ -80,11 +80,11 @@ ani_object ToErrorInfo(ani_env *env, const std::pair<int32_t, std::string>& erro
     CHECK_AND_RETURN_RET_LOG(
         env->Object_SetPropertyByName_Ref(errorInfo, "errorType", static_cast<ani_ref>(errorTypeItem)) == ANI_OK, err,
         "set property ErrorInfo.errorType failed");
-    ani_object soundIdObj = IntToObject(env, soundId);
+    ani_object soundIdObj = IntToAniObject(env, soundId);
     CHECK_AND_RETURN_RET_LOG(
         env->Object_SetPropertyByName_Ref(errorInfo, "soundId", static_cast<ani_ref>(soundIdObj)) == ANI_OK, err,
         "set property ErrorInfo.soundId failed");
-    ani_object streamIdObj = IntToObject(env, streamId);
+    ani_object streamIdObj = IntToAniObject(env, streamId);
     CHECK_AND_RETURN_RET_LOG(
         env->Object_SetPropertyByName_Ref(errorInfo, "streamId", static_cast<ani_ref>(streamIdObj)) == ANI_OK, err,
         "set property ErrorInfo.streamId failed");
