@@ -36,7 +36,7 @@ enum ErrorType: i32 {
 }
 
 @!sts_inject("""
-struct ErrorInfo<T extends Error = BusinessError> {
+export interface ErrorInfo<T extends Error = BusinessError> {
     errorCode: T;
     errorType?: ErrorType;
     soundId?: number;
