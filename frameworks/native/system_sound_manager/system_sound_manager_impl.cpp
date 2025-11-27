@@ -82,6 +82,9 @@ const int SUCCESS = 0;
 const int32_t EXT_PROXY_UID = 1000;
 const int32_t EXT_PROXY_SID = 66849;
 const int32_t CMD_SET_EXT_RINGTONE_URI = 6;
+const int32_t INVALID_DATASHARE = -2;
+const int32_t OPEN_FAILED = -3;
+const int32_t QUERY_FAILED = -4;
 
 enum ExtToneType : int32_t {
     EXT_TYPE_RINGTONE_ONE = 1,
@@ -1855,8 +1858,11 @@ int32_t SystemSoundManagerImpl::OpenToneUri(const std::shared_ptr<AbilityRuntime
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = isProxy ?
         SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID) :
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, ERROR,
-        "Failed to CreateDataShareHelper! datashare or ringtone library error.");
+    if (dataShareHelper == nullptr) {
+        SendPlaybackFailedEvent(INVALID_DATASHARE);
+        MEDIA_LOGE("Failed to CreateDataShareHelper! datashare or ringtone library error.");
+        return ERROR;
+    }
     DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
     std::string newAudioUri = RingtoneCheckUtils::GetCustomRingtoneCurrentPath(uri);
     int32_t ret = OpenToneUri(databaseTool, newAudioUri, toneType);
@@ -1871,6 +1877,7 @@ int32_t SystemSoundManagerImpl::OpenToneUri(const DatabaseTool &databaseTool,
 {
     if (!databaseTool.isInitialized || databaseTool.dataShareHelper == nullptr) {
         MEDIA_LOGE("The database tool is not ready!");
+        SendPlaybackFailedEvent(INVALID_DATASHARE);
         return ERROR;
     }
     if (SystemSoundManagerUtils::VerifyCustomPath(uri)) {
@@ -1892,25 +1899,42 @@ int32_t SystemSoundManagerImpl::OpenToneUri(const DatabaseTool &databaseTool,
     Uri queryUri(ringtoneLibraryUri);
     auto resultSet = databaseTool.dataShareHelper->Query(queryUri, queryPredicates, COLUMNS, &businessError);
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
-    CHECK_AND_RETURN_RET_LOG(results != nullptr, ERROR, "query failed, ringtone library error.");
+    if (results == nullptr) {
+        SendPlaybackFailedEvent(QUERY_FAILED);
+        MEDIA_LOGE("query failed, ringtone library error.");
+        return ERROR;
+    }
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
     if (ringtoneAsset == nullptr) {
         MEDIA_LOGE("OpenTone: tone of uri failed!");
         if (results != nullptr) results->Close();
         return TYPEERROR;
     }
-    int32_t fd  = 0;
+    int32_t toneId = ringtoneAsset->GetId();
+    int32_t fd  = OpenToneFile(databaseTool, uri, toneType, toneId);
+    if (results != nullptr) results->Close();
+    return fd;
+}
+
+int32_t SystemSoundManagerImpl::OpenToneFile(const DatabaseTool &databaseTool,
+    const std::string &uri, int32_t toneType, int32_t toneId)
+{
+    int32_t fd = 0;
     if (databaseTool.isProxy) {
         std::string absFilePath;
         PathToRealPath(uri, absFilePath);
         fd = open(absFilePath.c_str(), O_RDONLY);
     } else {
-        string uriStr = RINGTONE_PATH_URI + RINGTONE_SLASH_CHAR + to_string(ringtoneAsset->GetId());
+        string uriStr = RINGTONE_PATH_URI + RINGTONE_SLASH_CHAR + to_string(toneId);
         Uri ofUri(uriStr);
         fd = databaseTool.dataShareHelper->OpenFile(ofUri, "r");
     }
-    if (results != nullptr) results->Close();
-    return fd > 0 ? fd : ERROR;
+    if (fd < 0) {
+        SendPlaybackFailedEvent(OPEN_FAILED);
+        MEDIA_LOGE("query failed, ringtone library error.");
+        return ERROR;
+    }
+    return fd;
 }
 
 int32_t SystemSoundManagerImpl::OpenCustomToneUri(const std::string &customAudioUri, int32_t toneType)
@@ -1923,10 +1947,18 @@ int32_t SystemSoundManagerImpl::OpenCustomToneUri(const std::string &customAudio
     Uri ringtonePathUri(RINGTONE_PATH_URI);
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, ERROR, "Invalid dataShare");
+    if (dataShareHelper == nullptr) {
+        SendPlaybackFailedEvent(INVALID_DATASHARE);
+        MEDIA_LOGE("Invalid dataShare.");
+        return ERROR;
+    }
     auto resultSet = dataShareHelper->Query(ringtonePathUri, queryPredicates, COLUMNS, &businessError);
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
-    CHECK_AND_RETURN_RET_LOG(results != nullptr, ERROR, "query failed, ringtone library error.");
+    if (results == nullptr) {
+        SendPlaybackFailedEvent(QUERY_FAILED);
+        MEDIA_LOGE("query failed, ringtone library error.");
+        return ERROR;
+    }
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
     if (ringtoneAsset != nullptr) {
         string uriStr = RINGTONE_PATH_URI + RINGTONE_SLASH_CHAR + to_string(ringtoneAsset->GetId());
@@ -1934,9 +1966,14 @@ int32_t SystemSoundManagerImpl::OpenCustomToneUri(const std::string &customAudio
         int32_t fd = dataShareHelper->OpenFile(ofUri, "r");
         if (results != nullptr) results->Close();
         dataShareHelper->Release();
-        return fd > 0 ? fd : ERROR;
+        if (fd < 0) {
+            SendPlaybackFailedEvent(OPEN_FAILED);
+            return ERROR;
+        }
+        return fd;
     }
     MEDIA_LOGE("Open custom audio uri failed!");
+    SendPlaybackFailedEvent(QUERY_FAILED);
     if (results != nullptr) results->Close();
     dataShareHelper->Release();
     return TYPEERROR;
@@ -3288,6 +3325,7 @@ std::string SystemSoundManagerImpl::OpenAudioUri(const DatabaseTool &databaseToo
 {
     if (!databaseTool.isInitialized || databaseTool.dataShareHelper == nullptr) {
         MEDIA_LOGE("The database tool is not ready!");
+        SendPlaybackFailedEvent(INVALID_DATASHARE);
         return "";
     }
     std::string uri = RingtoneCheckUtils::GetCustomRingtoneCurrentPath(audioUri);
@@ -3295,7 +3333,6 @@ std::string SystemSoundManagerImpl::OpenAudioUri(const DatabaseTool &databaseToo
         MEDIA_LOGI("The audio uri is custom path.");
         return OpenCustomAudioUri(uri);
     }
-
     std::string newAudioUri = uri;
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
@@ -3312,27 +3349,45 @@ std::string SystemSoundManagerImpl::OpenAudioUri(const DatabaseTool &databaseToo
     Uri queryUri(ringtoneLibraryUri);
     auto resultSet = databaseTool.dataShareHelper->Query(queryUri, queryPredicates, columns, &businessError);
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
-    CHECK_AND_RETURN_RET_LOG(results != nullptr, newAudioUri, "query failed, ringtone library error.");
+    if (results == nullptr) {
+        SendPlaybackFailedEvent(QUERY_FAILED);
+        MEDIA_LOGE("query failed, ringtone library error.");
+        return newAudioUri;
+    }
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
     if (ringtoneAsset == nullptr) {
         MEDIA_LOGE("The ringtoneAsset is nullptr! audioUri : %{public}s, uri : %{public}s, isProxy : %{public}d",
             audioUri.c_str(), uri.c_str(), databaseTool.isProxy);
         return newAudioUri;
     }
+    int32_t audioId = ringtoneAsset->GetId();
+    newAudioUri = OpenAudioFile(databaseTool, uri, audioId);
+    if (results != nullptr) {
+        results->Close();
+    }
+    return newAudioUri;
+}
+
+std::string SystemSoundManagerImpl::OpenAudioFile(const DatabaseTool &databaseTool,
+    const std::string &uri, int32_t audioId)
+{
+    std::string newAudioUri = uri;
     int32_t fd  = 0;
     if (databaseTool.isProxy) {
         std::string absFilePath;
         PathToRealPath(uri, absFilePath);
         fd = open(absFilePath.c_str(), O_RDONLY);
     } else {
-        string uriStr = RINGTONE_PATH_URI + RINGTONE_SLASH_CHAR + to_string(ringtoneAsset->GetId());
+        string uriStr = RINGTONE_PATH_URI + RINGTONE_SLASH_CHAR + to_string(audioId);
         Uri ofUri(uriStr);
         fd = databaseTool.dataShareHelper->OpenFile(ofUri, "r");
     }
-    if (results != nullptr) results->Close();
 
     if (fd > 0) {
         newAudioUri = FDHEAD + to_string(fd);
+    } else {
+        SendPlaybackFailedEvent(OPEN_FAILED);
+        MEDIA_LOGE("The audioUri open failed!");
     }
     MEDIA_LOGI("OpenAudioUri result: newAudioUri is %{public}s", newAudioUri.c_str());
     return newAudioUri;
@@ -3349,9 +3404,18 @@ std::string SystemSoundManagerImpl::OpenCustomAudioUri(const std::string &custom
     Uri ringtonePathUri(RINGTONE_PATH_URI);
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, newAudioUri, "Invalid dataShare");
+    if (dataShareHelper == nullptr) {
+        SendPlaybackFailedEvent(INVALID_DATASHARE);
+        MEDIA_LOGE("Invalid dataShare.");
+        return newAudioUri;
+    }
     auto resultSet = dataShareHelper->Query(ringtonePathUri, queryPredicates, columns, &businessError);
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
+    if (results == nullptr) {
+        SendPlaybackFailedEvent(QUERY_FAILED);
+        MEDIA_LOGE("query failed, ringtone library error.");
+        return newAudioUri;
+    }
     CHECK_AND_RETURN_RET_LOG(results != nullptr, newAudioUri, "query failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
     int32_t fd = 0;
@@ -3362,18 +3426,23 @@ std::string SystemSoundManagerImpl::OpenCustomAudioUri(const std::string &custom
         fd = dataShareHelper->OpenFile(ofUri, "r");
         if (results != nullptr) results->Close();
     }
-    dataShareHelper->Release();
     if (fd > 0) {
         newAudioUri = FDHEAD + to_string(fd);
+    } else {
+        SendPlaybackFailedEvent(OPEN_FAILED);
     }
     MEDIA_LOGI("OpenCustomAudioUri: newAudioUri is %{public}s", newAudioUri.c_str());
-    if (results != nullptr) results->Close();
+    if (results != nullptr) {
+        results->Close();
+    }
+    dataShareHelper->Release();
     return newAudioUri;
 }
 
 std::string SystemSoundManagerImpl::OpenHapticsUri(const DatabaseTool &databaseTool, const std::string &hapticsUri)
 {
     if (!databaseTool.isInitialized || databaseTool.dataShareHelper == nullptr) {
+        SendPlaybackFailedEvent(INVALID_DATASHARE);
         MEDIA_LOGE("The database tool is not ready!");
         return "";
     }
@@ -3394,26 +3463,45 @@ std::string SystemSoundManagerImpl::OpenHapticsUri(const DatabaseTool &databaseT
     Uri queryUri(vibrateFilesUri);
     auto resultSet = databaseTool.dataShareHelper->Query(queryUri, queryPredicates, columns, &businessError);
     auto results = make_unique<RingtoneFetchResult<VibrateAsset>>(move(resultSet));
-    CHECK_AND_RETURN_RET_LOG(results != nullptr, newHapticsUri, "query failed, ringtone library error.");
+    if (results == nullptr) {
+        MEDIA_LOGE("query failed, ringtone library error.");
+        SendPlaybackFailedEvent(QUERY_FAILED);
+        return newHapticsUri;
+    }
     unique_ptr<VibrateAsset> vibrateAssetByUri = results->GetFirstObject();
     if (vibrateAssetByUri == nullptr) {
         MEDIA_LOGE("The vibrateAssetByUri is nullptr!");
+        SendPlaybackFailedEvent(QUERY_FAILED);
         return newHapticsUri;
     }
+    int32_t hapticsId = vibrateAssetByUri->GetId();
+    newHapticsUri = OpenHapticsFile(databaseTool, hapticsUri, hapticsId);
+    if (results != nullptr) {
+        results->Close();
+    }
+    return newHapticsUri;
+}
+
+std::string SystemSoundManagerImpl::OpenHapticsFile(
+    const DatabaseTool &databaseTool, const std::string &hapticsUri, int32_t hapticsId)
+{
+    std::string newHapticsUri = hapticsUri;
     int32_t fd = 0;
     if (databaseTool.isProxy) {
         std::string absFilePath;
         PathToRealPath(hapticsUri, absFilePath);
         fd = open(absFilePath.c_str(), O_RDONLY);
     } else {
-        string uriStr = VIBRATE_PATH_URI + RINGTONE_SLASH_CHAR + to_string(vibrateAssetByUri->GetId());
+        string uriStr = VIBRATE_PATH_URI + RINGTONE_SLASH_CHAR + to_string(hapticsId);
         MEDIA_LOGD("OpenHapticsUri: uri is %{public}s", uriStr.c_str());
         Uri ofUri(uriStr);
         fd = databaseTool.dataShareHelper->OpenFile(ofUri, "r");
     }
-    if (results != nullptr) results->Close();
+
     if (fd > 0) {
         newHapticsUri = FDHEAD + to_string(fd);
+    } else {
+        SendPlaybackFailedEvent(OPEN_FAILED);
     }
     MEDIA_LOGI("OpenHapticsUri result: newHapticsUri is %{public}s", newHapticsUri.c_str());
     return newHapticsUri;
@@ -3512,6 +3600,17 @@ std::vector<ToneInfo> SystemSoundManagerImpl::GetCurrentToneInfos()
     dataShareHelper->Release();
     MEDIA_LOGI("Finish to get tone infos!");
     return toneInfos;
+}
+
+void SystemSoundManagerImpl::SendPlaybackFailedEvent(const int32_t &errorCode)
+{
+    MEDIA_LOGI("Send playback failed event.");
+    std::shared_ptr<Media::MediaMonitor::EventBean> bean = std::make_shared<Media::MediaMonitor::EventBean>(
+        Media::MediaMonitor::ModuleId::AUDIO, Media::MediaMonitor::EventId::TONE_PLAYBACK_FAILED,
+        Media::MediaMonitor::EventType::FAULT_EVENT);
+    bean->Add("ERROR_CODE", errorCode);
+    bean->Add("ERROR_REASON", SystemSoundManagerUtils::GetTonePlaybackErrorReason(errorCode));
+    Media::MediaMonitor::MediaMonitorManager::GetInstance().WriteLogMsg(bean);
 }
 } // namesapce Media
 } // namespace OHOS

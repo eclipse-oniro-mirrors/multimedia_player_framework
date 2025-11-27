@@ -197,6 +197,10 @@ private:
     int32_t UpdateShotToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, const int32_t &toneId,
         SystemToneType systemToneType, const int32_t &num);
     int32_t OpenToneUri(const DatabaseTool &databaseTool, const std::string &uri, int32_t toneType);
+    int32_t OpenToneFile(const DatabaseTool &databaseTool,
+        const std::string &uri, int32_t toneType, int32_t toneId);
+    std::string OpenAudioFile(const DatabaseTool &databaseTool, const std::string &uri, int32_t audioId);
+    std::string OpenHapticsFile(const DatabaseTool &databaseTool, const std::string &hapticsUri, int32_t hapticsId);
     int32_t OpenCustomToneUri(const std::string &customAudioUri, int32_t toneType);
     int32_t UpdateNotificatioToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         const int32_t &toneId);
@@ -248,6 +252,7 @@ private:
     int32_t SetExtRingToneUri(const std::string &uri, const std::string &title, int32_t toneType);
     void SendCustomizedToneEvent(bool flag, const std::shared_ptr<ToneAttrs> &toneAttrs, off_t fileSize,
         std::string mimeType, int result);
+    void SendPlaybackFailedEvent(const int32_t &errorCode);
     std::string CustomizedToneWriteFile(std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
         const std::shared_ptr<ToneAttrs> &toneAttrs, ParamsForAddCustomizedTone &paramsForAddCustomizedTone);
     void OpenOneFile(std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
