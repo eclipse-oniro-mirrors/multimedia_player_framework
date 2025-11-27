@@ -984,7 +984,7 @@ napi_status MediaAsyncContext::SendCompleteEvent(napi_env env, MediaAsyncContext
             delete asyncContext;
         }
     };
-    return napi_send_event(env, task, prio);
+    return napi_send_event(env, task, prio, "AVPlayer MediaAsyncContext::SendCompleteEvent");
 }
 
 bool CommonNapi::AddStringProperty(napi_env env, napi_value obj, const std::string &key, const std::string &value)

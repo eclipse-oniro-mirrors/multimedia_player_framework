@@ -151,7 +151,7 @@ napi_status MediaDataSourceCallback::UvWork(MediaDataSourceJsCallbackWraper *cbW
         } while (0);
         delete cbWrap;
     };
-    return napi_send_event(env_, task, napi_eprio_immediate);
+    return napi_send_event(env_, task, napi_eprio_immediate, "AVPlayer MediaDataSourceCallback::UvWork");
 }
 
 int32_t MediaDataSourceCallback::ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)

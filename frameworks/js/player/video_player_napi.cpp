@@ -840,7 +840,7 @@ napi_status VideoPlayerNapi::CompleteAsyncWork(napi_env env, void *data, napi_ev
             cb->ClearAsyncWork(true, "the request was aborted because videoplayer ProcessWork error");
         }
     };
-    return napi_send_event(env, task, prio);
+    return napi_send_event(env, task, prio, "AVPlayer VideoPlayerNapi::CompleteAsyncWork");
 }
 
 napi_value VideoPlayerNapi::SetSpeed(napi_env env, napi_callback_info info)
