@@ -56,7 +56,7 @@ class _taihe_ErrorInfo_inject implements ErrorInfo {
     )
     {
         this.errorCode = errorCode;
-        this.errorType = errorCode;
+        this.errorType = errorType;
         this.soundId = soundId;
         this.streamId = streamId;
     }
