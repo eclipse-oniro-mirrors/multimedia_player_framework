@@ -58,7 +58,7 @@ ani_object SoundPoolCallBackTaihe::ToBusinessError(ani_env *env, int32_t code, c
 }
 
 ani_object ToErrorInfo(ani_env *env, const std::pair<int32_t, std::string>& errorPair,
-    ERROR_TYPE errorType, int32_t soundId, int32_t streamId) const;
+    ERROR_TYPE errorType, int32_t soundId, int32_t streamId) const
 {
     ani_object err {};
     ani_class cls {};
@@ -102,7 +102,7 @@ ani_status SoundPoolCallBackTaihe::ToAniEnum(ani_env *env, ERROR_TYPE errorType,
     return ANI_OK;
 }
 
-ani_status SoundPoolCallBackTaihe::IntToAniObject(ani_env *env, int32_t value) const
+ani_object SoundPoolCallBackTaihe::IntToAniObject(ani_env *env, int32_t value) const
 {
     static constexpr const char *className = "std.core.Int";
     ani_object err {};
