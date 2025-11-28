@@ -2501,7 +2501,7 @@ int32_t PlayerServer::GetTrackDescription(Format &format, uint32_t trackIndex)
     for (const auto& item: trackInfo) {
         int32_t index = -1;
         item.GetIntValue("track_index", index);
-        if (index == trackIndex) {
+        if (index == static_cast<int32_t>(trackIndex)) {
             format = item;
             return MSERR_OK;
         }
