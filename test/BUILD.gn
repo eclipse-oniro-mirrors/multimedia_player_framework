@@ -40,6 +40,7 @@ group("media_unit_test") {
       "unittest/avmetadatahelper_impl_unit_test:avmetadatahelper_impl_unit_test",
       "unittest/avmetadatahelper_impl_unittest:avmetadatahelper_impl_unittest",
       "unittest/avmetadatahelper_test:avmetadatahelper_unit_test",
+      "unittest/dfx_agent_test:dfx_agent_unit_test",
       "unittest/dfx_log_dump_unittest:dfx_log_dump_unittest",
       "unittest/dfx_test:player_framework_dfx_test",
       "unittest/dragging_player_agent_unittest:dragging_player_agent_unittest",

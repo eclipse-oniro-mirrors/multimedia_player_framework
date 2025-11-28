@@ -1121,6 +1121,23 @@ int32_t PlayerServer::GetPlaybackInfo(Format &playbackInfo)
     return MSERR_OK;
 }
 
+int32_t PlayerServer::GetPlaybackStatisticMetrics(Format &playbackStatisticMetrics)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+
+    if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED && lastOpStatus_ != PLAYER_STARTED &&
+        lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE && lastOpStatus_ != PLAYER_STOPPED) {
+        MEDIA_LOGE("Can not get playback statistic metrics, currentState is %{public}s",
+            GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+    MEDIA_LOGD("PlayerServer GetPlaybackStatisticMetrics in");
+    int32_t ret = playerEngine_->GetPlaybackStatisticMetrics(playbackStatisticMetrics);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine GetPlaybackStatisticMetrics Failed!");
+    return MSERR_OK;
+}
+
 int32_t PlayerServer::GetAudioTrackInfo(std::vector<Format> &audioTrack)
 {
     std::lock_guard<std::mutex> lock(mutex_);

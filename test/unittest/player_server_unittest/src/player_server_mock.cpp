@@ -14,6 +14,7 @@
  */
 
 #include "player_server_mock.h"
+#include <cstdint>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include "media_errors.h"
@@ -575,6 +576,12 @@ int32_t PlayerServerMock::GetPlaybackInfo(Format &playbackInfo)
     return player_->GetPlaybackInfo(playbackInfo);
 }
 
+int32_t PlayerServerMock::GetPlaybackStatisticMetrics(Format &playbackStatisticMetrics)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->GetPlaybackStatisticMetrics(playbackStatisticMetrics);
+}
+
 int32_t PlayerServerMock::GetAudioTrackInfo(std::vector<Format> &audioTrack)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
@@ -939,6 +946,11 @@ int32_t PlayerEngineMock::GetVideoTrackInfo(std::vector<Format> &videoTrack)
 }
 
 int32_t PlayerEngineMock::GetPlaybackInfo(Format &playbackInfo)
+{
+    return MSERR_OK;
+}
+
+int32_t PlayerEngineMock::GetPlaybackStatisticMetrics(Format &playbackStatisticMetrics)
 {
     return MSERR_OK;
 }

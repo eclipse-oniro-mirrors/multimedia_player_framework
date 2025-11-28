@@ -174,6 +174,18 @@ HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, 
     liveController_.CreateTask(playerId_);
     bundleName_ = GetClientBundleName(appUid);
     dfxAgent_ = std::make_shared<DfxAgent>(playerId_, bundleName_);
+    dfxAgent_->SetMetricsCallback([this](std::weak_ptr<DfxAgent> agent, const DfxEvent& event) {
+        auto info = AnyCast<DfxAgent::AVMetricsEvent>(event.param);
+        AVMetricsEvent infoCopy = {
+            .metricsEventType = info.metricsEventType,
+            .timeStamp = info.timeStamp,
+            .playbackPosition = info.playbackPosition,
+            .details = info.details
+        };
+        HandleMetricsEvent(infoCopy.timeStamp, infoCopy.playbackPosition,
+            infoCopy.details["Duration"],
+            static_cast<OHOS::Media::MediaType>(infoCopy.details["MediaType"]));
+    });
 }
 
 HiPlayerImpl::~HiPlayerImpl()
@@ -633,6 +645,7 @@ int32_t HiPlayerImpl::PrepareAsync()
 {
     MediaTrace trace("HiPlayerImpl::PrepareAsync");
     MEDIA_LOG_D("HiPlayerImpl PrepareAsync");
+    int64_t startTime = GetCurrentMillisecond();
     if (!(pipelineStates_ == PlayerStates::PLAYER_INITIALIZED || pipelineStates_ == PlayerStates::PLAYER_STOPPED) &&
         !isNeedSwDecoder_) {
         CollectionErrorInfo(MSERR_INVALID_OPERATION, "PrepareAsync pipelineStates not initialized or stopped");
@@ -677,6 +690,7 @@ int32_t HiPlayerImpl::PrepareAsync()
         }
     }
     UpdatePlayerStateAndNotify();
+    prepareDuration_ = GetCurrentMillisecond() - startTime;
     MEDIA_LOG_I("PrepareAsync End");
     return TransStatus(ret);
 }
@@ -2260,6 +2274,32 @@ int32_t HiPlayerImpl::GetPlaybackInfo(Format& playbackInfo)
     return TransStatus(Status::OK);
 }
 
+int32_t HiPlayerImpl::GetPlaybackStatisticMetrics(Format &playbackStatisticMetrics)
+{
+    MEDIA_LOG_D("GetPlaybackStatisticMetrics in");
+
+    DownloadInfo downloadInfo;
+    auto ret = demuxer_->GetDownloadInfo(downloadInfo);
+    if (ret == Status::OK) {
+        playbackStatisticMetrics.PutIntValue("prepare_duration", static_cast<int32_t>(prepareDuration_));
+        playbackStatisticMetrics.PutIntValue(
+            "resource_connection_duration", static_cast<int32_t>(downloadInfo.firstDownloadTime));
+        playbackStatisticMetrics.PutIntValue(
+            "first_frame_decapsulation_duration", static_cast<int32_t>(downloadInfo.firstFrameDecapsulationTime));
+        playbackStatisticMetrics.PutIntValue("total_playback_time", static_cast<int32_t>(playTotalDuration_));
+        playbackStatisticMetrics.PutIntValue("loading_count", downloadInfo.loadingCount);
+        playbackStatisticMetrics.PutIntValue("total_loading_time", static_cast<int32_t>(downloadInfo.totalLoadingTime));
+        playbackStatisticMetrics.PutLongValue("total_loading_Bytes", downloadInfo.totalDownLoadBytes);
+        int64_t stallingCount = 0;
+        dfxAgent_->GetTotalStallingTimes(&stallingCount);
+        playbackStatisticMetrics.PutIntValue("stalling_count", static_cast<int32_t>(stallingCount));
+        int64_t totalStallingTime = 0;
+        dfxAgent_->GetTotalStallingDuration(&totalStallingTime);
+        playbackStatisticMetrics.PutIntValue("total_stalling_time",  static_cast<int32_t>(totalStallingTime));
+    }
+    return TransStatus(Status::OK);
+}
+
 int32_t HiPlayerImpl::GetAudioTrackInfo(std::vector<Format>& audioTrack)
 {
     MEDIA_LOG_I("GetAudioTrackInfo in");
@@ -3311,6 +3351,28 @@ void __attribute__((no_sanitize("cfi"))) HiPlayerImpl::OnStateChanged(PlayerStat
     {
         AutoLock lock(stateMutex_);
         cond_.NotifyOne();
+    }
+}
+
+void HiPlayerImpl::HandleMetricsEvent(int64_t timeStamp, int64_t timeLine, int64_t duration,
+    OHOS::Media::MediaType mediaType)
+{
+    MEDIA_LOG_D_SHORT("HandleMetricsEvent timestamp: %{public}" PRId64 ", timeline: %{public}" PRId64 ",\
+        duration: %{public}" PRId64 ", mediaType: %{public}d",
+        timeStamp, timeLine, duration, static_cast<int32_t>(mediaType));
+    if (callbackLooper_.IsStarted()) {
+        Format format;
+        format.PutIntValue(PlayerKeys::PLAYER_METRICS_EVENT_TYPE,
+            static_cast<int32_t>(AV_METRICS_EVENT_TYPE_STALLING));
+        format.PutLongValue(PlayerKeys::PLAYER_STALLING_TIMESTAMP, timeStamp);
+        format.PutLongValue(PlayerKeys::PLAYER_STALLING_TIMELINE, timeLine);
+        format.PutLongValue(PlayerKeys::PLAYER_STALLING_DURATION, duration);
+        format.PutIntValue(PlayerKeys::PLAYER_STALLING_MEDIA_TYPE, static_cast<int32_t>(mediaType));
+        MEDIA_LOG_I("sending stalling event: timestamp=%{public}" PRId64 ", timeline=%{public}" PRId64\
+            ", duration=%{public}" PRId64 ", mediaType=%{public}d",
+            timeStamp, timeLine, duration, static_cast<int32_t>(mediaType));
+
+        callbackLooper_.OnInfo(INFO_TYPE_METRICS_EVENT, 0, format);
     }
 }
 

@@ -584,6 +584,12 @@ int32_t PlayerMock::GetPlaybackInfo(Format &playbackInfo)
     return player_->GetPlaybackInfo(playbackInfo);
 }
 
+int32_t PlayerMock::GetPlaybackStatisticMetrics(Format &playbackStatisticMetrics)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->GetPlaybackStatisticMetrics(playbackStatisticMetrics);
+}
+
 int32_t PlayerMock::GetAudioTrackInfo(std::vector<Format> &audioTrack)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");

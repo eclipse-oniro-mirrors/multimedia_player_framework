@@ -115,6 +115,12 @@ public:
         return 0;
     }
 
+    virtual int32_t GetPlaybackStatisticMetrics(Format &playbackStatisticMetrics)
+    {
+        (void)playbackStatisticMetrics;
+        return 0;
+    }
+
     virtual int32_t SetDecryptConfig(const sptr<OHOS::DrmStandard::IMediaKeySessionService> &keySessionProxy,
         bool svp)
     {
@@ -293,6 +299,7 @@ public:
         SET_CAMERA_POST_POSTPROCESSING,
         GET_MEDIA_DESCRIPTION,
         GET_TRACK_DESCRIPTION,
+        GET_PLAYBACK_STATISTIC_METRICS,
         MAX_IPC_ID,                   // all IPC codes should be added before MAX_IPC_ID
         GET_GLOBAL_INFO,
     };

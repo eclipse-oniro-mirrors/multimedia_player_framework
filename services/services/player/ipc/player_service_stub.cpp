@@ -194,6 +194,8 @@ void PlayerServiceStub::FillPlayerFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return GetVideoTrackInfo(data, reply); } };
     playerFuncs_[GET_PLAYBACK_INFO] = { "Player::GetPlaybackInfo",
         [this](MessageParcel &data, MessageParcel &reply) { return GetPlaybackInfo(data, reply); } };
+    playerFuncs_[GET_PLAYBACK_STATISTIC_METRICS] = { "Player::GetPlaybackStatisticMetrics",
+        [this](MessageParcel &data, MessageParcel &reply) { return GetPlaybackStatisticMetrics(data, reply); } };
     playerFuncs_[GET_AUDIO_TRACK_INFO] = { "Player::GetAudioTrackInfo",
         [this](MessageParcel &data, MessageParcel &reply) { return GetAudioTrackInfo(data, reply); } };
     playerFuncs_[GET_SUBTITLE_TRACK_INFO] = { "Player::GetSubtitleTrackInfo",
@@ -559,6 +561,14 @@ int32_t PlayerServiceStub::GetPlaybackInfo(Format &playbackInfo)
     MediaTrace trace("PlayerServiceStub::GetPlaybackInfo");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->GetPlaybackInfo(playbackInfo);
+}
+
+int32_t PlayerServiceStub::GetPlaybackStatisticMetrics(Format &playbackStatisticMetrics)
+{
+    MediaTrace trace("PlayerServiceStub::GetPlaybackStatisticMetrics");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    MEDIA_LOGI("GetPlaybackStatisticMetrics(core) request");
+    return playerServer_->GetPlaybackStatisticMetrics(playbackStatisticMetrics);
 }
 
 int32_t PlayerServiceStub::GetAudioTrackInfo(std::vector<Format> &audioTrack)
@@ -995,6 +1005,17 @@ int32_t PlayerServiceStub::GetPlaybackInfo(MessageParcel &data, MessageParcel &r
     Format playbackInfo;
     int32_t ret = GetPlaybackInfo(playbackInfo);
     (void)MediaParcel::Marshalling(reply, playbackInfo);
+    reply.WriteInt32(ret);
+
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::GetPlaybackStatisticMetrics(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    Format playbackMetrics;
+    int32_t ret = GetPlaybackStatisticMetrics(playbackMetrics);
+    (void)MediaParcel::Marshalling(reply, playbackMetrics);
     reply.WriteInt32(ret);
 
     return MSERR_OK;

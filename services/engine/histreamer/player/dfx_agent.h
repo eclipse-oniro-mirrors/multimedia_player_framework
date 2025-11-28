@@ -46,16 +46,30 @@ public:
     void OnDfxEvent(const DfxEvent &event);
     void SetInstanceId(const std::string& instanceId);
     void ResetAgent();
+    void SetMetricsCallback(DfxEventHandleFunc cb);
+    void GetTotalStallingDuration(int64_t* duration);
+    void GetTotalStallingTimes(int64_t* times);
+
+    struct AVMetricsEvent {
+        int32_t metricsEventType = 0;
+        int64_t timeStamp = 0;
+        int64_t playbackPosition = 0;
+        std::map<std::string, int64_t> details;
+    };
+
 private:
     void ReportLagEvent(int64_t lagDuration, const std::string& eventMsg);
     void ReportEosSeek0Event(int32_t appUid);
     void UpdateDfxInfo(const DfxEvent &event);
+    void ReportMetricsEvent(const DfxEvent &event);
     std::string GetPerfStr(const bool needWaitAllData);
     static void ProcessVideoLagEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
     static void ProcessAudioLagEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
     static void ProcessStreamLagEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
     static void ProcessEosSeekEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
     static void ProcessPerfInfoEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
+    static void ProcessMetricsEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
+    DfxEventHandleFunc metricsCallback_;
     std::string groupId_ {};
     std::string instanceId_ {};
     std::string appName_ {};
@@ -64,6 +78,8 @@ private:
     bool hasReported_ {false};
     bool needPrintPerfLog_ { false };
     std::unordered_map<std::string, MainPerfData> perfDataMap_ {};
+    std::atomic<int64_t> totalStallingDuration_{0};
+    std::atomic<int64_t> totalStallingTimes_{0};
 
     static const std::map<DfxEventType, DfxEventHandleFunc> DFX_EVENT_HANDLERS_;
 };

@@ -66,6 +66,7 @@ public:
     MOCK_METHOD(int32_t, GetCurrentTime, (int32_t &currentTime), ());
     MOCK_METHOD(int32_t, GetVideoTrackInfo, (std::vector<Format> &videoTrack), ());
     MOCK_METHOD(int32_t, GetPlaybackInfo, (Format &playbackInfo), ());
+    MOCK_METHOD(int32_t, GetPlaybackStatisticMetrics, (Format &playbackStatisticMetrics), (override));
     MOCK_METHOD(int32_t, GetAudioTrackInfo, (std::vector<Format> &audioTrack), ());
     MOCK_METHOD(int32_t, GetVideoWidth, (), ());
     MOCK_METHOD(int32_t, GetVideoHeight, (), ());

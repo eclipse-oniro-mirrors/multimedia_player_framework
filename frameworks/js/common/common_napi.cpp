@@ -548,6 +548,33 @@ bool CommonNapi::SetPropertyArrayBuffer(
     return true;
 }
 
+bool CommonNapi::SetPropertyMap(napi_env env, napi_value &obj, const std::string &key,
+    const std::map<std::string, int64_t> &map)
+{
+    napi_value keyNapi = nullptr;
+    napi_status status = napi_create_string_utf8(env, key.c_str(), NAPI_AUTO_LENGTH, &keyNapi);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    napi_value valueNapi = nullptr;
+    status = napi_create_object(env, &valueNapi);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    for (const auto &kv : map) {
+        napi_value keyObj = nullptr;
+        status = napi_create_string_utf8(env, kv.first.c_str(), NAPI_AUTO_LENGTH, &keyObj);
+        CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+        napi_value valueObj = nullptr;
+        status = napi_create_int64(env, kv.second, &valueObj);
+        CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+        status = napi_set_property(env, valueNapi, keyObj, valueObj);
+        CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "failed to set property");
+    }
+    status = napi_set_property(env, obj, keyNapi, valueNapi);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "failed to set property");
+    return true;
+}
 
 bool CommonNapi::AddArrayInt(napi_env env, napi_value &array, const std::vector<int32_t> &vec)
 {

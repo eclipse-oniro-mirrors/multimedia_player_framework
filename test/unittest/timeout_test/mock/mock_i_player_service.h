@@ -56,6 +56,7 @@ public:
     MOCK_METHOD(int32_t, GetVideoHeight, (), (override));
     MOCK_METHOD(int32_t, GetDuration, (int32_t &duration), (override));
     MOCK_METHOD(int32_t, GetPlaybackInfo, (Format &playbackInfo), (override));
+    MOCK_METHOD(int32_t, GetPlaybackStatisticMetrics, (Format &playbackStatisticMetrics), (override));
     MOCK_METHOD(int32_t, SetPlaybackSpeed, (PlaybackRateMode mode), (override));
     MOCK_METHOD(int32_t, SetPlaybackRate, (float rate), (override));
     MOCK_METHOD(int32_t,
