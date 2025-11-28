@@ -1585,6 +1585,10 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Stop_004, TestSize.Level2)
  */
 HWTEST_F(NativeRecorderUnitTest, Recorder_Stop_005, TestSize.Level2)
 {
+#ifndef SUPPORT_RECORDER_CREATE_FILE
+    #define SUPPORT_RECORDER_CREATE_FILE
+    #define SUPPORT_RECORDER_CREATE_FILE_DEFINED_IN_TESTCASE
+#endif
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Stop_005 in.");
 
     OH_AVRecorder_Config config = config_;
@@ -1611,6 +1615,10 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Stop_005, TestSize.Level2)
     free(config.metadata.customInfo.value);
 
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Stop_005 out.");
+#ifdef SUPPORT_RECORDER_CREATE_FILE_DEFINED_IN_TESTCASE
+    #undef SUPPORT_RECORDER_CREATE_FILE
+    #undef SUPPORT_RECORDER_CREATE_FILE_DEFINED_IN_TESTCASE
+#endif
 }
 
 /**

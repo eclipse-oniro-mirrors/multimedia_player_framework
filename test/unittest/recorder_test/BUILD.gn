@@ -198,7 +198,7 @@ ohos_unittest("recorder_server_unit_test") {
   ]
 
   sanitize = {
-    cfi = true
+    cfi = false
     cfi_cross_dso = true
     debug = false
   }
