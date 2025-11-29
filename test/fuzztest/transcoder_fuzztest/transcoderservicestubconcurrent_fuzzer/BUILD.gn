@@ -57,7 +57,7 @@ ohos_fuzztest("TranscoderServiceStubConcurrentFuzzTest") {
   if (player_framework_support_transcoder) {
     sources = [
       "../../../../test/fuzztest/common/stub_common.cpp",
-      "transcoderservicestub_fuzzer.cpp",
+      "transcoderservicestubconcurrent_fuzzer.cpp",
     ]
   }
   deps = [
