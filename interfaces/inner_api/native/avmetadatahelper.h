@@ -73,6 +73,8 @@ enum HelperState : int32_t {
     HELPER_STATE_RUNNABLE,
     /* released states */
     HELPER_STATE_RELEASED,
+    /* HTTP interception state */
+    HELPER_STATE_HTTP_INTERCEPTED,
 };
 
 /**

@@ -192,6 +192,10 @@ napi_value AVMetadataExtractorNapi::JsResolveMetadata(napi_env env, napi_callbac
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Can't fetchMetadata, please set source.");
     }
 
+    if (extractor->state_ == HelperState::HELPER_STATE_HTTP_INTERCEPTED) {
+        promiseCtx->SignError(MSERR_EXT_API20_IO_CLEARTEXT_NOT_PERMITTED, "Http plaintext access is not allowed.");
+    }
+
     // async work
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsResolveMetadata", NAPI_AUTO_LENGTH, &resource);
@@ -488,6 +492,10 @@ napi_value AVMetadataExtractorNapi::JsFetchFrameAtTime(napi_env env, napi_callba
         asyncCtx->SignError(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE, "Parameter check failed");
     }
 
+    if (extractor->state_ == HelperState::HELPER_STATE_HTTP_INTERCEPTED) {
+        asyncCtx->SignError(MSERR_EXT_API20_IO_CLEARTEXT_NOT_PERMITTED, "Http plaintext access is not allowed.");
+    }
+
     if (extractor->state_ != HelperState::HELPER_STATE_RUNNABLE && !asyncCtx->errFlag) {
         asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Current state is not runnable, can't fetchFrame.");
     }
@@ -595,7 +603,13 @@ napi_value AVMetadataExtractorNapi::JsSetUrlSource(napi_env env, napi_callback_i
     extractor->url_ = CommonNapi::GetStringArgument(env, args[ARG_ZERO]);
     (void)CommonNapi::GetPropertyMap(env, args[1], extractor->header_);
     auto res = extractor->helper_->SetUrlSource(extractor->url_, extractor->header_);
-    extractor->state_ = res == MSERR_OK ? HelperState::HELPER_STATE_RUNNABLE : HelperState::HELPER_ERROR;
+    if (res == MSERR_OK) {
+        extractor->state_ = HelperState::HELPER_STATE_RUNNABLE;
+    } else if (res == MSERR_INVALID_OPERATION) {
+        extractor->state_ = HelperState::HELPER_STATE_HTTP_INTERCEPTED;
+    } else {
+        extractor->state_ = HelperState::HELPER_ERROR;
+    }
     extractor->helper_->SetAVMetadataCaller(AVMetadataCaller::AV_METADATA_EXTRACTOR);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSetUrlSource Out", FAKE_POINTER(extractor));
     return result;
