@@ -23,6 +23,8 @@
 #include "media_parcel.h"
 #include "i_standard_transcoder_service.h"
 #include "stub_common.h"
+#include "media_log.h"
+#include "fuzzer/FuzzedDataProvider.h"
 
 using namespace std;
 using namespace OHOS;
@@ -30,34 +32,25 @@ using namespace Media;
 
 namespace OHOS {
 namespace Media {
-TranscoderServiceStubFuzzerConcurrentConcurrent::TranscoderServiceStubFuzzerConcurrent()
+TranscoderServiceStubFuzzerConcurrent::TranscoderServiceStubFuzzerConcurrent()
 {
 }
 
 TranscoderServiceStubFuzzerConcurrent::~TranscoderServiceStubFuzzerConcurrent()
 {
 }
-
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {
+    LOG_CORE, LOG_DOMAIN_PLAYER, "TranscoderServiceStubFuzzerConcurrent" };
+constexpr char INPUT_VIDEO_PATH[] = "/data/local/tmp/input.mp4";
+constexpr char OUTPUT_VIDEO_PATH[] = "/data/local/tmp/output.mp4";
 const int32_t SYSTEM_ABILITY_ID = 3002;
 const bool RUN_ON_CREATE = false;
-bool  ::FuzzTranscoderOnRemoteRequest(uint8_t *data, size_t size)
+sptr<IRemoteStub<IStandardTransCoderService>> transcoderStub;
+
+bool TranscoderServiceStubFuzzerConcurrent::FuzzTranscoderOnRemoteRequest(uint8_t *data, size_t size)
 {
     if (data == nullptr || size < sizeof(int64_t)) {
         return true;
-    }
-    std::shared_ptr<MediaServer> mediaServer =
-        std::make_shared<MediaServer>(SYSTEM_ABILITY_ID, RUN_ON_CREATE);
-    sptr<IRemoteObject> listener = new(std::nothrow) MediaListenerStubFuzzer();
-    sptr<IRemoteObject> transcoder = mediaServer->GetSubSystemAbility(
-        IStandardMediaService::MediaSystemAbility::MEDIA_TRANSCODER, listener);
-    if (transcoder == nullptr) {
-        return false;
-    }
-
-    sptr<IRemoteStub<IStandardTransCoderService>> transcoderStub =
-        iface_cast<IRemoteStub<IStandardTransCoderService>>(transcoder);
-    if (transcoderStub == nullptr) {
-        return false;
     }
 
     /* Run your code on data */
@@ -103,116 +96,118 @@ bool  ::FuzzTranscoderOnRemoteRequest(uint8_t *data, size_t size)
     switch (code)
     {
         case 1: {
-            MessageParcel data;
+            MessageParcel dataSend;
             MessageParcel reply;
-            MessageParcel option;
+            MessageOption option;
 
-            bool token = data.WriteInterfaceToken(transcoder->GetDescriptor());
-            CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
+            bool token = dataSend.WriteInterfaceToken(transcoderStub->GetDescriptor());
+            CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
 
             int encoderType = provider.ConsumeIntegral<int32_t>();
             int32_t encoderArr[] = { VideoCodecFormat::VIDEO_DEFAULT, VideoCodecFormat::H264, VideoCodecFormat::MPEG4,
                 VideoCodecFormat::H265, VideoCodecFormat::VIDEO_CODEC_FORMAT_BUTT };
             int32_t index = encoderType % std::size(encoderArr);
             int32_t value = encoderArr[std::abs(index)];
-            data.WriteInt32(value);
-            transcoder->OnRemoteRequest(IStandardTransCoderService::RecorderServiceMsg::SET_VIDEO_ENCODER, data, reply, option);
+            dataSend.WriteInt32(value);
+            transcoderStub->OnRemoteRequest(
+                IStandardTransCoderService::RecorderServiceMsg::SET_VIDEO_ENCODER, dataSend, reply, option);
             break;
         }
         case 2: {
-            MessageParcel data;
+            MessageParcel dataSend;
             MessageParcel reply;
             MessageOption option;
 
             int width = provider.ConsumeIntegral<int32_t>();
             int height = provider.ConsumeIntegral<int32_t>();
-            bool token = data.WriteInterfaceToken(transcoder->GetDescriptor());
-            CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
-            data.WriteInt32(width);
-            data.WriteInt32(height);
-            transcoder->OnRemoteRequest(IStandardTransCoderService::RecorderServiceMsg::SET_VIDEO_SIZE, data, reply, option);
+            bool token = dataSend.WriteInterfaceToken(transcoderStub->GetDescriptor());
+           CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
+            dataSend.WriteInt32(width);
+            dataSend.WriteInt32(height);
+            transcoderStub->OnRemoteRequest(
+                IStandardTransCoderService::RecorderServiceMsg::SET_VIDEO_SIZE, dataSend, reply, option);
             break;
         }
         case 3: {
-            MessageParcel data;
+            MessageParcel dataSend;
             MessageParcel reply;
             MessageOption option;
 
             int rate = provider.ConsumeIntegral<int32_t>();
-            bool token = data.WriteInterfaceToken(transcoder->GetDescriptor());
-            CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
-            data.WriteInt32(rate);
-            transcoder->OnRemoteRequest(
-                IStandardTransCoderService::RecorderServiceMsg::SET_VIDEO_ENCODING_BIT_RATE, data, reply, option);
+            bool token = dataSend.WriteInterfaceToken(transcoderStub->GetDescriptor());
+           CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
+            dataSend.WriteInt32(rate);
+            transcoderStub->OnRemoteRequest(
+                IStandardTransCoderService::RecorderServiceMsg::SET_VIDEO_ENCODING_BIT_RATE, dataSend, reply, option);
             break;
         }
         case 4: {
-            MessageParcel data;
+            MessageParcel dataSend;
             MessageParcel reply;
             MessageOption option;
 
             int encoderType = provider.ConsumeIntegral<int32_t>();
-            bool token = data.WriteInterfaceToken(transcoder->GetDescriptor());
-            CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
+            bool token = dataSend.WriteInterfaceToken(transcoderStub->GetDescriptor());
+           CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
             int32_t index = encoderType % std::size(colorSpaceArr);
             int32_t value = colorSpaceArr[std::abs(index)];
-            data.WriteInt32(value);
-            transcoder->OnRemoteRequest(
-                IStandardTransCoderService::RecorderServiceMsg::SET_COLOR_SPACE, data, reply, option);
+            dataSend.WriteInt32(value);
+            transcoderStub->OnRemoteRequest(
+                IStandardTransCoderService::RecorderServiceMsg::SET_COLOR_SPACE, dataSend, reply, option);
             break;
         }
         case 5: {
-            MessageParcel data;
+            MessageParcel dataSend;
             MessageParcel reply;
             MessageOption option;
 
-            int enableBframe = provider.ConsumeBool<int32_t>();
-            bool token = data.WriteInterfaceToken(transcoder->GetDescriptor());
-            CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
-            data.WriteInt32(enableBframe);
-            transcoder->OnRemoteRequest(
-                IStandardTransCoderService::RecorderServiceMsg::SetEnableBFrame, data, reply, option);
+            int enableBframe = provider.ConsumeBool();
+            bool token = dataSend.WriteInterfaceToken(transcoderStub->GetDescriptor());
+           CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
+            dataSend.WriteInt32(enableBframe);
+            transcoderStub->OnRemoteRequest(
+                IStandardTransCoderService::RecorderServiceMsg::SET_ENABLE_B_FRAME, dataSend, reply, option);
             break;
         }
         case 6: {
-            MessageParcel data;
+            MessageParcel dataSend;
             MessageParcel reply;
             MessageOption option;
 
             int audioEncoderType = provider.ConsumeIntegral<int32_t>();
-            bool token = data.WriteInterfaceToken(transcoder->GetDescriptor());
-            CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
+            bool token = dataSend.WriteInterfaceToken(transcoderStub->GetDescriptor());
+           CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
 
             int32_t encoderArr[] = { AudioCodecFormat::AUDIO_DEFAULT, AudioCodecFormat::AAC_LC,
                 AudioCodecFormat::AUDIO_MPEG, AudioCodecFormat::AUDIO_G711MU,
                 AudioCodecFormat::AUDIO_CODEC_FORMAT_BUTT };
             int32_t index = audioEncoderType % std::size(encoderArr);
             int32_t value = encoderArr[std::abs(index)];
-            data.WriteInt32(value);
-            transcoder->OnRemoteRequest(
-                IStandardTransCoderService::RecorderServiceMsg::SET_VIDEO_ENCODER, data, reply, option);
+            dataSend.WriteInt32(value);
+            transcoderStub->OnRemoteRequest(
+                IStandardTransCoderService::RecorderServiceMsg::SET_VIDEO_ENCODER, dataSend, reply, option);
             break;
         }
         case 7: {
-            MessageParcel data;
+            MessageParcel dataSend;
             MessageParcel reply;
             MessageOption option;
 
             int audioBitrate = provider.ConsumeIntegral<int32_t>();
-            bool token = data.WriteInterfaceToken(transcoder->GetDescriptor());
-            CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
-            data.WriteInt32(audioBitrate);
-            transcoder->OnRemoteRequest(
-                IStandardTransCoderService::RecorderServiceMsg::SET_VIDEO_ENCODER, data, reply, option);
+            bool token = dataSend.WriteInterfaceToken(transcoderStub->GetDescriptor());
+           CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
+            dataSend.WriteInt32(audioBitrate);
+            transcoderStub->OnRemoteRequest(
+                IStandardTransCoderService::RecorderServiceMsg::SET_VIDEO_ENCODER, dataSend, reply, option);
             break;
         }
         case 8: {
-            MessageParcel data;
+            MessageParcel dataSend;
             MessageParcel reply;
             MessageOption option;
 
-            bool token = data.WriteInterfaceToken(transcoder->GetDescriptor());
-            CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
+            bool token = dataSend.WriteInterfaceToken(transcoderStub->GetDescriptor());
+           CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
 
             int outputFormat = provider.ConsumeIntegral<int32_t>();
             int32_t outputFormatArr[] = { OutputFormatType::FORMAT_DEFAULT, OutputFormatType::FORMAT_MPEG_4,
@@ -220,47 +215,47 @@ bool  ::FuzzTranscoderOnRemoteRequest(uint8_t *data, size_t size)
                 OutputFormatType::FORMAT_BUTT };
             int32_t index = outputFormat % std::size(outputFormatArr);
             int32_t value = outputFormatArr[std::abs(index)];
-            data.WriteInt32(value);
-            transcoder->OnRemoteRequest(
-                IStandardTransCoderService::RecorderServiceMsg::SET_VIDEO_ENCODER, data, reply, option);
+            dataSend.WriteInt32(value);
+            transcoderStub->OnRemoteRequest(
+                IStandardTransCoderService::RecorderServiceMsg::SET_VIDEO_ENCODER, dataSend, reply, option);
             break;
         }
         case 9: {
             break;
         }
         case 10: {
-            MessageParcel data;
+            MessageParcel dataSend;
             MessageParcel reply;
             MessageOption option;
 
-            bool token = data.WriteInterfaceToken(transcoder->GetDescriptor());
-            CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
+            bool token = dataSend.WriteInterfaceToken(transcoderStub->GetDescriptor());
+           CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
 
             int fdInput = open(INPUT_VIDEO_PATH, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
             if (fdInput < 0) {
-                return;
+                return false;
             }
-            data.WriteFileDescriptor(fdInput);
-            transcoder->OnRemoteRequest(
-                IStandardTransCoderService::RecorderServiceMsg::SET_INPUT_FILE_FD, data, reply, option);
+            dataSend.WriteFileDescriptor(fdInput);
+            transcoderStub->OnRemoteRequest(
+                IStandardTransCoderService::RecorderServiceMsg::SET_INPUT_FILE_FD, dataSend, reply, option);
             close(fdInput);
             break;
         }
         case 11: {
-            MessageParcel data;
+            MessageParcel dataSend;
             MessageParcel reply;
             MessageOption option;
 
-            bool token = data.WriteInterfaceToken(transcoder->GetDescriptor());
-            CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
+            bool token = dataSend.WriteInterfaceToken(transcoderStub->GetDescriptor());
+           CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
 
             int fdOutput = open(OUTPUT_VIDEO_PATH, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
             if (fdOutput < 0) {
-                return;
+                return false;
             }
-            data.WriteFileDescriptor(fdOutput);
-            transcoder->OnRemoteRequest(
-                IStandardTransCoderService::RecorderServiceMsg::SET_OUTPUT_FILE, data, reply, option);
+            dataSend.WriteFileDescriptor(fdOutput);
+            transcoderStub->OnRemoteRequest(
+                IStandardTransCoderService::RecorderServiceMsg::SET_OUTPUT_FILE, dataSend, reply, option);
             close(fdOutput);
             break;
         }   
@@ -283,6 +278,21 @@ bool FuzzTestTranscoderOnRemoteRequest(uint8_t *data, size_t size)
     TranscoderServiceStubFuzzerConcurrent testTranscoder;
     return testTranscoder.FuzzTranscoderOnRemoteRequest(data, size);
 }
+}
+
+extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
+{
+    std::shared_ptr<MediaServer> mediaServer =
+        std::make_shared<MediaServer>(SYSTEM_ABILITY_ID, RUN_ON_CREATE);
+    sptr<IRemoteObject> listener = new(std::nothrow) MediaListenerStubFuzzer();
+    sptr<IRemoteObject> transcoder = mediaServer->GetSubSystemAbility(
+        IStandardMediaService::MediaSystemAbility::MEDIA_TRANSCODER, listener);
+    if (transcoder == nullptr) {
+        return 0;
+    }
+    transcoderStub =
+        iface_cast<IRemoteStub<IStandardTransCoderService>>(transcoder);
+    return 0;
 }
 
 /* Fuzzer entry point */
