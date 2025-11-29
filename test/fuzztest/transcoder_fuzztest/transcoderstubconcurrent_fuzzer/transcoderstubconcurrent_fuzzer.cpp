@@ -288,7 +288,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
     static const int threadCode[] = {
         0, 1, 2
     };
-    int code = fdp.pickValueInArray(threadCode);
+    int code = fdp.PickValueInArray(threadCode);
     switch (code)
     {
         case 0 :{
