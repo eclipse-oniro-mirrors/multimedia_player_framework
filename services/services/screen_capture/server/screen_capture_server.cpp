@@ -3743,7 +3743,7 @@ int32_t ScreenCaptureServer::OnSpeakerAliveStatusChanged(bool speakerAliveStatus
     std::lock_guard<std::mutex> lock(innerAudioMutex_);
     CHECK_AND_RETURN_RET_LOG(innerAudioCapture_, MSERR_UNKNOWN, "innerAudioCapture_ is nullptr");
     if (!speakerAliveStatus && recorderFileAudioType_ == AVScreenCaptureMixMode::MIX_MODE &&
-        innerAudioCapture_->IsStop()) { // back to headset
+        !IsInnerCaptureRunning()) { // back to headset
         ret = innerAudioCapture_->Start(appInfo_); // Resume
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Resume failed");
     }
@@ -3776,7 +3776,7 @@ int32_t ScreenCaptureServer::OnVoIPStatusChanged(bool isInVoIPCall)
     MEDIA_LOGI("OnVoIPStatusChanged, isInVoIPCall:%{public}d", isInVoIPCall);
     if (isInVoIPCall) {
         CHECK_AND_RETURN_RET_LOG(innerAudioCapture_, MSERR_UNKNOWN, "innerAudioCapture is nullptr");
-        if (recorderFileAudioType_ == AVScreenCaptureMixMode::MIX_MODE && innerAudioCapture_->IsStop()) {
+        if (recorderFileAudioType_ == AVScreenCaptureMixMode::MIX_MODE && !IsInnerCaptureRunning()) {
             int32_t ret = innerAudioCapture_->Start(appInfo_); // Resume
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "OnVoIPStatusChanged innerAudioCapture Resume failed");
         }
