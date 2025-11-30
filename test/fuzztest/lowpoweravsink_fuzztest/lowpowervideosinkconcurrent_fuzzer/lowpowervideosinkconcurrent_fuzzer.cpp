@@ -88,13 +88,11 @@ bool LowPowerVideoSinkconcurrentFuzz::RunFuzz(uint8_t *data, size_t size)
     lowPowerVideoSinkStub->Flush();
     lowPowerVideoSinkStub->StartDecode();
     lowPowerVideoSinkStub->StartRender();
- 
     static const int threadCode[] = {
         0, 1, 2, 3, 4
     };
     int code = fdp.PickValueInArray(threadCode);
-    switch (code)
-    {
+    switch (code) {
         case 0 :{
             lowPowerVideoSinkStub->SetOutputSurface(nullptr);
             break;

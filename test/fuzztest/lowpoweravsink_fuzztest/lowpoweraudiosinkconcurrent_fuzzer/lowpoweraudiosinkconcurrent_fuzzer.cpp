@@ -118,13 +118,11 @@ bool LowPowerAudioSinkconcurrentFuzz::RunFuzz(uint8_t *data, size_t size)
     lowPowerAudioSinkStub->Pause();
     lowPowerAudioSinkStub->Resume();
     lowPowerAudioSinkStub->Flush();
-    
     static const int threadCode[] = {
         0, 1
     };
     int code = fdp.PickValueInArray(threadCode);
-    switch (code)
-    {
+    switch (code) {
         case 0 :{
             lowPowerAudioSinkStub->SetVolume(fdp.ConsumeFloatingPoint<float>());
             break;
