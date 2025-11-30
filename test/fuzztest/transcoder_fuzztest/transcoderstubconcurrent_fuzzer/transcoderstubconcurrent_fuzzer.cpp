@@ -289,19 +289,18 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
         0, 1, 2
     };
     int code = fdp.PickValueInArray(threadCode);
-    switch (code)
-    {
-        case 0 :{
+    switch (code) {
+        case 0: {
             OHOS::Media::FuzzTranscoderPause(transcoder);
             sleep(SECOND_TWO);
             break;
         }
-        case 1 :{
+        case 1: {
             OHOS::Media::FuzzTranscoderResume(transcoder);
             sleep(SECOND_TWO);
             break;
         }
-        case 2 :{
+        case 2: {
             OHOS::Media::FuzzTranscoderCancel(transcoder);
             break;
         }
