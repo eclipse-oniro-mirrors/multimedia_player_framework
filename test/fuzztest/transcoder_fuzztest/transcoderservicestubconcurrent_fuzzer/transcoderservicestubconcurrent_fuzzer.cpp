@@ -120,7 +120,7 @@ bool TranscoderServiceStubFuzzerConcurrent::FuzzTranscoderOnRemoteRequest(uint8_
             int width = provider.ConsumeIntegral<int32_t>();
             int height = provider.ConsumeIntegral<int32_t>();
             bool token = dataSend.WriteInterfaceToken(transcoderStub->GetDescriptor());
-           CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
+            CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
             dataSend.WriteInt32(width);
             dataSend.WriteInt32(height);
             transcoderStub->OnRemoteRequest(
@@ -134,7 +134,7 @@ bool TranscoderServiceStubFuzzerConcurrent::FuzzTranscoderOnRemoteRequest(uint8_
 
             int rate = provider.ConsumeIntegral<int32_t>();
             bool token = dataSend.WriteInterfaceToken(transcoderStub->GetDescriptor());
-           CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
+            CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
             dataSend.WriteInt32(rate);
             transcoderStub->OnRemoteRequest(
                 IStandardTransCoderService::RecorderServiceMsg::SET_VIDEO_ENCODING_BIT_RATE, dataSend, reply, option);
@@ -147,7 +147,7 @@ bool TranscoderServiceStubFuzzerConcurrent::FuzzTranscoderOnRemoteRequest(uint8_
 
             int encoderType = provider.ConsumeIntegral<int32_t>();
             bool token = dataSend.WriteInterfaceToken(transcoderStub->GetDescriptor());
-           CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
+            CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
             int32_t index = encoderType % std::size(colorSpaceArr);
             int32_t value = colorSpaceArr[std::abs(index)];
             dataSend.WriteInt32(value);
@@ -162,7 +162,7 @@ bool TranscoderServiceStubFuzzerConcurrent::FuzzTranscoderOnRemoteRequest(uint8_
 
             int enableBframe = provider.ConsumeBool();
             bool token = dataSend.WriteInterfaceToken(transcoderStub->GetDescriptor());
-           CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
+            CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
             dataSend.WriteInt32(enableBframe);
             transcoderStub->OnRemoteRequest(
                 IStandardTransCoderService::RecorderServiceMsg::SET_ENABLE_B_FRAME, dataSend, reply, option);
@@ -175,7 +175,7 @@ bool TranscoderServiceStubFuzzerConcurrent::FuzzTranscoderOnRemoteRequest(uint8_
 
             int audioEncoderType = provider.ConsumeIntegral<int32_t>();
             bool token = dataSend.WriteInterfaceToken(transcoderStub->GetDescriptor());
-           CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
+            CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
 
             int32_t encoderArr[] = { AudioCodecFormat::AUDIO_DEFAULT, AudioCodecFormat::AAC_LC,
                 AudioCodecFormat::AUDIO_MPEG, AudioCodecFormat::AUDIO_G711MU,
@@ -194,7 +194,7 @@ bool TranscoderServiceStubFuzzerConcurrent::FuzzTranscoderOnRemoteRequest(uint8_
 
             int audioBitrate = provider.ConsumeIntegral<int32_t>();
             bool token = dataSend.WriteInterfaceToken(transcoderStub->GetDescriptor());
-           CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
+            CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
             dataSend.WriteInt32(audioBitrate);
             transcoderStub->OnRemoteRequest(
                 IStandardTransCoderService::RecorderServiceMsg::SET_VIDEO_ENCODER, dataSend, reply, option);
@@ -206,7 +206,7 @@ bool TranscoderServiceStubFuzzerConcurrent::FuzzTranscoderOnRemoteRequest(uint8_
             MessageOption option;
 
             bool token = dataSend.WriteInterfaceToken(transcoderStub->GetDescriptor());
-           CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
+            CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
 
             int outputFormat = provider.ConsumeIntegral<int32_t>();
             int32_t outputFormatArr[] = { OutputFormatType::FORMAT_DEFAULT, OutputFormatType::FORMAT_MPEG_4,
@@ -228,7 +228,7 @@ bool TranscoderServiceStubFuzzerConcurrent::FuzzTranscoderOnRemoteRequest(uint8_
             MessageOption option;
 
             bool token = dataSend.WriteInterfaceToken(transcoderStub->GetDescriptor());
-           CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
+            CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
 
             int fdInput = open(INPUT_VIDEO_PATH, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
             if (fdInput < 0) {
