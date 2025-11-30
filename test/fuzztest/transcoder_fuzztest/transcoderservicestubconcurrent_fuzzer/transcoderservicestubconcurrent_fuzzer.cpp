@@ -93,8 +93,7 @@ bool TranscoderServiceStubFuzzerConcurrent::FuzzTranscoderOnRemoteRequest(uint8_
         TranscoderColorSpace::TRANSCODER_COLORSPACE_DISPLAY_BT2020_HLG,
         TranscoderColorSpace::TRANSCODER_COLORSPACE_DISPLAY_BT2020_PQ
     };
-    switch (code)
-    {
+    switch (code) {
         case 1: {
             MessageParcel dataSend;
             MessageParcel reply;
@@ -247,7 +246,7 @@ bool TranscoderServiceStubFuzzerConcurrent::FuzzTranscoderOnRemoteRequest(uint8_
             MessageOption option;
 
             bool token = dataSend.WriteInterfaceToken(transcoderStub->GetDescriptor());
-           CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
+            CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
 
             int fdOutput = open(OUTPUT_VIDEO_PATH, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
             if (fdOutput < 0) {
@@ -258,7 +257,7 @@ bool TranscoderServiceStubFuzzerConcurrent::FuzzTranscoderOnRemoteRequest(uint8_
                 IStandardTransCoderService::RecorderServiceMsg::SET_OUTPUT_FILE, dataSend, reply, option);
             close(fdOutput);
             break;
-        }   
+        }
         default:
             break;
     }
