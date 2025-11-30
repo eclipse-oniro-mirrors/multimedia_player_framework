@@ -197,8 +197,12 @@ bool CreateMediaLibrary(int32_t &fd, std::string &uri)
     MEDIA_LOGD("get uid:%{public}d, userId:%{public}d, tokenId:%{public}d", uid, userId,
         IPCSkeleton::GetCallingTokenID());
 
-    auto photoAssetProxy = mediaLibraryManager->CreatePhotoAssetProxy(CameraShotType::VIDEO, uid, userId,
-        IPCSkeleton::GetCallingTokenID());
+    PhotoAssetProxyCallerInfo callerInfo {
+        .callingUid = uid,
+        .userId = userId,
+        .callingTokenId = IPCSkeleton::GetCallingTokenID()
+    };
+    auto photoAssetProxy = mediaLibraryManager->CreatePhotoAssetProxy(callerInfo, CameraShotType::VIDEO);
     sptr<RecorderPhotoProxy> recorderPhotoProxy = new(std::nothrow) RecorderPhotoProxy();
     CHECK_AND_RETURN_RET_LOG(recorderPhotoProxy != nullptr, false,
         "Error to create recorderPhotoProxy");
