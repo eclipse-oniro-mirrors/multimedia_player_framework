@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 
+#ifndef RECORDERSERVICECONCURRENT_FUZZER
+#define RECORDERSERVICECONCURRENT_FUZZER
+
 #include <fcntl.h>
 #include <securec.h>
 #include <unistd.h>
@@ -23,3 +26,4 @@
 #include "recorder_server.h"
 
 #define FUZZ_PROJECT_NAME "recorderserviceconcurrent_fuzzer"
+#endif

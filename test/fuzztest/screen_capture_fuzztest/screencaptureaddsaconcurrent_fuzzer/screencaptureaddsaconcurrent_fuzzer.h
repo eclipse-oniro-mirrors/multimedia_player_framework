@@ -33,11 +33,8 @@ class ScreenCaptureAddSaConcurrentFuzzer : public TestScreenCapture {
 public:
     ScreenCaptureAddSaConcurrentFuzzer();
     ~ScreenCaptureAddSaConcurrentFuzzer();
-    void SetConfig(RecorderInfo &recorderInfo);
-    bool FuzzScreenCaptureAddSaConcurrent(uint8_t *data, size_t size);
     std::shared_ptr<TestScreenCapture> screenCapture = nullptr;
 };
 } // namespace Media
-bool FuzzTestScreenCaptureAddSaConcurrent(uint8_t *data, size_t size);
 } // namespace OHOS
 #endif
