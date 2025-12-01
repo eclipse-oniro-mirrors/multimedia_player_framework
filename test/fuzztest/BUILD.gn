@@ -61,6 +61,8 @@ group("fuzztest") {
     "recorder_fuzztest/recorderservice_fuzzer:RecorderServiceFuzzTest",
     "transcoder_fuzztest/transcoderservicestub_fuzzer:TranscoderServiceStubFuzzTest",
     "transcoder_fuzztest/transcoderstub_fuzzer:TranscoderStubFuzzTest",
+    "transcoder_fuzztest/transcoderservicestubconcurrent_fuzzer:TranscoderServiceStubConcurrentFuzzTest",
+    "transcoder_fuzztest/transcoderstubconcurrent_fuzzer:TranscoderStubConcurrentFuzzTest",
   ]
   if (player_framework_support_screen_capture) {
     deps += [
