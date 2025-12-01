@@ -309,9 +309,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
     
     static const int ipccodes[] = {1, 2, 3, 4, 5, 6, 7};
     int code = fdp.PickValueInArray(ipccodes);
-    
-    OHOS::Media::MediaDataSourceStub *dataSrcStub = nullptr;
-    
+        
     switch (code) {
         case 1: {
             OHOS::Media::FuzzavmetadatahelperResolveMetadata(OHOS::Media::avmetadatahelper, fdp.ConsumeIntegral<int32_t>());
