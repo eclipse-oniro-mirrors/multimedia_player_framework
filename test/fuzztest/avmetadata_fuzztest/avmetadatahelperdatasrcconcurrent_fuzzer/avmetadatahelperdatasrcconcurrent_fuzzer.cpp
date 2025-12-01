@@ -32,7 +32,7 @@ constexpr char VIDEO_PATH[] = "/data/local/tmp/test.mp4";
 const int32_t SYSTEM_ABILITY_ID = 3002;
 const bool RUN_ON_CREATE = false;
 }  // namespace
-//test
+
 namespace OHOS {
 namespace Media {
 class IMediaDataSourceImpl : public IMediaDataSource {
