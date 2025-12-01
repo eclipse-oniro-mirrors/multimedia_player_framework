@@ -23,6 +23,7 @@ group("fuzztest") {
     "avmetadata_fuzztest/avmetadatafetchframeattime_fuzzer:AVmetadataFetchFrameAtTimeFuzzTest",
     "avmetadata_fuzztest/avmetadatafile_fuzzer:AVmetadataFileFuzzTest",
     "avmetadata_fuzztest/avmetadatahelper_fuzzer:AVmetadataHelperFuzzTest",
+    "avmetadata_fuzztest/avmetadatahelperconcurrent_fuzzer:AVmetadataHelperConcurrentFuzzTest",
     "avmetadata_fuzztest/avmetadatahelperdatasrc_fuzzer:AVmetadataHelperDataSrcFuzzTest",
     "avmetadata_fuzztest/avmetadataresolvemetadata_fuzzer:AVmetadataResolveMetadataFuzzTest",
     "avmetadata_fuzztest/avmetadatasetsource_fuzzer:AVmetadataSetSourceFuzzTest",
