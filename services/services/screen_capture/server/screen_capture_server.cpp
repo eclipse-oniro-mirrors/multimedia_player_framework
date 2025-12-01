@@ -595,13 +595,12 @@ void SCWindowLifecycleListener::OnLifecycleEvent(SessionLifecycleEvent event, co
     switch (event) {
         case SessionLifecycleEvent::FOREGROUND: {
             MEDIA_LOGI("OnLifecycleEvent: SessionLifecycleEvent::FOREGROUND");
-            if (SCServer->IsCaptureScreen(SCServer->GetCurDisplayId()) &&
-                SCServer->GetWindowIdList().size() > 0) {
+            if (SCServer->IsCaptureScreen(SCServer->GetCurDisplayId()) && !SCServer->GetWindowIdList().empty()) {
                 WindowInfoOption windowInfoOption;
                 std::vector<sptr<WindowInfo>> infos;
                 windowInfoOption.windowId = SCServer->GetWindowIdList().front();
                 Rosen::WMError ret = Rosen::WindowManager::GetInstance().ListWindowInfo(windowInfoOption, infos);
-                CHECK_AND_RETURN_LOG(ret == Rosen::WMError::WM_OK && infos.size() > 0, "ListWindowInfo failed.");
+                CHECK_AND_RETURN_LOG(ret == Rosen::WMError::WM_OK && !infos.empty(), "ListWindowInfo failed.");
                 SCServer->NotifyCaptureContentChanged(
                     AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE,
                     reinterpret_cast<ScreenCaptureRect*>(&(infos.front()->windowLayoutInfo.rect)));
@@ -610,7 +609,7 @@ void SCWindowLifecycleListener::OnLifecycleEvent(SessionLifecycleEvent event, co
         }
         case SessionLifecycleEvent::BACKGROUND: {
             MEDIA_LOGI("OnLifecycleEvent: SessionLifecycleEvent::BACKGROUND");
-            if (!SCServer->IsCaptureScreen(SCServer->GetCurDisplayId())) {
+            if (SCServer->IsCaptureScreen(SCServer->GetCurDisplayId())) {
                 SCServer->NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE,
                     nullptr);
             }
