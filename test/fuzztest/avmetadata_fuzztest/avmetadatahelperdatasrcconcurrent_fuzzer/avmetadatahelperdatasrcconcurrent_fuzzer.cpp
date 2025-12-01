@@ -278,12 +278,13 @@ static sptr<IRemoteStub<OHOS::Media::IStandardAVMetadataHelperService>> avmetada
 }  // namespace Media
 }  // namespace OHOS
 
-// 全局变量用于并行测试
+
 
 
 extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv) {
-    // 创建avmetadatahelper实例，所有测试用例共享
     OHOS::Media::avmetadatahelper = OHOS::Media::CreateFuzzavmetadatahelper();
+    OHOS::Media::MediaDataSourceStub *dataSrcStub = nullptr;
+    OHOS::Media::FuzzavmetadatahelperSetSource(OHOS::Media::avmetadatahelper, dataSrcStub);
     return 0;
 }
 
@@ -293,7 +294,6 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
         return 0;
     }
 
-    // 创建测试文件 - 所有并发测试用例共享同一个文件
     int fd = open(VIDEO_PATH, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
     if (fd < 0) {
         return 0;
@@ -307,7 +307,6 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
 
     FuzzedDataProvider fdp(data, size);
     
-    // 使用case结构进行并行测试
     static const int ipccodes[] = {1, 2, 3, 4, 5, 6, 7};
     int code = fdp.PickValueInArray(ipccodes);
     
@@ -315,45 +314,34 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
     
     switch (code) {
         case 1: {
-            OHOS::Media::FuzzavmetadatahelperSetSource(OHOS::Media::avmetadatahelper, dataSrcStub);
             OHOS::Media::FuzzavmetadatahelperResolveMetadata(OHOS::Media::avmetadatahelper, fdp.ConsumeIntegral<int32_t>());
             break;
         }
         case 2: {
-            OHOS::Media::FuzzavmetadatahelperSetSource(OHOS::Media::avmetadatahelper, dataSrcStub);
             OHOS::Media::FuzzavmetadatahelperResolveMetadataMap(OHOS::Media::avmetadatahelper);
             break;
         }
         case 3: {
-            OHOS::Media::FuzzavmetadatahelperSetSource(OHOS::Media::avmetadatahelper, dataSrcStub);
             OHOS::Media::FuzzavmetadatahelperFetchAlbumCover(OHOS::Media::avmetadatahelper);
             break;
         }
         case 4: {
-            OHOS::Media::FuzzavmetadatahelperSetSource(OHOS::Media::avmetadatahelper, dataSrcStub);
             OHOS::Media::FuzzavmetadatahelperFetchFrame(
                 OHOS::Media::avmetadatahelper, fdp.ConsumeIntegral<int32_t>(), fdp.ConsumeIntegral<int32_t>());
             break;
         }
         case 5: {
-            OHOS::Media::FuzzavmetadatahelperSetSource(OHOS::Media::avmetadatahelper, dataSrcStub);
             OHOS::Media::FuzzavmetadatahelperGetAVMeta(OHOS::Media::avmetadatahelper);
             break;
         }
         case 6: {
-            OHOS::Media::FuzzavmetadatahelperSetSource(OHOS::Media::avmetadatahelper, dataSrcStub);
             OHOS::Media::FuzzavmetadatahelperGetTimeByFrameIndex(OHOS::Media::avmetadatahelper, fdp.ConsumeIntegral<int32_t>());
             break;
         }
         case 7: {
-            OHOS::Media::FuzzavmetadatahelperSetSource(OHOS::Media::avmetadatahelper, dataSrcStub);
             OHOS::Media::FuzzavmetadatahelperGetFrameIndexByTime(OHOS::Media::avmetadatahelper, fdp.ConsumeIntegral<int32_t>());
             break;
         }
     }
-
-    // 注意：在并行测试中，我们不删除文件，以便其他测试用例可以继续使用
-    // 同时也不释放avmetadatahelper，因为它是全局共享的
-    
     return 0;
 }
