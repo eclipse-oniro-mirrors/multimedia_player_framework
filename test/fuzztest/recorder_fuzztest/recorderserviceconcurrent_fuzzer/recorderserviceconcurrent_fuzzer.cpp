@@ -60,7 +60,8 @@ enum RecorderServiceMsg {
     SET_AUDIO_AACPROFILE = 20,
 };
 
-extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv) {
+extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
+{
     std::shared_ptr<IRecorderService> tempServer = RecorderServer::Create();
     if (tempServer) {
         recoderServer = std::static_pointer_cast<RecorderServer>(tempServer);
@@ -161,11 +162,10 @@ extern "C" int FuzzRecorderConconcurrentTestThree(FuzzedDataProvider& provider)
         return 0;
     }
     static const int ipccodes[] = {
-        11, 12, 13, 14, 15, 
+        11, 12, 13, 14, 15
     };
     int code = provider.PickValueInArray(ipccodes);
     switch (code) {
-        
         case SET_META_MIME_TYPE: {
             int32_t sourceId = provider.ConsumeIntegral<uint32_t>();
             const std::string_view type;

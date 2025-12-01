@@ -87,7 +87,8 @@ ScreenCaptureAddSaConcurrentFuzzer::~ScreenCaptureAddSaConcurrentFuzzer()
 
 std::shared_ptr<ScreenCaptureServer> screenCaptureServer_ = nullptr;
 
-extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv) {
+extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
+{
     std::shared_ptr<IScreenCaptureService> tempServer_ = ScreenCaptureServer::Create();
     if (tempServer_ == nullptr) {
         return 0;
