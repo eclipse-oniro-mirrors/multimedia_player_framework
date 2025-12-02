@@ -61,7 +61,7 @@ namespace PlayerHDI = OHOS::HDI::LowPowerPlayer::V1_0;
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaServerManager"};
 constexpr uint32_t REPORT_TIME = 100000000; // us
-constexpr uint32_t MAX_TIMES = 5; // us
+constexpr uint32_t MAX_TIMES = 5;
 constexpr int32_t RELEASE_THRESHOLD = 3;  // relese task
 }
 
