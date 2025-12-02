@@ -60,7 +60,8 @@ enum RecorderServiceMsg {
     SET_AUDIO_AACPROFILE = 20,
 };
 
-extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv) {
+extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
+{
     std::shared_ptr<IRecorderService> tempServer = RecorderServer::Create();
     if (tempServer) {
         recoderServer = std::static_pointer_cast<RecorderServer>(tempServer);
