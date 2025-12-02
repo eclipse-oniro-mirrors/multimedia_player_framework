@@ -148,7 +148,9 @@ void AVThumbnailGenerator::OnError(MediaAVCodec::AVCodecErrorType errorType, int
         bufferAvailableCond_.notify_all();
         {
             std::unique_lock<std::mutex> readTaskLock(readTaskMutex_);
-            readTaskAvailableCond_.wait(readTaskLock);
+            readTaskAvailableCond_.wait(readTaskLock, [this]() {
+                return readTaskExited_.load();
+            });
         }
         cond_.notify_all();
         return;
@@ -468,6 +470,7 @@ int64_t AVThumbnailGenerator::StopTask()
 {
     if (readTask_ != nullptr) {
         readTask_->Stop();
+        readTaskExited_.store(true);
         readTaskAvailableCond_.notify_all();
     }
     return 0;

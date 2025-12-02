@@ -64,6 +64,7 @@ private:
     std::atomic_bool stopProcessing_{false};
     std::atomic_bool readErrorFlag_{ false };
     std::atomic_bool isBufferAvailable_{ false };
+    std::atomic_bool readTaskExited_{ false };
     std::string trackMime_;
     Plugins::VideoRotation rotation_ = Plugins::VideoRotation::VIDEO_ROTATION_0;
     Plugins::VideoOrientationType orientation_ = Plugins::VideoOrientationType::ROTATE_NONE ;
