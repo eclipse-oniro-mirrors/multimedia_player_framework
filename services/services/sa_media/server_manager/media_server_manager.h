@@ -142,7 +142,7 @@ private:
         virtual ~AsyncExecutor() = default;
         void Commit(sptr<IRemoteObject> obj);
         void Clear();
-        void setClearCallBack(std::function<void()> callBack);
+        void SetClearCallBack(std::function<void()> callBack);
     private:
         void HandleAsyncExecution();
         std::list<sptr<IRemoteObject>> freeList_;

@@ -1240,7 +1240,7 @@ void MediaServerManager::AsyncExecutor::HandleAsyncExecution()
     callBack_();
 }
 
-void MediaServerManager::AsyncExecutor::setClearCallBack(std::function<void()> callBack)
+void MediaServerManager::AsyncExecutor::SetClearCallBack(std::function<void()> callBack)
 {
     std::lock_guard<std::mutex> lock(listMutex_);
     callBack_ = callBack;
