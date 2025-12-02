@@ -61,6 +61,7 @@ namespace PlayerHDI = OHOS::HDI::LowPowerPlayer::V1_0;
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaServerManager"};
 constexpr uint32_t REPORT_TIME = 100000000; // us
+constexpr uint32_t MAX_TIMES = 5; // us
 constexpr int32_t RELEASE_THRESHOLD = 3;  // relese task
 }
 
@@ -1048,7 +1049,7 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
     DestroyLppAudioPlayerStubForPid(pid);
     DestroyLppVideoPlayerStubForPid(pid);
     MonitorServiceStub::GetInstance()->OnClientDie(pid);
-    setClearCallBack([this]() {
+    executor_.setClearCallBack([this]() {
         CHECK_AND_RETURN_NOLOG(GetStubMapCountIsEmpty());
         SetCritical(false);
     });
@@ -1226,8 +1227,8 @@ void MediaServerManager::AsyncExecutor::HandleAsyncExecution()
         freeList_.swap(tempList);
     }
     int times = 0;
-    while (times < 5) {
-        bool allStubsRefCountLessOrEqual1 =false;
+    while (times < MAX_TIMES) {
+        bool allStubsRefCountLessOrEqual1 = false;
         for (auto& item : tempList) {
             int refCount = item->GetSptrRefCount();
             allStubsRefCountLessOrEqual1 = refCount > 1 ? true : false;
@@ -1239,7 +1240,8 @@ void MediaServerManager::AsyncExecutor::HandleAsyncExecution()
     callBack_();
 }
 
-void MediaServerManager::AsyncExecutor::setClearCallBack(std::function<void()> callBack){
+void MediaServerManager::AsyncExecutor::setClearCallBack(std::function<void()> callBack)
+{
     std::lock_guard<std::mutex> lock(listMutex_);
     callBack_ = callBack;
 }
