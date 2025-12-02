@@ -156,7 +156,8 @@ void ScreenCaptureMonitorCallback::OnJsCaptureCallBack(ScreenCaptureMonitorJsCal
         } while (0);
         delete jsCb;
     };
-    CHECK_AND_RETURN_LOG(napi_send_event(env_, task, napi_eprio_immediate) == napi_status::napi_ok,
+    CHECK_AND_RETURN_LOG(napi_send_event(env_, task, napi_eprio_immediate,
+        ScreenCaptureMonitorCallbackNapiTask::ON_JS_CAPTURE_CALLBACK.c_str()) == napi_status::napi_ok,
         "OnJsCaptureCallBack napi_send_event failed");
 
     CANCEL_SCOPE_EXIT_GUARD(0);

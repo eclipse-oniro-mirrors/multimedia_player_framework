@@ -45,6 +45,9 @@ const char RINGTONE_PARAMETER_SCANNER_USERID_KEY[] = "ringtone.scanner.userId";
 const char RINGTONE_PARAMETER_SCANNER_FIRST_FALSE[] = "false";
 const char RINGTONE_PARAMETER_SCANNER_FIRST_TRUE[] = "true";
 const int32_t RINGTONEPARA_SIZE = 64;
+const int32_t INVALID_DATASHARE = -2;
+const int32_t OPEN_FAILED = -3;
+const int32_t QUERY_FAILED = -4;
 
 int32_t SystemSoundManagerUtils::GetCurrentUserId()
 {
@@ -196,6 +199,21 @@ std::string SystemSoundManagerUtils::GetErrorReason(const int32_t &errorCode)
         errorReason = "system tone playback successfully";
     } else {
         errorReason = "system tone playback failed";
+    }
+    return errorReason;
+}
+
+std::string SystemSoundManagerUtils::GetTonePlaybackErrorReason(const int32_t &errorCode)
+{
+    std::string errorReason = "";
+    if (errorCode == INVALID_DATASHARE) {
+        errorReason = "Failed to CreateDataShareHelper!";
+    } else if (errorCode == OPEN_FAILED) {
+        errorReason = "Open audio uri failed!";
+    } else if (errorCode == QUERY_FAILED) {
+        errorReason = "query failed, ringtone library error!";
+    } else {
+        errorReason = "Invalid error";
     }
     return errorReason;
 }

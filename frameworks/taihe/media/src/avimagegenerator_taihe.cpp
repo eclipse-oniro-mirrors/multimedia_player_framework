@@ -117,6 +117,35 @@ optional<::ohos::multimedia::image::image::PixelMap> AVImageGeneratorImpl::Fetch
         Image::PixelMapImpl::CreatePixelMap(pixelMap));
 }
 
+optional<::ohos::multimedia::image::image::PixelMap> AVImageGeneratorImpl::FetchScaledFrameByTimeSync(
+    int64_t timeUs, AVImageQueryOptions options, optional_view<OutputSize> param)
+{
+    OHOS::Media::MediaTrace trace("AVImageGeneratorTaihe::FetchScaledFrameByTimeSync");
+    MEDIA_LOGI("FetchScaledFrameByTimeSync  in");
+    AVImageGeneratorImpl *taihe = this;
+    if (taihe->state_ != OHOS::Media::HelperState::HELPER_STATE_RUNNABLE) {
+        set_business_error(OHOS::Media::MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "Current state is not runnable, can't fetchFrame.");
+        return optional<::ohos::multimedia::image::image::PixelMap>(std::nullopt);
+    }
+    OHOS::Media::PixelMapParams pixelMapParams;
+    if (param.has_value()) {
+        if (param->height.has_value()) {
+            pixelMapParams.dstHeight = param->height.value();
+        }
+        if (param->width.has_value()) {
+            pixelMapParams.dstWidth = param->width.value();
+        }
+    }
+
+    OHOS::Media::PixelFormat colorFormat = OHOS::Media::PixelFormat::UNKNOWN;
+    pixelMapParams.colorFormat = colorFormat;
+    auto pixelMap = helper_->FetchScaledFrameYuv(timeUs, options.get_value(), pixelMapParams);
+    MEDIA_LOGI("FetchScaledFrameByTimeSync Out");
+    return optional<::ohos::multimedia::image::image::PixelMap>(std::in_place_t{},
+        Image::PixelMapImpl::CreatePixelMap(pixelMap));
+}
+
 void AVImageGeneratorImpl::ReleaseSync()
 {
     OHOS::Media::MediaTrace trace("AVImageGeneratorTaihe::ReleaseSync");

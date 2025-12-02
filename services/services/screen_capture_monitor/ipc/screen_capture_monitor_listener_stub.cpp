@@ -52,6 +52,10 @@ int ScreenCaptureMonitorListenerStub::OnRemoteRequest(uint32_t code, MessageParc
             OnScreenCaptureFinished(pid);
             return MSERR_OK;
         }
+        case ScreenCaptureMonitorListenerMsg::ON_SCREEN_CAPTURE_DIED: {
+            OnScreenCaptureDied();
+            return MSERR_OK;
+        }
         default: {
             MEDIA_LOGE("default case, need check ScreenCaptureMonitorListenerStub");
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -83,6 +87,19 @@ void ScreenCaptureMonitorListenerStub::OnScreenCaptureFinished(int32_t pid)
             MEDIA_LOGD("ScreenCaptureMonitorListenerStub::OnScreenCaptureFinished traversal"
                 "screenCaptureMonitorCallbacks_ pid: %{public}d", pid);
             value->OnScreenCaptureFinished(pid);
+        }
+    }
+}
+
+void ScreenCaptureMonitorListenerStub::OnScreenCaptureDied()
+{
+    MEDIA_LOGI("OnScreenCaptureDied:0x%{public}06" PRIXPTR " OnScreenCaptureDied",
+        FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (const auto& value : screenCaptureMonitorCallbacks_) {
+        if (value != nullptr) {
+            MEDIA_LOGD("ScreenCaptureMonitorListenerStub::OnScreenCaptureDied traversal");
+            value->OnScreenCaptureDied();
         }
     }
 }

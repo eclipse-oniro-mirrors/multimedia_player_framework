@@ -390,7 +390,7 @@ void VideoCallbackNapi::OnJsCallBack(VideoPlayerAsyncContext *context) const
             napi_close_handle_scope(env, scope);
         };
         MediaAsyncContext::CompleteCallback(context->env_, napi_ok, static_cast<void *>(context));
-    }, napi_eprio_high);
+    }, napi_eprio_high, "AVPlayer VideoCallbackNapi::OnJsCallBack");
     if (ret != napi_ok) {
         MEDIA_LOGE("Failed to execute libuv work queue, ret = %{public}d", ret);
         delete context;

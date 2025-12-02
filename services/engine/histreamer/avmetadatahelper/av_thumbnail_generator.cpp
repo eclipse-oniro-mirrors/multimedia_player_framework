@@ -15,6 +15,9 @@
 
 #include "av_thumbnail_generator.h"
 
+#include "avcodec_errors.h"
+#include "avcodec_info.h"
+#include "avcodec_list.h"
 #include "buffer/avbuffer_common.h"
 #include "common/media_source.h"
 #include "ibuffer_consumer_listener.h"
@@ -130,6 +133,29 @@ AVThumbnailGenerator::~AVThumbnailGenerator()
 void AVThumbnailGenerator::OnError(MediaAVCodec::AVCodecErrorType errorType, int32_t errorCode)
 {
     MEDIA_LOGE("OnError errorType:%{public}d, errorCode:%{public}d", static_cast<int32_t>(errorType), errorCode);
+    if (errorCode == MediaAVCodec::AVCodecServiceErrCode::AVCS_ERR_UNSUPPORTED_CODEC_SPECIFICATION) {
+        {
+            std::unique_lock<std::mutex> lock(onErrorMutex_);
+            CHECK_AND_RETURN_LOG(!hasReceivedCodecErrCodeOfUnsupported_,
+                "hasReceivedCodecErrCodeOfUnsupported_ is true");
+            hasReceivedCodecErrCodeOfUnsupported_ = true;
+        }
+
+        {
+            std::scoped_lock lock(mutex_, queueMutex_);
+            stopProcessing_ = true;
+        }
+        bufferAvailableCond_.notify_all();
+        {
+            std::unique_lock<std::mutex> readTaskLock(readTaskMutex_);
+            readTaskAvailableCond_.wait(readTaskLock, [this]() {
+                return readTaskExited_.load();
+            });
+        }
+        cond_.notify_all();
+        return;
+    }
+
     {
         std::scoped_lock lock(mutex_, queueMutex_);
         stopProcessing_ = true;
@@ -138,7 +164,7 @@ void AVThumbnailGenerator::OnError(MediaAVCodec::AVCodecErrorType errorType, int
     bufferAvailableCond_.notify_all();
 }
 
-Status AVThumbnailGenerator::InitDecoder()
+Status AVThumbnailGenerator::InitDecoder(const std::string& codecName)
 {
     MEDIA_LOGD("Init decoder start.");
     if (videoDecoder_ != nullptr) {
@@ -156,7 +182,8 @@ Status AVThumbnailGenerator::InitDecoder()
     callerInfo->SetData(Media::Tag::AV_CODEC_FORWARD_CALLER_UID, appUid_);
     callerInfo->SetData(Media::Tag::AV_CODEC_FORWARD_CALLER_PROCESS_NAME, appName_);
     format.SetMeta(callerInfo);
-    ret = MediaAVCodec::VideoDecoderFactory::CreateByMime(trackMime_, format, videoDecoder_);
+    ret = codecName == "" ? MediaAVCodec::VideoDecoderFactory::CreateByMime(trackMime_, format, videoDecoder_) :
+        MediaAVCodec::VideoDecoderFactory::CreateByName(codecName, format, videoDecoder_);
     MEDIA_LOGI("VideoDecoderAdapter::Init CreateByMime errorCode %{public}d", ret);
     CHECK_AND_RETURN_RET_LOG(videoDecoder_ != nullptr, Status::ERROR_NO_MEMORY, "Create videoDecoder_ is nullptr");
     MEDIA_LOGI("appUid: %{public}d, appPid: %{public}d, appName: %{public}s", appUid_, appPid_, appName_.c_str());
@@ -183,6 +210,39 @@ Status AVThumbnailGenerator::InitDecoder()
     return Status::OK;
 }
 
+void AVThumbnailGenerator::SwitchToSoftWareDecoder()
+{
+    CHECK_AND_RETURN_LOG(videoDecoder_ != nullptr && !trackMime_.empty(),
+        "videoDecoder_ is nullptr or trackMime_ is empty");
+    Format format;
+    videoDecoder_->GetCodecInfo(format);
+    int32_t isHardWareDecoder = 0;
+    format.GetIntValue(Media::Tag::MEDIA_IS_HARDWARE, isHardWareDecoder);
+    if (isHardWareDecoder == static_cast<int32_t>(true)) {
+        videoDecoder_->Stop();
+        videoDecoder_->Release();
+        videoDecoder_ = nullptr;
+        std::shared_ptr<MediaAVCodec::AVCodecList> codeclist = MediaAVCodec::AVCodecListFactory::CreateAVCodecList();
+        CHECK_AND_RETURN_LOG(codeclist != nullptr, "CreateAVCodecList failed, codeclist is nullptr.");
+        MediaAVCodec::CapabilityData *capabilityData = codeclist->GetCapability(trackMime_, false,
+            MediaAVCodec::AVCodecCategory::AVCODEC_SOFTWARE);
+        CHECK_AND_RETURN_LOG(capabilityData != nullptr, "GetCapability failed, capabilityData is nullptr.");
+        const std::string codecName = capabilityData->codecName;
+        CHECK_AND_RETURN_LOG(!codecName.empty(), "codecName is empty");
+        FlushBufferQueue();
+        inputBufferQueue_ = nullptr;
+        Init();
+        {
+            std::unique_lock lock(queueMutex_);
+            hasFetchedFrame_ = false;
+        }
+        auto res = SeekToTime(Plugins::Us2Ms(currentFetchFrameYuvTimeUs_),
+            static_cast<Plugins::SeekMode>(currentFetchFrameYuvOption_), currentFetchFrameYuvTimeUs_);
+        CHECK_AND_RETURN_LOG(res == Status::OK, "Seek failed.");
+        CHECK_AND_RETURN_LOG(InitDecoder(codecName) == Status::OK, "Failed to create software decoder.");
+    }
+}
+
 int32_t AVThumbnailGenerator::Init()
 {
     CHECK_AND_RETURN_RET_LOG(inputBufferQueue_ == nullptr, MSERR_OK, "InputBufferQueue already create");
@@ -203,7 +263,6 @@ int32_t AVThumbnailGenerator::Init()
 
     readTask_ = std::make_unique<Task>(std::string("AVThumbReadLoop"));
     CHECK_AND_RETURN_RET_LOG(readTask_ != nullptr, MSERR_NO_MEMORY, "Task is nullptr");
-
     readTask_->RegisterJob([this] {return ReadLoop();});
     readTask_->Start();
 
@@ -411,6 +470,8 @@ int64_t AVThumbnailGenerator::StopTask()
 {
     if (readTask_ != nullptr) {
         readTask_->Stop();
+        readTaskExited_.store(true);
+        readTaskAvailableCond_.notify_all();
     }
     return 0;
 }
@@ -539,8 +600,11 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
     readErrorFlag_ = false;
     hasFetchedFrame_ = false;
     isBufferAvailable_ = false;
+    hasReceivedCodecErrCodeOfUnsupported_ = false;
     outputConfig_ = param;
     seekTime_ = timeUs;
+    currentFetchFrameYuvTimeUs_ = timeUs;
+    currentFetchFrameYuvOption_ = option;
     trackInfo_ = GetVideoTrackInfo();
     CHECK_AND_RETURN_RET_LOG(trackInfo_ != nullptr, nullptr, "FetchFrameAtTime trackInfo_ is nullptr.");
     mediaDemuxer_->SelectTrack(trackIndex_);
@@ -551,10 +615,22 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
     bool fetchFrameRes = false;
     {
         std::unique_lock<std::mutex> lock(mutex_);
-
         // wait up to 3s to fetch frame AVSharedMemory at time.
         fetchFrameRes = cond_.wait_for(lock, std::chrono::seconds(MAX_WAIT_TIME_SECOND),
             [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); });
+    }
+
+    {
+        std::unique_lock retryLock(onErrorMutex_);
+        if (hasReceivedCodecErrCodeOfUnsupported_) {
+            stopProcessing_ = false;
+            SwitchToSoftWareDecoder();
+            {
+                std::unique_lock fetchFrameLock(mutex_);
+                fetchFrameRes = cond_.wait_for(fetchFrameLock, std::chrono::seconds(MAX_WAIT_TIME_SECOND),
+                    [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); });
+            }
+        }
     }
     if (fetchFrameRes) {
         HandleFetchFrameYuvRes();
@@ -804,6 +880,7 @@ void AVThumbnailGenerator::Reset()
     FlushBufferQueue();
 
     hasFetchedFrame_ = false;
+    hasReceivedCodecErrCodeOfUnsupported_ = false;
     fileType_ = FileType::UNKNOW;
     trackInfo_ = nullptr;
 }

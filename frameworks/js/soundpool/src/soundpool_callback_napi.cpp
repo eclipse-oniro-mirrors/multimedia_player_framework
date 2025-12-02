@@ -227,8 +227,8 @@ void SoundPoolCallBackNapi::OnJsErrorCallBack(SoundPoolJsCallBack *jsCb) const
         event->RunJsErrorCallBackTask(event);
         delete event;
     };
- 
-    auto ret = napi_send_event(env_, task, napi_eprio_immediate);
+    std::string taskname = "OnJsErrorCallBack";
+    auto ret = napi_send_event(env_, task, napi_eprio_immediate, taskname.c_str());
     if (ret != napi_status::napi_ok) {
         MEDIA_LOGE("Failed to SendEvent CallBack, ret = %{public}d", ret);
         delete jsCb;
@@ -241,8 +241,8 @@ void SoundPoolCallBackNapi::OnJsErrorOccurredCallBack(SoundPoolJsCallBack *jsCb)
         event->RunJsErrorOccurredCallBackTask(event);
         delete event;
     };
- 
-    auto ret = napi_send_event(env_, task, napi_eprio_immediate);
+    std::string taskname = "OnJsErrorOccurredCallBack";
+    auto ret = napi_send_event(env_, task, napi_eprio_immediate, taskname.c_str());
     if (ret != napi_status::napi_ok) {
         MEDIA_LOGE("Failed to SendEvent CallBack, ret = %{public}d", ret);
         delete jsCb;
@@ -332,8 +332,8 @@ void SoundPoolCallBackNapi::OnJsloadCompletedCallBack(SoundPoolJsCallBack *jsCb)
         event->RunJsloadCompletedCallBackTask(event);
         delete event;
     };
- 
-    auto ret = napi_send_event(env_, task, napi_eprio_immediate);
+    std::string taskname = "OnJsloadCompletedCallBack";
+    auto ret = napi_send_event(env_, task, napi_eprio_immediate, taskname.c_str());
     if (ret != napi_status::napi_ok) {
         MEDIA_LOGE("Failed to SendEvent CallBack, ret = %{public}d", ret);
         delete jsCb;
@@ -373,8 +373,8 @@ void SoundPoolCallBackNapi::OnJsplayCompletedCallBack(SoundPoolJsCallBack *jsCb)
         event->RunJsplayCompletedCallBackTask(event);
         delete event;
     };
- 
-    auto ret = napi_send_event(env_, task, napi_eprio_immediate);
+    std::string taskname = "OnJsplayCompletedCallBack";
+    auto ret = napi_send_event(env_, task, napi_eprio_immediate, taskname.c_str());
     if (ret != napi_status::napi_ok) {
         MEDIA_LOGE("Failed to SendEvent CallBack, ret = %{public}d", ret);
         delete jsCb;

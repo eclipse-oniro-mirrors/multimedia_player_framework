@@ -38,6 +38,8 @@ RecorderServiceStubFunctionsFuzzer::~RecorderServiceStubFunctionsFuzzer()
 
 const int32_t SYSTEM_ABILITY_ID = 3002;
 const bool RUN_ON_CREATE = false;
+const int32_t SET_INTERRUPT_STRATEGY = 51;
+const int32_t TRANSMIT_QOS = 52;
 
 sptr<IRemoteStub<IStandardRecorderService>> RecorderServiceStubFunctionsFuzzer::GetRecorderStub()
 {
@@ -54,6 +56,19 @@ sptr<IRemoteStub<IStandardRecorderService>> RecorderServiceStubFunctionsFuzzer::
     return recorderStub;
 }
 
+void RecorderServiceStubFunctionsFuzzer::RecorderOnRemoteRequest(
+    const sptr<IRemoteStub<IStandardRecorderService>>recorderStub, uint8_t *data, size_t size)
+{
+    MessageParcel msg;
+    msg.WriteInterfaceToken(recorderStub->GetDescriptor());
+    msg.WriteBuffer(data, size);
+    msg.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+    recorderStub->OnRemoteRequest(SET_INTERRUPT_STRATEGY, msg, reply, option);
+    recorderStub->OnRemoteRequest(TRANSMIT_QOS, msg, reply, option);
+}
+
 void RecorderServiceStubFunctionsFuzzer::SetRecorderConfig(
     const sptr<IRemoteStub<IStandardRecorderService>>recorderStub)
 {
@@ -62,18 +77,14 @@ void RecorderServiceStubFunctionsFuzzer::SetRecorderConfig(
 
     sourceId = GetData<int32_t>();
     recorderStub->SetMetaConfigs(sourceId);
-
     sourceId = GetData<int32_t>();
     recorderStub->SetMetaSource(MetaSourceType::VIDEO_META_MAKER_INFO, sourceId);
-
     sourceId = GetData<int32_t>();
     const std::string_view type;
     recorderStub->SetMetaMimeType(sourceId, type);
-
     sourceId = GetData<int32_t>();
     const std::string_view timedKey;
     recorderStub->SetMetaTimedKey(sourceId, timedKey);
-
     sourceId = GetData<int32_t>();
     const std::string_view srcTrackMime;
     recorderStub->SetMetaSourceTrackMime(sourceId, srcTrackMime);
@@ -83,10 +94,44 @@ void RecorderServiceStubFunctionsFuzzer::SetRecorderConfig(
     recorderStub->SetCaptureRate(sourceId, fps);
 
     sourceId = GetData<int32_t>();
-    recorderStub->GetSurface(sourceId);
+    int32_t bitRate = GetData<int32_t>();
+    recorderStub->SetAudioEncodingBitRate(sourceId, bitRate);
+
+    std::string genre;
+    recorderStub->SetGenre(genre);
+    int32_t duration = GetData<int32_t>();
+    recorderStub->SetMaxDuration(duration);
+    int32_t fd = GetData<int32_t>();
+    recorderStub->SetNextOutputFile(fd);
+    int32_t fileSize = GetData<int32_t>();
+    recorderStub->SetMaxFileSize(fileSize);
+    int32_t aacProfile = GetData<int32_t>();
+    const int32_t aacSize = 3;
+    aacProfile = ((aacProfile % aacSize) + aacSize) % aacSize;
+    AacProfile acProfile = static_cast<AacProfile>(aacProfile);
+    recorderStub->SetAudioAacProfile(sourceId, acProfile);
 
     sourceId = GetData<int32_t>();
+    recorderStub->SetVideoIsHdr(sourceId, true);
+    sourceId = GetData<int32_t>();
+    recorderStub->SetVideoEnableTemporalScale(sourceId, true);
+    sourceId = GetData<int32_t>();
+    recorderStub->SetVideoEnableStableQualityMode(sourceId, true);
+    sourceId = GetData<int32_t>();
+    recorderStub->SetVideoEnableBFrame(sourceId, true);
+
+    std::shared_ptr<AVBuffer> waterMarkBuffer;
+    recorderStub->SetWatermark(waterMarkBuffer);
+}
+
+void RecorderServiceStubFunctionsFuzzer::GetRecorderConfig(
+    const sptr<IRemoteStub<IStandardRecorderService>> recorderStub)
+{
+    int32_t sourceId = GetData<int32_t>();
+    recorderStub->GetSurface(sourceId);
+    sourceId = GetData<int32_t>();
     recorderStub->GetMetaSurface(sourceId);
+
     ConfigMap configMap;
     recorderStub->GetAVRecorderConfig(configMap);
 
@@ -95,39 +140,8 @@ void RecorderServiceStubFunctionsFuzzer::SetRecorderConfig(
 
     std::vector<EncoderCapabilityData> encoderInfo;
     recorderStub->GetAvailableEncoder(encoderInfo);
+
     recorderStub->GetMaxAmplitude();
-}
-
-void RecorderServiceStubFunctionsFuzzer::GetRecorderConfig(
-    const sptr<IRemoteStub<IStandardRecorderService>> recorderStub)
-{
-    int32_t sourceId = GetData<int32_t>();
-    int32_t bitRate = GetData<int32_t>();
-    recorderStub->SetAudioEncodingBitRate(sourceId, bitRate);
-
-    std::string genre;
-    recorderStub->SetGenre(genre);
-
-    int32_t duration = GetData<int32_t>();
-    recorderStub->SetMaxDuration(duration);
-
-    int32_t fd = GetData<int32_t>();
-    recorderStub->SetNextOutputFile(fd);
-
-    int32_t fileSize = GetData<int32_t>();
-    recorderStub->SetMaxFileSize(fileSize);
-
-    sourceId = GetData<int32_t>();
-    recorderStub->SetVideoIsHdr(sourceId, true);
-  
-    sourceId = GetData<int32_t>();
-    recorderStub->SetVideoEnableTemporalScale(sourceId, true);
-
-    sourceId = GetData<int32_t>();
-    recorderStub->SetVideoEnableStableQualityMode(sourceId, true);
-
-    sourceId = GetData<int32_t>();
-    recorderStub->SetVideoEnableBFrame(sourceId, true);
 }
 
 bool RecorderServiceStubFunctionsFuzzer::FuzzRecorderServiceStubFunctions(uint8_t *data, size_t size)
@@ -149,6 +163,7 @@ bool RecorderServiceStubFunctionsFuzzer::FuzzRecorderServiceStubFunctions(uint8_
     recorderStub->IsWatermarkSupported(isSupported);
     recorderStub->SetWillMuteWhenInterrupted(true);
     recorderStub->TransmitQos(QOS::QosLevel::QOS_USER_INTERACTIVE);
+    RecorderOnRemoteRequest(recorderStub, data, size);
     recorderStub->DestroyStub();
     return true;
 }

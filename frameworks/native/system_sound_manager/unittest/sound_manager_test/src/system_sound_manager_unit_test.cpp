@@ -1836,6 +1836,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_OpenToneUri_002, TestSize.
         std::string uri = vec[0]->GetUri();
         fd = systemSoundManager_->OpenToneUri(context_, uri, ToneType::TONE_TYPE_ALARM);
     }
+    close(fd);
     EXPECT_NE(systemSoundManager_, nullptr);
 }
 
@@ -1848,18 +1849,44 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_OpenToneUri_003, TestSize.
 {
     std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
     std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+    EXPECT_NE(systemSoundManager_, nullptr);
     bool isProxy = false;
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
-        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
+    DatabaseTool databaseTool = {true, isProxy, nullptr};
     int fd = systemSoundManager_->OpenToneUri(databaseTool, "test", ToneType::TONE_TYPE_ALARM);
     EXPECT_LT(fd, 0);
+    close(fd);
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
+        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    databaseTool = {true, isProxy, dataShareHelper};
+    fd = systemSoundManager_->OpenToneUri(databaseTool, "test", ToneType::TONE_TYPE_ALARM);
+    EXPECT_LT(fd, 0);
+    close(fd);
     ToneAttrs toneAttrs_ = systemSoundManager_->GetAlarmToneAttrs(context_);
     std::string uri = toneAttrs_.GetUri();
     fd = systemSoundManager_->OpenToneUri(context_, uri, ToneType::TONE_TYPE_ALARM);
-
-    EXPECT_NE(systemSoundManager_, nullptr);
+    EXPECT_GE(fd, 0);
+    close(fd);
+    isProxy = true;
+    dataShareHelper = SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID);
+    databaseTool = {true, isProxy, dataShareHelper};
+    fd = systemSoundManager_->OpenToneUri(databaseTool, uri, ToneType::TONE_TYPE_ALARM);
+    EXPECT_LT(fd, 0);
+    close(fd);
+    fd = systemSoundManager_->OpenCustomToneUri(uri, ToneType::TONE_TYPE_ALARM);
+    EXPECT_GE(fd, 0);
+    close(fd);
+    uri = "/data/storage/el2/base/files/ringtone.ogg";
+    fd = systemSoundManager_->OpenToneUri(databaseTool, uri, ToneType::TONE_TYPE_ALARM);
+    EXPECT_LT(fd, 0);
+    close(fd);
+    fd = systemSoundManager_->OpenToneUri(databaseTool, uri, ToneType::TONE_TYPE_INVALID);
+    EXPECT_LT(fd, 0);
+    close(fd);
+    fd = systemSoundManager_->OpenCustomToneUri(uri, ToneType::TONE_TYPE_INVALID);
+    EXPECT_LT(fd, 0);
+    close(fd);
 }
+
 
 /**
  * @tc.name  : Test OpenToneUri
@@ -2596,6 +2623,92 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetHapticsAttrsSyncedWithT
     systemSoundManager_->GetHapticsAttrsSyncedWithTone(systemToneUri, dataShareHelper, toneHapticsAttrs);
  
     dataShareHelper->Release();
+}
+
+/**
+ * @tc.name  : Test SendPlaybackFailedEvent
+ * @tc.number: Media_SoundManager_SendPlaybackFailedEvent_001
+ * @tc.desc  : Test SendPlaybackFailedEvent interface.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_SendPlaybackFailedEvent_001, TestSize.Level2)
+{
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    systemSoundManager_->SendPlaybackFailedEvent(0);
+    systemSoundManager_->SendPlaybackFailedEvent(-2);
+    systemSoundManager_->SendPlaybackFailedEvent(-3);
+    systemSoundManager_->SendPlaybackFailedEvent(-4);
+}
+
+/**
+ * @tc.name  : Test OpenAudioUri
+ * @tc.number: Media_SoundManager_OpenAudioUri_001
+ * @tc.desc  : Test OpenAudioUri interface.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_OpenAudioUri_001, TestSize.Level2)
+{
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    std::shared_ptr<AbilityRuntime::Context> context = std::make_shared<ContextImpl>();
+    EXPECT_NE(systemSoundManager_, nullptr);
+    bool isProxy = false;
+    DatabaseTool databaseTool = {true, isProxy, nullptr};
+    std::string newUri = "";
+    newUri = systemSoundManager_->OpenAudioUri(databaseTool, "test");
+    EXPECT_EQ(newUri, "");
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
+        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    databaseTool = {true, isProxy, dataShareHelper};
+    newUri = systemSoundManager_->OpenAudioUri(databaseTool, "test");
+    EXPECT_NE(newUri, "");
+    isProxy = true;
+    dataShareHelper = SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID);
+    databaseTool = {true, isProxy, dataShareHelper};
+    newUri = systemSoundManager_->OpenAudioUri(databaseTool, "test");
+    EXPECT_NE(newUri, "");
+    std::string uri = "/data/storage/el2/base/files/ringtone.ogg";
+    newUri = systemSoundManager_->OpenAudioUri(databaseTool, uri);
+    EXPECT_NE(newUri, "");
+    newUri = systemSoundManager_->OpenCustomAudioUri(uri);
+    EXPECT_NE(newUri, "");
+    newUri = systemSoundManager_->OpenCustomAudioUri("");
+    EXPECT_EQ(newUri, "");
+    RingtoneType ringtoneType = RingtoneType::RINGTONE_TYPE_SIM_CARD_0;
+    uri = systemSoundManager_->GetRingtoneUri(context, ringtoneType);
+    newUri = systemSoundManager_->OpenAudioUri(databaseTool, uri);
+    EXPECT_NE(newUri, "");
+}
+
+/**
+ * @tc.name  : Test OpenHapticsUri
+ * @tc.number: Media_SoundManager_OpenHapticsUri_001
+ * @tc.desc  : Test OpenHapticsUri interface.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_OpenHapticsUri_001, TestSize.Level2)
+{
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    std::shared_ptr<AbilityRuntime::Context> context = std::make_shared<ContextImpl>();
+    EXPECT_NE(systemSoundManager_, nullptr);
+    bool isProxy = false;
+    DatabaseTool databaseTool = {true, isProxy, nullptr};
+    std::string newUri = "";
+    newUri = systemSoundManager_->OpenHapticsUri(databaseTool, "test");
+    EXPECT_EQ(newUri, "");
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
+        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    databaseTool = {true, isProxy, dataShareHelper};
+    newUri = systemSoundManager_->OpenHapticsUri(databaseTool, "test");
+    EXPECT_NE(newUri, "");
+    isProxy = true;
+    dataShareHelper = SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID);
+    databaseTool = {true, isProxy, dataShareHelper};
+    newUri = systemSoundManager_->OpenHapticsUri(databaseTool, "test");
+    EXPECT_NE(newUri, "");
+    std::string uri = "/data/storage/el2/base/files/ringtone.ogg";
+    newUri = systemSoundManager_->OpenHapticsUri(databaseTool, uri);
+    EXPECT_NE(newUri, "");
+    RingtoneType ringtoneType = RingtoneType::RINGTONE_TYPE_SIM_CARD_0;
+    uri = systemSoundManager_->GetRingtoneUri(context, ringtoneType);
+    newUri = systemSoundManager_->OpenHapticsUri(databaseTool, uri);
+    EXPECT_NE(newUri, "");
 }
 } // namespace Media
 } // namespace OHOS

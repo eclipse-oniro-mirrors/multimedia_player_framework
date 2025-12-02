@@ -101,6 +101,7 @@ static const std::map<int32_t, const char*> g_MetadataCodeMap = {
     {44,    "videoRotateOrientation"},
     {45,    "gltf_offset"},
     {46,    "transfer_characteristics"},
+    {47,    "description"},
 };
 
 /**
@@ -131,6 +132,7 @@ static const std::vector<std::string> g_Metadata = {
     "customInfo",
     "tracks",
     "gltf_offset",
+    "description",
 };
 
 enum HdrType : int32_t {
@@ -324,6 +326,10 @@ enum AVMetadataCode : int32_t {
      * The metadata key to retrieve the information about the transfer_characteristic of the video.
      */
     AV_KEY_VIDEO_COLOR_TRC = 46,
+    /**
+     * The metadata key to retrieve the information about the description of the video.
+     */
+    AV_KEY_VIDEO_DESCRIPTION = 47,
 };
 
 /**
@@ -439,6 +445,22 @@ struct PixelMapParams {
      * otherwise, use BT709_LIMIT.
      */
     bool convertColorSpace = true;
+};
+
+/**
+ * @brief Provides the definition of the returned pixelmap's configuration
+ */
+struct OutputSize {
+    /**
+     * Expected pixelmap's width, -1 means to keep consistent with the
+     * original dimensions of the given video resource.
+     */
+    int32_t dstWidth = -1;
+    /**
+     * Expected pixelmap's width, -1 means to keep consistent with the
+     * original dimensions of the given video resource.
+     */
+    int32_t dstHeight = -1;
 };
 
 /**

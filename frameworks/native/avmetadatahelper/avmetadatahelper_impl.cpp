@@ -32,9 +32,10 @@
 #include "param_wrapper.h"
 #include "hdr_type.h"
 #include "metadata_convertor.h"
+#include "uri_helper.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "AVMetadatahelperImpl" };
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "MetaHelperImpl" };
 constexpr int32_t SCENE_CODE_EFFECTIVE_DURATION_MS = 20000;
 static constexpr char PERFORMANCE_STATS[] = "PERFORMANCE";
 static std::atomic<uint32_t> concurrentWorkCount_ = 0;
@@ -289,7 +290,7 @@ int32_t AVMetadataHelperImpl::SaveDataToFile(const std::string &fileName, const 
     std::string verifiedPath(realPath);
     std::ofstream outFile(verifiedPath.append("/" + fileName), std::ofstream::out);
     if (!outFile.is_open()) {
-        MEDIA_LOGI("SaveDataToFile write error, path=%{public}s", verifiedPath.c_str());
+        MEDIA_LOGW("SaveDataToFile write error, path=%{public}s", verifiedPath.c_str());
         return MSERR_UNKNOWN;
     }
 
@@ -303,7 +304,7 @@ void AVMetadataHelperImpl::InitDumpFlag()
     std::string dumpEnable;
     int32_t dumpRes = OHOS::system::GetStringParameter(dumpTag, dumpEnable, "false");
     isDump_ = (dumpEnable == "true");
-    MEDIA_LOGI("get dump flag, dumpRes: %{public}d, isDump_: %{public}d", dumpRes, isDump_);
+    MEDIA_LOGD("get dump flag, dumpRes: %{public}d, isDump_: %{public}d", dumpRes, isDump_);
 }
 
 int32_t AVMetadataHelperImpl::DumpPixelMap(bool isDump, std::shared_ptr<PixelMap> pixelMap,
@@ -775,6 +776,22 @@ int32_t AVMetadataHelperImpl::SetUrlSource(const std::string &uri, const std::ma
     CHECK_AND_RETURN_RET_LOG(!uri.empty(), MSERR_INVALID_VAL, "uri is empty.");
     CHECK_AND_RETURN_RET_LOG((uri.find("http://") == 0 || uri.find("https://") == 0),
         MSERR_INVALID_VAL, "uri is error.");
+
+    bool isComponentCfg = false;
+    std::string protocol = UriHelper::GetProtocolFromURL(uri);
+    int32_t ret = OHOS::NetManagerStandard::NetworkSecurityConfig::GetInstance()
+        .IsCleartextCfgByComponent("Media Kit", isComponentCfg);
+    MEDIA_LOGD("Media Kit, ret: %{public}d, isComponentCfg: %{public}d, protocol: %{public}s",
+        ret, isComponentCfg, protocol.c_str());
+    if (isComponentCfg && protocol == "http") {
+        bool isCleartextPermitted = true;
+        std::string hostname = UriHelper::GetHostnameFromURL(uri);
+        OHOS::NetManagerStandard::NetworkSecurityConfig::GetInstance()
+            .IsCleartextPermitted(hostname, isCleartextPermitted);
+        CHECK_AND_RETURN_RET_LOG(isCleartextPermitted, MSERR_INVALID_VAL,
+            "blocked insecure HTTP request to %{public}s, use HTTPS instead for secure communication!", uri.c_str());
+    }
+
     concurrentWorkCount_++;
     ReportSceneCode(AV_META_SCENE_BATCH_HANDLE);
     auto res = avMetadataHelperService_->SetUrlSource(uri, header);

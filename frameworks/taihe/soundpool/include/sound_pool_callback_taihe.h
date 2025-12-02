@@ -42,8 +42,10 @@ public:
     void SendLoadCompletedCallback(int32_t soundId);
     void SendPlayCompletedCallback(int32_t streamID);
     ani_object ToBusinessError(ani_env *env, int32_t code, const std::string &message) const;
-    ani_object ToErrorInfo(ani_env *env, int32_t code, const std::string &message,
-        int32_t playFinishedStreamID, int32_t loadSoundId, ERROR_TYPE errorType) const;
+    ani_object ToErrorInfo(ani_env *env, const std::pair<int32_t, std::string>& errorPair,
+        ERROR_TYPE errorType, int32_t soundId, int32_t streamId) const;
+    ani_status ToAniEnum(ani_env *env, ERROR_TYPE errorType, ani_enum_item &aniEnumItem) const;
+    ani_object IntToAniObject(ani_env *env, int32_t value) const;
     uintptr_t GetUndefined(ani_env* env) const;
     std::shared_ptr<OHOS::AppExecFwk::EventHandler> mainHandler_ = nullptr;
 protected:

@@ -1359,6 +1359,7 @@ void HiPlayerImpl::NotifySeek(Status rtv, bool flag, int64_t seekPos)
 int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
 {
     MediaTrace trace("HiPlayerImpl::Seek.");
+    AutoLock lock(handleCompleteMutex_);
     if (IsInValidSeekTime(mSeconds)) {
         MEDIA_LOG_E("Current seek time is not at playRange");
         auto errCode = TransStatus(Status::ERROR_INVALID_PARAMETER);
@@ -1677,6 +1678,10 @@ int32_t HiPlayerImpl::SetParameter(const Format& params)
         int32_t syncId = DEFAULT_SYNC_ID;
         params.GetIntValue(PlayerKeys::PLAYER_AUDIO_HAPTICS_SYNC_ID, syncId);
         (void)SetAudioHapticsSyncId(syncId);
+    }
+
+    if (params.ContainKey(PlayerKeys::PRIVACY_TYPE)) {
+        params.GetIntValue(PlayerKeys::PRIVACY_TYPE, audioPrivacyType_);
     }
 #ifdef SUPPORT_VIDEO
     if (params.ContainKey(PlayerKeys::VIDEO_SCALE_TYPE)) {
@@ -2393,6 +2398,18 @@ int32_t HiPlayerImpl::SetAudioRendererInfo(const int32_t contentType, const int3
     return TransStatus(Status::OK);
 }
 
+int32_t HiPlayerImpl::SetPrivacyType(const int32_t privacyType)
+{
+    MEDIA_LOG_D("SetPrivacyType, privacyType is: %{public}d", privacyType);
+    privacyType_ = std::make_shared<Meta>();
+
+    privacyType_->SetData("PRIVACY_TYPE", privacyType);
+    if (audioSink_ != nullptr) {
+        audioSink_->SetParameter(privacyType_);
+    }
+    return TransStatus(Status::OK);
+}
+
 int32_t HiPlayerImpl::SetAudioInterruptMode(const int32_t interruptMode)
 {
     MEDIA_LOG_I("SetAudioInterruptMode in");
@@ -3026,7 +3043,7 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
     NotifyBufferEnd();
     
     MEDIA_LOG_D_SHORT("NotifySeekDone seekPos: %{public}d", seekPos);
-    syncManager_->UpdataPausedMediaTime(seekPos);
+    syncManager_->UpdataPausedMediaTime(seekPos * TIME_CONVERSION_UNIT);
     callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, seekPos, format);
     callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, seekPos, format);
 }
@@ -3399,6 +3416,7 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
         SetDefaultAudioRenderInfo(trackInfos);
     }
     SetAudioRendererParameter();
+    SetPrivacyType(audioPrivacyType_);
     audioSink_->SetSyncCenter(syncManager_);
 
     completeState_.emplace_back(std::make_pair("AudioSink", false));
@@ -4017,6 +4035,7 @@ void HiPlayerImpl::DoInitDemuxer()
         ScopedTimer timer("Demuxer Init", DEMUXER_INIT_WARNING_MS);
         demuxer_->Init(playerEventReceiver_, playerFilterCallback_, interruptMonitor_);
     }
+    (void)demuxer_->SetPlayerMode();
 }
 
 Status HiPlayerImpl::InitVideoDecoder()
@@ -4086,7 +4105,6 @@ void HiPlayerImpl::CacheBuffer()
 {
     FALSE_RETURN(demuxer_ != nullptr && !demuxer_->IsAudioDemuxDecodeAsync() && audioSink_ != nullptr);
     Status ret = Status::OK;
-    audioSink_->Pause();
     ret = audioSink_->CacheBuffer();
     FALSE_RETURN(ret != Status::OK);
     UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);

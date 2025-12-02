@@ -51,11 +51,12 @@ public:
     static ani_object ToAudioStandardInterruptEvent(ani_env *env,
         const OHOS::AudioStandard::InterruptEvent &interruptEvent);
     static ani_status ToAniEnum(ani_env *env, OHOS::AudioStandard::StreamUsage value,
-    ani_enum_item &aniEnumItem);
+        ani_enum_item &aniEnumItem);
     static ani_status VolumeModeToAniEnum(ani_env *env, int32_t value,
-    ani_enum_item &aniEnumItem);
+        ani_enum_item &aniEnumItem);
     static ani_object CreateAudioRendererInfo(ani_env *env,
-    std::unique_ptr<OHOS::AudioStandard::AudioRendererInfo> &audioRendererInfo);
+        std::unique_ptr<OHOS::AudioStandard::AudioRendererInfo> &audioRendererInfo);
+    static ani_status ToAniLongObject(ani_env *env, int64_t src, ani_object &aniObj);
 };
 
 struct AutoRef {

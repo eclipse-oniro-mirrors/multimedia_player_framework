@@ -100,7 +100,7 @@ optional<AVDataSrcDescriptor> AVMetadataExtractorImpl::GetDataSrc()
     return optional<AVDataSrcDescriptor>(std::in_place_t{}, fdSrc);
 }
 
-void AVMetadataExtractorImpl::SetUrlSourceSync(::taihe::string_view url, optional_view<map<string, string>> header)
+void AVMetadataExtractorImpl::SetUrlSource(::taihe::string_view url, optional_view<map<string, string>> header)
 {
     OHOS::Media::MediaTrace trace("AVMetadataExtractorTaihe::setUrlSource");
     MEDIA_LOGI("TaiheSetUrlSource In");
@@ -267,6 +267,7 @@ void AVMetadataExtractorImpl::SetMetadataProperty(std::shared_ptr<OHOS::Media::M
         if (key == "customInfo") {
             std::shared_ptr<OHOS::Media::Meta> customData = std::make_shared<OHOS::Media::Meta>();
             CHECK_AND_CONTINUE_LOG(metadata->GetData(key, customData), "GetData failed, key %{public}s", key.c_str());
+            CHECK_AND_CONTINUE_LOG(customData != nullptr, "customData is nullptr");
             for (auto iter = customData->begin(); iter != customData->end(); ++iter) {
                 OHOS::Media::AnyValueType type = customData->GetValueType(iter->first);
                 CHECK_AND_CONTINUE_LOG(type == OHOS::Media::AnyValueType::STRING, "key is not string");
@@ -416,9 +417,10 @@ int64_t AVMetadataExtractorImpl::GetTimeByFrameIndexSync(int32_t index)
 optional<::ohos::multimedia::image::image::PixelMap> AVMetadataExtractorImpl::FetchFrameByTimeSync(int64_t timeUs,
     AVImageQueryOptions options, PixelMapParams const& param)
 {
-    OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::TaiheFetchFrameAtTime");
-    MEDIA_LOGI("TaiheFetchFrameAtTime  in");
-    if (state_ != OHOS::Media::HelperState::HELPER_STATE_RUNNABLE) {
+    OHOS::Media::MediaTrace trace("AVMetadataExtractorTaihe::TaiheFetchFrameAtTime");
+    MEDIA_LOGI("TaiheFetchFrameAtTime in");
+    AVMetadataExtractorImpl *taihe = this;
+    if (taihe->state_ != OHOS::Media::HelperState::HELPER_STATE_RUNNABLE) {
         set_business_error(OHOS::Media::MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "Current state is not runnable, can't fetchFrame.");
         return optional<::ohos::multimedia::image::image::PixelMap>(std::nullopt);

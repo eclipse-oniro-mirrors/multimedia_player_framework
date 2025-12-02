@@ -163,7 +163,8 @@ void AVTransCoderCallback::OnJsCompleteCallBack(AVTransCoderJsCallback *jsCb) co
         delete event;
     };
 
-    auto ret = napi_send_event(env_, task, napi_eprio_immediate);
+    std::string taskname = "OnJsCompleteCallBack";
+    auto ret = napi_send_event(env_, task, napi_eprio_immediate, taskname.c_str());
     if (ret != napi_status::napi_ok) {
         MEDIA_LOGE("Failed to SendEvent, ret = %{public}d", ret);
         delete jsCb;
@@ -204,7 +205,8 @@ void AVTransCoderCallback::OnJsProgressUpdateCallback(AVTransCoderJsCallback *js
         delete event;
     };
 
-    auto ret = napi_send_event(env_, task, napi_eprio_immediate);
+    std::string taskname = "OnJsProgressUpdateCallback";
+    auto ret = napi_send_event(env_, task, napi_eprio_immediate, taskname.c_str());
     if (ret != napi_status::napi_ok) {
         MEDIA_LOGE("Failed to SendEvent, ret = %{public}d", ret);
         delete jsCb;
@@ -259,7 +261,8 @@ void AVTransCoderCallback::OnJsErrorCallBack(AVTransCoderJsCallback *jsCb) const
         delete event;
     };
 
-    auto ret = napi_send_event(env_, task, napi_eprio_immediate);
+    std::string taskname = "OnJsErrorCallBack";
+    auto ret = napi_send_event(env_, task, napi_eprio_immediate, taskname.c_str());
     if (ret != napi_status::napi_ok) {
         MEDIA_LOGE("Failed to SendEvent, ret = %{public}d", ret);
         delete jsCb;

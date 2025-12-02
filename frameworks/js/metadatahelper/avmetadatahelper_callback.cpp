@@ -101,12 +101,13 @@ public:
     static void CompleteCallback(napi_env env, NapiCallback::Base *jsCb)
     {
         CHECK_AND_RETURN(jsCb != nullptr);
+        std::string taskname = "CompleteCallback";
         napi_status ret = napi_send_event(env, [jsCb] () {
             CHECK_AND_RETURN_LOG(jsCb != nullptr, "jsCb is nullptr");
             MEDIA_LOGI("JsCallBack %{public}s start", jsCb->callbackName.c_str());
             jsCb->UvWork();
             delete jsCb;
-        }, napi_eprio_high);
+        }, napi_eprio_high, taskname.c_str());
         if (ret != napi_ok) {
             MEDIA_LOGE("Failed to execute libuv work queue, ret = %{public}d", ret);
             delete jsCb;

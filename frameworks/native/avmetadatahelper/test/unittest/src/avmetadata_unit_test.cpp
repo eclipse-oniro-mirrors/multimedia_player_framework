@@ -975,6 +975,55 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0600, Level2)
 }
 
 /**
+    * @tc.number    : FetchFrameYuv_API_0700
+    * @tc.name      : FetchFrameYuv mbaff.mp4
+    * @tc.desc      : FetchFrameYuv API
+*/
+HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0700, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("mbaff.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    int64_t time = 0;
+    PixelMapParams param;
+    param.convertColorSpace = false;
+    auto pixelMap = helper->FetchFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 1920);
+    ASSERT_EQ(pixelMap->GetHeight(), 1080);
+}
+
+/**
+    * @tc.number    : FetchFrameYuv_API_0800
+    * @tc.name      : FetchFrameYuv H264_AAC.mp4 abnormal
+    * @tc.desc      : FetchFrameYuv API
+*/
+HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0800, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("H264_AAC.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    int64_t time = 0;
+    PixelMapParams param;
+    param.dstWidth = 360;
+    param.dstHeight = 240;
+    auto pixelMap = helper->FetchFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 360);
+    ASSERT_EQ(pixelMap->GetHeight(), 240);
+
+    param.dstWidth = 500;
+    param.dstHeight = 1000;
+    pixelMap = helper->FetchFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 720);
+    ASSERT_EQ(pixelMap->GetHeight(), 480);
+}
+
+/**
     * @tc.number    : FetchScaledFrameYuv_API_0100
     * @tc.name      : FetchScaledFrameYuv H264_AAC.mp4 custom scaling
     * @tc.desc      : FetchScaledFrameYuv API

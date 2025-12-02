@@ -84,7 +84,6 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
     };
 
     napi_property_descriptor properties[] = {
-        DECLARE_NAPI_FUNCTION("prepare", JsPrepare),
         DECLARE_NAPI_FUNCTION("play", JsPlay),
         DECLARE_NAPI_FUNCTION("pause", JsPause),
         DECLARE_NAPI_FUNCTION("stop", JsStop),
@@ -110,7 +109,6 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getCurrentTrack", JsGetCurrentTrack),
         DECLARE_NAPI_FUNCTION("addSubtitleUrl", JsAddSubtitleUrl),
         DECLARE_NAPI_FUNCTION("addSubtitleFdSrc", JsAddSubtitleAVFileDescriptor),
-        DECLARE_NAPI_FUNCTION("addSubtitleFromUrl", JsAddSubtitleUrl),
         DECLARE_NAPI_FUNCTION("addSubtitleFromFd", JsAddSubtitleAVFileDescriptor),
         DECLARE_NAPI_FUNCTION("setDecryptionConfig", JsSetDecryptConfig),
         DECLARE_NAPI_FUNCTION("getMediaKeySystemInfos", JsGetMediaKeySystemInfos),
@@ -121,6 +119,9 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getPlaybackPosition", JsGetPlaybackPosition),
         DECLARE_NAPI_FUNCTION("forceLoadVideo", JsForceLoadVideo),
 
+        DECLARE_NAPI_WRITABLE_FUNCTION("prepare", JsPrepare),
+        DECLARE_NAPI_WRITABLE_FUNCTION("addSubtitleFromUrl", JsAddSubtitleUrl),
+
         DECLARE_NAPI_GETTER_SETTER("url", JsGetUrl, JsSetUrl),
         DECLARE_NAPI_GETTER_SETTER("fdSrc", JsGetAVFileDescriptor, JsSetAVFileDescriptor),
         DECLARE_NAPI_GETTER_SETTER("dataSrc", JsGetDataSrc, JsSetDataSrc),
@@ -129,6 +130,7 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_GETTER_SETTER("videoScaleType", JsGetVideoScaleType, JsSetVideoScaleType),
         DECLARE_NAPI_GETTER_SETTER("audioInterruptMode", JsGetAudioInterruptMode, JsSetAudioInterruptMode),
         DECLARE_NAPI_GETTER_SETTER("audioRendererInfo", JsGetAudioRendererInfo, JsSetAudioRendererInfo),
+        DECLARE_NAPI_GETTER_SETTER("privacyType", JsGetPrivacyType, JsSetPrivacyType),
         DECLARE_NAPI_GETTER_SETTER("audioEffectMode", JsGetAudioEffectMode, JsSetAudioEffectMode),
 
         DECLARE_NAPI_SETTER("enableStartFrameRateOpt", JsSetStartFrameRateOptEnabled),
@@ -2646,6 +2648,49 @@ napi_value AVPlayerNapi::JsSetAudioRendererInfo(napi_env env, napi_callback_info
     return result;
 }
 
+napi_value AVPlayerNapi::JsSetPrivacyType(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::set privacyType");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsSetPrivacyType In");
+
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+    napi_valuetype valueType = napi_undefined;
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check the input");
+        return result;
+    }
+    if (jsPlayer->GetCurrentState() != AVPlayerState::STATE_INITIALIZED) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not initialized, unsupport to set audio renderer info");
+        return result;
+    }
+
+    int32_t privacyType = 0;
+    napi_status status = napi_get_value_int32(env, args[0], &privacyType);
+    if (status != napi_ok || privacyType < 0) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check the input privacyType");
+        return result;
+    }
+    jsPlayer->privacyType_ = privacyType;
+
+    auto task = std::make_shared<TaskHandler<void>>([jsPlayer, privacyType]() {
+        MEDIA_LOGI("SetPrivacyType Task");
+        if (jsPlayer->player_ != nullptr) {
+            Format format;
+            (void)format.PutIntValue(PlayerKeys::PRIVACY_TYPE, privacyType);
+            (void)jsPlayer->player_->SetParameter(format);
+        }
+    });
+    (void)jsPlayer->taskQue_->EnqueueTask(task);
+    MEDIA_LOGI("JsSetPrivacyType Out");
+    return result;
+}
+
 napi_value AVPlayerNapi::JsGetAudioRendererInfo(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVPlayerNapi::get audioRendererInfo");
@@ -2667,6 +2712,21 @@ napi_value AVPlayerNapi::JsGetAudioRendererInfo(napi_env env, napi_callback_info
     CommonNapi::SetPropertyInt32(env, result, "volumeMode", volumeMode);
     MEDIA_LOGI("JsGetAudioRendererInfo Out");
     return result;
+}
+
+napi_value AVPlayerNapi::JsGetPrivacyType(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::get privacyType");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsGetPrivacyType In");
+
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
+    napi_value value = nullptr;
+    (void)napi_create_int32(env, static_cast<int32_t>(jsPlayer->privacyType_), &value);
+    MEDIA_LOGI("JsGetPrivacyType Out");
+    return value;
 }
 
 napi_value AVPlayerNapi::JsGetCurrentTime(napi_env env, napi_callback_info info)

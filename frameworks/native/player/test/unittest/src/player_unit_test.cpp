@@ -4973,9 +4973,6 @@ HWTEST_F(PlayerUnitTest, Player_SetCameraPostprocessing_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     ASSERT_EQ(MSERR_OK, player_->SetCameraPostprocessing(false));
     EXPECT_EQ(MSERR_OK, player_->Play());
-    EXPECT_EQ(MSERR_OK, player_->Pause());
-    ASSERT_EQ(MSERR_OK, player_->SetCameraPostprocessing(true));
-    EXPECT_EQ(MSERR_OK, player_->Play());
 }
 
 /**
@@ -4991,7 +4988,7 @@ HWTEST_F(PlayerUnitTest, Player_SetCameraPostprocessing_002, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
     ASSERT_EQ(MSERR_OK, player_->EnableCameraPostprocessing());
     EXPECT_EQ(MSERR_OK, player_->Prepare());
-    ASSERT_EQ(MSERR_OK, player_->SetCameraPostprocessing(false));
+    ASSERT_EQ(MSERR_OK, player_->SetCameraPostprocessing(true));
     EXPECT_EQ(MSERR_OK, player_->Play());
 }
 

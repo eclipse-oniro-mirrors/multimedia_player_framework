@@ -32,6 +32,7 @@ void UIExtensionAbilityConnection::OnAbilityConnectDone(const AppExecFwk::Elemen
     const sptr<IRemoteObject> &remoteObject, int32_t resultCode)
 {
     CHECK_AND_RETURN_LOG(status_ == ConnectStatus::UNKNOWN, "status is not UNKNOWN");
+    CHECK_AND_RETURN_LOG(remoteObject != nullptr, "remoteObject is nullptr");
     status_ = ConnectStatus::STARTING;
     MessageParcel data;
     MessageParcel reply;
@@ -47,7 +48,8 @@ void UIExtensionAbilityConnection::OnAbilityConnectDone(const AppExecFwk::Elemen
     data.WriteString16(u"parameters");
     data.WriteString16(Str8ToStr16(commandStr_));
     MEDIA_LOGI("UIExtensionAbilityConnection::OnAbilityConnectDone start");
-    remoteObject->SendRequest(IAbilityConnection::ON_ABILITY_CONNECT_DONE, data, reply, option);
+    auto ret = remoteObject->SendRequest(IAbilityConnection::ON_ABILITY_CONNECT_DONE, data, reply, option);
+    CHECK_AND_RETURN_LOG(ret == MSERR_OK, "on ability connect done failed, error: %{public}d", ret);
     if (status_ == ConnectStatus::STARTING) {
         status_ = ConnectStatus::STARTED;
     } else if (status_ == ConnectStatus::CLOSING) {

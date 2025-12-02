@@ -108,8 +108,7 @@ int32_t AVMetadataHelperServiceStub::DestroyStub()
 int AVMetadataHelperServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Stub: OnRemoteRequest of code: %{public}u is received",
-        FAKE_POINTER(this), code);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnRemoteRequest: %{public}u", FAKE_POINTER(this), code);
 
     auto remoteDescriptor = data.ReadInterfaceToken();
     if (AVMetadataHelperServiceStub::GetDescriptor() != remoteDescriptor) {
@@ -346,7 +345,7 @@ int32_t AVMetadataHelperServiceStub::GetAVMetadata(MessageParcel &data, MessageP
 {
     (void)data;
     bool ret = true;
-    std::shared_ptr<Meta> customInfo = std::make_shared<Meta>();
+    std::shared_ptr<Meta> customInfo;
     std::vector<Format> tracksVec;
     auto metadata = GetAVMetadata();
     if (metadata == nullptr) {
@@ -357,6 +356,10 @@ int32_t AVMetadataHelperServiceStub::GetAVMetadata(MessageParcel &data, MessageP
     auto iter = metadata->Find("customInfo");
     if (iter != metadata->end()) {
         ret &= metadata->GetData("customInfo", customInfo);
+    }
+    if (customInfo == nullptr) {
+        MEDIA_LOGE("customInfo is null");
+        customInfo = std::make_shared<Meta>();
     }
     ret &= reply.WriteString("customInfo");
     ret &= customInfo->ToParcel(reply);

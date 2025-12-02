@@ -146,7 +146,8 @@ void AVScreenCaptureCallback::OnJsErrorCallBack(AVScreenCaptureJsCallback *jsCb)
         } while (0);
         delete jsCb;
     };
-    CHECK_AND_RETURN_LOG(napi_send_event(env_, task, napi_eprio_immediate) == napi_status::napi_ok,
+    CHECK_AND_RETURN_LOG(napi_send_event(env_, task, napi_eprio_immediate,
+        AVScreenCaptureCallbackNapiTask::ON_JS_ERROR_CALLBACK.c_str()) == napi_status::napi_ok,
         "OnJsErrorCallBack napi_send_event failed");
 
     CANCEL_SCOPE_EXIT_GUARD(0);
@@ -188,7 +189,8 @@ void AVScreenCaptureCallback::OnJsStateChangeCallBack(AVScreenCaptureJsCallback 
         } while (0);
         delete jsCb;
     };
-    CHECK_AND_RETURN_LOG(napi_send_event(env_, task, napi_eprio_immediate) == napi_status::napi_ok,
+    CHECK_AND_RETURN_LOG(napi_send_event(env_, task, napi_eprio_immediate,
+        AVScreenCaptureCallbackNapiTask::ON_JS_STATE_CHANGE_CALLBACK.c_str()) == napi_status::napi_ok,
         "OnJsStateChangeCallBack napi_send_event failed");
 
     CANCEL_SCOPE_EXIT_GUARD(0);

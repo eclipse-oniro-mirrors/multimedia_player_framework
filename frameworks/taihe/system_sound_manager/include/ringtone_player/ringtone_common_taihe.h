@@ -51,6 +51,7 @@ const std::string TAIHE_ERR_NO_MEMORY_INFO = "allocate memory failed";
 const std::string TAIHE_ERR_SYSTEM_INFO = "system error";
 const std::string TAIHE_ERR_PARAM_CHECK_ERROR_INFO = "Parameter check error";
 const std::string TAIHE_ERR_UNSUPPORTED_OPERATION_INFO = "Unsupported operation";
+const std::string TAIHE_ERR_URILIST_OVER_LIMIT_INFO = "Parameter is invalid, e.g. the length of uriList is too long";
 
 class RingtoneCommonTaihe {
 public:

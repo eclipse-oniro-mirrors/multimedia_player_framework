@@ -125,6 +125,32 @@ void ScreenCaptureMonitorCallback::OnScreenCaptureFinished(int32_t pid)
     }
 }
 
+void ScreenCaptureMonitorCallback::OnScreenCaptureDied()
+{
+    MEDIA_LOGI("ScreenCaptureMonitorCallback::OnScreenCaptureDied S");
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (refMap_.find(EVENT_SYSTEM_SCREEN_RECORD) == refMap_.end()) {
+        MEDIA_LOGW("can not find systemScreenRecorder callback!");
+        return;
+    }
+
+    ScreenCaptureMonitorAniCallback *cb = new(std::nothrow) ScreenCaptureMonitorAniCallback();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
+    cb->autoRef = refMap_.at(EVENT_SYSTEM_SCREEN_RECORD);
+    cb->callbackName = EVENT_SYSTEM_SCREEN_RECORD;
+    cb->captureEvent = ScreenCaptureMonitorEvent::SCREENCAPTURE_DIED;
+    MEDIA_LOGI("ScreenCaptureMonitorCallback::OnScreenCaptureDied E");
+    auto task = [this, cb]() {
+        this->OnTaiheCaptureCallBack(cb);
+    };
+    bool ret = mainHandler_->PostTask(task, "OnScreenCaptureDied", 0,
+        OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    if (!ret) {
+        MEDIA_LOGE("Failed to PostTask!");
+        delete cb;
+    }
+}
+
 void ScreenCaptureMonitorCallback::OnTaiheCaptureCallBack(ScreenCaptureMonitorAniCallback *taiheCb) const
 {
     std::string request = taiheCb->callbackName;

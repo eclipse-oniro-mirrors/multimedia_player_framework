@@ -62,6 +62,10 @@ const char* OH_PLAYER_TRACK_IS_SELECT = PlayerKeys::PLAYER_IS_SELECT.data();
 const char* OH_PLAYER_SUBTITLE_TEXT = PlayerKeys::SUBTITLE_TEXT.data();
 const char* OH_PLAYER_SUBTITLE_PTS = PlayerKeys::SUBTITLE_PTS.data();
 const char* OH_PLAYER_SUBTITLE_DURATION = PlayerKeys::SUBTITLE_DURATION.data();
+const char* OH_PLAYER_MD_KEY_HAS_VIDEO = PlayerKeys::PLAYER_HAS_VIDEO.data();
+const char* OH_PLAYER_MD_KEY_HAS_AUDIO = PlayerKeys::PLAYER_HAS_AUDIO.data();
+const char* OH_PLAYER_MD_KEY_HAS_SUBTITLE = PlayerKeys::PLAYER_HAS_SUBTITLE.data();
+const char* OH_PLAYER_MD_KEY_TRACK_INDEX = PlayerKeys::PLAYER_TRACK_INDEX.data();
 
 typedef struct PlayerErrorCodeApi9Convert {
     MediaServiceExtErrCodeAPI9 errorCodeApi9;
@@ -1492,12 +1496,11 @@ OH_AVFormat *OH_AVPlayer_GetMediaDescription(OH_AVPlayer *player)
     CHECK_AND_RETURN_RET_LOG(player != nullptr, nullptr, "SetOnInfo input player is nullptr!");
 
     OHOS::Media::Format format;
-    OH_AVFormat *avFormat = OH_AVFormat_Create();
-    CHECK_AND_RETURN_RET_LOG(avFormat != nullptr, nullptr, "Format is nullptr!");
-
     struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
     CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, nullptr, "player_ is null");
     playerObj->player_->GetMediaDescription(format);
+    OH_AVFormat *avFormat = OH_AVFormat_Create();
+    CHECK_AND_RETURN_RET_LOG(avFormat != nullptr, nullptr, "Format is nullptr!");
     avFormat->format_ = format;
     return avFormat;
 }
@@ -1508,13 +1511,12 @@ OH_AVFormat *OH_AVPlayer_GetTrackDescription(OH_AVPlayer *player, uint32_t index
     CHECK_AND_RETURN_RET_LOG(player != nullptr, nullptr, "SetOnInfo input player is nullptr!");
 
     OHOS::Media::Format format;
-    OH_AVFormat *avFormat = OH_AVFormat_Create();
-    CHECK_AND_RETURN_RET_LOG(avFormat != nullptr, nullptr, "Format is nullptr!");
-
     struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
     CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, nullptr, "player_ is null");
     int32_t ret = playerObj->player_->GetTrackDescription(format, index);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "player GetTrackDescription failed");
+    OH_AVFormat *avFormat = OH_AVFormat_Create();
+    CHECK_AND_RETURN_RET_LOG(avFormat != nullptr, nullptr, "Format is nullptr!");
     avFormat->format_ = format;
     return avFormat;
 }

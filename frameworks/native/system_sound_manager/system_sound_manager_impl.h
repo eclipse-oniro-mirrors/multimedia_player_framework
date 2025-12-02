@@ -183,6 +183,8 @@ private:
         RingtoneType ringtoneType, SourceType sourceType);
     int32_t UpdateRingtoneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, const int32_t &toneId,
         RingtoneType ringtoneType, const int32_t &num);
+    int32_t SetSystemToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const std::string &uri, SystemToneType systemToneType);
     std::string GetShotToneUriByType(const DatabaseTool &databaseTool, const std::string &type);
     ToneAttrs GetShotToneAttrsByType(const DatabaseTool &databaseTool, const std::string &type);
     std::string GetNotificationToneUriByType(const DatabaseTool &databaseTool);
@@ -195,6 +197,10 @@ private:
     int32_t UpdateShotToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, const int32_t &toneId,
         SystemToneType systemToneType, const int32_t &num);
     int32_t OpenToneUri(const DatabaseTool &databaseTool, const std::string &uri, int32_t toneType);
+    int32_t OpenToneFile(const DatabaseTool &databaseTool,
+        const std::string &uri, int32_t toneType, int32_t toneId);
+    std::string OpenAudioFile(const DatabaseTool &databaseTool, const std::string &uri, int32_t audioId);
+    std::string OpenHapticsFile(const DatabaseTool &databaseTool, const std::string &hapticsUri, int32_t hapticsId);
     int32_t OpenCustomToneUri(const std::string &customAudioUri, int32_t toneType);
     int32_t UpdateNotificatioToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         const int32_t &toneId);
@@ -215,6 +221,8 @@ private:
     std::unique_ptr<SimcardSettingAsset> GetSimcardSettingAssetByToneHapticsType(const DatabaseTool &databaseTool,
         ToneHapticsType toneHapticsType);
 
+    std::string GetHapticsUriByStyle(const DatabaseTool &databaseTool,
+        const std::string &standardHapticsUri, HapticsStyle hapticsStyle, const std::string &vibrateFilesUri);
     std::string GetToneSyncedHapticsUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         const std::string &toneUri);
     std::string GetDefaultNonSyncedHapticsUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
@@ -244,6 +252,7 @@ private:
     int32_t SetExtRingToneUri(const std::string &uri, const std::string &title, int32_t toneType);
     void SendCustomizedToneEvent(bool flag, const std::shared_ptr<ToneAttrs> &toneAttrs, off_t fileSize,
         std::string mimeType, int result);
+    void SendPlaybackFailedEvent(const int32_t &errorCode);
     std::string CustomizedToneWriteFile(std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
         const std::shared_ptr<ToneAttrs> &toneAttrs, ParamsForAddCustomizedTone &paramsForAddCustomizedTone);
     void OpenOneFile(std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
