@@ -1048,13 +1048,14 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
     DestroyLppAudioPlayerStubForPid(pid);
     DestroyLppVideoPlayerStubForPid(pid);
     MonitorServiceStub::GetInstance()->OnClientDie(pid);
+    setClearCallBack([this]() {
+        CHECK_AND_RETURN_NOLOG(GetStubMapCountIsEmpty());
+        SetCritical(false);
+    });
     executor_.Clear();
 #ifdef SUPPORT_START_STOP_ON_DEMAND
     UpdateAllInstancesReleasedTime();
 #endif
-
-    CHECK_AND_RETURN_NOLOG(GetStubMapCountIsEmpty());
-    SetCritical(false);
 }
 
 std::vector<pid_t> MediaServerManager::GetPlayerPids()
@@ -1224,7 +1225,23 @@ void MediaServerManager::AsyncExecutor::HandleAsyncExecution()
         std::lock_guard<std::mutex> lock(listMutex_);
         freeList_.swap(tempList);
     }
+    int times = 0;
+    while (times < 5) {
+        bool allStubsRefCountLessOrEqual1 =false;
+        for (auto& item : tempList) {
+            int refCount = item->GetSptrRefCount();
+            allStubsRefCountLessOrEqual1 = refCount > 1 ? true : false;
+        }
+        CHECK_AND_BREAK(allStubsRefCountLessOrEqual1);
+        sleep(1);
+    }
     tempList.clear();
+    callBack_();
+}
+
+void MediaServerManager::AsyncExecutor::setClearCallBack(std::function<void()> callBack){
+    std::lock_guard<std::mutex> lock(listMutex_);
+    callBack_ = callBack;
 }
 
 #ifdef SUPPORT_START_STOP_ON_DEMAND

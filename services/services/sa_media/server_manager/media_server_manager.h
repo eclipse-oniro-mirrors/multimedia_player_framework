@@ -142,10 +142,12 @@ private:
         virtual ~AsyncExecutor() = default;
         void Commit(sptr<IRemoteObject> obj);
         void Clear();
+        void setClearCallBack(std::function<void()> callBack);
     private:
         void HandleAsyncExecution();
         std::list<sptr<IRemoteObject>> freeList_;
         std::mutex listMutex_;
+        std::function<void()> callBack_;
     };
     std::map<sptr<IRemoteObject>, pid_t> recorderStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> transCoderStubMap_;
