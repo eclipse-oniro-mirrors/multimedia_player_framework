@@ -1049,7 +1049,7 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
     DestroyLppAudioPlayerStubForPid(pid);
     DestroyLppVideoPlayerStubForPid(pid);
     MonitorServiceStub::GetInstance()->OnClientDie(pid);
-    executor_.setClearCallBack([this]() {
+    executor_.SetClearCallBack([this]() {
         CHECK_AND_RETURN_NOLOG(GetStubMapCountIsEmpty());
         SetCritical(false);
     });
@@ -1226,7 +1226,7 @@ void MediaServerManager::AsyncExecutor::HandleAsyncExecution()
         std::lock_guard<std::mutex> lock(listMutex_);
         freeList_.swap(tempList);
     }
-    int times = 0;
+    int32_t times = 0;
     while (times < MAX_TIMES) {
         bool allStubsRefCountLessOrEqual1 = false;
         for (auto& item : tempList) {
@@ -1235,6 +1235,7 @@ void MediaServerManager::AsyncExecutor::HandleAsyncExecution()
         }
         CHECK_AND_BREAK(allStubsRefCountLessOrEqual1);
         sleep(1);
+        times++;
     }
     tempList.clear();
     callBack_();
