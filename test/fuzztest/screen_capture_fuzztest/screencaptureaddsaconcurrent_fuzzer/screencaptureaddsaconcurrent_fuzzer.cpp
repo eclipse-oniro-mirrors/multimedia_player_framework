@@ -54,28 +54,27 @@ enum ScreenCaptureServiceMsg {
     INIT_VIDEO_ENC_INFO = 7,
     INIT_VIDEO_CAP = 8,
     ACQUIRE_AUDIO_BUF = 9,
-    ACQUIRE_VIDEO_BUF = 10,
-    RELEASE_AUDIO_BUF = 11,
-    RELEASE_VIDEO_BUF = 12,
-    SET_MIC_ENABLE = 13,
-    START_SCREEN_CAPTURE = 14,
-    START_SCREEN_CAPTURE_WITH_SURFACE = 15,
-    STOP_SCREEN_CAPTURE = 16,
-    SET_SCREEN_ROTATION = 17,
-    EXCLUDE_CONTENT = 18,
-    RESIZE_CANVAS = 19,
-    SKIP_PRIVACY = 20,
-    SET_MAX_FRAME_RATE = 21,
-    SHOW_CURSOR = 22,
-    SET_CHECK_SA_LIMIT = 23,
-    SET_CHECK_LIMIT = 24,
-    SET_STRATEGY = 25,
-    UPDATE_SURFACE = 26,
-    SET_CAPTURE_AREA = 27,
-    SET_HIGH_LIGHT_MODE = 28,
-    PRESENT_PICKER = 29,
-    EXCLUDE_PICKER_WINDOWS = 30,
-    SET_PICKER_MODE = 31,
+    RELEASE_AUDIO_BUF = 10,
+    RELEASE_VIDEO_BUF = 11,
+    SET_MIC_ENABLE = 12,
+    START_SCREEN_CAPTURE = 13,
+    START_SCREEN_CAPTURE_WITH_SURFACE = 14,
+    STOP_SCREEN_CAPTURE = 15,
+    SET_SCREEN_ROTATION = 16,
+    EXCLUDE_CONTENT = 17,
+    RESIZE_CANVAS = 18,
+    SKIP_PRIVACY = 19,
+    SET_MAX_FRAME_RATE = 20,
+    SHOW_CURSOR = 21,
+    SET_CHECK_SA_LIMIT = 22,
+    SET_CHECK_LIMIT = 23,
+    SET_STRATEGY = 24,
+    UPDATE_SURFACE = 25,
+    SET_CAPTURE_AREA = 26,
+    SET_HIGH_LIGHT_MODE = 27,
+    PRESENT_PICKER = 28,
+    EXCLUDE_PICKER_WINDOWS = 29,
+    SET_PICKER_MODE = 30,
 };
 ScreenCaptureAddSaConcurrentFuzzer::ScreenCaptureAddSaConcurrentFuzzer()
 {
@@ -85,15 +84,42 @@ ScreenCaptureAddSaConcurrentFuzzer::~ScreenCaptureAddSaConcurrentFuzzer()
 {
 }
 
+RecorderInfo recorderInfo_;
+AudioEncInfo audioEncInfo_;
+AudioCaptureInfo innerCapInfo_;
+AudioCaptureInfo micCapInfo_;
+VideoEncInfo videoEncInfo_;
+VideoCaptureInfo videoCapInfo_;
+OHOS::Rect rect_;
 std::shared_ptr<ScreenCaptureServer> screenCaptureServer_ = nullptr;
 
-extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
-{
+extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv) {
     std::shared_ptr<IScreenCaptureService> tempServer_ = ScreenCaptureServer::Create();
     if (tempServer_ == nullptr) {
         return 0;
     }
     screenCaptureServer_ = std::static_pointer_cast<ScreenCaptureServer>(tempServer_);
+    int outputFd = open("/data/test/media/screen_capture_fuzz_server_start_file_01.mp4", O_RDWR);
+    recorderInfo_.url = "fd://" + std::to_string(outputFd);
+    recorderInfo_.fileFormat = "mp4";
+    audioEncInfo_.audioBitrate = AUDIO_BIT_RATE;
+    audioEncInfo_.audioCodecformat = AudioCodecFormat::AAC_LC;
+    innerCapInfo_.audioChannels = AUDIO_CHANNELS;
+    innerCapInfo_.audioSampleRate = AUDIO_SAMPLE_RATE;
+    innerCapInfo_.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
+    micCapInfo_.audioChannels = AUDIO_CHANNELS;
+    micCapInfo_.audioSampleRate = AUDIO_SAMPLE_RATE;
+    micCapInfo_.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
+    videoEncInfo_.videoBitrate = VIDEO_BIT_RATE;
+    videoEncInfo_.videoFrameRate = VIDEO_FRAME_RATE;
+    videoEncInfo_.videoCodec = VideoCodecFormat::H264;
+    videoCapInfo_.videoFrameHeight = VIDEO_FRAME_HEIGHT;
+    videoCapInfo_.videoFrameWidth = VIDEO_FRAME_WIDTH;
+    videoCapInfo_.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+    rect_.x = RECT_X;
+    rect_.y = RECT_Y;
+    rect_.w = RECT_W;
+    rect_.h = RECT_H;
     return 0;
 }
 } // namespace OHOS
@@ -118,15 +144,11 @@ static std::vector<int32_t> ConsumeIntList32(FuzzedDataProvider& provider)
     return vec;
 }
 
-extern "C" int FuzzScreenCaptureConconcurrentTestOne(FuzzedDataProvider& provider)
+int FuzzScreenCaptureConconcurrentTestOne(FuzzedDataProvider& provider, int code)
 {
     if (screenCaptureServer_ == nullptr) {
         return 0;
     }
-    static const int ipccodes[] = {
-        0, 1, 2, 3, 4
-    };
-    int code = provider.PickValueInArray(ipccodes);
     switch (code) {
         case RELEASE: {
             screenCaptureServer_->Release();
@@ -141,11 +163,7 @@ extern "C" int FuzzScreenCaptureConconcurrentTestOne(FuzzedDataProvider& provide
             break;
         }
         case SET_RECORDER_INFO: {
-            int outputFd = open("/data/test/media/screen_capture_fuzz_server_start_file_01.mp4", O_RDWR);
-            RecorderInfo recorderInfo;
-            recorderInfo.url = "fd://" + std::to_string(outputFd);
-            recorderInfo.fileFormat = "mp4";
-            screenCaptureServer_->SetRecorderInfo(recorderInfo);
+            screenCaptureServer_->SetRecorderInfo(recorderInfo_);
             break;
         }
         case SET_OUTPUT_FILE: {
@@ -153,72 +171,33 @@ extern "C" int FuzzScreenCaptureConconcurrentTestOne(FuzzedDataProvider& provide
             screenCaptureServer_->SetOutputFile(outputFd);
             break;
         }
+        case INIT_AUDIO_ENC_INFO: {
+            screenCaptureServer_->InitAudioEncInfo(audioEncInfo_);
+            break;
+        }
         default:
             break;
     }
     return 0;
 }
 
-extern "C" int FuzzScreenCaptureConconcurrentTestTwo(FuzzedDataProvider& provider)
+int FuzzScreenCaptureConconcurrentTestTwo(FuzzedDataProvider& provider, int code)
 {
     if (screenCaptureServer_ == nullptr) {
         return 0;
     }
-    static const int ipccodes[] = {
-        5, 6, 7
-    };
-    int code = provider.PickValueInArray(ipccodes);
     switch (code) {
-        case INIT_AUDIO_ENC_INFO: {
-            AudioEncInfo audioEncInfo;
-            audioEncInfo.audioBitrate = AUDIO_BIT_RATE;
-            audioEncInfo.audioCodecformat = AudioCodecFormat::AAC_LC;
-            screenCaptureServer_->InitAudioEncInfo(audioEncInfo);
-            break;
-        }
         case INIT_AUDIO_CAP: {
-            AudioCaptureInfo innerCapInfo;
-            AudioCaptureInfo micCapInfo;
-            innerCapInfo.audioChannels = AUDIO_CHANNELS;
-            innerCapInfo.audioSampleRate = AUDIO_SAMPLE_RATE;
-            innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
-            micCapInfo.audioChannels = AUDIO_CHANNELS;
-            micCapInfo.audioSampleRate = AUDIO_SAMPLE_RATE;
-            micCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
-            screenCaptureServer_->InitAudioCap(micCapInfo);
-            screenCaptureServer_->InitAudioCap(innerCapInfo);
+            screenCaptureServer_->InitAudioCap(micCapInfo_);
+            screenCaptureServer_->InitAudioCap(innerCapInfo_);
             break;
         }
         case INIT_VIDEO_ENC_INFO: {
-            VideoEncInfo videoEncInfo;
-            videoEncInfo.videoBitrate = VIDEO_BIT_RATE;
-            videoEncInfo.videoFrameRate = VIDEO_FRAME_RATE;
-            videoEncInfo.videoCodec = VideoCodecFormat::H264;
-            screenCaptureServer_->InitVideoEncInfo(videoEncInfo);
+            screenCaptureServer_->InitVideoEncInfo(videoEncInfo_);
             break;
         }
-        default:
-            break;
-    }
-    return 0;
-}
-
-extern "C" int FuzzScreenCaptureConconcurrentTestThree(FuzzedDataProvider& provider)
-{
-    if (screenCaptureServer_ == nullptr) {
-        return 0;
-    }
-    static const int ipccodes[] = {
-        8, 9, 10, 11, 12
-    };
-    int code = provider.PickValueInArray(ipccodes);
-    switch (code) {
         case INIT_VIDEO_CAP: {
-            VideoCaptureInfo videoCapInfo;
-            videoCapInfo.videoFrameHeight = VIDEO_FRAME_HEIGHT;
-            videoCapInfo.videoFrameWidth = VIDEO_FRAME_WIDTH;
-            videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-            screenCaptureServer_->InitVideoCap(videoCapInfo);
+            screenCaptureServer_->InitVideoCap(videoCapInfo_);
             break;
         }
         case ACQUIRE_AUDIO_BUF: {
@@ -226,20 +205,8 @@ extern "C" int FuzzScreenCaptureConconcurrentTestThree(FuzzedDataProvider& provi
             screenCaptureServer_->AcquireAudioBuffer(audioBuffer, AudioCaptureSourceType::APP_PLAYBACK);
             break;
         }
-        case ACQUIRE_VIDEO_BUF: {
-            sptr<OHOS::SurfaceBuffer> surfaceBuffer;
-            int fence = provider.ConsumeIntegral<int>();
-            int64_t timestamp = provider.ConsumeIntegral<int64_t>();
-            OHOS::Rect damage;
-            screenCaptureServer_->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage);
-            break;
-        }
         case RELEASE_AUDIO_BUF: {
             screenCaptureServer_->ReleaseAudioBuffer(AudioCaptureSourceType::APP_PLAYBACK);
-            break;
-        }
-        case RELEASE_VIDEO_BUF: {
-            screenCaptureServer_->ReleaseVideoBuffer();
             break;
         }
         default:
@@ -248,16 +215,16 @@ extern "C" int FuzzScreenCaptureConconcurrentTestThree(FuzzedDataProvider& provi
     return 0;
 }
 
-extern "C" int FuzzScreenCaptureConconcurrentTestFour(FuzzedDataProvider& provider)
+int FuzzScreenCaptureConconcurrentTestThree(FuzzedDataProvider& provider, int code)
 {
     if (screenCaptureServer_ == nullptr) {
         return 0;
     }
-    static const int ipccodes[] = {
-        13, 14, 15, 16, 17
-    };
-    int code = provider.PickValueInArray(ipccodes);
     switch (code) {
+        case RELEASE_VIDEO_BUF: {
+            screenCaptureServer_->ReleaseVideoBuffer();
+            break;
+        }
         case SET_MIC_ENABLE: {
             bool isMicrophone = provider.ConsumeBool();
             screenCaptureServer_->SetMicrophoneEnabled(isMicrophone);
@@ -278,27 +245,23 @@ extern "C" int FuzzScreenCaptureConconcurrentTestFour(FuzzedDataProvider& provid
             screenCaptureServer_->StopScreenCapture();
             break;
         }
-        case SET_SCREEN_ROTATION: {
-            bool canvasRotation = provider.ConsumeBool();
-            screenCaptureServer_->SetCanvasRotation(canvasRotation);
-            break;
-        }
         default:
             break;
     }
     return 0;
 }
 
-extern "C" int FuzzScreenCaptureConconcurrentTestFive(FuzzedDataProvider& provider)
+int FuzzScreenCaptureConconcurrentTestFour(FuzzedDataProvider& provider, int code)
 {
     if (screenCaptureServer_ == nullptr) {
         return 0;
     }
-    static const int ipccodes[] = {
-        18, 19, 20, 21, 22
-    };
-    int code = provider.PickValueInArray(ipccodes);
     switch (code) {
+        case SET_SCREEN_ROTATION: {
+            bool canvasRotation = provider.ConsumeBool();
+            screenCaptureServer_->SetCanvasRotation(canvasRotation);
+            break;
+        }
         case EXCLUDE_CONTENT: {
             ScreenCaptureContentFilter contentFilter;
             screenCaptureServer_->ExcludeContent(contentFilter);
@@ -317,27 +280,23 @@ extern "C" int FuzzScreenCaptureConconcurrentTestFive(FuzzedDataProvider& provid
             screenCaptureServer_->SetMaxVideoFrameRate(MAX_VIDEO_FRAME_RATE);
             break;
         }
-        case SHOW_CURSOR: {
-            bool showCursor = provider.ConsumeBool();
-            screenCaptureServer_->ShowCursor(showCursor);
-            break;
-        }
         default:
             break;
     }
     return 0;
 }
 
-extern "C" int FuzzScreenCaptureConconcurrentTestSix(FuzzedDataProvider& provider)
+int FuzzScreenCaptureConconcurrentTestFive(FuzzedDataProvider& provider, int code)
 {
     if (screenCaptureServer_ == nullptr) {
         return 0;
     }
-    static const int ipccodes[] = {
-        23, 24, 25, 26, 27
-    };
-    int code = provider.PickValueInArray(ipccodes);
     switch (code) {
+        case SHOW_CURSOR: {
+            bool showCursor = provider.ConsumeBool();
+            screenCaptureServer_->ShowCursor(showCursor);
+            break;
+        }
         case SET_CHECK_SA_LIMIT: {
             OHOS::AudioStandard::AppInfo appInfo;
             screenCaptureServer_->SetAndCheckSaLimit(appInfo);
@@ -363,24 +322,15 @@ extern "C" int FuzzScreenCaptureConconcurrentTestSix(FuzzedDataProvider& provide
     return 0;
 }
 
-extern "C" int FuzzScreenCaptureConconcurrentTestSeven(FuzzedDataProvider& provider)
+int FuzzScreenCaptureConconcurrentTestSix(FuzzedDataProvider& provider, int code)
 {
     if (screenCaptureServer_ == nullptr) {
         return 0;
     }
-    static const int ipccodes[] = {
-        27, 28, 29, 30, 31
-    };
-    int code = provider.PickValueInArray(ipccodes);
     switch (code) {
         case SET_CAPTURE_AREA: {
-            OHOS::Rect rect;
-            rect.x = RECT_X;
-            rect.y = RECT_Y;
-            rect.w = RECT_W;
-            rect.h = RECT_H;
             int displayId = provider.ConsumeIntegral<int>();
-            screenCaptureServer_->SetCaptureArea(displayId, rect);
+            screenCaptureServer_->SetCaptureArea(displayId, rect_);
             break;
         }
         case SET_HIGH_LIGHT_MODE: {
@@ -415,12 +365,24 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
         return 0;
     }
     FuzzedDataProvider provider(data, size);
-    FuzzScreenCaptureConconcurrentTestOne(provider);
-    FuzzScreenCaptureConconcurrentTestTwo(provider);
-    FuzzScreenCaptureConconcurrentTestThree(provider);
-    FuzzScreenCaptureConconcurrentTestFour(provider);
-    FuzzScreenCaptureConconcurrentTestFive(provider);
-    FuzzScreenCaptureConconcurrentTestSix(provider);
-    FuzzScreenCaptureConconcurrentTestSeven(provider);
+    static const int ipccodes[] = {
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+        12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+        22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+    };
+    int code = provider.PickValueInArray(ipccodes);
+    if (code >= RELEASE && code <= INIT_AUDIO_ENC_INFO) {
+        FuzzScreenCaptureConconcurrentTestOne(provider, code);
+    } else if (code >= INIT_AUDIO_CAP && code <= RELEASE_AUDIO_BUF) {
+        FuzzScreenCaptureConconcurrentTestTwo(provider, code);
+    } else if (code >= RELEASE_VIDEO_BUF && code <= STOP_SCREEN_CAPTURE) {
+        FuzzScreenCaptureConconcurrentTestThree(provider, code);
+    } else if (code >= SET_SCREEN_ROTATION && code <= SET_MAX_FRAME_RATE) {
+        FuzzScreenCaptureConconcurrentTestFour(provider, code);
+    } else if (code >= SHOW_CURSOR && code <= UPDATE_SURFACE) {
+        FuzzScreenCaptureConconcurrentTestFive(provider, code);
+    } else if (code >= SET_CAPTURE_AREA && code <= SET_PICKER_MODE) {
+        FuzzScreenCaptureConconcurrentTestSix(provider, code);
+    }
     return 0;
 }}

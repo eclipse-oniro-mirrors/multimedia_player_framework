@@ -36,7 +36,7 @@ static const int32_t VIDEO_ENCODING_BIT_RATE = 48000;
 static const int32_t AUDIO_ENCODING_BIT_RATE = 48000;
 static const int32_t AUDIO_SAMPLE_RATE = 48000;
 static const int32_t AUDIO_CHANNELS = 2;
-std::shared_ptr<RecorderServer> recoderServer;
+std::shared_ptr<RecorderServer> recoderServer = nullptr;
 enum RecorderServiceMsg {
     SET_ORIENTATION_HINT = 1,
     SET_VIDEO_ENCODER = 2,
@@ -60,8 +60,7 @@ enum RecorderServiceMsg {
     SET_AUDIO_AACPROFILE = 20,
 };
 
-extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
-{
+extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv) {
     std::shared_ptr<IRecorderService> tempServer = RecorderServer::Create();
     if (tempServer) {
         recoderServer = std::static_pointer_cast<RecorderServer>(tempServer);
@@ -72,16 +71,11 @@ extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
     return 0;
 }
 
-
-extern "C" int FuzzRecorderConconcurrentTestOne(FuzzedDataProvider& provider)
+int FuzzRecorderConconcurrentTestOne(FuzzedDataProvider& provider, int code)
 {
     if (recoderServer == nullptr) {
         return 0;
     }
-    static const int ipccodes[] = {
-        1, 2, 3, 4, 5
-    };
-    int code = provider.PickValueInArray(ipccodes);
     switch (code) {
         case SET_ORIENTATION_HINT: {
             int32_t rotation = provider.ConsumeIntegral<uint32_t>();
@@ -108,22 +102,17 @@ extern "C" int FuzzRecorderConconcurrentTestOne(FuzzedDataProvider& provider)
             recoderServer->SetVideoEncodingBitRate(sourceId, VIDEO_ENCODING_BIT_RATE);
             break;
         }
-        
         default:
             break;
     }
     return 0;
 }
 
-extern "C" int FuzzRecorderConconcurrentTestTwo(FuzzedDataProvider& provider)
+int FuzzRecorderConconcurrentTestTwo(FuzzedDataProvider& provider, int code)
 {
     if (recoderServer == nullptr) {
         return 0;
     }
-    static const int ipccodes[] = {
-        6, 7, 8, 9, 10
-    };
-    int code = provider.PickValueInArray(ipccodes);
     switch (code) {
         case SET_AUDIO_ENCODING_BIT_RATE: {
             int32_t sourceId = provider.ConsumeIntegral<uint32_t>();
@@ -156,15 +145,11 @@ extern "C" int FuzzRecorderConconcurrentTestTwo(FuzzedDataProvider& provider)
     return 0;
 }
 
-extern "C" int FuzzRecorderConconcurrentTestThree(FuzzedDataProvider& provider)
+int FuzzRecorderConconcurrentTestThree(FuzzedDataProvider& provider, int code)
 {
     if (recoderServer == nullptr) {
         return 0;
     }
-    static const int ipccodes[] = {
-        11, 12, 13, 14, 15
-    };
-    int code = provider.PickValueInArray(ipccodes);
     switch (code) {
         case SET_META_MIME_TYPE: {
             int32_t sourceId = provider.ConsumeIntegral<uint32_t>();
@@ -189,22 +174,17 @@ extern "C" int FuzzRecorderConconcurrentTestThree(FuzzedDataProvider& provider)
             recoderServer->SetAudioEncoder(sourceId, AudioCodecFormat::AUDIO_MPEG);
             break;
         }
-        
         default:
             break;
     }
     return 0;
 }
 
-extern "C" int FuzzRecorderConconcurrentTestFour(FuzzedDataProvider& provider)
+int FuzzRecorderConconcurrentTestFour(FuzzedDataProvider& provider, int code)
 {
     if (recoderServer == nullptr) {
         return 0;
     }
-    static const int ipccodes[] = {
-        16, 17, 18, 19, 20
-    };
-    int code = provider.PickValueInArray(ipccodes);
     switch (code) {
         case SET_AUDIO_SAMPLE_RATE: {
             int32_t sourceId = provider.ConsumeIntegral<uint32_t>();
@@ -251,9 +231,19 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
     }
     /* Run your code on data */
     FuzzedDataProvider provider(data, size);
-    FuzzRecorderConconcurrentTestOne(provider);
-    FuzzRecorderConconcurrentTestTwo(provider);
-    FuzzRecorderConconcurrentTestThree(provider);
-    FuzzRecorderConconcurrentTestFour(provider);
+    static const int ipccodes[] = {
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+        12, 13, 14, 15, 16, 17, 18, 19, 20
+    };
+    int code = provider.PickValueInArray(ipccodes);
+    if (code >= SET_ORIENTATION_HINT && code <= SET_VIDEO_ENCODING_BIT_RATE) {
+        FuzzRecorderConconcurrentTestOne(provider, code);
+    } else if (code >= SET_AUDIO_ENCODING_BIT_RATE && code <= SET_VIDEO_ENABLE_B_FRAME) {
+        FuzzRecorderConconcurrentTestTwo(provider, code);
+    } else if (code >= SET_META_MIME_TYPE && code <= SET_AUDIO_SAMPLE_RATE) {
+        FuzzRecorderConconcurrentTestThree(provider, code);
+    } else if (code >= SET_AUDIO_CHANNELS && code <= SET_AUDIO_AACPROFILE) {
+        FuzzRecorderConconcurrentTestFour(provider, code);
+    }
     return 0;
 }
