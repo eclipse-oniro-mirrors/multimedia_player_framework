@@ -35,12 +35,33 @@ enum ErrorType: i32 {
     PLAY_ERROR = 2
 }
 
-struct ErrorInfo {
-    errorCode: @sts_type("BusinessError<void>") Opaque;
-    errorType: Optional<ErrorType>;
-    soundId: Optional<i32>;
-    streamId: Optional<i32>;
+@!sts_inject("""
+export interface ErrorInfo<T extends Error = BusinessError> {
+    errorCode: T;
+    errorType?: ErrorType;
+    soundId?: number;
+    streamId?: number;
 }
+
+class _taihe_ErrorInfo_inject implements ErrorInfo {
+    errorCode: BusinessError<void>;
+    errorType: (ErrorType | undefined);
+    soundId: (number | undefined);
+    streamId: (number | undefined);
+    constructor(
+        errorCode: BusinessError<void>,
+        errorType: (ErrorType | undefined),
+        soundId: (number | undefined),
+        streamId: (number | undefined),
+    )
+    {
+        this.errorCode = errorCode;
+        this.errorType = errorType;
+        this.soundId = soundId;
+        this.streamId = streamId;
+    }
+}
+""")
 
 interface SoundPool {
     @gen_async("load")

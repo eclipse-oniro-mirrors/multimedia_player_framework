@@ -60,6 +60,7 @@ thread_local napi_ref SystemSoundManagerNapi::ringtoneType_ = nullptr;
 thread_local napi_ref SystemSoundManagerNapi::systemToneType_ = nullptr;
 thread_local napi_ref SystemSoundManagerNapi::toneCustomizedType_ = nullptr;
 thread_local napi_ref SystemSoundManagerNapi::toneHapticsMode_ = nullptr;
+thread_local napi_ref SystemSoundManagerNapi::systemSoundError_ = nullptr;
 
 SystemSoundManagerNapi::SystemSoundManagerNapi()
     : env_(nullptr), sysSoundMgrClient_(nullptr) {}
@@ -230,6 +231,36 @@ napi_value SystemSoundManagerNapi::CreateToneHapticsModeObject(napi_env env)
     return result;
 }
 
+napi_value SystemSoundManagerNapi::CreateSystemSoundErrorObject(napi_env env)
+{
+    napi_value soundResult = nullptr;
+    napi_status soundStatus;
+    std::string soundPropName;
+    int32_t soundRefCount = 1;
+ 
+    soundStatus = napi_create_object(env, &soundResult);
+    if (soundStatus == napi_ok) {
+        for (auto &iter: systemSoundErrorModeMap) {
+            soundPropName = iter.first;
+            soundStatus = AddNamedProperty(env, soundResult, soundPropName, iter.second);
+            if (soundStatus != napi_ok) {
+                MEDIA_LOGE("CreateSystemSoundErrorObject: Failed to add named prop!");
+                break;
+            }
+            soundPropName.clear();
+        }
+        if (soundStatus == napi_ok) {
+            soundStatus = napi_create_reference(env, soundResult, soundRefCount, &systemSoundError_);
+            if (soundStatus == napi_ok) {
+                return soundResult;
+            }
+        }
+    }
+    napi_get_undefined(env, &soundResult);
+ 
+    return soundResult;
+}
+
 napi_value SystemSoundManagerNapi::CreateToneCategoryRingtoneObject(napi_env env)
 {
     napi_value toneCategoryRingtone;
@@ -327,6 +358,7 @@ napi_status SystemSoundManagerNapi::DefineStaticProperties(napi_env env, napi_va
         DECLARE_NAPI_PROPERTY("TONE_CATEGORY_ALARM", CreateToneCategoryAlarmObject(env)),
         DECLARE_NAPI_PROPERTY("TONE_CATEGORY_NOTIFICATION_APP", CreateToneCategoryNotificationAppObject(env)),
         DECLARE_NAPI_PROPERTY("ToneHapticsMode", CreateToneHapticsModeObject(env)),
+        DECLARE_NAPI_PROPERTY("SystemSoundError", CreateSystemSoundErrorObject(env)),
     };
 
     return napi_define_properties(env, exports, sizeof(static_prop) / sizeof(static_prop[0]), static_prop);

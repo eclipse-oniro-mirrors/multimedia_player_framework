@@ -15,6 +15,7 @@
 
 #include "media_server_manager.h"
 #include <unordered_set>
+#include "media_utils.h"
 #ifdef SUPPORT_RECORDER
 #include "recorder_service_stub.h"
 #include "recorder_profiles_service_stub.h"
@@ -1170,6 +1171,8 @@ void MediaServerManager::ReportAppMemoryUsage()
 
 void MediaServerManager::SetCritical(bool critical)
 {
+    CHECK_AND_RETURN_LOG(GetClientBundleName(IPCSkeleton::GetCallingUid()) != "bootanimation",
+        "MediaServerManager::SetCritical do not SetCritical");
     auto ret = Memory::MemMgrClient::GetInstance().SetCritical(getpid(), critical, PLAYER_DISTRIBUTED_SERVICE_ID);
     CHECK_AND_RETURN_LOG(ret == 0, "MediaServerManager::SetCritical set critical to %{public}d fail.", critical);
     MEDIA_LOGI("MediaServerManager::SetCritical set critical to %{public}d success.", critical);

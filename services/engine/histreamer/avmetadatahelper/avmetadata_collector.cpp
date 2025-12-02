@@ -95,6 +95,7 @@ static const std::unordered_map<int32_t, std::string> AVMETA_KEY_TO_X_MAP = {
     { AV_KEY_DATE_TIME_ISO8601, "ISO8601 time" },
     { AV_KEY_GLTF_OFFSET, Tag::GLTF_OFFSET },
     { AV_KEY_VIDEO_COLOR_TRC, Tag::VIDEO_COLOR_TRC },
+    { AV_KEY_VIDEO_DESCRIPTION, Tag::MEDIA_DESCRIPTION },
 };
 
 AVMetaDataCollector::AVMetaDataCollector(std::shared_ptr<MediaDemuxer> &mediaDemuxer) : mediaDemuxer_(mediaDemuxer)
@@ -150,6 +151,7 @@ void AVMetaDataCollector::GetAudioTrackInfo(const std::shared_ptr<Meta> &trackIn
     audioTrackInfo.PutIntValue("track_index", static_cast<int32_t>(index));
     audioTrackInfo.PutIntValue("track_type", static_cast<int32_t>(Plugins::MediaType::AUDIO));
     audioTrackInfo.PutStringValue("codec_mime", mime);
+    audioTrackInfo.PutStringValue("mime_type", mime);
 
     int32_t audioChannels = 0;
     trackInfo->GetData(Tag::AUDIO_CHANNEL_COUNT, audioChannels);
@@ -171,7 +173,13 @@ void AVMetaDataCollector::GetAudioTrackInfo(const std::shared_ptr<Meta> &trackIn
     if (sampleDepth > 0) {
         audioTrackInfo.PutLongValue("sample_depth", sampleDepth);
     }
-
+    
+    std::vector<int32_t> trackIds;
+    if (trackInfo->GetData(Tag::REFERENCE_TRACK_IDS, trackIds)) {
+        std::string stringTrackIds = VectorToString(trackIds);
+        audioTrackInfo.PutStringValue("ref_track_ids", stringTrackIds);
+    }
+    
     trackInfoVec_.emplace_back(std::move(audioTrackInfo));
 }
 
@@ -183,6 +191,7 @@ void AVMetaDataCollector::GetVideoTrackInfo(const std::shared_ptr<Meta> &trackIn
     videoTrackInfo.PutIntValue("track_index", index);
     videoTrackInfo.PutIntValue("track_type", static_cast<int32_t>(Plugins::MediaType::VIDEO));
     videoTrackInfo.PutStringValue("codec_mime", mime);
+    videoTrackInfo.PutStringValue("mime_type", mime);
 
     int32_t originalWidth = 0;
     trackInfo->GetData(Tag::VIDEO_WIDTH, originalWidth);
@@ -196,6 +205,10 @@ void AVMetaDataCollector::GetVideoTrackInfo(const std::shared_ptr<Meta> &trackIn
     int32_t height = GetSarVideoHeight(trackInfo, originalHeight);
     videoTrackInfo.PutIntValue("height", height);
 
+    int64_t videoBitrate = 0;
+    trackInfo->GetData(Tag::MEDIA_BITRATE, videoBitrate);
+    videoTrackInfo.PutLongValue("bitrate", videoBitrate);
+
     double frameRate = 0;
     if (trackInfo->GetData(Tag::VIDEO_FRAME_RATE, frameRate)) {
         videoTrackInfo.PutDoubleValue("frame_rate", frameRate * FRAME_RATE_UNIT_MULTIPLE);
@@ -204,6 +217,13 @@ void AVMetaDataCollector::GetVideoTrackInfo(const std::shared_ptr<Meta> &trackIn
     bool isHdr = false;
     trackInfo->GetData(Tag::VIDEO_IS_HDR_VIVID, isHdr);
     videoTrackInfo.PutIntValue("hdr_type", static_cast<int32_t>(isHdr));
+
+    std::vector<int32_t> trackIds;
+    if (trackInfo->GetData(Tag::REFERENCE_TRACK_IDS, trackIds)) {
+        std::string stringTrackIds = VectorToString(trackIds);
+        videoTrackInfo.PutStringValue("ref_track_ids", stringTrackIds);
+    }
+    
     trackInfoVec_.emplace_back(std::move(videoTrackInfo));
 }
 
@@ -222,12 +242,42 @@ void AVMetaDataCollector::GetSubtitleTrackInfo(const std::shared_ptr<Meta> &trac
 void AVMetaDataCollector::GetOtherTrackInfo(const std::shared_ptr<Meta> &trackInfo, size_t index)
 {
     MEDIA_LOGD("GetOtherTrackInfo in");
+    std::string mime = "";
+    trackInfo->GetData(Tag::MIME_TYPE, mime);
     Format otherTrackInfo {};
     otherTrackInfo.PutIntValue("track_index", index);
     Plugins::MediaType mediaType = Plugins::MediaType::UNKNOWN;
     trackInfo->GetData(Tag::MEDIA_TYPE, mediaType);
     otherTrackInfo.PutIntValue("track_type", static_cast<int32_t>(mediaType));
+    otherTrackInfo.PutStringValue("codec_mime", mime);
+    otherTrackInfo.PutStringValue("mime_type", mime);
+
+    std::vector<int32_t> trackIds;
+    if (trackInfo->GetData(Tag::REFERENCE_TRACK_IDS, trackIds)) {
+        std::string stringTrackIds = VectorToString(trackIds);
+        otherTrackInfo.PutStringValue("ref_track_ids", stringTrackIds);
+    }
+
+    if (mediaType == Plugins::MediaType::AUXILIARY || mediaType == Plugins::MediaType::TIMEDMETA) {
+        std::string referenceType = "";
+        if (trackInfo->GetData(Tag::TRACK_REFERENCE_TYPE, referenceType)) {
+            otherTrackInfo.PutStringValue("track_ref_type", referenceType);
+        }
+    }
+
     trackInfoVec_.emplace_back(std::move(otherTrackInfo));
+}
+
+std::string AVMetaDataCollector::VectorToString(const std::vector<int32_t> &vec) const
+{
+    std::stringstream ss;
+    for (size_t i = 0; i < vec.size(); i++) {
+        if (i != 0) {
+            ss << ",";
+        }
+        ss << vec[i];
+    }
+    return ss.str();
 }
 
 int32_t AVMetaDataCollector::GetSarVideoWidth(std::shared_ptr<Meta> trackInfo, int32_t originalWidth) const
@@ -338,15 +388,8 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
         std::shared_ptr<Meta> meta = trackInfos[index];
         CHECK_AND_RETURN_RET_LOG(meta != nullptr, metadata.tbl_, "meta is invalid, index: %zu", index);
 
-        // skip the image track
         std::string mime;
         meta->Get<Tag::MIME_TYPE>(mime);
-        int32_t imageTypeLength = 5;
-        if (mime.substr(0, imageTypeLength).compare("image") == 0) {
-            MEDIA_LOGI("0x%{public}06" PRIXPTR " skip image track", FAKE_POINTER(this));
-            ++imageTrackCount;
-            continue;
-        }
         InitTracksInfoVector(meta, index);
         if (mime.find("video") == 0) {
             if (!isFirstVideoTrack) {
@@ -476,10 +519,6 @@ void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta
 void AVMetaDataCollector::FormatAVMeta(
     Metadata &avmeta, int32_t imageTrackCount, const std::shared_ptr<Meta> &globalInfo)
 {
-    std::string str = avmeta.GetMeta(AV_KEY_NUM_TRACKS);
-    if (IsAllDigits(str)) {
-        avmeta.SetMeta(AV_KEY_NUM_TRACKS, std::to_string(std::stoi(str) - imageTrackCount));
-    }
     FormatDuration(avmeta);
     FormatMimeType(avmeta, globalInfo);
     FormatDateTime(avmeta, globalInfo);
@@ -528,7 +567,7 @@ void AVMetaDataCollector::FormatDateTime(Metadata &avmeta, const std::shared_ptr
     }
     avmeta.SetMeta(AV_KEY_DATE_TIME, formattedDateTime);
     avmeta.SetMeta(AV_KEY_DATE_TIME_FORMAT,
-        formattedDateTime.compare(date) != 0 ? formattedDateTime : TimeFormatUtils::FormatDataTimeByString(date));
+        formattedDateTime.compare(date) != 0 ? formattedDateTime : TimeFormatUtils::FormatDateTimeByString(date));
 }
 
 void AVMetaDataCollector::FormatVideoRotateOrientation(Metadata &avmeta)

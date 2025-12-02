@@ -23,11 +23,23 @@
 #include "audio_info.h"
 
 namespace ANI::Media {
-const int32_t NAPI_ERR_INPUT_INVALID = 401;
-const int32_t NAPI_ERR_OPERATE_NOT_ALLOWED = 5400102;
-const int32_t NAPI_ERR_IO_ERROR = 5400103;
-const int32_t NAPI_ERR_SERVICE_DIED = 5400105;
-const int32_t NAPI_ERR_UNSUPPORTED_FORMAT = 5400106;
+const int32_t TAIHE_ERR_INPUT_INVALID = 401;
+const int32_t TAIHE_ERR_OPERATE_NOT_ALLOWED = 5400102;
+const int32_t TAIHE_ERR_IO_ERROR = 5400103;
+const int32_t TAIHE_ERR_SERVICE_DIED = 5400105;
+const int32_t TAIHE_ERR_UNSUPPORTED_FORMAT = 5400106;
+const int32_t TAIHE_ERR_PARAM_OUT_OF_RANGE = 5400108;
+const int32_t TAIHE_ERR_PERMISSION_DENIED = 202;
+const int32_t TAIHE_ERR_NOT_SUPPORTED = 801;
+
+const std::string TAIHE_ERR_INPUT_INVALID_INFO = "input parameter check failed";
+const std::string TAIHE_ERR_OPERATE_NOT_ALLOWED_INFO = "operate not allowed";
+const std::string TAIHE_ERR_IO_ERROR_INFO = "input or output error";
+const std::string TAIHE_ERR_SERVICE_DIED_INFO = "service died";
+const std::string TAIHE_ERR_UNSUPPORTED_FORMAT_INFO = "unsupport format";
+const std::string TAIHE_ERR_PARAM_OUT_OF_RANGE_INFO = "Parameter out of range";
+const std::string TAIHE_ERR_NOT_SUPPORTED_INFO = "Function is not supported in current device";
+const std::string TAIHE_ERR_PERMISSION_DENIED_INFO = "Caller is not a system application";
 
 class AudioHapticCommonTaihe {
 public:
@@ -35,6 +47,7 @@ public:
     ~AudioHapticCommonTaihe();
 
     static std::string GetMessageByCode(int32_t &code);
+    static bool VerifySelfSystemPermission();
 };
 
 } // namespace ANI::Media

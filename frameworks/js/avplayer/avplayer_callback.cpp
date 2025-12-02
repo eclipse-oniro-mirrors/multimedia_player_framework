@@ -469,7 +469,7 @@ public:
             MEDIA_LOGD("JsCallBack %{public}s start", jsCb->callbackName.c_str());
             jsCb->UvWork();
             delete jsCb;
-        }, napi_eprio_immediate);
+        }, napi_eprio_immediate, "AVPlayer CompleteCallback");
         if (ret != napi_ok) {
             MEDIA_LOGE("Failed to execute libuv work queue, ret = %{public}d", ret);
             delete jsCb;

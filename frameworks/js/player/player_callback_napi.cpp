@@ -304,7 +304,7 @@ void PlayerCallbackNapi::OnJsCallBack(PlayerJsCallback *jsCb) const
         delete event;
     };
 
-    auto ret = napi_send_event(env_, task, napi_eprio_high);
+    auto ret = napi_send_event(env_, task, napi_eprio_high, "AVPlayer PlayerCallbackNapi::OnJsCallBack");
     if (ret != napi_status::napi_ok) {
         MEDIA_LOGE("Failed to SendEvent, ret = %{public}d", ret);
         delete jsCb;
@@ -356,7 +356,7 @@ void PlayerCallbackNapi::OnJsCallBackError(PlayerJsCallback *jsCb) const
         delete event;
     };
 
-    auto ret = napi_send_event(env_, task, napi_eprio_high);
+    auto ret = napi_send_event(env_, task, napi_eprio_high, "AVPlayer PlayerCallbackNapi::OnJsCallBackError");
     if (ret != napi_status::napi_ok) {
         MEDIA_LOGE("Failed to SendEvent, ret = %{public}d", ret);
         delete jsCb;
@@ -400,7 +400,7 @@ void PlayerCallbackNapi::OnJsCallBackInt(PlayerJsCallback *jsCb) const
         delete event;
     };
 
-    auto ret = napi_send_event(env_, task, napi_eprio_high);
+    auto ret = napi_send_event(env_, task, napi_eprio_high, "AVPlayer PlayerCallbackNapi::OnJsCallBackInt");
     if (ret != napi_status::napi_ok) {
         MEDIA_LOGE("Failed to SendEvent, ret = %{public}d", ret);
         delete jsCb;
@@ -452,7 +452,7 @@ void PlayerCallbackNapi::OnJsCallBackIntVec(PlayerJsCallback *jsCb) const
         delete event;
     };
 
-    auto ret = napi_send_event(env_, task, napi_eprio_high);
+    auto ret = napi_send_event(env_, task, napi_eprio_high, "AVPlayer PlayerCallbackNapi::OnJsCallBackIntVec");
     if (ret != napi_status::napi_ok) {
         MEDIA_LOGE("Failed to SendEvent, ret = %{public}d", ret);
         delete jsCb;
@@ -495,7 +495,7 @@ void PlayerCallbackNapi::OnJsCallBackIntArray(PlayerJsCallback *jsCb) const
         delete event;
     };
 
-    auto ret = napi_send_event(env_, task, napi_eprio_high);
+    auto ret = napi_send_event(env_, task, napi_eprio_high, "AVPlayer PlayerCallbackNapi::OnJsCallBackIntArray");
     if (ret != napi_status::napi_ok) {
         MEDIA_LOGE("Failed to SendEvent, ret = %{public}d", ret);
         delete jsCb;
@@ -544,7 +544,7 @@ void PlayerCallbackNapi::OnJsCallBackInterrupt(PlayerJsCallback *jsCb) const
         delete event;
     };
 
-    auto ret = napi_send_event(env_, task, napi_eprio_high);
+    auto ret = napi_send_event(env_, task, napi_eprio_high, "AVPlayer PlayerCallbackNapi::OnJsCallBackInterrupt");
     if (ret != napi_status::napi_ok) {
         MEDIA_LOGE("Failed to SendEvent, ret = %{public}d", ret);
         delete jsCb;

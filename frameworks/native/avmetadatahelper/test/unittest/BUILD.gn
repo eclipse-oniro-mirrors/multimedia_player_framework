@@ -46,6 +46,7 @@ ohos_unittest("avmetadata_unit_test") {
     "hilog:libhilog",
     "image_framework:image_native",
     "init:libbegetutil",
+    "netmanager_base:net_security_config_if",
     "qos_manager:qos",
     "window_manager:libwm",
   ]

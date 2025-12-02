@@ -58,6 +58,10 @@ function GetScreenCaptureMonitorSync(): Optional<ScreenCaptureMonitor>;
 @gen_promise("createSoundPool")
 function CreateSoundPoolSync(maxStreams: i32, audioRendererInfo: audio.AudioRendererInfo): Optional<SoundPool>;
 
+@gen_async("createParallelSoundPool")
+@gen_promise("createParallelSoundPool")
+function CreateParallelSoundPoolSync(maxStreams: i32, audioRendererInfo: audio.AudioRendererInfo): Optional<SoundPool>;
+
 @gen_async("createVideoRecorder")
 @gen_promise("createVideoRecorder")
 function CreateVideoRecorderSync(): Optional<VideoRecorder>;
@@ -77,6 +81,10 @@ function CreateMediaSourceWithStreamData(streams: Array<MediaStream>): Optional<
 
 @gen_promise("reportAVScreenCaptureUserChoice")
 function ReportAVScreenCaptureUserChoiceSync(sessionId: i32, choice: String): void;
+
+@gen_async("getAVScreenCaptureconfigurableParameters")
+@gen_promise("getAVScreenCaptureconfigurableParameters")
+function GetAVScreenCaptureConfigurableParametersSync(sessionId: i32): String;
 
 enum HdrType: i32 {
     AV_HDR_TYPE_NONE = 0,
@@ -138,6 +146,11 @@ struct PixelMapParams {
     colorFormat: Optional<PixelFormat>;
 }
 
+struct OutputSize {
+    width: Optional<i32>;
+    height: Optional<i32>;
+}
+
 struct PlaybackStrategy {
     preferredWidth: Optional<i32>;
     preferredHeight: Optional<i32>;
@@ -177,8 +190,7 @@ interface AVMetadataExtractor {
     @gen_promise("getTimeByFrameIndex")
     GetTimeByFrameIndexSync(index: i32): i64;
 
-    @gen_promise("setUrlSource")
-    SetUrlSourceSync(url: String, header: Optional<@record Map<String, String>>): void;
+    SetUrlSource(url: String, @optional header: Optional<@record Map<String, String>>): void;
 
     @gen_async("fetchFrameByTime")
     @gen_promise("fetchFrameByTime")
@@ -397,7 +409,7 @@ interface AVPlayer {
         }
     }""")
     OnSeiMessageReceived(payloadTypes: Array<i32>, callback: (messages: Array<SeiMessage>,
-        playbackPosition: Optional<i32>) => void): void;
+        @optional playbackPosition: Optional<i32>) => void): void;
 
     @!sts_inject_into_interface("off(type: string, callback?: (state: string, reason: StateChangeReason)=> void): void;")
     @!sts_inject_into_interface("off(type: string, callback?: (data: object)=> void): void;")
@@ -480,7 +492,7 @@ interface AVPlayer {
         }
     }""")
     OffSeiMessageReceived(payloadTypes: Optional<Array<i32>>, callback: Optional<(messages: Array<SeiMessage>,
-        playbackPosition: Optional<i32>) => void>): void;
+        @optional playbackPosition: Optional<i32>) => void>): void;
     SetPlaybackRate(rate: f64): void;
 }
 
@@ -663,6 +675,9 @@ interface AVImageGenerator {
     @gen_async("fetchFrameByTime")
     @gen_promise("fetchFrameByTime")
     FetchFrameByTimeSync(timeUs: i64, options: AVImageQueryOptions, param: PixelMapParams): Optional<image.PixelMap>;
+
+    @gen_promise("fetchScaledFrameByTime")
+    FetchScaledFrameByTimeSync(timeUs: i64, options: AVImageQueryOptions, @optional param: Optional<OutputSize>): Optional<image.PixelMap>;
 
     @gen_async("release")
     @gen_promise("release")

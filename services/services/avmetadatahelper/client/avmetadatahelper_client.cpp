@@ -178,6 +178,7 @@ std::shared_ptr<AVBuffer> AVMetadataHelperClient::FetchFrameYuv(int64_t timeUs, 
 
 void AVMetadataHelperClient::Release()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_LOG(avMetadataHelperProxy_ != nullptr, "avmetadatahelper service does not exist.");
     avMetadataHelperProxy_->Release();
     callback_ = nullptr;

@@ -92,8 +92,8 @@ int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
     MEDIA_LOGI("0x%{public}06" PRIXPTR "Start success, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
 
     audioCapturer_ = audioCapturer;
-    readAudioLoop_ = std::make_unique<std::thread>([this] { this->CaptureAudio(); });
     captureState_.store(CAPTURER_RECORDING);
+    readAudioLoop_ = std::make_unique<std::thread>([this] { this->CaptureAudio(); });
     return MSERR_OK;
 }
 
@@ -393,19 +393,21 @@ int32_t AudioCapturerWrapper::DropBufferUntil(int64_t audioTime)
 {
     using namespace std::chrono_literals;
     std::unique_lock<std::mutex> lock(bufferMutex_);
-    CHECK_AND_RETURN_RET(IsRecording(), MSERR_OK);
+    int32_t dropCount = 0;
+    CHECK_AND_RETURN_RET(IsRecording(), dropCount);
     MEDIA_LOGD("0x%{public}06" PRIXPTR " DropBufferUntil S, name:%{public}s", FAKE_POINTER(this), threadName_.c_str());
     while (!availBuffers_.empty()) {
         if (availBuffers_.front() != nullptr && availBuffers_.front()->timestamp < audioTime) {
             MEDIA_LOGD("0x%{public}06" PRIXPTR " ABuffer drop name:%{public}s time: %{public}" PRId64,
                 FAKE_POINTER(this), threadName_.c_str(), availBuffers_.front()->timestamp);
             availBuffers_.pop_front();
+            dropCount++;
         } else {
             break;
         }
     }
     MEDIA_LOGD("0x%{public}06" PRIXPTR " DropBufferUntil E, name:%{public}s", FAKE_POINTER(this), threadName_.c_str());
-    return MSERR_OK;
+    return dropCount;
 }
 
 int32_t AudioCapturerWrapper::GetCurrentAudioTime(int64_t &currentAudioTime)

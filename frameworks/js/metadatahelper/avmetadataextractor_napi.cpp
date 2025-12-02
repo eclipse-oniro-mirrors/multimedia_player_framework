@@ -285,6 +285,7 @@ bool AVMetadataExtractorNapi::ParseMetadataOfCustomInfo(napi_env env, napi_value
     std::shared_ptr<Meta> customData = std::make_shared<Meta>();
     bool ret = metadata->GetData(key, customData);
     CHECK_AND_RETURN_RET_LOG(ret, false, "GetData failed, key %{public}s", key.c_str());
+    CHECK_AND_RETURN_RET_LOG(customData != nullptr, false, "customData == nullptr");
     for (auto iter = customData->begin(); iter != customData->end(); ++iter) {
         std::string curKey = iter->first;
         std::string curValue = StringifyMeta(iter->second);

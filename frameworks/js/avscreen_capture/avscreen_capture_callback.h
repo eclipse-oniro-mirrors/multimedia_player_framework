@@ -22,6 +22,11 @@
 
 namespace OHOS {
 namespace Media {
+namespace AVScreenCaptureCallbackNapiTask {
+const std::string ON_JS_STATE_CHANGE_CALLBACK = "AVScreenCaptureCallback::OnJsStateChangeCallBack";
+const std::string ON_JS_ERROR_CALLBACK = "AVScreenCaptureCallback::OnJsErrorCallBack";
+}
+
 class AVScreenCaptureCallback : public ScreenCaptureCallBack {
 public:
     explicit AVScreenCaptureCallback(napi_env env);

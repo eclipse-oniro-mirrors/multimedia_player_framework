@@ -262,7 +262,7 @@ bool UriHelper::ParseFdUri(std::string_view uri)
             "Invalid fd url");
         std::string_view sizeStr = uri.substr(delim2 + delim2Len);
         CHECK_AND_RETURN_RET_LOG(StrToInt(sizeStr, size_), false, "Invalid fd url");
-        MEDIA_LOGI("UriHelper ParseFdUri try close fd, fd is %{public}d, Set fd: %{public}d", fd_, fd);
+        MEDIA_LOGD("UriHelper ParseFdUri try close fd, fd is %{public}d, Set fd: %{public}d", fd_, fd);
         if (fd_ >= 0) {
             close(fd_);
             fd_ = -1;
@@ -277,6 +277,42 @@ bool UriHelper::ParseFdUri(std::string_view uri)
     MEDIA_LOGD("parse fd uri, fd: %{public}d, offset: %{public}" PRIi64 ", size: %{public}" PRIi64,
                fd_, offset_, size_);
     return CorrectFdParam();
+}
+
+std::string UriHelper::GetHostnameFromURL(const std::string &url)
+{
+    if (url.empty()) {
+        return "";
+    }
+    std::string delimiter = "://";
+    std::string tempUrl = url;
+    std::replace(tempUrl.begin(), tempUrl.end(), '\\', '/');
+    size_t posStart = tempUrl.find(delimiter);
+    if (posStart != std::string::npos) {
+        posStart += delimiter.length();
+    } else {
+        posStart = 0;
+    }
+    size_t notSlash = tempUrl.find_first_not_of('/', posStart);
+    if (notSlash != std::string::npos) {
+        posStart = notSlash;
+    }
+    size_t posEnd = std::min({ tempUrl.find(':', posStart),
+                              tempUrl.find('/', posStart), tempUrl.find('?', posStart) });
+    if (posEnd != std::string::npos) {
+        return tempUrl.substr(posStart, posEnd - posStart);
+    }
+    return tempUrl.substr(posStart);
+}
+
+std::string UriHelper::GetProtocolFromURL(const std::string &url)
+{
+    std::string delimiter = "://";
+    size_t pos = url.find(delimiter);
+    if (pos != std::string::npos) {
+        return url.substr(0, pos);
+    }
+    return "";
 }
 } // namespace Media
 } // namespace OHOS

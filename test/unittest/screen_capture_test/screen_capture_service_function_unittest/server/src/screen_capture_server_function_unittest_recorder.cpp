@@ -72,8 +72,8 @@ void ScreenCaptureServerUnittestCallbackMock::OnCaptureContentChanged(AVScreenCa
 
 void ScreenCaptureServerUnittestCallbackMock::OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo)
 {
-    MEDIA_LOGI("OnUserSelected() is called, selectType: %{public}d, displayId %{public}" PRIu64,
-        selectionInfo.selectType, selectionInfo.displayId);
+    MEDIA_LOGI("OnUserSelected() is called, selectType: %{public}d, displayId size %{public}zu",
+        selectionInfo.selectType, selectionInfo.displayIds.size());
 }
 
 void ScreenCaptureServerUnittestCallbackMock::Stop()

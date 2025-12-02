@@ -65,6 +65,17 @@ static const std::map<std::string, ToneHapticsMode> toneHapticsModeMap = {
     {"NON_SYNC", NON_SYNC},
 };
 
+static const std::map<std::string, SystemSoundError> systemSoundErrorModeMap = {
+    {"ERROR_IO", ERROR_IO},
+    {"ERROR_OK", ERROR_OK},
+    {"ERROR_TYPE_MISMATCH", ERROR_TYPE_MISMATCH},
+    {"ERROR_UNSUPPORTED_OPERATION", ERROR_UNSUPPORTED_OPERATION},
+    {"ERROR_DATA_TOO_LARGE", ERROR_DATA_TOO_LARGE},
+    {"ERROR_TOO_MANY_FILES", ERROR_TOO_MANY_FILES},
+    {"ERROR_INSUFFICIENT_ROM", ERROR_INSUFFICIENT_ROM},
+    {"ERROR_INVALID_PARAM", ERROR_INVALID_PARAM},
+};
+
 class SystemSoundManagerNapi {
 public:
     static napi_value Init(napi_env env, napi_value exports);
@@ -91,6 +102,7 @@ private:
     static napi_value CreateToneCategoryNotificationAppObject(napi_env env);
     static napi_value CreateToneHapticsTypeObject(napi_env env);
     static napi_value CreateToneHapticsModeObject(napi_env env);
+    static napi_value CreateSystemSoundErrorObject(napi_env env);
     static std::shared_ptr<AbilityRuntime::Context> GetAbilityContext(napi_env env, napi_value contextArg);
     static bool VerifySelfSystemPermission();
     static bool VerifyRingtonePermission();
@@ -184,6 +196,7 @@ private:
     static thread_local napi_ref systemToneType_;
     static thread_local napi_ref toneCustomizedType_;
     static thread_local napi_ref toneHapticsMode_;
+    static thread_local napi_ref systemSoundError_;
 
     napi_env env_;
 

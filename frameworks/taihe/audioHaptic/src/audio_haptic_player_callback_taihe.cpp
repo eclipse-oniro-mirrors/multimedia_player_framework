@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-#include "audio_haptic_log.h"
 #include "audio_haptic_player_callback_taihe.h"
+
+#include "audio_haptic_log.h"
 #include "common_taihe.h"
 
 namespace {

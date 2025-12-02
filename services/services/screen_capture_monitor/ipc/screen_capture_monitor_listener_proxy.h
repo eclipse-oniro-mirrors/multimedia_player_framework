@@ -32,6 +32,7 @@ public:
 
     void OnScreenCaptureStarted(int32_t pid) override;
     void OnScreenCaptureFinished(int32_t pid) override;
+    void OnScreenCaptureDied() override;
 
 private:
     sptr<IStandardScreenCaptureMonitorListener> listener_ = nullptr;
@@ -45,6 +46,7 @@ public:
 
     void OnScreenCaptureStarted(int32_t pid) override;
     void OnScreenCaptureFinished(int32_t pid) override;
+    void OnScreenCaptureDied() override;
 private:
     static inline BrokerDelegator<ScreenCaptureMonitorListenerProxy> delegator_;
 };

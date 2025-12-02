@@ -84,6 +84,37 @@ void ReportAVScreenCaptureUserChoiceSync(int32_t sessionId, string_view choice)
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
 }
 
+string GetAVScreenCaptureConfigurableParametersSync(int32_t sessionId)
+{
+    MediaTrace trace("AVScreenCapture::TaiheGetAVScreenCaptureconfigurableParameters");
+    const std::string &opt = AVScreenCapturegOpt::GET_CONFIG_PARAMS;
+    MEDIA_LOGI("Taihe %{public}s Start. TaiheGetAVScreenCaptureconfigurableParameters sessionId: %{public}d",
+        opt.c_str(), sessionId);
+    auto asyncCtx = std::make_unique<AVScreenCaptureAsyncContext>();
+    auto res = ::taihe::string("");
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, res, "failed to get AsyncContext");
+    if (!MediaTaiheUtils::SystemPermission()) {
+        set_business_error(MSERR_EXT_API9_PERMISSION_DENIED, "permission denied");
+        return res;
+    }
+    std::string resultStr = "";
+    asyncCtx->controller_ = ScreenCaptureControllerFactory::CreateScreenCaptureController();
+    if (asyncCtx->controller_ == nullptr) {
+        set_business_error(MSERR_EXT_API9_PERMISSION_DENIED, "failed to create controller.");
+        return res;
+    }
+    
+    int32_t ret = asyncCtx->controller_->GetAVScreenCaptureConfigurableParameters(sessionId, resultStr);
+    if (ret != MSERR_OK) {
+        set_business_error(MSERR_EXT_API20_SESSION_NOT_EXIST, "session does not exist.");
+        return res;
+    }
+    asyncCtx.release();
+
+    MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
+    return MediaTaiheUtils::ToTaiheString(resultStr);
+}
+
 RetInfo GetReturnInfo(int32_t errCode, const std::string &operate, const std::string &param,
     const std::string &add = "")
 {
@@ -625,3 +656,4 @@ void AVScreenCaptureAsyncContext::AVScreenCaptureSignError(int32_t errCode, cons
 
 TH_EXPORT_CPP_API_CreateAVScreenCaptureRecorderSync(CreateAVScreenCaptureRecorderSync);
 TH_EXPORT_CPP_API_ReportAVScreenCaptureUserChoiceSync(ReportAVScreenCaptureUserChoiceSync);
+TH_EXPORT_CPP_API_GetAVScreenCaptureConfigurableParametersSync(GetAVScreenCaptureConfigurableParametersSync);

@@ -33,6 +33,9 @@ namespace OHOS {
 namespace Media {
 std::string TimeFormatUtils::FormatDateTimeByTimeZone(const std::string &iso8601Str)
 {
+    if (iso8601Str.empty()) {
+        return iso8601Str;
+    }
     std::regex pattern(R"((\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(.\d{1,6})?(((\+|-)\d{4})|Z)?)");
     std::smatch match;
     if (!std::regex_match(iso8601Str, match, pattern)) {
@@ -94,31 +97,31 @@ std::string TimeFormatUtils::FormatLocalTime(std::chrono::system_clock::time_poi
     return oss.str();
 }
 
-std::string TimeFormatUtils::FormatDataTimeByString(const std::string &dataTime)
+std::string TimeFormatUtils::FormatDateTimeByString(const std::string &dateTime)
 {
-    if (dataTime.compare("") == 0) {
-        return dataTime;
+    if (dateTime.compare("") == 0) {
+        return dateTime;
     }
-    std::string::size_type position = dataTime.find(" ");
-    std::string data = "";
+    std::string::size_type position = dateTime.find(" ");
+    std::string date = "";
     std::string time = "";
-    if (position == dataTime.npos) {
-        data = dataTime;
-        if (data.find("-") == data.npos) {
-            data += "-01-01";
-        } else if (data.find_first_of("-") == data.find_last_of("-")) {
-            data += "-01";
+    if (position == dateTime.npos) {
+        date = dateTime;
+        if (date.find("-") == date.npos) {
+            date += "-01-01";
+        } else if (date.find_first_of("-") == date.find_last_of("-")) {
+            date += "-01";
         }
         time += " 00:00:00";
     } else {
-        data = dataTime.substr(0, position);
-        time = dataTime.substr(position);
-        if (data.find("-") == data.npos) {
-            data += "-01-01";
-        } else if (data.find_first_of("-") == data.find_last_of("-")) {
-            data += "-01";
+        date = dateTime.substr(0, position);
+        time = dateTime.substr(position);
+        if (date.find("-") == date.npos) {
+            date += "-01-01";
+        } else if (date.find_first_of("-") == date.find_last_of("-")) {
+            date += "-01";
         }
-        if (time.find(":") == data.npos) {
+        if (time.find(":") == time.npos) {
             time += ":00:00";
         } else if (time.find_first_of(":") == time.find_last_of(":")) {
             time += ":00";
@@ -126,8 +129,8 @@ std::string TimeFormatUtils::FormatDataTimeByString(const std::string &dataTime)
             time = time.substr(0, time.find("."));
         }
     }
-    MEDIA_LOGD("FormatDataTimeByString is: %{public}s%{public}s", data.c_str(), time.c_str());
-    return data + time;
+    MEDIA_LOGD("FormatDateTimeByString is: %{public}s%{public}s", date.c_str(), time.c_str());
+    return date + time;
 }
 }  // namespace Media
 }  // namespace OHOS

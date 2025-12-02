@@ -115,7 +115,7 @@ int64_t MediaSourceLoaderCallback::Open(std::shared_ptr<LoadingRequest> &request
             jsCb->setResult_ = true;
             jsCb->cond_.notify_all();
         } while (0);
-    }, napi_eprio_immediate);
+    }, napi_eprio_immediate, "AVPlayer MediaSourceLoaderCallback::Open");
     if (ret != napi_ok) {
         MEDIA_LOGE("Failed to execute libuv work queue");
         return jsCb_->uuid_;
@@ -176,7 +176,7 @@ void MediaSourceLoaderCallback::Read(int64_t uuid, int64_t requestedOffset, int6
             CHECK_AND_RETURN_LOG(napiStatus == napi_ok,
                 "%{public}s failed to napi_call_function", jsCb->callbackName_.c_str());
         } while (0);
-    }, napi_eprio_immediate);
+    }, napi_eprio_immediate, "AVPlayer MediaSourceLoaderCallback::Read");
     if (ret != napi_ok) {
         MEDIA_LOGE("Failed to execute libuv work queue");
     }
@@ -226,7 +226,7 @@ void MediaSourceLoaderCallback::Close(int64_t uuid)
             CHECK_AND_RETURN_LOG(napiStatus == napi_ok,
                 "%{public}s failed to napi_call_function", jsCb->callbackName_.c_str());
         } while (0);
-    }, napi_eprio_immediate);
+    }, napi_eprio_immediate, "AVPlayer MediaSourceLoaderCallback::Close");
     if (ret != napi_ok) {
         MEDIA_LOGE("Failed to execute libuv work queue");
     }

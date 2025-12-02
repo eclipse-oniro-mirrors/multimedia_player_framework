@@ -192,3 +192,35 @@ int32_t TestScreenCapture::ReleaseVideoBuffer()
     }
     return screenCapture->ReleaseVideoBuffer();
 }
+
+int32_t TestScreenCapture::SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config)
+{
+    if (screenCapture == nullptr) {
+        return MSERR_INVALID_OPERATION;
+    }
+    return screenCapture->SetCaptureAreaHighlight(config);
+}
+ 
+int32_t TestScreenCapture::PresentPicker()
+{
+    if (screenCapture == nullptr) {
+        return MSERR_INVALID_OPERATION;
+    }
+    return screenCapture->PresentPicker();
+}
+
+int32_t TestScreenCapture::SetPickerMode(PickerMode pickerMode)
+{
+    if (screenCapture == nullptr) {
+        return MSERR_INVALID_OPERATION;
+    }
+    return screenCapture->SetPickerMode(pickerMode);
+}
+
+int32_t TestScreenCapture::ExcludePickerWindows(std::vector<int32_t> &windowIDsVec)
+{
+    if (screenCapture == nullptr) {
+        return MSERR_INVALID_OPERATION;
+    }
+    return screenCapture->ExcludePickerWindows(windowIDsVec);
+}

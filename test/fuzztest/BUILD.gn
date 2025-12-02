@@ -24,12 +24,15 @@ group("fuzztest") {
     "avmetadata_fuzztest/avmetadatafile_fuzzer:AVmetadataFileFuzzTest",
     "avmetadata_fuzztest/avmetadatahelper_fuzzer:AVmetadataHelperFuzzTest",
     "avmetadata_fuzztest/avmetadatahelperdatasrc_fuzzer:AVmetadataHelperDataSrcFuzzTest",
+    "avmetadata_fuzztest/avmetadatahelperdatasrcconcurrent_fuzzer:AVmetadataHelperDataSrcConCurrentFuzzTest",
     "avmetadata_fuzztest/avmetadataresolvemetadata_fuzzer:AVmetadataResolveMetadataFuzzTest",
     "avmetadata_fuzztest/avmetadatasetsource_fuzzer:AVmetadataSetSourceFuzzTest",
     "avmetadata_fuzztest/avmetadatastub_fuzzer:AVmetadataStubFuzzTest",
     "avmetadata_fuzztest/avmetadatastublocal_fuzzer:AVmetadataStubLocalFuzzTest",
     "lowpoweravsink_fuzztest/lowpoweraudiosink_fuzzer:LowPowerAudioSinkFuzzTest",
+    "lowpoweravsink_fuzztest/lowpoweraudiosinkconcurrent_fuzzer:LowPowerAudioSinkconcurrentFuzzTest",
     "lowpoweravsink_fuzztest/lowpowervideosink_fuzzer:LowPowerVideoSinkFuzzTest",
+    "lowpoweravsink_fuzztest/lowpowervideosinkconcurrent_fuzzer:LowPowerVideoSinkconcurrentFuzzTest",
     "player_fuzztest/playerapi_fuzzer:PlayerApiFuzzTest",
     "player_fuzztest/playerdatasrc_fuzzer:PlayerDataSrcFuzzTest",
     "player_fuzztest/playerfile_fuzzer:PlayerFileFuzzTest",
@@ -61,6 +64,8 @@ group("fuzztest") {
     "recorder_fuzztest/recorderserviceconcurrent_fuzzer:RecorderServiceConCurrentFuzzTest",
     "transcoder_fuzztest/transcoderservicestub_fuzzer:TranscoderServiceStubFuzzTest",
     "transcoder_fuzztest/transcoderstub_fuzzer:TranscoderStubFuzzTest",
+    "transcoder_fuzztest/transcoderservicestubconcurrent_fuzzer:TranscoderServiceStubConcurrentFuzzTest",
+    "transcoder_fuzztest/transcoderstubconcurrent_fuzzer:TranscoderStubConcurrentFuzzTest",
   ]
   if (player_framework_support_screen_capture) {
     deps += [
@@ -75,6 +80,7 @@ group("fuzztest") {
       "screen_capture_fuzztest/screencapturecontrollerservicestub_fuzzer:ScreenCaptureControllerServiceStubFuzzTest",
       "screen_capture_fuzztest/screencapturedatatype_fuzzer:ScreenCaptureDataTypeFuzzTest",
       "screen_capture_fuzztest/screencapturefileformatfile_fuzzer:ScreenCaptureFileFormatFileFuzzTest",
+      "screen_capture_fuzztest/screencapturemonitorservice_fuzzer:ScreenCaptureMonitorServiceFuzzTest",
       "screen_capture_fuzztest/screencapturemonitorservicestub_fuzzer:ScreenCaptureMonitorServiceStubFuzzTest",
       "screen_capture_fuzztest/screencapturendkacquireaudiobuffer_fuzzer:ScreenCaptureNdkAcquireAudioBufferFuzzTest",
       "screen_capture_fuzztest/screencapturendkacquirevideobuffer_fuzzer:ScreenCaptureNdkAcquireVideoBufferFuzzTest",

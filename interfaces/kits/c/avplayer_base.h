@@ -377,6 +377,37 @@ extern const char* OH_PLAYER_MESSAGE_TYPE;
 extern const char* OH_PLAYER_IS_LIVE_STREAM;
 
 /**
+ * @brief Key to get the value whether the media resource contains video content,
+ *        value type is int32_t. 1 means true and 0 means false.
+ *        Media description key, see {@link OH_AVPlayer_GetMediaDescription}
+ * @since 22
+ */
+extern const char* OH_PLAYER_MD_KEY_HAS_VIDEO;
+
+/**
+ * @brief Key to get the value whether the media resource contains audio content,
+ *        value type is int32_t. 1 means true and 0 means false.
+ *        Media description key, see {@link OH_AVPlayer_GetMediaDescription}
+ * @since 22
+ */
+extern const char* OH_PLAYER_MD_KEY_HAS_AUDIO;
+
+/**
+ * @brief Key to get the value whether the media resource contains subtitle content,
+ *        value type is int32_t. 1 means true and 0 means false.
+ *        Media description key, see {@link OH_AVPlayer_GetMediaDescription}
+ * @since 22
+ */
+extern const char* OH_PLAYER_MD_KEY_HAS_SUBTITLE;
+
+/**
+ * @brief Key to get is track index, value type is int32_t.
+ *        Track description key, see {@link OH_AVPlayer_GetTrackDescription}
+ * @since 22
+ */
+extern const char* OH_PLAYER_MD_KEY_TRACK_INDEX;
+
+/**
  * @brief Called when a player message or alarm is received.
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @param player The pointer to an OH_AVPlayer instance.

@@ -31,6 +31,7 @@
 
 #include "color_space.h"
 #include "v1_0/cm_color_space.h"
+#include "network_security_config.h"
 
 namespace OHOS {
 namespace Media {

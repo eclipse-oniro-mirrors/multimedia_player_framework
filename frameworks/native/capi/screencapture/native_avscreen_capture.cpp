@@ -1451,9 +1451,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetDisplayIdSelected(OH_AVScreenC
     CHECK_AND_RETURN_RET_LOG(selection != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input selection is nullptr");
     struct ScreenCaptureUserSelectionObject *selectionObj =
         reinterpret_cast<ScreenCaptureUserSelectionObject *>(selection);
-    CHECK_AND_RETURN_RET_LOG(selectionObj != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL,
-        "selectionObj is null");
-    *displayId = selectionObj->userSelectionInfo_.displayId;
+    CHECK_AND_RETURN_RET_LOG(selectionObj->userSelectionInfo_.displayIds.size() == 1, AV_SCREEN_CAPTURE_ERR_UNSUPPORT,
+        "display id unsupport %{public}zu", selectionObj->userSelectionInfo_.displayIds.size());
+    *displayId = selectionObj->userSelectionInfo_.displayIds.front();
     MEDIA_LOGD("OH_AVScreenCapture_GetDisplayIdSelected displayId: %{public}" PRIu64, *displayId);
     return AV_SCREEN_CAPTURE_ERR_OK;
 }

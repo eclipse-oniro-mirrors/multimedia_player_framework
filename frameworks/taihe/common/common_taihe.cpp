@@ -307,4 +307,23 @@ ani_object CommonTaihe::CreateAudioRendererInfo(ani_env *env,
         (ani_int)audioRendererInfo->rendererFlags), aniObject, "set property rendererFlags failed");
     return aniObject;
 }
+
+ani_status CommonTaihe::ToAniLongObject(ani_env *env, int64_t src, ani_object &aniObj)
+{
+    CHECK_AND_RETURN_RET_LOG(env != nullptr, ANI_INVALID_ARGS, "Invalid env");
+    static const char *className = "escompat.BigInt";
+
+    ani_class cls {};
+    CHECK_AND_RETURN_RET_LOG(ANI_OK == env->FindClass(className, &cls), ANI_ERROR, "Failed to find class");
+
+    ani_method ctor {};
+    CHECK_AND_RETURN_RET_LOG(ANI_OK == env->Class_FindMethod(cls, "<ctor>", "l:", &ctor), ANI_ERROR,
+        "Failed to find class");
+
+    CHECK_AND_RETURN_RET_LOG(ANI_OK == env->Object_New(cls, ctor, &aniObj, static_cast<ani_long>(src)), ANI_ERROR,
+        "Failed to new Long object");
+
+    return ANI_OK;
+}
+
 } // namespace ANI::Media

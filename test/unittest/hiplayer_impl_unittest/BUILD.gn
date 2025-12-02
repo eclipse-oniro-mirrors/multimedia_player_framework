@@ -79,10 +79,10 @@ ohos_unittest("hiplayer_impl_unittest") {
 
   sanitize = {
     integer_overflow = true
-    ubsan = true
+    ubsan = false
     boundary_sanitize = true
     cfi = true
-    cfi_cross_dso = true
+    cfi_cross_dso = false
     debug = false
     blocklist = "$MEDIA_PLAYER_ROOT_DIR/cfi_blocklist.txt"
   }

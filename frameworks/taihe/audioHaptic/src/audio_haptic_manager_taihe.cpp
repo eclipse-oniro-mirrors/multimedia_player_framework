@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
+#include "audio_haptic_manager_taihe.h"
+
 #include "audio_haptic_common_taihe.h"
 #include "audio_haptic_log.h"
-#include "audio_haptic_manager_taihe.h"
 #include "audio_haptic_player.h"
 #include "audio_haptic_player_taihe.h"
 #include "common_taihe.h"
@@ -73,7 +74,7 @@ void AudioHapticManagerImpl::SetAudioLatencyMode(int32_t id, AudioLatencyMode la
     }
 
     if (!IsLegalAudioLatencyMode(latencyMode.get_value())) {
-        CommonTaihe::ThrowError(NAPI_ERR_INPUT_INVALID,
+        CommonTaihe::ThrowError(TAIHE_ERR_INPUT_INVALID,
             "SetAudioLatencyMode: the value of latencyMode is invalid");
         return;
     }
@@ -81,7 +82,7 @@ void AudioHapticManagerImpl::SetAudioLatencyMode(int32_t id, AudioLatencyMode la
     int32_t setResult = audioHapticMgrClient_->SetAudioLatencyMode(
         id, OHOS::Media::AudioLatencyMode(latencyMode.get_value()));
     if (setResult != SUCCESS) {
-        CommonTaihe::ThrowError(NAPI_ERR_OPERATE_NOT_ALLOWED,
+        CommonTaihe::ThrowError(TAIHE_ERR_OPERATE_NOT_ALLOWED,
             "SetAudioLatencyMode: Failed to set audio latency mode");
     }
 }
@@ -141,7 +142,7 @@ void AudioHapticManagerImpl::SetStreamUsage(int32_t id, uintptr_t usage)
     }
 
     if (!IsLegalAudioStreamUsage(streamUsage)) {
-        CommonTaihe::ThrowError(NAPI_ERR_INPUT_INVALID,
+        CommonTaihe::ThrowError(TAIHE_ERR_INPUT_INVALID,
             "SetStreamUsage: the value of streamUsage is invalid");
         return;
     }
@@ -149,9 +150,56 @@ void AudioHapticManagerImpl::SetStreamUsage(int32_t id, uintptr_t usage)
     int32_t setResult = audioHapticMgrClient_->SetStreamUsage(
         id, static_cast<OHOS::AudioStandard::StreamUsage>(streamUsage));
     if (setResult != SUCCESS) {
-        CommonTaihe::ThrowError(NAPI_ERR_OPERATE_NOT_ALLOWED,
+        CommonTaihe::ThrowError(TAIHE_ERR_OPERATE_NOT_ALLOWED,
             "SetStreamUsage: Failed to set stream usage");
     }
+}
+
+int32_t AudioHapticManagerImpl::RegisterSourceFromFdSync(AudioHapticFileDescriptor const& audioFd,
+    AudioHapticFileDescriptor const& hapticFd)
+{
+    if (audioHapticMgrClient_ == nullptr) {
+        CommonTaihe::ThrowError("Error: audioHapticMgrClient_ is nullptr");
+        return 0;
+    }
+
+    OHOS::Media::AudioHapticFileDescriptor audioHapticFd;
+    if (GetAudioHapticFileDescriptorValue(audioFd, audioHapticFd) != SUCCESS) {
+        CommonTaihe::ThrowError(TAIHE_ERR_INPUT_INVALID, "Invalid first parameter");
+        return 0;
+    }
+
+    OHOS::Media::AudioHapticFileDescriptor audioHapticFileDescriptor;
+    if (GetAudioHapticFileDescriptorValue(hapticFd, audioHapticFileDescriptor) != SUCCESS) {
+        CommonTaihe::ThrowError(TAIHE_ERR_INPUT_INVALID, "Invalid second parameter");
+        return 0;
+    }
+
+    int32_t sourceID;
+    if (audioHapticFd.fd == -1 || audioHapticFileDescriptor.fd == -1) {
+        sourceID = ERROR;
+    } else {
+        sourceID = audioHapticMgrClient_->RegisterSourceFromFd(audioHapticFd, audioHapticFileDescriptor);
+    }
+
+    if (sourceID <= ERROR) {
+        CommonTaihe::ThrowError(sourceID, "RegisterSourceFromFd Error: Operation is not supported or failed");
+        return 0;
+    }
+    return sourceID;
+}
+
+int32_t AudioHapticManagerImpl::GetAudioHapticFileDescriptorValue(AudioHapticFileDescriptor const& audioFd,
+    OHOS::Media::AudioHapticFileDescriptor& audioHapticFd)
+{
+    audioHapticFd.fd = audioFd.fd;
+    if (audioFd.length.has_value()) {
+        audioHapticFd.length = audioFd.length.value();
+    }
+    if (audioFd.offset.has_value()) {
+        audioHapticFd.offset = audioFd.offset.value();
+    }
+    return SUCCESS;
 }
 
 void AudioHapticManagerImpl::CreatePlayerExecute(std::unique_ptr<AudioHapticManagerTaiheContext> &taiheContext)
@@ -168,14 +216,14 @@ void AudioHapticManagerImpl::CreatePlayerExecute(std::unique_ptr<AudioHapticMana
         }
         // Fail to prepare the audio haptic player. Throw err.
         if (result == OHOS::Media::MSERR_OPEN_FILE_FAILED) {
-            taiheContext->errCode = NAPI_ERR_IO_ERROR;
+            taiheContext->errCode = TAIHE_ERR_IO_ERROR;
         } else if (result == OHOS::Media::MSERR_UNSUPPORT_FILE) {
-            taiheContext->errCode = NAPI_ERR_UNSUPPORTED_FORMAT;
+            taiheContext->errCode = TAIHE_ERR_UNSUPPORTED_FORMAT;
         } else {
-            taiheContext->errCode = NAPI_ERR_OPERATE_NOT_ALLOWED;
+            taiheContext->errCode = TAIHE_ERR_OPERATE_NOT_ALLOWED;
         }
     } else {
-        taiheContext->errCode = NAPI_ERR_OPERATE_NOT_ALLOWED;
+        taiheContext->errCode = TAIHE_ERR_OPERATE_NOT_ALLOWED;
     }
     taiheContext->audioHapticPlayer = nullptr;
     taiheContext->status = ERROR;

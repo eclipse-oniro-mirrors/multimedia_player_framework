@@ -150,6 +150,7 @@ public:
     static constexpr std::string_view CONTENT_TYPE = "content_type";
     static constexpr std::string_view STREAM_USAGE = "stream_usage";
     static constexpr std::string_view VOLUME_MODE = "volume_mode";
+    static constexpr std::string_view PRIVACY_TYPE = "privacy_type";
     static constexpr std::string_view RENDERER_FLAG = "renderer_flag";
     static constexpr std::string_view VIDEO_SCALE_TYPE = "video_scale_type";
     static constexpr std::string_view AUDIO_INTERRUPT_MODE = "audio_interrupt_mode";
@@ -170,6 +171,9 @@ public:
     static constexpr std::string_view SEI_PLAYBACK_POSITION = "sei_playbackPosition";
     static constexpr std::string_view SUPER_RESOLUTION_ENABLED = "super_resolution_enabled";
     static constexpr std::string_view PLAYER_AUDIO_HAPTICS_SYNC_ID = "audio_haptic_sync_id";
+    static constexpr std::string_view PLAYER_HAS_VIDEO = "has_video";
+    static constexpr std::string_view PLAYER_HAS_AUDIO = "has_audio";
+    static constexpr std::string_view PLAYER_HAS_SUBTITLE = "has_subtitle";
 };
 
 class PlaybackInfoKey {

@@ -144,8 +144,8 @@ void ScreenCaptureListenerProxy::OnUserSelected(ScreenCaptureUserSelectionInfo s
 
     bool token = data.WriteInterfaceToken(ScreenCaptureListenerProxy::GetDescriptor());
     CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
-    data.WriteInt32(selectionInfo.selectType);
-    data.WriteUint64(selectionInfo.displayId);
+    CHECK_AND_RETURN_LOG(data.WriteInt32(selectionInfo.selectType) && data.WriteUInt64Vector(selectionInfo.displayIds),
+        "Failed to write selectionInfo");
 
     int error = Remote()->SendRequest(ScreenCaptureListenerMsg::ON_USER_SELECTED, data, reply, option);
     CHECK_AND_RETURN_LOG(error == MSERR_OK, "OnUserSelected failed, error: %{public}d", error);
