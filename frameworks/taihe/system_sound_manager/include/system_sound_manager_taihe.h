@@ -46,7 +46,7 @@ public:
 
     string GetSystemToneUriSync(uintptr_t context, SystemToneType type);
     ToneHapticsSettings GetToneHapticsSettingsSync(uintptr_t context, ToneHapticsType type);
-    ::systemTonePlayer::SystemTonePlayer GetSystemTonePlayerSync(uintptr_t context, SystemToneType type);
+    SystemTonePlayerOrNull GetSystemTonePlayerSync(uintptr_t context, SystemToneType type);
 
     void CloseSync(int32_t fd);
     ToneAttrsTaihe GetDefaultRingtoneAttrsSync(uintptr_t context, RingtoneTypeTaihe type);
@@ -70,7 +70,7 @@ public:
     ToneHapticsAttrsTaihe GetHapticsAttrsSyncedWithToneSync(uintptr_t context, ::taihe::string_view toneUri);
     int32_t OpenToneHapticsSync(uintptr_t context, ::taihe::string_view hapticsUri);
     void SetSystemToneUriSync(uintptr_t context, ::taihe::string_view uri, SystemToneTypeTaihe type);
-    ::ringtonePlayer::RingtonePlayer GetRingtonePlayerSync(uintptr_t context, RingtoneTypeTaihe type);
+    RingtonePlayerOrNull GetRingtonePlayerSync(uintptr_t context, RingtoneTypeTaihe type);
     ::taihe::string GetRingtoneUriSync(uintptr_t context, RingtoneTypeTaihe type);
     void SetRingtoneUriSync(uintptr_t context, ::taihe::string_view uri, RingtoneTypeTaihe type);
     ToneAttrsTaihe GetCurrentRingtoneAttributeSync(RingtoneTypeTaihe type);

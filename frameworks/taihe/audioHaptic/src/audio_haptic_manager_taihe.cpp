@@ -206,7 +206,7 @@ void AudioHapticManagerImpl::CreatePlayerExecute(std::unique_ptr<AudioHapticMana
 {
     std::shared_ptr<OHOS::Media::AudioHapticPlayer> audioHapticPlayer =
         audioHapticMgrClient_->CreatePlayer(taiheContext->sourceID, taiheContext->playerOptions);
-    
+
     if (audioHapticPlayer != nullptr) {
         int32_t result = audioHapticPlayer->Prepare();
         if (result == OHOS::Media::MSERR_OK) {
@@ -230,33 +230,33 @@ void AudioHapticManagerImpl::CreatePlayerExecute(std::unique_ptr<AudioHapticMana
     taiheContext->errMessage = AudioHapticCommonTaihe::GetMessageByCode(taiheContext->errCode);
 }
 
-AudioHapticPlayer AudioHapticManagerImpl::CreatePlayerComplete(
+AudioHapticPlayerOrNull AudioHapticManagerImpl::CreatePlayerComplete(
     std::unique_ptr<AudioHapticManagerTaiheContext> &taiheContext)
 {
     if (taiheContext->audioHapticPlayer == nullptr) {
         CommonTaihe::ThrowError(taiheContext->errCode, taiheContext->errMessage);
-        return make_holder<AudioHapticPlayerImpl, AudioHapticPlayer>();
+        return AudioHapticPlayerOrNull::make_type_null();
     }
-    AudioHapticPlayer audioHapticPlayer = AudioHapticPlayerImpl::CreatePlayerInstance(taiheContext->audioHapticPlayer);
     if (::taihe::has_error()) {
         CommonTaihe::ThrowError("CreatePlayer Error: Operation is not supported or failed");
-        return make_holder<AudioHapticPlayerImpl, AudioHapticPlayer>();
+        return AudioHapticPlayerOrNull::make_type_null();
     }
-    return audioHapticPlayer;
+    return AudioHapticPlayerOrNull::make_type_audioHapticPlayer(AudioHapticPlayerImpl::CreatePlayerInstance(
+        taiheContext->audioHapticPlayer));
 }
 
-AudioHapticPlayer AudioHapticManagerImpl::CreatePlayerSync(int32_t id,
+AudioHapticPlayerOrNull AudioHapticManagerImpl::CreatePlayerSync(int32_t id,
     optional_view<AudioHapticPlayerOptions> options)
 {
     if (audioHapticMgrClient_ == nullptr) {
         CommonTaihe::ThrowError("Error: audioHapticMgrClient_ is nullptr");
-        return make_holder<AudioHapticPlayerImpl, AudioHapticPlayer>();
+        return AudioHapticPlayerOrNull::make_type_null();
     }
 
     std::unique_ptr<AudioHapticManagerTaiheContext> taiheContext = std::make_unique<AudioHapticManagerTaiheContext>();
     if (taiheContext == nullptr) {
         CommonTaihe::ThrowError("No memory");
-        return make_holder<AudioHapticPlayerImpl, AudioHapticPlayer>();
+        return AudioHapticPlayerOrNull::make_type_null();
     }
     taiheContext->sourceID = id;
     if (options.has_value()) {

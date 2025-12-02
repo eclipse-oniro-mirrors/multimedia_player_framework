@@ -107,9 +107,19 @@ enum SystemSoundError: i32  {
   ERROR_INVALID_PARAM = 20700007,
 }
 
+union RingtonePlayerOrNull {
+  type_ringtonePlayer: RingtonePlayer;
+  @null type_null;
+}
+
+union SystemTonePlayerOrNull {
+  type_systemTonePlayer: SystemTonePlayer;
+  @null type_null;
+}
+
 interface SystemSoundManager {
   @gen_promise("getSystemTonePlayer")
-  GetSystemTonePlayerSync(context: @sts_type("BaseContext") Opaque, type: SystemToneType): SystemTonePlayer;
+  GetSystemTonePlayerSync(context: @sts_type("BaseContext") Opaque, type: SystemToneType): SystemTonePlayerOrNull;
 
   @gen_promise("getSystemToneUri")
   GetSystemToneUriSync(context: @sts_type("BaseContext") Opaque, type: SystemToneType): String;
@@ -178,7 +188,7 @@ interface SystemSoundManager {
 
   @gen_promise("getRingtonePlayer")
   GetRingtonePlayerSync(
-    context: @sts_type("BaseContext") Opaque, type: RingtoneType): RingtonePlayer;
+    context: @sts_type("BaseContext") Opaque, type: RingtoneType): RingtonePlayerOrNull;
 
   @gen_promise("getRingtoneUri")
   GetRingtoneUriSync(context: @sts_type("BaseContext") Opaque, type: RingtoneType): String;

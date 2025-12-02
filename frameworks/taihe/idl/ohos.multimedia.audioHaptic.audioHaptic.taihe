@@ -41,6 +41,11 @@ struct AudioHapticFileDescriptor {
   offset: Optional<i64>;
 }
 
+union AudioHapticPlayerOrNull {
+  type_audioHapticPlayer: AudioHapticPlayer;
+  @null type_null;
+}
+
 interface AudioHapticManager {
     @gen_promise("registerSource")
     RegisterSourceSync(audioUri: String, hapticUri: String): i32;
@@ -53,7 +58,7 @@ interface AudioHapticManager {
     SetStreamUsage(id: i32, usage: @sts_type("audio.StreamUsage") Opaque): void;
 
     @gen_promise("createPlayer")
-    CreatePlayerSync(id: i32, options: Optional<AudioHapticPlayerOptions>): AudioHapticPlayer;
+    CreatePlayerSync(id: i32, options: Optional<AudioHapticPlayerOptions>): AudioHapticPlayerOrNull;
 
     @gen_promise("registerSourceFromFd")
     RegisterSourceFromFdSync(audioFd: AudioHapticFileDescriptor, hapticFd: AudioHapticFileDescriptor): i32;
@@ -64,7 +69,7 @@ interface AudioHapticPlayer {
 
     @gen_promise("start")
     StartSync(): void;
-    
+
     @gen_promise("stop")
     StopSync(): void;
 
