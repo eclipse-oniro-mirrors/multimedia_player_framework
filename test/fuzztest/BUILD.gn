@@ -58,6 +58,7 @@ group("fuzztest") {
     "recorder_fuzztest/recordersetvideosource_fuzzer:RecorderSetVideoSourceFuzzTest",
     "recorder_fuzztest/recorderservicestubfunctions_fuzzer:RecorderServiceStubFunctionsFuzzTest",
     "recorder_fuzztest/recordersetcaptureratefounction_fuzzer:RecorderSetCaptureRateFouncTionFuzzTest",
+    "recorder_fuzztest/recorderservice_fuzzer:RecorderServiceFuzzTest",
     "recorder_fuzztest/recorderserviceconcurrent_fuzzer:RecorderServiceConCurrentFuzzTest",
     "transcoder_fuzztest/transcoderservicestub_fuzzer:TranscoderServiceStubFuzzTest",
     "transcoder_fuzztest/transcoderstub_fuzzer:TranscoderStubFuzzTest",
@@ -118,6 +119,8 @@ group("fuzztest") {
       "screen_capture_fuzztest/screencapturevideosourcetype_fuzzer:ScreenCaptureVideoSourceTypeFuzzTest",
       "screen_capture_fuzztest/avscreencaptureservicestub_fuzzer:AvScreenCaptureServiceStubFuzzTest",
       "screen_capture_fuzztest/screencaptureaudiocapturerwrapper_fuzzer:ScreenCaptureAudioCapturerWrapperFuzzTest",
+      "screen_capture_fuzztest/screencapturendksetareahighlight_fuzzer:ScreenCaptureNdkSetAreaHighlightFuzzTest",	
+      "screen_capture_fuzztest/screencapturesetareahighlight_fuzzer:ScreenCaptureSetAreaHighlightFuzzTest",
       "screen_capture_fuzztest/screencaptureaddsaconcurrent_fuzzer:ScreenCaptureAddSaConcurrentFuzzTest",
     ]
   }
