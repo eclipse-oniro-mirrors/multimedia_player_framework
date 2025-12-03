@@ -27,18 +27,6 @@ std::map<OH_AVScreenCapture *, std::shared_ptr<ScreenCaptureCallbackMock>> Scree
 
 typedef struct NativeWindow OHNativeWindow;
 
-struct OH_AVScreenCapture_UserSelectionInfo {
-    OH_AVScreenCapture_UserSelectionInfo() = default;
-    virtual ~OH_AVScreenCapture_UserSelectionInfo() = default;
-}
-
-struct ScreenCaptureUserSelectionObject : public OH_AVScreenCapture_UserSelectionInfo {
-    explicit ScreenCaptureUserSelectionObject(ScreenCaptureUserSelectionInfo selectionInfo)
-        : userSelectionInfo_(selectionInfo) {}
-    ~ScreenCaptureUserSelectionObject() = default;
-    ScreenCaptureUserSelectionInfo userSelectionInfo_;
-};
-
 void ScreenCaptureCapiMock::OnError(OH_AVScreenCapture *screenCapture, int32_t errorCode)
 {
     std::shared_ptr<ScreenCaptureCallbackMock> mockCb = GetCallback(screenCapture);
