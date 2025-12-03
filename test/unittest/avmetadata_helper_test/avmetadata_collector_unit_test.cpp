@@ -593,6 +593,90 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: ExtractMetadataFromImageTrack_001
+ * @tc.desc: ExtractMetadataFromImageTrack_001
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadataFromImageTrack_001, TestSize.Level1)
+{
+    std::shared_ptr<Meta> imageTrackMetadata = std::make_shared<Meta>();
+    imageTrackMetadata->SetData(Tag::VIDEO_WIDTH, 720);
+    imageTrackMetadata->SetData(Tag::VIDEO_HEIGHT, 480);
+    std::vector<std::shared_ptr<Meta>> trackInfos = { imageTrackMetadata };
+ 
+    Metadata metadata;
+    metadata.SetMeta(AV_KEY_VIDEO_WIDTH, "1920");
+    metadata.SetMeta(AV_KEY_VIDEO_HEIGHT, "1080");
+
+    avmetaDataCollector->ExtractMetadataFromImageTrack(metadata, trackInfos, 0);
+    EXPECT_TRUE(metadata.GetMeta(AV_KEY_VIDEO_WIDTH) == "1920");
+    EXPECT_TRUE(metadata.GetMeta(AV_KEY_VIDEO_HEIGHT) == "1080");
+}
+
+/**
+ * @tc.name: ExtractMetadataFromImageTrack_002
+ * @tc.desc: ExtractMetadataFromImageTrack_002
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadataFromImageTrack_002, TestSize.Level1)
+{
+    std::shared_ptr<Meta> imageTrackMetadata = std::make_shared<Meta>();
+    imageTrackMetadata->SetData(Tag::VIDEO_WIDTH, 720);
+    imageTrackMetadata->SetData(Tag::VIDEO_HEIGHT, 480);
+    std::vector<std::shared_ptr<Meta>> trackInfos = { imageTrackMetadata };
+ 
+    Metadata metadata;
+    metadata.SetMeta(AV_KEY_VIDEO_WIDTH, "");
+    metadata.SetMeta(AV_KEY_VIDEO_HEIGHT, "1080");
+
+    avmetaDataCollector->ExtractMetadataFromImageTrack(metadata, trackInfos, 0);
+    EXPECT_TRUE(metadata.GetMeta(AV_KEY_VIDEO_WIDTH) == "720");
+    EXPECT_TRUE(metadata.GetMeta(AV_KEY_VIDEO_HEIGHT) == "1080");
+}
+
+/**
+ * @tc.name: ExtractMetadataFromImageTrack_003
+ * @tc.desc: ExtractMetadataFromImageTrack_003
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadataFromImageTrack_003, TestSize.Level1)
+{
+    std::shared_ptr<Meta> imageTrackMetadata = std::make_shared<Meta>();
+    imageTrackMetadata->SetData(Tag::VIDEO_WIDTH, 720);
+    imageTrackMetadata->SetData(Tag::VIDEO_HEIGHT, 480);
+    std::vector<std::shared_ptr<Meta>> trackInfos = { imageTrackMetadata };
+ 
+    Metadata metadata;
+    metadata.SetMeta(AV_KEY_VIDEO_WIDTH, "1920");
+    metadata.SetMeta(AV_KEY_VIDEO_HEIGHT, "");
+
+    avmetaDataCollector->ExtractMetadataFromImageTrack(metadata, trackInfos, 0);
+    EXPECT_TRUE(metadata.GetMeta(AV_KEY_VIDEO_WIDTH) == "1920");
+    EXPECT_TRUE(metadata.GetMeta(AV_KEY_VIDEO_HEIGHT) == "480");
+}
+
+/**
+ * @tc.name: ExtractMetadataFromImageTrack_004
+ * @tc.desc: ExtractMetadataFromImageTrack_004
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadataFromImageTrack_004, TestSize.Level1)
+{
+    std::shared_ptr<Meta> imageTrackMetadata = std::make_shared<Meta>();
+    imageTrackMetadata->SetData(Tag::VIDEO_WIDTH, 720);
+    imageTrackMetadata->SetData(Tag::VIDEO_HEIGHT, 480);
+    std::vector<std::shared_ptr<Meta>> trackInfos = { imageTrackMetadata };
+ 
+    Metadata metadata;
+    metadata.SetMeta(AV_KEY_VIDEO_WIDTH, "");
+    metadata.SetMeta(AV_KEY_VIDEO_HEIGHT, "");
+
+    avmetaDataCollector->ExtractMetadataFromImageTrack(metadata, trackInfos, 0);
+    EXPECT_TRUE(metadata.GetMeta(AV_KEY_VIDEO_WIDTH) == "720");
+    EXPECT_TRUE(metadata.GetMeta(AV_KEY_VIDEO_HEIGHT) == "480");
+}
+
+/**
  * @tc.name: IsAllDigits_001
  * @tc.desc: IsAllDigits_001
  * @tc.type: FUNC

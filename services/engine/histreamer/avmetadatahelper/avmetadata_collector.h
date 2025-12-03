@@ -93,7 +93,7 @@ private:
     std::unordered_map<int32_t, std::string> GetMetadata(
         const std::shared_ptr<Meta> &globalInfo, const std::vector<std::shared_ptr<Meta>> &trackInfos);
     void ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta, Metadata &avmeta) const;
-    void FormatAVMeta(Metadata &avmeta, int32_t imageTrackCount, const std::shared_ptr<Meta> &globalInfo);
+    void FormatAVMeta(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo);
     void FormatDuration(Metadata &avmeta);
     void FormatMimeType(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo);
     void FormatDateTime(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo);
@@ -110,6 +110,8 @@ private:
     bool IsSubtitleMime(const std::string& mime) const;
     void InitTracksInfoVector(const std::shared_ptr<Meta> &meta, size_t index);
     std::string VectorToString(const std::vector<int32_t> &vec) const;
+    void ExtractMetadataFromImageTrack(Metadata &metadata, const std::vector<std::shared_ptr<Meta>> &trackInfos,
+        size_t index);
 };
 }  // namespace Media
 }  // namespace OHOS
