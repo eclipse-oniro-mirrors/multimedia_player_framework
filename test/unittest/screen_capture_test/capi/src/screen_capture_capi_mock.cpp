@@ -27,6 +27,18 @@ std::map<OH_AVScreenCapture *, std::shared_ptr<ScreenCaptureCallbackMock>> Scree
 
 typedef struct NativeWindow OHNativeWindow;
 
+struct OH_AVScreenCapture_UserSelectionInfo {
+    OH_AVScreenCapture_UserSelectionInfo() = default;
+    virtual ~OH_AVScreenCapture_UserSelectionInfo() = default;
+}
+
+struct ScreenCaptureUserSelectionObject : public OH_AVScreenCapture_UserSelectionInfo {
+    explicit ScreenCaptureUserSelectionObject(ScreenCaptureUserSelectionInfo selectionInfo)
+        : userSelectionInfo_(selectionInfo) {}
+    ~ScreenCaptureUserSelectionObject() = default;
+    ScreenCaptureUserSelectionInfo userSelectionInfo_;
+};
+
 void ScreenCaptureCapiMock::OnError(OH_AVScreenCapture *screenCapture, int32_t errorCode)
 {
     std::shared_ptr<ScreenCaptureCallbackMock> mockCb = GetCallback(screenCapture);
@@ -94,6 +106,22 @@ void ScreenCaptureCapiMock::OnDisplaySelected(OH_AVScreenCapture *screenCapture,
     std::shared_ptr<ScreenCaptureCallbackMock> mockCb = GetCallback(screenCapture);
     if (mockCb != nullptr) {
         mockCb->OnDisplaySelected(displayId);
+    }
+}
+
+void ScreenCaptureCapiMock::OnUserSelected(OH_AVScreenCapture *screenCapture,
+    OH_AVScreenCapture_UserSelectionInfo* selection, void *userData)
+{
+    std::shared_ptr<ScreenCaptureCallbackMock> mockCb = GetCallback(screenCapture);
+    ScreenCaptureUserSelectionInfo selectionInfo;
+    int32_t type;
+    uint64_t displayId;
+    OH_AVScreenCapture_GetCaptureTypeSelected(selection, &type);
+    OH_AVScreenCapture_GetDisplayIdSelected(selection, &displayId);
+    selectionInfo.selectType = type;
+    selectionInfo.displayIds.push_back(displayId);
+    if (mockCb != nullptr) {
+        mockCb->OnUserSelected(&selectionInfo);
     }
 }
 
@@ -248,6 +276,17 @@ int32_t ScreenCaptureCapiMock::SetDisplayCallback()
 {
     MEDIA_LOGD("ScreenCaptureCapiMock SetDisplayCallback");
     int32_t ret = OH_AVScreenCapture_SetDisplayCallback(screenCapture_, ScreenCaptureCapiMock::OnDisplaySelected, this);
+    if (ret != AV_SCREEN_CAPTURE_ERR_OK) {
+        MEDIA_LOGE("ScreenCaptureCapiMock SetDisplayCallback failed, ret: %{public}d", ret);
+        return MSERR_UNKNOWN;
+    }
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}
+
+int32_t ScreenCaptureCapiMock::SetSelectionCallback()
+{
+    MEDIA_LOGD("ScreenCaptureCapiMock SetDisplayCallback");
+    int32_t ret = OH_AVScreenCapture_SetSelectionCallback(screenCapture_, ScreenCaptureCapiMock::OnUserSelected, this);
     if (ret != AV_SCREEN_CAPTURE_ERR_OK) {
         MEDIA_LOGE("ScreenCaptureCapiMock SetDisplayCallback failed, ret: %{public}d", ret);
         return MSERR_UNKNOWN;

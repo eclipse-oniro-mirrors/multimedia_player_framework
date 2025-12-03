@@ -173,6 +173,12 @@ void ScreenCaptureUnitTestCallback::OnDisplaySelected(uint64_t displayId)
     screenCaptureDisplayId_ = displayId;
 }
 
+void ScreenCaptureUnitTestCallback::OnUserSelected(ScreenCaptureUserSelectionInfo * selection)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTestCallback::OnUserSelected selection type:%{public}d, displayId:%{public}" PRIu64,
+    selection.selectType, selection.displayIds[0]);
+}
+
 void ScreenCaptureUnitTestCallback::OnBufferAvailable(std::shared_ptr<AVBuffer> buffer,
     AVScreenCaptureBufferType bufferType, int64_t timestamp)
 {
