@@ -605,7 +605,7 @@ napi_value AVMetadataExtractorNapi::JsSetUrlSource(napi_env env, napi_callback_i
     auto res = extractor->helper_->SetUrlSource(extractor->url_, extractor->header_);
     if (res == MSERR_OK) {
         extractor->state_ = HelperState::HELPER_STATE_RUNNABLE;
-    } else if (res == MSERR_INVALID_OPERATION) {
+    } else if (res == MSERR_CLEARTEXT_NOT_PERMITTED) {
         extractor->state_ = HelperState::HELPER_STATE_HTTP_INTERCEPTED;
     } else {
         extractor->state_ = HelperState::HELPER_ERROR;
