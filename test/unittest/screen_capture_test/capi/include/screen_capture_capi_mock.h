@@ -98,7 +98,7 @@ private:
         event, OH_Rect* area, void *userData);
     static void OnDisplaySelected(struct OH_AVScreenCapture *capture, uint64_t displayId, void *userData);
     static void OnUserSelected(OH_AVScreenCapture *screenCapture, OH_AVScreenCapture_UserSelectionInfo* selection,
-        void *userData)
+        void *userData);
     OH_AVScreenCaptureConfig Convert(AVScreenCaptureConfig config);
     OH_AVScreenCaptureHighlightConfig HighlightConfigConvert(AVScreenCaptureHighlightConfig config);
 
