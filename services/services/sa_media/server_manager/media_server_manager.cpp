@@ -1231,7 +1231,7 @@ void MediaServerManager::AsyncExecutor::HandleAsyncExecution()
         bool allStubsRefCountLessOrEqual1 = false;
         for (auto& item : tempList) {
             int refCount = item->GetSptrRefCount();
-            allStubsRefCountLessOrEqual1 = refCount > 1 ? true : false;
+            allStubsRefCountLessOrEqual1 = refCount > 1;
         }
         CHECK_AND_BREAK(allStubsRefCountLessOrEqual1);
         sleep(1);
