@@ -39,20 +39,20 @@ enum ErrorType: i32 {
 export interface ErrorInfo<T extends Error = BusinessError> {
     errorCode: T;
     errorType?: ErrorType;
-    soundId?: number;
-    streamId?: number;
+    soundId?: int;
+    streamId?: int;
 }
 
 class _taihe_ErrorInfo_inject implements ErrorInfo {
     errorCode: BusinessError<void>;
     errorType: (ErrorType | undefined);
-    soundId: (number | undefined);
-    streamId: (number | undefined);
+    soundId: (int | undefined);
+    streamId: (int | undefined);
     constructor(
         errorCode: BusinessError<void>,
         errorType: (ErrorType | undefined),
-        soundId: (number | undefined),
-        streamId: (number | undefined),
+        soundId: (int | undefined),
+        streamId: (int | undefined),
     )
     {
         this.errorCode = errorCode;
