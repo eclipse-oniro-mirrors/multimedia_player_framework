@@ -84,7 +84,7 @@ function ReportAVScreenCaptureUserChoiceSync(sessionId: i32, choice: String): vo
 
 @gen_async("getAVScreenCaptureConfigurableParameters")
 @gen_promise("getAVScreenCaptureConfigurableParameters")
-function GetAVScreenCaptureconfigurableParametersSync(sessionId: i32): String;
+function GetAVScreenCaptureConfigurableParametersSync(sessionId: i32): String;
 
 enum HdrType: i32 {
     AV_HDR_TYPE_NONE = 0,
