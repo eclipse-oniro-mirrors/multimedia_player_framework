@@ -2637,16 +2637,16 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_set_highlight_for_area_002, TestS
 }
 
 /**
- * @tc.name: screen_capture_set_selection_callback_002
+ * @tc.name: screen_capture_set_selection_callback_001
  * @tc.desc: do screencapture
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(ScreenCaptureUnitTest, screen_capture_set_selection_callback_002, TestSize.Level2)
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_set_selection_callback_001, TestSize.Level2)
 {
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_set_highlight_for_area_001 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_set_selection_callback_001 before");
     RecorderInfo recorderInfo;
-    SetRecorderInfo("screen_capture_set_highlight_for_area_002.mp4", recorderInfo);
+    SetRecorderInfo("screen_capture_set_selection_callback_001.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
     AudioCaptureInfo micCapInfo = {
         .audioSampleRate = 16000,
@@ -2660,7 +2660,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_set_selection_callback_002, TestS
         .audioSource = AudioCaptureSourceType::APP_PLAYBACK
     };
     config_.audioInfo.innerCapInfo = innerCapInfo;
-    config_.captureMode = CaptureMode::CAPTURE_INVAILD;
+    config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
     screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_);
     ASSERT_NE(nullptr, screenCaptureCb_);
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
