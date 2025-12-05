@@ -1435,6 +1435,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetCaptureTypeSelected(OH_AVScree
 {
     MEDIA_LOGD("OH_AVScreenCapture_GetCaptureTypeSelected S");
     CHECK_AND_RETURN_RET_LOG(selection != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input selection is nullptr");
+    CHECK_AND_RETURN_RET_LOG(type != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input type is nullptr");
     struct ScreenCaptureUserSelectionObject *selectionObj =
         reinterpret_cast<ScreenCaptureUserSelectionObject *>(selection);
     CHECK_AND_RETURN_RET_LOG(selectionObj != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL,
@@ -1449,6 +1450,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetDisplayIdSelected(OH_AVScreenC
 {
     MEDIA_LOGD("OH_AVScreenCapture_GetDisplayIdSelected S");
     CHECK_AND_RETURN_RET_LOG(selection != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input selection is nullptr");
+    CHECK_AND_RETURN_RET_LOG(displayId != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input displayId is nullptr");
     struct ScreenCaptureUserSelectionObject *selectionObj =
         reinterpret_cast<ScreenCaptureUserSelectionObject *>(selection);
     CHECK_AND_RETURN_RET_LOG(selectionObj->userSelectionInfo_.displayIds.size() == 1, AV_SCREEN_CAPTURE_ERR_UNSUPPORT,
