@@ -1198,7 +1198,7 @@ void AVPlayerCallback::OnAudioDeviceChangeCb(const int32_t extra, const Format &
     OHOS::Parcel parcel;
     parcel.WriteBuffer(parcelBuffer, parcelSize);
     OHOS::AudioStandard::AudioDeviceDescriptor deviceInfo(OHOS::AudioStandard::AudioDeviceDescriptor::DEVICE_INFO);
-    deviceInfo.Unmarshalling(parcel);
+    deviceInfo.UnmarshallingSelf(parcel);
 
     int32_t reason;
     infoBody.GetIntValue(PlayerKeys::AUDIO_DEVICE_CHANGE_REASON, reason);
