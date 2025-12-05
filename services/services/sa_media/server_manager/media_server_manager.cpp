@@ -1051,6 +1051,7 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
     DestroyLppVideoPlayerStubForPid(pid);
     MonitorServiceStub::GetInstance()->OnClientDie(pid);
     executor_.SetClearCallBack([this]() {
+        std::lock_guard<std::mutex> lock(mutex_);
         CHECK_AND_RETURN_NOLOG(GetStubMapCountIsEmpty());
         SetCritical(false);
     });
