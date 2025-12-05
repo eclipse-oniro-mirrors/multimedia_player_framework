@@ -62,7 +62,7 @@ namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaServerManager"};
 constexpr uint32_t REPORT_TIME = 100000000; // us
 constexpr uint32_t MAX_TIMES = 15;
-constexpr uint32_t DELAY_TIME = 200000;
+constexpr uint32_t DELAY_TIME = 200;
 constexpr int32_t RELEASE_THRESHOLD = 3;  // relese task
 }
 
@@ -1234,7 +1234,7 @@ void MediaServerManager::AsyncExecutor::HandleAsyncExecution()
             int refCount = item->GetSptrRefCount();
             allStubsRefCountBigger1 = refCount > 1;
         }
-        sleep(DELAY_TIME);
+        std::this_thread::sleep_for(std::chrono::milliseconds(DELAY_TIME));
         times++;
         CHECK_AND_BREAK(allStubsRefCountBigger1);
     }
