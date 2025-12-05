@@ -61,7 +61,7 @@ namespace PlayerHDI = OHOS::HDI::LowPowerPlayer::V1_0;
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaServerManager"};
 constexpr uint32_t REPORT_TIME = 100000000; // us
-constexpr uint32_t MAX_TIMES = 5;
+constexpr uint32_t MAX_TIMES = 3;
 constexpr int32_t RELEASE_THRESHOLD = 3;  // relese task
 }
 
@@ -1227,15 +1227,15 @@ void MediaServerManager::AsyncExecutor::HandleAsyncExecution()
         freeList_.swap(tempList);
     }
     int32_t times = 0;
-    while (times < MAX_TIMES) {
-        bool allStubsRefCountLessOrEqual1 = false;
+    while (times <= MAX_TIMES) {
+        bool allStubsRefCountBigger1 = false;
         for (auto& item : tempList) {
             int refCount = item->GetSptrRefCount();
-            allStubsRefCountLessOrEqual1 = refCount > 1;
+            allStubsRefCountBigger1 = refCount > 1;
         }
-        CHECK_AND_BREAK(allStubsRefCountLessOrEqual1);
-        sleep(1);
+        sleep(times);
         times++;
+        CHECK_AND_BREAK(allStubsRefCountBigger1);
     }
     tempList.clear();
     callBack_();
