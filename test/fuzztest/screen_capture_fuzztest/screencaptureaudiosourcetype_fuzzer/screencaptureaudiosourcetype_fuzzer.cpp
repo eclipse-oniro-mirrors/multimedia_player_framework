@@ -29,78 +29,60 @@ using namespace Media;
 
 namespace OHOS {
 namespace Media {
-ScreenCaptureAudioSourceTypeFuzzer::ScreenCaptureAudioSourceTypeFuzzer()
-{
-}
+    ScreenCaptureAudioSourceTypeFuzzer::ScreenCaptureAudioSourceTypeFuzzer() {}
 
-ScreenCaptureAudioSourceTypeFuzzer::~ScreenCaptureAudioSourceTypeFuzzer()
-{
-}
+    ScreenCaptureAudioSourceTypeFuzzer::~ScreenCaptureAudioSourceTypeFuzzer() {}
 
-void SetConfig(AVScreenCaptureConfig &config)
-{
-    AudioCaptureInfo miccapinfo = {
-        .audioSampleRate = 48000,
-        .audioChannels = 2,
-        .audioSource = SOURCE_DEFAULT
-    };
+    void SetConfig(AVScreenCaptureConfig &config)
+    {
+        AudioCaptureInfo miccapinfo = {.audioSampleRate = 48000, .audioChannels = 2, .audioSource = SOURCE_DEFAULT};
 
-    VideoCaptureInfo videocapinfo = {
-        .videoFrameWidth = 720,
-        .videoFrameHeight = 1280,
-        .videoSource = VIDEO_SOURCE_SURFACE_RGBA
-    };
+        VideoCaptureInfo videocapinfo = {
+            .videoFrameWidth = 720, .videoFrameHeight = 1280, .videoSource = VIDEO_SOURCE_SURFACE_RGBA};
 
-    AudioInfo audioinfo = {
-        .micCapInfo = miccapinfo,
-    };
+        AudioInfo audioinfo = {
+            .micCapInfo = miccapinfo,
+        };
 
-    VideoInfo videoinfo = {
-        .videoCapInfo = videocapinfo
-    };
+        VideoInfo videoinfo = {.videoCapInfo = videocapinfo};
 
-    config = {
-        .captureMode = CAPTURE_HOME_SCREEN,
-        .dataType = ORIGINAL_STREAM,
-        .audioInfo = audioinfo,
-        .videoInfo = videoinfo,
-    };
-}
-
-bool ScreenCaptureAudioSourceTypeFuzzer::FuzzScreenCaptureAudioSourceType(uint8_t *data, size_t size)
-{
-    if (data == nullptr || size < sizeof(AudioCaptureSourceType)) {
-        return false;
+        config = {
+            .captureMode = CAPTURE_HOME_SCREEN,
+            .dataType = ORIGINAL_STREAM,
+            .audioInfo = audioinfo,
+            .videoInfo = videoinfo,
+        };
     }
-    bool retFlags = TestScreenCapture::CreateScreenCapture();
-    RETURN_IF(retFlags, false);
 
-    AVScreenCaptureConfig config;
-    SetConfig(config);
-    constexpr int32_t audioSourceTypesList = 5;
-    constexpr uint32_t recorderTime = 3;
-    const AudioCaptureSourceType audioSourceType[audioSourceTypesList] {
-        SOURCE_INVALID,
-        SOURCE_DEFAULT,
-        MIC,
-        ALL_PLAYBACK,
-        APP_PLAYBACK,
-    };
-    int32_t asourcesubscript = abs(*reinterpret_cast<int32_t *>(data) % (audioSourceTypesList));
-    config.audioInfo.micCapInfo.audioSource = audioSourceType[asourcesubscript];
+    bool ScreenCaptureAudioSourceTypeFuzzer::FuzzScreenCaptureAudioSourceType(uint8_t *data, size_t size)
+    {
+        if (data == nullptr || size < sizeof(AudioCaptureSourceType)) {
+            return false;
+        }
+        bool retFlags = TestScreenCapture::CreateScreenCapture();
+        RETURN_IF(retFlags, false);
 
-    std::shared_ptr<TestScreenCaptureCallbackTest> callbackobj
-        = std::make_shared<TestScreenCaptureCallbackTest>();
-    TestScreenCapture::SetMicrophoneEnabled(true);
-    TestScreenCapture::SetCanvasRotation(true);
-    TestScreenCapture::SetScreenCaptureCallback(callbackobj);
-    TestScreenCapture::Init(config);
-    TestScreenCapture::StartScreenCapture();
-    sleep(recorderTime);
-    TestScreenCapture::StopScreenCapture();
-    TestScreenCapture::Release();
-    return true;
-}
+        AVScreenCaptureConfig config;
+        SetConfig(config);
+        constexpr int32_t audioSourceTypesList = 5;
+        constexpr uint32_t recorderTime = 3;
+        const AudioCaptureSourceType audioSourceType[audioSourceTypesList]{
+            SOURCE_INVALID, SOURCE_DEFAULT, MIC, ALL_PLAYBACK, APP_PLAYBACK,
+        };
+        int32_t asourcesubscript = abs(*reinterpret_cast<int32_t *>(data) % (audioSourceTypesList));
+        config.audioInfo.micCapInfo.audioSource = audioSourceType[asourcesubscript];
+
+        std::shared_ptr<TestScreenCaptureCallbackTest> callbackobj = std::make_shared<TestScreenCaptureCallbackTest>();
+        TestScreenCapture::SetMicrophoneEnabled(true);
+        TestScreenCapture::SetCanvasRotation(true);
+        TestScreenCapture::SetScreenCaptureCallback(callbackobj);
+        TestScreenCapture::Init(config);
+        TestScreenCapture::StartScreenCapture();
+        sleep(recorderTime);
+        TestScreenCapture::StopScreenCapture();
+        TestScreenCapture::Release();
+        return true;
+    }
 } // namespace Media
 
 bool FuzzTestScreenCaptureAudioSourceType(uint8_t *data, size_t size)

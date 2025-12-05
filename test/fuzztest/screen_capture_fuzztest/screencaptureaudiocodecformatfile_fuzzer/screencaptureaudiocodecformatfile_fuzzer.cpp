@@ -35,94 +35,67 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTUR
 
 namespace OHOS {
 namespace Media {
-ScreenCaptureAudioCodecFormatFileFuzzer::ScreenCaptureAudioCodecFormatFileFuzzer()
-{
-}
+    ScreenCaptureAudioCodecFormatFileFuzzer::ScreenCaptureAudioCodecFormatFileFuzzer() {}
 
-ScreenCaptureAudioCodecFormatFileFuzzer::~ScreenCaptureAudioCodecFormatFileFuzzer()
-{
-}
+    ScreenCaptureAudioCodecFormatFileFuzzer::~ScreenCaptureAudioCodecFormatFileFuzzer() {}
 
-void SetConfig(AVScreenCaptureConfig &config)
-{
-    AudioCaptureInfo innerCapInfo = {
-        .audioSampleRate = 48000,
-        .audioChannels = 2,
-        .audioSource = ALL_PLAYBACK
-    };
+    void SetConfig(AVScreenCaptureConfig &config)
+    {
+        AudioCaptureInfo innerCapInfo = {.audioSampleRate = 48000, .audioChannels = 2, .audioSource = ALL_PLAYBACK};
 
-    AudioEncInfo audioEncInfo = {
-        .audioBitrate = 48000,
-        .audioCodecformat = AudioCodecFormat::AAC_LC
-    };
+        AudioEncInfo audioEncInfo = {.audioBitrate = 48000, .audioCodecformat = AudioCodecFormat::AAC_LC};
 
-    VideoCaptureInfo videoCapInfo = {
-        .videoFrameWidth = 720,
-        .videoFrameHeight = 1080,
-        .videoSource = VIDEO_SOURCE_SURFACE_RGBA
-    };
+        VideoCaptureInfo videoCapInfo = {
+            .videoFrameWidth = 720, .videoFrameHeight = 1080, .videoSource = VIDEO_SOURCE_SURFACE_RGBA};
 
-    VideoEncInfo videoEncInfo = {
-        .videoCodec = VideoCodecFormat::MPEG4,
-        .videoBitrate = 2000000,
-        .videoFrameRate = 30
-    };
+        VideoEncInfo videoEncInfo = {
+            .videoCodec = VideoCodecFormat::MPEG4, .videoBitrate = 2000000, .videoFrameRate = 30};
 
-    AudioInfo audioInfo = {
-        .innerCapInfo = innerCapInfo,
-        .audioEncInfo = audioEncInfo
-    };
+        AudioInfo audioInfo = {.innerCapInfo = innerCapInfo, .audioEncInfo = audioEncInfo};
 
-    VideoInfo videoInfo = {
-        .videoCapInfo = videoCapInfo,
-        .videoEncInfo = videoEncInfo
-    };
+        VideoInfo videoInfo = {.videoCapInfo = videoCapInfo, .videoEncInfo = videoEncInfo};
 
-    config = {
-        .captureMode = CAPTURE_HOME_SCREEN,
-        .dataType = CAPTURE_FILE,
-        .audioInfo = audioInfo,
-        .videoInfo = videoInfo,
-    };
-}
-
-bool ScreenCaptureAudioCodecFormatFileFuzzer::FuzzScreenCaptureAudioCodecFormatFile(uint8_t *data, size_t size)
-{
-    if (data == nullptr || size < sizeof(int32_t)) {
-        return false;
+        config = {
+            .captureMode = CAPTURE_HOME_SCREEN,
+            .dataType = CAPTURE_FILE,
+            .audioInfo = audioInfo,
+            .videoInfo = videoInfo,
+        };
     }
-    bool retFlags = TestScreenCapture::CreateScreenCapture();
-    RETURN_IF(retFlags, false);
 
-    AVScreenCaptureConfig config;
-    SetConfig(config);
-    constexpr int32_t audioCodecformatList = 3;
-    constexpr uint32_t recorderTime = 3;
-    const AudioCodecFormat audioCodecformat[audioCodecformatList] {
-        AUDIO_DEFAULT,
-        AAC_LC,
-        AUDIO_CODEC_FORMAT_BUTT
-    };
-    int32_t randomNum = abs((*reinterpret_cast<int32_t *>(data)) % (audioCodecformatList));
-    MEDIA_LOGI("FuzzTest ScreenCaptureAudioBitrateFileNdkFuzzer randomNum: %{public}d ", randomNum);
+    bool ScreenCaptureAudioCodecFormatFileFuzzer::FuzzScreenCaptureAudioCodecFormatFile(uint8_t *data, size_t size)
+    {
+        if (data == nullptr || size < sizeof(int32_t)) {
+            return false;
+        }
+        bool retFlags = TestScreenCapture::CreateScreenCapture();
+        RETURN_IF(retFlags, false);
 
-    config.audioInfo.audioEncInfo.audioCodecformat = audioCodecformat[randomNum];
+        AVScreenCaptureConfig config;
+        SetConfig(config);
+        constexpr int32_t audioCodecformatList = 3;
+        constexpr uint32_t recorderTime = 3;
+        const AudioCodecFormat audioCodecformat[audioCodecformatList]{AUDIO_DEFAULT, AAC_LC, AUDIO_CODEC_FORMAT_BUTT};
+        int32_t randomNum = abs((*reinterpret_cast<int32_t *>(data)) % (audioCodecformatList));
+        MEDIA_LOGI("FuzzTest ScreenCaptureAudioBitrateFileNdkFuzzer randomNum: %{public}d ", randomNum);
 
-    RecorderInfo recorderInfo;
-    const std::string screenCaptureRoot = "/data/test/media/";
-    int32_t outputFd = open((screenCaptureRoot + "screen_capture_fuzz_audiocodecformat_file_01.mp4").c_str(),
-        O_RDWR | O_CREAT, 0777);
-    recorderInfo.url = "fd://" + to_string(outputFd);
-    recorderInfo.fileFormat = "mp4";
-    config.recorderInfo = recorderInfo;
+        config.audioInfo.audioEncInfo.audioCodecformat = audioCodecformat[randomNum];
 
-    TestScreenCapture::Init(config);
-    TestScreenCapture::StartScreenCapture();
-    sleep(recorderTime);
-    TestScreenCapture::StopScreenCapture();
-    TestScreenCapture::Release();
-    return true;
-}
+        RecorderInfo recorderInfo;
+        const std::string screenCaptureRoot = "/data/test/media/";
+        int32_t outputFd = open((screenCaptureRoot + "screen_capture_fuzz_audiocodecformat_file_01.mp4").c_str(),
+                                O_RDWR | O_CREAT, 0777);
+        recorderInfo.url = "fd://" + to_string(outputFd);
+        recorderInfo.fileFormat = "mp4";
+        config.recorderInfo = recorderInfo;
+
+        TestScreenCapture::Init(config);
+        TestScreenCapture::StartScreenCapture();
+        sleep(recorderTime);
+        TestScreenCapture::StopScreenCapture();
+        TestScreenCapture::Release();
+        return true;
+    }
 } // namespace Media
 
 bool FuzzTestScreenCaptureAudioCodecFormatFile(uint8_t *data, size_t size)
@@ -137,7 +110,7 @@ bool FuzzTestScreenCaptureAudioCodecFormatFile(uint8_t *data, size_t size)
     ScreenCaptureAudioCodecFormatFileFuzzer testScreenCapture;
     return testScreenCapture.FuzzScreenCaptureAudioCodecFormatFile(data, size);
 }
-} // namespace OHOS
+}  // namespace OHOS
 
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
