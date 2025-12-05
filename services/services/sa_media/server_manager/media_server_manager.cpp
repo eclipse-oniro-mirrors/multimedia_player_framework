@@ -1233,7 +1233,7 @@ void MediaServerManager::AsyncExecutor::HandleAsyncExecution()
             int refCount = item->GetSptrRefCount();
             allStubsRefCountBigger1 = refCount > 1;
         }
-        sleep(times);
+        sleep(1);
         times++;
         CHECK_AND_BREAK(allStubsRefCountBigger1);
     }
