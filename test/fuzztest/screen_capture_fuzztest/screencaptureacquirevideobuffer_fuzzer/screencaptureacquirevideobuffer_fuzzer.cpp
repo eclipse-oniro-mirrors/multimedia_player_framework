@@ -28,94 +28,80 @@ using namespace Media;
 
 namespace OHOS {
 namespace Media {
-ScreenCaptureAcquireVideoBufferFuzzer::ScreenCaptureAcquireVideoBufferFuzzer()
-{
-}
+    ScreenCaptureAcquireVideoBufferFuzzer::ScreenCaptureAcquireVideoBufferFuzzer() {}
 
-ScreenCaptureAcquireVideoBufferFuzzer::~ScreenCaptureAcquireVideoBufferFuzzer()
-{
-}
+    ScreenCaptureAcquireVideoBufferFuzzer::~ScreenCaptureAcquireVideoBufferFuzzer() {}
 
-namespace {
-    const uint8_t* g_data = nullptr;
-    size_t g_size = 0;
-    size_t g_pos;
-}
+    namespace {
+        const uint8_t *g_data = nullptr;
+        size_t g_size = 0;
+        size_t g_pos;
+    }  // namespace
 
-void SetConfig(AVScreenCaptureConfig &config)
-{
-    AudioCaptureInfo miccapinfo = {
-        .audioSampleRate = 48000,
-        .audioChannels = 2,
-        .audioSource = SOURCE_DEFAULT
-    };
+    void SetConfig(AVScreenCaptureConfig &config)
+    {
+        AudioCaptureInfo miccapinfo = {.audioSampleRate = 48000, .audioChannels = 2, .audioSource = SOURCE_DEFAULT};
 
-    VideoCaptureInfo videocapinfo = {
-        .videoFrameWidth = 720,
-        .videoFrameHeight = 1280,
-        .videoSource = VIDEO_SOURCE_SURFACE_RGBA
-    };
+        VideoCaptureInfo videocapinfo = {
+            .videoFrameWidth = 720, .videoFrameHeight = 1280, .videoSource = VIDEO_SOURCE_SURFACE_RGBA};
 
-    AudioInfo audioinfo = {
-        .micCapInfo = miccapinfo,
-    };
+        AudioInfo audioinfo = {
+            .micCapInfo = miccapinfo,
+        };
 
-    VideoInfo videoinfo = {
-        .videoCapInfo = videocapinfo
-    };
+        VideoInfo videoinfo = {.videoCapInfo = videocapinfo};
 
-    config = {
-        .captureMode = CAPTURE_HOME_SCREEN,
-        .dataType = ORIGINAL_STREAM,
-        .audioInfo = audioinfo,
-        .videoInfo = videoinfo,
-    };
-}
+        config = {
+            .captureMode = CAPTURE_HOME_SCREEN,
+            .dataType = ORIGINAL_STREAM,
+            .audioInfo = audioinfo,
+            .videoInfo = videoinfo,
+        };
+    }
 
-template<class T>
-T GetData()
-{
-    T object {};
-    size_t objectSize = sizeof(object);
-    if (g_data == nullptr || objectSize > g_size - g_pos) {
+    template <class T> T GetData()
+    {
+        T object{};
+        size_t objectSize = sizeof(object);
+        if (g_data == nullptr || objectSize > g_size - g_pos) {
+            return object;
+        }
+        errno_t ret = memcpy_s(&object, objectSize, g_data + g_pos, objectSize);
+        if (ret != EOK) {
+            return {};
+        }
+        g_pos += objectSize;
         return object;
     }
-    errno_t ret = memcpy_s(&object, objectSize, g_data + g_pos, objectSize);
-    if (ret != EOK) {
-        return {};
+
+    bool ScreenCaptureAcquireVideoBufferFuzzer::FuzzScreenCaptureAcquireVideoBuffer(uint8_t *data, size_t size)
+    {
+        if (data == nullptr) {
+            return false;
+        }
+        bool retFlags = TestScreenCapture::CreateScreenCapture();
+        RETURN_IF(retFlags, false);
+
+        AVScreenCaptureConfig config;
+        SetConfig(config);
+        g_data = data;
+        g_size = size;
+        g_pos = 0;
+
+        int32_t fence = GetData<int32_t>();
+        int64_t timestamp = GetData<int64_t>();
+        OHOS::Rect damage = GetData<OHOS::Rect>();
+
+        TestScreenCapture::SetMicrophoneEnabled(true);
+        TestScreenCapture::SetCanvasRotation(true);
+        TestScreenCapture::Init(config);
+        TestScreenCapture::StartScreenCapture();
+        TestScreenCapture::AcquireVideoBuffer(fence, timestamp, damage);
+        TestScreenCapture::ReleaseVideoBuffer();
+        TestScreenCapture::StopScreenCapture();
+        TestScreenCapture::Release();
+        return true;
     }
-    g_pos += objectSize;
-    return object;
-}
-
-bool ScreenCaptureAcquireVideoBufferFuzzer::FuzzScreenCaptureAcquireVideoBuffer(uint8_t *data, size_t size)
-{
-    if (data == nullptr) {
-        return false;
-    }
-    bool retFlags = TestScreenCapture::CreateScreenCapture();
-    RETURN_IF(retFlags, false);
-
-    AVScreenCaptureConfig config;
-    SetConfig(config);
-    g_data = data;
-    g_size = size;
-    g_pos = 0;
-
-    int32_t fence = GetData<int32_t>();
-    int64_t timestamp = GetData<int64_t>();
-    OHOS::Rect damage = GetData<OHOS::Rect>();
-
-    TestScreenCapture::SetMicrophoneEnabled(true);
-    TestScreenCapture::SetCanvasRotation(true);
-    TestScreenCapture::Init(config);
-    TestScreenCapture::StartScreenCapture();
-    TestScreenCapture::AcquireVideoBuffer(fence, timestamp, damage);
-    TestScreenCapture::ReleaseVideoBuffer();
-    TestScreenCapture::StopScreenCapture();
-    TestScreenCapture::Release();
-    return true;
-}
 } // namespace Media
 
 bool FuzzTestScreenCaptureAcquireVideoBuffer(uint8_t *data, size_t size)
