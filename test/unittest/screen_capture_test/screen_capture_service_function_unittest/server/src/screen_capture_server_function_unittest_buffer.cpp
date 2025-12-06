@@ -15,6 +15,7 @@
 
 #include <unistd.h>
 #include <sys/stat.h>
+#include "screen_cap_buffer_consumer_listener.h"
 #include "screen_capture_server_function_unittest.h"
 #include "ui_extension_ability_connection.h"
 #include "image_source.h"
