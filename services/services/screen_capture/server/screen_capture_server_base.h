@@ -118,17 +118,6 @@ enum StopReason: int8_t {
     STOP_REASON_INVALID = 4
 };
 
-struct SurfaceBufferEntry {
-    SurfaceBufferEntry(sptr<OHOS::SurfaceBuffer> buf, int32_t fence, int64_t timeStamp, OHOS::Rect& damage)
-        : buffer(std::move(buf)), flushFence(fence), timeStamp(timeStamp), damageRect(damage) {}
-    ~SurfaceBufferEntry() noexcept = default;
-
-    sptr<OHOS::SurfaceBuffer> buffer;
-    int32_t flushFence;
-    int64_t timeStamp = 0;
-    OHOS::Rect damageRect = {0, 0, 0, 0};
-};
-
 struct StatisticalEventInfo {
     int32_t errCode = 0;
     std::string errMsg;
@@ -139,57 +128,6 @@ struct StatisticalEventInfo {
     std::string videoResolution;
     StopReason stopReason = StopReason::STOP_REASON_INVALID;
     int32_t startLatency = -1;
-};
-
-enum class SCBufferMessageType {
-    EXIT,
-    GET_BUFFER
-};
-
-struct SCBufferMessage {
-    SCBufferMessageType type;
-    std::string text;
-};
-
-class ScreenCapBufferConsumerListener : public IBufferConsumerListener {
-public:
-    ScreenCapBufferConsumerListener(
-        sptr<Surface> consumer, const std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb)
-        : consumer_(consumer), screenCaptureCb_(screenCaptureCb) {}
-    ~ScreenCapBufferConsumerListener();
-
-    void OnBufferAvailable() override;
-    int32_t AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence, int64_t &timestamp,
-        OHOS::Rect &damage);
-    int32_t ReleaseVideoBuffer();
-    int32_t Release();
-    int32_t StartBufferThread();
-    void OnBufferAvailableAction();
-    void SurfaceBufferThreadRun();
-    void StopBufferThread();
-
-private:
-    int32_t ReleaseBuffer();
-    void ProcessVideoBufferCallBack();
-
-private:
-    std::mutex bufferAvailableWorkerMtx_;
-    std::condition_variable bufferAvailableWorkerCv_;
-    std::queue<SCBufferMessage> messageQueueSCB_;
-
-    std::mutex mutex_;
-    sptr<OHOS::Surface> consumer_ = nullptr;
-    std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
-    std::atomic<bool> isSurfaceCbInThreadStopped_ {true};
-    std::thread* surfaceCbInThread_ = nullptr;
-
-    std::mutex bufferMutex_;
-    std::condition_variable bufferCond_;
-    std::queue<std::unique_ptr<SurfaceBufferEntry>> availBuffers_;
-
-    static constexpr uint64_t MAX_MESSAGE_QUEUE_SIZE = 5;
-    static constexpr uint32_t MAX_BUFFER_SIZE = 3;
-    static constexpr uint32_t OPERATION_TIMEOUT_IN_MS = 1000; // 1000ms
 };
 
 #ifdef SUPPORT_CALL
