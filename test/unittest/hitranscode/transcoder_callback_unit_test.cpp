@@ -90,6 +90,18 @@ HWTEST_F(TranscoderCallbackUnitTest, DoReportMediaProgress_02, TestSize.Level0)
 }
 
 /**
+ * @tc.name: DoReportCompletedTime_01
+ * @tc.desc: DoReportCompletedTime_01
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(TranscoderCallbackUnitTest, DoReportCompletedTime_01, TestSize.Level0)
+{
+    callback_->DoReportCompletedTime();
+    EXPECT_TRUE(testObs_->onInfoFlag);
+}
+
+/**
  * @tc.name: Enqueue
  * @tc.desc: Enqueue
  * @tc.type: FUNC
