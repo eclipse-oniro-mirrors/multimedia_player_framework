@@ -61,6 +61,8 @@ namespace PlayerHDI = OHOS::HDI::LowPowerPlayer::V1_0;
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaServerManager"};
 constexpr uint32_t REPORT_TIME = 100000000; // us
+constexpr uint32_t MAX_TIMES = 15;
+constexpr uint32_t DELAY_TIME = 200;
 constexpr int32_t RELEASE_THRESHOLD = 3;  // relese task
 }
 
@@ -1048,13 +1050,15 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
     DestroyLppAudioPlayerStubForPid(pid);
     DestroyLppVideoPlayerStubForPid(pid);
     MonitorServiceStub::GetInstance()->OnClientDie(pid);
+    executor_.SetClearCallBack([this]() {
+        std::lock_guard<std::mutex> lock(mutex_);
+        CHECK_AND_RETURN_NOLOG(GetStubMapCountIsEmpty());
+        SetCritical(false);
+    });
     executor_.Clear();
 #ifdef SUPPORT_START_STOP_ON_DEMAND
     UpdateAllInstancesReleasedTime();
 #endif
-
-    CHECK_AND_RETURN_NOLOG(GetStubMapCountIsEmpty());
-    SetCritical(false);
 }
 
 std::vector<pid_t> MediaServerManager::GetPlayerPids()
@@ -1224,7 +1228,25 @@ void MediaServerManager::AsyncExecutor::HandleAsyncExecution()
         std::lock_guard<std::mutex> lock(listMutex_);
         freeList_.swap(tempList);
     }
+    int32_t times = 0;
+    while (times <= MAX_TIMES) {
+        bool allStubsRefCountBigger1 = false;
+        for (auto& item : tempList) {
+            int refCount = item->GetSptrRefCount();
+            allStubsRefCountBigger1 = refCount > 1;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(DELAY_TIME));
+        times++;
+        CHECK_AND_BREAK(allStubsRefCountBigger1);
+    }
     tempList.clear();
+    callBack_();
+}
+
+void MediaServerManager::AsyncExecutor::SetClearCallBack(std::function<void()> callBack)
+{
+    std::lock_guard<std::mutex> lock(listMutex_);
+    callBack_ = callBack;
 }
 
 #ifdef SUPPORT_START_STOP_ON_DEMAND

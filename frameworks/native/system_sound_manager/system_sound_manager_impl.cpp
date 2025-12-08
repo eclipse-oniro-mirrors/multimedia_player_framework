@@ -586,7 +586,7 @@ int32_t SystemSoundManagerImpl::SetRingtoneUri(const shared_ptr<Context> &contex
     std::lock_guard<std::mutex> lock(uriMutex_);
     CHECK_AND_RETURN_RET_LOG(IsRingtoneTypeValid(ringtoneType), MSERR_INVALID_VAL, "Invalid ringtone type");
 
-    MEDIA_LOGI("SetRingtoneUri: ringtoneType %{public}d, uri %{public}s", ringtoneType, uri.c_str());
+    HILOG_COMM_INFO("SetRingtoneUri: ringtoneType %{public}d, uri %{public}s", ringtoneType, uri.c_str());
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, ERROR, "Create dataShare failed, datashare or library error.");
@@ -773,7 +773,7 @@ std::string SystemSoundManagerImpl::GetRingtoneUri(const shared_ptr<Context> &co
 
 ToneAttrs SystemSoundManagerImpl::GetCurrentRingtoneAttribute(RingtoneType ringtoneType)
 {
-    MEDIA_LOGI("GetCurrentRingtoneAttribute: Start, ringtoneType: %{public}d", ringtoneType);
+    HILOG_COMM_INFO("GetCurrentRingtoneAttribute: Start, ringtoneType: %{public}d", ringtoneType);
     ToneAttrs toneAttrs = { "", "", "", CUSTOMISED, TONE_CATEGORY_RINGTONE };
     if (!IsRingtoneTypeValid(ringtoneType)) {
         MEDIA_LOGE("GetCurrentRingtoneAttribute: Invalid ringtone type!");
@@ -1067,7 +1067,7 @@ int32_t SystemSoundManagerImpl::SetSystemToneUri(const shared_ptr<Context> &cont
     std::lock_guard<std::mutex> lock(uriMutex_);
     CHECK_AND_RETURN_RET_LOG(IsSystemToneTypeValid(systemToneType), MSERR_INVALID_VAL, "Invalid system tone type");
 
-    MEDIA_LOGI("SetSystemToneUri: systemToneType %{public}d, uri %{public}s", systemToneType, uri.c_str());
+    HILOG_COMM_INFO("SetSystemToneUri: systemToneType %{public}d, uri %{public}s", systemToneType, uri.c_str());
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, ERROR, "Create dataShare failed.");
@@ -2146,7 +2146,7 @@ int32_t SystemSoundManagerImpl::AddCustomizedTone(const std::shared_ptr<DataShar
     }
     valuesBucket.Put(RINGTONE_COLUMN_DATA, static_cast<string>(toneAttrs->GetUri()));
     int32_t result = dataShareHelper->Insert(RINGTONEURI, valuesBucket);
-    MEDIA_LOGI("AddCustomizedTone, result : %{public}d", result);
+    HILOG_COMM_INFO("AddCustomizedTone, result : %{public}d", result);
     return result;
 }
 
@@ -2192,7 +2192,7 @@ bool SystemSoundManagerImpl::DeleteCustomizedTone(const std::shared_ptr<DataShar
     }
     predicates.EqualTo(RINGTONE_COLUMN_DATA, static_cast<string>(toneAttrs->GetUri()));
     bool result = (dataShareHelper->Delete(RINGTONEURI, predicates) > 0);
-    MEDIA_LOGI("DeleteCustomizedTone: displayName : %{public}s, result: %{public}d", displayName_.c_str(), result);
+    HILOG_COMM_INFO("DeleteCustomizedTone: displayName : %{public}s, result: %{public}d", displayName_.c_str(), result);
     return result;
 }
 
