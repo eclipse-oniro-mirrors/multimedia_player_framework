@@ -44,6 +44,18 @@ namespace {
     constexpr int32_t MAX_SUBTITLE_TRACK_NUN = 8;
     constexpr int32_t MEMORY_USAGE_VERSION_ISOLATION = 20;
     static bool g_isFirstInit = true;
+    const std::map<OHOS::Media::PlayerErrorType, std::string> ERROR_TYPE_INFOS = {
+        {OHOS::Media::PlayerErrorType::PLAY_ERR, "PLAY_ERR-"},
+        {OHOS::Media::PlayerErrorType::NET_ERR, "NET_ERR-"},
+        {OHOS::Media::PlayerErrorType::CONTAINER_ERR, "CONTAINER_ERR-"},
+        {OHOS::Media::PlayerErrorType::DEM_FMT_ERR, "DEM_FMT_ERR-"},
+        {OHOS::Media::PlayerErrorType::DEM_PARSE_ERR, "DEM_PARSE_ERR-"},
+        {OHOS::Media::PlayerErrorType::AUD_DEC_ERR, "AUD_DEC_ERR-"},
+        {OHOS::Media::PlayerErrorType::VID_DEC_ERR, "VID_DEC_ERR-"},
+        {OHOS::Media::PlayerErrorType::DRM_ERR, "DRM_ERR-"},
+        {OHOS::Media::PlayerErrorType::AUD_OUTPUT_ERR, "AUD_OUTPUT_ERR-"},
+        {OHOS::Media::PlayerErrorType::VPE_ERR, "VPE_ERR-"}
+    };
 }
 
 namespace OHOS {
@@ -1807,10 +1819,21 @@ int32_t PlayerServer::DumpInfo(int32_t fd)
     return MSERR_OK;
 }
 
-void PlayerServer::OnError(PlayerErrorType errorType, int32_t errorCode)
+std::string PlayerServer::GetPlayerErrorTypeStr(PlayerErrorType errorType)
 {
-    (void)errorType;
-    auto errorMsg = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode)) + ", ";
+    std::string errorTypeStr = "";
+    auto it = ERROR_TYPE_INFOS.find(errorType);
+    if (it != ERROR_TYPE_INFOS.end()) {
+        errorTypeStr = ERROR_TYPE_INFOS.at(errorType);
+    }
+    return errorTypeStr;
+}
+
+void PlayerServer::OnError(PlayerErrorType errorType, int32_t errorCode, const std::string &description)
+{
+    auto errorMsg = GetPlayerErrorTypeStr(errorType);
+    errorMsg += description != "" ? description + "-" : "null-";
+    errorMsg += MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode)) + ", ";
     errorMsg += MSErrorToString(static_cast<MediaServiceErrCode>(errorCode));
     return OnErrorMessage(errorCode, errorMsg);
 }

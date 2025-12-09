@@ -222,7 +222,7 @@ private:
     void HandleInitialPlayingStateChange(const EventType& eventType);
     void HandleDrmInfoUpdatedEvent(const Event& event);
     void HandleIsLiveStreamEvent(bool isLiveStream);
-    void HandleErrorEvent(int32_t errorCode);
+    void HandleErrorEvent(const Event& event);
     void HandleResolutionChangeEvent(const Event& event);
     void HandleBitrateStartEvent(const Event& event);
     void HandleAudioTrackChangeEvent(const Event& event);
@@ -333,6 +333,14 @@ private:
     void CacheBuffer();
     void NotifyBufferEnd();
     void OnHwDecoderSwitch();
+    PlayerErrorType GetPlayerErrorType(const Event& event);
+    PlayerErrorType GetPlayerErrorTypeFromDemuxerFilter(const Event& event);
+    PlayerErrorType GetPlayerErrorTypeFromAudioDecoder(const Event& event);
+    PlayerErrorType GetPlayerErrorTypeFromDecoderSurfaceFilter(const Event& event);
+    PlayerErrorType GetPlayerErrorTypeFromAudioSinkFilter(const Event& event);
+    PlayerErrorType GetPlayerErrorTypeFromAudioServerSinkPlugin(const Event& event);
+    PlayerErrorType GetPlayerErrorTypeFromEngine(const Event& event);
+    bool IsPrepareStateValid() const;
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;

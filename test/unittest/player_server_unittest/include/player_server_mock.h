@@ -19,6 +19,7 @@
 #include "player_server.h"
 #include "unittest_log.h"
 #include "wm/window.h"
+#include <atomic>
 
 namespace OHOS {
 namespace Media {
@@ -115,6 +116,8 @@ private:
     void HandleSubtitleCallback(int32_t extra, const Format &infoBody);
     void HandleTrackInfoCallback(int32_t extra, const Format &infoBody);
     bool errInfo_ {false};
+    std::atomic<int32_t> errorCode_ {0};
+    std::string errorMsg_ = "";
 };
 
 class PlayerServerMock : public NoCopyable {
@@ -241,6 +244,9 @@ public:
     bool IsFlvLive() override;
     int32_t GetPlaybackPosition(int32_t &playbackPosition) override;
     bool IsNeedChangePlaySpeed(PlaybackRateMode &mode, bool &isXSpeedPlay) override;
+    void TriggerError(PlayerErrorType errorType, int32_t errorCode, const std::string &msg);
+private:
+    std::weak_ptr<IPlayerEngineObs> obs_;
 };
 } // namespace Media
 } // namespace OHOS

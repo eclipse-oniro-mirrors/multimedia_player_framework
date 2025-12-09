@@ -263,13 +263,13 @@ void HiPlayerCallbackLooper::DoReportSystemOperation(const Any& info)
     }
 }
 
-void HiPlayerCallbackLooper::OnError(PlayerErrorType errorType, int32_t errorCode)
+void HiPlayerCallbackLooper::OnError(PlayerErrorType errorType, int32_t errorCode, const std::string &description)
 {
     Enqueue(std::make_shared<HiPlayerCallbackLooper::Event>(WHAT_ERROR, SteadyClock::GetCurrentTimeMs(),
-    std::make_pair(errorType, errorCode)));
+        std::make_pair(errorType, errorCode), description));
 }
 
-void HiPlayerCallbackLooper::DoReportError(const Any &error)
+void HiPlayerCallbackLooper::DoReportError(const Any &error, const std::string &description)
 {
     OHOS::Media::AutoLock lock(loopMutex_);
     auto obs = obs_.lock();
@@ -281,7 +281,7 @@ void HiPlayerCallbackLooper::DoReportError(const Any &error)
         }
         MEDIA_LOG_E("Report error, error type: " PUBLIC_LOG_D32 " error value: " PUBLIC_LOG_D32,
             static_cast<int32_t>(ptr->first), static_cast<int32_t>(ptr->second));
-        obs->OnError(ptr->first, ptr->second);
+        obs->OnError(ptr->first, ptr->second, description);
     }
 }
 
@@ -342,7 +342,7 @@ void HiPlayerCallbackLooper::LoopOnce(const std::shared_ptr<HiPlayerCallbackLoop
             DoReportInfo(item->detail);
             break;
         case WHAT_ERROR:
-            DoReportError(item->detail);
+            DoReportError(item->detail, item->description);
             break;
         case WHAT_COLLECT_AMPLITUDE:
             DoCollectAmplitude();

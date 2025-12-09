@@ -48,7 +48,7 @@ public:
 
     void ManualReportMediaProgressOnce();
 
-    void OnError(PlayerErrorType errorType, int32_t errorCode) override;
+    void OnError(PlayerErrorType errorType, int32_t errorCode, const std::string &description) override;
 
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) override;
 
@@ -67,16 +67,18 @@ private:
     void DoReportMediaProgress();
     void DoReportDfxInfo(const Any& info);
     void DoReportInfo(const Any& info);
-    void DoReportError(const Any& error);
+    void DoReportError(const Any& error, const std::string &description);
     void DoCollectAmplitude();
     void DoReportSystemOperation(const Any& info);
 
     struct Event {
-        Event(int32_t inWhat, int64_t inWhenMs, Any inAny): what(inWhat), whenMs(inWhenMs),
-            detail(std::move(inAny)) {}
+        Event(int32_t inWhat, int64_t inWhenMs, Any inAny, std::string description = "")
+            : what(inWhat), whenMs(inWhenMs), detail(std::move(inAny)), description(description)
+        {}
         int32_t what {0};
         int64_t whenMs {INT64_MAX};
         Any detail;
+        std::string description;
     };
     class EventQueue {
     public:

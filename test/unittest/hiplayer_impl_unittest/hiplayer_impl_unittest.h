@@ -16,6 +16,7 @@
 #ifndef HIPLAYER_IMPL_UNITTEST_H
 #define HIPLAYER_IMPL_UNITTEST_H
 
+#include <vector>
 #include "gtest/gtest.h"
 #include <gmock/gmock.h>
 
@@ -23,6 +24,7 @@
 #include "mock/audio_decoder_filter.h"
 #include "mock/decoder_surface_filter.h"
 #include "hiplayer_impl.h"
+#include "i_player_engine.h"
 
 namespace OHOS {
 namespace Media {
@@ -97,7 +99,7 @@ public:
     MOCK_METHOD(Status, AddHeadFilters, (std::vector<std::shared_ptr<Filter>> filters), ());
     MOCK_METHOD(Status, RemoveHeadFilter, (const std::shared_ptr<Filter>& filter), ());
     MOCK_METHOD(Status, LinkFilters, (const std::shared_ptr<Filter>& preFilter,
-        const std::vector<std::shared_ptr<Filter>>& filters, StreamType type, bool needTurbo), ());
+        const std::vector<std::shared_ptr<Filter>>& filters, StreamType type, bool needTurbo, bool needInit), ());
     MOCK_METHOD(Status, UpdateFilters, (const std::shared_ptr<Filter>& preFilter,
         const std::vector<std::shared_ptr<Filter>>& filters, StreamType type), ());
     MOCK_METHOD(Status, UnLinkFilters, (const std::shared_ptr<Filter>& preFilter,
@@ -111,8 +113,7 @@ public:
     explicit MockMediaSource(std::string uri) : MediaSource(std::move(uri)) {}
     MockMediaSource(std::string uri, std::map<std::string, std::string> header)
         : MediaSource(std::move(uri), std::move(header)) {}
-    explicit MockMediaSource(std::shared_ptr<IMediaDataSource> dataSrc)
-        : MediaSource(std::move(dataSrc)) {}
+    explicit MockMediaSource(std::shared_ptr<IMediaDataSource> dataSrc) : MediaSource(std::move(dataSrc)) {}
     ~MockMediaSource() = default;
     MOCK_CONST_METHOD0(GetSourceType, SourceType());
     MOCK_CONST_METHOD0(GetSourceUri, const std::string&());
@@ -280,8 +281,7 @@ public:
     MOCK_METHOD(bool, NeedImmediateRender, (), ());
     MOCK_METHOD(Status, SetIsCalledBySystemApp, (bool isCalledBySystemApp), ());
     MOCK_METHOD(Status, SetLooping, (bool loop), ());
-    
-    protected:
+protected:
     MOCK_METHOD(Status, OnUpdated, (StreamType inType, const std::shared_ptr<Meta>& meta,
         const std::shared_ptr<FilterLinkCallback>& callback), ());
     MOCK_METHOD(Status, OnUnLinked, (StreamType inType,
@@ -319,7 +319,7 @@ public:
         (const sptr<DrmStandard::IMediaKeySessionService>& keySessionProxy, bool svp), ());
     MOCK_METHOD(void, OnDumpInfo, (int32_t fd), ());
     MOCK_METHOD(void, SetCallerInfo, (uint64_t instanceId, const std::string& appName), ());
-    MOCK_METHOD(void, OnError, (CodecErrorType errorType, int32_t errorCode), ());
+    MOCK_METHOD(void, OnError, (CodecErrorType errorType, int32_t errorCode, const std::string &description), ());
     MOCK_METHOD(Status, OnLinked, (StreamType inType, const std::shared_ptr<Meta>& meta,
         const std::shared_ptr<FilterLinkCallback>& callback), ());
     MOCK_METHOD(Status, OnUpdated, (StreamType inType, const std::shared_ptr<Meta>& meta,
@@ -514,9 +514,15 @@ public:
     {
         return std::string("");
     }
-
 private:
     const std::string name_ = "";
+};
+class MockIPlayerEngineObs : public IPlayerEngineObs {
+public:
+    MOCK_METHOD(
+        void, OnError, (PlayerErrorType errorType, int32_t errorCode, const std::string &description), (override));
+    MOCK_METHOD(void, OnInfo, (PlayerOnInfoType type, int32_t extra, const Format &infoBody), (override));
+    MOCK_METHOD(void, OnSystemOperation, (PlayerOnSystemOperationType type, PlayerOperationReason reason), (override));
 };
 } // namespace Media
 } // namespace OHOS
