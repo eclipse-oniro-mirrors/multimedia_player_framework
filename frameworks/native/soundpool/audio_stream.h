@@ -74,7 +74,6 @@ public:
         const PlayParams &playParams);
     int32_t DoPlay();
     int32_t Stop();
-    void StopSameSoundWithoutLock();
     int32_t Release();
     
     void OnFirstFrameWriting(uint64_t latency) override;

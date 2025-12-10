@@ -645,7 +645,6 @@ int32_t StreamIDManager::GetAvailableStreamIDBySoundID(int32_t soundID)
         }
         MEDIA_LOGI("GetAvailableStreamIDBySoundID, before StopSameSoundWithoutLock");
         if (stream->GetStreamState() == StreamState::PLAYING) {
-            stream->StopSameSoundWithoutLock();
             stream->SetStreamState(StreamState::PREPARED);
             return stream->GetStreamID();
         }
