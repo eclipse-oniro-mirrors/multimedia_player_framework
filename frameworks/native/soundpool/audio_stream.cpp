@@ -24,6 +24,7 @@
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SOUNDPOOL, "AudioStream"};
     static const int32_t ERROE_GLOBAL_ID = -1;
+    static const int32_t NORMAL_PLAY_RENDERER_FLAGS = 0;
 }
 
 namespace OHOS {

@@ -19,16 +19,16 @@
 #include <atomic>
 #include <thread>
 
+#include "audio_stream.h"
 #include "cpp/mutex.h"
 #include "isoundpool.h"
 #include "media_dfx.h"
-#include "audio_stream.h"
 #include "sound_parser.h"
 #include "thread_pool.h"
 
 namespace OHOS {
 namespace Media {
-class CacheBuffer;
+class SoundParser;
 class AudioStream;
 
 class StreamIDManager : public std::enable_shared_from_this<StreamIDManager> {
