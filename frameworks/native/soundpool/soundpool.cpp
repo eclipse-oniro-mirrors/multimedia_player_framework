@@ -148,7 +148,7 @@ int32_t SoundPool::Load(int32_t fd, int64_t offset, int64_t length)
         std::to_string(length).c_str());
     CHECK_AND_RETURN_RET_LOG((fd > 0 && length > 0 && offset >= 0), -1, "Invalid fd param.");
     CHECK_AND_RETURN_RET_LOG(soundIDManager_ != nullptr, -1, "soundIDManager_ has been released");
-    return soundIDManager_->Load(fd, offset, length, apiVersion_);
+    return soundIDManager_->Load(fd, offset, length);
 }
 
 int32_t SoundPool::Play(int32_t soundID, const PlayParams &playParameters)

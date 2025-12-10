@@ -38,12 +38,12 @@ public:
     ~StreamIDManager();
 
     int32_t CreateAudioStream(int32_t soundID, int32_t &streamID,
-        const std::shared_ptr<OHOS::Media::SoundParser> &soundParser);
+        const std::shared_ptr<SoundParser> &soundParser);
 
     int32_t InitThreadPool();
-    int32_t PlayWithSameSoundInterrupt(const std::shared_ptr<OHOS::Media::SoundParser> &soundParser,
+    int32_t PlayWithSameSoundInterrupt(const std::shared_ptr<SoundParser> &soundParser,
         const PlayParams &playParameters);
-    int32_t PlayWithNoInterrupt(const std::shared_ptr<OHOS::Media::SoundParser> &soundParser,
+    int32_t PlayWithNoInterrupt(const std::shared_ptr<SoundParser> &soundParser,
         const PlayParams &playParameters);
         
     int32_t SetCallback(const std::shared_ptr<ISoundPoolCallback> &callback);

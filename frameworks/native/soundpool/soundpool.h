@@ -65,8 +65,6 @@ public:
     int32_t SetSoundPoolFrameWriteCallback(
         const std::shared_ptr<ISoundPoolFrameWriteCallback> &frameWriteCallback) override;
     
-    void SetApiVersion(int32_t apiVersion);
-
 private:
     bool CheckVolumeValid(float *leftVol, float *rightVol);
     static bool CheckRendererFlagsValid(AudioStandard::AudioRendererInfo audioRenderInfo);

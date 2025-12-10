@@ -30,7 +30,7 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-SoundParser::SoundParser(int32_t soundID, cosnt std::string &url)
+SoundParser::SoundParser(int32_t soundID, const std::string &url)
 {
     std::shared_ptr<MediaAVCodec::AVSource> source = MediaAVCodec::AVSourceFactory::CreateWithURI(url);
     CHECK_AND_RETURN_LOG(source != nullptr, "Create AVSource failed");
@@ -103,8 +103,7 @@ int32_t SoundParser::DoParser()
         MEDIA_LOGI("DoDecode failed and callback is nullptr");
         return MSERR_INVALID_VAL;
     }
-    MEDIA_LOGI("
-        DoParser end, soundID is %{public}d", soundID_);
+    MEDIA_LOGI("DoParser end, soundID is %{public}d", soundID_);
     return MSERR_OK;
 }
 

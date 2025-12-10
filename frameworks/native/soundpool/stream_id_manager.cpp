@@ -29,8 +29,8 @@ namespace {
     static const std::string THREAD_POOL_NAME_CACHE_BUFFER = "OS_CacheBuf";
     static const int32_t MAX_THREADS_NUM = 3;
     static const int32_t ERROE_GLOBAL_ID = -1;
-    static const size_t MAX_NUMBER_OF_PARALLEL_PLAYING = 5
-    static const int32_t MAX_NUMBER_OF_HELD_STREAMS = 5
+    static const size_t MAX_NUMBER_OF_PARALLEL_PLAYING = 5;
+    static const int32_t MAX_NUMBER_OF_HELD_STREAMS = 5;
 }
 
 namespace OHOS {
@@ -158,7 +158,8 @@ int32_t StreamIDManager::SetPlayWithSameSoundInterrupt(int32_t soundID, int32_t 
     stream->ConfigurePlayParametersWithoutLock(audioRendererInfo_, playParameters);
 
     if (playingStreamIDs_.size() < MAX_NUMBER_OF_PARALLEL_PLAYING) {
-        MEDIA_LOGI("SetPlayWithSameSoundInterrupt, playingStreamIDs_.size is %{public}zu < 5", playingStreamIDs_size());
+        MEDIA_LOGI("SetPlayWithSameSoundInterrupt, playingStreamIDs_.size is %{public}zu < 5",
+            playingStreamIDs_.size());
         AddPlayTask(streamID);
         return MSERR_OK;
     }
@@ -191,7 +192,7 @@ int32_t StreamIDManager::SetPlayWithSameSoundInterrupt(int32_t soundID, int32_t 
     return MSERR_OK;
 }
 
-int32_t StreamIDManager::PlayWithNoInterrupt(const std::shared_ptr<OHOS::Media::SoundParser> &soundParser,
+int32_t StreamIDManager::PlayWithNoInterrupt(const std::shared_ptr<SoundParser> &soundParser,
     const PlayParams &playParameters)
 {
     MediaTrace trace("StreamIDManager::PlayWithNoInterrupt");
@@ -369,9 +370,9 @@ int32_t StreamIDManager::AddStopTask(const std::shared_ptr<AudioStream> &stream)
 int32_t StreamIDManager::DoPlay(int32_t streamID)
 {
     MEDIA_LOGI("StreamIDManager::DoPlay start streamID is %{public}d", streamID);
-    std::shared_ptr<AudioStream> stream = GetStreamByStreamIDWitLock(streamID);
+    std::shared_ptr<AudioStream> stream = GetStreamByStreamIDWithLock(streamID);
     CHECK_AND_RETURN_RET_LOG(stream != nullptr, MSERR_INVALID_VAL, "StreamIDManager::DoPlay, stream is nullptr");
-    if (stream->DoPlay(streamID) == MSERR_OK) {
+    if (stream->DoPlay() == MSERR_OK) {
         MEDIA_LOGI("StreamIDManager::DoPlay successfully, streamID is %{public}d", streamID);
         return MSERR_OK;
     }
@@ -665,7 +666,7 @@ int32_t StreamIDManager::GetAvailableStreamIDBySoundID(int32_t soundID)
 }
 
 int32_t StreamIDManager::CreateAudioStream(int32_t soundID, int32_t &streamID,
-    const std::shared_ptr<OHOS::Media::SoundParser> &soundParser)
+    const std::shared_ptr<SoundParser> &soundParser)
 {
     do {
         nextStreamID_ = nextStreamID_ == INT32_MAX ? 1 : nextStreamID_ + 1;
@@ -705,7 +706,7 @@ int32_t StreamIDManager::CreateAudioStream(int32_t soundID, int32_t &streamID,
     return MSERR_OK;
 }
 
-void StreamIDManager::OnPlayFinished()
+void StreamIDManager::OnPlayFinished(int32_t streamID)
 {
     MEDIA_LOGI("StreamIDManager::OnPlayFinished start");
     std::lock_guard lock(streamIDManagerLock_);

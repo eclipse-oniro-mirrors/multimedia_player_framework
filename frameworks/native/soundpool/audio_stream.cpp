@@ -213,7 +213,7 @@ std::shared_ptr<AudioStandard::AudioRenderer> AudioStream::CreateAudioRenderer(
         AudioStandard::AudioSharedMemory::CreateFromLocal(pcmBufferSize_, "SoundPool");
     std::shared_ptr<AudioStandard::AudioRenderer> audioRenderer = AudioStandard::AudioRenderer::Create(rendererOptions,
         sharedMemory, shared_from_this());
-    int ret = memcpy_s(sharedMemory->GetBase(), pcmBufferSize_, pcmBuffer_->buffer, pcmBufferSize_);
+    int32_t ret = memcpy_s(sharedMemory->GetBase(), pcmBufferSize_, pcmBuffer_->buffer, pcmBufferSize_);
     MEDIA_LOGI("ret is %{public}d, pcmBufferSize_ is %{public}zu", ret, pcmBufferSize_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "Failed to copy pcm buffer from pcmBuffer to shared memory");
     soundPoolXCollie.CancelXCollieTimer();
@@ -250,7 +250,7 @@ int32_t AudioStream::DoPlay()
     MEDIA_LOGI("AudioStream::DoPlay start");
     std::lock_guard lock(streamLock_);
     if (streamState_.load() != StreamState::PREPARED) {
-        MEDIA_LOGI("AudioStream::DoPlay end, invalid stream(%{public}d), streamState is %{public}d", streamID,
+        MEDIA_LOGI("AudioStream::DoPlay end, invalid stream(%{public}d), streamState is %{public}d", streamID_,
             streamState_.load());
         return MSERR_INVALID_VAL;
     }
@@ -367,18 +367,18 @@ int32_t AudioStream::Release()
 
     // Use audioRenderer to release and don't lock, so it will not cause dead lock. if here locked, audioRenderer
     // will wait callback thread stop, and the callback thread can't get the lock, it will cause dead lock
-    if (audioRenderer != nullptr) {
+    if (audioRenderer_ != nullptr) {
         SoundPoolXCollie soundPoolXCollie("Release audioRenderer::Stop time out",
             [](void *) {
                 MEDIA_LOGI("Release audioRenderer::Stop time out");
             });
-        audioRenderer->Stop();
+        audioRenderer_->Stop();
         soundPoolXCollie.CancelXCollieTimer();
         SoundPoolXCollie soundPoolXCollieRelease("AudioStream::Release time out",
         [](void *) {
             MEDIA_LOGI("Release audioRenderer::Release time out");
         });
-        audioRenderer->Release();
+        audioRenderer_->Release();
         soundPoolXCollieRelease.CancelXCollieTimer();
         audioRenderer_ = nullptr;
     }
