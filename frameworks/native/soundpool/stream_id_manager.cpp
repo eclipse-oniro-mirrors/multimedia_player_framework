@@ -130,7 +130,6 @@ int32_t StreamIDManager::PlayWithSameSoundInterrupt(const std::shared_ptr<SoundP
     CHECK_AND_RETURN_RET_LOG(soundParser != nullptr, -1, "PlayWithSameSoundInterrupt, soundParser is nullptr");
     int32_t soundID = soundParser->GetSoundID();
     int32_t streamID = GetAvailableStreamIDBySoundID(soundID);
-
     if (streamID == 0) {
         CHECK_AND_RETURN_RET_LOG(MSERR_OK == CreateAudioStream(soundID, streamID, soundParser), -1,
             "Init stream failed");
@@ -204,7 +203,6 @@ int32_t StreamIDManager::PlayWithNoInterrupt(const std::shared_ptr<OHOS::Media::
     CHECK_AND_RETURN_RET_LOG(soundParser != nullptr, -1, "PlayWithNoInterrupt, soundParser is nullptr");
     int32_t soundID = soundParser->GetSoundID();
     int32_t streamID = GetAvailableStreamIDBySoundID(soundID);
-
     if (streamID == 0) {
         CHECK_AND_RETURN_RET_LOG(MSERR_OK == CreateAudioStream(soundID, streamID, soundParser), -1,
             "Init stream failed");
