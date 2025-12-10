@@ -123,7 +123,7 @@ int32_t StreamIDManager::PlayWithSameSoundInterrupt(const std::shared_ptr<SoundP
 {
     MediaTrace trace("StreamIDManager::PlayWithSameSoundInterrupt");
     std::lock_guard lock(streamIDManagerLock_);
-    MEDIA_LOGI("PlayWithSameSoundInterrupt, before remove")
+    MEDIA_LOGI("PlayWithSameSoundInterrupt, before remove");
     PrintPlayingStreams();
     PrintSoundID2Stream();
     RemoveInvalidStreamsInInterruptMode();
@@ -197,7 +197,7 @@ int32_t StreamIDManager::PlayWithNoInterrupt(const std::shared_ptr<SoundParser> 
 {
     MediaTrace trace("StreamIDManager::PlayWithNoInterrupt");
     std::lock_guard lock(streamIDManagerLock_);
-    MEDIA_LOGI("PlayWithNoInterrupt, before remove")
+    MEDIA_LOGI("PlayWithNoInterrupt, before remove");
     PrintPlayingStreams();
     PrintSoundID2MultiStreams();
     RemoveInvalidStreamsInNoInterruptMode();
@@ -231,7 +231,7 @@ int32_t StreamIDManager::SetPlayWithNoInterrupt(int32_t soundID, int32_t streamI
     stream->ConfigurePlayParameters(audioRendererInfo_, playParameters);
 
     if (playingStreamIDs_.size() < MAX_NUMBER_OF_PARALLEL_PLAYING) {
-        MEDIA_LOGI("SetPlayWithNoInterrupt, playingStreamIDs_.size is %{public}zu < 5", playingStreamIDs_size());
+        MEDIA_LOGI("SetPlayWithNoInterrupt, playingStreamIDs_.size is %{public}zu < 5", playingStreamIDs_.size());
         AddPlayTask(streamID);
         return MSERR_OK;
     }
@@ -356,14 +356,14 @@ int32_t StreamIDManager::AddPlayTask(int32_t streamID)
 
 int32_t StreamIDManager::AddStopTask(const std::shared_ptr<AudioStream> &stream)
 {
-    MEDIA_LOGI("AddStopTask, streamID is %{public}d", streamID);
+    MEDIA_LOGI("AddStopTask, streamID is %{public}d", stream->GetStreamID());
     ThreadPool::Task streamStopTask = [stream] { stream->Stop(); };
     CHECK_AND_RETURN_RET_LOG(streamStopThreadPool_ != nullptr, MSERR_INVALID_VAL,
         "Failed to obtain streamStopThreadPool_");
     CHECK_AND_RETURN_RET_LOG(streamStopTask != nullptr, MSERR_INVALID_VAL,
         "AddStopTask, streamPlayingThreadPool_ is nullptr");
     streamStopThreadPool_->AddTask(streamStopTask);
-    MEDIA_LOGI("AddStopTask end, streamID is %{public}d", streamID);
+    MEDIA_LOGI("AddStopTask end, streamID is %{public}d", stream->GetStreamID());
     return MSERR_OK;
 }
 
