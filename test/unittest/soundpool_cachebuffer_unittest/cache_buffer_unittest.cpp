@@ -45,7 +45,7 @@ void CacheBufferUnitTest::TearDownTestCase(void) {}
 
 void CacheBufferUnitTest::SetUp(void)
 {
-    cacheBuffer_ = std::make_shared<CacheBuffer>(trackFormat, soundID, streamID, cacheBufferStopThreadPool);
+    cacheBuffer_ = std::make_shared<AudioStream>(trackFormat, soundID, streamID, cacheBufferStopThreadPool);
     streamIDManager_ = std::make_shared<StreamIDManager>(TEST_FULL_CACHE_DATA, AudioStandard::AudioRendererInfo());
     mockAudioRenderer_ = std::make_unique<MockAudioRenderer>();
 }
@@ -55,37 +55,6 @@ void CacheBufferUnitTest::TearDown(void)
     cacheBuffer_ = nullptr;
     streamIDManager_ = nullptr;
     mockAudioRenderer_ = nullptr;
-}
-
-/**
- * @tc.name  : Test GetGlobalId
- * @tc.number: GetGlobalId_001
- * @tc.desc  : Test GetGlobalId (auto sharedManager = manager_.lock()) == false
- */
-HWTEST_F(CacheBufferUnitTest, GetGlobalId_001, TestSize.Level1)
-{
-    int32_t soundId = TEST_SOUND_ID;
-    int32_t ret = cacheBuffer_->GetGlobalId(soundId);
-    EXPECT_EQ(ret, ERROR_GLOBAL_ID);
-}
-
-/**
- * @tc.name  : Test DelGlobalId
- * @tc.number: DelGlobalId_001
- * @tc.desc  : Test DelGlobalId (auto sharedManager = manager_.lock()) == true
- *             Test DelGlobalId (auto sharedManager = manager_.lock()) == false
- */
-HWTEST_F(CacheBufferUnitTest, DelGlobalId_001, TestSize.Level1)
-{
-    // Test DelGlobalId (auto sharedManager = manager_.lock()) == false
-    int32_t soundId = TEST_SOUND_ID;
-    cacheBuffer_->DelGlobalId(soundId);
-    EXPECT_TRUE(!cacheBuffer_->manager_.lock());
-
-    // Test DelGlobalId (auto sharedManager = manager_.lock()) == true
-    cacheBuffer_->manager_ = streamIDManager_;
-    cacheBuffer_->DelGlobalId(soundId);
-    EXPECT_TRUE(cacheBuffer_->manager_.lock());
 }
 
 /**
@@ -107,27 +76,9 @@ HWTEST_F(CacheBufferUnitTest, DealAudioRendererParams_001, TestSize.Level1)
 /**
  * @tc.name  : Test GetAvailableAudioRenderer
  * @tc.number: GetAvailableAudioRenderer_001
- * @tc.desc  : Test GetAvailableAudioRenderer AudioRendererManager::GetInstance()
- *             .GetAudioRendererInstance(globalId) == nullptr
- */
-HWTEST_F(CacheBufferUnitTest, GetAvailableAudioRenderer_001, TestSize.Level1)
-{
-    streamIDManager_->globalIdVector_.push_back(std::make_pair(TEST_SOUND_ID, DEFAULT_GLOBAL_ID));
-    cacheBuffer_->soundID_ = TEST_SOUND_ID;
-    cacheBuffer_->manager_ = streamIDManager_;
-    cacheBuffer_->audioRenderer_ = std::move(mockAudioRenderer_);
-    AudioStandard::AudioRendererInfo audioRendererInfo;
-    PlayParams playParams;
-    cacheBuffer_->GetAvailableAudioRenderer(audioRendererInfo, playParams);
-    EXPECT_EQ(cacheBuffer_->GetGlobalId(TEST_SOUND_ID), ERROR_GLOBAL_ID);
-}
-
-/**
- * @tc.name  : Test GetAvailableAudioRenderer
- * @tc.number: GetAvailableAudioRenderer_002
  * @tc.desc  : Test GetAvailableAudioRenderer CreateAudioRenderer(audioRendererInfo, playParams) == nullptr
  */
-HWTEST_F(CacheBufferUnitTest, GetAvailableAudioRenderer_002, TestSize.Level1)
+HWTEST_F(CacheBufferUnitTest, GetAvailableAudioRenderer_001, TestSize.Level1)
 {
     cacheBuffer_->manager_ = streamIDManager_;
     AudioStandard::AudioRendererInfo audioRendererInfo;
@@ -153,8 +104,7 @@ HWTEST_F(CacheBufferUnitTest, HandleRendererNotStart_001, TestSize.Level1)
     EXPECT_CALL(*mockAudioRenderer_, Stop()).WillOnce(Return(true));
     EXPECT_CALL(*mockAudioRenderer_, Release()).WillOnce(Return(true));
     cacheBuffer_->audioRenderer_ = std::move(mockAudioRenderer_);
-    int32_t streamId = TEST_STREAM_ID;
-    int32_t ret = cacheBuffer_->HandleRendererNotStart(streamId);
+    int32_t ret = cacheBuffer_->HandleRendererNotStart();
     EXPECT_EQ(ret, MSERR_INVALID_VAL);
 }
 
@@ -180,9 +130,7 @@ HWTEST_F(CacheBufferUnitTest, HandleRendererNotStart_002, TestSize.Level1)
     auto cacheBufferCallback = std::make_shared<MockSoundPoolCallback>();
     EXPECT_CALL(*cacheBufferCallback, OnError(_)).Times(TIMES_ONE);
     cacheBuffer_->cacheBufferCallback_ = cacheBufferCallback;
-
-    int32_t streamId = TEST_STREAM_ID;
-    cacheBuffer_->HandleRendererNotStart(streamId);
+    cacheBuffer_->HandleRendererNotStart();
 }
 
 /**
@@ -197,30 +145,8 @@ HWTEST_F(CacheBufferUnitTest, HandleRendererNotStart_003, TestSize.Level1)
     EXPECT_CALL(*mockAudioRenderer_, Stop()).WillOnce(Return(true));
     EXPECT_CALL(*mockAudioRenderer_, Release()).WillOnce(Return(true));
     cacheBuffer_->audioRenderer_ = std::move(mockAudioRenderer_);
-    int32_t streamId = TEST_STREAM_ID;
-    int32_t ret = cacheBuffer_->HandleRendererNotStart(streamId);
+    int32_t ret = cacheBuffer_->HandleRendererNotStart();
     EXPECT_EQ(ret, MSERR_OK);
-}
-
-/**
- * @tc.name  : Test OnWriteData
- * @tc.number: OnWriteData_001
- * @tc.desc  : Test OnWriteData (auto ptr = cacheBufferStopThreadPool_.lock()) == nullptr
- */
-HWTEST_F(CacheBufferUnitTest, OnWriteData_001, TestSize.Level1)
-{
-    EXPECT_CALL(*mockAudioRenderer_, Stop()).WillOnce(Return(true));
-    EXPECT_CALL(*mockAudioRenderer_, Release()).WillOnce(Return(true));
-    EXPECT_CALL(*mockAudioRenderer_, GetBufferDesc(_)).WillRepeatedly(Return(AudioStandard::SUCCESS));
-    cacheBuffer_->audioRenderer_ = std::move(mockAudioRenderer_);
-    cacheBuffer_->isRunning_.store(true);
-    cacheBuffer_->isReadyToStopAudioRenderer_.store(false);
-    uint8_t* data = new uint8_t[1024];
-    cacheBuffer_->fullCacheData_ = std::make_shared<AudioBufferEntry>(data, TEST_FULL_CACHE_DATA);
-    cacheBuffer_->cacheDataFrameIndex_ = TEST_FULL_CACHE_DATA;
-    size_t length = TEST_CURRENT_LENGTH;
-    cacheBuffer_->OnWriteData(length);
-    EXPECT_TRUE(!cacheBuffer_->cacheBufferStopThreadPool_.lock());
 }
 
 /**
@@ -237,43 +163,15 @@ HWTEST_F(CacheBufferUnitTest, OnInterrupt_001, TestSize.Level1)
 }
 
 /**
- * @tc.name  : Test Stop
- * @tc.number: Stop_001
- * @tc.desc  : Test Stop audioRenderer_->IsFastRenderer() == true
- *             Test Stop callback_ == nullptr
- *             Test Stop cacheBufferCallback_ == nullptr
- */
-HWTEST_F(CacheBufferUnitTest, Stop_001, TestSize.Level1)
-{
-    // Test Stop audioRenderer_->IsFastRenderer() == true
-    EXPECT_CALL(*mockAudioRenderer_, IsFastRenderer()).WillOnce(Return(true));
-    EXPECT_CALL(*mockAudioRenderer_, Pause(_)).Times(TIMES_ONE);
-    EXPECT_CALL(*mockAudioRenderer_, Flush()).Times(TIMES_ONE);
-    cacheBuffer_->audioRenderer_ = std::move(mockAudioRenderer_);
-    cacheBuffer_->isRunning_.store(true);
-
-    // Test Stop callback_ == nullptr
-    cacheBuffer_->callback_ = nullptr;
-
-    // Test Stop cacheBufferCallback_ == nullptr
-    cacheBuffer_->cacheBufferCallback_ = nullptr;
-
-    int32_t streamId = TEST_STREAM_ID;
-    cacheBuffer_->streamID_ = TEST_STREAM_ID;
-    cacheBuffer_->Stop(streamId);
-}
-
-/**
  * @tc.name  : Test SetVolume
  * @tc.number: SetVolume_001
  * @tc.desc  : Test SetVolume streamID != streamID_
  */
 HWTEST_F(CacheBufferUnitTest, SetVolume_001, TestSize.Level1)
 {
-    int32_t streamId = TEST_STREAM_ID;
     float leftVolume = TEST_LEFT_VOLUMN;
     float rightVolume = TEST_RIGHT_VOLUMN;
-    int32_t ret = cacheBuffer_->SetVolume(streamId, leftVolume, rightVolume);
+    int32_t ret = cacheBuffer_->SetVolume(leftVolume, rightVolume);
     EXPECT_EQ(ret, MSERR_OK);
 }
 
@@ -284,12 +182,11 @@ HWTEST_F(CacheBufferUnitTest, SetVolume_001, TestSize.Level1)
  */
 HWTEST_F(CacheBufferUnitTest, SetVolume_002, TestSize.Level1)
 {
-    int32_t streamId = TEST_STREAM_ID;
     float leftVolume = TEST_LEFT_VOLUMN;
     float rightVolume = TEST_RIGHT_VOLUMN;
     cacheBuffer_->streamID_ = TEST_STREAM_ID;
     cacheBuffer_->audioRenderer_ = nullptr;
-    int32_t ret = cacheBuffer_->SetVolume(streamId, leftVolume, rightVolume);
+    int32_t ret = cacheBuffer_->SetVolume(leftVolume, rightVolume);
     EXPECT_EQ(ret, MSERR_OK);
 }
 
@@ -300,9 +197,8 @@ HWTEST_F(CacheBufferUnitTest, SetVolume_002, TestSize.Level1)
  */
 HWTEST_F(CacheBufferUnitTest, SetRate_001, TestSize.Level1)
 {
-    int32_t streamId = TEST_STREAM_ID;
     AudioStandard::AudioRendererRate renderRate = AudioStandard::AudioRendererRate::RENDER_RATE_NORMAL;
-    int32_t ret = cacheBuffer_->SetRate(streamId, renderRate);
+    int32_t ret = cacheBuffer_->SetRate(renderRate);
     EXPECT_EQ(ret, MSERR_OK);
 }
 
@@ -317,7 +213,7 @@ HWTEST_F(CacheBufferUnitTest, SetRate_002, TestSize.Level1)
     cacheBuffer_->streamID_ = TEST_STREAM_ID;
     AudioStandard::AudioRendererRate renderRate = AudioStandard::AudioRendererRate::RENDER_RATE_NORMAL;
     cacheBuffer_->audioRenderer_ = nullptr;
-    int32_t ret = cacheBuffer_->SetRate(streamId, renderRate);
+    int32_t ret = cacheBuffer_->SetRate(renderRate);
     EXPECT_EQ(ret, MSERR_OK);
 }
 
@@ -328,9 +224,8 @@ HWTEST_F(CacheBufferUnitTest, SetRate_002, TestSize.Level1)
  */
 HWTEST_F(CacheBufferUnitTest, SetPriority_001, TestSize.Level1)
 {
-    int32_t streamId = TEST_STREAM_ID;
     int32_t priority = TEST_PRIORITY;
-    cacheBuffer_->SetPriority(streamId, priority);
+    cacheBuffer_->SetPriority(priority);
     EXPECT_EQ(cacheBuffer_->priority_, 0);
 }
 
@@ -341,67 +236,9 @@ HWTEST_F(CacheBufferUnitTest, SetPriority_001, TestSize.Level1)
  */
 HWTEST_F(CacheBufferUnitTest, SetLoop_001, TestSize.Level1)
 {
-    int32_t streamId = TEST_STREAM_ID;
     int32_t loop = TEST_LOOP;
-    cacheBuffer_->SetLoop(streamId, loop);
+    cacheBuffer_->SetLoop(loop);
     EXPECT_EQ(cacheBuffer_->loop_, 0);
-}
-
-/**
- * @tc.name  : Test SetParallelPlayFlag
- * @tc.number: SetParallelPlayFlag_001
- * @tc.desc  : Test SetParallelPlayFlag streamID != streamID_
- */
-HWTEST_F(CacheBufferUnitTest, SetParallelPlayFlag_001, TestSize.Level1)
-{
-    int32_t streamId = TEST_STREAM_ID;
-    bool parallelPlayFlag = false;
-    int32_t ret = cacheBuffer_->SetParallelPlayFlag(streamId, parallelPlayFlag);
-    EXPECT_EQ(ret, MSERR_OK);
-}
-
-/**
- * @tc.name  : Test SetParallelPlayFlag
- * @tc.number: SetParallelPlayFlag_002
- * @tc.desc  : Test SetParallelPlayFlag audioRenderer_ != nullptr
- */
-HWTEST_F(CacheBufferUnitTest, SetParallelPlayFlag_002, TestSize.Level1)
-{
-    EXPECT_CALL(*mockAudioRenderer_, SetParallelPlayFlag(_))
-        .WillOnce(Return(MSERR_OK));
-    EXPECT_CALL(*mockAudioRenderer_, Stop()).WillOnce(Return(true));
-    EXPECT_CALL(*mockAudioRenderer_, Release()).WillOnce(Return(true));
-    cacheBuffer_->audioRenderer_ = std::move(mockAudioRenderer_);
-
-    int32_t streamId = TEST_STREAM_ID;
-    bool parallelPlayFlag = false;
-    cacheBuffer_->streamID_ = TEST_STREAM_ID;
-    cacheBuffer_->SetParallelPlayFlag(streamId, parallelPlayFlag);
-}
-
-/**
- * @tc.name  : Test Release
- * @tc.number: Release_001
- * @tc.desc  : Test FadeInAudioBuffer ret != AudioStandard::SUCCESS
- *             Test Release cacheData_.empty() == true
- *             Test Release frameWriteCallback_ == nullptr
- */
-HWTEST_F(CacheBufferUnitTest, Release_001, TestSize.Level1)
-{
-    // Test FadeInAudioBuffer ret != AudioStandard::SUCCESS
-    cacheBuffer_->isNeedFadeIn_ = true;
-    AudioStandard::BufferDesc bufDesc;
-    bufDesc.bufLength = 0;
-    cacheBuffer_->FadeInAudioBuffer(bufDesc);
-
-    // Test Release cacheData_.empty() == true
-    cacheBuffer_->cacheData_.clear();
-
-    // Test Release frameWriteCallback_ == nullptr
-    cacheBuffer_->frameWriteCallback_ == nullptr;
-
-    int32_t ret = cacheBuffer_->Release();
-    EXPECT_EQ(ret, MSERR_OK);
 }
 } // namespace Media
 } // namespace OHOS

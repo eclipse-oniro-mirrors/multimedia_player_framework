@@ -36,7 +36,7 @@ protected:
     int32_t streamID = 0;
     std::shared_ptr<ThreadPool> cacheBufferStopThreadPool = nullptr;
 
-    std::shared_ptr<CacheBuffer> cacheBuffer_;
+    std::shared_ptr<AudioStream> cacheBuffer_;
     std::shared_ptr<StreamIDManager> streamIDManager_;
     std::unique_ptr<MockAudioRenderer> mockAudioRenderer_;
 };
