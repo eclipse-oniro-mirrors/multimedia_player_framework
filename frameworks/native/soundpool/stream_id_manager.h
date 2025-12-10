@@ -59,7 +59,7 @@ public:
     void RemoveInvalidStreamsInNoInterruptMode();
     void RemoveStreamByStreamIDInInterruptMode(int32_t soundID, int32_t streamID);
     void RemoveStreamByStreamIDInNoInterruptMode(int32_t soundID);
-    int32_t ClearStreamIDInDeque(int32_t streamID, int32_t soundID);
+    int32_t ClearStreamIDInDeque(int32_t soundID, int32_t streamID);
     void PrintSoundID2MultiStreams();
     void PrintSoundID2Stream();
     void PrintPlayingStreams();

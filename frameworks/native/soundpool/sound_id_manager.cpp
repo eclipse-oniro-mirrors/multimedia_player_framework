@@ -27,8 +27,8 @@ namespace {
     static constexpr size_t MAX_LOAD_NUM_BELOW_API18 = 32;
     static constexpr size_t MAX_LOAD_NUM_ABOVE_API18 = 128;
 
-    static const int32_t SOUNDPOOL_API_VERSION_ISOLATION = 18;
-    static const int32_t FAULT_API_VERSION = -1;
+    static constexpr int32_t SOUNDPOOL_API_VERSION_ISOLATION = 18;
+    static constexpr int32_t FAULT_API_VERSION = -1;
 
     static constexpr int32_t MAX_SOUND_ID_QUEUE = 128;
     
@@ -93,15 +93,15 @@ int32_t SoundIDManager::Load(const std::string &url)
     int32_t soundID = -1;
     {
         std::lock_guard lock(soundManagerLock_);
-        size_t soundParserSize = soundParsers_.size();
-        if (apiVersion > 0 && apiVersion < SOUNDPOOL_API_VERSION_ISOLATION &&
-            soundParserSize < MAX_LOAD_NUM_BELOW_API18) {
+        size_t soundParsersSize = soundParsers_.size();
+        if (apiVersion_ > 0 && apiVersion_ < SOUNDPOOL_API_VERSION_ISOLATION &&
+            soundParsersSize >= MAX_LOAD_NUM_BELOW_API18) {
             MEDIA_LOGE("Failed to create soundParser by url below api18, soundParsers_ size is %{public}zu",
-                soudParserSize);
+                soundParsersSize);
             return soundID;
         }
         if ((apiVersion_ == FAULT_API_VERSION || apiVersion_ >= SOUNDPOOL_API_VERSION_ISOLATION) &&
-            soundParserSize >= MAX_LOAD_NUM_ABOVE_API18) {
+            soundParsersSize >= MAX_LOAD_NUM_ABOVE_API18) {
             MEDIA_LOGE("Failed to create soundParser by url above api18, soundParsers_ size is %{public}zu",
                 soudParserSize);
             return soundID;
@@ -135,17 +135,17 @@ int32_t SoundIDManager::Load(int32_t fd, int64_t offset, int64_t length)
     int32_t soundID = -1;
     {
         std::lock_guard lock(soundManagerLock_);
-        size_t soundParserSize = soundParsers_.size();
+        size_t soundParsersSize = soundParsers_.size();
         if (apiVersion_ > 0 && apiVersion_ < SOUNDPOOL_API_VERSION_ISOLATION &&
             soundPrsersSize >= MAX_LOAD_NUM_BELOW_API18) {
-            MEDIA_LOGI("Failed to create soundParser by fd below api18, soundParsers_ size is %{public}zu",
-                soundParserSize);
+            MEDIA_LOGE("Failed to create soundParser by fd below api18, soundParsers_ size is %{public}zu",
+                soundParsersSize);
             return soundID;
         }
         if ((apiVersion_ == FAULT_API_VERSION || apiVersion_ >= SOUNDPOOL_API_VERSION_ISOLATION) &&
-            soundParserSize >= MAX_LOAD_NUM_ABOVE_API18) {
-            MEDIA_LOGI("Failed to create soundParser by fd above api18, soundParsers_ size is %{public}zu",
-                soundParserSize);
+            soundParsersSize >= MAX_LOAD_NUM_ABOVE_API18) {
+            MEDIA_LOGE("Failed to create soundParser by fd above api18, soundParsers_ size is %{public}zu",
+                soundParsersSize);
             return soundID;
         }
         do {
@@ -162,7 +162,7 @@ int32_t SoundIDManager::Load(int32_t fd, int64_t offset, int64_t length)
 
 int32_t SoundIDManager::DoLoad(int32_t soundID)
 {
-    MEDIA_LOGI("SoundIDManager::DoLoad, soundID IS %{public}d", soundID);
+    MEDIA_LOGI("SoundIDManager::DoLoad, soundID is %{public}d", soundID);
     if (!isParsingThreadPoolStarted_) {
         InitThreadPool();
     }
@@ -175,7 +175,6 @@ int32_t SoundIDManager::DoLoad(int32_t soundID)
             }
             queueSpaceValid_.wait(lock);
         }
-        if (isQuitQueue_) return MSERR_OK;
         soundIDs_.push_back(soundID);
         queueDataValid_.notify_one();
     }
@@ -202,7 +201,7 @@ int32_t SoundIDManager::DoParser()
         soundIDs_.pop_front();
         queueSpaceValid_.notify_one();
         std::shared_ptr<SoundParser> soundParser = GetSoundParserBySoundID(soundID);
-        CHECK_AND_CONTINUE_LOOG(soundParser != nullptr, "soundParser is nullptr, soundID is %{public}d", soundID);
+        CHECK_AND_CONTINUE_LOG(soundParser != nullptr, "soundParser is nullptr, soundID is %{public}d", soundID);
         lock.unlock();
         soundParser->SetCallback(callback_);
         soundParser->DoParser();
@@ -215,7 +214,7 @@ int32_t SoundIDManager::DoParser()
 std::shared_ptr<SoundParser> SoundIDManager::GetSoundParserBySoundID(int32_t soundID) const
 {
     if (soundParsers_.empty()) {
-        MEDIA_LOGE("GetSoundParserBySoundID, soundParsers_ is empty");
+        MEDIA_LOGE("soundParsers_ is empty");
         return nullptr;
     }
     if (soundParsers_.find(soundID) != soundParsers_.end()) {

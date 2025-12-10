@@ -156,10 +156,10 @@ int32_t SoundPool::Play(int32_t soundID, const PlayParams &playParameters)
     MediaTrace trace("SoundPool::Play");
     MEDIA_LOGI("SoundPool::Play start");
     std::lock_guard lock(soundPoolLock_);
-    MEDIA_LOGI("SoundPool::Play, soundID is %{public}d ,priority is %{public}d", soundID, playParameters.priority);
+    MEDIA_LOGI("SoundPool::Play, soundID is %{public}d, priority is %{public}d", soundID, playParameters.priority);
 
     CHECK_AND_RETURN_RET_LOG(soundIDManager_ != nullptr, -1, "soundIDManager_ has been released");
-    std::shared_ptr<SoundParser> soundParser = soundIDManager_->FindSoundParser(soundID);
+    std::shared_ptr<SoundParser> soundParser = soundIDManager_->GetSoundParserBySoundID(soundID);
     CHECK_AND_RETURN_RET_LOG(soundParser != nullptr, -1, "soundParser is nullptr");
     if (!soundParser->IsSoundParserCompleted()) {
         MEDIA_LOGE("SoundPool::Play, soundID(%{public}d) has not been loaded completely", soundID);
@@ -168,7 +168,7 @@ int32_t SoundPool::Play(int32_t soundID, const PlayParams &playParameters)
     int32_t streamID = 0;
     if (parallelStreamFlag_) {
         CHECK_AND_RETURN_RET_LOG(parallelStreamManager_ != nullptr, ERROR_RETURN,
-            "parallelStreamManager_ have released.");
+            "parallelStreamManager_ has been released.");
         streamID = parallelStreamManager_->Play(soundParser, playParameters);
         MEDIA_LOGI("SoundPool::Play end, streamID is %{public}d", streamID);
         return streamID;
@@ -176,7 +176,7 @@ int32_t SoundPool::Play(int32_t soundID, const PlayParams &playParameters)
 
     // New playback path
     CHECK_AND_RETURN_RET_LOG(streamIdManager_ != nullptr, ERROR_RETURN, "sound pool have released.");
-    if (interruptMode_ == InterrruptMode::SAME_SOUND_INTERRUPT) {
+    if (interruptMode_ == InterruptMode::SAME_SOUND_INTERRUPT) {
         streamID = streamIdManager_->PlayWithSameSoundInterrupt(soundParser, playParameters);
         MEDIA_LOGI("SoundPool::Play end, streamID is %{public}d", streamID);
         return streamID;
@@ -204,10 +204,10 @@ int32_t SoundPool::Stop(int32_t streamID)
     }
     CHECK_AND_RETURN_RET_LOG(streamIdManager_ != nullptr, MSERR_INVALID_VAL,
         "SoundPool::Stop, streamIdManager_ is nullptr");
-    if (std::shared_ptr<AudioStream> stream = streamIdManager_->FindCacheBufferLock(streamID)) {
-        return stream->Stop(streamID);
+    if (std::shared_ptr<AudioStream> stream = streamIdManager_->GetStreamByStreamIDWithLock(streamID)) {
+        return stream->Stop();
     }
-    MEDIA_LOGI("SoundPool::Stop, can not find the stream(%{public}d)", streamID);
+    MEDIA_LOGE("SoundPool::Stop, can not find the stream(%{public}d)", streamID);
     return MSERR_INVALID_OPERATION;
 }
 
@@ -253,10 +253,10 @@ int32_t SoundPool::SetPriority(int32_t streamID, int32_t priority)
         "SoundPool::SetPriority, streamIdManager_ is nullptr");
     if (std::shared_ptr<AudioStream> stream = streamIdManager_->GetStreamByStreamIDWithLock(streamID)) {
         int32_t ret = stream->SetPriority(priority);
-        streamIdManager_->ReorderStream(priority);
+        streamIdManager_->ReorderStream(streamID, priority);
         return ret;
     }
-    MEDIA_LOGI("SoundPool::SetPriority, can not find the stream(%{public}d)", streamID);
+    MEDIA_LOGE("SoundPool::SetPriority, can not find the stream(%{public}d)", streamID);
     return MSERR_INVALID_OPERATION;
 } 
 
@@ -277,7 +277,7 @@ int32_t SoundPool::SetRate(int32_t streamID, const AudioStandard::AudioRendererR
     if (std::shared_ptr<AudioStream> stream = streamIdManager_->GetStreamByStreamIDWithLock(streamID)) {
         return stream->SetRate(renderRate);
     }
-    MEDIA_LOGI("SoundPool::SetRate can not find the stream(%{public}d)", streamID);
+    MEDIA_LOGE("SoundPool::SetRate can not find the stream(%{public}d)", streamID);
     return MSERR_INVALID_OPERATION;
 }
 
@@ -298,10 +298,10 @@ int32_t SoundPool::SetVolume(int32_t streamID, float leftVolume, float rightVolu
         return MSERR_INVALID_OPERATION;
     }
     CHECK_AND_RETURN_RET_LOG(streamIdManager_ != nullptr, MSERR_INVALID_VAL, "sound pool have released.");
-    if (std::shared_ptr<AudioStream> audioStream = streamIdManager_->FindCacheBufferLock(streamID)) {
-        return audioStream->SetVolume(streamID, leftVolume, rightVolume);
+    if (std::shared_ptr<AudioStream> stream = streamIdManager_->GetStreamByStreamIDWithLock(streamID)) {
+        return stream->SetVolume(leftVolume, rightVolume);
     }
-    MEDIA_LOGI("SoundPool::SetVolume, can not find the stream(%{public}d)", streamID);
+    MEDIA_LOGE("SoundPool::SetVolume, can not find the stream(%{public}d)", streamID);
     return MSERR_INVALID_OPERATION;
 }
 
@@ -310,7 +310,7 @@ void SoundPool::SetInterruptMode(InterruptMode interruptMode)
     std::lock_guard lock(soundPoolLock_);
     MEDIA_LOGI("SoundPool::SetInterruptMode, current interruptMode is %{public}d, new interruptMode is %{public}d",
         interruptMode_, interruptMode);
-    if (interruptMode < interruptMode::NO_INTERRUPT || interruptMode > InterruptMode::SAME_SOUND_INTERRUPT) {
+    if (interruptMode < InterruptMode::NO_INTERRUPT || interruptMode > InterruptMode::SAME_SOUND_INTERRUPT) {
         MEDIA_LOGE("interruptMode(%{public}d) is invalid", interruptMode);
         return;
     }

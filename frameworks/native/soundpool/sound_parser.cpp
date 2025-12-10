@@ -66,8 +66,8 @@ SoundParser::~SoundParser()
 
 int32_t SoundParser::DoParser()
 {
-    MediaTrace trace("SoundParser::DoParser");
-    MEDIA_LOGI("SoundParser::DoParser start, soundID is %{public}d", soundID_);
+    MediaTrace trace("DoParser");
+    MEDIA_LOGI("DoParser start, soundID is %{public}d", soundID_);
     std::unique_lock<ffrt::mutex> lock(soundParserLock_);
     CHECK_AND_RETURN_RET_LOG(source_ != nullptr, MSERR_INVALID_VAL, "DoParser source_ is nullptr");
     CHECK_AND_RETURN_RET_LOG(demuxer_ != nullptr, MSERR_INVALID_VAL, "DoParser demuxer_ is nullptr");
@@ -100,10 +100,11 @@ int32_t SoundParser::DoParser()
         return MSERR_INVALID_VAL;
     }
     if (result != MSERR_OK && callback_ == nullptr) {
-        MEDIA_LOGI("DoDecode failed, callback is nullptr");
+        MEDIA_LOGI("DoDecode failed and callback is nullptr");
         return MSERR_INVALID_VAL;
     }
-    MEDIA_LOGI("SoundParser::DoParser end, soundID is %{public}d", soundID_);
+    MEDIA_LOGI("
+        DoParser end, soundID is %{public}d", soundID_);
     return MSERR_OK;
 }
 
@@ -125,7 +126,7 @@ int32_t SoundParser::DoDemuxer(MediaAVCodec::Format *trackFormat)
     sourceFormat.GetLongValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_DURATION, duration);
 
     sourceDurationInfo_ = duration;
-    MEDIA_LOGI("soundID is %{public}d, trackCount is %{public}d, duration is %{public}d", soundID_, trackCount,
+    MEDIA_LOGI("soundID is %{public}d, trackCount is %{public}d, duration is %{public}lu", soundID_, trackCount,
         duration);
 
     for (int32_t trackIndex = 0; trackIndex < trackCount; trackIndex++) {
@@ -254,9 +255,9 @@ int32_t SoundParser::Release()
     return ret;
 }
 
-SoundDecoderCallback::SoundDecoderCallback(const int32_t soundID,
+SoundDecoderCallback::SoundDecoderCallback(int32_t soundID,
     const std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> &audioDec,
-    const std::shared_ptr<MediaAVCodec::AVDemuxer> &demuxer, const bool isRawFile) :
+    const std::shared_ptr<MediaAVCodec::AVDemuxer> &demuxer, bool isRawFile) :
     soundID_(soundID), audioDec_(audioDec), demuxer_(demuxer), isRawFile_(isRawFile), eosFlag_(false),
     decodeShouldCompleted_(false), currentSoundBufferSize_(0)
 {
@@ -300,7 +301,7 @@ void SoundDecoderCallback::OnInputBufferAvailable(uint32_t index, std::shared_pt
 
     if (buffer != nullptr && !eosFlag_ && !decodeShouldCompleted_) {
         if (demuxer_->ReadSample(0, buffer, sampleInfo, bufferFlag) != AVCS_ERR_OK) {
-            MEDIA_LOGE("OnInputBufferAvailable, ReadSample failed");
+            MEDIA_LOGE("ReadSample failed");
             amutex_.unlock();
             return;
         }
@@ -401,7 +402,7 @@ int32_t SoundDecoderCallback::ReCombineCacheData()
     uint8_t *fullBuffer = new(std::nothrow) uint8_t[currentSoundBufferSize_];
     CHECK_AND_RETURN_RET_LOG(fullBuffer != nullptr, MSERR_INVALID_VAL, "Invalid fullBuffer");
     int32_t copyIndex = 0;
-    int32_t remainBufferSize = static_cast<int32_t>(currentSoundBufferSize_);
+    int32_t remainBufferSize = currentSoundBufferSize_;
     MEDIA_LOGI("copyIndex is %{public}d, remainSize is %{public}d", copyIndex, remainBufferSize);
     for (std::shared_ptr<AudioBufferEntry> bufferEntry : availableAudioBuffers_) {
         if (bufferEntry != nullptr && bufferEntry->size > 0 && bufferEntry->buffer != nullptr) {

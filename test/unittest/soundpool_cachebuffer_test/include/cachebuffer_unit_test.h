@@ -49,7 +49,7 @@ protected:
     int32_t GetFdByFileName(std::string fileName);
     std::shared_ptr<AudioStreamMock> audioStream_ = nullptr;
     std::shared_ptr<ThreadPool> audioStreamStopThreadPool_;
-    std::atomic<bool> isAudiOStreamStopThreadPoolStarted_ = false;
+    std::atomic<bool> isAudioStreamStopThreadPoolStarted_ = false;
 };
 } // namespace Media
 } // namespace OHOS

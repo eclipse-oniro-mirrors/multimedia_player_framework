@@ -28,7 +28,7 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-AudioStream::AudioStream(const Format &trackFormat, const int32_t &soundID, const int32_t &streamID,
+AudioStream::AudioStream(const Format &trackFormat, int32_t &soundID, int32_t &streamID,
     std::shared_ptr<ThreadPool> streamStopThreadPool) : trackFormat_(trackFormat),
     soundID_(soundID), streamID_(streamID), streamStopThreadPool_(streamStopThreadPool), pcmBufferFrameIndex_(0)
 {
@@ -42,7 +42,7 @@ AudioStream::~AudioStream()
     Release();
 }
 
-void AudioStream::SetPcmBuffer(const std::shared_ptr<AudioBufferEntry> &cacheData, size_t cacheDataTotalSize)
+void AudioStream::SetPcmBuffer(const std::shared_ptr<AudioBufferEntry> &pcmBuffer, size_t pcmBufferSize)
 {
     pcmBuffer_ = pcmBuffer;
     pcmBufferSize_ = pcmBufferSize;
@@ -80,7 +80,7 @@ int32_t AudioStream::PreparePlayInner(const AudioStandard::AudioRendererInfo &au
         return MSERR_OK;
     }
     GetAvailableAudioRenderer(audioRendererInfo, playParams);
-    CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL, "audioRenderer_ is nullptrs");
+    CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL, "audioRenderer_ is nullptr");
     DealPlayParamsBeforePlay(playParams);
     return MSERR_OK;
 }
@@ -89,7 +89,7 @@ void AudioStream::DealPlayParamsBeforePlay(const PlayParams &playParams)
 {
     MediaTrace trace("AudioStream::DealPlayParamsBeforePlay");
     audioRenderer_->SetOffloadAllowed(false);
-    audioRenderer_->SetLoopTimes(playParams.loop)
+    audioRenderer_->SetLoopTimes(playParams.loop);
     loop_ = playParams.loop;
     audioRenderer_->SetRenderRate(CheckAndAlignRendererRate(playParams.rate));
     audioRenderer_->SetVolume(playParams.leftVolume);
@@ -135,14 +135,14 @@ void AudioStream::GetAvailableAudioRenderer(const AudioStandard::AudioRendererIn
     }
 }
 
-void AudioStream::PrepareAudioRenderer(std::unique_ptr<AudioStandard::AudioRenderer> &audioRenderer)
+void AudioStream::PrepareAudioRenderer(std::shared_ptr<AudioStandard::AudioRenderer> &audioRenderer)
 {
     MediaTrace trace("AudioStream::PrepareAudioRenderer");
     size_t targetSize = 0;
     int32_t ret = audioRenderer->GetBufferSize(targetSize);
-    audioRenderer->SetRenderMode(AudioStandard::AudioRenderMode::RENDER_MODE_STATIC);
+    audioRenderer->SetRenderMode(AudioStandard::AudioRenderMode::RENDER_MODE_STATIC);  // static buffer mode
     if (ret == 0 && targetSize != 0 && !audioRenderer->IsFastRenderer()) {
-        size_t bufferDuration = 20; // 20 -> 20ms
+        size_t bufferDuration = 20;  // 20 -> 20ms
         audioRenderer->SetBufferDuration(bufferDuration);
         MEDIA_LOGI("Buffer size is %{public}zu, duration is %{public}zu", targetSize, bufferDuration);
     }
@@ -195,10 +195,10 @@ void AudioStream::DealAudioRendererParams(AudioStandard::AudioRendererOptions &r
     rendererOptions.rendererInfo.expectedPlaybackDurationBytes = static_cast<uint64_t>(pcmBufferSize_);
 }
 
-std::unique_ptr<AudioStandard::AudioRenderer> AudioStream::CreateAudioRenderer(
+std::shared_ptr<AudioStandard::AudioRenderer> AudioStream::CreateAudioRenderer(
     const AudioStandard::AudioRendererInfo &audioRendererInfo, const PlayParams &playParams)
 {
-
+    MEDIA_LOGI("AudioStream::CreateAudioRenderer start");
     MediaTrace trace("AudioStream::CreateAudioRenderer");
     AudioStandard::AudioRendererOptions rendererOptions = {};
     DealAudioRendererParams(rendererOptions, audioRendererInfo);
@@ -207,8 +207,8 @@ std::unique_ptr<AudioStandard::AudioRenderer> AudioStream::CreateAudioRenderer(
         [](void *) {
             MEDIA_LOGI("AudioRenderer::Create time out");
         });
-    CHECK_AND_RETURN_RET_LOG(pcmBuffer_ != nullptr && pacmBufferSize_ > 0, nullptr,
-        "")
+    CHECK_AND_RETURN_RET_LOG(pcmBuffer_ != nullptr && pcmBufferSize_ > 0, nullptr,
+        "pcmBuffer_ or pcmBufferSize_ is invalid");
     std::shared_ptr<AudioStandard::AudioSharedMemory> sharedMemory =
         AudioStandard::AudioSharedMemory::CreateFromLocal(pcmBufferSize_, "SoundPool");
     std::shared_ptr<AudioStandard::AudioRenderer> audioRenderer = AudioStandard::AudioRenderer::Create(rendererOptions,
@@ -249,9 +249,9 @@ int32_t AudioStream::DoPlay()
     MediaTrace trace("AudioStream::DoPlay");
     MEDIA_LOGI("AudioStream::DoPlay start");
     std::lock_guard lock(streamLock_);
-    if (streamState.load() != StreamState::PREPARED) {
+    if (streamState_.load() != StreamState::PREPARED) {
         MEDIA_LOGI("AudioStream::DoPlay end, invalid stream(%{public}d), streamState is %{public}d", streamID,
-            streamState_load());
+            streamState_.load());
         return MSERR_INVALID_VAL;
     }
     if (audioRenderer_ == nullptr) {
@@ -270,23 +270,23 @@ int32_t AudioStream::DoPlay()
         [](void *) {
             MEDIA_LOGI("AudioStream::DoPlay, audioRenderer::Start time out");
         });
-        streamState_.store(StreamState::PLAYING);
+    streamState_.store(StreamState::PLAYING);
     if (!audioRenderer_->Start()) {
         MEDIA_LOGI("AudioStream::DoPlay, audioRenderer_->Start()");
         soundPoolXCollie.CancelXCollieTimer();
         streamState_.store(StreamState::RELEASED);
-        return HandleRendererNoStart();
+        return HandleRendererNotStart();
     }
     soundPoolXCollie.CancelXCollieTimer();
     MEDIA_LOGI("AudioStream::DoPlay end, streamID is %{public}d", streamID_);
     return MSERR_OK;
 }
 
-int32_t AudioStream::HandleRendererNoStart()
+int32_t AudioStream::HandleRendererNotStart()
 {
-    OHOS::AudioStandard::RendererState state = audioRenderer->GetStatus();
+    OHOS::AudioStandard::RendererState state = audioRenderer_->GetStatus();
     if (state == OHOS::AudioStandard::RendererState::RENDERER_RUNNING) {
-        MEDIA_LOGI("HandleRendererNoStart, audioRenderer us running, streamID is %{public}d", streamID_);
+        MEDIA_LOGI("HandleRendererNotStart, audioRenderer us running, streamID is %{public}d", streamID_);
         if (callback_ != nullptr) {
             MEDIA_LOGI("call OnPlayFinished, streamID is %{public}d", streamID_);
             callback_->OnPlayFinished(streamID_);
@@ -306,89 +306,13 @@ int32_t AudioStream::HandleRendererNoStart()
     return MSERR_INVALID_VAL;
 }
 
-int32_t AudioStream::PreparePlay(const AudioStandard::AudioRendererInfo &audioRendererInfo,
-    const PlayParams &playParams)
-{
-    std::lock_guard lock(streamLock_);
-    playParameters_ = playParams;
-    audioRendererInfo_ = audioRendererInfo;
-    return PreparePlayInner(audioRendererInfo, playParams);
-}
-
-int32_t AudioStream::DoPlay(const int32_t streamID)
-{
-    MediaTrace trace("AudioStream::DoPlay");
-    CHECK_AND_RETURN_RET_LOG(streamID == streamID_, MSERR_INVALID_VAL, "Invalid streamID, failed to DoPlay.");
-    std::lock_guard lock(streamLock_);
-    CHECK_AND_RETURN_RET_LOG(fullCacheData_ != nullptr, MSERR_INVALID_VAL, "fullCacheData_ is nullptr.");
-    if (audioRenderer_ == nullptr) {
-        MEDIA_LOGI("AudioStream::DoPlay audioRenderer_ is nullptr, try again");
-        PreparePlayInner(audioRendererInfo_, playParameters_);
-    }
-    MEDIA_LOGI("AudioStream::DoPlay start, streamID:%{public}d", streamID);
-    CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL, "Invalid audioRenderer.");
-    size_t bufferSize;
-    audioRenderer_->GetBufferSize(bufferSize);
-    MEDIA_LOGI("AudioStream::DoPlay, streamID_:%{public}d, bufferSize:%{public}zu, cacheDataFrameIndex_:%{public}zu,"
-        " cacheDataTotalSize_:%{public}zu", streamID_, bufferSize, cacheDataFrameIndex_, cacheDataTotalSize_);
-    audioRenderer_->SetSourceDuration(sourceDurationMs_);
-
-    cacheDataFrameIndex_ = 0;
-    havePlayedCount_ = 0;
-    isRunning_.store(true);
-    SoundPoolXCollie soundPoolXCollie("audioRenderer::Start time out",
-        [](void *) {
-            MEDIA_LOGI("audioRenderer::Start time out");
-        });
-    if (!audioRenderer_->Start()) {
-        soundPoolXCollie.CancelXCollieTimer();
-        return HandleRendererNotStart(streamID);
-    } else {
-        soundPoolXCollie.CancelXCollieTimer();
-    }
-    MEDIA_LOGI("AudioStream::DoPlay success, streamID:%{public}d", streamID);
-    return MSERR_OK;
-}
-
-int32_t AudioStream::HandleRendererNotStart(const int32_t streamID)
-{
-    OHOS::AudioStandard::RendererState state = audioRenderer_->GetStatus();
-    if (state == OHOS::AudioStandard::RendererState::RENDERER_RUNNING) {
-        MEDIA_LOGI("AudioStream::HandleRendererNotStart audioRenderer has started,"
-            " streamID:%{public}d", streamID);
-        isRunning_.store(true);
-        if (callback_ != nullptr) {
-            MEDIA_LOGI("AudioStream::HandleRendererNotStart callback_ OnPlayFinished,"
-                "streamID:%{public}d", streamID);
-            callback_->OnPlayFinished(streamID_);
-        }
-        isNeedFadeIn_ = true;
-        return MSERR_OK;
-    } else {
-        MEDIA_LOGE("AudioStream::HandleRendererNotStart audioRenderer start failed,"
-            "streamID:%{public}d", streamID);
-        isRunning_.store(false);
-        if (callback_ != nullptr) {
-            MEDIA_LOGI("AudioStream::HandleRendererNotStart doPlay failed, call callback,"
-                "streamID:%{public}d", streamID);
-            callback_->OnError(MSERR_INVALID_VAL);
-            SoundPoolUtils::ErrorInfo errorInfo{MSERR_INVALID_VAL, soundID_,
-                streamID_, ERROR_TYPE::PLAY_ERROR, callback_};
-            SoundPoolUtils::SendErrorInfo(errorInfo);
-        }
-        if (streamCallback_ != nullptr) streamCallback_->OnError(MSERR_INVALID_VAL);
-        return MSERR_INVALID_VAL;
-    }
-}
-
-int32_t AudioStream::Stop(const int32_t streamID)
+int32_t AudioStream::Stop()
 {
     MediaTrace trace("AudioStream::Stop");
     std::lock_guard lock(streamLock_);
-    MEDIA_LOGI("AudioStream::Stop streamID:%{public}d", streamID_);
-    CHECK_AND_RETURN_RET_LOG(streamID == streamID_, MSERR_INVALID_VAL, "Invalid streamID_.");
-    if (audioRenderer_ != nullptr && streamState_load() == StreamState::PLAYING) {
-        SoundPoolXCollie soundPoolXCollie("audioRenderer::Pause or Stop time out",
+    MEDIA_LOGI("AudioStream::Stop, streamID is %{public}d", streamID_);
+    if (audioRenderer_ != nullptr && streamState_.load() == StreamState::PLAYING) {
+        SoundPoolXCollie soundPoolXCollie("AudioStream audioRenderer::Pause or Stop time out",
             [](void *) {
                 MEDIA_LOGI("AudioStream::Stop time out");
             });
@@ -396,7 +320,7 @@ int32_t AudioStream::Stop(const int32_t streamID)
         soundPoolXCollie.CancelXCollieTimer();
         pcmBufferFrameIndex_ = 0;
         if (callback_ != nullptr) {
-            MEDIA_LOGI("streamCallback_ call OnPlayFinished.");
+            MEDIA_LOGI("callback_ call OnPlayFinished.");
             callback_->OnPlayFinished(streamID_);
         }
         if (streamCallback_ != nullptr) {
@@ -422,11 +346,9 @@ void AudioStream::OnInterrupt(const AudioStandard::InterruptEvent &interruptEven
         interruptEvent.hintType);
     if (interruptEvent.hintType == AudioStandard::InterruptHint::INTERRUPT_HINT_PAUSE ||
         interruptEvent.hintType == AudioStandard::InterruptHint::INTERRUPT_HINT_STOP) {
-        MEDIA_LOGI("AudioStream::OnInterrupt, interrupt audioStream, streamID_:%{public}d", streamID_);
-        int32_t streamIDInterrupt = streamID_;
-        ThreadPool::Task audioStreamInterruptTask = [this] { this->Stop(); };
+        ThreadPool::Task pcmBufferInterruptTask = [this] { this->Stop(); };
         if (auto ptr = streamStopThreadPool_.lock()) {
-            ptr->AddTask(audioStreamInterruptTask);
+            ptr->AddTask(pcmBufferInterruptTask);
         }
     }
 }
@@ -475,7 +397,7 @@ int32_t AudioStream::SetCallback(const std::shared_ptr<ISoundPoolCallback> &call
     return MSERR_OK;
 }
 
-int32_t AudioStream::SetCacheBufferCallback(const std::shared_ptr<ISoundPoolCallback> &callback)
+int32_t AudioStream::SetStreamCallback(const std::shared_ptr<ISoundPoolCallback> &callback)
 {
     streamCallback_ = callback;
     return MSERR_OK;
@@ -505,8 +427,7 @@ int32_t AudioStream::GetStreamID()
 int32_t AudioStream::SetVolume(float leftVolume, float rightVolume)
 {
     std::lock_guard lock(streamLock_);
-    CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL,
-        "AudioStream::SetVolume, audioRenderer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL, "SetVolume Invalid audioRenderer_");
     // audio cannot support left & right volume, all use left volume.
     (void) rightVolume;
     int32_t ret = audioRenderer_->SetVolume(leftVolume);
@@ -517,8 +438,7 @@ int32_t AudioStream::SetVolume(float leftVolume, float rightVolume)
 int32_t AudioStream::SetRate(const AudioStandard::AudioRendererRate &renderRate)
 {
     std::lock_guard lock(streamLock_);
-    CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL,
-        "AudioStream::SetRate, audioRenderer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL, "SetRate Invalid audioRenderer_");
     int32_t ret = audioRenderer_->SetRenderRate(CheckAndAlignRendererRate(renderRate));
     MEDIA_LOGI("AudioStream::SetRate, ret is %{public}d", ret);
     return ret;
@@ -538,7 +458,7 @@ int32_t AudioStream::SetPriorityWithoutLock(int32_t priority)
     return MSERR_OK;
 }
 
-int32_t AudioStream::SetLoop(int32_t streamID, int32_t loop)
+int32_t AudioStream::SetLoop(int32_t loop)
 {
     std::lock_guard lock(streamLock_);
     loop_ = loop;

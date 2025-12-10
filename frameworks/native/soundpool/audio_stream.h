@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -55,7 +55,7 @@ enum class StreamState : int32_t {
     PAUSED = 3,
     STOPPED = 4,
     RELEASED = 5,
-}
+};
 
 class AudioStream :
     public AudioStandard::AudioRendererFirstFrameWritingCallback,
@@ -83,7 +83,7 @@ public:
         const AudioStandard::StateChangeCmdType cmdType) override;
     void OnStaticBufferEvent(AudioStandard::StaticBufferEventId eventId) override;
 
-    int32_t SetVolume(int32_t streamID, float leftVolume, float rightVolume);
+    int32_t SetVolume(float leftVolume, float rightVolume);
     int32_t SetRate(const AudioStandard::AudioRendererRate &renderRate);
     int32_t SetPriority(int32_t priority);
     int32_t SetPriorityWithoutLock(int32_t priority);
@@ -106,20 +106,20 @@ private:
     void DealAudioRendererParams(AudioStandard::AudioRendererOptions &rendererOptions,
         const AudioStandard::AudioRendererInfo &audioRendererInfo);
     bool IsAudioRendererCanMix(const AudioStandard::AudioRendererInfo &audioRendererInfo);
-    void PrepareAudioRenderer(std::unique_ptr<AudioStandard::AudioRenderer> &audioRenderer);
+    void PrepareAudioRenderer(std::shared_ptr<AudioStandard::AudioRenderer> &audioRenderer);
     void GetAvailableAudioRenderer(const AudioStandard::AudioRendererInfo &audioRendererInfo,
         const PlayParams &playParams);
     void DealPlayParamsBeforePlay(const PlayParams &playParams);
 
     static AudioStandard::AudioRendererRate CheckAndAlignRendererRate(const int32_t rate);
-    int32_t PreparePlayInner(const AudioStandard::AudioRendererInfo &audioRendererInfo,
-        const PlayParams &playParams);
-    int32_t HandleRendererNotStart(const int32_t streamID);
+    int32_t PreparePlayInner(const AudioStandard::AudioRendererInfo &audioRendererInfo, const PlayParams &playParams);
+    int32_t HandleRendererNotStart();
 
     Format trackFormat_;
     int32_t soundID_ = 0;
     int32_t streamID_ = 0;
-    std::deque<std::shared_ptr<AudioBufferEntry>> cacheData_;
+    PlayParams playParameters_;
+    size_t pcmBufferSize_ = 0;
     std::shared_ptr<AudioBufferEntry> pcmBuffer_ = nullptr;
     std::shared_ptr<AudioStandard::AudioRenderer> audioRenderer_ = nullptr;
     AudioStandard::AudioRendererInfo audioRendererInfo_;
@@ -130,20 +130,18 @@ private:
     std::shared_ptr<ISoundPoolCallback> streamCallback_ = nullptr;
     std::shared_ptr<ISoundPoolFrameWriteCallback> frameWriteCallback_ = nullptr;
 
-    size_t cacheDataTotalSize_ = 0;
-    PlayParams playParameters_;
 
     ffrt::mutex streamLock_;
-    std::weak_ptr<ThreadPool> audioStreamStopThreadPool_;
+    std::weak_ptr<ThreadPool> streamStopThreadPool_;
     std::weak_ptr<OHOS::Media::StreamIDManager> manager_;
 
     int32_t loop_ = 0;
     int32_t priority_ = 0;
     int32_t rendererFlags_ = 0;
 
-    size_t cacheDataFrameIndex_ = 0;
+    size_t pcmBufferFrameIndex_ = 0;
     int64_t sourceDurationMs_ = 0;
-    std::atomic<StreamState> streamState;
+    std::atomic<StreamState> streamState_;
 };
 } // namespace Media
 } // namespace OHOS
