@@ -103,7 +103,7 @@ int32_t SoundIDManager::Load(const std::string &url)
         if ((apiVersion_ == FAULT_API_VERSION || apiVersion_ >= SOUNDPOOL_API_VERSION_ISOLATION) &&
             soundParsersSize >= MAX_LOAD_NUM_ABOVE_API18) {
             MEDIA_LOGE("Failed to create soundParser by url above api18, soundParsers_ size is %{public}zu",
-                soudParserSize);
+                soundParserSize);
             return soundID;
         }
 
@@ -137,7 +137,7 @@ int32_t SoundIDManager::Load(int32_t fd, int64_t offset, int64_t length)
         std::lock_guard lock(soundManagerLock_);
         size_t soundParsersSize = soundParsers_.size();
         if (apiVersion_ > 0 && apiVersion_ < SOUNDPOOL_API_VERSION_ISOLATION &&
-            soundPrsersSize >= MAX_LOAD_NUM_BELOW_API18) {
+            soundParsersSize >= MAX_LOAD_NUM_BELOW_API18) {
             MEDIA_LOGE("Failed to create soundParser by fd below api18, soundParsers_ size is %{public}zu",
                 soundParsersSize);
             return soundID;

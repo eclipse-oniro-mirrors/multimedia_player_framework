@@ -35,7 +35,7 @@ struct PlayParams {
     int32_t audioHapticsSyncId = 0;
 };
 
-enum InterruptMode : in32_t {
+enum InterruptMode : int32_t {
     NO_INTERRUPT = 0,
     SAME_SOUND_INTERRUPT = 1
 };
@@ -241,7 +241,7 @@ public:
 #ifdef UNSUPPORT_SOUND_POOL
     static std::shared_ptr<ISoundPool> CreateSoundPool(int maxStreams,
         const AudioStandard::AudioRendererInfo &audioRenderInfo,
-        InterruptMode interruptMode = InterruprMode::SAME_SOUND_INTERRUPT)
+        InterruptMode interruptMode = InterruptMode::SAME_SOUND_INTERRUPT)
     {
         return nullptr;
     }
@@ -253,7 +253,7 @@ public:
 #else
     static std::shared_ptr<ISoundPool> CreateSoundPool(int maxStreams,
         const AudioStandard::AudioRendererInfo &audioRenderInfo,
-        InterruptMode interruptMode = InterruprMode::SAME_SOUND_INTERRUPT);
+        InterruptMode interruptMode = InterruptMode::SAME_SOUND_INTERRUPT);
     static std::shared_ptr<ISoundPool> CreateParallelSoundPool(int maxStreams,
         const AudioStandard::AudioRendererInfo &audioRenderInfo);
 #endif
