@@ -171,7 +171,7 @@ HWTEST_F(StreamIDManagerUnitTest, streamId_function_006, TestSize.Level2)
     std::deque<std::shared_ptr<AudioBufferEntry>> cacheData;
     int32_t soundID = 0;
     int32_t streamID = 0;
-    auto audioStream = std::make_shared<CacheBuffer>(format, soundID, streamID, nullptr);
+    auto audioStream = std::make_shared<AudioStream>(format, soundID, streamID, nullptr);
     streamIDManager_->soundID2Stream_.emplace(BEGIN_NUM, cacheBuffer);
     streamIDManager_->playingStreamIDs_.emplace_back(BEGIN_NUM + 1);
     EXPECT_EQ(MSERR_INVALID_VAL, streamIDManager_->DoPlay(BEGIN_NUM + 1));
