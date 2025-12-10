@@ -16,9 +16,10 @@
 #ifndef SOUNDPOOL_CACHEBUFFER_UNITTEST_H
 #define SOUNDPOOL_CACHEBUFFER_UNITTEST_H
 
-#include "gtest/gtest.h"
-#include "cache_buffer.h"
 #include <gmock/gmock.h>
+
+#include "audio_stream.h"
+#include "gtest/gtest.h"
 #include "stream_unittest.h"
 
 namespace OHOS {
@@ -34,7 +35,7 @@ public:
     // TearDown: Called after each test cases
     void TearDown(void);
 
-    std::shared_ptr<CacheBuffer> cacheBuffer_;
+    std::shared_ptr<AudioStream> cacheBuffer_;
 };
 } // namespace Media
 } // namespace OHOS

@@ -20,30 +20,30 @@ using namespace OHOS;
 using namespace OHOS::Media;
 using namespace testing::ext;
 
-bool CacheBufferMock::CreateCacheBuffer(const Format &trackFormat, const int32_t &soundID,
-    const int32_t &streamID, std::shared_ptr<ThreadPool> cacheBufferStopThreadPool)
+bool AudioStreamMock::CreateAudioStream(const Format &trackFormat, int32_t soundID, int32_t streamID,
+    std::shared_ptr<ThreadPool> audioStreamStopThreadPool)
 {
-    if (cacheBuffer_ != nullptr) {
-        cacheBuffer_.reset();
+    if (audioStream_ != nullptr) {
+        audioStream_.reset();
     }
-    cacheBuffer_ = std::make_shared<CacheBuffer>(trackFormat, soundID, streamID, cacheBufferStopThreadPool);
-    return cacheBuffer_ == nullptr;
+    audioStream_ = std::make_shared<AudioStream>(trackFormat, soundID, streamID, audioStreamStopThreadPool);
+    return audioStream_ == nullptr;
 }
 
-bool CacheBufferMock::IsAudioRendererCanMix(const AudioStandard::AudioRendererInfo &audioRendererInfo)
+bool AudioStreamMock::IsAudioRendererCanMix(const AudioStandard::AudioRendererInfo &audioRendererInfo)
 {
-    UNITTEST_CHECK_AND_RETURN_RET_LOG(cacheBuffer_ != nullptr, MSERR_INVALID_OPERATION, "cacheBuffer_ == nullptr");
-    return cacheBuffer_->IsAudioRendererCanMix(audioRendererInfo);
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(audioStream_ != nullptr, MSERR_INVALID_OPERATION, "audioStream_ == nullptr");
+    return audioStream_->IsAudioRendererCanMix(audioRendererInfo);
 }
 
-int32_t CacheBufferMock::CreateAudioRenderer(const int32_t streamID,
+int32_t AudioStreamMock::CreateAudioRenderer(const int32_t streamID,
     const AudioStandard::AudioRendererInfo audioRendererInfo, const PlayParams playParams)
 {
-    UNITTEST_CHECK_AND_RETURN_RET_LOG(cacheBuffer_ != nullptr, MSERR_INVALID_OPERATION, "cacheBuffer_ == nullptr");
-    return cacheBuffer_->CreateAudioRenderer(audioRendererInfo, playParams) == nullptr;
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(audioStream_ != nullptr, MSERR_INVALID_OPERATION, "audioStream_ == nullptr");
+    return audioStream_->CreateAudioRenderer(audioRendererInfo, playParams) == nullptr;
 }
 
-size_t CacheBufferMock::GetFileSize(const std::string& fileName)
+size_t AudioStreamMock::GetFileSize(const std::string& fileName)
 {
     size_t fileSize = 0;
     if (!fileName.empty()) {

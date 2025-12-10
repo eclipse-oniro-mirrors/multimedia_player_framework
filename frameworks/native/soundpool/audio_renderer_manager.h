@@ -15,15 +15,16 @@
 #ifndef AUDIO_RENDERER_MANAGER_H
 #define AUDIO_RENDERER_MANAGER_H
 
-#include <unistd.h>
 #include <list>
+#include <unistd.h>
 #include <utility>
-#include "media_log.h"
-#include "media_errors.h"
-#include "media_dfx.h"
+
 #include "audio_renderer.h"
-#include "soundpool_xcollie.h"
+#include "media_dfx.h"
+#include "media_errors.h"
+#include "media_log.h"
 #include "parallel_stream_manager.h"
+#include "soundpool_xcollie.h"
 #include "stream_id_manager.h"
 
 namespace OHOS {

@@ -18,7 +18,7 @@
 #include "gtest/gtest.h"
 #include "mock/mock_audio_renderer.h"
 #include "mock/mock_sound_pool_callback.h"
-#include "cache_buffer.h"
+#include "audio_stream.h"
 
 
 namespace OHOS {

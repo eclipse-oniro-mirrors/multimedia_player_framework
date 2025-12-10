@@ -139,7 +139,7 @@ void ParallelStreamManager::DelSoundId(int32_t soundId)
     }
 }
 
-int32_t ParallelStreamManager::Play(std::shared_ptr<SoundParser> soundParser, PlayParams &playParameters)
+int32_t ParallelStreamManager::Play(std::shared_ptr<SoundParser> soundParser, const PlayParams &playParameters)
 {
     MediaTrace trace("ParallelStreamManager::Play");
     CHECK_AND_RETURN_RET_LOG(soundParser != nullptr, -1, "Invalid soundParser.");

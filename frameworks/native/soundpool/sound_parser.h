@@ -19,15 +19,17 @@
 #include <deque>
 #include <memory>
 #include <mutex>
-#include "cpp/mutex.h"
+
 #include "ashmem.h"
+#include "audio_shared_memory.h"
+#include "audio_stream.h"
 #include "avcodec_audio_decoder.h"
+#include "avcodec_codec_name.h"
 #include "avcodec_errors.h"
 #include "avdemuxer.h"
 #include "avsource.h"
 #include "buffer/avsharedmemory.h"
-#include "avcodec_codec_name.h"
-#include "cache_buffer.h"
+#include "cpp/mutex.h"
 #include "isoundpool.h"
 #include "media_description.h"
 #include "media_dfx.h"
@@ -55,11 +57,11 @@ public:
                 "Destruction SoundDecodeListener");
         }
         virtual void OnSoundDecodeCompleted(const std::shared_ptr<AudioBufferEntry> &fullCacheData) = 0;
-        virtual void SetSoundBufferTotalSize(const size_t soundBufferTotalSize) = 0;
+        virtual void SetSoundBufferTotalSize(size_t soundBufferTotalSize) = 0;
     };
 
-    SoundDecoderCallback(const int32_t soundID, const std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> &audioDec,
-        const std::shared_ptr<MediaAVCodec::AVDemuxer> &demuxer, const bool isRawFile);
+    SoundDecoderCallback(int32_t soundID, const std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> &audioDec,
+        const std::shared_ptr<MediaAVCodec::AVDemuxer> &demuxer, bool isRawFile);
     ~SoundDecoderCallback();
     int32_t SetDecodeCallback(const std::shared_ptr<SoundDecodeListener> &listener)
     {
@@ -87,23 +89,22 @@ private:
         uint32_t index, std::shared_ptr<AVSharedMemory> buffer);
 
     int32_t soundID_ = 0;
-    std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> audioDec_;
-    std::shared_ptr<MediaAVCodec::AVDemuxer> demuxer_;
-    std::shared_ptr<SoundDecodeListener> listener_;
-    std::string trackMimeTypeInfo_;
+    std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> audioDec_ = nullptr;
+    std::shared_ptr<MediaAVCodec::AVDemuxer> demuxer_ = nullptr;
+    std::shared_ptr<SoundDecodeListener> listener_ = nullptr;
     bool isRawFile_ = false;
     bool eosFlag_ = false;
     std::deque<std::shared_ptr<AudioBufferEntry>> availableAudioBuffers_;
-    std::shared_ptr<AudioBufferEntry> fullCacheData_;
-    bool decodeShouldCompleted_;
-    int32_t currentSoundBufferSize_;
+    std::shared_ptr<AudioBufferEntry> fullPcmBuffer_ = nullptr;
+    bool decodeShouldCompleted_ = false;
+    int32_t currentSoundBufferSize_ = 0;
     std::shared_ptr<ISoundPoolCallback> callback_ = nullptr;
     std::mutex amutex_;
 };
 
 class SoundParser : public std::enable_shared_from_this<SoundParser> {
 public:
-    SoundParser(int32_t soundID, std::string url);
+    SoundParser(int32_t soundID, const std::string &url);
     SoundParser(int32_t soundID, int32_t fd, int64_t offset, int64_t length);
     ~SoundParser();
     int32_t DoParser();
@@ -127,16 +128,16 @@ private:
     class SoundParserListener : public SoundDecoderCallback::SoundDecodeListener {
     public:
         explicit SoundParserListener(const std::weak_ptr<SoundParser> soundParser) : soundParserInner_(soundParser) {}
-        void OnSoundDecodeCompleted(
-            const std::shared_ptr<AudioBufferEntry> &fullCacheData) override;
-        void SetSoundBufferTotalSize(const size_t soundBufferTotalSize) override;
+        void OnSoundDecodeCompleted(const std::shared_ptr<AudioBufferEntry> &fullPcmBuffer) override;
+        void SetSoundBufferTotalSize(size_t soundBufferTotalSize) override;
         int32_t GetSoundData(std::shared_ptr<AudioBufferEntry> &soundData) const;
         size_t GetSoundDataTotalSize() const;
         bool IsSoundParserCompleted() const;
 
     private:
         std::weak_ptr<SoundParser> soundParserInner_;
-        std::shared_ptr<AudioBufferEntry> soundData_;
+        std::shared_ptr<AudioBufferEntry> soundData_ = nullptr;
+        std::shared_ptr<AudioStandard::AudioSharedMemory> sharedMemory_ = nullptr;
         size_t soundBufferTotalSize_ = 0;
         std::atomic<bool> isSoundParserCompleted_ = false;
     };
@@ -144,18 +145,18 @@ private:
     int32_t DoDemuxer(MediaAVCodec::Format *trackFormat);
     int32_t DoDecode(MediaAVCodec::Format &trackFormat);
     int32_t soundID_ = 0;
-    std::shared_ptr<MediaAVCodec::AVDemuxer> demuxer_;
-    std::shared_ptr<MediaAVCodec::AVSource> source_;
-    std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> audioDec_;
-    std::shared_ptr<SoundDecoderCallback> audioDecCb_;
+    std::shared_ptr<MediaAVCodec::AVDemuxer> demuxer_ = nullptr;
+    std::shared_ptr<MediaAVCodec::AVSource> source_ = nullptr;
+    std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> audioDec_ = nullptr;
+    std::shared_ptr<SoundDecoderCallback> audioDecCb_ = nullptr;
     ffrt::mutex soundParserLock_;
-    std::shared_ptr<SoundParserListener> soundParserListener_;
+    std::shared_ptr<SoundParserListener> soundParserListener_ = nullptr;
     std::shared_ptr<ISoundPoolCallback> callback_ = nullptr;
     bool isRawFile_ = false;
     int32_t fdSource_ = -1;
 
     MediaAVCodec::Format trackFormat_;
-    int64_t sourceDurationInfo_{};
+    int64_t sourceDurationInfo_ = 0;
 
     static constexpr int32_t AUDIO_SOURCE_TRACK_COUNT = 1;
     static constexpr int32_t AUDIO_SOURCE_TRACK_INDEX = 0;

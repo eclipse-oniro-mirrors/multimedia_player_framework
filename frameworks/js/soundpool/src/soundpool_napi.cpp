@@ -56,6 +56,7 @@ napi_value SoundPoolNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("setPriority", JsSetPriority),
         DECLARE_NAPI_FUNCTION("setRate", JsSetRate),
         DECLARE_NAPI_FUNCTION("setVolume", JsSetVolume),
+        DECLARE_NAPI_FUNCTION("setInterruptMode", JsSetInterruptMode),
         DECLARE_NAPI_FUNCTION("unload", JsUnload),
         DECLARE_NAPI_FUNCTION("release", JsRelease),
         DECLARE_NAPI_FUNCTION("on", JsSetOnCallback),
@@ -554,6 +555,29 @@ napi_value SoundPoolNapi::JsSetVolume(napi_env env, napi_callback_info info)
     return result;
 }
 
+napi_value SoundPoolNapi::JsSetInterruptMode(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("SoundPool::JsSetInterruptMode");
+    MEDIA_LOGI("SoundPoolNapi::JsSetInterruptMode");
+    size_t argCount = PARAM1;
+    napi_value args[PARAM1] = { nullptr };
+
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<SoundPoolAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get SoundPoolAsyncContext");
+    asyncCtx->napi = SoundPoolNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+    int32_t ret = asyncCtx->napi->ParserInterruptModeFromJs(asyncCtx, env, args);
+    CHECK_AND_RETURN_RET_LOG(ret != MSERR_OK, result, "failed to ParserInterruptModeFromJs");
+
+    asyncCtx->soundPool_ = asyncCtx->napi->soundPool_;
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->soundPool_ != nullptr, result, "soundPool_ is nullptr");
+    asyncCtx->soundPool_->SetInterruptMode(static_cast<InterruptMode>(asyncCtx->interrupt));
+    return result;
+}
+
 napi_value SoundPoolNapi::JsUnload(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("SoundPool::JsUnload");
@@ -869,6 +893,19 @@ int32_t SoundPoolNapi::ParserVolumeOptionFromJs(std::unique_ptr<SoundPoolAsyncCo
         (asyncCtx->SoundPoolAsyncSignError(MSERR_INVALID_VAL, "getrightvolme", "rightvolme"), MSERR_INVALID_VAL));
     asyncCtx->rightVolume_ = static_cast<float>(tempvolume);
 
+    return ret;
+}
+
+int32_t SoundPoolNapi::ParserInterruptModeFromJs(std::unique_ptr<SoundPoolAsyncContext> &asyncCtx, napi_env env,
+    napi_value *argv)
+{
+    int32_t ret = MSERR_OK;
+    int32_t interruptMode = 0;
+    napi_status status = napi_get_value_int32(env, argv[PARAM0], &interruptMode);
+    CHECK_AND_RETURN_RET(status == napi_ok,
+        (asyncCtx->SoundPoolAsyncSignError(MSERR_INVALID_VAL, "getinterruptmode", "interruptmode"), MSERR_INVALID_VAL));
+    asyncCtx->interruptMode_ = interruptMode;
+    MEDIA_LOGI("interruptMode is %{public}d", interruptMode);
     return ret;
 }
 

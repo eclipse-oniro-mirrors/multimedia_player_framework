@@ -12,22 +12,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef CACHE_BUFFER_H
-#define CACHE_BUFFER_H
+#ifndef AUDIO_STREAM_H
+#define AUDIO_STREAM_H
 
 #include <deque>
-#include "audio_renderer.h"
+
 #include "audio_info.h"
+#include "audio_renderer.h"
+#include "audio_shared_memory.h"
 #include "audio_stream_info.h"
 #include "audio_errors.h"
+#include "audio_system_manager.h"
+#include "cpp/mutex.h"
 #include "isoundpool.h"
 #include "media_description.h"
-#include "cpp/mutex.h"
 #include "media_dfx.h"
-#include "thread_pool.h"
-#include "audio_system_manager.h"
 #include "soundpool_xcollie.h"
 #include "stream_id_manager.h"
+#include "thread_pool.h"
 
 namespace OHOS {
 namespace Media {
@@ -47,107 +49,102 @@ struct AudioBufferEntry {
     int32_t size;
 };
 
-class CacheBuffer :
-    public AudioStandard::AudioRendererWriteCallback,
+enum class StreamState : int32_t {
+    PREPARED = 1,
+    PLAYING = 2,
+    PAUSED = 3,
+    STOPPED = 4,
+    RELEASED = 5,
+}
+
+class AudioStream :
     public AudioStandard::AudioRendererFirstFrameWritingCallback,
     public AudioStandard::AudioRendererCallback,
-    public std::enable_shared_from_this<CacheBuffer> {
+    public AudioStandard::StaticBufferEventCallback,
+    public std::enable_shared_from_this<AudioStream> {
 public:
-    CacheBuffer(const Format &trackFormat, const int32_t &soundID, const int32_t &streamID,
-        std::shared_ptr<ThreadPool> cacheBufferStopThreadPool);
-    ~CacheBuffer();
-    void SetSoundData(const std::shared_ptr<AudioBufferEntry> &cacheData, const size_t &cacheDataTotalSize);
+    AudioStream(const Format &trackFormat, int32_t &soundID, int32_t &streamID,
+        std::shared_ptr<ThreadPool> streamStopThreadPool);
+    ~AudioStream();
+    void SetPcmBuffer(const std::shared_ptr<AudioBufferEntry> &pcmBuffer, size_t pcmBufferSize);
     void SetManager(std::weak_ptr<OHOS::Media::StreamIDManager> streamIDManager);
-    void OnWriteData(size_t length) override;
+    void ConfigurePlayParameters(const AudioStandard::AudioRendererInfo &audioRendererInfo,
+        const PlayParams &playParams);
+    void ConfigurePlayParametersWithoutLock(const AudioStandard::AudioRendererInfo &audioRendererInfo,
+        const PlayParams &playParams);
+    int32_t DoPlay();
+    int32_t Stop();
+    void StopSameSoundWithoutLock();
+    int32_t Release();
+    
     void OnFirstFrameWriting(uint64_t latency) override;
     void OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent) override;
     void OnStateChange(const AudioStandard::RendererState state,
         const AudioStandard::StateChangeCmdType cmdType) override;
-    int32_t PreparePlay(const AudioStandard::AudioRendererInfo &audioRendererInfo, const PlayParams &playParams);
-    void GetAvailableAudioRenderer(const AudioStandard::AudioRendererInfo &audioRendererInfo,
-        const PlayParams &playParams);
-    int32_t DoPlay(const int32_t streamID);
-    int32_t Release();
-    int32_t Stop(const int32_t streamID);
-    int32_t SetVolume(const int32_t streamID, const float leftVolume, const float rightVolume);
-    int32_t SetRate(const int32_t streamID, const AudioStandard::AudioRendererRate renderRate);
-    int32_t SetPriority(const int32_t streamID, const int32_t priority);
-    int32_t SetLoop(const int32_t streamID, const int32_t loop);
-    int32_t SetParallelPlayFlag(const int32_t streamID, const bool parallelPlayFlag);
+    void OnStaticBufferEvent(AudioStandard::StaticBufferEventId eventId) override;
+
+    int32_t SetVolume(int32_t streamID, float leftVolume, float rightVolume);
+    int32_t SetRate(const AudioStandard::AudioRendererRate &renderRate);
+    int32_t SetPriority(int32_t priority);
+    int32_t SetPriorityWithoutLock(int32_t priority);
+    int32_t SetLoop(int32_t loop);
     int32_t SetCallback(const std::shared_ptr<ISoundPoolCallback> &callback);
-    int32_t SetCacheBufferCallback(const std::shared_ptr<ISoundPoolCallback> &callback);
+    int32_t SetStreamCallback(const std::shared_ptr<ISoundPoolCallback> &callback);
     int32_t SetFrameWriteCallback(const std::shared_ptr<ISoundPoolFrameWriteCallback> &callback);
     void SetSourceDuration(int64_t durationMs);
-
-    bool IsRunning() const
-    {
-        return isRunning_.load();
-    }
-    int32_t GetSoundID() const
-    {
-        return soundID_;
-    }
-    int32_t GetStreamID() const
-    {
-        return streamID_;
-    }
-    int32_t GetPriority() const
-    {
-        return priority_;
-    }
-
+    void SetStreamState(StreamState state);
+    StreamState GetStreamState();
+    int32_t GetSoundID();
+    int32_t GetStreamID();
+    int32_t GetPriority();
+    
 private:
     static constexpr int32_t NORMAL_PLAY_RENDERER_FLAGS = 0;
-    static constexpr int32_t LOW_LATENCY_PLAY_RENDERER_FLAGS = 1;
 
-    std::unique_ptr<AudioStandard::AudioRenderer> CreateAudioRenderer(
+    std::shared_ptr<AudioStandard::AudioRenderer> CreateAudioRenderer(
         const AudioStandard::AudioRendererInfo &audioRendererInfo, const PlayParams &playParams);
-    void PrepareAudioRenderer(std::unique_ptr<AudioStandard::AudioRenderer> &audioRenderer);
     void DealAudioRendererParams(AudioStandard::AudioRendererOptions &rendererOptions,
         const AudioStandard::AudioRendererInfo &audioRendererInfo);
-    void DealPlayParamsBeforePlay(const PlayParams &playParams);
-    static AudioStandard::AudioRendererRate CheckAndAlignRendererRate(const int32_t rate);
-    void DealWriteData(size_t length);
     bool IsAudioRendererCanMix(const AudioStandard::AudioRendererInfo &audioRendererInfo);
+    void PrepareAudioRenderer(std::unique_ptr<AudioStandard::AudioRenderer> &audioRenderer);
+    void GetAvailableAudioRenderer(const AudioStandard::AudioRendererInfo &audioRendererInfo,
+        const PlayParams &playParams);
+    void DealPlayParamsBeforePlay(const PlayParams &playParams);
+
+    static AudioStandard::AudioRendererRate CheckAndAlignRendererRate(const int32_t rate);
     int32_t PreparePlayInner(const AudioStandard::AudioRendererInfo &audioRendererInfo,
         const PlayParams &playParams);
-    int32_t GetGlobalId(int32_t soundID);
-    void DelGlobalId(int32_t globalId);
-    void SetGlobalId(int32_t soundID, int32_t globalId);
     int32_t HandleRendererNotStart(const int32_t streamID);
-    void FadeInAudioBuffer(const AudioStandard::BufferDesc &bufDesc);
 
     Format trackFormat_;
-    std::deque<std::shared_ptr<AudioBufferEntry>> cacheData_;
-    std::shared_ptr<AudioBufferEntry> fullCacheData_;
-    size_t cacheDataTotalSize_ = 0;
     int32_t soundID_ = 0;
     int32_t streamID_ = 0;
+    std::deque<std::shared_ptr<AudioBufferEntry>> cacheData_;
+    std::shared_ptr<AudioBufferEntry> pcmBuffer_ = nullptr;
+    std::shared_ptr<AudioStandard::AudioRenderer> audioRenderer_ = nullptr;
+    AudioStandard::AudioRendererInfo audioRendererInfo_;
     AudioStandard::AudioSampleFormat sampleFormat_ = AudioStandard::AudioSampleFormat::INVALID_WIDTH;
     AudioStandard::AudioChannel audioChannel_ = AudioStandard::AudioChannel::MONO;
-    PlayParams playParameters_;
-    AudioStandard::AudioRendererInfo audioRendererInfo_;
 
-    // use for save audiobuffer
-    std::unique_ptr<AudioStandard::AudioRenderer> audioRenderer_;
-    std::atomic<bool> isRunning_ = false;
-    std::atomic<bool> isReadyToStopAudioRenderer_ = false;
     std::shared_ptr<ISoundPoolCallback> callback_ = nullptr;
-    std::shared_ptr<ISoundPoolCallback> cacheBufferCallback_ = nullptr;
+    std::shared_ptr<ISoundPoolCallback> streamCallback_ = nullptr;
     std::shared_ptr<ISoundPoolFrameWriteCallback> frameWriteCallback_ = nullptr;
-    ffrt::mutex cacheBufferLock_;
-    std::weak_ptr<ThreadPool> cacheBufferStopThreadPool_;
+
+    size_t cacheDataTotalSize_ = 0;
+    PlayParams playParameters_;
+
+    ffrt::mutex streamLock_;
+    std::weak_ptr<ThreadPool> audioStreamStopThreadPool_;
     std::weak_ptr<OHOS::Media::StreamIDManager> manager_;
 
     int32_t loop_ = 0;
     int32_t priority_ = 0;
-    int32_t rendererFlags_ = NORMAL_PLAY_RENDERER_FLAGS;
-    bool isNeedFadeIn_ = false;
+    int32_t rendererFlags_ = 0;
 
     size_t cacheDataFrameIndex_ = 0;
-    int32_t havePlayedCount_ = 0;
-    int64_t sourceDurationMs_{};
+    int64_t sourceDurationMs_ = 0;
+    std::atomic<StreamState> streamState;
 };
 } // namespace Media
 } // namespace OHOS
-#endif // CACHE_BUFFER_H
+#endif // AUDIO_STREAM_H

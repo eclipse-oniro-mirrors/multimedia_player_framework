@@ -18,48 +18,58 @@
 
 #include <atomic>
 #include <thread>
-#include "cache_buffer.h"
+
+#include "cpp/mutex.h"
 #include "isoundpool.h"
+#include "media_dfx.h"
+#include "audio_stream.h"
 #include "sound_parser.h"
 #include "thread_pool.h"
-#include "cpp/mutex.h"
-#include "media_dfx.h"
 
 namespace OHOS {
 namespace Media {
 class CacheBuffer;
-class SoundParser;
+class AudioStream;
 
 class StreamIDManager : public std::enable_shared_from_this<StreamIDManager> {
 public:
-    StreamIDManager(int32_t maxStreams, AudioStandard::AudioRendererInfo audioRenderInfo);
+    StreamIDManager(int32_t maxStreams, const AudioStandard::AudioRendererInfo &audioRenderInfo,
+        InterruptMode interruptMode = InterruptMode::SAME_SOUND_INTERRUPT);
     ~StreamIDManager();
 
-    int32_t GetGlobalId(int32_t soundId);
-    void DelGlobalId(int32_t globalId);
-    void SetGlobalId(int32_t soundId, int32_t globalId);
-    void DelSoundId(int32_t soundId);
+    int32_t CreateAudioStream(int32_t soundID, int32_t &streamID,
+        const std::shared_ptr<OHOS::Media::SoundParser> &soundParser);
+
     int32_t InitThreadPool();
-    int32_t Play(std::shared_ptr<OHOS::Media::SoundParser> &soundParser, PlayParams &playParameters);
-
-    std::shared_ptr<CacheBuffer> FindCacheBufferLock(const int32_t streamID);
-
-    int32_t GetStreamIDBySoundID(const int32_t soundID);
-
+    int32_t PlayWithSameSoundInterrupt(const std::shared_ptr<OHOS::Media::SoundParser> &soundParser,
+        const PlayParams &playParameters);
+    int32_t PlayWithNoInterrupt(const std::shared_ptr<OHOS::Media::SoundParser> &soundParser,
+        const PlayParams &playParameters);
+        
     int32_t SetCallback(const std::shared_ptr<ISoundPoolCallback> &callback);
-
     int32_t SetFrameWriteCallback(const std::shared_ptr<ISoundPoolFrameWriteCallback> &callback);
 
     int32_t ReorderStream(int32_t streamID, int32_t priority);
+        
+    int32_t GetStreamIDBySoundIDWithLock(int32_t soundID);
+    std::shared_ptr<AudioStream> GetStreamByStreamIDWithLock(int32_t streamID);
+    int32_t GetAvailableStreamIDBySoundID(int32_t soundID);
 
+    void RemoveInvalidStreamsInInterruptMode();
+    void RemoveInvalidStreamsInNoInterruptMode();
+    void RemoveStreamByStreamIDInInterruptMode(int32_t soundID, int32_t streamID);
+    void RemoveStreamByStreamIDInNoInterruptMode(int32_t soundID);
     int32_t ClearStreamIDInDeque(int32_t streamID, int32_t soundID);
+    void PrintSoundID2MultiStreams();
+    void PrintSoundID2Stream();
+    void PrintPlayingStreams();
 
 private:
-    class CacheBufferCallBack : public ISoundPoolCallback {
+    class AudioStreamCallBack : public ISoundPoolCallback {
     public:
-        explicit CacheBufferCallBack(const std::weak_ptr<OHOS::Media::StreamIDManager> &streamIDManager)
+        explicit AudioStreamCallBack(const std::weak_ptr<OHOS::Media::StreamIDManager> &streamIDManager)
             : streamIDManagerInner_(streamIDManager) {}
-        virtual ~CacheBufferCallBack() = default;
+        virtual ~AudioStreamCallBack() = default;
         void OnLoadCompleted(int32_t soundID);
         void OnPlayFinished(int32_t streamID);
         void OnError(int32_t errorCode);
@@ -78,35 +88,40 @@ private:
         PlayParams playParameters;
     };
 
-    int32_t SetPlay(const int32_t soundID, const int32_t streamID, const PlayParams playParameters);
-    int32_t AddPlayTask(const int32_t streamID, const PlayParams playParameters);
-    int32_t DoPlay(const int32_t streamID);
-    int32_t GetFreshStreamID(const int32_t soundID, PlayParams playParameters);
-    void OnPlayFinished();
-    void QueueAndSortPlayingStreamID(int32_t streamID);
-    void QueueAndSortWillPlayStreamID(StreamIDAndPlayParamsInfo freshStreamIDAndPlayParamsInfo);
-    std::shared_ptr<CacheBuffer> FindCacheBuffer(const int32_t streamID);
+    int32_t SetPlayWithSameSoundInterrupt(int32_t soundID, int32_t streamID, const PlayParams &playParameters);
+    int32_t SetPlayWithNoInterrupt(int32_t soundID, int32_t streamID, const PlayParams &playParameters);
+    int32_t AddPlayTask(int32_t streamID);
+    int32_t AddStopTask(const std::shared_ptr<AudioStream> &stream);
+    int32_t DoPlay(int32_t streamID);
 
-    // pair<int32_t, int32_t> is mapping between SoundId and GlobalId
-    std::vector<std::pair<int32_t, int32_t>> globalIdVector_;
-    std::mutex globalIdMutex_;
-    std::shared_ptr<ISoundPoolCallback> cacheBufferCallback_ = nullptr;
-    AudioStandard::AudioRendererInfo audioRendererInfo_;
+    void OnPlayFinished(int32_t streamID);
+    void QueueAndSortPlayingStreamID(int32_t freshStreamID);
+    void QueueAndSortWillPlayStreamID(const StreamIDAndPlayParamsInfo &streamIDAndPlayParamsInfo);
+
+    int32_t GetStreamIDBySoundID(int32_t soundID);
+    std::shared_ptr<AudioStream> GetStreamByStreamID(int32_t streamID);
+
     ffrt::mutex streamIDManagerLock_;
     std::shared_ptr<ISoundPoolCallback> callback_ = nullptr;
     std::shared_ptr<ISoundPoolFrameWriteCallback> frameWriteCallback_ = nullptr;
-    std::map<int32_t, std::shared_ptr<CacheBuffer>> cacheBuffers_;
+    std::shared_ptr<ISoundPoolCallback> audioStreamCallback_ = nullptr;
+
+    std::unordered_map<int32_t, std::shared_ptr<AudioStream>> soundID2Stream_;
+    std::unordered_map<int32_t, std::list<std::shared_ptr<AudioStream>>> soundID2MultiStreams_;
+
     int32_t nextStreamID_ = 0;
+    AudioStandard::AudioRendererInfo audioRendererInfo_;
     int32_t maxStreams_ = MIN_PLAY_STREAMS_NUMBER;
 
     std::atomic<bool> isStreamPlayingThreadPoolStarted_ = false;
-    std::unique_ptr<ThreadPool> streamPlayingThreadPool_;
-    std::atomic<bool> isCacheBufferStopThreadPoolStarted_ = false;
-    std::shared_ptr<ThreadPool> cacheBufferStopThreadPool_;
+    std::unique_ptr<ThreadPool> streamPlayingThreadPool_ = nullptr;
+    std::atomic<bool> isStreamStopThreadPoolStarted_ = false;
+    std::shared_ptr<ThreadPool> streamStopThreadPool_ = nullptr;
 
-    std::deque<int32_t> streamIDs_;
-    std::deque<StreamIDAndPlayParamsInfo> willPlayStreamInfos_;
     std::deque<int32_t> playingStreamIDs_;
+    std::deque<StreamIDAndPlayParamsInfo> willPlayStreamInfos_;
+    InterruptMode interruptMode_ = InterruptMode::SAME_SOUND_INTERRUPT;
+    std::atomic<int32_t> currentStreamsNum_;
 };
 } // namespace Media
 } // namespace OHOS

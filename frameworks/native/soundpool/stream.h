@@ -16,19 +16,20 @@
 #define STREAM_H
 
 #include <deque>
-#include "audio_renderer.h"
-#include "audio_info.h"
-#include "audio_stream_info.h"
+
 #include "audio_errors.h"
+#include "audio_info.h"
+#include "audio_renderer.h"
+#include "audio_stream.h"
+#include "audio_stream_info.h"
+#include "audio_system_manager.h"
+#include "cpp/mutex.h"
 #include "isoundpool.h"
 #include "media_description.h"
-#include "cpp/mutex.h"
 #include "media_dfx.h"
-#include "thread_pool.h"
-#include "audio_system_manager.h"
-#include "soundpool_xcollie.h"
 #include "parallel_stream_manager.h"
-#include "cache_buffer.h"
+#include "soundpool_xcollie.h"
+#include "thread_pool.h"
 
 namespace OHOS {
 namespace Media {
@@ -46,7 +47,8 @@ public:
         std::shared_ptr<ThreadPool> streamStopThreadPool);
     ~Stream();
     void SetSoundData(const std::shared_ptr<AudioBufferEntry> &cacheData, const size_t &cacheDataTotalSize);
-    void SetPlayParamAndRendererInfo(PlayParams &playParameters, AudioStandard::AudioRendererInfo &audioRenderInfo);
+    void SetPlayParamAndRendererInfo(const PlayParams &playParameters,
+        const AudioStandard::AudioRendererInfo &audioRenderInfo);
     void SetManager(std::weak_ptr<OHOS::Media::ParallelStreamManager> parallelStreamManager);
     void PreparePlay();
     int32_t DoPlay();
