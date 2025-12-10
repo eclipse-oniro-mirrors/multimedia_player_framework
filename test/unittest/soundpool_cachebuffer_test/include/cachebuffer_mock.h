@@ -42,7 +42,7 @@ class AudioStreamMock {
 public:
     AudioStreamMock() = default;
     ~AudioStreamMock() = default;
-    bool AudioStreamMock(const Format &trackFormat, const int32_t &soundID, const int32_t &streamID,
+    bool CreateAudioStream(const Format &trackFormat, int32_t soundID, int32_t streamID,
         std::shared_ptr<ThreadPool> audioStreamStopThreadPool);
     bool IsAudioRendererCanMix(const AudioStandard::AudioRendererInfo &audioRendererInfo);
     int32_t CreateAudioRenderer(const int32_t streamID,

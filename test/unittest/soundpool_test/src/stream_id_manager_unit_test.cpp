@@ -146,7 +146,7 @@ HWTEST_F(StreamIDManagerUnitTest, streamId_function_005, TestSize.Level2)
     int32_t soundID = 0;
     int32_t streamID = 0;
     auto audioStream = std::make_shared<AudioStream>(format, soundID, streamID, nullptr);
-    streamIDManager_->soundID2Stream_.emplace(BEGIN_NUM, cacheBuffer);
+    streamIDManager_->soundID2Stream_.emplace(BEGIN_NUM, audioStream);
     StreamIDManager::StreamIDAndPlayParamsInfo freshStreamIDAndPlayParamsInfo1;
     freshStreamIDAndPlayParamsInfo.streamID = BEGIN_NUM + 1;
     streamIDManager_->QueueAndSortWillPlayStreamID(freshStreamIDAndPlayParamsInfo1);
@@ -172,14 +172,14 @@ HWTEST_F(StreamIDManagerUnitTest, streamId_function_006, TestSize.Level2)
     int32_t soundID = 0;
     int32_t streamID = 0;
     auto audioStream = std::make_shared<AudioStream>(format, soundID, streamID, nullptr);
-    streamIDManager_->soundID2Stream_.emplace(BEGIN_NUM, cacheBuffer);
+    streamIDManager_->soundID2Stream_.emplace(BEGIN_NUM, audioStream);
     streamIDManager_->playingStreamIDs_.emplace_back(BEGIN_NUM + 1);
     EXPECT_EQ(MSERR_INVALID_VAL, streamIDManager_->DoPlay(BEGIN_NUM + 1));
     streamIDManager_->playingStreamIDs_.emplace_back(BEGIN_NUM);
     EXPECT_EQ(MSERR_INVALID_VAL, streamIDManager_->DoPlay(BEGIN_NUM + 1));
-    cacheBuffer->isRunning_.store(true);
+    audioStream->isRunning_.store(true);
     EXPECT_EQ(MSERR_INVALID_VAL, streamIDManager_->DoPlay(BEGIN_NUM + 1));
-    cacheBuffer->isRunning_.store(false);
+    audioStream->isRunning_.store(false);
     EXPECT_EQ(MSERR_INVALID_VAL, streamIDManager_->DoPlay(BEGIN_NUM + 1));
     MEDIA_LOGI("streamId_function_006 after");
 }
