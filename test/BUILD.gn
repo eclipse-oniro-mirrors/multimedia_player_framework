@@ -79,7 +79,6 @@ group("media_unit_test") {
       "unittest/services/utils:utils_unit_test",
       "unittest/sound_parser_unittest:sound_parser_unittest",
       "unittest/soundpool_cachebuffer_test:soundpool_cachebuffer_unit_test",
-      "unittest/soundpool_cachebuffer_unittest:soundpool_cachebuffer_unittest",
       "unittest/soundpool_test:soundpool_unit_test",
       "unittest/soundpool_unittest:soundpool_unittest",
       "unittest/subscriber_unittest:account_subscriber_unittest",
