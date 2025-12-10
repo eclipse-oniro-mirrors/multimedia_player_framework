@@ -1947,12 +1947,13 @@ int32_t HiPlayerImpl::SetPlaybackSpeed(PlaybackRateMode mode)
 {
     MEDIA_LOG_I("SetPlaybackSpeed %{public}d", mode);
     float speed = TransformPlayRate2Float(mode);
+    Format format;
     if (doSetPlaybackSpeed(speed) != Status::OK) {
         MEDIA_LOG_E("SetPlaybackSpeed audioSink set speed error");
+        callbackLooper_.OnInfo(INFO_TYPE_SPEEDDONE, mode, format);
         return MSERR_UNKNOWN;
     }
     playbackRateMode_ = mode;
-    Format format;
     callbackLooper_.OnInfo(INFO_TYPE_SPEEDDONE, mode, format);
     MEDIA_LOG_I("SetPlaybackSpeed end");
     return MSERR_OK;
