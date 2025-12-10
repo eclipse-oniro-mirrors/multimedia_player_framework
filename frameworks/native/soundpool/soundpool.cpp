@@ -258,7 +258,7 @@ int32_t SoundPool::SetPriority(int32_t streamID, int32_t priority)
     }
     MEDIA_LOGE("SoundPool::SetPriority, can not find the stream(%{public}d)", streamID);
     return MSERR_INVALID_OPERATION;
-} 
+}
 
 int32_t SoundPool::SetRate(int32_t streamID, const AudioStandard::AudioRendererRate &renderRate)
 {

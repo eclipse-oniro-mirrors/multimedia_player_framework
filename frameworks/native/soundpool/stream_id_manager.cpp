@@ -66,7 +66,7 @@ StreamIDManager::~StreamIDManager()
                 stream->Stop();
                 stream->Release();
             }
-        } 
+        }
     }
     soundID2MultiStreams_.clear();
 
@@ -130,7 +130,7 @@ int32_t StreamIDManager::PlayWithSameSoundInterrupt(const std::shared_ptr<SoundP
     CHECK_AND_RETURN_RET_LOG(soundParser != nullptr, -1, "PlayWithSameSoundInterrupt, soundParser is nullptr");
     int32_t soundID = soundParser->GetSoundID();
     int32_t streamID = GetAvailableStreamIDBySoundID(soundID);
-        
+
     if (streamID == 0) {
         CHECK_AND_RETURN_RET_LOG(MSERR_OK == CreateAudioStream(soundID, streamID, soundParser), -1,
             "Init stream failed");
@@ -176,8 +176,8 @@ int32_t StreamIDManager::SetPlayWithSameSoundInterrupt(int32_t soundID, int32_t 
     if (stream->GetPriority() >= lastStream->GetPriority()) {
         MEDIA_LOGI("SetPlayWithSameSoundInterrupt, last streamID is %{public}d, priority is %{public}d, "
             "state is %{public}d, current streamID is %{public}d, priority is %{public}d, state is %{public}d",
-        lastStream->GetStreamID(), lastStream->GetPriority(), lastStream->GetStreamState(),
-        stream->GetStreamID(), stream->GetPriority(), stream->GetStreamState());
+            lastStream->GetStreamID(), lastStream->GetPriority(), lastStream->GetStreamState(), stream->GetStreamID(),
+            stream->GetPriority(), stream->GetStreamState());
         playingStreamIDs_.pop_back();
         AddStopTask(lastStream);
         AddPlayTask(streamID);
@@ -204,7 +204,7 @@ int32_t StreamIDManager::PlayWithNoInterrupt(const std::shared_ptr<OHOS::Media::
     CHECK_AND_RETURN_RET_LOG(soundParser != nullptr, -1, "PlayWithNoInterrupt, soundParser is nullptr");
     int32_t soundID = soundParser->GetSoundID();
     int32_t streamID = GetAvailableStreamIDBySoundID(soundID);
-        
+
     if (streamID == 0) {
         CHECK_AND_RETURN_RET_LOG(MSERR_OK == CreateAudioStream(soundID, streamID, soundParser), -1,
             "Init stream failed");
@@ -249,8 +249,8 @@ int32_t StreamIDManager::SetPlayWithNoInterrupt(int32_t soundID, int32_t streamI
     if (stream->GetPriority() >= lastStream->GetPriority()) {
         MEDIA_LOGI("SetPlayWithNoInterrupt, last streamID is %{public}d, priority is %{public}d, "
             "state is %{public}d, current streamID is %{public}d, priority is %{public}d, state is %{public}d",
-        lastStream->GetStreamID(), lastStream->GetPriority(), lastStream->GetStreamState(),
-        stream->GetStreamID(), stream->GetPriority(), stream->GetStreamState());
+            lastStream->GetStreamID(), lastStream->GetPriority(), lastStream->GetStreamState(), stream->GetStreamID(),
+            stream->GetPriority(), stream->GetStreamState());
         playingStreamIDs_.pop_back();
         AddStopTask(lastStream);
         AddPlayTask(streamID);
@@ -614,7 +614,7 @@ void StreamIDManager::RemoveStreamByStreamIDInInterruptMode(int32_t soundID, int
 {
     CHECK_AND_RETURN_LOG(soundID2MultiStreams_.find(soundID) != soundID2MultiStreams_.end(),
         "soundID(%{public}d) not exist in soundID2MultiStreams_", soundID);
-    std::list<std::shared_ptr<AudioStream>> &streams = soundID2MultiStreams_[soundID]; 
+    std::list<std::shared_ptr<AudioStream>> &streams = soundID2MultiStreams_[soundID];
     for (auto it = streams.begin(); it != streams.end(); it++) {
         if ((*it) != nullptr && (*it)->GetStreamID() == streamID) {
             streams.erase(it);

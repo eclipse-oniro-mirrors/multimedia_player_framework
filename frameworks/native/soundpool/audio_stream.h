@@ -130,7 +130,6 @@ private:
     std::shared_ptr<ISoundPoolCallback> streamCallback_ = nullptr;
     std::shared_ptr<ISoundPoolFrameWriteCallback> frameWriteCallback_ = nullptr;
 
-
     ffrt::mutex streamLock_;
     std::weak_ptr<ThreadPool> streamStopThreadPool_;
     std::weak_ptr<OHOS::Media::StreamIDManager> manager_;

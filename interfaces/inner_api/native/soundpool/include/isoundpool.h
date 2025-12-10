@@ -178,7 +178,7 @@ public:
 
     /**
      * @brief Set the interrupt mode for soundpool
-     * 
+     *
      * @param interruptMode The interrupt mode for soundpool
      * @since 1.0
      * @version 1.0

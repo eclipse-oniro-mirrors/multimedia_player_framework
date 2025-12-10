@@ -258,8 +258,13 @@ int32_t SoundParser::Release()
 SoundDecoderCallback::SoundDecoderCallback(int32_t soundID,
     const std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> &audioDec,
     const std::shared_ptr<MediaAVCodec::AVDemuxer> &demuxer, bool isRawFile) :
-    soundID_(soundID), audioDec_(audioDec), demuxer_(demuxer), isRawFile_(isRawFile), eosFlag_(false),
-    decodeShouldCompleted_(false), currentSoundBufferSize_(0)
+    soundID_(soundID),
+    audioDec_(audioDec),
+    demuxer_(demuxer),
+    isRawFile_(isRawFile),
+    eosFlag_(false),
+    decodeShouldCompleted_(false),
+    currentSoundBufferSize_(0)
 {
     MEDIA_LOGI("Construction SoundDecoderCallback");
 }
