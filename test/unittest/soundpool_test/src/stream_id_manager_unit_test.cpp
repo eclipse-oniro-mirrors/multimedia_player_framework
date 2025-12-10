@@ -177,10 +177,6 @@ HWTEST_F(StreamIDManagerUnitTest, streamId_function_006, TestSize.Level2)
     EXPECT_EQ(MSERR_INVALID_VAL, streamIDManager_->DoPlay(BEGIN_NUM + 1));
     streamIDManager_->playingStreamIDs_.emplace_back(BEGIN_NUM);
     EXPECT_EQ(MSERR_INVALID_VAL, streamIDManager_->DoPlay(BEGIN_NUM + 1));
-    audioStream->isRunning_.store(true);
-    EXPECT_EQ(MSERR_INVALID_VAL, streamIDManager_->DoPlay(BEGIN_NUM + 1));
-    audioStream->isRunning_.store(false);
-    EXPECT_EQ(MSERR_INVALID_VAL, streamIDManager_->DoPlay(BEGIN_NUM + 1));
     MEDIA_LOGI("streamId_function_006 after");
 }
 

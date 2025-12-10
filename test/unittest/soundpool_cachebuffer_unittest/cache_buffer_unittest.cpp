@@ -129,7 +129,7 @@ HWTEST_F(CacheBufferUnitTest, HandleRendererNotStart_002, TestSize.Level1)
 
     auto cacheBufferCallback = std::make_shared<MockSoundPoolCallback>();
     EXPECT_CALL(*cacheBufferCallback, OnError(_)).Times(TIMES_ONE);
-    cacheBuffer_->cacheBufferCallback_ = cacheBufferCallback;
+    cacheBuffer_->streamCallback_ = cacheBufferCallback;
     cacheBuffer_->HandleRendererNotStart();
 }
 
@@ -159,7 +159,7 @@ HWTEST_F(CacheBufferUnitTest, OnInterrupt_001, TestSize.Level1)
     AudioStandard::InterruptEvent interruptEvent;
     interruptEvent.hintType = AudioStandard::InterruptHint::INTERRUPT_HINT_PAUSE;
     cacheBuffer_->OnInterrupt(interruptEvent);
-    EXPECT_EQ(cacheBuffer_->cacheBufferStopThreadPool_.lock(), nullptr);
+    EXPECT_EQ(cacheBuffer_->streamStopThreadPool_.lock(), nullptr);
 }
 
 /**
