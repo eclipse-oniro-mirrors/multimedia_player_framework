@@ -99,8 +99,6 @@ public:
     int32_t GetPriority();
     
 private:
-    static constexpr int32_t NORMAL_PLAY_RENDERER_FLAGS = 0;
-
     std::shared_ptr<AudioStandard::AudioRenderer> CreateAudioRenderer(
         const AudioStandard::AudioRendererInfo &audioRendererInfo, const PlayParams &playParams);
     void DealAudioRendererParams(AudioStandard::AudioRendererOptions &rendererOptions,

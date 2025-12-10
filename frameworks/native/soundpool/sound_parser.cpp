@@ -125,7 +125,7 @@ int32_t SoundParser::DoDemuxer(MediaAVCodec::Format *trackFormat)
     sourceFormat.GetLongValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_DURATION, duration);
 
     sourceDurationInfo_ = duration;
-    MEDIA_LOGI("soundID is %{public}d, trackCount is %{public}d, duration is %{public}lu", soundID_, trackCount,
+    MEDIA_LOGI("soundID is %{public}d, trackCount is %{public}d, duration is %{public}zu", soundID_, trackCount,
         duration);
 
     for (int32_t trackIndex = 0; trackIndex < trackCount; trackIndex++) {

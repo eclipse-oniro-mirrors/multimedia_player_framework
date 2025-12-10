@@ -85,7 +85,7 @@ HWTEST_F(SoundPoolCacheBufferUnitTest, CreateAudioRenderer_001, TestSize.Level0)
 
     cacheBuffer_->CreateAudioRenderer(info, playParams);
 
-    EXPECT_EQ(cacheBuffer_->rendererFlags_, AudioStream::NORMAL_PLAY_RENDERER_FLAGS);
+    EXPECT_EQ(cacheBuffer_->rendererFlags_, 0);
 }
 
 /**
@@ -102,7 +102,7 @@ HWTEST_F(SoundPoolCacheBufferUnitTest, CreateAudioRenderer_002, TestSize.Level0)
 
     cacheBuffer_->CreateAudioRenderer(info, playParams);
 
-    EXPECT_EQ(cacheBuffer_->rendererFlags_, AudioStream::NORMAL_PLAY_RENDERER_FLAGS);
+    EXPECT_EQ(cacheBuffer_->rendererFlags_, 0);
 }
 
 /**
@@ -118,7 +118,7 @@ HWTEST_F(SoundPoolCacheBufferUnitTest, CreateAudioRenderer_003, TestSize.Level0)
 
     cacheBuffer_->CreateAudioRenderer(info, playParams);
 
-    EXPECT_EQ(cacheBuffer_->rendererFlags_, AudioStream::NORMAL_PLAY_RENDERER_FLAGS);
+    EXPECT_EQ(cacheBuffer_->rendererFlags_, 0);
 }
 } // namespace Media
 } // namespace OHOS
