@@ -39,6 +39,10 @@ public:
     {
         return 0;
     }
+    int32_t CancelAllFetchFrames() override
+    {
+        return 0;
+    }
     std::string ResolveMetadata(int32_t key) override
     {
         return std::string("");
@@ -65,6 +69,11 @@ public:
         int64_t timeUs, int32_t option, const OutputConfiguration &param) override
     {
         return nullptr;
+    }
+    int32_t FetchFrameYuvs(const std::vector<int64_t>& timeUs,
+        int32_t option, const PixelMapParams &param) override
+    {
+        return 0;
     }
     void Release() override
     {

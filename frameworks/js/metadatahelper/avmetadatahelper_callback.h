@@ -22,6 +22,7 @@
 #include "common_napi.h"
 #include "event_handler.h"
 #include "avmetadatahelper.h"
+#include "pixel_map.h"
 
 namespace OHOS {
 namespace Media {
@@ -37,6 +38,7 @@ const std::string STATE_ERROR = "error";
 namespace AVMetadataHelperEvent {
 const std::string EVENT_STATE_CHANGE = "stateChange";
 const std::string EVENT_ERROR = "error";
+const std::string EVENT_PIXEL_COMPLETE = "onFrameFetched";
 }
 
 class AVMetadataHelperNotify {
@@ -48,25 +50,52 @@ public:
 
 class AVMetadataHelperCallback : public HelperCallback {
 public:
+    explicit AVMetadataHelperCallback(napi_env env);
     AVMetadataHelperCallback(napi_env env, AVMetadataHelperNotify *listener);
     virtual ~AVMetadataHelperCallback();
     void OnError(int32_t errorCode, const std::string &errorMsg);
     void OnInfo(HelperOnInfoType type, int32_t extra, const Format &infoBody);
+    void OnPixelComplete (HelperOnInfoType type,
+                        const std::shared_ptr<AVBuffer> &reAvbuffer_,
+                        const FrameInfo &info,
+                        const PixelMapParams &param);
     void OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg);
     HelperStates GetCurrentState() const;
-    void SaveCallbackReference(const std::string &name, std::weak_ptr<AutoRef> ref);
+    void SaveCallbackReference(const std::string &name, std::shared_ptr<AutoRef> ref);
+    void setHelper(const std::shared_ptr<AVMetadataHelper> &helper);
     void ClearCallbackReference();
     void ClearCallbackReference(const std::string &name);
     void Start();
     void Pause();
     void Release();
-
+    void SendPixelCompleteCallback(const FrameInfo &info, const std::shared_ptr<PixelMap> &pixelMap);
 private:
+    enum FetchResult {
+        FETCH_FAILED = 0,
+        FETCH_SUCCEEDED = 1,
+        FETCH_CANCELED = 2,
+    };
+
+    struct AVMetadataJsCallback {
+        std::shared_ptr<AutoRef> autoRef;
+        std::string callbackName = "OnFrameFetched";
+        std::string errorMs;
+        int32_t errorCode;
+        int32_t reason = 1;
+        std::string state = "unknown";
+        std::shared_ptr<PixelMap> pixel_ = nullptr;
+        FetchResult fetchResult;
+        int64_t requestedTimeUs;
+        int64_t actualTimeUs;
+    };
+
+    void OnJsPixelCompleteCallback(AVMetadataJsCallback *jsCb) const;
     void OnStateChangeCb(const int32_t extra, const Format &infoBody);
+    std::shared_ptr<AVMetadataHelper> helper_ = nullptr;
     std::map<HelperOnInfoType, OnInfoFunc> onInfoFuncs_;
     std::mutex mutex_;
     napi_env env_ = nullptr;
-    std::map<std::string, std::weak_ptr<AutoRef>> refMap_;
+    std::map<std::string, std::shared_ptr<AutoRef>> refMap_;
     AVMetadataHelperNotify *listener_ = nullptr;
     std::atomic<bool> isloaded_ = false;
     HelperStates state_ = HELPER_IDLE;

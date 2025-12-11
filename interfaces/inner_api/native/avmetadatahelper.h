@@ -46,6 +46,22 @@ enum HelperErrorType : int32_t {
 enum HelperOnInfoType : int32_t {
     /* Current State changed, notify NAPI with onInfo callback. */
     HELPER_INFO_TYPE_STATE_CHANGE,
+    /* return the pixel. */
+    HELPER_INFO_TYPE_PIXEL,
+};
+
+enum FetchFrameBusinessError : int32_t {
+    NO_ERR = 0,
+    OPERATION_NOT_ALLOWED = 5400102,
+    FETCH_TIMEOUT = 5400104,
+    UNSUPPORTED_FORMAT = 5400106
+};
+
+struct FrameInfo {
+    FetchFrameBusinessError err;
+    int64_t requestedTimeUs;
+    int64_t actualTimeUs;
+    int32_t fetchResult;
 };
 
 /**
@@ -487,6 +503,19 @@ public:
      * @param errorMsg Error message.
      */
     virtual void OnError(int32_t errorCode, const std::string &errorMsg) = 0;
+
+    /**
+     * Called when a pixel complete message is notified.
+     *
+     * @param type Indicates the information type. For details, see {@link HelperOnInfoType}.
+     * @param reAvbuffer_ avbuffer required for callback.
+     * @param info info Return detailed information about the callback pixelMap.
+     * @param param param Information needed for image post-processing.
+     */
+    virtual void OnPixelComplete (HelperOnInfoType type,
+                            const std::shared_ptr<AVBuffer> &reAvbuffer_,
+                            const FrameInfo &info,
+                            const PixelMapParams &param) = 0;
 };
 
 /**
@@ -636,6 +665,34 @@ public:
      */
     virtual std::shared_ptr<PixelMap> FetchScaledFrameYuv(int64_t timeUs, int32_t option,
                                                           const PixelMapParams &param) = 0;
+    /**
+     * Fetch a representative video frame near a given timestamp by considering the given
+     * option if possible, and return a pixelmap with given parameters. This method must be
+     * called after the SetSource. Additionally, this method supports maintaining aspect ratio
+     * scaling when resizing the pixelmap.
+     * @param timeUs All the time position in microseconds in vector where the frame will be fetched.
+     * When fetching the frame at the given time position, there is no guarantee that
+     * the video source has a frame located at the position. When this happens, a frame
+     * nearby will be returned. If timeUs is negative, time position and option will ignored,
+     * and any frame that the implementation considers as representative may be returned.
+     * @param option the hint about how to fetch a frame, see {@link AVMetadataQueryOption}
+     * @param param the desired configuration of returned pixelmap, see {@link PixelMapParams}.
+     * @return Returns a pixelmap containing a scaled video frame, which can be null, if such a
+     * frame cannot be fetched.
+     */
+    virtual int32_t FetchScaledFrameYuvs(const std::vector<int64_t>& timeUs,
+                                        int32_t option, const PixelMapParams &param) = 0;
+    
+     /**
+     * Process the obtained pixelmap.
+     */
+    virtual std::shared_ptr<PixelMap> ProcessPixelMap(const std::shared_ptr<AVBuffer> &frameBuffer,
+                                                    const PixelMapParams &param, int32_t scaleMode) = 0;
+
+     /**
+     * Cancel all fetch tasks which are triggered by { fetchFramesByTimes }.
+     */
+    virtual int32_t CancelAllFetchFrames() = 0;
 
     /**
      * all meta data.

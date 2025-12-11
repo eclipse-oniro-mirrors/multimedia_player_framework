@@ -46,6 +46,9 @@ public:
     int32_t GetFrameIndexByTime(uint64_t time, uint32_t &index) override;
     std::shared_ptr<AVBuffer> FetchFrameYuv(int64_t timeUs,
         int32_t option, const OutputConfiguration &param) override;
+    int32_t CancelAllFetchFrames() override;
+    int32_t FetchFrameYuvs(const std::vector<int64_t>& timeUs,
+        int32_t option, const PixelMapParams &param) override;
     void Release() override;
 
     // AVMetadataHelperClient

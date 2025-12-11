@@ -30,6 +30,10 @@ public:
 
     void OnError(int32_t errorCode, const std::string &errorMsg) override;
     void OnInfo(HelperOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
+    void OnPixelComplete (HelperOnInfoType type,
+                        const std::shared_ptr<AVBuffer> &reAvbuffer_,
+                        const FrameInfo &info,
+                        const PixelMapParams &param) override;
 
 private:
     sptr<IStandardHelperListener> listener_ = nullptr;
@@ -42,6 +46,10 @@ public:
 
     void OnError(int32_t errorCode, const std::string &errorMsg) override;
     void OnInfo(HelperOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
+    void OnPixelComplete (HelperOnInfoType type,
+                        const std::shared_ptr<AVBuffer> &reAvbuffer_,
+                        const FrameInfo &info,
+                        const PixelMapParams &param) override;
 
 private:
     int32_t SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option);
