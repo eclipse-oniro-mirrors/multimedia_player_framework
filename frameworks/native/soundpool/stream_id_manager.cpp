@@ -27,9 +27,11 @@ namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SOUNDPOOL, "StreamIDManager"};
     static const std::string THREAD_POOL_NAME = "OS_StreamMgr";
     static const std::string THREAD_POOL_NAME_CACHE_BUFFER = "OS_CacheBuf";
-    static const int32_t MAX_THREADS_NUM = 3;
+    static const int32_t MAX_START_THREADS_NUM = 5;
+    static const int32_t MAX_STOPPED_THREADS_NUM = 5;
     static const int32_t ERROE_GLOBAL_ID = -1;
     static const size_t MAX_NUMBER_OF_PARALLEL_PLAYING = 5;
+    static const size_t MAX_NUMBER_OF_PLAYING = 32;
     static const int32_t MAX_NUMBER_OF_HELD_STREAMS = 5;
 }
 
@@ -103,15 +105,15 @@ int32_t StreamIDManager::InitThreadPool()
     }
     MEDIA_LOGI("stream playing thread pool maxStreams_:%{public}d", maxStreams_);
     // For stream priority logic, thread num need align to task num.
-    streamPlayingThreadPool_->Start(MAX_THREADS_NUM);
-    streamPlayingThreadPool_->SetMaxTaskNum(MAX_THREADS_NUM);
+    streamPlayingThreadPool_->Start(MAX_START_THREADS_NUM);
+    streamPlayingThreadPool_->SetMaxTaskNum(MAX_START_THREADS_NUM);
     isStreamPlayingThreadPoolStarted_.store(true);
 
     streamStopThreadPool_ = std::make_shared<ThreadPool>(THREAD_POOL_NAME_CACHE_BUFFER);
     CHECK_AND_RETURN_RET_LOG(streamStopThreadPool_ != nullptr, MSERR_INVALID_VAL,
         "Failed to obtain stop ThreadPool");
-    streamStopThreadPool_->Start(MAX_THREADS_NUM);
-    streamStopThreadPool_->SetMaxTaskNum(MAX_THREADS_NUM);
+    streamStopThreadPool_->Start(MAX_STOPPED_THREADS_NUM);
+    streamStopThreadPool_->SetMaxTaskNum(MAX_STOPPED_THREADS_NUM);
     isStreamStopThreadPoolStarted_.store(true);
 
     OHOS::Media::AudioRendererManager::GetInstance().SetStreamIDManager(weak_from_this());
@@ -158,8 +160,8 @@ int32_t StreamIDManager::SetPlayWithSameSoundInterrupt(int32_t soundID, int32_t 
     stream->ConfigurePlayParametersWithoutLock(audioRendererInfo_, playParameters);
 
     if (playingStreamIDs_.size() < maxStreams_) {
-        MEDIA_LOGI("SetPlayWithSameSoundInterrupt, playingStreamIDs_.size is %{public}zu < 5",
-            playingStreamIDs_.size());
+        MEDIA_LOGI("SetPlayWithSameSoundInterrupt, playingStreamIDs_.size is %{public}zu < %{public}d",
+            playingStreamIDs_.size(), maxStreams_);
         AddPlayTask(streamID);
         return MSERR_OK;
     }
@@ -719,6 +721,7 @@ void StreamIDManager::OnPlayFinished(int32_t streamID)
 {
     MEDIA_LOGI("StreamIDManager::OnPlayFinished start");
     std::lock_guard lock(streamIDManagerLock_);
+    MEDIA_LOGI("StreamIDManager::OnPlayFinished start and get lock");
     auto it = std::find(playingStreamIDs_.begin(), playingStreamIDs_.end(), streamID);
     if (it != playingStreamIDs_.end()) {
         playingStreamIDs_.erase(it);

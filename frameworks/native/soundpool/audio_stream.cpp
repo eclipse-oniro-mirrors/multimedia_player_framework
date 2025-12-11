@@ -292,11 +292,14 @@ int32_t AudioStream::DoPlayWithSameSoundInterrupt()
             "streamState is %{public}d", streamID_, streamState_.load());
         return MSERR_INVALID_VAL;
     }
-    if (audioRenderer_ == nullptr) {
-        MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt, audioRenderer_ is nullptr, try again");
-        PreparePlayInner(audioRendererInfo_, playParameters_);
-        CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL,
-            "AudioStream::DoPlayWithSameSoundInterrupt, audioRenderer_ is nullptr");
+    {
+        std::lock_guard lock(streamLock_);
+        if (audioRenderer_ == nullptr) {
+            MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt, audioRenderer_ is nullptr, try again");
+            PreparePlayInner(audioRendererInfo_, playParameters_);
+            CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL,
+                "AudioStream::DoPlayWithSameSoundInterrupt, audioRenderer_ is nullptr");
+        }
     }
     
     size_t bufferSize = 0;
@@ -309,6 +312,9 @@ int32_t AudioStream::DoPlayWithSameSoundInterrupt()
             MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt, audioRenderer::Start time out");
         });
     streamState_.store(StreamState::PLAYING);
+    if (streamCallback_ != nullptr) {
+        streamCallback_->OnPlayFinished(streamID_);
+    }
     audioRenderer_->Stop();
     if (!audioRenderer_->Start()) {
         MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt, audioRenderer_->Start()");
