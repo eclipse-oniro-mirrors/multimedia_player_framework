@@ -139,6 +139,7 @@ private:
     size_t pcmBufferFrameIndex_ = 0;
     int64_t sourceDurationMs_ = 0;
     std::atomic<StreamState> streamState_;
+    std::atomic<InterruptMode> interruptMode_ = InterruptMode::SAME_SOUND_INTERRUPT;
 };
 } // namespace Media
 } // namespace OHOS
