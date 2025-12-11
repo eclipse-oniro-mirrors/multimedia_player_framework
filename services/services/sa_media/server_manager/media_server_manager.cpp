@@ -1228,12 +1228,13 @@ void MediaServerManager::AsyncExecutor::HandleAsyncExecution()
         std::lock_guard<std::mutex> lock(listMutex_);
         freeList_.swap(tempList);
     }
-    int32_t times = 0;
-    while (times <= MAX_TIMES) {
+    uint32_t times = 0;
+    while (times < MAX_TIMES) {
         bool allStubsRefCountBigger1 = false;
         for (auto& item : tempList) {
             int refCount = item->GetSptrRefCount();
             allStubsRefCountBigger1 = refCount > 1;
+            CHECK_AND_BREAK(!allStubsRefCountBigger1);
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(DELAY_TIME));
         times++;
