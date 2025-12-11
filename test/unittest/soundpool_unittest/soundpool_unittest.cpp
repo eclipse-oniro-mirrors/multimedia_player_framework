@@ -107,6 +107,23 @@ HWTEST_F(SoundPoolUnittest, Play_001, TestSize.Level0)
 }
 
 /**
+ * @tc.name  : Test Play
+ * @tc.number: Play_002
+ * @tc.desc  : Test return -1
+ */
+HWTEST_F(SoundPoolUnittest, Play_002, TestSize.Level0)
+{
+    ASSERT_NE(soundPool_, nullptr);
+    std::shared_ptr<SoundParser> testPtr = std::make_shared<SoundParser>(1, "testurl");
+    soundPool_->soundIDManager_ = std::make_shared<SoundIDManager>();
+    int32_t soundID = ID_TEST;
+    PlayParams playParameters;
+    soundPool_->SetInterruptMode(InterruptMode::NO_INTERRUPT);
+    auto ret = soundPool_->Play(soundID, playParameters);
+    EXPECT_EQ(ret, MSERR_INVALID);
+}
+
+/**
  * @tc.name  : Test SetPriority
  * @tc.number: SetPriority_001
  * @tc.desc  : Test return MSERR_INVALID_OPERATION

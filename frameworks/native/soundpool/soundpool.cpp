@@ -32,7 +32,7 @@ namespace {
 namespace OHOS {
 namespace Media {
 std::shared_ptr<ISoundPool> SoundPoolFactory::CreateSoundPool(int maxStreams,
-    const AudioStandard::AudioRendererInfo &audioRenderInfo, InterruptMode interruptMode)
+    const AudioStandard::AudioRendererInfo &audioRenderInfo)
 {
     MEDIA_LOGI("SoundPoolFactory::CreateSoundPool");
     std::shared_ptr<SoundPool> impl;
@@ -308,6 +308,7 @@ int32_t SoundPool::SetVolume(int32_t streamID, float leftVolume, float rightVolu
 void SoundPool::SetInterruptMode(InterruptMode interruptMode)
 {
     std::lock_guard lock(soundPoolLock_);
+    CHECK_AND_RETURN_LOG(streamIdManager_ != nullptr, "SoundPool::SetInterruptMode, streamIdManager_ is nullptr");
     MEDIA_LOGI("SoundPool::SetInterruptMode, current interruptMode is %{public}d, new interruptMode is %{public}d",
         interruptMode_, interruptMode);
     if (interruptMode < InterruptMode::NO_INTERRUPT || interruptMode > InterruptMode::SAME_SOUND_INTERRUPT) {
@@ -315,6 +316,7 @@ void SoundPool::SetInterruptMode(InterruptMode interruptMode)
         return;
     }
     interruptMode_ = interruptMode;
+    streamIdManager_->SetInterruptMode(interruptMode);
 }
 
 int32_t SoundPool::Unload(int32_t soundID)

@@ -245,41 +245,80 @@ std::shared_ptr<AudioStandard::AudioRenderer> AudioStream::CreateAudioRenderer(
     return audioRenderer;
 }
 
-int32_t AudioStream::DoPlay()
+int32_t AudioStream::DoPlayWithNoInterrupt()
 {
-    MediaTrace trace("AudioStream::DoPlay");
-    MEDIA_LOGI("AudioStream::DoPlay start");
+    MediaTrace trace("AudioStream::DoPlayWithNoInterrupt");
+    MEDIA_LOGI("AudioStream::DoPlayWithNoInterrupt start");
     std::lock_guard lock(streamLock_);
     if (streamState_.load() != StreamState::PREPARED) {
-        MEDIA_LOGI("AudioStream::DoPlay end, invalid stream(%{public}d), streamState is %{public}d", streamID_,
-            streamState_.load());
+        MEDIA_LOGI("AudioStream::DoPlayWithNoInterrupt end, invalid stream(%{public}d), streamState is %{public}d",
+            streamID_, streamState_.load());
         return MSERR_INVALID_VAL;
     }
     if (audioRenderer_ == nullptr) {
-        MEDIA_LOGI("AudioStream::DoPlay, audioRenderer_ is nullptr, try again");
+        MEDIA_LOGI("AudioStream::DoPlayWithNoInterrupt, audioRenderer_ is nullptr, try again");
         PreparePlayInner(audioRendererInfo_, playParameters_);
         CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL,
-            "AudioStream::DoPlay, audioRenderer_ is nullptr");
+            "AudioStream::DoPlayWithNoInterrupt, audioRenderer_ is nullptr");
     }
     
     size_t bufferSize = 0;
     audioRenderer_->GetBufferSize(bufferSize);
-    MEDIA_LOGI("AudioStream::DoPlay, streamID_ is %{public}d, bufferSize is %{public}zu, "
+    MEDIA_LOGI("AudioStream::DoPlayWithNoInterrupt, streamID_ is %{public}d, bufferSize is %{public}zu, "
         "pcmBufferFrameIndex_ is %{public}zu, pcmBufferSize_ is %{public}zu", streamID_, bufferSize,
         pcmBufferFrameIndex_, pcmBufferSize_);
     SoundPoolXCollie soundPoolXCollie("AudioStream audioRenderer::Start time out",
         [](void *) {
-            MEDIA_LOGI("AudioStream::DoPlay, audioRenderer::Start time out");
+            MEDIA_LOGI("AudioStream::DoPlayWithNoInterrupt, audioRenderer::Start time out");
         });
     streamState_.store(StreamState::PLAYING);
     if (!audioRenderer_->Start()) {
-        MEDIA_LOGI("AudioStream::DoPlay, audioRenderer_->Start()");
+        MEDIA_LOGI("AudioStream::DoPlayWithNoInterrupt, audioRenderer_->Start()");
         soundPoolXCollie.CancelXCollieTimer();
         streamState_.store(StreamState::RELEASED);
         return HandleRendererNotStart();
     }
     soundPoolXCollie.CancelXCollieTimer();
-    MEDIA_LOGI("AudioStream::DoPlay end, streamID is %{public}d", streamID_);
+    MEDIA_LOGI("AudioStream::DoPlayWithNoInterrupt end, streamID is %{public}d", streamID_);
+    return MSERR_OK;
+}
+
+int32_t AudioStream::DoPlayWithSameSoundInterrupt()
+{
+    MediaTrace trace("AudioStream::DoPlayWithSameSoundInterrupt");
+    MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt start");
+    std::lock_guard lock(streamLock_);
+    if (streamState_.load() != StreamState::RELEASED) {
+        MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt end, invalid stream(%{public}d), "
+            "streamState is %{public}d", streamID_, streamState_.load());
+        return MSERR_INVALID_VAL;
+    }
+    if (audioRenderer_ == nullptr) {
+        MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt, audioRenderer_ is nullptr, try again");
+        PreparePlayInner(audioRendererInfo_, playParameters_);
+        CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL,
+            "AudioStream::DoPlayWithSameSoundInterrupt, audioRenderer_ is nullptr");
+    }
+    
+    size_t bufferSize = 0;
+    audioRenderer_->GetBufferSize(bufferSize);
+    MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt, streamID_ is %{public}d, bufferSize is %{public}zu, "
+        "pcmBufferFrameIndex_ is %{public}zu, pcmBufferSize_ is %{public}zu", streamID_, bufferSize,
+        pcmBufferFrameIndex_, pcmBufferSize_);
+    SoundPoolXCollie soundPoolXCollie("AudioStream audioRenderer::Start time out",
+        [](void *) {
+            MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt, audioRenderer::Start time out");
+        });
+    streamState_.store(StreamState::PLAYING);
+    audioRenderer_->Stop();
+    if (!audioRenderer_->Start()) {
+        MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt, audioRenderer_->Start()");
+        soundPoolXCollie.CancelXCollieTimer();
+        streamState_.store(StreamState::RELEASED);
+        return HandleRendererNotStart();
+    }
+    soundPoolXCollie.CancelXCollieTimer();
+    MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt end, streamID is %{public}d", streamID_);
     return MSERR_OK;
 }
 
