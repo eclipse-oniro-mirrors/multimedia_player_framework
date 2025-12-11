@@ -1684,36 +1684,37 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetDefaultToneHapticsSetti
     std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     EXPECT_NE(dataShareHelper, nullptr);
-
+    bool isProxy = false;
+    DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
     ToneHapticsSettings settings_;
     std::string currentToneUri;
     currentToneUri = systemSoundManager_->GetCurrentToneUri(context_,
         ToneHapticsType::CALL_SIM_CARD_0);
-    systemSoundManager_->GetDefaultToneHapticsSettings(dataShareHelper, currentToneUri,
+    systemSoundManager_->GetDefaultToneHapticsSettings(databaseTool, currentToneUri,
         ToneHapticsType::CALL_SIM_CARD_0, settings_);
     EXPECT_NE(systemSoundManager_, nullptr);
 
     currentToneUri = systemSoundManager_->GetCurrentToneUri(context_,
         ToneHapticsType::CALL_SIM_CARD_1);
-    systemSoundManager_->GetDefaultToneHapticsSettings(dataShareHelper, currentToneUri,
+    systemSoundManager_->GetDefaultToneHapticsSettings(databaseTool, currentToneUri,
         ToneHapticsType::CALL_SIM_CARD_1, settings_);
     EXPECT_NE(systemSoundManager_, nullptr);
 
     currentToneUri = systemSoundManager_->GetCurrentToneUri(context_,
         ToneHapticsType::NOTIFICATION);
-    systemSoundManager_->GetDefaultToneHapticsSettings(dataShareHelper, currentToneUri,
+    systemSoundManager_->GetDefaultToneHapticsSettings(databaseTool, currentToneUri,
         ToneHapticsType::NOTIFICATION, settings_);
     EXPECT_NE(systemSoundManager_, nullptr);
 
     currentToneUri = systemSoundManager_->GetCurrentToneUri(context_,
         ToneHapticsType::TEXT_MESSAGE_SIM_CARD_0);
-    systemSoundManager_->GetDefaultToneHapticsSettings(dataShareHelper, currentToneUri,
+    systemSoundManager_->GetDefaultToneHapticsSettings(databaseTool, currentToneUri,
         ToneHapticsType::TEXT_MESSAGE_SIM_CARD_0, settings_);
     EXPECT_NE(systemSoundManager_, nullptr);
 
     currentToneUri = systemSoundManager_->GetCurrentToneUri(context_,
         ToneHapticsType::TEXT_MESSAGE_SIM_CARD_1);
-    systemSoundManager_->GetDefaultToneHapticsSettings(dataShareHelper, currentToneUri,
+    systemSoundManager_->GetDefaultToneHapticsSettings(databaseTool, currentToneUri,
         ToneHapticsType::TEXT_MESSAGE_SIM_CARD_1, settings_);
     EXPECT_NE(systemSoundManager_, nullptr);
 
@@ -2355,16 +2356,18 @@ HWTEST(SystemSoundManagerUnitTest, UpdateToneHapticsSettings_Success_WhenUpdateS
     auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
     std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
         std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    bool isProxy = false;
     EXPECT_NE(systemSoundManagerImpl_, nullptr);
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     EXPECT_NE(dataShareHelper, nullptr);
+    DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
     std::string toneUri = "toneUri";
     ToneHapticsType toneHapticsType = ToneHapticsType::CALL_SIM_CARD_0;
     ToneHapticsSettings settings;
     settings.hapticsUri = "hapticsUri";
     settings.mode = ToneHapticsMode::SYNC;
     int32_t result =
-        systemSoundManagerImpl_->UpdateToneHapticsSettings(dataShareHelper, toneUri, toneHapticsType, settings);
+        systemSoundManagerImpl_->UpdateToneHapticsSettings(databaseTool, toneUri, toneHapticsType, settings);
     EXPECT_EQ(result, RESULT_SUCCESS);
 }
 
@@ -2378,6 +2381,8 @@ HWTEST(SystemSoundManagerUnitTest, GetDefaultNonSyncedHapticsUri_WhenTypeNotExis
     auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
     std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
         std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    bool isProxy = false;
+    DatabaseTool databaseTool = {true, isProxy, nullptr};
     EXPECT_NE(systemSoundManagerImpl_, nullptr);
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     EXPECT_NE(dataShareHelper, nullptr);
@@ -2386,9 +2391,10 @@ HWTEST(SystemSoundManagerUnitTest, GetDefaultNonSyncedHapticsUri_WhenTypeNotExis
     ToneHapticsType toneHapticsType = ToneHapticsType::CALL_SIM_CARD_0;
 
     // Act
-    std::string result = systemSoundManagerImpl_->GetDefaultNonSyncedHapticsUri(dataShareHelper, toneHapticsType);
+    databaseTool = {true, isProxy, dataShareHelper};
+    std::string result = systemSoundManagerImpl_->GetDefaultNonSyncedHapticsUri(databaseTool, toneHapticsType);
     toneHapticsType = ToneHapticsType::TEXT_MESSAGE_SIM_CARD_1;
-    result = systemSoundManagerImpl_->GetDefaultNonSyncedHapticsUri(dataShareHelper, toneHapticsType);
+    result = systemSoundManagerImpl_->GetDefaultNonSyncedHapticsUri(databaseTool, toneHapticsType);
 
     // Assert
     EXPECT_NE(result, "vs");
@@ -2404,12 +2410,14 @@ HWTEST(SystemSoundManagerUnitTest, GetDefaultNonSyncedHapticsUri_002, TestSize.L
     auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
     std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
         std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    bool isProxy = false;
+    DatabaseTool databaseTool = {true, isProxy, nullptr};
     EXPECT_NE(systemSoundManagerImpl_, nullptr);
     // Arrange
     ToneHapticsType toneHapticsType = ToneHapticsType::CALL_SIM_CARD_1;
 
     // Act
-    std::string result = systemSoundManagerImpl_->GetDefaultNonSyncedHapticsUri(nullptr, toneHapticsType);
+    std::string result = systemSoundManagerImpl_->GetDefaultNonSyncedHapticsUri(databaseTool, toneHapticsType);
 
     // Assert
     EXPECT_EQ(result, "");
@@ -2428,12 +2436,14 @@ HWTEST(SystemSoundManagerUnitTest, GetDefaultNonSyncedHapticsUri_001, TestSize.L
         std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
     EXPECT_NE(systemSoundManagerImpl_, nullptr);
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    bool isProxy = false;
+    DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
     EXPECT_NE(dataShareHelper, nullptr);
     // Arrange
     ToneHapticsType toneHapticsType = static_cast<ToneHapticsType>(100); // 100 is not in the map
 
     // Act
-    std::string result = systemSoundManagerImpl_->GetDefaultNonSyncedHapticsUri(dataShareHelper, toneHapticsType);
+    std::string result = systemSoundManagerImpl_->GetDefaultNonSyncedHapticsUri(databaseTool, toneHapticsType);
 
     // Assert
     EXPECT_EQ(result, "");
@@ -2449,12 +2459,14 @@ HWTEST(SystemSoundManagerUnitTest, GetDefaultNonSyncedHapticsUri_003, TestSize.L
     auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
     std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
         std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    bool isProxy = false;
+    DatabaseTool databaseTool = {true, isProxy, nullptr};
     EXPECT_NE(systemSoundManagerImpl_, nullptr);
     // Arrange
     ToneHapticsType toneHapticsType = ToneHapticsType::CALL_SIM_CARD_1;
 
     // Act
-    std::string result = systemSoundManagerImpl_->GetDefaultNonSyncedHapticsUri(nullptr, toneHapticsType);
+    std::string result = systemSoundManagerImpl_->GetDefaultNonSyncedHapticsUri(databaseTool, toneHapticsType);
 
     // Assert
     EXPECT_EQ(result, "");
@@ -2598,9 +2610,9 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetHapticsAttrsSyncedWithT
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     std::shared_ptr<ToneHapticsAttrs> toneHapticsAttrs;
     bool isProxy = false;
-    DatabaseTool databaseTool = {true, isProxy, nullptr};
+    DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
     std::string systemToneUri = systemSoundManager_->GetPresetNotificationToneUri(databaseTool);
-    systemSoundManager_->GetHapticsAttrsSyncedWithTone(systemToneUri, dataShareHelper, toneHapticsAttrs);
+    systemSoundManager_->GetHapticsAttrsSyncedWithTone(systemToneUri, databaseTool, toneHapticsAttrs);
  
     dataShareHelper->Release();
 }
@@ -2618,9 +2630,9 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetHapticsAttrsSyncedWithT
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     std::shared_ptr<ToneHapticsAttrs> toneHapticsAttrs;
     bool isProxy = false;
-    DatabaseTool databaseTool = {true, isProxy, nullptr};
+    DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
     std::string systemToneUri = systemSoundManager_->GetPresetNotificationToneUri(databaseTool);
-    systemSoundManager_->GetHapticsAttrsSyncedWithTone(systemToneUri, dataShareHelper, toneHapticsAttrs);
+    systemSoundManager_->GetHapticsAttrsSyncedWithTone(systemToneUri, databaseTool, toneHapticsAttrs);
  
     dataShareHelper->Release();
 }
