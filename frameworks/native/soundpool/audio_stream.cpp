@@ -295,14 +295,11 @@ int32_t AudioStream::DoPlayWithSameSoundInterrupt()
             "streamState is %{public}d", streamID_, streamState_.load());
         return MSERR_INVALID_VAL;
     }
-    {
-        std::lock_guard lock(streamLock_);
-        if (audioRenderer_ == nullptr) {
-            MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt, audioRenderer_ is nullptr, try again");
-            PreparePlayInner(audioRendererInfo_, playParameters_);
-            CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL,
-                "AudioStream::DoPlayWithSameSoundInterrupt, audioRenderer_ is nullptr");
-        }
+    if (audioRenderer_ == nullptr) {
+        MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt, audioRenderer_ is nullptr, try again");
+        PreparePlayInner(audioRendererInfo_, playParameters_);
+        CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL,
+            "AudioStream::DoPlayWithSameSoundInterrupt, audioRenderer_ is nullptr");
     }
     
     size_t bufferSize = 0;
@@ -314,7 +311,7 @@ int32_t AudioStream::DoPlayWithSameSoundInterrupt()
         streamCallback_->OnPlayFinished(streamID_);
     }
     streamState_.store(StreamState::PLAYING);
-    if (audioRenderer_->GetStatus() == OHOS::AudioStandard::RendererState::RENDERER_RUNNIN) {
+    if (audioRenderer_->GetStatus() == OHOS::AudioStandard::RendererState::RENDERER_RUNNING) {
         audioRenderer_->Stop();
         if (callback_ != nullptr) {
             MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt, call OnPlayFinished");
