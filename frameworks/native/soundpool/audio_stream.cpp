@@ -251,7 +251,7 @@ int32_t AudioStream::DoPlayWithNoInterrupt()
     MEDIA_LOGI("AudioStream::DoPlayWithNoInterrupt start");
     std::lock_guard lock(streamLock_);
     if (streamState_.load() != StreamState::PREPARED) {
-        MEDIA_LOGI("AudioStream::DoPlayWithNoInterrupt end, invalid stream(%{public}d), streamState is %{public}d",
+        MEDIA_LOGI("AudioStream::DoPlayWithNoInterrupt end, invalid stream(%{public}d), streamState_ is %{public}d",
             streamID_, streamState_.load());
         return MSERR_INVALID_VAL;
     }
@@ -287,7 +287,6 @@ int32_t AudioStream::DoPlayWithSameSoundInterrupt()
 {
     MediaTrace trace("AudioStream::DoPlayWithSameSoundInterrupt");
     MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt start");
-    std::lock_guard lock(streamLock_);
     if (streamState_.load() != StreamState::RELEASED) {
         MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt end, invalid stream(%{public}d), "
             "streamState is %{public}d", streamID_, streamState_.load());
