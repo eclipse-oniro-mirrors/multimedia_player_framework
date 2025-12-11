@@ -2559,6 +2559,23 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_picker_windows_01, TestSi
 }
 
 /**
+ * @tc.name: screen_capture_exclude_picker_windows_02
+ * @tc.desc: exclude picker windows
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_picker_windows_02, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_picker_windows_02 before");
+    std::vector<int32_t> windowIDs;
+    for (int i = 0; i < 1200; i++) {
+        windowIDs.push_back(i);
+    }
+    EXPECT_NE(MSERR_OK, screenCapture_->ExcludePickerWindows(windowIDs.data(), windowIDs.size()));
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_picker_windows_02 after");
+}
+
+/**
  * @tc.name: screen_capture_set_highlight_for_area_001
  * @tc.desc: do screencapture
  * @tc.type: FUNC

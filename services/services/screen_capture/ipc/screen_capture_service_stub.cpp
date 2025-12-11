@@ -396,6 +396,7 @@ int32_t ScreenCaptureServiceStub::ExcludePickerWindows(MessageParcel &data, Mess
     uint64_t size = 0;
     int32_t windowID = 0;
     CHECK_AND_RETURN_RET_LOG(data.ReadUint64(size), MSERR_INVALID_STATE, "failed to read data from MessageParcel");
+    CHECK_AND_RETURN_RET_LOG(size < MAX_WINDOWS_LEN, MSERR_INVALID_STATE, "windowID size is exceed max range");
     for (uint64_t i = 0; i < size; i++) {
         CHECK_AND_RETURN_RET_LOG(data.ReadInt32(windowID), MSERR_INVALID_STATE,
             "failed to read data from MessageParcel");
