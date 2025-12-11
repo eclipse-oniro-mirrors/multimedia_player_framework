@@ -29,6 +29,7 @@ public:
     int32_t SetAVMetadataCaller(AVMetadataCaller caller) override;
     int32_t SetUrlSource(const std::string &uri, const std::map<std::string, std::string> &header) override;
     int32_t SetSource(const sptr<IRemoteObject> &object) override;
+    int32_t CancelAllFetchFrames() override;
     std::unordered_map<int32_t, std::string> ResolveMetadataMap() override;
     std::string ResolveMetadata(int32_t key) override;
     std::shared_ptr<Meta> GetAVMetadata() override;
@@ -36,6 +37,8 @@ public:
         int32_t option, const OutputConfiguration &param) override;
     std::shared_ptr<AVBuffer> FetchFrameYuv(int64_t timeUs,
         int32_t option, const OutputConfiguration &param) override;
+    int32_t FetchFrameYuvs(const std::vector<int64_t>& timeUs,
+        int32_t option, const PixelMapParams &param) override;
     std::shared_ptr<AVSharedMemory> FetchArtPicture() override;
     int32_t DestroyStub() override;
     void Release() override;

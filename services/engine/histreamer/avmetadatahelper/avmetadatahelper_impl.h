@@ -51,6 +51,8 @@ public:
         int64_t timeUs, int32_t option, const OutputConfiguration &param) override;
     std::shared_ptr<AVBuffer> FetchFrameYuv(
         int64_t timeUs, int32_t option, const OutputConfiguration &param) override;
+    std::shared_ptr<AVBuffer> FetchFrameYuvs(
+        int64_t timeUs, int32_t option, const OutputConfiguration &param, bool &errCallback) override;
     std::shared_ptr<AVSharedMemory> FetchArtPicture() override;
     int32_t GetTimeByFrameIndex(uint32_t index, uint64_t &time) override;
     int32_t GetFrameIndexByTime(uint64_t time, uint32_t &index) override;

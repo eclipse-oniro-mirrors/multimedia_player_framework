@@ -181,6 +181,21 @@ int32_t AVMetadataHelperServiceProxy::SetListenerObject(const sptr<IRemoteObject
     return reply.ReadInt32();
 }
 
+int32_t AVMetadataHelperServiceProxy::CancelAllFetchFrames()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_EXT_API9_SERVICE_DIED, "Failed to write descriptor!");
+    int error = Remote()->SendRequest(CANCEL_FETCHFRAMES, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "CancelAllFetchFrames failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
 std::string AVMetadataHelperServiceProxy::ResolveMetadata(int32_t key)
 {
     MessageParcel data;
@@ -313,6 +328,31 @@ std::shared_ptr<AVBuffer> AVMetadataHelperServiceProxy::FetchFrameYuv(int64_t ti
     CHECK_AND_RETURN_RET(avBuffer != nullptr, nullptr);
     auto ret = avBuffer->ReadFromMessageParcel(reply);
     return ret ? avBuffer : nullptr;
+}
+
+int32_t AVMetadataHelperServiceProxy::FetchFrameYuvs(const std::vector<int64_t>& timeUs, int32_t option,
+                                                     const PixelMapParams &param)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption opt;
+
+    bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_EXT_API9_SERVICE_DIED, "Failed to write descriptor!");
+    (void)data.WriteInt64(static_cast<int64_t>(timeUs.size()));
+    (void)data.WriteBuffer(timeUs.data(), timeUs.size() * sizeof(int64_t));
+    (void)data.WriteInt32(option);
+    (void)data.WriteInt32(param.dstWidth);
+    (void)data.WriteInt32(param.dstHeight);
+    (void)data.WriteInt32(static_cast<int32_t>(param.colorFormat));
+    (void)data.WriteInt32(param.isSupportFlip);
+    (void)data.WriteInt32(param.convertColorSpace);
+    int error = Remote()->SendRequest(FETCH_FRAME_YUVS, data, reply, opt);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_EXT_API9_SERVICE_DIED,
+        "FetchFrameYuvs failed, error: %{public}d", error);
+    CHECK_AND_RETURN_RET(reply.ReadInt32() == MSERR_OK, MSERR_EXT_API9_SERVICE_DIED);
+    
+    return MSERR_OK;
 }
 
 std::shared_ptr<AVSharedMemory> AVMetadataHelperServiceProxy::FetchFrameAtTime(int64_t timeUs,

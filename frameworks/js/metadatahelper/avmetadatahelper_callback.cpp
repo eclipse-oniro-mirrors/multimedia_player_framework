@@ -14,6 +14,7 @@
  */
 
 #include "avmetadatahelper_callback.h"
+#include "pixel_map_napi.h"
 #include <uv.h>
 #include "media_errors.h"
 #include "media_log.h"
@@ -115,6 +116,11 @@ public:
     }
 };
 
+AVMetadataHelperCallback::AVMetadataHelperCallback(napi_env env) : env_(env)
+{
+    MEDIA_LOGI("AVMetadataHelperCallback Instances create");
+}
+
 AVMetadataHelperCallback::AVMetadataHelperCallback(napi_env env, AVMetadataHelperNotify *listener)
     : env_(env), listener_(listener)
 {
@@ -125,7 +131,15 @@ AVMetadataHelperCallback::AVMetadataHelperCallback(napi_env env, AVMetadataHelpe
 
 AVMetadataHelperCallback::~AVMetadataHelperCallback()
 {
+    helper_ = nullptr;
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+}
+
+void AVMetadataHelperCallback::setHelper(const std::shared_ptr<AVMetadataHelper> &helper)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_LOG(helper != nullptr, "AVMetadataHelper is nullptr");
+    helper_ = helper;
 }
 
 void AVMetadataHelperCallback::OnError(int32_t errorCode, const std::string &errorMsg)
@@ -170,6 +184,102 @@ void AVMetadataHelperCallback::OnInfo(HelperOnInfoType type, int32_t extra, cons
     }
 }
 
+void AVMetadataHelperCallback::OnPixelComplete(HelperOnInfoType type,
+                                               const std::shared_ptr<AVBuffer> &reAvbuffer_,
+                                               const FrameInfo &info,
+                                               const PixelMapParams &param)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("OnPixelComplete is called, OnPixelCompleteType: %{public}d", type);
+    CHECK_AND_RETURN_LOG(type == HelperOnInfoType::HELPER_INFO_TYPE_PIXEL, "HelperOnInfoType Error");
+    CHECK_AND_RETURN_LOG(helper_ != nullptr, "helper_ is nullptr");
+    auto pixelMap = helper_->ProcessPixelMap(reAvbuffer_, param, FrameScaleMode::ASPECT_RATIO);
+    SendPixelCompleteCallback(info, pixelMap);
+}
+
+void AVMetadataHelperCallback::SendPixelCompleteCallback(const FrameInfo &info,
+    const std::shared_ptr<PixelMap> &pixelMap)
+{
+    if (refMap_.find(AVMetadataHelperEvent::EVENT_PIXEL_COMPLETE) == refMap_.end()) {
+        MEDIA_LOGW("can not find pixelcomplete callback!");
+        return;
+    }
+    AVMetadataJsCallback *cb = new(std::nothrow) AVMetadataJsCallback();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
+    cb->autoRef = refMap_.at(AVMetadataHelperEvent::EVENT_PIXEL_COMPLETE);
+    cb->requestedTimeUs = info.requestedTimeUs;
+    cb->actualTimeUs = info.actualTimeUs;
+    cb->fetchResult = static_cast<FetchResult>(info.fetchResult);
+    cb->pixel_ = pixelMap;
+    cb->errorCode = info.err;
+    MEDIA_LOGI("AVMetadataHelperCallback::SendPixelCompleteCallback cb->errorCode, %{public}d", cb->errorCode);
+    switch (info.err) {
+        case OPERATION_NOT_ALLOWED:
+            cb->errorMs = "OPERATION_NOT_ALLOWED";
+            break;
+        case FETCH_TIMEOUT:
+            cb->errorMs = "FETCH_TIMEOUT";
+            break;
+        case UNSUPPORTED_FORMAT:
+            cb->errorMs = "UNSUPPORTED_FORMAT";
+            break;
+        default:
+            cb->errorMs = "NO_ERR";
+    }
+}
+
+void AVMetadataHelperCallback::OnJsPixelCompleteCallback(AVMetadataJsCallback *jsCb) const
+{
+    auto task = [event = jsCb]() {
+        CHECK_AND_RETURN_LOG(event != nullptr, "jsCb is nullptr");
+        std::string request = event->callbackName;
+        do {
+            std::shared_ptr<AutoRef> ref = event->autoRef;
+            CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_BREAK_LOG(scope != nullptr, "%{public}s scope is nullptr", request.c_str());
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(ref->env_, scope);
+            };
+            const size_t argCount = 2;
+            napi_value args[argCount] = {nullptr};
+            napi_value jsCallback = nullptr;
+            napi_value imageResult = nullptr;
+            napi_get_undefined(ref->env_, &args[0]);
+            napi_get_undefined(ref->env_, &args[1]);
+            napi_get_undefined(ref->env_, &imageResult);
+            napi_value frameInfo = nullptr;
+            napi_create_object(ref->env_, &frameInfo);
+            CHECK_AND_CONTINUE_LOG(CommonNapi::SetPropertyInt64(ref->env_, frameInfo, "requestedTimeUs",
+                event->requestedTimeUs), "Set RequestedTimeUs failed");
+            CHECK_AND_CONTINUE_LOG(CommonNapi::SetPropertyInt64(ref->env_, frameInfo, "actualTimeUs",
+                event->actualTimeUs), "Set actualTimeUs failed");
+            CHECK_AND_CONTINUE_LOG(CommonNapi::SetPropertyInt32(ref->env_, frameInfo, "result",
+                event->fetchResult), "Set fetchResult failed");
+            if (event->pixel_ != nullptr) {
+                imageResult = Media::PixelMapNapi::CreatePixelMap(ref->env_, event->pixel_);
+            }
+            napi_set_named_property(ref->env_, frameInfo, "image", imageResult);
+            args[1] = frameInfo;
+            if (event->errorCode != 0) {
+                napi_create_uint32(ref->env_, event->fetchResult, &args[0]);
+                (void)CommonNapi::CreateError(ref->env_, event->errorCode, event->errorMs, jsCallback);
+                args[0] = jsCallback;
+            }
+            napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
+                                request.c_str());
+            napi_value result = nullptr;
+            nstatus = napi_call_function(ref->env_, nullptr, jsCallback, argCount, args, &result);
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
+        } while (0);
+        delete event;
+        };
+    auto ret = napi_send_event(env_, task, napi_eprio_immediate);
+    if (ret != napi_status::napi_ok) { delete jsCb; }
+}
+
 void AVMetadataHelperCallback::OnStateChangeCb(const int32_t extra, const Format &infoBody)
 {
     HelperStates state = static_cast<HelperStates>(extra);
@@ -180,7 +290,7 @@ void AVMetadataHelperCallback::OnStateChangeCb(const int32_t extra, const Format
     }
 }
 
-void AVMetadataHelperCallback::SaveCallbackReference(const std::string &name, std::weak_ptr<AutoRef> ref)
+void AVMetadataHelperCallback::SaveCallbackReference(const std::string &name, std::shared_ptr<AutoRef> ref)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     refMap_[name] = ref;

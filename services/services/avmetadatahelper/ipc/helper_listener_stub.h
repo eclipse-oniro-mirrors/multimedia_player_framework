@@ -31,6 +31,10 @@ public:
     void OnError(HelperErrorType errorType, int32_t errorCode) override;
     void OnError(int32_t errorCode, const std::string &errorMsg) override;
     void OnInfo(HelperOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
+    void OnPixelComplete (HelperOnInfoType type,
+                        const std::shared_ptr<AVBuffer> &reAvbuffer_,
+                        const FrameInfo &info,
+                        const PixelMapParams &param) override;
 
     // HelperListenerStub
     void SetHelperCallback(const std::weak_ptr<HelperCallback> &callback);

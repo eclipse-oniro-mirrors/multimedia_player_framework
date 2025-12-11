@@ -40,6 +40,8 @@ public:
     ~AVThumbnailGenerator();
     std::shared_ptr<AVSharedMemory> FetchFrameAtTime(int64_t timeUs, int32_t option, const OutputConfiguration &param);
     std::shared_ptr<AVBuffer> FetchFrameYuv(int64_t timeUs, int32_t option, const OutputConfiguration &param);
+    std::shared_ptr<AVBuffer> FetchFrameYuvs(int64_t timeUs, int32_t option, const OutputConfiguration &param,
+        bool &errCallback);
     std::shared_ptr<AVSharedMemory> FetchArtPicture();
 
     void Reset();

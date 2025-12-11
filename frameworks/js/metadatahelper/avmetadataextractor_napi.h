@@ -32,7 +32,7 @@ struct AVMetadataExtractorAsyncContext;
 class AVMetadataExtractorNapi {
 public:
     __attribute__((visibility("default"))) static napi_value Init(napi_env env, napi_value exports);
-
+    static void ThrowError(napi_env env, int32_t code, const std::string &errMessage);
 private:
     static napi_value Constructor(napi_env env, napi_callback_info info);
     static void Destructor(napi_env env, void *nativeObject, void *finalize);
@@ -41,6 +41,8 @@ private:
     static napi_value JsResolveMetadata(napi_env env, napi_callback_info info);
     static napi_value JsFetchArtPicture(napi_env env, napi_callback_info info);
     static napi_value JsFetchFrameAtTime(napi_env env, napi_callback_info info);
+    static napi_value JsFetchFramesAtTimes(napi_env env, napi_callback_info info);
+    static napi_value JsCancelAllFetchFrames(napi_env env, napi_callback_info info);
     static napi_value JsRelease(napi_env env, napi_callback_info info);
     /**
      * fdSrc: AVFileDescriptor
@@ -75,17 +77,24 @@ private:
     static void GetFrameIndexByTimeComplete(napi_env env, napi_status status, void *data);
     static napi_value JSGetTimeByFrameIndex(napi_env env, napi_callback_info info);
     static napi_value JSGetFrameIndexByTime(napi_env env, napi_callback_info info);
+    void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
+    void setHelper(const std::shared_ptr<AVMetadataHelper> &header);
     
     AVMetadataExtractorNapi();
     ~AVMetadataExtractorNapi();
     int32_t GetFetchFrameArgs(std::unique_ptr<AVMetadataExtractorAsyncContext> &asyncCtx,
         napi_env env, napi_value timeUs, napi_value option, napi_value params);
-
+    int32_t GetFetchFrameVectorArgs(std::unique_ptr<AVMetadataExtractorAsyncContext> &asyncCtx,
+        napi_env env, napi_value timeUs, napi_value option, napi_value params);
+    int32_t GetCommonFetchFrameArgs(std::unique_ptr<AVMetadataExtractorAsyncContext> &asyncCtx,
+        napi_env env, napi_value option, napi_value params);
 private:
     static thread_local napi_ref constructor_;
     napi_env env_ = nullptr;
+    static bool releaseFlag;
     std::shared_ptr<AVMetadataHelper> helper_ = nullptr;
     std::shared_ptr<HelperDataSourceCallback> dataSrcCb_ = nullptr;
+    std::shared_ptr<HelperCallback> helperCb_ = nullptr;
     struct AVFileDescriptor fileDescriptor_;
     struct AVDataSrcDescriptor dataSrcDescriptor_;
     std::mutex mutex_;
@@ -93,6 +102,8 @@ private:
     HelperState state_ { HelperState::HELPER_STATE_IDLE };
     std::string url_ = "";
     std::map<std::string, std::string> header_;
+    const uint32_t framesArrMinLength = 0;
+    const uint32_t framesArrMaxLength = 4096;
 };
 
 struct AVMetadataExtractorAsyncContext : public MediaAsyncContext {
@@ -105,6 +116,7 @@ struct AVMetadataExtractorAsyncContext : public MediaAsyncContext {
     std::shared_ptr<PixelMap> artPicture_ = nullptr;
     std::shared_ptr<PixelMap> pixel_ = nullptr;
     std::shared_ptr<AVMetadataHelper> innerHelper_ = nullptr;
+    std::vector<int64_t> timeUsVector;
     int32_t status = 0;
     int32_t option = 0;
     int64_t timeUs = 0;

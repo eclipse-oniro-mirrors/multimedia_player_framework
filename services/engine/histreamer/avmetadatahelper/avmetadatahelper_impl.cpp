@@ -247,6 +247,19 @@ std::shared_ptr<AVBuffer> AVMetadataHelperImpl::FetchFrameYuv(
     return avBuffer;
 }
 
+std::shared_ptr<AVBuffer> AVMetadataHelperImpl::FetchFrameYuvs(
+    int64_t timeUs, int32_t option, const OutputConfiguration &param, bool &errCallback)
+{
+    MEDIA_LOGD("enter FetchFrameYuvs");
+    auto res = InitThumbnailGenerator();
+    CHECK_AND_RETURN_RET_NOLOG(res == Status::OK, nullptr);
+    CHECK_AND_RETURN_RET_NOLOG(thumbnailGenerator_ != nullptr, nullptr);
+    std::shared_ptr<AVBuffer> avBuffer = thumbnailGenerator_->FetchFrameYuvs(timeUs, option, param, errCallback);
+    CHECK_AND_RETURN_RET_NOLOG(metadataCaller_ != AVMetadataCaller::AV_METADATA_EXTRACTOR || avBuffer == nullptr ||
+        !(avBuffer->flag_ & (uint32_t)(AVBufferFlag::EOS)), nullptr);
+    return avBuffer;
+}
+
 int32_t AVMetadataHelperImpl::GetTimeByFrameIndex(uint32_t index, uint64_t &time)
 {
     CHECK_AND_RETURN_RET(!isForFrameConvert_, GetTimeForFrameConvert(index, time));

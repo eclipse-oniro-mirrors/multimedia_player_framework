@@ -33,6 +33,10 @@ public:
         (void)errorCode;
     }
     virtual void OnInfo(HelperOnInfoType type, int32_t extra, const Format &infoBody) = 0;
+    virtual void OnPixelComplete (HelperOnInfoType type,
+                        const std::shared_ptr<AVBuffer> &reAvbuffer_,
+                        const FrameInfo &info,
+                        const PixelMapParams &param) = 0;
     virtual void OnError(int32_t errorCode, const std::string &errorMsg)
     {
         (void)errorCode;
@@ -41,6 +45,7 @@ public:
     enum HelperListenerMsg {
         ON_INFO,
         ON_ERROR_MSG,
+        ON_PIXEL_COMPLETE,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardAVMetadataHelperListener");

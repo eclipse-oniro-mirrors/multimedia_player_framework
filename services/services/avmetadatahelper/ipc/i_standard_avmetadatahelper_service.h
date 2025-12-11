@@ -42,6 +42,7 @@ public:
     }
     virtual int32_t SetSource(int32_t fd, int64_t offset, int64_t size, int32_t usage) = 0;
     virtual int32_t SetSource(const sptr<IRemoteObject> &object) = 0;
+    virtual int32_t CancelAllFetchFrames() = 0;
     virtual std::string ResolveMetadata(int32_t key) = 0;
     virtual std::unordered_map<int32_t, std::string> ResolveMetadataMap() = 0;
     virtual std::shared_ptr<Meta> GetAVMetadata() = 0;
@@ -50,6 +51,8 @@ public:
         int64_t timeUs, int32_t option, const OutputConfiguration &param) = 0;
     virtual std::shared_ptr<AVBuffer> FetchFrameYuv(
         int64_t timeUs, int32_t option, const OutputConfiguration &param) = 0;
+    virtual int32_t FetchFrameYuvs(const std::vector<int64_t>& timeUs,
+        int32_t option, const PixelMapParams &param) = 0;
     virtual void Release() = 0;
     virtual int32_t DestroyStub() = 0;
     virtual int32_t SetHelperCallback() = 0;
@@ -69,6 +72,8 @@ public:
         FETCH_ALBUM_COVER,
         FETCH_FRAME_AT_TIME,
         FETCH_FRAME_YUV,
+        FETCH_FRAME_YUVS,
+        CANCEL_FETCHFRAMES,
         RELEASE,
         DESTROY,
         SET_CALLBACK,

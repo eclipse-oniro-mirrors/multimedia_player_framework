@@ -55,6 +55,20 @@ int HelperListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
             OnInfo(static_cast<HelperOnInfoType>(type), extra, format);
             return MSERR_OK;
         }
+        case HelperListenerMsg::ON_PIXEL_COMPLETE: {
+            int32_t type = data.ReadInt32();
+            FrameInfo info = {static_cast<FetchFrameBusinessError>(data.ReadInt32()), data.ReadInt64(),
+                data.ReadInt64(), data.ReadInt32()};
+            std::shared_ptr<AVBuffer> reAvbuffer_(AVBuffer::CreateAVBuffer());
+            auto ret = reAvbuffer_->ReadFromMessageParcel(data);
+            CHECK_AND_RETURN_RET(ret, MSERR_EXT_API9_SERVICE_DIED);
+            PixelMapParams param = {data.ReadInt32(), data.ReadInt32(), static_cast<PixelFormat>(data.ReadInt32()),
+                                    data.ReadBool(), data.ReadBool()};
+
+            MEDIA_LOGI("0x%{public}06" PRIXPTR " listen on info type: %{public}d", FAKE_POINTER(this), type);
+            OnPixelComplete(static_cast<HelperOnInfoType>(type), reAvbuffer_, info, param);
+            return MSERR_OK;
+        }
         case HelperListenerMsg::ON_ERROR_MSG: {
             int32_t errorCode = data.ReadInt32();
             std::string errorMsg = data.ReadString();
@@ -84,6 +98,16 @@ void HelperListenerStub::OnInfo(HelperOnInfoType type, int32_t extra, const Form
     cb->OnInfo(type, extra, infoBody);
 }
 
+void HelperListenerStub::OnPixelComplete(HelperOnInfoType type,
+    const std::shared_ptr<AVBuffer> &reAvbuffer_,
+    const FrameInfo &info,
+    const PixelMapParams &param)
+{
+    std::shared_ptr<HelperCallback> cb = callback_.lock();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "OnPixelComplete callbcak is null");
+    cb->OnPixelComplete(type, reAvbuffer_, info, param);
+}
+
 void HelperListenerStub::OnError(int32_t errorCode, const std::string &errorMsg)
 {
     std::shared_ptr<HelperCallback> cb = callback_.lock();
@@ -93,6 +117,7 @@ void HelperListenerStub::OnError(int32_t errorCode, const std::string &errorMsg)
 
 void HelperListenerStub::SetHelperCallback(const std::weak_ptr<HelperCallback> &callback)
 {
+    CHECK_AND_RETURN_LOG(callback.lock() != nullptr, "OnPixelComplete callbcak is null");
     callback_ = callback;
 }
 } // namespace Media
