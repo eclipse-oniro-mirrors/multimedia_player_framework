@@ -50,8 +50,8 @@ void Stream::SetSoundData(const std::shared_ptr<AudioBufferEntry> &cacheData, co
     cacheDataTotalSize_ = cacheDataTotalSize;
 }
 
-void Stream::SetPlayParamAndRendererInfo(PlayParams &playParameters,
-    AudioStandard::AudioRendererInfo &audioRenderInfo)
+void Stream::SetPlayParamAndRendererInfo(const PlayParams &playParameters,
+    const AudioStandard::AudioRendererInfo &audioRenderInfo)
 {
     playParameters_ = playParameters;
     priority_ = playParameters.priority;

@@ -1485,7 +1485,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_038, TestSize.Level2)
 
 /**
  * @tc.name: soundpool_function_039
- * @tc.desc: function test CacheBuffer DoPlay fail
+ * @tc.desc: function test AudioStream DoPlay fail
  * @tc.type: FUNC
  * @tc.require:
  */

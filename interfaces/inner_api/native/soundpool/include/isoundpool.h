@@ -17,6 +17,7 @@
 #define ISOUNDPOOL_H
 
 #include <string>
+
 #include "audio_info.h"
 #include "meta/format.h"
 #include "media_errors.h"
@@ -34,6 +35,11 @@ struct PlayParams {
     int32_t audioHapticsSyncId = 0;
 };
 
+enum InterruptMode : int32_t {
+    NO_INTERRUPT = 0,
+    SAME_SOUND_INTERRUPT = 1
+};
+
 class ISoundPoolCallback;
 class ISoundPoolFrameWriteCallback;
 
@@ -49,7 +55,7 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual int32_t Load(std::string url) = 0;
+    virtual int32_t Load(const std::string &url) = 0;
 
     /**
      * @brief Load the sound from a FileDescriptor..
@@ -72,7 +78,7 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual int32_t Play(int32_t soundID, PlayParams playParameters) = 0;
+    virtual int32_t Play(int32_t soundID, const PlayParams &playParameters) = 0;
 
     /**
      * @brief Stop a stream which is playing.
@@ -115,7 +121,7 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual int32_t SetRate(int32_t streamID, AudioStandard::AudioRendererRate renderRate) = 0;
+    virtual int32_t SetRate(int32_t streamID, const AudioStandard::AudioRendererRate &renderRate) = 0;
 
     /**
      * @brief Set stream volume.
@@ -169,6 +175,15 @@ public:
      */
     virtual int32_t SetSoundPoolFrameWriteCallback
         (const std::shared_ptr<ISoundPoolFrameWriteCallback> &frameWriteCallback) = 0;
+
+    /**
+     * @brief Set the interrupt mode for soundpool
+     *
+     * @param interruptMode The interrupt mode for soundpool
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual void SetInterruptMode(InterruptMode interruptMode) = 0;
 };
 
 class ISoundPoolCallback {
@@ -225,20 +240,22 @@ class __attribute__((visibility("default"))) SoundPoolFactory {
 public:
 #ifdef UNSUPPORT_SOUND_POOL
     static std::shared_ptr<ISoundPool> CreateSoundPool(int maxStreams,
-        AudioStandard::AudioRendererInfo audioRenderInfo)
+        const AudioStandard::AudioRendererInfo &audioRenderInfo,
+        InterruptMode interruptMode = InterruptMode::SAME_SOUND_INTERRUPT)
     {
         return nullptr;
     }
     static std::shared_ptr<ISoundPool> CreateParallelSoundPool(int maxStreams,
-        AudioStandard::AudioRendererInfo audioRenderInfo)
+        const AudioStandard::AudioRendererInfo &audioRenderInfo)
     {
         return nullptr;
     }
 #else
     static std::shared_ptr<ISoundPool> CreateSoundPool(int maxStreams,
-        AudioStandard::AudioRendererInfo audioRenderInfo);
+        const AudioStandard::AudioRendererInfo &audioRenderInfo,
+        InterruptMode interruptMode = InterruptMode::SAME_SOUND_INTERRUPT);
     static std::shared_ptr<ISoundPool> CreateParallelSoundPool(int maxStreams,
-        AudioStandard::AudioRendererInfo audioRenderInfo);
+        const AudioStandard::AudioRendererInfo &audioRenderInfo);
 #endif
 private:
     SoundPoolFactory() = default;
@@ -268,7 +285,7 @@ public:
         ERROR_TYPE errorType = ERROR_TYPE::LOAD_ERROR;
         std::shared_ptr<ISoundPoolCallback> callback = nullptr;
     };
-    static void SendErrorInfo(const ErrorInfo& errorInfo)
+    static void SendErrorInfo(const ErrorInfo &errorInfo)
     {
         Format format;
         format.PutIntValue(SoundPoolKeys::ERROR_CODE, errorInfo.errorCode);

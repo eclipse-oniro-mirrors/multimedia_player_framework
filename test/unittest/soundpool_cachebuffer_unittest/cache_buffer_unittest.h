@@ -18,7 +18,7 @@
 #include "gtest/gtest.h"
 #include "mock/mock_audio_renderer.h"
 #include "mock/mock_sound_pool_callback.h"
-#include "cache_buffer.h"
+#include "audio_stream.h"
 
 
 namespace OHOS {
@@ -36,7 +36,7 @@ protected:
     int32_t streamID = 0;
     std::shared_ptr<ThreadPool> cacheBufferStopThreadPool = nullptr;
 
-    std::shared_ptr<CacheBuffer> cacheBuffer_;
+    std::shared_ptr<AudioStream> cacheBuffer_;
     std::shared_ptr<StreamIDManager> streamIDManager_;
     std::unique_ptr<MockAudioRenderer> mockAudioRenderer_;
 };

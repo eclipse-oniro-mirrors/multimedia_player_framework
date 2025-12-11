@@ -63,6 +63,7 @@ public:
     MOCK_METHOD(int32_t, SetStreamType, (AudioStandard::AudioStreamType), (override));
     MOCK_METHOD(int32_t, SetVolume, (float), (const, override));
     MOCK_METHOD(float, GetVolume, (), (const, override));
+    MOCK_METHOD(int32_t, SetLoopTimes, (int64_t bufferLoopTimes), (override));
     MOCK_METHOD(int32_t, SetRenderRate, (AudioStandard::AudioRendererRate), (const, override));
     MOCK_METHOD(AudioStandard::AudioRendererRate, GetRenderRate, (), (const, override));
     MOCK_METHOD(int32_t, SetRendererSamplingRate, (uint32_t), (const, override));

@@ -453,6 +453,11 @@ static const std::vector<struct JsEnumInt> g_soundpoolErrorType = {
     { "PLAY_ERROR", ERROR_TYPE::PLAY_ERROR }
 };
 
+static const std::vector<struct JsEnumInt> g_soundpoolInterruptMode = {
+    { "NO_INTERRUPT", InterruptMode::NO_INTERRUPT },
+    { "SAME_SOUND_INTERRUPT", InterruptMode::SAME_SOUND_INTERRUPT }
+};
+
 static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_intEnumClassMap = {
     { "AVErrorCode", g_AVErrorCode},
     { "MediaErrorCode", g_mediaErrorCode },
@@ -492,6 +497,7 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_
     { "AVScreenCaptureFillMode", g_screenCaptureFillMode},
     { "ErrorType", g_soundpoolErrorType },
     { "AacProfile", g_aacProfile },
+    { "InterruptMode", g_soundpoolInterruptMode },
 };
 
 static const std::map<std::string_view, const std::vector<struct JsEnumString>&> g_stringEnumClassMap = {

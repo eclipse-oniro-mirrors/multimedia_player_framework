@@ -56,6 +56,7 @@ napi_value SoundPoolNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("setPriority", JsSetPriority),
         DECLARE_NAPI_FUNCTION("setRate", JsSetRate),
         DECLARE_NAPI_FUNCTION("setVolume", JsSetVolume),
+        DECLARE_NAPI_FUNCTION("setInterruptMode", JsSetInterruptMode),
         DECLARE_NAPI_FUNCTION("unload", JsUnload),
         DECLARE_NAPI_FUNCTION("release", JsRelease),
         DECLARE_NAPI_FUNCTION("on", JsSetOnCallback),
@@ -554,6 +555,24 @@ napi_value SoundPoolNapi::JsSetVolume(napi_env env, napi_callback_info info)
     return result;
 }
 
+napi_value SoundPoolNapi::JsSetInterruptMode(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("SoundPool::JsSetInterruptMode");
+    MEDIA_LOGI("SoundPoolNapi::JsSetInterruptMode");
+    size_t argCount = PARAM1;
+    napi_value args[PARAM1] = { nullptr };
+
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    SoundPoolNapi *soundPoolNapi = SoundPoolNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(soundPoolNapi != nullptr, result, "Failed to retrieve instance");
+    int32_t interruptMode = soundPoolNapi->ParserInterruptModeFromJs(env, args);
+    CHECK_AND_RETURN_RET_LOG(soundPoolNapi->soundPool_ != nullptr, result, "soundPool_ is nullptr");
+    soundPoolNapi->soundPool_->SetInterruptMode(static_cast<InterruptMode>(interruptMode));
+    return result;
+}
+
 napi_value SoundPoolNapi::JsUnload(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("SoundPool::JsUnload");
@@ -870,6 +889,15 @@ int32_t SoundPoolNapi::ParserVolumeOptionFromJs(std::unique_ptr<SoundPoolAsyncCo
     asyncCtx->rightVolume_ = static_cast<float>(tempvolume);
 
     return ret;
+}
+
+int32_t SoundPoolNapi::ParserInterruptModeFromJs(napi_env env, napi_value *argv)
+{
+    int32_t interruptMode = 0;
+    napi_status status = napi_get_value_int32(env, argv[PARAM0], &interruptMode);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, interruptMode, "failed to get interruptMode");
+    MEDIA_LOGI("interruptMode is %{public}d", interruptMode);
+    return interruptMode;
 }
 
 void SoundPoolNapi::SendCompleteEvent(napi_env env, std::unique_ptr<SoundPoolAsyncContext> asyncCtx)
