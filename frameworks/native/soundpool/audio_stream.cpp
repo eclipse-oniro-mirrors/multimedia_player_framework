@@ -187,11 +187,8 @@ void AudioStream::DealAudioRendererParams(AudioStandard::AudioRendererOptions &r
     if (IsAudioRendererCanMix(audioRendererInfo)) {
         rendererOptions.strategy.concurrencyMode = AudioStandard::AudioConcurrencyMode::MIX_WITH_OTHERS;
     }
-    rendererOptions.rendererInfo.contentType = audioRendererInfo.contentType;
-    rendererOptions.rendererInfo.streamUsage = audioRendererInfo.streamUsage;
+    rendererOptions.rendererInfo = audioRendererInfo;
     rendererOptions.privacyType = AudioStandard::PRIVACY_TYPE_PUBLIC;
-    rendererFlags_ = audioRendererInfo.rendererFlags;
-    rendererOptions.rendererInfo.rendererFlags = rendererFlags_;
     rendererOptions.rendererInfo.playerType = AudioStandard::PlayerType::PLAYER_TYPE_SOUND_POOL;
     rendererOptions.rendererInfo.expectedPlaybackDurationBytes = static_cast<uint64_t>(pcmBufferSize_);
 }

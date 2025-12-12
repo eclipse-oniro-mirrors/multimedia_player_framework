@@ -770,6 +770,11 @@ napi_status SoundPoolNapi::GetJsInstanceWithParameter(napi_env env, napi_value *
         napi_get_value_int32(env, tempValue, &(rendererInfo.rendererFlags));
     }
 
+    napi_status statusOption = napi_get_named_property(env, argv[PARAM1], "volumeMode", &tempValue);
+    if (statusOption == napi_ok) {
+        napi_get_value_int32(env, tempValue, reinterpret_cast<int32_t *>(&(rendererInfo.volumeMode)));
+    }
+
     return status;
 }
 
