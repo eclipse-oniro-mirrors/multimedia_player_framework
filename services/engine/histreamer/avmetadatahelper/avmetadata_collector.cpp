@@ -379,7 +379,6 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
 
     Metadata metadata;
     metadata.SetMeta(AV_KEY_GLTF_OFFSET, "-1");
-    metadata.SetMeta(AV_KEY_VIDEO_ORIENTATION, std::to_string(VideoOrientationType::ROTATE_NONE));
     ConvertToAVMeta(globalInfo, metadata);
 
     size_t trackCount = trackInfos.size();

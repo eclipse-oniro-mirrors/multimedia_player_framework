@@ -72,7 +72,8 @@ public:
         const PlayParams &playParams);
     void ConfigurePlayParametersWithoutLock(const AudioStandard::AudioRendererInfo &audioRendererInfo,
         const PlayParams &playParams);
-    int32_t DoPlay();
+    int32_t DoPlayWithNoInterrupt();
+    int32_t DoPlayWithSameSoundInterrupt();
     int32_t Stop();
     int32_t Release();
     
@@ -138,6 +139,7 @@ private:
     size_t pcmBufferFrameIndex_ = 0;
     int64_t sourceDurationMs_ = 0;
     std::atomic<StreamState> streamState_;
+    std::atomic<InterruptMode> interruptMode_ = InterruptMode::SAME_SOUND_INTERRUPT;
 };
 } // namespace Media
 } // namespace OHOS

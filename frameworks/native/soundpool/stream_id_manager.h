@@ -54,6 +54,7 @@ public:
     int32_t GetStreamIDBySoundIDWithLock(int32_t soundID);
     std::shared_ptr<AudioStream> GetStreamByStreamIDWithLock(int32_t streamID);
     int32_t GetAvailableStreamIDBySoundID(int32_t soundID);
+    void SetInterruptMode(InterruptMode interruptMode);
 
     void RemoveInvalidStreamsInInterruptMode();
     void RemoveInvalidStreamsInNoInterruptMode();

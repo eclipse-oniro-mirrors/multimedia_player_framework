@@ -240,8 +240,7 @@ class __attribute__((visibility("default"))) SoundPoolFactory {
 public:
 #ifdef UNSUPPORT_SOUND_POOL
     static std::shared_ptr<ISoundPool> CreateSoundPool(int maxStreams,
-        const AudioStandard::AudioRendererInfo &audioRenderInfo,
-        InterruptMode interruptMode = InterruptMode::SAME_SOUND_INTERRUPT)
+        const AudioStandard::AudioRendererInfo &audioRenderInfo)
     {
         return nullptr;
     }
@@ -252,8 +251,7 @@ public:
     }
 #else
     static std::shared_ptr<ISoundPool> CreateSoundPool(int maxStreams,
-        const AudioStandard::AudioRendererInfo &audioRenderInfo,
-        InterruptMode interruptMode = InterruptMode::SAME_SOUND_INTERRUPT);
+        const AudioStandard::AudioRendererInfo &audioRenderInfo);
     static std::shared_ptr<ISoundPool> CreateParallelSoundPool(int maxStreams,
         const AudioStandard::AudioRendererInfo &audioRenderInfo);
 #endif
