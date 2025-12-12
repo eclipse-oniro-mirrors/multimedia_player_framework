@@ -390,15 +390,14 @@ int32_t ScreenCaptureServiceStub::ExcludeContent(MessageParcel &data, MessagePar
 
 int32_t ScreenCaptureServiceStub::ExcludePickerWindows(MessageParcel &data, MessageParcel &reply)
 {
-    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
-        "screen capture server is nullptr");
+    FALSE_RETURN_AND_REPLY(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE, "screen capture server is nullptr");
     std::vector<int32_t> windowIDsVec;
     uint64_t size = 0;
     int32_t windowID = 0;
-    CHECK_AND_RETURN_RET_LOG(data.ReadUint64(size), MSERR_INVALID_STATE, "failed to read data from MessageParcel");
-    CHECK_AND_RETURN_RET_LOG(size < MAX_WINDOWS_LEN, MSERR_INVALID_STATE, "windowID size is exceed max range");
+    FALSE_RETURN_AND_REPLY(data.ReadUint64(size), MSERR_INVALID_STATE, "failed to read data from MessageParcel");
+    FALSE_RETURN_AND_REPLY(size < MAX_WINDOWS_LEN, MSERR_INVALID_STATE, "windowID size is exceed max range");
     for (uint64_t i = 0; i < size; i++) {
-        CHECK_AND_RETURN_RET_LOG(data.ReadInt32(windowID), MSERR_INVALID_STATE,
+        FALSE_RETURN_AND_REPLY(data.ReadInt32(windowID), MSERR_INVALID_STATE,
             "failed to read data from MessageParcel");
         windowIDsVec.push_back(windowID);
     }
