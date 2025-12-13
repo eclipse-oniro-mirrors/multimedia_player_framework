@@ -317,6 +317,13 @@ void SoundPoolImpl::SetVolumeSync(int32_t streamID, double leftVolume, double ri
     }
 }
 
+void SoundPoolImpl::SetInterruptMode(::soundPool::InterruptMode interruptMode)
+{
+    MediaTrace trace("SoundPool::TaiheInterruptMode");
+    MEDIA_LOGI("SoundPoolNapi::TaiheInterruptMode");
+    soundPool_->SetInterruptMode(static_cast<OHOS::Media::InterruptMode>(interruptMode.get_value()));
+}
+
 void SoundPoolImpl::UnloadSync(int32_t soundID)
 {
     MediaTrace trace("SoundPool::TaiheUnload");

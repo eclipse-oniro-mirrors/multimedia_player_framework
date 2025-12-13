@@ -20,6 +20,7 @@
 #include "isoundpool.h"
 #include "media_ani_common.h"
 #include "event_handler.h"
+#include "soundPool.proj.hpp"
 namespace ANI {
 namespace Media {
 using namespace OHOS::Media;

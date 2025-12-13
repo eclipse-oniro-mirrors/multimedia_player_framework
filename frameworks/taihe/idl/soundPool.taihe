@@ -35,6 +35,11 @@ enum ErrorType: i32 {
     PLAY_ERROR = 2
 }
 
+enum InterruptMode: i32 {
+    NO_INTERRUPT = 0,
+    SAME_SOUND_INTERRUPT = 1
+}
+
 @!sts_inject("""
 export interface ErrorInfo<T extends Error = BusinessError> {
     errorCode: T;
@@ -100,6 +105,8 @@ interface SoundPool {
     @gen_async("setVolume")
     @gen_promise("setVolume")
     SetVolumeSync(streamID: i32, leftVolume: f64, rightVolume: f64): void;
+
+    SetInterruptMode(interruptMode: InterruptMode): void;
 
     @gen_async("unload")
     @gen_promise("unload")
