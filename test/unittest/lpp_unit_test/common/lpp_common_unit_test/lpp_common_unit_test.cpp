@@ -40,6 +40,7 @@ void LppDataPacketUnitTest::SetUp(void)
 void LppDataPacketUnitTest::TearDown(void)
 {
     if (packet_ != nullptr) {
+        packet_->Clear();
         packet_.reset();
     }
 }
@@ -163,5 +164,48 @@ HWTEST_F(LppDataPacketUnitTest, WriteOneFrameToAVBuffer_002, TestSize.Level1)
     offset += sizeof(uint32_t);
     EXPECT_NE(packet_->WriteOneFrameToAVBuffer(buffer, offset), true);
 }
+
+/**
+ * @tc.name  : WriteOneFrameToAVBuffer_003
+ * @tc.number: WriteOneFrameToAVBuffer
+ * @tc.desc  : FUNC
+ */
+
+HWTEST_F(LppDataPacketUnitTest, WriteOneFrameToAVBuffer_003, TestSize.Level1)
+{
+    packet_->flag_.push_back(MediaAVCodec::AVCODEC_BUFFER_FLAG_EOS);
+    packet_->vectorReadIndex_ = 1;
+    packet_->pts_.push_back(2);
+    packet_->size_.push_back(3);
+    EXPECT_TRUE(packet_->IsEmpty());
+    auto allocator = AVAllocatorFactory::CreateSharedAllocator(MemoryFlag::MEMORY_READ_WRITE);
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer(allocator, MAX_BUFFER_SIZE_TEST);
+    packet_->memory_ = buffer->memory_;
+    EXPECT_FALSE(packet_->IsEos());
+    packet_->Disable();
+    EXPECT_NE(packet_->WriteOneFrameToAVBuffer(buffer), true);
+}
+
+/**
+ * @tc.name  : WriteOneFrameToAVBuffer_004
+ * @tc.number: WriteOneFrameToAVBuffer
+ * @tc.desc  : FUNC
+ */
+
+HWTEST_F(LppDataPacketUnitTest, WriteOneFrameToAVBuffer_004, TestSize.Level1)
+{
+    packet_->flag_.push_back(MediaAVCodec::AVCODEC_BUFFER_FLAG_EOS);
+    packet_->vectorReadIndex_ = 1;
+    packet_->pts_.push_back(2);
+    packet_->size_.push_back(3);
+    EXPECT_TRUE(packet_->IsEmpty());
+    auto allocator = AVAllocatorFactory::CreateSharedAllocator(MemoryFlag::MEMORY_READ_WRITE);
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer(allocator, MAX_BUFFER_SIZE_TEST);
+    packet_->memory_ = buffer->memory_;
+    EXPECT_FALSE(packet_->IsEos());
+    packet_->IsEnable();
+    buffer=nullptr;
+    EXPECT_NE(packet_->WriteOneFrameToAVBuffer(buffer), true);
+}
 } // namespace Media
-} // namespace OHOS
+} // namespace OHOS
