@@ -48,6 +48,7 @@ public:
     void SetPrioritySync(int32_t streamID, int32_t priority);
     void SetRateSync(int32_t streamID, ::ohos::multimedia::audio::AudioRendererRate rate);
     void SetVolumeSync(int32_t streamID, double leftVolume, double rightVolume);
+    void SetInterruptMode(::soundPool::InterruptMode interruptMode);
     void OnError(callback_view<void(uintptr_t)> callback);
     void OffError();
 
