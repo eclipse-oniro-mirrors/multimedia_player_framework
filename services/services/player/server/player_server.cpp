@@ -216,6 +216,7 @@ int32_t PlayerServer::SetSource(int32_t fd, int64_t offset, int64_t size)
         }
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
         uriHelper_ = std::move(uriHelper);
+        CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_INVALID_VAL, "playerEngine_ is nullptr");
         playerEngine_->SetPerfRecEnabled(
             uriHelper_ != nullptr && uriHelper_->GetFdLocation() == FdLocation::LOCAL);
     }
