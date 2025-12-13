@@ -23,6 +23,7 @@
 #include "audio_info.h"
 #include "audio_effect.h"
 #include "player.h"
+#include "avmetadatahelper_callback_taihe.h"
 
 namespace ANI::Media {
 using namespace taihe;
@@ -39,11 +40,15 @@ public:
     optional<AVMetadata> FetchMetadataSync();
     optional<ohos::multimedia::image::image::PixelMap> FetchAlbumCoverSync();
     void ReleaseSync();
+    void CancelAllFetchFrames();
     int32_t GetFrameIndexByTimeSync(int64_t timeUs);
     int64_t GetTimeByFrameIndexSync(int32_t index);
     void SetUrlSource(::taihe::string_view url, optional_view<map<string, string>> header);
     optional<::ohos::multimedia::image::image::PixelMap> FetchFrameByTimeSync(int64_t timeUs,
         AVImageQueryOptions options, PixelMapParams const& param);
+    void FetchFramesByTimes(array_view<int64_t> timeUs, AVImageQueryOptions options, PixelMapParams const& param,
+        callback_view<void(::ohos::multimedia::media::FrameInfo const& frameInfo,
+        optional_view<uintptr_t> err)> callback);
 private:
     std::shared_ptr<OHOS::Media::AVMetadataHelper> helper_;
     std::shared_ptr<OHOS::Media::HelperDataSourceCallback> dataSrcCb_ = nullptr;
@@ -56,6 +61,9 @@ private:
     void SetMetadataProperty(std::shared_ptr<OHOS::Media::Meta> metadata, AVMetadata &res);
     bool SetPropertyByType(AVMetadata &res, std::shared_ptr<OHOS::Media::Meta> metadata, std::string key);
     void SetDefaultMetadataProperty(AVMetadata &res);
+    void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
+    void setHelper(const std::shared_ptr<OHOS::Media::AVMetadataHelper> &helper);
+    std::shared_ptr<OHOS::Media::HelperCallback> helperCb_ = nullptr;
 };
 } // namespace ANI::Media
 #endif // AVMETADATAEXTRACTOR_TAIHE_H

@@ -163,6 +163,7 @@ taihe_shared_library("media_taihe") {
   sources += [
     "media/src/ani_constructor.cpp",
     "media/src/avimagegenerator_taihe.cpp",
+    "media/src/avmetadatahelper_callback_taihe.cpp",
     "media/src/avmetadataextractor_taihe.cpp",
     "media/src/avplayer_callback_taihe.cpp",
     "media/src/avplayer_taihe.cpp",

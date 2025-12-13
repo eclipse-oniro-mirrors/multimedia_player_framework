@@ -207,6 +207,7 @@ void AVMetadataHelperCallback::SendPixelCompleteCallback(const FrameInfo &info,
     AVMetadataJsCallback *cb = new(std::nothrow) AVMetadataJsCallback();
     CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
     cb->autoRef = refMap_.at(AVMetadataHelperEvent::EVENT_PIXEL_COMPLETE);
+    cb->callbackName = AVMetadataHelperEvent::EVENT_PIXEL_COMPLETE;
     cb->requestedTimeUs = info.requestedTimeUs;
     cb->actualTimeUs = info.actualTimeUs;
     cb->fetchResult = static_cast<FetchResult>(info.fetchResult);
@@ -225,7 +226,8 @@ void AVMetadataHelperCallback::SendPixelCompleteCallback(const FrameInfo &info,
             break;
         default:
             cb->errorMs = "NO_ERR";
-    }
+    };
+    this->OnJsPixelCompleteCallback(cb);
 }
 
 void AVMetadataHelperCallback::OnJsPixelCompleteCallback(AVMetadataJsCallback *jsCb) const
