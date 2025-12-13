@@ -1075,9 +1075,20 @@ int32_t AVScreenCaptureNapi::GetStrategy(std::unique_ptr<AVScreenCaptureAsyncCon
             strategy.enableBFrame), MSERR_INVALID_VAL, "enableBFrame invalid");
         strategy.setByUser = true;
     }
+    // get privacyMaskMode
+    status = napi_has_named_property(env, strategyVal, "privacyMaskMode", &exist);
+    if (status == napi_ok && exist) {
+        int32_t value = 0;
+        auto ret = AVScreenCaptureNapi::GetPropertyInt32(env, strategyVal, "privacyMaskMode", value);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, (asyncCtx->AVScreenCaptureSignError(
+            MSERR_INVALID_VAL, "getPrivacyMaskMode", "privacyMaskMode"), MSERR_INVALID_VAL));
+        CHECK_AND_RETURN_RET_LOG(value == 0 || value == 1, MSERR_INVALID_VAL, "privacyMaskMode invalid");
+        strategy.strategyForPrivacyMaskMode = value;
+        strategy.setByUser = true;
+    }
     MEDIA_LOGI("GetStrategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d, "
-        "enableBFrame: %{public}d", strategy.enableDeviceLevelCapture, strategy.keepCaptureDuringCall,
-        strategy.enableBFrame);
+        "enableBFrame: %{public}d, strategyForPrivacyMaskMode: %{public}d", strategy.enableDeviceLevelCapture,
+        strategy.keepCaptureDuringCall, strategy.enableBFrame, strategy.strategyForPrivacyMaskMode);
     return MSERR_OK;
 }
 
