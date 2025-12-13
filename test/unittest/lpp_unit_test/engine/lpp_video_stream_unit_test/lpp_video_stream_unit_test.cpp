@@ -762,7 +762,7 @@ HWTEST_F(LppVideoStreamUnitTest, SetLppAudioStreamerId_001, TestSize.Level1)
     ASSERT_NE(nullptr, videoStreamImpl_);
     std::string audioStreamerId = "";
     auto &lppEngineManager = ILppEngineManager::GetInstance();
-    EXPECT_CALL(lppEngineManager, GetLppAudioInstance(strEq("")).WillOnce(Return(nullptr));
+    EXPECT_CALL(lppEngineManager, GetLppAudioInstance(StrEq(""))).WillOnce(Return(nullptr));
     auto ret = videoStreamImpl_->SetLppAudioStreamerId(audioStreamerId);
     EXPECT_NE(ret, MSERR_OK);
 }
