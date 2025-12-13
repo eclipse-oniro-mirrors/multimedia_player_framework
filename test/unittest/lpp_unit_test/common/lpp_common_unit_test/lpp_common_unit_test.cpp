@@ -195,7 +195,7 @@ HWTEST_F(LppDataPacketUnitTest, WriteOneFrameToAVBuffer_003, TestSize.Level1)
 HWTEST_F(LppDataPacketUnitTest, WriteOneFrameToAVBuffer_004, TestSize.Level1)
 {
     packet_->flag_.push_back(MediaAVCodec::AVCODEC_BUFFER_FLAG_EOS);
-    packet_->vectorReadIndex_ = 1;
+    packet_->vectorReadIndex_ = 0;
     packet_->pts_.push_back(2);
     packet_->size_.push_back(3);
     EXPECT_FALSE(packet_->IsEmpty());
