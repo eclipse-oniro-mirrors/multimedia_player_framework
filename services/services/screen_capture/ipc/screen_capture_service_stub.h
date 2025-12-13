@@ -23,6 +23,16 @@
 
 namespace OHOS {
 namespace Media {
+
+#define FALSE_RETURN_AND_REPLY(cond, ret, fmt, ...)   \
+    do {                                              \
+        if (!(cond)) {                                \
+            MEDIA_LOGE(fmt, ##__VA_ARGS__);           \
+            reply.WriteInt32(ret);                    \
+            return ret;                               \
+        }                                             \
+    } while (0)
+
 class ScreenCaptureServiceStub : public IRemoteStub<IStandardScreenCaptureService>, public NoCopyable {
 public:
     static sptr<ScreenCaptureServiceStub> Create();

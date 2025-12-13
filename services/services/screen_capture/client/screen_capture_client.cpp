@@ -174,26 +174,16 @@ int32_t ScreenCaptureClient::ExcludeContent(ScreenCaptureContentFilter &contentF
 
 int32_t ScreenCaptureClient::ExcludePickerWindows(std::vector<int32_t> &windowIDsVec)
 {
-#ifdef PC_STANDARD
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
     return screenCaptureProxy_->ExcludePickerWindows(windowIDsVec);
-#else
-    (void)windowIDsVec;
-    return MSERR_INVALID_OPERATION;
-#endif
 }
 
 int32_t ScreenCaptureClient::SetPickerMode(PickerMode pickerMode)
 {
-#ifdef PC_STANDARD
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
     return screenCaptureProxy_->SetPickerMode(pickerMode);
-#else
-    (void)pickerMode;
-    return MSERR_INVALID_OPERATION;
-#endif
 }
 
 int32_t ScreenCaptureClient::SetMicrophoneEnabled(bool isMicrophone)
