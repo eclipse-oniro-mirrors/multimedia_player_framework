@@ -151,7 +151,7 @@ void AudioHapticPlayerCallbackNapi::OnInterruptJsCallback(std::unique_ptr<AudioH
         } while (0);
         napi_close_handle_scope(env, scope);
     };
-    auto ret = napi_send_event(env_, task, napi_eprio_high);
+    auto ret = napi_send_event(env_, task, napi_eprio_high, "audioInterrupt");
     if (ret != napi_status::napi_ok) {
         MEDIA_LOGE("Failed to SendEvent, ret = %{public}d", ret);
         delete event;
@@ -212,7 +212,7 @@ void AudioHapticPlayerCallbackNapi::OnEndOfStreamJsCallback(std::unique_ptr<Audi
         } while (0);
         napi_close_handle_scope(env, scope);
     };
-    auto ret = napi_send_event(env_, task, napi_eprio_high);
+    auto ret = napi_send_event(env_, task, napi_eprio_high, "endOfStream");
     if (ret != napi_status::napi_ok) {
         MEDIA_LOGE("Failed to SendEvent, ret = %{public}d", ret);
         delete event;
