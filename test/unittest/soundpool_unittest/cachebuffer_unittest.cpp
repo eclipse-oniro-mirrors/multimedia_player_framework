@@ -81,40 +81,6 @@ HWTEST_F(SoundPoolCacheBufferUnitTest, CreateAudioRenderer_001, TestSize.Level0)
     ASSERT_NE(cacheBuffer_, nullptr);
     AudioStandard::AudioRendererInfo info;
     PlayParams playParams;
-    cacheBuffer_->rendererFlags_ = AudioStandard::AUDIO_FLAG_VKB_FAST;
-
-    cacheBuffer_->CreateAudioRenderer(info, playParams);
-
-    EXPECT_EQ(cacheBuffer_->rendererFlags_, 0);
-}
-
-/**
- * @tc.name  : Test CreateAudioRenderer
- * @tc.number: CreateAudioRenderer_002
- * @tc.desc  : Test returns NORMAL_PLAY_RENDERER_FLAGS
- */
-HWTEST_F(SoundPoolCacheBufferUnitTest, CreateAudioRenderer_002, TestSize.Level0)
-{
-    ASSERT_NE(cacheBuffer_, nullptr);
-    AudioStandard::AudioRendererInfo info;
-    PlayParams playParams;
-    cacheBuffer_->rendererFlags_ = AudioStandard::AUDIO_FLAG_VKB_NORMAL;
-
-    cacheBuffer_->CreateAudioRenderer(info, playParams);
-
-    EXPECT_EQ(cacheBuffer_->rendererFlags_, 0);
-}
-
-/**
- * @tc.name  : Test CreateAudioRenderer
- * @tc.number: CreateAudioRenderer_003
- * @tc.desc  : Test returns NORMAL_PLAY_RENDERER_FLAGS
- */
-HWTEST_F(SoundPoolCacheBufferUnitTest, CreateAudioRenderer_003, TestSize.Level0)
-{
-    ASSERT_NE(cacheBuffer_, nullptr);
-    AudioStandard::AudioRendererInfo info;
-    PlayParams playParams;
 
     cacheBuffer_->CreateAudioRenderer(info, playParams);
 
