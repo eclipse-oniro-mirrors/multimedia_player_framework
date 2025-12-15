@@ -300,7 +300,7 @@ int32_t AudioStream::DoPlayWithSameSoundInterrupt()
         "pcmBufferFrameIndex_ is %{public}zu, pcmBufferSize_ is %{public}zu", streamID_, bufferSize,
         pcmBufferFrameIndex_, pcmBufferSize_);
     if (audioRenderer_->GetStatus() == OHOS::AudioStandard::RendererState::RENDERER_RUNNING &&
-        streamState_load() == StreamState::PLAYING) {
+        streamState_.load() == StreamState::PLAYING) {
         if (streamCallback_ != nullptr) {
             streamCallback_->OnPlayFinished(streamID_);
         }
@@ -310,7 +310,7 @@ int32_t AudioStream::DoPlayWithSameSoundInterrupt()
             callback_->OnPlayFinished(streamID_);
         }
     }
-    if (streamState_load() == StreamState::PREPARED || streamState_load() == StreamState::STOPPED) {
+    if (streamState_.load() == StreamState::PREPARED || streamState_.load() == StreamState::STOPPED) {
         streamState_.store(StreamState::PLAYING);
     }
     if (!audioRenderer_->Start()) {
@@ -357,7 +357,7 @@ int32_t AudioStream::Stop()
                 MEDIA_LOGI("AudioStream::Stop time out");
             });
         if (streamCallback_ != nullptr) {
-            MEDIA_LOGI("streamCallback_ call OnPlayFinished");
+            MEDIA_LOGI("streamCallback_ call OnPlayFinished.");
             streamCallback_->OnPlayFinished(streamID_);
         }
         audioRenderer_->Stop();
