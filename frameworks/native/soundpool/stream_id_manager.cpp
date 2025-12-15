@@ -448,7 +448,7 @@ void StreamIDManager::RemoveInvalidStreamsInInterruptMode()
     };
     for (const StreamState &state : statesToCheck) {
         for (auto it = soundID2Stream_.begin(); it != soundID2Stream_.end();) {
-            CHECK_AND_RETURN(currentStreamsNum_.load() <= MAX_NUMBER_OF_HELD_STREAMS);
+            CHECK_AND_RETURN(currentStreamsNum_.load() > MAX_NUMBER_OF_HELD_STREAMS);
             if (it->second != nullptr && state == it->second->GetStreamState()) {
                 it->second->Release();
                 it = soundID2Stream_.erase(it);
@@ -467,23 +467,31 @@ void StreamIDManager::RemoveInvalidStreamsInNoInterruptMode()
         StreamState::RELEASED, StreamState::STOPPED
     };
     for (const StreamState &state : statesToCheck) {
-        for (auto &mem : soundID2MultiStreams_) {
-            CHECK_AND_RETURN(currentStreamsNum_.load() <= MAX_NUMBER_OF_HELD_STREAMS);
-            std::list<std::shared_ptr<AudioStream>> &streams = mem.second;
-            for (auto it = streams.begin(); it != streams.end();) {
-                CHECK_AND_RETURN(currentStreamsNum_.load() <= MAX_NUMBER_OF_HELD_STREAMS);
-                if ((*it) != nullptr && state == (*it)->GetStreamState()) {
-                    MEDIA_LOGE("RemoveInvalidStreamsInNoInterruptMode, NO_INTERRUPT, streamID is %{public}d",
-                        (*it)->GetStreamID());
-                    (*it)->Release();
-                    it = streams.erase(it);
-                    currentStreamsNum_--;
-                    continue;
-                }
-                it++;
-            }
+        if (InnerProcessOfRemoveInvalidStreamsInNoInterruptMode(state)) {
+            return;
         }
     }
+}
+
+bool StreamIDManager::InnerProcessOfRemoveInvalidStreamsInNoInterruptMode(const StreamState &state)
+{
+    for (auto &mem : soundID2MultiStreams_) {
+        CHECK_AND_RETURN_RET(currentStreamsNum_.load() > MAX_NUMBER_OF_HELD_STREAMS, true);
+        std::list<std::shared_ptr<AudioStream>> &streams = mem.second;
+        for (auto it = streams.begin(); it != streams.end();) {
+            CHECK_AND_RETURN_RET(currentStreamsNum_.load() > MAX_NUMBER_OF_HELD_STREAMS, true);
+            if ((*it) != nullptr && state == (*it)->GetStreamState()) {
+                MEDIA_LOGE("RemoveInvalidStreamsInNoInterruptMode, NO_INTERRUPT, streamID is %{public}d",
+                    (*it)->GetStreamID());
+                (*it)->Release();
+                it = streams.erase(it);
+                currentStreamsNum_--;
+                continue;
+            }
+            it++;
+        }
+    }
+    return false;
 }
 
 std::shared_ptr<AudioStream> StreamIDManager::GetStreamByStreamIDWithLock(int32_t streamID)
