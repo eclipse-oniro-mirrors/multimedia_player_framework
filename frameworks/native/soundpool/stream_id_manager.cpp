@@ -159,7 +159,7 @@ int32_t StreamIDManager::SetPlayWithSameSoundInterrupt(int32_t soundID, int32_t 
     stream->SetPriorityWithoutLock(playParameters.priority);
     stream->ConfigurePlayParametersWithoutLock(audioRendererInfo_, playParameters);
 
-    if (playingStreamIDs_.size() < static_cast<size_t(maxStreams_)) {
+    if (playingStreamIDs_.size() < static_cast<size_t>(maxStreams_)) {
         MEDIA_LOGI("SetPlayWithSameSoundInterrupt, playingStreamIDs_.size is %{public}zu < %{public}d",
             playingStreamIDs_.size(), maxStreams_);
         AddPlayTask(streamID);
@@ -448,9 +448,7 @@ void StreamIDManager::RemoveInvalidStreamsInInterruptMode()
     };
     for (const StreamState &state : statesToCheck) {
         for (auto it = soundID2Stream_.begin(); it != soundID2Stream_.end();) {
-            if (currentStreamsNum_.load() <= MAX_NUMBER_OF_HELD_STREAMS) {
-                return;
-            }
+            CHECK_AND_RETURN(currentStreamsNum_.load() <= MAX_NUMBER_OF_HELD_STREAMS);
             if (it->second != nullptr && state == it->second->GetStreamState()) {
                 it->second->Release();
                 it = soundID2Stream_.erase(it);
@@ -470,14 +468,10 @@ void StreamIDManager::RemoveInvalidStreamsInNoInterruptMode()
     };
     for (const StreamState &state : statesToCheck) {
         for (auto &mem : soundID2MultiStreams_) {
-            if (currentStreamsNum_.load() <= MAX_NUMBER_OF_HELD_STREAMS) {
-                return;
-            }
+            CHECK_AND_RETURN(currentStreamsNum_.load() <= MAX_NUMBER_OF_HELD_STREAMS);
             std::list<std::shared_ptr<AudioStream>> &streams = mem.second;
             for (auto it = streams.begin(); it != streams.end();) {
-                if (currentStreamsNum_.load() <= MAX_NUMBER_OF_HELD_STREAMS) {
-                    return;
-                }
+                CHECK_AND_RETURN(currentStreamsNum_.load() <= MAX_NUMBER_OF_HELD_STREAMS);
                 if ((*it) != nullptr && state == (*it)->GetStreamState()) {
                     MEDIA_LOGE("RemoveInvalidStreamsInNoInterruptMode, NO_INTERRUPT, streamID is %{public}d",
                         (*it)->GetStreamID());
