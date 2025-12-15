@@ -211,6 +211,8 @@ HWTEST_F(LppVideoStreamUnitTest, OnEvent_001, TestSize.Level1)
     videoStreamImpl_->OnEvent({"VideoSource", EventType::EVENT_COMPLETE, ""});
     videoStreamImpl_->OnEvent({"VideoSource", EventType::EVENT_RESOLUTION_CHANGE, ""});
     videoStreamImpl_->OnEvent({"VideoSource", EventType::EVENT_BUFFERING, ""});
+    videoStreamImpl_->OnEvent({"VideoSource", EventType::EVENT_VIDEO_TARGET_ARRIVED, ""});
+    videoStreamImpl_->OnEvent({"VideoSource", EventType::EVENT_ERROR, ""});
     EXPECT_EQ(videoStreamImpl_->callbackLooper_, nullptr);
 }
 
@@ -732,6 +734,37 @@ HWTEST_F(LppVideoStreamUnitTest, HandleResolutionChangeEvent_001, TestSize.Level
     EXPECT_CALL(*callbackLooper_, OnStreamChanged(_)).Times(1);
 
     videoStreamImpl_->HandleResolutionChangeEvent(event);
+}
+
+/**
+ * @tc.name    : Test SetObs API
+ * @tc.number  : SetObs_001
+ * @tc.desc    : Test SetObs interface with valid obs
+ * @tc.require : issueI5NZAQ
+ */
+HWTEST_F(LppVideoStreamUnitTest, SetObs_001, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoStreamImpl_);
+    videoStreamImpl_->callbackLooper_ = callbackLooper_;
+    std::weak_ptr<ILppVideoStreamerEngineObs> obs;
+    EXPECT_CALL(*callbackLooper_, StartWithLppVideoStreamerEngineObs(_)).Times(1);
+    videoStreamImpl_->SetObs(obs);
+}
+
+/**
+ * @tc.name    : Test SetLppAudioStreamerId API
+ * @tc.number  : SetLppAudioStreamerId_001
+ * @tc.desc    : Test SetLppAudioStreamerId interface with valid audioStreamerId
+ * @tc.require : issueI5NZAQ
+ */
+HWTEST_F(LppVideoStreamUnitTest, SetLppAudioStreamerId_001, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoStreamImpl_);
+    std::string audioStreamerId = "";
+    auto &lppEngineManager = ILppEngineManager::GetInstance();
+    EXPECT_CALL(lppEngineManager, GetLppAudioInstance(StrEq(""))).WillOnce(Return(nullptr));
+    auto ret = videoStreamImpl_->SetLppAudioStreamerId(audioStreamerId);
+    EXPECT_NE(ret, MSERR_OK);
 }
 
 /**
