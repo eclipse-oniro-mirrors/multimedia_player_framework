@@ -261,6 +261,36 @@ napi_value SystemSoundManagerNapi::CreateSystemSoundErrorObject(napi_env env)
     return soundResult;
 }
 
+napi_value SystemSoundManagerNapi::CreateSystemSoundTypeObject(napi_env env)
+{
+    napi_value result = nullptr;
+    napi_status status;
+    std::string propName;
+    int32_t refCount = 1;
+
+    status = napi_create_object(env, &result);
+    if (status == napi_ok) {
+        for (auto &iter: systemSoundTypeModeMap) {
+            propName = iter.first;
+            status = AddNamedProperty(env, result, propName, iter.second);
+            if (status != napi_ok) {
+                MEDIA_LOGE("CreateSystemToneTypeObject: Failed to add named prop!");
+                break;
+            }
+            propName.clear();
+        }
+        if (status == napi_ok) {
+            status = napi_create_reference(env, result, refCount, &systemToneType_);
+            if (status == napi_ok) {
+                return result;
+            }
+        }
+    }
+    napi_get_undefined(env, &result);
+
+    return result;
+}
+
 napi_value SystemSoundManagerNapi::CreateToneCategoryRingtoneObject(napi_env env)
 {
     napi_value toneCategoryRingtone;
@@ -360,6 +390,7 @@ napi_status SystemSoundManagerNapi::DefineStaticProperties(napi_env env, napi_va
         DECLARE_NAPI_PROPERTY("TONE_CATEGORY_NOTIFICATION_APP", CreateToneCategoryNotificationAppObject(env)),
         DECLARE_NAPI_PROPERTY("ToneHapticsMode", CreateToneHapticsModeObject(env)),
         DECLARE_NAPI_PROPERTY("SystemSoundError", CreateSystemSoundErrorObject(env)),
+        DECLARE_NAPI_PROPERTY("SystemSoundType", CreateSystemSoundTypeObject(env)),
     };
 
     return napi_define_properties(env, exports, sizeof(static_prop) / sizeof(static_prop[0]), static_prop);

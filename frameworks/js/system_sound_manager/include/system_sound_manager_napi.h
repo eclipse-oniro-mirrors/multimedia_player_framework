@@ -77,6 +77,12 @@ static const std::map<std::string, SystemSoundError> systemSoundErrorModeMap = {
     {"ERROR_INVALID_PARAM", ERROR_INVALID_PARAM},
 };
 
+static const std::map<std::string, SystemSoundType> systemSoundTypeModeMap = {
+    {"PHOTO_SHUTTER", PHOTO_SHUTTER},
+    {"VIDEO_RECORDING_BEGIN", VIDEO_RECORDING_BEGIN},
+    {"VIDEO_RECORDING_END", VIDEO_RECORDING_END},
+};
+
 class SystemSoundManagerNapi {
 public:
     static napi_value Init(napi_env env, napi_value exports);
@@ -107,6 +113,7 @@ private:
     static napi_value CreateToneHapticsTypeObject(napi_env env);
     static napi_value CreateToneHapticsModeObject(napi_env env);
     static napi_value CreateSystemSoundErrorObject(napi_env env);
+    static napi_value CreateSystemSoundTypeObject(napi_env env);
     static std::shared_ptr<AbilityRuntime::Context> GetAbilityContext(napi_env env, napi_value contextArg);
     static bool VerifySelfSystemPermission();
     static bool VerifyRingtonePermission();
@@ -201,6 +208,7 @@ private:
     static thread_local napi_ref toneCustomizedType_;
     static thread_local napi_ref toneHapticsMode_;
     static thread_local napi_ref systemSoundError_;
+    static thread_local napi_ref systemSoundType_;
 
     napi_env env_;
 
