@@ -20,6 +20,7 @@
 #include "media_errors.h"
 #include "media_log.h"
 #include "securec.h"
+#include "stream_id_manager.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SOUNDPOOL, "AudioStream"};

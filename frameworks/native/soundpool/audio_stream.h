@@ -28,7 +28,6 @@
 #include "media_description.h"
 #include "media_dfx.h"
 #include "soundpool_xcollie.h"
-#include "stream_id_manager.h"
 #include "thread_pool.h"
 
 namespace OHOS {
