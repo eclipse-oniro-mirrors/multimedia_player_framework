@@ -26,11 +26,6 @@
 namespace OHOS {
 namespace Media {
 static const std::string g_SYSTEM_SOUND_PLAYER_NAPI_CLASS_NAME = "SystemSoundPlayer";
-static const std::map<std::string, SystemSoundType> g_SYSTEM_SOUND_TYPE_MAP = {
-    {"PHOTO_SHUTTER ", PHOTO_SHUTTER},
-    {"VIDEO_RECORDING_BEGIN ", VIDEO_RECORDING_BEGIN},
-    {"VIDEO_RECORDING_END", VIDEO_RECORDING_END},
-};
 
 class SystemSoundPlayerNapi {
 public:
@@ -43,11 +38,9 @@ public:
 private:
     static napi_status DefineStaticProperties(napi_env env, napi_value exports);
     static napi_status DefineClassProperties(napi_env env, napi_value &ctorObj);
-    static napi_value CreateSystemSoundTypeObject(napi_env env);
     static napi_value Construct(napi_env env, napi_callback_info info);
     static void Destructor(napi_env env, void* nativeObject, void* finalize_hint);
 
-    static napi_status AddNamedProperty(napi_env env, napi_value object, const std::string name, int32_t enumValue);
     static napi_value ThrowErrorAndReturn(napi_env env, const std::string& napiMessage, int32_t napiCode);
     static napi_value AsyncThrowErrorAndReturn(napi_env env, const std::string& napiMessage, int32_t napiCode);
 

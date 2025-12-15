@@ -64,15 +64,6 @@ bool SystemSoundPlayerNapi::IsSystemSoundTypeValid(int32_t systemSoundType)
     return systemSoundType >= PHOTO_SHUTTER && systemSoundType <= VIDEO_RECORDING_END;
 }
 
-napi_status SystemSoundPlayerNapi::DefineStaticProperties(napi_env env, napi_value exports)
-{
-    napi_property_descriptor static_prop[] = {
-        DECLARE_NAPI_PROPERTY("SystemSoundType", CreateSystemSoundTypeObject(env)),
-    };
-
-    return napi_define_properties(env, exports, sizeof(static_prop) / sizeof(static_prop[0]), static_prop);
-}
-
 napi_status SystemSoundPlayerNapi::DefineClassProperties(napi_env env, napi_value &ctorObj)
 {
     napi_property_descriptor system_sound_player_prop[] = {
@@ -85,50 +76,6 @@ napi_status SystemSoundPlayerNapi::DefineClassProperties(napi_env env, napi_valu
     return napi_define_class(env, g_SYSTEM_SOUND_PLAYER_NAPI_CLASS_NAME.c_str(), NAPI_AUTO_LENGTH,
         Construct, nullptr, sizeof(system_sound_player_prop) / sizeof(system_sound_player_prop[0]),
         system_sound_player_prop, &ctorObj);
-}
-
-napi_value SystemSoundPlayerNapi::CreateSystemSoundTypeObject(napi_env env)
-{
-    napi_value result = nullptr;
-    napi_status status;
-    std::string propName;
-    int32_t refCount = 1;
-
-    status = napi_create_object(env, &result);
-    if (status == napi_ok) {
-        for (auto &iter: g_SYSTEM_SOUND_TYPE_MAP) {
-            propName = iter.first;
-            status = AddNamedProperty(env, result, propName, iter.second);
-            if (status != napi_ok) {
-                MEDIA_LOGE("CreateSystemSoundTypeObject: Failed to add named prop!");
-                break;
-            }
-            propName.clear();
-        }
-        if (status == napi_ok) {
-            status = napi_create_reference(env, result, refCount, &g_systemSoundType);
-            if (status == napi_ok) {
-                return result;
-            }
-        }
-    }
-    napi_get_undefined(env, &result);
-
-    return result;
-}
-
-napi_status SystemSoundPlayerNapi::AddNamedProperty(napi_env env, napi_value object, const std::string name,
-    int32_t enumValue)
-{
-    napi_status status;
-    napi_value napiValue;
-
-    status = napi_create_int32(env, enumValue, &napiValue);
-    if (status == napi_ok) {
-        status = napi_set_named_property(env, object, name.c_str(), napiValue);
-    }
-
-    return status;
 }
 
 napi_value SystemSoundPlayerNapi::Init(napi_env env, napi_value exports)
@@ -147,11 +94,6 @@ napi_value SystemSoundPlayerNapi::Init(napi_env env, napi_value exports)
     }
 
     status = napi_set_named_property(env, exports, g_SYSTEM_SOUND_PLAYER_NAPI_CLASS_NAME.c_str(), ctorObj);
-    if (status != napi_ok) {
-        return nullptr;
-    }
-
-    status = DefineStaticProperties(env, exports);
     if (status != napi_ok) {
         return nullptr;
     }
