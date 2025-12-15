@@ -52,11 +52,11 @@ void AVMetaDataCollectorUnitTest::TearDown(void)
 }
  
 /**
- * @tc.name: ExtractMetadata
- * @tc.desc: ExtractMetadata
+ * @tc.name: ExtractMetadata_001
+ * @tc.desc: ExtractMetadata_001
  * @tc.type: FUNC
  */
-HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadata, TestSize.Level1)
+HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadata_001, TestSize.Level1)
 {
     std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
     std::shared_ptr<Meta> videoMeta = std::make_shared<Meta>();
@@ -98,6 +98,90 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadata, TestSize.Level1)
     EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
     avmetaDataCollector->ExtractMetadata();
     EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+}
+
+/**
+ * @tc.name: ExtractMetadata_002
+ * @tc.desc: ExtractMetadata_002
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadata_002, TestSize.Level1)
+{
+    std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
+    std::shared_ptr<Meta> videoMeta = std::make_shared<Meta>();
+    std::shared_ptr<Meta> imageMeta = std::make_shared<Meta>();
+    std::vector<std::shared_ptr<Meta>> trackInfos;
+    EXPECT_CALL(*mediaDemuxer, GetGlobalMetaInfo()).WillRepeatedly(Return(nullptr));
+    EXPECT_CALL(*mediaDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(trackInfos));
+    EXPECT_TRUE(avmetaDataCollector->ExtractMetadata().size() == 0);
+ 
+    globalMeta->SetData(Tag::MEDIA_ALBUM, "media");
+    globalMeta->SetData(Tag::MEDIA_ALBUM_ARTIST, "media_test");
+    globalMeta->SetData(Tag::MEDIA_ARTIST, "元数据测试");
+    globalMeta->SetData(Tag::MEDIA_AUTHOR, "");
+    globalMeta->SetData(Tag::MEDIA_COMPOSER, "测试");
+    globalMeta->SetData(Tag::MEDIA_DURATION, 10030000);
+    globalMeta->SetData(Tag::MEDIA_GENRE, "Lyrical");
+    globalMeta->SetData(Tag::MEDIA_HAS_AUDIO, true);
+    globalMeta->SetData(Tag::MEDIA_HAS_VIDEO, true);
+    globalMeta->SetData(Tag::MEDIA_TITLE, "test");
+    globalMeta->SetData(Tag::MEDIA_TRACK_COUNT, "3");
+    globalMeta->SetData(Tag::MEDIA_DATE, "2022");
+    globalMeta->SetData(Tag::MEDIA_FILE_TYPE, Plugins::FileType::OGG);
+ 
+    videoMeta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    videoMeta->SetData(Tag::VIDEO_ORIENTATION_TYPE, Plugins::VideoOrientationType::ROTATE_NONE);
+    videoMeta->SetData(Tag::VIDEO_HEIGHT, "480");
+    videoMeta->SetData(Tag::VIDEO_WIDTH, "720");
+    videoMeta->SetData(Tag::MIME_TYPE, "video/mp4");
+ 
+    imageMeta->SetData(Tag::MIME_TYPE, "image");
+    
+    trackInfos.push_back(videoMeta);
+    trackInfos.push_back(imageMeta);
+    trackInfos.push_back(nullptr);
+ 
+    EXPECT_CALL(*mediaDemuxer, GetGlobalMetaInfo()).WillRepeatedly(Return(globalMeta));
+    EXPECT_CALL(*mediaDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(trackInfos));
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+}
+
+/**
+ * @tc.name: GetMetadata_001
+ * @tc.desc: GetMetadata_001
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, GetMetadata_001, TestSize.Level1)
+{
+    std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
+    std::shared_ptr<Meta> audioMeta = std::make_shared<Meta>();
+    std::vector<std::shared_ptr<Meta>> trackInfos;
+ 
+    globalMeta->SetData(Tag::MEDIA_ALBUM, "media");
+    globalMeta->SetData(Tag::MEDIA_ALBUM_ARTIST, "media_test");
+    globalMeta->SetData(Tag::MEDIA_ARTIST, "元数据测试");
+    globalMeta->SetData(Tag::MEDIA_AUTHOR, "");
+    globalMeta->SetData(Tag::MEDIA_COMPOSER, "测试");
+    globalMeta->SetData(Tag::MEDIA_DURATION, 10030000);
+    globalMeta->SetData(Tag::MEDIA_GENRE, "Lyrical");
+    globalMeta->SetData(Tag::MEDIA_HAS_AUDIO, true);
+    globalMeta->SetData(Tag::MEDIA_HAS_VIDEO, true);
+    globalMeta->SetData(Tag::MEDIA_TITLE, "test");
+    globalMeta->SetData(Tag::MEDIA_TRACK_COUNT, "3");
+    globalMeta->SetData(Tag::MEDIA_DATE, "2022");
+    globalMeta->SetData(Tag::MEDIA_FILE_TYPE, Plugins::FileType::OGG);
+ 
+    audioMeta->SetData(Tag::MIME_TYPE, std::string("audio/vorbis"));
+    audioMeta->SetData(Tag::MEDIA_ARTIST, std::string("TrackArtist"));
+    audioMeta->SetData(Tag::MEDIA_ALBUM, std::string("TrackAlbum"));
+    audioMeta->SetData(Tag::MEDIA_TITLE, std::string("SameTitle"));
+    trackInfos.push_back(audioMeta);
+ 
+    auto map = avmetaDataCollector->GetMetadata(globalMeta, trackInfos);
+    EXPECT_TRUE(map[AV_KEY_TITLE] == "SameTitle");
 }
  
 /**
@@ -390,7 +474,157 @@ HWTEST_F(AVMetaDataCollectorUnitTest, FormatMimeType, TestSize.Level1)
     avmetaDataCollector->FormatMimeType(avmeta, globalInfo);
     EXPECT_FALSE(avmeta.HasMeta(AV_KEY_MIME_TYPE));
 }
- 
+
+/**
+ * @tc.name: IsOggFile
+ * @tc.desc: IsOggFile
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, IsOggFile, TestSize.Level1)
+{
+    std::shared_ptr<Meta> globalInfo;
+    EXPECT_FALSE(avmetaDataCollector->IsOggFile(globalInfo));
+    globalInfo = make_shared<Meta>();
+    globalInfo->SetData(Tag::MEDIA_FILE_TYPE, Plugins::FileType::OGG);
+    EXPECT_TRUE(avmetaDataCollector->IsOggFile(globalInfo));
+}
+
+/**
+ * @tc.name: ApplyOggTrackMetadataOverride_001
+ * @tc.desc: ApplyOggTrackMetadataOverride_001
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ApplyOggTrackMetadataOverride_001, TestSize.Level1)
+{
+    Metadata metadata;
+    metadata.SetMeta(AV_KEY_ARTIST, "GlobalArtist");
+    metadata.SetMeta(AV_KEY_ALBUM, "");
+    metadata.SetMeta(AV_KEY_TITLE, "SameTitle");
+
+    std::vector<std::shared_ptr<Meta>> trackInfos;
+    auto imageTrack = std::make_shared<Meta>();
+    imageTrack->SetData(Tag::MIME_TYPE, std::string("image/jpeg"));
+    imageTrack->SetData(Tag::MEDIA_ARTIST, std::string("ImageArtist"));
+    trackInfos.push_back(imageTrack);
+
+    auto videoTrack = std::make_shared<Meta>();
+    videoTrack->SetData(Tag::MIME_TYPE, std::string("video/mp4"));
+    videoTrack->SetData(Tag::MEDIA_ARTIST, std::string("VideoArtist"));
+    trackInfos.push_back(videoTrack);
+
+    auto audioTrack = std::make_shared<Meta>();
+    audioTrack->SetData(Tag::MIME_TYPE, std::string("audio/vorbis"));
+    audioTrack->SetData(Tag::MEDIA_ARTIST, std::string("TrackArtist"));
+    audioTrack->SetData(Tag::MEDIA_ALBUM, std::string("TrackAlbum"));
+    audioTrack->SetData(Tag::MEDIA_TITLE, std::string("SameTitle"));
+    trackInfos.push_back(audioTrack);
+
+    avmetaDataCollector->ApplyOggTrackMetadataOverride(trackInfos, metadata);
+
+    EXPECT_EQ(metadata.GetMeta(AV_KEY_ARTIST), "TrackArtist");
+    EXPECT_EQ(metadata.GetMeta(AV_KEY_ALBUM), "TrackAlbum");
+    EXPECT_EQ(metadata.GetMeta(AV_KEY_TITLE), "SameTitle");
+}
+
+/**
+ * @tc.name: ApplyOggTrackMetadataOverride_002
+ * @tc.desc: ApplyOggTrackMetadataOverride_002
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ApplyOggTrackMetadataOverride_002, TestSize.Level1)
+{
+    Metadata metadata;
+    metadata.SetMeta(AV_KEY_ARTIST, "OldArtist");
+
+    auto audioTrack = std::make_shared<Meta>();
+    audioTrack->SetData(Tag::MIME_TYPE, std::string("audio/vorbis"));
+    audioTrack->SetData(Tag::MEDIA_ARTIST, std::string("NewArtist"));
+
+    std::vector<std::shared_ptr<Meta>> trackInfos = {audioTrack};
+    avmetaDataCollector->ApplyOggTrackMetadataOverride(trackInfos, metadata);
+
+    EXPECT_EQ(metadata.GetMeta(AV_KEY_ARTIST), "NewArtist");
+}
+
+/**
+ * @tc.name: ApplyOggTrackMetadataOverride_003
+ * @tc.desc: ApplyOggTrackMetadataOverride_003
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ApplyOggTrackMetadataOverride_003, TestSize.Level1)
+{
+    Metadata metadata;
+    metadata.SetMeta(AV_KEY_ARTIST, "Original");
+
+    auto audioTrack = std::make_shared<Meta>();
+    audioTrack->SetData(Tag::MIME_TYPE, std::string("audio/opus"));
+    std::vector<std::shared_ptr<Meta>> trackInfos = {audioTrack};
+    avmetaDataCollector->ApplyOggTrackMetadataOverride(trackInfos, metadata);
+    EXPECT_EQ(metadata.GetMeta(AV_KEY_ARTIST), "Original");
+}
+
+/**
+ * @tc.name: ApplyOggTrackMetadataOverride_004
+ * @tc.desc: ApplyOggTrackMetadataOverride_004
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ApplyOggTrackMetadataOverride_004, TestSize.Level1)
+{
+    Metadata metadata;
+    metadata.SetMeta(AV_KEY_ALBUM, "OriginalAlbum");
+
+    auto audioTrack = std::make_shared<Meta>();
+    audioTrack->SetData(Tag::MIME_TYPE, std::string("audio/vorbis"));
+    audioTrack->SetData(Tag::MEDIA_ALBUM, std::string(""));
+    std::vector<std::shared_ptr<Meta>> trackInfos = {audioTrack};
+
+    avmetaDataCollector->ApplyOggTrackMetadataOverride(trackInfos, metadata);
+    EXPECT_EQ(metadata.GetMeta(AV_KEY_ALBUM), "OriginalAlbum");
+}
+
+/**
+ * @tc.name: ApplyOggTrackMetadataOverride_005
+ * @tc.desc: ApplyOggTrackMetadataOverride_005
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ApplyOggTrackMetadataOverride_005, TestSize.Level1)
+{
+    Metadata metadata;
+    metadata.SetMeta(AV_KEY_TITLE, "KeepMe");
+    
+    auto videoTrack = std::make_shared<Meta>();
+    videoTrack->SetData(Tag::MIME_TYPE, std::string("video/mp4"));
+    std::vector<std::shared_ptr<Meta>> trackInfos = {videoTrack};
+
+    avmetaDataCollector->ApplyOggTrackMetadataOverride(trackInfos, metadata);
+    EXPECT_EQ(metadata.GetMeta(AV_KEY_TITLE), "KeepMe");
+}
+
+/**
+ * @tc.name: ApplyOggTrackMetadataOverride_006
+ * @tc.desc: ApplyOggTrackMetadataOverride_006
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ApplyOggTrackMetadataOverride_006, TestSize.Level1)
+{
+    Metadata metadata;
+
+    auto videoTrack = std::make_shared<Meta>();
+    videoTrack->SetData(Tag::MIME_TYPE, std::string("video/mp4"));
+
+    auto firstAudio = std::make_shared<Meta>();
+    firstAudio->SetData(Tag::MIME_TYPE, std::string("audio/vorbis"));
+    firstAudio->SetData(Tag::MEDIA_TITLE, std::string("FirstTitle"));
+
+    auto secondAudio = std::make_shared<Meta>();
+    secondAudio->SetData(Tag::MIME_TYPE, std::string("audio/opus"));
+    secondAudio->SetData(Tag::MEDIA_TITLE, std::string("SecondTitle"));
+
+    std::vector<std::shared_ptr<Meta>> trackInfos = {videoTrack, firstAudio, secondAudio};
+    avmetaDataCollector->ApplyOggTrackMetadataOverride(trackInfos, metadata);
+    EXPECT_EQ(metadata.GetMeta(AV_KEY_TITLE), "FirstTitle");
+}
+
 /**
  * @tc.name: FormatDateTime_001
  * @tc.desc: FormatDateTime_001

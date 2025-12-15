@@ -98,6 +98,12 @@ static const std::unordered_map<int32_t, std::string> AVMETA_KEY_TO_X_MAP = {
     { AV_KEY_VIDEO_DESCRIPTION, Tag::MEDIA_DESCRIPTION },
 };
 
+static const std::vector<std::pair<int32_t, std::string>> oggOverrideKeys = {
+    { AV_KEY_ARTIST, Tag::MEDIA_ARTIST },
+    { AV_KEY_ALBUM, Tag::MEDIA_ALBUM },
+    { AV_KEY_TITLE, Tag::MEDIA_TITLE }
+};
+
 AVMetaDataCollector::AVMetaDataCollector(std::shared_ptr<MediaDemuxer> &mediaDemuxer) : mediaDemuxer_(mediaDemuxer)
 {
     MEDIA_LOGD("enter ctor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
@@ -405,6 +411,11 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
         CHECK_AND_CONTINUE(meta->GetData(Tag::MEDIA_TYPE, mediaType));
         ConvertToAVMeta(meta, metadata);
     }
+
+    if (IsOggFile(globalInfo)) {
+        ApplyOggTrackMetadataOverride(trackInfos, metadata);
+    }
+
     FormatAVMeta(metadata, globalInfo);
     auto it = metadata.tbl_.begin();
     while (it != metadata.tbl_.end()) {
@@ -413,6 +424,39 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
         it++;
     }
     return metadata.tbl_;
+}
+
+bool AVMetaDataCollector::IsOggFile(const std::shared_ptr<Meta> &globalInfo)
+{
+    if (!globalInfo) {
+        return false;
+    }
+    Plugins::FileType fileType = Plugins::FileType::UNKNOW;
+    globalInfo->GetData(Tag::MEDIA_FILE_TYPE, fileType);
+    return (fileType == Plugins::FileType::OGG);
+}
+
+void AVMetaDataCollector::ApplyOggTrackMetadataOverride(
+    const std::vector<std::shared_ptr<Meta>>& trackInfos, Metadata& metadata)
+{
+    for (const auto& track : trackInfos) {
+        std::string mime;
+        if (!track->GetData(Tag::MIME_TYPE, mime) || !IsAudioMime(mime)) {
+            continue;
+        }
+        for (const auto& [avKey, innerKey] : oggOverrideKeys) {
+            std::string trackVal;
+            if (!track->GetData(innerKey, trackVal) || trackVal.empty()) {
+                continue;
+            }
+            std::string currentVal = metadata.GetMeta(avKey);
+            if (!currentVal.empty() && currentVal == trackVal) {
+                continue;
+            }
+            metadata.SetMeta(avKey, trackVal);
+        }
+        break;
+    }
 }
 
 void AVMetaDataCollector::InitTracksInfoVector(const std::shared_ptr<Meta> &meta, size_t index)

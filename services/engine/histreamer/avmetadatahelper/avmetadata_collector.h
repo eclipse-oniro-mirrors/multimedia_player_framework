@@ -112,6 +112,8 @@ private:
     std::string VectorToString(const std::vector<int32_t> &vec) const;
     void ExtractMetadataFromImageTrack(Metadata &metadata, const std::vector<std::shared_ptr<Meta>> &trackInfos,
         size_t index);
+    bool IsOggFile(const std::shared_ptr<Meta> &globalInfo);
+    void ApplyOggTrackMetadataOverride(const std::vector<std::shared_ptr<Meta>> &trackInfos, Metadata &metadata);
 };
 }  // namespace Media
 }  // namespace OHOS
