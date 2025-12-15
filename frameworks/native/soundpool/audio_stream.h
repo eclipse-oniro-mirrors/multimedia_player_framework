@@ -66,7 +66,7 @@ public:
     AudioStream(const Format &trackFormat, int32_t &soundID, int32_t &streamID,
         std::shared_ptr<ThreadPool> streamStopThreadPool);
     ~AudioStream();
-    void SetPcmBuffer(const std::shared_ptr<AudioBufferEntry> &pcmBuffer, size_t pcmBufferSize);
+    bool SetPcmSharedMemory(const std::shared_ptr<AudioStandard::AudioSharedMemory> &pcmBuffer, size_t pcmBufferSize);
     void SetManager(std::weak_ptr<OHOS::Media::StreamIDManager> streamIDManager);
     void ConfigurePlayParameters(const AudioStandard::AudioRendererInfo &audioRendererInfo,
         const PlayParams &playParams);
@@ -118,7 +118,7 @@ private:
     int32_t streamID_ = 0;
     PlayParams playParameters_;
     size_t pcmBufferSize_ = 0;
-    std::shared_ptr<AudioBufferEntry> pcmBuffer_ = nullptr;
+    std::shared_ptr<AudioStandard::AudioSharedMemory> pcmBuffer_ = nullptr;
     std::shared_ptr<AudioStandard::AudioRenderer> audioRenderer_ = nullptr;
     AudioStandard::AudioRendererInfo audioRendererInfo_;
     AudioStandard::AudioSampleFormat sampleFormat_ = AudioStandard::AudioSampleFormat::INVALID_WIDTH;

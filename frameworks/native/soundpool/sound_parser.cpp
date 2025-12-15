@@ -214,6 +214,12 @@ int64_t SoundParser::GetSourceDuration()
     return sourceDurationInfo_;
 }
 
+std::shared_ptr<AudioStandard::AudioSharedMemory> SoundParser::GetAudioSharedMemory()
+{
+    CHECK_AND_RETURN_RET_LOG(audioDecCb_ != nullptr, nullptr, "GetAudioSharedMemory, audioDecCb_ is nullptr");
+    return audioDecCb_->GetAudioSharedMemory();
+}
+
 int32_t SoundParser::Release()
 {
     MediaTrace trace("SoundParser::Release");
@@ -330,6 +336,7 @@ void SoundDecoderCallback::DealBufferRawFile(MediaAVCodec::AVCodecBufferFlag buf
         CHECK_AND_RETURN_LOG(listener_ != nullptr, "DealBufferRawFile, listener is nullptr");
         listener_->OnSoundDecodeCompleted(fullPcmBuffer_);
         listener_->SetSoundBufferTotalSize(static_cast<size_t>(currentSoundBufferSize_));
+        CHECK_AND_RETURN_LOG(SetAudioSharedMemory(), "SetAudioSharedMemory failed");
         CHECK_AND_RETURN_LOG(callback_ != nullptr, "DealBufferRawFile, callback_ is nullptr");
         callback_->OnLoadCompleted(soundID_);
         return;
@@ -372,6 +379,8 @@ void SoundDecoderCallback::OnOutputBufferAvailable(uint32_t index, AVCodecBuffer
                 listener_->OnSoundDecodeCompleted(fullPcmBuffer_);
                 listener_->SetSoundBufferTotalSize(static_cast<size_t>(currentSoundBufferSize_));
             }
+            CHECK_AND_RETURN_LOG(SetAudioSharedMemory(), "SetAudioSharedMemory failed");
+
             if (callback_ != nullptr) {
                 callback_->OnLoadCompleted(soundID_);
             }
@@ -440,6 +449,28 @@ int32_t SoundDecoderCallback::ReCombineCacheData()
     return MSERR_OK;
 }
 
+bool SoundDecoderCallback::SetAudioSharedMemory()
+{
+    CHECK_AND_RETURN_RET_LOG(fullPcmBuffer_ != nullptr && currentSoundBufferSize_ > 0, false,
+        "SetAudioSharedMemory failed, fullPcmBuffer_ or currentSoundBufferSize_ is invalid");
+    audioSharedMemory_ = AudioStandard::AudioSharedMemory::CreateFromLocal(currentSoundBufferSize_, "SoundPool");
+    CHECK_AND_RETURN_RET_LOG(audioSharedMemory_ != nullptr, false,
+        "SetAudioSharedMemory failed, audioSharedMemory_ is nullptr");
+    int32_t ret = memcpy_s(audioSharedMemory_->GetBase(), currentSoundBufferSize_, fullPcmBuffer_->buffer,
+        currentSoundBufferSize_);
+    if (ret != MSERR_OK) {
+        audioSharedMemory_ = nullptr;
+        MEDIA_LOGE("SetAudioSharedMemory, memcpy_s failed");
+        return false;
+    }
+    return true;
+}
+
+std::shared_ptr<AudioStandard::AudioSharedMemory> SoundDecoderCallback::GetAudioSharedMemory()
+{
+    return audioSharedMemory_;
+}
+
 int32_t SoundDecoderCallback::SetCallback(const std::shared_ptr<ISoundPoolCallback> &callback)
 {
     MEDIA_LOGI("SoundDecoderCallback::SetCallback");
@@ -470,6 +501,7 @@ int32_t SoundDecoderCallback::Release()
     if (!availableAudioBuffers_.empty()) availableAudioBuffers_.clear();
     if (callback_ != nullptr) callback_.reset();
     if (fullPcmBuffer_ != nullptr) fullPcmBuffer_.reset();
+    if (audioSharedMemory_ != nullptr) audioSharedMemory_.reset();
     return ret;
 }
 
