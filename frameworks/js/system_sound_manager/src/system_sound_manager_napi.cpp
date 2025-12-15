@@ -300,7 +300,7 @@ napi_value SystemSoundManagerNapi::CreateToneCategoryNotificationAppObject(napi_
 {
     napi_value toneCategoryNotificationApp;
     napi_create_int32(env, TONE_CATEGORY_NOTIFICATION_APP, &toneCategoryNotificationApp);
-    
+
     return toneCategoryNotificationApp;
 }
 
@@ -346,6 +346,7 @@ napi_status SystemSoundManagerNapi::DefineStaticProperties(napi_env env, napi_va
 {
     napi_property_descriptor static_prop[] = {
         DECLARE_NAPI_STATIC_FUNCTION("getSystemSoundManager", GetSystemSoundManager),
+        DECLARE_NAPI_STATIC_FUNCTION("createSystemSoundPlayer", CreateSystemSoundPlayer),
         DECLARE_NAPI_PROPERTY("RingtoneType", CreateRingtoneTypeObject(env)),
         DECLARE_NAPI_PROPERTY("SystemToneType", CreateSystemToneTypeObject(env)),
         DECLARE_NAPI_PROPERTY("ToneHapticsType", CreateToneHapticsTypeObject(env)),
@@ -1064,6 +1065,90 @@ napi_value SystemSoundManagerNapi::CreateCustomizedToneAttrs(napi_env env, napi_
     }
     napi_get_undefined(env, &result);
     return result;
+}
+
+napi_value SystemSoundManagerNapi::CreateSystemSoundPlayer(napi_env env, napi_callback_info info)
+{
+    MEDIA_LOGI("SystemSoundManagerNapi::CreateSystemSoundPlayer in");
+    napi_value result = nullptr;
+    napi_value resource = nullptr;
+    napi_value thisVar = nullptr;
+
+    napi_status status = napi_get_cb_info(env, info, nullptr, nullptr, &thisVar, nullptr);
+    napi_get_undefined(env, &result);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && thisVar != nullptr,
+        ThrowErrorAndReturn(env, ERRCODE_NO_MEMORY_INFO, ERRCODE_NO_MEMORY),
+        "CreateSystemSoundPlayer: napi_get_cb_info failed");
+
+    std::unique_ptr<SystemSoundManagerAsyncContext> asyncContext = std::make_unique<SystemSoundManagerAsyncContext>();
+    status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
+    if (status == napi_ok) {
+        napi_create_promise(env, &asyncContext->deferred, &result);
+        napi_create_string_utf8(env, "CreateSystemSoundPlayer", NAPI_AUTO_LENGTH, &resource);
+        status = napi_create_async_work(env, nullptr, resource, AsyncCreateSystemSoundPlayer,
+            CreateSystemSoundPlayerAsyncCallbackComp, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+        if (status != napi_ok) {
+            MEDIA_LOGE("CreateSystemSoundPlayer: Failed to get create async work");
+            napi_get_undefined(env, &result);
+        } else {
+            napi_queue_async_work(env, asyncContext->work);
+            asyncContext.release();
+        }
+    }
+
+    return result;
+}
+
+void SystemSoundManagerNapi::AsyncCreateSystemSoundPlayer(napi_env env, void *data)
+{
+    SystemSoundManagerAsyncContext *context = static_cast<SystemSoundManagerAsyncContext *>(data);
+
+    std::shared_ptr<SystemSoundPlayer> systemSoundPlayer = SystemSoundPlayerFactory::CreateSystemSoundPlayer();
+    if (systemSoundPlayer != nullptr) {
+        context->systemSoundPlayer = systemSoundPlayer;
+        context->status = SUCCESS;
+    } else {
+        context->status = ERROR;
+    }
+}
+
+void SystemSoundManagerNapi::CreateSystemSoundPlayerAsyncCallbackComp(napi_env env, napi_status status, void* data)
+{
+    auto context = static_cast<SystemSoundManagerAsyncContext *>(data);
+    napi_value result[2] = {};
+    napi_value playerResult = nullptr;
+
+    if (context->systemSoundPlayer != nullptr) {
+        playerResult = SystemSoundPlayerNapi::CreateSystemSoundPlayerNapiInstance(env, context->systemSoundPlayer);
+        if (playerResult == nullptr) {
+            MEDIA_LOGE("Failed to CreateSystemSoundPlayerNapiInstance!");
+            napi_value message = nullptr;
+            napi_create_string_utf8(env, "CreateSystemSoundPlayer Error: Operation is not supported or failed",
+                NAPI_AUTO_LENGTH, &message);
+            napi_create_error(env, nullptr, message, &result[PARAM0]);
+            napi_get_undefined(env, &result[PARAM1]);
+        } else {
+            napi_get_undefined(env, &result[0]);
+            result[PARAM1] = playerResult;
+        }
+    } else {
+        MEDIA_LOGE("Failed to CreateSystemSoundPlayer!");
+        napi_value message = nullptr;
+        napi_create_string_utf8(env, "CreateSystemSoundPlayer Error: Operation is not supported or failed",
+            NAPI_AUTO_LENGTH, &message);
+        napi_create_error(env, nullptr, message, &result[PARAM0]);
+        napi_get_undefined(env, &result[PARAM1]);
+    }
+
+    if (!context->status) {
+        napi_resolve_deferred(env, context->deferred, result[PARAM1]);
+    } else {
+        napi_reject_deferred(env, context->deferred, result[PARAM0]);
+    }
+    napi_delete_async_work(env, context->work);
+
+    delete context;
+    context = nullptr;
 }
 
 napi_value SystemSoundManagerNapi::GetDefaultRingtoneAttrs(napi_env env, napi_callback_info info)
@@ -2032,6 +2117,7 @@ static napi_value Init(napi_env env, napi_value exports)
     RingtonePlayerNapi::Init(env, exports);
     SystemToneOptionsNapi::Init(env, exports);
     SystemTonePlayerNapi::Init(env, exports);
+    SystemSoundPlayerNapi::Init(env, exports);
 
     return exports;
 }
