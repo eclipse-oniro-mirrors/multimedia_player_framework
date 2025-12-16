@@ -37,7 +37,7 @@ namespace {
 namespace OHOS {
 namespace Media {
 IStreamIDManager::IStreamIDManager(int32_t maxStreams, const AudioStandard::AudioRendererInfo &audioRenderInfo) :
-    audioRendererInfo_(audioRenderInfo), maxStreams_(maxStreams);
+    audioRendererInfo_(audioRenderInfo), maxStreams_(maxStreams)
 {
     audioRendererInfo_.playerType = AudioStandard::PlayerType::PLAYER_TYPE_SOUND_POOL;
     currentStreamsNum_.store(0);
@@ -163,8 +163,7 @@ int32_t IStreamIDManager::SetFrameWriteCallback(const std::shared_ptr<ISoundPool
     return MSERR_OK;
 }
 
-int32_t IStreamIDManager::Play(const std::shared_ptr<SoundParser> &soundParser,
-    const PlayParams &playParameters)
+int32_t IStreamIDManager::Play(const std::shared_ptr<SoundParser> &soundParser, const PlayParams &playParameters)
 {
     MediaTrace trace("IStreamIDManager::Play");
     std::lock_guard lock(streamIDManagerLock_);
@@ -341,11 +340,11 @@ void IStreamIDManager::QueueAndSortWillPlayStreamID(const StreamIDAndPlayParamsI
 
 void IStreamIDManager::PostProcessingOfStreamDoPlayFailed(int32_t streamID)
 {
-    MEDIA_LOGI("PostProcessingOfStreamDoPlayFailed failed, streamID is %{public}d", streamID);
+    MEDIA_LOGI("PostProcessingOfStreamDoPlayFailed, streamID is %{public}d", streamID);
     for (int32_t i = 0; i < static_cast<int32_t>(playingStreamIDs_.size()); i++) {
         if (streamID == playingStreamIDs_[i]) {
             std::shared_ptr<AudioStream> stream = GetStreamByStreamID(streamID);
-            CHECK_AND_RETURN_RET_LOG(stream != nullptr, "PostProcessingOfStreamDoPlayFailed, stream is nullptr");
+            CHECK_AND_RETURN_LOG(stream != nullptr, "PostProcessingOfStreamDoPlayFailed, stream is nullptr");
             playingStreamIDs_.erase(playingStreamIDs_.begin() + i);
             stream->SetStreamState(StreamState::RELEASED);
             return;
@@ -362,7 +361,7 @@ void IStreamIDManager::AudioStreamCallBack::OnLoadCompleted(int32_t soundID)
 void IStreamIDManager::AudioStreamCallBack::OnPlayFinished(int32_t streamID)
 {
     (void)streamID;
-    if (std::shared_ptr<StreamIDManager> ptr = streamIDManagerInner_.lock()) {
+    if (std::shared_ptr<IStreamIDManager> ptr = streamIDManagerInner_.lock()) {
         ptr->OnPlayFinished(streamID);
     }
 }
@@ -422,7 +421,7 @@ void StreamIDManagerWithSameSoundInterrupt::RemoveInvalidStreams()
     }
 }
 
-void StreamIDManagerWithSameSoundInterrupt::RemoveStreamByStreamID(int32_t soundID)
+void StreamIDManagerWithSameSoundInterrupt::RemoveStreamByStreamID(int32_t soundID, int32_t streamID)
 {
     CHECK_AND_RETURN_LOG(soundID2Stream_.find(soundID) != soundID2Stream_.end(),
         "soundID(%{public}d) not exist in soundID2Stream_", soundID);
@@ -456,7 +455,7 @@ int32_t StreamIDManagerWithSameSoundInterrupt::ClearStreamIDInDeque(int32_t soun
     CHECK_AND_RETURN_RET_LOG(stream != nullptr, MSERR_INVALID_VAL, "ClearStreamIDInDeque, stream is nullptr");
     stream->Release();
     stream->SetStreamState(StreamState::RELEASED);
-    RemoveStreamByStreamID(soundID);
+    RemoveStreamByStreamID(soundID, streamID);
     return MSERR_OK;
 }
 
@@ -572,7 +571,7 @@ std::vector<int32_t> StreamIDManagerWithSameSoundInterrupt::GetStreamIDBySoundID
     std::vector<int32_t> ret;
     CHECK_AND_RETURN_RET_LOG(!soundID2Stream_.empty(), ret, "GetStreamIDBySoundID, soundID2Stream_ is empty");
     CHECK_AND_RETURN_RET_LOG(soundID2Stream_.find(soundID) != soundID2Stream_.end(), ret,
-        "GetStreamIDBySoundID, soundID2Stream_[%{public}d] is nullptr", soundID);
+        "GetStreamIDBySoundID, soundID2(%{public}d) not exists in soundID2Stream_", soundID);
     CHECK_AND_RETURN_RET_LOG(soundID2Stream_[soundID] != nullptr, ret,
         "GetStreamIDBySoundID, soundID2Stream_[%{public}d] is nullptr", soundID);
     int32_t streamID = soundID2Stream_[soundID]->GetStreamID();
@@ -653,7 +652,7 @@ bool StreamIDManagerWithNoInterrupt::InnerProcessOfRemoveInvalidStreams(const St
         for (auto it = streams.begin(); it != streams.end();) {
             CHECK_AND_RETURN_RET(currentStreamsNum_.load() > MAX_NUMBER_OF_HELD_STREAMS, true);
             if ((*it) != nullptr && state == (*it)->GetStreamState()) {
-                MEDIA_LOGE("RemoveInvalidStreamsInNoInterruptMode, NO_INTERRUPT, streamID is %{public}d",
+                MEDIA_LOGE("InnerProcessOfRemoveInvalidStreams, NO_INTERRUPT, streamID is %{public}d",
                     (*it)->GetStreamID());
                 (*it)->Release();
                 it = streams.erase(it);
@@ -666,7 +665,7 @@ bool StreamIDManagerWithNoInterrupt::InnerProcessOfRemoveInvalidStreams(const St
     return false;
 }
 
-void StreamIDManagerWithNoInterrupt::RemoveStreamByStreamID(int32_t soundID)
+void StreamIDManagerWithNoInterrupt::RemoveStreamByStreamID(int32_t soundID, int32_t streamID)
 {
     CHECK_AND_RETURN_LOG(soundID2MultiStreams_.find(soundID) != soundID2MultiStreams_.end(),
         "soundID(%{public}d) not exist in soundID2MultiStreams_", soundID);
@@ -696,7 +695,7 @@ int32_t StreamIDManagerWithNoInterrupt::ClearStreamIDInDeque(int32_t soundID, in
     CHECK_AND_RETURN_RET_LOG(stream != nullptr, MSERR_INVALID_VAL, "ClearStreamIDInDeque, stream is nullptr");
     stream->Release();
     stream->SetStreamState(StreamState::RELEASED);
-    RemoveStreamByStreamID(soundID);
+    RemoveStreamByStreamID(soundID, streamID);
     return MSERR_OK;
 }
 
@@ -738,7 +737,7 @@ void StreamIDManagerWithNoInterrupt::PrintSoundID2Stream()
 int32_t StreamIDManagerWithNoInterrupt::SetPlay(int32_t soundID, int32_t streamID,
     const PlayParams &playParameters)
 {
-    MEDIA_LOGI("StreamIDManagerWithNoInterrupt start");
+    MEDIA_LOGI("StreamIDManagerWithNoInterrupt::SetPlay start");
     MediaTrace trace("StreamIDManagerWithNoInterrupt::SetPlay");
     if (!isStreamPlayingThreadPoolStarted_.load()) {
         InitThreadPool();
@@ -760,7 +759,7 @@ int32_t StreamIDManagerWithNoInterrupt::SetPlay(int32_t soundID, int32_t streamI
     int32_t lastStreamID = playingStreamIDs_.back();
     std::shared_ptr<AudioStream> lastStream = GetStreamByStreamID(lastStreamID);
     if (lastStream == nullptr) {
-        MEDIA_LOGI("SetPlayWithNoInterrupt, lastStream is nullptr");
+        MEDIA_LOGI("SetPlay, lastStream is nullptr");
         playingStreamIDs_.pop_back();
         return MSERR_INVALID_VAL;
     }
@@ -786,7 +785,7 @@ int32_t StreamIDManagerWithNoInterrupt::SetPlay(int32_t soundID, int32_t streamI
 
 int32_t StreamIDManagerWithNoInterrupt::DoPlay(int32_t streamID)
 {
-    MEDIA_LOGI("StreamIDManagerWithNoInterrupt::DoPlay start streamID is %{public}d", streamID);
+    MEDIA_LOGI("StreamIDManagerWithNoInterrupt::DoPlay start, streamID is %{public}d", streamID);
     std::shared_ptr<AudioStream> stream = GetStreamByStreamIDWithLock(streamID);
     CHECK_AND_RETURN_RET_LOG(stream != nullptr, MSERR_INVALID_VAL,
         "StreamIDManagerWithNoInterrupt::DoPlay, stream is nullptr");

@@ -111,7 +111,7 @@ protected:
     std::deque<int32_t> playingStreamIDs_;
     std::deque<StreamIDAndPlayParamsInfo> willPlayStreamInfos_;
     std::atomic<int32_t> currentStreamsNum_;
-}
+};
 
 class StreamIDManagerWithSameSoundInterrupt : public IStreamIDManager,
     public std::enable_shared_from_this<StreamIDManagerWithSameSoundInterrupt> {
@@ -136,7 +136,7 @@ protected:
 
 private:
     std::unordered_map<int32_t, std::shared_ptr<AudioStream>> soundID2Stream_;
-}
+};
 
 class StreamIDManagerWithNoInterrupt : public IStreamIDManager,
     public std::enable_shared_from_this<StreamIDManagerWithNoInterrupt> {
@@ -160,53 +160,11 @@ protected:
     std::shared_ptr<AudioStream> GetStreamByStreamID(int32_t streamID) override;
 
 private:
-    class AudioStreamCallBack : public ISoundPoolCallback {
-    public:
-        explicit AudioStreamCallBack(const std::weak_ptr<OHOS::Media::StreamIDManager> &streamIDManager)
-            : streamIDManagerInner_(streamIDManager) {}
-        virtual ~AudioStreamCallBack() = default;
-        void OnLoadCompleted(int32_t soundID);
-        void OnPlayFinished(int32_t streamID);
-        void OnError(int32_t errorCode);
-
-    private:
-        std::weak_ptr<OHOS::Media::StreamIDManager> streamIDManagerInner_;
-    };
-    // audio render max concurrency count.
-    static constexpr int32_t MAX_PLAY_STREAMS_NUMBER = 32;
-    static constexpr int32_t MIN_PLAY_STREAMS_NUMBER = 1;
-    static constexpr int32_t CACHE_BUFFER_THREAD_NUMBER = 1;
-    static constexpr int32_t errorStreamId = -1;
-
-    struct StreamIDAndPlayParamsInfo {
-        int32_t streamID;
-        PlayParams playParameters;
-    };
-
-    int32_t SetPlayWithSameSoundInterrupt(int32_t soundID, int32_t streamID, const PlayParams &playParameters);
-    int32_t SetPlayWithNoInterrupt(int32_t soundID, int32_t streamID, const PlayParams &playParameters);
-    int32_t AddPlayTask(int32_t streamID);
-    int32_t AddStopTask(const std::shared_ptr<AudioStream> &stream);
-    int32_t DoPlay(int32_t streamID);
-
-    void OnPlayFinished(int32_t streamID);
-    void QueueAndSortPlayingStreamID(int32_t freshStreamID);
-    void QueueAndSortWillPlayStreamID(const StreamIDAndPlayParamsInfo &streamIDAndPlayParamsInfo);
-
-    std::vector<int32_t> GetStreamIDBySoundID(int32_t soundID);
-    std::shared_ptr<AudioStream> GetStreamByStreamID(int32_t streamID);
-
-    ffrt::mutex streamIDManagerLock_;
-    std::shared_ptr<ISoundPoolCallback> callback_ = nullptr;
-    std::shared_ptr<ISoundPoolFrameWriteCallback> frameWriteCallback_ = nullptr;
-    std::shared_ptr<ISoundPoolCallback> audioStreamCallback_ = nullptr;
-
-    std::unordered_map<int32_t, std::shared_ptr<AudioStream>> soundID2Stream_;
     std::unordered_map<int32_t, std::list<std::shared_ptr<AudioStream>>> soundID2MultiStreams_;
     size_t maxNumOfParallelPlaying_ = 5;
 
     bool InnerProcessOfRemoveInvalidStreams(const StreamState &state);
-}
+};
 } // namespace Media
 } // namespace OHOS
 #endif // STREAM_ID_MANAGER_H

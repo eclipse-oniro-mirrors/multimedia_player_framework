@@ -175,7 +175,7 @@ int32_t SoundPool::Play(int32_t soundID, const PlayParams &playParameters)
     }
 
     // New playback path
-    if (!isSetinterruptMode_) {
+    if (!isSetInterruptMode_) {
         MEDIA_LOGI("interruptMode_ is %{public}d", interruptMode_);
         streamIdManager_ = (interruptMode_ == InterruptMode::SAME_SOUND_INTERRUPT) ?
             streamIDManagerWithSameSoundInterrupt_ : streamIDManagerWithNoInterrupt_;
@@ -185,19 +185,10 @@ int32_t SoundPool::Play(int32_t soundID, const PlayParams &playParameters)
         int ret = streamIdManager_->InitThreadPool();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_VAL, "failed to init streamIdManager");
     }
-    isSetinterruptMode_ = true;
-    CHECK_AND_RETURN_RET_LOG(streamIdManager_ != nullptr, ERROR_RETURN, "sound pool have released.");
     isSetInterruptMode_ = true;
-    if (interruptMode_ == InterruptMode::SAME_SOUND_INTERRUPT) {
-        streamID = streamIdManager_->PlayWithSameSoundInterrupt(soundParser, playParameters);
-        MEDIA_LOGI("SoundPool::Play end, streamID is %{public}d", streamID);
-        return streamID;
-    }
-    if (interruptMode_ == InterruptMode::NO_INTERRUPT) {
-        streamID = streamIdManager_->PlayWithNoInterrupt(soundParser, playParameters);
-        MEDIA_LOGI("SoundPool::Play end, streamID is %{public}d", streamID);
-        return streamID;
-    }
+    CHECK_AND_RETURN_RET_LOG(streamIdManager_ != nullptr, ERROR_RETURN, "sound pool have released.");
+    streamID = streamIdManager_->PlayWithNoInterrupt(soundParser, playParameters);
+    MEDIA_LOGI("SoundPool::Play end, streamID is %{public}d", streamID);
     return streamID;
 }
 
@@ -220,7 +211,6 @@ int32_t SoundPool::Stop(int32_t streamID)
             "SoundPool::Stop, stream is nullptr");
         return stream->Stop();
     }
-    
     MEDIA_LOGE("SoundPool::Stop, can not find the stream(%{public}d)", streamID);
     return MSERR_INVALID_OPERATION;
 }
@@ -323,7 +313,6 @@ void SoundPool::SetInterruptMode(InterruptMode interruptMode)
 {
     std::lock_guard lock(soundPoolLock_);
     CHECK_AND_RETURN_LOG(!isSetInterruptMode_, "SoundPool::SetInterruptMode failed, InterruptMode has been set");
-    CHECK_AND_RETURN_LOG(streamIdManager_ != nullptr, "SoundPool::SetInterruptMode, streamIdManager_ is nullptr");
     MEDIA_LOGI("SoundPool::SetInterruptMode, current interruptMode is %{public}d, new interruptMode is %{public}d",
         interruptMode_, interruptMode);
     if (interruptMode < InterruptMode::NO_INTERRUPT || interruptMode > InterruptMode::SAME_SOUND_INTERRUPT) {
@@ -348,7 +337,8 @@ int32_t SoundPool::Unload(int32_t soundID)
 
     if (streamIdManager_ != nullptr) {
         std::vector<int32_t> streamIDsToBeRemoved = streamIdManager_->GetStreamIDBySoundIDWithLock(soundID);
-        if (std::shared_ptr<AudioStream> stream = streamIdManager_->GetStreamByStreamIDWithLock(streamID)) {
+        for (int32_t streamID : streamIDsToBeRemoved) {
+            if (std::shared_ptr<AudioStream> stream = streamIdManager_->GetStreamByStreamIDWithLock(streamID)) {
             stream->Stop();
             stream->Release();
             streamIdManager_->ClearStreamIDInDeque(soundID, streamID);
