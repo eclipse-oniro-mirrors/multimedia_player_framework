@@ -72,7 +72,9 @@ private:
 
     ffrt::mutex soundPoolLock_;
     std::shared_ptr<SoundIDManager> soundIDManager_ = nullptr;
-    std::shared_ptr<StreamIDManager> streamIdManager_ = nullptr;
+    std::shared_ptr<IStreamIDManager> streamIdManager_ = nullptr;
+    std::shared_ptr<IStreamIDManager> streamIDManagerWithSameSoundInterrupt_ = nullptr;
+    std::shared_ptr<IStreamIDManager> streamIDManagerWithNoInterrupt_ = nullptr;
     std::shared_ptr<ParallelStreamManager> parallelStreamManager_;
 
     std::shared_ptr<ISoundPoolCallback> callback_ = nullptr;
