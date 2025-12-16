@@ -37,7 +37,8 @@ namespace {
 namespace OHOS {
 namespace Media {
 IStreamIDManager::IStreamIDManager(int32_t maxStreams, const AudioStandard::AudioRendererInfo &audioRenderInfo) :
-    audioRendererInfo_(audioRenderInfo), maxStreams_(maxStreams)
+    audioRendererInfo_(audioRenderInfo),
+    maxStreams_(maxStreams)
 {
     audioRendererInfo_.playerType = AudioStandard::PlayerType::PLAYER_TYPE_SOUND_POOL;
     currentStreamsNum_.store(0);

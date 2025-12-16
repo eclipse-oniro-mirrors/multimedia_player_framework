@@ -344,8 +344,8 @@ int32_t SoundPool::Unload(int32_t soundID)
                 streamIdManager_->ClearStreamIDInDeque(soundID, streamID);
             }
         }
-        return soundIDManager_->Unload(soundID);
     }
+    return soundIDManager_->Unload(soundID);
 }
 
 int32_t SoundPool::Release()
