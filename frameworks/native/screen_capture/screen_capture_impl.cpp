@@ -116,6 +116,14 @@ int32_t ScreenCaptureImpl::ExcludeContent(ScreenCaptureContentFilter &contentFil
     return screenCaptureService_->ExcludeContent(contentFilter);
 }
 
+int32_t ScreenCaptureImpl::IncludeContent(ScreenCaptureContentFilter &contentFilter)
+{
+    MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " IncludeContent in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_NO_MEMORY,
+        "screen capture service does not exist.");
+    return screenCaptureService_->IncludeContent(contentFilter);
+}
+
 int32_t ScreenCaptureImpl::ExcludePickerWindows(std::vector<int32_t> &windowIDsVec)
 {
     MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " ExcludePickerWindows in", FAKE_POINTER(this));

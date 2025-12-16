@@ -311,6 +311,20 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ExcludeContent(struct OH_AVScreen
     struct OH_AVScreenCapture_ContentFilter *filter);
 
 /**
+ * @brief Set content filter to include specific content in the screen capture
+ * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+ * @param capture Pointer to an OH_AVScreenCapture instance
+ * @param filter Pointer to an OH_AVScreenCapture_ContentFilter instance
+ * @return Function result code.
+ *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
+ *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} if the input parameter is nullptr.
+ *         {@link AV_SCREEN_CAPTURE_ERR_UNSUPPORT} if the opertation is not supported.
+ * @since 23
+ */
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_IncludeContent(struct OH_AVScreenCapture *capture,
+    struct OH_AVScreenCapture_ContentFilter *filter);
+
+/**
   * @brief Configures exclusion list for system-level picker window
   * @details Filters specified windows before displaying the system-level picker.
   *          Excluded windows will not appear in the selection list.

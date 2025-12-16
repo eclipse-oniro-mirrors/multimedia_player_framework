@@ -78,6 +78,7 @@ int32_t ScreenCaptureServiceStub::Init()
     screenCaptureStubFuncs_[RELEASE_VIDEO_BUF] = &ScreenCaptureServiceStub::ReleaseVideoBuffer;
     screenCaptureStubFuncs_[DESTROY] = &ScreenCaptureServiceStub::DestroyStub;
     screenCaptureStubFuncs_[EXCLUDE_CONTENT] = &ScreenCaptureServiceStub::ExcludeContent;
+    screenCaptureStubFuncs_[INCLUDE_CONTENT] = &ScreenCaptureServiceStub::IncludeContent;
     screenCaptureStubFuncs_[EXCLUDE_PICKER_WINDOWS] = &ScreenCaptureServiceStub::ExcludePickerWindows;
     screenCaptureStubFuncs_[SET_PICKER_MODE] = &ScreenCaptureServiceStub::SetPickerMode;
     screenCaptureStubFuncs_[SHOW_CURSOR] = &ScreenCaptureServiceStub::ShowCursor;
@@ -254,6 +255,13 @@ int32_t ScreenCaptureServiceStub::ExcludeContent(ScreenCaptureContentFilter &con
     return screenCaptureServer_->ExcludeContent(contentFilter);
 }
 
+int32_t ScreenCaptureServiceStub::IncludeContent(ScreenCaptureContentFilter &contentFilter)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    return screenCaptureServer_->IncludeContent(contentFilter);
+}
+
 int32_t ScreenCaptureServiceStub::ExcludePickerWindows(std::vector<int32_t> &windowIDsVec)
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
@@ -384,6 +392,27 @@ int32_t ScreenCaptureServiceStub::ExcludeContent(MessageParcel &data, MessagePar
         contentFilter.windowIDsVec = vec;
     }
     int32_t ret = ExcludeContent(contentFilter);
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServiceStub::IncludeContent(MessageParcel &data, MessageParcel &reply)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    ScreenCaptureContentFilter contentFilter;
+    int32_t windowIdSize = data.ReadInt32();
+    CHECK_AND_RETURN_RET_LOG(windowIdSize < MAX_FILTER_CONTENTS_COUNT, MSERR_INVALID_STATE,
+                             "windowID size is exceed max range");
+    if (windowIdSize > 0) {
+        std::vector<uint64_t> vec;
+        for (int32_t i = 0; i < windowIdSize; i++) {
+            vec.push_back(data.ReadUint64());
+
+        }
+        contentFilter.windowIDsVec = vec;
+    }
+    int32_t ret = IncludeContent(contentFilter);
     reply.WriteInt32(ret);
     return MSERR_OK;
 }

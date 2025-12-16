@@ -3575,28 +3575,16 @@ int32_t ScreenCaptureServer::IncludeContent(ScreenCaptureContentFilter &contentF
 {
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(captureState_ != AVScreenCaptureState::STOPPED, MSERR_INVALID_OPERATION,
-        "ExcludeContent failed, capture is STOPPED");
-
+        "IncludeContent failed, capture is STOPPED");
+    for (size_t i = 0; i < contentFilter.windowIDsVec.size(); i++) {
+        MEDIA_LOGI("windowIDsVec value :%{public}" PRIu64, contentFilter.windowIDsVec[i]);
+    }
     MEDIA_LOGI("ScreenCaptureServer::IncludeContent start");
-    contentFilter_ = contentFilter;
-    if (captureState_ == AVScreenCaptureState::STARTED) {
-        Rosen::DisplayManager::GetInstance().SetVirtualScreenBlackList(virtualScreenId_, contentFilter_.windowIDsVec,
-            surfaceIdList_, surfaceTypeList_);
-    }
-    int32_t ret = MSERR_OK;
-    if (innerAudioCapture_ != nullptr) {
-        ret = innerAudioCapture_->UpdateAudioCapturerConfig(contentFilter_);
-    }
-
-    // For the moment, not support:
-    // For STREAM, should call AudioCapturer interface to make effect when start
-    // For CAPTURE FILE, should call Recorder interface to make effect when start
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("ScreenCaptureServer::ExcludeContent UpdateAudioCapturerConfig failed");
-        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNSUPPORT,
-            "ExcludeContent failed, UpdateAudioCapturerConfig failed");
-    }
-    return ret;
+    DMError ret = ScreenManager::GetInstance().AddVirtualScreenWhiteList(virtualScreenId_,
+        contentFilter.windowIDsVec);
+    CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
+        "ScreenCaptureServer::IncludeContent AddVirtualScreenWhiteList failed, ret:%{public}d", ret);
+    return MSERR_OK;
 }
 
 int32_t ScreenCaptureServer::ExcludePickerWindows(std::vector<int32_t> &windowIDsVec)

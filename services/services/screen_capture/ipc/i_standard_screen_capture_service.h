@@ -59,6 +59,7 @@ public:
     virtual int32_t ReleaseAudioBuffer(AudioCaptureSourceType type) = 0;
     virtual int32_t ReleaseVideoBuffer() = 0;
     virtual int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) = 0;
+    virtual int32_t IncludeContent(ScreenCaptureContentFilter &contentFilter) = 0;
     virtual int32_t SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config) = 0;
     virtual int32_t ExcludePickerWindows(std::vector<int32_t> &windowIDsVec) = 0;
     virtual int32_t SetPickerMode(PickerMode pickerMode) = 0;
@@ -104,6 +105,7 @@ public:
         PRESENT_PICKER = 31,
         EXCLUDE_PICKER_WINDOWS = 32,
         SET_PICKER_MODE = 33,
+        INCLUDE_CONTENT = 34,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardScreenCaptureService");
