@@ -82,6 +82,8 @@ public:
 
     int32_t SetCallback(const std::shared_ptr<ISoundPoolCallback> &callback);
     int32_t ReCombineCacheData();
+    bool SetAudioSharedMemory();
+    std::shared_ptr<AudioStandard::AudioSharedMemory> GetAudioSharedMemory();
     int32_t Release();
 
 private:
@@ -96,6 +98,7 @@ private:
     bool eosFlag_ = false;
     std::deque<std::shared_ptr<AudioBufferEntry>> availableAudioBuffers_;
     std::shared_ptr<AudioBufferEntry> fullPcmBuffer_ = nullptr;
+    std::shared_ptr<AudioStandard::AudioSharedMemory> audioSharedMemory_ = nullptr;
     bool decodeShouldCompleted_ = false;
     int32_t currentSoundBufferSize_ = 0;
     std::shared_ptr<ISoundPoolCallback> callback_ = nullptr;
@@ -123,6 +126,7 @@ public:
     int32_t SetCallback(const std::shared_ptr<ISoundPoolCallback> &callback);
     int32_t Release();
     int64_t GetSourceDuration();
+    std::shared_ptr<AudioStandard::AudioSharedMemory> GetAudioSharedMemory();
 
 private:
     class SoundParserListener : public SoundDecoderCallback::SoundDecodeListener {
@@ -137,7 +141,6 @@ private:
     private:
         std::weak_ptr<SoundParser> soundParserInner_;
         std::shared_ptr<AudioBufferEntry> soundData_ = nullptr;
-        std::shared_ptr<AudioStandard::AudioSharedMemory> sharedMemory_ = nullptr;
         size_t soundBufferTotalSize_ = 0;
         std::atomic<bool> isSoundParserCompleted_ = false;
     };

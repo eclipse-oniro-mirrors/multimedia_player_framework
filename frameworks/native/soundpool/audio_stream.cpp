@@ -20,6 +20,7 @@
 #include "media_errors.h"
 #include "media_log.h"
 #include "securec.h"
+#include "stream_id_manager.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SOUNDPOOL, "AudioStream"};
@@ -43,10 +44,13 @@ AudioStream::~AudioStream()
     Release();
 }
 
-void AudioStream::SetPcmBuffer(const std::shared_ptr<AudioBufferEntry> &pcmBuffer, size_t pcmBufferSize)
+bool AudioStream::SetPcmSharedMemory(const std::shared_ptr<AudioStandard::AudioSharedMemory> &pcmBuffer,
+    size_t pcmBufferSize)
 {
+    CHECK_AND_RETURN_RET_LOG(pcmBuffer != nullptr, false, "SetPcmSharedMemory failed, pcmBuffer is nullptr");
     pcmBuffer_ = pcmBuffer;
     pcmBufferSize_ = pcmBufferSize;
+    return true;
 }
 
 void AudioStream::SetManager(std::weak_ptr<StreamIDManager> streamIDManager)
@@ -200,6 +204,7 @@ std::shared_ptr<AudioStandard::AudioRenderer> AudioStream::CreateAudioRenderer(
     const AudioStandard::AudioRendererInfo &audioRendererInfo, const PlayParams &playParams)
 {
     MEDIA_LOGI("AudioStream::CreateAudioRenderer start");
+    CHECK_AND_RETURN_RET_LOG(pcmBuffer_ != nullptr, nullptr, "CreateAudioRenderer failed, pcmBuffer_ is nullptr");
     MediaTrace trace("AudioStream::CreateAudioRenderer");
     AudioStandard::AudioRendererOptions rendererOptions = {};
     DealAudioRendererParams(rendererOptions, audioRendererInfo);
@@ -208,15 +213,8 @@ std::shared_ptr<AudioStandard::AudioRenderer> AudioStream::CreateAudioRenderer(
         [](void *) {
             MEDIA_LOGI("AudioRenderer::Create time out");
         });
-    CHECK_AND_RETURN_RET_LOG(pcmBuffer_ != nullptr && pcmBufferSize_ > 0, nullptr,
-        "pcmBuffer_ or pcmBufferSize_ is invalid");
-    std::shared_ptr<AudioStandard::AudioSharedMemory> sharedMemory =
-        AudioStandard::AudioSharedMemory::CreateFromLocal(pcmBufferSize_, "SoundPool");
     std::shared_ptr<AudioStandard::AudioRenderer> audioRenderer = AudioStandard::AudioRenderer::Create(rendererOptions,
-        sharedMemory, shared_from_this());
-    int32_t ret = memcpy_s(sharedMemory->GetBase(), pcmBufferSize_, pcmBuffer_->buffer, pcmBufferSize_);
-    MEDIA_LOGI("ret is %{public}d, pcmBufferSize_ is %{public}zu", ret, pcmBufferSize_);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "Failed to copy pcm buffer from pcmBuffer to shared memory");
+        pcmBuffer_, shared_from_this());
     soundPoolXCollie.CancelXCollieTimer();
 
     if (audioRenderer == nullptr) {
@@ -232,12 +230,7 @@ std::shared_ptr<AudioStandard::AudioRenderer> AudioStream::CreateAudioRenderer(
             [](void *) {
                 MEDIA_LOGI("AudioRenderer::Create normal time out");
             });
-            std::shared_ptr<AudioStandard::AudioSharedMemory> sharedMemory =
-        AudioStandard::AudioSharedMemory::CreateFromLocal(pcmBufferSize_, "SoundPool");
-        audioRenderer = AudioStandard::AudioRenderer::Create(rendererOptions, sharedMemory, shared_from_this());
-        ret = memcpy_s(sharedMemory->GetBase(), pcmBufferSize_, pcmBuffer_->buffer, pcmBufferSize_);
-        MEDIA_LOGI("ret is %{public}d, pcmBufferSize_ is %{public}zu", ret, pcmBufferSize_);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "Failed to copy pcm buffer from pcmBuffer to shared memory");
+        audioRenderer = AudioStandard::AudioRenderer::Create(rendererOptions, pcmBuffer_, shared_from_this());
         soundPoolXCollieNormal.CancelXCollieTimer();
     }
 
@@ -307,16 +300,19 @@ int32_t AudioStream::DoPlayWithSameSoundInterrupt()
     MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt, streamID_ is %{public}d, bufferSize is %{public}zu, "
         "pcmBufferFrameIndex_ is %{public}zu, pcmBufferSize_ is %{public}zu", streamID_, bufferSize,
         pcmBufferFrameIndex_, pcmBufferSize_);
-    if (streamCallback_ != nullptr) {
-        streamCallback_->OnPlayFinished(streamID_);
-    }
-    streamState_.store(StreamState::PLAYING);
-    if (audioRenderer_->GetStatus() == OHOS::AudioStandard::RendererState::RENDERER_RUNNING) {
+    if (audioRenderer_->GetStatus() == OHOS::AudioStandard::RendererState::RENDERER_RUNNING &&
+        streamState_.load() == StreamState::PLAYING) {
+        if (streamCallback_ != nullptr) {
+            streamCallback_->OnPlayFinished(streamID_);
+        }
         audioRenderer_->Stop();
         if (callback_ != nullptr) {
             MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt, call OnPlayFinished");
             callback_->OnPlayFinished(streamID_);
         }
+    }
+    if (streamState_.load() == StreamState::PREPARED || streamState_.load() == StreamState::STOPPED) {
+        streamState_.store(StreamState::PLAYING);
     }
     if (!audioRenderer_->Start()) {
         MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt, audioRenderer_->Start()");
@@ -361,16 +357,16 @@ int32_t AudioStream::Stop()
             [](void *) {
                 MEDIA_LOGI("AudioStream::Stop time out");
             });
+        if (streamCallback_ != nullptr) {
+            MEDIA_LOGI("streamCallback_ call OnPlayFinished.");
+            streamCallback_->OnPlayFinished(streamID_);
+        }
         audioRenderer_->Stop();
         soundPoolXCollie.CancelXCollieTimer();
         pcmBufferFrameIndex_ = 0;
         if (callback_ != nullptr) {
             MEDIA_LOGI("callback_ call OnPlayFinished.");
             callback_->OnPlayFinished(streamID_);
-        }
-        if (streamCallback_ != nullptr && interruptMode_.load() == InterruptMode::NO_INTERRUPT) {
-            MEDIA_LOGI("streamCallback_ call OnPlayFinished.");
-            streamCallback_->OnPlayFinished(streamID_);
         }
     }
     MEDIA_LOGI("AudioStream::Stop end, streamID is %{public}d", streamID_);
@@ -428,7 +424,6 @@ int32_t AudioStream::Release()
         audioRenderer_ = nullptr;
     }
 
-    if (pcmBuffer_ != nullptr) pcmBuffer_.reset();
     if (callback_ != nullptr) callback_.reset();
     if (streamCallback_ != nullptr) streamCallback_.reset();
     if (frameWriteCallback_ != nullptr) frameWriteCallback_.reset();
