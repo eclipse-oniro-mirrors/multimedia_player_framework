@@ -19,6 +19,7 @@
 #include "system_sound_manager.h"
 
 #include "ringtone_player_napi.h"
+#include "system_sound_player_napi.h"
 #include "system_tone_player_napi.h"
 #include "tone_attrs_napi.h"
 #include "tone_haptics_attrs_napi.h"
@@ -76,6 +77,12 @@ static const std::map<std::string, SystemSoundError> systemSoundErrorModeMap = {
     {"ERROR_INVALID_PARAM", ERROR_INVALID_PARAM},
 };
 
+static const std::map<std::string, SystemSoundType> systemSoundTypeModeMap = {
+    {"PHOTO_SHUTTER", PHOTO_SHUTTER},
+    {"VIDEO_RECORDING_BEGIN", VIDEO_RECORDING_BEGIN},
+    {"VIDEO_RECORDING_END", VIDEO_RECORDING_END},
+};
+
 class SystemSoundManagerNapi {
 public:
     static napi_value Init(napi_env env, napi_value exports);
@@ -90,6 +97,9 @@ private:
     static napi_value Construct(napi_env env, napi_callback_info info);
     static napi_value CreateCustomizedToneAttrs(napi_env env, napi_callback_info info);
     static napi_value GetSystemSoundManager(napi_env env, napi_callback_info info);
+    static napi_value CreateSystemSoundPlayer(napi_env env, napi_callback_info info);
+    static void AsyncCreateSystemSoundPlayer(napi_env env, void *data);
+    static void CreateSystemSoundPlayerAsyncCallbackComp(napi_env env, napi_status status, void* data);
     static napi_status AddNamedProperty(napi_env env, napi_value object, const std::string name, int32_t enumValue);
     static napi_value CreateRingtoneTypeObject(napi_env env);
     static napi_value CreateSystemToneTypeObject(napi_env env);
@@ -103,6 +113,7 @@ private:
     static napi_value CreateToneHapticsTypeObject(napi_env env);
     static napi_value CreateToneHapticsModeObject(napi_env env);
     static napi_value CreateSystemSoundErrorObject(napi_env env);
+    static napi_value CreateSystemSoundTypeObject(napi_env env);
     static std::shared_ptr<AbilityRuntime::Context> GetAbilityContext(napi_env env, napi_value contextArg);
     static bool VerifySelfSystemPermission();
     static bool VerifyRingtonePermission();
@@ -197,6 +208,7 @@ private:
     static thread_local napi_ref toneCustomizedType_;
     static thread_local napi_ref toneHapticsMode_;
     static thread_local napi_ref systemSoundError_;
+    static thread_local napi_ref systemSoundType_;
 
     napi_env env_;
 
@@ -236,6 +248,7 @@ struct SystemSoundManagerAsyncContext {
     std::vector<std::pair<std::string, SystemSoundError>> removeResultArray;
     std::vector<std::string> uriList;
     std::vector<std::tuple<std::string, int64_t, SystemSoundError>> openToneResultArray;
+    std::shared_ptr<SystemSoundPlayer> systemSoundPlayer;
 };
 } // namespace Media
 } // namespace OHOS

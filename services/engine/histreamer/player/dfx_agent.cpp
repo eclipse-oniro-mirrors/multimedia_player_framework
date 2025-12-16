@@ -26,12 +26,25 @@ namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "DfxAgent" };
     constexpr int64_t LAG_EVENT_THRESHOLD_MS = 500; // Lag threshold is 500 ms
     constexpr int64_t LAG_EVENT_UPPER_MS = 5000; // Lag upper threshold is 5000 ms
+    constexpr int64_t TIME_S1_MS = 2; // 2ms
+    constexpr int64_t TIME_S2_MS = 10; // 10ms
+    constexpr int64_t TIME_S3_MS = 3; // 3ms
     ConcurrentUidSet g_appUidSet{};
     const std::string SOURCE = "SRC";
     const std::string DEMUXER = "DEMUX";
     const std::string VIDEO_SINK = "VSINK";
     const std::string AUDIO_SINK = "ASINK";
     const std::string VIDEO_RENDERER = "VRNDR";
+
+    struct StallingTimestamps {
+        int64_t timeDemuxerStart = 0;
+        int64_t timeDecoderStart = 0;
+        int64_t timeAVSyncStart = 0;
+        int64_t timeRenderStart = 0;
+        int64_t timePreFrameRender = 0;
+        int64_t timeFrameInterval = 0;
+        int64_t timeCurFramePts = 0;
+    };
 }
 
 const std::map<DfxEventType, DfxEventHandleFunc> DfxAgent::DFX_EVENT_HANDLERS_ = {
@@ -40,6 +53,7 @@ const std::map<DfxEventType, DfxEventHandleFunc> DfxAgent::DFX_EVENT_HANDLERS_ =
     { DfxEventType::DFX_INFO_PLAYER_STREAM_LAG, DfxAgent::ProcessStreamLagEvent },
     { DfxEventType::DFX_INFO_PLAYER_EOS_SEEK, DfxAgent::ProcessEosSeekEvent },
     { DfxEventType::DFX_INFO_PERF_REPORT, DfxAgent::ProcessPerfInfoEvent },
+    { DfxEventType::DFX_EVENT_STALLING, DfxAgent::ProcessMetricsEvent },
 };
 
 const std::unordered_map<std::string, bool> PERF_ITEM_NECESSITY = {
@@ -144,6 +158,17 @@ void DfxAgent::ResetAgent()
     });
 }
 
+void DfxAgent::SetMetricsCallback(DfxEventHandleFunc cb)
+{
+    FALSE_RETURN(dfxTask_ != nullptr);
+    std::weak_ptr<DfxAgent> agent = shared_from_this();
+    dfxTask_->SubmitJobOnce([agent, cb] {
+        auto ptr = agent.lock();
+        FALSE_RETURN_MSG(ptr != nullptr, "DfxAgent is released");
+        ptr->metricsCallback_ = cb;
+    });
+}
+
 void DfxAgent::ProcessVideoLagEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event)
 {
     auto agent = ptr.lock();
@@ -192,12 +217,101 @@ void DfxAgent::ProcessPerfInfoEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent 
     agent->UpdateDfxInfo(event);
 }
 
+void DfxAgent::ProcessMetricsEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event)
+{
+    auto agent = ptr.lock();
+    FALSE_RETURN(agent != nullptr);
+    agent->ReportMetricsEvent(event);
+}
+
 void DfxAgent::UpdateDfxInfo(const DfxEvent &event)
 {
     auto data = AnyCast<MainPerfData>(event.param);
     perfDataMap_.insert_or_assign(event.callerName, data);
     FALSE_RETURN_NOLOG(needPrintPerfLog_);
     MEDIA_LOG_D("%{public}s", GetPerfStr(true).c_str());
+}
+
+static bool ExtractStallingTimestamps(const std::vector<int64_t>& timeStampList, StallingTimestamps& ts)
+{
+    std::unordered_map<int64_t, int64_t*> stageMap = {
+        {static_cast<int64_t>(StallingStage::DEMUXER_START), &ts.timeDemuxerStart},
+        {static_cast<int64_t>(StallingStage::DECODER_START), &ts.timeDecoderStart},
+        {static_cast<int64_t>(StallingStage::AVSYNC_START), &ts.timeAVSyncStart},
+        {static_cast<int64_t>(StallingStage::RENDERER_START), &ts.timeRenderStart},
+        {static_cast<int64_t>(StallingStage::CUSTOM_PRE_RENDER), &ts.timePreFrameRender},
+        {static_cast<int64_t>(StallingStage::CUSTOM_FRAME_INTERVAL), &ts.timeFrameInterval},
+        {static_cast<int64_t>(StallingStage::CUSTOM_FRAME_PTS), &ts.timeCurFramePts},
+    };
+
+    size_t foundCount = 0;
+    int step = 2;
+    for (size_t i = 0; i + 1 < timeStampList.size(); i += step) {
+        int64_t stage = timeStampList[i];
+        auto it = stageMap.find(stage);
+        if (it != stageMap.end()) {
+            *(it->second) = timeStampList[i + 1];
+            ++foundCount;
+            MEDIA_LOG_D("ExtractStallingTimestamps: found stage=%" PRId64 ", value=%" PRId64,
+                stage, timeStampList[i + 1]);
+        } else {
+            MEDIA_LOG_D("ExtractStallingTimestamps: not found stage=%" PRId64, stage);
+        }
+    }
+    return foundCount == stageMap.size();
+}
+
+void DfxAgent::ReportMetricsEvent(const DfxEvent &event)
+{
+    auto timeStampList = AnyCast<std::vector<int64_t>>(event.param);
+    StallingTimestamps ts;
+    FALSE_RETURN(ExtractStallingTimestamps(timeStampList, ts));
+
+    int64_t delayTimeMs = 0;
+    auto texpMs = ts.timePreFrameRender + ts.timeFrameInterval;
+    delayTimeMs = ts.timeRenderStart - texpMs;
+    totalStallingDuration_.fetch_add(delayTimeMs);
+    totalStallingTimes_.fetch_add(1);
+
+    if (delayTimeMs >= 0) {
+        auto info = AVMetricsEvent{
+            .timeStamp = texpMs,
+            .playbackPosition = ts.timeCurFramePts,
+            .details = {
+                {"MediaType", OHOS::Media::MediaType::MEDIA_TYPE_VID},
+                {"Duration", delayTimeMs},
+            },
+        };
+
+        DfxEvent eventCopy;
+        eventCopy.param = info;
+        if (metricsCallback_ != nullptr) {
+            metricsCallback_(shared_from_this(), eventCopy);
+        }
+
+        if (ts.timeDemuxerStart > (texpMs - TIME_S1_MS - TIME_S2_MS - TIME_S3_MS)) {
+            MEDIA_LOG_I("PLAYER_LAG stalling lag at loader stage.");
+        }
+        if (ts.timeDemuxerStart < (texpMs - TIME_S1_MS - TIME_S2_MS - TIME_S3_MS)) {
+            MEDIA_LOG_I("PLAYER_LAG stalling lag at demuxer stage.");
+        }
+        if (ts.timeDecoderStart < (texpMs - TIME_S2_MS - TIME_S3_MS)) {
+            MEDIA_LOG_I("PLAYER_LAG stalling lag at decoder stage.");
+        }
+        if (ts.timeAVSyncStart < (texpMs - TIME_S3_MS)) {
+            MEDIA_LOG_I("PLAYER_LAG stalling lag at AVSync stage.");
+        }
+    }
+}
+
+void DfxAgent::GetTotalStallingDuration(int64_t* duration)
+{
+    *duration = totalStallingDuration_.load();
+}
+
+void DfxAgent::GetTotalStallingTimes(int64_t* times)
+{
+    *times = totalStallingTimes_.load();
 }
 
 std::string DfxAgent::GetPerfStr(const bool needWaitAllData)

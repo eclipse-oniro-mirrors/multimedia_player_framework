@@ -65,6 +65,7 @@ public:
     int32_t GetApiVersion(int32_t &apiVersion) override;
     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
     int32_t GetPlaybackInfo(Format &playbackInfo) override;
+    int32_t GetPlaybackStatisticMetrics(Format &playbackStatisticMetrics) override;
     int32_t GetVideoWidth() override;
     int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
         bool svp) override;

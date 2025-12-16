@@ -44,6 +44,18 @@ namespace {
     constexpr int32_t MAX_SUBTITLE_TRACK_NUN = 8;
     constexpr int32_t MEMORY_USAGE_VERSION_ISOLATION = 20;
     static bool g_isFirstInit = true;
+    const std::map<OHOS::Media::PlayerErrorType, std::string> ERROR_TYPE_INFOS = {
+        {OHOS::Media::PlayerErrorType::PLAY_ERR, "PLAY_ERR-"},
+        {OHOS::Media::PlayerErrorType::NET_ERR, "NET_ERR-"},
+        {OHOS::Media::PlayerErrorType::CONTAINER_ERR, "CONTAINER_ERR-"},
+        {OHOS::Media::PlayerErrorType::DEM_FMT_ERR, "DEM_FMT_ERR-"},
+        {OHOS::Media::PlayerErrorType::DEM_PARSE_ERR, "DEM_PARSE_ERR-"},
+        {OHOS::Media::PlayerErrorType::AUD_DEC_ERR, "AUD_DEC_ERR-"},
+        {OHOS::Media::PlayerErrorType::VID_DEC_ERR, "VID_DEC_ERR-"},
+        {OHOS::Media::PlayerErrorType::DRM_ERR, "DRM_ERR-"},
+        {OHOS::Media::PlayerErrorType::AUD_OUTPUT_ERR, "AUD_OUTPUT_ERR-"},
+        {OHOS::Media::PlayerErrorType::VPE_ERR, "VPE_ERR-"}
+    };
 }
 
 namespace OHOS {
@@ -216,6 +228,7 @@ int32_t PlayerServer::SetSource(int32_t fd, int64_t offset, int64_t size)
         }
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
         uriHelper_ = std::move(uriHelper);
+        CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_INVALID_VAL, "playerEngine_ is nullptr");
         playerEngine_->SetPerfRecEnabled(
             uriHelper_ != nullptr && uriHelper_->GetFdLocation() == FdLocation::LOCAL);
     }
@@ -1121,6 +1134,23 @@ int32_t PlayerServer::GetPlaybackInfo(Format &playbackInfo)
     return MSERR_OK;
 }
 
+int32_t PlayerServer::GetPlaybackStatisticMetrics(Format &playbackStatisticMetrics)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+
+    if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED && lastOpStatus_ != PLAYER_STARTED &&
+        lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE && lastOpStatus_ != PLAYER_STOPPED) {
+        MEDIA_LOGE("Can not get playback statistic metrics, currentState is %{public}s",
+            GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+    MEDIA_LOGD("PlayerServer GetPlaybackStatisticMetrics in");
+    int32_t ret = playerEngine_->GetPlaybackStatisticMetrics(playbackStatisticMetrics);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine GetPlaybackStatisticMetrics Failed!");
+    return MSERR_OK;
+}
+
 int32_t PlayerServer::GetAudioTrackInfo(std::vector<Format> &audioTrack)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -1789,10 +1819,21 @@ int32_t PlayerServer::DumpInfo(int32_t fd)
     return MSERR_OK;
 }
 
-void PlayerServer::OnError(PlayerErrorType errorType, int32_t errorCode)
+std::string PlayerServer::GetPlayerErrorTypeStr(PlayerErrorType errorType)
 {
-    (void)errorType;
-    auto errorMsg = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode)) + ", ";
+    std::string errorTypeStr = "";
+    auto it = ERROR_TYPE_INFOS.find(errorType);
+    if (it != ERROR_TYPE_INFOS.end()) {
+        errorTypeStr = ERROR_TYPE_INFOS.at(errorType);
+    }
+    return errorTypeStr;
+}
+
+void PlayerServer::OnError(PlayerErrorType errorType, int32_t errorCode, const std::string &description)
+{
+    auto errorMsg = GetPlayerErrorTypeStr(errorType);
+    errorMsg += description != "" ? description + "-" : "null-";
+    errorMsg += MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode)) + ", ";
     errorMsg += MSErrorToString(static_cast<MediaServiceErrCode>(errorCode));
     return OnErrorMessage(errorCode, errorMsg);
 }

@@ -138,10 +138,9 @@ public:
             std::string &hapticsFileName, std::string &hapticsUri);
     int32_t GetToneHapticsSettings(const DatabaseTool &databaseTool, const std::string &toneUri,
         ToneHapticsType toneHapticsType, ToneHapticsSettings &settings);
-    int32_t GetHapticsAttrsSyncedWithTone(const std::string &toneUri,
-        std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+    int32_t GetHapticsAttrsSyncedWithTone(const std::string &toneUri, const DatabaseTool &databaseTool,
         std::shared_ptr<ToneHapticsAttrs> &toneHapticsAttrs);
-    int32_t SetToneHapticsSettings(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+    int32_t SetToneHapticsSettings(const DatabaseTool &databaseTool,
         const std::string &toneUri, ToneHapticsType toneHapticsType, const ToneHapticsSettings &settings);
     bool CheckVibrateSwitchStatus();
     int32_t OpenToneUri(const std::shared_ptr<AbilityRuntime::Context> &context,
@@ -223,19 +222,18 @@ private:
 
     std::string GetHapticsUriByStyle(const DatabaseTool &databaseTool,
         const std::string &standardHapticsUri, HapticsStyle hapticsStyle, const std::string &vibrateFilesUri);
-    std::string GetToneSyncedHapticsUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+    std::string GetToneSyncedHapticsUri(const DatabaseTool &databaseTool,
         const std::string &toneUri);
-    std::string GetDefaultNonSyncedHapticsUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+    std::string GetDefaultNonSyncedHapticsUri(const DatabaseTool &databaseTool,
         ToneHapticsType toneHapticsType);
     std::string GetFirstNonSyncedHapticsUri();
-    int32_t GetDefaultToneHapticsSettings(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+    int32_t GetDefaultToneHapticsSettings(const DatabaseTool &databaseTool,
         const std::string &currentToneUri, ToneHapticsType toneHapticsType, ToneHapticsSettings &settings);
 
-    int32_t UpdateToneHapticsSettings(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+    int32_t UpdateToneHapticsSettings(const DatabaseTool &databaseTool,
         const std::string &toneUri, ToneHapticsType toneHapticsType, const ToneHapticsSettings &settings);
     bool GetVibrateTypeByStyle(int standardVibrateType, HapticsStyle hapticsStyle, int &vibrateType);
-    std::unique_ptr<RingtoneAsset> IsPresetRingtone(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
-        const std::string &toneUri);
+    std::unique_ptr<RingtoneAsset> IsPresetRingtone(const DatabaseTool &databaseTool, const std::string &toneUri);
     int GetStandardVibrateType(int toneType);
 
     bool IsRingtoneTypeValid(RingtoneType ringtongType);

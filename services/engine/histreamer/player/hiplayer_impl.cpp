@@ -26,6 +26,7 @@
 #include "directory_ex.h"
 #include "filter/filter_factory.h"
 #include "media_errors.h"
+#include "plugin/plugin_event.h"
 #include "osal/task/jobutils.h"
 #include "osal/task/pipeline_threadpool.h"
 #include "osal/task/task.h"
@@ -174,6 +175,18 @@ HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, 
     liveController_.CreateTask(playerId_);
     bundleName_ = GetClientBundleName(appUid);
     dfxAgent_ = std::make_shared<DfxAgent>(playerId_, bundleName_);
+    dfxAgent_->SetMetricsCallback([this](std::weak_ptr<DfxAgent> agent, const DfxEvent& event) {
+        auto info = AnyCast<DfxAgent::AVMetricsEvent>(event.param);
+        AVMetricsEvent infoCopy = {
+            .metricsEventType = info.metricsEventType,
+            .timeStamp = info.timeStamp,
+            .playbackPosition = info.playbackPosition,
+            .details = info.details
+        };
+        HandleMetricsEvent(infoCopy.timeStamp, infoCopy.playbackPosition,
+            infoCopy.details["Duration"],
+            static_cast<OHOS::Media::MediaType>(infoCopy.details["MediaType"]));
+    });
 }
 
 HiPlayerImpl::~HiPlayerImpl()
@@ -551,7 +564,8 @@ int32_t HiPlayerImpl::SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSee
         MEDIA_LOG_E("SetPlayRangeWithMode failed! start: " PUBLIC_LOG_D64 ", end: "
             PUBLIC_LOG_D64, start, end);
         rtv = Status::ERROR_INVALID_PARAMETER;
-        OnEvent({"engine", EventType::EVENT_ERROR, TransStatus(rtv)});
+        Event event{"engine", EventType::EVENT_ERROR, TransStatus(rtv), ""};
+        OnEvent(event);
         return TransStatus(rtv);
     }
     startTimeWithMode_ = start;
@@ -633,8 +647,8 @@ int32_t HiPlayerImpl::PrepareAsync()
 {
     MediaTrace trace("HiPlayerImpl::PrepareAsync");
     MEDIA_LOG_D("HiPlayerImpl PrepareAsync");
-    if (!(pipelineStates_ == PlayerStates::PLAYER_INITIALIZED || pipelineStates_ == PlayerStates::PLAYER_STOPPED) &&
-        !isNeedSwDecoder_) {
+    int64_t startTime = GetCurrentMillisecond();
+    if (IsPrepareStateValid()) {
         CollectionErrorInfo(MSERR_INVALID_OPERATION, "PrepareAsync pipelineStates not initialized or stopped");
         return MSERR_INVALID_OPERATION;
     }
@@ -652,7 +666,7 @@ int32_t HiPlayerImpl::PrepareAsync()
         demuxer_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true);
     }
     if (ret != Status::OK && !isInterruptNeeded_.load()) {
-        OnEvent({"engine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_CONTAINER_TYPE});
+        OnEvent({"engine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_CONTAINER_TYPE, ""});
         return HandleErrorRet(Status::ERROR_UNSUPPORTED_FORMAT, "PrepareAsync error: DoSetSource error");
     }
     FALSE_RETURN_V(!BreakIfInterruptted(), TransStatus(Status::OK));
@@ -677,8 +691,15 @@ int32_t HiPlayerImpl::PrepareAsync()
         }
     }
     UpdatePlayerStateAndNotify();
+    prepareDuration_ = GetCurrentMillisecond() - startTime;
     MEDIA_LOG_I("PrepareAsync End");
     return TransStatus(ret);
+}
+
+bool HiPlayerImpl::IsPrepareStateValid() const
+{
+    return !(pipelineStates_ == PlayerStates::PLAYER_INITIALIZED || pipelineStates_ == PlayerStates::PLAYER_STOPPED) &&
+        !isNeedSwDecoder_;
 }
 
 void HiPlayerImpl::CollectionErrorInfo(int32_t errCode, const std::string& errMsg)
@@ -728,7 +749,8 @@ Status HiPlayerImpl::DoSetPlayRange()
         MEDIA_LOG_E("DoSetPlayRange failed! start: " PUBLIC_LOG_D64 ", end: " PUBLIC_LOG_D64,
                     rangeStartTime, rangeEndTime);
         ret = Status::ERROR_INVALID_PARAMETER;
-        OnEvent({"engine", EventType::EVENT_ERROR, TransStatus(ret)});
+        Event event{"engine", EventType::EVENT_ERROR, TransStatus(ret), ""};
+        OnEvent(event);
         return ret;
     }
     if ((pipeline_ != nullptr) && (rangeEndTime > PLAY_RANGE_DEFAULT_VALUE)) {
@@ -1349,7 +1371,7 @@ void HiPlayerImpl::NotifySeek(Status rtv, bool flag, int64_t seekPos)
         // change player state to PLAYER_STATE_ERROR when seek error.
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
         Format format;
-        callbackLooper_.OnError(PLAYER_ERROR, MSERR_DATA_SOURCE_IO_ERROR);
+        callbackLooper_.OnError(PlayerErrorType::PLAY_ERR, MSERR_DATA_SOURCE_IO_ERROR, "");
         callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, -1, format);
         return;
     }
@@ -1363,7 +1385,8 @@ int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
     if (IsInValidSeekTime(mSeconds)) {
         MEDIA_LOG_E("Current seek time is not at playRange");
         auto errCode = TransStatus(Status::ERROR_INVALID_PARAMETER);
-        OnEvent({"engine", EventType::EVENT_ERROR, errCode});
+        Event event{"engine", EventType::EVENT_ERROR, errCode, ""};
+        OnEvent(event);
         return errCode;
     }
     MEDIA_LOG_I("Seek.");
@@ -1947,12 +1970,13 @@ int32_t HiPlayerImpl::SetPlaybackSpeed(PlaybackRateMode mode)
 {
     MEDIA_LOG_I("SetPlaybackSpeed %{public}d", mode);
     float speed = TransformPlayRate2Float(mode);
+    Format format;
     if (doSetPlaybackSpeed(speed) != Status::OK) {
         MEDIA_LOG_E("SetPlaybackSpeed audioSink set speed error");
+        callbackLooper_.OnInfo(INFO_TYPE_SPEEDDONE, mode, format);
         return MSERR_UNKNOWN;
     }
     playbackRateMode_ = mode;
-    Format format;
     callbackLooper_.OnInfo(INFO_TYPE_SPEEDDONE, mode, format);
     MEDIA_LOG_I("SetPlaybackSpeed end");
     return MSERR_OK;
@@ -2260,6 +2284,32 @@ int32_t HiPlayerImpl::GetPlaybackInfo(Format& playbackInfo)
     return TransStatus(Status::OK);
 }
 
+int32_t HiPlayerImpl::GetPlaybackStatisticMetrics(Format &playbackStatisticMetrics)
+{
+    MEDIA_LOG_D("GetPlaybackStatisticMetrics in");
+
+    DownloadInfo downloadInfo;
+    auto ret = demuxer_->GetDownloadInfo(downloadInfo);
+    if (ret == Status::OK) {
+        playbackStatisticMetrics.PutIntValue("prepare_duration", static_cast<int32_t>(prepareDuration_));
+        playbackStatisticMetrics.PutIntValue(
+            "resource_connection_duration", static_cast<int32_t>(downloadInfo.firstDownloadTime));
+        playbackStatisticMetrics.PutIntValue(
+            "first_frame_decapsulation_duration", static_cast<int32_t>(downloadInfo.firstFrameDecapsulationTime));
+        playbackStatisticMetrics.PutIntValue("total_playback_time", static_cast<int32_t>(playTotalDuration_));
+        playbackStatisticMetrics.PutIntValue("loading_count", downloadInfo.loadingCount);
+        playbackStatisticMetrics.PutIntValue("total_loading_time", static_cast<int32_t>(downloadInfo.totalLoadingTime));
+        playbackStatisticMetrics.PutLongValue("total_loading_Bytes", downloadInfo.totalDownLoadBytes);
+        int64_t stallingCount = 0;
+        dfxAgent_->GetTotalStallingTimes(&stallingCount);
+        playbackStatisticMetrics.PutIntValue("stalling_count", static_cast<int32_t>(stallingCount));
+        int64_t totalStallingTime = 0;
+        dfxAgent_->GetTotalStallingDuration(&totalStallingTime);
+        playbackStatisticMetrics.PutIntValue("total_stalling_time",  static_cast<int32_t>(totalStallingTime));
+    }
+    return TransStatus(Status::OK);
+}
+
 int32_t HiPlayerImpl::GetAudioTrackInfo(std::vector<Format>& audioTrack)
 {
     MEDIA_LOG_I("GetAudioTrackInfo in");
@@ -2431,7 +2481,7 @@ void HiPlayerImpl::OnEvent(const Event &event)
         }
         case EventType::EVENT_ERROR: {
             OnStateChanged(PlayerStateId::ERROR);
-            HandleErrorEvent(AnyCast<int32_t>(event.param));
+            HandleErrorEvent(event);
             break;
         }
         case EventType::EVENT_READY: {
@@ -2780,9 +2830,163 @@ void HiPlayerImpl::HandleIsLiveStreamEvent(bool isLiveStream)
     callbackLooper_.OnInfo(INFO_TYPE_IS_LIVE_STREAM, isLiveStream, format);
 }
 
-void HiPlayerImpl::HandleErrorEvent(int32_t errorCode)
+PlayerErrorType HiPlayerImpl::GetPlayerErrorTypeFromDemuxerFilter(const Event& event)
 {
-    callbackLooper_.OnError(PLAYER_ERROR, errorCode);
+    PlayerErrorType errorType = PlayerErrorType::PLAYER_ERROR_UNKNOWN;
+    int32_t errorCode = AnyCast<int32_t>(event.param);
+
+    switch (errorCode) {
+        case MSERR_DEMUXER_FAILED:
+        case MSERR_UNSUPPORT_CONTAINER_TYPE:
+            errorType = PlayerErrorType::DEM_FMT_ERR;
+            break;
+        case MSERR_DATA_SOURCE_ERROR_UNKNOWN:
+        case MSERR_DEMUXER_BUFFER_NO_MEMORY:
+            errorType = PlayerErrorType::DEM_PARSE_ERR;
+            break;
+        case static_cast<int32_t>(NetworkClientErrorCode::ERROR_TIME_OUT):
+        case static_cast<int32_t>(NetworkClientErrorCode::ERROR_NOT_RETRY):
+            errorType = PlayerErrorType::NET_ERR;
+        default:
+            if (event.description == "server") {
+                errorType = PlayerErrorType::NET_ERR;
+            }
+            break;
+    }
+
+    return errorType;
+}
+
+PlayerErrorType HiPlayerImpl::GetPlayerErrorTypeFromAudioDecoder(const Event& event)
+{
+    PlayerErrorType errorType = PlayerErrorType::PLAYER_ERROR_UNKNOWN;
+    int32_t errorCode = AnyCast<int32_t>(event.param);
+
+    switch (errorCode) {
+        case MSERR_UNSUPPORT_AUD_DEC_TYPE:
+            errorType = PlayerErrorType::AUD_DEC_ERR;
+            break;
+        case MSERR_DRM_VERIFICATION_FAILED:
+            errorType = PlayerErrorType::DRM_ERR;
+        default:
+            break;
+    }
+
+    return errorType;
+}
+
+PlayerErrorType HiPlayerImpl::GetPlayerErrorTypeFromDecoderSurfaceFilter(const Event& event)
+{
+    PlayerErrorType errorType = PlayerErrorType::PLAYER_ERROR_UNKNOWN;
+    int32_t errorCode = AnyCast<int32_t>(event.param);
+
+    switch (errorCode) {
+        case MSERR_EXT_API9_IO:
+            if (event.description == "post_processor") {
+                errorType = PlayerErrorType::VPE_ERR;
+                break;
+            }
+        case MSERR_UNSUPPORT_VID_SRC_TYPE:
+            if (event.description == "post_processor") {
+                errorType = PlayerErrorType::VPE_ERR;
+                break;
+            }
+        case MSERR_UNSUPPORT_VID_DEC_TYPE:
+        case MSERR_VID_DEC_FAILED:
+            errorType = PlayerErrorType::VID_DEC_ERR;
+            break;
+        default:
+            break;
+    }
+
+    return errorType;
+}
+
+PlayerErrorType HiPlayerImpl::GetPlayerErrorTypeFromAudioSinkFilter(const Event& event)
+{
+    PlayerErrorType errorType = PlayerErrorType::PLAYER_ERROR_UNKNOWN;
+    int32_t errorCode = AnyCast<int32_t>(event.param);
+
+    switch (errorCode) {
+        case MSERR_AUD_RENDER_FAILED:
+            errorType = PlayerErrorType::AUD_OUTPUT_ERR;
+            break;
+        default:
+            break;
+    }
+
+    return errorType;
+}
+
+PlayerErrorType HiPlayerImpl::GetPlayerErrorTypeFromAudioServerSinkPlugin(const Event& event)
+{
+    PlayerErrorType errorType = PlayerErrorType::PLAYER_ERROR_UNKNOWN;
+    int32_t errorCode = AnyCast<int32_t>(event.param);
+
+    switch (errorCode) {
+        case MSERR_UNSUPPORT_AUD_SAMPLE_RATE:
+        case MSERR_UNSUPPORT_AUD_CHANNEL_NUM:
+        case MSERR_UNSUPPORT_AUD_PARAMS:
+            errorType = PlayerErrorType::AUD_OUTPUT_ERR;
+            break;
+        default:
+            break;
+    }
+
+    return errorType;
+}
+
+PlayerErrorType HiPlayerImpl::GetPlayerErrorTypeFromEngine(const Event& event)
+{
+    PlayerErrorType errorType = PlayerErrorType::PLAYER_ERROR_UNKNOWN;
+    int32_t errorCode = AnyCast<int32_t>(event.param);
+
+    switch (errorCode) {
+        case MSERR_SEEK_CONTINUOUS_UNSUPPORTED:
+        case MSERR_DATA_SOURCE_IO_ERROR:
+        case MSERR_INVALID_VAL:
+            errorType = PlayerErrorType::PLAY_ERR;
+            break;
+        case MSERR_UNSUPPORT_CONTAINER_TYPE:
+            errorType = PlayerErrorType::CONTAINER_ERR;
+            break;
+        default:
+            break;
+    }
+
+    return errorType;
+}
+
+PlayerErrorType HiPlayerImpl::GetPlayerErrorType(const Event& event)
+{
+    PlayerErrorType errorType = PlayerErrorType::PLAYER_ERROR_UNKNOWN;
+    std::string filter = event.srcFilter;
+
+    if (filter == "demuxer_filter") {
+        errorType = GetPlayerErrorTypeFromDemuxerFilter(event);
+    } else if (filter == "audioDecoder") {
+        errorType = GetPlayerErrorTypeFromAudioDecoder(event);
+    } else if (filter == "decoderSurface" ||
+        filter == "surface_decoder_filter" ||
+        filter == "DecoderSurfaceFilter") {
+        errorType = GetPlayerErrorTypeFromDecoderSurfaceFilter(event);
+    } else if (filter == "audio_sink_filter") {
+        errorType = GetPlayerErrorTypeFromAudioSinkFilter(event);
+    } else if (filter == "audioSinkPlugin" || filter == "sampleRate isn't supported" ||
+               filter == "channel isn't supported" || filter == "sampleFmt isn't supported") {
+        errorType = GetPlayerErrorTypeFromAudioServerSinkPlugin(event);
+    } else if (filter == "engine") {
+        errorType = GetPlayerErrorTypeFromEngine(event);
+    }
+
+    return errorType;
+}
+
+void HiPlayerImpl::HandleErrorEvent(const Event& event)
+{
+    int32_t errorCode = AnyCast<int32_t>(event.param);
+    PlayerErrorType errorType = GetPlayerErrorType(event);
+    callbackLooper_.OnError(errorType, errorCode, event.description);
 }
 
 void HiPlayerImpl::NotifyBufferingStart(int32_t param)
@@ -3314,6 +3518,28 @@ void __attribute__((no_sanitize("cfi"))) HiPlayerImpl::OnStateChanged(PlayerStat
     }
 }
 
+void HiPlayerImpl::HandleMetricsEvent(int64_t timeStamp, int64_t timeLine, int64_t duration,
+    OHOS::Media::MediaType mediaType)
+{
+    MEDIA_LOG_D_SHORT("HandleMetricsEvent timestamp: %{public}" PRId64 ", timeline: %{public}" PRId64 ",\
+        duration: %{public}" PRId64 ", mediaType: %{public}d",
+        timeStamp, timeLine, duration, static_cast<int32_t>(mediaType));
+    if (callbackLooper_.IsStarted()) {
+        Format format;
+        format.PutIntValue(PlayerKeys::PLAYER_METRICS_EVENT_TYPE,
+            static_cast<int32_t>(AV_METRICS_EVENT_TYPE_STALLING));
+        format.PutLongValue(PlayerKeys::PLAYER_STALLING_TIMESTAMP, timeStamp);
+        format.PutLongValue(PlayerKeys::PLAYER_STALLING_TIMELINE, timeLine);
+        format.PutLongValue(PlayerKeys::PLAYER_STALLING_DURATION, duration);
+        format.PutIntValue(PlayerKeys::PLAYER_STALLING_MEDIA_TYPE, static_cast<int32_t>(mediaType));
+        MEDIA_LOG_I("sending stalling event: timestamp=%{public}" PRId64 ", timeline=%{public}" PRId64\
+            ", duration=%{public}" PRId64 ", mediaType=%{public}d",
+            timeStamp, timeLine, duration, static_cast<int32_t>(mediaType));
+
+        callbackLooper_.OnInfo(INFO_TYPE_METRICS_EVENT, 0, format);
+    }
+}
+
 Status HiPlayerImpl::OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd, StreamType outType)
 {
     MEDIA_LOG_D_SHORT("HiPlayerImpl::OnCallback filter, outType: %{public}d", outType);
@@ -3652,7 +3878,7 @@ Status HiPlayerImpl::StartSeekContinous()
         res = demuxer_->ResumeDragging();
         FALSE_LOG_MSG(res == Status::OK, "ResumeDragging failed");
     } else {
-        callbackLooper_.OnError(PLAYER_ERROR, MSERR_SEEK_CONTINUOUS_UNSUPPORTED);
+        callbackLooper_.OnError(PlayerErrorType::PLAY_ERR, MSERR_SEEK_CONTINUOUS_UNSUPPORTED, "");
     }
     SetFrameRateForSeekPerformance(FRAME_RATE_FOR_SEEK_PERFORMANCE);
     return res;

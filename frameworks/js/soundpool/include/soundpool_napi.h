@@ -107,6 +107,11 @@ private:
     static napi_value JsSetVolume(napi_env env, napi_callback_info info);
 
     /**
+     * setInterruptMode(interruptMode: InterruptMode): void
+     */
+    static napi_value JsSetInterruptMode(napi_env env, napi_callback_info info);
+
+    /**
      * unload(soundID: number, callback: AsyncCallback<void>): void
      * unload(soundID: number): Promise<void>
      */
@@ -133,19 +138,18 @@ private:
     static napi_value JsSetOnCallback(napi_env env, napi_callback_info info);
     static napi_value JsClearOnCallback(napi_env env, napi_callback_info info);
     // Use to get soundpool instance.
-    static SoundPoolNapi* GetJsInstanceAndArgs(napi_env env, napi_callback_info info,
-        size_t &argCount, napi_value *args);
+    static SoundPoolNapi* GetJsInstanceAndArgs(napi_env env, napi_callback_info info, size_t &argCount,
+        napi_value *args);
     static napi_status GetJsInstanceWithParameter(napi_env env, napi_value *argv, int32_t argvLength);
     static void SendCompleteEvent(napi_env env, std::unique_ptr<SoundPoolAsyncContext> asyncCtx);
     static bool IsSystemApp();
-    int32_t ParserLoadOptionFromJs(std::unique_ptr<SoundPoolAsyncContext> &asyncCtx,
-        napi_env env, napi_value *argv, size_t argCount);
-    int32_t ParserPlayOptionFromJs(std::unique_ptr<SoundPoolAsyncContext> &asyncCtx,
-        napi_env env, napi_value *argv, size_t argCount);
-    int32_t ParserRateOptionFromJs(std::unique_ptr<SoundPoolAsyncContext> &asyncCtx,
-    napi_env env, napi_value *argv);
-    int32_t ParserVolumeOptionFromJs(std::unique_ptr<SoundPoolAsyncContext> &asyncCtx,
-    napi_env env, napi_value *argv);
+    int32_t ParserLoadOptionFromJs(std::unique_ptr<SoundPoolAsyncContext> &asyncCtx, napi_env env, napi_value *argv,
+        size_t argCount);
+    int32_t ParserPlayOptionFromJs(std::unique_ptr<SoundPoolAsyncContext> &asyncCtx, napi_env env, napi_value *argv,
+        size_t argCount);
+    int32_t ParserRateOptionFromJs(std::unique_ptr<SoundPoolAsyncContext> &asyncCtx, napi_env env, napi_value *argv);
+    int32_t ParserVolumeOptionFromJs(std::unique_ptr<SoundPoolAsyncContext> &asyncCtx, napi_env env, napi_value *argv);
+    int32_t ParserInterruptModeFromJs(napi_env env, napi_value *argv);
     bool GetPropertyBool(napi_env env, napi_value configObj, const std::string &type, bool &result);
 
     void ErrorCallback(int32_t errCode, const std::string &operate, const std::string &add = "");
@@ -167,8 +171,8 @@ private:
 struct SoundPoolAsyncContext : public MediaAsyncContext {
     explicit SoundPoolAsyncContext(napi_env env) : MediaAsyncContext(env) {}
     ~SoundPoolAsyncContext() = default;
-    void SoundPoolAsyncSignError(int32_t errCode, const std::string &operate,
-        const std::string &param, const std::string &add = "");
+    void SoundPoolAsyncSignError(int32_t errCode, const std::string &operate, const std::string &param,
+        const std::string &add = "");
     SoundPoolNapi *napi = nullptr;
     std::shared_ptr<ISoundPool> soundPool_;
     std::shared_ptr<ISoundPoolCallback> callbackNapi_;
@@ -183,6 +187,7 @@ struct SoundPoolAsyncContext : public MediaAsyncContext {
     int32_t priority_ = 0;
     float leftVolume_ = 0.0f;
     float rightVolume_ = 0.0f;
+    int32_t interruptMode_ = 0;
     AudioStandard::AudioRendererRate renderRate_ = AudioStandard::AudioRendererRate::RENDER_RATE_NORMAL;
 };
 } // namespace Media

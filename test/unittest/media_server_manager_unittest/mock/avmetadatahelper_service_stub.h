@@ -45,6 +45,7 @@ public:
     MOCK_METHOD(int32_t, SetSource, (int32_t fd, int64_t offset, int64_t size, int32_t usage), (override));
     MOCK_METHOD(int32_t, SetSource, (const sptr<IRemoteObject> &object), (override));
     MOCK_METHOD(std::string, ResolveMetadata, (int32_t key), (override));
+    MOCK_METHOD(int32_t, CancelAllFetchFrames, (), (override));
     MOCK_METHOD((std::unordered_map<int32_t, std::string>), ResolveMetadataMap, (), (override));
     MOCK_METHOD(std::shared_ptr<Meta>, GetAVMetadata, (), (override));
     MOCK_METHOD(std::shared_ptr<AVSharedMemory>, FetchArtPicture, (), (override));
@@ -52,6 +53,8 @@ public:
         const OutputConfiguration &param), (override));
     MOCK_METHOD(std::shared_ptr<AVBuffer>, FetchFrameYuv, (int64_t timeUs,
         int32_t option, const OutputConfiguration &param), (override));
+    MOCK_METHOD(int32_t, FetchFrameYuvs, (const std::vector<int64_t>& timeUs,
+        int32_t option, const PixelMapParams &param), (override));
     MOCK_METHOD(void, Release, (), (override));
     MOCK_METHOD(int32_t, DestroyStub, (), (override));
     MOCK_METHOD(int32_t, SetHelperCallback, (), (override));
@@ -69,6 +72,7 @@ public:
     MOCK_METHOD(int32_t, FetchArtPictureInner, (MessageParcel &data, MessageParcel &reply));
     MOCK_METHOD(int32_t, FetchFrameAtTimeInner, (MessageParcel &data, MessageParcel &reply));
     MOCK_METHOD(int32_t, FetchFrameYuvInner, (MessageParcel &data, MessageParcel &reply));
+    MOCK_METHOD(int32_t, FetchFrameYuvsInner, (MessageParcel &data, MessageParcel &reply));
     MOCK_METHOD(int32_t, ReleaseInner, (MessageParcel &data, MessageParcel &reply));
     MOCK_METHOD(int32_t, DestroyStubInner, (MessageParcel &data, MessageParcel &reply));
     MOCK_METHOD(int32_t, SetHelperCallbackInner, (MessageParcel &data, MessageParcel &reply));

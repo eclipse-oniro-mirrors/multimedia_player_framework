@@ -438,22 +438,24 @@ napi_status AVScreenCaptureNapi::GetWindowIDsVectorParams(std::vector<uint64_t> 
     return napi_ok;
 }
 
-napi_status AVScreenCaptureNapi::GetInt32VectorParams(std::vector<int32_t> &vec, napi_env env, napi_value* args)
+napi_status AVScreenCaptureNapi::GetInt32VectorParams(std::vector<int32_t> &vec, napi_env env, napi_value arg)
 {
     uint32_t array_length;
-    napi_status status = napi_get_array_length(env, args[0], &array_length);
+    napi_status status = napi_get_array_length(env, arg, &array_length);
     if (status != napi_ok) {
         return status;
     }
     for (uint32_t i = 0; i < array_length; i++) {
         napi_value temp;
-        status = napi_get_element(env, args[0], i, &temp);
+        status = napi_get_element(env, arg, i, &temp);
         int32_t tempValue = -1;
         if (status == napi_ok) {
             status = napi_get_value_int32(env, temp, &tempValue);
         }
         if (status == napi_ok) {
             vec.push_back(tempValue);
+        } else {
+            return status;
         }
     }
     return napi_ok;
@@ -578,7 +580,10 @@ napi_value AVScreenCaptureNapi::JsExcludePickerWindows(napi_env env, napi_callba
 
     std::vector<int32_t> windowIDsVec;
     napi_get_cb_info(env, info, &argCount, args, nullptr, nullptr);
-    napi_status status = GetInt32VectorParams(windowIDsVec, env, args);
+    napi_status status = napi_invalid_arg;
+    if (argCount > 0 && args[0] != nullptr) {
+        status = GetInt32VectorParams(windowIDsVec, env, args[0]);
+    }
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, (asyncCtx->AVScreenCaptureSignError(MSERR_EXT_API9_INVALID_PARAMETER,
         "ExcludePickerWindows", "ExcludePickerWindows get value failed"), result), "failed to GetInt32VectorParams");
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);

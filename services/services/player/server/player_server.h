@@ -98,6 +98,7 @@ public:
     int32_t GetVideoHeight() override;
     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
     int32_t GetPlaybackInfo(Format &playbackInfo) override;
+    int32_t GetPlaybackStatisticMetrics(Format &playbackStatisticMetrics) override;
     int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override;
     int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) override;
     int32_t GetDuration(int32_t &duration) override;
@@ -135,7 +136,7 @@ public:
     int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override;
 
     // IPlayerEngineObs override
-    void OnError(PlayerErrorType errorType, int32_t errorCode) override;
+    void OnError(PlayerErrorType errorType, int32_t errorCode, const std::string &description) override;
     void OnErrorMessage(int32_t errorCode, const std::string &errorMsg) override;
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
     void OnSystemOperation(PlayerOnSystemOperationType type, PlayerOperationReason reason) override;
@@ -243,6 +244,7 @@ private:
     int32_t HandleSetPlaybackRate(float rate);
     int32_t SetAudioEffectMode(const int32_t effectMode);
     int32_t CheckandDoUnFreeze();
+    std::string GetPlayerErrorTypeStr(PlayerErrorType errorType);
 
     void HandleEos();
     void PreparedHandleEos();

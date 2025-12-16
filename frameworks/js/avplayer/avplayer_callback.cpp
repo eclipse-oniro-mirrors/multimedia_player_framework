@@ -30,6 +30,8 @@
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "AVPlayerCallback" };
 constexpr int32_t ARGS_TWO = 2;
+constexpr int32_t ARGS_THREE = 3;
+constexpr int32_t ARGS_FOUR = 4;
 }
 
 namespace OHOS {
@@ -303,6 +305,49 @@ public:
 
             napi_value result = nullptr;
             status = napi_call_function(boolRef->env_, nullptr, jsCallback, 1, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok,
+                "%{public}s failed to napi_call_function", callbackName.c_str());
+        }
+    };
+
+    struct MetricsEvent : public Base {
+        std::vector<int64_t> valueVec;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> stallingRef = callback.lock();
+            CHECK_AND_RETURN_LOG(stallingRef != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(stallingRef->env_, &scope);
+            CHECK_AND_RETURN_LOG(scope != nullptr,
+                "%{public}s scope is nullptr", callbackName.c_str());
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(stallingRef->env_, scope);
+            };
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(stallingRef->env_, stallingRef->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+
+            napi_value array = nullptr;
+            (void)napi_create_array_with_length(stallingRef->env_, 1, &array);
+
+            napi_value metric = nullptr;
+            napi_create_object(stallingRef->env_, &metric);
+            (void)CommonNapi::SetPropertyInt32(stallingRef->env_, metric, "event", valueVec[0]);
+            (void)CommonNapi::SetPropertyInt64(stallingRef->env_, metric, "timeStamp", valueVec[1]);
+            (void)CommonNapi::SetPropertyInt64(stallingRef->env_, metric, "playbackPosition", valueVec[ARGS_TWO]);
+            std::map<std::string, int64_t> detailMap = {{"media_type", valueVec[ARGS_FOUR]},
+                {"duration", valueVec[ARGS_THREE]}};
+            (void)CommonNapi::SetPropertyMap(stallingRef->env_, metric, "details", detailMap);
+            (void)napi_set_element(stallingRef->env_, array, 0, metric);
+
+            napi_value result = nullptr;
+            napi_value args[1] = {array};
+
+            status = napi_call_function(stallingRef->env_, nullptr, jsCallback, 1, args, &result);
             CHECK_AND_RETURN_LOG(status == napi_ok,
                 "%{public}s failed to napi_call_function", callbackName.c_str());
         }
@@ -728,6 +773,8 @@ void AVPlayerCallback::InitInfoFuncsPart2()
         [this](const int32_t extra, const Format &infoBody) { OnSuperResolutionChangedCb(extra, infoBody); };
     onInfoFuncs_[INFO_TYPE_RATEDONE] =
         [this](const int32_t extra, const Format &infoBody) { OnPlaybackRateDoneCb(extra, infoBody); };
+    onInfoFuncs_[INFO_TYPE_METRICS_EVENT] =
+        [this](const int32_t extra, const Format &infoBody) { OnMetricsEventCb(extra, infoBody); };
 }
 
 void AVPlayerCallback::OnAudioDeviceChangeCb(const int32_t extra, const Format &infoBody)
@@ -1310,6 +1357,45 @@ void AVPlayerCallback::OnSuperResolutionChangedCb(const int32_t extra, const For
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_SUPER_RESOLUTION_CHANGED);
     cb->callbackName = AVPlayerEvent::EVENT_SUPER_RESOLUTION_CHANGED;
     cb->value = enabled ? true : false;
+    NapiCallback::CompleteCallback(env_, cb);
+}
+
+void AVPlayerCallback::OnMetricsEventCb(const int32_t extra, const Format &infoBody)
+{
+    (void)extra;
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    
+    // Extract stalling event information from infoBody
+    int32_t stallingEventType = 0;
+    int64_t stallingTimestamp = 0;
+    int64_t stallingTimeline = 0;
+    int64_t stallingDuration = 0;
+    int32_t stallingMediaType = 0;
+
+    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_METRICS_EVENT_TYPE, stallingEventType);
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_STALLING_TIMESTAMP, stallingTimestamp);
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_STALLING_TIMELINE, stallingTimeline);
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_STALLING_DURATION, stallingDuration);
+    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_STALLING_MEDIA_TYPE, stallingMediaType);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnMetricsEventCb is called, timestamp = %{public}" PRId64
+        ", timeline = %{public}" PRId64 ", duration = %{public}" PRId64 ", mediaType = %{public}" PRId32,
+        FAKE_POINTER(this), stallingTimestamp, stallingTimeline, stallingDuration, stallingMediaType);
+
+    if (refMap_.find(AVPlayerEvent::EVENT_METRICS) == refMap_.end()) {
+        MEDIA_LOGW("can not find metrics event callback!");
+        return;
+    }
+    
+    NapiCallback::MetricsEvent *cb = new(std::nothrow) NapiCallback::MetricsEvent();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new MetricsEvent");
+
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_METRICS);
+    cb->callbackName = AVPlayerEvent::EVENT_METRICS;
+    cb->valueVec.push_back(stallingEventType);
+    cb->valueVec.push_back(stallingTimestamp);
+    cb->valueVec.push_back(stallingTimeline);
+    cb->valueVec.push_back(stallingDuration);
+    cb->valueVec.push_back(static_cast<int64_t>(stallingMediaType));
     NapiCallback::CompleteCallback(env_, cb);
 }
 

@@ -18,13 +18,14 @@
 #include <atomic>
 #include <thread>
 #include <vector>
-#include "cache_buffer.h"
-#include "stream.h"
-#include "isoundpool.h"
-#include "sound_parser.h"
-#include "thread_pool.h"
+
+#include "audio_stream.h"
 #include "cpp/mutex.h"
+#include "isoundpool.h"
 #include "media_dfx.h"
+#include "sound_parser.h"
+#include "stream.h"
+#include "thread_pool.h"
 
 namespace OHOS {
 namespace Media {
@@ -40,7 +41,7 @@ public:
     void SetGlobalId(int32_t soundId, int32_t globalId);
     void DelSoundId(int32_t soundId);
     int32_t InitThreadPool();
-    int32_t Play(std::shared_ptr<SoundParser> soundParser, PlayParams &playParameters);
+    int32_t Play(std::shared_ptr<SoundParser> soundParser, const PlayParams &playParameters);
     int32_t UnloadStream(int32_t soundId);
     void ReorderStream();
     std::shared_ptr<Stream> FindStreamLock(const int32_t streamId);

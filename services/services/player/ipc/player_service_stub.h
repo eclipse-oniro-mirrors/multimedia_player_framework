@@ -65,6 +65,7 @@ public:
     int32_t GetPlaybackPosition(int32_t &playbackPosition) override;
     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
     int32_t GetPlaybackInfo(Format &playbackInfo) override;
+    int32_t GetPlaybackStatisticMetrics(Format &playbackStatisticMetrics) override;
     int32_t GetPlaybackSpeed(PlaybackRateMode &mode) override;
     int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) override;
     int32_t GetVideoHeight() override;
@@ -153,6 +154,7 @@ private:
     int32_t GetPlaybackPosition(MessageParcel &data, MessageParcel &reply);
     int32_t GetVideoTrackInfo(MessageParcel &data, MessageParcel &reply);
     int32_t GetPlaybackInfo(MessageParcel &data, MessageParcel &reply);
+    int32_t GetPlaybackStatisticMetrics(MessageParcel &data, MessageParcel &reply);
     int32_t GetAudioTrackInfo(MessageParcel &data, MessageParcel &reply);
     int32_t GetSubtitleTrackInfo(MessageParcel &data, MessageParcel &reply);
     int32_t GetVideoWidth(MessageParcel &data, MessageParcel &reply);

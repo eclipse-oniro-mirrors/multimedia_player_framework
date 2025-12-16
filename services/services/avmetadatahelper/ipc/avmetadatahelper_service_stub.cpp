@@ -74,6 +74,10 @@ int32_t AVMetadataHelperServiceStub::Init()
             [this](MessageParcel &data, MessageParcel &reply) { return FetchFrameAtTime(data, reply); } },
         { FETCH_FRAME_YUV,
             [this](MessageParcel &data, MessageParcel &reply) { return FetchFrameYuv(data, reply); } },
+        { FETCH_FRAME_YUVS,
+            [this](MessageParcel &data, MessageParcel &reply) { return FetchFrameYuvs(data, reply); } },
+        { CANCEL_FETCHFRAMES,
+            [this](MessageParcel &data, MessageParcel &reply) { return CancelAllFetchFrames(data, reply); } },
         { RELEASE,
             [this](MessageParcel &data, MessageParcel &reply) { return Release(data, reply); } },
         { DESTROY,
@@ -220,6 +224,23 @@ std::shared_ptr<AVBuffer> AVMetadataHelperServiceStub::FetchFrameYuv(int64_t tim
     return avMetadateHelperServer_->FetchFrameYuv(timeUs, option, param);
 }
 
+int32_t AVMetadataHelperServiceStub::FetchFrameYuvs(const std::vector<int64_t>& timeUs,
+    int32_t option, const PixelMapParams &param)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr,
+        MSERR_EXT_API9_SERVICE_DIED, "avmetadatahelper server is nullptr");
+    return avMetadateHelperServer_->FetchFrameYuvs(timeUs, option, param);
+}
+
+int32_t AVMetadataHelperServiceStub::CancelAllFetchFrames()
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr,
+        MSERR_EXT_API9_SERVICE_DIED, "avmetadatahelper server is nullptr");
+    return avMetadateHelperServer_->CancelAllFetchFrames();
+}
+
 void AVMetadataHelperServiceStub::Release()
 {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -313,6 +334,12 @@ int32_t AVMetadataHelperServiceStub::SetMediaDataSource(MessageParcel &data, Mes
 {
     sptr<IRemoteObject> object = data.ReadRemoteObject();
     reply.WriteInt32(SetSource(object));
+    return MSERR_OK;
+}
+
+int32_t AVMetadataHelperServiceStub::CancelAllFetchFrames(MessageParcel &data, MessageParcel &reply)
+{
+    reply.WriteInt32(CancelAllFetchFrames());
     return MSERR_OK;
 }
 
@@ -417,6 +444,22 @@ int32_t AVMetadataHelperServiceStub::FetchFrameYuv(MessageParcel &data, MessageP
     reply.WriteInt32(avBuffer != nullptr ? MSERR_OK : MSERR_INVALID_VAL);
     CHECK_AND_RETURN_RET(avBuffer != nullptr, MSERR_OK);
     avBuffer->WriteToMessageParcel(reply);
+    return MSERR_OK;
+}
+
+int32_t AVMetadataHelperServiceStub::FetchFrameYuvs(MessageParcel &data, MessageParcel &reply)
+{
+    std::vector<int64_t> timeUsVec;
+    int64_t timeUsSize = data.ReadInt64();
+    const void* timeUsBuffer = data.ReadBuffer(timeUsSize * sizeof(int64_t));
+    const int64_t* dataPtr = static_cast<const int64_t*>(timeUsBuffer);
+    timeUsVec.assign(dataPtr, dataPtr + timeUsSize);
+    int32_t option = data.ReadInt32();
+    PixelMapParams param = {data.ReadInt32(), data.ReadInt32(), static_cast<PixelFormat>(data.ReadInt32()),
+                            data.ReadBool(), data.ReadBool()};
+
+    int32_t result = FetchFrameYuvs(timeUsVec, option, param);
+    reply.WriteInt32(result == MSERR_OK ? MSERR_OK : MSERR_EXT_API9_SERVICE_DIED);
     return MSERR_OK;
 }
 

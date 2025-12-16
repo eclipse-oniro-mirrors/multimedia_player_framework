@@ -54,7 +54,6 @@ int32_t AVMetadataHelperClient::SetHelperCallback(const std::shared_ptr<HelperCa
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_NO_MEMORY, "input param callback is nullptr..");
     CHECK_AND_RETURN_RET_LOG(listenerStub_ != nullptr, MSERR_NO_MEMORY, "listenerStub_ is nullptr..");
-
     callback_ = callback;
     listenerStub_->SetHelperCallback(callback);
 
@@ -174,6 +173,23 @@ std::shared_ptr<AVBuffer> AVMetadataHelperClient::FetchFrameYuv(int64_t timeUs, 
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperProxy_ != nullptr, nullptr, "avmetadatahelper service does not exist.");
     return avMetadataHelperProxy_->FetchFrameYuv(timeUs, option, param);
+}
+
+int32_t AVMetadataHelperClient::CancelAllFetchFrames()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperProxy_ != nullptr,
+        MSERR_EXT_API9_SERVICE_DIED, "avmetadatahelper service does not exist.");
+    return avMetadataHelperProxy_->CancelAllFetchFrames();
+}
+
+int32_t AVMetadataHelperClient::FetchFrameYuvs(const std::vector<int64_t>& timeUs, int32_t option,
+    const PixelMapParams &param)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperProxy_ != nullptr,
+        MSERR_EXT_API9_SERVICE_DIED, "avmetadatahelper service does not exist.");
+    return avMetadataHelperProxy_->FetchFrameYuvs(timeUs, option, param);
 }
 
 void AVMetadataHelperClient::Release()

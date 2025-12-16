@@ -26,7 +26,7 @@ class MockIPlayerEngineObs : public IPlayerEngineObs {
 public:
     MockIPlayerEngineObs() = default;
     ~MockIPlayerEngineObs() override = default;
-    MOCK_METHOD(void, OnError, (PlayerErrorType errorType, int32_t errorCode), ());
+    MOCK_METHOD(void, OnError, (PlayerErrorType errorType, int32_t errorCode, const std::string &description), ());
     MOCK_METHOD(void, OnErrorMessage, (int32_t errorCode, const std::string &errorMsg), ());
     void OnSystemOperation(PlayerOnSystemOperationType type, PlayerOperationReason reason) override
     {
@@ -66,6 +66,7 @@ public:
     MOCK_METHOD(int32_t, GetCurrentTime, (int32_t &currentTime), ());
     MOCK_METHOD(int32_t, GetVideoTrackInfo, (std::vector<Format> &videoTrack), ());
     MOCK_METHOD(int32_t, GetPlaybackInfo, (Format &playbackInfo), ());
+    MOCK_METHOD(int32_t, GetPlaybackStatisticMetrics, (Format &playbackStatisticMetrics), ());
     MOCK_METHOD(int32_t, GetAudioTrackInfo, (std::vector<Format> &audioTrack), ());
     MOCK_METHOD(int32_t, GetVideoWidth, (), ());
     MOCK_METHOD(int32_t, GetVideoHeight, (), ());

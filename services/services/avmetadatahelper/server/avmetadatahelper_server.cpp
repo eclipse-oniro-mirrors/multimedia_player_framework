@@ -398,6 +398,67 @@ std::shared_ptr<AVBuffer> AVMetadataHelperServer::FetchFrameYuv(int64_t timeUs, 
     return result.Value();
 }
 
+int32_t AVMetadataHelperServer::CancelAllFetchFrames()
+{
+    MediaTrace trace("AVMetadataHelperServer::CancelAllFetchFrames");
+    std::unique_lock<std::mutex> lock(mutex_);
+    isCanceled_ = true;
+    return MSERR_OK;
+}
+
+int32_t AVMetadataHelperServer::FetchFrameYuvs(const std::vector<int64_t>& timeUsVector, int32_t option,
+    const PixelMapParams &param)
+{
+    MediaTrace trace("AVMetadataHelperServer::FetchFrameYuvs");
+    std::unique_lock<std::mutex> lock(mutex_);
+    std::shared_ptr<AVBuffer> result = nullptr;
+    OutputConfiguration config = { .dstWidth = param.dstWidth,
+                                   .dstHeight = param.dstHeight,
+                                   .colorFormat = param.colorFormat };
+    if (isCanceled_.load()) {isCanceled_ = false;}
+
+    auto task = std::make_shared<TaskHandler<int32_t>>([this, timeUsVector, option, config, param] {
+        MediaTrace trace("AVMetadataHelperServer::FetchFrameAtTime_task");
+        std::shared_ptr<AVBuffer> err(AVBuffer::CreateAVBuffer());
+        std::shared_ptr<AVBuffer> frameBuffer_ = nullptr;
+        CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr,
+            MSERR_EXT_API9_SERVICE_DIED, "avMetadataHelperEngine_ is nullptr");
+        CHECK_AND_RETURN_RET(currState_ == HELPER_PREPARED || currState_ == HELPER_CALL_DONE,
+            MSERR_EXT_API9_SERVICE_DIED);
+        int64_t actualTimeUs = 0;
+        for (const auto& timeUs : timeUsVector) {
+            if (isCanceled_.load()) {
+                FrameInfo frameinfo_ = {NO_ERR, timeUs, 0, FETCH_CANCELED};
+                NotifyPixelCompleteCallback(HELPER_INFO_TYPE_PIXEL, err, frameinfo_, param);
+                continue;
+            }
+            if (timeUs < 0) {
+                FrameInfo frameinfo_ = {UNSUPPORTED_FORMAT, timeUs, 0, FETCH_FAILED};
+                NotifyPixelCompleteCallback(HELPER_INFO_TYPE_PIXEL, err, frameinfo_, param);
+                continue;
+            }
+            bool errCallback = false;
+            frameBuffer_ = avMetadataHelperEngine_->FetchFrameYuvs(timeUs, option, config, errCallback);
+            if (errCallback == true) {
+                FrameInfo frameinfo_ = {FETCH_TIMEOUT, timeUs, 0, FETCH_FAILED};
+                NotifyPixelCompleteCallback(HELPER_INFO_TYPE_PIXEL, err, frameinfo_, param);
+                continue;
+            } else if (frameBuffer_ == nullptr) {
+                FrameInfo frameinfo_ = {OPERATION_NOT_ALLOWED, timeUs, 0, FETCH_FAILED};
+                NotifyPixelCompleteCallback(HELPER_INFO_TYPE_PIXEL, err, frameinfo_, param);
+                continue;
+            } else {
+                actualTimeUs = frameBuffer_->pts_;
+                FrameInfo frameinfo_ = {NO_ERR, timeUs, actualTimeUs, FETCH_SUCCEEDED};
+                NotifyPixelCompleteCallback(HELPER_INFO_TYPE_PIXEL, frameBuffer_, frameinfo_, param);
+            }
+        }
+        return MSERR_EXT_API9_OK;
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    return ret == MSERR_OK? MSERR_OK : MSERR_EXT_API9_SERVICE_DIED;
+}
+
 void AVMetadataHelperServer::Release()
 {
     MediaTrace trace("AVMetadataHelperServer::Release");
@@ -532,6 +593,16 @@ void AVMetadataHelperServer::NotifyInfoCallback(HelperOnInfoType type, int32_t e
     if (helperCb_ != nullptr) {
         helperCb_->OnInfo(type, extra);
     }
+}
+
+void AVMetadataHelperServer::NotifyPixelCompleteCallback(HelperOnInfoType type,
+                                                         const std::shared_ptr<AVBuffer> &reAvbuffer_,
+                                                         const FrameInfo &info,
+                                                         const PixelMapParams &param)
+{
+    std::lock_guard<std::mutex> lockCb(mutexCb_);
+    CHECK_AND_RETURN_LOG(helperCb_ != nullptr, "AVMetadataHelperServer CallBack Is Null");
+    helperCb_->OnPixelComplete(type, reAvbuffer_, info, param);
 }
 
 const std::string &AVMetadataHelperServer::GetStatusDescription(int32_t status)

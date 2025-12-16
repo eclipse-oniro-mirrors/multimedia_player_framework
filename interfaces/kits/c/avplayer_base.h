@@ -474,6 +474,69 @@ typedef struct AVPlayerCallback {
     OH_AVPlayerOnError onError = nullptr;
 } AVPlayerCallback;
 
+/**
+ * @brief Key to get prepare duration value in statistic metrics info,
+ *     value type is int32_t, in milliseconds.
+ * @since 23
+ */
+extern const char* OH_MEDIA_EVENT_INFO_PREPARE_DURATION;
+
+/**
+ * @brief Key to get resource link establishment time in statistic metrics info,
+ *     value type is int32_t, in milliseconds.
+ * @since 23
+ */
+extern const char* OH_MEDIA_EVENT_INFO_RESOURCE_CONNECTION_DURATION;
+
+/**
+ * @brief Key to get decapsulation time of the first sample in statistic metrics info,
+ *     value type is int32_t, in milliseconds.
+ * @since 23
+ */
+extern const char* OH_MEDIA_EVENT_INFO_FIRST_FRAME_DECAPSULATION_DURATION;
+
+/**
+ * @brief Key to get cumulative playback time in statistic metrics info,
+ *     value type is int32_t, in milliseconds.
+ * @since 23
+ */
+extern const char* OH_MEDIA_EVENT_INFO_TOTAL_PLAYING_TIME;
+
+/**
+ * @brief Key to get cumulative times of media resource loading request in statistic metrics info,
+ *     value type is int32_t.
+ * @since 23
+ */
+extern const char* OH_MEDIA_EVENT_INFO_DOWNLOAD_REQUESTS_COUNT;
+
+/**
+ * @brief Key to get the total time spent loading the media resource in statistic metrics info,
+ *     value type is int32_t, in milliseconds.
+ * @since 23
+ */
+extern const char* OH_MEDIA_EVENT_INFO_DOWNLOAD_TOTAL_DOWNLOAD_TIME;
+
+/**
+ * @brief Key to get size of loaded media resources in statistic metrics info,
+ *     value type is int64_t.
+ * @since 23
+ */
+extern const char* OH_MEDIA_EVENT_INFO_DOWNLOAD_TOTAL_DOWNLOAD_SIZE;
+
+/**
+ * @brief Key to get cumulative stalling count in statistic metrics info,
+ *     value type is int32_t.
+ * @since 23
+ */
+extern const char* OH_MEDIA_EVENT_INFO_STALLING_COUNT;
+
+/**
+ * @brief Key to get the cumulative stalling time in statistic metrics info,
+ *     value type is int32_t, in milliseconds.
+ * @since 23
+ */
+extern const char* OH_MEDIA_EVENT_INFO_TOTAL_STALLING_TIME;
+
 #ifdef __cplusplus
 }
 #endif

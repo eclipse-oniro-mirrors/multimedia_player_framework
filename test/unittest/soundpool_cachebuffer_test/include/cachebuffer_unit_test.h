@@ -30,7 +30,7 @@ namespace OHOS {
 namespace Media {
 using namespace AudioStandard;
 using namespace MediaAVCodec;
-class CacheBufferUnitTest : public testing::Test {
+class AudioStreamUnitTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
@@ -45,11 +45,11 @@ protected:
     static const int32_t waitTime20 = 20;
     static const int32_t waitTime30 = 30;
     int32_t loadNum_ = 0;
-    void CreateCacheBuffer(const Format &trackFormat, const int32_t &soundID, const int32_t &streamID);
+    void CreateAudioStream(const Format &trackFormat, const int32_t &soundID, const int32_t &streamID);
     int32_t GetFdByFileName(std::string fileName);
-    std::shared_ptr<CacheBufferMock> cacheBuffer_ = nullptr;
-    std::shared_ptr<ThreadPool> cacheBufferStopThreadPool_;
-    std::atomic<bool> isCacheBufferStopThreadPoolStarted_ = false;
+    std::shared_ptr<AudioStreamMock> audioStream_ = nullptr;
+    std::shared_ptr<ThreadPool> audioStreamStopThreadPool_;
+    std::atomic<bool> isAudioStreamStopThreadPoolStarted_ = false;
 };
 } // namespace Media
 } // namespace OHOS

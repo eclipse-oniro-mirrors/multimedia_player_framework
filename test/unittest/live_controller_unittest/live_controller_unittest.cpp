@@ -97,7 +97,7 @@ HWTEST_F(LiveControllerUnittest, LCUOtherFunction_001, TestSize.Level0)
     ASSERT_NE(liveController_, nullptr);
     PlayerErrorType errorType = PlayerErrorType::PLAYER_ERROR;
     int32_t errorCode = 0;
-    liveController_->OnError(errorType, errorCode);
+    liveController_->OnError(errorType, errorCode, "");
     PlayerOnInfoType typeInfo = PlayerOnInfoType::INFO_TYPE_ERROR_MSG;
     int32_t extra = 0;
     Format infoBody;

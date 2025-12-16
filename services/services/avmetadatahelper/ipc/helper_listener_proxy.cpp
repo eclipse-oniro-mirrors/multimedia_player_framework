@@ -68,6 +68,34 @@ void HelperListenerProxy::OnInfo(HelperOnInfoType type, int32_t extra, const For
     CHECK_AND_RETURN_LOG(error == MSERR_OK, "on info failed, error: %{public}d", error);
 }
 
+void HelperListenerProxy::OnPixelComplete(HelperOnInfoType type,
+    const std::shared_ptr<AVBuffer> &reAvbuffer_,
+    const FrameInfo &info,
+    const PixelMapParams &param)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(HelperListenerProxy::GetDescriptor());
+    CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
+
+    (void)data.WriteInt32(type);
+    (void)data.WriteInt32(info.err);
+    (void)data.WriteInt64(info.requestedTimeUs);
+    (void)data.WriteInt64(info.actualTimeUs);
+    (void)data.WriteInt32(info.fetchResult);
+    CHECK_AND_RETURN_LOG(reAvbuffer_ != nullptr, "Failed to write buffer!");
+    reAvbuffer_->WriteToMessageParcel(data);
+    (void)data.WriteInt32(param.dstWidth);
+    (void)data.WriteInt32(param.dstHeight);
+    (void)data.WriteInt32(static_cast<int32_t>(param.colorFormat));
+    (void)data.WriteBool(param.isSupportFlip);
+    (void)data.WriteBool(param.convertColorSpace);
+    int error = SendRequest(HelperListenerMsg::ON_PIXEL_COMPLETE, data, reply, option);
+    CHECK_AND_RETURN_LOG(error == MSERR_OK, "OnPixelComplete failed, error: %{public}d", error);
+}
+
 HelperListenerCallback::HelperListenerCallback(const sptr<IStandardHelperListener> &listener) : listener_(listener)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
@@ -89,6 +117,15 @@ void HelperListenerCallback::OnInfo(HelperOnInfoType type, int32_t extra, const 
 {
     CHECK_AND_RETURN(listener_ != nullptr);
     listener_->OnInfo(type, extra, infoBody);
+}
+
+void HelperListenerCallback::OnPixelComplete(HelperOnInfoType type,
+    const std::shared_ptr<AVBuffer> &reAvbuffer_,
+    const FrameInfo &info,
+    const PixelMapParams &param)
+{
+    CHECK_AND_RETURN(listener_ != nullptr);
+    listener_->OnPixelComplete(type, reAvbuffer_, info, param);
 }
 
 int32_t HelperListenerProxy::SendRequest(uint32_t code, MessageParcel &data,

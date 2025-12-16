@@ -115,9 +115,12 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("setPlaybackStrategy", JsSetPlaybackStrategy),
         DECLARE_NAPI_FUNCTION("setMediaMuted", JsSetMediaMuted),
         DECLARE_NAPI_FUNCTION("getPlaybackInfo", JsGetPlaybackInfo),
+        DECLARE_NAPI_FUNCTION("getPlaybackStatisticMetrics", JsGetPlaybackStatisticMetrics),
         DECLARE_NAPI_FUNCTION("isSeekContinuousSupported", JsIsSeekContinuousSupported),
         DECLARE_NAPI_FUNCTION("getPlaybackPosition", JsGetPlaybackPosition),
         DECLARE_NAPI_FUNCTION("forceLoadVideo", JsForceLoadVideo),
+        DECLARE_NAPI_FUNCTION("onMetricsEvent", JsSetOnMetricsEventCallback),
+        DECLARE_NAPI_FUNCTION("offMetricsEvent", JsClearOnMetricsEventCallback),
 
         DECLARE_NAPI_WRITABLE_FUNCTION("prepare", JsPrepare),
         DECLARE_NAPI_WRITABLE_FUNCTION("addSubtitleFromUrl", JsAddSubtitleUrl),
@@ -1469,6 +1472,50 @@ napi_value AVPlayerNapi::JsGetMediaKeySystemInfos(napi_env env, napi_callback_in
     }
 
     return napiMap;
+}
+
+napi_value AVPlayerNapi::JsGetPlaybackStatisticMetrics(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::JsGetPlaybackStatisticMetrics");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsGetPlaybackStatisticMetrics In");
+
+    auto promiseCtx = std::make_unique<AVPlayerContext>(env);
+    promiseCtx->napi = AVPlayerNapi::GetJsInstance(env, info);
+    CHECK_AND_RETURN_RET_LOG(promiseCtx->napi != nullptr, result, "failed to GetJsInstance");
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
+    // async work
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "JsGetPlaybackStatisticMetrics", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(
+        env, nullptr, resource,
+        [](napi_env env, void *data) {
+            MEDIA_LOGI("JsGetPlaybackStatisticMetrics Task");
+            auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
+            CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
+
+            auto jsPlayer = promiseCtx->napi;
+            if (jsPlayer == nullptr) {
+                return promiseCtx->SignError(
+                    MSERR_EXT_API9_OPERATE_NOT_PERMIT, "avplayer is deconstructed");
+            }
+
+            Format &playbackStatisticMetrics = jsPlayer->PlaybackStatisticMetrics_;
+            if (jsPlayer->CanGetPlaybackStatisticMetrics() && jsPlayer->player_ != nullptr) {
+                (void)jsPlayer->player_->GetPlaybackStatisticMetrics(playbackStatisticMetrics);
+            } else {
+                return promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                    "current state is not prepared/playing/paused/completed/stopped, "
+                    "unsupport get playback statistics metrics");
+            }
+            promiseCtx->JsResult = std::make_unique<AVCodecJsResultFormat>(playbackStatisticMetrics);
+        },
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
+    promiseCtx.release();
+    MEDIA_LOGI("JSGetPlaybackStatisticMetrics Out");
+    return result;
 }
 
 napi_value AVPlayerNapi::JsGetPlaybackInfo(napi_env env, napi_callback_info info)
@@ -2887,6 +2934,18 @@ bool AVPlayerNapi::IsControllable()
     }
 }
 
+bool AVPlayerNapi::CanGetPlaybackStatisticMetrics()
+{
+    auto state = GetCurrentState();
+    if (state == AVPlayerState::STATE_PREPARED || state == AVPlayerState::STATE_PLAYING ||
+        state == AVPlayerState::STATE_PAUSED || state == AVPlayerState::STATE_COMPLETED ||
+        state == AVPlayerState::STATE_STOPPED) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 bool AVPlayerNapi::CanSetPlayRange()
 {
     auto state = GetCurrentState();
@@ -3443,6 +3502,42 @@ napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
     return result;
 }
 
+napi_value AVPlayerNapi::JsSetOnMetricsEventCallback(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::onMetricsEvent");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGD("JsSetOnMetricsEventCallback In");
+
+    napi_value args[MIN_ARG_COUNTS] = { nullptr }; // args[0]: callback
+    size_t argCount = MIN_ARG_COUNTS;
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+    if (argCount > MIN_ARG_COUNTS) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "Mandatory parameters are left unspecified.");
+        return result;
+    }
+
+    if (jsPlayer->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to on event");
+        return result;
+    }
+
+    std::string callbackName = AVPlayerEvent::EVENT_METRICS;
+    napi_ref ref = nullptr;
+    CHECK_AND_RETURN_RET_NOLOG(
+        VerifyExpectedType({env, args[0], napi_function}, jsPlayer, "param should be function."), result);
+    jsPlayer->HandleListenerStateChange(callbackName, true);
+    napi_status status = napi_create_reference(env, args[0], 1, &ref);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create reference!");
+
+    std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
+        jsPlayer->SaveCallbackReference(callbackName, autoRef);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSetOnMetricsEventCallback callbackName: %{public}s success",
+        FAKE_POINTER(jsPlayer), callbackName.c_str());
+    return result;
+}
+
 bool AVPlayerNapi::VerifyExpectedType(const NapiTypeCheckUnit &unit, AVPlayerNapi *jsPlayer, const std::string &msg)
 {
     napi_valuetype tmpType;
@@ -3464,6 +3559,37 @@ void AVPlayerNapi::SeiMessageCallbackOff(AVPlayerNapi *jsPlayer, std::string &ca
     }
     (void)jsPlayer->player_->SetSeiMessageCbStatus(seiMessageCallbackflag_, payloadTypes);
 }
+
+napi_value AVPlayerNapi::JsClearOnMetricsEventCallback(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::offMetricsEvent");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGD("JsClearOnMetricsEventCallback In");
+
+    napi_value args[ARRAY_ARG_COUNTS_THREE] = { nullptr }; // args[0]:type, args[1]: payloadTypes  args[2]:callback
+    size_t argCount = 3;
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+
+    if (jsPlayer->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        return result;
+    }
+
+    if (argCount > 1) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "Mandatory parameters are left unspecified.");
+        return result;
+    }
+
+    std::string callbackName = AVPlayerEvent::EVENT_METRICS;
+
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " set callbackName: %{public}s", FAKE_POINTER(jsPlayer), callbackName.c_str());
+    jsPlayer->HandleListenerStateChange(callbackName, false);
+    jsPlayer->ClearCallbackReference(callbackName);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsClearOnCallback success", FAKE_POINTER(jsPlayer));
+    return result;
+}
+
 
 napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info)
 {

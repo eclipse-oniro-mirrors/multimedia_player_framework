@@ -28,7 +28,7 @@ ohos_shared_library("soundpool_client") {
   }
   sources = [
     "audio_renderer_manager.cpp",
-    "cache_buffer.cpp",
+    "audio_stream.cpp",
     "parallel_stream_manager.cpp",
     "sound_id_manager.cpp",
     "sound_parser.cpp",
@@ -58,6 +58,7 @@ ohos_shared_library("soundpool_client") {
     "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",
     "audio_framework:audio_client",
+    "audio_framework:audio_common",
     "audio_framework:audio_renderer",
     "bundle_framework:appexecfwk_base",
     "c_utils:utils",

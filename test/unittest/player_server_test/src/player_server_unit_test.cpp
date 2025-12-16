@@ -4587,6 +4587,55 @@ HWTEST_F(PlayerServerUnitTest, Player_GetPlaybackInfo_002, TestSize.Level2)
 }
 
 /**
+ * @tc.name  : Test GetPlaybackStatisticMetrics API
+ * @tc.number: Player_GetPlaybackStatisticMetrics_001
+ * @tc.desc  : Test Player GetPlaybackStatisticMetrics
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetPlaybackStatisticMetrics_001, TestSize.Level0)
+{
+    Format playbackStatisticMetrics;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->GetPlaybackStatisticMetrics(playbackStatisticMetrics));
+}
+
+/**
+ * @tc.name  : Test GetPlaybackStatisticMetrics API
+ * @tc.number: Player_GetPlaybackStatisticMetrics_002
+ * @tc.desc  : Test Player GetPlaybackStatisticMetrics
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetPlaybackStatisticMetrics_002, TestSize.Level2)
+{
+    Format playbackStatisticMetrics;
+    int32_t duration = 0;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    EXPECT_NE(MSERR_OK, player_->GetPlaybackStatisticMetrics(playbackStatisticMetrics));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_NE(MSERR_OK, player_->GetPlaybackStatisticMetrics(playbackStatisticMetrics));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->GetPlaybackStatisticMetrics(playbackStatisticMetrics));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->GetPlaybackStatisticMetrics(playbackStatisticMetrics));
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->GetPlaybackStatisticMetrics(playbackStatisticMetrics));
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_CLOSEST));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->GetPlaybackStatisticMetrics(playbackStatisticMetrics));
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+    EXPECT_EQ(MSERR_OK, player_->GetPlaybackStatisticMetrics(playbackStatisticMetrics));
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_NE(MSERR_OK, player_->GetPlaybackStatisticMetrics(playbackStatisticMetrics));
+}
+
+/**
  * @tc.name  : Test GetSubtitleTrackInfo API
  * @tc.number: Player_GetSubtitleTrackInfo_001
  * @tc.desc  : Test Player GetSubtitleTrackInfo

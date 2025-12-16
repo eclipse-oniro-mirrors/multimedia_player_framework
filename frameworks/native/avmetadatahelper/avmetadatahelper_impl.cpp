@@ -857,6 +857,18 @@ std::shared_ptr<Meta> AVMetadataHelperImpl::GetAVMetadata()
     return res;
 }
 
+int32_t AVMetadataHelperImpl::CancelAllFetchFrames()
+{
+    std::shared_ptr<IAVMetadataHelperService> avMetadataHelperService =avMetadataHelperService_;
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+        "avmetadatahelper service does not exist.");
+    concurrentWorkCount_++;
+    MEDIA_LOGI("AVMetadataHelperImpl::CancelAllFetchFrames In");
+    int32_t res = avMetadataHelperService->CancelAllFetchFrames();
+    concurrentWorkCount_--;
+    return res;
+}
+
 std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchArtPicture()
 {
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, nullptr,
@@ -963,6 +975,21 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchScaledFrameYuv(int64_t time
     return FetchFrameBase(timeUs, option, param, FrameScaleMode::ASPECT_RATIO);
 }
 
+int32_t AVMetadataHelperImpl::FetchScaledFrameYuvs(const std::vector<int64_t>& timeUs,
+    int32_t option, const PixelMapParams &param)
+{
+    std::shared_ptr<IAVMetadataHelperService> avMetadataHelperService = avMetadataHelperService_;
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperService != nullptr, MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+        "avmetadatahelper service does not exist.");
+
+    concurrentWorkCount_++;
+    ReportSceneCode(AV_META_SCENE_BATCH_HANDLE);
+
+    int32_t result = avMetadataHelperService->FetchFrameYuvs(timeUs, option, param);
+    concurrentWorkCount_--;
+    return result;
+}
+
 std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameBase(int64_t timeUs, int32_t option,
                                                                const PixelMapParams &param, int32_t scaleMode)
 {
@@ -977,7 +1004,13 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameBase(int64_t timeUs, i
     auto frameBuffer = avMetadataHelperService->FetchFrameYuv(timeUs, option, config);
     CHECK_AND_RETURN_RET(frameBuffer != nullptr && frameBuffer->memory_ != nullptr, nullptr);
     concurrentWorkCount_--;
-    
+
+    return ProcessPixelMap(frameBuffer, param, scaleMode);
+}
+
+std::shared_ptr<PixelMap> AVMetadataHelperImpl::ProcessPixelMap(const std::shared_ptr<AVBuffer> &frameBuffer,
+                                                                const PixelMapParams &param, int32_t scaleMode)
+{
     DumpAVBuffer(isDump_, frameBuffer, DUMP_FILE_NAME_AVBUFFER);
 
     PixelMapInfo pixelMapInfo = { .pixelFormat = param.colorFormat };

@@ -140,6 +140,19 @@ enum PixelFormat: i32 {
     RGB_888 = 5,
 }
 
+enum FetchResult: i32 {
+    FETCH_FAILED = 0,
+    FETCH_SUCCEEDED = 1,
+    FETCH_CANCELLED = 2,
+}
+
+struct FrameInfo {
+    requestedTimeUs: i64;
+    actualTimeUs: Optional<i64>;
+    image: Optional<image.PixelMap>;
+    result: FetchResult;
+}
+
 struct PixelMapParams {
     width: Optional<i32>;
     height: Optional<i32>;
@@ -195,6 +208,11 @@ interface AVMetadataExtractor {
     @gen_async("fetchFrameByTime")
     @gen_promise("fetchFrameByTime")
     FetchFrameByTimeSync(timeUs: i64, options: AVImageQueryOptions, param: PixelMapParams): Optional<image.PixelMap>;
+
+    CancelAllFetchFrames(): void;
+
+    FetchFramesByTimes(timesUs: Array<i64>, queryOption: AVImageQueryOptions, param: PixelMapParams,
+        callback: (frameInfo: FrameInfo, @optional err: Optional<@sts_type("BusinessError<void>") Opaque>) => void): void;
 }
 
 enum MediaDescriptionKey: String {

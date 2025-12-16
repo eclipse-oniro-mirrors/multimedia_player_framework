@@ -103,7 +103,7 @@ HWTEST_F(SoundParserUnitTest, SoundParser_DoDemuxer_001, TestSize.Level0)
     int32_t ret = soundParser_->source_->GetSourceFormat(sourceFormat);
     EXPECT_EQ(ret, AVCS_ERR_INVALID_OPERATION);
     ret = soundParser_->DoDemuxer(&trackFormat);
-    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_EQ(ret, MSERR_INVALID_VAL);
 }
 
 // @tc.name     Test OnError OnInputBufferAvailable SetCallback API

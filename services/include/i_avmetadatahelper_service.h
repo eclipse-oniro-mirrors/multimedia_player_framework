@@ -140,6 +140,11 @@ public:
     virtual int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) = 0;
 
     /**
+     * Cancel all fetch tasks which are triggered by fetchFramesByTimes
+     */
+    virtual int32_t CancelAllFetchFrames() = 0;
+
+    /**
      * Retrieve the meta data associated with the specified key. This method can be
      * called after the SetSource.
      * @param key One of the constants listed above at the definition of {@link AVMetadataCode}.
@@ -203,6 +208,22 @@ public:
      */
     virtual std::shared_ptr<AVBuffer> FetchFrameYuv(
         int64_t timeUs, int32_t option, const OutputConfiguration &param) = 0;
+
+    /**
+     * Fetch multi representative video frames near multi given timestamps by considering the given
+     * option if possible, and return a video frame with given parameters. This method must be
+     * called after the SetSource.
+     * @param timeUs The time position in microseconds where the frame will be fetched.
+     * When fetching the frame at the given time position, there is no guarantee that
+     * the video source has a frame located at the position. When this happens, a frame
+     * nearby will be returned. If timeUs is negative, time position and option will ignored,
+     * and any frame that the implementation considers as representative may be returned.
+     * @param option the hint about how to fetch a frame, see {@link AVMetadataQueryOption}
+     * @param param the desired configuration of returned video frame, see {@link OutputConfiguration}.
+     * @return Returns task result.
+     */
+    virtual int32_t FetchFrameYuvs(const std::vector<int64_t>& timeUs,
+        int32_t option, const PixelMapParams &param) = 0;
 
     /**
      * Release the internel resource. After this method called, the service instance

@@ -14,6 +14,7 @@
  */
 
 #include "player_server_mock.h"
+#include <cstdint>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include "media_errors.h"
@@ -279,6 +280,8 @@ PlayerStates PlayerCallbackTest::GetState()
 
 void PlayerCallbackTest::OnError(int32_t errorCode, const std::string &errorMsg)
 {
+    errorCode_ = errorCode;
+    errorMsg_ = errorMsg;
     if (!trackDoneFlag_) {
         trackDoneFlag_ = true;
         condVarTrackDone_.notify_all();
@@ -573,6 +576,12 @@ int32_t PlayerServerMock::GetPlaybackInfo(Format &playbackInfo)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     return player_->GetPlaybackInfo(playbackInfo);
+}
+
+int32_t PlayerServerMock::GetPlaybackStatisticMetrics(Format &playbackStatisticMetrics)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->GetPlaybackStatisticMetrics(playbackStatisticMetrics);
 }
 
 int32_t PlayerServerMock::GetAudioTrackInfo(std::vector<Format> &audioTrack)
@@ -874,7 +883,16 @@ int32_t PlayerEngineMock::SetSource(const std::shared_ptr<IMediaDataSource> &dat
 
 int32_t PlayerEngineMock::SetObs(const std::weak_ptr<IPlayerEngineObs> &obs)
 {
+    obs_ = obs;
     return MSERR_OK;
+}
+
+void PlayerEngineMock::TriggerError(PlayerErrorType errorType, int32_t errorCode, const std::string &msg)
+{
+    auto obs = obs_.lock();
+    if (obs != nullptr) {
+        obs->OnError(errorType, errorCode, msg);
+    }
 }
 
 int32_t PlayerEngineMock::Play()
@@ -939,6 +957,11 @@ int32_t PlayerEngineMock::GetVideoTrackInfo(std::vector<Format> &videoTrack)
 }
 
 int32_t PlayerEngineMock::GetPlaybackInfo(Format &playbackInfo)
+{
+    return MSERR_OK;
+}
+
+int32_t PlayerEngineMock::GetPlaybackStatisticMetrics(Format &playbackStatisticMetrics)
 {
     return MSERR_OK;
 }

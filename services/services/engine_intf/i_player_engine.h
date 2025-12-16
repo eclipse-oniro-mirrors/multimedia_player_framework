@@ -36,7 +36,7 @@ namespace Media {
 class IPlayerEngineObs : public std::enable_shared_from_this<IPlayerEngineObs> {
 public:
     virtual ~IPlayerEngineObs() = default;
-    virtual void OnError(PlayerErrorType errorType, int32_t errorCode) = 0;
+    virtual void OnError(PlayerErrorType errorType, int32_t errorCode, const std::string &description) = 0;
     virtual void OnErrorMessage(int32_t errorCode, const std::string &errorMsg)
     {
         (void)errorCode;
@@ -161,7 +161,13 @@ public:
         (void)interruptMode;
         return 0;
     }
-    
+
+    virtual int32_t GetPlaybackStatisticMetrics(Format &playbackStatisticMetrics)
+    {
+        (void)playbackStatisticMetrics;
+        return 0;
+    }
+
     virtual int32_t SelectTrack(int32_t index, PlayerSwitchMode mode = PlayerSwitchMode::SWITCH_SMOOTH)
     {
         (void)index;

@@ -77,6 +77,13 @@ struct DrmInfoItem {
     uint32_t psshLen;
 };
 
+struct AVMetricsEvent {
+    int32_t metricsEventType = 0;
+    int64_t timeStamp = 0;
+    int64_t playbackPosition = 0;
+    std::map<std::string, int64_t> details;
+};
+
 class AVMediaSource {
 public:
     AVMediaSource(std::string sourceUrl, std::map<std::string, std::string> sourceHeader)
@@ -174,6 +181,11 @@ public:
     static constexpr std::string_view PLAYER_HAS_VIDEO = "has_video";
     static constexpr std::string_view PLAYER_HAS_AUDIO = "has_audio";
     static constexpr std::string_view PLAYER_HAS_SUBTITLE = "has_subtitle";
+    static constexpr std::string_view PLAYER_METRICS_EVENT_TYPE = "metrics_event_type";
+    static constexpr std::string_view PLAYER_STALLING_TIMESTAMP = "stalling_timestamp";
+    static constexpr std::string_view PLAYER_STALLING_TIMELINE = "stalling_timeline";
+    static constexpr std::string_view PLAYER_STALLING_DURATION = "stalling_duration";
+    static constexpr std::string_view PLAYER_STALLING_MEDIA_TYPE = "stalling_media_type";
 };
 
 class PlaybackInfoKey {
@@ -185,6 +197,19 @@ public:
     static constexpr std::string_view BUFFER_DURATION = "buffer_duration";
 };
 
+class PlaybackMetricsKey {
+public:
+    static constexpr std::string_view PREPARE_DURATION = "prepare_duration";
+    static constexpr std::string_view RESOURCE_CONNECTION_DURATION = "resource_connection_duration";
+    static constexpr std::string_view FIRST_FRAME_DECAPSULATION_DURATION = "first_frame_decapsulation_duration";
+    static constexpr std::string_view TOTAL_PLAYING_TIME = "total_playback_time";
+    static constexpr std::string_view DOWNLOAD_REQUESTS_COUNT = "loading_count";
+    static constexpr std::string_view TOTAL_DOWNLOAD_TIME = "total_loading_time";
+    static constexpr std::string_view TOTAL_DOWNLOAD_SIZE = "total_loading_Bytes";
+    static constexpr std::string_view STALLING_COUNT = "stalling_count";
+    static constexpr std::string_view TOTAL_STALLING_TIME = "total_stalling_time";
+};
+
 enum PlayerErrorType : int32_t {
     /* Valid error, error code reference defined in media_errors.h */
     PLAYER_ERROR,
@@ -193,6 +218,26 @@ enum PlayerErrorType : int32_t {
     /* extend error type start,The extension error type agreed upon by the plug-in and
        the application will be transparently transmitted by the service. */
     PLAYER_ERROR_EXTEND_START = 0X10000,
+    /* Playback mode not supported */
+    PLAY_ERR,
+    /* Network timeout or error. */
+    NET_ERR,
+    /* The file container format is not supported. */
+    CONTAINER_ERR,
+    /* The unpacking format is not supported */
+    DEM_FMT_ERR,
+    /* Error parsing during unpacking */
+    DEM_PARSE_ERR,
+    /* Audio decoding error */
+    AUD_DEC_ERR,
+    /* Video decoding error */
+    VID_DEC_ERR,
+    /*DRM error*/
+    DRM_ERR,
+    /*Audio output error*/
+    AUD_OUTPUT_ERR,
+    /* VPE error */
+    VPE_ERR,
 };
 
 enum PlayerMessageType : int32_t {
@@ -292,6 +337,8 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_FLV_AUTO_SELECT_BITRATE,
     /* return the message when speeding done. */
     INFO_TYPE_RATEDONE,
+    /* return the message when metrics event occurs. */
+    INFO_TYPE_METRICS_EVENT,
 };
 
 enum PlayerStates : int32_t {
@@ -349,6 +396,10 @@ enum PlayerProducer : int32_t {
     INNER = 0,
     CAPI,
     NAPI
+};
+
+enum AVMetricsEventType : int32_t {
+    AV_METRICS_EVENT_TYPE_STALLING = 1,
 };
 
 class PlayerCallback {
@@ -598,6 +649,23 @@ public:
      * @version 1.0
      */
     virtual int32_t GetPlaybackInfo(Format &playbackInfo) = 0;
+
+    /**
+     * @brief Obtains the playbackStatisticMetrics, contains prepare_duration, resource_connection_duration,
+     * first_frame_decapsulation_duration, total_playback_time, loading_count, total_loading_time, total_loading_Bytes,
+     * stalling_count, total_stalling_time.
+     *
+     * @param playbackStatisticMetrics.
+     * @return Returns {@link MSERR_OK} if the statistic metrics is get; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t GetPlaybackStatisticMetrics(Format& playbackStatisticMetrics)
+    {
+        (void)playbackStatisticMetrics;
+        return 0;
+    }
 
     /**
      * @brief Obtains the audio track info, contains mimeType, bitRate, sampleRate, channels, language.

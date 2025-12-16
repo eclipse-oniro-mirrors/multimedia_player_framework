@@ -2549,12 +2549,11 @@ std::string SystemSoundManagerImpl::GetCurrentToneUri(const DatabaseTool &databa
     return currentToneUri;
 }
 
-int32_t SystemSoundManagerImpl::UpdateToneHapticsSettings(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+int32_t SystemSoundManagerImpl::UpdateToneHapticsSettings(const DatabaseTool &databaseTool,
     const std::string &toneUri, ToneHapticsType toneHapticsType, const ToneHapticsSettings &settings)
 {
     MEDIA_LOGI("UpdateToneHapticsSettings: toneUri[%{public}s], mode[%{public}d], hapticsUri[%{public}s]",
         toneUri.c_str(), settings.mode, settings.hapticsUri.c_str());
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper_ = dataShareHelper;
     DataShare::DataSharePredicates queryPredicates;
     queryPredicates.EqualTo(SIMCARD_SETTING_COLUMN_MODE, hapticsTypeWhereArgsMap_[toneHapticsType].first);
     queryPredicates.And();
@@ -2566,42 +2565,28 @@ int32_t SystemSoundManagerImpl::UpdateToneHapticsSettings(std::shared_ptr<DataSh
     valuesBucket.Put(SIMCARD_SETTING_COLUMN_RING_MODE, to_string(hapticsModeMap_[settings.mode]));
     valuesBucket.Put(SIMCARD_SETTING_COLUMN_VIBRATE_MODE, to_string(VIBRATE_TYPE_STANDARD));
 
-    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
-    int32_t ret =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
-        "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    if (ret != Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
-        dataShareHelper_ = SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-        CHECK_AND_RETURN_RET_LOG(dataShareHelper_ != nullptr, IO_ERROR, "Invalid dataShare,");
-        int32_t result = dataShareHelper_->Update(SIMCARDSETTINGURI, queryPredicates, valuesBucket);
-        if (result > 0) {
-            return SUCCESS;
-        } else {
-            MEDIA_LOGE("UpdateToneHapticsSettings: update haptics settings fail");
-        }
-        valuesBucket.Put(SIMCARD_SETTING_COLUMN_MODE, to_string(hapticsTypeWhereArgsMap_[toneHapticsType].first));
-        valuesBucket.Put(SIMCARD_SETTING_COLUMN_RINGTONE_TYPE,
-            to_string(hapticsTypeWhereArgsMap_[toneHapticsType].second));
-        result = dataShareHelper_->Insert(SIMCARDSETTINGURI, valuesBucket);
-        if (result <= 0) {
-            MEDIA_LOGE("UpdateToneHapticsSettings: insert haptics settings fail");
-        }
-        return result > 0 ? SUCCESS : IO_ERROR;
+    std::string ringtoneLibraryUri = "";
+    if (databaseTool.isProxy) {
+        ringtoneLibraryUri = RINGTONE_LIBRARY_PROXY_DATA_URI_SIMCARD_SETTING +
+            "&user=" + std::to_string(SystemSoundManagerUtils::GetCurrentUserId());
     } else {
-        Uri SIMCARDSETTINGURI_PROXY(RINGTONE_LIBRARY_PROXY_DATA_URI_SIMCARD_SETTING + "&user=" +
-            std::to_string(SystemSoundManagerUtils::GetCurrentUserId()));
-        int32_t result = dataShareHelper_->Update(SIMCARDSETTINGURI_PROXY, queryPredicates, valuesBucket);
-        if (result > 0) {
-            return SUCCESS;
-        }
-        valuesBucket.Put(SIMCARD_SETTING_COLUMN_MODE, to_string(hapticsTypeWhereArgsMap_[toneHapticsType].first));
-        valuesBucket.Put(SIMCARD_SETTING_COLUMN_RINGTONE_TYPE,
-            to_string(hapticsTypeWhereArgsMap_[toneHapticsType].second));
-        result = dataShareHelper_->Insert(SIMCARDSETTINGURI_PROXY, valuesBucket);
-        if (result <= 0) {
-            MEDIA_LOGE("UpdateToneHapticsSettings: insert haptics settings fail");
-        }
-        return result > 0 ? SUCCESS : IO_ERROR;
+        ringtoneLibraryUri = SIMCARD_SETTING_PATH_URI;
     }
+    Uri queryUri(ringtoneLibraryUri);
+    int32_t result = databaseTool.dataShareHelper->Update(queryUri, queryPredicates, valuesBucket);
+    if (result > 0) {
+        return SUCCESS;
+    } else {
+        MEDIA_LOGE("UpdateToneHapticsSettings: update haptics settings fail");
+    }
+    valuesBucket.Put(SIMCARD_SETTING_COLUMN_MODE, to_string(hapticsTypeWhereArgsMap_[toneHapticsType].first));
+    valuesBucket.Put(SIMCARD_SETTING_COLUMN_RINGTONE_TYPE,
+        to_string(hapticsTypeWhereArgsMap_[toneHapticsType].second));
+    result = databaseTool.dataShareHelper->Insert(queryUri, valuesBucket);
+    if (result <= 0) {
+        MEDIA_LOGE("UpdateToneHapticsSettings: insert haptics settings fail");
+    }
+    return result > 0 ? SUCCESS : IO_ERROR;
 }
 
 std::unique_ptr<SimcardSettingAsset> SystemSoundManagerImpl::GetSimcardSettingAssetByToneHapticsType(
@@ -2629,10 +2614,10 @@ std::unique_ptr<SimcardSettingAsset> SystemSoundManagerImpl::GetSimcardSettingAs
 }
 
 std::string SystemSoundManagerImpl::GetToneSyncedHapticsUri(
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, const std::string &toneUri)
+    const DatabaseTool &databaseTool, const std::string &toneUri)
 {
     std::shared_ptr<ToneHapticsAttrs> toneHapticsAttrs;
-    int32_t result = GetHapticsAttrsSyncedWithTone(toneUri, dataShareHelper, toneHapticsAttrs);
+    int32_t result = GetHapticsAttrsSyncedWithTone(toneUri, databaseTool, toneHapticsAttrs);
     if (result == SUCCESS && toneHapticsAttrs) {
         return toneHapticsAttrs->GetUri();
     }
@@ -2640,7 +2625,7 @@ std::string SystemSoundManagerImpl::GetToneSyncedHapticsUri(
 }
 
 std::string SystemSoundManagerImpl::GetDefaultNonSyncedHapticsUri(
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, ToneHapticsType toneHapticsType)
+    const DatabaseTool &databaseTool, ToneHapticsType toneHapticsType)
 {
     MEDIA_LOGD("GetDefaultNonSyncedHapticsUri: toneHapticsType %{public}d", toneHapticsType);
     auto toneHapticsItem = defaultToneHapticsUriMap_.find(toneHapticsType);
@@ -2649,29 +2634,27 @@ std::string SystemSoundManagerImpl::GetDefaultNonSyncedHapticsUri(
         return "";
     }
 
-    CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, "",
-        "Create dataShare failed, datashare or ringtone library error.");
+    if (!databaseTool.isInitialized || databaseTool.dataShareHelper == nullptr) {
+        MEDIA_LOGE("Create dataShare failed, datashare or ringtone library error");
+        return "";
+    }
 
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicatesByUri;
     queryPredicatesByUri.EqualTo(VIBRATE_COLUMN_DISPLAY_NAME, toneHapticsItem->second);
     queryPredicatesByUri.And();
     queryPredicatesByUri.EqualTo(VIBRATE_COLUMN_VIBRATE_TYPE, VIBRATE_TYPE_STANDARD);
-    Uri VIBRATEURI_PROXY(RINGTONE_LIBRARY_PROXY_DATA_URI_VIBATE_FILES + "&user=" +
-        std::to_string(SystemSoundManagerUtils::GetCurrentUserId()));
-    auto resultSetByUri = dataShareHelper->Query(VIBRATEURI_PROXY, queryPredicatesByUri, VIBRATE_TABLE_COLUMNS,
-        &businessError);
-    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
-    int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
-        "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    MEDIA_LOGI("systemsoundmanagerimpl result :%{public}d ",  result);
-    if (result != Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
-        dataShareHelper = SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-        CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, "",
-            "Invalid dataShare, datashare or ringtone library error.");
-        resultSetByUri = dataShareHelper->Query(VIBRATEURI, queryPredicatesByUri,
-            VIBRATE_TABLE_COLUMNS, &businessError);
+
+    std::string ringtoneLibraryUri = "";
+    if (databaseTool.isProxy) {
+        ringtoneLibraryUri = RINGTONE_LIBRARY_PROXY_DATA_URI_VIBATE_FILES +
+            "&user=" + std::to_string(SystemSoundManagerUtils::GetCurrentUserId());
+    } else {
+        ringtoneLibraryUri = VIBRATE_PATH_URI;
     }
+    Uri queryUri(ringtoneLibraryUri);
+    auto resultSetByUri = databaseTool.dataShareHelper->Query(queryUri, queryPredicatesByUri, VIBRATE_TABLE_COLUMNS,
+        &businessError);
     auto resultsByUri = make_unique<RingtoneFetchResult<VibrateAsset>>(move(resultSetByUri));
     unique_ptr<VibrateAsset> vibrateAssetByUri = resultsByUri->GetFirstObject();
     if (vibrateAssetByUri == nullptr) {
@@ -2679,7 +2662,6 @@ std::string SystemSoundManagerImpl::GetDefaultNonSyncedHapticsUri(
             toneHapticsItem->second.c_str());
         return "";
     }
-
     string hapticsUri = vibrateAssetByUri->GetPath();
     MEDIA_LOGI("GetDefaultNonSyncedHapticsUri: toneHapticsType %{public}d default haptics %{public}s",
         toneHapticsType, hapticsUri.c_str());
@@ -2697,15 +2679,15 @@ std::string SystemSoundManagerImpl::GetFirstNonSyncedHapticsUri()
 }
 
 int32_t SystemSoundManagerImpl::GetDefaultToneHapticsSettings(
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, const std::string &currentToneUri,
+    const DatabaseTool &databaseTool, const std::string &currentToneUri,
     ToneHapticsType toneHapticsType, ToneHapticsSettings &settings)
 {
-    settings.hapticsUri = GetToneSyncedHapticsUri(dataShareHelper, currentToneUri);
+    settings.hapticsUri = GetToneSyncedHapticsUri(databaseTool, currentToneUri);
     if (!settings.hapticsUri.empty()) {
         settings.mode = ToneHapticsMode::SYNC;
         return SUCCESS;
     }
-    settings.hapticsUri = GetDefaultNonSyncedHapticsUri(dataShareHelper, toneHapticsType);
+    settings.hapticsUri = GetDefaultNonSyncedHapticsUri(databaseTool, toneHapticsType);
     if (!settings.hapticsUri.empty()) {
         settings.mode = ToneHapticsMode::NON_SYNC;
         return SUCCESS;
@@ -2763,10 +2745,8 @@ int32_t SystemSoundManagerImpl::GetToneHapticsSettings(const DatabaseTool &datab
 
     int32_t result = SUCCESS;
     auto simcardSettingAsset = GetSimcardSettingAssetByToneHapticsType(databaseTool, toneHapticsType);
-
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = databaseTool.dataShareHelper;
     if (simcardSettingAsset == nullptr || simcardSettingAsset->GetToneFile().empty()) {
-        result = GetDefaultToneHapticsSettings(dataShareHelper, toneUri, toneHapticsType, settings);
+        result = GetDefaultToneHapticsSettings(databaseTool, toneUri, toneHapticsType, settings);
         if (result != SUCCESS) {
             MEDIA_LOGE("GetToneHapticsSettings: get defaultTone haptics settings fail");
         }
@@ -2783,7 +2763,7 @@ int32_t SystemSoundManagerImpl::GetToneHapticsSettings(const DatabaseTool &datab
         settings.hapticsUri = simcardSettingAsset->GetVibrateFile();
         settings.mode = IntToToneHapticsMode(simcardSettingAsset->GetRingMode());
     } else {
-        result = GetDefaultToneHapticsSettings(dataShareHelper, toneUri, toneHapticsType, settings);
+        result = GetDefaultToneHapticsSettings(databaseTool, toneUri, toneHapticsType, settings);
     }
     if (result == SUCCESS) {
         MEDIA_LOGI("GetDefaultToneHapticsSettings: get defaultTone haptics settings success");
@@ -2800,27 +2780,35 @@ int32_t SystemSoundManagerImpl::SetToneHapticsSettings(const std::shared_ptr<Abi
 {
 #ifdef SUPPORT_VIBRATOR
     CHECK_AND_RETURN_RET_LOG(IsToneHapticsTypeValid(toneHapticsType), OPERATION_ERROR, "Invalid tone haptics type");
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
+
+    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
+    int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
+        "ohos.permission.ACCESS_CUSTOM_RINGTONE");
+    bool isProxy = (result == Security::AccessToken::PermissionState::PERMISSION_GRANTED) ? true : false;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = isProxy ?
+        SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID) :
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, IO_ERROR,
         "Create dataShare failed, datashare or ringtone library error.");
+    DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
     string currentToneUri = GetCurrentToneUri(context, toneHapticsType);
 
-    int32_t res = SetToneHapticsSettings(dataShareHelper, currentToneUri, toneHapticsType, settings);
+    int32_t res = SetToneHapticsSettings(databaseTool, currentToneUri, toneHapticsType, settings);
     dataShareHelper->Release();
     return res;
 #endif
     return UNSUPPORTED_ERROR;
 }
 
-int32_t SystemSoundManagerImpl::SetToneHapticsSettings(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+int32_t SystemSoundManagerImpl::SetToneHapticsSettings(const DatabaseTool &databaseTool,
     const std::string &toneUri, ToneHapticsType toneHapticsType, const ToneHapticsSettings &settings)
 {
 #ifdef SUPPORT_VIBRATOR
     std::lock_guard<std::mutex> lock(toneHapticsMutex_);
     MEDIA_LOGI("SetToneHapticsSettings: toneUri %{public}s type %{public}d hapticsUri %{public}s mode %{public}d",
         toneUri.c_str(), toneHapticsType, settings.hapticsUri.c_str(), settings.mode);
-    if (dataShareHelper == nullptr || toneUri.empty() || !IsToneHapticsTypeValid(toneHapticsType)) {
+    if (!databaseTool.isInitialized || databaseTool.dataShareHelper == nullptr ||
+        toneUri.empty() || !IsToneHapticsTypeValid(toneHapticsType)) {
         MEDIA_LOGE("SetToneHapticsSettings: param fail");
         return IO_ERROR;
     }
@@ -2831,34 +2819,31 @@ int32_t SystemSoundManagerImpl::SetToneHapticsSettings(std::shared_ptr<DataShare
         queryPredicatesByUri.EqualTo(VIBRATE_COLUMN_DATA, updateSettings.hapticsUri);
         queryPredicatesByUri.And();
         queryPredicatesByUri.EqualTo(VIBRATE_COLUMN_PLAY_MODE, hapticsModeMap_[updateSettings.mode]);
-        Uri VIBRATEURI_PROXY(RINGTONE_LIBRARY_PROXY_DATA_URI_VIBATE_FILES + "&user=" +
-            std::to_string(SystemSoundManagerUtils::GetCurrentUserId()));
-        auto resultSetByUri = dataShareHelper->Query(VIBRATEURI_PROXY, queryPredicatesByUri, VIBRATE_TABLE_COLUMNS,
-            &businessError);
-        Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
-        int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
-        "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-        if (result != Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
-            std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
-                SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-            CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, IO_ERROR, "Invalid dataShare");
-        resultSetByUri = dataShareHelper->Query(VIBRATEURI, queryPredicatesByUri,
-            VIBRATE_TABLE_COLUMNS, &businessError);
+
+        std::string ringtoneLibraryUri = "";
+        if (databaseTool.isProxy) {
+            ringtoneLibraryUri = RINGTONE_LIBRARY_PROXY_DATA_URI_VIBATE_FILES +
+                "&user=" + std::to_string(SystemSoundManagerUtils::GetCurrentUserId());
+        } else {
+            ringtoneLibraryUri = VIBRATE_PATH_URI;
         }
+        Uri queryUri(ringtoneLibraryUri);
+        auto resultSetByUri = databaseTool.dataShareHelper->Query(queryUri, queryPredicatesByUri,
+            VIBRATE_TABLE_COLUMNS, &businessError);
         auto resultsByUri = make_unique<RingtoneFetchResult<VibrateAsset>>(move(resultSetByUri));
         unique_ptr<VibrateAsset> vibrateAssetByUri = resultsByUri->GetFirstObject();
         CHECK_AND_RETURN_RET_LOG(vibrateAssetByUri != nullptr, OPERATION_ERROR,
             "SetToneHapticsSettings: vibration of uri is not in the ringtone library!");
     } else if (settings.mode == ToneHapticsMode::SYNC) {
         std::shared_ptr<ToneHapticsAttrs> toneHapticsAttrs;
-        int32_t result = GetHapticsAttrsSyncedWithTone(toneUri, dataShareHelper, toneHapticsAttrs);
+        int32_t result = GetHapticsAttrsSyncedWithTone(toneUri, databaseTool, toneHapticsAttrs);
         if (result != SUCCESS) {
             return result;
         }
         updateSettings.hapticsUri = toneHapticsAttrs->GetUri();
     }
 
-    int32_t res = UpdateToneHapticsSettings(dataShareHelper, toneUri, toneHapticsType, updateSettings);
+    int32_t res = UpdateToneHapticsSettings(databaseTool, toneUri, toneHapticsType, updateSettings);
     if (res != SUCCESS) {
         MEDIA_LOGE("SetToneHapticsSettings: set tone haptics settings fail!");
     }
@@ -2948,49 +2933,38 @@ std::string SystemSoundManagerImpl::ConvertToHapticsFileName(const std::string &
 }
 
 std::unique_ptr<RingtoneAsset> SystemSoundManagerImpl::IsPresetRingtone(
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, const std::string &toneUri)
+    const DatabaseTool &databaseTool, const std::string &toneUri)
 {
+    if (!databaseTool.isInitialized || databaseTool.dataShareHelper == nullptr || toneUri.empty()) {
+        MEDIA_LOGE("GetHapticsAttrsSyncedWithTone: param fail");
+        return nullptr;
+    }
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
     queryPredicates.EqualTo(RINGTONE_COLUMN_DATA, toneUri);
-    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
-    int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
-        "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    MEDIA_LOGI("the Permissions result :%{public}d ", result);
-    if (result != Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
-        dataShareHelper = SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-        CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, nullptr, "Invalid dataShare.");
-        auto resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
-        auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
-        CHECK_AND_RETURN_RET_LOG(results != nullptr, nullptr, "query failed, ringtone library error.");
-        unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
-        if (ringtoneAsset == nullptr) {
-            MEDIA_LOGE("IsPresetRingtone: toneUri[%{public}s] inexistence in the ringtone library!", toneUri.c_str());
-            return nullptr;
-        }
-        if (ringtoneAsset->GetSourceType() != SOURCE_TYPE_PRESET) {
-            MEDIA_LOGE("IsPresetRingtone: toneUri[%{public}s] is not system prefabrication!", toneUri.c_str());
-            return nullptr;
-        }
-        if (results != nullptr) results->Close();
-        dataShareHelper->Release();
-        return ringtoneAsset;
+
+    std::string ringtoneLibraryUri = "";
+    if (databaseTool.isProxy) {
+        ringtoneLibraryUri = RINGTONE_LIBRARY_PROXY_DATA_URI_TONE_FILES +
+            "&user=" + std::to_string(SystemSoundManagerUtils::GetCurrentUserId());
     } else {
-        Uri RINGTONEURI_PROXY(RINGTONE_LIBRARY_PROXY_DATA_URI_TONE_FILES + "&user=" +
-            std::to_string(SystemSoundManagerUtils::GetCurrentUserId()));
-        auto resultSet = dataShareHelper->Query(RINGTONEURI_PROXY, queryPredicates, COLUMNS, &businessError);
-        auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
-        unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
-        if (ringtoneAsset == nullptr) {
-            MEDIA_LOGE("IsPresetRingtone: toneUri[%{public}s] inexistence in the ringtone library!", toneUri.c_str());
-            return nullptr;
-        }
-        if (ringtoneAsset->GetSourceType() != SOURCE_TYPE_PRESET) {
-            MEDIA_LOGE("IsPresetRingtone: toneUri[%{public}s] is not system prefabrication!", toneUri.c_str());
-            return nullptr;
-        }
-        return ringtoneAsset;
+        ringtoneLibraryUri = RINGTONE_PATH_URI;
     }
+    Uri queryUri(ringtoneLibraryUri);
+    auto resultSet = databaseTool.dataShareHelper->Query(queryUri, queryPredicates, COLUMNS, &businessError);
+    auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
+    CHECK_AND_RETURN_RET_LOG(results != nullptr, nullptr, "query failed, ringtone library error.");
+    unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
+    if (ringtoneAsset == nullptr) {
+        MEDIA_LOGE("IsPresetRingtone: toneUri[%{public}s] inexistence in the ringtone library!", toneUri.c_str());
+        return nullptr;
+    }
+    if (ringtoneAsset->GetSourceType() != SOURCE_TYPE_PRESET) {
+        MEDIA_LOGE("IsPresetRingtone: toneUri[%{public}s] is not system prefabrication!", toneUri.c_str());
+        return nullptr;
+    }
+    if (results != nullptr) results->Close();
+    return ringtoneAsset;
 }
 
 int SystemSoundManagerImpl::GetStandardVibrateType(int toneType)
@@ -3012,12 +2986,17 @@ int32_t SystemSoundManagerImpl::GetHapticsAttrsSyncedWithTone(const std::shared_
 {
 #ifdef SUPPORT_VIBRATOR
     CHECK_AND_RETURN_RET_LOG(!toneUri.empty(), OPERATION_ERROR, "Invalid toneUri");
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
+    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
+    int32_t resultProxy =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
+        "ohos.permission.ACCESS_CUSTOM_RINGTONE");
+    bool isProxy = (resultProxy == Security::AccessToken::PermissionState::PERMISSION_GRANTED) ? true : false;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = isProxy ?
+        SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID) :
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, IO_ERROR,
         "Create dataShare failed, datashare or ringtone library error.");
-
-    int32_t result = GetHapticsAttrsSyncedWithTone(toneUri, dataShareHelper, toneHapticsAttrs);
+    DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
+    int32_t result = GetHapticsAttrsSyncedWithTone(toneUri, databaseTool, toneHapticsAttrs);
     dataShareHelper->Release();
     return result;
 #endif
@@ -3037,15 +3016,15 @@ DataShare::DataSharePredicates SystemSoundManagerImpl::CreateVibrateQueryPredica
 }
     
 int32_t SystemSoundManagerImpl::GetHapticsAttrsSyncedWithTone(const std::string &toneUri,
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, std::shared_ptr<ToneHapticsAttrs> &toneHapticsAttrs)
+    const DatabaseTool &databaseTool, std::shared_ptr<ToneHapticsAttrs> &toneHapticsAttrs)
 {
 #ifdef SUPPORT_VIBRATOR
     MEDIA_LOGI("GetHapticsAttrsSyncedWithTone: get %{public}s sync vibration.", toneUri.c_str());
-    if (dataShareHelper == nullptr || toneUri.empty()) {
+    if (!databaseTool.isInitialized || databaseTool.dataShareHelper == nullptr || toneUri.empty()) {
         MEDIA_LOGE("GetHapticsAttrsSyncedWithTone: param fail");
         return IO_ERROR;
     }
-    unique_ptr<RingtoneAsset> ringtoneAsset = IsPresetRingtone(dataShareHelper, toneUri);
+    unique_ptr<RingtoneAsset> ringtoneAsset = IsPresetRingtone(databaseTool, toneUri);
     if (ringtoneAsset == nullptr) {
         MEDIA_LOGE("GetHapticsAttrsSyncedWithTone: toneUri[%{public}s] is not presetRingtone!", toneUri.c_str());
         return OPERATION_ERROR;
@@ -3054,21 +3033,16 @@ int32_t SystemSoundManagerImpl::GetHapticsAttrsSyncedWithTone(const std::string 
     DataShare::DataSharePredicates vibrateQueryPredicates = CreateVibrateQueryPredicates(
         ringtoneAsset->GetDisplayName(), GetStandardVibrateType(ringtoneAsset->GetToneType()));
     
-    Uri VIBRATEURI_PROXY(RINGTONE_LIBRARY_PROXY_DATA_URI_VIBATE_FILES + "&user=" +
-        std::to_string(SystemSoundManagerUtils::GetCurrentUserId()));
-    auto vibrateResultSet = dataShareHelper->Query(VIBRATEURI_PROXY, vibrateQueryPredicates, VIBRATE_TABLE_COLUMNS,
-        &businessError);
-    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
-    int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
-        "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    MEDIA_LOGI("systemsoundmanagerimpl  result :%{public}d ",  result);
-    if (result != Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
-        dataShareHelper = SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-        CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, IO_ERROR,
-            "Invalid dataShare, datashare or ringtone library error.");
-        vibrateResultSet = dataShareHelper->Query(VIBRATEURI, vibrateQueryPredicates,
-            VIBRATE_TABLE_COLUMNS, &businessError);
+    std::string ringtoneLibraryUri = "";
+    if (databaseTool.isProxy) {
+        ringtoneLibraryUri = RINGTONE_LIBRARY_PROXY_DATA_URI_VIBATE_FILES +
+            "&user=" + std::to_string(SystemSoundManagerUtils::GetCurrentUserId());
+    } else {
+        ringtoneLibraryUri = VIBRATE_PATH_URI;
     }
+    Uri queryUri(ringtoneLibraryUri);
+    auto vibrateResultSet = databaseTool.dataShareHelper->Query(queryUri, vibrateQueryPredicates,
+        VIBRATE_TABLE_COLUMNS, &businessError);
     auto vibrateResults = make_unique<RingtoneFetchResult<VibrateAsset>>(move(vibrateResultSet));
 
     unique_ptr<VibrateAsset> vibrateAsset = vibrateResults->GetFirstObject();
@@ -3079,8 +3053,7 @@ int32_t SystemSoundManagerImpl::GetHapticsAttrsSyncedWithTone(const std::string 
     std::string gentleTitle;
     std::string gentleName;
     std::string gentleUri;
-    DatabaseTool databaseTool = {true, false, dataShareHelper};
-    result = GetGentleHapticsAttr(databaseTool, vibrateAsset->GetPath(), gentleTitle, gentleName, gentleUri);
+    int32_t result = GetGentleHapticsAttr(databaseTool, vibrateAsset->GetPath(), gentleTitle, gentleName, gentleUri);
     if (result != 0) {
         MEDIA_LOGW("GetHapticsAttrsSyncedWithTone: get gentle haptics attrs fail");
     }

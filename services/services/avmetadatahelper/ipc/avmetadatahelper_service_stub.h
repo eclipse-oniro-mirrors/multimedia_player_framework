@@ -37,6 +37,7 @@ public:
     int32_t SetUrlSource(const std::string &uri, const std::map<std::string, std::string> &header) override;
     int32_t SetSource(int32_t fd, int64_t offset, int64_t size, int32_t usage) override;
     int32_t SetSource(const sptr<IRemoteObject> &object) override;
+    int32_t CancelAllFetchFrames() override;
     std::string ResolveMetadata(int32_t key) override;
     std::unordered_map<int32_t, std::string> ResolveMetadataMap() override;
     std::shared_ptr<Meta> GetAVMetadata() override;
@@ -45,6 +46,8 @@ public:
         int32_t option, const OutputConfiguration &param) override;
     std::shared_ptr<AVBuffer> FetchFrameYuv(int64_t timeUs,
         int32_t option, const OutputConfiguration &param) override;
+    int32_t FetchFrameYuvs(const std::vector<int64_t>& timeUs,
+        int32_t option, const PixelMapParams &param) override;
     void Release() override;
     int32_t DestroyStub() override;
     int32_t SetHelperCallback() override;
@@ -65,6 +68,8 @@ private:
     int32_t FetchArtPicture(MessageParcel &data, MessageParcel &reply);
     int32_t FetchFrameAtTime(MessageParcel &data, MessageParcel &reply);
     int32_t FetchFrameYuv(MessageParcel &data, MessageParcel &reply);
+    int32_t FetchFrameYuvs(MessageParcel &data, MessageParcel &reply);
+    int32_t CancelAllFetchFrames(MessageParcel &data, MessageParcel &reply);
     int32_t Release(MessageParcel &data, MessageParcel &reply);
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);
     int32_t SetHelperCallback(MessageParcel &data, MessageParcel &reply);
