@@ -117,7 +117,7 @@ class StreamIDManagerWithSameSoundInterrupt : public IStreamIDManager,
     public std::enable_shared_from_this<StreamIDManagerWithSameSoundInterrupt> {
 public:
     StreamIDManagerWithSameSoundInterrupt(int32_t maxStreams, const AudioStandard::AudioRendererInfo &audioRenderInfo);
-    ~StreamIDManagerWithSameSoundInterrupt();
+    ~StreamIDManagerWithSameSoundInterrupt() override;
 
     int32_t GetAvailableStreamIDBySoundID(int32_t soundID) override;
     void RemoveInvalidStreams() override;
@@ -142,7 +142,7 @@ class StreamIDManagerWithNoInterrupt : public IStreamIDManager,
     public std::enable_shared_from_this<StreamIDManagerWithNoInterrupt> {
 public:
     StreamIDManagerWithNoInterrupt(int32_t maxStreams, const AudioStandard::AudioRendererInfo &audioRenderInfo);
-    ~StreamIDManagerWithNoInterrupt();
+    ~StreamIDManagerWithNoInterrupt() override;
 
     int32_t GetAvailableStreamIDBySoundID(int32_t soundID) override;
     void RemoveInvalidStreams() override;

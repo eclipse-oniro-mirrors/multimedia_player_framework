@@ -339,12 +339,13 @@ int32_t SoundPool::Unload(int32_t soundID)
         std::vector<int32_t> streamIDsToBeRemoved = streamIdManager_->GetStreamIDBySoundIDWithLock(soundID);
         for (int32_t streamID : streamIDsToBeRemoved) {
             if (std::shared_ptr<AudioStream> stream = streamIdManager_->GetStreamByStreamIDWithLock(streamID)) {
-            stream->Stop();
-            stream->Release();
-            streamIdManager_->ClearStreamIDInDeque(soundID, streamID);
+                stream->Stop();
+                stream->Release();
+                streamIdManager_->ClearStreamIDInDeque(soundID, streamID);
+            }
         }
+        return soundIDManager_->Unload(soundID);
     }
-    return soundIDManager_->Unload(soundID);
 }
 
 int32_t SoundPool::Release()
