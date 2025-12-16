@@ -410,7 +410,7 @@ int32_t ScreenCaptureServiceStub::IncludeContent(MessageParcel &data, MessagePar
     if (windowIdSize > 0) {
         std::vector<uint64_t> vec;
         for (int32_t i = 0; i < windowIdSize; i++) {
-            CHECK_AND_RETURN_RET_LOG(data.ReadUInt64(windowID), MSERR_INVALID_STATE,
+            CHECK_AND_RETURN_RET_LOG(data.ReadUint64(windowID), MSERR_INVALID_STATE,
                 "failed to read data from MessageParcel");
             vec.push_back(windowID);
         }
