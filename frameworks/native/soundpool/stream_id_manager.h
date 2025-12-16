@@ -43,19 +43,6 @@ public:
 
     int32_t InitThreadPool();
     void SetInterruptMode(InterruptMode interruptMode);
-<<<<<<< HEAD
-    int32_t GetStreamIDBySoundIDWithLock(int32_t soundID);
-    std::shared_ptr<AudioStream> GetStreamByStreamIDWithLock(int32_t streamID);
-    
-protected:
-    virtual void PrintPlayingStreams() = 0;
-    virtual void PrintSoundID2Stream() = 0;
-    virtual int32_t SetPlay(int32_t soundID, int32_t streamID, const PlayParams &playParameters) = 0;
-    virtual int32_t DoPlay(int32_t streamID) = 0;
-    virtual int32_t GetStreamIDBySoundID(int32_t soundID) = 0;
-    virtual std::shared_ptr<AudioStream> GetStreamByStreamID(int32_t streamID) = 0;
-
-=======
     std::vector<int32_t> GetStreamIDBySoundIDWithLock(int32_t soundID);
     std::shared_ptr<AudioStream> GetStreamByStreamIDWithLock(int32_t streamID);
     
@@ -67,7 +54,6 @@ protected:
     virtual std::shared_ptr<AudioStream> GetStreamByStreamID(int32_t streamID) = 0;
 
     virtual void PrintPlayingStreams();
->>>>>>> 675c9fd56 (soundpool并行架构优化)
     int32_t AddPlayTask(int32_t streamID);
     int32_t AddStopTask(const std::shared_ptr<AudioStream> &stream);
     void QueueAndSortPlayingStreamID(int32_t freshStreamID);
