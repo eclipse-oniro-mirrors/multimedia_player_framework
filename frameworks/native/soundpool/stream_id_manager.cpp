@@ -37,6 +37,180 @@ namespace {
 
 namespace OHOS {
 namespace Media {
+int32_t IStreamIDManager::InitThreadPool()
+{
+    if (isStreamPlayingThreadPoolStarted_.load()) {
+        return MSERR_OK;
+    }
+    streamPlayingThreadPool_ = std::make_unique<ThreadPool>(THREAD_POOL_NAME);
+    CHECK_AND_RETURN_RET_LOG(streamPlayingThreadPool_ != nullptr, MSERR_INVALID_VAL,
+        "Failed to obtain playing ThreadPool");
+    if (maxStreams_ > MAX_PLAY_STREAMS_NUMBER) {
+        maxStreams_ = MAX_PLAY_STREAMS_NUMBER;
+        MEDIA_LOGI("more than max play stream number, align to max play strem number.");
+    }
+    if (maxStreams_ < MIN_PLAY_STREAMS_NUMBER) {
+        maxStreams_ = MIN_PLAY_STREAMS_NUMBER;
+        MEDIA_LOGI("less than min play stream number, align to min play strem number.");
+    }
+    MEDIA_LOGI("stream playing thread pool maxStreams_:%{public}d", maxStreams_);
+    // For stream priority logic, thread num need align to task num.
+    streamPlayingThreadPool_->Start(MAX_START_THREADS_NUM);
+    streamPlayingThreadPool_->SetMaxTaskNum(maxStreams_);
+    isStreamPlayingThreadPoolStarted_.store(true);
+
+    streamStopThreadPool_ = std::make_shared<ThreadPool>(THREAD_POOL_NAME_CACHE_BUFFER);
+    CHECK_AND_RETURN_RET_LOG(streamStopThreadPool_ != nullptr, MSERR_INVALID_VAL,
+        "Failed to obtain stop ThreadPool");
+    streamStopThreadPool_->Start(MAX_STOPPED_THREADS_NUM);
+    streamStopThreadPool_->SetMaxTaskNum(maxStreams_);
+    isStreamStopThreadPoolStarted_.store(true);
+
+    OHOS::Media::AudioRendererManager::GetInstance().SetStreamIDManager(weak_from_this());
+    return MSERR_OK;
+}
+
+void IStreamIDManager::SetInterruptMode(InterruptMode interruptMode)
+{
+    std::lock_guard lock(streamIDManagerLock_);
+    MEDIA_LOGI("IStreamIDManager::SetInterruptMode, current interruptMode is %{public}d, "
+        "new interruptMode is %{public}d", interruptMode_, interruptMode);
+    if (interruptMode < InterruptMode::NO_INTERRUPT || interruptMode > InterruptMode::SAME_SOUND_INTERRUPT) {
+        MEDIA_LOGE("interruptMode(%{public}d) is invalid", interruptMode);
+        return;
+    }
+    interruptMode_ = interruptMode;
+}
+
+int32_t IStreamIDManager::GetStreamIDBySoundIDWithLock(int32_t soundID)
+{
+    std::lock_guard lock(streamIDManagerLock_);
+    return GetStreamIDBySoundID(soundID);
+}
+
+std::shared_ptr<AudioStream> IStreamIDManager::GetStreamByStreamIDWithLock(int32_t streamID)
+{
+    std::lock_guard lock(streamIDManagerLock_);
+    return GetStreamByStreamID(streamID);
+}
+
+int32_t IStreamIDManager::AddPlayTask(int32_t streamID)
+{
+    MEDIA_LOGI("AddPlayTask, streamID is %{public}d", streamID);
+    ThreadPool::Task streamPlayTask = [this, streamID] { this->DoPlay(streamID); };
+    CHECK_AND_RETURN_RET_LOG(streamPlayingThreadPool_ != nullptr, MSERR_INVALID_VAL,
+        "Failed to obtain streamPlayingThreadPool_");
+    CHECK_AND_RETURN_RET_LOG(streamPlayTask != nullptr, MSERR_INVALID_VAL,
+        "AddPlayTask, streamPlayingThreadPool_ is nullptr");
+    QueueAndSortPlayingStreamID(streamID);
+
+    streamPlayingThreadPool_->AddTask(streamPlayTask);
+    MEDIA_LOGI("AddPlayTask end, streamID is %{public}d", streamID);
+    return MSERR_OK;
+}
+
+int32_t IStreamIDManager::AddStopTask(const std::shared_ptr<AudioStream> &stream)
+{
+    MEDIA_LOGI("AddStopTask, streamID is %{public}d", stream->GetStreamID());
+    ThreadPool::Task streamStopTask = [stream] { stream->Stop(); };
+    CHECK_AND_RETURN_RET_LOG(streamStopThreadPool_ != nullptr, MSERR_INVALID_VAL,
+        "Failed to obtain streamStopThreadPool_");
+    CHECK_AND_RETURN_RET_LOG(streamStopTask != nullptr, MSERR_INVALID_VAL,
+        "AddStopTask, streamPlayingThreadPool_ is nullptr");
+    streamStopThreadPool_->AddTask(streamStopTask);
+    MEDIA_LOGI("AddStopTask end, streamID is %{public}d", stream->GetStreamID());
+    return MSERR_OK;
+}
+
+// Sort in descending order
+// 0 has the lowest priority, and the higher the value, the higher the priority
+// The queue head has the highest value and priority
+void IStreamIDManager::QueueAndSortPlayingStreamID(int32_t freshStreamID)
+{
+    MEDIA_LOGI("StreamIDManager::QueueAndSortPlayingStreamID start");
+    if (playingStreamIDs_.empty()) {
+        playingStreamIDs_.emplace_back(freshStreamID);
+        return;
+    }
+
+    bool shouldReCombinePlayingQueue = false;
+    for (size_t i = 0; i < playingStreamIDs_.size(); i++) {
+        int32_t playingStreamID = playingStreamIDs_[i];
+        std::shared_ptr<AudioStream> freshStream = GetStreamByStreamID(freshStreamID);
+        std::shared_ptr<AudioStream> playingStream = GetStreamByStreamID(playingStreamID);
+        if (playingStream == nullptr) {
+            playingStreamIDs_.erase(playingStreamIDs_.begin() + i);
+            shouldReCombinePlayingQueue = true;
+            break;
+        }
+        if (freshStream == nullptr) {
+            break;
+        }
+        if (freshStream->GetPriority() >= playingStream->GetPriority()) {
+            playingStreamIDs_.insert(playingStreamIDs_.begin() + i, freshStreamID);
+            break;
+        }
+        if (playingStreamIDs_.size() >= 1 && i == playingStreamIDs_.size() - 1 &&
+            freshStream->GetPriority() < playingStream->GetPriority()) {
+            playingStreamIDs_.push_back(freshStreamID);
+            break;
+        }
+    }
+    if (shouldReCombinePlayingQueue) {
+        QueueAndSortPlayingStreamID(freshStreamID);
+    }
+}
+
+// Sort in descending order.
+// 0 has the lowest priority, and the higher the value, the higher the priority
+// The queue head has the highest value and priority
+void IStreamIDManager::QueueAndSortWillPlayStreamID(const StreamIDAndPlayParamsInfo &streamIDAndPlayParamsInfo)
+{
+    if (willPlayStreamInfos_.empty()) {
+        willPlayStreamInfos_.emplace_back(streamIDAndPlayParamsInfo);
+        return;
+    }
+
+    bool shouldReCombineWillPlayQueue = false;
+    for (size_t i = 0; i < willPlayStreamInfos_.size(); i++) {
+        std::shared_ptr<AudioStream> freshCacheBuffer = GetStreamByStreamID(streamIDAndPlayParamsInfo.streamID);
+        std::shared_ptr<AudioStream> willPlayCacheBuffer = GetStreamByStreamID(willPlayStreamInfos_[i].streamID);
+        if (willPlayCacheBuffer == nullptr) {
+            willPlayStreamInfos_.erase(willPlayStreamInfos_.begin() + i);
+            shouldReCombineWillPlayQueue = true;
+            break;
+        }
+        if (freshCacheBuffer == nullptr) {
+            break;
+        }
+        if (freshCacheBuffer->GetPriority() >= willPlayCacheBuffer->GetPriority()) {
+            willPlayStreamInfos_.insert(willPlayStreamInfos_.begin() + i, streamIDAndPlayParamsInfo);
+            break;
+        }
+        if (willPlayStreamInfos_.size() >= 1 && i == willPlayStreamInfos_.size() - 1 &&
+            freshCacheBuffer->GetPriority() < willPlayCacheBuffer->GetPriority()) {
+            willPlayStreamInfos_.push_back(streamIDAndPlayParamsInfo);
+            break;
+        }
+    }
+    if (shouldReCombineWillPlayQueue) {
+        QueueAndSortWillPlayStreamID(streamIDAndPlayParamsInfo);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 StreamIDManager::StreamIDManager(int32_t maxStreams, const AudioStandard::AudioRendererInfo &audioRenderInfo,
     InterruptMode interruptMode) : audioRendererInfo_(audioRenderInfo), maxStreams_(maxStreams)
 {
