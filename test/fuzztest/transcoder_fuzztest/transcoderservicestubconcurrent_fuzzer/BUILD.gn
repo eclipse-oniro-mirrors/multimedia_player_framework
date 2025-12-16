@@ -19,7 +19,7 @@ MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
 
 ##############################fuzztest##########################################
 ohos_fuzztest("TranscoderServiceStubConcurrentFuzzTest") {
-  module_out_path = "$MODULE_OUTPUT_PATH/transcoder"
+  module_out_path = "$MODULE_OUTPUT_PATH/transcoder/concurrent"
   fuzz_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/transcoder_fuzztest/transcoderservicestubconcurrent_fuzzer"
   resource_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/resource/ohos_test.xml"
 

@@ -184,7 +184,7 @@ bool TranscoderServiceStubFuzzerConcurrent::FuzzTranscoderOnRemoteRequest(uint8_
             int32_t value = encoderArr[std::abs(index)];
             dataSend.WriteInt32(value);
             transcoderStub->OnRemoteRequest(
-                IStandardTransCoderService::RecorderServiceMsg::SET_VIDEO_ENCODER, dataSend, reply, option);
+                IStandardTransCoderService::RecorderServiceMsg::SET_AUDIO_ENCODER, dataSend, reply, option);
             break;
         }
         case 7: {
@@ -197,7 +197,7 @@ bool TranscoderServiceStubFuzzerConcurrent::FuzzTranscoderOnRemoteRequest(uint8_
             CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
             dataSend.WriteInt32(audioBitrate);
             transcoderStub->OnRemoteRequest(
-                IStandardTransCoderService::RecorderServiceMsg::SET_VIDEO_ENCODER, dataSend, reply, option);
+                IStandardTransCoderService::RecorderServiceMsg::SET_AUDIO_ENCODING_BIT_RATE, dataSend, reply, option);
             break;
         }
         case 8: {
@@ -216,7 +216,7 @@ bool TranscoderServiceStubFuzzerConcurrent::FuzzTranscoderOnRemoteRequest(uint8_
             int32_t value = outputFormatArr[std::abs(index)];
             dataSend.WriteInt32(value);
             transcoderStub->OnRemoteRequest(
-                IStandardTransCoderService::RecorderServiceMsg::SET_VIDEO_ENCODER, dataSend, reply, option);
+                IStandardTransCoderService::RecorderServiceMsg::SET_OUTPUT_FORMAT, dataSend, reply, option);
             break;
         }
         case 9: {

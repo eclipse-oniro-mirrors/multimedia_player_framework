@@ -33,7 +33,7 @@ public:
     ~TranscoderServiceStubFuzzerConcurrent();
     bool FuzzTranscoderOnRemoteRequest(uint8_t *data, size_t size);
 };
-}
 bool FuzzTestTranscoderOnRemoteRequest(uint8_t *data, size_t size);
+}
 }
 #endif // TRANSCODERSERVICESTUBCONCURRENT_FUZZER
