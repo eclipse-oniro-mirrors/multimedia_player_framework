@@ -3576,8 +3576,8 @@ int32_t ScreenCaptureServer::IncludeContent(ScreenCaptureContentFilter &contentF
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(captureState_ != AVScreenCaptureState::STOPPED, MSERR_INVALID_OPERATION,
         "IncludeContent failed, capture is STOPPED");
-    for (size_t i = 0; i < contentFilter.windowIDsVec.size(); i++) {
-        MEDIA_LOGI("windowIDsVec value :%{public}" PRIu64, contentFilter.windowIDsVec[i]);
+    for (const auto& windowID : contentFilter.windowIDsVec) {
+        MEDIA_LOGI("windowIDsVec value :%{public}" PRIu64, windowID);
     }
     MEDIA_LOGI("ScreenCaptureServer::IncludeContent start");
     DMError ret = ScreenManager::GetInstance().AddVirtualScreenWhiteList(virtualScreenId_,
