@@ -218,6 +218,26 @@ enum PlayerErrorType : int32_t {
     /* extend error type start,The extension error type agreed upon by the plug-in and
        the application will be transparently transmitted by the service. */
     PLAYER_ERROR_EXTEND_START = 0X10000,
+    /* Playback mode not supported */
+    PLAY_ERR,
+    /* Network timeout or error. */
+    NET_ERR,
+    /* The file container format is not supported. */
+    CONTAINER_ERR,
+    /* The unpacking format is not supported */
+    DEM_FMT_ERR,
+    /* Error parsing during unpacking */
+    DEM_PARSE_ERR,
+    /* Audio decoding error */
+    AUD_DEC_ERR,
+    /* Video decoding error */
+    VID_DEC_ERR,
+    /*DRM error*/
+    DRM_ERR,
+    /*Audio output error*/
+    AUD_OUTPUT_ERR,
+    /* VPE error */
+    VPE_ERR,
 };
 
 enum PlayerMessageType : int32_t {

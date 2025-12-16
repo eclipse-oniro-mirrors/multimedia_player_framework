@@ -40,7 +40,7 @@ class MockIPlayerEngineObs : public IPlayerEngineObs {
 public:
     MockIPlayerEngineObs() = default;
     ~MockIPlayerEngineObs() override = default;
-    MOCK_METHOD(void, OnError, (PlayerErrorType errorType, int32_t errorCode), ());
+    MOCK_METHOD(void, OnError, (PlayerErrorType errorType, int32_t errorCode, const std::string &description), ());
     MOCK_METHOD(void, OnErrorMessage, (int32_t errorCode, const std::string &errorMsg), ());
     MOCK_METHOD(void, OnInfo, (PlayerOnInfoType type, int32_t extra, const Format &infoBody), ());
     MOCK_METHOD(void, OnSystemOperation,

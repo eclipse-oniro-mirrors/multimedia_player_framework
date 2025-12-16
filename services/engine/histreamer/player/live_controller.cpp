@@ -120,10 +120,11 @@ void LiveController::DoCheckLiveDelayTime()
     }
 }
 
-void LiveController::OnError(PlayerErrorType errorType, int32_t errorCode)
+void LiveController::OnError(PlayerErrorType errorType, int32_t errorCode, const std::string &description)
 {
     (void)errorType;
     (void)errorCode;
+    (void)description;
 }
 
 void LiveController::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)

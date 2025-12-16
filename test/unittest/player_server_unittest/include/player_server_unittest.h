@@ -22,6 +22,24 @@
 
 namespace OHOS {
 namespace Media {
+
+struct ErrorScenario {
+    PlayerErrorType type;
+    int32_t code;
+    std::string expectedPrefix;
+};
+
+class PlayerServerTestAccessor : public PlayerServer {
+public:
+    inline int32_t Init() override
+    {
+        return PlayerServer::Init();
+    }
+    inline int32_t InitTaskMgr()
+    {
+        return taskMgr_.Init();
+    }
+};
 class PlayerServerUnitTest : public testing::Test {
 public:
     // SetUpTestCase: Called before all test cases

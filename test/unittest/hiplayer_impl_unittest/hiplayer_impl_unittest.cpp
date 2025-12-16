@@ -15,16 +15,45 @@
 
 #include "media_errors.h"
 #include "hiplayer_impl_unittest.h"
+#include "i_player_engine.h"
 #include "pipeline/pipeline.h"
 #include "player.h"
 #include "audio_device_descriptor.h"
 #include "audio_capture_filter.h"
+#include "plugin/plugin_event.h"
+#include <algorithm>
+#include <chrono>
+#include <future>
+#include <mutex>
+#include <tuple>
 
 namespace OHOS {
 namespace Media {
 using namespace std;
 using namespace testing;
 using namespace testing::ext;
+namespace {
+std::vector<std::tuple<std::string, int32_t, std::string, PlayerErrorType>> g_errorEvents = {
+    {"audioDecoder", MSERR_UNSUPPORT_AUD_DEC_TYPE, "audio/test_mime", PlayerErrorType::AUD_DEC_ERR},
+    {"audioDecoder", MSERR_DRM_VERIFICATION_FAILED, "audio/test_mime", PlayerErrorType::DRM_ERR},
+    {"audio_sink_filter", MSERR_AUD_RENDER_FAILED, "null", PlayerErrorType::AUD_OUTPUT_ERR},
+    {"DecoderSurfaceFilter", MSERR_EXT_API9_IO, "video/test_mime", PlayerErrorType::VID_DEC_ERR},
+    {"DecoderSurfaceFilter", MSERR_EXT_API9_IO, "post_processor", PlayerErrorType::VPE_ERR},
+    {"decoderSurface", MSERR_UNSUPPORT_VID_DEC_TYPE, "video/test_mime", PlayerErrorType::VID_DEC_ERR},
+    {"decoderSurface", MSERR_VID_DEC_FAILED, "video/test_mime", PlayerErrorType::VID_DEC_ERR},
+    {"decoderSurface", MSERR_UNSUPPORT_VID_SRC_TYPE, "video/test_mime", PlayerErrorType::VID_DEC_ERR},
+    {"demuxer_filter", MSERR_DEMUXER_FAILED, "video/test_mime", PlayerErrorType::DEM_FMT_ERR},
+    {"demuxer_filter", MSERR_UNSUPPORT_CONTAINER_TYPE, "video/test_mime", PlayerErrorType::DEM_FMT_ERR},
+    {"demuxer_filter", MSERR_DATA_SOURCE_ERROR_UNKNOWN, "video/test_mime", PlayerErrorType::DEM_PARSE_ERR},
+    {"demuxer_filter", MSERR_DEMUXER_BUFFER_NO_MEMORY, "video/test_mime", PlayerErrorType::DEM_PARSE_ERR},
+    {"demuxer_filter", static_cast<int32_t>(Plugins::NetworkClientErrorCode::ERROR_TIME_OUT), "client",
+        PlayerErrorType::NET_ERR},
+    {"audioSinkPlugin", MSERR_UNSUPPORT_AUD_SAMPLE_RATE, "null", PlayerErrorType::AUD_OUTPUT_ERR},
+    {"sampleRate isn't supported", MSERR_UNSUPPORT_AUD_SAMPLE_RATE, "sample_rate",
+        PlayerErrorType::AUD_OUTPUT_ERR},
+    {"channel isn't supported", MSERR_UNSUPPORT_AUD_CHANNEL_NUM, "channel_num", PlayerErrorType::AUD_OUTPUT_ERR},
+    {"sampleFmt isn't supported", MSERR_UNSUPPORT_AUD_PARAMS, "sample_format", PlayerErrorType::AUD_OUTPUT_ERR}};
+}
 
 void PlayHiplayerImplUnitTest::SetUpTestCase(void)
 {
@@ -996,6 +1025,42 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SetMediaMuted_003, TestSize.Level0)
 
     ret = hiplayer_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_SUBTITLE, false);
     EXPECT_NE(ret, MSERR_OK);
+}
+
+// @tc.name     Test ReportAllErrorEvents
+// @tc.number   PHIUT_ReportAllErrorEvents_001
+// @tc.desc     Test all error reporting points from various filters
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_ReportAllErrorEvents_001, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    auto mockObs = std::make_shared<MockIPlayerEngineObs>();
+    hiplayer_->SetObs(mockObs);
+    hiplayer_->pipeline_ = std::make_shared<MockPipeline>();
+    hiplayer_->Init();
+    auto receiver = hiplayer_->playerEventReceiver_;
+    ASSERT_NE(receiver, nullptr);
+    std::vector<std::tuple<PlayerErrorType, int32_t, std::string>> actualEvents;
+    EXPECT_CALL(*mockObs, OnError(_, _, _))
+        .WillRepeatedly(Invoke([&](PlayerErrorType t, int32_t code, const std::string &desc) {
+            actualEvents.emplace_back(t, code, desc);
+        }));
+    for (const auto& e : g_errorEvents) {
+        Event event;
+        event.srcFilter = std::get<0>(e);
+        event.type = EventType::EVENT_ERROR;
+        event.param = std::get<1>(e);
+        event.description = std::get<2>(e);
+        receiver->OnEvent(event);
+    }
+    for (int i = 0; i < 20 && actualEvents.size() < g_errorEvents.size(); ++i) {
+        usleep(10000);
+    }
+    EXPECT_EQ(actualEvents.size(), g_errorEvents.size());
+    for (size_t i = 0; i < g_errorEvents.size(); ++i) {
+        EXPECT_EQ(std::get<0>(actualEvents[i]), std::get<3>(g_errorEvents[i]));
+        EXPECT_EQ(std::get<1>(actualEvents[i]), std::get<1>(g_errorEvents[i]));
+        EXPECT_EQ(std::get<2>(actualEvents[i]), std::get<2>(g_errorEvents[i]));
+    }
 }
 } // namespace Media
 } // namespace OHOS
