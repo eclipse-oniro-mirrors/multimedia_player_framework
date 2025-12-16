@@ -403,7 +403,8 @@ int32_t ScreenCaptureServiceStub::IncludeContent(MessageParcel &data, MessagePar
     ScreenCaptureContentFilter contentFilter;
     int32_t windowIdSize = 0;
     uint64_t windowID = 0;
-    CHECK_AND_RETURN_RET_LOG(data.ReadInt32(windowIdSize), MSERR_INVALID_STATE, "failed to read data from MessageParcel");
+    CHECK_AND_RETURN_RET_LOG(data.ReadInt32(windowIdSize), MSERR_INVALID_STATE,
+        "failed to read data from MessageParcel");
     CHECK_AND_RETURN_RET_LOG(windowIdSize < MAX_FILTER_CONTENTS_COUNT, MSERR_INVALID_STATE,
                              "windowID size is exceed max range");
     if (windowIdSize > 0) {

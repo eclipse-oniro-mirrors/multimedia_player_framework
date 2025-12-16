@@ -174,7 +174,7 @@ int32_t ScreenCaptureClient::ExcludeContent(ScreenCaptureContentFilter &contentF
 
 int32_t ScreenCaptureClient::IncludeContent(ScreenCaptureContentFilter &contentFilter)
 {
-    std::lock_guardstd::mutex lock(mutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
     return screenCaptureProxy_->IncludeContent(contentFilter);
 }
