@@ -638,6 +638,18 @@ OH_AVFormat *OH_AVPlayer_GetMediaDescription(OH_AVPlayer *player);
  */
 OH_AVFormat *OH_AVPlayer_GetTrackDescription(OH_AVPlayer *player, uint32_t index);
 
+/**
+ * @brief Get the statistic metrics info of current player.
+ *     It should be noted that the life cycle of the OH_AVFormat instance pointed to by the return value * needs
+ *     to be manually released by the caller.
+ * @param player Pointer to an OH_AVPlayer instance
+ * @return Returns the statistic metrics info.
+ *     if the execution is successful, otherwise returns nullptr. Possible failure causes:
+ *       1. player is invaild.
+ *       2. player's media source is invalid.
+ * @since 23
+ */
+OH_AVFormat *OH_AVPlayer_GetPlaybackStatisticMetrics(OH_AVPlayer *player);
 #ifdef __cplusplus
 }
 #endif

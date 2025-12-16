@@ -161,7 +161,13 @@ public:
         (void)interruptMode;
         return 0;
     }
-    
+
+    virtual int32_t GetPlaybackStatisticMetrics(Format &playbackStatisticMetrics)
+    {
+        (void)playbackStatisticMetrics;
+        return 0;
+    }
+
     virtual int32_t SelectTrack(int32_t index, PlayerSwitchMode mode = PlayerSwitchMode::SWITCH_SMOOTH)
     {
         (void)index;

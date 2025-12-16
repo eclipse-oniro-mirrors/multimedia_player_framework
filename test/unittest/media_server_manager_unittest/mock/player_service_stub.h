@@ -71,6 +71,7 @@ public:
     MOCK_METHOD(int32_t, GetPlaybackPosition, (int32_t &playbackPosition), (override));
     MOCK_METHOD(int32_t, GetVideoTrackInfo, (std::vector<Format> &videoTrack), (override));
     MOCK_METHOD(int32_t, GetPlaybackInfo, (Format &playbackInfo), (override));
+    MOCK_METHOD(int32_t, GetPlaybackStatisticMetrics, (Format &playbackStatisticMetrics), (override));
     MOCK_METHOD(int32_t, GetPlaybackSpeed, (PlaybackRateMode &mode), (override));
     MOCK_METHOD(int32_t, GetSubtitleTrackInfo, (std::vector<Format> &subtitleTrack), (override));
     MOCK_METHOD(int32_t, GetVideoHeight, (), (override));

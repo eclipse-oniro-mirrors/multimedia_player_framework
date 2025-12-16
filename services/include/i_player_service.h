@@ -629,6 +629,23 @@ public:
     virtual bool IsSeekContinuousSupported() = 0;
 
     /**
+     * @brief Obtains the playbackStatisticMetrics, contains prepare_duration, resource_connection_duration,
+     * first_frame_decapsulation_duration, total_playback_time, loading_count, total_loading_time, total_loading_Bytes,
+     * stalling_count, total_stalling_time.
+     *
+     * @param playbackStatisticMetrics.
+     * @return Returns {@link MSERR_OK} if the statistic metrics is get; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t GetPlaybackStatisticMetrics(Format& playbackStatisticMetrics)
+    {
+        (void)playbackStatisticMetrics;
+        return 0;
+    }
+
+    /**
      * @brief Set get sei message callback status.
      *
      * @param status callback status.

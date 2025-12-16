@@ -58,6 +58,7 @@ public:
     int32_t GetPlaybackPosition(int32_t &playbackPosition) override;
     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
     int32_t GetPlaybackInfo(Format& playbackInfo) override;
+    int32_t GetPlaybackStatisticMetrics(Format &playbackStatisticMetrics) override;
     int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) override;
     int32_t GetDuration(int32_t &duration) override;
     int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) override;

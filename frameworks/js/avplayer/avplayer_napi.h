@@ -68,6 +68,7 @@ const std::string EVENT_ERROR = "error";
 const std::string EVENT_AMPLITUDE_UPDATE = "amplitudeUpdate";
 const std::string EVENT_SEI_MESSAGE_INFO = "seiMessageReceived";
 const std::string EVENT_SUPER_RESOLUTION_CHANGED = "superResolutionChanged";
+const std::string EVENT_METRICS = "metricsEvent";
 }
 
 using TaskRet = std::pair<int32_t, std::string>;
@@ -279,6 +280,8 @@ private:
      */
     static napi_value JsGetPlaybackInfo(napi_env env, napi_callback_info info);
 
+    static napi_value JsGetPlaybackStatisticMetrics(napi_env env, napi_callback_info info);
+
     static napi_value JsIsSeekContinuousSupported(napi_env env, napi_callback_info info);
 
     /**
@@ -315,6 +318,9 @@ private:
      */
     static napi_value JsSetOnCallback(napi_env env, napi_callback_info info);
     static napi_value JsClearOnCallback(napi_env env, napi_callback_info info);
+
+    static napi_value JsSetOnMetricsEventCallback(napi_env env, napi_callback_info info);
+    static napi_value JsClearOnMetricsEventCallback(napi_env env, napi_callback_info info);
 
     static AVPlayerNapi* GetJsInstance(napi_env env, napi_callback_info info);
     static AVPlayerNapi* GetJsInstanceWithParameter(napi_env env, napi_callback_info info,
@@ -356,6 +362,7 @@ private:
 
     std::string GetCurrentState();
     bool IsControllable();
+    bool CanGetPlaybackStatisticMetrics();
     bool CanSetPlayRange();
     bool CanSetLoudnessGain();
     bool CanSetSuperResolution();
@@ -457,6 +464,7 @@ private:
     std::shared_mutex drmMutex_{};
     std::multimap<std::string, std::vector<uint8_t>> localDrmInfos_;
     Format playbackInfo_;
+    Format PlaybackStatisticMetrics_;
     int32_t index_ = -1;
     int32_t mode_ = SWITCH_SMOOTH;
     std::mutex syncMutex_;

@@ -140,6 +140,7 @@ public:
     int32_t GetCurrentTime(int32_t &currentTime);
     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack);
     int32_t GetPlaybackInfo(Format &playbackInfo);
+    int32_t GetPlaybackStatisticMetrics(Format &playbackStatisticMetrics);
     int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack);
     int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack);
     int32_t GetVideoWidth();

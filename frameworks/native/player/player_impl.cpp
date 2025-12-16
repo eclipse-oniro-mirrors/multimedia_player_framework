@@ -557,6 +557,20 @@ int32_t PlayerImpl::GetPlaybackInfo(Format &playbackInfo)
     return ret;
 }
 
+int32_t PlayerImpl::GetPlaybackStatisticMetrics(Format &playbackStatisticMetrics)
+{
+    int64_t startTime = SteadyClock::GetCurrentTimeMs();
+    ScopedTimer timer("GetPlaybackStatisticMetrics", OVERTIME_WARNING_MS);
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetPlaybackStatisticMetrics in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    int32_t ret = MSERR_OK;
+    LISTENER(ret = playerService_->GetPlaybackStatisticMetrics(playbackStatisticMetrics),
+        "GetPlaybackStatisticMetrics", false, TIME_OUT_SECOND);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
+    hiAppEventAgent_->TraceApiEvent(ret, "GetPlaybackStatisticMetrics", startTime, traceId_);
+    return ret;
+}
+
 int32_t PlayerImpl::GetAudioTrackInfo(std::vector<Format> &audioTrack)
 {
     int64_t startTime = SteadyClock::GetCurrentTimeMs();

@@ -79,6 +79,7 @@ private:
     void OnMaxAmplitudeCollectedCb(const int32_t extra, const Format &infoBody);
     void OnSeiInfoCb(const int32_t extra, const Format &infoBody);
     void OnSuperResolutionChangedCb(const int32_t extra, const Format &infoBody);
+    void OnMetricsEventCb(const int32_t extra, const Format &infoBody);
 
     void OnEosCb(const int32_t extra, const Format &infoBody);
     void NotifyIsLiveStream(const int32_t extra, const Format &infoBody);

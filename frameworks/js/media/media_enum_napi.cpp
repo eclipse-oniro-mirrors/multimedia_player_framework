@@ -363,6 +363,18 @@ static const std::vector<struct JsEnumString> g_playbackInfoKey = {
     { "BUFFER_DURATION", "buffer_duration" },
 };
 
+static const std::vector<struct JsEnumString> g_playbackMetricsKey = {
+    { "PREPARE_DURATION", "prepare_duration" },
+    { "RESOURCE_CONNECTION_DURATION", "resource_connection_duration" },
+    { "FIRST_FRAME_DECAPSULATION_DURATION", "first_frame_decapsulation_duration" },
+    { "TOTAL_PLAYING_TIME", "total_playback_time" },
+    { "DOWNLOAD_REQUESTS_COUNT", "loading_count" },
+    { "TOTAL_DOWNLOAD_TIME", "total_loading_time" },
+    { "TOTAL_DOWNLOAD_SIZE", "total_loading_Bytes" },
+    { "STALLING_COUNT", "stalling_count" },
+    { "TOTAL_STALLING_TIME", "total_stalling_time" },
+};
+
 static const std::vector<struct JsEnumString> g_codecMimeType = {
     { "VIDEO_H263", OHOS::Media::Plugins::MimeType::VIDEO_H263 },
     { "VIDEO_AVC", OHOS::Media::Plugins::MimeType::VIDEO_AVC },
@@ -506,6 +518,7 @@ static const std::map<std::string_view, const std::vector<struct JsEnumString>&>
     { "CodecMimeType", g_codecMimeType },
     { "AVMimeTypes", g_avMimeTypes },
     { "PlaybackInfoKey", g_playbackInfoKey },
+    { "PlaybackMetricsKey", g_playbackMetricsKey },
 };
 
 napi_value MediaEnumNapi::JsEnumIntInit(napi_env env, napi_value exports)

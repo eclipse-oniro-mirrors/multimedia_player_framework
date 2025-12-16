@@ -816,6 +816,31 @@ HWTEST_F(HiplayerImplUnitTest, GetPlaybackInfo_001, TestSize.Level0)
     EXPECT_EQ(hiplayer_->GetAudioEffectMode(effectMode), MSERR_OK);
 }
 
+HWTEST_F(HiplayerImplUnitTest, GetPlaybackStatisticMetrics_001, TestSize.Level0)
+{
+    std::string name = "builtin.player.demuxer";
+    std::shared_ptr<DemuxerFilterMock> demuxerMock =
+        std::make_shared<DemuxerFilterMock>(name, FilterType::FILTERTYPE_DEMUXER);
+    hiplayer_->demuxer_ = demuxerMock;
+    hiplayer_->audioSink_ = nullptr;
+
+    hiplayer_->OnEvent({"hiplayer", EventType::EVENT_IS_LIVE_STREAM, false});
+    hiplayer_->OnEvent({"hiplayer", EventType::EVENT_READY, false});
+    hiplayer_->OnEvent({"hiplayer", EventType::BUFFERING_END, 2});
+    hiplayer_->OnEvent({"hiplayer", EventType::BUFFERING_START, 1});
+    hiplayer_->OnEvent({"hiplayer", EventType::EVENT_CACHED_DURATION, 100});
+    hiplayer_->OnEvent({"hiplayer", EventType::EVENT_BUFFER_PROGRESS, 100});
+    hiplayer_->OnEvent({"hiplayer", EventType::EVENT_AUDIO_SERVICE_DIED, 1});
+    hiplayer_->OnEvent({"hiplayer", EventType::EVENT_COMPLETE, false});
+
+    Format playbackStatisticMetrics;
+    EXPECT_EQ(hiplayer_->GetPlaybackStatisticMetrics(playbackStatisticMetrics), 0);
+    PlaybackRateMode mode;
+    EXPECT_EQ(hiplayer_->GetPlaybackSpeed(mode), MSERR_OK);
+    int32_t effectMode;
+    EXPECT_EQ(hiplayer_->GetAudioEffectMode(effectMode), MSERR_OK);
+}
+
 HWTEST_F(HiplayerImplUnitTest, InitAudioDefaultTrackIndex_001, TestSize.Level0)
 {
     hiplayer_->demuxer_ = nullptr;

@@ -67,6 +67,17 @@ const char* OH_PLAYER_MD_KEY_HAS_AUDIO = PlayerKeys::PLAYER_HAS_AUDIO.data();
 const char* OH_PLAYER_MD_KEY_HAS_SUBTITLE = PlayerKeys::PLAYER_HAS_SUBTITLE.data();
 const char* OH_PLAYER_MD_KEY_TRACK_INDEX = PlayerKeys::PLAYER_TRACK_INDEX.data();
 
+const char* OH_MEDIA_EVENT_INFO_PREPARE_DURATION = PlaybackMetricsKey::PREPARE_DURATION.data();
+const char* OH_MEDIA_EVENT_INFO_RESOURCE_CONNECTION_DURATION = PlaybackMetricsKey::RESOURCE_CONNECTION_DURATION.data();
+const char* OH_MEDIA_EVENT_INFO_FIRST_FRAME_DECAPSULATION_DURATION =
+    PlaybackMetricsKey::FIRST_FRAME_DECAPSULATION_DURATION.data();
+const char* OH_MEDIA_EVENT_INFO_TOTAL_PLAYING_TIME = PlaybackMetricsKey::TOTAL_PLAYING_TIME.data();
+const char* OH_MEDIA_EVENT_INFO_DOWNLOAD_REQUESTS_COUNT = PlaybackMetricsKey::DOWNLOAD_REQUESTS_COUNT.data();
+const char* OH_MEDIA_EVENT_INFO_DOWNLOAD_TOTAL_DOWNLOAD_TIME = PlaybackMetricsKey::TOTAL_DOWNLOAD_TIME.data();
+const char* OH_MEDIA_EVENT_INFO_DOWNLOAD_TOTAL_DOWNLOAD_SIZE = PlaybackMetricsKey::TOTAL_DOWNLOAD_SIZE.data();
+const char* OH_MEDIA_EVENT_INFO_STALLING_COUNT = PlaybackMetricsKey::STALLING_COUNT.data();
+const char* OH_MEDIA_EVENT_INFO_TOTAL_STALLING_TIME = PlaybackMetricsKey::TOTAL_STALLING_TIME.data();
+
 typedef struct PlayerErrorCodeApi9Convert {
     MediaServiceExtErrCodeAPI9 errorCodeApi9;
     OH_AVErrCode avErrorCode;
@@ -1515,6 +1526,22 @@ OH_AVFormat *OH_AVPlayer_GetTrackDescription(OH_AVPlayer *player, uint32_t index
     CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, nullptr, "player_ is null");
     int32_t ret = playerObj->player_->GetTrackDescription(format, index);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "player GetTrackDescription failed");
+    OH_AVFormat *avFormat = OH_AVFormat_Create();
+    CHECK_AND_RETURN_RET_LOG(avFormat != nullptr, nullptr, "Format is nullptr!");
+    avFormat->format_ = format;
+    return avFormat;
+}
+
+OH_AVFormat *OH_AVPlayer_GetPlaybackStatisticMetrics(OH_AVPlayer *player)
+{
+    MEDIA_LOGI("OH_AVPlayer_GetPlaybackStatisticMetrics S");
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, nullptr, "SetOnInfo input player is nullptr!");
+
+    OHOS::Media::Format format;
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, nullptr, "player_ is null");
+    int32_t ret = playerObj->player_->GetPlaybackStatisticMetrics(format);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "player GetPlaybackStatisticMetrics failed");
     OH_AVFormat *avFormat = OH_AVFormat_Create();
     CHECK_AND_RETURN_RET_LOG(avFormat != nullptr, nullptr, "Format is nullptr!");
     avFormat->format_ = format;

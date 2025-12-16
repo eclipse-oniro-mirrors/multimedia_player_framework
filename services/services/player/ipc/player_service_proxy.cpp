@@ -91,6 +91,7 @@ void PlayerServiceProxy::InitPlayerFuncsPart1()
     playerFuncs_[SET_CALLBACK] = "Player::SetPlayerCallback";
     playerFuncs_[GET_VIDEO_TRACK_INFO] = "Player::GetVideoTrackInfo";
     playerFuncs_[GET_PLAYBACK_INFO] = "Player::GetPlaybackInfo";
+    playerFuncs_[GET_PLAYBACK_STATISTIC_METRICS] = "Player::GetPlaybackStatisticMetrics";
     playerFuncs_[GET_AUDIO_TRACK_INFO] = "Player::GetAudioTrackInfo";
     playerFuncs_[GET_SUBTITLE_TRACK_INFO] = "Player::GetSubtitleTrackInfo";
     playerFuncs_[GET_VIDEO_WIDTH] = "Player::GetVideoWidth";
@@ -597,6 +598,24 @@ int32_t PlayerServiceProxy::GetPlaybackInfo(Format &playbackInfo)
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "GetPlaybackInfo failed, error: %{public}d", error);
     (void)MediaParcel::Unmarshalling(reply, playbackInfo);
+
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::GetPlaybackStatisticMetrics(Format &playbackStatisticMetrics)
+{
+    MediaTrace trace("PlayerServiceProxy::GetPlaybackStatisticMetrics");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    int32_t error = SendRequest(GET_PLAYBACK_STATISTIC_METRICS, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(
+        error == MSERR_OK, MSERR_INVALID_OPERATION, "GetPlaybackStatisticMetrics failed, error: %{public}d", error);
+    (void)MediaParcel::Unmarshalling(reply, playbackStatisticMetrics);
 
     return reply.ReadInt32();
 }

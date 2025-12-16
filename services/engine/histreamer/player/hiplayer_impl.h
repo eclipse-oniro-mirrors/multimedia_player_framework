@@ -145,6 +145,7 @@ public:
     int32_t DeselectTrack(int32_t trackId) override;
     int32_t GetVideoTrackInfo(std::vector<Format>& videoTrack) override;
     int32_t GetPlaybackInfo(Format& playbackInfo) override;
+    int32_t GetPlaybackStatisticMetrics(Format& playbackStatisticMetrics) override;
     int32_t GetAudioTrackInfo(std::vector<Format>& audioTrack) override;
     int32_t GetSubtitleTrackInfo(std::vector<Format>& subtitleTrack) override;
     int32_t GetVideoWidth() override;
@@ -177,6 +178,7 @@ public:
     void HandleDfxEvent(const DfxEvent &event);
     void HandleMemoryUsageEvent(const DfxEvent &event);
     void OnStateChanged(PlayerStateId state, bool isSystemOperation = false);
+    void HandleMetricsEvent(int64_t timeStamp, int64_t timeLine, int64_t duration, OHOS::Media::MediaType);
     Status OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd, StreamType outType);
     int32_t SeekContinous(int32_t mSeconds, int64_t seekContinousBatchNo) override;
     int32_t ExitSeekContinous(bool align, int64_t seekContinousBatchNo) override;
@@ -463,6 +465,7 @@ private:
     bool maxAmplitudeCbStatus_ {false};
     OHOS::Media::Mutex handleCompleteMutex_{};
     int64_t playStartTime_ = 0;
+    int64_t prepareDuration_ = 0;
     std::atomic<bool> isBufferingStartNotified_ {false};
     std::atomic<bool> needUpdateSei_ {true};
     bool seiMessageCbStatus_ {false};
