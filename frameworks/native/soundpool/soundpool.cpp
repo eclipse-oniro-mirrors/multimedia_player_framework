@@ -183,7 +183,7 @@ int32_t SoundPool::Play(int32_t soundID, const PlayParams &playParameters)
         streamIDManagerWithNoInterrupt_.reset();
         CHECK_AND_RETURN_RET_LOG(streamIdManager_ != nullptr, ERROR_RETURN, "Initialize streamIdManager_ failed.");
         int ret = streamIdManager_->InitThreadPool();
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_VAL, "failed to init streamIdManager");
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ERROR_RETURN, "failed to init streamIdManager");
     }
     isSetInterruptMode_ = true;
     CHECK_AND_RETURN_RET_LOG(streamIdManager_ != nullptr, ERROR_RETURN, "sound pool have released.");
