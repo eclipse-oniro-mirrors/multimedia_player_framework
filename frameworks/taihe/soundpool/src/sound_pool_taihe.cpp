@@ -35,7 +35,7 @@ SoundPoolImpl::SoundPoolImpl(int32_t maxStreams, ohos::multimedia::audio::AudioR
     rendererInfo.streamUsage = static_cast<OHOS::AudioStandard::StreamUsage>(audioRendererInfo.usage.get_value());
     rendererInfo.rendererFlags = audioRendererInfo.rendererFlags;
     if (audioRendererInfo.volumeMode) {
-        rendererInfo.volumeMode = 
+        rendererInfo.volumeMode =
             static_cast<OHOS::AudioStandard::AudioVolumeMode>((audioRendererInfo.volumeMode)->get_value());
     }
     soundPool_ = isParallel
