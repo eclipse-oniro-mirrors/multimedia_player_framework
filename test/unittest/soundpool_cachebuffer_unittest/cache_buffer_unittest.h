@@ -37,7 +37,7 @@ protected:
     std::shared_ptr<ThreadPool> cacheBufferStopThreadPool = nullptr;
 
     std::shared_ptr<AudioStream> cacheBuffer_;
-    std::shared_ptr<StreamIDManager> streamIDManager_;
+    std::shared_ptr<IStreamIDManager> streamIDManager_;
     std::unique_ptr<MockAudioRenderer> mockAudioRenderer_;
 };
 } // namespace Media
