@@ -342,6 +342,12 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ExcludePickerWindows(
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetPickerMode(
     struct OH_AVScreenCapture *capture, OH_CapturePickerMode pickerMode);
 
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_AddWhiteListWindows(struct OH_AVScreenCapture *capture,
+    int32_t *windowIDs, int32_t windowCount);
+
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_RemoveWhiteListWindows(struct OH_AVScreenCapture *capture,
+    int32_t *windowIDs, int32_t windowCount);
+
 /**
  * @brief Add Window content to the screen capture content filter
  * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
