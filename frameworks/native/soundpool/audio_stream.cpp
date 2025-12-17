@@ -191,7 +191,7 @@ void AudioStream::DealAudioRendererParams(AudioStandard::AudioRendererOptions &r
     if (IsAudioRendererCanMix(audioRendererInfo)) {
         rendererOptions.strategy.concurrencyMode = AudioStandard::AudioConcurrencyMode::MIX_WITH_OTHERS;
     }
-    rendererOptions.rendererInfo.contentType = audioRendererInfo.contentType;	
+    rendererOptions.rendererInfo.contentType = audioRendererInfo.contentType;
     rendererOptions.rendererInfo.streamUsage = audioRendererInfo.streamUsage;
     rendererOptions.rendererInfo.volumeMode = audioRendererInfo.volumeMode;
     rendererOptions.privacyType = AudioStandard::PRIVACY_TYPE_PUBLIC;
