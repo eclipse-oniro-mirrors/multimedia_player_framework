@@ -62,7 +62,7 @@ private:
     bool CheckAudioLatencyMode(const int32_t &sourceId, const AudioLatencyMode &latencyMode);
     bool CheckAudioStreamUsage(const AudioStandard::StreamUsage &streamUsage);
     void ReleasePlayerInfo(const std::shared_ptr<AudioHapticPlayerInfo>& info);
-    void ReportPlayerOverflowEvent();
+    void ReportPlayerOverflowEvent() const;
 
     std::unordered_map<int32_t, std::shared_ptr<AudioHapticPlayerInfo>> audioHapticPlayerMap_;
     int32_t curPlayerIndex_;
