@@ -506,7 +506,7 @@ int32_t ScreenCaptureServiceProxy::ExcludeContent(ScreenCaptureContentFilter &co
     return reply.ReadInt32();
 }
 
-int32_t ScreenCaptureServiceProxy::IncludeContent(ScreenCaptureContentFilter &contentFilter)
+int32_t ScreenCaptureServiceProxy::AddWhiteListWindows(std::vector<uint64_t> &windowIDsVec)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -516,19 +516,45 @@ int32_t ScreenCaptureServiceProxy::IncludeContent(ScreenCaptureContentFilter &co
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
     
     int count = 0;
-    token = data.WriteInt32(static_cast<int32_t>(contentFilter.windowIDsVec.size()));
+    token = data.WriteInt32(static_cast<int32_t>(windowIDsVec.size()));
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write windowCount size!");
-    for (size_t i = 0; i < contentFilter.windowIDsVec.size(); i++) {
-        token = data.WriteUint64(static_cast<uint64_t>(contentFilter.windowIDsVec[i]));
+    for (size_t i = 0; i < windowIDsVec.size(); i++) {
+        token = data.WriteUint64(static_cast<uint64_t>(windowIDsVec[i]));
         CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write windowIDs");
         count++;
         if (count >= MAX_WINDOWS_LEN) {
             break;
         }
     }
-    int error = Remote()->SendRequest(INCLUDE_CONTENT, data, reply, option);
+    int error = Remote()->SendRequest(ADD_WHITE_LIST_WINDOWS, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
-        "IncludeContent failed, error: %{public}d", error);
+        "AddWhiteListWindows failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
+int32_t ScreenCaptureServiceProxy::RemoveWhiteListWindows(std::vector<uint64_t> &windowIDsVec)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+ 
+    bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+    
+    int count = 0;
+    token = data.WriteInt32(static_cast<int32_t>(windowIDsVec.size()));
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write windowCount size!");
+    for (size_t i = 0; i < windowIDsVec.size(); i++) {
+        token = data.WriteUint64(static_cast<uint64_t>(windowIDsVec[i]));
+        CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write windowIDs");
+        count++;
+        if (count >= MAX_WINDOWS_LEN) {
+            break;
+        }
+    }
+    int error = Remote()->SendRequest(REMOVE_WHITE_LIST_WINDOWS, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "RemoveWhiteListWindows failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
 

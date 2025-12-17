@@ -3571,19 +3571,35 @@ int32_t ScreenCaptureServer::ExcludeContent(ScreenCaptureContentFilter &contentF
     return ret;
 }
 
-int32_t ScreenCaptureServer::IncludeContent(ScreenCaptureContentFilter &contentFilter)
+int32_t ScreenCaptureServer::AddWhiteListWindows(std::vector<uint64_t> &windowIDsVec)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(captureState_ != AVScreenCaptureState::STOPPED, MSERR_INVALID_OPERATION,
-        "IncludeContent failed, capture is STOPPED");
-    for (const auto& windowID : contentFilter.windowIDsVec) {
-        MEDIA_LOGI("windowIDsVec value :%{public}" PRIu64, windowID);
+        "AddWhiteListWindows failed, capture is STOPPED");
+    for (const auto& windowID : windowIDsVec) {
+        MEDIA_LOGI("AddWhiteListWindows windowIDsVec value :%{public}" PRIu64, windowID);
     }
-    MEDIA_LOGI("ScreenCaptureServer::IncludeContent start");
+    MEDIA_LOGI("ScreenCaptureServer::AddWhiteListWindows start");
     DMError ret = ScreenManager::GetInstance().AddVirtualScreenWhiteList(virtualScreenId_,
-        contentFilter.windowIDsVec);
+        windowIDsVec);
     CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
-        "ScreenCaptureServer::IncludeContent AddVirtualScreenWhiteList failed, ret:%{public}d", ret);
+        "ScreenCaptureServer::AddWhiteListWindows AddVirtualScreenWhiteList failed, ret:%{public}d", ret);
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServer::RemoveWhiteListWindows(std::vector<uint64_t> &windowIDsVec)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(captureState_ != AVScreenCaptureState::STOPPED, MSERR_INVALID_OPERATION,
+        "AddWhiteListWindows failed, capture is STOPPED");
+    for (const auto& windowID : windowIDsVec) {
+        MEDIA_LOGI("RemoveWhiteListWindows windowIDsVec value :%{public}" PRIu64, windowID);
+    }
+    MEDIA_LOGI("ScreenCaptureServer::AddWhiteListWindows start");
+    DMError ret = ScreenManager::GetInstance().RemoveVirtualScreenWhiteList(virtualScreenId_,
+        windowIDsVec);
+    CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
+        "ScreenCaptureServer::RemoveWhiteListWindows RemoveVirtualScreenWhiteList failed, ret:%{public}d", ret);
     return MSERR_OK;
 }
 

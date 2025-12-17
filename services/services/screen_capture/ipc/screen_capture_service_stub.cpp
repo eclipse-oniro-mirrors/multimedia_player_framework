@@ -396,11 +396,11 @@ int32_t ScreenCaptureServiceStub::ExcludeContent(MessageParcel &data, MessagePar
     return MSERR_OK;
 }
 
-int32_t ScreenCaptureServiceStub::IncludeContent(MessageParcel &data, MessageParcel &reply)
+int32_t ScreenCaptureServiceStub::AddWhiteListWindows(MessageParcel &data, MessageParcel &reply)
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
-    ScreenCaptureContentFilter contentFilter;
+    std::vector<uint64_t> vec;
     int32_t windowIdSize = 0;
     uint64_t windowID = 0;
     CHECK_AND_RETURN_RET_LOG(data.ReadInt32(windowIdSize), MSERR_INVALID_STATE,
@@ -408,15 +408,36 @@ int32_t ScreenCaptureServiceStub::IncludeContent(MessageParcel &data, MessagePar
     CHECK_AND_RETURN_RET_LOG(windowIdSize < MAX_FILTER_CONTENTS_COUNT, MSERR_INVALID_STATE,
                              "windowID size is exceed max range");
     if (windowIdSize > 0) {
-        std::vector<uint64_t> vec;
         for (int32_t i = 0; i < windowIdSize; i++) {
             CHECK_AND_RETURN_RET_LOG(data.ReadUint64(windowID), MSERR_INVALID_STATE,
                 "failed to read data from MessageParcel");
             vec.push_back(windowID);
         }
-        contentFilter.windowIDsVec = vec;
     }
-    int32_t ret = IncludeContent(contentFilter);
+    int32_t ret = AddWhiteListWindows(vec);
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServiceStub::RemoveWhiteListWindows(MessageParcel &data, MessageParcel &reply)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    std::vector<uint64_t> vec;
+    int32_t windowIdSize = 0;
+    uint64_t windowID = 0;
+    CHECK_AND_RETURN_RET_LOG(data.ReadInt32(windowIdSize), MSERR_INVALID_STATE,
+        "failed to read data from MessageParcel");
+    CHECK_AND_RETURN_RET_LOG(windowIdSize < MAX_FILTER_CONTENTS_COUNT, MSERR_INVALID_STATE,
+                             "windowID size is exceed max range");
+    if (windowIdSize > 0) {
+        for (int32_t i = 0; i < windowIdSize; i++) {
+            CHECK_AND_RETURN_RET_LOG(data.ReadUint64(windowID), MSERR_INVALID_STATE,
+                "failed to read data from MessageParcel");
+            vec.push_back(windowID);
+        }
+    }
+    int32_t ret = RemoveWhiteListWindows(vec);
     reply.WriteInt32(ret);
     return MSERR_OK;
 }
