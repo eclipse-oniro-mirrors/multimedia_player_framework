@@ -53,7 +53,7 @@ public:
     {
         return;
     }
-    void OnPixelComplete (HelperOnInfoType type,
+    void OnPixelComplete(HelperOnInfoType type,
                         const std::shared_ptr<AVBuffer> &reAvbuffer_,
                         const FrameInfo &info,
                         const PixelMapParams &param)
