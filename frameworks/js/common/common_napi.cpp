@@ -475,6 +475,12 @@ bool CommonNapi::SetPropertyByValueType(napi_env env, napi_value &obj, std::shar
         CHECK_AND_RETURN_RET_LOG(ret, ret, "GetData failed, key %{public}s", key.c_str());
         ret = CommonNapi::SetPropertyInt32(env, obj, key, value);
         CHECK_AND_RETURN_RET_LOG(ret, ret, "SetPropertyString failed, key %{public}s", key.c_str());
+    } else if (type == AnyValueType::UINT32_T) {
+        uint32_t value;
+        ret = meta->GetData(key, value);
+        CHECK_AND_RETURN_RET_LOG(ret, ret, "GetData failed, key %{public}s", key.c_str());
+        ret = CommonNapi::SetPropertyUint32(env, obj, key, value);
+        CHECK_AND_RETURN_RET_LOG(ret, ret, "SetPropertyString failed, key %{public}s", key.c_str());
     } else if (type == AnyValueType::FLOAT) {
         float dValue;
         ret = meta->GetData(key, dValue);
@@ -612,6 +618,24 @@ bool CommonNapi::SetPropertyInt32(napi_env env, napi_value &obj, const std::stri
     return true;
 }
 
+bool CommonNapi::SetPropertyUint32(napi_env env, napi_value &obj, const std::string &key, uint32_t value)
+{
+    CHECK_AND_RETURN_RET(obj != nullptr, false);
+
+    napi_value keyNapi = nullptr;
+    napi_status status = napi_create_string_utf8(env, key.c_str(), NAPI_AUTO_LENGTH, &keyNapi);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    napi_value valueNapi = nullptr;
+    status = napi_create_uint32(env, value, &valueNapi);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    status = napi_set_property(env, obj, keyNapi, valueNapi);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "failed to set property");
+
+    return true;
+}
+
 bool CommonNapi::SetPropertyInt64(napi_env env, napi_value &obj, const std::string &key, int64_t value)
 {
     CHECK_AND_RETURN_RET(obj != nullptr, false);
@@ -687,6 +711,7 @@ bool CommonNapi::SetPropertyString(napi_env env, napi_value &obj, const std::str
 napi_value CommonNapi::CreateFormatBuffer(napi_env env, Format &format)
 {
     int32_t intValue = 0;
+    uint32_t uintValue = 0;
     size_t bufferLen = 0;
     std::string strValue;
     uint8_t *bufferData = nullptr;
@@ -699,6 +724,11 @@ napi_value CommonNapi::CreateFormatBuffer(napi_env env, Format &format)
             case FORMAT_TYPE_INT32:
                 if (format.GetIntValue(iter.first, intValue)) {
                     CHECK_AND_RETURN_RET(SetPropertyInt32(env, buffer, iter.first, intValue) == true, nullptr);
+                }
+                break;
+            case FORMAT_TYPE_UINT32:
+                if (format.GetUintValue(iter.first, uintValue)) {
+                    CHECK_AND_RETURN_RET(SetPropertyUint32(env, buffer, iter.first, uintValue) == true, nullptr);
                 }
                 break;
             case FORMAT_TYPE_INT64:
@@ -740,6 +770,7 @@ napi_value CommonNapi::CreateFormatBuffer(napi_env env, Format &format)
 bool CommonNapi::CreateFormatBufferByRef(napi_env env, Format &format, napi_value &result)
 {
     int32_t intValue = 0;
+    uint32_t uintValue = 0;
     int64_t longValue = 0;
     std::string strValue = "";
     napi_status status = napi_create_object(env, &result);
@@ -750,6 +781,11 @@ bool CommonNapi::CreateFormatBufferByRef(napi_env env, Format &format, napi_valu
             case FORMAT_TYPE_INT32:
                 if (format.GetIntValue(iter.first, intValue)) {
                     (void)SetPropertyInt32(env, result, iter.first, intValue);
+                }
+                break;
+            case FORMAT_TYPE_UINT32:
+                if (format.GetUintValue(iter.first, uintValue)) {
+                    (void)SetPropertyUint32(env, result, iter.first, uintValue);
                 }
                 break;
             case FORMAT_TYPE_INT64:
