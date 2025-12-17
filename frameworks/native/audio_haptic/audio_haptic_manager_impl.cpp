@@ -196,7 +196,7 @@ int32_t AudioHapticManagerImpl::RegisterSourceFromFd(const AudioHapticFileDescri
     return sourceId;
 }
 
-void AudioHapticManagerImpl::ReportPlayerOverflowEvent()
+void AudioHapticManagerImpl::ReportPlayerOverflowEvent() const
 {
     std::shared_ptr<Media::MediaMonitor::EventBean> bean = std::make_shared<Media::MediaMonitor::EventBean>(
         Media::MediaMonitor::ModuleId::AUDIO, Media::MediaMonitor::EventId::TONE_PLAYBACK_FAILED,
