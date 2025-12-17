@@ -78,7 +78,8 @@ int32_t ScreenCaptureServiceStub::Init()
     screenCaptureStubFuncs_[RELEASE_VIDEO_BUF] = &ScreenCaptureServiceStub::ReleaseVideoBuffer;
     screenCaptureStubFuncs_[DESTROY] = &ScreenCaptureServiceStub::DestroyStub;
     screenCaptureStubFuncs_[EXCLUDE_CONTENT] = &ScreenCaptureServiceStub::ExcludeContent;
-    screenCaptureStubFuncs_[INCLUDE_CONTENT] = &ScreenCaptureServiceStub::IncludeContent;
+    screenCaptureStubFuncs_[ADD_WHITE_LIST_WINDOWS] = &ScreenCaptureServiceStub::AddWhiteListWindows;
+    screenCaptureStubFuncs_[REMOVE_WHITE_LIST_WINDOWS] = &ScreenCaptureServiceStub::RemoveWhiteListWindows;
     screenCaptureStubFuncs_[EXCLUDE_PICKER_WINDOWS] = &ScreenCaptureServiceStub::ExcludePickerWindows;
     screenCaptureStubFuncs_[SET_PICKER_MODE] = &ScreenCaptureServiceStub::SetPickerMode;
     screenCaptureStubFuncs_[SHOW_CURSOR] = &ScreenCaptureServiceStub::ShowCursor;
@@ -255,11 +256,18 @@ int32_t ScreenCaptureServiceStub::ExcludeContent(ScreenCaptureContentFilter &con
     return screenCaptureServer_->ExcludeContent(contentFilter);
 }
 
-int32_t ScreenCaptureServiceStub::IncludeContent(ScreenCaptureContentFilter &contentFilter)
+int32_t ScreenCaptureServiceStub::AddWhiteListWindows(std::vector<uint64_t> &windowIDsVec)
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
-    return screenCaptureServer_->IncludeContent(contentFilter);
+    return screenCaptureServer_->AddWhiteListWindows(windowIDsVec);
+}
+
+int32_t ScreenCaptureServiceStub::RemoveWhiteListWindows(std::vector<uint64_t> &windowIDsVec)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    return screenCaptureServer_->RemoveWhiteListWindows(windowIDsVec);
 }
 
 int32_t ScreenCaptureServiceStub::ExcludePickerWindows(std::vector<int32_t> &windowIDsVec)

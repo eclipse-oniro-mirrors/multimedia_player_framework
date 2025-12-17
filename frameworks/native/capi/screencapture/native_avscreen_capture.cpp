@@ -562,23 +562,6 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ExcludeContent(struct OH_AVScreen
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
 
-OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_IncludeContent(struct OH_AVScreenCapture *capture,
-    struct OH_AVScreenCapture_ContentFilter *filter)
-{
-    CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
-    struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
-        AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture is null");
- 
-    CHECK_AND_RETURN_RET_LOG(filter != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input filter is nullptr!");
-    struct ScreenCaptureContentFilterObject *contentFilterObj =
-        reinterpret_cast<ScreenCaptureContentFilterObject *>(filter);
- 
-    int32_t ret = screenCaptureObj->screenCapture_->IncludeContent(contentFilterObj->screenCaptureContentFilter);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_UNSUPPORT, "StartScreenCapture failed!");
-    return AV_SCREEN_CAPTURE_ERR_OK;
-}
-
 struct OH_AVScreenCapture *OH_AVScreenCapture_Create(void)
 {
     std::shared_ptr<ScreenCapture> screenCapture = ScreenCaptureFactory::CreateScreenCapture();
