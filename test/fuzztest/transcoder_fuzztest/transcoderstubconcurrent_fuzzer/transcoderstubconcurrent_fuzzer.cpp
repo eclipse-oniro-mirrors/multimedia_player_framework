@@ -108,7 +108,8 @@ void FuzzTranscoderSetAudioEncoder(sptr<IRemoteStub<IStandardTransCoderService>>
     int32_t index = audioEncoderType % std::size(encoderArr);
     int32_t value = encoderArr[std::abs(index)];
     data.WriteInt32(value);
-    transcoder->OnRemoteRequest(IStandardTransCoderService::RecorderServiceMsg::SET_VIDEO_ENCODER, data, reply, option);
+    transcoder->OnRemoteRequest(
+        IStandardTransCoderService::RecorderServiceMsg::SET_AUDIO_ENCODER, data, reply, option);
 }
 
 void FuzzTranscoderSetAudioEncodingBitRate(
@@ -121,7 +122,8 @@ void FuzzTranscoderSetAudioEncodingBitRate(
     bool token = data.WriteInterfaceToken(transcoder->GetDescriptor());
     CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
     data.WriteInt32(audioBitrate);
-    transcoder->OnRemoteRequest(IStandardTransCoderService::RecorderServiceMsg::SET_VIDEO_ENCODER, data, reply, option);
+    transcoder->OnRemoteRequest(
+        IStandardTransCoderService::RecorderServiceMsg::SET_AUDIO_ENCODING_BIT_RATE, data, reply, option);
 }
 
 void FuzzTranscoderSetOutputFormat(sptr<IRemoteStub<IStandardTransCoderService>> transcoder, int32_t outputFormat)
@@ -139,7 +141,8 @@ void FuzzTranscoderSetOutputFormat(sptr<IRemoteStub<IStandardTransCoderService>>
     int32_t index = outputFormat % std::size(outputFormatArr);
     int32_t value = outputFormatArr[std::abs(index)];
     data.WriteInt32(value);
-    transcoder->OnRemoteRequest(IStandardTransCoderService::RecorderServiceMsg::SET_VIDEO_ENCODER, data, reply, option);
+    transcoder->OnRemoteRequest(
+        IStandardTransCoderService::RecorderServiceMsg::SET_OUTPUT_FORMAT, data, reply, option);
 }
 
 void FuzzTranscoderSetInputFile(sptr<IRemoteStub<IStandardTransCoderService>> transcoder)
@@ -156,7 +159,8 @@ void FuzzTranscoderSetInputFile(sptr<IRemoteStub<IStandardTransCoderService>> tr
         return;
     }
     data.WriteFileDescriptor(fdInput);
-    transcoder->OnRemoteRequest(IStandardTransCoderService::RecorderServiceMsg::SET_INPUT_FILE_FD, data, reply, option);
+    transcoder->OnRemoteRequest(
+        IStandardTransCoderService::RecorderServiceMsg::SET_INPUT_FILE_FD, data, reply, option);
     close(fdInput);
 }
 
@@ -274,7 +278,8 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
     FuzzedDataProvider fdp(data, size);
     auto transcoder = OHOS::Media::CreateFuzzTranscoder();
     OHOS::Media::FuzzTranscoderSetVideoEncoder(transcoder, fdp.ConsumeIntegral<int32_t>());
-    OHOS::Media::FuzzTranscoderSetVideoSize(transcoder, fdp.ConsumeIntegral<int32_t>(), fdp.ConsumeIntegral<int32_t>());
+    OHOS::Media::FuzzTranscoderSetVideoSize(
+        transcoder, fdp.ConsumeIntegral<int32_t>(), fdp.ConsumeIntegral<int32_t>());
     OHOS::Media::FuzzTranscoderSetVideoEncodingBitRate(transcoder, fdp.ConsumeIntegral<int32_t>());
     OHOS::Media::FuzzTranscoderSetAudioEncoder(transcoder, fdp.ConsumeIntegral<int32_t>());
     OHOS::Media::FuzzTranscoderSetAudioEncodingBitRate(transcoder, fdp.ConsumeIntegral<int32_t>());
