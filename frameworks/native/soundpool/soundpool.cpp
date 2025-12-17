@@ -176,6 +176,7 @@ int32_t SoundPool::Play(int32_t soundID, const PlayParams &playParameters)
 
     // New playback path
     CHECK_AND_RETURN_RET_LOG(streamIdManager_ != nullptr, ERROR_RETURN, "sound pool have released.");
+    isSetInterruptMode_ = true;
     if (interruptMode_ == InterruptMode::SAME_SOUND_INTERRUPT) {
         streamID = streamIdManager_->PlayWithSameSoundInterrupt(soundParser, playParameters);
         MEDIA_LOGI("SoundPool::Play end, streamID is %{public}d", streamID);
