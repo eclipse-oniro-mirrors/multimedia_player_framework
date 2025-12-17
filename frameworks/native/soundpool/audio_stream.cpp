@@ -503,6 +503,9 @@ int32_t AudioStream::SetLoop(int32_t loop)
 {
     std::lock_guard lock(streamLock_);
     loop_ = loop;
+    CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL, "SetLoop Invalid audioRenderer_");
+    int32_t ret = audioRenderer_->SetLoopTimes(loop);
+    MEDIA_LOGI("AudioStream::SetLoop, ret is %{public}d", ret);
     return MSERR_OK;
 }
 

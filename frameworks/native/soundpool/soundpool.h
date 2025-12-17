@@ -81,6 +81,7 @@ private:
     int32_t apiVersion_ = 0;
     bool isReleased_ = false;
     bool parallelStreamFlag_ = false;
+    bool isSetInterruptMode_ = false;
     InterruptMode interruptMode_ = InterruptMode::SAME_SOUND_INTERRUPT;
 };
 } // namespace Media
