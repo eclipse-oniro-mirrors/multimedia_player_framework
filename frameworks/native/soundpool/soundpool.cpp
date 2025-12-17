@@ -176,6 +176,7 @@ int32_t SoundPool::Play(int32_t soundID, const PlayParams &playParameters)
 
     // New playback path
     CHECK_AND_RETURN_RET_LOG(streamIdManager_ != nullptr, ERROR_RETURN, "sound pool have released.");
+    isSetInterruptMode_ = true;
     if (interruptMode_ == InterruptMode::SAME_SOUND_INTERRUPT) {
         streamID = streamIdManager_->PlayWithSameSoundInterrupt(soundParser, playParameters);
         MEDIA_LOGI("SoundPool::Play end, streamID is %{public}d", streamID);
@@ -308,6 +309,7 @@ int32_t SoundPool::SetVolume(int32_t streamID, float leftVolume, float rightVolu
 void SoundPool::SetInterruptMode(InterruptMode interruptMode)
 {
     std::lock_guard lock(soundPoolLock_);
+    CHECK_AND_RETURN_LOG(!isSetInterruptMode_, "SoundPool::SetInterruptMode failed, InterruptMode has been set");
     CHECK_AND_RETURN_LOG(streamIdManager_ != nullptr, "SoundPool::SetInterruptMode, streamIdManager_ is nullptr");
     MEDIA_LOGI("SoundPool::SetInterruptMode, current interruptMode is %{public}d, new interruptMode is %{public}d",
         interruptMode_, interruptMode);
@@ -317,6 +319,7 @@ void SoundPool::SetInterruptMode(InterruptMode interruptMode)
     }
     interruptMode_ = interruptMode;
     streamIdManager_->SetInterruptMode(interruptMode);
+    isSetInterruptMode_ = true;
 }
 
 int32_t SoundPool::Unload(int32_t soundID)
@@ -352,6 +355,7 @@ int32_t SoundPool::ReleaseInner()
     MediaTrace trace("SoundPool::ReleaseInner");
     std::lock_guard lock(soundPoolLock_);
     MEDIA_LOGI("SoundPool::ReleaseInner");
+    isSetInterruptMode_ = false;
     if (streamIdManager_ != nullptr) {
         streamIdManager_.reset();
     }
