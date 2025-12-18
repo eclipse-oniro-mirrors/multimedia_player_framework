@@ -582,7 +582,7 @@ std::vector<int32_t> StreamIDManager::GetStreamIDBySoundID(int32_t soundID)
     if (interruptMode_ == InterruptMode::SAME_SOUND_INTERRUPT) {
         CHECK_AND_RETURN_RET_LOG(!soundID2Stream_.empty(), ret, "GetStreamIDBySoundID, soundID2Stream_ is empty");
         CHECK_AND_RETURN_RET_LOG(soundID2Stream_.find(soundID) != soundID2Stream_.end(), ret,
-            "GetStreamIDBySoundID, soundID2Stream_[%{public}d] is nullptr", soundID);
+            "GetStreamIDBySoundID, soundID(%{public}d) not exists in soundID2Stream_", soundID);
         CHECK_AND_RETURN_RET_LOG(soundID2Stream_[soundID] != nullptr, ret,
             "GetStreamIDBySoundID, soundID2Stream_[%{public}d] is nullptr", soundID);
         int32_t streamID = soundID2Stream_[soundID]->GetStreamID();
@@ -591,11 +591,11 @@ std::vector<int32_t> StreamIDManager::GetStreamIDBySoundID(int32_t soundID)
     CHECK_AND_RETURN_RET_LOG(!soundID2MultiStreams_.empty(), ret,
         "GetStreamIDBySoundID, soundID2MultiStreams_ is empty");
     CHECK_AND_RETURN_RET_LOG(soundID2MultiStreams_.find(soundID) != soundID2MultiStreams_.end(), ret,
-        "GetStreamIDBySoundID, soundID2MultiStreams_[%{public}d] is nullptr", soundID);
+        "GetStreamIDBySoundID, soundID(%{public}d) not exists in soundID2MultiStreams_", soundID);
     CHECK_AND_RETURN_RET_LOG(!soundID2MultiStreams_[soundID].empty(), ret,
         "GetStreamIDBySoundID, soundID2MultiStreams_[%{public}d] is empty", soundID);
     std::list<std::shared_ptr<AudioStream>> audioStreams = soundID2MultiStreams_[soundID];
-    for (const std::shared_ptr<AudioStream> &stream: audioStreams) {
+    for (const std::shared_ptr<AudioStream> &stream : audioStreams) {
         CHECK_AND_CONTINUE(stream != nullptr);
         ret.push_back(stream->GetStreamID());
     }
