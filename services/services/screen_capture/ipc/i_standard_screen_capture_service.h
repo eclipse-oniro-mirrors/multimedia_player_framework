@@ -59,8 +59,8 @@ public:
     virtual int32_t ReleaseAudioBuffer(AudioCaptureSourceType type) = 0;
     virtual int32_t ReleaseVideoBuffer() = 0;
     virtual int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) = 0;
-    virtual int32_t AddWhiteListWindows(std::vector<uint64_t> &windowIDsVec) = 0;
-    virtual int32_t RemoveWhiteListWindows(std::vector<uint64_t> &windowIDsVec) = 0;
+    virtual int32_t AddWhiteListWindows(const std::vector<uint64_t> &windowIDsVec) = 0;
+    virtual int32_t RemoveWhiteListWindows(const std::vector<uint64_t> &windowIDsVec) = 0;
     virtual int32_t SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config) = 0;
     virtual int32_t ExcludePickerWindows(std::vector<int32_t> &windowIDsVec) = 0;
     virtual int32_t SetPickerMode(PickerMode pickerMode) = 0;

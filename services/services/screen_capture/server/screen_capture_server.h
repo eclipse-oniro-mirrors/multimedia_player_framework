@@ -98,8 +98,8 @@ public:
     int32_t SetMaxVideoFrameRate(int32_t frameRate) override;
     void Release() override;
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
-    int32_t AddWhiteListWindows(std::vector<uint64_t> &windowIDsVec) override;
-    int32_t RemoveWhiteListWindows(std::vector<uint64_t> &windowIDsVec) override;
+    int32_t AddWhiteListWindows(const std::vector<uint64_t> &windowIDsVec) override;
+    int32_t RemoveWhiteListWindows(const std::vector<uint64_t> &windowIDsVec) override;
     int32_t ExcludePickerWindows(std::vector<int32_t> &windowIDsVec) override;
     int32_t SetPickerMode(PickerMode pickerMode) override;
     int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) override;

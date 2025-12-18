@@ -579,7 +579,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_AddWhiteListWindows(struct OH_AVS
             vec.push_back(static_cast<uint64_t>(*(windowIDs + i)));
         }
     }
-    CHECK_AND_RETURN_RET_LOG(vec.size() >= 0, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input window content invalid!");
+    CHECK_AND_RETURN_RET_LOG(vec.size() > 0, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input window content invalid!");
     int32_t ret = screenCaptureObj->screenCapture_->AddWhiteListWindows(vec);
     CHECK_AND_RETURN_RET_LOG(ret != MSERR_UNSUPPORT, AV_SCREEN_CAPTURE_ERR_UNSUPPORT,
         "AddWhiteListWindows failed, ret: %{public}d", ret);
@@ -605,7 +605,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_RemoveWhiteListWindows(struct OH_
             vec.push_back(static_cast<uint64_t>(*(windowIDs + i)));
         }
     }
-    CHECK_AND_RETURN_RET_LOG(vec.size() >= 0, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input window content invalid!");
+    CHECK_AND_RETURN_RET_LOG(vec.size() > 0, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input window content invalid!");
     int32_t ret = screenCaptureObj->screenCapture_->RemoveWhiteListWindows(vec);
     CHECK_AND_RETURN_RET_LOG(ret != MSERR_UNSUPPORT, AV_SCREEN_CAPTURE_ERR_UNSUPPORT,
         "RemoveWhiteListWindows failed, ret: %{public}d", ret);

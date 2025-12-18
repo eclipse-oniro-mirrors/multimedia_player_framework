@@ -172,14 +172,14 @@ int32_t ScreenCaptureClient::ExcludeContent(ScreenCaptureContentFilter &contentF
     return screenCaptureProxy_->ExcludeContent(contentFilter);
 }
 
-int32_t ScreenCaptureClient::AddWhiteListWindows(std::vector<uint64_t> &windowIDsVec)
+int32_t ScreenCaptureClient::AddWhiteListWindows(const std::vector<uint64_t> &windowIDsVec)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
     return screenCaptureProxy_->AddWhiteListWindows(windowIDsVec);
 }
 
-int32_t ScreenCaptureClient::RemoveWhiteListWindows(std::vector<uint64_t> &windowIDsVec)
+int32_t ScreenCaptureClient::RemoveWhiteListWindows(const std::vector<uint64_t> &windowIDsVec)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
