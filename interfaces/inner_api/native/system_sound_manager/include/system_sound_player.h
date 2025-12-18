@@ -19,6 +19,8 @@
 #include <memory>
 #include <mutex>
 
+#include "system_sound_manager.h"
+
 namespace OHOS {
 namespace Media {
 const int32_t SSP_SUCCESS = 0;
@@ -31,12 +33,6 @@ const std::string ERRCODE_NO_MEMORY_INFO = "allocate memory failed";
 const std::string ERRCODE_IO_ERROR_INFO = "I/O error";
 const std::string ERRCODE_SYSTEM_ERROR_INFO = "system error";
 const std::string ERRCODE_INVALID_PARAM_INFO = "invalid parameter";
-
-enum SystemSoundType {
-    PHOTO_SHUTTER = 0,
-    VIDEO_RECORDING_BEGIN = 1,
-    VIDEO_RECORDING_END = 2,
-};
 
 class SystemSoundPlayer {
 public:

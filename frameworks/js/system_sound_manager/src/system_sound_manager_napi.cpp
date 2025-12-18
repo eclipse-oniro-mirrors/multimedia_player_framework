@@ -61,6 +61,7 @@ thread_local napi_ref SystemSoundManagerNapi::systemToneType_ = nullptr;
 thread_local napi_ref SystemSoundManagerNapi::toneCustomizedType_ = nullptr;
 thread_local napi_ref SystemSoundManagerNapi::toneHapticsMode_ = nullptr;
 thread_local napi_ref SystemSoundManagerNapi::systemSoundError_ = nullptr;
+thread_local napi_ref SystemSoundManagerNapi::systemSoundType_ = nullptr;
 
 SystemSoundManagerNapi::SystemSoundManagerNapi()
     : env_(nullptr), sysSoundMgrClient_(nullptr) {}
@@ -280,7 +281,7 @@ napi_value SystemSoundManagerNapi::CreateSystemSoundTypeObject(napi_env env)
             propName.clear();
         }
         if (status == napi_ok) {
-            status = napi_create_reference(env, result, refCount, &systemToneType_);
+            status = napi_create_reference(env, result, refCount, &systemSoundType_);
             if (status == napi_ok) {
                 return result;
             }
