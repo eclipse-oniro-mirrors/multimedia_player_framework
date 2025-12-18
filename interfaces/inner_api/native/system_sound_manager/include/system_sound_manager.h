@@ -71,6 +71,12 @@ enum SystemSoundError {
     ERROR_INVALID_PARAM = 20700007,
 };
 
+enum SystemSoundType {
+    PHOTO_SHUTTER = 0,
+    VIDEO_RECORDING_BEGIN = 1,
+    VIDEO_RECORDING_END = 2,
+};
+
 struct ParamsForAddCustomizedTone {
     std::string dstPath;
     int32_t srcFd;

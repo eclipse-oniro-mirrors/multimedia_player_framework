@@ -98,6 +98,12 @@ int32_t SystemSoundPlayerImpl::Load(SystemSoundType systemSoundType)
     std::lock_guard<std::mutex> lock(systemSoundPlayerMutex_);
     CHECK_AND_RETURN_RET_LOG(!isReleased_, ERRCODE_SYSTEM_ERROR, "The SystemSoundPlayer has been released!");
 
+    int32_t result = LoadInternal(systemSoundType);
+    return result;
+}
+
+int32_t SystemSoundPlayerImpl::LoadInternal(SystemSoundType systemSoundType)
+{
     if (soundIds_.count(systemSoundType) > 0 && soundIds_[systemSoundType] >= 0) {
         MEDIA_LOGI("The systemSoundType: %{public}d has been loaded.", systemSoundType);
         return SSP_SUCCESS;
@@ -174,8 +180,11 @@ int32_t SystemSoundPlayerImpl::Play(SystemSoundType systemSoundType)
         return ERRCODE_SYSTEM_ERROR;
     }
     if (soundIds_.count(systemSoundType) == 0 || soundIds_[systemSoundType] < 0) {
-        MEDIA_LOGE("The systemSoundType: %{public}d is not loaded!", systemSoundType);
-        return ERRCODE_IO_ERROR;
+        int32_t result = LoadInternal(systemSoundType);
+        if (result != SSP_SUCCESS) {
+            MEDIA_LOGE("The systemSoundType: %{public}d is not loaded!", systemSoundType);
+            return ERRCODE_IO_ERROR;
+        }
     }
     PlayParams playParams {
         .loop = 0,

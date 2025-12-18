@@ -47,6 +47,7 @@ private:
     bool InitSoundPoolPlayer();
     int32_t ReleaseInternal();
     int32_t OpenSystemSoundFile(const std::string &filePath);
+    int32_t LoadInternal(SystemSoundType systemSoundType);
 
     std::mutex systemSoundPlayerMutex_;
     std::map<SystemSoundType, int32_t> soundIds_;
