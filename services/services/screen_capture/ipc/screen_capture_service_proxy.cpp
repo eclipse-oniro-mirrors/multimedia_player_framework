@@ -535,7 +535,6 @@ int32_t ScreenCaptureServiceProxy::RemoveWhiteListWindows(const std::vector<uint
     bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
     
-    int count = 0;
     token = data.WriteInt32(static_cast<int32_t>(windowIDsVec.size()));
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write windowCount size!");
     token = data.WriteUInt64Vector(windowIDsVec);
