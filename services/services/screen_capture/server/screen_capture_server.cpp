@@ -3574,32 +3574,34 @@ int32_t ScreenCaptureServer::ExcludeContent(ScreenCaptureContentFilter &contentF
 int32_t ScreenCaptureServer::AddWhiteListWindows(const std::vector<uint64_t> &windowIDsVec)
 {
     std::unique_lock<std::mutex> lock(mutex_);
+    MediaTrace trace("ScreenCaptureServer::AddWhiteListWindows");
     CHECK_AND_RETURN_RET_LOG(captureState_ != AVScreenCaptureState::STOPPED, MSERR_INVALID_OPERATION,
         "AddWhiteListWindows failed, capture is STOPPED");
     for (const auto& windowID : windowIDsVec) {
         MEDIA_LOGI("AddWhiteListWindows windowIDsVec value :%{public}" PRIu64, windowID);
     }
-    MEDIA_LOGI("ScreenCaptureServer::AddWhiteListWindows start");
+    MEDIA_LOGI("AddWhiteListWindows start");
     DMError ret = ScreenManager::GetInstance().AddVirtualScreenWhiteList(virtualScreenId_,
         windowIDsVec);
     CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
-        "ScreenCaptureServer::AddWhiteListWindows AddVirtualScreenWhiteList failed, ret:%{public}d", ret);
+        "AddVirtualScreenWhiteList failed, ret:%{public}d", ret);
     return MSERR_OK;
 }
 
 int32_t ScreenCaptureServer::RemoveWhiteListWindows(const std::vector<uint64_t> &windowIDsVec)
 {
     std::unique_lock<std::mutex> lock(mutex_);
+    MediaTrace trace("ScreenCaptureServer::RemoveWhiteListWindows");
     CHECK_AND_RETURN_RET_LOG(captureState_ != AVScreenCaptureState::STOPPED, MSERR_INVALID_OPERATION,
         "RemoveWhiteListWindows failed, capture is STOPPED");
     for (const auto& windowID : windowIDsVec) {
         MEDIA_LOGI("RemoveWhiteListWindows windowIDsVec value :%{public}" PRIu64, windowID);
     }
-    MEDIA_LOGI("ScreenCaptureServer::RemoveWhiteListWindows start");
+    MEDIA_LOGI("RemoveWhiteListWindows start");
     DMError ret = ScreenManager::GetInstance().RemoveVirtualScreenWhiteList(virtualScreenId_,
         windowIDsVec);
     CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
-        "ScreenCaptureServer::RemoveWhiteListWindows RemoveVirtualScreenWhiteList failed, ret:%{public}d", ret);
+        "RemoveVirtualScreenWhiteList failed, ret:%{public}d", ret);
     return MSERR_OK;
 }
 
