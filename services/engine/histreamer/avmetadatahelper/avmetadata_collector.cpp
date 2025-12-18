@@ -231,11 +231,11 @@ void AVMetaDataCollector::GetSubtitleTrackInfo(const std::shared_ptr<Meta> &trac
     const std::string& mime, size_t index)
 {
     (void)trackInfo;
-    (void)mime;
     MEDIA_LOGD("GetSubtitleTrackInfo in");
     Format subtitleTrackInfo {};
     subtitleTrackInfo.PutIntValue("track_index", index);
     subtitleTrackInfo.PutIntValue("track_type", static_cast<int32_t>(Plugins::MediaType::SUBTITLE));
+    subtitleTrackInfo.PutStringValue("mime_type", mime);
     trackInfoVec_.emplace_back(std::move(subtitleTrackInfo));
 }
 
