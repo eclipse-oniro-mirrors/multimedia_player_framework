@@ -3218,15 +3218,10 @@ int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForWindow(const sptr<Rosen::
 {
     ScreenId mirrorGroup = defaultDisplay->GetScreenId();
     uint64_t defaultDisplayId = GetDisplayIdOfWindows(defaultDisplay->GetScreenId());
-    auto mirrorDisplay = ScreenManager::GetInstance().GetScreenById(defaultDisplayId);
-    CHECK_AND_RETURN_RET_LOG(mirrorDisplay != nullptr, MSERR_UNKNOWN,
-        "GetScreenById failed, displayId:%{public}" PRIu64, defaultDisplayId);
-    const auto &rotation = mirrorDisplay->GetRotation();
-    auto ret = ScreenManager::GetInstance().MakeMirror(defaultDisplayId, mirrorIds, mirrorGroup, rotation);
+    DMError ret = ScreenManager::GetInstance().MakeMirror(defaultDisplayId, mirrorIds, mirrorGroup);
     CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
         "MakeVirtualScreenMirror failed, captureMode:%{public}d, ret:%{public}d", captureConfig_.captureMode, ret);
-    MEDIA_LOGI("MakeVirtualScreenMirror window screen success, screenId:%{public}" PRIu64 ", rotation:%{public}" PRIu32,
-        defaultDisplayId, static_cast<uint32_t>(rotation));
+    MEDIA_LOGI("MakeVirtualScreenMirror window screen success, screenId:%{public}" PRIu64, defaultDisplayId);
     SetDisplayScreenId(defaultDisplayId);
     return MSERR_OK;
 }
@@ -3236,13 +3231,12 @@ int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForHomeScreen(const sptr<Ros
 {
     ScreenId mirrorGroup = defaultDisplay->GetScreenId();
     MEDIA_LOGI("MakeVirtualScreenMirror DefaultDisplay, screenId:%{public}" PRIu64, mirrorGroup);
-    const auto &rotation = defaultDisplay->GetRotation();
-    auto ret = ScreenManager::GetInstance().MakeMirror(defaultDisplay->GetScreenId(), mirrorIds, mirrorGroup, rotation);
+    DMError ret = ScreenManager::GetInstance().MakeMirror(defaultDisplay->GetScreenId(), mirrorIds, mirrorGroup);
     CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
         "MakeVirtualScreenMirror failed, captureMode:%{public}d, ret:%{public}d", captureConfig_.captureMode, ret);
     SetDisplayScreenId(defaultDisplay->GetScreenId());
-    MEDIA_LOGI("MakeVirtualScreenMirror default screen success, screenId:%{public}" PRIu64
-        ", rotation:%{public}" PRIu32, defaultDisplay->GetScreenId(), static_cast<uint32_t>(rotation));
+    MEDIA_LOGI("MakeVirtualScreenMirror default screen success, screenId:%{public}" PRIu64,
+        defaultDisplay->GetScreenId());
     return MSERR_OK;
 }
 
@@ -3274,13 +3268,11 @@ int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForSpecifiedScreen(const spt
             continue;
         }
         ScreenId mirrorGroup = defaultDisplay->GetScreenId();
-        const auto &rotation = screen->GetRotation();
-        ret = ScreenManager::GetInstance().MakeMirror(screen->GetId(), mirrorIds, mirrorGroup, rotation);
+        ret = ScreenManager::GetInstance().MakeMirror(screen->GetId(), mirrorIds, mirrorGroup);
         CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
             "MakeVirtualScreenMirror failed to MakeMirror for CAPTURE_SPECIFIED_SCREEN, ret:%{public}d", ret);
         SetDisplayScreenId(screen->GetId());
-        MEDIA_LOGI("MakeVirtualScreenMirror extend screen success, screenId:%{public}" PRIu64
-            ", rotation:%{public}" PRIu32, screen->GetId(), static_cast<uint32_t>(rotation));
+        MEDIA_LOGI("MakeVirtualScreenMirror extend screen success, screenId:%{public}" PRIu64, screen->GetId());
         return MSERR_OK;
     }
     MEDIA_LOGE("MakeVirtualScreenMirror failed to find screenId:%{public}" PRIu64, displayIds_.front());
