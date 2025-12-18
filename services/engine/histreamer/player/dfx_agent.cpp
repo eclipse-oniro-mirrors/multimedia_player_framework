@@ -261,6 +261,17 @@ static bool ExtractStallingTimestamps(const std::vector<int64_t>& timeStampList,
     return foundCount == stageMap.size();
 }
 
+int64_t DfxAgent::CalculateEventTimestamp(int64_t steadyMs)
+{
+    int64_t systemStartTimeStamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()
+        ).count() -
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now().time_since_epoch()
+        ).count();
+    return systemStartTimeStamp + steadyMs;
+}
+
 void DfxAgent::ReportMetricsEvent(const DfxEvent &event)
 {
     auto timeStampList = AnyCast<std::vector<int64_t>>(event.param);
@@ -275,7 +286,7 @@ void DfxAgent::ReportMetricsEvent(const DfxEvent &event)
 
     if (delayTimeMs >= 0) {
         auto info = AVMetricsEvent{
-            .timeStamp = texpMs,
+            .timeStamp = CalculateEventTimestamp(texpMs),
             .playbackPosition = ts.timeCurFramePts,
             .details = {
                 {"MediaType", OHOS::Media::MediaType::MEDIA_TYPE_VID},
