@@ -1093,9 +1093,8 @@ int32_t HiPlayerImpl::PauseDemuxer()
     callbackLooper_.StopCollectMaxAmplitude();
     StopFlvCheckLiveDelayTime();
     syncManager_->Pause();
-    Status ret = demuxer_->PauseDemuxerReadLoop();
     SetBuffering(true);
-    return TransStatus(ret);
+    return TransStatus(Status::OK);
 }
 
 int32_t HiPlayerImpl::ResumeDemuxer()
