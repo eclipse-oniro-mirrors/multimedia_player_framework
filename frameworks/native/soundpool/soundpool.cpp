@@ -319,7 +319,6 @@ void SoundPool::SetInterruptMode(InterruptMode interruptMode)
     }
     interruptMode_ = interruptMode;
     streamIdManager_->SetInterruptMode(interruptMode);
-    isSetInterruptMode_ = true;
 }
 
 int32_t SoundPool::Unload(int32_t soundID)
@@ -335,11 +334,13 @@ int32_t SoundPool::Unload(int32_t soundID)
         return soundIDManager_->Unload(soundID);
     }
     CHECK_AND_RETURN_RET_LOG(streamIdManager_ != nullptr, MSERR_INVALID_VAL, "streamIdManager_ has been released");
-    int32_t streamID = streamIdManager_->GetStreamIDBySoundIDWithLock(soundID);
-    if (std::shared_ptr<AudioStream> stream = streamIdManager_->GetStreamByStreamIDWithLock(streamID)) {
-        stream->Stop();
-        stream->Release();
-        streamIdManager_->ClearStreamIDInDeque(soundID, streamID);
+    std::vector<int32_t> streamIDsToBeRemoved = streamIdManager_->GetStreamIDBySoundIDWithLock(soundID);
+    for (int32_t streamID : streamIDsToBeRemoved) {
+        if (std::shared_ptr<AudioStream> stream = streamIdManager_->GetStreamByStreamIDWithLock(streamID)) {
+            stream->Stop();
+            stream->Release();
+            streamIdManager_->ClearStreamIDInDeque(soundID, streamID);
+        }
     }
     return soundIDManager_->Unload(soundID);
 }

@@ -51,7 +51,7 @@ public:
 
     int32_t ReorderStream(int32_t streamID, int32_t priority);
         
-    int32_t GetStreamIDBySoundIDWithLock(int32_t soundID);
+    std::vector<int32_t> GetStreamIDBySoundIDWithLock(int32_t soundID);
     std::shared_ptr<AudioStream> GetStreamByStreamIDWithLock(int32_t streamID);
     int32_t GetAvailableStreamIDBySoundID(int32_t soundID);
     void SetInterruptMode(InterruptMode interruptMode);
@@ -59,8 +59,8 @@ public:
     void RemoveInvalidStreamsInInterruptMode();
     void RemoveInvalidStreamsInNoInterruptMode();
     bool InnerProcessOfRemoveInvalidStreamsInNoInterruptMode(const StreamState &state);
-    void RemoveStreamByStreamIDInInterruptMode(int32_t soundID, int32_t streamID);
-    void RemoveStreamByStreamIDInNoInterruptMode(int32_t soundID);
+    void RemoveStreamByStreamIDInInterruptMode(int32_t soundID);
+    void RemoveStreamByStreamIDInNoInterruptMode(int32_t soundID, int32_t streamID);
     int32_t ClearStreamIDInDeque(int32_t soundID, int32_t streamID);
     void PrintSoundID2MultiStreams();
     void PrintSoundID2Stream();
@@ -100,7 +100,7 @@ private:
     void QueueAndSortPlayingStreamID(int32_t freshStreamID);
     void QueueAndSortWillPlayStreamID(const StreamIDAndPlayParamsInfo &streamIDAndPlayParamsInfo);
 
-    int32_t GetStreamIDBySoundID(int32_t soundID);
+    std::vector<int32_t> GetStreamIDBySoundID(int32_t soundID);
     std::shared_ptr<AudioStream> GetStreamByStreamID(int32_t streamID);
 
     ffrt::mutex streamIDManagerLock_;
