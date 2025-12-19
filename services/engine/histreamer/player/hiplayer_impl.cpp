@@ -2005,6 +2005,14 @@ int32_t HiPlayerImpl::GetPlaybackSpeed(PlaybackRateMode& mode)
     return MSERR_OK;
 }
 
+int32_t HiPlayerImpl::GetPlaybackRate(float& rate)
+{
+    MEDIA_LOG_I("GetPlaybackRate in");
+    rate = playbackRate_.load();
+    MEDIA_LOG_I("GetPlaybackRate end, rate is " PUBLIC_LOG_D32, rate);
+    return MSERR_OK;
+}
+
 bool HiPlayerImpl::IsVideoMime(const std::string& mime)
 {
     return mime.find("video/") == 0;

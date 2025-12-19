@@ -396,6 +396,19 @@ public:
     virtual int32_t GetPlaybackSpeed(PlaybackRateMode &mode) = 0;
 
     /**
+     * @brief get the current player playback rate
+     *
+     * @param rate the rate which can get.
+     * @return Returns {@link MSERR_OK} if the current player playback rate is get; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     */
+    virtual int32_t GetPlaybackRate(float &rate)
+    {
+        (void)rate;
+        return 0;
+    }
+
+    /**
      * @brief add for drm, set decrypt module
      *
      * @param keySessionProxy is the sptr will be setted to playerserver.

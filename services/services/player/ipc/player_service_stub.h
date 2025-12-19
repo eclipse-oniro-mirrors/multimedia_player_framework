@@ -67,6 +67,7 @@ public:
     int32_t GetPlaybackInfo(Format &playbackInfo) override;
     int32_t GetPlaybackStatisticMetrics(Format &playbackStatisticMetrics) override;
     int32_t GetPlaybackSpeed(PlaybackRateMode &mode) override;
+    int32_t GetPlaybackRate(float &rate) override;
     int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) override;
     int32_t GetVideoHeight() override;
     int32_t GetDuration(int32_t &duration) override;
@@ -164,6 +165,7 @@ private:
     int32_t SetPlaybackSpeed(MessageParcel &data, MessageParcel &reply);
     int32_t SetPlaybackRate(MessageParcel &data, MessageParcel &reply);
     int32_t GetPlaybackSpeed(MessageParcel &data, MessageParcel &reply);
+    int32_t GetPlaybackRate(MessageParcel &data, MessageParcel &reply);
 #ifdef SUPPORT_VIDEO
     int32_t SetVideoSurface(MessageParcel &data, MessageParcel &reply);
 #endif

@@ -1480,12 +1480,26 @@ int32_t PlayerServer::GetPlaybackSpeed(PlaybackRateMode &mode)
     std::lock_guard<std::mutex> lock(mutex_);
 
     if (lastOpStatus_ == PLAYER_STATE_ERROR) {
-        MEDIA_LOGE("Can not GetDuration, currentState is PLAYER_STATE_ERROR");
+        MEDIA_LOGE("Can not GetPlaybackSpeed, currentState is PLAYER_STATE_ERROR");
         return MSERR_INVALID_OPERATION;
     }
     MEDIA_LOGD("PlayerServer GetPlaybackSpeed in");
 
     mode = config_.speedMode;
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::GetPlaybackRate(float &rate)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    if (lastOpStatus_ == PLAYER_STATE_ERROR) {
+        MEDIA_LOGE("Can not GetPlaybackRate, currentState is PLAYER_STATE_ERROR");
+        return MSERR_INVALID_OPERATION;
+    }
+    MEDIA_LOGD("PlayerServer GetPlaybackRate in");
+
+    rate = config_.speedRate;
     return MSERR_OK;
 }
 

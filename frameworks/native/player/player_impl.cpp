@@ -669,6 +669,14 @@ int32_t PlayerImpl::GetPlaybackSpeed(PlaybackRateMode &mode)
     return ret;
 }
 
+int32_t PlayerImpl::GetPlaybackRate(float &rate)
+{
+    ScopedTimer timer("GetPlaybackRate", OVERTIME_WARNING_MS);
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetPlaybackRate in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    LISTENER(return playerService_->GetPlaybackRate(rate), "GetPlaybackRate", false, TIME_OUT_SECOND);
+}
+
 int32_t PlayerImpl::SelectBitRate(uint32_t bitRate)
 {
     int64_t startTime = SteadyClock::GetCurrentTimeMs();

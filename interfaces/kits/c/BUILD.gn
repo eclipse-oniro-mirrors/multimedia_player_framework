@@ -24,6 +24,8 @@ group("capi_packages") {
       "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avrecorder",
       "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avtranscoder",
       "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:lowpower_avsink",
+      "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avmedia_source",
+      "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avmetakeys",
       "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:native_avscreen_capture",
     ]
   }
@@ -34,6 +36,8 @@ config("media_capi_config") {
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c",
     "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/common",
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/mediasource",
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/metakeys",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
   ]
 
@@ -301,7 +305,10 @@ ohos_shared_library("avmetadata_extractor") {
   cflags = [ "--coverage" ]
   ldflags = [ "--coverage" ]
 
-  sources = [ "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/avmetadatahelper/native_avmetadata_extractor.cpp" ]
+  sources = [
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/avmetadatahelper/native_avmetadata_extractor.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/avmetadatahelper/native_avmetadata_helper_callback.cpp"
+  ]
 
   deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client" ]
 
@@ -329,6 +336,135 @@ ohos_shared_library("avmetadata_extractor") {
   
   if (player_framework_support_drm) {
     public_external_deps = [
+      "drm_framework:drm_framework",
+      "drm_framework:native_drm",
+    ]
+  }
+
+  defines = []
+  defines += player_framework_defines
+
+  innerapi_tags = [ "ndk" ]
+
+  output_extension = "so"
+  subsystem_name = "multimedia"
+  part_name = "player_framework"
+}
+
+ohos_shared_library("avmedia_source") {
+  stack_protector_ret = true
+  install_enable = true
+
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  configs = [ ":media_capi_config" ]
+
+  public_configs = [ ":media_capi_public_config" ]
+
+  cflags_cc = [ "--coverage" ]
+  cflags = [ "--coverage" ]
+  ldflags = [ "--coverage" ]
+
+  sources = [
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/mediasource/native_media_source.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/mediasource/native_media_source_loader_callback_impl.cpp",
+  ]
+
+  deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client" ]
+
+  external_deps = [
+    "audio_framework:audio_capturer",
+    "av_codec:av_codec_client",
+    "c_utils:utils",
+    "graphic_surface:surface",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "image_framework:image_native",
+    "image_framework:ohimage",
+    "image_framework:pixelmap",
+    "ipc:ipc_core",
+    "media_foundation:media_foundation",
+    "samgr:samgr_proxy",
+  ]
+
+  if (player_framework_support_lowpower_av_sink) {
+    external_deps += [
+      "drivers_interface_lpplayer:liblow_power_player_proxy_1.0",
+    ]
+  }
+
+  if (player_framework_support_drm) {
+    external_deps += [
+      "drm_framework:drm_framework",
+      "drm_framework:native_drm",
+    ]
+  }
+
+  defines = []
+  defines += player_framework_defines
+
+  innerapi_tags = [ "ndk" ]
+
+  output_extension = "so"
+  subsystem_name = "multimedia"
+  part_name = "player_framework"
+}
+
+ohos_shared_library("avmetakeys") {
+  stack_protector_ret = true
+  install_enable = true
+
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  configs = [ ":media_capi_config" ]
+
+  public_configs = [ ":media_capi_public_config" ]
+
+  cflags_cc = [ "--coverage" ]
+  cflags = [ "--coverage" ]
+  ldflags = [ "--coverage" ]
+
+  sources = [ "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/metakeys/native_metakeys.cpp" ]
+
+  deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client" ]
+
+  external_deps = [
+    "audio_framework:audio_capturer",
+    "av_codec:av_codec_client",
+    "c_utils:utils",
+    "graphic_surface:surface",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "image_framework:image_native",
+    "image_framework:ohimage",
+    "image_framework:pixelmap",
+    "ipc:ipc_core",
+    "media_foundation:media_foundation",
+    "samgr:samgr_proxy",
+  ]
+
+  if (player_framework_support_lowpower_av_sink) {
+    external_deps += [
+      "drivers_interface_lpplayer:liblow_power_player_proxy_1.0",
+    ]
+  }
+
+  if (player_framework_support_drm) {
+    external_deps += [
       "drm_framework:drm_framework",
       "drm_framework:native_drm",
     ]

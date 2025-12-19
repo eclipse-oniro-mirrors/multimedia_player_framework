@@ -24,13 +24,19 @@
 #include "native_player_magic.h"
 #include "native_window.h"
 #include "avplayer.h"
+#include "avsei_message_impl.h"
+#include "native_media_source_impl.h"
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "NativeAVPlayer"};
     constexpr uint32_t ERROR_CODE_API9_MAP_LENGTH = 23;
     constexpr uint32_t STATE_MAP_LENGTH = 9;
-    constexpr uint32_t INFO_TYPE_LENGTH = 19;
+    constexpr uint32_t INFO_TYPE_LENGTH = 20;
+    constexpr uint32_t MEDIA_TYPE_LENGTH = 5;
+    constexpr uint32_t SWITCH_MODE_LENGTH = 3;
     constexpr int32_t UNSUPPORT_FORMAT_ERROR_CODE = 331350544;
     constexpr int32_t AVPLAYER_ERR_UNSUPPORT = 9;
+    constexpr int32_t PLAY_RANGE_DEFAULT_VALUE = -1;
+    constexpr int32_t MIN_AUTO_QUICK_PLAY_THRESHOLD = 2;
 }
 
 using namespace OHOS::Media;
@@ -78,6 +84,20 @@ const char* OH_MEDIA_EVENT_INFO_DOWNLOAD_TOTAL_SIZE = PlaybackMetricsKey::TOTAL_
 const char* OH_MEDIA_EVENT_INFO_STALLING_COUNT = PlaybackMetricsKey::STALLING_COUNT.data();
 const char* OH_MEDIA_EVENT_INFO_TOTAL_STALLING_TIME = PlaybackMetricsKey::TOTAL_STALLING_TIME.data();
 
+const char* OH_PLAYER_SEI_PAYLOAD_TYPE = PlayerKeys::PLAYER_SEI_PAYLOAD_TYPE.data();
+const char* OH_PLAYER_SEI_PAYLOAD_CONTENT = PlayerKeys::PLAYER_SEI_PAYLOAD_CONTENT.data();
+const char* OH_PLAYER_SUPER_RESOLUTION_ENABLE_STATE = PlayerKeys::SUPER_RESOLUTION_ENABLED.data();
+const char* OH_PLAYER_TRACH_CHANGE_INFO_TRACK_INDEX = PlayerKeys::PLAYER_TRACK_INDEX.data();
+const char* OH_PLAYER_TRACH_CHANGE_INFO_TRACK_SELECTED = PlayerKeys::PLAYER_IS_SELECT.data();
+const char* OH_PLAYER_SUBTITLE_UPDATE_INFO_DURATION = PlayerKeys::SUBTITLE_DURATION.data();
+const char* OH_MEDIA_SUBTOH_PLAYER_SUBTITLE_UPDATE_INFO_START_TIMEITLE_START_TIME = PlayerKeys::SUBTITLE_PTS.data();
+const char* OH_PLAYER_SUBTITLE_UPDATE_INFO_TEXT = PlayerKeys::SUBTITLE_TEXT.data();
+const char* OH_PLAYER_SERVER_IP_ADDRESS = PlaybackInfoKey::SERVER_IP_ADDRESS.data();
+const char* OH_PLAYER_IS_DOWNLOADING = PlaybackInfoKey::IS_DOWNLOADING.data();
+const char* OH_PLAYER_BUFFER_DURATION = PlaybackInfoKey::BUFFER_DURATION.data();
+const char* OH_PLAYER_DOWNLOAD_RATE = PlaybackInfoKey::DOWNLOAD_RATE.data();
+const char* OH_PLAYER_AVG_DOWNLOAD_RATE = PlaybackInfoKey::AVG_DOWNLOAD_RATE.data();
+
 typedef struct PlayerErrorCodeApi9Convert {
     MediaServiceExtErrCodeAPI9 errorCodeApi9;
     OH_AVErrCode avErrorCode;
@@ -92,6 +112,31 @@ typedef struct PlayerOnInfoTypeConvert {
     PlayerOnInfoType playerOnInfoType;
     AVPlayerOnInfoType aVPlayerOnInfoType;
 } PlayerOnInfoTypeConvert;
+
+typedef struct MediaTypeConvert {
+    OH_MediaType ohMediaType;
+    OHOS::Media::MediaType mediaType;
+} MediaTypeConvert;
+
+typedef struct SwitchModeConvert {
+    OHOS::Media::PlayerSwitchMode playerSwitchMode;
+    AVPlayerTrackSwitchMode avPlayerTrackSwitchMode;
+} SwitchModeConvert;
+
+typedef struct OH_AVPlaybackStrategy {
+    uint32_t preferredWidth = 0;
+    uint32_t preferredHeight = 0;
+    uint32_t preferredBufferDuration = 0;
+    double preferredBufferDurationForPlaying = 0;
+    double thresholdForAutoQuickPlay = -1;
+    bool preferredHdr = false;
+    bool showFirstFrameOnPrepare = false;
+    bool enableSuperResolution = false;
+    OH_MediaType mutedMediaType = OH_MediaType::MEDIA_TYPE_AUXILIARY;
+    const char* preferredAudioLanguage = "";
+    const char* preferredSubtitleLanguage = "";
+    bool keepDecodingOnMute = false;
+} OH_AVPlaybackStrategy;
 
 static const PlayerErrorCodeApi9Convert ERROR_CODE_API9_MAP[ERROR_CODE_API9_MAP_LENGTH] = {
     {MSERR_EXT_API9_OK, AV_ERR_OK},
@@ -151,6 +196,21 @@ static const PlayerOnInfoTypeConvert ON_INFO_TYPE[INFO_TYPE_LENGTH] = {
     { INFO_TYPE_SUBTITLE_UPDATE_INFO, AV_INFO_TYPE_SUBTITLE_UPDATE },
     { INFO_TYPE_AUDIO_DEVICE_CHANGE, AV_INFO_TYPE_AUDIO_OUTPUT_DEVICE_CHANGE},
     { INFO_TYPE_RATEDONE, AV_INFO_TYPE_PLAYBACK_RATE_DONE },
+    { INFO_TYPE_SUPER_RESOLUTION_CHANGED, AV_INFO_TYPE_SUPER_RESOLUTION_CHANGED },
+};
+
+static const MediaTypeConvert MEDIA_TYPE_MAP[MEDIA_TYPE_LENGTH] = {
+    { OH_MediaType::MEDIA_TYPE_AUD, OHOS::Media::MediaType::MEDIA_TYPE_AUD },
+    { OH_MediaType::MEDIA_TYPE_VID, OHOS::Media::MediaType::MEDIA_TYPE_VID },
+    { OH_MediaType::MEDIA_TYPE_SUBTITLE, OHOS::Media::MediaType::MEDIA_TYPE_SUBTITLE },
+    { OH_MediaType::MEDIA_TYPE_TIMED_METADATA, OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT },
+    { OH_MediaType::MEDIA_TYPE_AUXILIARY, OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT },
+};
+
+static const SwitchModeConvert SWITCH_MODE_MAP[SWITCH_MODE_LENGTH] = {
+    { SWITCH_SMOOTH, AV_TRACK_SWITCH_MODE_SMOOTH },
+    { SWITCH_SEGMENT, AV_TRACK_SWITCH_MODE_SEGMENT },
+    { SWITCH_CLOSEST, AV_TRACK_SWITCH_MODE_CLOSEST },
 };
 
 static OH_AVErrCode MSErrCodeToAVErrCodeApi9(MediaServiceExtErrCodeAPI9 errorCode)
@@ -221,6 +281,49 @@ private:
     void *userData_ = nullptr;
 };
 
+class NativeAVPlayerOnSeiMessageReceivedCallback {
+public:
+    NativeAVPlayerOnSeiMessageReceivedCallback(OH_AVPlayerOnSeiMessageReceivedCallback callback, void *userData)
+        : callback_(callback), userData_(userData) {}
+    virtual ~NativeAVPlayerOnSeiMessageReceivedCallback() = default;
+
+    void OnInfo(OH_AVPlayer *player, OH_AVSeiMessageArray *message, int32_t playbackPosition)
+    {
+        CHECK_AND_RETURN(player != nullptr && callback_ != nullptr);
+        callback_(player, message, playbackPosition, userData_);
+    }
+
+private:
+    OH_AVPlayerOnSeiMessageReceivedCallback callback_ = nullptr;
+    void *userData_ = nullptr;
+};
+
+class NativeAVPlayerOnAmplitudeUpdateCallback {
+public:
+    NativeAVPlayerOnAmplitudeUpdateCallback(OH_AVPlayerOnAmplitudeUpdateCallback callback, void *userData)
+        : callback_(callback), userData_(userData) {}
+    virtual ~NativeAVPlayerOnAmplitudeUpdateCallback() = default;
+
+    void OnAmplitudeUpdateCallback(OH_AVPlayer *player, float *amp, uint32_t count)
+    {
+        CHECK_AND_RETURN(player != nullptr && callback_ != nullptr);
+
+        double* doubleAmp = new (std::nothrow) double[count];
+        CHECK_AND_RETURN(doubleAmp != nullptr);
+
+        for (uint32_t i = 0; i < count; i++) {
+            doubleAmp[i] = static_cast<double>(amp[i]);
+        }
+        callback_(player, doubleAmp, count, userData_);
+        delete[] doubleAmp;
+        doubleAmp = nullptr;
+    }
+
+private:
+    OH_AVPlayerOnAmplitudeUpdateCallback callback_ = nullptr;
+    void *userData_ = nullptr;
+};
+
 #ifdef SUPPORT_AVPLAYER_DRM
 class NativeAVPlayerCallback : public PlayerCallback, public DrmSystemInfoCallback {
 public:
@@ -246,6 +349,8 @@ public:
     int32_t SetPlayCallback(AVPlayerCallback callback);
     int32_t SetOnErrorCallback(OH_AVPlayerOnErrorCallback callback, void *userData);
     int32_t SetOnInfoCallback(OH_AVPlayerOnInfoCallback callback, void *userData);
+    int32_t SetOnSeiMessageReceivedCallback(OH_AVPlayerOnSeiMessageReceivedCallback callback, void *userData);
+    int32_t SetOnAmplitudeUpdateCallback(OH_AVPlayerOnAmplitudeUpdateCallback callback, void *userData);
     void Start();
     void Pause();
 
@@ -271,6 +376,9 @@ private:
     void OnSubtitleInfoCb(const int32_t extra, const Format &infoBody);
     void OnAudioDeviceChangeCb(const int32_t extra, const Format &infoBody);
     void OnDrmInfoUpdatedCb(const int32_t extra, const Format &infoBody);
+    void OnSeiInfoCb(const int32_t extra, const Format &infoBody);
+    void OnAmplitudeUpdateCb(const int32_t extra, const Format &infoBody);
+    void OnSuperResolutionChangedCb(const int32_t extra, const Format &infoBody);
 
 private:
     std::mutex mutex_;
@@ -279,6 +387,8 @@ private:
     struct OH_AVPlayer *player_ = nullptr;
     std::shared_ptr<NativeAVPlayerOnErrorCallback> errorCallback_ = nullptr;
     std::shared_ptr<NativeAVPlayerOnInfoCallback> infoCallback_ = nullptr;
+    std::shared_ptr<NativeAVPlayerOnSeiMessageReceivedCallback> seiMessageReceivedCallback_ = nullptr;
+    std::shared_ptr<NativeAVPlayerOnAmplitudeUpdateCallback> amplitudeUpdateCallback_ = nullptr;
     std::map<uint32_t, OnInfoFunc> onInfoFuncs_;
     struct AVPlayerCallback callback_ = { .onInfo = nullptr, .onError = nullptr };
     Player_MediaKeySystemInfoCallback drmsysteminfocallback_ = nullptr;
@@ -387,6 +497,12 @@ NativeAVPlayerCallback::NativeAVPlayerCallback(OH_AVPlayer *player, AVPlayerCall
             [this](const int32_t extra, const Format &infoBody) { OnAudioDeviceChangeCb(extra, infoBody); } },
         { INFO_TYPE_DRM_INFO_UPDATED,
             [this](const int32_t extra, const Format &infoBody) { OnDrmInfoUpdatedCb(extra, infoBody); } },
+        { INFO_TYPE_SEI_UPDATE_INFO,
+            [this](const int32_t extra, const Format &infoBody) { OnSeiInfoCb(extra, infoBody); } },
+        { INFO_TYPE_MAX_AMPLITUDE_COLLECT,
+            [this](const int32_t extra, const Format &infoBody) { OnAmplitudeUpdateCb(extra, infoBody); } },
+        { INFO_TYPE_SUPER_RESOLUTION_CHANGED,
+            [this](const int32_t extra, const Format &infoBody) { OnSuperResolutionChangedCb(extra, infoBody); } },
     };
 }
 
@@ -412,6 +528,16 @@ void NativeAVPlayerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const 
 
     if (type == INFO_TYPE_DRM_INFO_UPDATED) { // process drm with independent callback
         OnDrmInfoUpdatedCb(extra, infoBody);
+        return;
+    }
+
+    if (type == INFO_TYPE_SEI_UPDATE_INFO) {
+        OnSeiInfoCb(extra, infoBody);
+        return;
+    }
+
+    if (type == INFO_TYPE_MAX_AMPLITUDE_COLLECT) {
+        OnAmplitudeUpdateCb(extra, infoBody);
         return;
     }
 
@@ -554,6 +680,37 @@ int32_t NativeAVPlayerCallback::SetOnInfoCallback(OH_AVPlayerOnInfoCallback call
         infoCallback_ = std::shared_ptr<NativeAVPlayerOnInfoCallback>(onInfoCallback);
     } else {
         infoCallback_ = nullptr;
+    }
+    return AV_ERR_OK;
+}
+
+int32_t NativeAVPlayerCallback::SetOnSeiMessageReceivedCallback(OH_AVPlayerOnSeiMessageReceivedCallback callback,
+    void *userData)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (callback != nullptr) {
+        NativeAVPlayerOnSeiMessageReceivedCallback *onSeiCallback =
+            new (std::nothrow) NativeAVPlayerOnSeiMessageReceivedCallback(callback, userData);
+        CHECK_AND_RETURN_RET_LOG(onSeiCallback != nullptr, AV_ERR_NO_MEMORY, "seiMessageReceivedCallback_ is nullptr");
+        seiMessageReceivedCallback_ = std::shared_ptr<NativeAVPlayerOnSeiMessageReceivedCallback>(onSeiCallback);
+    } else {
+        seiMessageReceivedCallback_ = nullptr;
+    }
+    return AV_ERR_OK;
+}
+
+int32_t NativeAVPlayerCallback::SetOnAmplitudeUpdateCallback(OH_AVPlayerOnAmplitudeUpdateCallback callback,
+    void *userData)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (callback != nullptr) {
+        NativeAVPlayerOnAmplitudeUpdateCallback *onAmplitudeUpdateCallback =
+            new (std::nothrow) NativeAVPlayerOnAmplitudeUpdateCallback(callback, userData);
+        CHECK_AND_RETURN_RET_LOG(onAmplitudeUpdateCallback != nullptr, AV_ERR_NO_MEMORY,
+            "amplitudeUpdateCallback_ is nullptr!");
+        amplitudeUpdateCallback_ = std::shared_ptr<NativeAVPlayerOnAmplitudeUpdateCallback>(onAmplitudeUpdateCallback);
+    } else {
+        amplitudeUpdateCallback_ = nullptr;
     }
     return AV_ERR_OK;
 }
@@ -916,6 +1073,75 @@ void NativeAVPlayerCallback::OnDrmInfoUpdatedCb(const int32_t extra, const Forma
 #endif
 }
 
+void NativeAVPlayerCallback::OnSeiInfoCb(const int32_t extra, const Format &infoBody)
+{
+    CHECK_AND_RETURN_LOG(seiMessageReceivedCallback_ != nullptr, "can not find on sei message callback!");
+
+    (void)extra;
+    int32_t playbackPosition = 0;
+    bool res = infoBody.GetIntValue(Tag::AV_PLAYER_SEI_PLAYBACK_POSITION, playbackPosition);
+    CHECK_AND_RETURN_LOG(res, "get playback position failed");
+
+    std::vector<Format> formatVec;
+    res = infoBody.GetFormatVector(Tag::AV_PLAYER_SEI_PLAYBACK_GROUP, formatVec);
+    CHECK_AND_RETURN_LOG(res, "get sei payload group failed");
+
+    SeiMessageArray *message = new (std::nothrow) SeiMessageArray(formatVec);
+    CHECK_AND_RETURN_LOG(message != nullptr, "failed to new SeiMessageArray");
+
+    if (seiMessageReceivedCallback_ == nullptr) {
+        return;
+    }
+
+    seiMessageReceivedCallback_->OnInfo(player_, message, playbackPosition);
+}
+
+void NativeAVPlayerCallback::OnAmplitudeUpdateCb(const int32_t extra, const Format &infoBody)
+{
+    (void)extra;
+    CHECK_AND_RETURN_LOG(isSourceLoaded_.load(), "OnAmplitudeUpdateCb current source is unready");
+    std::vector<float> validAmplitudeVec;
+    if (infoBody.ContainKey(std::string(PlayerKeys::AUDIO_MAX_AMPLITUDE))) {
+        uint8_t *addr = nullptr;
+        size_t size = 0;
+        infoBody.GetBuffer(std::string(PlayerKeys::AUDIO_MAX_AMPLITUDE), &addr, size);
+        CHECK_AND_RETURN_LOG(addr != nullptr, "max amplitude addr is nullptr");
+        while (size > 0) {
+            if (size < sizeof(float)) {
+                break;
+            }
+            float maxAmplitude = *(static_cast<float *>(static_cast<void *>(addr)));
+            addr += sizeof(float);
+            size -= sizeof(float);
+            validAmplitudeVec.push_back(static_cast<float>(maxAmplitude));
+        }
+    }
+
+    if (amplitudeUpdateCallback_ == nullptr) {
+        return;
+    }
+
+    uint32_t count = static_cast<uint32_t>(validAmplitudeVec.size());
+
+    amplitudeUpdateCallback_->OnAmplitudeUpdateCallback(player_,
+        validAmplitudeVec.data(), count);
+}
+
+void NativeAVPlayerCallback::OnSuperResolutionChangedCb(const int32_t extra, const Format &infoBody)
+{
+    (void)extra;
+    CHECK_AND_RETURN_LOG(isSourceLoaded_.load(), "OnSuperResolutionChangedCb current source is unready");
+
+    int32_t enabled = 0;
+    infoBody.GetIntValue(PlayerKeys::SUPER_RESOLUTION_ENABLED, enabled);
+
+    OHOS::sptr<OH_AVFormat> avFormat = new (std::nothrow) OH_AVFormat();
+    CHECK_AND_RETURN_LOG(avFormat != nullptr, "OnSuperResolutionChangedCb OH_AVFormat create failed");
+    avFormat->format_.PutIntValue(OH_PLAYER_SUPER_RESOLUTION_ENABLE_STATE, enabled);
+    infoCallback_->OnInfo(player_, AV_INFO_TYPE_SUPER_RESOLUTION_CHANGED,
+        reinterpret_cast<OH_AVFormat *>(avFormat.GetRefPtr()));
+}
+
 OH_AVPlayer *OH_AVPlayer_Create(void)
 {
     std::shared_ptr<Player> player = PlayerFactory::CreatePlayer(OHOS::Media::PlayerProducer::CAPI);
@@ -1149,6 +1375,19 @@ OH_AVErrCode OH_AVPlayer_GetPlaybackSpeed(OH_AVPlayer *player, AVPlaybackSpeed *
     int32_t ret = playerObj->player_->GetPlaybackSpeed(md);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player GetPlaybackSpeed failed");
     *speed = static_cast<AVPlaybackSpeed>(md);
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVPlayer_GetPlaybackRate(OH_AVPlayer *player, float *rate)
+{
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(rate != nullptr, AV_ERR_INVALID_VAL, "rate is nullptr");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+    float tmpRate;
+    int32_t ret = playerObj->player_->GetPlaybackRate(tmpRate);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player GetPlaybackRate failed");
+    *rate = tmpRate;
     return AV_ERR_OK;
 }
 
@@ -1477,6 +1716,38 @@ OH_AVErrCode OH_AVPlayer_SetOnInfoCallback(OH_AVPlayer *player, OH_AVPlayerOnInf
     return AV_ERR_OK;
 }
 
+OH_AVErrCode OH_AVPlayer_SetAmplitudeUpdateCallback(OH_AVPlayer *player, OH_AVPlayerOnAmplitudeUpdateCallback callback,
+    void *userData)
+{
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "SetAmplitudeUpdate input player is nullptr!");
+    if (callback == nullptr) {
+        MEDIA_LOGI("SetAmplitudeUpdate callback is nullptr, unregister callback.");
+    }
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL,
+        "SetAmplitudeUpdate player_ is nullptr");
+
+    OH_AVErrCode errCode = AVPlayerSetPlayerCallback(player, playerObj, callback == nullptr);
+    CHECK_AND_RETURN_RET_LOG(errCode == AV_ERR_OK, errCode,
+        "AVPlayerSetPlayerCallback AVPlayerOnAmplitudeUpdateCallback error");
+
+    AVPlayerState currentState = AVPlayerState::AV_IDLE;
+    errCode = OH_AVPlayer_GetState(player, &currentState);
+    CHECK_AND_RETURN_RET_LOG(errCode == AV_ERR_OK, errCode, "OH_AVPlayer_GetState failed");
+
+    CHECK_AND_RETURN_RET_LOG(currentState != AVPlayerState::AV_RELEASED, AV_ERR_INVALID_VAL,
+        "current state is released, unsupport to on event");
+
+    playerObj->player_->SetMaxAmplitudeCbStatus(callback != nullptr);
+
+    if (playerObj->callback_ == nullptr ||
+        playerObj->callback_->SetOnAmplitudeUpdateCallback(callback, userData) != AV_ERR_OK) {
+        MEDIA_LOGE("OH_AVPlayer_SetAmplitudeUpdateCallback error");
+        return AV_ERR_INVALID_VAL;
+    }
+    return AV_ERR_OK;
+}
+
 OH_AVErrCode OH_AVPlayer_SetLoudnessGain(OH_AVPlayer *player, float loudnessGain)
 {
     CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
@@ -1516,6 +1787,470 @@ OH_AVFormat *OH_AVPlayer_GetMediaDescription(OH_AVPlayer *player)
     return avFormat;
 }
 
+OH_AVErrCode OH_AVPlayer_AddFdSubtitleSource(OH_AVPlayer *player, int32_t fd, int64_t offset, int64_t size)
+{
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+    if (offset < 0) {
+        offset = 0;
+    }
+    if (size < -1) {
+        size = -1;
+    }
+    int32_t ret = playerObj->player_->AddSubSource(fd, offset, size);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player AddFDSubtitleSource failed");
+    return AV_ERR_OK;
+}
+
+template<typename T, typename = std::enable_if_t<std::is_same_v<int64_t, T> || std::is_same_v<int32_t, T>>>
+bool StrToInt(const std::string_view& str, T& value)
+{
+    CHECK_AND_RETURN_RET(!str.empty() && (isdigit(str.front()) || (str.front() == '-' || str.front() == '+')), false);
+    std::string valStr(str);
+    char *end = nullptr;
+    errno = 0;
+    const char* addr = valStr.c_str();
+    long long result = strtoll(addr, &end, 10); /* 10 means decimal */
+    CHECK_AND_RETURN_RET_LOG(result >= LLONG_MIN && result <= LLONG_MAX, false,
+        "call StrToInt func false,  input str is: %{public}s!", valStr.c_str());
+    CHECK_AND_RETURN_RET_LOG(end != addr && end[0] == '\0' && errno != ERANGE, false,
+        "call StrToInt func false,  input str is: %{public}s!", valStr.c_str());
+    if constexpr (std::is_same<int32_t, T>::value) {
+        CHECK_AND_RETURN_RET_LOG(result >= INT_MIN && result <= INT_MAX, false,
+            "call StrToInt func false,  input str is: %{public}s!", valStr.c_str());
+        value = static_cast<int32_t>(result);
+        return true;
+    }
+    value = result;
+    return true;
+}
+
+OH_AVErrCode OH_AVPlayer_AddUrlSubtitleSource(OH_AVPlayer *player, const char *url)
+{
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+    CHECK_AND_RETURN_RET_LOG(url != nullptr, AV_ERR_INVALID_VAL, "url is null");
+    std::string url_str(url);
+    bool isFd = (url_str.find("fd://") != std::string::npos) ? true : false;
+    bool isNetwork = (url_str.find("http") != std::string::npos) ? true : false;
+    CHECK_AND_RETURN_RET_LOG((isFd || isNetwork), AV_ERR_INVALID_VAL,
+        "invalid parameters, The input parameter is not fd:// or network address");
+    if (isNetwork) {
+        int32_t ret = playerObj->player_->AddSubSource(url_str);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "failed to add url subtitle source");
+    } else if (isFd) {
+        const std::string fdHead = "fd://";
+        std::string inputFd = url_str.substr(fdHead.size());
+        int32_t fd = -1;
+        CHECK_AND_RETURN_RET_LOG((StrToInt(inputFd, fd) && fd > 0), AV_ERR_INVALID_VAL,
+            "invalid parameters, The input parameter is not a fd://+numeric string");
+        int32_t ret = playerObj->player_->AddSubSource(fd, 0, -1);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "failed to add url subtitle source");
+    }
+    return AV_ERR_OK;
+}
+
+bool CanSetPlayRange(OH_AVPlayer *player)
+{
+    AVPlayerState state = AVPlayerState::AV_ERROR;
+    OH_AVPlayer_GetState(player, &state);
+    return (state == AVPlayerState::AV_INITIALIZED ||
+            state == AVPlayerState::AV_PREPARED ||
+            state == AVPlayerState::AV_PAUSED ||
+            state == AVPlayerState::AV_STOPPED ||
+            state == AVPlayerState::AV_COMPLETED);
+}
+
+bool IsControllable(OH_AVPlayer *player)
+{
+    AVPlayerState state = AVPlayerState::AV_ERROR;
+    OH_AVPlayer_GetState(player, &state);
+    return (state == AVPlayerState::AV_PREPARED ||
+            state == AVPlayerState::AV_PLAYING ||
+            state == AVPlayerState::AV_PAUSED ||
+            state == AVPlayerState::AV_COMPLETED);
+}
+
+PlayerSeekMode TransferSeekMode(bool closestRange)
+{
+    int32_t closestRangeInt = static_cast<int32_t>(closestRange);
+    PlayerSeekMode seekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
+    switch (closestRangeInt) {
+        case 1: // Seek to the next sync frame of the given timestamp.
+            seekMode = PlayerSeekMode::SEEK_NEXT_SYNC;
+            break;
+        case 0: // Seek to the closest frame of the given timestamp. 2 refers SeekMode in @ohos.multimedia.media.d.ts
+            seekMode = PlayerSeekMode::SEEK_CLOSEST;
+            break;
+        default:
+            seekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
+            break;
+    }
+    return seekMode;
+}
+
+OH_AVErrCode OH_AVPlayer_SetPlaybackRange(OH_AVPlayer *player, int32_t mSecondsStart, int32_t mSecondsEnd,
+                                          bool closestRange)
+{
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+    bool canSetPlayRange = CanSetPlayRange(player);
+    CHECK_AND_RETURN_RET_LOG(canSetPlayRange, AV_ERR_OPERATE_NOT_PERMIT,
+        "current state is not initialized/prepared/paused/stopped/completed, unsupport setPlaybackRange operation");
+    CHECK_AND_RETURN_RET_LOG(mSecondsStart >= PLAY_RANGE_DEFAULT_VALUE, AV_ERR_INVALID_VAL,
+        "invalid parameters, please check start");
+    CHECK_AND_RETURN_RET_LOG(mSecondsEnd >= PLAY_RANGE_DEFAULT_VALUE, AV_ERR_INVALID_VAL,
+        "invalid parameters, please check end");
+    int32_t ret = playerObj->player_->SetPlayRangeWithMode(mSecondsStart, mSecondsEnd, TransferSeekMode(closestRange));
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player setPlaybackRange failed");
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVPlayer_SetMediaMuted(OH_AVPlayer *player, OH_MediaType type, bool muted)
+{
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+    AVPlayerState state = AVPlayerState::AV_ERROR;
+    OH_AVPlayer_GetState(player, &state);
+    bool isInitialized = (state == AVPlayerState::AV_PREPARED ||
+                          state == AVPlayerState::AV_PLAYING ||
+                          state == AVPlayerState::AV_PAUSED ||
+                          state == AVPlayerState::AV_COMPLETED);
+    CHECK_AND_RETURN_RET_LOG(isInitialized, AV_ERR_OPERATE_NOT_PERMIT,
+        "current state is not stopped or initialized, unsupport set playback strategy operation");
+    OHOS::Media::MediaType type_ = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
+    for (uint32_t i = 0; i < MEDIA_TYPE_LENGTH; i++) {
+        if (MEDIA_TYPE_MAP[i].ohMediaType == type) {
+            type_ = MEDIA_TYPE_MAP[i].mediaType;
+            break;
+        }
+    }
+    int32_t ret = playerObj->player_->SetMediaMuted(type_, muted);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "failed to set muted");
+    return AV_ERR_OK;
+}
+
+int32_t OH_AVPlayer_GetPlaybackPosition(OH_AVPlayer *player)
+{
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, -1, "input player is nullptr!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, -1, "player_ is null");
+    AVPlayerState state = AVPlayerState::AV_ERROR;
+    OH_AVPlayer_GetState(player, &state);
+    bool isControllable = (state == AVPlayerState::AV_PREPARED ||
+                           state == AVPlayerState::AV_PLAYING ||
+                           state == AVPlayerState::AV_PAUSED ||
+                           state == AVPlayerState::AV_COMPLETED);
+    CHECK_AND_RETURN_RET_LOG(isControllable, -1,
+        "current state is not prepared/playing/paused/completed, not support get playback position");
+    int32_t playbackPosition = 0;
+    int32_t ret = playerObj->player_->GetPlaybackPosition(playbackPosition);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, -1, "player GetPlaybackPosition failed");
+    return playbackPosition;
+}
+
+bool OH_AVPlayer_IsSeekContinuousSupported(OH_AVPlayer *player)
+{
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, false, "input player is nullptr!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, false, "player_ is null");
+    if (playerObj->isReleased_.load()) {
+        return false;
+    }
+    bool isSeekContinuousSupported = playerObj->player_->IsSeekContinuousSupported();
+    return isSeekContinuousSupported;
+}
+
+OH_AVErrCode OH_AVPlayer_SelectTrackWithMode(OH_AVPlayer *player, int32_t index, AVPlayerTrackSwitchMode mode)
+{
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj != nullptr, AV_ERR_OPERATE_NOT_PERMIT, "avplayer is deconstructed");
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+    CHECK_AND_RETURN_RET_LOG(index >= 0, AV_ERR_INVALID_VAL, "invalid parameters, please check the track index");
+    CHECK_AND_RETURN_RET_LOG(!(mode < AV_TRACK_SWITCH_MODE_SMOOTH || mode > AV_TRACK_SWITCH_MODE_CLOSEST),
+        AV_ERR_INVALID_VAL, "invalid parameters, please switch seek mode");
+    PlayerSwitchMode mode_ = SWITCH_CLOSEST;
+    for (uint32_t i = 0; i < SWITCH_MODE_LENGTH; i++) {
+        if (SWITCH_MODE_MAP[i].avPlayerTrackSwitchMode == mode) {
+            mode_ = SWITCH_MODE_MAP[i].playerSwitchMode;
+        }
+    }
+    int32_t ret = playerObj->player_->SelectTrack(index, mode_);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player SelectTrackWithMode failed");
+    return AV_ERR_OK;
+}
+
+OH_AVFormat *OH_AVPlayer_GetPlaybackInfo(OH_AVPlayer *player)
+{
+    MEDIA_LOGI("OH_AVPlayer_GetPlaybackInfo S");
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, nullptr, "SetOnInfo input player is nullptr!");
+
+    OHOS::Media::Format format;
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, nullptr, "player_ is null");
+    bool ret = IsControllable(player);
+    CHECK_AND_RETURN_RET_LOG(ret, nullptr,
+        "current state is not prepared/playing/paused/completed, unsupport get playback info");
+    playerObj->player_->GetPlaybackInfo(format);
+    OH_AVFormat *avFormat = OH_AVFormat_Create();
+    CHECK_AND_RETURN_RET_LOG(avFormat != nullptr, nullptr, "Format is nullptr!");
+    avFormat->format_ = format;
+    return avFormat;
+}
+
+uint32_t OH_AVPlayer_GetTrackCount(OH_AVPlayer *player)
+{
+    MEDIA_LOGI("OH_AVPlayer_GetTrackCount S");
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, 0, "SetOnInfo input player is nullptr!");
+
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, 0, "player_ is null");
+    std::vector<Format> trackInfo;
+    bool ret = IsControllable(player);
+    CHECK_AND_RETURN_RET_LOG(ret, 0,
+        "current state is not prepared/playing/paused/completed, unsupport get track count");
+    playerObj->player_->GetVideoTrackInfo(trackInfo);
+    playerObj->player_->GetAudioTrackInfo(trackInfo);
+    playerObj->player_->GetSubtitleTrackInfo(trackInfo);
+    uint32_t trackCount = static_cast<uint32_t>(trackInfo.size());
+    return trackCount;
+}
+
+OH_AVFormat *OH_AVPlayer_GetTrackFormat(OH_AVPlayer *player, uint32_t trackIndex)
+{
+    MEDIA_LOGI("OH_AVPlayer_GetTrackFormat S");
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, nullptr, "SetOnInfo input player is nullptr!");
+
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, nullptr, "player_ is null");
+    std::vector<Format> trackInfo;
+    bool ret = IsControllable(player);
+    CHECK_AND_RETURN_RET_LOG(ret, nullptr,
+        "current state is not prepared/playing/paused/completed, unsupport get track format");
+    playerObj->player_->GetVideoTrackInfo(trackInfo);
+    playerObj->player_->GetAudioTrackInfo(trackInfo);
+    playerObj->player_->GetSubtitleTrackInfo(trackInfo);
+    CHECK_AND_RETURN_RET_LOG(trackIndex < trackInfo.size(), nullptr, "trackIndex is out of range");
+    OH_AVFormat *avFormat = OH_AVFormat_Create();
+    CHECK_AND_RETURN_RET_LOG(avFormat != nullptr, nullptr, "Format is nullptr!");
+    avFormat->format_ = trackInfo[trackIndex];
+    return avFormat;
+}
+bool CanSetSuperResolution(OH_AVPlayer *player)
+{
+    AVPlayerState state;
+    OH_AVErrCode ret = OH_AVPlayer_GetState(player, &state);
+    CHECK_AND_RETURN_RET_LOG(ret == AV_ERR_OK, AV_ERR_INVALID_VAL, "player GetState failed");
+
+    if (state == AVPlayerState::AV_INITIALIZED || state == AVPlayerState::AV_PREPARED ||
+        state == AVPlayerState::AV_PLAYING || state == AVPlayerState::AV_PAUSED ||
+        state == AVPlayerState::AV_STOPPED || state == AVPlayerState::AV_COMPLETED) {
+        return true;
+    }
+
+    return false;
+}
+
+OH_AVErrCode OH_AVPlayer_SetTargetVideoWindowSize(OH_AVPlayer *player, int32_t width, int32_t height)
+{
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+
+    CHECK_AND_RETURN_RET_LOG(CanSetSuperResolution(player), AV_ERR_OPERATE_NOT_PERMIT,
+        "current state is not initialized/prepared/playing/paused/completed/stopped, "
+        "unsupport set video window size");
+
+    int32_t ret = playerObj->player_->SetVideoWindowSize(width, height);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "failed to set super resolution");
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVPlayer_SetVideoSuperResolutionEnable(OH_AVPlayer *player, bool enabled)
+{
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+
+    CHECK_AND_RETURN_RET_LOG(CanSetSuperResolution(player), AV_ERR_OPERATE_NOT_PERMIT,
+        "current state is not initialized/prepared/playing/paused/completed/stopped, "
+        "unsupport set super resolution operation");
+
+    int32_t ret = playerObj->player_->SetSuperResolution(enabled);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "failed to set super resolution");
+    return AV_ERR_OK;
+}
+
+OH_AVPlaybackStrategy *OH_AVPlaybackStrategy_Create(void)
+{
+    return new (std::nothrow) OH_AVPlaybackStrategy();
+}
+
+OH_AVErrCode OH_AVPlaybackStrategy_Destroy(OH_AVPlaybackStrategy *strategy)
+{
+    CHECK_AND_RETURN_RET_LOG(strategy != nullptr, AV_ERR_INVALID_VAL, "strategy is null");
+    delete strategy;
+    return AV_ERR_OK;
+}
+
+static OH_AVErrCode ConvertToInternalStrategy(OHOS::Media::AVPlayStrategy *internalStrategy,
+    OH_AVPlaybackStrategy *strategy)
+{
+    CHECK_AND_RETURN_RET_LOG(internalStrategy != nullptr, AV_ERR_INVALID_VAL, "internalStrategy is nullptr");
+    internalStrategy->preferredWidth = strategy->preferredWidth;
+    internalStrategy->preferredHeight = strategy->preferredHeight;
+    internalStrategy->preferredBufferDuration = strategy->preferredBufferDuration;
+    internalStrategy->preferredBufferDurationForPlaying =
+        (strategy->preferredBufferDurationForPlaying >= 0) ? strategy->preferredBufferDurationForPlaying : -1;
+    internalStrategy->thresholdForAutoQuickPlay =
+        (strategy->thresholdForAutoQuickPlay >= 0) ? strategy->thresholdForAutoQuickPlay : -1;
+    internalStrategy->preferredHdr = strategy->preferredHdr;
+    internalStrategy->showFirstFrameOnPrepare = strategy->showFirstFrameOnPrepare;
+    internalStrategy->enableSuperResolution = strategy->enableSuperResolution;
+    for (uint32_t i = 0; i < MEDIA_TYPE_LENGTH; i++) {
+        if (MEDIA_TYPE_MAP[i].ohMediaType == strategy->mutedMediaType) {
+            internalStrategy->mutedMediaType = MEDIA_TYPE_MAP[i].mediaType;
+            break;
+        }
+    }
+    internalStrategy->keepDecodingOnMute = strategy->keepDecodingOnMute;
+    internalStrategy->preferredAudioLanguage =
+        (strategy->preferredAudioLanguage != nullptr) ? strategy->preferredAudioLanguage : std::string();
+    internalStrategy->preferredSubtitleLanguage =
+        (strategy->preferredSubtitleLanguage != nullptr) ? strategy->preferredSubtitleLanguage : std::string();
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVPlayer_SetPlaybackStrategy(OH_AVPlayer *player, OH_AVPlaybackStrategy *strategy)
+{
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr");
+    CHECK_AND_RETURN_RET_LOG(strategy != nullptr, AV_ERR_INVALID_VAL, "strategy is nullptr");
+
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+
+    AVPlayerState state;
+    OH_AVErrCode err = OH_AVPlayer_GetState(player, &state);
+    CHECK_AND_RETURN_RET_LOG(err == AV_ERR_OK, err, "failed to get current state");
+    if (state != AV_INITIALIZED && state != AV_STOPPED) {
+        MEDIA_LOGE("current state is not initialized or stopped, unsupport set playback strategy");
+        return AV_ERR_OPERATE_NOT_PERMIT;
+    }
+    CHECK_AND_RETURN_RET_LOG (
+        strategy->preferredBufferDurationForPlaying >= 0 && !(strategy->preferredBufferDuration > 0 &&
+            strategy->preferredBufferDurationForPlaying > 0 &&
+            strategy->preferredBufferDurationForPlaying > strategy->preferredBufferDuration),
+        AV_ERR_INVALID_VAL,
+        "playing duration is above buffer duration or below zero");
+    CHECK_AND_RETURN_RET_LOG (
+        strategy->thresholdForAutoQuickPlay == -1 ||
+            (strategy->thresholdForAutoQuickPlay >= strategy->preferredBufferDurationForPlaying &&
+            strategy->thresholdForAutoQuickPlay >= MIN_AUTO_QUICK_PLAY_THRESHOLD),
+        AV_ERR_INVALID_VAL,
+        "thresholdForAutoQuickPlay is invalid");
+
+    OHOS::Media::AVPlayStrategy internalStrategy;
+    OH_AVErrCode convertRet = ConvertToInternalStrategy(&internalStrategy, strategy);
+    CHECK_AND_RETURN_RET_LOG(convertRet == AV_ERR_OK, convertRet, "failed to convert strategy to internalStrategy");
+
+    int32_t ret = playerObj->player_->SetPlaybackStrategy(internalStrategy);
+    CHECK_AND_RETURN_RET_LOG(ret == 0, AV_ERR_INVALID_VAL, "SetPlaybackStrategy failed");
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVPlaybackStrategy_SetPreferredWidth(OH_AVPlaybackStrategy *strategy, int32_t width)
+{
+    CHECK_AND_RETURN_RET_LOG(strategy != nullptr, AV_ERR_INVALID_VAL, "strategy is nullptr");
+    strategy->preferredWidth = static_cast<uint32_t>(width);
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVPlaybackStrategy_SetPreferredHeight(OH_AVPlaybackStrategy *strategy, int32_t height)
+{
+    CHECK_AND_RETURN_RET_LOG(strategy != nullptr, AV_ERR_INVALID_VAL, "strategy is nullptr");
+    strategy->preferredHeight = static_cast<uint32_t>(height);
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVPlaybackStrategy_SetPreferredBufferDuration(OH_AVPlaybackStrategy *strategy, int32_t ms)
+{
+    CHECK_AND_RETURN_RET_LOG(strategy != nullptr, AV_ERR_INVALID_VAL, "strategy is nullptr");
+    strategy->preferredBufferDuration = static_cast<uint32_t>(ms);
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVPlaybackStrategy_SetPreferredBufferDurationForPlaying(OH_AVPlaybackStrategy *strategy, double seconds)
+{
+    CHECK_AND_RETURN_RET_LOG(strategy != nullptr, AV_ERR_INVALID_VAL, "strategy is nullptr");
+    strategy->preferredBufferDurationForPlaying = seconds;
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVPlaybackStrategy_SetThresholdForAutoQuickPlay(OH_AVPlaybackStrategy *strategy, double seconds)
+{
+    CHECK_AND_RETURN_RET_LOG(strategy != nullptr, AV_ERR_INVALID_VAL, "strategy is nullptr");
+    strategy->thresholdForAutoQuickPlay = seconds;
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVPlaybackStrategy_SetPreferredHdr(OH_AVPlaybackStrategy *strategy, bool enabled)
+{
+    CHECK_AND_RETURN_RET_LOG(strategy != nullptr, AV_ERR_INVALID_VAL, "strategy is nullptr");
+    strategy->preferredHdr = enabled;
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVPlaybackStrategy_SetShowFirstFrameOnPrepare(OH_AVPlaybackStrategy *strategy, bool enabled)
+{
+    CHECK_AND_RETURN_RET_LOG(strategy != nullptr, AV_ERR_INVALID_VAL, "strategy is nullptr");
+    strategy->showFirstFrameOnPrepare = enabled;
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVPlaybackStrategy_SetSuperResolutionEnable(OH_AVPlaybackStrategy *strategy, bool enabled)
+{
+    CHECK_AND_RETURN_RET_LOG(strategy != nullptr, AV_ERR_INVALID_VAL, "strategy is nullptr");
+    strategy->enableSuperResolution = enabled;
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVPlaybackStrategy_SetMutedMediaType(OH_AVPlaybackStrategy *strategy, OH_MediaType mediaType)
+{
+    CHECK_AND_RETURN_RET_LOG(strategy != nullptr, AV_ERR_INVALID_VAL, "strategy is nullptr");
+    CHECK_AND_RETURN_RET_LOG(mediaType >= OH_MediaType::MEDIA_TYPE_AUD &&
+        mediaType <= OH_MediaType::MEDIA_TYPE_AUXILIARY, AV_ERR_INVALID_VAL, "invalid MediaType value");
+    strategy->mutedMediaType = mediaType;
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVPlaybackStrategy_SetPreferredAudioLanguage(OH_AVPlaybackStrategy *strategy, const char *lang)
+{
+    CHECK_AND_RETURN_RET_LOG(strategy != nullptr, AV_ERR_INVALID_VAL, "strategy is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lang != nullptr, AV_ERR_INVALID_VAL, "lang is nullptr");
+    strategy->preferredAudioLanguage = lang;
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVPlaybackStrategy_SetPreferredSubtitleLanguage(OH_AVPlaybackStrategy *strategy, const char *lang)
+{
+    CHECK_AND_RETURN_RET_LOG(strategy != nullptr, AV_ERR_INVALID_VAL, "strategy is nullptr");
+    CHECK_AND_RETURN_RET_LOG(lang != nullptr, AV_ERR_INVALID_VAL, "lang is nullptr");
+    strategy->preferredSubtitleLanguage = lang;
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVPlaybackStrategy_SetKeepDecodingOnMute(OH_AVPlaybackStrategy *strategy, bool enabled)
+{
+    CHECK_AND_RETURN_RET_LOG(strategy != nullptr, AV_ERR_INVALID_VAL, "strategy is nullptr");
+    strategy->keepDecodingOnMute = enabled;
+    return AV_ERR_OK;
+}
+
 OH_AVFormat *OH_AVPlayer_GetTrackDescription(OH_AVPlayer *player, uint32_t index)
 {
     MEDIA_LOGI("OH_AVPlayer_GetTrackDescription S");
@@ -1545,5 +2280,100 @@ OH_AVFormat *OH_AVPlayer_GetPlaybackStatisticMetrics(OH_AVPlayer *player)
     OH_AVFormat *avFormat = OH_AVFormat_Create();
     CHECK_AND_RETURN_RET_LOG(avFormat != nullptr, nullptr, "Format is nullptr!");
     avFormat->format_ = format;
+    return avFormat;
+}
+
+OH_AVErrCode OH_AVPlayer_SetMediaSource(OH_AVPlayer *player, OH_AVMediaSource *source)
+{
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(source != nullptr, AV_ERR_INVALID_VAL, "mediaSource is nullptr!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+
+    if (player->state_ != PLAYER_IDLE) {
+        MEDIA_LOGE("current state is not idle, unsupport set mediaSource. state: %{public}d", player->state_);
+        return AV_ERR_INVALID_VAL;
+    }
+
+    playerObj->StartListenCurrentResource();
+
+    MediaSourceObject *mediaSourceObj = static_cast<MediaSourceObject *>(source);
+    CHECK_AND_RETURN_RET_LOG(mediaSourceObj->mediasource_ != nullptr, AV_ERR_INVALID_VAL,
+        "mediaSourceObj mediaSource_ is nullptr!");
+
+    int32_t ret = MSERR_OK;
+    MEDIA_LOGI("player SetSource Called");
+    if (mediaSourceObj->mediasource_->IsFileDescriptorSet()) {
+        auto desc = mediaSourceObj->mediasource_->GetFileDescriptor();
+        MEDIA_LOGD("SetMediaSource(fd), fd=%{public}d, offset=%{public}lld, size=%{public}lld",
+            desc.fd, desc.offset, desc.size);
+        ret = playerObj->player_->SetSource(desc.fd, desc.offset, desc.size);
+        MEDIA_LOGI("player SetSource(fd), ret: %{public}d", ret);
+    } else if (mediaSourceObj->mediasource_->IsDataSourceSet()) {
+        auto dataSource = mediaSourceObj->mediasource_->GetDataSource();
+        MEDIA_LOGD("SetMediaSource(data source)");
+        ret = playerObj->player_->SetSource(dataSource);
+        MEDIA_LOGI("player SetSource(data source), ret: %{public}d", ret);
+    } else {
+        MEDIA_LOGD("SetMediaSource(url), url=%{public}s", mediaSourceObj->mediasource_->url.c_str());
+        AVPlayStrategy strategy = {};
+        ret = playerObj->player_->SetMediaSource(mediaSourceObj->mediasource_, strategy);
+        MEDIA_LOGI("player SetMediaSource(url), ret: %{public}d", ret);
+    }
+
+    return ret == MSERR_OK ? AV_ERR_OK : AV_ERR_INVALID_VAL;
+}
+
+OH_AVErrCode OH_AVPlayer_SetSeiReceivedCallback(OH_AVPlayer *player, const int *payloadTypes, uint32_t typeNum,
+    OH_AVPlayerOnSeiMessageReceivedCallback callback, void *userData)
+{
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(payloadTypes != nullptr, AV_ERR_INVALID_VAL, "input payloadTypes is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(typeNum >= 0, AV_ERR_INVALID_VAL, "input typeNum is invalid!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+
+    AVPlayerState state;
+    OH_AVErrCode errCode = OH_AVPlayer_GetState(player, &state);
+    CHECK_AND_RETURN_RET_LOG(errCode == AV_ERR_OK, errCode, "current state is released, unsupport to on event");
+    CHECK_AND_RETURN_RET_LOG(state != AVPlayerState::AV_RELEASED, AV_ERR_INVALID_VAL,
+        "current state is released, unsupport to on event");
+
+    std::vector<int32_t> payloadTypesVec(payloadTypes, payloadTypes + typeNum);
+    playerObj->player_->SetSeiMessageCbStatus(true, payloadTypesVec);
+
+    errCode = AVPlayerSetPlayerCallback(player, playerObj, callback == nullptr);
+    CHECK_AND_RETURN_RET_LOG(errCode == AV_ERR_OK, errCode, "AVPlayerSetPlayerCallback AVPlayerOnInfoCallback error");
+    CHECK_AND_RETURN_RET_LOG(playerObj->callback_ != nullptr, AV_ERR_INVALID_VAL,
+        "AVPlayerSetPlayerCallback AVPlayerOnInfoCallback error");
+
+    int32_t ret = playerObj->callback_->SetOnSeiMessageReceivedCallback(callback, userData);
+    CHECK_AND_RETURN_RET_LOG(ret == AV_ERR_OK, AV_ERR_INVALID_VAL, "player SetPlayerCallback failed");
+
+    ret = playerObj->player_->SetPlayerCallback(playerObj->callback_);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player SetPlayerCallback failed");
+    return AV_ERR_OK;
+}
+
+uint32_t OH_AVSeiMessage_GetSeiCount(OH_AVSeiMessageArray *message)
+{
+    CHECK_AND_RETURN_RET_LOG(message != nullptr, 0, "input message is nullptr");
+    struct SeiMessageArray *messageObj = reinterpret_cast<SeiMessageArray *>(message);
+    CHECK_AND_RETURN_RET_LOG(messageObj != nullptr, 0, "messageObj is nullptr");
+
+    return messageObj->payloadGroup_.size();
+}
+
+OH_AVFormat *OH_AVSeiMessage_GetSei(OH_AVSeiMessageArray *message, uint32_t index)
+{
+    CHECK_AND_RETURN_RET_LOG(message != nullptr, nullptr, "input message is nullptr");
+    struct SeiMessageArray *messageObj = reinterpret_cast<SeiMessageArray *>(message);
+    CHECK_AND_RETURN_RET_LOG(messageObj != nullptr, nullptr, "messageObj is nullptr");
+    CHECK_AND_RETURN_RET_LOG(index < messageObj->payloadGroup_.size(), nullptr, "input index is invalid");
+
+    OH_AVFormat *avFormat = OH_AVFormat_Create();
+    CHECK_AND_RETURN_RET_LOG(avFormat != nullptr, nullptr, "GetSEI OH_AVFormat create failed");
+
+    avFormat->format_ = messageObj->payloadGroup_[index];
     return avFormat;
 }

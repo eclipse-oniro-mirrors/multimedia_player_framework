@@ -136,6 +136,7 @@ public:
     int32_t SetPlaybackRate(float rate) override;
     int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) override;
     int32_t GetPlaybackSpeed(PlaybackRateMode& mode) override;
+    int32_t GetPlaybackRate(float& rate) override;
     int32_t SelectBitRate(uint32_t bitRate, bool isAutoSelect) override;
     int32_t GetAudioEffectMode(int32_t &effectMode) override;
     int32_t SetAudioEffectMode(int32_t effectMode) override;

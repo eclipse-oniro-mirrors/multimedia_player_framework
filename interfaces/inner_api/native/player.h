@@ -84,11 +84,29 @@ struct AVMetricsEvent {
     std::map<std::string, int64_t> details;
 };
 
+struct FileDescriptor {
+    int32_t fd = 0;
+    int64_t offset = 0;
+    int64_t size = 0;
+};
+
 class AVMediaSource {
 public:
     AVMediaSource(std::string sourceUrl, std::map<std::string, std::string> sourceHeader)
         : url(sourceUrl), header(sourceHeader)
     {
+        fileDescriptorSet_ = false;
+        dataSrcSet_ = false;
+    }
+    AVMediaSource(FileDescriptor fileDescriptor)
+        : fileDescriptor_(fileDescriptor), fileDescriptorSet_(true)
+    {
+        dataSrcSet_ = false;
+    }
+    AVMediaSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
+        : dataSrc_(dataSrc), dataSrcSet_(true)
+    {
+        fileDescriptorSet_ = false;
     }
     ~AVMediaSource()
     {
@@ -112,6 +130,26 @@ public:
     {
         mediaStreamVec_.push_back(mediaStream);
     }
+
+    bool IsFileDescriptorSet()
+    {
+        return fileDescriptorSet_;
+    }
+
+    const FileDescriptor& GetFileDescriptor()
+    {
+        return fileDescriptor_;
+    }
+
+    bool IsDataSourceSet()
+    {
+        return dataSrcSet_;
+    }
+
+    const std::shared_ptr<IMediaDataSource>& GetDataSource()
+    {
+        return dataSrc_;
+    }
     std::string url {};
     std::string mimeType_ {};
     std::map<std::string, std::string> header;
@@ -119,6 +157,10 @@ public:
     std::shared_ptr<Plugins::IMediaSourceLoader> sourceLoader_ {nullptr};
 private:
     std::vector<AVPlayMediaStream> mediaStreamVec_;
+    FileDescriptor fileDescriptor_ {};
+    std::shared_ptr<IMediaDataSource> dataSrc_ {nullptr};
+    bool fileDescriptorSet_ = false;
+    bool dataSrcSet_ = false;
 };
 
 class PlayerKeys {
@@ -186,6 +228,8 @@ public:
     static constexpr std::string_view PLAYER_STALLING_TIMELINE = "stalling_timeline";
     static constexpr std::string_view PLAYER_STALLING_DURATION = "stalling_duration";
     static constexpr std::string_view PLAYER_STALLING_MEDIA_TYPE = "stalling_media_type";
+    static constexpr std::string_view PLAYER_SEI_PAYLOAD_TYPE = "payloadType";
+    static constexpr std::string_view PLAYER_SEI_PAYLOAD_CONTENT = "payload";
 };
 
 class PlaybackInfoKey {
@@ -737,6 +781,19 @@ public:
      * @version 1.0
      */
     virtual int32_t GetPlaybackSpeed(PlaybackRateMode &mode) = 0;
+
+    /**
+     * @brief get the current player playback rate
+     *
+     * @param rate the rate which can get.
+     * @return Returns {@link MSERR_OK} if the current player playback rate is get; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     */
+    virtual int32_t GetPlaybackRate(float &rate)
+    {
+        (void)rate;
+        return 0;
+    }
 
     /**
      * @brief set the bit rate use for hls player
