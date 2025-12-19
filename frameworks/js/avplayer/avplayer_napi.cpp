@@ -2868,8 +2868,8 @@ napi_value AVPlayerNapi::JsGetCurrentPresentationTimestamp(napi_env env, napi_ca
     int64_t currentPresentation = 0;
     (void)jsPlayer->player_->GetCurrentPresentationTimestamp(currentPresentation);
     if (currentPresentation != 0) {
-        MEDIA_LOGD("0x%{public}06" PRIXPTR " JsGetCurrentPresentationTimestamp Out, state %{public}s,
-            time: (%{public}" PRIu64 ")", FAKE_POINTER(jsPlayer), curState.c_str(), currentPresentation);
+        MEDIA_LOGD("0x%{public}06" PRIXPTR " JsGetCurrentPresentationTimestamp Out, time: (%{public}" PRIu64 ")",
+            FAKE_POINTER(jsPlayer), currentPresentation);
     }
 
     napi_value value = nullptr;
