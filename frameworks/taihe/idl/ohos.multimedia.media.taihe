@@ -278,6 +278,7 @@ interface AVPlayer {
     @set SetVideoScaleType(videoScaleType: Optional<VideoScaleType>): void;
     IsSeekContinuousSupported() : bool;
     GetPlaybackPosition(): i32;
+    GetCurrentPresentationTimestamp(): i64;
     SetBitrate(bitrate: i32): void;
     SetDecryptionConfig(mediaKeySession: drm.MediaKeySession, secureVideoPath: bool): void;
     GetMediaKeySystemInfos(): Array<drm.MediaKeySystemInfo>;

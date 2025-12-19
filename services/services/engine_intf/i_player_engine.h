@@ -306,6 +306,12 @@ public:
         return 0;
     }
 
+    virtual int32_t GetCurrentPresentationTimestamp(int64_t &currentPresentation)
+    {
+        (void)currentPresentation;
+        return 0;
+    }
+
     virtual int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes)
     {
         (void)status;

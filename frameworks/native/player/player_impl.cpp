@@ -531,6 +531,20 @@ int32_t PlayerImpl::GetPlaybackPosition(int32_t &playbackPosition)
     return ret;
 }
 
+int32_t PlayerImpl::GetCurrentPresentationTimestamp(int64_t &currentPresentation)
+{
+    int64_t startTime = SteadyClock::GetCurrentTimeMs();
+    ScopedTimer timer("GetCurrentPresentationTimestamp", OVERTIME_WARNING_MS);
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetCurrentPresentationTimestamp in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    int32_t ret = MSERR_OK;
+    LISTENER(ret = playerService_->GetCurrentPresentationTimestamp(currentPresentation),
+        "GetCurrentPresentationTimestamp", false, TIME_OUT_SECOND);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
+    hiAppEventAgent_->TraceApiEvent(ret, "GetCurrentPresentationTimestamp", startTime, traceId_);
+    return ret;
+}
+
 int32_t PlayerImpl::GetVideoTrackInfo(std::vector<Format> &videoTrack)
 {
     int64_t startTime = SteadyClock::GetCurrentTimeMs();

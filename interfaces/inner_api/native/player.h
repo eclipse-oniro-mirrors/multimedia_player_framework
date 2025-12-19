@@ -1213,6 +1213,12 @@ public:
         (void)trackIndex;
         return 0;
     }
+
+    virtual int32_t GetCurrentPresentationTimestamp(int64_t &currentPresentation)
+    {
+        currentPresentation = 0;
+        return 0;
+    }
 };
 
 class __attribute__((visibility("default"))) PlayerFactory {

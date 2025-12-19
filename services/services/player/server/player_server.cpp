@@ -1102,6 +1102,32 @@ int32_t PlayerServer::GetPlaybackPosition(int32_t &playbackPosition)
     return MSERR_OK;
 }
 
+int32_t PlayerServer::GetCurrentPresentationTimestamp(int64_t &currentPresentation)
+{
+    // delete lock, cannot be called concurrently with Reset or Release
+    if (lastOpStatus_ == PLAYER_IDLE || lastOpStatus_ == PLAYER_STATE_ERROR) {
+        MEDIA_LOGE("Can not GetCurrentPresentationTimestamp, currentState is %{public}s",
+            GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+
+    MEDIA_LOGD("PlayerServer GetCurrentPresentationTimestamp in, currentState is %{public}s",
+        GetStatusDescription(lastOpStatus_).c_str());
+    if (lastOpStatus_ != PLAYER_STARTED && lastOpStatus_ != PLAYER_PAUSED &&
+        lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
+        currentPresentation = 0;
+        MEDIA_LOGD("get position at state: %{public}s, return 0", GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_OK;
+    }
+
+    if (playerEngine_ != nullptr) {
+        int32_t ret = playerEngine_->GetCurrentPresentationTimestamp(currentPresentation);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, 
+            "Engine GetCurrentPresentationTimestamp Failed!");
+    }
+    return MSERR_OK;
+}
+
 int32_t PlayerServer::GetVideoTrackInfo(std::vector<Format> &videoTrack)
 {
     std::lock_guard<std::mutex> lock(mutex_);

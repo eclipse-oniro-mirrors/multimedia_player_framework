@@ -866,5 +866,11 @@ int32_t PlayerServerMock::GetTrackDescription(Format &format, uint32_t trackInde
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     return player_->GetTrackDescription(format, trackIndex);
 }
+
+int32_t PlayerServerMock::GetCurrentPresentationTimestamp(int64_t &currentPresentation)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->GetCurrentPresentationTimestamp(currentPresentation);
+}
 } // namespace Media
 } // namespace OHOS

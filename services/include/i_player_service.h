@@ -780,6 +780,12 @@ public:
         (void)trackIndex;
         return 0;
     }
+
+    virtual int32_t GetCurrentPresentationTimestamp(int64_t &currentPresentation)
+    {
+        (void) currentPresentation;
+        return 0;
+    }
 };
 } // namespace Media
 } // namespace OHOS

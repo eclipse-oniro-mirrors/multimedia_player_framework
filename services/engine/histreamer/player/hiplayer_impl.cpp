@@ -1771,6 +1771,17 @@ int32_t HiPlayerImpl::GetPlaybackPosition(int32_t& playbackPositionMs)
     return TransStatus(Status::OK);
 }
 
+int32_t HiPlayerImpl::GetCurrentPresentationTimestamp(int64_t &currentPresentation)
+{
+    FALSE_RETURN_V(syncManager_ != nullptr, TransStatus(Status::ERROR_NULL_POINTER));
+    currentPresentation = syncManager_->GetMediaTimeNow();
+    int64_t startPts = syncManager_->GetMediaStartPts();
+    FALSE_RETURN_V_MSG_E(startPts != HST_TIME_NONE, currentPresentation, "startPts is none");
+    currentPresentation += startPts;
+    MEDIA_LOG_D("GetCurrentPresentationTimestamp: " PUBLIC_LOG_D64, currentPresentation);
+    return TransStatus(Status::OK);
+}
+
 int32_t HiPlayerImpl::GetDuration(int32_t& durationMs)
 {
     durationMs = durationMs_.load();
