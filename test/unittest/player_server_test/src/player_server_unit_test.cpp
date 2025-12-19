@@ -5716,7 +5716,7 @@ HWTEST_F(PlayerServerUnitTest, Player_GetTrackDescription_001, TestSize.Level1)
  * @tc.number: Player_GetCurrentPresentationTimestamp _001
  * @tc.desc  : Test Player state
  */
-HWTEST_F(PlayerServerUnitTest, Player_GetCurrentPresentationTimestamp _001, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_GetCurrentPresentationTimestamp_001, TestSize.Level1)
 {
     int64_t currentPresentation;
     EXPECT_NE(MSERR_OK, player_->GetCurrentPresentationTimestamp(currentPresentation));
@@ -5743,7 +5743,7 @@ HWTEST_F(PlayerServerUnitTest, Player_GetCurrentPresentationTimestamp _001, Test
  * @tc.number: Player_GetCurrentPresentationTimestamp _002
  * @tc.desc  : Test Player state
  */
-HWTEST_F(PlayerServerUnitTest, Player_GetCurrentPresentationTimestamp _002, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_GetCurrentPresentationTimestamp_002, TestSize.Level1)
 {
     int64_t currentPresentation;
     std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
