@@ -2290,21 +2290,22 @@ int32_t HiPlayerImpl::GetPlaybackStatisticMetrics(Format &playbackStatisticMetri
     DownloadInfo downloadInfo;
     auto ret = demuxer_->GetDownloadInfo(downloadInfo);
     if (ret == Status::OK) {
-        playbackStatisticMetrics.PutIntValue("prepare_duration", static_cast<int32_t>(prepareDuration_));
-        playbackStatisticMetrics.PutIntValue(
-            "resource_connection_duration", static_cast<int32_t>(downloadInfo.firstDownloadTime));
-        playbackStatisticMetrics.PutIntValue(
-            "first_frame_decapsulation_duration", static_cast<int32_t>(downloadInfo.firstFrameDecapsulationTime));
-        playbackStatisticMetrics.PutIntValue("total_playback_time", static_cast<int32_t>(playTotalDuration_));
-        playbackStatisticMetrics.PutIntValue("loading_count", downloadInfo.loadingCount);
-        playbackStatisticMetrics.PutIntValue("total_loading_time", static_cast<int32_t>(downloadInfo.totalLoadingTime));
+        playbackStatisticMetrics.PutUintValue("prepare_duration", static_cast<uint32_t>(prepareDuration_));
+        playbackStatisticMetrics.PutUintValue(
+            "resource_connection_duration", static_cast<uint32_t>(downloadInfo.firstDownloadTime));
+        playbackStatisticMetrics.PutUintValue(
+            "first_frame_decapsulation_duration", static_cast<uint32_t>(downloadInfo.firstFrameDecapsulationTime));
+        playbackStatisticMetrics.PutUintValue("total_playback_time", static_cast<uint32_t>(playTotalDuration_));
+        playbackStatisticMetrics.PutUintValue("loading_count", static_cast<uint32_t>(downloadInfo.loadingCount));
+        playbackStatisticMetrics.PutUintValue(
+            "total_loading_time", static_cast<uint32_t>(downloadInfo.totalLoadingTime));
         playbackStatisticMetrics.PutLongValue("total_loading_Bytes", downloadInfo.totalDownLoadBytes);
         int64_t stallingCount = 0;
         dfxAgent_->GetTotalStallingTimes(&stallingCount);
-        playbackStatisticMetrics.PutIntValue("stalling_count", static_cast<int32_t>(stallingCount));
+        playbackStatisticMetrics.PutUintValue("stalling_count", static_cast<uint32_t>(stallingCount));
         int64_t totalStallingTime = 0;
         dfxAgent_->GetTotalStallingDuration(&totalStallingTime);
-        playbackStatisticMetrics.PutIntValue("total_stalling_time",  static_cast<int32_t>(totalStallingTime));
+        playbackStatisticMetrics.PutUintValue("total_stalling_time",  static_cast<uint32_t>(totalStallingTime));
     }
     return TransStatus(Status::OK);
 }

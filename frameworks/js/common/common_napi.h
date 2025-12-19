@@ -72,6 +72,7 @@ public:
     static napi_deferred CreatePromise(napi_env env, napi_ref ref, napi_value &result);
     static bool SetPropertyByValueType(napi_env env, napi_value &obj, std::shared_ptr<Meta> &meta, std::string key);
     static bool SetPropertyInt32(napi_env env, napi_value &obj, const std::string &key, int32_t value);
+    static bool SetPropertyUint32(napi_env env, napi_value &obj, const std::string &key, uint32_t value);
     static bool SetPropertyInt64(napi_env env, napi_value &obj, const std::string &key, int64_t value);
     static bool SetPropertyDouble(napi_env env, napi_value &obj, const std::string &key, double value);
     static bool SetPropertyBool(napi_env env, napi_value &obj, const std::string &key, bool value);

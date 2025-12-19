@@ -34,6 +34,9 @@ static bool DoMarshalling(MessageParcel &parcel, const Format &format)
             case FORMAT_TYPE_INT32:
                 (void)parcel.WriteInt32(it->second.val.int32Val);
                 break;
+            case FORMAT_TYPE_UINT32:
+                (void)parcel.WriteUint32(it->second.val.uint32Val);
+                break;
             case FORMAT_TYPE_INT64:
                 (void)parcel.WriteInt64(it->second.val.int64Val);
                 break;
@@ -96,6 +99,9 @@ static bool DoUnmarshalling(MessageParcel &parcel, Format &format)
         switch (valType) {
             case FORMAT_TYPE_INT32:
                 (void)format.PutIntValue(key, parcel.ReadInt32());
+                break;
+            case FORMAT_TYPE_UINT32:
+                (void)format.PutUintValue(key, parcel.ReadUint32());
                 break;
             case FORMAT_TYPE_INT64:
                 (void)format.PutLongValue(key, parcel.ReadInt64());
