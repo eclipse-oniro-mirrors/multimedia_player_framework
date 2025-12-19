@@ -177,7 +177,7 @@ public:
     int32_t SetLoudnessGain(float loudnessGain);
     int32_t GetMediaDescription(Format &format);
     int32_t GetTrackDescription(Format &format, uint32_t trackIndex);
-    int32_t GetCurrentPresentationTimestamp(int64_t &currentPresentation)
+    int32_t GetCurrentPresentationTimestamp(int64_t &currentPresentation);
 private:
     void SeekPrepare(int32_t &mseconds, PlayerSeekMode &mode);
     std::shared_ptr<IPlayerService> player_ = nullptr;
