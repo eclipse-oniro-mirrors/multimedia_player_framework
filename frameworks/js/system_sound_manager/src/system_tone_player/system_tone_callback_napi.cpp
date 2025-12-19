@@ -228,7 +228,7 @@ void SystemTonePlayerCallbackNapi::OnJsCallbackPlayFinished(std::shared_ptr<Syst
         } while (0);
         napi_close_handle_scope(env, scope);
     };
-    auto ret = napi_send_event(env_, task, napi_eprio_high);
+    auto ret = napi_send_event(env_, task, napi_eprio_high, "playFinished");
     if (ret != napi_status::napi_ok) {
         MEDIA_LOGE("Failed to SendEvent, ret = %{public}d", ret);
     }
@@ -289,7 +289,7 @@ void SystemTonePlayerCallbackNapi::OnJsCallbackError(std::shared_ptr<SystemToneP
         } while (0);
         napi_close_handle_scope(env, scope);
     };
-    auto ret = napi_send_event(env_, task, napi_eprio_high);
+    auto ret = napi_send_event(env_, task, napi_eprio_high, "error");
     if (ret != napi_status::napi_ok) {
         MEDIA_LOGE("Failed to SendEvent, ret = %{public}d", ret);
     }
