@@ -5749,7 +5749,7 @@ HWTEST_F(PlayerServerUnitTest, Player_GetCurrentPresentationTimestamp _002, Test
     std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
     (void)server_->Init();
     server_->lastOpStatus_ = PLAYER_STATE_ERROR;
-    EXPECT_NE(MSERR_OK, player_->GetCurrentPresentationTimestamp(currentPresentation));
+    EXPECT_NE(MSERR_OK, server_->GetCurrentPresentationTimestamp(currentPresentation));
 }
 } // namespace Media
 } // namespace OHOS
