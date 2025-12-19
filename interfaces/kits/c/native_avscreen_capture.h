@@ -343,36 +343,6 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetPickerMode(
     struct OH_AVScreenCapture *capture, OH_CapturePickerMode pickerMode);
 
 /**
- * @brief Set content filter to include specific content in the screen capture
- * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
- * @param capture Pointer to an OH_AVScreenCapture instance
- * @param windowIDs Pointer of windowID list to be added
- * @param windowCount length of windowID list
- * @return Function result code.
- *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
- *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} input capture is nullptr.
- *         {@link AV_SCREEN_CAPTURE_ERR_UNSUPPORT} if the operation is not supported.
- * @since 23
- */
-OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_AddWhiteListWindows(struct OH_AVScreenCapture *capture,
-    int32_t *windowIDs, int32_t windowCount);
-
-/**
- * @brief Set content filter to exclude specific content in the screen capture
- * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
- * @param capture Pointer to an OH_AVScreenCapture instance
- * @param windowIDs Pointer of windowID list to be deleted
- * @param windowCount length of windowID list
- * @return Function result code.
- *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
- *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} input capture is nullptr.
- *         {@link AV_SCREEN_CAPTURE_ERR_UNSUPPORT} if the operation is not supported.
- * @since 23
- */
-OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_RemoveWhiteListWindows(struct OH_AVScreenCapture *capture,
-    int32_t *windowIDs, int32_t windowCount);
-
-/**
  * @brief Add Window content to the screen capture content filter
  * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
  * @param filter Pointer to an OH_AVScreenCapture_ContentFilter instance
