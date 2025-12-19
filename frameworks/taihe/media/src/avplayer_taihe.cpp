@@ -1398,7 +1398,7 @@ int64_t AVPlayerImpl::GetCurrentPresentationTimestamp()
     (void)player_->GetCurrentPresentationTimestamp(currentPresentation);
     if (currentPresentation != 0) {
         MEDIA_LOGD("0x%{public}06" PRIXPTR " JsGettCurrentPresentationTimestamp Out, time: (%{public}" PRIu64 ")",
-            FAKE_POINTER(this), curState.c_str(), currentPresentation);
+            FAKE_POINTER(this), currentPresentation);
     }
     return currentPresentation;
 }
