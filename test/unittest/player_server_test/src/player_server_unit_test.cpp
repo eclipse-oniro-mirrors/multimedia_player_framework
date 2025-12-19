@@ -5710,6 +5710,7 @@ HWTEST_F(PlayerServerUnitTest, Player_GetTrackDescription_001, TestSize.Level1)
     EXPECT_EQ(MSERR_OK, player_->Stop());
     ASSERT_EQ(MSERR_OK, player_->GetTrackDescription(format, 0));
 }
+
 /**
  * @tc.name  : Test GetCurrentPresentationTimestamp  API
  * @tc.number: Player_GetCurrentPresentationTimestamp _001
@@ -5718,6 +5719,7 @@ HWTEST_F(PlayerServerUnitTest, Player_GetTrackDescription_001, TestSize.Level1)
 HWTEST_F(PlayerServerUnitTest, Player_GetCurrentPresentationTimestamp _001, TestSize.Level1)
 {
     int64_t currentPresentation;
+    EXPECT_NE(MSERR_OK, player_->GetCurrentPresentationTimestamp(currentPresentation));
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     ASSERT_EQ(MSERR_OK, player_->GetCurrentPresentationTimestamp(currentPresentation));
     EXPECT_EQ(MSERR_OK, player_->Prepare());
@@ -5734,6 +5736,20 @@ HWTEST_F(PlayerServerUnitTest, Player_GetCurrentPresentationTimestamp _001, Test
     ASSERT_EQ(false, player_->IsPlaying());
     ASSERT_EQ(PlayerStates::PLAYER_PLAYBACK_COMPLETE, player_->GetState());
     ASSERT_EQ(MSERR_OK, player_->GetCurrentPresentationTimestamp(currentPresentation));
+}
+
+/**
+ * @tc.name  : Test GetCurrentPresentationTimestamp  API
+ * @tc.number: Player_GetCurrentPresentationTimestamp _002
+ * @tc.desc  : Test Player state
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetCurrentPresentationTimestamp _002, TestSize.Level1)
+{
+    int64_t currentPresentation;
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    server_->lastOpStatus_ = PLAYER_STATE_ERROR;
+    EXPECT_NE(MSERR_OK, player_->GetCurrentPresentationTimestamp(currentPresentation));
 }
 } // namespace Media
 } // namespace OHOS
