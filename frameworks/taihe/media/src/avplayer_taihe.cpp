@@ -1385,7 +1385,7 @@ int64_t AVPlayerImpl::GetCurrentPresentationTimestamp()
 {
     MediaTrace trace("AVPlayerImpl::get currentPresentationTimestamp");
     MEDIA_LOGD("getCurrentPresentationTimestamp In");
-    int32_t currentPresentation = -1;
+    int64_t currentPresentation = -1;
     CHECK_AND_RETURN_RET_LOG(player_ != nullptr, currentPresentation, "failed to check player_");
     std::string curState = GetCurrentState();
     if (curState != AVPlayerState::STATE_PLAYING &&
