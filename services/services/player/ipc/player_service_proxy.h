@@ -48,6 +48,7 @@ public:
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t Stop() override;
     int32_t GetPlaybackSpeed(PlaybackRateMode &mode) override;
+    int32_t GetPlaybackRate(float &rate) override;
     int32_t Release() override;
     int32_t GetVideoHeight() override;
     int32_t ReleaseSync() override;

@@ -512,6 +512,7 @@ interface AVPlayer {
     OffSeiMessageReceived(payloadTypes: Optional<Array<i32>>, callback: Optional<(messages: Array<SeiMessage>,
         @optional playbackPosition: Optional<i32>) => void>): void;
     SetPlaybackRate(rate: f64): void;
+    GetPlaybackRate(): f64;
 }
 
 struct SeiMessage {

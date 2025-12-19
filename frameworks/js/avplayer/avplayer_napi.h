@@ -132,6 +132,10 @@ private:
      */
     static napi_value JsSetPlaybackRate(napi_env env, napi_callback_info info);
     /**
+     * GetPlaybackRate(): float
+     */
+    static napi_value JsGetPlaybackRate(napi_env env, napi_callback_info info);
+    /**
      * setLoudnessGain(loudness: double): void
      */
     static napi_value JsSetLoudnessGain(napi_env env, napi_callback_info info);

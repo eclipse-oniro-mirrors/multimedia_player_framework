@@ -226,6 +226,7 @@ public:
     PlayerSwitchMode TransferSwitchMode(int32_t mode);
     void GetAVPlayStrategyFromStrategyTmp(AVPlayStrategy &strategy, const AVPlayStrategyTmp &strategyTmp);
     void SetPlaybackRate(double rate);
+    double GetPlaybackRate();
 private:
     static bool IsSystemApp();
     void ResetUserParameters();

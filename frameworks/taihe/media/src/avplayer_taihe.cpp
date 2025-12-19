@@ -43,6 +43,7 @@ namespace {
     constexpr int32_t PLAY_RANGE_DEFAULT_VALUE = -1;
     constexpr int32_t SEEK_MODE_CLOSEST = 2;
     constexpr int32_t API_VERSION_18 = 18;
+    constexpr double RATE_DEFAULT_VALUE = 1.0;
 }
 
 namespace ANI::Media {
@@ -1438,6 +1439,24 @@ void AVPlayerImpl::SetPlaybackRate(double rate)
     }
     MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheSetRate Out", FAKE_POINTER(this));
     return;
+}
+
+double AVPlayerImpl::GetPlaybackRate()
+{
+    MediaTrace trace("AVPlayerImpl::getRate");
+    MEDIA_LOGI("TaiheGetRate In");
+
+    double emptyRate = 0;
+    if (IsLiveSource()) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "The stream is live stream, not support rate");
+        return emptyRate;
+    }
+
+    float rate = RATE_DEFAULT_VALUE;
+    int32_t ret = player_->GetPlaybackRate(rate);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, emptyRate, "failed to GetPlaybackRate");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheGetRate Out", FAKE_POINTER(this));
+    return static_cast<double>(rate);
 }
 
 void AVPlayerImpl::SetPlaybackRangeSync(int32_t startTimeMs, int32_t endTimeMs,

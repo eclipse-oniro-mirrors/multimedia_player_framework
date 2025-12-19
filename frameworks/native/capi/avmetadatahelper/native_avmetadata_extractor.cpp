@@ -21,6 +21,9 @@
 #include "avmetadata_extractor.h"
 #include "avmetadatahelper.h"
 #include "pixelmap_native_impl.h"
+#include "avmedia_source.h"
+#include "native_media_source_impl.h"
+#include "native_avmetadata_helper_callback.h"
 #include <unordered_set>
 
 namespace {
@@ -30,14 +33,68 @@ namespace {
 
 using namespace OHOS::Media;
 
+typedef struct OH_AVMetadataExtractor_OutputParam {
+    int32_t dstWidth = -1;
+    int32_t dstHeight = -1;
+    PixelFormat colorFormat = PixelFormat::RGB_565;
+    bool isSupportFlip = false;
+    bool convertColorSpace = true;
+} OH_AVMetadataExtractor_OutputParam;
+
 struct AVMetadataExtractorObject : public OH_AVMetadataExtractor {
-    explicit AVMetadataExtractorObject(const std::shared_ptr<AVMetadataHelper> &aVMetadataHelper)
-        : aVMetadataHelper_(aVMetadataHelper) {}
+    explicit AVMetadataExtractorObject(const std::shared_ptr<AVMetadataHelper> &aVMetadataHelper,
+        const std::shared_ptr<NativeAVMetadataHelperCallback> &callback)
+        : aVMetadataHelper_(aVMetadataHelper), helperCb_(callback) {}
     ~AVMetadataExtractorObject() = default;
 
     const std::shared_ptr<AVMetadataHelper> aVMetadataHelper_ = nullptr;
     std::atomic<HelperState> state_ = HelperState::HELPER_STATE_IDLE;
+    const std::shared_ptr<NativeAVMetadataHelperCallback> helperCb_ = nullptr;
 };
+
+class OnFrameFetchedCallback : public BaseCallback {
+public:
+    OnFrameFetchedCallback(OH_AVMetadataExtractor *extractor, OH_AVMetadataExtractor_OnFrameFetched callback,
+        void *userData): extractor_(extractor), callback_(callback), userData_(userData) {}
+    void OnInfo(const NativeCallbackOnInfo &info) override;
+
+private:
+    OH_AVMetadataExtractor *extractor_ = nullptr;
+    OH_AVMetadataExtractor_OnFrameFetched callback_ = nullptr;
+    void *userData_ = nullptr;
+};
+
+void OnFrameFetchedCallback::OnInfo(const NativeCallbackOnInfo &info)
+{
+    CHECK_AND_RETURN_LOG(callback_ != nullptr, "OnFrameFetchedCallback callback_ is nullptr");
+    OH_AVMetadataExtractor_FrameInfo frameInfo {
+        .requestTimeUs = info.frameInfo.requestedTimeUs,
+        .actualTimeUs = info.frameInfo.actualTimeUs,
+        .result = static_cast<OH_AVMetadataExtractor_FetchState>(info.frameInfo.fetchResult)
+    };
+
+    OH_AVErrCode code = AV_ERR_OK;
+    switch (info.frameInfo.err) {
+        case OPERATION_NOT_ALLOWED:
+            code = AV_ERR_OPERATE_NOT_PERMIT;
+            break;
+        case FETCH_TIMEOUT:
+            code = AV_ERR_TIMEOUT;
+            break;
+        case UNSUPPORTED_FORMAT:
+            code = AV_ERR_UNSUPPORTED_FORMAT;
+            break;
+        default:
+            code = AV_ERR_OK;
+    }
+
+    frameInfo.image = new(std::nothrow) OH_PixelmapNative(info.pixelMap);
+    if (frameInfo.image == nullptr) {
+        MEDIA_LOGE("create OH_PixelmapNative failed");
+        code = AV_ERR_NO_MEMORY;
+    }
+    callback_(extractor_, &frameInfo, code, userData_);
+}
 
 static std::unique_ptr<PixelMap> ConvertMemToPixelMap(std::shared_ptr<AVSharedMemory> sharedMemory)
 {
@@ -158,8 +215,15 @@ OH_AVMetadataExtractor* OH_AVMetadataExtractor_Create(void)
     std::shared_ptr<AVMetadataHelper> aVMetadataHelper =  AVMetadataHelperFactory::CreateAVMetadataHelper();
     CHECK_AND_RETURN_RET_LOG(aVMetadataHelper != nullptr, nullptr,
                              "failed to AVMetadataHelperFactory::CreateAVMetadataHelper");
+    std::shared_ptr<NativeAVMetadataHelperCallback> callback = std::make_shared<NativeAVMetadataHelperCallback>();
+    CHECK_AND_RETURN_RET_LOG(callback != nullptr, nullptr,
+                             "failed to create NativeAVMetadataHelperCallback");
 
-    struct AVMetadataExtractorObject *object = new(std::nothrow) AVMetadataExtractorObject(aVMetadataHelper);
+    callback->SetHelper(aVMetadataHelper);
+    int32_t res = aVMetadataHelper->SetHelperCallback(callback);
+    CHECK_AND_RETURN_RET_LOG(res == MSERR_OK, nullptr, "failed to SetHelperCallback");
+
+    struct AVMetadataExtractorObject *object = new(std::nothrow) AVMetadataExtractorObject(aVMetadataHelper, callback);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "failed to new AVMetadataExtractorObject");
     MEDIA_LOGI("0x%{public}06" PRIXPTR " OH_AVMetadataExtractor", FAKE_POINTER(object));
 
@@ -232,6 +296,125 @@ OH_AVErrCode OH_AVMetadataExtractor_FetchAlbumCover(OH_AVMetadataExtractor* extr
     return AV_ERR_OK;
 }
 
+OH_AVMetadataExtractor_OutputParam* OH_AVMetadataExtractor_OutputParam_Create()
+{
+    OH_AVMetadataExtractor_OutputParam *params = new(std::nothrow) OH_AVMetadataExtractor_OutputParam();
+    CHECK_AND_RETURN_RET_LOG(params != nullptr, nullptr, "create OH_AVMetadataExtractor_OutputParam failed!");
+    return params;
+}
+
+OH_AVErrCode OH_AVMetadataExtractor_OutputParam_Destroy(OH_AVMetadataExtractor_OutputParam* outputParam)
+{
+    CHECK_AND_RETURN_RET_LOG(outputParam != nullptr, AV_ERR_INVALID_VAL, "input outputParam is nullptr!");
+    delete outputParam;
+    return AV_ERR_OK;
+}
+
+bool OH_AVMetadataExtractor_OutputParam_SetSize(OH_AVMetadataExtractor_OutputParam* outputParam,
+    int32_t width, int32_t height)
+{
+    CHECK_AND_RETURN_RET_LOG(outputParam != nullptr, false, "input outputParam is nullptr");
+    outputParam->dstWidth = width;
+    outputParam->dstHeight = height;
+    return true;
+}
+
+OH_AVErrCode OH_AVMetadataExtractor_FetchFrameByTime(OH_AVMetadataExtractor* extractor,
+    int64_t timeUs, OH_AVMedia_SeekMode queryOption,
+    const OH_AVMetadataExtractor_OutputParam* outputParam, OH_PixelmapNative** pixelMap)
+{
+    CHECK_AND_RETURN_RET_LOG(extractor != nullptr, AV_ERR_INVALID_VAL, "input aVMetadataExtractor is nullptr");
+    CHECK_AND_RETURN_RET_LOG(timeUs >= 0, AV_ERR_INVALID_VAL, "input timeUs is invalid, must be non-negative");
+    CHECK_AND_RETURN_RET_LOG(outputParam != nullptr, AV_ERR_INVALID_VAL, "input outputParam is nullptr");
+    CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, AV_ERR_INVALID_VAL, "input pixelMap is nullptr");
+    struct AVMetadataExtractorObject *extractorObj = reinterpret_cast<AVMetadataExtractorObject *>(extractor);
+    CHECK_AND_RETURN_RET_LOG(extractorObj->aVMetadataHelper_ != nullptr, AV_ERR_INVALID_VAL,
+                             "aVMetadataHelper_ is nullptr");
+
+    CHECK_AND_RETURN_RET_LOG(extractorObj->state_ != HelperState::HELPER_STATE_HTTP_INTERCEPTED,
+                             AV_ERR_IO_CLEARTEXT_NOT_PERMITTED, "Http plaintext access is not allowed.");
+    CHECK_AND_RETURN_RET_LOG(extractorObj->state_ == HelperState::HELPER_STATE_RUNNABLE,
+                             AV_ERR_OPERATE_NOT_PERMIT, "Current state is not runnable, can't fetchFrame.");
+
+    bool isValidFormat = (outputParam->colorFormat == PixelFormat::RGB_565 ||
+                          outputParam->colorFormat == PixelFormat::RGB_888 ||
+                          outputParam->colorFormat == PixelFormat::RGBA_8888);
+    CHECK_AND_RETURN_RET_LOG(isValidFormat, AV_ERR_INVALID_VAL, "input colorFormat is invalid");
+
+    PixelMapParams param = {
+        .dstWidth = outputParam->dstWidth,
+        .dstHeight = outputParam->dstHeight,
+        .colorFormat = outputParam->colorFormat,
+        .isSupportFlip = outputParam->isSupportFlip,
+    };
+
+    auto pixelMapInner =
+        extractorObj->aVMetadataHelper_->FetchScaledFrameYuv(timeUs, static_cast<int32_t>(queryOption), param);
+    CHECK_AND_RETURN_RET_LOG(pixelMapInner != nullptr, AV_ERR_SERVICE_DIED, "aVMetadataHelper FetchFrame failed");
+
+    *pixelMap = new(std::nothrow) OH_PixelmapNative(pixelMapInner);
+    CHECK_AND_RETURN_RET_LOG(*pixelMap != nullptr, AV_ERR_INVALID_VAL, "create OH_PixelmapNative failed");
+    return AV_ERR_OK;
+}
+
+OH_AVFormat *OH_AVMetadataExtractor_GetTrackDescription(OH_AVMetadataExtractor *extractor, uint32_t index)
+{
+    CHECK_AND_RETURN_RET_LOG(extractor != nullptr, nullptr, "input extractor is nullptr");
+    OH_AVFormat *avFormat = new (std::nothrow) OH_AVFormat();
+    CHECK_AND_RETURN_RET_LOG(avFormat != nullptr, nullptr, "OH_AVFormat is nullptr");
+    struct AVMetadataExtractorObject *extractorObj = reinterpret_cast<AVMetadataExtractorObject *>(extractor);
+    CHECK_AND_RETURN_RET_LOG(extractorObj->aVMetadataHelper_ != nullptr, nullptr,
+                             "aVMetadataHelper_ is nullptr");
+
+    CHECK_AND_RETURN_RET_LOG(extractorObj->state_ == HelperState::HELPER_STATE_RUNNABLE,
+                             nullptr, "Current state is not runnable, can't fetchMetadata.");
+
+    std::shared_ptr<Meta> srcMeta = extractorObj->aVMetadataHelper_->GetAVMetadata();
+    CHECK_AND_RETURN_RET_LOG(srcMeta != nullptr, nullptr, "Metadata get failed");
+
+    std::string key = "tracks";
+    CHECK_AND_RETURN_RET_LOG(srcMeta->Find(key) != srcMeta->end(), nullptr, "failed to find key: tracks");
+
+    std::vector<Format> trackInfoVec;
+    bool res = srcMeta->GetData(key, trackInfoVec);
+    CHECK_AND_RETURN_RET_LOG(res, nullptr, "GetData failed, key %{public}s", key.c_str());
+
+    bool checkIndex = static_cast<size_t>(index) < trackInfoVec.size();
+    CHECK_AND_RETURN_RET_LOG(checkIndex, nullptr, "index out of range");
+    Format format = trackInfoVec.at(index);
+    avFormat->format_ = format;
+
+    return avFormat;
+}
+
+OH_AVFormat *OH_AVMetadataExtractor_GetCustomInfo(OH_AVMetadataExtractor *extractor)
+{
+    CHECK_AND_RETURN_RET_LOG(extractor != nullptr, nullptr, "input extractor is nullptr");
+    OH_AVFormat *avFormat = new (std::nothrow) OH_AVFormat();
+    CHECK_AND_RETURN_RET_LOG(avFormat != nullptr, nullptr, "OH_AVFormat is nullptr");
+    struct AVMetadataExtractorObject *extractorObj = reinterpret_cast<AVMetadataExtractorObject *>(extractor);
+    CHECK_AND_RETURN_RET_LOG(extractorObj->aVMetadataHelper_ != nullptr, nullptr,
+                             "aVMetadataHelper_ is nullptr");
+
+    CHECK_AND_RETURN_RET_LOG(extractorObj->state_ == HelperState::HELPER_STATE_RUNNABLE,
+                             nullptr, "Current state is not runnable, can't fetchMetadata.");
+
+    std::shared_ptr<Meta> srcMeta = extractorObj->aVMetadataHelper_->GetAVMetadata();
+    CHECK_AND_RETURN_RET_LOG(srcMeta != nullptr, nullptr, "Metadata get failed");
+
+    std::string key = "customInfo";
+    CHECK_AND_RETURN_RET_LOG(srcMeta->Find(key) != srcMeta->end(), nullptr, "failed to find key: customInfo");
+
+    std::shared_ptr<Meta> customData = std::make_shared<Meta>();
+    bool res = srcMeta->GetData(key, customData);
+    CHECK_AND_RETURN_RET_LOG(res, nullptr, "GetData failed, key %{public}s", key.c_str());
+    CHECK_AND_RETURN_RET_LOG(customData != nullptr, nullptr, "customData == nullptr");
+
+    auto ret = avFormat->format_.SetMeta(customData);
+    CHECK_AND_RETURN_RET_LOG(ret, nullptr, "AvMetadata set failed");
+    return avFormat;
+}
+
 OH_AVErrCode OH_AVMetadataExtractor_Release(OH_AVMetadataExtractor* extractor)
 {
     CHECK_AND_RETURN_RET_LOG(extractor != nullptr, AV_ERR_INVALID_VAL, "input extractor is nullptr");
@@ -239,6 +422,94 @@ OH_AVErrCode OH_AVMetadataExtractor_Release(OH_AVMetadataExtractor* extractor)
     CHECK_AND_RETURN_RET_LOG(extractorObj->aVMetadataHelper_ != nullptr, AV_ERR_INVALID_VAL,
                              "aVMetadataHelper_ is nullptr");
     extractorObj->aVMetadataHelper_->Release();
+    if (extractorObj->helperCb_ != nullptr) {
+        extractorObj->helperCb_->ClearCallbackReference();
+    }
     delete extractorObj;
     return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVMetadataExtractor_SetMediaSource(OH_AVMetadataExtractor *extractor, OH_AVMediaSource *source)
+{
+    CHECK_AND_RETURN_RET_LOG(extractor != nullptr, AV_ERR_INVALID_VAL, "input extractor is nullptr");
+    CHECK_AND_RETURN_RET_LOG(source != nullptr, AV_ERR_INVALID_VAL, "input source is nullptr");
+    struct AVMetadataExtractorObject *extractorObj = reinterpret_cast<AVMetadataExtractorObject *>(extractor);
+    CHECK_AND_RETURN_RET_LOG(extractorObj->aVMetadataHelper_ != nullptr, AV_ERR_INVALID_VAL,
+                             "aVMetadataHelper_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(extractorObj->state_ == HelperState::HELPER_STATE_IDLE, AV_ERR_INVALID_VAL,
+                             "Has set source once, unsupport set again");
+    MediaSourceObject *mediaSourceObj = reinterpret_cast<MediaSourceObject *>(source);
+    CHECK_AND_RETURN_RET_LOG(mediaSourceObj->mediasource_ != nullptr, AV_ERR_INVALID_VAL,
+                             "media source is nullptr");
+
+    int32_t ret = MSERR_OK;
+    if (mediaSourceObj->mediasource_->IsDataSourceSet()) {
+        std::shared_ptr<IMediaDataSource> dataSrc = mediaSourceObj->mediasource_->GetDataSource();
+        ret = extractorObj->aVMetadataHelper_->SetSource(dataSrc);
+        extractorObj->state_ = ret == MSERR_OK ? HelperState::HELPER_STATE_RUNNABLE : HelperState::HELPER_ERROR;
+    } else if (mediaSourceObj->mediasource_->IsFileDescriptorSet()) {
+        MEDIA_LOGE("OH_AVMetadataExtractor_SetMediaSource into fd branch");
+        return AV_ERR_INVALID_VAL;
+    } else {
+        ret = extractorObj->aVMetadataHelper_->SetUrlSource(
+            mediaSourceObj->mediasource_->url, mediaSourceObj->mediasource_->header);
+
+        if (ret != MSERR_OK) {
+            extractorObj->state_ = ret == MSERR_CLEARTEXT_NOT_PERMITTED ?
+                HelperState::HELPER_STATE_HTTP_INTERCEPTED : HelperState::HELPER_ERROR;
+        } else {
+            extractorObj->state_ = HelperState::HELPER_STATE_RUNNABLE;
+        }
+        extractorObj->aVMetadataHelper_->SetAVMetadataCaller(AVMetadataCaller::AV_METADATA_EXTRACTOR);
+    }
+    return ret == MSERR_OK ? AV_ERR_OK : AV_ERR_INVALID_VAL;
+}
+
+OH_AVErrCode OH_AVMetadataExtractor_FetchFramesByTimes(OH_AVMetadataExtractor* extractor, int64_t timeUs[],
+    uint16_t timesUsSize, OH_AVMedia_SeekMode queryOption, const OH_AVMetadataExtractor_OutputParam* outputParam,
+    OH_AVMetadataExtractor_OnFrameFetched onFrameInfoCallback, void* userData)
+{
+    CHECK_AND_RETURN_RET_LOG(extractor != nullptr, AV_ERR_INVALID_VAL, "input extractor is nullptr");
+
+    struct AVMetadataExtractorObject *extractorObj = reinterpret_cast<AVMetadataExtractorObject *>(extractor);
+    CHECK_AND_RETURN_RET_LOG(extractorObj->aVMetadataHelper_ != nullptr, AV_ERR_INVALID_VAL,
+        "aVMetadataHelper_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(extractorObj->helperCb_ != nullptr, AV_ERR_INVALID_VAL,
+        "helperCb_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(extractorObj->state_ != HelperState::HELPER_STATE_HTTP_INTERCEPTED,
+        AV_ERR_IO_CLEARTEXT_NOT_PERMITTED, "Http plaintext access is not allowed.");
+    CHECK_AND_RETURN_RET_LOG(extractorObj->state_ == HelperState::HELPER_STATE_RUNNABLE,
+        AV_ERR_SERVICE_DIED, "Service died");
+
+    CHECK_AND_RETURN_RET_LOG(timeUs != nullptr, AV_ERR_INVALID_VAL, "input timeUs is empty");
+    CHECK_AND_RETURN_RET_LOG(timesUsSize > 0, AV_ERR_INVALID_VAL, "input timesUsSize is invalid");
+    CHECK_AND_RETURN_RET_LOG(outputParam != nullptr, AV_ERR_INVALID_VAL, "input outputParam is nullptr");
+
+    std::shared_ptr<OnFrameFetchedCallback> callback =
+        std::make_shared<OnFrameFetchedCallback>(extractor, onFrameInfoCallback, userData);
+    CHECK_AND_RETURN_RET_LOG(callback != nullptr, AV_ERR_INVALID_VAL, "failed to create callback");
+
+    extractorObj->helperCb_->SaveCallbackReference(NativeAVMetadataHelperEvent::EVENT_PIXEL_COMPLETE, callback);
+    std::vector<int64_t> timeUsVector(timeUs, timeUs + timesUsSize);
+    PixelMapParams param = {
+        .dstWidth = outputParam->dstWidth,
+        .dstHeight = outputParam->dstHeight,
+        .colorFormat = outputParam->colorFormat,
+        .isSupportFlip = outputParam->isSupportFlip,
+        .convertColorSpace = outputParam->convertColorSpace
+    };
+    int32_t fetchRes = extractorObj->aVMetadataHelper_->
+        FetchScaledFrameYuvs(timeUsVector, static_cast<int32_t>(queryOption), param);
+    CHECK_AND_RETURN_RET_LOG(fetchRes == MSERR_OK, AV_ERR_SERVICE_DIED, "Service died");
+    return AV_ERR_OK;
+}
+
+void OH_AVMetadataExtractor_CancelAllFetchFrames(OH_AVMetadataExtractor* extractor)
+{
+    CHECK_AND_RETURN_LOG(extractor != nullptr, "input aVMetadataExtractor is nullptr");
+    struct AVMetadataExtractorObject *extractorObj = reinterpret_cast<AVMetadataExtractorObject *>(extractor);
+    CHECK_AND_RETURN_LOG(extractorObj->aVMetadataHelper_ != nullptr, "aVMetadataHelper_ is nullptr");
+
+    (void)extractorObj->aVMetadataHelper_->CancelAllFetchFrames();
+    return;
 }

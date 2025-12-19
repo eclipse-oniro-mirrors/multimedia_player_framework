@@ -100,6 +100,7 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("setLoudnessGain", JsSetLoudnessGain),
         DECLARE_NAPI_FUNCTION("setSpeed", JsSetSpeed),
         DECLARE_NAPI_FUNCTION("setPlaybackRate", JsSetPlaybackRate),
+        DECLARE_NAPI_FUNCTION("getPlaybackRate", JsGetPlaybackRate),
         DECLARE_NAPI_FUNCTION("setMediaSource", JsSetMediaSource),
         DECLARE_NAPI_FUNCTION("setBitrate", JsSelectBitrate),
         DECLARE_NAPI_FUNCTION("getTrackDescription", JsGetTrackDescription),
@@ -1021,6 +1022,34 @@ napi_value AVPlayerNapi::JsSetPlaybackRate(napi_env env, napi_callback_info info
     }
     MEDIA_LOGD("0x%{public}06" PRIXPTR " JsSetRate Out", FAKE_POINTER(jsPlayer));
     return result;
+}
+
+napi_value AVPlayerNapi::JsGetPlaybackRate(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::getRate");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsGetRate In");
+
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
+
+    if (jsPlayer->IsLiveSource()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "The stream is live stream, not support rate");
+        return result;
+    }
+
+    float rate = RATE_DEFAULT_VALUE;
+    int32_t ret = jsPlayer->player_->GetPlaybackRate(rate);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, result, "failed to GetPlaybackRate");
+
+    napi_value value = nullptr;
+    napi_status status = napi_create_double(env, rate, &value);
+    if (status != napi_ok) {
+        MEDIA_LOGE("GetPlaybackRate status != napi_ok");
+    }
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " JsGetRate Out", FAKE_POINTER(jsPlayer));
+    return value;
 }
 
 napi_value AVPlayerNapi::JsSetVolume(napi_env env, napi_callback_info info)

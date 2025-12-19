@@ -254,6 +254,8 @@ void PlayerServiceStub::FillPlayerFuncPart3()
         [this](MessageParcel &data, MessageParcel &reply) { return EnableCameraPostprocessing(data, reply); } };
     playerFuncs_[SET_PLAYERBACK_RATE] = { "Player::SetPlaybackRate",
         [this](MessageParcel &data, MessageParcel &reply) { return SetPlaybackRate(data, reply); } };
+    playerFuncs_[GET_PLAYERBACK_RATE] = { "Player::GetPlaybackRate",
+        [this](MessageParcel &data, MessageParcel &reply) { return GetPlaybackRate(data, reply); } };
     playerFuncs_[ENABLE_REPORT_MEDIA_PROGRESS] = { "Player::EnableReportMediaProgress",
         [this](MessageParcel &data, MessageParcel &reply) { return EnableReportMediaProgress(data, reply); } };
     playerFuncs_[ENABLE_REPORT_AUDIO_INTERRUPT] = { "Player::EnableReportAudioInterrupt",
@@ -639,6 +641,13 @@ int32_t PlayerServiceStub::GetPlaybackSpeed(PlaybackRateMode &mode)
     MediaTrace trace("PlayerServiceStub::GetPlaybackSpeed");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->GetPlaybackSpeed(mode);
+}
+
+int32_t PlayerServiceStub::GetPlaybackRate(float &rate)
+{
+    MediaTrace trace("PlayerServiceStub::GetPlaybackRate");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->GetPlaybackRate(rate);
 }
 
 int32_t PlayerServiceStub::SelectBitRate(uint32_t bitRate)
@@ -1198,6 +1207,16 @@ int32_t PlayerServiceStub::GetPlaybackSpeed(MessageParcel &data, MessageParcel &
     PlaybackRateMode mode = SPEED_FORWARD_1_00_X;
     int32_t ret = GetPlaybackSpeed(mode);
     reply.WriteInt32(mode);
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::GetPlaybackRate(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    float rate = 1.0f;
+    int32_t ret = GetPlaybackRate(rate);
+    reply.WriteFloat(rate);
     reply.WriteInt32(ret);
     return MSERR_OK;
 }

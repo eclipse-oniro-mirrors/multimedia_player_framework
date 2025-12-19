@@ -121,6 +121,12 @@ public:
         return 0;
     }
 
+    virtual int32_t GetPlaybackRate(float &rate)
+    {
+        (void)rate;
+        return 0;
+    }
+
     virtual int32_t SetDecryptConfig(const sptr<OHOS::DrmStandard::IMediaKeySessionService> &keySessionProxy,
         bool svp)
     {
@@ -302,6 +308,7 @@ public:
         GET_PLAYBACK_STATISTIC_METRICS,
         MAX_IPC_ID,                   // all IPC codes should be added before MAX_IPC_ID
         GET_GLOBAL_INFO,
+        GET_PLAYERBACK_RATE,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardPlayerService");

@@ -55,6 +55,21 @@ struct OH_AVRecorder : public OHOS::RefBase {
     virtual ~OH_AVRecorder() = default;
 };
 
+struct OH_AVHttpHeader : public OHOS::RefBase {
+    std::map<std::string, std::string> records = {};
+    std::mutex recordsMutex;
+};
+
+struct OH_AVMediaSource : public OHOS::RefBase {
+    OH_AVMediaSource() = default;
+    virtual ~OH_AVMediaSource() = default;
+};
+
+struct OH_AVMediaSourceLoadingRequest : public OHOS::RefBase {
+    OH_AVMediaSourceLoadingRequest() = default;
+    virtual ~OH_AVMediaSourceLoadingRequest() = default;
+};
+
 struct OH_AVImageGenerator : public OHOS::RefBase {
     OH_AVImageGenerator() = default;
     virtual ~OH_AVImageGenerator() = default;
@@ -90,8 +105,18 @@ struct OH_AVSamplesBuffer : public OHOS::RefBase {
     virtual ~OH_AVSamplesBuffer() = default;
 };
 
+struct OH_AVSeiMessageArray : public OHOS::RefBase {
+    OH_AVSeiMessageArray() = default;
+    virtual ~OH_AVSeiMessageArray() = default;
+};
+
 struct OH_LowPowerAVSink_Capability : public OHOS::RefBase {
     OH_LowPowerAVSink_Capability() = default;
     virtual ~OH_LowPowerAVSink_Capability() = default;
+};
+
+struct OH_AVMediaSourceLoader : public OHOS::RefBase {
+    OH_AVMediaSourceLoader() = default;
+    virtual ~OH_AVMediaSourceLoader() = default;
 };
 #endif // NATIVE_SCREEN_CAPTURE_MAGIC_H

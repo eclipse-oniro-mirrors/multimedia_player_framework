@@ -134,6 +134,12 @@ public:
         return 0;
     }
 
+    virtual int32_t GetPlaybackRate(float &rate)
+    {
+        (void)rate;
+        return 0;
+    }
+
     virtual int32_t SetLooping(bool loop) = 0;
     virtual int32_t SetParameter(const Format &param) = 0;
     virtual int32_t SelectBitRate(uint32_t bitRate, bool isAutoSelect)
