@@ -341,6 +341,7 @@ private:
     PlayerErrorType GetPlayerErrorTypeFromAudioServerSinkPlugin(const Event& event);
     PlayerErrorType GetPlayerErrorTypeFromEngine(const Event& event);
     bool IsPrepareStateValid() const;
+    void MetricsUpdateDuration();
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
