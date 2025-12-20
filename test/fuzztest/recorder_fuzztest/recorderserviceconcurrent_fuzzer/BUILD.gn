@@ -19,7 +19,7 @@ MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
 
 ##############################fuzztest##########################################
 ohos_fuzztest("RecorderServiceConCurrentFuzzTest") {
-  module_out_path = "$MODULE_SCREENCAPTURE_OUTPUT_PATH/recorder/concurrent"
+  module_out_path = "./player_framework/ScreenCapture/concurrent/recorder"
   fuzz_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/recorder_fuzztest/recorderserviceconcurrent_fuzzer"
   resource_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/resource/ohos_test.xml"
 
