@@ -1104,7 +1104,6 @@ int32_t PlayerServer::GetPlaybackPosition(int32_t &playbackPosition)
 
 int32_t PlayerServer::GetCurrentPresentationTimestamp(int64_t &currentPresentation)
 {
-    // delete lock, cannot be called concurrently with Reset or Release
     if (lastOpStatus_ == PLAYER_IDLE || lastOpStatus_ == PLAYER_STATE_ERROR) {
         MEDIA_LOGE("Can not GetCurrentPresentationTimestamp, currentState is %{public}s",
             GetStatusDescription(lastOpStatus_).c_str());
@@ -1120,11 +1119,10 @@ int32_t PlayerServer::GetCurrentPresentationTimestamp(int64_t &currentPresentati
         return MSERR_OK;
     }
 
-    if (playerEngine_ != nullptr) {
-        int32_t ret = playerEngine_->GetCurrentPresentationTimestamp(currentPresentation);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
-            "Engine GetCurrentPresentationTimestamp Failed!");
-    }
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    int32_t ret = playerEngine_->GetCurrentPresentationTimestamp(currentPresentation);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
+        "Engine GetCurrentPresentationTimestamp Failed!");
     return MSERR_OK;
 }
 
