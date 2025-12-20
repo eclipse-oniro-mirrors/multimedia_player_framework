@@ -1232,6 +1232,16 @@ void HiPlayerImpl::UpdatePlayTotalDuration()
     playTotalDuration_ += GetCurrentMillisecond() - startTime;
 }
 
+void HiPlayerImpl::MetricsUpdateDuration()
+{
+    if (pipelineStates_ != PlayerStates::PLAYER_STARTED) {
+        return;
+    }
+    int64_t startTime = startTime_.load();
+    startTime_ = GetCurrentMillisecond();
+    playTotalDuration_ += startTime_ - startTime;
+}
+
 void HiPlayerImpl::AppendPlayerMediaInfo()
 {
     MEDIA_LOG_D_SHORT("AppendPlayerMediaInfo entered.");
@@ -2298,6 +2308,7 @@ int32_t HiPlayerImpl::GetPlaybackStatisticMetrics(Format &playbackStatisticMetri
     DownloadInfo downloadInfo;
     auto ret = demuxer_->GetDownloadInfo(downloadInfo);
     if (ret == Status::OK) {
+        MetricsUpdateDuration();
         playbackStatisticMetrics.PutUintValue("prepare_duration", static_cast<uint32_t>(prepareDuration_));
         playbackStatisticMetrics.PutUintValue(
             "resource_connection_duration", static_cast<uint32_t>(downloadInfo.firstDownloadTime));
