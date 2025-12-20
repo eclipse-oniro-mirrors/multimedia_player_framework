@@ -3573,8 +3573,10 @@ int32_t ScreenCaptureServer::ExcludeContent(ScreenCaptureContentFilter &contentF
 
 int32_t ScreenCaptureServer::AddWhiteListWindows(const std::vector<uint64_t> &windowIDsVec)
 {
-    std::unique_lock<std::mutex> lock(mutex_);
     MediaTrace trace("ScreenCaptureServer::AddWhiteListWindows");
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::STARTED, MSERR_INVALID_OPERATION,
+        "AddWhiteListWindows failed, virtual screen not create");
     CHECK_AND_RETURN_RET_LOG(captureState_ != AVScreenCaptureState::STOPPED, MSERR_INVALID_OPERATION,
         "AddWhiteListWindows failed, capture is STOPPED");
     for (const auto& windowID : windowIDsVec) {
@@ -3585,13 +3587,16 @@ int32_t ScreenCaptureServer::AddWhiteListWindows(const std::vector<uint64_t> &wi
         windowIDsVec);
     CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
         "AddVirtualScreenWhiteList failed, ret:%{public}d", ret);
+    MEDIA_LOGI("AddWhiteListWindows success");
     return MSERR_OK;
 }
 
 int32_t ScreenCaptureServer::RemoveWhiteListWindows(const std::vector<uint64_t> &windowIDsVec)
 {
-    std::unique_lock<std::mutex> lock(mutex_);
     MediaTrace trace("ScreenCaptureServer::RemoveWhiteListWindows");
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::STARTED, MSERR_INVALID_OPERATION,
+        "RemoveWhiteListWindows failed, virtual screen not create");
     CHECK_AND_RETURN_RET_LOG(captureState_ != AVScreenCaptureState::STOPPED, MSERR_INVALID_OPERATION,
         "RemoveWhiteListWindows failed, capture is STOPPED");
     for (const auto& windowID : windowIDsVec) {
@@ -3602,6 +3607,7 @@ int32_t ScreenCaptureServer::RemoveWhiteListWindows(const std::vector<uint64_t> 
         windowIDsVec);
     CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
         "RemoveVirtualScreenWhiteList failed, ret:%{public}d", ret);
+    MEDIA_LOGI("RemoveWhiteListWindows success");
     return MSERR_OK;
 }
 
