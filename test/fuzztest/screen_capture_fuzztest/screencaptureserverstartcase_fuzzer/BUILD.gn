@@ -37,6 +37,7 @@ ohos_fuzztest("ScreenCaptureServerStartCaseFuzzTest") {
     "$MEDIA_ROOT_DIR/services/services/player/subscriber",
     "$MEDIA_ROOT_DIR/services/services/media_data_source/ipc",
     "$MEDIA_ROOT_DIR/services/services/media_data_source/server",
+    "$MEDIA_ROOT_DIR/services/services/dolby_passthrough/ipc",
     "$MEDIA_ROOT_DIR/services/services/monitor/client",
     "$MEDIA_ROOT_DIR/services/services/monitor/ipc",
     "$MEDIA_ROOT_DIR/services/services/monitor/server",

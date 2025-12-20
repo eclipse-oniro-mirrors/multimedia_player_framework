@@ -236,6 +236,12 @@ public:
         return 0;
     }
 
+    virtual int32_t RegisterDeviceCapability(const sptr<IRemoteObject> &object)
+    {
+        (void)object;
+        return 0;
+    }
+
     /**
      * IPC code ID
      */
@@ -307,6 +313,7 @@ public:
         GET_TRACK_DESCRIPTION,
         GET_PLAYBACK_STATISTIC_METRICS,
         MAX_IPC_ID,                   // all IPC codes should be added before MAX_IPC_ID
+        REGISTER_DEVICE_CAPABILITY,
         GET_GLOBAL_INFO,
         GET_PLAYERBACK_RATE,
     };

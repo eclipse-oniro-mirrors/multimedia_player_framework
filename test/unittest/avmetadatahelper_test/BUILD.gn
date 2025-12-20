@@ -41,6 +41,7 @@ ohos_unittest("avmetadatahelper_unit_test") {
     "player/subscriber",
     "media_data_source/ipc",
     "media_data_source/server",
+    "dolby_passthrough/ipc",
     "monitor/client",
     "monitor/ipc",
     "monitor/server",

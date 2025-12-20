@@ -18,6 +18,7 @@
 #include "player_listener_proxy.h"
 #include "media_data_source_proxy.h"
 #include "media_server_manager.h"
+#include "dolby_passthrough_proxy.h"
 
 #ifdef SUPPORT_AVPLAYER_DRM
 #include "media_key_session_service_proxy.h"
@@ -274,6 +275,8 @@ void PlayerServiceStub::FillPlayerFuncPart3()
         [this](MessageParcel &data, MessageParcel &reply) { return GetMediaDescription(data, reply); } };
     playerFuncs_[GET_TRACK_DESCRIPTION] = { "Player::GET_TRACK_DESCRIPTION",
         [this](MessageParcel &data, MessageParcel &reply) { return GetTrackDescription(data, reply); } };
+    playerFuncs_[REGISTER_DEVICE_CAPABILITY] = { "Player::RegisterDeviceCapability",
+        [this](MessageParcel &data, MessageParcel &reply) { return RegisterDeviceCapability(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
@@ -1611,6 +1614,28 @@ int32_t PlayerServiceStub::GetTrackDescription(Format &format, uint32_t trackInd
     MediaTrace trace("PlayerServiceStub::GetTrackDescription");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->GetTrackDescription(format, trackIndex);
+}
+
+int32_t PlayerServiceStub::RegisterDeviceCapability(MessageParcel &data, MessageParcel &reply)
+{
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
+    reply.WriteInt32(RegisterDeviceCapability(object));
+    return MSERR_OK;
+}
+ 
+int32_t PlayerServiceStub::RegisterDeviceCapability(const sptr<IRemoteObject> &object)
+{
+    MediaTrace trace("PlayerServiceStub::RegisterDeviceCapability");
+    MEDIA_LOGI("PlayerServiceStub RegisterDeviceCapability");
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "registerDeviceCapability object is nullptr");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+ 
+    sptr<IStandardDolbyPassthrough> proxy = iface_cast<IStandardDolbyPassthrough>(object);
+    CHECK_AND_RETURN_RET_LOG(proxy != nullptr, MSERR_NO_MEMORY, "failed to convert DolbyPassthroughProxy");
+    std::shared_ptr<IDolbyPassthrough> dolbyPassthrough = std::make_shared<DolbyPassthroughCallback>(proxy);
+    CHECK_AND_RETURN_RET_LOG(dolbyPassthrough != nullptr, MSERR_NO_MEMORY,
+        "failed to new DolbyPassthroughCallbackCallback");
+    return playerServer_->SetDolbyPassthroughCallback(dolbyPassthrough);
 }
 } // namespace Media
 } // namespace OHOS

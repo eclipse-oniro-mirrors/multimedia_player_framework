@@ -793,6 +793,19 @@ public:
         (void)trackIndex;
         return 0;
     }
+
+    virtual int32_t RegisterDeviceCapability(IsAudioPassthrough callback, GetDolbyList getDolbyList)
+    {
+        (void)callback;
+        (void)getDolbyList;
+        return 0;
+    }
+
+    virtual int32_t SetDolbyPassthroughCallback(std::shared_ptr<IDolbyPassthrough> &dolbyPassthrough)
+    {
+        (void)dolbyPassthrough;
+        return 0;
+    }
 };
 } // namespace Media
 } // namespace OHOS

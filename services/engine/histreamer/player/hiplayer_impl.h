@@ -206,6 +206,8 @@ public:
     void CleanUnusedListener();
     int32_t SetBuffering(bool isBuffering);
     int32_t GetMediaDescription(Format &format) override;
+    bool IsAudioPass(const char* mimeType) override;
+    std::vector<std::string> GetDolbyList() override;
 
 private:
     enum HiplayerSvpMode : int32_t {

@@ -122,6 +122,7 @@ void PlayerServiceProxy::InitPlayerFuncsPart2()
     playerFuncs_[ENABLE_REPORT_AUDIO_INTERRUPT] = "Player::EnableReportAudioInterrupt";
     playerFuncs_[SET_CAMERA_POST_POSTPROCESSING] = "Player::SetCameraPostprocessing";
     playerFuncs_[GET_GLOBAL_INFO] = "Player::GetGlobalInfo";
+    playerFuncs_[REGISTER_DEVICE_CAPABILITY] = "Player::RegisterDeviceCapability";
 }
 
 int32_t PlayerServiceProxy::SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -1447,6 +1448,24 @@ int32_t PlayerServiceProxy::GetTrackDescription(Format &format, uint32_t trackIn
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "GetTrackDescription failed, error: %{public}d", error);
     MediaParcel::Unmarshalling(reply, format);
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::RegisterDeviceCapability(const sptr<IRemoteObject> &object)
+{
+    MediaTrace trace("PlayerServiceProxy::RegisterDeviceCapability");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+ 
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+ 
+    (void)data.WriteRemoteObject(object);
+    int32_t error = SendRequest(REGISTER_DEVICE_CAPABILITY, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "RegisterDeviceCapability failed, error: %{public}d", error);
+ 
     return reply.ReadInt32();
 }
 } // namespace Media

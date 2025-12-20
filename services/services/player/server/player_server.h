@@ -166,6 +166,10 @@ public:
     int32_t GetGlobalInfo(std::shared_ptr<Meta> &globalInfo) override;
     int32_t GetMediaDescription(Format &format) override;
     int32_t GetTrackDescription(Format &format, uint32_t trackIndex) override;
+    int32_t SetDolbyPassthroughCallback(std::shared_ptr<IDolbyPassthrough> &dolbyPassthrough) override;
+    static std::shared_ptr<IDolbyPassthrough>& GetPassthroughCallbackInstance();
+    bool IsAudioPass(const char* mimeType) override;
+    std::vector<std::string> GetDolbyList() override;
 
 protected:
     class BaseState;
@@ -316,6 +320,7 @@ private:
     std::atomic<bool> isFrozen_ = false;
     bool isMemoryExchanged_ = false;
     OHOS::Media::MediaType mutedMediaType_ = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
+    static std::vector<std::string> dolbyList_;
 };
 } // namespace Media
 } // namespace OHOS

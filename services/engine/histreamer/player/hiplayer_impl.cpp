@@ -150,6 +150,23 @@ public:
         return hiPlayerImpl_->OnCallback(filter, cmd, outType);
     }
 
+    bool IsAudioPassCallback(const char* mimeType) override
+    {
+        MEDIA_LOG_D("PlayerFilterCallback IsAudioPassCallback.");
+        std::shared_lock<std::shared_mutex> lk(cbMutex_);
+        FALSE_RETURN_V(hiPlayerImpl_ != nullptr, false);
+        FALSE_RETURN_V(mimeType != nullptr, false);
+        return hiPlayerImpl_->IsAudioPass(mimeType);
+    }
+
+    std::vector<std::string> GetDolbyList()
+    {
+        MEDIA_LOG_D("PlayerFilterCallback GetDolbyList.");
+        std::shared_lock<std::shared_mutex> lk(cbMutex_);
+        FALSE_RETURN_V(hiPlayerImpl_ != nullptr, {});
+        return hiPlayerImpl_->GetDolbyList();
+    }
+
     void NotifyRelease() override
     {
         MEDIA_LOG_D("PlayerEventReceiver NotifyRelease.");
@@ -3568,6 +3585,8 @@ Status HiPlayerImpl::OnCallback(std::shared_ptr<Filter> filter, const FilterCall
                 return LinkSubtitleSinkFilter(filter, outType);
             case StreamType::STREAMTYPE_RAW_AUDIO:
                 return LinkAudioSinkFilter(filter, outType);
+            case StreamType::STREAMTYPE_DOLBY:
+                return LinkAudioSinkFilter(filter, outType);
             case StreamType::STREAMTYPE_ENCODED_AUDIO:
                 return LinkAudioDecoderFilter(filter, outType);
 #ifdef SUPPORT_VIDEO
@@ -3656,6 +3675,9 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
     audioSink_->SetMaxAmplitudeCbStatus(maxAmplitudeCbStatus_);
     audioSink_->SetPerfRecEnabled(isPerfRecEnabled_);
     audioSink_->SetIsCalledBySystemApp(isCalledBySystemApp_);
+    if (type == StreamType::STREAMTYPE_DOLBY) {
+        audioSink_->SetAudioPassFlag(true);
+    }
     if (demuxer_ != nullptr && audioRenderInfo_ == nullptr) {
         std::vector<std::shared_ptr<Meta>> trackInfos = demuxer_->GetStreamMetaInfo();
         SetDefaultAudioRenderInfo(trackInfos);
@@ -4367,6 +4389,19 @@ int32_t HiPlayerImpl::GetMediaDescription(Format &format)
     std::shared_ptr<Meta> globalMeta = demuxer_->GetGlobalMetaInfo();
     format.SetMeta(globalMeta);
     return TransStatus(Status::OK);
+}
+
+bool HiPlayerImpl::IsAudioPass(const char* mimeType)
+{
+    MEDIA_LOG_D("IsAudioPass in");
+    FALSE_RETURN_V(mimeType != nullptr, false);
+    return callbackLooper_.IsAudioPass(mimeType);
+}
+
+std::vector<std::string> HiPlayerImpl::GetDolbyList()
+{
+    MEDIA_LOG_D("GetDolbyList in");
+    return callbackLooper_.GetDolbyList();
 }
 }  // namespace Media
 }  // namespace OHOS

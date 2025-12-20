@@ -106,6 +106,7 @@ public:
     int32_t GetGlobalInfo(std::shared_ptr<Meta> &globalInfo) override;
     int32_t GetMediaDescription(Format &format) override;
     int32_t GetTrackDescription(Format &format, uint32_t trackIndex) override;
+    int32_t RegisterDeviceCapability(IsAudioPassthrough callback, GetDolbyList getDolbyList) override;
 private:
     void ResetSeekVariables();
     void HandleSeekDoneInfo(PlayerOnInfoType type, int32_t extra);

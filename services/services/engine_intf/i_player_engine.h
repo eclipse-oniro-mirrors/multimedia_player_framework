@@ -48,6 +48,15 @@ public:
     {
         (void)event;
     }
+    virtual bool IsAudioPass(const char* mime)
+    {
+        (void)mime;
+        return false;
+    }
+    virtual std::vector<std::string> GetList()
+    {
+        return {};
+    }
 };
 
 class IPlayerEngine {
@@ -410,6 +419,15 @@ public:
     {
         (void)format;
         return 0;
+    }
+    virtual bool IsAudioPass(const char* mime)
+    {
+        (void)mime;
+        return false;
+    }
+    virtual std::vector<std::string> GetList()
+    {
+        return {};
     }
 };
 } // namespace Media

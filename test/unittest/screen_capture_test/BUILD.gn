@@ -53,6 +53,7 @@ config("screen_capture_test_config") {
     "$MEDIA_PLAYER_ROOT_DIR/services/services/player/subscriber",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_data_source/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_data_source/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/dolby_passthrough/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/monitor/client",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/monitor/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/monitor/server",

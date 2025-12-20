@@ -64,6 +64,7 @@ using namespace OHOS::HiviewDFX;
 using namespace OHOS::Media::Plugins;
 const std::string START_TAG = "PlayerCreate->Start";
 const std::string STOP_TAG = "PlayerStop->Destroy";
+std::vector<std::string> PlayerServer::dolbyList_ = {};
 static const std::unordered_map<int32_t, std::string> STATUS_TO_STATUS_DESCRIPTION_TABLE = {
     {PLAYER_STATE_ERROR, "PLAYER_STATE_ERROR"},
     {PLAYER_IDLE, "PLAYER_IDLE"},
@@ -2562,6 +2563,46 @@ int32_t PlayerServer::GetTrackDescription(Format &format, uint32_t trackIndex)
         }
     }
     return MSERR_INVALID_OPERATION;
+}
+
+int32_t PlayerServer::SetDolbyPassthroughCallback(std::shared_ptr<IDolbyPassthrough> &dolbyPassthrough)
+{
+    MEDIA_LOGI("PlayerServer::SetDolbyPassthroughCallback");
+    std::lock_guardstd::mutex lock(mutex_);
+    MediaTrace trace("PlayerServer::SetDolbyPassthroughCallback");
+    CHECK_AND_RETURN_RET_LOG(dolbyPassthrough != nullptr, MSERR_INVALID_VAL, "dolbyPassthrough is nullptr");
+    GetPassthroughCallbackInstance() = dolbyPassthrough;
+    dolbyList_.clear();
+    return MSERR_OK;
+}
+
+std::shared_ptr<IDolbyPassthrough>& PlayerServer::GetPassthroughCallbackInstance()
+{
+    MEDIA_LOGI("RegisterAudioPassthroughCallback: GetPassthroughCallbackInstance");
+    static auto instance = std::shared_ptr<IDolbyPassthrough>();
+    return instance;
+}
+
+bool PlayerServer::IsAudioPass(const char* mimeType)
+{
+    MEDIA_LOGI("PlayerFilterCallback IsAudioPassthrough.");
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET(mimeType != nullptr, false);
+    auto callbackInstance = PlayerServer::GetPassthroughCallbackInstance();
+    CHECK_AND_RETURN_RET(callbackInstance != nullptr, false);
+    return callbackInstance->IsAudioPass(mimeType);
+}
+
+std::vector<std::string> PlayerServer::GetDolbyList()
+{
+    MEDIA_LOGI("PlayerFilterCallback GetDolbyList.");
+    std::lock_guardstd::mutex lock(mutex_);
+    auto callbackInstance = PlayerServer::GetPassthroughCallbackInstance();
+    CHECK_AND_RETURN_RET(callbackInstance != nullptr, {});
+    if (dolbyList_.empty()) {
+        dolbyList_ = callbackInstance->GetList();
+    }
+    return dolbyList_;
 }
 } // namespace Media
 } // namespace OHOS

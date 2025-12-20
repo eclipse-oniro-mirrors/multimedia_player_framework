@@ -40,6 +40,7 @@ ohos_fuzztest("AVmetadataHelperDataSrcFuzzTest") {
     "$MEDIA_ROOT_DIR/services/services/avmetadatahelper/ipc",
     "$MEDIA_ROOT_DIR/services/services/common",
     "$MEDIA_ROOT_DIR/services/services/media_data_source/ipc",
+    "$MEDIA_ROOT_DIR/services/services/dolby_passthrough/ipc",
     "$MEDIA_ROOT_DIR/services/services/sa_media/ipc",
     "$MEDIA_ROOT_DIR/services/services/sa_media/server",
     "$MEDIA_ROOT_DIR/services/services/sa_media/server_manager",
