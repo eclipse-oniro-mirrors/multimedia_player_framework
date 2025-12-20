@@ -409,7 +409,6 @@ int32_t ScreenCaptureServiceStub::AddWhiteListWindows(MessageParcel &data, Messa
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     std::vector<uint64_t> vec;
-
     CHECK_AND_RETURN_RET_LOG(data.ReadUInt64Vector(&vec), MSERR_INVALID_STATE,
         "failed to read data from MessageParcel");
     int32_t ret = AddWhiteListWindows(vec);
@@ -422,7 +421,6 @@ int32_t ScreenCaptureServiceStub::RemoveWhiteListWindows(MessageParcel &data, Me
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     std::vector<uint64_t> vec;
-
     CHECK_AND_RETURN_RET_LOG(data.ReadUInt64Vector(&vec), MSERR_INVALID_STATE,
         "failed to read data from MessageParcel");
     int32_t ret = RemoveWhiteListWindows(vec);
