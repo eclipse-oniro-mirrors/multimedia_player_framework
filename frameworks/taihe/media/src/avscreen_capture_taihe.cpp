@@ -368,7 +368,7 @@ RetInfo AVScreenCaptureRecorderImpl::StopRecording()
 }
 
 int32_t AVScreenCaptureRecorderImpl::GetStrategy(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
-            ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config)
+        ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config)
 {
     // return MSERR_OK, because strategy is optional.
     CHECK_AND_RETURN_RET_LOG(config.strategy.has_value(), MSERR_OK, "without strategy");
