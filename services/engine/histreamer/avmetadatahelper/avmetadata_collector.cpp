@@ -441,9 +441,7 @@ void AVMetaDataCollector::ApplyOggTrackMetadataOverride(
 {
     for (const auto& track : trackInfos) {
         std::string mime;
-        if (!track->GetData(Tag::MIME_TYPE, mime) || !IsAudioMime(mime)) {
-            continue;
-        }
+        CHECK_AND_CONTINUE(track->GetData(Tag::MIME_TYPE, mime) && IsAudioMime(mime));
         for (const auto& [avKey, innerKey] : oggOverrideKeys) {
             std::string trackVal;
             if (!track->GetData(innerKey, trackVal) || trackVal.empty()) {
