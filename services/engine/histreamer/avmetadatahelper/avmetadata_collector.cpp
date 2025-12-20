@@ -32,7 +32,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "
 namespace OHOS {
 namespace Media {
 const int32_t FRAME_RATE_UNIT_MULTIPLE = 100; // the unit of frame rate is frames per 100s
-static constexpr int PICTURE_MAX_SIZE = 1024 * 1024;
+static constexpr int PICTURE_MAX_SIZE = 25 * 1024 * 1024;
 static constexpr int SECOND_DEVIDE_MS = 1000;
 const int32_t NUMBER_OF_CHARACTERS_IN_VALID_VIDEOROTATEORIENTATIONTYPE = 2;
 
