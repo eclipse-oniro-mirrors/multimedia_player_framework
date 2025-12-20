@@ -917,6 +917,14 @@ enum AVScreenCaptureFillMode:i32 {
     SCALE_TO_FILL = 1,
 }
 
+struct AVScreenCaptureStrategy {
+    enableDeviceLevelCapture: Optional<bool>;
+    keepCaptureDuringCall: Optional<bool>;
+    enableBFrame: Optional<bool>;
+    privacyMaskMode: Optional<i32>;
+}
+
+
 struct AVScreenCaptureRecordConfig {
     fd: i32;
     frameWidth: Optional<i32>;
@@ -928,6 +936,7 @@ struct AVScreenCaptureRecordConfig {
     preset: Optional<AVScreenCaptureRecordPreset>;
     displayId: Optional<i32>;
     fillMode: Optional<AVScreenCaptureFillMode>;
+    strategy: Optional<AVScreenCaptureStrategy>;
 }
 
 enum MetaSourceType: i32 {

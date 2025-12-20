@@ -90,6 +90,8 @@ public:
         ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config);
     int32_t GetRecorderInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
         ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config);
+    int32_t GetStrategy(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
+        ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config);
     void OnError(callback_view<void(uintptr_t)> callback);
     void OffError(optional_view<callback<void(uintptr_t)>> callback);
     ::taihe::string GetAVScreenCaptureConfigurableParametersSync(int32_t sessionId);
