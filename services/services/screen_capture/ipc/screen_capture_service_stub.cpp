@@ -409,16 +409,9 @@ int32_t ScreenCaptureServiceStub::AddWhiteListWindows(MessageParcel &data, Messa
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     std::vector<uint64_t> vec;
-    int32_t windowIdSize = 0;
 
-    CHECK_AND_RETURN_RET_LOG(data.ReadInt32(windowIdSize), MSERR_INVALID_STATE,
+    CHECK_AND_RETURN_RET_LOG(data.ReadUInt64Vector(&vec), MSERR_INVALID_STATE,
         "failed to read data from MessageParcel");
-    CHECK_AND_RETURN_RET_LOG(windowIdSize < MAX_FILTER_CONTENTS_COUNT, MSERR_INVALID_STATE,
-                             "windowID size is exceed max range");
-    if (windowIdSize > 0) {
-        CHECK_AND_RETURN_RET_LOG(data.ReadUInt64Vector(&vec), MSERR_INVALID_STATE,
-            "failed to read data from MessageParcel");
-    }
     int32_t ret = AddWhiteListWindows(vec);
     reply.WriteInt32(ret);
     return MSERR_OK;
@@ -429,16 +422,9 @@ int32_t ScreenCaptureServiceStub::RemoveWhiteListWindows(MessageParcel &data, Me
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     std::vector<uint64_t> vec;
-    int32_t windowIdSize = 0;
 
-    CHECK_AND_RETURN_RET_LOG(data.ReadInt32(windowIdSize), MSERR_INVALID_STATE,
+    CHECK_AND_RETURN_RET_LOG(data.ReadUInt64Vector(&vec), MSERR_INVALID_STATE,
         "failed to read data from MessageParcel");
-    CHECK_AND_RETURN_RET_LOG(windowIdSize < MAX_FILTER_CONTENTS_COUNT, MSERR_INVALID_STATE,
-                             "windowID size is exceed max range");
-    if (windowIdSize > 0) {
-        CHECK_AND_RETURN_RET_LOG(data.ReadUInt64Vector(&vec), MSERR_INVALID_STATE,
-            "failed to read data from MessageParcel");
-    }
     int32_t ret = RemoveWhiteListWindows(vec);
     reply.WriteInt32(ret);
     return MSERR_OK;
