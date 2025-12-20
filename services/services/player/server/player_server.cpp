@@ -1122,7 +1122,7 @@ int32_t PlayerServer::GetCurrentPresentationTimestamp(int64_t &currentPresentati
 
     if (playerEngine_ != nullptr) {
         int32_t ret = playerEngine_->GetCurrentPresentationTimestamp(currentPresentation);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, 
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
             "Engine GetCurrentPresentationTimestamp Failed!");
     }
     return MSERR_OK;
