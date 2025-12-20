@@ -235,6 +235,8 @@ int32_t AVScreenCaptureRecorderImpl::GetConfig(std::unique_ptr<AVScreenCaptureAs
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetVideoInfo");
     ret =  GetRecorderInfo(asyncCtx, config);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetRecorderInfo");
+    ret = GetStrategy(asyncCtx, config);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetStrategy");
     return MSERR_OK;
 }
 
@@ -363,6 +365,41 @@ RetInfo AVScreenCaptureRecorderImpl::StopRecording()
     int32_t ret = screenCapture_->StopScreenRecording();
     CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(ret, "StopRecording", ""));
     return RetInfo(MSERR_EXT_API9_OK, "");
+}
+
+int32_t AVScreenCaptureRecorderImpl::GetStrategy(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
+    ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config)
+{
+    // return MSERR_OK, because strategy is optional.
+    CHECK_AND_RETURN_RET_LOG(config.strategy.has_value(), MSERR_OK, "without strategy");
+    ScreenCaptureStrategy &strategy = asyncCtx->config_.strategy;
+    AVScreenCaptureStrategy avStrategy = config.strategy.value();
+    // get enableDeviceLevelCapture
+    if (avStrategy.enableDeviceLevelCapture.has_value()) {
+        strategy.enableDeviceLevelCapture = avStrategy.enableDeviceLevelCapture.value();
+        strategy.setByUser = true;
+    }
+    // get keepCaptureDuringCall
+    if (avStrategy.keepCaptureDuringCall.has_value()) {
+        strategy.keepCaptureDuringCall = avStrategy.keepCaptureDuringCall.value();
+        strategy.setByUser = true;
+    }
+    // get enableBFrame
+    if (avStrategy.enableBFrame.has_value()) {
+        strategy.enableBFrame = avStrategy.enableBFrame.value();
+        strategy.setByUser = true;
+    }
+    // get strategyForPrivacyMaskMode
+    if (avStrategy.privacyMaskMode.has_value()) {
+        CHECK_AND_RETURN_RET_LOG(avStrategy.privacyMaskMode.value() == 0 || avStrategy.privacyMaskMode.value() == 1,
+            MSERR_INVALID_VAL, "privacyMaskMode invalid");
+        strategy.strategyForPrivacyMaskMode = avStrategy.privacyMaskMode.value();
+        strategy.setByUser = true;
+    }
+    MEDIA_LOGI("GetStrategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d, "
+        "enableBFrame: %{public}d, strategyForPrivacyMaskMode: %{public}d", strategy.enableDeviceLevelCapture,
+        strategy.keepCaptureDuringCall, strategy.enableBFrame, strategy.strategyForPrivacyMaskMode);
+    return MSERR_OK;
 }
 
 void AVScreenCaptureRecorderImpl::InitSync(::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config)
