@@ -511,7 +511,6 @@ int32_t ScreenCaptureServiceProxy::AddWhiteListWindows(const std::vector<uint64_
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
- 
     bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
     token = data.WriteUInt64Vector(windowIDsVec);
@@ -527,7 +526,6 @@ int32_t ScreenCaptureServiceProxy::RemoveWhiteListWindows(const std::vector<uint
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
- 
     bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
     token = data.WriteUInt64Vector(windowIDsVec);
