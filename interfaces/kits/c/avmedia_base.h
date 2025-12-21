@@ -42,22 +42,22 @@ extern "C" {
 #endif
 
 /**
- * @brief Enumerates the frame query options about the relationship between the given time and a frame.
+ * @brief Enumerates the seek mode by the given time and the key frame.
  *
  * @since 23
  */
 typedef enum OH_AVMedia_SeekMode {
     /** Resource is located right after or at the given time */
-    OH_AVMETADATA_EXTRACTOR_QUERY_NEXT_SYNC = 0,
+    OH_AVMEDIA_SEEK_NEXT_SYNC = 0,
 
     /** Resource is located right before or at the given time */
-    OH_AVMETADATA_EXTRACTOR_QUERY_PREVIOUS_SYNC = 1,
+    OH_AVMEDIA_SEEK_PREVIOUS_SYNC = 1,
 
     /** Resource is located closest to or at the given time */
-    OH_AVMETADATA_EXTRACTOR_QUERY_CLOSEST_SYNC = 2,
+    OH_AVMEDIA_SEEK_CLOSEST_SYNC = 2,
 
     /** Resource is located closest to or at the given time */
-    OH_AVMETADATA_EXTRACTOR_QUERY_CLOSEST = 3,
+    OH_AVMEDIA_SEEK_CLOSEST = 3,
 } OH_AVMedia_SeekMode;
 
 #ifdef __cplusplus

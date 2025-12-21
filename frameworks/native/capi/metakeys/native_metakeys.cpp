@@ -41,5 +41,5 @@ const char* OH_AVMETA_KEY_TRACK_NAME = "track_name";
 const char* OH_AVMETA_KEY_HDR_TYPE = "hdr_type";
 const char* OH_AVMETA_KEY_ORIGINAL_WIDTH = "original_width";
 const char* OH_AVMETA_KEY_ORIGINAL_HEIGHT = "original_height";
-const char* OH_AVMETADATA_EXTRACTOR_REF_TRACK_IDS = "ref_track_ids";
-const char* OH_AVMETADATA_EXTRACTOR_TRACK_REF_TYPE = "track_ref_type";
+const char* OH_AVMETA_KEY_REF_TRACK_IDS = "ref_track_ids";
+const char* OH_AVMETA_KEY_TRACK_REF_TYPE = "track_ref_type";

@@ -303,11 +303,10 @@ OH_AVMetadataExtractor_OutputParam* OH_AVMetadataExtractor_OutputParam_Create()
     return params;
 }
 
-OH_AVErrCode OH_AVMetadataExtractor_OutputParam_Destroy(OH_AVMetadataExtractor_OutputParam* outputParam)
+void OH_AVMetadataExtractor_OutputParam_Destroy(OH_AVMetadataExtractor_OutputParam* outputParam)
 {
-    CHECK_AND_RETURN_RET_LOG(outputParam != nullptr, AV_ERR_INVALID_VAL, "input outputParam is nullptr!");
+    CHECK_AND_RETURN_LOG(outputParam != nullptr, "input outputParam is nullptr!");
     delete outputParam;
-    return AV_ERR_OK;
 }
 
 bool OH_AVMetadataExtractor_OutputParam_SetSize(OH_AVMetadataExtractor_OutputParam* outputParam,
@@ -320,7 +319,7 @@ bool OH_AVMetadataExtractor_OutputParam_SetSize(OH_AVMetadataExtractor_OutputPar
 }
 
 OH_AVErrCode OH_AVMetadataExtractor_FetchFrameByTime(OH_AVMetadataExtractor* extractor,
-    int64_t timeUs, OH_AVMedia_SeekMode queryOption,
+    int64_t timeUs, OH_AVMedia_SeekMode seekMode,
     const OH_AVMetadataExtractor_OutputParam* outputParam, OH_PixelmapNative** pixelMap)
 {
     CHECK_AND_RETURN_RET_LOG(extractor != nullptr, AV_ERR_INVALID_VAL, "input aVMetadataExtractor is nullptr");
@@ -349,7 +348,7 @@ OH_AVErrCode OH_AVMetadataExtractor_FetchFrameByTime(OH_AVMetadataExtractor* ext
     };
 
     auto pixelMapInner =
-        extractorObj->aVMetadataHelper_->FetchScaledFrameYuv(timeUs, static_cast<int32_t>(queryOption), param);
+        extractorObj->aVMetadataHelper_->FetchScaledFrameYuv(timeUs, static_cast<int32_t>(seekMode), param);
     CHECK_AND_RETURN_RET_LOG(pixelMapInner != nullptr, AV_ERR_SERVICE_DIED, "aVMetadataHelper FetchFrame failed");
 
     *pixelMap = new(std::nothrow) OH_PixelmapNative(pixelMapInner);
@@ -466,7 +465,7 @@ OH_AVErrCode OH_AVMetadataExtractor_SetMediaSource(OH_AVMetadataExtractor *extra
 }
 
 OH_AVErrCode OH_AVMetadataExtractor_FetchFramesByTimes(OH_AVMetadataExtractor* extractor, int64_t timeUs[],
-    uint16_t timesUsSize, OH_AVMedia_SeekMode queryOption, const OH_AVMetadataExtractor_OutputParam* outputParam,
+    uint16_t timesUsSize, OH_AVMedia_SeekMode seekMode, const OH_AVMetadataExtractor_OutputParam* outputParam,
     OH_AVMetadataExtractor_OnFrameFetched onFrameInfoCallback, void* userData)
 {
     CHECK_AND_RETURN_RET_LOG(extractor != nullptr, AV_ERR_INVALID_VAL, "input extractor is nullptr");
@@ -499,7 +498,7 @@ OH_AVErrCode OH_AVMetadataExtractor_FetchFramesByTimes(OH_AVMetadataExtractor* e
         .convertColorSpace = outputParam->convertColorSpace
     };
     int32_t fetchRes = extractorObj->aVMetadataHelper_->
-        FetchScaledFrameYuvs(timeUsVector, static_cast<int32_t>(queryOption), param);
+        FetchScaledFrameYuvs(timeUsVector, static_cast<int32_t>(seekMode), param);
     CHECK_AND_RETURN_RET_LOG(fetchRes == MSERR_OK, AV_ERR_SERVICE_DIED, "Service died");
     return AV_ERR_OK;
 }

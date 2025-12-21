@@ -66,14 +66,14 @@ OH_AVErrCode OH_AVHttpHeader_GetCount(OH_AVHttpHeader *header, uint32_t *count)
     return AV_ERR_OK;
 }
 
-OH_AVErrCode OH_AVHttpHeader_GetRecord(OH_AVHttpHeader *header, int index, const char **key, const char **value)
+OH_AVErrCode OH_AVHttpHeader_GetRecord(OH_AVHttpHeader *header, uint32_t index, const char **key, const char **value)
 {
     CHECK_AND_RETURN_RET_LOG(header != nullptr, AV_ERR_INVALID_VAL, "input header is nullptr!");
     CHECK_AND_RETURN_RET_LOG(key != nullptr, AV_ERR_INVALID_VAL, "input key is nullptr!");
     CHECK_AND_RETURN_RET_LOG(value != nullptr, AV_ERR_INVALID_VAL, "input value is nullptr!");
 
     std::lock_guard<std::mutex> lock(header->recordsMutex);
-    CHECK_AND_RETURN_RET_LOG(index >= 0 && static_cast<size_t>(index) < header->records.size(),
+    CHECK_AND_RETURN_RET_LOG(static_cast<size_t>(index) < header->records.size(),
         AV_ERR_INVALID_VAL, "input index is invalid!");
     auto it = header->records.begin();
     std::advance(it, index);

@@ -138,7 +138,7 @@ OH_AVErrCode OH_AVHttpHeader_AddRecord(OH_AVHttpHeader *header, const char *key,
  *     (@link AV_ERR_INVALID_VAL) if header is nullptr or index out of bound.
  * @since 23
  */
-OH_AVErrCode OH_AVHttpHeader_GetRecord(OH_AVHttpHeader *header, int index, const char **key, const char **value);
+OH_AVErrCode OH_AVHttpHeader_GetRecord(OH_AVHttpHeader *header, uint32_t index, const char **key, const char **value);
 
 /**
  * @brief Creates a media source from url.

@@ -783,7 +783,7 @@ OH_AVErrCode OH_AVPlayer_SetAmplitudeUpdateCallback(OH_AVPlayer *player, OH_AVPl
  *         {@link AV_ERR_INVALID_VAL} if input player is nullptr.
  * @since 23
  */
-OH_AVErrCode OH_AVPlayer_SetSeiReceivedCallback(OH_AVPlayer *player, const int *payloadTypes, uint32_t typeNum,
+OH_AVErrCode OH_AVPlayer_SetSeiReceivedCallback(OH_AVPlayer *player, const int32_t *payloadTypes, uint32_t typeNum,
     OH_AVPlayerOnSeiMessageReceivedCallback callback, void *userData);
 
 /**

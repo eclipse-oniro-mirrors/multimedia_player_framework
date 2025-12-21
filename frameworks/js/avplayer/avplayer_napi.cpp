@@ -1031,25 +1031,32 @@ napi_value AVPlayerNapi::JsGetPlaybackRate(napi_env env, napi_callback_info info
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsGetRate In");
 
-    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
-    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
+    auto promiseCtx = std::make_unique<AVPlayerContext>(env);
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+    promiseCtx->napi = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
 
-    if (jsPlayer->IsLiveSource()) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "The stream is live stream, not support rate");
-        return result;
-    }
-
-    float rate = RATE_DEFAULT_VALUE;
-    int32_t ret = jsPlayer->player_->GetPlaybackRate(rate);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, result, "failed to GetPlaybackRate");
-
-    napi_value value = nullptr;
-    napi_status status = napi_create_double(env, rate, &value);
-    if (status != napi_ok) {
-        MEDIA_LOGE("GetPlaybackRate status != napi_ok");
-    }
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " JsGetRate Out", FAKE_POINTER(jsPlayer));
-    return value;
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "JsGetPlaybackRate", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
+        [](napi_env env, void *data) {
+            auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
+            CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
+            auto jsPlayer = promiseCtx->napi;
+            if (jsPlayer->IsLiveSource()) {
+                promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "The stream is live stream, not support rate");
+            }
+            float rate = RATE_DEFAULT_VALUE;
+            jsPlayer->player_->GetPlaybackRate(rate);
+            promiseCtx->JsResult = std::make_unique<MediaJsResultDouble>(rate);
+        },
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
+    promiseCtx.release();
+    MEDIA_LOGD("JsGetRate Out");
+    return result;
 }
 
 napi_value AVPlayerNapi::JsSetVolume(napi_env env, napi_callback_info info)
