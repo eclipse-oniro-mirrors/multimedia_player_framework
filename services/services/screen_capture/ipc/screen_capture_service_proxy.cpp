@@ -516,7 +516,6 @@ int32_t ScreenCaptureServiceProxy::AddWhiteListWindows(const std::vector<uint64_
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
     token = data.WriteUInt64Vector(windowIDsVec);
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write windowIDsVec!");
-
     int error = Remote()->SendRequest(ADD_WHITE_LIST_WINDOWS, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "AddWhiteListWindows failed, error: %{public}d", error);
@@ -533,7 +532,6 @@ int32_t ScreenCaptureServiceProxy::RemoveWhiteListWindows(const std::vector<uint
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
     token = data.WriteUInt64Vector(windowIDsVec);
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write windowIDsVec!");
-
     int error = Remote()->SendRequest(REMOVE_WHITE_LIST_WINDOWS, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "RemoveWhiteListWindows failed, error: %{public}d", error);
