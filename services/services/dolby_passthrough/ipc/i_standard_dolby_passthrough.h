@@ -16,7 +16,7 @@
 #ifndef I_STANDARD_DOLBY_PASSTHROUGH_H
 #define I_STANDARD_DOLBY_PASSTHROUGH_H
 
-#include "ipc_types.h" 
+#include "ipc_types.h"
 #include "iremote_broker.h"
 #include "iremote_proxy.h"
 #include "iremote_stub.h"
