@@ -53,7 +53,7 @@ public:
         (void)mime;
         return false;
     }
-    virtual std::vector<std::string> GetList()
+    virtual std::vector<std::string> GetDolbyList()
     {
         return {};
     }
@@ -425,7 +425,7 @@ public:
         (void)mime;
         return false;
     }
-    virtual std::vector<std::string> GetList()
+    virtual std::vector<std::string> GetDolbyList()
     {
         return {};
     }
