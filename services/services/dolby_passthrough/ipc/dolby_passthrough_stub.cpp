@@ -35,7 +35,8 @@ DolbyPassthroughStub::~DolbyPassthroughStub()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destory", FAKE_POINTER(this));
 }
 
-int DolbyPassthroughStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
+int DolbyPassthroughStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
+    MessageOption &option)
 {
     MEDIA_LOGI("DolbyPassthroughStub::OnRemoteRequest");
     auto remoteDescriptor = data.ReadInterfaceToken();
