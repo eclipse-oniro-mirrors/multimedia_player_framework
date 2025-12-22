@@ -33,7 +33,7 @@
 namespace OHOS {
 namespace Media {
 using namespace MediaAVCodec;
-class StreamIDManager;
+class IStreamIDManager;
 
 struct AudioBufferEntry {
     AudioBufferEntry(uint8_t *buf, int32_t length) : buffer(std::move(buf)), size(length) {}
@@ -66,7 +66,7 @@ public:
         std::shared_ptr<ThreadPool> streamStopThreadPool);
     ~AudioStream();
     bool SetPcmSharedMemory(const std::shared_ptr<AudioStandard::AudioSharedMemory> &pcmBuffer, size_t pcmBufferSize);
-    void SetManager(std::weak_ptr<OHOS::Media::StreamIDManager> streamIDManager);
+    void SetManager(std::weak_ptr<OHOS::Media::IStreamIDManager> streamIDManager);
     void ConfigurePlayParameters(const AudioStandard::AudioRendererInfo &audioRendererInfo,
         const PlayParams &playParams);
     void ConfigurePlayParametersWithoutLock(const AudioStandard::AudioRendererInfo &audioRendererInfo,
@@ -129,7 +129,7 @@ private:
 
     ffrt::mutex streamLock_;
     std::weak_ptr<ThreadPool> streamStopThreadPool_;
-    std::weak_ptr<OHOS::Media::StreamIDManager> manager_;
+    std::weak_ptr<OHOS::Media::IStreamIDManager> manager_;
 
     int32_t loop_ = 0;
     int32_t priority_ = 0;

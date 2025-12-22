@@ -32,7 +32,7 @@ public:
     void TearDown(void);
 
 protected:
-    std::shared_ptr<StreamIDManager> streamIDManager_ = nullptr;
+    std::shared_ptr<StreamIDManagerWithSameSoundInterrupt> streamIDManager_ = nullptr;
 };
 }  // namespace Media
 }  // namespace OHOS

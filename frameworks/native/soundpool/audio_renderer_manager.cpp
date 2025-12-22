@@ -135,7 +135,7 @@ void AudioRendererManager::SetParallelManager(std::weak_ptr<ParallelStreamManage
     parallelManagerList_.push_back(parallelManager);
 }
 
-void AudioRendererManager::SetStreamIDManager(std::weak_ptr<StreamIDManager> streamIDManager)
+void AudioRendererManager::SetStreamIDManager(std::weak_ptr<IStreamIDManager> streamIDManager)
 {
     std::lock_guard<std::mutex> lock(renderMgrMutex_);
     streamIDManagerList_.push_back(streamIDManager);
