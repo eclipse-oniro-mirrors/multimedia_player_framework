@@ -147,6 +147,21 @@ private:
     int32_t value_;
 };
 
+class MediaJsResultDouble : public MediaJsResult {
+public:
+    explicit MediaJsResultDouble(double value)
+        : value_(value)
+    {
+    }
+    ~MediaJsResultDouble() = default;
+    napi_status GetJsResult(napi_env env, napi_value &result) override
+    {
+        return napi_create_double(env, value_, &result);
+    }
+private:
+    double value_;
+};
+
 class MediaJsResultString : public MediaJsResult {
 public:
     explicit MediaJsResultString(const std::string &value)
