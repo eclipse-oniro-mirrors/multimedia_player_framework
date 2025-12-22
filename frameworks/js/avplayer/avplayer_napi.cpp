@@ -120,6 +120,7 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("isSeekContinuousSupported", JsIsSeekContinuousSupported),
         DECLARE_NAPI_FUNCTION("getPlaybackPosition", JsGetPlaybackPosition),
         DECLARE_NAPI_FUNCTION("forceLoadVideo", JsForceLoadVideo),
+        DECLARE_NAPI_FUNCTION("getCurrentPresentationTimestamp", JsGetCurrentPresentationTimestamp),
         DECLARE_NAPI_FUNCTION("onMetricsEvent", JsSetOnMetricsEventCallback),
         DECLARE_NAPI_FUNCTION("offMetricsEvent", JsClearOnMetricsEventCallback),
 
@@ -2870,6 +2871,41 @@ napi_value AVPlayerNapi::JsGetPlaybackPosition(napi_env env, napi_callback_info 
     napi_status status = napi_create_int32(env, playbackPosition, &value);
     if (status != napi_ok) {
         MEDIA_LOGE("JsGetPlaybackPosition status != napi_ok");
+    }
+    return value;
+}
+
+napi_value AVPlayerNapi::JsGetCurrentPresentationTimestamp(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::getCurrentPresentationTimestamp");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGD("JsGetCurrentPresentationTimestamp In");
+
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
+    CHECK_AND_RETURN_RET_LOG(jsPlayer->player_ != nullptr, result, "failed to check player_");
+
+    std::string curState = jsPlayer->GetCurrentState();
+    if (curState != AVPlayerState::STATE_PLAYING &&
+        curState != AVPlayerState::STATE_PAUSED &&
+        curState != AVPlayerState::STATE_COMPLETED) {
+        return CommonNapi::ThrowError(env, MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not playing/paused/completed, not support getCurrentPresentationTimestamp");
+    }
+
+    int64_t currentPresentation = 0;
+    (void)jsPlayer->player_->GetCurrentPresentationTimestamp(currentPresentation);
+    if (currentPresentation != 0) {
+        MEDIA_LOGD("0x%{public}06" PRIXPTR " JsGetCurrentPresentationTimestamp Out, time: (%{public}" PRIu64 ")",
+            FAKE_POINTER(jsPlayer), currentPresentation);
+    }
+
+    napi_value value = nullptr;
+    napi_status status = napi_create_int64(env, currentPresentation, &value);
+    if (status != napi_ok) {
+        MEDIA_LOGE("JsGetCurrentPresentationTimestamp status != napi_ok");
+        return CommonNapi::ThrowError(env, MSERR_EXT_API9_OPERATE_NOT_PERMIT, "faild to create int64 value");
     }
     return value;
 }

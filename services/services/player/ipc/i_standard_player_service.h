@@ -164,6 +164,12 @@ public:
         return 0;
     }
 
+    virtual int32_t GetCurrentPresentationTimestamp(int64_t &currentPresentation)
+    {
+        (void)currentPresentation;
+        return 0;
+    }
+
     virtual int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes)
     {
         (void)status;
@@ -306,6 +312,7 @@ public:
         GET_MEDIA_DESCRIPTION,
         GET_TRACK_DESCRIPTION,
         GET_PLAYBACK_STATISTIC_METRICS,
+        GET_CURRENT_PRESENTATION_TIMESTAMP,
         MAX_IPC_ID,                   // all IPC codes should be added before MAX_IPC_ID
         GET_GLOBAL_INFO,
         GET_PLAYERBACK_RATE,

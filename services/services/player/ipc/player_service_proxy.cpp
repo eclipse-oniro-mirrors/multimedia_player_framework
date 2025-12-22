@@ -122,6 +122,7 @@ void PlayerServiceProxy::InitPlayerFuncsPart2()
     playerFuncs_[ENABLE_REPORT_AUDIO_INTERRUPT] = "Player::EnableReportAudioInterrupt";
     playerFuncs_[SET_CAMERA_POST_POSTPROCESSING] = "Player::SetCameraPostprocessing";
     playerFuncs_[GET_GLOBAL_INFO] = "Player::GetGlobalInfo";
+    playerFuncs_[GET_CURRENT_PRESENTATION_TIMESTAMP] = "Player::GetCurrentPresentationTimestamp";
 }
 
 int32_t PlayerServiceProxy::SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -536,6 +537,23 @@ int32_t PlayerServiceProxy::GetPlaybackPosition(int32_t &playbackPosition)
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "GetPlaybackPosition failed, error: %{public}d", error);
     playbackPosition = reply.ReadInt32();
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::GetCurrentPresentationTimestamp(int64_t &currentPresentation)
+{
+    MediaTrace trace("PlayerServiceProxy::GetCurrentPresentationTimestamp");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    int32_t error = SendRequest(GET_CURRENT_PRESENTATION_TIMESTAMP, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "GetCurrentPresentationTimestamp failed, error: %{public}d", error);
+    currentPresentation = reply.ReadInt64();
     return reply.ReadInt32();
 }
 
