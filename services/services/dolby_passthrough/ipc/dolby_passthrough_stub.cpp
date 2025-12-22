@@ -44,7 +44,7 @@ int DolbyPassthroughStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Me
         return MSEE_INVALID_OPERATION;
     }
 
-    switch(static_cast<ListenerMsg>(code)) {
+    switch (static_cast<ListenerMsg>(code)) {
         case ListenerMsg::IS_AUDIO_PASS: {
             std::string mime = data.ReadString();
             bool ret = IsAudioPass(mime.c_str());
