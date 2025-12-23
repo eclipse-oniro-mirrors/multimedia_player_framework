@@ -1463,7 +1463,7 @@ void AVPlayerImpl::SetPlaybackRate(double rate)
     return;
 }
 
-double AVPlayerImpl::GetPlaybackRate()
+double AVPlayerImpl::GetPlaybackRateSync()
 {
     MediaTrace trace("AVPlayerImpl::getRate");
     MEDIA_LOGI("TaiheGetRate In");
