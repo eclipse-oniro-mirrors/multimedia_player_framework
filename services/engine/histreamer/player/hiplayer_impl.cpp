@@ -1310,6 +1310,18 @@ void HiPlayerImpl::AppendPlayerMediaInfo()
 int32_t HiPlayerImpl::Reset()
 {
     MediaTrace trace("HiPlayerImpl::Reset");
+    if (dfxAgent_ != nullptr) {
+        Format fmt;
+        if (GetPlaybackStatisticMetrics(fmt) == TransStatus(Status::OK)) {
+            auto now = std::chrono::system_clock::now();
+            fmt.PutLongValue(
+                "timestamp", std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count());
+            DfxEvent event {"PLAYBACK_STATISTICS", DfxEventType::DFX_EVENT_PLAYBACK_STATISTICS, fmt};
+            dfxAgent_->OnDfxEvent(event);
+        } else {
+            MEDIA_LOG_W("GetPlaybackStatisticMetrics failed, skipping upload");
+        }
+    }
     if (pipelineStates_ == PlayerStates::PLAYER_STOPPED) {
         return TransStatus(Status::OK);
     }
@@ -2343,6 +2355,7 @@ int32_t HiPlayerImpl::GetPlaybackStatisticMetrics(Format &playbackStatisticMetri
     MEDIA_LOG_D("GetPlaybackStatisticMetrics in");
 
     DownloadInfo downloadInfo;
+    FALSE_RETURN_V(demuxer_ != nullptr && dfxAgent_ != nullptr, TransStatus(Status::ERROR_NULL_POINTER));
     auto ret = demuxer_->GetDownloadInfo(downloadInfo);
     if (ret == Status::OK) {
         MetricsUpdateDuration();
@@ -2362,7 +2375,7 @@ int32_t HiPlayerImpl::GetPlaybackStatisticMetrics(Format &playbackStatisticMetri
         playbackStatisticMetrics.PutUintValue("stalling_count", static_cast<uint32_t>(stallingCount));
         int64_t totalStallingTime = 0;
         dfxAgent_->GetTotalStallingDuration(&totalStallingTime);
-        playbackStatisticMetrics.PutUintValue("total_stalling_time",  static_cast<uint32_t>(totalStallingTime));
+        playbackStatisticMetrics.PutUintValue("total_stalling_time", static_cast<uint32_t>(totalStallingTime));
     }
     return TransStatus(Status::OK);
 }
