@@ -568,5 +568,63 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_set_selection_callback_001, TestS
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_set_selection_callback_001 after");
 }
+
+/**
+ * @tc.name: screen_capture_save_file_add_white_list_windows
+ * @tc.desc: do screencapture
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_add_white_list_windows, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_add_white_list_windows before");
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_save_file_add_white_list_windows.mp4", recorderInfo);
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo innerCapInfo = {
+            .audioSampleRate = 16000,
+            .audioChannels = 2,
+            .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+    vector<int> windowIds = {-1, 2, 5};
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->AddWhiteListWindows(&windowIds[0], static_cast<int32_t>(windowIds.size())));
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_add_white_list_windows after");
+}
+
+/**
+ * @tc.name: screen_capture_save_file_remove_white_list_windows
+ * @tc.desc: do screencapture
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_remove_white_list_windows, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_remove_white_list_windows before");
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_save_file_remove_white_list_windows.mp4", recorderInfo);
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo innerCapInfo = {
+            .audioSampleRate = 16000,
+            .audioChannels = 2,
+            .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+    vector<int> windowIds = {-1, 2, 5};
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->RemoveWhiteListWindows(&windowIds[0], static_cast<int32_t>(windowIds.size())));
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_remove_white_list_windows after");
+}
 } // namespace Media
 } // namespace OHOS
