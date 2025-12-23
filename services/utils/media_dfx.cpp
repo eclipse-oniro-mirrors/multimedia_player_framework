@@ -198,7 +198,6 @@ void MediaEvent::MediaKitStatistics(std::string syscap, std::string appName, std
     ParseOneEventForMeta(meta, metaInfoJson);
     events = metaInfoJson.dump();
 #endif
-MEDIA_LOG_I("zyb %{public}s", events.c_str());
     HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::MULTI_MEDIA, "MEDIAKIT_STATISTICS",
                     OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
                     "SYSCAP", syscap,
