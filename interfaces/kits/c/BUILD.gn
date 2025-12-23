@@ -25,7 +25,7 @@ group("capi_packages") {
       "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avtranscoder",
       "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:lowpower_avsink",
       "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avmedia_source",
-      "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avmetakeys",
+      "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avmedia_base",
       "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:native_avscreen_capture",
     ]
   }
@@ -417,7 +417,7 @@ ohos_shared_library("avmedia_source") {
   part_name = "player_framework"
 }
 
-ohos_shared_library("avmetakeys") {
+ohos_shared_library("avmedia_base") {
   stack_protector_ret = true
   install_enable = true
 
