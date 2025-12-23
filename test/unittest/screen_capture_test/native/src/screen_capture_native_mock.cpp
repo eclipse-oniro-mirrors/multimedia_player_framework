@@ -223,6 +223,26 @@ int32_t ScreenCaptureNativeMock::SkipPrivacyMode(int32_t *windowIDs, int32_t win
     return screenCapture_->SkipPrivacyMode(vec);
 }
 
+int32_t ScreenCaptureNativeMock::AddWhiteListWindows(int32_t *windowIDs, int32_t windowCount)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    std::vector<uint64_t> vec;
+    for (int32_t i = 0; i < windowCount; i++) {
+        vec.push_back(static_cast<uint64_t>(*(windowIDs + i)));
+    }
+    return screenCapture_->AddWhiteListWindows(vec);
+}
+
+int32_t ScreenCaptureNativeMock::RemoveWhiteListWindows(int32_t *windowIDs, int32_t windowCount)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    std::vector<uint64_t> vec;
+    for (int32_t i = 0; i < windowCount; i++) {
+        vec.push_back(static_cast<uint64_t>(*(windowIDs + i)));
+    }
+    return screenCapture_->RemoveWhiteListWindows(vec);
+}
+
 int32_t ScreenCaptureNativeMock::SetMaxVideoFrameRate(int32_t frameRate)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
