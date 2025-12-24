@@ -1206,6 +1206,50 @@ void ScreenCaptureServer::SetMetaDataReport()
     ReportMediaInfo(instanceId_);
 }
 
+void ScreenCaptureServer::SetMediaKitReport(const std::string &APIcall)
+{
+    nlohmann::json metaInfoJson;
+    metaInfoJson["captureMode"] =  captureConfig_.captureMode;
+    metaInfoJson["dataType"] =  std::to_string(captureConfig_.dataType);
+    metaInfoJson["videoCapDisplayId"] =  captureConfig_.videoInfo.videoCapInfo.displayId;
+    metaInfoJson["videoFrameWidth"] =  captureConfig_.videoInfo.videoCapInfo.videoFrameWidth;
+    metaInfoJson["videoFrameHeight"] =  captureConfig_.videoInfo.videoCapInfo.videoFrameHeight;
+    metaInfoJson["videoSourceType"] =  captureConfig_.videoInfo.videoCapInfo.videoSource;
+    metaInfoJson["videoCapState"] =  captureConfig_.videoInfo.videoCapInfo.state;
+    metaInfoJson["videoCodec"] =  captureConfig_.videoInfo.videoEncInfo.videoCodec;
+    metaInfoJson["videoBitrate"] =  captureConfig_.videoInfo.videoEncInfo.videoBitrate;
+    metaInfoJson["videoFrameRate"] =  captureConfig_.videoInfo.videoEncInfo.videoFrameRate;
+    metaInfoJson["videoEncState"] =  captureConfig_.videoInfo.videoEncInfo.state;
+    metaInfoJson["micAudioSampleRate"] =  captureConfig_.audioInfo.micCapInfo.audioSampleRate;
+    metaInfoJson["micChannels"] =  captureConfig_.audioInfo.micCapInfo.audioChannels;
+    metaInfoJson["micAaudioSource"] =  captureConfig_.audioInfo.micCapInfo.audioSource;
+    metaInfoJson["micState"] =  captureConfig_.audioInfo.micCapInfo.state;
+    metaInfoJson["innerAudioSampleRate"] =  captureConfig_.audioInfo.innerCapInfo.audioSampleRate;
+    metaInfoJson["innerChannels"] =  captureConfig_.audioInfo.innerCapInfo.audioChannels;
+    metaInfoJson["innerAaudioSource"] =  captureConfig_.audioInfo.innerCapInfo.audioSource;
+    metaInfoJson["innerState"] =  captureConfig_.audioInfo.innerCapInfo.state;
+    metaInfoJson["audioBitrate"] =  captureConfig_.audioInfo.audioEncInfo.audioBitrate;
+    metaInfoJson["audioCodecformat"] =  captureConfig_.audioInfo.audioEncInfo.audioCodecformat;
+    metaInfoJson["audioEncState"] =  captureConfig_.audioInfo.innerCapInfo.state;
+    metaInfoJson["recorderUrl"] =  captureConfig_.recorderInfo.url;
+    metaInfoJson["recorderFileFormat"] =  captureConfig_.recorderInfo.fileFormat;
+    metaInfoJson["enableDeviceLevelCapture"] =  captureConfig_.strategy.enableDeviceLevelCapture;
+    metaInfoJson["keepCaptureDuringCall"] =  captureConfig_.strategy.keepCaptureDuringCall;
+    metaInfoJson["strategyForPrivacyMaskMode"] =  captureConfig_.strategy.strategyForPrivacyMaskMode;
+    metaInfoJson["canvasFollowRotation"] =  captureConfig_.strategy.canvasFollowRotation;
+    metaInfoJson["enableBFrame"] =  captureConfig_.strategy.enableBFrame;
+    metaInfoJson["setByUser"] =  captureConfig_.strategy.setByUser;
+    metaInfoJson["pickerPopUp"] =  captureConfig_.strategy.pickerPopUp;
+    metaInfoJson["fillMode"] =  captureConfig_.strategy.fillMode;
+    metaInfoJson["highlightLineThickness"] =  captureConfig_.highlightConfig.lineThickness;
+    metaInfoJson["highlightLineColor"] =  captureConfig_.highlightConfig.lineColor;
+    metaInfoJson["highlightMode"] =  captureConfig_.highlightConfig.mode;
+    std::string instanceIdStr =  std::to_string(instanceId_);
+    OHOS::Media::MediaEvent event;
+    std::string events = metaInfoJson.dump();
+    event.MediaKitStatistics("AVScreenCapture", appName_, instanceIdStr, APIcall, events);
+}
+
 ScreenCaptureServer::ScreenCaptureServer()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " ScreenCaptureServer Instances create", FAKE_POINTER(this));
@@ -1770,6 +1814,7 @@ int32_t ScreenCaptureServer::OnReceiveUserPrivacyAuthority(bool isAllowed)
         MEDIA_LOGE("OnReceiveUserPrivacyAuthority failed, capture is not POPUP_WINDOW");
         screenCaptureCb_->OnError(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL,
             AVScreenCaptureErrorCode::SCREEN_CAPTURE_ERR_UNKNOWN);
+        SetMediaKitReport("startRecording fail");
         StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
         return MSERR_UNKNOWN;
     }
@@ -2196,6 +2241,7 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
             captureState_ = AVScreenCaptureState::STARTED;
             screenCaptureCb_->OnError(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL,
                 AVScreenCaptureErrorCode::SCREEN_CAPTURE_ERR_UNKNOWN);
+            SetMediaKitReport("startRecording fail");
             StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
             return;
         }
@@ -2224,6 +2270,7 @@ void ScreenCaptureServer::PostStartScreenCaptureFail()
     if (isPrivacyAuthorityEnabled_) {
         screenCaptureCb_->OnError(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL,
             AVScreenCaptureErrorCode::SCREEN_CAPTURE_ERR_UNKNOWN);
+        SetMediaKitReport("startRecording fail");
     }
     StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
     isPrivacyAuthorityEnabled_ = false;
@@ -2254,6 +2301,7 @@ int32_t ScreenCaptureServer::TryNotificationOnPostStartScreenCapture()
         if (screenCaptureCb_ != nullptr) {
             screenCaptureCb_->OnError(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL,
                 AVScreenCaptureErrorCode::SCREEN_CAPTURE_ERR_UNKNOWN);
+            SetMediaKitReport("startRecording fail");
         }
         StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
         return MSERR_UNKNOWN;
@@ -2553,6 +2601,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
     }
 
     ret = OnStartScreenCapture();
+    SetMediaKitReport("startRecording");
     PostStartScreenCapture(ret == MSERR_OK);
 
     MEDIA_LOGI("StartScreenCaptureInner E, appUid:%{public}d, appPid:%{public}d", appInfo_.appUid, appInfo_.appPid);
