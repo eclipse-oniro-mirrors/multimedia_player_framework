@@ -36,15 +36,15 @@ std::string TimeFormatUtils::FormatDateTimeByTimeZone(const std::string &iso8601
     if (iso8601Str.empty()) {
         return iso8601Str;
     }
-    std::regex pattern(R"((\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(.\d{1,6})?(((\+|-)\d{4})|Z)?)");
+    std::regex pattern(
+        R"((\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(\.\d{1,9})?(((\+|-)\d{4})|Z|((\+|-)\d{2}:\d{2}))?)");
     std::smatch match;
     if (!std::regex_match(iso8601Str, match, pattern)) {
         return iso8601Str;  // not standard ISO8601 type string
     }
 
     std::istringstream iss(iso8601Str);
-    std::tm tm;
-    tm.tm_isdst = -1;
+    std::tm tm{.tm_isdst = -1};
     if (!(iss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%S"))) {
         return iso8601Str;  // cant prase time
     }
@@ -56,17 +56,12 @@ std::string TimeFormatUtils::FormatDateTimeByTimeZone(const std::string &iso8601
     }
     uint32_t length = iso8601Str.length();
     long diffTime = 0;
-    if (iso8601Str.substr(length - 1, 1).compare("Z") != 0) {
-        char symbol = iso8601Str.at(length - 5);
-        if (symbol != '+' && symbol != '-') {
-            std::ostringstream oss;
-            oss << std::put_time(&tm, "%Y-%m-%d %H:%M:%S");
-            return oss.str();
-        }
-        int mins = std::stoi(iso8601Str.substr(length - 2, 2));
-        int hours = std::stoi(iso8601Str.substr(length - 4, 2));
-        long seconds = (hours * 60 + mins) * 60;
-        diffTime = symbol == '+' ? seconds : -seconds;
+    std::string tz = (match.size() > 8) ? match[8].str();
+    if (tz.empty()) {
+        return FormatLocalTime(std::chrono::system_clock::from_time_t(tt));
+    }
+    if (tz.compare("Z") != 0) {
+        diffTime = ParseIso8601TimeZoneOffset(tz);
     }
 
     // convert time to localtime
@@ -82,6 +77,37 @@ std::string TimeFormatUtils::FormatDateTimeByTimeZone(const std::string &iso8601
     auto localTime =
         std::chrono::system_clock::from_time_t(std::mktime(&tm)) + std::chrono::seconds(timezone - diffTime);
     return FormatLocalTime(localTime);
+}
+
+long TimeFormatUtils::ParseIso8601TimeZoneOffset(const std::string& tz) {
+    if (tz.empty() || tz == "Z") {
+        return 0;
+    }
+
+    char symbol = tz[0];
+    if (symbol != '+' && symbol != '-') {
+        return 0;
+    }
+
+    std::string numPart = tz.substr(1);
+    int hours = 0, mins = 0;
+
+    if (numPart.find(':') != std::string::npos) {
+        if (numPart.length() < 5 || numPart[2] != ':') {
+            return 0;
+        }
+        hours = std::stoi(numPart.substr(0, 2));
+        mins  = std::stoi(numPart.substr(3, 2));
+    } else {
+        if (numPart.length() != 4) {
+            return 0;
+        }
+        hours = std::stoi(numPart.substr(0, 2));
+        mins  = std::stoi(numPart.substr(2, 2));
+    }
+
+    long seconds = (hours * 60 + mins) * 60;
+    return (symbol == '+') ? seconds : -seconds;
 }
 
 std::string TimeFormatUtils::FormatLocalTime(std::chrono::system_clock::time_point localTime)
