@@ -54,9 +54,8 @@ std::string TimeFormatUtils::FormatDateTimeByTimeZone(const std::string &iso8601
     if (tt == -1) {
         return iso8601Str;
     }
-    uint32_t length = iso8601Str.length();
     long diffTime = 0;
-    std::string tz = (match.size() > 8) ? match[8].str();
+    std::string tz = (match.size() > 8) ? match[8].str() : "";
     if (tz.empty()) {
         return FormatLocalTime(std::chrono::system_clock::from_time_t(tt));
     }
