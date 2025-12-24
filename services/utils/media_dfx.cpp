@@ -481,6 +481,11 @@ int32_t AppendMediaInfo(const std::shared_ptr<Meta>& meta, uint64_t instanceId)
     return MSERR_OK;
 }
 
+void ReportTranscoderMediaInfo(uint64_t instanceId)
+{
+
+}
+
 int32_t ReportMediaInfo(uint64_t instanceId)
 {
     MEDIA_LOG_I("Report: Delete media info instanceId.");

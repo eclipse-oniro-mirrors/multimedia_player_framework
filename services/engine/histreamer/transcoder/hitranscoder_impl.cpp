@@ -613,13 +613,16 @@ int32_t HiTransCoderImpl::Prepare()
         MEDIA_LOG_E("Prepare failed with error " PUBLIC_LOG_D32, ret);
         auto errCode = TransTranscoderStatus(ret);
         CollectionErrorInfo(errCode, "Prepare error");
+        AppendMediaKitTranscoderMediaInfo();
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, errCode});
         return errCode;
     }
     Status errCode = SetSurfacePipeline(width, height);
     if (errCode == Status::ERROR_UNKNOWN) {
+        AppendMediaKitTranscoderMediaInfo();
         errCode = Status::ERROR_SET_OUTPUT_SURFACE_FAILED;
     }
+    AppendMediaKitTranscoderMediaInfo();
     return TransTranscoderStatus(errCode);
 }
 
@@ -792,6 +795,11 @@ void HiTransCoderImpl::AppendDstMediaInfo(std::shared_ptr<Meta> meta)
     int64_t dstAudioBitrate;
     audioEncFormat_->Get<Tag::MEDIA_BITRATE>(dstAudioBitrate);
     meta->SetData(Tag::AV_TRANSCODER_DST_AUDIO_BITRATE, static_cast<int32_t>(dstAudioBitrate));
+}
+
+void HiTransCoderImpl::AppendMediaKitTranscoderMediaInfo()
+{
+    
 }
 
 void HiTransCoderImpl::OnEvent(const Event &event)
