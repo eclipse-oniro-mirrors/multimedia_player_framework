@@ -595,12 +595,14 @@ int32_t HiTransCoderImpl::Prepare()
             MEDIA_LOG_E("Output video width or height not set");
             CollectionErrorInfo(MSERR_INVALID_VAL, "Prepare error");
             OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_INVALID_VAL});
+            AppendMediaKitTranscoderMediaInfo();
             return MSERR_INVALID_VAL;
         }
         if (width > inputVideoWidth_ || height > inputVideoHeight_ || std::min(width, height) < MINIMUM_WIDTH_HEIGHT) {
             MEDIA_LOG_E("Output video width or height is invalid");
             CollectionErrorInfo(MSERR_PARAMETER_VERIFICATION_FAILED, "Prepare error");
             OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_PARAMETER_VERIFICATION_FAILED});
+            AppendMediaKitTranscoderMediaInfo();
             return MSERR_PARAMETER_VERIFICATION_FAILED;
         }
         skipProcessFilterFlag_.isSameVideoResolution = (width == inputVideoWidth_) && (height == inputVideoHeight_);
@@ -619,7 +621,6 @@ int32_t HiTransCoderImpl::Prepare()
     }
     Status errCode = SetSurfacePipeline(width, height);
     if (errCode == Status::ERROR_UNKNOWN) {
-        AppendMediaKitTranscoderMediaInfo();
         errCode = Status::ERROR_SET_OUTPUT_SURFACE_FAILED;
     }
     AppendMediaKitTranscoderMediaInfo();
@@ -799,7 +800,43 @@ void HiTransCoderImpl::AppendDstMediaInfo(std::shared_ptr<Meta> meta)
 
 void HiTransCoderImpl::AppendMediaKitTranscoderMediaInfo()
 {
+    MEDIA_LOG_I("HiTransCoderImpl::AppendMediaKitTranscoderMediaInfo");
     
+    std::vector<std::pair<std::string, std::string>> mediaInfo_;
+
+    std::string srcAudioMime;
+    srcAudioFormat_->Get<Tag::MIME_TYPE>(srcAudioMime);
+    mediaInfo_.push_back({"SrcAudioMime", srcAudioMime});
+    std::string srcVideoMime;
+    srcVideoFormat_->Get<Tag::MIME_TYPE>(srcVideoMime);
+    mediaInfo_.push_back({"SrcVideoMime", srcVideoMime});
+    mediaInfo_.push_back({"SrcVideoWidth", std::to_string(inputVideoWidth_)});
+    mediaInfo_.push_back({"SrcVideoHeight", std::to_string(inputVideoHeight_)});
+    std::shared_ptr<Meta> globalInfo = demuxerFilter_->GetGlobalMetaInfo();
+    FileType fileType_ = FileType::UNKNOW;
+    globalInfo->GetData(Tag::MEDIA_FILE_TYPE, fileType_);
+    mediaInfo_.push_back({"SrcFormat", std::to_string(static_cast<int32_t>(fileType_))});
+
+    std::string dstAudioMime;
+    audioEncFormat_->Get<Tag::MIME_TYPE>(dstAudioMime);
+    mediaInfo_.push_back({"DstAudioMime", dstAudioMime});
+    std::string dstVideoMime;
+    videoEncFormat_->Get<Tag::MIME_TYPE>(dstVideoMime);
+    mediaInfo_.push_back({"DstVideoMime", dstVideoMime});
+    int64_t dstVideoBitrate;
+    videoEncFormat_->Get<Tag::MEDIA_BITRATE>(dstVideoBitrate);
+    mediaInfo_.push_back({"DstVideoBit", std::to_string(dstVideoBitrate)});
+    int64_t dstAudioBitrate;
+    audioEncFormat_->Get<Tag::MEDIA_BITRATE>(dstAudioBitrate);
+    mediaInfo_.push_back({"DstAudioBit", std::to_string(dstAudioBitrate)});
+    mediaInfo_.push_back({"DstFormat", std::to_string(static_cast<int32_t>(outputFormatType_))});
+    int32_t outputVideoWidth = inputVideoWidth_;
+    int32_t outputVideoHeight = inputVideoHeight_;
+    videoEncFormat_->GetData(Tag::VIDEO_WIDTH, outputVideoWidth);
+    mediaInfo_.push_back({"DstVideoWidth", std::to_string(outputVideoWidth)});
+    videoEncFormat_->GetData(Tag::VIDEO_HEIGHT, outputVideoHeight);
+    mediaInfo_.push_back({"DstVideoHeight", std::to_string(outputVideoHeight)});
+    ReportTranscoderMediaInfo(appUid_, instanceId_, mediaInfo_, errCode_);
 }
 
 void HiTransCoderImpl::OnEvent(const Event &event)
