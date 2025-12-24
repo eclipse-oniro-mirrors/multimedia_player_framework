@@ -2898,7 +2898,7 @@ napi_value AVPlayerNapi::JsGetCurrentPresentationTimestamp(napi_env env, napi_ca
         curState != AVPlayerState::STATE_PAUSED &&
         curState != AVPlayerState::STATE_COMPLETED) {
         return CommonNapi::ThrowError(env, MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-           "current state is not playing/paused/completed, not support getCurrentPresentationTimestamp");
+            "current state is not playing/paused/completed, not support getCurrentPresentationTimestamp");
     }
 
     int64_t currentPresentation = 0;
