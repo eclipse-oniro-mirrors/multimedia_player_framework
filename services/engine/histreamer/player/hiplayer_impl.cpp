@@ -2005,13 +2005,14 @@ int32_t HiPlayerImpl::SetPlaybackSpeed(PlaybackRateMode mode)
 int32_t HiPlayerImpl::SetPlaybackRate(float rate)
 {
     MEDIA_LOG_I("SetPlaybackRate %{public}f", rate);
+    int32_t extra = 0;
+    Format format;
     if (doSetPlaybackSpeed(rate) != Status::OK) {
         MEDIA_LOG_E("SetPlaybackRate audioSink set speed error");
+        callbackLooper_.OnInfo(INFO_TYPE_RATEDONE, extra, format);
         return MSERR_UNKNOWN;
     }
-    int32_t extra = 0;
     playbackRate_ = rate;
-    Format format;
     (void)format.PutFloatValue(PlayerKeys::PLAYER_PLAYBACK_RATE, rate);
     callbackLooper_.OnInfo(INFO_TYPE_RATEDONE, extra, format);
     MEDIA_LOG_I("SetPlaybackRate end");
