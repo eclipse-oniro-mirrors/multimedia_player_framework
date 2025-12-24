@@ -190,14 +190,8 @@ void MediaEvent::SourceEventWrite(const std::string& eventName, OHOS::HiviewDFX:
 }
 
 void MediaEvent::MediaKitStatistics(std::string syscap, std::string appName, std::string instanceId,
-    std::string APICall, std::shared_ptr<Media::Meta> meta)
+    std::string APICall, std::string events)
 {
-    std::string events;
-#ifndef CROSS_PLATFORM
-    json metaInfoJson;
-    ParseOneEventForMeta(meta, metaInfoJson);
-    events = metaInfoJson.dump();
-#endif
     HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::MULTI_MEDIA, "MEDIAKIT_STATISTICS",
                     OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
                     "SYSCAP", syscap,
@@ -297,51 +291,6 @@ void MediaEvent::ParseOneEvent(const std::pair<uint64_t, std::shared_ptr<OHOS::M
         } else if (Any::IsSameTypeWith<float>(valueType)) {
             float floatVal = 0.0f;
             if (listPair.second->GetData(it->first, floatVal)) {
-                metaInfoJson[it->first] = OSAL::FloatToString(floatVal);
-            }
-        } else {
-            MEDIA_LOG_I("not found type matched with it->first: %{public}s", it->first.c_str());
-        }
-    }
-}
-
-void MediaEvent::ParseOneEventForMeta(const std::shared_ptr<OHOS::Media::Meta> &meta, json& metaInfoJson)
-{
-    for (auto it = meta->begin(); it != meta->end(); ++it) {
-        Any valueType = OHOS::Media::GetDefaultAnyValue(it->first);
-        if (Any::IsSameTypeWith<int32_t>(valueType)) {
-            int32_t intVal;
-            if (meta->GetData(it->first, intVal)) {
-                metaInfoJson[it->first] = std::to_string(intVal);
-            }
-        } else if (Any::IsSameTypeWith<uint32_t>(valueType)) {
-            uint32_t uintVal;
-            if (meta->GetData(it->first, uintVal)) {
-                metaInfoJson[it->first] = std::to_string(uintVal);
-            }
-        } else if (Any::IsSameTypeWith<uint64_t>(valueType)) {
-            uint64_t uintVal;
-            if (meta->GetData(it->first, uintVal)) {
-                metaInfoJson[it->first] = std::to_string(uintVal);
-            }
-        } else if (Any::IsSameTypeWith<std::string>(valueType)) {
-            std::string strVal;
-            if (meta->GetData(it->first, strVal)) {
-                metaInfoJson[it->first] = strVal;
-            }
-        } else if (Any::IsSameTypeWith<int8_t>(valueType)) {
-            int8_t intVal;
-            if (meta->GetData(it->first, intVal)) {
-                metaInfoJson[it->first] = std::to_string(intVal);
-            }
-        } else if (Any::IsSameTypeWith<bool>(valueType)) {
-            bool isTrue;
-            if (meta->GetData(it->first, isTrue)) {
-                metaInfoJson[it->first] = isTrue ? "true" : "false";
-            }
-        } else if (Any::IsSameTypeWith<float>(valueType)) {
-            float floatVal = 0.0f;
-            if (meta->GetData(it->first, floatVal)) {
                 metaInfoJson[it->first] = OSAL::FloatToString(floatVal);
             }
         } else {
