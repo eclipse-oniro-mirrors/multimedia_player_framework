@@ -15,6 +15,8 @@
 #ifndef SOUNDPOOL_H
 #define SOUNDPOOL_H
 
+#include <atomic>
+
 #include "audio_renderer.h"
 #include "cpp/mutex.h"
 #include "isoundpool.h"
@@ -85,6 +87,12 @@ private:
     bool parallelStreamFlag_ = false;
     bool isSetInterruptMode_ = false;
     InterruptMode interruptMode_ = InterruptMode::SAME_SOUND_INTERRUPT;
+
+    // for DFX statistic.
+    std::atomic<int32_t> playSucceed_ = 0;
+    std::atomic<int32_t> loadSucceed_ = 0;
+    std::atomic<int32_t> playFailed_ = 0;
+    std::atomic<int32_t> loadFailed_ = 0;
 };
 } // namespace Media
 } // namespace OHOS
