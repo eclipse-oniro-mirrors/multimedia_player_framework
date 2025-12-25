@@ -409,6 +409,7 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
     }
     if (dfxAgent_ != nullptr) {
         dfxAgent_->SetSourceType(sourceType);
+        fileType_ = sourceType;
     }
     hasExtSub_ = false;
     pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
