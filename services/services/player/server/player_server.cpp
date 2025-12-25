@@ -2592,7 +2592,7 @@ int32_t PlayerServer::GetTrackDescription(Format &format, uint32_t trackIndex)
 int32_t PlayerServer::SetDolbyPassthroughCallback(std::shared_ptr<IDolbyPassthrough> &dolbyPassthrough)
 {
     MEDIA_LOGI("PlayerServer::SetDolbyPassthroughCallback");
-    std::lock_guardstd::mutex lock(mutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("PlayerServer::SetDolbyPassthroughCallback");
     CHECK_AND_RETURN_RET_LOG(dolbyPassthrough != nullptr, MSERR_INVALID_VAL, "dolbyPassthrough is nullptr");
     GetPassthroughCallbackInstance() = dolbyPassthrough;
