@@ -1276,7 +1276,7 @@ public:
     }
 
     virtual int32_t GetCurrentPresentationTimestamp(int64_t &currentPresentation)
-    {	
+    {
         currentPresentation = 0;	
         return 0;
     }
