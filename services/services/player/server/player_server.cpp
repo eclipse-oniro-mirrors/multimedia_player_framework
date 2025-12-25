@@ -2480,7 +2480,9 @@ int32_t PlayerServer::SetCameraPostprocessing(bool isOpen)
 {
     MediaTrace::TraceBegin("PlayerServer::SetCameraPostprocessing", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(lastOpStatus_ == PLAYER_PREPARED, MSERR_INVALID_OPERATION, "last status is not prepared");
+    bool isSupportOpenPostProcess = lastOpStatus_ == PLAYER_PREPARED || lastOpStatus_ == PLAYER_PAUSED ||
+        lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE;
+    CHECK_AND_RETURN_RET_LOG(isSupportOpenPostProcess, MSERR_INVALID_OPERATION, "last status is not prepared");
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
     return playerEngine_->SetCameraPostprocessing(isOpen);
 }
