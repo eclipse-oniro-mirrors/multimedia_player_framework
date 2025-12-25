@@ -25,8 +25,7 @@ namespace OHOS {
 namespace Media {
 
 DolbyPassthroughStub::DolbyPassthroughStub(IsAudioPassthrough callback, GetDolbyList getDolbyList)
-    : callback_(callback)
-    , getDolbyList_(getDolbyList)
+    : callback_(callback) , getDolbyList_(getDolbyList)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
