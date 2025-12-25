@@ -523,6 +523,7 @@ private:
     bool isNeedSwDecoder_ = false;
     bool notNotifyForSw_ = false;
     bool isVideoDecoderInited_ = false;
+    FileType fileType_ =  FileType::UNKNOW;
 };
 } // namespace Media
 } // namespace OHOS
