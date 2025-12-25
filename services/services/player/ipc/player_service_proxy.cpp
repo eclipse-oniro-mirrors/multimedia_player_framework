@@ -1475,15 +1475,15 @@ int32_t PlayerServiceProxy::RegisterDeviceCapability(const sptr<IRemoteObject> &
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
- 
+
     bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
- 
+
     (void)data.WriteRemoteObject(object);
     int32_t error = SendRequest(REGISTER_DEVICE_CAPABILITY, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "RegisterDeviceCapability failed, error: %{public}d", error);
- 
+
     return reply.ReadInt32();
 }
 } // namespace Media
