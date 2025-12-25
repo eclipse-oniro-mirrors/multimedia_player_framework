@@ -2586,7 +2586,6 @@ std::shared_ptr<IDolbyPassthrough>& PlayerServer::GetPassthroughCallbackInstance
 bool PlayerServer::IsAudioPass(const char* mimeType)
 {
     MEDIA_LOGI("PlayerFilterCallback IsAudioPassthrough.");
-    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET(mimeType != nullptr, false);
     auto callbackInstance = PlayerServer::GetPassthroughCallbackInstance();
     CHECK_AND_RETURN_RET(callbackInstance != nullptr, false);
@@ -2596,7 +2595,6 @@ bool PlayerServer::IsAudioPass(const char* mimeType)
 std::vector<std::string> PlayerServer::GetDolbyList()
 {
     MEDIA_LOGI("PlayerFilterCallback GetDolbyList.");
-    std::lock_guardstd::mutex lock(mutex_);
     auto callbackInstance = PlayerServer::GetPassthroughCallbackInstance();
     CHECK_AND_RETURN_RET(callbackInstance != nullptr, {});
     if (dolbyList_.empty()) {
