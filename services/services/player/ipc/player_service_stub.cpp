@@ -1648,7 +1648,7 @@ int32_t PlayerServiceStub::RegisterDeviceCapability(const sptr<IRemoteObject> &o
     MEDIA_LOGI("PlayerServiceStub RegisterDeviceCapability");
     CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "registerDeviceCapability object is nullptr");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
- 
+
     sptr<IStandardDolbyPassthrough> proxy = iface_cast<IStandardDolbyPassthrough>(object);
     CHECK_AND_RETURN_RET_LOG(proxy != nullptr, MSERR_NO_MEMORY, "failed to convert DolbyPassthroughProxy");
     std::shared_ptr<IDolbyPassthrough> dolbyPassthrough = std::make_shared<DolbyPassthroughCallback>(proxy);
