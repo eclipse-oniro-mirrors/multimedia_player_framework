@@ -133,6 +133,8 @@ void AVMetadataExtractorImpl::SetUrlSource(::taihe::string_view url, optional_vi
     auto res = helper_->SetUrlSource(url_, header_);
     if (res == OHOS::Media::MSERR_OK) {
         state_ = OHOS::Media::HelperState::HELPER_STATE_RUNNABLE;
+    } else if (res == OHOS::Media::MSERR_CLEARTEXT_NOT_PERMITTED) {
+        state_ = OHOS::Media::HelperState::HELPER_STATE_HTTP_INTERCEPTED;
     } else {
         state_ = OHOS::Media::HelperState::HELPER_ERROR;
     }
@@ -298,7 +300,13 @@ optional<AVMetadata> AVMetadataExtractorImpl::FetchMetadataSync()
     OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::FetchMetadataSync");
     MEDIA_LOGI("FetchMetadataSync In");
     if (state_ != OHOS::Media::HelperState::HELPER_STATE_RUNNABLE) {
-        set_business_error(OHOS::Media::MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Can't fetchMetadata, please set source.");
+        if (state_ == OHOS::Media::HelperState::HELPER_STATE_HTTP_INTERCEPTED) {
+            set_business_error(OHOS::Media::MSERR_EXT_API20_IO_CLEARTEXT_NOT_PERMITTED,
+                "Http plaintext access is not allowed.");
+        } else {
+            set_business_error(OHOS::Media::MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "Can't fetchMetadata, please set source.");
+        }
         return optional<AVMetadata>(std::nullopt);
     }
     CHECK_AND_RETURN_RET_LOG(helper_ != nullptr, optional<AVMetadata>(std::nullopt), "Invalid promiseCtx.");
@@ -430,8 +438,13 @@ optional<::ohos::multimedia::image::image::PixelMap> AVMetadataExtractorImpl::Fe
     MEDIA_LOGI("TaiheFetchFrameAtTime in");
     AVMetadataExtractorImpl *taihe = this;
     if (taihe->state_ != OHOS::Media::HelperState::HELPER_STATE_RUNNABLE) {
-        set_business_error(OHOS::Media::MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "Current state is not runnable, can't fetchFrame.");
+        if (taihe->state_ == OHOS::Media::HelperState::HELPER_STATE_HTTP_INTERCEPTED) {
+            set_business_error(OHOS::Media::MSERR_EXT_API20_IO_CLEARTEXT_NOT_PERMITTED,
+                "Http plaintext access is not allowed.");
+        } else {
+            set_business_error(OHOS::Media::MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "Current state is not runnable, can't fetchFrame.");
+        }
         return optional<::ohos::multimedia::image::image::PixelMap>(std::nullopt);
     }
     OHOS::Media::PixelMapParams pixelMapParams;
