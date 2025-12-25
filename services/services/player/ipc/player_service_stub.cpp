@@ -275,6 +275,8 @@ void PlayerServiceStub::FillPlayerFuncPart3()
         [this](MessageParcel &data, MessageParcel &reply) { return GetMediaDescription(data, reply); } };
     playerFuncs_[GET_TRACK_DESCRIPTION] = { "Player::GET_TRACK_DESCRIPTION",
         [this](MessageParcel &data, MessageParcel &reply) { return GetTrackDescription(data, reply); } };
+    playerFuncs_[GET_CURRENT_PRESENTATION_TIMESTAMP] = { "Player::GetCurrentPresentationTimestamp",
+        [this](MessageParcel &data, MessageParcel &reply) { return GetCurrentPresentationTimestamp(data, reply); } };
     playerFuncs_[REGISTER_DEVICE_CAPABILITY] = { "Player::RegisterDeviceCapability",
         [this](MessageParcel &data, MessageParcel &reply) { return RegisterDeviceCapability(data, reply); } };
 }
