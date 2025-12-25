@@ -245,7 +245,7 @@ static bool ExtractStallingTimestamps(const std::vector<int64_t>& timeStampList,
     };
 
     size_t foundCount = 0;
-    int step = 2;
+    size_t step = 2;
     for (size_t i = 0; i + 1 < timeStampList.size(); i += step) {
         int64_t stage = timeStampList[i];
         auto it = stageMap.find(stage);

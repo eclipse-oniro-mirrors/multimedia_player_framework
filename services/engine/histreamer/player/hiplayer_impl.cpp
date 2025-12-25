@@ -2878,6 +2878,7 @@ PlayerErrorType HiPlayerImpl::GetPlayerErrorTypeFromDemuxerFilter(const Event& e
         case static_cast<int32_t>(NetworkClientErrorCode::ERROR_TIME_OUT):
         case static_cast<int32_t>(NetworkClientErrorCode::ERROR_NOT_RETRY):
             errorType = PlayerErrorType::NET_ERR;
+            break;
         default:
             if (event.description == "server") {
                 errorType = PlayerErrorType::NET_ERR;
@@ -2899,6 +2900,7 @@ PlayerErrorType HiPlayerImpl::GetPlayerErrorTypeFromAudioDecoder(const Event& ev
             break;
         case MSERR_DRM_VERIFICATION_FAILED:
             errorType = PlayerErrorType::DRM_ERR;
+            break;
         default:
             break;
     }
@@ -2913,15 +2915,13 @@ PlayerErrorType HiPlayerImpl::GetPlayerErrorTypeFromDecoderSurfaceFilter(const E
 
     switch (errorCode) {
         case MSERR_EXT_API9_IO:
-            if (event.description == "post_processor") {
-                errorType = PlayerErrorType::VPE_ERR;
-                break;
-            }
         case MSERR_UNSUPPORT_VID_SRC_TYPE:
             if (event.description == "post_processor") {
                 errorType = PlayerErrorType::VPE_ERR;
-                break;
+            } else {
+                errorType = PlayerErrorType::VID_DEC_ERR;
             }
+            break;
         case MSERR_UNSUPPORT_VID_DEC_TYPE:
         case MSERR_VID_DEC_FAILED:
             errorType = PlayerErrorType::VID_DEC_ERR;
