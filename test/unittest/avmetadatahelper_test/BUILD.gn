@@ -84,6 +84,7 @@ ohos_unittest("avmetadatahelper_unit_test") {
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_data_source/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/dolby_passthrough/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/monitor/client",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/monitor/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/avmetadatahelper/client",
