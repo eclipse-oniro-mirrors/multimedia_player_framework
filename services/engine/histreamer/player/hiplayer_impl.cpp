@@ -150,18 +150,18 @@ public:
         return hiPlayerImpl_->OnCallback(filter, cmd, outType);
     }
 
-    bool IsAudioPassCallback(const char* mimeType) override
+    bool IsAudioPassthroughCallback(const char* mimeType) override
     {
-        MEDIA_LOG_D("PlayerFilterCallback IsAudioPassCallback.");
+        MEDIA_LOG_I("PlayerFilterCallback IsAudioPassthrough.");
         std::shared_lock<std::shared_mutex> lk(cbMutex_);
         FALSE_RETURN_V(hiPlayerImpl_ != nullptr, false);
         FALSE_RETURN_V(mimeType != nullptr, false);
         return hiPlayerImpl_->IsAudioPass(mimeType);
     }
 
-    std::vector<std::string> GetDolbyList()
+    std::vector<std::string> GetDolbyListCallback() override
     {
-        MEDIA_LOG_D("PlayerFilterCallback GetDolbyList.");
+        MEDIA_LOG_I("PlayerFilterCallback GetDolbyList.");
         std::shared_lock<std::shared_mutex> lk(cbMutex_);
         FALSE_RETURN_V(hiPlayerImpl_ != nullptr, {});
         return hiPlayerImpl_->GetDolbyList();
