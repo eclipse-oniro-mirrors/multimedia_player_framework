@@ -864,6 +864,8 @@ int32_t RecorderServer::Prepare()
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("RecorderServer::Prepare");
     MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " Prepare in", FAKE_POINTER(this));
+    OHOS::Media::MediaEvent event;
+    event.MediaKitStatistics("AVRecorder", bundleName_, std::to_string(instanceId_), "Prepare", "");
     if (status_ == REC_PREPARED) {
         MEDIA_LOGE("Can not repeat Prepare");
         return MSERR_INVALID_OPERATION;
@@ -879,6 +881,7 @@ int32_t RecorderServer::Prepare()
     auto result = task->GetResult();
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_PREPARED : REC_ERROR);
+    SetMediaKitReport(status_);
     return ret;
 }
 
@@ -915,6 +918,7 @@ int32_t RecorderServer::Start()
         int64_t endTime = GetCurrentMillisecond();
         statisticalEventInfo_.startLatency = static_cast<int32_t>(endTime - startTime_);
     }
+    SetMediaKitReport(status_);
     return ret;
 }
 
@@ -938,6 +942,7 @@ int32_t RecorderServer::Pause()
     auto result = task->GetResult();
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_PAUSED : REC_ERROR);
+    SetMediaKitReport(status_);
     return ret;
 }
 
@@ -961,6 +966,7 @@ int32_t RecorderServer::Resume()
     auto result = task->GetResult();
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_RECORDING : REC_ERROR);
+    SetMediaKitReport(status_);
     return ret;
 }
 
@@ -992,6 +998,7 @@ int32_t RecorderServer::Stop(bool block)
         }
 #endif
     }
+    SetMediaKitReport(status_);
     return ret;
 }
 
@@ -1010,6 +1017,7 @@ int32_t RecorderServer::Reset()
     auto result = task->GetResult();
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_INITIALIZED : REC_ERROR);
+    SetMediaKitReport(status_);
     return ret;
 }
 
@@ -1259,6 +1267,7 @@ void RecorderServer::SetMetaDataReport()
     meta->SetData(Tag::RECORDER_DURATION, statisticalEventInfo_.recordDuration);
     statisticalEventInfo_.containerMime = GetVideoMime(config_.videoCodec) + ";" + GetAudioMime(config_.audioCodec);
     meta->SetData(Tag::RECORDER_CONTAINER_MIME, statisticalEventInfo_.containerMime);
+    meta->SetData(Tag::RECORDER_CONTAINER_FORMAT, GetContainerFormat(config_.format));
     meta->SetData(Tag::RECORDER_VIDEO_MIME, GetVideoMime(config_.videoCodec));
     statisticalEventInfo_.videoResolution = std::to_string(config_.width) + "x" + std::to_string(config_.height);
     meta->SetData(Tag::RECORDER_VIDEO_RESOLUTION, statisticalEventInfo_.videoResolution);
@@ -1320,6 +1329,42 @@ std::string RecorderServer::GetAudioMime(AudioCodecFormat encoder)
             break;
     }
     return audioMime;
+}
+
+std::string RecorderServer::GetContainerFormat(OutputFormatType format)
+{
+    std::string containerFormat;
+    switch (format) {
+        case OHOS::Media::OutputFormatType::FORMAT_MPEG_4:
+            containerFormat = Plugins::MimeType::MEDIA_MP4;
+            break;
+        case OHOS::Media::OutputFormatType::FORMAT_M4A:
+            containerFormat = Plugins::MimeType::MEDIA_M4A;
+            break;
+        case OHOS::Media::OutputFormatType::FORMAT_AMR:
+            containerFormat = Plugins::MimeType::MEDIA_AMR;
+            break;
+        case OHOS::Media::OutputFormatType::FORMAT_MP3:
+            containerFormat = Plugins::MimeType::MEDIA_MP3;
+            break;
+        case OHOS::Media::OutputFormatType::FORMAT_WAV:
+            containerFormat = Plugins::MimeType::MEDIA_WAV;
+            break;
+        case OHOS::Media::OutputFormatType::FORMAT_AAC:
+            containerFormat = Plugins::MimeType::MEDIA_AAC;
+            break;
+        default:
+            break;
+    }
+    return containerFormat;
+}
+ 
+void RecorderServer::SetMediaKitReport(RecStatus status)
+{
+    OHOS::Media::MediaEvent event;
+    if (status == REC_ERROR) {
+        event.MediaKitStatistics("AVRecorder", bundleName_, std::to_string(instanceId_), "AVRecorder fail", "");
+    }
 }
 
 bool RecorderServer::CheckCameraOutputState()

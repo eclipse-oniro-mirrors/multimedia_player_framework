@@ -135,6 +135,7 @@ public:
     void SetErrorInfo(int32_t errCode, std::string &errMsg);
     std::string GetVideoMime(VideoCodecFormat encoder);
     std::string GetAudioMime(AudioCodecFormat encoder);
+    std::string GetContainerFormat(OutputFormatType format);
 
     /* used for DFX events */
     uint64_t instanceId_ = 0;
@@ -143,6 +144,7 @@ private:
     int32_t Init();
     const std::string &GetStatusDescription(OHOS::Media::RecorderServer::RecStatus status);
     bool CheckCameraOutputState();
+    void SetMediaKitReport(RecStatus status);
 
     std::unique_ptr<IRecorderEngine> recorderEngine_ = nullptr;
     std::shared_ptr<RecorderCallback> recorderCb_ = nullptr;
