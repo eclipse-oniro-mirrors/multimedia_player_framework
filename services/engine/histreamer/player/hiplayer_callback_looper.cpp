@@ -390,7 +390,7 @@ bool HiPlayerCallbackLooper::IsAudioPass(const char* mimeType)
     }
     return false;
 }
-
+ 
 std::vector<std::string> HiPlayerCallbackLooper::GetDolbyList()
 {
     auto obs = obs_.lock();
