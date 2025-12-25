@@ -33,7 +33,7 @@ DolbyPassthroughCallback::DolbyPassthroughCallback(const sptr<IStandardDolbyPass
 
 DolbyPassthroughCallback::~DolbyPassthroughCallback()
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destory", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
 
@@ -47,9 +47,11 @@ bool DolbyPassthroughCallback::IsAudioPass(const char* mime)
 std::vector<std::string> DolbyPassthroughCallback::GetList()
 {
     MEDIA_LOGD("GetDolbyList in");
-    CHECK_AND_RETURN_RET_LOG(callbackProxy_ != nullptr, {}, "callbackProxy_ is nullptr");
+    std::vector<std::string> nulllist = {};
+    CHECK_AND_RETURN_RET_LOG(callbackProxy_ != nullptr, nulllist, "callbackProxy_ is nullptr");
     return callbackProxy_->GetList();
 }
+
 
 DolbyPassthroughProxy::DolbyPassthroughProxy(const sptr<IRemoteObject> &impl)
     : IRemoteProxy<IStandardDolbyPassthrough>(impl)
@@ -76,7 +78,7 @@ bool DolbyPassthroughProxy::IsAudioPass(const char* mime)
 
     data.WriteString(std::string(mime));
     int error = Remote()->SendRequest(static_cast<uint32_t>(ListenerMsg::IS_AUDIO_PASS), data, reply, option);
-    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, FALSE, "IsAudioPass failed, error: %{public}d", error);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, false, "IsAudioPass failed, error: %{public}d", error);
     return reply.ReadBool();
 }
 
@@ -88,14 +90,14 @@ std::vector<std::string> DolbyPassthroughProxy::GetList()
     MessageOption option(MessageOption::TF_SYNC);
 
     std::vector<std::string> nulllist = {};
-    bool token = data.WriteInterfaceToken(MediaDataSourceProxy::GetDescriptor());
+    bool token = data.WriteInterfaceToken(DolbyPassthroughProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, nulllist, "Failed to write descriptor!");
 
     int error = Remote()->SendRequest(static_cast<uint32_t>(ListenerMsg::GET_LIST), data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, nulllist, "GetDolbyList failed, error: %{public}d", error);
 
     std::vector<std::string> dolbylist;
-    reply.ReadStringVector(&dolbylist);
+    (void)reply.ReadStringVector(&dolbylist);
     return dolbylist;
 }
 } // namespace Media
