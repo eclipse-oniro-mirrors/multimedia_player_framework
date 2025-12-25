@@ -122,6 +122,7 @@ void PlayerServiceProxy::InitPlayerFuncsPart2()
     playerFuncs_[ENABLE_REPORT_AUDIO_INTERRUPT] = "Player::EnableReportAudioInterrupt";
     playerFuncs_[SET_CAMERA_POST_POSTPROCESSING] = "Player::SetCameraPostprocessing";
     playerFuncs_[GET_GLOBAL_INFO] = "Player::GetGlobalInfo";
+    playerFuncs_[GET_CURRENT_PRESENTATION_TIMESTAMP] = "Player::GetCurrentPresentationTimestamp";
     playerFuncs_[REGISTER_DEVICE_CAPABILITY] = "Player::RegisterDeviceCapability";
 }
 
