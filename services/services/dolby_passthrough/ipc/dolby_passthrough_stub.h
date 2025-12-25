@@ -22,7 +22,7 @@
 
 namespace OHOS {
 namespace Media {
-class DolbyPassthroughStub : public IRemoteProxy<IStandardDolbyPassthrough>, public NoCopyable {
+class DolbyPassthroughStub : public IRemoteStub<IStandardDolbyPassthrough>, public NoCopyable {
 public:
     explicit DolbyPassthroughStub(IsAudioPassthrough callback, GetDolbyList getDolbyList);
     virtual ~DolbyPassthroughStub();
@@ -37,4 +37,4 @@ private:
 };
 } // namespace Media
 } // namespace OHOS
-#endif //DOLBY_PASSTHROUGH_STUB_H
+#endif // DOLBY_PASSTHROUGH_STUB_H
