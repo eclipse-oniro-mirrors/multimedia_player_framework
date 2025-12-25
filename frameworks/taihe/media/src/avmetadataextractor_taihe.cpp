@@ -133,7 +133,7 @@ void AVMetadataExtractorImpl::SetUrlSource(::taihe::string_view url, optional_vi
     auto res = helper_->SetUrlSource(url_, header_);
     if (res == OHOS::Media::MSERR_OK) {
         state_ = OHOS::Media::HelperState::HELPER_STATE_RUNNABLE;
-    } else if (res == OHOS::Media::MSERR_CLEARTEXT_NOT_PERMITTED){
+    } else if (res == OHOS::Media::MSERR_CLEARTEXT_NOT_PERMITTED) {
         state_ = OHOS::Media::HelperState::HELPER_STATE_HTTP_INTERCEPTED;
     } else {
         state_ = OHOS::Media::HelperState::HELPER_ERROR;
