@@ -103,6 +103,15 @@ OH_AVErrCode OH_AVMediaSource_SetMimeType(OH_AVMediaSource *source, const char *
     return AV_ERR_OK;
 }
 
+OH_AVErrCode OH_AVMediaSource_EnableOfflineCache(OH_AVMediaSource *source, bool enable)
+{
+    CHECK_AND_RETURN_RET_LOG(source != nullptr, AV_ERR_INVALID_VAL, "input source is nullptr!");
+    MediaSourceObject* mediasourceObj = static_cast<MediaSourceObject*>(source);
+    CHECK_AND_RETURN_RET_LOG(mediasourceObj->mediasource_ != nullptr, AV_ERR_INVALID_VAL, "source is null");
+    mediasourceObj->mediasource_->enableOfflineCache(std::string(mimetype));
+    return AV_ERR_OK;
+}
+
 OH_AVMediaSource *OH_AVMediaSource_CreateWithUrl(const char *url, OH_AVHttpHeader *header)
 {
     CHECK_AND_RETURN_RET_LOG(url != nullptr, nullptr, "input url is nullptr!");
