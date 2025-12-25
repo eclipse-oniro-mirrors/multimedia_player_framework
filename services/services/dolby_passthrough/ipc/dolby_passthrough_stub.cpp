@@ -18,21 +18,22 @@
 #include "media_errors.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "DolbyPassthroughProxy"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "DolbyPassthroughStub"};
 }
 
 namespace OHOS {
 namespace Media {
 
 DolbyPassthroughStub::DolbyPassthroughStub(IsAudioPassthrough callback, GetDolbyList getDolbyList)
-    : callback_(callback), getDolbyList_(getDolbyList)
+    : callback_(callback)
+    , getDolbyList_(getDolbyList)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 DolbyPassthroughStub::~DolbyPassthroughStub()
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destory", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
 int DolbyPassthroughStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
@@ -42,7 +43,7 @@ int DolbyPassthroughStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Me
     auto remoteDescriptor = data.ReadInterfaceToken();
     if (DolbyPassthroughStub::GetDescriptor() != remoteDescriptor) {
         MEDIA_LOGE("Invalid descriptor");
-        return MSEE_INVALID_OPERATION;
+        return MSERR_INVALID_OPERATION;
     }
 
     switch (static_cast<ListenerMsg>(code)) {
@@ -54,7 +55,7 @@ int DolbyPassthroughStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Me
         }
         case ListenerMsg::GET_LIST: {
             std::vector<std::string> ret = GetList();
-            reply.WriteStringBool(ret);
+            reply.WriteStringVector(ret);
             return MSERR_OK;
         }
         default: {
@@ -64,10 +65,9 @@ int DolbyPassthroughStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Me
     }
 }
 
-
 bool DolbyPassthroughStub::IsAudioPass(const char* mime)
 {
-    MEDIA_LOGD("IsAudioPass in mime = %{public}s", mime);
+    MEDIA_LOGD("IsAudioPass in mime =  %{public}s", mime);
     if (!callback_) {
         MEDIA_LOGE("callback_ is null, cannot check IsAudioPass");
         return false;
@@ -78,7 +78,7 @@ bool DolbyPassthroughStub::IsAudioPass(const char* mime)
 std::vector<std::string> DolbyPassthroughStub::GetList()
 {
     if (!getDolbyList_) {
-        MEDIA_LOGE("getDolbyList_ is null, cannot check get list");
+        MEDIA_LOGE("getDolbyList_ is null, cannot get list");
         return {};
     }
     return getDolbyList_();
