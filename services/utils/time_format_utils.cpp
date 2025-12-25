@@ -27,6 +27,14 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "TimeFormatUtils"};
+const int HHMM_LENGTH = 4;
+const int HH_COLON_MM_MIN_LENGTH = 5;
+const int COLON_POS = 2;
+const int HOUR_START = 0;
+const int MIN_START_WITHOUT_COLON = 2;
+const int HOUR_LEN = 2;
+const int MIN_START_WITH_COLON = 3;
+const int MIN_LEN = 2;
 }
 
 namespace OHOS {
@@ -78,7 +86,8 @@ std::string TimeFormatUtils::FormatDateTimeByTimeZone(const std::string &iso8601
     return FormatLocalTime(localTime);
 }
 
-long TimeFormatUtils::ParseIso8601TimeZoneOffset(const std::string& tz) {
+long TimeFormatUtils::ParseIso8601TimeZoneOffset(const std::string& tz)
+{
     if (tz.empty() || tz == "Z") {
         return 0;
     }
@@ -89,20 +98,21 @@ long TimeFormatUtils::ParseIso8601TimeZoneOffset(const std::string& tz) {
     }
 
     std::string numPart = tz.substr(1);
-    int hours = 0, mins = 0;
+    int hours = 0;
+    int mins = 0;
 
     if (numPart.find(':') != std::string::npos) {
-        if (numPart.length() < 5 || numPart[2] != ':') {
+        if (numPart.length() < HH_COLON_MM_MIN_LENGTH || numPart[COLON_POS] != ':') {
             return 0;
         }
-        hours = std::stoi(numPart.substr(0, 2));
-        mins  = std::stoi(numPart.substr(3, 2));
+        hours = std::stoi(numPart.substr(HOUR_START, HOUR_LEN));
+        mins  = std::stoi(numPart.substr(MIN_START_WITH_COLON, MIN_LEN));
     } else {
-        if (numPart.length() != 4) {
+        if (numPart.length() != HHMM_LENGTH) {
             return 0;
         }
-        hours = std::stoi(numPart.substr(0, 2));
-        mins  = std::stoi(numPart.substr(2, 2));
+        hours = std::stoi(numPart.substr(HOUR_START, HOUR_LEN));
+        mins  = std::stoi(numPart.substr(MIN_START_WITHOUT_COLON, MIN_LEN));
     }
 
     long seconds = (hours * 60 + mins) * 60;
