@@ -4405,14 +4405,14 @@ int32_t HiPlayerImpl::GetMediaDescription(Format &format)
 
 bool HiPlayerImpl::IsAudioPass(const char* mimeType)
 {
-    MEDIA_LOG_D("IsAudioPass in");
+    MEDIA_LOG_I("HiPlayerImpl::IsAudioPass");
     FALSE_RETURN_V(mimeType != nullptr, false);
     return callbackLooper_.IsAudioPass(mimeType);
 }
 
 std::vector<std::string> HiPlayerImpl::GetDolbyList()
 {
-    MEDIA_LOG_D("GetDolbyList in");
+    MEDIA_LOG_I("HiPlayerImpl::GetDolbyList");
     return callbackLooper_.GetDolbyList();
 }
 }  // namespace Media
