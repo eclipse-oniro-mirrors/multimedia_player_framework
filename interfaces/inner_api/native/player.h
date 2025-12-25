@@ -1275,6 +1275,12 @@ public:
         return 0;
     }
 
+    virtual int32_t GetCurrentPresentationTimestamp(int64_t &currentPresentation)	
+    {	
+        currentPresentation = 0;	
+        return 0;
+    }
+
     virtual int32_t RegisterDeviceCapability(IsAudioPassthrough callback, GetDolbyList getDolbyList)
     {
         (void)callback;
