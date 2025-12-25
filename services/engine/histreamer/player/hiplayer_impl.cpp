@@ -2424,7 +2424,7 @@ int32_t HiPlayerImpl::GetSubtitleTrackInfo(std::vector<Format>& subtitleTrack)
 
 void HiPlayerImpl::SetMediaKitReport(const std::string &APIcall)
 {
-    MEDIA_LOG_D("GetTrackInfo in");
+    MEDIA_LOG_D("SetMediaKitReport in");
     nlohmann::json metaInfoJson;
     std::string videoMime = "";
     std::string audioMime = "";
