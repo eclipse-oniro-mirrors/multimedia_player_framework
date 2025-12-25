@@ -1085,9 +1085,8 @@ int32_t AVScreenCaptureNapi::GetStrategy(std::unique_ptr<AVScreenCaptureAsyncCon
     if (status == napi_ok && exist) {
         int32_t value = 0;
         auto ret = AVScreenCaptureNapi::GetPropertyInt32(env, strategyVal, "privacyMaskMode", value);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, (asyncCtx->AVScreenCaptureSignError(
-            MSERR_INVALID_VAL, "getPrivacyMaskMode", "privacyMaskMode"), MSERR_INVALID_VAL));
-        CHECK_AND_RETURN_RET_LOG(value == 0 || value == 1, MSERR_INVALID_VAL, "privacyMaskMode invalid");
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK && (value == 0 || value == 1), MSERR_INVALID_VAL,
+            "privacyMaskMode invalid");
         strategy.strategyForPrivacyMaskMode = value;
         strategy.setByUser = true;
     }

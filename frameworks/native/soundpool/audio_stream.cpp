@@ -53,7 +53,7 @@ bool AudioStream::SetPcmSharedMemory(const std::shared_ptr<AudioStandard::AudioS
     return true;
 }
 
-void AudioStream::SetManager(std::weak_ptr<StreamIDManager> streamIDManager)
+void AudioStream::SetManager(std::weak_ptr<IStreamIDManager> streamIDManager)
 {
     manager_ = streamIDManager;
 }
@@ -290,7 +290,7 @@ int32_t AudioStream::DoPlayWithSameSoundInterrupt()
         return MSERR_INVALID_VAL;
     }
     if (audioRenderer_ == nullptr) {
-        MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt, audioRenderer_ is nullptr, try again");
+        MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt, try to create audioRenderer");
         PreparePlayInner(audioRendererInfo_, playParameters_);
         CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL,
             "AudioStream::DoPlayWithSameSoundInterrupt, audioRenderer_ is nullptr");

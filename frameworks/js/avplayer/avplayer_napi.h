@@ -214,6 +214,10 @@ private:
      */
     static napi_value JsGetPlaybackPosition(napi_env env, napi_callback_info info);
     /**
+     * readonly currentPresentationTimestamp: number
+     */
+    static napi_value JsGetCurrentPresentationTimestamp(napi_env env, napi_callback_info info);
+    /**
      * readonly forceLoadVideo: boolean
      */
     static napi_value JsForceLoadVideo(napi_env env, napi_callback_info info);

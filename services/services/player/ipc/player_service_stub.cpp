@@ -554,6 +554,13 @@ int32_t PlayerServiceStub::GetPlaybackPosition(int32_t &playbackPosition)
     return playerServer_->GetPlaybackPosition(playbackPosition);
 }
 
+int32_t PlayerServiceStub::GetCurrentPresentationTimestamp(int64_t &currentPresentation)
+{
+    MediaTrace trace("PlayerServiceStub::GetCurrentPresentationTimestamp");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->GetCurrentPresentationTimestamp(currentPresentation);
+}
+
 int32_t PlayerServiceStub::GetVideoTrackInfo(std::vector<Format> &videoTrack)
 {
     MediaTrace trace("PlayerServiceStub::GetVideoTrackInfo");
@@ -983,6 +990,16 @@ int32_t PlayerServiceStub::GetCurrentTime(MessageParcel &data, MessageParcel &re
     int32_t currentTime = -1;
     int32_t ret = GetCurrentTime(currentTime);
     reply.WriteInt32(currentTime);
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::GetCurrentPresentationTimestamp(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    int64_t currentPresentation = 0;
+    int32_t ret = GetCurrentPresentationTimestamp(currentPresentation);
+    reply.WriteInt64(currentPresentation);
     reply.WriteInt32(ret);
     return MSERR_OK;
 }

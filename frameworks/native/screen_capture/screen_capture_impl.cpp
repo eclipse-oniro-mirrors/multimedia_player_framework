@@ -116,6 +116,22 @@ int32_t ScreenCaptureImpl::ExcludeContent(ScreenCaptureContentFilter &contentFil
     return screenCaptureService_->ExcludeContent(contentFilter);
 }
 
+int32_t ScreenCaptureImpl::AddWhiteListWindows(const std::vector<uint64_t> &windowIDsVec)
+{
+    MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " AddWhiteListWindows in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_NO_MEMORY,
+        "screen capture service does not exist.");
+    return screenCaptureService_->AddWhiteListWindows(windowIDsVec);
+}
+
+int32_t ScreenCaptureImpl::RemoveWhiteListWindows(const std::vector<uint64_t> &windowIDsVec)
+{
+    MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " RemoveWhiteListWindows in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_NO_MEMORY,
+        "screen capture service does not exist.");
+    return screenCaptureService_->RemoveWhiteListWindows(windowIDsVec);
+}
+
 int32_t ScreenCaptureImpl::ExcludePickerWindows(std::vector<int32_t> &windowIDsVec)
 {
     MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " ExcludePickerWindows in", FAKE_POINTER(this));

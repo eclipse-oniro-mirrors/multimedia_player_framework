@@ -311,7 +311,7 @@ ani_object CommonTaihe::CreateAudioRendererInfo(ani_env *env,
 ani_status CommonTaihe::ToAniLongObject(ani_env *env, int64_t src, ani_object &aniObj)
 {
     CHECK_AND_RETURN_RET_LOG(env != nullptr, ANI_INVALID_ARGS, "Invalid env");
-    static const char *className = "escompat.BigInt";
+    static const char *className = "std.core.BigInt";
 
     ani_class cls {};
     CHECK_AND_RETURN_RET_LOG(ANI_OK == env->FindClass(className, &cls), ANI_ERROR, "Failed to find class");

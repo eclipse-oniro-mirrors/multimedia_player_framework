@@ -5710,5 +5710,46 @@ HWTEST_F(PlayerServerUnitTest, Player_GetTrackDescription_001, TestSize.Level1)
     EXPECT_EQ(MSERR_OK, player_->Stop());
     ASSERT_EQ(MSERR_OK, player_->GetTrackDescription(format, 0));
 }
+
+/**
+ * @tc.name  : Test GetCurrentPresentationTimestamp  API
+ * @tc.number: Player_GetCurrentPresentationTimestamp _001
+ * @tc.desc  : Test Player state
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetCurrentPresentationTimestamp_001, TestSize.Level1)
+{
+    int64_t currentPresentation;
+    EXPECT_NE(MSERR_OK, player_->GetCurrentPresentationTimestamp(currentPresentation));
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    ASSERT_EQ(MSERR_OK, player_->GetCurrentPresentationTimestamp(currentPresentation));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    ASSERT_EQ(MSERR_OK, player_->GetCurrentPresentationTimestamp(currentPresentation));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    ASSERT_EQ(MSERR_OK, player_->GetCurrentPresentationTimestamp(currentPresentation));
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    ASSERT_EQ(MSERR_OK, player_->GetCurrentPresentationTimestamp(currentPresentation));
+    int32_t duration = 0;
+    ASSERT_EQ(MSERR_OK, player_->GetDuration(duration));
+    ASSERT_EQ(MSERR_OK, player_->Seek(duration, PlayerSeekMode::SEEK_NEXT_SYNC));
+    ASSERT_EQ(MSERR_OK, player_->Play());
+    sleep(1);
+    ASSERT_EQ(false, player_->IsPlaying());
+    ASSERT_EQ(PlayerStates::PLAYER_PLAYBACK_COMPLETE, player_->GetState());
+    ASSERT_EQ(MSERR_OK, player_->GetCurrentPresentationTimestamp(currentPresentation));
+}
+
+/**
+ * @tc.name  : Test GetCurrentPresentationTimestamp  API
+ * @tc.number: Player_GetCurrentPresentationTimestamp _002
+ * @tc.desc  : Test Player state
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetCurrentPresentationTimestamp_002, TestSize.Level1)
+{
+    int64_t currentPresentation;
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    server_->lastOpStatus_ = PLAYER_STATE_ERROR;
+    EXPECT_NE(MSERR_OK, server_->GetCurrentPresentationTimestamp(currentPresentation));
+}
 } // namespace Media
 } // namespace OHOS

@@ -78,6 +78,8 @@ int32_t ScreenCaptureServiceStub::Init()
     screenCaptureStubFuncs_[RELEASE_VIDEO_BUF] = &ScreenCaptureServiceStub::ReleaseVideoBuffer;
     screenCaptureStubFuncs_[DESTROY] = &ScreenCaptureServiceStub::DestroyStub;
     screenCaptureStubFuncs_[EXCLUDE_CONTENT] = &ScreenCaptureServiceStub::ExcludeContent;
+    screenCaptureStubFuncs_[ADD_WHITE_LIST_WINDOWS] = &ScreenCaptureServiceStub::AddWhiteListWindows;
+    screenCaptureStubFuncs_[REMOVE_WHITE_LIST_WINDOWS] = &ScreenCaptureServiceStub::RemoveWhiteListWindows;
     screenCaptureStubFuncs_[EXCLUDE_PICKER_WINDOWS] = &ScreenCaptureServiceStub::ExcludePickerWindows;
     screenCaptureStubFuncs_[SET_PICKER_MODE] = &ScreenCaptureServiceStub::SetPickerMode;
     screenCaptureStubFuncs_[SHOW_CURSOR] = &ScreenCaptureServiceStub::ShowCursor;
@@ -254,6 +256,20 @@ int32_t ScreenCaptureServiceStub::ExcludeContent(ScreenCaptureContentFilter &con
     return screenCaptureServer_->ExcludeContent(contentFilter);
 }
 
+int32_t ScreenCaptureServiceStub::AddWhiteListWindows(const std::vector<uint64_t> &windowIDsVec)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    return screenCaptureServer_->AddWhiteListWindows(windowIDsVec);
+}
+
+int32_t ScreenCaptureServiceStub::RemoveWhiteListWindows(const std::vector<uint64_t> &windowIDsVec)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    return screenCaptureServer_->RemoveWhiteListWindows(windowIDsVec);
+}
+
 int32_t ScreenCaptureServiceStub::ExcludePickerWindows(std::vector<int32_t> &windowIDsVec)
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
@@ -384,6 +400,30 @@ int32_t ScreenCaptureServiceStub::ExcludeContent(MessageParcel &data, MessagePar
         contentFilter.windowIDsVec = vec;
     }
     int32_t ret = ExcludeContent(contentFilter);
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServiceStub::AddWhiteListWindows(MessageParcel &data, MessageParcel &reply)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    std::vector<uint64_t> vec;
+    CHECK_AND_RETURN_RET_LOG(data.ReadUInt64Vector(&vec), MSERR_INVALID_STATE,
+        "failed to read data from MessageParcel");
+    int32_t ret = AddWhiteListWindows(vec);
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServiceStub::RemoveWhiteListWindows(MessageParcel &data, MessageParcel &reply)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    std::vector<uint64_t> vec;
+    CHECK_AND_RETURN_RET_LOG(data.ReadUInt64Vector(&vec), MSERR_INVALID_STATE,
+        "failed to read data from MessageParcel");
+    int32_t ret = RemoveWhiteListWindows(vec);
     reply.WriteInt32(ret);
     return MSERR_OK;
 }

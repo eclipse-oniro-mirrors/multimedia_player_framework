@@ -46,7 +46,8 @@ void CacheBufferUnitTest::TearDownTestCase(void) {}
 void CacheBufferUnitTest::SetUp(void)
 {
     cacheBuffer_ = std::make_shared<AudioStream>(trackFormat, soundID, streamID, cacheBufferStopThreadPool);
-    streamIDManager_ = std::make_shared<StreamIDManager>(TEST_FULL_CACHE_DATA, AudioStandard::AudioRendererInfo());
+    streamIDManager_ = std::make_shared<StreamIDManagerWithSameSoundInterrupt>(TEST_FULL_CACHE_DATA,
+        AudioStandard::AudioRendererInfo());
     mockAudioRenderer_ = std::make_unique<MockAudioRenderer>();
 }
 

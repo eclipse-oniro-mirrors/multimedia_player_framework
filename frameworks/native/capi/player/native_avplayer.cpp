@@ -2324,7 +2324,7 @@ OH_AVErrCode OH_AVPlayer_SetMediaSource(OH_AVPlayer *player, OH_AVMediaSource *s
     return ret == MSERR_OK ? AV_ERR_OK : AV_ERR_INVALID_VAL;
 }
 
-OH_AVErrCode OH_AVPlayer_SetSeiReceivedCallback(OH_AVPlayer *player, const int *payloadTypes, uint32_t typeNum,
+OH_AVErrCode OH_AVPlayer_SetSeiReceivedCallback(OH_AVPlayer *player, const int32_t *payloadTypes, uint32_t typeNum,
     OH_AVPlayerOnSeiMessageReceivedCallback callback, void *userData)
 {
     CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");

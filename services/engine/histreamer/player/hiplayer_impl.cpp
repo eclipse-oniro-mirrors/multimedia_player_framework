@@ -1798,6 +1798,17 @@ int32_t HiPlayerImpl::GetPlaybackPosition(int32_t& playbackPositionMs)
     return TransStatus(Status::OK);
 }
 
+int32_t HiPlayerImpl::GetCurrentPresentationTimestamp(int64_t &currentPresentation)
+{
+    FALSE_RETURN_V(syncManager_ != nullptr, TransStatus(Status::ERROR_NULL_POINTER));
+    currentPresentation = syncManager_->GetMediaTimeNow();
+    int64_t startPts = syncManager_->GetMediaStartPts();
+    FALSE_RETURN_V_MSG_E(startPts != HST_TIME_NONE, currentPresentation, "startPts is none");
+    currentPresentation += startPts;
+    MEDIA_LOG_D("GetCurrentPresentationTimestamp: " PUBLIC_LOG_D64, currentPresentation);
+    return TransStatus(Status::OK);
+}
+
 int32_t HiPlayerImpl::GetDuration(int32_t& durationMs)
 {
     durationMs = durationMs_.load();
@@ -2011,13 +2022,14 @@ int32_t HiPlayerImpl::SetPlaybackSpeed(PlaybackRateMode mode)
 int32_t HiPlayerImpl::SetPlaybackRate(float rate)
 {
     MEDIA_LOG_I("SetPlaybackRate %{public}f", rate);
+    int32_t extra = 0;
+    Format format;
     if (doSetPlaybackSpeed(rate) != Status::OK) {
         MEDIA_LOG_E("SetPlaybackRate audioSink set speed error");
+        callbackLooper_.OnInfo(INFO_TYPE_RATEDONE, extra, format);
         return MSERR_UNKNOWN;
     }
-    int32_t extra = 0;
     playbackRate_ = rate;
-    Format format;
     (void)format.PutFloatValue(PlayerKeys::PLAYER_PLAYBACK_RATE, rate);
     callbackLooper_.OnInfo(INFO_TYPE_RATEDONE, extra, format);
     MEDIA_LOG_I("SetPlaybackRate end");

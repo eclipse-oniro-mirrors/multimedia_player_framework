@@ -128,6 +128,7 @@ public:
     bool IsSeekContinuousSupported();
     array<map<string, MediaDescriptionValue>> GetTrackDescriptionSync();
     int32_t GetPlaybackPosition();
+    int64_t GetCurrentPresentationTimestamp();
     void SetBitrate(int32_t bitrate);
     void SetDecryptionConfig(ohos::multimedia::drm::weak::MediaKeySession mediaKeySession, bool secureVideoPath);
     ::taihe::array<MediaKeySystemInfo> GetMediaKeySystemInfos();
@@ -226,7 +227,7 @@ public:
     PlayerSwitchMode TransferSwitchMode(int32_t mode);
     void GetAVPlayStrategyFromStrategyTmp(AVPlayStrategy &strategy, const AVPlayStrategyTmp &strategyTmp);
     void SetPlaybackRate(double rate);
-    double GetPlaybackRate();
+    double GetPlaybackRateSync();
 private:
     static bool IsSystemApp();
     void ResetUserParameters();

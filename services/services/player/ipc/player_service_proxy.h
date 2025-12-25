@@ -57,6 +57,7 @@ public:
     int32_t SetVolumeMode(int32_t mode) override;
     int32_t GetCurrentTime(int32_t &currentTime) override;
     int32_t GetPlaybackPosition(int32_t &playbackPosition) override;
+    int32_t GetCurrentPresentationTimestamp(int64_t &currentPresentation) override;
     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
     int32_t GetPlaybackInfo(Format& playbackInfo) override;
     int32_t GetPlaybackStatisticMetrics(Format &playbackStatisticMetrics) override;

@@ -42,7 +42,7 @@ public:
     void SetAudioRendererInstance(int32_t globalId, std::unique_ptr<AudioStandard::AudioRenderer> audioRenderer);
     void RemoveOldAudioRenderer();
     void SetParallelManager(std::weak_ptr<ParallelStreamManager> parallelManager);
-    void SetStreamIDManager(std::weak_ptr<StreamIDManager> streamIDManager);
+    void SetStreamIDManager(std::weak_ptr<IStreamIDManager> streamIDManager);
     void DelAudioRenderer(int32_t globalId);
 
 private:
@@ -52,7 +52,7 @@ private:
     int32_t globalIdNext_ = 0;
     std::list<std::pair<int32_t, std::unique_ptr<AudioStandard::AudioRenderer>>> audioRendererVector_;
     std::list<std::weak_ptr<ParallelStreamManager>> parallelManagerList_;
-    std::list<std::weak_ptr<StreamIDManager>> streamIDManagerList_;
+    std::list<std::weak_ptr<IStreamIDManager>> streamIDManagerList_;
 };
 } // namespace Media
 } // namespace OHOS

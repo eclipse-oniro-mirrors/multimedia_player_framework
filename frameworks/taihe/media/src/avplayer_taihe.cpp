@@ -1382,6 +1382,28 @@ int32_t AVPlayerImpl::GetPlaybackPosition()
     return playbackPosition;
 }
 
+int64_t AVPlayerImpl::GetCurrentPresentationTimestamp()
+{
+    MediaTrace trace("AVPlayerImpl::get currentPresentationTimestamp");
+    MEDIA_LOGD("getCurrentPresentationTimestamp In");
+    int64_t currentPresentation = -1;
+    CHECK_AND_RETURN_RET_LOG(player_ != nullptr, currentPresentation, "failed to check player_");
+    std::string curState = GetCurrentState();
+    if (curState != AVPlayerState::STATE_PLAYING &&
+        curState != AVPlayerState::STATE_PAUSED &&
+        curState != AVPlayerState::STATE_COMPLETED) {
+        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not playing/paused/completed, unsupport video current presentation timestamp");
+        return currentPresentation;
+    }
+    (void)player_->GetCurrentPresentationTimestamp(currentPresentation);
+    if (currentPresentation != 0) {
+        MEDIA_LOGD("0x%{public}06" PRIXPTR " JsGettCurrentPresentationTimestamp Out, time: (%{public}" PRIu64 ")",
+            FAKE_POINTER(this), currentPresentation);
+    }
+    return currentPresentation;
+}
+
 void AVPlayerImpl::SetBitrate(int32_t bitrate)
 {
     MediaTrace trace("AVPlayerImpl::setBitrate");
@@ -1441,7 +1463,7 @@ void AVPlayerImpl::SetPlaybackRate(double rate)
     return;
 }
 
-double AVPlayerImpl::GetPlaybackRate()
+double AVPlayerImpl::GetPlaybackRateSync()
 {
     MediaTrace trace("AVPlayerImpl::getRate");
     MEDIA_LOGI("TaiheGetRate In");

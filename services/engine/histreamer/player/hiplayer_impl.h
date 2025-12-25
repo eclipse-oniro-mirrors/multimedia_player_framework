@@ -131,6 +131,7 @@ public:
     int32_t SetObs(const std::weak_ptr<IPlayerEngineObs>& obs) override;
     int32_t GetCurrentTime(int32_t& currentPositionMs) override;
     int32_t GetPlaybackPosition(int32_t& playbackPositionMs) override;
+    int32_t GetCurrentPresentationTimestamp(int64_t &currentPresentation) override;
     int32_t GetDuration(int32_t& durationMs) override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
     int32_t SetPlaybackRate(float rate) override;

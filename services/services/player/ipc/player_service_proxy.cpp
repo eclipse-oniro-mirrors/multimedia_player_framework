@@ -540,6 +540,23 @@ int32_t PlayerServiceProxy::GetPlaybackPosition(int32_t &playbackPosition)
     return reply.ReadInt32();
 }
 
+int32_t PlayerServiceProxy::GetCurrentPresentationTimestamp(int64_t &currentPresentation)
+{
+    MediaTrace trace("PlayerServiceProxy::GetCurrentPresentationTimestamp");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    int32_t error = SendRequest(GET_CURRENT_PRESENTATION_TIMESTAMP, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "GetCurrentPresentationTimestamp failed, error: %{public}d", error);
+    currentPresentation = reply.ReadInt64();
+    return reply.ReadInt32();
+}
+
 int32_t PlayerServiceProxy::GetVideoTrackInfo(std::vector<Format> &videoTrack)
 {
     MediaTrace trace("PlayerServiceProxy::GetVideoTrackInfo");

@@ -98,9 +98,9 @@ int32_t SoundPool::Init(int maxStreams, const AudioStandard::AudioRendererInfo &
     // start contruct stream manager
     std::lock_guard lock(soundPoolLock_);
     soundIDManager_ = std::make_shared<SoundIDManager>();
-    streamIdManager_ = std::make_shared<StreamIDManager>(maxStreams, audioRenderInfo, interruptMode_);
-    int ret = streamIdManager_->InitThreadPool();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_VAL, "failed to init streamIdManager");
+    streamIDManagerWithSameSoundInterrupt_ = std::make_shared<StreamIDManagerWithSameSoundInterrupt>(maxStreams,
+        audioRenderInfo);
+    streamIDManagerWithNoInterrupt_ = std::make_shared<StreamIDManagerWithNoInterrupt>(maxStreams, audioRenderInfo);
     return MSERR_OK;
 }
 
@@ -175,18 +175,20 @@ int32_t SoundPool::Play(int32_t soundID, const PlayParams &playParameters)
     }
 
     // New playback path
-    CHECK_AND_RETURN_RET_LOG(streamIdManager_ != nullptr, ERROR_RETURN, "sound pool have released.");
+    if (!isSetInterruptMode_) {
+        MEDIA_LOGI("interruptMode_ is %{public}d", interruptMode_);
+        streamIdManager_ = (interruptMode_ == InterruptMode::SAME_SOUND_INTERRUPT) ?
+            streamIDManagerWithSameSoundInterrupt_ : streamIDManagerWithNoInterrupt_;
+        streamIDManagerWithSameSoundInterrupt_.reset();
+        streamIDManagerWithNoInterrupt_.reset();
+        CHECK_AND_RETURN_RET_LOG(streamIdManager_ != nullptr, ERROR_RETURN, "Initialize streamIdManager_ failed.");
+        int ret = streamIdManager_->InitThreadPool();
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ERROR_RETURN, "failed to init streamIdManager");
+    }
     isSetInterruptMode_ = true;
-    if (interruptMode_ == InterruptMode::SAME_SOUND_INTERRUPT) {
-        streamID = streamIdManager_->PlayWithSameSoundInterrupt(soundParser, playParameters);
-        MEDIA_LOGI("SoundPool::Play end, streamID is %{public}d", streamID);
-        return streamID;
-    }
-    if (interruptMode_ == InterruptMode::NO_INTERRUPT) {
-        streamID = streamIdManager_->PlayWithNoInterrupt(soundParser, playParameters);
-        MEDIA_LOGI("SoundPool::Play end, streamID is %{public}d", streamID);
-        return streamID;
-    }
+    CHECK_AND_RETURN_RET_LOG(streamIdManager_ != nullptr, ERROR_RETURN, "sound pool have released.");
+    streamID = streamIdManager_->Play(soundParser, playParameters);
+    MEDIA_LOGI("SoundPool::Play end, streamID is %{public}d", streamID);
     return streamID;
 }
 
@@ -203,9 +205,10 @@ int32_t SoundPool::Stop(int32_t streamID)
         }
         return MSERR_INVALID_OPERATION;
     }
-    CHECK_AND_RETURN_RET_LOG(streamIdManager_ != nullptr, MSERR_INVALID_VAL,
-        "SoundPool::Stop, streamIdManager_ is nullptr");
-    if (std::shared_ptr<AudioStream> stream = streamIdManager_->GetStreamByStreamIDWithLock(streamID)) {
+    if (streamIdManager_ != nullptr) {
+        std::shared_ptr<AudioStream> stream = streamIdManager_->GetStreamByStreamIDWithLock(streamID);
+        CHECK_AND_RETURN_RET_LOG(stream != nullptr, MSERR_INVALID_VAL,
+            "SoundPool::Stop, stream is nullptr");
         return stream->Stop();
     }
     MEDIA_LOGE("SoundPool::Stop, can not find the stream(%{public}d)", streamID);
@@ -310,7 +313,6 @@ void SoundPool::SetInterruptMode(InterruptMode interruptMode)
 {
     std::lock_guard lock(soundPoolLock_);
     CHECK_AND_RETURN_LOG(!isSetInterruptMode_, "SoundPool::SetInterruptMode failed, InterruptMode has been set");
-    CHECK_AND_RETURN_LOG(streamIdManager_ != nullptr, "SoundPool::SetInterruptMode, streamIdManager_ is nullptr");
     MEDIA_LOGI("SoundPool::SetInterruptMode, current interruptMode is %{public}d, new interruptMode is %{public}d",
         interruptMode_, interruptMode);
     if (interruptMode < InterruptMode::NO_INTERRUPT || interruptMode > InterruptMode::SAME_SOUND_INTERRUPT) {
@@ -318,7 +320,6 @@ void SoundPool::SetInterruptMode(InterruptMode interruptMode)
         return;
     }
     interruptMode_ = interruptMode;
-    streamIdManager_->SetInterruptMode(interruptMode);
 }
 
 int32_t SoundPool::Unload(int32_t soundID)
@@ -333,13 +334,15 @@ int32_t SoundPool::Unload(int32_t soundID)
         parallelStreamManager_->UnloadStream(soundID);
         return soundIDManager_->Unload(soundID);
     }
-    CHECK_AND_RETURN_RET_LOG(streamIdManager_ != nullptr, MSERR_INVALID_VAL, "streamIdManager_ has been released");
-    std::vector<int32_t> streamIDsToBeRemoved = streamIdManager_->GetStreamIDBySoundIDWithLock(soundID);
-    for (int32_t streamID : streamIDsToBeRemoved) {
-        if (std::shared_ptr<AudioStream> stream = streamIdManager_->GetStreamByStreamIDWithLock(streamID)) {
-            stream->Stop();
-            stream->Release();
-            streamIdManager_->ClearStreamIDInDeque(soundID, streamID);
+
+    if (streamIdManager_ != nullptr) {
+        std::vector<int32_t> streamIDsToBeRemoved = streamIdManager_->GetStreamIDBySoundIDWithLock(soundID);
+        for (int32_t streamID : streamIDsToBeRemoved) {
+            if (std::shared_ptr<AudioStream> stream = streamIdManager_->GetStreamByStreamIDWithLock(streamID)) {
+                stream->Stop();
+                stream->Release();
+                streamIdManager_->ClearStreamIDInDeque(soundID, streamID);
+            }
         }
     }
     return soundIDManager_->Unload(soundID);
@@ -394,8 +397,11 @@ int32_t SoundPool::SetSoundPoolCallback(const std::shared_ptr<ISoundPoolCallback
     if (soundIDManager_ != nullptr) {
         soundIDManager_->SetCallback(soundPoolCallback);
     }
-    if (streamIdManager_ != nullptr) {
-        streamIdManager_->SetCallback(soundPoolCallback);
+    if (streamIDManagerWithSameSoundInterrupt_ != nullptr) {
+        streamIDManagerWithSameSoundInterrupt_->SetCallback(soundPoolCallback);
+    }
+    if (streamIDManagerWithNoInterrupt_ != nullptr) {
+        streamIDManagerWithNoInterrupt_->SetCallback(soundPoolCallback);
     }
     if (parallelStreamManager_ != nullptr) {
         parallelStreamManager_->SetCallback(soundPoolCallback);
@@ -408,8 +414,11 @@ int32_t SoundPool::SetSoundPoolFrameWriteCallback(
     const std::shared_ptr<ISoundPoolFrameWriteCallback> &frameWriteCallback)
 {
     MEDIA_LOGI("SoundPool::SetSoundPoolFrameWriteCallback");
-    if (streamIdManager_ != nullptr) {
-        streamIdManager_->SetFrameWriteCallback(frameWriteCallback);
+    if (streamIDManagerWithSameSoundInterrupt_ != nullptr) {
+        streamIDManagerWithSameSoundInterrupt_->SetFrameWriteCallback(frameWriteCallback);
+    }
+    if (streamIDManagerWithNoInterrupt_ != nullptr) {
+        streamIDManagerWithNoInterrupt_->SetFrameWriteCallback(frameWriteCallback);
     }
     if (parallelStreamManager_ != nullptr) {
         parallelStreamManager_->SetFrameWriteCallback(frameWriteCallback);

@@ -69,6 +69,7 @@ private:
     static void ProcessEosSeekEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
     static void ProcessPerfInfoEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
     static void ProcessMetricsEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
+    int64_t CalculateEventTimestamp(int64_t steadyMs);
     DfxEventHandleFunc metricsCallback_;
     std::string groupId_ {};
     std::string instanceId_ {};

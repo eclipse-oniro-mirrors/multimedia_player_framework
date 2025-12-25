@@ -94,6 +94,7 @@ public:
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t GetCurrentTime(int32_t &currentTime) override;
     int32_t GetPlaybackPosition(int32_t &playbackPosition) override;
+    int32_t GetCurrentPresentationTimestamp(int64_t &currentPresentation) override;
     int32_t GetVideoWidth() override;
     int32_t GetVideoHeight() override;
     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;

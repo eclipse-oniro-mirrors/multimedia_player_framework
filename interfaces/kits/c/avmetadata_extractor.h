@@ -77,7 +77,7 @@ OH_AVMetadataExtractor_OutputParam* OH_AVMetadataExtractor_OutputParam_Create();
  *         {@link AV_ERR_INVALID_VAL} if input params is nullptr.
  * @since 23
  */
-OH_AVErrCode OH_AVMetadataExtractor_OutputParam_Destroy(OH_AVMetadataExtractor_OutputParam* outputParam);
+void OH_AVMetadataExtractor_OutputParam_Destroy(OH_AVMetadataExtractor_OutputParam* outputParam);
 
 /**
  * @brief Set the desired output size for the fetched frame.
@@ -113,7 +113,7 @@ bool OH_AVMetadataExtractor_OutputParam_SetSize(OH_AVMetadataExtractor_OutputPar
  * @since 23
  */
 OH_AVErrCode OH_AVMetadataExtractor_FetchFrameByTime(OH_AVMetadataExtractor* extractor, int64_t timeUs,
-    OH_AVMedia_SeekMode queryOption, const OH_AVMetadataExtractor_OutputParam* outputParam,
+    OH_AVMedia_SeekMode seekMode, const OH_AVMetadataExtractor_OutputParam* outputParam,
     OH_PixelmapNative** pixelMap);
 
 typedef void (*OH_AVMetadataExtractor_OnFrameFetched)(OH_AVMetadataExtractor* extractor,
@@ -128,7 +128,7 @@ typedef void (*OH_AVMetadataExtractor_OnFrameFetched)(OH_AVMetadataExtractor* ex
  * @param timeUs Pointer to an array of time positions (in microseconds) where frames are to be retrieved.
  *               Must not be nullptr when timesLen > 0.
  * @param timesUsSize The number of time points in the timeUs array.
- * @param queryOption The query option that defines the relationship between each given time and a frame.
+ * @param seekMode The seek mode that defines the relationship between each given time and a frame.
  *                For details, see {@link OH_AVMedia_SeekMode}.
  * @param outputParam Pointer to an OH_AVMetadataExtractor_OutputParam instance that specifies output parameters
  *                     for the fetched frames (such as desired size and pixel format). Can be nullptr to use defaults.
@@ -146,7 +146,7 @@ typedef void (*OH_AVMetadataExtractor_OnFrameFetched)(OH_AVMetadataExtractor* ex
  * @since 23
  */
 OH_AVErrCode OH_AVMetadataExtractor_FetchFramesByTimes(OH_AVMetadataExtractor* extractor, int64_t timeUs[],
-    uint16_t timesUsSize, OH_AVMedia_SeekMode queryOption, const OH_AVMetadataExtractor_OutputParam* outputParam,
+    uint16_t timesUsSize, OH_AVMedia_SeekMode seekMode, const OH_AVMetadataExtractor_OutputParam* outputParam,
     OH_AVMetadataExtractor_OnFrameFetched onFrameInfoCallback, void* userData);
 
 /**
