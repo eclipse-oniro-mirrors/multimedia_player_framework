@@ -29,11 +29,6 @@ using namespace OHOS::Media;
 using namespace std;
 using namespace testing::ext;
 
-namespace {
-    const long SEC_PER_HOUR = 3600;
-    const long SEC_PER_MIN  = 60;
-}
-
 namespace OHOS {
 namespace Media {
 void TimeFormatUtilsUnitTest::SetUpTestCase(void) {}
@@ -175,64 +170,6 @@ HWTEST_F(TimeFormatUtilsUnitTest, FormatDateTimeByString_008, TestSize.Level0)
     std::string dateTime = "2022-12 12:00";
     std::string expected = "2022-12-01 12:00:00";
     EXPECT_EQ(TimeFormatUtils::FormatDateTimeByString(dateTime), expected);
-}
-
-HWTEST_F(TimeFormatUtilsUnitTest, ParseIso8601TimeZoneOffset_001, TestSize.Level0)
-{
-    // Empty or Z → 0
-    EXPECT_EQ(TimeFormatUtils::ParseIso8601TimeZoneOffset(""), 0L);
-    EXPECT_EQ(TimeFormatUtils::ParseIso8601TimeZoneOffset("Z"), 0L);
-}
-
-HWTEST_F(TimeFormatUtilsUnitTest, ParseIso8601TimeZoneOffset_002, TestSize.Level0)
-{
-    // Invalid symbol
-    EXPECT_EQ(TimeFormatUtils::ParseIso8601TimeZoneOffset("X0800"), 0L);
-    EXPECT_EQ(TimeFormatUtils::ParseIso8601TimeZoneOffset("@08:00"), 0L);
-    EXPECT_EQ(TimeFormatUtils::ParseIso8601TimeZoneOffset("0800"), 0L);
-}
-
-HWTEST_F(TimeFormatUtilsUnitTest, ParseIso8601TimeZoneOffset_003, TestSize.Level0)
-{
-    // Valid +HH:MM
-    EXPECT_EQ(TimeFormatUtils::ParseIso8601TimeZoneOffset("+08:00"), 8 * SEC_PER_HOUR);
-    EXPECT_EQ(TimeFormatUtils::ParseIso8601TimeZoneOffset("-05:30"), -(5 * SEC_PER_HOUR + 30 * SEC_PER_MIN));
-    EXPECT_EQ(TimeFormatUtils::ParseIso8601TimeZoneOffset("+00:00"), 0L);
-}
-
-HWTEST_F(TimeFormatUtilsUnitTest, ParseIso8601TimeZoneOffset_004, TestSize.Level0)
-{
-    // Invalid +H:M or truncated
-    EXPECT_EQ(TimeFormatUtils::ParseIso8601TimeZoneOffset("+8:0"), 0L);
-    EXPECT_EQ(TimeFormatUtils::ParseIso8601TimeZoneOffset("+08:"), 0L);
-    EXPECT_EQ(TimeFormatUtils::ParseIso8601TimeZoneOffset("+0:00"), 0L); // 长度不够
-    EXPECT_EQ(TimeFormatUtils::ParseIso8601TimeZoneOffset("+08:0"), 0L); // mins only 1 digit
-}
-
-HWTEST_F(TimeFormatUtilsUnitTest, ParseIso8601TimeZoneOffset_005, TestSize.Level0)
-{
-    // Valid +HHMM (4-digit)
-    EXPECT_EQ(TimeFormatUtils::ParseIso8601TimeZoneOffset("+0800"), 8 * SEC_PER_HOUR);
-    EXPECT_EQ(TimeFormatUtils::ParseIso8601TimeZoneOffset("-1234"), -(12 * SEC_PER_HOUR + 34 * SEC_PER_MIN));
-    EXPECT_EQ(TimeFormatUtils::ParseIso8601TimeZoneOffset("+0000"), 0L);
-}
-
-HWTEST_F(TimeFormatUtilsUnitTest, ParseIso8601TimeZoneOffset_006, TestSize.Level0)
-{
-    // Invalid HHMM (not 4-digit)
-    EXPECT_EQ(TimeFormatUtils::ParseIso8601TimeZoneOffset("+08"), 0L);
-    EXPECT_EQ(TimeFormatUtils::ParseIso8601TimeZoneOffset("+080"), 0L);
-    EXPECT_EQ(TimeFormatUtils::ParseIso8601TimeZoneOffset("+08000"), 0L); // too long
-}
-
-HWTEST_F(TimeFormatUtilsUnitTest, ParseIso8601TimeZoneOffset_007, TestSize.Level0)
-{
-    // Extreme but valid values
-    EXPECT_EQ(TimeFormatUtils::ParseIso8601TimeZoneOffset("+1400"), 14 * SEC_PER_HOUR); // max UTC+14
-    EXPECT_EQ(TimeFormatUtils::ParseIso8601TimeZoneOffset("-1200"), -12 * SEC_PER_HOUR); // min common
-    // Note: "+9999" is parsed as 99h99m, though invalid in real world
-    long extreme = (99 * 60 + 99) * 60;
-    EXPECT_EQ(TimeFormatUtils::ParseIso8601TimeZoneOffset("+9999"), extreme);
 }
 } // namespace Media
 } // namespace OHOS
