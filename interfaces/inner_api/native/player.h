@@ -120,6 +120,14 @@ public:
     {
         return mimeType_;
     }
+    void enableOfflineCache(bool enable) 
+    {
+        enable_ = enable;
+    }
+    bool GetEnalbe()
+    {
+        return enable;
+    }
 
     const std::vector<AVPlayMediaStream>& GetAVPlayMediaStreamList()
     {
@@ -152,6 +160,7 @@ public:
     }
     std::string url {};
     std::string mimeType_ {};
+    bool enalbe_ {false};
     std::map<std::string, std::string> header;
     std::shared_ptr<LoaderCallback> mediaSourceLoaderCb_ {nullptr};
     std::shared_ptr<Plugins::IMediaSourceLoader> sourceLoader_ {nullptr};

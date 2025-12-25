@@ -392,9 +392,20 @@ public:
         return mediaStreamVec_;
     }
 
+    void enableOfflineCache(const bool& enable) 
+    {
+        enable_ = enable;
+    }
+
+    bool GetEnable()
+    {
+        return enable_;
+    }
+
     std::map<std::string, std::string> header;
     std::string url {};
     std::string mimeType_ {};
+    bool enable_ {false};
 private:
     std::vector<AVPlayMediaStreamTmp> mediaStreamVec_;
 };
