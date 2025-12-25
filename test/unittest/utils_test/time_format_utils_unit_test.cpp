@@ -189,7 +189,7 @@ HWTEST_F(TimeFormatUtilsUnitTest, ParseIso8601TimeZoneOffset_002, TestSize.Level
     // Invalid symbol
     EXPECT_EQ(TimeFormatUtils::ParseIso8601TimeZoneOffset("X0800"), 0L);
     EXPECT_EQ(TimeFormatUtils::ParseIso8601TimeZoneOffset("@08:00"), 0L);
-    EXPECT_EQ(TimeFormatUtils::ParseIso8601TimeZoneOffset("0800"), 0L); // missing +/- 
+    EXPECT_EQ(TimeFormatUtils::ParseIso8601TimeZoneOffset("0800"), 0L);
 }
 
 HWTEST_F(TimeFormatUtilsUnitTest, ParseIso8601TimeZoneOffset_003, TestSize.Level0)
