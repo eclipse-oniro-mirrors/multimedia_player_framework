@@ -21,15 +21,14 @@
 
 namespace OHOS {
 namespace Media {
-
-class DolbyPassthroughCallback : public IDolbyPassthrough, public NoCopyable {
+class DolbyPassthroughCallback :  public IDolbyPassthrough, public NoCopyable {
 public:
     explicit DolbyPassthroughCallback(const sptr<IStandardDolbyPassthrough> &ipcProxy);
     virtual ~DolbyPassthroughCallback();
 
     bool IsAudioPass(const char* mime);
     std::vector<std::string> GetList();
-
+    
 private:
     sptr<IStandardDolbyPassthrough> callbackProxy_ = nullptr;
 };
@@ -47,4 +46,4 @@ private:
 };
 } // namespace Media
 } // namespace OHOS
-#endif //DOLBY_PASSTHROUGH_PROXY_H
+#endif // DOLBY_PASSTHROUGH_PROXY_H
