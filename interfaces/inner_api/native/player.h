@@ -160,7 +160,7 @@ public:
     }
     std::string url {};
     std::string mimeType_ {};
-    bool enalbe_ {false};
+    bool enable_ {false};
     std::map<std::string, std::string> header;
     std::shared_ptr<LoaderCallback> mediaSourceLoaderCb_ {nullptr};
     std::shared_ptr<Plugins::IMediaSourceLoader> sourceLoader_ {nullptr};
