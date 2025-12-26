@@ -73,7 +73,6 @@ bool ScreenCaptureAddWhiteListWindowsFuzzer::FuzzScreenCaptureAddWhiteListWindow
     }
     bool retFlags = TestScreenCapture::CreateScreenCapture();
     RETURN_IF(retFlags, false);
-
     AVScreenCaptureConfig config;
     SetConfig(config);
     constexpr uint32_t recorderTime = 3;
