@@ -32,9 +32,9 @@ namespace OHOS {
 namespace Media {
 
 namespace {
-    const uint8_t* data_ = nullptr;
-    size_t size_ = 0;
-    size_t pos_;
+    const uint8_t* g_data_ = nullptr;
+    size_t g_size_ = 0;
+    size_t g_pos_;
 }
 
 template<class T>
@@ -42,14 +42,14 @@ T GetData()
 {
     T object {};
     size_t objectSize = sizeof(object);
-    if (data_ == nullptr || objectSize > size_ - pos_) {
+    if (g_data_ == nullptr || objectSize > g_size_ - g_pos_) {
         return object;
     }
-    errno_t ret = memcpy_s(&object, objectSize, data_ + pos_, objectSize);
+    errno_t ret = memcpy_s(&object, objectSize, g_data_ + g_pos_, objectSize);
     if (ret != EOK) {
         return {};
     }
-    pos_ += objectSize;
+    g_pos_ += objectSize;
     return object;
 }
 
@@ -110,9 +110,9 @@ bool ScreenCaptureAudioCapturerWrapperFuzzer::FuzzScreenAudioCapturerWrapper(uin
     if (data == nullptr || size < 2 * sizeof(int32_t)) {  // 2 input params
         return false;
     }
-    data_ = data;
-    size_ = size;
-    pos_ = 0;
+    g_data_ = data;
+    g_size_ = size;
+    g_pos_ = 0;
     RecorderInfo recorderInfo;
     int outputFd = open("/data/test/media/screen_capture_fuzz_server_start_file_01.mp4", O_RDWR);
     recorderInfo.url = "fd://" + std::to_string(outputFd);
