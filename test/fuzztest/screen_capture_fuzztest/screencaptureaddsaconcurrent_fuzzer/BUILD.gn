@@ -19,7 +19,7 @@ MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
  
 ##############################fuzztest##########################################
 ohos_fuzztest("ScreenCaptureAddSaConcurrentFuzzTest") {
-  module_out_path = "$MODULE_SCREENCAPTURE_OUTPUT_PATH/screen_capture/concurrent"
+  module_out_path = "./player_framework/ScreenCapture/concurrent/screen_capture"
   fuzz_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/screen_capture_fuzztest/screencaptureaddsaconcurrent_fuzzer"
   resource_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/resource/ohos_test.xml"
  
