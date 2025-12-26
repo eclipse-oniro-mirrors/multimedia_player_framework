@@ -108,7 +108,7 @@ OH_AVErrCode OH_AVMediaSource_EnableOfflineCache(OH_AVMediaSource *source, bool 
     CHECK_AND_RETURN_RET_LOG(source != nullptr, AV_ERR_INVALID_VAL, "input source is nullptr!");
     MediaSourceObject* mediasourceObj = static_cast<MediaSourceObject*>(source);
     CHECK_AND_RETURN_RET_LOG(mediasourceObj->mediasource_ != nullptr, AV_ERR_INVALID_VAL, "source is null");
-    mediasourceObj->mediasource_->enableOfflineCache(std::string(mimetype));
+    mediasourceObj->mediasource_->enableOfflineCache(enable);
     return AV_ERR_OK;
 }
 
