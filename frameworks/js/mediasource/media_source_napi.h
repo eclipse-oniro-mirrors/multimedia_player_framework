@@ -45,7 +45,7 @@ private:
     /**
      * function createMediaSourceWithStreamData(streams: Array<MediaStream>): MediaSource;
      */
-    static napi_value enableOfflineCache(boolean enable);
+    static napi_value enableOfflineCache(bool enable);
 
     /**
      * function setMimeType(mimeType: AVMimeType): MediaSource
