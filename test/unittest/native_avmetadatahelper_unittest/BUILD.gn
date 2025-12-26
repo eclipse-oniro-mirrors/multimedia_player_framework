@@ -27,6 +27,7 @@ ohos_unittest("avmetadata_unittest") {
     "//foundation/multimedia/player_framework/services/services/avmetadatahelper/client",
     "//foundation/multimedia/player_framework/services/services/avmetadatahelper/ipc",
     "//foundation/multimedia/player_framework/services/services/media_data_source/ipc",
+    "//foundation/multimedia/player_framework/services/services/dolby_passthrough/ipc",
     "//foundation/multimedia/player_framework/services/services/media_source/ipc",
     "//foundation/multimedia/player_framework/services/services/monitor/client",
     "//foundation/multimedia/player_framework/services/services/monitor/ipc",
