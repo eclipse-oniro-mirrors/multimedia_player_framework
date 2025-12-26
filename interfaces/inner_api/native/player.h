@@ -126,7 +126,7 @@ public:
     }
     bool GetEnalbe()
     {
-        return enable;
+        return enable_;
     }
 
     const std::vector<AVPlayMediaStream>& GetAVPlayMediaStreamList()
