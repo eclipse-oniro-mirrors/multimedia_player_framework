@@ -392,7 +392,7 @@ public:
         return mediaStreamVec_;
     }
 
-    void enableOfflineCache(const bool& enable) 
+    void enableOfflineCache(const bool& enable)
     {
         enable_ = enable;
     }
