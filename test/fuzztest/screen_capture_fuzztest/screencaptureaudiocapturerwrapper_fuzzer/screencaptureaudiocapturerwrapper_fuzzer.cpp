@@ -30,6 +30,29 @@ using namespace Media;
 
 namespace OHOS {
 namespace Media {
+
+namespace {
+    const uint8_t* g_data = nullptr;
+    size_t g_size = 0;
+    size_t g_pos;
+}
+
+template<class T>
+T GetData()
+{
+    T object {};
+    size_t objectSize = sizeof(object);
+    if (g_data == nullptr || objectSize > g_size - g_pos) {
+        return object;
+    }
+    errno_t ret = memcpy_s(&object, objectSize, g_data + g_pos, objectSize);
+    if (ret != EOK) {
+        return {};
+    }
+    g_pos += objectSize;
+    return object;
+}
+
 ScreenCaptureAudioCapturerWrapperFuzzer::ScreenCaptureAudioCapturerWrapperFuzzer()
 {
 }
@@ -82,12 +105,14 @@ void ScreenCaptureAudioCapturerWrapperFuzzer::SetConfig(RecorderInfo &recorderIn
     };
 }
 
-
 bool ScreenCaptureAudioCapturerWrapperFuzzer::FuzzScreenAudioCapturerWrapper(uint8_t *data, size_t size)
 {
     if (data == nullptr || size < 2 * sizeof(int32_t)) {  // 2 input params
         return false;
     }
+    g_data = data;
+    g_size = size;
+    g_pos = 0;
     RecorderInfo recorderInfo;
     int outputFd = open("/data/test/media/screen_capture_fuzz_server_start_file_01.mp4", O_RDWR);
     recorderInfo.url = "fd://" + std::to_string(outputFd);
@@ -109,11 +134,10 @@ bool ScreenCaptureAudioCapturerWrapperFuzzer::FuzzScreenAudioCapturerWrapper(uin
     audioCapturerWrapper->GetAudioCapturerState();
     audioCapturerWrapper->RelativeSleep(1);
     audioCapturerWrapper->PartiallyPrintLog(1, "CaptureAudio read audio buffer failed ");
-    audioCapturerWrapper->PartiallyPrintLog(1, "CaptureAudio read audio buffer failed ");
-    audioCapturerWrapper->SetIsMute(true);
+    audioCapturerWrapper->SetIsMute(GetData<bool>());
     audioCapturerWrapper->UseUpAllLeftBufferUntil(GetData<int64_t>());
     size_t  buffersize = 0;
-    int64_t currentAudioTime;
+    int64_t currentAudioTime = 0;
     audioCapturerWrapper->GetBufferSize(buffersize);
     uint8_t *buffer = (uint8_t *)malloc(buffersize);
     shared_ptr<AudioBuffer> audioBuffer = make_shared<AudioBuffer>(buffer, 0, 0, AudioCaptureSourceType::ALL_PLAYBACK);
@@ -125,8 +149,8 @@ bool ScreenCaptureAudioCapturerWrapperFuzzer::FuzzScreenAudioCapturerWrapper(uin
     audioCapturerWrapper->IsRecording();
     audioCapturerWrapper->IsStop();
     audioCapturerWrapper->Stop();
-    audioCapturerWrapper->SetIsInTelCall(true);
-    audioCapturerWrapper->SetIsInVoIPCall(true);
+    audioCapturerWrapper->SetIsInTelCall(GetData<bool>());
+    audioCapturerWrapper->SetIsInVoIPCall(GetData<bool>());
     audioCapturerWrapper->Start(appInfo);
     audioCapturerWrapper->ReleaseAudioBuffer();
     audioCapturerWrapper->Stop();
