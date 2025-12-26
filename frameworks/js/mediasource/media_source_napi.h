@@ -43,9 +43,9 @@ private:
     static napi_value JsCreateMediaSourceWithStreamData(napi_env env, napi_callback_info info);
 
     /**
-     * function createMediaSourceWithStreamData(streams: Array<MediaStream>): MediaSource;
+     * function EnableOfflineCache(enable: boolean): MediaSource;
      */
-    static napi_value enableOfflineCache(bool enable);
+    static napi_value JsEnableOfflineCache(napi_env env, napi_callback_info info);
 
     /**
      * function setMimeType(mimeType: AVMimeType): MediaSource
