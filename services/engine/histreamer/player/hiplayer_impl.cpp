@@ -2458,6 +2458,7 @@ void HiPlayerImpl::SetMediaKitReport(const std::string &APIcall)
     metaInfoJson["subtitleMime"] = subtitleMime;
     std::string events = metaInfoJson.dump();
     std::string instanceIdStr = std::to_string(instanceId_);
+    MEDIA_LOG_D("SetMediaKitReport info: %{public}s", events.c_str());
     OHOS::Media::MediaEvent event;
     event.MediaKitStatistics("AVPlayer", bundleName_, instanceIdStr, APIcall, events);
 }
@@ -3066,7 +3067,7 @@ void HiPlayerImpl::HandleErrorEvent(const Event& event)
 {
     int32_t errorCode = AnyCast<int32_t>(event.param);
     PlayerErrorType errorType = GetPlayerErrorType(event);
-    SetMediaKitReport("avplayer error");
+    SetMediaKitReport("avplayer error: " + std::to_string(errorType));
     callbackLooper_.OnError(errorType, errorCode, event.description);
 }
 
