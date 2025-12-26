@@ -112,11 +112,11 @@ bool ScreenCaptureAudioCapturerWrapperFuzzer::FuzzScreenAudioCapturerWrapper(uin
     audioCapturerWrapper->PartiallyPrintLog(1, "CaptureAudio read audio buffer failed ");
     audioCapturerWrapper->SetIsMute(true);
     audioCapturerWrapper->UseUpAllLeftBufferUntil(GetData<int64_t>());
-    size_t  buffersize = GetData<int32_t>();
+    size_t  buffersize = 0;
     int64_t currentAudioTime;
+    audioCapturerWrapper->GetBufferSize(buffersize);
     uint8_t *buffer = (uint8_t *)malloc(buffersize);
     shared_ptr<AudioBuffer> audioBuffer = make_shared<AudioBuffer>(buffer, 0, 0, AudioCaptureSourceType::ALL_PLAYBACK);
-    audioCapturerWrapper->GetBufferSize(buffersize);
     audioCapturerWrapper->AddBufferFrom(GetData<int64_t>(), GetData<int64_t>(), GetData<int64_t>());
     audioCapturerWrapper->AcquireAudioBuffer(audioBuffer);
     audioCapturerWrapper->DropBufferUntil(GetData<int64_t>());
