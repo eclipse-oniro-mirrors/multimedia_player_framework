@@ -585,6 +585,7 @@ int32_t HiTransCoderImpl::Prepare()
 {
     MEDIA_LOG_I("HiTransCoderImpl::Prepare()");
     MediaTrace trace("HiTransCoderImpl::Prepare()");
+    AppendMediaKitTranscoderMediaInfo();
     int32_t width = 0;
     int32_t height = 0;
     if (isExistVideoTrack_) {
@@ -623,7 +624,6 @@ int32_t HiTransCoderImpl::Prepare()
     if (errCode == Status::ERROR_UNKNOWN) {
         errCode = Status::ERROR_SET_OUTPUT_SURFACE_FAILED;
     }
-    AppendMediaKitTranscoderMediaInfo();
     return TransTranscoderStatus(errCode);
 }
 
