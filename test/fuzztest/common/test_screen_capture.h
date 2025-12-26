@@ -53,6 +53,8 @@ public:
     int32_t ShowCursor(bool showCursor);
     int32_t ResizeCanvas(int32_t width, int32_t height);
     int32_t SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec);
+    int32_t AddWhiteListWindows(std::vector<uint64_t> &windowIDsVec);
+    int32_t RemoveWhiteListWindows(std::vector<uint64_t> &windowIDsVec);
     int32_t SetMaxFrameRate(int32_t frameRate);
     int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type);
     sptr<OHOS::SurfaceBuffer> AcquireVideoBuffer(int32_t &fence, int64_t &timestamp, Rect &damage);

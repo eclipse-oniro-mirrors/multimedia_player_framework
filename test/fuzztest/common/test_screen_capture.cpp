@@ -136,6 +136,22 @@ int32_t TestScreenCapture::SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec)
     return screenCapture->SkipPrivacyMode(windowIDsVec);
 }
 
+int32_t TestScreenCapture::AddWhiteListWindows(std::vector<uint64_t> &windowIDsVec)
+{
+    if (screenCapture == nullptr) {
+        return MSERR_INVALID_OPERATION;
+    }
+    return screenCapture->AddWhiteListWindows(windowIDsVec);
+}
+
+int32_t TestScreenCapture::RemoveWhiteListWindows(std::vector<uint64_t> &windowIDsVec)
+{
+    if (screenCapture == nullptr) {
+        return MSERR_INVALID_OPERATION;
+    }
+    return screenCapture->RemoveWhiteListWindows(windowIDsVec);
+}
+
 int32_t TestScreenCapture::SetMaxFrameRate(int32_t frameRate)
 {
     if (screenCapture == nullptr) {
