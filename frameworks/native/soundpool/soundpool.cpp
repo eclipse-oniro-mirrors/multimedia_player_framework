@@ -201,7 +201,7 @@ int32_t SoundPool::Play(int32_t soundID, const PlayParams &playParameters)
     do {
         CHECK_AND_BREAK_LOG(soundIDManager_ != nullptr, "soundIDManager_ has been released");
         std::shared_ptr<SoundParser> soundParser = soundIDManager_->GetSoundParserBySoundID(soundID);
-        CHECK_AND_BREAK_LOG(soundParser != nullptr, -1, "soundParser is nullptr");
+        CHECK_AND_BREAK_LOG(soundParser != nullptr, "soundParser is nullptr");
         CHECK_AND_BREAK_LOG(soundParser->IsSoundParserCompleted(),
             "SoundPool::Play, soundID(%{public}d) has not been loaded completely", soundID);
         int32_t streamID = ERROR_RETURN;
