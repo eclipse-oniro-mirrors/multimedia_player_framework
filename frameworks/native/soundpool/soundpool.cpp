@@ -196,7 +196,7 @@ int32_t SoundPool::Play(int32_t soundID, const PlayParams &playParameters)
     MediaTrace trace("SoundPool::Play");
     std::lock_guard lock(soundPoolLock_);
     MEDIA_LOGI("SoundPool::Play start, soundID is %{public}d, priority is %{public}d", soundID,
-        playParameters.priority)
+        playParameters.priority);
 
     do {
         CHECK_AND_BREAK_LOG(soundIDManager_ != nullptr, "soundIDManager_ has been released");
@@ -397,10 +397,10 @@ int32_t SoundPool::Release()
 {
     MEDIA_LOGI("SoundPool::Release");
     
-    int32_t playSucceed = playSucceed_.exchange(0, std:memory_order_relaxed);
-    int32_t loadSucceed = loadSucceed_.exchange(0, std:memory_order_relaxed);
-    int32_t playFailed = playFailed_.exchange(0, std:memory_order_relaxed);
-    int32_t loadFailed = loadFailed_.exchange(0, std:memory_order_relaxed);
+    int32_t playSucceed = playSucceed_.exchange(0, std::memory_order_relaxed);
+    int32_t loadSucceed = loadSucceed_.exchange(0, std::memory_order_relaxed);
+    int32_t playFailed = playFailed_.exchange(0, std::memory_order_relaxed);
+    int32_t loadFailed = loadFailed_.exchange(0, std::memory_order_relaxed);
 
     AsyncCall([playSucceed, loadSucceed, playFailed, loadFailed]() {
         Json json;
