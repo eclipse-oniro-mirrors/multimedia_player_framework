@@ -120,7 +120,7 @@ public:
     {
         return mimeType_;
     }
-    void enableOfflineCache(bool enable) 
+    void enableOfflineCache(bool enable)
     {
         enable_ = enable;
     }
