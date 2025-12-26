@@ -128,7 +128,6 @@ bool ScreenCaptureAudioCapturerWrapperFuzzer::FuzzScreenAudioCapturerWrapper(uin
     appInfo.appUid = IPCSkeleton::GetCallingUid();
     appInfo.appPid = IPCSkeleton::GetCallingPid();
     audioCapturerWrapper->Start(appInfo);
-    audioCapturerWrapper->Start(appInfo);
     contentFilter.filteredAudioContents.insert(AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_CURRENT_APP_AUDIO);
     audioCapturerWrapper->UpdateAudioCapturerConfig(contentFilter);
     audioCapturerWrapper->GetAudioCapturerState();
