@@ -492,19 +492,15 @@ void ReportTranscoderMediaInfo(int32_t uid, uint64_t instanceId,
     }
     std::string infoArr;
     std::string appName = GetClientBundleName(uid);
-    json mediaInfoJson;
     json mediaEvents;
 
     for (const auto& kv : mediaInfo) {
-        json valueJson;
-        valueJson[kv.first] = kv.second;
-        mediaEvents.push_back(valueJson);
+        mediaEvents[kv.first] = kv.second;
     }
-    mediaInfoJson["mediaEvents"] = mediaEvents;
-    infoArr = mediaInfoJson.dump();
-    std::string APICall = errCode == 0 ? "Prepare_Successed" : "ERROR";
+    infoArr = mediaEvents.dump();
+    std::string APICall = errCode == 0 ? "Prepare" : "Prepare_ERROR";
     MediaEvent event;
-    event.MediaKitStatistics("AVTRANSCODER", appName, std::to_string(instanceId), APICall, infoArr);
+    event.MediaKitStatistics("AVTranscoder", appName, std::to_string(instanceId), APICall, infoArr);
 }
 
 int32_t ReportMediaInfo(uint64_t instanceId)
