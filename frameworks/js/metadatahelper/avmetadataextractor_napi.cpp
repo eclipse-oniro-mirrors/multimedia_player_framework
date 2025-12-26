@@ -510,7 +510,7 @@ napi_value AVMetadataExtractorNapi::JsFetchFramesAtTimes(napi_env env, napi_call
     asyncCtx->innerHelper_ = extractor->helper_;
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[argCallback]);
-    std::string callbackName = "OnframeFetched";
+    std::string callbackName = "OnFrameFetched";
     CHECK_AND_RETURN_RET_LOG(asyncCtx->callbackRef != nullptr, result, "failed to create reference!");
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, asyncCtx->callbackRef);
     extractor->SetCallbackReference(callbackName, autoRef);
@@ -518,7 +518,7 @@ napi_value AVMetadataExtractorNapi::JsFetchFramesAtTimes(napi_env env, napi_call
     napi_valuetype valueType = napi_undefined;
     bool notParamValid = argCount < argCallback || napi_typeof(env, args[argPixelParam], &valueType) != napi_ok ||
         valueType != napi_object ||
-        extractor->GetFetchFrameArgs(asyncCtx, env, args[ARG_ZERO], args[ARG_ONE], args[ARG_TWO]) != MSERR_OK;
+        extractor->GetFetchFrameVectorArgs(asyncCtx, env, args[ARG_ZERO], args[ARG_ONE], args[ARG_TWO]) != MSERR_OK;
     if (notParamValid) {
         ThrowError(env, MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE, "Parameter check failed.");
         return result;
@@ -532,7 +532,7 @@ napi_value AVMetadataExtractorNapi::JsFetchFramesAtTimes(napi_env env, napi_call
         return result;
     }
 
-    CHECK_AND_RETURN_RET_LOG(asyncCtx && !asyncCtx->errFlag && asyncCtx->innerHelper_, nullptr, "Invalid context.");
+    CHECK_AND_RETURN_RET_LOG(asyncCtx && !asyncCtx->errFlag && asyncCtx->innerHelper_, result, "Invalid context.");
     int32_t fetchRes = asyncCtx->innerHelper_->
         FetchScaledFrameYuvs(asyncCtx->timeUsVector, asyncCtx->option, asyncCtx->param_);
     if (fetchRes != MSERR_OK) {
