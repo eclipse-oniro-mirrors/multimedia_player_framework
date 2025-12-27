@@ -18,6 +18,9 @@
 #include <unistd.h>
 #include "screencapturemonitorservice_fuzzer.h"
 #include "i_standard_screen_capture_monitor_service.h"
+#include "directory_ex.h"
+#include "test_template.h"
+#include "string_ex.h"
 
 using namespace std;
 using namespace OHOS;
@@ -25,7 +28,6 @@ using namespace Media;
 
 namespace OHOS {
 namespace Media {
-
 ScreenCaptureMonitorListenerTest::ScreenCaptureMonitorListenerTest()
 {
 }
@@ -59,6 +61,9 @@ bool ScreenCaptureMonitorServiceFuzzer::FuzzScreenCaptureMonitorCase(uint8_t *da
     if (data == nullptr || size < sizeof(int64_t)) {
         return true;
     }
+    g_baseFuzzData = data;
+    g_baseFuzzSize = size;
+    g_baseFuzzPos = 0;
 
     std::shared_ptr<ScreenCaptureMonitorServer> screenCaptureMonitorServer =
         ScreenCaptureMonitorServer::GetInstance();
@@ -66,10 +71,10 @@ bool ScreenCaptureMonitorServiceFuzzer::FuzzScreenCaptureMonitorCase(uint8_t *da
     screenCaptureMonitorServer->SetScreenCaptureMonitorCallback(listener);
     screenCaptureMonitorServer->RegisterScreenCaptureMonitorListener(listener);
     screenCaptureMonitorServer->UnregisterScreenCaptureMonitorListener(listener);
-    int32_t started = data[0] % 2;
-    screenCaptureMonitorServer->CallOnScreenCaptureStarted(started);
-    int32_t maxPid = 10000;
-    screenCaptureMonitorServer->SetSystemScreenRecorderStatus(data[0] % maxPid);
+    int32_t pid = GetData<int32_t>();
+    screenCaptureMonitorServer->CallOnScreenCaptureStarted(pid);
+    int32_t started = GetData<bool>();
+    screenCaptureMonitorServer->SetSystemScreenRecorderStatus(started);
     screenCaptureMonitorServer->RemoveScreenCaptureMonitorCallback(listener);
     return true;
 }

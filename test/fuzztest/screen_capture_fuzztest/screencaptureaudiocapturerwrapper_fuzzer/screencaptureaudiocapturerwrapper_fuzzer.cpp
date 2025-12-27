@@ -23,6 +23,7 @@
 #include "screencaptureaudiocapturerwrapper_fuzzer.h"
 #include "i_standard_screen_capture_service.h"
 #include "screen_capture_server.h"
+#include "test_template.h"
 
 using namespace std;
 using namespace OHOS;
@@ -82,12 +83,14 @@ void ScreenCaptureAudioCapturerWrapperFuzzer::SetConfig(RecorderInfo &recorderIn
     };
 }
 
-
 bool ScreenCaptureAudioCapturerWrapperFuzzer::FuzzScreenAudioCapturerWrapper(uint8_t *data, size_t size)
 {
     if (data == nullptr || size < 2 * sizeof(int32_t)) {  // 2 input params
         return false;
     }
+    g_baseFuzzData = data;
+    g_baseFuzzSize = size;
+    g_baseFuzzPos = 0;
     RecorderInfo recorderInfo;
     int outputFd = open("/data/test/media/screen_capture_fuzz_server_start_file_01.mp4", O_RDWR);
     recorderInfo.url = "fd://" + std::to_string(outputFd);
@@ -103,31 +106,28 @@ bool ScreenCaptureAudioCapturerWrapperFuzzer::FuzzScreenAudioCapturerWrapper(uin
     appInfo.appUid = IPCSkeleton::GetCallingUid();
     appInfo.appPid = IPCSkeleton::GetCallingPid();
     audioCapturerWrapper->Start(appInfo);
-    audioCapturerWrapper->Start(appInfo);
     contentFilter.filteredAudioContents.insert(AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_CURRENT_APP_AUDIO);
     audioCapturerWrapper->UpdateAudioCapturerConfig(contentFilter);
     audioCapturerWrapper->GetAudioCapturerState();
-    int32_t value = (*reinterpret_cast<int32_t *>(data)) % 100;
     audioCapturerWrapper->RelativeSleep(1);
     audioCapturerWrapper->PartiallyPrintLog(1, "CaptureAudio read audio buffer failed ");
-    audioCapturerWrapper->PartiallyPrintLog(1, "CaptureAudio read audio buffer failed ");
-    audioCapturerWrapper->SetIsMute(true);
-    audioCapturerWrapper->UseUpAllLeftBufferUntil(value);
-    size_t  buffersize = 1;
-    int64_t currentAudioTime;
+    audioCapturerWrapper->SetIsMute(GetData<bool>());
+    audioCapturerWrapper->UseUpAllLeftBufferUntil(GetData<int64_t>());
+    size_t  buffersize = 0;
+    int64_t currentAudioTime = 0;
+    audioCapturerWrapper->GetBufferSize(buffersize);
     uint8_t *buffer = (uint8_t *)malloc(buffersize);
     shared_ptr<AudioBuffer> audioBuffer = make_shared<AudioBuffer>(buffer, 0, 0, AudioCaptureSourceType::ALL_PLAYBACK);
-    audioCapturerWrapper->GetBufferSize(buffersize);
-    audioCapturerWrapper->AddBufferFrom(value, value, value);
+    audioCapturerWrapper->AddBufferFrom(GetData<int64_t>(), GetData<int64_t>(), GetData<int64_t>());
     audioCapturerWrapper->AcquireAudioBuffer(audioBuffer);
-    audioCapturerWrapper->DropBufferUntil(value);
+    audioCapturerWrapper->DropBufferUntil(GetData<int64_t>());
     audioCapturerWrapper->GetCurrentAudioTime(currentAudioTime);
     audioCapturerWrapper->ReleaseAudioBuffer();
     audioCapturerWrapper->IsRecording();
     audioCapturerWrapper->IsStop();
     audioCapturerWrapper->Stop();
-    audioCapturerWrapper->SetIsInTelCall(true);
-    audioCapturerWrapper->SetIsInVoIPCall(true);
+    audioCapturerWrapper->SetIsInTelCall(GetData<bool>());
+    audioCapturerWrapper->SetIsInVoIPCall(GetData<bool>());
     audioCapturerWrapper->Start(appInfo);
     audioCapturerWrapper->ReleaseAudioBuffer();
     audioCapturerWrapper->Stop();
