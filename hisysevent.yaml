@@ -179,8 +179,9 @@ EOS_SEEK_0:
   APP_UID: {type: INT32, desc: app uid}
 
 MEDIAKIT_STATISTICS:
-  __BASE: {type: STATISTIC, level: MINOR, desc: MediaKit statistics}
-  SYSCAP: {type: STRING, desc: Module name}
-  APP_NAME: {type: STRING, desc: Caller app name}
-  INSTANCE_ID: {type: STRING, desc: Distinct player id}
-  API_CALL: {type: STRING, desc: Lag info message}
+  __BASE: {type: STATISTIC, level: CRITICAL, desc: MediaKit statistics}
+  SYSCAP: {type: STRING, desc: System Capability}
+  APP_NAME: {type: STRING, desc: app name}
+  INSTANCE_ID: {type: STRING, desc: instance ID}
+  API_CALL: {type: STRING, desc: api call}
+  MEDIA_EVENTS: {type: STRING, desc: media events}
