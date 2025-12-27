@@ -596,14 +596,12 @@ int32_t HiTransCoderImpl::Prepare()
             MEDIA_LOG_E("Output video width or height not set");
             CollectionErrorInfo(MSERR_INVALID_VAL, "Prepare error");
             OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_INVALID_VAL});
-            AppendMediaKitTranscoderMediaInfo();
             return MSERR_INVALID_VAL;
         }
         if (width > inputVideoWidth_ || height > inputVideoHeight_ || std::min(width, height) < MINIMUM_WIDTH_HEIGHT) {
             MEDIA_LOG_E("Output video width or height is invalid");
             CollectionErrorInfo(MSERR_PARAMETER_VERIFICATION_FAILED, "Prepare error");
             OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_PARAMETER_VERIFICATION_FAILED});
-            AppendMediaKitTranscoderMediaInfo();
             return MSERR_PARAMETER_VERIFICATION_FAILED;
         }
         skipProcessFilterFlag_.isSameVideoResolution = (width == inputVideoWidth_) && (height == inputVideoHeight_);
@@ -616,7 +614,6 @@ int32_t HiTransCoderImpl::Prepare()
         MEDIA_LOG_E("Prepare failed with error " PUBLIC_LOG_D32, ret);
         auto errCode = TransTranscoderStatus(ret);
         CollectionErrorInfo(errCode, "Prepare error");
-        AppendMediaKitTranscoderMediaInfo();
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, errCode});
         return errCode;
     }
@@ -812,6 +809,10 @@ void HiTransCoderImpl::AppendMediaKitTranscoderMediaInfo()
     mediaInfo_.push_back({"SrcVideoMime", srcVideoMime});
     mediaInfo_.push_back({"SrcVideoWidth", std::to_string(inputVideoWidth_)});
     mediaInfo_.push_back({"SrcVideoHeight", std::to_string(inputVideoHeight_)});
+    if (demuxerFilter_ == nullptr) {
+        MEDIA_LOG_E("demuxerFilter_ is nullptr");
+        return;
+    }
     std::shared_ptr<Meta> globalInfo = demuxerFilter_->GetGlobalMetaInfo();
     FileType fileType_ = FileType::UNKNOW;
     globalInfo->GetData(Tag::MEDIA_FILE_TYPE, fileType_);
@@ -839,6 +840,16 @@ void HiTransCoderImpl::AppendMediaKitTranscoderMediaInfo()
     ReportTranscoderMediaInfo(appUid_, instanceId_, mediaInfo_, errCode_);
 }
 
+void HiTransCoderImpl::AppendMediaKitTranscoderMediaError(int32_t errCode)
+{
+    MEDIA_LOG_I("HiTransCoderImpl::AppendMediaKitTranscoderMediaError");
+    
+    std::vector<std::pair<std::string, std::string>> mediaInfo_;
+    mediaInfo_.push_back({"ErrorCode", std::to_string(errCode)});
+
+    ReportTranscoderMediaInfo(appUid_, instanceId_, mediaInfo_, errCode);
+}
+
 void HiTransCoderImpl::OnEvent(const Event &event)
 {
     switch (event.type) {
@@ -864,6 +875,7 @@ void HiTransCoderImpl::HandleErrorEvent(int32_t errorCode)
         ignoreError_ = true;
     }
     MEDIA_LOG_W("OnError, errorCode: " PUBLIC_LOG_D32, errorCode);
+    AppendMediaKitTranscoderMediaError(errorCode);
     FALSE_RETURN_MSG(callbackLooper_ != nullptr, "callbackLooper is nullptr");
     callbackLooper_->StopReportMediaProgress();
     if (pipeline_ != nullptr) {
