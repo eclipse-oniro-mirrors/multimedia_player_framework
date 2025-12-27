@@ -64,7 +64,7 @@ private:
     void AppendSrcMediaInfo(std::shared_ptr<Meta> meta);
     void AppendDstMediaInfo(std::shared_ptr<Meta> meta);
     void AppendMediaKitTranscoderMediaInfo();
-    void AppendMediaKitTranscoderMediaError();
+    void AppendMediaKitTranscoderMediaError(int32_t errCode);
     int32_t GetRealPath(const std::string &url, std::string &realUrlPath) const;
     void ConfigureVideoEncoderFormat(const TransCoderParam &transCoderParam);
     Status ConfigureColorSpace(const TransCoderParam &transCoderParam);
