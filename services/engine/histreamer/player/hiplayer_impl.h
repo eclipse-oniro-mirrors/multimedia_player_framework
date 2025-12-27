@@ -344,7 +344,7 @@ private:
     PlayerErrorType GetPlayerErrorTypeFromEngine(const Event& event);
     bool IsPrepareStateValid() const;
     void MetricsUpdateDuration();
-    void SetMediaKitReport(const std::string &APIcall);
+    void SetMediaKitReport(const std::string &apiCall);
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
