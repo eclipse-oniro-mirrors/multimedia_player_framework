@@ -18,6 +18,9 @@
 #include <unistd.h>
 #include "screencapturemonitorservice_fuzzer.h"
 #include "i_standard_screen_capture_monitor_service.h"
+#include "directory_ex.h"
+#include "test_template.h"
+#include "string_ex.h"
 
 using namespace std;
 using namespace OHOS;
@@ -25,29 +28,6 @@ using namespace Media;
 
 namespace OHOS {
 namespace Media {
-
-namespace {
-    uint8_t* g_data = nullptr;
-    size_t g_size = 0;
-    size_t g_pos;
-}
-
-template<class T>
-T GetData()
-{
-    T object {};
-    size_t objectSize = sizeof(object);
-    if (g_data == nullptr || objectSize > g_size - g_pos) {
-        return object;
-    }
-    errno_t ret = memcpy_s(&object, objectSize, g_data + g_pos, objectSize);
-    if (ret != EOK) {
-        return {};
-    }
-    g_pos += objectSize;
-    return object;
-}
-
 ScreenCaptureMonitorListenerTest::ScreenCaptureMonitorListenerTest()
 {
 }
@@ -81,10 +61,9 @@ bool ScreenCaptureMonitorServiceFuzzer::FuzzScreenCaptureMonitorCase(uint8_t *da
     if (data == nullptr || size < sizeof(int64_t)) {
         return true;
     }
-    
-    g_data = data;
-    g_size = size;
-    g_pos = 0;
+    g_baseFuzzData = data;
+    g_baseFuzzSize = size;
+    g_baseFuzzPos = 0;
 
     std::shared_ptr<ScreenCaptureMonitorServer> screenCaptureMonitorServer =
         ScreenCaptureMonitorServer::GetInstance();
