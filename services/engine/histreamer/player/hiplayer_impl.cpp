@@ -2422,7 +2422,7 @@ int32_t HiPlayerImpl::GetSubtitleTrackInfo(std::vector<Format>& subtitleTrack)
     return TransStatus(Status::OK);
 }
 
-void HiPlayerImpl::SetMediaKitReport(const std::string &APIcall)
+void HiPlayerImpl::SetMediaKitReport(const std::string &apiCall)
 {
     MEDIA_LOG_D("SetMediaKitReport in");
     nlohmann::json metaInfoJson;
@@ -2450,7 +2450,6 @@ void HiPlayerImpl::SetMediaKitReport(const std::string &APIcall)
             }
         }
     }
-
     metaInfoJson["fileType"] = fileType_;
     metaInfoJson["sourceType"] = sourceType_;
     metaInfoJson["videoMime"] = videoMime;
@@ -2460,7 +2459,7 @@ void HiPlayerImpl::SetMediaKitReport(const std::string &APIcall)
     std::string instanceIdStr = std::to_string(instanceId_);
     MEDIA_LOG_D("SetMediaKitReport info: %{public}s", events.c_str());
     OHOS::Media::MediaEvent event;
-    event.MediaKitStatistics("AVPlayer", bundleName_, instanceIdStr, APIcall, events);
+    event.MediaKitStatistics("AVPlayer", bundleName_, instanceIdStr, apiCall, events);
 }
 
 int32_t HiPlayerImpl::GetVideoWidth()
