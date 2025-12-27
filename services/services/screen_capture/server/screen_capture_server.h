@@ -272,6 +272,7 @@ private:
     void ResSchedReportData(int64_t value, std::unordered_map<std::string, std::string> payload);
     int64_t GetCurrentMillisecond();
     void SetMetaDataReport();
+    void SetMediaKitReport(const std::string &errMsg);
     void SetErrorInfo(int32_t errCode, const std::string &errMsg, StopReason stopReason, bool userAgree);
     int32_t ReStartMicForVoIPStatusSwitch();
     void RegisterPrivateWindowListener();

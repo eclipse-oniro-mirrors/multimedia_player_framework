@@ -71,6 +71,8 @@ public:
         const std::string& errMsg);
     void CommonStatisicsEventWrite(CallType callType, OHOS::HiviewDFX::HiSysEvent::EventType type,
         const std::map<int32_t, std::list<std::pair<uint64_t, std::shared_ptr<Meta>>>>& infoMap);
+    void MediaKitStatistics(std::string syscap, std::string appName, std::string instanceId, std::string APICall,
+        std::string events);
 private:
     void StatisicsHiSysEventWrite(CallType callType, OHOS::HiviewDFX::HiSysEvent::EventType type,
         const std::vector<std::string>& infoArr);

@@ -189,6 +189,18 @@ void MediaEvent::SourceEventWrite(const std::string& eventName, OHOS::HiviewDFX:
                     "ERROR_MESG", errMsg);
 }
 
+void MediaEvent::MediaKitStatistics(std::string syscap, std::string appName, std::string instanceId,
+    std::string APICall, std::string events)
+{
+    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::MULTI_MEDIA, "MEDIAKIT_STATISTICS",
+                    OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
+                    "SYSCAP", syscap,
+                    "APP_NAME", appName,
+                    "INSTANCE_ID", instanceId,
+                    "API_CALL", APICall,
+                    "MEDIA_EVENTS", events);
+}
+
 void MediaEvent::ScreenCaptureEventWrite(const std::string& eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
     const std::string& appName, uint64_t instanceId, int8_t captureMode, int8_t dataMode, int32_t errorCode,
     const std::string& errorMessage)
