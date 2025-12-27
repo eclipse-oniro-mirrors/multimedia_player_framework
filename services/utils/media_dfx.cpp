@@ -481,6 +481,28 @@ int32_t AppendMediaInfo(const std::shared_ptr<Meta>& meta, uint64_t instanceId)
     return MSERR_OK;
 }
 
+void ReportTranscoderMediaInfo(int32_t uid, uint64_t instanceId,
+    std::vector<std::pair<std::string, std::string>> mediaInfo, int32_t errCode)
+{
+    MEDIA_LOG_I("ReportTranscoderMediaInfo.");
+
+    if (mediaInfo.empty()) {
+        MEDIA_LOG_I("mediaInfo is empty.");
+        return;
+    }
+    std::string infoArr;
+    std::string appName = GetClientBundleName(uid);
+    json mediaEvents;
+
+    for (const auto& kv : mediaInfo) {
+        mediaEvents[kv.first] = kv.second;
+    }
+    infoArr = mediaEvents.dump();
+    std::string APICall = errCode == 0 ? "Prepare" : "Prepare_ERROR";
+    MediaEvent event;
+    event.MediaKitStatistics("AVTranscoder", appName, std::to_string(instanceId), APICall, infoArr);
+}
+
 int32_t ReportMediaInfo(uint64_t instanceId)
 {
     MEDIA_LOG_I("Report: Delete media info instanceId.");
