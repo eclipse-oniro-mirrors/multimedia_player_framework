@@ -1,4 +1,4 @@
-/*
+/*0
  * Copyright (C) 2021 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1267,6 +1267,7 @@ void RecorderServer::SetMetaDataReport()
     meta->SetData(Tag::RECORDER_DURATION, statisticalEventInfo_.recordDuration);
     statisticalEventInfo_.containerMime = GetVideoMime(config_.videoCodec) + ";" + GetAudioMime(config_.audioCodec);
     meta->SetData(Tag::RECORDER_CONTAINER_MIME, statisticalEventInfo_.containerMime);
+    meta->SetData(Tag::RECORDER_CONTAINER_FORMAT, GetContainerFormat(config_.format));
     meta->SetData(Tag::RECORDER_VIDEO_MIME, GetVideoMime(config_.videoCodec));
     statisticalEventInfo_.videoResolution = std::to_string(config_.width) + "x" + std::to_string(config_.height);
     meta->SetData(Tag::RECORDER_VIDEO_RESOLUTION, statisticalEventInfo_.videoResolution);
