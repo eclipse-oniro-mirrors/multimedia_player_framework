@@ -31,6 +31,7 @@ ohos_fuzztest("LowPowerAudioSinkconcurrentFuzzTest") {
     "$MEDIA_ROOT_DIR/services/include",
     "$MEDIA_ROOT_DIR/services/services/common",
     "$MEDIA_ROOT_DIR/services/services/media_data_source/ipc",
+    "$MEDIA_ROOT_DIR/services/services/dolby_passthrough/ipc",
     "$MEDIA_ROOT_DIR/services/services/lpp_audio_streamer/ipc",
     "$MEDIA_ROOT_DIR/services/services/lpp_video_streamer/ipc",
     "$MEDIA_ROOT_DIR/services/services/sa_media/ipc",

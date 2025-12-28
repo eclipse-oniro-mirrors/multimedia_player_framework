@@ -28,6 +28,7 @@ ohos_unittest("player_mem_manage_test") {
     "$MEDIA_PLAYER_ROOT_DIR/services/services/common",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_data_source/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/dolby_passthrough/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/player/client",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/player/player_mem_manage",

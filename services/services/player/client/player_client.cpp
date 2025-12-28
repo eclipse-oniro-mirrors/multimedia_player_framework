@@ -216,6 +216,7 @@ int32_t PlayerClient::Reset()
     std::lock_guard<std::mutex> lock(mutex_);
     dataSrcStub_ = nullptr;
     sourceLoaderStub_ = nullptr;
+    dolbyPassthroughStub_ = nullptr;
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return DisableWhenOK(playerProxy_->Reset());
 }
@@ -226,6 +227,7 @@ int32_t PlayerClient::Release()
     callback_ = nullptr;
     listenerStub_ = nullptr;
     dataSrcStub_ = nullptr;
+    dolbyPassthroughStub_ = nullptr;
     sourceLoaderStub_ = nullptr;
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return DisableWhenOK(playerProxy_->Release());
@@ -238,6 +240,7 @@ int32_t PlayerClient::ReleaseSync()
     listenerStub_ = nullptr;
     dataSrcStub_ = nullptr;
     sourceLoaderStub_ = nullptr;
+    dolbyPassthroughStub_ = nullptr;
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return DisableWhenOK(playerProxy_->ReleaseSync());
 }
@@ -622,6 +625,21 @@ int32_t PlayerClient::GetTrackDescription(Format &format, uint32_t trackIndex)
 {
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerProxy_->GetTrackDescription(format, trackIndex);
+}
+
+int32_t PlayerClient::RegisterDeviceCapability(IsAudioPassthrough callback, GetDolbyList getDolbyList)
+{
+    MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " RegisterDeviceCapability", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_NO_MEMORY, "isAudioPassthrough is nullptr");
+    CHECK_AND_RETURN_RET_LOG(getDolbyList != nullptr, MSERR_NO_MEMORY, "getDolbyList is nullptr");
+    dolbyPassthroughStub_ = new(std::nothrow) DolbyPassthroughStub(callback, getDolbyList);
+    
+    CHECK_AND_RETURN_RET_LOG(dolbyPassthroughStub_ != nullptr, MSERR_NO_MEMORY,
+        "failed to new dolbyPassthroughStub object");
+    sptr<IRemoteObject> object = dolbyPassthroughStub_->AsObject();
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "listener object is nullptr..");
+    return playerProxy_->RegisterDeviceCapability(object);
 }
 } // namespace Media
 } // namespace OHOS

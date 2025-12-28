@@ -26,6 +26,7 @@
 #include "media_data_source.h"
 #include "loading_request.h"
 #include "media_source.h"
+#include "dolby_passthrough.h"
 
 namespace OHOS {
 namespace DrmStandard {
@@ -445,6 +446,9 @@ enum PlayerProducer : int32_t {
 enum AVMetricsEventType : int32_t {
     AV_METRICS_EVENT_TYPE_STALLING = 1,
 };
+
+typedef bool(*IsAudioPassthrough)(const char* mime);
+typedef std::vector<std::string>(*GetDolbyList)();
 
 class PlayerCallback {
 public:
@@ -1274,6 +1278,13 @@ public:
     virtual int32_t GetCurrentPresentationTimestamp(int64_t &currentPresentation)
     {
         currentPresentation = 0;
+        return 0;
+    }
+
+    virtual int32_t RegisterDeviceCapability(IsAudioPassthrough callback, GetDolbyList getDolbyList)
+    {
+        (void)callback;
+        (void)getDolbyList;
         return 0;
     }
 };

@@ -31,6 +31,7 @@ ohos_unittest("monitor_server_unittest") {
     "$MEDIA_PLAYER_ROOT_DIR/services/services/player/subscriber",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_data_source/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_data_source/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/dolby_passthrough/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/server",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/monitor/client",

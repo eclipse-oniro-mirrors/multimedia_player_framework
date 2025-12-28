@@ -22,6 +22,7 @@
 #include "media_data_source_stub.h"
 #include "media_source_loader_stub.h"
 #include "monitor_client_object.h"
+#include "dolby_passthrough_stub.h"
 
 namespace OHOS {
 namespace Media {
@@ -104,6 +105,7 @@ public:
     int32_t GetGlobalInfo(std::shared_ptr<Meta> &globalInfo) override;
     int32_t GetMediaDescription(Format &format) override;
     int32_t GetTrackDescription(Format &format, uint32_t trackIndex) override;
+    int32_t RegisterDeviceCapability(IsAudioPassthrough callback, GetDolbyList getDolbyList) override;
 
 private:
     int32_t CreateListenerObject();
@@ -112,6 +114,7 @@ private:
     sptr<IStandardPlayerService> playerProxy_ = nullptr;
     sptr<PlayerListenerStub> listenerStub_ = nullptr;
     sptr<MediaDataSourceStub> dataSrcStub_ = nullptr;
+    sptr<DolbyPassthroughStub> dolbyPassthroughStub_ = nullptr;
     sptr<MediaSourceLoaderStub> sourceLoaderStub_ = nullptr;
     std::shared_ptr<PlayerCallback> callback_ = nullptr;
     std::mutex mutex_;

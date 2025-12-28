@@ -377,5 +377,27 @@ void HiPlayerCallbackLooper::OnInfoDelay(PlayerOnInfoType type, int32_t extra, c
     Enqueue(std::make_shared<HiPlayerCallbackLooper::Event>(WHAT_INFO, SteadyClock::GetCurrentTimeMs() + delayMs,
         std::make_tuple(type, extra, infoBody)));
 }
+
+bool HiPlayerCallbackLooper::IsAudioPass(const char* mimeType)
+{
+    auto obs = obs_.lock();
+    if (obs != nullptr) {
+        if (mimeType == nullptr) {
+            MEDIA_LOG_E_SHORT("IsAudioPass error, mimeType is nullptr");
+            return false;
+        }
+        return obs->IsAudioPass(mimeType);
+    }
+    return false;
+}
+
+std::vector<std::string> HiPlayerCallbackLooper::GetDolbyList()
+{
+    auto obs = obs_.lock();
+    if (obs != nullptr) {
+        return obs->GetDolbyList();
+    }
+    return {};
+}
 }  // namespace Media
 }  // namespace OHOS

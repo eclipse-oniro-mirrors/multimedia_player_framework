@@ -42,6 +42,7 @@ ohos_unittest("av_thumbnail_generator_unittest") {
     "player/subscriber",
     "media_data_source/ipc",
     "media_data_source/server",
+    "dolby_passthrough/ipc",
     "monitor/client",
     "monitor/ipc",
     "monitor/server",

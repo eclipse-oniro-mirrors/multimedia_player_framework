@@ -62,6 +62,8 @@ public:
     void StopCollectMaxAmplitude();
     void ReportRemainedMaxAmplitude();
     void OnInfoDelay(PlayerOnInfoType type, int32_t extra, const Format &infoBody, int64_t delayMs);
+    bool IsAudioPass(const char* mimeType) override;
+    std::vector<std::string> GetDolbyList() override;
 
 private:
     void DoReportMediaProgress();
