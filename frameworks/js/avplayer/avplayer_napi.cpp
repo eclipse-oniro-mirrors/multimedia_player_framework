@@ -2139,7 +2139,7 @@ std::shared_ptr<AVMediaSource> AVPlayerNapi::GetAVMediaSource(napi_env env, napi
     std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(srcTmp->url, srcTmp->header);
     CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, nullptr, "create mediaSource failed!");
     mediaSource->SetMimeType(srcTmp->GetMimeType());
-    mediaSource->enableOfflineCache(srcTmp->GetEnable());
+    mediaSource->enableOfflineCache(srcTmp->GetenableOfflineCache());
     mediaSource->mediaSourceLoaderCb_ = MediaSourceNapi::GetSourceLoader(env, value);
     if (mediaSource->mediaSourceLoaderCb_ == nullptr) {
         MEDIA_LOGI("mediaSourceLoaderCb_ nullptr");

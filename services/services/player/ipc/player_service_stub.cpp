@@ -1178,6 +1178,10 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
 
     struct AVPlayStrategy strategy;
     ReadPlayStrategyFromMessageParcel(data, strategy);
+    bool flagNull = data.ReadBool();
+    MEDIA_LOGI("% flagNull %{public}d", flagNull);
+    bool enable = data.ReadBool();
+    mediaSource->enableOfflineCache(enable);
     reply.WriteInt32(SetMediaSource(mediaSource, strategy));
     if (mimeType == AVMimeType::APPLICATION_M3U8) {
         (void)::close(fd);

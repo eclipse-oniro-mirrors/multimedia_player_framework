@@ -269,9 +269,7 @@ napi_value MediaSourceNapi::JsEnableOfflineCache(napi_env env, napi_callback_inf
     }
  
     mediaSource->enableOfflineCache(enable);
- 
-    MEDIA_LOGI("JsEnableOfflineCache enable: %{public}d", enable);
-    MEDIA_LOGI("JsEnableOfflineCache Out");
+
     return undefinedResult;
 }
 

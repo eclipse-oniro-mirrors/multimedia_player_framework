@@ -397,7 +397,7 @@ public:
         enable_ = enable;
     }
 
-    bool GetEnable()
+    bool GetenableOfflineCache()
     {
         return enable_;
     }
