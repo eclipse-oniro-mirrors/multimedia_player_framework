@@ -801,6 +801,7 @@ int32_t AVMetadataHelperImpl::SetUrlSource(const std::string &uri, const std::ma
 
 int32_t AVMetadataHelperImpl::SetSource(int32_t fd, int64_t offset, int64_t size, int32_t usage)
 {
+    std::lock_guard<std::mutex> lock(releaseMutex_);
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, MSERR_NO_MEMORY,
         "avmetadatahelper service does not exist..");
     MEDIA_LOGI("Set file source fd: %{public}d, offset: %{public}" PRIu64 ", size: %{public}" PRIu64,

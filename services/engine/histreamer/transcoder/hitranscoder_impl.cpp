@@ -585,6 +585,7 @@ int32_t HiTransCoderImpl::Prepare()
 {
     MEDIA_LOG_I("HiTransCoderImpl::Prepare()");
     MediaTrace trace("HiTransCoderImpl::Prepare()");
+    AppendMediaKitTranscoderMediaInfo();
     int32_t width = 0;
     int32_t height = 0;
     if (isExistVideoTrack_) {
@@ -794,6 +795,61 @@ void HiTransCoderImpl::AppendDstMediaInfo(std::shared_ptr<Meta> meta)
     meta->SetData(Tag::AV_TRANSCODER_DST_AUDIO_BITRATE, static_cast<int32_t>(dstAudioBitrate));
 }
 
+void HiTransCoderImpl::AppendMediaKitTranscoderMediaInfo()
+{
+    MEDIA_LOG_I("HiTransCoderImpl::AppendMediaKitTranscoderMediaInfo");
+    
+    std::vector<std::pair<std::string, std::string>> mediaInfo_;
+
+    std::string srcAudioMime;
+    srcAudioFormat_->Get<Tag::MIME_TYPE>(srcAudioMime);
+    mediaInfo_.push_back({"SrcAudioMime", srcAudioMime});
+    std::string srcVideoMime;
+    srcVideoFormat_->Get<Tag::MIME_TYPE>(srcVideoMime);
+    mediaInfo_.push_back({"SrcVideoMime", srcVideoMime});
+    mediaInfo_.push_back({"SrcVideoWidth", std::to_string(inputVideoWidth_)});
+    mediaInfo_.push_back({"SrcVideoHeight", std::to_string(inputVideoHeight_)});
+    if (demuxerFilter_ == nullptr) {
+        MEDIA_LOG_E("demuxerFilter_ is nullptr");
+        return;
+    }
+    std::shared_ptr<Meta> globalInfo = demuxerFilter_->GetGlobalMetaInfo();
+    FileType fileType_ = FileType::UNKNOW;
+    globalInfo->GetData(Tag::MEDIA_FILE_TYPE, fileType_);
+    mediaInfo_.push_back({"SrcFormat", std::to_string(static_cast<int32_t>(fileType_))});
+
+    std::string dstAudioMime;
+    audioEncFormat_->Get<Tag::MIME_TYPE>(dstAudioMime);
+    mediaInfo_.push_back({"DstAudioMime", dstAudioMime});
+    std::string dstVideoMime;
+    videoEncFormat_->Get<Tag::MIME_TYPE>(dstVideoMime);
+    mediaInfo_.push_back({"DstVideoMime", dstVideoMime});
+    int64_t dstVideoBitrate;
+    videoEncFormat_->Get<Tag::MEDIA_BITRATE>(dstVideoBitrate);
+    mediaInfo_.push_back({"DstVideoBit", std::to_string(dstVideoBitrate)});
+    int64_t dstAudioBitrate;
+    audioEncFormat_->Get<Tag::MEDIA_BITRATE>(dstAudioBitrate);
+    mediaInfo_.push_back({"DstAudioBit", std::to_string(dstAudioBitrate)});
+    mediaInfo_.push_back({"DstFormat", std::to_string(static_cast<int32_t>(outputFormatType_))});
+    int32_t outputVideoWidth = inputVideoWidth_;
+    int32_t outputVideoHeight = inputVideoHeight_;
+    videoEncFormat_->GetData(Tag::VIDEO_WIDTH, outputVideoWidth);
+    mediaInfo_.push_back({"DstVideoWidth", std::to_string(outputVideoWidth)});
+    videoEncFormat_->GetData(Tag::VIDEO_HEIGHT, outputVideoHeight);
+    mediaInfo_.push_back({"DstVideoHeight", std::to_string(outputVideoHeight)});
+    ReportTranscoderMediaInfo(appUid_, instanceId_, mediaInfo_, errCode_);
+}
+
+void HiTransCoderImpl::AppendMediaKitTranscoderMediaError(int32_t errCode)
+{
+    MEDIA_LOG_I("HiTransCoderImpl::AppendMediaKitTranscoderMediaError");
+    
+    std::vector<std::pair<std::string, std::string>> mediaInfo_;
+    mediaInfo_.push_back({"ErrorCode", std::to_string(errCode)});
+
+    ReportTranscoderMediaInfo(appUid_, instanceId_, mediaInfo_, errCode);
+}
+
 void HiTransCoderImpl::OnEvent(const Event &event)
 {
     switch (event.type) {
@@ -819,6 +875,7 @@ void HiTransCoderImpl::HandleErrorEvent(int32_t errorCode)
         ignoreError_ = true;
     }
     MEDIA_LOG_W("OnError, errorCode: " PUBLIC_LOG_D32, errorCode);
+    AppendMediaKitTranscoderMediaError(errorCode);
     FALSE_RETURN_MSG(callbackLooper_ != nullptr, "callbackLooper is nullptr");
     callbackLooper_->StopReportMediaProgress();
     if (pipeline_ != nullptr) {

@@ -409,6 +409,7 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
     }
     if (dfxAgent_ != nullptr) {
         dfxAgent_->SetSourceType(sourceType);
+        sourceType_ = sourceType;
     }
     hasExtSub_ = false;
     pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
@@ -466,6 +467,7 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     }
     if (dfxAgent_ != nullptr) {
         dfxAgent_->SetSourceType(sourceType);
+        sourceType_ = sourceType;
     }
 
     pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
@@ -483,6 +485,7 @@ int32_t HiPlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc
     }
     if (dfxAgent_ != nullptr) {
         dfxAgent_->SetSourceType(PlayerDfxSourceType::DFX_SOURCE_TYPE_DATASRC);
+        sourceType_ = PlayerDfxSourceType::DFX_SOURCE_TYPE_DATASRC;
     }
     playStatisticalInfo_.sourceType = static_cast<int32_t>(SourceType::SOURCE_TYPE_STREAM);
     dataSrc_ = dataSrc;
@@ -694,6 +697,7 @@ int32_t HiPlayerImpl::PrepareAsync()
     UpdatePlayerStateAndNotify();
     prepareDuration_ = GetCurrentMillisecond() - startTime;
     MEDIA_LOG_I("PrepareAsync End");
+    SetMediaKitReport("avplayer prepare out");
     return TransStatus(ret);
 }
 
@@ -1301,6 +1305,8 @@ int32_t HiPlayerImpl::Reset()
     if (dfxAgent_ != nullptr) {
         dfxAgent_->SetSourceType(PlayerDfxSourceType::DFX_SOURCE_TYPE_UNKNOWN);
         dfxAgent_->ResetAgent();
+        sourceType_ = PlayerDfxSourceType::DFX_SOURCE_TYPE_UNKNOWN;
+        fileType_ = FileType::UNKNOW;
     }
     OnStateChanged(PlayerStateId::STOPPED);
     return ret;
@@ -2418,6 +2424,46 @@ int32_t HiPlayerImpl::GetSubtitleTrackInfo(std::vector<Format>& subtitleTrack)
     return TransStatus(Status::OK);
 }
 
+void HiPlayerImpl::SetMediaKitReport(const std::string &apiCall)
+{
+    MEDIA_LOG_D("SetMediaKitReport in");
+    nlohmann::json metaInfoJson;
+    std::string videoMime = "";
+    std::string audioMime = "";
+    std::string subtitleMime = "";
+    if (demuxer_ != nullptr) {
+        std::string mime;
+        std::vector<std::shared_ptr<Meta>> streamMetaInfo = demuxer_->GetStreamMetaInfo();
+        for (size_t trackIndex = 0; trackIndex < streamMetaInfo.size(); trackIndex++) {
+            auto trackInfo = streamMetaInfo[trackIndex];
+            if (!(trackInfo->GetData(Tag::MIME_TYPE, mime)) || mime.find("invalid") == 0) {
+                MEDIA_LOG_W("Get MIME fail");
+                continue;
+            }
+            MEDIA_LOG_D("DfxTrackInfo: %{public}s", mime.c_str());
+            if (videoMime == "" && IsVideoMime(mime)) {
+                videoMime = mime;
+            }
+            if (audioMime == "" && IsAudioMime(mime)) {
+                audioMime = mime;
+            }
+            if (subtitleMime == "" && IsSubtitleMime(mime)) {
+                subtitleMime = mime;
+            }
+        }
+    }
+    metaInfoJson["fileType"] = fileType_;
+    metaInfoJson["sourceType"] = sourceType_;
+    metaInfoJson["videoMime"] = videoMime;
+    metaInfoJson["audioMime"] = audioMime;
+    metaInfoJson["subtitleMime"] = subtitleMime;
+    std::string events = metaInfoJson.dump();
+    std::string instanceIdStr = std::to_string(instanceId_);
+    MEDIA_LOG_D("SetMediaKitReport info: %{public}s", events.c_str());
+    OHOS::Media::MediaEvent event;
+    event.MediaKitStatistics("AVPlayer", bundleName_, instanceIdStr, apiCall, events);
+}
+
 int32_t HiPlayerImpl::GetVideoWidth()
 {
 #ifdef SUPPORT_VIDEO
@@ -2825,6 +2871,9 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     demuxer_->SetCallerInfo(instanceId_, bundleName_);
     demuxer_->SetDumpFlag(isDump_);
     std::shared_ptr<Meta> globalMeta = demuxer_->GetGlobalMetaInfo();
+    if (globalMeta != nullptr && globalMeta->GetData(Tag::MEDIA_FILE_TYPE, fileType_)) {
+        MEDIA_LOG_D("DoSetSource getFileType: %{public}d", static_cast<int32_t>(fileType_));
+    }
     if (ret == Status::OK && !MetaUtils::CheckFileType(globalMeta)) {
         MEDIA_LOG_W("0x%{public}06" PRIXPTR " SetSource unsupport", FAKE_POINTER(this));
         ret = Status::ERROR_INVALID_DATA;
@@ -3019,6 +3068,7 @@ void HiPlayerImpl::HandleErrorEvent(const Event& event)
 {
     int32_t errorCode = AnyCast<int32_t>(event.param);
     PlayerErrorType errorType = GetPlayerErrorType(event);
+    SetMediaKitReport("avplayer error: " + std::to_string(errorType));
     callbackLooper_.OnError(errorType, errorCode, event.description);
 }
 

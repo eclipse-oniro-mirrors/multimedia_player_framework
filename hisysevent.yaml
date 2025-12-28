@@ -177,3 +177,11 @@ EOS_SEEK_0:
   __BASE: {type: STATISTIC, level: CRITICAL, desc: eos seek 0, preserve: true}
   APP_NAME: {type: STRING, desc: app name}
   APP_UID: {type: INT32, desc: app uid}
+
+MEDIAKIT_STATISTICS:
+  __BASE: {type: STATISTIC, level: CRITICAL, desc: MediaKit statistics}
+  SYSCAP: {type: STRING, desc: System Capability}
+  APP_NAME: {type: STRING, desc: app name}
+  INSTANCE_ID: {type: STRING, desc: instance ID}
+  API_CALL: {type: STRING, desc: api call}
+  MEDIA_EVENTS: {type: STRING, desc: media events}

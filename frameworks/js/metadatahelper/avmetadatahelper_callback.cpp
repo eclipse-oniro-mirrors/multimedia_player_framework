@@ -227,7 +227,7 @@ void AVMetadataHelperCallback::SendPixelCompleteCallback(const FrameInfo &info,
         default:
             cb->errorMs = "NO_ERR";
     };
-    this->OnJsPixelCompleteCallback(cb);
+    OnJsPixelCompleteCallback(cb);
 }
 
 void AVMetadataHelperCallback::OnJsPixelCompleteCallback(AVMetadataJsCallback *jsCb) const

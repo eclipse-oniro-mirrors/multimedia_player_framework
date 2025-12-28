@@ -345,8 +345,8 @@ int32_t AVMetadataHelperServiceProxy::FetchFrameYuvs(const std::vector<int64_t>&
     (void)data.WriteInt32(param.dstWidth);
     (void)data.WriteInt32(param.dstHeight);
     (void)data.WriteInt32(static_cast<int32_t>(param.colorFormat));
-    (void)data.WriteInt32(param.isSupportFlip);
-    (void)data.WriteInt32(param.convertColorSpace);
+    (void)data.WriteBool(param.isSupportFlip);
+    (void)data.WriteBool(param.convertColorSpace);
     int error = Remote()->SendRequest(FETCH_FRAME_YUVS, data, reply, opt);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_EXT_API9_SERVICE_DIED,
         "FetchFrameYuvs failed, error: %{public}d", error);

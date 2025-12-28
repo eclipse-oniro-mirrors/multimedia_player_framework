@@ -344,6 +344,7 @@ private:
     PlayerErrorType GetPlayerErrorTypeFromEngine(const Event& event);
     bool IsPrepareStateValid() const;
     void MetricsUpdateDuration();
+    void SetMediaKitReport(const std::string &apiCall);
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
@@ -524,6 +525,8 @@ private:
     bool notNotifyForSw_ = false;
     bool isVideoDecoderInited_ = false;
     bool enable_ = false;
+    PlayerDfxSourceType sourceType_ = PlayerDfxSourceType::DFX_SOURCE_TYPE_UNKNOWN;
+    FileType fileType_ = FileType::UNKNOW;
 };
 } // namespace Media
 } // namespace OHOS

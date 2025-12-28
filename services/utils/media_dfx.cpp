@@ -189,6 +189,18 @@ void MediaEvent::SourceEventWrite(const std::string& eventName, OHOS::HiviewDFX:
                     "ERROR_MESG", errMsg);
 }
 
+void MediaEvent::MediaKitStatistics(const std::string& syscap, const std::string& appName,
+    const std::string& instanceId, const std::string& APICall, const std::string& events)
+{
+    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::MULTI_MEDIA, "MEDIAKIT_STATISTICS",
+                    OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
+                    "SYSCAP", syscap,
+                    "APP_NAME", appName,
+                    "INSTANCE_ID", instanceId,
+                    "API_CALL", APICall,
+                    "MEDIA_EVENTS", events);
+}
+
 void MediaEvent::ScreenCaptureEventWrite(const std::string& eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
     const std::string& appName, uint64_t instanceId, int8_t captureMode, int8_t dataMode, int32_t errorCode,
     const std::string& errorMessage)
@@ -467,6 +479,28 @@ int32_t AppendMediaInfo(const std::shared_ptr<Meta>& meta, uint64_t instanceId)
         }
     }
     return MSERR_OK;
+}
+
+void ReportTranscoderMediaInfo(int32_t uid, uint64_t instanceId,
+    std::vector<std::pair<std::string, std::string>> mediaInfo, int32_t errCode)
+{
+    MEDIA_LOG_I("ReportTranscoderMediaInfo.");
+
+    if (mediaInfo.empty()) {
+        MEDIA_LOG_I("mediaInfo is empty.");
+        return;
+    }
+    std::string infoArr;
+    std::string appName = GetClientBundleName(uid);
+    json mediaEvents;
+
+    for (const auto& kv : mediaInfo) {
+        mediaEvents[kv.first] = kv.second;
+    }
+    infoArr = mediaEvents.dump();
+    std::string APICall = errCode == 0 ? "Prepare" : "Prepare_ERROR";
+    MediaEvent event;
+    event.MediaKitStatistics("AVTranscoder", appName, std::to_string(instanceId), APICall, infoArr);
 }
 
 int32_t ReportMediaInfo(uint64_t instanceId)
