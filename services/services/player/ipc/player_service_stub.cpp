@@ -1144,11 +1144,9 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
         header.emplace(kstr, vstr);
     }
     std::string mimeType = data.ReadString();
-
     std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(url, header);
     CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr");
     mediaSource->SetMimeType(mimeType);
-
     if (sourceLoader_ != nullptr) {
         mediaSource->sourceLoader_ = std::move(sourceLoader_);
     }
@@ -1162,11 +1160,8 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
     size_t fdTailPos = uri.find("?");
     if (mimeType == AVMimeType::APPLICATION_M3U8 && fdHeadPos != std::string::npos &&
         fdTailPos != std::string::npos) {
-        std::string temp = uri.substr(fdTailPos);
-        std::string newUrl = "fd://" + std::to_string(fd) + temp;
-        mediaSource->url = newUrl;
+        mediaSource->url = "fd://" + std::to_string(fd) + uri.substr(fdTailPos);
     }
-
     int32_t ret = ReadMediaStreamListFromMessageParcel(data, mediaSource);
     if (ret != MSERR_OK) {
         MEDIA_LOGE("ReadMediaStreamListFromMessageParcel failed");
@@ -1175,13 +1170,10 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
         }
         return ret;
     }
-
     struct AVPlayStrategy strategy;
     ReadPlayStrategyFromMessageParcel(data, strategy);
-    bool flagNull = data.ReadBool();
-    MEDIA_LOGI("flagNull %{public}d", flagNull);
-    bool enable = data.ReadBool();
-    mediaSource->enableOfflineCache(enable);
+    MEDIA_LOGI("flagNull %{public}d", data.ReadBool());
+    mediaSource->enableOfflineCache(data.ReadBool());
     reply.WriteInt32(SetMediaSource(mediaSource, strategy));
     if (mimeType == AVMimeType::APPLICATION_M3U8) {
         (void)::close(fd);
