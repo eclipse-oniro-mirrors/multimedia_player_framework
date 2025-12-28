@@ -44,6 +44,7 @@ public:
         bool &errCallback);
     std::shared_ptr<AVSharedMemory> FetchArtPicture();
 
+    void DfxReport(std::string apiCall);
     void Reset();
     void Destroy();
     void OnEvent(const Event &event);

@@ -451,7 +451,9 @@ int32_t AVMetadataHelperServiceStub::FetchFrameYuvs(MessageParcel &data, Message
 {
     std::vector<int64_t> timeUsVec;
     int64_t timeUsSize = data.ReadInt64();
+    timeUsSize = timeUsSize > timeUsArrMaxLen ? timeUsArrMaxLen : timeUsSize;
     const void* timeUsBuffer = data.ReadBuffer(timeUsSize * sizeof(int64_t));
+    CHECK_AND_RETURN_RET_LOG(timeUsBuffer != nullptr, MSERR_EXT_API9_SERVICE_DIED, "timeUsBuffer is null");
     const int64_t* dataPtr = static_cast<const int64_t*>(timeUsBuffer);
     timeUsVec.assign(dataPtr, dataPtr + timeUsSize);
     int32_t option = data.ReadInt32();
