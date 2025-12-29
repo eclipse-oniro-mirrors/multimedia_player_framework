@@ -5100,10 +5100,10 @@ HWTEST_F(PlayerUnitTest, Player_RegisterDeviceCapability_002, TestSize.Level0)
             return false;
         }
         return strcmp(mime, "audio/dolby") == 0;
-    }
+    };
     GetDolbyList dolbyListCb = []() -> std::vector<std::string> {
         return {"audio/ac3", "audio/eac3", "audio/dts"};
-    }
+    };
     ASSERT_EQ(MSERR_OK, player_->RegisterDeviceCapability(passthroughCb, dolbyListCb));
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
