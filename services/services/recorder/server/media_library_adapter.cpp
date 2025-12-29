@@ -32,7 +32,7 @@ namespace Media {
 namespace MeidaLibraryAdapter {
 constexpr std::string_view prefix = "VID_";
 constexpr std::string_view connector = "_";
-constexpr in32_t VIDEO_COUNT = 1;
+constexpr int32_t VIDEO_COUNT = 1;
 class RecorderPhotoProxy : public PhotoProxy {
 public:
     RecorderPhotoProxy() { }
