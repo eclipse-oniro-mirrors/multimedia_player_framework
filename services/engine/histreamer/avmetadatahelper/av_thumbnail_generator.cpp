@@ -132,7 +132,7 @@ AVThumbnailGenerator::~AVThumbnailGenerator()
 
 void AVThumbnailGenerator::OnError(MediaAVCodec::AVCodecErrorType errorType, int32_t errorCode)
 {
-    MEDIA_LOGE("OnError, instance is 0x{public}06" PRIXPTR ", errorType is %{public}d, errorCode is %{public}d",
+    MEDIA_LOGE("OnError, instance is 0x%{public}06" PRIXPTR ", errorType is %{public}d, errorCode is %{public}d",
         FAKE_POINTER(this), static_cast<int32_t>(errorType), errorCode);
     if (errorCode == MediaAVCodec::AVCodecServiceErrCode::AVCS_ERR_UNSUPPORTED_CODEC_SPECIFICATION) {
         {
