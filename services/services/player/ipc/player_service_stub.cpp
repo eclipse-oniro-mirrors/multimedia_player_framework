@@ -1129,6 +1129,13 @@ int32_t PlayerServiceStub::SetPlaybackRate(MessageParcel &data, MessageParcel &r
     return MSERR_OK;
 }
 
+void PlayerServiceStub::MimeTypeCheck(std::string mimeType, int32_t fd)
+{
+    if (mimeType == AVMimeType::APPLICATION_M3U8) {
+        (void)::close(fd);
+    }
+}
+ 
 int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &reply)
 {
     std::string url = data.ReadString();
@@ -1172,12 +1179,12 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
     }
     struct AVPlayStrategy strategy;
     ReadPlayStrategyFromMessageParcel(data, strategy);
-    MEDIA_LOGI("flagNull %{public}d", data.ReadBool());
-    mediaSource->enableOfflineCache(data.ReadBool());
+    bool flagNull = data.ReadBool();
+    MEDIA_LOGI("flagNull %{public}d", flagNull);
+    bool enable = data.ReadBool();
+    mediaSource->enableOfflineCache(enable);
     reply.WriteInt32(SetMediaSource(mediaSource, strategy));
-    if (mimeType == AVMimeType::APPLICATION_M3U8) {
-        (void)::close(fd);
-    }
+    MimeTypeCheck(mimeType, fd);
     return MSERR_OK;
 }
 
