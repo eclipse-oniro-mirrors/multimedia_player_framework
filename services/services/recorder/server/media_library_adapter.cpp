@@ -32,6 +32,7 @@ namespace Media {
 namespace MeidaLibraryAdapter {
 constexpr std::string_view prefix = "VID_";
 constexpr std::string_view connector = "_";
+constexpr in32_t VIDEO_COUNT = 1;
 class RecorderPhotoProxy : public PhotoProxy {
 public:
     RecorderPhotoProxy() { }
@@ -202,7 +203,7 @@ bool CreateMediaLibrary(int32_t &fd, std::string &uri)
         .userId = userId,
         .callingTokenId = IPCSkeleton::GetCallingTokenID()
     };
-    auto photoAssetProxy = mediaLibraryManager->CreatePhotoAssetProxy(callerInfo, CameraShotType::VIDEO, 1);
+    auto photoAssetProxy = mediaLibraryManager->CreatePhotoAssetProxy(callerInfo, CameraShotType::VIDEO, VIDEO_COUNT);
     sptr<RecorderPhotoProxy> recorderPhotoProxy = new(std::nothrow) RecorderPhotoProxy();
     CHECK_AND_RETURN_RET_LOG(recorderPhotoProxy != nullptr, false,
         "Error to create recorderPhotoProxy");
