@@ -286,7 +286,7 @@ int32_t AudioStream::DoPlayWithSameSoundInterrupt()
     MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt start");
     std::lock_guard lock(streamLock_);
     interruptMode_.store(InterruptMode::SAME_SOUND_INTERRUPT);
-    if (streamState_.load() != StreamState::RELEASED) {
+    if (streamState_.load() == StreamState::RELEASED) {
         MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt end, invalid stream(%{public}d), "
             "streamState is %{public}d", streamID_, streamState_.load());
         return MSERR_INVALID_VAL;
