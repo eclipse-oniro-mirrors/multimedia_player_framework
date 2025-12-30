@@ -99,7 +99,7 @@ void AudioStream::DealPlayParamsBeforePlay(const PlayParams &playParams)
     audioRenderer_->SetRenderRate(CheckAndAlignRendererRate(playParams.rate));
     audioRenderer_->SetVolume(playParams.leftVolume);
     priority_ = playParams.priority;
-    audioRenderer_->SetParallelPlayFlag(true);
+    audioRenderer_->SetParallelPlayFlag(playParams.parallelPlayFlag);
     audioRenderer_->SetAudioHapticsSyncId(playParams.audioHapticsSyncId);
 }
 
@@ -132,7 +132,7 @@ void AudioStream::GetAvailableAudioRenderer(const AudioStandard::AudioRendererIn
     if (audioRenderer_ == nullptr) {
         audioRenderer_ = CreateAudioRenderer(audioRendererInfo, playParams);
         if (audioRenderer_ == nullptr) {
-            MEDIA_LOGE("CreateAudioRenderer failed, release old auidoRenderer");
+            MEDIA_LOGE("CreateAudioRenderer failed, release old audioRenderer");
             audioRenderer_ = CreateAudioRenderer(audioRendererInfo, playParams);
         }
         CHECK_AND_RETURN_LOG(audioRenderer_ != nullptr, "audioRenderer_ is nullptr");
@@ -250,6 +250,7 @@ int32_t AudioStream::DoPlayWithNoInterrupt()
             streamID_, streamState_.load());
         return MSERR_INVALID_VAL;
     }
+
     if (audioRenderer_ == nullptr) {
         MEDIA_LOGI("AudioStream::DoPlayWithNoInterrupt, audioRenderer_ is nullptr, try again");
         PreparePlayInner(audioRendererInfo_, playParameters_);
@@ -262,6 +263,7 @@ int32_t AudioStream::DoPlayWithNoInterrupt()
     MEDIA_LOGI("AudioStream::DoPlayWithNoInterrupt, streamID_ is %{public}d, bufferSize is %{public}zu, "
         "pcmBufferFrameIndex_ is %{public}zu, pcmBufferSize_ is %{public}zu", streamID_, bufferSize,
         pcmBufferFrameIndex_, pcmBufferSize_);
+
     SoundPoolXCollie soundPoolXCollie("AudioStream audioRenderer::Start time out",
         [](void *) {
             MEDIA_LOGI("AudioStream::DoPlayWithNoInterrupt, audioRenderer::Start time out");
@@ -295,7 +297,7 @@ int32_t AudioStream::DoPlayWithSameSoundInterrupt()
         CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL,
             "AudioStream::DoPlayWithSameSoundInterrupt, audioRenderer_ is nullptr");
     }
-    
+
     size_t bufferSize = 0;
     audioRenderer_->GetBufferSize(bufferSize);
     MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt, streamID_ is %{public}d, bufferSize is %{public}zu, "

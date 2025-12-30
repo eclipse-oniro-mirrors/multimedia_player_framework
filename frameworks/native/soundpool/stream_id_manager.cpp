@@ -241,7 +241,7 @@ int32_t IStreamIDManager::AddPlayTask(int32_t streamID)
     CHECK_AND_RETURN_RET_LOG(streamPlayingThreadPool_ != nullptr, MSERR_INVALID_VAL,
         "Failed to obtain streamPlayingThreadPool_");
     CHECK_AND_RETURN_RET_LOG(streamPlayTask != nullptr, MSERR_INVALID_VAL,
-        "AddPlayTask, streamPlayingThreadPool_ is nullptr");
+        "AddPlayTask, streamPlayTask is nullptr");
     QueueAndSortPlayingStreamID(streamID);
 
     streamPlayingThreadPool_->AddTask(streamPlayTask);
@@ -256,7 +256,7 @@ int32_t IStreamIDManager::AddStopTask(const std::shared_ptr<AudioStream> &stream
     CHECK_AND_RETURN_RET_LOG(streamStopThreadPool_ != nullptr, MSERR_INVALID_VAL,
         "Failed to obtain streamStopThreadPool_");
     CHECK_AND_RETURN_RET_LOG(streamStopTask != nullptr, MSERR_INVALID_VAL,
-        "AddStopTask, streamPlayingThreadPool_ is nullptr");
+        "AddStopTask, streamStopTask is nullptr");
     streamStopThreadPool_->AddTask(streamStopTask);
     MEDIA_LOGI("AddStopTask end, streamID is %{public}d", stream->GetStreamID());
     return MSERR_OK;
@@ -421,10 +421,15 @@ void StreamIDManagerWithSameSoundInterrupt::RemoveInvalidStreams()
     }
 }
 
-void StreamIDManagerWithSameSoundInterrupt::RemoveStreamByStreamID(int32_t soundID, int32_t streamID)
+void StreamIDManagerWithSameSoundInterrupt::RemoveStreamBySoundIDAndStreamID(int32_t soundID, int32_t streamID)
 {
-    CHECK_AND_RETURN_LOG(soundID2Stream_.find(soundID) != soundID2Stream_.end(),
-        "soundID(%{public}d) not exist in soundID2Stream_", soundID);
+    auto it = soundID2Stream_.find(soundID);
+    CHECK_AND_RETURN_LOG(it != soundID2Stream_.end(), "soundID(%{public}d) not exist in soundID2Stream_", soundID);
+    if ((*it).second->GetStreamID() != streamID) {
+        MEDIA_LOGE("RemoveStreamBySoundIDAndStreamID, soundID(%{public}d) does not correspond to streamID(%{public}d)",
+            soundID, streamID);
+        return;
+    }
     soundID2Stream_.erase(soundID);
     currentStreamsNum_--;
     return;
@@ -455,7 +460,7 @@ int32_t StreamIDManagerWithSameSoundInterrupt::ClearStreamIDInDeque(int32_t soun
     CHECK_AND_RETURN_RET_LOG(stream != nullptr, MSERR_INVALID_VAL, "ClearStreamIDInDeque, stream is nullptr");
     stream->Release();
     stream->SetStreamState(StreamState::RELEASED);
-    RemoveStreamByStreamID(soundID, streamID);
+    RemoveStreamBySoundIDAndStreamID(soundID, streamID);
     return MSERR_OK;
 }
 
@@ -571,7 +576,7 @@ std::vector<int32_t> StreamIDManagerWithSameSoundInterrupt::GetStreamIDBySoundID
     std::vector<int32_t> ret;
     CHECK_AND_RETURN_RET_LOG(!soundID2Stream_.empty(), ret, "GetStreamIDBySoundID, soundID2Stream_ is empty");
     CHECK_AND_RETURN_RET_LOG(soundID2Stream_.find(soundID) != soundID2Stream_.end(), ret,
-        "GetStreamIDBySoundID, soundID2(%{public}d) not exists in soundID2Stream_", soundID);
+        "GetStreamIDBySoundID, soundID(%{public}d) not exists in soundID2Stream_", soundID);
     CHECK_AND_RETURN_RET_LOG(soundID2Stream_[soundID] != nullptr, ret,
         "GetStreamIDBySoundID, soundID2Stream_[%{public}d] is nullptr", soundID);
     int32_t streamID = soundID2Stream_[soundID]->GetStreamID();
@@ -665,7 +670,7 @@ bool StreamIDManagerWithNoInterrupt::InnerProcessOfRemoveInvalidStreams(const St
     return false;
 }
 
-void StreamIDManagerWithNoInterrupt::RemoveStreamByStreamID(int32_t soundID, int32_t streamID)
+void StreamIDManagerWithNoInterrupt::RemoveStreamBySoundIDAndStreamID(int32_t soundID, int32_t streamID)
 {
     CHECK_AND_RETURN_LOG(soundID2MultiStreams_.find(soundID) != soundID2MultiStreams_.end(),
         "soundID(%{public}d) not exist in soundID2MultiStreams_", soundID);
@@ -695,7 +700,7 @@ int32_t StreamIDManagerWithNoInterrupt::ClearStreamIDInDeque(int32_t soundID, in
     CHECK_AND_RETURN_RET_LOG(stream != nullptr, MSERR_INVALID_VAL, "ClearStreamIDInDeque, stream is nullptr");
     stream->Release();
     stream->SetStreamState(StreamState::RELEASED);
-    RemoveStreamByStreamID(soundID, streamID);
+    RemoveStreamBySoundIDAndStreamID(soundID, streamID);
     return MSERR_OK;
 }
 
