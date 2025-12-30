@@ -197,7 +197,11 @@ void AudioStream::DealAudioRendererParams(AudioStandard::AudioRendererOptions &r
     rendererOptions.privacyType = AudioStandard::PRIVACY_TYPE_PUBLIC;
     rendererFlags_ = audioRendererInfo.rendererFlags;
     rendererOptions.rendererInfo.rendererFlags = rendererFlags_;
-    rendererOptions.rendererInfo.playerType = AudioStandard::PlayerType::PLAYER_TYPE_SOUND_POOL;
+    if (audioRendererInfo.playerType == AudioStandard::PlayerType::PLAYER_TYPE_SYSTEM_SOUND_PLAYER) {
+        rendererOptions.rendererInfo.playerType = audioRendererInfo.playerType;
+    } else {
+        rendererOptions.rendererInfo.playerType = AudioStandard::PlayerType::PLAYER_TYPE_SOUND_POOL;
+    }
     rendererOptions.rendererInfo.expectedPlaybackDurationBytes = static_cast<uint64_t>(pcmBufferSize_);
 }
 
