@@ -470,6 +470,10 @@ static const std::vector<struct JsEnumInt> g_soundpoolInterruptMode = {
     { "SAME_SOUND_INTERRUPT", InterruptMode::SAME_SOUND_INTERRUPT }
 };
 
+static const std::vector<struct JsEnumInt> g_avMetricsEventType = {
+    { "AV_METRICS_EVENT_STALLING", AVMetricsEventType::AV_METRICS_EVENT_TYPE_STALLING },
+};
+
 static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_intEnumClassMap = {
     { "AVErrorCode", g_AVErrorCode},
     { "MediaErrorCode", g_mediaErrorCode },
@@ -510,6 +514,7 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_
     { "ErrorType", g_soundpoolErrorType },
     { "AacProfile", g_aacProfile },
     { "SoundInterruptMode", g_soundpoolInterruptMode },
+    { "AVMetricsEventType", g_avMetricsEventType },
 };
 
 static const std::map<std::string_view, const std::vector<struct JsEnumString>&> g_stringEnumClassMap = {
