@@ -1094,6 +1094,7 @@ void NativeAVPlayerCallback::OnSeiInfoCb(const int32_t extra, const Format &info
     }
 
     seiMessageReceivedCallback_->OnInfo(player_, message, playbackPosition);
+    delete message;
 }
 
 void NativeAVPlayerCallback::OnAmplitudeUpdateCb(const int32_t extra, const Format &infoBody)
