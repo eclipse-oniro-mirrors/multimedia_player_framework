@@ -2350,10 +2350,11 @@ int32_t HiPlayerImpl::GetPlaybackStatisticMetrics(Format &playbackStatisticMetri
         playbackStatisticMetrics.PutUintValue(
             "first_frame_decapsulation_duration", static_cast<uint32_t>(downloadInfo.firstFrameDecapsulationTime));
         playbackStatisticMetrics.PutUintValue("total_playback_time", static_cast<uint32_t>(playTotalDuration_));
-        playbackStatisticMetrics.PutUintValue("loading_count", static_cast<uint32_t>(downloadInfo.loadingCount));
+        playbackStatisticMetrics.PutUintValue(
+            "loading_requests_count", static_cast<uint32_t>(downloadInfo.loadingCount));
         playbackStatisticMetrics.PutUintValue(
             "total_loading_time", static_cast<uint32_t>(downloadInfo.totalLoadingTime));
-        playbackStatisticMetrics.PutLongValue("total_loading_Bytes", downloadInfo.totalDownLoadBytes);
+        playbackStatisticMetrics.PutLongValue("total_loading_bytes", downloadInfo.totalDownLoadBytes);
         int64_t stallingCount = 0;
         dfxAgent_->GetTotalStallingTimes(&stallingCount);
         playbackStatisticMetrics.PutUintValue("stalling_count", static_cast<uint32_t>(stallingCount));
