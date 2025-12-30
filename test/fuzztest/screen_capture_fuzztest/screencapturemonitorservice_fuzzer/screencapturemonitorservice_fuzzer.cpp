@@ -73,7 +73,7 @@ bool ScreenCaptureMonitorServiceFuzzer::FuzzScreenCaptureMonitorCase(uint8_t *da
     screenCaptureMonitorServer->UnregisterScreenCaptureMonitorListener(listener);
     int32_t pid = GetData<int32_t>();
     screenCaptureMonitorServer->CallOnScreenCaptureStarted(pid);
-    int32_t started = GetData<bool>();
+    bool started = GetData<bool>();
     screenCaptureMonitorServer->SetSystemScreenRecorderStatus(started);
     screenCaptureMonitorServer->RemoveScreenCaptureMonitorCallback(listener);
     return true;
