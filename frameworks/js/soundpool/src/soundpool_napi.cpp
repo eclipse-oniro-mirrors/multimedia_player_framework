@@ -900,7 +900,7 @@ int32_t SoundPoolNapi::ParserVolumeOptionFromJs(std::unique_ptr<SoundPoolAsyncCo
 int32_t SoundPoolNapi::ParserInterruptModeFromJs(napi_env env, napi_value *argv, size_t argCount)
 {
     int32_t interruptMode = 1;
-    CHECK_AND_RETURN_RET_LOG(argCount == 1, MSERR_INVALID_VAL, "argv is invalid, size is %{public}lu", argCount);
+    CHECK_AND_RETURN_RET_LOG(argCount == 1, MSERR_INVALID_VAL, "argv is invalid, size is %{public}zu", argCount);
     napi_status status = napi_get_value_int32(env, argv[PARAM0], &interruptMode);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, MSERR_INVALID_VAL, "failed to get interruptMode");
     MEDIA_LOGI("interruptMode is %{public}d", interruptMode);
