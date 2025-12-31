@@ -138,17 +138,14 @@ void AVThumbnailGenerator::OnError(MediaAVCodec::AVCodecErrorType errorType, int
         {
             MEDIA_LOGI("OnError, before onErrorMutex_");
             std::unique_lock<std::mutex> lock(onErrorMutex_);
-            MEDIA_LOGI("OnError, get onErrorMutex_");
             CHECK_AND_RETURN_LOG(!hasReceivedCodecErrCodeOfUnsupported_,
                 "hasReceivedCodecErrCodeOfUnsupported_ is true");
-            MEDIA_LOGI("OnError, set hasReceivedCodecErrCodeOfUnsupported_ to true");
             hasReceivedCodecErrCodeOfUnsupported_ = true;
         }
 
         {
             MEDIA_LOGI("OnError, before mutex_ and queueMutex_");
             std::scoped_lock lock(mutex_, queueMutex_);
-            MEDIA_LOGI("OnError, get mutex_ and queueMutex_");
             stopProcessing_ = true;
         }
         bufferAvailableCond_.notify_all();
