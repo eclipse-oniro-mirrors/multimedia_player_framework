@@ -611,9 +611,8 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
                                                               const OutputConfiguration &param)
 {
     MEDIA_LOGI("Fetch frame 0x%{public}06" PRIXPTR " timeUs:%{public}" PRId64 ", option:%{public}d,"
-               "dstWidth:%{public}d, dstHeight:%{public}d, colorFormat:%{public}d",
-               FAKE_POINTER(this), timeUs, option, param.dstWidth, param.dstHeight,
-               static_cast<int32_t>(param.colorFormat));
+               "dstWidth:%{public}d, dstHeight:%{public}d, colorFormat:%{public}d", FAKE_POINTER(this), timeUs, option,
+               param.dstWidth, param.dstHeight, static_cast<int32_t>(param.colorFormat));
     CHECK_AND_RETURN_RET_LOG(mediaDemuxer_ != nullptr, nullptr, "FetchFrameAtTime demuxer is nullptr");
     avBuffer_ = nullptr;
     readErrorFlag_ = false;
@@ -642,9 +641,7 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
     {
         MEDIA_LOGI("FetchFrameYuv, retry fetch frame");
         std::unique_lock retryLock(onErrorMutex_);
-        MEDIA_LOGI("FetchFrameYuv, retry fetch frame and get onErrorMutex_");
         if (hasReceivedCodecErrCodeOfUnsupported_) {
-            MEDIA_LOGI("FetchFrameYuv, retry fetch frame and try to switch decoder");
             stopProcessing_ = false;
             SwitchToSoftWareDecoder();
             {
@@ -652,7 +649,6 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
                 MEDIA_LOGI("FetchFrameYuv, retry fetch frame, wait for the lock");
                 fetchFrameRes = cond_.wait_for(fetchFrameLock, std::chrono::seconds(MAX_WAIT_TIME_SECOND),
                     [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); });
-                MEDIA_LOGI("FetchFrameYuv, fetch frame successfully");
             }
         }
         MEDIA_LOGI("FetchFrameYuv, fetch frame end");
