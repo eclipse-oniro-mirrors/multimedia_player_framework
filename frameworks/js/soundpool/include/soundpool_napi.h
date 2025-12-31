@@ -149,7 +149,7 @@ private:
         size_t argCount);
     int32_t ParserRateOptionFromJs(std::unique_ptr<SoundPoolAsyncContext> &asyncCtx, napi_env env, napi_value *argv);
     int32_t ParserVolumeOptionFromJs(std::unique_ptr<SoundPoolAsyncContext> &asyncCtx, napi_env env, napi_value *argv);
-    int32_t ParserInterruptModeFromJs(napi_env env, napi_value *argv);
+    int32_t ParserInterruptModeFromJs(napi_env env, napi_value *argv, size_t argCount);
     bool GetPropertyBool(napi_env env, napi_value configObj, const std::string &type, bool &result);
 
     void ErrorCallback(int32_t errCode, const std::string &operate, const std::string &add = "");
