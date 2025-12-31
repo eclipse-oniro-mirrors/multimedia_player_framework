@@ -361,3 +361,12 @@ OH_AVMediaSource *OH_AVMediaSource_CreateWithFd(int32_t fd, int64_t offset, int6
 
     return static_cast<OH_AVMediaSource *>(mediasourceObj);
 }
+
+OH_AVErrCode OH_AVMediaSource_Destroy(OH_AVMediaSource *source)
+{
+    CHECK_AND_RETURN_RET_LOG(source != nullptr, AV_ERR_INVALID_VAL, "input source is nullptr!");
+    MediaSourceObject* mediasourceObj = reinterpret_cast<MediaSourceObject*>(source);
+    delete mediasourceObj;
+    mediasourceObj = nullptr;
+    return AV_ERR_OK;
+}

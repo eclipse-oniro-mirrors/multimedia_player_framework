@@ -175,6 +175,16 @@ OH_AVMediaSource *OH_AVMediaSource_CreateWithDataSource(OH_AVDataSource *dataSou
 OH_AVMediaSource *OH_AVMediaSource_CreateWithFd(int32_t fd, int64_t offset, int64_t size);
 
 /**
+ * @brief Release media source instance
+ * @param source Pointer to an OH_AVMediaSource instance
+ * @return Function result code.
+ *     (@link AV_ERR_OK) if the execution is successful.
+ *     (@link AV_ERR_INVALID_VAL) if source is nullptr or release failed.
+ * @since 23
+ */
+OH_AVErrCode OH_AVMediaSource_Destroy(OH_AVMediaSource *source);
+
+/**
  * @brief Set media mime type to handle extended media source.
  * @param source Pointer to a OH_AVMediaSource.
 
