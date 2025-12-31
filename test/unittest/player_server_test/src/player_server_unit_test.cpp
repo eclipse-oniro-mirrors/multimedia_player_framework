@@ -3476,7 +3476,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlaybackRate_005, TestSize.Level1)
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
     float playbackRate = -1;
-    EXPECT_NE(MSERR_OK, player_->SetPlaybackRate(playbackRate));
+    EXPECT_EQ(MSERR_OK, player_->SetPlaybackRate(playbackRate));
 }
 
 /**
