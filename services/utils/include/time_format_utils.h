@@ -34,6 +34,8 @@ public:
     static std::string __attribute__((visibility("default"))) FormatDateTimeByString(const std::string &dateTime);
     static std::string FormatLocalTime(std::chrono::system_clock::time_point localTime);
     static long ParseIso8601TimeZoneOffset(const std::string& tz);
+private:
+    static bool IsAllDigits(const std::string& str);
 };
 }  // namespace Media
 }  // namespace OHOS
