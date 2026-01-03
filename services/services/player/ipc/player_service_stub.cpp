@@ -1128,13 +1128,6 @@ int32_t PlayerServiceStub::SetPlaybackRate(MessageParcel &data, MessageParcel &r
     reply.WriteInt32(SetPlaybackRate(rate));
     return MSERR_OK;
 }
-
-void PlayerServiceStub::MimeTypeCheck(std::string mimeType, int32_t fd)
-{
-    if (mimeType == AVMimeType::APPLICATION_M3U8) {
-        (void)::close(fd);
-    }
-}
  
 int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &reply)
 {
@@ -1179,12 +1172,12 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
     }
     struct AVPlayStrategy strategy;
     ReadPlayStrategyFromMessageParcel(data, strategy);
-    bool flagNull = data.ReadBool();
-    MEDIA_LOGI("flagNull %{public}d", flagNull);
     bool enable = data.ReadBool();
     mediaSource->enableOfflineCache(enable);
     reply.WriteInt32(SetMediaSource(mediaSource, strategy));
-    MimeTypeCheck(mimeType, fd);
+    if (mimeType == AVMimeType::APPLICATION_M3U8) {
+        (void)::close(fd);
+    }
     return MSERR_OK;
 }
 
@@ -1221,6 +1214,7 @@ void PlayerServiceStub::ReadPlayStrategyFromMessageParcel(MessageParcel &data, A
     strategy.mutedMediaType = static_cast<OHOS::Media::MediaType>(data.ReadInt32());
     strategy.preferredAudioLanguage = data.ReadString();
     strategy.preferredSubtitleLanguage = data.ReadString();
+    strategy.keepDecodingOnMute = data.ReadBool();
 }
 
 int32_t PlayerServiceStub::GetPlaybackSpeed(MessageParcel &data, MessageParcel &reply)
