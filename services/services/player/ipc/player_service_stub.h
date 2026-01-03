@@ -94,7 +94,6 @@ public:
     int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override;
     int32_t SetSourceLoader(const sptr<IRemoteObject> &object) override;
     int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) override;
-    void MimeTypeCheck(std::string mimeType, int32_t fd) override;
     bool IsPlaying() override;
     bool IsLooping() override;
     int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
