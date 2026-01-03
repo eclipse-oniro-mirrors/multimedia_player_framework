@@ -188,18 +188,6 @@ OH_AVMediaSource *OH_AVMediaSource_CreateWithFd(int32_t fd, int64_t offset, int6
 OH_AVErrCode OH_AVMediaSource_SetMimeType(OH_AVMediaSource *source, const char *mimetype);
 
 /**
- * @brief Set enable  to Enable offline caching.
- * @param source Pointer to a OH_AVMediaSource.
-
- * @param enable Enable offline caching.
- * @return Function result code.
- *     (@link AV_ERR_OK) if the execution is successful.
- *     (@link AV_ERR_INVALID_VAL) if source or mimetype is nullptr.
- * @since 23
- */
-OH_AVErrCode OH_AVMediaSource_EnableOfflineCache(OH_AVMediaSource *source, bool enable);
-
-/**
  * @brief Get the request url.
  * @param request the OH_AVMediaSourceLoadingRequest instance.
  * @param url the output url string.
