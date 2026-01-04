@@ -77,7 +77,6 @@ bool ScreenCaptureRemoveWhiteListWindowsFuzzer::FuzzScreenCaptureRemoveWhiteList
     AVScreenCaptureConfig config;
     SetConfig(config);
     constexpr uint32_t recorderTime = 3;
-
     std::shared_ptr<TestScreenCaptureCallbackTest> callbackobj
         = std::make_shared<TestScreenCaptureCallbackTest>();
     std::vector<uint64_t> windowIDsVec;
