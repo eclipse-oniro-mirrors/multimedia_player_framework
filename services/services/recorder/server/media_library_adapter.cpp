@@ -15,7 +15,7 @@
 #include <iomanip>
 #include <ctime>
 #include "media_library_adapter.h"
-#include "media_library_manager.h"
+#include "media_library_camera_manager.h"
 #include "media_log.h"
 #include "ipc_skeleton.h"
 #include "media_dfx.h"
@@ -184,10 +184,10 @@ bool CreateMediaLibrary(int32_t &fd, std::string &uri)
     CHECK_AND_RETURN_RET_LOG(samgr != nullptr, false, "Failed to get System ability manager");
     auto object = samgr->GetSystemAbility(PLAYER_DISTRIBUTED_SERVICE_ID);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, false, "object is null");
-    auto mediaLibraryManager = Media::MediaLibraryManager::GetMediaLibraryManager();
-    CHECK_AND_RETURN_RET_LOG(mediaLibraryManager != nullptr, false,
-        "Error to init mediaLibraryManager");
-    mediaLibraryManager->InitMediaLibraryManager(object);
+    auto mediaLibraryCameraManager = Media::MediaLibraryCameraManager::GetMediaLibraryCameraManager();
+    CHECK_AND_RETURN_RET_LOG(mediaLibraryCameraManager != nullptr, false,
+        "Error to init mediaLibraryCameraManager");
+    mediaLibraryCameraManager->InitMediaLibraryCameraManager(object);
     const static int32_t INVALID_UID = -1;
     const static int32_t BASE_USER_RANGE = 200000;
     int32_t uid = IPCSkeleton::GetCallingUid();
@@ -203,7 +203,8 @@ bool CreateMediaLibrary(int32_t &fd, std::string &uri)
         .userId = userId,
         .callingTokenId = IPCSkeleton::GetCallingTokenID()
     };
-    auto photoAssetProxy = mediaLibraryManager->CreatePhotoAssetProxy(callerInfo, CameraShotType::VIDEO, VIDEO_COUNT);
+    auto photoAssetProxy =
+        mediaLibraryCameraManager->CreatePhotoAssetProxy(callerInfo, CameraShotType::VIDEO, VIDEO_COUNT);
     sptr<RecorderPhotoProxy> recorderPhotoProxy = new(std::nothrow) RecorderPhotoProxy();
     CHECK_AND_RETURN_RET_LOG(recorderPhotoProxy != nullptr, false,
         "Error to create recorderPhotoProxy");
@@ -211,7 +212,7 @@ bool CreateMediaLibrary(int32_t &fd, std::string &uri)
     photoAssetProxy->AddPhotoProxy((sptr<PhotoProxy>&)recorderPhotoProxy);
     uri = photoAssetProxy->GetPhotoAssetUri();
     MEDIA_LOGD("video uri:%{public}s", uri.c_str());
-    fd = mediaLibraryManager->OpenAsset(uri, "rw");
+    fd = mediaLibraryCameraManager->OpenAsset(uri, "rw");
     return true;
 }
 } // namespace MeidaLibraryAdapter
