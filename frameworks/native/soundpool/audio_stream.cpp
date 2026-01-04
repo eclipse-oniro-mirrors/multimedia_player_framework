@@ -426,9 +426,11 @@ int32_t AudioStream::Release()
         [](void *) {
             MEDIA_LOGI("Release audioRenderer::Release time out");
         });
+        lock.unlock();
         audioRenderer_->Release();
-        soundPoolXCollieRelease.CancelXCollieTimer();
         audioRenderer_ = nullptr;
+        lock.lock();
+        soundPoolXCollieRelease.CancelXCollieTimer();
     }
 
     if (callback_ != nullptr) callback_.reset();
