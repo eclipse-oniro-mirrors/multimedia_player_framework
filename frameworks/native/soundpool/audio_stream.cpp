@@ -412,9 +412,6 @@ int32_t AudioStream::Release()
     MediaTrace trace("AudioStream::Release");
     MEDIA_LOGI("AudioStream::Release start, streamID is %{public}d", streamID_);
     std::unique_lock lock(streamLock_);
-
-    // Use audioRenderer to release and don't lock, so it will not cause dead lock. if here locked, audioRenderer
-    // will wait callback thread stop, and the callback thread can't get the lock, it will cause dead lock
     if (audioRenderer_ != nullptr) {
         SoundPoolXCollie soundPoolXCollie("Release audioRenderer::Stop time out",
             [](void *) {
@@ -426,6 +423,8 @@ int32_t AudioStream::Release()
         [](void *) {
             MEDIA_LOGI("Release audioRenderer::Release time out");
         });
+        // When calling Release of audiorenderer, unlock here because the function will wait for the callback
+        // indicating playback completion, otherwise, deadlock may occur
         lock.unlock();
         audioRenderer_->Release();
         audioRenderer_ = nullptr;
