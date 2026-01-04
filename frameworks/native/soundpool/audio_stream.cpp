@@ -411,7 +411,7 @@ int32_t AudioStream::Release()
 {
     MediaTrace trace("AudioStream::Release");
     MEDIA_LOGI("AudioStream::Release start, streamID is %{public}d", streamID_);
-    std::lock_guard lock(streamLock_);
+    std::unique_lock lock(streamLock_);
 
     // Use audioRenderer to release and don't lock, so it will not cause dead lock. if here locked, audioRenderer
     // will wait callback thread stop, and the callback thread can't get the lock, it will cause dead lock
