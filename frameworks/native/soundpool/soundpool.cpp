@@ -414,7 +414,7 @@ int32_t SoundPool::Release()
         const std::string appName = GetClientBundleName(appUid);
 
         HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::MULTI_MEDIA,
-            "MEIDAKIT_STATISTICS",
+            "MEDIAKIT_STATISTICS",
             OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
             "SYSCAP", MODULE_NAME,
             "APP_NAME", appName,
