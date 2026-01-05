@@ -136,6 +136,7 @@ private:
     int64_t ReadLoop();
     void FlushBufferQueue();
     int64_t StopTask();
+    bool WaitForFrame();
 };
 }  // namespace Media
 }  // namespace OHOS
