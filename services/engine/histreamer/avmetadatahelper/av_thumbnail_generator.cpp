@@ -30,6 +30,7 @@
 #include "plugin/plugin_time.h"
 #include "sync_fence.h"
 #include "uri_helper.h"
+#include "media_dfx.h"
 
 #include "v1_0/cm_color_space.h"
 #include "v1_0/hdr_static_metadata.h"
@@ -597,6 +598,47 @@ void AVThumbnailGenerator::HandleFetchFrameAtTimeRes()
     videoDecoder_->ReleaseOutputBuffer(bufferIndex_, false);
 }
 
+void AVThumbnailGenerator::DfxReport(std::string apiCall)
+{
+    nlohmann::json metaInfoJson;
+    OHOS::Media::MediaEvent event;
+    if (mediaDemuxer_ == nullptr) {
+        std::string events = metaInfoJson.dump();
+        event.MediaKitStatistics("AVImageGenerator", appName_, std::to_string(appPid_), apiCall, events);
+        return;
+    }
+    const std::shared_ptr<Meta> globalInfo = mediaDemuxer_->GetGlobalMetaInfo();
+    Plugins::FileType fileType =  Plugins::FileType::UNKNOW;
+    globalInfo->GetData(Tag::MEDIA_FILE_TYPE, fileType);
+    metaInfoJson["fileType"] = static_cast<int32_t>(fileType);
+    const std::vector<std::shared_ptr<Meta>> trackInfos = mediaDemuxer_->GetStreamMetaInfo();
+    size_t trackCount = trackInfos.size();
+    for (size_t index = 0; index < trackCount; index++) {
+        std::shared_ptr<Meta> meta = trackInfos[index];
+        CHECK_AND_RETURN_LOG(meta != nullptr, "DfxReport meta is nullptr");
+        std::string mime;
+        meta->Get<Tag::MIME_TYPE>(mime);
+        if (mime.find("video/") == 0) {
+            metaInfoJson["videoMime"] = mime;
+            int32_t originalWidth = 0;
+            meta->GetData(Tag::VIDEO_WIDTH, originalWidth);
+            metaInfoJson["originalWidth"] = originalWidth;
+            int32_t originalHeight = 0;
+            meta->GetData(Tag::VIDEO_HEIGHT, originalHeight);
+            metaInfoJson["originalHeight"] = originalHeight;
+            double frameRate = 0;
+            if (meta->GetData(Tag::VIDEO_FRAME_RATE, frameRate)) {
+                metaInfoJson["frameRate"] = frameRate;
+            }
+        }
+        if (mime.find("audio/") == 0) {
+            metaInfoJson["audioMime"] = mime;
+        }
+    }
+    std::string events = metaInfoJson.dump();
+    event.MediaKitStatistics("AVImageGenerator", appName_, std::to_string(appPid_), apiCall, events);
+}
+
 std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, int32_t option,
                                                               const OutputConfiguration &param)
 {
@@ -620,6 +662,7 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
     auto res = SeekToTime(Plugins::Us2Ms(timeUs), static_cast<Plugins::SeekMode>(option), realSeekTime);
     CHECK_AND_RETURN_RET_LOG(res == Status::OK, nullptr, "Seek fail");
     CHECK_AND_RETURN_RET_LOG(InitDecoder() == Status::OK, nullptr, "FetchFrameAtTime InitDecoder failed.");
+    DfxReport("AVImageGenerator call");
     bool fetchFrameRes = WaitForFrame();
     {
         MEDIA_LOGI("FetchFrameYuv, retry fetch frame");
@@ -639,6 +682,7 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
     if (fetchFrameRes) {
         HandleFetchFrameYuvRes();
     } else {
+        DfxReport("AVImageGenerator fail");
         HandleFetchFrameYuvFailed();
     }
     return avBuffer_;

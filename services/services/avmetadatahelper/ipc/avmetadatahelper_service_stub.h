@@ -81,6 +81,7 @@ private:
     std::shared_ptr<IAVMetadataHelperService> avMetadateHelperServer_ = nullptr;
     std::map<uint32_t, AVMetadataHelperStubFunc> avMetadataHelperFuncs_;
     std::shared_ptr<HelperCallback> helperCallback_ = nullptr;
+    const int32_t timeUsArrMaxLen = 4096;
 };
 } // namespace Media
 } // namespace OHOS

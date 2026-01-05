@@ -72,8 +72,6 @@ public:
         FETCH_ALBUM_COVER,
         FETCH_FRAME_AT_TIME,
         FETCH_FRAME_YUV,
-        FETCH_FRAME_YUVS,
-        CANCEL_FETCHFRAMES,
         RELEASE,
         DESTROY,
         SET_CALLBACK,
@@ -83,6 +81,8 @@ public:
         GET_FRAME_INDEX_BY_TIME,
         SET_METADATA_CALLER,
         SET_HTTP_URI_SOURCE,
+        FETCH_FRAME_YUVS,
+        CANCEL_FETCHFRAMES,
         MAX_IPC_ID,
     };
 

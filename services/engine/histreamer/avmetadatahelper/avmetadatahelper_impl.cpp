@@ -242,6 +242,23 @@ std::shared_ptr<AVBuffer> AVMetadataHelperImpl::FetchFrameYuv(
     auto res = InitThumbnailGenerator();
     CHECK_AND_RETURN_RET_NOLOG(res == Status::OK, nullptr);
     std::shared_ptr<AVBuffer> avBuffer = thumbnailGenerator_->FetchFrameYuv(timeUs, option, param);
+    Plugins::FileType fileType =  Plugins::FileType::UNKNOW;
+    if (mediaDemuxer_ != nullptr) {
+        const std::shared_ptr<Meta> globalInfo = mediaDemuxer_->GetGlobalMetaInfo();
+        globalInfo->GetData(Tag::MEDIA_FILE_TYPE, fileType);
+    }
+    CHECK_AND_RETURN_RET_NOLOG(avBuffer != nullptr, nullptr);
+    bool isEosBuffer = avBuffer->flag_ & (uint32_t)(AVBufferFlag::EOS);
+    if (fileType == Plugins::FileType::MPEGTS) {
+        if (isEosBuffer) {
+            avBuffer = thumbnailGenerator_->FetchFrameYuv(succTimeUs_, option, param);
+            CHECK_AND_RETURN_RET_NOLOG(avBuffer != nullptr, nullptr);
+            MEDIA_LOGI("dtsTime %{public}" PRId64 " ptsTime %{public}" PRId64, avBuffer->dts_, avBuffer->pts_);
+        } else {
+            succTimeUs_ = timeUs;
+            MEDIA_LOGI("last succTime %{public}" PRId64, succTimeUs_);
+        }
+    }
     CHECK_AND_RETURN_RET_NOLOG(metadataCaller_ != AVMetadataCaller::AV_METADATA_EXTRACTOR || avBuffer == nullptr ||
         !(avBuffer->flag_ & (uint32_t)(AVBufferFlag::EOS)), nullptr);
     return avBuffer;

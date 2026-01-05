@@ -87,6 +87,7 @@ private:
     int32_t appUid_{0};
     int32_t appPid_{0};
     uint32_t appTokenId_{0};
+    int64_t succTimeUs_{0};
     std::string appName_;
     AVMetadataCaller metadataCaller_ = AVMetadataCaller::AV_META_DATA_DEFAULT;
 };
