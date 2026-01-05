@@ -444,6 +444,7 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
         CollectionErrorInfo(MSERR_INVALID_VAL, "mediaSource is nullptr");
         return MSERR_INVALID_VAL;
     }
+    enable_ = mediaSource->GetenableOfflineCache();
     header_ = mediaSource->header;
 
     playMediaStreamVec_ = mediaSource->GetAVPlayMediaStreamList();
@@ -749,6 +750,7 @@ void HiPlayerImpl::DoSetMediaSource(Status& ret)
             return;
         }
         mediaSource->SetSourceLoader(sourceLoader_);
+        mediaSource->enableOfflineCache(enable_);
         ret = DoSetSource(mediaSource);
     } else {
         if (!header_.empty()) {

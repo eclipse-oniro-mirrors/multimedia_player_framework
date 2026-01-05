@@ -40,6 +40,7 @@ napi_value MediaSourceNapi::Init(napi_env env, napi_value exports)
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION("setMimeType", JsSetMimeType),
         DECLARE_NAPI_FUNCTION("setMediaResourceLoaderDelegate", JsSetMediaResourceLoaderDelegate),
+        DECLARE_NAPI_FUNCTION("enableOfflineCache", JsEnableOfflineCache),
     };
 
     napi_value constructor = nullptr;
@@ -242,6 +243,32 @@ napi_value MediaSourceNapi::JsSetMimeType(napi_env env, napi_callback_info info)
     }
 
     mediaSource->SetMimeType(mimeType);
+
+    return undefinedResult;
+}
+
+napi_value MediaSourceNapi::JsEnableOfflineCache(napi_env env, napi_callback_info info)
+{
+    napi_value undefinedResult = nullptr;
+    napi_get_undefined(env, &undefinedResult);
+    MEDIA_LOGI("JsEnableOfflineCache In");
+ 
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+ 
+    napi_value jsThis = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, nullptr, "failed to napi_get_cb_info");
+    bool enable = false;
+    napi_get_value_bool(env, args[0], &enable);
+    std::shared_ptr<AVMediaSourceTmp> mediaSource = GetMediaSource(env, jsThis);
+ 
+    if (mediaSource == nullptr) {
+        MEDIA_LOGE("Fail to get mediaSource instance.");
+        return undefinedResult;
+    }
+ 
+    mediaSource->enableOfflineCache(enable);
 
     return undefinedResult;
 }
