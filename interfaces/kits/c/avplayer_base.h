@@ -48,7 +48,16 @@ extern "C" {
 
 typedef struct OH_AVPlayer OH_AVPlayer;
 typedef struct NativeWindow OHNativeWindow;
+/**
+ * @brief OH_AVSeiMessageArray field.
+ * @since 23
+ */
 typedef struct OH_AVSeiMessageArray OH_AVSeiMessageArray;
+
+/**
+ * @brief OH_AVPlaybackStrategy field.
+ * @since 23
+ */
 typedef struct OH_AVPlaybackStrategy OH_AVPlaybackStrategy;
 
 /**
@@ -220,7 +229,11 @@ typedef enum AVPlayerOnInfoType {
     AV_INFO_TYPE_AUDIO_OUTPUT_DEVICE_CHANGE = 17,
     /* Event type indicating playback rate configuration completed. */
     AV_INFO_TYPE_PLAYBACK_RATE_DONE = 18,
-    /* super-resolution changed info type. */
+    /**
+     * @brief Super-resolution changed info type.
+     *
+     * @since 23
+     */
     AV_INFO_TYPE_SUPER_RESOLUTION_CHANGED = 19,
 } AVPlayerOnInfoType;
 

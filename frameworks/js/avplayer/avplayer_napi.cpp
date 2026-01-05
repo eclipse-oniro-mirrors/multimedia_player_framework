@@ -1046,9 +1046,6 @@ napi_value AVPlayerNapi::JsGetPlaybackRate(napi_env env, napi_callback_info info
             auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
             CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
             auto jsPlayer = promiseCtx->napi;
-            if (jsPlayer->IsLiveSource()) {
-                promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "The stream is live stream, not support rate");
-            }
             float rate = RATE_DEFAULT_VALUE;
             jsPlayer->player_->GetPlaybackRate(rate);
             promiseCtx->JsResult = std::make_unique<MediaJsResultDouble>(rate);

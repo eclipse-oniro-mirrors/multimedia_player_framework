@@ -1879,10 +1879,10 @@ PlayerSeekMode TransferSeekMode(bool closestRange)
     int32_t closestRangeInt = static_cast<int32_t>(closestRange);
     PlayerSeekMode seekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
     switch (closestRangeInt) {
-        case 1: // Seek to the next sync frame of the given timestamp.
-            seekMode = PlayerSeekMode::SEEK_NEXT_SYNC;
+        case 0: // Seek to the previous sync frame of the given timestamp.
+            seekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
             break;
-        case 0: // Seek to the closest frame of the given timestamp. 2 refers SeekMode in @ohos.multimedia.media.d.ts
+        case 1: // Seek to the closest frame of the given timestamp.
             seekMode = PlayerSeekMode::SEEK_CLOSEST;
             break;
         default:
@@ -2083,6 +2083,10 @@ OH_AVErrCode OH_AVPlayer_SetVideoSuperResolutionEnable(OH_AVPlayer *player, bool
         "unsupport set super resolution operation");
 
     int32_t ret = playerObj->player_->SetSuperResolution(enabled);
+    CHECK_AND_RETURN_RET_LOG(ret != MSERR_SUPER_RESOLUTION_UNSUPPORTED, AV_ERR_SUPER_RESOLUTION_UNSUPPORTED,
+        "failed to set super resolution, the super resolution feature is unsupported");
+    CHECK_AND_RETURN_RET_LOG(ret != MSERR_SUPER_RESOLUTION_NOT_ENABLED, AV_ERR_SUPER_RESOLUTION_NOT_ENABLED,
+        "failed to set super resolution, the super resolution feature is not enabled");
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "failed to set super resolution");
     return AV_ERR_OK;
 }

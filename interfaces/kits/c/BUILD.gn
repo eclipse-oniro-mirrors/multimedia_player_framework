@@ -324,6 +324,7 @@ ohos_shared_library("avmetadata_extractor") {
     "image_framework:pixelmap",
     "ipc:ipc_core",
     "media_foundation:media_foundation",
+    "media_foundation:native_media_core",
     "samgr:samgr_proxy",
     "window_manager:libdm",
   ]

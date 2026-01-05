@@ -61,131 +61,136 @@ extern "C" {
 typedef struct OH_AVMetadataExtractor OH_AVMetadataExtractor;
 
 /**
- * @brief Create a pixel map params instance.
- * @return Returns a pointer to an OH_AVMetadataExtractor_OutputParam instance for success, nullptr for failure.
- *         Possible failure causes: memory allocation failed.
+ * @brief Create an OH_AVMetadataExtractor_OutputParam instance
+ *
+ * @return The new OH_AVMetadataExtractor_OutputParam instance.
  * @since 23
  */
 OH_AVMetadataExtractor_OutputParam* OH_AVMetadataExtractor_OutputParam_Create();
 
 /**
- * @brief Destroy the pixel map params object and release its resources.
+ * @brief Release an OH_AVMetadataExtractor_OutputParam instance
  *
- * @param params Pointer to an OH_AVMetadataExtractor_OutputParam instance.
- * @return Function result code.
- *         {@link AV_ERR_OK} if the execution is successful.
- *         {@link AV_ERR_INVALID_VAL} if input params is nullptr.
+ * @param outputParam - Pointer to an OH_AVMetadataExtractor_OutputParam instance.
  * @since 23
  */
 void OH_AVMetadataExtractor_OutputParam_Destroy(OH_AVMetadataExtractor_OutputParam* outputParam);
 
 /**
- * @brief Set the desired output size for the fetched frame.
- * @param params Pointer to an OH_AVMetadataExtractor_OutputParam instance.
- * @param width The desired width of the output frame.
- *              If width is less than 0, the original width will be used.
- *              If width is equal to 0, the width will be used scaled by height.
- * @param height The desired height of the output frame.
- *               If height is less than 0, the original height will be used.
- *               If height is equal to 0, the height will be used scaled by width.
- * @return T success, F failure.
+ * @brief Set an OH_AVMetadataExtractor_OutputParam instance's size attribute
+ * If the width or height is negtive, use the original video width or height;
+ * If the width or height is zero, keep the aspect ratio and scale image.
+ * If width and height both are positive, scale image with input width and height parameter.
+ * @param outputParam - Pointer to an OH_AVMetadataExtractor_OutputParam instance.
+ * @param width - The width of output image, scaled if neccessary.
+ * @param height - The height of output image, scaled if neccessary.
+ * @return The return value is TRUE for success, FALSE for failure.
+ *     Possible failure causes: outputParam is nullptr.
  * @since 23
  */
 bool OH_AVMetadataExtractor_OutputParam_SetSize(OH_AVMetadataExtractor_OutputParam* outputParam,
     int32_t width, int32_t height);
 
 /**
- * @brief Fetch a frame at the specified time from the video source.
- *        This function must be called after {@link OH_AVMetadataExtractor_SetFDSource}.
- * @param extractor Pointer to an OH_AVMetadataExtractor instance.
- * @param timeUs The time position where the frame is to be retrieved, in microseconds.
- * @param options The query option that defines the relationship between the given time and a frame.
- *                For details, see {@link OH_AVMedia_SeekMode}.
- * @param outputParams Pointer to an OH_AVMetadataExtractor_OutputParam instance that specifies output parameters.
- * @param pixelMap The fetched frame from the video source. For details, see {@link OH_PixelmapNative}.
+ * @brief Fetch an image at the specific time from a video resource.
+ *     This function must be called after source set.
+ *
+ * @param extractor - Pointer to an OH_AVMetadataExtractor instance.
+ * @param timeUs - The time expected to fetch picture from the video resource. The unit is microsecond(us).
+ * @param seekMode - The seek option about the relationship between the given timeUs and a key frame,
+ *                see {@link OH_AVMedia_SeekMode}.
+ * @param outputParam - The output format of the image, e.g. height or width of the image.
+ *                see {@link OH_AVMetadataExtractor_OutputParam}.
+ *                If nullptr, the fetched frame uses video original size
+ * @param pixelMap The fetched output image from the video source. For details, see {@link OH_PixelmapNative}.
+ *                Note: user need release pixelMap by {@link OH_PixelmapNative_Destroy} after use.
  * @return Function result code.
  *         {@link AV_ERR_OK} if the execution is successful.
- *         {@link AV_ERR_INVALID_VAL} if input extractor is nullptr or input param is invalid.
+ *         {@link AV_ERR_INVALID_VAL} if the input param is invalid.
  *         {@link AV_ERR_OPERATE_NOT_PERMIT} if operation not allowed.
  *         {@link AV_ERR_UNSUPPORTED_FORMAT} if format is unsupported.
- *         {@link AV_ERR_NO_MEMORY} if internal memory allocation failed.
+ *         {@link AV_ERR_SERVICE_DIED} if the service died.
  *         {@link AV_ERR_IO_CLEARTEXT_NOT_PERMITTED} if http cleartext traffic is not permitted.
  * @since 23
  */
-OH_AVErrCode OH_AVMetadataExtractor_FetchFrameByTime(OH_AVMetadataExtractor* extractor, int64_t timeUs,
+OH_AVErrCode OH_AVMetadataExtractor_FetchFrameByTime(OH_AVMetadataExtractor *extractor, int64_t timeUs,
     OH_AVMedia_SeekMode seekMode, const OH_AVMetadataExtractor_OutputParam* outputParam,
     OH_PixelmapNative** pixelMap);
 
-typedef void (*OH_AVMetadataExtractor_OnFrameFetched)(OH_AVMetadataExtractor* extractor,
-    const OH_AVMetadataExtractor_FrameInfo* frameInfo, OH_AVErrCode code, void* userData);
-
 /**
- * @brief Fetch multiple frames at specified times from the video source.
- *        This function must be called after {@link OH_AVMetadataExtractor_SetFDSource}.
- *        Frames are fetched according to the given query option for each time point, and results are
- *        returned asynchronously via the provided callback.
- * @param extractor Pointer to an OH_AVMetadataExtractor instance.
- * @param timeUs Pointer to an array of time positions (in microseconds) where frames are to be retrieved.
- *               Must not be nullptr when timesLen > 0.
- * @param timesUsSize The number of time points in the timeUs array.
- * @param seekMode The seek mode that defines the relationship between each given time and a frame.
- *                For details, see {@link OH_AVMedia_SeekMode}.
- * @param outputParam Pointer to an OH_AVMetadataExtractor_OutputParam instance that specifies output parameters
- *                     for the fetched frames (such as desired size and pixel format). Can be nullptr to use defaults.
- * @param onFrameInfoCallback Callback invoked for each fetched result. For details, see
- *           {@link OH_AVMetadataExtractor_OnFrameFetched}. Must not be nullptr.
- * @param userData User-defined data pointer passed through to the callback. Can be nullptr.
- * @return Function result code.
- *         {@link AV_ERR_OK} if the execution is successful.
- *         {@link AV_ERR_INVALID_VAL} if input extractor is nullptr or input param is invalid.
- *         {@link AV_ERR_SERVICE_DIED} if media service died.
- *         {@link AV_ERR_IO_CLEARTEXT_NOT_PERMITTED} http cleartext traffic is not permitted.
- *         {@link AV_ERR_OPERATE_NOT_PERMIT} if operation not allowed.
- *         {@link AV_ERR_UNSUPPORTED_FORMAT} if format is unsupported.
- *         {@link AV_ERR_TIMEOUT} if http cleartext traffic is not permitted.
+ * @brief defines the callback function for frames fetched by AVMetadataExtractor
+ *     Note: frameInfo will be released automatically after callback, but user should release
+ *     frameInfo.image manually by {@link OH_PixelmapNative_Destroy} to avoid memory leaks.
  * @since 23
  */
-OH_AVErrCode OH_AVMetadataExtractor_FetchFramesByTimes(OH_AVMetadataExtractor* extractor, int64_t timeUs[],
+typedef void (*OH_AVMetadataExtractor_OnFrameFetched)(OH_AVMetadataExtractor *extractor,
+    const OH_AVMetadataExtractor_FrameInfo* frameInfo, OH_AVErrCode code, void *userData);
+
+/**
+ * @brief Batch fetch images at the specific times from a video resource.
+ *     This function must be called after source set.
+ *
+ * @param extractor - Pointer to an OH_AVMetadataExtractor instance.
+ * @param timesUs - The times array expected to fetch picture from the video resource. The unit is microsecond(us).
+ * @param timesUsSize - The length of input times array.
+ * @param seekMode - The seek option about the relationship between the given timeUs and a key frame,
+ *                see {@link OH_AVMedia_SeekMode}.
+ * @param outputParam - The output format of the image, e.g. height or width of the image.
+ *                see {@link OH_AVMetadataExtractor_OutputParam}.
+ *                If nullptr, the fetched frame uses video original size
+ * @param onFrameInfoCallback - The callback function when a frame is fetched or failed to fetch.
+ * @param userData - The user custom data for callback function.
+ * @return Function result code.
+ *         {@link AV_ERR_OK} if the execution is successful.
+ *         {@link AV_ERR_INVALID_VAL} if the input param is invalid.
+ *         {@link AV_ERR_SERVICE_DIED} if the service died.
+ *         {@link AV_ERR_IO_CLEARTEXT_NOT_PERMITTED} if http cleartext traffic is not permitted.
+ *         {@link AV_ERR_OPERATE_NOT_PERMIT} if operation not allowed. Returned by onFrameInfoCallback.
+ *         {@link AV_ERR_UNSUPPORTED_FORMAT} if format is unsupported. Returned by onFrameInfoCallback.
+ *         {@link AV_ERR_TIMEOUT} if the execution is times out. Returned by onFrameInfoCallback.
+ * @since 23
+ */
+OH_AVErrCode OH_AVMetadataExtractor_FetchFramesByTimes(OH_AVMetadataExtractor *extractor, int64_t timesUs[],
     uint16_t timesUsSize, OH_AVMedia_SeekMode seekMode, const OH_AVMetadataExtractor_OutputParam* outputParam,
     OH_AVMetadataExtractor_OnFrameFetched onFrameInfoCallback, void* userData);
 
 /**
- * @brief Cancel all pending or ongoing frame fetch requests initiated by
- *        {@link OH_AVMetadataExtractor_FetchFramesByTimes}.
- *        This function must be called after {@link OH_AVMetadataExtractor_SetFDSource}.
- * @param extractor Pointer to an OH_AVMetadataExtractor instance.
- * @note After cancellation, callbacks for the cancelled requests may still be invoked
- *       with status {@link OH_AVMetadataExtractor_FetchStatus::CANCELLED}, depending on timing.
+ * @brief Cancel the batch fetch images operation (initiated by {@link OH_AVMetadataExtractor_FetchFramesByTimes}).
+ * The pending fetches are cancelled and marked with CANCELLED result
+ * in {@OH_AVMetadataExtractor_OnFrameFetched} callback
+ *
+ * @param extractor - Pointer to an OH_AVMetadataExtractor instance.
  * @since 23
  */
-void OH_AVMetadataExtractor_CancelAllFetchFrames(OH_AVMetadataExtractor* extractor);
+void OH_AVMetadataExtractor_CancelAllFetchFrames(OH_AVMetadataExtractor *extractor);
 
 /**
  * @brief Get the track description information from the media source.
- *        This function must be called after {@link OH_AVMetadataExtractor_SetFDSource}.
+ *        This function must be called after source set.
  * @param extractor Pointer to an OH_AVMetadataExtractor instance.
  * @param index The index of the track description to retrieve.
  * @return Returns a pointer to an OH_AVFormat instance containing track description for success, nullptr for failure.
  *         Possible failure causes: extractor is nullptr, no source set, or format is unsupported.
+ *         Note: User need release OH_AVFormat by {@link OH_AVFormat_Destroy} after use.
  * @since 23
  */
 OH_AVFormat *OH_AVMetadataExtractor_GetTrackDescription(OH_AVMetadataExtractor *extractor, uint32_t index);
 
 /**
  * @brief Get the custom information from the media source.
- *        This function must be called after {@link OH_AVMetadataExtractor_SetFDSource}.
+ *        This function must be called after source set.
  * @param extractor Pointer to an OH_AVMetadataExtractor instance.
  * @return Returns a pointer to an OH_AVFormat instance containing custom metadata for success, nullptr for failure.
  *         Possible failure causes: extractor is nullptr, no source set, or custom info not found.
+ *         Note: User need release OH_AVFormat by {@link OH_AVFormat_Destroy} after use.
  * @since 23
  */
 OH_AVFormat *OH_AVMetadataExtractor_GetCustomInfo(OH_AVMetadataExtractor *extractor);
 
 /**
- * @brief Get the custom information from the media source.
- *        This function must be called after {@link OH_AVMetadataExtractor_SetFDSource}.
+ * @brief Set media source to the extractor
  * @param extractor Pointer to an OH_AVMetadataExtractor instance.
- * @param source The media source to set for the extractor.
+ * @param source The media source to set to the extractor.
  * @return Function result code.
  *         {@link AV_ERR_OK} if the execution is successful.
  *         {@link AV_ERR_INVALID_VAL} if input extractor is nullptr or input source is invalid.

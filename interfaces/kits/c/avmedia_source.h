@@ -14,6 +14,16 @@
  */
 
 /**
+ * @addtogroup avmedia_source
+ * @{
+ *
+ * @brief Defines APIs for AVMediaSource.
+ *
+ * @syscap SystemCapability.Multimedia.Media.Core
+ * @since 23
+ */
+
+/**
  * @file avmedia_source.h
  *
  * @brief Defines the structure and enumeration for AVMediaSource.
@@ -145,7 +155,7 @@ OH_AVErrCode OH_AVHttpHeader_GetRecord(OH_AVHttpHeader *header, uint32_t index, 
  * @param url Url of the media source. The following streaming media formats are supported: HLS,
  *     HTTP-FLV, DASH, and HTTPS.
  * @param header Http headers attached to network request.
- * @returns Returns a pointer to an OH_AVMediaSource instance for success, nullptr for failure
+ * @return Returns a pointer to an OH_AVMediaSource instance for success, nullptr for failure
  * @since 23
  */
 OH_AVMediaSource *OH_AVMediaSource_CreateWithUrl(const char *url, OH_AVHttpHeader *header);
@@ -153,7 +163,7 @@ OH_AVMediaSource *OH_AVMediaSource_CreateWithUrl(const char *url, OH_AVHttpHeade
 /**
  * @brief Creates a media source from OH_AVDataSource.
  * @param dataSource Pointer to a OH_AVDataSource
- * @returns Returns a pointer to an OH_AVMediaSource instance for success, nullptr for failure
+ * @return Returns a pointer to an OH_AVMediaSource instance for success, nullptr for failure
  * @since 23
  */
 OH_AVMediaSource *OH_AVMediaSource_CreateWithDataSource(OH_AVDataSource *dataSource);
@@ -163,7 +173,7 @@ OH_AVMediaSource *OH_AVMediaSource_CreateWithDataSource(OH_AVDataSource *dataSou
  * @param fd The fileDescriptor of data source.
  * @param offset The offset into the file to start reading.
  * @param size The file size in bytes.
- * @returns Returns a pointer to an OH_AVMediaSource instance for success, nullptr for failure
+ * @return Returns a pointer to an OH_AVMediaSource instance for success, nullptr for failure
  * @details Possible failure causes:
  * 1. fd is invalid.
  * 2. offset is invalid.
@@ -227,7 +237,7 @@ OH_AVErrCode OH_AVMediaSourceLoadingRequest_GetHttpHeader(OH_AVMediaSourceLoadin
  * @param offset Offset of the current media data relative to the start of the resource.
  * @param data Media data sent to the player.
  * @param dataSize - data length sent to player.
- * @returns Accepted bytes for current read. The value less than zero means failed.
+ * @return Accepted bytes for current read. The value less than zero means failed.
  *     -2, Means player needs current data any more, the client should stop current read process.
  *     -3, means player buffer is full, the client should wait for next read.
  * @since 23
@@ -263,7 +273,7 @@ void OH_AVMediaSourceLoadingRequest_FinishLoading(
 
 /**
  * @brief Create a OH_AVMediaSourceLoader instance.
- * Return the OH_AVMediaSourceLoader pointer if success, else return NULL.
+ * @return OH_AVMediaSourceLoader pointer if success, else return NULL.
  * @since 23
  */
 OH_AVMediaSourceLoader *OH_AVMediaSourceLoader_Create(void);
@@ -280,7 +290,7 @@ OH_AVErrCode OH_AVMediaSourceLoader_Destroy(OH_AVMediaSourceLoader *loader);
 
 /**
  * @brief Set a source loader to a media source instance.
- * @param source the OH_AVMediaSource which need network delegate.
+ * @param source the OH_AVMediaSource which need network delegation.
  * @param loader The OH_AVMediaSourceLoader instance
  * @return Function result code.
  *     (@link AV_ERR_OK) if the execution is successful.
@@ -313,11 +323,10 @@ typedef int64_t (*OH_AVMediaSourceLoaderOnSourceOpenedCallback)(OH_AVMediaSource
  * The client must return the handle immediately after processing the request.
  * @param uuid ID for the resource handle.
  * @param requestedOffset Offset of the current media data relative to the start of the resource.
- * @param requestedLength length of the current request.
+ * @param requestedLength Length of the current request.
  *     -1 means reaching the end of the resource, need to inform the player of the end of
- *     the push through the (@link #OH_AVMediaSourceLoaderOnSourceReadCallback) method.
+ *     the push through the (@link OH_AVMediaSourceLoadingRequest_FinishLoading) method.
  * @param userData The data set by user in OH_AVMediaSourceLoader_SetSourceReadCallback
- * @returns void
  * @since 23
  */
 typedef void (*OH_AVMediaSourceLoaderOnSourceReadCallback)(int64_t uuid, int64_t requestedOffset,
@@ -329,7 +338,6 @@ typedef void (*OH_AVMediaSourceLoaderOnSourceReadCallback)(int64_t uuid, int64_t
  * The client must return the handle immediately after processing the request.
  * @param uuid ID for the resource handle.
  * @param userData The data set by user in OH_AVMediaSourceLoader_SetSourceCloseCallback
- * @returns void
  * @since 23
  */
 typedef void (*OH_AVMediaSourceLoaderOnSourceClosedCallback)(int64_t uuid, void *userData);

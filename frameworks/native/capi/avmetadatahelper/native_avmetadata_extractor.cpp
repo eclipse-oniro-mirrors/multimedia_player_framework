@@ -359,8 +359,6 @@ OH_AVErrCode OH_AVMetadataExtractor_FetchFrameByTime(OH_AVMetadataExtractor* ext
 OH_AVFormat *OH_AVMetadataExtractor_GetTrackDescription(OH_AVMetadataExtractor *extractor, uint32_t index)
 {
     CHECK_AND_RETURN_RET_LOG(extractor != nullptr, nullptr, "input extractor is nullptr");
-    OH_AVFormat *avFormat = new (std::nothrow) OH_AVFormat();
-    CHECK_AND_RETURN_RET_LOG(avFormat != nullptr, nullptr, "OH_AVFormat is nullptr");
     struct AVMetadataExtractorObject *extractorObj = reinterpret_cast<AVMetadataExtractorObject *>(extractor);
     CHECK_AND_RETURN_RET_LOG(extractorObj->aVMetadataHelper_ != nullptr, nullptr,
                              "aVMetadataHelper_ is nullptr");
@@ -380,6 +378,10 @@ OH_AVFormat *OH_AVMetadataExtractor_GetTrackDescription(OH_AVMetadataExtractor *
 
     bool checkIndex = static_cast<size_t>(index) < trackInfoVec.size();
     CHECK_AND_RETURN_RET_LOG(checkIndex, nullptr, "index out of range");
+
+    OH_AVFormat *avFormat = new (std::nothrow) OH_AVFormat();
+    CHECK_AND_RETURN_RET_LOG(avFormat != nullptr, nullptr, "OH_AVFormat is nullptr");
+
     Format format = trackInfoVec.at(index);
     avFormat->format_ = format;
 
@@ -389,8 +391,6 @@ OH_AVFormat *OH_AVMetadataExtractor_GetTrackDescription(OH_AVMetadataExtractor *
 OH_AVFormat *OH_AVMetadataExtractor_GetCustomInfo(OH_AVMetadataExtractor *extractor)
 {
     CHECK_AND_RETURN_RET_LOG(extractor != nullptr, nullptr, "input extractor is nullptr");
-    OH_AVFormat *avFormat = new (std::nothrow) OH_AVFormat();
-    CHECK_AND_RETURN_RET_LOG(avFormat != nullptr, nullptr, "OH_AVFormat is nullptr");
     struct AVMetadataExtractorObject *extractorObj = reinterpret_cast<AVMetadataExtractorObject *>(extractor);
     CHECK_AND_RETURN_RET_LOG(extractorObj->aVMetadataHelper_ != nullptr, nullptr,
                              "aVMetadataHelper_ is nullptr");
@@ -409,8 +409,15 @@ OH_AVFormat *OH_AVMetadataExtractor_GetCustomInfo(OH_AVMetadataExtractor *extrac
     CHECK_AND_RETURN_RET_LOG(res, nullptr, "GetData failed, key %{public}s", key.c_str());
     CHECK_AND_RETURN_RET_LOG(customData != nullptr, nullptr, "customData == nullptr");
 
+    OH_AVFormat *avFormat = new (std::nothrow) OH_AVFormat();
+    CHECK_AND_RETURN_RET_LOG(avFormat != nullptr, nullptr, "OH_AVFormat is nullptr");
+
     auto ret = avFormat->format_.SetMeta(customData);
-    CHECK_AND_RETURN_RET_LOG(ret, nullptr, "AvMetadata set failed");
+    if (!ret) {
+        MEDIA_LOGE("AvMetadata set failed");
+        OH_AVFormat_Destroy(avFormat);
+        return nullptr;
+    }
     return avFormat;
 }
 
@@ -464,7 +471,7 @@ OH_AVErrCode OH_AVMetadataExtractor_SetMediaSource(OH_AVMetadataExtractor *extra
     return ret == MSERR_OK ? AV_ERR_OK : AV_ERR_INVALID_VAL;
 }
 
-OH_AVErrCode OH_AVMetadataExtractor_FetchFramesByTimes(OH_AVMetadataExtractor* extractor, int64_t timeUs[],
+OH_AVErrCode OH_AVMetadataExtractor_FetchFramesByTimes(OH_AVMetadataExtractor* extractor, int64_t timesUs[],
     uint16_t timesUsSize, OH_AVMedia_SeekMode seekMode, const OH_AVMetadataExtractor_OutputParam* outputParam,
     OH_AVMetadataExtractor_OnFrameFetched onFrameInfoCallback, void* userData)
 {
@@ -480,7 +487,7 @@ OH_AVErrCode OH_AVMetadataExtractor_FetchFramesByTimes(OH_AVMetadataExtractor* e
     CHECK_AND_RETURN_RET_LOG(extractorObj->state_ == HelperState::HELPER_STATE_RUNNABLE,
         AV_ERR_SERVICE_DIED, "Service died");
 
-    CHECK_AND_RETURN_RET_LOG(timeUs != nullptr, AV_ERR_INVALID_VAL, "input timeUs is empty");
+    CHECK_AND_RETURN_RET_LOG(timesUs != nullptr, AV_ERR_INVALID_VAL, "input timesUs is empty");
     CHECK_AND_RETURN_RET_LOG(timesUsSize > 0, AV_ERR_INVALID_VAL, "input timesUsSize is invalid");
     CHECK_AND_RETURN_RET_LOG(outputParam != nullptr, AV_ERR_INVALID_VAL, "input outputParam is nullptr");
 
@@ -489,7 +496,7 @@ OH_AVErrCode OH_AVMetadataExtractor_FetchFramesByTimes(OH_AVMetadataExtractor* e
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, AV_ERR_INVALID_VAL, "failed to create callback");
 
     extractorObj->helperCb_->SaveCallbackReference(NativeAVMetadataHelperEvent::EVENT_PIXEL_COMPLETE, callback);
-    std::vector<int64_t> timeUsVector(timeUs, timeUs + timesUsSize);
+    std::vector<int64_t> timeUsVector(timesUs, timesUs + timesUsSize);
     PixelMapParams param = {
         .dstWidth = outputParam->dstWidth,
         .dstHeight = outputParam->dstHeight,
