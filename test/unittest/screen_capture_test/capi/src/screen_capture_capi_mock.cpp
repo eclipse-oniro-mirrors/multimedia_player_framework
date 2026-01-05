@@ -380,6 +380,16 @@ int32_t ScreenCaptureCapiMock::SkipPrivacyMode(int32_t *windowIDs, int32_t windo
     return OH_AVScreenCapture_SkipPrivacyMode(screenCapture_, windowIDs, windowCount);
 }
 
+int32_t ScreenCaptureCapiMock::AddWhiteListWindows(int32_t *windowIDs, int32_t windowCount)
+{
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureCapiMock::RemoveWhiteListWindows(int32_t *windowIDs, int32_t windowCount)
+{
+    return MSERR_OK;
+}
+
 int32_t ScreenCaptureCapiMock::SetMaxVideoFrameRate(int32_t frameRate)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");

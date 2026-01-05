@@ -44,6 +44,8 @@ public:
     int32_t ResizeCanvas(int32_t width, int32_t height) override;
     int32_t UpdateSurface(const std::any& surface) override;
     int32_t SkipPrivacyMode(int32_t *windowIDs, int32_t windowCount) override;
+    int32_t AddWhiteListWindows(int32_t *windowIDs, int32_t windowCount) override;
+    int32_t RemoveWhiteListWindows(int32_t *windowIDs, int32_t windowCount) override;
     int32_t SetMaxVideoFrameRate(int32_t frameRate) override;
     int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type) override;
     sptr<OHOS::SurfaceBuffer> AcquireVideoBuffer(int32_t &fence, int64_t &timestamp, OHOS::Rect &damage) override;
