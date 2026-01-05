@@ -578,14 +578,7 @@ std::shared_ptr<AVSharedMemory> AVThumbnailGenerator::FetchFrameAtTime(int64_t t
     auto res = SeekToTime(Plugins::Us2Ms(timeUs), static_cast<Plugins::SeekMode>(option), realSeekTime);
     CHECK_AND_RETURN_RET_LOG(res == Status::OK, nullptr, "Seek fail");
     CHECK_AND_RETURN_RET_LOG(InitDecoder() == Status::OK, nullptr, "FetchFrameAtTime InitDecoder failed.");
-    bool fetchFrameRes = false;
-    {
-        std::unique_lock<std::mutex> lock(mutex_);
-
-        // wait up to 3s to fetch frame AVSharedMemory at time.
-        fetchFrameRes = cond_.wait_for(lock, std::chrono::seconds(MAX_WAIT_TIME_SECOND),
-            [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); });
-    }
+    bool fetchFrameRes = WaitForFrame();
     if (fetchFrameRes) {
         HandleFetchFrameAtTimeRes();
     } else {
@@ -627,14 +620,7 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
     auto res = SeekToTime(Plugins::Us2Ms(timeUs), static_cast<Plugins::SeekMode>(option), realSeekTime);
     CHECK_AND_RETURN_RET_LOG(res == Status::OK, nullptr, "Seek fail");
     CHECK_AND_RETURN_RET_LOG(InitDecoder() == Status::OK, nullptr, "FetchFrameAtTime InitDecoder failed.");
-    bool fetchFrameRes = false;
-    {
-        std::unique_lock<std::mutex> lock(mutex_);
-        // wait up to 3s to fetch frame AVSharedMemory at time.
-        fetchFrameRes = cond_.wait_for(lock, std::chrono::seconds(MAX_WAIT_TIME_SECOND),
-            [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); });
-    }
-
+    bool fetchFrameRes = WaitForFrame();
     {
         MEDIA_LOGI("FetchFrameYuv, retry fetch frame");
         std::unique_lock retryLock(onErrorMutex_);
@@ -656,6 +642,20 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
         HandleFetchFrameYuvFailed();
     }
     return avBuffer_;
+}
+
+bool AVThumbnailGenerator::WaitForFrame()
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    auto start = std::chrono::steady_clock::now();
+    bool result = cond_.wait_for(lock, std::chrono::seconds(MAX_WAIT_TIME_SECOND),
+        [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); });
+    auto duration = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::steady_clock::now() - start);
+    if (duration >= std::chrono::seconds(MAX_WAIT_TIME_SECOND)) {
+        MEDIA_LOGE("FetchFrame waited >= 3s");
+    }
+    return result;
 }
 
 std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuvs(int64_t timeUs, int32_t option,
