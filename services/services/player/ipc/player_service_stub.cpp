@@ -1131,7 +1131,7 @@ int32_t PlayerServiceStub::SetPlaybackRate(MessageParcel &data, MessageParcel &r
     reply.WriteInt32(SetPlaybackRate(rate));
     return MSERR_OK;
 }
-
+ 
 int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &reply)
 {
     std::string url = data.ReadString();
@@ -1147,11 +1147,9 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
         header.emplace(kstr, vstr);
     }
     std::string mimeType = data.ReadString();
-
     std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(url, header);
     CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr");
     mediaSource->SetMimeType(mimeType);
-
     if (sourceLoader_ != nullptr) {
         mediaSource->sourceLoader_ = std::move(sourceLoader_);
     }
@@ -1165,11 +1163,8 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
     size_t fdTailPos = uri.find("?");
     if (mimeType == AVMimeType::APPLICATION_M3U8 && fdHeadPos != std::string::npos &&
         fdTailPos != std::string::npos) {
-        std::string temp = uri.substr(fdTailPos);
-        std::string newUrl = "fd://" + std::to_string(fd) + temp;
-        mediaSource->url = newUrl;
+        mediaSource->url = "fd://" + std::to_string(fd) + uri.substr(fdTailPos);
     }
-
     int32_t ret = ReadMediaStreamListFromMessageParcel(data, mediaSource);
     if (ret != MSERR_OK) {
         MEDIA_LOGE("ReadMediaStreamListFromMessageParcel failed");
@@ -1178,9 +1173,10 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
         }
         return ret;
     }
-
     struct AVPlayStrategy strategy;
     ReadPlayStrategyFromMessageParcel(data, strategy);
+    bool enable = data.ReadBool();
+    mediaSource->enableOfflineCache(enable);
     reply.WriteInt32(SetMediaSource(mediaSource, strategy));
     if (mimeType == AVMimeType::APPLICATION_M3U8) {
         (void)::close(fd);
@@ -1221,6 +1217,7 @@ void PlayerServiceStub::ReadPlayStrategyFromMessageParcel(MessageParcel &data, A
     strategy.mutedMediaType = static_cast<OHOS::Media::MediaType>(data.ReadInt32());
     strategy.preferredAudioLanguage = data.ReadString();
     strategy.preferredSubtitleLanguage = data.ReadString();
+    strategy.keepDecodingOnMute = data.ReadBool();
 }
 
 int32_t PlayerServiceStub::GetPlaybackSpeed(MessageParcel &data, MessageParcel &reply)

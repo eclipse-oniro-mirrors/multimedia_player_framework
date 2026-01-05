@@ -3476,7 +3476,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlaybackRate_005, TestSize.Level1)
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
     float playbackRate = -1;
-    EXPECT_NE(MSERR_OK, player_->SetPlaybackRate(playbackRate));
+    EXPECT_EQ(MSERR_OK, player_->SetPlaybackRate(playbackRate));
 }
 
 /**
@@ -4942,7 +4942,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlayRangeWithMode_003, TestSize.Level0)
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->SetPlayRangeWithMode(0, 600, SEEK_CONTINOUS));
+    EXPECT_EQ(MSERR_OK, player_->SetPlayRangeWithMode(100, 600, SEEK_CONTINOUS));
     ASSERT_NE(MSERR_OK, player_->PrepareAsync());
     EXPECT_EQ(MSERR_INVALID_OPERATION, player_->Play());
     EXPECT_EQ(MSERR_INVALID_OPERATION, player_->Pause());

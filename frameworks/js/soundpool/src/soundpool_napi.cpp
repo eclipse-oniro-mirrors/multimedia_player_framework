@@ -567,8 +567,9 @@ napi_value SoundPoolNapi::JsSetInterruptMode(napi_env env, napi_callback_info in
 
     SoundPoolNapi *soundPoolNapi = SoundPoolNapi::GetJsInstanceAndArgs(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(soundPoolNapi != nullptr, result, "Failed to retrieve instance");
-    int32_t interruptMode = soundPoolNapi->ParserInterruptModeFromJs(env, args);
-    CHECK_AND_RETURN_RET_LOG(soundPoolNapi->soundPool_ != nullptr, result, "soundPool_ is nullptr");
+    int32_t interruptMode = soundPoolNapi->ParserInterruptModeFromJs(env, args, argCount);
+    CHECK_AND_RETURN_RET_LOG(soundPoolNapi->soundPool_ != nullptr && interruptMode != MSERR_INVALID_VAL, result,
+        "soundPool_ is nullptr or ParserInterruptModeFromJs failed");
     soundPoolNapi->soundPool_->SetInterruptMode(static_cast<InterruptMode>(interruptMode));
     return result;
 }
@@ -896,11 +897,12 @@ int32_t SoundPoolNapi::ParserVolumeOptionFromJs(std::unique_ptr<SoundPoolAsyncCo
     return ret;
 }
 
-int32_t SoundPoolNapi::ParserInterruptModeFromJs(napi_env env, napi_value *argv)
+int32_t SoundPoolNapi::ParserInterruptModeFromJs(napi_env env, napi_value *argv, size_t argCount)
 {
-    int32_t interruptMode = 0;
+    int32_t interruptMode = 1;
+    CHECK_AND_RETURN_RET_LOG(argCount == 1, MSERR_INVALID_VAL, "argv is invalid, size is %{public}zu", argCount);
     napi_status status = napi_get_value_int32(env, argv[PARAM0], &interruptMode);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, interruptMode, "failed to get interruptMode");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, MSERR_INVALID_VAL, "failed to get interruptMode");
     MEDIA_LOGI("interruptMode is %{public}d", interruptMode);
     return interruptMode;
 }

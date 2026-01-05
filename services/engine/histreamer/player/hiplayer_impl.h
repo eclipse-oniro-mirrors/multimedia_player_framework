@@ -526,6 +526,7 @@ private:
     bool isNeedSwDecoder_ = false;
     bool notNotifyForSw_ = false;
     bool isVideoDecoderInited_ = false;
+    bool enable_ = false;
     PlayerDfxSourceType sourceType_ = PlayerDfxSourceType::DFX_SOURCE_TYPE_UNKNOWN;
     FileType fileType_ = FileType::UNKNOW;
 };

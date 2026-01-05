@@ -105,14 +105,24 @@ long TimeFormatUtils::ParseIso8601TimeZoneOffset(const std::string& tz)
         if (numPart.length() < HH_COLON_MM_MIN_LENGTH || numPart[COLON_POS] != ':') {
             return 0;
         }
-        hours = std::stoi(numPart.substr(HOUR_START, HOUR_LEN));
-        mins  = std::stoi(numPart.substr(MIN_START_WITH_COLON, MIN_LEN));
+        std::string hourStr = numPart.substr(HOUR_START, HOUR_LEN);
+        std::string minStr = numPart.substr(MIN_START_WITH_COLON, MIN_LEN);
+        if (!IsAllDigits(hourStr) || !IsAllDigits(minStr)) {
+            return 0;
+        }
+        hours = std::stoi(hourStr);
+        mins = std::stoi(minStr);
     } else {
         if (numPart.length() != HHMM_LENGTH) {
             return 0;
         }
-        hours = std::stoi(numPart.substr(HOUR_START, HOUR_LEN));
-        mins  = std::stoi(numPart.substr(MIN_START_WITHOUT_COLON, MIN_LEN));
+        std::string hourStr = numPart.substr(HOUR_START, HOUR_LEN);
+        std::string minStr = numPart.substr(MIN_START_WITHOUT_COLON, MIN_LEN);
+        if (!IsAllDigits(hourStr) || !IsAllDigits(minStr)) {
+            return 0;
+        }
+        hours = std::stoi(hourStr);
+        mins = std::stoi(minStr);
     }
 
     long seconds = (hours * 60 + mins) * 60;
@@ -166,6 +176,16 @@ std::string TimeFormatUtils::FormatDateTimeByString(const std::string &dateTime)
     }
     MEDIA_LOGD("FormatDateTimeByString is: %{public}s%{public}s", date.c_str(), time.c_str());
     return date + time;
+}
+
+bool TimeFormatUtils::IsAllDigits(const std::string& str)
+{
+    if (str.empty()) {
+        return false;
+    }
+    return std::all_of(str.begin(), str.end(), [](char c) {
+        return c >= '0' && c <= '9';
+    });
 }
 }  // namespace Media
 }  // namespace OHOS

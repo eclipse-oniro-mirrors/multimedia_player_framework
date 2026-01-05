@@ -69,8 +69,9 @@ bool SystemSoundPlayerImpl::InitSoundPoolPlayer()
 
     AudioStandard::AudioRendererInfo audioRenderInfo;
     audioRenderInfo.contentType = AudioStandard::ContentType::CONTENT_TYPE_UNKNOWN;
-    audioRenderInfo.streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_MUSIC;
-    audioRenderInfo.rendererFlags = AudioStandard::AUDIO_FLAG_NORMAL;
+    audioRenderInfo.streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_ENFORCED_TONE;
+    audioRenderInfo.rendererFlags = AudioStandard::AUDIO_FLAG_MMAP;
+    audioRenderInfo.playerType = AudioStandard::PLAYER_TYPE_SYSTEM_SOUND_PLAYER;
     soundPool_ = SoundPoolFactory::CreateSoundPool(MAX_SOUND_POOL_STREAMS, audioRenderInfo);
     if (soundPool_ == nullptr) {
         MEDIA_LOGE("Failed to create sound pool!");

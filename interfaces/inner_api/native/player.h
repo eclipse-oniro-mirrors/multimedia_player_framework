@@ -121,6 +121,14 @@ public:
     {
         return mimeType_;
     }
+    void enableOfflineCache(bool enable)
+    {
+        enable_ = enable;
+    }
+    bool GetenableOfflineCache()
+    {
+        return enable_;
+    }
 
     const std::vector<AVPlayMediaStream>& GetAVPlayMediaStreamList()
     {
@@ -153,6 +161,7 @@ public:
     }
     std::string url {};
     std::string mimeType_ {};
+    bool enable_ {false};
     std::map<std::string, std::string> header;
     std::shared_ptr<LoaderCallback> mediaSourceLoaderCb_ {nullptr};
     std::shared_ptr<Plugins::IMediaSourceLoader> sourceLoader_ {nullptr};
@@ -248,9 +257,9 @@ public:
     static constexpr std::string_view RESOURCE_CONNECTION_DURATION = "resource_connection_duration";
     static constexpr std::string_view FIRST_FRAME_DECAPSULATION_DURATION = "first_frame_decapsulation_duration";
     static constexpr std::string_view TOTAL_PLAYING_TIME = "total_playback_time";
-    static constexpr std::string_view DOWNLOAD_REQUESTS_COUNT = "loading_count";
+    static constexpr std::string_view DOWNLOAD_REQUESTS_COUNT = "loading_requests_count";
     static constexpr std::string_view TOTAL_DOWNLOAD_TIME = "total_loading_time";
-    static constexpr std::string_view TOTAL_DOWNLOAD_SIZE = "total_loading_Bytes";
+    static constexpr std::string_view TOTAL_DOWNLOAD_SIZE = "total_loading_bytes";
     static constexpr std::string_view STALLING_COUNT = "stalling_count";
     static constexpr std::string_view TOTAL_STALLING_TIME = "total_stalling_time";
 };
@@ -700,8 +709,8 @@ public:
 
     /**
      * @brief Obtains the playbackStatisticMetrics, contains prepare_duration, resource_connection_duration,
-     * first_frame_decapsulation_duration, total_playback_time, loading_count, total_loading_time, total_loading_Bytes,
-     * stalling_count, total_stalling_time.
+     * first_frame_decapsulation_duration, total_playback_time, loading_requests_count, total_loading_time,
+     * total_loading_bytes, stalling_count, total_stalling_time.
      *
      * @param playbackStatisticMetrics.
      * @return Returns {@link MSERR_OK} if the statistic metrics is get; returns an error code defined

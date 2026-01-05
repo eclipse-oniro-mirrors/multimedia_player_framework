@@ -133,9 +133,11 @@ AVThumbnailGenerator::~AVThumbnailGenerator()
 
 void AVThumbnailGenerator::OnError(MediaAVCodec::AVCodecErrorType errorType, int32_t errorCode)
 {
-    MEDIA_LOGE("OnError errorType:%{public}d, errorCode:%{public}d", static_cast<int32_t>(errorType), errorCode);
+    MEDIA_LOGE("OnError, instance is 0x%{public}06" PRIXPTR ", errorType is %{public}d, errorCode is %{public}d",
+        FAKE_POINTER(this), static_cast<int32_t>(errorType), errorCode);
     if (errorCode == MediaAVCodec::AVCodecServiceErrCode::AVCS_ERR_UNSUPPORTED_CODEC_SPECIFICATION) {
         {
+            MEDIA_LOGI("OnError, before onErrorMutex_");
             std::unique_lock<std::mutex> lock(onErrorMutex_);
             CHECK_AND_RETURN_LOG(!hasReceivedCodecErrCodeOfUnsupported_,
                 "hasReceivedCodecErrCodeOfUnsupported_ is true");
@@ -143,15 +145,19 @@ void AVThumbnailGenerator::OnError(MediaAVCodec::AVCodecErrorType errorType, int
         }
 
         {
+            MEDIA_LOGI("OnError, before mutex_ and queueMutex_");
             std::scoped_lock lock(mutex_, queueMutex_);
             stopProcessing_ = true;
         }
         bufferAvailableCond_.notify_all();
         {
+            MEDIA_LOGI("OnError, before readTaskMutex_");
             std::unique_lock<std::mutex> readTaskLock(readTaskMutex_);
+            MEDIA_LOGI("OnError, get readTaskMutex_");
             readTaskAvailableCond_.wait(readTaskLock, [this]() {
                 return readTaskExited_.load();
             });
+            MEDIA_LOGI("OnError, after waiting for readTaskLock");
         }
         cond_.notify_all();
         return;
@@ -213,16 +219,20 @@ Status AVThumbnailGenerator::InitDecoder(const std::string& codecName)
 
 void AVThumbnailGenerator::SwitchToSoftWareDecoder()
 {
+    MEDIA_LOGI("SwitchToSoftWareDecoder start");
     CHECK_AND_RETURN_LOG(videoDecoder_ != nullptr && !trackMime_.empty(),
         "videoDecoder_ is nullptr or trackMime_ is empty");
     Format format;
     videoDecoder_->GetCodecInfo(format);
+    MEDIA_LOGI("SwitchToSoftWareDecoder, GetCodecInfo successfully");
     int32_t isHardWareDecoder = 0;
     format.GetIntValue(Media::Tag::MEDIA_IS_HARDWARE, isHardWareDecoder);
     if (isHardWareDecoder == static_cast<int32_t>(true)) {
+        MEDIA_LOGI("SwitchToSoftWareDecoder, videoDecoder_ will be released");
         videoDecoder_->Stop();
         videoDecoder_->Release();
         videoDecoder_ = nullptr;
+        MEDIA_LOGI("SwitchToSoftWareDecoder, videoDecoder_ has been released");
         std::shared_ptr<MediaAVCodec::AVCodecList> codeclist = MediaAVCodec::AVCodecListFactory::CreateAVCodecList();
         CHECK_AND_RETURN_LOG(codeclist != nullptr, "CreateAVCodecList failed, codeclist is nullptr.");
         MediaAVCodec::CapabilityData *capabilityData = codeclist->GetCapability(trackMime_, false,
@@ -242,6 +252,7 @@ void AVThumbnailGenerator::SwitchToSoftWareDecoder()
         CHECK_AND_RETURN_LOG(res == Status::OK, "Seek failed.");
         CHECK_AND_RETURN_LOG(InitDecoder(codecName) == Status::OK, "Failed to create software decoder.");
     }
+    MEDIA_LOGI("SwitchToSoftWareDecoder end");
 }
 
 int32_t AVThumbnailGenerator::Init()
@@ -568,14 +579,7 @@ std::shared_ptr<AVSharedMemory> AVThumbnailGenerator::FetchFrameAtTime(int64_t t
     auto res = SeekToTime(Plugins::Us2Ms(timeUs), static_cast<Plugins::SeekMode>(option), realSeekTime);
     CHECK_AND_RETURN_RET_LOG(res == Status::OK, nullptr, "Seek fail");
     CHECK_AND_RETURN_RET_LOG(InitDecoder() == Status::OK, nullptr, "FetchFrameAtTime InitDecoder failed.");
-    bool fetchFrameRes = false;
-    {
-        std::unique_lock<std::mutex> lock(mutex_);
-
-        // wait up to 3s to fetch frame AVSharedMemory at time.
-        fetchFrameRes = cond_.wait_for(lock, std::chrono::seconds(MAX_WAIT_TIME_SECOND),
-            [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); });
-    }
+    bool fetchFrameRes = WaitForFrame();
     if (fetchFrameRes) {
         HandleFetchFrameAtTimeRes();
     } else {
@@ -639,9 +643,8 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
                                                               const OutputConfiguration &param)
 {
     MEDIA_LOGI("Fetch frame 0x%{public}06" PRIXPTR " timeUs:%{public}" PRId64 ", option:%{public}d,"
-               "dstWidth:%{public}d, dstHeight:%{public}d, colorFormat:%{public}d",
-               FAKE_POINTER(this), timeUs, option, param.dstWidth, param.dstHeight,
-               static_cast<int32_t>(param.colorFormat));
+               "dstWidth:%{public}d, dstHeight:%{public}d, colorFormat:%{public}d", FAKE_POINTER(this), timeUs, option,
+               param.dstWidth, param.dstHeight, static_cast<int32_t>(param.colorFormat));
     CHECK_AND_RETURN_RET_LOG(mediaDemuxer_ != nullptr, nullptr, "FetchFrameAtTime demuxer is nullptr");
     avBuffer_ = nullptr;
     readErrorFlag_ = false;
@@ -660,25 +663,21 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
     CHECK_AND_RETURN_RET_LOG(res == Status::OK, nullptr, "Seek fail");
     CHECK_AND_RETURN_RET_LOG(InitDecoder() == Status::OK, nullptr, "FetchFrameAtTime InitDecoder failed.");
     DfxReport("AVImageGenerator call");
-    bool fetchFrameRes = false;
+    bool fetchFrameRes = WaitForFrame();
     {
-        std::unique_lock<std::mutex> lock(mutex_);
-        // wait up to 3s to fetch frame AVSharedMemory at time.
-        fetchFrameRes = cond_.wait_for(lock, std::chrono::seconds(MAX_WAIT_TIME_SECOND),
-            [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); });
-    }
-
-    {
+        MEDIA_LOGI("FetchFrameYuv, retry fetch frame");
         std::unique_lock retryLock(onErrorMutex_);
         if (hasReceivedCodecErrCodeOfUnsupported_) {
             stopProcessing_ = false;
             SwitchToSoftWareDecoder();
             {
                 std::unique_lock fetchFrameLock(mutex_);
+                MEDIA_LOGI("FetchFrameYuv, retry fetch frame, wait for the lock");
                 fetchFrameRes = cond_.wait_for(fetchFrameLock, std::chrono::seconds(MAX_WAIT_TIME_SECOND),
                     [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); });
             }
         }
+        MEDIA_LOGI("FetchFrameYuv, fetch frame end");
     }
     if (fetchFrameRes) {
         HandleFetchFrameYuvRes();
@@ -687,6 +686,20 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
         HandleFetchFrameYuvFailed();
     }
     return avBuffer_;
+}
+
+bool AVThumbnailGenerator::WaitForFrame()
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    auto start = std::chrono::steady_clock::now();
+    bool result = cond_.wait_for(lock, std::chrono::seconds(MAX_WAIT_TIME_SECOND),
+        [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); });
+    auto duration = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::steady_clock::now() - start);
+    if (duration >= std::chrono::seconds(MAX_WAIT_TIME_SECOND)) {
+        MEDIA_LOGE("FetchFrame waited >= 3s");
+    }
+    return result;
 }
 
 std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuvs(int64_t timeUs, int32_t option,

@@ -368,9 +368,9 @@ static const std::vector<struct JsEnumString> g_playbackMetricsKey = {
     { "RESOURCE_CONNECTION_DURATION", "resource_connection_duration" },
     { "FIRST_FRAME_DECAPSULATION_DURATION", "first_frame_decapsulation_duration" },
     { "TOTAL_PLAYING_TIME", "total_playback_time" },
-    { "DOWNLOAD_REQUESTS_COUNT", "loading_count" },
+    { "DOWNLOAD_REQUESTS_COUNT", "loading_requests_count" },
     { "TOTAL_DOWNLOAD_TIME", "total_loading_time" },
-    { "TOTAL_DOWNLOAD_SIZE", "total_loading_Bytes" },
+    { "TOTAL_DOWNLOAD_SIZE", "total_loading_bytes" },
     { "STALLING_COUNT", "stalling_count" },
     { "TOTAL_STALLING_TIME", "total_stalling_time" },
 };
@@ -470,6 +470,10 @@ static const std::vector<struct JsEnumInt> g_soundpoolInterruptMode = {
     { "SAME_SOUND_INTERRUPT", InterruptMode::SAME_SOUND_INTERRUPT }
 };
 
+static const std::vector<struct JsEnumInt> g_avMetricsEventType = {
+    { "AV_METRICS_EVENT_STALLING", AVMetricsEventType::AV_METRICS_EVENT_TYPE_STALLING },
+};
+
 static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_intEnumClassMap = {
     { "AVErrorCode", g_AVErrorCode},
     { "MediaErrorCode", g_mediaErrorCode },
@@ -510,6 +514,7 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_
     { "ErrorType", g_soundpoolErrorType },
     { "AacProfile", g_aacProfile },
     { "SoundInterruptMode", g_soundpoolInterruptMode },
+    { "AVMetricsEventType", g_avMetricsEventType },
 };
 
 static const std::map<std::string_view, const std::vector<struct JsEnumString>&> g_stringEnumClassMap = {

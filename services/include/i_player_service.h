@@ -643,8 +643,8 @@ public:
 
     /**
      * @brief Obtains the playbackStatisticMetrics, contains prepare_duration, resource_connection_duration,
-     * first_frame_decapsulation_duration, total_playback_time, loading_count, total_loading_time, total_loading_Bytes,
-     * stalling_count, total_stalling_time.
+     * first_frame_decapsulation_duration, total_playback_time, loading_requests_count, total_loading_time,
+     * total_loading_bytes, stalling_count, total_stalling_time.
      *
      * @param playbackStatisticMetrics.
      * @return Returns {@link MSERR_OK} if the statistic metrics is get; returns an error code defined
