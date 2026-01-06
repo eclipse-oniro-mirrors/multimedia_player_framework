@@ -719,48 +719,5 @@
             <option name="push" value="res_avtranscoder/Mock_Output.mp4 -> /data/test" src="res"/>
         </preparer>
     </target>
-    <target name="player_server_unittest">
-        <depend resource="test_videofile/H264_AAC.mp4" pushpath="/data/test" findpath="res" presetcmd=""/>
-        <depend resource="test_videofile/H264_AAC_multi_track.mp4" pushpath="/data/test" findpath="res" presetcmd=""/>
-        <depend resource="test_subtitlefile/utf8.srt" pushpath="/data/test" findpath="res" presetcmd=""/>
-        <preparer>
-            <option name="push" value="test_subtitlefile/utf8.srt -> /data/test" src="res"/>
-            <option name="push" value="test_subtitlefile/utf8_test1.srt -> /data/test" src="res"/>
-            <option name="push" value="test_videofile/H264_AAC.mp4 -> /data/test" src="res"/>
-            <option name="push" value="test_videofile/H264_AAC_multi_track.mp4 -> /data/test" src="res"/>
-            <option name="push" value="test_videofile/H264_AAC_DRM.ts -> /data/test" src="res"/>
-            <option name="push" value="test_videofile/H265_AAC.mp4 -> /data/test" src="res"/>
-            <option name="push" value="test_videofile/H264_MP3.mp4 -> /data/test" src="res"/>
-            <option name="push" value="test_videofile/MPEG2_AAC.mp4 -> /data/test" src="res"/>
-            <option name="push" value="test_videofile/MPEG2_MP3.mp4 -> /data/test" src="res"/>
-            <option name="push" value="test_videofile/MPEG4_AAC.mp4 -> /data/test" src="res"/>
-            <option name="push" value="test_videofile/MPEG4_MP3.mp4 -> /data/test" src="res"/>
-            <option name="push" value="test_videofile/out_170_170.mp4 -> /data/test" src="res"/>
-            <option name="push" value="test_videofile/AVC_Baseline@L1.2_81.0Kbps_320x240.mp4 -> /data/test" src="res"/>
-            <option name="push" value="test_videofile/aac_44100Hz_143kbs_stereo.aac -> /data/test" src="res"/>
-            <option name="push" value="test_videofile/aac_48000Hz_70kbs_mono.m4a -> /data/test" src="res"/>
-            <option name="push" value="test_videofile/mp3_48000Hz_64kbs_mono.mp3 -> /data/test" src="res"/>
-            <option name="push" value="test_videofile/pcm_s16le_48000Hz_768kbs_mono.wav-> /data/test" src="res"/>
-            <option name="push" value="test_videofile/vorbis_48000Hz_80kbs_mono.ogg -> /data/test" src="res"/>
-            <option name="push" value="test_videofile/amr_nb_8ksr_7400kbr_1ch.amr -> /data/test" src="res"/>
-            <option name="push" value="test_videofile/H264_AAC_320x240.mp4 -> /data/test" src="res"/>
-            <option name="push" value="test_videofile/ChineseColor_H264_AAC_480p_15fps.mp4 -> /data/test" src="res"/>
-            <option name="push" value="test_videofile/AVC_Baseline@L1.2_81.0Kbps_320x240.mp4 -> /data/test" src="res"/>
-            <option name="push" value="test_videofile/MP4_ROTATE_90.mp4 -> /data/test" src="res"/>
-            <option name="push" value="test_videofile/1kb.mp3 -> /data/test" src="res"/>
-            <option name="push" value="test_videofile/01.mp3 -> /data/test" src="res"/>
-            <option name="push" value="test_videofile/mpeg4_1920_1080_aac_flac.mkv -> /data/test" src="res"/>
-            <option name="push" value="test_videofile/128x96.mp4 -> /data/test" src="res"/>
-            <option name="push" value="test_videofile/h264_aac_640x480_30r.ts -> /data/test" src="res"/>
-            <option name="push" value="test_videofile/flac_44100Hz_978kbs_stereo.flac -> /data/test" src="res"/>
-            <option name="push" value="test_videofile/H264_AAC.mkv -> /data/test" src="res"/>
-            <option name="push" value="error.mp4 -> /data/test" src="res"/>
-            <option name="shell" value="mkdir /data/media"/>
-            <option name="shell" value="mkdir /data/test"/>
-            <option name="shell" value="mkdir /data/test/media"/>
-            <option name="shell" value="restorecon /data/test/media"/>
-            <option name="shell" value="restorecon /data/media/log"/>
-        </preparer>
-    </target>
 </configuration>
 
