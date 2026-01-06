@@ -220,7 +220,7 @@ bool LppDataPacket::IsEmpty()
 
 bool LppDataPacket::WriteOneFrameToAVBuffer(std::shared_ptr<AVBuffer> &buffer)
 {
-    if (IsEmpty()|| memory_ == nullptr || memory_->GetAddr() == nullptr) {
+    if (IsEmpty() || memory_ == nullptr || memory_->GetAddr() == nullptr) {
         MEDIA_LOGW("Current Packet is Empty;");
         return false;
     }
