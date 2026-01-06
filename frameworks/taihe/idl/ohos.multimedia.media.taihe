@@ -242,10 +242,38 @@ union PlaybackInfoValue {
     type_int: i32;
 }
 
+union PlaybackMetricsValue {
+    type_string: String;
+    type_int: i32;
+}
+
 enum SwitchMode: i32 {
     SMOOTH = 0,
     SEGMENT = 1,
     CLOSEST = 2,
+}
+
+enum PlaybackMetricsKey: String {
+  PREPARE_DURATION = "prepare_duration",
+  RESOURCE_CONNECTION_DURATION = "resource_connection_duration",
+  FIRST_FRAME_DECAPSULATION_DURATION = "first_frame_decapsulation_duration",
+  TOTAL_PLAYING_TIME = "total_playback_time",
+  DOWNLOAD_REQUESTS_COUNT = "loading_requests_count",
+  TOTAL_DOWNLOAD_TIME = "total_loading_time",
+  TOTAL_DOWNLOAD_SIZE = "total_loading_bytes",
+  STALLING_COUNT = "stalling_count",
+  TOTAL_STALLING_TIME = "total_stalling_time",
+}
+
+enum AVMetricsEventType: i32 {
+  AV_METRICS_EVENT_STALLING = 1,
+}
+
+struct AVMetricsEvent {
+  event: AVMetricsEventType;
+  timeStamp: i64;
+  playbackPosition: i32;
+  details: @record Map<String, i64>;
 }
 
 interface AVPlayer {
@@ -346,6 +374,9 @@ interface AVPlayer {
 
     @gen_promise("setPlaybackStrategy")
     SetPlaybackStrategySync(strategy: PlaybackStrategy): void;
+
+    @gen_promise("getPlaybackStatisticMetrics")
+    GetPlaybackStatisticMetricsSync(): @record Map<PlaybackMetricsKey, PlaybackMetricsValue>;
 
     @!sts_inject_into_interface("on(type: string, callback: (state: String, reason: StateChangeReason)=> void): void;")
     @!sts_inject_into_interface("on(type: string, callback: (err: BusinessError<void>)=> void): void;")
@@ -515,6 +546,8 @@ interface AVPlayer {
     SetPlaybackRate(rate: f64): void;
     @gen_promise("getPlaybackRate")
     GetPlaybackRateSync(): f64;
+    OnMetricsEvent(callback: (data: Array<AVMetricsEvent>)=> void): void;
+    OffMetricsEvent(callback: Optional<(data: Array<AVMetricsEvent>)=> void>): void;
 }
 
 struct SeiMessage {

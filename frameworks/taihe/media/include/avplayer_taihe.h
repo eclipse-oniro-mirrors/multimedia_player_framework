@@ -93,6 +93,7 @@ namespace AVPlayerEvent {
     const std::string EVENT_SUPER_RESOLUTION_CHANGED = "superResolutionChanged";
     const std::string EVENT_SEI_MESSAGE_INFO = "seiMessageReceived";
     const std::string EVENT_RATE_DONE = "playbackRateDone";
+    const std::string EVENT_METRICS = "metricsEvent";
 }
 
 class AVPlayerImpl : public AVPlayerNotify {
@@ -149,6 +150,7 @@ public:
     void DeselectTrackSync(int32_t index);
     void AddSubtitleFromUrlSync(::taihe::string_view url);
     map<string, PlaybackInfoValue> GetPlaybackInfoSync();
+    map<::ohos::multimedia::media::PlaybackMetricsKey, PlaybackMetricsValue> GetPlaybackStatisticMetricsSync();
     void SetVideoWindowSizeSync(int32_t width, int32_t height);
     void SetSuperResolutionSync(bool enabled);
     void SetPlaybackRangeSync(int32_t startTimeMs, int32_t endTimeMs,
@@ -180,6 +182,7 @@ public:
     void OnAudioInterrupt(callback_view<void(ohos::multimedia::audio::InterruptEvent const&)> callback);
     void OnAudioOutputDeviceChangeWithInfo(callback_view<void(
         ohos::multimedia::audio::AudioStreamDeviceChangeInfo const&)> callback);
+    void OnMetricsEvent(callback_view<void(array_view<::ohos::multimedia::media::AVMetricsEvent> data)> callback);
 
     void OffError(optional_view<callback<void(uintptr_t)>> callback);
     void OffStateChange(optional_view<callback<void(string_view,
@@ -208,6 +211,8 @@ public:
     void OffAudioInterrupt(optional_view<callback<void(::ohos::multimedia::audio::InterruptEvent const&)>> callback);
     void OffAudioOutputDeviceChangeWithInfo(optional_view<callback<void(
         ::ohos::multimedia::audio::AudioStreamDeviceChangeInfo const&)>> callback);
+    void OffMetricsEvent(optional_view<callback<void(
+        array_view<::ohos::multimedia::media::AVMetricsEvent> data)>> callback);
     bool GetIntArrayArgument(std::vector<int32_t> &vec, const std::vector<int32_t> &inputArray);
     void SeiMessageCallbackOff(std::string &callbackName, const std::vector<int32_t> &payloadTypes);
     void MaxAmplitudeCallbackOff(std::string callbackName);
@@ -250,6 +255,7 @@ private:
     void PauseListenCurrentResource();
     bool IsLiveSource() const;
     bool IsControllable();
+    bool CanGetPlaybackStatisticMetrics();
     bool CanSetSuperResolution();
     bool IsRateValid(double rate);
     bool CanSetPlayRange();
@@ -302,6 +308,7 @@ private:
     };
     OHOS::AudioStandard::InterruptMode interruptMode_ = OHOS::AudioStandard::InterruptMode::SHARE_MODE;
     Format playbackInfo_;
+    Format playbackStatisticMetrics_;
     int32_t index_ = -1;
     int32_t mode_ = SWITCH_SMOOTH;
     std::mutex syncMutex_;

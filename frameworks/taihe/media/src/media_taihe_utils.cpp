@@ -147,6 +147,9 @@ bool MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::AudioStreamDevi
 template
 bool MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::InterruptMode>(int32_t value,
     typename ohos::multimedia::audio::InterruptMode::key_t &key);
+template
+bool MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::media::AVMetricsEventType>(int32_t value,
+    typename ohos::multimedia::media::AVMetricsEventType::key_t &key);
 
 
 ani_object MediaTaiheUtils::ToBusinessError(ani_env *env, int32_t code, const std::string &message)
@@ -262,6 +265,49 @@ map<string, PlaybackInfoValue> MediaTaiheUtils::CreateFormatBufferByRef(OHOS::Me
         }
     }
     return playbackInfo;
+}
+
+map<::ohos::multimedia::media::PlaybackMetricsKey, PlaybackMetricsValue> MediaTaiheUtils::CreateFormatResult(
+    OHOS::Media::Format &format)
+{
+    int32_t intValue = 0;
+    uint32_t uintValue = 0;
+    int64_t longValue = 0;
+    std::string strValue = "";
+    map<::ohos::multimedia::media::PlaybackMetricsKey, PlaybackMetricsValue> playbackMetrics;
+
+    for (auto &iter : format.GetFormatMap()) {
+        taihe::string playbackMetricsType = MediaTaiheUtils::ToTaiheString(iter.first);
+        ohos::multimedia::media::PlaybackMetricsKey::key_t playbackMetricsKey;
+        MediaTaiheUtils::GetEnumKeyByStringValue<ohos::multimedia::media::PlaybackMetricsKey>(
+            playbackMetricsType, playbackMetricsKey);
+        switch (format.GetValueType(std::string_view(iter.first))) {
+            case OHOS::Media::FORMAT_TYPE_INT32:
+                if (format.GetIntValue(iter.first, intValue)) {
+                    playbackMetrics.emplace(playbackMetricsKey, PlaybackMetricsValue::make_type_int(intValue));
+                }
+                break;
+            case OHOS::Media::FORMAT_TYPE_UINT32:
+                if (format.GetUintValue(iter.first, uintValue)) {
+                    playbackMetrics.emplace(playbackMetricsKey, PlaybackMetricsValue::make_type_int(uintValue));
+                }
+                break;
+            case OHOS::Media::FORMAT_TYPE_INT64:
+                if (format.GetLongValue(iter.first, longValue)) {
+                    playbackMetrics.emplace(playbackMetricsKey, PlaybackMetricsValue::make_type_int(longValue));
+                }
+                break;
+            case OHOS::Media::FORMAT_TYPE_STRING:
+                if (format.GetStringValue(iter.first, strValue)) {
+                    playbackMetrics.emplace(playbackMetricsKey, PlaybackMetricsValue::make_type_string(strValue));
+                }
+                break;
+            default:
+                MEDIA_LOGE("format key: %{public}s", iter.first.c_str());
+                break;
+        }
+    }
+    return playbackMetrics;
 }
 
 bool MediaTaiheUtils::IsSystemApp()
