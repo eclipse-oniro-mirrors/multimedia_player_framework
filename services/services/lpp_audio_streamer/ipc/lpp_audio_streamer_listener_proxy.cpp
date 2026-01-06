@@ -46,7 +46,6 @@ void LppAudioStreamerListenerProxy::OnError(int32_t errorCode, const std::string
 
     data.WriteInt32(errorCode);
     data.WriteString(errorMsg);
-    CHECK_AND_RETURN_LOG(Remote() != nullptr, "Remote() is nullptr!");
     int error = Remote()->SendRequest(LppAudioStreamerListenerMsg::ON_ERROR, data, reply, option);
     CHECK_AND_RETURN_LOG(error == MSERR_OK, "on error failed, error: %{public}d", error);
 }
