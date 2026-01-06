@@ -225,7 +225,7 @@ HWTEST_F(LppDataPacketUnitTest, WriteOneFrameToAVBuffer_005, TestSize.Level1)
     std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer(allocator, MAX_BUFFER_SIZE_TEST);
     packet_->memory_ = nullptr;
     EXPECT_FALSE(packet_->IsEos());
-    EXPECT_FALSE(packet_->WriteToByteBuffer(buffer));
+    EXPECT_FALSE(packet_->WriteOneFrameToAVBuffer(buffer));
 }
 } // namespace Media
 } // namespace OHOS
