@@ -19,6 +19,7 @@
 #include "common/log.h"
 #include "common/media_source.h"
 #include "hisysevent.h"
+#include "format.h"
 
 namespace OHOS {
 namespace Media {
@@ -35,6 +36,7 @@ namespace {
     const std::string VIDEO_SINK = "VSINK";
     const std::string AUDIO_SINK = "ASINK";
     const std::string VIDEO_RENDERER = "VRNDR";
+    const size_t TIME_STAMP_LIST_STEP = 2; //namecode + timestamp
 
     struct StallingTimestamps {
         int64_t timeDemuxerStart = 0;
@@ -54,6 +56,7 @@ const std::map<DfxEventType, DfxEventHandleFunc> DfxAgent::DFX_EVENT_HANDLERS_ =
     { DfxEventType::DFX_INFO_PLAYER_EOS_SEEK, DfxAgent::ProcessEosSeekEvent },
     { DfxEventType::DFX_INFO_PERF_REPORT, DfxAgent::ProcessPerfInfoEvent },
     { DfxEventType::DFX_EVENT_STALLING, DfxAgent::ProcessMetricsEvent },
+    { DfxEventType::DFX_EVENT_PLAYBACK_STATISTICS, DfxAgent::ProcessPlaybackStatisticsEvent },
 };
 
 const std::unordered_map<std::string, bool> PERF_ITEM_NECESSITY = {
@@ -261,6 +264,52 @@ static bool ExtractStallingTimestamps(const std::vector<int64_t>& timeStampList,
     return foundCount == stageMap.size();
 }
 
+static std::string BuildStageStr(int64_t expected, const StallingTimestamps& ts)
+{
+    std::ostringstream oss;
+    auto appendStage = [&oss](const std::string& stage) {
+        if (oss.tellp() > 0) {
+            oss << '|';
+        }
+        oss << stage;
+    };
+
+    if (ts.timeDemuxerStart > (expected - TIME_S1_MS - TIME_S2_MS - TIME_S3_MS)) {
+        MEDIA_LOG_I("PLAYER_LAG stalling lag at loader stage.");
+        appendStage("Loader");
+    }
+    if (ts.timeDemuxerStart < (expected - TIME_S1_MS - TIME_S2_MS - TIME_S3_MS)) {
+        MEDIA_LOG_I("PLAYER_LAG stalling lag at demuxer stage.");
+        appendStage("Demuxer");
+    }
+    if (ts.timeDecoderStart < (expected - TIME_S2_MS - TIME_S3_MS)) {
+        MEDIA_LOG_I("PLAYER_LAG stalling lag at decoder stage.");
+        appendStage("Decoder");
+    }
+    if (ts.timeAVSyncStart < (expected - TIME_S3_MS)) {
+        MEDIA_LOG_I("PLAYER_LAG stalling lag at AVSync stage.");
+        appendStage("AVSync");
+    }
+    return oss.str();
+}
+
+static std::string BuildUploadMessage(int64_t expected, const StallingTimestamps &ts,
+    const std::vector<int64_t> &timeStampList, const DfxAgent::AVMetricsEvent &info)
+{
+    std::ostringstream oss;
+    oss << "TIMESTAMP=" << info.timeStamp << ",PLAYBACK_POSITION=" << info.playbackPosition
+        << ",STAGE=" << BuildStageStr(expected, ts);
+
+    oss << ",RAW_STALLING_DATA=";
+    for (size_t i = 0; i + 1 < timeStampList.size(); i += TIME_STAMP_LIST_STEP) {
+        oss << "[" << timeStampList[i] << ":" << timeStampList[i + 1] << "]";
+        if (i + TIME_STAMP_LIST_STEP < timeStampList.size()) {
+            oss << ",";
+        }
+    }
+    return oss.str();
+}
+
 int64_t DfxAgent::CalculateEventTimestamp(int64_t steadyMs)
 {
     int64_t systemStartTimeStamp = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -277,42 +326,43 @@ void DfxAgent::ReportMetricsEvent(const DfxEvent &event)
     auto timeStampList = AnyCast<std::vector<int64_t>>(event.param);
     StallingTimestamps ts;
     FALSE_RETURN(ExtractStallingTimestamps(timeStampList, ts));
-
-    int64_t delayTimeMs = 0;
-    auto texpMs = ts.timePreFrameRender + ts.timeFrameInterval;
-    delayTimeMs = ts.timeRenderStart - texpMs;
+    auto expected = ts.timePreFrameRender + ts.timeFrameInterval;
+    int64_t delayTimeMs = ts.timeRenderStart - expected;
     totalStallingDuration_.fetch_add(delayTimeMs);
     totalStallingTimes_.fetch_add(1);
+    FALSE_RETURN(delayTimeMs >= 0);
 
-    if (delayTimeMs >= 0) {
-        auto info = AVMetricsEvent{
-            .timeStamp = CalculateEventTimestamp(texpMs),
-            .playbackPosition = ts.timeCurFramePts,
-            .details = {
-                {"MediaType", OHOS::Media::MediaType::MEDIA_TYPE_VID},
-                {"Duration", delayTimeMs},
-            },
-        };
+    AVMetricsEvent info {
+        .timeStamp = CalculateEventTimestamp(expected),
+        .playbackPosition = ts.timeCurFramePts,
+        .details = {{"MediaType", OHOS::Media::MediaType::MEDIA_TYPE_VID}, {"Duration", delayTimeMs}},
+    };
 
-        DfxEvent eventCopy;
-        eventCopy.param = info;
-        if (metricsCallback_ != nullptr) {
-            metricsCallback_(shared_from_this(), eventCopy);
-        }
-
-        if (ts.timeDemuxerStart > (texpMs - TIME_S1_MS - TIME_S2_MS - TIME_S3_MS)) {
-            MEDIA_LOG_I("PLAYER_LAG stalling lag at loader stage.");
-        }
-        if (ts.timeDemuxerStart < (texpMs - TIME_S1_MS - TIME_S2_MS - TIME_S3_MS)) {
-            MEDIA_LOG_I("PLAYER_LAG stalling lag at demuxer stage.");
-        }
-        if (ts.timeDecoderStart < (texpMs - TIME_S2_MS - TIME_S3_MS)) {
-            MEDIA_LOG_I("PLAYER_LAG stalling lag at decoder stage.");
-        }
-        if (ts.timeAVSyncStart < (texpMs - TIME_S3_MS)) {
-            MEDIA_LOG_I("PLAYER_LAG stalling lag at AVSync stage.");
-        }
+    DfxEvent eventCopy;
+    eventCopy.param = info;
+    if (metricsCallback_ != nullptr) {
+        metricsCallback_(shared_from_this(), eventCopy);
     }
+
+    auto agent = shared_from_this();
+    FALSE_RETURN_MSG(agent != nullptr, "DfxAgent is released");
+    auto appName = agent->appName_;
+    auto instanceId = agent->instanceId_;
+    auto sourceType = agent->sourceType_;
+    auto lagDuration = info.details.at("Duration");
+    auto msg = BuildUploadMessage(expected, ts, timeStampList, info);
+
+    dfxTask_->SubmitJobOnce([appName, instanceId, sourceType, lagDuration, msg] {
+        HiSysEventWrite(
+            OHOS::HiviewDFX::HiSysEvent::Domain::MULTI_MEDIA,
+            "PLAYER_LAG",
+            OHOS::HiviewDFX::HiSysEvent::EventType::FAULT,
+            "APP_NAME", appName,
+            "INSTANCE_ID", instanceId,
+            "SOURCE_TYPE", static_cast<uint8_t>(sourceType),
+            "LAG_DURATION", lagDuration,
+            "MSG", msg);
+    });
 }
 
 void DfxAgent::GetTotalStallingDuration(int64_t* duration)
@@ -348,5 +398,60 @@ std::string DfxAgent::GetPerfStr(const bool needWaitAllData)
     needPrintPerfLog_ = !isAllDataReady;
     return (!isAllDataReady && needWaitAllData) ? waitFor : perfStr;
 }
+
+void DfxAgent::ProcessPlaybackStatisticsEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event)
+{
+    auto agent = ptr.lock();
+    FALSE_RETURN(agent != nullptr);
+    agent->ReportPlaybackStatisticsEvent(event);
+}
+
+void DfxAgent::ReportPlaybackStatisticsEvent(const DfxEvent &event)
+{
+    auto fmt = AnyCast<OHOS::Media::Format>(event.param);
+    uint32_t prepareDuration = 0;
+    uint32_t firstDownloadTime = 0;
+    uint32_t firstFrameDecapsulationTime = 0;
+    uint32_t playTotalDuration = 0;
+    uint32_t loadingCount = 0;
+    uint32_t totalLoadingTime = 0;
+    int64_t totalDownLoadBytes = 0;
+    uint32_t stallingCount = 0;
+    uint32_t totalStallingTime = 0;
+    int64_t timeStamp = 0;
+    FALSE_LOG(fmt.GetUintValue("prepare_duration", prepareDuration));
+    FALSE_LOG(fmt.GetUintValue("resource_connection_duration", firstDownloadTime));
+    FALSE_LOG(fmt.GetUintValue("first_frame_decapsulation_duration", firstFrameDecapsulationTime));
+    FALSE_LOG(fmt.GetUintValue("total_playback_time", playTotalDuration));
+    FALSE_LOG(fmt.GetUintValue("loading_requests_count", loadingCount));
+    FALSE_LOG(fmt.GetUintValue("total_loading_time", totalLoadingTime));
+    FALSE_LOG(fmt.GetLongValue("total_loading_bytes", totalDownLoadBytes));
+    FALSE_LOG(fmt.GetUintValue("stalling_count", stallingCount));
+    FALSE_LOG(fmt.GetUintValue("total_stalling_time", totalStallingTime));
+    FALSE_LOG(fmt.GetLongValue("timestamp", timeStamp));
+
+    auto agent = shared_from_this();
+    FALSE_RETURN_MSG(agent != nullptr, "DfxAgent is released");
+    std::vector<std::string> eventFields {
+        "APP_NAME=" + agent->appName_,
+        "INSTANCE_ID=" + agent->instanceId_,
+        "TIMESTAMP=" + std::to_string(timeStamp),
+        "PREPARE_DURATION=" + std::to_string(prepareDuration),
+        "RESOURCE_CONNECTION_DURATION=" + std::to_string(firstDownloadTime),
+        "FIRST_FRAME_DECAPSULATION_DURATION=" + std::to_string(firstFrameDecapsulationTime),
+        "TOTAL_PLAYBACK_TIME=" + std::to_string(playTotalDuration),
+        "LOADING_COUNT=" + std::to_string(loadingCount),
+        "TOTAL_LOADING_TIME=" + std::to_string(totalLoadingTime),
+        "TOTAL_LOADING_BYTES=" + std::to_string(totalDownLoadBytes),
+        "STALLING_COUNT=" + std::to_string(stallingCount),
+        "TOTAL_STALLING_TIME=" + std::to_string(totalStallingTime),
+    };
+    dfxTask_->SubmitJobOnce([eventFields = std::move(eventFields)] {
+        MEDIA_LOG_I("Uploading get playback statistics event.");
+        HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::MULTI_MEDIA, "PLAYER_COMMON_STATISTICS",
+            OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC, "EVENTS", eventFields);
+    });
+}
+
 }  // namespace Media
 }  // namespace OHOS
