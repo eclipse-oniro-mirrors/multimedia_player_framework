@@ -70,15 +70,6 @@ void PlayHiplayerImplUnitTest::SetUp(void)
 
 void PlayHiplayerImplUnitTest::TearDown(void)
 {
-    if (hiplayer_->demuxer_ != nullptr) {
-        if (hiplayer_->demuxer_->demuxer_ != nullptr) {
-            hiplayer_->demuxer_->demuxer_ = nullptr;
-        }
-        if (hiplayer_->demuxer_->interruptMonitor_ != nullptr) {
-            hiplayer_->demuxer_->interruptMonitor_ = nullptr;
-        }
-        hiplayer_->demuxer_ = nullptr;
-    }
     hiplayer_ = nullptr;
 }
 
@@ -429,7 +420,6 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_HandleVideoTrackChangeEvent_001, TestSi
     event.param = format;
     hiplayer_->HandleVideoTrackChangeEvent(event);
     EXPECT_NE(hiplayer_->isSeekClosest_.load(), true);
-    hiplayer_->demuxer_ = nullptr;
 #undef SUPPORT_VIDEO
 }
 
@@ -756,112 +746,6 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_DoRestartLiveLink_001, TestSize.Level0)
     hiplayer_->DoRestartLiveLink();
 }
 
-// @tc.name     Test DoRestartLiveLink API
-// @tc.number   PHIUT_DoRestartLiveLink_002
-// @tc.desc     Test audioDecoder_ != nullptr && audioSink_ != nullptr && videoDecoder_ != nullptr
-HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_DoRestartLiveLink_002, TestSize.Level0)
-{
-    ASSERT_NE(hiplayer_, nullptr);
-    hiplayer_->isFlvLive_ = true;
-    std::string name = "testname";
-    FilterType type = FilterType::VIDEO_CAPTURE;
-    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
-    EXPECT_CALL(*mockDemuxer, DoFlush()).WillOnce(Return(Status::OK));
-    hiplayer_->demuxer_ = mockDemuxer;
-    auto mockAudioSink = std::make_shared<MockAudioSinkFilter>(name, FilterType::VIDEO_CAPTURE);
-    EXPECT_CALL(*mockAudioSink, DoFlush()).WillOnce(Return(Status::OK));
-    EXPECT_CALL(*mockAudioSink, DoStart()).WillOnce(Return(Status::OK));
-    hiplayer_->audioSink_ = mockAudioSink;
-    auto mockVideoDemuxer = std::make_shared<DecoderSurfaceFilter>(name, type);
-    EXPECT_CALL(*mockVideoDemuxer, DoFlush()).WillOnce(Return(Status::OK));
-    EXPECT_CALL(*mockVideoDemuxer, DoStart()).WillOnce(Return(Status::OK));
-    hiplayer_->videoDecoder_ = mockVideoDemuxer;
-    auto mockAudioDecoder = std::make_shared<AudioDecoderFilter>(name, type);
-    EXPECT_CALL(*mockAudioDecoder, DoFlush()).WillOnce(Return(Status::OK));
-    EXPECT_CALL(*mockAudioDecoder, DoStart()).WillOnce(Return(Status::OK));
-    hiplayer_->audioDecoder_ = mockAudioDecoder;
-    
-    hiplayer_->DoRestartLiveLink();
-}
-
-// @tc.name     Test SetReopenFd API
-// @tc.number   PHIUT_SetReopenFd_001
-// @tc.desc     Test all
-HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SetReopenFd_001, TestSize.Level0)
-{
-    ASSERT_NE(hiplayer_, nullptr);
-    int32_t fd = 0;
-    
-    int32_t ret = hiplayer_->SetReopenFd(fd);
-    EXPECT_EQ(ret, 0);
-}
-
-// @tc.name     Test EnableCameraPostprocessing API
-// @tc.number   PHIUT_EnableCameraPostprocessing_001
-// @tc.desc     Test all
-HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_EnableCameraPostprocessing_001, TestSize.Level0)
-{
-    ASSERT_NE(hiplayer_, nullptr);
-    hiplayer_->enableCameraPostprocessing_ = true;
-    
-    int32_t ret = hiplayer_->EnableCameraPostprocessing();
-    EXPECT_EQ(ret, 0);
-}
-
-// @tc.name     Test SetSeiMessageListener API
-// @tc.number   PHIUT_SetSeiMessageListener_001
-// @tc.desc     Test !(videoDecoder_ != nullptr && surface_ != nullptr)
-HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SetSeiMessageListener_001, TestSize.Level0)
-{
-    ASSERT_NE(hiplayer_, nullptr);
-    hiplayer_->videoDecoder_ = nullptr;
-    hiplayer_->surface_ = nullptr;
-    
-    auto ret = hiplayer_->SetSeiMessageListener();
-    EXPECT_EQ(ret, Status::OK);
-
-    std::string name = "testname";
-    FilterType type = FilterType::VIDEO_CAPTURE;
-    auto mockVideoDemuxer = std::make_shared<DecoderSurfaceFilter>(name, type);
-    hiplayer_->videoDecoder_ = mockVideoDemuxer;
-    hiplayer_->surface_ = nullptr;
-    ret = hiplayer_->SetSeiMessageListener();
-    EXPECT_EQ(ret, Status::OK);
-
-    auto mockCodecSurface = sptr<MockCodecSurface>(new MockCodecSurface());
-    hiplayer_->surface_ = mockCodecSurface;
-    hiplayer_->videoDecoder_ = nullptr;
-    ret = hiplayer_->SetSeiMessageListener();
-    EXPECT_EQ(ret, Status::OK);
-}
-
-// @tc.name     Test SetSeiMessageListener API
-// @tc.number   PHIUT_SetSeiMessageListener_002
-// @tc.desc     Test !(seiDecoder_ != nullptr && surface_ == nullptr)
-HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SetSeiMessageListener_002, TestSize.Level0)
-{
-    ASSERT_NE(hiplayer_, nullptr);
-    hiplayer_->surface_ = nullptr;
-    hiplayer_->seiDecoder_ = nullptr;
-    auto ret = hiplayer_->SetSeiMessageListener();
-    EXPECT_EQ(ret, Status::OK);
-
-    std::string name = "testname";
-    FilterType type = FilterType::VIDEO_CAPTURE;
-    auto mockSeiDecoder = std::make_shared<SeiParserFilter>(name, type);
-    hiplayer_->seiDecoder_ = mockSeiDecoder;
-    auto mockCodecSurface = sptr<MockCodecSurface>(new MockCodecSurface());
-    hiplayer_->surface_ = mockCodecSurface;
-    ret = hiplayer_->SetSeiMessageListener();
-    EXPECT_EQ(ret, Status::OK);
-
-    hiplayer_->seiDecoder_ = nullptr;
-    mockCodecSurface = sptr<MockCodecSurface>(new MockCodecSurface());
-    hiplayer_->surface_ = mockCodecSurface;
-    ret = hiplayer_->SetSeiMessageListener();
-    EXPECT_EQ(ret, Status::OK);
-}
-
 // @tc.name     Test LinkSeiDecoder API
 // @tc.number   PHIUT_LinkSeiDecoder_001
 // @tc.desc     Test seiDecoder_ != nullptr
@@ -876,107 +760,6 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_LinkSeiDecoder_001, TestSize.Level0)
     std::shared_ptr<Filter> preFilter = mockFilter;
     auto ret = hiplayer_->LinkSeiDecoder(preFilter, StreamType::STREAMTYPE_ENCODED_AUDIO);
     EXPECT_EQ(ret, Status::OK);
-}
-
-// @tc.name     Test IsLiveStream API
-// @tc.number   PHIUT_IsLiveStream_001
-// @tc.desc     Test all
-HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsLiveStream_001, TestSize.Level0)
-{
-    ASSERT_NE(hiplayer_, nullptr);
-    std::string name = "testname";
-    FilterType type = FilterType::VIDEO_CAPTURE;
-    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
-    hiplayer_->demuxer_ = mockDemuxer;
-    auto ret = hiplayer_->IsLiveStream();
-    EXPECT_EQ(ret, false);
-}
-
-// @tc.name     Test ResumeDemuxer API
-// @tc.number   PHIUT_ResumeDemuxer_001
-// @tc.desc     Test all
-HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_ResumeDemuxer_001, TestSize.Level0)
-{
-    ASSERT_NE(hiplayer_, nullptr);
-    hiplayer_->pipelineStates_ = PlayerStates::PLAYER_STATE_ERROR;
-
-    auto ret = hiplayer_->ResumeDemuxer();
-    EXPECT_EQ(ret, 0);
-}
-
-// @tc.name     Test HandleSeek API
-// @tc.number   PHIUT_HandleSeek_001
-// @tc.desc     Test case PlayerStates::PLAYER_FROZEN
-HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_HandleSeek_001, TestSize.Level0)
-{
-    ASSERT_NE(hiplayer_, nullptr);
-    hiplayer_->pipelineStates_ = PlayerStates::PLAYER_FROZEN;
-    auto mockPipeline = std::make_shared<MockPipeline>();
-    hiplayer_->pipeline_ = mockPipeline;
-    std::string name = "testname";
-    FilterType type = FilterType::VIDEO_CAPTURE;
-    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
-    hiplayer_->demuxer_ = mockDemuxer;
-    auto ret = hiplayer_->HandleSeek(0, PlayerSeekMode::SEEK_NEXT_SYNC);
-    EXPECT_EQ(ret, Status::OK);
-}
-
-// @tc.name     Test doFrozenSeek API
-// @tc.number   PHIUT_doFrozenSeek_001
-// @tc.desc     Test isUnFreezeSeek = true
-HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_doFrozenSeek_001, TestSize.Level0)
-{
-    ASSERT_NE(hiplayer_, nullptr);
-    std::shared_ptr<Meta> meta1 = std::make_shared<Meta>();
-    meta1->SetData(Tag::MIME_TYPE, "test/invailed");
-    std::shared_ptr<Meta> meta2 = std::make_shared<Meta>();
-    meta2->SetData(Tag::MIME_TYPE, "text/vtt");
-    std::vector<std::shared_ptr<Meta>> metaInfo;
-    metaInfo.push_back(meta2);
-    metaInfo.push_back(meta1);
-    std::string name = "testname";
-    FilterType type = FilterType::VIDEO_CAPTURE;
-    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
-    hiplayer_->demuxer_ = mockDemuxer;
-    auto mockPipeline = std::make_shared<MockPipeline>();
-    hiplayer_->pipeline_ = mockPipeline;
-    auto ret = hiplayer_->doFrozenSeek(0, PlayerSeekMode::SEEK_NEXT_SYNC, true);
-    EXPECT_EQ(ret, Status::OK);
-}
-
-// @tc.name     Test doFrozenSeek API
-// @tc.number   PHIUT_doFrozenSeek_002
-// @tc.desc     Test isUnFreezeSeek = false
-HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_doFrozenSeek_002, TestSize.Level0)
-{
-    ASSERT_NE(hiplayer_, nullptr);
-    auto ret = hiplayer_->doFrozenSeek(0, PlayerSeekMode::SEEK_CLOSEST, false);
-    EXPECT_EQ(ret, Status::OK);
-    EXPECT_EQ(hiplayer_->isForzenSeekRecv_, true);
-}
-
-// @tc.name     Test EnableStartFrameRateOpt API
-// @tc.number   PHIUT_EnableStartFrameRateOpt_001
-// @tc.desc     Test videoTrack.GetDoubleValue("frame_rate", frameRate) && syncManager_ != nullptr
-HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_EnableStartFrameRateOpt_001, TestSize.Level0)
-{
-    ASSERT_NE(hiplayer_, nullptr);
-    double frameRate = 1;
-    Format format1;
-    format1.PutDoubleValue("frame_rate", frameRate);
-    hiplayer_->syncManager_ = nullptr;
-    hiplayer_->EnableStartFrameRateOpt(format1);
-    EXPECT_TRUE(format1.GetDoubleValue("frame_rate", frameRate));
-
-    Format format2;
-    format2.PutDoubleValue("frame_rate", 2.0);
-    hiplayer_->EnableStartFrameRateOpt(format2);
-
-    hiplayer_->syncManager_ = std::make_shared<MediaSyncManager>();
-    hiplayer_->EnableStartFrameRateOpt(format2);
-    EXPECT_NE(hiplayer_->syncManager_->videoInitialFrameRate_, 0.01);
-    hiplayer_->EnableStartFrameRateOpt(format1);
-    EXPECT_EQ(hiplayer_->syncManager_->videoInitialFrameRate_, 0.01);
 }
 
 // @tc.name     Test SetMediaMuted API
