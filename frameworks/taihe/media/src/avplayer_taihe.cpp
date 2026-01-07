@@ -1152,6 +1152,25 @@ map<string, PlaybackInfoValue> AVPlayerImpl::GetPlaybackInfoSync()
     return MediaTaiheUtils::CreateFormatBufferByRef(playbackInfo);
 }
 
+map<::ohos::multimedia::media::PlaybackMetricsKey, PlaybackMetricsValue> AVPlayerImpl::GetPlaybackStatisticMetricsSync()
+{
+    MediaTrace trace("AVPlayerImpl::GetPlaybackStatisticMetricsSync");
+    MEDIA_LOGI("GetPlaybackStatisticMetricsSync In");
+    Format &playbackStatisticMetrics = playbackStatisticMetrics_;
+    if (CanGetPlaybackStatisticMetrics() && player_ != nullptr) {
+        (void)player_->GetPlaybackStatisticMetrics(playbackStatisticMetrics);
+    } else {
+        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed/stopped, "
+            "unsupport get playback statistics metrics");
+        map<::ohos::multimedia::media::PlaybackMetricsKey, PlaybackMetricsValue> emptyPlaybackStatisticMetrics;
+        return emptyPlaybackStatisticMetrics;
+    }
+
+    MEDIA_LOGI("GetPlaybackStatisticMetricsSync Out");
+    return MediaTaiheUtils::CreateFormatResult(playbackStatisticMetrics);
+}
+
 void AVPlayerImpl::DeselectTrackSync(int32_t index)
 {
     MediaTrace trace("AVPlayerImpl::deselectTrack");
@@ -2570,6 +2589,28 @@ void AVPlayerImpl::OnSeiMessageReceived(array_view<int32_t> payloadTypes,
     return;
 }
 
+void AVPlayerImpl::OnMetricsEvent(callback_view<void(
+    array_view<::ohos::multimedia::media::AVMetricsEvent> data)> callback)
+{
+    MediaTrace trace("AVPlayerImpl::OnMetricsEvent");
+    MEDIA_LOGD("TaiheOnMetricsEvent In");
+
+    if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to on event");
+        return;
+    }
+
+    ani_env *env = taihe::get_env();
+    std::shared_ptr<taihe::callback<void(array_view<::ohos::multimedia::media::AVMetricsEvent> data)>> taiheCallback =
+        std::make_shared<taihe::callback<void(array_view<::ohos::multimedia::media::AVMetricsEvent> data)>>(callback);
+    std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
+    std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
+    SaveCallbackReference(AVPlayerEvent::EVENT_DRM_INFO_UPDATE, autoRef);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR
+        " TaiheOnMetricsEvent callbackName: metricsEvent success", FAKE_POINTER(this));
+    return;
+}
+
 void AVPlayerImpl::OffError(optional_view<callback<void(uintptr_t)>> callback)
 {
     MediaTrace trace("AVPlayerImpl::OffError");
@@ -2928,6 +2969,21 @@ void AVPlayerImpl::OffSeiMessageReceived(optional_view<array<int32_t>> payloadTy
     return;
 }
 
+void AVPlayerImpl::OffMetricsEvent(optional_view<callback<void(
+    array_view<::ohos::multimedia::media::AVMetricsEvent> data)>> callback)
+{
+    MediaTrace trace("AVPlayerImpl::OffMetricsEvent");
+    MEDIA_LOGD("OffMetricsEvent In");
+
+    if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        return;
+    }
+
+    std::string callbackName = AVPlayerEvent::EVENT_METRICS;
+    ClearCallbackReference(callbackName);
+    MEDIA_LOGI("OffMetricsEvent End");
+}
+
 bool AVPlayerImpl::GetIntArrayArgument(std::vector<int32_t> &vec, const std::vector<int32_t> &inputArray)
 {
     if (inputArray.empty()) {
@@ -2987,6 +3043,18 @@ bool AVPlayerImpl::IsControllable()
     auto state = GetCurrentState();
     if (state == AVPlayerState::STATE_PREPARED || state == AVPlayerState::STATE_PLAYING ||
         state == AVPlayerState::STATE_PAUSED || state == AVPlayerState::STATE_COMPLETED) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool AVPlayerImpl::CanGetPlaybackStatisticMetrics()
+{
+    auto state = GetCurrentState();
+    if (state == AVPlayerState::STATE_PREPARED || state == AVPlayerState::STATE_PLAYING ||
+        state == AVPlayerState::STATE_PAUSED || state == AVPlayerState::STATE_COMPLETED ||
+        state == AVPlayerState::STATE_STOPPED) {
         return true;
     } else {
         return false;

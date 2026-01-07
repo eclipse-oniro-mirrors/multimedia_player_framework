@@ -27,6 +27,9 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "AVPlayerCallback" };
+constexpr int32_t ARGS_TWO = 2;
+constexpr int32_t ARGS_THREE = 3;
+constexpr int32_t ARGS_FOUR = 4;
 }
 
 namespace ANI {
@@ -438,6 +441,44 @@ public:
         }
     };
 
+    struct MetricsEvent : public Base {
+        std::vector<int64_t> valueVec;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> stallingRef = callback.lock();
+            CHECK_AND_RETURN_LOG(stallingRef != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            auto func = stallingRef->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
+            std::shared_ptr<taihe::callback<void(
+                array_view<::ohos::multimedia::media::AVMetricsEvent> data)>> cacheCallback =
+                std::reinterpret_pointer_cast<taihe::callback<void(
+                    array_view<::ohos::multimedia::media::AVMetricsEvent> data)>>(func);
+
+            int32_t aVMetricsEventType = static_cast<int32_t>(valueVec[0]);
+            ohos::multimedia::media::AVMetricsEventType::key_t aVMetricsEventTypeKey;
+            MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::media::AVMetricsEventType>(
+                aVMetricsEventType, aVMetricsEventTypeKey);
+            std::map<std::string, int64_t> detailMap = {{"media_type", valueVec[ARGS_FOUR]},
+                {"duration", valueVec[ARGS_THREE]}};
+            map<string, int64_t> taiheHeader;
+            for (const auto& [key, value] : detailMap) {
+                taiheHeader.emplace(taihe::string(key), value);
+            }
+            ::ohos::multimedia::media::AVMetricsEvent aVMetricsEvent {
+                .event = ohos::multimedia::media::AVMetricsEventType(aVMetricsEventTypeKey),
+                .timeStamp = valueVec[1],
+                .playbackPosition = valueVec[ARGS_TWO],
+                .details = taiheHeader,
+            };
+            std::vector<::ohos::multimedia::media::AVMetricsEvent> infoArray;
+            infoArray.push_back(aVMetricsEvent);
+            (*cacheCallback)(array<::ohos::multimedia::media::AVMetricsEvent>(copy_data_t{},
+                infoArray.data(), infoArray.size()));
+        }
+    };
+
     static void CompleteCallback(AniCallback::Base *aniCb, std::shared_ptr<OHOS::AppExecFwk::EventHandler> mainHandler)
     {
         CHECK_AND_RETURN_LOG(aniCb != nullptr, "aniCb is nullptr");
@@ -542,6 +583,8 @@ AVPlayerCallback::AVPlayerCallback(AVPlayerNotify *listener)
             [this](const int32_t extra, const Format &infoBody) { OnAudioDeviceChangeCb(extra, infoBody); } },
         { INFO_TYPE_EOS, [this](const int32_t extra, const Format &infoBody) { OnEosCb(extra, infoBody); } },
         { INFO_TYPE_SEEKDONE, [this](const int32_t extra, const Format &infoBody) { OnSeekDoneCb(extra, infoBody); } },
+        { INFO_TYPE_METRICS_EVENT,
+            [this](const int32_t extra, const Format &infoBody) { OnMetricsEventCb(extra, infoBody); } },
     };
 }
 
@@ -1206,6 +1249,45 @@ void AVPlayerCallback::OnAudioDeviceChangeCb(const int32_t extra, const Format &
     cb->deviceInfo = deviceInfo;
     cb->reason = reason;
 
+    AniCallback::CompleteCallback(cb, mainHandler_);
+}
+
+void AVPlayerCallback::OnMetricsEventCb(const int32_t extra, const Format &infoBody)
+{
+    (void)extra;
+    CHECK_AND_RETURN_LOG(isLoaded_.load(), "current source is unready");
+    
+    // Extract stalling event information from infoBody
+    int32_t stallingEventType = 0;
+    int64_t stallingTimestamp = 0;
+    int64_t stallingTimeline = 0;
+    int64_t stallingDuration = 0;
+    int32_t stallingMediaType = 0;
+
+    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_METRICS_EVENT_TYPE, stallingEventType);
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_STALLING_TIMESTAMP, stallingTimestamp);
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_STALLING_TIMELINE, stallingTimeline);
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_STALLING_DURATION, stallingDuration);
+    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_STALLING_MEDIA_TYPE, stallingMediaType);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnMetricsEventCb is called, timestamp = %{public}" PRId64
+        ", timeline = %{public}" PRId64 ", duration = %{public}" PRId64 ", mediaType = %{public}" PRId32,
+        FAKE_POINTER(this), stallingTimestamp, stallingTimeline, stallingDuration, stallingMediaType);
+
+    if (refMap_.find(AVPlayerEvent::EVENT_METRICS) == refMap_.end()) {
+        MEDIA_LOGW("can not find metrics event callback!");
+        return;
+    }
+    
+    AniCallback::MetricsEvent *cb = new(std::nothrow) AniCallback::MetricsEvent();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new MetricsEvent");
+
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_METRICS);
+    cb->callbackName = AVPlayerEvent::EVENT_METRICS;
+    cb->valueVec.push_back(stallingEventType);
+    cb->valueVec.push_back(stallingTimestamp);
+    cb->valueVec.push_back(stallingTimeline);
+    cb->valueVec.push_back(stallingDuration);
+    cb->valueVec.push_back(static_cast<int64_t>(stallingMediaType));
     AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
