@@ -401,6 +401,8 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
     MediaTrace trace("HiPlayerImpl::SetSource uri");
     MEDIA_LOG_D("HiPlayerImpl SetSource uri");
     CreateMediaInfo(CallType::AVPLAYER, appUid_, instanceId_);
+    CreatePlaybackInfo(CallType::AVPLAYER, appUid_, instanceId_);
+    CreateStallingInfo(CallType::AVPLAYER, appUid_, instanceId_);
     playStatisticalInfo_.sourceUrl = "private";
     playStatisticalInfo_.sourceType = static_cast<int32_t>(SourceType::SOURCE_TYPE_URI);
     url_ = uri;
@@ -1307,21 +1309,23 @@ void HiPlayerImpl::AppendPlayerMediaInfo()
     AppendMediaInfo(meta, instanceId_);
 }
 
+void HiPlayerImpl::AppendPlaybackStatisticsInfo()
+{
+    auto fmt = std::make_shared<Format>();
+    if (GetPlaybackStatisticMetrics(*fmt) == TransStatus(Status::OK)) {
+        auto now = std::chrono::system_clock::now();
+        fmt->PutLongValue(
+            "timestamp", std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count());
+        AppendPlaybackInfo(fmt, instanceId_);
+    } else {
+        MEDIA_LOG_W("GetPlaybackStatisticMetrics failed, skipping record");
+    }
+}
+
 int32_t HiPlayerImpl::Reset()
 {
     MediaTrace trace("HiPlayerImpl::Reset");
-    if (dfxAgent_ != nullptr) {
-        Format fmt;
-        if (GetPlaybackStatisticMetrics(fmt) == TransStatus(Status::OK)) {
-            auto now = std::chrono::system_clock::now();
-            fmt.PutLongValue(
-                "timestamp", std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count());
-            DfxEvent event {"PLAYBACK_STATISTICS", DfxEventType::DFX_EVENT_PLAYBACK_STATISTICS, fmt};
-            dfxAgent_->OnDfxEvent(event);
-        } else {
-            MEDIA_LOG_W("GetPlaybackStatisticMetrics failed, skipping upload");
-        }
-    }
+    AppendPlaybackStatisticsInfo();
     if (pipelineStates_ == PlayerStates::PLAYER_STOPPED) {
         return TransStatus(Status::OK);
     }

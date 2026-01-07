@@ -264,6 +264,7 @@ private:
     int32_t SetPrivacyType(const int32_t privacyType);
     void SetDefaultAudioRenderInfo(const std::vector<std::shared_ptr<Meta>> &trackInfos);
     void AppendPlayerMediaInfo();
+    void AppendPlaybackStatisticsInfo();
     int64_t GetCurrentMillisecond();
     void UpdatePlayStatistics();
     void DoSetMediaSource(Status& ret);

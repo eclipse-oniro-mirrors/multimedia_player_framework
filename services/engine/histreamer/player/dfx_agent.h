@@ -62,7 +62,6 @@ private:
     void ReportEosSeek0Event(int32_t appUid);
     void UpdateDfxInfo(const DfxEvent &event);
     void ReportMetricsEvent(const DfxEvent &event);
-    void ReportPlaybackStatisticsEvent(const DfxEvent &event);
     std::string GetPerfStr(const bool needWaitAllData);
     static void ProcessVideoLagEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
     static void ProcessAudioLagEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
@@ -70,7 +69,6 @@ private:
     static void ProcessEosSeekEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
     static void ProcessPerfInfoEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
     static void ProcessMetricsEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
-    static void ProcessPlaybackStatisticsEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
     int64_t CalculateEventTimestamp(int64_t steadyMs);
     DfxEventHandleFunc metricsCallback_;
     std::string groupId_ {};
