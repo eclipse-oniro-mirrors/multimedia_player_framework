@@ -1,0 +1,218 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/test.gni")
+import("//foundation/multimedia/player_framework/config.gni")
+
+module_output_path = "player_framework/player"
+
+ohos_unittest("media_server_manager_unittest") {
+  module_out_path = module_output_path
+
+  include_dirs = [
+    "./mock",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/sa_media/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/sa_media/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/sa_media/server_manager",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/common",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/audio_background_adapter",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/player_mem_manage",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/subscriber",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_data_source/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_data_source/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/dolby_passthrough/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/monitor/client",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/monitor/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/monitor/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/recorder/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/recorder/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/avmetadatahelper/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/avmetadatahelper/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/avcodec/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/avcodec/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/avcodeclist/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/avcodeclist/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/recorder_profiles/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/recorder_profiles/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture_monitor/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture_monitor/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/transcoder/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/transcoder/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/observer",
+    "$MEDIA_PLAYER_ROOT_DIR/services/include",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/factory",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/common",
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/common/recorder_profiles",
+    "$MEDIA_PLAYER_ROOT_DIR/services/dfx",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/lpp_audio_streamer/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/lpp_audio_streamer/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/lpp_audio_streamer/client",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/lpp_video_streamer/client",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/lpp_video_streamer/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/lpp_video_streamer/server",
+  ]
+
+  if (player_framework_support_avsession_background) {
+    include_dirs += [
+      "$MEDIA_PLAYER_ROOT_DIR/services/services/player/avsession_background",
+    ]
+  }
+
+  cflags = [
+    "-Wall",
+    "-Werror",
+    "-Dprivate=public",
+    "-Dprotected=public",
+  ]
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+  }
+
+  external_deps = [
+    "ability_runtime:ability_connect_callback_stub",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtokenid_sdk",
+    "audio_framework:audio_client",
+    "av_codec:av_codec_client",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "googletest:gmock_main",
+    "graphic_2d:librender_service_base",
+    "hdf_core:libhdi",
+    "hicollie:libhicollie",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
+    "hitrace:libhitracechain",
+    "hiview:libucollection_client",
+    "i18n:intl_util",
+    "image_framework:image_native",
+    "init:libbegetutil",
+    "ipc:ipc_single",
+    "jsoncpp:jsoncpp",
+    "libxml2:libxml2",
+    "media_foundation:media_foundation",
+    "memmgr:memmgrclient",
+    "napi:ace_napi",
+    "os_account:os_account_innerkits",
+    "qos_manager:qos",
+    "resource_management:global_resmgr",
+    "resource_schedule_service:ressched_client",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+
+  if (player_framework_support_lowpower_av_sink) {
+    external_deps += [
+      "drivers_interface_lpplayer:liblow_power_player_stub_1.0",
+    ]
+  }
+
+  if (player_framework_support_video) {
+    external_deps += [ "graphic_surface:surface" ]
+  }
+
+  if (player_framework_support_screen_capture_stopbycall) {
+    external_deps += [
+      "call_manager:tel_call_manager_api",
+      "core_service:tel_core_service_api",
+      "state_registry:tel_state_registry_api",
+    ]
+  }
+
+  if (player_framework_support_screen_capture) {
+    external_deps += [
+      "ability_base:base",
+      "ability_base:want",
+      "ability_base:zuri",
+      "ability_runtime:ability_context_native",
+      "ability_runtime:ability_manager",
+      "ability_runtime:abilitykit_native",
+      "ability_runtime:extension_manager",
+      "ability_runtime:runtime",
+      "access_token:libnativetoken_shared",
+      "access_token:libprivacy_sdk",
+      "access_token:libtokensetproc_shared",
+      "audio_framework:audio_capturer",
+      "audio_framework:audio_client",
+      "distributed_notification_service:ans_innerkits",
+      "graphic_surface:sync_fence",
+      "relational_store:native_rdb",
+      "window_manager:libdm",
+      "window_manager:scene_session",
+      "window_manager:scene_session_manager",
+      "window_manager:session_manager_lite",
+    ]
+  }
+
+  if (player_framework_support_avsession_background) {
+    external_deps += [
+      "ability_base:want",
+      "ability_runtime:wantagent_innerkits",
+      "audio_framework:audio_client",
+      "av_session:avsession_client",
+      "input:libmmi-client",
+    ]
+  }
+
+  if (player_framework_support_auto_create_file) {
+    external_deps += [
+      "camera_framework:camera_framework",
+      "data_share:datashare_common",
+      "data_share:datashare_consumer",
+      "media_library:media_library",
+      "media_library:media_library_manager",
+      "samgr:samgr_proxy",
+    ]
+  }
+
+  if (use_memmgr_plugin) {
+    external_deps += [ "memmgr_override:memmgrclient" ]
+  } else if (use_memmgr) {
+    external_deps += [ "memmgr:memmgrclient" ]
+  }
+
+  if (player_framework_support_drm) {
+    external_deps += [ "drm_framework:drm_framework" ]
+  }
+
+  if (player_framework_support_power_manager) {
+    external_deps += [ "power_manager:powermgr_client" ]
+  }
+
+  deps = [
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
+    "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_dfx",
+    "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
+  ]
+
+  sources = [
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/sa_media/server_manager/media_server_manager.cpp",
+    "media_server_manager_unittest.cpp",
+  ]
+
+  resource_config_file =
+      "$MEDIA_PLAYER_ROOT_DIR/test/unittest/resources/ohos_test.xml"
+}
