@@ -1,0 +1,77 @@
+# Copyright (C) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/test.gni")
+import("//foundation/multimedia/player_framework/config.gni")
+
+ohos_unittest("dfx_log_dump_unittest") {
+  module_out_path = "player_framework/player_framework/media_dfx"
+
+  cflags = [
+    "-Wall",
+    "-Werror",
+    "-Dprivate=public",
+    "-Dprotected=public",
+  ]
+
+  if (is_arkui_x) {
+    defines += [ "CROSS_PLATFORM" ]
+  }
+
+  include_dirs = [
+    "./",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils",
+    "$MEDIA_PLAYER_ROOT_DIR/services/dfx",
+  ]
+
+  sources = [
+    "dfx_log_dump_unittest.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/dfx/dfx_log_dump.cpp",
+  ]
+
+  deps = [ "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils" ]
+
+  external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "access_token:libprivacy_sdk",
+    "av_codec:av_codec_client",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "googletest:gmock",
+    "graphic_surface:surface",
+    "hicollie:libhicollie",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
+    "hitrace:libhitracechain",
+    "image_framework:image_native",
+    "init:libbegetutil",
+    "ipc:ipc_single",
+    "libxml2:libxml2",
+    "media_foundation:media_foundation",
+    "os_account:os_account_innerkits",
+    "qos_manager:qos",
+    "samgr:samgr_proxy",
+  ]
+
+  if (player_framework_support_drm) {
+    external_deps += [ "drm_framework:drm_framework" ]
+  }
+
+  subsystem_name = "multimedia"
+  part_name = "player_framework"
+}

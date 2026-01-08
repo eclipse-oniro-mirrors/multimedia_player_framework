@@ -1,0 +1,148 @@
+# Copyright (C) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/test.gni")
+import("//foundation/multimedia/player_framework/config.gni")
+
+ohos_unittest("av_thumbnail_generator_unittest") {
+  module_out_path = "player_framework/player_framework/avmetadatahelper"
+
+  cflags = [
+    "-O2",
+    "-fPIC",
+    "-Wall",
+    "-fexceptions",
+    "-fno-rtti",
+    "-Wno-unused-but-set-variable",
+    "-Wno-format",
+    "-Dprivate=public",
+    "-Dprotected=public",
+  ]
+
+  include_dirs = [
+    "./mock",
+    "sa_media/ipc",
+    "sa_media/server",
+    "sa_media/server_manager",
+    "common",
+    "player/audio_background_adapter",
+    "player/ipc",
+    "player/player_mem_manage",
+    "player/server",
+    "player/subscriber",
+    "media_data_source/ipc",
+    "media_data_source/server",
+    "dolby_passthrough/ipc",
+    "monitor/client",
+    "monitor/ipc",
+    "monitor/server",
+    "recorder/ipc",
+    "recorder/server",
+    "avmetadatahelper/ipc",
+    "avmetadatahelper/server",
+    "avcodec/ipc",
+    "avcodec/server",
+    "avcodeclist/ipc",
+    "avcodeclist/server",
+    "recorder_profiles/ipc",
+    "recorder_profiles/server",
+    "screen_capture/server",
+    "screen_capture/ipc",
+    "screen_capture_monitor/server",
+    "screen_capture_monitor/ipc",
+    "transcoder/server",
+    "transcoder/ipc",
+    "observer",
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/avmetadatahelper",
+    "$MEDIA_PLAYER_ROOT_DIR/services/include",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/factory",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/common",
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/common/recorder_profiles",
+    "./../../../../player_framework/frameworks/native/player",
+    "./../../../../player_framework/test/unittest/common/include",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/avmetadatahelper/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/avmetadatahelper",
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/utils",
+    "$MEDIA_PLAYER_ROOT_DIR/services/include",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
+  ]
+
+  if (player_framework_support_avsession_background) {
+    include_dirs += [ "player/avsession_background" ]
+  }
+
+  defines = []
+  defines += player_framework_defines
+
+  if (target_cpu == "arm") {
+    cflags += [ "-DBINDER_IPC_32BIT" ]
+  }
+
+  sources = [
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/avmetadatahelper/avmetadata_collector.cpp",
+    "./av_thumbnail_generator_unittest.cpp",
+  ]
+
+  deps = [
+    "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_dfx",
+    "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
+  ]
+
+  external_deps = [
+    "ability_runtime:ability_connect_callback_stub",
+    "access_token:libaccesstoken_sdk",
+    "audio_framework:audio_client",
+    "av_codec:av_codec_client",
+    "c_utils:utils",
+    "call_manager:tel_call_manager_api",
+    "common_event_service:cesfwk_innerkits",
+    "core_service:tel_core_service_api",
+    "drivers_interface_camera:metadata",
+    "drivers_interface_display:display_commontype_idl_headers",
+    "googletest:gmock_main",
+    "graphic_2d:librender_service_base",
+    "graphic_surface:surface",
+    "graphic_surface:sync_fence",
+    "hdf_core:libhdi",
+    "hicollie:libhicollie",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
+    "hitrace:libhitracechain",
+    "i18n:intl_util",
+    "image_framework:image_native",
+    "image_framework:image_native",
+    "init:libbegetutil",
+    "ipc:ipc_single",
+    "libxml2:libxml2",
+    "media_foundation:media_foundation",
+    "memmgr:memmgrclient",
+    "napi:ace_napi",
+    "os_account:os_account_innerkits",
+    "qos_manager:concurrent_task_client",
+    "qos_manager:qos",
+    "resource_schedule_service:ressched_client",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+    "state_registry:tel_state_registry_api",
+  ]
+
+  subsystem_name = "multimedia"
+  part_name = "player_framework"
+}
