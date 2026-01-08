@@ -228,5 +228,93 @@ HWTEST_F(SoundPoolStreamUnitTest, StreamDealPlayParamsBeforePlayUnittest_001, Te
     ASSERT_EQ(stream_->loop_, playParameters.loop);
     ASSERT_EQ(stream_->priority_, playParameters.priority);
 }
+
+// @tc.name     Test DoPlay API
+// @tc.number   StreamDoPlayUnittest_003
+// @tc.desc     Test audioRenderer_->Start() == false
+//              Test callback_ != nullptr, streamCallback_ != nullptr
+HWTEST_F(SoundPoolStreamUnitTest, StreamDoPlayUnittest_003, TestSize.Level0)
+{
+    ASSERT_NE(stream_, nullptr);
+    ASSERT_EQ(true, stream_->manager_.expired());
+    stream_->fullCacheData_ = std::make_shared<AudioBufferEntry>(nullptr, 0);
+    ASSERT_NE(nullptr, stream_->fullCacheData_);
+    auto audioRenderer = std::make_unique<MockAudioRender>();
+    EXPECT_CALL(*(audioRenderer), GetBufferSize(_)).Times(2).WillRepeatedly(testing::Return(0));
+    EXPECT_CALL(*(audioRenderer), SetRenderMode(_)).WillOnce(testing::Return(0));
+    EXPECT_CALL(*(audioRenderer), SetRenderRate(_)).WillOnce(testing::Return(0));
+    EXPECT_CALL(*(audioRenderer), SetVolume(_)).WillOnce(testing::Return(0));
+    EXPECT_CALL(*(audioRenderer), SetOffloadAllowed(_)).WillOnce(testing::Return(0));
+    EXPECT_CALL(*(audioRenderer), SetRendererCallback(_)).WillOnce(testing::Return(0));
+    EXPECT_CALL(*(audioRenderer), SetRendererWriteCallback(_)).WillOnce(testing::Return(0));
+    EXPECT_CALL(*(audioRenderer), SetRendererFirstFrameWritingCallback(_)).WillOnce(testing::Return(0));
+    EXPECT_CALL(*(audioRenderer), SetAudioHapticsSyncId(_)).WillOnce(testing::Return());
+    EXPECT_CALL(*(audioRenderer), SetParallelPlayFlag(_)).WillOnce(testing::Return(0));
+    EXPECT_CALL(*(audioRenderer), Start(_)).WillOnce(testing::Return(false));
+    stream_->audioRenderer_ = std::move(audioRenderer);
+    auto callback = std::make_shared<MockISoundPoolCallback>();
+    EXPECT_CALL(*callback, OnError(_)).WillOnce(testing::Return());
+    stream_->callback_ = callback;
+    auto streamCallback = std::make_shared<MockISoundPoolCallback>();
+    EXPECT_CALL(*streamCallback, OnError(_)).WillOnce(testing::Return());
+    stream_->streamCallback_ = streamCallback;
+    auto ret = stream_->DoPlay();
+    stream_->audioRenderer_ = nullptr;
+    EXPECT_EQ(ret, MSERR_INVALID_VAL);
+}
+
+// @tc.name     Test DoPlay API
+// @tc.number   StreamDoPlayUnittest_004
+// @tc.desc     Test audioRenderer_->Start() == false
+//              Test callback_ == nullptr, streamCallback_ == nullptr
+HWTEST_F(SoundPoolStreamUnitTest, StreamDoPlayUnittest_004, TestSize.Level0)
+{
+    ASSERT_NE(stream_, nullptr);
+    ASSERT_EQ(true, stream_->manager_.expired());
+    stream_->fullCacheData_ = std::make_shared<AudioBufferEntry>(nullptr, 0);
+    ASSERT_NE(nullptr, stream_->fullCacheData_);
+    auto audioRenderer = std::make_unique<MockAudioRender>();
+    EXPECT_CALL(*(audioRenderer), GetBufferSize(_)).Times(2).WillRepeatedly(testing::Return(0));
+    EXPECT_CALL(*(audioRenderer), SetRenderMode(_)).WillOnce(testing::Return(0));
+    EXPECT_CALL(*(audioRenderer), SetRenderRate(_)).WillOnce(testing::Return(0));
+    EXPECT_CALL(*(audioRenderer), SetVolume(_)).WillOnce(testing::Return(0));
+    EXPECT_CALL(*(audioRenderer), SetOffloadAllowed(_)).WillOnce(testing::Return(0));
+    EXPECT_CALL(*(audioRenderer), SetRendererCallback(_)).WillOnce(testing::Return(0));
+    EXPECT_CALL(*(audioRenderer), SetRendererWriteCallback(_)).WillOnce(testing::Return(0));
+    EXPECT_CALL(*(audioRenderer), SetRendererFirstFrameWritingCallback(_)).WillOnce(testing::Return(0));
+    EXPECT_CALL(*(audioRenderer), SetAudioHapticsSyncId(_)).WillOnce(testing::Return());
+    EXPECT_CALL(*(audioRenderer), SetParallelPlayFlag(_)).WillOnce(testing::Return(0));
+    EXPECT_CALL(*(audioRenderer), Start(_)).WillOnce(testing::Return(false));
+    stream_->audioRenderer_ = std::move(audioRenderer);
+    ASSERT_EQ(nullptr, stream_->callback_);
+    ASSERT_EQ(nullptr, stream_->streamCallback_);
+    auto ret = stream_->DoPlay();
+    stream_->audioRenderer_ = nullptr;
+    EXPECT_EQ(ret, MSERR_INVALID_VAL);
+}
+
+// @tc.name     Test OnInterrupt API
+// @tc.number   StreamOnInterruptUnittest_002
+// @tc.desc     Test hintType == AudioStandard::InterruptHint::INTERRUPT_HINT_STOP
+HWTEST_F(SoundPoolStreamUnitTest, StreamOnInterruptUnittest_002, TestSize.Level0)
+{
+    ASSERT_NE(stream_, nullptr);
+    AudioStandard::InterruptEvent interruptEvent;
+    interruptEvent.hintType = AudioStandard::InterruptHint::INTERRUPT_HINT_STOP;
+    stream_->OnInterrupt(interruptEvent);
+    EXPECT_EQ(stream_->startStopFlag_.load(), true);
+}
+
+// @tc.name     Test OnInterrupt API
+// @tc.number   StreamOnInterruptUnittest_003
+// @tc.desc     Test hintType is not acceptable
+HWTEST_F(SoundPoolStreamUnitTest, StreamOnInterruptUnittest_003, TestSize.Level0)
+{
+    ASSERT_NE(stream_, nullptr);
+    AudioStandard::InterruptEvent interruptEvent;
+    interruptEvent.hintType = AudioStandard::InterruptHint::INTERRUPT_HINT_RESUME;
+    stream_->OnInterrupt(interruptEvent);
+    EXPECT_EQ(stream_->startStopFlag_.load(), false);
+}
 } // namespace Media
 } // namespace OHOS
