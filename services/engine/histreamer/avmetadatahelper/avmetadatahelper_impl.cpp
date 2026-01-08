@@ -249,7 +249,7 @@ std::shared_ptr<AVBuffer> AVMetadataHelperImpl::FetchFrameYuv(
     }
     CHECK_AND_RETURN_RET_NOLOG(avBuffer != nullptr, nullptr);
     bool isEosBuffer = avBuffer->flag_ & (uint32_t)(AVBufferFlag::EOS);
-    if (fileType == Plugins::FileType::MPEGTS) {
+    if (fileType == Plugins::FileType::MPEGTS && metadataCaller_ != AVMetadataCaller::AV_METADATA_EXTRACTOR) {
         if (isEosBuffer) {
             avBuffer = thumbnailGenerator_->FetchFrameYuv(succTimeUs_, option, param);
             CHECK_AND_RETURN_RET_NOLOG(avBuffer != nullptr, nullptr);
