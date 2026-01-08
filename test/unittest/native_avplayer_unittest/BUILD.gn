@@ -1,0 +1,81 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/test.gni")
+import("//foundation/multimedia/player_framework/config.gni")
+
+module_output_path = "player_framework/player_framework/native_avplayer"
+
+ohos_unittest("native_avplayer_unittest") {
+  module_out_path = module_output_path
+  module_install_dir = "tests"
+  include_dirs = [
+    "../../../common",
+    "./include",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/player",
+    "$MEDIA_PLAYER_ROOT_DIR/test/unittest/common/include",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c",
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/player",
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/common",
+  ]
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  cflags = [
+    "-Wall",
+    "-Werror",
+    "-Wno-deprecated-declarations",
+    "-Dprivate=public",
+    "-Dprotected=public",
+  ]
+
+  sources = [ "src/avplayer_unittest.cpp", ]
+
+  deps = [
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avplayer",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avmedia_source",
+  ]
+
+  external_deps = [
+    "audio_framework:audio_capturer",
+    "audio_framework:audio_client",
+    "av_codec:av_codec_client",
+    "c_utils:utils",
+    "graphic_surface:surface",
+    "graphic_surface:sync_fence",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "image_framework:image_native",
+    "image_framework:image_receiver_ndk",
+    "image_framework:pixelmap",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "media_foundation:media_foundation",
+    "media_foundation:media_monitor_buffer",
+    "media_foundation:media_monitor_client",
+    "media_foundation:media_monitor_common",
+    "media_foundation:native_media_core",
+    "qos_manager:qos",
+    "samgr:samgr_proxy",
+    "window_manager:libdm",
+  ]
+
+  resource_config_file =
+      "$MEDIA_PLAYER_ROOT_DIR/test/unittest/resources/ohos_test.xml"
+}

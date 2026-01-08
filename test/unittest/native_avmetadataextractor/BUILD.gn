@@ -26,6 +26,7 @@ ohos_unittest("native_avmetadataextractor_unit_test") {
     "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/player",
     "$MEDIA_PLAYER_ROOT_DIR/test/unittest/common/include",
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c",
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/mediasource",
     "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/avmetadatahelper",
     "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/common",
   ]
@@ -47,8 +48,10 @@ ohos_unittest("native_avmetadataextractor_unit_test") {
   if (player_framework_support_metadata) {
     sources = [ "src/avmetadataextractor_unit_test.cpp" ]
   }
-  public_deps =
-      [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avmetadata_extractor" ]
+  deps = [
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avmetadata_extractor",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avmedia_source",
+  ]
 
   external_deps = [
     "audio_framework:audio_capturer",
