@@ -207,5 +207,25 @@ HWTEST_F(LppDataPacketUnitTest, WriteOneFrameToAVBuffer_004, TestSize.Level1)
     buffer=nullptr;
     EXPECT_EQ(packet_->WriteOneFrameToAVBuffer(buffer), true);
 }
+
+/**
+ * @tc.name  : WriteOneFrameToAVBuffer_005
+ * @tc.number: WriteOneFrameToAVBuffer
+ * @tc.desc  : FUNC
+ */
+
+HWTEST_F(LppDataPacketUnitTest, WriteOneFrameToAVBuffer_005, TestSize.Level1)
+{
+    packet_->flag_.push_back(MediaAVCodec::AVCODEC_BUFFER_FLAG_EOS);
+    packet_->vectorReadIndex_ = 0;
+    packet_->pts_.push_back(2);
+    packet_->size_.push_back(3);
+    EXPECT_FALSE(packet_->IsEmpty());
+    auto allocator = AVAllocatorFactory::CreateSharedAllocator(MemoryFlag::MEMORY_READ_WRITE);
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer(allocator, MAX_BUFFER_SIZE_TEST);
+    packet_->memory_ = nullptr;
+    EXPECT_FALSE(packet_->IsEos());
+    EXPECT_FALSE(packet_->WriteOneFrameToAVBuffer(buffer));
+}
 } // namespace Media
 } // namespace OHOS
