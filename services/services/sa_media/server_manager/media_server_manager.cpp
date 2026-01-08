@@ -237,7 +237,7 @@ int32_t MediaServerManager::FreezeStubForPids(const std::set<int32_t> &pidList, 
                    stubSet.size(), pid, isProxy);
         
         for (const auto &stubObj : stubSet) {
-            auto playerStub = iface_cast<PlayerServiceStub>(stubObj);
+            auto playerStub = iface_cast<IStandardPlayerService>(stubObj);
             CHECK_AND_CONTINUE_LOG(playerStub != nullptr,
                                    "failed to cast PlayerServiceStub, pid = %{public}d", pid);
 
@@ -257,7 +257,7 @@ int32_t MediaServerManager::ResetAllProxy()
     MEDIA_LOGI("received ResetAllProxy");
     for (const auto &pidEntry : pidToPlayerStubMap_) {
         for (const auto &remoteObj : pidEntry.second) {
-            auto playerStub = iface_cast<PlayerServiceStub>(remoteObj);
+            auto playerStub = iface_cast<IStandardPlayerService>(remoteObj);
             CHECK_AND_CONTINUE_LOG(playerStub != nullptr,
                                    "failed to cast PlayerServiceStub, pid = %{public}d", pidEntry.first);
             playerStub->UnFreeze();
@@ -1125,7 +1125,7 @@ bool MediaServerManager::GetMemUsageForPlayer()
     std::lock_guard<std::mutex> lock(mutex_);
     std::unordered_map<pid_t, uint32_t> memoryList;
     for (const auto& [object, pid] : playerStubMap_) {
-        auto stub = iface_cast<PlayerServiceStub>(object);
+        auto stub = iface_cast<IStandardPlayerService>(object);
         auto num = stub->GetMemoryUsage();
         if (num == 0) {
             continue;

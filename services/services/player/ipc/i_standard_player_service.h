@@ -248,6 +248,21 @@ public:
         return 0;
     }
 
+    virtual int32_t Freeze()
+    {
+        return 0;
+    }
+
+    virtual int32_t UnFreeze()
+    {
+        return 0;
+    }
+
+    virtual uint32_t GetMemoryUsage()
+    {
+        return 0;
+    }
+
     /**
      * IPC code ID
      */

@@ -1278,8 +1278,8 @@ int32_t PlayerServiceStub::SetDecryptConfig(MessageParcel &data, MessageParcel &
     CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "KeySessionServiceProxy object is nullptr");
     bool svp = data.ReadBool();
 
-    sptr<DrmStandard::MediaKeySessionServiceProxy> keySessionServiceProxy =
-        iface_cast<DrmStandard::MediaKeySessionServiceProxy>(object);
+    sptr<DrmStandard::IMediaKeySessionService> keySessionServiceProxy =
+        iface_cast<DrmStandard::IMediaKeySessionService>(object);
     if (keySessionServiceProxy != nullptr) {
         MEDIA_LOGD("And it's count is: %{public}d", keySessionServiceProxy->GetSptrRefCount());
         reply.WriteInt32(SetDecryptConfig(keySessionServiceProxy, svp));

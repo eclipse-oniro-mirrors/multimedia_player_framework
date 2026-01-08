@@ -77,8 +77,8 @@ public:
     int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
     int32_t SetSuperResolution(bool enabled) override;
     int32_t SetVideoWindowSize(int32_t width, int32_t height) override;
-    int32_t Freeze();
-    int32_t UnFreeze();
+    int32_t Freeze() override;
+    int32_t UnFreeze() override;
 #ifdef SUPPORT_VIDEO
     int32_t SetVideoSurface(sptr<Surface> surface) override;
 #endif
@@ -106,7 +106,7 @@ public:
     bool IsSeekContinuousSupported() override;
     int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes) override;
     int32_t SetStartFrameRateOptEnabled(bool enabled) override;
-    uint32_t GetMemoryUsage();
+    uint32_t GetMemoryUsage() override;
     int32_t SetReopenFd(int32_t fd) override;
     int32_t EnableCameraPostprocessing() override;
     int32_t SetCameraPostprocessing(bool isOpen) override;

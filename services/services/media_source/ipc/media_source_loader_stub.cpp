@@ -53,7 +53,8 @@ int MediaSourceLoaderStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
         case SourceLoaderMsg::INIT: {
             sptr<IRemoteObject> object = data.ReadRemoteObject();
             CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "object is nullptr");
-            sptr<MediaSourceLoadingRequestProxy> requestProxy = iface_cast<MediaSourceLoadingRequestProxy>(object);
+            sptr<IStandardMediaSourceLoadingRequest> requestProxy =
+                iface_cast<IStandardMediaSourceLoadingRequest>(object);
             CHECK_AND_RETURN_RET_LOG(requestProxy != nullptr, MSERR_NO_MEMORY, "failed to convert");
             requestCallback_ =  std::make_shared<MediaSourceLoadingRequestCallback>(requestProxy);
             CHECK_AND_RETURN_RET_LOG(requestCallback_ != nullptr, MSERR_NO_MEMORY, "failed to create requestCallback_");
