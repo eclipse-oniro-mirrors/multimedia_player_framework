@@ -55,7 +55,6 @@ ohos_unittest("avmetadatahelper_impl_unittest") {
     "av_codec:av_codec_client",
     "c_utils:utils",
     "drivers_interface_display:display_commontype_idl_headers",
-    "drivers_interface_lpplayer:liblow_power_player_stub_1.0",
     "googletest:gmock",
     "graphic_2d:librender_service_client",
     "graphic_surface:surface",
@@ -69,6 +68,12 @@ ohos_unittest("avmetadatahelper_impl_unittest") {
     "qos_manager:qos",
     "window_manager:libwm",
   ]
+
+  if (player_framework_support_lowpower_av_sink) {
+    external_deps += [
+      "drivers_interface_lpplayer:liblow_power_player_stub_1.0",
+    ]
+  }
 
   if (player_framework_support_drm) {
     external_deps += [ "drm_framework:drm_framework" ]
