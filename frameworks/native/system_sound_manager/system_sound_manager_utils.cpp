@@ -25,6 +25,12 @@
 #include "system_tone_player_impl.h"
 #include "parameter.h"
 #include "hitrace_meter.h"
+#include "access_token.h"
+#include "accesstoken_kit.h"
+#include "directory_ex.h"
+#include "ipc_skeleton.h"
+#include "tokenid_kit.h"
+#include "token_setproc.h"
 
 using namespace std;
 using namespace nlohmann;
@@ -42,6 +48,7 @@ constexpr int32_t RETRY_TIME_S = 5;
 constexpr int64_t SLEEP_TIME_S = 1;
 const std::string SANDBOX_PREFIX = "/data/storage/el2/base/files/";
 const char RINGTONE_PARAMETER_SCANNER_USERID_KEY[] = "ringtone.scanner.userId";
+const char RINGTONE_PARAMETER_SCANNER_FIRST_KEY[] = "ringtone.scanner.first";
 const char RINGTONE_PARAMETER_SCANNER_FIRST_FALSE[] = "false";
 const char RINGTONE_PARAMETER_SCANNER_FIRST_TRUE[] = "true";
 const int32_t RINGTONEPARA_SIZE = 64;
@@ -108,6 +115,18 @@ shared_ptr<DataShare::DataShareHelper> SystemSoundManagerUtils::CreateDataShareH
         return nullptr;
     }
     return DataShare::DataShareHelper::Creator(remoteObj, RINGTONE_URI);
+}
+
+void SystemSoundManagerUtils::CreateDataShareHelper(int32_t systemAbilityId, bool &isProxy,
+    shared_ptr<DataShare::DataShareHelper> &dataShareHelper)
+{
+    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
+    int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
+        "ohos.permission.ACCESS_CUSTOM_RINGTONE");
+    isProxy = (result == Security::AccessToken::PermissionState::PERMISSION_GRANTED &&
+        GetScannerFirstParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, RINGTONEPARA_SIZE) &&
+        CheckCurrentUser()) ? true : false;
+    dataShareHelper = isProxy ? CreateDataShareHelperUri(systemAbilityId) : CreateDataShareHelper(systemAbilityId);
 }
 
 bool SystemSoundManagerUtils::VerifyCustomPath(const std::string &audioUri)
