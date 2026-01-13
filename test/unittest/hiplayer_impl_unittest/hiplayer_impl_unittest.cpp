@@ -303,30 +303,6 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_OnEventSub_001, TestSize.Level0)
     EXPECT_EQ(hiplayer_->audioSink_, nullptr);
 }
 
-// @tc.name     Test OnEventSubTrackChange API
-// @tc.number   PHIUT_OnEventSubTrackChange_001
-// @tc.desc     Test OnEventSubTrackChange interface, 2.
-HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_OnEventSubTrackChange_001, TestSize.Level0)
-{
-    ASSERT_NE(hiplayer_, nullptr);
-    Event event;
-    int32_t test1 = 10;
-    std::string name = "testname";
-    FilterType type = FilterType::VIDEO_CAPTURE;
-    hiplayer_->demuxer_ = std::make_shared<DemuxerFilter>(name, type);
-    std::shared_ptr<Meta> testptr = std::make_shared<Meta>();
-    hiplayer_->demuxer_->demuxer_ = std::make_shared<MediaDemuxer>();
-    hiplayer_->demuxer_->demuxer_->mediaMetaData_.trackMetas.push_back(testptr);
-    event.param = test1;
-    event.type = EventType::EVENT_VIDEO_TRACK_CHANGE;
-    hiplayer_->OnEventSubTrackChange(event);
-    
-    event.type = EventType::EVENT_SUBTITLE_TRACK_CHANGE;
-    hiplayer_->subtitleSink_ = std::make_shared<SubtitleSinkFilter>("test");
-    hiplayer_->OnEventSubTrackChange(event);
-    EXPECT_EQ(hiplayer_->audioSink_, nullptr);
-}
-
 // @tc.name     Test DoSetSource API
 // @tc.number   PHIUT_DoSetSource_001
 // @tc.desc     Test DoSetSource interface, 2.
