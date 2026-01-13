@@ -1385,7 +1385,7 @@ OH_AVErrCode OH_AVPlayer_GetPlaybackRate(OH_AVPlayer *player, float *rate)
     CHECK_AND_RETURN_RET_LOG(rate != nullptr, AV_ERR_INVALID_VAL, "rate is nullptr");
     struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
     CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
-    float tmpRate;
+    float tmpRate = 1.0f;
     int32_t ret = playerObj->player_->GetPlaybackRate(tmpRate);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player GetPlaybackRate failed");
     *rate = tmpRate;
