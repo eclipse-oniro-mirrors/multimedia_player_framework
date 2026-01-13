@@ -16,8 +16,6 @@
 #include "ringtone_player_impl.h"
 
 #include <sys/stat.h>
-#include "accesstoken_kit.h"
-#include "ipc_skeleton.h"
 #include "directory_ex.h"
 #include "ringtone_proxy_uri.h"
 #include "config_policy_utils.h"
@@ -46,8 +44,6 @@ const std::string RINGTONE_PATH = "/media/audio/";
 const std::string STANDARD_HAPTICS_PATH = "/media/haptics/standard/synchronized/";
 const std::string NON_SYNC_HAPTICS_PATH = "resource/media/haptics/standard/non-synchronized/";
 const std::string FDHEAD = "fd://";
-const char RINGTONE_PARAMETER_SCANNER_FIRST_KEY[] = "ringtone.scanner.first";
-const int32_t RINGTONEPARA_SIZE = 64;
 
 RingtonePlayerImpl::RingtonePlayerImpl(const shared_ptr<Context> &context,
     SystemSoundManagerImpl &sysSoundMgr, RingtoneType type)
@@ -182,15 +178,8 @@ bool RingtonePlayerImpl::InitDatabaseTool()
         MEDIA_LOGE("The database tool has been initialized. No need to reload.");
         return true;
     }
-    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
-    int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
-        "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    databaseTool_.isProxy = (result == Security::AccessToken::PermissionState::PERMISSION_GRANTED &&
-        SystemSoundManagerUtils::GetScannerFirstParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, RINGTONEPARA_SIZE) &&
-        SystemSoundManagerUtils::CheckCurrentUser()) ? true : false;
-    databaseTool_.dataShareHelper = databaseTool_.isProxy ?
-        SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID) :
-        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID,
+        databaseTool_.isProxy, databaseTool_.dataShareHelper);
     if (databaseTool_.dataShareHelper == nullptr) {
         MEDIA_LOGE("Failed to create dataShareHelper!");
         databaseTool_.isInitialized = false;
@@ -208,7 +197,7 @@ void RingtonePlayerImpl::ReleaseDatabaseTool()
         return;
     }
     if (databaseTool_.dataShareHelper != nullptr) {
-        MEDIA_LOGD("Enter CreateDataShareHelperUri()");
+        MEDIA_LOGD("Enter ReleaseDataShareHelperUri()");
         databaseTool_.dataShareHelper->Release();
         databaseTool_.dataShareHelper = nullptr;
     }

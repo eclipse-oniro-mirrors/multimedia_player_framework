@@ -31,8 +31,9 @@ namespace Media {
 class SystemSoundManagerUtils {
 public:
     static int32_t GetCurrentUserId();
-    static std::shared_ptr<DataShare::DataShareHelper> CreateDataShareHelperUri(int32_t systemAbilityId);
     static std::shared_ptr<DataShare::DataShareHelper> CreateDataShareHelper(int32_t systemAbilityId);
+    static void CreateDataShareHelper(int32_t systemAbilityId,
+        bool &isProxy, std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper);
     static bool VerifyCustomPath(const std::string &audioUri);
     static bool IdExists(const std::string &ids, int32_t id);
     static bool CheckCurrentUser();
@@ -40,6 +41,8 @@ public:
     static int32_t GetTypeForSystemSoundUri(const std::string &audioUri);
     static std::string GetErrorReason(const int32_t &errorCode);
     static std::string GetTonePlaybackErrorReason(const int32_t &errorCode);
+private:
+    static std::shared_ptr<DataShare::DataShareHelper> CreateDataShareHelperUri(int32_t systemAbilityId);
 };
 
 class __attribute__((visibility("default"))) MediaTrace : public NoCopyable {

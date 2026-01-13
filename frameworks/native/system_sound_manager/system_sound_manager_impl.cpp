@@ -21,8 +21,6 @@
 #include "file_ex.h"
 #include "nlohmann/json.hpp"
 #include <nativetoken_kit.h>
-#include "access_token.h"
-#include "accesstoken_kit.h"
 #include "directory_ex.h"
 #include "ipc_skeleton.h"
 #include "tokenid_kit.h"
@@ -103,8 +101,6 @@ static const char PARAM_HAPTICS_SETTING_SHOT_CARD_TWO[] = "const.multimedia.hapt
 static const char PARAM_HAPTICS_SETTING_NOTIFICATIONTONE[] = "const.multimedia.notification_tone_haptics";
 static const int32_t SYSPARA_SIZE = 128;
 
-const char RINGTONE_PARAMETER_SCANNER_FIRST_KEY[] = "ringtone.scanner.first";
-const int32_t RINGTONEPARA_SIZE = 64;
 
 std::shared_ptr<SystemSoundManager> SystemSoundManagerFactory::systemSoundManager_ = nullptr;
 std::mutex SystemSoundManagerFactory::systemSoundManagerMutex_;
@@ -780,15 +776,9 @@ ToneAttrs SystemSoundManagerImpl::GetCurrentRingtoneAttribute(RingtoneType ringt
         return toneAttrs;
     }
 
-    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
-    int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
-        "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    bool isProxy = (result == Security::AccessToken::PermissionState::PERMISSION_GRANTED &&
-        SystemSoundManagerUtils::GetScannerFirstParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, RINGTONEPARA_SIZE) &&
-        SystemSoundManagerUtils::CheckCurrentUser()) ? true : false;
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = isProxy ?
-        SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID) :
-        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    bool isProxy = false;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper;
+    SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID, isProxy, dataShareHelper);
     if (dataShareHelper == nullptr) {
         MEDIA_LOGE("GetCurrentRingtoneAttribute: Failed to CreateDataShareHelper!");
         return toneAttrs;
@@ -1342,15 +1332,9 @@ ToneAttrs SystemSoundManagerImpl::GetSystemToneAttrs(SystemToneType systemToneTy
     ToneAttrs toneAttrs = { "", "", "", CUSTOMISED, category };
     CHECK_AND_RETURN_RET_LOG(IsSystemToneTypeValid(systemToneType), toneAttrs, "Invalid system tone type");
 
-    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
-    int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
-        "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    bool isProxy = (result == Security::AccessToken::PermissionState::PERMISSION_GRANTED &&
-        SystemSoundManagerUtils::GetScannerFirstParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, RINGTONEPARA_SIZE) &&
-        SystemSoundManagerUtils::CheckCurrentUser()) ? true : false;
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = isProxy ?
-        SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID) :
-        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    bool isProxy = false;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper;
+    SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID, isProxy, dataShareHelper);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, toneAttrs,
         "Failed to CreateDataShareHelper! datashare or ringtone library error.");
     DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
@@ -1408,9 +1392,13 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultRingtoneAttrs(
     MEDIA_LOGI("GetDefaultRingtoneAttrs : Enter the getDefaultRingtoneAttrs interface");
     std::lock_guard<std::mutex> lock(uriMutex_);
     CHECK_AND_RETURN_RET_LOG(IsRingtoneTypeValid(ringtoneType),  nullptr, "Invalid ringtone type");
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
-        SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID);
+    bool isProxy = false;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper;
+    SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID, isProxy, dataShareHelper);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, nullptr, "Create dataShare failed.");
+    std::string queryUri = isProxy ? RINGTONE_LIBRARY_PROXY_DATA_URI_TONE_FILES + "&user=" +
+        std::to_string(SystemSoundManagerUtils::GetCurrentUserId()) : RINGTONE_PATH_URI;
+    Uri QUERYURI(queryUri);
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
     ringtoneAttrs_ = nullptr;
@@ -1419,21 +1407,8 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultRingtoneAttrs(
         PRELOAD_CONFIG_TABLE + "." + PRELOAD_CONFIG_COLUMN_TONE_ID);
     queryPredicates.InnerJoin(PRELOAD_CONFIG_TABLE)->On(onClause)->EqualTo(
         PRELOAD_CONFIG_TABLE + "." + PRELOAD_CONFIG_COLUMN_RING_TONE_TYPE, defaultoneTypeMap_[ringtoneType]);
-    Uri RINGTONEURI_PROXY(RINGTONE_LIBRARY_PROXY_DATA_URI_TONE_FILES + "&user=" +
-        std::to_string(SystemSoundManagerUtils::GetCurrentUserId()));
-    auto resultSet = dataShareHelper->Query(RINGTONEURI_PROXY, queryPredicates, JOIN_COLUMNS, &businessError);
-    int32_t errCode = businessError.GetCode();
-    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
-    int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
-        "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    MEDIA_LOGI("GetDefaultRingtoneAttrs: errCode:%{public}d, result :%{public}d ", errCode, result);
-    if (errCode != 0 || result != Security::AccessToken::PermissionState::PERMISSION_GRANTED ||
-        !SystemSoundManagerUtils::GetScannerFirstParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, RINGTONEPARA_SIZE) ||
-        !SystemSoundManagerUtils::CheckCurrentUser()) {
-        dataShareHelper = SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-        CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, nullptr, "Invalid dataShare.");
-        resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, JOIN_COLUMNS, &businessError);
-    }
+    auto resultSet = dataShareHelper->Query(QUERYURI, queryPredicates, JOIN_COLUMNS, &businessError);
+    CHECK_AND_RETURN_RET_LOG(resultSet != nullptr, nullptr, "query failed.");
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     CHECK_AND_RETURN_RET_LOG(results != nullptr, nullptr, "single sim card failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
@@ -1458,30 +1433,20 @@ std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetRingtoneAttrL
     MEDIA_LOGI("GetRingtoneAttrList : Enter the getRingtoneAttrList interface");
     std::lock_guard<std::mutex> lock(uriMutex_);
     ringtoneAttrsArray_.clear();
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
-        SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID);
+    bool isProxy = false;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper;
+    SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID, isProxy, dataShareHelper);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, ringtoneAttrsArray_,
         "Create dataShare failed, datashare or ringtone library error.");
+    std::string queryUri = isProxy ? RINGTONE_LIBRARY_PROXY_DATA_URI_TONE_FILES + "&user=" +
+        std::to_string(SystemSoundManagerUtils::GetCurrentUserId()) : RINGTONE_PATH_URI;
+    Uri QUERYURI(queryUri);
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
     queryPredicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, to_string(TONE_TYPE_RINGTONE));
     queryPredicates.GreaterThan(RINGTONE_COLUMN_MEDIA_TYPE, to_string(RINGTONE_MEDIA_TYPE_INVALID));
-    Uri RINGTONEURI_PROXY(RINGTONE_LIBRARY_PROXY_DATA_URI_TONE_FILES + "&user=" +
-        std::to_string(SystemSoundManagerUtils::GetCurrentUserId()));
-    auto resultSet = dataShareHelper->Query(RINGTONEURI_PROXY, queryPredicates, COLUMNS, &businessError);
-    int32_t errCode = businessError.GetCode();
-    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
-    int32_t result = Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
-        "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    MEDIA_LOGI("GetRingtoneAttrList:errCode:%{public}d, result :%{public}d ", errCode, result);
-    if (errCode != 0 || result != Security::AccessToken::PermissionState::PERMISSION_GRANTED  ||
-        !SystemSoundManagerUtils::GetScannerFirstParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, RINGTONEPARA_SIZE) ||
-        !SystemSoundManagerUtils::CheckCurrentUser()) {
-        dataShareHelper = SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-        CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, ringtoneAttrsArray_,
-            "Invalid dataShare, datashare or ringtone library error.");
-        resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
-    }
+    auto resultSet = dataShareHelper->Query(QUERYURI, queryPredicates, COLUMNS, &businessError);
+    CHECK_AND_RETURN_RET_LOG(resultSet != nullptr, ringtoneAttrsArray_, "query failed.");
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     CHECK_AND_RETURN_RET_LOG(results != nullptr, ringtoneAttrsArray_, "query failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
@@ -1506,11 +1471,13 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultSystemToneAttrs(
     MEDIA_LOGI("GetDefaultSystemToneAttrs : Enter the getDefaultSystemToneAttrs interface");
     std::lock_guard<std::mutex> lock(uriMutex_);
     CHECK_AND_RETURN_RET_LOG(IsSystemToneTypeValid(systemToneType),  nullptr, "Invalid systemtone type");
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
-        SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID);
+    bool isProxy = false;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper;
+    SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID, isProxy, dataShareHelper);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, nullptr, "Create dataShare failed.");
-    std::string ringToneType = systemToneType == SYSTEM_TONE_TYPE_NOTIFICATION ?
-        RINGTONE_COLUMN_NOTIFICATION_TONE_TYPE : RINGTONE_COLUMN_SHOT_TONE_TYPE;
+    std::string queryUri = isProxy ? RINGTONE_LIBRARY_PROXY_DATA_URI_TONE_FILES + "&user=" +
+        std::to_string(SystemSoundManagerUtils::GetCurrentUserId()) : RINGTONE_PATH_URI;
+    Uri QUERYURI(queryUri);
     int32_t category = systemToneType == SYSTEM_TONE_TYPE_NOTIFICATION ?
         TONE_CATEGORY_NOTIFICATION : TONE_CATEGORY_TEXT_MESSAGE;
     DataShare::DatashareBusinessError businessError;
@@ -1521,20 +1488,8 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultSystemToneAttrs(
         PRELOAD_CONFIG_TABLE + "." + PRELOAD_CONFIG_COLUMN_TONE_ID);
     queryPredicates.InnerJoin(PRELOAD_CONFIG_TABLE)->On(onClause)->EqualTo(
         PRELOAD_CONFIG_TABLE + "." + PRELOAD_CONFIG_COLUMN_RING_TONE_TYPE, defaultsystemTypeMap_[systemToneType]);
-    Uri RINGTONEURI_PROXY(RINGTONE_LIBRARY_PROXY_DATA_URI_TONE_FILES + "&user=" +
-        std::to_string(SystemSoundManagerUtils::GetCurrentUserId()));
-    auto resultSet = dataShareHelper->Query(RINGTONEURI_PROXY, queryPredicates, JOIN_COLUMNS, &businessError);
-    int32_t errCode = businessError.GetCode();
-    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
-    int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
-        "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    if (errCode != 0 || result != Security::AccessToken::PermissionState::PERMISSION_GRANTED ||
-        !SystemSoundManagerUtils::GetScannerFirstParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, RINGTONEPARA_SIZE) ||
-        !SystemSoundManagerUtils::CheckCurrentUser()) {
-        dataShareHelper = SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-        CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, nullptr, "Invalid dataShare.");
-        resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, JOIN_COLUMNS, &businessError);
-    }
+    auto resultSet = dataShareHelper->Query(QUERYURI, queryPredicates, JOIN_COLUMNS, &businessError);
+    CHECK_AND_RETURN_RET_LOG(resultSet != nullptr, nullptr, "query failed.");
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     CHECK_AND_RETURN_RET_LOG(results != nullptr, nullptr, "query single systemtone failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
@@ -1557,32 +1512,22 @@ std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetSystemToneAtt
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
     systemtoneAttrsArray_.clear();
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
-        SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID);
+    bool isProxy = false;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper;
+    SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID, isProxy, dataShareHelper);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, systemtoneAttrsArray_,
         "Create dataShare failed, datashare or ringtone library error.");
+    std::string queryUri = isProxy ? RINGTONE_LIBRARY_PROXY_DATA_URI_TONE_FILES + "&user=" +
+        std::to_string(SystemSoundManagerUtils::GetCurrentUserId()) : RINGTONE_PATH_URI;
+    Uri QUERYURI(queryUri);
     int32_t category = systemToneType == SYSTEM_TONE_TYPE_NOTIFICATION ?
         TONE_CATEGORY_NOTIFICATION : TONE_CATEGORY_TEXT_MESSAGE;
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
     queryPredicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, to_string(TONE_TYPE_NOTIFICATION));
     queryPredicates.GreaterThan(RINGTONE_COLUMN_MEDIA_TYPE, to_string(RINGTONE_MEDIA_TYPE_INVALID));
-    Uri RINGTONEURI_PROXY(RINGTONE_LIBRARY_PROXY_DATA_URI_TONE_FILES + "&user=" +
-        std::to_string(SystemSoundManagerUtils::GetCurrentUserId()));
-    auto resultSet = dataShareHelper->Query(RINGTONEURI_PROXY, queryPredicates, COLUMNS, &businessError);
-    int32_t errCode = businessError.GetCode();
-    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
-    int32_t result = Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
-        "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    MEDIA_LOGI("GetSystemToneAttrList: errCode:%{public}d, result :%{public}d ", errCode, result);
-    if (errCode != 0 || result != Security::AccessToken::PermissionState::PERMISSION_GRANTED ||
-        !SystemSoundManagerUtils::GetScannerFirstParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, RINGTONEPARA_SIZE) ||
-        !SystemSoundManagerUtils::CheckCurrentUser()) {
-        dataShareHelper = SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-        CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, systemtoneAttrsArray_,
-            "Invalid dataShare, datashare or ringtone library error.");
-        resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
-    }
+    auto resultSet = dataShareHelper->Query(QUERYURI, queryPredicates, COLUMNS, &businessError);
+    CHECK_AND_RETURN_RET_LOG(resultSet != nullptr, systemtoneAttrsArray_, "query failed.");
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     CHECK_AND_RETURN_RET_LOG(results != nullptr, systemtoneAttrsArray_, "query failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
@@ -1681,15 +1626,9 @@ ToneAttrs SystemSoundManagerImpl::GetAlarmToneAttrs(const std::shared_ptr<Abilit
     MEDIA_LOGI("GetAlarmToneAttrs: Start.");
     std::lock_guard<std::mutex> lock(uriMutex_);
     ToneAttrs toneAttrs = { "", "", "", CUSTOMISED, TONE_CATEGORY_ALARM };
-    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
-    int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
-        "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    bool isProxy = (result == Security::AccessToken::PermissionState::PERMISSION_GRANTED &&
-        SystemSoundManagerUtils::GetScannerFirstParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, RINGTONEPARA_SIZE) &&
-        SystemSoundManagerUtils::CheckCurrentUser()) ? true : false;
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = isProxy ?
-        SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID) :
-        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    bool isProxy = false;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper;
+    SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID, isProxy, dataShareHelper);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, toneAttrs,
         "Failed to CreateDataShareHelper! datashare or ringtone library error.");
     DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
@@ -1748,9 +1687,11 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultAlarmToneAttrs(
 {
     MEDIA_LOGI("GetDefaultAlarmToneAttrs : Enter the getDefaultAlarmToneAttrs interface");
     std::lock_guard<std::mutex> lock(uriMutex_);
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
-        SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID);
+    bool isProxy = false;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper;
+    SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID, isProxy, dataShareHelper);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, nullptr, "Create dataShare failed.");
+
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
     alarmtoneAttrs_ = nullptr;
@@ -1759,21 +1700,13 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultAlarmToneAttrs(
         PRELOAD_CONFIG_TABLE + "." + PRELOAD_CONFIG_COLUMN_TONE_ID);
     queryPredicates.InnerJoin(PRELOAD_CONFIG_TABLE)->On(onClause)->EqualTo(
         PRELOAD_CONFIG_TABLE + "." + PRELOAD_CONFIG_COLUMN_RING_TONE_TYPE, DEFAULT_ALARM_TYPE);
-    Uri RINGTONEURI_PROXY(RINGTONE_LIBRARY_PROXY_DATA_URI_TONE_FILES + "&user=" +
-        std::to_string(SystemSoundManagerUtils::GetCurrentUserId()));
-    auto resultSet = dataShareHelper->Query(RINGTONEURI_PROXY, queryPredicates, JOIN_COLUMNS, &businessError);
-    int32_t errCode = businessError.GetCode();
-    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
-    int32_t result = Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
-        "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    MEDIA_LOGI("GetDefaultAlarmToneAttrs:errCode:%{public}d, result :%{public}d ",  errCode, result);
-    if (errCode != 0 || result != Security::AccessToken::PermissionState::PERMISSION_GRANTED ||
-        !SystemSoundManagerUtils::GetScannerFirstParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, RINGTONEPARA_SIZE) ||
-        !SystemSoundManagerUtils::CheckCurrentUser()) {
-        dataShareHelper = SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-        CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, nullptr, "Invalid dataShare,");
-        resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, JOIN_COLUMNS, &businessError);
-    }
+
+    std::string queryUri = isProxy ? RINGTONE_LIBRARY_PROXY_DATA_URI_TONE_FILES + "&user=" +
+        std::to_string(SystemSoundManagerUtils::GetCurrentUserId()) : RINGTONE_PATH_URI;
+    Uri QUERYURI(queryUri);
+    auto resultSet = dataShareHelper->Query(QUERYURI, queryPredicates, JOIN_COLUMNS, &businessError);
+
+    CHECK_AND_RETURN_RET_LOG(resultSet != nullptr, nullptr, "query failed.");
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     CHECK_AND_RETURN_RET_LOG(results != nullptr, nullptr, "query failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
@@ -1797,29 +1730,21 @@ std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetAlarmToneAttr
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
     alarmtoneAttrsArray_.clear();
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
-        SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID);
-    CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, alarmtoneAttrsArray_,
-        "Create dataShare failed, datashare or ringtone library error.");
+    bool isProxy = false;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper;
+    SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID, isProxy, dataShareHelper);
+    CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, alarmtoneAttrsArray_, "Create dataShare failed.");
+    
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
     queryPredicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, to_string(TONE_TYPE_ALARM));
     queryPredicates.GreaterThan(RINGTONE_COLUMN_MEDIA_TYPE, to_string(RINGTONE_MEDIA_TYPE_INVALID));
-    Uri RINGTONEURI_PROXY(RINGTONE_LIBRARY_PROXY_DATA_URI_TONE_FILES + "&user=" +
-        std::to_string(SystemSoundManagerUtils::GetCurrentUserId()));
-    auto resultSet = dataShareHelper->Query(RINGTONEURI_PROXY, queryPredicates, COLUMNS, &businessError);
-    int32_t errCode = businessError.GetCode();
-    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
-    int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
-        "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    if (errCode != 0 || result != Security::AccessToken::PermissionState::PERMISSION_GRANTED ||
-        !SystemSoundManagerUtils::GetScannerFirstParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, RINGTONEPARA_SIZE) ||
-        !SystemSoundManagerUtils::CheckCurrentUser()) {
-        dataShareHelper = SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-        CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, alarmtoneAttrsArray_,
-            "Invalid dataShare, datashare or ringtone library error.");
-        resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
-    }
+    std::string queryUri = isProxy ? RINGTONE_LIBRARY_PROXY_DATA_URI_TONE_FILES + "&user=" +
+        std::to_string(SystemSoundManagerUtils::GetCurrentUserId()) : RINGTONE_PATH_URI;
+    Uri QUERYURI(queryUri);
+    auto resultSet = dataShareHelper->Query(QUERYURI, queryPredicates, COLUMNS, &businessError);
+
+    CHECK_AND_RETURN_RET_LOG(resultSet != nullptr, alarmtoneAttrsArray_, "query failed.");
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     CHECK_AND_RETURN_RET_LOG(results != nullptr, alarmtoneAttrsArray_, "query failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
@@ -1849,15 +1774,9 @@ int32_t SystemSoundManagerImpl::OpenToneUri(const std::shared_ptr<AbilityRuntime
 {
     MEDIA_LOGI("Enter the OpenToneUri interface.");
     std::lock_guard<std::mutex> lock(uriMutex_);
-    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
-    int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
-        "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    bool isProxy = (result == Security::AccessToken::PermissionState::PERMISSION_GRANTED &&
-        SystemSoundManagerUtils::GetScannerFirstParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, RINGTONEPARA_SIZE) &&
-        SystemSoundManagerUtils::CheckCurrentUser()) ? true : false;
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = isProxy ?
-        SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID) :
-        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    bool isProxy = false;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper;
+    SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID, isProxy, dataShareHelper);
     if (dataShareHelper == nullptr) {
         SendPlaybackFailedEvent(INVALID_DATASHARE);
         MEDIA_LOGE("Failed to CreateDataShareHelper! datashare or ringtone library error.");
@@ -2513,13 +2432,9 @@ ToneHapticsMode SystemSoundManagerImpl::IntToToneHapticsMode(int32_t value)
 std::string SystemSoundManagerImpl::GetCurrentToneUri(const std::shared_ptr<AbilityRuntime::Context> &context,
     ToneHapticsType toneHapticsType)
 {
-    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
-    int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
-        "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    bool isProxy = (result == Security::AccessToken::PermissionState::PERMISSION_GRANTED) ? true : false;
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = isProxy ?
-        SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID) :
-        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    bool isProxy = false;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper;
+    SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID, isProxy, dataShareHelper);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, "",
         "Failed to CreateDataShareHelper! datashare or ringtone library error.");
     DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
@@ -2706,20 +2621,16 @@ int32_t SystemSoundManagerImpl::GetToneHapticsSettings(const std::shared_ptr<Abi
 #ifdef SUPPORT_VIBRATOR
     CHECK_AND_RETURN_RET_LOG(IsToneHapticsTypeValid(toneHapticsType), IO_ERROR, "Invalid tone haptics type");
 
-    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
-    int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
-        "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    bool isProxy = (result == Security::AccessToken::PermissionState::PERMISSION_GRANTED) ? true : false;
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = isProxy ?
-        SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID) :
-        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    bool isProxy = false;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper;
+    SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID, isProxy, dataShareHelper);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, IO_ERROR,
         "Failed to CreateDataShareHelper! datashare or ringtone library error.");
     DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
 
     string currentToneUri = GetCurrentToneUri(databaseTool, toneHapticsType);
 
-    result = GetToneHapticsSettings(databaseTool, currentToneUri, toneHapticsType, settings);
+    int32_t result = GetToneHapticsSettings(databaseTool, currentToneUri, toneHapticsType, settings);
     dataShareHelper->Release();
     return result;
 #endif
@@ -2781,13 +2692,9 @@ int32_t SystemSoundManagerImpl::SetToneHapticsSettings(const std::shared_ptr<Abi
 #ifdef SUPPORT_VIBRATOR
     CHECK_AND_RETURN_RET_LOG(IsToneHapticsTypeValid(toneHapticsType), OPERATION_ERROR, "Invalid tone haptics type");
 
-    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
-    int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
-        "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    bool isProxy = (result == Security::AccessToken::PermissionState::PERMISSION_GRANTED) ? true : false;
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = isProxy ?
-        SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID) :
-        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    bool isProxy = false;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper;
+    SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID, isProxy, dataShareHelper);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, IO_ERROR,
         "Create dataShare failed, datashare or ringtone library error.");
     DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
@@ -2875,36 +2782,31 @@ int32_t SystemSoundManagerImpl::GetToneHapticsList(const std::shared_ptr<Ability
 {
 #ifdef SUPPORT_VIBRATOR
     MEDIA_LOGI("GetToneHapticsList: get vibration list, type : %{public}s.", isSynced ? "sync" : "non sync");
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
-        SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID);
+    bool isProxy = false;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper;
+    SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID, isProxy, dataShareHelper);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, IO_ERROR,
         "Create dataShare failed, datashare or ringtone library error.");
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates = CreateVibrationListQueryPredicates(isSynced);
-
-    Uri VIBRATEURI_PROXY(RINGTONE_LIBRARY_PROXY_DATA_URI_VIBATE_FILES + "&user=" +
-        std::to_string(SystemSoundManagerUtils::GetCurrentUserId()));
-    auto resultSet = dataShareHelper->Query(VIBRATEURI_PROXY, queryPredicates, VIBRATE_TABLE_COLUMNS, &businessError);
-    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
-    int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
-        "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    if (result != Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
-        dataShareHelper = SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-        CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, IO_ERROR, "Invalid dataShare,");
-        resultSet = dataShareHelper->Query(VIBRATEURI, queryPredicates, VIBRATE_TABLE_COLUMNS, &businessError);
-    }
+    std::string queryUri = isProxy ? RINGTONE_LIBRARY_PROXY_DATA_URI_VIBATE_FILES + "&user=" +
+        std::to_string(SystemSoundManagerUtils::GetCurrentUserId()) : VIBRATE_PATH_URI;
+    Uri QUERYURI(queryUri);
+    auto resultSet = dataShareHelper->Query(QUERYURI, queryPredicates, VIBRATE_TABLE_COLUMNS, &businessError);
+    CHECK_AND_RETURN_RET_LOG(resultSet != nullptr, QUERY_FAILED, "query failed.");
     auto results = make_unique<RingtoneFetchResult<VibrateAsset>>(move(resultSet));
     toneHapticsAttrsArray.clear();
     unique_ptr<VibrateAsset> vibrateAsset = results->GetFirstObject();
     std::string gentleTitle;
     std::string gentleName;
     std::string gentleUri;
-    DatabaseTool databaseTool = {true, false, dataShareHelper};
+    DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
     if (vibrateAsset == nullptr) {
         MEDIA_LOGE("GetToneHapticsList: get %{public}s vibration list fail!", isSynced ? "sync" : "non sync");
     } else {
         while (vibrateAsset != nullptr) {
-            result = GetGentleHapticsAttr(databaseTool, vibrateAsset->GetPath(), gentleTitle, gentleName, gentleUri);
+            int32_t result = GetGentleHapticsAttr(databaseTool,
+                vibrateAsset->GetPath(), gentleTitle, gentleName, gentleUri);
             if (result != 0) {
                 MEDIA_LOGW("GetHapticsAttrsSyncedWithTone: get gentle haptics attrs fail");
             }
@@ -2986,13 +2888,9 @@ int32_t SystemSoundManagerImpl::GetHapticsAttrsSyncedWithTone(const std::shared_
 {
 #ifdef SUPPORT_VIBRATOR
     CHECK_AND_RETURN_RET_LOG(!toneUri.empty(), OPERATION_ERROR, "Invalid toneUri");
-    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
-    int32_t resultProxy =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
-        "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    bool isProxy = (resultProxy == Security::AccessToken::PermissionState::PERMISSION_GRANTED) ? true : false;
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = isProxy ?
-        SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID) :
-        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    bool isProxy = false;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper;
+    SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID, isProxy, dataShareHelper);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, IO_ERROR,
         "Create dataShare failed, datashare or ringtone library error.");
     DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
@@ -3540,15 +3438,9 @@ std::vector<ToneInfo> SystemSoundManagerImpl::GetCurrentToneInfos()
 {
     std::vector<ToneInfo> toneInfos = {};
     ToneAttrs toneAttrs = { "", "", "", CUSTOMISED, TONE_CATEGORY_INVALID };
-    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
-    int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
-        "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    bool isProxy = (result == Security::AccessToken::PermissionState::PERMISSION_GRANTED &&
-        SystemSoundManagerUtils::GetScannerFirstParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, RINGTONEPARA_SIZE) &&
-        SystemSoundManagerUtils::CheckCurrentUser()) ? true : false;
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = isProxy ?
-        SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID) :
-        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    bool isProxy = false;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper;
+    SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID, isProxy, dataShareHelper);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, toneInfos,
         "Failed to CreateDataShareHelper! datashare or ringtone library error.");
     DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
