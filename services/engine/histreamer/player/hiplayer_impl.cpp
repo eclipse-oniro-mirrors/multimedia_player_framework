@@ -2068,7 +2068,7 @@ int32_t HiPlayerImpl::GetPlaybackRate(float& rate)
 {
     MEDIA_LOG_I("GetPlaybackRate in");
     rate = playbackRate_.load();
-    MEDIA_LOG_I("GetPlaybackRate end, rate is " PUBLIC_LOG_D32, rate);
+    MEDIA_LOG_I("GetPlaybackRate end, rate is %{public}f", rate);
     return MSERR_OK;
 }
 
