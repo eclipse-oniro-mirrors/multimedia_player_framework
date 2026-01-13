@@ -91,6 +91,9 @@ class MockContext : public AbilityRuntime::Context {
         std::shared_ptr<Context> CreateAreaModeContext(int areaMode) override { return nullptr; }
         std::shared_ptr<Context> CreateDisplayContext(uint64_t displayId) override { return nullptr; }
         bool IsContext(size_t contextTypeId) override { return false; }
+
+        std::shared_ptr<Context> CreateModuleOrPluginContext(const std::string &bundleName,
+            const std::string &moduleName) override { return nullptr; }
 };
 
 /**
