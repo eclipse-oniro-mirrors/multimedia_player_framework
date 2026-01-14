@@ -43,6 +43,7 @@ void DfxAgentUnitTest::SetUp(void)
     std::string groupId = "test_group";
     std::string appName = "test_app";
     agent_ = std::make_shared<DfxAgent>(groupId, appName);
+    agent_->SetInstanceId("42");
 }
 
 void DfxAgentUnitTest::TearDown(void)
