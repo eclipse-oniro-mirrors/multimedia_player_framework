@@ -196,6 +196,11 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
 MediaServerManager::MediaServerManager()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    executor_.SetClearCallBack([this]() {
+        std::lock_guard<std::mutex> lock(mutex_);
+        CHECK_AND_RETURN_NOLOG(GetStubMapCountIsEmpty());
+        SetCritical(false);
+    });
 }
 
 MediaServerManager::~MediaServerManager()
@@ -1050,11 +1055,6 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
     DestroyLppAudioPlayerStubForPid(pid);
     DestroyLppVideoPlayerStubForPid(pid);
     MonitorServiceStub::GetInstance()->OnClientDie(pid);
-    executor_.SetClearCallBack([this]() {
-        std::lock_guard<std::mutex> lock(mutex_);
-        CHECK_AND_RETURN_NOLOG(GetStubMapCountIsEmpty());
-        SetCritical(false);
-    });
     executor_.Clear();
 #ifdef SUPPORT_START_STOP_ON_DEMAND
     UpdateAllInstancesReleasedTime();
