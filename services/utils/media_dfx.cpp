@@ -17,6 +17,7 @@
 
 #include <cstdint>
 #include <format>
+#include <sstream>
 #include <unistd.h>
 
 #include "securec.h"
@@ -32,6 +33,11 @@
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "MediaDFX" };
 
+    using CallType = OHOS::Media::CallType;
+    using StallingInfo = OHOS::Media::StallingInfo;
+    using StallingEventList = std::list<std::pair<uint64_t, std::shared_ptr<std::vector<StallingInfo>>>>;
+    using json = nlohmann::json;
+
     constexpr uint32_t MAX_STRING_SIZE = 256;
     constexpr int64_t HOURS_BETWEEN_REPORTS = 4;
     constexpr int64_t MAX_MAP_SIZE = 100;
@@ -45,8 +51,92 @@ namespace {
         std::map<int32_t, std::list<std::pair<uint64_t, std::shared_ptr<OHOS::Media::Meta>>>>> reportMediaInfoMap_;
     std::map<OHOS::Media::CallType, std::map<int32_t, int32_t>> mediaMaxInstanceNumberMap_;
     std::map<uint64_t, std::pair<OHOS::Media::CallType, int32_t>> idMap_;
+
+    std::map<OHOS::Media::CallType,
+        std::map<int32_t, std::list<std::pair<uint64_t, std::shared_ptr<std::vector<OHOS::Media::Format>>>>>>
+        reportPlaybackInfoMap_;
+    std::map<OHOS::Media::CallType, std::map<int32_t, StallingEventList>> reportStallingInfoMap_;
+
     std::chrono::system_clock::time_point currentTime_ = std::chrono::system_clock::now();
     bool g_reachMaxMapSize {false};
+    bool g_reachMaxMapSizeStalling {false};
+
+    void SetPlaybackMetrics(CallType callType, int32_t uid, json &playbackMetrics)
+    {
+        auto playbackCallTypeIt = reportPlaybackInfoMap_.find(callType);
+        if (playbackCallTypeIt == reportPlaybackInfoMap_.end()) {
+            return;
+        }
+        auto playbackUidIt = playbackCallTypeIt->second.find(uid);
+        if (playbackUidIt == playbackCallTypeIt->second.end()) {
+            return;
+        }
+
+        for (const auto &instancePair : playbackUidIt->second) {
+            auto playbackPtr = instancePair.second;
+            if (!playbackPtr) {
+                continue;
+            }
+            for (const auto &fmt : *playbackPtr) {
+                uint32_t prepareDuration = 0;
+                uint32_t playTotalDuration = 0;
+                int64_t timeStamp = 0;
+                if (!fmt.GetUintValue("prepare_duration", prepareDuration)) {
+                    MEDIA_LOG_W("Get prepare_duration failed");
+                    continue;
+                }
+                if (!fmt.GetUintValue("total_playback_time", playTotalDuration)) {
+                    MEDIA_LOG_W("Get total_playback_time failed");
+                    continue;
+                }
+                if (!fmt.GetLongValue("timestamp", timeStamp)) {
+                    MEDIA_LOG_W("Get timestamp failed");
+                    continue;
+                }
+
+                json playbackMetric;
+                playbackMetric["prepare_duration"] = prepareDuration;
+                playbackMetric["total_playback_time"] = playTotalDuration;
+                playbackMetric["timestamp"] = timeStamp;
+                playbackMetrics.push_back(playbackMetric);
+            }
+        }
+    }
+
+    void StallingStatisticsEventWrite(const StallingEventList &eventList, json &lagEvents)
+    {
+    #ifndef CROSS_PLATFORM
+        auto buildStallingInfoJson = [](const std::vector<int64_t> &vec) {
+            json arr = json::array();
+            for (const auto &val : vec) {
+                arr.push_back(val);
+            }
+            return arr;
+        };
+        for (const auto &instancePair : eventList) {
+            uint64_t instanceId = instancePair.first;
+            const auto &metaListPtr = instancePair.second;
+            if (!metaListPtr) {
+                continue;
+            }
+            for (const auto &meta : *metaListPtr) {
+                uint64_t eventInstanceId = (meta.instanceId != 0) ? meta.instanceId : instanceId;
+                json oneEvent;
+                oneEvent["app_name"] = meta.appName;
+                oneEvent["source_type"] = meta.sourceType;
+                oneEvent["instance_id"] = eventInstanceId;
+                oneEvent["timestamp"] = meta.timeStamp;
+                oneEvent["playback_position"] = meta.playbackPosition;
+                oneEvent["duration"] = meta.lagDuration;
+                oneEvent["stalling_info"] = buildStallingInfoJson(meta.stallingInfo);
+                if (!meta.stage.empty()) {
+                    oneEvent["stage"] = meta.stage;
+                }
+                lagEvents.push_back(oneEvent);
+            }
+        }
+    #endif
+    }
 
     bool CollectReportMediaInfo(uint64_t instanceId)
     {
@@ -113,10 +203,39 @@ namespace {
         auto currentTime = std::chrono::system_clock::now();
         currentTime_ = currentTime;
         reportMediaInfoMap_.clear();
+        reportPlaybackInfoMap_.clear();
         UpdateMaxInsNumberMap(OHOS::Media::CallType::AVPLAYER);
         return OHOS::Media::MSERR_OK;
     }
-}
+
+    void StallingStatisticsEventReport()
+    {
+        MEDIA_LOG_I("StallingStatisticsEventReport.");
+        if (reportStallingInfoMap_.empty()) {
+            MEDIA_LOG_I("reportStallingInfoMap_ is empty, can't report");
+            return;
+        }
+        OHOS::Media::MediaEvent event;
+        for (const auto &ctPair : reportStallingInfoMap_) {
+            json lagEvents = json::array();
+            for (const auto &uidPair : ctPair.second) {
+                const auto &eventList = uidPair.second;
+                StallingStatisticsEventWrite(eventList, lagEvents);
+            }
+            if (lagEvents.empty()) {
+                continue;
+            }
+
+            json msgObj;
+            msgObj["stalling_events"] = lagEvents;
+            event.PlayerLagStallingEventWrite("", "", 0, 0, msgObj.dump());
+        }
+        auto currentTime = std::chrono::system_clock::now();
+        currentTime_ = currentTime;
+        reportStallingInfoMap_.clear();
+    }
+    
+} // namespace
 
 namespace OHOS {
 namespace Media {
@@ -173,6 +292,19 @@ void MediaEvent::EventWriteBundleName(std::string eventName, OHOS::HiviewDFX::Hi
                     "APP_UID", appUid,
                     "STATUS", status,
                     "BUNDLE", bundleName);
+}
+
+void MediaEvent::PlayerLagStallingEventWrite(const std::string& appName, const std::string& instanceId,
+    uint8_t sourceType, int32_t lagDuration, const std::string& msg)
+{
+    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::MULTI_MEDIA,
+        "PLAYER_LAG",
+        OHOS::HiviewDFX::HiSysEvent::EventType::FAULT,
+        "APP_NAME", appName,
+        "INSTANCE_ID", instanceId,
+        "SOURCE_TYPE", sourceType,
+        "LAG_DURATION", lagDuration,
+        "MSG", msg);
 }
 
 void MediaEvent::SourceEventWrite(const std::string& eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
@@ -244,6 +376,11 @@ void MediaEvent::CommonStatisicsEventWrite(CallType callType, OHOS::HiviewDFX::H
             } else {
                 eventInfoJson["maxInstanceNum"] = 0;
             }
+        }
+        json playbackMetrics = json::array();
+        SetPlaybackMetrics(callType, kv.first, playbackMetrics);
+        if (!playbackMetrics.empty()) {
+            eventInfoJson["playbackMetrics"] = playbackMetrics;
         }
         jsonArray.push_back(eventInfoJson);
         infoArr.push_back(jsonArray.dump());
@@ -420,6 +557,71 @@ int32_t CreateMediaInfo(CallType callType, int32_t uid, uint64_t instanceId)
     return MSERR_OK;
 }
 
+int32_t CreatePlaybackInfo(CallType callType, int32_t uid, uint64_t instanceId)
+{
+    MEDIA_LOG_I("CreatePlaybackInfo uid is: %{public}" PRId32, uid);
+    {
+        std::lock_guard<std::mutex> lock(collectMut_);
+        auto instanceIdMap = idMap_.find(instanceId);
+        if (instanceIdMap != idMap_.end()) {
+            auto existPair = instanceIdMap->second;
+            if (existPair.first != callType || existPair.second != uid) {
+                MEDIA_LOG_W("CreatePlaybackInfo instanceId exists with different owner");
+                return MSERR_INVALID_VAL;
+            }
+            MEDIA_LOG_I("CreatePlaybackInfo reuse existing instanceId mapping");
+        } else {
+            MEDIA_LOG_I("CreatePlaybackInfo not found instanceId in idMap_, add the instanceId to idMap_");
+            idMap_[instanceId] = std::make_pair(callType, uid);
+        }
+        std::shared_ptr<std::vector<Format>> playbackInfo = std::make_shared<std::vector<Format>>();
+        std::pair<uint64_t, std::shared_ptr<std::vector<Format>>> playbackInfoPair(instanceId, playbackInfo);
+        auto ctUidToPlaybackInfo = reportPlaybackInfoMap_.find(callType);
+        if (ctUidToPlaybackInfo != reportPlaybackInfoMap_.end()) {
+            auto it = ctUidToPlaybackInfo->second.find(uid);
+            if (it != ctUidToPlaybackInfo->second.end()) {
+                it->second.push_back(playbackInfoPair);
+                MEDIA_LOG_I("CreatePlaybackInfo: Successfully inserted playbackInfoPair for uid ");
+            } else {
+                ctUidToPlaybackInfo->second[uid].push_back(playbackInfoPair);
+                MEDIA_LOG_I(
+                    "CreatePlaybackInfo: Successfully created new list for uid and inserted playbackInfoPair.");
+            }
+        } else {
+            reportPlaybackInfoMap_[callType][uid].push_back(playbackInfoPair);
+            MEDIA_LOG_I("CreatePlaybackInfo: Successfully created new list for callType and uid ");
+        }
+    }
+    return MSERR_OK;
+}
+
+int32_t CreateStallingInfo(CallType callType, int32_t uid, uint64_t instanceId)
+{
+    MEDIA_LOG_I("CreateStallingInfo uid is: %{public}" PRId32, uid);
+    {
+        std::lock_guard<std::mutex> lock(collectMut_);
+        auto instanceIdMap = idMap_.find(instanceId);
+        if (instanceIdMap != idMap_.end()) {
+            auto existPair = instanceIdMap->second;
+            if (existPair.first != callType || existPair.second != uid) {
+                MEDIA_LOG_W("CreateStallingInfo instanceId exists with different owner");
+                return MSERR_INVALID_VAL;
+            }
+            MEDIA_LOG_I("CreateStallingInfo reuse existing instanceId mapping");
+        } else {
+            MEDIA_LOG_I("CreateStallingInfo not found instanceId in idMap_, add the instanceId to idMap_");
+            idMap_[instanceId] = std::make_pair(callType, uid);
+        }
+        auto metaList = std::make_shared<std::vector<StallingInfo>>();
+        std::pair<uint64_t, std::shared_ptr<std::vector<StallingInfo>>> stallingMetaPair(instanceId, metaList);
+        auto &listRef = reportStallingInfoMap_[callType][uid];
+        listRef.push_back(stallingMetaPair);
+        MEDIA_LOG_I("CreateStallingInfo: Successfully created StallingInfo for callType and uid");
+    }
+    g_reachMaxMapSizeStalling = (reportStallingInfoMap_[callType].size() >= MAX_MAP_SIZE);
+    return MSERR_OK;
+}
+
 void GetMaxInstanceNumber(CallType callType, int32_t uid, uint64_t instanceId, int32_t curInsNumber)
 {
     std::lock_guard<std::mutex> lock(maxReportMut_);
@@ -481,6 +683,86 @@ int32_t AppendMediaInfo(const std::shared_ptr<Meta>& meta, uint64_t instanceId)
     return MSERR_OK;
 }
 
+int32_t AppendPlaybackInfo(const std::shared_ptr<Format> &fmt, uint64_t instanceId)
+{
+    MEDIA_LOG_I("AppendPlaybackInfo.");
+    std::lock_guard<std::mutex> lock(collectMut_);
+    auto idMapIt = idMap_.find(instanceId);
+    if (idMapIt == idMap_.end()) {
+        MEDIA_LOG_I("Not found instanceId while appending playback info");
+        return MSERR_INVALID_VAL;
+    }
+    CallType ct = idMapIt->second.first;
+    int32_t uid = idMapIt->second.second;
+    auto ctUidToPlaybackInfo = reportPlaybackInfoMap_.find(ct);
+    if (ctUidToPlaybackInfo == reportPlaybackInfoMap_.end()) {
+        MEDIA_LOG_I(
+            "Calltype not found while appending playback info, calltype is : %{public}d", static_cast<CallType>(ct));
+        return MSERR_INVALID_OPERATION;
+    }
+    auto it = ctUidToPlaybackInfo->second.find(uid);
+    if (it == ctUidToPlaybackInfo->second.end()) {
+        MEDIA_LOG_I("Uid not found while appending playback info, uid is : %{public}" PRId32, uid);
+        return MSERR_INVALID_OPERATION;
+    }
+    auto &instanceList = it->second;
+    bool found = false;
+    for (auto &instancePair : instanceList) {
+        if (instancePair.first == instanceId) {
+            if (instancePair.second) {
+                instancePair.second->push_back(*fmt);
+                found = true;
+            }
+            break;
+        }
+    }
+    if (!found) {
+        MEDIA_LOG_I("instanceId not found in instanceList while appending playback meta");
+        return MSERR_INVALID_OPERATION;
+    }
+    return MSERR_OK;
+}
+
+int32_t AppendStallingInfo(const StallingInfo &info, uint64_t instanceId)
+{
+    MEDIA_LOG_I("AppendStallingInfo.");
+    std::lock_guard<std::mutex> lock(collectMut_);
+    auto idMapIt = idMap_.find(instanceId);
+    if (idMapIt == idMap_.end()) {
+        MEDIA_LOG_I("Not found instanceId when append stalling meta");
+        return MSERR_INVALID_VAL;
+    }
+    CallType ct = idMapIt->second.first;
+    int32_t uid = idMapIt->second.second;
+    auto ctUidToStallingInfo = reportStallingInfoMap_.find(ct);
+    if (ctUidToStallingInfo == reportStallingInfoMap_.end()) {
+        MEDIA_LOG_I(
+            "Calltype not found when append stalling meta, calltype is : %{public}d", static_cast<CallType>(ct));
+        return MSERR_INVALID_OPERATION;
+    }
+    auto it = ctUidToStallingInfo->second.find(uid);
+    if (it == ctUidToStallingInfo->second.end()) {
+        MEDIA_LOG_I("Uid not found while appending stalling meta, uid is : %{public}" PRId32, uid);
+        return MSERR_INVALID_OPERATION;
+    }
+    auto &instanceList = it->second;
+    bool found = false;
+    for (auto &instancePair : instanceList) {
+        if (instancePair.first == instanceId) {
+            if (instancePair.second) {
+                instancePair.second->push_back(info);
+            }
+            found = true;
+            break;
+        }
+    }
+    if (!found) {
+        MEDIA_LOG_I("instanceId not found in instanceList while appending stalling meta");
+        return MSERR_INVALID_OPERATION;
+    }
+    return MSERR_OK;
+}
+
 void ReportTranscoderMediaInfo(int32_t uid, uint64_t instanceId,
     std::vector<std::pair<std::string, std::string>> mediaInfo, int32_t errCode)
 {
@@ -511,6 +793,11 @@ int32_t ReportMediaInfo(uint64_t instanceId)
         return MSERR_INVALID_OPERATION;
     }
     std::lock_guard<std::mutex> lock(reportMut_);
+    if (g_reachMaxMapSizeStalling) {
+        MEDIA_LOG_I("Stalling event data size exceeds 100, report the stalling event");
+        g_reachMaxMapSizeStalling = false;
+        StallingStatisticsEventReport();
+    }
     if (g_reachMaxMapSize) {
         MEDIA_LOG_I("Event data size exceeds 100, report the event");
         g_reachMaxMapSize = false;
@@ -521,6 +808,7 @@ int32_t ReportMediaInfo(uint64_t instanceId)
     auto hour = std::chrono::duration_cast<std::chrono::hours>(diff).count();
     if (hour >= HOURS_BETWEEN_REPORTS) {
         MEDIA_LOG_I("Over 4 hours, report the event");
+        StallingStatisticsEventReport();
         return StatisticsEventReport();
     }
     return MSERR_OK;

@@ -20,12 +20,14 @@
 #include <list>
 #include <memory>
 #include <map>
+#include <vector>
 #include <string>
 #include <refbase.h>
 #include "nocopyable.h"
 #include "hisysevent.h"
 #include "hitrace_meter.h"
 #include "meta/meta.h"
+#include "meta/format.h"
 #ifndef CROSS_PLATFORM
 #include "nlohmann/json.hpp"
 #endif
@@ -37,6 +39,20 @@ namespace Media {
 #ifndef CROSS_PLATFORM
 using json = nlohmann::json;
 #endif
+
+struct StallingInfo {
+    std::string appName {};
+    int64_t lagDuration {0};
+    uint8_t sourceType {0};
+    uint64_t instanceId {0};
+    int64_t timeStamp {0};
+    int64_t playbackPosition {0};
+    std::string stage {};
+    std::vector<int64_t> stallingInfo {};
+};
+
+using StallingEventList = std::list<std::pair<uint64_t, std::shared_ptr<std::vector<StallingInfo>>>>;
+
 enum CallType {
     AVPLAYER,
     AVRECORDER,
@@ -63,6 +79,8 @@ public:
         std::string module, std::string status, int32_t appUid, int32_t appPid);
     void EventWriteBundleName(std::string eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
         std::string module, std::string status, int32_t appUid, int32_t appPid, std::string bundleName);
+    void PlayerLagStallingEventWrite(const std::string& appName, const std::string& instanceId,
+        uint8_t sourceType, int32_t lagDuration, const std::string& msg);
     void SourceEventWrite(const std::string& eventName, OHOS::HiviewDFX::HiSysEvent::EventType type, const std::string&
         appName, uint64_t instanceId, const std::string& callerType, int8_t sourceType, const std::string& sourceUrl,
         const std::string& errMsg);
@@ -71,6 +89,9 @@ public:
         const std::string& errMsg);
     void CommonStatisicsEventWrite(CallType callType, OHOS::HiviewDFX::HiSysEvent::EventType type,
         const std::map<int32_t, std::list<std::pair<uint64_t, std::shared_ptr<Meta>>>>& infoMap);
+    void PlaybackStatisticsEventWrite(CallType callType, OHOS::HiviewDFX::HiSysEvent::EventType type,
+        const std::map<int32_t, std::list<std::pair<uint64_t, std::shared_ptr<std::vector<OHOS::Media::Format>>>>>
+            &infoMap);
     void MediaKitStatistics(const std::string& syscap, const std::string& appName, const std::string& instanceId,
         const std::string& APICall, const std::string& events);
 private:
@@ -102,6 +123,13 @@ __attribute__((visibility("default"))) uint64_t GetMediaInfoContainInstanceNum()
 __attribute__((visibility("default"))) void GetMaxInstanceNumber(CallType callType, int32_t uid,
     uint64_t instanceId, int32_t curInsNumber);
 __attribute__((visibility("default"))) void UpdateMaxInsNumberMap(CallType callType);
+__attribute__((visibility("default"))) int32_t CreateStallingInfo(CallType callType, int32_t uid,
+    uint64_t instanceId);
+__attribute__((visibility("default"))) int32_t CreatePlaybackInfo(CallType callType, int32_t uid, uint64_t instanceId);
+
+__attribute__((visibility("default"))) int32_t AppendStallingInfo(const StallingInfo &info, uint64_t instanceId);
+__attribute__((visibility("default"))) int32_t AppendPlaybackInfo(
+    const std::shared_ptr<OHOS::Media::Format> &fmt, uint64_t instanceId);
 
 class __attribute__((visibility("default"))) MediaTrace : public NoCopyable {
 public:
