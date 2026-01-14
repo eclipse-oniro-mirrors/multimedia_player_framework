@@ -77,7 +77,7 @@ private:
         ColorManager::ColorSpaceName colorSpaceName = ColorManager::ColorSpaceName::NONE;
     };
 
-    std::mutex releaseMutex_;
+    std::mutex mutex_;
 
     static std::string GetLocalTime()
     {
