@@ -26,6 +26,7 @@ group("media_unit_test") {
       "../frameworks/native/system_sound_manager/unittest/ringtone_player_test:ringtone_player_unit_test",
       "../frameworks/native/system_sound_manager/unittest/sound_manager_test:system_sound_manager_unit_test",
       "../frameworks/native/system_sound_manager/unittest/tone_player_test:system_tone_player_unit_test",
+      "../frameworks/native/system_sound_manager/unittest/sound_player_test:system_sound_player_unit_test",
       "../frameworks/native/transcoder/test/unittest:transcoder_unit_test",
       "../frameworks/native/video_editor/test/unittest:video_editor_unit_test",
       "unittest/audio_background_adapter_test:audio_background_adapter_unit_test",

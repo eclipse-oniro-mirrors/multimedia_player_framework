@@ -23,6 +23,7 @@ ohos_unittest("system_sound_manager_unit_test") {
     "../../ringtone_player",
     "../../system_sound_vibrator",
     "../../system_tone_player",
+    "../../system_sound_player",
     "../../../../../services/utils/include",
     "../../../../../interfaces/inner_api/native/audio_haptic/include",
     "../../../../../interfaces/inner_api/native/soundpool/include",
@@ -41,6 +42,7 @@ ohos_unittest("system_sound_manager_unit_test") {
     "../../system_sound_manager_vibrate.cpp",
     "../../system_sound_vibrator/system_sound_vibrator.cpp",
     "../../system_tone_player/system_tone_player_impl.cpp",
+    "../../system_sound_player/system_sound_player_impl.cpp",
     "src/system_sound_manager_unit_next_test.cpp",
     "src/system_sound_manager_unit_test.cpp",
   ]
