@@ -1643,8 +1643,8 @@ Status HiPlayerImpl::HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs)
         }
     }
     if (videoDecoder_ != nullptr) {
- 	    videoDecoder_->ClosestSeekDone();
- 	}
+        videoDecoder_->ClosestSeekDone();
+    }
     if (audioSink_ != nullptr) {
         audioSink_->SetIsCancelStart(false);
     }
