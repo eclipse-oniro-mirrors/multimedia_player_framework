@@ -4550,7 +4550,7 @@ void ScreenCaptureServer::ReleaseInner()
 {
     MediaTrace trace("ScreenCaptureServer::ReleaseInner");
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner S", FAKE_POINTER(this));
-    {
+    if (captureState_ != AVScreenCaptureState::STOPPED) {
         std::lock_guard<std::mutex> lock(mutex_);
         if (captureState_ != AVScreenCaptureState::STOPPED) {
             StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
