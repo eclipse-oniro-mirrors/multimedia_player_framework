@@ -75,15 +75,11 @@ int32_t LppVideoStreamerServiceStub::Init()
     CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY,
         "failed to create lppVideoPlayerServer_");
     {
-        td::lock_guard<std::mutex> lock(vServiceStubMutex_);
+        std::lock_guard<std::mutex> lock(vServiceStubMutex_);
         if (framePacket_ == nullptr) {
             framePacket_ = OHOS::sptr<LppDataPacket>::MakeSptr();
             CHECK_AND_RETURN_RET_LOG(framePacket_ != nullptr, MSERR_NO_MEMORY, "failed to create framePacket_");
         }
-    }
-    if (framePacket_ == nullptr) {
-        framePacket_ = OHOS::sptr<LppDataPacket>::MakeSptr();
-        CHECK_AND_RETURN_RET_LOG(framePacket_ != nullptr, MSERR_NO_MEMORY, "failed to create framePacket_");
     }
     SetPlayerFuncs();
     return MSERR_OK;
