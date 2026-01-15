@@ -437,6 +437,7 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_004, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, ret);
     EXPECT_NE(MSERR_OK, player_->PrepareAsync());
 }
+
 /**
  * @tc.name  : Test Player SetSource
  * @tc.number: Player_SetSource_005
