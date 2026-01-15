@@ -172,6 +172,7 @@ int32_t TransCoderClient::SetOutputFile(int32_t fd)
 
 int32_t TransCoderClient::SetTransCoderCallback(const std::shared_ptr<TransCoderCallback> &callback)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_NO_MEMORY, "input param callback is nullptr.");
     CHECK_AND_RETURN_RET_LOG(listenerStub_ != nullptr, MSERR_NO_MEMORY, "listenerStub_ is nullptr.");
 

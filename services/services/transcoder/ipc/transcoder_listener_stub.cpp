@@ -62,29 +62,45 @@ int TransCoderListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, 
 
 void TransCoderListenerStub::OnError(int32_t errorCode, const std::string &errorMsg)
 {
-    if (callback_ != nullptr) {
-        callback_->OnError(errorCode, errorMsg);
+    std::shared_ptr<TransCoderCallback> cb;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        cb = callback_;
+    }
+    if (cb != nullptr) {
+        cb->OnError(errorCode, errorMsg);
     }
 
-    std::shared_ptr<MonitorClientObject> monitor = monitor_.lock();
+    std::shared_ptr<MonitorClientObject> monitor;
+    {
+        std::lock_guard<std::mutex> monitorLock(monitorMutex_);
+        monitor = monitor_.lock();
+    }
     CHECK_AND_RETURN(monitor != nullptr);
     (void)monitor->DisableMonitor();
 }
 
 void TransCoderListenerStub::OnInfo(int32_t type, int32_t extra)
 {
-    CHECK_AND_RETURN(callback_ != nullptr);
-    callback_->OnInfo(type, extra);
+    std::shared_ptr<TransCoderCallback> cb;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        cb = callback_;
+    }
+    CHECK_AND_RETURN(cb != nullptr);
+    cb->OnInfo(type, extra);
 }
 
 void TransCoderListenerStub::SetTransCoderCallback(const std::shared_ptr<TransCoderCallback> &callback)
 {
+    std::lock_guard<std::mutex> lock(callbackMutex_);
     callback_ = callback;
 }
 
 void TransCoderListenerStub::SetMonitor(const std::weak_ptr<MonitorClientObject> &monitor)
 {
     MEDIA_LOGI("SetMonitor");
+    std::lock_guard<std::mutex> monitorLock(monitorMutex_);
     monitor_ = monitor;
 }
 } // namespace Media

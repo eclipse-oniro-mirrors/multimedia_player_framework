@@ -220,6 +220,7 @@ private:
     std::unique_ptr<TaskQueue> taskQue_;
     static std::map<std::string, AvTransCoderTaskqFunc> taskQFuncs_;
     bool hasConfiged_ = false;
+    std:mutex eventCbMutex_;
 
     std::string srcUrl_ = "";
     struct AVFileDescriptor srcFd_;

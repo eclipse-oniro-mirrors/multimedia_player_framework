@@ -50,6 +50,7 @@ public:
 private:
     std::shared_ptr<ITransCoderService> transCoderService_ = nullptr;
     HiviewDFX::HiTraceId traceId_;
+    std::mutex mutex_;
 };
 } // namespace Media
 } // namespace OHOS
