@@ -246,7 +246,9 @@ void FuzzTestMediaServerManager(uint8_t *data, size_t size)
     if (data == nullptr || size < sizeof(int32_t)) {
         return;
     }
-
+    g_baseFuzzData = data;
+    g_baseFuzzSize = size;
+    g_baseFuzzPos = 0;
     MediaServerManagerFuzzer testMediaServerManager;
     return testMediaServerManager.FuzzMediaServerManagerAll(data, size);
 }
