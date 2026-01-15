@@ -82,6 +82,7 @@ void LppAudioStreamerListenerStub::OnInfo(AudioStreamerOnInfoType type,
 
 void LppAudioStreamerListenerStub::SetLppAudioStreamerCallback(const std::shared_ptr<AudioStreamerCallback> &callback)
 {
+    std::lock_guard<std::mutex> lock(aListenStubMutex_);
     callback_ = callback;
 }
 

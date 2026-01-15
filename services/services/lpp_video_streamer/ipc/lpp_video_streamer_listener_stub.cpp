@@ -83,6 +83,7 @@ void LppVideoStreamerListenerStub::OnInfo(VideoStreamerOnInfoType type,
 
 void LppVideoStreamerListenerStub::SetLppVideoStreamerCallback(const std::shared_ptr<VideoStreamerCallback> &callback)
 {
+    std::lock_guard<std::mutex> lock(vListenStubMutex_);
     callback_ = callback;
 }
 

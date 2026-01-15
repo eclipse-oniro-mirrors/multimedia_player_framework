@@ -33,6 +33,7 @@ public:
 
 private:
     std::shared_ptr<AudioStreamerCallback> callback_ = nullptr;
+    std::mutex aListenStubMutex_;
 };
 } // namespace Media
 } // namespace OHOS

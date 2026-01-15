@@ -76,6 +76,7 @@ public:
 
 private:
     LppAudioStreamerServiceStub();
+    std::mutex aServiceStubMutex_;
 
 public:
     int32_t Init(MessageParcel &data, MessageParcel &reply);
