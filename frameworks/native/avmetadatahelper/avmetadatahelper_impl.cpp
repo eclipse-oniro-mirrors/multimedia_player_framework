@@ -711,6 +711,7 @@ AVMetadataHelperImpl::~AVMetadataHelperImpl()
 
 int32_t AVMetadataHelperImpl::SetHelperCallback(const std::shared_ptr<HelperCallback> &callback)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGD("AVMetadataHelperImpl:0x%{public}06" PRIXPTR " SetHelperCallback in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, MSERR_SERVICE_DIED,
         "metadata helper service does not exist..");
@@ -751,6 +752,7 @@ void AVMetadataHelperImpl::ReportSceneCode(Scene scene)
 
 int32_t AVMetadataHelperImpl::SetSource(const std::string &uri, int32_t usage)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, MSERR_NO_MEMORY,
         "avmetadatahelper service does not exist..");
     CHECK_AND_RETURN_RET_LOG(!uri.empty(), MSERR_INVALID_VAL, "uri is empty.");
@@ -764,6 +766,7 @@ int32_t AVMetadataHelperImpl::SetSource(const std::string &uri, int32_t usage)
 
 int32_t AVMetadataHelperImpl::SetAVMetadataCaller(AVMetadataCaller caller)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, MSERR_NO_MEMORY,
         "avmetadatahelper service does not exist..");
     return avMetadataHelperService_->SetAVMetadataCaller(caller);
@@ -771,6 +774,7 @@ int32_t AVMetadataHelperImpl::SetAVMetadataCaller(AVMetadataCaller caller)
 
 int32_t AVMetadataHelperImpl::SetUrlSource(const std::string &uri, const std::map<std::string, std::string> &header)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, MSERR_NO_MEMORY,
         "avmetadatahelper service does not exist..");
     CHECK_AND_RETURN_RET_LOG(!uri.empty(), MSERR_INVALID_VAL, "uri is empty.");
@@ -801,7 +805,7 @@ int32_t AVMetadataHelperImpl::SetUrlSource(const std::string &uri, const std::ma
 
 int32_t AVMetadataHelperImpl::SetSource(int32_t fd, int64_t offset, int64_t size, int32_t usage)
 {
-    std::lock_guard<std::mutex> lock(releaseMutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, MSERR_NO_MEMORY,
         "avmetadatahelper service does not exist..");
     MEDIA_LOGI("Set file source fd: %{public}d, offset: %{public}" PRIu64 ", size: %{public}" PRIu64,
@@ -818,6 +822,7 @@ int32_t AVMetadataHelperImpl::SetSource(int32_t fd, int64_t offset, int64_t size
 
 int32_t AVMetadataHelperImpl::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGD("AVMetadataHelperImpl:0x%{public}06" PRIXPTR " SetSource in(dataSrc)", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(dataSrc != nullptr, MSERR_INVALID_VAL, "failed to create data source");
 
@@ -830,6 +835,7 @@ int32_t AVMetadataHelperImpl::SetSource(const std::shared_ptr<IMediaDataSource> 
 
 std::string AVMetadataHelperImpl::ResolveMetadata(int32_t key)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, "",
         "avmetadatahelper service does not exist.");
     concurrentWorkCount_++;
@@ -840,6 +846,7 @@ std::string AVMetadataHelperImpl::ResolveMetadata(int32_t key)
 
 std::unordered_map<int32_t, std::string> AVMetadataHelperImpl::ResolveMetadata()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, {},
         "avmetadatahelper service does not exist.");
     concurrentWorkCount_++;
@@ -850,6 +857,7 @@ std::unordered_map<int32_t, std::string> AVMetadataHelperImpl::ResolveMetadata()
 
 std::shared_ptr<Meta> AVMetadataHelperImpl::GetAVMetadata()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, nullptr,
         "avmetadatahelper service does not exist.");
     concurrentWorkCount_++;
@@ -860,7 +868,7 @@ std::shared_ptr<Meta> AVMetadataHelperImpl::GetAVMetadata()
 
 int32_t AVMetadataHelperImpl::CancelAllFetchFrames()
 {
-    std::shared_ptr<IAVMetadataHelperService> avMetadataHelperService =avMetadataHelperService_;
+    std::shared_ptr<IAVMetadataHelperService> avMetadataHelperService = avMetadataHelperService_;
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, MSERR_EXT_API9_OPERATE_NOT_PERMIT,
         "avmetadatahelper service does not exist.");
     concurrentWorkCount_++;
@@ -872,6 +880,7 @@ int32_t AVMetadataHelperImpl::CancelAllFetchFrames()
 
 std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchArtPicture()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, nullptr,
         "avmetadatahelper service does not exist.");
     concurrentWorkCount_++;
@@ -883,6 +892,7 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchArtPicture()
 std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
     int64_t timeUs, int32_t option, const PixelMapParams &param)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, nullptr,
         "avmetadatahelper service does not exist.");
 
@@ -994,6 +1004,7 @@ int32_t AVMetadataHelperImpl::FetchScaledFrameYuvs(const std::vector<int64_t>& t
 std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameBase(int64_t timeUs, int32_t option,
                                                                const PixelMapParams &param, int32_t scaleMode)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     std::shared_ptr<IAVMetadataHelperService> avMetadataHelperService = avMetadataHelperService_;
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService != nullptr, nullptr, "avmetadatahelper service does not exist.");
 
@@ -1065,6 +1076,7 @@ void AVMetadataHelperImpl::ScalePixelMapByMode(std::shared_ptr<PixelMap> &pixelM
 
 int32_t AVMetadataHelperImpl::GetTimeByFrameIndex(uint32_t index, uint64_t &time)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, 0, "avmetadatahelper service does not exist.");
     concurrentWorkCount_++;
     auto res = avMetadataHelperService_->GetTimeByFrameIndex(index, time);
@@ -1074,6 +1086,7 @@ int32_t AVMetadataHelperImpl::GetTimeByFrameIndex(uint32_t index, uint64_t &time
 
 int32_t AVMetadataHelperImpl::GetFrameIndexByTime(uint64_t time, uint32_t &index)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, 0, "avmetadatahelper service does not exist.");
     concurrentWorkCount_++;
     auto res = avMetadataHelperService_->GetFrameIndexByTime(time, index);
@@ -1083,7 +1096,7 @@ int32_t AVMetadataHelperImpl::GetFrameIndexByTime(uint64_t time, uint32_t &index
 
 void AVMetadataHelperImpl::Release()
 {
-    std::lock_guard<std::mutex> lock(releaseMutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Release", FAKE_POINTER(this));
     CHECK_AND_RETURN_LOG(avMetadataHelperService_ != nullptr, "avmetadatahelper service does not exist.");
     avMetadataHelperService_->Release();
