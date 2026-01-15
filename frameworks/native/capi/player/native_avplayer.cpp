@@ -1090,6 +1090,7 @@ void NativeAVPlayerCallback::OnSeiInfoCb(const int32_t extra, const Format &info
     CHECK_AND_RETURN_LOG(message != nullptr, "failed to new SeiMessageArray");
 
     if (seiMessageReceivedCallback_ == nullptr) {
+        delete message;
         return;
     }
 
