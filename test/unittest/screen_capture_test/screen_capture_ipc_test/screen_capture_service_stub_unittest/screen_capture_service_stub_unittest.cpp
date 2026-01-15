@@ -23,8 +23,6 @@ using namespace OHOS::Media;
 
 namespace {
 constexpr int MAX_WINDOWS_LEN = 1000;
-constexpr int32_t FLIE_CREATE_FLAGS = 0777;
-static const std::string SCREEN_CAPTURE_ROOT_DIR = "/data/test/media/";
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureServiceStubTest"};
 }
 
