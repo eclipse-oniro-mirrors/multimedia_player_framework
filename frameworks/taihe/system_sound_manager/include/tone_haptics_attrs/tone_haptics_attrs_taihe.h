@@ -35,6 +35,9 @@ public:
     ::taihe::string GetUri();
     ::taihe::string GetTitle();
     ::taihe::string GetFileName();
+    ::taihe::string GetGentleUri();
+    ::taihe::string GetGentleTitle();
+    ::taihe::string GetGentFileName();
 
 private:
     bool CheckNativeToneHapticsAttrs();
