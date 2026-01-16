@@ -71,7 +71,8 @@ int32_t LppAudioStreamerServiceStub::Init()
         if (lppAudioPlayerServer_ == nullptr) {
             lppAudioPlayerServer_ = LppAudioStreamerServer::Create();
         }
-        CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_NO_MEMORY,"failed to create lppAudioStreamerServer_");
+        CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_NO_MEMORY,
+            "failed to create lppAudioStreamerServer_");
         if (framePacket_ == nullptr) {
             framePacket_ = OHOS::sptr<LppDataPacket>::MakeSptr();
             CHECK_AND_RETURN_RET_LOG(framePacket_ != nullptr, MSERR_NO_MEMORY, "failed to create framePacket_");

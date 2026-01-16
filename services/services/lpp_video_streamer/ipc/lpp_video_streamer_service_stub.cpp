@@ -72,7 +72,8 @@ int32_t LppVideoStreamerServiceStub::Init()
         if (lppVideoPlayerServer_ == nullptr) {
             lppVideoPlayerServer_ = LppVideoStreamerServer::Create();
         }
-        CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY,"failed to create lppVideoPlayerServer_");
+        CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY,
+            "failed to create lppVideoPlayerServer_");
         if (framePacket_ == nullptr) {
             framePacket_ = OHOS::sptr<LppDataPacket>::MakeSptr();
             CHECK_AND_RETURN_RET_LOG(framePacket_ != nullptr, MSERR_NO_MEMORY, "failed to create framePacket_");
