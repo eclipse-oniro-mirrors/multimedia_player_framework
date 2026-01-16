@@ -795,6 +795,7 @@ void AVTransCoderNapi::StateCallback(const std::string &state)
 
 void AVTransCoderNapi::SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref)
 {
+    std::lock_guard<std::mutex> lock(eventCbMutex_);
     eventCbMap_[callbackName] = ref;
     CHECK_AND_RETURN_LOG(transCoderCb_ != nullptr, "transCoderCb_ is nullptr!");
     auto napiCb = std::static_pointer_cast<AVTransCoderCallback>(transCoderCb_);
@@ -803,6 +804,7 @@ void AVTransCoderNapi::SetCallbackReference(const std::string &callbackName, std
 
 void AVTransCoderNapi::CancelCallbackReference(const std::string &callbackName)
 {
+    std::lock_guard<std::mutex> lock(eventCbMutex_);
     CHECK_AND_RETURN_LOG(transCoderCb_ != nullptr, "transCoderCb_ is nullptr!");
     auto napiCb = std::static_pointer_cast<AVTransCoderCallback>(transCoderCb_);
     napiCb->CancelCallbackReference(callbackName);

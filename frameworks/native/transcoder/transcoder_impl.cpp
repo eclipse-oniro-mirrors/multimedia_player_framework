@@ -37,6 +37,7 @@ std::shared_ptr<TransCoder> TransCoderFactory::CreateTransCoder()
 
 int32_t TransCoderImpl::Init()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     HiviewDFX::HiTraceChain::SetId(traceId_);
     transCoderService_ = MediaServiceFactory::GetInstance().CreateTransCoderService();
     CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr, MSERR_NO_MEMORY, "failed to create transcoder service");
@@ -51,6 +52,7 @@ TransCoderImpl::TransCoderImpl()
 
 TransCoderImpl::~TransCoderImpl()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_LOG(transCoderService_ != nullptr, "0x%{public}06" PRIXPTR " Inst destroy", FAKE_POINTER(this));
     (void)MediaServiceFactory::GetInstance().DestroyTransCoderService(transCoderService_);
     transCoderService_ = nullptr;
@@ -60,6 +62,7 @@ TransCoderImpl::~TransCoderImpl()
 
 int32_t TransCoderImpl::SetVideoEncoder(VideoCodecFormat encoder)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("TransCoderImpl:0x%{public}06" PRIXPTR " SetVideoEncoder in, encoder is %{public}d",
         FAKE_POINTER(this), encoder);
     CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr, MSERR_INVALID_OPERATION,
@@ -69,6 +72,7 @@ int32_t TransCoderImpl::SetVideoEncoder(VideoCodecFormat encoder)
 
 int32_t TransCoderImpl::SetVideoSize(int32_t width, int32_t height)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("TransCoderImpl:0x%{public}06" PRIXPTR " SetVideoSize in, width is %{public}d, height is %{public}d",
         FAKE_POINTER(this), width, height);
     CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr, MSERR_INVALID_OPERATION,
@@ -78,6 +82,7 @@ int32_t TransCoderImpl::SetVideoSize(int32_t width, int32_t height)
 
 int32_t TransCoderImpl::SetVideoEncodingBitRate(int32_t bitRate)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("TransCoderImpl:0x%{public}06" PRIXPTR " SetVideoEncodingBitRate in, bitRate is %{public}d",
         FAKE_POINTER(this), bitRate);
     CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr, MSERR_INVALID_OPERATION,
@@ -87,6 +92,7 @@ int32_t TransCoderImpl::SetVideoEncodingBitRate(int32_t bitRate)
 
 int32_t TransCoderImpl::SetColorSpace(TranscoderColorSpace colorSpaceFormat)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("TransCoderImpl:0x%{public}06" PRIXPTR " SetColorSpace in, colorSpace is %{public}d",
         FAKE_POINTER(this), static_cast<int32_t>(colorSpaceFormat));
     CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr, MSERR_INVALID_OPERATION,
@@ -96,6 +102,7 @@ int32_t TransCoderImpl::SetColorSpace(TranscoderColorSpace colorSpaceFormat)
 
 int32_t TransCoderImpl::SetEnableBFrame(bool enableBFrame)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("TransCoderImpl:0x%{public}06" PRIXPTR " SetEnableBFrame in, enableBFrame is %{public}d",
         FAKE_POINTER(this), static_cast<int32_t>(enableBFrame));
     CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr, MSERR_INVALID_OPERATION,
@@ -105,6 +112,7 @@ int32_t TransCoderImpl::SetEnableBFrame(bool enableBFrame)
 
 int32_t TransCoderImpl::SetAudioEncoder(AudioCodecFormat encoder)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("TransCoderImpl:0x%{public}06" PRIXPTR " SetAudioEncoder in, encoder is %{public}d",
         FAKE_POINTER(this), encoder);
     CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr, MSERR_INVALID_OPERATION,
@@ -114,6 +122,7 @@ int32_t TransCoderImpl::SetAudioEncoder(AudioCodecFormat encoder)
 
 int32_t TransCoderImpl::SetAudioEncodingBitRate(int32_t bitRate)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("TransCoderImpl:0x%{public}06" PRIXPTR " SetAudioEncodingBitRate in, bitRate is %{public}d",
         FAKE_POINTER(this), bitRate);
     CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr, MSERR_INVALID_OPERATION,
@@ -123,6 +132,7 @@ int32_t TransCoderImpl::SetAudioEncodingBitRate(int32_t bitRate)
 
 int32_t TransCoderImpl::SetOutputFormat(OutputFormatType format)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("TransCoderImpl:0x%{public}06" PRIXPTR " SetOutputFormat in, format is %{public}d",
         FAKE_POINTER(this), format);
     CHECK_AND_RETURN_RET_LOG(format != FORMAT_DEFAULT, MSERR_INVALID_VAL, "format is invalid");
@@ -133,6 +143,7 @@ int32_t TransCoderImpl::SetOutputFormat(OutputFormatType format)
 
 int32_t TransCoderImpl::SetInputFile(int32_t fd, int64_t offset, int64_t size)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("TransCoderImpl:0x%{public}06" PRIXPTR " SetInputFile in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr, MSERR_INVALID_OPERATION,
         "transcoder service does not exist..");
@@ -141,6 +152,7 @@ int32_t TransCoderImpl::SetInputFile(int32_t fd, int64_t offset, int64_t size)
 
 int32_t TransCoderImpl::SetOutputFile(int32_t fd)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("TransCoderImpl:0x%{public}06" PRIXPTR " SetOutputFile in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr, MSERR_INVALID_OPERATION,
         "transcoder service does not exist..");
@@ -149,6 +161,7 @@ int32_t TransCoderImpl::SetOutputFile(int32_t fd)
 
 int32_t TransCoderImpl::SetTransCoderCallback(const std::shared_ptr<TransCoderCallback> &callback)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("TransCoderImpl:0x%{public}06" PRIXPTR " SetTransCoderCallback in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_INVALID_VAL, "input callback is nullptr.");
     CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr, MSERR_INVALID_OPERATION,
@@ -158,6 +171,7 @@ int32_t TransCoderImpl::SetTransCoderCallback(const std::shared_ptr<TransCoderCa
 
 int32_t TransCoderImpl::Prepare()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("TransCoderImpl:0x%{public}06" PRIXPTR " Prepare in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr, MSERR_INVALID_OPERATION,
         "transcoder service does not exist..");
@@ -166,6 +180,7 @@ int32_t TransCoderImpl::Prepare()
 
 int32_t TransCoderImpl::Start()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("TransCoderImpl:0x%{public}06" PRIXPTR " Start in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr, MSERR_INVALID_OPERATION,
         "transcoder service does not exist..");
@@ -174,6 +189,7 @@ int32_t TransCoderImpl::Start()
 
 int32_t TransCoderImpl::Pause()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("TransCoderImpl:0x%{public}06" PRIXPTR " Pause in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr, MSERR_INVALID_OPERATION,
         "transcoder service does not exist..");
@@ -182,6 +198,7 @@ int32_t TransCoderImpl::Pause()
 
 int32_t TransCoderImpl::Resume()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("TransCoderImpl:0x%{public}06" PRIXPTR " Resume in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr, MSERR_INVALID_OPERATION,
         "transcoder service does not exist..");
@@ -190,6 +207,7 @@ int32_t TransCoderImpl::Resume()
 
 int32_t TransCoderImpl::Cancel()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("TransCoderImpl:0x%{public}06" PRIXPTR " Cancel in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr, MSERR_INVALID_OPERATION,
         "transcoder service does not exist..");
@@ -198,6 +216,7 @@ int32_t TransCoderImpl::Cancel()
 
 int32_t TransCoderImpl::Release()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("TransCoderImpl:0x%{public}06" PRIXPTR " Release in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr, MSERR_INVALID_OPERATION,
         "transcoder service does not exist..");

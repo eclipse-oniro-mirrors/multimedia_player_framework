@@ -35,6 +35,8 @@ public:
 private:
     std::shared_ptr<TransCoderCallback> callback_ = nullptr;
     std::weak_ptr<MonitorClientObject> monitor_;
+    std::mutex callbackMutex_;
+    std::mutex monitorMutex_;
 };
 } // namespace Media
 } // namespace OHOS

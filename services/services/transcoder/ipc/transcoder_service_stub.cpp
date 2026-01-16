@@ -47,6 +47,7 @@ TransCoderServiceStub::TransCoderServiceStub()
 
 TransCoderServiceStub::~TransCoderServiceStub()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     (void)CancellationMonitor(pid_);
     if (transCoderServer_ != nullptr) {
         (void)transCoderServer_->Release();
@@ -57,6 +58,7 @@ TransCoderServiceStub::~TransCoderServiceStub()
 
 int32_t TransCoderServiceStub::Init()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     transCoderServer_ = TransCoderServer::Create();
     CHECK_AND_RETURN_RET_LOG(transCoderServer_ != nullptr, MSERR_NO_MEMORY, "failed to create TransCoderServer");
 
