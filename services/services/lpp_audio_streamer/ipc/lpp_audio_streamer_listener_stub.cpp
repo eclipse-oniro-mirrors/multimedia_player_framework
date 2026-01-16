@@ -68,6 +68,7 @@ int LppAudioStreamerListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &
 
 void LppAudioStreamerListenerStub::OnError(int32_t errorCode, const std::string &errorMsg)
 {
+    std::lock_guard<std::mutex> lock(aListenStubMutex_);
     CHECK_AND_RETURN_LOG(callback_ != nullptr, "callback_ is nullptr");
     callback_->OnError(errorCode, errorMsg);
 }
@@ -75,6 +76,7 @@ void LppAudioStreamerListenerStub::OnError(int32_t errorCode, const std::string 
 void LppAudioStreamerListenerStub::OnInfo(AudioStreamerOnInfoType type,
     int32_t extra, const Format &infoBody)
 {
+    std::lock_guard<std::mutex> lock(aListenStubMutex_);
     CHECK_AND_RETURN_LOG(callback_ != nullptr, "callback_ is nullptr");
     callback_->OnInfo(type, extra, infoBody);
 }

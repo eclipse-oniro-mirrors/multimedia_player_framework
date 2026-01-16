@@ -51,6 +51,7 @@ LppAudioStreamerServiceStub::LppAudioStreamerServiceStub()
 
 LppAudioStreamerServiceStub::~LppAudioStreamerServiceStub()
 {
+    std::lock_guard<std::mutex> lock(aServiceStubMutex_);
     if (lppAudioPlayerServer_ != nullptr) {
         auto task = std::make_shared<TaskHandler<void>>([this] {
             (void)lppAudioPlayerServer_->Release();
@@ -70,18 +71,13 @@ int32_t LppAudioStreamerServiceStub::Init()
         if (lppAudioPlayerServer_ == nullptr) {
             lppAudioPlayerServer_ = LppAudioStreamerServer::Create();
         }
-    }
-    
-    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_NO_MEMORY,
+        CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_NO_MEMORY,
         "failed to create lppAudioStreamerServer_");
-    {
-        std::lock_guard<std::mutex> lock(aServiceStubMutex_);
         if (framePacket_ == nullptr) {
             framePacket_ = OHOS::sptr<LppDataPacket>::MakeSptr();
             CHECK_AND_RETURN_RET_LOG(framePacket_ != nullptr, MSERR_NO_MEMORY, "failed to create framePacket_");
         }
-    }
-    
+    }   
     SetPlayerFuncs();
     return MSERR_OK;
 }
@@ -146,17 +142,12 @@ int LppAudioStreamerServiceStub::OnRemoteRequest(
         MEDIA_LOGE("Invalid descriptor");
         return MSERR_INVALID_OPERATION;
     }
-    std::map<uint32_t, std::pair<std::string, PlayerStubFunc>> playerFuncsTmp;
-    {
-        std::lock_guard<std::mutex> lock(aServiceStubMutex_);
-        playerFuncsTmp = playerFuncs_;
-    }
-
-    auto itFunc = playerFuncsTmp.find(code);
-    if (itFunc != playerFuncsTmp.end()) {
+    auto itFunc = playerFuncs_.find(code);
+    if (itFunc != playerFuncs_.end()) {
         auto memberFunc = itFunc->second.second;
         auto funcName = itFunc->second.first;
         if (memberFunc != nullptr) {
+            std::lock_guard<std::mutex> lock(aServiceStubMutex_);
             auto task = std::make_shared<TaskHandler<int>>([&memberFunc, &data, &reply, &funcName] {
                 MediaTrace trace(funcName);
                 return memberFunc(data, reply);
@@ -314,7 +305,6 @@ int32_t LppAudioStreamerServiceStub::Reset(MessageParcel &data, MessageParcel &r
 
 int32_t LppAudioStreamerServiceStub::Release()
 {
-    std::lock_guard<std::mutex> lock(aServiceStubMutex_);
     CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     lppAudioPlayerServer_->Release();
     lppAudioPlayerServer_ = nullptr;
@@ -404,11 +394,7 @@ int32_t LppAudioStreamerServiceStub::SetListenerObject(const sptr<IRemoteObject>
 
     std::shared_ptr<AudioStreamerCallback> callback = std::make_shared<LppAudioStreamerListenerCallback>(listener);
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_NO_MEMORY, "failed to new LppAudioStreamListenerCallback");
-    {
-        std::lock_guard<std::mutex> lock(aServiceStubMutex_);
-        playerCallback_ = callback;
-    }
-    
+    playerCallback_ = callback;
     return MSERR_OK;
 }
 

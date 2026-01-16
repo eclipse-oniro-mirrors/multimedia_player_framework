@@ -52,6 +52,7 @@ LppVideoStreamerServiceStub::LppVideoStreamerServiceStub()
 
 LppVideoStreamerServiceStub::~LppVideoStreamerServiceStub()
 {
+    std::lock_guard<std::mutex> lock(vServiceStubMutex_);
     if (lppVideoPlayerServer_ != nullptr) {
         auto task = std::make_shared<TaskHandler<void>>([this] {
             (void)lppVideoPlayerServer_->Release();
@@ -71,11 +72,8 @@ int32_t LppVideoStreamerServiceStub::Init()
         if (lppVideoPlayerServer_ == nullptr) {
             lppVideoPlayerServer_ = LppVideoStreamerServer::Create();
         }
-    }
-    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY,
+        CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY,
         "failed to create lppVideoPlayerServer_");
-    {
-        std::lock_guard<std::mutex> lock(vServiceStubMutex_);
         if (framePacket_ == nullptr) {
             framePacket_ = OHOS::sptr<LppDataPacket>::MakeSptr();
             CHECK_AND_RETURN_RET_LOG(framePacket_ != nullptr, MSERR_NO_MEMORY, "failed to create framePacket_");
@@ -160,16 +158,12 @@ int LppVideoStreamerServiceStub::OnRemoteRequest(
         MEDIA_LOGE("Invalid descriptor");
         return MSERR_INVALID_OPERATION;
     }
-    std::map<uint32_t, std::pair<std::string, PlayerStubFunc>> playerFuncsTmp;
-    {
-        std::lock_guard<std::mutex> lock(vServiceStubMutex_);
-        playerFuncsTmp = playerFuncs_;
-    }
-    auto itFunc = playerFuncsTmp.find(code);
-    if (itFunc != playerFuncsTmp.end()) {
+    auto itFunc = playerFuncs_.find(code);
+    if (itFunc != playerFuncs_.end()) {
         auto memberFunc = itFunc->second.second;
         auto funcName = itFunc->second.first;
         if (memberFunc != nullptr) {
+            std::lock_guard<std::mutex> lock(vServiceStubMutex_);
             auto task = std::make_shared<TaskHandler<int>>([&memberFunc, &data, &reply, &funcName] {
                 MediaTrace trace(funcName);
                 return memberFunc(data, reply);
@@ -323,7 +317,6 @@ int32_t LppVideoStreamerServiceStub::Reset(MessageParcel &data, MessageParcel &r
 
 int32_t LppVideoStreamerServiceStub::Release()
 {
-    std::lock_guard<std::mutex> lock(vServiceStubMutex_);
     CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
     lppVideoPlayerServer_->Release();
     lppVideoPlayerServer_ = nullptr;
@@ -483,11 +476,7 @@ int32_t LppVideoStreamerServiceStub::SetListenerObject(const sptr<IRemoteObject>
 
     std::shared_ptr<VideoStreamerCallback> callback = std::make_shared<LppVideoStreamerListenerCallback>(listener);
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_NO_MEMORY, "failed to new LppAudioStreamListenerCallback");
-    {
-        std::lock_guard<std::mutex> lock(vServiceStubMutex_);
-        playerCallback_ = callback;
-    }
-    
+    playerCallback_ = callback;
     return MSERR_OK;
 }
 
