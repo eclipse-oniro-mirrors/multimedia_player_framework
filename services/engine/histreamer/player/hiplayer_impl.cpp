@@ -1621,7 +1621,7 @@ Status HiPlayerImpl::HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs)
     MEDIA_LOG_I_SHORT("doSeek SEEK_CLOSEST");
     isSeekClosest_.store(true);
     if (videoDecoder_ != nullptr) {
-        videoDecoder_->SetSeekTime(seekTimeUs + mediaStartPts_, PlayerSeekMode::SEEK_CLOSEST);
+        videoDecoder_->SetSeekTime(seekTimeUs + mediaStartPts_, PlayerSeekMode::SEEK_CLOSEST, true);
     }
     if (audioSink_ != nullptr) {
         audioSink_->SetIsCancelStart(true);
@@ -1641,6 +1641,9 @@ Status HiPlayerImpl::HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs)
         if (timeout && videoDecoder_ != nullptr) {
             videoDecoder_->ResetSeekInfo();
         }
+    }
+    if (videoDecoder_ != nullptr) {
+        videoDecoder_->ClosestSeekDone();
     }
     if (audioSink_ != nullptr) {
         audioSink_->SetIsCancelStart(false);
