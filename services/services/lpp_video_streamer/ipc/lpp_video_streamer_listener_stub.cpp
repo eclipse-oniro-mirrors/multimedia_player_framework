@@ -68,6 +68,7 @@ int LppVideoStreamerListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &
 
 void LppVideoStreamerListenerStub::OnError(int32_t errorCode, const std::string &errorMsg)
 {
+    std::lock_guard<std::mutex> lock(vListenStubMutex_);
     if (callback_ != nullptr) {
         callback_->OnError(errorCode, errorMsg);
     }
@@ -76,6 +77,7 @@ void LppVideoStreamerListenerStub::OnError(int32_t errorCode, const std::string 
 void LppVideoStreamerListenerStub::OnInfo(VideoStreamerOnInfoType type,
     int32_t extra, const Format &infoBody)
 {
+    std::lock_guard<std::mutex> lock(vListenStubMutex_);
     CHECK_AND_RETURN_LOG(callback_!=nullptr, "callback_ is nullptr");
     callback_->OnInfo(type, extra, infoBody);
 }
@@ -83,6 +85,7 @@ void LppVideoStreamerListenerStub::OnInfo(VideoStreamerOnInfoType type,
 
 void LppVideoStreamerListenerStub::SetLppVideoStreamerCallback(const std::shared_ptr<VideoStreamerCallback> &callback)
 {
+    std::lock_guard<std::mutex> lock(vListenStubMutex_);
     callback_ = callback;
 }
 

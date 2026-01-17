@@ -52,6 +52,7 @@ LppVideoStreamerServiceStub::LppVideoStreamerServiceStub()
 
 LppVideoStreamerServiceStub::~LppVideoStreamerServiceStub()
 {
+    std::lock_guard<std::mutex> lock(vServiceStubMutex_);
     if (lppVideoPlayerServer_ != nullptr) {
         auto task = std::make_shared<TaskHandler<void>>([this] {
             (void)lppVideoPlayerServer_->Release();
@@ -66,14 +67,17 @@ LppVideoStreamerServiceStub::~LppVideoStreamerServiceStub()
 
 int32_t LppVideoStreamerServiceStub::Init()
 {
-    if (lppVideoPlayerServer_ == nullptr) {
-        lppVideoPlayerServer_ = LppVideoStreamerServer::Create();
-    }
-    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY,
-        "failed to create lppVideoPlayerServer_");
-    if (framePacket_ == nullptr) {
-        framePacket_ = OHOS::sptr<LppDataPacket>::MakeSptr();
-        CHECK_AND_RETURN_RET_LOG(framePacket_ != nullptr, MSERR_NO_MEMORY, "failed to create framePacket_");
+    {
+        std::lock_guard<std::mutex> lock(vServiceStubMutex_);
+        if (lppVideoPlayerServer_ == nullptr) {
+            lppVideoPlayerServer_ = LppVideoStreamerServer::Create();
+        }
+        CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_NO_MEMORY,
+            "failed to create lppVideoPlayerServer_");
+        if (framePacket_ == nullptr) {
+            framePacket_ = OHOS::sptr<LppDataPacket>::MakeSptr();
+            CHECK_AND_RETURN_RET_LOG(framePacket_ != nullptr, MSERR_NO_MEMORY, "failed to create framePacket_");
+        }
     }
     SetPlayerFuncs();
     return MSERR_OK;
@@ -159,6 +163,7 @@ int LppVideoStreamerServiceStub::OnRemoteRequest(
         auto memberFunc = itFunc->second.second;
         auto funcName = itFunc->second.first;
         if (memberFunc != nullptr) {
+            std::lock_guard<std::mutex> lock(vServiceStubMutex_);
             auto task = std::make_shared<TaskHandler<int>>([&memberFunc, &data, &reply, &funcName] {
                 MediaTrace trace(funcName);
                 return memberFunc(data, reply);
@@ -471,7 +476,6 @@ int32_t LppVideoStreamerServiceStub::SetListenerObject(const sptr<IRemoteObject>
 
     std::shared_ptr<VideoStreamerCallback> callback = std::make_shared<LppVideoStreamerListenerCallback>(listener);
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_NO_MEMORY, "failed to new LppAudioStreamListenerCallback");
-
     playerCallback_ = callback;
     return MSERR_OK;
 }

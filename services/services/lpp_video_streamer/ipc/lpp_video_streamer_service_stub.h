@@ -90,6 +90,7 @@ public:
 
 private:
     LppVideoStreamerServiceStub();
+    std::mutex vServiceStubMutex_;
 
 public:
     int32_t Init(MessageParcel &data, MessageParcel &reply);

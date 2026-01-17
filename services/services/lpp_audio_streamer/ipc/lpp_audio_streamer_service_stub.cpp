@@ -51,6 +51,7 @@ LppAudioStreamerServiceStub::LppAudioStreamerServiceStub()
 
 LppAudioStreamerServiceStub::~LppAudioStreamerServiceStub()
 {
+    std::lock_guard<std::mutex> lock(aServiceStubMutex_);
     if (lppAudioPlayerServer_ != nullptr) {
         auto task = std::make_shared<TaskHandler<void>>([this] {
             (void)lppAudioPlayerServer_->Release();
@@ -65,14 +66,17 @@ LppAudioStreamerServiceStub::~LppAudioStreamerServiceStub()
 
 int32_t LppAudioStreamerServiceStub::Init()
 {
-    if (lppAudioPlayerServer_ == nullptr) {
-        lppAudioPlayerServer_ = LppAudioStreamerServer::Create();
-    }
-    CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_NO_MEMORY,
-        "failed to create lppAudioStreamerServer_");
-    if (framePacket_ == nullptr) {
-        framePacket_ = OHOS::sptr<LppDataPacket>::MakeSptr();
-        CHECK_AND_RETURN_RET_LOG(framePacket_ != nullptr, MSERR_NO_MEMORY, "failed to create framePacket_");
+    {
+        std::lock_guard<std::mutex> lock(aServiceStubMutex_);
+        if (lppAudioPlayerServer_ == nullptr) {
+            lppAudioPlayerServer_ = LppAudioStreamerServer::Create();
+        }
+        CHECK_AND_RETURN_RET_LOG(lppAudioPlayerServer_ != nullptr, MSERR_NO_MEMORY,
+            "failed to create lppAudioStreamerServer_");
+        if (framePacket_ == nullptr) {
+            framePacket_ = OHOS::sptr<LppDataPacket>::MakeSptr();
+            CHECK_AND_RETURN_RET_LOG(framePacket_ != nullptr, MSERR_NO_MEMORY, "failed to create framePacket_");
+        }
     }
     SetPlayerFuncs();
     return MSERR_OK;
@@ -143,6 +147,7 @@ int LppAudioStreamerServiceStub::OnRemoteRequest(
         auto memberFunc = itFunc->second.second;
         auto funcName = itFunc->second.first;
         if (memberFunc != nullptr) {
+            std::lock_guard<std::mutex> lock(aServiceStubMutex_);
             auto task = std::make_shared<TaskHandler<int>>([&memberFunc, &data, &reply, &funcName] {
                 MediaTrace trace(funcName);
                 return memberFunc(data, reply);
@@ -389,7 +394,6 @@ int32_t LppAudioStreamerServiceStub::SetListenerObject(const sptr<IRemoteObject>
 
     std::shared_ptr<AudioStreamerCallback> callback = std::make_shared<LppAudioStreamerListenerCallback>(listener);
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_NO_MEMORY, "failed to new LppAudioStreamListenerCallback");
-
     playerCallback_ = callback;
     return MSERR_OK;
 }
