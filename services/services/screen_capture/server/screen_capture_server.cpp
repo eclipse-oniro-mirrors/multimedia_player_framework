@@ -84,7 +84,6 @@ static const std::string VIRTUAL_SCREENAME_SCREEN_CAPTRURE = "screeen_capture";
 static const std::string VIRTUAL_SCREENAME_SCREEN_CAPTRURE_FILE = "screeen_capture_file";
 #ifdef PC_STANDARD
 static const std::string SELECT_ABILITY_NAME = "SelectWindowAbility";
-static const int32_t SELECT_WINDOW_MISSION_ID_NUM_MAX = 2;
 static const std::string PERM_CUST_SCR_REC = "ohos.permission.CUSTOM_SCREEN_RECORDING";
 static const std::string TIMEOUT_SCREENOFF_DISABLE_LOCK = "ohos.permission.TIMEOUT_SCREENOFF_DISABLE_LOCK";
 #endif
@@ -126,6 +125,13 @@ template <typename T> static std::string JoinVector(const std::vector<T> &vec, c
         }
     }
     return oss.str();
+}
+
+static std::string JsonToString(const Json::Value &root)
+{
+    Json::StreamWriterBuilder builder;
+    std::string comStr = Json::writeString(builder, root);
+    return comStr;
 }
 
 void NotificationSubscriber::OnConnected()
@@ -914,7 +920,7 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
     MEDIA_LOGI("ReportAVScreenCaptureUserChoice captureState_ is %{public}d", server->captureState_);
 
     Json::Value root;
-#ifdef PC_STANDARD
+#ifdef SUPPORT_SCREEN_CAPTURE_PICKER
     if (server->IsPickerPopUp() && server->isPresentPicker_ && server->captureState_ == AVScreenCaptureState::STARTED) {
         return server->HandlePresentPickerWindowCase(root, content);
     }
@@ -1064,11 +1070,13 @@ void ScreenCaptureServer::HandleSetDisplayIdAndMissionId(Json::Value &root)
 
 int32_t ScreenCaptureServer::PresentPicker()
 {
+#ifdef SUPPORT_SCREEN_CAPTURE_PICKER
 #ifdef PC_STANDARD
     if (!IsPickerPopUp()) {
         MEDIA_LOGE("PresentPicker not support picker.");
         return MSERR_INVALID_OPERATION;
     }
+endif
     if (captureState_ != AVScreenCaptureState::STARTED) {
         MEDIA_LOGE("PresentPicker captureState_ is not STARTED, not allowed.");
         return MSERR_INVALID_OPERATION;
@@ -1078,7 +1086,7 @@ int32_t ScreenCaptureServer::PresentPicker()
     std::lock_guard<std::mutex> lock(mutex_);
     isPresentPicker_ = true;
     isPresentPickerPopWindow_ = true;
-    int32_t ret = StartPrivacyWindow();
+    int32_t ret = StartPicker();
     return ret;
 #endif
     return MSERR_INVALID_OPERATION;
@@ -1790,7 +1798,7 @@ int32_t ScreenCaptureServer::RequestUserPrivacyAuthority(bool &isSkipPrivacyWind
             MEDIA_LOGI("ScreenCaptureServer::RequestUserPrivacyAuthority skip privacy window");
             return MSERR_OK;
         }
-        return StartPrivacyWindow();
+        return StartAuthWindow();
     }
 
     MEDIA_LOGI("privacy notification window not support, go on to check CAPTURE_SCREEN permission");
@@ -2371,7 +2379,7 @@ int32_t ScreenCaptureServer::InitAudioCap(AudioCaptureInfo audioInfo)
         captureConfig_.audioInfo.innerCapInfo = audioInfo;
         avType_ = (avType_ == AVScreenCaptureAvType::INVALID_TYPE) ? AVScreenCaptureAvType::AUDIO_TYPE :
             AVScreenCaptureAvType::AV_TYPE;
-#ifdef PC_STANDARD
+#ifdef SUPPORT_SCREEN_CAPTURE_PICKER
         showShareSystemAudioBox_ = true;
         MEDIA_LOGI("InitAudioCap set showShareSystemAudioBox true.");
 #endif
@@ -2663,16 +2671,70 @@ int32_t ScreenCaptureServer::RegisterServerCallbacks()
     return MSERR_OK;
 }
 
-#ifdef PC_STANDARD
+void ScreenCaptureServer::BuildCommonParams(Json::Value &root)
+{
+    root["ability.want.params.uiExtensionType"] = "sys/commonUI";
+    root["sessionId"] = std::to_string(sessionId_);
+    root["callerUid"] = std::to_string(appInfo_.appUid);
+    root["appLabel"] = callingLabel_;
+    root["showSensitiveCheckBox"] = std::to_string(static_cast<int>(showSensitiveCheckBox_));
+    root["checkBoxSelected"] = std::to_string(static_cast<int>(checkBoxSelected_));
+}
+ 
+#ifdef SUPPORT_SCREEN_CAPTURE_PICKER
 bool ScreenCaptureServer::CheckCaptureSpecifiedWindowForSelectWindow()
 {
-    if (captureConfig_.captureMode == CAPTURE_SPECIFIED_WINDOW &&
-        captureConfig_.videoInfo.videoCapInfo.taskIDs.size() < SELECT_WINDOW_MISSION_ID_NUM_MAX) {
-            return true;
+    constexpr size_t taskIdNumMax = 2;
+    return captureConfig_.captureMode == CAPTURE_SPECIFIED_WINDOW &&
+        captureConfig_.videoInfo.videoCapInfo.taskIDs.size() < taskIdNumMax;
+}
+ 
+bool ScreenCaptureServer::IsPickerPopUp()
+{
+    if (captureConfig_.strategy.pickerPopUp == AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_ENABLE) {
+        return true;
     }
+#ifdef PC_STANDARD
+    if (captureConfig_.strategy.pickerPopUp == AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_DISABLE) {
+        return false;
+    }
+    return !isRegionCapture_ &&
+           (captureConfig_.captureMode == CAPTURE_SPECIFIED_SCREEN || CheckCaptureSpecifiedWindowForSelectWindow());
+#else
     return false;
+#endif
 }
 
+int32_t ScreenCaptureServer::StartPicker()
+{
+    MEDIA_LOGI("StartPicker");
+    isRegionCapture_ = false;
+#ifdef PC_STANDARD
+    AAFwk::Want want;
+    AppExecFwk::ElementName element("", GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY], SELECT_ABILITY_NAME);
+    want.SetElement(element);
+    want.SetParam("appLabel", callingLabel_);
+    want.SetParam("sessionId", sessionId_);
+    want.SetParam("showSensitiveCheckBox", showSensitiveCheckBox_);
+    want.SetParam("checkBoxSelected", checkBoxSelected_);
+    want.SetParam("showShareSystemAudioBox", showShareSystemAudioBox_);
+    want.SetParam("excludedWindowIDs", JoinVector(excludedWindowIDsVec_));
+    want.SetParam("pickerMode", static_cast<int>(pickerMode_));
+    SendConfigToUIParams(want);
+    auto ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want);
+    MEDIA_LOGI("StartPicker ret=%{public}d", ret);
+    return ret;
+#elif defined(SUPPORT_PICKER_PHONE_PAD)
+    Json::Value root;
+    BuildCommonParams(root);
+    BuildPickerParams(root);
+    return StartPrivacyWindow(JsonToString(root));
+#else
+    return ERR_INVALID_VALUE;
+#endif
+}
+
+#ifdef PC_STANDARD
 void ScreenCaptureServer::SendConfigToUIParams(AAFwk::Want &want)
 {
     if (displayIds_.size() > 1) {
@@ -2699,68 +2761,65 @@ void ScreenCaptureServer::SendConfigToUIParams(AAFwk::Want &want)
         want.SetParam("missionId", -1); // -1 无效值
     }
 }
+
+#elif defined(SUPPORT_PICKER_PHONE_PAD)
+void ScreenCaptureServer::BuildPickerParams(Json::Value &root)
+{
+    root["showShareSystemAudioBox"] = showShareSystemAudioBox_;
+    if (!excludedWindowIDsVec_.empty()) {
+        Json::Value excludedWindowIDs(Json::arrayValue);
+        for (const auto &windowId : excludedWindowIDsVec_) {
+            excludedWindowIDs.append(windowId);
+        }
+        root["excludedWindowIDs"] = excludedWindowIDs;
+    }
+    if (!displayIds_.empty()) {
+        Json::Value displayIds(Json::arrayValue);
+        for (const auto &displayId : displayIds_) {
+            displayIds.append(displayId);
+        }
+        root["displayIds"] = displayIds;
+    }
+    if (CheckCaptureSpecifiedWindowForSelectWindow() &&
+        captureConfig_.videoInfo.videoCapInfo.taskIDs.size() == 1) {
+        Json::Value missionIds(Json::arrayValue);
+        missionIds.append(captureConfig_.videoInfo.videoCapInfo.taskIDs.front());
+        root["missionIds"] = missionIds;
+    }
+    root["pickerMode"] = static_cast<int>(pickerMode_);
+}
+#endif
 #endif
 
-std::string ScreenCaptureServer::BuildCommandString()
+std::string ScreenCaptureServer::StartPrivacyWindow(const std::string &cmdStr)
 {
-    std::string comStr = "{\"ability.want.params.uiExtensionType\":\"sys/commonUI\",\"sessionId\":\"";
-    comStr += std::to_string(sessionId_);
-    comStr += "\",\"callerUid\":\"";
-    comStr += std::to_string(appInfo_.appUid);
-    comStr += "\",\"appLabel\":\"";
-    comStr += callingLabel_;
-    comStr += "\",\"showSensitiveCheckBox\":\"";
-    comStr += std::to_string(showSensitiveCheckBox_);
-    comStr += "\",\"checkBoxSelected\":\"";
-    comStr += std::to_string(checkBoxSelected_);
-    comStr += "\"}";
-    return comStr;
-}
-
-int32_t ScreenCaptureServer::StartPrivacyWindow()
-{
-    std::string comStr = BuildCommandString();
-
     AAFwk::Want want;
-    ErrCode ret = ERR_INVALID_VALUE;
-#ifdef PC_STANDARD
-    if (IsPickerPopUp()) {
-        isRegionCapture_ = false;
-        AppExecFwk::ElementName element("",
-            GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"],
-            SELECT_ABILITY_NAME); // DeviceID
-        want.SetElement(element);
-        want.SetParam("params", comStr);
-        want.SetParam("appLabel", callingLabel_);
-        want.SetParam("sessionId", sessionId_);
-        want.SetParam("showSensitiveCheckBox", showSensitiveCheckBox_);
-        want.SetParam("checkBoxSelected", checkBoxSelected_);
-        want.SetParam("showShareSystemAudioBox", showShareSystemAudioBox_);
-        want.SetParam("excludedWindowIDs", JoinVector(excludedWindowIDsVec_));
-        want.SetParam("pickerMode", static_cast<int>(pickerMode_));
-        SendConfigToUIParams(want);
-        ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want);
-        MEDIA_LOGI("StartAbility end %{public}d, DeviceType : PC", ret);
-    } else {
-        showShareSystemAudioBox_ = false;
-        want.SetElementName(GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionbundlename"],
-            GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionabilityname"]);
-        connection_ = sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(comStr));
-        ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,
-            nullptr, -1);
-        MEDIA_LOGI("ConnectServiceExtensionAbility end %{public}d, DeviceType : PC", ret);
-    }
-#else
     want.SetElementName(GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionbundlename"],
                         GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionabilityname"]);
-    connection_ = sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(comStr));
-    ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,
+    connection_ = sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(cmdStr));
+    auto ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,
         nullptr, -1);
-    MEDIA_LOGI("ConnectServiceExtensionAbility end %{public}d, Device : Phone", ret);
-#endif
+    MEDIA_LOGI("StartPrivacyWindow ret=%{public}d", ret);
     return ret;
 }
 
+int32_t ScreenCaptureServer::StartAuthWindow()
+{
+#ifdef SUPPORT_SCREEN_CAPTURE_PICKER
+    if (IsPickerPopUp()) {
+        return StartPicker();
+    }
+    showShareSystemAudioBox_ = false;
+    Json::Value root;
+    BuildCommonParams(root);
+    return StartPrivacyWindow(JsonToString(root));
+#else
+    Json::Value root;
+    BuildCommonParams(root);
+    return StartPrivacyWindow(JsonToString(root));
+#endif
+}
+ 
 int32_t ScreenCaptureServer::StartNotification()
 {
     int32_t result = NotificationHelper::SubscribeLocalLiveViewNotification(NOTIFICATION_SUBSCRIBER);
@@ -3233,18 +3292,6 @@ int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForWindowForHopper(const spt
     return MSERR_OK;
 }
 
-bool ScreenCaptureServer::IsPickerPopUp()
-{
-    if (captureConfig_.strategy.pickerPopUp == AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_ENABLE) {
-        return true;
-    }
-    if (captureConfig_.strategy.pickerPopUp == AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_DISABLE) {
-        return false;
-    }
-    return !isRegionCapture_ &&
-           (captureConfig_.captureMode == CAPTURE_SPECIFIED_SCREEN || CheckCaptureSpecifiedWindowForSelectWindow());
-}
-
 void ScreenCaptureServer::SetTimeoutScreenoffDisableLock(bool lockScreen)
 {
     MEDIA_LOGI("SetTimeoutScreenoffDisableLock Start lockScreen %{public}d", lockScreen);
@@ -3654,7 +3701,7 @@ int32_t ScreenCaptureServer::RemoveWhiteListWindows(const std::vector<uint64_t> 
 
 int32_t ScreenCaptureServer::ExcludePickerWindows(std::vector<int32_t> &windowIDsVec)
 {
-#ifdef PC_STANDARD
+#ifdef SUPPORT_SCREEN_CAPTURE_PICKER
     MEDIA_LOGD("ScreenCaptureServer::ExcludePickerWindows start");
     excludedWindowIDsVec_.clear();
     for (auto id : windowIDsVec) {
@@ -3670,7 +3717,7 @@ int32_t ScreenCaptureServer::ExcludePickerWindows(std::vector<int32_t> &windowID
 
 int32_t ScreenCaptureServer::SetPickerMode(PickerMode pickerMode)
 {
-#ifdef PC_STANDARD
+#ifdef SUPPORT_SCREEN_CAPTURE_PICKER
     MEDIA_LOGD("ScreenCaptureServer::SetPickerMode");
     pickerMode_ = pickerMode;
     return MSERR_OK;
@@ -4428,34 +4475,25 @@ bool ScreenCaptureServer::DestroyPopWindow()
         MEDIA_LOGI("window not pop up, no need to destroy.");
         return true;
     }
-#ifdef PC_STANDARD
+#ifdef defined(PC_STANDARD) && defined(SUPPORT_SCREEN_CAPTURE_PICKER)
     if (IsPickerPopUp()) {
         MEDIA_LOGI("DestroyPopWindow end, type: picker, deviceType: PC.");
         ErrCode ret = ERR_INVALID_VALUE;
         AAFwk::Want want;
-        AppExecFwk::ElementName element("",
-            GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"],
-            SELECT_ABILITY_NAME); // DeviceID
+        AppExecFwk::ElementName element("", GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY], SELECT_ABILITY_NAME);
         want.SetElement(element);
         want.SetParam("appLabel", callingLabel_);
         want.SetParam("sessionId", sessionId_);
         want.SetParam("terminateSelf", true); // inform picker to terminateSelf
-        SendConfigToUIParams(want);
         ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want);
         MEDIA_LOGI("Destroy picker end %{public}d, DeviceType: PC", ret);
         return ret == ERR_OK;
-    } else {
-        if (connection_ != nullptr) {
-            MEDIA_LOGI("DestroyPopWindow close dialog, deviceType: PC.");
-            return connection_->CloseDialog();
-        }
-    }
-#else
-    if (connection_ != nullptr) {
-        MEDIA_LOGI("DestroyPopWindow close dialog, deviceType: Phone.");
-        return connection_->CloseDialog();
     }
 #endif
+    if (connection_ != nullptr) {
+        MEDIA_LOGI("DestroyPopWindow close dialog");
+        return connection_->CloseDialog();
+    }
     return true;
 }
 
@@ -4666,7 +4704,7 @@ void ScreenCaptureServer::AppPrivacyProtected(ScreenId& virtualScreenId, bool ap
 
 bool ScreenCaptureServer::IsSkipPrivacyWindow()
 {
-#ifdef PC_STANDARD
+#ifdef defined(PC_STANDARD) && defined(SUPPORT_SCREEN_CAPTURE_PICKER)
     return GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_ ||
            (CheckCustScrRecPermission() && !IsPickerPopUp());
 #else

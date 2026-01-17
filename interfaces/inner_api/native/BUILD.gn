@@ -94,11 +94,6 @@ config("media_client_base_config") {
 
   defines = []
   defines += player_framework_defines
-
-  if (player_framework_feature_pc_select_window) {
-    defines += [ "PC_STANDARD" ]
-  }
-
 }
 
 ohos_shared_library("media_client") {

@@ -651,7 +651,7 @@ AVScreenCaptureConfig OH_AVScreenCapture_Convert(OH_AVScreenCaptureConfig config
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ExcludePickerWindows(
     struct OH_AVScreenCapture *capture, const int32_t *excludedWindowIDs, uint32_t windowCount)
 {
-#ifdef PC_STANDARD
+#ifdef SUPPORT_SCREEN_CAPTURE_PICKER
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
     CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
@@ -678,7 +678,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ExcludePickerWindows(
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetPickerMode(
     struct OH_AVScreenCapture *capture, OH_CapturePickerMode pickerMode)
 {
-#ifdef PC_STANDARD
+#ifdef SUPPORT_SCREEN_CAPTURE_PICKER
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
     CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,

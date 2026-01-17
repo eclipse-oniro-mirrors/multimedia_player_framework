@@ -2477,7 +2477,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_presentPicker_test01, TestSize.Le
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
     sleep(RECORDER_TIME);
-#ifdef PC_STANDARD
+#ifdef SUPPORT_SCREEN_CAPTURE_PICKER
      EXPECT_EQ(MSERR_OK, screenCapture_->PresentPicker());
 #else
     EXPECT_NE(MSERR_OK, screenCapture_->PresentPicker());
@@ -2532,7 +2532,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_set_picker_mode_01, TestSize.Leve
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_set_picker_mode_01 before");
     PickerMode pickerMode = PickerMode::WINDOW_ONLY;
-#ifdef PC_STANDARD
+#ifdef SUPPORT_SCREEN_CAPTURE_PICKER
     EXPECT_EQ(MSERR_OK, screenCapture_->SetPickerMode(pickerMode));
 #else
     EXPECT_NE(MSERR_OK, screenCapture_->SetPickerMode(pickerMode));
@@ -2550,7 +2550,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_picker_windows_01, TestSi
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_picker_windows_01 before");
     std::vector<int32_t> windowIDs = {100, 101, 102};
-#ifdef PC_STANDARD
+#ifdef SUPPORT_SCREEN_CAPTURE_PICKER
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludePickerWindows(windowIDs.data(), windowIDs.size()));
 #else
     EXPECT_NE(MSERR_OK, screenCapture_->ExcludePickerWindows(windowIDs.data(), windowIDs.size()));

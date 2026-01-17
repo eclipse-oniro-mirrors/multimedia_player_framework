@@ -106,10 +106,6 @@ ohos_shared_library("native_avscreen_capture") {
 
   defines = []
 
-  if (player_framework_feature_pc_select_window) {
-    defines += [ "PC_STANDARD" ]
-  }
-
   output_extension = "so"
   subsystem_name = "multimedia"
   part_name = "player_framework"

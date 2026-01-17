@@ -16,17 +16,6 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include "screen_capture_server_function_unittest.h"
-#include "ui_extension_ability_connection.h"
-#include "image_source.h"
-#include "image_type.h"
-#include "pixel_map.h"
-#include "media_log.h"
-#include "media_errors.h"
-#include "media_utils.h"
-#include "uri_helper.h"
-#include "media_dfx.h"
-#include "scope_guard.h"
-#include "param_wrapper.h"
 
 using namespace testing::ext;
 using namespace OHOS::Media::ScreenCaptureTestParam;
@@ -36,7 +25,7 @@ namespace OHOS {
 namespace Media {
 HWTEST_F(ScreenCaptureServerFunctionTest, StartPrivacyWindow_001, TestSize.Level2)
 {
-    ASSERT_NE(screenCaptureServer_->StartPrivacyWindow(), MSERR_OK);
+    ASSERT_NE(screenCaptureServer_->StartPrivacyWindow(""), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_001, TestSize.Level2)
