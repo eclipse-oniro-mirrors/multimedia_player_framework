@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include "screen_capture_server_function_unittest.h"
+#include "ui_extension_ability_connection.h"
 
 using namespace testing::ext;
 using namespace OHOS::Media::ScreenCaptureTestParam;
