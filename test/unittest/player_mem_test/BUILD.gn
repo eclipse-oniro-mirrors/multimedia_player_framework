@@ -1,0 +1,97 @@
+# Copyright (c) 2024-2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/test.gni")
+import("//foundation/multimedia/player_framework/config.gni")
+
+module_output_path = "player_framework/player_framework/player"
+
+ohos_unittest("player_server_mem_test") {
+  module_out_path = module_output_path
+  include_dirs = [
+    "./",
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/js/avplayer",
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/js/common",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player",
+    "$MEDIA_PLAYER_ROOT_DIR/services/include",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/common",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_data_source/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/dolby_passthrough/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/client",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/player_mem_manage",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/server/",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/subscriber",
+  ]
+
+  cflags = [
+    "-Wall",
+    "-Werror",
+    "-Dprivate=public",
+    "-Dprotected=public",
+  ]
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+  }
+
+  external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "access_token:libnativetoken_shared",
+    "access_token:libprivacy_sdk",
+    "access_token:libtokensetproc_shared",
+    "audio_framework:audio_client",
+    "av_codec:av_codec_client",
+    "common_event_service:cesfwk_innerkits",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "hdf_core:libhdi",
+    "hicollie:libhicollie",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
+    "hitrace:libhitracechain",
+    "init:libbegetutil",
+    "ipc:ipc_single",
+    "media_foundation:media_foundation",
+    "memmgr:memmgrclient",
+    "napi:ace_napi",
+    "os_account:os_account_innerkits",
+    "qos_manager:concurrent_task_client",
+    "qos_manager:qos",
+    "resource_schedule_service:ressched_client",
+    "safwk:system_ability_fwk",
+  ]
+
+  if (player_framework_support_drm) {
+    external_deps += [ "drm_framework:drm_framework" ]
+  }
+
+  sources = [
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/player_mem_manage/player_server_mem.cpp",
+    "player_server_mem_test.cpp",
+    "player_server_mem_unit_test.cpp",
+  ]
+
+  deps = [
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player:media_engine_histreamer_player",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
+  ]
+
+  resource_config_file =
+      "$MEDIA_PLAYER_ROOT_DIR/test/unittest/resources/ohos_test.xml"
+}
