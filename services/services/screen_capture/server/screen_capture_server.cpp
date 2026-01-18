@@ -1076,7 +1076,7 @@ int32_t ScreenCaptureServer::PresentPicker()
         MEDIA_LOGE("PresentPicker not support picker.");
         return MSERR_INVALID_OPERATION;
     }
-endif
+#endif
     if (captureState_ != AVScreenCaptureState::STARTED) {
         MEDIA_LOGE("PresentPicker captureState_ is not STARTED, not allowed.");
         return MSERR_INVALID_OPERATION;
