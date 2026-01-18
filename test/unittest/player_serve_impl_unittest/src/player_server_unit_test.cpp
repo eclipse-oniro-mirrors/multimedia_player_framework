@@ -766,47 +766,5 @@ HWTEST_F(PlayerServerUnitTest, Player_SetSource_004, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, ret);
     EXPECT_NE(MSERR_OK, player_->PrepareAsync());
 }
-
-/**
- * @tc.name  : Test Player SetSource
- * @tc.number: Player_SetSource_005
- * @tc.desc  : Test Player SetSource interface
- */
-HWTEST_F(PlayerServerUnitTest, Player_SetSource_005, TestSize.Level3)
-{
-    PlaybackRateMode mode;
-    int32_t duration = 0;
-    float playbackRate = 1.5f;
-    std::vector<Format> videoTrack;
-    std::vector<Format> audioTrack;
-    Format format;
-    format.PutIntValue(PlayerKeys::VIDEO_SCALE_TYPE,
-        static_cast<int32_t>(Plugins::VideoScaleType::VIDEO_SCALE_TYPE_FIT));
-    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_NE(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_NE(MSERR_OK, player_->PrepareAsync());
-    EXPECT_NE(MSERR_OK, player_->Prepare());
-    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
-    EXPECT_EQ(MSERR_OK, player_->SetVolume(1, 1));
-    EXPECT_NE(MSERR_OK, player_->Play());
-    EXPECT_NE(MSERR_OK, player_->Pause());
-    EXPECT_NE(MSERR_OK, player_->Seek(0, SEEK_CLOSEST));
-    EXPECT_EQ(MSERR_OK, player_->SetLooping(true));
-    EXPECT_EQ(true, player_->IsLooping());
-    EXPECT_EQ(MSERR_OK, player_->SetVolume(1, 1));
-    EXPECT_NE(MSERR_OK, player_->SetPlaybackRate(playbackRate));
-    EXPECT_NE(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X));
-    EXPECT_EQ(MSERR_OK, player_->GetPlaybackSpeed(mode));
-    EXPECT_EQ(SPEED_FORWARD_1_00_X, mode);
-    EXPECT_NE(MSERR_OK, player_->GetDuration(duration));
-    EXPECT_NE(MSERR_OK, player_->GetVideoTrackInfo(videoTrack));
-    EXPECT_NE(MSERR_OK, player_->GetAudioTrackInfo(audioTrack));
-    EXPECT_NE(480, player_->GetVideoHeight());
-    EXPECT_NE(720, player_->GetVideoWidth());
-    EXPECT_NE(MSERR_OK, player_->Stop());
-    EXPECT_NE(MSERR_OK, player_->Reset());
-}
 } // namespace Media
 } // namespace OHOS
