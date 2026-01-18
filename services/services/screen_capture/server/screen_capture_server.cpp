@@ -1086,6 +1086,7 @@ endif
     std::lock_guard<std::mutex> lock(mutex_);
     isPresentPicker_ = true;
     isPresentPickerPopWindow_ = true;
+    showShareSystemAudioBox_ = false;
     int32_t ret = StartPicker();
     return ret;
 #endif
