@@ -2792,7 +2792,7 @@ void ScreenCaptureServer::BuildPickerParams(Json::Value &root)
 #endif
 #endif
 
-std::string ScreenCaptureServer::StartPrivacyWindow(const std::string &cmdStr)
+int32_t ScreenCaptureServer::StartPrivacyWindow(const std::string &cmdStr)
 {
     AAFwk::Want want;
     want.SetElementName(GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionbundlename"],
