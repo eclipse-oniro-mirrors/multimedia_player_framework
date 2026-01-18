@@ -4476,7 +4476,7 @@ bool ScreenCaptureServer::DestroyPopWindow()
         MEDIA_LOGI("window not pop up, no need to destroy.");
         return true;
     }
-#ifdef defined(PC_STANDARD) && defined(SUPPORT_SCREEN_CAPTURE_PICKER)
+#if defined(PC_STANDARD) && defined(SUPPORT_SCREEN_CAPTURE_PICKER)
     if (IsPickerPopUp()) {
         MEDIA_LOGI("DestroyPopWindow end, type: picker, deviceType: PC.");
         ErrCode ret = ERR_INVALID_VALUE;
@@ -4705,7 +4705,7 @@ void ScreenCaptureServer::AppPrivacyProtected(ScreenId& virtualScreenId, bool ap
 
 bool ScreenCaptureServer::IsSkipPrivacyWindow()
 {
-#ifdef defined(PC_STANDARD) && defined(SUPPORT_SCREEN_CAPTURE_PICKER)
+#if defined(PC_STANDARD) && defined(SUPPORT_SCREEN_CAPTURE_PICKER)
     return GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_ ||
            (CheckCustScrRecPermission() && !IsPickerPopUp());
 #else
