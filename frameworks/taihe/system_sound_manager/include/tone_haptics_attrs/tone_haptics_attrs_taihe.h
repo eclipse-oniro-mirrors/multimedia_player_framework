@@ -37,7 +37,7 @@ public:
     ::taihe::string GetFileName();
     ::taihe::string GetGentleUri();
     ::taihe::string GetGentleTitle();
-    ::taihe::string GetGentFileName();
+    ::taihe::string GetGentleFileName();
 
 private:
     bool CheckNativeToneHapticsAttrs();
