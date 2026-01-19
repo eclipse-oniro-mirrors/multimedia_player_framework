@@ -77,4 +77,28 @@ bool ToneHapticsAttrsImpl::CheckNativeToneHapticsAttrs()
 
     return toneHapticsAttrs_->GetFileName();
 }
+
+::taihe::string ToneHapticsAttrsImpl::GetGentleUri()
+{
+    CHECK_AND_RETURN_RET_LOG(CheckPermission(), "", "No system permission");
+    CHECK_AND_RETURN_RET_LOG(CheckNativeToneHapticsAttrs(), "", "toneHapticsAttrs_ is nullptr");
+
+    return toneHapticsAttrs_->GetGentleUri();
+}
+
+::taihe::string ToneHapticsAttrsImpl::GetGentleTitle()
+{
+    CHECK_AND_RETURN_RET_LOG(CheckPermission(), "", "No system permission");
+    CHECK_AND_RETURN_RET_LOG(CheckNativeToneHapticsAttrs(), "", "toneHapticsAttrs_ is nullptr");
+
+    return toneHapticsAttrs_->GetGentleTitle();
+}
+
+::taihe::string ToneHapticsAttrsImpl::GetGentleFileName()
+{
+    CHECK_AND_RETURN_RET_LOG(CheckPermission(), "", "No system permission");
+    CHECK_AND_RETURN_RET_LOG(CheckNativeToneHapticsAttrs(), "", "toneHapticsAttrs_ is nullptr");
+
+    return toneHapticsAttrs_->GetGentleFileName();
+}
 } // namespace ANI::Media
