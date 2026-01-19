@@ -22,6 +22,7 @@
 #include "av_common.h"
 #include "media_taihe_utils.h"
 #include "pixel_map_taihe.h"
+#include "ipc_skeleton.h"
 
 using namespace ANI::Media;
 using namespace ohos::multimedia::media;
