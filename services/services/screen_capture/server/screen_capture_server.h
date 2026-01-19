@@ -252,7 +252,7 @@ private:
 #ifdef PC_STANDARD
     void SendConfigToUIParams(AAFwk::Want& want);
 #elif defined(SUPPORT_PICKER_PHONE_PAD)
-    std::string BuildPickerParams(Json::Value &root);
+    void BuildPickerParams(Json::Value &root);
 #endif
 #endif
 
