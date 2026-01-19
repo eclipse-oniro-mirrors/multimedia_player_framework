@@ -903,5 +903,11 @@ int32_t PlayerMock::ForceLoadVideo(bool status)
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     return player_->ForceLoadVideo(status);
 }
+
+int32_t PlayerMock::RegisterDeviceCapability(IsAudioPassthrough passthroughCb, GetDolbyList dolbyListCb)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->RegisterDeviceCapability(passthroughCb, dolbyListCb);
+}
 } // namespace Media
 } // namespace OHOS

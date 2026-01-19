@@ -188,6 +188,7 @@ public:
     int32_t EnableCameraPostprocessing();
     int32_t SetCameraPostprocessing(bool isOpen);
     int32_t ForceLoadVideo(bool status);
+    int32_t RegisterDeviceCapability(IsAudioPassthrough passthroughCb, GetDolbyList dolbyListCb);
 private:
     void SeekPrepare(int32_t &mseconds, PlayerSeekMode &mode);
     std::shared_ptr<Player> player_ = nullptr;

@@ -5067,5 +5067,46 @@ HWTEST_F(PlayerUnitTest, Player_ForceLoadVideo_004, TestSize.Level0)
     ASSERT_EQ(MSERR_OK, player_->ForceLoadVideo(true));
     EXPECT_EQ(MSERR_OK, player_->Play());
 }
+
+/**
+ * @tc.name  : Test RegisterDeviceCapability API
+ * @tc.number: Player_RegisterDeviceCapability_001
+ * @tc.desc  : Test Player RegisterDeviceCapability API when playing is looping
+ * */
+HWTEST_F(PlayerUnitTest, Player_RegisterDeviceCapability_001, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    ASSERT_EQ(MSERR_NO_MEMORY, player_->RegisterDeviceCapability(nullptr, nullptr));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+}
+
+/**
+ * @tc.name  : Test RegisterDeviceCapability API
+ * @tc.number: Player_RegisterDeviceCapability_002
+ * @tc.desc  : Test Player RegisterDeviceCapability API when playing is looping
+ * */
+HWTEST_F(PlayerUnitTest, Player_RegisterDeviceCapability_002, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    IsAudioPassthrough passthroughCb = [](const char* mime) -> bool {
+        if (mime == nullptr) {
+            return false;
+        }
+        return strcmp(mime, "audio/dolby") == 0;
+    };
+    GetDolbyList dolbyListCb = []() -> std::vector<std::string> {
+        return {"audio/ac3", "audio/eac3", "audio/dts"};
+    };
+    ASSERT_EQ(MSERR_OK, player_->RegisterDeviceCapability(passthroughCb, dolbyListCb));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+}
 } // namespace Media
 } // namespace OHOS
