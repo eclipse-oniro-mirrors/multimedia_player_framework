@@ -62,6 +62,7 @@ namespace AVRecordergOpt {
     const std::string GET_ENCODER_INFO = "GetEncoderInfo";
     const std::string IS_WATERMARK_SUPPORTED = "IsWatermarkSupported";
     const std::string SET_WATERMARK = "SetWatermark";
+    const std::string SET_METADATA = "SetMetadata";
 }
 
 constexpr int32_t AVRECORDER_DEFAULT_AUDIO_BIT_RATE = 48000;
@@ -162,6 +163,7 @@ public:
     void ReleaseSync();
     void ResetSync();
     void ResumeSync();
+    void SetMetadataSync(std::map<std::string, std::string> metadata);
 
     optional<::ohos::multimedia::media::AVRecorderConfig> GetAVRecorderConfigSync();
     std::shared_ptr<TaskHandler<RetInfo>> GetAVRecorderConfigTask(
@@ -309,6 +311,7 @@ private:
     int32_t videoFrameWidth_ = -1;
     int32_t videoFrameHeight_ = -1;
     OHOS::sptr<OHOS::Surface> metaSurface_ = nullptr;
+    int32_t SetMetadata(const std::map<std::string, std::string> &recordMeta);
 };
 
 struct AVRecorderAsyncContext {

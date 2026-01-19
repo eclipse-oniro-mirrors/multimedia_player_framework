@@ -22,6 +22,8 @@
 #include "av_common.h"
 #include "media_taihe_utils.h"
 #include "pixel_map_taihe.h"
+#include "tokenid_kit.h"
+#include "ipc_skeleton.h"
 
 using namespace ANI::Media;
 using namespace ohos::multimedia::media;
@@ -1414,6 +1416,46 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::IsWatermarkSupportedTask(
 int32_t AVRecorderImpl::IsWatermarkSupported(bool &isWatermarkSupported)
 {
     return recorder_->IsWatermarkSupported(isWatermarkSupported);
+}
+
+void AVRecorderImpl::SetMetadataSync(std::map<std::string, std::string> metadata)
+{
+    MediaTrace trace("AVRecorder::SetMetadata");
+    const std::string &opt = AVRecordergOpt::SET_METADATA;
+    MEDIA_LOGI("Taihe %{public}s Start", opt.c_str());
+
+    auto asyncCtx = std::make_unique<AVRecorderAsyncContext>();
+    CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
+    asyncCtx->taihe = this;
+    CHECK_AND_RETURN_LOG(asyncCtx->taihe != nullptr, "failed to GetJsInstanceAndArgs");
+    CHECK_AND_RETURN_LOG(asyncCtx->taihe->taskQue_ != nullptr, "taskQue is nullptr!");
+
+    uint64_t accessTokenIDEx = OHOS::IPCSkeleton::GetCallingFullTokenID();
+    bool isSystemApp = OHOS::Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIDEx);
+    if (!isSystemApp) {
+        asyncCtx->taihe->ErrorCallback(MSERR_EXT_API9_PERMISSION_DENIED, "SetMetadata", "not system app");
+        return;
+    }
+    CHECK_AND_RETURN_LOG(asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK, "on error state");
+    CHECK_AND_RETURN_LOG(asyncCtx->taihe->CheckRepeatOperation(opt) == MSERR_OK, "on error Operation");
+    CHECK_AND_RETURN_LOG(metadata.size() != 0, "metadata has no data");
+    auto task = std::make_shared<TaskHandler<void>>([taihe = asyncCtx->taihe, metadata]() {
+        if (taihe != nullptr) {
+            (void)taihe->SetMetadata(metadata);
+        }
+    });
+    (void)asyncCtx->taihe->taskQue_->EnqueueTask(task);
+    MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
+}
+
+int32_t AVRecorderImpl::SetMetadata(const std::map<std::string, std::string> &recordMeta)
+{
+    std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
+    for (auto &meta : recordMeta) {
+        MEDIA_LOGI("recordMeta tag: %{public}s, value: %{public}s", meta.first.c_str(), meta.second.c_str());
+        userMeta->SetData(meta.first, meta.second);
+    }
+    return recorder_->SetUserMeta(userMeta);
 }
 
 void AVRecorderImpl::UpdateRotationSync(int32_t rotation)
