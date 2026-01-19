@@ -185,8 +185,12 @@ void MediaServerManagerFuzzer::FuzzMediaServerManagerMonitorAndCodec(uint8_t *da
 
 void MediaServerManagerFuzzer::FuzzCanKillMediaService(uint8_t *data, size_t size)
 {
+    uint32_t randomCount = GetData<uint32_t>();
+    uint32_t loopTimes = randomCount % 10;
     MediaServerManager& mediaServerManager = MediaServerManager::GetInstance();
-    mediaServerManager.CanKillMediaService();
+    for (uint32_t i = 0; i <= loopTimes; i++) {
+        mediaServerManager.CanKillMediaService();
+    }
 }
 
 void MediaServerManagerFuzzer::FuzzSetClearCallBack(uint8_t *data, size_t size)
@@ -220,16 +224,21 @@ void MediaServerManagerFuzzer::FuzzReportAppMemoryUsage(uint8_t *data, size_t si
     CreateAndDestroyStub(mediaServerManager, MediaServerManager::StubType::AVMETADATAHELPER);
     CreateAndDestroyStub(mediaServerManager, MediaServerManager::StubType::RECORDER);
 
-    uint32_t errType = 200;
+    uint32_t randomCount = GetData<uint32_t>();
+    uint32_t errType = randomCount + 200;
     auto invalidType = static_cast<MediaServerManager::StubType>(errType);
     mediaServerManager.CreateStubObject(invalidType);
 }
 
 void MediaServerManagerFuzzer::FuzzGetPlayerPids(uint8_t *data, size_t size)
 {
+    uint32_t randomCount = GetData<uint32_t>();
+    uint32_t loopTimes = randomCount % 10;
     MediaServerManager& mediaServerManager = MediaServerManager::GetInstance();
-    mediaServerManager.CreateStubObject(MediaServerManager::StubType::PLAYER);
-    mediaServerManager.GetPlayerPids();
+    for (uint32_t i = 0; i <= loopTimes; i++) {
+        mediaServerManager.CreateStubObject(MediaServerManager::StubType::PLAYER);
+        mediaServerManager.GetPlayerPids();
+    }
 }
 
 void MediaServerManagerFuzzer::FuzzDestroyDumperForPid(uint8_t *data, size_t size)
