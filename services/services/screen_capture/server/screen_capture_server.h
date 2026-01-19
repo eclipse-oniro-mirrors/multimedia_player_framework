@@ -234,7 +234,8 @@ private:
     bool UpdatePrivacyUsingPermissionState(VideoPermissionState state);
     bool CheckPrivacyWindowSkipPermission();
     int32_t RequestUserPrivacyAuthority(bool &isSkipPrivacyWindow);
-    int32_t StartPrivacyWindow();
+    int32_t StartPrivacyWindow(const std::string &cmdStr);
+    int32_t StartAuthWindow();
     void SetCaptureConfig(CaptureMode captureMode, int32_t missionId = -1); // -1 invalid
     ScreenScaleMode GetScreenScaleMode(const AVScreenCaptureFillMode &fillMode);
     int32_t HandlePopupWindowCase(Json::Value& root, const std::string &content);
@@ -242,11 +243,20 @@ private:
     int32_t HandlePresentPickerWindowCase(Json::Value& root, const std::string &content);
     void PrepareSelectWindow(Json::Value &root);
     bool IsSkipPrivacyWindow();
-    std::string BuildCommandString();
+    void BuildCommonParams(Json::Value &root);
+
+#ifdef SUPPORT_SCREEN_CAPTURE_PICKER
+    bool CheckCaptureSpecifiedWindowForSelectWindow();
+    bool IsPickerPopUp();
+    int32_t StartPicker();
+#ifdef PC_STANDARD
+    void SendConfigToUIParams(AAFwk::Want& want);
+#elif defined(SUPPORT_PICKER_PHONE_PAD)
+    void BuildPickerParams(Json::Value &root);
+#endif
+#endif
 
 #ifdef PC_STANDARD
-    bool CheckCaptureSpecifiedWindowForSelectWindow();
-    void SendConfigToUIParams(AAFwk::Want& want);
     bool IsHopper();
     int32_t MakeVirtualScreenMirrorForWindowForHopper(const sptr<Rosen::Display> &defaultDisplay,
         std::vector<ScreenId> &mirrorIds);
@@ -254,7 +264,6 @@ private:
         std::vector<ScreenId> &mirrorIds);
     int32_t MakeVirtualScreenMirrorForSpecifiedScreenForHopper(const sptr<Rosen::Display> &defaultDisplay,
         std::vector<ScreenId> &mirrorIds);
-    bool IsPickerPopUp();
     bool CheckCustScrRecPermission();
     void SetTimeoutScreenoffDisableLock(bool lockScreen);
 #endif

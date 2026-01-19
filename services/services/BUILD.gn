@@ -102,6 +102,9 @@ config("media_service_config") {
   if (player_framework_feature_pc_select_window) {
     defines += [ "PC_STANDARD" ]
   }
+  if (player_framework_feature_phone_pad_select_window) {
+    defines += [ "SUPPORT_PICKER_PHONE_PAD" ]
+  }
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }

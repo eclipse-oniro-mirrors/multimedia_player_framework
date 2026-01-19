@@ -30,6 +30,7 @@ declare_args() {
   player_framework_support_screen_capture_stopbycall = false
   player_framework_support_screen_capture_controller = false
   player_framework_feature_pc_select_window = false
+  player_framework_feature_phone_pad_select_window = false
   player_framework_support_jssoundpool = true
   player_framework_support_mediasource = true
   player_framework_support_auto_create_file = false
@@ -233,6 +234,11 @@ if (player_framework_support_hiappevent) {
 
 if (player_framework_support_drivers_interface_camera) {
   player_framework_defines += [ "SUPPORT_DRIVER_INTERFACE_CAMERA" ]
+}
+
+if (player_framework_feature_pc_select_window ||
+    player_framework_feature_phone_pad_select_window) {
+  player_framework_defines += [ "SUPPORT_SCREEN_CAPTURE_PICKER" ]
 }
 
 # Config path

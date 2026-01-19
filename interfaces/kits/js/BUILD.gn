@@ -215,10 +215,6 @@ ohos_shared_library("media") {
     defines += [ "CROSS_PLATFORM" ]
   }
 
-  if (player_framework_feature_pc_select_window) {
-    defines += [ "PC_STANDARD" ]
-  }
-
   relative_install_dir = "module/multimedia"
   part_name = "player_framework"
   subsystem_name = "multimedia"

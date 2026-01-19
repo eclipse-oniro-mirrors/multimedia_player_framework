@@ -55,6 +55,7 @@
         "player_framework_support_power_manager",
         "player_framework_support_json",
         "player_framework_feature_pc_select_window",
+        "player_framework_feature_phone_pad_select_window",
         "player_framework_enable_start_stop_on_demand",
         "player_framework_support_lowpower_av_sink"
       ],
