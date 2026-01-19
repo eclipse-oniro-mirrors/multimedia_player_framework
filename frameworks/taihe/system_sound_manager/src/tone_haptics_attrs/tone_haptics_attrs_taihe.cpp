@@ -78,7 +78,7 @@ bool ToneHapticsAttrsImpl::CheckNativeToneHapticsAttrs()
     return toneHapticsAttrs_->GetFileName();
 }
 
-::taihe::string SystemSoundManagerImpl::GetGentleUri()
+::taihe::string ToneHapticsAttrsImpl::GetGentleUri()
 {
     CHECK_AND_RETURN_RET_LOG(CheckPermission(), "", "No system permission");
     CHECK_AND_RETURN_RET_LOG(CheckNativeToneHapticsAttrs(), "", "toneHapticsAttrs_ is nullptr");
@@ -86,7 +86,7 @@ bool ToneHapticsAttrsImpl::CheckNativeToneHapticsAttrs()
     return toneHapticsAttrs_->GetGentleUri();
 }
 
-::taihe::string SystemSoundManagerImpl::GetGentleTitle()
+::taihe::string ToneHapticsAttrsImpl::GetGentleTitle()
 {
     CHECK_AND_RETURN_RET_LOG(CheckPermission(), "", "No system permission");
     CHECK_AND_RETURN_RET_LOG(CheckNativeToneHapticsAttrs(), "", "toneHapticsAttrs_ is nullptr");
@@ -94,7 +94,7 @@ bool ToneHapticsAttrsImpl::CheckNativeToneHapticsAttrs()
     return toneHapticsAttrs_->GetGentleTitle();
 }
 
-::taihe::string SystemSoundManagerImpl::GetGentFileName()
+::taihe::string ToneHapticsAttrsImpl::GetGentFileName()
 {
     CHECK_AND_RETURN_RET_LOG(CheckPermission(), "", "No system permission");
     CHECK_AND_RETURN_RET_LOG(CheckNativeToneHapticsAttrs(), "", "toneHapticsAttrs_ is nullptr");
