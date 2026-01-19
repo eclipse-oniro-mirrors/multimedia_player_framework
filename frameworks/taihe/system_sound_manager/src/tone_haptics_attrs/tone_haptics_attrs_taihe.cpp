@@ -94,11 +94,11 @@ bool ToneHapticsAttrsImpl::CheckNativeToneHapticsAttrs()
     return toneHapticsAttrs_->GetGentleTitle();
 }
 
-::taihe::string ToneHapticsAttrsImpl::GetGentFileName()
+::taihe::string ToneHapticsAttrsImpl::GetGentleFileName()
 {
     CHECK_AND_RETURN_RET_LOG(CheckPermission(), "", "No system permission");
     CHECK_AND_RETURN_RET_LOG(CheckNativeToneHapticsAttrs(), "", "toneHapticsAttrs_ is nullptr");
 
-    return toneHapticsAttrs_->GetGentFileName();
+    return toneHapticsAttrs_->GetGentleFileName();
 }
 } // namespace ANI::Media
