@@ -67,7 +67,7 @@ DolbyPassthroughProxy::~DolbyPassthroughProxy()
 bool DolbyPassthroughProxy::IsAudioPass(const char* mime)
 {
     MEDIA_LOGD("IsAudioPass in");
-    CHECK_AND_RETURN_RET_LOG(mime != nullptr, MSERR_NO_MEMORY, "mime is nullptr");
+    CHECK_AND_RETURN_RET_LOG(mime != nullptr, false, "mime is nullptr");
     MediaTrace trace("DolbyPassthrough::IsAudioPass");
     MessageParcel data;
     MessageParcel reply;
