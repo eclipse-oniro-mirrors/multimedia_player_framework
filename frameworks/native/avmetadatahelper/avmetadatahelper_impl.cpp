@@ -868,6 +868,7 @@ std::shared_ptr<Meta> AVMetadataHelperImpl::GetAVMetadata()
 
 int32_t AVMetadataHelperImpl::CancelAllFetchFrames()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     std::shared_ptr<IAVMetadataHelperService> avMetadataHelperService = avMetadataHelperService_;
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, MSERR_EXT_API9_OPERATE_NOT_PERMIT,
         "avmetadatahelper service does not exist.");
@@ -989,6 +990,7 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchScaledFrameYuv(int64_t time
 int32_t AVMetadataHelperImpl::FetchScaledFrameYuvs(const std::vector<int64_t>& timeUs,
     int32_t option, const PixelMapParams &param)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     std::shared_ptr<IAVMetadataHelperService> avMetadataHelperService = avMetadataHelperService_;
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService != nullptr, MSERR_EXT_API9_OPERATE_NOT_PERMIT,
         "avmetadatahelper service does not exist.");
