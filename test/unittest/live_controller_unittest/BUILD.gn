@@ -83,8 +83,9 @@ ohos_unittest("live_controller_unittest") {
     ubsan = true
     boundary_sanitize = true
     cfi = true
-    cfi_cross_dso = true
+    cfi_cross_dso = false
     debug = false
+    blocklist = "$MEDIA_PLAYER_ROOT_DIR/cfi_blocklist.txt"
   }
 
   external_deps = [
