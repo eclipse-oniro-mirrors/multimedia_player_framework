@@ -909,15 +909,15 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ReleaseVideoBuffer(struct OH_AVSc
         MEDIA_LOGE("ReleaseVideoBuffer() not permit for has set DataCallback");
         return AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT;
     }
-
-    if (!referencedBuffer_.empty()) {
+    {
         std::unique_lock<std::mutex> lock(g_bufferMutex);
-        OH_NativeBuffer* nativebuffer = referencedBuffer_.front();
-        OH_NativeBuffer_Unreference(nativebuffer);
-        referencedBuffer_.pop();
-        MEDIA_LOGD("unreference the front nativebuffer");
+        if (!referencedBuffer_.empty()) {
+            OH_NativeBuffer* nativebuffer = referencedBuffer_.front();
+            OH_NativeBuffer_Unreference(nativebuffer);
+            referencedBuffer_.pop();
+            MEDIA_LOGD("unreference the front nativebuffer");
+        }
     }
-
     int32_t ret = screenCaptureObj->screenCapture_->ReleaseVideoBuffer();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT, "ReleaseVideoBuffer failed!");
 
