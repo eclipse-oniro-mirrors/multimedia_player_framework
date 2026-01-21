@@ -3375,15 +3375,11 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
 
 void HiPlayerImpl::NotifyBufferEnd()
 {
-    auto startTime = std::chrono::steady_clock::now();
-    demuxer_->WaitForBufferingEnd();
-    auto endTime = std::chrono::steady_clock::now();
-    auto waitTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
-    MEDIA_LOG_D_SHORT("NotifyBufferEnd WaitForBufferingEnd: %{public}d ms", static_cast<int32_t>(waitTime));
     FALSE_RETURN(isSeekClosest_);
     isSeekClosest_.store(false);
     FALSE_RETURN(isBufferingStartNotified_);
     MEDIA_LOG_I_SHORT("SEEK_CLOSEST BUFFERING_END PLAYING");
+    FALSE_RETURN(!demuxer_->IsBuffering());
     NotifyBufferingEnd(NOTIFY_BUFFERING_END_PARAM);
 }
 
