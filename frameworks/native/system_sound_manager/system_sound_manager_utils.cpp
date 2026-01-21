@@ -198,12 +198,12 @@ int32_t SystemSoundManagerUtils::GetTypeForSystemSoundUri(const std::string &aud
         return SystemToneUriType::NO_RINGTONES;
     }
 
-    size_t pos = audioUri.find_first_of("sys_prod");
+    size_t pos = audioUri.find("sys_prod");
     if (pos == 0 || pos == 1) {
         // The audioUri of a preset ringtone starts with "sys prod” or "/sys prod".
         return SystemToneUriType::PRESET_RINGTONES;
     }
-    pos = audioUri.find_first_of("data");
+    pos = audioUri.find("data");
     if (pos == 0 || pos == 1) {
         // The audioUri of a custom ringtone starts with "data" or "/data".
         return SystemToneUriType::CUSTOM_RINGTONES;
