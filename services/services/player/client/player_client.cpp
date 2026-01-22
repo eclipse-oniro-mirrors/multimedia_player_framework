@@ -16,6 +16,7 @@
 #include "player_client.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "../media_source/loader/media_loader.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerClient"};
@@ -365,6 +366,13 @@ int32_t PlayerClient::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr!");
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
 
+    bool isCacheAble = mediaSource->GetEnable();
+    if (mediaSource->mediaSourceLoaderCb_ != nullptr && mediaSource->GetEnable()) {
+        MEDIA_LOGE("Cannot set local cache and proxy download at the same time.");
+        mediaSource->sourceLoader_ = nullptr;
+        return playerProxy_->SetMediaSource(mediaSource, strategy);
+    }
+
     if (mediaSource->mediaSourceLoaderCb_ != nullptr) {
         MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " mediaSource->mediaSourceLoaderCb_ in", FAKE_POINTER(this));
         sourceLoaderStub_ = new(std::nothrow) MediaSourceLoaderStub(mediaSource->mediaSourceLoaderCb_);
@@ -375,6 +383,22 @@ int32_t PlayerClient::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
  
         CHECK_AND_RETURN_RET_LOG(playerProxy_->SetSourceLoader(object) == MSERR_OK,
             MSERR_UNKNOWN, "SetSourceLoader error");
+    } else {
+        if (isCacheAble) {
+            std::shared_ptr<LoaderCallback> mediaSourceLoaderCb = std::make_shared<MediaLoader>(mediaSource->url);
+            mediaSource->mediaSourceLoaderCb_ = mediaSourceLoaderCb;
+
+            MEDIA_LOGI("PlayerClient:0x%{public}06" PRIXPTR
+                " mediaSource->mediaSourceLoaderCb_ in", FAKE_POINTER(this));
+            sourceLoaderStub_ = new(std::nothrow) MediaSourceLoaderStub(mediaSource->mediaSourceLoaderCb_);
+            CHECK_AND_RETURN_RET_LOG(sourceLoaderStub_ != nullptr, MSERR_NO_MEMORY, "failed to new LoaderStub object");
+
+            sptr<IRemoteObject> object = sourceLoaderStub_->AsObject();
+            CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "listener object is nullptr..");
+
+            CHECK_AND_RETURN_RET_LOG(playerProxy_->SetSourceLoader(object) == MSERR_OK,
+                MSERR_UNKNOWN, "Custom SetSourceLoader error");
+        }
     }
     MEDIA_LOGD("url_=%{private}s playMediaStreamVec_size=%{public}zu mimeType_=%{public}s",
         mediaSource->url.c_str(),

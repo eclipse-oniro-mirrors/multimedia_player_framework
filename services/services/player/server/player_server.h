@@ -274,6 +274,7 @@ private:
     void HandleFlvLiveRestartLink();
     void TryFlvLiveRestartLink();
     void UpdateFlvLivePauseTime();
+    void SetParameter();
 
 #ifdef SUPPORT_VIDEO
     sptr<Surface> surface_ = nullptr;

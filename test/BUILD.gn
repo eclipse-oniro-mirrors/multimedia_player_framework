@@ -92,6 +92,7 @@ group("media_unit_test") {
       "unittest/transcoder_server:transcoder_server_unit_test",
       "unittest/utils_test:player_framework_utils_test",
       "example:audio_haptic_test",
+      "unittest/cache_manager_test:cache_manager_test",
     ]
     if (player_framework_support_screen_capture) {
       deps += [
