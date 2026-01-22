@@ -163,8 +163,8 @@ int LppVideoStreamerServiceStub::OnRemoteRequest(
         auto memberFunc = itFunc->second.second;
         auto funcName = itFunc->second.first;
         if (memberFunc != nullptr) {
-            std::lock_guard<std::mutex> lock(vServiceStubMutex_);
-            auto task = std::make_shared<TaskHandler<int>>([&memberFunc, &data, &reply, &funcName] {
+            auto task = std::make_shared<TaskHandler<int>>([&memberFunc, &data, &reply, &funcName, this] {
+                std::lock_guard<std::mutex> lock(vServiceStubMutex_);
                 MediaTrace trace(funcName);
                 return memberFunc(data, reply);
             });
