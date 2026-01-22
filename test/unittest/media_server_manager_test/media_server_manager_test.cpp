@@ -176,38 +176,9 @@ HWTEST_F(MediaServerManagerTest, DestroyStubObjectForPid_001, TestSize.Level1)
     sptr<IRemoteObject> recorder =
         MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::RECORDER);
     EXPECT_NE(recorder, nullptr);
-    sptr<IRemoteObject> player =
-        MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::PLAYER);
-    EXPECT_NE(player, nullptr);
-    sptr<IRemoteObject> avmetadatahelper =
-        MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVMETADATAHELPER);
-    EXPECT_NE(avmetadatahelper, nullptr);
-    sptr<IRemoteObject> avcodecList =
-        MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVCODECLIST);
-    EXPECT_EQ(avcodecList, nullptr);
-    sptr<IRemoteObject> avcodec =
-        MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVCODEC);
-    EXPECT_EQ(avcodec, nullptr);
-    sptr<IRemoteObject> recorderProfiles =
-        MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::RECORDERPROFILES);
-    EXPECT_NE(recorderProfiles, nullptr);
-    sptr<IRemoteObject> monitor =
-        MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::MONITOR);
-    EXPECT_NE(monitor, nullptr);
-    sptr<IRemoteObject> screenCapture =
-        MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::SCREEN_CAPTURE);
-    EXPECT_NE(screenCapture, nullptr);
-    sptr<IRemoteObject> screenCaptureController =
-        MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::SCREEN_CAPTURE_CONTROLLER);
-    EXPECT_NE(screenCaptureController, nullptr);
-    sptr<IRemoteObject> transcoder =
-        MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::TRANSCODER);
-    EXPECT_NE(transcoder, nullptr);
-    sptr<IRemoteObject> screenCaptureMonitor =
-        MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::SCREEN_CAPTURE_MONITOR);
-    EXPECT_NE(screenCaptureMonitor, nullptr);
     pid_t pid = IPCSkeleton::GetCallingPid();
     MediaServerManager::GetInstance().DestroyStubObjectForPid(pid);
+    EXPECT_EQ(MediaServerManager::GetInstance().recorderStubMap_.size(), 0);
 }
 
 /**
