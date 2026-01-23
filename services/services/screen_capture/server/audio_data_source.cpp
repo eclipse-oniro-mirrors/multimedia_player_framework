@@ -572,17 +572,17 @@ AudioDataSourceReadAtActionState AudioDataSource::MixModeBufferWrite(std::shared
 {
     HandleBufferTimeStamp(innerAudioBuffer, micAudioBuffer);
     if (innerAudioBuffer && innerAudioBuffer->buffer && micAudioBuffer && micAudioBuffer->buffer) {
-        char* mixData = new (std::nothrow) char[innerAudioBuffer->length];
+        auto mixData = std::make_unique<uint8_t[]>(innerAudioBuffer->length);
         CHECK_AND_RETURN_RET_LOG(mixData != nullptr, AudioDataSourceReadAtActionState::RETRY_SKIP,
             "mixData memory allocation failed");
         int channels = 2;
-        MixAudio(innerAudioBuffer, micAudioBuffer, mixData, channels);
+        MixAudio(innerAudioBuffer, micAudioBuffer, reinterpret_cast<char*>(mixData.get()), channels);
         MEDIA_LOGD("ABuffer write mix mix cur:%{public}" PRId64 " mic:%{public}" PRId64 " last: %{public}" PRId64,
             innerAudioBuffer->timestamp, micAudioBuffer->timestamp, lastWriteAudioFramePts_.load());
         lastWriteAudioFramePts_.store(innerAudioBuffer->timestamp);
         lastMicAudioFramePts_.store(micAudioBuffer->timestamp);
         lastWriteType_ = AVScreenCaptureMixBufferType::MIX;
-        audioBufferQ_.emplace_back(reinterpret_cast<uint8_t*>(mixData), innerAudioBuffer->timestamp);
+        audioBufferQ_.emplace_back(mixData, innerAudioBuffer->timestamp);
     } else if (innerAudioBuffer && innerAudioBuffer->buffer) {
         MEDIA_LOGD("ABuffer write mix inner cur:%{public}" PRId64 " last: %{public}" PRId64,
                 innerAudioBuffer->timestamp, lastWriteAudioFramePts_.load());
@@ -690,8 +690,7 @@ void AudioDataSource::FillLostBuffer(const int64_t &lostNum, const int64_t &time
         lostNum, timestamp, bufferSize);
     auto pts = timestamp;
     for (int64_t i = 0; i < lostNum; i++) {
-        auto *buffer = new (std::nothrow) uint8_t[bufferSize]{0};
-        CHECK_AND_CONTINUE_LOG(buffer != nullptr, "AudioDataSource::FillLostBuffer: buffer is null");
+        auto buffer = std::make_unique<uint8_t[]>(bufferSize);
         pts -= FILL_AUDIO_FRAME_DURATION_IN_NS;
         audioBufferQ_.emplace_front(buffer, pts);
     }
@@ -723,8 +722,8 @@ AudioDataSource::CacheBuffer::CacheBuffer(const std::shared_ptr<AudioBuffer> &bu
 {
 }
 
-AudioDataSource::CacheBuffer::CacheBuffer(uint8_t *buf, const int64_t &timestamp)
-    : buf_(std::unique_ptr<uint8_t>(buf)), timestamp(timestamp)
+AudioDataSource::CacheBuffer::CacheBuffer(std::unique_ptr<uint8_t[]> &buf, const int64_t &timestamp)
+    : buf_(std::move(buf)), timestamp(timestamp)
 {
 }
 
