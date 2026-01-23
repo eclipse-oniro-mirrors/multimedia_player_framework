@@ -420,11 +420,12 @@ int32_t AudioStream::Release()
         audioRenderer_->Stop();
         soundPoolXCollie.CancelXCollieTimer();
         SoundPoolXCollie soundPoolXCollieRelease("AudioStream::Release time out",
-        [](void *) {
-            MEDIA_LOGI("Release audioRenderer::Release time out");
-        });
+            [](void *) {
+                MEDIA_LOGI("Release audioRenderer::Release time out");
+            });
         // When calling Release of audiorenderer, unlock here because the function will wait for the callback
         // indicating playback completion, otherwise, deadlock may occur
+        streamState_.store(StreamState::RELEASED);
         lock.unlock();
         audioRenderer_->Release();
         audioRenderer_ = nullptr;

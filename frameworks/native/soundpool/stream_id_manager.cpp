@@ -458,10 +458,6 @@ int32_t StreamIDManagerWithSameSoundInterrupt::ClearStreamIDInDeque(int32_t soun
         ++it;
     }
 
-    std::shared_ptr<AudioStream> stream = GetStreamByStreamID(streamID);
-    CHECK_AND_RETURN_RET_LOG(stream != nullptr, MSERR_INVALID_VAL, "ClearStreamIDInDeque, stream is nullptr");
-    stream->Release();
-    stream->SetStreamState(StreamState::RELEASED);
     RemoveStreamBySoundIDAndStreamID(soundID, streamID);
     return MSERR_OK;
 }
@@ -698,10 +694,6 @@ int32_t StreamIDManagerWithNoInterrupt::ClearStreamIDInDeque(int32_t soundID, in
         ++it;
     }
 
-    std::shared_ptr<AudioStream> stream = GetStreamByStreamID(streamID);
-    CHECK_AND_RETURN_RET_LOG(stream != nullptr, MSERR_INVALID_VAL, "ClearStreamIDInDeque, stream is nullptr");
-    stream->Release();
-    stream->SetStreamState(StreamState::RELEASED);
     RemoveStreamBySoundIDAndStreamID(soundID, streamID);
     return MSERR_OK;
 }
