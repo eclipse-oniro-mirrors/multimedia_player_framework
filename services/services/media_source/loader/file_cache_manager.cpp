@@ -112,7 +112,7 @@ bool FileCacheManager::IsValid(const std::string& path, int64_t exceptedSize)
     int64_t actual = GetSize(path);
     if (actual != exceptedSize) {
         Clear(path);
-        MEDIA_LOG_D("Segment is invalid: excepted %ld, got %ld", exceptedSize, actual);
+        MEDIA_LOG_D("Segment is invalid: excepted %lld, got %lld", exceptedSize, actual);
         return false;
     }
     return true;
