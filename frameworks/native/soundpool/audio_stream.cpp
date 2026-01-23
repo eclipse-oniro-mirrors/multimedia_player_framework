@@ -476,7 +476,8 @@ int32_t AudioStream::GetStreamID()
 int32_t AudioStream::SetVolume(float leftVolume, float rightVolume)
 {
     std::lock_guard lock(streamLock_);
-    CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL, "SetVolume Invalid audioRenderer_");
+    CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr && streamState_.load() != StreamState::RELEASED,
+        MSERR_INVALID_VAL, "SetVolume, Invalid audioRenderer_");
     // audio cannot support left & right volume, all use left volume.
     (void) rightVolume;
     int32_t ret = audioRenderer_->SetVolume(leftVolume);
@@ -487,7 +488,8 @@ int32_t AudioStream::SetVolume(float leftVolume, float rightVolume)
 int32_t AudioStream::SetRate(const AudioStandard::AudioRendererRate &renderRate)
 {
     std::lock_guard lock(streamLock_);
-    CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL, "SetRate Invalid audioRenderer_");
+    CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr && streamState_.load() != StreamState::RELEASED,
+        MSERR_INVALID_VAL, "SetRate, Invalid audioRenderer_");
     int32_t ret = audioRenderer_->SetRenderRate(CheckAndAlignRendererRate(renderRate));
     MEDIA_LOGI("AudioStream::SetRate, ret is %{public}d", ret);
     return ret;
@@ -511,7 +513,8 @@ int32_t AudioStream::SetLoop(int32_t loop)
 {
     std::lock_guard lock(streamLock_);
     loop_ = loop;
-    CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL, "SetLoop Invalid audioRenderer_");
+    CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr && streamState_.load() != StreamState::RELEASED,
+        MSERR_INVALID_VAL, "SetLoop, Invalid audioRenderer_");
     int32_t ret = audioRenderer_->SetLoopTimes(loop);
     MEDIA_LOGI("AudioStream::SetLoop, ret is %{public}d", ret);
     return MSERR_OK;
