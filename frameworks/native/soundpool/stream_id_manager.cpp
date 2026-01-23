@@ -223,7 +223,7 @@ void IStreamIDManager::PrintPlayingStreams()
             oss << ", ";
         }
     }
-    MEDIA_LOGI("PrintPlayingStreams, playingStreamIDs_: [%{public}s]", oos.str().c_str());
+    MEDIA_LOGI("PrintPlayingStreams, playingStreamIDs_: [%{public}s]", oss.str().c_str());
 }
 
 bool IStreamIDManager::InnerProcessOfOnPlayFinished(int32_t streamID)
