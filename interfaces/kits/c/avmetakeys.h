@@ -48,7 +48,7 @@ extern const char* OH_AVMETA_KEY_MIME_TYPE;
 extern const char* OH_AVMETA_KEY_DURATION;
 
 /**
- * @brief Key for bitrate, value type is uint32_t.
+ * @brief Key for bitrate, value type is int64_t.
  * @since 23
  */
 extern const char* OH_AVMETA_KEY_BITRATE;
@@ -90,7 +90,7 @@ extern const char* OH_AVMETA_KEY_SAMPLE_RATE;
 extern const char* OH_AVMETA_KEY_SAMPLE_DEPTH;
 
 /**
- * @brief Key for language. value type is string.
+ * @brief Key for language, value type is string.
  * @since 23
  */
 extern const char* OH_AVMETA_KEY_LANGUAGE;
@@ -108,13 +108,13 @@ extern const char* OH_AVMETA_KEY_TRACK_NAME;
 extern const char* OH_AVMETA_KEY_HDR_TYPE;
 
 /**
- * @brief Key for is original width, value type is int32_t.
+ * @brief Key for original width, value type is int32_t.
  * @since 23
  */
 extern const char* OH_AVMETA_KEY_ORIGINAL_WIDTH;
 
 /**
- * @brief Key for is original height, value type is int32_t.
+ * @brief Key for original height, value type is int32_t.
  * @since 23
  */
 extern const char* OH_AVMETA_KEY_ORIGINAL_HEIGHT;
@@ -123,13 +123,13 @@ extern const char* OH_AVMETA_KEY_ORIGINAL_HEIGHT;
  * @brief Key to get the list of referenced track IDs. Only used by metadata extractor.
  * @since 23
  */
-extern const char* OH_AVMETADATA_EXTRACTOR_REF_TRACK_IDS;
+extern const char* OH_AVMETA_KEY_REF_TRACK_IDS;
 
 /**
  * @brief Key to get the track reference type. Only used by metadata extractor.
  * @since 23
  */
-extern const char* OH_AVMETADATA_EXTRACTOR_TRACK_REF_TYPE;
+extern const char* OH_AVMETA_KEY_TRACK_REF_TYPE;
 
 #ifdef __cplusplus
 }

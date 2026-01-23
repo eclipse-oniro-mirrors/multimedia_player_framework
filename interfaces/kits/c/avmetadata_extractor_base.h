@@ -234,17 +234,17 @@ typedef enum OH_AVMetadataExtractor_FetchState {
 } OH_AVMetadataExtractor_FetchState;
 
 /**
-* @brief Define OH_AVMetadataExtractor_OutputParam field.
-*
-* @since 23
-*/
+ * @brief defines the output param for frames fetched by AVMetadataExtractor
+ *
+ * @since 23
+ */
 typedef struct OH_AVMetadataExtractor_OutputParam OH_AVMetadataExtractor_OutputParam;
 
 /**
-* @brief defines the frame info fetched from video.
-*
-* @since 23
-*/
+ * @brief defines the frame info fetched from video
+ *
+ * @since 23
+ */
 typedef struct OH_AVMetadataExtractor_FrameInfo {
     /** The request time passed by user */
     int64_t requestTimeUs;

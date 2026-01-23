@@ -29,7 +29,7 @@
  * @brief Defines the structure and enumeration for AVMedia.
  *
  * @kit MediaKit
- * @library libavmedia_source.so
+ * @library libavmedia_base.so
  * @syscap SystemCapability.Multimedia.Media.Core
  * @since 23
  */
@@ -47,16 +47,16 @@ extern "C" {
  * @since 23
  */
 typedef enum OH_AVMedia_SeekMode {
-    /** Resource is located right after or at the given time */
+    /** Seek to keyframe after the time point. */
     OH_AVMEDIA_SEEK_NEXT_SYNC = 0,
 
-    /** Resource is located right before or at the given time */
+    /** Seek to keyframe before the time point. */
     OH_AVMEDIA_SEEK_PREVIOUS_SYNC = 1,
 
-    /** Resource is located closest to or at the given time */
+    /** Seek to closest keyframe near the time point. */
     OH_AVMEDIA_SEEK_CLOSEST_SYNC = 2,
 
-    /** Resource is located closest to or at the given time */
+    /** Seek to the time point */
     OH_AVMEDIA_SEEK_CLOSEST = 3,
 } OH_AVMedia_SeekMode;
 

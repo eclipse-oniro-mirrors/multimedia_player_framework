@@ -111,6 +111,9 @@ void MediaSourceLoaderCallback::Release()
     if (openedCallback_ != nullptr) {
         openedCallback_->Release();
     }
+    openedCallback_ = nullptr;
+    readCallback_ = nullptr;
+    closeCallback_ = nullptr;
 }
 
 }

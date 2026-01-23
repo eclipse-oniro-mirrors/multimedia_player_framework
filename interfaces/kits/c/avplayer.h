@@ -663,12 +663,12 @@ OH_AVFormat *OH_AVPlayer_GetTrackDescription(OH_AVPlayer *player, uint32_t index
 OH_AVFormat *OH_AVPlayer_GetPlaybackStatisticMetrics(OH_AVPlayer *player);
 
 /**
- * @brief Add subtitle resource represented by fd to the player. The external subtitle must be set after
- * fdSrc is set in an AVPlayer instance.
- * @param player Pointer to an OH_AVPlayer instance
- * @param fd Indicates the file descriptor of subtitle source.
- * @param offset Indicates the offset of media source in file descriptor.
- * @param size Indicates the size of media source.
+ * @brief Add subtitle resource represented by FD to the player. Currently, the external subtitle must be set after
+ *     fdSrc of the video resource is set in an AVPlayer instance.
+ * @param {OH_AVPlayer} player Pointer to an OH_AVPlayer instance
+ * @param {int32_t} fd Indicates the file descriptor of subtitle source.
+ * @param {int64_t} offset Indicates the offset of media source in file descriptor.
+ * @param {int64_t} size Indicates the size of media source.
  * @return Function result code.
  *         {@link AV_ERR_OK} if the execution is successful.
  *         {@link AV_ERR_INVALID_VAL} if input player is nullptr.
@@ -731,12 +731,12 @@ OH_AVErrCode OH_AVPlayer_SetMediaMuted(OH_AVPlayer *player, OH_MediaType mediaTy
 int32_t OH_AVPlayer_GetPlaybackPosition(OH_AVPlayer *player);
 
 /**
- * Checks whether the media source supports continuous seek.
- * The actual value is returned when this API is called in the prepared, playing, paused, or completed state.
- * The value **false** is returned if it is called in other states. For devices that do not support the seek
- * operation in {@link AV_SEEK_CONTINUOUS} mode, false is returned.
+ * @brief Checks whether the media source supports continuous seek.
+ *     The actual value is returned when this API is called in the prepared, playing, paused, or completed state.
+ *     The value **false** is returned if it is called in other states. For devices that do not support the seek
+ *     operation in {@link AV_SEEK_CONTINUOUS} mode, false is returned.
  * @param player Pointer to an OH_AVPlayer instance.
- * @returns true - seek continuous is supported.
+ * @return true - seek continuous is supported.
  *         false - seek continuous is not supported or the support status is uncertain.
  * @since 23
  */
@@ -771,8 +771,8 @@ OH_AVErrCode OH_AVPlayer_SetAmplitudeUpdateCallback(OH_AVPlayer *player, OH_AVPl
 
 /**
  * @brief Subscribes to events indicating that a Supplemental Enhancement Information (SEI) message is received. This
- * applies only to HTTP-FLV live streaming and is triggered when SEI messages are present in the video stream.
- * You must initiate the subscription before calling prepare.
+ *     applies only to HTTP-FLV live streaming and is triggered when SEI messages are present in the video stream.
+ *     You must initiate the subscription before calling prepare.
  * @param player Pointer to an OH_AVPlayer instance
  * @param payloadTypes playload types
  * @param typeNum The size of the playload types array.
@@ -805,8 +805,8 @@ OH_AVFormat *OH_AVSeiMessage_GetSei(OH_AVSeiMessageArray *message, uint32_t inde
 
 /**
  * @brief Set video window size for super-resolution. This API can be called when the AVPlayer is in the initialized,
- *  prepared, playing, paused, completed, or stopped state.The input parameter values must be in the range
- *   of 320 x 320 to 1920 x 1080 (in px).
+ *     prepared, playing, paused, completed, or stopped state.The input parameter values must be in the range
+ *     of 320 x 320 to 1920 x 1080 (in px).
  * @param player Pointer to an OH_AVPlayer instance
  * @param width Width of the window. The value range is [320 - 1920], in px.
  * @param height Height of the window. The value range is [320 - 1080], in px.
@@ -814,9 +814,9 @@ OH_AVFormat *OH_AVSeiMessage_GetSei(OH_AVSeiMessageArray *message, uint32_t inde
  *         {@link AV_ERR_OK} if the execution is successful.
  *         {@link AV_ERR_INVALID_VAL} if input player is nullptr, or Parameter errord.
  *         {@link AV_ERR_OPERATE_NOT_PERMIT} if Operation not allowed.
- *         {@link AV_ERR_UNSUPPORTED} if Super resolution is not supported.
+ *         {@link AV_ERR_SUPER_RESOLUTION_UNSUPPORTED} if Super resolution is not supported.
  *         {@link AV_ERR_SUPER_RESOLUTION_NOT_ENABLED} if Missing enable super resolution feature in{@link
- *          PlaybackStrategy}.
+ *          OH_AVPlaybackStrategy}.
  * @since 23
  */
 OH_AVErrCode OH_AVPlayer_SetTargetVideoWindowSize(OH_AVPlayer *player, int32_t width, int32_t height);
@@ -824,7 +824,7 @@ OH_AVErrCode OH_AVPlayer_SetTargetVideoWindowSize(OH_AVPlayer *player, int32_t w
 /**
  * @brief Enable or disable super-resolution dynamically. This API can be called when the AVPlayer is in the
  * initialized, prepared, playing, paused, completed, or stopped state.
- * Must enable super-resolution feature in {@link PlaybackStrategy} before calling prepare.
+ * Must enable super-resolution feature in {@link OH_AVPlaybackStrategy} before calling prepare.
  * @param player Pointer to an OH_AVPlayer instance.
  * @param enabled true: super-resolution enabled; false: super-resolution disabled.
  * @return Function result code.
@@ -833,7 +833,7 @@ OH_AVErrCode OH_AVPlayer_SetTargetVideoWindowSize(OH_AVPlayer *player, int32_t w
  *         {@link AV_ERR_OPERATE_NOT_PERMIT} if Operation not allowed.
  *         {@link AV_ERR_SUPER_RESOLUTION_UNSUPPORTED} if Super resolution is not supported.
  *         {@link AV_ERR_SUPER_RESOLUTION_NOT_ENABLED} if Missing enable super resolution feature in{@link
- *          PlaybackStrategy}.
+ *          OH_AVPlaybackStrategy}.
  * @since 23
  */
 OH_AVErrCode OH_AVPlayer_SetVideoSuperResolutionEnable(OH_AVPlayer *player, bool enabled);
@@ -850,7 +850,7 @@ OH_AVPlaybackStrategy *OH_AVPlaybackStrategy_Create(void);
  * @param strategy The OH_AVPlaybackStrategy instance.
  * @return Function result code.
  *         {@link AV_ERR_OK} if the execution is successful.
- *         {@link AV_ERR_INVALID_VAL} if input player is nullptr.
+ *         {@link AV_ERR_INVALID_VAL} if input strategy is nullptr.
  * @since 23
  */
 OH_AVErrCode OH_AVPlaybackStrategy_Destroy(OH_AVPlaybackStrategy *strategy);
@@ -859,7 +859,9 @@ OH_AVErrCode OH_AVPlaybackStrategy_Destroy(OH_AVPlaybackStrategy *strategy);
  * @brief Choose a stream width close to it.
  * @param strategy The OH_AVPlaybackStrategy used by avplayer.
  * @param width the preferred width chosen to play by avplayer at start.
- * @return OH_AVErrCode indicating success or failure.
+ * @return Function result code.
+ *         {@link AV_ERR_OK} if the execution is successful.
+ *         {@link AV_ERR_INVALID_VAL} if input strategy is nullptr.
  * @since 23
  */
 OH_AVErrCode OH_AVPlaybackStrategy_SetPreferredWidth(OH_AVPlaybackStrategy *strategy, int32_t width);
@@ -868,7 +870,9 @@ OH_AVErrCode OH_AVPlaybackStrategy_SetPreferredWidth(OH_AVPlaybackStrategy *stra
  * @brief Choose a stream height close to it.
  * @param strategy The OH_AVPlaybackStrategy used by avplayer.
  * @param height The preferred width chosen to play by avplayer at start.
- * @return OH_AVErrCode indicating success or failure.
+ * @return Function result code.
+ *         {@link AV_ERR_OK} if the execution is successful.
+ *         {@link AV_ERR_INVALID_VAL} if input strategy is nullptr.
  * @since 23
  */
 OH_AVErrCode OH_AVPlaybackStrategy_SetPreferredHeight(OH_AVPlaybackStrategy *strategy, int32_t height);
@@ -877,7 +881,9 @@ OH_AVErrCode OH_AVPlaybackStrategy_SetPreferredHeight(OH_AVPlaybackStrategy *str
  * @brief Choose a preferred buffer duration close to it.
  * @param strategy The OH_AVPlaybackStrategy used by avplayer.
  * @param ms The preferred buffer duration chosen to play by avplayer at start.
- * @return OH_AVErrCode indicating success or failure.
+ * @return Function result code.
+ *         {@link AV_ERR_OK} if the execution is successful.
+ *         {@link AV_ERR_INVALID_VAL} if input strategy is nullptr.
  * @since 23
  */
 OH_AVErrCode OH_AVPlaybackStrategy_SetPreferredBufferDuration(OH_AVPlaybackStrategy *strategy, int32_t ms);
@@ -887,7 +893,9 @@ OH_AVErrCode OH_AVPlaybackStrategy_SetPreferredBufferDuration(OH_AVPlaybackStrat
  *
  * @param strategy Pointer to OH_AVPlaybackStrategy.
  * @param enabled true to enable HDR, false to disable.
- * @return OH_AVErrCode indicating success or failure.
+ * @return Function result code.
+ *         {@link AV_ERR_OK} if the execution is successful.
+ *         {@link AV_ERR_INVALID_VAL} if input strategy is nullptr.
  * @since 23
  */
 OH_AVErrCode OH_AVPlaybackStrategy_SetPreferredHdr(OH_AVPlaybackStrategy *strategy, bool enabled);
@@ -897,7 +905,9 @@ OH_AVErrCode OH_AVPlaybackStrategy_SetPreferredHdr(OH_AVPlaybackStrategy *strate
  *
  * @param strategy Pointer to OH_AVPlaybackStrategy.
  * @param lang Subtitle language code (e.g., "zh").
- * @return OH_AVErrCode indicating success or failure.
+ * @return Function result code.
+ *         {@link AV_ERR_OK} if the execution is successful.
+ *         {@link AV_ERR_INVALID_VAL} if input strategy is nullptr.
  * @since 23
  */
 OH_AVErrCode OH_AVPlaybackStrategy_SetPreferredSubtitleLanguage(OH_AVPlaybackStrategy *strategy, const char *lang);
@@ -907,7 +917,9 @@ OH_AVErrCode OH_AVPlaybackStrategy_SetPreferredSubtitleLanguage(OH_AVPlaybackStr
  *
  * @param strategy Pointer to OH_AVPlaybackStrategy.
  * @param lang Audio language code (e.g., "en").
- * @return OH_AVErrCode indicating success or failure.
+ * @return Function result code.
+ *         {@link AV_ERR_OK} if the execution is successful.
+ *         {@link AV_ERR_INVALID_VAL} if input strategy is nullptr.
  * @since 23
  */
 OH_AVErrCode OH_AVPlaybackStrategy_SetPreferredAudioLanguage(OH_AVPlaybackStrategy *strategy, const char *lang);
@@ -917,7 +929,9 @@ OH_AVErrCode OH_AVPlaybackStrategy_SetPreferredAudioLanguage(OH_AVPlaybackStrate
  *
  * @param strategy Pointer to OH_AVPlaybackStrategy.
  * @param mediaType Media type to mute.
- * @return OH_AVErrCode indicating success or failure.
+ * @return Function result code.
+ *         {@link AV_ERR_OK} if the execution is successful.
+ *         {@link AV_ERR_INVALID_VAL} if input strategy is nullptr.
  * @since 23
  */
 OH_AVErrCode OH_AVPlaybackStrategy_SetMutedMediaType(OH_AVPlaybackStrategy *strategy, OH_MediaType mediaType);
@@ -927,7 +941,9 @@ OH_AVErrCode OH_AVPlaybackStrategy_SetMutedMediaType(OH_AVPlaybackStrategy *stra
  *
  * @param strategy Pointer to OH_AVPlaybackStrategy.
  * @param enabled true to show, false otherwise.
- * @return OH_AVErrCode indicating success or failure.
+ * @return Function result code.
+ *         {@link AV_ERR_OK} if the execution is successful.
+ *         {@link AV_ERR_INVALID_VAL} if input strategy is nullptr.
  * @since 23
  */
 OH_AVErrCode OH_AVPlaybackStrategy_SetShowFirstFrameOnPrepare(OH_AVPlaybackStrategy *strategy, bool enabled);
@@ -937,7 +953,9 @@ OH_AVErrCode OH_AVPlaybackStrategy_SetShowFirstFrameOnPrepare(OH_AVPlaybackStrat
  *
  * @param strategy Pointer to OH_AVPlaybackStrategy.
  * @param seconds Threshold value.
- * @return OH_AVErrCode indicating success or failure.
+ * @return Function result code.
+ *         {@link AV_ERR_OK} if the execution is successful.
+ *         {@link AV_ERR_INVALID_VAL} if input strategy is nullptr.
  * @since 23
  */
 OH_AVErrCode OH_AVPlaybackStrategy_SetThresholdForAutoQuickPlay(OH_AVPlaybackStrategy *strategy, double seconds);
@@ -947,7 +965,9 @@ OH_AVErrCode OH_AVPlaybackStrategy_SetThresholdForAutoQuickPlay(OH_AVPlaybackStr
  *
  * @param strategy Pointer to OH_AVPlaybackStrategy.
  * @param enabled true to enable, false to disable.
- * @return OH_AVErrCode indicating success or failure.
+ * @return Function result code.
+ *         {@link AV_ERR_OK} if the execution is successful.
+ *         {@link AV_ERR_INVALID_VAL} if input strategy is nullptr.
  * @since 23
  */
 OH_AVErrCode OH_AVPlaybackStrategy_SetSuperResolutionEnable(OH_AVPlaybackStrategy *strategy, bool enabled);
@@ -957,7 +977,9 @@ OH_AVErrCode OH_AVPlaybackStrategy_SetSuperResolutionEnable(OH_AVPlaybackStrateg
  *
  * @param strategy Pointer to OH_AVPlaybackStrategy.
  * @param seconds Buffer duration in seconds.
- * @return OH_AVErrCode indicating success or failure.
+ * @return Function result code.
+ *         {@link AV_ERR_OK} if the execution is successful.
+ *         {@link AV_ERR_INVALID_VAL} if input strategy is nullptr.
  * @since 23
  */
 OH_AVErrCode OH_AVPlaybackStrategy_SetPreferredBufferDurationForPlaying(OH_AVPlaybackStrategy *strategy,
@@ -968,7 +990,9 @@ OH_AVErrCode OH_AVPlaybackStrategy_SetPreferredBufferDurationForPlaying(OH_AVPla
  *
  * @param strategy Pointer to OH_AVPlaybackStrategy.
  * @param enabled true to keep decoding, false to pause decoding when muted.
- * @return OH_AVErrCode indicating success or failure.
+ * @return Function result code.
+ *         {@link AV_ERR_OK} if the execution is successful.
+ *         {@link AV_ERR_INVALID_VAL} if input strategy is nullptr.
  * @since 23
  */
 OH_AVErrCode OH_AVPlaybackStrategy_SetKeepDecodingOnMute(OH_AVPlaybackStrategy *strategy, bool enabled);
@@ -987,8 +1011,8 @@ OH_AVErrCode OH_AVPlayer_SetPlaybackStrategy(OH_AVPlayer *player, OH_AVPlaybackS
 
 /**
  * @brief Get statistic info of current player. This API can be called only when the avplayer is in the prepared,
- * playing, or paused state.
- * @param player Pointer to an OH_AVPlayer instance
+ *     playing, or paused state.
+ * @param {OH_AVPlayer*} player Pointer to an OH_AVPlayer instance
  * @return Returns a pointer to an OH_AVFormat instance.
  *         Return nullptr if the player is nullptr or invalid.
  * @since 23
