@@ -214,9 +214,6 @@ std::shared_ptr<AudioStream> IStreamIDManager::InnerProcessOfCreateAudioStream(i
 
 void IStreamIDManager::PrintPlayingStreams()
 {
-    for (const auto &mem : playingStreamIDs_) {
-        MEDIA_LOGI("PrintPlayingStreams, streamID is %{public}d", mem);
-    }
     static std::ostringstream oss;
     oss.str("");
     oss.clear();
@@ -226,7 +223,7 @@ void IStreamIDManager::PrintPlayingStreams()
             oss << ", ";
         }
     }
-    MEDIA_LOGI("PrintPlayingStreams, streamID is [%{public}s]", oos.str().c_str());
+    MEDIA_LOGI("PrintPlayingStreams, playingStreamIDs_: [%{public}s]", oos.str().c_str());
 }
 
 bool IStreamIDManager::InnerProcessOfOnPlayFinished(int32_t streamID)
