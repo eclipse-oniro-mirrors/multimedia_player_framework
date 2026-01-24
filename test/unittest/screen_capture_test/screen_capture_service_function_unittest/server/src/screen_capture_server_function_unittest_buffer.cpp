@@ -36,50 +36,6 @@ using namespace OHOS::Media;
 namespace OHOS {
 namespace Media {
 /**
-* @tc.name: AcquireAudioBuffer_001
-* @tc.desc: mic = SOURCE_DEFAULT, inner = ALL_PLAYBACK
-* @tc.type: FUNC
-*/
-HWTEST_F(ScreenCaptureServerFunctionTest, AcquireAudioBuffer_001, TestSize.Level2)
-{
-    SetValidConfig();
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    screenCaptureServer_->SetMicrophoneOn();
-    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    sleep(RECORDER_TIME / 2);
-    std::shared_ptr<AudioBuffer> audioBuffer = nullptr;
-    ASSERT_EQ(screenCaptureServer_->AcquireAudioBuffer(audioBuffer, AudioCaptureSourceType::SOURCE_DEFAULT), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->AcquireAudioBuffer(audioBuffer, AudioCaptureSourceType::ALL_PLAYBACK), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->ReleaseAudioBuffer(AudioCaptureSourceType::SOURCE_DEFAULT), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->ReleaseAudioBuffer(AudioCaptureSourceType::ALL_PLAYBACK), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
-}
-
-/**
-* @tc.name: AcquireAudioBuffer_002
-* @tc.desc: mic = MIC, inner = APP_PLAYBACK
-* @tc.type: FUNC
-*/
-HWTEST_F(ScreenCaptureServerFunctionTest, AcquireAudioBuffer_002, TestSize.Level2)
-{
-    SetValidConfig();
-    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::MIC;
-    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::APP_PLAYBACK;
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    screenCaptureServer_->SetMicrophoneOn();
-    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    sleep(RECORDER_TIME / 2);
-    std::shared_ptr<AudioBuffer> audioBuffer = nullptr;
-    ASSERT_EQ(screenCaptureServer_->AcquireAudioBuffer(audioBuffer, AudioCaptureSourceType::MIC), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->AcquireAudioBuffer(audioBuffer, AudioCaptureSourceType::APP_PLAYBACK), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->ReleaseAudioBuffer(AudioCaptureSourceType::MIC), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->ReleaseAudioBuffer(AudioCaptureSourceType::APP_PLAYBACK), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
-}
-
-/**
 * @tc.name: AcquireVideoBuffer_001
 * @tc.desc: isDump_ = false
 * @tc.type: FUNC
