@@ -2742,7 +2742,7 @@ void ScreenCaptureServer::SendConfigToUIParams(AAFwk::Want &want)
         const auto &displayStr = JoinVector(displayIds_);
         MEDIA_LOGI("SendConfigToUIParams displayId: %{public}s", displayStr.c_str());
         want.SetParam("displayId", displayStr);
-    } else if (!displayIds_.empty() && displayIds_.front() <= std::numeric_limits<int>::max()) {
+    } else if (!displayIds_.empty() && displayIds_.front() <= (uint64_t)std::numeric_limits<int>::max()) {
         MEDIA_LOGI("SendConfigToUIParams displayId: %{public}" PRIu64, displayIds_.front());
         want.SetParam("displayId", static_cast<int>(displayIds_.front()));
     } else {
