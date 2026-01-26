@@ -105,7 +105,7 @@ private:
     int64_t curOffset_ {0};
     std::mutex mutex_;
     uint8_t* buffer_;
-    int64_t data_size = 0;
+    int64_t dataSize = 0;
     volatile int64_t cacheOffset_ = 0;
     pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
     pthread_cond_t cond_download = PTHREAD_COND_INITIALIZER;
