@@ -408,7 +408,7 @@ void CustomLoaderCallback::Close(int64_t uuid)
     isInterruptNeeded_ = true;
     pthread_cond_signal(&cond_return);
     if (client) {
-        data_size = 0;
+        dataSize = 0;
         pthread_cond_signal(&cond_download);
         client->Close(false);
         client->Deinit();
@@ -544,9 +544,9 @@ void CustomLoaderCallback::StartDownloadTask(const std::weak_ptr<CustomLoaderCal
         if (!self->isInterruptedNewDownLoad_) {
             MEDIA_LOG_I("download end");
             if (self->size_ == -1) {
-                self->size_ = self->cacheOffset_ + self->data_size;
+                self->size_ = self->cacheOffset_ + self->dataSize;
             }
-            self->data_size = SHARD_SIZE;
+            self->dataSize = SHARD_SIZE;
             pthread_cond_signal(&self->cond_return);
         }
     });
@@ -563,8 +563,8 @@ void CustomLoaderCallback::ReadDataTask(const std::weak_ptr<CustomLoaderCallback
         }
 
         pthread_mutex_lock(&self->mutex);
-        if (self->data_size != SHARD_SIZE) {
-            MEDIA_LOG_I("data_size is under 4MB, wait download");
+        if (self->dataSize != SHARD_SIZE) {
+            MEDIA_LOG_I("dataSize is under 4MB, wait download");
             pthread_cond_wait(&self->cond_return, &self->mutex);
             MEDIA_LOG_I("wait download end");
         }
@@ -626,7 +626,7 @@ void CustomLoaderCallback::HandleCacheMiss(int64_t start, int64_t& len,
         "; cacheOffset: " PUBLIC_LOG_D64, start, self->cacheOffset_);
 
     self->cacheOffset_ += SHARD_SIZE;
-    self->data_size = 0;
+    self->dataSize = 0;
     memset_s(self->buffer_, SHARD_SIZE, 0, SHARD_SIZE);
     pthread_cond_signal(&self->cond_download);
     pthread_cond_wait(&self->cond_return, &self->mutex);
@@ -641,7 +641,7 @@ void CustomLoaderCallback::HandleDownloadFromStart(int64_t& len, bool noSizeAndR
 {
     MEDIA_LOG_I("need download from start");
     self->isInterruptedNewDownLoad_ = true;
-    self->data_size = 0;
+    self->dataSize = 0;
     pthread_cond_signal(&self->cond_download);
     self->Redownload(weakThis);
 
@@ -667,7 +667,7 @@ void CustomLoaderCallback::RespondDataChunk(int64_t start, int64_t& read, int64_
     read += readLen;
     if (bufferStart + readLen == SHARD_SIZE) {
         self->cacheOffset_ += SHARD_SIZE;
-        self->data_size = 0;
+        self->dataSize = 0;
         memset_s(self->buffer_, SHARD_SIZE, 0, SHARD_SIZE);
         MEDIA_LOG_I("data return thread wait, notify download thread");
         pthread_cond_signal(&self->cond_download);
@@ -684,27 +684,27 @@ size_t CustomLoaderCallback::RxBodyDataUnsupportRangeAndCache(void* buffer, size
     pthread_mutex_lock(&downloader->mutex);
     size_t dataLen = size * nitems;
     uint8_t* tempBuffer = static_cast<uint8_t*>(buffer);
-    if (dataLen + downloader->data_size > SHARD_SIZE) {
+    if (dataLen + downloader->dataSize > SHARD_SIZE) {
         MEDIA_LOG_I("download data need write with slice");
         size_t writeLen = 0;
         size_t needWriteLen = dataLen;
         while (needWriteLen > 0) {
-            int len = needWriteLen + downloader->data_size > SHARD_SIZE ?
-                SHARD_SIZE - downloader->data_size : needWriteLen;
-            memcpy_s(downloader->buffer_ + downloader->data_size, len, tempBuffer + writeLen, len);
-            downloader->data_size += len;
+            int len = needWriteLen + downloader->dataSize > SHARD_SIZE ?
+                SHARD_SIZE - downloader->dataSize : needWriteLen;
+            memcpy_s(downloader->buffer_ + downloader->dataSize, len, tempBuffer + writeLen, len);
+            downloader->dataSize += len;
             writeLen += len;
             needWriteLen -= len;
-            if (downloader->data_size == SHARD_SIZE) {
+            if (downloader->dataSize == SHARD_SIZE) {
                 MEDIA_LOG_I("download thread wait, notify data return thread:");
                 pthread_cond_signal(&downloader->cond_return);
                 pthread_cond_wait(&downloader->cond_download, &downloader->mutex);
             }
         }
     } else {
-        memcpy_s(downloader->buffer_ + downloader->data_size, SHARD_SIZE - downloader->data_size, tempBuffer, dataLen);
-        downloader->data_size += dataLen;
-        if (downloader->data_size == SHARD_SIZE) {
+        memcpy_s(downloader->buffer_ + downloader->dataSize, SHARD_SIZE - downloader->dataSize, tempBuffer, dataLen);
+        downloader->dataSize += dataLen;
+        if (downloader->dataSize == SHARD_SIZE) {
             MEDIA_LOG_I("download thread wait, notify data return thread:");
             pthread_cond_signal(&downloader->cond_return);
             pthread_cond_wait(&downloader->cond_download, &downloader->mutex);
@@ -736,7 +736,7 @@ void CustomLoaderCallback::Redownload(const std::weak_ptr<CustomLoaderCallback>&
         }
         self->isInterruptedNewDownLoad_ = false;
         self->isDownload_ = true;
-        self->data_size = 0;
+        self->dataSize = 0;
         self->cacheOffset_ = 0;
         memset_s(self->buffer_, SHARD_SIZE, 0, SHARD_SIZE);
         auto client = NetworkClientAgent::NewInstance(&RxHeaderData, &RxBodyData, self.get());
@@ -748,7 +748,7 @@ void CustomLoaderCallback::Redownload(const std::weak_ptr<CustomLoaderCallback>&
         self->isDownload_ = false;
         if (!self->isInterruptedNewDownLoad_) {
             MEDIA_LOG_I("download end");
-            self->data_size = SHARD_SIZE;
+            self->dataSize = SHARD_SIZE;
             pthread_cond_signal(&self->cond_return);
         }
     });
