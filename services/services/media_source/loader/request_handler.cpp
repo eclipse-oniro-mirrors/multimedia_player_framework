@@ -21,6 +21,7 @@ namespace OHOS {
 namespace Media {
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "RequestHandler" };
+    constexpr int64_t TIMEOUT_MS = 5000;
 }
 
 RequestHandler::RequestHandler(std::shared_ptr<Plugins::HttpPlugin::NetworkClient> client): client_(client) {}
@@ -33,7 +34,7 @@ void RequestHandler::Request(int64_t start, int64_t length, const std::string& u
     Plugins::HttpPlugin::RequestInfo sourceInfo;
     sourceInfo.url = url;
     sourceInfo.httpHeader = headers;
-    sourceInfo.timeoutMs = 5000;
+    sourceInfo.timeoutMs = TIMEOUT_MS;
 
     auto weakThis = weak_from_this();
     auto handleResponseCb = [weakThis](int32_t clientCode, int32_t serverCode, Status ret) {
