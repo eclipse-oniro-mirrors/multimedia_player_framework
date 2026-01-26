@@ -64,7 +64,8 @@ struct FileInfo {
     uint64_t size;
 
     // 按修改时间升序排序
-    bool operator<(const FileInfo& other) const {
+    bool operator<(const FileInfo& other) const
+    {
         return writeTime < other.writeTime;
     }
 };
@@ -100,7 +101,7 @@ private:
     static std::once_flag onceFlag_;
     int fd_;
     void* mapped_;
-    size_t file_size_;
+    size_t fileSize_;
     std::unordered_map<std::string, std::string> entryIndex_;
     std::unordered_map<std::string, std::vector<CacheEntryInfo>> index_;
     std::mutex mutex_;
