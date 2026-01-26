@@ -30,7 +30,8 @@ namespace fs = std::filesystem;
 using namespace std::chrono;
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "StreamCacheManager"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "StreamCacheManager"};
+    constexpr int64_t TIMER_INIT = 10;
 }
 
 namespace OHOS {
@@ -57,7 +58,7 @@ std::shared_ptr<StreamCacheManager> StreamCacheManager::Create()
 
 StreamCacheManager::StreamCacheManager():fd_(-1), mapped_(MAP_FAILED), fileSize_(0)
 {
-    ScopedTimer timer("StreamCacheManager init", 10);
+    ScopedTimer timer("StreamCacheManager init", TIMER_INIT);
     LoadMapping();
     LoadIndex();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
