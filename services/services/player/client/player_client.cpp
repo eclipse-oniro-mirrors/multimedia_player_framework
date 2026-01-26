@@ -366,8 +366,8 @@ int32_t PlayerClient::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr!");
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
 
-    bool isCacheAble = mediaSource->GetEnable();
-    if (mediaSource->mediaSourceLoaderCb_ != nullptr && mediaSource->GetEnable()) {
+    bool isCacheAble = mediaSource->GetenableOfflineCache();
+    if (mediaSource->mediaSourceLoaderCb_ != nullptr && mediaSource->GetenableOfflineCache()) {
         MEDIA_LOGE("Cannot set local cache and proxy download at the same time.");
         mediaSource->sourceLoader_ = nullptr;
         return playerProxy_->SetMediaSource(mediaSource, strategy);
