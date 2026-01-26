@@ -116,6 +116,9 @@ public:
         int32_t sessionId);
     void SystemPrivacyProtected(ScreenId& virtualScreenId, bool systemPrivacyProtectionSwitch);
     void AppPrivacyProtected(ScreenId& virtualScreenId, bool appPrivacyProtectionSwitch);
+    void OnUpdateMirrorDisplay(std::vector<uint64_t> &displayIds);
+    void OnWindowInfoChanged(const uint64_t &displayId);
+    void OnWindowLifecycle(SCWindowLifecycleListener::SessionLifecycleEvent event);
 #ifdef SUPPORT_CALL
     int32_t TelCallStateUpdated(bool isInTelCall);
     int32_t TelCallAudioStateUpdated(bool isInTelCallAudio);
@@ -311,11 +314,16 @@ private:
     void UnRegisterLanguageSwitchListener();
     int32_t HandleOriginalStreamPrivacy();
     void PublishScreenCaptureEvent(const std::string& state);
+    void OnCaptureContentChanged(bool isMirrorChanged = false);
+    int32_t RegisterRecordDisplayListener();
+    int32_t UnRegisterRecordDisplayListener();
 private:
     std::mutex mutex_;
     std::mutex cbMutex_;
     std::mutex innerMutex_;
     std::mutex inCallMutex_;
+    std::mutex displayScreenIdsMutex_;
+    std::shared_mutex windowIdListMutex_;
     mutable std::shared_mutex rw_lock_;
     std::shared_ptr<ScreenCaptureObserverCallBack> screenCaptureObserverCb_ = nullptr;
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
@@ -366,7 +374,11 @@ private:
     std::vector<ScreenId> displayIds_;
     std::vector<uint64_t> missionIds_;
     std::vector<int32_t> windowIdList_ = {};
-    ScreenId curWindowInDisplayId_ = SCREEN_ID_INVALID;
+    std::atomic<ScreenId> curWindowInDisplayId_{SCREEN_ID_INVALID};
+    std::atomic<AVScreenCaptureContentChangedEvent> curWindowEvent_ =
+        AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE;
+    std::atomic<SCWindowLifecycleListener::SessionLifecycleEvent> curWindowLifecycle_ =
+        SCWindowLifecycleListener::SessionLifecycleEvent::FOREGROUND;
     ScreenCaptureContentFilter contentFilter_;
     AVScreenCaptureState captureState_ = AVScreenCaptureState::CREATED;
     std::shared_ptr<NotificationLocalLiveViewContent> localLiveViewContent_;
@@ -375,6 +387,7 @@ private:
     sptr<SCWindowLifecycleListener> windowLifecycleListener_ = nullptr;
     sptr<SCDeathRecipientListener> lifecycleListenerDeathRecipient_ = nullptr;
     sptr<SCWindowInfoChangedListener> windowInfoChangedListener_ = nullptr;
+    sptr<ScreenManager::IRecordDisplayListener> recordDisplayListener_ = nullptr;
     bool isRegionCapture_ = false;
     uint64_t regionDisplayId_ = 0;
     OHOS::Rect regionArea_ = {0, 0, 0, 0};

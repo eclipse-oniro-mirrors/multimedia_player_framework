@@ -28,9 +28,6 @@ public:
     virtual ~ScreenCaptureMonitorCallback();
     void SaveCallbackReference(const std::string &name, std::weak_ptr<AutoRef> ref);
     void CancelCallbackReference(const std::string &name);
-    void OnScreenCaptureStarted(int32_t pid) override;
-    void OnScreenCaptureFinished(int32_t pid) override;
-    void OnScreenCaptureDied() override;
     std::shared_ptr<OHOS::AppExecFwk::EventHandler> mainHandler_ = nullptr;
 private:
     struct ScreenCaptureMonitorAniCallback {
@@ -38,6 +35,9 @@ private:
         std::string callbackName = "unknown";
         OHOS::Media::ScreenCaptureMonitorEvent captureEvent;
     };
+    void OnScreenCaptureStarted(int32_t pid) override;
+    void OnScreenCaptureFinished(int32_t pid) override;
+    void OnScreenCaptureDied() override;
     void OnTaiheCaptureCallBack(ScreenCaptureMonitorAniCallback *taiheCb) const;
 
     std::mutex mutex_;
