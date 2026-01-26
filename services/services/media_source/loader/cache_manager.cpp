@@ -286,8 +286,8 @@ std::string StreamCacheManager::GetMediaCache(const std::string& url)
     char* ptr = static_cast<char*>(mapped_);
     CacheEntryHeader* header = reinterpret_cast<CacheEntryHeader*>(ptr + info.offset);
     std::string entry = ExtractField(ptr + info.offset, header->fieldCount, CacheFieldId::ENTRY);
-    CHECK_AND_RETURN_RET_LOG(!entry.empty() && entry.find("..") == std::string::npos
-        && entry.find('/') == std::string::npos && entry.find('\\') == std::string::npos,
+    CHECK_AND_RETURN_RET_LOG(!entry.empty() && entry.find("..") == std::string::npos &&
+        entry.find('/') == std::string::npos && entry.find('\\') == std::string::npos,
         "", "get media cache file failed");
     
     std::string path = CACHE_DIR + fs::path::preferred_separator + entry;
