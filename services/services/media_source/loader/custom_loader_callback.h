@@ -109,7 +109,7 @@ private:
     volatile int64_t cacheOffset_ = 0;
     pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
     pthread_cond_t condDownload_ = PTHREAD_COND_INITIALIZER;
-    pthread_cond_t cond_return = PTHREAD_COND_INITIALIZER;
+    pthread_cond_t condReturn_ = PTHREAD_COND_INITIALIZER;
     bool firstRequest_ = true;
     bool isDownload_ = false;
     bool isInterruptedNewDownLoad_ = false;
