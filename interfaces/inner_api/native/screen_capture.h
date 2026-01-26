@@ -160,6 +160,12 @@ enum class AVScreenCapturePickerPopUp : int32_t {
     SCREEN_CAPTURE_PICKER_POPUP_ENABLE = 1,
 };
 
+enum class ScreenCaptureHighlightMode : int32_t {
+    HIGHLIGHT_MODE_CLOSED = 0,
+    HIGHLIGHT_MODE_CORNER_WRAP = 1,
+    HIGHLIGHT_MODE_INVALID = 2,
+};
+
 enum class PickerMode : int32_t {
     WINDOW_ONLY = 0,
     SCREEN_ONLY = 1,
@@ -168,11 +174,6 @@ enum class PickerMode : int32_t {
     // 注意：新增枚举值时，请在当前注释行上方新增，并更新下方的边界值（边界值用于枚举值合法性判断）。
     MIN_VAL = WINDOW_ONLY,
     MAX_VAL = SCREEN_AND_WINDOW,
-};
-
-enum class ScreenCaptureHighlightMode : int32_t {
-    HIGHLIGHT_MODE_CLOSED = 0,
-    HIGHLIGHT_MODE_CORNER_WRAP = 1,
 };
 
 struct ScreenCaptureContentFilter {
@@ -212,8 +213,8 @@ struct ScreenCaptureStrategy {
 
 struct AVScreenCaptureHighlightConfig {
     uint32_t lineThickness = 0;
-    uint32_t lineColor = 0;
-    ScreenCaptureHighlightMode mode = ScreenCaptureHighlightMode::HIGHLIGHT_MODE_CLOSED;
+    uint32_t lineColor = 0x11000000;
+    ScreenCaptureHighlightMode mode = ScreenCaptureHighlightMode::HIGHLIGHT_MODE_INVALID;
 };
 
 struct VideoCaptureInfo {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Huawei Device Co., Ltd.
+ * Copyright (C) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -120,7 +120,7 @@ private:
     std::deque<CacheBuffer> audioBufferQ_;
     int32_t appPid_ { 0 };
     std::string appName_;
-    bool speakerAliveStatus_ = true;
+    std::atomic<bool> speakerAliveStatus_ = true;
     std::atomic<bool> isInVoIPCall_ = false;
     std::mutex voipStatusChangeMutex_;
     std::atomic<int64_t> firstAudioFramePts_{-1};

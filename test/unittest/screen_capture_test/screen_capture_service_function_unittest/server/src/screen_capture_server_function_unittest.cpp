@@ -2341,7 +2341,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, Highlight_001, TestSize.Level2)
         .lineColor = 0xff0000ff,
         .mode = ScreenCaptureHighlightMode::HIGHLIGHT_MODE_CLOSED
     };
-    
+
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->missionIds_ = {};
     screenCaptureServer_->missionIds_.push_back(70);
@@ -3193,6 +3193,28 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetDisplayScreenId_001, TestSize.Level
     screenCaptureServer_->SetDisplayScreenId(std::move(displayIds));
     EXPECT_TRUE(screenCaptureServer_->displayIds_.empty());
     EXPECT_EQ(screenCaptureServer_->displayScreenIds_.size(), 4);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnUpdateMirrorDisplay_001, TestSize.Level2)
+{
+    std::vector<uint64_t> displayIds = {0, 1, 2, 3};
+    screenCaptureServer_->OnUpdateMirrorDisplay(displayIds);
+    EXPECT_FALSE(screenCaptureServer_->displayScreenIds_.empty());
+    EXPECT_EQ(screenCaptureServer_->displayScreenIds_.size(), displayIds.size());
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, UnRegisterRecordDisplayListener_001, TestSize.Level2)
+{
+    auto ret = screenCaptureServer_->UnRegisterRecordDisplayListener();
+    EXPECT_EQ(screenCaptureServer_->recordDisplayListener_, nullptr);
+    EXPECT_EQ(ret, MSERR_UNKNOWN);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnWindowInfoChanged_005, TestSize.Level2)
+{
+    uint64_t displayId = 123;
+    screenCaptureServer_->OnWindowInfoChanged(displayId);
+    EXPECT_EQ(screenCaptureServer_->curWindowInDisplayId_, displayId);
 }
 
 class ScreenCaptureMonitorServiceStubTest : public testing::Test {
