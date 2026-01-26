@@ -21,6 +21,7 @@ namespace OHOS {
 namespace Media {
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "HttpHeaderParser"};
+    constexpr int64_t SUB_STR_LEN = 5;
 }
 
 void HttpHeaderParser::ParseHttpHeader(std::map<std::string, std::string>& headerMap,
@@ -41,7 +42,7 @@ void HttpHeaderParser::ParseHttpHeader(std::map<std::string, std::string>& heade
         }
 
         // Ignore status lines starting with HTTP/
-        if (line.size() >= 5 && line.substr(0, 5) == "HTTP/") {
+        if (line.size() >= SUB_STR_LEN && line.substr(0, SUB_STR_LEN) == "HTTP/") {
             continue;
         }
 
