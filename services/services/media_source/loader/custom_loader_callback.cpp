@@ -411,7 +411,7 @@ void CustomLoaderCallback::Close(int64_t uuid)
     pthread_cond_signal(&cond_return);
     if (client) {
         dataSize = 0;
-        pthread_cond_signal(&cond_download);
+        pthread_cond_signal(&condDownload_);
         client->Close(false);
         client->Deinit();
         requestHandler_->SetClient(nullptr);
@@ -631,7 +631,7 @@ void CustomLoaderCallback::HandleCacheMiss(int64_t start, int64_t& len,
     self->cacheOffset_ += SHARD_SIZE;
     self->dataSize = 0;
     memset_s(self->buffer_, SHARD_SIZE, 0, SHARD_SIZE);
-    pthread_cond_signal(&self->cond_download);
+    pthread_cond_signal(&self->condDownload_);
     pthread_cond_wait(&self->cond_return, &self->mutex);
 
     if (noSizeAndRequest && self->size_ != -1) {
@@ -645,7 +645,7 @@ void CustomLoaderCallback::HandleDownloadFromStart(int64_t& len, bool noSizeAndR
     MEDIA_LOG_I("need download from start");
     self->isInterruptedNewDownLoad_ = true;
     self->dataSize = 0;
-    pthread_cond_signal(&self->cond_download);
+    pthread_cond_signal(&self->condDownload_);
     self->Redownload(weakThis);
 
     pthread_cond_wait(&self->cond_return, &self->mutex);
@@ -673,7 +673,7 @@ void CustomLoaderCallback::RespondDataChunk(int64_t start, int64_t& read, int64_
         self->dataSize = 0;
         memset_s(self->buffer_, SHARD_SIZE, 0, SHARD_SIZE);
         MEDIA_LOG_I("data return thread wait, notify download thread");
-        pthread_cond_signal(&self->cond_download);
+        pthread_cond_signal(&self->condDownload_);
         pthread_cond_wait(&self->cond_return, &self->mutex);
     }
     if (noSizeAndRequest && self->size_ != -1) {
@@ -701,7 +701,7 @@ size_t CustomLoaderCallback::RxBodyDataUnsupportRangeAndCache(void* buffer, size
             if (downloader->dataSize == SHARD_SIZE) {
                 MEDIA_LOG_I("download thread wait, notify data return thread:");
                 pthread_cond_signal(&downloader->cond_return);
-                pthread_cond_wait(&downloader->cond_download, &downloader->mutex);
+                pthread_cond_wait(&downloader->condDownload_, &downloader->mutex);
             }
         }
     } else {
@@ -710,7 +710,7 @@ size_t CustomLoaderCallback::RxBodyDataUnsupportRangeAndCache(void* buffer, size
         if (downloader->dataSize == SHARD_SIZE) {
             MEDIA_LOG_I("download thread wait, notify data return thread:");
             pthread_cond_signal(&downloader->cond_return);
-            pthread_cond_wait(&downloader->cond_download, &downloader->mutex);
+            pthread_cond_wait(&downloader->condDownload_, &downloader->mutex);
         }
     }
     pthread_mutex_unlock(&downloader->mutex);
