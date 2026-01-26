@@ -55,7 +55,7 @@ std::shared_ptr<StreamCacheManager> StreamCacheManager::Create()
     return cacheManager_;
 }
 
-StreamCacheManager::StreamCacheManager():fd_(-1), mapped_(MAP_FAILED), file_size_(0)
+StreamCacheManager::StreamCacheManager():fd_(-1), mapped_(MAP_FAILED), fileSize_(0)
 {
     ScopedTimer timer("StreamCacheManager init", 10);
     LoadMapping();
@@ -74,20 +74,20 @@ void StreamCacheManager::LoadMapping()
     struct stat st;
     CHECK_AND_RETURN_LOG(fstat(fd_, &st) != -1, "fstat fd failed");
 
-    file_size_ = st.st_size;
-    if (file_size_ == 0) {
+    fileSize_ = st.st_size;
+    if (fileSize_ == 0) {
         MEDIA_LOGI("file_size is zero");
         return;
     }
 
     // 映射文件
-    mapped_ = mmap(nullptr, file_size_, PROT_READ | PROT_WRITE, MAP_SHARED, fd_, 0);
+    mapped_ = mmap(nullptr, fileSize_, PROT_READ | PROT_WRITE, MAP_SHARED, fd_, 0);
 }
 
 StreamCacheManager::~StreamCacheManager()
 {
     if (mapped_ != MAP_FAILED) {
-        munmap(mapped_, file_size_);
+        munmap(mapped_, fileSize_);
     }
     if (fd_ != -1) {
         close(fd_);
@@ -100,8 +100,8 @@ void StreamCacheManager::LoadIndex()
     CHECK_AND_RETURN_LOG(mapped_ != MAP_FAILED, "mapped is invalid");
     char* ptr = static_cast<char*>(mapped_);
     size_t offset = 0;
-    while (offset < file_size_) {
-        CHECK_AND_RETURN_LOG(offset + sizeof(CacheEntryHeader) < file_size_, "header size exceed file size");
+    while (offset < fileSize_) {
+        CHECK_AND_RETURN_LOG(offset + sizeof(CacheEntryHeader) < fileSize_, "header size exceed file size");
         CacheEntryHeader* header = reinterpret_cast<CacheEntryHeader*>(ptr + offset);
         CHECK_AND_RETURN_LOG(header != nullptr, "reinterpret_cast CacheEntryHeader is null");
         if (header->fieldCount > MAX_FILED_COUNT) {
@@ -114,7 +114,7 @@ void StreamCacheManager::LoadIndex()
             return;
         }
         size_t fieldsSize = header->fieldCount * sizeof(CacheField);
-        CHECK_AND_RETURN_LOG(offset + sizeof(CacheEntryHeader) + fieldsSize < file_size_,
+        CHECK_AND_RETURN_LOG(offset + sizeof(CacheEntryHeader) + fieldsSize < fileSize_,
             "fieldSize exceeds file size, fieldCount:%{public}d", header->fieldCount);
 
         // 读取所有字段头
@@ -228,24 +228,24 @@ bool StreamCacheManager::CreateMediaCache(const std::string& url, const std::str
     }
 
     size_t totalSize = headerSize + fieldsHeaderSize + contentSize;
-    CHECK_AND_RETURN_RET_LOG(ftruncate(fd_, file_size_ + totalSize) != -1, false,
+    CHECK_AND_RETURN_RET_LOG(ftruncate(fd_, fileSize_ + totalSize) != -1, false,
         "ftruncate failed:%{public}s", strerror(errno));
 
     // 重新映射
-    void* newMapped = mmap(nullptr, file_size_ + totalSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd_, 0);
+    void* newMapped = mmap(nullptr, fileSize_ + totalSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd_, 0);
     CHECK_AND_RETURN_RET_LOG(newMapped != MAP_FAILED, false, "mmap failed: %{public}s", strerror(errno));
     mapped_ = newMapped;
 
     // 写入数据
     InsertMapping(activeFields, headerSize, fieldsHeaderSize);
 
-    index_[key].emplace_back(file_size_, totalSize);
+    index_[key].emplace_back(fileSize_, totalSize);
     entryIndex_[entry] = lastAccessTime;
 
-    file_size_ += totalSize;
+    fileSize_ += totalSize;
 
     // 刷新到磁盘
-    msync(mapped_, file_size_, MS_SYNC);
+    msync(mapped_, fileSize_, MS_SYNC);
 
     return true;
 }
@@ -254,7 +254,7 @@ bool StreamCacheManager::InsertMapping(const std::vector<std::pair<CacheFieldId,
     size_t headerSize, size_t fieldsHeaderSize)
 {
     CHECK_AND_RETURN_RET_LOG(mapped_ != MAP_FAILED, false, "mapped is invalid");
-    char* ptr = static_cast<char*>(mapped_) + file_size_;
+    char* ptr = static_cast<char*>(mapped_) + fileSize_;
     CacheEntryHeader* header = reinterpret_cast<CacheEntryHeader*>(ptr);
     CHECK_AND_RETURN_RET_LOG(header != nullptr, false, "reinterpret_cast CacheEntryHeader is null");
     header->version = VERSION;
@@ -314,12 +314,12 @@ bool StreamCacheManager::RemoveMediaCache(const std::string& url)
     std::string path = CACHE_DIR + fs::path::preferred_separator + entry;
     fs::remove_all(path);
     MEDIA_LOGI("remove file:%{public}s", entry.c_str());
-    errno_t ret = memmove_s(ptr + info.offset, file_size_ - info.offset, ptr + info.offset + info.cacheEntrySize,
-        file_size_ - (info.offset + info.cacheEntrySize));
+    errno_t ret = memmove_s(ptr + info.offset, fileSize_ - info.offset, ptr + info.offset + info.cacheEntrySize,
+        fileSize_ - (info.offset + info.cacheEntrySize));
     CHECK_AND_RETURN_RET_LOG(ret == EOK, false, "remove media cache falied");
 
-    file_size_ -= info.cacheEntrySize;
-    ftruncate(fd_, file_size_);
+    fileSize_ -= info.cacheEntrySize;
+    ftruncate(fd_, fileSize_);
     index_.clear();
     entryIndex_.clear();
     LoadIndex();
@@ -391,7 +391,7 @@ bool StreamCacheManager::UpdateLastAccessTime(CacheEntryInfo &info, const std::s
         entryIndex_[entry] = newTimeStr;
         CHECK_AND_RETURN_RET_LOG(fieldHeaders[i].len == newTimeStr.size(), true, "length is inconsistent");
         memcpy_s(contentPtr + offset, fieldHeaders[i].len, newTimeStr.data(), newTimeStr.size());
-        msync(mapped_, file_size_, MS_SYNC);
+        msync(mapped_, fileSize_, MS_SYNC);
         return true;
     }
 
