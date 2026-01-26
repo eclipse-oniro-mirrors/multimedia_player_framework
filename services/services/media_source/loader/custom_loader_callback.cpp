@@ -32,6 +32,8 @@ namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "CustomLoaderCallback" };
     constexpr int64_t SHARD_SIZE = 4 * 1024 * 1024;
     constexpr int64_t WAIT_TIME_US = 10000;
+    constexpr int64_t INTERNET_WAIT_TIME = 100;
+    constexpr int64_t TAB_INDEX = 2;
 }
 
 CustomLoaderCallback::CustomLoaderCallback(int64_t uuid,
@@ -132,7 +134,7 @@ void CustomLoaderCallback::CreateUrlDir()
                 std::string line = key + ": " + value + "\r\n";
                 write(fd, line.c_str(), line.size());
             }
-            write(fd, "\r\n", 2);
+            write(fd, "\r\n", TAB_INDEX);
             close(fd);
         }
     }
@@ -447,12 +449,13 @@ size_t CustomLoaderCallback::RxBodyData(void* buffer, size_t size, size_t nitems
     size_t dataLen = size * nitems;
     if (mediaDownloader->isFirstCallback_) {
         MEDIA_LOG_I("receive first callback");
-        mediaDownloader->task_->SubmitJobOnce([mediaDownloader] {
-            FALSE_RETURN_MSG(mediaDownloader->requestHandler_->GetClient() != nullptr, "client is nullptr!");
-            mediaDownloader->requestHandler_->GetClient()->Close(false);
-            mediaDownloader->requestHandler_->GetClient()->Deinit();
-            mediaDownloader->requestHandler_->SetClient(nullptr);
-        }, 100, false);
+        mediaDownloader->task_->SubmitJobOnce(
+            [mediaDownloader] {
+                FALSE_RETURN_MSG(mediaDownloader->requestHandler_->GetClient() != nullptr, "client is nullptr!");
+                mediaDownloader->requestHandler_->GetClient()->Close(false);
+                mediaDownloader->requestHandler_->GetClient()->Deinit();
+                mediaDownloader->requestHandler_->SetClient(nullptr);
+            }, INTERNET_WAIT_TIME, false);
         mediaDownloader->isFirstCallback_ = false;
         return dataLen;
     }
