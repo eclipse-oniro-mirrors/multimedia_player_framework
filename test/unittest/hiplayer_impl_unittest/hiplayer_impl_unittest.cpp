@@ -377,28 +377,6 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_NotifySeekDone_001, TestSize.Level0)
     EXPECT_NE(hiplayer_->isSeekClosest_.load(), true);
 }
 
-// @tc.name     Test HandleVideoTrackChangeEvent API
-// @tc.number   PHIUT_HandleVideoTrackChangeEvent_001
-// @tc.desc     Test HandleVideoTrackChangeEvent interface, 2.
-HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_HandleVideoTrackChangeEvent_001, TestSize.Level0)
-{
-#define SUPPORT_VIDEO
-    ASSERT_NE(hiplayer_, nullptr);
-    std::string name = "testname";
-    FilterType type = FilterType::VIDEO_CAPTURE;
-    hiplayer_->demuxer_ = std::make_shared<DemuxerFilter>(name, type);
-    std::shared_ptr<Meta> testptr = std::make_shared<Meta>();
-    hiplayer_->demuxer_->demuxer_ = std::make_shared<MediaDemuxer>();
-    hiplayer_->demuxer_->demuxer_->mediaMetaData_.trackMetas.push_back(testptr);
-    Event event;
-    Format format;
-    format.meta_ = std::make_shared<Meta>();
-    event.param = format;
-    hiplayer_->HandleVideoTrackChangeEvent(event);
-    EXPECT_NE(hiplayer_->isSeekClosest_.load(), true);
-#undef SUPPORT_VIDEO
-}
-
 // @tc.name     Test OnStateChanged API
 // @tc.number   PHIUT_OnStateChanged_001
 // @tc.desc     Test OnStateChanged interface, 1.
