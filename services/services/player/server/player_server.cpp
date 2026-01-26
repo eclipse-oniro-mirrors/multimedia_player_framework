@@ -258,7 +258,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     if (dataSrc_ != nullptr) {
         ret = playerEngine_->SetSource(dataSrc_);
     } else if (mediaSource_ != nullptr) {
-        if (mediaSource_->GetEnable() && mediaSource_->sourceLoader_ == nullptr) {
+        if (mediaSource_->GetenableOfflineCache() && mediaSource_->sourceLoader_ == nullptr) {
             OnErrorCb(MSERR_INVALID_OPERATION, "Cannot set local cache and proxy download at the same time.");
             return MSERR_INVALID_OPERATION;
         }
