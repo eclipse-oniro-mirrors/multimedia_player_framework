@@ -27,7 +27,6 @@ namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SOUNDPOOL, "StreamIDManager"};
     static const std::string THREAD_POOL_NAME = "OS_StreamMgr";
     static const std::string THREAD_POOL_NAME_CACHE_BUFFER = "OS_CacheBuf";
-    static const int32_t MAX_START_THREADS_NUM = 5;
     static const int32_t MAX_STOPPED_THREADS_NUM = 5;
     static const int32_t ERROE_GLOBAL_ID = -1;
     static const size_t MAX_NUMBER_OF_PLAYING = 32;
@@ -88,7 +87,7 @@ int32_t IStreamIDManager::InitThreadPool()
     }
     MEDIA_LOGI("stream playing thread pool maxStreams_:%{public}d", maxStreams_);
     // For stream priority logic, thread num need align to task num.
-    streamPlayingThreadPool_->Start(MAX_START_THREADS_NUM);
+    streamPlayingThreadPool_->Start(maxStreams_);
     streamPlayingThreadPool_->SetMaxTaskNum(maxStreams_);
     isStreamPlayingThreadPoolStarted_.store(true);
 
@@ -215,9 +214,16 @@ std::shared_ptr<AudioStream> IStreamIDManager::InnerProcessOfCreateAudioStream(i
 
 void IStreamIDManager::PrintPlayingStreams()
 {
-    for (const auto &mem : playingStreamIDs_) {
-        MEDIA_LOGI("PrintPlayingStreams, streamID is %{public}d", mem);
+    static std::ostringstream oss;
+    oss.str("");
+    oss.clear();
+    for (size_t i = 0; i < playingStreamIDs_.size(); ++i) {
+        oss << playingStreamIDs_[i];
+        if (i < playingStreamIDs_.size() - 1) {
+            oss << ", ";
+        }
     }
+    MEDIA_LOGI("PrintPlayingStreams, playingStreamIDs_: [%{public}s]", oss.str().c_str());
 }
 
 bool IStreamIDManager::InnerProcessOfOnPlayFinished(int32_t streamID)
@@ -246,6 +252,7 @@ int32_t IStreamIDManager::AddPlayTask(int32_t streamID)
         "AddPlayTask, streamPlayTask is nullptr");
     QueueAndSortPlayingStreamID(streamID);
 
+    MEDIA_LOGI("AddPlayTask, QueueAndSortPlayingStreamID end");
     streamPlayingThreadPool_->AddTask(streamPlayTask);
     MEDIA_LOGI("AddPlayTask end, streamID is %{public}d", streamID);
     return MSERR_OK;
@@ -458,10 +465,6 @@ int32_t StreamIDManagerWithSameSoundInterrupt::ClearStreamIDInDeque(int32_t soun
         ++it;
     }
 
-    std::shared_ptr<AudioStream> stream = GetStreamByStreamID(streamID);
-    CHECK_AND_RETURN_RET_LOG(stream != nullptr, MSERR_INVALID_VAL, "ClearStreamIDInDeque, stream is nullptr");
-    stream->Release();
-    stream->SetStreamState(StreamState::RELEASED);
     RemoveStreamBySoundIDAndStreamID(soundID, streamID);
     return MSERR_OK;
 }
@@ -698,10 +701,6 @@ int32_t StreamIDManagerWithNoInterrupt::ClearStreamIDInDeque(int32_t soundID, in
         ++it;
     }
 
-    std::shared_ptr<AudioStream> stream = GetStreamByStreamID(streamID);
-    CHECK_AND_RETURN_RET_LOG(stream != nullptr, MSERR_INVALID_VAL, "ClearStreamIDInDeque, stream is nullptr");
-    stream->Release();
-    stream->SetStreamState(StreamState::RELEASED);
     RemoveStreamBySoundIDAndStreamID(soundID, streamID);
     return MSERR_OK;
 }
