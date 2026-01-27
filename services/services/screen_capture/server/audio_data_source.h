@@ -43,11 +43,11 @@ class AudioDataSource : public IAudioDataSource {
     class CacheBuffer {
     private:
         std::shared_ptr<AudioBuffer> refBuf_{nullptr};
-        std::unique_ptr<uint8_t> buf_{nullptr};
+        std::unique_ptr<uint8_t[]> buf_{nullptr};
     public:
         CacheBuffer() = delete;
         explicit CacheBuffer(const std::shared_ptr<AudioBuffer> &buf);
-        CacheBuffer(uint8_t *buf, const int64_t &timestamp);
+        CacheBuffer(std::unique_ptr<uint8_t[]> &buf, const int64_t &timestamp);
         int64_t timestamp{0};
         void WriteTo(const std::shared_ptr<AVMemory> &avMem, const uint32_t &len);
     };
