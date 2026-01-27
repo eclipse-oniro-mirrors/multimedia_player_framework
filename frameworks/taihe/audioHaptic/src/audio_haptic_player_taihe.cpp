@@ -254,8 +254,7 @@ bool AudioHapticPlayerImpl::IsHapticsIntensityAdjustmentSupported()
         return false;
     }
 
-    bool isSupported = audioHapticPlayer_->IsHapticsIntensityAdjustmentSupported();
-    return isSupported;
+    return audioHapticPlayer_->IsHapticsIntensityAdjustmentSupported();
 }
 
 void AudioHapticPlayerImpl::SetLoopSync(bool loop)
@@ -306,8 +305,7 @@ bool AudioHapticPlayerImpl::IsHapticsRampSupported()
         return false;
     }
 
-    bool isSupported = audioHapticPlayer_->IsHapticsRampSupported();
-    return isSupported;
+    return audioHapticPlayer_->IsHapticsRampSupported();
 }
 
 bool AudioHapticPlayerImpl::RegisterCallback(const std::string &callbackName,
