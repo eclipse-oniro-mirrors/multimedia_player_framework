@@ -317,10 +317,6 @@ void RingtonePlayerImpl::InitPlayer(std::string &audioUri, ToneHapticsSettings &
     int32_t result = player_->Prepare();
     if (audioUri == NO_RING_SOUND) {
         MEDIA_LOGI("The incoming audioUri is no_ring_sound.");
-        if (!configuredUri_.empty() && configuredUri_ == audioUri) {
-            MEDIA_LOGI("The right ringtone uri has been registered. Return directly.");
-            ringtoneState_ = RingtoneState::STATE_PREPARED;
-        }
         configuredUri_ = NO_RING_SOUND;
         ringtoneState_ = RingtoneState::STATE_NEW;
         result = MSERR_OK;
