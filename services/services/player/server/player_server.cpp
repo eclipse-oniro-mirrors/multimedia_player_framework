@@ -253,13 +253,15 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     playerEngine_ = engineFactory->CreatePlayerEngine(appUid_, appPid_, appTokenId_);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_CREATE_PLAYER_ENGINE_FAILED,
         "failed to create player engine");
-    playerEngine_->SetInstancdId(instanceId_);
-    playerEngine_->SetApiVersion(apiVersion_.load());
-    playerEngine_->SetIsCalledBySystemApp(isCalledBySystemApp_);
+    SetParameter();
     MEDIA_LOGI("Setted InstanceId");
     if (dataSrc_ != nullptr) {
         ret = playerEngine_->SetSource(dataSrc_);
     } else if (mediaSource_ != nullptr) {
+        if (mediaSource_->GetenableOfflineCache() && mediaSource_->sourceLoader_ == nullptr) {
+            OnErrorCb(MSERR_INVALID_OPERATION, "Cannot set local cache and proxy download at the same time.");
+            return MSERR_INVALID_OPERATION;
+        }
         ret = playerEngine_->SetMediaSource(mediaSource_, strategy_);
     } else {
         ret = playerEngine_->SetSource(url);
@@ -286,6 +288,13 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     Format format;
     OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_INITIALIZED, format);
     return MSERR_OK;
+}
+
+void PlayerServer::SetParameter()
+{
+    playerEngine_->SetInstancdId(instanceId_);
+    playerEngine_->SetApiVersion(apiVersion_.load());
+    playerEngine_->SetIsCalledBySystemApp(isCalledBySystemApp_);
 }
 
 int32_t PlayerServer::AddSubSource(const std::string &url)

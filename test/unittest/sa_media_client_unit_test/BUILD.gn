@@ -52,6 +52,7 @@ include_dirs = [
     "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture_monitor/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/transcoder/client",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/transcoder/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/loader",
   ]
 
   cflags = [
@@ -124,6 +125,13 @@ include_dirs = [
     "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture_monitor/ipc/screen_capture_monitor_listener_stub.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/transcoder/client/transcoder_client.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/transcoder/ipc/transcoder_listener_stub.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/loader/cache_manager.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/loader/file_cache_manager.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/loader/media_loader.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/loader/http_header_parser.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/loader/request_handler.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/loader/custom_loader_callback.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/loader/network_client_agent.cpp",
     "media_client_unit_test.cpp",
   ]
 

@@ -129,7 +129,8 @@
           "hiappevent",
           "drivers_interface_lpplayer",
           "runtime_core",
-          "json"
+          "json",
+          "histreamer_ext"
         ],
         "third_party": [
           "bounds_checking_function"

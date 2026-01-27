@@ -134,6 +134,13 @@ ohos_shared_library("media_client") {
       "$MEDIA_ROOT_DIR/services/services/player/client/player_client.cpp",
       "$MEDIA_ROOT_DIR/services/services/player/ipc/player_listener_stub.cpp",
       "$MEDIA_ROOT_DIR/services/services/player/ipc/player_service_proxy.cpp",
+      "$MEDIA_ROOT_DIR/services/services/media_source/loader/cache_manager.cpp",
+      "$MEDIA_ROOT_DIR/services/services/media_source/loader/file_cache_manager.cpp",
+      "$MEDIA_ROOT_DIR/services/services/media_source/loader/media_loader.cpp",
+      "$MEDIA_ROOT_DIR/services/services/media_source/loader/http_header_parser.cpp",
+      "$MEDIA_ROOT_DIR/services/services/media_source/loader/request_handler.cpp",
+      "$MEDIA_ROOT_DIR/services/services/media_source/loader/custom_loader_callback.cpp",
+      "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/loader/network_client_agent.cpp",
     ]
   }
   if (player_framework_support_recorder) {
@@ -226,6 +233,16 @@ ohos_shared_library("media_client") {
     "samgr:samgr_proxy",
     "hdf_core:libhdi",
   ]
+
+  if (player_framework_support_libcurl) {
+    external_deps += [
+      "av_codec:http_curl_client",
+    ]
+  } else {
+    external_deps += [
+      "histreamer_ext:http_curl_client",
+    ]
+  }
 
   if (player_framework_support_lowpower_av_sink) {
     external_deps += [
