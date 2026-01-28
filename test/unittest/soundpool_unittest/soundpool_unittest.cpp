@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 
+#include <fcntl.h>
+#include <unistd.h>
+
 #include "soundpool_unittest.h"
 #include "media_errors.h"
 #include "soundpool_manager_multi.h"
@@ -29,6 +32,9 @@ static const int32_t ID_TEST = 0;
 static const int32_t NUM_TEST = 1;
 static const int32_t MSERR_INVALID = -1;
 static const int32_t SOUNDPOOL_INSTANCE_MAX_NUM = 128;
+static const int32_t INVALID_SOUNDID = -1;
+static const int32_t INVALID_STREAMID = -1;
+
 void SoundPoolUnittest::SetUpTestCase(void)
 {}
 
@@ -43,6 +49,28 @@ void SoundPoolUnittest::SetUp(void)
 void SoundPoolUnittest::TearDown(void)
 {
     soundPool_ = nullptr;
+}
+
+void SoundPoolUnittest::ConfigureSoundPool(int maxStreams)
+{
+    if (soundPool_ == nullptr) {
+        return;
+    }
+    soundPool_->soundIDManager_ = std::make_shared<SoundIDManager>();
+    AudioStandard::AudioRendererInfo audioRenderInfo;
+    soundPool_->Init(maxStreams, audioRenderInfo);
+    std::shared_ptr<IStreamIDManager::AudioStreamCallback> audioStreamCallback =
+        std::make_shared<IStreamIDManager::AudioStreamCallback>(soundPool_->streamIdManager_) ;
+    soundPool_->SetSoundPoolCallback(audioStreamCallback);
+}
+
+int32_t SoundPoolUnittest::LoadResourceByUri(const std::string &resourceName)
+{
+    std::string resourcePath = resourcePathPrefix_ + resourceName;
+    int32_t fd = open(resourcePath.c_str(), O_RDWR);
+    std::string uri = "fd://" + std::to_string(fd);
+    int32_t soundID = soundPool_->Load(uri);
+    return soundID;
 }
 
 /**
@@ -91,6 +119,46 @@ HWTEST_F(SoundPoolUnittest, CheckInitParam_003, TestSize.Level1)
 }
 
 /**
+ * @tc.name  : Test Load uri
+ * @tc.number: Load_Uri_001
+ * @tc.desc  : Test return -1
+ */
+HWTEST_F(SoundPoolUnittest, Load_Uri_001, TestSize.Level0)
+{
+    ASSERT_NE(soundPool_, nullptr);
+    soundPool_->soundIDManager_ = std::make_shared<SoundIDManager>();
+    int32_t soundID = LoadResourceByUri("test_01.mp3");
+    EXPECT_GT(soundID, INVALID_SOUNDID);
+}
+
+/**
+ * @tc.name  : Test Load uri
+ * @tc.number: Load_Uri_002
+ * @tc.desc  : Test return -1
+ */
+HWTEST_F(SoundPoolUnittest, Load_Uri_002, TestSize.Level0)
+{
+    ASSERT_NE(soundPool_, nullptr);
+    soundPool_->soundIDManager_ = std::make_shared<SoundIDManager>();
+    soundPool_->SetApiVersion(20);
+    int32_t soundID = LoadResourceByUri("test_01.mp3");
+    EXPECT_GT(soundID, INVALID_SOUNDID);
+}
+
+/**
+ * @tc.name  : Test Load fd
+ * @tc.number: Load_Fd_001
+ * @tc.desc  : Test return -1
+ */
+HWTEST_F(SoundPoolUnittest, Load_Fd_001, TestSize.Level0)
+{
+    ASSERT_NE(soundPool_, nullptr);
+    soundPool_->soundIDManager_ = std::make_shared<SoundIDManager>();
+    int32_t soundID = soundPool_->Load(-1, 0, 0);
+    EXPECT_EQ(soundID, INVALID_SOUNDID);
+}
+
+/**
  * @tc.name  : Test Play
  * @tc.number: Play_001
  * @tc.desc  : Test return -1
@@ -121,6 +189,46 @@ HWTEST_F(SoundPoolUnittest, Play_002, TestSize.Level0)
     soundPool_->SetInterruptMode(InterruptMode::NO_INTERRUPT);
     auto ret = soundPool_->Play(soundID, playParameters);
     EXPECT_EQ(ret, MSERR_INVALID);
+}
+
+/**
+ * @tc.name  : Test Play
+ * @tc.number: Play_003
+ * @tc.desc  : Test return positive number
+ */
+HWTEST_F(SoundPoolUnittest, Play_003, TestSize.Level0)
+{
+    ConfigureSoundPool(4);
+    ASSERT_NE(soundPool_, nullptr);
+
+    int32_t soundID = LoadResourceByUri("test_01.mp3");
+    ASSERT_GT(soundID, INVALID_SOUNDID);
+    PlayParams playParameters;
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+    int32_t streamID = soundPool_->Play(soundID, playParameters);
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+    EXPECT_GT(streamID, INVALID_STREAMID);
+}
+
+/**
+ * @tc.name  : Test Stop
+ * @tc.number: Stop_001
+ * @tc.desc  : Test return 0
+ */
+HWTEST_F(SoundPoolUnittest, Stop_001, TestSize.Level0)
+{
+    ConfigureSoundPool(4);
+    ASSERT_NE(soundPool_, nullptr);
+
+    int32_t soundID = LoadResourceByUri("test_01.mp3");
+    ASSERT_GT(soundID, INVALID_SOUNDID);
+    PlayParams playParameters;
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+    int32_t streamID = soundPool_->Play(soundID, playParameters);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    ASSERT_GT(streamID, INVALID_STREAMID);
+    int32_t ret = soundPool_->Stop(streamID);
+    EXPECT_EQ(ret, MSERR_OK);
 }
 
 /**

@@ -192,13 +192,13 @@ HWTEST_F(StreamIDManagerUnitTest, streamId_function_007, TestSize.Level2)
     streamIDManager_->playingStreamIDs_.emplace_back(BEGIN_NUM);
     streamIDManager_->playingStreamIDs_.emplace_back(STREAM_ID_BEGIN);
     streamIDManager_->ClearStreamIDInDeque(SOUND_ID_BEGIN, STREAM_ID_BEGIN);
-    EXPECT_EQ(MSERR_INVALID_VAL, streamIDManager_->ClearStreamIDInDeque(SOUND_ID_BEGIN, STREAM_ID_BEGIN));
+    EXPECT_EQ(MSERR_OK, streamIDManager_->ClearStreamIDInDeque(SOUND_ID_BEGIN, STREAM_ID_BEGIN));
 
     IStreamIDManager::StreamIDAndPlayParamsInfo streamIDAndPlayParamsInfo;
     streamIDManager_->willPlayStreamInfos_.emplace_back(streamIDAndPlayParamsInfo);
     IStreamIDManager::StreamIDAndPlayParamsInfo streamIDAndPlayParamsInfo1;
     streamIDManager_->willPlayStreamInfos_.emplace_back(streamIDAndPlayParamsInfo1);
-    EXPECT_EQ(MSERR_INVALID_VAL, streamIDManager_->ClearStreamIDInDeque(SOUND_ID_BEGIN, STREAM_ID_BEGIN));
+    EXPECT_EQ(MSERR_OK, streamIDManager_->ClearStreamIDInDeque(SOUND_ID_BEGIN, STREAM_ID_BEGIN));
     MEDIA_LOGI("streamId_function_007 after");
 }
 

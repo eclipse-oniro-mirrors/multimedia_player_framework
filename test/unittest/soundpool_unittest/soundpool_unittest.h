@@ -34,6 +34,12 @@ public:
 
 protected:
     std::shared_ptr<SoundPool> soundPool_ = nullptr;
+
+private:
+    std::string resourcePathPrefix_ = "/data/test/";
+
+    void ConfigureSoundPool(int maxStreams);
+    int32_t LoadResourceByUri(const std::string &resourceName);
 };
 }  // namespace Media
 }  // namespace OHOS
