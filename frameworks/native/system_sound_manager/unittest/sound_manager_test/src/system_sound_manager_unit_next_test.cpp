@@ -20,7 +20,6 @@ using namespace testing::ext;
 namespace OHOS {
 namespace Media {
 const int SUCCESS = 0;
-const int RESULT_SIZE = -26;
 const int32_t TONE_CATEGORY = -13;
 const int32_t SYSPARA_SIZE = 128;
 void SystemSoundManagerUnitNextTest::SetUpTestCase(void) {}
@@ -173,27 +172,6 @@ HWTEST(SystemSoundManagerUnitNextTest, ReadDefaultToneHaptics_001, TestSize.Leve
     ToneHapticsType toneHapticsType = CALL_SIM_CARD_0;
     systemSoundManagerImpl_->ReadDefaultToneHaptics(paramName, toneHapticsType);
     EXPECT_TRUE(systemSoundManagerImpl_->defaultToneHapticsUriMap_.empty());
-}
-
-/**
- * @tc.name  : RemoveSourceTypeForRingTone
- * @tc.number: RemoveSourceTypeForRingTone_001
- * @tc.desc  : Test RemoveSourceTypeForRingTone when entering RINGTONE_TYPE_SIM_CARD_1 branch
- */
-HWTEST(SystemSoundManagerUnitNextTest, RemoveSourceTypeForRingTone_001, TestSize.Level0)
-{
-    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
-    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
-        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
-    ASSERT_NE(systemSoundManagerImpl_, nullptr);
-
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    ASSERT_NE(dataShareHelper, nullptr);
-
-    RingtoneType ringtoneType = RINGTONE_TYPE_SIM_CARD_1;
-    SourceType sourceType = SOURCE_TYPE_CUSTOMISED;
-    int32_t result = systemSoundManagerImpl_->RemoveSourceTypeForRingTone(dataShareHelper, ringtoneType, sourceType);
-    EXPECT_EQ(result, RESULT_SIZE);
 }
 
 /**

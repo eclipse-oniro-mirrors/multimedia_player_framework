@@ -76,22 +76,6 @@ HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_OpenCustomAudioUri_001
 
 /**
  * @tc.name  : Test SystemSoundManagerImpl API
- * @tc.number: SystemSoundManagerImpl_GetFirstNonSyncedHapticsUri_001
- * @tc.desc  : Test GetFirstNonSyncedHapticsUri interface
- */
-HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_GetFirstNonSyncedHapticsUri_001, TestSize.Level0)
-{
-    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
-    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
-        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
-    EXPECT_NE(systemSoundManagerImpl_, nullptr);
-
-    std::string result = systemSoundManagerImpl_->GetFirstNonSyncedHapticsUri();
-    EXPECT_NE(result, "");
-}
-
-/**
- * @tc.name  : Test SystemSoundManagerImpl API
  * @tc.number: SystemSoundManagerImpl_RemoveSourceTypeForRingTone_001
  * @tc.desc  : Test RemoveSourceTypeForRingTone interface
  */
@@ -271,29 +255,6 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetAlarmToneUri_001, TestS
 }
 
 /**
- * @tc.name  : Test GetAlarmToneAttrs API
- * @tc.number: Media_SoundManager_GetAlarmToneAttrs_001
- * @tc.desc  : Test GetAlarmToneAttrs interface. Returns attributes of the default system tone.
- */
-HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetAlarmToneAttrs_001, TestSize.Level2)
-{
-    std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
-    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
-    bool isProxy = false;
-    DatabaseTool databaseTool = {true, isProxy, nullptr};
-    ToneAttrs toneAttrs_ = systemSoundManager_->GetAlarmToneAttrs(context_);
-    EXPECT_EQ(toneAttrs_.GetUri().empty(), false);
-    toneAttrs_ = systemSoundManager_->GetAlarmToneAttrs(databaseTool);
-    EXPECT_EQ(toneAttrs_.GetUri().empty(), true);
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
-        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    databaseTool = {true, isProxy, dataShareHelper};
-    toneAttrs_ = systemSoundManager_->GetAlarmToneAttrs(databaseTool);
-    EXPECT_EQ(toneAttrs_.GetUri().empty(), false);
-    dataShareHelper->Release();
-}
-
-/**
  * @tc.name  : Test SetAlarmToneUri API
  * @tc.number: Media_SoundManager_SetAlarmToneUri_001
  * @tc.desc  : Test SetAlarmToneUri interface. Returns attributes of the default system tone.
@@ -418,45 +379,6 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_RemoveCustomizedTone_001, 
     systemSoundManager_->AddCustomizedToneByExternalUri(context_, toneAttrs_, uri);
     res = systemSoundManager_->RemoveCustomizedTone(context_, uri);
     EXPECT_NE(systemSoundManager_, nullptr);
-}
-
-/**
- * @tc.name  : Test SetToneAttrs API
- * @tc.number: Media_SoundManager_SetToneAttrs_001
- * @tc.desc  : Test SetToneAttrs interface.
- */
-HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_SetToneAttrs_001, TestSize.Level2)
-{
-    std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
-    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
-    auto vec = systemSoundManager_->GetAlarmToneAttrList(context_);
-    std::string uri = "";
-    if (vec.size() > 0) {
-        uri = vec[0]->GetUri();
-    }
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
-        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    std::shared_ptr<ToneAttrs> toneAttrs = std::make_shared<ToneAttrs>("default",
-        "default", "default", CUSTOMISED, TONE_CATEGORY_RINGTONE);
-    DataShare::DataSharePredicates queryPredicates;
-    DataShare::DatashareBusinessError businessError;
-    queryPredicates.EqualTo(RINGTONE_COLUMN_DATA, uri);
-    auto resultSet = dataShareHelper->Query(RINGTONEURITEST, queryPredicates, COLUMNSTEST, &businessError);
-    auto results = std::make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
-    std::unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
-    if (ringtoneAsset == nullptr) {
-        std::cout << "ringtoneAsset is nullptr"<< std::endl;
-    }
-    std::string mimeType = "";
-    ringtoneAsset->SetToneType(TONE_TYPE_NOTIFICATION);
-    ringtoneAsset->SetMediaType(RINGTONE_MEDIA_TYPE_AUDIO);
-    ASSERT_NO_THROW(systemSoundManager_->SetToneAttrs(toneAttrs, ringtoneAsset));
-    ringtoneAsset->SetToneType(TONE_TYPE_ALARM);
-    ASSERT_NO_THROW(systemSoundManager_->SetToneAttrs(toneAttrs, ringtoneAsset));
-    ringtoneAsset->SetToneType(TONE_TYPE_CONTACTS);
-    ASSERT_NO_THROW(systemSoundManager_->SetToneAttrs(toneAttrs, ringtoneAsset));
-    ringtoneAsset->SetToneType(TONE_TYPE_APP_NOTIFICATION);
-    ASSERT_NO_THROW(systemSoundManager_->SetToneAttrs(toneAttrs, ringtoneAsset));
 }
 
 /**

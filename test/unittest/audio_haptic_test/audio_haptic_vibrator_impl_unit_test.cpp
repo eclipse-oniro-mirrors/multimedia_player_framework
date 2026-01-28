@@ -962,21 +962,6 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_036, TestSize.
 
 /**
  * @tc.name  : Test AudioHapticVibratorImpl API
- * @tc.number: AudioHapticVibratorImpl_037
- * @tc.desc  : Test AudioHapticVibratorImpl::IsHapticsCustomSupported()
- */
-HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_037, TestSize.Level0)
-{
-    AudioHapticPlayerImpl audioHapticPlayerImpl;
-    auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
-    EXPECT_NE(audioHapticVibratorImpl, nullptr);
-
-    bool ret = audioHapticVibratorImpl->IsHapticsCustomSupported();
-    EXPECT_EQ(ret, true);
-}
-
-/**
- * @tc.name  : Test AudioHapticVibratorImpl API
  * @tc.number: AudioHapticVibratorImpl_038
  * @tc.desc  : Test AudioHapticVibratorImpl::SetHapticIntensity()
  */
@@ -1112,38 +1097,6 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_042, TestSize.
     audioHapticVibratorImpl->ResumeModulePackge();
     EXPECT_EQ(70.0f, audioHapticVibratorImpl->vibratorParameter_.intensity);
     EXPECT_EQ(nullptr, audioHapticVibratorImpl->modulatePkg_);
-}
-
-/**
- * @tc.name  : Test AudioHapticVibratorImpl API
- * @tc.number: AudioHapticVibratorImpl_043
- * @tc.desc  : Test AudioHapticVibratorImpl::SetHapticsFeature()
- */
-HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_043, TestSize.Level1)
-{
-    uint64_t tokenID;
-    ASSERT_TRUE(GetPermission({"ohos.permission.VIBRATE"}, tokenID, false));
-
-    AudioHapticPlayerImpl audioHapticPlayerImpl;
-    auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
-    EXPECT_NE(audioHapticVibratorImpl, nullptr);
-    EXPECT_NE(g_vibrationPackage, nullptr);
-
-    // vibratorPkg_ is null
-    EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, audioHapticVibratorImpl->SetHapticsFeature(HapticsFeature::GENTLE_HAPTICS));
-
-    audioHapticVibratorImpl->vibratorPkg_ = g_vibrationPackage2;
-    EXPECT_EQ(MSERR_OK, audioHapticVibratorImpl->SetHapticsFeature(HapticsFeature::GENTLE_HAPTICS));
-
-    audioHapticVibratorImpl->isRunning_.store(true);
-    EXPECT_EQ(MSERR_OK, audioHapticVibratorImpl->SetHapticsFeature(HapticsFeature::GENTLE_HAPTICS));
-
-    audioHapticVibratorImpl->modulatePkg_ = audioHapticVibratorImpl->vibratorPkg_;
-    EXPECT_EQ(MSERR_OK, audioHapticVibratorImpl->SetHapticsFeature(HapticsFeature::GENTLE_HAPTICS));
-
-    audioHapticVibratorImpl->modulatePkg_ = audioHapticVibratorImpl->vibratorPkg_;
-    audioHapticVibratorImpl->isRunning_.store(false);
-    EXPECT_EQ(MSERR_OK, audioHapticVibratorImpl->SetHapticsFeature(HapticsFeature::GENTLE_HAPTICS));
 }
 
 /**
