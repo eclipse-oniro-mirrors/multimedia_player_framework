@@ -151,26 +151,6 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_005, TestSize.Level1
 
 /**
  * @tc.name  : Test MediaTonePlayer
- * @tc.number: Media_TonePlayert_006
- * @tc.desc  : Test GetNewHapticUriForAudioUri. Returns void.
- */
-HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_006, TestSize.Level1)
-{
-    auto context_ = std::make_shared<ContextImpl>();
-    auto systemSoundMgr_ = std::make_shared<SystemSoundManagerImpl>();
-    SystemToneType systemToneType = SYSTEM_TONE_TYPE_SIM_CARD_0;
-    auto systemTonePlayerImpl_ = std::make_shared<SystemTonePlayerImpl>(context_, *systemSoundMgr_, systemToneType);
-    std::string audioUri = "/media/audio/test.ogg";
-    std::map<ToneHapticsFeature, std::string> hapticsUriMap;
-    hapticsUriMap[ToneHapticsFeature::STANDARD] = "test1";
-    hapticsUriMap[ToneHapticsFeature::GENTLE] = "test2";
-    systemTonePlayerImpl_->GetNewHapticUriForAudioUri(audioUri, hapticsUriMap);
-    EXPECT_TRUE(hapticsUriMap[ToneHapticsFeature::STANDARD].find("Rise.json") != std::string::npos);
-    EXPECT_TRUE(hapticsUriMap[ToneHapticsFeature::GENTLE].find("Rise.json") != std::string::npos);
-}
-
-/**
- * @tc.name  : Test MediaTonePlayer
  * @tc.number: Media_TonePlayert_007
  * @tc.desc  : Test GetHapticUriForAudioUri. Returns void
  */

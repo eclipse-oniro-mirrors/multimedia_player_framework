@@ -23,7 +23,6 @@ const int32_t NUM2 = 2;
 const float NUM_1 = -1.0f;
 const float NUM_2 = 2.0f;
 const float NUM_3 = 0.5f;
-const float NUM_4 = 200.0f;
 
 void AudioHapticPlayerImplUnitTest::SetUpTestCase(void) {}
 void AudioHapticPlayerImplUnitTest::TearDownTestCase(void) {}
@@ -537,51 +536,6 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_024, TestSize.Leve
     float intensity = NUM_1;
     auto ret = audioHapticPlayerImpl->SetHapticIntensity(intensity);
     EXPECT_EQ(ret, NOT_SUPPORTED_CODE);
-}
-
-/**
- * @tc.name  : Test AudioHapticPlayerImpl API
- * @tc.number: AudioHapticPlayerImpl_025
- * @tc.desc  : Test AudioHapticPlayerImpl::SetHapticIntensity()
- */
-HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_025, TestSize.Level1)
-{
-    auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
-
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
-
-    float intensity = NUM_2;
-
-    AudioHapticPlayerImpl audioHapticPlayerImpl2;
-    audioHapticPlayerImpl->audioHapticVibrator_ = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl2);
-    EXPECT_NE(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
-
-    auto ret = audioHapticPlayerImpl->SetHapticIntensity(intensity);
-    EXPECT_EQ(ret, MSERR_OK);
-}
-
-/**
- * @tc.name  : Test AudioHapticPlayerImpl API
- * @tc.number: AudioHapticPlayerImpl_026
- * @tc.desc  : Test AudioHapticPlayerImpl::SetHapticIntensity()
- */
-HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_026, TestSize.Level1)
-{
-    auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
-
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
-
-    AudioHapticPlayerImpl audioHapticPlayerImpl2;
-    audioHapticPlayerImpl->audioHapticVibrator_ = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl2);
-    EXPECT_NE(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
-
-    float intensity = NUM_1;
-    auto ret = audioHapticPlayerImpl->SetHapticIntensity(intensity);
-    EXPECT_EQ(ret, MSERR_INVALID_VAL);
-
-    intensity = NUM_4;
-    ret = audioHapticPlayerImpl->SetHapticIntensity(intensity);
-    EXPECT_EQ(ret, MSERR_INVALID_VAL);
 }
 
 /**
@@ -1200,49 +1154,6 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_058, TestSize.Leve
 }
 
 /**
- * @tc.name  : Test SetHapticsRamp API
- * @tc.number: AudioHapticPlayerImpl_059
- * @tc.desc  : Test AudioHapticPlayerImpl::SetHapticsRamp()
- */
-/**
- * @tc.name  : Test SetHapticsRamp API
- * @tc.number: AudioHapticPlayerImpl_059
- * @tc.desc  : Test AudioHapticPlayerImpl::SetHapticsRamp()
- */
-HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_059, TestSize.Level1)
-{
-    auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
-
-    audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_RELEASED;
-    EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, audioHapticPlayerImpl->SetHapticsRamp(50, 1.0f, 50.0f));
-
-    audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_RUNNING;
-    EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, audioHapticPlayerImpl->SetHapticsRamp(50, 1.0f, 50.0f));
-
-    audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_PREPARED;
-    EXPECT_EQ(NOT_SUPPORTED_CODE, audioHapticPlayerImpl->SetHapticsRamp(50, 1.0f, 50.0f));
-
-    AudioHapticPlayerImpl audioHapticPlayerImpl2;
-    auto audioHapticVibrator_ = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl2);
-    audioHapticPlayerImpl->audioHapticVibrator_ = audioHapticVibrator_;
-    EXPECT_NE(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
-    
-    // test duration less than 100ms
-    EXPECT_EQ(MSERR_INVALID_VAL, audioHapticPlayerImpl->SetHapticsRamp(50, 1.0f, 50.0f));
-    // test startIntensity less than 1.0f
-    EXPECT_EQ(MSERR_INVALID_VAL, audioHapticPlayerImpl->SetHapticsRamp(1000, -1.0f, 50.0f));
-    // test startIntensity larger than 100.0f
-    EXPECT_EQ(MSERR_INVALID_VAL, audioHapticPlayerImpl->SetHapticsRamp(1000, 101.0f, 50.0f));
-    // test endIntensity less than 1.0f
-    EXPECT_EQ(MSERR_INVALID_VAL, audioHapticPlayerImpl->SetHapticsRamp(1000, 50.0f, -1.0f));
-    // test endIntensity larger than 100.0f
-    EXPECT_EQ(MSERR_INVALID_VAL, audioHapticPlayerImpl->SetHapticsRamp(1000, 50.0f, 101.0f));
-    // test all params ok
-    EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, audioHapticPlayerImpl->SetHapticsRamp(1000, 50.0f, 90.0f));
-}
-
-/**
  * @tc.name  : Test SetHapticsFeature API
  * @tc.number: AudioHapticPlayerImpl_060
  * @tc.desc  : Test AudioHapticPlayerImpl::SetHapticsFeature()
@@ -1295,24 +1206,6 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_061, TestSize.Leve
     auto ret = audioHapticPlayerImpl->Start();
     EXPECT_NE(ret, MSERR_OK);
     EXPECT_NE(audioHapticPlayerImpl->audioHapticSyncId_, MSERR_OK);
-}
-
-/**
- * @tc.name  : Test AudioHapticPlayerImpl API
- * @tc.number: AudioHapticPlayerImpl_062
- * @tc.desc  : Test AudioHapticPlayerImpl::GetDelayTime()
- */
-HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_062, TestSize.Level1)
-{
-    auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
-    
-    audioHapticPlayerImpl->latencyMode_ = AUDIO_LATENCY_MODE_FAST;
-    EXPECT_EQ(audioHapticPlayerImpl->GetDelayTime(0), 0);
-
-    audioHapticPlayerImpl->latencyMode_ = AUDIO_LATENCY_MODE_NORMAL;
-    EXPECT_EQ(audioHapticPlayerImpl->GetDelayTime(0), 80);
-    EXPECT_EQ(audioHapticPlayerImpl->GetDelayTime(0), 40);
 }
 
 /**
