@@ -81,9 +81,9 @@ void SoundPoolUnittest::ConfigureSoundPool(int maxStreams)
     soundPool_->soundIDManager_ = std::make_shared<SoundIDManager>();
     AudioStandard::AudioRendererInfo audioRenderInfo;
     soundPool_->Init(maxStreams, audioRenderInfo);
-    std::shared_ptr<IStreamIDManager::AudioStreamCallback> audioStreamCallback =
-        std::make_shared<IStreamIDManager::AudioStreamCallback>(soundPool_->streamIdManager_) ;
-    soundPool_->SetSoundPoolCallback(audioStreamCallback);
+    std::shared_ptr<IStreamIDManager::AudioStreamCallBack> audioStreamCallBack =
+        std::make_shared<IStreamIDManager::AudioStreamCallBack>(soundPool_->streamIdManager_) ;
+    soundPool_->SetSoundPoolCallback(audioStreamCallBack);
 }
 
 int32_t SoundPoolUnittest::LoadResourceByUri(const std::string &resourceName)
