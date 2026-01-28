@@ -2115,6 +2115,216 @@ HWTEST_F(AVMetaDataCollectorUnitTest, GetVideoTrackInfo_Dimensions_001, TestSize
 }
 
 /**
+ * @tc.name: GetVideoTrackInfo_Dimensions_002
+ * @tc.desc: Test GetVideoTrackInfo with specific width and height values
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, GetVideoTrackInfo_Dimensions_002, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    std::string mime = "video/avc";
+    size_t index = 0;
+    
+    meta->SetData(Tag::VIDEO_WIDTH, 800);
+    meta->SetData(Tag::VIDEO_HEIGHT, 600);
+    
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->GetVideoTrackInfo(meta, mime, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+    
+    auto& trackInfo = avmetaDataCollector->trackInfoVec_.back();
+    int32_t width = -1;
+    int32_t height = -1;
+    int32_t originalWidth = -1;
+    int32_t originalHeight = -1;
+    
+    trackInfo.GetIntValue("width", width);
+    trackInfo.GetIntValue("height", height);
+    trackInfo.GetIntValue("original_width", originalWidth);
+    trackInfo.GetIntValue("original_height", originalHeight);
+    
+    EXPECT_EQ(originalWidth, 800);
+    EXPECT_EQ(originalHeight, 600);
+    EXPECT_EQ(width, 800);
+    EXPECT_EQ(height, 600);
+}
+
+/**
+ * @tc.name: GetVideoTrackInfo_Dimensions_003
+ * @tc.desc: Test GetVideoTrackInfo with specific width and height values
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, GetVideoTrackInfo_Dimensions_003, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    std::string mime = "video/avc";
+    size_t index = 0;
+    
+    meta->SetData(Tag::VIDEO_WIDTH, 1024);
+    meta->SetData(Tag::VIDEO_HEIGHT, 1280);
+    
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->GetVideoTrackInfo(meta, mime, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+    
+    auto& trackInfo = avmetaDataCollector->trackInfoVec_.back();
+    int32_t width = -1;
+    int32_t height = -1;
+    int32_t originalWidth = -1;
+    int32_t originalHeight = -1;
+    
+    trackInfo.GetIntValue("width", width);
+    trackInfo.GetIntValue("height", height);
+    trackInfo.GetIntValue("original_width", originalWidth);
+    trackInfo.GetIntValue("original_height", originalHeight);
+    
+    EXPECT_EQ(originalWidth, 1024);
+    EXPECT_EQ(originalHeight, 1280);
+    EXPECT_EQ(width, 1024);
+    EXPECT_EQ(height, 1280);
+}
+
+/**
+ * @tc.name: GetVideoTrackInfo_Dimensions_004
+ * @tc.desc: Test GetVideoTrackInfo with specific width and height values
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, GetVideoTrackInfo_Dimensions_004, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    std::string mime = "video/avc";
+    size_t index = 0;
+    
+    meta->SetData(Tag::VIDEO_WIDTH, 700);
+    meta->SetData(Tag::VIDEO_HEIGHT, 500);
+    
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->GetVideoTrackInfo(meta, mime, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+    
+    auto& trackInfo = avmetaDataCollector->trackInfoVec_.back();
+    int32_t width = -1;
+    int32_t height = -1;
+    int32_t originalWidth = -1;
+    int32_t originalHeight = -1;
+    
+    trackInfo.GetIntValue("width", width);
+    trackInfo.GetIntValue("height", height);
+    trackInfo.GetIntValue("original_width", originalWidth);
+    trackInfo.GetIntValue("original_height", originalHeight);
+    
+    EXPECT_EQ(originalWidth, 700);
+    EXPECT_EQ(originalHeight, 500);
+    EXPECT_EQ(width, 700);
+    EXPECT_EQ(height, 500);
+}
+
+/**
+ * @tc.name: GetVideoTrackInfo_Dimensions_005
+ * @tc.desc: Test GetVideoTrackInfo with specific width and height values
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, GetVideoTrackInfo_Dimensions_005, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    std::string mime = "video/avc";
+    size_t index = 0;
+    
+    meta->SetData(Tag::VIDEO_WIDTH, 400);
+    meta->SetData(Tag::VIDEO_HEIGHT, 500);
+    
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->GetVideoTrackInfo(meta, mime, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+    
+    auto& trackInfo = avmetaDataCollector->trackInfoVec_.back();
+    int32_t width = -1;
+    int32_t height = -1;
+    int32_t originalWidth = -1;
+    int32_t originalHeight = -1;
+    
+    trackInfo.GetIntValue("width", width);
+    trackInfo.GetIntValue("height", height);
+    trackInfo.GetIntValue("original_width", originalWidth);
+    trackInfo.GetIntValue("original_height", originalHeight);
+    
+    EXPECT_EQ(originalWidth, 400);
+    EXPECT_EQ(originalHeight, 500);
+    EXPECT_EQ(width, 400);
+    EXPECT_EQ(height, 500);
+}
+
+/**
+ * @tc.name: GetVideoTrackInfo_Dimensions_006
+ * @tc.desc: Test GetVideoTrackInfo with specific width and height values
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, GetVideoTrackInfo_Dimensions_006, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    std::string mime = "video/avc";
+    size_t index = 0;
+    
+    meta->SetData(Tag::VIDEO_WIDTH, 2000);
+    meta->SetData(Tag::VIDEO_HEIGHT, 3000);
+    
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->GetVideoTrackInfo(meta, mime, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+    
+    auto& trackInfo = avmetaDataCollector->trackInfoVec_.back();
+    int32_t width = -1;
+    int32_t height = -1;
+    int32_t originalWidth = -1;
+    int32_t originalHeight = -1;
+    
+    trackInfo.GetIntValue("width", width);
+    trackInfo.GetIntValue("height", height);
+    trackInfo.GetIntValue("original_width", originalWidth);
+    trackInfo.GetIntValue("original_height", originalHeight);
+    
+    EXPECT_EQ(originalWidth, 2000);
+    EXPECT_EQ(originalHeight, 3000);
+    EXPECT_EQ(width, 2000);
+    EXPECT_EQ(height, 3000);
+}
+
+/**
+ * @tc.name: GetVideoTrackInfo_Dimensions_007
+ * @tc.desc: Test GetVideoTrackInfo with specific width and height values
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, GetVideoTrackInfo_Dimensions_007, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    std::string mime = "video/avc";
+    size_t index = 0;
+    
+    meta->SetData(Tag::VIDEO_WIDTH, 2580);
+    meta->SetData(Tag::VIDEO_HEIGHT, 1900);
+    
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->GetVideoTrackInfo(meta, mime, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+    
+    auto& trackInfo = avmetaDataCollector->trackInfoVec_.back();
+    int32_t width = -1;
+    int32_t height = -1;
+    int32_t originalWidth = -1;
+    int32_t originalHeight = -1;
+    
+    trackInfo.GetIntValue("width", width);
+    trackInfo.GetIntValue("height", height);
+    trackInfo.GetIntValue("original_width", originalWidth);
+    trackInfo.GetIntValue("original_height", originalHeight);
+    
+    EXPECT_EQ(originalWidth, 2580);
+    EXPECT_EQ(originalHeight, 1900);
+    EXPECT_EQ(width, 2580);
+    EXPECT_EQ(height, 1900);
+}
+
+/**
  * @tc.name: VectorToString_001
  * @tc.desc: Test VectorToString with specific values
  * @tc.type: FUNC
@@ -2264,6 +2474,52 @@ HWTEST_F(AVMetaDataCollectorUnitTest, InitTracksInfoVector_025, TestSize.Level1)
 {
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     std::string refTrackIds = "2";
+    meta->SetData(Tag::REF_TRACK_IDS, refTrackIds);
+    std::string refTrackType = "auxl";
+    meta->SetData(Tag::TRACK_REF_TYPE, refTrackType);
+    size_t index = 0;
+    std::string result;
+    bool ret = meta->GetData(Tag::REF_TRACK_IDS, result);
+    EXPECT_TRUE(ret);
+    ret = meta->GetData(Tag::TRACK_REF_TYPE, result);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->InitTracksInfoVector(meta, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+}
+
+/**
+ * @tc.name: InitTracksInfoVector_026
+ * @tc.desc: InitTracksInfoVector_026
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, InitTracksInfoVector_026, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    std::string refTrackIds = "2,3";
+    meta->SetData(Tag::REF_TRACK_IDS, refTrackIds);
+    std::string refTrackType = "auxl";
+    meta->SetData(Tag::TRACK_REF_TYPE, refTrackType);
+    size_t index = 0;
+    std::string result;
+    bool ret = meta->GetData(Tag::REF_TRACK_IDS, result);
+    EXPECT_TRUE(ret);
+    ret = meta->GetData(Tag::TRACK_REF_TYPE, result);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 0);
+    avmetaDataCollector->InitTracksInfoVector(meta, index);
+    EXPECT_EQ(avmetaDataCollector->trackInfoVec_.size(), 1);
+}
+
+/**
+ * @tc.name: InitTracksInfoVector_027
+ * @tc.desc: InitTracksInfoVector_027
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, InitTracksInfoVector_027, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    std::string refTrackIds = "2,3,23";
     meta->SetData(Tag::REF_TRACK_IDS, refTrackIds);
     std::string refTrackType = "auxl";
     meta->SetData(Tag::TRACK_REF_TYPE, refTrackType);
