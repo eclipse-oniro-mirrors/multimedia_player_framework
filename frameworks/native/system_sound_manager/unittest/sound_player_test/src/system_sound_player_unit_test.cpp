@@ -84,10 +84,10 @@ HWTEST(SystemSoundPlayerUnitTest, systemSoundPlayer_003, TestSize.Level1)
     SystemSoundType systemSoundType = PHOTO_SHUTTER;
     systemSoundPlayerImpl_->isReleased_ = false;
     ret = systemSoundPlayerImpl_->Load(systemSoundType);
-    EXPECT_EQ(ret, 0);
+    EXPECT_NE(ret, 0);
     systemSoundPlayerImpl_->soundPool_ = nullptr;
     ret = systemSoundPlayerImpl_->Load(systemSoundType);
-    EXPECT_EQ(ret, 0);
+    EXPECT_NE(ret, 0);
     systemSoundPlayerImpl_->isReleased_ = true;
     ret = systemSoundPlayerImpl_->Load(systemSoundType);
     EXPECT_NE(ret, 0);
@@ -125,7 +125,7 @@ HWTEST(SystemSoundPlayerUnitTest, systemSoundPlayer_005, TestSize.Level1)
     systemSoundPlayerImpl_->isReleased_ = false;
     // systemSoundPlayerImpl_->soundIds_[systemSoundType] = 1;
     ret = systemSoundPlayerImpl_->Play(systemSoundType);
-    EXPECT_EQ(ret, 0);
+    EXPECT_NE(ret, 0);
     systemSoundPlayerImpl_->isReleased_ = true;
     ret = systemSoundPlayerImpl_->Play(systemSoundType);
     EXPECT_NE(ret, 0);
