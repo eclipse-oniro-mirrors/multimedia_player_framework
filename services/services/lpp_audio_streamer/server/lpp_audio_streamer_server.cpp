@@ -232,7 +232,8 @@ int32_t LppAudioStreamerServer::SetLoudnessGain(const float loudnessGain)
             "wrong state");
     }
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
-    CHECK_AND_RETURN_RET_LOG(loudnessGain >= MIN_LOUDNESS_GAIN && loudnessGain <= MAX_LOUDNESS_GAIN, MSERR_INVALID_OPERATION, 
+    CHECK_AND_RETURN_RET_LOG(loudnessGain >= MIN_LOUDNESS_GAIN &&
+        loudnessGain <= MAX_LOUDNESS_GAIN, MSERR_INVALID_OPERATION,
         "SetLoudnessGain failed, the loudnessGain should be set to a value ranging from -90 to 24");
     auto ret = streamerEngine_->SetLoudnessGain(loudnessGain);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "loudnessGain Failed!");
