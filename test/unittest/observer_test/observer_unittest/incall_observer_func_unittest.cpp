@@ -111,20 +111,6 @@ HWTEST_F(InCallObserverInnerUnitTest, RegisterObserver_01, TestSize.Level1)
 }
 
 /**
- * @tc.name: OnCallStateUpdated_01
- * @tc.desc: OnCallStateUpdated_01
- * @tc.type: FUNC
- */
-HWTEST_F(InCallObserverInnerUnitTest, OnCallStateUpdated_01, TestSize.Level1)
-{
-    ASSERT_FALSE(InCallObserver::GetInstance().IsInCall(true));
-    InCallObserver::GetInstance().OnCallStateUpdated(true);
-    ASSERT_TRUE(InCallObserver::GetInstance().IsInCall(false));
-    InCallObserver::GetInstance().OnCallStateUpdated(false);
-    ASSERT_FALSE(InCallObserver::GetInstance().IsInCall(false));
-}
-
-/**
  * @tc.name: RegisterInCallObserverCallBack_01
  * @tc.desc: RegisterInCallObserverCallBack_01
  * @tc.type: FUNC
@@ -250,6 +236,20 @@ HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_05, TestSize.Level1)
     telephonyObserver->OnIccAccountUpdated();
     InCallObserver::GetInstance().IsInCall(false);
     ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(false));
+}
+
+/**
+ * @tc.name: OnCallStateUpdated_01
+ * @tc.desc: OnCallStateUpdated_01
+ * @tc.type: FUNC
+ */
+HWTEST_F(InCallObserverInnerUnitTest, OnCallStateUpdated_01, TestSize.Level1)
+{
+    ASSERT_FALSE(InCallObserver::GetInstance().IsInCall(false));
+    InCallObserver::GetInstance().OnCallStateUpdated(true);
+    ASSERT_TRUE(InCallObserver::GetInstance().IsInCall(false));
+    InCallObserver::GetInstance().OnCallStateUpdated(false);
+    ASSERT_FALSE(InCallObserver::GetInstance().IsInCall(true));
 }
 } // namespace InCallObserverFuncUT
 } // namespace Media
