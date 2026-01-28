@@ -75,6 +75,7 @@ HWTEST_F(LppVideoStreamUnitTest, SetVideoSurface_001, TestSize.Level0)
     sptr<Surface> surface = Surface::CreateSurfaceAsConsumer();
     auto res = videoStreamImpl_->SetVideoSurface(surface);
     EXPECT_EQ(res, MSERR_INVALID_VAL);
+    videoStreamImpl_->SetVideoSurface(surface);
 }
 
 /**
@@ -145,6 +146,55 @@ HWTEST_F(LppVideoStreamUnitTest, StartDecode_002, TestSize.Level1)
     videoStreamImpl_->syncMgr_ = syncMgr_;
     videoStreamImpl_->isLpp_ = isLpp;
     videoStreamImpl_->isChannelSetDone_ = true;
+    auto res = videoStreamImpl_->StartDecode();
+    EXPECT_EQ(res, MSERR_OK);
+}
+
+/**
+* @tc.name    : Test StartDecode API
+* @tc.number  : StartDecode_003
+* @tc.desc    : Test StartDecode interface
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(LppVideoStreamUnitTest, StartDecode_003, TestSize.Level0)
+{
+    ASSERT_NE(nullptr, videoStreamImpl_);
+    bool isLpp = true;
+    ASSERT_NE(nullptr, vdec_);
+    EXPECT_CALL(*vdec_, StartDecode).WillRepeatedly(Return(MSERR_OK));
+    videoStreamImpl_->vdec_ = vdec_;
+    ASSERT_NE(nullptr, dataMgr_);
+    EXPECT_CALL(*dataMgr_, StartDecode).WillRepeatedly(Return(MSERR_OK));
+    videoStreamImpl_->dataMgr_ = dataMgr_;
+    ASSERT_NE(nullptr, syncMgr_);
+    videoStreamImpl_->syncMgr_ = syncMgr_;
+    videoStreamImpl_->isLpp_ = isLpp;
+    videoStreamImpl_->isChannelSetDone_ = false;
+    auto res = videoStreamImpl_->StartDecode();
+    EXPECT_EQ(res, MSERR_OK);
+}
+ 
+/**
+* @tc.name    : Test StartDecode API
+* @tc.number  : StartDecode_004
+* @tc.desc    : Test StartDecode interface
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(LppVideoStreamUnitTest, StartDecode_004, TestSize.Level0)
+{
+    ASSERT_NE(nullptr, videoStreamImpl_);
+    bool isLpp = false;
+    ASSERT_NE(nullptr, vdec_);
+    EXPECT_CALL(*vdec_, StartDecode).WillRepeatedly(Return(MSERR_OK));
+    EXPECT_CALL(*vdec_, SetChannelIdDone).WillRepeatedly(Return());
+    videoStreamImpl_->vdec_ = vdec_;
+    ASSERT_NE(nullptr, dataMgr_);
+    EXPECT_CALL(*dataMgr_, StartDecode).WillRepeatedly(Return(MSERR_OK));
+    videoStreamImpl_->dataMgr_ = dataMgr_;
+    ASSERT_NE(nullptr, syncMgr_);
+    videoStreamImpl_->syncMgr_ = syncMgr_;
+    videoStreamImpl_->isLpp_ = isLpp;
+    videoStreamImpl_->isChannelSetDone_ = false;
     auto res = videoStreamImpl_->StartDecode();
     EXPECT_EQ(res, MSERR_OK);
 }
