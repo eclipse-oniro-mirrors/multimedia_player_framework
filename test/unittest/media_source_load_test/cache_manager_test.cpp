@@ -440,5 +440,98 @@ HWTEST_F(CacheManagerTest, CacheManagerTest_UpdateLastAccessTime_002, TestSize.L
     }
     EXPECT_FALSE(manager_->UpdateLastAccessTime(info, key));
 }
+
+/**
+* @tc.name  : CacheManagerTest_StaticCreate_002
+* @tc.number: StaticCreate_002
+* @tc.desc  : test create singleton
+*/
+HWTEST_F(CacheManagerTest, CacheManagerTest_StaticCreate_002, TestSize.Level0)
+{
+    // 第一次调用Create方法
+    auto instance1 = StreamCacheManager::Create();
+    ASSERT_NE(instance1, nullptr);
+
+    // 第二次调用Create方法
+    auto instance2 = StreamCacheManager::Create();
+    ASSERT_EQ(instance1, instance2);
+}
+
+/**
+* @tc.name  : CacheManagerTest_LoadIndex_002
+* @tc.number: LoadIndex_002
+* @tc.desc  : test LoadIndex
+*/
+HWTEST_F(CacheManagerTest, CacheManagerTest_LoadIndex_002, TestSize.Level0)
+{
+    std::string url = "http://example.com/audio.mp3";
+    std::string type = "audio";
+    bool randomAccess = true;
+    uint64_t size = 1024;
+    manager_->CreateMediaCache(url, type, randomAccess, size);
+    EXPECT_TRUE(manager_->mapped_ != MAP_FAILED);
+    char* ptr = static_cast<char*>(manager_->mapped_);
+    CacheEntryHeader* header = reinterpret_cast<CacheEntryHeader*>(ptr);
+    header->fieldCount = 100;
+    manager_->LoadIndex();
+    EXPECT_TRUE(manager_->index_.empty());
+}
+
+/**
+* @tc.name  : CacheManagerTest_RemoveCacheDirectory_003
+* @tc.number: RemoveCacheDirectory_003
+* @tc.desc  : test dir size > 800MB
+*/
+HWTEST_F(CacheManagerTest, CacheManagerTest_RemoveCacheDirectory_003, TestSize.Level0)
+{
+    std::string url = "http://example.com/audio.mp3";
+    std::string type = "audio";
+    bool randomAccess = true;
+    uint64_t size = 1024;
+    manager_->cacheSize_.store(CACHE_FILE_SIZE_WATERLINE, std::memory_order_relaxed);
+    manager_->CreateMediaCache(url, type, randomAccess, size);
+    std::string dir = manager_->GetMediaCache(url);
+    std::string path = dir + "/temp";
+    fs::create_directories(path);
+    for (int i = 0; i < 3; i++) {
+        std::string filename = dir + "/" + std::to_string(i);
+        std::ofstream file(filename, std::ios::binary | std::ios::trunc);
+        file.seekp(400ULL * 1024ULL * 1024ULL, std::ios::beg);
+        file.put('\0');
+        file.close();
+        manager_->FlushWriteLength(filename, 400ULL * 1024ULL * 1024ULL);
+    }
+    bool result = manager_->cacheSize_.load() < MAX_CACHE_FILE_SIZE;
+    EXPECT_TRUE(result);
+}
+
+
+/**
+* @tc.name  : CacheManagerTest_UpdateLastAccessTime_003
+* @tc.number: UpdateLastAccessTime_003
+* @tc.desc  : test UpdateLastAccessTime
+*/
+HWTEST_F(CacheManagerTest, CacheManagerTest_UpdateLastAccessTime_003, TestSize.Level0)
+{
+    std::string url = "http://example.com/audio.mp3";
+    std::string type = "audio";
+    bool randomAccess = true;
+    uint64_t size = 1024;
+    manager_->CreateMediaCache(url, type, randomAccess, size);
+    EXPECT_TRUE(manager_->mapped_ != MAP_FAILED);
+    std::string key = std::to_string(std::hash<std::string>()(url));
+    auto it = manager_->index_.find(key);
+    EXPECT_TRUE(it != manager_->index_.end());
+
+    CacheEntryInfo info;
+    manager_->FindFirstEqualField(it->second, info, url, CacheFieldId::REQUEST_URL);
+    char* ptr = static_cast<char*>(manager_->mapped_) + info.offset;
+    CacheEntryHeader* header = reinterpret_cast<CacheEntryHeader*>(ptr);
+    CacheField* filedHeaders = reinterpret_cast<CacheField*>(ptr + sizeof(CacheEntryHeader));
+    for (size_t i = 0; i < header->fieldCount; i++) {
+        filedHeaders[i].id = 0;
+    }
+    EXPECT_FALSE(manager_->UpdateLastAccessTime(info, key));
+}
 }
 }
