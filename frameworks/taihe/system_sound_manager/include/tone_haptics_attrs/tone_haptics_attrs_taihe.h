@@ -24,6 +24,7 @@
 #include "tone_haptics_attrs.h"
 
 namespace ANI::Media {
+using namespace ohos::multimedia::systemSoundManager;
 static const std::string TONE_HAPTICS_ATTRS_TAIHE_CLASS_NAME = "ToneHapticsAttrs";
 
 class ToneHapticsAttrsImpl {
@@ -35,9 +36,9 @@ public:
     ::taihe::string GetUri();
     ::taihe::string GetTitle();
     ::taihe::string GetFileName();
-    ::taihe::string GetGentleUri();
-    ::taihe::string GetGentleTitle();
-    ::taihe::string GetGentleFileName();
+    StringOrNull GetGentleUri();
+    StringOrNull GetGentleTitle();
+    StringOrNull GetGentleFileName();
 
 private:
     bool CheckNativeToneHapticsAttrs();

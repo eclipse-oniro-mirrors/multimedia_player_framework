@@ -78,27 +78,30 @@ bool ToneHapticsAttrsImpl::CheckNativeToneHapticsAttrs()
     return toneHapticsAttrs_->GetFileName();
 }
 
-::taihe::string ToneHapticsAttrsImpl::GetGentleUri()
+StringOrNull ToneHapticsAttrsImpl::GetGentleUri()
 {
-    CHECK_AND_RETURN_RET_LOG(CheckPermission(), "", "No system permission");
-    CHECK_AND_RETURN_RET_LOG(CheckNativeToneHapticsAttrs(), "", "toneHapticsAttrs_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(CheckPermission(), StringOrNull::make_type_null(), "No system permission");
+    CHECK_AND_RETURN_RET_LOG(CheckNativeToneHapticsAttrs(),
+        StringOrNull::make_type_null(), "toneHapticsAttrs_ is nullptr");
 
-    return toneHapticsAttrs_->GetGentleUri();
+    return StringOrNull::make_type_string(toneHapticsAttrs_->GetGentleUri());
 }
 
-::taihe::string ToneHapticsAttrsImpl::GetGentleTitle()
+StringOrNull ToneHapticsAttrsImpl::GetGentleTitle()
 {
-    CHECK_AND_RETURN_RET_LOG(CheckPermission(), "", "No system permission");
-    CHECK_AND_RETURN_RET_LOG(CheckNativeToneHapticsAttrs(), "", "toneHapticsAttrs_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(CheckPermission(), StringOrNull::make_type_null(), "No system permission");
+    CHECK_AND_RETURN_RET_LOG(CheckNativeToneHapticsAttrs(),
+        StringOrNull::make_type_null(), "toneHapticsAttrs_ is nullptr");
 
-    return toneHapticsAttrs_->GetGentleTitle();
+    return StringOrNull::make_type_string(toneHapticsAttrs_->GetGentleTitle());
 }
 
-::taihe::string ToneHapticsAttrsImpl::GetGentleFileName()
+StringOrNull ToneHapticsAttrsImpl::GetGentleFileName()
 {
-    CHECK_AND_RETURN_RET_LOG(CheckPermission(), "", "No system permission");
-    CHECK_AND_RETURN_RET_LOG(CheckNativeToneHapticsAttrs(), "", "toneHapticsAttrs_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(CheckPermission(), StringOrNull::make_type_null(), "No system permission");
+    CHECK_AND_RETURN_RET_LOG(CheckNativeToneHapticsAttrs(),
+        StringOrNull::make_type_null(), "toneHapticsAttrs_ is nullptr");
 
-    return toneHapticsAttrs_->GetGentleFileName();
+    return StringOrNull::make_type_string(toneHapticsAttrs_->GetGentleFileName());
 }
 } // namespace ANI::Media
