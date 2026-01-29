@@ -24,7 +24,7 @@
 #include "tone_haptics_attrs.h"
 
 namespace ANI::Media {
-using namespace ohos::multimedia::systemsoundmanager;
+using namespace ohos::multimedia::systemSoundmanager;
 static const std::string TONE_HAPTICS_ATTRS_TAIHE_CLASS_NAME = "ToneHapticsAttrs";
 
 class ToneHapticsAttrsImpl {
