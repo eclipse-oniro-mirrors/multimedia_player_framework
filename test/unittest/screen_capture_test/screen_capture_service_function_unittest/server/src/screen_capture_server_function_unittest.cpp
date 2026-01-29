@@ -779,6 +779,19 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetOutputFile_001, TestSize.Level2)
     ASSERT_NE(screenCaptureServer_->SetOutputFile(-1), MSERR_OK);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, SetOutputFile_002, TestSize.Level2)
+{
+    int outputFd = open("/data/test/media/SetOutputFile_003.mp4", O_CREAT | O_RDONLY, 0644);
+    close(outputFd);
+    ASSERT_EQ(screenCaptureServer_->SetOutputFile(outputFd), MSERR_INVALID_VAL);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetOutputFile_003, TestSize.Level2)
+{
+    int outputFd = open("/data/test/media/SetOutputFile_003.mp4", O_CREAT | O_RDONLY, 0644);
+    ASSERT_EQ(screenCaptureServer_->SetOutputFile(outputFd), MSERR_INVALID_VAL);
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, OnStartScreenCapture_001, TestSize.Level2)
 {
     SetInvalidConfig();
@@ -2115,11 +2128,27 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StopAndRelease_002, TestSize.Level2)
     }
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, NotifyStopAndRelease_001, TestSize.Level2)
+{
+    ScreenCaptureObserverCallBack* obcb = new ScreenCaptureObserverCallBack(screenCaptureServer_);
+    if (obcb) {
+        ASSERT_EQ(obcb->NotifyStopAndRelease(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER), true);
+    }
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, TelCallStateUpdated_001, TestSize.Level2)
 {
     ScreenCaptureObserverCallBack* obcb = new ScreenCaptureObserverCallBack(screenCaptureServer_);
     if (obcb) {
         ASSERT_EQ(obcb->TelCallStateUpdated(false), true);
+    }
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, NotifyTelCallStateUpdated_001, TestSize.Level2)
+{
+    ScreenCaptureObserverCallBack* obcb = new ScreenCaptureObserverCallBack(screenCaptureServer_);
+    if (obcb) {
+        ASSERT_EQ(obcb->NotifyTelCallStateUpdated(false), true);
     }
 }
 
@@ -2283,6 +2312,44 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ShowCursor_002, TestSize.Level2)
     screenCaptureServer_->showCursor_ = false;
     int ret = screenCaptureServer_->ShowCursor(true);
     ASSERT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ShowCursor_003, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("ShowCursor_003.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    int ret = screenCaptureServer_->ShowCursor(false);
+    ASSERT_EQ(ret, MSERR_OK);
+    ret = screenCaptureServer_->ShowCursor(true);
+    ASSERT_EQ(ret, MSERR_OK);
+    ret = screenCaptureServer_->ShowCursor(false);
+    ASSERT_EQ(ret, MSERR_OK);
+    sleep(RECORDER_TIME);
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, Highlight_001, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("Highlight_001.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    AVScreenCaptureHighlightConfig HighlightConfig = {
+        .lineThickness = 1,
+        .lineColor = 0xff0000ff,
+        .mode = ScreenCaptureHighlightMode::HIGHLIGHT_MODE_CLOSED
+    };
+    
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->missionIds_ = {};
+    screenCaptureServer_->missionIds_.push_back(70);
+    screenCaptureServer_->SetCaptureMode(CaptureMode::CAPTURE_SPECIFIED_WINDOW);
+    screenCaptureServer_->SetCaptureAreaHighlight(HighlightConfig);
+    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    sleep(RECORDER_TIME);
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, PostStartScreenCaptureSuccessAction_001, TestSize.Level2)
