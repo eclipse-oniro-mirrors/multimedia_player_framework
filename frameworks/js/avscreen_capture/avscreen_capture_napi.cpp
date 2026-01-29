@@ -424,7 +424,7 @@ napi_status AVScreenCaptureNapi::GetWindowIDsVectorParams(std::vector<uint64_t> 
         return status;
     }
     CHECK_AND_RETURN_RET_LOG(array_length >= 0 && array_length < MAX_WINDOWS_LEN,
-                        napi_invalid_arg, "num out of range!");
+                             napi_invalid_arg, "num out of range!");
     for (uint32_t i = 0; i < array_length; i++) {
         napi_value temp;
         status = napi_get_element(env, args[0], i, &temp);
@@ -449,7 +449,7 @@ napi_status AVScreenCaptureNapi::GetInt32VectorParams(std::vector<int32_t> &vec,
         return status;
     }
     CHECK_AND_RETURN_RET_LOG(array_length >= 0 && array_length < MAX_WINDOWS_LEN,
-                        napi_invalid_arg, "num out of range!");
+                             napi_invalid_arg, "num out of range!");
     for (uint32_t i = 0; i < array_length; i++) {
         napi_value temp;
         status = napi_get_element(env, arg, i, &temp);
