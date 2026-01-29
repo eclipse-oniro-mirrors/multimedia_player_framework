@@ -442,6 +442,8 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
 {
     MediaTrace trace("HiPlayerImpl::SetMediaSource.");
     MEDIA_LOG_I("SetMediaSource entered media source stream");
+    CreatePlaybackInfo(CallType::AVPLAYER, appUid_, instanceId_);
+    CreateStallingInfo(CallType::AVPLAYER, appUid_, instanceId_);
     if (mediaSource == nullptr) {
         CollectionErrorInfo(MSERR_INVALID_VAL, "mediaSource is nullptr");
         return MSERR_INVALID_VAL;
@@ -452,20 +454,7 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     playMediaStreamVec_ = mediaSource->GetAVPlayMediaStreamList();
     url_ = playMediaStreamVec_.empty() ? mediaSource->url : playMediaStreamVec_[0].url;
     sourceLoader_ = mediaSource->sourceLoader_;
-
-    preferedWidth_ = strategy.preferredWidth;
-    preferedHeight_ = strategy.preferredHeight;
-    bufferDuration_ = strategy.preferredBufferDuration;
-    preferHDR_ = strategy.preferredHdr;
-    renderFirstFrame_ = strategy.showFirstFrameOnPrepare;
-    mutedMediaType_ = strategy.mutedMediaType;
-    audioLanguage_ = strategy.preferredAudioLanguage;
-    subtitleLanguage_ = strategy.preferredSubtitleLanguage;
-    enableCameraPostprocessing_ = strategy.enableCameraPostprocessing;
-    videoPostProcessorType_ = strategy.enableSuperResolution ? VideoPostProcessorType::SUPER_RESOLUTION
-                                : VideoPostProcessorType::NONE;
-    isPostProcessorOn_ = strategy.enableSuperResolution;
-
+    this->ExtractStrategyParams(strategy);
     mimeType_ = mediaSource->GetMimeType();
     SetFlvLiveParams(strategy);
     FALSE_RETURN_V(IsLivingMaxDelayTimeValid(), TransStatus(Status::ERROR_INVALID_PARAMETER));
@@ -499,6 +488,8 @@ int32_t HiPlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc
 {
     MediaTrace trace("HiPlayerImpl::SetSource dataSrc");
     MEDIA_LOG_I("SetSource in source stream");
+    CreatePlaybackInfo(CallType::AVPLAYER, appUid_, instanceId_);
+    CreateStallingInfo(CallType::AVPLAYER, appUid_, instanceId_);
     if (dataSrc == nullptr) {
         MEDIA_LOG_E("SetSource error: dataSrc is null");
     }
@@ -4483,6 +4474,22 @@ std::vector<std::string> HiPlayerImpl::GetDolbyList()
 {
     MEDIA_LOG_I("HiPlayerImpl::GetDolbyList");
     return callbackLooper_.GetDolbyList();
+}
+
+void HiPlayerImpl::ExtractStrategyParams(const AVPlayStrategy &strategy)
+{
+    preferedWidth_ = strategy.preferredWidth;
+    preferedHeight_ = strategy.preferredHeight;
+    bufferDuration_ = strategy.preferredBufferDuration;
+    preferHDR_ = strategy.preferredHdr;
+    renderFirstFrame_ = strategy.showFirstFrameOnPrepare;
+    mutedMediaType_ = strategy.mutedMediaType;
+    audioLanguage_ = strategy.preferredAudioLanguage;
+    subtitleLanguage_ = strategy.preferredSubtitleLanguage;
+    enableCameraPostprocessing_ = strategy.enableCameraPostprocessing;
+    videoPostProcessorType_ =
+        strategy.enableSuperResolution ? VideoPostProcessorType::SUPER_RESOLUTION : VideoPostProcessorType::NONE;
+    isPostProcessorOn_ = strategy.enableSuperResolution;
 }
 }  // namespace Media
 }  // namespace OHOS
