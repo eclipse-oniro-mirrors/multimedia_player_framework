@@ -624,6 +624,12 @@
             <option name="shell" value="restorecon /data/test"/>
         </preparer>
     </target>
+    <target name="soundpool_unittest">
+        <preparer>
+            <option name="push" value="res_soundpool/test_01.mp3 -> /data/test" src="res"/>
+            <option name="shell" value="restorecon /data/test"/>
+        </preparer>
+    </target>
     <target name="soundpool_cachebuffer_unit_test">
         <preparer>
             <option name="push" value="res_soundpool/test_01.mp3 -> /data/test" src="res"/>
