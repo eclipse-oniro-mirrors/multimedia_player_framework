@@ -52,12 +52,6 @@ public:
         audioDecoderAdapter_ = audioDecoderAdapter;
     }
     virtual ~LppAudioDecProducerListener() = default;
-
-    int OnRemoteRequest(uint32_t code, MessageParcel& arguments, MessageParcel& reply, MessageOption& option) override
-    {
-        return IPCObjectStub::OnRemoteRequest(code, arguments, reply, option);
-    }
-
     void OnBufferAvailable() override
     {
         auto audioDecoderAdapter = audioDecoderAdapter_.lock();
