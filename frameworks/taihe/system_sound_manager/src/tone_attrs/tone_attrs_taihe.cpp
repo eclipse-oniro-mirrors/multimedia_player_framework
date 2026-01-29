@@ -144,7 +144,7 @@ void ToneAttrsImpl::SetCategory(int32_t category)
     bool isCategoryValid = false;
     if (category == OHOS::Media::TONE_CATEGORY_RINGTONE || category == OHOS::Media::TONE_CATEGORY_TEXT_MESSAGE ||
         category == OHOS::Media::TONE_CATEGORY_NOTIFICATION || category == OHOS::Media::TONE_CATEGORY_ALARM ||
-        category == OHOS::Media::TONE_CATEGORY_CONTACTS) {
+        category == OHOS::Media::TONE_CATEGORY_CONTACTS || category == OHOS::Media::TONE_CATEGORY_NOTIFICATION_APP) {
         isCategoryValid = true;
     }
     if (!isCategoryValid) {

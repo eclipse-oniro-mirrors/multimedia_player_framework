@@ -90,10 +90,18 @@ struct ToneHapticsSettings {
   hapticsUri: Optional<String>;
 }
 
+union StringOrNull {
+  type_string: String;
+  @null type_null;
+}
+
 interface ToneHapticsAttrs {
   GetUri(): String;
   GetTitle(): String;
   GetFileName(): String;
+  GetGentleUri(): StringOrNull;
+  GetGentleTitle(): StringOrNull;
+  GetGentleFileName(): StringOrNull;
 }
 
 enum SystemSoundError: i32  {
