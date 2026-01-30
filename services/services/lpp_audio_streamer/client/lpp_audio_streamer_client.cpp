@@ -202,7 +202,7 @@ void LppAudioStreamerClient::MediaServerDied()
         playerProxy_ = nullptr;
         listenerStub_ = nullptr;
     }
-    CHECK_AND_RETURN(callback_ == nullptr);
+    CHECK_AND_RETURN(callback_ != nullptr);
     callback_->OnError(MSERR_SERVICE_DIED,
         "mediaserver is died, please create a new audio sink instance again");
 }
