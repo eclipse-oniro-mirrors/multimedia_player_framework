@@ -114,8 +114,8 @@ private:
     bool isDownload_ = false;
     bool isInterruptedNewDownLoad_ = false;
     bool isInterruptNeeded_ = false;
-    int64_t requestedOffset_;
-    int64_t requestedLength_;
+    int64_t requestedOffset_ {0};
+    int64_t requestedLength_ {0};
 };
 } // namespace Media
 } // namespace OHOS
