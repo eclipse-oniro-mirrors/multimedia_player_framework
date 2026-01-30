@@ -700,8 +700,8 @@ size_t CustomLoaderCallback::RxBodyDataUnsupportRangeAndCache(void* buffer, size
             needWriteLen -= len;
             if (downloader->dataSize == SHARD_SIZE) {
                 MEDIA_LOG_I("download thread wait, notify data return thread:");
-                pthread_cond_signal(&downloader->cond_return);
-                pthread_cond_wait(&downloader->cond_download, &downloader->mutex);
+                pthread_cond_signal(&downloader->condReturn_);
+                pthread_cond_wait(&downloader->condDownload_, &downloader->mutex);
             }
         }
     } else {
@@ -709,8 +709,8 @@ size_t CustomLoaderCallback::RxBodyDataUnsupportRangeAndCache(void* buffer, size
         downloader->dataSize += static_cast<int64_t>(dataLen);
         if (downloader->dataSize == SHARD_SIZE) {
             MEDIA_LOG_I("download thread wait, notify data return thread:");
-            pthread_cond_signal(&downloader->cond_return);
-            pthread_cond_wait(&downloader->cond_download, &downloader->mutex);
+            pthread_cond_signal(&downloader->condReturn_);
+            pthread_cond_wait(&downloader->condDownload_, &downloader->mutex);
         }
     }
     pthread_mutex_unlock(&downloader->mutex);
