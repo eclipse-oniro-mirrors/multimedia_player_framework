@@ -174,6 +174,7 @@ void AVTransCoderCallback::OnJsCompleteCallBack(AVTransCoderJsCallback *jsCb) co
 void AVTransCoderCallback::OnJsProgressUpdateCallback(AVTransCoderJsCallback *jsCb) const
 {
     auto task = [event = jsCb]() {
+        // Js Thread
         CHECK_AND_RETURN_LOG(event != nullptr, "jsCb is nullptr");
         std::string request = event->callbackName;
         do {
