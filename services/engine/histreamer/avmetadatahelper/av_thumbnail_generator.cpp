@@ -646,17 +646,11 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
                "dstWidth:%{public}d, dstHeight:%{public}d, colorFormat:%{public}d", FAKE_POINTER(this), timeUs, option,
                param.dstWidth, param.dstHeight, static_cast<int32_t>(param.colorFormat));
     CHECK_AND_RETURN_RET_LOG(mediaDemuxer_ != nullptr, nullptr, "FetchFrameAtTime demuxer is nullptr");
-    avBuffer_ = nullptr;
-    readErrorFlag_ = false;
-    hasFetchedFrame_ = false;
-    isBufferAvailable_ = false;
-    hasReceivedCodecErrCodeOfUnsupported_.store(false);
-    outputConfig_ = param;
-    seekTime_ = timeUs;
-    currentFetchFrameYuvTimeUs_ = timeUs;
-    currentFetchFrameYuvOption_ = option;
+    ResetParamsBeforeFetchFrame(timeUs, option, param);
+
     trackInfo_ = GetVideoTrackInfo();
     CHECK_AND_RETURN_RET_LOG(trackInfo_ != nullptr, nullptr, "FetchFrameAtTime trackInfo_ is nullptr.");
+ 
     mediaDemuxer_->SelectTrack(trackIndex_);
     int64_t realSeekTime = timeUs;
     auto res = SeekToTime(Plugins::Us2Ms(timeUs), static_cast<Plugins::SeekMode>(option), realSeekTime);
@@ -754,6 +748,19 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuvs(int64_t timeUs, i
         HandleFetchFrameYuvFailed();
     }
     return avBuffer_;
+}
+
+void AVThumbnailGenerator::ResetParamsBeforeFetchFrame(int64_t timeUs, int32_t option, const OutputConfiguration &param)
+{
+    avBuffer_ = nullptr;
+    readErrorFlag_ = false;
+    hasFetchedFrame_ = false;
+    isBufferAvailable_ = false;
+    hasReceivedCodecErrCodeOfUnsupported_.store(false);
+    outputConfig_ = param;
+    seekTime_ = timeUs;
+    currentFetchFrameYuvTimeUs_ = timeUs;
+    currentFetchFrameYuvOption_ = option;
 }
 
 void AVThumbnailGenerator::HandleFetchFrameYuvRes()
