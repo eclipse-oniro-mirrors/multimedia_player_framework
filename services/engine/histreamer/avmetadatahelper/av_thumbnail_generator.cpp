@@ -139,9 +139,9 @@ void AVThumbnailGenerator::OnError(MediaAVCodec::AVCodecErrorType errorType, int
         {
             MEDIA_LOGI("OnError, before onErrorMutex_");
             std::unique_lock<std::mutex> lock(onErrorMutex_);
-            CHECK_AND_RETURN_LOG(!hasReceivedCodecErrCodeOfUnsupported_,
+            CHECK_AND_RETURN_LOG(!hasReceivedCodecErrCodeOfUnsupported_.load(),
                 "hasReceivedCodecErrCodeOfUnsupported_ is true");
-            hasReceivedCodecErrCodeOfUnsupported_ = true;
+            hasReceivedCodecErrCodeOfUnsupported_.store(true);
         }
 
         {
@@ -650,7 +650,7 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
     readErrorFlag_ = false;
     hasFetchedFrame_ = false;
     isBufferAvailable_ = false;
-    hasReceivedCodecErrCodeOfUnsupported_ = false;
+    hasReceivedCodecErrCodeOfUnsupported_.store(false);
     outputConfig_ = param;
     seekTime_ = timeUs;
     currentFetchFrameYuvTimeUs_ = timeUs;
@@ -664,21 +664,22 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
     CHECK_AND_RETURN_RET_LOG(InitDecoder() == Status::OK, nullptr, "FetchFrameAtTime InitDecoder failed.");
     DfxReport("AVImageGenerator call");
     bool fetchFrameRes = WaitForFrame();
-    {
-        MEDIA_LOGI("FetchFrameYuv, retry fetch frame");
-        std::unique_lock retryLock(onErrorMutex_);
-        if (hasReceivedCodecErrCodeOfUnsupported_) {
+
+    MEDIA_LOGI("FetchFrameYuv, retry fetch frame");
+    if (hasReceivedCodecErrCodeOfUnsupported_.load()) {
+        {
+            std::scoped_lock lock(mutex_, queueMutex_);
             stopProcessing_ = false;
-            SwitchToSoftWareDecoder();
-            {
-                std::unique_lock fetchFrameLock(mutex_);
-                MEDIA_LOGI("FetchFrameYuv, retry fetch frame, wait for the lock");
-                fetchFrameRes = cond_.wait_for(fetchFrameLock, std::chrono::seconds(MAX_WAIT_TIME_SECOND),
-                    [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); });
-            }
         }
-        MEDIA_LOGI("FetchFrameYuv, fetch frame end");
+        SwitchToSoftWareDecoder();
+        {
+            std::unique_lock fetchFrameLock(mutex_);
+            MEDIA_LOGI("FetchFrameYuv, retry fetch frame, wait for the lock");
+            fetchFrameRes = cond_.wait_for(fetchFrameLock, std::chrono::seconds(MAX_WAIT_TIME_SECOND),
+                [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); });
+        }
     }
+
     if (fetchFrameRes) {
         HandleFetchFrameYuvRes();
     } else {

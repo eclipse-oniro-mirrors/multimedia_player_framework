@@ -116,7 +116,7 @@ private:
     double frameRate_ { 0.0 };
     Plugins::SeekMode seekMode_ {};
     int64_t duration_ = 0;
-    bool hasReceivedCodecErrCodeOfUnsupported_ = false;
+    std::atomic<bool> hasReceivedCodecErrCodeOfUnsupported_ = false;
     int64_t currentFetchFrameYuvTimeUs_ = 0;
     int32_t currentFetchFrameYuvOption_ = 0;
 
