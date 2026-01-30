@@ -687,27 +687,27 @@ size_t CustomLoaderCallback::RxBodyDataUnsupportRangeAndCache(void* buffer, size
     pthread_mutex_lock(&downloader->mutex);
     size_t dataLen = size * nitems;
     uint8_t* tempBuffer = static_cast<uint8_t*>(buffer);
-    if (dataLen + static_cast<size_t>(downloader->data_size) > SHARD_SIZE) {
+    if (dataLen + static_cast<size_t>(downloader->dataSize) > SHARD_SIZE) {
         MEDIA_LOG_I("download data need write with slice");
         size_t writeLen = 0;
         size_t needWriteLen = dataLen;
         while (needWriteLen > 0) {
-            size_t len = needWriteLen + static_cast<size_t>(downloader->data_size) > SHARD_SIZE ?
-                static_cast<size_t>(SHARD_SIZE - downloader->data_size) : needWriteLen;
-            memcpy_s(downloader->buffer_ + downloader->data_size, len, tempBuffer + writeLen, len);
-            downloader->data_size += static_cast<int64_t>(len);
+            size_t len = needWriteLen + static_cast<size_t>(downloader->dataSize) > SHARD_SIZE ?
+                static_cast<size_t>(SHARD_SIZE - downloader->dataSize) : needWriteLen;
+            memcpy_s(downloader->buffer_ + downloader->dataSize, len, tempBuffer + writeLen, len);
+            downloader->dataSize += static_cast<int64_t>(len);
             writeLen += len;
             needWriteLen -= len;
-            if (downloader->data_size == SHARD_SIZE) {
+            if (downloader->dataSize == SHARD_SIZE) {
                 MEDIA_LOG_I("download thread wait, notify data return thread:");
                 pthread_cond_signal(&downloader->cond_return);
                 pthread_cond_wait(&downloader->cond_download, &downloader->mutex);
             }
         }
     } else {
-        memcpy_s(downloader->buffer_ + downloader->data_size, SHARD_SIZE - downloader->data_size, tempBuffer, dataLen);
-        downloader->data_size += static_cast<int64_t>(dataLen);
-        if (downloader->data_size == SHARD_SIZE) {
+        memcpy_s(downloader->buffer_ + downloader->dataSize, SHARD_SIZE - downloader->dataSize, tempBuffer, dataLen);
+        downloader->dataSize += static_cast<int64_t>(dataLen);
+        if (downloader->dataSize == SHARD_SIZE) {
             MEDIA_LOG_I("download thread wait, notify data return thread:");
             pthread_cond_signal(&downloader->cond_return);
             pthread_cond_wait(&downloader->cond_download, &downloader->mutex);
