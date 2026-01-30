@@ -3710,7 +3710,7 @@ napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info
     std::vector<int32_t> payloadTypes = {};
     if (CommonNapi::GetIntArrayArgument(env, args[1], payloadTypes)) {
         jsPlayer->SeiMessageCallbackOff(jsPlayer, callbackName, payloadTypes);
-        if(!payloadTypes.empty() &&  payloadTypes[0] == SEI_MSG_PAYLOAD_TYPE_SUPPORT) {
+        if (!payloadTypes.empty() && payloadTypes[0] == SEI_MSG_PAYLOAD_TYPE_SUPPORT) {
             jsPlayer.ClearCallbackReference(callbackName);
             MEDIA_LOGI("SEI_MSG_PAYLOAD_TYPE_SUPPORT.");
         }
