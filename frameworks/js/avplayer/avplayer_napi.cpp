@@ -3709,6 +3709,9 @@ napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info
     std::vector<int32_t> payloadTypes = {};
     if (CommonNapi::GetIntArrayArgument(env, args[1], payloadTypes)) {
         jsPlayer->SeiMessageCallbackOff(jsPlayer, callbackName, payloadTypes);
+        if(!payloadTypes.empty() &&  payloadTypes[0] == SEI_MSG_PAYLOAD_TYPE_SUPPORT) {
+            
+        }
     } else {
         MEDIA_LOGD("The array is empty, no processing is performed.");
     }

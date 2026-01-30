@@ -377,7 +377,9 @@ bool StreamCacheManager::UpdateLastAccessTime(CacheEntryInfo &info, const std::s
     CHECK_AND_RETURN_RET_LOG(mapped_ != MAP_FAILED, false, "mapped is invalid");
     char* ptr = static_cast<char*>(mapped_) + info.offset;
     CacheEntryHeader* header = reinterpret_cast<CacheEntryHeader*>(ptr);
+    CHECK_AND_RETURN_RET_LOG(header != nullptr, false, "header is null");
     CacheField* fieldHeaders = reinterpret_cast<CacheField*>(ptr + sizeof(CacheEntryHeader));
+    CHECK_AND_RETURN_RET_LOG(fieldHeaders != nullptr, false, "fieldHeaders is null");
     char* contentPtr = ptr + sizeof(CacheEntryHeader) + (header->fieldCount * sizeof(CacheField));
 
     size_t offset = 0;
