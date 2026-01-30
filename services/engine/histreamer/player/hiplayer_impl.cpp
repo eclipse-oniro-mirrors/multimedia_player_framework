@@ -2181,6 +2181,7 @@ int32_t HiPlayerImpl::InnerSelectTrack(std::string mime, int32_t trackId, Player
         return MSERR_UNKNOWN;
     }
     if (IsSubtitleMime(mime)) {
+        
         currentSubtitleTrackId_ = trackId;
     } else if (IsVideoMime(mime)) {
         currentVideoTrackId_ = trackId;
