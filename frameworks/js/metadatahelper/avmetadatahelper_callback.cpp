@@ -263,11 +263,10 @@ void AVMetadataHelperCallback::OnJsPixelCompleteCallback(AVMetadataJsCallback *j
                 imageResult = Media::PixelMapNapi::CreatePixelMap(ref->env_, event->pixel_);
             }
             napi_set_named_property(ref->env_, frameInfo, "image", imageResult);
-            args[1] = frameInfo;
+            args[0] = frameInfo;
             if (event->errorCode != 0) {
-                napi_create_uint32(ref->env_, event->fetchResult, &args[0]);
                 (void)CommonNapi::CreateError(ref->env_, event->errorCode, event->errorMs, jsCallback);
-                args[0] = jsCallback;
+                args[1] = jsCallback;
             }
             napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
@@ -277,7 +276,7 @@ void AVMetadataHelperCallback::OnJsPixelCompleteCallback(AVMetadataJsCallback *j
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
         } while (0);
         delete event;
-        };
+    };
     auto ret = napi_send_event(env_, task, napi_eprio_immediate);
     if (ret != napi_status::napi_ok) { delete jsCb; }
 }
