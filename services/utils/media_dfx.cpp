@@ -360,26 +360,35 @@ void MediaEvent::CommonStatisicsEventWrite(CallType callType, OHOS::HiviewDFX::H
     for (const auto& kv : infoMap) {
         json jsonArray;
         json eventInfoJson;
+        json playbackMetrics = json::array();
+        SetPlaybackMetrics(callType, kv.first, playbackMetrics);
+        bool hasPlaybackMetrics = !playbackMetrics.empty();
         json mediaEvents;
         for (const auto& listPair : kv.second) {
+            if (!listPair.second) continue;
             json metaInfoJson;
             ParseOneEvent(listPair, metaInfoJson);
             mediaEvents.push_back(metaInfoJson);
         }
+        bool hasMediaEvents = !mediaEvents.empty();
         eventInfoJson["appName"] = GetClientBundleName(kv.first);
-        eventInfoJson["mediaEvents"] = mediaEvents;
-        {
-            std::lock_guard<std::mutex> lock(maxReportMut_);
-            auto it = mediaMaxInstanceNumberMap_[callType].find(kv.first);
-            if (it != mediaMaxInstanceNumberMap_[callType].end()) {
-                eventInfoJson["maxInstanceNum"] = it->second;
-            } else {
-                eventInfoJson["maxInstanceNum"] = 0;
+        if (hasMediaEvents) {
+            eventInfoJson["mediaEvents"] = mediaEvents;
+            {
+                std::lock_guard<std::mutex> lock(maxReportMut_);
+                auto it = mediaMaxInstanceNumberMap_[callType].find(kv.first);
+                if (it != mediaMaxInstanceNumberMap_[callType].end()) {
+                    eventInfoJson["maxInstanceNum"] = it->second;
+                } else {
+                    eventInfoJson["maxInstanceNum"] = 0;
+                }
             }
-        }
-        json playbackMetrics = json::array();
-        SetPlaybackMetrics(callType, kv.first, playbackMetrics);
-        if (!playbackMetrics.empty()) {
+            if (hasPlaybackMetrics) {
+                eventInfoJson["playbackMetrics"] = playbackMetrics;
+            }
+        } else if (hasPlaybackMetrics) {
+            eventInfoJson["mediaEvents"] = json::array();
+            eventInfoJson["maxInstanceNum"] = 0;
             eventInfoJson["playbackMetrics"] = playbackMetrics;
         }
         jsonArray.push_back(eventInfoJson);

@@ -348,6 +348,7 @@ private:
     bool IsPrepareStateValid() const;
     void MetricsUpdateDuration();
     void SetMediaKitReport(const std::string &apiCall);
+    void ExtractStrategyParams(const AVPlayStrategy& strategy);
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
