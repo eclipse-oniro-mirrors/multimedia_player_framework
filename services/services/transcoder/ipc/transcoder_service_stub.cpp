@@ -23,6 +23,7 @@
 #include "media_permission.h"
 #include "accesstoken_kit.h"
 #include "media_dfx.h"
+#include "media_utils.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "TransCoderServiceStub"};
@@ -37,6 +38,8 @@ sptr<TransCoderServiceStub> TransCoderServiceStub::Create()
 
     int32_t ret = transCoderStub->Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to transcoder stub init");
+    int32_t appUid = IPCSkeleton::GetCallingPid();
+    (void)GetClientBundleName(appUid);
     return transCoderStub;
 }
 
