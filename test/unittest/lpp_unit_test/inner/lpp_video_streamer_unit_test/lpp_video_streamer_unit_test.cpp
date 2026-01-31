@@ -46,8 +46,9 @@ HWTEST_F(VideoStreamerUnitTest, VideoCreateByMime_001, TestSize.Level1)
     EXPECT_EQ(invalidVideoPlayer, nullptr);
 
     std::string validMime = "video/avc";
+    VideoStreamerFactory::GetLppCapacity();
     std::shared_ptr<VideoStreamer> validVideoPlayer = VideoStreamerFactory::CreateByMime(validMime);
     EXPECT_NE(validVideoPlayer, nullptr);
 }
 }  // namespace Media
-}  // namespace OHOS
+}  // namespace OHOS
