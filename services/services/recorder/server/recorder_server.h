@@ -41,7 +41,7 @@ public:
     SaveDocumentSyncCallback() {};
     virtual ~SaveDocumentSyncCallback() {};
     void OnSyncShutdown() override;
-    bool GetShutdown() override;
+    bool GetShutdown();
 
 private:
     std::mutex mutex_;
