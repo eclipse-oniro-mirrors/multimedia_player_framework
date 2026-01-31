@@ -41,10 +41,12 @@ public:
     SaveDocumentSyncCallback() {};
     virtual ~SaveDocumentSyncCallback() {};
     void OnSyncShutdown() override;
-    bool isShutdown = false;
+    bool GetShutdown() override;
 
 private:
-    const int32_t intervalTime = 500000; // 500 ms
+    std::mutex mutex_;
+    bool isShutdown_ = false;
+    const int32_t intervalTime_ = 500000; // 500 ms
 };
 #endif
 class RecorderServer : public IRecorderService, public IRecorderEngineObs, public NoCopyable {
