@@ -2112,77 +2112,63 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartFileInnerAudioCapture_003, TestSi
 #ifdef SUPPORT_CALL
 HWTEST_F(ScreenCaptureServerFunctionTest, StopAndRelease_001, TestSize.Level2)
 {
-    ScreenCaptureObserverCallBack* obcb = new ScreenCaptureObserverCallBack(screenCaptureServer_);
+    auto obcb = std::make_unique<ScreenCaptureObserverCallBack>(screenCaptureServer_);
     if (obcb) {
         ASSERT_EQ(obcb->StopAndRelease(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER), true);
     }
-    delete obcb;
-    obcb = nullptr;
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, StopAndRelease_002, TestSize.Level2)
 {
-    ScreenCaptureObserverCallBack* obcb = new ScreenCaptureObserverCallBack(screenCaptureServer_);
+    auto obcb = std::make_unique<ScreenCaptureObserverCallBack>(screenCaptureServer_);
     if (obcb) {
         screenCaptureServer_->Release();
         screenCaptureServer_ = nullptr;
         ASSERT_EQ(obcb->StopAndRelease(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER), true);
     }
-    delete obcb;
-    obcb = nullptr;
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, NotifyStopAndRelease_001, TestSize.Level2)
 {
-    ScreenCaptureObserverCallBack* obcb = new ScreenCaptureObserverCallBack(screenCaptureServer_);
+    auto obcb = std::make_unique<ScreenCaptureObserverCallBack>(screenCaptureServer_);
     if (obcb) {
         ASSERT_EQ(obcb->NotifyStopAndRelease(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER), true);
     }
-    delete obcb;
-    obcb = nullptr;
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, TelCallStateUpdated_001, TestSize.Level2)
 {
-    ScreenCaptureObserverCallBack* obcb = new ScreenCaptureObserverCallBack(screenCaptureServer_);
+    auto obcb = std::make_unique<ScreenCaptureObserverCallBack>(screenCaptureServer_);
     if (obcb) {
         ASSERT_EQ(obcb->TelCallStateUpdated(false), true);
     }
-    delete obcb;
-    obcb = nullptr;
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, NotifyTelCallStateUpdated_001, TestSize.Level2)
 {
-    ScreenCaptureObserverCallBack* obcb = new ScreenCaptureObserverCallBack(screenCaptureServer_);
+    auto obcb = std::make_unique<ScreenCaptureObserverCallBack>(screenCaptureServer_);
     if (obcb) {
         ASSERT_EQ(obcb->NotifyTelCallStateUpdated(false), true);
     }
-    delete obcb;
-    obcb = nullptr;
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, TelCallStateUpdated_002, TestSize.Level2)
 {
     screenCaptureServer_->appName_ = HiviewCareBundleName;
-    ScreenCaptureObserverCallBack* obcb = new ScreenCaptureObserverCallBack(screenCaptureServer_);
+    auto obcb = std::make_unique<ScreenCaptureObserverCallBack>(screenCaptureServer_);
     if (obcb) {
         ASSERT_EQ(obcb->TelCallStateUpdated(false), true);
     }
-    delete obcb;
-    obcb = nullptr;
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, TelCallStateUpdated_003, TestSize.Level2)
 {
-    ScreenCaptureObserverCallBack* obcb = new ScreenCaptureObserverCallBack(screenCaptureServer_);
+    auto obcb = std::make_unique<ScreenCaptureObserverCallBack>(screenCaptureServer_);
     if (obcb) {
         screenCaptureServer_->Release();
         screenCaptureServer_ = nullptr;
         ASSERT_EQ(obcb->TelCallStateUpdated(false), true);
     }
-    delete obcb;
-    obcb = nullptr;
 }
 
 /**
