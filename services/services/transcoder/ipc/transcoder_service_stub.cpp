@@ -38,7 +38,7 @@ sptr<TransCoderServiceStub> TransCoderServiceStub::Create()
 
     int32_t ret = transCoderStub->Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to transcoder stub init");
-    int32_t appUid = IPCSkeleton::GetCallingPid();
+    int32_t appUid = IPCSkeleton::GetCallingUid();
     (void)GetClientBundleName(appUid);
     return transCoderStub;
 }
