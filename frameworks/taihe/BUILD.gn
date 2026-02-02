@@ -153,6 +153,10 @@ taihe_shared_library("media_taihe") {
   subsystem_name = "$subsystem_name"
   part_name = "$part_name"
 
+  cflags = [
+    "-D_FORTIFY_SOURCE=2",
+  ]
+
   include_dirs = [
     "common",
     "media/include",

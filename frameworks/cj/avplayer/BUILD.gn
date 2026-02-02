@@ -67,6 +67,10 @@ ohos_shared_library("cj_avplayer_ffi") {
     "graphic_surface:surface",
   ]
 
+  cflags = [
+    "-D_FORTIFY_SOURCE=2",
+  ]
+  
   innerapi_tags = [ "platformsdk" ]
   subsystem_name = "multimedia"
   part_name = "player_framework"
