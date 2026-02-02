@@ -283,7 +283,7 @@ int32_t IStreamIDManager::AddReleaseTask(const std::shared_ptr<AudioStream> &str
     CHECK_AND_RETURN_RET_LOG(streamStopThreadPool_ != nullptr, MSERR_INVALID_VAL,
         "Failed to obtain streamReleaseThreadPool_");
     CHECK_AND_RETURN_RET_LOG(streamReleaseTask != nullptr, MSERR_INVALID_VAL,
-        "AddReleaseTask, streamStopTask is nullptr");
+        "AddReleaseTask, streamReleaseTask is nullptr");
     streamStopThreadPool_->AddTask(streamReleaseTask);
     MEDIA_LOGI("AddReleaseTask end, streamID is %{public}d", stream->GetStreamID());
     return MSERR_OK;
