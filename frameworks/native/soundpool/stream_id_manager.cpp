@@ -686,7 +686,7 @@ bool StreamIDManagerWithNoInterrupt::InnerProcessOfRemoveInvalidStreams(const St
             if ((*it) != nullptr && state == (*it)->GetStreamState()) {
                 MEDIA_LOGI("InnerProcessOfRemoveInvalidStreams, NO_INTERRUPT, streamID is %{public}d",
                     (*it)->GetStreamID());
-                AddReleaseTask(*it);
+                AddReleaseTask((*it));
                 it = streams.erase(it);
                 currentStreamsNum_--;
                 continue;
@@ -772,7 +772,7 @@ int32_t StreamIDManagerWithNoInterrupt::SetPlay(int32_t soundID, int32_t streamI
     }
     CHECK_AND_RETURN_RET_LOG(streamPlayingThreadPool_ != nullptr, MSERR_INVALID_VAL,
         "Failed to obtain stream play threadpool");
-    
+
     std::unique_lock lock(streamIDManagerLock_);
     std::shared_ptr<AudioStream> stream = GetStreamByStreamID(streamID);
     CHECK_AND_RETURN_RET_LOG(stream != nullptr, MSERR_INVALID_VAL, "SetPlay, stream(%{public}d) is nullptr", streamID);
