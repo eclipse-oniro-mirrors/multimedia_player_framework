@@ -71,6 +71,7 @@ protected:
     bool InnerProcessOfOnPlayFinished(int32_t streamID);
     int32_t AddPlayTask(int32_t streamID);
     int32_t AddStopTask(const std::shared_ptr<AudioStream> &stream);
+    int32_t AddReleaseTask(const std::shared_ptr<AudioStream> &stream);
     void QueueAndSortPlayingStreamID(int32_t freshStreamID);
     void QueueAndSortWillPlayStreamID(const StreamIDAndPlayParamsInfo &streamIDAndPlayParamsInfo);
     void PostProcessingOfStreamDoPlayFailed(int32_t streamID);
