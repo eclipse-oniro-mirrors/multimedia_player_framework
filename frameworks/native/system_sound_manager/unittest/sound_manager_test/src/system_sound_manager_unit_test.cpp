@@ -598,6 +598,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_OpenToneHaptics_001, TestS
     EXPECT_NE(systemSoundManager_, nullptr);
 }
 
+#ifdef SUPPORT_VIBRATOR
 /**
  * @tc.name  : Test GetGentleTitle API
  * @tc.number: Media_SoundManager_GetGentleTitle_001
@@ -2644,5 +2645,6 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_OpenHapticsUri_001, TestSi
     newUri = systemSoundManager_->OpenHapticsUri(databaseTool, uri);
     EXPECT_NE(newUri, "");
 }
+#endif
 } // namespace Media
 } // namespace OHOS
