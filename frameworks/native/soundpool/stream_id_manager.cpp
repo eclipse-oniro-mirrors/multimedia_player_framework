@@ -470,6 +470,8 @@ void StreamIDManagerWithSameSoundInterrupt::RemoveInvalidStreams()
             it++;
         }
     }
+    lock.unlock();
+    AddReleaseTask(streamsToBeReleased);
 }
 
 void StreamIDManagerWithSameSoundInterrupt::RemoveStreamBySoundIDAndStreamID(int32_t soundID, int32_t streamID)
@@ -720,6 +722,11 @@ bool StreamIDManagerWithNoInterrupt::InnerProcessOfRemoveInvalidStreams(const St
             }
             it++;
         }
+    }
+    lock.unlock();
+    AddReleaseTask(streamsToBeReleased);
+    if (currentStreamsNum_.load() <= MAX_NUMBER_OF_HELD_STREAMS) {
+        return true;
     }
     return false;
 }
