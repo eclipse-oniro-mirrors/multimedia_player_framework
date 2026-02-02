@@ -60,7 +60,7 @@ SoundParser::SoundParser(int32_t soundID, int32_t fd, int64_t offset, int64_t le
 
 SoundParser::~SoundParser()
 {
-    MEDIA_LOGI("SoundParser Destructor, soundID is %{public}d", soundID_);
+    MEDIA_LOGI("SoundParser Destruction, soundID is %{public}d", soundID_);
     Release();
 }
 
@@ -87,6 +87,7 @@ int32_t SoundParser::DoParser()
         MEDIA_LOGI("DoDemuxer failed and callback is nullptr");
         return MSERR_INVALID_VAL;
     }
+
     result = DoDecode(trackFormat_);
     if (result != MSERR_OK && callback_ != nullptr) {
         MEDIA_LOGI("DoDecode failed, call callback");
@@ -125,7 +126,8 @@ int32_t SoundParser::DoDemuxer(MediaAVCodec::Format *trackFormat)
     sourceFormat.GetLongValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_DURATION, duration);
 
     sourceDurationInfo_ = duration;
-    MEDIA_LOGI("soundID is %{public}d, trackCount is %{public}d", soundID_, trackCount);
+    MEDIA_LOGI("soundID is %{public}d, trackCount is %{public}d, duration is %{public}lu", soundID_, trackCount,
+        duration);
 
     for (int32_t trackIndex = 0; trackIndex < trackCount; trackIndex++) {
         int32_t trackType = 0;
@@ -141,7 +143,6 @@ int32_t SoundParser::DoDemuxer(MediaAVCodec::Format *trackFormat)
             std::string trackMimeTypeInfo = "";
             trackFormat->GetStringValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_CODEC_MIME, trackMimeTypeInfo);
             if (AUDIO_RAW_MIMETYPE_INFO.compare(trackMimeTypeInfo) != 0) {
-                // resample format
                 trackFormat->PutIntValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_AUDIO_SAMPLE_FORMAT,
                     MediaAVCodec::SAMPLE_S16LE);
             } else {
@@ -180,7 +181,7 @@ int32_t SoundParser::DoDecode(const MediaAVCodec::Format &trackFormat)
         if (callback_ != nullptr) audioDecCb_->SetCallback(callback_);
         ret = audioDec_->Start();
         CHECK_AND_RETURN_RET_LOG(ret == 0, MSERR_INVALID_VAL, "Failed to start audioDecorder.");
-        MEDIA_LOGI("DoDecode end, decoder has been started, soundID is %{public}d", soundID_);
+        MEDIA_LOGI("DoDecode, audio decoder has been started, soundID is %{public}d", soundID_);
     }
     return MSERR_OK;
 }
@@ -223,7 +224,7 @@ std::shared_ptr<AudioStandard::AudioSharedMemory> SoundParser::GetAudioSharedMem
 int32_t SoundParser::Release()
 {
     MediaTrace trace("SoundParser::Release");
-    MEDIA_LOGI("SoundParser::Release start, soundID is %{public}d", soundID_);
+    MEDIA_LOGI("Release start, soundID is %{public}d", soundID_);
     int32_t ret = MSERR_OK;
     std::shared_ptr<SoundDecoderCallback> audioDecCbRelease;
     {
@@ -255,20 +256,15 @@ int32_t SoundParser::Release()
         (void)close(fdSource_);
         fdSource_ = -1;
     }
-    MEDIA_LOGI("SoundParser::Release end, soundID is %{public}d", soundID_);
+    MEDIA_LOGI("Release end, soundID is %{public}d", soundID_);
     return ret;
 }
 
 SoundDecoderCallback::SoundDecoderCallback(int32_t soundID,
     const std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> &audioDec,
-    const std::shared_ptr<MediaAVCodec::AVDemuxer> &demuxer, bool isRawFile)
-    : soundID_(soundID),
-    audioDec_(audioDec),
-    demuxer_(demuxer),
-    isRawFile_(isRawFile),
-    eosFlag_(false),
-    decodeShouldCompleted_(false),
-    currentSoundBufferSize_(0)
+const std::shared_ptr<MediaAVCodec::AVDemuxer> &demuxer, bool isRawFile) :
+    soundID_(soundID), audioDec_(audioDec), demuxer_(demuxer), isRawFile_(isRawFile), eosFlag_(false),
+    decodeShouldCompleted_(false), currentSoundBufferSize_(0)
 {
     MEDIA_LOGI("Construction SoundDecoderCallback");
 }
@@ -333,7 +329,7 @@ void SoundDecoderCallback::DealBufferRawFile(MediaAVCodec::AVCodecBufferFlag buf
             bufferFlag == AVCODEC_BUFFER_FLAG_EOS)) {
         decodeShouldCompleted_ = true;
         ReCombineCacheData();
-        CHECK_AND_RETURN_LOG(listener_ != nullptr, "DealBufferRawFile, listener is nullptr");
+        CHECK_AND_RETURN_LOG(listener_ != nullptr, "Invalid listener");
         listener_->OnSoundDecodeCompleted(fullPcmBuffer_);
         listener_->SetSoundBufferTotalSize(static_cast<size_t>(currentSoundBufferSize_));
         CHECK_AND_RETURN_LOG(SetAudioSharedMemory(), "SetAudioSharedMemory failed");
@@ -410,7 +406,7 @@ void SoundDecoderCallback::OnOutputBufferAvailable(uint32_t index, AVCodecBuffer
 
 int32_t SoundDecoderCallback::ReCombineCacheData()
 {
-    MEDIA_LOGI("ReCombineCacheData start, currentSoundBufferSize_ is %{public}d", currentSoundBufferSize_);
+    MEDIA_LOGI("ReCombine start, currentSoundBufferSize_ is %{public}d", currentSoundBufferSize_);
     uint8_t *fullBuffer = new(std::nothrow) uint8_t[currentSoundBufferSize_];
     CHECK_AND_RETURN_RET_LOG(fullBuffer != nullptr, MSERR_INVALID_VAL, "Invalid fullBuffer");
     int32_t copyIndex = 0;
@@ -420,26 +416,26 @@ int32_t SoundDecoderCallback::ReCombineCacheData()
         if (bufferEntry != nullptr && bufferEntry->size > 0 && bufferEntry->buffer != nullptr) {
             if (remainBufferSize < bufferEntry->size) {
                 delete[] fullBuffer;
-                MEDIA_LOGE("ReCombineCacheData size is not enough, remainBufferSize is %{public}d, "
-                    "buffer size is %{public}d", remainBufferSize, bufferEntry->size);
+                MEDIA_LOGE("ReCombine size is not enough, remainBufferSize is %{public}d, buffer size is %{public}d",
+                    remainBufferSize, bufferEntry->size);
                 return MSERR_INVALID_VAL;
             }
             int32_t ret = memcpy_s(fullBuffer + copyIndex, remainBufferSize, bufferEntry->buffer, bufferEntry->size);
             if (ret != MSERR_OK) {
                 delete[] fullBuffer;
-                MEDIA_LOGE("ReCombineCacheData memcpy failed");
+                MEDIA_LOGE("memcpy failed");
                 return MSERR_INVALID_VAL;
             }
             copyIndex += bufferEntry->size;
             remainBufferSize -= bufferEntry->size;
         } else if (bufferEntry != nullptr) {
-            MEDIA_LOGE("Invalid bufferEntry, size is %{public}d, buffer is %{public}d",
-                bufferEntry->size, bufferEntry->buffer != nullptr);
+            MEDIA_LOGE("Invalid bufferEntry, size:%{public}d, buffer is %{public}d", bufferEntry->size,
+                bufferEntry->buffer != nullptr);
         } else {
             MEDIA_LOGE("bufferEntry is nullptr");
         }
     }
-    MEDIA_LOGI("ReCombineCacheData end copyIndex is %{public}d, remainSize is %{public}d", copyIndex, remainBufferSize);
+    MEDIA_LOGI("ReCombineCacheData end, copyIndex is %{public}d, remainSize is %{public}d", copyIndex, remainBufferSize);
 
     fullPcmBuffer_ = std::make_shared<AudioBufferEntry>(fullBuffer, currentSoundBufferSize_);
 
@@ -473,7 +469,6 @@ std::shared_ptr<AudioStandard::AudioSharedMemory> SoundDecoderCallback::GetAudio
 
 int32_t SoundDecoderCallback::SetCallback(const std::shared_ptr<ISoundPoolCallback> &callback)
 {
-    MEDIA_LOGI("SoundDecoderCallback::SetCallback");
     callback_ = callback;
     return MSERR_OK;
 }

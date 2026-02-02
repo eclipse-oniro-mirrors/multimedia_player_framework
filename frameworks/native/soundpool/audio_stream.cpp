@@ -1,4 +1,3 @@
-
 /*
  * Copyright (C) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,14 +24,14 @@
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SOUNDPOOL, "AudioStream"};
     static const int32_t ERROE_GLOBAL_ID = -1;
-    static const int32_t NORMAL_PLAY_RENDERER_FLAGS = 0;
 }
 
 namespace OHOS {
 namespace Media {
 AudioStream::AudioStream(const Format &trackFormat, int32_t &soundID, int32_t &streamID,
     std::shared_ptr<ThreadPool> streamStopThreadPool) : trackFormat_(trackFormat),
-    soundID_(soundID), streamID_(streamID), streamStopThreadPool_(streamStopThreadPool), pcmBufferFrameIndex_(0)
+    soundID_(soundID), streamID_(streamID), streamStopThreadPool_(streamStopThreadPool),
+    pcmBufferFrameIndex_(0)
 {
     MEDIA_LOGI("AudioStream Constructor, soundID is %{public}d, streamID is %{public}d", soundID, streamID);
     streamState_.store(StreamState::PREPARED);
@@ -254,9 +253,6 @@ int32_t AudioStream::DoPlayWithNoInterrupt()
             streamID_, streamState_.load());
         return MSERR_INVALID_VAL;
     }
-
-    if (audioRenderer_ == nullptr) {
-        MEDIA_LOGI("AudioStream::DoPlayWithNoInterrupt, audioRenderer_ is nullptr, try again");
         PreparePlayInner(audioRendererInfo_, playParameters_);
         CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL,
             "AudioStream::DoPlayWithNoInterrupt, audioRenderer_ is nullptr");
