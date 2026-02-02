@@ -110,7 +110,7 @@ void Stream::PreparePlay()
         audioRenderer_ = CreateAudioRenderer(audioRendererInfo_, playParameters_);
         if (audioRenderer_ == nullptr) {
             AudioRendererManager::GetInstance().RemoveOldAudioRenderer();
-            MEDIA_LOGE("Stream::PreparePlay CreateAudioRenderer fail, release old auidoRenderer");
+            MEDIA_LOGE("Stream::PreparePlay CreateAudioRenderer fail, release old audioRenderer");
             audioRenderer_ = CreateAudioRenderer(audioRendererInfo_, playParameters_);
         }
         MEDIA_LOGI("Stream::PreparePlay CreateAudioRenderer New end");
