@@ -100,6 +100,7 @@ group("media_unit_test") {
         "unittest/screen_capture_test:screen_capture_capi_unit_test",
         "unittest/screen_capture_test:screen_capture_native_unit_test",
         "unittest/screen_capture_test:screen_capture_server_function_unit_test",
+        "unittest/screen_capture_test:screen_capture_ipc_unit_test",
       ]
       if (player_framework_support_screen_capture_stopbycall) {
         deps += [ "unittest/observer_test:incall_observer_unit_test" ]
