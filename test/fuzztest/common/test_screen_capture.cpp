@@ -128,7 +128,7 @@ int32_t TestScreenCapture::UpdateSurface(sptr<Surface> surface)
     return screenCapture->UpdateSurface(surface);
 }
 
-int32_t TestScreenCapture::SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec)
+int32_t TestScreenCapture::SkipPrivacyMode(const std::vector<uint64_t> &windowIDsVec)
 {
     if (screenCapture == nullptr) {
         return MSERR_INVALID_OPERATION;
