@@ -30,7 +30,8 @@ namespace {
     static const int32_t MAX_STOPPED_THREADS_NUM = 5;
     static const int32_t ERROE_GLOBAL_ID = -1;
     static const size_t MAX_NUMBER_OF_PLAYING = 32;
-    static const int32_t MAX_NUMBER_OF_HELD_STREAMS = 5;
+    static const int32_t MAX_NUMBER_OF_HELD_STREAMS = 6;
+    static const int32_t MAX_TASK_NUM_MULTIPLE = 2;
 }
 
 namespace OHOS {
@@ -88,14 +89,14 @@ int32_t IStreamIDManager::InitThreadPool()
     MEDIA_LOGI("stream playing thread pool maxStreams_:%{public}d", maxStreams_);
     // For stream priority logic, thread num need align to task num.
     streamPlayingThreadPool_->Start(maxStreams_);
-    streamPlayingThreadPool_->SetMaxTaskNum(maxStreams_);
+    streamPlayingThreadPool_->SetMaxTaskNum(maxStreams_ * MAX_TASK_NUM_MULTIPLE);
     isStreamPlayingThreadPoolStarted_.store(true);
 
     streamStopThreadPool_ = std::make_shared<ThreadPool>(THREAD_POOL_NAME_CACHE_BUFFER);
     CHECK_AND_RETURN_RET_LOG(streamStopThreadPool_ != nullptr, MSERR_INVALID_VAL,
         "Failed to obtain stop ThreadPool");
-    streamStopThreadPool_->Start(MAX_STOPPED_THREADS_NUM);
-    streamStopThreadPool_->SetMaxTaskNum(maxStreams_);
+    streamStopThreadPool_->Start(maxStreams_);
+    streamStopThreadPool_->SetMaxTaskNum(maxStreams_ * MAX_TASK_NUM_MULTIPLE);
     isStreamStopThreadPoolStarted_.store(true);
 
     return MSERR_OK;
@@ -171,7 +172,9 @@ int32_t IStreamIDManager::Play(const std::shared_ptr<SoundParser> &soundParser, 
     std::unique_lock lock(streamIDManagerLock_);
     PrintPlayingStreams();
     PrintSoundID2Stream();
+    lock.unlock();
     RemoveInvalidStreams();
+    lock.lock();
     CHECK_AND_RETURN_RET_LOG(soundParser != nullptr, -1, "Play, soundParser is nullptr");
     int32_t soundID = soundParser->GetSoundID();
     int32_t streamID = GetAvailableStreamIDBySoundID(soundID);
@@ -276,16 +279,31 @@ int32_t IStreamIDManager::AddStopTask(const std::shared_ptr<AudioStream> &stream
     return MSERR_OK;
 }
 
-int32_t IStreamIDManager::AddReleaseTask(const std::shared_ptr<AudioStream> &stream)
+int32_t IStreamIDManager::AddReleaseTask(const std::vector<std::shared_ptr<AudioStream>> &streamsToBeReleased)
 {
-    MEDIA_LOGI("AddReleaseTask, streamID is %{public}d", stream->GetStreamID());
-    ThreadPool::Task streamReleaseTask = [stream] { stream->Release(); };
+    CHECK_AND_RETURN_RET_LOG(!streamsToBeReleased.empty(), MSERR_INVALID_VAL, "No stream to be released");
+    static std::ostringstream oss;
+    oss.str("");
+    oss.clear();
+    for (size_t i = 0; i < streamsToBeReleased.size(); ++i) {
+        oss << streamsToBeReleased[i]->GetStreamID();
+        if (i < streamsToBeReleased.size() - 1) {
+            oss << ", ";
+        }
+    }
+    MEDIA_LOGI("AddReleaseTask, streamIDs is [%{public}s]", oss.str().c_str());
+
+    ThreadPool::Task streamReleaseTask = [streamsToBeReleased] {
+        for (const std::shared_ptr<AudioStream> &stream : streamsToBeReleased) {
+            stream->Release();
+        }
+    };
     CHECK_AND_RETURN_RET_LOG(streamStopThreadPool_ != nullptr, MSERR_INVALID_VAL,
         "Failed to obtain streamReleaseThreadPool_");
     CHECK_AND_RETURN_RET_LOG(streamReleaseTask != nullptr, MSERR_INVALID_VAL,
         "AddReleaseTask, streamReleaseTask is nullptr");
     streamStopThreadPool_->AddTask(streamReleaseTask);
-    MEDIA_LOGI("AddReleaseTask end, streamID is %{public}d", stream->GetStreamID());
+    MEDIA_LOGI("AddReleaseTask end, streamIDs is [%{public}s]", oss.str().c_str());
     return MSERR_OK;
 }
 
@@ -434,11 +452,17 @@ void StreamIDManagerWithSameSoundInterrupt::RemoveInvalidStreams()
     static std::vector<StreamState> statesToCheck = {
         StreamState::RELEASED, StreamState::STOPPED, StreamState::PREPARED
     };
+    std::unique_lock lock(streamIDManagerLock_);
+    std::vector<std::shared_ptr<AudioStream>> streamsToBeReleased;
     for (const StreamState &state : statesToCheck) {
         for (auto it = soundID2Stream_.begin(); it != soundID2Stream_.end();) {
-            CHECK_AND_RETURN(currentStreamsNum_.load() > MAX_NUMBER_OF_HELD_STREAMS);
+            if (currentStreamsNum_.load() <= MAX_NUMBER_OF_HELD_STREAMS) {
+                lock.unlock();
+                AddReleaseTask(streamsToBeReleased);
+                return;
+            }
             if (it->second != nullptr && state == it->second->GetStreamState()) {
-                AddReleaseTask(it->second);
+                streamsToBeReleased.push_back(it->second);
                 it = soundID2Stream_.erase(it);
                 currentStreamsNum_--;
                 continue;
@@ -679,15 +703,18 @@ void StreamIDManagerWithNoInterrupt::RemoveInvalidStreams()
 
 bool StreamIDManagerWithNoInterrupt::InnerProcessOfRemoveInvalidStreams(const StreamState &state)
 {
+    std::unique_lock lock(streamIDManagerLock_);
+    std::vector<std::shared_ptr<AudioStream>> streamsToBeReleased;
     for (auto &mem : soundID2MultiStreams_) {
-        CHECK_AND_RETURN_RET(currentStreamsNum_.load() > MAX_NUMBER_OF_HELD_STREAMS, true);
         std::list<std::shared_ptr<AudioStream>> &streams = mem.second;
         for (auto it = streams.begin(); it != streams.end();) {
-            CHECK_AND_RETURN_RET(currentStreamsNum_.load() > MAX_NUMBER_OF_HELD_STREAMS, true);
+            if (currentStreamsNum_.load() <= MAX_NUMBER_OF_HELD_STREAMS) {
+                lock.unlock();
+                AddReleaseTask(streamsToBeReleased);
+                return true;
+            }
             if ((*it) != nullptr && state == (*it)->GetStreamState()) {
-                MEDIA_LOGI("InnerProcessOfRemoveInvalidStreams, NO_INTERRUPT, streamID is %{public}d",
-                    (*it)->GetStreamID());
-                AddReleaseTask((*it));
+                streamsToBeReleased.push_back((*it));
                 it = streams.erase(it);
                 currentStreamsNum_--;
                 continue;
