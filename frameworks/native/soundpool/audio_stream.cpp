@@ -256,7 +256,7 @@ int32_t AudioStream::DoPlayWithNoInterrupt()
         PreparePlayInner(audioRendererInfo_, playParameters_);
         CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL,
             "AudioStream::DoPlayWithNoInterrupt, audioRenderer_ is nullptr");
-    }
+
     
     size_t bufferSize = 0;
     audioRenderer_->GetBufferSize(bufferSize);
@@ -294,7 +294,7 @@ int32_t AudioStream::DoPlayWithSameSoundInterrupt()
         PreparePlayInner(audioRendererInfo_, playParameters_);
         CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL,
             "AudioStream::DoPlayWithSameSoundInterrupt, audioRenderer_ is nullptr");
-    }
+
 
     size_t bufferSize = 0;
     audioRenderer_->GetBufferSize(bufferSize);
