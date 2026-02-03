@@ -176,6 +176,7 @@ int32_t HelperDataSourceCallback::GetCallback(const std::string &name, std::shar
         return MSERR_INVALID_VAL;
     }
     auto ref = refMap_.at(HELPER_READAT_CALLBACK_NAME);
+    CHECK_AND_RETURN_RET_LOG(ref != nullptr, 0, "HELPER_READAT_CALLBACK_NAME is nullptr!");
     callback = ref->callbackRef_;
     return MSERR_OK;
 }

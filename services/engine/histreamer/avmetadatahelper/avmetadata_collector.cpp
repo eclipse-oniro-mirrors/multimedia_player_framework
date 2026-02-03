@@ -142,7 +142,7 @@ Status AVMetaDataCollector::GetVideoTrackId(uint32_t &trackId)
         if (trackMime.find("video/") == 0) {
             videoTrackId_ = index;
             trackId = index;
-            hasVideo_ = true;
+            hasVideo_.store(true);
             return Status::OK;
         }
     }
@@ -419,8 +419,13 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
     FormatAVMeta(metadata, globalInfo);
     auto it = metadata.tbl_.begin();
     while (it != metadata.tbl_.end()) {
+        auto keyNameIt = AVMETA_KEY_TO_X_MAP.find(it->first);
+        if (keyNameIt == AVMETA_KEY_TO_X_MAP.end()) {
+            it++;
+            continue;
+        }
         MEDIA_LOGD("metadata tbl, key: %{public}d, keyName: %{public}s, val: %{public}s", it->first,
-            AVMETA_KEY_TO_X_MAP.find(it->first)->second.c_str(), it->second.c_str());
+            keyNameIt->second.c_str(), it->second.c_str());
         it++;
     }
     return metadata.tbl_;
@@ -721,7 +726,7 @@ void AVMetaDataCollector::Reset()
     mediaDemuxer_->Reset();
     collectedMeta_.clear();
     videoTrackId_ = 0;
-    hasVideo_ = false;
+    hasVideo_.store(false);
     collectedArtPicture_ = nullptr;
 }
 
