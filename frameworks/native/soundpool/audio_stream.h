@@ -17,11 +17,11 @@
 
 #include <deque>
 
+#include "audio_errors.h"
 #include "audio_info.h"
 #include "audio_renderer.h"
 #include "audio_shared_memory.h"
 #include "audio_stream_info.h"
-#include "audio_errors.h"
 #include "audio_system_manager.h"
 #include "cpp/mutex.h"
 #include "isoundpool.h"
@@ -75,7 +75,7 @@ public:
     int32_t DoPlayWithSameSoundInterrupt();
     int32_t Stop();
     int32_t Release();
-    
+
     void OnFirstFrameWriting(uint64_t latency) override;
     void OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent) override;
     void OnStateChange(const AudioStandard::RendererState state,
@@ -98,6 +98,8 @@ public:
     int32_t GetPriority();
     
 private:
+    static constexpr int32_t NORMAL_PLAY_RENDERER_FLAGS = 0;
+
     std::shared_ptr<AudioStandard::AudioRenderer> CreateAudioRenderer(
         const AudioStandard::AudioRendererInfo &audioRendererInfo, const PlayParams &playParams);
     void DealAudioRendererParams(AudioStandard::AudioRendererOptions &rendererOptions,
@@ -107,7 +109,6 @@ private:
     void GetAvailableAudioRenderer(const AudioStandard::AudioRendererInfo &audioRendererInfo,
         const PlayParams &playParams);
     void DealPlayParamsBeforePlay(const PlayParams &playParams);
-
     static AudioStandard::AudioRendererRate CheckAndAlignRendererRate(const int32_t rate);
     int32_t PreparePlayInner(const AudioStandard::AudioRendererInfo &audioRendererInfo, const PlayParams &playParams);
     int32_t HandleRendererNotStart();
@@ -142,4 +143,4 @@ private:
 };
 } // namespace Media
 } // namespace OHOS
-#endif // AUDIO_STREAM_H
+#endif // STREAM_H
