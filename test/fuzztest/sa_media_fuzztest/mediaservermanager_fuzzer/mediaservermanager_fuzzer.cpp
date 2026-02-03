@@ -57,14 +57,23 @@ void MediaServerManagerFuzzer::FuzzMediaServerManagerResetAllProxy(uint8_t *data
     MediaServerManager& mediaServerManager = MediaServerManager::GetInstance();
     mediaServerManager.ResetAllProxy();
 
-    int kPlayerCount = GetData<int32_t>();
+    int32_t kPlayerCount = GetData<int32_t>();
     constexpr int32_t maxPlayerCount = 3;
-    int32_t playerCount = kPlayerCount % (maxPlayerCount + 1);
+    int32_t playerCount = std::abs(kPlayerCount) % (maxPlayerCount + 1);
 
-    for (int i = 0; i < playerCount; ++i) {
-        (void)mediaServerManager.CreateStubObject(MediaServerManager::StubType::PLAYER);
+    std::vector<sptr<IRemoteObject>> players;
+    players.reserve(static_cast<size_t>(playerCount));
+    for (int32_t i = 0; i < playerCount; ++i) {
+        auto obj = mediaServerManager.CreateStubObject(MediaServerManager::StubType::PLAYER);
+        if (obj != nullptr) {
+            players.emplace_back(obj);
+        }
     }
     (void)mediaServerManager.ResetAllProxy();
+
+    for (auto &obj : players) {
+        mediaServerManager.DestroyStubObject(MediaServerManager::StubType::PLAYER, obj);
+    }
 }
 
 void MediaServerManagerFuzzer::FuzzMediaServerManagerFreezeStubForPids(uint8_t *data, size_t size)
@@ -82,8 +91,13 @@ void MediaServerManagerFuzzer::FuzzMediaServerManagerFreezeStubForPids(uint8_t *
     uint32_t rawCount = GetData<uint32_t>();
     constexpr uint32_t maxPlayerCount = 3;
     uint32_t playerCount = rawCount % (maxPlayerCount + 1);
+    std::vector<sptr<IRemoteObject>> players;
+    players.reserve(playerCount);
     for (uint32_t i = 0; i < playerCount; ++i) {
-        (void)mediaServerManager.CreateStubObject(MediaServerManager::StubType::PLAYER);
+        auto obj = mediaServerManager.CreateStubObject(MediaServerManager::StubType::PLAYER);
+        if (obj != nullptr) {
+            players.emplace_back(obj);
+        }
     }
 
     std::set<int32_t> pidList;
@@ -99,6 +113,10 @@ void MediaServerManagerFuzzer::FuzzMediaServerManagerFreezeStubForPids(uint8_t *
     bool isProxy = (GetData<uint8_t>() & 0x1) != 0;
     (void)mediaServerManager.FreezeStubForPids(pidList, isProxy);
     (void)mediaServerManager.FreezeStubForPids(pidList, !isProxy);
+
+    for (auto &obj : players) {
+        mediaServerManager.DestroyStubObject(MediaServerManager::StubType::PLAYER, obj);
+    }
 }
 
 void MediaServerManagerFuzzer::FuzzMediaServerManagerCreateRecorder(uint8_t *data, size_t size)
@@ -236,8 +254,11 @@ void MediaServerManagerFuzzer::FuzzGetPlayerPids(uint8_t *data, size_t size)
     uint32_t loopTimes = randomCount % 10;
     MediaServerManager& mediaServerManager = MediaServerManager::GetInstance();
     for (uint32_t i = 0; i <= loopTimes; i++) {
-        mediaServerManager.CreateStubObject(MediaServerManager::StubType::PLAYER);
+        auto obj = mediaServerManager.CreateStubObject(MediaServerManager::StubType::PLAYER);
         mediaServerManager.GetPlayerPids();
+        if (obj != nullptr) {
+            mediaServerManager.DestroyStubObject(MediaServerManager::StubType::PLAYER, obj);
+        }
     }
 }
 
