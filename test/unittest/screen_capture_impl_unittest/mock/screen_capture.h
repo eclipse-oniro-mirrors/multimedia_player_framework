@@ -328,7 +328,7 @@ public:
     virtual int32_t SetCanvasRotation(bool canvasRotation) = 0;
     virtual int32_t ShowCursor(bool showCursor) = 0;
     virtual int32_t ResizeCanvas(int32_t width, int32_t height) = 0;
-    virtual int32_t SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec) = 0;
+    virtual int32_t SkipPrivacyMode(const std::vector<uint64_t> &windowIDsVec) = 0;
     virtual int32_t AddWhiteListWindows(const std::vector<uint64_t> &windowIDsVec) = 0;
     virtual int32_t RemoveWhiteListWindows(const std::vector<uint64_t> &windowIDsVec) = 0;
     virtual int32_t SetMaxVideoFrameRate(int32_t frameRate) = 0;

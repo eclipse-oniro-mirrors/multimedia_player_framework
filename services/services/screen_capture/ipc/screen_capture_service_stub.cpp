@@ -312,7 +312,7 @@ int32_t ScreenCaptureServiceStub::ResizeCanvas(int32_t width, int32_t height)
     return screenCaptureServer_->ResizeCanvas(width, height);
 }
 
-int32_t ScreenCaptureServiceStub::SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec)
+int32_t ScreenCaptureServiceStub::SkipPrivacyMode(const std::vector<uint64_t> &windowIDsVec)
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
                              "screen capture server is nullptr");

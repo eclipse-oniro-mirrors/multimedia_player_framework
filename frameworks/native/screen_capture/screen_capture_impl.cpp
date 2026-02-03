@@ -208,7 +208,7 @@ int32_t ScreenCaptureImpl::UpdateSurface(sptr<Surface> surface)
     return screenCaptureService_->UpdateSurface(surface);
 }
 
-int32_t ScreenCaptureImpl::SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec)
+int32_t ScreenCaptureImpl::SkipPrivacyMode(const std::vector<uint64_t> &windowIDsVec)
 {
     MEDIA_LOGD("SkipPrivacyMode:0x%{public}06" PRIXPTR " init in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_NO_MEMORY,

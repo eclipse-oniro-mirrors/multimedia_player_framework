@@ -228,7 +228,7 @@ int32_t ScreenCaptureClient::ResizeCanvas(int32_t width, int32_t height)
     return screenCaptureProxy_->ResizeCanvas(width, height);
 }
 
-int32_t ScreenCaptureClient::SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec)
+int32_t ScreenCaptureClient::SkipPrivacyMode(const std::vector<uint64_t> &windowIDsVec)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
