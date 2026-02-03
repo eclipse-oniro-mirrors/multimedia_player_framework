@@ -35,8 +35,8 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-IStreamIDManager::IStreamIDManager(int32_t maxStreams, const AudioStandard::AudioRendererInfo &audioRenderInfo)
-    : audioRendererInfo_(audioRenderInfo), maxStreams_(maxStreams)
+IStreamIDManager::IStreamIDManager(int32_t maxStreams, const AudioStandard::AudioRendererInfo &audioRenderInfo) :
+    audioRendererInfo_(audioRenderInfo), maxStreams_(maxStreams)
 {
     if (audioRendererInfo_.playerType != AudioStandard::PlayerType::PLAYER_TYPE_SYSTEM_SOUND_PLAYER) {
         audioRendererInfo_.playerType = AudioStandard::PlayerType::PLAYER_TYPE_SOUND_POOL;
@@ -433,7 +433,8 @@ void StreamIDManagerWithSameSoundInterrupt::RemoveInvalidStreams()
 void StreamIDManagerWithSameSoundInterrupt::RemoveStreamBySoundIDAndStreamID(int32_t soundID, int32_t streamID)
 {
     auto it = soundID2Stream_.find(soundID);
-    CHECK_AND_RETURN_LOG(it != soundID2Stream_.end(), "soundID(%{public}d) not exist in soundID2Stream_", soundID);
+    CHECK_AND_RETURN_LOG(it != soundID2Stream_.end(),
+        "soundID(%{public}d) not exist in soundID2Stream_", soundID);
     if ((*it).second->GetStreamID() != streamID) {
         MEDIA_LOGE("RemoveStreamBySoundIDAndStreamID, soundID(%{public}d) does not correspond to streamID(%{public}d)",
             soundID, streamID);

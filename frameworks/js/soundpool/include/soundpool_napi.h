@@ -107,7 +107,7 @@ private:
     static napi_value JsSetVolume(napi_env env, napi_callback_info info);
 
     /**
-     * setInterruptMode(interruptMode: InterruptMode): void
+     * SetInterruptMode(interruptMode: InterruptMode): void
      */
     static napi_value JsSetInterruptMode(napi_env env, napi_callback_info info);
 

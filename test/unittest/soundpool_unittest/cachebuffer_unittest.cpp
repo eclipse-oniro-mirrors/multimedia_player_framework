@@ -74,7 +74,7 @@ HWTEST_F(SoundPoolCacheBufferUnitTest, CacheBuferDealPlayParamsBeforePlayUnittes
 /**
  * @tc.name  : Test CreateAudioRenderer
  * @tc.number: CreateAudioRenderer_001
- * @tc.desc  : Test returns 0
+ * @tc.desc  : Test returns NORMAL_PLAY_RENDERER_FLAGS
  */
 HWTEST_F(SoundPoolCacheBufferUnitTest, CreateAudioRenderer_001, TestSize.Level0)
 {

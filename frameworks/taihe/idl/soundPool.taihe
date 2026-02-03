@@ -21,18 +21,9 @@ import { BusinessError, ErrorCallback, AsyncCallback, Callback } from '@ohos.bas
 
 use ohos.multimedia.audio as audio;
 
-struct PlayParameters {
-  loop: Optional<i32>;
-  rate: Optional<i32>;
-  leftVolume: Optional<f64>;
-  rightVolume: Optional<f64>;
-  priority: Optional<i32>;
-  parallelPlayFlag: Optional<bool>;
-}
-
 enum ErrorType: i32 {
-    LOAD_ERROR = 1,
-    PLAY_ERROR = 2
+  LOAD_ERROR = 1,
+  PLAY_ERROR = 2
 }
 
 enum InterruptMode: i32 {
@@ -67,6 +58,15 @@ class _taihe_ErrorInfo_inject implements ErrorInfo {
     }
 }
 """)
+
+struct PlayParameters {
+  loop: Optional<i32>;
+  rate: Optional<i32>;
+  leftVolume: Optional<f64>;
+  rightVolume: Optional<f64>;
+  priority: Optional<i32>;
+  parallelPlayFlag: Optional<bool>;
+}
 
 interface SoundPool {
     @gen_async("load")

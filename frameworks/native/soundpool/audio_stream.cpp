@@ -1,4 +1,3 @@
-
 /*
  * Copyright (C) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,14 +24,14 @@
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SOUNDPOOL, "AudioStream"};
     static const int32_t ERROE_GLOBAL_ID = -1;
-    static const int32_t NORMAL_PLAY_RENDERER_FLAGS = 0;
 }
 
 namespace OHOS {
 namespace Media {
 AudioStream::AudioStream(const Format &trackFormat, int32_t &soundID, int32_t &streamID,
     std::shared_ptr<ThreadPool> streamStopThreadPool) : trackFormat_(trackFormat),
-    soundID_(soundID), streamID_(streamID), streamStopThreadPool_(streamStopThreadPool), pcmBufferFrameIndex_(0)
+    soundID_(soundID), streamID_(streamID), streamStopThreadPool_(streamStopThreadPool),
+    pcmBufferFrameIndex_(0)
 {
     MEDIA_LOGI("AudioStream Constructor, soundID is %{public}d, streamID is %{public}d", soundID, streamID);
     streamState_.store(StreamState::PREPARED);
@@ -254,14 +253,9 @@ int32_t AudioStream::DoPlayWithNoInterrupt()
             streamID_, streamState_.load());
         return MSERR_INVALID_VAL;
     }
-
-    if (audioRenderer_ == nullptr) {
-        MEDIA_LOGI("AudioStream::DoPlayWithNoInterrupt, audioRenderer_ is nullptr, try again");
-        PreparePlayInner(audioRendererInfo_, playParameters_);
-        CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL,
-            "AudioStream::DoPlayWithNoInterrupt, audioRenderer_ is nullptr");
-    }
-    
+    PreparePlayInner(audioRendererInfo_, playParameters_);
+    CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL,
+        "AudioStream::DoPlayWithNoInterrupt, audioRenderer_ is nullptr");
     size_t bufferSize = 0;
     audioRenderer_->GetBufferSize(bufferSize);
     MEDIA_LOGI("AudioStream::DoPlayWithNoInterrupt, streamID_ is %{public}d, bufferSize is %{public}zu, "
@@ -291,17 +285,13 @@ int32_t AudioStream::DoPlayWithSameSoundInterrupt()
     std::lock_guard lock(streamLock_);
     interruptMode_.store(InterruptMode::SAME_SOUND_INTERRUPT);
     if (streamState_.load() == StreamState::RELEASED) {
-        MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt end, invalid stream(%{public}d), "
-            "streamState is %{public}d", streamID_, streamState_.load());
+    MEDIA_LOGI("AudioStream::DoPlay end, invalid stream(%{public}d),  streamState_ is %{public}d", streamID_,
+            streamState_.load());
         return MSERR_INVALID_VAL;
     }
-    if (audioRenderer_ == nullptr) {
-        MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt, try to create audioRenderer");
-        PreparePlayInner(audioRendererInfo_, playParameters_);
-        CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL,
-            "AudioStream::DoPlayWithSameSoundInterrupt, audioRenderer_ is nullptr");
-    }
-
+    PreparePlayInner(audioRendererInfo_, playParameters_);
+    CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL,
+        "AudioStream::DoPlayWithSameSoundInterrupt, audioRenderer_ is nullptr");
     size_t bufferSize = 0;
     audioRenderer_->GetBufferSize(bufferSize);
     MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt, streamID_ is %{public}d, bufferSize is %{public}zu, "
@@ -362,7 +352,7 @@ int32_t AudioStream::Stop()
     if (audioRenderer_ != nullptr && streamState_.load() == StreamState::PLAYING) {
         SoundPoolXCollie soundPoolXCollie("AudioStream audioRenderer::Pause or Stop time out",
             [](void *) {
-                MEDIA_LOGI("AudioStream::Stop time out");
+                MEDIA_LOGI("AudioStream audioRenderer::Pause or Stop time out");
             });
         if (streamCallback_ != nullptr) {
             MEDIA_LOGI("streamCallback_ call OnPlayFinished.");
@@ -372,7 +362,7 @@ int32_t AudioStream::Stop()
         soundPoolXCollie.CancelXCollieTimer();
         pcmBufferFrameIndex_ = 0;
         if (callback_ != nullptr) {
-            MEDIA_LOGI("callback_ call OnPlayFinished.");
+            MEDIA_LOGI("AudioStream::Stop, call OnPlayFinished");
             callback_->OnPlayFinished(streamID_);
         }
     }
@@ -390,7 +380,7 @@ void AudioStream::OnFirstFrameWriting(uint64_t latency)
 void AudioStream::OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent)
 {
     MEDIA_LOGI("AudioStream::OnInterrupt, streamID_ is %{public}d, eventType is %{public}d, forceType is %{public}d,"
-        "hintType is %{public}d", streamID_, interruptEvent.eventType, interruptEvent.forceType,
+        "hintType:%{public}d", streamID_, interruptEvent.eventType, interruptEvent.forceType,
         interruptEvent.hintType);
     if (interruptEvent.hintType == AudioStandard::InterruptHint::INTERRUPT_HINT_PAUSE ||
         interruptEvent.hintType == AudioStandard::InterruptHint::INTERRUPT_HINT_STOP) {
@@ -432,11 +422,10 @@ int32_t AudioStream::Release()
         lock.lock();
         soundPoolXCollieRelease.CancelXCollieTimer();
     }
-
     if (callback_ != nullptr) callback_.reset();
     if (streamCallback_ != nullptr) streamCallback_.reset();
     if (frameWriteCallback_ != nullptr) frameWriteCallback_.reset();
-    MEDIA_LOGI("AudioStream::Release end, streamID is %{public}d", streamID_);
+    MEDIA_LOGI("Release end, streamID is %{public}d", streamID_);
     return MSERR_OK;
 }
 
@@ -491,7 +480,7 @@ int32_t AudioStream::SetRate(const AudioStandard::AudioRendererRate &renderRate)
     CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr && streamState_.load() != StreamState::RELEASED,
         MSERR_INVALID_VAL, "SetRate, Invalid audioRenderer_");
     int32_t ret = audioRenderer_->SetRenderRate(CheckAndAlignRendererRate(renderRate));
-    MEDIA_LOGI("AudioStream::SetRate, ret is %{public}d", ret);
+    MEDIA_LOGI("AudioStream::SetRate, ret:%{public}d", ret);
     return ret;
 }
 
