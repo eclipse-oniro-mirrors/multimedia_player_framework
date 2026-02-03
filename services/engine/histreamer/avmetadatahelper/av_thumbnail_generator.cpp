@@ -368,8 +368,9 @@ std::shared_ptr<Meta> AVThumbnailGenerator::GetVideoTrackInfo()
                        FAKE_POINTER(this), trackIndex_, trackMime_.c_str());
             trackInfos[index]->Get<Tag::VIDEO_ROTATION>(rotation_);
             trackInfos[index]->Get<Tag::VIDEO_ORIENTATION_TYPE>(orientation_);
-            MEDIA_LOGI("rotation is %{public}d, orientation is %{public}d", static_cast<int32_t>(rotation_),
+            MEDIA_LOGI("Rotation is %{public}d, orientation is %{public}d", static_cast<int32_t>(rotation_),
                 static_cast<int32_t>(orientation_));
+
             return trackInfos[trackIndex_];
         }
     }
@@ -553,6 +554,7 @@ void AVThumbnailGenerator::OnOutputBufferAvailable(uint32_t index, std::shared_p
         avBuffer_ = buffer;
     }
     MEDIA_LOGI("dstTime %{public}" PRId64 " resTime %{public}" PRId64, seekTime_, buffer->pts_);
+    MEDIA_LOGI("dstTime %{public}" PRId64 " avBuffer_resTime %{public}" PRId64, seekTime_, avBuffer_->pts_);
     cond_.notify_all();
     PauseFetchFrame();
 }
@@ -579,7 +581,14 @@ std::shared_ptr<AVSharedMemory> AVThumbnailGenerator::FetchFrameAtTime(int64_t t
     auto res = SeekToTime(Plugins::Us2Ms(timeUs), static_cast<Plugins::SeekMode>(option), realSeekTime);
     CHECK_AND_RETURN_RET_LOG(res == Status::OK, nullptr, "Seek fail");
     CHECK_AND_RETURN_RET_LOG(InitDecoder() == Status::OK, nullptr, "FetchFrameAtTime InitDecoder failed.");
-    bool fetchFrameRes = WaitForFrame();
+    bool fetchFrameRes = false;
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+
+        // wait up to 3s to fetch frame AVSharedMemory at time.
+        fetchFrameRes = cond_.wait_for(lock, std::chrono::seconds(MAX_WAIT_TIME_SECOND),
+            [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); });
+    }
     if (fetchFrameRes) {
         HandleFetchFrameAtTimeRes();
     } else {
@@ -663,7 +672,14 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
     CHECK_AND_RETURN_RET_LOG(res == Status::OK, nullptr, "Seek fail");
     CHECK_AND_RETURN_RET_LOG(InitDecoder() == Status::OK, nullptr, "FetchFrameAtTime InitDecoder failed.");
     DfxReport("AVImageGenerator call");
-    bool fetchFrameRes = WaitForFrame();
+    bool fetchFrameRes = false;
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        // wait up to 3s to fetch frame AVSharedMemory at time.
+        fetchFrameRes = cond_.wait_for(lock, std::chrono::seconds(MAX_WAIT_TIME_SECOND),
+            [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); });
+    }
+
     {
         MEDIA_LOGI("FetchFrameYuv, retry fetch frame");
         std::unique_lock retryLock(onErrorMutex_);
@@ -686,20 +702,6 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
         HandleFetchFrameYuvFailed();
     }
     return avBuffer_;
-}
-
-bool AVThumbnailGenerator::WaitForFrame()
-{
-    std::unique_lock<std::mutex> lock(mutex_);
-    auto start = std::chrono::steady_clock::now();
-    bool result = cond_.wait_for(lock, std::chrono::seconds(MAX_WAIT_TIME_SECOND),
-        [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); });
-    auto duration = std::chrono::duration_cast<std::chrono::seconds>(
-        std::chrono::steady_clock::now() - start);
-    if (duration >= std::chrono::seconds(MAX_WAIT_TIME_SECOND)) {
-        MEDIA_LOGE("FetchFrame waited >= 3s");
-    }
-    return result;
 }
 
 std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuvs(int64_t timeUs, int32_t option,
@@ -786,6 +788,8 @@ Status AVThumbnailGenerator::SeekToTime(int64_t timeMs, Plugins::SeekMode option
     }
     timeMs = duration_ > 0 ? std::min(timeMs, Plugins::Us2Ms(duration_)) : timeMs;
     auto res = mediaDemuxer_->SeekTo(timeMs, option, realSeekTime);
+    /* SEEK_NEXT_SYNV or SEEK_PREVIOUS_SYNC may cant find I frames and return seek failed
+       if seek failed, use SEEK_CLOSEST_SYNC seek again */
     if (res != Status::OK && option != Plugins::SeekMode::SEEK_CLOSEST_SYNC) {
         res = mediaDemuxer_->SeekTo(timeMs, Plugins::SeekMode::SEEK_CLOSEST_SYNC, realSeekTime);
         seekMode_ = Plugins::SeekMode::SEEK_CLOSEST_SYNC;
@@ -916,6 +920,8 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::GenerateAlignmentAvBuffer()
     targetAvBuffer->meta_->Set<Tag::VIDEO_IS_HDR_VIVID>(isHdr);
     targetAvBuffer->meta_->Set<Tag::VIDEO_SLICE_HEIGHT>(outputHeight);
     targetAvBuffer->flag_ = avBuffer_->flag_;
+    targetAvBuffer->dts_ = avBuffer_->dts_;
+    targetAvBuffer->pts_ = avBuffer_->pts_;
     return targetAvBuffer;
 }
 
@@ -929,6 +935,9 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::GenerateAvBufferFromFCodec()
     CHECK_AND_RETURN_RET_LOG(targetAvBuffer != nullptr && targetAvBuffer->memory_ != nullptr, nullptr,
         "Create avBuffer failed");
     targetAvBuffer->memory_->Write(avBuffer_->memory_->GetAddr(), avBuffer_->memory_->GetSize(), 0);
+    targetAvBuffer->flag_ = avBuffer_->flag_;
+    targetAvBuffer->dts_ = avBuffer_->dts_;
+    targetAvBuffer->pts_ = avBuffer_->pts_;
     return targetAvBuffer;
 }
 
