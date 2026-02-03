@@ -349,7 +349,6 @@ private:
     /* used for both CAPTURE STREAM and CAPTURE FILE */
     OHOS::AudioStandard::AppInfo appInfo_;
     bool isScreenCaptureAuthority_ = false;
-    bool isPresentPicker_ = false;
     bool isPresentPickerPopWindow_ = false;
     std::string appName_ = "";
     AVScreenCaptureConfig captureConfig_;
