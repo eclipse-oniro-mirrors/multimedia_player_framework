@@ -464,18 +464,19 @@ void SoundPoolImpl::OnErrorOccurred(callback_view<void(uintptr_t)> callback)
 {
     MediaTrace trace("SoundPoolImpl::OnErrorOccurred");
     MEDIA_LOGI("OnErrorOccurred Start");
+
     std::string callbackName = SoundPoolEvent::EVENT_ERROR_OCCURRED;
     ani_env *env = get_env();
     std::shared_ptr<taihe::callback<void(uintptr_t)>> taiheCallback =
             std::make_shared<taihe::callback<void(uintptr_t)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
-
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SetCallbackReference(callbackName, autoRef);
     MEDIA_LOGI("OnErrorOccurred End");
 }
 
-void SoundPoolImpl::OffErrorOccurred(optional_view<callback<void(uintptr_t)>> callback)
+void SoundPoolImpl::OffErrorOccurred
+    (optional_view<taihe::callback<void(uintptr_t)>> callback)
 {
     MediaTrace trace("SoundPoolImpl::OffErrorOccurred");
     MEDIA_LOGI("OffErrorOccurred Start");

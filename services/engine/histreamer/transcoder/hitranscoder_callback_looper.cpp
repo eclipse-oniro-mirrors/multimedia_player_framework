@@ -102,6 +102,7 @@ void HiTransCoderCallbackLooper::DoReportCompletedTime()
     if (obs) {
         Format format;
         int32_t currentPositionMs;
+        FALSE_RETURN(transCoderEngine_ != nullptr);
         if (transCoderEngine_->GetDuration(currentPositionMs) == 0) {
             MEDIA_LOG_D("EVENT_AUDIO_PROGRESS completed position updated: " PUBLIC_LOG_D32, currentPositionMs);
             obs->OnInfo(TransCoderOnInfoType::INFO_TYPE_PROGRESS_UPDATE, currentPositionMs);
@@ -122,6 +123,7 @@ void HiTransCoderCallbackLooper::DoReportMediaProgress()
         Format format;
         int32_t currentPositionMs;
         int32_t durationMs;
+        FALSE_RETURN(transCoderEngine_ != nullptr);
         if (transCoderEngine_->GetCurrentTime(currentPositionMs) == 0 &&
             transCoderEngine_->GetDuration(durationMs) == 0) {
             FALSE_RETURN(durationMs != 0);

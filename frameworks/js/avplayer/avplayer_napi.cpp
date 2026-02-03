@@ -59,6 +59,7 @@ namespace {
     constexpr int32_t ARGS_TWO = 2;
     constexpr int32_t ARGS_THREE = 3;
     constexpr int32_t SEEK_CONTINUOUS_TS_ENUM_NUM = 3;
+    constexpr int32_t SEI_MSG_PAYLOAD_TYPE_SUPPORT = 5;
     constexpr double RATE_DEFAULT_VALUE = 1.0;
 }
 
@@ -3709,6 +3710,10 @@ napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info
     std::vector<int32_t> payloadTypes = {};
     if (CommonNapi::GetIntArrayArgument(env, args[1], payloadTypes)) {
         jsPlayer->SeiMessageCallbackOff(jsPlayer, callbackName, payloadTypes);
+        if (!payloadTypes.empty() && payloadTypes[0] == SEI_MSG_PAYLOAD_TYPE_SUPPORT) {
+            jsPlayer->ClearCallbackReference(callbackName);
+            MEDIA_LOGI("SEI_MSG_PAYLOAD_TYPE_SUPPORT.");
+        }
     } else {
         MEDIA_LOGD("The array is empty, no processing is performed.");
     }

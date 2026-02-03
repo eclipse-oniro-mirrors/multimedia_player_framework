@@ -94,7 +94,7 @@ public:
     int32_t SetCanvasRotation(bool canvasRotation) override;
     int32_t ShowCursor(bool showCursor) override;
     int32_t ResizeCanvas(int32_t width, int32_t height) override;
-    int32_t SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec) override;
+    int32_t SkipPrivacyMode(const std::vector<uint64_t> &windowIDsVec) override;
     int32_t SetMaxVideoFrameRate(int32_t frameRate) override;
     void Release() override;
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
@@ -349,7 +349,6 @@ private:
     /* used for both CAPTURE STREAM and CAPTURE FILE */
     OHOS::AudioStandard::AppInfo appInfo_;
     bool isScreenCaptureAuthority_ = false;
-    bool isPresentPicker_ = false;
     bool isPresentPickerPopWindow_ = false;
     std::string appName_ = "";
     AVScreenCaptureConfig captureConfig_;

@@ -19,10 +19,10 @@
 #include <atomic>
 #include <thread>
 
-#include "audio_stream.h"
 #include "cpp/mutex.h"
 #include "isoundpool.h"
 #include "media_dfx.h"
+#include "audio_stream.h"
 #include "sound_parser.h"
 #include "thread_pool.h"
 
@@ -37,7 +37,7 @@ public:
 
     virtual int32_t GetAvailableStreamIDBySoundID(int32_t soundID) = 0;
     virtual void RemoveInvalidStreams() = 0;
-    virtual void RemoveStreamBySoundIDAndStreamID(int32_t soundID, int32_t streamID = 0) = 0;
+    virtual void RemoveStreamBySoundIDAndStreamID(int32_t soundID, int32_t streamID) = 0;
     virtual int32_t ClearStreamIDInDeque(int32_t soundID, int32_t streamID) = 0;
     virtual void OnPlayFinished(int32_t streamID) = 0;
     
@@ -71,6 +71,7 @@ protected:
     bool InnerProcessOfOnPlayFinished(int32_t streamID);
     int32_t AddPlayTask(int32_t streamID);
     int32_t AddStopTask(const std::shared_ptr<AudioStream> &stream);
+    int32_t AddReleaseTask(const std::vector<std::shared_ptr<AudioStream>> &streamsToBeReleased);
     void QueueAndSortPlayingStreamID(int32_t freshStreamID);
     void QueueAndSortWillPlayStreamID(const StreamIDAndPlayParamsInfo &streamIDAndPlayParamsInfo);
     void PostProcessingOfStreamDoPlayFailed(int32_t streamID);
@@ -146,7 +147,7 @@ public:
 
     int32_t GetAvailableStreamIDBySoundID(int32_t soundID) override;
     void RemoveInvalidStreams() override;
-    void RemoveStreamBySoundIDAndStreamID(int32_t soundID, int32_t streamID = 0) override;
+    void RemoveStreamBySoundIDAndStreamID(int32_t soundID, int32_t streamID) override;
     int32_t ClearStreamIDInDeque(int32_t soundID, int32_t streamID) override;
     void OnPlayFinished(int32_t streamID) override;
 

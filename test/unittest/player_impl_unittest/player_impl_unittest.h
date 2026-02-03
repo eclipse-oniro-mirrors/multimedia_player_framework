@@ -116,6 +116,11 @@ public:
     MOCK_METHOD(int32_t, GetCurrentTrack, (int32_t trackType, int32_t &index), (override));
     MOCK_METHOD(int32_t, GetSubtitleTrackInfo, (std::vector<Format> &subtitleTrack), (override));
     MOCK_METHOD(bool, IsSeekContinuousSupported, (), (override));
+    MOCK_METHOD(int32_t, GetCurrentPresentationTimestamp, (int64_t &currentPresentation), (override));
+    MOCK_METHOD(int32_t, GetMediaDescription, (Format &format), (override));
+    MOCK_METHOD(int32_t, GetTrackDescription, (Format &format, uint32_t trackIndex), (override));
+    MOCK_METHOD(int32_t, SetLoudnessGain, (float loudnessGain), (override));
+    MOCK_METHOD(int32_t, SetReopenFd, (int32_t fd), (override));
 };
 
 class MockPlayerCallback : public PlayerCallback {

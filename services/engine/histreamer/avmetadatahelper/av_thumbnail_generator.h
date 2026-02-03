@@ -65,8 +65,8 @@ private:
     OutputConfiguration outputConfig_;
     Format outputFormat_;
     int64_t seekTime_{0};
-    std::atomic_bool hasFetchedFrame_{false};
-    std::atomic_bool stopProcessing_{false};
+    std::atomic_bool hasFetchedFrame_{ false };
+    std::atomic_bool stopProcessing_{ false };
     std::atomic_bool readErrorFlag_{ false };
     std::atomic_bool isBufferAvailable_{ false };
     std::atomic_bool readTaskExited_{ false };

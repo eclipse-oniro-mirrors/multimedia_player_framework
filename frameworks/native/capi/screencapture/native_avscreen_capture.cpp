@@ -656,7 +656,8 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ExcludePickerWindows(
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
     CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
         AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture is null");
-
+    CHECK_AND_RETURN_RET_LOG(windowCount >= 0 && windowCount < MAX_WINDOWS_LEN,
+                             AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "windowCount out of range!");
     CHECK_AND_RETURN_RET_LOG(!(excludedWindowIDs == nullptr && windowCount > 0),
         AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input excludedWindowIDs invalid, nullptr but size is not 0!");
 
@@ -1158,8 +1159,10 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ContentFilter_AddWindowContent(
     CHECK_AND_RETURN_RET_LOG(filter != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input filter is nullptr!");
     struct ScreenCaptureContentFilterObject *contentFilterObj =
             reinterpret_cast<ScreenCaptureContentFilterObject *>(filter);
-    CHECK_AND_RETURN_RET_LOG(windowIDs != nullptr && windowCount > 0 && windowCount < MAX_WINDOWS_LEN,
-                             AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input window invalid!");
+    CHECK_AND_RETURN_RET_LOG(windowCount >= 0 && windowCount < MAX_WINDOWS_LEN,
+                             AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "windowCount out of range!");
+    CHECK_AND_RETURN_RET_LOG(!(windowIDs == nullptr && windowCount > 0),
+                             AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input window invalid, nullptr but size is not 0!");
     std::vector<uint64_t> vec;
     for (int32_t i = 0; i < windowCount; i++) {
         if (static_cast<int32_t>(*(windowIDs + i)) >= 0) {
@@ -1199,7 +1202,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SkipPrivacyMode(struct OH_AVScree
     CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
                              AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
     CHECK_AND_RETURN_RET_LOG(windowCount >= 0 && windowCount < MAX_WINDOWS_LEN,
-                             AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input window invalid!");
+                             AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "windowCount out of range!");
     CHECK_AND_RETURN_RET_LOG(!(windowIDs == nullptr && windowCount > 0),
                              AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input window invalid, nullptr but size not 0!");
     std::vector<uint64_t> vec;

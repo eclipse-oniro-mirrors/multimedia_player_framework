@@ -52,6 +52,7 @@ CustomLoaderCallback::CustomLoaderCallback(int64_t uuid,
     requestHandler_->SetFileCacheManager(fileCacheManager_);
     requestHandler_->SetHeaderParser(headerParser_);
     buffer_ = static_cast<uint8_t *>(malloc(SHARD_SIZE));
+    FALSE_RETURN_MSG(buffer_ != nullptr, "buffer_ is nullptr");
     NetworkClientAgent::Create();
 }
 
@@ -438,6 +439,8 @@ void CustomLoaderCallback::RequestData(const std::shared_ptr<LoadingRequest>& re
 
 size_t CustomLoaderCallback::RxHeaderData(void* buffer, size_t size, size_t nitems, void* userParam)
 {
+    FALSE_RETURN_V_MSG_E(buffer != nullptr, 0, "buffer is nullptr");
+    FALSE_RETURN_V_MSG_E(userParam != nullptr, 0, "userParam is nullptr");
     auto mediaDownloader = static_cast<CustomLoaderCallback*>(userParam);
     mediaDownloader->requestHandler_->OnHeaderReceived(buffer, size, nitems);
     return size * nitems;
@@ -445,6 +448,8 @@ size_t CustomLoaderCallback::RxHeaderData(void* buffer, size_t size, size_t nite
 
 size_t CustomLoaderCallback::RxBodyData(void* buffer, size_t size, size_t nitems, void* userParam)
 {
+    FALSE_RETURN_V_MSG_E(buffer != nullptr, 0, "buffer is nullptr");
+    FALSE_RETURN_V_MSG_E(userParam != nullptr, 0, "userParam is nullptr");
     auto mediaDownloader = static_cast<CustomLoaderCallback*>(userParam);
     size_t dataLen = size * nitems;
     if (mediaDownloader->isFirstCallback_) {
@@ -683,19 +688,21 @@ void CustomLoaderCallback::RespondDataChunk(int64_t start, int64_t& read, int64_
 
 size_t CustomLoaderCallback::RxBodyDataUnsupportRangeAndCache(void* buffer, size_t size, size_t nitems, void* userParam)
 {
+    FALSE_RETURN_V_MSG_E(buffer != nullptr, 0, "buffer is nullptr");
+    FALSE_RETURN_V_MSG_E(userParam != nullptr, 0, "userParam is nullptr");
     auto downloader = static_cast<CustomLoaderCallback*>(userParam);
     pthread_mutex_lock(&downloader->mutex);
     size_t dataLen = size * nitems;
     uint8_t* tempBuffer = static_cast<uint8_t*>(buffer);
-    if (dataLen + downloader->dataSize > SHARD_SIZE) {
+    if (dataLen + static_cast<size_t>(downloader->dataSize) > SHARD_SIZE) {
         MEDIA_LOG_I("download data need write with slice");
         size_t writeLen = 0;
         size_t needWriteLen = dataLen;
         while (needWriteLen > 0) {
-            int len = needWriteLen + downloader->dataSize > SHARD_SIZE ?
-                SHARD_SIZE - downloader->dataSize : needWriteLen;
+            size_t len = needWriteLen + static_cast<size_t>(downloader->dataSize) > SHARD_SIZE ?
+                static_cast<size_t>(SHARD_SIZE - downloader->dataSize) : needWriteLen;
             memcpy_s(downloader->buffer_ + downloader->dataSize, len, tempBuffer + writeLen, len);
-            downloader->dataSize += len;
+            downloader->dataSize += static_cast<int64_t>(len);
             writeLen += len;
             needWriteLen -= len;
             if (downloader->dataSize == SHARD_SIZE) {
@@ -706,7 +713,7 @@ size_t CustomLoaderCallback::RxBodyDataUnsupportRangeAndCache(void* buffer, size
         }
     } else {
         memcpy_s(downloader->buffer_ + downloader->dataSize, SHARD_SIZE - downloader->dataSize, tempBuffer, dataLen);
-        downloader->dataSize += dataLen;
+        downloader->dataSize += static_cast<int64_t>(dataLen);
         if (downloader->dataSize == SHARD_SIZE) {
             MEDIA_LOG_I("download thread wait, notify data return thread:");
             pthread_cond_signal(&downloader->condReturn_);

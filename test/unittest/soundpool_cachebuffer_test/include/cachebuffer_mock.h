@@ -16,8 +16,8 @@
 #define AUDIO_STREAM_MOCK_H
  
 #include <atomic>
-#include <cstdio>
 #include <cstdlib>
+#include <cstdio>
 #include <fcntl.h>
 #include <iostream>
 #include <memory>

@@ -28,7 +28,7 @@ namespace OHOS {
 namespace Media {
 
 constexpr const char* WATER_MARK_DESC =
-    "{\"imageEffect\":{\"filters\":[{\"name\":\"InplaceSticker\",\"values\":"
+    "{\"imageEffect\":{\"filters\":[{\"name\":\"Brightness\",\"values\":"
     "{\"RESOURCE_DIRECTORY\":\"/sys_prod/resource/camera\"}}],\"name\":\"brandWaterMark\"}}";
 
 constexpr const char* SURFACE_VERTEX_SHADER_CODE = R"(uniform mat4 uTexMatrix;

@@ -39,10 +39,6 @@ public:
     {
         MEDIA_LOG_I("~VideoDecoderInputProducerListener");
     }
-    int OnRemoteRequest(uint32_t code, MessageParcel& arguments, MessageParcel& reply, MessageOption& option) override
-    {
-        return IPCObjectStub::OnRemoteRequest(code, arguments, reply, option);
-    }
     void OnBufferAvailable() override
     {
         auto videoDataMgr = videoDataMgr_.lock();

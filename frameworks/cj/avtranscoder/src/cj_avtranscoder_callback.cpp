@@ -135,9 +135,9 @@ CjAVTransCoderState CJAVTranscoderCallback::GetState()
 
 void CJAVTranscoderCallback::OnError(int32_t errCode, const std::string &errorMsg)
 {
-    MediaServiceExtErrCodeAPI9 exErr = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode));
-    MEDIA_LOGE("CJAVTranscoderCallback::OnError: %{public}d, %{public}s", exErr, errorMsg.c_str());
-    SendErrorCallback(exErr, errorMsg);
+    MediaServiceExtErrCodeAPI9 extErr = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode));
+    MEDIA_LOGE("CJAVTranscoderCallback::OnError: %{public}d, %{public}s", extErr, errorMsg.c_str());
+    SendErrorCallback(extErr, errorMsg);
     SendStateCallback(CjAVTransCoderState::STATE_ERROR, StateChangeReason::BACKGROUND);
 }
 

@@ -50,7 +50,7 @@ public:
     int32_t SetCanvasRotation(bool canvasRotation) override;
     int32_t ShowCursor(bool showCursor) override;
     int32_t ResizeCanvas(int32_t width, int32_t height) override;
-    int32_t SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec) override;
+    int32_t SkipPrivacyMode(const std::vector<uint64_t> &windowIDsVec) override;
     int32_t SetMaxVideoFrameRate(int32_t frameRate) override;
     int32_t SetListenerObject(const sptr<IRemoteObject> &object) override;
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;

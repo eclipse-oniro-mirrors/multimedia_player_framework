@@ -442,6 +442,8 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
 {
     MediaTrace trace("HiPlayerImpl::SetMediaSource.");
     MEDIA_LOG_I("SetMediaSource entered media source stream");
+    CreatePlaybackInfo(CallType::AVPLAYER, appUid_, instanceId_);
+    CreateStallingInfo(CallType::AVPLAYER, appUid_, instanceId_);
     if (mediaSource == nullptr) {
         CollectionErrorInfo(MSERR_INVALID_VAL, "mediaSource is nullptr");
         return MSERR_INVALID_VAL;
@@ -452,20 +454,7 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     playMediaStreamVec_ = mediaSource->GetAVPlayMediaStreamList();
     url_ = playMediaStreamVec_.empty() ? mediaSource->url : playMediaStreamVec_[0].url;
     sourceLoader_ = mediaSource->sourceLoader_;
-
-    preferedWidth_ = strategy.preferredWidth;
-    preferedHeight_ = strategy.preferredHeight;
-    bufferDuration_ = strategy.preferredBufferDuration;
-    preferHDR_ = strategy.preferredHdr;
-    renderFirstFrame_ = strategy.showFirstFrameOnPrepare;
-    mutedMediaType_ = strategy.mutedMediaType;
-    audioLanguage_ = strategy.preferredAudioLanguage;
-    subtitleLanguage_ = strategy.preferredSubtitleLanguage;
-    enableCameraPostprocessing_ = strategy.enableCameraPostprocessing;
-    videoPostProcessorType_ = strategy.enableSuperResolution ? VideoPostProcessorType::SUPER_RESOLUTION
-                                : VideoPostProcessorType::NONE;
-    isPostProcessorOn_ = strategy.enableSuperResolution;
-
+    this->ExtractStrategyParams(strategy);
     mimeType_ = mediaSource->GetMimeType();
     SetFlvLiveParams(strategy);
     FALSE_RETURN_V(IsLivingMaxDelayTimeValid(), TransStatus(Status::ERROR_INVALID_PARAMETER));
@@ -499,6 +488,8 @@ int32_t HiPlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc
 {
     MediaTrace trace("HiPlayerImpl::SetSource dataSrc");
     MEDIA_LOG_I("SetSource in source stream");
+    CreatePlaybackInfo(CallType::AVPLAYER, appUid_, instanceId_);
+    CreateStallingInfo(CallType::AVPLAYER, appUid_, instanceId_);
     if (dataSrc == nullptr) {
         MEDIA_LOG_E("SetSource error: dataSrc is null");
     }
@@ -769,6 +760,10 @@ Status HiPlayerImpl::DoSetPlayRange()
 {
     Status ret = Status::OK;
     int64_t rangeStartTime = GetPlayRangeStartTime();
+    std::pair<int64_t, bool> startInfo;
+    if (rangeStartTime == -1 && demuxer_->GetStartInfo(startInfo) && startInfo.first > 0) {
+        rangeStartTime = startInfo.first;
+    }
     int64_t rangeEndTime = GetPlayRangeEndTime();
     if (!IsValidPlayRange(rangeStartTime, rangeEndTime)) {
         MEDIA_LOG_E("DoSetPlayRange failed! start: " PUBLIC_LOG_D64 ", end: " PUBLIC_LOG_D64,
@@ -819,6 +814,7 @@ void HiPlayerImpl::UpdateMediaFirstPts()
 {
     FALSE_RETURN(syncManager_ != nullptr);
     std::string mime;
+    FALSE_RETURN_MSG(demuxer_ != nullptr, "demuxer_ is nullptr");
     std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
     int64_t startTime = 0;
     for (const auto& trackInfo : metaInfo) {
@@ -890,6 +886,7 @@ void HiPlayerImpl::DoInitializeForHttp()
     }
     std::vector<uint32_t> vBitRates;
     MEDIA_LOG_D_SHORT("DoInitializeForHttp");
+    FALSE_RETURN_MSG(demuxer_ != nullptr, "demuxer_ is nullptr");
     auto ret = demuxer_->GetBitRates(vBitRates);
     if (ret == Status::OK && vBitRates.size() > 0) {
         int mSize = static_cast<int>(vBitRates.size());
@@ -2181,7 +2178,11 @@ int32_t HiPlayerImpl::InnerSelectTrack(std::string mime, int32_t trackId, Player
         return MSERR_UNKNOWN;
     }
     if (IsSubtitleMime(mime)) {
+        MEDIA_LOG_I("InnerSelectTrack, min: %{public}s, trackId is " PUBLIC_LOG_D32, mime.c_str(), trackId);
         currentSubtitleTrackId_ = trackId;
+        int32_t curPosMs = 0;
+        GetCurrentTime(curPosMs);
+        return TransStatus(Seek(curPosMs, PlayerSeekMode::SEEK_CLOSEST, false));
     } else if (IsVideoMime(mime)) {
         currentVideoTrackId_ = trackId;
         int32_t curPosMs = 0;
@@ -3182,6 +3183,7 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
         eosInLoopForFrozen_ = true;
     }
     callbackLooper_.DoReportCompletedTime();
+    FALSE_RETURN_MSG(pipeline_ != nullptr, "pipeline_ is nullptr");
     if (pipelineStates_ != PlayerStates::PLAYER_FROZEN ||
         (pipelineStates_ == PlayerStates::PLAYER_FROZEN && !singleLoop_.load())) {
         pipeline_->Pause();
@@ -4483,6 +4485,22 @@ std::vector<std::string> HiPlayerImpl::GetDolbyList()
 {
     MEDIA_LOG_I("HiPlayerImpl::GetDolbyList");
     return callbackLooper_.GetDolbyList();
+}
+
+void HiPlayerImpl::ExtractStrategyParams(const AVPlayStrategy &strategy)
+{
+    preferedWidth_ = strategy.preferredWidth;
+    preferedHeight_ = strategy.preferredHeight;
+    bufferDuration_ = strategy.preferredBufferDuration;
+    preferHDR_ = strategy.preferredHdr;
+    renderFirstFrame_ = strategy.showFirstFrameOnPrepare;
+    mutedMediaType_ = strategy.mutedMediaType;
+    audioLanguage_ = strategy.preferredAudioLanguage;
+    subtitleLanguage_ = strategy.preferredSubtitleLanguage;
+    enableCameraPostprocessing_ = strategy.enableCameraPostprocessing;
+    videoPostProcessorType_ =
+        strategy.enableSuperResolution ? VideoPostProcessorType::SUPER_RESOLUTION : VideoPostProcessorType::NONE;
+    isPostProcessorOn_ = strategy.enableSuperResolution;
 }
 }  // namespace Media
 }  // namespace OHOS
