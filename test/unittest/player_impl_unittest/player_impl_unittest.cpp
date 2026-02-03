@@ -15,6 +15,7 @@
 
 #include "player_impl_unittest.h"
 #include "media_errors.h"
+#include "../hitranscode_impl_unittest/mock/mock_imediakeysessionServices.h"
 
 namespace OHOS {
 namespace Media {
@@ -172,6 +173,135 @@ HWTEST_F(PlayerImplUnitTest, SelectTrack_001, TestSize.Level0)
     playerImpl_->prevTrackIndex_ = NUM_1;
     auto ret = playerImpl_->SelectTrack(NUM_1, PlayerSwitchMode::SWITCH_SMOOTH);
     EXPECT_EQ(ret, NUM_0);
+}
+
+/**
+ * @tc.name  : Test GetPlaybackStatisticMetrics
+ * @tc.number: GetPlaybackStatisticMetrics_001
+ * @tc.desc  : Test playerService_ is valid and returns MSERR_OK
+ */
+HWTEST_F(PlayerImplUnitTest, GetPlaybackStatisticMetrics_001, TestSize.Level0)
+{
+    ASSERT_NE(playerImpl_, nullptr);
+    auto mockService = std::make_shared<MockIPlayerService>();
+    playerImpl_->playerService_ = mockService;
+
+    Format playbackStatisticMetrics;
+    EXPECT_CALL(*mockService, GetPlaybackStatisticMetrics(_)).WillOnce(Return(MSERR_OK));
+
+    auto ret = playerImpl_->GetPlaybackStatisticMetrics(playbackStatisticMetrics);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test GetCurrentPresentationTimestamp
+ * @tc.number: GetCurrentPresentationTimestamp_001
+ * @tc.desc  : Test playerService_ is valid and returns MSERR_OK
+ */
+HWTEST_F(PlayerImplUnitTest, GetCurrentPresentationTimestamp_001, TestSize.Level0)
+{
+    ASSERT_NE(playerImpl_, nullptr);
+    auto mockService = std::make_shared<MockIPlayerService>();
+    playerImpl_->playerService_ = mockService;
+
+    int64_t currentPresentation = 0;
+    EXPECT_CALL(*mockService, GetCurrentPresentationTimestamp(_)).WillOnce(Return(MSERR_OK));
+
+    auto ret = playerImpl_->GetCurrentPresentationTimestamp(currentPresentation);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test GetMediaDescription
+ * @tc.number: GetMediaDescription_001
+ * @tc.desc  : Test playerService_ is valid and returns MSERR_OK
+ */
+HWTEST_F(PlayerImplUnitTest, GetMediaDescription_001, TestSize.Level0)
+{
+    ASSERT_NE(playerImpl_, nullptr);
+    auto mockService = std::make_shared<MockIPlayerService>();
+    playerImpl_->playerService_ = mockService;
+
+    Format format;
+    EXPECT_CALL(*mockService, GetMediaDescription(_)).WillOnce(Return(MSERR_OK));
+
+    auto ret = playerImpl_->GetMediaDescription(format);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test GetTrackDescription
+ * @tc.number: GetTrackDescription_001
+ * @tc.desc  : Test playerService_ is valid and returns MSERR_OK
+ */
+HWTEST_F(PlayerImplUnitTest, GetTrackDescription_001, TestSize.Level0)
+{
+    ASSERT_NE(playerImpl_, nullptr);
+    auto mockService = std::make_shared<MockIPlayerService>();
+    playerImpl_->playerService_ = mockService;
+
+    Format format;
+    uint32_t trackIndex = 0;
+    EXPECT_CALL(*mockService, GetTrackDescription(_, _)).WillOnce(Return(MSERR_OK));
+
+    auto ret = playerImpl_->GetTrackDescription(format, trackIndex);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test SetLoudnessGain
+ * @tc.number: SetLoudnessGain_001
+ * @tc.desc  : Test playerService_ is valid and returns MSERR_OK
+ */
+HWTEST_F(PlayerImplUnitTest, SetLoudnessGain_001, TestSize.Level0)
+{
+    ASSERT_NE(playerImpl_, nullptr);
+    auto mockService = std::make_shared<MockIPlayerService>();
+    playerImpl_->playerService_ = mockService;
+
+    float gain = 1.0f;
+    EXPECT_CALL(*mockService, SetLoudnessGain(gain)).WillOnce(Return(MSERR_OK));
+
+    auto ret = playerImpl_->SetLoudnessGain(gain);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test SetReopenFd
+ * @tc.number: SetReopenFd_001
+ * @tc.desc  : Test playerService_ is valid and returns MSERR_OK
+ */
+HWTEST_F(PlayerImplUnitTest, SetReopenFd_001, TestSize.Level0)
+{
+    ASSERT_NE(playerImpl_, nullptr);
+    auto mockService = std::make_shared<MockIPlayerService>();
+    playerImpl_->playerService_ = mockService;
+
+    int32_t fd = NUM_1;
+    EXPECT_CALL(*mockService, SetReopenFd(fd)).WillOnce(Return(MSERR_OK));
+
+    auto ret = playerImpl_->SetReopenFd(fd);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test SetDecryptConfig
+ * @tc.number: SetDecryptConfig_001
+ * @tc.desc  : Test return value when keySessionProxy is nullptr
+ */
+HWTEST_F(PlayerImplUnitTest, SetDecryptConfig_001, TestSize.Level0)
+{
+    ASSERT_NE(playerImpl_, nullptr);
+    auto mockService = std::make_shared<MockIPlayerService>();
+    playerImpl_->playerService_ = mockService;
+
+    sptr<DrmStandard::IMediaKeySessionService> keySessionProxy;
+    auto ret = playerImpl_->SetDecryptConfig(keySessionProxy, false);
+#ifdef SUPPORT_AVPLAYER_DRM
+    EXPECT_EQ(ret, MSERR_INVALID_VAL);
+#else
+    EXPECT_EQ(ret, 0);
+#endif
 }
 } // namespace Media
 } // namespace OHOS
