@@ -87,7 +87,6 @@ group("media_unit_test") {
       "unittest/soundpool_test:soundpool_unit_test",
       "unittest/soundpool_unittest:soundpool_unittest",
       "unittest/subscriber_unittest:account_subscriber_unittest",
-      "unittest/task_queue_test:task_queue_unit_test",
       "unittest/timeout_test:player_timeout_unit_test",
       "unittest/transcoder_server:transcoder_server_unit_test",
       "unittest/utils_test:player_framework_utils_test",

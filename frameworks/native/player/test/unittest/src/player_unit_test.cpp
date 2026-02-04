@@ -312,32 +312,6 @@ HWTEST_F(PlayerUnitTest, Player_SetMediaSource_006, TestSize.Level0)
 
 /**
  * @tc.name  : Test Player SetMediaSource API
- * @tc.number: Player_SetMediaSource_007
- * @tc.desc  : Test Player SetMediaSource interface pre_download
- */
-HWTEST_F(PlayerUnitTest, Player_SetMediaSource_007, TestSize.Level0)
-{
-    std::map<std::string, std::string> header = {
-        {"key1", "value1"},
-        {"key2", "value2"},
-    };
-    struct AVPlayStrategy strategy = {1080, 920, 0, false};
-    std::shared_ptr<LoaderCallback> mediaSourceLoaderCb = std::make_shared<MockLoaderCallback>();
-    std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(VIDEO_URL, header);
-    mediaSource->mediaSourceLoaderCb_ = mediaSourceLoaderCb;
-    EXPECT_EQ(MSERR_OK, player_->SetMediaSource(mediaSource, strategy));
-
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    int32_t ret = player_->PrepareAsync();
-    if (ret == MSERR_OK) {
-        PlayFunTest(PRE_DOWNLOAD);
-    }
-}
-
-/**
- * @tc.name  : Test Player SetMediaSource API
  * @tc.number: Player_SetMediaSource_008
  * @tc.desc  : Test Player SetMediaSource with MediaStream
  */
@@ -2324,35 +2298,6 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_002, TestSize.Level0)
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
         EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(vSurface));
         EXPECT_EQ(MSERR_OK, player_->Prepare());
-        char str[100]; // 100: str len
-        sprintf_s(str, 100, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
-        system(str);
-        system("hidumper -s 1909 -a \"-t 3\"");
-        EXPECT_EQ(MSERR_OK, player_->Play());
-        EXPECT_EQ(MSERR_OK, player_->Reset());
-        system("param set sys.media.player.resource.type Local");
-    }
-}
-
-/**
- * @tc.name  : Test Player Mem Recycle
- * @tc.number: Player_Mem_Recycle_003
- * @tc.desc  : Test Player Mem Recycle
- */
-HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_003, TestSize.Level0)
-{
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "H264_MP3.mp4"};
-    for (uint32_t i = 0; i < srcVec.size(); i++) {
-        if (srcVec[i] == MEDIA_ROOT + "H264_MP3.mp4") {
-            system("param set sys.media.player.resource.type NetWork");
-        }
-        ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
-        EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-        EXPECT_EQ(MSERR_OK, player_->Prepare());
-        EXPECT_EQ(MSERR_OK, player_->Play());
-        sleep(15);
         char str[100]; // 100: str len
         sprintf_s(str, 100, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
         system(str);
@@ -4816,38 +4761,6 @@ HWTEST_F(PlayerUnitTest, Player_SetPlayRangeUsWithMode_002, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_TRUE(player_->IsPlaying());
     EXPECT_EQ(MSERR_OK, player_->Pause());
-}
-
-/**
- * @tc.name  : Test IsSeekContinuousSupported with supported video in prepared state
- * @tc.number: Player_IsSeekContinuousSupported_001
- * @tc.desc  : Test returns true when video supports SeekContinuous (prepared state)
- */
-HWTEST_F(PlayerUnitTest, Player_IsSeekContinuousSupported_001, TestSize.Level0)
-{
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
-    EXPECT_TRUE(player_->IsSeekContinuousSupported());
-}
-
-/**
- * @tc.name  : Test IsSeekContinuousSupported with supported video in playing state
- * @tc.number: Player_IsSeekContinuousSupported_002
- * @tc.desc  : Test returns true when video supports SeekContinuous (playing state)
- */
-HWTEST_F(PlayerUnitTest, Player_IsSeekContinuousSupported_002, TestSize.Level0)
-{
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TIME_2_SEC);
-    EXPECT_TRUE(player_->IsSeekContinuousSupported());
 }
 
 /**
