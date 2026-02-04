@@ -272,7 +272,7 @@ void OH_LowPowerAudioSinkCallback::OnInfo(AudioStreamerOnInfoType type, int32_t 
             break;
         case INFO_TYPE_LPP_AUDIO_POSITION_UPDATE:
             CHECK_AND_RETURN_LOG(positionUpdatedCallback_ != nullptr, "positionUpdatedCallback_ is nullptr");
-            int64_t position;
+            long position;
             infoBody.GetLongValue(AudioStreamerKeys::LPP_CURRENT_POSITION, position);
             positionUpdatedCallback_->OnPositionUpdated(lppAudioStreamer_, position);
             break;
