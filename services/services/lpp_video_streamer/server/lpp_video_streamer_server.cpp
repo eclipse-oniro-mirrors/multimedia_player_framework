@@ -325,7 +325,7 @@ int32_t LppVideoStreamerServer::RenderFirstFrame()
     return ret;
 }
 
-bool LppVideoStreamerServer::StateEnter(VideoState targetState, std::string funcName)
+bool LppVideoStreamerServer::StateEnter(VideoState targetState, const std::string funcName)
 {
     std::lock_guard<std::mutex> lock(stateMutex_);
     MEDIA_LOGI("LppVideoStreamerServer::StateEnter state = %{public}d, targetState = %{public}d",
