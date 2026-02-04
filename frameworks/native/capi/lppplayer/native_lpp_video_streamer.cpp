@@ -670,14 +670,3 @@ OH_LowPowerAVSink_Capability *OH_LowPowerAVSink_GetCapability()
         object->lppCapibility_->videoCap_.size(), object->lppCapibility_->audioCap_.size());
     return object;
 }
-
-OH_AVErrCode OH_LowPowerVideoSink_GetLatestPts(OH_LowPowerVideoSink *streamer, int64_t *pts)
-{
-    MEDIA_LOGD("OH_LowPowerVideoSink_GetLatestPts");
-    CHECK_AND_RETURN_RET_LOG(streamer != nullptr, AV_ERR_INVALID_VAL, "streamer is nullptr!");
-    LowPowerVideoSinkObject *streamerObj = reinterpret_cast<LowPowerVideoSinkObject *>(streamer);
-    CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_VAL, "videoStreamer_ is nullptr");
-    int32_t res = streamerObj->videoStreamer_->GetLatestPts(*pts);
-    return LppMsErrToOHAvErr(res);
-}
