@@ -652,7 +652,8 @@ void AVMetadataHelperImpl::SetPixelMapYuvInfo(sptr<SurfaceBuffer> &surfaceBuffer
     uint8_t ratio = pixelMapInfo.isHdr ? HDR_PIXEL_SIZE : SDR_PIXEL_SIZE;
     int32_t srcWidth = pixelMap->GetWidth();
     int32_t srcHeight = pixelMap->GetHeight();
-    YUVDataInfo yuvDataInfo = { .yWidth = srcWidth,
+    YUVDataInfo yuvDataInfo = { .imageSize = { srcWidth, srcHeight },
+                                .yWidth = srcWidth,
                                 .yHeight = srcHeight,
                                 .uvWidth = srcWidth / 2,
                                 .uvHeight = srcHeight / 2,
