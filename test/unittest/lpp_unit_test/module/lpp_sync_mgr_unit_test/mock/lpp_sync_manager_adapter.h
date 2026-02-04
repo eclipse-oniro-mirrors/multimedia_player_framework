@@ -27,7 +27,6 @@
 
 namespace OHOS {
 namespace Media {
-
 class LppSyncManagerAdapter : public std::enable_shared_from_this<LppSyncManagerAdapter> {
 public:
     MOCK_METHOD(int32_t, SetVideoChannelId, (const uint32_t channelId));
@@ -45,8 +44,8 @@ public:
     MOCK_METHOD(int32_t, SetParameter, ((const std::map<std::string, std::string>)& parameters));
     MOCK_METHOD(int32_t, GetParameter, ((std::map<std::string, std::string>)& parameters));
     MOCK_METHOD(int32_t, UpdateTimeAnchor, (const int64_t anchorPts, const int64_t anchorClk));
-    MOCK_METHOD(int32_t, LoadAdapter, (uint32_t& instanceId));
-    MOCK_METHOD(int32_t, UnloadAdapter, (uint32_t instanceId));
+    MOCK_METHOD(int32_t, LoadAdapter, ());
+    MOCK_METHOD(int32_t, UnloadAdapter, ());
     MOCK_METHOD(int32_t, BindOutputBuffers, ((const std::map<uint32_t, sptr<SurfaceBuffer>>)& bufferMap));
     MOCK_METHOD(int32_t, UnbindOutputBuffers, ());
     MOCK_METHOD(int32_t, GetShareBuffer, (int32_t& fd));
@@ -57,17 +56,15 @@ public:
 
 class LowPowerPlayerFactory {
 public:
-    static int32_t CreateLppSyncManagerAdapter(uint32_t &instanceId, std::shared_ptr<LppSyncManagerAdapter> &adapter)
+    static int32_t CreateLppSyncManagerAdapter(std::shared_ptr<LppSyncManagerAdapter> &adapter)
     {
-        instanceId = 1;
         if (adapter != nullptr) {
             return 0;
         }
         adapter = std::make_shared<LppSyncManagerAdapter>();
         return 0;
     }
-    static int32_t DestroyLppSyncManagerAdapter(
-        const uint32_t instanceId, std::shared_ptr<LppSyncManagerAdapter> adapter)
+    static int32_t DestroyLppSyncManagerAdapter(std::shared_ptr<LppSyncManagerAdapter> adapter)
     {
         return 0;
     }
