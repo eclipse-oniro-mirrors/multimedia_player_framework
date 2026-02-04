@@ -666,14 +666,17 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
     CHECK_AND_RETURN_RET_LOG(res == Status::OK, nullptr, "Seek fail");
     CHECK_AND_RETURN_RET_LOG(InitDecoder() == Status::OK, nullptr, "FetchFrameAtTime InitDecoder failed.");
     DfxReport("AVImageGenerator call");
-    bool fetchFrameRes = WaitForFrame();
+    bool fetchFrameRes = false;
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        // wait up to 3s to fetch frame AVSharedMemory at time.
+        fetchFrameRes = cond_.wait_for(lock, std::chrono::seconds(MAX_WAIT_TIME_SECOND),
+            [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); });
+    }
 
     MEDIA_LOGI("FetchFrameYuv, retry fetch frame");
     if (hasReceivedCodecErrCodeOfUnsupported_.load()) {
-        {
-            std::scoped_lock lock(mutex_, queueMutex_);
-            stopProcessing_ = false;
-        }
+        stopProcessing_.store(false);
         SwitchToSoftWareDecoder();
         {
             std::unique_lock fetchFrameLock(mutex_);
