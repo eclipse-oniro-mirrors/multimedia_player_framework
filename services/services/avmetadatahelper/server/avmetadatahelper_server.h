@@ -59,18 +59,18 @@ private:
     void NotifyErrorCallback(int32_t code, const std::string msg);
     void NotifyInfoCallback(HelperOnInfoType type, int32_t extra);
     void NotifyPixelCompleteCallback(HelperOnInfoType type,
-                            const std::shared_ptr<AVBuffer> &reAvbuffer_,
-                            const FrameInfo &info,
-                            const PixelMapParams &param);
+        const std::shared_ptr<AVBuffer> &reAvbuffer_,
+        const FrameInfo &info,
+        const PixelMapParams &param);
     int32_t InitEngine(const std::string &uri);
     int32_t CheckSourceByUriHelper();
 
     int32_t appUid_ = 0;
     int32_t appPid_ = 0;
-    enum FetchRes : int32_t {
+    enum fetchRes : int32_t {
         FETCH_FAILED = 0,
         FETCH_SUCCEEDED = 1,
-        FETCH_CANCELED = 2,
+        FETCH_CANCELED = 2
     };
     uint32_t appTokenId_ = 0;
     std::string appName_;

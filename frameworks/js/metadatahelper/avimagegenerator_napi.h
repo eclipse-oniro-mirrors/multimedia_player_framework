@@ -19,6 +19,7 @@
 #include "media_errors.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
+#include "media_data_source_callback.h"
 #include "common_napi.h"
 #include "audio_info.h"
 #include "audio_effect.h"

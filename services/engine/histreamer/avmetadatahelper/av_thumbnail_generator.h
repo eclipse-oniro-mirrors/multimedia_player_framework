@@ -72,7 +72,7 @@ private:
     std::atomic_bool readTaskExited_{ false };
     std::string trackMime_;
     Plugins::VideoRotation rotation_ = Plugins::VideoRotation::VIDEO_ROTATION_0;
-    Plugins::VideoOrientationType orientation_ = Plugins::VideoOrientationType::ROTATE_NONE ;
+    Plugins::VideoOrientationType orientation_ = Plugins::VideoOrientationType::ROTATE_NONE;
     size_t trackIndex_{0};
     std::shared_ptr<Meta> trackInfo_;
     std::mutex mutex_;
@@ -142,7 +142,6 @@ private:
     void HandleFetchFrameYuvFailed();
     void HandleFetchFrameAtTimeRes();
     void PauseFetchFrame();
-    bool WaitForFrame();
 };
 }  // namespace Media
 }  // namespace OHOS
