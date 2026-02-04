@@ -40,6 +40,7 @@ AVMetadataSetSourceFuzzer::~AVMetadataSetSourceFuzzer()
 
 bool AVMetadataSetSourceFuzzer::FuzzAVMetadataSetSource(uint8_t *data, size_t size)
 {
+    constexpr int32_t DATA_INDEX_OFFSET = 4;
     constexpr int32_t USAGE_LIST = 2;
     std::shared_ptr<AVMetadataHelper> avmetadata = AVMetadataHelperFactory::CreateAVMetadataHelper();
     if (avmetadata == nullptr) {
@@ -66,7 +67,7 @@ bool AVMetadataSetSourceFuzzer::FuzzAVMetadataSetSource(uint8_t *data, size_t si
     int32_t reproducibleRandom = abs((data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3]));
     int32_t setsourceusage = usage[reproducibleRandom % USAGE_LIST];
     int32_t retSetsource = avmetadata->SetSource(setsourcefd,
-        *reinterpret_cast<int64_t *>(data), setsourcesize, setsourceusage);
+        *reinterpret_cast<int64_t *>(data + DATA_INDEX_OFFSET), setsourcesize, setsourceusage);
     if (retSetsource != 0) {
         (void)close(setsourcefd);
         avmetadata->Release();

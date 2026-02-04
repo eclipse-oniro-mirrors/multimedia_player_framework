@@ -44,6 +44,8 @@ bool AVMetadataFetchFrameAtTimeFuzzer::FuzzAVMetadataFetchFrameAtTime(uint8_t *d
     constexpr int32_t AV_COLOR_FORMAT_LIST = 11;
     constexpr int32_t DATA_INDEX = 0;
     constexpr int32_t DATA_INDEX_OFFSET = 4;
+    constexpr int32_t TWO_COUNT_OFFSET = 2;
+    constexpr int32_t THREE_COUNT_OFFSET = 3;
 
     std::shared_ptr<AVMetadataHelper> avmetadata = AVMetadataHelperFactory::CreateAVMetadataHelper();
     if (avmetadata == nullptr) {
@@ -80,11 +82,12 @@ bool AVMetadataFetchFrameAtTimeFuzzer::FuzzAVMetadataFetchFrameAtTime(uint8_t *d
     };
     PixelFormat colorFormat = colorFormats[data[DATA_INDEX] % AV_COLOR_FORMAT_LIST];
 
-    struct PixelMapParams pixelMapParams = {*reinterpret_cast<int32_t *>(data),
-                                            *reinterpret_cast<int32_t *>(data + DATA_INDEX_OFFSET), colorFormat};
+    struct PixelMapParams pixelMapParams = {*reinterpret_cast<int32_t *>(data + DATA_INDEX_OFFSET),
+                                            *reinterpret_cast<int32_t *>(data + TWO_COUNT_OFFSET * DATA_INDEX_OFFSET), colorFormat};
     
     std::shared_ptr<PixelMap> retFetchFrameAtTime =
-        avmetadata->FetchFrameAtTime(*reinterpret_cast<int64_t *>(data), option, pixelMapParams);
+        avmetadata->FetchFrameAtTime(*reinterpret_cast<int64_t *>(
+        data + THREE_COUNT_OFFSET * DATA_INDEX_OFFSET), option, pixelMapParams);
 
     if (retFetchFrameAtTime != 0) {
         avmetadata->Release();

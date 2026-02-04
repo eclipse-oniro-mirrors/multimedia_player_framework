@@ -29,24 +29,6 @@ constexpr int32_t SET_FD_SOURCE = 3;
 
 namespace OHOS {
 namespace Media {
-bool FuzzAVMetadataStub(uint8_t *data, size_t size)
-{
-    if (data == nullptr || size < sizeof(int64_t)) {
-        return true;
-    }
-    sptr<AVMetadataServiceProxyFuzzer> avmetaProxy = AVMetadataServiceProxyFuzzer::Create();
-    if (avmetaProxy == nullptr) {
-        return false;
-    }
-    for (uint32_t codeId = 0; codeId < AVMetadataServiceProxyFuzzer::MAX_IPC_ID; codeId++) {
-        if (codeId != AVMetadataServiceProxyFuzzer::DESTROY) {
-            avmetaProxy->SendRequest(codeId, data, size, true);
-        }
-    }
-    avmetaProxy->SendRequest(AVMetadataServiceProxyFuzzer::DESTROY, data, size, false);
-    return true;
-}
-
 void SetSourceLocalFd(sptr<IRemoteStub<IStandardAVMetadataHelperService>> avmetadataStub)
 {
     int32_t fileDes = open(VIDEO_PATH, O_RDONLY);
@@ -66,6 +48,7 @@ const int32_t SYSTEM_ABILITY_ID = 3002;
 const bool RUN_ON_CREATE = false;
 bool FuzzAVMetadataStubLocal(uint8_t *data, size_t size)
 {
+    constexpr int32_t DATA_INDEX_OFFSET = 4;
     if (data == nullptr || size < sizeof(int64_t)) {
         return true;
     }
@@ -91,7 +74,7 @@ bool FuzzAVMetadataStubLocal(uint8_t *data, size_t size)
         if (isWirteToken) {
             msg.WriteInterfaceToken(avmetadataStub->GetDescriptor());
         }
-        msg.WriteBuffer(data, size);
+        msg.WriteBuffer(data + code * DATA_INDEX_OFFSET, size);
         msg.RewindRead(0);
         MessageParcel reply;
         MessageOption option;
@@ -128,7 +111,7 @@ bool FuzzAVMetadataStubLocal2(uint8_t *data, size_t size)
         if (isWirteToken) {
             msg.WriteInterfaceToken(avmetadataStub->GetDescriptor());
         }
-        msg.WriteBuffer(data, size);
+        msg.WriteBuffer(data + code * DATA_INDEX_OFFSET, size);
         msg.RewindRead(0);
         MessageParcel reply;
         MessageOption option;

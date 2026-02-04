@@ -340,6 +340,14 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
             OHOS::Media::FuzzavmetadatahelperGetFrameIndexByTime(OHOS::Media::avmetadatahelper, fdp.ConsumeIntegral<int32_t>());
             break;
         }
+        case 8: {
+            OHOS::Media::FuzzavmetadatahelperRelease(OHOS::Media::avmetadatahelper, fdp.ConsumeIntegral<int32_t>());
+            break;
+        }
+        case 9: {
+            OHOS::Media::FuzzavmetadatahelperDestroy(OHOS::Media::avmetadatahelper, fdp.ConsumeIntegral<int32_t>());
+            break;
+        }
     }
     return 0;
 }
