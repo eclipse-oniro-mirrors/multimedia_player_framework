@@ -245,8 +245,6 @@ void CustomLoaderCallback::SubmitNonRandomReadJob(int64_t uuid, int64_t requeste
         }
     };
 
-    std::lock_guard<std::mutex> lock(mutex_);
-
     if (size_ == -1) {
         task_->SubmitJobOnce(job);
     } else {
