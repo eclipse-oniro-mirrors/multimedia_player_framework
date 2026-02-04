@@ -727,16 +727,13 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuvs(int64_t timeUs, i
             [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); });
     }
 
-    {
-        std::unique_lock retryLock(onErrorMutex_);
-        if (hasReceivedCodecErrCodeOfUnsupported_) {
-            stopProcessing_.store(false);
-            SwitchToSoftWareDecoder();
-            {
-                std::unique_lock fetchFrameLock(mutex_);
-                fetchFrameRes = cond_.wait_for(fetchFrameLock, std::chrono::seconds(MAX_WAIT_TIME_SECOND),
-                    [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); });
-            }
+    if (hasReceivedCodecErrCodeOfUnsupported_.load()) {
+        stopProcessing_.store(false);
+        SwitchToSoftWareDecoder();
+        {
+            std::unique_lock fetchFrameLock(mutex_);
+            fetchFrameRes = cond_.wait_for(fetchFrameLock, std::chrono::seconds(MAX_WAIT_TIME_SECOND),
+                [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); });
         }
     }
     if (fetchFrameRes) {
