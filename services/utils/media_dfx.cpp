@@ -203,7 +203,10 @@ namespace {
         auto currentTime = std::chrono::system_clock::now();
         currentTime_ = currentTime;
         reportMediaInfoMap_.clear();
-        reportPlaybackInfoMap_.clear();
+        {
+            std::lock_guard<std::mutex> lock(collectMut_);
+            reportPlaybackInfoMap_.clear();
+        }
         UpdateMaxInsNumberMap(OHOS::Media::CallType::AVPLAYER);
         return OHOS::Media::MSERR_OK;
     }
@@ -232,7 +235,10 @@ namespace {
         }
         auto currentTime = std::chrono::system_clock::now();
         currentTime_ = currentTime;
-        reportStallingInfoMap_.clear();
+        {
+            std::lock_guard<std::mutex> lock(collectMut_);
+            reportStallingInfoMap_.clear();
+        }
     }
     
 } // namespace
