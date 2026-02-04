@@ -509,13 +509,13 @@ public:
      *
      * @param type Indicates the information type. For details, see {@link HelperOnInfoType}.
      * @param reAvbuffer_ avbuffer required for callback.
-     * @param info info Return detailed information about the callback pixelMap.
-     * @param param param Information needed for image post-processing.
+     * @param info Return detailed information about the callback pixelMap.
+     * @param param Information needed for image post-processing.
      */
-    virtual void OnPixelComplete (HelperOnInfoType type,
-                            const std::shared_ptr<AVBuffer> &reAvbuffer_,
-                            const FrameInfo &info,
-                            const PixelMapParams &param) = 0;
+    virtual void OnPixelComplete(HelperOnInfoType type,
+                                const std::shared_ptr<AVBuffer> &reAvbuffer_,
+                                const FrameInfo &info,
+                                const PixelMapParams &param) = 0;
 };
 
 /**
@@ -681,7 +681,7 @@ public:
      * frame cannot be fetched.
      */
     virtual int32_t FetchScaledFrameYuvs(const std::vector<int64_t>& timeUs,
-                                        int32_t option, const PixelMapParams &param) = 0;
+        int32_t option, const PixelMapParams &param) = 0;
     
      /**
      * Process the obtained pixelmap.
@@ -689,7 +689,7 @@ public:
     virtual std::shared_ptr<PixelMap> ProcessPixelMap(const std::shared_ptr<AVBuffer> &frameBuffer,
                                                     const PixelMapParams &param, int32_t scaleMode) = 0;
 
-     /**
+    /**
      * Cancel all fetch tasks which are triggered by { fetchFramesByTimes }.
      */
     virtual int32_t CancelAllFetchFrames() = 0;

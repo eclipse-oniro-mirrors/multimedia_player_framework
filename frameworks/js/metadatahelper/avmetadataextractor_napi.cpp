@@ -149,14 +149,15 @@ void AVMetadataExtractorNapi::Destructor(napi_env env, void *nativeObject, void 
             napi->helper_->Release();
         }
         delete napi;
+    } else {
+        std::thread([napi]() -> void {
+            MEDIA_LOGD("Destructor Release enter");
+            if (napi != nullptr && napi->helper_ != nullptr) {
+                napi->helper_->Release();
+            }
+            delete napi;
+        }).detach();
     }
-    std::thread([napi]() -> void {
-        MEDIA_LOGD("Destructor Release enter");
-        if (napi != nullptr && napi->helper_ != nullptr) {
-            napi->helper_->Release();
-        }
-        delete napi;
-    }).detach();
     MEDIA_LOGD("Destructor success");
 }
 
@@ -500,11 +501,9 @@ napi_value AVMetadataExtractorNapi::JsFetchFramesAtTimes(napi_env env, napi_call
     napi_value args[maxArgs] = { nullptr };
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-
     AVMetadataExtractorNapi* extractor
         = AVMetadataExtractorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(extractor != nullptr, result, "failed to GetJsInstance");
-
     auto asyncCtx = std::make_unique<AVMetadataExtractorAsyncContext>(env);
     CHECK_AND_RETURN_RET_LOG(asyncCtx, result, "failed to GetAsyncContext");
     asyncCtx->innerHelper_ = extractor->helper_;
@@ -538,7 +537,6 @@ napi_value AVMetadataExtractorNapi::JsFetchFramesAtTimes(napi_env env, napi_call
     if (fetchRes != MSERR_OK) {
         ThrowError(env, MSERR_EXT_API9_SERVICE_DIED, "Service died.");
     }
-
     asyncCtx.release();
     return result;
 }
@@ -601,12 +599,12 @@ napi_value AVMetadataExtractorNapi::JsFetchFrameAtTime(napi_env env, napi_callba
         asyncCtx->SignError(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE, "Parameter check failed");
     }
 
-    if (extractor->state_ == HelperState::HELPER_STATE_HTTP_INTERCEPTED) {
-        asyncCtx->SignError(MSERR_EXT_API20_IO_CLEARTEXT_NOT_PERMITTED, "Http plaintext access is not allowed.");
-    }
-
     if (extractor->state_ != HelperState::HELPER_STATE_RUNNABLE && !asyncCtx->errFlag) {
         asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Current state is not runnable, can't fetchFrame.");
+    }
+
+    if (extractor->state_ == HelperState::HELPER_STATE_HTTP_INTERCEPTED) {
+        asyncCtx->SignError(MSERR_EXT_API20_IO_CLEARTEXT_NOT_PERMITTED, "Http plaintext access is not allowed.");
     }
 
     napi_value resource = nullptr;

@@ -78,7 +78,7 @@ private:
     static napi_value JSGetTimeByFrameIndex(napi_env env, napi_callback_info info);
     static napi_value JSGetFrameIndexByTime(napi_env env, napi_callback_info info);
     void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
-    void setHelper(const std::shared_ptr<AVMetadataHelper> &header);
+    void setHelper(const std::shared_ptr<AVMetadataHelper> &helper);
     
     AVMetadataExtractorNapi();
     ~AVMetadataExtractorNapi();
@@ -88,6 +88,7 @@ private:
         napi_env env, napi_value timeUs, napi_value option, napi_value params);
     int32_t GetCommonFetchFrameArgs(std::unique_ptr<AVMetadataExtractorAsyncContext> &asyncCtx,
         napi_env env, napi_value option, napi_value params);
+
 private:
     static thread_local napi_ref constructor_;
     napi_env env_ = nullptr;
