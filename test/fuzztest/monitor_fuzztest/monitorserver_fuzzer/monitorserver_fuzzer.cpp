@@ -29,7 +29,6 @@ namespace OHOS {
 namespace Media {
 const size_t ELEMENTS_MAX = 1000;
 static const int32_t MIN_SIZE_NUM = 4;
-static const size_t MAX_ALLOWED_SIZE = 4096;
 MonitorServerFuzzer::MonitorServerFuzzer()
 {
 }
@@ -101,7 +100,7 @@ void MonitorServerFuzzer::GetObjListByPidFuzzTest(FuzzedDataProvider& provider)
  /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(uint8_t* data, size_t size)
 {
-    if ((data == nullptr) || (size < MIN_SIZE_NUM) || (size > MAX_ALLOWED_SIZE)) {
+    if ((data == nullptr) || (size < MIN_SIZE_NUM)) {
         return 0;
     }
     FuzzedDataProvider provider(data, size);
