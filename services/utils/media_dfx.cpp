@@ -909,7 +909,7 @@ bool GetPlaybackEventInfo(const OHOS::Media::Format& fmt, PlaybackEventInfo& pla
         MEDIA_LOG_W("Get total_loading_time failed");
         return false;
     }
-    if (!fmt.GetUintValue("total_loading_bytes", playbackEventInfo.totalDownLoadBytes)) {
+    if (!fmt.GetLongValue("total_loading_bytes", playbackEventInfo.totalDownLoadBytes)) {
         MEDIA_LOG_W("Get total_loading_bytes failed");
         return false;
     }
