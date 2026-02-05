@@ -334,7 +334,7 @@ int32_t AudioStream::ReStartAudioStream()
     if (streamState_.load() == StreamState::PREPARED || streamState_.load() == StreamState::STOPPED) {
         streamState_.store(StreamState::PLAYING);
     }
-    if (!audioRenderer_->ReStart()) {
+    if (!audioRenderer_->ResetStaticPlayPosition()) {
         MEDIA_LOGI("AudioStream::ReStartAudioStream, audioRenderer_->Start()");
         streamState_.store(StreamState::RELEASED);
         return HandleRendererNotStart();
