@@ -261,7 +261,7 @@ int32_t SoundParser::Release()
 
 SoundDecoderCallback::SoundDecoderCallback(int32_t soundID,
     const std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> &audioDec,
-const std::shared_ptr<MediaAVCodec::AVDemuxer> &demuxer, bool isRawFile) :
+    const std::shared_ptr<MediaAVCodec::AVDemuxer> &demuxer, bool isRawFile) :
     soundID_(soundID), audioDec_(audioDec), demuxer_(demuxer), isRawFile_(isRawFile), eosFlag_(false),
     decodeShouldCompleted_(false), currentSoundBufferSize_(0)
 {
@@ -434,7 +434,8 @@ int32_t SoundDecoderCallback::ReCombineCacheData()
             MEDIA_LOGE("bufferEntry is nullptr");
         }
     }
-    MEDIA_LOGI("ReCombineCacheData end, copyIndex is %{public}d, remainSize is %{public}d", copyIndex, remainBufferSize);
+    MEDIA_LOGI("ReCombineCacheData end, copyIndex is %{public}d, remainSize is %{public}d", copyIndex,
+        remainBufferSize);
 
     fullPcmBuffer_ = std::make_shared<AudioBufferEntry>(fullBuffer, currentSoundBufferSize_);
 
