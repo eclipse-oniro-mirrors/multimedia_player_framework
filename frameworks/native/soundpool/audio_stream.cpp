@@ -327,20 +327,20 @@ int32_t AudioStream::DoPlayWithSameSoundInterrupt()
 
 int32_t AudioStream::RestartAudioStream()
 {
-    MEDIA_LOGI("AudioStream::ReStartAudioStream start, streamID is %{public}d", streamID_);
+    MEDIA_LOGI("AudioStream::RestartAudioStream start, streamID is %{public}d", streamID_);
     if (callback_ != nullptr) {
-        MEDIA_LOGI("AudioStream::ReStartAudioStream, call OnPlayFinished");
+        MEDIA_LOGI("AudioStream::RestartAudioStream, call OnPlayFinished");
         callback_->OnPlayFinished(streamID_);
     }
     if (streamState_.load() == StreamState::PREPARED || streamState_.load() == StreamState::STOPPED) {
         streamState_.store(StreamState::PLAYING);
     }
     if (!audioRenderer_->ResetStaticPlayPosition()) {
-        MEDIA_LOGI("AudioStream::ReStartAudioStream, audioRenderer_->Start()");
+        MEDIA_LOGI("AudioStream::RestartAudioStream, audioRenderer_->ResetStaticPlayPosition()");
         streamState_.store(StreamState::RELEASED);
         return HandleRendererNotStart();
     }
-    MEDIA_LOGI("AudioStream::ReStartAudioStream end, streamID is %{public}d", streamID_);
+    MEDIA_LOGI("AudioStream::RestartAudioStream end, streamID is %{public}d", streamID_);
     return MSERR_OK;
         
 }
