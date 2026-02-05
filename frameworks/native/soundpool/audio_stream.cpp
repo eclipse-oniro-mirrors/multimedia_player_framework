@@ -256,6 +256,7 @@ int32_t AudioStream::DoPlayWithNoInterrupt()
     PreparePlayInner(audioRendererInfo_, playParameters_);
     CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL,
         "AudioStream::DoPlayWithNoInterrupt, audioRenderer_ is nullptr");
+    audioRenderer_->SetLoopTimes(currentLoop_);
     size_t bufferSize = 0;
     audioRenderer_->GetBufferSize(bufferSize);
     MEDIA_LOGI("AudioStream::DoPlayWithNoInterrupt, streamID_ is %{public}d, bufferSize is %{public}zu, "
@@ -527,6 +528,8 @@ int32_t AudioStream::SetLoop(int32_t loop)
     std::lock_guard lock(streamLock_);
     CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr && streamState_.load() != StreamState::RELEASED,
         MSERR_INVALID_VAL, "SetLoop, Invalid audioRenderer_");
+    lastLoop_ = currentLoop_;
+    currentLoop_ = loop;
     int32_t ret = audioRenderer_->SetLoopTimes(loop);
     MEDIA_LOGI("AudioStream::SetLoop, ret is %{public}d", ret);
     return MSERR_OK;
