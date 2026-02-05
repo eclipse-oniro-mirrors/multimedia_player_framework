@@ -111,6 +111,7 @@ private:
     void DealPlayParamsBeforePlay(const PlayParams &playParams);
     static AudioStandard::AudioRendererRate CheckAndAlignRendererRate(const int32_t rate);
     int32_t PreparePlayInner(const AudioStandard::AudioRendererInfo &audioRendererInfo, const PlayParams &playParams);
+    int32_t ReStartAudioStream();
     int32_t HandleRendererNotStart();
 
     Format trackFormat_;
@@ -132,7 +133,8 @@ private:
     std::weak_ptr<ThreadPool> streamStopThreadPool_;
     std::weak_ptr<OHOS::Media::IStreamIDManager> manager_;
 
-    int32_t loop_ = 0;
+    int32_t lastLoop_ = 0;
+    int32_t currentLoop_ = 0;
     int32_t priority_ = 0;
     int32_t rendererFlags_ = 0;
 

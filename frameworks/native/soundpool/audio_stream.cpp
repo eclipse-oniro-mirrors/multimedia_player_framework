@@ -93,8 +93,8 @@ void AudioStream::DealPlayParamsBeforePlay(const PlayParams &playParams)
 {
     MediaTrace trace("AudioStream::DealPlayParamsBeforePlay");
     audioRenderer_->SetOffloadAllowed(false);
-    audioRenderer_->SetLoopTimes(playParams.loop);
-    loop_ = playParams.loop;
+    lastLoop_ = currentLoop_;
+    currentLoop_ = playParams.loop
     audioRenderer_->SetRenderRate(CheckAndAlignRendererRate(playParams.rate));
     audioRenderer_->SetVolume(playParams.leftVolume);
     priority_ = playParams.priority;
@@ -302,6 +302,9 @@ int32_t AudioStream::DoPlayWithSameSoundInterrupt()
         if (streamCallback_ != nullptr) {
             streamCallback_->OnPlayFinished(streamID_);
         }
+        if (lastLoop_ == currentLoop_) {
+            return ReStartAudioStream();
+        }
         audioRenderer_->Stop();
         if (callback_ != nullptr) {
             MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt, call OnPlayFinished");
@@ -311,6 +314,7 @@ int32_t AudioStream::DoPlayWithSameSoundInterrupt()
     if (streamState_.load() == StreamState::PREPARED || streamState_.load() == StreamState::STOPPED) {
         streamState_.store(StreamState::PLAYING);
     }
+    audioRenderer_->SetLoopTimes(currentLoop_);  // avoid calling during stream playing
     if (!audioRenderer_->Start()) {
         MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt, audioRenderer_->Start()");
         streamState_.store(StreamState::RELEASED);
@@ -318,6 +322,26 @@ int32_t AudioStream::DoPlayWithSameSoundInterrupt()
     }
     MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt end, streamID is %{public}d", streamID_);
     return MSERR_OK;
+}
+
+int32_t AudioStream::ReStartAudioStream()
+{
+    MEDIA_LOGI("AudioStream::ReStartAudioStream start, streamID is %{public}d", streamID_);
+    if (callback_ != nullptr) {
+        MEDIA_LOGI("AudioStream::ReStartAudioStream, call OnPlayFinished");
+        callback_->OnPlayFinished(streamID_);
+    }
+    if (streamState_.load() == StreamState::PREPARED || streamState_.load() == StreamState::STOPPED) {
+        streamState_.store(StreamState::PLAYING);
+    }
+    if (!audioRenderer_->ReStart()) {
+        MEDIA_LOGI("AudioStream::ReStartAudioStream, audioRenderer_->Start()");
+        streamState_.store(StreamState::RELEASED);
+        return HandleRendererNotStart();
+    }
+    MEDIA_LOGI("AudioStream::ReStartAudioStream end, streamID is %{public}d", streamID_);
+    return MSERR_OK;
+        
 }
 
 int32_t AudioStream::HandleRendererNotStart()
@@ -501,7 +525,6 @@ int32_t AudioStream::SetPriorityWithoutLock(int32_t priority)
 int32_t AudioStream::SetLoop(int32_t loop)
 {
     std::lock_guard lock(streamLock_);
-    loop_ = loop;
     CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr && streamState_.load() != StreamState::RELEASED,
         MSERR_INVALID_VAL, "SetLoop, Invalid audioRenderer_");
     int32_t ret = audioRenderer_->SetLoopTimes(loop);
