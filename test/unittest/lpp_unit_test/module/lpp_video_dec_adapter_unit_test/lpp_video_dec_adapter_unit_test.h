@@ -20,7 +20,6 @@
 #include "lpp_vdec_adapter.h"
 #include "lpp_vdec_adapter.cpp"
 #include "lpp_sync_manager.h"
-
 #include "avcodec_common.h"
 #include "mock_event_receiver.h"
 #include "avbuffer_consumer_mock.h"
