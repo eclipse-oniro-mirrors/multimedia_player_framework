@@ -211,6 +211,27 @@ HWTEST_F(SoundPoolUnittest, Play_003, TestSize.Level0)
 }
 
 /**
+ * @tc.name  : Test Play
+ * @tc.number: Play_004
+ * @tc.desc  : Test return positive number
+ */
+HWTEST_F(SoundPoolUnittest, Play_004, TestSize.Level0)
+{
+    ConfigureSoundPool(4);
+    ASSERT_NE(soundPool_, nullptr);
+
+    int32_t soundID = LoadResourceByUri("test_01.mp3");
+    ASSERT_GT(soundID, INVALID_SOUNDID);
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+    PlayParams playParameters;
+    int32_t streamID = soundPool_->Play(soundID, playParameters);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+    streamID = soundPool_->Play(soundID, playParameters);
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+    EXPECT_GT(streamID, INVALID_STREAMID);
+}
+
+/**
  * @tc.name  : Test Stop
  * @tc.number: Stop_001
  * @tc.desc  : Test return 0
