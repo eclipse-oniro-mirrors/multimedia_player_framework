@@ -802,7 +802,7 @@ HWTEST_F(LppVideoDecAdapterUnitTest, OnError_001, TestSize.Level1)
 {
     ASSERT_NE(nullptr, videoDecAdapter_);
     std::shared_ptr<MockEventReceiver> eventRec = std::make_shared<MockEventReceiver>();
-    ASSERT_NE(nullptr, eventRec); 
+    ASSERT_NE(nullptr, eventRec);
     videoDecAdapter_->SetEventReceiver(eventRec);
 
     MediaAVCodec::AVCodecErrorType errorType = MediaAVCodec::AVCodecErrorType::AVCODEC_ERROR_INTERNAL;
