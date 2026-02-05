@@ -94,7 +94,7 @@ void AudioStream::DealPlayParamsBeforePlay(const PlayParams &playParams)
     MediaTrace trace("AudioStream::DealPlayParamsBeforePlay");
     audioRenderer_->SetOffloadAllowed(false);
     lastLoop_ = currentLoop_;
-    currentLoop_ = playParams.loop
+    currentLoop_ = playParams.loop;
     audioRenderer_->SetRenderRate(CheckAndAlignRendererRate(playParams.rate));
     audioRenderer_->SetVolume(playParams.leftVolume);
     priority_ = playParams.priority;
