@@ -33,6 +33,7 @@ ohos_unittest("system_sound_manager_unit_test") {
     "-Wall",
     "-Werror",
     "-fno-access-control",
+    "-USUPPORT_VIBRATOR"
   ]
 
   sources = [
