@@ -221,7 +221,6 @@ int32_t LppAudioRenderAdapter::Pause()
 {
     MEDIA_LOG_I("LppAudioRenderAdapter::Pause");
     FALSE_RETURN_V_MSG(audioRenderer_ != nullptr, MSERR_INVALID_OPERATION, "audioRenderer_ is nullptr");
-
     forceUpdateTimeAnchorNextTime_ = true;
     renderTask_->Pause();
     AudioStandard::RendererState state = audioRenderer_->GetStatus();
