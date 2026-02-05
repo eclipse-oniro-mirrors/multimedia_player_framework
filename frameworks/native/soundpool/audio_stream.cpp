@@ -342,7 +342,6 @@ int32_t AudioStream::RestartAudioStream()
     }
     MEDIA_LOGI("AudioStream::RestartAudioStream end, streamID is %{public}d", streamID_);
     return MSERR_OK;
-        
 }
 
 int32_t AudioStream::HandleRendererNotStart()
