@@ -111,7 +111,7 @@ private:
     void DealPlayParamsBeforePlay(const PlayParams &playParams);
     static AudioStandard::AudioRendererRate CheckAndAlignRendererRate(const int32_t rate);
     int32_t PreparePlayInner(const AudioStandard::AudioRendererInfo &audioRendererInfo, const PlayParams &playParams);
-    int32_t ReStartAudioStream();
+    int32_t RestartAudioStream();
     int32_t HandleRendererNotStart();
 
     Format trackFormat_;

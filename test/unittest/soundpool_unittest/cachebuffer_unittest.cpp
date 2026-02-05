@@ -67,7 +67,7 @@ HWTEST_F(SoundPoolCacheBufferUnitTest, CacheBuferDealPlayParamsBeforePlayUnittes
     playParameters.parallelPlayFlag = true;
     playParameters.audioHapticsSyncId = audioHapticsSyncId;
     cacheBuffer_->DealPlayParamsBeforePlay(playParameters);
-    ASSERT_EQ(cacheBuffer_->loop_, playParameters.loop);
+    ASSERT_EQ(cacheBuffer_->currentLoop_, playParameters.loop);
     ASSERT_EQ(cacheBuffer_->priority_, playParameters.priority);
 }
 
