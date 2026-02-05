@@ -303,7 +303,7 @@ int32_t AudioStream::DoPlayWithSameSoundInterrupt()
             streamCallback_->OnPlayFinished(streamID_);
         }
         if (lastLoop_ == currentLoop_) {
-            return ReStartAudioStream();
+            return RestartAudioStream();
         }
         audioRenderer_->Stop();
         if (callback_ != nullptr) {
@@ -324,7 +324,7 @@ int32_t AudioStream::DoPlayWithSameSoundInterrupt()
     return MSERR_OK;
 }
 
-int32_t AudioStream::ReStartAudioStream()
+int32_t AudioStream::RestartAudioStream()
 {
     MEDIA_LOGI("AudioStream::ReStartAudioStream start, streamID is %{public}d", streamID_);
     if (callback_ != nullptr) {
