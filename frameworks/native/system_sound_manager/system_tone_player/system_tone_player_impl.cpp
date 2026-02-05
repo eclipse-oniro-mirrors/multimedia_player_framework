@@ -278,13 +278,9 @@ void SystemTonePlayerImpl::GetNewHapticUriForAudioUri(const std::string &audioUr
     std::string currAudioUri = audioUri;
     std::string hapticUri = GetNewHapticUriForAudioUri(audioUri, RINGTONE_PATH, STANDARD_HAPTICS_PATH);
     if (hapticUri.empty()) {
-        currAudioUri = systemSoundMgr_.GetDefaultSystemToneUri(SYSTEM_TONE_TYPE_NOTIFICATION);
-        hapticUri = GetNewHapticUriForAudioUri(currAudioUri, RINGTONE_PATH, STANDARD_HAPTICS_PATH);
-        if (hapticUri.empty()) {
-            MEDIA_LOGW("Failed to find the default json file. Play system tone without vibration.");
-            isHapticUriEmpty_ = true;
-            return;
-        }
+        MEDIA_LOGW("Failed to find the default json file. Play system tone without vibration.");
+        isHapticUriEmpty_ = true;
+        return;
     }
     supportedHapticsFeatures_.push_back(ToneHapticsFeature::STANDARD);
     hapticsUriMap[ToneHapticsFeature::STANDARD] = hapticUri;
@@ -305,14 +301,9 @@ void SystemTonePlayerImpl::GetHapticUriForAudioUri(const std::string &audioUri,
     std::string currAudioUri = audioUri;
     std::string hapticUri = FindHapticUriByAudioUri(currAudioUri, ToneHapticsFeature::STANDARD, isSupported);
     if (!isSupported) {
-        MEDIA_LOGW("Failed to find the vibration json file for audioUri. Use the default json file.");
-        currAudioUri = systemSoundMgr_.GetDefaultSystemToneUri(SYSTEM_TONE_TYPE_NOTIFICATION);
-        hapticUri = FindHapticUriByAudioUri(currAudioUri, ToneHapticsFeature::STANDARD, isSupported);
-        if (!isSupported) {
-            MEDIA_LOGW("Failed to find the default json file. Play system tone without vibration.");
-            isHapticUriEmpty_ = true;
-            return;
-        }
+        MEDIA_LOGW("Failed to find the default json file. Play system tone without vibration.");
+        isHapticUriEmpty_ = true;
+        return;
     }
     supportedHapticsFeatures_.push_back(ToneHapticsFeature::STANDARD);
     hapticsUriMap[ToneHapticsFeature::STANDARD] = hapticUri;
