@@ -122,7 +122,7 @@ public:
 
     int32_t GetAvailableStreamIDBySoundID(int32_t soundID) override;
     void RemoveInvalidStreams() override;
-    void RemoveStreamBySoundIDAndStreamID(int32_t soundID, int32_t streamID = 0) override;
+    void RemoveStreamBySoundIDAndStreamID(int32_t soundID, int32_t streamID) override;
     int32_t ClearStreamIDInDeque(int32_t soundID, int32_t streamID) override;
     void OnPlayFinished(int32_t streamID) override;
 
