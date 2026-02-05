@@ -21,7 +21,7 @@
 
 namespace OHOS {
 namespace Media {
-static const std::string AUDIO_HAPTIC_FILE_DESCRIPTOR_NAPI_CLASS_NAME = "AudioHapticFileDescriptor";
+extern const std::string AUDIO_HAPTIC_FILE_DESCRIPTOR_NAPI_CLASS_NAME;
 
 class AudioHapticFileDescriptorNapi {
 public:

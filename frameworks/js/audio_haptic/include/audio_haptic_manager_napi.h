@@ -29,7 +29,7 @@
 
 namespace OHOS {
 namespace Media {
-static const std::string AUDIO_HAPTIC_MANAGER_NAPI_CLASS_NAME = "AudioHapticManager";
+extern const std::string AUDIO_HAPTIC_MANAGER_NAPI_CLASS_NAME;
 
 static const std::map<std::string, AudioLatencyMode> audioLatencyModeMap = {
     {"AUDIO_LATENCY_MODE_NORMAL", AUDIO_LATENCY_MODE_NORMAL},

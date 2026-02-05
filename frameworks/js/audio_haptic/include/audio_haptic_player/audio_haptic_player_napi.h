@@ -30,7 +30,7 @@
 
 namespace OHOS {
 namespace Media {
-static const std::string AUDIO_HAPTIC_PLAYER_NAPI_CLASS_NAME = "AudioHapticPlayer";
+extern const std::string AUDIO_HAPTIC_PLAYER_NAPI_CLASS_NAME;
 
 struct VolumeContext : public AsyncContext {
     float volume = 1.0f;

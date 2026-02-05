@@ -24,6 +24,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, 
 
 namespace OHOS {
 namespace Media {
+const std::string RINGTONE_OPTIONS_NAPI_CLASS_NAME = "RingtoneOptions";
 thread_local napi_ref RingtoneOptionsNapi::sConstructor_ = nullptr;
 
 float RingtoneOptionsNapi::sVolume_ = 1;
