@@ -32,56 +32,21 @@
 
 namespace OHOS {
 namespace Media {
-static const std::string SYSTEM_SND_MNGR_NAPI_CLASS_NAME = "SystemSoundManager";
+extern const std::string SYSTEM_SND_MNGR_NAPI_CLASS_NAME;
 
-static const std::map<std::string, RingtoneType> ringtoneTypeMap = {
-    {"RINGTONE_TYPE_DEFAULT", RINGTONE_TYPE_SIM_CARD_0}, // deprecated
-    {"RINGTONE_TYPE_MULTISIM", RINGTONE_TYPE_SIM_CARD_1}, // deprecated
-    {"RINGTONE_TYPE_SIM_CARD_0", RINGTONE_TYPE_SIM_CARD_0},
-    {"RINGTONE_TYPE_SIM_CARD_1", RINGTONE_TYPE_SIM_CARD_1}
-};
+extern const std::map<std::string, RingtoneType> ringtoneTypeMap;
 
-static const std::map<std::string, SystemToneType> systemToneTypeMap = {
-    {"SYSTEM_TONE_TYPE_SIM_CARD_0", SYSTEM_TONE_TYPE_SIM_CARD_0},
-    {"SYSTEM_TONE_TYPE_SIM_CARD_1", SYSTEM_TONE_TYPE_SIM_CARD_1},
-    {"SYSTEM_TONE_TYPE_NOTIFICATION", SYSTEM_TONE_TYPE_NOTIFICATION}
-};
+extern const std::map<std::string, SystemToneType> systemToneTypeMap;
 
-static const std::map<std::string, ToneHapticsType> toneHapticsTypeMap = {
-    {"CALL_SIM_CARD_0", CALL_SIM_CARD_0},
-    {"CALL_SIM_CARD_1", CALL_SIM_CARD_1},
-    {"TEXT_MESSAGE_SIM_CARD_0", TEXT_MESSAGE_SIM_CARD_0},
-    {"TEXT_MESSAGE_SIM_CARD_1", TEXT_MESSAGE_SIM_CARD_1},
-    {"NOTIFICATION", NOTIFICATION},
-};
+extern const std::map<std::string, ToneHapticsType> toneHapticsTypeMap;
 
-static const std::map<std::string, ToneCustomizedType> toneCustomizedTypeMap = {
-    {"PRE_INSTALLED", PRE_INSTALLED},
-    {"CUSTOMISED",  CUSTOMISED}
-};
+extern const std::map<std::string, ToneCustomizedType> toneCustomizedTypeMap;
 
-static const std::map<std::string, ToneHapticsMode> toneHapticsModeMap = {
-    {"NONE", NONE},
-    {"SYNC", SYNC},
-    {"NON_SYNC", NON_SYNC},
-};
+extern const std::map<std::string, ToneHapticsMode> toneHapticsModeMap
 
-static const std::map<std::string, SystemSoundError> systemSoundErrorModeMap = {
-    {"ERROR_IO", ERROR_IO},
-    {"ERROR_OK", ERROR_OK},
-    {"ERROR_TYPE_MISMATCH", ERROR_TYPE_MISMATCH},
-    {"ERROR_UNSUPPORTED_OPERATION", ERROR_UNSUPPORTED_OPERATION},
-    {"ERROR_DATA_TOO_LARGE", ERROR_DATA_TOO_LARGE},
-    {"ERROR_TOO_MANY_FILES", ERROR_TOO_MANY_FILES},
-    {"ERROR_INSUFFICIENT_ROM", ERROR_INSUFFICIENT_ROM},
-    {"ERROR_INVALID_PARAM", ERROR_INVALID_PARAM},
-};
+extern const std::map<std::string, SystemSoundError> systemSoundErrorModeMap;
 
-static const std::map<std::string, SystemSoundType> systemSoundTypeModeMap = {
-    {"PHOTO_SHUTTER", PHOTO_SHUTTER},
-    {"VIDEO_RECORDING_BEGIN", VIDEO_RECORDING_BEGIN},
-    {"VIDEO_RECORDING_END", VIDEO_RECORDING_END},
-};
+extern const std::map<std::string, SystemSoundType> systemSoundTypeModeMap;
 
 class SystemSoundManagerNapi {
 public:

@@ -23,16 +23,16 @@
 
 namespace OHOS {
 namespace Media {
-const int32_t SSP_SUCCESS = 0;
-const int32_t SSP_ERROR = -1;
-const int32_t ERRCODE_NO_MEMORY = 5400101;
-const int32_t ERRCODE_IO_ERROR = 5400103;
-const int32_t ERRCODE_SYSTEM_ERROR = 5400105;
-const int32_t ERRCODE_INVALID_PARAM = 5400108;
-const std::string ERRCODE_NO_MEMORY_INFO = "allocate memory failed";
-const std::string ERRCODE_IO_ERROR_INFO = "I/O error";
-const std::string ERRCODE_SYSTEM_ERROR_INFO = "system error";
-const std::string ERRCODE_INVALID_PARAM_INFO = "invalid parameter";
+inline const int32_t SSP_SUCCESS = 0;
+inline const int32_t SSP_ERROR = -1;
+inline const int32_t ERRCODE_NO_MEMORY = 5400101;
+inline const int32_t ERRCODE_IO_ERROR = 5400103;
+inline const int32_t ERRCODE_SYSTEM_ERROR = 5400105;
+inline const int32_t ERRCODE_INVALID_PARAM = 5400108;
+inline const std::string ERRCODE_NO_MEMORY_INFO = "allocate memory failed";
+inline const std::string ERRCODE_IO_ERROR_INFO = "I/O error";
+inline const std::string ERRCODE_SYSTEM_ERROR_INFO = "system error";
+inline const std::string ERRCODE_INVALID_PARAM_INFO = "invalid parameter";
 
 class SystemSoundPlayer {
 public:

@@ -27,10 +27,12 @@
 
 namespace OHOS {
 namespace Media {
-const std::string NO_SYSTEM_SOUND = "no_system_sound";
-const std::string NO_RING_SOUND = "no_ring_sound";
-const std::string FILE_SIZE_EXCEEDS_LIMIT = "20700004";
-const std::string FILE_COUNT_EXCEEDS_LIMIT = "20700005";
+inline const std::string NO_SYSTEM_SOUND = "no_system_sound";
+inline const std::string NO_RING_SOUND = "no_ring_sound";
+inline const std::string FILE_SIZE_EXCEEDS_LIMIT = "20700004";
+inline const std::string FILE_COUNT_EXCEEDS_LIMIT = "20700005";
+inline 
+
 const std::string ROM_IS_INSUFFICIENT = "20700006";
 
 

@@ -24,6 +24,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, 
 
 namespace OHOS {
 namespace Media {
+const std::string AUDIO_RENDERER_INFO_NAPI_CLASS_NAME = "AudioRendererInfo";
 thread_local napi_ref AudioRendererInfoNapi::sConstructor_ = nullptr;
 unique_ptr<AudioStandard::AudioRendererInfo> AudioRendererInfoNapi::sAudioRendererInfo_ = nullptr;
 
