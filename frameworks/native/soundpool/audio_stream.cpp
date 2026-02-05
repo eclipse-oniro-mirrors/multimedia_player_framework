@@ -285,7 +285,7 @@ int32_t AudioStream::DoPlayWithSameSoundInterrupt()
     std::lock_guard lock(streamLock_);
     interruptMode_.store(InterruptMode::SAME_SOUND_INTERRUPT);
     if (streamState_.load() == StreamState::RELEASED) {
-    MEDIA_LOGI("AudioStream::DoPlay end, invalid stream(%{public}d),  streamState_ is %{public}d", streamID_,
+        MEDIA_LOGI("AudioStream::DoPlay end, invalid stream(%{public}d),  streamState_ is %{public}d", streamID_,
             streamState_.load());
         return MSERR_INVALID_VAL;
     }
@@ -366,7 +366,7 @@ int32_t AudioStream::Stop()
             callback_->OnPlayFinished(streamID_);
         }
     }
-    MEDIA_LOGI("AudioStream::Stop end, streamID is %{public}d", streamID_);
+    MEDIA_LOGI("Stop end, streamID is %{public}d", streamID_);
     return MSERR_OK;
 }
 
@@ -380,8 +380,7 @@ void AudioStream::OnFirstFrameWriting(uint64_t latency)
 void AudioStream::OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent)
 {
     MEDIA_LOGI("AudioStream::OnInterrupt, streamID_ is %{public}d, eventType is %{public}d, forceType is %{public}d,"
-        "hintType:%{public}d", streamID_, interruptEvent.eventType, interruptEvent.forceType,
-        interruptEvent.hintType);
+        "hintType:%{public}d", streamID_, interruptEvent.eventType, interruptEvent.forceType, interruptEvent.hintType);
     if (interruptEvent.hintType == AudioStandard::InterruptHint::INTERRUPT_HINT_PAUSE ||
         interruptEvent.hintType == AudioStandard::InterruptHint::INTERRUPT_HINT_STOP) {
         ThreadPool::Task pcmBufferInterruptTask = [this] { this->Stop(); };
@@ -470,7 +469,7 @@ int32_t AudioStream::SetVolume(float leftVolume, float rightVolume)
     // audio cannot support left & right volume, all use left volume.
     (void) rightVolume;
     int32_t ret = audioRenderer_->SetVolume(leftVolume);
-    MEDIA_LOGI("AudioStream::SetVolume, ret is %{public}d", ret);
+    MEDIA_LOGI("AudioStream::SetVolume, ret:%{public}d", ret);
     return ret;
 }
 
