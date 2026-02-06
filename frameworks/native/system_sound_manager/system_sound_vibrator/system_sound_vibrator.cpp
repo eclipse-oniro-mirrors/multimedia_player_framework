@@ -33,9 +33,9 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, 
 namespace OHOS {
 namespace Media {
 const std::string PREFIX = "fd://";
+#ifdef SUPPORT_VIBRATOR
 constexpr int32_t PATTERNDURATION_TIME_MS = 800; //ms
 
-#ifdef SUPPORT_VIBRATOR
 const std::unordered_map<VibrationType, VibratorUsage> VIBRATOR_USAGE_MAP = {
     {VibrationType::VIBRATION_RINGTONE, USAGE_RING},
     {VibrationType::VIBRATION_SYSTEM_TONE, USAGE_NOTIFICATION},

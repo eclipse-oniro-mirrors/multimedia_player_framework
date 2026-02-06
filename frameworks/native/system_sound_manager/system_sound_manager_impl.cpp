@@ -2750,14 +2750,12 @@ int32_t SystemSoundManagerImpl::GetGentleHapticsAttr(const DatabaseTool &databas
     const std::string &standardHapticsUri, std::string &hapticsTitle,
     std::string &hapticsFileName, std::string &hapticsUri)
 {
+#ifdef SUPPORT_VIBRATOR
     if (!databaseTool.isInitialized || databaseTool.dataShareHelper == nullptr) {
         MEDIA_LOGE("The database tool is not ready!");
         return IO_ERROR;
     }
-    if (standardHapticsUri.empty()) {
-        MEDIA_LOGE("The standardHapticsUri is empty!");
-        return IO_ERROR;
-    }
+    CHECK_AND_RETURN_RET_LOG(!standardHapticsUri.empty(), IO_ERROR, "The standardHapticsUri is empty!");
     std::string vibrateFilesUri = databaseTool.isProxy ? (RINGTONE_LIBRARY_PROXY_DATA_URI_VIBATE_FILES +
         "&user=" + std::to_string(SystemSoundManagerUtils::GetCurrentUserId())) : VIBRATE_PATH_URI;
     Uri queryUri(vibrateFilesUri);
@@ -2796,6 +2794,7 @@ int32_t SystemSoundManagerImpl::GetGentleHapticsAttr(const DatabaseTool &databas
     if (resultsByDisplayName != nullptr) resultsByDisplayName->Close();
     MEDIA_LOGI("GetGentleHapticsAttr: title=%{public}s, name=%{public}s, uri=%{public}s",
         hapticsTitle.c_str(), hapticsFileName.c_str(), hapticsUri.c_str());
+#endif
     return SUCCESS;
 }
 
