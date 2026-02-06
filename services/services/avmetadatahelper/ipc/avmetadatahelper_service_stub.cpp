@@ -21,6 +21,7 @@
 #include "avsharedmemory_ipc.h"
 #include "media_data_source_proxy.h"
 #include "media_dfx.h"
+#include "media_utils.h"
 #include "surface_buffer.h"
 
 namespace {
@@ -37,6 +38,8 @@ sptr<AVMetadataHelperServiceStub> AVMetadataHelperServiceStub::Create()
 
     int32_t ret = avMetadataHelperStub->Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to avmetadatahlper stub init");
+    int32_t appUid = IPCSkeleton::GetCallingUid();
+    (void)GetClientBundleName(appUid);
     return avMetadataHelperStub;
 }
 
@@ -459,7 +462,6 @@ int32_t AVMetadataHelperServiceStub::FetchFrameYuvs(MessageParcel &data, Message
     int32_t option = data.ReadInt32();
     PixelMapParams param = {data.ReadInt32(), data.ReadInt32(), static_cast<PixelFormat>(data.ReadInt32()),
                             data.ReadBool(), data.ReadBool()};
-
     int32_t result = FetchFrameYuvs(timeUsVec, option, param);
     reply.WriteInt32(result == MSERR_OK ? MSERR_OK : MSERR_EXT_API9_SERVICE_DIED);
     return MSERR_OK;

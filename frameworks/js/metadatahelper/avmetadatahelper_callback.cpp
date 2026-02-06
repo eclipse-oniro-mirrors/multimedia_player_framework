@@ -118,7 +118,7 @@ public:
 
 AVMetadataHelperCallback::AVMetadataHelperCallback(napi_env env) : env_(env)
 {
-    MEDIA_LOGI("AVMetadataHelperCallback Instances create");
+    MEDIA_LOGI("AVMetadataHelperCallback Instances Create");
 }
 
 AVMetadataHelperCallback::AVMetadataHelperCallback(napi_env env, AVMetadataHelperNotify *listener)
@@ -185,9 +185,7 @@ void AVMetadataHelperCallback::OnInfo(HelperOnInfoType type, int32_t extra, cons
 }
 
 void AVMetadataHelperCallback::OnPixelComplete(HelperOnInfoType type,
-                                               const std::shared_ptr<AVBuffer> &reAvbuffer_,
-                                               const FrameInfo &info,
-                                               const PixelMapParams &param)
+    const std::shared_ptr<AVBuffer> &reAvbuffer_, const FrameInfo &info, const PixelMapParams &param)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("OnPixelComplete is called, OnPixelCompleteType: %{public}d", type);
@@ -227,6 +225,7 @@ void AVMetadataHelperCallback::SendPixelCompleteCallback(const FrameInfo &info,
         default:
             cb->errorMs = "NO_ERR";
     };
+
     OnJsPixelCompleteCallback(cb);
 }
 
@@ -245,7 +244,7 @@ void AVMetadataHelperCallback::OnJsPixelCompleteCallback(AVMetadataJsCallback *j
                 napi_close_handle_scope(ref->env_, scope);
             };
             const size_t argCount = 2;
-            napi_value args[argCount] = {nullptr};
+            napi_value args[argCount] = { nullptr };
             napi_value jsCallback = nullptr;
             napi_value imageResult = nullptr;
             napi_get_undefined(ref->env_, &args[0]);

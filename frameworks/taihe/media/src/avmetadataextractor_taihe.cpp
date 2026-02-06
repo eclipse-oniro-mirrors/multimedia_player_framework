@@ -109,39 +109,6 @@ optional<AVDataSrcDescriptor> AVMetadataExtractorImpl::GetDataSrc()
     return optional<AVDataSrcDescriptor>(std::in_place_t{}, fdSrc);
 }
 
-void AVMetadataExtractorImpl::SetUrlSource(::taihe::string_view url, optional_view<map<string, string>> header)
-{
-    OHOS::Media::MediaTrace trace("AVMetadataExtractorTaihe::setUrlSource");
-    MEDIA_LOGI("TaiheSetUrlSource In");
-
-    if (state_ != OHOS::Media::HelperState::HELPER_STATE_IDLE) {
-        MEDIA_LOGE("Has set source once, unsupport set again");
-        return;
-    }
-    if (helper_ == nullptr) {
-        MEDIA_LOGE("Invalid AVMetadataExtractorTaihe.");
-        return;
-    }
-
-    std::string url_(url);
-    std::map<std::string, std::string> header_;
-    if (header.has_value()) {
-        for (const auto& pair : header.value()) {
-            header_[std::string(pair.first)] = std::string(pair.second);
-        }
-    }
-    auto res = helper_->SetUrlSource(url_, header_);
-    if (res == OHOS::Media::MSERR_OK) {
-        state_ = OHOS::Media::HelperState::HELPER_STATE_RUNNABLE;
-    } else if (res == OHOS::Media::MSERR_CLEARTEXT_NOT_PERMITTED) {
-        state_ = OHOS::Media::HelperState::HELPER_STATE_HTTP_INTERCEPTED;
-    } else {
-        state_ = OHOS::Media::HelperState::HELPER_ERROR;
-    }
-    helper_->SetAVMetadataCaller(OHOS::Media::AVMetadataCaller::AV_METADATA_EXTRACTOR);
-    MEDIA_LOGI("TaiheSetUrlSource Out");
-}
-
 void AVMetadataExtractorImpl::SetDataSrc(optional_view<AVDataSrcDescriptor> dataSrc)
 {
     OHOS::Media::MediaTrace trace("AVMetadataExtractorTaihe::set dataSrc");
@@ -175,6 +142,38 @@ void AVMetadataExtractorImpl::SetDataSrc(optional_view<AVDataSrcDescriptor> data
             OHOS::Media::HelperState::HELPER_STATE_RUNNABLE : OHOS::Media::HelperState::HELPER_ERROR;
         MEDIA_LOGI("TaiheSetDataSrc Out");
     }
+}
+
+void AVMetadataExtractorImpl::SetUrlSource(::taihe::string_view url, optional_view<map<string, string>> header)
+{
+    OHOS::Media::MediaTrace trace("AVMetadataExtractorTaihe::setUrlSource");
+    MEDIA_LOGI("TaiheSetUrlSource In");
+
+    if (state_ != OHOS::Media::HelperState::HELPER_STATE_IDLE) {
+        MEDIA_LOGE("Has set source once, unsupport set again");
+        return;
+    }
+    if (helper_ == nullptr) {
+        MEDIA_LOGE("Invalid AVMetadataExtractorTaihe.");
+        return;
+    }
+    std::string url_(url);
+    std::map<std::string, std::string> header_;
+    if (header.has_value()) {
+        for (const auto& pair : header.value()) {
+            header_[std::string(pair.first)] = std::string(pair.second);
+        }
+    }
+    auto res = helper_->SetUrlSource(url_, header_);
+    if (res == OHOS::Media::MSERR_OK) {
+        state_ = OHOS::Media::HelperState::HELPER_STATE_RUNNABLE;
+    } else if (res == OHOS::Media::MSERR_CLEARTEXT_NOT_PERMITTED) {
+        state_ = OHOS::Media::HelperState::HELPER_STATE_HTTP_INTERCEPTED;
+    } else {
+        state_ = OHOS::Media::HelperState::HELPER_ERROR;
+    }
+    helper_->SetAVMetadataCaller(OHOS::Media::AVMetadataCaller::AV_METADATA_EXTRACTOR);
+    MEDIA_LOGI("TaiheSetUrlSource Out");
 }
 
 void AVMetadataExtractorImpl::SetDefaultMetadataProperty(AVMetadata &res)
@@ -434,8 +433,8 @@ int64_t AVMetadataExtractorImpl::GetTimeByFrameIndexSync(int32_t index)
 optional<::ohos::multimedia::image::image::PixelMap> AVMetadataExtractorImpl::FetchFrameByTimeSync(int64_t timeUs,
     AVImageQueryOptions options, PixelMapParams const& param)
 {
-    OHOS::Media::MediaTrace trace("AVMetadataExtractorTaihe::TaiheFetchFrameAtTime");
-    MEDIA_LOGI("TaiheFetchFrameAtTime in");
+    OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::FetchFrameByTimeSync");
+    MEDIA_LOGI("FetchFrameByTimeSync in");
     AVMetadataExtractorImpl *taihe = this;
     if (taihe->state_ != OHOS::Media::HelperState::HELPER_STATE_RUNNABLE) {
         if (taihe->state_ == OHOS::Media::HelperState::HELPER_STATE_HTTP_INTERCEPTED) {
@@ -467,7 +466,7 @@ optional<::ohos::multimedia::image::image::PixelMap> AVMetadataExtractorImpl::Fe
     }
     pixelMapParams.colorFormat = colorFormat;
     auto pixelMap = helper_->FetchScaledFrameYuv(timeUs, options.get_value(), pixelMapParams);
-    MEDIA_LOGI("TaiheFetchFrameByTime Out");
+    MEDIA_LOGI("FetchFrameByTimeSync Out");
     return optional<::ohos::multimedia::image::image::PixelMap>(std::in_place_t{},
         Image::PixelMapImpl::CreatePixelMap(pixelMap));
 }

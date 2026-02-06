@@ -190,7 +190,7 @@ int32_t AVMetadataHelperServiceProxy::CancelAllFetchFrames()
     bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_EXT_API9_SERVICE_DIED, "Failed to write descriptor!");
     int error = Remote()->SendRequest(CANCEL_FETCHFRAMES, data, reply, option);
-    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_EXT_API9_SERVICE_DIED,
         "CancelAllFetchFrames failed, error: %{public}d", error);
 
     return reply.ReadInt32();
@@ -331,7 +331,7 @@ std::shared_ptr<AVBuffer> AVMetadataHelperServiceProxy::FetchFrameYuv(int64_t ti
 }
 
 int32_t AVMetadataHelperServiceProxy::FetchFrameYuvs(const std::vector<int64_t>& timeUs, int32_t option,
-                                                     const PixelMapParams &param)
+    const PixelMapParams &param)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -351,7 +351,7 @@ int32_t AVMetadataHelperServiceProxy::FetchFrameYuvs(const std::vector<int64_t>&
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_EXT_API9_SERVICE_DIED,
         "FetchFrameYuvs failed, error: %{public}d", error);
     CHECK_AND_RETURN_RET(reply.ReadInt32() == MSERR_OK, MSERR_EXT_API9_SERVICE_DIED);
-    
+
     return MSERR_OK;
 }
 

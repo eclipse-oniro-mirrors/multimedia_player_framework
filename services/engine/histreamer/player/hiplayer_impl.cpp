@@ -810,6 +810,7 @@ void HiPlayerImpl::UpdateMediaFirstPts()
 {
     FALSE_RETURN(syncManager_ != nullptr);
     std::string mime;
+    FALSE_RETURN_MSG(demuxer_ != nullptr, "demuxer_ is nullptr");
     std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
     int64_t startTime = 0;
     for (const auto& trackInfo : metaInfo) {
@@ -881,6 +882,7 @@ void HiPlayerImpl::DoInitializeForHttp()
     }
     std::vector<uint32_t> vBitRates;
     MEDIA_LOG_D_SHORT("DoInitializeForHttp");
+    FALSE_RETURN_MSG(demuxer_ != nullptr, "demuxer_ is nullptr");
     auto ret = demuxer_->GetBitRates(vBitRates);
     if (ret == Status::OK && vBitRates.size() > 0) {
         int mSize = static_cast<int>(vBitRates.size());
@@ -3173,6 +3175,7 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
         eosInLoopForFrozen_ = true;
     }
     callbackLooper_.DoReportCompletedTime();
+    FALSE_RETURN_MSG(pipeline_ != nullptr, "pipeline_ is nullptr");
     if (pipelineStates_ != PlayerStates::PLAYER_FROZEN ||
         (pipelineStates_ == PlayerStates::PLAYER_FROZEN && !singleLoop_.load())) {
         pipeline_->Pause();

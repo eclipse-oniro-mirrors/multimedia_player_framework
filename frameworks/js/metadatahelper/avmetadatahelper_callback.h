@@ -38,7 +38,7 @@ const std::string STATE_ERROR = "error";
 namespace AVMetadataHelperEvent {
 const std::string EVENT_STATE_CHANGE = "stateChange";
 const std::string EVENT_ERROR = "error";
-const std::string EVENT_PIXEL_COMPLETE = "onFrameFetched";
+const std::string EVENT_PIXEL_COMPLETE = "OnFrameFetched";
 }
 
 class AVMetadataHelperNotify {
@@ -71,9 +71,9 @@ public:
     void SendPixelCompleteCallback(const FrameInfo &info, const std::shared_ptr<PixelMap> &pixelMap);
 private:
     enum FetchResult {
-        FETCH_FAILED = 0,
-        FETCH_SUCCEEDED = 1,
-        FETCH_CANCELED = 2,
+            FETCH_FAILED = 0,
+            FETCH_SUCCEEDED = 1,
+            FETCH_CANCELED = 2,
     };
 
     struct AVMetadataJsCallback {
