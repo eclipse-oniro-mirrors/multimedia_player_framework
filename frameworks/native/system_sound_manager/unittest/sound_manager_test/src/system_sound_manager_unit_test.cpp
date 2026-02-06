@@ -26,6 +26,7 @@ using namespace testing::ext;
 
 namespace OHOS {
 namespace Media {
+#ifdef SUPPORT_VIBRATOR
 Uri RINGTONEURITEST(RINGTONE_PATH_URI);
 vector<string> COLUMNSTEST = {{RINGTONE_COLUMN_TONE_ID}, {RINGTONE_COLUMN_DATA}, {RINGTONE_COLUMN_DISPLAY_NAME},
     {RINGTONE_COLUMN_TITLE}, {RINGTONE_COLUMN_TONE_TYPE}, {RINGTONE_COLUMN_MEDIA_TYPE}, {RINGTONE_COLUMN_SOURCE_TYPE},
@@ -2644,5 +2645,6 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_OpenHapticsUri_001, TestSi
     newUri = systemSoundManager_->OpenHapticsUri(databaseTool, uri);
     EXPECT_NE(newUri, "");
 }
+#endif
 } // namespace Media
 } // namespace OHOS
