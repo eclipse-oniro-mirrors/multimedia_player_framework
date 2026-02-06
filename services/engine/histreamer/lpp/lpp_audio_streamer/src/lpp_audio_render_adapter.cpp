@@ -501,7 +501,7 @@ void LppAudioRenderAdapter::DriveBufferCircle()
     size_t availDataSize = availDataSize_.load();
     FALSE_RETURN_NOLOG(availDataSize < maxCbDataSize_);
     std::shared_ptr<AVBuffer> oldestBuffer = availOutputBuffers_.front();
-    FALSE_RETURN_MSG(oldestBuffer != nullptr && oldestBuffer->memory_ != nullptr 
+    FALSE_RETURN_MSG(oldestBuffer != nullptr && oldestBuffer->memory_ != nullptr
         && oldestBuffer->memory_->GetSize() > 0, "buffer or memory is nullptr");
     std::shared_ptr<AVBuffer> swapBuffer = CopyBuffer(oldestBuffer);
     FALSE_RETURN_MSG(swapBuffer != nullptr, "CopyBuffer failed, swapBuffer is nullptr");
@@ -562,7 +562,7 @@ bool LppAudioRenderAdapter::CopyBufferData(AudioStandard::BufferDesc &bufferDesc
     size_t &size, size_t &cacheBufferSize, int64_t &bufferPts)
 {
     size_t availableSize = cacheBufferSize > size ? size : cacheBufferSize;
-    FALSE_RETURN_V_MSG(bufferDesc.dataLength >= 0 && currentQueuedBufferOffset_ >= 0, 
+    FALSE_RETURN_V_MSG(bufferDesc.dataLength >= 0 && currentQueuedBufferOffset_ >= 0,
         false, "bufferDesc.dataLength or currentQueuedBufferOffset_ is less than 0.");
     auto ret = memcpy_s(bufferDesc.buffer + bufferDesc.dataLength, availableSize,
         buffer->memory_->GetAddr() + currentQueuedBufferOffset_, availableSize);
@@ -583,7 +583,7 @@ bool LppAudioRenderAdapter::CopyBufferData(AudioStandard::BufferDesc &bufferDesc
 bool LppAudioRenderAdapter::CopyAudioVividBufferData(AudioStandard::BufferDesc &bufferDesc,
     std::shared_ptr<AVBuffer> &buffer, size_t &size, size_t &cacheBufferSize, int64_t &bufferPts)
 {
-    FALSE_RETURN_V_MSG(bufferDesc.dataLength >= 0 && currentQueuedBufferOffset_ >= 0, 
+    FALSE_RETURN_V_MSG(bufferDesc.dataLength >= 0 && currentQueuedBufferOffset_ >= 0,
         false, "bufferDesc.dataLength or currentQueuedBufferOffset_ is less than 0.");
     auto ret = memcpy_s(bufferDesc.buffer + bufferDesc.dataLength, cacheBufferSize,
         buffer->memory_->GetAddr() + currentQueuedBufferOffset_, cacheBufferSize);

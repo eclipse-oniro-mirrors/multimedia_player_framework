@@ -314,7 +314,7 @@ int32_t LppVideoStreamerServiceProxy::SetPlaybackSpeed(float speed)
     data.WriteFloat(speed);
 
     int32_t error = Remote()->SendRequest(SET_PLAYBACK_SPEED, data, reply, option);
-    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION, 
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetPlaybackSpeed failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
