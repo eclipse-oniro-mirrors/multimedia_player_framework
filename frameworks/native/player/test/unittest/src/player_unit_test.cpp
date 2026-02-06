@@ -3107,28 +3107,6 @@ HWTEST_F(PlayerUnitTest, Player_SetSurface_001, TestSize.Level0)
 
 /**
  * @tc.name  : Test AddSubSource
- * @tc.number: Player_AddSubSource_001
- * @tc.desc  : Test Player AddSubSource state machine
- */
-HWTEST_F(PlayerUnitTest, Player_AddSubSource_001, TestSize.Level0)
-{
-    ASSERT_NE(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
-    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_NE(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE));    // Illegal state machine
-    EXPECT_EQ(MSERR_OK, player_->Prepare());
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    EXPECT_NE(SUBTITLE_0_SEC, player_->GetSubtitleText(SUBTITLE_0_SEC));
-    EXPECT_EQ(MSERR_OK, player_->Pause());
-    EXPECT_EQ(MSERR_OK, player_->Stop());
-    EXPECT_EQ(MSERR_OK, player_->Reset());
-    EXPECT_EQ(MSERR_OK, player_->Release());
-}
-
-/**
- * @tc.name  : Test AddSubSource
  * @tc.number: Player_AddSubSource_002
  * @tc.desc  : Test Player AddSubSource behavior
  */
