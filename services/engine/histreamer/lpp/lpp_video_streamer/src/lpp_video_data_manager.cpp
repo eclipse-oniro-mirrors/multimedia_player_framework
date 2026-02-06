@@ -167,9 +167,9 @@ void LppVideoDataManager::OnBufferAvailable()
 
 void LppVideoDataManager::HandleBufferAvailable()
 {
+    std::lock_guard<std::mutex> lk(dataPacketMutex_);
     FALSE_RETURN_MSG(eventReceiver_ != nullptr, "eventReceiver_ is nullptr");
     FALSE_RETURN_MSG(inputProducer_ != nullptr, "inputProducer_ is nullptr");
-    std::lock_guard<std::mutex> lk(dataPacketMutex_);
     FALSE_RETURN_NOLOG(!isRequiringData_);
     if (dataPacket_ == nullptr || dataPacket_->IsEmpty()) {
         MEDIA_LOG_D("dataPacket_ is empty, trigger callback");
