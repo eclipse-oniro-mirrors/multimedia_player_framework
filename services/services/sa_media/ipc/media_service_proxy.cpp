@@ -21,7 +21,7 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaServiceProxy"};
-constexpr int64_t MAX_PIDS_COUNT = 100;
+constexpr int64_t MAX_PIDS_COUNT = 65536;
 }
 
 namespace OHOS {
