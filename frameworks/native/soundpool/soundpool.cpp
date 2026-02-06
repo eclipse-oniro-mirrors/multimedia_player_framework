@@ -379,7 +379,7 @@ int32_t SoundPool::Unload(int32_t soundID)
     MediaTrace trace("SoundPool::Unload");
     std::lock_guard lock(soundPoolLock_);
     MEDIA_LOGI("The sound which soundID is %{public}d will be unloaded", soundID);
-    CHECK_AND_RETURN_RET_LOG(soundIDManager_ != nullptr, -1, "soundIDManager_ has been released.");
+    CHECK_AND_RETURN_RET_LOG(soundIDManager_ != nullptr, -1, "soundIDManager_ has been released");
     if (parallelStreamFlag_) {
         CHECK_AND_RETURN_RET_LOG(parallelStreamManager_ != nullptr, MSERR_INVALID_VAL,
             "parallelStreamManager_ have released.");
