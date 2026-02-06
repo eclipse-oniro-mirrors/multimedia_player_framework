@@ -513,7 +513,7 @@ void LppAudioRenderAdapter::DriveBufferCircle()
 
 std::shared_ptr<AVBuffer> LppAudioRenderAdapter::CopyBuffer(const std::shared_ptr<AVBuffer> buffer)
 {
-    FALSE_RETURN_V_MSG_E(buffer != nullptr && buffer->memory_ != nullptr 
+    FALSE_RETURN_V_MSG_E(buffer != nullptr && buffer->memory_ != nullptr
         && buffer->memory_->GetSize() > 0, nullptr, "buffer or memory is nullptr");
     std::shared_ptr<Meta> meta = buffer->meta_;
     std::vector<uint8_t> metaData;
