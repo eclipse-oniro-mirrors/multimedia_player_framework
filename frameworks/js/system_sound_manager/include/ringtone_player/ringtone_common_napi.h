@@ -25,18 +25,18 @@
 
 namespace OHOS {
 namespace Media {
-inline int32_t  NAPI_ERR_NO_PERMISSION = 201;
-inline const int32_t  NAPI_ERR_PERMISSION_DENIED = 202;
-inline const int32_t  NAPI_ERR_INPUT_INVALID = 401;
-inline const int32_t  NAPI_ERR_URI_ERROR = 20700001;
-inline const int32_t  NAPI_ERR_OPERATE_NOT_ALLOWED = 5400102;
-inline const int32_t  NAPI_ERR_IO_ERROR = 5400103;
-inline const int32_t  NAPI_ERR_INVALID_PARAM = 6800101;
-inline const int32_t  NAPI_ERR_NO_MEMORY = 6800102;
-inline const int32_t  NAPI_ERR_UNSUPPORTED = 6800104;
-inline const int32_t  NAPI_ERR_SYSTEM = 6800301;
-inline const int32_t  NAPI_ERR_PARAM_CHECK_ERROR = 20700002;
-inline const int32_t  NAPI_ERR_UNSUPPORTED_OPERATION = 20700003;
+inline const int32_t NAPI_ERR_NO_PERMISSION = 201;
+inline const int32_t NAPI_ERR_PERMISSION_DENIED = 202;
+inline const int32_t NAPI_ERR_INPUT_INVALID = 401;
+inline const int32_t NAPI_ERR_URI_ERROR = 20700001;
+inline const int32_t NAPI_ERR_OPERATE_NOT_ALLOWED = 5400102;
+inline const int32_t NAPI_ERR_IO_ERROR = 5400103;
+inline const int32_t NAPI_ERR_INVALID_PARAM = 6800101;
+inline const int32_t NAPI_ERR_NO_MEMORY = 6800102;
+inline const int32_t NAPI_ERR_UNSUPPORTED = 6800104;
+inline const int32_t NAPI_ERR_SYSTEM = 6800301;
+inline const int32_t NAPI_ERR_PARAM_CHECK_ERROR = 20700002;
+inline const int32_t NAPI_ERR_UNSUPPORTED_OPERATION = 20700003;
 
 inline const std::string NAPI_ERR_NO_PERMISSION_INFO = "Permission denied";
 inline const std::string NAPI_ERR_PERMISSION_DENIED_INFO = "Caller is not a system application";
