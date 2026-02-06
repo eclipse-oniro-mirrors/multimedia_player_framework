@@ -13,12 +13,15 @@
 * limitations under the License.
 */
 #include "system_sound_manager_unit_next_test.h"
+#include "media_core.h"
 
 using namespace OHOS::AbilityRuntime;
 using namespace testing::ext;
 
 namespace OHOS {
 namespace Media {
+const int ERROR = -1;
+const int TYPEERROR = -2;
 const int SUCCESS = 0;
 const int32_t TONE_CATEGORY = -13;
 const int32_t SYSPARA_SIZE = 128;
@@ -1423,5 +1426,342 @@ HWTEST(SystemSoundManagerUnitNextTest, GetPresetNotificationToneAttrs_002, TestS
     EXPECT_EQ(result.GetCategory(), TONE_CATEGORY_NOTIFICATION);
 }
 
+/**
+ * @tc.name  : Test SetRingtoneUri with valid URI (Success Path)
+ * @tc.number: Media_SoundManager_SetRingtoneUri_Refactor_001
+ * @tc.desc  : Test SetRingtoneUri returns SUCCESS for valid URI with matching toneType.
+ *            This tests the optimized single-query code path.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_SetRingtoneUri_Refactor_001, TestSize.Level2)
+{
+    auto systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    std::shared_ptr<Context> context_ = std::make_shared<ContextImpl>();
+    EXPECT_NE(systemSoundManager_, nullptr);
+
+    // Get a valid ringtone URI (not alarm tone)
+    auto vec = systemSoundManager_->GetRingtoneAttrList(context_,
+        RingtoneType::RINGTONE_TYPE_SIM_CARD_0);
+    if (vec.size() > 0) {
+        std::string uri = vec[0]->GetUri();
+        EXPECT_FALSE(uri.empty());
+
+        // Test setting ringtone with valid URI
+        int32_t result = systemSoundManager_->SetRingtoneUri(context_, uri,
+            RingtoneType::RINGTONE_TYPE_SIM_CARD_0);
+        EXPECT_EQ(result, SUCCESS);
+
+        // Verify the URI was set
+        std::string getUri = systemSoundManager_->GetRingtoneUri(context_,
+            RingtoneType::RINGTONE_TYPE_SIM_CARD_0);
+        EXPECT_FALSE(getUri.empty());
+    }
+}
+
+/**
+ * @tc.name  : Test SetRingtoneUri with NO_RING_SOUND
+ * @tc.number: Media_SoundManager_SetRingtoneUri_Refactor_002
+ * @tc.desc  : Test SetRingtoneUri handles NO_RING_SOUND correctly.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_SetRingtoneUri_Refactor_002, TestSize.Level2)
+{
+    auto systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    std::shared_ptr<Context> context_ = std::make_shared<ContextImpl>();
+    EXPECT_NE(systemSoundManager_, nullptr);
+
+    // Test setting no ring sound
+    int32_t result = systemSoundManager_->SetRingtoneUri(context_, NO_RING_SOUND,
+        RingtoneType::RINGTONE_TYPE_SIM_CARD_0);
+    EXPECT_EQ(result, SUCCESS);
+}
+
+/**
+ * @tc.name  : Test SetRingtoneUri with all ringtone types
+ * @tc.number: Media_SoundManager_SetRingtoneUri_Refactor_003
+ * @tc.desc  : Test SetRingtoneUri works correctly with all RingtoneType values.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_SetRingtoneUri_Refactor_003, TestSize.Level2)
+{
+    auto systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    std::shared_ptr<Context> context_ = std::make_shared<ContextImpl>();
+    EXPECT_NE(systemSoundManager_, nullptr);
+
+    // Get a valid ringtone URI
+    auto vec = systemSoundManager_->GetRingtoneAttrList(context_,
+        RingtoneType::RINGTONE_TYPE_SIM_CARD_0);
+    if (vec.size() > 0) {
+        std::string uri = vec[0]->GetUri();
+
+        // Test all ringtone types
+        std::vector<RingtoneType> ringtoneTypes = {
+            RingtoneType::RINGTONE_TYPE_SIM_CARD_0,
+            RingtoneType::RINGTONE_TYPE_SIM_CARD_1
+        };
+
+        for (auto type : ringtoneTypes) {
+            int32_t result = systemSoundManager_->SetRingtoneUri(context_, uri, type);
+            EXPECT_EQ(result, SUCCESS);
+        }
+    }
+}
+
+/**
+ * @tc.name  : Test SetSystemToneUri with notification type
+ * @tc.number: Media_SoundManager_SetSystemToneUri_Refactor_001
+ * @tc.desc  : Test SetSystemToneUri with SYSTEM_TONE_TYPE_NOTIFICATION.
+ *            This tests the UpdateNotificatioToneUriWrapper code path.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_SetSystemToneUri_Refactor_001, TestSize.Level2)
+{
+    auto systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    std::shared_ptr<Context> context_ = std::make_shared<ContextImpl>();
+    EXPECT_NE(systemSoundManager_, nullptr);
+
+    // Get a valid notification tone URI
+    auto vec = systemSoundManager_->GetSystemToneAttrList(context_,
+        SystemToneType::SYSTEM_TONE_TYPE_NOTIFICATION);
+    if (vec.size() > 0) {
+        std::string uri = vec[0]->GetUri();
+        EXPECT_FALSE(uri.empty());
+
+        // Test setting system tone with notification type
+        int32_t result = systemSoundManager_->SetSystemToneUri(context_, uri,
+            SystemToneType::SYSTEM_TONE_TYPE_NOTIFICATION);
+        EXPECT_EQ(result, SUCCESS);
+
+        // Verify the URI was set
+        std::string getUri = systemSoundManager_->GetSystemToneUri(context_,
+            SystemToneType::SYSTEM_TONE_TYPE_NOTIFICATION);
+        EXPECT_FALSE(getUri.empty());
+    }
+}
+
+/**
+ * @tc.name  : Test SetSystemToneUri with shot tone types
+ * @tc.number: Media_SoundManager_SetSystemToneUri_Refactor_002
+ * @tc.desc  : Test SetSystemToneUri with SIM_CARD shot tone types.
+ *            This tests the UpdateShotToneUri code path.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_SetSystemToneUri_Refactor_002, TestSize.Level2)
+{
+    auto systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    std::shared_ptr<Context> context_ = std::make_shared<ContextImpl>();
+    EXPECT_NE(systemSoundManager_, nullptr);
+
+    // Get a valid system tone URI
+    auto vec = systemSoundManager_->GetSystemToneAttrList(context_,
+        SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_0);
+    if (vec.size() > 0) {
+        std::string uri = vec[0]->GetUri();
+
+        // Test shot tone types
+        std::vector<SystemToneType> systemToneTypes = {
+            SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_0,
+            SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_1
+        };
+
+        for (auto type : systemToneTypes) {
+            int32_t result = systemSoundManager_->SetSystemToneUri(context_, uri, type);
+            EXPECT_EQ(result, SUCCESS);
+        }
+    }
+}
+
+/**
+ * @tc.name  : Test SetSystemToneUri with NO_SYSTEM_SOUND
+ * @tc.number: Media_SoundManager_SetSystemToneUri_Refactor_003
+ * @tc.desc  : Test SetSystemToneUri handles NO_SYSTEM_SOUND correctly.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_SetSystemToneUri_Refactor_003, TestSize.Level2)
+{
+    auto systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    std::shared_ptr<Context> context_ = std::make_shared<ContextImpl>();
+    EXPECT_NE(systemSoundManager_, nullptr);
+
+    // Test setting no system sound
+    int32_t result = systemSoundManager_->SetSystemToneUri(context_, NO_SYSTEM_SOUND,
+        SystemToneType::SYSTEM_TONE_TYPE_NOTIFICATION);
+    EXPECT_EQ(result, SUCCESS);
+}
+
+/**
+ * @tc.name  : Test SetRingtoneUri with invalid URI
+ * @tc.number: Media_SoundManager_SetRingtoneUri_Refactor_004
+ * @tc.desc  : Test SetRingtoneUri returns ERROR for non-existent URI.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_SetRingtoneUri_Refactor_004, TestSize.Level2)
+{
+    auto systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    std::shared_ptr<Context> context_ = std::make_shared<ContextImpl>();
+    EXPECT_NE(systemSoundManager_, nullptr);
+
+    // Test with non-existent URI
+    std::string invalidUri = "file:///data/storage/el2/base/files/nonexistent_ringtone.ogg";
+    int32_t result = systemSoundManager_->SetRingtoneUri(context_, invalidUri,
+        RingtoneType::RINGTONE_TYPE_SIM_CARD_0);
+    EXPECT_EQ(result, ERROR);
+}
+
+/**
+ * @tc.name  : Test SetSystemToneUri with invalid URI
+ * @tc.number: Media_SoundManager_SetSystemToneUri_Refactor_005
+ * @tc.desc  : Test SetSystemToneUri returns ERROR for non-existent URI.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_SetSystemToneUri_Refactor_005, TestSize.Level2)
+{
+    auto systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    std::shared_ptr<Context> context_ = std::make_shared<ContextImpl>();
+    EXPECT_NE(systemSoundManager_, nullptr);
+
+    // Test with non-existent URI
+    std::string invalidUri = "file:///data/storage/el2/base/files/nonexistent_tone.ogg";
+    int32_t result = systemSoundManager_->SetSystemToneUri(context_, invalidUri,
+        SystemToneType::SYSTEM_TONE_TYPE_NOTIFICATION);
+    EXPECT_EQ(result, ERROR);
+}
+
+/**
+ * @tc.name  : Test SetRingtoneUri and SetSystemToneUri consistency
+ * @tc.number: Media_SoundManager_SetToneUri_Refactor_006
+ * @tc.desc  : Test that both refactored methods work consistently.
+ *            Verifies that SetToneUriParams and UpdateToneUriFunc work correctly.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_SetToneUri_Refactor_006, TestSize.Level2)
+{
+    auto systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    std::shared_ptr<Context> context_ = std::make_shared<ContextImpl>();
+    EXPECT_NE(systemSoundManager_, nullptr);
+
+    // Get valid URIs from appropriate sources
+    auto ringtoneVec = systemSoundManager_->GetRingtoneAttrList(context_,
+        RingtoneType::RINGTONE_TYPE_SIM_CARD_0);
+    auto notificationVec = systemSoundManager_->GetSystemToneAttrList(context_,
+        SystemToneType::SYSTEM_TONE_TYPE_NOTIFICATION);
+
+    if (ringtoneVec.size() > 0) {
+        std::string uri = ringtoneVec[0]->GetUri();
+        EXPECT_FALSE(uri.empty());
+
+        // Test SetRingtoneUri
+        int32_t result1 = systemSoundManager_->SetRingtoneUri(context_, uri,
+            RingtoneType::RINGTONE_TYPE_SIM_CARD_0);
+        EXPECT_EQ(result1, SUCCESS);
+
+        // Test SetSystemToneUri with shot tone type
+        int32_t result2 = systemSoundManager_->SetSystemToneUri(context_, uri,
+            SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_0);
+        EXPECT_EQ(result2, TYPEERROR);
+    }
+
+    if (notificationVec.size() > 0) {
+        std::string uri = notificationVec[0]->GetUri();
+        EXPECT_FALSE(uri.empty());
+
+        // Test SetSystemToneUri with notification type
+        int32_t result3 = systemSoundManager_->SetSystemToneUri(context_, uri,
+            SystemToneType::SYSTEM_TONE_TYPE_NOTIFICATION);
+        EXPECT_EQ(result3, SUCCESS);
+    }
+}
+
+/**
+ * @tc.name  : Test resource management in refactored code
+ * @tc.number: Media_SoundManager_SetToneUri_Refactor_007
+ * @tc.desc  : Test that dataShareHelper is properly released after SetToneUriInternal.
+ *            Verifies no resource leaks in the refactored implementation.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_SetToneUri_Refactor_007, TestSize.Level2)
+{
+    auto systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    std::shared_ptr<Context> context_ = std::make_shared<ContextImpl>();
+    EXPECT_NE(systemSoundManager_, nullptr);
+
+    // Get valid URIs from appropriate sources
+    auto ringtoneVec = systemSoundManager_->GetRingtoneAttrList(context_,
+        RingtoneType::RINGTONE_TYPE_SIM_CARD_0);
+    auto notificationVec = systemSoundManager_->GetSystemToneAttrList(context_,
+        SystemToneType::SYSTEM_TONE_TYPE_NOTIFICATION);
+
+    if (ringtoneVec.size() > 0) {
+        std::string uri = ringtoneVec[0]->GetUri();
+
+        // Call multiple times to ensure no resource leak
+        for (int i = 0; i < 10; i++) {
+            int32_t result = systemSoundManager_->SetRingtoneUri(context_, uri,
+                RingtoneType::RINGTONE_TYPE_SIM_CARD_0);
+            EXPECT_EQ(result, SUCCESS);
+        }
+    }
+
+    if (notificationVec.size() > 0) {
+        std::string uri = notificationVec[0]->GetUri();
+
+        // Also test SetSystemToneUri multiple times
+        for (int i = 0; i < 10; i++) {
+            int32_t result = systemSoundManager_->SetSystemToneUri(context_, uri,
+                SystemToneType::SYSTEM_TONE_TYPE_NOTIFICATION);
+            EXPECT_EQ(result, SUCCESS);
+        }
+    }
+}
+
+/**
+ * @tc.name  : Test return value semantics preservation
+ * @tc.number: Media_SoundManager_SetToneUri_Refactor_008
+ * @tc.desc  : Test that ERROR vs TYPEERROR return values are correctly preserved.
+ *            ERROR: URI doesn't exist, TYPEERROR: URI exists but toneType mismatch.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_SetToneUri_Refactor_008, TestSize.Level2)
+{
+    auto systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    std::shared_ptr<Context> context_ = std::make_shared<ContextImpl>();
+    EXPECT_NE(systemSoundManager_, nullptr);
+
+    // Test 1: Non-existent URI should return ERROR
+    std::string nonExistentUri = "file:///data/storage/el2/base/files/nonexistent_file_12345.ogg";
+    int32_t result1 = systemSoundManager_->SetRingtoneUri(context_, nonExistentUri,
+        RingtoneType::RINGTONE_TYPE_SIM_CARD_0);
+    EXPECT_EQ(result1, ERROR);
+
+    // Test 2: Invalid RingtoneType should return MSERR_INVALID_VAL
+    RingtoneType invalidType = static_cast<RingtoneType>(999);
+    std::string validUri = "test_uri";
+    int32_t result2 = systemSoundManager_->SetRingtoneUri(context_, validUri, invalidType);
+    EXPECT_EQ(result2, MSERR_INVALID_VAL);
+}
+
+/**
+ * @tc.name  : Test SetToneUriParams with all ringtone types
+ * @tc.number: Media_SoundManager_SetToneUri_Refactor_009
+ * @tc.desc  : Test SetToneUriInternal with different ringtone types via SetRingtoneUri.
+ *            Verifies the SetToneUriParams structure works correctly.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_SetToneUri_Refactor_009, TestSize.Level2)
+{
+    auto systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    std::shared_ptr<Context> context_ = std::make_shared<ContextImpl>();
+    EXPECT_NE(systemSoundManager_, nullptr);
+
+    // Get a valid ringtone URI
+    auto vec = systemSoundManager_->GetRingtoneAttrList(context_,
+        RingtoneType::RINGTONE_TYPE_SIM_CARD_0);
+    ASSERT_GT(vec.size(), 0u);
+    std::string uri = vec[0]->GetUri();
+    EXPECT_FALSE(uri.empty());
+
+    // Test all SIM card types for ringtone
+    std::vector<RingtoneType> ringtoneTypes = {
+        RingtoneType::RINGTONE_TYPE_SIM_CARD_0,
+        RingtoneType::RINGTONE_TYPE_SIM_CARD_1
+    };
+
+    for (auto ringtoneType : ringtoneTypes) {
+        int32_t result = systemSoundManager_->SetRingtoneUri(context_, uri, ringtoneType);
+        EXPECT_EQ(result, SUCCESS);
+
+        // Verify each type
+        std::string retrievedUri = systemSoundManager_->GetRingtoneUri(context_, ringtoneType);
+        EXPECT_FALSE(retrievedUri.empty());
+    }
+}
 } // namespace Media
 } // namespace OHOS

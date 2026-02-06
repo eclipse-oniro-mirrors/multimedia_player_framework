@@ -67,6 +67,12 @@ struct UpdateToneTypeParams {
     int32_t shotToneType;
 };
 
+struct SetToneUriParams {
+    int32_t toneTypeQuery;           // TONE_TYPE_RINGTONE or TONE_TYPE_NOTIFICATION for query
+    int32_t systemToneOrRingtoneType; // RingtoneType or SystemToneType value
+    int32_t setExtToneType;          // TONE_TYPE_RINGTONE or TONE_TYPE_NOTIFICATION for SetExtRingtoneUri
+};
+
 class SystemSoundManagerImpl : public SystemSoundManager {
 public:
     SystemSoundManagerImpl();
@@ -194,6 +200,30 @@ private:
         RingtoneType ringtoneType, const int32_t &shotToneType);
     int32_t SetSystemToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         const std::string &uri, SystemToneType systemToneType);
+
+    using UpdateToneUriFunc = int32_t(SystemSoundManagerImpl::*)(
+        std::shared_ptr<DataShare::DataShareHelper>,
+        const int32_t &toneId,
+        int32_t type,
+        const int32_t &shotToneType
+    );
+
+    int32_t SetToneUriInternal(
+        std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const std::string &uri,
+        const SetToneUriParams &params,
+        UpdateToneUriFunc updateFunc);
+
+    // Wrapper functions to unify different update function signatures
+    int32_t UpdateRingtoneUriWrapper(
+        std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const int32_t &toneId, int32_t ringtoneType, const int32_t &shotToneType);
+    int32_t UpdateNotificatioToneUriWrapper(
+        std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const int32_t &toneId, int32_t systemToneType, const int32_t &shotToneType);
+    int32_t UpdateShotToneUriWrapper(
+        std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const int32_t &toneId, int32_t systemToneType, const int32_t &shotToneType);
     ToneAttrs GetShotToneAttrsByType(const DatabaseTool &databaseTool, const std::string &type);
     ToneAttrs GetNotificationToneAttrsByType(const DatabaseTool &databaseTool);
     ToneAttrs GetPresetShotToneAttrsByType(const DatabaseTool &databaseTool, const std::string &type);
@@ -242,7 +272,7 @@ private:
     std::unique_ptr<RingtoneAsset> IsPresetRingtone(const DatabaseTool &databaseTool, const std::string &toneUri);
     int GetStandardVibrateType(int toneType);
 
-    bool IsRingtoneTypeValid(RingtoneType ringtongType);
+    bool IsRingtoneTypeValid(RingtoneType ringtoneType);
     bool IsSystemToneTypeValid(SystemToneType systemToneType);
     bool IsSystemToneType(const std::unique_ptr<RingtoneAsset> &ringtoneAsset,
         const SystemToneType &systemToneType);
