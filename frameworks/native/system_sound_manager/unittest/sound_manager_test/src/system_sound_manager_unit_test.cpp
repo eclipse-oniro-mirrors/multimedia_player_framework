@@ -2645,5 +2645,6 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_OpenHapticsUri_001, TestSi
     newUri = systemSoundManager_->OpenHapticsUri(databaseTool, uri);
     EXPECT_NE(newUri, "");
 }
+#endif
 } // namespace Media
 } // namespace OHOS
