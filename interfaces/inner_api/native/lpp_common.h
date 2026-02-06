@@ -40,7 +40,6 @@ public:
     bool ReadFromByteBuffer(uint8_t *buffer, int32_t capacity);
     bool IsEmpty();
     virtual bool WriteOneFrameToAVBuffer(std::shared_ptr<AVBuffer> &buffer);
-    bool WriteOneFrameToAVBuffer(std::shared_ptr<AVBuffer> &avbuffer, int& offset);
     void Clear();
     void Init(std::string streamerId);
     void Disable();
@@ -63,6 +62,7 @@ private:
     bool WriteVector(MessageParcel &parcel);
     bool ReadVector(MessageParcel &parcel);
     bool IsEos();
+    bool WriteOneFrameToAVBuffer(std::shared_ptr<AVBuffer> &avbuffer, int& offset);
     int dataOffset_ {0};
     size_t vectorReadIndex_ {0};
     uint32_t frameCount_ {0};

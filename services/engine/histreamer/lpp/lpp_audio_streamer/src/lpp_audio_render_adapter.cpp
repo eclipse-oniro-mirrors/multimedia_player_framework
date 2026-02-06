@@ -221,12 +221,13 @@ int32_t LppAudioRenderAdapter::Pause()
 {
     MEDIA_LOG_I("LppAudioRenderAdapter::Pause");
     FALSE_RETURN_V_MSG(audioRenderer_ != nullptr, MSERR_INVALID_OPERATION, "audioRenderer_ is nullptr");
-    FALSE_RETURN_V_MSG(renderTask_ != nullptr, MSERR_INVALID_OPERATION, "renderTask_ is nullptr");
     forceUpdateTimeAnchorNextTime_ = true;
     renderTask_->Pause();
-    FALSE_RETURN_V_MSG(audioRenderer_->GetStatus() != AudioStandard::RendererState::RENDERER_PAUSED,
-        MSERR_OK, "audio renderer no need pause");
-    FALSE_RETURN_V_MSG_W(audioRenderer_->Pause(), MSERR_PAUSE_FAILED, "renderer pause fail.");
+    AudioStandard::RendererState state = audioRenderer_->GetStatus();
+    // audio interrupt state is stopped
+    FALSE_RETURN_V_MSG(state != AudioStandard::RendererState::RENDERER_PAUSED &&
+        state != AudioStandard::RendererState::RENDERER_STOPPED, MSERR_OK, "audio renderer no need pause");
+    FALSE_RETURN_V_MSG_W(audioRenderer_->Pause(), MSERR_AUD_RENDER_FAILED, "renderer pause fail.");
     return MSERR_OK;
 }
 
@@ -371,6 +372,8 @@ int32_t LppAudioRenderAdapter::GetAudioPosition(timespec &time, uint32_t &frameP
     AudioStandard::Timestamp audioPositionTimestamp;
     int32_t ret = audioRenderer_->GetAudioTimestampInfo(
         audioPositionTimestamp, AudioStandard::Timestamp::Timestampbase::BOOTTIME);
+    FALSE_RETURN_V_MSG(audioPositionTimestamp.framePosition != 0,
+        MSERR_INVALID_OPERATION, "GetAudioPosition framePosition is 0")
     FALSE_RETURN_V_MSG(ret == MSERR_OK, AudioStandardStatusToMSError(ret), "GetAudioPosition failed");
     time = audioPositionTimestamp.time;
     int64_t currentRenderClockTime = time.tv_sec * SEC_TO_US + time.tv_nsec / US_TO_MS;  // convert to us
@@ -559,6 +562,8 @@ bool LppAudioRenderAdapter::IsBufferDataDrained(AudioStandard::BufferDesc &buffe
 bool LppAudioRenderAdapter::CopyBufferData(AudioStandard::BufferDesc &bufferDesc, std::shared_ptr<AVBuffer> &buffer,
     size_t &size, size_t &cacheBufferSize, int64_t &bufferPts)
 {
+    FALSE_RETURN_V_MSG(bufferDesc.buffer != nullptr, false, "Audio bufferDesc is nullptr");
+    FALSE_RETURN_V_MSG(buffer != nullptr && buffer->memory_ != nullptr, false, "AVBuffer is nullptr");
     size_t availableSize = cacheBufferSize > size ? size : cacheBufferSize;
     auto ret = memcpy_s(bufferDesc.buffer + bufferDesc.dataLength, availableSize,
         buffer->memory_->GetAddr() + currentQueuedBufferOffset_, availableSize);
@@ -579,6 +584,8 @@ bool LppAudioRenderAdapter::CopyBufferData(AudioStandard::BufferDesc &bufferDesc
 bool LppAudioRenderAdapter::CopyAudioVividBufferData(AudioStandard::BufferDesc &bufferDesc,
     std::shared_ptr<AVBuffer> &buffer, size_t &size, size_t &cacheBufferSize, int64_t &bufferPts)
 {
+    FALSE_RETURN_V_MSG(bufferDesc.buffer != nullptr, false, "Audio bufferDesc is nullptr");
+    FALSE_RETURN_V_MSG(buffer != nullptr && buffer->memory_ != nullptr, false, "AVBuffer is nullptr");
     auto ret = memcpy_s(bufferDesc.buffer + bufferDesc.dataLength, cacheBufferSize,
         buffer->memory_->GetAddr() + currentQueuedBufferOffset_, cacheBufferSize);
     FALSE_RETURN_V_MSG(ret == 0, false, "copy from cache buffer may fail.");
@@ -650,6 +657,7 @@ void LppAudioRenderAdapter::UpdateTimeAnchor(int64_t bufferPts)
 {
     FALSE_RETURN_MSG(bufferPts != Plugins::HST_TIME_NONE, "invalid bufferPts");
     startPts_ = startPts_ == Plugins::HST_TIME_NONE ? bufferPts : startPts_;
+    FALSE_RETURN_MSG(sampleFormatBytes_ > 0 && sampleRate_ > 0 && audioChannelCount_ > 0, "not init");
     int64_t writtenTime = writtenCnt_ * SEC_TO_US / sampleFormatBytes_ / sampleRate_ / audioChannelCount_;
     curPts_ = writtenTime + startPts_;
     int64_t nowClockTime = GetCurrentClockTimeUs();

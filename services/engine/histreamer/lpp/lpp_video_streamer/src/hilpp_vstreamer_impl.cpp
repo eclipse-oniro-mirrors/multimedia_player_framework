@@ -182,6 +182,8 @@ int32_t HiLppVideoStreamerImpl::Prepare()
     MEDIA_LOG_I("HiLppVideoStreamerImpl::Prepare");
     eventReceiver_ = std::make_shared<LppVideoEventReceiver>(weak_from_this(), streamerId_);
     FALSE_RETURN_V_MSG(eventReceiver_ != nullptr, MSERR_NO_MEMORY, "callbackLooper_ is nullptr");
+    auto audioStreamerEngine = audioStreamerEngine_.lock();
+    FALSE_RETURN_V_MSG(audioStreamerEngine != nullptr, MSERR_INVALID_OPERATION, "audioStreamerEngine_ is nullptr");
     FALSE_RETURN_V_MSG(dataMgr_ != nullptr && vdec_ != nullptr && syncMgr_ != nullptr,
         MSERR_INVALID_OPERATION, "object is nullptr");
     dataMgr_->SetEventReceiver(eventReceiver_);

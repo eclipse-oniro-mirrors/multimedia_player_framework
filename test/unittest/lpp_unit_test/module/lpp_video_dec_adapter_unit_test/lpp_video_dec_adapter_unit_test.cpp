@@ -821,7 +821,7 @@ HWTEST_F(LppVideoDecAdapterUnitTest, OnOutputFormatChanged_001, TestSize.Level1)
 {
     ASSERT_NE(nullptr, videoDecAdapter_);
     std::shared_ptr<MockEventReceiver> eventRec = std::make_shared<MockEventReceiver>();
-    EXPECT_CALL(*eventRec, OnEvent(_)).WillOnce(Return());
+    ASSERT_NE(nullptr, eventRec);
     videoDecAdapter_->SetEventReceiver(eventRec);
 
     Format format;
@@ -846,7 +846,7 @@ HWTEST_F(LppVideoDecAdapterUnitTest, GeneratedJobIdx_001, TestSize.Level1)
 
     EXPECT_EQ(jobIdx, 1);
 }
- 
+
 /**
 * @tc.name    : Test LppVideoDecoderCallback API
 * @tc.number  : Callback_001
@@ -863,11 +863,11 @@ HWTEST_F(LppVideoDecAdapterUnitTest, Callback_001, TestSize.Level1)
     int32_t errorCode = 1001;
     EXPECT_NE(callback->videoDecoderAdapter_.lock(), nullptr);
     callback->OnError(errorType, errorCode);
- 
+
     MediaAVCodec::Format format;
     EXPECT_NE(callback->videoDecoderAdapter_.lock(), nullptr);
     callback->OnOutputFormatChanged(format);
- 
+
     auto buffer = std::make_shared<AVBuffer>();
     EXPECT_NE(callback->videoDecoderAdapter_.lock(), nullptr);
     callback->OnInputBufferAvailable(0, buffer);

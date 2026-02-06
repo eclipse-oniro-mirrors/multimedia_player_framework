@@ -25,33 +25,33 @@ ILppEngineManager& ILppEngineManager::GetInstance()
     return iLppEngineManager;
 }
 
-void ILppEngineManager::AddLppVideoInstance(const std::string &key, std::shared_ptr<ILppVideoStreamerEngine> instance)
-{
+void ILppEngineManager::AddLppVideoInstance(const std::string &key,
+    std::shared_ptr<ILppVideoStreamerEngine> instance) {
     return;
 }
 
-void ILppEngineManager::AddLppAudioInstance(const std::string &key, std::shared_ptr<ILppAudioStreamerEngine> instance)
-{
+void ILppEngineManager::AddLppAudioInstance(const std::string &key,
+    std::shared_ptr<ILppAudioStreamerEngine> instance) {
     return;
 }
 
-std::shared_ptr<ILppVideoStreamerEngine> ILppEngineManager::GetLppVideoInstance(const std::string &key)
-{
+std::shared_ptr<ILppVideoStreamerEngine> ILppEngineManager::GetLppVideoInstance(const std::string &key) {
+
     return nullptr;
 }
 
-std::shared_ptr<ILppAudioStreamerEngine> ILppEngineManager::GetLppAudioInstance(const std::string &key)
-{
+std::shared_ptr<ILppAudioStreamerEngine> ILppEngineManager::GetLppAudioInstance(const std::string &key) {
+
     return nullptr;
 }
 
-void ILppEngineManager::removeLppVideoInstance(const std::string &key)
-{
+void ILppEngineManager::RemoveLppVideoInstance(const std::string &key) {
+
     return;
 }
 
-void ILppEngineManager::removeLppAudioInstance(const std::string &key)
-{
+void ILppEngineManager::RemoveLppAudioInstance(const std::string &key) {
+
     return;
 }
 }  // namespace Media
