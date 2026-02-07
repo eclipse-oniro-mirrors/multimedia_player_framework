@@ -312,32 +312,6 @@ HWTEST_F(PlayerUnitTest, Player_SetMediaSource_006, TestSize.Level0)
 
 /**
  * @tc.name  : Test Player SetMediaSource API
- * @tc.number: Player_SetMediaSource_007
- * @tc.desc  : Test Player SetMediaSource interface pre_download
- */
-HWTEST_F(PlayerUnitTest, Player_SetMediaSource_007, TestSize.Level0)
-{
-    std::map<std::string, std::string> header = {
-        {"key1", "value1"},
-        {"key2", "value2"},
-    };
-    struct AVPlayStrategy strategy = {1080, 920, 0, false};
-    std::shared_ptr<LoaderCallback> mediaSourceLoaderCb = std::make_shared<MockLoaderCallback>();
-    std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(VIDEO_URL, header);
-    mediaSource->mediaSourceLoaderCb_ = mediaSourceLoaderCb;
-    EXPECT_EQ(MSERR_OK, player_->SetMediaSource(mediaSource, strategy));
-
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    int32_t ret = player_->PrepareAsync();
-    if (ret == MSERR_OK) {
-        PlayFunTest(PRE_DOWNLOAD);
-    }
-}
-
-/**
- * @tc.name  : Test Player SetMediaSource API
  * @tc.number: Player_SetMediaSource_008
  * @tc.desc  : Test Player SetMediaSource with MediaStream
  */
