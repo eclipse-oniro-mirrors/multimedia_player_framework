@@ -31,10 +31,7 @@ inline const std::string NO_SYSTEM_SOUND = "no_system_sound";
 inline const std::string NO_RING_SOUND = "no_ring_sound";
 inline const std::string FILE_SIZE_EXCEEDS_LIMIT = "20700004";
 inline const std::string FILE_COUNT_EXCEEDS_LIMIT = "20700005";
-inline 
-
-const std::string ROM_IS_INSUFFICIENT = "20700006";
-
+inline const std::string ROM_IS_INSUFFICIENT = "20700006";
 
 enum RingtoneType {
     RINGTONE_TYPE_SIM_CARD_0 = 0,
