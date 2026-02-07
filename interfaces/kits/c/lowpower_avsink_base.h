@@ -1,106 +1,98 @@
-OpenHarmony
-同步事件侵入式消分备案黄蓝差异黄蓝差异(CR)个人提交跟踪看板项目提交跟踪看板DTS问题单看板
-Welcome, z00654174 
-黄蓝差异 详情
-multimedia_player_framework黄蓝差异详情
-test/unittest/lpp_unit_test/module/lpp_sync_mgr_adapter_unit_test/mock/v1_0/ilow_power_player_factory.h
-multimedia_player_framework
-master
-huawei/EMUI/HarmonyOS/hmos_trunk_dev_20260115/OpenHarmony-Trunk
-待处理
---
---
-test/fuzztest/lowpoweravsink_fuzztest/lowpowervideosink_fuzzer/lowpowervideosink_fuzzer.cpp
-multimedia_player_framework
-master
-huawei/EMUI/HarmonyOS/hmos_trunk_dev_20260115/OpenHarmony-Trunk
-待处理
---
---
-test/fuzztest/lowpoweravsink_fuzztest/lowpowervideosink_fuzzer/BUILD.gn
-multimedia_player_framework
-master
-huawei/EMUI/HarmonyOS/hmos_trunk_dev_20260115/OpenHarmony-Trunk
-待处理
---
---
-test/fuzztest/lowpoweravsink_fuzztest/lowpoweraudiosink_fuzzer/lowpoweraudiosink_fuzzer.cpp
-multimedia_player_framework
-master
-huawei/EMUI/HarmonyOS/hmos_trunk_dev_20260115/OpenHarmony-Trunk
-待处理
---
---
-test/fuzztest/lowpoweravsink_fuzztest/lowpoweraudiosink_fuzzer/BUILD.gn
-multimedia_player_framework
-master
-huawei/EMUI/HarmonyOS/hmos_trunk_dev_20260115/OpenHarmony-Trunk
-待处理
---
---
-interfaces/kits/c/lowpower_avsink_base.h
-multimedia_player_framework
-master
-huawei/EMUI/HarmonyOS/hmos_trunk_dev_20260115/OpenHarmony-Trunk
-待处理
---
---
-共 6 条
-10条/页
-
-
-前往
-1
-页
-interfaces/kits/c/lowpower_avsink_base.h-黄蓝区差异详情
-
-蓝区代码
-黄区代码
-typedef struct OH_AVSamplesBuffer OH_AVSamplesBuffer;
-
-/**
- * @brief Forward declaration of OH_LowPowerAVSink_Capability.
- *
- * @since 21
- */
-typedef struct OH_LowPowerAVSink_Capability OH_LowPowerAVSink_Capability;
-
-/**
- * @brief Append one OH_AVBuffer data to framePacketBuffer instance.
- *
- * This function queries and returns the capability set supported by the current
- * lowpower audio/video sink, including but not limited to supported media formats, etc.
- *
- * @return {OH_LowPowerAVSink_Capability*}
- *         - A pointer to the capability structure if the sink supports capability queries and the query is successful.
- *         - nullptr if the sink does not support capability queries or the query fails.
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
  
- * @since 21
- */
-OH_LowPowerAVSink_Capability *OH_LowPowerAVSink_GetCapability();
-#ifdef __cplusplus
-}
-typedef struct OH_AVSamplesBuffer OH_AVSamplesBuffer;
+import("//build/config/features.gni")
+import("//build/test.gni")
+import("//foundation/multimedia/player_framework/config.gni")
+ 
+module_output_path = "$MODULE_OUTPUT_PATH/media_player"
+MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
 
-/**
- * @brief Forward declaration of OH_LowPowerAVSink_Capability.
- *
- * @since 20
- */
-typedef struct OH_LowPowerAVSink_Capability OH_LowPowerAVSink_Capability;
+ohos_fuzztest("LowPowerAudioSinkFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "$MEDIA_ROOT_DIR/test/fuzztest/lowpoweravsink_fuzztest/lowpoweraudiosink_fuzzer"
 
-/**
- * @brief Append one OH_AVBuffer data to framePacketBuffer instance.
- *
- * This function queries and returns the capability set supported by the current
- * lowpower audio/video sink, including but not limited to supported media formats, etc.
- *
- * @return {OH_LowPowerAVSink_Capability*}
- * - A pointer to the capability structure if the sink supports capability queries and the query is successful.
- * - nullptr if the sink does not support capability queries or the query fails.
+  defines = [ "IMAGE_COLORSPACE_FLAG" ]
+  defines += player_framework_defines
+ 
+  include_dirs = [
+    "./include",
+    "$MEDIA_ROOT_DIR/services/include",
+    "$MEDIA_ROOT_DIR/services/services/common",
+    "$MEDIA_ROOT_DIR/services/services/media_data_source/ipc",
+    "$MEDIA_ROOT_DIR/services/services/dolby_passthrough/ipc",
+    "$MEDIA_ROOT_DIR/services/services/lpp_audio_streamer/ipc",
+    "$MEDIA_ROOT_DIR/services/services/lpp_video_streamer/ipc",
+    "$MEDIA_ROOT_DIR/services/services/sa_media/ipc",
+    "$MEDIA_ROOT_DIR/services/services/sa_media/server",
+    "$MEDIA_ROOT_DIR/services/services/sa_media/server_manager",
+    "$MEDIA_ROOT_DIR/test/fuzztest/lowpoweravsink_fuzztest",
+    "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
+    "$MEDIA_ROOT_DIR/test/fuzztest/common",
+    "$MEDIA_ROOT_DIR/interfaces/inner_api",
+    "$MEDIA_ROOT_DIR/services/services/monitor/client",
+  ]
+  cflags = [
+    "-std=c++17",
+    "-fno-rtti",
+    "-fno-exceptions",
+    "-Wall",
+    "-fno-common",
+    "-fstack-protector-strong",
+    "-Wshadow",
+    "-FPIC",
+    "-FS",
+    "-O2",
+    "-D_FORTIFY_SOURCE=2",
+    "-fvisibility=hidden",
+    "-Wformat=2",
+    "-Wfloat-equal",
+    "-Wdate-time",
+    "-Werror",
+    "-Wextra",
+    "-Wimplicit-fallthrough",
+    "-Wsign-compare",
+    "-Wunused-parameter",
+    "-DBINDER_IPC_32BIT",
+  ]
+  if (player_framework_support_player) {
+    sources = [
+      "$MEDIA_ROOT_DIR/services/services/common/avsharedmemory_ipc.cpp",
+      "$MEDIA_ROOT_DIR/services/services/media_data_source/ipc/media_data_source_stub.cpp",
+      "$MEDIA_ROOT_DIR/test/fuzztest/common/stub_common.cpp",
+      "lowpoweraudiosink_fuzzer.cpp",
+    ]
+  }
+  deps = [
+    "$MEDIA_ROOT_DIR/interfaces/inner_api/native:media_client",
+    "$MEDIA_ROOT_DIR/services/services:media_service",
+    "$MEDIA_ROOT_DIR/services/utils:media_service_utils",
+  ]
+  external_deps = [
+    "av_codec:av_codec_client",
+    "c_utils:utils",
+    "graphic_surface:surface",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "player_framework:media_client",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
 
- * @since 21
- */
-OH_LowPowerAVSink_Capability *OH_LowPowerAVSink_GetCapability();
-#ifdef __cplusplus
+  if (player_framework_support_lowpower_av_sink) {
+    external_deps += [
+      "drivers_interface_lpplayer:liblow_power_player_proxy_1.0",
+    ]
+  }
 }
