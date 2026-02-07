@@ -139,9 +139,7 @@ std::string RingtonePlayerImpl::GetNewHapticUriForAudioUri(const std::string &au
 {
     std::string hapticUri = GetNewHapticUriForAudioUri(audioUri, RINGTONE_PATH, STANDARD_HAPTICS_PATH);
     if (hapticUri.empty()) {
-        MEDIA_LOGW("Failed to find the vibration json file for audioUri. Use the default json file.");
-        std::string currAudioUri = systemSoundMgr_.GetDefaultRingtoneUri(RINGTONE_TYPE_SIM_CARD_0);
-        return GetNewHapticUriForAudioUri(currAudioUri, RINGTONE_PATH, STANDARD_HAPTICS_PATH);
+        MEDIA_LOGW("Failed to find the vibration json file for audioUri.");
     }
     return hapticUri;
 }
@@ -157,16 +155,7 @@ std::string RingtonePlayerImpl::GetHapticUriForAudioUri(const std::string &audio
     }
 
     if (hapticUri == "" || !IsFileExisting(hapticUri)) {
-        MEDIA_LOGW("Failed to find the vibration json file for audioUri. Use the default json file.");
-        std::string defaultRingtoneUri = systemSoundMgr_.GetDefaultRingtoneUri(RINGTONE_TYPE_SIM_CARD_0);
-        if (defaultRingtoneUri.length() > AUDIO_FORMAT_STR.length() &&
-            defaultRingtoneUri.rfind(AUDIO_FORMAT_STR) == defaultRingtoneUri.length() - AUDIO_FORMAT_STR.length()) {
-            // the end of default ringtone uri is ".ogg"
-            hapticUri = defaultRingtoneUri;
-            hapticUri.replace(hapticUri.rfind(AUDIO_FORMAT_STR), AUDIO_FORMAT_STR.length(), HAPTIC_FORMAT_STR);
-        } else {
-            MEDIA_LOGW("The default ringtone uri is invalid!");
-        }
+        MEDIA_LOGW("Failed to find the vibration json file for audioUri.");
     }
 
     return hapticUri;

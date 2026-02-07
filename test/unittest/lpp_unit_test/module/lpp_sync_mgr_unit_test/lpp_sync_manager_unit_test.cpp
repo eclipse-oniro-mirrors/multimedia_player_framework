@@ -229,7 +229,6 @@ HWTEST_F(LppSyncManagerUnitTest, Stop_001, TestSize.Level1)
 */
 HWTEST_F(LppSyncManagerUnitTest, Reset_001, TestSize.Level1)
 {
-    EXPECT_CALL(*mockAdapter_, UnbindOutputBuffers()).WillOnce(Return(MSERR_OK));
     EXPECT_CALL(*mockAdapter_, Reset()).WillOnce(Return(MSERR_OK));
     int32_t res = syncManager_->Reset();
     EXPECT_EQ(res, 0);
@@ -399,4 +398,4 @@ HWTEST_F(LppSyncManagerUnitTest, SetEventReceiver_001, TestSize.Level1)
     EXPECT_NE(targetEventReceiver, nullptr);
 }
 }
-}
+}

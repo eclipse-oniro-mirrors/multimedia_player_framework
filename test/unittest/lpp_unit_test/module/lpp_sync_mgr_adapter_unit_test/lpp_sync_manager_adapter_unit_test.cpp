@@ -57,12 +57,10 @@ void LppSyncManagerAdapterUnitTest::TearDown(void)
 HWTEST_F(LppSyncManagerAdapterUnitTest, CreateLppSyncManagerAdapter_001, TestSize.Level0)
 {
     std::shared_ptr<LppSyncManagerAdapter> instance = nullptr;
-    uint32_t instanceId = 0;
-    int32_t res = LowPowerPlayerFactory::CreateLppSyncManagerAdapter(instanceId, instance);
+    int32_t res = LowPowerPlayerFactory::CreateLppSyncManagerAdapter(instance);
     EXPECT_EQ(res, 0);
     EXPECT_NE(instance, nullptr);
-    EXPECT_NE(instanceId, 0);
-    res = LowPowerPlayerFactory::DestroyLppSyncManagerAdapter(instanceId, instance);
+    res = LowPowerPlayerFactory::DestroyLppSyncManagerAdapter(instance);
     EXPECT_EQ(res, 0);
 }
 
@@ -415,4 +413,4 @@ HWTEST_F(LppSyncManagerAdapterUnitTest, Callback_001, TestSize.Level0)
     EXPECT_GE(onInfoCnt, 0);
 }
 } // namespace Media
-} // namespace OHOS
+} // namespace OHOS

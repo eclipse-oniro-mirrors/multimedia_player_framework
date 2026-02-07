@@ -361,9 +361,6 @@ void LppVideoDecoderAdapter::HandleQueueBufferAvailable()
     int32_t index;
     bool getDataRes = tmpBuffer->meta_->GetData(Tag::REGULAR_TRACK_ID, index);
     FALSE_RETURN_MSG(getDataRes, "get index failed.");
-    if ((tmpBuffer->flag_ & static_cast<uint32_t>(Plugins::AVBufferFlag::EOS)) > 0) {
-        tmpBuffer->memory_->SetSize(0);
-    }
     int32_t res = videoDecoder_->QueueInputBuffer(static_cast<uint32_t>(index));
     FALSE_RETURN_MSG(res == MediaAVCodec::AVCS_ERR_OK, "videoDecoder_ QueueInputBuffer failed");
     DumpBufferIfNeeded(dumpFileNameOutput_, tmpBuffer);
@@ -645,7 +642,7 @@ int32_t LppVideoDecoderAdapter::SetTargetPts(int64_t targetPts)
     Format format;
     format.PutLongValue("video_seek_pts", targetPts);
     auto ret = videoDecoder_->SetParameter(format);
-    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, MSERR_VID_DEC_FAILED, "Seek failed");
+    FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, AVCSErrorToMSError(ret), "Seek failed");
     return MSERR_OK;
 }
 }  // namespace Media

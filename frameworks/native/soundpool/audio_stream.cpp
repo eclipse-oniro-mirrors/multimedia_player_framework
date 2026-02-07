@@ -93,8 +93,8 @@ void AudioStream::DealPlayParamsBeforePlay(const PlayParams &playParams)
 {
     MediaTrace trace("AudioStream::DealPlayParamsBeforePlay");
     audioRenderer_->SetOffloadAllowed(false);
-    audioRenderer_->SetLoopTimes(playParams.loop);
-    loop_ = playParams.loop;
+    lastLoop_ = currentLoop_;
+    currentLoop_ = playParams.loop;
     audioRenderer_->SetRenderRate(CheckAndAlignRendererRate(playParams.rate));
     audioRenderer_->SetVolume(playParams.leftVolume);
     priority_ = playParams.priority;
@@ -256,6 +256,7 @@ int32_t AudioStream::DoPlayWithNoInterrupt()
     PreparePlayInner(audioRendererInfo_, playParameters_);
     CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL,
         "AudioStream::DoPlayWithNoInterrupt, audioRenderer_ is nullptr");
+    audioRenderer_->SetLoopTimes(currentLoop_);
     size_t bufferSize = 0;
     audioRenderer_->GetBufferSize(bufferSize);
     MEDIA_LOGI("AudioStream::DoPlayWithNoInterrupt, streamID_ is %{public}d, bufferSize is %{public}zu, "
@@ -285,7 +286,7 @@ int32_t AudioStream::DoPlayWithSameSoundInterrupt()
     std::lock_guard lock(streamLock_);
     interruptMode_.store(InterruptMode::SAME_SOUND_INTERRUPT);
     if (streamState_.load() == StreamState::RELEASED) {
-    MEDIA_LOGI("AudioStream::DoPlay end, invalid stream(%{public}d),  streamState_ is %{public}d", streamID_,
+        MEDIA_LOGI("AudioStream::DoPlay end, invalid stream(%{public}d),  streamState_ is %{public}d", streamID_,
             streamState_.load());
         return MSERR_INVALID_VAL;
     }
@@ -302,6 +303,9 @@ int32_t AudioStream::DoPlayWithSameSoundInterrupt()
         if (streamCallback_ != nullptr) {
             streamCallback_->OnPlayFinished(streamID_);
         }
+        if (lastLoop_ == currentLoop_) {
+            return RestartAudioStream();
+        }
         audioRenderer_->Stop();
         if (callback_ != nullptr) {
             MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt, call OnPlayFinished");
@@ -311,12 +315,32 @@ int32_t AudioStream::DoPlayWithSameSoundInterrupt()
     if (streamState_.load() == StreamState::PREPARED || streamState_.load() == StreamState::STOPPED) {
         streamState_.store(StreamState::PLAYING);
     }
+    audioRenderer_->SetLoopTimes(currentLoop_);  // avoid calling during stream playing
     if (!audioRenderer_->Start()) {
         MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt, audioRenderer_->Start()");
         streamState_.store(StreamState::RELEASED);
         return HandleRendererNotStart();
     }
     MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt end, streamID is %{public}d", streamID_);
+    return MSERR_OK;
+}
+
+int32_t AudioStream::RestartAudioStream()
+{
+    MEDIA_LOGI("AudioStream::RestartAudioStream start, streamID is %{public}d", streamID_);
+    if (callback_ != nullptr) {
+        MEDIA_LOGI("AudioStream::RestartAudioStream, call OnPlayFinished");
+        callback_->OnPlayFinished(streamID_);
+    }
+    if (streamState_.load() == StreamState::PREPARED || streamState_.load() == StreamState::STOPPED) {
+        streamState_.store(StreamState::PLAYING);
+    }
+    if (!audioRenderer_->ResetStaticPlayPosition()) {
+        MEDIA_LOGI("AudioStream::RestartAudioStream, audioRenderer_->ResetStaticPlayPosition()");
+        streamState_.store(StreamState::RELEASED);
+        return HandleRendererNotStart();
+    }
+    MEDIA_LOGI("AudioStream::RestartAudioStream end, streamID is %{public}d", streamID_);
     return MSERR_OK;
 }
 
@@ -366,7 +390,7 @@ int32_t AudioStream::Stop()
             callback_->OnPlayFinished(streamID_);
         }
     }
-    MEDIA_LOGI("AudioStream::Stop end, streamID is %{public}d", streamID_);
+    MEDIA_LOGI("Stop end, streamID is %{public}d", streamID_);
     return MSERR_OK;
 }
 
@@ -380,8 +404,7 @@ void AudioStream::OnFirstFrameWriting(uint64_t latency)
 void AudioStream::OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent)
 {
     MEDIA_LOGI("AudioStream::OnInterrupt, streamID_ is %{public}d, eventType is %{public}d, forceType is %{public}d,"
-        "hintType:%{public}d", streamID_, interruptEvent.eventType, interruptEvent.forceType,
-        interruptEvent.hintType);
+        "hintType:%{public}d", streamID_, interruptEvent.eventType, interruptEvent.forceType, interruptEvent.hintType);
     if (interruptEvent.hintType == AudioStandard::InterruptHint::INTERRUPT_HINT_PAUSE ||
         interruptEvent.hintType == AudioStandard::InterruptHint::INTERRUPT_HINT_STOP) {
         ThreadPool::Task pcmBufferInterruptTask = [this] { this->Stop(); };
@@ -470,7 +493,7 @@ int32_t AudioStream::SetVolume(float leftVolume, float rightVolume)
     // audio cannot support left & right volume, all use left volume.
     (void) rightVolume;
     int32_t ret = audioRenderer_->SetVolume(leftVolume);
-    MEDIA_LOGI("AudioStream::SetVolume, ret is %{public}d", ret);
+    MEDIA_LOGI("AudioStream::SetVolume, ret:%{public}d", ret);
     return ret;
 }
 
@@ -501,9 +524,10 @@ int32_t AudioStream::SetPriorityWithoutLock(int32_t priority)
 int32_t AudioStream::SetLoop(int32_t loop)
 {
     std::lock_guard lock(streamLock_);
-    loop_ = loop;
     CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr && streamState_.load() != StreamState::RELEASED,
         MSERR_INVALID_VAL, "SetLoop, Invalid audioRenderer_");
+    lastLoop_ = currentLoop_;
+    currentLoop_ = loop;
     int32_t ret = audioRenderer_->SetLoopTimes(loop);
     MEDIA_LOGI("AudioStream::SetLoop, ret is %{public}d", ret);
     return MSERR_OK;

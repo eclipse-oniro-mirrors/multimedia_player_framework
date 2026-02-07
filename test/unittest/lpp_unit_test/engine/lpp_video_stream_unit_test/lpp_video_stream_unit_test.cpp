@@ -890,7 +890,7 @@ HWTEST_F(LppVideoStreamUnitTest, GetLatestPts_002, TestSize.Level0)
  
     int64_t pts = 0;
     auto res = videoStreamImpl_->GetLatestPts(pts);
-    EXPECT_EQ(res, 0);
+    EXPECT_EQ(res, MSERR_OK);
 }
 } // namespace Media
 } // namespace OHOS

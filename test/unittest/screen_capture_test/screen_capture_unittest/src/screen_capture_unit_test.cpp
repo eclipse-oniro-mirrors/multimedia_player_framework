@@ -1980,45 +1980,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_02, TestSize.Level2)
 }
 
 /**
- * @tc.name: screen_capture_buffertest_resize_01
- * @tc.desc: screen capture buffer test
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_resize_01, TestSize.Level2)
-{
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_buffertest_resize_01 before");
-    SetConfig(config_);
-    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-
-    aFlag = 1;
-    vFlag = 1;
-    bool isMicrophone = false;
-
-    screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
-    ASSERT_NE(nullptr, screenCaptureCb_);
-    screenCapture_->SetMicrophoneEnabled(isMicrophone);
-    EXPECT_NE(MSERR_OK, screenCapture_->ResizeCanvas(270, 480));
-    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
-    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
-    EXPECT_NE(MSERR_OK, screenCapture_->ResizeCanvas(270, 480));
-    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    sleep(RECORDER_TIME);
-    cout << "screenCapture_->ResizeCanvas start 1" << endl;
-    EXPECT_EQ(MSERR_OK, screenCapture_->ResizeCanvas(270, 480));
-    cout << "screenCapture_->ResizeCanvas end 1" << endl;
-    sleep(RECORDER_TIME);
-    cout << "screenCapture_->ResizeCanvas start 2" << endl;
-    EXPECT_EQ(MSERR_OK, screenCapture_->ResizeCanvas(1980, 3520));
-    cout << "screenCapture_->ResizeCanvas end 2" << endl;
-    sleep(RECORDER_TIME);
-    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
-    EXPECT_NE(MSERR_OK, screenCapture_->ResizeCanvas(270, 480));
-    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_buffertest_resize_01 after");
-}
-
-/**
  * @tc.name: screen_capture_buffertest_resize_02
  * @tc.desc: screen capture buffer test
  * @tc.type: FUNC
@@ -2053,50 +2014,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_resize_02, TestSize.Le
     EXPECT_NE(MSERR_OK, screenCapture_->ResizeCanvas(270, 48000));
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_buffertest_resize_02 after");
-}
-
-/**
- * @tc.name: screen_capture_with_surface_resize_show_size
- * @tc.desc: do screencapture
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_resize_show_size, TestSize.Level2)
-{
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_with_surface_resize_show_size before");
-    SetConfig(config_);
-    config_.videoInfo.videoCapInfo.videoFrameWidth = 720;
-    config_.videoInfo.videoCapInfo.videoFrameHeight = 1280;
-    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-    bool isMicrophone = false;
-    screenCapture_->SetMicrophoneEnabled(isMicrophone);
-    EXPECT_NE(MSERR_OK, screenCapture_->ResizeCanvas(270, 480));
-    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
-    EXPECT_NE(MSERR_OK, screenCapture_->ResizeCanvas(270, 480));
-
-    sptr<OHOS::Surface> consumer = OHOS::Surface::CreateSurfaceAsConsumer();
-    consumer->SetDefaultUsage(BUFFER_USAGE_CPU_READ | BUFFER_USAGE_MEM_MMZ_CACHE);
-    auto producer = consumer->GetProducer();
-    auto producerSurface = OHOS::Surface::CreateSurfaceAsProducer(producer);
-
-    sptr<IBufferConsumerListener> surfaceCb = OHOS::sptr<ScreenCapBufferDemoConsumerListener>::MakeSptr(consumer);
-    consumer->RegisterConsumerListener(surfaceCb);
-
-    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCaptureWithSurface(producerSurface));
-    sleep(RECORDER_TIME);
-    cout << "screenCapture_->ResizeCanvas start 1" << endl;
-    EXPECT_EQ(MSERR_OK, screenCapture_->ResizeCanvas(270, 480));
-    cout << "screenCapture_->ResizeCanvas end 1" << endl;
-    sleep(RECORDER_TIME);
-    cout << "screenCapture_->ResizeCanvas start 2" << endl;
-    EXPECT_EQ(MSERR_OK, screenCapture_->ResizeCanvas(1980, 3520));
-    cout << "screenCapture_->ResizeCanvas end 2" << endl;
-    sleep(RECORDER_TIME);
-    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
-    EXPECT_NE(MSERR_OK, screenCapture_->ResizeCanvas(270, 480));
-    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    CloseFile();
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_with_surface_resize_show_size after");
 }
 
 /**

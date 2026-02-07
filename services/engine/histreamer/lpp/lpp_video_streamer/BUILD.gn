@@ -90,6 +90,7 @@ ohos_static_library("media_engine_histreamer_lpp_video_streamer") {
     "graphic_surface:sync_fence",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_single",
     "media_foundation:media_foundation",

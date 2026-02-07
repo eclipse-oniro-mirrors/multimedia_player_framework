@@ -56,18 +56,15 @@ HWTEST(SystemSoundPlayerUnitTest, systemSoundPlayer_001, TestSize.Level1)
  */
 HWTEST(SystemSoundPlayerUnitTest, systemSoundPlayer_002, TestSize.Level1)
 {
-    bool ret = 0;
-    int32_t MAX_SOUND_POOL_STREAMS = 1;
+    bool ret = false;
     auto systemSoundPlayerImpl_ = std::make_shared<SystemSoundPlayerImpl>();
     AudioStandard::AudioRendererInfo audioRenderInfo;
     audioRenderInfo.contentType = AudioStandard::ContentType::CONTENT_TYPE_UNKNOWN;
-    audioRenderInfo.streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_MUSIC; // ToDo: 待确认
-    audioRenderInfo.rendererFlags = AudioStandard::AUDIO_FLAG_NORMAL;
+    audioRenderInfo.streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_ENFORCED_TONE;
+    audioRenderInfo.rendererFlags = AudioStandard::AUDIO_FLAG_MMAP;
+    audioRenderInfo.playerType = AudioStandard::PLAYER_TYPE_SYSTEM_SOUND_PLAYER;
     systemSoundPlayerImpl_->soundPool_ =
-        SoundPoolFactory::CreateSoundPool(MAX_SOUND_POOL_STREAMS, audioRenderInfo);
-    ret = systemSoundPlayerImpl_->InitSoundPoolPlayer();
-    EXPECT_TRUE(ret);
-    systemSoundPlayerImpl_->soundPool_ = nullptr;
+        SoundPoolFactory::CreateSoundPool(1, audioRenderInfo);
     ret = systemSoundPlayerImpl_->InitSoundPoolPlayer();
     EXPECT_TRUE(ret);
 }
@@ -79,20 +76,10 @@ HWTEST(SystemSoundPlayerUnitTest, systemSoundPlayer_002, TestSize.Level1)
  */
 HWTEST(SystemSoundPlayerUnitTest, systemSoundPlayer_003, TestSize.Level1)
 {
-    int32_t ret = 0;
+    bool ret = false;
     auto systemSoundPlayerImpl_ = std::make_shared<SystemSoundPlayerImpl>();
-    SystemSoundType systemSoundType = PHOTO_SHUTTER;
-    systemSoundPlayerImpl_->isReleased_ = false;
-    ret = systemSoundPlayerImpl_->Load(systemSoundType);
-    EXPECT_NE(ret, 0);
-    systemSoundPlayerImpl_->soundPool_ = nullptr;
-    ret = systemSoundPlayerImpl_->Load(systemSoundType);
-    EXPECT_NE(ret, 0);
-    systemSoundPlayerImpl_->isReleased_ = true;
-    ret = systemSoundPlayerImpl_->Load(systemSoundType);
-    EXPECT_NE(ret, 0);
-    ret = systemSoundPlayerImpl_->Load(static_cast<SystemSoundType>(-1));
-    EXPECT_NE(ret, 0);
+    ret = systemSoundPlayerImpl_->InitSoundPoolPlayer();
+    EXPECT_TRUE(ret);
 }
 
 /**
@@ -104,11 +91,12 @@ HWTEST(SystemSoundPlayerUnitTest, systemSoundPlayer_004, TestSize.Level1)
 {
     int32_t ret = 0;
     auto systemSoundPlayerImpl_ = std::make_shared<SystemSoundPlayerImpl>();
-    SystemSoundType systemSoundType = PHOTO_SHUTTER;
-    systemSoundPlayerImpl_->isReleased_ = true;
-    ret = systemSoundPlayerImpl_->Play(systemSoundType);
+    ret = systemSoundPlayerImpl_->Load(static_cast<SystemSoundType>(-1));
     EXPECT_NE(ret, 0);
-    ret = systemSoundPlayerImpl_->Play(static_cast<SystemSoundType>(-1));
+
+    SystemSoundType systemSoundType = PHOTO_SHUTTER;
+    systemSoundPlayerImpl_->isReleased_ = false;
+    ret = systemSoundPlayerImpl_->Load(systemSoundType);
     EXPECT_NE(ret, 0);
 }
 
@@ -122,14 +110,8 @@ HWTEST(SystemSoundPlayerUnitTest, systemSoundPlayer_005, TestSize.Level1)
     int32_t ret = 0;
     auto systemSoundPlayerImpl_ = std::make_shared<SystemSoundPlayerImpl>();
     SystemSoundType systemSoundType = PHOTO_SHUTTER;
-    systemSoundPlayerImpl_->isReleased_ = false;
-    // systemSoundPlayerImpl_->soundIds_[systemSoundType] = 1;
-    ret = systemSoundPlayerImpl_->Play(systemSoundType);
-    EXPECT_NE(ret, 0);
     systemSoundPlayerImpl_->isReleased_ = true;
-    ret = systemSoundPlayerImpl_->Play(systemSoundType);
-    EXPECT_NE(ret, 0);
-    ret = systemSoundPlayerImpl_->Play(static_cast<SystemSoundType>(-1));
+    ret = systemSoundPlayerImpl_->Load(systemSoundType);
     EXPECT_NE(ret, 0);
 }
 
@@ -142,10 +124,13 @@ HWTEST(SystemSoundPlayerUnitTest, systemSoundPlayer_006, TestSize.Level1)
 {
     int32_t ret = 0;
     auto systemSoundPlayerImpl_ = std::make_shared<SystemSoundPlayerImpl>();
+    ret = systemSoundPlayerImpl_->Play(static_cast<SystemSoundType>(-1));
+    EXPECT_NE(ret, 0);
+
     SystemSoundType systemSoundType = PHOTO_SHUTTER;
     systemSoundPlayerImpl_->isReleased_ = false;
-    ret = systemSoundPlayerImpl_->Unload(systemSoundType);
-    EXPECT_EQ(ret, 0);
+    ret = systemSoundPlayerImpl_->Play(systemSoundType);
+    EXPECT_NE(ret, 0);
 }
 
 /**
@@ -157,10 +142,10 @@ HWTEST(SystemSoundPlayerUnitTest, systemSoundPlayer_007, TestSize.Level1)
 {
     int32_t ret = 0;
     auto systemSoundPlayerImpl_ = std::make_shared<SystemSoundPlayerImpl>();
-    SystemSoundType systemSoundType = PHOTO_SHUTTER;
-    systemSoundPlayerImpl_->isReleased_ = false;
-    ret = systemSoundPlayerImpl_->Unload(systemSoundType);
-    EXPECT_EQ(ret, 0);
+    SystemSoundType systemSoundType = VIDEO_RECORDING_BEGIN;
+    systemSoundPlayerImpl_->isReleased_ = true;
+    ret = systemSoundPlayerImpl_->Play(systemSoundType);
+    EXPECT_NE(ret, 0);
 }
 
 /**
@@ -169,6 +154,21 @@ HWTEST(SystemSoundPlayerUnitTest, systemSoundPlayer_007, TestSize.Level1)
  * @tc.desc  : Test systemSoundPlayer interface.
  */
 HWTEST(SystemSoundPlayerUnitTest, systemSoundPlayer_008, TestSize.Level1)
+{
+    int32_t ret = 0;
+    auto systemSoundPlayerImpl_ = std::make_shared<SystemSoundPlayerImpl>();
+    SystemSoundType systemSoundType = PHOTO_SHUTTER;
+    systemSoundPlayerImpl_->isReleased_ = false;
+    ret = systemSoundPlayerImpl_->Unload(systemSoundType);
+    EXPECT_EQ(ret, 0);
+}
+
+/**
+ * @tc.name  : Test SystemSoundPlayer
+ * @tc.number: systemSoundPlayer_009
+ * @tc.desc  : Test systemSoundPlayer interface.
+ */
+HWTEST(SystemSoundPlayerUnitTest, systemSoundPlayer_009, TestSize.Level1)
 {
     int32_t ret = 0;
     auto systemSoundPlayerImpl_ = std::make_shared<SystemSoundPlayerImpl>();
@@ -184,10 +184,10 @@ HWTEST(SystemSoundPlayerUnitTest, systemSoundPlayer_008, TestSize.Level1)
 
 /**
  * @tc.name  : Test SystemSoundPlayer
- * @tc.number: systemSoundPlayer_009
+ * @tc.number: systemSoundPlayer_010
  * @tc.desc  : Test systemSoundPlayer interface.
  */
-HWTEST(SystemSoundPlayerUnitTest, systemSoundPlayer_009, TestSize.Level1)
+HWTEST(SystemSoundPlayerUnitTest, systemSoundPlayer_010, TestSize.Level1)
 {
     int32_t ret = 0;
     auto systemSoundPlayerImpl_ = std::make_shared<SystemSoundPlayerImpl>();
@@ -202,10 +202,10 @@ HWTEST(SystemSoundPlayerUnitTest, systemSoundPlayer_009, TestSize.Level1)
 
 /**
  * @tc.name  : Test SystemSoundPlayer
- * @tc.number: systemSoundPlayer_010
+ * @tc.number: systemSoundPlayer_011
  * @tc.desc  : Test systemSoundPlayer interface.
  */
-HWTEST(SystemSoundPlayerUnitTest, systemSoundPlayer_010, TestSize.Level1)
+HWTEST(SystemSoundPlayerUnitTest, systemSoundPlayer_011, TestSize.Level1)
 {
     int32_t ret = 0;
     auto systemSoundPlayerImpl_ = std::make_shared<SystemSoundPlayerImpl>();
@@ -227,10 +227,10 @@ HWTEST(SystemSoundPlayerUnitTest, systemSoundPlayer_010, TestSize.Level1)
 
 /**
  * @tc.name  : Test SystemSoundPlayer
- * @tc.number: systemSoundPlayer_011
+ * @tc.number: systemSoundPlayer_012
  * @tc.desc  : Test systemSoundPlayer interface.
  */
-HWTEST(SystemSoundPlayerUnitTest, systemSoundPlayer_011, TestSize.Level1)
+HWTEST(SystemSoundPlayerUnitTest, systemSoundPlayer_012, TestSize.Level1)
 {
     auto systemSoundPlayerImpl_ = std::make_shared<SystemSoundPlayerImpl>();
     auto playerSoundPoolCallback = std::make_shared<PlayerSoundPoolCallback>(systemSoundPlayerImpl_);
@@ -244,10 +244,10 @@ HWTEST(SystemSoundPlayerUnitTest, systemSoundPlayer_011, TestSize.Level1)
 
 /**
  * @tc.name  : Test SystemSoundPlayer
- * @tc.number: systemSoundPlayer_012
+ * @tc.number: systemSoundPlayer_013
  * @tc.desc  : Test systemSoundPlayer interface.
  */
-HWTEST(SystemSoundPlayerUnitTest, systemSoundPlayer_012, TestSize.Level1)
+HWTEST(SystemSoundPlayerUnitTest, systemSoundPlayer_013, TestSize.Level1)
 {
     int32_t streamId = 0;
     auto systemSoundPlayerImpl_ = std::make_shared<SystemSoundPlayerImpl>();
@@ -261,10 +261,10 @@ HWTEST(SystemSoundPlayerUnitTest, systemSoundPlayer_012, TestSize.Level1)
 
 /**
  * @tc.name  : Test SystemSoundPlayer
- * @tc.number: systemSoundPlayer_013
+ * @tc.number: systemSoundPlayer_014
  * @tc.desc  : Test systemSoundPlayer interface.
  */
-HWTEST(SystemSoundPlayerUnitTest, systemSoundPlayer_013, TestSize.Level1)
+HWTEST(SystemSoundPlayerUnitTest, systemSoundPlayer_014, TestSize.Level1)
 {
     auto systemSoundPlayerImpl_ = std::make_shared<SystemSoundPlayerImpl>();
     auto playerSoundPoolCallback = std::make_shared<PlayerSoundPoolCallback>(systemSoundPlayerImpl_);

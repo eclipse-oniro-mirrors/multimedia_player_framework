@@ -51,6 +51,19 @@ struct StallingInfo {
     std::vector<int64_t> stallingInfo {};
 };
 
+struct PlaybackEventInfo {
+    uint32_t prepareDuration {0};
+    uint32_t playTotalDuration {0};
+    int64_t timeStamp {0};
+    uint32_t firstDownloadTime {0};
+    uint32_t firstFrameDecapsulationTime {0};
+    uint32_t loadingCount {0};
+    uint32_t totalLoadingTime {0};
+    int64_t totalDownLoadBytes {0};
+    uint32_t stallingCount {0};
+    uint32_t totalStallingTime {0};
+};
+
 using StallingEventList = std::list<std::pair<uint64_t, std::shared_ptr<std::vector<StallingInfo>>>>;
 
 enum CallType {
@@ -123,6 +136,8 @@ __attribute__((visibility("default"))) uint64_t GetMediaInfoContainInstanceNum()
 __attribute__((visibility("default"))) void GetMaxInstanceNumber(CallType callType, int32_t uid,
     uint64_t instanceId, int32_t curInsNumber);
 __attribute__((visibility("default"))) void UpdateMaxInsNumberMap(CallType callType);
+__attribute__((visibility("default"))) bool GetPlaybackEventInfo(const OHOS::Media::Format& fmt,
+    PlaybackEventInfo& playbackEventInfo);
 __attribute__((visibility("default"))) int32_t CreateStallingInfo(CallType callType, int32_t uid,
     uint64_t instanceId);
 __attribute__((visibility("default"))) int32_t CreatePlaybackInfo(CallType callType, int32_t uid, uint64_t instanceId);

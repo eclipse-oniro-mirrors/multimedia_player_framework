@@ -306,7 +306,7 @@ bool LppAudioStreamerServer::ErrorCheck(int32_t errorCode)
     return true;
 }
 
-void LppAudioStreamerServer::OnError(const LppErrCode errCode, const std::string &errMsg)
+void LppAudioStreamerServer::OnError(const MediaServiceErrCode errCode, const std::string &errMsg)
 {
     CHECK_AND_RETURN_LOG(lppAudioStreamerCb_ != nullptr, "lppAudioStreamerCb_ nullptr");
     MEDIA_LOGE("LppAudioStreamerServer::OnError, errorCode: %{public}d, errorMsg: %{public}s",
