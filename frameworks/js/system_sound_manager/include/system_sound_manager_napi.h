@@ -42,7 +42,7 @@ extern const std::map<std::string, ToneHapticsType> toneHapticsTypeMap;
 
 extern const std::map<std::string, ToneCustomizedType> toneCustomizedTypeMap;
 
-extern const std::map<std::string, ToneHapticsMode> toneHapticsModeMap
+extern const std::map<std::string, ToneHapticsMode> toneHapticsModeMap;
 
 extern const std::map<std::string, SystemSoundError> systemSoundErrorModeMap;
 
