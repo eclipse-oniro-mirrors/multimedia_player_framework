@@ -1624,7 +1624,7 @@ Status HiPlayerImpl::HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs)
     MEDIA_LOG_I_SHORT("doSeek SEEK_CLOSEST");
     isSeekClosest_.store(true);
     if (videoDecoder_ != nullptr) {
-        videoDecoder_->SetSeekTime(seekTimeUs + mediaStartPts_, PlayerSeekMode::SEEK_CLOSEST, true);
+        videoDecoder_->SetSeekTime(seekTimeUs + mediaStartPts_, PlayerSeekMode::SEEK_CLOSEST);
     }
     if (audioSink_ != nullptr) {
         audioSink_->SetIsCancelStart(true);
@@ -1634,7 +1634,7 @@ Status HiPlayerImpl::HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs)
     FALSE_RETURN_V(!isInterruptNeeded_, Status::OK);
     SetFrameRateForSeekPerformance(FRAME_RATE_FOR_SEEK_PERFORMANCE);
     bool timeout = false;
-    auto res = seekAgent_->Seek(seekPos, timeout);
+    auto res = seekAgent_->Seek(seekPos, timeout, playerEventReceiver_);
     SetFrameRateForSeekPerformance(FRAME_RATE_DEFAULT);
     MEDIA_LOG_I_SHORT("seekAgent_ Seek end");
     if (res != Status::OK) {
@@ -1644,9 +1644,6 @@ Status HiPlayerImpl::HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs)
         if (timeout && videoDecoder_ != nullptr) {
             videoDecoder_->ResetSeekInfo();
         }
-    }
-    if (videoDecoder_ != nullptr) {
-        videoDecoder_->ClosestSeekDone();
     }
     if (audioSink_ != nullptr) {
         audioSink_->SetIsCancelStart(false);
@@ -2673,6 +2670,10 @@ void HiPlayerImpl::OnEventContinue(const Event &event)
             OnHwDecoderSwitch();
             break;
         }
+        case EventType::EVENT_NOTIFY_SEEK_CLOSEST: {
+            NotifySeekClosest(AnyCast<bool>(event.param));
+            break;
+        }
         default:
             break;
     }
@@ -2683,6 +2684,12 @@ void HiPlayerImpl::OnHwDecoderSwitch()
     isNeedSwDecoder_ = true;
     notNotifyForSw_ = true;
     PrepareAsync();
+}
+
+void HiPlayerImpl::NotifySeekClosest(bool isSeekDone)
+{
+    FALSE_RETURN_NOLOG(videoDecoder_ != nullptr);
+    videoDecoder_->ClosestSeekDone(isSeekDone);
 }
 
 void HiPlayerImpl::HandleSeiInfoEvent(const Event &event)

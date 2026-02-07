@@ -35,7 +35,7 @@ public:
     explicit SeekAgent(std::shared_ptr<Pipeline::DemuxerFilter> demuxer, int64_t startPts = 0);
     ~SeekAgent();
 
-    Status Seek(int64_t seekPos, bool &timeout);
+    Status Seek(int64_t seekPos, bool &timeout, const std::shared_ptr<Pipeline::EventReceiver>& receiver);
     Status OnAudioBufferFilled(std::shared_ptr<AVBuffer>& buffer,
         sptr<AVBufferQueueProducer> producer, int32_t trackId);
     Status OnVideoBufferFilled(std::shared_ptr<AVBuffer>& buffer,
@@ -45,7 +45,7 @@ public:
 private:
     Status SetBufferFilledListener();
     Status RemoveBufferFilledListener();
-    Status GetAllTrackInfo(int32_t &videoTrackId, std::vector<int32_t> &audioTrackIds);
+    Status GetAllTrackInfo(std::vector<int32_t> &videoTrackIds, std::vector<int32_t> &audioTrackIds);
     bool GetAudioTrackId(int32_t &audioTrackId);
 
     std::shared_ptr<Pipeline::DemuxerFilter> demuxer_;
