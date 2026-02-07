@@ -65,7 +65,7 @@ std::shared_ptr<ILppVideoStreamerEngine> ILppEngineManager::GetLppVideoInstance(
 
 std::shared_ptr<ILppAudioStreamerEngine> ILppEngineManager::GetLppAudioInstance(const std::string &key)
 {
-    MEDIA_LOG_I("0x%{public}06" PRIXPTR " GetLppVideoInstance", FAKE_POINTER(this));
+    MEDIA_LOG_I("0x%{public}06" PRIXPTR " GetLppAudioInstance", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(audioMapMutex_);
     auto it = lppAudioStreamerMap_.find(key);
     if (it != lppAudioStreamerMap_.end()) {

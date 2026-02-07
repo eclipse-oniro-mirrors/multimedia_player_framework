@@ -196,6 +196,8 @@ bool LppDataPacket::WriteOneFrameToAVBuffer(std::shared_ptr<AVBuffer> &avbuffer,
     CHECK_AND_RETURN_RET_LOG(avbuffer->memory_->GetCapacity() - offset >= writeLength, false, "not enough capacity");
 
     uint8_t *buffer = avbuffer->memory_->GetAddr();
+
+    CHECK_AND_RETURN_RET_LOG(offset >= 0, false, "offset is less than 0.");
     int32_t ret = 0;
     ret = memcpy_s(buffer + offset, sizeof(int64_t), &pts_[vectorReadIndex_], sizeof(int64_t));
     CHECK_AND_RETURN_RET_LOG(ret == 0, false, "memcopy error");
@@ -203,6 +205,7 @@ bool LppDataPacket::WriteOneFrameToAVBuffer(std::shared_ptr<AVBuffer> &avbuffer,
     ret = memcpy_s(buffer + offset, sizeof(uint32_t), &size_[vectorReadIndex_], sizeof(uint32_t));
     CHECK_AND_RETURN_RET_LOG(ret == 0, false, "memcopy error");
     offset += sizeof(uint32_t);
+    CHECK_AND_RETURN_RET_LOG(memory_ != nullptr, false, "memory_ is nullptr");
     ret = memcpy_s(buffer + offset, size_[vectorReadIndex_], memory_->GetAddr() + dataOffset_, size_[vectorReadIndex_]);
     CHECK_AND_RETURN_RET_LOG(ret == 0, false, "memcopy error");
     offset += size_[vectorReadIndex_];
