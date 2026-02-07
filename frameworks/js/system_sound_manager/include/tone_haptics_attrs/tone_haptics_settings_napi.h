@@ -23,7 +23,7 @@
 
 namespace OHOS {
 namespace Media {
-extern const std::string TONE_HAPTICS_SETTINGS_NAPI_CLASS_NAME = "ToneHapticsSettings";
+extern const std::string TONE_HAPTICS_SETTINGS_NAPI_CLASS_NAME;
 
 class ToneHapticsSettingsNapi {
 public:
