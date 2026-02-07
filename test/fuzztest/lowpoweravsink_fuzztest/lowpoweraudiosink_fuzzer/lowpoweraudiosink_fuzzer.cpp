@@ -18,10 +18,10 @@ import("//foundation/multimedia/player_framework/config.gni")
 module_output_path = "$MODULE_OUTPUT_PATH/media_player"
 MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
 
-ohos_fuzztest("LowPowerVideoSinkFuzzTest") {
+ohos_fuzztest("LowPowerAudioSinkFuzzTest") {
   module_out_path = module_output_path
   fuzz_config_file =
-      "$MEDIA_ROOT_DIR/test/fuzztest/lowpoweravsink_fuzztest/lowpowervideosink_fuzzer"
+      "$MEDIA_ROOT_DIR/test/fuzztest/lowpoweravsink_fuzztest/lowpoweraudiosink_fuzzer"
 
   defines = [ "IMAGE_COLORSPACE_FLAG" ]
   defines += player_framework_defines
@@ -41,6 +41,7 @@ ohos_fuzztest("LowPowerVideoSinkFuzzTest") {
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_ROOT_DIR/test/fuzztest/common",
     "$MEDIA_ROOT_DIR/interfaces/inner_api",
+    "$MEDIA_ROOT_DIR/services/services/monitor/client",
   ]
   cflags = [
     "-std=c++17",
@@ -70,7 +71,7 @@ ohos_fuzztest("LowPowerVideoSinkFuzzTest") {
       "$MEDIA_ROOT_DIR/services/services/common/avsharedmemory_ipc.cpp",
       "$MEDIA_ROOT_DIR/services/services/media_data_source/ipc/media_data_source_stub.cpp",
       "$MEDIA_ROOT_DIR/test/fuzztest/common/stub_common.cpp",
-      "lowpowervideosink_fuzzer.cpp",
+      "lowpoweraudiosink_fuzzer.cpp",
     ]
   }
   deps = [
@@ -88,6 +89,7 @@ ohos_fuzztest("LowPowerVideoSinkFuzzTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+
   if (player_framework_support_lowpower_av_sink) {
     external_deps += [
       "drivers_interface_lpplayer:liblow_power_player_proxy_1.0",
