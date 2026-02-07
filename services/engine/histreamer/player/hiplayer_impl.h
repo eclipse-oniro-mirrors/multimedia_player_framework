@@ -338,6 +338,7 @@ private:
     void CacheBuffer();
     void NotifyBufferEnd();
     void OnHwDecoderSwitch();
+    void NotifySeekClosest(bool isSeekDone);
     PlayerErrorType GetPlayerErrorType(const Event& event);
     PlayerErrorType GetPlayerErrorTypeFromDemuxerFilter(const Event& event);
     PlayerErrorType GetPlayerErrorTypeFromAudioDecoder(const Event& event);

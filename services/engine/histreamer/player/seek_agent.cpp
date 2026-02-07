@@ -71,7 +71,7 @@ SeekAgent::~SeekAgent()
     MEDIA_LOG_I("~SeekAgent dtor called.");
 }
 
-Status SeekAgent::Seek(int64_t seekPos, bool &timeout)
+Status SeekAgent::Seek(int64_t seekPos, bool &timeout, const std::shared_ptr<Pipeline::EventReceiver>& receiver)
 {
     MEDIA_LOG_I("Seek start, seekPos: %{public}" PRId64, seekPos);
     FALSE_RETURN_V_MSG_E(demuxer_ != nullptr, Status::ERROR_INVALID_PARAMETER, "Invalid demuxer filter instance.");
@@ -90,11 +90,13 @@ Status SeekAgent::Seek(int64_t seekPos, bool &timeout)
     bool isClosetSeekDone = true;
     {
         AutoLock lock(targetArrivedLock_);
+        receiver->OnEvent({"seek_agent", EventType::EVENT_NOTIFY_SEEK_CLOSEST, false});
         demuxer_->ResumeForSeek();
         MEDIA_LOG_I("ResumeForSeek end");
         isClosetSeekDone = targetArrivedCond_.WaitFor(lock, WAIT_MAX_MS, [this] {
             return (isAudioTargetArrived_ && (isVideoTargetArrived_ || demuxer_->IsVideoMuted())) || isInterruptNeeded_;
         });
+        receiver->OnEvent({"seek_agent", EventType::EVENT_NOTIFY_SEEK_CLOSEST, true});
         MEDIA_LOG_I("Wait end");
     }
     MEDIA_LOG_I("PauseForSeek start");
@@ -114,7 +116,7 @@ Status SeekAgent::Seek(int64_t seekPos, bool &timeout)
     return st;
 }
 
-Status SeekAgent::GetAllTrackInfo(int32_t &videoTrackId, std::vector<int32_t> &audioTrackIds)
+Status SeekAgent::GetAllTrackInfo(std::vector<int32_t> &videoTrackIds, std::vector<int32_t> &audioTrackIds)
 {
     auto trackInfo = demuxer_->GetStreamMetaInfo();
     int32_t trackInfoSize = static_cast<int32_t>(trackInfo.size());
@@ -123,7 +125,7 @@ Status SeekAgent::GetAllTrackInfo(int32_t &videoTrackId, std::vector<int32_t> &a
         std::string mimeType;
         if (trackMeta->Get<Tag::MIME_TYPE>(mimeType) && mimeType.find("video") == 0) {
             MEDIA_LOG_I("Find video trackId: " PUBLIC_LOG_U32 ", mimeType: " PUBLIC_LOG_S, index, mimeType.c_str());
-            videoTrackId = index;
+            videoTrackIds.push_back(index);
             continue;
         }
         if (trackMeta->Get<Tag::MIME_TYPE>(mimeType) && mimeType.find("audio") == 0) {
@@ -161,9 +163,9 @@ Status SeekAgent::SetBufferFilledListener()
     producerMap_ = demuxer_->GetBufferQueueProducerMap();
     FALSE_RETURN_V_MSG_E(!producerMap_.empty(), Status::ERROR_INVALID_PARAMETER, "producerMap is empty.");
 
-    int32_t videoTrackId = -1;
+    std::vector<int32_t> videoTrackIds;
     std::vector<int32_t> audioTrackIds;
-    GetAllTrackInfo(videoTrackId, audioTrackIds);
+    GetAllTrackInfo(videoTrackIds, audioTrackIds);
 
     auto it = producerMap_.begin();
     while (it != producerMap_.end()) {
@@ -184,7 +186,7 @@ Status SeekAgent::SetBufferFilledListener()
             it++;
             continue;
         }
-        if (it->first == videoTrackId) {
+        if (std::find(videoTrackIds.begin(), videoTrackIds.end(), it->first) != videoTrackIds.end()) {
             sptr<IBrokerListener> videoListener
                 = new VideoBufferFilledListener(shared_from_this(), it->second, it->first);
             {
