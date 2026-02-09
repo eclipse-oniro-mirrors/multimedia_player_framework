@@ -222,7 +222,6 @@ OH_AVMetadataExtractor* OH_AVMetadataExtractor_Create(void)
     callback->SetHelper(aVMetadataHelper);
     int32_t res = aVMetadataHelper->SetHelperCallback(callback);
     CHECK_AND_RETURN_RET_LOG(res == MSERR_OK, nullptr, "failed to SetHelperCallback");
-
     struct AVMetadataExtractorObject *object = new(std::nothrow) AVMetadataExtractorObject(aVMetadataHelper, callback);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "failed to new AVMetadataExtractorObject");
     MEDIA_LOGI("0x%{public}06" PRIXPTR " OH_AVMetadataExtractor", FAKE_POINTER(object));
@@ -257,7 +256,8 @@ OH_AVErrCode OH_AVMetadataExtractor_FetchMetadata(OH_AVMetadataExtractor* extrac
     struct AVMetadataExtractorObject *extractorObj = reinterpret_cast<AVMetadataExtractorObject *>(extractor);
     CHECK_AND_RETURN_RET_LOG(extractorObj->aVMetadataHelper_ != nullptr, AV_ERR_INVALID_VAL,
                              "aVMetadataHelper_ is nullptr");
-    
+    CHECK_AND_RETURN_RET_LOG(extractorObj->state_ == HelperState::HELPER_STATE_HTTP_INTERCEPTED,
+                             AV_ERR_IO_CLEARTEXT_NOT_PERMITTED, "Http plaintext access is not allowed.");
     CHECK_AND_RETURN_RET_LOG(extractorObj->state_ == HelperState::HELPER_STATE_RUNNABLE,
                              AV_ERR_OPERATE_NOT_PERMIT, "Current state is not runnable, can't fetchMetadata.");
 
@@ -332,6 +332,7 @@ OH_AVErrCode OH_AVMetadataExtractor_FetchFrameByTime(OH_AVMetadataExtractor* ext
 
     CHECK_AND_RETURN_RET_LOG(extractorObj->state_ != HelperState::HELPER_STATE_HTTP_INTERCEPTED,
                              AV_ERR_IO_CLEARTEXT_NOT_PERMITTED, "Http plaintext access is not allowed.");
+
     CHECK_AND_RETURN_RET_LOG(extractorObj->state_ == HelperState::HELPER_STATE_RUNNABLE,
                              AV_ERR_OPERATE_NOT_PERMIT, "Current state is not runnable, can't fetchFrame.");
 
@@ -484,11 +485,13 @@ OH_AVErrCode OH_AVMetadataExtractor_FetchFramesByTimes(OH_AVMetadataExtractor* e
         "helperCb_ is nullptr");
     CHECK_AND_RETURN_RET_LOG(extractorObj->state_ != HelperState::HELPER_STATE_HTTP_INTERCEPTED,
         AV_ERR_IO_CLEARTEXT_NOT_PERMITTED, "Http plaintext access is not allowed.");
+
     CHECK_AND_RETURN_RET_LOG(extractorObj->state_ == HelperState::HELPER_STATE_RUNNABLE,
         AV_ERR_SERVICE_DIED, "Service died");
 
     CHECK_AND_RETURN_RET_LOG(timesUs != nullptr, AV_ERR_INVALID_VAL, "input timesUs is empty");
     CHECK_AND_RETURN_RET_LOG(timesUsSize > 0, AV_ERR_INVALID_VAL, "input timesUsSize is invalid");
+    CHECK_AND_RETURN_RET_LOG(timesUsSize <= 4096, AV_ERR_INVALID_VAL, "input timesUsSize is invalid");
     CHECK_AND_RETURN_RET_LOG(outputParam != nullptr, AV_ERR_INVALID_VAL, "input outputParam is nullptr");
 
     std::shared_ptr<OnFrameFetchedCallback> callback =
