@@ -3747,7 +3747,7 @@ Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFi
 #ifdef SUPPORT_START_STOP_ON_DEMAND
     return pipeline_->LinkFilters(preFilter, {audioDecoder_}, type, true);
 #else
-    return pipeline_->LinkFilters(preFilter, {audioDecoder_}, type, isOnlyAudio_);
+    return pipeline_->LinkFilters(preFilter, {audioDecoder_}, type, isOnlyAudio_ || bundleName_ == "bootanimation");
 #endif
 }
 
@@ -3781,7 +3781,7 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
 #ifdef SUPPORT_START_STOP_ON_DEMAND
     auto res = pipeline_->LinkFilters(preFilter, {audioSink_}, type, true);
 #else
-    auto res = pipeline_->LinkFilters(preFilter, {audioSink_}, type, isOnlyAudio_);
+    auto res = pipeline_->LinkFilters(preFilter, {audioSink_}, type, isOnlyAudio_ || bundleName_ == "bootanimation");
 #endif
     if (mutedMediaType_ == OHOS::Media::MediaType::MEDIA_TYPE_AUD) {
         audioSink_->SetMuted(true);
@@ -3864,7 +3864,7 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
 #ifdef SUPPORT_START_STOP_ON_DEMAND
     return pipeline_->LinkFilters(preFilter, {videoDecoder_}, type, true, needInit);
 #else
-    return pipeline_->LinkFilters(preFilter, {videoDecoder_}, type, false, needInit);
+    return pipeline_->LinkFilters(preFilter, {videoDecoder_}, type, bundleName_ == "bootanimation", needInit);
 #endif
 }
 #endif
