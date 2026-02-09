@@ -176,7 +176,7 @@ int32_t AudioDataSource::RegisterAudioRendererEventListener(const int32_t client
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_INVALID_VAL, "audio callback is null");
     int32_t ret = AudioStreamManager::GetInstance()->RegisterAudioRendererEventListener(clientPid, callback);
     std::vector<std::shared_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
-        SpeakerStateUpdate(audioRendererChangeInfos);
+    SpeakerStateUpdate(audioRendererChangeInfos);
     std::string region = Global::I18n::LocaleConfig::GetSystemRegion();
     if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
             .compare(appName_) == 0 && region == "CN") {
