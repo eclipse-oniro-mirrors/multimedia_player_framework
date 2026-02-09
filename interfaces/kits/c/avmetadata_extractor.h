@@ -20,7 +20,7 @@
  * @brief Provides APIs of metadata capability for Media Source.
  *
  * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
- * @since 16
+ * @since 18
  */
 
 /**
@@ -31,7 +31,7 @@
  *
  * @kit MediaKit
  * @library libavmetadata_extractor.so
- * @since 16
+ * @since 18
  */
 
 #ifndef MULTIMEDIA_PLAYER_FRAMEWORK_NATIVE_AVMETADATA_EXTRACTOR_H
@@ -56,7 +56,7 @@ extern "C" {
  * @brief Define OH_AVMetadataExtractor field.
  *
  * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
- * @since 16
+ * @since 18
  */
 typedef struct OH_AVMetadataExtractor OH_AVMetadataExtractor;
 
@@ -204,7 +204,7 @@ OH_AVErrCode OH_AVMetadataExtractor_SetMediaSource(OH_AVMetadataExtractor *extra
  * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
  * @return Returns a pointer to an OH_AVMetadataExtractor instance for success, nullptr for failure
  * Possible failure causes: failed to HstEngineFactory::CreateAVMetadataHelperEngine.
- * @since 16
+ * @since 18
  */
 OH_AVMetadataExtractor* OH_AVMetadataExtractor_Create(void);
 
@@ -221,7 +221,7 @@ OH_AVMetadataExtractor* OH_AVMetadataExtractor_Create(void);
  *         {@link AV_ERR_INVALID_VAL} if input extractor is nullptr or input param is invalid.
  *         {@link AV_ERR_OPERATE_NOT_PERMIT} if operation not allowed.
  *         {@link AV_ERR_NO_MEMORY} if internal memory allocation failed.
- * @since 16
+ * @since 18
  */
 OH_AVErrCode OH_AVMetadataExtractor_SetFDSource(OH_AVMetadataExtractor* extractor,
     int32_t fd, int64_t offset, int64_t size);
@@ -239,7 +239,7 @@ OH_AVErrCode OH_AVMetadataExtractor_SetFDSource(OH_AVMetadataExtractor* extracto
  *         {@link AV_ERR_OPERATE_NOT_PERMIT} if operation not allowed.
  *         {@link AV_ERR_UNSUPPORTED_FORMAT} if format is unsupported.
  *         {@link AV_ERR_NO_MEMORY} if internal memory allocation failed.
- * @since 16
+ * @since 18
  */
 OH_AVErrCode OH_AVMetadataExtractor_FetchMetadata(OH_AVMetadataExtractor* extractor, OH_AVFormat* avMetadata);
 
@@ -256,7 +256,7 @@ OH_AVErrCode OH_AVMetadataExtractor_FetchMetadata(OH_AVMetadataExtractor* extrac
  *         {@link AV_ERR_OPERATE_NOT_PERMIT} if operation not allowed.
  *         {@link AV_ERR_UNSUPPORTED_FORMAT} if format is unsupported.
  *         {@link AV_ERR_NO_MEMORY} if internal memory allocation failed.
- * @since 16
+ * @since 18
  */
 OH_AVErrCode OH_AVMetadataExtractor_FetchAlbumCover(OH_AVMetadataExtractor* extractor, OH_PixelmapNative** pixelMap);
 
@@ -268,7 +268,7 @@ OH_AVErrCode OH_AVMetadataExtractor_FetchAlbumCover(OH_AVMetadataExtractor* extr
  * @return Function result code.
  *         {@link AV_ERR_OK} if the execution is successful.
  *         {@link AV_ERR_INVALID_VAL} if input extractor is nullptr or input param is invalid.
- * @since 16
+ * @since 18
  */
 OH_AVErrCode OH_AVMetadataExtractor_Release(OH_AVMetadataExtractor* extractor);
 
