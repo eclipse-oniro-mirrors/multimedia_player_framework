@@ -49,8 +49,7 @@ void NativeAVMetadataHelperCallback::SendPixelCompleteCallback(const FrameInfo &
     const std::shared_ptr<PixelMap> &pixelMap)
 {
     if (refMap_.find(NativeAVMetadataHelperEvent::EVENT_PIXEL_COMPLETE) == refMap_.end()) {
-        MEDIA_LOGW("can not find pixelcomplete callback: %{public}s!",
-            NativeAVMetadataHelperEvent::EVENT_PIXEL_COMPLETE.c_str());
+        MEDIA_LOGW("can not find pixelcomplete callback!");
         return;
     }
     auto callback = refMap_.at(NativeAVMetadataHelperEvent::EVENT_PIXEL_COMPLETE);
@@ -70,14 +69,12 @@ void NativeAVMetadataHelperCallback::SetHelper(const std::shared_ptr<AVMetadataH
 void NativeAVMetadataHelperCallback::SaveCallbackReference(const std::string &name, std::shared_ptr<BaseCallback> ref)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    MEDIA_LOGI("SaveCallbackReference is called, name: %{public}s", name.c_str());
     refMap_[name] = ref;
 }
 
 void NativeAVMetadataHelperCallback::ClearCallbackReference()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    MEDIA_LOGI("ClearCallbackReference is called");
     refMap_.clear();
 }
 
