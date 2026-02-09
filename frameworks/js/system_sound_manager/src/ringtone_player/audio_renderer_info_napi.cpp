@@ -179,7 +179,7 @@ napi_value AudioRendererInfoNapi::SetContentType(napi_env env, napi_callback_inf
     }
 
     status = napi_get_value_int32(env, args[0], &contentType);
-    if (status == napi_ok) {
+    if (status == napi_ok && audioRendererInfoNapi != nullptr && audioRendererInfoNapi->audioRendererInfo_ != nullptr) {
         audioRendererInfoNapi->audioRendererInfo_->contentType = static_cast<AudioStandard::ContentType>(contentType);
     }
 
@@ -305,7 +305,7 @@ napi_value AudioRendererInfoNapi::SetRendererFlags(napi_env env, napi_callback_i
     }
 
     status = napi_get_value_int32(env, args[0], &rendererFlags);
-    if (status == napi_ok && audioRendererInfoNapi != nullptr && audioRendererInfo_ != nullptr) {
+    if (status == napi_ok && audioRendererInfoNapi != nullptr && audioRendererInfoNapi->audioRendererInfo_ != nullptr) {
         audioRendererInfoNapi->audioRendererInfo_->rendererFlags = rendererFlags;
     }
 
