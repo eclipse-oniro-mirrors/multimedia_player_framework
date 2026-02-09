@@ -141,7 +141,6 @@ private:
     void HandleFetchFrameYuvRes();
     void HandleFetchFrameYuvFailed();
     void HandleFetchFrameAtTimeRes();
-
     void PauseFetchFrame();
 };
 }  // namespace Media
