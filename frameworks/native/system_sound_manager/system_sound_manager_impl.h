@@ -201,28 +201,18 @@ private:
     int32_t SetSystemToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         const std::string &uri, SystemToneType systemToneType);
 
-    using UpdateToneUriFunc = int32_t(SystemSoundManagerImpl::*)(
-        std::shared_ptr<DataShare::DataShareHelper>,
-        const int32_t &toneId,
-        int32_t type,
-        const int32_t &shotToneType
-    );
+    using UpdateToneUriFunc = int32_t(SystemSoundManagerImpl::*)(std::shared_ptr<DataShare::DataShareHelper>,
+        const int32_t &toneId, int32_t type, const int32_t &shotToneType);
 
-    int32_t SetToneUriInternal(
-        std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
-        const std::string &uri,
-        const SetToneUriParams &params,
-        UpdateToneUriFunc updateFunc);
+    int32_t SetToneUriInternal(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const std::string &uri, const SetToneUriParams &params, UpdateToneUriFunc updateFunc);
 
     // Wrapper functions to unify different update function signatures
-    int32_t UpdateRingtoneUriWrapper(
-        std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+    int32_t UpdateRingtoneUriWrapper(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         const int32_t &toneId, int32_t ringtoneType, const int32_t &shotToneType);
-    int32_t UpdateNotificatioToneUriWrapper(
-        std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+    int32_t UpdateNotificatioToneUriWrapper(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         const int32_t &toneId, int32_t systemToneType, const int32_t &shotToneType);
-    int32_t UpdateShotToneUriWrapper(
-        std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+    int32_t UpdateShotToneUriWrapper(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         const int32_t &toneId, int32_t systemToneType, const int32_t &shotToneType);
     ToneAttrs GetShotToneAttrsByType(const DatabaseTool &databaseTool, const std::string &type);
     ToneAttrs GetNotificationToneAttrsByType(const DatabaseTool &databaseTool);
