@@ -245,7 +245,7 @@ void AVThumbnailGenerator::SwitchToSoftWareDecoder()
         Init();
         {
             std::unique_lock lock(queueMutex_);
-            hasFetchedFrame_ = false;
+            hasFetchedFrame_.store(false);
         }
         auto res = SeekToTime(Plugins::Us2Ms(currentFetchFrameYuvTimeUs_),
             static_cast<Plugins::SeekMode>(currentFetchFrameYuvOption_), currentFetchFrameYuvTimeUs_);
@@ -427,7 +427,7 @@ void AVThumbnailGenerator::OnInputBufferAvailable(uint32_t index, std::shared_pt
             inputBufferQueueConsumer_->SetQueueSizeAndAttachBuffer(size, buffer, false);
             bufferVector_.push_back(buffer);
         }
-        isBufferAvailable_ = true;
+        isBufferAvailable_.store(true);
     }
     bufferAvailableCond_.notify_all();
 }
@@ -449,7 +449,7 @@ int64_t AVThumbnailGenerator::ReadLoop()
         AVBufferConfig avBufferConfig;
         auto res = inputBufferQueueProducer_->RequestBuffer(emptyBuffer, avBufferConfig, REQUEST_BUFFER_TIMEOUT);
         if (res != Status::OK) {
-            isBufferAvailable_ = false;
+            isBufferAvailable_.store(false);
             return 0;
         }
     }
@@ -460,7 +460,7 @@ int64_t AVThumbnailGenerator::ReadLoop()
     if (readSampleRes != Status::OK && readSampleRes != Status::END_OF_STREAM && readSampleRes != Status::ERROR_AGAIN) {
         {
             std::unique_lock<std::mutex> lock(mutex_);
-            readErrorFlag_ = true;
+            readErrorFlag_.store(true);
         }
         cond_.notify_all();
         inputBufferQueueProducer_->PushBuffer(emptyBuffer, false);
@@ -537,7 +537,7 @@ void AVThumbnailGenerator::OnOutputBufferAvailable(uint32_t index, std::shared_p
     
     {
         std::unique_lock<std::mutex> lock(mutex_);
-        hasFetchedFrame_ = true;
+        hasFetchedFrame_.store(true);
     }
     if (isClosest && avBuffer_ != nullptr) {
         int64_t preDiff = seekTime_ - avBuffer_->pts_;
@@ -568,9 +568,9 @@ std::shared_ptr<AVSharedMemory> AVThumbnailGenerator::FetchFrameAtTime(int64_t t
                static_cast<int32_t>(param.colorFormat));
     CHECK_AND_RETURN_RET_LOG(mediaDemuxer_ != nullptr, nullptr, "FetchFrameAtTime demuxer is nullptr");
 
-    readErrorFlag_ = false;
-    hasFetchedFrame_ = false;
-    isBufferAvailable_ = false;
+    readErrorFlag_.store(false);
+    hasFetchedFrame_.store(false);
+    isBufferAvailable_.store(false);
     outputConfig_ = param;
     seekTime_ = timeUs;
     trackInfo_ = GetVideoTrackInfo();
@@ -656,9 +656,9 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
                param.dstWidth, param.dstHeight, static_cast<int32_t>(param.colorFormat));
     CHECK_AND_RETURN_RET_LOG(mediaDemuxer_ != nullptr, nullptr, "FetchFrameAtTime demuxer is nullptr");
     avBuffer_ = nullptr;
-    readErrorFlag_ = false;
-    hasFetchedFrame_ = false;
-    isBufferAvailable_ = false;
+    readErrorFlag_.store(false);
+    hasFetchedFrame_.store(false);
+    isBufferAvailable_.store(false);
     hasReceivedCodecErrCodeOfUnsupported_ = false;
     outputConfig_ = param;
     seekTime_ = timeUs;
@@ -684,7 +684,7 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
         MEDIA_LOGI("FetchFrameYuv, retry fetch frame");
         std::unique_lock retryLock(onErrorMutex_);
         if (hasReceivedCodecErrCodeOfUnsupported_) {
-            stopProcessing_ = false;
+            stopProcessing_.store(false);
             SwitchToSoftWareDecoder();
             {
                 std::unique_lock fetchFrameLock(mutex_);
@@ -713,9 +713,9 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuvs(int64_t timeUs, i
                static_cast<int32_t>(param.colorFormat));
     CHECK_AND_RETURN_RET_LOG(mediaDemuxer_ != nullptr, nullptr, "FetchFrameAtTime demuxer is nullptr");
     avBuffer_ = nullptr;
-    readErrorFlag_ = false;
-    hasFetchedFrame_ = false;
-    isBufferAvailable_ = false;
+    readErrorFlag_.store(false);
+    hasFetchedFrame_.store(false);
+    isBufferAvailable_.store(false);
     hasReceivedCodecErrCodeOfUnsupported_ = false;
     outputConfig_ = param;
     seekTime_ = timeUs;
@@ -739,7 +739,7 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuvs(int64_t timeUs, i
     {
         std::unique_lock retryLock(onErrorMutex_);
         if (hasReceivedCodecErrCodeOfUnsupported_) {
-            stopProcessing_ = false;
+            stopProcessing_.store(false);
             SwitchToSoftWareDecoder();
             {
                 std::unique_lock fetchFrameLock(mutex_);
@@ -1003,7 +1003,7 @@ void AVThumbnailGenerator::Reset()
 
     FlushBufferQueue();
 
-    hasFetchedFrame_ = false;
+    hasFetchedFrame_.store(false);
     hasReceivedCodecErrCodeOfUnsupported_ = false;
     fileType_ = FileType::UNKNOW;
     trackInfo_ = nullptr;
@@ -1020,7 +1020,7 @@ void AVThumbnailGenerator::FlushBufferQueue()
             bufferVector_.clear();
             inputBufferQueueConsumer_->SetQueueSize(0);
         }
-        isBufferAvailable_ = false;
+        isBufferAvailable_.store(false);
     }
     {
         std::unique_lock<std::mutex> lock(dtsQueMutex_);
@@ -1083,7 +1083,7 @@ void AVThumbnailGenerator::Destroy()
 {
     {
         std::unique_lock<std::mutex> lock(queueMutex_);
-        stopProcessing_ = true;
+        stopProcessing_.store(true);
     }
     bufferAvailableCond_.notify_all();
 
@@ -1102,7 +1102,7 @@ void AVThumbnailGenerator::Destroy()
 
 void AVThumbnailGenerator::PauseFetchFrame()
 {
-    hasFetchedFrame_ = true;
+    hasFetchedFrame_.store(true);
     mediaDemuxer_->Pause();
     mediaDemuxer_->Flush();
     videoDecoder_->Flush();
