@@ -239,7 +239,7 @@ napi_value SystemToneOptionsNapi::SetHapticsMute(napi_env env, napi_callback_inf
     }
 
     status = napi_get_value_bool(env, args[0], &muteHaptics);
-    if (status == napi_ok) {
+    if (status == napi_ok && ringtoneOptionsNapi != nullptr) {
         ringtoneOptionsNapi->muteHaptics_ = muteHaptics;
     }
 
