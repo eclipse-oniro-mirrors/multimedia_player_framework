@@ -16,20 +16,20 @@
 #ifndef AV_THUMBNAIL_GENERATOR
 #define AV_THUMBNAIL_GENERATOR
 
-#include <unordered_map>
-#include <set>
-#include <deque>
 #include <condition_variable>
+#include <deque>
 #include <mutex>
 #include <nocopyable.h>
+#include <set>
+#include <unordered_map>
 
+#include "buffer/avbuffer.h"
 #include "buffer/avsharedmemorybase.h"
 #include "common/status.h"
 #include "i_avmetadatahelper_service.h"
 #include "media_demuxer.h"
 #include "pipeline/pipeline.h"
 #include "video_decoder_adapter.h"
-#include "buffer/avbuffer.h"
 
 namespace OHOS {
 namespace Media {
@@ -38,6 +38,7 @@ public:
     explicit AVThumbnailGenerator(std::shared_ptr<MediaDemuxer> &mediaDemuxer, int32_t appUid, int32_t appPid,
         uint32_t appTokenId, uint64_t appFullTokenId);
     ~AVThumbnailGenerator();
+
     std::shared_ptr<AVSharedMemory> FetchFrameAtTime(int64_t timeUs, int32_t option, const OutputConfiguration &param);
     std::shared_ptr<AVBuffer> FetchFrameYuv(int64_t timeUs, int32_t option, const OutputConfiguration &param);
     std::shared_ptr<AVBuffer> FetchFrameYuvs(int64_t timeUs, int32_t option, const OutputConfiguration &param,
@@ -55,9 +56,10 @@ public:
     void OnInputBufferAvailable(uint32_t index, std::shared_ptr<AVBuffer> buffer);
     void OnOutputBufferAvailable(uint32_t index, std::shared_ptr<AVBuffer> buffer);
     void OnFetchedFrameBufferAvailable();
+    void AcquireAvailableInputBuffer();
+
     int32_t Init();
     void SetClientBundleName(std::string appName);
-    void AcquireAvailableInputBuffer();
 
 private:
     OutputConfiguration outputConfig_;
@@ -95,17 +97,20 @@ private:
     std::unique_ptr<Task> readTask_ = nullptr;
     std::vector<std::shared_ptr<AVBuffer>> bufferVector_;
 
-    Status InitDecoder(const std::string& codecName = "");
+    Status InitDecoder(const std::string &codecName = "");
     void SwitchToSoftWareDecoder();
+
     std::shared_ptr<Meta> GetVideoTrackInfo();
+    void InitMediaInfoFromGlobalMeta();
     void SetDemuxerOutputBufferPts(std::shared_ptr<AVBuffer> &outputBuffer);
     void GetInputBufferDts(std::shared_ptr<AVBuffer> &inputBuffer);
     void SetDecoderOutputBufferPts(std::shared_ptr<AVBuffer> &outputBuffer);
     void ConvertToAVSharedMemory();
-    void ConvertP010ToNV12(
-        const sptr<SurfaceBuffer> &surfaceBuffer, uint8_t *dstNV12, int32_t strideWidth, int32_t strideHeight);
+    void ConvertP010ToNV12(const sptr<SurfaceBuffer> &surfaceBuffer, uint8_t *dstNV12, int32_t strideWidth,
+        int32_t strideHeight);
     int32_t GetYuvDataAlignStride(const sptr<SurfaceBuffer> &surfaceBuffer);
     Status SeekToTime(int64_t timeMs, Plugins::SeekMode option, int64_t realSeekTime);
+
     int32_t width_ = 0;
     int32_t height_ = 0;
     int32_t appUid_{0};
@@ -116,7 +121,7 @@ private:
     double frameRate_ { 0.0 };
     Plugins::SeekMode seekMode_ {};
     int64_t duration_ = 0;
-    bool hasReceivedCodecErrCodeOfUnsupported_ = false;
+    std::atomic<bool> hasReceivedCodecErrCodeOfUnsupported_ = false;
     int64_t currentFetchFrameYuvTimeUs_ = 0;
     int32_t currentFetchFrameYuvOption_ = 0;
 
@@ -128,15 +133,16 @@ private:
     bool SetSbStaticMetadata(sptr<SurfaceBuffer> &buffer, const std::vector<uint8_t> &staticMetadata);
     bool SetSbDynamicMetadata(sptr<SurfaceBuffer> &buffer, const std::vector<uint8_t> &dynamicMetadata);
 
+    int64_t ReadLoop();
+    int64_t StopTask();
+    void FlushBufferQueue();
+
+    void ResetParamsBeforeFetchFrame(int64_t timeUs, int32_t option, const OutputConfiguration &param);
     void HandleFetchFrameYuvRes();
     void HandleFetchFrameYuvFailed();
     void HandleFetchFrameAtTimeRes();
 
     void PauseFetchFrame();
-    void InitMediaInfoFromGlobalMeta();
-    int64_t ReadLoop();
-    void FlushBufferQueue();
-    int64_t StopTask();
 };
 }  // namespace Media
 }  // namespace OHOS
