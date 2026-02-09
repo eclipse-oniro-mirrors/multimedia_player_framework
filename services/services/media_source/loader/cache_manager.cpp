@@ -74,8 +74,7 @@ void StreamCacheManager::LoadMapping()
 
     struct stat st;
     CHECK_AND_RETURN_LOG(fstat(fd_, &st) != -1, "fstat fd failed");
-
-    fileSize_ = st.st_size;
+    fileSize_ = static_cast<size_t>(st.st_size);
     if (fileSize_ == 0) {
         MEDIA_LOGI("file_size is zero");
         return;
@@ -165,7 +164,7 @@ bool StreamCacheManager::FlushWriteLength(const std::string& path, uint64_t file
         auto it = index_.find(key);
         if (size < NEED_REMOVE_CACHE_SIZE && it != index_.end()) {
             CacheEntryInfo info;
-            FindFirstEqualField(it->second, info, entry, CacheFieldId::ENTRY);
+            CHECK_AND_CONTINUE_LOG(FindFirstEqualField(it->second, info, entry, CacheFieldId::ENTRY), "get error info");
             char* ptr = static_cast<char*>(mapped_);
             CacheEntryHeader* header = reinterpret_cast<CacheEntryHeader*>(ptr + info.offset);
             std::string url = ExtractField(ptr + info.offset, header->fieldCount, CacheFieldId::REQUEST_URL);
@@ -266,11 +265,20 @@ bool StreamCacheManager::InsertMapping(const std::vector<std::pair<CacheFieldId,
     for (size_t i = 0; i < activeFields.size(); ++i) {
         fieldHeaders[i].id = static_cast<uint32_t>(activeFields[i].first);
         fieldHeaders[i].len = activeFields[i].second.size();
-        memcpy_s(contentPtr, activeFields[i].second.size(),
+        errno_t ret = memcpy_s(contentPtr, activeFields[i].second.size(),
             activeFields[i].second.data(), activeFields[i].second.size());
+        CHECK_AND_RETURN_RET_LOG(ret == EOK, false, "memcpy_s failed");
         contentPtr += activeFields[i].second.size();
     }
     return true;
+}
+
+void StreamCacheManager::ReleaseMap()
+{
+    if (mapped_ != MAP_FAILED) {
+        munmap(mapped_, fileSize_);
+    }
+    MEDIA_LOGD("0x%{public}06" PRIXPTR "ReleaseMap", FAKE_POINTER(this));
 }
 
 std::string StreamCacheManager::GetMediaCache(const std::string& url)
@@ -393,7 +401,8 @@ bool StreamCacheManager::UpdateLastAccessTime(CacheEntryInfo &info, const std::s
 
         entryIndex_[entry] = newTimeStr;
         CHECK_AND_RETURN_RET_LOG(fieldHeaders[i].len == newTimeStr.size(), true, "length is inconsistent");
-        memcpy_s(contentPtr + offset, fieldHeaders[i].len, newTimeStr.data(), newTimeStr.size());
+        errno_t ret = memcpy_s(contentPtr + offset, fieldHeaders[i].len, newTimeStr.data(), newTimeStr.size());
+        CHECK_AND_RETURN_RET_LOG(ret == EOK, false, "memcpy_s failed");
         msync(mapped_, fileSize_, MS_SYNC);
         return true;
     }

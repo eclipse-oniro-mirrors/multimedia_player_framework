@@ -80,6 +80,7 @@ public:
     bool CreateMediaCache(const std::string& url, const std::string& type,
         bool randomAccess, uint64_t size); // 添加缓存映射目录
     bool FlushWriteLength(const std::string& path, uint64_t fileSize);      //刷新缓存文件大小
+    void ReleaseMap();
 
 private:
     void LoadIndex();
