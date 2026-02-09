@@ -24,6 +24,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, 
 
 namespace OHOS {
 namespace Media {
+const std::string AUDIO_HAPTIC_PLAYER_OPTIONS_NAPI_CLASS_NAME = "AudioHapticPlayerOptions";
 thread_local napi_ref AudioHapticPlayerOptionsNapi::sConstructor_ = nullptr;
 
 bool AudioHapticPlayerOptionsNapi::sMuteAudio_ = false;

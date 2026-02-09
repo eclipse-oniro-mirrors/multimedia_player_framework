@@ -21,7 +21,7 @@
 
 namespace OHOS {
 namespace Media {
-static const std::string AUDIO_HAPTIC_PLAYER_OPTIONS_NAPI_CLASS_NAME = "AudioHapticPlayerOptions";
+extern const std::string AUDIO_HAPTIC_PLAYER_OPTIONS_NAPI_CLASS_NAME;
 
 class AudioHapticPlayerOptionsNapi {
 public:

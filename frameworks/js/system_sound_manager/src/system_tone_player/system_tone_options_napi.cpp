@@ -24,6 +24,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, 
 
 namespace OHOS {
 namespace Media {
+const std::string SYSTEM_TONE_OPTIONS_NAPI_CLASS_NAME = "SystemToneOptions";
 thread_local napi_ref SystemToneOptionsNapi::sConstructor_ = nullptr;
 
 bool SystemToneOptionsNapi::sMuteAudio_ = false;
@@ -238,7 +239,7 @@ napi_value SystemToneOptionsNapi::SetHapticsMute(napi_env env, napi_callback_inf
     }
 
     status = napi_get_value_bool(env, args[0], &muteHaptics);
-    if (status == napi_ok) {
+    if (status == napi_ok && ringtoneOptionsNapi != nullptr) {
         ringtoneOptionsNapi->muteHaptics_ = muteHaptics;
     }
 

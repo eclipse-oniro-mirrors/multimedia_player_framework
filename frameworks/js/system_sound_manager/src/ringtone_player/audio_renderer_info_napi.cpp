@@ -24,6 +24,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, 
 
 namespace OHOS {
 namespace Media {
+const std::string AUDIO_RENDERER_INFO_NAPI_CLASS_NAME = "AudioRendererInfo";
 thread_local napi_ref AudioRendererInfoNapi::sConstructor_ = nullptr;
 unique_ptr<AudioStandard::AudioRendererInfo> AudioRendererInfoNapi::sAudioRendererInfo_ = nullptr;
 
@@ -178,7 +179,7 @@ napi_value AudioRendererInfoNapi::SetContentType(napi_env env, napi_callback_inf
     }
 
     status = napi_get_value_int32(env, args[0], &contentType);
-    if (status == napi_ok) {
+    if (status == napi_ok && audioRendererInfoNapi != nullptr && audioRendererInfoNapi->audioRendererInfo_ != nullptr) {
         audioRendererInfoNapi->audioRendererInfo_->contentType = static_cast<AudioStandard::ContentType>(contentType);
     }
 
@@ -304,7 +305,7 @@ napi_value AudioRendererInfoNapi::SetRendererFlags(napi_env env, napi_callback_i
     }
 
     status = napi_get_value_int32(env, args[0], &rendererFlags);
-    if (status == napi_ok) {
+    if (status == napi_ok && audioRendererInfoNapi != nullptr && audioRendererInfoNapi->audioRendererInfo_ != nullptr) {
         audioRendererInfoNapi->audioRendererInfo_->rendererFlags = rendererFlags;
     }
 

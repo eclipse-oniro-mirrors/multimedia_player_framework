@@ -39,6 +39,7 @@ const int SUCCESS = 0;
 
 namespace OHOS {
 namespace Media {
+const std::string RINGTONE_PLAYER_NAPI_CLASS_NAME = "RingtonePlayer";
 static const std::map<RingtoneState, std::string> STATEMAP = {
     {STATE_INVALID, AVPlayerState::STATE_ERROR},
     {STATE_NEW, AVPlayerState::STATE_INITIALIZED},
