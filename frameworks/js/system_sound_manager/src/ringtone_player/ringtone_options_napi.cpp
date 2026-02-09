@@ -240,7 +240,7 @@ napi_value RingtoneOptionsNapi::SetLoop(napi_env env, napi_callback_info info)
     }
 
     status = napi_get_value_bool(env, args[0], &loop);
-    if (status == napi_ok) {
+    if (status == napi_ok && ringtoneOptionsNapi != nullptr) {
         ringtoneOptionsNapi->loop_ = loop;
     }
 
