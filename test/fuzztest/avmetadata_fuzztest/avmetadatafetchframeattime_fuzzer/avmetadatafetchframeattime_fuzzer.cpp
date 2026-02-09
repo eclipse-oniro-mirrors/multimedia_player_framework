@@ -42,8 +42,10 @@ bool AVMetadataFetchFrameAtTimeFuzzer::FuzzAVMetadataFetchFrameAtTime(uint8_t *d
 {
     constexpr int32_t AV_METADATA_QUERY_OPTION_LIST = 4;
     constexpr int32_t AV_COLOR_FORMAT_LIST = 11;
-    constexpr int32_t DATA_INDEX = 0;
-    constexpr int32_t DATA_INDEX_OFFSET = 4;
+    constexpr int32_t DATA_INDEX_COLOR = 4;
+    constexpr int32_t DATA_INDEX_OFFSET = 5;
+    constexpr int32_t TWO_COUNT_DOUBLE_OFFSET = 9;
+    constexpr int32_t THREE_COUNT_TRIBLE_OFFSET = 13;
 
     std::shared_ptr<AVMetadataHelper> avmetadata = AVMetadataHelperFactory::CreateAVMetadataHelper();
     if (avmetadata == nullptr) {
@@ -78,13 +80,14 @@ bool AVMetadataFetchFrameAtTimeFuzzer::FuzzAVMetadataFetchFrameAtTime(uint8_t *d
         PixelFormat::NV12,
         PixelFormat::CMYK
     };
-    PixelFormat colorFormat = colorFormats[data[DATA_INDEX] % AV_COLOR_FORMAT_LIST];
+    PixelFormat colorFormat = colorFormats[data[DATA_INDEX_COLOR] % AV_COLOR_FORMAT_LIST];
 
-    struct PixelMapParams pixelMapParams = {*reinterpret_cast<int32_t *>(data),
-                                            *reinterpret_cast<int32_t *>(data + DATA_INDEX_OFFSET), colorFormat};
+    struct PixelMapParams pixelMapParams = {*reinterpret_cast<int32_t *>(data + DATA_INDEX_OFFSET),
+                                            *reinterpret_cast<int32_t *>(data + TWO_COUNT_DOUBLE_OFFSET), colorFormat};
     
     std::shared_ptr<PixelMap> retFetchFrameAtTime =
-        avmetadata->FetchFrameAtTime(*reinterpret_cast<int64_t *>(data), option, pixelMapParams);
+        avmetadata->FetchFrameAtTime(*reinterpret_cast<int64_t *>(
+        data + THREE_COUNT_TRIBLE_OFFSET), option, pixelMapParams);
 
     if (retFetchFrameAtTime != 0) {
         avmetadata->Release();
@@ -97,7 +100,8 @@ bool AVMetadataFetchFrameAtTimeFuzzer::FuzzAVMetadataFetchFrameAtTime(uint8_t *d
 
 bool FuzzTestAVMetadataFetchFrameAtTime(uint8_t *data, size_t size)
 {
-    if (data == nullptr) {
+    constexpr size_t MIN_SIZE = sizeof(int32_t) * 3 + sizeof(int64_t);
+    if (data == nullptr || size < MIN_SIZE) {
         return 0;
     }
 
