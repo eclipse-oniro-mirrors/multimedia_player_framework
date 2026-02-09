@@ -418,11 +418,8 @@ int32_t SystemSoundManagerImpl::UpdateRingtoneUri(std::shared_ptr<DataShare::Dat
     return UpdateToneTypeUri(dataShareHelper, params);
 }
 
-int32_t SystemSoundManagerImpl::SetToneUriInternal(
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
-    const std::string &uri,
-    const SetToneUriParams &params,
-    UpdateToneUriFunc updateFunc)
+int32_t SystemSoundManagerImpl::SetToneUriInternal(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+    const std::string &uri, const SetToneUriParams &params, UpdateToneUriFunc updateFunc)
 {
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
@@ -464,8 +461,7 @@ int32_t SystemSoundManagerImpl::SetToneUriInternal(
     return (ringtoneAssetByUri != nullptr) ? TYPEERROR : ERROR;
 }
 
-int32_t SystemSoundManagerImpl::UpdateRingtoneUriWrapper(
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+int32_t SystemSoundManagerImpl::UpdateRingtoneUriWrapper(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
     const int32_t &toneId, int32_t ringtoneType, const int32_t &shotToneType)
 {
     return UpdateRingtoneUri(dataShareHelper, toneId,
@@ -473,16 +469,15 @@ int32_t SystemSoundManagerImpl::UpdateRingtoneUriWrapper(
 }
 
 int32_t SystemSoundManagerImpl::UpdateNotificatioToneUriWrapper(
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
-    const int32_t &toneId, int32_t systemToneType, const int32_t &shotToneType)
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, const int32_t &toneId, int32_t systemToneType,
+    const int32_t &shotToneType)
 {
     (void)systemToneType;
     (void)shotToneType;
     return UpdateNotificatioToneUri(dataShareHelper, toneId);
 }
 
-int32_t SystemSoundManagerImpl::UpdateShotToneUriWrapper(
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+int32_t SystemSoundManagerImpl::UpdateShotToneUriWrapper(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
     const int32_t &toneId, int32_t systemToneType, const int32_t &shotToneType)
 {
     return UpdateShotToneUri(dataShareHelper, toneId,
