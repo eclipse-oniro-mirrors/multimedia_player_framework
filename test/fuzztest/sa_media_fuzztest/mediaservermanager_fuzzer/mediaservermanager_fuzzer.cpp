@@ -129,7 +129,6 @@ void MediaServerManagerFuzzer::FuzzMediaServerManagerCreateRecorder(uint8_t *dat
         sptr<IRemoteObject> obj = mediaServerManager.CreateStubObject(MediaServerManager::StubType::RECORDER);
         if (obj != nullptr) {
             mediaServerManager.DestroyStubObject(MediaServerManager::StubType::RECORDER, obj);
-            mediaServerManager.DestroyStubObject(MediaServerManager::StubType::RECORDER, obj);
         }
     }
     uint32_t rawProfilesCount = GetData<uint32_t>();
@@ -138,7 +137,6 @@ void MediaServerManagerFuzzer::FuzzMediaServerManagerCreateRecorder(uint8_t *dat
     for (uint32_t i = 0; i < profilesCount; ++i) {
         sptr<IRemoteObject> obj = mediaServerManager.CreateStubObject(MediaServerManager::StubType::RECORDERPROFILES);
         if (obj != nullptr) {
-            mediaServerManager.DestroyStubObject(MediaServerManager::StubType::RECORDERPROFILES, obj);
             mediaServerManager.DestroyStubObject(MediaServerManager::StubType::RECORDERPROFILES, obj);
         }
     }
@@ -149,7 +147,6 @@ void MediaServerManagerFuzzer::FuzzMediaServerManagerCreateRecorder(uint8_t *dat
         sptr<IRemoteObject> obj = mediaServerManager.CreateStubObject(MediaServerManager::StubType::SCREEN_CAPTURE);
         if (obj != nullptr) {
             mediaServerManager.DestroyStubObject(MediaServerManager::StubType::SCREEN_CAPTURE, obj);
-            mediaServerManager.DestroyStubObject(MediaServerManager::StubType::SCREEN_CAPTURE, obj);
         }
     }
     for (uint32_t i = 0; i < screenCaptureCount; ++i) {
@@ -157,14 +154,12 @@ void MediaServerManagerFuzzer::FuzzMediaServerManagerCreateRecorder(uint8_t *dat
             MediaServerManager::StubType::SCREEN_CAPTURE_MONITOR);
         if (obj != nullptr) {
             mediaServerManager.DestroyStubObject(MediaServerManager::StubType::SCREEN_CAPTURE_MONITOR, obj);
-            mediaServerManager.DestroyStubObject(MediaServerManager::StubType::SCREEN_CAPTURE_MONITOR, obj);
         }
     }
     for (uint32_t i = 0; i < screenCaptureCount; ++i) {
         sptr<IRemoteObject> obj = mediaServerManager.CreateStubObject(
             MediaServerManager::StubType::SCREEN_CAPTURE_CONTROLLER);
         if (obj != nullptr) {
-            mediaServerManager.DestroyStubObject(MediaServerManager::StubType::SCREEN_CAPTURE_CONTROLLER, obj);
             mediaServerManager.DestroyStubObject(MediaServerManager::StubType::SCREEN_CAPTURE_CONTROLLER, obj);
         }
     }
@@ -184,7 +179,6 @@ void MediaServerManagerFuzzer::FuzzMediaServerManagerMonitorAndCodec(uint8_t *da
             mediaServerManager.CreateStubObject(MediaServerManager::StubType::AVCODEC);
         if (obj != nullptr) {
             mediaServerManager.DestroyStubObject(MediaServerManager::StubType::AVCODEC, obj);
-            mediaServerManager.DestroyStubObject(MediaServerManager::StubType::AVCODEC, obj);
         }
     }
 
@@ -195,7 +189,6 @@ void MediaServerManagerFuzzer::FuzzMediaServerManagerMonitorAndCodec(uint8_t *da
         sptr<IRemoteObject> obj =
             mediaServerManager.CreateStubObject(MediaServerManager::StubType::AVCODECLIST);
         if (obj != nullptr) {
-            mediaServerManager.DestroyStubObject(MediaServerManager::StubType::AVCODECLIST, obj);
             mediaServerManager.DestroyStubObject(MediaServerManager::StubType::AVCODECLIST, obj);
         }
     }
@@ -215,7 +208,9 @@ void MediaServerManagerFuzzer::FuzzSetClearCallBack(uint8_t *data, size_t size)
 {
     MediaServerManager& mediaServerManager = MediaServerManager::GetInstance();
     pid_t targetPid = GetData<uint32_t>();
-    mediaServerManager.DestroyStubObjectForPid(targetPid);
+    if (targetPid != IPCSkeleton::GetCallingPid()) {
+        mediaServerManager.DestroyStubObjectForPid(targetPid);
+    }
 }
 
 inline void MediaServerManagerFuzzer::CreateAndDestroyStub(MediaServerManager &mgr, MediaServerManager::StubType type)
