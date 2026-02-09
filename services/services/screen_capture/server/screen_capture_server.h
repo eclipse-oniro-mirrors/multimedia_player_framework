@@ -182,6 +182,7 @@ private:
     void UpdateHighlightOutline(bool isStarted);
     void SetHighlightConfigForWindowManager(bool isStarted,
         Rosen::OutlineParams &outlineParams);
+    bool IsSetHighlightConfig();
     int32_t StartScreenCaptureFile();
     int32_t StartScreenCaptureStream();
     int32_t StartAudioCapture();

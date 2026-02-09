@@ -3171,7 +3171,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnUpdateMirrorDisplay_001, TestSize.Le
     std::vector<uint64_t> displayIds = {0, 1, 2, 3};
     screenCaptureServer_->OnUpdateMirrorDisplay(displayIds);
     EXPECT_FALSE(screenCaptureServer_->displayScreenIds_.empty());
-    EXPECT_EQ(screenCaptureServer_->displayScreenIds_.size(), displayIds.size());
+    EXPECT_EQ(screenCaptureServer_->displayScreenIds_.size(), 4);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, UnRegisterRecordDisplayListener_001, TestSize.Level2)

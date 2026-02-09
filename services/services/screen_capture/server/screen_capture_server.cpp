@@ -94,6 +94,8 @@ static const int32_t WINDOW_INFO_LIST_SIZE = 1;
 static const int32_t MEDIA_SERVICE_SA_ID = 3002;
 static const uint32_t MIN_LINE_WIDTH = 1;
 static const uint32_t MAX_LINE_WIDTH = 8;
+static const uint32_t MAX_LINE_COLOR_RGB = 0xffffff;
+static const uint32_t MIN_LINE_COLOR_ARGB = 0xff000000;
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     static const int32_t NOTIFICATION_MAX_TRY_NUM = 3;
 #endif
@@ -2137,15 +2139,17 @@ int32_t ScreenCaptureServer::OnStartScreenCapture()
 
 void ScreenCaptureServer::UpdateHighlightOutline(bool isStarted)
 {
-    MEDIA_LOGI("UpdateHighlightOutline enter");
-    if (captureConfig_.captureMode == CaptureMode::CAPTURE_SPECIFIED_WINDOW &&
-        (captureConfig_.highlightConfig.lineThickness >= MIN_LINE_WIDTH &&
-        captureConfig_.highlightConfig.lineThickness <= MAX_LINE_WIDTH)) {
+    MEDIA_LOGI("UpdateHighlightOutline enter. isStarted:%{public}d", static_cast<int32_t>(isStarted));
+    if (IsSetHighlightConfig()) {
         Rosen::OutlineParams outlineParams;
         outlineParams.type_ = OutlineType::OUTLINE_FOR_WINDOW;
         SetHighlightConfigForWindowManager(isStarted, outlineParams);
         auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
         sptr<IRemoteObject> media_server = samgr->GetSystemAbility(MEDIA_SERVICE_SA_ID);
+        if (media_server == nullptr) {
+            MEDIA_LOGE("Get media service failed");
+            return;
+        }
         Rosen::WMError res = WindowManager::GetInstance().UpdateOutline(media_server, outlineParams);
         if (res == Rosen::WMError::WM_OK) {
             MEDIA_LOGI("UpdateHighlightOutline sussess");
@@ -2153,6 +2157,26 @@ void ScreenCaptureServer::UpdateHighlightOutline(bool isStarted)
             MEDIA_LOGE("UpdateHighlightOutline failed:%{public}d", res);
         }
     }
+}
+
+bool ScreenCaptureServer::IsSetHighlightConfig()
+{
+    if (captureConfig_.highlightConfig.lineThickness < MIN_LINE_WIDTH ||
+        captureConfig_.highlightConfig.lineThickness > MAX_LINE_WIDTH) {
+        return false;
+    }
+    if (captureConfig_.highlightConfig.lineColor > MAX_LINE_COLOR_RGB &&
+        captureConfig_.highlightConfig.lineColor < MIN_LINE_COLOR_ARGB) {
+        return false;
+    }
+    if (captureConfig_.highlightConfig.mode != ScreenCaptureHighlightMode::HIGHLIGHT_MODE_CLOSED &&
+        captureConfig_.highlightConfig.mode != ScreenCaptureHighlightMode::HIGHLIGHT_MODE_CORNER_WRAP) {
+        return false;
+    }
+    if (captureConfig_.captureMode != CaptureMode::CAPTURE_SPECIFIED_WINDOW) {
+        return false;
+    }
+    return true;
 }
 
 void ScreenCaptureServer::SetHighlightConfigForWindowManager(bool isStarted,
@@ -2179,10 +2203,9 @@ void ScreenCaptureServer::SetHighlightConfigForWindowManager(bool isStarted,
         outlineParams.outlineStyleParams_.outlineWidth_ = OUTLINE_WIDTH_DEFAULT;
         outlineParams.outlineStyleParams_.outlineShape_ = OutlineShape::OUTLINE_SHAPE_FOUR_CORNERS;
     }
-    MEDIA_LOGI("SetHighlightConfigForWindowManager, isStarted:%{public}s, lineColor:0x%{public}x,"
-        " lineThickness:%{public}dvp, mode:%{public}d", isStarted ? "true" : "false",
-        outlineParams.outlineStyleParams_.outlineColor_, outlineParams.outlineStyleParams_.outlineWidth_,
-        outlineParams.outlineStyleParams_.outlineShape_);
+    MEDIA_LOGI("SetHighlightConfigForWindowManager, lineColor:0x%{public}x, lineThickness:%{public}dvp, "
+        "mode:%{public}d", outlineParams.outlineStyleParams_.outlineColor_,
+        outlineParams.outlineStyleParams_.outlineWidth_, outlineParams.outlineStyleParams_.outlineShape_);
 }
 
 OutlineShape ScreenCaptureServer::ConvertToOutlineShape(ScreenCaptureHighlightMode mode)
