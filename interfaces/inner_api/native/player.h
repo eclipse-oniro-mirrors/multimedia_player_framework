@@ -655,8 +655,6 @@ public:
      */
     virtual int32_t SetVolume(float leftVolume, float rightVolume) = 0;
 
-    virtual int32_t SetVolumeMode(int32_t mode);
-
     virtual int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) = 0;
 
     /**
@@ -706,23 +704,6 @@ public:
      * @version 1.0
      */
     virtual int32_t GetPlaybackInfo(Format &playbackInfo) = 0;
-
-    /**
-     * @brief Obtains the playbackStatisticMetrics, contains prepare_duration, resource_connection_duration,
-     * first_frame_decapsulation_duration, total_playback_time, loading_requests_count, total_loading_time,
-     * total_loading_bytes, stalling_count, total_stalling_time.
-     *
-     * @param playbackStatisticMetrics.
-     * @return Returns {@link MSERR_OK} if the statistic metrics is get; returns an error code defined
-     * in {@link media_errors.h} otherwise.
-     * @since 1.0
-     * @version 1.0
-     */
-    virtual int32_t GetPlaybackStatisticMetrics(Format& playbackStatisticMetrics)
-    {
-        (void)playbackStatisticMetrics;
-        return 0;
-    }
 
     /**
      * @brief Obtains the audio track info, contains mimeType, bitRate, sampleRate, channels, language.
@@ -782,7 +763,11 @@ public:
      * @return Returns {@link MSERR_OK} if the playback rate is set successful; returns an error code defined
      * in {@link media_errors.h} otherwise.
      */
-    virtual int32_t SetPlaybackRate(float rate) = 0;
+    virtual int32_t SetPlaybackRate(float rate)
+    {
+        (void)rate;
+        return 0;
+    }
 
     /**
      * @brief get the current player playback rate
@@ -794,19 +779,6 @@ public:
      * @version 1.0
      */
     virtual int32_t GetPlaybackSpeed(PlaybackRateMode &mode) = 0;
-
-    /**
-     * @brief get the current player playback rate
-     *
-     * @param rate the rate which can get.
-     * @return Returns {@link MSERR_OK} if the current player playback rate is get; returns an error code defined
-     * in {@link media_errors.h} otherwise.
-     */
-    virtual int32_t GetPlaybackRate(float &rate)
-    {
-        (void)rate;
-        return 0;
-    }
 
     /**
      * @brief set the bit rate use for hls player
@@ -850,6 +822,25 @@ public:
     {
         (void)type;
         (void)isMuted;
+        return 0;
+    }
+
+    virtual int32_t SetVolumeMode(int32_t mode)
+    {
+        (void)mode;
+        return 0;
+    }
+
+        /**
+     * @brief get the current player playback rate
+     *
+     * @param rate the rate which can get.
+     * @return Returns {@link MSERR_OK} if the current player playback rate is get; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     */
+    virtual int32_t GetPlaybackRate(float &rate)
+    {
+        (void)rate;
         return 0;
     }
 
@@ -991,7 +982,7 @@ public:
         return 0;
     }
 
-    virtual bool ReleaseClientListener() = 0;
+    virtual bool ReleaseClientListener() { return true; }
 
     /**
      * @brief Enables render video first frame of the media playback.
@@ -1248,6 +1239,23 @@ public:
         return 0;
     }
 
+    /**
+     * @brief Obtains the playbackStatisticMetrics, contains prepare_duration, resource_connection_duration,
+     * first_frame_decapsulation_duration, total_playback_time, loading_requests_count, total_loading_time,
+     * total_loading_bytes, stalling_count, total_stalling_time.
+     *
+     * @param playbackStatisticMetrics.
+     * @return Returns {@link MSERR_OK} if the statistic metrics is get; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t GetPlaybackStatisticMetrics(Format& playbackStatisticMetrics)
+    {
+        (void)playbackStatisticMetrics;
+        return 0;
+    }
+
     virtual int32_t SetCameraPostprocessing(bool isOpen)
     {
         (void)isOpen;
@@ -1259,15 +1267,15 @@ public:
         return 0;
     }
 
-    virtual int32_t SetLoudnessGain(float loudnessGain)
-    {
-        (void)loudnessGain;
-        return 0;
-    }
-    
     virtual int32_t GetGlobalInfo(std::shared_ptr<Meta> &globalInfo)
     {
         (void)globalInfo;
+        return 0;
+    }
+
+    virtual int32_t SetLoudnessGain(float loudnessGain)
+    {
+        (void)loudnessGain;
         return 0;
     }
     
