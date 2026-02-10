@@ -760,6 +760,7 @@ Status HiPlayerImpl::DoSetPlayRange()
 {
     Status ret = Status::OK;
     int64_t rangeStartTime = GetPlayRangeStartTime();
+    
     std::pair<int64_t, bool> startInfo;
     if (rangeStartTime == -1 && demuxer_->GetStartInfo(startInfo) && startInfo.first > 0) {
         rangeStartTime = startInfo.first;
@@ -2175,11 +2176,7 @@ int32_t HiPlayerImpl::InnerSelectTrack(std::string mime, int32_t trackId, Player
         return MSERR_UNKNOWN;
     }
     if (IsSubtitleMime(mime)) {
-        MEDIA_LOG_I("InnerSelectTrack, min: %{public}s, trackId is " PUBLIC_LOG_D32, mime.c_str(), trackId);
         currentSubtitleTrackId_ = trackId;
-        int32_t curPosMs = 0;
-        GetCurrentTime(curPosMs);
-        return TransStatus(Seek(curPosMs, PlayerSeekMode::SEEK_CLOSEST, false));
     } else if (IsVideoMime(mime)) {
         currentVideoTrackId_ = trackId;
         int32_t curPosMs = 0;
