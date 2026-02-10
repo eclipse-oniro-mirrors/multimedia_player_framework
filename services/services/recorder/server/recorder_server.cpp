@@ -1034,7 +1034,7 @@ int32_t RecorderServer::Release()
         (void)task->GetResult();
 #ifdef SUPPORT_POWER_MANAGER
         if (syncCallback_) {
-            if (!syncCallback_->isShutdown) {
+            if (!syncCallback_->GetShutdown()) {
                 shutdownClient_.UnRegisterShutdownCallback(static_cast<sptr<PowerMgr::ISyncShutdownCallback>>
                     (syncCallback_));
             }
@@ -1385,10 +1385,17 @@ bool RecorderServer::CheckCameraOutputState()
 }
 
 #ifdef SUPPORT_POWER_MANAGER
+bool SaveDocumentSyncCallback::GetShutdown()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    return isShutdown_;
+}
+
 void SaveDocumentSyncCallback::OnSyncShutdown()
 {
-    isShutdown = true;
-    usleep(intervalTime); // wait 500 ms
+    std::lock_guard<std::mutex> lock(mutex_);
+    isShutdown_ = true;
+    usleep(intervalTime_); // wait 500 ms
 }
 #endif
 } // namespace Media
