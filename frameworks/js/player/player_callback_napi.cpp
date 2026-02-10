@@ -277,7 +277,6 @@ void PlayerCallbackNapi::OnAudioInterruptCb(const Format &infoBody) const
 void PlayerCallbackNapi::OnJsCallBack(PlayerJsCallback *jsCb) const
 {
     auto task = [event = jsCb]() {
-                // Js Thread
         std::string request = event->callbackName;
         MEDIA_LOGD("JsCallBack %{public}s, uv_queue_work start", request.c_str());
         do {

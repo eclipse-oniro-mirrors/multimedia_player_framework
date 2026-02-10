@@ -1007,7 +1007,7 @@ void AVPlayerCallback::OnSpeedDoneCb(const int32_t extra, const Format &infoBody
 
 void AVPlayerCallback::OnPlaybackRateDoneCb(const int32_t extra, const Format &infoBody)
 {
-    (void)extra;
+    (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     float speedRate = 0.0f;
     (void)infoBody.GetFloatValue(PlayerKeys::PLAYER_PLAYBACK_RATE, speedRate);

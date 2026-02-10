@@ -24,6 +24,7 @@
 #endif
 #include "fd_utils.h"
 #include "osal/utils/steady_clock.h"
+#include "uri_helper.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerImpl"};
@@ -33,6 +34,8 @@ constexpr int64_t OVERTIME_WARNING_MS = 10;
 constexpr int64_t CREATE_AVPLAYER_WARNING_MS = 30;
 constexpr int64_t RESET_WARNING_MS = 30;
 constexpr int64_t RELEASE_WARNING_MS = 200;
+constexpr int32_t PATH_MAX_REAL = PATH_MAX + 1;
+constexpr ssize_t RESULT_ERROR = -1;
 const int32_t TIME_OUT_SECOND = 15;
 }
 
@@ -160,6 +163,23 @@ int32_t PlayerImpl::SetSource(const std::string &url)
     ScopedTimer timer("SetSource url", OVERTIME_WARNING_MS);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty..");
+    if (UriHelper::IsNetworkUrl(url))
+    {
+        bool isComponentCfg = false;
+        std::string protocol = UriHelper::GetProtocolFromURL(url);
+        int32_t ret2 = OHOS::NetManagerStandard::NetworkSecurityConfig::GetInstance()
+            .IsCleartextCfgByComponent("Media Kit", isComponentCfg);
+        MEDIA_LOG_D("Media Kit, ret: %{public}d, isComponentCfg: %{public}d, protocol: %{public}s",
+            ret2, isComponentCfg, protocol.c_str());
+        if (isComponentCfg && protocol == "http") {
+            bool isCleartextPermitted = true;
+            std::string hostname = UriHelper::GetHostnameFromURL(url);
+            OHOS::NetManagerStandard::NetworkSecurityConfig::GetInstance()
+                .isCleartextPermitted(hostname, isCleartextPermitted);
+            CHECK_AND_RETURN_RET_LOG(isCleartextPermitted, MSERR_CLEARTEXT_NOT_PERMITTED,
+                "http plain text request is not permitted");
+        }
+    }
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->SetSource(url), "SetSource url", false, TIME_OUT_SECOND);
     CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
@@ -939,8 +959,10 @@ int32_t PlayerImpl::SetReopenFd(int32_t fd)
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR "SetReopenFd  in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
-    MEDIA_LOGD("set reopen fd: %{public}d", fd);
-    LISTENER(return playerService_->SetReopenFd(fd), "SetReopenFd", false, TIME_OUT_SECOND);
+    FdsanFd reopenFdCinema = FdUtils::ReOpenFd(fd);
+    int32_t fdCinema = reopenFdCinema.Get();
+    MEDIA_LOGD("set reopen fd: %{public}d ; fdCinema: %{public}d", fd, fdCinema);
+    LISTENER(return playerService_->SetReopenFd(fd, fdCinema), "SetReopenFd", false, TIME_OUT_SECOND);
 }
  
 int32_t PlayerImpl::EnableCameraPostprocessing()
@@ -961,7 +983,7 @@ int32_t PlayerImpl::EnableCameraPostprocessing()
 
 int32_t PlayerImpl::SetCameraPostprocessing(bool isOpen)
 {
-    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR "SetCameraPostprocessing  in", FAKE_POINTER(this));
+    MEDIA_LOGI("PlayerImpl:0x%{public}06" PRIXPTR "SetCameraPostprocessing  in", FAKE_POINTER(this));
     ScopedTimer timer("SetCameraPostprocessing", OVERTIME_WARNING_MS);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
     LISTENER(return playerService_->SetCameraPostprocessing(isOpen), "SetCameraPostprocessing", false, TIME_OUT_SECOND);

@@ -670,26 +670,6 @@ void AVPlayerCallback::OnSpeedDoneCb(const int32_t extra, const Format &infoBody
     AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
-void AVPlayerCallback::OnBitRateDoneCb(const int32_t extra, const Format &infoBody)
-{
-    (void)infoBody;
-    CHECK_AND_RETURN_LOG(isLoaded_.load(), "current source is unready");
-    int32_t bitRate = extra;
-    MEDIA_LOGI("Bitrate %{public}d", bitRate);
-    if (refMap_.find(AVPlayerEvent::EVENT_BITRATE_DONE) == refMap_.end()) {
-        MEDIA_LOGW(" can not find bitrate callback!");
-        return;
-    }
-
-    AniCallback::Int *cb = new(std::nothrow) AniCallback::Int();
-    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Int");
-
-    cb->callback = refMap_.at(AVPlayerEvent::EVENT_BITRATE_DONE);
-    cb->callbackName = AVPlayerEvent::EVENT_BITRATE_DONE;
-    cb->value = bitRate;
-    AniCallback::CompleteCallback(cb, mainHandler_);
-}
-
 void AVPlayerCallback::OnPlaybackRateDoneCb(const int32_t extra, const Format &infoBody)
 {
     (void)infoBody;
@@ -708,6 +688,26 @@ void AVPlayerCallback::OnPlaybackRateDoneCb(const int32_t extra, const Format &i
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_RATE_DONE);
     cb->callbackName = AVPlayerEvent::EVENT_RATE_DONE;
     cb->value = static_cast<double>(speedRate);
+    AniCallback::CompleteCallback(cb, mainHandler_);
+}
+
+void AVPlayerCallback::OnBitRateDoneCb(const int32_t extra, const Format &infoBody)
+{
+    (void)infoBody;
+    CHECK_AND_RETURN_LOG(isLoaded_.load(), "current source is unready");
+    int32_t bitRate = extra;
+    MEDIA_LOGI("Bitrate %{public}d", bitRate);
+    if (refMap_.find(AVPlayerEvent::EVENT_BITRATE_DONE) == refMap_.end()) {
+        MEDIA_LOGW(" can not find bitrate callback!");
+        return;
+    }
+
+    AniCallback::Int *cb = new(std::nothrow) AniCallback::Int();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Int");
+
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_BITRATE_DONE);
+    cb->callbackName = AVPlayerEvent::EVENT_BITRATE_DONE;
+    cb->value = bitRate;
     AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
