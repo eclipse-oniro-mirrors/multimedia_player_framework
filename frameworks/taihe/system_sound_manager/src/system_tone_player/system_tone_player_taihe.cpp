@@ -50,7 +50,7 @@ SystemTonePlayerImpl::SystemTonePlayerImpl(std::shared_ptr<OHOS::Media::SystemTo
                 return;
             }
             int32_t ret = systemTonePlayer_->SetSystemTonePlayerFinishedAndErrorCallback(callbackTaihe_);
-            MEDIA_LOGI("SetSystemTonePlayerFinishedAndErrorCallback %{public}s", ret == 0 ? "succeess" : "failed");
+            MEDIA_LOGI("SetSystemTonePlayerFinishedAndErrorCallback %{public}s", ret == 0 ? "success" : "failed");
         }
     }
 }

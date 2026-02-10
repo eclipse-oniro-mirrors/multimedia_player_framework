@@ -18,7 +18,6 @@
 #include "audio_haptic_player_impl.h"
 
 #include "audio_haptic_log.h"
-#include "media_monitor_manager.h"
 #include "media_errors.h"
 
 #include "isoundpool.h"
@@ -33,8 +32,6 @@ namespace Media {
 const std::int32_t MAX_PLAYER_NUM = 128;
 const int32_t ERROR = -1;
 const std::string FDHEAD = "fd://";
-const int32_t ERROR_CODE_HAPTIC_PLAYERS_OVERFLOW = -100;
-const std::string ERROR_INFO_HAPTIC_PLAYERS_OVERFLOW = "Haptic players overflow for uid: ";
 
 std::shared_ptr<AudioHapticManager> AudioHapticManagerFactory::audioHapticManager_ = nullptr;
 std::mutex AudioHapticManagerFactory::audioHapticManagerMutex_;
@@ -116,7 +113,6 @@ int32_t AudioHapticManagerImpl::RegisterSourceWithEffectId(const std::string &au
     }
     if (curPlayerCount_ >= MAX_PLAYER_NUM) {
         MEDIA_LOGE("RegisterSourceWithEffectId failed. curPlayerCount_: %{public}d", curPlayerCount_);
-        ReportPlayerOverflowEvent();
         return INVALID_SOURCE_ID;
     }
     curPlayerIndex_ = (curPlayerIndex_ + 1) % MAX_PLAYER_NUM;
@@ -140,7 +136,6 @@ int32_t AudioHapticManagerImpl::RegisterSource(const std::string &audioUri, cons
 
     if (curPlayerCount_ >= MAX_PLAYER_NUM) {
         MEDIA_LOGE("RegisterSource failed curPlayerCount_: %{public}d", curPlayerCount_);
-        ReportPlayerOverflowEvent();
         return INVALID_SOURCE_ID;
     }
     curPlayerIndex_ = (curPlayerIndex_ + 1) % MAX_PLAYER_NUM;
@@ -167,7 +162,6 @@ int32_t AudioHapticManagerImpl::RegisterSourceFromFd(const AudioHapticFileDescri
     std::lock_guard<std::mutex> lock(audioHapticManagerMutex_);
     if (curPlayerCount_ >= MAX_PLAYER_NUM) {
         MEDIA_LOGE("RegisterSourceFromFd failed curPlayerCount_: %{public}d", curPlayerCount_);
-        ReportPlayerOverflowEvent();
         return INVALID_SOURCE_ID;
     }
     int32_t newAudioFd = dup(audioFd.fd);
@@ -178,6 +172,7 @@ int32_t AudioHapticManagerImpl::RegisterSourceFromFd(const AudioHapticFileDescri
     int32_t newHapticFd = dup(hapticFd.fd);
     if (newHapticFd == FILE_DESCRIPTOR_INVALID) {
         MEDIA_LOGE("RegisterSourceFromFd failed invalid haptic fd");
+        close(newAudioFd);
         return INVALID_SOURCE_ID;
     }
 
@@ -194,16 +189,6 @@ int32_t AudioHapticManagerImpl::RegisterSourceFromFd(const AudioHapticFileDescri
     MEDIA_LOGI("audioFd: %{public}d, hapticeFd: %{public}d, sourceId: %{public}d",
         audioFd.fd, hapticFd.fd, sourceId);
     return sourceId;
-}
-
-void AudioHapticManagerImpl::ReportPlayerOverflowEvent() const
-{
-    std::shared_ptr<Media::MediaMonitor::EventBean> bean = std::make_shared<Media::MediaMonitor::EventBean>(
-        Media::MediaMonitor::ModuleId::AUDIO, Media::MediaMonitor::EventId::TONE_PLAYBACK_FAILED,
-        Media::MediaMonitor::EventType::FAULT_EVENT);
-    bean->Add("ERROR_CODE", ERROR_CODE_HAPTIC_PLAYERS_OVERFLOW);
-    bean->Add("ERROR_REASON", ERROR_INFO_HAPTIC_PLAYERS_OVERFLOW + std::to_string(getuid()));
-    Media::MediaMonitor::MediaMonitorManager::GetInstance().WriteLogMsg(bean);
 }
 
 int32_t AudioHapticManagerImpl::UnregisterSource(const int32_t &sourceID)

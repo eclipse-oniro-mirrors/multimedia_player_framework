@@ -175,7 +175,7 @@ std::string RingtonePlayerImpl::GetHapticUriForAudioUri(const std::string &audio
 bool RingtonePlayerImpl::InitDatabaseTool()
 {
     if (databaseTool_.isInitialized) {
-        MEDIA_LOGE("The database tool has been initialized. No need to reload.");
+        MEDIA_LOGI("The database tool has been initialized. No need to reload.");
         return true;
     }
     SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID,
@@ -193,7 +193,7 @@ bool RingtonePlayerImpl::InitDatabaseTool()
 void RingtonePlayerImpl::ReleaseDatabaseTool()
 {
     if (!databaseTool_.isInitialized) {
-        MEDIA_LOGE("The database tool has been released!");
+        MEDIA_LOGI("The database tool has been released!");
         return;
     }
     if (databaseTool_.dataShareHelper != nullptr) {
