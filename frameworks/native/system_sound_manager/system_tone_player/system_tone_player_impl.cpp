@@ -315,7 +315,7 @@ void SystemTonePlayerImpl::GetHapticUriForAudioUri(const std::string &audioUri,
 bool SystemTonePlayerImpl::InitDatabaseTool()
 {
     if (databaseTool_.isInitialized) {
-        MEDIA_LOGE("The database tool has been initialized. No need to reload.");
+        MEDIA_LOGI("The database tool has been initialized. No need to reload.");
         return true;
     }
     SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID,
@@ -333,7 +333,7 @@ bool SystemTonePlayerImpl::InitDatabaseTool()
 void SystemTonePlayerImpl::ReleaseDatabaseTool()
 {
     if (!databaseTool_.isInitialized) {
-        MEDIA_LOGE("The database tool has been released!");
+        MEDIA_LOGI("The database tool has been released!");
         return;
     }
     if (databaseTool_.dataShareHelper != nullptr) {
@@ -374,7 +374,7 @@ int32_t SystemTonePlayerImpl::Start()
 
 int32_t SystemTonePlayerImpl::Start(const SystemToneOptions &systemToneOptions)
 {
-    MEDIA_LOGW("Enter Start() with systemToneOptions: muteAudio %{public}d, muteHaptics %{public}d",
+    MEDIA_LOGI("Enter Start() with systemToneOptions: muteAudio %{public}d, muteHaptics %{public}d",
         systemToneOptions.muteAudio, systemToneOptions.muteHaptics);
     std::lock_guard<std::mutex> lock(systemTonePlayerMutex_);
     CHECK_AND_RETURN_RET_LOG(systemToneState_ != SystemToneState::STATE_RELEASED, MSERR_INVALID_STATE,
@@ -388,7 +388,6 @@ int32_t SystemTonePlayerImpl::Start(const SystemToneOptions &systemToneOptions)
     bool actualMuteHaptics = ringerModeOptions.muteHaptics || systemToneOptions.muteHaptics || isHapticUriEmpty_ ||
         isNoneHaptics_;
     if (actualMuteAudio) {
-        MEDIA_LOGW("The audio of system tone player is muted!");
         int32_t delayTime = DEFAULT_DELAY;
         // the audio of system tone player has been muted. Only start vibrator.
         if (!actualMuteHaptics) {
@@ -424,7 +423,7 @@ int32_t SystemTonePlayerImpl::Start(const SystemToneOptions &systemToneOptions)
 
 int32_t SystemTonePlayerImpl::Stop(const int32_t &streamId)
 {
-    MEDIA_LOGW("Enter Stop() with streamId %{public}d", streamId);
+    MEDIA_LOGI("Enter Stop() with streamId %{public}d", streamId);
     std::lock_guard<std::mutex> lock(systemTonePlayerMutex_);
     CHECK_AND_RETURN_RET_LOG(systemToneState_ != SystemToneState::STATE_RELEASED, MSERR_INVALID_STATE,
         "System tone player has been released!");

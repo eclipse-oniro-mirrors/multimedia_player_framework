@@ -44,7 +44,7 @@ static int32_t GenerateSyncId()
 {
     static constexpr uint8_t pidBits = 8;        // Number of bits allocated for the Process ID
     static constexpr uint8_t randomBits = 8;     // Number of bits allocated for the random value
-    static constexpr uint8_t timeBits = 24;      // Number of bits allocated for the time difference
+    static constexpr uint8_t timeBits = 15;      // Number of bits allocated for the time difference
 
     static constexpr uint32_t pidMask = (1 << pidBits) - 1;      // Mask for PID (0xFF for 8 bits)
     static constexpr uint32_t randomMask = (1 << randomBits) - 1; // Mask for random value (0xFF for 8 bits)
@@ -170,7 +170,6 @@ void AudioHapticPlayerImpl::LoadPlayer()
     // Load vibrator
     audioHapticVibrator_ = AudioHapticVibrator::CreateAudioHapticVibrator(*this);
     CHECK_AND_RETURN_LOG(audioHapticVibrator_ != nullptr, "Failed to create audio haptic vibrator instance");
-    audioHapticVibrator_->SetAudioHapticSyncId(audioHapticSyncId_);
 }
 
 bool AudioHapticPlayerImpl::IsMuted(const AudioHapticType &audioHapticType) const
@@ -228,7 +227,7 @@ int32_t AudioHapticPlayerImpl::Start()
     result = audioHapticSound_->StartSound(audioHapticSyncId_.load());
     SendHapticPlayerEvent(MSERR_OK, "START_HAPTIC_PLAYER");
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result, "Failed to start sound.");
-    MEDIA_LOGW("StartSound() has been executed successfully!");
+
     playerState_ = AudioHapticPlayerState::STATE_RUNNING;
     return result;
 }
@@ -498,7 +497,11 @@ int32_t AudioHapticPlayerImpl::GetDelayTime(int32_t playedTimes)
 {
     // normal mode needs to calc waiting time, fast mode start vib immediatelly
     if (latencyMode_ == AUDIO_LATENCY_MODE_NORMAL) {
-        return playedTimes > 0 ? NORMAL_LOOP_FOLLOW_WAIT_MS : NORMAL_LOOP_FIRST_WAIT_MS;
+        if (playedTimes > 0) {
+            return NORMAL_LOOP_FOLLOW_WAIT_MS;
+        }
+
+        return NORMAL_LOOP_FIRST_WAIT_MS;
     }
 
     return 0;
@@ -531,13 +534,10 @@ int32_t AudioHapticPlayerImpl::StartVibrate()
         }
 
         canStartVibrate_ = false; // reset for next time.
-        int32_t delayMS = GetDelayTime(playedTimes); // audio haptics sync offset
-        // If new synchronization is unsupported, use old solution
-        if (!isSupportDSPSync_) {
-            int32_t hapticDelay = audioHapticVibrator_->GetDelayTime();
-            delayMS = (static_cast<int32_t>(this->audioLatency_) - hapticDelay) > 0 ?
-                static_cast<int32_t>(this->audioLatency_) - hapticDelay : 0;
-        }
+        int32_t hapticDelay = audioHapticVibrator_->GetDelayTime();
+        int32_t notSupportDelay = (static_cast<int32_t>(this->audioLatency_) - hapticDelay) > 0 ?
+            static_cast<int32_t>(this->audioLatency_) - hapticDelay : 0;
+        int32_t delayMS = isSupportDSPSync_ ? GetDelayTime(playedTimes) : notSupportDelay;
         waitResult = condStartVibrate_.wait_for(lockWait, std::chrono::milliseconds(delayMS),
             [this]() { return isVibrationStopped_.load(); });
         if (isVibrationStopped_) {

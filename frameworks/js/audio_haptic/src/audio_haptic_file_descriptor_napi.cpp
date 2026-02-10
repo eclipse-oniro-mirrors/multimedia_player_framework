@@ -185,7 +185,7 @@ napi_value AudioHapticFileDescriptorNapi::SetFd(napi_env env, napi_callback_info
     }
 
     status = napi_get_value_int32(env, args[0], &fd);
-    if (status == napi_ok) {
+    if (status == napi_ok && audioHapticFileDescriptorNapi != nullptr) {
         audioHapticFileDescriptorNapi->fd_ = fd;
     }
 
@@ -245,7 +245,7 @@ napi_value AudioHapticFileDescriptorNapi::SetLength(napi_env env, napi_callback_
     }
 
     status = napi_get_value_int64(env, args[0], &length);
-    if (status == napi_ok) {
+    if (status == napi_ok && audioHapticFileDescriptorNapi != nullptr) {
         audioHapticFileDescriptorNapi->length_ = length;
     }
 
@@ -305,7 +305,7 @@ napi_value AudioHapticFileDescriptorNapi::SetOffset(napi_env env, napi_callback_
     }
 
     status = napi_get_value_int64(env, args[0], &offset);
-    if (status == napi_ok) {
+    if (status == napi_ok && audioHapticFileDescriptorNapi != nullptr) {
         audioHapticFileDescriptorNapi->offset_ = offset;
     }
 

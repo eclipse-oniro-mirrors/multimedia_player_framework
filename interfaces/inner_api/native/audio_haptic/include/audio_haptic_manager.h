@@ -38,7 +38,7 @@ public:
     virtual int32_t RegisterSource(const std::string &audioUri, const std::string &hapticUri) = 0;
 
     virtual int32_t RegisterSourceFromFd(const AudioHapticFileDescriptor& audioFd,
-        const AudioHapticFileDescriptor& hapticFd);
+        const AudioHapticFileDescriptor& hapticFd) = 0;
 
     virtual int32_t RegisterSourceWithEffectId(const std::string &audioUri, const std::string &effectId) = 0;
 
