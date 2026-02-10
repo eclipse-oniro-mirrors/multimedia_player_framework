@@ -68,7 +68,6 @@ int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
         std::vector<SourceType> targetSources = {
             SourceType::SOURCE_TYPE_MIC,
             SourceType::SOURCE_TYPE_VOICE_CALL,
-            SourceType::SOURCE_TYPE_VOICE_RECOGNITION,
             SourceType::SOURCE_TYPE_VOICE_MESSAGE,
             SourceType::SOURCE_TYPE_CAMCORDER
         };
