@@ -94,6 +94,7 @@ private:
     std::mutex vibrateMutex_;
     AudioStandard::StreamUsage streamUsage_ = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     bool isStopped_ = false;
+    int32_t patternduratiomTime_ = 0;
     std::atomic<int32_t> vibrationTimeElapsed_ = 0;
     std::atomic<int64_t> patternStartTime_ = 0;
     std::atomic<int32_t> vibratorTime_ = 0;

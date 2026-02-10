@@ -48,6 +48,7 @@ private:
     int32_t ReleaseSoundInternal();
     void ReleaseSoundPoolPlayer();
     int32_t OpenAudioSource();
+    int32_t ExtractFd(const std::string& audioUri);
 
     AudioSource audioSource_;
     bool muteAudio_ = false;
