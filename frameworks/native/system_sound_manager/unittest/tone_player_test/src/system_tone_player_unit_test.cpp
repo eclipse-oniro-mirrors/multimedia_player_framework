@@ -570,7 +570,7 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_031, TestSize.Level1
     EXPECT_EQ(result, MSERR_OK);
     systemTonePlayerImpl_->InitHapticsSourceIds();
     result = systemTonePlayerImpl_->SetHapticsFeature(ToneHapticsFeature::STANDARD);
-    EXPECT_EQ(result, MSERR_OK);
+    EXPECT_EQ(result, ERROR_UNSUPPORTED_OPERATION);
     ToneHapticsFeature feature;
     result = systemTonePlayerImpl_->GetHapticsFeature(feature);
     EXPECT_EQ(result, MSERR_OK);

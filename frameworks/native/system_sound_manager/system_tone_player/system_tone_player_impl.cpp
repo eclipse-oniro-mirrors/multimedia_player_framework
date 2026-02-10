@@ -48,10 +48,6 @@ const std::string FDHEAD = "fd://";
 const std::string AUDIO_FORMAT_STR = ".ogg";
 const std::string HAPTIC_FORMAT_STR = ".json";
 const int32_t MAX_STREAM_ID = 128;
-const int32_t ERRCODE_OPERATION_NOT_ALLOWED = 5400102;
-const int32_t ERRCODE_IOERROR = 5400103;
-const int32_t ERRCODE_INVALID_PARAMS = 20700002;
-const int32_t ERRCODE_UNSUPPORTED_OPERATION = 20700003;
 const std::string GENTLE_HAPTIC_PATH = "/sys_prod/resource/media/haptics/gentle/synchronized/notifications";
 const std::string RINGTONE_PATH = "/media/audio/";
 const std::string STANDARD_HAPTICS_PATH = "/media/haptics/standard/synchronized/";
@@ -358,7 +354,7 @@ int32_t SystemTonePlayerImpl::Prepare()
 
     if (!databaseTool_.isInitialized && !InitDatabaseTool()) {
         MEDIA_LOGE("The database tool is not ready!");
-        return ERRCODE_IOERROR;
+        return ERROR_IO;
     }
     std::string audioUri = systemSoundMgr_.GetSystemToneAttrs(databaseTool_, systemToneType_).GetUri();
     int32_t result = InitPlayer(audioUri);
@@ -398,9 +394,9 @@ int32_t SystemTonePlayerImpl::Start(const SystemToneOptions &systemToneOptions)
         if (!actualMuteHaptics) {
             if (!databaseTool_.isInitialized && !InitDatabaseTool()) {
                 MEDIA_LOGE("The database tool is not ready!");
-                SendSystemTonePlaybackEvent(ERRCODE_IOERROR, systemToneOptions.muteAudio,
+                SendSystemTonePlaybackEvent(ERROR_IO, systemToneOptions.muteAudio,
                     systemToneOptions.muteHaptics);
-                return ERRCODE_IOERROR;
+                return ERROR_IO;
             }
             std::string hapticUri = (configuredUri_ == NO_SYSTEM_SOUND) ?
                 defaultNonSyncHapticUri_ : hapticUriMap_[hapticsFeature_];
@@ -596,9 +592,9 @@ static bool IsValidVolume(float &scale)
 
 int32_t SystemTonePlayerImpl::SetAudioVolume(float volume)
 {
-    CHECK_AND_RETURN_RET_LOG(systemToneState_ != SystemToneState::STATE_RELEASED, ERRCODE_OPERATION_NOT_ALLOWED,
+    CHECK_AND_RETURN_RET_LOG(systemToneState_ != SystemToneState::STATE_RELEASED, ERROR_OPERATION_NOT_ALLOWED,
         "System tone player has been released!");
-    CHECK_AND_RETURN_RET_LOG(IsValidVolume(volume), ERRCODE_INVALID_PARAMS,
+    CHECK_AND_RETURN_RET_LOG(IsValidVolume(volume), ERROR_INVALID_PARAMS,
         "Invliad volume, the volume must be in the [0, 1] range");
     volume_ = volume;
     return MSERR_OK;
@@ -612,7 +608,7 @@ int32_t SystemTonePlayerImpl::GetAudioVolume(float &recvValue)
 
 int32_t SystemTonePlayerImpl::GetSupportHapticsFeatures(std::vector<ToneHapticsFeature> &recvFeatures)
 {
-    CHECK_AND_RETURN_RET_LOG(systemToneState_ != SystemToneState::STATE_RELEASED, ERRCODE_UNSUPPORTED_OPERATION,
+    CHECK_AND_RETURN_RET_LOG(systemToneState_ != SystemToneState::STATE_RELEASED, ERROR_UNSUPPORTED_OPERATION,
         "System tone player has been released!");
     recvFeatures = supportedHapticsFeatures_;
     return MSERR_OK;
@@ -620,19 +616,19 @@ int32_t SystemTonePlayerImpl::GetSupportHapticsFeatures(std::vector<ToneHapticsF
 
 int32_t SystemTonePlayerImpl::SetHapticsFeature(ToneHapticsFeature feature)
 {
-    CHECK_AND_RETURN_RET_LOG(systemToneState_ != SystemToneState::STATE_RELEASED, ERRCODE_OPERATION_NOT_ALLOWED,
+    CHECK_AND_RETURN_RET_LOG(systemToneState_ != SystemToneState::STATE_RELEASED, ERROR_OPERATION_NOT_ALLOWED,
         "System tone player has been released!");
     CHECK_AND_RETURN_RET_LOG((feature == ToneHapticsFeature::STANDARD || feature == ToneHapticsFeature::GENTLE) &&
         std::find(supportedHapticsFeatures_.begin(),
         supportedHapticsFeatures_.end(), feature) != supportedHapticsFeatures_.end(),
-        ERRCODE_UNSUPPORTED_OPERATION, "Unsupport haptics features %{public}d", feature);
+        ERROR_UNSUPPORTED_OPERATION, "Unsupport haptics features %{public}d", feature);
     hapticsFeature_ = feature;
     return MSERR_OK;
 }
 
 int32_t SystemTonePlayerImpl::GetHapticsFeature(ToneHapticsFeature &feature)
 {
-    CHECK_AND_RETURN_RET_LOG(systemToneState_ != SystemToneState::STATE_RELEASED, ERRCODE_UNSUPPORTED_OPERATION,
+    CHECK_AND_RETURN_RET_LOG(systemToneState_ != SystemToneState::STATE_RELEASED, ERROR_UNSUPPORTED_OPERATION,
         "System tone player has been released!");
     feature = hapticsFeature_;
     return MSERR_OK;
