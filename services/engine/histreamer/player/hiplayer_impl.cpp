@@ -760,7 +760,6 @@ Status HiPlayerImpl::DoSetPlayRange()
 {
     Status ret = Status::OK;
     int64_t rangeStartTime = GetPlayRangeStartTime();
-    
     std::pair<int64_t, bool> startInfo;
     if (rangeStartTime == -1 && demuxer_->GetStartInfo(startInfo) && startInfo.first > 0) {
         rangeStartTime = startInfo.first;
