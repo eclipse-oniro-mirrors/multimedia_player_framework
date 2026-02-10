@@ -80,7 +80,7 @@ bool PlayerFileFuzzer::FuzzFile(const uint8_t* data, size_t size)
     player_->Stop();
     int32_t ret = player_->Release();
     if (ret != MSERR_OK) {
-        return false; 
+        return false;
     }
     return true;
 }
