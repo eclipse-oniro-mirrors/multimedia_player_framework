@@ -256,7 +256,7 @@ OH_AVErrCode OH_AVMetadataExtractor_FetchMetadata(OH_AVMetadataExtractor* extrac
     struct AVMetadataExtractorObject *extractorObj = reinterpret_cast<AVMetadataExtractorObject *>(extractor);
     CHECK_AND_RETURN_RET_LOG(extractorObj->aVMetadataHelper_ != nullptr, AV_ERR_INVALID_VAL,
                              "aVMetadataHelper_ is nullptr");
-    CHECK_AND_RETURN_RET_LOG(extractorObj->state_ == HelperState::HELPER_STATE_HTTP_INTERCEPTED,
+    CHECK_AND_RETURN_RET_LOG(extractorObj->state_ != HelperState::HELPER_STATE_HTTP_INTERCEPTED,
                              AV_ERR_IO_CLEARTEXT_NOT_PERMITTED, "Http plaintext access is not allowed.");
     CHECK_AND_RETURN_RET_LOG(extractorObj->state_ == HelperState::HELPER_STATE_RUNNABLE,
                              AV_ERR_OPERATE_NOT_PERMIT, "Current state is not runnable, can't fetchMetadata.");
