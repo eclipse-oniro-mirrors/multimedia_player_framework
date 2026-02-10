@@ -163,8 +163,7 @@ int32_t PlayerImpl::SetSource(const std::string &url)
     ScopedTimer timer("SetSource url", OVERTIME_WARNING_MS);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty..");
-    if (UriHelper::IsNetworkUrl(url))
-    {
+    if (UriHelper::IsNetworkUrl(url)) {
         bool isComponentCfg = false;
         std::string protocol = UriHelper::GetProtocolFromURL(url);
         int32_t ret2 = OHOS::NetManagerStandard::NetworkSecurityConfig::GetInstance()
