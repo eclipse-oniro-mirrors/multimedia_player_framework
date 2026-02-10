@@ -20,7 +20,7 @@
  * @brief Provides APIs for generating an image at the specific time from a video resource.
  *
  * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
- * @since 16
+ * @since 18
  */
 
 /**
@@ -30,7 +30,7 @@
  *
  * @kit MediaKit
  * @library libavimage_generator.so
- * @since 16
+ * @since 18
  */
 
 #ifndef MULTIMEDIA_PLAYER_FRAMEWORK_NATIVE_AVIMAGE_GENERATOR_BASE_H
@@ -46,7 +46,7 @@ extern "C" {
  * @brief Enumerates the image query options about the relationship between the given timeUs and a key frame.
  *
  * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
- * @since 16
+ * @since 18
  */
 typedef enum OH_AVImageGenerator_QueryOptions {
     /**
