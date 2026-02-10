@@ -44,60 +44,6 @@ static std::shared_ptr<DataShare::DataShareHelper> CreateDataShareHelper(int32_t
     return DataShare::DataShareHelper::Creator(remoteObj, RINGTONE_URI);
 }
 
-class MockContext : public AbilityRuntime::Context {
-    public:
-        MockContext() = default;
-        ~MockContext() override = default;
-
-        std::string GetBundleName() const override { return "mock_bundle_name"; }
-        std::shared_ptr<Context> CreateBundleContext(const std::string &bundleName) override { return nullptr; }
-        std::shared_ptr<AppExecFwk::ApplicationInfo> GetApplicationInfo() const override { return nullptr; }
-        std::shared_ptr<Global::Resource::ResourceManager> GetResourceManager() const override { return nullptr; }
-        std::string GetBundleCodePath() const override { return ""; }
-        std::shared_ptr<AppExecFwk::HapModuleInfo> GetHapModuleInfo() const override { return nullptr; }
-        std::string GetBundleCodeDir() override { return ""; }
-        std::string GetCacheDir() override { return ""; }
-        std::string GetTempDir() override { return ""; }
-        std::string GetFilesDir() override { return ""; }
-        std::string GetResourceDir(const std::string &moduleName) override { return ""; }
-        bool IsUpdatingConfigurations() override { return false; }
-        bool PrintDrawnCompleted() override { return false; }
-        std::string GetDatabaseDir() override { return ""; }
-        int32_t GetSystemDatabaseDir(const std::string &groupId, bool checkExist, std::string &databaseDir)
-            override { return 0; }
-        std::string GetPreferencesDir() override { return ""; }
-        int32_t GetSystemPreferencesDir(const std::string &groupId, bool checkExist, std::string &preferencesDir)
-            override { return 0; }
-        std::string GetGroupDir(std::string groupId) override { return ""; }
-        std::string GetDistributedFilesDir() override { return ""; }
-        std::string GetCloudFileDir() override { return ""; }
-        std::string GetLogFileDir() override { return ""; }
-        sptr<IRemoteObject> GetToken() override { return nullptr; }
-        void SetToken(const sptr<IRemoteObject> &token) override {}
-        void SwitchArea(int mode) override {}
-        std::shared_ptr<Context> CreateModuleContext(const std::string &moduleName) override { return nullptr; }
-        std::shared_ptr<Context> CreateModuleContext(const std::string &bundleName, const std::string &moduleName)
-            override { return nullptr; }
-        std::shared_ptr<Global::Resource::ResourceManager> CreateModuleResourceManager(const std::string &bundleName,
-            const std::string &moduleName) override { return nullptr; }
-        int32_t CreateSystemHspModuleResourceManager(const std::string &bundleName, const std::string &moduleName,
-            std::shared_ptr<Global::Resource::ResourceManager> &resourceManager) override { return 0; }
-        int32_t CreateHspModuleResourceManager(const std::string &bundleName, const std::string &moduleName,
-            std::shared_ptr<Global::Resource::ResourceManager> &resourceManager) override { return 0; }
-        int GetArea() override { return 0; }
-        std::string GetProcessName() override { return ""; }
-        std::shared_ptr<AppExecFwk::Configuration> GetConfiguration() const override { return nullptr; }
-        std::string GetBaseDir() const override { return ""; }
-        Global::Resource::DeviceType GetDeviceType() const override
-            { return Global::Resource::DeviceType::DEVICE_PHONE; }
-        std::shared_ptr<Context> CreateAreaModeContext(int areaMode) override { return nullptr; }
-        std::shared_ptr<Context> CreateDisplayContext(uint64_t displayId) override { return nullptr; }
-        bool IsContext(size_t contextTypeId) override { return false; }
-
-        std::shared_ptr<Context> CreateModuleOrPluginContext(const std::string &bundleName,
-            const std::string &moduleName) override { return nullptr; }
-};
-
 /**
  * @tc.name  : IsRingtoneTypeValid
  * @tc.number: IsRingtoneTypeValid_001
@@ -388,7 +334,7 @@ HWTEST(SystemSoundManagerUnitNextTest, SetSystemToneUri_001, TestSize.Level0)
         std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
     ASSERT_NE(systemSoundManagerImpl_, nullptr);
 
-    std::shared_ptr<AbilityRuntime::Context> context = std::make_shared<MockContext>();
+    std::shared_ptr<AbilityRuntime::Context> context = std::make_shared<ContextImpl>();
     ASSERT_NE(context, nullptr);
 
     std::string uri = NO_SYSTEM_SOUND;
@@ -409,7 +355,7 @@ HWTEST(SystemSoundManagerUnitNextTest, GetSpecificRingTonePlayer_001, TestSize.L
         std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
     ASSERT_NE(systemSoundManagerImpl_, nullptr);
 
-    std::shared_ptr<AbilityRuntime::Context> context = std::make_shared<MockContext>();
+    std::shared_ptr<AbilityRuntime::Context> context = std::make_shared<ContextImpl>();
     ASSERT_NE(context, nullptr);
     RingtoneType ringtoneType = RINGTONE_TYPE_SIM_CARD_0;
     std::string ringtoneUri = "valid_uri";
@@ -430,7 +376,7 @@ HWTEST(SystemSoundManagerUnitNextTest, SetRingtoneUri_001, TestSize.Level0)
         std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
     ASSERT_NE(systemSoundManagerImpl_, nullptr);
 
-    std::shared_ptr<AbilityRuntime::Context> context = std::make_shared<MockContext>();
+    std::shared_ptr<AbilityRuntime::Context> context = std::make_shared<ContextImpl>();
     ASSERT_NE(context, nullptr);
 
     std::string uri = NO_RING_SOUND;
@@ -493,7 +439,7 @@ HWTEST(SystemSoundManagerUnitNextTest, AddCustomizedToneByExternalUri_001, TestS
         std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
     ASSERT_NE(systemSoundManagerImpl_, nullptr);
 
-    std::shared_ptr<AbilityRuntime::Context> context = std::make_shared<MockContext>();
+    std::shared_ptr<AbilityRuntime::Context> context = std::make_shared<ContextImpl>();
     ASSERT_NE(context, nullptr);
 
     std::shared_ptr<ToneAttrs> toneAttrs = std::make_shared<ToneAttrs>(
@@ -605,7 +551,7 @@ HWTEST(SystemSoundManagerUnitNextTest, AddCustomizedToneByFdAndOffset_001, TestS
         std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
     ASSERT_NE(systemSoundManagerImpl_, nullptr);
 
-    std::shared_ptr<AbilityRuntime::Context> context = std::make_shared<MockContext>();
+    std::shared_ptr<AbilityRuntime::Context> context = std::make_shared<ContextImpl>();
     ASSERT_NE(context, nullptr);
     std::shared_ptr<ToneAttrs> toneAttrs = std::make_shared<ToneAttrs>(
         "test_tone", "test_file", "test_uri", ToneCustomizedType::CUSTOMISED, TONE_CATEGORY_RINGTONE);
