@@ -944,7 +944,7 @@ void ScreenCaptureServer::GetValueFromJson(Json::Value &root,
             value = false;
         }
     }
-    MEDIA_LOGI("GetValueFromJson value: %{public}d", value);
+    MEDIA_LOGI("GetValueFromJson key=%{public}s value=%{public}d", key.c_str(), value);
 }
 
 void ScreenCaptureServer::SetCaptureConfig(CaptureMode captureMode, int32_t missionId)
@@ -986,7 +986,8 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
 
     Json::Value root;
 #ifdef SUPPORT_SCREEN_CAPTURE_PICKER
-    if (server->IsPickerPopUp() && server->isPresentPicker_ && server->captureState_ == AVScreenCaptureState::STARTED) {
+    if (server->IsPickerPopUp() && server->isPresentPickerPopWindow_ &&
+        server->captureState_ == AVScreenCaptureState::STARTED) {
         return server->HandlePresentPickerWindowCase(root, content);
     }
 #endif
@@ -1062,18 +1063,11 @@ int32_t ScreenCaptureServer::HandlePresentPickerWindowCase(Json::Value& root, co
     std::lock_guard<std::mutex> lock(mutex_);
     std::string choice = "false";
     GetChoiceFromJson(root, content, std::string("choice"), choice);
-    GetValueFromJson(root, content, std::string("checkBoxSelected"), checkBoxSelected_);
-    systemPrivacyProtectionSwitch_ = checkBoxSelected_;
-    appPrivacyProtectionSwitch_ = checkBoxSelected_;
-    if (showShareSystemAudioBox_) {
-        GetValueFromJson(root, content, std::string("isInnerAudioBoxSelected"), isInnerAudioBoxSelected_);
-    }
-    MEDIA_LOGI("HandlePresentPickerWindowCase showShareSystemAudioBox: %{public}d, isInnerAudioBoxSelected: %{public}d,"
-        " dataType: %{public}d, choice: %{public}s, mode: %{public}d", showShareSystemAudioBox_,
-        isInnerAudioBoxSelected_, captureConfig_.dataType, choice.c_str(), captureConfig_.captureMode);
+    MEDIA_LOGI("HandlePresentPickerWindowCase dataType: %{public}d, choice: %{public}s, mode: %{public}d",
+        captureConfig_.dataType, choice.c_str(), captureConfig_.captureMode);
     isPresentPickerPopWindow_ = false;
     if (choice != USER_CHOICE_ALLOW) {
-        MEDIA_LOGI("ReportAVScreenCaptureUserChoice user choice is not allow or deny");
+        MEDIA_LOGI("HandlePresentPickerWindowCase user choice is not allow");
         return MSERR_OK;
     }
     HandleSetDisplayIdAndMissionId(root);
@@ -1161,9 +1155,9 @@ int32_t ScreenCaptureServer::PresentPicker()
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " PresentPicker start.", FAKE_POINTER(this));
     MediaTrace trace("ScreenCaptureServer::PresentPicker");
     std::lock_guard<std::mutex> lock(mutex_);
-    isPresentPicker_ = true;
     isPresentPickerPopWindow_ = true;
     showShareSystemAudioBox_ = false;
+    showSensitiveCheckBox_ = false;
     int32_t ret = StartPicker();
     return ret;
 #endif
@@ -4658,7 +4652,6 @@ int32_t ScreenCaptureServer::StopScreenCapture()
 
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances StopScreenCapture E", FAKE_POINTER(this));
     isScreenCaptureAuthority_ = false;
-    isPresentPicker_ = false;
     isPresentPickerPopWindow_ = false;
     return ret;
 }
