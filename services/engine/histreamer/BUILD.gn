@@ -53,6 +53,10 @@ ohos_shared_library("media_engine_histreamer") {
     deps += [ "lpp:media_engine_histreamer_lpp_package" ]
   }
 
+  cflags = [
+    "-D_FORTIFY_SOURCE=2",
+  ]
+
   relative_install_dir = "media"
   subsystem_name = "multimedia"
   part_name = "player_framework"
