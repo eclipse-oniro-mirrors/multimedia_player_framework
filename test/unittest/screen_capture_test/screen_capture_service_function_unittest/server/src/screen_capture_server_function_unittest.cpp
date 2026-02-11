@@ -830,7 +830,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, IsPickerPopUp_001, TestSize.Level2)
     ScreenCaptureStrategy strategy;
     strategy.pickerPopUp = AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_ENABLE;
     screenCaptureServer_->SetScreenCaptureStrategy(strategy);
+#ifdef SUPPORT_SCREEN_CAPTURE_PICKER
     ASSERT_EQ(screenCaptureServer_->IsPickerPopUp(), true);
+#endif
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, IsPickerPopUp_002, TestSize.Level2)
@@ -838,7 +840,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, IsPickerPopUp_002, TestSize.Level2)
     ScreenCaptureStrategy strategy;
     strategy.pickerPopUp = AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_DISABLE;
     screenCaptureServer_->SetScreenCaptureStrategy(strategy);
+#ifdef SUPPORT_SCREEN_CAPTURE_PICKER
     ASSERT_EQ(screenCaptureServer_->IsPickerPopUp(), false);
+#endif
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SetScreenScaleMode_001, TestSize.Level2)
