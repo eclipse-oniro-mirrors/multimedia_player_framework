@@ -780,12 +780,10 @@ bool ScreenCaptureServer::IsSAServiceCalling()
     MEDIA_LOGI("ScreenCaptureServer::IsSAServiceCalling START.");
     const auto tokenId = IPCSkeleton::GetCallingTokenID();
     const auto tokenTypeFlag = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
-    if (tokenTypeFlag == Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE ||
-        tokenTypeFlag == Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL) {
-        MEDIA_LOGI("ScreenCaptureServer::IsSAServiceCalling true.");
-        return true;
-    }
-    return false;
+    CHECK_AND_RETURN_RET_NOLOG(tokenTypeFlag != Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE &&
+        tokenTypeFlag != Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL, false);
+    MEDIA_LOGI("ScreenCaptureServer::IsSAServiceCalling true.");
+    return true;
 }
 
 std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::Create()
@@ -1068,10 +1066,8 @@ int32_t ScreenCaptureServer::HandlePresentPickerWindowCase(Json::Value& root, co
     MEDIA_LOGI("HandlePresentPickerWindowCase dataType: %{public}d, choice: %{public}s, mode: %{public}d",
         captureConfig_.dataType, choice.c_str(), captureConfig_.captureMode);
     isPresentPickerPopWindow_ = false;
-    if (choice != USER_CHOICE_ALLOW) {
-        MEDIA_LOGI("HandlePresentPickerWindowCase user choice is not allow");
-        return MSERR_OK;
-    }
+    CHECK_AND_RETURN_RET_LOGI(choice == USER_CHOICE_ALLOW, MSERR_OK,
+        "ReportAVScreenCaptureUserChoice user choice is not allow");
     HandleSetDisplayIdAndMissionId(root);
     DestroyVirtualScreen();
     UnRegisterWindowLifecycleListener();
@@ -1502,13 +1498,10 @@ bool ScreenCaptureServer::CheckScreenCapturePermission()
 {
     int result = Security::AccessToken::AccessTokenKit::VerifyAccessToken(appInfo_.appTokenId,
         "ohos.permission.CAPTURE_SCREEN");
-    if (result == Security::AccessToken::PERMISSION_GRANTED) {
-        MEDIA_LOGI("user have the right to access capture screen!");
-        return true;
-    } else {
-        MEDIA_LOGE("user do not have the right to access capture screen!");
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(result == Security::AccessToken::PERMISSION_GRANTED, false,
+        "user do not have the right to access capture screen!");
+    MEDIA_LOGI("user have the right to access capture screen!");
+    return true;
 }
 
 bool ScreenCaptureServer::IsUserPrivacyAuthorityNeeded()
@@ -1854,12 +1847,10 @@ bool ScreenCaptureServer::CheckPrivacyWindowSkipPermission()
     MEDIA_LOGI("ScreenCaptureServer::CheckPrivacyWindowSkipPermission() START.");
     int result = Security::AccessToken::AccessTokenKit::VerifyAccessToken(appInfo_.appTokenId,
         "ohos.permission.EXEMPT_CAPTURE_SCREEN_AUTHORIZE");
-    if (result == Security::AccessToken::PERMISSION_GRANTED) {
-        MEDIA_LOGI("CheckPrivacyWindowSkipPermission: user have the right to skip privacywindow");
-        return true;
-    }
-    MEDIA_LOGD("CheckPrivacyWindowSkipPermission: user do not have the right to skip privacywindow");
-    return false;
+    CHECK_AND_RETURN_RET_LOG(result == Security::AccessToken::PERMISSION_GRANTED, false,
+        "CheckPrivacyWindowSkipPermission: user do not have the right to skip privacywindow");
+    MEDIA_LOGI("CheckPrivacyWindowSkipPermission: user have the right to skip privacywindow");
+    return true;
 }
 
 int32_t ScreenCaptureServer::RequestUserPrivacyAuthority(bool &isSkipPrivacyWindow)
@@ -1917,9 +1908,7 @@ int32_t ScreenCaptureServer::StartAudioCapture()
     int32_t ret = MSERR_UNKNOWN;
     if (isMicrophoneSwitchTurnOn_) {
         ret = StartStreamMicAudioCapture();
-        if (ret != MSERR_OK) {
-            MEDIA_LOGE("StartAudioCapture StartStreamMicAudioCapture failed");
-        }
+        TRUE_LOG(ret != MSERR_OK, MEDIA_LOGE, "StartAudioCapture StartStreamMicAudioCapture failed");
     }
     ret = StartStreamInnerAudioCapture();
     if (ret != MSERR_OK) {
@@ -2054,12 +2043,9 @@ int32_t ScreenCaptureServer::StartScreenCaptureStream()
         ret, captureConfig_.dataType);
 
     ret = StartStreamVideoCapture();
-    if (ret != MSERR_OK) {
-        StopAudioCapture();
-        MEDIA_LOGE("StartScreenCaptureStream failed");
-        return ret;
-    }
-    MEDIA_LOGI("StartScreenCaptureStream success");
+    CHECK_AND_RETURN_RET_LOGI(ret != MSERR_OK, ret, "StartScreenCaptureStream success");
+    StopAudioCapture();
+    MEDIA_LOGE("StartScreenCaptureStream failed");
     return ret;
 }
 
@@ -2404,17 +2390,15 @@ int32_t ScreenCaptureServer::TryStartNotification()
 int32_t ScreenCaptureServer::TryNotificationOnPostStartScreenCapture()
 {
     int32_t tryTimes = TryStartNotification();
-    if (tryTimes > NOTIFICATION_MAX_TRY_NUM) {
-        captureState_ = AVScreenCaptureState::STARTED;
-        if (screenCaptureCb_ != nullptr) {
-            screenCaptureCb_->OnError(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL,
-                AVScreenCaptureErrorCode::SCREEN_CAPTURE_ERR_UNKNOWN);
-            SetMediaKitReport("startRecording fail");
-        }
-        StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
-        return MSERR_UNKNOWN;
+    CHECK_AND_RETURN_RET_NOLOG(tryTimes > NOTIFICATION_MAX_TRY_NUM, MSERR_OK);
+    captureState_ = AVScreenCaptureState::STARTED;
+    if (screenCaptureCb_ != nullptr) {
+        screenCaptureCb_->OnError(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL,
+            AVScreenCaptureErrorCode::SCREEN_CAPTURE_ERR_UNKNOWN);
+        SetMediaKitReport("startRecording fail");
     }
-    return MSERR_OK;
+    StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
+    return MSERR_UNKNOWN;
 }
 #endif
 
@@ -2539,10 +2523,8 @@ int32_t ScreenCaptureServer::InitRecorderInfo(std::shared_ptr<IRecorderService> 
         ret = recorder->SetVideoEncodingBitRate(videoSourceId_, captureConfig_.videoInfo.videoEncInfo.videoBitrate);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoEncodingBitRate failed");
         ret = recorder->SetVideoEnableBFrame(videoSourceId_, captureConfig_.strategy.enableBFrame);
-        if (ret != MSERR_OK) {
-            MEDIA_LOGE("recorder SetVideoEnableBFrame failed");
-            // continue, do not return error
-        }
+        // continue, do not return error
+        TRUE_LOG(ret != MSERR_OK, MEDIA_LOGE, "recorder SetVideoEnableBFrame failed");
     }
     return MSERR_OK;
 }
@@ -2636,15 +2618,9 @@ bool ScreenCaptureServer::UpdatePrivacyUsingPermissionState(VideoPermissionState
     int res = 0;
     if (state == START_VIDEO) {
         res = PrivacyKit::StartUsingPermission(appInfo_.appTokenId, "ohos.permission.CAPTURE_SCREEN", appInfo_.appPid);
-        if (res != 0) {
-            MEDIA_LOGE("start using perm error");
-            return false;
-        }
+        CHECK_AND_RETURN_RET_LOG(res == 0, false, "start using perm error");
         res = PrivacyKit::AddPermissionUsedRecord(appInfo_.appTokenId, "ohos.permission.CAPTURE_SCREEN", 1, 0);
-        if (res != 0) {
-            MEDIA_LOGE("add screen capture record error: %{public}d", res);
-            return false;
-        }
+        CHECK_AND_RETURN_RET_LOG(res == 0, false, "add screen capture record error: %{public}d", res);
     } else if (state == STOP_VIDEO) {
         res = PrivacyKit::StopUsingPermission(appInfo_.appTokenId, "ohos.permission.CAPTURE_SCREEN", appInfo_.appPid);
         if (res != 0) {
@@ -2699,10 +2675,8 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
             return ret;
         }
 
-        if (isPrivacyAuthorityEnabled_ && !isSkipPrivacyWindow) {
-            MEDIA_LOGI("Wait for user interactions to ALLOW/DENY capture");
-            return MSERR_OK;
-        }
+        CHECK_AND_RETURN_RET_LOGI(!isPrivacyAuthorityEnabled_ || isSkipPrivacyWindow, MSERR_OK,
+            "Wait for user interactions to ALLOW/DENY capture");
         MEDIA_LOGI("privacy notification window not support, app has CAPTURE_SCREEN permission and go on");
     } else {
         MEDIA_LOGI("Privacy Authority granted automatically and go on"); // for root and skip permission
@@ -2795,9 +2769,8 @@ bool ScreenCaptureServer::IsPickerPopUp()
         return true;
     }
 #ifdef PC_STANDARD
-    if (captureConfig_.strategy.pickerPopUp == AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_DISABLE) {
-        return false;
-    }
+    CHECK_AND_RETURN_RET_NOLOG(captureConfig_.strategy.pickerPopUp
+        != AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_DISABLE, false);
     return !isRegionCapture_ &&
            (captureConfig_.captureMode == CAPTURE_SPECIFIED_SCREEN || CheckCaptureSpecifiedWindowForSelectWindow());
 #else
@@ -2953,9 +2926,7 @@ void ScreenCaptureServer::RefreshResConfig()
     std::string language = Global::I18n::LocaleConfig::GetSystemLanguage();
     UErrorCode status = U_ZERO_ERROR;
     icu::Locale locale = icu::Locale::forLanguageTag(language, status);
-    if (status != U_ZERO_ERROR) {
-        MEDIA_LOGE("forLanguageTag failed, errCode:%{public}d", status);
-    }
+    TRUE_LOG(status != U_ZERO_ERROR, MEDIA_LOGE, "forLanguageTag failed, errCode:%{public}d", status);
     if (resConfig_) {
         resConfig_->SetLocaleInfo(locale.getLanguage(), locale.getScript(), locale.getCountry());
         if (resourceManager_) {
@@ -3169,10 +3140,8 @@ int32_t ScreenCaptureServer::StartStreamVideoCapture()
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartStreamVideoCapture start, state:%{public}d, "
         "dataType:%{public}d, isSurfaceMode:%{public}s.", FAKE_POINTER(this),
         captureConfig_.videoInfo.videoCapInfo.state, captureConfig_.dataType, isSurfaceMode_ ? "true" : "false");
-    if (captureConfig_.videoInfo.videoCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_IGNORE) {
-        MEDIA_LOGI("StartStreamVideoCapture is ignored");
-        return MSERR_OK;
-    }
+    CHECK_AND_RETURN_RET_LOGI(captureConfig_.videoInfo.videoCapInfo.state
+        != AVScreenCaptureParamValidationState::VALIDATION_IGNORE, MSERR_OK, "StartStreamVideoCapture is ignored");
     CHECK_AND_RETURN_RET_LOG(
         captureConfig_.videoInfo.videoCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID,
         MSERR_INVALID_VAL, "StartStreamVideoCapture failed, invalid param, dataType:%{public}d",
@@ -3274,9 +3243,7 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
     if (!showCursor_) {
         MEDIA_LOGI("CreateVirtualScreen without cursor");
         int32_t ret = ShowCursorInner();
-        if (ret != MSERR_OK) {
-            MEDIA_LOGE("CreateVirtualScreen SetVirtualScreenBlackList failed");
-        }
+        TRUE_LOG(ret != MSERR_OK, MEDIA_LOGE, "CreateVirtualScreen SetVirtualScreenBlackList failed");
     }
     MEDIA_LOGI("CreateVirtualScreen success, screenId: %{public}" PRIu64, virtualScreenId_);
     return PrepareVirtualScreenMirror();
@@ -3665,20 +3632,14 @@ int32_t ScreenCaptureServer::ReleaseMicAudioBuffer()
 
 int32_t ScreenCaptureServer::GetInnerAudioCaptureBufferSize(size_t &size)
 {
-    if (innerAudioCapture_ == nullptr) {
-        MEDIA_LOGE("innerAudioCapture_ is nullptr");
-        return MSERR_UNKNOWN;
-    }
+    CHECK_AND_RETURN_RET_LOG(innerAudioCapture_ != nullptr, MSERR_UNKNOWN, "innerAudioCapture_ is nullptr");
     int32_t ret = innerAudioCapture_->GetBufferSize(size);
     return ret;
 }
 
 int32_t ScreenCaptureServer::GetMicAudioCaptureBufferSize(size_t &size)
 {
-    if (micAudioCapture_ == nullptr) {
-        MEDIA_LOGE("micAudioCapture_ is nullptr");
-        return MSERR_UNKNOWN;
-    }
+    CHECK_AND_RETURN_RET_LOG(micAudioCapture_ != nullptr, MSERR_UNKNOWN, "micAudioCapture_ is nullptr");
     int32_t ret = micAudioCapture_->GetBufferSize(size);
     return ret;
 }
@@ -4124,10 +4085,8 @@ int32_t ScreenCaptureServer::SetCanvasRotationInner()
     CHECK_AND_RETURN_RET_LOG(virtualScreenId_ != SCREEN_ID_INVALID, MSERR_INVALID_VAL,
                              "SetCanvasRotation failed virtual screen not init");
     auto ret = ScreenManager::GetInstance().SetVirtualMirrorScreenCanvasRotation(virtualScreenId_, canvasRotation_);
-    if (CheckAppVersionForUnsupport(ret)) {
-        MEDIA_LOGE("SetVirtualMirrorScreenCanvasRotation failed, ret: %{public}d", ret);
-        return MSERR_UNSUPPORT;
-    }
+    CHECK_AND_RETURN_RET_LOG(!CheckAppVersionForUnsupport(ret), MSERR_UNSUPPORT,
+        "SetVirtualMirrorScreenCanvasRotation failed, ret: %{public}d", ret);
     CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_INVALID_OPERATION,
                              "SetVirtualMirrorScreenCanvasRotation failed, ret: %{public}d", ret);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " SetCanvasRotationInner OK.", FAKE_POINTER(this));
@@ -4196,10 +4155,8 @@ int32_t ScreenCaptureServer::ResizeCanvas(int32_t width, int32_t height)
 
     auto resizeRet = ScreenManager::GetInstance().ResizeVirtualScreen(virtualScreenId_, width, height);
     MEDIA_LOGI("ScreenCaptureServer::ResizeCanvas, ResizeVirtualScreen end, ret: %{public}d ", resizeRet);
-    if (CheckAppVersionForUnsupport(resizeRet)) {
-        MEDIA_LOGE("ResizeCanvas failed, resizeRet: %{public}d", resizeRet);
-        return MSERR_UNSUPPORT;
-    }
+    CHECK_AND_RETURN_RET_LOG(!CheckAppVersionForUnsupport(resizeRet), MSERR_UNSUPPORT,
+        "ResizeCanvas failed, resizeRet: %{public}d", resizeRet);
     CHECK_AND_RETURN_RET_LOG(resizeRet == DMError::DM_OK, MSERR_INVALID_OPERATION, "ResizeVirtualScreen failed");
 
     return MSERR_OK;
@@ -4207,9 +4164,7 @@ int32_t ScreenCaptureServer::ResizeCanvas(int32_t width, int32_t height)
 
 int32_t ScreenCaptureServer::UpdateSurface(sptr<Surface> surface)
 {
-    if (!isSurfaceMode_) {
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_NOLOG(isSurfaceMode_, MSERR_INVALID_OPERATION);
     MediaTrace trace("ScreenCaptureServer::UpdateSurface");
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("ScreenCaptureServer::UpdateSurface start");
@@ -4249,10 +4204,8 @@ int32_t ScreenCaptureServer::SkipPrivacyModeInner()
                              "SkipPrivacyMode failed virtual screen not init");
     auto ret = Rosen::DisplayManager::GetInstance().SetVirtualScreenSecurityExemption(virtualScreenId_,
         appInfo_.appPid, skipPrivacyWindowIDsVec_);
-    if (CheckAppVersionForUnsupport(ret)) {
-        MEDIA_LOGE("SetVirtualScreenSecurityExemption failed, ret: %{public}d", ret);
-        return MSERR_UNSUPPORT;
-    }
+    CHECK_AND_RETURN_RET_LOG(!CheckAppVersionForUnsupport(ret), MSERR_UNSUPPORT,
+        "SetVirtualScreenSecurityExemption failed, ret: %{public}d", ret);
     CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_INVALID_OPERATION,
         "SkipPrivacyModeInner failed, ret: %{public}d", ret);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " SkipPrivacyModeInner OK.", FAKE_POINTER(this));
@@ -4276,10 +4229,8 @@ int32_t ScreenCaptureServer::SetMaxVideoFrameRate(int32_t frameRate)
     uint32_t actualRefreshRate = 0;
     auto res = ScreenManager::GetInstance().SetVirtualScreenMaxRefreshRate(virtualScreenId_,
         static_cast<uint32_t>(frameRate), actualRefreshRate);
-    if (CheckAppVersionForUnsupport(res)) {
-        MEDIA_LOGE("SetVirtualScreenMaxRefreshRate failed, res: %{public}d", res);
-        return MSERR_UNSUPPORT;
-    }
+    CHECK_AND_RETURN_RET_LOG(!CheckAppVersionForUnsupport(res), MSERR_UNSUPPORT,
+        "SetVirtualScreenMaxRefreshRate failed, res: %{public}d", res);
     CHECK_AND_RETURN_RET_LOG(res == DMError::DM_OK, MSERR_INVALID_OPERATION, "SetMaxVideoFrameRate failed");
 
     MEDIA_LOGI("ScreenCaptureServer::SetMaxVideoFrameRate end, frameRate:%{public}d, actualRefreshRate:%{public}u",
@@ -4311,10 +4262,8 @@ int32_t ScreenCaptureServer::SetScreenScaleMode()
                              "SetScreenScaleMode failed virtual screen not init");
     auto ret = ScreenManager::GetInstance().SetVirtualMirrorScreenScaleMode(
         virtualScreenId_, GetScreenScaleMode(captureConfig_.strategy.fillMode));
-    if (ret != DMError::DM_OK) {
-        MEDIA_LOGW("SetScreenScaleMode failed, ret: %{public}d", ret);
-        return static_cast<int32_t>(ret);
-    }
+    CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, static_cast<int32_t>(ret),
+        "SetScreenScaleMode failed, ret: %{public}d", ret);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " SetScreenScaleMode OK.", FAKE_POINTER(this));
     return MSERR_OK;
 }
@@ -4387,11 +4336,10 @@ int32_t ScreenCaptureServer::StopVideoCapture()
     MEDIA_LOGI("StopVideoCapture");
     if ((virtualScreenId_ < 0) || ((consumer_ == nullptr) && !isSurfaceMode_) || !isConsumerStart_) {
         MEDIA_LOGI("StopVideoCapture IGNORED, video capture not start");
-        if (surfaceCb_ != nullptr) {
-            (static_cast<ScreenCapBufferConsumerListener *>(surfaceCb_.GetRefPtr()))->StopBufferThread();
-            (static_cast<ScreenCapBufferConsumerListener *>(surfaceCb_.GetRefPtr()))->Release();
-            surfaceCb_ = nullptr;
-        }
+        CHECK_AND_RETURN_RET(surfaceCb_ != nullptr, MSERR_OK);
+        (static_cast<ScreenCapBufferConsumerListener *>(surfaceCb_.GetRefPtr()))->StopBufferThread();
+        (static_cast<ScreenCapBufferConsumerListener *>(surfaceCb_.GetRefPtr()))->Release();
+        surfaceCb_ = nullptr;
         return MSERR_OK;
     }
 
@@ -4427,9 +4375,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureRecorder()
             innerAudioCapture_->UseUpAllLeftBufferUntil(currentAudioTime);
         }
         ret = recorder_->Stop(false);
-        if (ret != MSERR_OK) {
-            MEDIA_LOGE("StopScreenCaptureRecorder recorder stop failed, ret:%{public}d", ret);
-        }
+        TRUE_LOG(ret != MSERR_OK, MEDIA_LOGE, "StopScreenCaptureRecorder recorder stop failed, ret:%{public}d", ret);
         DestroyVirtualScreen();
         recorder_->Release();
         recorder_ = nullptr;
@@ -4551,10 +4497,7 @@ bool ScreenCaptureServer::DestroyPrivacySheet()
     AAFwk::Want want;
 
     std::string bundleName = GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"];
-    if (bundleName.empty()) {
-        MEDIA_LOGE("Failed to get screenrecorder bundlename.");
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(!bundleName.empty(), false, "Failed to get screenrecorder bundlename.");
     AppExecFwk::ElementName element("", bundleName, "PrivacyControlAbility");
 
     want.SetElement(element);
@@ -4642,9 +4585,8 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
 #endif
     isPrivacyAuthorityEnabled_ = false;
     isRegionCapture_ = false;
-    if (!LastPidUpdatePrivacyUsingPermissionState(appInfo_.appPid)) {
-        MEDIA_LOGE("UpdatePrivacyUsingPermissionState STOP failed, dataType:%{public}d", captureConfig_.dataType);
-    }
+    TRUE_LOG(!LastPidUpdatePrivacyUsingPermissionState(appInfo_.appPid), MEDIA_LOGE,
+        "UpdatePrivacyUsingPermissionState STOP failed, dataType:%{public}d", captureConfig_.dataType);
     std::unordered_map<std::string, std::string> payload;
     int64_t value = ResourceSchedule::ResType::ScreenCaptureStatus::STOP_SCREEN_CAPTURE;
     ResSchedReportData(value, payload);
@@ -4782,11 +4724,10 @@ void ScreenCaptureServer::SystemPrivacyProtected(ScreenId& virtualScreenId, bool
     std::vector<ScreenId> screenIds;
     screenIds.push_back(virtualScreenId);
     auto ret = ScreenManager::GetInstance().SetScreenSkipProtectedWindow(screenIds, systemPrivacyProtectionSwitch);
-    if (ret == DMError::DM_OK || ret == DMError::DM_ERROR_DEVICE_NOT_SUPPORT) {
-        MEDIA_LOGI("SystemPrivacyProtected SetScreenSkipProtectedWindow success");
-    } else {
-        MEDIA_LOGI("SystemPrivacyProtected SetScreenSkipProtectedWindow failed, ret: %{public}d", ret);
-    }
+    TRUE_LOG(ret == DMError::DM_OK || ret == DMError::DM_ERROR_DEVICE_NOT_SUPPORT, MEDIA_LOGI,
+        "SystemPrivacyProtected SetScreenSkipProtectedWindow success");
+    TRUE_LOG(ret != DMError::DM_OK && ret != DMError::DM_ERROR_DEVICE_NOT_SUPPORT, MEDIA_LOGI,
+        "SystemPrivacyProtected SetScreenSkipProtectedWindow failed, ret: %{public}d", ret);
 }
 
 void ScreenCaptureServer::AppPrivacyProtected(ScreenId& virtualScreenId, bool appPrivacyProtectionSwitch)
