@@ -168,13 +168,13 @@ int32_t PlayerImpl::SetSource(const std::string &url)
         std::string protocol = UriHelper::GetProtocolFromURL(url);
         int32_t ret2 = OHOS::NetManagerStandard::NetworkSecurityConfig::GetInstance()
             .IsCleartextCfgByComponent("Media Kit", isComponentCfg);
-        MEDIA_LOG_D("Media Kit, ret: %{public}d, isComponentCfg: %{public}d, protocol: %{public}s",
+        MEDIA_LOGD("Media Kit, ret: %{public}d, isComponentCfg: %{public}d, protocol: %{public}s",
             ret2, isComponentCfg, protocol.c_str());
         if (isComponentCfg && protocol == "http") {
             bool isCleartextPermitted = true;
             std::string hostname = UriHelper::GetHostnameFromURL(url);
             OHOS::NetManagerStandard::NetworkSecurityConfig::GetInstance()
-                .isCleartextPermitted(hostname, isCleartextPermitted);
+                .IsCleartextPermitted(hostname, isCleartextPermitted);
             CHECK_AND_RETURN_RET_LOG(isCleartextPermitted, MSERR_CLEARTEXT_NOT_PERMITTED,
                 "http plain text request is not permitted");
         }

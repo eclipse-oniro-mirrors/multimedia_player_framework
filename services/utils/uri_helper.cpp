@@ -279,6 +279,14 @@ bool UriHelper::ParseFdUri(std::string_view uri)
     return CorrectFdParam();
 }
 
+bool UriHelper::IsNetworkUrl(const std::string &url)
+{
+    if(url.empty) {
+        return false;
+    }
+    return url.find("http") == 0 || url.find("https") == 0;
+}
+
 std::string UriHelper::GetHostnameFromURL(const std::string &url)
 {
     if (url.empty()) {
