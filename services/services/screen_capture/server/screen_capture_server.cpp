@@ -4227,7 +4227,7 @@ int32_t ScreenCaptureServer::UpdateSurface(sptr<Surface> surface)
     return MSERR_OK;
 }
 
-int32_t ScreenCaptureServer::SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec)
+int32_t ScreenCaptureServer::SkipPrivacyMode(const std::vector<uint64_t> &windowIDsVec)
 {
     MediaTrace trace("ScreenCaptureServer::SkipPrivacyMode");
     std::lock_guard<std::mutex> lock(mutex_);

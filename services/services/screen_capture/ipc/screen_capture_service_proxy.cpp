@@ -670,7 +670,7 @@ int32_t ScreenCaptureServiceProxy::ResizeCanvas(int32_t width, int32_t height)
     return reply.ReadInt32();
 }
 
-int32_t ScreenCaptureServiceProxy::SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec)
+int32_t ScreenCaptureServiceProxy::SkipPrivacyMode(const std::vector<uint64_t> &windowIDsVec)
 {
     MessageParcel data;
     MessageParcel reply;
