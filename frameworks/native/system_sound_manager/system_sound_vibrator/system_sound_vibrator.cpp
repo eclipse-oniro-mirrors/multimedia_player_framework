@@ -109,7 +109,6 @@ int32_t SystemSoundVibrator::StartVibratorForSystemTone(const std::string &hapti
     Sensors::SetUsage(USAGE_NOTIFICATION);
     Sensors::SetLoopCount(1);
     result = Sensors::PlayVibratorCustom(fd, 0, statbuf.st_size);
-    MEDIA_LOGW("Start vibrator: PlayVibratorCustom result [%{public}d]", result);
     close(fd);
 #endif
 
@@ -195,9 +194,11 @@ int32_t SystemSoundVibrator::VibrateForRingtone(const std::string hapticUri)
 
     int32_t result = VibrateLoopFunc(lock, fd);
     if (result != MSERR_OK) {
+        close(fd);
         MEDIA_LOGE("Failed to start vibrator!");
         return MSERR_INVALID_OPERATION;
     }
+    close(fd);
     return result;
 }
 
@@ -216,7 +217,6 @@ int32_t SystemSoundVibrator::VibrateLoopFunc(std::unique_lock<std::mutex> &lock,
         vibratorFd->offset = 0;
         vibratorFd->length = statbuf.st_size;
     } else {
-        close(fd);
         return MSERR_OPEN_FILE_FAILED;
     }
 
@@ -244,7 +244,6 @@ int32_t SystemSoundVibrator::VibrateLoopFunc(std::unique_lock<std::mutex> &lock,
             []() { return !g_isRunning; });
         CHECK_AND_RETURN_RET_LOG(g_isRunning, result, "RunVibrationPatterns: Stop() is call when waiting");
     }
-    close(vibratorFd->fd);
 #endif
     return result;
 }
@@ -303,8 +302,8 @@ int32_t SystemSoundVibrator::GetVibratorDuration(const std::string &hapticUri)
 
     int32_t result = Sensors::PreProcess(vibratorFD, vibratorPkg);
     if (result != 0) {
+        close(fd);
         MEDIA_LOGE("Failed to pre-process hapticUri!");
-        Sensors::FreeVibratorPackage(vibratorPkg);
         return ret;
     }
     int32_t delayTime = 0;
@@ -315,7 +314,7 @@ int32_t SystemSoundVibrator::GetVibratorDuration(const std::string &hapticUri)
         vibratorPkg.patterns[patternMaxIndex].events[eventMaxIndex].time +
         vibratorPkg.patterns[patternMaxIndex].events[eventMaxIndex].duration;
     Sensors::FreeVibratorPackage(vibratorPkg);
-    close(vibratorFD.fd);
+    close(fd);
 #endif
     return ret;
 }

@@ -89,12 +89,9 @@ int32_t AudioHapticSoundNormalImpl::OpenAudioSource()
         "The audio uri is empty or the fd is invalid");
 
     if (!audioUri.empty()) {
-        const std::string fdHead = "fd://";
-        if (audioUri.find(fdHead) != std::string::npos) {
-            int32_t fd = atoi(audioUri.substr(fdHead.size()).c_str());
-            CHECK_AND_RETURN_RET_LOG(fd > FILE_DESCRIPTOR_INVALID, MSERR_OPEN_FILE_FAILED,
-                "Prepare: Failed to extract fd for avplayer.");
-            fileDes_ = dup(fd);
+        int32_t oldFd = ExtractFd(audioUri);
+        if (oldFd != FILE_DESCRIPTOR_INVALID) {
+            fileDes_ = dup(oldFd);
         } else {
             std::string absFilePath;
             CHECK_AND_RETURN_RET_LOG(PathToRealPath(audioUri, absFilePath), MSERR_OPEN_FILE_FAILED,
@@ -121,6 +118,9 @@ int32_t AudioHapticSoundNormalImpl::ResetAVPlayer()
     int32_t ret = OpenAudioSource();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to open audio source.");
 
+    if (fileDes_ < 0) {
+        MEDIA_LOGE("File opening failed, fileDes_ = %{public}d", fileDes_);
+    }
     ret = avPlayer_->SetSource(fileDes_, audioSource_.offset, audioSource_.length);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_OPEN_FILE_FAILED, "Set source failed %{public}d", ret);
 
@@ -174,6 +174,7 @@ int32_t AudioHapticSoundNormalImpl::StartSound(const int32_t &audioHapticSyncId)
     }
 
     audioHapticSyncId_ = audioHapticSyncId;
+    MEDIA_LOGI("AudioHapticSoundNormalImpl::StartSound start sound with syncId %{public}d", audioHapticSyncId_);
     Format format;
     format.PutIntValue(PlayerKeys::PLAYER_AUDIO_HAPTICS_SYNC_ID, audioHapticSyncId_);
     ret = avPlayer_->SetParameter(format);
@@ -367,6 +368,26 @@ void AudioHapticSoundNormalImpl::NotifyEndOfStreamEvent(const bool &isLoop)
     } else {
         MEDIA_LOGE("NotifyEndOfStreamEvent: audioHapticPlayerCallback_ is nullptr");
     }
+}
+
+int32_t AudioHapticSoundNormalImpl::ExtractFd(const std::string& audioUri)
+{
+    const std::string prefix = "fd://";
+    if (audioUri.size() <= prefix.size() || audioUri.substr(0, prefix.length()) != prefix) {
+        MEDIA_LOGW("ExtractFd: Input does not start with the required prefix.");
+        return FILE_DESCRIPTOR_INVALID;
+    }
+
+    std::string numberPart = audioUri.substr(prefix.length());
+    for (char c : numberPart) {
+        if (!std::isdigit(c)) {
+            MEDIA_LOGE("ExtractFd: The part after the prefix is not all digits.");
+            return FILE_DESCRIPTOR_INVALID;
+        }
+    }
+
+    int32_t fd = atoi(numberPart.c_str());
+    return fd > FILE_DESCRIPTOR_INVALID ? fd : FILE_DESCRIPTOR_INVALID;
 }
 
 // Callback class symbols

@@ -89,11 +89,9 @@ int32_t AudioHapticSoundLowLatencyImpl::OpenAudioSource()
 
     if (!audioUri.empty()) {
         const std::string fdHead = "fd://";
-        if (audioUri.find(fdHead) != std::string::npos) {
-            int32_t fd = atoi(audioUri.substr(fdHead.size()).c_str());
-            CHECK_AND_RETURN_RET_LOG(fd > 0, MSERR_OPEN_FILE_FAILED,
-                "GetAudioUriFd: Failed to extract fd for avplayer.");
-            fileDes_ = dup(fd);
+        int32_t oldFd = ExtractFd(audioUri);
+        if (oldFd != FILE_DESCRIPTOR_INVALID) {
+            fileDes_ = dup(oldFd);
             MEDIA_LOGI("fileDes_ == %{public}d", fileDes_);
         } else {
             std::string absFilePath;
@@ -110,6 +108,14 @@ int32_t AudioHapticSoundLowLatencyImpl::OpenAudioSource()
     MEDIA_LOGI("AudioHapticSoundLowLatencyImpl::OpenAudioSource fileDes_: %{public}d", fileDes_);
     CHECK_AND_RETURN_RET_LOG(fileDes_ > FILE_DESCRIPTOR_INVALID, MSERR_OPEN_FILE_FAILED,
         "AudioHapticSoundLowLatencyImpl::OpenAudioSource: Failed to open the audio source for sound pool.");
+    // If an audio player is created through a file descriptor (FD)
+    // the length information is required, otherwise SoundPool will return a failure
+    if (audioUri.empty() && audioSource_.length == 0) {
+        struct stat64 statbuf = { 0 };
+        CHECK_AND_RETURN_RET_LOG(fstat64(fileDes_, &statbuf) == 0, MSERR_OPEN_FILE_FAILED,
+            "AudioHapticSoundLowLatencyImpl::OpenAudioSource: Failed to open the audio source for sound pool.");
+        audioSource_.length = statbuf.st_size;
+    }
     return MSERR_OK;
 }
 
@@ -169,6 +175,7 @@ int32_t AudioHapticSoundLowLatencyImpl::StartSound(const int32_t &audioHapticSyn
     CHECK_AND_RETURN_RET_LOG(soundPoolPlayer_ != nullptr, MSERR_INVALID_STATE, "Sound pool player instance is null");
 
     audioHapticSyncId_ = audioHapticSyncId;
+    MEDIA_LOGI("AudioHapticSoundLowLatencyImpl::StartSound start sound with syncId %{public}d", audioHapticSyncId_);
     PlayParams playParams {
         .loop = (loop_ ? -1 : 0),
         .rate = 0, // default AudioRendererRate::RENDER_RATE_NORMAL
@@ -341,6 +348,26 @@ void AudioHapticSoundLowLatencyImpl::NotifyEndOfStreamEvent()
     } else {
         MEDIA_LOGE("NotifyEndOfStreamEvent: audioHapticPlayerCallback_ is nullptr");
     }
+}
+
+int32_t AudioHapticSoundLowLatencyImpl::ExtractFd(const std::string& audioUri)
+{
+    const std::string prefix = "fd://";
+    if (audioUri.size() <= prefix.size() || audioUri.substr(0, prefix.length()) != prefix) {
+        MEDIA_LOGW("ExtractFd: Input does not start with the required prefix.");
+        return FILE_DESCRIPTOR_INVALID;
+    }
+
+    std::string numberPart = audioUri.substr(prefix.length());
+    for (char c : numberPart) {
+        if (!std::isdigit(c)) {
+            MEDIA_LOGE("ExtractFd: The part after the prefix is not all digits.");
+            return FILE_DESCRIPTOR_INVALID;
+        }
+    }
+
+    int32_t fd = atoi(numberPart.c_str());
+    return fd > FILE_DESCRIPTOR_INVALID ? fd : FILE_DESCRIPTOR_INVALID;
 }
 
 // Callback class symbols
