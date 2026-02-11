@@ -64,7 +64,7 @@ int32_t TaskQueue::Stop() noexcept
         if (t != nullptr && t->joinable()) {
             t->detach();
         }
-        std::unique_lock<std::mutex> lock(tidMutex_);
+        std::unique_lock<std::mutex> lock1(tidMutex_);
         MEDIA_LOGW("Stop at the task thread, set isExit true, detach thread: [%{public}s], tid_: (%{public}d)",
             name_.c_str(), tid_);
         return MSERR_INVALID_OPERATION;
@@ -80,7 +80,7 @@ int32_t TaskQueue::Stop() noexcept
         t->join();
     }
     {
-        std::unique_lock<std::mutex> lock(tidMutex_);
+        std::unique_lock<std::mutex> lock1(tidMutex_);
         MEDIA_LOGI("Stop at the other thread, set isExit true, join thread: [%{public}s], tid_: (%{public}d)",
             name_.c_str(), tid_);
     }
