@@ -31,15 +31,9 @@ namespace OHOS {
 namespace Media {
 extern const std::string AUDIO_HAPTIC_MANAGER_NAPI_CLASS_NAME;
 
-static const std::map<std::string, AudioLatencyMode> audioLatencyModeMap = {
-    {"AUDIO_LATENCY_MODE_NORMAL", AUDIO_LATENCY_MODE_NORMAL},
-    {"AUDIO_LATENCY_MODE_FAST", AUDIO_LATENCY_MODE_FAST}
-};
+extern const std::map<std::string, AudioLatencyMode> audioLatencyModeMap;
 
-static const std::map<std::string, AudioHapticType> audioHapticTypeMap = {
-    {"AUDIO_HAPTIC_TYPE_AUDIO", AUDIO_HAPTIC_TYPE_AUDIO},
-    {"AUDIO_HAPTIC_TYPE_HAPTIC", AUDIO_HAPTIC_TYPE_HAPTIC}
-};
+extern const std::map<std::string, AudioHapticType> audioHapticTypeMap;
 
 struct RegisterFromFdContext : public AsyncContext {
     AudioHapticFileDescriptor audioFd;
