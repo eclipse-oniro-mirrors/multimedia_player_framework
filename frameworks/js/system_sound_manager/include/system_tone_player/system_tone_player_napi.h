@@ -27,7 +27,7 @@
 
 namespace OHOS {
 namespace Media {
-static const std::string SYSTEM_TONE_PLAYER_NAPI_CLASS_NAME = "SystemTonePlayer";
+extern const std::string SYSTEM_TONE_PLAYER_NAPI_CLASS_NAME;
 
 class SystemTonePlayerNapi {
 public:

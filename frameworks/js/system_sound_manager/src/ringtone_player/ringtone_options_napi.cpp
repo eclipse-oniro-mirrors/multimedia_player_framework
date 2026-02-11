@@ -24,6 +24,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, 
 
 namespace OHOS {
 namespace Media {
+const std::string RINGTONE_OPTIONS_NAPI_CLASS_NAME = "RingtoneOptions";
 thread_local napi_ref RingtoneOptionsNapi::sConstructor_ = nullptr;
 
 float RingtoneOptionsNapi::sVolume_ = 1;
@@ -239,7 +240,7 @@ napi_value RingtoneOptionsNapi::SetLoop(napi_env env, napi_callback_info info)
     }
 
     status = napi_get_value_bool(env, args[0], &loop);
-    if (status == napi_ok) {
+    if (status == napi_ok && ringtoneOptionsNapi != nullptr) {
         ringtoneOptionsNapi->loop_ = loop;
     }
 

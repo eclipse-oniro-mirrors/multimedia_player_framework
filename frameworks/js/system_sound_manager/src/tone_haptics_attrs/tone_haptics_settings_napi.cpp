@@ -24,6 +24,8 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, 
 
 namespace OHOS {
 namespace Media {
+const std::string TONE_HAPTICS_SETTINGS_NAPI_CLASS_NAME = "ToneHapticsSettings";
+
 thread_local napi_ref ToneHapticsSettingsNapi::sConstructor_ = nullptr;
 
 ToneHapticsSettingsNapi::ToneHapticsSettingsNapi() : env_(nullptr) {}

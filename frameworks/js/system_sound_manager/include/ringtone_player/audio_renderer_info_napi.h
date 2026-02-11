@@ -22,7 +22,7 @@
 
 namespace OHOS {
 namespace Media {
-static const std::string AUDIO_RENDERER_INFO_NAPI_CLASS_NAME = "AudioRendererInfo";
+extern const std::string AUDIO_RENDERER_INFO_NAPI_CLASS_NAME;
 
 class AudioRendererInfoNapi {
 public:

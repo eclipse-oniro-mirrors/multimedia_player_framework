@@ -21,7 +21,7 @@
 
 namespace OHOS {
 namespace Media {
-static const std::string RINGTONE_OPTIONS_NAPI_CLASS_NAME = "RingtoneOptions";
+extern const std::string RINGTONE_OPTIONS_NAPI_CLASS_NAME;
 
 class RingtoneOptionsNapi {
 public:

@@ -42,6 +42,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, 
 
 namespace OHOS {
 namespace Media {
+const std::string SYSTEM_TONE_PLAYER_NAPI_CLASS_NAME = "SystemTonePlayer";
 thread_local napi_ref SystemTonePlayerNapi::sConstructor_ = nullptr;
 std::shared_ptr<SystemTonePlayer> SystemTonePlayerNapi::sSystemTonePlayer_ = nullptr;
 
