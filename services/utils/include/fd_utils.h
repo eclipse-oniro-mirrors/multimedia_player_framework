@@ -30,7 +30,7 @@ namespace Media {
 namespace {
 constexpr size_t MAX_ATTR_NAME = 64;
 const std::string CLOUD_LOCATION_ATTR = "user.cloud.location";
-static const std::string LOCAL = "1";
+static const std::string LOCAL_FD = "1";
 }
 #endif
 
@@ -76,7 +76,7 @@ private:
         std::string local(value, static_cast<size_t>(size));
         MEDIA_LOGD("Getxattr value, local is %{public}s", local.c_str());
 
-        return local == LOCAL;
+        return local == LOCAL_FD;
     }
 #endif
 

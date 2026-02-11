@@ -58,6 +58,8 @@ public:
         return false;
     }
 
+    virtual void SetInterruptState() {};
+
 protected:
     shared_ptr<OHOS::Media::Pipeline::Pipeline> pipeline_ {nullptr};
     shared_ptr<DemuxerFilter> demuxer_ {nullptr};
