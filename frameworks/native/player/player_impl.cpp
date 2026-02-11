@@ -958,10 +958,8 @@ int32_t PlayerImpl::SetReopenFd(int32_t fd)
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR "SetReopenFd  in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
-    FdsanFd reopenFdCinema = FdUtils::ReOpenFd(fd);
-    int32_t fdCinema = reopenFdCinema.Get();
-    MEDIA_LOGD("set reopen fd: %{public}d ; fdCinema: %{public}d", fd, fdCinema);
-    LISTENER(return playerService_->SetReopenFd(fd, fdCinema), "SetReopenFd", false, TIME_OUT_SECOND);
+    MEDIA_LOGD("set reopen fd: %{public}d", fd);
+    LISTENER(return playerService_->SetReopenFd(fd), "SetReopenFd", false, TIME_OUT_SECOND);
 }
  
 int32_t PlayerImpl::EnableCameraPostprocessing()
