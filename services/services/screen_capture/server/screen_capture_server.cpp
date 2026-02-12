@@ -4724,10 +4724,7 @@ void ScreenCaptureServer::SystemPrivacyProtected(ScreenId& virtualScreenId, bool
     std::vector<ScreenId> screenIds;
     screenIds.push_back(virtualScreenId);
     auto ret = ScreenManager::GetInstance().SetScreenSkipProtectedWindow(screenIds, systemPrivacyProtectionSwitch);
-    TRUE_LOG(ret == DMError::DM_OK || ret == DMError::DM_ERROR_DEVICE_NOT_SUPPORT, MEDIA_LOGI,
-        "SystemPrivacyProtected SetScreenSkipProtectedWindow success");
-    TRUE_LOG(ret != DMError::DM_OK && ret != DMError::DM_ERROR_DEVICE_NOT_SUPPORT, MEDIA_LOGI,
-        "SystemPrivacyProtected SetScreenSkipProtectedWindow failed, ret: %{public}d", ret);
+    MEDIA_LOGI("SystemPrivacyProtected SetScreenSkipProtectedWindow done, ret: %{public}d", ret);
 }
 
 void ScreenCaptureServer::AppPrivacyProtected(ScreenId& virtualScreenId, bool appPrivacyProtectionSwitch)
