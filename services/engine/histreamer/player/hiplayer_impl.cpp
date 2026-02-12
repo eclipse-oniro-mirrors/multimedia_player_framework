@@ -3183,7 +3183,7 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
         eosInLoopForFrozen_ = true;
     }
     callbackLooper_.DoReportCompletedTime();
-    FALSE_RETURN_MSG(pipeline_ != nullptr, "pipeline_ is nullptr");
+    FALSE_RETURN_MSG(pipeline_ != nullptr, "pipeline_ is nullptr!");
     if (pipelineStates_ != PlayerStates::PLAYER_FROZEN || !singleLoop_.load()) {
         pipeline_->Pause();
     }
