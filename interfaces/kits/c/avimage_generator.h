@@ -20,7 +20,7 @@
  * @brief Provides APIs for generating an image at the specific time from a video resource.
  *
  * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
- * @since 16
+ * @since 18
  */
 
 /**
@@ -31,7 +31,7 @@
  *
  * @kit MediaKit
  * @library libavimage_generator.so
- * @since 16
+ * @since 18
  */
 
 #ifndef MULTIMEDIA_PLAYER_FRAMEWORK_NATIVE_AVIMAGE_GENERATOR_H
@@ -52,7 +52,7 @@ extern "C" {
  * @brief Define OH_AVImageGenerator field.
  *
  * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
- * @since 16
+ * @since 18
  */
 typedef struct OH_AVImageGenerator OH_AVImageGenerator;
 
@@ -62,7 +62,7 @@ typedef struct OH_AVImageGenerator OH_AVImageGenerator;
  * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
  * @return Returns a pointer to an OH_AVImageGenerator instance for success, nullptr for failure.
  *         Possible failure causes: HstEngineFactory failed to CreateAVMetadataHelperEngine.
- * @since 16
+ * @since 18
  */
 OH_AVImageGenerator* OH_AVImageGenerator_Create(void);
 
@@ -79,7 +79,7 @@ OH_AVImageGenerator* OH_AVImageGenerator_Create(void);
  *         {@link AV_ERR_INVALID_VAL} if input generator is nullptr or input param is invalid.
  *         {@link AV_ERR_OPERATE_NOT_PERMIT} if operation not allowed.
  *         {@link AV_ERR_NO_MEMORY} if internal memory allocation failed.
- * @since 16
+ * @since 18
  */
 OH_AVErrCode OH_AVImageGenerator_SetFDSource(OH_AVImageGenerator* generator,
     int32_t fd, int64_t offset, int64_t size);
@@ -101,7 +101,7 @@ OH_AVErrCode OH_AVImageGenerator_SetFDSource(OH_AVImageGenerator* generator,
  *         {@link AV_ERR_OPERATE_NOT_PERMIT} if operation not allowed.
  *         {@link AV_ERR_UNSUPPORTED_FORMAT} if format is unsupported.
  *         {@link AV_ERR_NO_MEMORY} if internal memory allocation failed.
- * @since 16
+ * @since 18
  */
 OH_AVErrCode OH_AVImageGenerator_FetchFrameByTime(OH_AVImageGenerator* generator,
     int64_t timeUs, OH_AVImageGenerator_QueryOptions options, OH_PixelmapNative** pixelMap);
@@ -114,7 +114,7 @@ OH_AVErrCode OH_AVImageGenerator_FetchFrameByTime(OH_AVImageGenerator* generator
  * @return Function result code.
  *         {@link AV_ERR_OK} if the execution is successful.
  *         {@link AV_ERR_INVALID_VAL} if input generator is nullptr or input param is invalid.
- * @since 16
+ * @since 18
  */
 OH_AVErrCode OH_AVImageGenerator_Release(OH_AVImageGenerator* generator);
 
