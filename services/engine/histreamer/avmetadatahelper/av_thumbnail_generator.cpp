@@ -665,7 +665,8 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
     mediaDemuxer_->SelectTrack(trackIndex_);
     int64_t realSeekTime = timeUs;
     auto res = SeekToTime(Plugins::Us2Ms(timeUs), static_cast<Plugins::SeekMode>(option), realSeekTime);
-    if (res == Status::END_OF_STREAM && fileType_ == FileType::MPEGTS && codecMimeName_ == "mpeg4") {
+    if (res == Status::END_OF_STREAM && fileType_ == FileType::MPEGTS
+        && (codecMimeName_ == "mpeg4" || codecMimeName_ == "vc1")) {
         std::shared_ptr<AVBuffer> mpeg4EosBuffer(AVBuffer::CreateAVBuffer());
         mpeg4EosBuffer->flag_ = (uint32_t)(AVBufferFlag::EOS);
         return mpeg4EosBuffer;
@@ -789,7 +790,7 @@ Status AVThumbnailGenerator::SeekToTime(int64_t timeMs, Plugins::SeekMode option
     }
     timeMs = duration_ > 0 ? std::min(timeMs, Plugins::Us2Ms(duration_)) : timeMs;
     Status res = Status::OK;
-    if (fileType_ == FileType::MPEGTS && codecMimeName_ == "mpeg4") {
+    if (fileType_ == FileType::MPEGTS && (codecMimeName_ == "mpeg4" || codecMimeName_ == "vc1")) {
         res = mediaDemuxer_->SeekToKeyFrame(timeMs, option, realSeekTime, MediaDemuxer::CallerType::AVMETADATA);
     } else {
         res = mediaDemuxer_->SeekTo(timeMs, option, realSeekTime);
@@ -797,7 +798,8 @@ Status AVThumbnailGenerator::SeekToTime(int64_t timeMs, Plugins::SeekMode option
     /* SEEK_NEXT_SYNC or SEEK_PREVIOUS_SYNC may cant find I frame and return seek failed
        if seek failed, use SEEK_CLOSEST_SYNC seek again */
     if (res != Status::OK && option != Plugins::SeekMode::SEEK_CLOSEST_SYNC
-        && (fileType_ != FileType::MPEGTS || codecMimeName_ != "mpeg4")) {
+        && (fileType_ != FileType::MPEGTS || codecMimeName_ != "mpeg4")
+        && (fileType_ != FileType::MPEGTS || codecMimeName_ != "vc1")) {
         res = mediaDemuxer_->SeekTo(timeMs, Plugins::SeekMode::SEEK_CLOSEST_SYNC, realSeekTime);
         seekMode_ = Plugins::SeekMode::SEEK_CLOSEST_SYNC;
     }
