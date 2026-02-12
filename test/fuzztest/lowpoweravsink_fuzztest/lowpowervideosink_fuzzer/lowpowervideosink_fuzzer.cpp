@@ -65,8 +65,7 @@ sptr<IRemoteStub<IStandardLppVideoStreamerService>> LowPowerVideoSinkFuzz::GetVi
     if (lowPowerVideoSink == nullptr) {
         return nullptr;
     }
-    sptr<IRemoteStub<IStandardLppVideoStreamerService>> lowPowerVideoSinkStub =
-        iface_cast<IRemoteStub<IStandardLppVideoStreamerService>>(lowPowerVideoSink);
+    sptr<IRemoteStub<IStandardLppVideoStreamerService>> lowPowerVideoSinkStub = iface_cast<IRemoteStub<IStandardLppVideoStreamerService>>(lowPowerVideoSink);
     return lowPowerVideoSinkStub;
 }
 
@@ -131,4 +130,4 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t* data, size_t size)
     videoSink.RunFuzz(data, size);
     unlink(DATA_PATH);
     return 0;
-}
+}
