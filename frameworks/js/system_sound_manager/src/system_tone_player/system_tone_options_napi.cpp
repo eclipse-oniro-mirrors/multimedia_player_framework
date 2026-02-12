@@ -179,7 +179,7 @@ napi_value SystemToneOptionsNapi::SetAudioMute(napi_env env, napi_callback_info 
     }
 
     status = napi_get_value_bool(env, args[0], &muteAudio);
-    if (status == napi_ok) {
+    if (status == napi_ok && systemToneOptionsNapi != nullptr) {
         systemToneOptionsNapi->muteAudio_ = muteAudio;
     }
 

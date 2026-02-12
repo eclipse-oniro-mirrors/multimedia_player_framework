@@ -259,9 +259,7 @@ bool SystemSoundManagerImpl::IsSystemToneType(const unique_ptr<RingtoneAsset> &r
     const SystemToneType &systemToneType)
 {
     CHECK_AND_RETURN_RET_LOG(ringtoneAsset != nullptr, false, "Invalid ringtone asset.");
-    return (systemToneType == SYSTEM_TONE_TYPE_NOTIFICATION ?
-        TONE_TYPE_NOTIFICATION != ringtoneAsset->GetToneType() :
-        TONE_TYPE_SHOT != ringtoneAsset->GetToneType());
+    return TONE_TYPE_NOTIFICATION != ringtoneAsset->GetToneType();
 }
 
 bool SystemSoundManagerImpl::IsToneHapticsTypeValid(ToneHapticsType toneHapticsType)
@@ -994,12 +992,12 @@ int32_t SystemSoundManagerImpl::UpdateNotificatioToneUri(std::shared_ptr<DataSha
 int32_t SystemSoundManagerImpl::SetNoSystemToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
     SystemToneType systemToneType)
 {
+    MEDIA_LOGI("Set no audio uri for system tone type %{public}d", systemToneType);
     int32_t result = 0;
     // Removes the flag for the current system tone uri.
     result += RemoveSourceTypeForSystemTone(dataShareHelper, systemToneType, SOURCE_TYPE_CUSTOMISED);
     // Removes the flag for the preset system tone uri.
     result += RemoveSourceTypeForSystemTone(dataShareHelper, systemToneType, SOURCE_TYPE_PRESET);
-    MEDIA_LOGI("Set no audio uri for system tone type %{public}d. changedRows %{public}d", systemToneType, result);
     return result;
 }
 
@@ -1123,19 +1121,17 @@ std::string SystemSoundManagerImpl::GetShotToneUriByType(const DatabaseTool &dat
 
 ToneAttrs SystemSoundManagerImpl::GetShotToneAttrsByType(const DatabaseTool &databaseTool, const std::string &type)
 {
+    MEDIA_LOGI("databaseTool : %{public}d, type = %{public}s", databaseTool.isProxy, type.c_str());
     ToneAttrs toneAttrs = { "", "", "", CUSTOMISED, TONE_CATEGORY_TEXT_MESSAGE };
     if (!databaseTool.isInitialized || databaseTool.dataShareHelper == nullptr) {
         MEDIA_LOGE("The database tool is not ready!");
         return toneAttrs;
     }
-
-    std::string uri = "";
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
     queryPredicates.SetWhereClause(RINGTONE_COLUMN_SHOT_TONE_TYPE + " = ? AND " +
         RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE + " = ? ");
     queryPredicates.SetWhereArgs({type, to_string(SOURCE_TYPE_CUSTOMISED)});
-
     std::string ringtoneLibraryUri = "";
     if (databaseTool.isProxy) {
         ringtoneLibraryUri = RINGTONE_LIBRARY_PROXY_DATA_URI_TONE_FILES +
@@ -1154,11 +1150,7 @@ ToneAttrs SystemSoundManagerImpl::GetShotToneAttrsByType(const DatabaseTool &dat
         toneAttrs.SetFileName(ringtoneAsset->GetDisplayName());
         toneAttrs.SetTitle(ringtoneAsset->GetTitle());
         toneAttrs.SetUri(ringtoneAsset->GetPath());
-        if (ringtoneAsset->GetMediaType() == RINGTONE_MEDIA_TYPE_VIDEO) {
-            toneAttrs.SetMediaType(ToneMediaType::MEDIA_TYPE_VID);
-        } else {
-            toneAttrs.SetMediaType(ToneMediaType::MEDIA_TYPE_AUD);
-        }
+        toneAttrs.SetMediaType(ToneMediaType::MEDIA_TYPE_AUD);
     }
     if (results != nullptr) results->Close();
     return toneAttrs;
@@ -1206,11 +1198,7 @@ ToneAttrs SystemSoundManagerImpl::GetPresetShotToneAttrsByType(const DatabaseToo
         toneAttrs.SetTitle(ringtoneAsset->GetTitle());
         toneAttrs.SetFileName(ringtoneAsset->GetDisplayName());
         toneAttrs.SetCategory(ringtoneAsset->GetToneType());
-        if (ringtoneAsset->GetMediaType() == RINGTONE_MEDIA_TYPE_VIDEO) {
-            toneAttrs.SetMediaType(ToneMediaType::MEDIA_TYPE_VID);
-        } else {
-            toneAttrs.SetMediaType(ToneMediaType::MEDIA_TYPE_AUD);
-        }
+        toneAttrs.SetMediaType(ToneMediaType::MEDIA_TYPE_AUD);
     }
     if (results != nullptr) results->Close();
     return toneAttrs;
@@ -1256,11 +1244,7 @@ ToneAttrs SystemSoundManagerImpl::GetNotificationToneAttrsByType(const DatabaseT
         toneAttrs.SetTitle(ringtoneAsset->GetTitle());
         toneAttrs.SetFileName(ringtoneAsset->GetDisplayName());
         toneAttrs.SetCategory(ringtoneAsset->GetToneType());
-        if (ringtoneAsset->GetMediaType() == RINGTONE_MEDIA_TYPE_VIDEO) {
-            toneAttrs.SetMediaType(ToneMediaType::MEDIA_TYPE_VID);
-        } else {
-            toneAttrs.SetMediaType(ToneMediaType::MEDIA_TYPE_AUD);
-        }
+        toneAttrs.SetMediaType(ToneMediaType::MEDIA_TYPE_AUD);
     }
     if (results != nullptr) results->Close();
     return toneAttrs;
@@ -1306,11 +1290,7 @@ ToneAttrs SystemSoundManagerImpl::GetPresetNotificationToneAttrs(const DatabaseT
         toneAttrs.SetTitle(ringtoneAsset->GetTitle());
         toneAttrs.SetFileName(ringtoneAsset->GetDisplayName());
         toneAttrs.SetCategory(ringtoneAsset->GetToneType());
-        if (ringtoneAsset->GetMediaType() == RINGTONE_MEDIA_TYPE_VIDEO) {
-            toneAttrs.SetMediaType(ToneMediaType::MEDIA_TYPE_VID);
-        } else {
-            toneAttrs.SetMediaType(ToneMediaType::MEDIA_TYPE_AUD);
-        }
+        toneAttrs.SetMediaType(ToneMediaType::MEDIA_TYPE_AUD);
     }
     if (results != nullptr) results->Close();
     return toneAttrs;
@@ -1372,7 +1352,7 @@ ToneAttrs SystemSoundManagerImpl::GetSystemToneAttrs(const DatabaseTool &databas
         case SYSTEM_TONE_TYPE_NOTIFICATION:
             toneAttrs = GetNotificationToneAttrsByType(databaseTool);
             if (toneAttrs.GetUri().empty()) {
-                toneAttrs = GetNotificationToneAttrsByType(databaseTool);
+                toneAttrs = GetPresetNotificationToneAttrs(databaseTool);
             }
             break;
         default:
@@ -1670,11 +1650,7 @@ ToneAttrs SystemSoundManagerImpl::GetAlarmToneAttrs(const DatabaseTool &database
         toneAttrs.SetFileName(ringtoneAsset->GetDisplayName());
         toneAttrs.SetTitle(ringtoneAsset->GetTitle());
         toneAttrs.SetUri(ringtoneAsset->GetPath());
-        if (ringtoneAsset->GetMediaType() == RINGTONE_MEDIA_TYPE_VIDEO) {
-            toneAttrs.SetMediaType(ToneMediaType::MEDIA_TYPE_VID);
-        } else {
-            toneAttrs.SetMediaType(ToneMediaType::MEDIA_TYPE_AUD);
-        }
+        toneAttrs.SetMediaType(ToneMediaType::MEDIA_TYPE_AUD);
     } else {
         MEDIA_LOGE("GetAlarmToneAttrs: no alarmtone in the ringtone library!");
     }
@@ -3089,6 +3065,10 @@ int32_t SystemSoundManagerImpl::GetGentleHapticsAttr(const DatabaseTool &databas
         MEDIA_LOGE("The database tool is not ready!");
         return IO_ERROR;
     }
+    if (standardHapticsUri.empty()) {
+        MEDIA_LOGE("The standardHapticsUri is empty!");
+        return IO_ERROR;
+    }
     CHECK_AND_RETURN_RET_LOG(!standardHapticsUri.empty(), IO_ERROR, "The standardHapticsUri is empty!");
     std::string vibrateFilesUri = databaseTool.isProxy ? (RINGTONE_LIBRARY_PROXY_DATA_URI_VIBATE_FILES +
         "&user=" + std::to_string(SystemSoundManagerUtils::GetCurrentUserId())) : VIBRATE_PATH_URI;
@@ -3107,7 +3087,6 @@ int32_t SystemSoundManagerImpl::GetGentleHapticsAttr(const DatabaseTool &databas
     HapticsStyle::HAPTICS_STYLE_GENTLE, vibrateType);
     if (resultsByUri != nullptr) resultsByUri->Close();
     if (!getResult) {
-        if (resultsByUri != nullptr) resultsByUri->Close();
         return IO_ERROR;
     }
     DataShare::DataSharePredicates queryPredicatesByDisplayName;
