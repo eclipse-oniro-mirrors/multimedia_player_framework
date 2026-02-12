@@ -1386,8 +1386,12 @@ napi_value AVPlayerNapi::JsSetStartFrameRateOptEnabled(napi_env env, napi_callba
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "enableStartFrameRateOpt is not napi_boolean");
         return result;
     }
-
     napi_status status = napi_get_value_bool(env, args[0], &jsPlayer->enabled_);
+         if (status != napi_ok) { 
+         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, 
+             "invalid parameters, please check the input enableStartFrameRateOpt"); 
+         return result; 
+    }
 
     if (!IsSystemApp()) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,

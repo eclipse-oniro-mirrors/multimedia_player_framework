@@ -34,8 +34,6 @@ constexpr int64_t OVERTIME_WARNING_MS = 10;
 constexpr int64_t CREATE_AVPLAYER_WARNING_MS = 30;
 constexpr int64_t RESET_WARNING_MS = 30;
 constexpr int64_t RELEASE_WARNING_MS = 200;
-constexpr int32_t PATH_MAX_REAL = PATH_MAX + 1;
-constexpr ssize_t RESULT_ERROR = -1;
 const int32_t TIME_OUT_SECOND = 15;
 }
 
