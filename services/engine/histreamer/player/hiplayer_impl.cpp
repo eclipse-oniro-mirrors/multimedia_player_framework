@@ -3534,7 +3534,7 @@ void HiPlayerImpl::HandleAudioTrackChangeEvent(const Event& event)
         audioSink_->DoFlush();
         audioDecoder_->Start();
         if (IsNeedAudioSinkChangeTrack(metaInfo, trackId)) {
-            MEDIA_LOG_I("AudioSink changeTrack");
+            MEDIA_LOG_I("AudioSink changeTrack in");
             if (Status::OK != audioSink_->ChangeTrack(metaInfo[trackId])) {
                 MEDIA_LOG_E("HandleAudioTrackChangeEvent audioSink change track error");
                 return;
