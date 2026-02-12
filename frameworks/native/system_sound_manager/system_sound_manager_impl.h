@@ -210,7 +210,7 @@ private:
     int32_t RemoveSourceTypeForSystemTone(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         SystemToneType systemToneType, SourceType sourceType);
     int32_t UpdateAlarmTone(const std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
-        const std::string &uri, const int32_T &toneId);
+        const std::string &uri, const int32_t &toneId);
     bool ConvertToRingtoneType(ToneHapticsType toneHapticsType, RingtoneType &ringtoneType);
     bool ConvertToSystemToneType(ToneHapticsType toneHapticsType, SystemToneType &systemToneType);
     std::string ConvertToHapticsFileName(const std::string &fileName);
