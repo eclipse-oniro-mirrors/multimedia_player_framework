@@ -23,7 +23,6 @@
 #include "hitrace/tracechain.h"
 #include "hiappevent_agent.h"
 #include "common/fdsan_fd.h"
-#include "network_security_config.h"
 
 namespace OHOS {
 namespace Media {

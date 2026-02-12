@@ -24,7 +24,6 @@
 #endif
 #include "fd_utils.h"
 #include "osal/utils/steady_clock.h"
-#include "uri_helper.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerImpl"};
@@ -161,22 +160,6 @@ int32_t PlayerImpl::SetSource(const std::string &url)
     ScopedTimer timer("SetSource url", OVERTIME_WARNING_MS);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty..");
-    if (UriHelper::IsNetworkUrl(url)) {
-        bool isComponentCfg = false;
-        std::string protocol = UriHelper::GetProtocolFromURL(url);
-        int32_t ret2 = OHOS::NetManagerStandard::NetworkSecurityConfig::GetInstance()
-            .IsCleartextCfgByComponent("Media Kit", isComponentCfg);
-        MEDIA_LOGD("Media Kit, ret: %{public}d, isComponentCfg: %{public}d, protocol: %{public}s",
-            ret2, isComponentCfg, protocol.c_str());
-        if (isComponentCfg && protocol == "http") {
-            bool isCleartextPermitted = true;
-            std::string hostname = UriHelper::GetHostnameFromURL(url);
-            OHOS::NetManagerStandard::NetworkSecurityConfig::GetInstance()
-                .IsCleartextPermitted(hostname, isCleartextPermitted);
-            CHECK_AND_RETURN_RET_LOG(isCleartextPermitted, MSERR_CLEARTEXT_NOT_PERMITTED,
-                "http plain text request is not permitted");
-        }
-    }
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->SetSource(url), "SetSource url", false, TIME_OUT_SECOND);
     CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
