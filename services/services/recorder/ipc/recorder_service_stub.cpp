@@ -1203,6 +1203,10 @@ int32_t RecorderServiceStub::TransmitQos(MessageParcel &data, MessageParcel &rep
     if (!(data.ReadInt32(level))) {
         return MSERR_INVALID_VAL;
     }
+    if (level < static_cast<int32_t>(QOS::QosLevel::QOS_BACKGROUND) ||
+        level > static_cast<int32_t>(QOS::QosLevel::QOS_MAX)) {
+        return MSERR_INVALID_VAL;
+    }
 
     QOS::QosLevel qosLevel = static_cast<QOS::QosLevel>(level);
     return TransmitQos(qosLevel);
