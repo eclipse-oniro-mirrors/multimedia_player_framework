@@ -457,7 +457,7 @@ OH_AVErrCode OH_AVPlayer_SetLooping(OH_AVPlayer *player, bool loop);
  * in {@link native_averrors.h} otherwise.
  * @since 11
  * @deprecated since 12
- * @useinstead {@link OH_AVPlayer_SetOnInfoCallback} {@link OH_AVPlayer_SetOnErrorCallback}
+ * @useinstead {@link OH_AVPlayer_SetPlayerOnInfoCallback} {@link OH_AVPlayer_SetPlayerOnErrorCallback}
  * @version 1.0
  */
 OH_AVErrCode OH_AVPlayer_SetPlayerCallback(OH_AVPlayer *player, AVPlayerCallback callback);

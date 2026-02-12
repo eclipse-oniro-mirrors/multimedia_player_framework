@@ -557,7 +557,7 @@ typedef void (*OH_AVPlayerOnInfoCallback)(OH_AVPlayer *player, AVPlayerOnInfoTyp
  * @param errorMsg Error message.
  * @since 11
  * @deprecated since 12
- * @useinstead {@link OH_AVPlayerOnErrorCallback}
+ * @useinstead {@link OH_AVPlayerOnInfoCallback} {@link OH_AVPlayerOnError}
  * @version 1.0
  */
 typedef void (*OH_AVPlayerOnError)(OH_AVPlayer *player, int32_t errorCode, const char *errorMsg);
