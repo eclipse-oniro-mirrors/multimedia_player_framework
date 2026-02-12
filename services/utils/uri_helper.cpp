@@ -281,7 +281,7 @@ bool UriHelper::ParseFdUri(std::string_view uri)
 
 bool UriHelper::IsNetworkUrl(const std::string &url)
 {
-    if (url.empty) {
+    if (url.empty()) {
         return false;
     }
     return url.find("http") == 0 || url.find("https") == 0;
