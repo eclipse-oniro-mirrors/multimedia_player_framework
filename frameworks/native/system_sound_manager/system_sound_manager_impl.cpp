@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd. 
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1260,7 +1260,7 @@ int32_t SystemSoundManagerImpl::SetAlarmToneUri(const std::shared_ptr<AbilityRun
         ringtoneAsset = results->GetNextObject();
     }
     if (ringtoneAsset != nullptr) {
-        int32_t changedRows = UpdataeAlarmToneUri(dataShareHelper, ringtoneAsset->GetId());
+        int32_t changedRows = updateAlarmToneUri(dataShareHelper, ringtoneAsset->GetId());
         if (results != nullptr) results->Close();
         dataShareHelper->Release();
         SetExtRingtoneUri(uri, ringtoneAsset->GetTitle(), TONE_TYPE_ALARM, TONE_TYPE_ALARM, changedRows);
@@ -1272,7 +1272,7 @@ int32_t SystemSoundManagerImpl::SetAlarmToneUri(const std::shared_ptr<AbilityRun
     return TYPEERROR;
 }
 
-int32_t SystemSoundManagerImpl::UpdataeAlarmToneUri(
+int32_t SystemSoundManagerImpl::updateAlarmToneUri(
     const std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, const int32_t ringtoneAssetId)
 {
     DataSharePredicates updateOldPredicates;
@@ -1289,7 +1289,7 @@ int32_t SystemSoundManagerImpl::UpdataeAlarmToneUri(
     updateValuesBucket.Put(RINGTONE_COLUMN_ALARM_TONE_TYPE, ALARM_TONE_TYPE);
     updateValuesBucket.Put(RINGTONE_COLUMN_ALARM_TONE_SOURCE_TYPE, SOURCE_TYPE_CUSTOMISED);
     int32_t changedRows = dataShareHelper->Update(RINGTONEURI, updatePredicates, updateValuesBucket);
-    MEDIA_LOGI("UpdataeAlarmToneUri: result(changedRows) %{public}d", changedRows);
+    MEDIA_LOGI("updateAlarmToneUri: result(changedRows) %{public}d", changedRows);
     return changedRows;
 }
 
