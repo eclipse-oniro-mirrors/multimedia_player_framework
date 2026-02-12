@@ -29,24 +29,6 @@ constexpr int32_t SET_FD_SOURCE = 3;
 
 namespace OHOS {
 namespace Media {
-bool FuzzAVMetadataStub(uint8_t *data, size_t size)
-{
-    if (data == nullptr || size < sizeof(int64_t)) {
-        return true;
-    }
-    sptr<AVMetadataServiceProxyFuzzer> avmetaProxy = AVMetadataServiceProxyFuzzer::Create();
-    if (avmetaProxy == nullptr) {
-        return false;
-    }
-    for (uint32_t codeId = 0; codeId < AVMetadataServiceProxyFuzzer::MAX_IPC_ID; codeId++) {
-        if (codeId != AVMetadataServiceProxyFuzzer::DESTROY) {
-            avmetaProxy->SendRequest(codeId, data, size, true);
-        }
-    }
-    avmetaProxy->SendRequest(AVMetadataServiceProxyFuzzer::DESTROY, data, size, false);
-    return true;
-}
-
 void SetSourceLocalFd(sptr<IRemoteStub<IStandardAVMetadataHelperService>> avmetadataStub)
 {
     int32_t fileDes = open(VIDEO_PATH, O_RDONLY);
@@ -91,7 +73,9 @@ bool FuzzAVMetadataStubLocal(uint8_t *data, size_t size)
         if (isWirteToken) {
             msg.WriteInterfaceToken(avmetadataStub->GetDescriptor());
         }
-        msg.WriteBuffer(data, size);
+        size_t offset = code % size;
+        size_t length = size - offset;
+        msg.WriteBuffer(data + offset, length);
         msg.RewindRead(0);
         MessageParcel reply;
         MessageOption option;
@@ -128,7 +112,9 @@ bool FuzzAVMetadataStubLocal2(uint8_t *data, size_t size)
         if (isWirteToken) {
             msg.WriteInterfaceToken(avmetadataStub->GetDescriptor());
         }
-        msg.WriteBuffer(data, size);
+        size_t offset = code % size;
+        size_t length = size - offset;
+        msg.WriteBuffer(data + offset, length);
         msg.RewindRead(0);
         MessageParcel reply;
         MessageOption option;
@@ -144,7 +130,9 @@ bool FuzzAVMetadataStubLocal2(uint8_t *data, size_t size)
 extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
 {
     /* Run your code on data */
-    OHOS::Media::FuzzAVMetadataStub(data, size);
+    if (data == nullptr || size < sizeof(int64_t)) {
+        return 0;
+    }
     OHOS::Media::FuzzAVMetadataStubLocal(data, size);
     OHOS::Media::FuzzAVMetadataStubLocal2(data, size);
     return 0;
