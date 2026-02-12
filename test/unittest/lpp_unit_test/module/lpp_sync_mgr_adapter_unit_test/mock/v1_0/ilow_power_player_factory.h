@@ -41,24 +41,17 @@ public:
         return sptr<ILowPowerPlayerFactory>::MakeSptr();
     }
 
-    int32_t CreateSyncMgr(sptr<OHOS::HDI::LowPowerPlayer::V1_0::ILppSyncManagerAdapter>& syncMgrAdapter,
-        uint32_t& syncMgrId)
+    int32_t CreateSyncMgr(sptr<OHOS::HDI::LowPowerPlayer::V1_0::ILppSyncManagerAdapter>& syncMgrAdapter)
+
     {
         syncMgrAdapter
             = sptr<OHOS::HDI::LowPowerPlayer::V1_0::ILppSyncManagerAdapter>::MakeSptr();
-        syncMgrId = 1;
+
         return 0;
     }
 
-    int32_t DestroySyncMgr(uint32_t syncMgrId)
-    {
-        return 0;
-    }
 };
 } // V1_0
 } // LowPowerPlayer
 } // HDI
 } // OHOS
-
-#endif // OHOS_HDI_LOW_POWER_PLAYER_V1_0_ILOWPOWERPLAYERFACTORY_H
-
