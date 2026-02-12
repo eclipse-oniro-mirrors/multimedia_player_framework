@@ -58,8 +58,6 @@ public:
         return false;
     }
 
-    virtual void SetInterruptState() {};
-
 protected:
     shared_ptr<OHOS::Media::Pipeline::Pipeline> pipeline_ {nullptr};
     shared_ptr<DemuxerFilter> demuxer_ {nullptr};
@@ -97,7 +95,6 @@ public:
     void Release();
     mutex draggingMutex_ {};
     DraggingMode GetDraggingMode();
-    void SetInterruptState();
  
 private:
     static bool loaded_;
@@ -134,7 +131,6 @@ public:
 
     void ConsumeVideoFrame(const shared_ptr<AVBuffer> avBuffer, uint32_t bufferIndex) override;
     bool IsVideoStreamDiscardable(const shared_ptr<AVBuffer> avBuffer) override;
-    void SetInterruptState() override;
 
 private:
     void StopDragging(int64_t seekCnt);
