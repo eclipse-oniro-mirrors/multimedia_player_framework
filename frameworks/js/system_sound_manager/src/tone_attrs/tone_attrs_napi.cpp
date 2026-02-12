@@ -33,6 +33,10 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, 
 namespace OHOS {
 namespace Media {
 const std::string TONE_ATTRS_NAPI_CLASS_NAME = "ToneAttrs";
+const std::map<std::string, int32_t> toneMediaTypeMap = {
+    {"AUDIO", static_cast<int32_t>(ToneMediaType::MEDIA_TYPE_AUD)},
+    {"VIDEO", static_cast<int32_t>(ToneMediaType::MEDIA_TYPE_VID)}
+};
 thread_local napi_ref ToneAttrsNapi::sConstructor_ = nullptr;
 thread_local napi_ref ToneAttrsNapi::toneMediaType_ = nullptr;
 std::shared_ptr<ToneAttrs> ToneAttrsNapi::sToneAttrs_ = nullptr;

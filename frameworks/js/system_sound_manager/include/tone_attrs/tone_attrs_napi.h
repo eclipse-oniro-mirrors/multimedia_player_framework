@@ -25,10 +25,7 @@ namespace OHOS {
 namespace Media {
 extern const std::string TONE_ATTRS_NAPI_CLASS_NAME;
 
-static const std::map<std::string, int32_t> toneMediaTypeMap = {
-    {"AUDIO", static_cast<int32_t>(ToneMediaType::MEDIA_TYPE_AUD)},
-    {"VIDEO", static_cast<int32_t>(ToneMediaType::MEDIA_TYPE_VID)}
-};
+extern const std::map<std::string, int32_t> toneMediaTypeMap;
 
 class ToneAttrsNapi {
 public:

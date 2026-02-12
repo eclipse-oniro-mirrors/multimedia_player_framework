@@ -32,6 +32,14 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, 
 namespace OHOS {
 namespace Media {
 const std::string AUDIO_HAPTIC_MANAGER_NAPI_CLASS_NAME = "AudioHapticManager";
+const std::map<std::string, AudioLatencyMode> audioLatencyModeMap = {
+    {"AUDIO_LATENCY_MODE_NORMAL", AUDIO_LATENCY_MODE_NORMAL},
+    {"AUDIO_LATENCY_MODE_FAST", AUDIO_LATENCY_MODE_FAST}
+};
+const std::map<std::string, AudioHapticType> audioHapticTypeMap = {
+    {"AUDIO_HAPTIC_TYPE_AUDIO", AUDIO_HAPTIC_TYPE_AUDIO},
+    {"AUDIO_HAPTIC_TYPE_HAPTIC", AUDIO_HAPTIC_TYPE_HAPTIC}
+};
 thread_local napi_ref AudioHapticManagerNapi::sConstructor_ = nullptr;
 thread_local napi_ref AudioHapticManagerNapi::sAudioLatencyMode_ = nullptr;
 thread_local napi_ref AudioHapticManagerNapi::sAudioHapticType_ = nullptr;
