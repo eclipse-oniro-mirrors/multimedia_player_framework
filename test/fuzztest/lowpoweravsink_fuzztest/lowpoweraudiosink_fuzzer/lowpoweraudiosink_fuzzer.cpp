@@ -74,8 +74,7 @@ sptr<IRemoteStub<IStandardLppAudioStreamerService>> LowPowerAudioSinkFuzz::GetAu
     if (lowPowerAudioSink == nullptr) {
         return nullptr;
     }
-    sptr<IRemoteStub<IStandardLppAudioStreamerService>> lowPowerAudioSinkStub =
-        iface_cast<IRemoteStub<IStandardLppAudioStreamerService>>(lowPowerAudioSink);
+    sptr<IRemoteStub<IStandardLppAudioStreamerService>> lowPowerAudioSinkStub = iface_cast<IRemoteStub<IStandardLppAudioStreamerService>>(lowPowerAudioSink);
     return lowPowerAudioSinkStub;
 }
 
@@ -152,4 +151,5 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t* data, size_t size)
     audioSink.RunFuzz(data, size);
     unlink(DATA_PATH);
     return 0;
-}
+}
+

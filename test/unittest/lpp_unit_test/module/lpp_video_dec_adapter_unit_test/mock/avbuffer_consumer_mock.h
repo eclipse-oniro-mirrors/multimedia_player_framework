@@ -73,24 +73,20 @@ protected:
     uint8_t *base_;
     uint64_t uid_;
     std::shared_ptr<AVAllocator> allocator_;
-    static std::shared_ptr<AVMemory> CreateAVMemory(
-        std::shared_ptr<AVAllocator> allocator, int32_t capacity = 0, int32_t align = 0)
-    {
+    static std::shared_ptr<AVMemory> CreateAVMemory(std::shared_ptr<AVAllocator> allocator,
+                                                    int32_t capacity = 0, int32_t align = 0){
         return std::make_shared<AVMemory>();
     }
-    static std::shared_ptr<AVMemory> CreateAVMemory(uint8_t *ptr, int32_t capacity, int32_t size)
-    {
+    static std::shared_ptr<AVMemory> CreateAVMemory(uint8_t *ptr, int32_t capacity, int32_t size){
         return std::make_shared<AVMemory>();
     }
-    static std::shared_ptr<AVMemory> CreateAVMemory(MessageParcel &parcel, bool isSurfaceBuffer = false)
-    {
+    static std::shared_ptr<AVMemory> CreateAVMemory(MessageParcel &parcel, bool isSurfaceBuffer = false){
         return std::make_shared<AVMemory>();
     }
-    static std::shared_ptr<AVMemory> CreateAVMemory(sptr<SurfaceBuffer> surfaceBuffer)
-    {
+    static std::shared_ptr<AVMemory> CreateAVMemory(sptr<SurfaceBuffer> surfaceBuffer){
         return std::make_shared<AVMemory>();
     }
 };
 } // namespace Media
 } // namespace OHOS
-#endif // AVBUFFER_QUEUE_CONSUMER_MOCK_H
+#endif // AVBUFFER_QUEUE_CONSUMER_MOCK_H

@@ -269,7 +269,7 @@ HWTEST_F(LppAudioDataManagerUnitTest, HandleBufferAvailable_002, TestSize.Level1
     EXPECT_TRUE(pushBufferSuccess);
 }
 
-void HandleBufferAvailableFunTest0031()
+void LppAudioDataManagerUnitTest::HandleBufferAvailableFunTest0031()
 {
     sptr<LppDataPacket> framePacket = sptr<LppDataPacket>::MakeSptr();
     framePacket->Init();
@@ -307,9 +307,9 @@ void HandleBufferAvailableFunTest0031()
     EXPECT_EQ(audioDataMgr_->isRequiringData_, true);
 }
 
-void HandleBufferAvailableFunTest0032()
+void LppAudioDataManagerUnitTest::HandleBufferAvailableFunTest0032()
 {
-    framePacket = sptr<LppDataPacket>::MakeSptr();
+    sptr<LppDataPacket> framePacket = sptr<LppDataPacket>::MakeSptr();
     framePacket->Init();
     audioDataMgr_->dataPacket_ = framePacket;
     audioDataMgr_->isRequiringData_ = false;
@@ -379,9 +379,9 @@ HWTEST_F(LppAudioDataManagerUnitTest, HandleBufferAvailable_003, TestSize.Level1
     audioDataMgr_->HandleBufferAvailable();
     EXPECT_EQ(audioDataMgr_->isRequiringData_, true);
 
-    HandleBufferAvailableFunTest_003_1();
+    HandleBufferAvailableFunTest0031();
 
-    HandleBufferAvailableFunTest_003_2();
+    HandleBufferAvailableFunTest0032();
 }
 } // namespace Media
 } // namespace OHOS
