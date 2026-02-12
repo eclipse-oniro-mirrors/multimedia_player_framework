@@ -48,6 +48,12 @@ ohos_unittest("lpp_video_streamer_unit_test") {
     "media_foundation:media_foundation"
   ]
 
+  if (player_framework_support_lowpower_av_sink) {
+    external_deps += [
+      "drivers_interface_lpplayer:liblow_power_player_proxy_1.0",
+    ]
+  }
+
   resource_config_file =
       "$MEDIA_PLAYER_ROOT_DIR/test/unittest/resources/ohos_test.xml"
 }
