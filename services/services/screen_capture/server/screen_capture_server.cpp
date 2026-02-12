@@ -780,8 +780,8 @@ bool ScreenCaptureServer::IsSAServiceCalling()
     MEDIA_LOGI("ScreenCaptureServer::IsSAServiceCalling START.");
     const auto tokenId = IPCSkeleton::GetCallingTokenID();
     const auto tokenTypeFlag = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
-    CHECK_AND_RETURN_RET_NOLOG(tokenTypeFlag != Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE &&
-        tokenTypeFlag != Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL, false);
+    CHECK_AND_RETURN_RET_NOLOG(tokenTypeFlag == Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE ||
+        tokenTypeFlag == Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL, false);
     MEDIA_LOGI("ScreenCaptureServer::IsSAServiceCalling true.");
     return true;
 }
