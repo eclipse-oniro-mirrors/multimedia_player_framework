@@ -182,8 +182,6 @@ private:
         RingtoneType ringtoneType, SourceType sourceType);
     int32_t UpdateRingtoneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, const int32_t &toneId,
         RingtoneType ringtoneType, const int32_t &num);
-    int32_t SetSystemToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
-        const std::string &uri, SystemToneType systemToneType);
     std::string GetShotToneUriByType(const DatabaseTool &databaseTool, const std::string &type);
     ToneAttrs GetShotToneAttrsByType(const DatabaseTool &databaseTool, const std::string &type);
     std::string GetNotificationToneUriByType(const DatabaseTool &databaseTool);
@@ -201,6 +199,8 @@ private:
     std::string OpenAudioFile(const DatabaseTool &databaseTool, const std::string &uri, int32_t audioId);
     std::string OpenHapticsFile(const DatabaseTool &databaseTool, const std::string &hapticsUri, int32_t hapticsId);
     int32_t OpenCustomToneUri(const std::string &customAudioUri, int32_t toneType);
+    int32_t SetSystemToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const std::string &uri, SystemToneType systemToneType);
     int32_t UpdateNotificatioToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         const int32_t &toneId);
     int32_t UpdataeAlarmToneUri(const std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
@@ -209,7 +209,8 @@ private:
         SystemToneType systemToneType);
     int32_t RemoveSourceTypeForSystemTone(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         SystemToneType systemToneType, SourceType sourceType);
-
+    int32_t UpdateAlarmTone(const std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const std::string &uri, const int32_T &toneId);
     bool ConvertToRingtoneType(ToneHapticsType toneHapticsType, RingtoneType &ringtoneType);
     bool ConvertToSystemToneType(ToneHapticsType toneHapticsType, SystemToneType &systemToneType);
     std::string ConvertToHapticsFileName(const std::string &fileName);
@@ -220,8 +221,6 @@ private:
     std::unique_ptr<SimcardSettingAsset> GetSimcardSettingAssetByToneHapticsType(const DatabaseTool &databaseTool,
         ToneHapticsType toneHapticsType);
 
-    std::string GetHapticsUriByStyle(const DatabaseTool &databaseTool,
-        const std::string &standardHapticsUri, HapticsStyle hapticsStyle, const std::string &vibrateFilesUri);
     std::string GetToneSyncedHapticsUri(const DatabaseTool &databaseTool,
         const std::string &toneUri);
     std::string GetDefaultNonSyncedHapticsUri(const DatabaseTool &databaseTool,
@@ -235,6 +234,8 @@ private:
     bool GetVibrateTypeByStyle(int standardVibrateType, HapticsStyle hapticsStyle, int &vibrateType);
     std::unique_ptr<RingtoneAsset> IsPresetRingtone(const DatabaseTool &databaseTool, const std::string &toneUri);
     int GetStandardVibrateType(int toneType);
+    std::string GetHapticsUriByStyle(const DatabaseTool &databaseTool,
+        const std::string &standardHapticsUri, HapticsStyle hapticsStyle, const std::string &vibrateFilesUri);
 
     bool IsRingtoneTypeValid(RingtoneType ringtongType);
     bool IsSystemToneTypeValid(SystemToneType systemToneType);
