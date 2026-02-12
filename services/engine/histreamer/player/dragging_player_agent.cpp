@@ -187,12 +187,6 @@ bool DraggingPlayerAgent::LoadSymbol()
     return true;
 }
 
-void DraggingPlayerAgent::SetInterruptState()
-{
-    FALSE_RETURN_MSG(delegator_ != nullptr, "delegator_ is null");
-    delegator_->SetInterruptState();
-}
-
 shared_ptr<DraggingDelegator> DraggingDelegatorFactory::CreateDelegator(
     const shared_ptr<OHOS::Media::Pipeline::Pipeline> pipeline,
     const shared_ptr<DemuxerFilter> demuxer,
@@ -322,12 +316,6 @@ void SeekContinuousDelegator::StopDragging(int64_t seekCnt)
     FALSE_RETURN(draggingPlayer_ != nullptr);
     FALSE_RETURN_NOLOG(seekCnt_.load() == seekCnt);
     draggingPlayer_->StopDragging();
-}
-
-void SeekContinuousDelegator::SetInterruptState()
-{
-    FALSE_RETURN(draggingPlayer_ != nullptr);
-    draggingPlayer_->SetInterruptState();
 }
 
 shared_ptr<SeekClosestDelegator> SeekClosestDelegator::Create(
