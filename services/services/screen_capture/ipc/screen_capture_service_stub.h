@@ -75,6 +75,8 @@ public:
     int32_t UpdateSurface(sptr<Surface> surface) override;
     int32_t SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config) override;
     int32_t SetCaptureArea(uint64_t displayId, OHOS::Rect area) override;
+    int32_t GetMultiDisplayCaptureCapability(const std::vector<uint64_t> &displayIds,
+        MultiDisplayCapability &capability) override;
 
 private:
     ScreenCaptureServiceStub();
@@ -113,6 +115,7 @@ private:
     int32_t SetCaptureAreaHighlight(MessageParcel &data, MessageParcel &reply);
     int32_t UpdateSurface(MessageParcel &data, MessageParcel &reply);
     int32_t SetCaptureArea(MessageParcel &data, MessageParcel &reply);
+    int32_t GetMultiDisplayCaptureCapability(MessageParcel &data, MessageParcel &reply);
 
     int32_t Release(MessageParcel &data, MessageParcel &reply);
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);

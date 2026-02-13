@@ -31,6 +31,7 @@
 
 namespace {
 constexpr int MAX_WINDOWS_LEN = 1000;
+constexpr int MAX_DISPLAYS_LEN = 1000;
 constexpr int VIRTUAL_DISPLAY_ID_START = 1000;
 constexpr uint32_t MIN_LINE_THICKNESS = 1;
 constexpr uint32_t MAX_LINE_THICKNESS = 8;
@@ -1445,6 +1446,20 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetDisplayIdSelected(OH_AVScreenC
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
 
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetMultiDisplayIdsSelected(
+    OH_AVScreenCapture_UserSelectionInfo *selection, uint64_t** displayIds, size_t *count)
+{
+    MEDIA_LOGD("OH_AVScreenCapture_GetMultiDisplayIdsSelected S");
+    CHECK_AND_RETURN_RET_LOG(selection != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input selection is nullptr");
+    CHECK_AND_RETURN_RET_LOG(displayIds != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input displayIds is nullptr");
+    CHECK_AND_RETURN_RET_LOG(count != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input displayIds is nullptr");
+    auto *selectionObj = reinterpret_cast<ScreenCaptureUserSelectionObject *>(selection);
+    *count = selectionObj->userSelectionInfo_.displayIds.size();
+    *displayIds = selectionObj->userSelectionInfo_.displayIds.data();
+    MEDIA_LOGD("OH_AVScreenCapture_GetMultiDisplayIdsSelected displayIds size: %{public}zu", *count);
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}
+
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForBFramesEncoding(
     OH_AVScreenCapture_CaptureStrategy *strategy, bool value)
 {
@@ -1478,5 +1493,37 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForFillMode(
     struct ScreenCaptureStrategyObject *strategyObj = reinterpret_cast<ScreenCaptureStrategyObject *>(strategy);
     CHECK_AND_RETURN_RET_LOG(strategyObj != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "strategyObj is nullptr");
     strategyObj->strategy.fillMode = static_cast<AVScreenCaptureFillMode>(mode);
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}
+
+void SetMultiDisplayCapability(MultiDisplayCapability displayCapability, OH_MultiDisplayCapability *capability)
+{
+    capability->width = displayCapability.width;
+    capability->height = displayCapability.height;
+    capability->isMultiDisplaySupport = displayCapability.isMultiDisplaySupport;
+}
+ 
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetMultiDisplayCaptureCapability(struct OH_AVScreenCapture *capture,
+    uint64_t *displayIds, size_t count, OH_MultiDisplayCapability *capability)
+{
+    CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr");
+    CHECK_AND_RETURN_RET_LOG(count < MAX_DISPLAYS_LEN && count > 1, AV_SCREEN_CAPTURE_ERR_INVALID_VAL,
+        "input count invalid!");
+    CHECK_AND_RETURN_RET_LOG(displayIds != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL,
+        "input displayIds invalid, nullptr but size not 0!");
+    CHECK_AND_RETURN_RET_LOG(capability != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capability invalid!");
+    auto *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL,
+        "screenCapture_ is null");
+    std::vector<uint64_t> displayIdList;
+    for (size_t i = 0; i < count; i++) {
+        displayIdList.push_back(displayIds[i]);
+    }
+    MultiDisplayCapability displayCapability;
+    SetMultiDisplayCapability(displayCapability, capability);
+    int32_t ret = screenCaptureObj->screenCapture_->GetMultiDisplayCaptureCapability(displayIdList, displayCapability);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK,
+        AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "GetMultiDisplayCaptureCapability failed!");
+    SetMultiDisplayCapability(displayCapability, capability);
     return AV_SCREEN_CAPTURE_ERR_OK;
 }

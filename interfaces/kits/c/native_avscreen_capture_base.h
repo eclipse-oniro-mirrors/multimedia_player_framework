@@ -541,6 +541,21 @@ typedef struct OH_AVScreenCaptureHighlightConfig {
 } OH_AVScreenCaptureHighlightConfig;
 
 /**
+ * @brief Multi-display recording capability information.
+ * This structure describes the capabilities of multi-display recording, including whether the device supports
+ * multi-display recording and the supported resolution.
+ * @since 24
+ */
+typedef struct OH_MultiDisplayCapability {
+    /** Whether multi-display recording is supported */
+    bool isMultiDisplaySupport;
+    /** Supported width (in pixels) */
+    uint32_t width;
+    /** Supported height (in pixels) */
+    uint32_t height;
+} OH_MultiDisplayCapability;
+
+/**
  * @brief Capture source selector display mode enumeration
  *
  * @since 22

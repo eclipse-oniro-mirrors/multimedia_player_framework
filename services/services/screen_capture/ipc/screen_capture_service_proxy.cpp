@@ -20,6 +20,7 @@
 
 namespace {
 constexpr int MAX_WINDOWS_LEN = 1000;
+constexpr size_t MAX_DISPLAY_LEN = 1000;
 constexpr int MAX_AUDIO_BUFFER_LEN = 10 * 1024 * 1024; // 10M
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureServiceProxy"};
 }
@@ -766,6 +767,27 @@ int32_t ScreenCaptureServiceProxy::SetCaptureArea(uint64_t displayId, OHOS::Rect
     int error = Remote()->SendRequest(SET_CAPTURE_AREA, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
                              "SetCaptureArea failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
+int32_t ScreenCaptureServiceProxy::GetMultiDisplayCaptureCapability(const std::vector<uint64_t> &displayIds,
+    MultiDisplayCapability &capability)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+    CHECK_AND_RETURN_RET_LOG(displayIds.size() < MAX_DISPLAY_LEN && displayIds.size() > 1, MSERR_INVALID_OPERATION,
+        "displayIds size is exceed max range");
+    token = data.WriteUInt64Vector(displayIds);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write displayIds!");
+ 
+    int error = Remote()->SendRequest(GET_MULTI_DISPLAY_CAPTURE_CAPABILITY, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "GetMultiDisplayCaptureCapability failed, error: %{public}d", error);
+    CHECK_AND_RETURN_RET_LOG(reply.ReadUint32(capability.width) && reply.ReadUint32(capability.height) &&
+        reply.ReadBool(capability.isMultiDisplaySupport), MSERR_INVALID_OPERATION, "Failed to get data!");
     return reply.ReadInt32();
 }
 } // namespace Media

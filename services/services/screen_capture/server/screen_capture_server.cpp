@@ -96,6 +96,7 @@ static const uint32_t MIN_LINE_WIDTH = 1;
 static const uint32_t MAX_LINE_WIDTH = 8;
 static const uint32_t MAX_LINE_COLOR_RGB = 0xffffff;
 static const uint32_t MIN_LINE_COLOR_ARGB = 0xff000000;
+static const size_t MAX_DISPLAY_LEN = 1000;
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     static const int32_t NOTIFICATION_MAX_TRY_NUM = 3;
 #endif
@@ -3873,6 +3874,24 @@ int32_t ScreenCaptureServer::SetCaptureAreaInner(uint64_t displayId, OHOS::Rect 
     SetDisplayScreenId(regionScreenId);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " SetCaptureAreaInner end, state:%{public}d.",
         FAKE_POINTER(this), captureState_);
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServer::GetMultiDisplayCaptureCapability(const std::vector<uint64_t> &displayIds,
+    MultiDisplayCapability &capability)
+{
+    MediaTrace trace("ScreenCaptureServer::GetMultiDisplayCaptureCapability");
+    std::lock_guard<std::mutex> lock(mutex_);
+    DMRect region;
+    CHECK_AND_RETURN_RET_LOG(displayIds.size() < MAX_DISPLAY_LEN || displayIds.size() > 1,
+        MSERR_INVALID_OPERATION, "displayIds size is exceed max range");
+    auto ret = ScreenManager::GetInstance().QueryMultiScreenCapture(displayIds, region);
+    CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK || ret == DMError::DM_ERROR_INVALID_PARAM ||
+        ret == DMError::DM_ERROR_DEVICE_NOT_SUPPORT, MSERR_UNKNOWN, "QueryMultiScreenCapture ret: %{public}d", ret);
+    CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_OK, "QueryMultiScreenCapture ret: %{public}d", ret);
+    capability.width = region.width_;
+    capability.height = region.height_;
+    capability.isMultiDisplaySupport = true;
     return MSERR_OK;
 }
 

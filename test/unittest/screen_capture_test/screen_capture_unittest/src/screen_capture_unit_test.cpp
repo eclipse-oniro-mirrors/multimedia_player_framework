@@ -2392,6 +2392,10 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_presentPicker_test01, TestSize.Le
     config_.audioInfo.innerCapInfo = innerCapInfo;
 
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->CreateCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->StrategyForPickerPopUp(true));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->ReleaseCaptureStrategy());
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
     sleep(RECORDER_TIME);
 #ifdef SUPPORT_SCREEN_CAPTURE_PICKER
@@ -2568,6 +2572,30 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_set_highlight_for_area_002, TestS
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_set_highlight_for_area_002 after");
+}
+
+/**
+ * @tc.name: screen_capture_multi_display_01
+ * @tc.desc: screen capture buffer test
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_multi_display_01, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_multi_display_01 before");
+    SetConfig(config_);
+    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+    vector<uint64_t> displayIds = {0, 1};
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    MultiDisplayCapability multiDisplayCapability;
+    EXPECT_EQ(MSERR_OK,
+        screenCapture_->GetMultiDisplayCaptureCapability(&displayIds[0], displayIds.size(), &multiDisplayCapability));
+    EXPECT_EQ(multiDisplayCapability.isMultiDisplaySupport, false);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_multi_display_01 after");
 }
 } // namespace Media
 } // namespace OHOS

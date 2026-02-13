@@ -74,6 +74,8 @@ public:
     MOCK_METHOD(int32_t, UpdateSurface, (sptr<Surface> surface), (override));
     MOCK_METHOD(int32_t, SetCaptureArea, (uint64_t displayId, OHOS::Rect area), (override));
     MOCK_METHOD(int32_t, SetCaptureAreaHighlight, (AVScreenCaptureHighlightConfig config), (override));
+    MOCK_METHOD(int32_t, GetMultiDisplayCaptureCapability, (const std::vector<uint64_t> &displayIds,
+        MultiDisplayCapability &capability), (override));
 };
 
 class MockSurface : public Surface {

@@ -217,6 +217,12 @@ struct AVScreenCaptureHighlightConfig {
     ScreenCaptureHighlightMode mode = ScreenCaptureHighlightMode::HIGHLIGHT_MODE_INVALID;
 };
 
+struct MultiDisplayCapability {
+    bool isMultiDisplaySupport = false;
+    uint32_t width = 0;
+    uint32_t height = 0;
+};
+
 struct VideoCaptureInfo {
     uint64_t displayId = 0;
     std::list<int32_t> taskIDs;
@@ -366,6 +372,8 @@ public:
     virtual int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) = 0;
     virtual int32_t UpdateSurface(sptr<Surface> surface) = 0;
     virtual int32_t SetCaptureArea(uint64_t displayId, Rect area) = 0;
+    virtual int32_t GetMultiDisplayCaptureCapability(const std::vector<uint64_t> &displayIds,
+        MultiDisplayCapability &capability) = 0;
 };
 
 class __attribute__((visibility("default"))) ScreenCaptureFactory {
