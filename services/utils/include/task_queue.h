@@ -254,7 +254,7 @@ private:
     std::unique_ptr<std::thread> thread_;
     std::list<TaskHandlerItem> taskList_;
     std::mutex mutex_;
-    std::mutex tidMutex_;
+    std::shared_mutex tidMutex_;
     std::condition_variable cond_;
     std::string name_;
     pid_t tid_ = -1;
