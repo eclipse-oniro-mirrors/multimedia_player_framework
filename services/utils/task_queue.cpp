@@ -64,7 +64,7 @@ int32_t TaskQueue::Stop() noexcept
         if (t != nullptr && t->joinable()) {
             t->detach();
         }
-        std::unique_lock<std::mutex> lock1(tidMutex_);
+        std::shared_lock<std::shared_mutex> lock1(tidMutex_);
         MEDIA_LOGW("Stop at the task thread, set isExit true, detach thread: [%{public}s], tid_: (%{public}d)",
             name_.c_str(), tid_);
         return MSERR_INVALID_OPERATION;
@@ -80,7 +80,7 @@ int32_t TaskQueue::Stop() noexcept
         t->join();
     }
     {
-        std::unique_lock<std::mutex> lock1(tidMutex_);
+        std::shared_lock<std::shared_mutex> lock1(tidMutex_);
         MEDIA_LOGI("Stop at the other thread, set isExit true, join thread: [%{public}s], tid_: (%{public}d)",
             name_.c_str(), tid_);
     }
@@ -92,7 +92,7 @@ int32_t TaskQueue::Stop() noexcept
 
 void TaskQueue::SetQos(const QosLevel level)
 {
-    std::unique_lock<std::mutex> lock(tidMutex_);
+    std::shared_lock<std::shared_mutex> lock(tidMutex_);
     if (tid_ == -1) {
         MEDIA_LOGW("SetQos thread level failed, tid invalid");
         return;
@@ -103,7 +103,7 @@ void TaskQueue::SetQos(const QosLevel level)
 
 void TaskQueue::ResetQos()
 {
-    std::unique_lock<std::mutex> lock(tidMutex_);
+    std::shared_lock<std::shared_mutex> lock(tidMutex_);
     if (tid_ == -1) {
         MEDIA_LOGW("ResetQos thread level failed, tid invalid");
         return;
@@ -168,7 +168,7 @@ __attribute__((no_sanitize("cfi"))) void TaskQueue::TaskProcessor()
 {
     constexpr uint32_t nameSizeMax = 15;
     {
-        std::unique_lock<std::mutex> lock(tidMutex_);
+        std::unique_lock<std::shared_mutex> lock(tidMutex_);
         tid_ = gettid();
     }
     MEDIA_LOGI("Enter TaskProcessor [%{public}s], tid_: (%{public}d)", name_.c_str(), tid_);
