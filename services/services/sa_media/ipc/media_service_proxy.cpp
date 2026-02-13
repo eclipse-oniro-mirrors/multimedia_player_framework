@@ -21,6 +21,7 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaServiceProxy"};
+constexpr int64_t MAX_PIDS_COUNT = 65536;
 }
 
 namespace OHOS {
@@ -69,7 +70,7 @@ std::vector<pid_t> MediaServiceProxy::GetPlayerPids()
         return res;
     }
     int64_t vecSize = reply.ReadInt64();
-    CHECK_AND_RETURN_RET_LOG(vecSize >= 0, res, "Fail to read vecSize");
+    CHECK_AND_RETURN_RET_LOG(vecSize >= 0 && vecSize <= MAX_PIDS_COUNT, res, "Fail to read vecSize");
     for (int64_t i = 0; i < vecSize; i++) {
         res.emplace_back(static_cast<pid_t>(reply.ReadInt64()));
     }
