@@ -132,7 +132,7 @@ enum class AacProfile : int32_t {
     
     AAC_HE_V2 = 2,
 
-    VIDEO_CODEC_FORMAT_BUTT,
+    AUDIO_CODEC_FORMAT_BUTT,
 };
 
 /**
