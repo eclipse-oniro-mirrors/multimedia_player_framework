@@ -760,6 +760,10 @@ Status HiPlayerImpl::DoSetPlayRange()
 {
     Status ret = Status::OK;
     int64_t rangeStartTime = GetPlayRangeStartTime();
+    std::pair<int64_t, bool> startInfo;
+    if (rangeStartTime == -1 && demuxer_->GetStartInfo(startInfo) && startInfo.first > 0) {
+        rangeStartTime = startInfo.first;
+    }
     int64_t rangeEndTime = GetPlayRangeEndTime();
     if (!IsValidPlayRange(rangeStartTime, rangeEndTime)) {
         MEDIA_LOG_E("DoSetPlayRange failed! start: " PUBLIC_LOG_D64 ", end: " PUBLIC_LOG_D64,
