@@ -827,6 +827,881 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: ConvertToAVMeta_003
+ * @tc.desc: ConvertToAVMeta_003
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_003, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_ALBUM, "album_test");
+    meta->SetData(Tag::MEDIA_ALBUM_ARTIST, "album_artist_test");
+    meta->SetData(Tag::MEDIA_ARTIST, "artist_test");
+    meta->SetData(Tag::MEDIA_AUTHOR, "author_test");
+    meta->SetData(Tag::MEDIA_COMPOSER, "测试");
+    int64_t duration = 10030000;
+    meta->SetData(Tag::MEDIA_DURATION, duration);
+    meta->SetData(Tag::MEDIA_GENRE, "Lyrical");
+    bool hasAudio = true;
+    meta->SetData(Tag::MEDIA_HAS_AUDIO, hasAudio);
+    meta->SetData(Tag::MEDIA_HAS_VIDEO, "yes");
+    meta->SetData(Tag::MIME_TYPE, "video/mp4");
+    meta->SetData(Tag::MEDIA_TRACK_COUNT, "2");
+    int32_t rate = 44100;
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, rate);
+    meta->SetData(Tag::MEDIA_TITLE, "test");
+    meta->SetData(Tag::VIDEO_HEIGHT, "720");
+    meta->SetData(Tag::VIDEO_WIDTH, "1080");
+    meta->SetData(Tag::MEDIA_DATE, "2022");
+    meta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    meta->SetData(Tag::VIDEO_COLOR_TRC, Plugins::TransferCharacteristic::HLG);
+ 
+    Metadata avmeta;
+    avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
+    EXPECT_FALSE(avmeta.tbl_.size() == 0);
+}
+
+/**
+ * @tc.name: ConvertToAVMeta_004
+ * @tc.desc: ConvertToAVMeta_004
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_004, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_ALBUM, "album_test");
+    meta->SetData(Tag::MEDIA_ALBUM_ARTIST, "album_artist_test");
+    meta->SetData(Tag::MEDIA_ARTIST, "artist_test");
+    meta->SetData(Tag::MEDIA_AUTHOR, "author_test");
+    meta->SetData(Tag::MEDIA_COMPOSER, "测试");
+    int64_t duration = 10030000;
+    meta->SetData(Tag::MEDIA_DURATION, duration);
+    meta->SetData(Tag::MEDIA_GENRE, "Lyrical");
+    bool hasAudio = true;
+    meta->SetData(Tag::MEDIA_HAS_AUDIO, hasAudio);
+    meta->SetData(Tag::MEDIA_HAS_VIDEO, "yes");
+    meta->SetData(Tag::MIME_TYPE, "video/mp4");
+    meta->SetData(Tag::MEDIA_TRACK_COUNT, "2");
+    int32_t rate = 44100;
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, rate);
+    meta->SetData(Tag::MEDIA_TITLE, "test");
+    meta->SetData(Tag::VIDEO_HEIGHT, "480");
+    meta->SetData(Tag::VIDEO_WIDTH, "360");
+    meta->SetData(Tag::MEDIA_DATE, "2022");
+    meta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    meta->SetData(Tag::VIDEO_COLOR_TRC, Plugins::TransferCharacteristic::HLG);
+ 
+    Metadata avmeta;
+    avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
+    EXPECT_FALSE(avmeta.tbl_.size() == 0);
+}
+
+/**
+ * @tc.name: ConvertToAVMeta_004
+ * @tc.desc: ConvertToAVMeta_004
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_004, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_ALBUM, "album_test");
+    meta->SetData(Tag::MEDIA_ALBUM_ARTIST, "album_artist_test");
+    meta->SetData(Tag::MEDIA_ARTIST, "artist_test");
+    meta->SetData(Tag::MEDIA_AUTHOR, "author_test");
+    meta->SetData(Tag::MEDIA_COMPOSER, "测试");
+    int64_t duration = 10030000;
+    meta->SetData(Tag::MEDIA_DURATION, duration);
+    meta->SetData(Tag::MEDIA_GENRE, "Lyrical");
+    bool hasAudio = true;
+    meta->SetData(Tag::MEDIA_HAS_AUDIO, hasAudio);
+    meta->SetData(Tag::MEDIA_HAS_VIDEO, "yes");
+    meta->SetData(Tag::MIME_TYPE, "video/mp4");
+    meta->SetData(Tag::MEDIA_TRACK_COUNT, "2");
+    int32_t rate = 44100;
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, rate);
+    meta->SetData(Tag::MEDIA_TITLE, "test1");
+    meta->SetData(Tag::VIDEO_HEIGHT, "480");
+    meta->SetData(Tag::VIDEO_WIDTH, "720");
+    meta->SetData(Tag::MEDIA_DATE, "2022");
+    meta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    meta->SetData(Tag::VIDEO_COLOR_TRC, Plugins::TransferCharacteristic::HLG);
+ 
+    Metadata avmeta;
+    avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
+    EXPECT_FALSE(avmeta.tbl_.size() == 0);
+}
+
+/**
+ * @tc.name: ConvertToAVMeta_005
+ * @tc.desc: ConvertToAVMeta_005
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_005, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_ALBUM, "album_test");
+    meta->SetData(Tag::MEDIA_ALBUM_ARTIST, "album_artist_test");
+    meta->SetData(Tag::MEDIA_ARTIST, "artist_test");
+    meta->SetData(Tag::MEDIA_AUTHOR, "author_test");
+    meta->SetData(Tag::MEDIA_COMPOSER, "测试1");
+    int64_t duration = 10030000;
+    meta->SetData(Tag::MEDIA_DURATION, duration);
+    meta->SetData(Tag::MEDIA_GENRE, "Lyrical");
+    bool hasAudio = true;
+    meta->SetData(Tag::MEDIA_HAS_AUDIO, hasAudio);
+    meta->SetData(Tag::MEDIA_HAS_VIDEO, "yes");
+    meta->SetData(Tag::MIME_TYPE, "video/mp4");
+    meta->SetData(Tag::MEDIA_TRACK_COUNT, "2");
+    int32_t rate = 44100;
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, rate);
+    meta->SetData(Tag::MEDIA_TITLE, "test");
+    meta->SetData(Tag::VIDEO_HEIGHT, "480");
+    meta->SetData(Tag::VIDEO_WIDTH, "720");
+    meta->SetData(Tag::MEDIA_DATE, "2022");
+    meta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    meta->SetData(Tag::VIDEO_COLOR_TRC, Plugins::TransferCharacteristic::HLG);
+ 
+    Metadata avmeta;
+    avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
+    EXPECT_FALSE(avmeta.tbl_.size() == 0);
+}
+
+/**
+ * @tc.name: ConvertToAVMeta_006
+ * @tc.desc: ConvertToAVMeta_006
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_006, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_ALBUM, "album_test");
+    meta->SetData(Tag::MEDIA_ALBUM_ARTIST, "album_artist_test");
+    meta->SetData(Tag::MEDIA_ARTIST, "artist_test");
+    meta->SetData(Tag::MEDIA_AUTHOR, "author_test");
+    meta->SetData(Tag::MEDIA_COMPOSER, "测试2");
+    int64_t duration = 10030000;
+    meta->SetData(Tag::MEDIA_DURATION, duration);
+    meta->SetData(Tag::MEDIA_GENRE, "Lyrical");
+    bool hasAudio = true;
+    meta->SetData(Tag::MEDIA_HAS_AUDIO, hasAudio);
+    meta->SetData(Tag::MEDIA_HAS_VIDEO, "yes");
+    meta->SetData(Tag::MIME_TYPE, "video/mp4");
+    meta->SetData(Tag::MEDIA_TRACK_COUNT, "2");
+    int32_t rate = 44100;
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, rate);
+    meta->SetData(Tag::MEDIA_TITLE, "test");
+    meta->SetData(Tag::VIDEO_HEIGHT, "480");
+    meta->SetData(Tag::VIDEO_WIDTH, "720");
+    meta->SetData(Tag::MEDIA_DATE, "2022");
+    meta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    meta->SetData(Tag::VIDEO_COLOR_TRC, Plugins::TransferCharacteristic::HLG);
+ 
+    Metadata avmeta;
+    avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
+    EXPECT_FALSE(avmeta.tbl_.size() == 0);
+}
+
+/**
+ * @tc.name: ConvertToAVMeta_007
+ * @tc.desc: ConvertToAVMeta_007
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_007, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_ALBUM, "album_test_007");
+    meta->SetData(Tag::MEDIA_ALBUM_ARTIST, "album_artist_test_007");
+    meta->SetData(Tag::MEDIA_ARTIST, "artist_test_007");
+    meta->SetData(Tag::MEDIA_AUTHOR, "author_test_007");
+    meta->SetData(Tag::MEDIA_COMPOSER, "测试007");
+    int64_t duration = 10030000 + 1000;
+    meta->SetData(Tag::MEDIA_DURATION, duration);
+    meta->SetData(Tag::MEDIA_GENRE, "Lyrical_007");
+    bool hasAudio = true;
+    meta->SetData(Tag::MEDIA_HAS_AUDIO, hasAudio);
+    meta->SetData(Tag::MEDIA_HAS_VIDEO, "yes_007");
+    meta->SetData(Tag::MIME_TYPE, "video/mp4_007");
+    meta->SetData(Tag::MEDIA_TRACK_COUNT, "3");
+    int32_t rate = 44100;
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, rate);
+    meta->SetData(Tag::MEDIA_TITLE, "test_007");
+    meta->SetData(Tag::VIDEO_HEIGHT, "481");
+    meta->SetData(Tag::VIDEO_WIDTH, "721");
+    meta->SetData(Tag::MEDIA_DATE, "2022_007");
+    meta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    meta->SetData(Tag::VIDEO_COLOR_TRC, Plugins::TransferCharacteristic::HLG);
+ 
+    Metadata avmeta;
+    avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
+    EXPECT_FALSE(avmeta.tbl_.size() == 0);
+}
+
+/**
+ * @tc.name: ConvertToAVMeta_008
+ * @tc.desc: ConvertToAVMeta_008
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_008, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_ALBUM, "album_test_008");
+    meta->SetData(Tag::MEDIA_ALBUM_ARTIST, "album_artist_test_008");
+    meta->SetData(Tag::MEDIA_ARTIST, "artist_test_008");
+    meta->SetData(Tag::MEDIA_AUTHOR, "author_test_008");
+    meta->SetData(Tag::MEDIA_COMPOSER, "测试008");
+    int64_t duration = 10030000 + 2000;
+    meta->SetData(Tag::MEDIA_DURATION, duration);
+    meta->SetData(Tag::MEDIA_GENRE, "Lyrical_008");
+    bool hasAudio = true;
+    meta->SetData(Tag::MEDIA_HAS_AUDIO, hasAudio);
+    meta->SetData(Tag::MEDIA_HAS_VIDEO, "yes_008");
+    meta->SetData(Tag::MIME_TYPE, "video/mp4_008");
+    meta->SetData(Tag::MEDIA_TRACK_COUNT, "4");
+    int32_t rate = 44100;
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, rate);
+    meta->SetData(Tag::MEDIA_TITLE, "test_008");
+    meta->SetData(Tag::VIDEO_HEIGHT, "482");
+    meta->SetData(Tag::VIDEO_WIDTH, "722");
+    meta->SetData(Tag::MEDIA_DATE, "2022_008");
+    meta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    meta->SetData(Tag::VIDEO_COLOR_TRC, Plugins::TransferCharacteristic::HLG);
+ 
+    Metadata avmeta;
+    avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
+    EXPECT_FALSE(avmeta.tbl_.size() == 0);
+}
+
+/**
+ * @tc.name: ConvertToAVMeta_009
+ * @tc.desc: ConvertToAVMeta_009
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_009, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_ALBUM, "album_test_009");
+    meta->SetData(Tag::MEDIA_ALBUM_ARTIST, "album_artist_test_009");
+    meta->SetData(Tag::MEDIA_ARTIST, "artist_test_009");
+    meta->SetData(Tag::MEDIA_AUTHOR, "author_test_009");
+    meta->SetData(Tag::MEDIA_COMPOSER, "测试009");
+    int64_t duration = 10030000 + 3000;
+    meta->SetData(Tag::MEDIA_DURATION, duration);
+    meta->SetData(Tag::MEDIA_GENRE, "Lyrical_009");
+    bool hasAudio = true;
+    meta->SetData(Tag::MEDIA_HAS_AUDIO, hasAudio);
+    meta->SetData(Tag::MEDIA_HAS_VIDEO, "yes_009");
+    meta->SetData(Tag::MIME_TYPE, "video/mp4_009");
+    meta->SetData(Tag::MEDIA_TRACK_COUNT, "5");
+    int32_t rate = 44100;
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, rate);
+    meta->SetData(Tag::MEDIA_TITLE, "test_009");
+    meta->SetData(Tag::VIDEO_HEIGHT, "483");
+    meta->SetData(Tag::VIDEO_WIDTH, "723");
+    meta->SetData(Tag::MEDIA_DATE, "2022_009");
+    meta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    meta->SetData(Tag::VIDEO_COLOR_TRC, Plugins::TransferCharacteristic::HLG);
+ 
+    Metadata avmeta;
+    avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
+    EXPECT_FALSE(avmeta.tbl_.size() == 0);
+}
+
+/**
+ * @tc.name: ConvertToAVMeta_010
+ * @tc.desc: ConvertToAVMeta_010
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_010, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_ALBUM, "album_test_010");
+    meta->SetData(Tag::MEDIA_ALBUM_ARTIST, "album_artist_test_010");
+    meta->SetData(Tag::MEDIA_ARTIST, "artist_test_010");
+    meta->SetData(Tag::MEDIA_AUTHOR, "author_test_010");
+    meta->SetData(Tag::MEDIA_COMPOSER, "测试010");
+    int64_t duration = 10030000 + 4000;
+    meta->SetData(Tag::MEDIA_DURATION, duration);
+    meta->SetData(Tag::MEDIA_GENRE, "Lyrical_010");
+    bool hasAudio = true;
+    meta->SetData(Tag::MEDIA_HAS_AUDIO, hasAudio);
+    meta->SetData(Tag::MEDIA_HAS_VIDEO, "yes_010");
+    meta->SetData(Tag::MIME_TYPE, "video/mp4_010");
+    meta->SetData(Tag::MEDIA_TRACK_COUNT, "6");
+    int32_t rate = 44100;
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, rate);
+    meta->SetData(Tag::MEDIA_TITLE, "test_010");
+    meta->SetData(Tag::VIDEO_HEIGHT, "484");
+    meta->SetData(Tag::VIDEO_WIDTH, "724");
+    meta->SetData(Tag::MEDIA_DATE, "2022_010");
+    meta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    meta->SetData(Tag::VIDEO_COLOR_TRC, Plugins::TransferCharacteristic::HLG);
+ 
+    Metadata avmeta;
+    avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
+    EXPECT_FALSE(avmeta.tbl_.size() == 0);
+}
+
+/**
+ * @tc.name: ConvertToAVMeta_011
+ * @tc.desc: ConvertToAVMeta_011
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_011, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_ALBUM, "album_test_011");
+    meta->SetData(Tag::MEDIA_ALBUM_ARTIST, "album_artist_test_011");
+    meta->SetData(Tag::MEDIA_ARTIST, "artist_test_011");
+    meta->SetData(Tag::MEDIA_AUTHOR, "author_test_011");
+    meta->SetData(Tag::MEDIA_COMPOSER, "测试011");
+    int64_t duration = 10030000 + 5000;
+    meta->SetData(Tag::MEDIA_DURATION, duration);
+    meta->SetData(Tag::MEDIA_GENRE, "Lyrical_011");
+    bool hasAudio = true;
+    meta->SetData(Tag::MEDIA_HAS_AUDIO, hasAudio);
+    meta->SetData(Tag::MEDIA_HAS_VIDEO, "yes_011");
+    meta->SetData(Tag::MIME_TYPE, "video/mp4_011");
+    meta->SetData(Tag::MEDIA_TRACK_COUNT, "7");
+    int32_t rate = 44100;
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, rate);
+    meta->SetData(Tag::MEDIA_TITLE, "test_011");
+    meta->SetData(Tag::VIDEO_HEIGHT, "485");
+    meta->SetData(Tag::VIDEO_WIDTH, "725");
+    meta->SetData(Tag::MEDIA_DATE, "2022_011");
+    meta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    meta->SetData(Tag::VIDEO_COLOR_TRC, Plugins::TransferCharacteristic::HLG);
+ 
+    Metadata avmeta;
+    avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
+    EXPECT_FALSE(avmeta.tbl_.size() == 0);
+}
+
+/**
+ * @tc.name: ConvertToAVMeta_012
+ * @tc.desc: ConvertToAVMeta_012
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_012, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_ALBUM, "album_test_012");
+    meta->SetData(Tag::MEDIA_ALBUM_ARTIST, "album_artist_test_012");
+    meta->SetData(Tag::MEDIA_ARTIST, "artist_test_012");
+    meta->SetData(Tag::MEDIA_AUTHOR, "author_test_012");
+    meta->SetData(Tag::MEDIA_COMPOSER, "测试012");
+    int64_t duration = 10030000 + 6000;
+    meta->SetData(Tag::MEDIA_DURATION, duration);
+    meta->SetData(Tag::MEDIA_GENRE, "Lyrical_012");
+    bool hasAudio = true;
+    meta->SetData(Tag::MEDIA_HAS_AUDIO, hasAudio);
+    meta->SetData(Tag::MEDIA_HAS_VIDEO, "yes_012");
+    meta->SetData(Tag::MIME_TYPE, "video/mp4_012");
+    meta->SetData(Tag::MEDIA_TRACK_COUNT, "8");
+    int32_t rate = 44100;
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, rate);
+    meta->SetData(Tag::MEDIA_TITLE, "test_012");
+    meta->SetData(Tag::VIDEO_HEIGHT, "486");
+    meta->SetData(Tag::VIDEO_WIDTH, "726");
+    meta->SetData(Tag::MEDIA_DATE, "2022_012");
+    meta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    meta->SetData(Tag::VIDEO_COLOR_TRC, Plugins::TransferCharacteristic::HLG);
+ 
+    Metadata avmeta;
+    avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
+    EXPECT_FALSE(avmeta.tbl_.size() == 0);
+}
+
+/**
+ * @tc.name: ConvertToAVMeta_013
+ * @tc.desc: ConvertToAVMeta_013
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_013, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_ALBUM, "album_test_013");
+    meta->SetData(Tag::MEDIA_ALBUM_ARTIST, "album_artist_test_013");
+    meta->SetData(Tag::MEDIA_ARTIST, "artist_test_013");
+    meta->SetData(Tag::MEDIA_AUTHOR, "author_test_013");
+    meta->SetData(Tag::MEDIA_COMPOSER, "测试013");
+    int64_t duration = 10030000 + 7000;
+    meta->SetData(Tag::MEDIA_DURATION, duration);
+    meta->SetData(Tag::MEDIA_GENRE, "Lyrical_013");
+    bool hasAudio = true;
+    meta->SetData(Tag::MEDIA_HAS_AUDIO, hasAudio);
+    meta->SetData(Tag::MEDIA_HAS_VIDEO, "yes_013");
+    meta->SetData(Tag::MIME_TYPE, "video/mp4_013");
+    meta->SetData(Tag::MEDIA_TRACK_COUNT, "9");
+    int32_t rate = 44100;
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, rate);
+    meta->SetData(Tag::MEDIA_TITLE, "test_013");
+    meta->SetData(Tag::VIDEO_HEIGHT, "487");
+    meta->SetData(Tag::VIDEO_WIDTH, "727");
+    meta->SetData(Tag::MEDIA_DATE, "2022_013");
+    meta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    meta->SetData(Tag::VIDEO_COLOR_TRC, Plugins::TransferCharacteristic::HLG);
+ 
+    Metadata avmeta;
+    avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
+    EXPECT_FALSE(avmeta.tbl_.size() == 0);
+}
+
+/**
+ * @tc.name: ConvertToAVMeta_014
+ * @tc.desc: ConvertToAVMeta_014
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_014, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_ALBUM, "album_test_014");
+    meta->SetData(Tag::MEDIA_ALBUM_ARTIST, "album_artist_test_014");
+    meta->SetData(Tag::MEDIA_ARTIST, "artist_test_014");
+    meta->SetData(Tag::MEDIA_AUTHOR, "author_test_014");
+    meta->SetData(Tag::MEDIA_COMPOSER, "测试014");
+    int64_t duration = 10030000 + 8000;
+    meta->SetData(Tag::MEDIA_DURATION, duration);
+    meta->SetData(Tag::MEDIA_GENRE, "Lyrical_014");
+    bool hasAudio = true;
+    meta->SetData(Tag::MEDIA_HAS_AUDIO, hasAudio);
+    meta->SetData(Tag::MEDIA_HAS_VIDEO, "yes_014");
+    meta->SetData(Tag::MIME_TYPE, "video/mp4_014");
+    meta->SetData(Tag::MEDIA_TRACK_COUNT, "10");
+    int32_t rate = 44100;
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, rate);
+    meta->SetData(Tag::MEDIA_TITLE, "test_014");
+    meta->SetData(Tag::VIDEO_HEIGHT, "488");
+    meta->SetData(Tag::VIDEO_WIDTH, "728");
+    meta->SetData(Tag::MEDIA_DATE, "2022_014");
+    meta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    meta->SetData(Tag::VIDEO_COLOR_TRC, Plugins::TransferCharacteristic::HLG);
+ 
+    Metadata avmeta;
+    avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
+    EXPECT_FALSE(avmeta.tbl_.size() == 0);
+}
+
+/**
+ * @tc.name: ConvertToAVMeta_015
+ * @tc.desc: ConvertToAVMeta_015
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_015, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_ALBUM, "album_test_015");
+    meta->SetData(Tag::MEDIA_ALBUM_ARTIST, "album_artist_test_015");
+    meta->SetData(Tag::MEDIA_ARTIST, "artist_test_015");
+    meta->SetData(Tag::MEDIA_AUTHOR, "author_test_015");
+    meta->SetData(Tag::MEDIA_COMPOSER, "测试015");
+    int64_t duration = 10030000 + 9000;
+    meta->SetData(Tag::MEDIA_DURATION, duration);
+    meta->SetData(Tag::MEDIA_GENRE, "Lyrical_015");
+    bool hasAudio = true;
+    meta->SetData(Tag::MEDIA_HAS_AUDIO, hasAudio);
+    meta->SetData(Tag::MEDIA_HAS_VIDEO, "yes_015");
+    meta->SetData(Tag::MIME_TYPE, "video/mp4_015");
+    meta->SetData(Tag::MEDIA_TRACK_COUNT, "11");
+    int32_t rate = 44100;
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, rate);
+    meta->SetData(Tag::MEDIA_TITLE, "test_015");
+    meta->SetData(Tag::VIDEO_HEIGHT, "489");
+    meta->SetData(Tag::VIDEO_WIDTH, "729");
+    meta->SetData(Tag::MEDIA_DATE, "2022_015");
+    meta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    meta->SetData(Tag::VIDEO_COLOR_TRC, Plugins::TransferCharacteristic::HLG);
+ 
+    Metadata avmeta;
+    avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
+    EXPECT_FALSE(avmeta.tbl_.size() == 0);
+}
+
+/**
+ * @tc.name: ConvertToAVMeta_016
+ * @tc.desc: ConvertToAVMeta_016
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_016, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_ALBUM, "album_test_016");
+    meta->SetData(Tag::MEDIA_ALBUM_ARTIST, "album_artist_test_016");
+    meta->SetData(Tag::MEDIA_ARTIST, "artist_test_016");
+    meta->SetData(Tag::MEDIA_AUTHOR, "author_test_016");
+    meta->SetData(Tag::MEDIA_COMPOSER, "测试016");
+    int64_t duration = 10030000 + 10000;
+    meta->SetData(Tag::MEDIA_DURATION, duration);
+    meta->SetData(Tag::MEDIA_GENRE, "Lyrical_016");
+    bool hasAudio = true;
+    meta->SetData(Tag::MEDIA_HAS_AUDIO, hasAudio);
+    meta->SetData(Tag::MEDIA_HAS_VIDEO, "yes_016");
+    meta->SetData(Tag::MIME_TYPE, "video/mp4_016");
+    meta->SetData(Tag::MEDIA_TRACK_COUNT, "12");
+    int32_t rate = 44100;
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, rate);
+    meta->SetData(Tag::MEDIA_TITLE, "test_016");
+    meta->SetData(Tag::VIDEO_HEIGHT, "490");
+    meta->SetData(Tag::VIDEO_WIDTH, "730");
+    meta->SetData(Tag::MEDIA_DATE, "2022_016");
+    meta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    meta->SetData(Tag::VIDEO_COLOR_TRC, Plugins::TransferCharacteristic::HLG);
+ 
+    Metadata avmeta;
+    avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
+    EXPECT_FALSE(avmeta.tbl_.size() == 0);
+}
+
+/**
+ * @tc.name: ConvertToAVMeta_017
+ * @tc.desc: ConvertToAVMeta_017
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_017, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_ALBUM, "album_test_017");
+    meta->SetData(Tag::MEDIA_ALBUM_ARTIST, "album_artist_test_017");
+    meta->SetData(Tag::MEDIA_ARTIST, "artist_test_017");
+    meta->SetData(Tag::MEDIA_AUTHOR, "author_test_017");
+    meta->SetData(Tag::MEDIA_COMPOSER, "测试017");
+    int64_t duration = 10030000 + 11000;
+    meta->SetData(Tag::MEDIA_DURATION, duration);
+    meta->SetData(Tag::MEDIA_GENRE, "Lyrical_017");
+    bool hasAudio = true;
+    meta->SetData(Tag::MEDIA_HAS_AUDIO, hasAudio);
+    meta->SetData(Tag::MEDIA_HAS_VIDEO, "yes_017");
+    meta->SetData(Tag::MIME_TYPE, "video/mp4_017");
+    meta->SetData(Tag::MEDIA_TRACK_COUNT, "13");
+    int32_t rate = 44100;
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, rate);
+    meta->SetData(Tag::MEDIA_TITLE, "test_017");
+    meta->SetData(Tag::VIDEO_HEIGHT, "491");
+    meta->SetData(Tag::VIDEO_WIDTH, "731");
+    meta->SetData(Tag::MEDIA_DATE, "2022_017");
+    meta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    meta->SetData(Tag::VIDEO_COLOR_TRC, Plugins::TransferCharacteristic::HLG);
+ 
+    Metadata avmeta;
+    avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
+    EXPECT_FALSE(avmeta.tbl_.size() == 0);
+}
+
+/**
+ * @tc.name: ConvertToAVMeta_018
+ * @tc.desc: ConvertToAVMeta_018
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_018, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_ALBUM, "album_test_018");
+    meta->SetData(Tag::MEDIA_ALBUM_ARTIST, "album_artist_test_018");
+    meta->SetData(Tag::MEDIA_ARTIST, "artist_test_018");
+    meta->SetData(Tag::MEDIA_AUTHOR, "author_test_018");
+    meta->SetData(Tag::MEDIA_COMPOSER, "测试018");
+    int64_t duration = 10030000 + 12000;
+    meta->SetData(Tag::MEDIA_DURATION, duration);
+    meta->SetData(Tag::MEDIA_GENRE, "Lyrical_018");
+    bool hasAudio = true;
+    meta->SetData(Tag::MEDIA_HAS_AUDIO, hasAudio);
+    meta->SetData(Tag::MEDIA_HAS_VIDEO, "yes_018");
+    meta->SetData(Tag::MIME_TYPE, "video/mp4_018");
+    meta->SetData(Tag::MEDIA_TRACK_COUNT, "14");
+    int32_t rate = 44100;
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, rate);
+    meta->SetData(Tag::MEDIA_TITLE, "test_018");
+    meta->SetData(Tag::VIDEO_HEIGHT, "492");
+    meta->SetData(Tag::VIDEO_WIDTH, "732");
+    meta->SetData(Tag::MEDIA_DATE, "2022_018");
+    meta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    meta->SetData(Tag::VIDEO_COLOR_TRC, Plugins::TransferCharacteristic::HLG);
+ 
+    Metadata avmeta;
+    avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
+    EXPECT_FALSE(avmeta.tbl_.size() == 0);
+}
+
+/**
+ * @tc.name: ConvertToAVMeta_019
+ * @tc.desc: ConvertToAVMeta_019
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_019, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_ALBUM, "album_test_019");
+    meta->SetData(Tag::MEDIA_ALBUM_ARTIST, "album_artist_test_019");
+    meta->SetData(Tag::MEDIA_ARTIST, "artist_test_019");
+    meta->SetData(Tag::MEDIA_AUTHOR, "author_test_019");
+    meta->SetData(Tag::MEDIA_COMPOSER, "测试019");
+    int64_t duration = 10030000 + 13000;
+    meta->SetData(Tag::MEDIA_DURATION, duration);
+    meta->SetData(Tag::MEDIA_GENRE, "Lyrical_019");
+    bool hasAudio = true;
+    meta->SetData(Tag::MEDIA_HAS_AUDIO, hasAudio);
+    meta->SetData(Tag::MEDIA_HAS_VIDEO, "yes_019");
+    meta->SetData(Tag::MIME_TYPE, "video/mp4_019");
+    meta->SetData(Tag::MEDIA_TRACK_COUNT, "15");
+    int32_t rate = 44100;
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, rate);
+    meta->SetData(Tag::MEDIA_TITLE, "test_019");
+    meta->SetData(Tag::VIDEO_HEIGHT, "493");
+    meta->SetData(Tag::VIDEO_WIDTH, "733");
+    meta->SetData(Tag::MEDIA_DATE, "2022_019");
+    meta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    meta->SetData(Tag::VIDEO_COLOR_TRC, Plugins::TransferCharacteristic::HLG);
+ 
+    Metadata avmeta;
+    avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
+    EXPECT_FALSE(avmeta.tbl_.size() == 0);
+}
+
+/**
+ * @tc.name: ConvertToAVMeta_020
+ * @tc.desc: ConvertToAVMeta_020
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_020, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_ALBUM, "album_test_020");
+    meta->SetData(Tag::MEDIA_ALBUM_ARTIST, "album_artist_test_020");
+    meta->SetData(Tag::MEDIA_ARTIST, "artist_test_020");
+    meta->SetData(Tag::MEDIA_AUTHOR, "author_test_020");
+    meta->SetData(Tag::MEDIA_COMPOSER, "测试020");
+    int64_t duration = 10030000 + 14000;
+    meta->SetData(Tag::MEDIA_DURATION, duration);
+    meta->SetData(Tag::MEDIA_GENRE, "Lyrical_020");
+    bool hasAudio = true;
+    meta->SetData(Tag::MEDIA_HAS_AUDIO, hasAudio);
+    meta->SetData(Tag::MEDIA_HAS_VIDEO, "yes_020");
+    meta->SetData(Tag::MIME_TYPE, "video/mp4_020");
+    meta->SetData(Tag::MEDIA_TRACK_COUNT, "16");
+    int32_t rate = 44100;
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, rate);
+    meta->SetData(Tag::MEDIA_TITLE, "test_020");
+    meta->SetData(Tag::VIDEO_HEIGHT, "494");
+    meta->SetData(Tag::VIDEO_WIDTH, "734");
+    meta->SetData(Tag::MEDIA_DATE, "2022_020");
+    meta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    meta->SetData(Tag::VIDEO_COLOR_TRC, Plugins::TransferCharacteristic::HLG);
+ 
+    Metadata avmeta;
+    avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
+    EXPECT_FALSE(avmeta.tbl_.size() == 0);
+}
+
+/**
+ * @tc.name: ConvertToAVMeta_021
+ * @tc.desc: ConvertToAVMeta_021
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_021, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_ALBUM, "album_test_021");
+    meta->SetData(Tag::MEDIA_ALBUM_ARTIST, "album_artist_test_021");
+    meta->SetData(Tag::MEDIA_ARTIST, "artist_test_021");
+    meta->SetData(Tag::MEDIA_AUTHOR, "author_test_021");
+    meta->SetData(Tag::MEDIA_COMPOSER, "测试021");
+    int64_t duration = 10030000 + 15000;
+    meta->SetData(Tag::MEDIA_DURATION, duration);
+    meta->SetData(Tag::MEDIA_GENRE, "Lyrical_021");
+    bool hasAudio = true;
+    meta->SetData(Tag::MEDIA_HAS_AUDIO, hasAudio);
+    meta->SetData(Tag::MEDIA_HAS_VIDEO, "yes_021");
+    meta->SetData(Tag::MIME_TYPE, "video/mp4_021");
+    meta->SetData(Tag::MEDIA_TRACK_COUNT, "17");
+    int32_t rate = 44100;
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, rate);
+    meta->SetData(Tag::MEDIA_TITLE, "test_021");
+    meta->SetData(Tag::VIDEO_HEIGHT, "495");
+    meta->SetData(Tag::VIDEO_WIDTH, "735");
+    meta->SetData(Tag::MEDIA_DATE, "2022_021");
+    meta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    meta->SetData(Tag::VIDEO_COLOR_TRC, Plugins::TransferCharacteristic::HLG);
+ 
+    Metadata avmeta;
+    avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
+    EXPECT_FALSE(avmeta.tbl_.size() == 0);
+}
+
+/**
+ * @tc.name: ConvertToAVMeta_022
+ * @tc.desc: ConvertToAVMeta_022
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_022, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_ALBUM, "album_test_022");
+    meta->SetData(Tag::MEDIA_ALBUM_ARTIST, "album_artist_test_022");
+    meta->SetData(Tag::MEDIA_ARTIST, "artist_test_022");
+    meta->SetData(Tag::MEDIA_AUTHOR, "author_test_022");
+    meta->SetData(Tag::MEDIA_COMPOSER, "测试022");
+    int64_t duration = 10030000 + 16000;
+    meta->SetData(Tag::MEDIA_DURATION, duration);
+    meta->SetData(Tag::MEDIA_GENRE, "Lyrical_022");
+    bool hasAudio = true;
+    meta->SetData(Tag::MEDIA_HAS_AUDIO, hasAudio);
+    meta->SetData(Tag::MEDIA_HAS_VIDEO, "yes_022");
+    meta->SetData(Tag::MIME_TYPE, "video/mp4_022");
+    meta->SetData(Tag::MEDIA_TRACK_COUNT, "18");
+    int32_t rate = 44100;
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, rate);
+    meta->SetData(Tag::MEDIA_TITLE, "test_022");
+    meta->SetData(Tag::VIDEO_HEIGHT, "496");
+    meta->SetData(Tag::VIDEO_WIDTH, "736");
+    meta->SetData(Tag::MEDIA_DATE, "2022_022");
+    meta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    meta->SetData(Tag::VIDEO_COLOR_TRC, Plugins::TransferCharacteristic::HLG);
+ 
+    Metadata avmeta;
+    avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
+    EXPECT_FALSE(avmeta.tbl_.size() == 0);
+}
+
+/**
+ * @tc.name: ConvertToAVMeta_023
+ * @tc.desc: ConvertToAVMeta_023
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_023, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_ALBUM, "album_test_023");
+    meta->SetData(Tag::MEDIA_ALBUM_ARTIST, "album_artist_test_023");
+    meta->SetData(Tag::MEDIA_ARTIST, "artist_test_023");
+    meta->SetData(Tag::MEDIA_AUTHOR, "author_test_023");
+    meta->SetData(Tag::MEDIA_COMPOSER, "测试023");
+    int64_t duration = 10030000 + 17000;
+    meta->SetData(Tag::MEDIA_DURATION, duration);
+    meta->SetData(Tag::MEDIA_GENRE, "Lyrical_023");
+    bool hasAudio = true;
+    meta->SetData(Tag::MEDIA_HAS_AUDIO, hasAudio);
+    meta->SetData(Tag::MEDIA_HAS_VIDEO, "yes_023");
+    meta->SetData(Tag::MIME_TYPE, "video/mp4_023");
+    meta->SetData(Tag::MEDIA_TRACK_COUNT, "19");
+    int32_t rate = 44100;
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, rate);
+    meta->SetData(Tag::MEDIA_TITLE, "test_023");
+    meta->SetData(Tag::VIDEO_HEIGHT, "497");
+    meta->SetData(Tag::VIDEO_WIDTH, "737");
+    meta->SetData(Tag::MEDIA_DATE, "2022_023");
+    meta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    meta->SetData(Tag::VIDEO_COLOR_TRC, Plugins::TransferCharacteristic::HLG);
+ 
+    Metadata avmeta;
+    avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
+    EXPECT_FALSE(avmeta.tbl_.size() == 0);
+}
+
+/**
+ * @tc.name: ConvertToAVMeta_024
+ * @tc.desc: ConvertToAVMeta_024
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_024, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_ALBUM, "album_test_024");
+    meta->SetData(Tag::MEDIA_ALBUM_ARTIST, "album_artist_test_024");
+    meta->SetData(Tag::MEDIA_ARTIST, "artist_test_024");
+    meta->SetData(Tag::MEDIA_AUTHOR, "author_test_024");
+    meta->SetData(Tag::MEDIA_COMPOSER, "测试024");
+    int64_t duration = 10030000 + 18000;
+    meta->SetData(Tag::MEDIA_DURATION, duration);
+    meta->SetData(Tag::MEDIA_GENRE, "Lyrical_024");
+    bool hasAudio = true;
+    meta->SetData(Tag::MEDIA_HAS_AUDIO, hasAudio);
+    meta->SetData(Tag::MEDIA_HAS_VIDEO, "yes_024");
+    meta->SetData(Tag::MIME_TYPE, "video/mp4_024");
+    meta->SetData(Tag::MEDIA_TRACK_COUNT, "20");
+    int32_t rate = 44100;
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, rate);
+    meta->SetData(Tag::MEDIA_TITLE, "test_024");
+    meta->SetData(Tag::VIDEO_HEIGHT, "498");
+    meta->SetData(Tag::VIDEO_WIDTH, "738");
+    meta->SetData(Tag::MEDIA_DATE, "2022_024");
+    meta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    meta->SetData(Tag::VIDEO_COLOR_TRC, Plugins::TransferCharacteristic::HLG);
+ 
+    Metadata avmeta;
+    avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
+    EXPECT_FALSE(avmeta.tbl_.size() == 0);
+}
+
+/**
+ * @tc.name: ConvertToAVMeta_025
+ * @tc.desc: ConvertToAVMeta_025
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_025, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_ALBUM, "album_test_025");
+    meta->SetData(Tag::MEDIA_ALBUM_ARTIST, "album_artist_test_025");
+    meta->SetData(Tag::MEDIA_ARTIST, "artist_test_025");
+    meta->SetData(Tag::MEDIA_AUTHOR, "author_test_025");
+    meta->SetData(Tag::MEDIA_COMPOSER, "测试025");
+    int64_t duration = 10030000 + 19000;
+    meta->SetData(Tag::MEDIA_DURATION, duration);
+    meta->SetData(Tag::MEDIA_GENRE, "Lyrical_025");
+    bool hasAudio = true;
+    meta->SetData(Tag::MEDIA_HAS_AUDIO, hasAudio);
+    meta->SetData(Tag::MEDIA_HAS_VIDEO, "yes_025");
+    meta->SetData(Tag::MIME_TYPE, "video/mp4_025");
+    meta->SetData(Tag::MEDIA_TRACK_COUNT, "21");
+    int32_t rate = 44100;
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, rate);
+    meta->SetData(Tag::MEDIA_TITLE, "test_025");
+    meta->SetData(Tag::VIDEO_HEIGHT, "499");
+    meta->SetData(Tag::VIDEO_WIDTH, "739");
+    meta->SetData(Tag::MEDIA_DATE, "2022_025");
+    meta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    meta->SetData(Tag::VIDEO_COLOR_TRC, Plugins::TransferCharacteristic::HLG);
+ 
+    Metadata avmeta;
+    avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
+    EXPECT_FALSE(avmeta.tbl_.size() == 0);
+}
+
+/**
+ * @tc.name: ConvertToAVMeta_026
+ * @tc.desc: ConvertToAVMeta_026
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_026, TestSize.Level1)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::MEDIA_ALBUM, "album_test_026");
+    meta->SetData(Tag::MEDIA_ALBUM_ARTIST, "album_artist_test_026");
+    meta->SetData(Tag::MEDIA_ARTIST, "artist_test_026");
+    meta->SetData(Tag::MEDIA_AUTHOR, "author_test_026");
+    meta->SetData(Tag::MEDIA_COMPOSER, "测试026");
+    int64_t duration = 10030000 + 20000;
+    meta->SetData(Tag::MEDIA_DURATION, duration);
+    meta->SetData(Tag::MEDIA_GENRE, "Lyrical_026");
+    bool hasAudio = true;
+    meta->SetData(Tag::MEDIA_HAS_AUDIO, hasAudio);
+    meta->SetData(Tag::MEDIA_HAS_VIDEO, "yes_026");
+    meta->SetData(Tag::MIME_TYPE, "video/mp4_026");
+    meta->SetData(Tag::MEDIA_TRACK_COUNT, "22");
+    int32_t rate = 44100;
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, rate);
+    meta->SetData(Tag::MEDIA_TITLE, "test_026");
+    meta->SetData(Tag::VIDEO_HEIGHT, "500");
+    meta->SetData(Tag::VIDEO_WIDTH, "740");
+    meta->SetData(Tag::MEDIA_DATE, "2022_026");
+    meta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    meta->SetData(Tag::VIDEO_COLOR_TRC, Plugins::TransferCharacteristic::HLG);
+ 
+    Metadata avmeta;
+    avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
+    EXPECT_FALSE(avmeta.tbl_.size() == 0);
+}
+
+/**
  * @tc.name: ExtractMetadataFromImageTrack_001
  * @tc.desc: ExtractMetadataFromImageTrack_001
  * @tc.type: FUNC
