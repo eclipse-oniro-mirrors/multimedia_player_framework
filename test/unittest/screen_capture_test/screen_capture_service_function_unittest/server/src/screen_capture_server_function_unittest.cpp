@@ -820,6 +820,31 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnStartScreenCapture_002, TestSize.Lev
     ASSERT_NE(screenCaptureServer_->OnStartScreenCapture(), MSERR_OK);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, SetDataType_001, TestSize.Level2)
+{
+    ASSERT_EQ(screenCaptureServer_->SetDataType(DataType::INVAILD), MSERR_INVALID_VAL);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, IsPickerPopUp_001, TestSize.Level2)
+{
+    ScreenCaptureStrategy strategy;
+    strategy.pickerPopUp = AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_ENABLE;
+    screenCaptureServer_->SetScreenCaptureStrategy(strategy);
+#ifdef SUPPORT_SCREEN_CAPTURE_PICKER
+    ASSERT_EQ(screenCaptureServer_->IsPickerPopUp(), true);
+#endif
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, IsPickerPopUp_002, TestSize.Level2)
+{
+    ScreenCaptureStrategy strategy;
+    strategy.pickerPopUp = AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_DISABLE;
+    screenCaptureServer_->SetScreenCaptureStrategy(strategy);
+#ifdef SUPPORT_SCREEN_CAPTURE_PICKER
+    ASSERT_EQ(screenCaptureServer_->IsPickerPopUp(), false);
+#endif
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, SetScreenScaleMode_001, TestSize.Level2)
 {
     ASSERT_NE(screenCaptureServer_->SetScreenScaleMode(), MSERR_OK);
@@ -2128,6 +2153,15 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StopAndRelease_002, TestSize.Level2)
     }
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, StopAndRelease_003, TestSize.Level2)
+{
+    auto obcb = std::make_unique<ScreenCaptureObserverCallBack>(screenCaptureServer_);
+    if (obcb) {
+        screenCaptureServer_->StopScreenCaptureByEvent(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER);
+        ASSERT_EQ(obcb->StopAndRelease(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER), true);
+    }
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, NotifyStopAndRelease_001, TestSize.Level2)
 {
     auto obcb = std::make_unique<ScreenCaptureObserverCallBack>(screenCaptureServer_);
@@ -2167,6 +2201,15 @@ HWTEST_F(ScreenCaptureServerFunctionTest, TelCallStateUpdated_003, TestSize.Leve
     if (obcb) {
         screenCaptureServer_->Release();
         screenCaptureServer_ = nullptr;
+        ASSERT_EQ(obcb->TelCallStateUpdated(false), true);
+    }
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, TelCallStateUpdated_004, TestSize.Level2)
+{
+    auto obcb = std::make_unique<ScreenCaptureObserverCallBack>(screenCaptureServer_);
+    if (obcb) {
+        screenCaptureServer_->StopScreenCaptureByEvent(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER);
         ASSERT_EQ(obcb->TelCallStateUpdated(false), true);
     }
 }

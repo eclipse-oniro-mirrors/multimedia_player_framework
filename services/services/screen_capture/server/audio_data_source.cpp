@@ -58,9 +58,7 @@ void AudioDataSource::TelCallAudioStateUpdate(
     std::vector<std::shared_ptr<AudioRendererChangeInfo>> allAudioRendererChangeInfos;
     AudioStreamManager::GetInstance()->GetCurrentRendererChangeInfos(allAudioRendererChangeInfos);
     for (const std::shared_ptr<AudioRendererChangeInfo> &changeInfo: allAudioRendererChangeInfos) {
-        if (!changeInfo) {
-            continue;
-        }
+        CHECK_AND_CONTINUE(changeInfo);
         MEDIA_LOGD("Client pid : %{public}d, State : %{public}d, usage : %{public}d",
             changeInfo->clientPid, static_cast<int32_t>(changeInfo->rendererState),
             static_cast<int32_t>(changeInfo->rendererInfo.streamUsage));
@@ -83,9 +81,7 @@ bool AudioDataSource::HasSpeakerStream(
     uint32_t headSetCount = 0;
     bool hasSpeakerStream = true;
     for (const std::shared_ptr<AudioRendererChangeInfo> &changeInfo: audioRendererChangeInfos) {
-        if (!changeInfo) {
-            continue;
-        }
+        CHECK_AND_CONTINUE(changeInfo);
         MEDIA_LOGD("ChangeInfo Id: %{public}d, Client pid : %{public}d, State : %{public}d, DeviceType : %{public}d",
             changeInfoIndex, changeInfo->clientPid, static_cast<int32_t>(changeInfo->rendererState),
             static_cast<int32_t>(changeInfo->outputDeviceInfo.deviceType_));
@@ -100,9 +96,9 @@ bool AudioDataSource::HasSpeakerStream(
         }
         changeInfoIndex++;
     }
-    if (headSetCount == changeInfoIndex) { // only if all streams in headset
-        hasSpeakerStream = false;
-    }
+    // only if all streams in headset
+    CHECK_AND_RETURN_RET_NOLOG(headSetCount == changeInfoIndex, hasSpeakerStream);
+    hasSpeakerStream = false;
     return hasSpeakerStream;
 }
 
@@ -126,16 +122,14 @@ bool AudioDataSource::HasVoIPStream(
     const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
 {
     for (const std::shared_ptr<AudioRendererChangeInfo> &changeInfo: audioRendererChangeInfos) {
-        if (!changeInfo) {
-            continue;
-        }
+        CHECK_AND_CONTINUE(changeInfo);
         MEDIA_LOGD("Client pid : %{public}d, State : %{public}d, usage : %{public}d",
             changeInfo->clientPid, static_cast<int32_t>(changeInfo->rendererState),
             static_cast<int32_t>(changeInfo->rendererInfo.streamUsage));
-        if (changeInfo->rendererInfo.streamUsage == AudioStandard::StreamUsage::STREAM_USAGE_VOICE_COMMUNICATION ||
-		    changeInfo->rendererInfo.streamUsage == AudioStandard::StreamUsage::STREAM_USAGE_VIDEO_COMMUNICATION) {
-            return true;
-        }
+        CHECK_AND_RETURN_RET_NOLOG(
+            changeInfo->rendererInfo.streamUsage != AudioStandard::StreamUsage::STREAM_USAGE_VOICE_COMMUNICATION
+            && changeInfo->rendererInfo.streamUsage != AudioStandard::StreamUsage::STREAM_USAGE_VIDEO_COMMUNICATION,
+            true);
     }
     return false;
 }
@@ -203,10 +197,9 @@ void AudioDataSource::SetVideoFirstFramePts(int64_t firstFramePts)
 
 void AudioDataSource::SetAudioFirstFramePts(int64_t firstFramePts)
 {
-    if (firstAudioFramePts_.load() == -1) {
-        firstAudioFramePts_.store(firstFramePts);
-        MEDIA_LOGI("firstAudioFramePts_: %{public}" PRId64, firstFramePts);
-    }
+    CHECK_AND_RETURN(firstAudioFramePts_.load() == -1);
+    firstAudioFramePts_.store(firstFramePts);
+    MEDIA_LOGI("firstAudioFramePts_: %{public}" PRId64, firstFramePts);
 }
 
 ScreenCaptureServer* AudioDataSource::GetScreenCaptureServer()
@@ -244,10 +237,8 @@ AudioDataSourceReadAtActionState AudioDataSource::WriteMixAudio(std::shared_ptr<
     std::shared_ptr<AudioBuffer> &innerAudioBuffer, std::shared_ptr<AudioBuffer> &micAudioBuffer)
 {
     std::shared_ptr<AVMemory> &bufferMem = buffer->memory_;
-    if (buffer->memory_ == nullptr || innerAudioBuffer == nullptr || micAudioBuffer == nullptr) {
-        MEDIA_LOGE("buffer->memory_ or innerAudioBuffer nullptr");
-        return AudioDataSourceReadAtActionState::RETRY_SKIP;
-    }
+    CHECK_AND_RETURN_RET_LOG(buffer->memory_ != nullptr && innerAudioBuffer != nullptr && micAudioBuffer != nullptr,
+        AudioDataSourceReadAtActionState::RETRY_SKIP, "buffer->memory_ or innerAudioBuffer nullptr");
     SetAudioFirstFramePts(std::min(micAudioBuffer->timestamp, innerAudioBuffer->timestamp));
     return MixModeBufferWrite(innerAudioBuffer, micAudioBuffer, bufferMem);
 }
@@ -329,9 +320,8 @@ int64_t AudioDataSource::GetFirstAudioTime(std::shared_ptr<AudioBuffer> &innerAu
 AudioDataSourceReadAtActionState AudioDataSource::ReadWriteAudioBufferMixCore(std::shared_ptr<AVBuffer> &buffer,
     uint32_t length, std::shared_ptr<AudioBuffer> &innerAudioBuffer, std::shared_ptr<AudioBuffer> &micAudioBuffer)
 {
-    if (innerAudioBuffer == nullptr && micAudioBuffer) {
-        return WriteMicAudio(buffer, length, micAudioBuffer);
-    }
+    CHECK_AND_RETURN_RET_NOLOG(innerAudioBuffer != nullptr || !micAudioBuffer,
+        WriteMicAudio(buffer, length, micAudioBuffer));
     if (innerAudioBuffer && micAudioBuffer == nullptr) {
         if (screenCaptureServer_->IsStopAcquireAudioBufferFlag() && isInWaitMicSyncState_) {
             return WriteInnerAudio(buffer, length, innerAudioBuffer);
@@ -352,11 +342,10 @@ AudioDataSourceReadAtActionState AudioDataSource::ReadWriteAudioBufferMixCore(st
     if (innerAudioBuffer && micAudioBuffer) {
         return InnerMicAudioSync(buffer, length, innerAudioBuffer, micAudioBuffer);
     }
-    if (innerAudioBuffer == nullptr && micAudioBuffer == nullptr) {
-        MEDIA_LOGD("acquire none inner mic buffer");
-        return AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG;
-    }
-    return AudioDataSourceReadAtActionState::OK;
+    CHECK_AND_RETURN_RET_NOLOG(innerAudioBuffer == nullptr && micAudioBuffer == nullptr,
+        AudioDataSourceReadAtActionState::OK);
+    MEDIA_LOGD("acquire none inner mic buffer");
+    return AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG;
 }
 
 AudioDataSourceReadAtActionState AudioDataSource::ReadWriteAudioBufferMix(std::shared_ptr<AVBuffer> &buffer,
@@ -444,10 +433,8 @@ AudioDataSourceReadAtActionState AudioDataSource::VideoAudioSyncInnerMode(std::s
         SetAudioFirstFramePts(firstVideoFramePts_.load());
         return AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG;
     } else { // (timeWindow > NEG_AUDIO_INTERVAL_IN_NS && timeWindow < AUDIO_INTERVAL_IN_NS)
-        if (buffer->memory_ == nullptr || innerAudioBuffer == nullptr) {
-            MEDIA_LOGE("buffer->memory_ or innerAudioBuffer nullptr");
-            return AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG;
-        }
+        CHECK_AND_RETURN_RET_LOG(buffer->memory_ != nullptr && innerAudioBuffer != nullptr,
+            AudioDataSourceReadAtActionState::RETRY_SKIP, "buffer->memory_ or innerAudioBuffer nullptr");
         MEDIA_LOGD("ABuffer write inner cur:%{public}" PRId64 " last: %{public}" PRId64,
             innerAudioBuffer->timestamp, lastWriteAudioFramePts_.load());
         lastWriteAudioFramePts_.store(innerAudioBuffer->timestamp);

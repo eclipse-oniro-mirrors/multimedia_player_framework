@@ -126,6 +126,14 @@ namespace OHOS {
         }                                             \
     } while (0)
 
+#define CHECK_AND_RETURN_RET_LOGI(cond, ret, fmt, ...) \
+    do {                                              \
+        if (!(cond)) {                                \
+            MEDIA_LOGI(fmt, ##__VA_ARGS__);           \
+            return ret;                               \
+        }                                             \
+    } while (0)
+
 #define CHECK_AND_RETURN_LOG(cond, fmt, ...) \
     do {                                     \
         if (!(cond)) {                       \
