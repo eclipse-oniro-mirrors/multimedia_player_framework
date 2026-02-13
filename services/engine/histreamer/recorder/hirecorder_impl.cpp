@@ -565,7 +565,7 @@ void HiRecorderImpl::ClearAllConfiguration()
     RemoveFilterAction(audioCaptureFilter_);
     RemoveFilterAction(videoEncoderFilter_);
     RemoveFilterAction(videoCaptureFilter_);
-    
+
     for (auto iter : metaDataFilters_) {
         if (metaDataFormats_.find(iter.first) != metaDataFormats_.end()) {
             metaDataFormats_.at(iter.first)->Clear();
@@ -987,20 +987,16 @@ void HiRecorderImpl::ConfigureVideoEnableTemporalScale(const RecorderParam &recP
 
 void HiRecorderImpl::ConfigureVidEnableStableQualityMode(const RecorderParam &recParam)
 {
-    MEDIA_LOG_I("HiRecorderImpl::ConfigureVidEnableStableQualityMode enter.");
     VidEnableStableQualityMode vidEnableStableQualityMode =
         static_cast<const VidEnableStableQualityMode&>(recParam);
     enableStableQualityMode_ = vidEnableStableQualityMode.enableStableQualityMode;
-    MEDIA_LOG_I("HiRecorderImpl::enableStableQualityMode_ is: %{public}d", enableStableQualityMode_);
 }
 
 void HiRecorderImpl::ConfigureVidEnableBFrame(const RecorderParam &recParam)
 {
-    MEDIA_LOG_I("HiRecorderImpl::ConfigureVidEnableBFrame enter.");
     VidEnableBFrame vidEnableBFrame =
         static_cast<const VidEnableBFrame&>(recParam);
     enableBFrame_ = vidEnableBFrame.enableBFrame;
-    MEDIA_LOG_I("HiRecorderImpl::enableBFrame_ is: %{public}d", enableBFrame_);
 }
 
 void HiRecorderImpl::ConfigureVideoEncoderFormat(const RecorderParam &recParam)
