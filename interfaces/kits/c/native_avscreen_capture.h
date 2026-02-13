@@ -600,7 +600,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetDisplayIdSelected(OH_AVScreenC
  * @since 24
  */
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetMultiDisplayIdsSelected(
-    OH_AVScreenCapture_UserSelectionInfo *selection, uint64_t **displayIds, size_t *count)
+    OH_AVScreenCapture_UserSelectionInfo *selection, uint64_t **displayIds, size_t *count);
 
 /**
  * @brief Indicates whether to enable B-frame encoding, which is used to reduce the size of the recorded file.
@@ -682,7 +682,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_PresentPicker(struct OH_AVScreenC
 * @since 24
 */
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetMultiDisplayCaptureCapability(struct OH_AVScreenCapture *capture,
-    uint64_t *displayIds, size_t count, OH_MultiDisplayCapability *capability)
+    uint64_t *displayIds, size_t count, OH_MultiDisplayCapability *capability);
 #ifdef __cplusplus
 }
 #endif
