@@ -35,6 +35,7 @@ namespace {
 
     using CallType = OHOS::Media::CallType;
     using StallingInfo = OHOS::Media::StallingInfo;
+    using PlaybackEventInfo = OHOS::Media::PlaybackEventInfo;
     using StallingEventList = std::list<std::pair<uint64_t, std::shared_ptr<std::vector<StallingInfo>>>>;
     using json = nlohmann::json;
 
@@ -78,26 +79,22 @@ namespace {
                 continue;
             }
             for (const auto &fmt : *playbackPtr) {
-                uint32_t prepareDuration = 0;
-                uint32_t playTotalDuration = 0;
-                int64_t timeStamp = 0;
-                if (!fmt.GetUintValue("prepare_duration", prepareDuration)) {
-                    MEDIA_LOG_W("Get prepare_duration failed");
-                    continue;
-                }
-                if (!fmt.GetUintValue("total_playback_time", playTotalDuration)) {
-                    MEDIA_LOG_W("Get total_playback_time failed");
-                    continue;
-                }
-                if (!fmt.GetLongValue("timestamp", timeStamp)) {
-                    MEDIA_LOG_W("Get timestamp failed");
+                PlaybackEventInfo playbackEventInfo;
+                if (!GetPlaybackEventInfo(fmt, playbackEventInfo)) {
                     continue;
                 }
 
                 json playbackMetric;
-                playbackMetric["prepare_duration"] = prepareDuration;
-                playbackMetric["total_playback_time"] = playTotalDuration;
-                playbackMetric["timestamp"] = timeStamp;
+                playbackMetric["prepare_duration"] = playbackEventInfo.prepareDuration;
+                playbackMetric["total_playback_time"] = playbackEventInfo.playTotalDuration;
+                playbackMetric["timestamp"] = playbackEventInfo.timeStamp;
+                playbackMetric["resource_connection_duration"] = playbackEventInfo.firstDownloadTime;
+                playbackMetric["first_frame_decapsulation_duration"] = playbackEventInfo.firstFrameDecapsulationTime;
+                playbackMetric["loading_requests_count"] = playbackEventInfo.loadingCount;
+                playbackMetric["total_loading_time"] = playbackEventInfo.totalLoadingTime;
+                playbackMetric["total_loading_bytes"] = playbackEventInfo.totalDownLoadBytes;
+                playbackMetric["stalling_count"] = playbackEventInfo.stallingCount;
+                playbackMetric["total_stalling_time"] = playbackEventInfo.totalStallingTime;
                 playbackMetrics.push_back(playbackMetric);
             }
         }
@@ -879,6 +876,52 @@ uint64_t GetMediaInfoContainInstanceNum()
     MEDIA_LOG_I("MediaInfo instances %{public}" PRIu64 ", ReportInfo instances %{public}" PRIu64,
         mediaInsNum, reportInsNum);
     return mediaInsNum + reportInsNum;
+}
+
+bool GetPlaybackEventInfo(const OHOS::Media::Format& fmt, PlaybackEventInfo& playbackEventInfo)
+{
+    if (!fmt.GetUintValue("prepare_duration", playbackEventInfo.prepareDuration)) {
+        MEDIA_LOG_W("Get prepare_duration failed");
+        return false;
+    }
+    if (!fmt.GetUintValue("total_playback_time", playbackEventInfo.playTotalDuration)) {
+        MEDIA_LOG_W("Get total_playback_time failed");
+        return false;
+    }
+    if (!fmt.GetLongValue("timestamp", playbackEventInfo.timeStamp)) {
+        MEDIA_LOG_W("Get timestamp failed");
+        return false;
+    }
+    if (!fmt.GetUintValue("resource_connection_duration", playbackEventInfo.firstDownloadTime)) {
+        MEDIA_LOG_W("Get resource_connection_duration failed");
+        return false;
+    }
+    if (!fmt.GetUintValue("first_frame_decapsulation_duration",
+        playbackEventInfo.firstFrameDecapsulationTime)) {
+        MEDIA_LOG_W("Get first_frame_decapsulation_duration failed");
+        return false;
+    }
+    if (!fmt.GetUintValue("loading_requests_count", playbackEventInfo.loadingCount)) {
+        MEDIA_LOG_W("Get loading_requests_count failed");
+        return false;
+    }
+    if (!fmt.GetUintValue("total_loading_time", playbackEventInfo.totalLoadingTime)) {
+        MEDIA_LOG_W("Get total_loading_time failed");
+        return false;
+    }
+    if (!fmt.GetLongValue("total_loading_bytes", playbackEventInfo.totalDownLoadBytes)) {
+        MEDIA_LOG_W("Get total_loading_bytes failed");
+        return false;
+    }
+    if (!fmt.GetUintValue("stalling_count", playbackEventInfo.stallingCount)) {
+        MEDIA_LOG_W("Get stalling_count failed");
+        return false;
+    }
+    if (!fmt.GetUintValue("total_stalling_time", playbackEventInfo.totalStallingTime)) {
+        MEDIA_LOG_W("Get total_stalling_time failed");
+        return false;
+    }
+    return true;
 }
 
 MediaTrace::MediaTrace(const std::string &funcName, HiTraceOutputLevel level, const std::string &customArgs)
