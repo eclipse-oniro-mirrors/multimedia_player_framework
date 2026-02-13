@@ -45,6 +45,12 @@ class Source;
 
 class AVBufferQueueProducer;
 
+enum class DemuxerCallerType : int32_t {
+    PLAYER = 0,
+    AVMETADATA,
+    TRANSCODER,
+};
+
 class MediaDemuxer {
 public:
     virtual ~MediaDemuxer() = default;
@@ -58,6 +64,8 @@ public:
     virtual std::shared_ptr<Meta> GetUserMeta();
 
     virtual Status SeekTo(int64_t seekTime, Plugins::SeekMode mode, int64_t& realSeekTime);
+    virtual Status SeekToKeyFrame(int64_t seekTime, Plugins::SeekMode mode,
+ 	         int64_t& realSeekTime, DemuxerCallerType callerType);
     virtual Status Reset();
     virtual Status Start();
     virtual Status Stop();

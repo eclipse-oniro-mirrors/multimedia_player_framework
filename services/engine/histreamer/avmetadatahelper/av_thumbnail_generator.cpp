@@ -791,7 +791,7 @@ Status AVThumbnailGenerator::SeekToTime(int64_t timeMs, Plugins::SeekMode option
     timeMs = duration_ > 0 ? std::min(timeMs, Plugins::Us2Ms(duration_)) : timeMs;
     Status res = Status::OK;
     if (fileType_ == FileType::MPEGTS && (codecMimeName_ == "mpeg4" || codecMimeName_ == "vc1")) {
-        res = mediaDemuxer_->SeekToKeyFrame(timeMs, option, realSeekTime, MediaDemuxer::CallerType::AVMETADATA);
+        res = mediaDemuxer_->SeekToKeyFrame(timeMs, option, realSeekTime, DemuxerCallerType::AVMETADATA);
     } else {
         res = mediaDemuxer_->SeekTo(timeMs, option, realSeekTime);
     }
