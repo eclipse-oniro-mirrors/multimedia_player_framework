@@ -670,17 +670,17 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureAreaHighlight(struct OH
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_PresentPicker(struct OH_AVScreenCapture *capture);
 
 /**
-* @brief Get multi-display recording capability information
-* @param capture Pointer to OH_AVScreenCapture instance
-* @param displayIds Array of display IDs
-* @param count Number of displays
-* @param capability Pointer to OH_MultiDisplayCapability instance
-* @return Function result code.
-* {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
-* {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} if input parameter is nullptr.
-* {@link AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT} operation not permitted, failed to get data.
-* @since 24
-*/
+ * @brief Get multi-display recording capability information
+ * @param capture Pointer to OH_AVScreenCapture instance
+ * @param displayIds Array of display IDs
+ * @param count Number of displays
+ * @param capability Pointer to OH_MultiDisplayCapability instance
+ * @return Function result code.
+ * {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
+ * {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} if input parameter is nullptr.
+ * {@link AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT} operation not permitted, failed to get data.
+ * @since 24
+ */
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetMultiDisplayCaptureCapability(struct OH_AVScreenCapture *capture,
     uint64_t *displayIds, size_t count, OH_MultiDisplayCapability *capability);
 #ifdef __cplusplus
