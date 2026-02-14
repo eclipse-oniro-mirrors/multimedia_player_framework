@@ -19,7 +19,7 @@
 #include "string_ex.h"
 #include "media_errors.h"
 #include "directory_ex.h"
-#include "screencapturesetmultidisplayid_ndk_fuzzer.h"
+#include "screencapturemultidisplayid_ndk_fuzzer.h"
 #include "test_template.h"
  
 using namespace std;
