@@ -52,7 +52,7 @@ namespace OHOS {
 #define MEDIA_LOG(func, fmt, args...)                                   \
     do {                                                                \
         if (LABEL.tag != nullptr) {                                     \
-            (void)func(LOG_TYPE, fmt, ##args);                          \
+            (void)func(LOG_TYPE, "#%{public}d " fmt, __LINE__, ##args); \
         }                                                               \
     } while (0)
 
