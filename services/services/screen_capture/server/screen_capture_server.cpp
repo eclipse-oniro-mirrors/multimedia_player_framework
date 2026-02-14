@@ -3883,7 +3883,7 @@ int32_t ScreenCaptureServer::GetMultiDisplayCaptureCapability(const std::vector<
     MediaTrace trace("ScreenCaptureServer::GetMultiDisplayCaptureCapability");
     std::lock_guard<std::mutex> lock(mutex_);
     DMRect region;
-    CHECK_AND_RETURN_RET_LOG(displayIds.size() < MAX_DISPLAY_LEN || displayIds.size() > 1,
+    CHECK_AND_RETURN_RET_LOG(displayIds.size() < MAX_DISPLAY_LEN && displayIds.size() > 1,
         MSERR_INVALID_OPERATION, "displayIds size is exceed max range");
     auto ret = ScreenManager::GetInstance().QueryMultiScreenCapture(displayIds, region);
     CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK || ret == DMError::DM_ERROR_INVALID_PARAM ||
