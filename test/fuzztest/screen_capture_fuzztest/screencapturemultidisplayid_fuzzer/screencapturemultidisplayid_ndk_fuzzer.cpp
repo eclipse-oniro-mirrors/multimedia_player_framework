@@ -28,11 +28,11 @@ using namespace Media;
  
 namespace OHOS {
 namespace Media {
-ScreenCaptureSetMultiDisplayIdNdkFuzzer::ScreenCaptureSetMultiDisplayIdNdkFuzzer()
+ScreenCaptureMultiDisplayIdNdkFuzzer::ScreenCaptureMultiDisplayIdNdkFuzzer()
 {
 }
  
-ScreenCaptureSetMultiDisplayIdNdkFuzzer::~ScreenCaptureSetMultiDisplayIdNdkFuzzer()
+ScreenCaptureMultiDisplayIdNdkFuzzer::~ScreenCaptureMultiDisplayIdNdkFuzzer()
 {
 }
  
@@ -69,7 +69,7 @@ void SetConfig(OH_AVScreenCaptureConfig &config)
 }
  
  
-bool ScreenCaptureSetMultiDisplayIdNdkFuzzer::ScreenCaptureSetMultiDisplayIdNdk(uint8_t *data, size_t size)
+bool ScreenCaptureMultiDisplayIdNdkFuzzer::ScreenCaptureMultiDisplayIdNdk(uint8_t *data, size_t size)
 {
     if (data == nullptr || size < sizeof(int32_t)) {
         return false;
@@ -99,7 +99,7 @@ bool ScreenCaptureSetMultiDisplayIdNdkFuzzer::ScreenCaptureSetMultiDisplayIdNdk(
 }
 } // namespace Media
  
-bool ScreenCaptureSetMultiDisplayIdNdk(uint8_t *data, size_t size)
+bool ScreenCaptureMultiDisplayIdNdk(uint8_t *data, size_t size)
 {
     if (data == nullptr) {
         return true;
@@ -108,8 +108,8 @@ bool ScreenCaptureSetMultiDisplayIdNdk(uint8_t *data, size_t size)
     if (size < sizeof(int32_t)) {
         return true;
     }
-    ScreenCaptureSetMultiDisplayIdNdkFuzzer testScreenCapture;
-    return testScreenCapture.ScreenCaptureSetMultiDisplayIdNdk(data, size);
+    ScreenCaptureMultiDisplayIdNdkFuzzer testScreenCapture;
+    return testScreenCapture.ScreenCaptureMultiDisplayIdNdk(data, size);
 }
 } // namespace OHOS
  
@@ -117,6 +117,6 @@ bool ScreenCaptureSetMultiDisplayIdNdk(uint8_t *data, size_t size)
 extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
 {
     /* Run your code on data */
-    OHOS::ScreenCaptureSetMultiDisplayIdNdk(data, size);
+    OHOS::ScreenCaptureMultiDisplayIdNdk(data, size);
     return 0;
 }
