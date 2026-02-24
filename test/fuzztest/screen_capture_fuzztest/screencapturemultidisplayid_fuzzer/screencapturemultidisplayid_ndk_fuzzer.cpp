@@ -75,6 +75,7 @@ bool ScreenCaptureMultiDisplayIdNdkFuzzer::ScreenCaptureMultiDisplayIdNdk(uint8_
         return false;
     }
     constexpr uint32_t recorderTime = 5;
+    // set random data
     g_baseFuzzData = data;
     g_baseFuzzSize = size;
     g_baseFuzzPos = 0;
