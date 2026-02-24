@@ -3114,7 +3114,7 @@ int32_t ScreenCaptureServer::StartScreenCapture(bool isPrivacyAuthorityEnabled)
     CHECK_AND_RETURN_RET_LOG(
         captureState_ == AVScreenCaptureState::CREATED || captureState_ == AVScreenCaptureState::STOPPED,
         MSERR_INVALID_OPERATION, "StartScreenCapture failed, not in CREATED or STOPPED, state:%{public}d",
-         captureState_.load());
+        captureState_.load());
     MEDIA_LOGI("StartScreenCapture isPrivacyAuthorityEnabled:%{public}d", isPrivacyAuthorityEnabled);
     isSurfaceMode_ = false;
     return StartScreenCaptureInner(isPrivacyAuthorityEnabled);
@@ -3126,7 +3126,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureWithSurface(sptr<Surface> surface
     CHECK_AND_RETURN_RET_LOG(
         captureState_ == AVScreenCaptureState::CREATED || captureState_ == AVScreenCaptureState::STOPPED,
         MSERR_INVALID_OPERATION, "StartScreenCaptureWithSurface failed, not in CREATED or STOPPED, state:%{public}d",
-         captureState_.load());
+        captureState_.load());
     MEDIA_LOGI("StartScreenCaptureWithSurface isPrivacyAuthorityEnabled:%{public}d", isPrivacyAuthorityEnabled);
     if (surface == nullptr) {
         MEDIA_LOGE("surface is nullptr");
