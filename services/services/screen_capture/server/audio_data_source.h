@@ -113,6 +113,9 @@ public:
 private:
     void MixAudio(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
         std::shared_ptr<AudioBuffer> &micAudioBuffer, char* mixData, int channels);
+    void ReleaseAudioBuffer(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
+        std::shared_ptr<AudioBuffer> &micAudioBuffer);
+    void SetMixAudioTypeLog(AVScreenCaptureMixBufferType audioType);
     AudioDataSourceReadAtActionState ReadAudioBuffer(std::shared_ptr<AVBuffer> &buffer, const uint32_t &length);
     int32_t LostFrameNum(const int64_t &timestamp);
     void FillLostBuffer(const int64_t &lostNum, const int64_t &timestamp, const uint32_t &bufferSize);
@@ -127,6 +130,8 @@ private:
     std::atomic<int64_t> firstVideoFramePts_{-1};
     std::atomic<int64_t> lastWriteAudioFramePts_{0};
     std::atomic<int64_t> lastMicAudioFramePts_{0};
+    std::atomic<AVScreenCaptureMixBufferType> audioType_{AVScreenCaptureMixBufferType::INVALID};
+    std::atomic<uint64_t> audioTypeSize_{0};
     AVScreenCaptureMixBufferType lastWriteType_ = AVScreenCaptureMixBufferType::INVALID;
     int32_t stableStopInnerSwitchCount_ = 0;
     bool mixModeAddAudioMicFrame_ = false;

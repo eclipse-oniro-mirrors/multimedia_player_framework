@@ -589,6 +589,26 @@ AudioDataSourceReadAtActionState AudioDataSource::MixModeBufferWrite(std::shared
         MEDIA_LOGE("without buffer write");
         return AudioDataSourceReadAtActionState::RETRY_SKIP;
     }
+    SetMixAudioTypeLog();
+    ReleaseAudioBuffer(innerAudioBuffer, micAudioBuffer);
+    return AudioDataSourceReadAtActionState::OK;
+}
+
+void AudioDataSource::SetMixAudioTypeLog()
+{
+    if (lastWriteType_ != audioType_) {
+        MEDIA_LOGI("get audio buffer times type: %{public}d, size: %{public}lu",
+            audioType_.load(), audioTypeSize_.load());
+        audioType_.store(lastWriteType_);
+        audioTypeSize_ = 1;
+    } else {
+        audioTypeSize_++;
+    }
+}
+
+void AudioDataSource::ReleaseAudioBuffer(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
+        std::shared_ptr<AudioBuffer> &micAudioBuffer)
+{
     if (innerAudioBuffer) {
         screenCaptureServer_->ReleaseInnerAudioBuffer();
         innerAudioBuffer = nullptr;
@@ -597,7 +617,6 @@ AudioDataSourceReadAtActionState AudioDataSource::MixModeBufferWrite(std::shared
         screenCaptureServer_->ReleaseMicAudioBuffer();
         micAudioBuffer = nullptr;
     }
-    return AudioDataSourceReadAtActionState::OK;
 }
 
 int32_t AudioDataSource::GetSize(int64_t &size)
