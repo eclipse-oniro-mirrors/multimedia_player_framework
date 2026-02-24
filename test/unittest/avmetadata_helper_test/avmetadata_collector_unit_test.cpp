@@ -860,7 +860,7 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_003, TestSize.Level1)
     avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
     EXPECT_FALSE(avmeta.tbl_.size() == 0);
 }
-
+ 
 /**
  * @tc.name: ConvertToAVMeta_004
  * @tc.desc: ConvertToAVMeta_004
@@ -895,13 +895,13 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_004, TestSize.Level1)
     avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
     EXPECT_FALSE(avmeta.tbl_.size() == 0);
 }
-
+ 
 /**
- * @tc.name: ConvertToAVMeta_004
- * @tc.desc: ConvertToAVMeta_004
+ * @tc.name: ConvertToAVMeta_005
+ * @tc.desc: ConvertToAVMeta_005
  * @tc.type: FUNC
  */
-HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_004, TestSize.Level1)
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_005, TestSize.Level1)
 {
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::MEDIA_ALBUM, "album_test");
@@ -930,13 +930,13 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_004, TestSize.Level1)
     avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
     EXPECT_FALSE(avmeta.tbl_.size() == 0);
 }
-
+ 
 /**
- * @tc.name: ConvertToAVMeta_005
- * @tc.desc: ConvertToAVMeta_005
+ * @tc.name: ConvertToAVMeta_006
+ * @tc.desc: ConvertToAVMeta_006
  * @tc.type: FUNC
  */
-HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_005, TestSize.Level1)
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_006, TestSize.Level1)
 {
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::MEDIA_ALBUM, "album_test");
@@ -965,13 +965,13 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_005, TestSize.Level1)
     avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
     EXPECT_FALSE(avmeta.tbl_.size() == 0);
 }
-
+ 
 /**
- * @tc.name: ConvertToAVMeta_006
- * @tc.desc: ConvertToAVMeta_006
+ * @tc.name: ConvertToAVMeta_007
+ * @tc.desc: ConvertToAVMeta_007
  * @tc.type: FUNC
  */
-HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_006, TestSize.Level1)
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_007, TestSize.Level1)
 {
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::MEDIA_ALBUM, "album_test");
@@ -1000,13 +1000,13 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_006, TestSize.Level1)
     avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
     EXPECT_FALSE(avmeta.tbl_.size() == 0);
 }
-
+ 
 /**
- * @tc.name: ConvertToAVMeta_007
- * @tc.desc: ConvertToAVMeta_007
+ * @tc.name: ConvertToAVMeta_008
+ * @tc.desc: ConvertToAVMeta_008
  * @tc.type: FUNC
  */
-HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_007, TestSize.Level1)
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_008, TestSize.Level1)
 {
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::MEDIA_ALBUM, "album_test_007");
@@ -1035,13 +1035,13 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_007, TestSize.Level1)
     avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
     EXPECT_FALSE(avmeta.tbl_.size() == 0);
 }
-
+ 
 /**
- * @tc.name: ConvertToAVMeta_008
- * @tc.desc: ConvertToAVMeta_008
+ * @tc.name: ConvertToAVMeta_009
+ * @tc.desc: ConvertToAVMeta_009
  * @tc.type: FUNC
  */
-HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_008, TestSize.Level1)
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_009, TestSize.Level1)
 {
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::MEDIA_ALBUM, "album_test_008");
@@ -1070,13 +1070,13 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_008, TestSize.Level1)
     avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
     EXPECT_FALSE(avmeta.tbl_.size() == 0);
 }
-
+ 
 /**
- * @tc.name: ConvertToAVMeta_009
- * @tc.desc: ConvertToAVMeta_009
+ * @tc.name: ConvertToAVMeta_010
+ * @tc.desc: ConvertToAVMeta_010
  * @tc.type: FUNC
  */
-HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_009, TestSize.Level1)
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_010, TestSize.Level1)
 {
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::MEDIA_ALBUM, "album_test_009");
@@ -1105,13 +1105,13 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_009, TestSize.Level1)
     avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
     EXPECT_FALSE(avmeta.tbl_.size() == 0);
 }
-
+ 
 /**
- * @tc.name: ConvertToAVMeta_010
- * @tc.desc: ConvertToAVMeta_010
+ * @tc.name: ConvertToAVMeta_011
+ * @tc.desc: ConvertToAVMeta_011
  * @tc.type: FUNC
  */
-HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_010, TestSize.Level1)
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_011, TestSize.Level1)
 {
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::MEDIA_ALBUM, "album_test_010");
@@ -1140,13 +1140,13 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_010, TestSize.Level1)
     avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
     EXPECT_FALSE(avmeta.tbl_.size() == 0);
 }
-
+ 
 /**
- * @tc.name: ConvertToAVMeta_011
- * @tc.desc: ConvertToAVMeta_011
+ * @tc.name: ConvertToAVMeta_012
+ * @tc.desc: ConvertToAVMeta_012
  * @tc.type: FUNC
  */
-HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_011, TestSize.Level1)
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_012, TestSize.Level1)
 {
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::MEDIA_ALBUM, "album_test_011");
@@ -1175,10 +1175,10 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_011, TestSize.Level1)
     avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
     EXPECT_FALSE(avmeta.tbl_.size() == 0);
 }
-
+ 
 /**
- * @tc.name: ConvertToAVMeta_012
- * @tc.desc: ConvertToAVMeta_012
+ * @tc.name: ConvertToAVMeta_013
+ * @tc.desc: ConvertToAVMeta_013
  * @tc.type: FUNC
  */
 HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_012, TestSize.Level1)
@@ -1210,13 +1210,13 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_012, TestSize.Level1)
     avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
     EXPECT_FALSE(avmeta.tbl_.size() == 0);
 }
-
+ 
 /**
- * @tc.name: ConvertToAVMeta_013
- * @tc.desc: ConvertToAVMeta_013
+ * @tc.name: ConvertToAVMeta_014
+ * @tc.desc: ConvertToAVMeta_014
  * @tc.type: FUNC
  */
-HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_013, TestSize.Level1)
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_014, TestSize.Level1)
 {
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::MEDIA_ALBUM, "album_test_013");
@@ -1245,13 +1245,13 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_013, TestSize.Level1)
     avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
     EXPECT_FALSE(avmeta.tbl_.size() == 0);
 }
-
+ 
 /**
- * @tc.name: ConvertToAVMeta_014
- * @tc.desc: ConvertToAVMeta_014
+ * @tc.name: ConvertToAVMeta_015
+ * @tc.desc: ConvertToAVMeta_015
  * @tc.type: FUNC
  */
-HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_014, TestSize.Level1)
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_015, TestSize.Level1)
 {
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::MEDIA_ALBUM, "album_test_014");
@@ -1280,13 +1280,13 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_014, TestSize.Level1)
     avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
     EXPECT_FALSE(avmeta.tbl_.size() == 0);
 }
-
+ 
 /**
- * @tc.name: ConvertToAVMeta_015
- * @tc.desc: ConvertToAVMeta_015
+ * @tc.name: ConvertToAVMeta_016
+ * @tc.desc: ConvertToAVMeta_016
  * @tc.type: FUNC
  */
-HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_015, TestSize.Level1)
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_016, TestSize.Level1)
 {
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::MEDIA_ALBUM, "album_test_015");
@@ -1315,13 +1315,13 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_015, TestSize.Level1)
     avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
     EXPECT_FALSE(avmeta.tbl_.size() == 0);
 }
-
+ 
 /**
- * @tc.name: ConvertToAVMeta_016
- * @tc.desc: ConvertToAVMeta_016
+ * @tc.name: ConvertToAVMeta_017
+ * @tc.desc: ConvertToAVMeta_017
  * @tc.type: FUNC
  */
-HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_016, TestSize.Level1)
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_017, TestSize.Level1)
 {
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::MEDIA_ALBUM, "album_test_016");
@@ -1350,13 +1350,13 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_016, TestSize.Level1)
     avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
     EXPECT_FALSE(avmeta.tbl_.size() == 0);
 }
-
+ 
 /**
- * @tc.name: ConvertToAVMeta_017
- * @tc.desc: ConvertToAVMeta_017
+ * @tc.name: ConvertToAVMeta_018
+ * @tc.desc: ConvertToAVMeta_018
  * @tc.type: FUNC
  */
-HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_017, TestSize.Level1)
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_018, TestSize.Level1)
 {
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::MEDIA_ALBUM, "album_test_017");
@@ -1385,13 +1385,13 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_017, TestSize.Level1)
     avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
     EXPECT_FALSE(avmeta.tbl_.size() == 0);
 }
-
+ 
 /**
- * @tc.name: ConvertToAVMeta_018
- * @tc.desc: ConvertToAVMeta_018
+ * @tc.name: ConvertToAVMeta_019
+ * @tc.desc: ConvertToAVMeta_019
  * @tc.type: FUNC
  */
-HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_018, TestSize.Level1)
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_019, TestSize.Level1)
 {
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::MEDIA_ALBUM, "album_test_018");
@@ -1420,13 +1420,13 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_018, TestSize.Level1)
     avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
     EXPECT_FALSE(avmeta.tbl_.size() == 0);
 }
-
+ 
 /**
- * @tc.name: ConvertToAVMeta_019
- * @tc.desc: ConvertToAVMeta_019
+ * @tc.name: ConvertToAVMeta_020
+ * @tc.desc: ConvertToAVMeta_020
  * @tc.type: FUNC
  */
-HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_019, TestSize.Level1)
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_020, TestSize.Level1)
 {
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::MEDIA_ALBUM, "album_test_019");
@@ -1455,13 +1455,13 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_019, TestSize.Level1)
     avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
     EXPECT_FALSE(avmeta.tbl_.size() == 0);
 }
-
+ 
 /**
- * @tc.name: ConvertToAVMeta_020
- * @tc.desc: ConvertToAVMeta_020
+ * @tc.name: ConvertToAVMeta_021
+ * @tc.desc: ConvertToAVMeta_021
  * @tc.type: FUNC
  */
-HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_020, TestSize.Level1)
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_021, TestSize.Level1)
 {
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::MEDIA_ALBUM, "album_test_020");
@@ -1490,13 +1490,13 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_020, TestSize.Level1)
     avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
     EXPECT_FALSE(avmeta.tbl_.size() == 0);
 }
-
+ 
 /**
- * @tc.name: ConvertToAVMeta_021
- * @tc.desc: ConvertToAVMeta_021
+ * @tc.name: ConvertToAVMeta_022
+ * @tc.desc: ConvertToAVMeta_022
  * @tc.type: FUNC
  */
-HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_021, TestSize.Level1)
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_022, TestSize.Level1)
 {
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::MEDIA_ALBUM, "album_test_021");
@@ -1525,13 +1525,13 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_021, TestSize.Level1)
     avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
     EXPECT_FALSE(avmeta.tbl_.size() == 0);
 }
-
+ 
 /**
- * @tc.name: ConvertToAVMeta_022
- * @tc.desc: ConvertToAVMeta_022
+ * @tc.name: ConvertToAVMeta_023
+ * @tc.desc: ConvertToAVMeta_023
  * @tc.type: FUNC
  */
-HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_022, TestSize.Level1)
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_023, TestSize.Level1)
 {
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::MEDIA_ALBUM, "album_test_022");
@@ -1560,13 +1560,13 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_022, TestSize.Level1)
     avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
     EXPECT_FALSE(avmeta.tbl_.size() == 0);
 }
-
+ 
 /**
- * @tc.name: ConvertToAVMeta_023
- * @tc.desc: ConvertToAVMeta_023
+ * @tc.name: ConvertToAVMeta_024
+ * @tc.desc: ConvertToAVMeta_024
  * @tc.type: FUNC
  */
-HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_023, TestSize.Level1)
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_024, TestSize.Level1)
 {
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::MEDIA_ALBUM, "album_test_023");
@@ -1595,13 +1595,13 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_023, TestSize.Level1)
     avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
     EXPECT_FALSE(avmeta.tbl_.size() == 0);
 }
-
+ 
 /**
- * @tc.name: ConvertToAVMeta_024
- * @tc.desc: ConvertToAVMeta_024
+ * @tc.name: ConvertToAVMeta_025
+ * @tc.desc: ConvertToAVMeta_025
  * @tc.type: FUNC
  */
-HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_024, TestSize.Level1)
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_025, TestSize.Level1)
 {
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::MEDIA_ALBUM, "album_test_024");
@@ -1630,13 +1630,13 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_024, TestSize.Level1)
     avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
     EXPECT_FALSE(avmeta.tbl_.size() == 0);
 }
-
+ 
 /**
- * @tc.name: ConvertToAVMeta_025
- * @tc.desc: ConvertToAVMeta_025
+ * @tc.name: ConvertToAVMeta_026
+ * @tc.desc: ConvertToAVMeta_026
  * @tc.type: FUNC
  */
-HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_025, TestSize.Level1)
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_026, TestSize.Level1)
 {
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::MEDIA_ALBUM, "album_test_025");
@@ -1665,13 +1665,13 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_025, TestSize.Level1)
     avmetaDataCollector->ConvertToAVMeta(meta, avmeta);
     EXPECT_FALSE(avmeta.tbl_.size() == 0);
 }
-
+ 
 /**
- * @tc.name: ConvertToAVMeta_026
- * @tc.desc: ConvertToAVMeta_026
+ * @tc.name: ConvertToAVMeta_027
+ * @tc.desc: ConvertToAVMeta_027
  * @tc.type: FUNC
  */
-HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_026, TestSize.Level1)
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_027, TestSize.Level1)
 {
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::MEDIA_ALBUM, "album_test_026");
