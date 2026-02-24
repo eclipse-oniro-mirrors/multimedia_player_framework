@@ -4448,9 +4448,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
     if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
         ret = StopScreenCaptureRecorder();
     } else if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
-        int32_t retAudio = StopAudioCapture();
-        int32_t retVideo = StopVideoCapture();
-        ret = (retAudio == MSERR_OK && retVideo == MSERR_OK) ? MSERR_OK : MSERR_STOP_FAILED;
+        ret = StopAudioAndVideoCapture();
     } else {
         MEDIA_LOGW("StopScreenCaptureInner unsupport and ignore");
         return MSERR_OK;
@@ -4470,6 +4468,14 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
     }
     StopScreenCaptureInnerUnBind();
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopScreenCaptureInner end.", FAKE_POINTER(this));
+    return ret;
+}
+
+int32_t ScreenCaptureServer::StopAudioAndVideoCapture()
+{
+    int32_t retAudio = StopAudioCapture();
+    int32_t retVideo = StopVideoCapture();
+    int32_t ret = (retAudio == MSERR_OK && retVideo == MSERR_OK) ? MSERR_OK : MSERR_STOP_FAILED;
     return ret;
 }
 

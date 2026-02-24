@@ -196,6 +196,7 @@ private:
     int32_t StartStreamVideoCapture();
     int32_t StartStreamHomeVideoCapture();
     int32_t StopScreenCaptureInner(AVScreenCaptureStateCode stateCode);
+    int32_t StopAudioAndVideoCapture();
     void StopScreenCaptureInnerUnBind();
     bool IsLastStartedPidInstance(int32_t pid);
     bool LastPidUpdatePrivacyUsingPermissionState(int32_t pid);
