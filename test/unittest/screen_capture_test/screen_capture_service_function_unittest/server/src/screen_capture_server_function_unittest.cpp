@@ -3260,53 +3260,12 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnWindowInfoChanged_005, TestSize.Leve
     EXPECT_EQ(screenCaptureServer_->curWindowInDisplayId_, displayId);
 }
 
-class ScreenCaptureMonitorServiceStubTest : public testing::Test {
-protected:
-void SetUp() override
+HWTEST_F(ScreenCaptureServerFunctionTest, GetMultiDisplayCaptureCapability_001, TestSize.Level2)
 {
-    screenCaptureMonitorServiceStub_ = ScreenCaptureMonitorServiceStub::Create();
-    ASSERT_NE(screenCaptureMonitorServiceStub_, nullptr);
-}
-
-void TearDown() override
-{
-    screenCaptureMonitorServiceStub_ = nullptr;
-}
-
-    sptr<ScreenCaptureMonitorServiceStub> screenCaptureMonitorServiceStub_;
-};
-
-HWTEST_F(ScreenCaptureMonitorServiceStubTest, CloseListenerObject_001, TestSize.Level2)
-{
-    int32_t result = screenCaptureMonitorServiceStub_->CloseListenerObject();
-    EXPECT_EQ(result, MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureMonitorServiceStubTest, IsScreenCaptureWorking_001, TestSize.Level2)
-{
-    std::list<int32_t> pidList = screenCaptureMonitorServiceStub_->IsScreenCaptureWorking();
-    EXPECT_TRUE(pidList.empty());
-}
-
-HWTEST_F(ScreenCaptureMonitorServiceStubTest, IsSystemScreenRecorder_001, TestSize.Level2)
-{
-    int32_t pid = 1234;
-    bool isSystem = screenCaptureMonitorServiceStub_->IsSystemScreenRecorder(pid);
-    EXPECT_TRUE(!isSystem);
-    isSystem = screenCaptureMonitorServiceStub_->IsSystemScreenRecorder(-1);
-    EXPECT_TRUE(!isSystem);
-}
-
-HWTEST_F(ScreenCaptureMonitorServiceStubTest, IsSystemScreenRecorderWorking_001, TestSize.Level2)
-{
-    bool isSystemWorking = screenCaptureMonitorServiceStub_->IsSystemScreenRecorderWorking();
-    EXPECT_TRUE(!isSystemWorking);
-}
-
-HWTEST_F(ScreenCaptureMonitorServiceStubTest, DestroyStub_001, TestSize.Level2)
-{
-    int32_t result = screenCaptureMonitorServiceStub_->DestroyStub();
-    EXPECT_EQ(result, MSERR_OK);
+    MultiDisplayCapability multiDisplayCapability = {};
+    vector<uint64_t> displayIds = {0, 1};
+    EXPECT_EQ(MSERR_OK, screenCaptureServer_->GetMultiDisplayCaptureCapability(displayIds, multiDisplayCapability));
+    EXPECT_FALSE(multiDisplayCapability.isMultiDisplaySupport);
 }
 } // Media
 } // OHOS

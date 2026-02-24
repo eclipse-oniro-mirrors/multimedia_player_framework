@@ -171,6 +171,12 @@ struct AVScreenCaptureHighlightConfig {
     ScreenCaptureHighlightMode mode = ScreenCaptureHighlightMode::HIGHLIGHT_MODE_CLOSED;
 };
 
+struct MultiDisplayCapability {
+    bool isMultiDisplaySupport = false;
+    uint32_t width = 0;
+    uint32_t height = 0;
+};
+
 struct ScreenCaptureContentFilter {
     std::set<AVScreenCaptureFilterableAudioContent> filteredAudioContents;
     std::vector<uint64_t> windowIDsVec;
@@ -352,6 +358,8 @@ public:
     virtual int32_t UpdateSurface(sptr<Surface> surface) = 0;
     virtual int32_t SetCaptureArea(uint64_t displayId, Rect area) = 0;
     virtual int32_t SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config) = 0;
+    virtual int32_t GetMultiDisplayCaptureCapability (const std::vector<uint64_t> &displayIds,
+        MultiDisplayCapability &multiDisplayCapability) = 0;
 };
 
 class __attribute__((visibility("default"))) ScreenCaptureFactory {

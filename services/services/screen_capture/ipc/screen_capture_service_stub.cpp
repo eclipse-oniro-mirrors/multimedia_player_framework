@@ -90,6 +90,8 @@ int32_t ScreenCaptureServiceStub::Init()
     screenCaptureStubFuncs_[SET_CAPTURE_AREA] = &ScreenCaptureServiceStub::SetCaptureArea;
     screenCaptureStubFuncs_[SET_HIGH_LIGHT_MODE] = &ScreenCaptureServiceStub::SetCaptureAreaHighlight;
     screenCaptureStubFuncs_[PRESENT_PICKER] = &ScreenCaptureServiceStub::PresentPicker;
+    screenCaptureStubFuncs_[GET_MULTI_DISPLAY_CAPTURE_CAPABILITY] =
+        &ScreenCaptureServiceStub::GetMultiDisplayCaptureCapability;
     return MSERR_OK;
 }
 
@@ -375,6 +377,14 @@ int32_t ScreenCaptureServiceStub::SetCaptureArea(uint64_t displayId, OHOS::Rect 
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     return screenCaptureServer_->SetCaptureArea(displayId, area);
+}
+
+int32_t ScreenCaptureServiceStub::GetMultiDisplayCaptureCapability(const std::vector<uint64_t> &displayIds,
+    MultiDisplayCapability &capability)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    return screenCaptureServer_->GetMultiDisplayCaptureCapability(displayIds, capability);
 }
 
 int32_t ScreenCaptureServiceStub::ExcludeContent(MessageParcel &data, MessageParcel &reply)
@@ -861,6 +871,21 @@ int32_t ScreenCaptureServiceStub::SetCaptureArea(MessageParcel &data, MessagePar
     area.h = data.ReadInt32();
 
     int32_t ret = SetCaptureArea(displayId, area);
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServiceStub::GetMultiDisplayCaptureCapability(MessageParcel &data, MessageParcel &reply)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    std::vector<uint64_t> displayIds;
+    data.ReadUInt64Vector(&displayIds);
+    MultiDisplayCapability capability;
+    int32_t ret = GetMultiDisplayCaptureCapability(displayIds, capability);
+    reply.WriteUint32(capability.width);
+    reply.WriteUint32(capability.height);
+    reply.WriteBool(capability.isMultiDisplaySupport);
     reply.WriteInt32(ret);
     return MSERR_OK;
 }

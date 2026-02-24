@@ -373,5 +373,16 @@ int32_t ScreenCaptureNativeMock::SetCaptureAreaHighlight(AVScreenCaptureHighligh
 {
     return MSERR_OK;
 }
+
+int32_t ScreenCaptureNativeMock::GetMultiDisplayCaptureCapability(uint64_t *displayIds, size_t count,
+    MultiDisplayCapability *multiDisplayCapability)
+{
+    std::vector<uint64_t> vec;
+    for (uint32_t i = 0; i < count; i++) {
+        vec.push_back(*(displayIds + i));
+    }
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    return screenCapture_->GetMultiDisplayCaptureCapability(vec, *multiDisplayCapability);
+}
 } // namespace Media
 } // namespace OHOS

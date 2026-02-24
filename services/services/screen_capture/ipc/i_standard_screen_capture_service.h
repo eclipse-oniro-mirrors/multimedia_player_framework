@@ -67,7 +67,8 @@ public:
     virtual int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) = 0;
     virtual int32_t UpdateSurface(sptr<Surface> surface) = 0;
     virtual int32_t SetCaptureArea(uint64_t displayId, OHOS::Rect area) = 0;
-
+    virtual int32_t GetMultiDisplayCaptureCapability(const std::vector<uint64_t> &displayIds,
+        MultiDisplayCapability &capability) = 0;
     /**
      * IPC code ID
      */
@@ -108,6 +109,7 @@ public:
         SET_PICKER_MODE = 33,
         ADD_WHITE_LIST_WINDOWS = 34,
         REMOVE_WHITE_LIST_WINDOWS = 35,
+        GET_MULTI_DISPLAY_CAPTURE_CAPABILITY = 36,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardScreenCaptureService");

@@ -65,6 +65,8 @@ public:
     virtual int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) = 0;
     virtual int32_t UpdateSurface(sptr<Surface> surface) = 0;
     virtual int32_t SetCaptureArea(uint64_t displayId, OHOS::Rect area) = 0;
+    virtual int32_t GetMultiDisplayCaptureCapability(const std::vector<uint64_t> &displayIds,
+        MultiDisplayCapability &capability) = 0;
 };
 } // namespace Media
 } // namespace OHOS

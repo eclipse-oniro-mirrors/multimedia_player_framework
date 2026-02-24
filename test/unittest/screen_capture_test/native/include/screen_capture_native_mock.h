@@ -74,6 +74,8 @@ public:
     int32_t StrategyForPickerPopUp(bool value) override;
     int32_t StrategyForFillMode(AVScreenCaptureFillMode value) override;
     int32_t SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config) override;
+    int32_t GetMultiDisplayCaptureCapability(uint64_t *displayIds, size_t count,
+        MultiDisplayCapability *multiDisplayCapability) override;
 private:
     std::shared_ptr<ScreenCapture> screenCapture_ = nullptr;
     std::shared_ptr<ScreenCaptureCallBack> cb_;

@@ -131,6 +131,8 @@ public:
     virtual int32_t StrategyForPickerPopUp(bool value);
     virtual int32_t StrategyForFillMode(AVScreenCaptureFillMode value);
     virtual int32_t SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config);
+    virtual int32_t GetMultiDisplayCaptureCapability(uint64_t *displayIds, size_t count,
+        MultiDisplayCapability *multiDisplayCapability) = 0;
 };
 
 class __attribute__((visibility("default"))) ScreenCaptureMockFactory {

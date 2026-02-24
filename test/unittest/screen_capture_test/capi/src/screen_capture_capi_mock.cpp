@@ -104,8 +104,11 @@ void ScreenCaptureCapiMock::OnUserSelected(OH_AVScreenCapture *screenCapture,
     ScreenCaptureUserSelectionInfo selectionInfo;
     int32_t type;
     uint64_t displayId;
+    uint64_t* displayIds;
+    size_t count;
     OH_AVScreenCapture_GetCaptureTypeSelected(selection, &type);
     OH_AVScreenCapture_GetDisplayIdSelected(selection, &displayId);
+    OH_AVScreenCapture_GetMultiDisplayIdsSelected(selection, &displayIds, &count);
     selectionInfo.selectType = type;
     selectionInfo.displayIds.push_back(displayId);
     if (mockCb != nullptr) {
@@ -275,6 +278,13 @@ int32_t ScreenCaptureCapiMock::SetSelectionCallback()
 {
     MEDIA_LOGD("ScreenCaptureCapiMock SetDisplayCallback");
     int32_t ret = OH_AVScreenCapture_SetSelectionCallback(screenCapture_, ScreenCaptureCapiMock::OnUserSelected, this);
+    int32_t type;
+    uint64_t displayId;
+    uint64_t* displayIds;
+    size_t count;
+    OH_AVScreenCapture_GetCaptureTypeSelected(nullptr, &type);
+    OH_AVScreenCapture_GetDisplayIdSelected(nullptr, &displayId);
+    OH_AVScreenCapture_GetMultiDisplayIdsSelected(nullptr, &displayIds, &count);
     if (ret != AV_SCREEN_CAPTURE_ERR_OK) {
         MEDIA_LOGE("ScreenCaptureCapiMock SetDisplayCallback failed, ret: %{public}d", ret);
         return MSERR_UNKNOWN;
@@ -576,4 +586,16 @@ int32_t ScreenCaptureCapiMock::SetCaptureAreaHighlight(AVScreenCaptureHighlightC
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_UNKNOWN, "screenCapture_ == nullptr");
     OH_AVScreenCaptureHighlightConfig highlightConfig = HighlightConfigConvert(config);
     return OH_AVScreenCapture_SetCaptureAreaHighlight(screenCapture_, highlightConfig);
+}
+ 
+int32_t ScreenCaptureCapiMock::GetMultiDisplayCaptureCapability(
+    uint64_t *displayIds, size_t count, MultiDisplayCapability *multiDisplayCapability)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_UNKNOWN, "screenCapture_ == nullptr");
+    OH_MultiDisplayCapability capability;
+    auto ret = OH_AVScreenCapture_GetMultiDisplayCaptureCapability(screenCapture_, displayIds, count, &capability);
+    multiDisplayCapability->width = capability.width;
+    multiDisplayCapability->height = capability.height;
+    multiDisplayCapability->isMultiDisplaySupport = capability.isMultiDisplaySupport;
+    return ret;
 }
