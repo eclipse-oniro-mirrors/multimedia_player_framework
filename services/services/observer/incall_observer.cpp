@@ -134,14 +134,9 @@ bool InCallObserver::OnCallStateUpdated(bool inCall)
 
 bool InCallObserver::Init()
 {
-    if (isTelephonyStateListenerDied_) {
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " InCallObserver Init, Register Observer", FAKE_POINTER(this));
-        UnRegisterObserver();
-        RegisterObserver();
-        isTelephonyStateListenerDied_ = false;
-    } else {
-        MEDIA_LOGI("InCallObserver exist : %{public}d", isTelephonyStateListenerDied_);
-    }
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " InCallObserver Init, Register Observer", FAKE_POINTER(this));
+    UnRegisterObserver();
+    RegisterObserver();
     return true;
 }
 
