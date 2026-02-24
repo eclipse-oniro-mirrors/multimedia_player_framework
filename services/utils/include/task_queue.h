@@ -27,6 +27,7 @@
 #include "media_errors.h"
 #include "nocopyable.h"
 #include "qos.h"
+#include <shared_mutex>
 
 namespace OHOS {
 namespace Media {
