@@ -36,13 +36,13 @@ namespace Media {
 InCallObserver& InCallObserver::GetInstance()
 {
     static InCallObserver instance;
-    instance.Init();
     return instance;
 }
 
 InCallObserver::InCallObserver(): taskQue_("IncallObs")
 {
     taskQue_.Start();
+    Init();
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 

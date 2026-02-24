@@ -380,7 +380,7 @@ private:
     std::atomic<SCWindowLifecycleListener::SessionLifecycleEvent> curWindowLifecycle_ =
         SCWindowLifecycleListener::SessionLifecycleEvent::FOREGROUND;
     ScreenCaptureContentFilter contentFilter_;
-    AVScreenCaptureState captureState_ = AVScreenCaptureState::CREATED;
+    std::atomic<AVScreenCaptureState> captureState_ = AVScreenCaptureState::CREATED;
     std::shared_ptr<NotificationLocalLiveViewContent> localLiveViewContent_;
     int64_t startTime_ = 0;
     sptr<UIExtensionAbilityConnection> connection_ = nullptr;
