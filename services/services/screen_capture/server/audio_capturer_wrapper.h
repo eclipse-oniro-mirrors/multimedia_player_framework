@@ -24,6 +24,7 @@
 #include <memory>
 #include <atomic>
 #include <queue>
+#include <shared_mutex>
 
 #include "audio_capturer.h"
 #include "screen_capture.h"
