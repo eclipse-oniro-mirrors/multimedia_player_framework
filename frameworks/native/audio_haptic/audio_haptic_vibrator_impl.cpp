@@ -414,7 +414,7 @@ int32_t AudioHapticVibratorImpl::SetHapticsRamp(int32_t duration, float startInt
     // four points will be enough
     int32_t numPoints = 4;
     VibratorCurvePoint points[numPoints];
-    int32_t timeIntervalMs = actualDuration / (numPoints - 1);
+    int32_t timeIntervalMs = actualDuration / numPoints;
     int32_t intensityStep = (endIntensity - startIntensity) / numPoints;
 
     for (int i = 0; i < numPoints; ++i) {
