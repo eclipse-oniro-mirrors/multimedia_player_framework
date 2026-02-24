@@ -96,6 +96,7 @@ protected:
 
 private:
     std::mutex mutex_;
+    std::shared_mutex audioCapturerMutex_;
     AudioCaptureInfo audioInfo_;
     std::string threadName_;
     std::unique_ptr<std::thread> readAudioLoop_ = nullptr;
