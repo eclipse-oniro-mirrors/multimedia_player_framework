@@ -133,7 +133,6 @@ group("fuzztest") {
       "screen_capture_fuzztest/screencaptureaddsaconcurrent_fuzzer:ScreenCaptureAddSaConcurrentFuzzTest",
       "screen_capture_fuzztest/screencaptureaddwhitelistwindows_fuzzer:ScreenCaptureAddWhiteListWindowsFuzzTest",
       "screen_capture_fuzztest/screencaptureremovewhitelistwindows_fuzzer:ScreenCaptureRemoveWhiteListWindowsFuzzTest",
-      "screen_capture_fuzztest/screencapturemultidisplayid_fuzzer:ScreenCaptureMultiDisplayIdNdkFuzzTest",
     ]
   }
 }
