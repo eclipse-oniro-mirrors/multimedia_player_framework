@@ -90,10 +90,9 @@ int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
     }
     MEDIA_LOGI("0x%{public}06" PRIXPTR "Start success, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
 
-    {
-        std::unique_lock<std::shared_mutex> capturerLock(audioCapturerMutex_);
-        audioCapturer_ = audioCapturer;
-    }
+    std::unique_lock<std::shared_mutex> capturerLock(audioCapturerMutex_);
+    audioCapturer_ = audioCapturer;
+    capturerLock.unlock();
     captureState_.store(CAPTURER_RECORDING);
     readAudioLoop_ = std::make_unique<std::thread>([this] { this->CaptureAudio(); });
     return MSERR_OK;
@@ -112,14 +111,13 @@ int32_t AudioCapturerWrapper::Stop()
         readAudioLoop_.reset();
         readAudioLoop_ = nullptr;
     }
-    {
-        std::unique_lock<std::shared_mutex> capturerLock(audioCapturerMutex_);
-        if (audioCapturer_ != nullptr) {
-            audioCapturer_->Stop();
-            audioCapturer_->Release();
-            audioCapturer_ = nullptr;
-        }
+    std::unique_lock<std::shared_mutex> capturerLock(audioCapturerMutex_);
+    if (audioCapturer_ != nullptr) {
+        audioCapturer_->Stop();
+        audioCapturer_->Release();
+        audioCapturer_ = nullptr;
     }
+    capturerLock.unlock();
     std::unique_lock<std::mutex> bufferLock(bufferMutex_);
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Stop pop, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
     while (!availBuffers_.empty()) {
@@ -147,12 +145,11 @@ int32_t AudioCapturerWrapper::UpdateAudioCapturerConfig(ScreenCaptureContentFilt
         config.filterOptions.pidFilterMode = OHOS::AudioStandard::FilterMode::EXCLUDE;
         MEDIA_LOGI("UpdateAudioCapturerConfig exclude current app audio");
     }
-    {
-        std::shared_lock<std::shared_mutex> capturerLock(audioCapturerMutex_);
-        CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr, MSERR_INVALID_VAL,
-            "AudioCapturerWrapper::UpdateAudioCapturerConfig audioCapturer_ is nullptr");
-        int32_t ret = audioCapturer_->UpdatePlaybackCaptureConfig(config);
-    }
+    std::shared_lock<std::shared_mutex> capturerLock(audioCapturerMutex_);
+    CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr, MSERR_INVALID_VAL,
+        "AudioCapturerWrapper::UpdateAudioCapturerConfig audioCapturer_ is nullptr");
+    int32_t ret = audioCapturer_->UpdatePlaybackCaptureConfig(config);
+    capturerLock.unlock();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_VAL,
         "AudioCapturerWrapper::UpdateAudioCapturerConfig failed");
     MEDIA_LOGI("AudioCapturerWrapper::UpdateAudioCapturerConfig success");
@@ -311,11 +308,10 @@ int32_t AudioCapturerWrapper::CaptureAudio()
     std::string name = threadName_.substr(0, std::min(threadName_.size(), static_cast<size_t>(MAX_THREAD_NAME_LENGTH)));
     pthread_setname_np(pthread_self(), name.c_str());
     size_t bufferLen = 0;
-    {
-        std::shared_lock<std::shared_mutex> capturerLock(audioCapturerMutex_);
-        CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr && audioCapturer_->GetBufferSize(bufferLen) == MSERR_OK &&
-            bufferLen > 0, MSERR_NO_MEMORY, "CaptureAudio GetBufferSize failed");
-    }
+    std::shared_lock<std::shared_mutex> capturerLock(audioCapturerMutex_);
+    CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr && audioCapturer_->GetBufferSize(bufferLen) == MSERR_OK &&
+        bufferLen > 0, MSERR_NO_MEMORY, "CaptureAudio GetBufferSize failed");
+    capturerLock.unlock();
     std::shared_ptr<AudioBuffer> audioBuffer;
     while (true) {
         CHECK_AND_RETURN_RET_LOG(IsRecording(), MSERR_OK, "CaptureAudio is not running, stop capture %{public}s",
@@ -472,11 +468,10 @@ int32_t AudioCapturerWrapper::GetBufferSize(size_t &size)
         MEDIA_LOGD("GetBufferSize failed, not running, name:%{public}s", threadName_.c_str());
         return MSERR_UNKNOWN;
     }
-    {
-        std::shared_lock<std::shared_mutex> capturerLock(audioCapturerMutex_);
-        CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr && audioCapturer_->GetBufferSize(size) == MSERR_OK,
-            MSERR_NO_MEMORY, "CaptureAudio GetBufferSize failed");
-    }
+    std::shared_lock<std::shared_mutex> capturerLock(audioCapturerMutex_);
+    CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr && audioCapturer_->GetBufferSize(size) == MSERR_OK,
+        MSERR_NO_MEMORY, "CaptureAudio GetBufferSize failed");
+    capturerLock.unlock();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " GetBufferSize Buffer E, name:%{public}s",
         FAKE_POINTER(this), threadName_.c_str());
     return MSERR_OK;
