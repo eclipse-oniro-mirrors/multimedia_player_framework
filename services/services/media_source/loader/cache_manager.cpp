@@ -25,6 +25,7 @@
 #include "cache_manager.h"
 #include "media_log.h"
 #include "scoped_timer.h"
+#include "common/log.h"
 
 namespace fs = std::filesystem;
 using namespace std::chrono;
@@ -44,6 +45,7 @@ static const uint64_t CACHE_FILE_SIZE_WATERLINE = 3ULL * 1024ULL * 1024ULL * 102
 static const uint64_t NEED_REMOVE_CACHE_SIZE = 800ULL * 1024ULL * 1024ULL;
 static const std::string CACHE_DIR = "/data/storage/el2/base/cache/avplayer_media_loader";
 static const std::string CACHE_MAPPING_FILE = "cache_mapping.txt";
+static const size_t MAX_CACHE_MAPPING_FILE_SIZE = 10ULL * 1024ULL * 1024ULL;
 
 std::once_flag StreamCacheManager::onceFlag_;
 std::shared_ptr<StreamCacheManager> StreamCacheManager::cacheManager_;
@@ -323,6 +325,7 @@ bool StreamCacheManager::RemoveMediaCache(const std::string& url)
     std::string path = CACHE_DIR + fs::path::preferred_separator + entry;
     fs::remove_all(path);
     MEDIA_LOGI("remove file:%{public}s", entry.c_str());
+    FALSE_RETURN_V(fileSize_ > 0 && fileSize_ <= MAX_CACHE_MAPPING_FILE_SIZE, false);
     errno_t ret = memmove_s(ptr + info.offset, fileSize_ - info.offset, ptr + info.offset + info.cacheEntrySize,
         fileSize_ - (info.offset + info.cacheEntrySize));
     CHECK_AND_RETURN_RET_LOG(ret == EOK, false, "remove media cache falied");
