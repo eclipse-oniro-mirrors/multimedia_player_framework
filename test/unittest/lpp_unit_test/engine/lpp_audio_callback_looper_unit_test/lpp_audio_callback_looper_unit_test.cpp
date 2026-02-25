@@ -113,5 +113,594 @@ HWTEST_F(LppAudioCallbackLooperUnitTest, DoPositionUpdate_001, TestSize.Level0)
     EXPECT_EQ(pos, 0);
 }
 
+/**
+* @tc.name    : Test DoPositionUpdate API
+* @tc.number  : DoPositionUpdate_002
+* @tc.desc    : Test DoPositionUpdate
+*/
+HWTEST_F(LppAudioCallbackLooperUnitTest, DoPositionUpdate_002, TestSize.Level0)
+{
+    lppAudioCallbackLooper_->positionUpdateIdx_.store(0);
+    std::shared_ptr<ILppAudioStreamerEngine> engineMock = std::make_shared<ILppAudioStreamerEngine>();
+    std::shared_ptr<ILppAudioStreamerEngineObs> obsMock = std::make_shared<ILppAudioStreamerEngineObs>();
+    lppAudioCallbackLooper_->task_ = nullptr;
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = 0; }),
+                Return(MSERR_OK)
+            )
+        );
+    EXPECT_CALL(*obsMock, OnPositionUpdated(_)).Times(1);
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = 0; }),
+                Return(ERROR)
+            )
+        );
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = Plugins::HST_TIME_NONE; }),
+                Return(MSERR_OK)
+            )
+        );
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = Plugins::HST_TIME_NONE; }),
+                Return(ERROR)
+            )
+        );
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = Plugins::HST_TIME_NONE; }),
+                Return(MSERR_OK)
+            )
+        );
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    int32_t res = -1;
+    int64_t pos = -1;
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = 0; }),
+                Return(MSERR_OK)
+            )
+        );
+    res = engineMock->GetCurrentPosition(pos);
+    EXPECT_EQ(res, MSERR_OK);
+    EXPECT_EQ(pos, 0);
+}
+
+/**
+* @tc.name    : Test DoPositionUpdate API
+* @tc.number  : DoPositionUpdate_003
+* @tc.desc    : Test DoPositionUpdate
+*/
+HWTEST_F(LppAudioCallbackLooperUnitTest, DoPositionUpdate_003, TestSize.Level0)
+{
+    lppAudioCallbackLooper_->positionUpdateIdx_.store(0);
+    std::shared_ptr<ILppAudioStreamerEngine> engineMock = std::make_shared<ILppAudioStreamerEngine>();
+    std::shared_ptr<ILppAudioStreamerEngineObs> obsMock = std::make_shared<ILppAudioStreamerEngineObs>();
+    lppAudioCallbackLooper_->task_ = nullptr;
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = 0; }),
+                Return(MSERR_OK)
+            )
+        );
+    EXPECT_CALL(*obsMock, OnPositionUpdated(_)).Times(2);
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = 0; }),
+                Return(ERROR)
+            )
+        );
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = 0; }),
+                Return(MSERR_OK)
+            )
+        );
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = Plugins::HST_TIME_NONE; }),
+                Return(MSERR_OK)
+            )
+        );
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = Plugins::HST_TIME_NONE; }),
+                Return(ERROR)
+            )
+        );
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    int32_t res = -1;
+    int64_t pos = -1;
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = 0; }),
+                Return(MSERR_OK)
+            )
+        );
+    res = engineMock->GetCurrentPosition(pos);
+    EXPECT_EQ(res, MSERR_OK);
+    EXPECT_EQ(pos, 0);
+}
+
+/**
+* @tc.name    : Test DoPositionUpdate API
+* @tc.number  : DoPositionUpdate_004
+* @tc.desc    : Test DoPositionUpdate
+*/
+HWTEST_F(LppAudioCallbackLooperUnitTest, DoPositionUpdate_004, TestSize.Level0)
+{
+    lppAudioCallbackLooper_->positionUpdateIdx_.store(0);
+    std::shared_ptr<ILppAudioStreamerEngine> engineMock = std::make_shared<ILppAudioStreamerEngine>();
+    std::shared_ptr<ILppAudioStreamerEngineObs> obsMock = std::make_shared<ILppAudioStreamerEngineObs>();
+    lppAudioCallbackLooper_->task_ = nullptr;
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = 0; }),
+                Return(MSERR_OK)
+            )
+        );
+    EXPECT_CALL(*obsMock, OnPositionUpdated(_)).Times(2);
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = 0; }),
+                Return(ERROR)
+            )
+        );
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = 0; }),
+                Return(MSERR_OK)
+            )
+        );
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = Plugins::HST_TIME_NONE; }),
+                Return(MSERR_OK)
+            )
+        );
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = Plugins::HST_TIME_NONE; }),
+                Return(ERROR)
+            )
+        );
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = Plugins::HST_TIME_NONE; }),
+                Return(MSERR_OK)
+            )
+        );
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    int32_t res = -1;
+    int64_t pos = -1;
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = 0; }),
+                Return(MSERR_OK)
+            )
+        );
+    res = engineMock->GetCurrentPosition(pos);
+    EXPECT_EQ(res, MSERR_OK);
+    EXPECT_EQ(pos, 0);
+}
+
+/**
+* @tc.name    : Test DoPositionUpdate API
+* @tc.number  : DoPositionUpdate_005
+* @tc.desc    : Test DoPositionUpdate
+*/
+HWTEST_F(LppAudioCallbackLooperUnitTest, DoPositionUpdate_005, TestSize.Level0)
+{
+    lppAudioCallbackLooper_->positionUpdateIdx_.store(0);
+    std::shared_ptr<ILppAudioStreamerEngine> engineMock = std::make_shared<ILppAudioStreamerEngine>();
+    std::shared_ptr<ILppAudioStreamerEngineObs> obsMock = std::make_shared<ILppAudioStreamerEngineObs>();
+    lppAudioCallbackLooper_->task_ = nullptr;
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = 0; }),
+                Return(MSERR_OK)
+            )
+        );
+    EXPECT_CALL(*obsMock, OnPositionUpdated(_)).Times(2);
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = 0; }),
+                Return(MSERR_OK)
+            )
+        );
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = Plugins::HST_TIME_NONE; }),
+                Return(MSERR_OK)
+            )
+        );
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    int32_t res = -1;
+    int64_t pos = -1;
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = 0; }),
+                Return(MSERR_OK)
+            )
+        );
+    res = engineMock->GetCurrentPosition(pos);
+    EXPECT_EQ(res, MSERR_OK);
+    EXPECT_EQ(pos, 0);
+}
+
+/**
+* @tc.name    : Test DoPositionUpdate API
+* @tc.number  : DoPositionUpdate_006
+* @tc.desc    : Test DoPositionUpdate
+*/
+HWTEST_F(LppAudioCallbackLooperUnitTest, DoPositionUpdate_006, TestSize.Level0)
+{
+    lppAudioCallbackLooper_->positionUpdateIdx_.store(0);
+    std::shared_ptr<ILppAudioStreamerEngine> engineMock = std::make_shared<ILppAudioStreamerEngine>();
+    std::shared_ptr<ILppAudioStreamerEngineObs> obsMock = std::make_shared<ILppAudioStreamerEngineObs>();
+    lppAudioCallbackLooper_->task_ = nullptr;
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = 0; }),
+                Return(MSERR_OK)
+            )
+        );
+    EXPECT_CALL(*obsMock, OnPositionUpdated(_)).Times(2);
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = 0; }),
+                Return(MSERR_OK)
+            )
+        );
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = 0; }),
+                Return(ERROR)
+            )
+        );
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = Plugins::HST_TIME_NONE; }),
+                Return(MSERR_OK)
+            )
+        );
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = Plugins::HST_TIME_NONE; }),
+                Return(ERROR)
+            )
+        );
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = Plugins::HST_TIME_NONE; }),
+                Return(MSERR_OK)
+            )
+        );
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    int32_t res = -1;
+    int64_t pos = -1;
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = 0; }),
+                Return(MSERR_OK)
+            )
+        );
+    res = engineMock->GetCurrentPosition(pos);
+    EXPECT_EQ(res, MSERR_OK);
+    EXPECT_EQ(pos, 0);
+}
+
+/**
+* @tc.name    : Test DoPositionUpdate API
+* @tc.number  : DoPositionUpdate_007
+* @tc.desc    : Test DoPositionUpdate
+*/
+HWTEST_F(LppAudioCallbackLooperUnitTest, DoPositionUpdate_007, TestSize.Level0)
+{
+    lppAudioCallbackLooper_->positionUpdateIdx_.store(0);
+    std::shared_ptr<ILppAudioStreamerEngine> engineMock = std::make_shared<ILppAudioStreamerEngine>();
+    std::shared_ptr<ILppAudioStreamerEngineObs> obsMock = std::make_shared<ILppAudioStreamerEngineObs>();
+    lppAudioCallbackLooper_->task_ = nullptr;
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = 0; }),
+                Return(MSERR_OK)
+            )
+        );
+    EXPECT_CALL(*obsMock, OnPositionUpdated(_)).Times(3);
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = 0; }),
+                Return(MSERR_OK)
+            )
+        );
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = 0; }),
+                Return(MSERR_OK)
+            )
+        );
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = Plugins::HST_TIME_NONE; }),
+                Return(MSERR_OK)
+            )
+        );
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = Plugins::HST_TIME_NONE; }),
+                Return(MSERR_OK)
+            )
+        );
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = Plugins::HST_TIME_NONE; }),
+                Return(MSERR_OK)
+            )
+        );
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    int32_t res = -1;
+    int64_t pos = -1;
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = 0; }),
+                Return(MSERR_OK)
+            )
+        );
+    res = engineMock->GetCurrentPosition(pos);
+    EXPECT_EQ(res, MSERR_OK);
+    EXPECT_EQ(pos, 0);
+}
+
+/**
+* @tc.name    : Test DoPositionUpdate API
+* @tc.number  : DoPositionUpdate_008
+* @tc.desc    : Test DoPositionUpdate
+*/
+HWTEST_F(LppAudioCallbackLooperUnitTest, DoPositionUpdate_008, TestSize.Level0)
+{
+    lppAudioCallbackLooper_->positionUpdateIdx_.store(0);
+    std::shared_ptr<ILppAudioStreamerEngine> engineMock = std::make_shared<ILppAudioStreamerEngine>();
+    std::shared_ptr<ILppAudioStreamerEngineObs> obsMock = std::make_shared<ILppAudioStreamerEngineObs>();
+    lppAudioCallbackLooper_->task_ = nullptr;
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = 0; }),
+                Return(MSERR_OK)
+            )
+        );
+    EXPECT_CALL(*obsMock, OnPositionUpdated(_)).Times(1);
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = 0; }),
+                Return(ERROR)
+            )
+        );
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = 0; }),
+                Return(ERROR)
+            )
+        );
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = Plugins::HST_TIME_NONE; }),
+                Return(ERROR)
+            )
+        );
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = Plugins::HST_TIME_NONE; }),
+                Return(ERROR)
+            )
+        );
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = Plugins::HST_TIME_NONE; }),
+                Return(MSERR_OK)
+            )
+        );
+    lppAudioCallbackLooper_->obs_ = obsMock;
+    lppAudioCallbackLooper_->engine_ = engineMock;
+    lppAudioCallbackLooper_->DoPositionUpdate(0);
+
+    int32_t res = -1;
+    int64_t pos = -1;
+    EXPECT_CALL(*engineMock, GetCurrentPosition(_))
+        .WillOnce(
+            DoAll(
+                Invoke([](int64_t &currentPosition) { currentPosition = 0; }),
+                Return(MSERR_OK)
+            )
+        );
+    res = engineMock->GetCurrentPosition(pos);
+    EXPECT_EQ(res, MSERR_OK);
+    EXPECT_EQ(pos, 0);
+}
+
 } // namespace Media
 } // namespace OHOS
