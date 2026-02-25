@@ -1181,7 +1181,7 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_012, TestSize.Level1)
  * @tc.desc: ConvertToAVMeta_013
  * @tc.type: FUNC
  */
-HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_012, TestSize.Level1)
+HWTEST_F(AVMetaDataCollectorUnitTest, ConvertToAVMeta_013, TestSize.Level1)
 {
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::MEDIA_ALBUM, "album_test_012");
