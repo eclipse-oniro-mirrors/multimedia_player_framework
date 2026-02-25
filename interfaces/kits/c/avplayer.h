@@ -579,6 +579,18 @@ OH_AVErrCode OH_AVPlayer_SetOnInfoCallback(OH_AVPlayer *player, OH_AVPlayerOnInf
 OH_AVErrCode OH_AVPlayer_SetOnErrorCallback(OH_AVPlayer *player, OH_AVPlayerOnErrorCallback callback, void *userData);
 
 /**
+ * @brief Set the media source of the player. The data of this media source is provided by the application.
+ * @param {OH_AVPlayer*} player Pointer to an OH_AVPlayer instance
+ * @param {OH_AVDataSourceExt*} datasrc Pointer to an OH_AVDataSourceExt instance
+ * @param {void*} userData The handle passed in by the user is used to pass in the callback
+ * @return Function result code.
+ *         {@link AV_ERR_OK} if the execution is successful.
+ *         {@link AV_ERR_INVALID_VAL} if input player is nullptr or datasrc is nullptr.
+ * @since 21
+ */
+OH_AVErrCode OH_AVPlayer_SetDataSource(OH_AVPlayer *player, OH_AVDataSourceExt* datasrc, void* userData);
+
+/**
  * @brief Sets the loudness gain of current media. The default gain is 0.0 dB.
  * This API can be called only when the AVPlayer is in the prepared, playing, paused completed or stopped state.
  * The default loudness gain is 0.0dB. The stream usage of the player must be
@@ -600,18 +612,6 @@ OH_AVErrCode OH_AVPlayer_SetOnErrorCallback(OH_AVPlayer *player, OH_AVPlayerOnEr
  * @since 21
  */
 OH_AVErrCode OH_AVPlayer_SetLoudnessGain(OH_AVPlayer *player, float loudnessGain);
-
-/**
- * @brief Set the media source of the player. The data of this media source is provided by the application.
- * @param {OH_AVPlayer*} player Pointer to an OH_AVPlayer instance
- * @param {OH_AVDataSourceExt*} datasrc Pointer to an OH_AVDataSourceExt instance
- * @param {void*} userData The handle passed in by the user is used to pass in the callback
- * @return Function result code.
- *         {@link AV_ERR_OK} if the execution is successful.
- *         {@link AV_ERR_INVALID_VAL} if input player is nullptr or datasrc is nullptr.
- * @since 21
- */
-OH_AVErrCode OH_AVPlayer_SetDataSource(OH_AVPlayer *player, OH_AVDataSourceExt* datasrc, void* userData);
 
 /**
  * @brief Get the player media source info.

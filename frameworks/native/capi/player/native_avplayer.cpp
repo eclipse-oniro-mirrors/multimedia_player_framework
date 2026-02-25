@@ -35,6 +35,7 @@ namespace {
     constexpr uint32_t SWITCH_MODE_LENGTH = 3;
     constexpr int32_t UNSUPPORT_FORMAT_ERROR_CODE = 331350544;
     constexpr int32_t AVPLAYER_ERR_UNSUPPORT = 9;
+    constexpr int32_t INVALID_PARAMETER_CODE = -1;
     constexpr int32_t PLAY_RANGE_DEFAULT_VALUE = -1;
     constexpr int32_t MIN_AUTO_QUICK_PLAY_THRESHOLD = 2;
 }
@@ -405,7 +406,7 @@ public:
     {
         if (mem == nullptr || dataSourceExt_ == nullptr) {
             MEDIA_LOGE("NativeAVDataSource ReadAt mem or dataSourceExt_ is nullptr");
-            return 0;
+            return INVALID_PARAMETER_CODE;
         }
         std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer(
             mem->GetBase(), mem->GetSize(), mem->GetSize()
@@ -418,7 +419,7 @@ public:
     {
         if (dataSourceExt_ == nullptr) {
             MEDIA_LOGE("NativeAVDataSource GetSize dataSourceExt_ is nullptr");
-            return 0;
+            return INVALID_PARAMETER_CODE;
         }
         size = dataSourceExt_->size;
         return 0;
@@ -753,7 +754,7 @@ void NativeAVPlayerCallback::OnSpeedDoneCb(const int32_t extra, const Format &in
 
 void NativeAVPlayerCallback::OnPlaybackRateDoneCb(const int32_t extra, const Format &infoBody)
 {
-    (void)extra;
+    (void)infoBody;
     CHECK_AND_RETURN_LOG(isSourceLoaded_.load(), "OnPlaybackRateDoneCb current source is unready");
     float rate = 0.0f;
     (void)infoBody.GetFloatValue(PlayerKeys::PLAYER_PLAYBACK_RATE, rate);
@@ -1750,16 +1751,6 @@ OH_AVErrCode OH_AVPlayer_SetAmplitudeUpdateCallback(OH_AVPlayer *player, OH_AVPl
     return AV_ERR_OK;
 }
 
-OH_AVErrCode OH_AVPlayer_SetLoudnessGain(OH_AVPlayer *player, float loudnessGain)
-{
-    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
-    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
-    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
-    int32_t ret = playerObj->player_->SetLoudnessGain(loudnessGain);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_STATE, "player SetLoudnessGain failed");
-    return AV_ERR_OK;
-}
-
 OH_AVErrCode OH_AVPlayer_SetDataSource(OH_AVPlayer *player, OH_AVDataSourceExt* datasrc, void* userData)
 {
     CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
@@ -1771,6 +1762,16 @@ OH_AVErrCode OH_AVPlayer_SetDataSource(OH_AVPlayer *player, OH_AVDataSourceExt* 
     std::shared_ptr<IMediaDataSource> avDataSource = std::make_shared<NativeAVDataSource>(datasrc, userData);
     int32_t ret = playerObj->player_->SetSource(avDataSource);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player setDataSource failed");
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVPlayer_SetLoudnessGain(OH_AVPlayer *player, float loudnessGain)
+{
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+    int32_t ret = playerObj->player_->SetLoudnessGain(loudnessGain);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_STATE, "player SetLoudnessGain failed");
     return AV_ERR_OK;
 }
 
@@ -2311,8 +2312,6 @@ OH_AVErrCode OH_AVPlayer_SetMediaSource(OH_AVPlayer *player, OH_AVMediaSource *s
     MEDIA_LOGI("player SetSource Called");
     if (mediaSourceObj->mediasource_->IsFileDescriptorSet()) {
         auto desc = mediaSourceObj->mediasource_->GetFileDescriptor();
-        MEDIA_LOGD("SetMediaSource(fd), fd=%{public}d, offset=%{public}lld, size=%{public}lld",
-            desc.fd, desc.offset, desc.size);
         ret = playerObj->player_->SetSource(desc.fd, desc.offset, desc.size);
         MEDIA_LOGI("player SetSource(fd), ret: %{public}d", ret);
     } else if (mediaSourceObj->mediasource_->IsDataSourceSet()) {
@@ -2326,7 +2325,6 @@ OH_AVErrCode OH_AVPlayer_SetMediaSource(OH_AVPlayer *player, OH_AVMediaSource *s
         ret = playerObj->player_->SetMediaSource(mediaSourceObj->mediasource_, strategy);
         MEDIA_LOGI("player SetMediaSource(url), ret: %{public}d", ret);
     }
-
     return ret == MSERR_OK ? AV_ERR_OK : AV_ERR_INVALID_VAL;
 }
 

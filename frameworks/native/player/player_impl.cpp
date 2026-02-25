@@ -961,7 +961,7 @@ int32_t PlayerImpl::EnableCameraPostprocessing()
 
 int32_t PlayerImpl::SetCameraPostprocessing(bool isOpen)
 {
-    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR "SetCameraPostprocessing  in", FAKE_POINTER(this));
+    MEDIA_LOGI("PlayerImpl:0x%{public}06" PRIXPTR "SetCameraPostprocessing  in", FAKE_POINTER(this));
     ScopedTimer timer("SetCameraPostprocessing", OVERTIME_WARNING_MS);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
     LISTENER(return playerService_->SetCameraPostprocessing(isOpen), "SetCameraPostprocessing", false, TIME_OUT_SECOND);

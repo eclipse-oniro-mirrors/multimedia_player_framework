@@ -39,7 +39,9 @@ ohos_shared_library("media_engine_histreamer") {
     deps += [ "player:media_engine_histreamer_player" ]
   }
 
-  external_deps = [ "hilog:libhilog" ]
+  external_deps = [
+    "hilog:libhilog"
+  ]
 
   if (player_framework_support_metadata) {
     deps += [ "avmetadatahelper:media_engine_histreamer_avmetadatahelper" ]
