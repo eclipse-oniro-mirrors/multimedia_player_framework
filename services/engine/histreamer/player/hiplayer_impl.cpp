@@ -209,7 +209,8 @@ HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, 
 HiPlayerImpl::~HiPlayerImpl()
 {
     MEDIA_LOG_D("~HiPlayerImpl dtor called");
-    if (demuxer_) {
+    if (pipeline_ != nullptr && demuxer_) {
+        std::unique_lock<std::mutex> lock(pipelineMutex_);
         pipeline_->RemoveHeadFilter(demuxer_);
     }
     if (dfxAgent_ != nullptr) {
@@ -532,6 +533,7 @@ void HiPlayerImpl::ResetIfSourceExisted()
     MEDIA_LOG_I("Source is existed, reset the relatived objects");
     ReleaseInner();
     if (pipeline_ != nullptr) {
+        std::unique_lock<std::mutex> lock(pipelineMutex_);
         pipeline_.reset();
     }
     if (audioDecoder_ != nullptr) {
