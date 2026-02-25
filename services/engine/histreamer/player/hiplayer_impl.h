@@ -416,6 +416,7 @@ private:
 
     std::mutex drmMutex_;
     std::mutex flvLiveMutex_;
+    std::mutex pipelineMutex_;
     std::condition_variable drmConfigCond_;
     std::condition_variable flvLiveCond_;
     bool isDrmProtected_ = false;
