@@ -25,7 +25,6 @@
 #include "cache_manager.h"
 #include "media_log.h"
 #include "scoped_timer.h"
-#include "common/log.h"
 
 namespace fs = std::filesystem;
 using namespace std::chrono;
@@ -325,7 +324,7 @@ bool StreamCacheManager::RemoveMediaCache(const std::string& url)
     std::string path = CACHE_DIR + fs::path::preferred_separator + entry;
     fs::remove_all(path);
     MEDIA_LOGI("remove file:%{public}s", entry.c_str());
-    FALSE_RETURN_V(fileSize_ > 0 && fileSize_ <= MAX_CACHE_MAPPING_FILE_SIZE, false);
+    CHECK_AND_RETURN_RET_LOG(fileSize_ > 0 && fileSize_ <= MAX_CACHE_MAPPING_FILE_SIZE, false, "fileSize_ is invalid");
     errno_t ret = memmove_s(ptr + info.offset, fileSize_ - info.offset, ptr + info.offset + info.cacheEntrySize,
         fileSize_ - (info.offset + info.cacheEntrySize));
     CHECK_AND_RETURN_RET_LOG(ret == EOK, false, "remove media cache falied");
