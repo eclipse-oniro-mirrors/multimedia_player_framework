@@ -167,6 +167,7 @@ public:
     void OnTimeUpdate(callback_view<void(int32_t)> callback);
     void OnVolumeChange(callback_view<void(double)> callback);
     void OnSpeedDone(callback_view<void(int32_t)> callback);
+    void OnPlaybackRateDone(callback_view<void(double)> callback);
     void OnBitrateDone(callback_view<void(int32_t)> callback);
     void OnAvailableBitrates(callback_view<void(array_view<int32_t>)> callback);
     void OnAmplitudeUpdate(callback_view<void(array_view<double>)> callback);
@@ -176,7 +177,6 @@ public:
     void OnSubtitleUpdate(callback_view<void(SubtitleInfo const&)> callback);
     void OnSuperResolutionChanged(callback_view<void(bool)> callback);
     void OnTrackInfoUpdate(callback_view<void(array_view<map<string, MediaDescriptionValue>>)> callback);
-    void OnPlaybackRateDone(callback_view<void(double)> callback);
     void OnSeiMessageReceived(array_view<int32_t> payloadTypes,
         callback_view<void(array_view<SeiMessage>, optional_view<int32_t>)> callback);
     void OnAudioInterrupt(callback_view<void(ohos::multimedia::audio::InterruptEvent const&)> callback);
@@ -205,9 +205,9 @@ public:
     void OffSubtitleUpdate(optional_view<callback<void(SubtitleInfo const&)>> callback);
     void OffSuperResolutionChanged(optional_view<callback<void(bool)>> callback);
     void OffTrackInfoUpdate(optional_view<callback<void(array_view<map<string, int32_t>>)>> callback);
+    void OffPlaybackRateDone(optional_view<callback<void(double)>> callback);
     void OffSeiMessageReceived(optional_view<array<int32_t>> payloadTypes,
         optional_view<callback<void(array_view<SeiMessage>, optional_view<int32_t>)>> callback);
-    void OffPlaybackRateDone(optional_view<callback<void(double)>> callback);
     void OffAudioInterrupt(optional_view<callback<void(::ohos::multimedia::audio::InterruptEvent const&)>> callback);
     void OffAudioOutputDeviceChangeWithInfo(optional_view<callback<void(
         ::ohos::multimedia::audio::AudioStreamDeviceChangeInfo const&)>> callback);

@@ -1457,22 +1457,25 @@ void AVPlayerImpl::SetPlaybackRate(double rate)
         OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "The stream is live stream, not support rate");
         return;
     }
+
     if (!IsRateValid(rate)) {
         OnErrorCb(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
             "invalid parameters, please check the rate");
         return;
     }
+
     if (!IsControllable()) {
         OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not prepared/playing/paused/completed, unsupport rate operation");
         return;
     }
+
     auto task = std::make_shared<TaskHandler<void>>([this, rate]() {
         MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheSetRate Task In", FAKE_POINTER(this));
         if (player_ != nullptr) {
             (void)player_->SetPlaybackRate(static_cast<float>(rate));
         }
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheSetRate Task Out", FAKE_POINTER(this));
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheSetRate Task OUT", FAKE_POINTER(this));
     });
     MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheSetRate EnqueueTask In", FAKE_POINTER(this));
     if (player_ != nullptr) {
@@ -1684,6 +1687,17 @@ void AVPlayerImpl::SetPlaybackStrategySync(::ohos::multimedia::media::PlaybackSt
     MEDIA_LOGI("TaiheSetPlaybackStrategy Out");
 }
 
+bool AVPlayerImpl::IsRateValid(double rate)
+{
+    const double minRate = 0.125f;
+    const double maxRate = 4.0f;
+    const double eps = 1e-15;
+    if ((rate < minRate - eps) || (rate > maxRate + eps)) {
+        return false;
+    }
+    return true;
+}
+
 bool AVPlayerImpl::IsPalyingDurationValid(const AVPlayStrategyTmp &strategyTmp)
 {
     if ((strategyTmp.preferredBufferDuration > 0 && strategyTmp.preferredBufferDurationForPlaying > 0 &&
@@ -1701,17 +1715,6 @@ bool AVPlayerImpl::IsLivingMaxDelayTimeValid(const AVPlayStrategyTmp &strategyTm
     }
     if (strategyTmp.thresholdForAutoQuickPlay < AVPlayStrategyConstant::BUFFER_DURATION_FOR_PLAYING_SECONDS ||
         strategyTmp.thresholdForAutoQuickPlay < strategyTmp.preferredBufferDurationForPlaying) {
-            return false;
-        }
-    return true;
-}
-
-bool AVPlayerImpl::IsRateValid(double rate)
-{
-    const double minRate = 0.125f;
-    const double maxRate = 4.0f;
-    const double eps = 1e-15;
-    if ((rate < minRate - eps) || (rate > maxRate + eps)) {
         return false;
     }
     return true;
@@ -2505,13 +2508,14 @@ void AVPlayerImpl::OnPlaybackRateDone(callback_view<void(double)> callback)
         OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to on event");
         return;
     }
+
     ani_env *env = taihe::get_env();
     std::shared_ptr<taihe::callback<void(double)>> taiheCallback =
             std::make_shared<taihe::callback<void(double)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SaveCallbackReference(AVPlayerEvent::EVENT_RATE_DONE, autoRef);
-    MEDIA_LOGI("0x%{public}06" PRIXPTR "TaiheOnPlaybackRateDone callbackName: playbackRateDone success",
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheOnPlaybackRateDone callbackName: playbackRateDone success",
         FAKE_POINTER(this));
     return;
 }

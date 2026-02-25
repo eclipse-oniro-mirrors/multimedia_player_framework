@@ -262,7 +262,7 @@ napi_value AVPlayerNapi::JsCreateAVPlayer(napi_env env, napi_callback_info info)
     } else {
         asyncContext.release();
     }
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " JsCreateAVPlayer Out", FAKE_POINTER(jsThis));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsCreateAVPlayer Out", FAKE_POINTER(jsThis));
     return result;
 }
 
@@ -1288,7 +1288,12 @@ void AVPlayerNapi::EnqueueNetworkTask(const std::string url)
             return;
         }
         if (player_ != nullptr) {
-            if (player_->SetSource(url) != MSERR_OK) {
+            auto ret = player_->SetSource(url);
+            if (ret == MSERR_CLEARTEXT_NOT_PERMITTED) {
+                QueueOnErrorCb(MSERR_EXT_API20_IO_CLEARTEXT_NOT_PERMITTED, "http plain text request is not permitted");
+                return;
+            }
+            if (ret != MSERR_OK) {
                 QueueOnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "failed to SetSourceNetWork");
                 return;
             }
@@ -1381,7 +1386,6 @@ napi_value AVPlayerNapi::JsSetStartFrameRateOptEnabled(napi_env env, napi_callba
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "enableStartFrameRateOpt is not napi_boolean");
         return result;
     }
-
     napi_status status = napi_get_value_bool(env, args[0], &jsPlayer->enabled_);
     if (status != napi_ok) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,

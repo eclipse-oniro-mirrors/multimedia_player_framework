@@ -369,9 +369,7 @@ std::string DfxAgent::GetPerfStr(const bool needWaitAllData)
             isAllDataReady = false;
         }
     }
-    if (isAllDataReady) {
-        perfDataMap_.clear();
-    }
+    perfDataMap_.clear();
     needPrintPerfLog_ = !isAllDataReady;
     return (!isAllDataReady && needWaitAllData) ? waitFor : perfStr;
 }

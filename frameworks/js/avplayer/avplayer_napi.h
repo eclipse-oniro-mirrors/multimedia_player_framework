@@ -403,9 +403,9 @@ private:
     bool IsPalyingDurationValid(const AVPlayStrategyTmp &strategyTmp);
     void EnqueueMediaSourceTask(AVPlayerNapi *jsPlayer, const std::shared_ptr<AVMediaSource> &mediaSource,
                                 const struct AVPlayStrategy &strategy);
+    bool IsLivingMaxDelayTimeValid(const AVPlayStrategyTmp &strategyTmp);
     void AddMediaStreamToAVMediaSource(
         const std::shared_ptr<AVMediaSourceTmp> &srcTmp, std::shared_ptr<AVMediaSource> &mediaSource);
-    bool IsLivingMaxDelayTimeValid(const AVPlayStrategyTmp &strategyTmp);
     bool IsRateValid(float rate);
 
     std::condition_variable stopTaskQueCond_;
