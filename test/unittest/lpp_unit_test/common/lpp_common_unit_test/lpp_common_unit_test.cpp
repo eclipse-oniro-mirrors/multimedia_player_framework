@@ -266,7 +266,7 @@ HWTEST_F(LppDataPacketUnitTest, WriteOneFrameToAVBuffer_006, TestSize.Level1)
     packet_->memory_ = buffer->memory_;
     EXPECT_TRUE(packet_->IsEos());
     packet_->IsEnable();
-    EXPECT_EQ(packet_->WriteOneFrameToAVBuffer(buffer), true);//值待确认
+    EXPECT_EQ(packet_->WriteOneFrameToAVBuffer(buffer), true);
 }
 } // namespace Media
 } // namespace OHOS
