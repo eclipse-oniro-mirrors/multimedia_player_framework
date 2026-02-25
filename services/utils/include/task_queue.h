@@ -27,6 +27,7 @@
 #include "media_errors.h"
 #include "nocopyable.h"
 #include "qos.h"
+#include <shared_mutex>
 
 namespace OHOS {
 namespace Media {
@@ -254,6 +255,7 @@ private:
     std::unique_ptr<std::thread> thread_;
     std::list<TaskHandlerItem> taskList_;
     std::mutex mutex_;
+    std::shared_mutex tidMutex_;
     std::condition_variable cond_;
     std::string name_;
     pid_t tid_ = -1;
