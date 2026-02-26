@@ -58,7 +58,14 @@ int32_t LppVideoStreamerClient::SetParameter(const Format &param)
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerProxy_->SetParameter(param);
 }
-
+ 
+int32_t LppVideoStreamerClient::GetParameter(Format &param)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->GetParameter(param);
+}
+ 
 int32_t LppVideoStreamerClient::Configure(const Format &param)
 {
     std::lock_guard<std::mutex> lock(mutex_);

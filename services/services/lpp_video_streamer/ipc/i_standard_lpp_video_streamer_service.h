@@ -34,6 +34,8 @@ public:
     
     virtual int32_t SetParameter(const Format &param) = 0;
 
+    virtual int32_t GetParameter(Format &param) = 0;
+
     virtual int32_t Configure(const Format &param) = 0;
 
     virtual int32_t Prepare() = 0;
@@ -112,6 +114,7 @@ public:
         SET_AUDIO_STREAMER_ID,
         RENDER_FIRST_FRAME,
         GET_LATEST_PTS,
+        GET_PARAMETER,
         MAX_IPC_ID,                   // all IPC codes should be added before MAX_IPC_ID
     };
 

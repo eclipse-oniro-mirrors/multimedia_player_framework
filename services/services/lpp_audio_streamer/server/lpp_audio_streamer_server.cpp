@@ -122,6 +122,14 @@ int32_t LppAudioStreamerServer::SetParameter(const Format &param)
     return MSERR_OK;
 }
 
+int32_t LppAudioStreamerServer::GetParameter(Format &param)
+{
+    MEDIA_LOGI("LppAudioStreamerServer GetParameter");
+    CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
+    param = param_;
+    return MSERR_OK;
+}
+
 int32_t LppAudioStreamerServer::Configure(const Format &param)
 {
     MEDIA_LOGI("LppAudioStreamerServer Configure");
@@ -131,6 +139,7 @@ int32_t LppAudioStreamerServer::Configure(const Format &param)
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     ret = streamerEngine_->Configure(param);
     CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), ret, "SetParameter Failed!");
+    param_ = param;
     return MSERR_OK;
 }
 

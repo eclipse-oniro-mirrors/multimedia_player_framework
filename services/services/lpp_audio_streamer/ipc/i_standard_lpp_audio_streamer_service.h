@@ -34,6 +34,8 @@ public:
     
     virtual int32_t SetParameter(const Format &param) = 0;
 
+    virtual int32_t GetParameter(Format &param) = 0;
+
     virtual int32_t Configure(const Format &param) = 0;
 
     virtual int32_t Prepare() = 0;
@@ -94,6 +96,7 @@ public:
         SET_VIDOE_STREAMER_ID,
         GET_STREAM_ID,
         SET_LOUDNESS_GAIN,
+        GET_PARAMETER,
         MAX_IPC_ID,                   // all IPC codes should be added before MAX_IPC_ID
     };
 

@@ -95,6 +95,8 @@ void LppVideoStreamerServiceStub::FillPlayerFuncPart1()
         [this](MessageParcel &data, MessageParcel &reply) { return Init(data, reply); }};
     playerFuncs_[SET_PARAMETER] = {"Player::SetParameter",
         [this](MessageParcel &data, MessageParcel &reply) { return SetParameter(data, reply); }};
+    playerFuncs_[GET_PARAMETER] = {"Player::GetParameter",
+        [this](MessageParcel &data, MessageParcel &reply) { return GetParameter(data, reply); }};
     playerFuncs_[CONFIGURE] = {
         "Player::Configure", [this](MessageParcel &data, MessageParcel &reply) { return Configure(data, reply); }};
     playerFuncs_[PREPARE] = {
@@ -205,6 +207,22 @@ int32_t LppVideoStreamerServiceStub::SetParameter(MessageParcel &data, MessagePa
 
     reply.WriteInt32(SetParameter(param));
 
+    return MSERR_OK;
+}
+
+int32_t LppVideoStreamerServiceStub::GetParameter(Format &param)
+{
+    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
+    return lppVideoPlayerServer_->GetParameter(param);
+}
+ 
+int32_t LppVideoStreamerServiceStub::GetParameter(MessageParcel &data, MessageParcel &reply)
+{
+    Format param;
+    int32_t ret = GetParameter(param);
+    reply.WriteInt32(ret);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_OK, "Failed to get GetParameter!");
+    MediaParcel::MetaMarshalling(reply, param);
     return MSERR_OK;
 }
 

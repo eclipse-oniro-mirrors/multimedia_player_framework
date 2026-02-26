@@ -91,6 +91,14 @@ int32_t VideoStreamerImpl::SetParameter(const Format &param)
     return ret;
 }
 
+int32_t VideoStreamerImpl::GetParameter(Format &param)
+{
+    CHECK_AND_RETURN_RET_LOG(enableLppSink_, MSERR_UNSUPPORT, "Lpp is disabled");
+    CHECK_AND_RETURN_RET_LOG(streamerService_ != nullptr, MSERR_SERVICE_DIED, "service died");
+    int32_t ret = streamerService_->GetParameter(param);
+    return ret;
+}
+
 int32_t VideoStreamerImpl::Prepare()
 {
     MEDIA_LOGI("VideoStreamerImpl Prepare");
