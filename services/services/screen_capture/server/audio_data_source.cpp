@@ -607,7 +607,7 @@ void AudioDataSource::SetMixAudioTypeLog()
 }
 
 void AudioDataSource::ReleaseAudioBuffer(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
-        std::shared_ptr<AudioBuffer> &micAudioBuffer)
+    std::shared_ptr<AudioBuffer> &micAudioBuffer)
 {
     if (innerAudioBuffer) {
         screenCaptureServer_->ReleaseInnerAudioBuffer();
