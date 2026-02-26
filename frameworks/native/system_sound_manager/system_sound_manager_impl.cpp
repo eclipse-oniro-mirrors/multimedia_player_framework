@@ -2925,6 +2925,7 @@ std::string SystemSoundManagerImpl::OpenAudioFile(const DatabaseTool &databaseTo
 {
     std::string newAudioUri = uri;
     int32_t fd  = 0;
+    bool shouldCloseFd = false;
     if (databaseTool.isProxy) {
         std::string absFilePath;
         PathToRealPath(uri, absFilePath);
@@ -2937,11 +2938,16 @@ std::string SystemSoundManagerImpl::OpenAudioFile(const DatabaseTool &databaseTo
 
     if (fd > 0) {
         newAudioUri = FDHEAD + to_string(fd);
+        shouldCloseFd = true;
     } else {
         SendPlaybackFailedEvent(OPEN_FAILED);
         MEDIA_LOGE("The audioUri open failed!");
     }
     MEDIA_LOGI("OpenAudioUri result: newAudioUri is %{public}s", newAudioUri.c_str());
+
+    if (shouldCloseFd > 0) {
+        close(fd);
+    }
     return newAudioUri;
 }
 
@@ -3039,6 +3045,7 @@ std::string SystemSoundManagerImpl::OpenHapticsFile(
 {
     std::string newHapticsUri = hapticsUri;
     int32_t fd = 0;
+    bool shouldCloseFd = false;
     if (databaseTool.isProxy) {
         std::string absFilePath;
         PathToRealPath(hapticsUri, absFilePath);
@@ -3052,8 +3059,13 @@ std::string SystemSoundManagerImpl::OpenHapticsFile(
 
     if (fd > 0) {
         newHapticsUri = FDHEAD + to_string(fd);
+        shouldCloseFd = true;
     } else {
         SendPlaybackFailedEvent(OPEN_FAILED);
+    }
+
+    if (shouldCloseFd) {
+        close(fd);
     }
     MEDIA_LOGI("OpenHapticsUri result: newHapticsUri is %{public}s", newHapticsUri.c_str());
     return newHapticsUri;
