@@ -115,7 +115,7 @@ private:
         std::shared_ptr<AudioBuffer> &micAudioBuffer, char* mixData, int channels);
     void ReleaseAudioBuffer(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
         std::shared_ptr<AudioBuffer> &micAudioBuffer);
-    void SetMixAudioTypeLog(AVScreenCaptureMixBufferType audioType);
+    void SetMixAudioTypeLog();
     AudioDataSourceReadAtActionState ReadAudioBuffer(std::shared_ptr<AVBuffer> &buffer, const uint32_t &length);
     int32_t LostFrameNum(const int64_t &timestamp);
     void FillLostBuffer(const int64_t &lostNum, const int64_t &timestamp, const uint32_t &bufferSize);
