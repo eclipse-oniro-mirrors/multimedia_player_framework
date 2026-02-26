@@ -77,7 +77,7 @@ int32_t AudioStreamerImpl::SetParameter(const Format &param)
 
 int32_t AudioStreamerImpl::GetParameter(Format &param)
 {
-    CHECK_AND_RETURN_RET_LOG(enableLppSink_, AV_ERR_INVALID_VAL, "Lpp is disabled");
+    CHECK_AND_RETURN_RET_LOG(enableLppSink_, MSERR_UNSUPPORT, "Lpp is disabled");
     CHECK_AND_RETURN_RET_LOG(streamerService_ != nullptr, MSERR_SERVICE_DIED, "service died");
     return streamerService_->GetParameter(param);
 }
