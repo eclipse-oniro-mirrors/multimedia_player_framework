@@ -373,7 +373,7 @@ int32_t LppAudioRenderAdapter::GetAudioPosition(timespec &time, uint32_t &frameP
     int32_t ret = audioRenderer_->GetAudioTimestampInfo(
         audioPositionTimestamp, AudioStandard::Timestamp::Timestampbase::BOOTTIME);
     FALSE_RETURN_V_MSG(audioPositionTimestamp.framePosition != 0,
-        MSERR_INVALID_OPERATION, "GetAudioPosition framePosition is 0")
+        MSERR_INVALID_OPERATION, "GetAudioPosition framePosition is 0");
     FALSE_RETURN_V_MSG(ret == MSERR_OK, AudioStandardStatusToMSError(ret), "GetAudioPosition failed");
     time = audioPositionTimestamp.time;
     int64_t currentRenderClockTime = time.tv_sec * SEC_TO_US + time.tv_nsec / US_TO_MS;  // convert to us
@@ -504,7 +504,8 @@ void LppAudioRenderAdapter::DriveBufferCircle()
     size_t availDataSize = availDataSize_.load();
     FALSE_RETURN_NOLOG(availDataSize < maxCbDataSize_);
     std::shared_ptr<AVBuffer> oldestBuffer = availOutputBuffers_.front();
-    FALSE_RETURN_MSG(oldestBuffer != nullptr && oldestBuffer->memory_->GetSize() > 0, "buffer or memory is nullptr");
+    FALSE_RETURN_MSG(oldestBuffer != nullptr && oldestBuffer->memory_ != nullptr
+        && oldestBuffer->memory_->GetSize() > 0, "buffer or memory is nullptr");
     std::shared_ptr<AVBuffer> swapBuffer = CopyBuffer(oldestBuffer);
     FALSE_RETURN_MSG(swapBuffer != nullptr, "CopyBuffer failed, swapBuffer is nullptr");
     availOutputBuffers_.pop();
@@ -515,7 +516,8 @@ void LppAudioRenderAdapter::DriveBufferCircle()
 
 std::shared_ptr<AVBuffer> LppAudioRenderAdapter::CopyBuffer(const std::shared_ptr<AVBuffer> buffer)
 {
-    FALSE_RETURN_V_MSG_E(buffer != nullptr && buffer->memory_->GetSize() > 0, nullptr, "buffer or memory is nullptr");
+    FALSE_RETURN_V_MSG_E(buffer != nullptr && buffer->memory_ != nullptr
+        && buffer->memory_->GetSize() > 0, nullptr, "buffer or memory is nullptr");
     std::shared_ptr<Meta> meta = buffer->meta_;
     std::vector<uint8_t> metaData;
     FALSE_RETURN_V_MSG_W(meta == nullptr || !meta->GetData(Tag::OH_MD_KEY_AUDIO_VIVID_METADATA, metaData), nullptr,
@@ -565,6 +567,8 @@ bool LppAudioRenderAdapter::CopyBufferData(AudioStandard::BufferDesc &bufferDesc
     FALSE_RETURN_V_MSG(bufferDesc.buffer != nullptr, false, "Audio bufferDesc is nullptr");
     FALSE_RETURN_V_MSG(buffer != nullptr && buffer->memory_ != nullptr, false, "AVBuffer is nullptr");
     size_t availableSize = cacheBufferSize > size ? size : cacheBufferSize;
+    FALSE_RETURN_V_MSG(bufferDesc.dataLength >= 0 && currentQueuedBufferOffset_ >= 0,
+        false, "bufferDesc.dataLength or currentQueuedBufferOffset_ is less than 0.");
     auto ret = memcpy_s(bufferDesc.buffer + bufferDesc.dataLength, availableSize,
         buffer->memory_->GetAddr() + currentQueuedBufferOffset_, availableSize);
     FALSE_RETURN_V_MSG(ret == 0, false, "copy from cache buffer may fail.");
@@ -586,6 +590,9 @@ bool LppAudioRenderAdapter::CopyAudioVividBufferData(AudioStandard::BufferDesc &
 {
     FALSE_RETURN_V_MSG(bufferDesc.buffer != nullptr, false, "Audio bufferDesc is nullptr");
     FALSE_RETURN_V_MSG(buffer != nullptr && buffer->memory_ != nullptr, false, "AVBuffer is nullptr");
+
+    FALSE_RETURN_V_MSG(bufferDesc.dataLength >= 0 && currentQueuedBufferOffset_ >= 0,
+        false, "bufferDesc.dataLength or currentQueuedBufferOffset_ is less than 0.");
     auto ret = memcpy_s(bufferDesc.buffer + bufferDesc.dataLength, cacheBufferSize,
         buffer->memory_->GetAddr() + currentQueuedBufferOffset_, cacheBufferSize);
     FALSE_RETURN_V_MSG(ret == 0, false, "copy from cache buffer may fail.");
