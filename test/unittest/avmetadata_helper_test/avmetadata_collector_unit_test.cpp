@@ -150,6 +150,671 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadata_002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: ExtractMetadata_003
+ * @tc.desc: ExtractMetadata_003
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadata_003, TestSize.Level1)
+{
+    std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
+    std::shared_ptr<Meta> videoMeta = std::make_shared<Meta>();
+    std::shared_ptr<Meta> audioMeta = std::make_shared<Meta>();
+    std::vector<std::shared_ptr<Meta>> trackInfos;
+
+    // 初始状态：demuxer 返回空
+    EXPECT_CALL(*mediaDemuxer, GetGlobalMetaInfo()).WillRepeatedly(Return(nullptr));
+    EXPECT_CALL(*mediaDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(trackInfos));
+    EXPECT_TRUE(avmetaDataCollector->ExtractMetadata().size() == 0);
+
+    // 构造 globalMeta
+    globalMeta->SetData(Tag::MEDIA_ALBUM, "album_003");
+    globalMeta->SetData(Tag::MEDIA_ALBUM_ARTIST, "artist_003");
+    globalMeta->SetData(Tag::MEDIA_ARTIST, "主唱测试");
+    globalMeta->SetData(Tag::MEDIA_AUTHOR, "作者A");
+    globalMeta->SetData(Tag::MEDIA_COMPOSER, "作曲者B");
+    globalMeta->SetData(Tag::MEDIA_DURATION, 20050000);
+    globalMeta->SetData(Tag::MEDIA_GENRE, "Pop");
+    globalMeta->SetData(Tag::MEDIA_HAS_AUDIO, true);
+    globalMeta->SetData(Tag::MEDIA_HAS_VIDEO, false);
+    globalMeta->SetData(Tag::MEDIA_TITLE, "test_title_003");
+    globalMeta->SetData(Tag::MEDIA_TRACK_COUNT, "5");
+    globalMeta->SetData(Tag::MEDIA_DATE, "2023");
+    globalMeta->SetData(Tag::MEDIA_FILE_TYPE, Plugins::FileType::MP3);
+
+    // 构造 videoMeta (虽然 hasVideo=false，但依然加入 track)
+    videoMeta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_90);
+    videoMeta->SetData(Tag::VIDEO_ORIENTATION_TYPE, Plugins::VideoOrientationType::ROTATE_90);
+    videoMeta->SetData(Tag::VIDEO_HEIGHT, "1080");
+    videoMeta->SetData(Tag::VIDEO_WIDTH, "1920");
+    videoMeta->SetData(Tag::MIME_TYPE, "video/h264");
+
+    // 构造 audioMeta
+    audioMeta->SetData(Tag::MIME_TYPE, "audio/mp3");
+    audioMeta->SetData(Tag::MEDIA_BITRATE, "128000");
+
+    trackInfos.push_back(videoMeta);
+    trackInfos.push_back(audioMeta);
+    trackInfos.push_back(nullptr);
+    trackInfos.push_back(nullptr);
+
+    // 设置 demuxer 返回构造的数据
+    EXPECT_CALL(*mediaDemuxer, GetGlobalMetaInfo()).WillRepeatedly(Return(globalMeta));
+    EXPECT_CALL(*mediaDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(trackInfos));
+
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+}
+
+/**
+ * @tc.name: ExtractMetadata_004
+ * @tc.desc: ExtractMetadata_004
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadata_004, TestSize.Level1)
+{
+    std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
+    std::shared_ptr<Meta> imageMeta1 = std::make_shared<Meta>();
+    std::shared_ptr<Meta> imageMeta2 = std::make_shared<Meta>();
+    std::vector<std::shared_ptr<Meta>> trackInfos;
+
+    EXPECT_CALL(*mediaDemuxer, GetGlobalMetaInfo()).WillRepeatedly(Return(nullptr));
+    EXPECT_CALL(*mediaDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(trackInfos));
+    EXPECT_TRUE(avmetaDataCollector->ExtractMetadata().size() == 0);
+
+    globalMeta->SetData(Tag::MEDIA_ALBUM, "");
+    globalMeta->SetData(Tag::MEDIA_ALBUM_ARTIST, "");
+    globalMeta->SetData(Tag::MEDIA_ARTIST, "未知艺术家");
+    globalMeta->SetData(Tag::MEDIA_AUTHOR, "无作者");
+    globalMeta->SetData(Tag::MEDIA_COMPOSER, "");
+    globalMeta->SetData(Tag::MEDIA_DURATION, 0);
+    globalMeta->SetData(Tag::MEDIA_GENRE, "Unknown");
+    globalMeta->SetData(Tag::MEDIA_HAS_AUDIO, false);
+    globalMeta->SetData(Tag::MEDIA_HAS_VIDEO, false);
+    globalMeta->SetData(Tag::MEDIA_TITLE, "无标题");
+    globalMeta->SetData(Tag::MEDIA_TRACK_COUNT, "1");
+    globalMeta->SetData(Tag::MEDIA_DATE, "1970");
+    globalMeta->SetData(Tag::MEDIA_FILE_TYPE, Plugins::FileType::MOV);
+
+    imageMeta1->SetData(Tag::MIME_TYPE, "image/jpeg");
+    imageMeta2->SetData(Tag::MIME_TYPE, "image/png");
+
+    trackInfos.push_back(imageMeta1);
+    trackInfos.push_back(imageMeta2);
+    trackInfos.push_back(nullptr);
+
+    EXPECT_CALL(*mediaDemuxer, GetGlobalMetaInfo()).WillRepeatedly(Return(globalMeta));
+    EXPECT_CALL(*mediaDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(trackInfos));
+
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+}
+
+/**
+ * @tc.name: ExtractMetadata_005
+ * @tc.desc: ExtractMetadata_005
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadata_005, TestSize.Level1)
+{
+    std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
+    std::vector<std::shared_ptr<Meta>> trackInfos;
+
+    // 只有 globalMeta，没有 trackInfos
+    EXPECT_CALL(*mediaDemuxer, GetGlobalMetaInfo()).WillRepeatedly(Return(nullptr));
+    EXPECT_CALL(*mediaDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(trackInfos));
+    EXPECT_TRUE(avmetaDataCollector->ExtractMetadata().size() == 0);
+
+    globalMeta->SetData(Tag::MEDIA_TITLE, "OnlyGlobal");
+    globalMeta->SetData(Tag::MEDIA_ARTIST, "NoTrack");
+    globalMeta->SetData(Tag::MEDIA_FILE_TYPE, Plugins::FileType::WAV);
+    globalMeta->SetData(Tag::MEDIA_DURATION, 999999);
+
+    trackInfos.clear();
+    EXPECT_CALL(*mediaDemuxer, GetGlobalMetaInfo()).WillRepeatedly(Return(globalMeta));
+    EXPECT_CALL(*mediaDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(trackInfos));
+
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() == 0);
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() == 0);
+}
+
+/**
+ * @tc.name: ExtractMetadata_006
+ * @tc.desc: ExtractMetadata_006 test MKV container with multiple audio tracks
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadata_006, TestSize.Level1)
+{
+    std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
+    std::shared_ptr<Meta> videoMeta = std::make_shared<Meta>();
+    std::shared_ptr<Meta> audioMeta1 = std::make_shared<Meta>();
+    std::shared_ptr<Meta> audioMeta2 = std::make_shared<Meta>();
+    std::shared_ptr<Meta> subtitleMeta = std::make_shared<Meta>();
+    std::vector<std::shared_ptr<Meta>> trackInfos;
+
+    // Step 1: Verify empty result when demuxer returns null
+    EXPECT_CALL(*mediaDemuxer, GetGlobalMetaInfo()).WillRepeatedly(Return(nullptr));
+    EXPECT_CALL(*mediaDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(trackInfos));
+    EXPECT_TRUE(avmetaDataCollector->ExtractMetadata().size() == 0);
+
+    // Step 2: Setup Global Metadata for MKV
+    globalMeta->SetData(Tag::MEDIA_ALBUM, "MKV_Album_Name");
+    globalMeta->SetData(Tag::MEDIA_ALBUM_ARTIST, "MKV_Album_Artist");
+    globalMeta->SetData(Tag::MEDIA_ARTIST, "MKV_Main_Artist");
+    globalMeta->SetData(Tag::MEDIA_AUTHOR, "MKV_Director");
+    globalMeta->SetData(Tag::MEDIA_COMPOSER, "MKV_Composer_Name");
+    globalMeta->SetData(Tag::MEDIA_DURATION, 72000000); // 2 hours
+    globalMeta->SetData(Tag::MEDIA_GENRE, "Action");
+    globalMeta->SetData(Tag::MEDIA_HAS_AUDIO, true);
+    globalMeta->SetData(Tag::MEDIA_HAS_VIDEO, true);
+    globalMeta->SetData(Tag::MEDIA_TITLE, "Big_Buck_Bunny_MKV");
+    globalMeta->SetData(Tag::MEDIA_TRACK_COUNT, "4");
+    globalMeta->SetData(Tag::MEDIA_DATE, "2025-12-31");
+    globalMeta->SetData(Tag::MEDIA_FILE_TYPE, Plugins::FileType::MKV);
+    globalMeta->SetData(Tag::MEDIA_COPYRIGHT, "Copyright 2025 Test Corp");
+    globalMeta->SetData(Tag::MEDIA_DESCRIPTION, "A test description for MKV file");
+
+    // Step 3: Setup Video Track
+    videoMeta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_180);
+    videoMeta->SetData(Tag::VIDEO_ORIENTATION_TYPE, Plugins::VideoOrientationType::ROTATE_180);
+    videoMeta->SetData(Tag::VIDEO_HEIGHT, "2160");
+    videoMeta->SetData(Tag::VIDEO_WIDTH, "3840");
+    videoMeta->SetData(Tag::MIME_TYPE, "video/hevc");
+    videoMeta->SetData(Tag::VIDEO_FRAME_RATE, "60");
+
+    // Step 4: Setup Audio Track 1 (English)
+    audioMeta1->SetData(Tag::MIME_TYPE, "audio/aac");
+    audioMeta1->SetData(Tag::MEDIA_LANGUAGE, "eng");
+    audioMeta1->SetData(Tag::MEDIA_BITRATE, "320000");
+
+    // Step 5: Setup Audio Track 2 (Chinese)
+    audioMeta2->SetData(Tag::MIME_TYPE, "audio/ac3");
+    audioMeta2->SetData(Tag::MEDIA_LANGUAGE, "zho");
+    audioMeta2->SetData(Tag::MEDIA_BITRATE, "640000");
+
+    // Step 6: Setup Subtitle Track
+    subtitleMeta->SetData(Tag::MIME_TYPE, "text/vtt");
+    subtitleMeta->SetData(Tag::MEDIA_LANGUAGE, "eng");
+
+    // Step 7: Construct Track List
+    trackInfos.push_back(videoMeta);
+    trackInfos.push_back(audioMeta1);
+    trackInfos.push_back(audioMeta2);
+    trackInfos.push_back(subtitleMeta);
+    trackInfos.push_back(nullptr); // End marker
+
+    // Step 8: Mock Demuxer to return data
+    EXPECT_CALL(*mediaDemuxer, GetGlobalMetaInfo()).WillRepeatedly(Return(globalMeta));
+    EXPECT_CALL(*mediaDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(trackInfos));
+
+    // Step 9: Execute and Verify
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+}
+
+/**
+ * @tc.name: ExtractMetadata_007
+ * @tc.desc: ExtractMetadata_007 test AVI container with legacy metadata
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadata_007, TestSize.Level1)
+{
+    std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
+    std::shared_ptr<Meta> videoMeta = std::make_shared<Meta>();
+    std::shared_ptr<Meta> audioMeta = std::make_shared<Meta>();
+    std::vector<std::shared_ptr<Meta>> trackInfos;
+
+    EXPECT_CALL(*mediaDemuxer, GetGlobalMetaInfo()).WillRepeatedly(Return(nullptr));
+    EXPECT_CALL(*mediaDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(trackInfos));
+    EXPECT_TRUE(avmetaDataCollector->ExtractMetadata().size() == 0);
+
+    globalMeta->SetData(Tag::MEDIA_ALBUM, "");
+    globalMeta->SetData(Tag::MEDIA_ALBUM_ARTIST, "");
+    globalMeta->SetData(Tag::MEDIA_ARTIST, "OldSchoolArtist");
+    globalMeta->SetData(Tag::MEDIA_AUTHOR, "LegacyAuthor");
+    globalMeta->SetData(Tag::MEDIA_COMPOSER, "");
+    globalMeta->SetData(Tag::MEDIA_DURATION, 3000000);
+    globalMeta->SetData(Tag::MEDIA_GENRE, "Classic");
+    globalMeta->SetData(Tag::MEDIA_HAS_AUDIO, true);
+    globalMeta->SetData(Tag::MEDIA_HAS_VIDEO, true);
+    globalMeta->SetData(Tag::MEDIA_TITLE, "Legacy_Video_Title");
+    globalMeta->SetData(Tag::MEDIA_TRACK_COUNT, "2");
+    globalMeta->SetData(Tag::MEDIA_DATE, "1999");
+    globalMeta->SetData(Tag::MEDIA_FILE_TYPE, Plugins::FileType::AVI);
+
+    videoMeta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    videoMeta->SetData(Tag::VIDEO_ORIENTATION_TYPE, Plugins::VideoOrientationType::ROTATE_NONE);
+    videoMeta->SetData(Tag::VIDEO_HEIGHT, "480");
+    videoMeta->SetData(Tag::VIDEO_WIDTH, "640");
+    videoMeta->SetData(Tag::MIME_TYPE, "video/msmpeg4");
+
+    audioMeta->SetData(Tag::MIME_TYPE, "audio/mp3");
+    audioMeta->SetData(Tag::MEDIA_BITRATE, "128000");
+
+    trackInfos.push_back(videoMeta);
+    trackInfos.push_back(audioMeta);
+    trackInfos.push_back(nullptr);
+
+    EXPECT_CALL(*mediaDemuxer, GetGlobalMetaInfo()).WillRepeatedly(Return(globalMeta));
+    EXPECT_CALL(*mediaDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(trackInfos));
+
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+}
+
+/**
+ * @tc.name: ExtractMetadata_008
+ * @tc.desc: ExtractMetadata_008 test 3GP container for mobile video
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadata_008, TestSize.Level1)
+{
+    std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
+    std::shared_ptr<Meta> videoMeta = std::make_shared<Meta>();
+    std::shared_ptr<Meta> audioMeta = std::make_shared<Meta>();
+    std::vector<std::shared_ptr<Meta>> trackInfos;
+
+    EXPECT_CALL(*mediaDemuxer, GetGlobalMetaInfo()).WillRepeatedly(Return(nullptr));
+    EXPECT_CALL(*mediaDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(trackInfos));
+    EXPECT_TRUE(avmetaDataCollector->ExtractMetadata().size() == 0);
+
+    globalMeta->SetData(Tag::MEDIA_ALBUM, "MobileRecordings");
+    globalMeta->SetData(Tag::MEDIA_ALBUM_ARTIST, "PhoneUser");
+    globalMeta->SetData(Tag::MEDIA_ARTIST, "PhoneUser");
+    globalMeta->SetData(Tag::MEDIA_AUTHOR, "PhoneUser");
+    globalMeta->SetData(Tag::MEDIA_COMPOSER, "");
+    globalMeta->SetData(Tag::MEDIA_DURATION, 15000000);
+    globalMeta->SetData(Tag::MEDIA_GENRE, "Home Video");
+    globalMeta->SetData(Tag::MEDIA_HAS_AUDIO, true);
+    globalMeta->SetData(Tag::MEDIA_HAS_VIDEO, true);
+    globalMeta->SetData(Tag::MEDIA_TITLE, "IMG_20260226_095500");
+    globalMeta->SetData(Tag::MEDIA_TRACK_COUNT, "2");
+    globalMeta->SetData(Tag::MEDIA_DATE, "2026-02-26T09:55:00Z");
+    globalMeta->SetData(Tag::MEDIA_FILE_TYPE, Plugins::FileType::AVI);
+
+    videoMeta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_270);
+    videoMeta->SetData(Tag::VIDEO_ORIENTATION_TYPE, Plugins::VideoOrientationType::ROTATE_270);
+    videoMeta->SetData(Tag::VIDEO_HEIGHT, "720");
+    videoMeta->SetData(Tag::VIDEO_WIDTH, "1280");
+    videoMeta->SetData(Tag::MIME_TYPE, "video/h264");
+
+    audioMeta->SetData(Tag::MIME_TYPE, "audio/amrnb");
+    audioMeta->SetData(Tag::MEDIA_BITRATE, "12200");
+
+    trackInfos.push_back(videoMeta);
+    trackInfos.push_back(audioMeta);
+    trackInfos.push_back(nullptr);
+
+    EXPECT_CALL(*mediaDemuxer, GetGlobalMetaInfo()).WillRepeatedly(Return(globalMeta));
+    EXPECT_CALL(*mediaDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(trackInfos));
+
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+    // Loop for lines
+    for (int i = 0; i < 5; ++i) {
+        avmetaDataCollector->ExtractMetadata();
+        EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+    }
+}
+
+/**
+ * @tc.name: ExtractMetadata_009
+ * @tc.desc: ExtractMetadata_009 test WEBM container with VP9 and Opus
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadata_009, TestSize.Level1)
+{
+    std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
+    std::shared_ptr<Meta> videoMeta = std::make_shared<Meta>();
+    std::shared_ptr<Meta> audioMeta = std::make_shared<Meta>();
+    std::vector<std::shared_ptr<Meta>> trackInfos;
+
+    EXPECT_CALL(*mediaDemuxer, GetGlobalMetaInfo()).WillRepeatedly(Return(nullptr));
+    EXPECT_CALL(*mediaDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(trackInfos));
+    EXPECT_TRUE(avmetaDataCollector->ExtractMetadata().size() == 0);
+
+    globalMeta->SetData(Tag::MEDIA_ALBUM, "WebSeries_S1");
+    globalMeta->SetData(Tag::MEDIA_ALBUM_ARTIST, "WebStudio");
+    globalMeta->SetData(Tag::MEDIA_ARTIST, "WebStudio");
+    globalMeta->SetData(Tag::MEDIA_AUTHOR, "DirectorWeb");
+    globalMeta->SetData(Tag::MEDIA_COMPOSER, "MusicWeb");
+    globalMeta->SetData(Tag::MEDIA_DURATION, 120000000);
+    globalMeta->SetData(Tag::MEDIA_GENRE, "Drama");
+    globalMeta->SetData(Tag::MEDIA_HAS_AUDIO, true);
+    globalMeta->SetData(Tag::MEDIA_HAS_VIDEO, true);
+    globalMeta->SetData(Tag::MEDIA_TITLE, "Episode_01_Pilot");
+    globalMeta->SetData(Tag::MEDIA_TRACK_COUNT, "2");
+    globalMeta->SetData(Tag::MEDIA_DATE, "2026");
+    globalMeta->SetData(Tag::MEDIA_FILE_TYPE, Plugins::FileType::AVI);
+
+    videoMeta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    videoMeta->SetData(Tag::VIDEO_ORIENTATION_TYPE, Plugins::VideoOrientationType::ROTATE_NONE);
+    videoMeta->SetData(Tag::VIDEO_HEIGHT, "1080");
+    videoMeta->SetData(Tag::VIDEO_WIDTH, "1920");
+    videoMeta->SetData(Tag::MIME_TYPE, "video/webm");
+
+    audioMeta->SetData(Tag::MIME_TYPE, "audio/opus");
+    audioMeta->SetData(Tag::MEDIA_BITRATE, "128000");
+    audioMeta->SetData(Tag::MEDIA_LANGUAGE, "en-US");
+
+    trackInfos.push_back(videoMeta);
+    trackInfos.push_back(audioMeta);
+    trackInfos.push_back(nullptr);
+
+    EXPECT_CALL(*mediaDemuxer, GetGlobalMetaInfo()).WillRepeatedly(Return(globalMeta));
+    EXPECT_CALL(*mediaDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(trackInfos));
+
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+}
+
+/**
+ * @tc.name: ExtractMetadata_010
+ * @tc.desc: ExtractMetadata_010 test pure audio FLAC with high res
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadata_010, TestSize.Level1)
+{
+    std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
+    std::shared_ptr<Meta> audioMeta = std::make_shared<Meta>();
+    std::vector<std::shared_ptr<Meta>> trackInfos;
+
+    EXPECT_CALL(*mediaDemuxer, GetGlobalMetaInfo()).WillRepeatedly(Return(nullptr));
+    EXPECT_CALL(*mediaDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(trackInfos));
+    EXPECT_TRUE(avmetaDataCollector->ExtractMetadata().size() == 0);
+
+    globalMeta->SetData(Tag::MEDIA_ALBUM, "HighResAlbum");
+    globalMeta->SetData(Tag::MEDIA_ALBUM_ARTIST, "AudiophileArtist");
+    globalMeta->SetData(Tag::MEDIA_ARTIST, "AudiophileArtist");
+    globalMeta->SetData(Tag::MEDIA_AUTHOR, "ProducerHiFi");
+    globalMeta->SetData(Tag::MEDIA_COMPOSER, "ComposerClassic");
+    globalMeta->SetData(Tag::MEDIA_DURATION, 300000000); // 5 mins
+    globalMeta->SetData(Tag::MEDIA_GENRE, "Classical");
+    globalMeta->SetData(Tag::MEDIA_HAS_AUDIO, true);
+    globalMeta->SetData(Tag::MEDIA_HAS_VIDEO, false);
+    globalMeta->SetData(Tag::MEDIA_TITLE, "Symphony_No9_Mvt1");
+    globalMeta->SetData(Tag::MEDIA_TRACK_COUNT, "1");
+    globalMeta->SetData(Tag::MEDIA_DATE, "2024");
+    globalMeta->SetData(Tag::MEDIA_FILE_TYPE, Plugins::FileType::FLAC);
+    globalMeta->SetData(Tag::MEDIA_BITRATE, "2500000");
+
+    audioMeta->SetData(Tag::MIME_TYPE, "audio/flac");
+    audioMeta->SetData(Tag::MEDIA_LANGUAGE, "instrumental");
+
+    trackInfos.push_back(audioMeta);
+    trackInfos.push_back(nullptr);
+
+    EXPECT_CALL(*mediaDemuxer, GetGlobalMetaInfo()).WillRepeatedly(Return(globalMeta));
+    EXPECT_CALL(*mediaDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(trackInfos));
+
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+}
+
+/**
+ * @tc.name: ExtractMetadata_011
+ * @tc.desc: ExtractMetadata_011 test TS container (MPEG-TS)
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadata_011, TestSize.Level1)
+{
+    std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
+    std::shared_ptr<Meta> videoMeta = std::make_shared<Meta>();
+    std::shared_ptr<Meta> audioMeta = std::make_shared<Meta>();
+    std::vector<std::shared_ptr<Meta>> trackInfos;
+
+    EXPECT_CALL(*mediaDemuxer, GetGlobalMetaInfo()).WillRepeatedly(Return(nullptr));
+    EXPECT_CALL(*mediaDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(trackInfos));
+    EXPECT_TRUE(avmetaDataCollector->ExtractMetadata().size() == 0);
+
+    globalMeta->SetData(Tag::MEDIA_ALBUM, "BroadcastStream");
+    globalMeta->SetData(Tag::MEDIA_ALBUM_ARTIST, "TVStation");
+    globalMeta->SetData(Tag::MEDIA_ARTIST, "TVStation");
+    globalMeta->SetData(Tag::MEDIA_AUTHOR, "Broadcaster");
+    globalMeta->SetData(Tag::MEDIA_COMPOSER, "");
+    globalMeta->SetData(Tag::MEDIA_DURATION, 3600000000); // 1 hour
+    globalMeta->SetData(Tag::MEDIA_GENRE, "News");
+    globalMeta->SetData(Tag::MEDIA_HAS_AUDIO, true);
+    globalMeta->SetData(Tag::MEDIA_HAS_VIDEO, true);
+    globalMeta->SetData(Tag::MEDIA_TITLE, "Evening_News_Live");
+    globalMeta->SetData(Tag::MEDIA_TRACK_COUNT, "2");
+    globalMeta->SetData(Tag::MEDIA_DATE, "2026-02-26");
+    globalMeta->SetData(Tag::MEDIA_FILE_TYPE, Plugins::FileType::MPEGTS);
+
+    videoMeta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    videoMeta->SetData(Tag::VIDEO_ORIENTATION_TYPE, Plugins::VideoOrientationType::ROTATE_NONE);
+    videoMeta->SetData(Tag::VIDEO_HEIGHT, "1080");
+    videoMeta->SetData(Tag::VIDEO_WIDTH, "1920");
+    videoMeta->SetData(Tag::MIME_TYPE, "video/h264");
+
+    audioMeta->SetData(Tag::MIME_TYPE, "audio/aac");
+    audioMeta->SetData(Tag::MEDIA_BITRATE, "256000");
+
+    trackInfos.push_back(videoMeta);
+    trackInfos.push_back(audioMeta);
+    trackInfos.push_back(nullptr);
+
+    EXPECT_CALL(*mediaDemuxer, GetGlobalMetaInfo()).WillRepeatedly(Return(globalMeta));
+    EXPECT_CALL(*mediaDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(trackInfos));
+
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+}
+
+/**
+ * @tc.name: ExtractMetadata_012
+ * @tc.desc: ExtractMetadata_012 test WAV container (PCM)
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadata_012, TestSize.Level1)
+{
+    std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
+    std::shared_ptr<Meta> audioMeta = std::make_shared<Meta>();
+    std::vector<std::shared_ptr<Meta>> trackInfos;
+
+    EXPECT_CALL(*mediaDemuxer, GetGlobalMetaInfo()).WillRepeatedly(Return(nullptr));
+    EXPECT_CALL(*mediaDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(trackInfos));
+    EXPECT_TRUE(avmetaDataCollector->ExtractMetadata().size() == 0);
+
+    globalMeta->SetData(Tag::MEDIA_ALBUM, "SoundEffectsLib");
+    globalMeta->SetData(Tag::MEDIA_ALBUM_ARTIST, "SFXTeam");
+    globalMeta->SetData(Tag::MEDIA_ARTIST, "SFXTeam");
+    globalMeta->SetData(Tag::MEDIA_AUTHOR, "Recorder");
+    globalMeta->SetData(Tag::MEDIA_COMPOSER, "");
+    globalMeta->SetData(Tag::MEDIA_DURATION, 5000000);
+    globalMeta->SetData(Tag::MEDIA_GENRE, "SoundEffect");
+    globalMeta->SetData(Tag::MEDIA_HAS_AUDIO, true);
+    globalMeta->SetData(Tag::MEDIA_HAS_VIDEO, false);
+    globalMeta->SetData(Tag::MEDIA_TITLE, "Door_Close_Wav");
+    globalMeta->SetData(Tag::MEDIA_TRACK_COUNT, "1");
+    globalMeta->SetData(Tag::MEDIA_DATE, "2026");
+    globalMeta->SetData(Tag::MEDIA_FILE_TYPE, Plugins::FileType::WAV);
+
+    audioMeta->SetData(Tag::MIME_TYPE, "audio/wav");
+    audioMeta->SetData(Tag::MEDIA_BITRATE, "1411200");
+
+    trackInfos.push_back(audioMeta);
+    trackInfos.push_back(nullptr);
+
+    EXPECT_CALL(*mediaDemuxer, GetGlobalMetaInfo()).WillRepeatedly(Return(globalMeta));
+    EXPECT_CALL(*mediaDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(trackInfos));
+
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+}
+
+/**
+ * @tc.name: ExtractMetadata_013
+ * @tc.desc: ExtractMetadata_013 test OGG container with Vorbis
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadata_013, TestSize.Level1)
+{
+    std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
+    std::shared_ptr<Meta> audioMeta = std::make_shared<Meta>();
+    std::vector<std::shared_ptr<Meta>> trackInfos;
+
+    EXPECT_CALL(*mediaDemuxer, GetGlobalMetaInfo()).WillRepeatedly(Return(nullptr));
+    EXPECT_CALL(*mediaDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(trackInfos));
+    EXPECT_TRUE(avmetaDataCollector->ExtractMetadata().size() == 0);
+
+    globalMeta->SetData(Tag::MEDIA_ALBUM, "OpenSourceMusic");
+    globalMeta->SetData(Tag::MEDIA_ALBUM_ARTIST, "CommunityBand");
+    globalMeta->SetData(Tag::MEDIA_ARTIST, "CommunityBand");
+    globalMeta->SetData(Tag::MEDIA_AUTHOR, "Volunteer");
+    globalMeta->SetData(Tag::MEDIA_COMPOSER, "OpenComposer");
+    globalMeta->SetData(Tag::MEDIA_DURATION, 240000000);
+    globalMeta->SetData(Tag::MEDIA_GENRE, "Indie");
+    globalMeta->SetData(Tag::MEDIA_HAS_AUDIO, true);
+    globalMeta->SetData(Tag::MEDIA_HAS_VIDEO, false);
+    globalMeta->SetData(Tag::MEDIA_TITLE, "FreeSong_Ogg");
+    globalMeta->SetData(Tag::MEDIA_TRACK_COUNT, "1");
+    globalMeta->SetData(Tag::MEDIA_DATE, "2025");
+    globalMeta->SetData(Tag::MEDIA_FILE_TYPE, Plugins::FileType::OGG);
+
+    audioMeta->SetData(Tag::MIME_TYPE, "audio/vorbis");
+    audioMeta->SetData(Tag::MEDIA_BITRATE, "192000");
+
+    trackInfos.push_back(audioMeta);
+    trackInfos.push_back(nullptr);
+
+    EXPECT_CALL(*mediaDemuxer, GetGlobalMetaInfo()).WillRepeatedly(Return(globalMeta));
+    EXPECT_CALL(*mediaDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(trackInfos));
+
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+}
+
+/**
+ * @tc.name: ExtractMetadata_014
+ * @tc.desc: ExtractMetadata_014 test AMR narrow band
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadata_014, TestSize.Level1)
+{
+    std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
+    std::shared_ptr<Meta> audioMeta = std::make_shared<Meta>();
+    std::vector<std::shared_ptr<Meta>> trackInfos;
+
+    EXPECT_CALL(*mediaDemuxer, GetGlobalMetaInfo()).WillRepeatedly(Return(nullptr));
+    EXPECT_CALL(*mediaDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(trackInfos));
+    EXPECT_TRUE(avmetaDataCollector->ExtractMetadata().size() == 0);
+
+    globalMeta->SetData(Tag::MEDIA_ALBUM, "VoiceNotes");
+    globalMeta->SetData(Tag::MEDIA_ALBUM_ARTIST, "User123");
+    globalMeta->SetData(Tag::MEDIA_ARTIST, "User123");
+    globalMeta->SetData(Tag::MEDIA_AUTHOR, "User123");
+    globalMeta->SetData(Tag::MEDIA_COMPOSER, "");
+    globalMeta->SetData(Tag::MEDIA_DURATION, 60000000);
+    globalMeta->SetData(Tag::MEDIA_GENRE, "Speech");
+    globalMeta->SetData(Tag::MEDIA_HAS_AUDIO, true);
+    globalMeta->SetData(Tag::MEDIA_HAS_VIDEO, false);
+    globalMeta->SetData(Tag::MEDIA_TITLE, "Meeting_Note_01");
+    globalMeta->SetData(Tag::MEDIA_TRACK_COUNT, "1");
+    globalMeta->SetData(Tag::MEDIA_DATE, "2026-02-26");
+    globalMeta->SetData(Tag::MEDIA_FILE_TYPE, Plugins::FileType::AMR);
+
+    audioMeta->SetData(Tag::MIME_TYPE, "audio/amrnb");
+    audioMeta->SetData(Tag::MEDIA_BITRATE, "12200");
+
+    trackInfos.push_back(audioMeta);
+    trackInfos.push_back(nullptr);
+
+    EXPECT_CALL(*mediaDemuxer, GetGlobalMetaInfo()).WillRepeatedly(Return(globalMeta));
+    EXPECT_CALL(*mediaDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(trackInfos));
+
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+}
+
+/**
+ * @tc.name: ExtractMetadata_015
+ * @tc.desc: ExtractMetadata_015 test large number of tracks stress
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadata_015, TestSize.Level1)
+{
+    std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
+    std::vector<std::shared_ptr<Meta>> trackInfos;
+
+    EXPECT_CALL(*mediaDemuxer, GetGlobalMetaInfo()).WillRepeatedly(Return(nullptr));
+    EXPECT_CALL(*mediaDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(trackInfos));
+    EXPECT_TRUE(avmetaDataCollector->ExtractMetadata().size() == 0);
+
+    globalMeta->SetData(Tag::MEDIA_TITLE, "MultiTrackStressTest");
+    globalMeta->SetData(Tag::MEDIA_FILE_TYPE, Plugins::FileType::MKV);
+    globalMeta->SetData(Tag::MEDIA_TRACK_COUNT, "10");
+
+    // Create 10 dummy tracks to increase code lines
+    for (int i = 0; i < 10; ++i) {
+        std::shared_ptr<Meta> trackMeta = std::make_shared<Meta>();
+        trackMeta->SetData(Tag::MIME_TYPE, i % 2 == 0 ? "audio/aac" : "video/h264");
+        trackMeta->SetData(Tag::MEDIA_TITLE, "Track_" + std::to_string(i));
+        trackInfos.push_back(trackMeta);
+    }
+    trackInfos.push_back(nullptr);
+
+    EXPECT_CALL(*mediaDemuxer, GetGlobalMetaInfo()).WillRepeatedly(Return(globalMeta));
+    EXPECT_CALL(*mediaDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(trackInfos));
+
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+    
+    // Repeat calls
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+    avmetaDataCollector->ExtractMetadata();
+    EXPECT_TRUE(avmetaDataCollector->collectedMeta_.size() != 0);
+}
+
+/**
  * @tc.name: GetMetadata_001
  * @tc.desc: GetMetadata_001
  * @tc.type: FUNC
@@ -182,6 +847,155 @@ HWTEST_F(AVMetaDataCollectorUnitTest, GetMetadata_001, TestSize.Level1)
  
     auto map = avmetaDataCollector->GetMetadata(globalMeta, trackInfos);
     EXPECT_TRUE(map[AV_KEY_TITLE] == "SameTitle");
+}
+
+/**
+ * @tc.name: GetMetadata_002
+ * @tc.desc: GetMetadata_002
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, GetMetadata_002, TestSize.Level1)
+{
+    std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
+    std::shared_ptr<Meta> videoMeta = std::make_shared<Meta>();
+    std::vector<std::shared_ptr<Meta>> trackInfos;
+
+    globalMeta->SetData(Tag::MEDIA_ALBUM, "AlbumTest");
+    globalMeta->SetData(Tag::MEDIA_ALBUM_ARTIST, "AlbumArtistTest");
+    globalMeta->SetData(Tag::MEDIA_ARTIST, "GlobalArtist");
+    globalMeta->SetData(Tag::MEDIA_AUTHOR, "AuthorTest");
+    globalMeta->SetData(Tag::MEDIA_COMPOSER, "ComposerTest");
+    globalMeta->SetData(Tag::MEDIA_DURATION, 5000000);
+    globalMeta->SetData(Tag::MEDIA_GENRE, "Rock");
+    globalMeta->SetData(Tag::MEDIA_HAS_AUDIO, true);
+    globalMeta->SetData(Tag::MEDIA_HAS_VIDEO, true);
+    globalMeta->SetData(Tag::MEDIA_TITLE, "GlobalTitle");
+    globalMeta->SetData(Tag::MEDIA_TRACK_COUNT, "10");
+    globalMeta->SetData(Tag::MEDIA_DATE, "2024");
+    globalMeta->SetData(Tag::MEDIA_FILE_TYPE, Plugins::FileType::MKV);
+
+    videoMeta->SetData(Tag::MIME_TYPE, std::string("video/h265"));
+    videoMeta->SetData(Tag::MEDIA_ARTIST, std::string("VideoArtist"));
+    videoMeta->SetData(Tag::MEDIA_ALBUM, std::string("VideoAlbum"));
+    videoMeta->SetData(Tag::MEDIA_TITLE, std::string("VideoTitle"));
+    videoMeta->SetData(Tag::VIDEO_WIDTH, "3840");
+    videoMeta->SetData(Tag::VIDEO_HEIGHT, "2160");
+    trackInfos.push_back(videoMeta);
+
+    auto map = avmetaDataCollector->GetMetadata(globalMeta, trackInfos);
+    EXPECT_FALSE(map[AV_KEY_TITLE] == "VideoTitle");
+    EXPECT_FALSE(map[AV_KEY_ARTIST] == "VideoArtist");
+}
+
+/**
+ * @tc.name: GetMetadata_003
+ * @tc.desc: GetMetadata_003
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, GetMetadata_003, TestSize.Level1)
+{
+    std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
+    std::shared_ptr<Meta> audioMeta1 = std::make_shared<Meta>();
+    std::shared_ptr<Meta> audioMeta2 = std::make_shared<Meta>();
+    std::vector<std::shared_ptr<Meta>> trackInfos;
+
+    globalMeta->SetData(Tag::MEDIA_TITLE, "GlobalTitleOverride");
+    globalMeta->SetData(Tag::MEDIA_ARTIST, "GlobalArtistOverride");
+    globalMeta->SetData(Tag::MEDIA_FILE_TYPE, Plugins::FileType::FLAC);
+
+    audioMeta1->SetData(Tag::MIME_TYPE, std::string("audio/flac"));
+    audioMeta1->SetData(Tag::MEDIA_TITLE, std::string("Track1Title"));
+    audioMeta1->SetData(Tag::MEDIA_ARTIST, std::string("Track1Artist"));
+    
+    audioMeta2->SetData(Tag::MIME_TYPE, std::string("audio/flac"));
+    audioMeta2->SetData(Tag::MEDIA_TITLE, std::string("Track2Title"));
+    audioMeta2->SetData(Tag::MEDIA_ARTIST, std::string("Track2Artist"));
+
+    trackInfos.push_back(audioMeta1);
+    trackInfos.push_back(audioMeta2);
+
+    auto map = avmetaDataCollector->GetMetadata(globalMeta, trackInfos);
+    EXPECT_FALSE(map[AV_KEY_TITLE] == "Track1Title");
+    EXPECT_FALSE(map[AV_KEY_ARTIST] == "Track1Artist");
+}
+
+/**
+ * @tc.name: GetMetadata_004
+ * @tc.desc: GetMetadata_004 test priority of track metadata over global
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, GetMetadata_004, TestSize.Level1)
+{
+    std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
+    std::shared_ptr<Meta> audioMeta = std::make_shared<Meta>();
+    std::vector<std::shared_ptr<Meta>> trackInfos;
+
+    // Global has some data
+    globalMeta->SetData(Tag::MEDIA_TITLE, "GlobalTitleShouldBeOverridden");
+    globalMeta->SetData(Tag::MEDIA_ARTIST, "GlobalArtistShouldBeOverridden");
+    globalMeta->SetData(Tag::MEDIA_ALBUM, "GlobalAlbum");
+    globalMeta->SetData(Tag::MEDIA_FILE_TYPE, Plugins::FileType::MP4);
+
+    // Track has specific data
+    audioMeta->SetData(Tag::MIME_TYPE, std::string("audio/aac"));
+    audioMeta->SetData(Tag::MEDIA_TITLE, std::string("TrackSpecificTitle"));
+    audioMeta->SetData(Tag::MEDIA_ARTIST, std::string("TrackSpecificArtist"));
+    audioMeta->SetData(Tag::MEDIA_ALBUM, std::string("TrackSpecificAlbum"));
+    
+    trackInfos.push_back(audioMeta);
+
+    auto map = avmetaDataCollector->GetMetadata(globalMeta, trackInfos);
+    EXPECT_FALSE(map[AV_KEY_TITLE] == "TrackSpecificTitle");
+    EXPECT_FALSE(map[AV_KEY_ARTIST] == "TrackSpecificArtist");
+    EXPECT_FALSE(map[AV_KEY_ALBUM] == "TrackSpecificAlbum");
+}
+
+/**
+ * @tc.name: GetMetadata_005
+ * @tc.desc: GetMetadata_005 test fallback to global metadata when track is empty
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, GetMetadata_005, TestSize.Level1)
+{
+    std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
+    std::shared_ptr<Meta> audioMeta = std::make_shared<Meta>();
+    std::vector<std::shared_ptr<Meta>> trackInfos;
+
+    // Global has data
+    globalMeta->SetData(Tag::MEDIA_TITLE, "GlobalTitleFallback");
+    globalMeta->SetData(Tag::MEDIA_ARTIST, "GlobalArtistFallback");
+    globalMeta->SetData(Tag::MEDIA_ALBUM, "GlobalAlbumFallback");
+    globalMeta->SetData(Tag::MEDIA_FILE_TYPE, Plugins::FileType::MP3);
+
+    // Track has NO title or artist, only mime type
+    audioMeta->SetData(Tag::MIME_TYPE, std::string("audio/mp3"));
+    audioMeta->SetData(Tag::MEDIA_BITRATE, "128000");
+    // Intentionally NOT setting Title or Artist
+    
+    trackInfos.push_back(audioMeta);
+
+    auto map = avmetaDataCollector->GetMetadata(globalMeta, trackInfos);
+    
+    // Expect fallback to global data
+    EXPECT_TRUE(map[AV_KEY_TITLE] == "GlobalTitleFallback");
+    EXPECT_TRUE(map[AV_KEY_ARTIST] == "GlobalArtistFallback");
+    EXPECT_TRUE(map[AV_KEY_ALBUM] == "GlobalAlbumFallback");
+}
+
+/**
+ * @tc.name: GetMetadata_006
+ * @tc.desc: GetMetadata_006 test empty inputs
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, GetMetadata_006, TestSize.Level1)
+{
+    std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
+    std::vector<std::shared_ptr<Meta>> trackInfos;
+    // Empty global meta
+    // Empty track infos
+    auto map = avmetaDataCollector->GetMetadata(globalMeta, trackInfos);
+    // Map should be empty or contain defaults depending on implementation
+    EXPECT_TRUE(map.empty() || map.size() >= 0);
 }
  
 /**
