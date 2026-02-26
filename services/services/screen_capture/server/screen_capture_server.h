@@ -198,6 +198,7 @@ private:
     int32_t StartStreamVideoCapture();
     int32_t StartStreamHomeVideoCapture();
     int32_t StopScreenCaptureInner(AVScreenCaptureStateCode stateCode);
+    int32_t StopAudioAndVideoCapture();
     void StopScreenCaptureInnerUnBind();
     bool IsLastStartedPidInstance(int32_t pid);
     bool LastPidUpdatePrivacyUsingPermissionState(int32_t pid);
@@ -382,7 +383,7 @@ private:
     std::atomic<SCWindowLifecycleListener::SessionLifecycleEvent> curWindowLifecycle_ =
         SCWindowLifecycleListener::SessionLifecycleEvent::FOREGROUND;
     ScreenCaptureContentFilter contentFilter_;
-    AVScreenCaptureState captureState_ = AVScreenCaptureState::CREATED;
+    std::atomic<AVScreenCaptureState> captureState_ = AVScreenCaptureState::CREATED;
     std::shared_ptr<NotificationLocalLiveViewContent> localLiveViewContent_;
     int64_t startTime_ = 0;
     sptr<UIExtensionAbilityConnection> connection_ = nullptr;

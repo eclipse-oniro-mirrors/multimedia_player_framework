@@ -55,7 +55,6 @@ private:
     std::atomic<bool> inCall_{false};
     std::mutex mutex_;
     bool Init();
-    bool isTelephonyStateListenerDied_ = true;
     TaskQueue taskQue_;
 };
 }
