@@ -382,8 +382,8 @@ OH_AVErrCode OH_LowPowerVideoSink_GetParameter(OH_LowPowerVideoSink *sink, OH_AV
     Format format_ {};
     int32_t res = streamerObj->videoStreamer_->GetParameter(format_);
     format->format_= format_;
-    CHECK_AND_RETURN_RET_LOG(res == MSERR_OK, AV_ERR_OPERATE_NOT_PERMIT, "OH_LowPowerVideoSink_GetParameter failed");
-    return MSERR_OK;
+    CHECK_AND_RETURN_RET_LOG(res == AV_ERR_OK, AV_ERR_OPERATE_NOT_PERMIT, "OH_LowPowerVideoSink_GetParameter failed");
+    return AV_ERR_OK;
 }
 
 OH_AVErrCode OH_LowPowerVideoSink_SetVideoSurface(OH_LowPowerVideoSink *streamer, const OHNativeWindow *window)
