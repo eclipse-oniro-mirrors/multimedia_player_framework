@@ -272,7 +272,7 @@ void OH_LowPowerAudioSinkCallback::OnInfo(AudioStreamerOnInfoType type, int32_t 
             break;
         case INFO_TYPE_LPP_AUDIO_POSITION_UPDATE:
             CHECK_AND_RETURN_LOG(positionUpdatedCallback_ != nullptr, "positionUpdatedCallback_ is nullptr");
-            int64_t position;
+            long position;
             infoBody.GetLongValue(AudioStreamerKeys::LPP_CURRENT_POSITION, position);
             positionUpdatedCallback_->OnPositionUpdated(lppAudioStreamer_, position);
             break;
@@ -334,9 +334,16 @@ OH_AVErrCode OH_LowPowerAudioSink_SetParameter(OH_LowPowerAudioSink *streamer, c
 OH_AVErrCode OH_LowPowerAudioSink_GetParameter(OH_LowPowerAudioSink *sink, OH_AVFormat *format)
 {
     MEDIA_LOGD("OH_LowPowerAudioSink_GetParameter");
-    (void)sink;
-    (void)format;
-    return AV_ERR_OK;
+    CHECK_AND_RETURN_RET_LOG(sink != nullptr, AV_ERR_INVALID_VAL, "streamer is nullptr");
+    CHECK_AND_RETURN_RET_LOG(format != nullptr, AV_ERR_INVALID_VAL, "format is nullptr");
+    struct LowPowerAudioSinkObject *streamerObj = reinterpret_cast<LowPowerAudioSinkObject *>(sink);
+    CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_VAL, "audioStreamer_ is nullptr");
+    Format format_ = {};
+    int32_t res = streamerObj->audioStreamer_->GetParameter(format_);
+    format->format_= format_;
+    CHECK_AND_RETURN_RET_LOG(res == MSERR_OK, AV_ERR_OPERATE_NOT_PERMIT, "OH_LowPowerVideoSink_GetParameter failed");
+    return MSERR_OK;
 }
 
 OH_AVErrCode OH_LowPowerAudioSink_Prepare(OH_LowPowerAudioSink *streamer)
