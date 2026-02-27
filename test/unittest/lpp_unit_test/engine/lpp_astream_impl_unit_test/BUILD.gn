@@ -14,7 +14,6 @@
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
-
 module_output_path = "player_framework/player_framework/lpp_unit_test"
 
 config("lpp_astream_impl_unit_test_config") {
