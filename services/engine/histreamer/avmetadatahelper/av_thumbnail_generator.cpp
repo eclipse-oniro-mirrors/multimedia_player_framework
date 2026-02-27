@@ -370,6 +370,8 @@ std::shared_ptr<Meta> AVThumbnailGenerator::GetVideoTrackInfo()
             trackInfos[index]->Get<Tag::VIDEO_ORIENTATION_TYPE>(orientation_);
             MEDIA_LOGI("Rotation is %{public}d, orientation is %{public}d", static_cast<int32_t>(rotation_),
                 static_cast<int32_t>(orientation_));
+            trackInfos[index]->Get<Tag::ORIGINAL_CODEC_NAME>(codecMimeName_);
+            MEDIA_LOGI("ORIGINAL_CODEC_NAME is %{public}s", codecMimeName_.c_str());
 
             return trackInfos[trackIndex_];
         }
@@ -663,6 +665,11 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
     mediaDemuxer_->SelectTrack(trackIndex_);
     int64_t realSeekTime = timeUs;
     auto res = SeekToTime(Plugins::Us2Ms(timeUs), static_cast<Plugins::SeekMode>(option), realSeekTime);
+    if (res == Status::END_OF_STREAM && fileType_ == FileType::MPEGTS && codecMimeName_ == "mpeg4") {
+        std::shared_ptr<AVBuffer> mpeg4EosBuffer(AVBuffer::CreateAVBuffer());
+        mpeg4EosBuffer->flag_ = (uint32_t)(AVBufferFlag::EOS);
+        return mpeg4EosBuffer;
+    }
     CHECK_AND_RETURN_RET_LOG(res == Status::OK, nullptr, "Seek fail");
     CHECK_AND_RETURN_RET_LOG(InitDecoder() == Status::OK, nullptr, "FetchFrameAtTime InitDecoder failed.");
     DfxReport("AVImageGenerator call");
@@ -781,7 +788,13 @@ Status AVThumbnailGenerator::SeekToTime(int64_t timeMs, Plugins::SeekMode option
         option = Plugins::SeekMode::SEEK_PREVIOUS_SYNC;
     }
     timeMs = duration_ > 0 ? std::min(timeMs, Plugins::Us2Ms(duration_)) : timeMs;
-    auto res = mediaDemuxer_->SeekTo(timeMs, option, realSeekTime);
+    Status res = Status::OK;
+    if (fileType_ == FileType::MPEGTS && codecMimeName_ == "mpeg4") {
+        res = mediaDemuxer_->SeekToKeyFrame(timeMs, option, realSeekTime, DemuxerCallerType::AVMETADATA);
+        return res;
+    } else {
+        res = mediaDemuxer_->SeekTo(timeMs, option, realSeekTime);
+    }
     /* SEEK_NEXT_SYNC or SEEK_PREVIOUS_SYNC may cant find I frame and return seek failed
        if seek failed, use SEEK_CLOSEST_SYNC seek again */
     if (res != Status::OK && option != Plugins::SeekMode::SEEK_CLOSEST_SYNC) {
