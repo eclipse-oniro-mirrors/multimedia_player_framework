@@ -26,6 +26,12 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTUR
 
 namespace OHOS::Media {
 
+AudioDataSource::~AudioDataSource()
+{
+    MEDIA_LOGI("get audio buffer times type: %{public}d, size: %{public}" PRIu64,
+        audioType_.load(), audioTypeSize_.load());
+}
+
 void AudioDataSource::SpeakerStateUpdate(
     const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
 {

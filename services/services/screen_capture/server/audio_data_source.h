@@ -54,6 +54,7 @@ class AudioDataSource : public IAudioDataSource {
 public:
     AudioDataSource(AVScreenCaptureMixMode type, ScreenCaptureServer* screenCaptureServer) : type_(type),
         screenCaptureServer_(screenCaptureServer) {}
+    virtual ~AudioDataSource();
 
     int64_t GetFirstAudioTime(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
         std::shared_ptr<AudioBuffer> &micAudioBuffer);
