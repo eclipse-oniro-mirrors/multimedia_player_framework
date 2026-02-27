@@ -72,6 +72,21 @@ int32_t LppVideoStreamerServiceProxy::SetParameter(const Format &param)
     return reply.ReadInt32();
 }
 
+int32_t LppVideoStreamerServiceProxy::GetParameter(Format &param)
+{
+    MEDIA_LOGD("LppVideoStreamerServiceProxy::GetParameter");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    bool token = data.WriteInterfaceToken(LppVideoStreamerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+    Remote()->SendRequest(GET_PARAMETER, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(reply.ReadInt32() == MSERR_OK, MSERR_INVALID_OPERATION, "Failed to SendRequest!");
+    bool ret = MediaParcel::MetaUnmarshalling(reply, param);
+    CHECK_AND_RETURN_RET_LOG(ret, MSERR_INVALID_OPERATION, "Failed to MetaUnMarshalling format!");
+    return MSERR_OK;
+}
+
 int32_t LppVideoStreamerServiceProxy::Configure(const Format &param)
 {
     MessageParcel data;

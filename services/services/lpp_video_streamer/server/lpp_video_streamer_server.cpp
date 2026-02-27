@@ -102,6 +102,14 @@ int32_t LppVideoStreamerServer::SetParameter(const Format &param)
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     auto ret = streamerEngine_->SetParameter(param);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetParameter Failed!");
+    param_ = param;
+    return MSERR_OK;
+}
+
+int32_t LppVideoStreamerServer::GetParameter(Format &param)
+{
+    MEDIA_LOGI("LppAudioStreamerServer GetParameter");
+    param = param_;
     return MSERR_OK;
 }
 
@@ -114,6 +122,7 @@ int32_t LppVideoStreamerServer::Configure(const Format &param)
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     ret = streamerEngine_->Configure(param);
     CHECK_AND_RETURN_RET_LOG(ErrorCheck(ret), ret, "Configure Failed!");
+    param_ = param;
     return MSERR_OK;
 }
 
