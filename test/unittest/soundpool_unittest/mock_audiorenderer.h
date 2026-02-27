@@ -121,6 +121,18 @@ public:
         (override));
     MOCK_METHOD(void, SetAudioHapticsSyncId, (int32_t audioHapticsSyncId), (override));
     MOCK_METHOD(void, ResetFirstFrameState, (), (override));
+    MOCK_METHOD(int32_t, StartImpl, (StateChangeCmdType cmdType), (override));
+    MOCK_METHOD(int32_t, DrainImpl, (), (const, override));
+    MOCK_METHOD(int32_t, FlushImpl, (), (const, override));
+    MOCK_METHOD(int32_t, PauseImpl, (StateChangeCmdType cmdType), (override));
+    MOCK_METHOD(int32_t, StopImpl, (), (override));
+    MOCK_METHOD(int32_t, ReleaseImpl, (), (override));
+    MOCK_METHOD(int32_t, StartWithError, (StateChangeCmdType cmdType), (override));
+    MOCK_METHOD(int32_t, DrainWithError, (), (const, override));
+    MOCK_METHOD(int32_t, FlushWithError, (), (const, override));
+    MOCK_METHOD(int32_t, PauseWithError, (StateChangeCmdType cmdType), (override));
+    MOCK_METHOD(int32_t, StopWithError, (), (override));
+    MOCK_METHOD(int32_t, ReleaseWithError, (), (override));
 };
 } // namespace Media
 } // namespace OHOS
