@@ -59,6 +59,14 @@ int32_t LppAudioStreamerClient::SetParameter(const Format &param)
     return playerProxy_->SetParameter(param);
 }
 
+int32_t LppAudioStreamerClient::GetParameter(Format &param)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGD("LppAudioStreamerClient::GetParameter");
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->GetParameter(param);
+}
+
 int32_t LppAudioStreamerClient::Configure(const Format &param)
 {
     std::lock_guard<std::mutex> lock(mutex_);

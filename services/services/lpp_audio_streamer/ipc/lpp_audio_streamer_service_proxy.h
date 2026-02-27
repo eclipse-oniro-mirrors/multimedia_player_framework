@@ -30,6 +30,8 @@ public:
     
     int32_t SetParameter(const Format &param) override;
 
+    int32_t GetParameter(Format &param) override;
+
     int32_t Configure(const Format &param) override;
     
     int32_t Prepare() override;

@@ -59,6 +59,8 @@ public:
 
     virtual int32_t SetParameter(const Format &param) = 0;
 
+    virtual int32_t GetParameter(Format &param) = 0;
+
     virtual int32_t Configure(const Format &param) = 0;
 
     virtual int32_t SetOutputSurface(sptr<Surface> surface) = 0;
