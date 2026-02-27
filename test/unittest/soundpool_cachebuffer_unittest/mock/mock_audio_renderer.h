@@ -127,7 +127,7 @@ public:
         (AudioStandard::Timestamp &, AudioStandard::Timestamp::Timestampbase), (const, override));
     MOCK_METHOD(void, SetFastStatusChangeCallback,
         (const std::shared_ptr<AudioStandard::AudioRendererFastStatusChangeCallback> &), (override));
-        MOCK_METHOD(int32_t, StartImpl, (StateChangeCmdType cmdType), (override));
+    MOCK_METHOD(int32_t, StartImpl, (StateChangeCmdType cmdType), (override));
     MOCK_METHOD(int32_t, DrainImpl, (), (const, override));
     MOCK_METHOD(int32_t, FlushImpl, (), (const, override));
     MOCK_METHOD(int32_t, PauseImpl, (StateChangeCmdType cmdType), (override));
