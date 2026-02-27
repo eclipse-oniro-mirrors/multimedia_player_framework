@@ -374,8 +374,15 @@ OH_AVErrCode OH_LowPowerVideoSink_SetParameter(OH_LowPowerVideoSink *streamer, c
 OH_AVErrCode OH_LowPowerVideoSink_GetParameter(OH_LowPowerVideoSink *sink, OH_AVFormat *format)
 {
     MEDIA_LOGD("OH_LowPowerVideoSink_GetParameter");
-    (void)sink;
-    (void)format;
+    CHECK_AND_RETURN_RET_LOG(sink != nullptr, AV_ERR_INVALID_VAL, "streamer is nullptr");
+    CHECK_AND_RETURN_RET_LOG(format != nullptr, AV_ERR_INVALID_VAL, "format is nullptr");
+    auto streamerObj = reinterpret_cast<LowPowerVideoSinkObject *>(sink);
+    CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->videoStreamer_ != nullptr, AV_ERR_INVALID_VAL, "videoStreamer_ is nullptr");
+    Format format_ {};
+    int32_t res = streamerObj->videoStreamer_->GetParameter(format_);
+    format->format_= format_;
+    CHECK_AND_RETURN_RET_LOG(res == AV_ERR_OK, AV_ERR_OPERATE_NOT_PERMIT, "OH_LowPowerVideoSink_GetParameter failed");
     return AV_ERR_OK;
 }
 

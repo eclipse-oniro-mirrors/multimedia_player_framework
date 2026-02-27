@@ -334,8 +334,15 @@ OH_AVErrCode OH_LowPowerAudioSink_SetParameter(OH_LowPowerAudioSink *streamer, c
 OH_AVErrCode OH_LowPowerAudioSink_GetParameter(OH_LowPowerAudioSink *sink, OH_AVFormat *format)
 {
     MEDIA_LOGD("OH_LowPowerAudioSink_GetParameter");
-    (void)sink;
-    (void)format;
+    CHECK_AND_RETURN_RET_LOG(sink != nullptr, AV_ERR_INVALID_VAL, "streamer is nullptr");
+    CHECK_AND_RETURN_RET_LOG(format != nullptr, AV_ERR_INVALID_VAL, "format is nullptr");
+    struct LowPowerAudioSinkObject *streamerObj = reinterpret_cast<LowPowerAudioSinkObject *>(sink);
+    CHECK_AND_RETURN_RET_LOG(streamerObj != nullptr, AV_ERR_INVALID_VAL, "streamerObj is nullptr");
+    CHECK_AND_RETURN_RET_LOG(streamerObj->audioStreamer_ != nullptr, AV_ERR_INVALID_VAL, "audioStreamer_ is nullptr");
+    Format format_ = {};
+    int32_t res = streamerObj->audioStreamer_->GetParameter(format_);
+    format->format_= format_;
+    CHECK_AND_RETURN_RET_LOG(res == AV_ERR_OK, AV_ERR_OPERATE_NOT_PERMIT, "OH_LowPowerVideoSink_GetParameter failed");
     return AV_ERR_OK;
 }
 

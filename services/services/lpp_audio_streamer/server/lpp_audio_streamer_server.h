@@ -51,6 +51,8 @@ public:
 
     int32_t SetParameter(const Format &param) override;
 
+    int32_t GetParameter(Format &param) override;
+
     int32_t Configure(const Format &param) override;
 
     int32_t Prepare() override;
@@ -115,6 +117,7 @@ private:
     int32_t appUid_ = 0;
     int32_t appPid_ = 0;
     std::string appName_;
+    Format param_ {};
 };
 } // namespace Media
 } // namespace OHOS
