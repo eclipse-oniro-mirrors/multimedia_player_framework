@@ -14,7 +14,7 @@
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
-module_output_path = "player_framework/transcoder"
+module_output_path = "player_framework/player_framework/transcoder"
 
 ohos_unittest("transcoder_unit_test") {
   module_out_path = module_output_path
