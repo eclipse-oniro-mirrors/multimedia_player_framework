@@ -14,7 +14,7 @@
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
-module_output_path = "player_framework/lpp_unit_test"
+module_output_path = "player_framework/player_framework/lpp_unit_test"
 
 config("lpp_astream_impl_unit_test_config") {
   visibility = [ ":*" ]
@@ -93,4 +93,4 @@ ohos_unittest("lpp_astream_impl_unit_test") {
     "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
   ]
-}
+}
