@@ -597,7 +597,7 @@ AudioDataSourceReadAtActionState AudioDataSource::MixModeBufferWrite(std::shared
 void AudioDataSource::SetMixAudioTypeLog()
 {
     if (lastWriteType_ != audioType_) {
-        MEDIA_LOGI("get audio buffer times type: %{public}d, size: %{public}", PRIu64
+        MEDIA_LOGI("get audio buffer times type: %{public}d, size: %{public}", PRIu64,
             audioType_.load(), audioTypeSize_.load());
         audioType_.store(lastWriteType_);
         audioTypeSize_ = 1;
