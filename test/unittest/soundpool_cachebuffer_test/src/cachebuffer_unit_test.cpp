@@ -15,6 +15,8 @@
 
 #include "cachebuffer_unit_test.h"
 #include "media_errors.h"
+#include "isoundpool.h"
+#include "cachebuffer_callback_mock.h"
 
 using namespace OHOS;
 using namespace OHOS::Media;
@@ -247,6 +249,137 @@ HWTEST_F(AudioStreamUnitTest, soundpool_SoundParseOnError_001, TestSize.Level2)
     }
     EXPECT_EQ(streamID, audioStream_->audioStream_->streamID_);
     MEDIA_LOGI("AudioStreamUnitTest soundpool_SoundParseOnError_001 after");
+}
+
+/**
+* @tc.name: soundpool_GetSoundID_001
+* @tc.desc: function test GetSoundID result
+* @tc.type: FUNC
+* @tc.require:
+*/
+HWTEST_F(AudioStreamUnitTest, soundpool_GetSoundID_001, TestSize.Level2)
+{
+    MEDIA_LOGI("AudioStreamUnitTest soundpool_GetSoundID_001 before");
+    const int32_t soundID = 1;
+    const int32_t streamID = 1;
+    Format format;
+    CreateAudioStream(format, soundID, streamID);
+    audioStream_->audioStream_->streamID_ = streamID;
+    audioStream_->audioStream_->soundID_ = soundID;
+    EXPECT_EQ(soundID, audioStream_->audioStream_->GetSoundID());
+    MEDIA_LOGI("AudioStreamUnitTest soundpool_GetSoundID_001 after");
+}
+
+/**
+* @tc.name: soundpool_GetStreamID_001
+* @tc.desc: function test GetStreamID result
+* @tc.type: FUNC
+* @tc.require:
+*/
+HWTEST_F(AudioStreamUnitTest, soundpool_GetStreamID_001, TestSize.Level2)
+{
+    MEDIA_LOGI("AudioStreamUnitTest soundpool_GetStreamID_001 before");
+    const int32_t soundID = 1;
+    const int32_t streamID = 1;
+    Format format;
+    CreateAudioStream(format, soundID, streamID);
+    audioStream_->audioStream_->streamID_ = streamID;
+    audioStream_->audioStream_->soundID_ = soundID;
+    EXPECT_EQ(streamID, audioStream_->audioStream_->GetStreamID());
+    MEDIA_LOGI("AudioStreamUnitTest soundpool_GetStreamID_001 after");
+}
+
+/**
+* @tc.name: soundpool_SetSourceDuration_001
+* @tc.desc: function test SetSourceDuration result
+* @tc.type: FUNC
+* @tc.require:
+*/
+HWTEST_F(AudioStreamUnitTest, soundpool_SetSourceDuration_001, TestSize.Level2)
+{
+    MEDIA_LOGI("AudioStreamUnitTest soundpool_SetSourceDuration_001 before");
+    const int32_t soundID = 1;
+    const int32_t streamID = 1;
+    const int64_t durationMs = 1000;
+    Format format;
+    CreateAudioStream(format, soundID, streamID);
+    audioStream_->audioStream_->streamID_ = streamID;
+    audioStream_->audioStream_->soundID_ = soundID;
+    audioStream_->audioStream_->SetSourceDuration(durationMs);
+    EXPECT_EQ(durationMs, audioStream_->audioStream_->sourceDurationMs_);
+    MEDIA_LOGI("AudioStreamUnitTest soundpool_SetSourceDuration_001 after");
+}
+
+/**
+* @tc.name: soundpool_SetCallback_001
+* @tc.desc: function test SetCallback result
+* @tc.type: FUNC
+* @tc.require:
+*/
+HWTEST_F(AudioStreamUnitTest, soundpool_SetCallback_001, TestSize.Level2)
+{
+    MEDIA_LOGI("AudioStreamUnitTest soundpool_SetCallback_001 before");
+    const int32_t soundID = 1;
+    const int32_t streamID = 1;
+    std::shared_ptr<ISoundPoolCallback> callbk = std::make_shared<AudioStreamCallbackMock>();
+    Format format;
+    CreateAudioStream(format, soundID, streamID);
+    audioStream_->audioStream_->streamID_ = streamID;
+    audioStream_->audioStream_->soundID_ = soundID;
+
+    EXPECT_EQ(MSERR_OK, audioStream_->audioStream_->SetCallback(callbk));
+    MEDIA_LOGI("AudioStreamUnitTest soundpool_SetCallback_001 after");
+}
+
+/**
+* @tc.name: soundpool_SetCallback_002
+* @tc.desc: function test SetCallback result
+* @tc.type: FUNC
+* @tc.require:
+*/
+HWTEST_F(AudioStreamUnitTest, soundpool_SetCallback_002, TestSize.Level2)
+{
+    MEDIA_LOGI("AudioStreamUnitTest soundpool_SetCallback_002 before");
+    const int32_t soundID = 1;
+    const int32_t streamID = 1;
+    std::shared_ptr<ISoundPoolCallback> callbk = std::make_shared<AudioStreamCallbackMock>();
+    Format format;
+    CreateAudioStream(format, soundID, streamID);
+    audioStream_->audioStream_->streamID_ = streamID;
+    audioStream_->audioStream_->soundID_ = soundID;
+
+    audioStream_->audioStream_->SetCallback(callbk);
+    EXPECT_EQ(callbk, audioStream_->audioStream_->callback_);
+    MEDIA_LOGI("AudioStreamUnitTest soundpool_SetCallback_002 after");
+}
+
+/**
+* @tc.name: soundpool_SetCallback_003
+* @tc.desc: function test SetCallback result
+* @tc.type: FUNC
+* @tc.require:
+*/
+HWTEST_F(AudioStreamUnitTest, soundpool_SetCallback_003, TestSize.Level2)
+{
+    MEDIA_LOGI("AudioStreamUnitTest soundpool_SetCallback_003 before");
+    const int32_t soundID = 1;
+    const int32_t streamID = 1;
+    std::shared_ptr<ISoundPoolCallback> callbk = std::make_shared<AudioStreamCallbackMock>();
+    Format format;
+    CreateAudioStream(format, soundID, streamID);
+    audioStream_->audioStream_->streamID_ = streamID;
+    audioStream_->audioStream_->soundID_ = soundID;
+
+    audioStream_->audioStream_->SetCallback(callbk);
+    EXPECT_NE(nullptr, audioStream_->audioStream_->callback_);
+    if (audioStream_->audioStream_->callback_) {
+        audioStream_->audioStream_->callback_->OnLoadCompleted(soundID);
+        AudioStreamCallbackMock *call =
+            reinterpret_cast<AudioStreamCallbackMock*>((audioStream_->audioStream_->callback_).get());
+        EXPECT_NE(nullptr, call);
+        EXPECT_EQ(soundID, call->GetLoadCompletedSoundId());
+    }
+    MEDIA_LOGI("AudioStreamUnitTest soundpool_SetCallback_003 after");
 }
 } // namespace Media
 } // namespace OHOS
