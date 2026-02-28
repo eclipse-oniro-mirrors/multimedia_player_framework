@@ -70,7 +70,7 @@ void AudioStreamCallbackMock::OnErrorOccurred(Format &errorInfo)
 
 /**
  * @brief For test get the loadCompletedSoundId to check if callback has been called.
- * 
+ *
  * @since 1.0
  * @version 1.0
  **/
@@ -81,7 +81,7 @@ int32_t AudioStreamCallbackMock::GetLoadCompletedSoundId()
 
 /**
  * @brief For test get the playFinishedStreamID to check if callback has been called.
- * 
+ *
  * @since 1.0
  * @version 1.0
  **/
@@ -92,7 +92,7 @@ int32_t AudioStreamCallbackMock::GetPlayFinishedStreamID()
 
 /**
  * @brief For test get the errorErrorCode to check if callback has been called.
- * 
+ *
  * @since 1.0
  * @version 1.0
  **/
