@@ -63,7 +63,7 @@ public:
      * @version 1.0
      */
     void OnErrorOccurred(Format &errorInfo) override;
-    
+
     /**
      * @brief For test get the loadCompletedSoundId to check if callback has been called.
      *
@@ -71,7 +71,7 @@ public:
      * @version 1.0
      **/
     int32_t GetLoadCompletedSoundId();
-    
+
     /**
      * @brief For test get the playFinishedStreamID to check if callback has been called.
      *
@@ -79,7 +79,7 @@ public:
      * @version 1.0
      **/
     int32_t GetPlayFinishedStreamID();
-    
+
     /**
      * @brief For test get the errorErrorCode to check if callback has been called.
      *
@@ -87,7 +87,7 @@ public:
      * @version 1.0
      **/
     int32_t GetErrorErrorCode();
-    
+
 private:
     int32_t loadCompletedSoundId = -1;
     int32_t playFinishedStreamID = -1;
