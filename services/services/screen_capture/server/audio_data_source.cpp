@@ -632,7 +632,6 @@ void AudioDataSource::MixAudio(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
     double const splitNum = 32;
     int const doubleChannels = 2;
     double coefficient = 1;
-    int totalNum = 0;
     char* srcData[2] = {
         reinterpret_cast<char*>(innerAudioBuffer->buffer),
         reinterpret_cast<char*>(micAudioBuffer->buffer)
@@ -641,7 +640,8 @@ void AudioDataSource::MixAudio(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
         return;
     }
 
-    for (totalNum = 0; totalNum < innerAudioBuffer->length / (sizeof(short) / sizeof(char)); totalNum++) {
+    const int32_t totalLen = static_cast<int32_t>(innerAudioBuffer->length / (sizeof(short) / sizeof(char)));
+    for (int32_t totalNum = 0; totalNum < totalLen; totalNum++) {
         int temp = 0;
         for (int channelNum = 0; channelNum < channels; channelNum++) {
             CHECK_AND_CONTINUE(!(channelNum == 1 && micAudioBuffer->length <= totalNum * channels));
