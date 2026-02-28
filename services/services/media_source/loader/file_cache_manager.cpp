@@ -16,6 +16,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <cinttypes>
 #include "file_cache_manager.h"
 #include "common/log.h"
 
@@ -112,7 +113,7 @@ bool FileCacheManager::IsValid(const std::string& path, int64_t exceptedSize)
     int64_t actual = GetSize(path);
     if (actual != exceptedSize) {
         Clear(path);
-        MEDIA_LOG_D("Segment is invalid: excepted %lld, got %lld", exceptedSize, actual);
+        MEDIA_LOG_D("Segment is invalid: excepted %" PRId64 ", got %" PRId64, exceptedSize, actual);
         return false;
     }
     return true;
