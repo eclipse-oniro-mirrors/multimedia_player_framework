@@ -73,7 +73,7 @@ private:
     std::atomic<bool> isHeaderResponded_{false};
     std::atomic<bool> isClosed_{false};
     std::shared_ptr<LoadingRequest> request_;
-    int64_t uuid_;
+    int64_t uuid_ {-1};
     int32_t clientCode_ {-1};
     std::atomic<bool> isRequestError_{false};
 };

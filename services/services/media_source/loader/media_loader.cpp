@@ -24,6 +24,8 @@ namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "MediaLoader"};
 }
 
+std::atomic<uint32_t> MediaLoader::instanceCount_ = 0;
+
 MediaLoader::MediaLoader(std::string url) : url_(url)
 {
     downloadTask_ = std::make_shared<Task>("OS_Custom_Dlr", "", TaskType::SINGLETON, TaskPriority::HIGH, false);
@@ -31,7 +33,16 @@ MediaLoader::MediaLoader(std::string url) : url_(url)
     interruptedTask_ = std::make_shared<Task>(
         "OS_Custom_Interrupted", "", TaskType::SINGLETON, TaskPriority::HIGH, false);
     isSupportLocalCache_ = true;
+    instanceCount_.fetch_add(1);
     MEDIA_LOG_I("MediaLoader construtor");
+}
+
+MediaLoader::~MediaLoader()
+{
+    MEDIA_LOG_I("~MediaLoader");
+    instanceCount_.fetch_sub(1);
+    FALSE_RETURN_MSG(instanceCount_.load() == 0, "Instance count is not zero.");
+    StreamCacheManager::Create()->ReleaseMap();
 }
 
 int64_t MediaLoader::Open(std::shared_ptr<LoadingRequest>& request)
