@@ -807,9 +807,8 @@ Status AVThumbnailGenerator::SeekToTime(int64_t timeMs, Plugins::SeekMode option
         seekFunc = [this](int64_t t, Plugins::SeekMode m, int64_t& r) { return mediaDemuxer_->SeekToStart(t, m, r); };
     }
     Status res = seekFunc(timeMs, option, realSeekTime);
-
-    // SEEK_NEXT_SYNC or SEEK_PREVIOUS_SYNC may cant find I frame and return seek failed
-    // if seek failed, use SEEK_CLOSEST_SYNC seek again
+    /* SEEK_NEXT_SYNC or SEEK_PREVIOUS_SYNC may cant find I frame and return seek failed
+       if seek failed, use SEEK_CLOSEST_SYNC seek again */
     if (res != Status::OK && option != Plugins::SeekMode::SEEK_CLOSEST_SYNC) {
         res = seekFunc(timeMs, Plugins::SeekMode::SEEK_CLOSEST_SYNC, realSeekTime);
         seekMode_ = Plugins::SeekMode::SEEK_CLOSEST_SYNC;
