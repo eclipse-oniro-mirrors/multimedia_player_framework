@@ -163,7 +163,6 @@ public:
     MOCK_METHOD(Status, SetSubtitleSource, (const std::shared_ptr<MediaSource> source), ());
     MOCK_METHOD(void, SetBundleName, (const std::string& bundleName), ());
     MOCK_METHOD(Status, SeekTo, (int64_t seekTime, Plugins::SeekMode mode, int64_t& realSeekTime), ());
-    MOCK_METHOD(Status, SeekToStart, (int64_t seekTime, Plugins::SeekMode mode, int64_t& realSeekTime), ());
     MOCK_METHOD(bool, IsRefParserSupported, (), ());
     MOCK_METHOD(Status, StartReferenceParser, (int64_t startTimeMs, bool isForward), ());
     MOCK_METHOD(Status, GetFrameLayerInfo,
