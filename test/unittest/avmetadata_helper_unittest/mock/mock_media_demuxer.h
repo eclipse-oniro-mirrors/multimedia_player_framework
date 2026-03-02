@@ -45,6 +45,7 @@ public:
     MOCK_METHOD(std::shared_ptr<Meta>, GetUserMeta, (), (override));
  
     MOCK_METHOD(Status, SeekTo, (int64_t seekTime, Plugins::SeekMode mode, int64_t& realSeekTime), (override));
+    MOCK_METHOD(Status, SeekToStart, (int64_t seekTime, Plugins::SeekMode mode, int64_t& realSeekTime), (override));
     MOCK_METHOD(Status, SeekToKeyFrame, (int64_t seekTime, Plugins::SeekMode mode,
         int64_t& realSeekTime, DemuxerCallerType callerType), (override));
     MOCK_METHOD(Status, Reset, (), (override));

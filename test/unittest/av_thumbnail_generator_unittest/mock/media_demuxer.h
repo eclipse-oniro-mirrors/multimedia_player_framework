@@ -64,6 +64,7 @@ public:
     virtual std::shared_ptr<Meta> GetUserMeta();
 
     virtual Status SeekTo(int64_t seekTime, Plugins::SeekMode mode, int64_t& realSeekTime);
+    virtual Status SeekToStart(int64_t seekTime, Plugins::SeekMode mode, int64_t& realSeekTime);
     virtual Status SeekToKeyFrame(int64_t seekTime, Plugins::SeekMode mode,
  	         int64_t& realSeekTime, DemuxerCallerType callerType);
     virtual Status Reset();
