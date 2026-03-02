@@ -37,7 +37,6 @@ constexpr char INPUT_VIDEO_PATH[] = "/data/local/tmp/input.mp4";
 constexpr char OUTPUT_VIDEO_PATH[] = "/data/local/tmp/output.mp4";
 constexpr int32_t SYSTEM_ABILITY_ID = 3002;
 constexpr bool RUN_ON_CREATE = false;
-constexpr uint32_t SECOND_TWO = 2;
 }  // namespace
 
 namespace OHOS {
@@ -261,16 +260,6 @@ void FuzzTranscoderDestroyStub(sptr<IRemoteStub<IStandardTransCoderService>> tra
 extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
 {
     /* Run your code on data */
-    int fdInput = open(INPUT_VIDEO_PATH, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
-    if (fdInput < 0) {
-        return 0;
-    }
-    if (write(fdInput, data, size) <= 0) {
-        close(fdInput);
-        return 0;
-    }
-    close(fdInput);
-
     FuzzedDataProvider fdp(data, size);
     auto transcoder = OHOS::Media::CreateFuzzTranscoder();
     OHOS::Media::FuzzTranscoderSetVideoEncoder(transcoder, fdp.ConsumeIntegral<int32_t>());
@@ -282,13 +271,9 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
     OHOS::Media::FuzzTranscoderSetInputFile(transcoder);
     OHOS::Media::FuzzTranscoderSetOutputFile(transcoder);
     OHOS::Media::FuzzTranscoderPrepare(transcoder);
-    sleep(SECOND_TWO);
     OHOS::Media::FuzzTranscoderStart(transcoder);
-    sleep(SECOND_TWO);
     OHOS::Media::FuzzTranscoderPause(transcoder);
-    sleep(SECOND_TWO);
     OHOS::Media::FuzzTranscoderResume(transcoder);
-    sleep(SECOND_TWO);
     OHOS::Media::FuzzTranscoderCancel(transcoder);
     OHOS::Media::FuzzTranscoderRelease(transcoder);
     OHOS::Media::FuzzTranscoderDestroyStub(transcoder);
