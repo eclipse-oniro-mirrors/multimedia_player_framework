@@ -80,16 +80,6 @@ struct OH_AVMetadataExtractor : public OHOS::RefBase {
     virtual ~OH_AVMetadataExtractor() = default;
 };
 
-struct OH_AVTranscoder : public OHOS::RefBase {
-    OH_AVTranscoder() = default;
-    virtual ~OH_AVTranscoder() = default;
-};
-
-struct OH_AVTranscoder_Config : public OHOS::RefBase {
-    OH_AVTranscoder_Config() = default;
-    virtual ~OH_AVTranscoder_Config() = default;
-};
-
 struct OH_LowPowerAudioSink : public OHOS::RefBase {
     OH_LowPowerAudioSink() = default;
     virtual ~OH_LowPowerAudioSink() = default;
@@ -103,6 +93,16 @@ struct OH_LowPowerVideoSink : public OHOS::RefBase {
 struct OH_AVSamplesBuffer : public OHOS::RefBase {
     OH_AVSamplesBuffer() = default;
     virtual ~OH_AVSamplesBuffer() = default;
+};
+
+struct OH_AVTranscoder : public OHOS::RefBase {
+    OH_AVTranscoder() = default;
+    virtual ~OH_AVTranscoder() = default;
+};
+
+struct OH_AVTranscoder_Config : public OHOS::RefBase {
+    OH_AVTranscoder_Config() = default;
+    virtual ~OH_AVTranscoder_Config() = default;
 };
 
 struct OH_AVSeiMessageArray : public OHOS::RefBase {

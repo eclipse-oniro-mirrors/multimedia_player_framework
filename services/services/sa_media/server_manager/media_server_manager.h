@@ -129,7 +129,6 @@ private:
     void DestroyLppVideoPlayerStubForPid(pid_t pid);
 
     void StartMemoryReportTask();
-    void ReleaseMemoryReportTask();
     bool GetMemUsageForPlayer();
     void ReportAppMemoryUsage();
     void SetCritical(bool critical);

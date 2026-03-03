@@ -85,7 +85,7 @@ public:
     std::shared_ptr<IScreenCaptureController> CreateScreenCaptureControllerClient() override;
     int32_t DestroyScreenCaptureControllerClient(std::shared_ptr<IScreenCaptureController> controller) override;
 #endif
-    std::vector<pid_t> GetPlayerPids() override;
+    
 #ifdef SUPPORT_LPP_AUDIO_STRAMER
     std::shared_ptr<ILppAudioStreamerService> CreateLppAudioStreamerService() override;
     int32_t DestroyLppAudioStreamerService(std::shared_ptr<ILppAudioStreamerService> lppAudioPlayer) override;
@@ -96,11 +96,12 @@ public:
     int32_t DestroyLppVideoStreamerService(std::shared_ptr<ILppVideoStreamerService> lppAudioPlayer) override;
     LppAvCapabilityInfo *GetLppCapacity() override;
 #endif
+    std::vector<pid_t> GetPlayerPids() override;
 
 private:
     sptr<IStandardMediaService> GetMediaProxy();
     bool IsAlived();
-    static void MediaServerDied(pid_t pid, std::weak_ptr<MediaClient> client);
+    static void MediaServerDied(pid_t pid);
     void DoMediaServerDied();
     void AVPlayerServerDied();
     void AVTranscoderServerDied();

@@ -64,8 +64,7 @@ struct FileInfo {
     uint64_t size;
 
     // 按修改时间升序排序
-    bool operator<(const FileInfo& other) const
-    {
+    bool operator<(const FileInfo& other) const {
         return writeTime < other.writeTime;
     }
 };
