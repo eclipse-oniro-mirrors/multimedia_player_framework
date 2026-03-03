@@ -1452,7 +1452,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetMultiDisplayIdsSelected(
     MEDIA_LOGD("OH_AVScreenCapture_GetMultiDisplayIdsSelected S");
     CHECK_AND_RETURN_RET_LOG(selection != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input selection is nullptr");
     CHECK_AND_RETURN_RET_LOG(displayIds != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input displayIds is nullptr");
-    CHECK_AND_RETURN_RET_LOG(count != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input displayIds is nullptr");
+    CHECK_AND_RETURN_RET_LOG(count != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input count is nullptr");
     auto *selectionObj = reinterpret_cast<ScreenCaptureUserSelectionObject *>(selection);
     *count = selectionObj->userSelectionInfo_.displayIds.size();
     *displayIds = selectionObj->userSelectionInfo_.displayIds.data();
@@ -1523,7 +1523,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetMultiDisplayCaptureCapability(
     SetMultiDisplayCapability(displayCapability, capability);
     int32_t ret = screenCaptureObj->screenCapture_->GetMultiDisplayCaptureCapability(displayIdList, displayCapability);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK,
-        AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "GetMultiDisplayCaptureCapability failed!");
+        AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT, "GetMultiDisplayCaptureCapability failed!");
     SetMultiDisplayCapability(displayCapability, capability);
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
