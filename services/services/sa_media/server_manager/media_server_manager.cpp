@@ -274,11 +274,9 @@ int32_t MediaServerManager::ResetAllProxy()
 sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    bool isEmpty = GetStubMapCountIsEmpty();
 
     auto res = CreateStubObjectByType(type);
 
-    CHECK_AND_RETURN_RET_NOLOG((isEmpty && !GetStubMapCountIsEmpty()), res);
     SetCritical(true);
     return res;
 }
