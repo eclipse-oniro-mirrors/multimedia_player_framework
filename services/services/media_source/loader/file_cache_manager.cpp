@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <filesystem>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -23,6 +24,8 @@ namespace OHOS {
 namespace Media {
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "FileCacheManager"};
+    const std::string CACHE_DIR = "/data/storage/el2/base/cache/avplayer_media_loader";
+    const char FILE_SEPARATOR = std::filesystem::path::preferred_separator;
 }
 
 std::shared_ptr<FileCacheManager> FileCacheManager::Create()
@@ -32,6 +35,7 @@ std::shared_ptr<FileCacheManager> FileCacheManager::Create()
 
 int32_t FileCacheManager::Write(const std::string& path, const void* buffer, int64_t size)
 {
+    FALSE_RETURN_V_MSG_E(IsValidPath(path), -1, "invalid path");
     int fd = open(path.c_str(), O_RDWR | O_CREAT | O_APPEND, 0644);
     if (fd == -1) {
         MEDIA_LOG_E("WriteCacheData open file error");
@@ -48,6 +52,7 @@ int32_t FileCacheManager::Write(const std::string& path, const void* buffer, int
 
 int32_t FileCacheManager::Read(const std::string& path, void* buffer, int64_t offset, int64_t size)
 {
+    FALSE_RETURN_V_MSG_E(IsValidPath(path), -1, "invalid path");
     int fd = open(path.c_str(), O_RDONLY);
     if (fd == -1) {
         MEDIA_LOG_W("ReadCacheData open file error");
@@ -81,6 +86,7 @@ int32_t FileCacheManager::Read(const std::string& path, void* buffer, int64_t of
 
 int64_t FileCacheManager::GetSize(const std::string& path)
 {
+    FALSE_RETURN_V_MSG_E(IsValidPath(path), -1, "invalid path");
     int fd = open(path.c_str(), O_RDONLY);
     if (fd == -1) {
         MEDIA_LOG_E("GetFileSize open file error");
@@ -115,6 +121,27 @@ bool FileCacheManager::IsValid(const std::string& path, int64_t exceptedSize)
         MEDIA_LOG_D("Segment is invalid: excepted %lld, got %lld", exceptedSize, actual);
         return false;
     }
+    return true;
+}
+
+bool FileCacheManager::IsValidPath(const std::string& inputPath)
+{
+    FALSE_RETURN_V_MSG_E(inputPath.length() <= PATH_MAX, false, "path len invalid");
+
+    std::filesystem::path inPath(inputPath);
+    FALSE_RETURN_V_MSG_E(inPath.has_parent_path(), false, "path no parent path.");
+
+    // if path not exist, check parent path
+    auto checkPath = std::filesystem::exists(inputPath) ? inputPath : inPath.parent_path().string();
+
+    char path[PATH_MAX + 1] = {0};
+    auto realPath = realpath(checkPath.c_str(), path);
+    FALSE_RETURN_V_MSG_E(realPath, false, "realPath fail");
+    std::string canonicalPath(path);
+    auto isPrefixVaild = canonicalPath.length() >= CACHE_DIR.length() &&
+        (canonicalPath.compare(0, CACHE_DIR.length(), CACHE_DIR) == 0) &&
+        (canonicalPath.length() == CACHE_DIR.length() || canonicalPath[CACHE_DIR.length()] == FILE_SEPARATOR);
+    FALSE_RETURN_V_MSG_E(isPrefixVaild, false, "path is not under the expected dir");
     return true;
 }
 } // namespace Media

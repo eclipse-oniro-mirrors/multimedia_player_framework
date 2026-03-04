@@ -30,6 +30,9 @@ public:
     int64_t GetSize(const std::string& path);
     int32_t Clear(const std::string& path);
     bool IsValid(const std::string& path, int64_t exceptedSize);
+
+private:
+ 	bool IsValidPath(const std::string& inputPath);
 };
 } // namespace Media
 } // namespace OHOS

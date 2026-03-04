@@ -35,11 +35,14 @@ constexpr int32_t WHAT_ERROR = 3;
 constexpr int32_t WHAT_COLLECT_AMPLITUDE = 4;
 constexpr int32_t WHAT_SYSTEM_OPERATION = 5;
 constexpr int32_t WHAT_DFX_INFO = 6;
+constexpr int32_t WHAT_MEDIA_PROGRESS_ONCE = 7;
 
 constexpr int32_t TUPLE_POS_0 = 0;
 constexpr int32_t TUPLE_POS_1 = 1;
 constexpr int32_t TUPLE_POS_2 = 2;
 constexpr int32_t MAX_AMPLITUDE_SIZE = 5;
+
+constexpr int PROGRESS_REPORT_INTERVAL = 100;
 }
 HiPlayerCallbackLooper::HiPlayerCallbackLooper()
 {
@@ -137,7 +140,7 @@ void HiPlayerCallbackLooper::StartCollectMaxAmplitude(int64_t updateIntervalMs)
 
 void HiPlayerCallbackLooper::ManualReportMediaProgressOnce()
 {
-    Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS, SteadyClock::GetCurrentTimeMs(), Any()));
+    Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS_ONCE, SteadyClock::GetCurrentTimeMs(), Any()));
 }
 
 void HiPlayerCallbackLooper::StopReportMediaProgress()
@@ -145,6 +148,7 @@ void HiPlayerCallbackLooper::StopReportMediaProgress()
     MEDIA_LOG_D("HiPlayerCallbackLooper StopReportMediaProgress");
     OHOS::Media::AutoLock lock(loopMutex_);
     reportMediaProgress_ = false;
+    lastReportTime_ = 0;
 }
 
 void HiPlayerCallbackLooper::StopCollectMaxAmplitude()
@@ -176,7 +180,7 @@ void HiPlayerCallbackLooper::DoReportCompletedTime()
     }
 }
 
-void HiPlayerCallbackLooper::DoReportMediaProgress()
+void HiPlayerCallbackLooper::DoReportMediaProgress(int type)
 {
     OHOS::Media::AutoLock lock(loopMutex_);
     if (!reportMediaProgress_ || !enableReportMediaProgress_) {
@@ -187,7 +191,10 @@ void HiPlayerCallbackLooper::DoReportMediaProgress()
     if (obs && !isDropMediaProgress_) {
         Format format;
         int32_t currentPositionMs;
-        if (playerEngine_->GetCurrentTime(currentPositionMs) == 0) {
+        if (playerEngine_->GetCurrentTime(currentPositionMs) == 0
+ 	        && (type == WHAT_MEDIA_PROGRESS_ONCE || (type == WHAT_MEDIA_PROGRESS
+ 	        && SteadyClock::GetCurrentTimeMs() - lastReportTime_ >= PROGRESS_REPORT_INTERVAL))) {
+ 	        lastReportTime_ = type == WHAT_MEDIA_PROGRESS ? SteadyClock::GetCurrentTimeMs() : lastReportTime_;
             MEDIA_LOG_D("EVENT_AUDIO_PROGRESS position updated: " PUBLIC_LOG_D32, currentPositionMs);
             obs->OnInfo(INFO_TYPE_POSITION_UPDATE, currentPositionMs, format);
         } else {
@@ -195,8 +202,10 @@ void HiPlayerCallbackLooper::DoReportMediaProgress()
         }
     }
     isDropMediaProgress_ = false;
-    Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS,
-        SteadyClock::GetCurrentTimeMs() + reportProgressIntervalMs_, Any()));
+    if (type == WHAT_MEDIA_PROGRESS) {
+ 	    Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS,
+ 	        SteadyClock::GetCurrentTimeMs() + reportProgressIntervalMs_, Any()));
+    }
 }
 
 void HiPlayerCallbackLooper::DoCollectAmplitude()
@@ -336,7 +345,8 @@ void HiPlayerCallbackLooper::LoopOnce(const std::shared_ptr<HiPlayerCallbackLoop
 {
     switch (item->what) {
         case WHAT_MEDIA_PROGRESS:
-            DoReportMediaProgress();
+        case WHAT_MEDIA_PROGRESS_ONCE:
+            DoReportMediaProgress(item->what);
             break;
         case WHAT_INFO:
             DoReportInfo(item->detail);
