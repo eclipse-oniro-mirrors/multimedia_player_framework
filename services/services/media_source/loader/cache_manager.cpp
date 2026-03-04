@@ -26,6 +26,8 @@
 #include "media_log.h"
 #include "scoped_timer.h"
 
+#include <cinttypes>
+
 namespace fs = std::filesystem;
 using namespace std::chrono;
 
@@ -436,7 +438,7 @@ bool StreamCacheManager::RemoveCacheDirectory(const std::string& path)
 
     for (const auto& file : files) {
         if (removeSize >= NEED_REMOVE_CACHE_SIZE) {
-            MEDIA_LOGI("remove end, count:%llu, size:%{public}d", removeSize, deletedCount);
+            MEDIA_LOGI("remove end, count:%" PRIu64 ", size:%{public}d", removeSize, deletedCount);
             break;
         }
 
