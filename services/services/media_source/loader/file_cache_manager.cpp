@@ -17,7 +17,6 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <cinttypes>
 #include "file_cache_manager.h"
 #include "common/log.h"
 
@@ -25,7 +24,8 @@ namespace OHOS {
 namespace Media {
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "FileCacheManager"};
-    const std::string CACHE_DIR = "/data/storage/el2/base/cache/avplayer_media_loader/";
+    const std::string CACHE_DIR = "/data/storage/el2/base/cache/avplayer_media_loader";
+    const char FILE_SEPARATOR = std::filesystem::path::preferred_separator;
 }
 
 std::shared_ptr<FileCacheManager> FileCacheManager::Create()
@@ -138,8 +138,10 @@ bool FileCacheManager::IsValidPath(const std::string& inputPath)
     auto realPath = realpath(checkPath.c_str(), path);
     FALSE_RETURN_V_MSG_E(realPath, false, "realPath fail");
     std::string canonicalPath(path);
-    FALSE_RETURN_V_MSG_E(canonicalPath.length() >= CACHE_DIR.length() &&
-        (canonicalPath.compare(0, CACHE_DIR.length(), CACHE_DIR) == 0), false, "path is not under the expected dir");
+    auto isPrefixVaild = canonicalPath.length() >= CACHE_DIR.length() &&
+        (canonicalPath.compare(0, CACHE_DIR.length(), CACHE_DIR) == 0) &&
+        (canonicalPath.length() == CACHE_DIR.length() || canonicalPath[CACHE_DIR.length()] == FILE_SEPARATOR);
+    FALSE_RETURN_V_MSG_E(isPrefixVaild, false, "path is not under the expected dir");
     return true;
 }
 } // namespace Media

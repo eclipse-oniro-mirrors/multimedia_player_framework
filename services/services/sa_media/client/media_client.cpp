@@ -66,7 +66,6 @@ constexpr int32_t POWERMGR_UID = 5528;
 constexpr int32_t RETYR_WAIT_TIME = 5;
 constexpr int32_t MAX_RETYR = 20;
 static MediaClient g_mediaClientInstance;
-
 IMediaService &MediaServiceFactory::GetInstance()
 {
     return g_mediaClientInstance;
@@ -437,7 +436,7 @@ int32_t MediaClient::DestroyLppAudioStreamerService(std::shared_ptr<ILppAudioStr
 LppAvCapabilityInfo *MediaClient::GetLppCapacity()
 {
     MEDIA_LOGI("MediaClient::GetLppCapacity");
-    CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "MediaServer is Not Alived");
+    CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "MediaServer Is Not Alived");
     LppAvCapabilityInfo *lppAvCapabilityInfo = new LppAvCapabilityInfo();
     int32_t ret = mediaProxy_->GetLppCapacity(*lppAvCapabilityInfo);
     if (ret != MSERR_OK) {
