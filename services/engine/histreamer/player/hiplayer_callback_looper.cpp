@@ -203,8 +203,8 @@ void HiPlayerCallbackLooper::DoReportMediaProgress(int type)
     }
     isDropMediaProgress_ = false;
     if (type == WHAT_MEDIA_PROGRESS) {
- 	    Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS,
- 	        SteadyClock::GetCurrentTimeMs() + reportProgressIntervalMs_, Any()));
+        Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS,
+            SteadyClock::GetCurrentTimeMs() + reportProgressIntervalMs_, Any()));
     }
 }
 
