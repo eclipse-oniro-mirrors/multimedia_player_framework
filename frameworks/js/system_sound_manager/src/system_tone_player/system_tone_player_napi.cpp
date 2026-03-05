@@ -79,6 +79,8 @@ napi_value SystemTonePlayerNapi::Init(napi_env env, napi_value exports)
             status = napi_set_named_property(env, exports, SYSTEM_TONE_PLAYER_NAPI_CLASS_NAME.c_str(), ctorObj);
             if (status == napi_ok) {
                 return exports;
+            } else {
+                napi_delete_reference(env, sConstructor_);
             }
         }
     }

@@ -89,6 +89,8 @@ napi_value RingtonePlayerNapi::Init(napi_env env, napi_value exports)
             status = napi_set_named_property(env, exports, RINGTONE_PLAYER_NAPI_CLASS_NAME.c_str(), ctorObj);
             if (status == napi_ok) {
                 return exports;
+            } else {
+                napi_delete_reference(env, sConstructor_);
             }
         }
     }

@@ -464,11 +464,13 @@ napi_value SystemSoundManagerNapi::Init(napi_env env, napi_value exports)
 
     status = napi_set_named_property(env, exports, SYSTEM_SND_MNGR_NAPI_CLASS_NAME.c_str(), ctorObj);
     if (status != napi_ok) {
+        napi_delete_reference(env, sConstructor_);
         return nullptr;
     }
 
     status = DefineStaticProperties(env, exports);
     if (status != napi_ok) {
+        napi_delete_reference(env, sConstructor_);
         return nullptr;
     }
 
