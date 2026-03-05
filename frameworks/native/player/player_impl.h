@@ -21,7 +21,6 @@
 #include "osal/task/autolock.h"
 #include "i_player_service.h"
 #include "hitrace/tracechain.h"
-#include "hiappevent_agent.h"
 #include "common/fdsan_fd.h"
 
 namespace OHOS {
@@ -102,7 +101,6 @@ public:
     int32_t EnableCameraPostprocessing() override;
     int32_t SetCameraPostprocessing(bool isOpen) override;
     int32_t ForceLoadVideo(bool status) override;
-    void TraceApiEvent(int errCode, const std::string& message, time_t startTime);
     int32_t GetGlobalInfo(std::shared_ptr<Meta> &globalInfo) override;
     int32_t SetLoudnessGain(float loudnessGain) override;
     int32_t GetMediaDescription(Format &format) override;
@@ -126,8 +124,6 @@ private:
     sptr<Surface> surface_ = nullptr;
     HiviewDFX::HiTraceId traceId_;
     std::mutex cbMutex_;
-    std::shared_ptr<HiAppEventAgent> hiAppEventAgent_ = nullptr;
-    int64_t prepareStartTimeMs_ = -1;
 };
 
 class PlayerImplCallback : public PlayerCallback {
