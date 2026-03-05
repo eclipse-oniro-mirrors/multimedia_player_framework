@@ -192,9 +192,9 @@ void HiPlayerCallbackLooper::DoReportMediaProgress(int type)
         Format format;
         int32_t currentPositionMs;
         if (playerEngine_->GetCurrentTime(currentPositionMs) == 0
- 	        && (type == WHAT_MEDIA_PROGRESS_ONCE || (type == WHAT_MEDIA_PROGRESS
- 	        && SteadyClock::GetCurrentTimeMs() - lastReportTime_ >= PROGRESS_REPORT_INTERVAL))) {
- 	        lastReportTime_ = type == WHAT_MEDIA_PROGRESS ? SteadyClock::GetCurrentTimeMs() : lastReportTime_;
+            && (type == WHAT_MEDIA_PROGRESS_ONCE || (type == WHAT_MEDIA_PROGRESS
+            && SteadyClock::GetCurrentTimeMs() - lastReportTime_ >= PROGRESS_REPORT_INTERVAL))) {
+            lastReportTime_ = type == WHAT_MEDIA_PROGRESS ? SteadyClock::GetCurrentTimeMs() : lastReportTime_;
             MEDIA_LOG_D("EVENT_AUDIO_PROGRESS position updated: " PUBLIC_LOG_D32, currentPositionMs);
             obs->OnInfo(INFO_TYPE_POSITION_UPDATE, currentPositionMs, format);
         } else {
