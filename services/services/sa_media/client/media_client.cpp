@@ -439,7 +439,6 @@ LppAvCapabilityInfo *MediaClient::GetLppCapacity()
     MEDIA_LOGI("MediaClient::GetLppCapacity");
     CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "MediaServer Is Not Alived");
     LppAvCapabilityInfo *lppAvCapabilityInfo = new LppAvCapabilityInfo();
-    CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "MediaServer Is Not Alived");
     int32_t ret = mediaProxy_->GetLppCapacity(*lppAvCapabilityInfo);
     if (ret != MSERR_OK) {
         delete lppAvCapabilityInfo;
