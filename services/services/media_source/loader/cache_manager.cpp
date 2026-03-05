@@ -438,7 +438,7 @@ bool StreamCacheManager::RemoveCacheDirectory(const std::string& path)
 
     for (const auto& file : files) {
         if (removeSize >= NEED_REMOVE_CACHE_SIZE) {
-            MEDIA_LOGI("remove end, count:%{public}d, size:%{public}d", removeSize, deletedCount);
+            MEDIA_LOGI("remove end, count:%{public}llu, size:%{public}llu", removeSize, deletedCount);
             break;
         }
 
