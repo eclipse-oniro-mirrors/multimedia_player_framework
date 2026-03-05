@@ -1111,7 +1111,25 @@ HWTEST_F(AVMetaDataCollectorUnitTest, GetAVMetadata_005, TestSize.Level1)
     std::string description;
     EXPECT_TRUE(meta->GetData("description", description));
 }
- 
+
+/**
+ * @tc.name: GetAVMetadata_006
+ * @tc.desc: GetAVMetadata_006
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetaDataCollectorUnitTest, GetAVMetadata_006, TestSize.Level1)
+{
+    avmetaDataCollector->collectedMeta_ = {
+        { AV_KEY_ENCODER, "encoder" },
+    };
+    avmetaDataCollector->collectedAVMetaData_ = nullptr;
+    auto meta = avmetaDataCollector->GetAVMetadata();
+    EXPECT_TRUE(meta != nullptr);
+
+    std::string encoder;
+    EXPECT_TRUE(meta->GetData("encoder", encoder));
+}
+
 /**
  * @tc.name: GetArtPicture
  * @tc.desc: GetArtPicture

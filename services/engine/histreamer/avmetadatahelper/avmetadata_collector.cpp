@@ -96,6 +96,7 @@ static const std::unordered_map<int32_t, std::string> AVMETA_KEY_TO_X_MAP = {
     { AV_KEY_GLTF_OFFSET, Tag::GLTF_OFFSET },
     { AV_KEY_VIDEO_COLOR_TRC, Tag::VIDEO_COLOR_TRC },
     { AV_KEY_VIDEO_DESCRIPTION, Tag::MEDIA_DESCRIPTION },
+    { AV_KEY_ENCODER, Tag::MEDIA_ENCODER },
 };
 
 static const std::vector<std::pair<int32_t, std::string>> oggOverrideKeys = {
