@@ -106,12 +106,12 @@ napi_value ToneAttrsNapi::Init(napi_env env, napi_value exports)
  
     status = napi_set_named_property(env, exports, TONE_ATTRS_NAPI_CLASS_NAME.c_str(), ctorObj);
     if (status != napi_ok) {
+        napi_delete_reference(env, sConstructor_);
         return nullptr;
     }
  
     status = ToneStaticProperties(env, exports);
     if (status != napi_ok) {
-        napi_delete_reference(env, sConstructor_);
         return nullptr;
     }
  
