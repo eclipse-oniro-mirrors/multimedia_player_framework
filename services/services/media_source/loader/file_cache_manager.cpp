@@ -138,10 +138,10 @@ bool FileCacheManager::IsValidPath(const std::string& inputPath)
     auto realPath = realpath(checkPath.c_str(), path);
     FALSE_RETURN_V_MSG_E(realPath, false, "realPath fail");
     std::string canonicalPath(path);
-    auto isPrefixVaild = canonicalPath.length() >= CACHE_DIR.length() &&
+    auto isPrefixValid = canonicalPath.length() >= CACHE_DIR.length() &&
         (canonicalPath.compare(0, CACHE_DIR.length(), CACHE_DIR) == 0) &&
         (canonicalPath.length() == CACHE_DIR.length() || canonicalPath[CACHE_DIR.length()] == FILE_SEPARATOR);
-    FALSE_RETURN_V_MSG_E(isPrefixVaild, false, "path is not under the expected dir");
+    FALSE_RETURN_V_MSG_E(isPrefixValid, false, "path is not under the expected dir");
     return true;
 }
 } // namespace Media
