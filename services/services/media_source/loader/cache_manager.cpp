@@ -296,8 +296,8 @@ std::string StreamCacheManager::GetMediaCache(const std::string& url)
     char* ptr = static_cast<char*>(mapped_);
     CacheEntryHeader* header = reinterpret_cast<CacheEntryHeader*>(ptr + info.offset);
     std::string entry = ExtractField(ptr + info.offset, header->fieldCount, CacheFieldId::ENTRY);
-    CHECK_AND_RETURN_RET_LOG(!entry.empty() && entry.find("..") == std::string::npos &&
-        entry.find('/') == std::string::npos && entry.find('\\') == std::string::npos,
+    CHECK_AND_RETURN_RET_LOG(!entry.empty() && entry.find("..") == std::string::npos
+        && entry.find('/') == std::string::npos && entry.find('\\') == std::string::npos,
         "", "get media cache file failed");
     
     std::string path = CACHE_DIR + fs::path::preferred_separator + entry;
@@ -424,7 +424,7 @@ bool StreamCacheManager::RemoveCacheDirectory(const std::string& path)
 {
     CHECK_AND_RETURN_RET_LOG(fs::exists(path) && fs::is_directory(path), false,
         "file does not exist or is not a directory");
-    int removeSize = 0;
+    uint64_t removeSize = 0;
     int deletedCount = 0;
     std::vector<FileInfo> files;
     for (const auto& entry : fs::recursive_directory_iterator(path)) {
@@ -438,7 +438,7 @@ bool StreamCacheManager::RemoveCacheDirectory(const std::string& path)
 
     for (const auto& file : files) {
         if (removeSize >= NEED_REMOVE_CACHE_SIZE) {
-            MEDIA_LOGI("remove end, count:%{public}d, size:%{public}d", removeSize, deletedCount);
+            MEDIA_LOGI("remove end, count:%{public}llu, size:%{public}d", removeSize, deletedCount);
             break;
         }
 

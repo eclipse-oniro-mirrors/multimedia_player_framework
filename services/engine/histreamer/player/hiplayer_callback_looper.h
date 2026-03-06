@@ -66,7 +66,7 @@ public:
     std::vector<std::string> GetDolbyList() override;
 
 private:
-    void DoReportMediaProgress();
+    void DoReportMediaProgress(int type);
     void DoReportDfxInfo(const Any& info);
     void DoReportInfo(const Any& info);
     void DoReportError(const Any& error, const std::string &description);
@@ -113,6 +113,7 @@ private:
     int64_t reportProgressIntervalMs_ {100}; // default interval is 100 ms
     int64_t collectMaxAmplitudeIntervalMs_ {100}; // default interval is 100 ms
     std::vector<float> vMaxAmplitudeArray_ {};
+    int64_t lastReportTime_ {0};
 };
 }  // namespace Media
 }  // namespace OHOS

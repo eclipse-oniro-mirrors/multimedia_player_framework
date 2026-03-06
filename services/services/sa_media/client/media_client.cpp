@@ -65,15 +65,11 @@ constexpr uint32_t MAX_WAIT_TIME = 5000;
 constexpr int32_t POWERMGR_UID = 5528;
 constexpr int32_t RETYR_WAIT_TIME = 5;
 constexpr int32_t MAX_RETYR = 20;
-std::shared_ptr<MediaClient> g_mediaClientInstance;
+static MediaClient g_mediaClientInstance;
 std::once_flag onceFlag_;
-
 IMediaService &MediaServiceFactory::GetInstance()
 {
-    std::call_once(onceFlag_, [] {
-        g_mediaClientInstance = std::make_shared<MediaClient>();
-    });
-    return *g_mediaClientInstance;
+    return g_mediaClientInstance;
 }
 
 MediaClient::MediaClient() noexcept
@@ -249,7 +245,6 @@ int32_t MediaClient::DestroyTransCoderService(std::shared_ptr<ITransCoderService
     return MSERR_OK;
 }
 #endif
-
 #ifdef SUPPORT_PLAYER
 std::shared_ptr<IPlayerService> MediaClient::CreatePlayerService()
 {
@@ -266,6 +261,7 @@ std::shared_ptr<IPlayerService> MediaClient::CreatePlayerService()
         uint64_t tokenId = IPCSkeleton::GetCallingFullTokenID();
         isSysAppGallery = Security::AccessToken::AccessTokenKit::IsSystemAppByFullTokenID(tokenId);
     }
+    CHECK_AND_RETURN_RET_LOG(mediaProxy_ != nullptr, nullptr, "media proxy is nullptr.");
     object = isSysAppGallery?
         mediaProxy_ -> GetSubSystemAbility(playerAbility, listenerStub_->AsObject())
         : mediaProxy_ ->GetSubSystemAbilityWithTimeOut(playerAbility, listenerStub_->AsObject(), MAX_WAIT_TIME);
@@ -405,13 +401,6 @@ int32_t MediaClient::DestroyScreenCaptureControllerClient(std::shared_ptr<IScree
 }
 #endif
 
-std::vector<pid_t> MediaClient::GetPlayerPids()
-{
-    std::vector<pid_t> res;
-    CHECK_AND_RETURN_RET_LOG(IsAlived(), res, "MediaServer Is Not Alived");
-    return mediaProxy_->GetPlayerPids();
-}
-
 #ifdef SUPPORT_LPP_AUDIO_STRAMER
 std::shared_ptr<ILppAudioStreamerService> MediaClient::CreateLppAudioStreamerService()
 {
@@ -448,9 +437,12 @@ int32_t MediaClient::DestroyLppAudioStreamerService(std::shared_ptr<ILppAudioStr
 LppAvCapabilityInfo *MediaClient::GetLppCapacity()
 {
     MEDIA_LOGI("MediaClient::GetLppCapacity");
-    LppAvCapabilityInfo *lppAvCapabilityInfo = new LppAvCapabilityInfo();
     CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "MediaServer Is Not Alived");
+    LppAvCapabilityInfo *lppAvCapabilityInfo = new LppAvCapabilityInfo();
     int32_t ret = mediaProxy_->GetLppCapacity(*lppAvCapabilityInfo);
+    if (ret != MSERR_OK) {
+        delete lppAvCapabilityInfo;
+    }
     CHECK_AND_RETURN_RET_LOG(ret == 0, nullptr, "MediaClient::GetLppCapacityfailed");
     return lppAvCapabilityInfo;
 }
@@ -486,6 +478,13 @@ int32_t MediaClient::DestroyLppVideoStreamerService(std::shared_ptr<ILppVideoStr
 }
 #endif
 
+std::vector<pid_t> MediaClient::GetPlayerPids()
+{
+    std::vector<pid_t> res;
+    CHECK_AND_RETURN_RET_LOG(IsAlived(), res, "MediaServer Is Not Alived");
+    return mediaProxy_->GetPlayerPids();
+}
+
 sptr<IStandardMonitorService> MediaClient::GetMonitorProxy()
 {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -520,8 +519,7 @@ sptr<IStandardMediaService> MediaClient::GetMediaProxy()
     deathRecipient_ = new(std::nothrow) MediaDeathRecipient(pid);
     CHECK_AND_RETURN_RET_LOG(deathRecipient_ != nullptr, nullptr, "failed to new MediaDeathRecipient.");
 
-    deathRecipient_->SetNotifyCb(std::bind(&MediaClient::MediaServerDied, std::placeholders::_1,
-        g_mediaClientInstance));
+    deathRecipient_->SetNotifyCb(std::bind(&MediaClient::MediaServerDied, std::placeholders::_1));
     bool result = object->AddDeathRecipient(deathRecipient_);
     if (!result) {
         MEDIA_LOGE("failed to add deathRecipient");
@@ -533,12 +531,10 @@ sptr<IStandardMediaService> MediaClient::GetMediaProxy()
     return mediaProxy_;
 }
 
-void MediaClient::MediaServerDied(pid_t pid, std::weak_ptr<MediaClient> client)
+void MediaClient::MediaServerDied(pid_t pid)
 {
     MEDIA_LOGE("media server is died, pid:%{public}d!", pid);
-    auto instance = client.lock();
-    CHECK_AND_RETURN_LOG(instance, "mediaClient instance has been released, maybe current process is exiting");
-    instance->DoMediaServerDied();
+    g_mediaClientInstance.DoMediaServerDied();
 }
 
 void MediaClient::AVPlayerServerDied()

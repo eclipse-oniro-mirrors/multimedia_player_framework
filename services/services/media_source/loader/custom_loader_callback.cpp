@@ -34,6 +34,22 @@ namespace {
     constexpr int64_t WAIT_TIME_US = 10000;
     constexpr int64_t INTERNET_WAIT_TIME = 100;
     constexpr int64_t TAB_INDEX = 2;
+
+    bool StrToLong(const std::string_view& str, int64_t& value)
+    {
+        FALSE_RETURN_V_MSG_E(!str.empty() && (isdigit(str.front()) || (str.front() == '-')),
+            false, "no valid string.");
+        std::string valStr(str);
+        char* end = nullptr;
+        errno = 0;
+        long long result = strtoll(valStr.c_str(), &end, 10); /* 10 means decimal */
+        FALSE_RETURN_V_MSG_E(result >= LLONG_MIN && result <= LLONG_MAX, false,
+            "call StrToLong func false,  input str is: %{public}s!", valStr.c_str());
+        FALSE_RETURN_V_MSG_E(end != valStr.c_str() && end[0] == '\0' && errno != ERANGE, false,
+            "call StrToLong func false,  input str is: %{public}s!", valStr.c_str());
+        value = result;
+        return true;
+    }
 }
 
 CustomLoaderCallback::CustomLoaderCallback(int64_t uuid,
@@ -52,7 +68,9 @@ CustomLoaderCallback::CustomLoaderCallback(int64_t uuid,
     requestHandler_->SetFileCacheManager(fileCacheManager_);
     requestHandler_->SetHeaderParser(headerParser_);
     buffer_ = static_cast<uint8_t *>(malloc(SHARD_SIZE));
+    currentBuffer_ = static_cast<uint8_t *>(malloc(SHARD_SIZE / 4));
     FALSE_RETURN_MSG(buffer_ != nullptr, "buffer_ is nullptr");
+    FALSE_RETURN_MSG(currentBuffer_ != nullptr, "currentBuffer_ is nullptr");
     NetworkClientAgent::Create();
 }
 
@@ -62,6 +80,14 @@ CustomLoaderCallback::~CustomLoaderCallback()
         requestHandler_->GetClient()->Deinit();
         requestHandler_->GetClient()->Close(false);
         requestHandler_->SetClient(nullptr);
+    }
+    if (buffer_) {
+        free(buffer_);
+        buffer_ = nullptr;
+    }
+    if (currentBuffer_) {
+        free(currentBuffer_);
+        currentBuffer_ = nullptr;
     }
 }
 
@@ -109,7 +135,7 @@ void CustomLoaderCallback::CreateUrlDir()
     
     auto contentLength = headerMap_.find("content-length");
     if (contentLength != headerMap_.end()) {
-        size_ = std::stoll(contentLength->second);
+        FALSE_RETURN_MSG(StrToLong(contentLength->second, size_), "Failed to read size.");
     }
 
     auto type = headerMap_.find("content-type");
@@ -290,6 +316,10 @@ void CustomLoaderCallback::HandleNonCacheRequest(const std::shared_ptr<CustomLoa
     std::lock_guard<std::mutex> lock(self->mutex_);
     self->path_ = "1";
     self->currentLen_ = (requestedLength <= 0) ? (self->size_ - requestedOffset) : requestedLength;
+    if (self->currentBuffer_  != nullptr) {
+        free(self->currentBuffer_);
+        self->currentBuffer_ = nullptr;
+    }
     self->currentBuffer_ = static_cast<uint8_t*>(malloc(self->currentLen_));
     if (self->currentBuffer_ == nullptr) {
         MEDIA_LOG_I("malloc is failed");
@@ -455,13 +485,12 @@ size_t CustomLoaderCallback::RxBodyData(void* buffer, size_t size, size_t nitems
     size_t dataLen = size * nitems;
     if (mediaDownloader->isFirstCallback_) {
         MEDIA_LOG_I("receive first callback");
-        mediaDownloader->task_->SubmitJobOnce(
-            [mediaDownloader] {
-                FALSE_RETURN_MSG(mediaDownloader->requestHandler_->GetClient() != nullptr, "client is nullptr!");
-                mediaDownloader->requestHandler_->GetClient()->Close(false);
-                mediaDownloader->requestHandler_->GetClient()->Deinit();
-                mediaDownloader->requestHandler_->SetClient(nullptr);
-            }, INTERNET_WAIT_TIME, false);
+        mediaDownloader->task_->SubmitJobOnce([mediaDownloader] {
+            FALSE_RETURN_MSG(mediaDownloader->requestHandler_->GetClient() != nullptr, "client is nullptr!");
+            mediaDownloader->requestHandler_->GetClient()->Close(false);
+            mediaDownloader->requestHandler_->GetClient()->Deinit();
+            mediaDownloader->requestHandler_->SetClient(nullptr);
+        }, INTERNET_WAIT_TIME, false);
         mediaDownloader->isFirstCallback_ = false;
         return dataLen;
     }
@@ -572,8 +601,8 @@ void CustomLoaderCallback::ReadDataTask(const std::weak_ptr<CustomLoaderCallback
         }
 
         pthread_mutex_lock(&self->mutex);
-        if (self->dataSize != SHARD_SIZE) {
-            MEDIA_LOG_I("dataSize is under 4MB, wait download");
+        if (self->dataSize  != SHARD_SIZE) {
+            MEDIA_LOG_I("dataSize  is under 4MB, wait download");
             pthread_cond_wait(&self->condReturn_, &self->mutex);
             MEDIA_LOG_I("wait download end");
         }
@@ -713,12 +742,15 @@ size_t CustomLoaderCallback::RxBodyDataUnsupportRangeAndCache(void* buffer, size
             }
         }
     } else {
-        memcpy_s(downloader->buffer_ + downloader->dataSize, SHARD_SIZE - downloader->dataSize, tempBuffer, dataLen);
+        errno_t rc = memcpy_s(downloader->buffer_ + downloader->dataSize, SHARD_SIZE -
+            downloader->dataSize, tempBuffer, dataLen);
         downloader->dataSize += static_cast<int64_t>(dataLen);
-        if (downloader->dataSize == SHARD_SIZE) {
-            MEDIA_LOG_I("download thread wait, notify data return thread:");
-            pthread_cond_signal(&downloader->condReturn_);
-            pthread_cond_wait(&downloader->condDownload_, &downloader->mutex);
+        if (rc == 0) {
+            if (downloader->dataSize == SHARD_SIZE) {
+                MEDIA_LOG_I("download thread wait, notify data return thread:");
+                pthread_cond_signal(&downloader->condReturn_);
+                pthread_cond_wait(&downloader->condDownload_, &downloader->mutex);
+            }
         }
     }
     pthread_mutex_unlock(&downloader->mutex);

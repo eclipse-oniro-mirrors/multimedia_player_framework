@@ -40,8 +40,8 @@ private:
     int32_t GetSystemAbility(MessageParcel &data, MessageParcel &reply);
     int32_t GetSystemAbilityAync(MessageParcel &data, MessageParcel &reply);
     int32_t ReleaseClientListenerStub(MessageParcel &data, MessageParcel &reply);
-    int32_t HandleKillMediaService(MessageParcel &data, MessageParcel &reply);
     int32_t GetPlayerPidsStub(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleKillMediaService(MessageParcel &data, MessageParcel &reply);
     void ReleaseClientListener() override;
     std::vector<pid_t> GetPlayerPids() override;
     int32_t GetLppCapacity(LppAvCapabilityInfo &lppAvCapability) override;

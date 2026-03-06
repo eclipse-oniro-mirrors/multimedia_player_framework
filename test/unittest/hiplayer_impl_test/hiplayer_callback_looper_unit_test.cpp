@@ -68,7 +68,7 @@ HWTEST_F(HiplayerCallbackLooperUnitTest, DoReportMediaProgress_001, TestSize.Lev
 {
     callback_->reportMediaProgress_ = true;
     testObs_ = nullptr;
-    callback_->DoReportMediaProgress();
+    callback_->DoReportMediaProgress(WHAT_MEDIA_PROGRESS);
     EXPECT_FALSE(callback_->isDropMediaProgress_);
     callback_->reportMediaProgress_ = false;
 }
@@ -82,11 +82,11 @@ HWTEST_F(HiplayerCallbackLooperUnitTest, DoReportMediaProgress_002, TestSize.Lev
 {
     callback_->reportMediaProgress_ = false;
     callback_->isDropMediaProgress_ = true;
-    callback_->DoReportMediaProgress();
+    callback_->DoReportMediaProgress(WHAT_MEDIA_PROGRESS);
     EXPECT_FALSE(testObs_->onInfoFlag);
     callback_->reportMediaProgress_ = true;
     callback_->isDropMediaProgress_ = true;
-    callback_->DoReportMediaProgress();
+    callback_->DoReportMediaProgress(WHAT_MEDIA_PROGRESS);
     EXPECT_FALSE(testObs_->onInfoFlag);
     callback_->reportMediaProgress_ = false;
 }
