@@ -4767,7 +4767,7 @@ void ScreenCaptureServer::SystemPrivacyProtected(ScreenId& virtualScreenId, bool
     MEDIA_LOGI("SystemPrivacyProtected SetScreenSkipProtectedWindow done, ret: %{public}d", ret);
     std::vector<std::string> privacyWindowTags;
     privacyWindowTags.push_back("SCB_KEYBOARD_FLOATING");
-    auto ret = ScreenManager::GetInstance().SetScreenPrivacyWindowTagSwitch(virtualScreenId,
+    ret = ScreenManager::GetInstance().SetScreenPrivacyWindowTagSwitch(virtualScreenId,
         privacyWindowTags, systemPrivacyProtectionSwitch);
     MEDIA_LOGI("SystemPrivacyProtected SetScreenPrivacyWindowTagSwitch done, ret: %{public}d", ret);
 }
