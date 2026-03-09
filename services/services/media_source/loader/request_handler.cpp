@@ -37,13 +37,14 @@ void RequestHandler::Request(int64_t start, int64_t length, const std::string& u
     sourceInfo.timeoutMs = TIMEOUT_MS;
 
     auto weakThis = weak_from_this();
-    auto handleResponseCb = [weakThis](int32_t clientCode, int32_t serverCode, Status ret) {
+    auto handleResponseCb = [weakThis](int32_t clientCode, int32_t serverCode, const std::string &ca, Status ret) {
         MEDIA_LOG_W("HandleResponseCb clientCode: %{public}d serverCode %{public}d", clientCode, serverCode);
         auto self = weakThis.lock();
         if (!self) {
             return;
         }
 
+        (void)ca;
         self->clientCode_ = clientCode;
         if (ret != Status::OK) {
             self->request_->FinishLoading(self->uuid_, 5);
