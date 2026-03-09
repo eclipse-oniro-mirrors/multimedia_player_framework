@@ -79,7 +79,7 @@ public:
     void OnAudioCaptureChange(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo);
     int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo);
     int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo);
-    int32_t GetMaxAmplitude();
+    int32_t GetMaxAmplitude(int32_t &amplitude);
     void SetCallingInfo(const std::string &bundleName, uint64_t instanceId);
     int32_t IsWatermarkSupported(bool &isWatermarkSupported);
     int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer);

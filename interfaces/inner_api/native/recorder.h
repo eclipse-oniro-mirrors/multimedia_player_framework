@@ -965,7 +965,8 @@ public:
 
     virtual int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo) = 0;
 
-    virtual int32_t GetMaxAmplitude() = 0;
+    virtual int32_t GetMaxAmplitude(int32_t &amplitude) = 0;
+
     /**
      * @brief Check if the avrecorder has watermark capability.
      *

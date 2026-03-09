@@ -134,7 +134,8 @@ bool RecorderServiceFuzzer::FuzzRecorderService(uint8_t *data, size_t size)
     recoderServer->SetFileSplitDuration(FileSplitType::FILE_SPLIT_NORMAL, timestamp, duration);
     std::vector<EncoderCapabilityData> encoderInfo;
     recoderServer->GetAvailableEncoder(encoderInfo);
-    recoderServer->GetMaxAmplitude();
+    int32_t amplitude;
+    recoderServer->GetMaxAmplitude(amplitude);
     recoderServer->Start();
     recoderServer->Pause();
     recoderServer->Resume();

@@ -1609,8 +1609,7 @@ int32_t AVRecorderNapi::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &ch
 
 int32_t AVRecorderNapi::GetMaxAmplitude(int32_t &maxAmplitude)
 {
-    maxAmplitude = recorder_->GetMaxAmplitude();
-    return MSERR_OK;
+    return recorder_->GetMaxAmplitude(maxAmplitude);
 }
 
 int32_t AVRecorderNapi::GetEncoderInfo(std::vector<EncoderCapabilityData> &encoderInfo)

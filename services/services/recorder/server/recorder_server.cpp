@@ -1157,12 +1157,14 @@ int32_t RecorderServer::GetAvailableEncoder(std::vector<EncoderCapabilityData> &
     return result.Value();
 }
 
-int32_t RecorderServer::GetMaxAmplitude()
+int32_t RecorderServer::GetMaxAmplitude(int32_t &amplitude)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_PREPARED && status_ != REC_RECORDING && status_ != REC_PAUSED,
+        MSERR_INVALID_STATE);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
-        return recorderEngine_->GetMaxAmplitude();
+        return recorderEngine_->GetMaxAmplitude(amplitude);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");

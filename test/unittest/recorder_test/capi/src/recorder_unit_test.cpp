@@ -904,6 +904,81 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetAVRecorderConfig_003, TestSize.Leve
 }
 
 /**
+ * @tc.name: Recorder_GetAudioCapturerMaxAmplitude_001
+ * @tc.desc: Test recorder GetAudioCapturerMaxAmplitude process 001
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_GetAudioCapturerMaxAmplitude_001, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_GetAudioCapturerMaxAmplitude_001 in.");
+
+    OH_AVRecorder_Config config = config_;
+    config.metadata.genre = strdup("");
+    config.metadata.videoOrientation = strdup("0");
+    config.metadata.customInfo.key = strdup("");
+    config.metadata.customInfo.value = strdup("");
+
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_GetAudioCapturerMaxAmplitude_001.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
+
+    int32_t ret = AV_ERR_OK;
+    ret = OH_AVRecorder_Prepare(recorder_, &config);
+    EXPECT_EQ(ret, AV_ERR_OK);
+
+    int32_t amplitude = 0;
+    ret = OH_AVRecorder_GetAudioCapturerMaxAmplitude(recorder_, &amplitude);
+    EXPECT_EQ(ret, AV_ERR_OK);
+
+    free(config.url);
+    free(config.metadata.genre);
+    free(config.metadata.videoOrientation);
+    free(config.metadata.customInfo.key);
+    free(config.metadata.customInfo.value);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_GetAudioCapturerMaxAmplitude_001 out.");
+}
+
+/**
+ * @tc.name: Recorder_SetCustomInfo_001
+ * @tc.desc: Test recorder SetCustomInfo process 001
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_SetCustomInfo_001, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetCustomInfo_001 in.");
+
+    OH_AVRecorder_Config config = config_;
+    config.metadata.genre = strdup("");
+    config.metadata.videoOrientation = strdup("0");
+    config.metadata.customInfo.key = strdup("");
+    config.metadata.customInfo.value = strdup("");
+
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_SetCustomInfo_001.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
+
+    int32_t ret = AV_ERR_OK;
+    ret = OH_AVRecorder_Prepare(recorder_, &config);
+    EXPECT_EQ(ret, AV_ERR_OK);
+
+    OH_AVFormat *customInfo = OH_AVFormat_Create();
+    OH_AVFormat_SetStringValue(customInfo, "com.openharmony.test", "Recorder_SetCustomInfo_001");
+    ret = OH_AVRecorder_SetCustomInfo(recorder_, customInfo);
+    EXPECT_EQ(ret, AV_ERR_OK);
+
+    OH_AVFormat_Destroy(customInfo);
+
+    free(config.url);
+    free(config.metadata.genre);
+    free(config.metadata.videoOrientation);
+    free(config.metadata.customInfo.key);
+    free(config.metadata.customInfo.value);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetCustomInfo_001 out.");
+}
+
+/**
  * @tc.name: Recorder_GetInputSurface_001
  * @tc.desc: Test recorder GetInputSurface process 001
  * @tc.type: FUNC

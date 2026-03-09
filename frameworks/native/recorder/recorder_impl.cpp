@@ -414,10 +414,10 @@ int32_t RecorderImpl::GetAvailableEncoder(std::vector<EncoderCapabilityData> &en
     return recorderService_->GetAvailableEncoder(encoderInfo);
 }
 
-int32_t RecorderImpl::GetMaxAmplitude()
+int32_t RecorderImpl::GetMaxAmplitude(int32_t &amplitude)
 {
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
-    return recorderService_->GetMaxAmplitude();
+    return recorderService_->GetMaxAmplitude(amplitude);
 }
 
 int32_t RecorderImpl::IsWatermarkSupported(bool &isWatermarkSupported)

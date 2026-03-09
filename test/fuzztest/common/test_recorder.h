@@ -86,7 +86,7 @@ public:
     void SetVideoEnableStableQualityMode(int32_t sourceId, bool enableStableQualityMode);
     void SetVideoEnableBFrame(int32_t sourceId, bool enableBFrame);
     void GetMetaSurface(int32_t sourceId);
-    void GetMaxAmplitude();
+    void GetMaxAmplitude(int32_t &amplitude);
     void SetMetaConfigs(int32_t sourceId);
     void IsWatermarkSupported(bool &isWatermarkSupported);
     void SetWillMuteWhenInterrupted(bool muteWhenInterrupted);

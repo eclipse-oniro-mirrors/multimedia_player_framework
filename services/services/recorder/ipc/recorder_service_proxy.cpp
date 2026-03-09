@@ -954,7 +954,7 @@ int32_t RecorderServiceProxy::GetAvailableEncoder(std::vector<EncoderCapabilityD
     return reply.ReadInt32();
 }
 
-int32_t RecorderServiceProxy::GetMaxAmplitude()
+int32_t RecorderServiceProxy::GetMaxAmplitude(int32_t &amplitude)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -966,9 +966,9 @@ int32_t RecorderServiceProxy::GetMaxAmplitude()
     int error = Remote()->SendRequest(GET_MAX_AMPLITUDE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "GetMaxAmplitude failed, error: %{public}d", error);
-    int32_t amplitude = reply.ReadInt32();
+    amplitude = reply.ReadInt32();
     MEDIA_LOGI("GetMaxAmplitude amplitude result: %{public}d", amplitude);
-    return amplitude;
+    return reply.ReadInt32();
 }
 
 int32_t RecorderServiceProxy::IsWatermarkSupported(bool &isWatermarkSupported)

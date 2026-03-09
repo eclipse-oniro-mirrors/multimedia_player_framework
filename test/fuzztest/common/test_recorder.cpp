@@ -352,9 +352,9 @@ void TestRecorder::SetWillMuteWhenInterrupted(bool muteWhenInterrupted)
     recorder->SetWillMuteWhenInterrupted(muteWhenInterrupted);
 }
 
-void TestRecorder::GetMaxAmplitude()
+void TestRecorder::GetMaxAmplitude(int32_t &amplitude)
 {
-    recorder->GetMaxAmplitude();
+    recorder->GetMaxAmplitude(amplitude);
 }
 
 bool TestRecorder::RequesetBuffer(const std::string &recorderType, VideoRecorderConfig_ &recorderConfig)
