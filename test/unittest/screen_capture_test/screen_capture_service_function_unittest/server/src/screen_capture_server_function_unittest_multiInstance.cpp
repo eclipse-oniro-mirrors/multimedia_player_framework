@@ -898,14 +898,14 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_001, TestS
 
 HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_002, TestSize.Level2)
 {
-    ScreenCaptureRect* area = nullptr;
+    std::unique_ptr<ScreenCaptureRect> area = std::make_unique<ScreenCaptureRect>();
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     area->x = 0;
     area->y = 0;
     area->width = 1;
     area->height = 1;
     screenCaptureServer_->NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE,
-        area);
+        area.get());
     screenCaptureServer_->NotifyCaptureContentChanged(
         AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE, nullptr);
     screenCaptureServer_->NotifyCaptureContentChanged(
