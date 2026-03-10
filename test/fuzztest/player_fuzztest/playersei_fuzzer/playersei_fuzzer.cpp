@@ -64,7 +64,8 @@ std::shared_ptr<AVBuffer> ReadAVBufferFromLocalFile()
     return avBuffer;
 }
 
-bool PlayerSeiFuzzer::IsHEVC(uint8_t *data, size_t size) {
+bool PlayerSeiFuzzer::IsHEVC(uint8_t *data, size_t size) 
+{
     FuzzedDataProvider fdp(data, size);
     if (fdp.ConsumeIntegral<int32_t>() < sizeof(HEVC_START_CODE)) {
         return false;
