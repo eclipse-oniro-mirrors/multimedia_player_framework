@@ -120,6 +120,7 @@ static const std::map<int32_t, const char*> g_MetadataCodeMap = {
     {45,    "gltf_offset"},
     {46,    "transfer_characteristics"},
     {47,    "description"},
+    {48,    "encoder"},
 };
 
 /**
@@ -151,6 +152,7 @@ static const std::vector<std::string> g_Metadata = {
     "tracks",
     "gltf_offset",
     "description",
+    "encoder",
 };
 
 enum HdrType : int32_t {
@@ -348,6 +350,10 @@ enum AVMetadataCode : int32_t {
      * The metadata key to retrieve the information about the description of the video.
      */
     AV_KEY_VIDEO_DESCRIPTION = 47,
+    /**
+     * The metadata key to represent the software or hardware and setting used for encoding.
+     */
+    AV_KEY_ENCODER = 48,
 };
 
 /**
