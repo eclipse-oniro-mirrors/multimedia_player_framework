@@ -86,6 +86,9 @@ int32_t AVMetadataHelperImpl::SetAVMetadataCaller(AVMetadataCaller caller)
 int32_t AVMetadataHelperImpl::SetUrlSource(const std::string &uri, const std::map<std::string, std::string> &header)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " SetUrlSource uri: %{private}s", FAKE_POINTER(this), uri.c_str());
+    CHECK_AND_RETURN_RET_LOG(!uri.empty(), MSERR_INVALID_VAL, "url is empty.");
+    CHECK_AND_RETURN_RET_LOG((uri.find("http://") == 0 || uri.find("https://") == 0), MSERR_INVALID_VAL,
+        "url is error.");
 
     auto ret = SetSourceInternel(uri, header);
     CHECK_AND_RETURN_RET_LOG(ret == Status::OK, MSERR_INVALID_VAL,
