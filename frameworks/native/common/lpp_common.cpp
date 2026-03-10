@@ -126,6 +126,7 @@ bool LppDataPacket::ReadVector(MessageParcel &parcel)
     }
 
     parcel.ReadInt64(size);
+    CHECK_AND_RETURN_RET_LOG(size >= 0 && size <= MAX_BUFFER_CNT, false, "invalid buffer cnt");
     std::vector<int64_t> pts;
     for (int i = 0; i < size; i++) {
         int64_t elem = 0;
@@ -134,6 +135,7 @@ bool LppDataPacket::ReadVector(MessageParcel &parcel)
     }
 
     parcel.ReadInt64(size);
+    CHECK_AND_RETURN_RET_LOG(size >= 0 && size <= MAX_BUFFER_CNT, false, "invalid buffer cnt");
     for (int i = 0; i < size; i++) {
         int elem = 0;
         parcel.ReadInt32(elem);
