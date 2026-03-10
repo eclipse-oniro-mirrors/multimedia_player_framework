@@ -1309,6 +1309,7 @@ void HiPlayerImpl::AppendPlayerMediaInfo()
     meta->SetData(Tag::AV_PLAYER_MAX_LAG_DURATION, playStatisticalInfo_.maxLagDuration);
     meta->SetData(Tag::AV_PLAYER_AVG_LAG_DURATION, playStatisticalInfo_.avgLagDuration);
     meta->SetData(Tag::AV_PLAYER_MAX_SURFACESWAP_LATENCY, playStatisticalInfo_.maxSurfaceSwapLatency);
+    meta->SetData(Tag::AV_PLAYER_BUFFER_DURATION, bufferDuration_);
     AppendMediaInfo(meta, instanceId_);
 }
 
