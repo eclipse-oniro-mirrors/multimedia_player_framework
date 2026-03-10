@@ -1648,9 +1648,6 @@ Status HiPlayerImpl::HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs)
     if (audioSink_ != nullptr) {
         audioSink_->SetIsCancelStart(false);
     }
-    if (subtitleSink_ != nullptr) {
-        subtitleSink_->NotifySeek();
-    }
     interruptMonitor_->DeregisterListener(seekAgent_);
     seekAgent_.reset();
     return res;
