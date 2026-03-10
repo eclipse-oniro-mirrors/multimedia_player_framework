@@ -26,6 +26,7 @@ class PlayerSeiFuzzer {
 public:
     PlayerSeiFuzzer();
     ~PlayerSeiFuzzer();
+    bool IsHEVC(uint8_t *data, size_t size);
     bool RunFuzz(uint8_t *data, size_t size);
 };
 } // namespace MEDIA

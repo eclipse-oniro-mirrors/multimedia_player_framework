@@ -20,6 +20,7 @@
 #include "media_parcel.h"
 #include "i_standard_player_service.h"
 #include "media_server_manager.h"
+#include "fuzzer/FuzzedDataProvider.h"
 
 namespace OHOS {
 namespace Media {
@@ -62,7 +63,8 @@ bool FuzzPlayerStubLocal(uint8_t *data, size_t size)
         return false;
     }
 
-    bool isWirteToken = size >0 && data[0] % 9 != 0;
+    FuzzedDataProvider fdp(data, size);
+    bool isWirteToken = fdp.ConsumeIntegral<int32_t>() % 9 != 0;
     for (uint32_t code = 0; code <= PlayerServiceProxyFuzzer::MAX_IPC_ID; code++) {
         MessageParcel msg;
         if (isWirteToken) {
