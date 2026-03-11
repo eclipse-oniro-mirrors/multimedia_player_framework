@@ -23,6 +23,8 @@
 #include "hitrace/tracechain.h"
 #include "media_utils.h"
 #include "screen_capture_server.h"
+#include "tokenid_kit.h"
+#include "access_token.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureMonitorServer"};
@@ -38,6 +40,8 @@ std::shared_ptr<ScreenCaptureMonitorServer> ScreenCaptureMonitorServer::GetInsta
         int32_t ret = screenCaptureMonitorServer->Init();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to init ScreenCaptureMonitorServer");
     }
+    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer->SystemPermission(), nullptr,
+        "is not system app failed to init ScreenCaptureMonitorServer");
     return screenCaptureMonitorServer;
 }
 
@@ -158,6 +162,23 @@ bool ScreenCaptureMonitorServer::IsSystemScreenRecorderWorking()
 {
     MEDIA_LOGI("ScreenCaptureMonitorServer::IsSystemScreenRecorderWorking S");
     return isSystemScreenRecorderWorking_;
+}
+
+bool ScreenCaptureMonitorServer::IsSystemApp()
+{
+    uint64_t accessTokenIDEx = IPCSkeleton::GetCallingFullTokenID();
+    bool isSystemApp = Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIDEx);
+    return isSystemApp;
+}
+
+bool ScreenCaptureMonitorServer::SystemPermission()
+{
+    auto tokenId = IPCSkeleton::GetCallingTokenID();
+    auto tokenType = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
+    if (tokenType == Security::AccessToken::TOKEN_NATIVE || tokenType == Security::AccessToken::TOKEN_SHELL) {
+        return true;
+    }
+    return IsSystemApp();
 }
 } // namespace Media
 } // namespace OHOS
