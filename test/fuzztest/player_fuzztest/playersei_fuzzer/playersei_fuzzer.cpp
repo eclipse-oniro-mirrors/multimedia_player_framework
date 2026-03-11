@@ -29,7 +29,9 @@ using namespace OHOS::Media;
 namespace OHOS {
 namespace Media {
 const char *DATA_PATH = "/data/test/fuzz_create.mp4";
+const std::string TYPE_AVC = "video/avc";
 const std::string TYPE_HEVC = "video/hevc";
+const uint8_t HEVC_START_CODE[] = { 0x00, 0x00, 0x00, 0x01 };
 
 PlayerSeiFuzzer::PlayerSeiFuzzer()
 {
@@ -62,17 +64,33 @@ std::shared_ptr<AVBuffer> ReadAVBufferFromLocalFile()
     return avBuffer;
 }
 
+bool PlayerSeiFuzzer::IsHEVC(uint8_t *data, size_t size)
+{
+    FuzzedDataProvider fdp(data, size);
+    if (fdp.ConsumeIntegral<int32_t>() < sizeof(HEVC_START_CODE)) {
+        return false;
+    }
+
+    for (size_t i = 0; i < sizeof(HEVC_START_CODE); ++i) {
+        if (fdp.ConsumeIntegral<int32_t>() != HEVC_START_CODE[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool PlayerSeiFuzzer::RunFuzz(uint8_t *data, size_t size)
 {
     int32_t fd = open(DATA_PATH, O_RDONLY);
-    std::shared_ptr<SeiParserHelper> seiParserHelper = SeiParserHelperFactory::CreateHelper(TYPE_HEVC);
+    std::string type = IsHEVC(data, size) ? TYPE_HEVC : TYPE_AVC;
+    
+    std::shared_ptr<SeiParserHelper> seiParserHelper = SeiParserHelperFactory::CreateHelper(type);
     if (seiParserHelper == nullptr) {
         return false;
     }
 
     auto buffer = ReadAVBufferFromLocalFile();
 
-    FuzzedDataProvider fdp(data, size);
     seiParserHelper->SetPayloadTypeVec({ 5 });
     std::shared_ptr<SeiPayloadInfoGroup> group = std::make_shared<SeiPayloadInfoGroup>();
     seiParserHelper->ParseSeiPayload(buffer, group);
