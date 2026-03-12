@@ -40,8 +40,6 @@ std::shared_ptr<ScreenCaptureMonitorServer> ScreenCaptureMonitorServer::GetInsta
         int32_t ret = screenCaptureMonitorServer->Init();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to init ScreenCaptureMonitorServer");
     }
-    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer->SystemPermission(), nullptr,
-        "is not system app failed to init ScreenCaptureMonitorServer");
     return screenCaptureMonitorServer;
 }
 

@@ -50,10 +50,11 @@ public:
     void SetSystemScreenRecorderStatus(bool started);
     bool IsSystemScreenRecorder(int32_t pid) override;
     bool IsSystemScreenRecorderWorking() override;
+    bool SystemPermission();
+
 private:
     int32_t Init();
     bool IsSystemApp();
-    bool SystemPermission();
 
     std::mutex mutex_;
     std::mutex mutexCb_;
