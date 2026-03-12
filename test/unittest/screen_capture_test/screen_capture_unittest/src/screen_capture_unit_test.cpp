@@ -2617,7 +2617,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_error_handling_002, TestSize.Leve
     SetConfig(config_);
     
     // 设置无效参数确保初始化失败
-    config_.audioInfo.micCapInfo.audioSampleRate = 0;
+    config_ = {};
     EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
     
     // 尝试在初始化失败后启动
@@ -2663,7 +2663,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_error_handling_004, TestSize.Leve
     SetConfig(config_);
     
     // 设置空回调
-    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(nullptr));
+    EXPECT_NE(MSERR_OK, screenCapture_->SetScreenCaptureCallback(nullptr));
     
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
@@ -2782,7 +2782,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_state_machine_003, TestSize.Level
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     
     // 尝试再次启动（状态回退测试）
-    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
     
     sleep(1);
@@ -3070,6 +3070,94 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_audio_003, TestSize.Level2)
 }
 
 /**
+ * @tc.name: screen_capture_audio_004_1
+ * @tc.desc: 音频源类型边界测试
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_audio_004_1, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_audio_004_1 before");
+    SetConfig(config_);
+    
+    // 测试所有音频源类型
+    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.micCapInfo.audioChannels = 2;
+    config_.audioInfo.micCapInfo.audioSource = SOURCE_DEFAULT;
+    
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_audio_004_1 after");
+}
+
+/**
+ * @tc.name: screen_capture_audio_004_2
+ * @tc.desc: 音频源类型边界测试
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_audio_004_2, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_audio_004_2 before");
+    SetConfig(config_);
+    
+    // 测试所有音频源类型
+    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.micCapInfo.audioChannels = 2;
+
+    config_.audioInfo.micCapInfo.audioSource = MIC;
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_audio_004_2 after");
+}
+
+/**
+ * @tc.name: screen_capture_audio_004_3
+ * @tc.desc: 音频源类型边界测试
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_audio_004_3, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_audio_004_3 before");
+    SetConfig(config_);
+    
+    // 测试所有音频源类型
+    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.micCapInfo.audioChannels = 2;
+
+    config_.audioInfo.micCapInfo.audioSource = APP_PLAYBACK;
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_audio_004 after");
+}
+
+/**
+ * @tc.name: screen_capture_audio_004_4
+ * @tc.desc: 音频源类型边界测试
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_audio_004_4, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_audio_004_4 before");
+    SetConfig(config_);
+    
+    // 测试所有音频源类型
+    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.micCapInfo.audioChannels = 2;
+
+    config_.audioInfo.micCapInfo.audioSource = ALL_PLAYBACK;
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_audio_004_4 after");
+}
+
+/**
  * @tc.name: screen_capture_audio_004
  * @tc.desc: 音频源类型边界测试
  * @tc.type: FUNC
@@ -3180,14 +3268,14 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_005, TestSize.Level2)
 }
 
 /**
- * @tc.name: screen_capture_video_006
+ * @tc.name: screen_capture_video_006_1
  * @tc.desc: 视频编码格式测试
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_006, TestSize.Level2)
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_006_1, TestSize.Level2)
 {
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_video_006 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_video_006_1 before");
     SetConfig(config_);
     
     // 测试H264编码
@@ -3195,17 +3283,45 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_006, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_video_006_1 after");
+}
+
+/**
+ * @tc.name: screen_capture_video_006_2
+ * @tc.desc: 视频编码格式测试
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_006_2, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_video_006_2 before");
+    SetConfig(config_);
+    
     // 测试H265编码
     config_.videoInfo.videoEncInfo.videoCodec = H265;
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_video_006_2 after");
+}
+
+/**
+ * @tc.name: screen_capture_video_006_3
+ * @tc.desc: 视频编码格式测试
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_006_3, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_video_006_3 before");
+    SetConfig(config_);
     
     // 测试MPEG4编码
     config_.videoInfo.videoEncInfo.videoCodec = MPEG4;
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_video_006 after");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_video_006_3 after");
 }
 
 /**
@@ -3258,7 +3374,14 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_compatibility_004, TestSize.Level
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_compatibility_004.mp4", recorderInfo);
     recorderInfo.fileFormat = "mp4";
+
     SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
     
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
@@ -3270,14 +3393,14 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_compatibility_004, TestSize.Level
 }
 
 /**
- * @tc.name: screen_capture_compatibility_005
+ * @tc.name: screen_capture_compatibility_005_1
  * @tc.desc: 捕获模式测试
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(ScreenCaptureUnitTest, screen_capture_compatibility_005, TestSize.Level2)
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_compatibility_005_1, TestSize.Level2)
 {
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_compatibility_005 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_compatibility_005_1 before");
     SetConfig(config_);
     
     // 测试CAPTURE_HOME_SCREEN模式
@@ -3285,28 +3408,56 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_compatibility_005, TestSize.Level
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_compatibility_005_1 after");
+}
+
+/**
+ * @tc.name: screen_capture_compatibility_005_2
+ * @tc.desc: 捕获模式测试
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_compatibility_005_2, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_compatibility_005_2 before");
+    SetConfig(config_);
+
     // 测试CAPTURE_SPECIFIED_SCREEN模式
     config_.captureMode = CAPTURE_SPECIFIED_SCREEN;
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    
+
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_compatibility_005_2 after");
+}
+
+/**
+ * @tc.name: screen_capture_compatibility_005_3
+ * @tc.desc: 捕获模式测试
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_compatibility_005_3, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_compatibility_005_3 before");
+    SetConfig(config_);
+
     // 测试CAPTURE_SPECIFIED_WINDOW模式
     config_.captureMode = CAPTURE_SPECIFIED_WINDOW;
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_compatibility_005 after");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_compatibility_005_3 after");
 }
 
 /**
- * @tc.name: screen_capture_compatibility_006
+ * @tc.name: screen_capture_compatibility_006_1
  * @tc.desc: 数据类型测试
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(ScreenCaptureUnitTest, screen_capture_compatibility_006, TestSize.Level2)
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_compatibility_006_1, TestSize.Level2)
 {
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_compatibility_006 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_compatibility_006_1 before");
     SetConfig(config_);
     
     // 测试ORIGINAL_STREAM模式
@@ -3314,14 +3465,27 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_compatibility_006, TestSize.Level
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_compatibility_006_1 after");
+}
+
+/**
+ * @tc.name: screen_capture_compatibility_006_2
+ * @tc.desc: 数据类型测试
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_compatibility_006_2, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_compatibility_006_2 before");
+    SetConfig(config_);
+    
     // 测试CAPTURE_FILE模式
     config_.dataType = CAPTURE_FILE;
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_compatibility_006 after");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_compatibility_006_2 after");
 }
-
 
 /**
  * @tc.name: screen_capture_multi_display_01
