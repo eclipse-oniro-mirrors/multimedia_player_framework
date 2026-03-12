@@ -64,14 +64,9 @@ int32_t AVMetadataHelperImpl::SetSource(const std::string &uri, int32_t usage)
 
     MEDIA_LOGD("0x%{public}06" PRIXPTR " SetSource uri: %{private}s, type:%{public}d", FAKE_POINTER(this), uri.c_str(),
         uriHelper.UriType());
-
-    auto ret = SetSourceInternel(uri, usage == AVMetadataUsage::AV_META_USAGE_FRAME_INDEX_CONVERT);
-    CHECK_AND_RETURN_RET_LOG(usage != AVMetadataUsage::AV_META_USAGE_FRAME_INDEX_CONVERT, static_cast<int32_t>(ret),
-                             "ret = %{public}d", static_cast<int32_t>(ret));
-    CHECK_AND_RETURN_RET_LOG(ret == Status::OK, MSERR_INVALID_VAL,
-        "0x%{public}06" PRIXPTR " Failed to call SetSourceInternel", FAKE_POINTER(this));
-    CHECK_AND_RETURN_RET_LOG(MetaUtils::CheckFileType(mediaDemuxer_->GetGlobalMetaInfo()),
-        MSERR_UNSUPPORT, "0x%{public}06" PRIXPTR "SetSource unsupport", FAKE_POINTER(this));
+    sourceUri_ = uri;
+    sourceType_ = (usage == AVMetadataUsage::AV_META_USAGE_FRAME_INDEX_CONVERT ? SourceType::FRAME_CONVERT :
+        SourceType::URI);
     return MSERR_OK;
 }
 
@@ -89,16 +84,9 @@ int32_t AVMetadataHelperImpl::SetUrlSource(const std::string &uri, const std::ma
     CHECK_AND_RETURN_RET_LOG(!uri.empty(), MSERR_INVALID_VAL, "url is empty.");
     CHECK_AND_RETURN_RET_LOG((uri.find("http://") == 0 || uri.find("https://") == 0), MSERR_INVALID_VAL,
         "url is error.");
-
-    auto ret = SetSourceInternel(uri, header);
-    CHECK_AND_RETURN_RET_LOG(ret == Status::OK, MSERR_INVALID_VAL,
-        "0x%{public}06" PRIXPTR " Failed to call SetSourceInternel", FAKE_POINTER(this));
-    CHECK_AND_RETURN_RET_LOG(MetaUtils::CheckFileType(mediaDemuxer_->GetGlobalMetaInfo()),
-        MSERR_UNSUPPORT, "0x%{public}06" PRIXPTR "SetSource unsupport", FAKE_POINTER(this));
-    CHECK_AND_RETURN_RET_LOG(!mediaDemuxer_->IsSeekToTimeSupported(),
-        MSERR_UNSUPPORT, "0x%{public}06" PRIXPTR " hls/dash unsupport", FAKE_POINTER(this));
-    CHECK_AND_RETURN_RET_LOG(GetDurationMs() > 0,
-        MSERR_UNSUPPORT, "0x%{public}06" PRIXPTR " live stream unsupport", FAKE_POINTER(this));
+    sourceUri_ = uri;
+    sourceHeader_ = header;
+    sourceType_ = SourceType::URL_SOURCE;
     return MSERR_OK;
 }
 
@@ -116,12 +104,8 @@ int64_t AVMetadataHelperImpl::GetDurationMs()
 int32_t AVMetadataHelperImpl::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR "SetSource dataSrc", FAKE_POINTER(this));
-    Status ret = SetSourceInternel(dataSrc);
-    CHECK_AND_RETURN_RET_LOG(ret == Status::OK, MSERR_INVALID_VAL, "Failed to call SetSourceInternel");
-
-    CHECK_AND_RETURN_RET_LOG(MetaUtils::CheckFileType(mediaDemuxer_->GetGlobalMetaInfo()),
-        MSERR_UNSUPPORT, "0x%{public}06" PRIXPTR "SetSource unsupport", FAKE_POINTER(this));
-    MEDIA_LOGI("0x%{public}06" PRIXPTR "set source success", FAKE_POINTER(this));
+    dataSource_ = dataSrc;
+    sourceType_ = SourceType::DATA_SOURCE;
     return MSERR_OK;
 }
 
@@ -148,6 +132,7 @@ Status AVMetadataHelperImpl::SetSourceForFrameConvert(const std::string &uri)
 {
     Reset();
     isForFrameConvert_ = true;
+    sourceType_ = SourceType::FRAME_CONVERT;
     conversion_ = std::make_shared<TimeAndIndexConversion>();
     CHECK_AND_RETURN_RET_LOG(
         conversion_ != nullptr, Status::ERROR_NO_MEMORY, "SetSourceInternel conversion_ is nullptr");
@@ -176,6 +161,8 @@ Status AVMetadataHelperImpl::SetSourceInternel(const std::string &uri,
     const std::map<std::string, std::string> &header)
 {
     Reset();
+    sourceType_ = SourceType::URL_SOURCE;
+    sourceHeader_ = header;
     mediaDemuxer_ = std::make_shared<MediaDemuxer>();
     CHECK_AND_RETURN_RET_LOG(
         mediaDemuxer_ != nullptr, Status::ERROR_INVALID_DATA, "SetSourceInternel demuxer is nullptr");
@@ -240,6 +227,13 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchFrameAtTime(
 
 int32_t AVMetadataHelperImpl::GetTimeByFrameIndex(uint32_t index, uint64_t &time)
 {
+    MEDIA_LOGD("GetTimeByFrameIndex, isForFrameConvert_: %{public}d, sourceType_: %{public}d",
+        isForFrameConvert_.load(), static_cast<int>(sourceType_));
+    if (sourceType_ == SourceType::FRAME_CONVERT) {
+        Status status = SetSourceInternel(sourceUri_, true);
+        CHECK_AND_RETURN_RET_LOG(status == Status::OK, MSERR_INVALID_STATE, "Create conversion_ failed");
+        return GetTimeForFrameConvert(index, time);
+    }
     CHECK_AND_RETURN_RET(!isForFrameConvert_, GetTimeForFrameConvert(index, time));
     auto res = InitMetadataCollector();
     CHECK_AND_RETURN_RET_LOG(res == Status::OK, MSERR_INVALID_STATE, "Create collector failed");
@@ -248,6 +242,13 @@ int32_t AVMetadataHelperImpl::GetTimeByFrameIndex(uint32_t index, uint64_t &time
 
 int32_t AVMetadataHelperImpl::GetFrameIndexByTime(uint64_t time, uint32_t &index)
 {
+    MEDIA_LOGD("GetFrameIndexByTime, isForFrameConvert_: %{public}d, sourceType_: %{public}d",
+        isForFrameConvert_.load(), static_cast<int>(sourceType_));
+    if (sourceType_ == SourceType::FRAME_CONVERT) {
+        Status status = SetSourceInternel(sourceUri_, true);
+        CHECK_AND_RETURN_RET_LOG(status == Status::OK, MSERR_INVALID_STATE, "Create conversion_ failed");
+        return GetIndexForFrameConvert(time, index);
+    }
     CHECK_AND_RETURN_RET(!isForFrameConvert_, GetIndexForFrameConvert(time, index));
     auto res = InitMetadataCollector();
     CHECK_AND_RETURN_RET_LOG(res == Status::OK, MSERR_INVALID_STATE, "Create collector failed");
@@ -307,6 +308,24 @@ std::shared_ptr<AVBuffer> AVMetadataHelperImpl::FetchFrameYuv(
     return avBuffer;
 }
 
+FetchFrameResult AVMetadataHelperImpl::FetchFrameYuvWithTimeout(int64_t timeUs, int32_t option,
+    const OutputConfiguration &param, int64_t timeoutMs)
+{
+    MEDIA_LOGD("enter FetchFrameYuvWithTimeout");
+    auto start = std::chrono::steady_clock::now();
+    auto res = InitThumbnailGenerator();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
+    int64_t remainingTime = timeoutMs - duration.count();
+    CHECK_AND_RETURN_RET_LOG(remainingTime > 0, FetchFrameResult(nullptr, nullptr, true),
+        "initThumbnailGenerator, set source timeout");
+    MEDIA_LOGI("reamining time is %{public}" PRId64 "ms", remainingTime);
+    CHECK_AND_RETURN_RET_NOLOG(res == Status::OK, FetchFrameResult(nullptr, nullptr, false));
+    auto result = thumbnailGenerator_->FetchFrameYuvWithTimeout(timeUs, option, param, remainingTime);
+    CHECK_AND_RETURN_RET_NOLOG(metadataCaller_ != AVMetadataCaller::AV_METADATA_EXTRACTOR || result.avbuffer == nullptr
+        || !(result.avbuffer->flag_ & (uint32_t)(AVBufferFlag::EOS)), FetchFrameResult(nullptr, nullptr, false));
+    return result;
+}
+
 std::shared_ptr<AVBuffer> AVMetadataHelperImpl::FetchFrameYuvs(
     int64_t timeUs, int32_t option, const OutputConfiguration &param, bool &errCallback)
 {
@@ -315,6 +334,37 @@ std::shared_ptr<AVBuffer> AVMetadataHelperImpl::FetchFrameYuvs(
     CHECK_AND_RETURN_RET_NOLOG(res == Status::OK, nullptr);
     CHECK_AND_RETURN_RET_NOLOG(thumbnailGenerator_ != nullptr, nullptr);
     std::shared_ptr<AVBuffer> avBuffer = thumbnailGenerator_->FetchFrameYuvs(timeUs, option, param, errCallback);
+    CHECK_AND_RETURN_RET_NOLOG(metadataCaller_ != AVMetadataCaller::AV_METADATA_EXTRACTOR || avBuffer == nullptr ||
+        !(avBuffer->flag_ & (uint32_t)(AVBufferFlag::EOS)), nullptr);
+    return avBuffer;
+}
+
+std::shared_ptr<AVBuffer> AVMetadataHelperImpl::FetchFrameYuvsWithTimeout(
+    int64_t timeUs, int32_t option, const OutputConfiguration &param, bool &isTimeout, int64_t timeoutMs)
+{
+    MEDIA_LOGD("enter FetchFrameYuvsWithTimeout");
+    SetInterruptState(false);
+    auto start = std::chrono::steady_clock::now();
+    Status res = Status::OK;
+    auto initFuture = std::async(std::launch::async, [this, &res]() {
+        res = InitThumbnailGenerator();
+    });
+    auto waitStatus = initFuture.wait_for(std::chrono::milliseconds(timeoutMs));
+    if (waitStatus == std::future_status::timeout) {
+        MEDIA_LOGE("InitThumbnailGenerator timeout after %{public}" PRId64 "ms", timeoutMs);
+        SetInterruptState(true);
+        StopDemuxer();
+        isTimeout = true;
+        return nullptr;
+    }
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
+    int64_t remainingTime = timeoutMs - duration.count();
+    CHECK_AND_RETURN_RET_LOG(remainingTime > 0, nullptr, "initThumbnailGenerator, set source timeout");
+    MEDIA_LOGI("remaining time is %{public}" PRId64 "ms", remainingTime);
+    CHECK_AND_RETURN_RET_NOLOG(res == Status::OK, nullptr);
+    CHECK_AND_RETURN_RET_NOLOG(thumbnailGenerator_ != nullptr, nullptr);
+    std::shared_ptr<AVBuffer> avBuffer =
+        thumbnailGenerator_->FetchFrameYuvsWithTimeout(timeUs, option, param, isTimeout, remainingTime);
     CHECK_AND_RETURN_RET_NOLOG(metadataCaller_ != AVMetadataCaller::AV_METADATA_EXTRACTOR || avBuffer == nullptr ||
         !(avBuffer->flag_ & (uint32_t)(AVBufferFlag::EOS)), nullptr);
     return avBuffer;
@@ -335,6 +385,9 @@ void AVMetadataHelperImpl::Reset()
     }
 
     isForFrameConvert_ = false;
+    isDemuxerInitialized_ = false;
+    sourceType_ = SourceType::NONE;
+    sourceHeader_.clear();
 }
 
 void AVMetadataHelperImpl::Destroy()
@@ -358,6 +411,8 @@ void AVMetadataHelperImpl::Destroy()
 
 Status AVMetadataHelperImpl::InitMetadataCollector()
 {
+    int32_t ret = InitDemuxer();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, Status::ERROR_INVALID_STATE, "Init demuxer failed");
     CHECK_AND_RETURN_RET_LOG(
         mediaDemuxer_ != nullptr, Status::ERROR_INVALID_STATE, "mediaDemuxer_ is nullptr");
     if (metadataCollector_ == nullptr) {
@@ -370,6 +425,8 @@ Status AVMetadataHelperImpl::InitMetadataCollector()
 
 Status AVMetadataHelperImpl::InitThumbnailGenerator()
 {
+    int32_t ret = InitDemuxer();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, Status::ERROR_INVALID_STATE, "Init demuxer failed");
     CHECK_AND_RETURN_RET_LOG(
         mediaDemuxer_ != nullptr, Status::ERROR_INVALID_STATE, "mediaDemuxer_ is nullptr");
     if (thumbnailGenerator_ == nullptr) {
@@ -394,6 +451,52 @@ void AVMetadataHelperImpl::SetInterruptState(bool isInterruptNeeded)
     if (interruptMonitor_) {
         interruptMonitor_->SetInterruptState(isInterruptNeeded);
     }
+}
+
+void AVMetadataHelperImpl::StopDemuxer()
+{
+    MEDIA_LOGI("Stop demuxer");
+    if (mediaDemuxer_) {
+        mediaDemuxer_->Stop();
+    }
+}
+
+int32_t AVMetadataHelperImpl::InitDemuxer()
+{
+    Status ret = Status::OK;
+    if (!isDemuxerInitialized_) {
+        switch (sourceType_) {
+            case SourceType::URI:
+                ret = SetSourceInternel(sourceUri_, false);
+                CHECK_AND_RETURN_RET_LOG(ret == Status::OK, MSERR_INVALID_VAL,
+                    "0x%{public}06" PRIXPTR " Failed to call SetSourceInternel", FAKE_POINTER(this));
+                CHECK_AND_RETURN_RET_LOG(MetaUtils::CheckFileType(mediaDemuxer_->GetGlobalMetaInfo()),
+                    MSERR_UNSUPPORT, "0x%{public}06" PRIXPTR "SetSource unsupport", FAKE_POINTER(this));
+                break;
+            case SourceType::URL_SOURCE:
+                ret = SetSourceInternel(sourceUri_, sourceHeader_);
+                CHECK_AND_RETURN_RET_LOG(ret == Status::OK, MSERR_INVALID_VAL,
+                    "0x%{public}06" PRIXPTR " Failed to call SetSourceInternel", FAKE_POINTER(this));
+                CHECK_AND_RETURN_RET_LOG(MetaUtils::CheckFileType(mediaDemuxer_->GetGlobalMetaInfo()),
+                    MSERR_UNSUPPORT, "0x%{public}06" PRIXPTR "SetSource unsupport", FAKE_POINTER(this));
+                CHECK_AND_RETURN_RET_LOG(!mediaDemuxer_->IsSeekToTimeSupported(),
+                    MSERR_UNSUPPORT, "0x%{public}06" PRIXPTR " hls/dash unsupport", FAKE_POINTER(this));
+                CHECK_AND_RETURN_RET_LOG(GetDurationMs() > 0,
+                    MSERR_UNSUPPORT, "0x%{public}06" PRIXPTR " live stream unsupport", FAKE_POINTER(this));
+                break;
+            case SourceType::DATA_SOURCE:
+                ret = SetSourceInternel(dataSource_);
+                CHECK_AND_RETURN_RET_LOG(ret == Status::OK, MSERR_INVALID_VAL, "Failed to call SetSourceInternel");
+                CHECK_AND_RETURN_RET_LOG(MetaUtils::CheckFileType(mediaDemuxer_->GetGlobalMetaInfo()),
+                    MSERR_UNSUPPORT, "0x%{public}06" PRIXPTR "SetSource unsupport", FAKE_POINTER(this));
+                break;
+            default:
+                return MSERR_INVALID_OPERATION;
+        }
+        MEDIA_LOGI("0x%{public}06" PRIXPTR "set source success", FAKE_POINTER(this));
+    }
+    isDemuxerInitialized_ = true;
+    return MSERR_OK;
 }
 }  // namespace Media
 }  // namespace OHOS

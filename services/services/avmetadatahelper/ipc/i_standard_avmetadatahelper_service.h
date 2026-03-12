@@ -46,13 +46,18 @@ public:
     virtual std::string ResolveMetadata(int32_t key) = 0;
     virtual std::unordered_map<int32_t, std::string> ResolveMetadataMap() = 0;
     virtual std::shared_ptr<Meta> GetAVMetadata() = 0;
+    virtual MetadataResult GetAVMetadataWithTimeout(int64_t timeoutMs) = 0;
     virtual std::shared_ptr<AVSharedMemory> FetchArtPicture() = 0;
     virtual std::shared_ptr<AVSharedMemory> FetchFrameAtTime(
         int64_t timeUs, int32_t option, const OutputConfiguration &param) = 0;
     virtual std::shared_ptr<AVBuffer> FetchFrameYuv(
         int64_t timeUs, int32_t option, const OutputConfiguration &param) = 0;
+    virtual FetchFrameResult FetchFrameYuvWithTimeout(int64_t timeUs, int32_t option,
+        const OutputConfiguration &param, int64_t timeoutMs) = 0;
     virtual int32_t FetchFrameYuvs(const std::vector<int64_t>& timeUs,
         int32_t option, const PixelMapParams &param) = 0;
+    virtual int32_t FetchFrameYuvsWithTimeout(const std::vector<int64_t>& timeUs,
+        int32_t option, const PixelMapParams &param, int64_t timeoutMs) = 0;
     virtual void Release() = 0;
     virtual int32_t DestroyStub() = 0;
     virtual int32_t SetHelperCallback() = 0;
@@ -84,6 +89,9 @@ public:
         FETCH_FRAME_YUVS,
         CANCEL_FETCHFRAMES,
         MAX_IPC_ID,
+        FETCH_FRAME_YUV_WITH_TIMEOUT,
+        FETCH_FRAME_YUVS_WITH_TIMEOUT,
+        GET_AVMETADATA_WITH_TIMEOUT,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardAVMetadataHelperService");

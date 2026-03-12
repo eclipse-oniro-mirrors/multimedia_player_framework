@@ -176,6 +176,15 @@ public:
     virtual std::shared_ptr<Meta> GetAVMetadata() = 0;
 
     /**
+     * Get all avmetadata.
+     * This method must be called after the SetSource.
+     * @param timeoutMs The timeout in milliseconds for fetching metadata. If the operation
+     * exceeds this time, it will return an error.
+     * @return Returns a MetadataResult containing the metadata and timeout status.
+     */
+    virtual MetadataResult GetAVMetadataWithTimeout(int64_t timeoutMs) = 0;
+
+    /**
      * Fetch a representative video frame near a given timestamp by considering the given
      * option if possible, and return a video frame with given parameters. This method must be
      * called after the SetSource.
@@ -210,6 +219,25 @@ public:
         int64_t timeUs, int32_t option, const OutputConfiguration &param) = 0;
 
     /**
+     * Fetch a representative video frame near a given timestamp by considering the given
+     * option if possible, and return a video frame with given parameters. This method must be
+     * called after the SetSource.
+     * @param timeUs The time position in microseconds where the frame will be fetched.
+     * When fetching the frame at the given time position, there is no guarantee that
+     * the video source has a frame located at the position. When this happens, a frame
+     * nearby will be returned. If timeUs is negative, time position and option will ignored,
+     * and any frame that the implementation considers as representative may be returned.
+     * @param option the hint about how to fetch a frame, see {@link AVMetadataQueryOption}
+     * @param param the desired configuration of returned video frame, see {@link OutputConfiguration}.
+     * @param timeoutMs The timeout in milliseconds for fetching the frame. If the operation
+     * exceeds this time, it will return an error.
+     * @return Returns a FetchFrameResult containing the fetched frame data, which includes
+     * the AVBuffer, PixelMap, and timeout status.
+     */
+    virtual FetchFrameResult FetchFrameYuvWithTimeout(
+        int64_t timeUs, int32_t option, const OutputConfiguration &param, int64_t timeoutMs) = 0;
+
+    /**
      * Fetch multi representative video frames near multi given timestamps by considering the given
      * option if possible, and return a video frame with given parameters. This method must be
      * called after the SetSource.
@@ -224,6 +252,24 @@ public:
      */
     virtual int32_t FetchFrameYuvs(const std::vector<int64_t>& timeUs,
         int32_t option, const PixelMapParams &param) = 0;
+
+    /**
+     * Fetch multi representative video frames near multi given timestamps by considering the given
+     * option if possible, and return a video frame with given parameters. This method must be
+     * called after the SetSource.
+     * @param timeUs The time position in microseconds where the frame will be fetched.
+     * When fetching the frame at the given time position, there is no guarantee that
+     * the video source has a frame located at the position. When this happens, a frame
+     * nearby will be returned. If timeUs is negative, time position and option will ignored,
+     * and any frame that the implementation considers as representative may be returned.
+     * @param option the hint about how to fetch a frame, see {@link AVMetadataQueryOption}
+     * @param param the desired configuration of returned video frame, see {@link OutputConfiguration}.
+     * @param timeoutMs The timeout in milliseconds for fetching the frame. If the operation
+     * exceeds this time, it will return an error.
+     * @return Returns status code indicating success or failure.
+     */
+    virtual int32_t FetchFrameYuvsWithTimeout(const std::vector<int64_t>& timeUs,
+        int32_t option, const PixelMapParams &param, int64_t timeoutMs) = 0;
 
     /**
      * Release the internel resource. After this method called, the service instance

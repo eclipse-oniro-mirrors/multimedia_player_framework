@@ -193,6 +193,10 @@ interface AVMetadataExtractor {
     @gen_promise("fetchMetadata")
     FetchMetadataSync(): Optional<AVMetadata>;
 
+    @gen_async("fetchMetadataWithTimeout")
+    @gen_promise("fetchMetadataWithTimeout")
+    FetchMetadataWithTimeoutSync(timeoutMs: i64): Optional<AVMetadata>;
+
     @gen_async("fetchAlbumCover")
     @gen_promise("fetchAlbumCover")
     FetchAlbumCoverSync(): Optional<image.PixelMap>;
@@ -209,9 +213,18 @@ interface AVMetadataExtractor {
     @gen_promise("fetchFrameByTime")
     FetchFrameByTimeSync(timeUs: i64, options: AVImageQueryOptions, param: PixelMapParams): Optional<image.PixelMap>;
 
+    @gen_async("fetchFrameByTimeWithTimeout")
+    @gen_promise("fetchFrameByTimeWithTimeout")
+    FetchFrameByTimeWithTimeoutSync(timeUs: i64, options: AVImageQueryOptions,
+        param: PixelMapParams, timeoutMs: i64): Optional<image.PixelMap>;
+
     CancelAllFetchFrames(): void;
 
     FetchFramesByTimes(timesUs: Array<i64>, queryOption: AVImageQueryOptions, param: PixelMapParams,
+        callback: (frameInfo: FrameInfo, @optional err: Optional<@sts_type("BusinessError<void>") Opaque>) => void): void;
+
+    FetchFramesByTimesWithTimeout(timesUs: Array<i64>, queryOption: AVImageQueryOptions,
+        param: PixelMapParams, timeoutMs: i64,
         callback: (frameInfo: FrameInfo, @optional err: Optional<@sts_type("BusinessError<void>") Opaque>) => void): void;
 }
 

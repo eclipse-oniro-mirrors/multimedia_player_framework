@@ -39,6 +39,7 @@ public:
     std::string ResolveMetadata(int32_t key) override;
     std::unordered_map<int32_t, std::string> ResolveMetadata() override;
     std::shared_ptr<Meta> GetAVMetadata() override;
+    MetadataResult GetAVMetadataWithTimeout(int64_t timeoutMs) override;
     std::shared_ptr<AVSharedMemory> FetchArtPicture() override;
     std::shared_ptr<AVSharedMemory> FetchFrameAtTime(int64_t timeUs,
         int32_t option, const OutputConfiguration &param) override;
@@ -46,9 +47,13 @@ public:
     int32_t GetFrameIndexByTime(uint64_t time, uint32_t &index) override;
     std::shared_ptr<AVBuffer> FetchFrameYuv(int64_t timeUs,
         int32_t option, const OutputConfiguration &param) override;
+    FetchFrameResult FetchFrameYuvWithTimeout(int64_t timeUs,
+        int32_t option, const OutputConfiguration &param, int64_t timeoutMs) override;
     int32_t CancelAllFetchFrames() override;
     int32_t FetchFrameYuvs(const std::vector<int64_t>& timeUs,
         int32_t option, const PixelMapParams &param) override;
+    int32_t FetchFrameYuvsWithTimeout(const std::vector<int64_t>& timeUs,
+        int32_t option, const PixelMapParams &param, int64_t timeoutMs) override;
     void Release() override;
 
     // AVMetadataHelperClient

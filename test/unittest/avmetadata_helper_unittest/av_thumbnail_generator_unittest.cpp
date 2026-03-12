@@ -264,11 +264,11 @@ HWTEST_F(AVThumbnailGeneratorUnitTest, HandleFetchFrameYuvFailed, TestSize.Level
 }
 
 /**
- * @tc.name: SeekToTime
+ * @tc.name: SeekToTime_001
  * @tc.desc: Test option == Plugins::SeekMode::SEEK_CLOSEST
  * @tc.type: FUNC
  */
-HWTEST_F(AVThumbnailGeneratorUnitTest, SeekToTime, TestSize.Level1)
+HWTEST_F(AVThumbnailGeneratorUnitTest, SeekToTime_001, TestSize.Level1)
 {
     ASSERT_NE(avThumbnailGenerator_, nullptr);
     int64_t timeMs = 0;
@@ -276,6 +276,23 @@ HWTEST_F(AVThumbnailGeneratorUnitTest, SeekToTime, TestSize.Level1)
     int64_t realSeekTime = 0;
     EXPECT_CALL(*(mockMediaDemuxer_), SeekTo(_,_,_)).WillRepeatedly(Return(Status::OK));
     auto ret = avThumbnailGenerator_->SeekToTime(timeMs, option, realSeekTime);
+    EXPECT_EQ(ret, Status::OK);
+}
+
+/**
+ * @tc.name: SeekToTime_002
+ * @tc.desc: Test seekTimeCostMs
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVThumbnailGeneratorUnitTest, SeekToTime_002, TestSize.Level1)
+{
+    ASSERT_NE(avThumbnailGenerator_, nullptr);
+    int64_t timeMs = 0;
+    int64_t seekTimeCostMs = 0;
+    Plugins::SeekMode option = Plugins::SeekMode::SEEK_CLOSEST;
+    int64_t realSeekTime = 0;
+    EXPECT_CALL(*(mockMediaDemuxer_), SeekTo(_,_,_)).WillRepeatedly(Return(Status::OK));
+    auto ret = avThumbnailGenerator_->SeekToTime(timeMs, option, realSeekTime, seekTimeCostMs);
     EXPECT_EQ(ret, Status::OK);
 }
 

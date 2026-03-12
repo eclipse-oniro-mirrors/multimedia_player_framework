@@ -39,9 +39,12 @@ private:
     static napi_value JsCreateAVMetadataExtractor(napi_env env, napi_callback_info info);
     static napi_value JsSetUrlSource(napi_env env, napi_callback_info info);
     static napi_value JsResolveMetadata(napi_env env, napi_callback_info info);
+    static napi_value JsResolveMetadataWithTimeout(napi_env env, napi_callback_info info);
     static napi_value JsFetchArtPicture(napi_env env, napi_callback_info info);
     static napi_value JsFetchFrameAtTime(napi_env env, napi_callback_info info);
+    static napi_value JsFetchFrameAtTimeWithTimeout(napi_env env, napi_callback_info info);
     static napi_value JsFetchFramesAtTimes(napi_env env, napi_callback_info info);
+    static napi_value JsFetchFramesAtTimesWithTimeout(napi_env env, napi_callback_info info);
     static napi_value JsCancelAllFetchFrames(napi_env env, napi_callback_info info);
     static napi_value JsRelease(napi_env env, napi_callback_info info);
     /**
@@ -121,6 +124,7 @@ struct AVMetadataExtractorAsyncContext : public MediaAsyncContext {
     int32_t status = 0;
     int32_t option = 0;
     int64_t timeUs = 0;
+    int64_t timeoutMs = 0;
     uint64_t timeStamp_ = 0;
     uint32_t index_ = 0;
     PixelMapParams param_;

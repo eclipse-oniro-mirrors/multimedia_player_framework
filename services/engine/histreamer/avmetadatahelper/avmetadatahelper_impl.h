@@ -51,12 +51,17 @@ public:
         int64_t timeUs, int32_t option, const OutputConfiguration &param) override;
     std::shared_ptr<AVBuffer> FetchFrameYuv(
         int64_t timeUs, int32_t option, const OutputConfiguration &param) override;
+    FetchFrameResult FetchFrameYuvWithTimeout(int64_t timeUs, int32_t option, const OutputConfiguration &param,
+        int64_t timeoutMs) override;
     std::shared_ptr<AVBuffer> FetchFrameYuvs(
         int64_t timeUs, int32_t option, const OutputConfiguration &param, bool &errCallback) override;
+    std::shared_ptr<AVBuffer> FetchFrameYuvsWithTimeout(int64_t timeUs, int32_t option,
+        const OutputConfiguration &param, bool &isTimeout, int64_t timeoutMs) override;
     std::shared_ptr<AVSharedMemory> FetchArtPicture() override;
     int32_t GetTimeByFrameIndex(uint32_t index, uint64_t &time) override;
     int32_t GetFrameIndexByTime(uint64_t time, uint32_t &index) override;
     void SetInterruptState(bool isInterruptNeeded) override;
+    void StopDemuxer() override;
 
 private:
     std::shared_ptr<OHOS::Media::MediaDemuxer> mediaDemuxer_;
@@ -79,6 +84,7 @@ private:
     int32_t GetTimeForFrameConvert(uint32_t index, uint64_t &time);
     int32_t GetIndexForFrameConvert(uint64_t time, uint32_t &index);
     int64_t GetDurationMs();
+    int32_t InitDemuxer();
 
     void Reset();
     void Destroy();
@@ -90,6 +96,19 @@ private:
     int64_t succTimeUs_{0};
     std::string appName_;
     AVMetadataCaller metadataCaller_ = AVMetadataCaller::AV_META_DATA_DEFAULT;
+
+    enum class SourceType {
+        NONE,
+        URI,
+        DATA_SOURCE,
+        URL_SOURCE,
+        FRAME_CONVERT,
+    };
+    std::string sourceUri_;
+    std::map<std::string, std::string> sourceHeader_;
+    std::shared_ptr<IMediaDataSource> dataSource_;
+    SourceType sourceType_ = { SourceType::NONE };
+    bool isDemuxerInitialized_ = false;
 };
 }  // namespace Media
 }  // namespace OHOS

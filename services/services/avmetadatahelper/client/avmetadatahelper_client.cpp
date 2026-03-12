@@ -140,6 +140,14 @@ std::shared_ptr<Meta> AVMetadataHelperClient::GetAVMetadata()
     return avMetadataHelperProxy_->GetAVMetadata();
 }
 
+MetadataResult AVMetadataHelperClient::GetAVMetadataWithTimeout(int64_t timeoutMs)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperProxy_ != nullptr, MetadataResult(nullptr, false),
+        "avmetadatahelper service does not exist.");
+    return avMetadataHelperProxy_->GetAVMetadataWithTimeout(timeoutMs);
+}
+
 std::shared_ptr<AVSharedMemory> AVMetadataHelperClient::FetchArtPicture()
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -167,6 +175,15 @@ int32_t AVMetadataHelperClient::GetFrameIndexByTime(uint64_t time, uint32_t &ind
     return avMetadataHelperProxy_->GetFrameIndexByTime(time, index);
 }
 
+FetchFrameResult AVMetadataHelperClient::FetchFrameYuvWithTimeout(int64_t timeUs, int32_t option,
+    const OutputConfiguration &param, int64_t timeoutMs)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperProxy_ != nullptr, FetchFrameResult(nullptr, nullptr, false),
+        "avmetadatahelper service does not exist.");
+    return avMetadataHelperProxy_->FetchFrameYuvWithTimeout(timeUs, option, param, timeoutMs);
+}
+
 std::shared_ptr<AVBuffer> AVMetadataHelperClient::FetchFrameYuv(int64_t timeUs, int32_t option,
     const OutputConfiguration &param)
 {
@@ -190,6 +207,17 @@ int32_t AVMetadataHelperClient::FetchFrameYuvs(const std::vector<int64_t>& timeU
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperProxy_ != nullptr,
         MSERR_EXT_API9_SERVICE_DIED, "avmetadatahelper service does not exist.");
     return avMetadataHelperProxy_->FetchFrameYuvs(timeUs, option, param);
+}
+
+int32_t AVMetadataHelperClient::FetchFrameYuvsWithTimeout(const std::vector<int64_t>& timeUs,
+    int32_t option, const PixelMapParams &param, int64_t timeoutMs)
+{
+    MEDIA_LOGI("AVMetadataHelperClient::FetchFrameYuvsWithTimeout in");
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperProxy_ != nullptr,
+        MSERR_EXT_API9_SERVICE_DIED, "avmetadatahelper service does not exist.");
+    MEDIA_LOGI("AVMetadataHelperClient::FetchFrameYuvsWithTimeout out");
+    return avMetadataHelperProxy_->FetchFrameYuvsWithTimeout(timeUs, option, param, timeoutMs);
 }
 
 void AVMetadataHelperClient::Release()

@@ -48,13 +48,18 @@ public:
     MOCK_METHOD(int32_t, CancelAllFetchFrames, (), (override));
     MOCK_METHOD((std::unordered_map<int32_t, std::string>), ResolveMetadataMap, (), (override));
     MOCK_METHOD(std::shared_ptr<Meta>, GetAVMetadata, (), (override));
+    MOCK_METHOD(MetadataResult, GetAVMetadataWithTimeout, (int64_t timeoutMs), (override));
     MOCK_METHOD(std::shared_ptr<AVSharedMemory>, FetchArtPicture, (), (override));
     MOCK_METHOD(std::shared_ptr<AVSharedMemory>, FetchFrameAtTime, (int64_t timeUs, int32_t option,
         const OutputConfiguration &param), (override));
     MOCK_METHOD(std::shared_ptr<AVBuffer>, FetchFrameYuv, (int64_t timeUs,
         int32_t option, const OutputConfiguration &param), (override));
+    MOCK_METHOD(FetchFrameResult, FetchFrameYuvWithTimeout, (int64_t timeUs,
+        int32_t option, const OutputConfiguration &param, int64_t timeoutMs), (override));
     MOCK_METHOD(int32_t, FetchFrameYuvs, (const std::vector<int64_t>& timeUs,
         int32_t option, const PixelMapParams &param), (override));
+    MOCK_METHOD(int32_t, FetchFrameYuvsWithTimeout, (const std::vector<int64_t>& timeUs,
+        int32_t option, const PixelMapParams &param, int64_t timeoutMs), (override));
     MOCK_METHOD(void, Release, (), (override));
     MOCK_METHOD(int32_t, DestroyStub, (), (override));
     MOCK_METHOD(int32_t, SetHelperCallback, (), (override));
@@ -69,10 +74,13 @@ public:
     MOCK_METHOD(int32_t, ResolveMetadataInner, (MessageParcel &data, MessageParcel &reply));
     MOCK_METHOD(int32_t, ResolveMetadataMapInner, (MessageParcel &data, MessageParcel &reply));
     MOCK_METHOD(int32_t, GetAVMetadataInner, (MessageParcel &data, MessageParcel &reply));
+    MOCK_METHOD(int32_t, GetAVMetadataWithTimeoutInner, (MessageParcel &data, MessageParcel &reply));
     MOCK_METHOD(int32_t, FetchArtPictureInner, (MessageParcel &data, MessageParcel &reply));
     MOCK_METHOD(int32_t, FetchFrameAtTimeInner, (MessageParcel &data, MessageParcel &reply));
     MOCK_METHOD(int32_t, FetchFrameYuvInner, (MessageParcel &data, MessageParcel &reply));
     MOCK_METHOD(int32_t, FetchFrameYuvsInner, (MessageParcel &data, MessageParcel &reply));
+    MOCK_METHOD(int32_t, FetchFrameYuvWithTimoutInner, (MessageParcel &data, MessageParcel &reply));
+    MOCK_METHOD(int32_t, FetchFrameYuvsWithTimeoutInner, (MessageParcel &data, MessageParcel &reply));
     MOCK_METHOD(int32_t, ReleaseInner, (MessageParcel &data, MessageParcel &reply));
     MOCK_METHOD(int32_t, DestroyStubInner, (MessageParcel &data, MessageParcel &reply));
     MOCK_METHOD(int32_t, SetHelperCallbackInner, (MessageParcel &data, MessageParcel &reply));

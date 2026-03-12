@@ -258,6 +258,53 @@ std::shared_ptr<Meta> AVMetadataHelperServiceProxy::GetAVMetadata()
     return metadata;
 }
 
+MetadataResult AVMetadataHelperServiceProxy::GetAVMetadataWithTimeout(int64_t timeoutMs)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    std::shared_ptr<Meta> metadata = std::make_shared<Meta>();
+    std::shared_ptr<Meta> customInfo = std::make_shared<Meta>();
+    std::vector<Format> tracksVec;
+
+    bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MetadataResult(nullptr, false), "Failed to write descriptor!");
+    (void)data.WriteInt64(timeoutMs);
+
+    int error = Remote()->SendRequest(GET_AVMETADATA_WITH_TIMEOUT, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MetadataResult(nullptr, false),
+        "GetAVMetadata failed, error: %{public}d", error);
+    CHECK_AND_RETURN_RET(reply.ReadInt32() != MSERR_NETWORK_TIMEOUT, MetadataResult(nullptr, true));
+
+    bool ret = true;
+    std::string key = reply.ReadString();
+    if (key.compare("customInfo") == 0) {
+        ret = customInfo->FromParcel(reply);
+    }
+    CHECK_AND_RETURN_RET_LOG(ret == true, MetadataResult(nullptr, false), "customInfo FromParcel failed");
+
+    key = reply.ReadString();
+    if (key.compare("tracks") == 0) {
+        int32_t trackCnt = reply.ReadInt32();
+        CHECK_AND_RETURN_RET_LOG(trackCnt <= MAX_TRACK_COUNT, MetadataResult(nullptr, false),
+            "trackCnt is invalid");
+        for (int32_t i = 0; i < trackCnt; i++) {
+            Format trackInfo;
+            (void)MediaParcel::Unmarshalling(reply, trackInfo);
+            tracksVec.push_back(trackInfo);
+        }
+    }
+    key = reply.ReadString();
+    if (key.compare("AVMetadata") == 0) {
+        ret = metadata->FromParcel(reply);
+    }
+    CHECK_AND_RETURN_RET_LOG(ret == true, MetadataResult(nullptr, false), "metadata FromParcel failed");
+
+    metadata->SetData("customInfo", customInfo);
+    metadata->SetData("tracks", tracksVec);
+    return MetadataResult(metadata, false);
+}
+
 std::unordered_map<int32_t, std::string> AVMetadataHelperServiceProxy::ResolveMetadataMap()
 {
     MessageParcel data;
@@ -330,6 +377,36 @@ std::shared_ptr<AVBuffer> AVMetadataHelperServiceProxy::FetchFrameYuv(int64_t ti
     return ret ? avBuffer : nullptr;
 }
 
+FetchFrameResult AVMetadataHelperServiceProxy::FetchFrameYuvWithTimeout(int64_t timeUs, int32_t option,
+    const OutputConfiguration &param, int64_t timeoutMs)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption opt;
+
+    bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, FetchFrameResult(nullptr, nullptr, false),
+        "Failed to write descriptor!");
+
+    (void)data.WriteInt64(timeUs);
+    (void)data.WriteInt32(option);
+    (void)data.WriteInt32(param.dstWidth);
+    (void)data.WriteInt32(param.dstHeight);
+    (void)data.WriteInt32(static_cast<int32_t>(param.colorFormat));
+    (void)data.WriteInt64(timeoutMs);
+
+    int error = Remote()->SendRequest(FETCH_FRAME_YUV_WITH_TIMEOUT, data, reply, opt);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, FetchFrameResult(nullptr, nullptr, false),
+        "FetchFrameYuvWithTimeout failed, error: %{public}d", error);
+    CHECK_AND_RETURN_RET_LOG(reply.ReadInt32() != MSERR_NETWORK_TIMEOUT, FetchFrameResult(nullptr, nullptr, true),
+        "FetchFrameYuvWith timeout");
+    CHECK_AND_RETURN_RET(reply.ReadInt32() == MSERR_OK, FetchFrameResult(nullptr, nullptr, false));
+    auto avBuffer = AVBuffer::CreateAVBuffer();
+    CHECK_AND_RETURN_RET(avBuffer != nullptr, FetchFrameResult(nullptr, nullptr, false));
+    auto ret = avBuffer->ReadFromMessageParcel(reply);
+    return ret ? FetchFrameResult(avBuffer, nullptr, false) : FetchFrameResult(nullptr, nullptr, false);
+}
+
 int32_t AVMetadataHelperServiceProxy::FetchFrameYuvs(const std::vector<int64_t>& timeUs, int32_t option,
     const PixelMapParams &param)
 {
@@ -350,6 +427,32 @@ int32_t AVMetadataHelperServiceProxy::FetchFrameYuvs(const std::vector<int64_t>&
     int error = Remote()->SendRequest(FETCH_FRAME_YUVS, data, reply, opt);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_EXT_API9_SERVICE_DIED,
         "FetchFrameYuvs failed, error: %{public}d", error);
+    CHECK_AND_RETURN_RET(reply.ReadInt32() == MSERR_OK, MSERR_EXT_API9_SERVICE_DIED);
+
+    return MSERR_OK;
+}
+
+int32_t AVMetadataHelperServiceProxy::FetchFrameYuvsWithTimeout(const std::vector<int64_t>& timeUs, int32_t option,
+    const PixelMapParams &param, int64_t timeoutMs)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption opt;
+
+    bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_EXT_API9_SERVICE_DIED, "Failed to write descriptor!");
+    (void)data.WriteInt64(static_cast<int64_t>(timeUs.size()));
+    (void)data.WriteBuffer(timeUs.data(), timeUs.size() * sizeof(int64_t));
+    (void)data.WriteInt32(option);
+    (void)data.WriteInt32(param.dstWidth);
+    (void)data.WriteInt32(param.dstHeight);
+    (void)data.WriteInt32(static_cast<int32_t>(param.colorFormat));
+    (void)data.WriteBool(param.isSupportFlip);
+    (void)data.WriteBool(param.convertColorSpace);
+    (void)data.WriteInt64(timeoutMs);
+    int error = Remote()->SendRequest(FETCH_FRAME_YUVS_WITH_TIMEOUT, data, reply, opt);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_EXT_API9_SERVICE_DIED,
+        "FetchFrameYuvsWithTimeout failed, error: %{public}d", error);
     CHECK_AND_RETURN_RET(reply.ReadInt32() == MSERR_OK, MSERR_EXT_API9_SERVICE_DIED);
 
     return MSERR_OK;

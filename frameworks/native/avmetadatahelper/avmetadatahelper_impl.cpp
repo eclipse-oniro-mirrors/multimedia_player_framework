@@ -871,6 +871,17 @@ std::shared_ptr<Meta> AVMetadataHelperImpl::GetAVMetadata()
     return res;
 }
 
+MetadataResult AVMetadataHelperImpl::GetAVMetadataWithTimeout(int64_t timeoutMs)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, MetadataResult(nullptr, false),
+        "avmetadatahelper service does not exist.");
+    concurrentWorkCount_++;
+    auto res = avMetadataHelperService_->GetAVMetadataWithTimeout(timeoutMs);
+    concurrentWorkCount_--;
+    return res;
+}
+
 int32_t AVMetadataHelperImpl::CancelAllFetchFrames()
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -991,6 +1002,12 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchScaledFrameYuv(int64_t time
     return FetchFrameBase(timeUs, option, param, FrameScaleMode::ASPECT_RATIO);
 }
 
+FetchFrameResult AVMetadataHelperImpl::FetchScaledFrameYuvWithTimeout(int64_t timeUs, int32_t option,
+    const PixelMapParams &param, int64_t timeoutMs)
+{
+    return FetchFrameBase(timeUs, option, param, timeoutMs, FrameScaleMode::ASPECT_RATIO);
+}
+
 int32_t AVMetadataHelperImpl::FetchScaledFrameYuvs(const std::vector<int64_t>& timeUs,
     int32_t option, const PixelMapParams &param)
 {
@@ -1003,6 +1020,21 @@ int32_t AVMetadataHelperImpl::FetchScaledFrameYuvs(const std::vector<int64_t>& t
 
     int32_t result = avMetadataHelperService_->FetchFrameYuvs(timeUs, option, param);
     concurrentWorkCount_--;
+    return result;
+}
+
+int32_t AVMetadataHelperImpl::FetchScaledFrameYuvsWithTimeout(const std::vector<int64_t>& timeUs,
+    int32_t option, const PixelMapParams &param, int64_t timeoutMs)
+{
+    MEDIA_LOGI("AVMetadataHelperImpl::FetchScaledFrameYuvsWithTimeout in");
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+        "avmetadatahelper service does not exist.");
+    concurrentWorkCount_++;
+    ReportSceneCode(AV_META_SCENE_BATCH_HANDLE);
+    int32_t result = avMetadataHelperService_->FetchFrameYuvsWithTimeout(timeUs, option, param, timeoutMs);
+    concurrentWorkCount_--;
+    MEDIA_LOGI("AVMetadataHelperImpl::FetchScaledFrameYuvsWithTimeout out");
     return result;
 }
 
@@ -1023,6 +1055,29 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameBase(int64_t timeUs, i
     concurrentWorkCount_--;
 
     return ProcessPixelMap(frameBuffer, param, scaleMode);
+}
+
+FetchFrameResult AVMetadataHelperImpl::FetchFrameBase(int64_t timeUs, int32_t option,
+    const PixelMapParams &param, int64_t timeoutMs, int32_t scaleMode)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    std::shared_ptr<IAVMetadataHelperService> avMetadataHelperService = avMetadataHelperService_;
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperService != nullptr, FetchFrameResult(nullptr, nullptr, false),
+        "avmetadatahelper service does not exist.");
+
+    concurrentWorkCount_++;
+    ReportSceneCode(AV_META_SCENE_BATCH_HANDLE);
+    OutputConfiguration config = { .dstWidth = param.dstWidth,
+                                   .dstHeight = param.dstHeight,
+                                   .colorFormat = param.colorFormat };
+    auto result = avMetadataHelperService->FetchFrameYuvWithTimeout(timeUs, option, config, timeoutMs);
+    CHECK_AND_RETURN_RET(!result.isTimeout, FetchFrameResult(nullptr, nullptr, true));
+    CHECK_AND_RETURN_RET(result.avbuffer != nullptr && result.avbuffer->memory_ != nullptr,
+        FetchFrameResult(nullptr, nullptr, false));
+    concurrentWorkCount_--;
+
+    auto pixelMap = ProcessPixelMap(result.avbuffer, param, scaleMode);
+    return FetchFrameResult(nullptr, pixelMap, false);
 }
 
 std::shared_ptr<PixelMap> AVMetadataHelperImpl::ProcessPixelMap(const std::shared_ptr<AVBuffer> &frameBuffer,

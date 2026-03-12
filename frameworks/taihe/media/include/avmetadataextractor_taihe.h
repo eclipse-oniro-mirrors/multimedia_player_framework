@@ -38,6 +38,7 @@ public:
     optional<AVDataSrcDescriptor> GetDataSrc();
     void SetDataSrc(optional_view<AVDataSrcDescriptor> dataSrc);
     optional<AVMetadata> FetchMetadataSync();
+    optional<AVMetadata> FetchMetadataWithTimeoutSync(int64_t timeoutMs);
     optional<ohos::multimedia::image::image::PixelMap> FetchAlbumCoverSync();
     void ReleaseSync();
     void CancelAllFetchFrames();
@@ -46,7 +47,13 @@ public:
     void SetUrlSource(::taihe::string_view url, optional_view<map<string, string>> header);
     optional<::ohos::multimedia::image::image::PixelMap> FetchFrameByTimeSync(int64_t timeUs,
         AVImageQueryOptions options, PixelMapParams const& param);
+    optional<::ohos::multimedia::image::image::PixelMap> FetchFrameByTimeWithTimeoutSync(int64_t timeUs,
+        AVImageQueryOptions options, PixelMapParams const& param, int64_t timeoutMs);
     void FetchFramesByTimes(array_view<int64_t> timeUs, AVImageQueryOptions options, PixelMapParams const& param,
+        callback_view<void(::ohos::multimedia::media::FrameInfo const& frameInfo,
+        optional_view<uintptr_t> err)> callback);
+    void FetchFramesByTimesWithTimeout(array_view<int64_t> timeUs, AVImageQueryOptions options,
+        PixelMapParams const& param, int64_t timeoutMs,
         callback_view<void(::ohos::multimedia::media::FrameInfo const& frameInfo,
         optional_view<uintptr_t> err)> callback);
 private:

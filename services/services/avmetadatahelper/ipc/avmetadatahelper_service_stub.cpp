@@ -28,6 +28,7 @@ namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_METADATA, "AVMetadataHelperServiceStub"};
 constexpr uint32_t MAX_MAP_SIZE = 100;
 constexpr int32_t TIMEUS_ARR_MAX_LEN = 4096;
+constexpr int64_t MAX_TIMEOUT_MS = 20000;
 }
 
 namespace OHOS {
@@ -60,7 +61,12 @@ int32_t AVMetadataHelperServiceStub::Init()
     avMetadateHelperServer_ = AVMetadataHelperServer::Create();
     CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, MSERR_NO_MEMORY,
         "failed to create AVMetadataHelper Service");
+    InitFunctionMap();
+    return MSERR_OK;
+}
 
+void AVMetadataHelperServiceStub::InitFunctionMap()
+{
     avMetadataHelperFuncs_ = {
         { SET_URI_SOURCE,
             [this](MessageParcel &data, MessageParcel &reply) { return SetUriSource(data, reply); } },
@@ -78,8 +84,12 @@ int32_t AVMetadataHelperServiceStub::Init()
             [this](MessageParcel &data, MessageParcel &reply) { return FetchFrameAtTime(data, reply); } },
         { FETCH_FRAME_YUV,
             [this](MessageParcel &data, MessageParcel &reply) { return FetchFrameYuv(data, reply); } },
+        { FETCH_FRAME_YUV_WITH_TIMEOUT,
+            [this](MessageParcel &data, MessageParcel &reply) { return FetchFrameYuvWithTimeout(data, reply); } },
         { FETCH_FRAME_YUVS,
             [this](MessageParcel &data, MessageParcel &reply) { return FetchFrameYuvs(data, reply); } },
+        { FETCH_FRAME_YUVS_WITH_TIMEOUT,
+            [this](MessageParcel &data, MessageParcel &reply) { return FetchFrameYuvsWithTimeout(data, reply); } },
         { CANCEL_FETCHFRAMES,
             [this](MessageParcel &data, MessageParcel &reply) { return CancelAllFetchFrames(data, reply); } },
         { RELEASE,
@@ -92,6 +102,8 @@ int32_t AVMetadataHelperServiceStub::Init()
             [this](MessageParcel &data, MessageParcel &reply) { return SetListenerObject(data, reply); } },
         { GET_AVMETADATA,
             [this](MessageParcel &data, MessageParcel &reply) { return GetAVMetadata(data, reply); } },
+        { GET_AVMETADATA_WITH_TIMEOUT,
+            [this](MessageParcel &data, MessageParcel &reply) { return GetAVMetadataWithTimeout(data, reply); } },
         { GET_TIME_BY_FRAME_INDEX,
             [this](MessageParcel &data, MessageParcel &reply) { return GetTimeByFrameIndex(data, reply); } },
         { GET_FRAME_INDEX_BY_TIME,
@@ -101,7 +113,6 @@ int32_t AVMetadataHelperServiceStub::Init()
         { SET_HTTP_URI_SOURCE,
             [this](MessageParcel &data, MessageParcel &reply) { return SetUrlSource(data, reply); } },
     };
-    return MSERR_OK;
 }
 
 int32_t AVMetadataHelperServiceStub::DestroyStub()
@@ -205,6 +216,14 @@ std::shared_ptr<Meta> AVMetadataHelperServiceStub::GetAVMetadata()
     return avMetadateHelperServer_->GetAVMetadata();
 }
 
+MetadataResult AVMetadataHelperServiceStub::GetAVMetadataWithTimeout(int64_t timeoutMs)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, MetadataResult(nullptr, false),
+        "avmetadatahelper server is nullptr");
+    return avMetadateHelperServer_->GetAVMetadataWithTimeout(timeoutMs);
+}
+
 std::shared_ptr<AVSharedMemory> AVMetadataHelperServiceStub::FetchArtPicture()
 {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -228,6 +247,15 @@ std::shared_ptr<AVBuffer> AVMetadataHelperServiceStub::FetchFrameYuv(int64_t tim
     return avMetadateHelperServer_->FetchFrameYuv(timeUs, option, param);
 }
 
+FetchFrameResult AVMetadataHelperServiceStub::FetchFrameYuvWithTimeout(int64_t timeUs,
+    int32_t option, const OutputConfiguration &param, int64_t timeoutMs)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, FetchFrameResult(nullptr, nullptr, false),
+        "avmetadatahelper server is nullptr");
+    return avMetadateHelperServer_->FetchFrameYuvWithTimeout(timeUs, option, param, timeoutMs);
+}
+
 int32_t AVMetadataHelperServiceStub::FetchFrameYuvs(const std::vector<int64_t>& timeUs,
     int32_t option, const PixelMapParams &param)
 {
@@ -235,6 +263,15 @@ int32_t AVMetadataHelperServiceStub::FetchFrameYuvs(const std::vector<int64_t>& 
     CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr,
         MSERR_EXT_API9_SERVICE_DIED, "avmetadatahelper server is nullptr");
     return avMetadateHelperServer_->FetchFrameYuvs(timeUs, option, param);
+}
+
+int32_t AVMetadataHelperServiceStub::FetchFrameYuvsWithTimeout(const std::vector<int64_t>& timeUs,
+    int32_t option, const PixelMapParams &param, int64_t timeoutMs)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr,
+        MSERR_EXT_API9_SERVICE_DIED, "avmetadatahelper server is nullptr");
+    return avMetadateHelperServer_->FetchFrameYuvsWithTimeout(timeUs, option, param, timeoutMs);
 }
 
 int32_t AVMetadataHelperServiceStub::CancelAllFetchFrames()
@@ -416,6 +453,56 @@ int32_t AVMetadataHelperServiceStub::GetAVMetadata(MessageParcel &data, MessageP
     return MSERR_OK;
 }
 
+int32_t AVMetadataHelperServiceStub::GetAVMetadataWithTimeout(MessageParcel &data, MessageParcel &reply)
+{
+    int64_t timeoutMs = data.ReadInt64();
+    CHECK_AND_RETURN_RET_LOG(timeoutMs > 0 && timeoutMs <= MAX_TIMEOUT_MS, MSERR_INVALID_VAL,
+        "timeoutMs illegal");
+    bool ret = true;
+    std::shared_ptr<Meta> customInfo;
+    std::vector<Format> tracksVec;
+    auto result = GetAVMetadataWithTimeout(timeoutMs);
+    CHECK_AND_RETURN_RET_LOG(result.meta != nullptr || result.isTimeout == true,
+        MSERR_EXT_API9_UNSUPPORT_FORMAT, "metadata is nullptr");
+    reply.WriteInt32(result.isTimeout ? MSERR_NETWORK_TIMEOUT : MSERR_OK);
+    auto metadata = result.meta;
+    if (metadata == nullptr) {
+        MEDIA_LOGE("metadata is null");
+        metadata = std::make_shared<Meta>();
+    }
+
+    auto iter = metadata->Find("customInfo");
+    if (iter != metadata->end()) {
+        ret &= metadata->GetData("customInfo", customInfo);
+    }
+    if (customInfo == nullptr) {
+        MEDIA_LOGE("customInfo is null");
+        customInfo = std::make_shared<Meta>();
+    }
+    ret &= reply.WriteString("customInfo");
+    ret &= customInfo->ToParcel(reply);
+    metadata->Remove("customInfo");
+
+    iter = metadata->Find("tracks");
+    if (iter != metadata->end()) {
+        ret &= metadata->GetData("tracks", tracksVec);
+    }
+    ret &= reply.WriteString("tracks");
+    ret &= reply.WriteInt32(static_cast<int32_t>(tracksVec.size()));
+    for (auto trackIter = tracksVec.begin(); trackIter != tracksVec.end(); trackIter++) {
+        (void)MediaParcel::Marshalling(reply, *trackIter);
+    }
+    metadata->Remove("tracks");
+    ret &= reply.WriteString("AVMetadata");
+    ret &= metadata->ToParcel(reply);
+    if (!ret) {
+        MEDIA_LOGE("GetAVMetadata ToParcel error");
+    }
+    metadata->SetData("customInfo", customInfo);
+    metadata->SetData("tracks", tracksVec);
+    return MSERR_OK;
+}
+
 int32_t AVMetadataHelperServiceStub::FetchArtPicture(MessageParcel &data, MessageParcel &reply)
 {
     (void)data;
@@ -451,6 +538,23 @@ int32_t AVMetadataHelperServiceStub::FetchFrameYuv(MessageParcel &data, MessageP
     return MSERR_OK;
 }
 
+int32_t AVMetadataHelperServiceStub::FetchFrameYuvWithTimeout(MessageParcel &data, MessageParcel &reply)
+{
+    int64_t timeUs = data.ReadInt64();
+    int32_t option = data.ReadInt32();
+    OutputConfiguration param = {data.ReadInt32(), data.ReadInt32(), static_cast<PixelFormat>(data.ReadInt32())};
+    int64_t timeoutMs = data.ReadInt64();
+    CHECK_AND_RETURN_RET_LOG(timeoutMs > 0 && timeoutMs <= MAX_TIMEOUT_MS, MSERR_INVALID_VAL,
+        "timeoutMs illegal");
+
+    FetchFrameResult result = FetchFrameYuvWithTimeout(timeUs, option, param, timeoutMs);
+    reply.WriteInt32(result.isTimeout ? MSERR_NETWORK_TIMEOUT : MSERR_OK);
+    reply.WriteInt32(result.avbuffer != nullptr ? MSERR_OK : MSERR_INVALID_VAL);
+    CHECK_AND_RETURN_RET(result.avbuffer != nullptr, MSERR_OK);
+    result.avbuffer->WriteToMessageParcel(reply);
+    return MSERR_OK;
+}
+
 int32_t AVMetadataHelperServiceStub::FetchFrameYuvs(MessageParcel &data, MessageParcel &reply)
 {
     std::vector<int64_t> timeUsVec;
@@ -465,6 +569,27 @@ int32_t AVMetadataHelperServiceStub::FetchFrameYuvs(MessageParcel &data, Message
     PixelMapParams param = {data.ReadInt32(), data.ReadInt32(), static_cast<PixelFormat>(data.ReadInt32()),
                             data.ReadBool(), data.ReadBool()};
     int32_t result = FetchFrameYuvs(timeUsVec, option, param);
+    reply.WriteInt32(result == MSERR_OK ? MSERR_OK : MSERR_EXT_API9_SERVICE_DIED);
+    return MSERR_OK;
+}
+
+int32_t AVMetadataHelperServiceStub::FetchFrameYuvsWithTimeout(MessageParcel &data, MessageParcel &reply)
+{
+    std::vector<int64_t> timeUsVec;
+    int64_t timeUsSize = data.ReadInt64();
+    CHECK_AND_RETURN_RET_LOG(timeUsSize > 0, MSERR_EXT_API9_SERVICE_DIED, "timeUsSize illegal");
+    timeUsSize = timeUsSize > TIMEUS_ARR_MAX_LEN ? TIMEUS_ARR_MAX_LEN : timeUsSize;
+    const void* timeUsBuffer = data.ReadBuffer(timeUsSize * sizeof(int64_t));
+    CHECK_AND_RETURN_RET_LOG(timeUsBuffer != nullptr, MSERR_EXT_API9_SERVICE_DIED, "timeUsBuffer is null");
+    const int64_t* dataPtr = static_cast<const int64_t*>(timeUsBuffer);
+    timeUsVec.assign(dataPtr, dataPtr + timeUsSize);
+    int32_t option = data.ReadInt32();
+    PixelMapParams param = {data.ReadInt32(), data.ReadInt32(), static_cast<PixelFormat>(data.ReadInt32()),
+                            data.ReadBool(), data.ReadBool()};
+    int64_t timeoutMs = data.ReadInt64();
+    CHECK_AND_RETURN_RET_LOG(timeoutMs > 0 && timeoutMs <= MAX_TIMEOUT_MS, MSERR_EXT_API9_SERVICE_DIED,
+        "timeoutMs illegal");
+    int32_t result = FetchFrameYuvsWithTimeout(timeUsVec, option, param, timeoutMs);
     reply.WriteInt32(result == MSERR_OK ? MSERR_OK : MSERR_EXT_API9_SERVICE_DIED);
     return MSERR_OK;
 }

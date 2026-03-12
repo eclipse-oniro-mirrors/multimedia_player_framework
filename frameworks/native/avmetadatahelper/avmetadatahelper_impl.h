@@ -49,12 +49,17 @@ public:
     std::string ResolveMetadata(int32_t key) override;
     std::unordered_map<int32_t, std::string> ResolveMetadata() override;
     std::shared_ptr<Meta> GetAVMetadata() override;
+    MetadataResult GetAVMetadataWithTimeout(int64_t timeoutMs) override;
     std::shared_ptr<AVSharedMemory> FetchArtPicture() override;
     std::shared_ptr<PixelMap> FetchFrameAtTime(int64_t timeUs, int32_t option, const PixelMapParams &param) override;
     std::shared_ptr<PixelMap> FetchFrameYuv(int64_t timeUs, int32_t option, const PixelMapParams &param) override;
-    int32_t FetchScaledFrameYuvs(const std::vector<int64_t>& timeUs,
-                            int32_t option, const PixelMapParams &param) override;
+    int32_t FetchScaledFrameYuvs(const std::vector<int64_t>& timeUs, int32_t option,
+        const PixelMapParams &param) override;
+    int32_t FetchScaledFrameYuvsWithTimeout(const std::vector<int64_t>& timeUs, int32_t option,
+        const PixelMapParams &param, int64_t timeoutMs) override;
     std::shared_ptr<PixelMap> FetchScaledFrameYuv(int64_t timeUs, int32_t option, const PixelMapParams &param) override;
+    FetchFrameResult FetchScaledFrameYuvWithTimeout(int64_t timeUs, int32_t option,
+        const PixelMapParams &param, int64_t timeoutMs) override;
     std::shared_ptr<PixelMap> ProcessPixelMap(const std::shared_ptr<AVBuffer> &frameBuffer,
                                             const PixelMapParams &param, int32_t scaleMode) override;
     void Release() override;
@@ -126,7 +131,9 @@ private:
     static void ScalePixelMapWithEqualRatio(std::shared_ptr<PixelMap> &pixelMap, PixelMapInfo &info,
                                             const PixelMapParams &param);
     std::shared_ptr<PixelMap> FetchFrameBase(int64_t timeUs, int32_t option,
-                                             const PixelMapParams &param, int32_t scaleMode);
+        const PixelMapParams &param, int32_t scaleMode);
+    FetchFrameResult FetchFrameBase(int64_t timeUs, int32_t option,
+        const PixelMapParams &param, int64_t timeoutMs, int32_t scaleMode);
     int32_t CopySurfaceBufferToPixelMap(sptr<SurfaceBuffer> &SurfaceBuffer,
                                         std::shared_ptr<PixelMap> pixelMap,
                                         PixelMapInfo &pixelMapInfo);

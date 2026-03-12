@@ -25,6 +25,7 @@ using namespace ANI::Media;
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_METADATA, "AVMetadataExtractorTaihe"};
+constexpr int64_t MAX_TIMEOUT_MS = 20000;
 }
 namespace ANI::Media {
 
@@ -321,6 +322,42 @@ optional<AVMetadata> AVMetadataExtractorImpl::FetchMetadataSync()
     return optional<AVMetadata>(std::in_place_t{}, res);
 }
 
+optional<AVMetadata> AVMetadataExtractorImpl::FetchMetadataWithTimeoutSync(int64_t timeoutMs)
+{
+    OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::FetchMetadataWithTimeoutSync");
+    MEDIA_LOGI("FetchMetadataWithTimeoutSync In");
+    if (timeoutMs <= 0 || timeoutMs > MAX_TIMEOUT_MS) {
+        set_business_error(OHOS::Media::MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
+            "Parameter check failed, can't fetchFrame.");
+        return optional<AVMetadata>(std::nullopt);
+    }
+    if (state_ != OHOS::Media::HelperState::HELPER_STATE_RUNNABLE) {
+        if (state_ == OHOS::Media::HelperState::HELPER_STATE_HTTP_INTERCEPTED) {
+            set_business_error(OHOS::Media::MSERR_EXT_API20_IO_CLEARTEXT_NOT_PERMITTED,
+                "Http plaintext access is not allowed.");
+        } else {
+            set_business_error(OHOS::Media::MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "Can't fetchMetadata, please set source.");
+        }
+        return optional<AVMetadata>(std::nullopt);
+    }
+    CHECK_AND_RETURN_RET_LOG(helper_ != nullptr, optional<AVMetadata>(std::nullopt), "Invalid promiseCtx.");
+    OHOS::Media::MetadataResult result = helper_->GetAVMetadataWithTimeout(timeoutMs);
+    if (result.isTimeout) {
+        MEDIA_LOGE("ResolveMetadata timeout");
+        set_business_error(OHOS::Media::MSERR_EXT_API9_TIMEOUT, "ResolveMetadata fail, metadata is null!");
+        return optional<AVMetadata>(std::nullopt);
+    } else if (result.meta == nullptr) {
+        MEDIA_LOGE("ResolveMetadata AVMetadata is nullptr");
+        set_business_error(OHOS::Media::MSERR_EXT_API9_UNSUPPORT_FORMAT, "ResolveMetadata fail, metadata is null!");
+        return optional<AVMetadata>(std::nullopt);
+    }
+    AVMetadata res;
+    SetDefaultMetadataProperty(res);
+    SetMetadataProperty(result.meta, res);
+    return optional<AVMetadata>(std::in_place_t{}, res);
+}
+
 optional<AVMetadataExtractor> CreateAVMetadataExtractorSync()
 {
     OHOS::Media::MediaTrace trace("AVMetadataExtractor::CreateAVMetadataExtractor");
@@ -471,6 +508,58 @@ optional<::ohos::multimedia::image::image::PixelMap> AVMetadataExtractorImpl::Fe
         Image::PixelMapImpl::CreatePixelMap(pixelMap));
 }
 
+optional<::ohos::multimedia::image::image::PixelMap> AVMetadataExtractorImpl::FetchFrameByTimeWithTimeoutSync(
+    int64_t timeUs, AVImageQueryOptions options, PixelMapParams const& param, int64_t timeoutMs)
+{
+    OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::FetchFrameByTimeWithTimeoutSync");
+    if (timeoutMs <= 0 || timeoutMs > MAX_TIMEOUT_MS) {
+        set_business_error(OHOS::Media::MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
+            "Parameter check failed, can't fetchFrame.");
+        return optional<::ohos::multimedia::image::image::PixelMap>(std::nullopt);
+    }
+    AVMetadataExtractorImpl *taihe = this;
+    if (taihe->state_ != OHOS::Media::HelperState::HELPER_STATE_RUNNABLE) {
+        if (taihe->state_ == OHOS::Media::HelperState::HELPER_STATE_HTTP_INTERCEPTED) {
+            set_business_error(OHOS::Media::MSERR_EXT_API20_IO_CLEARTEXT_NOT_PERMITTED,
+                "Http plaintext access is not allowed.");
+        } else {
+            set_business_error(OHOS::Media::MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "Current state is not runnable, can't fetchFrame.");
+        }
+        return optional<::ohos::multimedia::image::image::PixelMap>(std::nullopt);
+    }
+    OHOS::Media::PixelMapParams pixelMapParams;
+    if (param.height.has_value()) {
+        pixelMapParams.dstHeight = param.height.value();
+    }
+    if (param.width.has_value()) {
+        pixelMapParams.dstWidth = param.width.value();
+    }
+    OHOS::Media::PixelFormat colorFormat = OHOS::Media::PixelFormat::RGBA_8888;
+    if (param.colorFormat.has_value()) {
+        int32_t formatVal = static_cast<int32_t>(param.colorFormat.value());
+        colorFormat = static_cast<OHOS::Media::PixelFormat>(formatVal);
+        if (colorFormat != OHOS::Media::PixelFormat::RGB_565 && colorFormat !=
+            OHOS::Media::PixelFormat::RGB_888 &&
+            colorFormat != OHOS::Media::PixelFormat::RGBA_8888) {
+            set_business_error(OHOS::Media::MSERR_INVALID_VAL, "formatVal is invalid");
+            return optional<::ohos::multimedia::image::image::PixelMap>(std::nullopt);
+        }
+    }
+    pixelMapParams.colorFormat = colorFormat;
+    auto result = helper_->FetchScaledFrameYuvWithTimeout(timeUs, options.get_value(), pixelMapParams, timeoutMs);
+    if (result.isTimeout) {
+        MEDIA_LOGE("FetchScaledFrameYuv timeout");
+        set_business_error(OHOS::Media::MSERR_EXT_API9_TIMEOUT, "FetchScaledFrameYuv timeout");
+        return optional<::ohos::multimedia::image::image::PixelMap>(std::nullopt);
+    } else if (result.pixelmap == nullptr) {
+        set_business_error(OHOS::Media::MSERR_EXT_API9_UNSUPPORT_FORMAT, "pixlemap is nullptr");
+        return optional<::ohos::multimedia::image::image::PixelMap>(std::nullopt);
+    }
+    return optional<::ohos::multimedia::image::image::PixelMap>(std::in_place_t{},
+        Image::PixelMapImpl::CreatePixelMap(result.pixelmap));
+}
+
 void AVMetadataExtractorImpl::CancelAllFetchFrames()
 {
     OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::JsCancelAllFetchFrames.");
@@ -535,6 +624,71 @@ void AVMetadataExtractorImpl::FetchFramesByTimes(array_view<int64_t> timesUs,
     int32_t fetchRes = helper_->FetchScaledFrameYuvs(timesUsTypeInt, queryOption.get_value(), pixelMapParams);
     if (fetchRes != OHOS::Media::MSERR_OK) {
         MediaTaiheUtils::ThrowExceptionError("SERVICE DIED.");
+    }
+    return;
+}
+
+void AVMetadataExtractorImpl::FetchFramesByTimesWithTimeout(array_view<int64_t> timesUs,
+    AVImageQueryOptions queryOption, PixelMapParams const& param, int64_t timeoutMs,
+    callback_view<void(::ohos::multimedia::media::FrameInfo const& frameInfo,
+    optional_view<uintptr_t> err)> callback)
+{
+    OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::FetchFramesByTimesWithTimeout");
+    if (timeoutMs <= 0 || timeoutMs > MAX_TIMEOUT_MS) {
+        set_business_error(OHOS::Media::MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
+            "Parameter check failed, can't fetchFrame.");
+        return;
+    }
+    AVMetadataExtractorImpl *taihe = this;
+    if (taihe->state_ != OHOS::Media::HelperState::HELPER_STATE_RUNNABLE) {
+        set_business_error(OHOS::Media::MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "Current state is not runnable, can't fetchFrame.");
+        return;
+    }
+
+    std::string callbackName = "OnFrameFetched";
+    ani_env *env = taihe::get_env();
+    std::shared_ptr<taihe::callback<void(::ohos::multimedia::media::FrameInfo const&,
+        taihe::optional_view<uintptr_t>)>> taiheCallback = std::make_shared
+        <taihe::callback<void(::ohos::multimedia::media::FrameInfo const&,
+        taihe::optional_view<uintptr_t>)>>(callback);
+    std::shared_ptr<uintptr_t> cacheCallback =
+        std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
+    std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
+    SetCallbackReference(callbackName, autoRef);
+
+    std::vector<int64_t> timesUsTypeInt;
+    timesUsTypeInt.reserve(timesUs.size());
+    for (int64_t value : timesUs) {
+        timesUsTypeInt.push_back(value);
+    }
+
+    OHOS::Media::PixelMapParams pixelMapParams;
+    if (param.height.has_value()) {
+        pixelMapParams.dstHeight = param.height.value();
+    }
+    if (param.width.has_value()) {
+        pixelMapParams.dstWidth = param.width.value();
+    }
+    OHOS::Media::PixelFormat colorFormat = OHOS::Media::PixelFormat::RGBA_8888;
+    if (param.colorFormat.has_value()) {
+        int32_t formatVal = static_cast<int32_t>(param.colorFormat.value());
+        colorFormat = static_cast<OHOS::Media::PixelFormat>(formatVal);
+        if (colorFormat != OHOS::Media::PixelFormat::RGB_565 && colorFormat !=
+            OHOS::Media::PixelFormat::RGB_888 &&
+            colorFormat != OHOS::Media::PixelFormat::RGBA_8888) {
+            set_business_error(OHOS::Media::MSERR_INVALID_VAL, "formatVal is invalid");
+            return;
+        }
+    }
+    pixelMapParams.colorFormat = colorFormat;
+
+    CHECK_AND_RETURN_LOG(helper_ != nullptr, "inner helper_ is null.");
+    int32_t fetchRes = helper_->FetchScaledFrameYuvsWithTimeout(
+        timesUsTypeInt, queryOption.get_value(), pixelMapParams, timeoutMs);
+    if (fetchRes != OHOS::Media::MSERR_OK) {
+        set_business_error(OHOS::Media::MSERR_EXT_API9_SERVICE_DIED,
+            "Service died, can't fetchFrame.");
     }
     return;
 }
