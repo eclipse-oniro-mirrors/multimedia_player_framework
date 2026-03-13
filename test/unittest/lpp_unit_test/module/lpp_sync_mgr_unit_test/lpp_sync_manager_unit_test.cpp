@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#ifdef SUPPORT_DRIVERS_INTERFACE_LPPLAYER
 #include "lpp_sync_manager_unit_test.h"
 #include "media_errors.h"
 
@@ -399,3 +399,4 @@ HWTEST_F(LppSyncManagerUnitTest, SetEventReceiver_001, TestSize.Level1)
 }
 }
 }
+#endif

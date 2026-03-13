@@ -98,7 +98,7 @@ ohos_shared_library("native_avscreen_capture") {
     "window_manager:libdm",
   ]
 
-  if (player_framework_support_lowpower_av_sink) {
+  if (player_framework_support_lowpower_av_sink && drivers_interface_lpplayer_flag) {
     external_deps += [
       "drivers_interface_lpplayer:liblow_power_player_proxy_1.0",
     ]
@@ -148,7 +148,7 @@ ohos_shared_library("avplayer") {
     "media_foundation:native_media_core",
   ]
 
-  if (player_framework_support_lowpower_av_sink) {
+  if (player_framework_support_lowpower_av_sink && drivers_interface_lpplayer_flag) {
     external_deps += [
       "drivers_interface_lpplayer:liblow_power_player_proxy_1.0",
     ]
@@ -208,7 +208,7 @@ ohos_shared_library("avrecorder") {
     "window_manager:libdm",
   ]
 
-  if (player_framework_support_lowpower_av_sink) {
+  if (player_framework_support_lowpower_av_sink && drivers_interface_lpplayer_flag) {
     external_deps += [
       "drivers_interface_lpplayer:liblow_power_player_proxy_1.0",
     ]
@@ -267,7 +267,7 @@ ohos_shared_library("avimage_generator") {
     "window_manager:libdm",
   ]
 
-  if (player_framework_support_lowpower_av_sink) {
+  if (player_framework_support_lowpower_av_sink && drivers_interface_lpplayer_flag) {
     external_deps += [
       "drivers_interface_lpplayer:liblow_power_player_proxy_1.0",
     ]
@@ -325,7 +325,7 @@ ohos_shared_library("avmetadata_extractor") {
     "window_manager:libdm",
   ]
 
-  if (player_framework_support_lowpower_av_sink) {
+  if (player_framework_support_lowpower_av_sink && drivers_interface_lpplayer_flag) {
     external_deps += [
       "drivers_interface_lpplayer:liblow_power_player_proxy_1.0",
     ]
@@ -391,7 +391,7 @@ ohos_shared_library("avmedia_source") {
     "samgr:samgr_proxy",
   ]
 
-  if (player_framework_support_lowpower_av_sink) {
+  if (player_framework_support_lowpower_av_sink && drivers_interface_lpplayer_flag) {
     external_deps += [
       "drivers_interface_lpplayer:liblow_power_player_proxy_1.0",
     ]
@@ -454,7 +454,7 @@ ohos_shared_library("avmedia_base") {
     "samgr:samgr_proxy",
   ]
 
-  if (player_framework_support_lowpower_av_sink) {
+  if (player_framework_support_lowpower_av_sink && drivers_interface_lpplayer_flag) {
     external_deps += [
       "drivers_interface_lpplayer:liblow_power_player_proxy_1.0",
     ]
@@ -565,7 +565,7 @@ ohos_shared_library("lowpower_avsink") {
     "hisysevent:libhisysevent",
   ]
 
-  if (player_framework_support_lowpower_av_sink) {
+  if (player_framework_support_lowpower_av_sink && drivers_interface_lpplayer_flag) {
     external_deps += [
       "drivers_interface_lpplayer:liblow_power_player_proxy_1.0",
     ]

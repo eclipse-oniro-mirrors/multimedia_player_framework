@@ -15,7 +15,7 @@
 #ifndef LPP_SYNC_MANAGER_ADAPTER_UNIT_TEST_H
 #define LPP_SYNC_MANAGER_ADAPTER_UNIT_TEST_H
 
-
+#ifdef SUPPORT_DRIVERS_INTERFACE_LPPLAYER
 #include "gtest/gtest.h"
 #include "lpp_sync_manager_adapter.h"
 #include "mock_event_receiver.h"
@@ -40,4 +40,5 @@ protected:
 };
 }  // namespace Media
 }  // namespace OHOS
+#endif
 #endif

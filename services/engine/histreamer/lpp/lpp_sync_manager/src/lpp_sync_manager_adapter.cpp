@@ -14,6 +14,7 @@
  */
 
 #define HST_LOG_TAG "LppSyncManagerAdapter"
+#ifdef SUPPORT_DRIVERS_INTERFACE_LPPLAYER
 #include <chrono>
 #include "lpp_sync_manager_adapter.h"
 #include "common/log.h"
@@ -404,3 +405,4 @@ int32_t LowPowerPlayerFactory::DestroyLppSyncManagerAdapter(std::shared_ptr<LppS
 
 }  // namespace Media
 }  // namespace OHOS
+#endif

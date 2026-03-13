@@ -69,7 +69,7 @@ ohos_unittest("avmetadatahelper_impl_unittest") {
     "window_manager:libwm",
   ]
 
-  if (player_framework_support_lowpower_av_sink) {
+  if (player_framework_support_lowpower_av_sink && drivers_interface_lpplayer_flag) {
     external_deps += [
       "drivers_interface_lpplayer:liblow_power_player_stub_1.0",
     ]
