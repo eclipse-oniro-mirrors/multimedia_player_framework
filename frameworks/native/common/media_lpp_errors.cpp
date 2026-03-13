@@ -17,7 +17,7 @@
 #include "avcodec_errors.h"
 #include "audio_errors.h"
 #include "audio_info.h"
-#ifdef SUPPORT_LPP
+#ifdef SUPPORT_DRIVERS_INTERFACE_LPPLAYER
 #include "hdf_base.h"
 #endif
 
@@ -125,14 +125,14 @@ const std::map<AudioStandard::AudioErrors, MediaServiceErrCode> AUDIOINFOERROR_T
 };
 
 
-#ifdef SUPPORT_LPP
+#ifdef SUPPORT_DRIVERS_INTERFACE_LPPLAYER
 const std::map<HDF_STATUS, MediaServiceErrCode> HDF_STATUS_TO_MSERROR = {
     {HDF_SUCCESS,   MSERR_OK},
     {HDF_FAILURE,   MSERR_HARDWARE_ERROR},
 };
 #endif
 
-#ifdef SUPPORT_LPP
+#ifdef SUPPORT_DRIVERS_INTERFACE_LPPLAYER
 const std::map<HDFErrCode, MediaServiceErrCode> HDF_ERROR_TO_MSERROR = {
     {HDF_ERR_OK,                            MSERR_OK},
     {HDF_ERR_SHB_TIME_ANCHOR_GIANT_GAP,     MSERR_OK},
@@ -188,7 +188,7 @@ MediaServiceErrCode AudioStandardErrorToMSError(int32_t code)
 
 MediaServiceErrCode HDIStatusToMSError(int32_t code)
 {
-#ifdef SUPPORT_LPP
+#ifdef SUPPORT_DRIVERS_INTERFACE_LPPLAYER
     HDF_STATUS errCode = static_cast<HDF_STATUS>(code);
     if (HDF_STATUS_TO_MSERROR.find(errCode) != HDF_STATUS_TO_MSERROR.end()) {
         return HDF_STATUS_TO_MSERROR.at(errCode);
@@ -199,7 +199,7 @@ MediaServiceErrCode HDIStatusToMSError(int32_t code)
 
 MediaServiceErrCode HDIErrorToMSError(int32_t code)
 {
-#ifdef SUPPORT_LPP
+#ifdef SUPPORT_DRIVERS_INTERFACE_LPPLAYER
     HDFErrCode errCode = static_cast<HDFErrCode>(code);
     if (HDF_ERROR_TO_MSERROR.find(errCode) != HDF_ERROR_TO_MSERROR.end()) {
         return HDF_ERROR_TO_MSERROR.at(errCode);

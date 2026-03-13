@@ -53,7 +53,7 @@
 #include "system_ability_definition.h"
 #include "mem_mgr_client.h"
 #include <set>
-#ifdef SUPPORT_LPP_VIDEO_STRAMER
+#ifdef SUPPORT_DRIVERS_INTERFACE_LPPLAYER
 #include "v1_0/ilow_power_player_factory.h"
 namespace PlayerHDI = OHOS::HDI::LowPowerPlayer::V1_0;
 #endif
@@ -575,6 +575,7 @@ sptr<IRemoteObject> MediaServerManager::CreateLppAudioPlayerStubObject()
 #ifdef SUPPORT_LPP_VIDEO_STRAMER
 int32_t MediaServerManager::GetLppCapacity(LppAvCapabilityInfo &lppAvCapability)
 {
+#ifdef SUPPORT_DRIVERS_INTERFACE_LPPLAYER
     auto factory = PlayerHDI::ILowPowerPlayerFactory::Get(true);
     CHECK_AND_RETURN_RET_LOG(factory != nullptr, UNKNOWN_ERROR, "MediaServerManager::GetLppCapacity is failed");
     PlayerHDI::LppAVCap lppAVCap;
@@ -584,6 +585,8 @@ int32_t MediaServerManager::GetLppCapacity(LppAvCapabilityInfo &lppAvCapability)
     CHECK_AND_RETURN_RET_LOG(ret == 0, ret, "FAILED MediaServerManager::GetLppCapacity");
     lppAvCapability.SetLppAvCapabilityInfo(lppAVCap);
     return ret;
+#endif
+    return -1;
 }
 
 sptr<IRemoteObject> MediaServerManager::CreateLppVideoPlayerStubObject()

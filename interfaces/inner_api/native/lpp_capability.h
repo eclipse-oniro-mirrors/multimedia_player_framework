@@ -17,7 +17,7 @@
 #define LPP_CAPABILITY_H
 
 #include <refbase.h>
-#ifdef SUPPORT_LPP_VIDEO_STRAMER
+#ifdef SUPPORT_DRIVERS_INTERFACE_LPPLAYER
 #include "v1_0/ilow_power_player_factory.h"
 namespace PlayerHDI = OHOS::HDI::LowPowerPlayer::V1_0;
 #endif
@@ -35,7 +35,7 @@ public:
     uint32_t maxInstance_ = 0;
     bool isSupportDRM_ = false;
     std::vector<uint32_t> supportHDRTypes_ = {};             /** HDR10, HDR10+, HDRVivid */
-#ifdef SUPPORT_LPP_VIDEO_STRAMER
+#ifdef SUPPORT_DRIVERS_INTERFACE_LPPLAYER
     VideoMimeCapIpc(const PlayerHDI::VideoMimeCap &videoMimeCap)
     {
         mime_ = videoMimeCap.mime;
@@ -98,7 +98,7 @@ public:
     std::string mime_ = "";                               /** AAC, Flac, Vorbis, MPEG, G711mu, AMR(amrnb, amrwb), APE */
     uint32_t sampleRate_ = 0;
     uint32_t channelCount_ = 0;
-#ifdef SUPPORT_LPP_VIDEO_STRAMER
+#ifdef SUPPORT_DRIVERS_INTERFACE_LPPLAYER
     AudioMimeCapIpc(const PlayerHDI::AudioMimeCap &audioMimeCap)
     {
         mime_ = audioMimeCap.mime;
@@ -133,7 +133,7 @@ public:
     
     LppAvCapabilityInfo() {}
 
-#ifdef SUPPORT_LPP_VIDEO_STRAMER
+#ifdef SUPPORT_DRIVERS_INTERFACE_LPPLAYER
     void SetLppAvCapabilityInfo(PlayerHDI::LppAVCap &lppAVCap)
     {
         maxInstance_ = lppAVCap.maxInstance;

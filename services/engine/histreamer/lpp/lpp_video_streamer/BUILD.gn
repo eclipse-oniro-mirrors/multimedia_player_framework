@@ -26,6 +26,9 @@ config("media_engine_histreamer_lpp_video_streamer_config") {
     defines += [ "SUPPORT_LPP" ]
     defines += [ "SUPPORT_LPP_AUDIO_STRAMER" ]
     defines += [ "SUPPORT_LPP_VIDEO_STRAMER" ]
+    if(drivers_interface_lpplayer_flag){
+      defines += [ "SUPPORT_DRIVERS_INTERFACE_LPPLAYER" ]
+    }
   } else {
     defines += [ "UNSUPPORT_LPP_AUDIO_STRAMER" ]
     defines += [ "UNSUPPORT_LPP_VIDEO_STRAMER" ]
@@ -97,7 +100,7 @@ ohos_static_library("media_engine_histreamer_lpp_video_streamer") {
     "safwk:system_ability_fwk",
   ]
 
-  if (player_framework_support_lowpower_av_sink) {
+  if (player_framework_support_lowpower_av_sink && drivers_interface_lpplayer_flag) {
     external_deps += [ 
       "drivers_interface_lpplayer:liblow_power_player_proxy_1.0",
       "hdf_core:libhdi",

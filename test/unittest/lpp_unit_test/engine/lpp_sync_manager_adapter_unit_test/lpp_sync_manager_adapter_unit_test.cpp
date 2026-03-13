@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-
+#ifdef SUPPORT_DRIVERS_INTERFACE_LPPLAYER
 #include "gtest/gtest.h"
 #include "lpp_sync_manager_adapter_unit_test.h"
 #include "media_lpp_errors.h"
@@ -73,3 +73,4 @@ HWTEST_F(LppSyncManagerAdapterUnitTest, BindOutputBuffers_001, TestSize.Level0)
 
 }  // namespace Media
 }  // namespace OHOS
+#endif
