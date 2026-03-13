@@ -3161,40 +3161,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_audio_004_4, TestSize.Level2)
 }
 
 /**
- * @tc.name: screen_capture_audio_004
- * @tc.desc: 音频源类型边界测试
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(ScreenCaptureUnitTest, screen_capture_audio_004, TestSize.Level2)
-{
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_audio_004 before");
-    SetConfig(config_);
-    
-    // 测试所有音频源类型
-    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.micCapInfo.audioChannels = 2;
-    config_.audioInfo.micCapInfo.audioSource = SOURCE_DEFAULT;
-    
-    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
-    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    
-    config_.audioInfo.micCapInfo.audioSource = MIC;
-    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
-    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    
-    config_.audioInfo.micCapInfo.audioSource = APP_PLAYBACK;
-    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
-    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    
-    config_.audioInfo.micCapInfo.audioSource = ALL_PLAYBACK;
-    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
-    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_audio_004 after");
-}
-
-/**
  * @tc.name: screen_capture_video_003
  * @tc.desc: 视频分辨率边界测试 - 极小值
  * @tc.type: FUNC
@@ -3480,8 +3446,16 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_compatibility_006_1, TestSize.Lev
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_compatibility_006_2, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_compatibility_006_2 before");
-    SetConfig(config_);
-    
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_compatibility_006_2.mp4", recorderInfo);
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo micCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT
+    };
+    config_.audioInfo.micCapInfo = micCapInfo;
+
     // 测试CAPTURE_FILE模式
     config_.dataType = CAPTURE_FILE;
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
