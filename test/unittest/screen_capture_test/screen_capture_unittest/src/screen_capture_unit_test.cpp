@@ -2727,7 +2727,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_state_machine_001, TestSize.Level
     
     // 第二次启动（应该失败或被忽略）
     auto result = screenCapture_->StartScreenCapture();
-    
+    MEDIA_LOGI("screen_capture_state_machine_001 result:%{public}d", result);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_state_machine_001 after");
@@ -2748,7 +2748,8 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_state_machine_002, TestSize.Level
     
     // 第一次停止（未启动状态）
     auto result1 = screenCapture_->StopScreenCapture();
-    
+    MEDIA_LOGI("screen_capture_state_machine_001 result:%{public}d", result1);
+
     // 启动
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
     
@@ -2757,7 +2758,8 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_state_machine_002, TestSize.Level
     
     // 第三次停止
     auto result2 = screenCapture_->StopScreenCapture();
-    
+    MEDIA_LOGI("screen_capture_state_machine_001 result:%{public}d", result2);
+
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_state_machine_002 after");
 }
@@ -2809,7 +2811,8 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_concurrent_001, TestSize.Level2)
     
     // 启动当前实例
     auto result1 = screenCapture_->StartScreenCapture();
-    
+    MEDIA_LOGI("screen_capture_state_machine_001 result:%{public}d", result1);
+
     sleep(1);
     
     // 停止当前实例
@@ -2833,12 +2836,14 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_privacy_001, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     
     // 设置跳过隐私窗口
-    vector<uint64_t> windowIDsVec = {1, 3, 5};
-    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(windowIDsVec));
+    vector<int> windowIDsVec = {1, 3, 5};
+    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIDsVec[0], 
+        static_cast<int32_t>(windowIDsVec.size())));
     
     // 动态更新隐私窗口列表
     windowIDsVec.push_back(7);
-    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(windowIDsVec));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIDsVec[0], 
+        static_cast<int32_t>(windowIDsVec.size())));
     
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
     
@@ -2994,8 +2999,8 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_privacy_003, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     
     // 初始设置隐私窗口
-    vector<uint64_t> windowIDsVec = {1, 3};
-    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(windowIDsVec));
+    vector<int> windowIDsVec = {1, 3};
+    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIDsVec[0], static_cast<int32_t>(windowIDsVec.size())));
     
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
     
@@ -3004,7 +3009,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_privacy_003, TestSize.Level2)
     // 录制中添加更多窗口
     windowIDsVec.push_back(5);
     windowIDsVec.push_back(7);
-    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(windowIDsVec));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIDsVec[0], static_cast<int32_t>(windowIDsVec.size())));
     
     sleep(1);
     
@@ -3035,8 +3040,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_privacy_004, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     
     // 停止后设置隐私窗口
-    vector<uint64_t> windowIDsVec = {1, 3, 5};
-    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(windowIDsVec));
+    vector<int> windowIDsVec = {1, 3, 5};
+    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIDsVec[0], 
+        static_cast<int32_t>(windowIDsVec.size())));
     
     // 验证设置成功
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
@@ -3342,8 +3348,8 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_performance_003, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
     auto endTime = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-    
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_performance_003 start latency: %{public}d ms", duration.count());
+    int32_t latencyMs = static_cast<int32_t>(duration.count());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_performance_003 start latency: %{public}d ms", latencyMs);
     
     sleep(1);
     
@@ -3352,8 +3358,8 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_performance_003, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     endTime = std::chrono::high_resolution_clock::now();
     duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-    
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_performance_003 stop latency: %{public}d ms", duration.count());
+    int32_t latencyMs1 = static_cast<int32_t>(duration.count());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_performance_003 stop latency: %{public}d ms", latencyMs1);
     
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_performance_003 after");
