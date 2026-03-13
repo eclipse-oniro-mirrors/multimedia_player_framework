@@ -2837,13 +2837,11 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_privacy_001, TestSize.Level2)
     
     // 设置跳过隐私窗口
     vector<int> windowIDsVec = {1, 3, 5};
-    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIDsVec[0], 
-        static_cast<int32_t>(windowIDsVec.size())));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIDsVec[0], static_cast<int32_t>(windowIDsVec.size())));
     
     // 动态更新隐私窗口列表
     windowIDsVec.push_back(7);
-    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIDsVec[0], 
-        static_cast<int32_t>(windowIDsVec.size())));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIDsVec[0], static_cast<int32_t>(windowIDsVec.size())));
     
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
     
@@ -3041,8 +3039,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_privacy_004, TestSize.Level2)
     
     // 停止后设置隐私窗口
     vector<int> windowIDsVec = {1, 3, 5};
-    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIDsVec[0], 
-        static_cast<int32_t>(windowIDsVec.size())));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIDsVec[0], static_cast<int32_t>(windowIDsVec.size())));
     
     // 验证设置成功
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
