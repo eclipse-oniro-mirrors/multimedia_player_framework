@@ -1592,8 +1592,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::GetMaxAmplitudeTask(
 
 int32_t AVRecorderImpl::GetMaxAmplitude(int32_t &maxAmplitude)
 {
-    maxAmplitude = recorder_->GetMaxAmplitude();
-    return MSERR_OK;
+    return recorder_->GetMaxAmplitude(maxAmplitude);
 }
 
 void AVRecorderImpl::SetWatermarkSync(::ohos::multimedia::image::image::weak::PixelMap watermark,

@@ -141,7 +141,8 @@ void RecorderServiceStubFunctionsFuzzer::GetRecorderConfig(
     std::vector<EncoderCapabilityData> encoderInfo;
     recorderStub->GetAvailableEncoder(encoderInfo);
 
-    recorderStub->GetMaxAmplitude();
+    int32_t amplitude;
+    recorderStub->GetMaxAmplitude(amplitude);
 }
 
 bool RecorderServiceStubFunctionsFuzzer::FuzzRecorderServiceStubFunctions(uint8_t *data, size_t size)

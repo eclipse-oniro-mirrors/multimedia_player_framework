@@ -86,10 +86,11 @@ public:
     MOCK_METHOD(int32_t, GetLocation, (Location &location), (override));
     MOCK_METHOD(int32_t, GetCurrentCapturerChangeInfo, (AudioRecorderChangeInfo &changeInfo), (override));
     MOCK_METHOD(int32_t, GetAvailableEncoder, (std::vector<EncoderCapabilityData> &encoderInfo), (override));
-    MOCK_METHOD(int32_t, GetMaxAmplitude, (), (override));
+    MOCK_METHOD(int32_t, GetMaxAmplitude, (int32_t &amplitude), (override));
     MOCK_METHOD(int32_t, IsWatermarkSupported, (bool &isWatermarkSupported), (override));
     MOCK_METHOD(int32_t, SetWatermark, (std::shared_ptr<AVBuffer> &waterMarkBuffer), (override));
     MOCK_METHOD(int32_t, SetUserMeta, (const std::shared_ptr<Meta> &userMeta), (override));
+    MOCK_METHOD(int32_t, SetCustomInfo, (const std::shared_ptr<Meta> &customInfo), (override));
     MOCK_METHOD(int32_t, SetWillMuteWhenInterrupted, (bool muteWhenInterrupted), (override));
     MOCK_METHOD(int32_t, TransmitQos, (QOS::QosLevel level), (override));
     MOCK_METHOD(int32_t, DoIpcAbnormality, (), (override));

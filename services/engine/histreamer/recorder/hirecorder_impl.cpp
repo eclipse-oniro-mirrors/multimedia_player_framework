@@ -751,12 +751,14 @@ int32_t HiRecorderImpl::GetAvailableEncoder(std::vector<EncoderCapabilityData> &
     return (int32_t)ret;
 }
 
-int32_t HiRecorderImpl::GetMaxAmplitude()
+int32_t HiRecorderImpl::GetMaxAmplitude(int32_t &amplitude)
 {
     FALSE_RETURN_V_MSG_E(audioCaptureFilter_ != nullptr,
         (int32_t)Status::ERROR_INVALID_OPERATION, "audioCaptureFilter_ is null, cannot get audio max amplitude");
 
-    return audioCaptureFilter_->GetMaxAmplitude();
+    Status ret = audioCaptureFilter_->GetMaxAmplitude(amplitude);
+
+    return (int32_t)ret;
 }
 
 void HiRecorderImpl::ConfigureAudio(const RecorderParam &recParam)
@@ -1254,6 +1256,13 @@ int32_t HiRecorderImpl::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
         "muxerFilter is nullptr, cannot set usermeta");
     muxerFilter_->SetUserMeta(userMeta);
     return static_cast<int32_t>(Status::OK);
+}
+
+Status HiRecorderImpl::SetCustomInfo(const std::shared_ptr<Meta> &customInfo)
+{
+    FALSE_RETURN_V_MSG_E(muxerFilter_ != nullptr, Status::ERROR_NULL_POINTER,
+        "muxerFilter is nullptr, cannot set customInfo");
+    return muxerFilter_->SetCustomInfo(customInfo);
 }
 
 int32_t HiRecorderImpl::SetWillMuteWhenInterrupted(bool muteWhenInterrupted)

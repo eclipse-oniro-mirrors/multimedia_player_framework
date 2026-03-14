@@ -954,7 +954,7 @@ int32_t RecorderServiceProxy::GetAvailableEncoder(std::vector<EncoderCapabilityD
     return reply.ReadInt32();
 }
 
-int32_t RecorderServiceProxy::GetMaxAmplitude()
+int32_t RecorderServiceProxy::GetMaxAmplitude(int32_t &amplitude)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -966,9 +966,9 @@ int32_t RecorderServiceProxy::GetMaxAmplitude()
     int error = Remote()->SendRequest(GET_MAX_AMPLITUDE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "GetMaxAmplitude failed, error: %{public}d", error);
-    int32_t amplitude = reply.ReadInt32();
+    amplitude = reply.ReadInt32();
     MEDIA_LOGI("GetMaxAmplitude amplitude result: %{public}d", amplitude);
-    return amplitude;
+    return reply.ReadInt32();
 }
 
 int32_t RecorderServiceProxy::IsWatermarkSupported(bool &isWatermarkSupported)
@@ -1021,6 +1021,25 @@ int32_t RecorderServiceProxy::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
     int error = Remote()->SendRequest(SET_USERMETA, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetUserMeta failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
+int32_t RecorderServiceProxy::SetCustomInfo(const std::shared_ptr<Meta> &customInfo)
+{
+    (void)customInfo;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+    
+    CHECK_AND_RETURN_RET_LOG(customInfo->ToParcel(data), MSERR_INVALID_OPERATION, "write data failed");
+
+    int error = Remote()->SendRequest(SET_CUSTOMINFO, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetCustomInfo failed, error: %{public}d", error);
 
     return reply.ReadInt32();
 }

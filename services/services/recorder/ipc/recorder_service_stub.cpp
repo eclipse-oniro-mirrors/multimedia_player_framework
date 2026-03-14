@@ -516,10 +516,10 @@ int32_t RecorderServiceStub::GetAvailableEncoder(std::vector<EncoderCapabilityDa
     return recorderServer_->GetAvailableEncoder(encoderInfo);
 }
 
-int32_t RecorderServiceStub::GetMaxAmplitude()
+int32_t RecorderServiceStub::GetMaxAmplitude(int32_t &amplitude)
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
-    return recorderServer_->GetMaxAmplitude();
+    return recorderServer_->GetMaxAmplitude(amplitude);
 }
 
 int32_t RecorderServiceStub::IsWatermarkSupported(bool &isWatermarkSupported)
@@ -544,6 +544,12 @@ int32_t RecorderServiceStub::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
     return recorderServer_->SetUserMeta(userMeta);
+}
+
+int32_t RecorderServiceStub::SetCustomInfo(const std::shared_ptr<Meta> &customInfo)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->SetCustomInfo(customInfo);
 }
 
 int32_t RecorderServiceStub::TransmitQos(QOS::QosLevel level)
@@ -1149,7 +1155,10 @@ int32_t RecorderServiceStub::GetAvailableEncoder(MessageParcel &data, MessagePar
 int32_t RecorderServiceStub::GetMaxAmplitude(MessageParcel &data, MessageParcel &reply)
 {
     (void)data;
-    reply.WriteInt32(GetMaxAmplitude());
+    int32_t amplitude = 0;
+    int32_t ret = GetMaxAmplitude(amplitude);
+    reply.WriteInt32(amplitude);
+    reply.WriteInt32(ret);
 
     return MSERR_OK;
 }
@@ -1180,6 +1189,16 @@ int32_t RecorderServiceStub::SetUserMeta(MessageParcel &data, MessageParcel &rep
         "read metadata failed");
     CHECK_AND_RETURN_RET_LOG(reply.WriteInt32(SetUserMeta(userMeta)), MSERR_INVALID_OPERATION,
         "SetUserMeta reply write failed");
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::SetCustomInfo(MessageParcel &data, MessageParcel &reply)
+{
+    std::shared_ptr<Meta> customInfo = std::make_shared<Meta>();
+    CHECK_AND_RETURN_RET_LOG(customInfo->FromParcel(data), MSERR_INVALID_OPERATION,
+        "read custom info failed");
+    CHECK_AND_RETURN_RET_LOG(reply.WriteInt32(SetCustomInfo(customInfo)), MSERR_INVALID_OPERATION,
+        "SetCustomInfo reply write failed");
     return MSERR_OK;
 }
 

@@ -95,10 +95,11 @@ public:
     virtual int32_t SetVideoEnableBFrame(int32_t sourceId, bool enableBFrame) = 0;
     virtual int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo) = 0;
     virtual int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo) = 0;
-    virtual int32_t GetMaxAmplitude() = 0;
+    virtual int32_t GetMaxAmplitude(int32_t &amplitude) = 0;
     virtual int32_t IsWatermarkSupported(bool &isWatermarkSupported) = 0;
     virtual int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer) = 0;
     virtual int32_t SetUserMeta(const std::shared_ptr<Meta> &userMeta) = 0;
+    virtual int32_t SetCustomInfo(const std::shared_ptr<Meta> &customInfo) = 0;
     virtual int32_t SetWillMuteWhenInterrupted(bool muteWhenInterrupted) = 0;
     virtual int32_t TransmitQos(QOS::QosLevel level) = 0;
     /**
@@ -159,6 +160,7 @@ public:
         SET_INTERRUPT_STRATEGY,
         TRANSMIT_QOS,
         SET_AUDIO_AACPROFILE,
+        SET_CUSTOMINFO,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardRecorderService");

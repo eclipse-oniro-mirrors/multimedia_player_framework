@@ -965,7 +965,8 @@ public:
 
     virtual int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo) = 0;
 
-    virtual int32_t GetMaxAmplitude() = 0;
+    virtual int32_t GetMaxAmplitude(int32_t &amplitude) = 0;
+
     /**
      * @brief Check if the avrecorder has watermark capability.
      *
@@ -994,6 +995,16 @@ public:
      * @version 1.0
     */
     virtual int32_t SetUserMeta(const std::shared_ptr<Meta> &userMeta) = 0;
+
+    /**
+     * @brief Set custom info to avrecorder.
+     *
+     * @param customInfo metadata
+     * @return Returns {@link MSERR_OK} If the SetCustomInfo succeeds; returns an error code otherwise.
+     * @since 1.0
+     * @version 1.0
+    */
+    virtual int32_t SetCustomInfo(const std::shared_ptr<Meta> &customInfo) = 0;
 
     /** @brief set interrupt mode to avrecorder.
      *
