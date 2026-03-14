@@ -225,6 +225,10 @@ public:
      * Set user meta
     */
     virtual int32_t SetUserMeta(const std::shared_ptr<Meta> &userMeta) = 0;
+    /**
+     * Set custom info
+    */
+    virtual Status SetCustomInfo(const std::shared_ptr<Meta> &customInfo) = 0;
 
     /**
      * Set Interrupt strategy

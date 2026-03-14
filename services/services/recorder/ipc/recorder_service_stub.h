@@ -142,6 +142,7 @@ private:
     int32_t IsWatermarkSupported(MessageParcel &data, MessageParcel &reply);
     int32_t SetWatermark(MessageParcel &data, MessageParcel &reply);
     int32_t SetUserMeta(MessageParcel &data, MessageParcel &reply);
+    int32_t SetCustomInfo(MessageParcel &data, MessageParcel &reply);
     int32_t SetWillMuteWhenInterrupted(MessageParcel &data, MessageParcel &reply);
     int32_t TransmitQos(MessageParcel &data, MessageParcel &reply);
     int32_t CheckPermission();

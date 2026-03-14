@@ -1231,14 +1231,14 @@ int32_t RecorderServer::SetCustomInfo(const std::shared_ptr<Meta> &customInfo)
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_PREPARED && status_ != REC_RECORDING && status_ != REC_PAUSED,
         MSERR_INVALID_STATE);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
-    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
-        return recorderEngine_->SetCustomInfo(userMeta);
+    auto task = std::make_shared<TaskHandler<Status>>([&, this] {
+        return recorderEngine_->SetCustomInfo(customInfo);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     int32_t result;
-    int32_t statusCode = task->GetResult();
+    Status statusCode = task->GetResult().Value();
     if (statusCode == Status::NO_ERROR) {
         result = MSERR_OK;
     } else if (statusCode == Status::ERROR_NULL_POINTER) {

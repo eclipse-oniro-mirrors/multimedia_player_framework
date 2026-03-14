@@ -549,7 +549,7 @@ int32_t RecorderServiceStub::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
 int32_t RecorderServiceStub::SetCustomInfo(const std::shared_ptr<Meta> &customInfo)
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
-    return recorderServer_->SetCustomInfo(userMeta);
+    return recorderServer_->SetCustomInfo(customInfo);
 }
 
 int32_t RecorderServiceStub::TransmitQos(QOS::QosLevel level)
