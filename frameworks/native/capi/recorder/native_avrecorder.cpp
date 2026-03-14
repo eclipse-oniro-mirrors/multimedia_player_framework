@@ -628,7 +628,7 @@ OH_AVErrCode OH_AVRecorder_SetCustomInfo(OH_AVRecorder *recorder, OH_AVFormat *c
     CHECK_AND_RETURN_RET_LOG(recorderObj->recorder_ != nullptr, AV_ERR_INVALID_VAL, "recorder_ is null");
 
     std::shared_ptr<Meta> meta = customInfo->format_.GetMeta();
-    int32_t ret = recorderObj->recorder_->SetUserMeta(meta);
+    int32_t ret = recorderObj->recorder_->SetCustomInfo(meta);
 
     CHECK_AND_RETURN_RET_LOG(ret != MSERR_INVALID_STATE, AV_ERR_INVALID_STATE, "Invalid state");
     CHECK_AND_RETURN_RET_LOG(ret != MSERR_NO_MEMORY, AV_ERR_NO_MEMORY, "No memory");

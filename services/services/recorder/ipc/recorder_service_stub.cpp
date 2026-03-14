@@ -1196,7 +1196,7 @@ int32_t RecorderServiceStub::SetCustomInfo(MessageParcel &data, MessageParcel &r
 {
     std::shared_ptr<Meta> customInfo = std::make_shared<Meta>();
     CHECK_AND_RETURN_RET_LOG(customInfo->FromParcel(data), MSERR_INVALID_OPERATION,
-        "read metadata failed");
+        "read custom info failed");
     CHECK_AND_RETURN_RET_LOG(reply.WriteInt32(SetCustomInfo(customInfo)), MSERR_INVALID_OPERATION,
         "SetCustomInfo reply write failed");
     return MSERR_OK;
