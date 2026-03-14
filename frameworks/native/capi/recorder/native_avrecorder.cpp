@@ -609,7 +609,9 @@ OH_AVErrCode OH_AVRecorder_GetAudioCapturerMaxAmplitude(OH_AVRecorder *recorder,
     int32_t ret = recorderObj->recorder_->GetMaxAmplitude(*amplitude);
 
     CHECK_AND_RETURN_RET_LOG(ret != MSERR_INVALID_STATE, AV_ERR_INVALID_STATE, "Invalid state");
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "GetAudioCapturerMaxAmplitude failed!");
+    CHECK_AND_RETURN_RET_LOG(ret != MSERR_NO_MEMORY, AV_ERR_NO_MEMORY, "No memory");
+    CHECK_AND_RETURN_RET_LOG(ret != MSERR_INVALID_VAL, AV_ERR_INVALID_VAL, "Invalid value");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_UNKNOWN, "GetAudioCapturerMaxAmplitude failed!");
 
     MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_GetAudioCapturerMaxAmplitude out.");
     return AV_ERR_OK;
@@ -619,6 +621,7 @@ OH_AVErrCode OH_AVRecorder_SetCustomInfo(OH_AVRecorder *recorder, OH_AVFormat *c
 {
     MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_SetCustomInfo in.");
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(customInfo != nullptr, AV_ERR_INVALID_VAL, "input customInfo is nullptr!");
 
     struct RecorderObject *recorderObj = reinterpret_cast<RecorderObject *>(recorder);
     CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");
@@ -628,7 +631,9 @@ OH_AVErrCode OH_AVRecorder_SetCustomInfo(OH_AVRecorder *recorder, OH_AVFormat *c
     int32_t ret = recorderObj->recorder_->SetUserMeta(meta);
 
     CHECK_AND_RETURN_RET_LOG(ret != MSERR_INVALID_STATE, AV_ERR_INVALID_STATE, "Invalid state");
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "SetCustomInfo failed!");
+    CHECK_AND_RETURN_RET_LOG(ret != MSERR_NO_MEMORY, AV_ERR_NO_MEMORY, "No memory");
+    CHECK_AND_RETURN_RET_LOG(ret != MSERR_INVALID_VAL, AV_ERR_INVALID_VAL, "Invalid value");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_UNKNOWN, "SetCustomInfo failed!");
 
     MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_SetCustomInfo out.");
     return AV_ERR_OK;
