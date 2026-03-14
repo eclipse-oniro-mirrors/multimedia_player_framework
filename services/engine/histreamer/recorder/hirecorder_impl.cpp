@@ -1258,6 +1258,13 @@ int32_t HiRecorderImpl::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
     return static_cast<int32_t>(Status::OK);
 }
 
+int32_t HiRecorderImpl::SetCustomInfo(const std::shared_ptr<Meta> &customInfo)
+{
+    FALSE_RETURN_V_MSG_E(muxerFilter_ != nullptr, static_cast<int32_t>(Status::ERROR_NULL_POINTER),
+        "muxerFilter is nullptr, cannot set usermeta");
+    return muxerFilter_->SetCustomInfo(userMeta);
+}
+
 int32_t HiRecorderImpl::SetWillMuteWhenInterrupted(bool muteWhenInterrupted)
 {
     muteWhenInterrupted_ = muteWhenInterrupted;

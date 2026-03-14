@@ -159,6 +159,7 @@ public:
         SET_INTERRUPT_STRATEGY,
         TRANSMIT_QOS,
         SET_AUDIO_AACPROFILE,
+        SET_CUSTOMINFO,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardRecorderService");

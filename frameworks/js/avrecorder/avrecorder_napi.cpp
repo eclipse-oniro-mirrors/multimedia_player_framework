@@ -92,6 +92,7 @@ napi_value AVRecorderNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getAvailableEncoder", JsGetAvailableEncoder),
         DECLARE_NAPI_FUNCTION("setWatermark", JsSetWatermark),
         DECLARE_NAPI_FUNCTION("setMetadata", JsSetMetadata),
+        DECLARE_NAPI_FUNCTION("setCustomInfo", JsSetCustomInfo),
         DECLARE_NAPI_FUNCTION("isWatermarkSupported", JsIsWatermarkSupported),
         DECLARE_NAPI_FUNCTION("setWillMuteWhenInterrupted", JsSetWillMuteWhenInterrupted),
 
@@ -441,6 +442,62 @@ napi_value AVRecorderNapi::JsSetMetadata(napi_env env, napi_callback_info info)
         }
     });
     (void)jsRecorder->taskQue_->EnqueueTask(task);
+
+    MEDIA_LOGI("Js %{public}s End", opt.c_str());
+    return result;
+}
+
+napi_value AVRecorderNapi::JsSetCustomInfo(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVRecorder::JsSetCustomInfo");
+    const std::string &opt = AVRecordergOpt::SET_CUSTOM_INFO;
+    MEDIA_LOGI("Js %{public}s Start", opt.c_str());
+
+    const int32_t maxParam = 1; // customInfo: Record<string, string>
+    size_t argCount = maxParam;
+    napi_value args[maxParam] = { nullptr };
+
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<AVRecorderAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+    AVRecorderNapi *jsRecorder = AVRecorderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsRecorder != nullptr, result, "failed to GetJsInstanceAndArgs");
+    CHECK_AND_RETURN_RET_LOG(jsRecorder->taskQue_ != nullptr, result, "taskQue is nullptr!");
+
+    if (jsRecorder->CheckStateMachine(opt) == MSERR_OK) {
+        std::map<std::string, std::string> recordMeta;
+        CommonNapi::GetPropertyMap(env, args[0], recordMeta);
+        CHECK_AND_RETURN_RET_LOG(recordMeta.size() != 0, result, "recordMeta has no data");
+
+        asyncCtx->task_ = std::make_shared<TaskHandler<RetInfo>>([jsRecorder, recordMeta]() {
+            int32_t ret = jsRecorder->SetCustomInfo(recordMeta);
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, GetRetInfo(ret, "SetCustomInfoTask", ""),
+                "SetCustomInfoTask failed");
+            return RetInfo(MSERR_EXT_API9_OK, "");
+        });
+        (void)jsRecorder->taskQue_->EnqueueTask(asyncCtx->task_);
+    } else {
+        asyncCtx->AVRecorderSignError(MSERR_INVALID_STATE, opt, "");
+    }
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        AVRecorderAsyncContext* asyncCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
+
+        if (asyncCtx->task_) {
+            auto result = asyncCtx->task_->GetResult();
+            if (result.Value().first != MSERR_EXT_API9_OK) {
+                asyncCtx->SignError(result.Value().first, result.Value().second);
+            }
+        }
+        MEDIA_LOGI("The js thread of %{public}s finishes execution and returns", opt.c_str());
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
+    asyncCtx.release();
 
     MEDIA_LOGI("Js %{public}s End", opt.c_str());
     return result;
@@ -1675,6 +1732,16 @@ int32_t AVRecorderNapi::SetMetadata(const std::map<std::string, std::string> &re
         userMeta->SetData(meta.first, meta.second);
     }
     return recorder_->SetUserMeta(userMeta);
+}
+
+int32_t AVRecorderNapi::SetCustomInfo(const std::map<std::string, std::string> &recordMeta)
+{
+    std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
+    for (auto &meta : recordMeta) {
+        MEDIA_LOGI("recordMeta tag: %{public}s, value: %{public}s", meta.first.c_str(), meta.second.c_str());
+        userMeta->SetData(meta.first, meta.second);
+    }
+    return recorder_->SetCustomInfo(userMeta);
 }
 
 int32_t AVRecorderNapi::ConfigAVBufferMeta(std::shared_ptr<PixelMap> &pixelMap,
