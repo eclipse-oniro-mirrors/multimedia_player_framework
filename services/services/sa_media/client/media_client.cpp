@@ -110,7 +110,7 @@ bool MediaClient::IsAlived()
     if (mediaProxy_.expired()) {
         auto proxy = GetMediaProxy();
         if (proxy != nullptr) {
-            mediaProxy_ = proxy;
+            mediaProxy_ = wptr<IStandardMediaService>(proxy);
         }
     }
 
@@ -535,7 +535,7 @@ sptr<IStandardMediaService> MediaClient::GetMediaProxy()
 
     auto proxy = iface_cast<IStandardMediaService>(object);
     CHECK_AND_RETURN_RET_LOG(proxy != nullptr, nullptr, "media proxy proxy is nullptr.");
-    mediaProxy_ = proxy;
+    mediaProxy_ = wptr<IStandardMediaService>(proxy);
 
     pid_t pid = 0;
     deathRecipient_ = new(std::nothrow) MediaDeathRecipient(pid);
