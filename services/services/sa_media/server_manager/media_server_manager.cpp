@@ -83,12 +83,14 @@ void ConsoleInfo(std::map<pid_t, int32_t> &pidCount, bool isConsole, std::string
         }
         return ;
     }
+    std::ostringstream oss;
+    oss << dumpGroupInfoLog;
     for (const auto& pair : pidCount) {
-        dumpGroupInfoLog += "[" + std::to_string(pair.first) + "/";
-        dumpGroupInfoLog += std::to_string(pair.second) + "]";
+        oss << "[" + std::to_string(pair.first) << "/";
+        oss << std::to_string(pair.second) << "]";
     }
-    dumpGroupInfoLog += "\n";
-    MEDIA_LOGI("%{public}s", dumpGroupInfoLog.c_str());
+    oss << "\n";
+    MEDIA_LOGI("%{public}s", oss.str().c_str());
 }
 
 int32_t WriteInfo(int32_t fd, std::string &dumpString, bool isConsole, std::vector<Dumper> dumpers, bool needDetail)
