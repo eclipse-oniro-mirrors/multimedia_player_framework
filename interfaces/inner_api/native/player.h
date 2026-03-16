@@ -41,7 +41,7 @@ struct AVPlayStrategy;
 namespace DrmConstant {
 constexpr uint32_t DRM_MAX_M3U8_DRM_PSSH_LEN = 2048;
 constexpr uint32_t DRM_MAX_M3U8_DRM_UUID_LEN = 16;
-constexpr uint32_t DRM_MAX_DRM_INFO_COUNT = 200;
+constexpr uint32_t DRM_MAX_DRM_INFO_COUNT = 8;
 }
 
 namespace AVPlayStrategyConstant {
