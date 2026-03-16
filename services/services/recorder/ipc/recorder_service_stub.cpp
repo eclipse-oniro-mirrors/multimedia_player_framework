@@ -174,6 +174,8 @@ void RecorderServiceStub::FillRecFuncPart3()
         [this](MessageParcel &data, MessageParcel &reply) { return SetVideoEnableBFrame(data, reply); };
     recFuncs_[TRANSMIT_QOS] =
         [this](MessageParcel &data, MessageParcel &reply) { return TransmitQos(data, reply); };
+    recFuncs_[SET_CUSTOMINFO] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetCustomInfo(data, reply); };
 }
 
 int32_t RecorderServiceStub::DestroyStub()
