@@ -498,12 +498,12 @@ HWTEST_F(ScreenCaptureImplUnitTest, ExceptionScenarios_002, TestSize.Level0)
     screenCaptureImpl_->screenCaptureService_ = mockService;
     
     ScreenCaptureStrategy strategy;
-    EXPECT_CALL(*mockService, SetScreenCaptureStrategy(_)).WillOnce(Return(MSERR_TIMEOUT));
+    EXPECT_CALL(*mockService, SetScreenCaptureStrategy(_)).WillOnce(Return(MSERR_NETWORK_TIMEOUT));
     EXPECT_NE(screenCaptureImpl_->SetScreenCaptureStrategy(strategy), MSERR_OK);
     
     uint64_t displayId = 1;
     OHOS::Rect area = {0, 0, 1920, 1080};
-    EXPECT_CALL(*mockService, SetCaptureArea(_, _)).WillOnce(Return(MSERR_NETWORK_TIMEOUT));
+    EXPECT_CALL(*mockService, SetCaptureArea(_, _)).WillOnce(Return(MSERR_SERVICE_DIED));
     EXPECT_NE(screenCaptureImpl_->SetCaptureArea(displayId, area), MSERR_OK);
 }
 
