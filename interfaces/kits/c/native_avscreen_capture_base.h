@@ -199,12 +199,12 @@ typedef struct OH_AudioCaptureInfo {
  *
  * @since 24
  */
-typedef struct OH_PrivacyProtectinfo { 
+typedef struct OH_PrivacyProtectInfo {
     /* App privacy protection status */
     bool appPrivacyProtection;
     /* System privacy protection status */
     bool systemPrivacyProtection;
-} OH_PrivacyProtectinfo;
+} OH_PrivacyProtectInfo;
 
 /**
  * @brief Audio encoder info
@@ -684,13 +684,13 @@ typedef void (*OH_AVScreenCapture_OnUserSelected)(OH_AVScreenCapture* capture,
  *  the function pointer will be called
  * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
  * @param {OH_AVScreenCapture*} capture Pointer to an OH_AVScreenCapture instance
- * @param {OH_PrivacyProtectinfo*} privacyProtect Pointer to privacy protect info
+ * @param {OH_PrivacyProtectInfo*} privacyProtect Pointer to privacy protect info
  * @param {void*} userData Pointer to user specific data
  *
  * @since 24
  */
 typedef void (*OH_AVScreenCapture_OnPrivacyProtect)(OH_AVScreenCapture* capture,
-    OH_PrivacyProtectinfo* privacyProtect, void *userData);
+    OH_PrivacyProtectInfo* privacyProtect, void *userData);
 #ifdef __cplusplus
 }
 #endif

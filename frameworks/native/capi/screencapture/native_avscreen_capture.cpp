@@ -152,7 +152,7 @@ public:
     void OnPrivacyProtect(struct OH_AVScreenCapture *capture, AVScreenCapturePrivacyProtect privacyProtect)
     {
         CHECK_AND_RETURN(capture != nullptr && callback_ != nullptr);
-        OH_PrivacyProtectinfo data = {
+        OH_PrivacyProtectInfo data = {
             .appPrivacyProtection = privacyProtect.appPrivacyProtection,
             .systemPrivacyProtection = privacyProtect.systemPrivacyProtection,
         };

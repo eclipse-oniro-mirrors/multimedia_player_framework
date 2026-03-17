@@ -115,6 +115,16 @@ int ScreenCaptureListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &dat
             OnDisplaySelected(displayId);
             return MSERR_OK;
         }
+        default: {
+            return OnRemoteRequestInner(code, data, reply, option);
+        }
+    }
+}
+
+int ScreenCaptureListenerStub::OnRemoteRequestInner(uint32_t code, MessageParcel &data, MessageParcel &reply,
+    MessageOption &option)
+{
+    switch (code) {
         case ScreenCaptureListenerMsg::ON_CONTENT_CHANGED: {
             MEDIA_LOGD("ScreenCaptureListenerMsg::ON_CONTENT_CHANGED");
             return OnCaptureContentChangedStub(data, reply);
