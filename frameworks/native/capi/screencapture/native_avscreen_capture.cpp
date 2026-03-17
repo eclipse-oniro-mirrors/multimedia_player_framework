@@ -153,8 +153,8 @@ public:
     {
         CHECK_AND_RETURN(capture != nullptr && callback_ != nullptr);
         OH_PrivacyProtectInfo data = {
-            .appPrivacyProtection = privacyProtect.appPrivacyProtection,
-            .systemPrivacyProtection = privacyProtect.systemPrivacyProtection,
+            .sensitiveAppProtection = privacyProtect.appPrivacyProtection,
+            .systemWindowProtection = privacyProtect.systemPrivacyProtection,
         };
         callback_(capture, &data, userData_);
     }
