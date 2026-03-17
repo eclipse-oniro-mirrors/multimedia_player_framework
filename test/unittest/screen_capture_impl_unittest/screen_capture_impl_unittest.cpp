@@ -232,7 +232,8 @@ HWTEST_F(ScreenCaptureImplUnitTest, ExcludeContent_001, TestSize.Level0)
     auto mockService = std::make_shared<MockScreenCaptureService>();
     screenCaptureImpl_->screenCaptureService_ = mockService;
     ScreenCaptureContentFilter contentFilter;
-    contentFilter.filteredAudioContents.insert(AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_NOTIFICATION_AUDIO);
+    contentFilter.filteredAudioContents.insert(
+        AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_NOTIFICATION_AUDIO);
     contentFilter.windowIDsVec = {1, 2};
     EXPECT_CALL(*mockService, ExcludeContent(_)).WillOnce(Return(MSERR_OK));
     auto ret = screenCaptureImpl_->ExcludeContent(contentFilter);
