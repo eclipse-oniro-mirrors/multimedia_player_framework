@@ -1010,6 +1010,7 @@ int32_t ScreenCaptureServer::HandlePopupWindowCase(Json::Value& root, const std:
 
     systemPrivacyProtectionSwitch_ = checkBoxSelected_;
     appPrivacyProtectionSwitch_ = checkBoxSelected_;
+    NotifyprivacyProtect();
     MEDIA_LOGI("ReportAVScreenCaptureUserChoice checkBoxSelected: %{public}d", checkBoxSelected_);
 
     if (showShareSystemAudioBox_) {
@@ -1037,6 +1038,8 @@ int32_t ScreenCaptureServer::HandlePopupWindowCase(Json::Value& root, const std:
 int32_t ScreenCaptureServer::HandleStreamDataCase(Json::Value& root, const std::string &content)
 {
     bool stopRecord = false;
+    bool appPrivacyProtectionSwitch = false;
+    bool systemPrivacyProtectionSwitch = false;
     GetValueFromJson(root, content, std::string("stopRecording"), stopRecord);
     if (stopRecord) {
         StopScreenCaptureByEvent(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER);
@@ -1045,9 +1048,15 @@ int32_t ScreenCaptureServer::HandleStreamDataCase(Json::Value& root, const std::
     }
 
     GetValueFromJson(root, content, std::string("appPrivacyProtectionSwitch"),
-        appPrivacyProtectionSwitch_);
+        appPrivacyProtectionSwitch);
     GetValueFromJson(root, content, std::string("systemPrivacyProtectionSwitch"),
-        systemPrivacyProtectionSwitch_);
+        systemPrivacyProtectionSwitch);
+    if (appPrivacyProtectionSwitch != appPrivacyProtectionSwitch_ ||
+        systemPrivacyProtectionSwitch != systemPrivacyProtectionSwitch_) {
+        appPrivacyProtectionSwitch_ = appPrivacyProtectionSwitch;
+        systemPrivacyProtectionSwitch_ = systemPrivacyProtectionSwitch;
+        NotifyprivacyProtect();
+    }
 
     SystemPrivacyProtected(virtualScreenId_, systemPrivacyProtectionSwitch_);
     AppPrivacyProtected(virtualScreenId_, appPrivacyProtectionSwitch_);
@@ -2311,6 +2320,19 @@ void ScreenCaptureServer::NotifyUserSelected(ScreenCaptureUserSelectionInfo sele
         MEDIA_LOGI("NotifyUserSelected displayId size: %{public}zu, selectType: %{public}d",
             selectionInfo.displayIds.size(), selectionInfo.selectType);
         screenCaptureCb_->OnUserSelected(selectionInfo);
+    }
+}
+
+void ScreenCaptureServer::NotifyprivacyProtect()
+{
+    if (screenCaptureCb_ != nullptr) {
+        MEDIA_LOGI("NotifyprivacyProtect displayId appPrivacyProtect: %{public}d, systemPrivacyProtect: %{public}d",
+            appPrivacyProtectionSwitch_, systemPrivacyProtectionSwitch_);
+        AVScreenCapturePrivacyProtect privacyProtect = {
+            .appPrivacyProtection = appPrivacyProtectionSwitch_,
+            .systemPrivacyProtection = systemPrivacyProtectionSwitch_
+        };
+        screenCaptureCb_->OnPrivacyProtect(privacyProtect);
     }
 }
 

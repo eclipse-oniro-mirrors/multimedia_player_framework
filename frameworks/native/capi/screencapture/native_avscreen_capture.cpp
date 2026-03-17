@@ -143,6 +143,27 @@ private:
     void *userData_;
 };
 
+class NativeScreenCapturePrivacyProtectCallback {
+public:
+    NativeScreenCapturePrivacyProtectCallback(OH_AVScreenCapture_OnPrivacyProtect callback, void *userData)
+        : callback_(callback), userData_(userData) {}
+    virtual ~NativeScreenCapturePrivacyProtectCallback() = default;
+ 
+    void OnPrivacyProtect(struct OH_AVScreenCapture *capture, AVScreenCapturePrivacyProtect privacyProtect)
+    {
+        CHECK_AND_RETURN(capture != nullptr && callback_ != nullptr);
+        OH_PrivacyProtectinfo data = {
+            .appPrivacyProtection = privacyProtect.appPrivacyProtection,
+            .systemPrivacyProtection = privacyProtect.systemPrivacyProtection,
+        };
+        callback_(capture, &data, userData_);
+    }
+ 
+private:
+    OH_AVScreenCapture_OnPrivacyProtect callback_;
+    void *userData_;
+};
+
 class NativeScreenCaptureErrorCallback {
 public:
     NativeScreenCaptureErrorCallback(OH_AVScreenCapture_OnError callback, void *userData)
@@ -370,6 +391,18 @@ public:
         }
     }
 
+    void OnPrivacyProtect(AVScreenCapturePrivacyProtect privacyProtect) override
+    {
+        MEDIA_LOGI("OnPrivacyProtect() is called");
+        std::shared_lock<std::shared_mutex> lock(mutex_);
+        CHECK_AND_RETURN(capture_ != nullptr);
+ 
+        if (privacyProtectCallback_ != nullptr) {
+            privacyProtectCallback_->OnPrivacyProtect(capture_, privacyProtect);
+            return;
+        }
+    }
+
     void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) override
     {
         CHECK_AND_RETURN(!isBufferAvailableCallbackStop_.load());
@@ -471,6 +504,13 @@ public:
         return userSelectedCallback_ != nullptr;
     }
 
+    bool SetPrivacyProtectCallback(OH_AVScreenCapture_OnPrivacyProtect callback, void *userData)
+    {
+        std::unique_lock<std::shared_mutex> lock(mutex_);
+        privacyProtectCallback_ = std::make_shared<NativeScreenCapturePrivacyProtectCallback>(callback, userData);
+        return privacyProtectCallback_ != nullptr;
+    }
+
     bool SetErrorCallback(OH_AVScreenCapture_OnError callback, void *userData)
     {
         std::unique_lock<std::shared_mutex> lock(mutex_);
@@ -505,6 +545,7 @@ private:
     std::shared_ptr<NativeScreenCaptureDisplaySelectedCallback> displaySelectedCallback_ = nullptr;
     std::shared_ptr<NativeScreenCaptureContentChangedCallback> contentChangedCallback_ = nullptr;
     std::shared_ptr<NativeScreenCaptureUserSelectedCallback> userSelectedCallback_ = nullptr;
+    std::shared_ptr<NativeScreenCapturePrivacyProtectCallback> privacyProtectCallback_ = nullptr;
 };
 
 struct ScreenCaptureContentFilterObject : public OH_AVScreenCapture_ContentFilter {
@@ -1525,5 +1566,29 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetMultiDisplayCaptureCapability(
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK,
         AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT, "GetMultiDisplayCaptureCapability failed!");
     SetMultiDisplayCapability(displayCapability, capability);
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}
+
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetPrivacyProtectCallback(struct OH_AVScreenCapture *capture,
+    OH_AVScreenCapture_OnPrivacyProtect callback, void *userData)
+{
+    MEDIA_LOGD("OH_AVScreenCapture_SetPrivacyProtectCallback S");
+    CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr");
+    CHECK_AND_RETURN_RET_LOG(callback != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input callback is nullptr");
+    struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
+        AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
+    CHECK_AND_RETURN_RET_LOG(!screenCaptureObj->isStart,
+        AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "This interface should be called before Start is called!");
+ 
+    OH_AVSCREEN_CAPTURE_ErrCode errCode = AVScreenCaptureSetCallback(capture, screenCaptureObj);
+    CHECK_AND_RETURN_RET_LOG(errCode == AV_SCREEN_CAPTURE_ERR_OK, AV_SCREEN_CAPTURE_ERR_INVALID_VAL,
+        "SetPrivacyProtectCallback is null");
+    if (screenCaptureObj->callback_ == nullptr ||
+        !screenCaptureObj->callback_->SetPrivacyProtectCallback(callback, userData)) {
+        MEDIA_LOGE("OH_AVScreenCapture_SetPrivacyProtectCallback error");
+        return AV_SCREEN_CAPTURE_ERR_INVALID_VAL;
+    }
+    MEDIA_LOGD("OH_AVScreenCapture_SetPrivacyProtectCallback E");
     return AV_SCREEN_CAPTURE_ERR_OK;
 }

@@ -194,6 +194,21 @@ typedef struct OH_AudioCaptureInfo {
 } OH_AudioCaptureInfo;
 
 /**
+ * @brief Audio capture info struct
+ * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+ *
+ * @since 24
+ * @version 1.0
+ */
+typedef struct OH_PrivacyProtectinfo { 
+ 
+    bool appPrivacyProtection;
+ 
+    bool systemPrivacyProtection;
+ 
+} OH_PrivacyProtectinfo;
+
+/**
  * @brief Audio encoder info
  * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
  *
@@ -665,6 +680,20 @@ typedef struct OH_AVScreenCapture_UserSelectionInfo OH_AVScreenCapture_UserSelec
 */
 typedef void (*OH_AVScreenCapture_OnUserSelected)(OH_AVScreenCapture* capture,
     OH_AVScreenCapture_UserSelectionInfo* selections, void *userData);
+
+/**
+* @brief When the user selects parameters in the authorization interface (selection interface),
+*  the function interface returns the parameters to the application.
+* @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+* @param {OH_AVScreenCapture*} capture Pointer to an OH_AVScreenCapture instance
+* @param {OH_AVScreenCapture_UserSelectionInfo*} selections The recording parameter information
+*        selected by the user on the authorization interface
+* @param {void*} userData Pointer to user specific data
+*
+* @since 24
+*/
+typedef void (*OH_AVScreenCapture_OnPrivacyProtect)(OH_AVScreenCapture* capture,
+    OH_PrivacyProtectinfo* privacyProtect, void *userData);
 #ifdef __cplusplus
 }
 #endif

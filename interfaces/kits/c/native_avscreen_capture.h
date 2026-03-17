@@ -683,6 +683,22 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_PresentPicker(struct OH_AVScreenC
  */
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetMultiDisplayCaptureCapability(struct OH_AVScreenCapture *capture,
     uint64_t *displayIds, size_t count, OH_MultiDisplayCapability *capability);
+
+/**
+ * @brief Register user privacyProtect notification callback function
+ * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+ * @param {OH_AVScreenCapture*} capture Pointer to OH_AVScreenCapture which want to handle Privacy Protect info
+ * @param {OH_AVScreenCapture_OnPrivacyProtect} callback user selection callback function, see
+ *        {@link OH_AVScreenCapture_OnUserSelected}
+ * @param {void*} userData The control block pointer passed by the application is carried to the application when it
+ *        is returned
+ * @return Function result code.
+ *          {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
+ *          {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} input capture is nullptr.
+ * @since 20
+ */
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetPrivacyProtectCallback(struct OH_AVScreenCapture *capture,
+    OH_AVScreenCapture_OnPrivacyProtect callback, void *userData);
 #ifdef __cplusplus
 }
 #endif
