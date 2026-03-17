@@ -975,6 +975,7 @@ int32_t HiPlayerImpl::Pause(bool isSystemOperation)
     FALSE_RETURN_V_MSG_E(pipelineStates_ != PlayerStates::PLAYER_PLAYBACK_COMPLETE,
         TransStatus(Status::OK), "completed not allow pause");
     Status ret = Status::OK;
+    CacheBuffer();
     ret = pipeline_->Pause();
     syncManager_->Pause();
     if (ret != Status::OK) {
@@ -1461,6 +1462,7 @@ Status HiPlayerImpl::doPreparedSeek(int64_t seekPos, PlayerSeekMode mode)
 Status HiPlayerImpl::doStartedSeek(int64_t seekPos, PlayerSeekMode mode)
 {
     MEDIA_LOG_I("doStartedSeek");
+    CacheBuffer();
     pipeline_ -> Pause();
     pipeline_ -> Flush();
     auto rtv = doSeek(seekPos, mode);
