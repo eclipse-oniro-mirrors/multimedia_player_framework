@@ -75,17 +75,23 @@ MediaServerManager &MediaServerManager::GetInstance()
     return instance;
 }
 
-void ConsoleInfo(std::map<pid_t, int32_t> &pidCount, std::string &dumpGroupInfoLog)
+void ConsoleInfo(std::map<pid_t, int32_t> &pidCount, bool isConsole, std::string &dumpGroupInfoLog)
 {
-    for (const auto& pair : pidCount) {
-        dumpGroupInfoLog += "-----#: ";
-        dumpGroupInfoLog += "pid = " + std::to_string(pair.first) + ", insNum: ";
-        dumpGroupInfoLog += std::to_string(pair.second) + "\n";
+    if (pidCount.empty()) {
+        if (isConsole) {
+            MEDIA_LOGI("%{public}s", dumpGroupInfoLog.c_str());
+        }
+        return ;
     }
+    for (const auto& pair : pidCount) {
+        dumpGroupInfoLog += "[" + std::to_string(pair.first) + "/";
+        dumpGroupInfoLog += std::to_string(pair.second) + "]";
+    }
+    dumpGroupInfoLog += "\n";
     MEDIA_LOGI("%{public}s", dumpGroupInfoLog.c_str());
 }
 
-int32_t WriteInfo(int32_t fd, std::string &dumpString, std::vector<Dumper> dumpers, bool needDetail)
+int32_t WriteInfo(int32_t fd, std::string &dumpString, bool isConsole, std::vector<Dumper> dumpers, bool needDetail)
 {
     int32_t i = 0;
     std::map<pid_t, int32_t> pidCount;
@@ -128,7 +134,7 @@ int32_t WriteInfo(int32_t fd, std::string &dumpString, std::vector<Dumper> dumpe
         write(fd, dumpString.c_str(), dumpString.size());
     } else {
         MEDIA_LOGD("%{public}s", dumpString.c_str());
-        ConsoleInfo(pidCount, dumpGroupInfoLog);
+        ConsoleInfo(pidCount, isConsole, dumpGroupInfoLog);
     }
     dumpString.clear();
 
@@ -143,37 +149,37 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
         argSets.insert(args[index]);
     }
 
-    dumpString += "--PlayerServer--\n";
-    auto ret = WriteInfo(fd, dumpString, dumperTbl_[StubType::PLAYER],
+    dumpString = "--PlayerServer--:";
+    auto ret = WriteInfo(fd, dumpString, true, dumperTbl_[StubType::PLAYER],
         argSets.find(u"player") != argSets.end());
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to write PlayerServer information");
 
-    dumpString += "--RecorderServer--\n";
-    ret =  WriteInfo(fd, dumpString, dumperTbl_[StubType::RECORDER],
+    dumpString = "--RecorderServer--:";
+    ret =  WriteInfo(fd, dumpString, false, dumperTbl_[StubType::RECORDER],
         argSets.find(u"recorder") != argSets.end());
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to write RecorderServer information");
 
-    dumpString += "--CodecServer--\n";
-    ret = WriteInfo(fd, dumpString, dumperTbl_[StubType::AVCODEC],
+    dumpString = "--CodecServer--:";
+    ret = WriteInfo(fd, dumpString, false, dumperTbl_[StubType::AVCODEC],
         argSets.find(u"codec") != argSets.end());
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to write CodecServer information");
 
-    dumpString += "--AVMetaServer--\n";
-    ret = WriteInfo(fd, dumpString, dumperTbl_[StubType::AVMETADATAHELPER], false);
+    dumpString = "--AVMetaServer--:";
+    ret = WriteInfo(fd, dumpString, false, dumperTbl_[StubType::AVMETADATAHELPER], false);
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to write AVMetaServer information");
     
-    dumpString += "--TranscoderServer--\n";
-    ret = WriteInfo(fd, dumpString, dumperTbl_[StubType::TRANSCODER],
+    dumpString = "--TranscoderServer--:";
+    ret = WriteInfo(fd, dumpString, false, dumperTbl_[StubType::TRANSCODER],
         argSets.find(u"transcoder") != argSets.end());
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to write Transcoder information");
 
-    dumpString += "--ScreenCaptureServer--\n";
-    ret = WriteInfo(fd, dumpString, dumperTbl_[StubType::SCREEN_CAPTURE],
+    dumpString = "--ScreenCaptureServer--:";
+    ret = WriteInfo(fd, dumpString, false, dumperTbl_[StubType::SCREEN_CAPTURE],
         argSets.find(u"screencapture") != argSets.end());
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to write ScreenCapture information");
