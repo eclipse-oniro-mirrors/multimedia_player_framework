@@ -200,10 +200,10 @@ typedef struct OH_AudioCaptureInfo {
  * @since 24
  */
 typedef struct OH_PrivacyProtectInfo {
-    /* App privacy protection status */
-    bool appPrivacyProtection;
     /* System privacy protection status */
-    bool systemPrivacyProtection;
+    bool systemWindowProtection;
+    /* App privacy protection status */
+    bool sensitiveAppProtection;
 } OH_PrivacyProtectInfo;
 
 /**
