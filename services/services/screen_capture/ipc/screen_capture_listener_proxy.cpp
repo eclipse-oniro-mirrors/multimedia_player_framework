@@ -167,22 +167,6 @@ void ScreenCaptureListenerProxy::OnPrivacyProtect(AVScreenCapturePrivacyProtect 
     CHECK_AND_RETURN_LOG(error == MSERR_OK, "OnPrivacyProtect failed, error: %{public}d", error);
 }
 
-void ScreenCaptureListenerProxy::OnPrivacyProtect(AVScreenCapturePrivacyProtect privacyProtect)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_ASYNC);
- 
-    bool token = data.WriteInterfaceToken(ScreenCaptureListenerProxy::GetDescriptor());
-    CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
-    CHECK_AND_RETURN_LOG(data.WriteBool(privacyProtect.appPrivacyProtection) &&
-        data.WriteBool(privacyProtect.systemPrivacyProtection),
-        "Failed to write privacyProtect");
- 
-    int error = Remote()->SendRequest(ScreenCaptureListenerMsg::ON_PRIVACY_PROTECT, data, reply, option);
-    CHECK_AND_RETURN_LOG(error == MSERR_OK, "OnPrivacyProtect failed, error: %{public}d", error);
-}
- 
 ScreenCaptureListenerCallback::ScreenCaptureListenerCallback(const sptr<IStandardScreenCaptureListener> &listener)
     : listener_(listener)
 {
