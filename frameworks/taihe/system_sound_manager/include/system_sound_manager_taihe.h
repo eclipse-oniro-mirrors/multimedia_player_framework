@@ -45,37 +45,68 @@ public:
     ~SystemSoundManagerImpl();
 
     string GetSystemToneUriSync(uintptr_t context, SystemToneType type);
+    string GetSystemToneUri(uintptr_t context, SystemToneType type);
     ToneHapticsSettings GetToneHapticsSettingsSync(uintptr_t context, ToneHapticsType type);
+    ToneHapticsSettings GetToneHapticsSettings(uintptr_t context, ToneHapticsType type);
     SystemTonePlayerOrNull GetSystemTonePlayerSync(uintptr_t context, SystemToneType type);
+    SystemTonePlayerOrNull GetSystemTonePlayer(uintptr_t context, SystemToneType type);
 
     void CloseSync(int32_t fd);
+    void Close(int32_t fd);
     ToneAttrsTaihe GetDefaultRingtoneAttrsSync(uintptr_t context, RingtoneTypeTaihe type);
+    ToneAttrsTaihe GetDefaultRingtoneAttrs(uintptr_t context, RingtoneTypeTaihe type);
     ::taihe::array<ToneAttrsTaihe> GetAlarmToneAttrListSync(uintptr_t context);
+    ::taihe::array<ToneAttrsTaihe> GetAlarmToneAttrList(uintptr_t context);
     void RemoveCustomizedToneSync(uintptr_t context, ::taihe::string_view uri);
+    void RemoveCustomizedTone(uintptr_t context, ::taihe::string_view uri);
     ::taihe::array<ToneAttrsTaihe> GetSystemToneAttrListSync(uintptr_t context, SystemToneTypeTaihe type);
+    ::taihe::array<ToneAttrsTaihe> GetSystemToneAttrList(uintptr_t context, SystemToneTypeTaihe type);
     ::taihe::string AddCustomizedToneByUriSync(
+        uintptr_t context, WeakToneAttrsTaihe toneAttr, ::taihe::string_view externalUri);
+    ::taihe::string AddCustomizedToneByUri(
         uintptr_t context, WeakToneAttrsTaihe toneAttr, ::taihe::string_view externalUri);
     ::taihe::string AddCustomizedToneByFdSync(
         uintptr_t context, WeakToneAttrsTaihe toneAttr, int32_t fd, ::taihe::optional_view<int64_t> offset,
         ::taihe::optional_view<int64_t> length);
+    ::taihe::string AddCustomizedToneByFd(
+        uintptr_t context, WeakToneAttrsTaihe toneAttr, int32_t fd, ::taihe::optional_view<int64_t> offset,
+        ::taihe::optional_view<int64_t> length);
     int32_t OpenAlarmToneSync(uintptr_t context, ::taihe::string_view uri);
+    int32_t OpenAlarmTone(uintptr_t context, ::taihe::string_view uri);
     ToneAttrsTaihe GetDefaultSystemToneAttrsSync(uintptr_t context, SystemToneTypeTaihe type);
+    ToneAttrsTaihe GetDefaultSystemToneAttrs(uintptr_t context, SystemToneTypeTaihe type);
     ::taihe::array<ToneAttrsTaihe> GetRingtoneAttrListSync(uintptr_t context, RingtoneTypeTaihe type);
+    ::taihe::array<ToneAttrsTaihe> GetRingtoneAttrList(uintptr_t context, RingtoneTypeTaihe type);
     void SetAlarmToneUriSync(uintptr_t context, ::taihe::string_view uri);
+    void SetAlarmToneUri(uintptr_t context, ::taihe::string_view uri);
     ::taihe::string GetAlarmToneUriSync(uintptr_t context);
+    ::taihe::string GetAlarmToneUri(uintptr_t context);
     ToneAttrsTaihe GetDefaultAlarmToneAttrsSync(uintptr_t context);
+    ToneAttrsTaihe GetDefaultAlarmToneAttrs(uintptr_t context);
     ::taihe::array<ToneHapticsAttrsTaihe> GetToneHapticsListSync(uintptr_t context, bool isSynced);
+    ::taihe::array<ToneHapticsAttrsTaihe> GetToneHapticsList(uintptr_t context, bool isSynced);
     void SetToneHapticsSettingsSync(
         uintptr_t context, ToneHapticsTypeTaihe type, const ToneHapticsSettings& settings);
+    void SetToneHapticsSettings(
+        uintptr_t context, ToneHapticsTypeTaihe type, const ToneHapticsSettings& settings);
     ToneHapticsAttrsTaihe GetHapticsAttrsSyncedWithToneSync(uintptr_t context, ::taihe::string_view toneUri);
+    ToneHapticsAttrsTaihe GetHapticsAttrsSyncedWithTone(uintptr_t context, ::taihe::string_view toneUri);
     int32_t OpenToneHapticsSync(uintptr_t context, ::taihe::string_view hapticsUri);
+    int32_t OpenToneHaptics(uintptr_t context, ::taihe::string_view hapticsUri);
     void SetSystemToneUriSync(uintptr_t context, ::taihe::string_view uri, SystemToneTypeTaihe type);
+    void SetSystemToneUri(uintptr_t context, ::taihe::string_view uri, SystemToneTypeTaihe type);
     RingtonePlayerOrNull GetRingtonePlayerSync(uintptr_t context, RingtoneTypeTaihe type);
+    RingtonePlayerOrNull GetRingtonePlayer(uintptr_t context, RingtoneTypeTaihe type);
     ::taihe::string GetRingtoneUriSync(uintptr_t context, RingtoneTypeTaihe type);
+    ::taihe::string GetRingtoneUri(uintptr_t context, RingtoneTypeTaihe type);
     void SetRingtoneUriSync(uintptr_t context, ::taihe::string_view uri, RingtoneTypeTaihe type);
+    void SetRingtoneUri(uintptr_t context, ::taihe::string_view uri, RingtoneTypeTaihe type);
     ToneAttrsTaihe GetCurrentRingtoneAttributeSync(RingtoneTypeTaihe type);
+    ToneAttrsTaihe GetCurrentRingtoneAttribute(RingtoneTypeTaihe type);
     ::taihe::array<uintptr_t> RemoveCustomizedToneListSync(::taihe::array_view<::taihe::string> uriList);
+    ::taihe::array<uintptr_t> RemoveCustomizedToneList(::taihe::array_view<::taihe::string> uriList);
     ::taihe::array<uintptr_t> OpenToneListSync(::taihe::array_view<::taihe::string> uriList);
+    ::taihe::array<uintptr_t> OpenToneList(::taihe::array_view<::taihe::string> uriList);
 
     friend SystemSoundManagerTaihe GetSystemSoundManager();
 
