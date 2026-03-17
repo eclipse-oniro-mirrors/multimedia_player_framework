@@ -23,9 +23,7 @@
 #include <climits>
 #include <cstdio>
 #include <cstdlib>
-#include "test_ndk_screen_capture.h"
 #include "test_screen_capture.h"
-#include "screen_capture.h"
 #include "i_standard_screen_capture_service.h"
 #include "i_screen_capture_service.h"
 #include "screen_capture_server.h"
@@ -34,14 +32,13 @@
  
 namespace OHOS {
 namespace Media {
-class ScreenCaptureKeyboardPrivacyProtectedFuzzer : public TestNdkScreenCapture {
+class ScreenCaptureKeyboardPrivacyProtectedFuzzer : public TestScreenCapture {
 public:
     ScreenCaptureKeyboardPrivacyProtectedFuzzer();
     ~ScreenCaptureKeyboardPrivacyProtectedFuzzer();
     bool ScreenCaptureKeyboardPrivacyProtected(uint8_t *data, size_t size);
-    OH_AVScreenCapture* screenCapture = nullptr;
+    std::shared_ptr<TestScreenCapture> screenCapture = nullptr;
     std::shared_ptr<ScreenCaptureServer> screenCaptureServer_ = nullptr;
-    std::shared_ptr<TestScreenCaptureNdkCallback> screenCaptureCb = nullptr;
 };
 } // namespace Media
 bool ScreenCaptureKeyboardPrivacyProtected(uint8_t *data, size_t size);

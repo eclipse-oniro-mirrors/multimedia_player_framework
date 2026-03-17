@@ -19,12 +19,12 @@
 #include "string_ex.h"
 #include "media_errors.h"
 #include "directory_ex.h"
-#include "test_template.h"
 #include "screen_capture.h"
-#include "screen_capture_server.h"
-#include "i_screen_capture_service.h"
-#include "i_standard_screen_capture_service.h"
 #include "screencapturekeyboardprivacyprotected_fuzzer.h"
+#include "test_template.h"
+#include "i_standard_screen_capture_service.h"
+#include "i_screen_capture_service.h"
+#include "screen_capture_server.h"
  
 using namespace std;
 using namespace OHOS;
@@ -40,31 +40,31 @@ ScreenCaptureKeyboardPrivacyProtectedFuzzer::~ScreenCaptureKeyboardPrivacyProtec
 {
 }
  
-void SetConfig(OH_AVScreenCaptureConfig &config)
+void SetConfig(AVScreenCaptureConfig &config)
 {
-    OH_AudioCaptureInfo miccapinfo = {
+    AudioCaptureInfo miccapinfo = {
         .audioSampleRate = 48000,
         .audioChannels = 2,
-        .audioSource = OH_SOURCE_DEFAULT
+        .audioSource = SOURCE_DEFAULT
     };
- 
-    OH_VideoCaptureInfo videocapinfo = {
+
+    VideoCaptureInfo videocapinfo = {
         .videoFrameWidth = 720,
         .videoFrameHeight = 1280,
-        .videoSource = OH_VIDEO_SOURCE_SURFACE_RGBA
+        .videoSource = VIDEO_SOURCE_SURFACE_RGBA
     };
- 
-    OH_AudioInfo audioinfo = {
-        .micCapInfo = miccapinfo
+
+    AudioInfo audioinfo = {
+        .micCapInfo = miccapinfo,
     };
- 
-    OH_VideoInfo videoinfo = {
+
+    VideoInfo videoinfo = {
         .videoCapInfo = videocapinfo
     };
- 
+
     config = {
-        .captureMode = OH_CAPTURE_HOME_SCREEN,
-        .dataType = OH_ORIGINAL_STREAM,
+        .captureMode = CAPTURE_HOME_SCREEN,
+        .dataType = ORIGINAL_STREAM,
         .audioInfo = audioinfo,
         .videoInfo = videoinfo,
     };
@@ -84,7 +84,6 @@ bool ScreenCaptureKeyboardPrivacyProtectedFuzzer::ScreenCaptureKeyboardPrivacyPr
     if (screenCaptureServer_ == nullptr || data == nullptr) {
         return 0;
     }
-    constexpr uint32_t recorderTime = 5;
     // set random data
     g_baseFuzzData = data;
     g_baseFuzzSize = size;
@@ -92,15 +91,22 @@ bool ScreenCaptureKeyboardPrivacyProtectedFuzzer::ScreenCaptureKeyboardPrivacyPr
     ScreenId virtualScreenId = 1;
     bool systemPrivacyProtectionSwitch = true;
     screenCaptureServer_->SystemPrivacyProtected(virtualScreenId, systemPrivacyProtectionSwitch);
-    screenCapture = OH_AVScreenCapture_Create();
-    OH_AVScreenCaptureConfig config;
+
+    bool retFlags = TestScreenCapture::CreateScreenCapture();
+    RETURN_IF(retFlags, false);
+
+    AVScreenCaptureConfig config;
     SetConfig(config);
-    OH_AVScreenCapture_Init(screenCapture, config);
-    OH_AVScreenCapture_StartScreenCapture(screenCapture);
+    constexpr uint32_t recorderTime = 5;
+
+    std::shared_ptr<TestScreenCaptureCallbackTest> callbackobj
+        = std::make_shared<TestScreenCaptureCallbackTest>();
+    TestScreenCapture::SetScreenCaptureCallback(callbackobj);
+    TestScreenCapture::Init(config);
+    TestScreenCapture::StartScreenCapture();
     sleep(recorderTime);
-    OH_AVScreenCapture_PresentPicker(screenCapture);
-    OH_AVScreenCapture_StopScreenCapture(screenCapture);
-    OH_AVScreenCapture_Release(screenCapture);
+    TestScreenCapture::StopScreenCapture();
+    TestScreenCapture::Release();
     return true;
 }
 } // namespace Media
