@@ -111,7 +111,7 @@ bool MediaClient::IsAlived()
         mediaProxy_ = GetMediaProxy();
     }
 
-    return (weakProxy_.promote() != nullptr)? true : false;
+    return weakProxy_.promote() != nullptr;
 }
 
 bool MediaClient::ReleaseClientListener()
