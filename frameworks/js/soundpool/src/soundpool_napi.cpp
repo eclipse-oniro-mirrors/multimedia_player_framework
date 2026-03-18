@@ -448,11 +448,11 @@ napi_value SoundPoolNapi::JsSetPriority(napi_env env, napi_callback_info info)
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
     napi_status status = napi_get_value_int32(env, args[PARAM0], &asyncCtx->streamId_);
     if (status != napi_ok || asyncCtx->streamId_ <= 0) {
-        asyncCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "Failed to SetPriority");
+        asyncCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "Failed to setPriority");
     }
     status = napi_get_value_int32(env, args[PARAM1], &asyncCtx->priority_);
     if (status != napi_ok || asyncCtx->priority_ < 0) {
-        asyncCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "Failed to SetPriority, priority is invalid");
+        asyncCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "Failed to setPriority, priority is invalid");
     }
 
     napi_value resource = nullptr;
