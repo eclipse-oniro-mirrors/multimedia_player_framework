@@ -344,7 +344,7 @@ public:
     }
 
     virtual void OnPrivacyProtect(AVScreenCapturePrivacyProtect privacyProtect)
-        {
+    {
         (void)privacyProtect;
         return;
     }
