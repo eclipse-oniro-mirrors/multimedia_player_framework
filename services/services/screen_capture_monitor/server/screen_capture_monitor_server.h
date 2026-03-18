@@ -50,7 +50,7 @@ public:
     void SetSystemScreenRecorderStatus(bool started);
     bool IsSystemScreenRecorder(int32_t pid) override;
     bool IsSystemScreenRecorderWorking() override;
-    bool SystemPermission();
+    bool HasSystemPermission();
 
 private:
     int32_t Init();

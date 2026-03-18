@@ -2600,6 +2600,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetSystemScreenRecorderStatus_003, Tes
 HWTEST_F(ScreenCaptureServerFunctionTest, IsSystemScreenRecorder_001, TestSize.Level2)
 {
     auto screenCaptureMonitorServer = ScreenCaptureMonitorServer::GetInstance();
+    screenCaptureMonitorServer->HasSystemPermission();
     screenCaptureMonitorServer->RegisterScreenCaptureMonitorListener(nullptr);
     screenCaptureMonitorServer->UnregisterScreenCaptureMonitorListener(nullptr);
     ScreenCaptureServer::systemScreenRecorderPid_ = -1;

@@ -169,7 +169,7 @@ bool ScreenCaptureMonitorServer::IsSystemApp()
     return isSystemApp;
 }
 
-bool ScreenCaptureMonitorServer::SystemPermission()
+bool ScreenCaptureMonitorServer::HasSystemPermission()
 {
     auto tokenId = IPCSkeleton::GetCallingTokenID();
     auto tokenType = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
