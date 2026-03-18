@@ -108,7 +108,7 @@ int32_t MediaClient::ResetAllProxy()
 bool MediaClient::IsAlived()
 {
     if (weakProxy_.promote() == nullptr) {
-        mediaProxy = GetMediaProxy();
+        mediaProxy_ = GetMediaProxy();
     }
 
     return (weakProxy_.promote() != nullptr)? true : false;
@@ -117,7 +117,7 @@ bool MediaClient::IsAlived()
 bool MediaClient::ReleaseClientListener()
 {
     // there exist non-const methods of the sptr mediaProxy_, possible data-race.
-    auto proxy = weakProxy_.lock();
+    auto proxy = weakProxy_.promote();
     if (proxy == nullptr) {
         MEDIA_LOGE("mediaProxy is nullptr");
         return false;
