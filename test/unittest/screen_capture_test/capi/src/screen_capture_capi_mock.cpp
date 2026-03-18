@@ -116,7 +116,6 @@ void ScreenCaptureCapiMock::OnUserSelected(OH_AVScreenCapture *screenCapture,
     }
 }
 
-
 void ScreenCaptureCapiMock::OnPrivacyProtect(OH_AVScreenCapture *screenCapture,
     OH_PrivacyProtectInfo* privacyProtect, void *userData)
 {
