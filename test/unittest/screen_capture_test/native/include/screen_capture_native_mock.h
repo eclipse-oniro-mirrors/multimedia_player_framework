@@ -29,6 +29,7 @@ public:
         const bool isStateChangeCallbackEnabled, const bool isCaptureContentChangeCallbackEnabled) override;
     int32_t SetDisplayCallback() override;
     int32_t SetSelectionCallback() override;
+    int32_t SetPrivacyProtectCallback() override;
     int32_t Init(AVScreenCaptureConfig config) override;
     int32_t Init(OHOS::AudioStandard::AppInfo &appInfo) override;
     int32_t StartScreenCapture() override;

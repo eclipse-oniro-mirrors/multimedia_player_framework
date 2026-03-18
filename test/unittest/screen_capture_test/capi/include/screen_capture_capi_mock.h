@@ -29,6 +29,7 @@ public:
         const bool isStateChangeCallbackEnabled, const bool isCaptureContentChangeCallbackEnabled) override;
     int32_t SetDisplayCallback() override;
     int32_t SetSelectionCallback() override;
+    int32_t SetPrivacyProtectCallback() override;
     int32_t Init(AVScreenCaptureConfig config) override;
     int32_t Init(OHOS::AudioStandard::AppInfo &appInfo) override;
     int32_t StartScreenCapture() override;
@@ -102,6 +103,8 @@ private:
         event, OH_Rect* area, void *userData);
     static void OnDisplaySelected(struct OH_AVScreenCapture *capture, uint64_t displayId, void *userData);
     static void OnUserSelected(OH_AVScreenCapture *screenCapture, OH_AVScreenCapture_UserSelectionInfo* selection,
+        void *userData);
+    static void OnPrivacyProtect(OH_AVScreenCapture *screenCapture, OH_PrivacyProtectInfo* privacyProtect,
         void *userData);
     OH_AVScreenCaptureConfig Convert(AVScreenCaptureConfig config);
     OH_AVScreenCaptureHighlightConfig HighlightConfigConvert(AVScreenCaptureHighlightConfig config);

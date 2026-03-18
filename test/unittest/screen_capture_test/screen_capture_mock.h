@@ -49,7 +49,8 @@ public:
     virtual void OnStateChange(AVScreenCaptureStateCode stateCode) = 0;
     virtual void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area) = 0;
     virtual void OnDisplaySelected(uint64_t displayId) = 0;
-    virtual void OnUserSelected(ScreenCaptureUserSelectionInfo *selection) = 0;;
+    virtual void OnUserSelected(ScreenCaptureUserSelectionInfo *selection) = 0;
+    virtual void OnPrivacyProtect(AVScreenCapturePrivacyProtect privacyProtect) = 0;
     virtual void OnError(int32_t errorCode, void *userData)
     {
         (void)errorCode;
@@ -77,6 +78,7 @@ public:
         const bool isErrorCallbackEnabled = false, const bool isDataCallbackEnabled = false,
         const bool isStateChangeCallbackEnabled = false, const bool isCaptureContentChangeCallbackEnabled = false) = 0;
     virtual int32_t SetSelectionCallback() = 0;
+    virtual int32_t SetPrivacyProtectCallback() = 0;
     virtual int32_t SetDisplayCallback() = 0;
     virtual int32_t Init(AVScreenCaptureConfig config) = 0;
     virtual int32_t Init(OHOS::AudioStandard::AppInfo &appInfo) = 0;

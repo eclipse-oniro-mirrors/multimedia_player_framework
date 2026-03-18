@@ -116,6 +116,19 @@ void ScreenCaptureCapiMock::OnUserSelected(OH_AVScreenCapture *screenCapture,
     }
 }
 
+
+void ScreenCaptureCapiMock::OnPrivacyProtect(OH_AVScreenCapture *screenCapture,
+    OH_PrivacyProtectInfo* privacyProtect, void *userData)
+{
+    std::shared_ptr<ScreenCaptureCallbackMock> mockCb = GetCallback(screenCapture);
+    AVScreenCapturePrivacyProtect privacyProtectInfo;
+    privacyProtectInfo.appPrivacyProtection = privacyProtect->sensitiveAppProtection;
+    privacyProtectInfo.systemPrivacyProtection = privacyProtect->systemWindowProtection;
+    if (mockCb != nullptr) {
+        mockCb->OnPrivacyProtect(privacyProtectInfo);
+    }
+}
+
 OH_AVScreenCaptureConfig ScreenCaptureCapiMock::Convert(AVScreenCaptureConfig config)
 {
     OH_AVScreenCaptureConfig tempConfig;
@@ -276,7 +289,7 @@ int32_t ScreenCaptureCapiMock::SetDisplayCallback()
 
 int32_t ScreenCaptureCapiMock::SetSelectionCallback()
 {
-    MEDIA_LOGD("ScreenCaptureCapiMock SetDisplayCallback");
+    MEDIA_LOGD("ScreenCaptureCapiMock SetSelectionCallback");
     int32_t ret = OH_AVScreenCapture_SetSelectionCallback(screenCapture_, ScreenCaptureCapiMock::OnUserSelected, this);
     int32_t type;
     uint64_t displayId;
@@ -286,7 +299,19 @@ int32_t ScreenCaptureCapiMock::SetSelectionCallback()
     OH_AVScreenCapture_GetDisplayIdSelected(nullptr, &displayId);
     OH_AVScreenCapture_GetMultiDisplayIdsSelected(nullptr, &displayIds, &count);
     if (ret != AV_SCREEN_CAPTURE_ERR_OK) {
-        MEDIA_LOGE("ScreenCaptureCapiMock SetDisplayCallback failed, ret: %{public}d", ret);
+        MEDIA_LOGE("ScreenCaptureCapiMock SetSelectionCallback failed, ret: %{public}d", ret);
+        return MSERR_UNKNOWN;
+    }
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}
+
+int32_t ScreenCaptureCapiMock::SetPrivacyProtectCallback()
+{
+    MEDIA_LOGD("ScreenCaptureCapiMock SetPrivacyProtectCallback");
+    int32_t ret = OH_AVScreenCapture_SetPrivacyProtectCallback(screenCapture_,
+        ScreenCaptureCapiMock::OnPrivacyProtect, this);
+    if (ret != AV_SCREEN_CAPTURE_ERR_OK) {
+        MEDIA_LOGE("ScreenCaptureCapiMock SetPrivacyProtectCallback failed, ret: %{public}d", ret);
         return MSERR_UNKNOWN;
     }
     return AV_SCREEN_CAPTURE_ERR_OK;

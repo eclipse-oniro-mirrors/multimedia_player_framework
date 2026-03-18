@@ -35,6 +35,7 @@ public:
     void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area) override;
     void OnDisplaySelected(uint64_t displayId) override;
     void OnUserSelected(ScreenCaptureUserSelectionInfo *selection) override;
+    void OnPrivacyProtect(AVScreenCapturePrivacyProtect privacyProtect) override;
     void OnError(int32_t errorCode, void *userData) override;
     void OnBufferAvailable(std::shared_ptr<AVBuffer> buffer, AVScreenCaptureBufferType bufferType,
         int64_t timestamp) override;
