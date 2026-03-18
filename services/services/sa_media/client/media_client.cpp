@@ -90,7 +90,7 @@ int32_t MediaClient::ProxyForFreeze(const std::set<int32_t> &pidList, bool isPro
     CHECK_AND_RETURN_RET_LOG(size <= MAX_PID_LIST_SIZE, MSERR_INVALID_VAL, "invalid pidList size");
     MEDIA_LOGD("received Freeze Notification, pidSize = %{public}d, isProxy = %{public}d",
                static_cast<int32_t>(size), isProxy);
-    auto proxy = mediaProxy_.lock();
+    auto proxy = weakProxy_.promote();
     CHECK_AND_RETURN_RET_LOG(proxy != nullptr, MSERR_SERVICE_DIED, "media proxy is nullptr.");
     return proxy->FreezeStubForPids(pidList, isProxy);
 }
@@ -100,27 +100,24 @@ int32_t MediaClient::ResetAllProxy()
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(IsAlived(), MSERR_SERVICE_DIED, "media service does not exist.");
     MEDIA_LOGI("received ResetAllProxy");
-    auto proxy = mediaProxy_.lock();
+    auto proxy = weakProxy_.promote();
     CHECK_AND_RETURN_RET_LOG(proxy != nullptr, MSERR_SERVICE_DIED, "media proxy is nullptr.");
     return proxy->ResetAllProxy();
 }
 
 bool MediaClient::IsAlived()
 {
-    if (mediaProxy_.expired()) {
-        auto proxy = GetMediaProxy();
-        if (proxy != nullptr) {
-            mediaProxy_ = wptr<IStandardMediaService>(proxy);
-        }
+    if (weakProxy_.promote() == nullptr) {
+        mediaProxy = GetMediaProxy();
     }
 
-    return !mediaProxy_.expired();
+    return (weakProxy_.promote() != nullptr)? true : false;
 }
 
 bool MediaClient::ReleaseClientListener()
 {
     // there exist non-const methods of the sptr mediaProxy_, possible data-race.
-    auto proxy = mediaProxy_.lock();
+    auto proxy = weakProxy_.lock();
     if (proxy == nullptr) {
         MEDIA_LOGE("mediaProxy is nullptr");
         return false;
@@ -160,7 +157,7 @@ void MediaClient::CreateMediaServiceInstance(IStandardMediaService::MediaSystemA
             mediaProxyUpdatedCondition_.wait_for(lock, std::chrono::milliseconds(SLEEP_TIME));
             continue;
         }
-        auto proxy = mediaProxy_.lock();
+        auto proxy = weakProxy_.promote();
         CHECK_AND_RETURN_LOG(proxy != nullptr, "media proxy is nullptr.");
         object = proxy->GetSubSystemAbilityWithTimeOut(subSystemId, listenerStub_->AsObject(), MAX_WAIT_TIME);
         if (object != nullptr) {
@@ -172,7 +169,7 @@ void MediaClient::CreateMediaServiceInstance(IStandardMediaService::MediaSystemA
     }
 #else
     CHECK_AND_RETURN_LOG(IsAlived(), "media service does not exist.");
-    auto proxy = mediaProxy_.lock();
+    auto proxy = weakProxy_.promote();
     CHECK_AND_RETURN_LOG(proxy != nullptr, "media proxy is nullptr.");
     object = proxy->GetSubSystemAbility(subSystemId, listenerStub_->AsObject());
 #endif
@@ -273,7 +270,7 @@ std::shared_ptr<IPlayerService> MediaClient::CreatePlayerService()
         uint64_t tokenId = IPCSkeleton::GetCallingFullTokenID();
         isSysAppGallery = Security::AccessToken::AccessTokenKit::IsSystemAppByFullTokenID(tokenId);
     }
-    auto proxy = mediaProxy_.lock();
+    auto proxy = weakProxy_.promote();
     CHECK_AND_RETURN_RET_LOG(proxy != nullptr, nullptr, "media proxy is nullptr.");
     object = isSysAppGallery?
         proxy -> GetSubSystemAbility(playerAbility, listenerStub_->AsObject())
@@ -421,7 +418,7 @@ std::shared_ptr<ILppAudioStreamerService> MediaClient::CreateLppAudioStreamerSer
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "media service does not exist.");
 
-    auto proxy = mediaProxy_.lock();
+    auto proxy = weakProxy_.promote();
     CHECK_AND_RETURN_RET_LOG(proxy != nullptr, nullptr, "media proxy is nullptr.");
     sptr<IRemoteObject> object = proxy->GetSubSystemAbility(
         IStandardMediaService::MediaSystemAbility::MEDIA_LPP_AUDIO_PLAYER, listenerStub_->AsObject());
@@ -454,7 +451,7 @@ LppAvCapabilityInfo *MediaClient::GetLppCapacity()
     MEDIA_LOGI("MediaClient::GetLppCapacity");
     CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "MediaServer Is Not Alived");
     LppAvCapabilityInfo *lppAvCapabilityInfo = new LppAvCapabilityInfo();
-    auto proxy = mediaProxy_.lock();
+    auto proxy = weakProxy_.promote();
     CHECK_AND_RETURN_RET_LOG(proxy != nullptr, nullptr, "media proxy is nullptr.");
     int32_t ret = proxy->GetLppCapacity(*lppAvCapabilityInfo);
         if (ret != MSERR_OK) {
@@ -470,7 +467,7 @@ std::shared_ptr<ILppVideoStreamerService> MediaClient::CreateLppVideoStreamerSer
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "media service does not exist.");
 
-    auto proxy = mediaProxy_.lock();
+    auto proxy = weakProxy_.promote();
     CHECK_AND_RETURN_RET_LOG(proxy != nullptr, nullptr, "media proxy is nullptr.");
     sptr<IRemoteObject> object = proxy->GetSubSystemAbility(
         IStandardMediaService::MediaSystemAbility::MEDIA_LPP_VIDEO_PLAYER, listenerStub_->AsObject());
@@ -501,7 +498,7 @@ std::vector<pid_t> MediaClient::GetPlayerPids()
 {
     std::vector<pid_t> res;
     CHECK_AND_RETURN_RET_LOG(IsAlived(), res, "MediaServer Is Not Alived");
-    auto proxy = mediaProxy_.lock();
+    auto proxy = weakProxy_.promote();
     CHECK_AND_RETURN_RET_LOG(proxy != nullptr, res, "media proxy is nullptr.");
     return proxy->GetPlayerPids();
 }
@@ -533,9 +530,9 @@ sptr<IStandardMediaService> MediaClient::GetMediaProxy()
     }
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "media object is nullptr.");
 
-    auto proxy = iface_cast<IStandardMediaService>(object);
+    mediaProxy_ = iface_cast<IStandardMediaService>(object);
     CHECK_AND_RETURN_RET_LOG(proxy != nullptr, nullptr, "media proxy proxy is nullptr.");
-    mediaProxy_ = wptr<IStandardMediaService>(proxy);
+    weakProxy_ = wptr<IStandardMediaService>(mediaProxy_);
 
     pid_t pid = 0;
     deathRecipient_ = new(std::nothrow) MediaDeathRecipient(pid);
@@ -659,13 +656,13 @@ void MediaClient::DoMediaServerDied()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("DoMediaServerDied");
-    auto proxy = mediaProxy_.lock();
+    auto proxy = weakProxy_.promote();
     if (proxy != nullptr) {
         sptr<IRemoteObject> object = proxy->AsObject();
         if (object != nullptr) {
             object->RemoveDeathRecipient(deathRecipient_);
         }
-        mediaProxy_.reset();
+        mediaProxy_ = nullptr;
     }
     listenerStub_ = nullptr;
     deathRecipient_ = nullptr;
@@ -686,7 +683,7 @@ bool MediaClient::CanKillMediaService()
     CHECK_AND_RETURN_RET_LOG(lock.owns_lock(), false, "MediaClient mutex_ try_lock false, please try again later.");
     CHECK_AND_RETURN_RET_LOG(IsAlived(), false, "media service does not exist.");
 
-    auto proxy = mediaProxy_.lock();
+    auto proxy = weakProxy_.promote();
     CHECK_AND_RETURN_RET_LOG(proxy != nullptr, false, "media proxy is nullptr.");
     return proxy->CanKillMediaService();
 }
