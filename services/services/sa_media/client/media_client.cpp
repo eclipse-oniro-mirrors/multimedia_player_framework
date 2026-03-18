@@ -454,7 +454,7 @@ LppAvCapabilityInfo *MediaClient::GetLppCapacity()
     auto proxy = weakProxy_.promote();
     CHECK_AND_RETURN_RET_LOG(proxy != nullptr, nullptr, "media proxy is nullptr.");
     int32_t ret = proxy->GetLppCapacity(*lppAvCapabilityInfo);
-        if (ret != MSERR_OK) {
+    if (ret != MSERR_OK) {
         delete lppAvCapabilityInfo;
     }
     CHECK_AND_RETURN_RET_LOG(ret == 0, nullptr, "MediaClient::GetLppCapacityfailed");
@@ -531,7 +531,7 @@ sptr<IStandardMediaService> MediaClient::GetMediaProxy()
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "media object is nullptr.");
 
     mediaProxy_ = iface_cast<IStandardMediaService>(object);
-    CHECK_AND_RETURN_RET_LOG(proxy != nullptr, nullptr, "media proxy proxy is nullptr.");
+    CHECK_AND_RETURN_RET_LOG(mediaProxy_ != nullptr, nullptr, "media proxy is nullptr.");
     weakProxy_ = wptr<IStandardMediaService>(mediaProxy_);
 
     pid_t pid = 0;
