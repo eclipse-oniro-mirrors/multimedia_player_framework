@@ -280,8 +280,8 @@ napi_value SoundPoolNapi::JsLoad(napi_env env, napi_callback_info info)
                 soundId = asyncCtx->soundPool_->Load(asyncCtx->url_);
             }
             if (soundId < 0) {
-                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Failed to load sound, the resource path is
-                    invalid, please check input parameters");
+                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                                    "Failed to load sound, the resource path is invalid, please check input parameters");
             } else {
                 asyncCtx->JsResult = std::make_unique<MediaJsResultInt>(soundId);
             }
