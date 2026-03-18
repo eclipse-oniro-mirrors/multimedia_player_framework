@@ -112,7 +112,8 @@ private:
     void CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility subSystemId,
                                     sptr<IRemoteObject> &object, std::unique_lock<std::mutex> &lock);
 
-    std::weak_ptr<IStandardMediaService> mediaProxy_;
+    wptr<IStandardMediaService> weakProxy_;
+    sptr<IStandardMediaService> mediaProxy_ = nullptr;
     sptr<MediaListenerStub> listenerStub_ = nullptr;
     sptr<MediaDeathRecipient> deathRecipient_ = nullptr;
 #ifdef SUPPORT_RECORDER
