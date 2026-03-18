@@ -740,7 +740,7 @@ int32_t ScreenCaptureServiceProxy::SetScreenCaptureStrategy(ScreenCaptureStrateg
     token = data.WriteBool(strategy.enableDeviceLevelCapture) && data.WriteBool(strategy.keepCaptureDuringCall) &&
             data.WriteInt32(strategy.strategyForPrivacyMaskMode) && data.WriteBool(strategy.canvasFollowRotation) &&
             data.WriteBool(strategy.enableBFrame) && data.WriteInt32(static_cast<int32_t>(strategy.pickerPopUp)) &&
-            data.WriteInt32(static_cast<int32_t>(strategy.fillMode));
+            data.WriteInt32(static_cast<int32_t>(strategy.fillMode)) && data.WriteBool(strategy.enablePause);
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write strategy!");
 
     int error = Remote()->SendRequest(SET_STRATEGY, data, reply, option);
@@ -788,6 +788,38 @@ int32_t ScreenCaptureServiceProxy::GetMultiDisplayCaptureCapability(const std::v
         "GetMultiDisplayCaptureCapability failed, error: %{public}d", error);
     CHECK_AND_RETURN_RET_LOG(reply.ReadUint32(capability.width) && reply.ReadUint32(capability.height) &&
         reply.ReadBool(capability.isMultiDisplaySupport), MSERR_INVALID_OPERATION, "Failed to get data!");
+    return reply.ReadInt32();
+}
+
+int32_t ScreenCaptureServiceProxy::PauseScreenCapture()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    int error = Remote()->SendRequest(PAUSE_SCREEN_CAPTURE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "PauseScreenCapture failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
+int32_t ScreenCaptureServiceProxy::ResumeScreenCapture()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    int error = Remote()->SendRequest(RESUME_SCREEN_CAPTURE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "ResumeScreenCapture failed, error: %{public}d", error);
+
     return reply.ReadInt32();
 }
 } // namespace Media

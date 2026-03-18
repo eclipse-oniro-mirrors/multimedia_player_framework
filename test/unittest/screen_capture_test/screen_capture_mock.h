@@ -87,6 +87,8 @@ public:
     virtual int32_t StopScreenCapture() = 0;
     virtual int32_t StartScreenRecording() = 0;
     virtual int32_t StopScreenRecording() = 0;
+    virtual int32_t PauseScreenRecording() = 0;
+    virtual int32_t ResumeScreenRecording() = 0;
     virtual int32_t PresentPicker() = 0;
     virtual int32_t Release() = 0;
     virtual int32_t SetMicrophoneEnabled(bool isMicrophone) = 0;
@@ -132,6 +134,7 @@ public:
     virtual int32_t StrategyForPrivacyMaskMode(int32_t value);
     virtual int32_t StrategyForPickerPopUp(bool value);
     virtual int32_t StrategyForFillMode(AVScreenCaptureFillMode value);
+    virtual int32_t StrategyForPause(bool value);
     virtual int32_t SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config);
     virtual int32_t GetMultiDisplayCaptureCapability(uint64_t *displayIds, size_t count,
         MultiDisplayCapability *multiDisplayCapability) = 0;

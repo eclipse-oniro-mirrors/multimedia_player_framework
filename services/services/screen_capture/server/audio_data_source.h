@@ -111,7 +111,10 @@ public:
     void HandleBufferTimeStamp(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
         std::shared_ptr<AudioBuffer> &micAudioBuffer);
     ScreenCaptureServer* GetScreenCaptureServer();
+    void Pause();
+    void Resume();
 private:
+    int64_t GetCurrentTimeNs();
     void MixAudio(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
         std::shared_ptr<AudioBuffer> &micAudioBuffer, char* mixData, int channels);
     void ReleaseAudioBuffer(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
@@ -139,7 +142,9 @@ private:
     bool isInWaitMicSyncState_ = false;
     AVScreenCaptureMixMode type_;
     ScreenCaptureServer* screenCaptureServer_;
-
+    std::atomic<int64_t> pauseStartTime_{0};
+    std::atomic<int64_t> pauseDuration_{0};
+ 
     static constexpr int32_t INNER_SWITCH_MIC_REQUIRE_COUNT = 10;
     static constexpr int32_t ADS_LOG_SKIP_NUM = 1000;
     static constexpr int64_t MAX_INNER_AUDIO_TIMEOUT_IN_NS = 2000000000; // 2s

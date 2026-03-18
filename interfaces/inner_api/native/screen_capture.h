@@ -114,6 +114,14 @@ enum AVScreenCaptureStateCode {
     SCREEN_CAPTURE_STATE_EXIT_PRIVATE_SCENE = 9,
     /* ScreenCapture stopped by user switches */
     SCREEN_CAPTURE_STATE_STOPPED_BY_USER_SWITCHES = 10,
+    /* ScreenCapture paused by user */
+    SCREEN_CAPTURE_STATE_PAUSED_BY_USER = 11,
+    /* ScreenCapture resumed by user */
+    SCREEN_CAPTURE_STATE_RESUMED_BY_USER = 12,
+    /* ScreenCapture paused by app */
+    SCREEN_CAPTURE_STATE_PAUSED_BY_APP = 13,
+    /* ScreenCapture resumed by app */
+    SCREEN_CAPTURE_STATE_RESUMED_BY_APP = 14,
 };
 
 enum AVScreenCaptureBufferType {
@@ -209,6 +217,7 @@ struct ScreenCaptureStrategy {
     bool setByUser = false;
     AVScreenCapturePickerPopUp pickerPopUp = AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_DEFAULT;
     AVScreenCaptureFillMode fillMode = AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO;
+    bool enablePause = false;
 };
 
 struct AVScreenCaptureHighlightConfig {
@@ -385,6 +394,8 @@ public:
     virtual int32_t SetCaptureArea(uint64_t displayId, Rect area) = 0;
     virtual int32_t GetMultiDisplayCaptureCapability(const std::vector<uint64_t> &displayIds,
         MultiDisplayCapability &capability) = 0;
+    virtual int32_t PauseScreenCapture() = 0;
+    virtual int32_t ResumeScreenCapture() = 0;
 };
 
 class __attribute__((visibility("default"))) ScreenCaptureFactory {

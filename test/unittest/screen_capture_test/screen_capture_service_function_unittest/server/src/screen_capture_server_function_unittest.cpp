@@ -3742,6 +3742,68 @@ HWTEST_F(ScreenCaptureServerFunctionTest, InitLiveViewContent_004, TestSize.Leve
     EXPECT_EQ(result->GetTitle(), expectedTitle);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, InitLiveViewContent_005, TestSize.Level2)
+{
+    std::string callingLabel_ = "TestApp";
+    screenCaptureServer_->callingLabel_ = callingLabel_;
+    screenCaptureServer_->captureConfig_.strategy.enablePause = false;
+    screenCaptureServer_->InitLiveViewContent();
+    auto result = screenCaptureServer_->localLiveViewContent_;
+    EXPECT_NE(result, nullptr);
+    EXPECT_EQ(result->GetText(), "\"TestApp\" 正在使用屏幕");
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, InitLiveViewContent_006, TestSize.Level2)
+{
+    std::string callingLabel_ = "TestApp";
+    screenCaptureServer_->callingLabel_ = callingLabel_;
+    screenCaptureServer_->captureConfig_.strategy.enablePause = true;
+    screenCaptureServer_->isTimePaused_ = false;
+    screenCaptureServer_->InitLiveViewContent();
+    auto result = screenCaptureServer_->localLiveViewContent_;
+    EXPECT_NE(result, nullptr);
+    EXPECT_EQ(result->GetText(), "\"TestApp\" 正在使用屏幕");
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, InitLiveViewContent_007, TestSize.Level2)
+{
+    std::string callingLabel_ = "TestApp";
+    screenCaptureServer_->callingLabel_ = callingLabel_;
+    screenCaptureServer_->captureConfig_.strategy.enablePause = true;
+    screenCaptureServer_->isTimePaused_ = true;
+    screenCaptureServer_->InitLiveViewContent();
+    auto result = screenCaptureServer_->localLiveViewContent_;
+    EXPECT_NE(result, nullptr);
+    EXPECT_EQ(result->GetText(), "\"TestApp\" 正在使用屏幕");
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, UpdateLiveViewButton_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.strategy.enablePause = false;
+    screenCaptureServer_->isTimePaused_ = false;
+    screenCaptureServer_->InitLiveViewContent();
+    screenCaptureServer_->UpdateLiveViewButton();
+    EXPECT_NE(screenCaptureServer_->localLiveViewContent_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, UpdateLiveViewButton_002, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.strategy.enablePause = true;
+    screenCaptureServer_->isTimePaused_ = false;
+    screenCaptureServer_->InitLiveViewContent();
+    screenCaptureServer_->UpdateLiveViewButton();
+    EXPECT_NE(screenCaptureServer_->localLiveViewContent_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, UpdateLiveViewButton_003, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.strategy.enablePause = true;
+    screenCaptureServer_->isTimePaused_ = true;
+    screenCaptureServer_->InitLiveViewContent();
+    screenCaptureServer_->UpdateLiveViewButton();
+    EXPECT_NE(screenCaptureServer_->localLiveViewContent_, nullptr);
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, SetupPublishRequestTest_001, TestSize.Level2)
 {
     NotificationRequest request;

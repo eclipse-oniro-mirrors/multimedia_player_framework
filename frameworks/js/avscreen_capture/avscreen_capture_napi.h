@@ -32,6 +32,8 @@ const std::string REPORT_USER_CHOICE = "ReportAVScreenCaptureUserChoice";
 const std::string GET_CONFIG_PARAMS = "GetAVScreenCaptureConfigurableParameters";
 const std::string START_RECORDING = "StartRecording";
 const std::string STOP_RECORDING = "StopRecording";
+const std::string PAUSE_RECORDING = "PauseRecording";
+const std::string RESUME_RECORDING = "ResumeRecording";
 const std::string SKIP_PRIVACY_MODE = "SkipPrivacyMode";
 const std::string SET_MIC_ENABLE = "SetMicrophoneEnable";
 const std::string RELEASE = "Release";
@@ -95,6 +97,14 @@ private:
      * stopRecording(): Promise<void>
      */
     static napi_value JsStopRecording(napi_env env, napi_callback_info info);
+    /**
+     * pauseRecording(): Promise<void>
+     */
+    static napi_value JsPauseRecording(napi_env env, napi_callback_info info);
+    /**
+     * resumeRecording(): Promise<void>
+     */
+    static napi_value JsResumeRecording(napi_env env, napi_callback_info info);
     /**
      * PresentPicker(): Promise<void>
      */
@@ -168,6 +178,8 @@ private:
 
     RetInfo StartRecording();
     RetInfo StopRecording();
+    RetInfo PauseRecording();
+    RetInfo ResumeRecording();
     RetInfo Release();
     RetInfo PresentPicker();
 
@@ -180,7 +192,8 @@ private:
     int32_t GetConfig(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetRecorderInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetStrategy(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env, napi_value args);
-    bool GetOptionalPropertyBool(napi_env env, napi_value configObj, const std::string &type, bool &result);
+    void GetOptionalBoolProperty(napi_env env, napi_value obj, const std::string &propertyName, bool &target,
+        bool &setByUser);
 
     static thread_local napi_ref constructor_;
     napi_env env_ = nullptr;

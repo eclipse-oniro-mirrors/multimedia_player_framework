@@ -213,6 +213,27 @@ ScreenCaptureServer* AudioDataSource::GetScreenCaptureServer()
     return screenCaptureServer_;
 }
 
+int64_t AudioDataSource::GetCurrentTimeNs()
+{
+    struct timespec timestamp = {0, 0};
+    clock_gettime(CLOCK_MONOTONIC, &timestamp);
+    return timestamp.tv_sec * SEC_TO_NS + timestamp.tv_nsec;
+}
+
+void AudioDataSource::Pause()
+{
+    pauseStartTime_.store(GetCurrentTimeNs());
+    MEDIA_LOGI("AudioDataSource::Pause, pauseStartTime=%{public}" PRId64, pauseStartTime_.load());
+}
+
+void AudioDataSource::Resume()
+{
+    int64_t duration = GetCurrentTimeNs() - pauseStartTime_.load();
+    pauseDuration_.fetch_add(duration);
+    MEDIA_LOGI("AudioDataSource::Resume, duration=%{public}" PRId64 ", pauseDuration=%{public}" PRId64,
+        duration, pauseDuration_.load());
+}
+
 AudioDataSourceReadAtActionState AudioDataSource::WriteInnerAudio(std::shared_ptr<AVBuffer> &buffer,
     uint32_t length, std::shared_ptr<AudioBuffer> &innerAudioBuffer)
 {
@@ -492,7 +513,7 @@ AudioDataSourceReadAtActionState AudioDataSource::ReadAudioBuffer(
     MEDIA_LOGD("AudioDataSource ReadAt start");
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, AudioDataSourceReadAtActionState::RETRY_SKIP,
         "ReadAt screenCaptureServer null");
-    if (screenCaptureServer_->GetSCServerCaptureState() != AVScreenCaptureState::STARTED) {
+    if (!screenCaptureServer_->IsStartedOrResumed()) {
         return AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG;
     }
     if (screenCaptureServer_->IsSCRecorderFileWithVideo() && firstVideoFramePts_.load() == -1) { // video frame not come
@@ -691,7 +712,7 @@ void AudioDataSource::MixAudio(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
 int32_t AudioDataSource::LostFrameNum(const int64_t &timestamp)
 {
     return static_cast<int32_t>(
-        (timestamp - (writedFrameTime_ + firstAudioFramePts_)) / FILL_AUDIO_FRAME_DURATION_IN_NS);
+        (timestamp - pauseDuration_ - (writedFrameTime_ + firstAudioFramePts_)) / FILL_AUDIO_FRAME_DURATION_IN_NS);
 }
 
 void AudioDataSource::FillLostBuffer(const int64_t &lostNum, const int64_t &timestamp, const uint32_t &bufferSize)

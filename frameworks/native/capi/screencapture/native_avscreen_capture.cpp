@@ -1529,11 +1529,21 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForFillMode(
 {
     CHECK_AND_RETURN_RET_LOG(strategy != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input strategy is nullptr");
     CHECK_AND_RETURN_RET_LOG(mode == OH_AVScreenCapture_FillMode::OH_SCREENCAPTURE_FILLMODE_ASPECT_SCALE_FIT ||
-                                 mode == OH_AVScreenCapture_FillMode::OH_SCREENCAPTURE_FILLMODE_SCALE_TO_FILL,
+        mode == OH_AVScreenCapture_FillMode::OH_SCREENCAPTURE_FILLMODE_SCALE_TO_FILL,
         AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input mode is invalid");
     struct ScreenCaptureStrategyObject *strategyObj = reinterpret_cast<ScreenCaptureStrategyObject *>(strategy);
     CHECK_AND_RETURN_RET_LOG(strategyObj != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "strategyObj is nullptr");
     strategyObj->strategy.fillMode = static_cast<AVScreenCaptureFillMode>(mode);
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}
+
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForPause(
+    OH_AVScreenCapture_CaptureStrategy *strategy, bool value)
+{
+    CHECK_AND_RETURN_RET_LOG(strategy != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input strategy is nullptr");
+    struct ScreenCaptureStrategyObject *strategyObj = reinterpret_cast<ScreenCaptureStrategyObject *>(strategy);
+    CHECK_AND_RETURN_RET_LOG(strategyObj != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "strategyObj is nullptr");
+    strategyObj->strategy.enablePause = value;
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
 
@@ -1590,5 +1600,33 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetPrivacyProtectCallback(struct 
         return AV_SCREEN_CAPTURE_ERR_INVALID_VAL;
     }
     MEDIA_LOGD("OH_AVScreenCapture_SetPrivacyProtectCallback E");
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}
+
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_PauseScreenCapture(struct OH_AVScreenCapture *capture)
+{
+    MEDIA_LOGI("OH_AVScreenCapture_PauseScreenCapture In: 0x%{public}06" PRIXPTR, FAKE_POINTER(capture));
+    CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
+
+    struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
+        AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
+
+    int32_t ret = screenCaptureObj->screenCapture_->PauseScreenCapture();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT, "PauseScreenCapture failed!");
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}
+
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ResumeScreenCapture(struct OH_AVScreenCapture *capture)
+{
+    MEDIA_LOGI("OH_AVScreenCapture_ResumeScreenCapture In: 0x%{public}06" PRIXPTR, FAKE_POINTER(capture));
+    CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
+
+    struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
+        AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
+
+    int32_t ret = screenCaptureObj->screenCapture_->ResumeScreenCapture();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT, "ResumeScreenCapture failed!");
     return AV_SCREEN_CAPTURE_ERR_OK;
 }

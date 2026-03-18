@@ -258,6 +258,7 @@ ohos_unittest("screen_capture_server_function_unit_test") {
       "screen_capture_service_function_unittest/server/src/screen_capture_server_function_unittest_buffer.cpp",
       "screen_capture_service_function_unittest/server/src/screen_capture_server_function_unittest_check_param.cpp",
       "screen_capture_service_function_unittest/server/src/screen_capture_server_function_unittest_multiInstance.cpp",
+      "screen_capture_service_function_unittest/server/src/screen_capture_server_function_unittest_pause_resume.cpp",
       "screen_capture_service_function_unittest/server/src/screen_capture_server_function_unittest_recorder.cpp",
       "screen_capture_service_function_unittest/server/src/screen_capture_server_function_unittest_voip.cpp",
       "screen_capture_service_function_unittest/server/src/screen_capture_server_function_unittest_window.cpp",

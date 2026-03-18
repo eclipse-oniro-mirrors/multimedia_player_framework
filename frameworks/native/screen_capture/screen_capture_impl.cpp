@@ -502,5 +502,21 @@ int32_t ScreenCaptureImpl::GetMultiDisplayCaptureCapability(const std::vector<ui
         "screen capture service does not exist.");
     return screenCaptureService_->GetMultiDisplayCaptureCapability(displayIds, capability);
 }
+
+int32_t ScreenCaptureImpl::PauseScreenCapture()
+{
+    MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " PauseScreenCapture in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_NO_MEMORY,
+        "screen capture service does not exist.");
+    return screenCaptureService_->PauseScreenCapture();
+}
+
+int32_t ScreenCaptureImpl::ResumeScreenCapture()
+{
+    MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " ResumeScreenCapture in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_NO_MEMORY,
+        "screen capture service does not exist.");
+    return screenCaptureService_->ResumeScreenCapture();
+}
 } // namespace Media
 } // namespace OHOS

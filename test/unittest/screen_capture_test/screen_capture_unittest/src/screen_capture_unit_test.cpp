@@ -2318,7 +2318,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_max_frame_rate_02, Tes
         << " averageFrameRate_05: " << averageFrameRate_05 << endl;
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_buffertest_max_frame_rate_02 after");
 }
- 
+
 /**
  * @tc.name: screen_capture_with_surface_update_surface
  * @tc.desc: do screencapture
@@ -2335,15 +2335,15 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_update_surface, Test
     bool isMicrophone = false;
     screenCapture_->SetMicrophoneEnabled(isMicrophone);
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
- 
+
     sptr<OHOS::Surface> consumer = OHOS::Surface::CreateSurfaceAsConsumer();
     consumer->SetDefaultUsage(BUFFER_USAGE_CPU_READ | BUFFER_USAGE_MEM_MMZ_CACHE);
     auto producer = consumer->GetProducer();
     auto producerSurface = OHOS::Surface::CreateSurfaceAsProducer(producer);
- 
+
     sptr<IBufferConsumerListener> surfaceCb = OHOS::sptr<ScreenCapBufferDemoConsumerListener>::MakeSptr(consumer);
     consumer->RegisterConsumerListener(surfaceCb);
- 
+
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCaptureWithSurface(producerSurface));
     sleep(RECORDER_TIME);
     MEDIA_LOGI("screenCapture_->UpdateSurface start 1");
@@ -2562,7 +2562,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_set_highlight_for_area_001, TestS
     highlightConfig.lineThickness = 4;
     highlightConfig.lineColor = 0xff0000ff;
     highlightConfig.mode = ScreenCaptureHighlightMode::HIGHLIGHT_MODE_CLOSED;
- 
+
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     screenCapture_->SetCaptureAreaHighlight(highlightConfig);
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
@@ -2571,7 +2571,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_set_highlight_for_area_001, TestS
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_set_highlight_for_area_001 after");
 }
- 
+
 /**
  * @tc.name: screen_capture_set_highlight_for_area_002
  * @tc.desc: do screencapture
@@ -2601,7 +2601,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_set_highlight_for_area_002, TestS
     highlightConfig.lineThickness = 4;
     highlightConfig.lineColor = 0xff0000ff;
     highlightConfig.mode = ScreenCaptureHighlightMode::HIGHLIGHT_MODE_CORNER_WRAP;
- 
+
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     screenCapture_->SetCaptureAreaHighlight(highlightConfig);
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
@@ -2620,23 +2620,23 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_error_handling_001, TestSize.Leve
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_error_handling_001 before");
     SetConfig(config_);
-    
+
     // 设置无效的音频参数
     config_.audioInfo.micCapInfo.audioSampleRate = 0;
     config_.audioInfo.micCapInfo.audioChannels = 0;
     config_.audioInfo.micCapInfo.audioSource = SOURCE_INVALID;
-    
+
     // 设置无效的视频参数
     config_.videoInfo.videoCapInfo.videoFrameWidth = -1;
     config_.videoInfo.videoCapInfo.videoFrameHeight = -1;
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_BUTT;
-    
+
     // 设置无效的数据类型
     config_.dataType = INVAILD;
-    
+
     // 尝试初始化
     EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
-    
+
     // 验证状态保持为初始状态
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_error_handling_001 after");
@@ -2652,17 +2652,17 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_error_handling_002, TestSize.Leve
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_error_handling_002 before");
     SetConfig(config_);
-    
+
     // 设置无效参数确保初始化失败
     config_ = {};
     EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
-    
+
     // 尝试在初始化失败后启动
     EXPECT_NE(MSERR_OK, screenCapture_->StartScreenCapture());
-    
+
     // 尝试停止
     EXPECT_NE(MSERR_OK, screenCapture_->StopScreenCapture());
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_error_handling_002 after");
 }
@@ -2677,12 +2677,12 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_error_handling_003, TestSize.Leve
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_error_handling_003 before");
     SetConfig(config_);
-    
+
     // 设置超大分辨率模拟资源不足
     config_.videoInfo.videoCapInfo.videoFrameWidth = 8192;
     config_.videoInfo.videoCapInfo.videoFrameHeight = 8192;
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-    
+
     EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_error_handling_003 after");
@@ -2698,10 +2698,10 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_error_handling_004, TestSize.Leve
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_error_handling_004 before");
     SetConfig(config_);
-    
+
     // 设置空回调
     EXPECT_NE(MSERR_OK, screenCapture_->SetScreenCaptureCallback(nullptr));
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_error_handling_004 after");
@@ -2716,10 +2716,10 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_error_handling_004, TestSize.Leve
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_error_handling_006, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_error_handling_006 before");
-    
+
     // 不初始化直接启动
     EXPECT_NE(MSERR_OK, screenCapture_->StartScreenCapture());
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_error_handling_006 after");
 }
@@ -2734,12 +2734,12 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_state_machine_001, TestSize.Level
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_state_machine_001 before");
     SetConfig(config_);
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
-    
+
     // 第一次启动
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    
+
     // 第二次启动（应该失败或被忽略）
     auto result = screenCapture_->StartScreenCapture();
     MEDIA_LOGI("screen_capture_state_machine_001 result:%{public}d", result);
@@ -2758,19 +2758,19 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_state_machine_002, TestSize.Level
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_state_machine_002 before");
     SetConfig(config_);
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
-    
+
     // 第一次停止（未启动状态）
     auto result1 = screenCapture_->StopScreenCapture();
     MEDIA_LOGI("screen_capture_state_machine_001 result:%{public}d", result1);
 
     // 启动
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    
+
     // 第二次停止
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
-    
+
     // 第三次停止
     auto result2 = screenCapture_->StopScreenCapture();
     MEDIA_LOGI("screen_capture_state_machine_001 result:%{public}d", result2);
@@ -2789,21 +2789,21 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_state_machine_003, TestSize.Level
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_state_machine_003 before");
     SetConfig(config_);
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
-    
+
     // 启动
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    
+
     // 立即停止
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
-    
+
     // 尝试再次启动（状态回退测试）
     EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    
+
     sleep(1);
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_state_machine_003 after");
@@ -2818,21 +2818,21 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_state_machine_003, TestSize.Level
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_concurrent_001, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_concurrent_001 before");
-    
+
     SetConfig(config_);
-    
+
     // 初始化当前实例
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
-    
+
     // 启动当前实例
     auto result1 = screenCapture_->StartScreenCapture();
     MEDIA_LOGI("screen_capture_state_machine_001 result:%{public}d", result1);
 
     sleep(1);
-    
+
     // 停止当前实例
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_concurrent_001 after");
 }
@@ -2847,21 +2847,21 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_privacy_001, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_privacy_001 before");
     SetConfig(config_);
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
-    
+
     // 设置跳过隐私窗口
     vector<int> windowIDsVec = {1, 3, 5};
     EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIDsVec[0], static_cast<int32_t>(windowIDsVec.size())));
-    
+
     // 动态更新隐私窗口列表
     windowIDsVec.push_back(7);
     EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIDsVec[0], static_cast<int32_t>(windowIDsVec.size())));
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    
+
     sleep(1);
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_privacy_001 after");
@@ -2877,17 +2877,17 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_audio_001, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_audio_001 before");
     SetConfig(config_);
-    
+
     // 设置不匹配的采样率
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
     config_.audioInfo.micCapInfo.audioChannels = 2;
     config_.audioInfo.innerCapInfo.audioSampleRate = 48000; // 不匹配
     config_.audioInfo.innerCapInfo.audioChannels = 2;
-    
+
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_audio_001.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
-    
+
     EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_audio_001 after");
@@ -2903,21 +2903,21 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_001, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_video_001 before");
     SetConfig(config_);
-    
+
     // 初始分辨率
     config_.videoInfo.videoCapInfo.videoFrameWidth = 720;
     config_.videoInfo.videoCapInfo.videoFrameHeight = 1280;
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    
+
     sleep(1);
-    
+
     // 尝试动态调整画布大小
     EXPECT_EQ(MSERR_OK, screenCapture_->ResizeCanvas(1080, 1920));
-    
+
     sleep(1);
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_video_001 after");
@@ -2933,17 +2933,17 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_performance_001, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_performance_001 before");
     SetConfig(config_);
-    
+
     // 设置高帧率
     config_.videoInfo.videoEncInfo.videoFrameRate = 60;
     config_.videoInfo.videoEncInfo.videoBitrate = 10000000;
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    
+
     // 录制较长时间测试性能
     sleep(5);
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_performance_001 after");
@@ -2959,16 +2959,16 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_compatibility_001, TestSize.Level
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_compatibility_001 before");
     SetConfig(config_);
-    
+
     // 非标准分辨率
     config_.videoInfo.videoCapInfo.videoFrameWidth = 854;
     config_.videoInfo.videoCapInfo.videoFrameHeight = 480;
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    
+
     sleep(1);
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_compatibility_001 after");
@@ -2984,15 +2984,15 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_compatibility_002, TestSize.Level
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_compatibility_002 before");
     SetConfig(config_);
-    
+
     // 非标准帧率
     config_.videoInfo.videoEncInfo.videoFrameRate = 24;
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    
+
     sleep(1);
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_compatibility_002 after");
@@ -3008,24 +3008,24 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_privacy_003, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_privacy_003 before");
     SetConfig(config_);
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
-    
+
     // 初始设置隐私窗口
     vector<int> windowIDsVec = {1, 3};
     EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIDsVec[0], static_cast<int32_t>(windowIDsVec.size())));
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    
+
     sleep(1);
-    
+
     // 录制中添加更多窗口
     windowIDsVec.push_back(5);
     windowIDsVec.push_back(7);
     EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIDsVec[0], static_cast<int32_t>(windowIDsVec.size())));
-    
+
     sleep(1);
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_privacy_003 after");
@@ -3041,21 +3041,21 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_privacy_004, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_privacy_004 before");
     SetConfig(config_);
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
-    
+
     // 启动
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    
+
     sleep(1);
-    
+
     // 停止
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
-    
+
     // 停止后设置隐私窗口
     vector<int> windowIDsVec = {1, 3, 5};
     EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIDsVec[0], static_cast<int32_t>(windowIDsVec.size())));
-    
+
     // 验证设置成功
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_privacy_004 after");
@@ -3071,17 +3071,17 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_audio_003, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_audio_003 before");
     SetConfig(config_);
-    
+
     // 设置不匹配的通道数
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
     config_.audioInfo.micCapInfo.audioChannels = 1;
     config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
     config_.audioInfo.innerCapInfo.audioChannels = 2;
-    
+
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_audio_003.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
-    
+
     EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_audio_003 after");
@@ -3097,15 +3097,15 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_audio_004_1, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_audio_004_1 before");
     SetConfig(config_);
-    
+
     // 测试所有音频源类型
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
     config_.audioInfo.micCapInfo.audioChannels = 2;
     config_.audioInfo.micCapInfo.audioSource = SOURCE_DEFAULT;
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    
+
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_audio_004_1 after");
 }
 
@@ -3119,7 +3119,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_audio_004_2, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_audio_004_2 before");
     SetConfig(config_);
-    
+
     // 测试所有音频源类型
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
     config_.audioInfo.micCapInfo.audioChannels = 2;
@@ -3127,7 +3127,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_audio_004_2, TestSize.Level2)
     config_.audioInfo.micCapInfo.audioSource = MIC;
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    
+
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_audio_004_2 after");
 }
 
@@ -3141,7 +3141,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_audio_004_3, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_audio_004_3 before");
     SetConfig(config_);
-    
+
     // 测试所有音频源类型
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
     config_.audioInfo.micCapInfo.audioChannels = 2;
@@ -3149,7 +3149,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_audio_004_3, TestSize.Level2)
     config_.audioInfo.micCapInfo.audioSource = APP_PLAYBACK;
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    
+
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_audio_004 after");
 }
 
@@ -3163,7 +3163,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_audio_004_4, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_audio_004_4 before");
     SetConfig(config_);
-    
+
     // 测试所有音频源类型
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
     config_.audioInfo.micCapInfo.audioChannels = 2;
@@ -3171,7 +3171,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_audio_004_4, TestSize.Level2)
     config_.audioInfo.micCapInfo.audioSource = ALL_PLAYBACK;
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    
+
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_audio_004_4 after");
 }
 
@@ -3185,17 +3185,17 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_003, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_video_003 before");
     SetConfig(config_);
-    
+
     // 测试最小分辨率
     config_.videoInfo.videoCapInfo.videoFrameWidth = 320;
     config_.videoInfo.videoCapInfo.videoFrameHeight = 240;
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    
+
     sleep(1);
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_video_003 after");
@@ -3211,16 +3211,16 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_004, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_video_004 before");
     SetConfig(config_);
-    
+
     // 测试最小帧率
     config_.videoInfo.videoEncInfo.videoFrameRate = 15;
     config_.videoInfo.videoEncInfo.videoBitrate = 1000000;
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    
+
     sleep(1);
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_video_004 after");
@@ -3236,16 +3236,16 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_005, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_video_005 before");
     SetConfig(config_);
-    
+
     // 测试最小比特率
     config_.videoInfo.videoEncInfo.videoBitrate = 100000;
     config_.videoInfo.videoEncInfo.videoFrameRate = 30;
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    
+
     sleep(1);
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_video_005 after");
@@ -3261,12 +3261,12 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_006_1, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_video_006_1 before");
     SetConfig(config_);
-    
+
     // 测试H264编码
     config_.videoInfo.videoEncInfo.videoCodec = H264;
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    
+
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_video_006_1 after");
 }
 
@@ -3280,12 +3280,12 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_006_2, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_video_006_2 before");
     SetConfig(config_);
-    
+
     // 测试H265编码
     config_.videoInfo.videoEncInfo.videoCodec = H265;
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    
+
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_video_006_2 after");
 }
 
@@ -3299,12 +3299,12 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_006_3, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_video_006_3 before");
     SetConfig(config_);
-    
+
     // 测试MPEG4编码
     config_.videoInfo.videoEncInfo.videoCodec = MPEG4;
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    
+
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_video_006_3 after");
 }
 
@@ -3318,9 +3318,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_performance_003, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_performance_003 before");
     SetConfig(config_);
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
-    
+
     // 测试启动延迟
     auto startTime = std::chrono::high_resolution_clock::now();
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
@@ -3328,9 +3328,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_performance_003, TestSize.Level2)
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
     int32_t latencyMs = static_cast<int32_t>(duration.count());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_performance_003 start latency: %{public}d ms", latencyMs);
-    
+
     sleep(1);
-    
+
     // 测试停止延迟
     startTime = std::chrono::high_resolution_clock::now();
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
@@ -3338,7 +3338,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_performance_003, TestSize.Level2)
     duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
     int32_t latencyMs1 = static_cast<int32_t>(duration.count());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_performance_003 stop latency: %{public}d ms", latencyMs1);
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_performance_003 after");
 }
@@ -3353,7 +3353,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_compatibility_004, TestSize.Level
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_compatibility_004 before");
     SetConfig(config_);
-    
+
     // 测试mp4格式
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_compatibility_004.mp4", recorderInfo);
@@ -3366,13 +3366,13 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_compatibility_004, TestSize.Level
         .audioSource = AudioCaptureSourceType::APP_PLAYBACK
     };
     config_.audioInfo.innerCapInfo = innerCapInfo;
-    
+
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
     sleep(1);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    
+
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_compatibility_004 after");
 }
 
@@ -3386,12 +3386,12 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_compatibility_005_1, TestSize.Lev
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_compatibility_005_1 before");
     SetConfig(config_);
-    
+
     // 测试CAPTURE_HOME_SCREEN模式
     config_.captureMode = CAPTURE_HOME_SCREEN;
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    
+
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_compatibility_005_1 after");
 }
 
@@ -3429,7 +3429,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_compatibility_005_3, TestSize.Lev
     config_.captureMode = CAPTURE_SPECIFIED_WINDOW;
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    
+
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_compatibility_005_3 after");
 }
 
@@ -3443,12 +3443,12 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_compatibility_006_1, TestSize.Lev
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_compatibility_006_1 before");
     SetConfig(config_);
-    
+
     // 测试ORIGINAL_STREAM模式
     config_.dataType = ORIGINAL_STREAM;
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    
+
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_compatibility_006_1 after");
 }
 
@@ -3481,8 +3481,132 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_compatibility_006_2, TestSize.Lev
     config_.dataType = CAPTURE_FILE;
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    
+
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_compatibility_006_2 after");
+}
+
+HWTEST_F(ScreenCaptureUnitTest, PauseScreenRecording_001, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest PauseScreenRecording_001 before");
+    SetConfig(config_);
+
+    // 测试mp4格式
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_compatibility_004.mp4", recorderInfo);
+    recorderInfo.fileFormat = "mp4";
+
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->CreateCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->StrategyForPause(true));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->ReleaseCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
+    sleep(1);
+    ASSERT_EQ(MSERR_OK, screenCapture_->PauseScreenRecording());
+    ASSERT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest PauseScreenRecording_001 after");
+}
+
+HWTEST_F(ScreenCaptureUnitTest, PauseScreenRecording_002, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest PauseScreenRecording_002 before");
+    SetConfig(config_);
+
+    // 测试mp4格式
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_compatibility_004.mp4", recorderInfo);
+    recorderInfo.fileFormat = "mp4";
+
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->CreateCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->StrategyForPause(true));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->ReleaseCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
+    sleep(1);
+    ASSERT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
+    ASSERT_NE(MSERR_OK, screenCapture_->PauseScreenRecording());
+    ASSERT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest PauseScreenRecording_002 after");
+}
+
+HWTEST_F(ScreenCaptureUnitTest, ResumeScreenRecording_001, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest ResumeScreenRecording_001 before");
+    SetConfig(config_);
+
+    // 测试mp4格式
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_compatibility_004.mp4", recorderInfo);
+    recorderInfo.fileFormat = "mp4";
+
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->CreateCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->StrategyForPause(true));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->ReleaseCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
+    sleep(1);
+    ASSERT_EQ(MSERR_OK, screenCapture_->PauseScreenRecording());
+    ASSERT_EQ(MSERR_OK, screenCapture_->ResumeScreenRecording());
+    ASSERT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest ResumeScreenRecording_001 after");
+}
+
+HWTEST_F(ScreenCaptureUnitTest, ResumeScreenRecording_002, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest ResumeScreenRecording_002 before");
+    SetConfig(config_);
+
+    // 测试mp4格式
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_compatibility_004.mp4", recorderInfo);
+    recorderInfo.fileFormat = "mp4";
+
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->CreateCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->StrategyForPause(true));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->ReleaseCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
+    sleep(1);
+    ASSERT_EQ(MSERR_OK, screenCapture_->PauseScreenRecording());
+    ASSERT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
+    ASSERT_NE(MSERR_OK, screenCapture_->ResumeScreenRecording());
+    ASSERT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest ResumeScreenRecording_002 after");
 }
 
 /**

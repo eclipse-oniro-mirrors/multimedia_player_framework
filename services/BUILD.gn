@@ -35,6 +35,8 @@ group("media_services_package") {
       "etc:screen_capture_stop_image",
       "etc:screen_capture_capsule_stop_live2_image",
       "etc:screen_capture_light_image",
+      "etc:screen_capture_pause_image",
+      "etc:screen_capture_play_image",
     ]
   }
   if (player_framework_support_screen_capture) {

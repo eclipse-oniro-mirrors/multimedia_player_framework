@@ -508,5 +508,91 @@ HWTEST_F(ScreenCaptureImplUnitTest, ExceptionScenarios_002, TestSize.Level0)
     EXPECT_NE(screenCaptureImpl_->SetCaptureArea(displayId, area), MSERR_OK);
 }
 
+
+/**
+ * @tc.name  : Test PauseScreenCapture
+ * @tc.number: PauseScreenCapture_001
+ * @tc.desc  : Test screenCaptureService_ is null
+ */
+HWTEST_F(ScreenCaptureImplUnitTest, PauseScreenCapture_001, TestSize.Level0)
+{
+    ASSERT_NE(screenCaptureImpl_, nullptr);
+    screenCaptureImpl_->screenCaptureService_ = nullptr;
+    auto ret = screenCaptureImpl_->PauseScreenCapture();
+    EXPECT_EQ(ret, MSERR_NO_MEMORY);
+}
+
+/**
+ * @tc.name  : Test PauseScreenCapture
+ * @tc.number: PauseScreenCapture_002
+ * @tc.desc  : Test service returns MSERR_OK
+ */
+HWTEST_F(ScreenCaptureImplUnitTest, PauseScreenCapture_002, TestSize.Level0)
+{
+    ASSERT_NE(screenCaptureImpl_, nullptr);
+    auto mockService = std::make_shared<MockScreenCaptureService>();
+    screenCaptureImpl_->screenCaptureService_ = mockService;
+    EXPECT_CALL(*mockService, PauseScreenCapture()).WillOnce(Return(MSERR_OK));
+    auto ret = screenCaptureImpl_->PauseScreenCapture();
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test PauseScreenCapture
+ * @tc.number: PauseScreenCapture_003
+ * @tc.desc  : Test service returns error
+ */
+HWTEST_F(ScreenCaptureImplUnitTest, PauseScreenCapture_003, TestSize.Level0)
+{
+    ASSERT_NE(screenCaptureImpl_, nullptr);
+    auto mockService = std::make_shared<MockScreenCaptureService>();
+    screenCaptureImpl_->screenCaptureService_ = mockService;
+    EXPECT_CALL(*mockService, PauseScreenCapture()).WillOnce(Return(MSERR_INVALID_OPERATION));
+    auto ret = screenCaptureImpl_->PauseScreenCapture();
+    EXPECT_EQ(ret, MSERR_INVALID_OPERATION);
+}
+
+/**
+ * @tc.name  : Test ResumeScreenCapture
+ * @tc.number: ResumeScreenCapture_001
+ * @tc.desc  : Test screenCaptureService_ is null
+ */
+HWTEST_F(ScreenCaptureImplUnitTest, ResumeScreenCapture_001, TestSize.Level0)
+{
+    ASSERT_NE(screenCaptureImpl_, nullptr);
+    screenCaptureImpl_->screenCaptureService_ = nullptr;
+    auto ret = screenCaptureImpl_->ResumeScreenCapture();
+    EXPECT_EQ(ret, MSERR_NO_MEMORY);
+}
+
+/**
+ * @tc.name  : Test ResumeScreenCapture
+ * @tc.number: ResumeScreenCapture_002
+ * @tc.desc  : Test service returns MSERR_OK
+ */
+HWTEST_F(ScreenCaptureImplUnitTest, ResumeScreenCapture_002, TestSize.Level0)
+{
+    ASSERT_NE(screenCaptureImpl_, nullptr);
+    auto mockService = std::make_shared<MockScreenCaptureService>();
+    screenCaptureImpl_->screenCaptureService_ = mockService;
+    EXPECT_CALL(*mockService, ResumeScreenCapture()).WillOnce(Return(MSERR_OK));
+    auto ret = screenCaptureImpl_->ResumeScreenCapture();
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test ResumeScreenCapture
+ * @tc.number: ResumeScreenCapture_003
+ * @tc.desc  : Test service returns error
+ */
+HWTEST_F(ScreenCaptureImplUnitTest, ResumeScreenCapture_003, TestSize.Level0)
+{
+    ASSERT_NE(screenCaptureImpl_, nullptr);
+    auto mockService = std::make_shared<MockScreenCaptureService>();
+    screenCaptureImpl_->screenCaptureService_ = mockService;
+    EXPECT_CALL(*mockService, ResumeScreenCapture()).WillOnce(Return(MSERR_INVALID_OPERATION));
+    auto ret = screenCaptureImpl_->ResumeScreenCapture();
+    EXPECT_EQ(ret, MSERR_INVALID_OPERATION);
+}
 } // namespace Media
 } // namespace OHOS

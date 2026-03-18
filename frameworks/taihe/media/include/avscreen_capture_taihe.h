@@ -33,6 +33,8 @@ namespace AVScreenCapturegOpt {
     const std::string GET_CONFIG_PARAMS = "GetAVScreenCaptureconfigurableParameters";
     const std::string START_RECORDING = "StartRecording";
     const std::string STOP_RECORDING = "StopRecording";
+    const std::string PAUSE_RECORDING = "PauseRecording";
+    const std::string RESUME_RECORDING = "ResumeRecording";
     const std::string SKIP_PRIVACY_MODE = "SkipPrivacyMode";
     const std::string SET_MIC_ENABLE = "SetMicrophoneEnable";
     const std::string RELEASE = "Release";
@@ -67,12 +69,16 @@ public:
     void InitSync(::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config);
     void StartRecordingSync();
     void StopRecordingSync();
+    void PauseRecordingSync();
+    void ResumeRecordingSync();
     void SkipPrivacyModeSync(::taihe::array_view<int32_t> windowIDs);
     void SetMicEnabledSync(bool enable);
     void ReleaseSync();
 
     RetInfo StartRecording();
     RetInfo StopRecording();
+    RetInfo PauseRecording();
+    RetInfo ResumeRecording();
     RetInfo Release();
 
     int32_t CheckAudioSampleRate(const int32_t &audioSampleRate);

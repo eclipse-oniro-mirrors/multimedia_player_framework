@@ -76,6 +76,8 @@ public:
     MOCK_METHOD(int32_t, GetMultiDisplayCaptureCapability, (const std::vector<uint64_t> &displayIds,
         MultiDisplayCapability &capability), (override));
     MOCK_METHOD(int32_t, SetCaptureAreaHighlight, (AVScreenCaptureHighlightConfig config), (override));
+    MOCK_METHOD(int32_t, PauseScreenCapture, (), (override));
+    MOCK_METHOD(int32_t, ResumeScreenCapture, (), (override));
     MOCK_METHOD(int32_t, SetCaptureModeInner, (MessageParcel &data, MessageParcel &reply));
     MOCK_METHOD(int32_t, SetDataTypeInner, (MessageParcel &data, MessageParcel &reply));
     MOCK_METHOD(int32_t, SetRecorderInfoInner, (MessageParcel &data, MessageParcel &reply));

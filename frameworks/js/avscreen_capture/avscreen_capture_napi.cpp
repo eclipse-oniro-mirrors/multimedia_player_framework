@@ -35,6 +35,8 @@ const std::string CLASS_NAME = "AVScreenCapture";
 std::map<std::string, AVScreenCaptureNapi::AvScreenCaptureTaskqFunc> AVScreenCaptureNapi::taskQFuncs_ = {
     {AVScreenCapturegOpt::START_RECORDING, &AVScreenCaptureNapi::StartRecording},
     {AVScreenCapturegOpt::STOP_RECORDING, &AVScreenCaptureNapi::StopRecording},
+    {AVScreenCapturegOpt::PAUSE_RECORDING, &AVScreenCaptureNapi::PauseRecording},
+    {AVScreenCapturegOpt::RESUME_RECORDING, &AVScreenCaptureNapi::ResumeRecording},
     {AVScreenCapturegOpt::RELEASE, &AVScreenCaptureNapi::Release},
     {AVScreenCapturegOpt::PRESENT_PICKER, &AVScreenCaptureNapi::PresentPicker},
 };
@@ -62,6 +64,8 @@ napi_value AVScreenCaptureNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("init", JsInit),
         DECLARE_NAPI_FUNCTION("startRecording", JsStartRecording),
         DECLARE_NAPI_FUNCTION("stopRecording", JsStopRecording),
+        DECLARE_NAPI_FUNCTION("pauseRecording", JsPauseRecording),
+        DECLARE_NAPI_FUNCTION("resumeRecording", JsResumeRecording),
         DECLARE_NAPI_FUNCTION("skipPrivacyMode", JsSkipPrivacyMode),
         DECLARE_NAPI_FUNCTION("setMicEnabled", JsSetMicrophoneEnabled),
         DECLARE_NAPI_FUNCTION("release", JsRelease),
@@ -420,6 +424,18 @@ napi_value AVScreenCaptureNapi::JsStopRecording(napi_env env, napi_callback_info
 {
     MediaTrace trace("AVScreenCapture::JsStopRecording");
     return ExecuteByPromise(env, info,  AVScreenCapturegOpt::STOP_RECORDING);
+}
+
+napi_value AVScreenCaptureNapi::JsPauseRecording(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVScreenCapture::JsPauseRecording");
+    return ExecuteByPromise(env, info, AVScreenCapturegOpt::PAUSE_RECORDING);
+}
+
+napi_value AVScreenCaptureNapi::JsResumeRecording(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVScreenCapture::JsResumeRecording");
+    return ExecuteByPromise(env, info, AVScreenCapturegOpt::RESUME_RECORDING);
 }
 
 napi_value AVScreenCaptureNapi::JsPresentPicker(napi_env env, napi_callback_info info)
@@ -872,6 +888,20 @@ RetInfo AVScreenCaptureNapi::StopRecording()
     return RetInfo(MSERR_EXT_API9_OK, "");
 }
 
+RetInfo AVScreenCaptureNapi::PauseRecording()
+{
+    int32_t ret = screenCapture_->PauseScreenCapture();
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(ret, "PauseRecording", ""));
+    return RetInfo(MSERR_EXT_API9_OK, "");
+}
+
+RetInfo AVScreenCaptureNapi::ResumeRecording()
+{
+    int32_t ret = screenCapture_->ResumeScreenCapture();
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(ret, "ResumeRecording", ""));
+    return RetInfo(MSERR_EXT_API9_OK, "");
+}
+
 RetInfo AVScreenCaptureNapi::PresentPicker()
 {
     if (screenCapture_ == nullptr) {
@@ -1046,19 +1076,27 @@ int32_t AVScreenCaptureNapi::GetRecorderInfo(std::unique_ptr<AVScreenCaptureAsyn
     return MSERR_OK;
 }
 
-bool AVScreenCaptureNapi::GetOptionalPropertyBool(napi_env env, napi_value configObj, const std::string &type,
-    bool &result)
+void AVScreenCaptureNapi::GetOptionalBoolProperty(napi_env env, napi_value obj, const std::string &propertyName,
+    bool &target, bool &setByUser)
 {
+    bool exist = false;
+    napi_status status = napi_has_named_property(env, obj, propertyName.c_str(), &exist);
+    if (status != napi_ok || !exist) {
+        return;
+    }
+
     napi_value item = nullptr;
-    if (napi_get_named_property(env, configObj, type.c_str(), &item) != napi_ok) {
-        MEDIA_LOGE("get %{public}s property fail", type.c_str());
-        return false;
+    if (napi_get_named_property(env, obj, propertyName.c_str(), &item) != napi_ok) {
+        MEDIA_LOGE("get %{public}s property fail", propertyName.c_str());
+        return;
     }
-    if (napi_get_value_bool(env, item, &result) != napi_ok) {
-        MEDIA_LOGE("get %{public}s property value fail", type.c_str());
-        return false;
+
+    if (napi_get_value_bool(env, item, &target) != napi_ok) {
+        MEDIA_LOGE("get %{public}s property value fail", propertyName.c_str());
+        return;
     }
-    return true;
+
+    setByUser = true;
 }
 
 int32_t AVScreenCaptureNapi::GetStrategy(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
@@ -1069,36 +1107,20 @@ int32_t AVScreenCaptureNapi::GetStrategy(std::unique_ptr<AVScreenCaptureAsyncCon
     bool exist = false;
     napi_status status = napi_has_named_property(env, args, "strategy", &exist);
     CHECK_AND_RETURN_RET_LOG((status == napi_ok && exist), MSERR_OK, "without strategy");
-    // return MSERR_OK, because strategy is optional.
-
     CHECK_AND_RETURN_RET_LOG(napi_get_named_property(env, args, "strategy", &strategyVal) == napi_ok,
         MSERR_INVALID_VAL, "get strategy property failed");
     napi_valuetype valueType = napi_undefined;
     status = napi_typeof(env, strategyVal, &valueType);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, MSERR_INVALID_VAL, "get valueType failed");
     CHECK_AND_RETURN_RET_LOG(valueType != napi_undefined, MSERR_INVALID_VAL, "strategy undefined");
-    // get enableDeviceLevelCapture
-    status = napi_has_named_property(env, strategyVal, "enableDeviceLevelCapture", &exist);
-    if (status == napi_ok && exist) {
-        CHECK_AND_RETURN_RET_LOG(GetOptionalPropertyBool(env, strategyVal, "enableDeviceLevelCapture",
-            strategy.enableDeviceLevelCapture), MSERR_INVALID_VAL, "enableDeviceLevelCapture invalid");
-        strategy.setByUser = true;
-    }
-    // get keepCaptureDuringCall
-    status = napi_has_named_property(env, strategyVal, "keepCaptureDuringCall", &exist);
-    if (status == napi_ok && exist) {
-        CHECK_AND_RETURN_RET_LOG(GetOptionalPropertyBool(env, strategyVal, "keepCaptureDuringCall",
-            strategy.keepCaptureDuringCall), MSERR_INVALID_VAL, "keepCaptureDuringCall invalid");
-        strategy.setByUser = true;
-    }
-    // get enableBFrame
-    status = napi_has_named_property(env, strategyVal, "enableBFrame", &exist);
-    if (status == napi_ok && exist) {
-        CHECK_AND_RETURN_RET_LOG(GetOptionalPropertyBool(env, strategyVal, "enableBFrame",
-            strategy.enableBFrame), MSERR_INVALID_VAL, "enableBFrame invalid");
-        strategy.setByUser = true;
-    }
-    // get privacyMaskMode
+
+    GetOptionalBoolProperty(env, strategyVal, "enableDeviceLevelCapture",
+        strategy.enableDeviceLevelCapture, strategy.setByUser);
+    GetOptionalBoolProperty(env, strategyVal, "keepCaptureDuringCall",
+        strategy.keepCaptureDuringCall, strategy.setByUser);
+    GetOptionalBoolProperty(env, strategyVal, "enableBFrame", strategy.enableBFrame, strategy.setByUser);
+    GetOptionalBoolProperty(env, strategyVal, "enablePause", strategy.enablePause, strategy.setByUser);
+
     status = napi_has_named_property(env, strategyVal, "privacyMaskMode", &exist);
     if (status == napi_ok && exist) {
         int32_t value = 0;
@@ -1109,8 +1131,9 @@ int32_t AVScreenCaptureNapi::GetStrategy(std::unique_ptr<AVScreenCaptureAsyncCon
         strategy.setByUser = true;
     }
     MEDIA_LOGI("GetStrategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d, "
-        "enableBFrame: %{public}d, strategyForPrivacyMaskMode: %{public}d", strategy.enableDeviceLevelCapture,
-        strategy.keepCaptureDuringCall, strategy.enableBFrame, strategy.strategyForPrivacyMaskMode);
+        "enableBFrame: %{public}d, enablePause: %{public}d, strategyForPrivacyMaskMode: %{public}d",
+        strategy.enableDeviceLevelCapture, strategy.keepCaptureDuringCall, strategy.enableBFrame, strategy.enablePause,
+        strategy.strategyForPrivacyMaskMode);
     return MSERR_OK;
 }
 
