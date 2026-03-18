@@ -547,7 +547,7 @@ sptr<IStandardMediaService> MediaClient::GetMediaProxy()
 
     listenerStub_ = new(std::nothrow) MediaListenerStub();
     CHECK_AND_RETURN_RET_LOG(listenerStub_ != nullptr, nullptr, "failed to new MediaListenerStub");
-    return proxy;
+    return mediaProxy_;
 }
 
 void MediaClient::MediaServerDied(pid_t pid)
