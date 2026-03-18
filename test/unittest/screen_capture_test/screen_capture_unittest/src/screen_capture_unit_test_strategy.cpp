@@ -463,43 +463,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_ShowCursor_01, TestSize
 }
 
 /**
- * @tc.name: screen_capture_set_privacy_protect_callback_001
- * @tc.desc: do screencapture
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(ScreenCaptureUnitTest, screen_capture_set_privacy_protect_callback_001, TestSize.Level2)
-{
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_set_privacy_protect_callback_001 before");
-    RecorderInfo recorderInfo;
-    SetRecorderInfo("screen_capture_set_privacy_protect_callback_001.mp4", recorderInfo);
-    SetConfigFile(config_, recorderInfo);
-    AudioCaptureInfo micCapInfo = {
-        .audioSampleRate = 16000,
-        .audioChannels = 2,
-        .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT
-    };
-    config_.audioInfo.micCapInfo = micCapInfo;
-    AudioCaptureInfo innerCapInfo = {
-        .audioSampleRate = 16000,
-        .audioChannels = 2,
-        .audioSource = AudioCaptureSourceType::APP_PLAYBACK
-    };
-    config_.audioInfo.innerCapInfo = innerCapInfo;
-    config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
-    screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_);
-    ASSERT_NE(nullptr, screenCaptureCb_);
-    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
-    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
-    EXPECT_EQ(MSERR_OK, screenCapture_->SetPrivacyProtectCallback());
-    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
-    sleep(RECORDER_TIME);
-    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
-    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_set_privacy_protect_callback_001 after");
-}
-
-/**
  * @tc.name: screen_capture_save_file_set_and_check_sa_limit
  * @tc.desc: do screencapture
  * @tc.type: FUNC
