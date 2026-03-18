@@ -36,14 +36,21 @@ public:
 
     bool IsMuted(AudioHapticType audioHapticType);
     void StartSync();
+    void Start();
     void StopSync();
+    void Stop();
     void ReleaseSync();
+    void Release();
     void SetVolumeSync(double volume);
+    void SetVolume(double volume);
     void SetHapticsIntensitySync(double intensity);
+    void SetHapticsIntensity(double intensity);
     void EnableHapticsInSilentMode(bool enable);
     bool IsHapticsIntensityAdjustmentSupported();
     void SetLoopSync(bool loop);
+    void SetLoop(bool loop);
     void SetHapticsRampSync(int32_t duration, double startIntensity, double endIntensity);
+    void SetHapticsRamp(int32_t duration, double startIntensity, double endIntensity);
     bool IsHapticsRampSupported();
     void OnAudioInterrupt(callback_view<void(uintptr_t)> callback);
     void OffAudioInterrupt(optional_view<callback<void(uintptr_t)>> callback);

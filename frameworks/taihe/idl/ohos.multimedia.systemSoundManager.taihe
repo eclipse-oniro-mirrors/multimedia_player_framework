@@ -92,7 +92,7 @@ struct ToneHapticsSettings {
 
 union StringOrNull {
   type_string: String;
-  @null type_null;
+  type_null: @null unit;
 }
 
 interface ToneHapticsAttrs {
@@ -117,101 +117,107 @@ enum SystemSoundError: i32  {
 
 union RingtonePlayerOrNull {
   type_ringtonePlayer: RingtonePlayer;
-  @null type_null;
+  type_null: @null unit;
 }
 
 union SystemTonePlayerOrNull {
   type_systemTonePlayer: SystemTonePlayer;
-  @null type_null;
+  type_null: @null unit;
 }
 
 interface SystemSoundManager {
-  @gen_promise("getSystemTonePlayer")
   GetSystemTonePlayerSync(context: @sts_type("BaseContext") Opaque, type: SystemToneType): SystemTonePlayerOrNull;
+  @promise GetSystemTonePlayer(context: @sts_type("BaseContext") Opaque, type: SystemToneType): SystemTonePlayerOrNull;
 
-  @gen_promise("getSystemToneUri")
   GetSystemToneUriSync(context: @sts_type("BaseContext") Opaque, type: SystemToneType): String;
+  @promise GetSystemToneUri(context: @sts_type("BaseContext") Opaque, type: SystemToneType): String;
 
-  @gen_promise("getToneHapticsSettings")
   GetToneHapticsSettingsSync(context: @sts_type("BaseContext") Opaque, type: ToneHapticsType): ToneHapticsSettings;
+  @promise GetToneHapticsSettings(context: @sts_type("BaseContext") Opaque, type: ToneHapticsType): ToneHapticsSettings;
 
-  @gen_promise("close")
   CloseSync(fd: i32): void;
+  @promise Close(fd: i32): void;
 
-  @gen_promise("getDefaultRingtoneAttrs")
   GetDefaultRingtoneAttrsSync(context: @sts_type("BaseContext") Opaque, type: RingtoneType): ToneAttrs;
+  @promise GetDefaultRingtoneAttrs(context: @sts_type("BaseContext") Opaque, type: RingtoneType): ToneAttrs;
 
-  @gen_promise("getAlarmToneAttrList")
   GetAlarmToneAttrListSync(context: @sts_type("BaseContext") Opaque): Array<ToneAttrs>;
+  @promise GetAlarmToneAttrList(context: @sts_type("BaseContext") Opaque): Array<ToneAttrs>;
 
-  @gen_promise("removeCustomizedTone")
   RemoveCustomizedToneSync(context: @sts_type("BaseContext") Opaque, uri: String): void;
+  @promise RemoveCustomizedTone(context: @sts_type("BaseContext") Opaque, uri: String): void;
 
-  @gen_promise("getSystemToneAttrList")
   GetSystemToneAttrListSync(context: @sts_type("BaseContext") Opaque, type: SystemToneType): Array<ToneAttrs>;
+  @promise GetSystemToneAttrList(context: @sts_type("BaseContext") Opaque, type: SystemToneType): Array<ToneAttrs>;
 
-  @gen_promise("addCustomizedTone")
   AddCustomizedToneByUriSync(
     context: @sts_type("BaseContext") Opaque, toneAttr: ToneAttrs, externalUri: String): String;
+  @promise AddCustomizedToneByUri(
+    context: @sts_type("BaseContext") Opaque, toneAttr: ToneAttrs, externalUri: String): String;
 
-  @gen_promise("addCustomizedTone")
   AddCustomizedToneByFdSync(
     context: @sts_type("BaseContext") Opaque, toneAttr: ToneAttrs, fd: i32, offset: Optional<i64>,
     length: Optional<i64>): String;
+  @promise AddCustomizedToneByFd(
+    context: @sts_type("BaseContext") Opaque, toneAttr: ToneAttrs, fd: i32, offset: Optional<i64>,
+    length: Optional<i64>): String;
 
-  @gen_promise("openAlarmTone")
   OpenAlarmToneSync(context: @sts_type("BaseContext") Opaque, uri: String): i32;
+  @promise OpenAlarmTone(context: @sts_type("BaseContext") Opaque, uri: String): i32;
 
-  @gen_promise("getDefaultSystemToneAttrs")
   GetDefaultSystemToneAttrsSync(context: @sts_type("BaseContext") Opaque, type: SystemToneType): ToneAttrs;
+  @promise GetDefaultSystemToneAttrs(context: @sts_type("BaseContext") Opaque, type: SystemToneType): ToneAttrs;
 
-  @gen_promise("getRingtoneAttrList")
   GetRingtoneAttrListSync(context: @sts_type("BaseContext") Opaque, type: RingtoneType): Array<ToneAttrs>;
+  @promise GetRingtoneAttrList(context: @sts_type("BaseContext") Opaque, type: RingtoneType): Array<ToneAttrs>;
 
-  @gen_promise("setAlarmToneUri")
   SetAlarmToneUriSync(context: @sts_type("BaseContext") Opaque, uri: String): void;
+  @promise SetAlarmToneUri(context: @sts_type("BaseContext") Opaque, uri: String): void;
 
-  @gen_promise("getAlarmToneUri")
   GetAlarmToneUriSync(context: @sts_type("BaseContext") Opaque): String;
+  @promise GetAlarmToneUri(context: @sts_type("BaseContext") Opaque): String;
 
-  @gen_promise("getDefaultAlarmToneAttrs")
   GetDefaultAlarmToneAttrsSync(context: @sts_type("BaseContext") Opaque): ToneAttrs;
+  @promise GetDefaultAlarmToneAttrs(context: @sts_type("BaseContext") Opaque): ToneAttrs;
 
-  @gen_promise("getToneHapticsList")
   GetToneHapticsListSync(context: @sts_type("BaseContext") Opaque, isSynced: bool): Array<ToneHapticsAttrs>;
+  @promise GetToneHapticsList(context: @sts_type("BaseContext") Opaque, isSynced: bool): Array<ToneHapticsAttrs>;
 
-  @gen_promise("setToneHapticsSettings")
   SetToneHapticsSettingsSync(
     context: @sts_type("BaseContext") Opaque, type: ToneHapticsType, settings: ToneHapticsSettings): void;
+  @promise SetToneHapticsSettings(
+    context: @sts_type("BaseContext") Opaque, type: ToneHapticsType, settings: ToneHapticsSettings): void;
 
-  @gen_promise("getHapticsAttrsSyncedWithTone")
   GetHapticsAttrsSyncedWithToneSync(
     context: @sts_type("BaseContext") Opaque, toneUri: String): ToneHapticsAttrs;
+  @promise GetHapticsAttrsSyncedWithTone(
+    context: @sts_type("BaseContext") Opaque, toneUri: String): ToneHapticsAttrs;
 
-  @gen_promise("openToneHaptics")
   OpenToneHapticsSync(context: @sts_type("BaseContext") Opaque, hapticsUri: String): i32;
+  @promise OpenToneHaptics(context: @sts_type("BaseContext") Opaque, hapticsUri: String): i32;
 
-  @gen_promise("setSystemToneUri")
   SetSystemToneUriSync(context: @sts_type("BaseContext") Opaque, uri: String, type: SystemToneType): void;
+  @promise SetSystemToneUri(context: @sts_type("BaseContext") Opaque, uri: String, type: SystemToneType): void;
 
-  @gen_promise("getRingtonePlayer")
   GetRingtonePlayerSync(
     context: @sts_type("BaseContext") Opaque, type: RingtoneType): RingtonePlayerOrNull;
+  @promise GetRingtonePlayer(
+    context: @sts_type("BaseContext") Opaque, type: RingtoneType): RingtonePlayerOrNull;
 
-  @gen_promise("getRingtoneUri")
   GetRingtoneUriSync(context: @sts_type("BaseContext") Opaque, type: RingtoneType): String;
+  @promise GetRingtoneUri(context: @sts_type("BaseContext") Opaque, type: RingtoneType): String;
 
-  @gen_promise("setRingtoneUri")
   SetRingtoneUriSync(context: @sts_type("BaseContext") Opaque, uri: String, type: RingtoneType): void;
+  @promise SetRingtoneUri(context: @sts_type("BaseContext") Opaque, uri: String, type: RingtoneType): void;
 
-  @gen_promise("getCurrentRingtoneAttribute")
   GetCurrentRingtoneAttributeSync(type: RingtoneType): ToneAttrs;
+  @promise GetCurrentRingtoneAttribute(type: RingtoneType): ToneAttrs;
 
-  @gen_promise("removeCustomizedToneList")
   RemoveCustomizedToneListSync(uriList: Array<String>): Array<@sts_type("[string, SystemSoundError]") Opaque>;
+  @promise RemoveCustomizedToneList(uriList: Array<String>): Array<@sts_type("[string, SystemSoundError]") Opaque>;
 
-  @gen_promise("openToneList")
   OpenToneListSync(uriList: Array<String>): Array<@sts_type("[string, long, SystemSoundError]") Opaque>;
+  @promise OpenToneList(uriList: Array<String>): Array<@sts_type("[string, long, SystemSoundError]") Opaque>;
 
 }
 

@@ -35,12 +35,17 @@ public:
     ~AudioHapticManagerImpl();
 
     int32_t RegisterSourceSync(string_view audioUri, string_view hapticUri);
+    int32_t RegisterSource(string_view audioUri, string_view hapticUri);
     void UnregisterSourceSync(int32_t id);
+    void UnregisterSource(int32_t id);
     void SetAudioLatencyMode(int32_t id, AudioLatencyMode latencyMode);
     void SetStreamUsage(int32_t id, uintptr_t usage);
     int32_t RegisterSourceFromFdSync(AudioHapticFileDescriptor const& audioFd,
         AudioHapticFileDescriptor const& hapticFd);
+    int32_t RegisterSourceFromFd(AudioHapticFileDescriptor const& audioFd,
+        AudioHapticFileDescriptor const& hapticFd);
     AudioHapticPlayerOrNull CreatePlayerSync(int32_t id, optional_view<AudioHapticPlayerOptions> options);
+    AudioHapticPlayerOrNull CreatePlayer(int32_t id, optional_view<AudioHapticPlayerOptions> options);
 
 private:
     bool IsLegalAudioLatencyMode(int32_t latencyMode);
