@@ -691,7 +691,7 @@ typedef void (*OH_AVScreenCapture_OnUserSelected)(OH_AVScreenCapture* capture,
  * @param {void*} userData Pointer to user specific data
  *
  * @since 24
- */OH_PrivacyProtectInfo
+ */
 typedef void (*OH_AVScreenCapture_OnPrivacyProtect)(OH_AVScreenCapture* capture,
     OH_PrivacyProtectInfo* privacyProtect, void *userData);
 
