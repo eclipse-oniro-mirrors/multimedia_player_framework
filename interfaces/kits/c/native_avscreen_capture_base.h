@@ -321,13 +321,18 @@ typedef struct OH_AVScreenCaptureConfig {
 
 /**
  * @brief Privacy protect info struct
- *
  * @since 24
  */
 typedef struct OH_PrivacyProtectInfo {
-    /** System privacy protection status */
+    /**
+     * @brief System privacy protection status
+     * @since 24
+     */
     bool systemWindowProtection;
-    /** App privacy protection status */
+    /**
+     * @brief App privacy protection status
+     * @since 24
+     */
     bool sensitiveAppProtection;
 } OH_PrivacyProtectInfo;
 
@@ -686,7 +691,7 @@ typedef void (*OH_AVScreenCapture_OnUserSelected)(OH_AVScreenCapture* capture,
  * @param {void*} userData Pointer to user specific data
  *
  * @since 24
- */
+ */OH_PrivacyProtectInfo
 typedef void (*OH_AVScreenCapture_OnPrivacyProtect)(OH_AVScreenCapture* capture,
     OH_PrivacyProtectInfo* privacyProtect, void *userData);
 
