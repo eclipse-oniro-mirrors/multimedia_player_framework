@@ -370,7 +370,8 @@ napi_value SoundPoolNapi::JsStop(napi_env env, napi_callback_info info)
             CHECK_AND_RETURN_LOG(asyncCtx->soundPool_ != nullptr, "soundPool_ is nullptr!");
             int32_t ret = asyncCtx->soundPool_->Stop(asyncCtx->streamId_);
             if (ret != MSERR_OK) {
-                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Failed to stop sound, audio stream does not exist");
+                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                    "Failed to stop sound, audio stream does not exist");
             }
             MEDIA_LOGI("The js thread of stop finishes execution and returns");
         }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -464,7 +465,8 @@ napi_value SoundPoolNapi::JsSetPriority(napi_env env, napi_callback_info info)
             CHECK_AND_RETURN_LOG(asyncCtx->soundPool_ != nullptr, "soundPool_ is nullptr!");
             int32_t ret = asyncCtx->soundPool_->SetPriority(asyncCtx->streamId_, asyncCtx->priority_);
             if (ret != MSERR_OK) {
-                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Failed to setPriority, audio stream does not exist");
+                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                    "Failed to setPriority, audio stream does not exist");
             }
             MEDIA_LOGI("The js thread of SetPriority finishes execution and returns");
         }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -503,7 +505,8 @@ napi_value SoundPoolNapi::JsSetRate(napi_env env, napi_callback_info info)
             CHECK_AND_RETURN_LOG(asyncCtx->soundPool_ != nullptr, "soundPool_ is nullptr!");
             int32_t ret = asyncCtx->soundPool_->SetRate(asyncCtx->streamId_, asyncCtx->renderRate_);
             if (ret != MSERR_OK) {
-                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Failed to setRate, audio stream does not exist or rate is invalid");
+                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                    "Failed to setRate, audio stream does not exist or rate is invalid");
             }
             MEDIA_LOGI("The js thread of SetRate finishes execution and returns");
         }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -606,7 +609,8 @@ napi_value SoundPoolNapi::JsUnload(napi_env env, napi_callback_info info)
             CHECK_AND_RETURN_LOG(asyncCtx->soundPool_ != nullptr, "soundPool_ is nullptr!");
             int32_t ret = asyncCtx->soundPool_->Unload(asyncCtx->soundId_);
             if (ret != MSERR_OK) {
-                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Failed to unLoad sound, audio stream does not exist");
+                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                    "Failed to unLoad sound, audio stream does not exist");
             }
             MEDIA_LOGI("The js thread of Unload finishes execution and returns, soundID: %{public}d",
                 asyncCtx->soundId_);
