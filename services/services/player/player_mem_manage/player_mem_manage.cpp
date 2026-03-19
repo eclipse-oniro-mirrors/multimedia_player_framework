@@ -100,6 +100,7 @@ void PlayerMemManage::FindProbeTaskPlayer()
 
 void PlayerMemManage::ProbeTask()
 {
+    std::lock_guard<std::recursive_mutex> lock(recTaskMutex_);
     while (isProbeTaskCreated_) {
         FindProbeTaskPlayer();
         sleep(1);  // 1 : one second interval check
@@ -213,6 +214,7 @@ int32_t PlayerMemManage::DeregisterPlayerServer(const MemManageRecall &memRecall
     }
 
     {
+        std::lock_guard<std::recursive_mutex> lock(recMutex_);
         std::lock_guard<std::recursive_mutex> lock(recTaskMutex_);
         if (isProbeTaskCreated_ && playerManage_.size() == 0) {
             MEDIA_LOGI("Stop probe task");
