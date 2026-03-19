@@ -179,6 +179,12 @@ void ScreenCaptureUnitTestCallback::OnUserSelected(ScreenCaptureUserSelectionInf
     selection->selectType, selection->displayIds[0]);
 }
 
+void ScreenCaptureUnitTestCallback::OnPrivacyProtect(AVScreenCapturePrivacyProtect privacyProtect)
+{
+    MEDIA_LOGI("OnPrivacyProtect() is called, appPrivacyProtection %{public}d, systemPrivacyProtection %{public}d",
+        privacyProtect.appPrivacyProtection, privacyProtect.systemPrivacyProtection);
+}
+
 void ScreenCaptureUnitTestCallback::OnBufferAvailable(std::shared_ptr<AVBuffer> buffer,
     AVScreenCaptureBufferType bufferType, int64_t timestamp)
 {

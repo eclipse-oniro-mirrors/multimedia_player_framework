@@ -67,6 +67,17 @@ int32_t ScreenCaptureListenerStub::OnUserSelectedStub(MessageParcel &data, Messa
     return MSERR_OK;
 }
 
+int32_t ScreenCaptureListenerStub::OnPrivacyProtectStub(MessageParcel &data, MessageParcel &reply)
+{
+    (void) reply;
+    MEDIA_LOGI("ScreenCaptureListenerStub::OnPrivacyProtectStub start");
+    AVScreenCapturePrivacyProtect privacyProtect;
+    CHECK_AND_RETURN_RET_LOG(data.ReadBool(privacyProtect.appPrivacyProtection) &&
+        data.ReadBool(privacyProtect.systemPrivacyProtection), MSERR_UNKNOWN, "Failed to read privacyProtect");
+    OnPrivacyProtect(privacyProtect);
+    return MSERR_OK;
+}
+
 int ScreenCaptureListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {
@@ -104,12 +115,25 @@ int ScreenCaptureListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &dat
             OnDisplaySelected(displayId);
             return MSERR_OK;
         }
+        default: {
+            return OnRemoteRequestInner(code, data, reply, option);
+        }
+    }
+}
+
+int ScreenCaptureListenerStub::OnRemoteRequestInner(uint32_t code, MessageParcel &data, MessageParcel &reply,
+    MessageOption &option)
+{
+    switch (code) {
         case ScreenCaptureListenerMsg::ON_CONTENT_CHANGED: {
             MEDIA_LOGD("ScreenCaptureListenerMsg::ON_CONTENT_CHANGED");
             return OnCaptureContentChangedStub(data, reply);
         }
         case ScreenCaptureListenerMsg::ON_USER_SELECTED: {
             return OnUserSelectedStub(data, reply);
+        }
+        case ScreenCaptureListenerMsg::ON_PRIVACY_PROTECT: {
+            return OnPrivacyProtectStub(data, reply);
         }
         default: {
             MEDIA_LOGE("default case, need check ScreenCaptureListenerStub");
@@ -170,6 +194,13 @@ void ScreenCaptureListenerStub::OnUserSelected(ScreenCaptureUserSelectionInfo se
 {
     if (callback_ != nullptr) {
         callback_->OnUserSelected(selectionInfo);
+    }
+}
+
+void ScreenCaptureListenerStub::OnPrivacyProtect(AVScreenCapturePrivacyProtect privacyProtect)
+{
+    if (callback_ != nullptr) {
+        callback_->OnPrivacyProtect(privacyProtect);
     }
 }
 } // namespace Media

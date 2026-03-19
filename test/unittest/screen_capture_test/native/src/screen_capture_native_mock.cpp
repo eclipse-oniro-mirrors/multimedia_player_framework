@@ -110,6 +110,11 @@ int32_t ScreenCaptureNativeMock::SetSelectionCallback()
     return MSERR_OK;
 }
 
+int32_t ScreenCaptureNativeMock::SetPrivacyProtectCallback()
+{
+    return MSERR_OK;
+}
+
 int32_t ScreenCaptureNativeMock::StartScreenCapture()
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");

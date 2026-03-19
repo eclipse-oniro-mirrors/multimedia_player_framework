@@ -76,6 +76,12 @@ void ScreenCaptureServerUnittestCallbackMock::OnUserSelected(ScreenCaptureUserSe
         selectionInfo.selectType, selectionInfo.displayIds.size());
 }
 
+void ScreenCaptureServerUnittestCallbackMock::OnPrivacyProtect(AVScreenCapturePrivacyProtect privacyProtect)
+{
+    MEDIA_LOGI("OnPrivacyProtect() is called, appPrivacyProtection %{public}d, systemPrivacyProtection %{public}d",
+        privacyProtect.appPrivacyProtection, privacyProtect.systemPrivacyProtection);
+}
+
 void ScreenCaptureServerUnittestCallbackMock::Stop()
 {
     MEDIA_LOGD("Stop() is called");

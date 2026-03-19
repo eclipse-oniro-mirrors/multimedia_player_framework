@@ -27,6 +27,7 @@ public:
     virtual ~ScreenCaptureListenerStub();
     int32_t OnCaptureContentChangedStub(MessageParcel &data, MessageParcel &reply);
     int32_t OnUserSelectedStub(MessageParcel &data, MessageParcel &reply);
+    int32_t OnPrivacyProtectStub(MessageParcel &data, MessageParcel &reply);
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
     void OnError(ScreenCaptureErrorType errorType, int32_t errorCode) override;
     void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) override;
@@ -35,9 +36,12 @@ public:
     void OnDisplaySelected(uint64_t displayId) override;
     void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area) override;
     void OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo) override;
+    void OnPrivacyProtect(AVScreenCapturePrivacyProtect privacyProtect) override;
     void SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBack> &callback);
 
 private:
+    int OnRemoteRequestInner(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option);
+
     std::shared_ptr<ScreenCaptureCallBack> callback_ = nullptr;
 };
 } // namespace Media

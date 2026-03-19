@@ -320,6 +320,23 @@ typedef struct OH_AVScreenCaptureConfig {
 } OH_AVScreenCaptureConfig;
 
 /**
+ * @brief Privacy protect info struct
+ * @since 24
+ */
+typedef struct OH_PrivacyProtectInfo {
+    /**
+     * @brief System privacy protection status
+     * @since 24
+     */
+    bool systemWindowProtection;
+    /**
+     * @brief App privacy protection status
+     * @since 24
+     */
+    bool sensitiveAppProtection;
+} OH_PrivacyProtectInfo;
+
+/**
  * @brief When an error occurs in the running of the OH_AVScreenCapture instance, the function pointer will be called
  * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
  * @param capture Pointer to an OH_AVScreenCapture instance
@@ -665,6 +682,19 @@ typedef struct OH_AVScreenCapture_UserSelectionInfo OH_AVScreenCapture_UserSelec
 */
 typedef void (*OH_AVScreenCapture_OnUserSelected)(OH_AVScreenCapture* capture,
     OH_AVScreenCapture_UserSelectionInfo* selections, void *userData);
+
+/**
+ * @brief When privacy protect event occurs in the running of the OH_AVScreenCapture instance,
+ *  the function pointer will be called
+ * @param {OH_AVScreenCapture*} capture Pointer to an OH_AVScreenCapture instance
+ * @param {OH_PrivacyProtectInfo*} privacyProtect Pointer to privacy protect info
+ * @param {void*} userData Pointer to user specific data
+ *
+ * @since 24
+ */
+typedef void (*OH_AVScreenCapture_OnPrivacyProtect)(OH_AVScreenCapture* capture,
+    OH_PrivacyProtectInfo* privacyProtect, void *userData);
+
 #ifdef __cplusplus
 }
 #endif

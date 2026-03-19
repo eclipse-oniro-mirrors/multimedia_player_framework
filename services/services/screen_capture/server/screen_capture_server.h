@@ -146,6 +146,7 @@ public:
     void NotifyDisplaySelected(uint64_t displayId);
     void NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area);
     void NotifyUserSelected(ScreenCaptureUserSelectionInfo selectionInfo);
+    void NotifyprivacyProtect();
     int32_t SetAndCheckAppInfo(OHOS::AudioStandard::AppInfo &appInfo);
     void SetSCServerSaUid(int32_t saUid);
     int32_t GetSCServerSaUid();

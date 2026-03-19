@@ -223,6 +223,11 @@ struct MultiDisplayCapability {
     uint32_t height = 0;
 };
 
+struct AVScreenCapturePrivacyProtect {
+    bool appPrivacyProtection = false;
+    bool systemPrivacyProtection = false;
+};
+
 struct VideoCaptureInfo {
     uint64_t displayId = 0;
     std::list<int32_t> taskIDs;
@@ -335,6 +340,12 @@ public:
     virtual void OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo)
     {
         (void)selectionInfo;
+        return;
+    }
+
+    virtual void OnPrivacyProtect(AVScreenCapturePrivacyProtect privacyProtect)
+    {
+        (void)privacyProtect;
         return;
     }
 };
