@@ -70,7 +70,7 @@ int32_t ScreenCaptureListenerStub::OnUserSelectedStub(MessageParcel &data, Messa
 int32_t ScreenCaptureListenerStub::OnPrivacyProtectStub(MessageParcel &data, MessageParcel &reply)
 {
     (void) reply;
-    MEDIA_LOGI("ScreenCaptureListenerStub::OnUserSelectedStub start");
+    MEDIA_LOGI("ScreenCaptureListenerStub::OnPrivacyProtectStub start");
     AVScreenCapturePrivacyProtect privacyProtect;
     CHECK_AND_RETURN_RET_LOG(data.ReadBool(privacyProtect.appPrivacyProtection) &&
         data.ReadBool(privacyProtect.systemPrivacyProtection), MSERR_UNKNOWN, "Failed to read privacyProtect");
