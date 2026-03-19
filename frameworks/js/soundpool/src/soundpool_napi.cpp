@@ -280,7 +280,8 @@ napi_value SoundPoolNapi::JsLoad(napi_env env, napi_callback_info info)
                 soundId = asyncCtx->soundPool_->Load(asyncCtx->url_);
             }
             if (soundId < 0) {
-                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "load sound failed");
+                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                    "Failed to load sound, the resource path is invalid, please check input parameters");
             } else {
                 asyncCtx->JsResult = std::make_unique<MediaJsResultInt>(soundId);
             }
@@ -325,7 +326,7 @@ napi_value SoundPoolNapi::JsPlay(napi_env env, napi_callback_info info)
             CHECK_AND_RETURN_LOG(asyncCtx->soundPool_ != nullptr, "soundPool_ is nullptr!");
             int32_t streamId = asyncCtx->soundPool_->Play(asyncCtx->soundId_, asyncCtx->playParameters_);
             if (streamId < 0) {
-                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "play sound failed");
+                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Failed to play sound");
             } else {
                 asyncCtx->JsResult = std::make_unique<MediaJsResultInt>(streamId);
             }
