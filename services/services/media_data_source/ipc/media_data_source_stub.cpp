@@ -86,6 +86,11 @@ int MediaDataSourceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
             uint32_t length = data.ReadUint32();
             int64_t pos = data.ReadInt64();
             CHECK_AND_RETURN_RET_LOG(memory != nullptr, MSERR_NO_MEMORY, "memory is nullptr");
+            CHECK_AND_RETURN_RET_LOG(memory->GetSize() >= 0, MSERR_INVALID_VAL, "memory size invalid!");
+            CHECK_AND_RETURN_RET_LOG(offset <= static_cast<uint32_t>(memory->GetSize()),
+                MSERR_INVALID_VAL, "offset exceeds memory size");
+            CHECK_AND_RETURN_RET_LOG(length <= (static_cast<uint32_t>(memory->GetSize()) - offset),
+                MSERR_INVALID_VAL, "offset + length exceeds memory size");
             std::static_pointer_cast<AVDataSrcMemory>(memory)->SetOffset(offset);
             MEDIA_LOGD("offset is %{public}u", offset);
             int32_t realLen = ReadAt(memory, length, pos);
