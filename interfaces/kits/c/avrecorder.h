@@ -102,28 +102,34 @@ OH_AVErrCode OH_AVRecorder_GetAVRecorderConfig(OH_AVRecorder *recorder, OH_AVRec
  * @param amplitude - The max amplitude value of audio capturer
  * @return Function result code.
  *         {@link AV_ERR_OK} if the execution is successful.
- *         {@link AV_ERR_INVALID_VAL} if input recorder is nullptr.
- *         {@link AV_ERR_INVALID_STATE} function called in invalid state, only available after prepare state,
- *              and before stop state.
+ *         {@link AV_ERR_INVALID_VAL} if input recorder is nullptr or amplitude is nullptr.
+ *         {@link AV_ERR_INVALID_STATE} function called in invalid state.
+ *         {@link AV_ERR_NO_MEMORY} failed to malloc memory.
+ *         {@link AV_ERR_UNKNOWN} unknown error.
+ *
  * @since 26.0.0
  */
-OH_AVErrCode OH_AVRecorder_GetAudioCapturerMaxAmplitude(OH_AVRecorder *recorder, int32_t* amplitude);
+OH_AVErrCode OH_AVRecorder_GetAudioCapturerMaxAmplitude(OH_AVRecorder *recorder, int32_t *amplitude);
 
 /**
- * @brief Set custom info (key value pairs) for the recording file of the recorder.
- * This custom info overwrites the value in config.metadata.customInfo (see {prepare()} and {OH_AVRecorder_Config})
+ * @brief Set metadata (key-value pairs) for the recording file of the recorder.
+ * This metadata overwrites the value in config.metadata.customInfo (see {prepare()} and {OH_AVRecorder_Config})
  * if they have same key.
- * This API can be called only after the **prepare()** API is called, before starting recoder.
+ * This API can be called only after the **prepare()** API is called, before stop recorder.
  *
  * @param recorder - Pointer to an OH_AVRecorder instance
- * @param customInfo - The key value pairs added to the the recording file.
+ * @param metadata - The key-value pairs added to the the recording file.
+ *                   The key string should start with "com.openharmony.", the length of value can't be more than 256 bytes.
  * @return Function result code.
  *         {@link AV_ERR_OK} if the execution is successful.
- *         {@link AV_ERR_INVALID_VAL} if input recorder is nullptr or customInfo is nullptr.
- *         {@link AV_ERR_INVALID_STATE} function called in invalid state (only available in prepared state)
+ *         {@link AV_ERR_INVALID_VAL} if input recorder is nullptr or metadata is nullptr or the length of value exceed max length.
+ *         {@link AV_ERR_INVALID_STATE} function called in invalid state.
+ *         {@link AV_ERR_NO_MEMORY} failed to malloc memory.
+ *         {@link AV_ERR_UNKNOWN} unknown error.
+ *
  * @since 26.0.0
  */
-OH_AVErrCode OH_AVRecorder_SetCustomInfo(OH_AVRecorder *recorder, OH_AVFormat *customInfo);
+OH_AVErrCode OH_AVRecorder_SetMetadata(OH_AVRecorder *recorder, OH_AVFormat *metadata);
 
 /**
  * @brief Get input surface, it must be called between prepare completed and start.

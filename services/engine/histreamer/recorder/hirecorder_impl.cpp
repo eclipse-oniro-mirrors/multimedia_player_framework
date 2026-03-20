@@ -1250,19 +1250,11 @@ int32_t HiRecorderImpl::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer)
     return static_cast<int32_t>(videoEncoderFilter_->SetWatermark(waterMarkBuffer));
 }
 
-int32_t HiRecorderImpl::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
-{
-    FALSE_RETURN_V_MSG_E(muxerFilter_ != nullptr, static_cast<int32_t>(Status::ERROR_NULL_POINTER),
-        "muxerFilter is nullptr, cannot set usermeta");
-    muxerFilter_->SetUserMeta(userMeta);
-    return static_cast<int32_t>(Status::OK);
-}
-
-Status HiRecorderImpl::SetCustomInfo(const std::shared_ptr<Meta> &customInfo)
+Status HiRecorderImpl::SetUserMeta(const std::shared_ptr<Meta> &usermeta)
 {
     FALSE_RETURN_V_MSG_E(muxerFilter_ != nullptr, Status::ERROR_NULL_POINTER,
-        "muxerFilter is nullptr, cannot set customInfo");
-    return muxerFilter_->SetCustomInfo(customInfo);
+        "muxerFilter is nullptr, cannot set usermeta");
+    return muxerFilter_->SetUserMeta(usermeta);
 }
 
 int32_t HiRecorderImpl::SetWillMuteWhenInterrupted(bool muteWhenInterrupted)

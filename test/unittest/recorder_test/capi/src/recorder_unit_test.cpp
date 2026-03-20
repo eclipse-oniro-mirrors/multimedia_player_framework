@@ -940,13 +940,13 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetAudioCapturerMaxAmplitude_001, Test
 }
 
 /**
- * @tc.name: Recorder_SetCustomInfo_001
- * @tc.desc: Test recorder SetCustomInfo process 001
+ * @tc.name: Recorder_SetMetadata_001
+ * @tc.desc: Test recorder SetMetadata process 001
  * @tc.type: FUNC
  */
-HWTEST_F(NativeRecorderUnitTest, Recorder_SetCustomInfo_001, TestSize.Level2)
+HWTEST_F(NativeRecorderUnitTest, Recorder_SetMetadata_001, TestSize.Level2)
 {
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetCustomInfo_001 in.");
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetMetadata_001 in.");
 
     OH_AVRecorder_Config config = config_;
     config.metadata.genre = strdup("");
@@ -954,7 +954,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_SetCustomInfo_001, TestSize.Level2)
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
 
-    int32_t outputFd = open((RECORDER_ROOT + "Recorder_SetCustomInfo_001.mp4").c_str(), O_RDWR);
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_SetMetadata_001.mp4").c_str(), O_RDWR);
     const std::string fdHead = "fd://";
     config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
 
@@ -962,12 +962,12 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_SetCustomInfo_001, TestSize.Level2)
     ret = OH_AVRecorder_Prepare(recorder_, &config);
     EXPECT_EQ(ret, AV_ERR_OK);
 
-    OH_AVFormat *customInfo = OH_AVFormat_Create();
-    OH_AVFormat_SetStringValue(customInfo, "com.openharmony.test", "Recorder_SetCustomInfo_001");
-    ret = OH_AVRecorder_SetCustomInfo(recorder_, customInfo);
+    OH_AVFormat *metadata = OH_AVFormat_Create();
+    OH_AVFormat_SetStringValue(metadata, "com.openharmony.test", "Recorder_SetMetadata_001");
+    ret = OH_AVRecorder_SetMetadata(recorder_, metadata);
     EXPECT_EQ(ret, AV_ERR_OK);
 
-    OH_AVFormat_Destroy(customInfo);
+    OH_AVFormat_Destroy(metadata);
 
     free(config.url);
     free(config.metadata.genre);
@@ -975,7 +975,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_SetCustomInfo_001, TestSize.Level2)
     free(config.metadata.customInfo.key);
     free(config.metadata.customInfo.value);
 
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetCustomInfo_001 out.");
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetMetadata_001 out.");
 }
 
 /**

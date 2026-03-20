@@ -210,7 +210,7 @@
             <option name="shell" value="touch /data/test/media/Recorder_GetAVRecorderConfig_002.mp4"/>
             <option name="shell" value="touch /data/test/media/Recorder_GetAVRecorderConfig_003.mp4"/>
             <option name="shell" value="touch /data/test/media/Recorder_GetAudioCapturerMaxAmplitude_001.mp4"/>
-            <option name="shell" value="touch /data/test/media/Recorder_SetCustomInfo_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/Recorder_SetMetadata_001.mp4"/>
             <option name="shell" value="touch /data/test/media/Recorder_GetInputSurface_002.mp4"/>
             <option name="shell" value="touch /data/test/media/Recorder_UpdateRotation_002.mp4"/>
             <option name="shell" value="touch /data/test/media/Recorder_Start_002.mp4"/>
