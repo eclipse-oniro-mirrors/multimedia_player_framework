@@ -214,7 +214,7 @@ int32_t PlayerMemManage::DeregisterPlayerServer(const MemManageRecall &memRecall
     }
 
     {
-        std::lock_guard<std::recursive_mutex> lock(recMutex_);
+        std::lock_guard<std::recursive_mutex> lockRecMutex(recMutex_);
         std::lock_guard<std::recursive_mutex> lock(recTaskMutex_);
         if (isProbeTaskCreated_ && playerManage_.size() == 0) {
             MEDIA_LOGI("Stop probe task");
