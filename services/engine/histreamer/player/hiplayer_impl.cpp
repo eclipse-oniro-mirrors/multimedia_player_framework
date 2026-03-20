@@ -1615,7 +1615,7 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
     }
     if (rtv == Status::OK) {
         syncManager_->Seek(seekTimeUs);
-        if (subtitleSink_ != nullptr) {
+        if (!hasExtSub_ && subtitleSink_ != nullptr) {
             subtitleSink_->NotifySeek();
         }
     }
@@ -1650,6 +1650,9 @@ Status HiPlayerImpl::HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs)
     }
     if (audioSink_ != nullptr) {
         audioSink_->SetIsCancelStart(false);
+    }
+    if (!hasExtSub_ && subtitleSink_ != nullptr) {
+        subtitleSink_->NotifySeek();
     }
     interruptMonitor_->DeregisterListener(seekAgent_);
     seekAgent_.reset();

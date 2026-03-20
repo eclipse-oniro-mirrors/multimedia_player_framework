@@ -176,6 +176,66 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_Seek_001, TestSize.Level0)
     EXPECT_NE(ret, 0);
 }
 
+// @tc.name     Test Seek API
+// @tc.number   PHIUT_Seek_002
+// @tc.desc     PHIUT_Seek_002
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_Seek_002, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    int32_t mSeconds = 5;
+    PlayerSeekMode mode = PlayerSeekMode::SEEK_CLOSEST;
+    hiplayer_->endTimeWithMode_ = 0;
+    hiplayer_->startTimeWithMode_ = 10;
+    hiplayer_->hasExtSub_ = true;
+    int32_t ret = hiplayer_->Seek(mSeconds, mode);
+    EXPECT_NE(ret, 0);
+}
+
+// @tc.name     Test Seek API
+// @tc.number   PHIUT_Seek_003
+// @tc.desc     PHIUT_Seek_003
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_Seek_003, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    int32_t mSeconds = 5;
+    PlayerSeekMode mode = PlayerSeekMode::SEEK_CLOSEST;
+    hiplayer_->endTimeWithMode_ = 0;
+    hiplayer_->startTimeWithMode_ = 10;
+    hiplayer_->hasExtSub_ = false;
+    int32_t ret = hiplayer_->Seek(mSeconds, mode);
+    EXPECT_NE(ret, 0);
+}
+
+// @tc.name     Test Seek API
+// @tc.number   PHIUT_Seek_004
+// @tc.desc     PHIUT_Seek_004
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_Seek_004, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    int32_t mSeconds = 5;
+    PlayerSeekMode mode = PlayerSeekMode::SEEK_NEXT_SYNC;
+    hiplayer_->endTimeWithMode_ = 0;
+    hiplayer_->startTimeWithMode_ = 10;
+    hiplayer_->hasExtSub_ = true;
+    int32_t ret = hiplayer_->Seek(mSeconds, mode);
+    EXPECT_NE(ret, 0);
+}
+
+// @tc.name     Test Seek API
+// @tc.number   PHIUT_Seek_005
+// @tc.desc     PHIUT_Seek_005
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_Seek_005, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    int32_t mSeconds = 5;
+    PlayerSeekMode mode = PlayerSeekMode::SEEK_NEXT_SYNC;
+    hiplayer_->endTimeWithMode_ = 0;
+    hiplayer_->startTimeWithMode_ = 10;
+    hiplayer_->hasExtSub_ = false;
+    int32_t ret = hiplayer_->Seek(mSeconds, mode);
+    EXPECT_NE(ret, 0);
+}
+
 // @tc.name     Test NeedSeekClosest API
 // @tc.number   PHIUT_NeedSeekClosest_001
 // @tc.desc     Test Seek NeedSeekClosest, 2.
