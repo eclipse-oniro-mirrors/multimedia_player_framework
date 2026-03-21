@@ -1025,25 +1025,6 @@ int32_t RecorderServiceProxy::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
     return reply.ReadInt32();
 }
 
-int32_t RecorderServiceProxy::SetCustomInfo(const std::shared_ptr<Meta> &customInfo)
-{
-    (void)customInfo;
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
-    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
-    
-    CHECK_AND_RETURN_RET_LOG(customInfo->ToParcel(data), MSERR_INVALID_OPERATION, "write data failed");
-
-    int error = Remote()->SendRequest(SET_CUSTOMINFO, data, reply, option);
-    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
-        "SetCustomInfo failed, error: %{public}d", error);
-
-    return reply.ReadInt32();
-}
-
 int32_t RecorderServiceProxy::SetWillMuteWhenInterrupted(bool muteWhenInterrupted)
 {
     MessageParcel data;

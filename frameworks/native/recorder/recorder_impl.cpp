@@ -438,12 +438,6 @@ int32_t RecorderImpl::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
     return recorderService_->SetUserMeta(userMeta);
 }
 
-int32_t RecorderImpl::SetCustomInfo(const std::shared_ptr<Meta> &customInfo)
-{
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
-    return recorderService_->SetCustomInfo(customInfo);
-}
-
 int32_t RecorderImpl::SetWillMuteWhenInterrupted(bool muteWhenInterrupted)
 {
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
