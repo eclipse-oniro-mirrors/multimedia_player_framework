@@ -119,10 +119,12 @@ OH_AVErrCode OH_AVRecorder_GetAudioCapturerMaxAmplitude(OH_AVRecorder *recorder,
  *
  * @param recorder - Pointer to an OH_AVRecorder instance
  * @param metadata - The key-value pairs added to the the recording file.
- *                   The key string should start with "com.openharmony.", the length of value can't be more than 256 bytes.
+ *                   The key string should start with "com.openharmony.".
+ *                   The length of value can't be more than 256 bytes.
  * @return Function result code.
  *         {@link AV_ERR_OK} if the execution is successful.
- *         {@link AV_ERR_INVALID_VAL} if input recorder is nullptr or metadata is nullptr or the length of value exceed max length.
+ *         {@link AV_ERR_INVALID_VAL} if input recorder is nullptr or metadata is nullptr
+ *                                    or the length of value exceed max length.
  *         {@link AV_ERR_INVALID_STATE} function called in invalid state.
  *         {@link AV_ERR_NO_MEMORY} failed to malloc memory.
  *         {@link AV_ERR_UNKNOWN} unknown error.
