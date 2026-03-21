@@ -55,18 +55,6 @@ IStreamIDManager::~IStreamIDManager()
         frameWriteCallback_.reset();
     }
 
-    if (isStreamPlayingThreadPoolStarted_.load()) {
-        if (streamPlayingThreadPool_ != nullptr) {
-            streamPlayingThreadPool_->Stop();
-        }
-        isStreamPlayingThreadPoolStarted_.store(false);
-    }
-    if (isStreamStopThreadPoolStarted_.load()) {
-        if (streamStopThreadPool_ != nullptr) {
-            streamStopThreadPool_->Stop();
-        }
-        isStreamStopThreadPoolStarted_.store(false);
-    }
     currentStreamsNum_.store(0);
 }
 
@@ -188,6 +176,25 @@ int32_t IStreamIDManager::Play(const std::shared_ptr<SoundParser> &soundParser, 
     int32_t result = SetPlay(soundID, streamID, playParameters);
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, errorStreamId, "Invalid SetPlay");
     return streamID;
+}
+
+void IStreamIDManager::StopAllTasksInThreadPool()
+{
+    MEDIA_LOGI("Start to stop playing tasks");
+    if (isStreamPlayingThreadPoolStarted_.load()) {
+        if (streamPlayingThreadPool_ != nullptr) {
+            streamPlayingThreadPool_->Stop();
+        }
+        isStreamPlayingThreadPoolStarted_.store(false);
+    }
+    MEDIA_LOGI("Stop playing tasks successfully, start to stop other tasks");
+    if (isStreamStopThreadPoolStarted_.load()) {
+        if (streamStopThreadPool_ != nullptr) {
+            streamStopThreadPool_->Stop();
+        }
+        isStreamStopThreadPoolStarted_.store(false);
+    }
+    MEDIA_LOGI("Stop all tasks successfully");
 }
 
 std::shared_ptr<AudioStream> IStreamIDManager::InnerProcessOfCreateAudioStream(int32_t soundID, int32_t &streamID,
