@@ -2840,7 +2840,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartMicAudioCapture_006, TestSize.Lev
         screenCaptureServer_->captureConfig_.audioInfo.micCapInfo, screenCaptureServer_->screenCaptureCb_,
         std::string("OS_MicAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->micAudioCapture_->bundleName_ = ScreenRecorderBundleName;
-    screenCaptureServer_->captureConfig_.audioInfo.micCapInfo.state = AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    screenCaptureServer_->captureConfig_.audioInfo.micCapInfo.state =
+        AVScreenCaptureParamValidationState::VALIDATION_VALID;
     InCallObserver::GetInstance().OnCallStateUpdated(true);
     int ret = screenCaptureServer_->StartMicAudioCapture();
     ASSERT_EQ(ret, MSERR_OK);
