@@ -221,6 +221,8 @@ private:
     static std::map<std::string, AvTransCoderTaskqFunc> taskQFuncs_;
     bool hasConfiged_ = false;
     std::mutex eventCbMutex_;
+    std::shared_mutex transCoderMutex_;
+    std::shared_mutex transCoderCbMutex_;
 
     std::string srcUrl_ = "";
     struct AVFileDescriptor srcFd_;
