@@ -176,64 +176,74 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_Seek_001, TestSize.Level0)
     EXPECT_NE(ret, 0);
 }
 
-// @tc.name     Test Seek API
-// @tc.number   PHIUT_Seek_002
-// @tc.desc     PHIUT_Seek_002
-HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_Seek_002, TestSize.Level0)
+// @tc.name     Test NotifySubtitleSeek API
+// @tc.number   PHIUT_NotifySubtitleSeek_001
+// @tc.desc     PHIUT_NotifySubtitleSeek_001
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_NotifySubtitleSeek_001, TestSize.Level0)
 {
     ASSERT_NE(hiplayer_, nullptr);
-    int32_t mSeconds = 5;
-    PlayerSeekMode mode = PlayerSeekMode::SEEK_CLOSEST;
-    hiplayer_->endTimeWithMode_ = 0;
-    hiplayer_->startTimeWithMode_ = 10;
+
     hiplayer_->hasExtSub_ = true;
-    int32_t ret = hiplayer_->Seek(mSeconds, mode);
-    EXPECT_NE(ret, 0);
+    hiplayer_->subtitleSink_ = FilterFactory::Instance().CreateFilter<SubtitleSinkFilter>("player.subtitlesink",
+        FilterType::FILTERTYPE_SSINK);
+    
+    // Call the function to be tested
+    int32_t ret = hiplayer_->SubtitleSeek();
+ 
+    // Verify the result
+    EXPECT_EQ(ret, MSERR_OK);
 }
 
-// @tc.name     Test Seek API
-// @tc.number   PHIUT_Seek_003
-// @tc.desc     PHIUT_Seek_003
-HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_Seek_003, TestSize.Level0)
+// @tc.name     Test NotifySubtitleSeek API
+// @tc.number   PHIUT_NotifySubtitleSeek_002
+// @tc.desc     PHIUT_NotifySubtitleSeek_002
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_NotifySubtitleSeek_002, TestSize.Level0)
 {
     ASSERT_NE(hiplayer_, nullptr);
-    int32_t mSeconds = 5;
-    PlayerSeekMode mode = PlayerSeekMode::SEEK_CLOSEST;
-    hiplayer_->endTimeWithMode_ = 0;
-    hiplayer_->startTimeWithMode_ = 10;
+
     hiplayer_->hasExtSub_ = false;
-    int32_t ret = hiplayer_->Seek(mSeconds, mode);
-    EXPECT_NE(ret, 0);
+    hiplayer_->subtitleSink_ = FilterFactory::Instance().CreateFilter<SubtitleSinkFilter>("player.subtitlesink",
+        FilterType::FILTERTYPE_SSINK);
+    
+    // Call the function to be tested
+    int32_t ret = hiplayer_->SubtitleSeek();
+ 
+    // Verify the result
+    EXPECT_EQ(ret, MSERR_OK);
 }
 
-// @tc.name     Test Seek API
-// @tc.number   PHIUT_Seek_004
-// @tc.desc     PHIUT_Seek_004
-HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_Seek_004, TestSize.Level0)
+// @tc.name     Test NotifySubtitleSeek API
+// @tc.number   PHIUT_NotifySubtitleSeek_003
+// @tc.desc     PHIUT_NotifySubtitleSeek_003
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_NotifySubtitleSeek_003, TestSize.Level0)
 {
     ASSERT_NE(hiplayer_, nullptr);
-    int32_t mSeconds = 5;
-    PlayerSeekMode mode = PlayerSeekMode::SEEK_NEXT_SYNC;
-    hiplayer_->endTimeWithMode_ = 0;
-    hiplayer_->startTimeWithMode_ = 10;
+
     hiplayer_->hasExtSub_ = true;
-    int32_t ret = hiplayer_->Seek(mSeconds, mode);
-    EXPECT_NE(ret, 0);
+    hiplayer_->subtitleSink_ = nullptr;
+    
+    // Call the function to be tested
+    int32_t ret = hiplayer_->SubtitleSeek();
+ 
+    // Verify the result
+    EXPECT_EQ(ret, MSERR_OK);
 }
 
-// @tc.name     Test Seek API
-// @tc.number   PHIUT_Seek_005
-// @tc.desc     PHIUT_Seek_005
-HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_Seek_005, TestSize.Level0)
+// @tc.name     Test NotifySubtitleSeek API
+// @tc.number   PHIUT_NotifySubtitleSeek_004
+// @tc.desc     PHIUT_NotifySubtitleSeek_004
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_NotifySubtitleSeek_004, TestSize.Level0)
 {
     ASSERT_NE(hiplayer_, nullptr);
-    int32_t mSeconds = 5;
-    PlayerSeekMode mode = PlayerSeekMode::SEEK_NEXT_SYNC;
-    hiplayer_->endTimeWithMode_ = 0;
-    hiplayer_->startTimeWithMode_ = 10;
+
     hiplayer_->hasExtSub_ = false;
-    int32_t ret = hiplayer_->Seek(mSeconds, mode);
-    EXPECT_NE(ret, 0);
+    hiplayer_->subtitleSink_ = nullptr;
+    
+    // Call the function to be tested
+    int32_t ret = hiplayer_->SubtitleSeek();
+ 
+    // Verify the result
+    EXPECT_EQ(ret, MSERR_OK);
 }
 
 // @tc.name     Test NeedSeekClosest API
