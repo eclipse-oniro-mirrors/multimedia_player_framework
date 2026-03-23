@@ -438,6 +438,7 @@ int32_t SoundPool::ReleaseInner()
     MEDIA_LOGI("SoundPool::ReleaseInner");
     isSetInterruptMode_ = false;
     if (streamIdManager_ != nullptr) {
+        streamIdManager_->StopAllTasksInThreadPool();
         streamIdManager_.reset();
     }
     if (soundIDManager_ != nullptr) {
