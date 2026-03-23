@@ -1049,8 +1049,7 @@ int32_t ScreenCaptureServer::HandleStreamDataCase(Json::Value& root, const std::
     GetValueFromJson(root, content, std::string("systemPrivacyProtectionSwitch"),
         systemPrivacyProtectionSwitch_);
 
-    SystemPrivacyProtected(virtualScreenId_, systemPrivacyProtectionSwitch_);
-    AppPrivacyProtected(virtualScreenId_, appPrivacyProtectionSwitch_);
+    PrivacyProtected(virtualScreenId_, systemPrivacyProtectionSwitch_, appPrivacyProtectionSwitch_);
 
     std::lock_guard<std::mutex> lock(mutex_);
     NotificationRequest request;
@@ -3259,24 +3258,9 @@ int32_t ScreenCaptureServer::HandleOriginalStreamPrivacy()
     if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
         if (checkBoxSelected_) {
             MEDIA_LOGI("CreateVirtualScreen checkBoxSelected: %{public}d", checkBoxSelected_);
-            std::vector<ScreenId> screenIds;
-            screenIds.push_back(virtualScreenId_);
-            auto ret = ScreenManager::GetInstance().SetScreenSkipProtectedWindow(screenIds, true);
-            CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK || ret == DMError::DM_ERROR_DEVICE_NOT_SUPPORT,
-                MSERR_UNKNOWN, "0x%{public}06" PRIXPTR " SetScreenSkipProtectedWindow failed, ret: %{public}d",
-                FAKE_POINTER(this), ret);
-            MEDIA_LOGI("0x%{public}06" PRIXPTR " SetScreenSkipProtectedWindow success", FAKE_POINTER(this));
-            std::vector<std::string> privacyWindowTags;
-            privacyWindowTags.push_back("SCB_KEYBOARD_FLOATING");
-            ret = ScreenManager::GetInstance().SetScreenPrivacyWindowTagSwitch(virtualScreenId_,
-                privacyWindowTags, true);
-            CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK || ret == DMError::DM_ERROR_DEVICE_NOT_SUPPORT,
-                MSERR_UNKNOWN, "0x%{public}06" PRIXPTR " ProtectKeyboardPrivacy failed, ret: %{public}d",
-                FAKE_POINTER(this), ret);
-            MEDIA_LOGI("0x%{public}06" PRIXPTR " ProtectKeyboardPrivacy success", FAKE_POINTER(this));
-            AppPrivacyProtected(virtualScreenId_, true);
+            PrivacyProtected(virtualScreenId_, true, true);
         } else {
-            AppPrivacyProtected(virtualScreenId_, false);
+            PrivacyProtected(virtualScreenId_, false, false);
         }
     }
     return MSERR_OK;
@@ -4759,7 +4743,8 @@ void ScreenCaptureServer::SetupPublishRequest(NotificationRequest &request)
     }
 }
 
-void ScreenCaptureServer::SystemPrivacyProtected(ScreenId& virtualScreenId, bool systemPrivacyProtectionSwitch)
+void ScreenCaptureServer::PrivacyProtected(ScreenId& virtualScreenId, bool systemPrivacyProtectionSwitch,
+    bool appPrivacyProtectionSwitch)
 {
     std::vector<ScreenId> screenIds;
     screenIds.push_back(virtualScreenId);
@@ -4770,10 +4755,6 @@ void ScreenCaptureServer::SystemPrivacyProtected(ScreenId& virtualScreenId, bool
     ret = ScreenManager::GetInstance().SetScreenPrivacyWindowTagSwitch(virtualScreenId,
         privacyWindowTags, systemPrivacyProtectionSwitch);
     MEDIA_LOGI("SystemPrivacyProtected SetScreenPrivacyWindowTagSwitch done, ret: %{public}d", ret);
-}
-
-void ScreenCaptureServer::AppPrivacyProtected(ScreenId& virtualScreenId, bool appPrivacyProtectionSwitch)
-{
     std::vector<std::string> privacyWindowTags;
     privacyWindowTags.push_back("TAG_SCREEN_PROTECTION_SENSITIVE_APP");
     auto ret = ScreenManager::GetInstance().SetScreenPrivacyWindowTagSwitch(virtualScreenId,
