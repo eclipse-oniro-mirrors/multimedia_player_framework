@@ -4750,13 +4750,7 @@ void ScreenCaptureServer::PrivacyProtected(ScreenId& virtualScreenId, bool syste
     screenIds.push_back(virtualScreenId);
     auto ret = ScreenManager::GetInstance().SetScreenSkipProtectedWindow(screenIds, systemPrivacyProtectionSwitch);
     MEDIA_LOGI("SystemPrivacyProtected SetScreenSkipProtectedWindow done, ret: %{public}d", ret);
-    std::vector<std::string> privacyWindowTags;
-    privacyWindowTags.push_back("SCB_KEYBOARD_FLOATING");
-    ret = ScreenManager::GetInstance().SetScreenPrivacyWindowTagSwitch(virtualScreenId,
-        privacyWindowTags, systemPrivacyProtectionSwitch);
-    MEDIA_LOGI("SystemPrivacyProtected SetScreenPrivacyWindowTagSwitch done, ret: %{public}d", ret);
-    std::vector<std::string> privacyWindowTags;
-    privacyWindowTags.push_back("TAG_SCREEN_PROTECTION_SENSITIVE_APP");
+    std::vector<std::string> privacyWindowTags = {"SCB_KEYBOARD_FLOATING", "TAG_SCREEN_PROTECTION_SENSITIVE_APP"};
     auto ret = ScreenManager::GetInstance().SetScreenPrivacyWindowTagSwitch(virtualScreenId,
         privacyWindowTags, appPrivacyProtectionSwitch);
     if (ret == DMError::DM_OK || ret == DMError::DM_ERROR_DEVICE_NOT_SUPPORT) {
