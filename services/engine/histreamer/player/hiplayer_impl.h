@@ -209,6 +209,7 @@ public:
     int32_t GetMediaDescription(Format &format) override;
     bool IsAudioPass(const char* mimeType) override;
     std::vector<std::string> GetDolbyList() override;
+    int32_t NotifySubtitleSeek();
 
 private:
     enum HiplayerSvpMode : int32_t {
