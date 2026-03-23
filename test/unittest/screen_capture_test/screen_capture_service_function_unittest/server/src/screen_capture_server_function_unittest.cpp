@@ -2853,6 +2853,32 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SystemPrivacyProtected_001, TestSize.L
     EXPECT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::CREATED);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, SystemPrivacyProtected_002, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ScreenId virtualScreenId = screenCaptureServer_->virtualScreenId_;
+    bool systemPrivacyProtectionSwitch = true;
+    screenCaptureServer_->SystemPrivacyProtected(virtualScreenId, systemPrivacyProtectionSwitch);
+    EXPECT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::STARTED);
+    screenCaptureServer_->StopScreenCapture();
+    screenCaptureServer_->Release();
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SystemPrivacyProtected_003, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ScreenId virtualScreenId = screenCaptureServer_->virtualScreenId_;
+    bool systemPrivacyProtectionSwitch = false;
+    screenCaptureServer_->SystemPrivacyProtected(virtualScreenId, systemPrivacyProtectionSwitch);
+    EXPECT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::STARTED);
+    screenCaptureServer_->StopScreenCapture();
+    screenCaptureServer_->Release();
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, InitLiveViewContent_001, TestSize.Level2)
 {
     std::string callingLabel_ = "TestApp";
@@ -3047,6 +3073,24 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleOriginalStreamPrivacy_003, TestS
     screenCaptureServer_->checkBoxSelected_ = false;
     screenCaptureServer_->HandleOriginalStreamPrivacy();
     EXPECT_EQ(screenCaptureServer_->checkBoxSelected_, false);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, HandleOriginalStreamPrivacy_004, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.dataType = DataType::INVAILD;
+    screenCaptureServer_->checkBoxSelected_ = true;
+    EXPECT_EQ(screenCaptureServer_->HandleOriginalStreamPrivacy(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, HandleOriginalStreamPrivacy_005, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    screenCaptureServer_->checkBoxSelected_ = true;
+    EXPECT_EQ(screenCaptureServer_->HandleOriginalStreamPrivacy(), MSERR_OK);
+    screenCaptureServer_->StopScreenCapture();
+    screenCaptureServer_->Release();
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, RegisterLanguageSwitchListener_001, TestSize.Level2)
