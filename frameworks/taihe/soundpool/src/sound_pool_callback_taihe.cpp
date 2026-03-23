@@ -94,11 +94,11 @@ ani_object SoundPoolCallBackTaihe::ToErrorInfo(ani_env *env, const std::pair<int
 ani_status SoundPoolCallBackTaihe::ToAniEnum(ani_env *env, ERROR_TYPE errorType,
     ani_enum_item &aniEnumItem) const
 {
-    ani_int enumIndex = static_cast<ani_int>(errorType);
+    std::string enumName = (errorType == ERROR_TYPE::LOAD_ERROR) ? "LOAD_ERROR" : "PLAY_ERROR";
     ani_enum aniEnum {};
     CHECK_AND_RETURN_RET_LOG(env->FindEnum(ENUM_NAME_ERRORTYPE, &aniEnum) == ANI_OK,
         ANI_ERROR, "Find Enum Fail");
-    CHECK_AND_RETURN_RET_LOG(env->Enum_GetEnumItemByIndex(aniEnum, enumIndex, &aniEnumItem) == ANI_OK,
+    CHECK_AND_RETURN_RET_LOG(env->Enum_GetEnumItemByName(aniEnum, enumName.c_str(), &aniEnumItem) == ANI_OK,
         ANI_ERROR, "Find Enum item Fail");
     return ANI_OK;
 }
