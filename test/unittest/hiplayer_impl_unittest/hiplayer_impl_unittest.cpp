@@ -188,7 +188,7 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_NotifySubtitleSeek_001, TestSize.Level0
         FilterType::FILTERTYPE_SSINK);
     
     // Call the function to be tested
-    int32_t ret = hiplayer_->SubtitleSeek();
+    int32_t ret = hiplayer_->NotifySubtitleSeek();
  
     // Verify the result
     EXPECT_EQ(ret, MSERR_OK);
@@ -206,7 +206,7 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_NotifySubtitleSeek_002, TestSize.Level0
         FilterType::FILTERTYPE_SSINK);
     
     // Call the function to be tested
-    int32_t ret = hiplayer_->SubtitleSeek();
+    int32_t ret = hiplayer_->NotifySubtitleSeek();
  
     // Verify the result
     EXPECT_EQ(ret, MSERR_OK);
@@ -223,7 +223,7 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_NotifySubtitleSeek_003, TestSize.Level0
     hiplayer_->subtitleSink_ = nullptr;
     
     // Call the function to be tested
-    int32_t ret = hiplayer_->SubtitleSeek();
+    int32_t ret = hiplayer_->NotifySubtitleSeek();
  
     // Verify the result
     EXPECT_EQ(ret, MSERR_OK);
@@ -240,7 +240,7 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_NotifySubtitleSeek_004, TestSize.Level0
     hiplayer_->subtitleSink_ = nullptr;
     
     // Call the function to be tested
-    int32_t ret = hiplayer_->SubtitleSeek();
+    int32_t ret = hiplayer_->NotifySubtitleSeek();
  
     // Verify the result
     EXPECT_EQ(ret, MSERR_OK);
