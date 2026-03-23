@@ -110,6 +110,9 @@ private:
 #ifdef SUPPORT_LPP_VIDEO_STRAMER
     sptr<IRemoteObject> CreateLppVideoPlayerStubObject();
 #endif
+#ifdef SUPPORT_MEDIA_MADVISE
+    void HandleMadviseLibraries();
+#endif
     sptr<IRemoteObject> GetMonitorStubObject();
     sptr<IRemoteObject> CreateStubObjectByType(StubType type);
 

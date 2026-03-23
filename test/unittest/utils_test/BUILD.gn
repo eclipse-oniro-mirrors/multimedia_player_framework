@@ -38,6 +38,8 @@ ohos_unittest("player_framework_utils_test") {
     "-Wimplicit-fallthrough",
     "-Wsign-compare",
     "-Wunused-parameter",
+    "-Dprivate=public",
+    "-Dprotected=public",
   ]
 
   include_dirs = [
@@ -49,6 +51,7 @@ ohos_unittest("player_framework_utils_test") {
   sources = [
     "media_unils_unit_test.cpp",
     "time_format_utils_unit_test.cpp",
+    "madvise_utils_test.cpp",
   ]
 
   deps = [ "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils" ]
