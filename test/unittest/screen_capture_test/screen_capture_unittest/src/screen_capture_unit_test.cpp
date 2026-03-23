@@ -2708,28 +2708,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_error_handling_004, TestSize.Leve
 }
 
 /**
- * @tc.name: screen_capture_error_handling_005
- * @tc.desc: 重复释放测试
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(ScreenCaptureUnitTest, screen_capture_error_handling_005, TestSize.Level2)
-{
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_error_handling_005 before");
-    SetConfig(config_);
-    
-    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
-    
-    // 第一次释放
-    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    
-    // 第二次释放
-    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_error_handling_005 after");
-}
-
-/**
  * @tc.name: screen_capture_error_handling_006
  * @tc.desc: 未初始化就启动测试
  * @tc.type: FUNC

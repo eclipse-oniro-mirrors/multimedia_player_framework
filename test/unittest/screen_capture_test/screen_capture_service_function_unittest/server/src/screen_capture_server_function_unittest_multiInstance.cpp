@@ -913,6 +913,24 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_002, TestS
     ASSERT_NE(screenCaptureServer_, nullptr);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_003, TestSize.Level2)
+{
+    screenCaptureServer_->screenCaptureCb_ = nullptr;
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE,
+        nullptr);
+    ASSERT_NE(screenCaptureServer_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_004, TestSize.Level2)
+{
+    screenCaptureServer_->screenCaptureCb_ = nullptr;
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STOPPED;
+    screenCaptureServer_->NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE,
+        nullptr);
+    ASSERT_NE(screenCaptureServer_, nullptr);
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, SetDefaultDisplayIdOfWindows_001, TestSize.Level2)
 {
     screenCaptureServer_->missionIds_ = { 80 };
