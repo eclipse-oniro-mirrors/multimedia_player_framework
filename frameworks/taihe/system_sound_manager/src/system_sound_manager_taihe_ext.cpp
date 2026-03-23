@@ -35,9 +35,9 @@ const int ERROR = -1;
 const int INVALID_TONE_HAPTICS_TYPE = -1;
 
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, "SystemTonePlayerTaihe"};
-constexpr char ENUM_SYSTEM_SOUND_ERROR[] = "@ohos.multimedia.systemSoundManager.systemSoundManager.SystemSoundError";
-constexpr char CLASS_NAME_TUPLE2[] = "std.core.Tuple2";
-constexpr char CLASS_NAME_TUPLE3[] = "std.core.Tuple3";
+constexpr char ENUM_SYSTEM_SOUND_ERROR[] = "@ohos:multimedia.systemSoundManager.systemSoundManager.SystemSoundError";
+constexpr char CLASS_NAME_TUPLE2[] = "std:core.Tuple2";
+constexpr char CLASS_NAME_TUPLE3[] = "std:core.Tuple3";
 }
 
 static const std::map<OHOS::Media::SystemSoundError, int32_t> ANI_SYSTEMSOUNDERROR_INDEX_MAP = {
@@ -310,7 +310,7 @@ static ani_object GetAniObjectTuple2(ani_env *env, const std::string &str, int s
     ani_class cls {};
     const std::string className = CLASS_NAME_TUPLE2;
     CHECK_AND_RETURN_RET_LOG(ANI_OK == env->FindClass(className.c_str(), &cls), aniObjectTuple2,
-        "Failed to find class std.core.Tuple2");
+        "Failed to find class std:core.Tuple2");
 
     ani_method ctor;
     CHECK_AND_RETURN_RET_LOG(ANI_OK == env->Class_FindMethod(cls, "<ctor>", nullptr, &ctor), aniObjectTuple2,
@@ -340,7 +340,7 @@ static ani_object GetAniObjectTuple3(ani_env *env, const std::string &str, int64
     ani_class cls {};
     const std::string className = CLASS_NAME_TUPLE3;
     CHECK_AND_RETURN_RET_LOG(ANI_OK == env->FindClass(className.c_str(), &cls), aniObjectTuple3,
-        "Failed to find class std.core.Tuple3");
+        "Failed to find class std:core.Tuple3");
 
     ani_method ctor;
     CHECK_AND_RETURN_RET_LOG(ANI_OK == env->Class_FindMethod(cls, "<ctor>", nullptr, &ctor), aniObjectTuple3,

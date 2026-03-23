@@ -24,14 +24,14 @@
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "CommonTaihe"};
 
-constexpr char CLASS_NAME_BUSINESSERROR[] = "@ohos.base.BusinessError";
-constexpr char CLASS_NAME_INTERRUPTEVENT[] = "@ohos.multimedia.audio._taihe_InterruptEvent_inner";
-constexpr char CLASS_NAME_INTERRUPTTYPE[] = "@ohos.multimedia.audio._taihe_InterruptType_inner";
-constexpr char CLASS_NAME_INTERRUPTHINT[] = "@ohos.multimedia.audio._taihe_InterruptHint_inner";
-constexpr char CLASS_NAME_INTERRUPTFORCETYPE[] = "@ohos.multimedia.audio._taihe_InterruptForceType_inner";
-constexpr char CLASS_NAME_AUDIORENDERERINFO[] = "@ohos.multimedia.audio.audio._taihe_AudioRendererInfo_inner";
-constexpr char CLASS_NAME_STREAMUSAGE[] = "@ohos.multimedia.audio.audio.StreamUsage";
-constexpr char CLASS_NAME_VOLUMEMODE[] = "@ohos.multimedia.audio.audio.AudioVolumeMode";
+constexpr char CLASS_NAME_BUSINESSERROR[] = "@ohos:base.BusinessError";
+constexpr char CLASS_NAME_INTERRUPTEVENT[] = "@ohos:multimedia.audio._taihe_InterruptEvent_inner";
+constexpr char CLASS_NAME_INTERRUPTTYPE[] = "@ohos:multimedia.audio._taihe_InterruptType_inner";
+constexpr char CLASS_NAME_INTERRUPTHINT[] = "@ohos:multimedia.audio._taihe_InterruptHint_inner";
+constexpr char CLASS_NAME_INTERRUPTFORCETYPE[] = "@ohos:multimedia.audio._taihe_InterruptForceType_inner";
+constexpr char CLASS_NAME_AUDIORENDERERINFO[] = "@ohos:multimedia.audio.audio._taihe_AudioRendererInfo_inner";
+constexpr char CLASS_NAME_STREAMUSAGE[] = "@ohos:multimedia.audio.audio.StreamUsage";
+constexpr char CLASS_NAME_VOLUMEMODE[] = "@ohos:multimedia.audio.audio.AudioVolumeMode";
 
 static const std::map<OHOS::AudioStandard::InterruptType, int32_t> ANI_INTERRUPTTYPE_INDEX_MAP = {
     {OHOS::AudioStandard::InterruptType::INTERRUPT_TYPE_BEGIN, 1},
@@ -311,7 +311,7 @@ ani_object CommonTaihe::CreateAudioRendererInfo(ani_env *env,
 ani_status CommonTaihe::ToAniLongObject(ani_env *env, int64_t src, ani_object &aniObj)
 {
     CHECK_AND_RETURN_RET_LOG(env != nullptr, ANI_INVALID_ARGS, "Invalid env");
-    static const char *className = "std.core.BigInt";
+    static const char *className = "std:core.BigInt";
 
     ani_class cls {};
     CHECK_AND_RETURN_RET_LOG(ANI_OK == env->FindClass(className, &cls), ANI_ERROR, "Failed to find class");

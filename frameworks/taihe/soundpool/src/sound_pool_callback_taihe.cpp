@@ -105,17 +105,17 @@ ani_status SoundPoolCallBackTaihe::ToAniEnum(ani_env *env, ERROR_TYPE errorType,
 
 ani_object SoundPoolCallBackTaihe::IntToAniObject(ani_env *env, int32_t value) const
 {
-    static constexpr const char *className = "std.core.Int";
+    static constexpr const char *className = "std:core.Int";
     ani_object err {};
     ani_class cls {};
     CHECK_AND_RETURN_RET_LOG(env->FindClass(className, &cls) == ANI_OK, err,
-        "find class %{public}s failed", "std.core.Int");
+        "find class %{public}s failed", "std:core.Int");
     ani_method ctor {};
     CHECK_AND_RETURN_RET_LOG(env->Class_FindMethod(cls, "<ctor>", "i:", &ctor) == ANI_OK, err,
-        "find method std.core.Int constructor failed");
+        "find method std:core.Int constructor failed");
     ani_object intObject {};
     CHECK_AND_RETURN_RET_LOG(env->Object_New(cls, ctor, &intObject, static_cast<ani_int>(value)) == ANI_OK, err,
-        "new object %{public}s failed", "std.core.Int");
+        "new object %{public}s failed", "std:core.Int");
     return intObject;
 }
 
