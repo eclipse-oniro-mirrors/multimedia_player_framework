@@ -258,9 +258,6 @@ napi_value AVScreenCaptureNapi::JsReportAVScreenCaptureUserChoice(napi_env env, 
 
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
     asyncCtx->controller_ = ScreenCaptureControllerFactory::CreateScreenCaptureController();
-    if (asyncCtx->controller_ == nullptr) {
-        ThrowCustomError(env, MSERR_EXT_API9_PERMISSION_DENIED, "failed to create controller");
-    }
     asyncCtx->controller_->ReportAVScreenCaptureUserChoice(sessionId, choice);
 
     napi_value resource = nullptr;
