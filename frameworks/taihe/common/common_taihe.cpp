@@ -141,7 +141,7 @@ uintptr_t CommonTaihe::GetUndefinedPtr(ani_env *env)
 {
     CHECK_AND_RETURN_RET_LOG(env != nullptr, 0, "Invalid env");
     ani_ref undefinedRef {};
-    env->GetUndefined(&undefinedRef);
+    CHECK_AND_RETURN_RET_LOG(env->GetUndefined(&undefinedRef) == ANI_OK, 0, "GetUndefined failed");
     ani_object undefinedObj = static_cast<ani_object>(undefinedRef);
     return reinterpret_cast<uintptr_t>(undefinedObj);
 }
