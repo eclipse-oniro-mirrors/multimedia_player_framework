@@ -28,6 +28,7 @@ static const std::string CACHE_DIR = "/data/storage/el2/base/cache/avplayer_medi
 static const std::string CACHE_MAPPING_FILE = "cache_mapping.txt";
 static const uint64_t MAX_CACHE_FILE_SIZE = 4ULL * 1024ULL * 1024ULL * 1024ULL;
 static const uint64_t CACHE_FILE_SIZE_WATERLINE = 3ULL * 1024ULL * 1024ULL * 1024ULL;
+static const size_t MAX_CACHE_MAPPING_FILE_SIZE = 10ULL * 1024ULL * 1024ULL;
 
 void CacheManagerTest::SetUpTestCase(void)
 {
@@ -132,6 +133,23 @@ HWTEST_F(CacheManagerTest, CacheManagerTest_CreateMediaCache_004, TestSize.Level
     uint64_t size = 1024;
     manager_->mapped_ = MAP_FAILED;
     manager_->fd_ = -1;
+    bool result = manager_->CreateMediaCache(url, type, randomAccess, size);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.name  : CacheManagerTest_CreateMediaCache_005
+ * @tc.number: CreateMediaCache_004
+ * @tc.desc  : test CreateMediaCache with mapped_ == MAP_FAILED
+ */
+HWTEST_F(CacheManagerTest, CacheManagerTest_CreateMediaCache_005, TestSize.Level0)
+{
+    std::string url = "http://example.com/video.mp4";
+    std::string type = "video";
+    bool randomAccess = true;
+    uint64_t size = 1024;
+    manager->fileSize_ = MAX_CACHE_MAPPING_FILE_SIZE + 1;
+
     bool result = manager_->CreateMediaCache(url, type, randomAccess, size);
     EXPECT_TRUE(result);
 }
