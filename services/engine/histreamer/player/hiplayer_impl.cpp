@@ -1615,9 +1615,7 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
     }
     if (rtv == Status::OK) {
         syncManager_->Seek(seekTimeUs);
-        if (subtitleSink_ != nullptr) {
-            subtitleSink_->NotifySeek();
-        }
+        NotifySubtitleSeek();
     }
     return rtv;
 }
@@ -1651,6 +1649,7 @@ Status HiPlayerImpl::HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs)
     if (audioSink_ != nullptr) {
         audioSink_->SetIsCancelStart(false);
     }
+    NotifySubtitleSeek();
     interruptMonitor_->DeregisterListener(seekAgent_);
     seekAgent_.reset();
     return res;
@@ -4509,6 +4508,14 @@ void HiPlayerImpl::ExtractStrategyParams(const AVPlayStrategy &strategy)
     videoPostProcessorType_ =
         strategy.enableSuperResolution ? VideoPostProcessorType::SUPER_RESOLUTION : VideoPostProcessorType::NONE;
     isPostProcessorOn_ = strategy.enableSuperResolution;
+}
+
+int32_t HiPlayerImpl::NotifySubtitleSeek()
+{
+    if (!hasExtSub_ && subtitleSink_ != nullptr) {
+        subtitleSink_->NotifySeek();
+    }
+    return TransStatus(Status::OK);
 }
 }  // namespace Media
 }  // namespace OHOS
