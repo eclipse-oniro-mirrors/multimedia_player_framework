@@ -257,7 +257,6 @@ bool StreamCacheManager::CreateMediaCache(const std::string& url, const std::str
         index_.clear();
         entryIndex_.clear();
         LoadMapping();
-        return;
     }
 
     fileSize_ += totalSize;
