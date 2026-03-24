@@ -76,8 +76,8 @@ void StreamCacheManager::LoadMapping()
     struct stat st;
     CHECK_AND_RETURN_LOG(fstat(fd_, &st) != -1, "fstat fd failed");
     fileSize_ = static_cast<size_t>(st.st_size);
-    if (fileSize_ == 0 || fileSize_ >= MAX_CACHE_MAPPING_FILE_SIZE) {
-        MEDIA_LOGI("file_size is zero or file_size greater than max size");
+    if (fileSize_ == 0) {
+        MEDIA_LOGI("file_size is zero");
         return;
     }
 
