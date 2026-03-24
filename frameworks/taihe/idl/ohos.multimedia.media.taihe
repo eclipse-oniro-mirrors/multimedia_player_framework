@@ -662,6 +662,8 @@ enum ContainerFormatType: String {
     CFT_MPEG_4A = "m4a",
     CFT_MP3 = "mp3",
     CFT_WAV = "wav",
+    CFT_AMR = "amr",
+    CFT_AAC = "aac",
 }
 
 enum AVErrorCode: i32 {
