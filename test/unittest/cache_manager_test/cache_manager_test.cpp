@@ -120,6 +120,23 @@ HWTEST_F(CacheManagerTest, CacheManagerTest_CreateMediaCache_003, TestSize.Level
 }
 
 /**
+* @tc.name  : CacheManagerTest_CreateMediaCache_004
+* @tc.number: CreateMediaCache_004
+* @tc.desc  : test CreateMediaCache with mapped_ == MAP_FAILED
+*/
+HWTEST_F(CacheManagerTest, CacheManagerTest_CreateMediaCache_004, TestSize.Level0)
+{
+    std::string url = "http://example.com/video.mp4";
+    std::string type = "video";
+    bool randomAccess = true;
+    uint64_t size = 1024;
+    manager_->mapped_ = MAP_FAILED;
+    manager_->fd_ = -1;
+    bool result = manager_->CreateMediaCache(url, type, randomAccess, size);
+    EXPECT_TRUE(result);
+}
+
+/**
 * @tc.name  : CacheManagerTest_FindFirstEqualField_001
 * @tc.number: FindFirstEqualField_001
 * @tc.desc  : test FindFirstEqualField false
@@ -194,6 +211,39 @@ HWTEST_F(CacheManagerTest, CacheManagerTest_FlushWriteLength_003, TestSize.Level
 
     bool result = manager_->FlushWriteLength(path, fileSize);
     EXPECT_TRUE(result);
+}
+
+/**
+* @tc.name  : CacheManagerTest_FlushWriteLength_005
+* @tc.number: FlushWriteLength_005
+* @tc.desc  : test FlushWriteLength with mapped_ == MAP_FAILED
+*/
+HWTEST_F(CacheManagerTest, CacheManagerTest_FlushWriteLength_005, TestSize.Level0)
+{
+    std::string path = "test_path";
+    uint64_t fileSize = 1024;
+    manager_->mapped_ = MAP_FAILED;
+    manager_->fd_ = -1;
+    bool result = manager_->FlushWriteLength(path, fileSize);
+    EXPECT_TRUE(result);
+}
+
+/**
+* @tc.name  : CacheManagerTest_GetMediaCache_004
+* @tc.number: GetMediaCache_004
+* @tc.desc  : test GetMediaCache with mapped_ == MAP_FAILED
+*/
+HWTEST_F(CacheManagerTest, CacheManagerTest_GetMediaCache_001, TestSize.Level0)
+{
+    std::string url = "http://example.com/video.mp4";
+    std::string type = "video";
+    bool randomAccess = true;
+    uint64_t size = 1024;
+    manager_->CreateMediaCache(url, type, randomAccess, size);
+    manager_->mapped_ = MAP_FAILED;
+    manager_->fd_ = -1;
+    std::string result = manager_->GetMediaCache(url);
+    EXPECT_NE(result, "");
 }
 
 /**
@@ -342,6 +392,156 @@ HWTEST_F(CacheManagerTest, CacheManagerTest_UpdateLastAccessTime_001, TestSize.L
         filedHeaders[i].id = 0;
     }
     EXPECT_FALSE(manager_->UpdateLastAccessTime(info, key));
+}
+
+/**
+* @tc.name  : CacheManagerTest_GetMediaCache_002
+* @tc.number: GetMediaCache_002
+* @tc.desc  : test GetMediaCache with non-existent url
+*/
+HWTEST_F(CacheManagerTest, CacheManagerTest_GetMediaCache_002, TestSize.Level0)
+{
+    std::string url = "http://example.com/nonexistent.mp4";
+    std::string result = manager_->GetMediaCache(url);
+    EXPECT_EQ(result, "");
+}
+
+/**
+* @tc.name  : CacheManagerTest_RemoveMediaCache_001
+* @tc.number: RemoveMediaCache_001
+* @tc.desc  : test RemoveMediaCache with non-existent url
+*/
+HWTEST_F(CacheManagerTest, CacheManagerTest_RemoveMediaCache_001, TestSize.Level0)
+{
+    std::string url = "http://example.com/nonexistent.mp4";
+    bool result = manager_->RemoveMediaCache(url);
+    EXPECT_FALSE(result);
+}
+
+/**
+* @tc.name  : CacheManagerTest_RemoveMediaCache_002
+* @tc.number: RemoveMediaCache_002
+* @tc.desc  : test RemoveMediaCache with existing url
+*/
+HWTEST_F(CacheManagerTest, CacheManagerTest_RemoveMediaCache_002, TestSize.Level0)
+{
+    std::string url = "http://example.com/video.mp4";
+    std::string type = "video";
+    bool randomAccess = true;
+    uint64_t size = 1024;
+
+    manager_->CreateMediaCache(url, type, randomAccess, size);
+    bool result = manager_->RemoveMediaCache(url);
+    EXPECT_TRUE(result);
+}
+
+/**
+* @tc.name  : CacheManagerTest_ScanDirectorySize_001
+* @tc.number: ScanDirectorySize_001
+* @tc.desc  : test ScanDirectorySize with non-existent path
+*/
+HWTEST_F(CacheManagerTest, CacheManagerTest_ScanDirectorySize_001, TestSize.Level0)
+{
+    std::string path = "/nonexistent/path";
+    uint64_t size = manager_->ScanDirectorySize(path);
+    EXPECT_EQ(size, 0);
+}
+
+/**
+* @tc.name  : CacheManagerTest_ScanDirectorySize_002
+* @tc.number: ScanDirectorySize_002
+* @tc.desc  : test ScanDirectorySize with regular file path
+*/
+HWTEST_F(CacheManagerTest, CacheManagerTest_ScanDirectorySize_002, TestSize.Level0)
+{
+    std::string path = "/dev/null";
+    uint64_t size = manager_->ScanDirectorySize(path);
+    EXPECT_EQ(size, 0);
+}
+
+/**
+* @tc.name  : CacheManagerTest_RemoveCacheDirectory_002
+* @tc.number: RemoveCacheDirectory_002
+* @tc.desc  : test RemoveCacheDirectory with non-existent path
+*/
+HWTEST_F(CacheManagerTest, CacheManagerTest_RemoveCacheDirectory_002, TestSize.Level0)
+{
+    std::string path = "/nonexistent/path";
+    bool result = manager_->RemoveCacheDirectory(path);
+    EXPECT_FALSE(result);
+}
+
+/**
+* @tc.name  : CacheManagerTest_RemoveCacheDirectory_003
+* @tc.number: RemoveCacheDirectory_003
+* @tc.desc  : test RemoveCacheDirectory with regular file path
+*/
+HWTEST_F(CacheManagerTest, CacheManagerTest_RemoveCacheDirectory_003, TestSize.Level0)
+{
+    std::string path = "/dev/null";
+    bool result = manager_->RemoveCacheDirectory(path);
+    EXPECT_FALSE(result);
+}
+
+/**
+* @tc.name  : CacheManagerTest_InsertMapping_001
+* @tc.number: InsertMapping_001
+* @tc.desc  : test InsertMapping with mapped_ == MAP_FAILED
+*/
+HWTEST_F(CacheManagerTest, CacheManagerTest_InsertMapping_001, TestSize.Level0)
+{
+    std::vector<std::pair<CacheFieldId, std::string>> activeFields = {
+        { CacheFieldId::KEY, "test_key" },
+        { CacheFieldId::ENTRY, "test_entry" },
+    };
+    size_t headerSize = sizeof(CacheEntryHeader);
+    size_t fieldsHeaderSize = 2 * sizeof(CacheField);
+
+    manager_->mapped_ = MAP_FAILED;
+
+    bool result = manager_->InsertMapping(activeFields, headerSize, fieldsHeaderSize);
+    EXPECT_FALSE(result);
+}
+
+/**
+* @tc.name  : CacheManagerTest_FindFirstEqualField_002
+* @tc.number: FindFirstEqualField_002
+* @tc.desc  : test FindFirstEqualField with mapped_ == MAP_FAILED
+*/
+HWTEST_F(CacheManagerTest, CacheManagerTest_FindFirstEqualField_002, TestSize.Level0)
+{
+    std::vector<CacheEntryInfo> entries;
+    CacheEntryInfo info;
+    std::string value = "test_value";
+    CacheFieldId field = CacheFieldId::REQUEST_URL;
+
+    manager_->mapped_ = MAP_FAILED;
+
+    bool result = manager_->FindFirstEqualField(entries, info, value, field);
+    EXPECT_FALSE(result);
+}
+
+/**
+* @tc.name  : CacheManagerTest_UpdateLastAccessTime_002
+* @tc.number: UpdateLastAccessTime_002
+* @tc.desc  : test UpdateLastAccessTime with mapped_ == MAP_FAILED
+*/
+HWTEST_F(CacheManagerTest, CacheManagerTest_UpdateLastAccessTime_002, TestSize.Level0)
+{
+    std::string url = "http://example.com/audio.mp3";
+    std::string type = "audio";
+    bool randomAccess = true;
+    uint64_t size = 1024;
+    manager_->CreateMediaCache(url, type, randomAccess, size);
+    std::string key = std::to_string(std::hash<std::string>()(url));
+    auto it = manager_->index_.find(key);
+    CacheEntryInfo info;
+    manager_->FindFirstEqualField(it->second, info, url, CacheFieldId::REQUEST_URL);
+
+    manager_->mapped_ = MAP_FAILED;
+
+    bool result = manager_->UpdateLastAccessTime(info, key);
+    EXPECT_FALSE(result);
 }
 }
 }
