@@ -653,9 +653,9 @@ HWTEST_F(LppVideoDataManagerUnitTest, ProcessNewData_MultiplePackets_001, TestSi
     ASSERT_NE(nullptr, videoDataMgr_);
     std::vector<sptr<LppDataPacket>> packets;
     for (int i = 0; i < 5; i++) {
-        sptr<LppDataPacket>FramePacket = sptr<LppDataPacket>::MakeSptr();
+        sptr<LppDataPacket> framePacket = sptr<LppDataPacket>::MakeSptr();
         ASSERT_NE(nullptr, framePacket);
-FramePacket->Init();
+        framePacket->Init();
         framePacket->Enable();
         auto allocator = AVAllocatorFactory::CreateSharedAllocator(MemoryFlag::MEMORY_READ_WRITE);
         std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer(allocator, 1024);
