@@ -4751,21 +4751,22 @@ void ScreenCaptureServer::PrivacyProtected(ScreenId& virtualScreenId, bool syste
     auto ret = ScreenManager::GetInstance().SetScreenSkipProtectedWindow(screenIds, systemPrivacyProtectionSwitch);
     MEDIA_LOGI("SystemPrivacyProtected SetScreenSkipProtectedWindow done, ret: %{public}d", ret);
 
-    std::vector<std::string> privacyWindowTags = {"SCB_KEYBOARD_FLOATING", "TAG_SCREEN_PROTECTION_SENSITIVE_APP"};
-    std::vector<std::string> keyboardWindowTags = {"SCB_KEYBOARD_FLOATING"};
-    std::vector<std::string> appWindowTags = {"SCB_KEYBOARD_FLOATING"};
+    std::vector<std::string> privacyWindowTags;
     if (systemPrivacyProtectionSwitch == appPrivacyProtectionSwitch) {
+        privacyWindowTags.assign({"SCB_KEYBOARD_FLOATING", "TAG_SCREEN_PROTECTION_SENSITIVE_APP"});
         ret = ScreenManager::GetInstance().SetScreenPrivacyWindowTagSwitch(virtualScreenId,
             privacyWindowTags, appPrivacyProtectionSwitch);
         MEDIA_LOGI("AppPrivacyProtected SetScreenSkipProtectedWindow done, ret: %{public}d", ret);
     } else {
-        ret = ScreenManager::GetInstance().SetScreenPrivacyWindowTagSwitch(virtualScreenId,
-            keyboardWindowTags, systemPrivacyProtectionSwitch);
-        MEDIA_LOGI("KeyboardPrivacyProtected SetScreenSkipProtectedWindow done, ret: %{public}d", ret);
-        
-        ret = ScreenManager::GetInstance().SetScreenPrivacyWindowTagSwitch(virtualScreenId,
-            appWindowTags, appPrivacyProtectionSwitch);
-        MEDIA_LOGI("AppPrivacyProtected SetScreenSkipProtectedWindow done, ret: %{public}d", ret);
+         privacyWindowTags.assign({"SCB_KEYBOARD_FLOATING"});
+         ret = ScreenManager::GetInstance().SetScreenPrivacyWindowTagSwitch(virtualScreenId,
+             std::move(privacyWindowTags), systemPrivacyProtectionSwitch);
+         MEDIA_LOGI("KeyboardPrivacyProtected SetScreenSkipProtectedWindow done, ret: %{public}d", ret);
+         
+         privacyWindowTags.assign({"TAG", "SCREEN_PROTECTION_SENSITIVE_APP"});
+         ret = ScreenManager::GetInstance().SetScreenPrivacyWindowTagSwitch(virtualScreenId,
+             std::move(privacyWindowTags), appPrivacyProtectionSwitch);
+         MEDIA_LOGI("AppPrivacyProtected SetScreenSkipProtectedWindow done, ret: %{public}d", ret);
     }
 }
 
