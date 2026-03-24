@@ -76,7 +76,7 @@ void StreamCacheManager::LoadMapping()
     struct stat st;
     CHECK_AND_RETURN_LOG(fstat(fd_, &st) != -1, "fstat fd failed");
     fileSize_ = static_cast<size_t>(st.st_size);
-    if (fileSize_ == 0) {
+    if (fileSize_ == 0 || fileSize_ >= MAX_CACHE_MAPPING_FILE_SIZE) {
         MEDIA_LOGI("file_size is zero");
         return;
     }
@@ -138,6 +138,10 @@ void StreamCacheManager::LoadIndex()
 
 bool StreamCacheManager::FlushWriteLength(const std::string& path, uint64_t fileSize)
 {
+    if (mapped_ == MAP_FAILED) {
+        LoadMapping();
+        LoadIndex();
+    }
     (void)path;
     cacheSize_.fetch_add(fileSize, std::memory_order_relaxed);
     CHECK_AND_RETURN_RET_NOLOG(cacheSize_.load() > MAX_CACHE_FILE_SIZE, true);
@@ -200,6 +204,10 @@ std::string StreamCacheManager::ExtractField(char* entryStart, uint32_t fieldCou
 bool StreamCacheManager::CreateMediaCache(const std::string& url, const std::string& type,
     bool randomAccess, uint64_t size)
 {
+    if (mapped_ == MAP_FAILED) {
+        LoadMapping();
+        LoadIndex();
+    }
     std::unique_lock<std::mutex> lock(mutex_);
     std::string key = std::to_string(std::hash<std::string>()(url));
     auto it = index_.find(key);
@@ -243,6 +251,15 @@ bool StreamCacheManager::CreateMediaCache(const std::string& url, const std::str
     index_[key].emplace_back(fileSize_, totalSize);
     entryIndex_[entry] = lastAccessTime;
 
+    if (fileSize_ >= MAX_CACHE_MAPPING_FILE_SIZE) {
+        MEDIA_LOGE("fileSize greater than max cache mapping size");
+        fs::remove_all(CACHE_DIR);
+        index_.clear();
+        entryIndex_.clear();
+        LoadMapping();
+        return;
+    }
+
     fileSize_ += totalSize;
 
     // 刷新到磁盘
@@ -278,12 +295,17 @@ void StreamCacheManager::ReleaseMap()
 {
     if (mapped_ != MAP_FAILED) {
         munmap(mapped_, fileSize_);
+        mapped_ = MAP_FAILED;
     }
     MEDIA_LOGD("0x%{public}06" PRIXPTR "ReleaseMap", FAKE_POINTER(this));
 }
 
 std::string StreamCacheManager::GetMediaCache(const std::string& url)
 {
+    if (mapped_ == MAP_FAILED) {
+        LoadMapping();
+        LoadIndex();
+    }
     std::unique_lock<std::mutex> lock(mutex_);
     std::string key = std::to_string(std::hash<std::string>()(url));
     auto it = index_.find(key);
