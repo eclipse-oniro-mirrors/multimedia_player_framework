@@ -139,11 +139,11 @@ void StreamCacheManager::LoadIndex()
 bool StreamCacheManager::FlushWriteLength(const std::string& path, uint64_t fileSize)
 {
     (void)path;
+    std::unique_lock<std::mutex> lock(mutex_);
     cacheSize_.fetch_add(fileSize, std::memory_order_relaxed);
     CHECK_AND_RETURN_RET_NOLOG(cacheSize_.load() > MAX_CACHE_FILE_SIZE, true);
 
     MEDIA_LOGD("Clean cache directory start");
-    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(mapped_ != MAP_FAILED, false, "mapped is invalid");
     std::vector<std::pair<std::string, std::string>> sortedVec;
     sortedVec.reserve(entryIndex_.size());
@@ -276,6 +276,7 @@ bool StreamCacheManager::InsertMapping(const std::vector<std::pair<CacheFieldId,
 
 void StreamCacheManager::ReleaseMap()
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     if (mapped_ != MAP_FAILED) {
         munmap(mapped_, fileSize_);
     }
