@@ -148,7 +148,7 @@ HWTEST_F(CacheManagerTest, CacheManagerTest_CreateMediaCache_005, TestSize.Level
     std::string type = "video";
     bool randomAccess = true;
     uint64_t size = 1024;
-    manager->fileSize_ = MAX_CACHE_MAPPING_FILE_SIZE + 1;
+    manager_->fileSize_ = MAX_CACHE_MAPPING_FILE_SIZE + 1;
 
     bool result = manager_->CreateMediaCache(url, type, randomAccess, size);
     EXPECT_TRUE(result);
