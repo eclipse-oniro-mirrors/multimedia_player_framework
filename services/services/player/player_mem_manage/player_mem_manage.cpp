@@ -98,15 +98,6 @@ void PlayerMemManage::FindProbeTaskPlayer()
     }
 }
 
-void PlayerMemManage::ProbeTask()
-{
-    std::lock_guard<std::recursive_mutex> lock(recTaskMutex_);
-    while (isProbeTaskCreated_) {
-        FindProbeTaskPlayer();
-        sleep(1);  // 1 : one second interval check
-    }
-}
-
 bool PlayerMemManage::Init()
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
@@ -162,9 +153,6 @@ int32_t PlayerMemManage::RegisterPlayerServer(int32_t uid, int32_t pid, const Me
             isProbeTaskCreated_ = true;
             probeTaskQueue_ = std::make_unique<TaskQueue>("probeTaskQueue");
             CHECK_AND_RETURN_RET_LOG(probeTaskQueue_->Start() == MSERR_OK, false, "init task failed");
-            auto task = std::make_shared<TaskHandler<void>>([this] {
-                ProbeTask();
-            });
         }
     }
 
