@@ -4763,7 +4763,7 @@ void ScreenCaptureServer::PrivacyProtected(ScreenId& virtualScreenId, bool syste
             std::move(privacyWindowTags), systemPrivacyProtectionSwitch);
         MEDIA_LOGI("KeyboardPrivacyProtected SetScreenSkipProtectedWindow done, ret: %{public}d", ret);
         
-        privacyWindowTags.assign({"TAG", "SCREEN_PROTECTION_SENSITIVE_APP"});
+        privacyWindowTags.assign({"TAG_SCREEN_PROTECTION_SENSITIVE_APP"});
         ret = ScreenManager::GetInstance().SetScreenPrivacyWindowTagSwitch(virtualScreenId,
             std::move(privacyWindowTags), appPrivacyProtectionSwitch);
         MEDIA_LOGI("AppPrivacyProtected SetScreenSkipProtectedWindow done, ret: %{public}d", ret);

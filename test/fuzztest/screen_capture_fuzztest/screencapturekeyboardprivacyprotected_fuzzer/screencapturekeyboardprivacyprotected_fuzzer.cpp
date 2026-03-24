@@ -90,7 +90,9 @@ bool ScreenCaptureKeyboardPrivacyProtectedFuzzer::ScreenCaptureKeyboardPrivacyPr
     g_baseFuzzPos = 0;
     ScreenId virtualScreenId = 1;
     bool systemPrivacyProtectionSwitch = true;
-    screenCaptureServer_->SystemPrivacyProtected(virtualScreenId, systemPrivacyProtectionSwitch);
+    bool appPrivacyProtectionSwitch = true;
+    screenCaptureServer_->PrivacyProtected(virtualScreenId, systemPrivacyProtectionSwitch,
+        appPrivacyProtectionSwitch);
 
     bool retFlags = TestScreenCapture::CreateScreenCapture();
     RETURN_IF(retFlags, false);

@@ -2849,7 +2849,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrivacyProtected_001, TestSize.Level2)
 {
     ScreenId virtualScreenId = 1;
     bool systemPrivacyProtectionSwitch = true;
-    bool appPrivacyProtectionSwitch = true;
+    bool appPrivacyProtectionSwitch = false;
     screenCaptureServer_->PrivacyProtected(virtualScreenId, systemPrivacyProtectionSwitch,
         appPrivacyProtectionSwitch);
     EXPECT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::CREATED);
@@ -2878,6 +2878,21 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrivacyProtected_003, TestSize.Level2)
     ScreenId virtualScreenId = screenCaptureServer_->virtualScreenId_;
     bool systemPrivacyProtectionSwitch = false;
     bool appPrivacyProtectionSwitch = false;
+    screenCaptureServer_->PrivacyProtected(virtualScreenId, systemPrivacyProtectionSwitch,
+        appPrivacyProtectionSwitch);
+    EXPECT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::STARTED);
+    screenCaptureServer_->StopScreenCapture();
+    screenCaptureServer_->Release();
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, PrivacyProtected_004, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ScreenId virtualScreenId = screenCaptureServer_->virtualScreenId_;
+    bool systemPrivacyProtectionSwitch = false;
+    bool appPrivacyProtectionSwitch = true;
     screenCaptureServer_->PrivacyProtected(virtualScreenId, systemPrivacyProtectionSwitch,
         appPrivacyProtectionSwitch);
     EXPECT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::STARTED);
