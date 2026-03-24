@@ -860,5 +860,19 @@ int32_t PlayerMock::GetGlobalInfo(std::shared_ptr<Meta> &globalInfo)
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     return player_->GetGlobalInfo(globalInfo);
 }
+
+int32_t PlayerMock::SetTrackSelectionFilter(AVPlayTrackSelectionFilter trackFilter)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->SetTrackSelectionFilter(trackFilter);
+}
+
+int32_t PlayerMock::GetTrackSelectionFilter(AVPlayTrackSelectionFilter &trackFilter)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->GetTrackSelectionFilter(trackFilter);
+}
 } // namespace Media
 } // namespace OHOS

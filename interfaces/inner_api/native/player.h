@@ -65,6 +65,22 @@ struct AVPlayStrategy {
     bool keepDecodingOnMute = false;
 };
 
+struct AVPlayTrackSelectionFilter {
+    int32_t maxVideoBitrate = -1;
+    int32_t minVideoBitrate = -1;
+    int32_t maxVideoFrameRate = -1;
+    int32_t minVideoFrameRate = -1;
+    std::pair<int32_t, int32_t> maxVideoResolution = {-1, -1};
+    std::pair<int32_t, int32_t> minVideoResolution = {-1, -1};
+    std::vector<std::string> preferredVideoMimeTypes = {};
+    int32_t maxAudioBitrate = -1;
+    int32_t minAudioBitrate = -1;
+    int32_t maxAudioChannels = -1;
+    std::vector<std::string> preferredAudioMimeTypes = {};
+    std::vector<std::string> preferredAudioLanguages = {};
+    std::vector<std::string> preferredSubtitleLanguages = {};
+};
+
 struct AVPlayMediaStream {
     std::string url = "";
     uint32_t width = 0;
@@ -815,6 +831,18 @@ public:
     virtual int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     {
         (void)playbackStrategy;
+        return 0;
+    }
+
+    virtual int32_t SetTrackSelectionFilter(AVPlayTrackSelectionFilter trackFilter)
+    {
+        (void)trackFilter;
+        return 0;
+    }
+
+    virtual int32_t GetTrackSelectionFilter(AVPlayTrackSelectionFilter &trackFilter)
+    {
+        (void)trackFilter;
         return 0;
     }
 

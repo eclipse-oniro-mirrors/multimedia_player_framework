@@ -303,5 +303,39 @@ HWTEST_F(PlayerImplUnitTest, SetDecryptConfig_001, TestSize.Level0)
     EXPECT_EQ(ret, 0);
 #endif
 }
+
+/**
+ * @tc.name  : Test SetTrackSelectionFilter
+ * @tc.number: SetTrackSelectionFilter_001
+ * @tc.desc  : Test playerService_ is valid and returns MSERR_OK
+ */
+HWTEST_F(PlayerImplUnitTest, SetTrackSelectionFilter_001, TestSize.Level0)
+{
+    ASSERT_NE(playerImpl_, nullptr);
+    auto mockService = std::make_shared<MockIPlayerService>();
+    playerImpl_->playerService_ = mockService;
+
+    AVPlayTrackSelectionFilter trackFilter;
+    EXPECT_CALL(*mockService, SetTrackSelectionFilter(_)).WillOnce(Return(MSERR_OK));
+    auto ret = playerImpl_->SetTrackSelectionFilter(trackFilter);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test GetTrackSelectionFilter
+ * @tc.number: GetTrackSelectionFilter_001
+ * @tc.desc  : Test playerService_ is valid and returns MSERR_OK
+ */
+HWTEST_F(PlayerImplUnitTest, GetTrackSelectionFilter_001, TestSize.Level0)
+{
+    ASSERT_NE(playerImpl_, nullptr);
+    auto mockService = std::make_shared<MockIPlayerService>();
+    playerImpl_->playerService_ = mockService;
+
+    AVPlayTrackSelectionFilter trackFilter;
+    EXPECT_CALL(*mockService, GetTrackSelectionFilter(_)).WillOnce(Return(MSERR_OK));
+    auto ret = playerImpl_->GetTrackSelectionFilter(trackFilter);
+    EXPECT_EQ(ret, MSERR_OK);
+}
 } // namespace Media
 } // namespace OHOS

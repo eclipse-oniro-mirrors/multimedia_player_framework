@@ -93,6 +93,8 @@ public:
     MOCK_METHOD(int32_t, Freeze, (bool &isNoNeedToFreeze), (override));
     MOCK_METHOD(int32_t, UnFreeze, (), (override));
     MOCK_METHOD(int32_t, SetPlaybackRate, (float rate), (override));
+    MOCK_METHOD(int32_t, SetTrackSelectionFilter, (AVPlayTrackSelectionFilter trackFilter), (override));
+    MOCK_METHOD(int32_t, GetTrackSelectionFilter, (AVPlayTrackSelectionFilter &trackFilter), ());
 };
 class MockTask : public Task {
 public:

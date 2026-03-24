@@ -74,6 +74,8 @@ public:
     int32_t GetDuration(int32_t &duration) override;
     int32_t GetApiVersion(int32_t &apiVersion) override;
     int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) override;
+    int32_t SetTrackSelectionFilter(AVPlayTrackSelectionFilter trackFilter) override;
+    int32_t GetTrackSelectionFilter(AVPlayTrackSelectionFilter &trackFilter) override;
     int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
     int32_t SetSuperResolution(bool enabled) override;
     int32_t SetVideoWindowSize(int32_t width, int32_t height) override;
@@ -185,6 +187,8 @@ private:
     int32_t SetDecryptConfig(MessageParcel &data, MessageParcel &reply);
     int32_t SetMediaSource(MessageParcel &data, MessageParcel &reply);
     int32_t SetPlaybackStrategy(MessageParcel &data, MessageParcel &reply);
+    int32_t SetTrackSelectionFilter(MessageParcel &data, MessageParcel &reply);
+    int32_t GetTrackSelectionFilter(MessageParcel &data, MessageParcel &reply);
     int32_t SetMediaMuted(MessageParcel &data, MessageParcel &reply);
     int32_t SetSuperResolution(MessageParcel &data, MessageParcel &reply);
     int32_t SetVideoWindowSize(MessageParcel &data, MessageParcel &reply);
@@ -208,12 +212,17 @@ private:
     int32_t ReadMediaStreamListFromMessageParcel(
         MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource);
     void ReadPlayStrategyFromMessageParcel(MessageParcel &data, AVPlayStrategy &strategy);
+    void ReadTrackSelectionFilter(MessageParcel &data, AVPlayTrackSelectionFilter &filter);
+    void ReadTrackSelectionFilterInner(MessageParcel &data, AVPlayTrackSelectionFilter &filter);
+    void WriteTrackSelectionFilter(MessageParcel &reply, const AVPlayTrackSelectionFilter &filter);
+    void WriteTrackSelectionFilterInner(MessageParcel &reply, const AVPlayTrackSelectionFilter &filter);
 
     int32_t CheckandDoUnFreeze();
     std::map<uint32_t, std::pair<std::string, PlayerStubFunc>> playerFuncs_;
     void FillPlayerFuncPart1();
     void FillPlayerFuncPart2();
     void FillPlayerFuncPart3();
+    void FillPlayerFuncPart4();
 };
 } // namespace Media
 } // namespace OHOS

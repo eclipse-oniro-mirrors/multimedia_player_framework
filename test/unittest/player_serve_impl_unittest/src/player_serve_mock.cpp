@@ -872,5 +872,17 @@ int32_t PlayerServerMock::GetCurrentPresentationTimestamp(int64_t &currentPresen
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     return player_->GetCurrentPresentationTimestamp(currentPresentation);
 }
+
+int32_t PlayerServerMock::SetTrackSelectionFilter(AVPlayTrackSelectionFilter trackFilter)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->SetTrackSelectionFilter(trackFilter);
+}
+
+int32_t PlayerServerMock::GetTrackSelectionFilter(AVPlayTrackSelectionFilter &trackFilter)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->GetTrackSelectionFilter(trackFilter);
+}
 } // namespace Media
 } // namespace OHOS

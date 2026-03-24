@@ -896,5 +896,45 @@ HWTEST_F(PlayerTimeoutUnitTest, Player_SetSeiMessageCbStatus_Timeout_001, TestSi
 
     EXPECT_EQ(MSERR_OK, playerImpl_->SetSeiMessageCbStatus(testStatus, testPayloadTypes));
 }
+
+/**
+ * @tc.name  : Test SetTrackSelectionFilter
+ * @tc.number: SetTrackSelectionFilter_001
+ * @tc.desc  : Test playerService_ is valid and returns MSERR_OK
+ */
+HWTEST_F(PlayerTimeoutUnitTest, SetTrackSelectionFilter_001, TestSize.Level0)
+{
+    ASSERT_NE(playerImpl_, nullptr);
+    playerImpl_->playerService_ = mockPlayerService_;
+
+    AVPlayTrackSelectionFilter trackFilter;
+    EXPECT_CALL(*mockPlayerService_, SetTrackSelectionFilter(_))
+        .WillOnce([](AVPlayTrackSelectionFilter trackFilter) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            return MSERR_OK;
+        });
+    auto ret = playerImpl_->SetTrackSelectionFilter(trackFilter);
+    EXPECT_EQ(ret, 0);
+}
+
+/**
+ * @tc.name  : Test GetTrackSelectionFilter
+ * @tc.number: GetTrackSelectionFilter_001
+ * @tc.desc  : Test playerService_ is valid and returns MSERR_OK
+ */
+HWTEST_F(PlayerTimeoutUnitTest, GetTrackSelectionFilter_001, TestSize.Level0)
+{
+    ASSERT_NE(playerImpl_, nullptr);
+    playerImpl_->playerService_ = mockPlayerService_;
+
+    AVPlayTrackSelectionFilter trackFilter;
+    EXPECT_CALL(*mockPlayerService_, GetTrackSelectionFilter(_))
+        .WillOnce([](AVPlayTrackSelectionFilter trackFilter) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            return MSERR_OK;
+        });
+    auto ret = playerImpl_->GetTrackSelectionFilter(trackFilter);
+    EXPECT_EQ(ret, 0);
+}
 }
 }

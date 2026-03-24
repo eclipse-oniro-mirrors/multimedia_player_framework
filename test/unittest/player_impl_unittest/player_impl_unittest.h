@@ -121,6 +121,8 @@ public:
     MOCK_METHOD(int32_t, GetTrackDescription, (Format &format, uint32_t trackIndex), (override));
     MOCK_METHOD(int32_t, SetLoudnessGain, (float loudnessGain), (override));
     MOCK_METHOD(int32_t, SetReopenFd, (int32_t fd), (override));
+    MOCK_METHOD(int32_t, SetTrackSelectionFilter, (AVPlayTrackSelectionFilter trackFilter), (override));
+    MOCK_METHOD(int32_t, GetTrackSelectionFilter, (AVPlayTrackSelectionFilter &trackFilter), (override));
 };
 
 class MockPlayerCallback : public PlayerCallback {

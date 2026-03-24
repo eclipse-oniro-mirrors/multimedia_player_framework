@@ -273,6 +273,10 @@ private:
 
     static napi_value JsSetPlaybackStrategy(napi_env env, napi_callback_info info);
 
+    static napi_value JsSetTrackSelectionFilter(napi_env env, napi_callback_info info);
+
+    static napi_value JsGetTrackSelectionFilter(napi_env env, napi_callback_info info);
+
     static napi_value JsSetMediaMuted(napi_env env, napi_callback_info info);
 
     static napi_value JsSetSuperResolution(napi_env env, napi_callback_info info);
@@ -367,6 +371,7 @@ private:
     std::shared_ptr<TaskHandler<TaskRet>> EnableCameraPostprocessingTask();
     std::shared_ptr<TaskHandler<TaskRet>> EqueueSetPlayRangeTask(int32_t start, int32_t end, int32_t mode);
     std::shared_ptr<TaskHandler<TaskRet>> ForceLoadVideoTask(bool status);
+    std::shared_ptr<TaskHandler<TaskRet>> SetTrackSelectionFilterTask(AVPlayTrackSelectionFilter trackFilter);
 
     std::string GetCurrentState();
     bool IsControllable();
@@ -429,8 +434,11 @@ private:
         std::shared_ptr<TaskHandler<TaskRet>> asyncTask = nullptr;
         AVPlayerNapi *napi = nullptr;
         std::vector<Format> trackInfoVec_;
+        AVPlayTrackSelectionFilter trackFilter_;
     };
     std::shared_ptr<TaskHandler<TaskRet>> GetTrackDescriptionTask(const std::unique_ptr<AVPlayerContext> &promiseCtx);
+    std::shared_ptr<TaskHandler<TaskRet>> GetTrackSelectionFilterTask(const std::unique_ptr<AVPlayerContext>
+                                                                      &promiseCtx);
     void GetCurrentTrackTask(std::unique_ptr<AVPlayerContext> &promiseCtx, napi_env env, napi_value args);
     void HandleSelectTrack(std::unique_ptr<AVPlayerContext> &promiseCtx, napi_env env, napi_value args[],
         size_t argCount);

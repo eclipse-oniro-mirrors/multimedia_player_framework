@@ -505,6 +505,9 @@ int32_t PlayerServer::HandlePrepare()
     int32_t ret = playerEngine_->PrepareAsync();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Server Prepare Failed!");
     CHECK_AND_RETURN_RET_LOG(!isInterruptNeeded_, MSERR_OK, "Cancel prepare");
+    if (config_.hasTrackSelectionFilter) {
+        (void)playerEngine_->SetTrackSelectionFilter(config_.trackSelectionFilter_);
+    }
 
     if (config_.leftVolume < 1.0f) {
         (void)playerEngine_->SetVolume(config_.leftVolume, config_.rightVolume);
@@ -2269,6 +2272,27 @@ int32_t PlayerServer::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     MEDIA_LOGD("SetPlaybackStrategy keepDecodingOnmute is: %{public}d ", playbackStrategy.keepDecodingOnMute);
     mutedMediaType_ = playbackStrategy.mutedMediaType;
     return playerEngine_->SetPlaybackStrategy(playbackStrategy);
+}
+
+int32_t PlayerServer::SetTrackSelectionFilter(AVPlayTrackSelectionFilter trackFilter)
+{
+    MediaTrace::TraceBegin("PlayerServer::SetTrackSelectionFilter", FAKE_POINTER(this));
+    MEDIA_LOGD("SetTrackSelectionFilter");
+    std::lock_guard<std::mutex> lock(mutex_);
+    config_.trackSelectionFilter_ = trackFilter;
+    config_.hasTrackSelectionFilter = true;
+    
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_OK, "engine is nullptr");
+    return playerEngine_->SetTrackSelectionFilter(trackFilter);
+}
+
+int32_t PlayerServer::GetTrackSelectionFilter(AVPlayTrackSelectionFilter &trackFilter)
+{
+    MEDIA_LOGD("GetTrackSelectionFilter");
+    MediaTrace::TraceBegin("PlayerServer::GetTrackSelectionFilter", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    trackFilter = config_.trackSelectionFilter_;
+    return MSERR_OK;
 }
 
 int32_t PlayerServer::SetSuperResolution(bool enabled)

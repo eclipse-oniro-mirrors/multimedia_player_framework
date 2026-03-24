@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "player.h"
 #define HST_LOG_TAG "HiPlayer"
 
 #include "hiplayer_impl.h"
@@ -2858,6 +2859,7 @@ void HiPlayerImpl::DoSetPlayStrategy(const std::shared_ptr<MediaSource> source)
     playStrategy->subtitleLanguage = subtitleLanguage_;
     playStrategy->bufferDurationForPlaying = bufferDurationForPlaying_;
     playStrategy->thresholdForAutoQuickPlay = maxLivingDelayTime_;
+    demuxer_->SetPlayStrategy(playStrategy);
     if (source) {
         source->SetPlayStrategy(playStrategy);
         source->SetAppUid(appUid_);
@@ -3533,6 +3535,9 @@ void HiPlayerImpl::HandleAudioTrackChangeEvent(const Event& event)
         return;
     }
     if (IsAudioMime(mime)) {
+        if (currentAudioTrackId_ < 0) {
+            FALSE_RETURN(Status::OK == InitAudioDefaultTrackIndex());
+        }
         if (Status::OK != audioDecoder_->ChangePlugin(metaInfo[trackId])) {
             MEDIA_LOG_E("HandleAudioTrackChangeEvent audioDecoder change plugin error");
             return;
@@ -3933,6 +3938,29 @@ int32_t HiPlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
 
     SetFlvLiveParams(playbackStrategy);
     FALSE_RETURN_V(IsLivingMaxDelayTimeValid(), TransStatus(Status::ERROR_INVALID_PARAMETER));
+    return MSERR_OK;
+}
+
+int32_t HiPlayerImpl::SetTrackSelectionFilter(AVPlayTrackSelectionFilter avTrackFilter)
+{
+    MEDIA_LOG_I("SetTrackSelectionFilter");
+    
+    FALSE_RETURN_V_MSG_W(demuxer_ != nullptr, MSERR_OK, "demuxer_ is nullptr");
+    TrackSelectionFilter trackFilter;
+    trackFilter.maxVideoBitrate = avTrackFilter.maxVideoBitrate;
+    trackFilter.minVideoBitrate = avTrackFilter.minVideoBitrate;
+    trackFilter.maxVideoFrameRate = avTrackFilter.maxVideoFrameRate;
+    trackFilter.minVideoFrameRate = avTrackFilter.minVideoFrameRate;
+    trackFilter.maxVideoResolution = avTrackFilter.maxVideoResolution;
+    trackFilter.minVideoResolution = avTrackFilter.minVideoResolution;
+    trackFilter.preferredVideoMimeTypes = avTrackFilter.preferredVideoMimeTypes;
+    trackFilter.maxAudioBitrate = avTrackFilter.maxAudioBitrate;
+    trackFilter.minAudioBitrate = avTrackFilter.minAudioBitrate;
+    trackFilter.maxAudioChannels = avTrackFilter.maxAudioChannels;
+    trackFilter.preferredAudioMimeTypes = avTrackFilter.preferredAudioMimeTypes;
+    trackFilter.preferredAudioLanguages = avTrackFilter.preferredAudioLanguages;
+    trackFilter.preferredSubtitleLanguages = avTrackFilter.preferredSubtitleLanguages;
+    demuxer_->SetTrackSelectionFilter(trackFilter);
     return MSERR_OK;
 }
 
