@@ -544,6 +544,22 @@ int32_t PlayerClient::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     return playerProxy_->SetPlaybackStrategy(playbackStrategy);
 }
 
+int32_t PlayerClient::SetTrackSelectionFilter(AVPlayTrackSelectionFilter trackFilter)
+{
+    MEDIA_LOGI("SetTrackSelectionFilter");
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "playerProxy_ not exist");
+    return playerProxy_->SetTrackSelectionFilter(trackFilter);
+}
+
+int32_t PlayerClient::GetTrackSelectionFilter(AVPlayTrackSelectionFilter &trackFilter)
+{
+    MEDIA_LOGI("GetTrackSelectionFilter");
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "playerProxy_ not exist");
+    return playerProxy_->GetTrackSelectionFilter(trackFilter);
+}
+
 int32_t PlayerClient::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted)
 {
     std::lock_guard<std::mutex> lock(mutex_);

@@ -85,6 +85,8 @@ public:
     int32_t Init(const PlayerProducer producer = PlayerProducer::INNER);
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody);
     int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) override;
+    int32_t SetTrackSelectionFilter(AVPlayTrackSelectionFilter trackFilter) override;
+    int32_t GetTrackSelectionFilter(AVPlayTrackSelectionFilter &trackFilter) override;
     int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
     int32_t SetSuperResolution(bool enabled) override;
     int32_t SetVideoWindowSize(int32_t width, int32_t height) override;

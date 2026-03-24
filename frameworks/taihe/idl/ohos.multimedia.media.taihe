@@ -276,6 +276,27 @@ struct AVMetricsEvent {
   details: @record Map<String, i64>;
 }
 
+struct VideoSize{
+    width: Optional<i32>;
+    height: Optional<i32>;
+}
+
+struct TrackSelectionFilter {
+    maxVideoBitrate: Optional<i32>;
+    minVideoBitrate: Optional<i32>;
+    maxVideoFrameRate: Optional<i32>;
+    minVideoFrameRate: Optional<i32>;
+    maxVideoResolution: Optional<VideoSize>;
+    minVideoResolution: Optional<VideoSize>;
+    preferredVideoMimeTypes: Optional<Array<String>>;
+    maxAudioBitrate: Optional<i32>;
+    minAudioBitrate: Optional<i32>;
+    maxAudioChannels: Optional<i32>;
+    preferredAudioMimeTypes: Optional<Array<String>>;
+    preferredAudioLanguages: Optional<Array<String>>;
+    preferredSubtitleLanguages: Optional<Array<String>>;
+}
+
 interface AVPlayer {
     @get GetUrl(): Optional<String>;
     @set SetUrl(url: Optional<String>): void;
@@ -365,6 +386,12 @@ interface AVPlayer {
 
     @gen_promise("setVideoWindowSize")
     SetVideoWindowSizeSync(width: i32, height: i32): void;
+
+    @gen_promise("setTrackSelectionFilter")
+    SetTrackSelectionFilterSync(filter: TrackSelectionFilter): void;
+
+    @gen_promise("getTrackSelectionFilter")
+    GetTrackSelectionFilterSync(): TrackSelectionFilter;
 
     @gen_promise("setPlaybackRange")
     SetPlaybackRangeSync(startTimeMs: i32, endTimeMs: i32, mode: Optional<SeekMode>): void;

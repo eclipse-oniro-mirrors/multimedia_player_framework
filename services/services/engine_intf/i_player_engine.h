@@ -290,6 +290,13 @@ public:
         (void)playbackStrategy;
         return 0;
     }
+
+    virtual int32_t SetTrackSelectionFilter(AVPlayTrackSelectionFilter trackFilter)
+    {
+        (void)trackFilter;
+        return 0;
+    }
+
     virtual int32_t SeekContinous(int32_t mSeconds, int64_t seekContinousBatchNo)
     {
         (void)mSeconds;

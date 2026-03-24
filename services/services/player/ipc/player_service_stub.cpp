@@ -124,6 +124,7 @@ void PlayerServiceStub::SetPlayerFuncs()
     FillPlayerFuncPart1();
     FillPlayerFuncPart2();
     FillPlayerFuncPart3();
+    FillPlayerFuncPart4();
     (void)RegisterMonitor(appPid_);
 }
 
@@ -221,16 +222,6 @@ void PlayerServiceStub::FillPlayerFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return SetPlayRangeWithMode(data, reply); } };
     playerFuncs_[SET_PLAYBACK_STRATEGY] = { "SetPlaybackStrategy",
         [this](MessageParcel &data, MessageParcel &reply) { return SetPlaybackStrategy(data, reply); } };
-    playerFuncs_[SET_MEDIA_MUTED] = { "SetMediaMuted",
-        [this](MessageParcel &data, MessageParcel &reply) { return SetMediaMuted(data, reply); } };
-    playerFuncs_[SET_MAX_AMPLITUDE_CB_STATUS] = { "Player::SetMaxAmplitudeCbStatus",
-        [this](MessageParcel &data, MessageParcel &reply) { return SetMaxAmplitudeCbStatus(data, reply); } };
-    playerFuncs_[SET_DEVICE_CHANGE_CB_STATUS] = { "Player::SetDeviceChangeCbStatus",
-        [this](MessageParcel &data, MessageParcel &reply) { return SetDeviceChangeCbStatus(data, reply); } };
-    playerFuncs_[GET_API_VERSION] = { "GetApiVersion",
-        [this](MessageParcel &data, MessageParcel &reply) { return GetApiVersion(data, reply); } };
-    playerFuncs_[IS_SEEK_CONTINUOUS_SUPPORTED] = { "IsSeekContinuousSupported",
-        [this](MessageParcel &data, MessageParcel &reply) { return IsSeekContinuousSupported(data, reply); } };
 }
 
 void PlayerServiceStub::FillPlayerFuncPart3()
@@ -279,6 +270,24 @@ void PlayerServiceStub::FillPlayerFuncPart3()
         [this](MessageParcel &data, MessageParcel &reply) { return GetCurrentPresentationTimestamp(data, reply); } };
     playerFuncs_[REGISTER_DEVICE_CAPABILITY] = { "Player::RegisterDeviceCapability",
         [this](MessageParcel &data, MessageParcel &reply) { return RegisterDeviceCapability(data, reply); } };
+}
+
+void PlayerServiceStub::FillPlayerFuncPart4()
+{
+    playerFuncs_[SET_TRACK_SELECTION_FILTER] = { "SetTrackSelectionFilter",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetTrackSelectionFilter(data, reply); } };
+    playerFuncs_[GET_TRACK_SELECTION_FILTER] = { "GetTrackSelectionFilter",
+        [this](MessageParcel &data, MessageParcel &reply) { return GetTrackSelectionFilter(data, reply); } };
+    playerFuncs_[SET_MEDIA_MUTED] = { "SetMediaMuted",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetMediaMuted(data, reply); } };
+    playerFuncs_[SET_MAX_AMPLITUDE_CB_STATUS] = { "Player::SetMaxAmplitudeCbStatus",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetMaxAmplitudeCbStatus(data, reply); } };
+    playerFuncs_[SET_DEVICE_CHANGE_CB_STATUS] = { "Player::SetDeviceChangeCbStatus",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetDeviceChangeCbStatus(data, reply); } };
+    playerFuncs_[GET_API_VERSION] = { "GetApiVersion",
+        [this](MessageParcel &data, MessageParcel &reply) { return GetApiVersion(data, reply); } };
+    playerFuncs_[IS_SEEK_CONTINUOUS_SUPPORTED] = { "IsSeekContinuousSupported",
+        [this](MessageParcel &data, MessageParcel &reply) { return IsSeekContinuousSupported(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
@@ -1405,11 +1414,126 @@ int32_t PlayerServiceStub::SetPlaybackStrategy(MessageParcel &data, MessageParce
     return MSERR_OK;
 }
 
+int32_t PlayerServiceStub::SetTrackSelectionFilter(MessageParcel &data, MessageParcel &reply)
+{
+    MEDIA_LOGI("SetTrackSelectionFilter");
+    AVPlayTrackSelectionFilter trackFilter;
+    ReadTrackSelectionFilter(data, trackFilter);
+    reply.WriteInt32(SetTrackSelectionFilter(trackFilter));
+    return MSERR_OK;
+}
+
+void PlayerServiceStub::ReadTrackSelectionFilter(MessageParcel &data, AVPlayTrackSelectionFilter &trackFilter)
+{
+    trackFilter.maxVideoBitrate = data.ReadInt32();
+    trackFilter.minVideoBitrate = data.ReadInt32();
+    trackFilter.maxVideoFrameRate = data.ReadInt32();
+    trackFilter.minVideoFrameRate = data.ReadInt32();
+    int32_t width = data.ReadInt32();
+    int32_t height = data.ReadInt32();
+    trackFilter.maxVideoResolution = std::make_pair(width, height);
+    width = data.ReadInt32();
+    height = data.ReadInt32();
+    trackFilter.minVideoResolution = std::make_pair(width, height);
+    trackFilter.maxAudioBitrate = data.ReadInt32();
+    trackFilter.minAudioBitrate = data.ReadInt32();
+    trackFilter.maxAudioChannels = data.ReadInt32();
+    ReadTrackSelectionFilterInner(data, trackFilter);
+}
+
+void PlayerServiceStub::ReadTrackSelectionFilterInner(MessageParcel &data, AVPlayTrackSelectionFilter &trackFilter)
+{
+    uint32_t size = data.ReadUint32();
+    std::vector<std::string> videoMimeTypes;
+    for (uint32_t i = 0; i < size; i++) {
+        videoMimeTypes.emplace_back(data.ReadString());
+    }
+    trackFilter.preferredVideoMimeTypes = videoMimeTypes;
+
+    size = data.ReadUint32();
+    std::vector<std::string> audioMimeTypes;
+    for (uint32_t i = 0; i < size; i++) {
+        audioMimeTypes.emplace_back(data.ReadString());
+    }
+    trackFilter.preferredAudioMimeTypes = audioMimeTypes;
+
+    size = data.ReadUint32();
+    std::vector<std::string> audioLanguages;
+    for (uint32_t i = 0; i < size; i++) {
+        audioLanguages.emplace_back(data.ReadString());
+    }
+    trackFilter.preferredAudioLanguages = audioLanguages;
+
+    size = data.ReadUint32();
+    std::vector<std::string> subtitleLanguages;
+    for (uint32_t i = 0; i < size; i++) {
+        subtitleLanguages.emplace_back(data.ReadString());
+    }
+    trackFilter.preferredSubtitleLanguages = subtitleLanguages;
+}
+
+int32_t PlayerServiceStub::GetTrackSelectionFilter(MessageParcel &data, MessageParcel &reply)
+{
+    MEDIA_LOGI("GetTrackSelectionFilter");
+    AVPlayTrackSelectionFilter filter;
+    int32_t ret = GetTrackSelectionFilter(filter);
+    reply.WriteInt32(ret);
+    WriteTrackSelectionFilter(reply, filter);
+    return MSERR_OK;
+}
+
+void PlayerServiceStub::WriteTrackSelectionFilter(MessageParcel &reply, const AVPlayTrackSelectionFilter &filter)
+{
+    (void)reply.WriteInt32(filter.maxVideoBitrate);
+    (void)reply.WriteInt32(filter.minVideoBitrate);
+    (void)reply.WriteInt32(filter.maxVideoFrameRate);
+    (void)reply.WriteInt32(filter.minVideoFrameRate);
+    (void)reply.WriteInt32(filter.maxVideoResolution.first);
+    (void)reply.WriteInt32(filter.maxVideoResolution.second);
+    (void)reply.WriteInt32(filter.minVideoResolution.first);
+    (void)reply.WriteInt32(filter.minVideoResolution.second);
+    (void)reply.WriteInt32(filter.maxAudioBitrate);
+    (void)reply.WriteInt32(filter.minAudioBitrate);
+    (void)reply.WriteInt32(filter.maxAudioChannels);
+    WriteTrackSelectionFilterInner(reply, filter);
+}
+
+void PlayerServiceStub::WriteTrackSelectionFilterInner(MessageParcel &reply,
+                                                       const AVPlayTrackSelectionFilter &filter)
+{
+    auto vecWriteFunc = [&reply] (std::vector<std::string> elem) {
+        (void)reply.WriteUint32(elem.size());
+        for (uint32_t i = 0; i < elem.size(); i++) {
+            (void)reply.WriteString(elem.at(i));
+        }
+    };
+    vecWriteFunc(filter.preferredVideoMimeTypes);
+    vecWriteFunc(filter.preferredAudioMimeTypes);
+    vecWriteFunc(filter.preferredAudioLanguages);
+    vecWriteFunc(filter.preferredSubtitleLanguages);
+}
+
 int32_t PlayerServiceStub::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
 {
     MediaTrace trace("PlayerServiceStub::SetPlaybackStrategy");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetPlaybackStrategy(playbackStrategy);
+}
+
+int32_t PlayerServiceStub::SetTrackSelectionFilter(AVPlayTrackSelectionFilter trackFilter)
+{
+    MEDIA_LOGI("SetTrackSelectionFilter");
+    MediaTrace trace("PlayerServiceStub::SetTrackSelectionFilter");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetTrackSelectionFilter(trackFilter);
+}
+
+int32_t PlayerServiceStub::GetTrackSelectionFilter(AVPlayTrackSelectionFilter &trackFilter)
+{
+    MEDIA_LOGI("GetTrackSelectionFilter");
+    MediaTrace trace("PlayerServiceStub::GetTrackSelectionFilter");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->GetTrackSelectionFilter(trackFilter);
 }
 
 int32_t PlayerServiceStub::SetSuperResolution(MessageParcel &data, MessageParcel &reply)

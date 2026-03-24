@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include "player.h"
 #include "meta/format.h"
 #include "meta/meta.h"
 #include "av_common.h"
@@ -63,9 +64,14 @@ public:
     // support Record<string, string>
     static napi_status GetPropertyRecord(napi_env env, napi_value in, Meta &meta, std::string type);
     static bool GetPropertyMap(napi_env env, napi_value value, std::map<std::string, std::string>& map);
+    static bool GetPropertyVideoSize(napi_env env, napi_value value, const std::string &type,
+                                     std::pair<int32_t, int32_t> &result);
+    static bool GetPropertyArrayString(napi_env env, napi_value value, const std::string &type,
+                                       std::vector<std::string> &result);
     static bool GetFdArgument(napi_env env, napi_value value, AVFileDescriptor &rawFd);
     static bool GetPlayStrategy(napi_env env, napi_value value, AVPlayStrategyTmp &playStrategy);
     static bool GetPlayMediaStreamData(napi_env env, napi_value value, AVPlayMediaStreamTmp &mediaStream);
+    static bool GetTrackSelectionFilter(napi_env env, napi_value value, AVPlayTrackSelectionFilter &filter);
     static napi_status FillErrorArgs(napi_env env, int32_t errCode, const napi_value &args);
     static napi_status CreateError(napi_env env, int32_t errCode, const std::string &errMsg, napi_value &errVal);
     static napi_ref CreateReference(napi_env env, napi_value arg);
@@ -81,6 +87,11 @@ public:
         const napi_env &env, napi_value &result, const std::string &fieldStr, size_t bufferLen, uint8_t *bufferData);
     static bool SetPropertyMap(napi_env env, napi_value &obj, const std::string &key,
         const std::map<std::string, int64_t> &map);
+    static bool SetVideoSizeObject(napi_env, napi_value &obj, const std::string &key,
+        std::pair<int32_t, int32_t> &value);
+    static bool SetPropertyStringArray(napi_env env, napi_value &obj, const std::string &key,
+        const std::vector<std::string> &value);
+    static void SetTrackSelectFilterFlag(AVPlayTrackSelectionFilter &filter);
     static napi_value CreateFormatBuffer(napi_env env, Format &format);
     static bool CreateFormatBufferByRef(napi_env env, Format &format, napi_value &result);
     static bool AddRangeProperty(napi_env env, napi_value obj, const std::string &name, int32_t min, int32_t max);
@@ -320,6 +331,25 @@ public:
 
 private:
     Format format_;
+};
+
+class MediaJsResultTrackFilter : public MediaJsResult {
+public:
+    explicit MediaJsResultTrackFilter(const AVPlayTrackSelectionFilter &filter)
+        : filter_(filter)
+    {
+    }
+
+    ~MediaJsResultTrackFilter() override = default;
+
+    napi_status GetJsResult(napi_env env, napi_value &result) override;
+private:
+    napi_status GetJsResultInner(napi_env env, napi_value &result);
+    napi_status GetVideoJsResult(napi_env env, napi_value &result);
+    napi_status GetAudioJsResult(napi_env env, napi_value &result);
+    napi_status GetSubtitleJsResult(napi_env env, napi_value &result);
+
+    AVPlayTrackSelectionFilter filter_;
 };
 
 struct MediaAsyncContext {

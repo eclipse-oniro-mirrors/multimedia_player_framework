@@ -50,6 +50,7 @@ struct AVPlayerContext {
     }
     std::shared_ptr<TaskHandler<TaskRet>> asyncTask = nullptr;
     std::vector<Format> trackInfoVec_;
+    AVPlayTrackSelectionFilter trackFilter_;
 };
 struct AVPlayStrategyTmp {
     uint32_t preferredWidth;
@@ -152,6 +153,8 @@ public:
     map<string, PlaybackInfoValue> GetPlaybackInfoSync();
     map<::ohos::multimedia::media::PlaybackMetricsKey, PlaybackMetricsValue> GetPlaybackStatisticMetricsSync();
     void SetVideoWindowSizeSync(int32_t width, int32_t height);
+    void SetTrackSelectionFilterSync(TrackSelectionFilter filter);
+    TrackSelectionFilter GetTrackSelectionFilterSync();
     void SetSuperResolutionSync(bool enabled);
     void SetPlaybackRangeSync(int32_t startTimeMs, int32_t endTimeMs,
         optional_view<::ohos::multimedia::media::SeekMode> mode);
@@ -267,6 +270,9 @@ private:
     std::shared_ptr<TaskHandler<TaskRet>> GetTrackDescriptionTask(const std::unique_ptr<AVPlayerContext> &Ctx);
     std::shared_ptr<TaskHandler<TaskRet>> SetVideoWindowSizeTask(int32_t width, int32_t height);
     std::shared_ptr<TaskHandler<TaskRet>> SetSuperResolutionTask(bool enable);
+    std::shared_ptr<TaskHandler<TaskRet>> SetTrackSelectionFilterTask(AVPlayTrackSelectionFilter trackFilter);
+    std::shared_ptr<TaskHandler<TaskRet>> GetTrackSelectionFilterTask(const std::unique_ptr<AVPlayerContext>
+        &promiseCtx);
     std::shared_ptr<TaskHandler<TaskRet>> EqueueSetPlayRangeTask(int32_t start, int32_t end, int32_t mode);
     std::shared_ptr<TaskHandler<TaskRet>> SetMediaMutedTask(::OHOS::Media::MediaType type, bool isMuted);
     std::shared_ptr<TaskHandler<TaskRet>> SetPlaybackStrategyTask(AVPlayStrategy playStrategy);
