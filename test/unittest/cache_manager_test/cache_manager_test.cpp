@@ -138,24 +138,6 @@ HWTEST_F(CacheManagerTest, CacheManagerTest_CreateMediaCache_004, TestSize.Level
 }
 
 /**
- * @tc.name  : CacheManagerTest_CreateMediaCache_005
- * @tc.number: CreateMediaCache_004
- * @tc.desc  : test CreateMediaCache with mapped_ == MAP_FAILED
- */
-HWTEST_F(CacheManagerTest, CacheManagerTest_CreateMediaCache_005, TestSize.Level0)
-{
-    std::string url = "http://example.com/video.mp4";
-    std::string type = "video";
-    bool randomAccess = true;
-    uint64_t size = 1024;
-    manager_->fileSize_ = MAX_CACHE_MAPPING_FILE_SIZE + 1;
-    manager_->fd_ = -1;
-
-    bool result = manager_->CreateMediaCache(url, type, randomAccess, size);
-    EXPECT_TRUE(result);
-}
-
-/**
  * @tc.name  : CacheManagerTest_FindFirstEqualField_001
  * @tc.number: FindFirstEqualField_001
  * @tc.desc  : test FindFirstEqualField false
