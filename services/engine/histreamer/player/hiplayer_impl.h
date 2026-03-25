@@ -533,6 +533,8 @@ private:
     bool notNotifyForSw_ = false;
     bool isVideoDecoderInited_ = false;
     bool enable_ = false;
+    AVPlayTrackSelectionFilter trackSelectionFilter_;
+    std::atomic<bool> hasTrackSelectionFilter_ {false};
     PlayerDfxSourceType sourceType_ = PlayerDfxSourceType::DFX_SOURCE_TYPE_UNKNOWN;
     FileType fileType_ = FileType::UNKNOW;
 };
