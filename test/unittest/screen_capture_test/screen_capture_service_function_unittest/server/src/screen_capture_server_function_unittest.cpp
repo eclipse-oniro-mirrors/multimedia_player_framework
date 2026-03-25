@@ -3514,7 +3514,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, BuildPickerParams_001, TestSize.Level2
     EXPECT_FALSE(screenCaptureServer_->excludedWindowIDsVec_.empty());
     screenCaptureServer_->BuildPickerParams(root);
     EXPECT_TRUE(root.isMember("excludeWindowIDs"));
-    EXPECT_TRUE(root["excludeWindowsIDs"].isArrray());
+    EXPECT_TRUE(root["excludeWindowsIDs"].isArray());
     EXPECT_EQ(root["excludeWindowsIDs"].size(), 3);
     EXPECT_EQ(root["excludeWindowsIDs"][0].asInt(), 1001);
     EXPECT_EQ(root["excludeWindowsIDs"][1].asInt(), 1002);
@@ -3553,7 +3553,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, BuildPickerParams_004, TestSize.Level2
     screenCaptureServer_->displayIds_ = {1, 2, 3};
     screenCaptureServer_->BuildPickerParams(root);
     EXPECT_TRUE(root.isMember("displayIds"));
-    EXPECT_TRUE(root["displayIds"].isArrray());
+    EXPECT_TRUE(root["displayIds"].isArray());
     EXPECT_EQ(root["displayIds"].size(), 3);
     EXPECT_EQ(root["displayIds"][0].asInt(), 1);
     EXPECT_EQ(root["displayIds"][1].asInt(), 2);
@@ -3568,9 +3568,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, BuildPickerParams_005, TestSize.Level2
     ASSERT_TRUE(reader.parse(jsonStr, root));
     screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs = {1001};
     screenCaptureServer_->isSpecifiedWindowCapture_ = true;
-    ASSEERT_NO_FATAL_FAILURE(screenCaptureServer_->BuildPickerParams(root));
+    ASSERT_NO_FATAL_FAILURE(screenCaptureServer_->BuildPickerParams(root));
     EXPECT_TRUE(root.isMember("missionIds"));
-    EXPECT_TRUE(root["missionIds"].isArrray());
+    EXPECT_TRUE(root["missionIds"].isArray());
     EXPECT_EQ(root["missionIds"].size(), 1);
     EXPECT_EQ(root["missionIds"][0].asInt(), 1001);
 }
@@ -3583,7 +3583,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, BuildPickerParams_006, TestSize.Level2
     ASSERT_TRUE(reader.parse(jsonStr, root));
     screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs = {1001, 1002};
     screenCaptureServer_->isSpecifiedWindowCapture_ = true;
-    ASSEERT_NO_FATAL_FAILURE(screenCaptureServer_->BuildPickerParams(root));
+    ASSERT_NO_FATAL_FAILURE(screenCaptureServer_->BuildPickerParams(root));
     EXPECT_FALSE(root.isMember("missionIds"));
 }
 
@@ -3595,7 +3595,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, BuildPickerParams_007, TestSize.Level2
     ASSERT_TRUE(reader.parse(jsonStr, root));
     screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs = {1001};
     screenCaptureServer_->isSpecifiedWindowCapture_ = false;
-    ASSEERT_NO_FATAL_FAILURE(screenCaptureServer_->BuildPickerParams(root));
+    ASSERT_NO_FATAL_FAILURE(screenCaptureServer_->BuildPickerParams(root));
     EXPECT_FALSE(root.isMember("missionIds"));
 }
 
@@ -3607,7 +3607,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, BuildPickerParams_008, TestSize.Level2
     ASSERT_TRUE(reader.parse(jsonStr, root));
     screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs = {1001, 1002};
     screenCaptureServer_->isSpecifiedWindowCapture_ = false;
-    ASSEERT_NO_FATAL_FAILURE(screenCaptureServer_->BuildPickerParams(root));
+    ASSERT_NO_FATAL_FAILURE(screenCaptureServer_->BuildPickerParams(root));
     EXPECT_FALSE(root.isMember("missionIds"));
 }
 #endif
