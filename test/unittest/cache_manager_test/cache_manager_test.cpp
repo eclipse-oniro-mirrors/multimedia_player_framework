@@ -28,7 +28,6 @@ static const std::string CACHE_DIR = "/data/storage/el2/base/cache/avplayer_medi
 static const std::string CACHE_MAPPING_FILE = "cache_mapping.txt";
 static const uint64_t MAX_CACHE_FILE_SIZE = 4ULL * 1024ULL * 1024ULL * 1024ULL;
 static const uint64_t CACHE_FILE_SIZE_WATERLINE = 3ULL * 1024ULL * 1024ULL * 1024ULL;
-static const size_t MAX_CACHE_MAPPING_FILE_SIZE = 10ULL * 1024ULL * 1024ULL;
 
 void CacheManagerTest::SetUpTestCase(void)
 {
