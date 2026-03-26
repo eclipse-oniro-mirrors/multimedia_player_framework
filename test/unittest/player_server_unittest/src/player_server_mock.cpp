@@ -1041,5 +1041,19 @@ bool PlayerEngineMock::IsNeedChangePlaySpeed(PlaybackRateMode &mode, bool &isXSp
     mode = PlaybackRateMode::SPEED_FORWARD_1_20_X;
     return isXSpeedPlay;
 }
+
+int32_t PlayerServerMock::SetTrackSelectionFilter(AVPlayTrackSelectionFilter trackFilter)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    std::unique_lock<std::mutex> lock(mutex_);
+    return player_->SetTrackSelectionFilter(trackFilter);
+}
+
+int32_t PlayerServerMock::GetTrackSelectionFilter(AVPlayTrackSelectionFilter &trackFilter)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    std::unique_lock<std::mutex> lock(mutex_);
+    return player_->GetTrackSelectionFilter(trackFilter);
+}
 } // namespace Media
 } // namespace OHOS

@@ -1211,28 +1211,10 @@ int32_t RecorderServer::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("RecorderServer::SetUserMeta");
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_PREPARED && status_ != REC_RECORDING && status_ != REC_PAUSED,
-        MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
-    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
-        return recorderEngine_->SetUserMeta(userMeta);
-    });
-    int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
-
-    auto result = task->GetResult();
-    return result.Value();
-}
-
-int32_t RecorderServer::SetCustomInfo(const std::shared_ptr<Meta> &customInfo)
-{
-    MEDIA_LOGI("SetCustomInfo in");
-    std::lock_guard<std::mutex> lock(mutex_);
-    MediaTrace trace("RecorderServer::SetCustomInfo");
-    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_PREPARED && status_ != REC_RECORDING && status_ != REC_PAUSED,
         MSERR_INVALID_STATE);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     auto task = std::make_shared<TaskHandler<Status>>([&, this] {
-        return recorderEngine_->SetCustomInfo(customInfo);
+        return recorderEngine_->SetUserMeta(userMeta);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
@@ -1246,7 +1228,7 @@ int32_t RecorderServer::SetCustomInfo(const std::shared_ptr<Meta> &customInfo)
     } else if (statusCode == Status::ERROR_WRONG_STATE) {
         result = MSERR_INVALID_STATE;
     } else if (statusCode == Status::ERROR_INVALID_DATA) {
-        result = MSERR_INVALID_VAL;
+        result = MSERR_PARAM_OUT_OF_RANGE;
     } else {
         result = MSERR_UNKNOWN;
     }

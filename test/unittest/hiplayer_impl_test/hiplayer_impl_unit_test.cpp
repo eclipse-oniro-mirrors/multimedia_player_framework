@@ -1646,5 +1646,18 @@ HWTEST_F(HiplayerImplUnitTest, SetBuffering_004, TestSize.Level0)
     // 3. Verify the result
     EXPECT_EQ(ret, MSERR_OK);
 }
+
+/**
+* @tc.name    : Test SetTrackSelectionFilter API
+* @tc.number  : SetTrackSelectionFilter_001
+* @tc.desc    : Test SetTrackSelectionFilter interface when demuxer_ is nullptr.
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, SetTrackSelectionFilter_001, TestSize.Level0)
+{
+    AVPlayTrackSelectionFilter trackFilter;
+    int32_t ret = hiplayer_->SetTrackSelectionFilter(trackFilter);
+    EXPECT_EQ(ret, MSERR_OK);
+}
 } // namespace Media
 } // namespace OHOS

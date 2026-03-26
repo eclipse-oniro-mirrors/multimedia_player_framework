@@ -169,12 +169,18 @@ void AVTransCoderNapi::Destructor(napi_env env, void *nativeObject, void *finali
         if (napi->taskQue_ != nullptr) {
             (void)napi->taskQue_->Stop();
         }
+        
+        {
+            std::unique_lock<std::shared_mutex> cblock(napi->transCoderCbMutex_);
+            napi->transCoderCb_ = nullptr;
+        }
 
-        napi->transCoderCb_ = nullptr;
-
-        if (napi->transCoder_) {
-            napi->transCoder_->Release();
-            napi->transCoder_ = nullptr;
+        {
+            std::unique_lock<std::shared_mutex> transCoderlock(napi->transCoderMutex_);
+            if (napi->transCoder_) {
+                napi->transCoder_->Release();
+                napi->transCoder_ = nullptr;
+            }
         }
 
         delete napi;
@@ -290,6 +296,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVTransCoderNapi::GetPrepareTask(
     return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, config = asyncCtx->config_]() {
         const std::string &option = AVTransCoderOpt::PREPARE;
         MEDIA_LOGI("%{public}s Start", option.c_str());
+        std::shared_lock<std::shared_mutex> transCoderlock(napi->transCoderMutex_);
         CHECK_AND_RETURN_RET(napi != nullptr && napi->transCoder_ != nullptr && config != nullptr,
             GetReturnRet(MSERR_INVALID_OPERATION, option, ""));
 
@@ -422,6 +429,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVTransCoderNapi::GetPromiseTask(AVTransCo
 {
     return std::make_shared<TaskHandler<RetInfo>>([napi = avnapi, option = opt]() {
         MEDIA_LOGI("%{public}s Start", option.c_str());
+        std::shared_lock<std::shared_mutex> transCoderlock(napi->transCoderMutex_);
         CHECK_AND_RETURN_RET(napi != nullptr && napi->transCoder_ != nullptr,
             GetReturnRet(MSERR_INVALID_OPERATION, option, ""));
 
@@ -647,6 +655,7 @@ napi_value AVTransCoderNapi::JsGetDstFd(napi_env env, napi_callback_info info)
 
 RetInfo AVTransCoderNapi::Start()
 {
+    std::shared_lock<std::shared_mutex> transCoderlock(transCoderMutex_);
     int32_t ret = transCoder_->Start();
     CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "Start", ""));
     StateCallback(AVTransCoderState::STATE_STARTED);
@@ -655,6 +664,7 @@ RetInfo AVTransCoderNapi::Start()
 
 RetInfo AVTransCoderNapi::Pause()
 {
+    std::shared_lock<std::shared_mutex> transCoderlock(transCoderMutex_);
     int32_t ret = transCoder_->Pause();
     CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "Pause", ""));
     StateCallback(AVTransCoderState::STATE_PAUSED);
@@ -663,6 +673,7 @@ RetInfo AVTransCoderNapi::Pause()
 
 RetInfo AVTransCoderNapi::Resume()
 {
+    std::shared_lock<std::shared_mutex> transCoderlock(transCoderMutex_);
     int32_t ret = transCoder_->Resume();
     CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "Resume", ""));
     StateCallback(AVTransCoderState::STATE_STARTED);
@@ -671,6 +682,7 @@ RetInfo AVTransCoderNapi::Resume()
 
 RetInfo AVTransCoderNapi::Cancel()
 {
+    std::shared_lock<std::shared_mutex> transCoderlock(transCoderMutex_);
     int32_t ret = transCoder_->Cancel();
     CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "Stop", ""));
     StateCallback(AVTransCoderState::STATE_CANCELLED);
@@ -680,6 +692,7 @@ RetInfo AVTransCoderNapi::Cancel()
 
 RetInfo AVTransCoderNapi::Release()
 {
+    std::shared_lock<std::shared_mutex> transCoderlock(transCoderMutex_);
     int32_t ret = transCoder_->Release();
     CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "Release", ""));
 
@@ -691,6 +704,7 @@ RetInfo AVTransCoderNapi::Release()
 
 RetInfo AVTransCoderNapi::SetInputFile(int32_t fd, int64_t offset, int64_t size)
 {
+    std::shared_lock<std::shared_mutex> transCoderlock(transCoderMutex_);
     int32_t ret = transCoder_->SetInputFile(fd, offset, size);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetInputFile", ""));
     return RetInfo(MSERR_EXT_API9_OK, "");
@@ -698,6 +712,7 @@ RetInfo AVTransCoderNapi::SetInputFile(int32_t fd, int64_t offset, int64_t size)
 
 RetInfo AVTransCoderNapi::SetOutputFile(int32_t fd)
 {
+    std::shared_lock<std::shared_mutex> transCoderlock(transCoderMutex_);
     int32_t ret = transCoder_->SetOutputFile(fd);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetOutputFile", ""));
     return RetInfo(MSERR_EXT_API9_OK, "");
@@ -705,6 +720,7 @@ RetInfo AVTransCoderNapi::SetOutputFile(int32_t fd)
 
 int32_t AVTransCoderNapi::CheckStateMachine(const std::string &opt)
 {
+    std::shared_lock<std::shared_mutex> cblock(transCoderCbMutex_);
     auto napiCb = std::static_pointer_cast<AVTransCoderCallback>(transCoderCb_);
     CHECK_AND_RETURN_RET_LOG(napiCb != nullptr, MSERR_INVALID_OPERATION, "napiCb is nullptr!");
 
@@ -721,6 +737,7 @@ int32_t AVTransCoderNapi::CheckStateMachine(const std::string &opt)
 
 int32_t AVTransCoderNapi::CheckRepeatOperation(const std::string &opt)
 {
+    std::shared_lock<std::shared_mutex> cblock(transCoderCbMutex_);
     auto napiCb = std::static_pointer_cast<AVTransCoderCallback>(transCoderCb_);
     CHECK_AND_RETURN_RET_LOG(napiCb != nullptr, MSERR_INVALID_OPERATION, "napiCb is nullptr!");
 
@@ -737,6 +754,7 @@ int32_t AVTransCoderNapi::CheckRepeatOperation(const std::string &opt)
 
 RetInfo AVTransCoderNapi::Configure(std::shared_ptr<AVTransCoderConfig> config)
 {
+    std::shared_lock<std::shared_mutex> transCoderlock(transCoderMutex_);
     CHECK_AND_RETURN_RET(transCoder_ != nullptr, GetReturnRet(MSERR_INVALID_OPERATION, "Configure", ""));
     CHECK_AND_RETURN_RET(config != nullptr, GetReturnRet(MSERR_INVALID_VAL, "Configure", "config"));
 
@@ -771,6 +789,7 @@ RetInfo AVTransCoderNapi::Configure(std::shared_ptr<AVTransCoderConfig> config)
 
 void AVTransCoderNapi::ErrorCallback(int32_t errCode, const std::string &operate, const std::string &add)
 {
+    std::shared_lock<std::shared_mutex> cblock(transCoderCbMutex_);
     MEDIA_LOGE("failed to %{public}s, errCode = %{public}d", operate.c_str(), errCode);
     CHECK_AND_RETURN_LOG(transCoderCb_ != nullptr, "transCoderCb_ is nullptr!");
     auto napiCb = std::static_pointer_cast<AVTransCoderCallback>(transCoderCb_);
@@ -782,6 +801,7 @@ void AVTransCoderNapi::ErrorCallback(int32_t errCode, const std::string &operate
 
 void AVTransCoderNapi::StateCallback(const std::string &state)
 {
+    std::shared_lock<std::shared_mutex> cblock(transCoderCbMutex_);
     MEDIA_LOGI("Change state to %{public}s", state.c_str());
     CHECK_AND_RETURN_LOG(transCoderCb_ != nullptr, "transCoderCb_ is nullptr!");
     auto napiCb = std::static_pointer_cast<AVTransCoderCallback>(transCoderCb_);
@@ -797,6 +817,7 @@ void AVTransCoderNapi::SetCallbackReference(const std::string &callbackName, std
 {
     std::lock_guard<std::mutex> lock(eventCbMutex_);
     eventCbMap_[callbackName] = ref;
+    std::shared_lock<std::shared_mutex> cblock(transCoderCbMutex_);
     CHECK_AND_RETURN_LOG(transCoderCb_ != nullptr, "transCoderCb_ is nullptr!");
     auto napiCb = std::static_pointer_cast<AVTransCoderCallback>(transCoderCb_);
     napiCb->SaveCallbackReference(callbackName, ref);
@@ -805,6 +826,7 @@ void AVTransCoderNapi::SetCallbackReference(const std::string &callbackName, std
 void AVTransCoderNapi::CancelCallbackReference(const std::string &callbackName)
 {
     std::lock_guard<std::mutex> lock(eventCbMutex_);
+    std::shared_lock<std::shared_mutex> cblock(transCoderCbMutex_);
     CHECK_AND_RETURN_LOG(transCoderCb_ != nullptr, "transCoderCb_ is nullptr!");
     auto napiCb = std::static_pointer_cast<AVTransCoderCallback>(transCoderCb_);
     napiCb->CancelCallbackReference(callbackName);
@@ -813,6 +835,7 @@ void AVTransCoderNapi::CancelCallbackReference(const std::string &callbackName)
 
 void AVTransCoderNapi::CancelCallback()
 {
+    std::shared_lock<std::shared_mutex> cblock(transCoderCbMutex_);
     CHECK_AND_RETURN_LOG(transCoderCb_ != nullptr, "transCoderCb_ is nullptr!");
     auto napiCb = std::static_pointer_cast<AVTransCoderCallback>(transCoderCb_);
     napiCb->ClearCallbackReference();

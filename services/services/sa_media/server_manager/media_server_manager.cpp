@@ -57,6 +57,9 @@
 #include "v1_0/ilow_power_player_factory.h"
 namespace PlayerHDI = OHOS::HDI::LowPowerPlayer::V1_0;
 #endif
+#ifdef SUPPORT_MEDIA_MADVISE
+#include "media_madvise_utils.h"
+#endif
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaServerManager"};
@@ -64,6 +67,7 @@ constexpr uint32_t REPORT_TIME = 100000000; // us
 constexpr uint32_t MAX_TIMES = 15;
 constexpr uint32_t DELAY_TIME = 200;
 constexpr int32_t RELEASE_THRESHOLD = 3;  // relese task
+const std::string MEDIA_SERVICE_LIBNAME = "libmedia_service.z.so"; // madvise library name
 }
 
 namespace OHOS {
@@ -205,6 +209,9 @@ MediaServerManager::MediaServerManager()
     executor_.SetClearCallBack([this]() {
         std::lock_guard<std::mutex> lock(mutex_);
         CHECK_AND_RETURN_NOLOG(GetStubMapCountIsEmpty());
+#ifdef SUPPORT_MEDIA_MADVISE
+    HandleMadviseLibraries();
+#endif
         SetCritical(false);
     });
 }
@@ -888,8 +895,20 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
     UpdateAllInstancesReleasedTime();
 #endif
     CHECK_AND_RETURN_NOLOG(GetStubMapCountIsEmpty());
+#ifdef SUPPORT_MEDIA_MADVISE
+    HandleMadviseLibraries();
+#endif
     SetCritical(false);
 }
+
+#ifdef SUPPORT_MEDIA_MADVISE
+void MediaServerManager::HandleMadviseLibraries()
+{
+    CHECK_AND_RETURN_NOLOG(GetStubMapCountIsEmpty());
+    MEDIA_LOGI("HandleMadviseLibraries start.");
+    MadviseUtils::MadviseSingleLibrary(MEDIA_SERVICE_LIBNAME);
+}
+#endif
 
 void MediaServerManager::DestroyAVScreenCaptureStubForPid(pid_t pid)
 {

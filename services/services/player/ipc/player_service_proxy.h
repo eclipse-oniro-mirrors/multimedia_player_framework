@@ -64,6 +64,8 @@ public:
     int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) override;
     int32_t GetDuration(int32_t &duration) override;
     int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) override;
+    int32_t SetTrackSelectionFilter(AVPlayTrackSelectionFilter trackFilter) override;
+    int32_t GetTrackSelectionFilter(AVPlayTrackSelectionFilter &trackFilter) override;
     int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
     int32_t SetSuperResolution(bool enabled) override;
     int32_t SetVideoWindowSize(int32_t width, int32_t height) override;
@@ -104,7 +106,11 @@ private:
     void InitPlayerFuncsPart1();
     void InitPlayerFuncsPart2();
     void WritePlaybackStrategy(MessageParcel &data, const AVPlayStrategy &strategy);
+    void WriteTrackSelectionFilter(MessageParcel &data, const AVPlayTrackSelectionFilter &filter);
+    void WriteTrackSelectionFilterInner(MessageParcel &data, const AVPlayTrackSelectionFilter &filter);
     void WriteMediaStreamListToMessageParcel(const std::shared_ptr<AVMediaSource> &mediaSource, MessageParcel& data);
+    void ReadTrackSelectionFilter(MessageParcel &reply, AVPlayTrackSelectionFilter &trackFilter);
+    void ReadTrackSelectionFilterInner(MessageParcel &reply, AVPlayTrackSelectionFilter &trackFilter);
 
     static inline BrokerDelegator<PlayerServiceProxy> delegator_;
     std::map<uint32_t, std::string> playerFuncs_;

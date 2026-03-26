@@ -115,6 +115,8 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("setDecryptionConfig", JsSetDecryptConfig),
         DECLARE_NAPI_FUNCTION("getMediaKeySystemInfos", JsGetMediaKeySystemInfos),
         DECLARE_NAPI_FUNCTION("setPlaybackStrategy", JsSetPlaybackStrategy),
+        DECLARE_NAPI_FUNCTION("setTrackSelectionFilter", JsSetTrackSelectionFilter),
+        DECLARE_NAPI_FUNCTION("getTrackSelectionFilter", JsGetTrackSelectionFilter),
         DECLARE_NAPI_FUNCTION("setMediaMuted", JsSetMediaMuted),
         DECLARE_NAPI_FUNCTION("getPlaybackInfo", JsGetPlaybackInfo),
         DECLARE_NAPI_FUNCTION("getPlaybackStatisticMetrics", JsGetPlaybackStatisticMetrics),
@@ -1704,6 +1706,115 @@ napi_value AVPlayerNapi::JsSetPlaybackStrategy(napi_env env, napi_callback_info 
     return result;
 }
 
+napi_value AVPlayerNapi::JsSetTrackSelectionFilter(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::JsSetTrackSelectionFilter");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsSetTrackSelectionFilter");
+
+    size_t paramCountSingle = PARAM_COUNT_SINGLE;
+    napi_value args[PARAM_COUNT_SINGLE] = { nullptr };
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, paramCountSingle, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
+
+    auto promiseCtx = std::make_unique<AVPlayerContext>(env);
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
+    std::string currentState = jsPlayer->GetCurrentState();
+    napi_valuetype valueType = napi_undefined;
+    if (currentState == AVPlayerState::STATE_RELEASED) {
+        promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is release, unsupport set track selection filter");
+    } else {
+        if (napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
+            promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check input parameter");
+        } else {
+            AVPlayTrackSelectionFilter filter;
+            (void)CommonNapi::GetTrackSelectionFilter(env, args[0], filter);
+            promiseCtx->asyncTask = jsPlayer->SetTrackSelectionFilterTask(filter);
+        }
+    }
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "JsSetTrackSelectionFilter", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
+        [](napi_env env, void *data) {
+            auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
+            CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
+            promiseCtx->CheckTaskResult();
+        },
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
+    promiseCtx.release();
+    return result;
+}
+
+napi_value AVPlayerNapi::JsGetTrackSelectionFilter(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::JsGetTrackSelectionFilter");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsGetTrackSelectionFilter In");
+
+    auto promiseCtx = std::make_unique<AVPlayerContext>(env);
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+    promiseCtx->napi = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
+
+    auto jsPlayer = promiseCtx->napi;
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " JsGetTrackSelectionFilter EnqueueTask In", FAKE_POINTER(jsPlayer));
+    promiseCtx->asyncTask = jsPlayer->GetTrackSelectionFilterTask(promiseCtx);
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " JsGetTrackSelectionFilter EnqueueTask Out", FAKE_POINTER(jsPlayer));
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "JsGetTrackSelectionFilter", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
+        [](napi_env env, void *data) {
+            MEDIA_LOGI("Wait JsGetTrackSelectionFilter Task Start");
+            auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
+            CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
+            if (promiseCtx->asyncTask) {
+                auto result = promiseCtx->asyncTask->GetResult();
+                if (!result.HasResult()) {
+                    return promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                                                 "task has been cleared");
+                }
+                if (result.Value().first != MSERR_EXT_API9_OK) {
+                    return promiseCtx->SignError(result.Value().first, result.Value().second);
+                }
+                promiseCtx->JsResult = std::make_unique<MediaJsResultTrackFilter>(promiseCtx->trackFilter_);
+            }
+            MEDIA_LOGI("Wait GetTrackSelectionFilterTask Task End");
+        },
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
+    promiseCtx.release();
+    MEDIA_LOGI("JsGetTrackSelectionFilter Out");
+    return result;
+}
+
+std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::GetTrackSelectionFilterTask(const std::unique_ptr<AVPlayerContext>
+                                                                            &promiseCtx)
+{
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this, &trackFilter = promiseCtx->trackFilter_]() {
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " GetTrackSelectionFilterTask Task In", FAKE_POINTER(this));
+        std::unique_lock<std::mutex> lock(taskMutex_);
+        auto state = GetCurrentState();
+        if (state != AVPlayerState::STATE_RELEASED) {
+            (void)player_->GetTrackSelectionFilter(trackFilter);
+            MEDIA_LOGI("0x%{public}06" PRIXPTR " GetTrackSelectionFilterTask Task Out", FAKE_POINTER(this));
+            return TaskRet(MSERR_EXT_API9_OK, "Success");
+        } else {
+            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "current state is released, unsupport set track selection filter operation");
+        }
+    });
+    (void)taskQue_->EnqueueTask(task);
+    return task;
+}
+
 napi_value AVPlayerNapi::JsSetMediaMuted(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVPlayerNapi::JsSetPlaybackStrategy");
@@ -1790,6 +1901,28 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::SetPlaybackStrategyTask(AVPl
         } else {
             return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
                 "current state is not initialized or stopped, unsupport set playback strategy operation");
+        }
+        return TaskRet(MSERR_EXT_API9_OK, "Success");
+    });
+    (void)taskQue_->EnqueueTask(task);
+    return task;
+}
+
+std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::SetTrackSelectionFilterTask(AVPlayTrackSelectionFilter trackFilter)
+{
+    MEDIA_LOGI("SetTrackSelectionFilterTask");
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this, trackFilter]() {
+        std::unique_lock<std::mutex> lock(taskMutex_);
+        auto state = GetCurrentState();
+        if (state != AVPlayerState::STATE_RELEASED) {
+            int32_t ret = player_->SetTrackSelectionFilter(trackFilter);
+            if (ret != MSERR_OK) {
+                auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
+                return TaskRet(errCode, "failed to set track selection filter");
+            }
+        } else {
+            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "current state is released, unsupport set track selection filter operation");
         }
         return TaskRet(MSERR_EXT_API9_OK, "Success");
     });

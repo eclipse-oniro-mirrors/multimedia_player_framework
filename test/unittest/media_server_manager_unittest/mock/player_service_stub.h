@@ -118,6 +118,8 @@ public:
     MOCK_METHOD(int32_t, EnableReportMediaProgress, (bool enable), (override));
     MOCK_METHOD(int32_t, EnableReportAudioInterrupt, (bool enable), (override));
     MOCK_METHOD(int32_t, ForceLoadVideo, (bool status), (override));
+    MOCK_METHOD(int32_t, SetTrackSelectionFilter, (AVPlayTrackSelectionFilter trackFilter), (override));
+    MOCK_METHOD(int32_t, GetTrackSelectionFilter, (AVPlayTrackSelectionFilter &trackFilter), (override));
     virtual int32_t Init()
     {
         return 0;

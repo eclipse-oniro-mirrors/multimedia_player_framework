@@ -755,6 +755,25 @@ int32_t PlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     return ret;
 }
 
+int32_t PlayerImpl::SetTrackSelectionFilter(AVPlayTrackSelectionFilter trackFilter)
+{
+    ScopedTimer timer("SetTrackSelectionFilter", OVERTIME_WARNING_MS);
+    MEDIA_LOGD("SetTrackSelectionFilter");
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    int32_t ret = MSERR_OK;
+    LISTENER(
+        ret = playerService_->SetTrackSelectionFilter(trackFilter), "SetTrackSelectionFilter", false, TIME_OUT_SECOND);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK, ret);
+    return ret;
+}
+
+int32_t PlayerImpl::GetTrackSelectionFilter(AVPlayTrackSelectionFilter &trackFilter)
+{
+    MEDIA_LOGI("PlayerImpl:0x%{public}06" PRIXPTR " GetTrackSelectionFilter", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    return playerService_->GetTrackSelectionFilter(trackFilter);
+}
+
 int32_t PlayerImpl::SetSuperResolution(bool enabled)
 {
     ScopedTimer timer("SetSuperResolution", OVERTIME_WARNING_MS);

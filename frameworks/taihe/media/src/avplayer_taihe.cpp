@@ -1378,6 +1378,47 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerImpl::SetSuperResolutionTask(bool 
     return task;
 }
 
+std::shared_ptr<TaskHandler<TaskRet>> AVPlayerImpl::SetTrackSelectionFilterTask(AVPlayTrackSelectionFilter trackFilter)
+{
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this, trackFilter]() {
+        std::unique_lock<std::mutex> lock(taskMutex_);
+        auto state = GetCurrentState();
+        if (state != AVPlayerState::STATE_RELEASED) {
+            int32_t ret = player_->SetTrackSelectionFilter(trackFilter);
+            if (ret != MSERR_OK) {
+                auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
+                return TaskRet(errCode, "failed to set track selection filter");
+            }
+        } else {
+            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "current state is released, unsupport set track selection filter operation");
+        }
+        return TaskRet(MSERR_EXT_API9_OK, "Success");
+    });
+    (void)taskQue_->EnqueueTask(task);
+    return task;
+}
+
+std::shared_ptr<TaskHandler<TaskRet>> AVPlayerImpl::GetTrackSelectionFilterTask(const std::unique_ptr<AVPlayerContext>
+                                                                            &promiseCtx)
+{
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this, &trackFilter = promiseCtx->trackFilter_]() {
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " GetTrackSelectionFilterTask Task In", FAKE_POINTER(this));
+        std::unique_lock<std::mutex> lock(taskMutex_);
+        auto state = GetCurrentState();
+        if (state != AVPlayerState::STATE_RELEASED) {
+            (void)player_->GetTrackSelectionFilter(trackFilter);
+            MEDIA_LOGI("0x%{public}06" PRIXPTR " GetTrackSelectionFilterTask Task Out", FAKE_POINTER(this));
+            return TaskRet(MSERR_EXT_API9_OK, "Success");
+        } else {
+            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "current state is released, unsupport set track selection filter operation");
+        }
+    });
+    (void)taskQue_->EnqueueTask(task);
+    return task;
+}
+
 int32_t AVPlayerImpl::GetPlaybackPosition()
 {
     MediaTrace trace("AVPlayerImpl::get playbackPosition");
@@ -1685,6 +1726,106 @@ void AVPlayerImpl::SetPlaybackStrategySync(::ohos::multimedia::media::PlaybackSt
     }
     context->CheckTaskResult();
     MEDIA_LOGI("TaiheSetPlaybackStrategy Out");
+}
+
+void AVPlayerImpl::SetTrackSelectionFilterSync(TrackSelectionFilter filter)
+{
+    MediaTrace trace("AVPlayerImpl::setTrackSelectionFilter");
+    MEDIA_LOGI("TaiheSetTrackSelectionFilter In");
+    std::string currentState = GetCurrentState();
+    if (currentState == AVPlayerState::STATE_RELEASED) {
+        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is release, unsupport set track selection filter");
+        return;
+    }
+    AVPlayTrackSelectionFilter avfilter;
+    auto assignIfPresent = [](auto& dest, const auto& src) {
+        if (src.has_value()) dest = src.value();
+    };
+    assignIfPresent(avfilter.maxVideoBitrate, filter.maxVideoBitrate);
+    assignIfPresent(avfilter.minVideoBitrate, filter.minVideoBitrate);
+    assignIfPresent(avfilter.maxVideoFrameRate, filter.maxVideoFrameRate);
+    assignIfPresent(avfilter.minVideoFrameRate, filter.minVideoFrameRate);
+    assignIfPresent(avfilter.maxAudioBitrate, filter.maxAudioBitrate);
+    assignIfPresent(avfilter.minAudioBitrate, filter.minAudioBitrate);
+    assignIfPresent(avfilter.maxAudioChannels, filter.maxAudioChannels);
+    auto assignVectorIfPresent = [](auto& dest, const auto& src) -> bool {
+        if (!src.has_value()) return true;
+        if (src.value().empty()) {
+            MEDIA_LOGD("The array is empty, no processing is performed.");
+            return false;
+        }
+        dest = std::vector<std::string>(src.value().begin(), src.value().end());
+        return true;
+    };
+    if (!assignVectorIfPresent(avfilter.preferredVideoMimeTypes, filter.preferredVideoMimeTypes)) return;
+    if (!assignVectorIfPresent(avfilter.preferredAudioMimeTypes, filter.preferredAudioMimeTypes)) return;
+    if (!assignVectorIfPresent(avfilter.preferredAudioLanguages, filter.preferredAudioLanguages)) return;
+    if (!assignVectorIfPresent(avfilter.preferredSubtitleLanguages, filter.preferredSubtitleLanguages)) return;
+    auto assignResolution = [](auto& dest, const auto& src) {
+        if (src.has_value()) {
+            int32_t width = src.value().width.value_or(0);
+            int32_t height = src.value().height.value_or(0);
+            dest = std::make_pair(width, height);
+        }
+    };
+    assignResolution(avfilter.maxVideoResolution, filter.maxVideoResolution);
+    assignResolution(avfilter.minVideoResolution, filter.minVideoResolution);
+    auto context = std::make_shared<AVPlayerContext>();
+    context->asyncTask = SetTrackSelectionFilterTask(avfilter);
+    context->CheckTaskResult();
+    MEDIA_LOGI("TaiheSetTrackSelectionFilter Out");
+}
+
+TrackSelectionFilter AVPlayerImpl::GetTrackSelectionFilterSync()
+{
+    MediaTrace trace("AVPlayerImpl::getTrackSelectionFilter");
+    MEDIA_LOGI("TaiheGetTrackSelectionFilter In");
+    TrackSelectionFilter filter;
+    std::unique_ptr<AVPlayerContext> context = std::make_unique<AVPlayerContext>();
+    if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "task has been cleared");
+        return filter;
+    }
+    context->asyncTask = GetTrackSelectionFilterTask(context);
+    auto result = context->asyncTask->GetResult();
+    auto assignOpt = [](auto& target, const auto& source) {
+        if (source >= 0) {
+            target = optional<std::decay_t<decltype(target.value())>>(std::in_place_t{}, source);
+        }
+    };
+    assignOpt(filter.maxVideoBitrate, context->trackFilter_.maxVideoBitrate);
+    assignOpt(filter.minVideoBitrate, context->trackFilter_.minVideoBitrate);
+    assignOpt(filter.maxVideoFrameRate, context->trackFilter_.maxVideoFrameRate);
+    assignOpt(filter.minVideoFrameRate, context->trackFilter_.minVideoFrameRate);
+    assignOpt(filter.maxAudioBitrate, context->trackFilter_.maxAudioBitrate);
+    assignOpt(filter.minAudioBitrate, context->trackFilter_.minAudioBitrate);
+    assignOpt(filter.maxAudioChannels, context->trackFilter_.maxAudioChannels);
+    if (context->trackFilter_.maxVideoResolution.first >= 0 && context->trackFilter_.maxVideoResolution.second >= 0) {
+        VideoSize vs;
+        vs.width = optional<int32_t>(std::in_place_t{}, context->trackFilter_.maxVideoResolution.first);
+        vs.height = optional<int32_t>(std::in_place_t{}, context->trackFilter_.maxVideoResolution.second);
+        filter.maxVideoResolution = optional<VideoSize>(std::in_place_t{}, vs);
+    }
+    if (context->trackFilter_.minVideoResolution.first >= 0 && context->trackFilter_.minVideoResolution.second >= 0) {
+        VideoSize vs;
+        vs.width = optional<int32_t>(std::in_place_t{}, context->trackFilter_.minVideoResolution.first);
+        vs.height = optional<int32_t>(std::in_place_t{}, context->trackFilter_.minVideoResolution.second);
+        filter.minVideoResolution = optional<VideoSize>(std::in_place_t{}, vs);
+    }
+    auto assignArray = [](auto& target, const auto& source) {
+        if (!source.empty()) {
+            const auto& vec = source;
+            target = optional<::taihe::array<string>>(std::in_place_t{},
+                array<string>(copy_data_t{}, vec.data(), vec.size()));
+        }
+    };
+    assignArray(filter.preferredVideoMimeTypes, context->trackFilter_.preferredVideoMimeTypes);
+    assignArray(filter.preferredAudioMimeTypes, context->trackFilter_.preferredAudioMimeTypes);
+    assignArray(filter.preferredAudioLanguages, context->trackFilter_.preferredAudioLanguages);
+    assignArray(filter.preferredSubtitleLanguages, context->trackFilter_.preferredSubtitleLanguages);
+    MEDIA_LOGI("TaiheGetTrackSelectionFilter Out");
+    return filter;
 }
 
 bool AVPlayerImpl::IsRateValid(double rate)
@@ -2005,8 +2146,10 @@ void AVPlayerImpl::ReleaseSync()
         dataSrcCb_->ClearCallbackReference();
         dataSrcCb_ = nullptr;
     }
-
-    context->CheckTaskResult();
+    auto t1 = std::thread([context]() {
+        context->CheckTaskResult();
+    });
+    t1.detach();
     MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheRelease Out", FAKE_POINTER(this));
 }
 

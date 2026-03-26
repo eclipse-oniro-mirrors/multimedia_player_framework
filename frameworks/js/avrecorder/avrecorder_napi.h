@@ -60,7 +60,6 @@ const std::string GET_ENCODER_INFO = "GetEncoderInfo";
 const std::string IS_WATERMARK_SUPPORTED = "IsWatermarkSupported";
 const std::string SET_WATERMARK = "SetWatermark";
 const std::string SET_METADATA = "SetMetadata";
-const std::string SET_CUSTOM_INFO = "SetCustomInfo";
 const std::string SET_WILL_MUTE_WHEN_INTERRUPTED = "SetWillMuteWhenInterrupted";
 }
 
@@ -96,7 +95,6 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::IS_WATERMARK_SUPPORTED,
         AVRecordergOpt::SET_WATERMARK,
         AVRecordergOpt::SET_METADATA,
-        AVRecordergOpt::SET_CUSTOM_INFO,
     }},
     {AVRecorderState::STATE_STARTED, {
         AVRecordergOpt::START,
@@ -111,7 +109,6 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::GET_AV_RECORDER_CONFIG,
         AVRecordergOpt::IS_WATERMARK_SUPPORTED,
         AVRecordergOpt::SET_METADATA,
-        AVRecordergOpt::SET_CUSTOM_INFO,
     }},
     {AVRecorderState::STATE_PAUSED, {
         AVRecordergOpt::PAUSE,
@@ -125,7 +122,6 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::GET_AV_RECORDER_CONFIG,
         AVRecordergOpt::IS_WATERMARK_SUPPORTED,
         AVRecordergOpt::SET_METADATA,
-        AVRecordergOpt::SET_CUSTOM_INFO,
     }},
     {AVRecorderState::STATE_STOPPED, {
         AVRecordergOpt::STOP,
@@ -233,10 +229,6 @@ private:
      * setMetadata(metadata: Record<string, string>): void;
     */
     static napi_value JsSetMetadata(napi_env env, napi_callback_info info);
-    /**
-     * setCustomInfo(customInfo: Record<string, string>): void;
-    */
-    static napi_value JsSetCustomInfo(napi_env env, napi_callback_info info);
     /**
      * getInputSurface(callback: AsyncCallback<string>): void
      * getInputSurface(): Promise<string>
@@ -394,7 +386,6 @@ private:
     int32_t SetWillMuteWhenInterrupted(bool muteWhenInterrupted);
     int32_t SetWatermark(std::shared_ptr<PixelMap> &pixelMap, std::shared_ptr<WatermarkConfig> &watermarkConfig);
     int32_t SetMetadata(const std::map<std::string, std::string> &recordMeta);
-    int32_t SetCustomInfo(const std::map<std::string, std::string> &recordMeta);
 
     void ErrorCallback(int32_t errCode, const std::string &operate, const std::string &add = "");
     void StateCallback(const std::string &state);

@@ -1175,6 +1175,91 @@ int32_t PlayerServiceProxy::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     return reply.ReadInt32();
 }
 
+int32_t PlayerServiceProxy::SetTrackSelectionFilter(AVPlayTrackSelectionFilter trackFilter)
+{
+    MEDIA_LOGI("SetTrackSelectionFilter");
+    MediaTrace trace("PlayerServiceProxy::SetTrackSelectionFilter");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+    WriteTrackSelectionFilter(data, trackFilter);
+    int32_t error = SendRequest(SET_TRACK_SELECTION_FILTER, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetTrackSelectionFilter failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::GetTrackSelectionFilter(AVPlayTrackSelectionFilter& trackFilter)
+{
+    MEDIA_LOGI("GetTrackSelectionFilter");
+    MediaTrace trace("PlayerServiceProxy::GetTrackSelectionFilter");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+    int32_t error = SendRequest(GET_TRACK_SELECTION_FILTER, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "GetTrackSelectionFilter failed, error: %{public}d", error);
+    int32_t ret = reply.ReadInt32();
+    ReadTrackSelectionFilter(reply, trackFilter);
+    return ret;
+}
+
+void PlayerServiceProxy::ReadTrackSelectionFilter(MessageParcel &reply, AVPlayTrackSelectionFilter &trackFilter)
+{
+    trackFilter.maxVideoBitrate = reply.ReadInt32();
+    trackFilter.minVideoBitrate = reply.ReadInt32();
+    trackFilter.maxVideoFrameRate = reply.ReadInt32();
+    trackFilter.minVideoFrameRate = reply.ReadInt32();
+    int32_t width = reply.ReadInt32();
+    int32_t height = reply.ReadInt32();
+    trackFilter.maxVideoResolution = std::make_pair(width, height);
+    width = reply.ReadInt32();
+    height = reply.ReadInt32();
+    trackFilter.minVideoResolution = std::make_pair(width, height);
+    trackFilter.maxAudioBitrate = reply.ReadInt32();
+    trackFilter.minAudioBitrate = reply.ReadInt32();
+    trackFilter.maxAudioChannels = reply.ReadInt32();
+
+    ReadTrackSelectionFilterInner(reply, trackFilter);
+}
+
+void PlayerServiceProxy::ReadTrackSelectionFilterInner(MessageParcel &reply, AVPlayTrackSelectionFilter &trackFilter)
+{
+    uint32_t size = reply.ReadUint32();
+    std::vector<std::string> videoMimeTypes;
+    for (uint32_t i = 0; i < size; i++) {
+        videoMimeTypes.emplace_back(reply.ReadString());
+    }
+    trackFilter.preferredVideoMimeTypes = videoMimeTypes;
+
+    size = reply.ReadUint32();
+    std::vector<std::string> audioMimeTypes;
+    for (uint32_t i = 0; i < size; i++) {
+        audioMimeTypes.emplace_back(reply.ReadString());
+    }
+    trackFilter.preferredAudioMimeTypes = audioMimeTypes;
+
+    size = reply.ReadUint32();
+    std::vector<std::string> audioLanguages;
+    for (uint32_t i = 0; i < size; i++) {
+        audioLanguages.emplace_back(reply.ReadString());
+    }
+    trackFilter.preferredAudioLanguages = audioLanguages;
+
+    size = reply.ReadUint32();
+    std::vector<std::string> subtitleLanguages;
+    for (uint32_t i = 0; i < size; i++) {
+        subtitleLanguages.emplace_back(reply.ReadString());
+    }
+    trackFilter.preferredSubtitleLanguages = subtitleLanguages;
+}
+
 int32_t PlayerServiceProxy::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted)
 {
     MediaTrace trace("PlayerServiceProxy::SetMediaMuted");
@@ -1296,6 +1381,36 @@ void PlayerServiceProxy::WritePlaybackStrategy(MessageParcel &data, const AVPlay
     (void)data.WriteString(strategy.preferredAudioLanguage);
     (void)data.WriteString(strategy.preferredSubtitleLanguage);
     (void)data.WriteBool(strategy.keepDecodingOnMute);
+}
+
+void PlayerServiceProxy::WriteTrackSelectionFilter(MessageParcel &data, const AVPlayTrackSelectionFilter &filter)
+{
+    (void)data.WriteInt32(filter.maxVideoBitrate);
+    (void)data.WriteInt32(filter.minVideoBitrate);
+    (void)data.WriteInt32(filter.maxVideoFrameRate);
+    (void)data.WriteInt32(filter.minVideoFrameRate);
+    (void)data.WriteInt32(filter.maxVideoResolution.first);
+    (void)data.WriteInt32(filter.maxVideoResolution.second);
+    (void)data.WriteInt32(filter.minVideoResolution.first);
+    (void)data.WriteInt32(filter.minVideoResolution.second);
+    (void)data.WriteInt32(filter.maxAudioBitrate);
+    (void)data.WriteInt32(filter.minAudioBitrate);
+    (void)data.WriteInt32(filter.maxAudioChannels);
+    WriteTrackSelectionFilterInner(data, filter);
+}
+
+void PlayerServiceProxy::WriteTrackSelectionFilterInner(MessageParcel &data, const AVPlayTrackSelectionFilter &filter)
+{
+    auto vecWriteFunc = [&data] (std::vector<std::string> elem) {
+        (void)data.WriteUint32(elem.size());
+        for (uint32_t i = 0; i < elem.size(); i++) {
+            (void)data.WriteString(elem.at(i));
+        }
+    };
+    vecWriteFunc(filter.preferredVideoMimeTypes);
+    vecWriteFunc(filter.preferredAudioMimeTypes);
+    vecWriteFunc(filter.preferredAudioLanguages);
+    vecWriteFunc(filter.preferredSubtitleLanguages);
 }
 
 int32_t PlayerServiceProxy::SetReopenFd(int32_t fd)

@@ -56,7 +56,6 @@ private:
     };
     PlayerMemManage();
     bool Init();
-    void ProbeTask();
     void HandleOnTrimLevelLow();
     void FindBackGroundPlayerFromVec(AppPlayerInfo &appPlayerInfo);
     void FindFrontGroundPlayerFromVec(AppPlayerInfo &appPlayerInfo);

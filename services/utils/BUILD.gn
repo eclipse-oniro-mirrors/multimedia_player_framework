@@ -42,6 +42,7 @@ ohos_shared_library("media_service_utils") {
     "uri_helper.cpp",
     "watchdog.cpp",
     "xml_parse.cpp",
+    "media_madvise_utils.cpp",
   ]
 
   include_dirs = [

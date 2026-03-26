@@ -283,6 +283,103 @@ bool CommonNapi::GetPropertyMap(napi_env env, napi_value value, std::map<std::st
     return true;
 }
 
+bool CommonNapi::GetPropertyVideoSize(napi_env env, napi_value value, const std::string &type,
+                                      std::pair<int32_t, int32_t> &result)
+{
+    napi_value item = nullptr;
+    bool exist = false;
+    napi_status status = napi_has_named_property(env, value, type.c_str(), &exist);
+    if (status != napi_ok || !exist) {
+        MEDIA_LOGE("can not find %{public}s property", type.c_str());
+        return false;
+    }
+
+    if (napi_get_named_property(env, value, type.c_str(), &item) != napi_ok) {
+        MEDIA_LOGE("get %{public}s property fail", type.c_str());
+        return false;
+    }
+
+    napi_value width = nullptr;
+    napi_value height = nullptr;
+    if (napi_get_named_property(env, item, "width", &width) != napi_ok) {
+        MEDIA_LOGE("get video width fail");
+        return false;
+    }
+    if (napi_get_named_property(env, item, "height", &height) != napi_ok) {
+        MEDIA_LOGE("get video height fail");
+        return false;
+    }
+    int32_t widthValue = 0;
+    int32_t heightValue = 0;
+    if (napi_get_value_int32(env, width, &widthValue) != napi_ok) {
+        MEDIA_LOGE("get video width fail");
+        return false;
+    }
+    if (napi_get_value_int32(env, height, &heightValue) != napi_ok) {
+        MEDIA_LOGE("get video height fail");
+        return false;
+    }
+    result = std::make_pair(widthValue, heightValue);
+    return true;
+}
+
+bool CommonNapi::GetPropertyArrayString(napi_env env, napi_value value, const std::string &type,
+                                        std::vector<std::string> &result)
+{
+    napi_value item = nullptr;
+    bool exist = false;
+    napi_status status = napi_has_named_property(env, value, type.c_str(), &exist);
+    if (status != napi_ok || !exist) {
+        MEDIA_LOGE("can not find %{public}s property", type.c_str());
+        return false;
+    }
+
+    if (napi_get_named_property(env, value, type.c_str(), &item) != napi_ok) {
+        MEDIA_LOGE("get %{public}s property fail", type.c_str());
+        return false;
+    }
+    bool isArray = false;
+    if (napi_is_array(env, item, &isArray) != napi_ok || !isArray) {
+        MEDIA_LOGE(" %{public}s property is not an array", type.c_str());
+        return false;
+    }
+
+    uint32_t length = 0;
+    if (napi_get_array_length(env, item, &length) != napi_ok) {
+        MEDIA_LOGE("get %{public}s property array length fail", type.c_str());
+        return false;
+    }
+
+    std::vector<std::string> vec;
+    for (uint32_t i = 0; i < length; i++) {
+        napi_value elem;
+        if (napi_get_element(env, item, i, &elem) != napi_ok) {
+            MEDIA_LOGE("get %{public}d array element fail", i);
+            return false;
+        }
+        napi_valuetype elemType;
+        napi_typeof(env, elem, &elemType);
+        if (elemType != napi_string) {
+            MEDIA_LOGE("element type is not a string");
+            return false;
+        }
+        size_t strLen;
+        if (napi_get_value_string_utf8(env, elem, nullptr, 0, &strLen) != napi_ok) {
+            MEDIA_LOGE("get element length fail");
+            return false;
+        }
+        std::vector<char> buf(strLen + 1);
+        if (napi_get_value_string_utf8(env, elem, buf.data(), strLen + 1, nullptr) != napi_ok) {
+            MEDIA_LOGE("get element fail");
+            return false;
+        }
+        vec.emplace_back(buf.data(), strLen);
+    }
+    result = std::move(vec);
+
+    return true;
+}
+
 bool CommonNapi::GetPlayStrategy(napi_env env, napi_value value, AVPlayStrategyTmp &playStrategy)
 {
     if (!GetPropertyUint32(env, value, "preferredWidth", playStrategy.preferredWidth)) {
@@ -343,6 +440,53 @@ bool CommonNapi::GetPlayMediaStreamData(napi_env env, napi_value value, AVPlayMe
     GetPropertyUint32(env, value, "width", mediaStream.width);
     GetPropertyUint32(env, value, "height", mediaStream.height);
     GetPropertyUint32(env, value, "bitrate", mediaStream.bitrate);
+    return true;
+}
+
+bool CommonNapi::GetTrackSelectionFilter(napi_env env, napi_value value, AVPlayTrackSelectionFilter &filter)
+{
+    MEDIA_LOGI("SetTrackSelectionFilter");
+    if (!GetPropertyInt32(env, value, "maxVideoBitrate", filter.maxVideoBitrate)) {
+        filter.maxVideoBitrate = -1;
+    }
+    if (!GetPropertyInt32(env, value, "minVideoBitrate", filter.minVideoBitrate)) {
+        filter.minVideoBitrate = -1;
+    }
+    if (!GetPropertyInt32(env, value, "maxVideoFrameRate", filter.maxVideoFrameRate)) {
+        filter.maxVideoFrameRate = -1;
+    }
+    if (!GetPropertyInt32(env, value, "minVideoFrameRate", filter.minVideoFrameRate)) {
+        filter.minVideoFrameRate = -1;
+    }
+    if (!GetPropertyVideoSize(env, value, "maxVideoResolution", filter.maxVideoResolution)) {
+        filter.maxVideoResolution.first = -1;
+        filter.maxVideoResolution.second = -1;
+    }
+    if (!GetPropertyVideoSize(env, value, "minVideoResolution", filter.minVideoResolution)) {
+        filter.minVideoResolution.first = -1;
+        filter.minVideoResolution.second = -1;
+    }
+    if (!GetPropertyArrayString(env, value, "preferredVideoMimeTypes", filter.preferredVideoMimeTypes)) {
+        filter.preferredVideoMimeTypes = {};
+    }
+    if (!GetPropertyInt32(env, value, "maxAudioBitrate", filter.maxAudioBitrate)) {
+        filter.maxAudioBitrate = -1;
+    }
+    if (!GetPropertyInt32(env, value, "minAudioBitrate", filter.minAudioBitrate)) {
+        filter.minAudioBitrate = -1;
+    }
+    if (!GetPropertyInt32(env, value, "maxAudioChannels", filter.maxAudioChannels)) {
+        filter.maxAudioChannels = -1;
+    }
+    if (!GetPropertyArrayString(env, value, "preferredAudioMimeTypes", filter.preferredAudioMimeTypes)) {
+        filter.preferredAudioMimeTypes = {};
+    }
+    if (!GetPropertyArrayString(env, value, "preferredAudioLanguages", filter.preferredAudioLanguages)) {
+        filter.preferredAudioLanguages = {};
+    }
+    if (!GetPropertyArrayString(env, value, "preferredSubtitleLanguages", filter.preferredSubtitleLanguages)) {
+        filter.preferredSubtitleLanguages = {};
+    }
     return true;
 }
 
@@ -579,6 +723,47 @@ bool CommonNapi::SetPropertyMap(napi_env env, napi_value &obj, const std::string
     }
     status = napi_set_property(env, obj, keyNapi, valueNapi);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "failed to set property");
+    return true;
+}
+
+bool CommonNapi::SetVideoSizeObject(napi_env env, napi_value &obj, const std::string &key,
+    std::pair<int32_t, int32_t> &value)
+{
+    napi_value videoSize;
+    napi_status status = napi_create_object(env, &videoSize);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+    CHECK_AND_RETURN_RET(SetPropertyInt32(env, videoSize, "width", value.first) == true, false);
+    CHECK_AND_RETURN_RET(SetPropertyInt32(env, videoSize, "height", value.second) == true, false);
+
+    napi_value nameStr = nullptr;
+    status = napi_create_string_utf8(env, key.c_str(), NAPI_AUTO_LENGTH, &nameStr);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    status = napi_set_property(env, obj, nameStr, videoSize);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+    return true;
+}
+
+bool CommonNapi::SetPropertyStringArray(napi_env env, napi_value &obj, const std::string &key,
+    const std::vector<std::string> &value)
+{
+    napi_value array = nullptr;
+    napi_status status = napi_create_array_with_length(env, value.size(), &array);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    for (uint32_t i = 0; i < value.size(); i++) {
+        napi_value str;
+        napi_create_string_utf8(env, value[i].c_str(), NAPI_AUTO_LENGTH, &str);
+        status = napi_set_element(env, array, static_cast<uint32_t>(i), str);
+        CHECK_AND_RETURN_RET(status == napi_ok, false);
+    }
+
+    napi_value nameStr = nullptr;
+    status = napi_create_string_utf8(env, key.c_str(), NAPI_AUTO_LENGTH, &nameStr);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    status = napi_set_property(env, obj, nameStr, array);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
     return true;
 }
 
@@ -893,6 +1078,120 @@ napi_status MediaJsResultArray::GetJsResult(napi_env env, napi_value &result)
         description = CommonNapi::CreateFormatBuffer(env, value_[index]);
         if (description == nullptr || napi_set_element(env, result, index, description) != napi_ok) {
             return napi_cancelled;
+        }
+    }
+    return napi_ok;
+}
+
+napi_status MediaJsResultTrackFilter::GetJsResult(napi_env env, napi_value &result)
+{
+    napi_valuetype resultType;
+    napi_typeof(env, result, &resultType);
+    
+    if (resultType != napi_object) {
+        napi_status status = napi_create_object(env, &result);
+        if (status != napi_ok) {
+            MEDIA_LOGE("Failed to create object");
+            return napi_invalid_arg;
+        }
+    }
+    return GetJsResultInner(env, result);
+}
+
+napi_status MediaJsResultTrackFilter::GetJsResultInner(napi_env env, napi_value &result)
+{
+    if (GetVideoJsResult(env, result) != napi_ok) {
+        return napi_invalid_arg;
+    }
+    if (GetAudioJsResult(env, result) != napi_ok) {
+        return napi_invalid_arg;
+    }
+    if (GetSubtitleJsResult(env, result) != napi_ok) {
+        return napi_invalid_arg;
+    }
+    
+    return napi_ok;
+}
+
+napi_status MediaJsResultTrackFilter::GetVideoJsResult(napi_env env, napi_value &result)
+{
+    if (filter_.maxVideoBitrate >= 0) {
+        if (!CommonNapi::SetPropertyInt32(env, result, "maxVideoBitrate", filter_.maxVideoBitrate)) {
+            return napi_invalid_arg;
+        }
+    }
+    if (filter_.minVideoBitrate >= 0) {
+        if (!CommonNapi::SetPropertyInt32(env, result, "minVideoBitrate", filter_.minVideoBitrate)) {
+            return napi_invalid_arg;
+        }
+    }
+    if (filter_.maxVideoFrameRate >= 0) {
+        if (!CommonNapi::SetPropertyInt32(env, result, "maxVideoFrameRate", filter_.maxVideoFrameRate)) {
+            return napi_invalid_arg;
+        }
+    }
+    if (filter_.minVideoFrameRate >= 0) {
+        if (!CommonNapi::SetPropertyInt32(env, result, "minVideoFrameRate", filter_.minVideoFrameRate)) {
+            return napi_invalid_arg;
+        }
+    }
+    if (filter_.maxVideoResolution.first >= 0 && filter_.maxVideoResolution.second >= 0) {
+        if (!CommonNapi::SetVideoSizeObject(env, result, "maxVideoResolution", filter_.maxVideoResolution)) {
+            return napi_invalid_arg;
+        }
+    }
+    if (filter_.minVideoResolution.first >= 0 && filter_.minVideoResolution.second >= 0) {
+        if (!CommonNapi::SetVideoSizeObject(env, result, "minVideoResolution", filter_.minVideoResolution)) {
+            return napi_invalid_arg;
+        }
+    }
+    if (!filter_.preferredVideoMimeTypes.empty()) {
+        if (!CommonNapi::SetPropertyStringArray(env, result, "preferredVideoMimeTypes",
+                                                filter_.preferredVideoMimeTypes)) {
+            return napi_invalid_arg;
+        }
+    }
+    return napi_ok;
+}
+
+napi_status MediaJsResultTrackFilter::GetAudioJsResult(napi_env env, napi_value &result)
+{
+    if (filter_.maxAudioBitrate >= 0) {
+        if (!CommonNapi::SetPropertyInt32(env, result, "maxAudioBitrate", filter_.maxAudioBitrate)) {
+            return napi_invalid_arg;
+        }
+    }
+    if (filter_.minAudioBitrate >= 0) {
+        if (!CommonNapi::SetPropertyInt32(env, result, "minAudioBitrate", filter_.minAudioBitrate)) {
+            return napi_invalid_arg;
+        }
+    }
+    if (filter_.maxAudioChannels >= 0) {
+        if (!CommonNapi::SetPropertyInt32(env, result, "maxAudioChannels", filter_.maxAudioChannels)) {
+            return napi_invalid_arg;
+        }
+    }
+    if (!filter_.preferredAudioMimeTypes.empty()) {
+        if (!CommonNapi::SetPropertyStringArray(env, result, "preferredAudioMimeTypes",
+                                                filter_.preferredAudioMimeTypes)) {
+            return napi_invalid_arg;
+        }
+    }
+    if (!filter_.preferredAudioLanguages.empty()) {
+        if (!CommonNapi::SetPropertyStringArray(env, result, "preferredAudioLanguages",
+                                                filter_.preferredAudioLanguages)) {
+            return napi_invalid_arg;
+        }
+    }
+    return napi_ok;
+}
+
+napi_status MediaJsResultTrackFilter::GetSubtitleJsResult(napi_env env, napi_value &result)
+{
+    if (!filter_.preferredSubtitleLanguages.empty()) {
+        if (!CommonNapi::SetPropertyStringArray(env, result, "preferredSubtitleLanguages",
+                                                filter_.preferredSubtitleLanguages)) {
+            return napi_invalid_arg;
         }
     }
     return napi_ok;

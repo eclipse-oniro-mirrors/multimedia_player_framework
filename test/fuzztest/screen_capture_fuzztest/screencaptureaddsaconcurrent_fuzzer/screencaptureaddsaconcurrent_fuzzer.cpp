@@ -156,7 +156,8 @@ int FuzzScreenCaptureConconcurrentTestOne(FuzzedDataProvider &provider, int code
             break;
         }
         case SET_DATA_TYPE: {
-            screenCaptureServer_->SetDataType(DataType::CAPTURE_FILE);
+            DataType dataType = static_cast<DataType>(provider.ConsumeIntegral<uint8_t>() % 3);
+            screenCaptureServer_->SetDataType(dataType);
             break;
         }
         case SET_RECORDER_INFO: {
@@ -198,11 +199,15 @@ int FuzzScreenCaptureConconcurrentTestTwo(FuzzedDataProvider &provider, int code
         }
         case ACQUIRE_AUDIO_BUF: {
             std::shared_ptr<OHOS::Media::AudioBuffer> audioBuffer;
-            screenCaptureServer_->AcquireAudioBuffer(audioBuffer, AudioCaptureSourceType::APP_PLAYBACK);
+            AudioCaptureSourceType audioCaptureSourceType =
+                static_cast<AudioCaptureSourceType>(provider.ConsumeIntegral<uint8_t>() % 4);
+            screenCaptureServer_->AcquireAudioBuffer(audioBuffer, audioCaptureSourceType);
             break;
         }
         case RELEASE_AUDIO_BUF: {
-            screenCaptureServer_->ReleaseAudioBuffer(AudioCaptureSourceType::APP_PLAYBACK);
+            AudioCaptureSourceType audioCaptureSourceType =
+                static_cast<AudioCaptureSourceType>(provider.ConsumeIntegral<uint8_t>() % 4);
+            screenCaptureServer_->ReleaseAudioBuffer(audioCaptureSourceType);
             break;
         }
         default: break;

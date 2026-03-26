@@ -180,6 +180,8 @@ public:
     int32_t SetRenderFirstFrame(bool display);
     int32_t EnableReportMediaProgress(bool enable);
     int32_t GetPlaybackPosition(int32_t &playbackPosition);
+    int32_t SetTrackSelectionFilter(AVPlayTrackSelectionFilter trackFilter);
+    int32_t GetTrackSelectionFilter(AVPlayTrackSelectionFilter &trackFilter);
 private:
     void SeekPrepare(int32_t &mseconds, PlayerSeekMode &mode);
     std::shared_ptr<IPlayerService> player_ = nullptr;

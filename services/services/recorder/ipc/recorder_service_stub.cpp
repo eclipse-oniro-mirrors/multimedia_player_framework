@@ -174,8 +174,6 @@ void RecorderServiceStub::FillRecFuncPart3()
         [this](MessageParcel &data, MessageParcel &reply) { return SetVideoEnableBFrame(data, reply); };
     recFuncs_[TRANSMIT_QOS] =
         [this](MessageParcel &data, MessageParcel &reply) { return TransmitQos(data, reply); };
-    recFuncs_[SET_CUSTOMINFO] =
-        [this](MessageParcel &data, MessageParcel &reply) { return SetCustomInfo(data, reply); };
 }
 
 int32_t RecorderServiceStub::DestroyStub()
@@ -546,12 +544,6 @@ int32_t RecorderServiceStub::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
     return recorderServer_->SetUserMeta(userMeta);
-}
-
-int32_t RecorderServiceStub::SetCustomInfo(const std::shared_ptr<Meta> &customInfo)
-{
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
-    return recorderServer_->SetCustomInfo(customInfo);
 }
 
 int32_t RecorderServiceStub::TransmitQos(QOS::QosLevel level)
@@ -1191,16 +1183,6 @@ int32_t RecorderServiceStub::SetUserMeta(MessageParcel &data, MessageParcel &rep
         "read metadata failed");
     CHECK_AND_RETURN_RET_LOG(reply.WriteInt32(SetUserMeta(userMeta)), MSERR_INVALID_OPERATION,
         "SetUserMeta reply write failed");
-    return MSERR_OK;
-}
-
-int32_t RecorderServiceStub::SetCustomInfo(MessageParcel &data, MessageParcel &reply)
-{
-    std::shared_ptr<Meta> customInfo = std::make_shared<Meta>();
-    CHECK_AND_RETURN_RET_LOG(customInfo->FromParcel(data), MSERR_INVALID_OPERATION,
-        "read custom info failed");
-    CHECK_AND_RETURN_RET_LOG(reply.WriteInt32(SetCustomInfo(customInfo)), MSERR_INVALID_OPERATION,
-        "SetCustomInfo reply write failed");
     return MSERR_OK;
 }
 

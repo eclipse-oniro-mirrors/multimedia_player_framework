@@ -61,7 +61,7 @@ bool ScreenCaptureMonitorServiceStubFuzzer::FuzzScreenCaptureMonitorOnRemoteRequ
     }
 
     const int maxIpcNum = 32;
-    bool isWriteToken = size > 0 && data[0] % 9 != 0;
+    bool isWriteToken = data[0] % 9 != 0;
     for (uint32_t code = 0; code <= maxIpcNum; code++) {
         MessageParcel msg;
         if (isWriteToken) {

@@ -571,15 +571,6 @@ int32_t RecorderClient::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
     return recorderProxy_->SetUserMeta(userMeta);
 }
 
-int32_t RecorderClient::SetCustomInfo(const std::shared_ptr<Meta> &customInfo)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
-
-    MEDIA_LOGD("SetCustomInfo");
-    return recorderProxy_->SetCustomInfo(customInfo);
-}
-
 int32_t RecorderClient::SetWillMuteWhenInterrupted(bool muteWhenInterrupted)
 {
     std::lock_guard<std::mutex> lock(mutex_);
