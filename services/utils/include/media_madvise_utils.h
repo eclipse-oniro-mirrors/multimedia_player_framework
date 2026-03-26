@@ -24,12 +24,12 @@
 
 namespace OHOS {
 namespace Media {
-class __attribute__((visibility("default"))) MadviseUtils final {
+class __attribute__((visibility("default"))) MediaMadviseUtils final {
 public:
-    MadviseUtils() = delete;
-    ~MadviseUtils() = delete;
-    static bool MadviseSingleLibrary(const std::string &libName);
-    static int32_t MadviseMultipleLibraries(const std::vector<std::string> &libNames);
+    MediaMadviseUtils() = delete;
+    ~MediaMadviseUtils() = delete;
+    static bool MediaMadviseSingleLibrary(const std::string &libName);
+    static int32_t MediaMadviseMultipleLibraries(const std::vector<std::string> &libNames);
 
 private:
     static constexpr const char *UNKNOWN_LIB_NAME = "unknown";
