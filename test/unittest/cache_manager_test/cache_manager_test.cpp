@@ -120,10 +120,27 @@ HWTEST_F(CacheManagerTest, CacheManagerTest_CreateMediaCache_003, TestSize.Level
 }
 
 /**
-* @tc.name  : CacheManagerTest_FindFirstEqualField_001
-* @tc.number: FindFirstEqualField_001
-* @tc.desc  : test FindFirstEqualField false
-*/
+ * @tc.name  : CacheManagerTest_CreateMediaCache_004
+ * @tc.number: CreateMediaCache_004
+ * @tc.desc  : test CreateMediaCache with mapped_ == MAP_FAILED
+ */
+HWTEST_F(CacheManagerTest, CacheManagerTest_CreateMediaCache_004, TestSize.Level0)
+{
+    std::string url = "http://example.com/video.mp4";
+    std::string type = "video";
+    bool randomAccess = true;
+    uint64_t size = 1024;
+    manager_->mapped_ = MAP_FAILED;
+    manager_->fd_ = -1;
+    bool result = manager_->CreateMediaCache(url, type, randomAccess, size);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.name  : CacheManagerTest_FindFirstEqualField_001
+ * @tc.number: FindFirstEqualField_001
+ * @tc.desc  : test FindFirstEqualField false
+ */
 HWTEST_F(CacheManagerTest, CacheManagerTest_FindFirstEqualField_001, TestSize.Level0)
 {
     std::string url = "http://example.com/video.mp4";
@@ -197,10 +214,43 @@ HWTEST_F(CacheManagerTest, CacheManagerTest_FlushWriteLength_003, TestSize.Level
 }
 
 /**
-* @tc.name  : CacheManagerTest_GetPrefixBeforeUnderscore_001
-* @tc.number: GetPrefixBeforeUnderscore_001
-* @tc.desc  : test not included _
-*/
+ * @tc.name  : CacheManagerTest_FlushWriteLength_005
+ * @tc.number: FlushWriteLength_005
+ * @tc.desc  : test FlushWriteLength with mapped_ == MAP_FAILED
+ */
+HWTEST_F(CacheManagerTest, CacheManagerTest_FlushWriteLength_005, TestSize.Level0)
+{
+    std::string path = "test_path";
+    uint64_t fileSize = 1024;
+    manager_->mapped_ = MAP_FAILED;
+    manager_->fd_ = -1;
+    bool result = manager_->FlushWriteLength(path, fileSize);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.name  : CacheManagerTest_GetMediaCache_004
+ * @tc.number: GetMediaCache_004
+ * @tc.desc  : test GetMediaCache with mapped_ == MAP_FAILED
+ */
+HWTEST_F(CacheManagerTest, CacheManagerTest_GetMediaCache_001, TestSize.Level0)
+{
+    std::string url = "http://example.com/video.mp4";
+    std::string type = "video";
+    bool randomAccess = true;
+    uint64_t size = 1024;
+    manager_->CreateMediaCache(url, type, randomAccess, size);
+    manager_->mapped_ = MAP_FAILED;
+    manager_->fd_ = -1;
+    std::string result = manager_->GetMediaCache(url);
+    EXPECT_NE(result, "");
+}
+
+/**
+ * @tc.name  : CacheManagerTest_GetPrefixBeforeUnderscore_001
+ * @tc.number: GetPrefixBeforeUnderscore_001
+ * @tc.desc  : test not included _
+ */
 HWTEST_F(CacheManagerTest, CacheManagerTest_GetPrefixBeforeUnderscore_001, TestSize.Level0)
 {
     std::string input = "testDir";

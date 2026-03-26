@@ -138,6 +138,10 @@ void StreamCacheManager::LoadIndex()
 
 bool StreamCacheManager::FlushWriteLength(const std::string& path, uint64_t fileSize)
 {
+    if (mapped_ == MAP_FAILED) {
+        LoadMapping();
+        LoadIndex();
+    }
     (void)path;
     std::unique_lock<std::mutex> lock(mutex_);
     cacheSize_.fetch_add(fileSize, std::memory_order_relaxed);
@@ -200,6 +204,10 @@ std::string StreamCacheManager::ExtractField(char* entryStart, uint32_t fieldCou
 bool StreamCacheManager::CreateMediaCache(const std::string& url, const std::string& type,
     bool randomAccess, uint64_t size)
 {
+    if (mapped_ == MAP_FAILED) {
+        LoadMapping();
+        LoadIndex();
+    }
     std::unique_lock<std::mutex> lock(mutex_);
     std::string key = std::to_string(std::hash<std::string>()(url));
     auto it = index_.find(key);
@@ -243,6 +251,14 @@ bool StreamCacheManager::CreateMediaCache(const std::string& url, const std::str
     index_[key].emplace_back(fileSize_, totalSize);
     entryIndex_[entry] = lastAccessTime;
 
+    if (fileSize_ >= MAX_CACHE_MAPPING_FILE_SIZE) {
+        MEDIA_LOGE("fileSize greater than max cache mapping size");
+        fs::remove_all(CACHE_DIR);
+        index_.clear();
+        entryIndex_.clear();
+        LoadMapping();
+    }
+
     fileSize_ += totalSize;
 
     // 刷新到磁盘
@@ -279,12 +295,17 @@ void StreamCacheManager::ReleaseMap()
     std::unique_lock<std::mutex> lock(mutex_);
     if (mapped_ != MAP_FAILED) {
         munmap(mapped_, fileSize_);
+        mapped_ = MAP_FAILED;
     }
     MEDIA_LOGD("0x%{public}06" PRIXPTR "ReleaseMap", FAKE_POINTER(this));
 }
 
 std::string StreamCacheManager::GetMediaCache(const std::string& url)
 {
+    if (mapped_ == MAP_FAILED) {
+        LoadMapping();
+        LoadIndex();
+    }
     std::unique_lock<std::mutex> lock(mutex_);
     std::string key = std::to_string(std::hash<std::string>()(url));
     auto it = index_.find(key);
