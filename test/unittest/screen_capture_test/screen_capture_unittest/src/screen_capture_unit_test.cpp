@@ -3495,8 +3495,22 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_compatibility_006_1, TestSize.Lev
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_compatibility_006_2, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_compatibility_006_2 before");
-    SetConfig(config_);
-    
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_compatibility_006_2.mp4", recorderInfo);
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo micCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT
+    };
+    AudioCaptureInfo innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+    config_.audioInfo.micCapInfo = micCapInfo;
+
     // 测试CAPTURE_FILE模式
     config_.dataType = CAPTURE_FILE;
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));

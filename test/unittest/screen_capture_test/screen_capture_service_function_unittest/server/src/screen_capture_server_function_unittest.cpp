@@ -2143,6 +2143,55 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartFileInnerAudioCapture_003, TestSi
 }
 
 #ifdef SUPPORT_CALL
+HWTEST_F(ScreenCaptureServerFunctionTest, StartFileMicAudioCapture_001, TestSize.Level2)
+{
+    screenCaptureServer_->isCalledBySystemApp_ = true;
+    screenCaptureServer_->appName_ = HiviewCareBundleName;
+    InCallObserver::GetInstance().OnCallStateUpdated(true);
+    auto ret = screenCaptureServer_->StartFileMicAudioCapture();
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StartFileMicAudioCapture_002, TestSize.Level2)
+{
+    screenCaptureServer_->isCalledBySystemApp_ = true;
+    screenCaptureServer_->appName_ = HiviewCareBundleName;
+    InCallObserver::GetInstance().OnCallStateUpdated(false);
+    auto ret = screenCaptureServer_->StartFileMicAudioCapture();
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StartFileMicAudioCapture_003, TestSize.Level2)
+{
+    screenCaptureServer_->isCalledBySystemApp_ = false;
+    screenCaptureServer_->appName_ = HiviewCareBundleName;
+    InCallObserver::GetInstance().OnCallStateUpdated(true);
+    auto ret = screenCaptureServer_->StartFileMicAudioCapture();
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StartFileMicAudioCapture_004, TestSize.Level2)
+{
+    screenCaptureServer_->isCalledBySystemApp_ = false;
+    screenCaptureServer_->appName_ = HiviewCareBundleName;
+    InCallObserver::GetInstance().OnCallStateUpdated(false);
+    auto ret = screenCaptureServer_->StartFileMicAudioCapture();
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StartFileMicAudioCapture_005, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetValidConfigFile(recorderInfo);
+    screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
+        AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    screenCaptureServer_->isCalledBySystemApp_ = true;
+    screenCaptureServer_->appName_ = HiviewCareBundleName;
+    screenCaptureServer_->appInfo_.appUid = 100;
+    auto ret = screenCaptureServer_->StartFileMicAudioCapture();
+    EXPECT_EQ(ret, MSERR_UNKNOWN);
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, StopAndRelease_001, TestSize.Level2)
 {
     auto obcb = std::make_unique<ScreenCaptureObserverCallBack>(screenCaptureServer_);
