@@ -32,7 +32,7 @@ namespace Media {
 using namespace taihe;
 using namespace ohos::multimedia::media;
 
-constexpr char CLASS_NAME_BUSINESSERROR[] = "@ohos:base.BusinessError";
+constexpr char CLASS_NAME_BUSINESSERROR[] = "@ohos.base.BusinessError";
 constexpr char CLASS_NAME_ERRORINFO[] = "multimedia.soundPool._taihe_ErrorInfo_inject";
 constexpr char ENUM_NAME_ERRORTYPE[] = "multimedia.soundPool.ErrorType";
 class MediaTaiheUtils {
