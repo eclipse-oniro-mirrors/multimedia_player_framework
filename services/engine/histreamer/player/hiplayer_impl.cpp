@@ -3944,7 +3944,8 @@ int32_t HiPlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
 int32_t HiPlayerImpl::SetTrackSelectionFilter(AVPlayTrackSelectionFilter avTrackFilter)
 {
     MEDIA_LOG_I("SetTrackSelectionFilter");
-    
+    trackSelectionFilter_ = avTrackFilter;
+    hasTrackSelectionFilter_.store(true);
     FALSE_RETURN_V_MSG_W(demuxer_ != nullptr, MSERR_OK, "demuxer_ is nullptr");
     TrackSelectionFilter trackFilter;
     trackFilter.maxVideoBitrate = avTrackFilter.maxVideoBitrate;
@@ -4421,6 +4422,23 @@ void HiPlayerImpl::DoInitDemuxer()
         demuxer_->Init(playerEventReceiver_, playerFilterCallback_, interruptMonitor_);
     }
     (void)demuxer_->SetPlayerMode();
+    if (hasTrackSelectionFilter_.load()) {
+        TrackSelectionFilter trackFilter;
+        trackFilter.maxVideoBitrate = trackSelectionFilter_.maxVideoBitrate;
+        trackFilter.minVideoBitrate = trackSelectionFilter_.minVideoBitrate;
+        trackFilter.maxVideoFrameRate = trackSelectionFilter_.maxVideoFrameRate;
+        trackFilter.minVideoFrameRate = trackSelectionFilter_.minVideoFrameRate;
+        trackFilter.maxVideoResolution = trackSelectionFilter_.maxVideoResolution;
+        trackFilter.minVideoResolution = trackSelectionFilter_.minVideoResolution;
+        trackFilter.preferredVideoMimeTypes = trackSelectionFilter_.preferredVideoMimeTypes;
+        trackFilter.maxAudioBitrate = trackSelectionFilter_.maxAudioBitrate;
+        trackFilter.minAudioBitrate = trackSelectionFilter_.minAudioBitrate;
+        trackFilter.maxAudioChannels = trackSelectionFilter_.maxAudioChannels;
+        trackFilter.preferredAudioMimeTypes = trackSelectionFilter_.preferredAudioMimeTypes;
+        trackFilter.preferredAudioLanguages = trackSelectionFilter_.preferredAudioLanguages;
+        trackFilter.preferredSubtitleLanguages = trackSelectionFilter_.preferredSubtitleLanguages;
+        demuxer_->SetTrackSelectionFilter(trackFilter);
+    }
 }
 
 Status HiPlayerImpl::InitVideoDecoder()
