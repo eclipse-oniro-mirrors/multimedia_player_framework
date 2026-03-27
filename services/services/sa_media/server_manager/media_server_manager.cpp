@@ -906,7 +906,7 @@ void MediaServerManager::HandleMadviseLibraries()
 {
     CHECK_AND_RETURN_NOLOG(GetStubMapCountIsEmpty());
     MEDIA_LOGI("HandleMadviseLibraries start.");
-    MadviseUtils::MadviseSingleLibrary(MEDIA_SERVICE_LIBNAME);
+    MediaMadviseUtils::MediaMadviseSingleLibrary(MEDIA_SERVICE_LIBNAME);
 }
 #endif
 
