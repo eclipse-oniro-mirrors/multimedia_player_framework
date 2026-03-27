@@ -28,6 +28,32 @@ using namespace OHOS::Media::PlayerTestParam;
 
 namespace OHOS {
 namespace Media {
+namespace {
+constexpr int32_t EXPECTED_ENGINE_CALL_COUNT = 1;
+constexpr int32_t TEST_MAX_VIDEO_BITRATE = 4096;
+constexpr size_t EXPECTED_LANGUAGE_COUNT = 1;
+}
+
+class TrackSelectionFilterPlayerEngineMock : public PlayerEngineMock {
+public:
+    int32_t PrepareAsync() override
+    {
+        ++prepareAsyncCallCount_;
+        return PlayerEngineMock::PrepareAsync();
+    }
+
+    int32_t SetTrackSelectionFilter(AVPlayTrackSelectionFilter trackFilter) override
+    {
+        ++setTrackSelectionFilterCallCount_;
+        trackFilter_ = trackFilter;
+        return MSERR_OK;
+    }
+
+    int32_t prepareAsyncCallCount_ = 0;
+    int32_t setTrackSelectionFilterCallCount_ = 0;
+    AVPlayTrackSelectionFilter trackFilter_;
+};
+
 void PlayerServerUnitTest::SetUpTestCase(void)
 {
 }
@@ -53,6 +79,39 @@ void PlayerServerUnitTest::TearDown(void)
     if (player_ != nullptr) {
         player_->Release();
     }
+}
+
+/**
+ * @tc.name  : Test HandlePrepare
+ * @tc.number: Player_HandlePrepare_001
+ * @tc.desc  : Test Player HandlePrepare applies track selection filter config
+ */
+HWTEST_F(PlayerServerUnitTest, Player_HandlePrepare_001, TestSize.Level1)
+{
+    auto playerServer = static_pointer_cast<PlayerServer>(player_->player_);
+    ASSERT_NE(playerServer, nullptr);
+
+    auto mockEngine = std::make_unique<TrackSelectionFilterPlayerEngineMock>();
+    auto mockEnginePtr = mockEngine.get();
+    playerServer->playerEngine_ = std::move(mockEngine);
+    ASSERT_NE(playerServer->playerEngine_, nullptr);
+
+    playerServer->isInterruptNeeded_ = false;
+    playerServer->config_.hasTrackSelectionFilter = true;
+    playerServer->config_.trackSelectionFilter_.maxVideoBitrate = TEST_MAX_VIDEO_BITRATE;
+    playerServer->config_.trackSelectionFilter_.preferredAudioLanguages = {"zh-CN"};
+    playerServer->config_.leftVolume = 1.0f;
+    playerServer->config_.rightVolume = 1.0f;
+    playerServer->config_.looping = false;
+    playerServer->config_.speedMode = SPEED_FORWARD_1_00_X;
+    playerServer->config_.effectMode = OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT;
+
+    ASSERT_EQ(MSERR_OK, playerServer->HandlePrepare());
+    EXPECT_EQ(EXPECTED_ENGINE_CALL_COUNT, mockEnginePtr->prepareAsyncCallCount_);
+    EXPECT_EQ(EXPECTED_ENGINE_CALL_COUNT, mockEnginePtr->setTrackSelectionFilterCallCount_);
+    EXPECT_EQ(TEST_MAX_VIDEO_BITRATE, mockEnginePtr->trackFilter_.maxVideoBitrate);
+    ASSERT_EQ(EXPECTED_LANGUAGE_COUNT, mockEnginePtr->trackFilter_.preferredAudioLanguages.size());
+    EXPECT_EQ("zh-CN", mockEnginePtr->trackFilter_.preferredAudioLanguages[0]);
 }
 
 /**

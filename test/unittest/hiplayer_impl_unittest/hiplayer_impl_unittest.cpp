@@ -33,6 +33,9 @@ using namespace std;
 using namespace testing;
 using namespace testing::ext;
 namespace {
+constexpr int32_t AUDIO_TRACK_EVENT_INDEX = 0;
+constexpr int32_t INVALID_AUDIO_TRACK_ID = -1;
+const std::string TEST_AUDIO_MIME = "audio/test";
 std::vector<std::tuple<std::string, int32_t, std::string, PlayerErrorType>> g_errorEvents = {
     {"audioDecoder", MSERR_UNSUPPORT_AUD_DEC_TYPE, "audio/test_mime", PlayerErrorType::AUD_DEC_ERR},
     {"audioDecoder", MSERR_DRM_VERIFICATION_FAILED, "audio/test_mime", PlayerErrorType::DRM_ERR},
@@ -84,6 +87,40 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SetDefaultAudioRenderInfo_001, TestSize
     trackInfos.push_back(testptr);
     hiplayer_->SetDefaultAudioRenderInfo(trackInfos);
     EXPECT_EQ(hiplayer_->isNetWorkPlay_, false);
+}
+
+// @tc.name     Test HandleAudioTrackChangeEvent API
+// @tc.number   PHIUT_HandleAudioTrackChangeEvent_003
+// @tc.desc     Test branch currentAudioTrackId_ < 0 in HandleAudioTrackChangeEvent.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_HandleAudioTrackChangeEvent_003, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::shared_ptr<Meta> meta1 = std::make_shared<Meta>();
+    meta1->SetData(Tag::MIME_TYPE, TEST_AUDIO_MIME);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    auto *mockAudioDecoderRaw = new MockAudioDecoderFilter(name, type);
+    std::shared_ptr<AudioDecoderFilter> mockAudioDecoder(mockAudioDecoderRaw, [](AudioDecoderFilter* ptr) {
+        (void)ptr;
+    });
+    mockDemuxer->demuxer_ = std::make_shared<MediaDemuxer>();
+    mockDemuxer->demuxer_->mediaMetaData_.trackMetas.push_back(meta1);
+    EXPECT_CALL(*mockDemuxer, GetStreamMetaInfo())
+        .WillRepeatedly(Return(mockDemuxer->demuxer_->mediaMetaData_.trackMetas));
+    EXPECT_CALL(*mockAudioDecoderRaw, ChangePlugin(meta1)).WillOnce(Return(Status::ERROR_UNKNOWN));
+    hiplayer_->demuxer_ = mockDemuxer;
+    hiplayer_->audioDecoder_ = mockAudioDecoder;
+    hiplayer_->currentAudioTrackId_ = INVALID_AUDIO_TRACK_ID;
+    hiplayer_->defaultAudioTrackId_ = INVALID_AUDIO_TRACK_ID;
+
+    Event event;
+    event.param = AUDIO_TRACK_EVENT_INDEX;
+    hiplayer_->HandleAudioTrackChangeEvent(event);
+
+    EXPECT_EQ(hiplayer_->defaultAudioTrackId_, AUDIO_TRACK_EVENT_INDEX);
+    EXPECT_EQ(hiplayer_->currentAudioTrackId_, AUDIO_TRACK_EVENT_INDEX);
+    hiplayer_->audioDecoder_ = nullptr;
 }
 
 // @tc.name     Test SetSource API
