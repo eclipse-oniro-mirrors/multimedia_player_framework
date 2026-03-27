@@ -14,7 +14,6 @@
  */
 #ifndef LPP_SYNC_MANAGER_H
 #define LPP_SYNC_MANAGER_H
-
 #include "i_lpp_sync_manager.h"
 #include "lpp_sync_manager_adapter.h"
 #include "osal/task/task.h"
@@ -56,7 +55,9 @@ private:
     void ResetTimeAnchor();
 
     std::string videoStreamerId_ {};
+#ifdef SUPPORT_DRIVERS_INTERFACE_LPPLAYER
     std::shared_ptr<LppSyncManagerAdapter> adapter_ {nullptr};
+#endif
     bool videoIsLpp_ {true};
     bool audioIsLpp_ {false};
     std::mutex anchorMutex_{};

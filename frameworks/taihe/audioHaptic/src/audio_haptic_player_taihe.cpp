@@ -155,6 +155,11 @@ void AudioHapticPlayerImpl::StartSync()
     }
 }
 
+void AudioHapticPlayerImpl::Start()
+{
+    StartSync();
+}
+
 void AudioHapticPlayerImpl::StopSync()
 {
     if (audioHapticPlayer_ == nullptr) {
@@ -169,6 +174,11 @@ void AudioHapticPlayerImpl::StopSync()
     }
 }
 
+void AudioHapticPlayerImpl::Stop()
+{
+    StopSync();
+}
+
 void AudioHapticPlayerImpl::ReleaseSync()
 {
     if (audioHapticPlayer_ == nullptr) {
@@ -181,6 +191,11 @@ void AudioHapticPlayerImpl::ReleaseSync()
         MEDIA_LOGE("Release: Failed to release audio haptic player");
         CommonTaihe::ThrowError("Error: Operation is not supported or failed");
     }
+}
+
+void AudioHapticPlayerImpl::Release()
+{
+    ReleaseSync();
 }
 
 void AudioHapticPlayerImpl::SetVolumeSync(double volume)
@@ -199,6 +214,11 @@ void AudioHapticPlayerImpl::SetVolumeSync(double volume)
     if (result != 0) {
         CommonTaihe::ThrowError(result, "Failed to set volume");
     }
+}
+
+void AudioHapticPlayerImpl::SetVolume(double volume)
+{
+    SetVolumeSync(volume);
 }
 
 void AudioHapticPlayerImpl::SetHapticsIntensitySync(double intensity)
@@ -222,6 +242,11 @@ void AudioHapticPlayerImpl::SetHapticsIntensitySync(double intensity)
     if (result != 0) {
         CommonTaihe::ThrowError(result, "Failed to set haptics intensity");
     }
+}
+
+void AudioHapticPlayerImpl::SetHapticsIntensity(double intensity)
+{
+    SetHapticsIntensitySync(intensity);
 }
 
 void AudioHapticPlayerImpl::EnableHapticsInSilentMode(bool enable)
@@ -270,6 +295,11 @@ void AudioHapticPlayerImpl::SetLoopSync(bool loop)
     }
 }
 
+void AudioHapticPlayerImpl::SetLoop(bool loop)
+{
+    SetLoopSync(loop);
+}
+
 void AudioHapticPlayerImpl::SetHapticsRampSync(int32_t duration, double startIntensity, double endIntensity)
 {
     if (audioHapticPlayer_ == nullptr) {
@@ -291,6 +321,11 @@ void AudioHapticPlayerImpl::SetHapticsRampSync(int32_t duration, double startInt
     if (result != 0) {
         CommonTaihe::ThrowError(result, "Failed to set haptics ramp");
     }
+}
+
+void AudioHapticPlayerImpl::SetHapticsRamp(int32_t duration, double startIntensity, double endIntensity)
+{
+    SetHapticsRampSync(duration, startIntensity, endIntensity);
 }
 
 bool AudioHapticPlayerImpl::IsHapticsRampSupported()

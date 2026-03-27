@@ -53,9 +53,12 @@
 #include "system_ability_definition.h"
 #include "mem_mgr_client.h"
 #include <set>
-#ifdef SUPPORT_LPP_VIDEO_STRAMER
+#ifdef SUPPORT_DRIVERS_INTERFACE_LPPLAYER
 #include "v1_0/ilow_power_player_factory.h"
 namespace PlayerHDI = OHOS::HDI::LowPowerPlayer::V1_0;
+#endif
+#ifdef SUPPORT_MEDIA_MADVISE
+#include "media_madvise_utils.h"
 #endif
 
 namespace {
@@ -64,6 +67,7 @@ constexpr uint32_t REPORT_TIME = 100000000; // us
 constexpr uint32_t MAX_TIMES = 15;
 constexpr uint32_t DELAY_TIME = 200;
 constexpr int32_t RELEASE_THRESHOLD = 3;  // relese task
+const std::string MEDIA_SERVICE_LIBNAME = "libmedia_service.z.so"; // madvise library name
 }
 
 namespace OHOS {
@@ -75,17 +79,23 @@ MediaServerManager &MediaServerManager::GetInstance()
     return instance;
 }
 
-void ConsoleInfo(std::map<pid_t, int32_t> &pidCount, std::string &dumpGroupInfoLog)
+void ConsoleInfo(std::map<pid_t, int32_t> &pidCount, bool isConsole, std::string &dumpGroupInfoLog)
 {
-    for (const auto& pair : pidCount) {
-        dumpGroupInfoLog += "-----#: ";
-        dumpGroupInfoLog += "pid = " + std::to_string(pair.first) + ", insNum: ";
-        dumpGroupInfoLog += std::to_string(pair.second) + "\n";
+    if (pidCount.empty()) {
+        if (isConsole) {
+            MEDIA_LOGI("%{public}s", dumpGroupInfoLog.c_str());
+        }
+        return ;
     }
+    for (const auto& pair : pidCount) {
+        dumpGroupInfoLog += "[" + std::to_string(pair.first) + "/";
+        dumpGroupInfoLog += std::to_string(pair.second) + "]";
+    }
+    dumpGroupInfoLog += "\n";
     MEDIA_LOGI("%{public}s", dumpGroupInfoLog.c_str());
 }
 
-int32_t WriteInfo(int32_t fd, std::string &dumpString, std::vector<Dumper> dumpers, bool needDetail)
+int32_t WriteInfo(int32_t fd, std::string &dumpString, bool isConsole, std::vector<Dumper> dumpers, bool needDetail)
 {
     int32_t i = 0;
     std::map<pid_t, int32_t> pidCount;
@@ -128,7 +138,7 @@ int32_t WriteInfo(int32_t fd, std::string &dumpString, std::vector<Dumper> dumpe
         write(fd, dumpString.c_str(), dumpString.size());
     } else {
         MEDIA_LOGD("%{public}s", dumpString.c_str());
-        ConsoleInfo(pidCount, dumpGroupInfoLog);
+        ConsoleInfo(pidCount, isConsole, dumpGroupInfoLog);
     }
     dumpString.clear();
 
@@ -143,37 +153,37 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
         argSets.insert(args[index]);
     }
 
-    dumpString += "--PlayerServer--\n";
-    auto ret = WriteInfo(fd, dumpString, dumperTbl_[StubType::PLAYER],
+    dumpString = "--PlayerServer--:";
+    auto ret = WriteInfo(fd, dumpString, true, dumperTbl_[StubType::PLAYER],
         argSets.find(u"player") != argSets.end());
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to write PlayerServer information");
 
-    dumpString += "--RecorderServer--\n";
-    ret =  WriteInfo(fd, dumpString, dumperTbl_[StubType::RECORDER],
+    dumpString = "--RecorderServer--:";
+    ret =  WriteInfo(fd, dumpString, false, dumperTbl_[StubType::RECORDER],
         argSets.find(u"recorder") != argSets.end());
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to write RecorderServer information");
 
-    dumpString += "--CodecServer--\n";
-    ret = WriteInfo(fd, dumpString, dumperTbl_[StubType::AVCODEC],
+    dumpString = "--CodecServer--:";
+    ret = WriteInfo(fd, dumpString, false, dumperTbl_[StubType::AVCODEC],
         argSets.find(u"codec") != argSets.end());
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to write CodecServer information");
 
-    dumpString += "--AVMetaServer--\n";
-    ret = WriteInfo(fd, dumpString, dumperTbl_[StubType::AVMETADATAHELPER], false);
+    dumpString = "--AVMetaServer--:";
+    ret = WriteInfo(fd, dumpString, false, dumperTbl_[StubType::AVMETADATAHELPER], false);
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to write AVMetaServer information");
     
-    dumpString += "--TranscoderServer--\n";
-    ret = WriteInfo(fd, dumpString, dumperTbl_[StubType::TRANSCODER],
+    dumpString = "--TranscoderServer--:";
+    ret = WriteInfo(fd, dumpString, false, dumperTbl_[StubType::TRANSCODER],
         argSets.find(u"transcoder") != argSets.end());
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to write Transcoder information");
 
-    dumpString += "--ScreenCaptureServer--\n";
-    ret = WriteInfo(fd, dumpString, dumperTbl_[StubType::SCREEN_CAPTURE],
+    dumpString = "--ScreenCaptureServer--:";
+    ret = WriteInfo(fd, dumpString, false, dumperTbl_[StubType::SCREEN_CAPTURE],
         argSets.find(u"screencapture") != argSets.end());
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to write ScreenCapture information");
@@ -199,6 +209,9 @@ MediaServerManager::MediaServerManager()
     executor_.SetClearCallBack([this]() {
         std::lock_guard<std::mutex> lock(mutex_);
         CHECK_AND_RETURN_NOLOG(GetStubMapCountIsEmpty());
+#ifdef SUPPORT_MEDIA_MADVISE
+    HandleMadviseLibraries();
+#endif
         SetCritical(false);
     });
 }
@@ -274,11 +287,9 @@ int32_t MediaServerManager::ResetAllProxy()
 sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    bool isEmpty = GetStubMapCountIsEmpty();
 
     auto res = CreateStubObjectByType(type);
 
-    CHECK_AND_RETURN_RET_NOLOG((isEmpty && !GetStubMapCountIsEmpty()), res);
     SetCritical(true);
     return res;
 }
@@ -577,6 +588,7 @@ sptr<IRemoteObject> MediaServerManager::CreateLppAudioPlayerStubObject()
 #ifdef SUPPORT_LPP_VIDEO_STRAMER
 int32_t MediaServerManager::GetLppCapacity(LppAvCapabilityInfo &lppAvCapability)
 {
+#ifdef SUPPORT_DRIVERS_INTERFACE_LPPLAYER
     auto factory = PlayerHDI::ILowPowerPlayerFactory::Get(true);
     CHECK_AND_RETURN_RET_LOG(factory != nullptr, UNKNOWN_ERROR, "MediaServerManager::GetLppCapacity is failed");
     PlayerHDI::LppAVCap lppAVCap;
@@ -586,6 +598,8 @@ int32_t MediaServerManager::GetLppCapacity(LppAvCapabilityInfo &lppAvCapability)
     CHECK_AND_RETURN_RET_LOG(ret == 0, ret, "FAILED MediaServerManager::GetLppCapacity");
     lppAvCapability.SetLppAvCapabilityInfo(lppAVCap);
     return ret;
+#endif
+    return -1;
 }
 
 sptr<IRemoteObject> MediaServerManager::CreateLppVideoPlayerStubObject()
@@ -881,8 +895,20 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
     UpdateAllInstancesReleasedTime();
 #endif
     CHECK_AND_RETURN_NOLOG(GetStubMapCountIsEmpty());
+#ifdef SUPPORT_MEDIA_MADVISE
+    HandleMadviseLibraries();
+#endif
     SetCritical(false);
 }
+
+#ifdef SUPPORT_MEDIA_MADVISE
+void MediaServerManager::HandleMadviseLibraries()
+{
+    CHECK_AND_RETURN_NOLOG(GetStubMapCountIsEmpty());
+    MEDIA_LOGI("HandleMadviseLibraries start.");
+    MediaMadviseUtils::MediaMadviseSingleLibrary(MEDIA_SERVICE_LIBNAME);
+}
+#endif
 
 void MediaServerManager::DestroyAVScreenCaptureStubForPid(pid_t pid)
 {

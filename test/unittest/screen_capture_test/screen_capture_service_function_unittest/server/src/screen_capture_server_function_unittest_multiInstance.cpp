@@ -898,18 +898,36 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_001, TestS
 
 HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_002, TestSize.Level2)
 {
-    ScreenCaptureRect* area = nullptr;
+    std::unique_ptr<ScreenCaptureRect> area = std::make_unique<ScreenCaptureRect>();
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     area->x = 0;
     area->y = 0;
     area->width = 1;
     area->height = 1;
     screenCaptureServer_->NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE,
-        area);
+        area.get());
     screenCaptureServer_->NotifyCaptureContentChanged(
         AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE, nullptr);
     screenCaptureServer_->NotifyCaptureContentChanged(
         AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_UNAVAILABLE, nullptr);
+    ASSERT_NE(screenCaptureServer_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_003, TestSize.Level2)
+{
+    screenCaptureServer_->screenCaptureCb_ = nullptr;
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE,
+        nullptr);
+    ASSERT_NE(screenCaptureServer_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_004, TestSize.Level2)
+{
+    screenCaptureServer_->screenCaptureCb_ = nullptr;
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STOPPED;
+    screenCaptureServer_->NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE,
+        nullptr);
     ASSERT_NE(screenCaptureServer_, nullptr);
 }
 

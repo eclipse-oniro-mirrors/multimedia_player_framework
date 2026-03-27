@@ -101,6 +101,11 @@ string SystemSoundManagerImpl::GetSystemToneUriSync(uintptr_t context, SystemTon
     return uri;
 }
 
+string SystemSoundManagerImpl::GetSystemToneUri(uintptr_t context, SystemToneTypeTaihe type)
+{
+    return GetSystemToneUriSync(context, type);
+}
+
 SystemTonePlayerOrNull SystemSoundManagerImpl::GetSystemTonePlayerSync(uintptr_t context, SystemToneTypeTaihe type)
 {
     auto abilityContext = GetAbilityContext(get_env(), context);
@@ -120,6 +125,11 @@ SystemTonePlayerOrNull SystemSoundManagerImpl::GetSystemTonePlayerSync(uintptr_t
         systemTonePlayer));
 }
 
+SystemTonePlayerOrNull SystemSoundManagerImpl::GetSystemTonePlayer(uintptr_t context, SystemToneTypeTaihe type)
+{
+    return GetSystemTonePlayerSync(context, type);
+}
+
 void SystemSoundManagerImpl::CloseSync(int32_t fd)
 {
     CHECK_AND_RETURN_RET_LOG(CommonTaihe::VerifySelfSystemPermission(),
@@ -134,6 +144,11 @@ void SystemSoundManagerImpl::CloseSync(int32_t fd)
     if (sysSoundMgrClient_->Close(fd)) {
         CommonTaihe::ThrowError(TAIHE_ERR_IO_ERROR, TAIHE_ERR_IO_ERROR_INFO);
     }
+}
+
+void SystemSoundManagerImpl::Close(int32_t fd)
+{
+    CloseSync(fd);
 }
 
 ToneAttrsTaihe SystemSoundManagerImpl::GetDefaultRingtoneAttrsSync(uintptr_t context, RingtoneTypeTaihe type)
@@ -165,6 +180,11 @@ ToneAttrsTaihe SystemSoundManagerImpl::GetDefaultRingtoneAttrsSync(uintptr_t con
     return make_holder<ToneAttrsImpl, ToneAttrsTaihe>(toneAttrs);
 }
 
+ToneAttrsTaihe SystemSoundManagerImpl::GetDefaultRingtoneAttrs(uintptr_t context, RingtoneTypeTaihe type)
+{
+    return GetDefaultRingtoneAttrsSync(context, type);
+}
+
 ::taihe::array<ToneAttrsTaihe> SystemSoundManagerImpl::GetAlarmToneAttrListSync(uintptr_t context)
 {
     if (!(CommonTaihe::VerifySelfSystemPermission())) {
@@ -191,6 +211,11 @@ ToneAttrsTaihe SystemSoundManagerImpl::GetDefaultRingtoneAttrsSync(uintptr_t con
     return ToToneAttrsTaiheArray(toneAttrsArray);
 }
 
+::taihe::array<ToneAttrsTaihe> SystemSoundManagerImpl::GetAlarmToneAttrList(uintptr_t context)
+{
+    return GetAlarmToneAttrListSync(context);
+}
+
 void SystemSoundManagerImpl::RemoveCustomizedToneSync(uintptr_t context, ::taihe::string_view uri)
 {
     CHECK_AND_RETURN_RET_LOG(CommonTaihe::VerifyRingtonePermission(),
@@ -210,6 +235,11 @@ void SystemSoundManagerImpl::RemoveCustomizedToneSync(uintptr_t context, ::taihe
     } else if (result == ERROR) {
         CommonTaihe::ThrowError(TAIHE_ERR_IO_ERROR, TAIHE_ERR_IO_ERROR_INFO);
     }
+}
+
+void SystemSoundManagerImpl::RemoveCustomizedTone(uintptr_t context, ::taihe::string_view uri)
+{
+    RemoveCustomizedToneSync(context, uri);
 }
 
 ::taihe::array<ToneAttrsTaihe> SystemSoundManagerImpl::GetSystemToneAttrListSync(
@@ -238,6 +268,12 @@ void SystemSoundManagerImpl::RemoveCustomizedToneSync(uintptr_t context, ::taihe
         CommonTaihe::ThrowError(TAIHE_ERR_IO_ERROR, TAIHE_ERR_IO_ERROR_INFO);
     }
     return ToToneAttrsTaiheArray(toneAttrsArray);
+}
+
+::taihe::array<ToneAttrsTaihe> SystemSoundManagerImpl::GetSystemToneAttrList(
+    uintptr_t context, SystemToneTypeTaihe type)
+{
+    return GetSystemToneAttrListSync(context, type);
 }
 
 ::taihe::string SystemSoundManagerImpl::AddCustomizedToneByUriSync(
@@ -279,6 +315,12 @@ void SystemSoundManagerImpl::RemoveCustomizedToneSync(uintptr_t context, ::taihe
 
     CommonTaihe::ThrowError(TAIHE_ERR_IO_ERROR, TAIHE_ERR_IO_ERROR_INFO);
     return ERR_URI;
+}
+
+::taihe::string SystemSoundManagerImpl::AddCustomizedToneByUri(
+    uintptr_t context, WeakToneAttrsTaihe toneAttr, ::taihe::string_view externalUri)
+{
+    return AddCustomizedToneByUriSync(context, toneAttr, externalUri);
 }
 
 ::taihe::string SystemSoundManagerImpl::AddCustomizedToneByFdSync(
@@ -329,6 +371,13 @@ void SystemSoundManagerImpl::RemoveCustomizedToneSync(uintptr_t context, ::taihe
     return ERR_URI;
 }
 
+::taihe::string SystemSoundManagerImpl::AddCustomizedToneByFd(
+    uintptr_t context, WeakToneAttrsTaihe toneAttr, int32_t fd, ::taihe::optional_view<int64_t> offset,
+    ::taihe::optional_view<int64_t> length)
+{
+    return AddCustomizedToneByFdSync(context, toneAttr, fd, offset, length);
+}
+
 int32_t SystemSoundManagerImpl::OpenAlarmToneSync(uintptr_t context, ::taihe::string_view uri)
 {
     if (!(CommonTaihe::VerifySelfSystemPermission())) {
@@ -357,6 +406,11 @@ int32_t SystemSoundManagerImpl::OpenAlarmToneSync(uintptr_t context, ::taihe::st
         return ERROR;
     }
     return fd;
+}
+
+int32_t SystemSoundManagerImpl::OpenAlarmTone(uintptr_t context, ::taihe::string_view uri)
+{
+    return OpenAlarmToneSync(context, uri);
 }
 
 ToneAttrsTaihe SystemSoundManagerImpl::GetDefaultSystemToneAttrsSync(uintptr_t context, SystemToneTypeTaihe type)
@@ -388,6 +442,11 @@ ToneAttrsTaihe SystemSoundManagerImpl::GetDefaultSystemToneAttrsSync(uintptr_t c
     return make_holder<ToneAttrsImpl, ToneAttrsTaihe>(toneAttrs);
 }
 
+ToneAttrsTaihe SystemSoundManagerImpl::GetDefaultSystemToneAttrs(uintptr_t context, SystemToneTypeTaihe type)
+{
+    return GetDefaultSystemToneAttrsSync(context, type);
+}
+
 ::taihe::array<ToneAttrsTaihe> SystemSoundManagerImpl::GetRingtoneAttrListSync(
     uintptr_t context, RingtoneTypeTaihe type)
 {
@@ -416,6 +475,12 @@ ToneAttrsTaihe SystemSoundManagerImpl::GetDefaultSystemToneAttrsSync(uintptr_t c
     return ToToneAttrsTaiheArray(toneAttrsArray);
 }
 
+::taihe::array<ToneAttrsTaihe> SystemSoundManagerImpl::GetRingtoneAttrList(
+    uintptr_t context, RingtoneTypeTaihe type)
+{
+    return GetRingtoneAttrListSync(context, type);
+}
+
 void SystemSoundManagerImpl::SetAlarmToneUriSync(uintptr_t context, ::taihe::string_view uri)
 {
     CHECK_AND_RETURN_RET_LOG(CommonTaihe::VerifySelfSystemPermission(),
@@ -435,6 +500,11 @@ void SystemSoundManagerImpl::SetAlarmToneUriSync(uintptr_t context, ::taihe::str
     } else if (result == ERROR) {
         CommonTaihe::ThrowError(TAIHE_ERR_IO_ERROR, TAIHE_ERR_IO_ERROR_INFO);
     }
+}
+
+void SystemSoundManagerImpl::SetAlarmToneUri(uintptr_t context, ::taihe::string_view uri)
+{
+    SetAlarmToneUriSync(context, uri);
 }
 
 ::taihe::string SystemSoundManagerImpl::GetAlarmToneUriSync(uintptr_t context)
@@ -463,6 +533,11 @@ void SystemSoundManagerImpl::SetAlarmToneUriSync(uintptr_t context, ::taihe::str
     return uri;
 }
 
+::taihe::string SystemSoundManagerImpl::GetAlarmToneUri(uintptr_t context)
+{
+    return GetAlarmToneUriSync(context);
+}
+
 ToneAttrsTaihe SystemSoundManagerImpl::GetDefaultAlarmToneAttrsSync(uintptr_t context)
 {
     if (!(CommonTaihe::VerifySelfSystemPermission())) {
@@ -489,6 +564,11 @@ ToneAttrsTaihe SystemSoundManagerImpl::GetDefaultAlarmToneAttrsSync(uintptr_t co
     return make_holder<ToneAttrsImpl, ToneAttrsTaihe>(toneAttrs);
 }
 
+ToneAttrsTaihe SystemSoundManagerImpl::GetDefaultAlarmToneAttrs(uintptr_t context)
+{
+    return GetDefaultAlarmToneAttrsSync(context);
+}
+
 void SystemSoundManagerImpl::SetSystemToneUriSync(uintptr_t context, ::taihe::string_view uri, SystemToneTypeTaihe type)
 {
     std::shared_ptr<OHOS::AbilityRuntime::Context> abilityContext = GetAbilityContext(get_env(), context);
@@ -499,6 +579,11 @@ void SystemSoundManagerImpl::SetSystemToneUriSync(uintptr_t context, ::taihe::st
 
     sysSoundMgrClient_->SetSystemToneUri(
         abilityContext, std::string(uri), static_cast<OHOS::Media::SystemToneType>(type.get_value()));
+}
+
+void SystemSoundManagerImpl::SetSystemToneUri(uintptr_t context, ::taihe::string_view uri, SystemToneTypeTaihe type)
+{
+    SetSystemToneUriSync(context, uri, type);
 }
 
 RingtonePlayerOrNull SystemSoundManagerImpl::GetRingtonePlayerSync(
@@ -526,6 +611,11 @@ RingtonePlayerOrNull SystemSoundManagerImpl::GetRingtonePlayerSync(
         ::ringtonePlayer::RingtonePlayer>(ringtonePlayer));
 }
 
+RingtonePlayerOrNull SystemSoundManagerImpl::GetRingtonePlayer(uintptr_t context, RingtoneTypeTaihe type)
+{
+    return GetRingtonePlayerSync(context, type);
+}
+
 ::taihe::string SystemSoundManagerImpl::GetRingtoneUriSync(uintptr_t context, RingtoneTypeTaihe type)
 {
     std::shared_ptr<OHOS::AbilityRuntime::Context> abilityContext = GetAbilityContext(get_env(), context);
@@ -540,6 +630,11 @@ RingtonePlayerOrNull SystemSoundManagerImpl::GetRingtonePlayerSync(
         return ERR_URI;
     }
     return sysSoundMgrClient_->GetRingtoneUri(abilityContext, static_cast<OHOS::Media::RingtoneType>(typeInner));
+}
+
+::taihe::string SystemSoundManagerImpl::GetRingtoneUri(uintptr_t context, RingtoneTypeTaihe type)
+{
+    return GetRingtoneUriSync(context, type);
 }
 
 void SystemSoundManagerImpl::SetRingtoneUriSync(uintptr_t context, ::taihe::string_view uri, RingtoneTypeTaihe type)
@@ -557,6 +652,11 @@ void SystemSoundManagerImpl::SetRingtoneUriSync(uintptr_t context, ::taihe::stri
     }
     sysSoundMgrClient_->SetRingtoneUri(
         abilityContext, std::string(uri), static_cast<OHOS::Media::RingtoneType>(typeInner));
+}
+
+void SystemSoundManagerImpl::SetRingtoneUri(uintptr_t context, ::taihe::string_view uri, RingtoneTypeTaihe type)
+{
+    SetRingtoneUriSync(context, uri, type);
 }
 
 ToneAttrsTaihe CreateCustomizedToneAttrs()

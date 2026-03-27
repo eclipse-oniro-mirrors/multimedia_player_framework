@@ -581,9 +581,9 @@ int32_t CreatePlaybackInfo(CallType callType, int32_t uid, uint64_t instanceId)
                 MEDIA_LOG_W("CreatePlaybackInfo instanceId exists with different owner");
                 return MSERR_INVALID_VAL;
             }
-            MEDIA_LOG_I("CreatePlaybackInfo reuse existing instanceId mapping");
+            MEDIA_LOG_D("CreatePlaybackInfo reuse existing instanceId mapping");
         } else {
-            MEDIA_LOG_I("CreatePlaybackInfo not found instanceId in idMap_, add the instanceId to idMap_");
+            MEDIA_LOG_D("CreatePlaybackInfo not found instanceId in idMap_, add the instanceId to idMap_");
             idMap_[instanceId] = std::make_pair(callType, uid);
         }
         std::shared_ptr<std::vector<Format>> playbackInfo = std::make_shared<std::vector<Format>>();
@@ -593,15 +593,15 @@ int32_t CreatePlaybackInfo(CallType callType, int32_t uid, uint64_t instanceId)
             auto it = ctUidToPlaybackInfo->second.find(uid);
             if (it != ctUidToPlaybackInfo->second.end()) {
                 it->second.push_back(playbackInfoPair);
-                MEDIA_LOG_I("CreatePlaybackInfo: Successfully inserted playbackInfoPair for uid ");
+                MEDIA_LOG_D("CreatePlaybackInfo: Successfully inserted playbackInfoPair for uid ");
             } else {
                 ctUidToPlaybackInfo->second[uid].push_back(playbackInfoPair);
-                MEDIA_LOG_I(
+                MEDIA_LOG_D(
                     "CreatePlaybackInfo: Successfully created new list for uid and inserted playbackInfoPair.");
             }
         } else {
             reportPlaybackInfoMap_[callType][uid].push_back(playbackInfoPair);
-            MEDIA_LOG_I("CreatePlaybackInfo: Successfully created new list for callType and uid ");
+            MEDIA_LOG_D("CreatePlaybackInfo: Successfully created new list for callType and uid ");
         }
     }
     return MSERR_OK;

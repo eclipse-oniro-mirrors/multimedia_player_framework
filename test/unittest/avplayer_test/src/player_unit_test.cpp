@@ -4757,5 +4757,29 @@ HWTEST_F(PlayerUnitTest, Player_GetGlobalInfo_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->GetGlobalInfo());
 }
+
+/**
+ * @tc.name  : Test SetTrackSelectionFilter
+ * @tc.number: Player_SetTrackSelectionFilter_001
+ * @tc.desc  : Test Player SetTrackSelectionFilter
+ */
+HWTEST_F(PlayerUnitTest, Player_SetTrackSelectionFilter_001, TestSize.Level1)
+{
+    AVPlayTrackSelectionFilter trackFilter = {
+        .maxVideoBitrate = 32000
+    };
+    ASSERT_NE(MSERR_OK, player_->SetTrackSelectionFilter(trackFilter));
+}
+
+/**
+ * @tc.name  : Test GetTrackSelectionFilter
+ * @tc.number: Player_GetTrackSelectionFilter_001
+ * @tc.desc  : Test Player GetTrackSelectionFilter
+ */
+HWTEST_F(PlayerUnitTest, Player_GetTrackSelectionFilter_001, TestSize.Level1)
+{
+    AVPlayTrackSelectionFilter trackFilter = {};
+    ASSERT_NE(MSERR_OK, player_->GetTrackSelectionFilter(trackFilter));
+}
 } // namespace Media
 } // namespace OHOS

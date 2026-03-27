@@ -35,9 +35,9 @@ const int ERROR = -1;
 const int INVALID_TONE_HAPTICS_TYPE = -1;
 
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, "SystemTonePlayerTaihe"};
-constexpr char ENUM_SYSTEM_SOUND_ERROR[] = "@ohos.multimedia.systemSoundManager.systemSoundManager.SystemSoundError";
-constexpr char CLASS_NAME_TUPLE2[] = "std.core.Tuple2";
-constexpr char CLASS_NAME_TUPLE3[] = "std.core.Tuple3";
+constexpr char ENUM_SYSTEM_SOUND_ERROR[] = "@ohos:multimedia.systemSoundManager.systemSoundManager.SystemSoundError";
+constexpr char CLASS_NAME_TUPLE2[] = "std:core.Tuple2";
+constexpr char CLASS_NAME_TUPLE3[] = "std:core.Tuple3";
 }
 
 static const std::map<OHOS::Media::SystemSoundError, int32_t> ANI_SYSTEMSOUNDERROR_INDEX_MAP = {
@@ -140,6 +140,11 @@ ToneHapticsSettings SystemSoundManagerImpl::GetToneHapticsSettingsSync(
     return settings;
 }
 
+ToneHapticsSettings SystemSoundManagerImpl::GetToneHapticsSettings(uintptr_t context, ToneHapticsTypeTaihe type)
+{
+    return GetToneHapticsSettingsSync(context, type);
+}
+
 ::taihe::array<ToneHapticsAttrsTaihe> SystemSoundManagerImpl::GetToneHapticsListSync(uintptr_t context, bool isSynced)
 {
     if (!(CommonTaihe::VerifySelfSystemPermission())) {
@@ -168,6 +173,11 @@ ToneHapticsSettings SystemSoundManagerImpl::GetToneHapticsSettingsSync(
     return ToToneHapticsAttrsTaiheArray(toneHapticsAttrsArray);
 }
 
+::taihe::array<ToneHapticsAttrsTaihe> SystemSoundManagerImpl::GetToneHapticsList(uintptr_t context, bool isSynced)
+{
+    return GetToneHapticsListSync(context, isSynced);
+}
+
 void SystemSoundManagerImpl::SetToneHapticsSettingsSync(
     uintptr_t context, ToneHapticsTypeTaihe type, const ToneHapticsSettings& settings)
 {
@@ -186,6 +196,12 @@ void SystemSoundManagerImpl::SetToneHapticsSettingsSync(
     int32_t result = sysSoundMgrClient_->SetToneHapticsSettings(
         abilityContext, static_cast<OHOS::Media::ToneHapticsType>(type.get_value()), settingsInner);
     CheckToneHapticsResultAndThrowErrorExt(result);
+}
+
+void SystemSoundManagerImpl::SetToneHapticsSettings(
+    uintptr_t context, ToneHapticsTypeTaihe type, const ToneHapticsSettings& settings)
+{
+    SetToneHapticsSettingsSync(context, type, settings);
 }
 
 ToneHapticsAttrsTaihe SystemSoundManagerImpl::GetHapticsAttrsSyncedWithToneSync(
@@ -217,6 +233,12 @@ ToneHapticsAttrsTaihe SystemSoundManagerImpl::GetHapticsAttrsSyncedWithToneSync(
     return make_holder<ToneHapticsAttrsImpl, ToneHapticsAttrsTaihe>(toneHapticsAttrs);
 }
 
+ToneHapticsAttrsTaihe SystemSoundManagerImpl::GetHapticsAttrsSyncedWithTone(
+    uintptr_t context, ::taihe::string_view toneUri)
+{
+    return GetHapticsAttrsSyncedWithToneSync(context, toneUri);
+}
+
 int32_t SystemSoundManagerImpl::OpenToneHapticsSync(uintptr_t context, ::taihe::string_view hapticsUri)
 {
     if (!CommonTaihe::VerifySelfSystemPermission()) {
@@ -241,6 +263,11 @@ int32_t SystemSoundManagerImpl::OpenToneHapticsSync(uintptr_t context, ::taihe::
         return ERROR;
     }
     return fd;
+}
+
+int32_t SystemSoundManagerImpl::OpenToneHaptics(uintptr_t context, ::taihe::string_view hapticsUri)
+{
+    return OpenToneHapticsSync(context, hapticsUri);
 }
 
 ToneAttrsTaihe SystemSoundManagerImpl::GetCurrentRingtoneAttributeSync(RingtoneTypeTaihe type)
@@ -272,13 +299,18 @@ ToneAttrsTaihe SystemSoundManagerImpl::GetCurrentRingtoneAttributeSync(RingtoneT
     return make_holder<ToneAttrsImpl, ToneAttrsTaihe>(toneAttrs);
 }
 
+ToneAttrsTaihe SystemSoundManagerImpl::GetCurrentRingtoneAttribute(RingtoneTypeTaihe type)
+{
+    return GetCurrentRingtoneAttributeSync(type);
+}
+
 static ani_object GetAniObjectTuple2(ani_env *env, const std::string &str, int systemSoundErrorIndex)
 {
     ani_object aniObjectTuple2 {};
     ani_class cls {};
     const std::string className = CLASS_NAME_TUPLE2;
     CHECK_AND_RETURN_RET_LOG(ANI_OK == env->FindClass(className.c_str(), &cls), aniObjectTuple2,
-        "Failed to find class std.core.Tuple2");
+        "Failed to find class std:core.Tuple2");
 
     ani_method ctor;
     CHECK_AND_RETURN_RET_LOG(ANI_OK == env->Class_FindMethod(cls, "<ctor>", nullptr, &ctor), aniObjectTuple2,
@@ -308,7 +340,7 @@ static ani_object GetAniObjectTuple3(ani_env *env, const std::string &str, int64
     ani_class cls {};
     const std::string className = CLASS_NAME_TUPLE3;
     CHECK_AND_RETURN_RET_LOG(ANI_OK == env->FindClass(className.c_str(), &cls), aniObjectTuple3,
-        "Failed to find class std.core.Tuple3");
+        "Failed to find class std:core.Tuple3");
 
     ani_method ctor;
     CHECK_AND_RETURN_RET_LOG(ANI_OK == env->Class_FindMethod(cls, "<ctor>", nullptr, &ctor), aniObjectTuple3,
@@ -403,6 +435,11 @@ static ani_status GetAniIndexByValue(ani_env *env, OHOS::Media::SystemSoundError
     return ::taihe::array<uintptr_t>(results);
 }
 
+::taihe::array<uintptr_t> SystemSoundManagerImpl::RemoveCustomizedToneList(::taihe::array_view<::taihe::string> uriList)
+{
+    return RemoveCustomizedToneListSync(uriList);
+}
+
 ::taihe::array<uintptr_t> SystemSoundManagerImpl::OpenToneListSync(::taihe::array_view<::taihe::string> uriList)
 {
     std::vector<uintptr_t> results;
@@ -454,5 +491,10 @@ static ani_status GetAniIndexByValue(ani_env *env, OHOS::Media::SystemSoundError
         results.push_back(reinterpret_cast<uintptr_t>(aniObjectTuple3));
     }
     return ::taihe::array<uintptr_t>(results);
+}
+
+::taihe::array<uintptr_t> SystemSoundManagerImpl::OpenToneList(::taihe::array_view<::taihe::string> uriList)
+{
+    return OpenToneListSync(uriList);
 }
 } // namespace ANI::Media

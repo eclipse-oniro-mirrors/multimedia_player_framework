@@ -35,6 +35,7 @@ public:
     void OnDisplaySelected(uint64_t displayId) override;
     void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area) override;
     void OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo) override;
+    void OnPrivacyProtect(AVScreenCapturePrivacyProtect privacyProtect) override;
     void Stop()
     {
         isStopped_ = true;
@@ -57,6 +58,7 @@ public:
     void OnDisplaySelected(uint64_t displayId) override;
     void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area) override;
     void OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo) override;
+    void OnPrivacyProtect(AVScreenCapturePrivacyProtect privacyProtect) override;
 
 private:
     static inline BrokerDelegator<ScreenCaptureListenerProxy> delegator_;

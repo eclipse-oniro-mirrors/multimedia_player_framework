@@ -108,6 +108,16 @@ public:
         (void)playbackStrategy;
         return 0;
     }
+    virtual int32_t SetTrackSelectionFilter(AVPlayTrackSelectionFilter trackFilter)
+    {
+        (void)trackFilter;
+        return 0;
+    }
+    virtual int32_t GetTrackSelectionFilter(AVPlayTrackSelectionFilter &trackFilter)
+    {
+        (void)trackFilter;
+        return 0;
+    }
     virtual int32_t SetMediaMuted(MediaType mediaType, bool isMuted)
     {
         (void)mediaType;
@@ -314,6 +324,8 @@ public:
         GET_SUBTITLE_TRACK_INFO,
         SET_DECRYPT_CONFIG,
         SET_PLAYBACK_STRATEGY,
+        SET_TRACK_SELECTION_FILTER,
+        GET_TRACK_SELECTION_FILTER,
         SET_MEDIA_MUTED,
         SET_MAX_AMPLITUDE_CB_STATUS,
         SET_SEI_MESSAGE_CB_STATUS,

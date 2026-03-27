@@ -2070,7 +2070,11 @@ OH_AVErrCode OH_AVPlayer_SetTargetVideoWindowSize(OH_AVPlayer *player, int32_t w
         "unsupport set video window size");
 
     int32_t ret = playerObj->player_->SetVideoWindowSize(width, height);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "failed to set super resolution");
+    CHECK_AND_RETURN_RET_LOG(ret != MSERR_SUPER_RESOLUTION_UNSUPPORTED, AV_ERR_SUPER_RESOLUTION_UNSUPPORTED,
+        "failed to set video window size, the super resolution feature is unsupported");
+    CHECK_AND_RETURN_RET_LOG(ret != MSERR_SUPER_RESOLUTION_NOT_ENABLED, AV_ERR_SUPER_RESOLUTION_NOT_ENABLED,
+        "failed to set video window size, the super resolution feature is not enabled");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "failed to set video window size");
     return AV_ERR_OK;
 }
 

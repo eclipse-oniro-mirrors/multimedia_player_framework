@@ -37,6 +37,8 @@ declare_args() {
   player_framework_check_video_is_hdr_vivid = false
   player_framework_enable_start_stop_on_demand = false
   player_framework_support_lowpower_av_sink = false
+  player_framework_support_media_madvise = false
+  drivers_interface_lpplayer_flag = false
   if (defined(build_seccomp) && build_seccomp) {
     player_framework_support_seccomp = true
   }
@@ -107,6 +109,12 @@ if (defined(global_parts_info) && defined(global_parts_info.multimedia_histreame
   player_framework_support_libcurl = false
 }
 
+player_framework_support_lowpower_av_defines = []
+ 
+if (player_framework_support_lowpower_av_sink && drivers_interface_lpplayer_flag) {
+  player_framework_support_lowpower_av_defines += [ "SUPPORT_DRIVERS_INTERFACE_LPPLAYER" ]
+} 
+
 player_framework_defines = []
 
 if (player_framework_support_player) {
@@ -119,6 +127,9 @@ if (player_framework_support_lowpower_av_sink) {
   player_framework_defines += [ "SUPPORT_LPP" ]
   player_framework_defines += [ "SUPPORT_LPP_AUDIO_STRAMER" ]
   player_framework_defines += [ "SUPPORT_LPP_VIDEO_STRAMER" ]
+  if(drivers_interface_lpplayer_flag) {
+    player_framework_defines += [ "SUPPORT_DRIVERS_INTERFACE_LPPLAYER" ]
+  }
 } else {
   player_framework_defines += [ "UNSUPPORT_LPP_AUDIO_STRAMER" ]
   player_framework_defines += [ "UNSUPPORT_LPP_VIDEO_STRAMER" ]
@@ -244,6 +255,10 @@ if (player_framework_support_drivers_interface_camera) {
 if (player_framework_feature_pc_select_window ||
     player_framework_feature_phone_pad_select_window) {
   player_framework_defines += [ "SUPPORT_SCREEN_CAPTURE_PICKER" ]
+}
+
+if (player_framework_support_media_madvise) {
+  player_framework_defines += [ "SUPPORT_MEDIA_MADVISE" ]
 }
 
 # Config path

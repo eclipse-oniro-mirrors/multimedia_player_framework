@@ -14,7 +14,7 @@
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
-module_output_path = "player_framework/player_framework/lpp_unit_test"
+module_output_path = "player_framework/avtranscoder_and_avmetadata/lpp_unit_test"
 
 config("lpp_video_dec_adapter_unit_test_config") {
   visibility = [ ":*" ]
@@ -96,7 +96,7 @@ ohos_unittest("lpp_video_dec_adapter_unit_test") {
     external_deps += [ "drm_framework:drm_framework" ]
   }
 
-  if (player_framework_support_lowpower_av_sink) {
+  if (player_framework_support_lowpower_av_sink && drivers_interface_lpplayer_flag) {
     external_deps += [
       "drivers_interface_lpplayer:liblow_power_player_proxy_1.0",
       "hdf_core:libhdi",

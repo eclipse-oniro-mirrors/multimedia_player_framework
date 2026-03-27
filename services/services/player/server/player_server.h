@@ -116,6 +116,8 @@ public:
     int32_t GetPlaybackRate(float &rate) override;
     int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) override;
     int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) override;
+    int32_t SetTrackSelectionFilter(AVPlayTrackSelectionFilter trackFilter) override;
+    int32_t GetTrackSelectionFilter(AVPlayTrackSelectionFilter &trackFilter) override;
     int32_t SetMediaMuted(MediaType mediaType, bool isMuted) override;
     int32_t SetSuperResolution(bool enabled) override;
     int32_t SetVideoWindowSize(int32_t width, int32_t height) override;
@@ -221,6 +223,8 @@ protected:
         int32_t effectMode = OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT;
         std::map<std::string, std::string> header;
         AVPlayStrategy strategy_;
+        AVPlayTrackSelectionFilter trackSelectionFilter_;
+        bool hasTrackSelectionFilter = false;
     } config_;
 
 private:

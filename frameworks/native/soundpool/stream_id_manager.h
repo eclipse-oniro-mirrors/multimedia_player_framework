@@ -48,6 +48,7 @@ public:
     int32_t ReorderStream(int32_t streamID, int32_t priority);
     int32_t SetCallback(const std::shared_ptr<ISoundPoolCallback> &callback);
     int32_t SetFrameWriteCallback(const std::shared_ptr<ISoundPoolFrameWriteCallback> &callback);
+    void StopAllTasksInThreadPool();
     
 protected:
     IStreamIDManager(int32_t maxStreams, const AudioStandard::AudioRendererInfo &audioRenderInfo);

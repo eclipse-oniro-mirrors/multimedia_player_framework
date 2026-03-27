@@ -597,6 +597,48 @@ OH_AVErrCode OH_AVRecorder_GetAVRecorderConfig(OH_AVRecorder *recorder, OH_AVRec
     return AV_ERR_OK;
 }
 
+OH_AVErrCode OH_AVRecorder_GetAudioCapturerMaxAmplitude(OH_AVRecorder *recorder, int32_t *amplitude)
+{
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_GetAudioCapturerMaxAmplitude in.");
+    CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
+
+    struct RecorderObject *recorderObj = reinterpret_cast<RecorderObject *>(recorder);
+    CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderObj->recorder_ != nullptr, AV_ERR_INVALID_VAL, "recorder_ is null");
+
+    int32_t ret = recorderObj->recorder_->GetMaxAmplitude(*amplitude);
+
+    CHECK_AND_RETURN_RET_LOG(ret != MSERR_INVALID_STATE, AV_ERR_INVALID_STATE, "Invalid state");
+    CHECK_AND_RETURN_RET_LOG(ret != MSERR_NO_MEMORY, AV_ERR_NO_MEMORY, "No memory");
+    CHECK_AND_RETURN_RET_LOG(ret != MSERR_INVALID_VAL, AV_ERR_INVALID_VAL, "Invalid value");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_UNKNOWN, "GetAudioCapturerMaxAmplitude failed!");
+
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_GetAudioCapturerMaxAmplitude out.");
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVRecorder_SetMetadata(OH_AVRecorder *recorder, OH_AVFormat *metadata)
+{
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_SetMetadata in.");
+    CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(metadata != nullptr, AV_ERR_INVALID_VAL, "input metadata is nullptr!");
+
+    struct RecorderObject *recorderObj = reinterpret_cast<RecorderObject *>(recorder);
+    CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderObj->recorder_ != nullptr, AV_ERR_INVALID_VAL, "recorder_ is null");
+
+    std::shared_ptr<Meta> meta = metadata->format_.GetMeta();
+    int32_t ret = recorderObj->recorder_->SetUserMeta(meta);
+
+    CHECK_AND_RETURN_RET_LOG(ret != MSERR_INVALID_STATE, AV_ERR_INVALID_STATE, "Invalid state");
+    CHECK_AND_RETURN_RET_LOG(ret != MSERR_NO_MEMORY, AV_ERR_NO_MEMORY, "No memory");
+    CHECK_AND_RETURN_RET_LOG(ret != MSERR_INVALID_VAL, AV_ERR_INVALID_VAL, "Invalid value");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_UNKNOWN, "SetMetadata failed!");
+
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_SetMetadata out.");
+    return AV_ERR_OK;
+}
+
 OH_AVErrCode OH_AVRecorder_GetInputSurface(OH_AVRecorder *recorder, OHNativeWindow **window)
 {
     MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_GetInputSurface in.");

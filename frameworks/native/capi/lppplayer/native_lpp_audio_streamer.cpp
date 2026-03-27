@@ -255,12 +255,12 @@ void OH_LowPowerAudioSinkCallback::OnInfo(AudioStreamerOnInfoType type, int32_t 
             break;
         case INFO_TYPE_LPP_AUDIO_INTERRUPT:
             CHECK_AND_RETURN_LOG(interruptCallback_ != nullptr, "interruptCallback_ is nullptr");
-            int32_t forceType;
-            infoBody.GetIntValue(AudioStreamerKeys::LPP_AUDIO_INTERRUPT_FORCE_TYPE, forceType);
-            int32_t hint;
-            infoBody.GetIntValue(AudioStreamerKeys::LPP_AUDIO_INTERRUPT_HINT, hint);
+            int64_t forceType;
+            infoBody.GetLongValue(AudioStreamerKeys::LPP_AUDIO_INTERRUPT_FORCE_TYPE, forceType);
+            int64_t hint;
+            infoBody.GetLongValue(AudioStreamerKeys::LPP_AUDIO_INTERRUPT_HINT, hint);
             interruptCallback_->OnInterrupted(lppAudioStreamer_,
-                static_cast<OH_AudioInterrupt_ForceType>(hint),
+                static_cast<OH_AudioInterrupt_ForceType>(forceType),
                 static_cast<OH_AudioInterrupt_Hint>(hint));
             break;
         case INFO_TYPE_LPP_AUDIO_DEVICE_CHANGE:

@@ -129,6 +129,7 @@ public:
     void OnDisplaySelected(uint64_t displayId) {};
     void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area) {};
     void OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo) {};
+    void OnPrivacyProtect(AVScreenCapturePrivacyProtect privacyProtect) {};
 };
 
 class ScreenCaptureServerUnittestCallbackMock : public ScreenCaptureListenerCallback {
@@ -143,6 +144,7 @@ public:
     void OnDisplaySelected(uint64_t displayId);
     void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area);
     void OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo);
+    void OnPrivacyProtect(AVScreenCapturePrivacyProtect privacyProtect);
     void Stop();
 };
 } // Media

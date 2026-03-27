@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#ifdef SUPPORT_DRIVERS_INTERFACE_LPPLAYER
 #include "lpp_sync_manager_adapter_unit_test.h"
 #include "surface_buffer.h"
 #include "lpp_sync_manager.h"
@@ -414,3 +414,4 @@ HWTEST_F(LppSyncManagerAdapterUnitTest, Callback_001, TestSize.Level0)
 }
 } // namespace Media
 } // namespace OHOS
+#endif

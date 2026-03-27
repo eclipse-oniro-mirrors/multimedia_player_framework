@@ -206,9 +206,9 @@ public:
     virtual int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo) = 0;
     /**
      * Get current audio max amplitude.
-     * Return max amplitude.
+     * Return MSERR_OK indicates success, or others indicate failed.
      */
-    virtual int32_t GetMaxAmplitude() = 0;
+    virtual int32_t GetMaxAmplitude(int32_t &amplitude) = 0;
     /**
      * Set App calling info for recording.
      */
@@ -224,7 +224,7 @@ public:
     /**
      * Set user meta
     */
-    virtual int32_t SetUserMeta(const std::shared_ptr<Meta> &userMeta) = 0;
+    virtual Status SetUserMeta(const std::shared_ptr<Meta> &userMeta) = 0;
 
     /**
      * Set Interrupt strategy

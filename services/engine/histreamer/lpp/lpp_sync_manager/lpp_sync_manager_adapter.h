@@ -14,7 +14,7 @@
  */
 #ifndef LPP_SYNC_MANAGER_ADAPTER_H
 #define LPP_SYNC_MANAGER_ADAPTER_H
-
+#ifdef SUPPORT_DRIVERS_INTERFACE_LPPLAYER
 #include <map>
 #include <memory>
 
@@ -80,3 +80,4 @@ public:
 }  // namespace Media
 }  // namespace OHOS
 #endif  // LPP_SYNC_MANAGER_ADAPTER_H
+#endif

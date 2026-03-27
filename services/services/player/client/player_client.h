@@ -85,6 +85,8 @@ public:
     int32_t DeselectTrack(int32_t index) override;
     int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override;
     int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) override;
+    int32_t SetTrackSelectionFilter(AVPlayTrackSelectionFilter trackFilter) override;
+    int32_t GetTrackSelectionFilter(AVPlayTrackSelectionFilter &trackFilter) override;
     int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
     int32_t SetSuperResolution(bool enabled) override;
     int32_t SetVideoWindowSize(int32_t width, int32_t height) override;

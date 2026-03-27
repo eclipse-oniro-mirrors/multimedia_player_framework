@@ -554,6 +554,18 @@ public:
         return 0;
     }
 
+    virtual int32_t SetTrackSelectionFilter(AVPlayTrackSelectionFilter trackFilter)
+    {
+        (void)trackFilter;
+        return 0;
+    }
+
+    virtual int32_t GetTrackSelectionFilter(AVPlayTrackSelectionFilter &trackFilter)
+    {
+        (void)trackFilter;
+        return 0;
+    }
+
     virtual int32_t SetMediaMuted(MediaType mediaType, bool isMuted)
     {
         (void)mediaType;

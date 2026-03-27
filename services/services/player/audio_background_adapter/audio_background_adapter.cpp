@@ -49,16 +49,17 @@ AudioBackgroundAdapter::~AudioBackgroundAdapter()
 
 void AudioBackgroundAdapter::Init()
 {
+    if (init_.load()) {
+        return;
+    }
+    std::lock_guard<std::mutex> lock(initMutex_);
     if (!init_.load()) {
-        std::lock_guard<std::mutex> lock(initMutex_);
-        if (!init_.load()) {
-            MEDIA_LOGI("Init");
-            auto audioSystemManager = AudioStandard::AudioSystemManager::GetInstance();
-            CHECK_AND_RETURN_LOG(audioSystemManager != nullptr, "AudioSystemManager is nullptr");
-            int32_t ret = audioSystemManager->SetBackgroundMuteCallback(shared_from_this());
-            init_.store(ret == 0);
-            CHECK_AND_RETURN_LOG(ret == 0, "failed to SetBackgroundMuteCallback");
-        }
+        MEDIA_LOGI("Init");
+        auto audioSystemManager = AudioStandard::AudioSystemManager::GetInstance();
+        CHECK_AND_RETURN_LOG(audioSystemManager != nullptr, "AudioSystemManager is nullptr");
+        int32_t ret = audioSystemManager->SetBackgroundMuteCallback(shared_from_this());
+        init_.store(ret == 0);
+        CHECK_AND_RETURN_LOG(ret == 0, "failed to SetBackgroundMuteCallback");
     }
 }
 

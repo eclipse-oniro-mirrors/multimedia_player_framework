@@ -78,6 +78,7 @@ void ReportAVScreenCaptureUserChoiceSync(int32_t sessionId, string_view choice)
     auto asyncCtx = std::make_unique<AVScreenCaptureAsyncContext>();
     CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
     asyncCtx->controller_ = ScreenCaptureControllerFactory::CreateScreenCaptureController();
+    CHECK_AND_RETURN_LOG(asyncCtx->controller_ != nullptr, "failed to get controller_");
     asyncCtx->controller_->ReportAVScreenCaptureUserChoice(sessionId, static_cast<std::string>(choice));
     asyncCtx.release();
 

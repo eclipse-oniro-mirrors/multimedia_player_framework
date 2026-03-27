@@ -47,6 +47,8 @@
 #include "avrecorder_base.h"
 #include "native_averrors.h"
 #include "external_window.h"
+#include "native_avformat.h"
+#include "native_mfmagic.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -86,6 +88,50 @@ OH_AVErrCode OH_AVRecorder_Prepare(OH_AVRecorder *recorder, OH_AVRecorder_Config
  * @version 1.0
  */
 OH_AVErrCode OH_AVRecorder_GetAVRecorderConfig(OH_AVRecorder *recorder, OH_AVRecorder_Config **config);
+
+/**
+ * @brief Obtains the maximum amplitude of the current audio capturer.
+ * The amplitude value is the max value from the last call to the current call.
+ * For example, if you have obtained the maximum amplitude at 1s, and you call this API again at 2s,
+ * then the return value is the maximum amplitude within the duration from 1s to 2s.
+ *
+ * This API can be called only after the **prepare()** API is called.
+ * If this API is called after **stop()** is successfully called, an error is reported.
+ *
+ * @param recorder - Pointer to an OH_AVRecorder instance
+ * @param amplitude - The max amplitude value of audio capturer
+ * @return Function result code.
+ *         {@link AV_ERR_OK} if the execution is successful.
+ *         {@link AV_ERR_INVALID_VAL} if input recorder is nullptr or amplitude is nullptr.
+ *         {@link AV_ERR_INVALID_STATE} function called in invalid state.
+ *         {@link AV_ERR_NO_MEMORY} failed to malloc memory.
+ *         {@link AV_ERR_UNKNOWN} unknown error.
+ *
+ * @since 26.0.0
+ */
+OH_AVErrCode OH_AVRecorder_GetAudioCapturerMaxAmplitude(OH_AVRecorder *recorder, int32_t *amplitude);
+
+/**
+ * @brief Set metadata (key-value pairs) for the recording file of the recorder.
+ * This metadata overwrites the value in config.metadata.customInfo (see {prepare()} and {OH_AVRecorder_Config})
+ * if they have same key.
+ * This API can be called only after the **prepare()** API is called, before stop recorder.
+ *
+ * @param recorder - Pointer to an OH_AVRecorder instance
+ * @param metadata - The key-value pairs added to the the recording file.
+ *                   The key string should start with "com.openharmony.".
+ *                   The length of value can't be more than 256 bytes.
+ * @return Function result code.
+ *         {@link AV_ERR_OK} if the execution is successful.
+ *         {@link AV_ERR_INVALID_VAL} if input recorder is nullptr or metadata is nullptr
+ *                                    or the length of value exceed max length.
+ *         {@link AV_ERR_INVALID_STATE} function called in invalid state.
+ *         {@link AV_ERR_NO_MEMORY} failed to malloc memory.
+ *         {@link AV_ERR_UNKNOWN} unknown error.
+ *
+ * @since 26.0.0
+ */
+OH_AVErrCode OH_AVRecorder_SetMetadata(OH_AVRecorder *recorder, OH_AVFormat *metadata);
 
 /**
  * @brief Get input surface, it must be called between prepare completed and start.

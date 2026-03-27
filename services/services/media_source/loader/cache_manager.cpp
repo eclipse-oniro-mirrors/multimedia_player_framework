@@ -138,12 +138,16 @@ void StreamCacheManager::LoadIndex()
 
 bool StreamCacheManager::FlushWriteLength(const std::string& path, uint64_t fileSize)
 {
+    if (mapped_ == MAP_FAILED) {
+        LoadMapping();
+        LoadIndex();
+    }
     (void)path;
+    std::unique_lock<std::mutex> lock(mutex_);
     cacheSize_.fetch_add(fileSize, std::memory_order_relaxed);
     CHECK_AND_RETURN_RET_NOLOG(cacheSize_.load() > MAX_CACHE_FILE_SIZE, true);
 
     MEDIA_LOGD("Clean cache directory start");
-    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(mapped_ != MAP_FAILED, false, "mapped is invalid");
     std::vector<std::pair<std::string, std::string>> sortedVec;
     sortedVec.reserve(entryIndex_.size());
@@ -200,6 +204,10 @@ std::string StreamCacheManager::ExtractField(char* entryStart, uint32_t fieldCou
 bool StreamCacheManager::CreateMediaCache(const std::string& url, const std::string& type,
     bool randomAccess, uint64_t size)
 {
+    if (mapped_ == MAP_FAILED) {
+        LoadMapping();
+        LoadIndex();
+    }
     std::unique_lock<std::mutex> lock(mutex_);
     std::string key = std::to_string(std::hash<std::string>()(url));
     auto it = index_.find(key);
@@ -243,6 +251,14 @@ bool StreamCacheManager::CreateMediaCache(const std::string& url, const std::str
     index_[key].emplace_back(fileSize_, totalSize);
     entryIndex_[entry] = lastAccessTime;
 
+    if (fileSize_ >= MAX_CACHE_MAPPING_FILE_SIZE) {
+        MEDIA_LOGE("fileSize greater than max cache mapping size");
+        fs::remove_all(CACHE_DIR);
+        index_.clear();
+        entryIndex_.clear();
+        LoadMapping();
+    }
+
     fileSize_ += totalSize;
 
     // 刷新到磁盘
@@ -276,14 +292,20 @@ bool StreamCacheManager::InsertMapping(const std::vector<std::pair<CacheFieldId,
 
 void StreamCacheManager::ReleaseMap()
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     if (mapped_ != MAP_FAILED) {
         munmap(mapped_, fileSize_);
+        mapped_ = MAP_FAILED;
     }
     MEDIA_LOGD("0x%{public}06" PRIXPTR "ReleaseMap", FAKE_POINTER(this));
 }
 
 std::string StreamCacheManager::GetMediaCache(const std::string& url)
 {
+    if (mapped_ == MAP_FAILED) {
+        LoadMapping();
+        LoadIndex();
+    }
     std::unique_lock<std::mutex> lock(mutex_);
     std::string key = std::to_string(std::hash<std::string>()(url));
     auto it = index_.find(key);
@@ -296,8 +318,8 @@ std::string StreamCacheManager::GetMediaCache(const std::string& url)
     char* ptr = static_cast<char*>(mapped_);
     CacheEntryHeader* header = reinterpret_cast<CacheEntryHeader*>(ptr + info.offset);
     std::string entry = ExtractField(ptr + info.offset, header->fieldCount, CacheFieldId::ENTRY);
-    CHECK_AND_RETURN_RET_LOG(!entry.empty() && entry.find("..") == std::string::npos &&
-        entry.find('/') == std::string::npos && entry.find('\\') == std::string::npos,
+    CHECK_AND_RETURN_RET_LOG(!entry.empty() && entry.find("..") == std::string::npos
+        && entry.find('/') == std::string::npos && entry.find('\\') == std::string::npos,
         "", "get media cache file failed");
     
     std::string path = CACHE_DIR + fs::path::preferred_separator + entry;
@@ -424,7 +446,7 @@ bool StreamCacheManager::RemoveCacheDirectory(const std::string& path)
 {
     CHECK_AND_RETURN_RET_LOG(fs::exists(path) && fs::is_directory(path), false,
         "file does not exist or is not a directory");
-    int removeSize = 0;
+    uint64_t removeSize = 0;
     int deletedCount = 0;
     std::vector<FileInfo> files;
     for (const auto& entry : fs::recursive_directory_iterator(path)) {
@@ -438,7 +460,7 @@ bool StreamCacheManager::RemoveCacheDirectory(const std::string& path)
 
     for (const auto& file : files) {
         if (removeSize >= NEED_REMOVE_CACHE_SIZE) {
-            MEDIA_LOGI("remove end, count:%{public}d, size:%{public}d", removeSize, deletedCount);
+            MEDIA_LOGI("remove end, count:%{public}llu, size:%{public}d", removeSize, deletedCount);
             break;
         }
 

@@ -14,7 +14,7 @@
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
-module_output_path = "player_framework/player_framework/lpp_unit_test"
+module_output_path = "player_framework/avtranscoder_and_avmetadata/lpp_unit_test"
 
 ohos_unittest("lpp_video_streamer_unit_test") {
   module_out_path = module_output_path
@@ -48,7 +48,7 @@ ohos_unittest("lpp_video_streamer_unit_test") {
     "media_foundation:media_foundation"
   ]
 
-  if (player_framework_support_lowpower_av_sink) {
+  if (player_framework_support_lowpower_av_sink && drivers_interface_lpplayer_flag) {
     external_deps += [
       "drivers_interface_lpplayer:liblow_power_player_proxy_1.0",
     ]

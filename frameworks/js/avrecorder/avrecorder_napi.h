@@ -94,7 +94,7 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::GET_AV_RECORDER_CONFIG,
         AVRecordergOpt::IS_WATERMARK_SUPPORTED,
         AVRecordergOpt::SET_WATERMARK,
-        AVRecordergOpt::SET_METADATA
+        AVRecordergOpt::SET_METADATA,
     }},
     {AVRecorderState::STATE_STARTED, {
         AVRecordergOpt::START,
@@ -108,7 +108,7 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::GET_ENCODER_INFO,
         AVRecordergOpt::GET_AV_RECORDER_CONFIG,
         AVRecordergOpt::IS_WATERMARK_SUPPORTED,
-        AVRecordergOpt::SET_METADATA
+        AVRecordergOpt::SET_METADATA,
     }},
     {AVRecorderState::STATE_PAUSED, {
         AVRecordergOpt::PAUSE,
@@ -121,7 +121,7 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::GET_ENCODER_INFO,
         AVRecordergOpt::GET_AV_RECORDER_CONFIG,
         AVRecordergOpt::IS_WATERMARK_SUPPORTED,
-        AVRecordergOpt::SET_METADATA
+        AVRecordergOpt::SET_METADATA,
     }},
     {AVRecorderState::STATE_STOPPED, {
         AVRecordergOpt::STOP,

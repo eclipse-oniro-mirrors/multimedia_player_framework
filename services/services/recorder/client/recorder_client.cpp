@@ -535,13 +535,13 @@ int32_t RecorderClient::GetAvailableEncoder(std::vector<EncoderCapabilityData> &
     return recorderProxy_->GetAvailableEncoder(encoderInfo);
 }
 
-int32_t RecorderClient::GetMaxAmplitude()
+int32_t RecorderClient::GetMaxAmplitude(int32_t &amplitude)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
 
     MEDIA_LOGD("GetMaxAmplitude");
-    return recorderProxy_->GetMaxAmplitude();
+    return recorderProxy_->GetMaxAmplitude(amplitude);
 }
 
 int32_t RecorderClient::IsWatermarkSupported(bool &isWatermarkSupported)

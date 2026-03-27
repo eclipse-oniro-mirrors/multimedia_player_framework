@@ -53,6 +53,11 @@ int32_t AudioHapticManagerImpl::RegisterSourceSync(string_view audioUri, string_
     return audioHapticMgrClient_->RegisterSource(audioUri.c_str(), hapticUri.c_str());
 }
 
+int32_t AudioHapticManagerImpl::RegisterSource(string_view audioUri, string_view hapticUri)
+{
+    return RegisterSourceSync(audioUri, hapticUri);
+}
+
 void AudioHapticManagerImpl::UnregisterSourceSync(int32_t id)
 {
     if (audioHapticMgrClient_ == nullptr) {
@@ -64,6 +69,11 @@ void AudioHapticManagerImpl::UnregisterSourceSync(int32_t id)
     if (status != OHOS::Media::MSERR_OK) {
         CommonTaihe::ThrowError(status, "Error: UnregisterSource failed");
     }
+}
+
+void AudioHapticManagerImpl::UnregisterSource(int32_t id)
+{
+    UnregisterSourceSync(id);
 }
 
 void AudioHapticManagerImpl::SetAudioLatencyMode(int32_t id, AudioLatencyMode latencyMode)
@@ -189,6 +199,12 @@ int32_t AudioHapticManagerImpl::RegisterSourceFromFdSync(AudioHapticFileDescript
     return sourceID;
 }
 
+int32_t AudioHapticManagerImpl::RegisterSourceFromFd(AudioHapticFileDescriptor const& audioFd,
+    AudioHapticFileDescriptor const& hapticFd)
+{
+    return RegisterSourceFromFdSync(audioFd, hapticFd);
+}
+
 int32_t AudioHapticManagerImpl::GetAudioHapticFileDescriptorValue(AudioHapticFileDescriptor const& audioFd,
     OHOS::Media::AudioHapticFileDescriptor& audioHapticFd)
 {
@@ -266,6 +282,12 @@ AudioHapticPlayerOrNull AudioHapticManagerImpl::CreatePlayerSync(int32_t id,
 
     CreatePlayerExecute(taiheContext);
     return CreatePlayerComplete(taiheContext);
+}
+
+AudioHapticPlayerOrNull AudioHapticManagerImpl::CreatePlayer(int32_t id,
+    optional_view<AudioHapticPlayerOptions> options)
+{
+    return CreatePlayerSync(id, options);
 }
 
 AudioHapticManager GetAudioHapticManager()

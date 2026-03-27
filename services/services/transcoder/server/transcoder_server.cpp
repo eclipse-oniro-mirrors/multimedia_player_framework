@@ -104,12 +104,15 @@ const std::string& TransCoderServer::GetStatusDescription(OHOS::Media::TransCode
 void TransCoderServer::OnError(TransCoderErrorType errorType, int32_t errorCode)
 {
     (void)errorType;
-    std::lock_guard<std::mutex> lock(cbMutex_);
-    lastErrMsg_ = MSErrorToString(static_cast<MediaServiceErrCode>(errorCode));
-    CHECK_AND_RETURN(transCoderCb_ != nullptr);
+    {
+        std::lock_guard<std::mutex> lock(cbMutex_);
+        lastErrMsg_ = MSErrorToString(static_cast<MediaServiceErrCode>(errorCode));
+        CHECK_AND_RETURN(transCoderCb_ != nullptr);
+        MEDIA_LOGI("receive an error event, errorCode: %{public}d, errorMsg: %{public}s",
+            errorCode, lastErrMsg_.c_str());
+        transCoderCb_->OnError(errorCode, lastErrMsg_);
+    }
     status_ = REC_ERROR;
-    MEDIA_LOGI("receive an error event, errorCode: %{public}d, errorMsg: %{public}s", errorCode, lastErrMsg_.c_str());
-    transCoderCb_->OnError(errorCode, lastErrMsg_);
 }
 
 void TransCoderServer::OnInfo(TransCoderOnInfoType type, int32_t extra)
@@ -456,7 +459,6 @@ void TransCoderServer::ChangeStatus(RecStatus status)
 {
     CHECK_AND_RETURN_LOG(status_ != REC_ERROR, "status is error");
     {
-        std::lock_guard<std::mutex> cbLock(cbMutex_);
         status_ = status;
         MEDIA_LOGI("current status is %{public}s", GetStatusDescription(status_).c_str());
     }

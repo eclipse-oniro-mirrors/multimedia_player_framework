@@ -280,7 +280,8 @@ napi_value SoundPoolNapi::JsLoad(napi_env env, napi_callback_info info)
                 soundId = asyncCtx->soundPool_->Load(asyncCtx->url_);
             }
             if (soundId < 0) {
-                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "load sound failed");
+                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                    "Failed to load sound, the resource path is invalid, please check input parameters");
             } else {
                 asyncCtx->JsResult = std::make_unique<MediaJsResultInt>(soundId);
             }
@@ -325,7 +326,7 @@ napi_value SoundPoolNapi::JsPlay(napi_env env, napi_callback_info info)
             CHECK_AND_RETURN_LOG(asyncCtx->soundPool_ != nullptr, "soundPool_ is nullptr!");
             int32_t streamId = asyncCtx->soundPool_->Play(asyncCtx->soundId_, asyncCtx->playParameters_);
             if (streamId < 0) {
-                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "play sound failed");
+                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Failed to play sound");
             } else {
                 asyncCtx->JsResult = std::make_unique<MediaJsResultInt>(streamId);
             }
@@ -359,7 +360,7 @@ napi_value SoundPoolNapi::JsStop(napi_env env, napi_callback_info info)
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
     napi_status status = napi_get_value_int32(env, args[PARAM0], &asyncCtx->streamId_);
     if (status != napi_ok || asyncCtx->streamId_ <= 0) {
-        asyncCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "stop streamId failed, invaild value");
+        asyncCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "Failed to stop sound, streamID is invalid");
     }
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsStop", NAPI_AUTO_LENGTH, &resource);
@@ -370,7 +371,8 @@ napi_value SoundPoolNapi::JsStop(napi_env env, napi_callback_info info)
             CHECK_AND_RETURN_LOG(asyncCtx->soundPool_ != nullptr, "soundPool_ is nullptr!");
             int32_t ret = asyncCtx->soundPool_->Stop(asyncCtx->streamId_);
             if (ret != MSERR_OK) {
-                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "stop streamId failed");
+                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                    "Failed to stop sound, audio stream does not exist");
             }
             MEDIA_LOGI("The js thread of stop finishes execution and returns");
         }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -402,10 +404,10 @@ napi_value SoundPoolNapi::JsSetLoop(napi_env env, napi_callback_info info)
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
     napi_status status = napi_get_value_int32(env, args[PARAM0], &asyncCtx->streamId_);
     if (status != napi_ok || asyncCtx->streamId_ <= 0) {
-        asyncCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "SetLoop streamId failed,invaild value");
+        asyncCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "Failed to setLoop, streamID is invalid");
     }
     status = napi_get_value_int32(env, args[PARAM1], &asyncCtx->loop_);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "failed to setloop id");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to setLoop");
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsSetLoop", NAPI_AUTO_LENGTH, &resource);
@@ -416,7 +418,7 @@ napi_value SoundPoolNapi::JsSetLoop(napi_env env, napi_callback_info info)
             CHECK_AND_RETURN_LOG(asyncCtx->soundPool_ != nullptr, "soundPool_ is nullptr!");
             int32_t ret = asyncCtx->soundPool_->SetLoop(asyncCtx->streamId_, asyncCtx->loop_);
             if (ret != MSERR_OK) {
-                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "setLoop streamId failed");
+                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Failed to setLoop");
             }
             MEDIA_LOGI("The js thread of SetLoop finishes execution and returns");
         }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -448,11 +450,11 @@ napi_value SoundPoolNapi::JsSetPriority(napi_env env, napi_callback_info info)
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
     napi_status status = napi_get_value_int32(env, args[PARAM0], &asyncCtx->streamId_);
     if (status != napi_ok || asyncCtx->streamId_ <= 0) {
-        asyncCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "SetPriority streamId failed");
+        asyncCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "Failed to setPriority");
     }
     status = napi_get_value_int32(env, args[PARAM1], &asyncCtx->priority_);
     if (status != napi_ok || asyncCtx->priority_ < 0) {
-        asyncCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "SetPriority priority failed");
+        asyncCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "Failed to setPriority, priority is invalid");
     }
 
     napi_value resource = nullptr;
@@ -464,7 +466,8 @@ napi_value SoundPoolNapi::JsSetPriority(napi_env env, napi_callback_info info)
             CHECK_AND_RETURN_LOG(asyncCtx->soundPool_ != nullptr, "soundPool_ is nullptr!");
             int32_t ret = asyncCtx->soundPool_->SetPriority(asyncCtx->streamId_, asyncCtx->priority_);
             if (ret != MSERR_OK) {
-                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "SetPriority streamId failed");
+                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                    "Failed to setPriority, audio stream does not exist");
             }
             MEDIA_LOGI("The js thread of SetPriority finishes execution and returns");
         }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -503,7 +506,8 @@ napi_value SoundPoolNapi::JsSetRate(napi_env env, napi_callback_info info)
             CHECK_AND_RETURN_LOG(asyncCtx->soundPool_ != nullptr, "soundPool_ is nullptr!");
             int32_t ret = asyncCtx->soundPool_->SetRate(asyncCtx->streamId_, asyncCtx->renderRate_);
             if (ret != MSERR_OK) {
-                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "SetRate streamId failed");
+                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                    "Failed to setRate, audio stream does not exist or rate is invalid");
             }
             MEDIA_LOGI("The js thread of SetRate finishes execution and returns");
         }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -543,7 +547,7 @@ napi_value SoundPoolNapi::JsSetVolume(napi_env env, napi_callback_info info)
             int32_t ret = asyncCtx->soundPool_->SetVolume(asyncCtx->streamId_,
                 asyncCtx->leftVolume_, asyncCtx->rightVolume_);
             if (ret != MSERR_OK) {
-                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "setVolume streamId failed");
+                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Failed to setVolume");
             }
             MEDIA_LOGI("The js thread of SetVolume finishes execution and returns");
         }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -594,7 +598,7 @@ napi_value SoundPoolNapi::JsUnload(napi_env env, napi_callback_info info)
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
     napi_status status = napi_get_value_int32(env, args[PARAM0], &asyncCtx->soundId_);
     if (status != napi_ok || asyncCtx->soundId_ <= 0) {
-        asyncCtx->SignError(MSERR_EXT_API9_IO, "unLoad failed,inavild value");
+        asyncCtx->SignError(MSERR_EXT_API9_IO, "Failed to unLoad sound, soundID is invalid");
     }
 
     napi_value resource = nullptr;
@@ -606,7 +610,8 @@ napi_value SoundPoolNapi::JsUnload(napi_env env, napi_callback_info info)
             CHECK_AND_RETURN_LOG(asyncCtx->soundPool_ != nullptr, "soundPool_ is nullptr!");
             int32_t ret = asyncCtx->soundPool_->Unload(asyncCtx->soundId_);
             if (ret != MSERR_OK) {
-                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "unLoad soundID failed");
+                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                    "Failed to unLoad sound, audio stream does not exist");
             }
             MEDIA_LOGI("The js thread of Unload finishes execution and returns, soundID: %{public}d",
                 asyncCtx->soundId_);

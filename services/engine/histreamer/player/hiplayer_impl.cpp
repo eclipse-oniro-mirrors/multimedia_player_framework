@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "player.h"
 #define HST_LOG_TAG "HiPlayer"
 
 #include "hiplayer_impl.h"
@@ -975,6 +976,7 @@ int32_t HiPlayerImpl::Pause(bool isSystemOperation)
     FALSE_RETURN_V_MSG_E(pipelineStates_ != PlayerStates::PLAYER_PLAYBACK_COMPLETE,
         TransStatus(Status::OK), "completed not allow pause");
     Status ret = Status::OK;
+    CacheBuffer();
     ret = pipeline_->Pause();
     syncManager_->Pause();
     if (ret != Status::OK) {
@@ -1309,6 +1311,7 @@ void HiPlayerImpl::AppendPlayerMediaInfo()
     meta->SetData(Tag::AV_PLAYER_MAX_LAG_DURATION, playStatisticalInfo_.maxLagDuration);
     meta->SetData(Tag::AV_PLAYER_AVG_LAG_DURATION, playStatisticalInfo_.avgLagDuration);
     meta->SetData(Tag::AV_PLAYER_MAX_SURFACESWAP_LATENCY, playStatisticalInfo_.maxSurfaceSwapLatency);
+    meta->SetData(Tag::AV_PLAYER_BUFFER_DURATION, bufferDuration_);
     AppendMediaInfo(meta, instanceId_);
 }
 
@@ -1460,6 +1463,7 @@ Status HiPlayerImpl::doPreparedSeek(int64_t seekPos, PlayerSeekMode mode)
 Status HiPlayerImpl::doStartedSeek(int64_t seekPos, PlayerSeekMode mode)
 {
     MEDIA_LOG_I("doStartedSeek");
+    CacheBuffer();
     pipeline_ -> Pause();
     pipeline_ -> Flush();
     auto rtv = doSeek(seekPos, mode);
@@ -1612,9 +1616,7 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
     }
     if (rtv == Status::OK) {
         syncManager_->Seek(seekTimeUs);
-        if (subtitleSink_ != nullptr) {
-            subtitleSink_->NotifySeek();
-        }
+        NotifySubtitleSeek();
     }
     return rtv;
 }
@@ -1648,9 +1650,7 @@ Status HiPlayerImpl::HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs)
     if (audioSink_ != nullptr) {
         audioSink_->SetIsCancelStart(false);
     }
-    if (subtitleSink_ != nullptr) {
-        subtitleSink_->NotifySeek();
-    }
+    NotifySubtitleSeek();
     interruptMonitor_->DeregisterListener(seekAgent_);
     seekAgent_.reset();
     return res;
@@ -2859,6 +2859,7 @@ void HiPlayerImpl::DoSetPlayStrategy(const std::shared_ptr<MediaSource> source)
     playStrategy->subtitleLanguage = subtitleLanguage_;
     playStrategy->bufferDurationForPlaying = bufferDurationForPlaying_;
     playStrategy->thresholdForAutoQuickPlay = maxLivingDelayTime_;
+    demuxer_->SetPlayStrategy(playStrategy);
     if (source) {
         source->SetPlayStrategy(playStrategy);
         source->SetAppUid(appUid_);
@@ -3534,6 +3535,9 @@ void HiPlayerImpl::HandleAudioTrackChangeEvent(const Event& event)
         return;
     }
     if (IsAudioMime(mime)) {
+        if (currentAudioTrackId_ < 0) {
+            FALSE_RETURN(Status::OK == InitAudioDefaultTrackIndex());
+        }
         if (Status::OK != audioDecoder_->ChangePlugin(metaInfo[trackId])) {
             MEDIA_LOG_E("HandleAudioTrackChangeEvent audioDecoder change plugin error");
             return;
@@ -3934,6 +3938,29 @@ int32_t HiPlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
 
     SetFlvLiveParams(playbackStrategy);
     FALSE_RETURN_V(IsLivingMaxDelayTimeValid(), TransStatus(Status::ERROR_INVALID_PARAMETER));
+    return MSERR_OK;
+}
+
+int32_t HiPlayerImpl::SetTrackSelectionFilter(AVPlayTrackSelectionFilter avTrackFilter)
+{
+    MEDIA_LOG_I("SetTrackSelectionFilter");
+    
+    FALSE_RETURN_V_MSG_W(demuxer_ != nullptr, MSERR_OK, "demuxer_ is nullptr");
+    TrackSelectionFilter trackFilter;
+    trackFilter.maxVideoBitrate = avTrackFilter.maxVideoBitrate;
+    trackFilter.minVideoBitrate = avTrackFilter.minVideoBitrate;
+    trackFilter.maxVideoFrameRate = avTrackFilter.maxVideoFrameRate;
+    trackFilter.minVideoFrameRate = avTrackFilter.minVideoFrameRate;
+    trackFilter.maxVideoResolution = avTrackFilter.maxVideoResolution;
+    trackFilter.minVideoResolution = avTrackFilter.minVideoResolution;
+    trackFilter.preferredVideoMimeTypes = avTrackFilter.preferredVideoMimeTypes;
+    trackFilter.maxAudioBitrate = avTrackFilter.maxAudioBitrate;
+    trackFilter.minAudioBitrate = avTrackFilter.minAudioBitrate;
+    trackFilter.maxAudioChannels = avTrackFilter.maxAudioChannels;
+    trackFilter.preferredAudioMimeTypes = avTrackFilter.preferredAudioMimeTypes;
+    trackFilter.preferredAudioLanguages = avTrackFilter.preferredAudioLanguages;
+    trackFilter.preferredSubtitleLanguages = avTrackFilter.preferredSubtitleLanguages;
+    demuxer_->SetTrackSelectionFilter(trackFilter);
     return MSERR_OK;
 }
 
@@ -4509,6 +4536,14 @@ void HiPlayerImpl::ExtractStrategyParams(const AVPlayStrategy &strategy)
     videoPostProcessorType_ =
         strategy.enableSuperResolution ? VideoPostProcessorType::SUPER_RESOLUTION : VideoPostProcessorType::NONE;
     isPostProcessorOn_ = strategy.enableSuperResolution;
+}
+
+int32_t HiPlayerImpl::NotifySubtitleSeek()
+{
+    if (!hasExtSub_ && subtitleSink_ != nullptr) {
+        subtitleSink_->NotifySeek();
+    }
+    return TransStatus(Status::OK);
 }
 }  // namespace Media
 }  // namespace OHOS

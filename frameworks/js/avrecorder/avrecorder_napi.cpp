@@ -417,30 +417,44 @@ napi_value AVRecorderNapi::JsSetMetadata(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
+    auto asyncCtx = std::make_unique<AVRecorderAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
     AVRecorderNapi *jsRecorder = AVRecorderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsRecorder != nullptr, result, "failed to GetJsInstanceAndArgs");
-#ifndef CROSS_PLATFORM
-    uint64_t accessTokenIDEx = IPCSkeleton::GetCallingFullTokenID();
-    bool isSystemApp = Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIDEx);
-    if (!isSystemApp) {
-        jsRecorder->ErrorCallback(MSERR_EXT_API9_PERMISSION_DENIED, "JsSetMetadata", "not system app");
-        return result;
-    }
-#endif
     CHECK_AND_RETURN_RET_LOG(jsRecorder->taskQue_ != nullptr, result, "taskQue is nullptr!");
-    CHECK_AND_RETURN_RET_LOG(jsRecorder->CheckStateMachine(opt) == MSERR_OK, result, "on error state");
-    CHECK_AND_RETURN_RET_LOG(jsRecorder->CheckRepeatOperation(opt) == MSERR_OK, result, "on error Operation");
 
-    std::map<std::string, std::string> recordMeta;
-    CommonNapi::GetPropertyMap(env, args[0], recordMeta);
-    CHECK_AND_RETURN_RET_LOG(recordMeta.size() != 0, result, "recordMeta has no data");
+    if (jsRecorder->CheckStateMachine(opt) == MSERR_OK) {
+        std::map<std::string, std::string> recordMeta;
+        CommonNapi::GetPropertyMap(env, args[0], recordMeta);
+        CHECK_AND_RETURN_RET_LOG(recordMeta.size() != 0, result, "recordMeta has no data");
 
-    auto task = std::make_shared<TaskHandler<void>>([jsRecorder, recordMeta]() {
-        if (jsRecorder != nullptr) {
-            (void)jsRecorder->SetMetadata(recordMeta);
+        asyncCtx->task_ = std::make_shared<TaskHandler<RetInfo>>([jsRecorder, recordMeta]() {
+            int32_t ret = jsRecorder->SetMetadata(recordMeta);
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, GetRetInfo(ret, "SetMetadataTask", ""),
+                "SetMetadataTask failed");
+            return RetInfo(MSERR_EXT_API9_OK, "");
+        });
+        (void)jsRecorder->taskQue_->EnqueueTask(asyncCtx->task_);
+    } else {
+        asyncCtx->AVRecorderSignError(MSERR_INVALID_STATE, opt, "");
+    }
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        AVRecorderAsyncContext* asyncCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
+
+        if (asyncCtx->task_) {
+            auto result = asyncCtx->task_->GetResult();
+            if (result.Value().first != MSERR_EXT_API9_OK) {
+                asyncCtx->SignError(result.Value().first, result.Value().second);
+            }
         }
-    });
-    (void)jsRecorder->taskQue_->EnqueueTask(task);
+        MEDIA_LOGI("The js thread of %{public}s finishes execution and returns", opt.c_str());
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
+    asyncCtx.release();
 
     MEDIA_LOGI("Js %{public}s End", opt.c_str());
     return result;
@@ -1609,8 +1623,7 @@ int32_t AVRecorderNapi::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &ch
 
 int32_t AVRecorderNapi::GetMaxAmplitude(int32_t &maxAmplitude)
 {
-    maxAmplitude = recorder_->GetMaxAmplitude();
-    return MSERR_OK;
+    return recorder_->GetMaxAmplitude(maxAmplitude);
 }
 
 int32_t AVRecorderNapi::GetEncoderInfo(std::vector<EncoderCapabilityData> &encoderInfo)

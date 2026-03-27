@@ -5751,5 +5751,44 @@ HWTEST_F(PlayerServerUnitTest, Player_GetCurrentPresentationTimestamp_002, TestS
     server_->lastOpStatus_ = PLAYER_STATE_ERROR;
     EXPECT_NE(MSERR_OK, server_->GetCurrentPresentationTimestamp(currentPresentation));
 }
+
+/**
+ * @tc.name  : Test SetTrackSelectionFilter
+ * @tc.number: Player_SetTrackSelectionFilter_001
+ * @tc.desc  : Test Player SetTrackSelectionFilter
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetTrackSelectionFilter_001, TestSize.Level1)
+{
+    AVPlayTrackSelectionFilter trackFilter = {
+        .maxVideoBitrate = 32000
+    };
+    ASSERT_EQ(MSERR_OK, player_->SetTrackSelectionFilter(trackFilter));
+}
+
+/**
+ * @tc.name  : Test GetTrackSelectionFilter
+ * @tc.number: Player_GetTrackSelectionFilter_001
+ * @tc.desc  : Test Player GetTrackSelectionFilter
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetTrackSelectionFilter_001, TestSize.Level1)
+{
+    AVPlayTrackSelectionFilter trackFilter = {};
+    ASSERT_EQ(MSERR_OK, player_->GetTrackSelectionFilter(trackFilter));
+    EXPECT_EQ(-1, trackFilter.maxVideoBitrate);
+    EXPECT_EQ(-1, trackFilter.minVideoBitrate);
+    EXPECT_EQ(-1, trackFilter.maxVideoFrameRate);
+    EXPECT_EQ(-1, trackFilter.minVideoFrameRate);
+    EXPECT_EQ(-1, trackFilter.maxVideoResolution.first);
+    EXPECT_EQ(-1, trackFilter.maxVideoResolution.second);
+    EXPECT_EQ(-1, trackFilter.minVideoResolution.first);
+    EXPECT_EQ(-1, trackFilter.minVideoResolution.second);
+    EXPECT_TRUE(trackFilter.preferredVideoMimeTypes.empty());
+    EXPECT_EQ(-1, trackFilter.maxAudioBitrate);
+    EXPECT_EQ(-1, trackFilter.minAudioBitrate);
+    EXPECT_EQ(-1, trackFilter.maxAudioChannels);
+    EXPECT_TRUE(trackFilter.preferredAudioMimeTypes.empty());
+    EXPECT_TRUE(trackFilter.preferredAudioLanguages.empty());
+    EXPECT_TRUE(trackFilter.preferredSubtitleLanguages.empty());
+}
 } // namespace Media
 } // namespace OHOS

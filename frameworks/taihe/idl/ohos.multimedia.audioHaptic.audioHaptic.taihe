@@ -43,54 +43,54 @@ struct AudioHapticFileDescriptor {
 
 union AudioHapticPlayerOrNull {
   type_audioHapticPlayer: AudioHapticPlayer;
-  @null type_null;
+  type_null: @null unit;
 }
 
 interface AudioHapticManager {
-    @gen_promise("registerSource")
     RegisterSourceSync(audioUri: String, hapticUri: String): i32;
+    @promise RegisterSource(audioUri: String, hapticUri: String): i32;
 
-    @gen_promise("unregisterSource")
     UnregisterSourceSync(id: i32): void;
+    @promise UnregisterSource(id: i32): void;
 
     SetAudioLatencyMode(id: i32, latencyMode: AudioLatencyMode): void;
 
     SetStreamUsage(id: i32, usage: @sts_type("audio.StreamUsage") Opaque): void;
 
-    @gen_promise("createPlayer")
     CreatePlayerSync(id: i32, options: Optional<AudioHapticPlayerOptions>): AudioHapticPlayerOrNull;
+    @promise CreatePlayer(id: i32, options: Optional<AudioHapticPlayerOptions>): AudioHapticPlayerOrNull;
 
-    @gen_promise("registerSourceFromFd")
     RegisterSourceFromFdSync(audioFd: AudioHapticFileDescriptor, hapticFd: AudioHapticFileDescriptor): i32;
+    @promise RegisterSourceFromFd(audioFd: AudioHapticFileDescriptor, hapticFd: AudioHapticFileDescriptor): i32;
 }
 
 interface AudioHapticPlayer {
     IsMuted(type: AudioHapticType): bool;
 
-    @gen_promise("start")
     StartSync(): void;
+    @promise Start(): void;
 
-    @gen_promise("stop")
     StopSync(): void;
+    @promise Stop(): void;
 
-    @gen_promise("release")
     ReleaseSync(): void;
+    @promise Release(): void;
 
-    @gen_promise("setVolume")
     SetVolumeSync(volume: f64): void;
+    @promise SetVolume(volume: f64): void;
 
-    @gen_promise("setHapticsIntensity")
     SetHapticsIntensitySync(intensity: f64): void;
+    @promise SetHapticsIntensity(intensity: f64): void;
 
     EnableHapticsInSilentMode(enable: bool): void;
 
     IsHapticsIntensityAdjustmentSupported(): bool;
 
-    @gen_promise("setLoop")
     SetLoopSync(loop: bool): void;
+    @promise SetLoop(loop: bool): void;
 
-    @gen_promise("setHapticsRamp")
     SetHapticsRampSync(duration: i32, startIntensity: f64, endIntensity: f64): void;
+    @promise SetHapticsRamp(duration: i32, startIntensity: f64, endIntensity: f64): void;
 
     IsHapticsRampSupported(): bool;
 

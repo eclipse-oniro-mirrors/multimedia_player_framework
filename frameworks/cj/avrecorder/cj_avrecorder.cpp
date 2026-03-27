@@ -698,7 +698,7 @@ int32_t CjAVRecorder::GetAudioCapturerMaxAmplitude(int32_t *errCode)
         return retMaxAmplitude;
     }
     if (CheckStateMachine(opt) == MSERR_OK) {
-        retMaxAmplitude = recorder_->GetMaxAmplitude();
+        *errCode = recorder_->GetMaxAmplitude(retMaxAmplitude);
     } else {
         ret = GetRetInfo(MSERR_INVALID_OPERATION, "GetAudioCapturerMaxAmplitude", "", "CheckStateMachine failed");
         *errCode = ret.first;

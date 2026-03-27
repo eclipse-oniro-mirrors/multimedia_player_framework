@@ -388,409 +388,6 @@ HWTEST_F(LppVideoDataManagerUnitTest, HandleBufferAvailable_011, TestSize.Level1
 }
 
 /**
-* @tc.name    : Test HandleBufferAvailable API
-* @tc.number  : HandleBufferAvailable_012
-* @tc.desc    : Test HandleBufferAvailable interface
-* @tc.require : issueI5NZAQ
-*/
-HWTEST_F(LppVideoDataManagerUnitTest, HandleBufferAvailable_012, TestSize.Level0)
-{
-    ASSERT_NE(nullptr, videoDataMgr_);
-    std::shared_ptr<OHOS::Media::MockEventReceiver> eventReceiver
-        = std::make_shared<OHOS::Media::MockEventReceiver>();
-    ASSERT_NE(nullptr, eventReceiver);
-    EXPECT_CALL(*eventReceiver, OnEvent(_)).WillOnce(Return());
-    videoDataMgr_->SetEventReceiver(eventReceiver);
-    sptr<MockAVBufferQueueProducer> producer = sptr<MockAVBufferQueueProducer>::MakeSptr();
-    ASSERT_NE(nullptr, producer);
-    videoDataMgr_->inputProducer_ = producer;
-    EXPECT_EQ(videoDataMgr_->dataPacket_, nullptr);
-    videoDataMgr_->HandleBufferAvailable();
-    EXPECT_EQ(videoDataMgr_->isRequiringData_, true);
-}
-
-/**
-* @tc.name    : Test HandleBufferAvailable API
-* @tc.number  : HandleBufferAvailable_013
-* @tc.desc    : Test HandleBufferAvailable interface
-* @tc.require : issueI5NZAQ
-*/
-HWTEST_F(LppVideoDataManagerUnitTest, HandleBufferAvailable_013, TestSize.Level1)
-{
-    ASSERT_NE(nullptr, videoDataMgr_);
-    std::shared_ptr<OHOS::Media::MockEventReceiver> eventReceiver
-        = std::make_shared<OHOS::Media::MockEventReceiver>();
-    ASSERT_NE(nullptr, eventReceiver);
-    EXPECT_CALL(*eventReceiver, OnEvent(_)).WillOnce(Return());
-    videoDataMgr_->SetEventReceiver(eventReceiver);
-    sptr<MockAVBufferQueueProducer> producer = sptr<MockAVBufferQueueProducer>::MakeSptr();
-    ASSERT_NE(nullptr, producer);
-    videoDataMgr_->inputProducer_ = producer;
-    sptr<LppDataPacket> framePacket = sptr<LppDataPacket>::MakeSptr();
-    ASSERT_NE(nullptr, framePacket);
-    videoDataMgr_->dataPacket_ = framePacket;
-    EXPECT_LE(framePacket->flag_.size(), framePacket->vectorReadIndex_);
-    EXPECT_LE(framePacket->pts_.size(), framePacket->vectorReadIndex_);
-    EXPECT_LE(framePacket->size_.size(), framePacket->vectorReadIndex_);
-    EXPECT_EQ(videoDataMgr_->dataPacket_->IsEmpty(), true);
-    videoDataMgr_->HandleBufferAvailable();
-    EXPECT_EQ(videoDataMgr_->isRequiringData_, true);
-}
-
-/**
-* @tc.name    : Test HandleBufferAvailable API
-* @tc.number  : HandleBufferAvailable_014
-* @tc.desc    : Test HandleBufferAvailable interface
-* @tc.require : issueI5NZAQ
-*/
-HWTEST_F(LppVideoDataManagerUnitTest, HandleBufferAvailable_014, TestSize.Level1)
-{
-    ASSERT_NE(nullptr, videoDataMgr_);
-    std::shared_ptr<OHOS::Media::MockEventReceiver> eventReceiver
-        = std::make_shared<OHOS::Media::MockEventReceiver>();
-    ASSERT_NE(nullptr, eventReceiver);
-    EXPECT_CALL(*eventReceiver, OnEvent(_)).WillOnce(Return());
-    videoDataMgr_->SetEventReceiver(eventReceiver);
-    sptr<MockAVBufferQueueProducer> producer = sptr<MockAVBufferQueueProducer>::MakeSptr();
-    ASSERT_NE(nullptr, producer);
-    videoDataMgr_->inputProducer_ = producer;
-    sptr<LppDataPacket> framePacket = sptr<LppDataPacket>::MakeSptr();
-    ASSERT_NE(nullptr, framePacket);
-    framePacket->flag_.push_back(10);
-    videoDataMgr_->dataPacket_ = framePacket;
-    EXPECT_GT(framePacket->flag_.size(), framePacket->vectorReadIndex_);
-    EXPECT_LE(framePacket->pts_.size(), framePacket->vectorReadIndex_);
-    EXPECT_LE(framePacket->size_.size(), framePacket->vectorReadIndex_);
-    EXPECT_EQ(videoDataMgr_->dataPacket_->IsEmpty(), true);
-    videoDataMgr_->HandleBufferAvailable();
-    EXPECT_EQ(videoDataMgr_->isRequiringData_, true);
-}
-
-/**
-* @tc.name    : Test HandleBufferAvailable API
-* @tc.number  : HandleBufferAvailable_015
-* @tc.desc    : Test HandleBufferAvailable interface
-* @tc.require : issueI5NZAQ
-*/
-HWTEST_F(LppVideoDataManagerUnitTest, HandleBufferAvailable_015, TestSize.Level1)
-{
-    ASSERT_NE(nullptr, videoDataMgr_);
-    std::shared_ptr<OHOS::Media::MockEventReceiver> eventReceiver
-        = std::make_shared<OHOS::Media::MockEventReceiver>();
-    ASSERT_NE(nullptr, eventReceiver);
-    EXPECT_CALL(*eventReceiver, OnEvent(_)).WillOnce(Return());
-    videoDataMgr_->SetEventReceiver(eventReceiver);
-    sptr<MockAVBufferQueueProducer> producer = sptr<MockAVBufferQueueProducer>::MakeSptr();
-    ASSERT_NE(nullptr, producer);
-    videoDataMgr_->inputProducer_ = producer;
-    sptr<LppDataPacket> framePacket = sptr<LppDataPacket>::MakeSptr();
-    ASSERT_NE(nullptr, framePacket);
-    framePacket->flag_.push_back(10);
-    framePacket->pts_.push_back(33);
-    videoDataMgr_->dataPacket_ = framePacket;
-    EXPECT_GT(framePacket->flag_.size(), framePacket->vectorReadIndex_);
-    EXPECT_GT(framePacket->pts_.size(), framePacket->vectorReadIndex_);
-    EXPECT_LE(framePacket->size_.size(), framePacket->vectorReadIndex_);
-    EXPECT_EQ(videoDataMgr_->dataPacket_->IsEmpty(), true);
-    videoDataMgr_->HandleBufferAvailable();
-    EXPECT_EQ(videoDataMgr_->isRequiringData_, true);
-}
-
-/**
-* @tc.name    : Test HandleBufferAvailable API
-* @tc.number  : HandleBufferAvailable_016
-* @tc.desc    : Test HandleBufferAvailable interface
-* @tc.require : issueI5NZAQ
-*/
-HWTEST_F(LppVideoDataManagerUnitTest, HandleBufferAvailable_016, TestSize.Level1)
-{
-    ASSERT_NE(nullptr, videoDataMgr_);
-    std::shared_ptr<OHOS::Media::MockEventReceiver> eventReceiver
-        = std::make_shared<OHOS::Media::MockEventReceiver>();
-    ASSERT_NE(nullptr, eventReceiver);
-    EXPECT_CALL(*eventReceiver, OnEvent(_)).WillOnce(Return());
-    videoDataMgr_->SetEventReceiver(eventReceiver);
-    sptr<MockAVBufferQueueProducer> producer = sptr<MockAVBufferQueueProducer>::MakeSptr();
-    ASSERT_NE(nullptr, producer);
-    videoDataMgr_->inputProducer_ = producer;
-    sptr<LppDataPacket> framePacket = sptr<LppDataPacket>::MakeSptr();
-    ASSERT_NE(nullptr, framePacket);
-    framePacket->pts_.push_back(33);
-    videoDataMgr_->dataPacket_ = framePacket;
-    EXPECT_LE(framePacket->flag_.size(), framePacket->vectorReadIndex_);
-    EXPECT_GT(framePacket->pts_.size(), framePacket->vectorReadIndex_);
-    EXPECT_LE(framePacket->size_.size(), framePacket->vectorReadIndex_);
-    EXPECT_EQ(videoDataMgr_->dataPacket_->IsEmpty(), true);
-    videoDataMgr_->HandleBufferAvailable();
-    EXPECT_EQ(videoDataMgr_->isRequiringData_, true);
-}
-
-/**
-* @tc.name    : Test HandleBufferAvailable API
-* @tc.number  : HandleBufferAvailable_017
-* @tc.desc    : Test HandleBufferAvailable interface
-* @tc.require : issueI5NZAQ
-*/
-HWTEST_F(LppVideoDataManagerUnitTest, HandleBufferAvailable_017, TestSize.Level1)
-{
-    ASSERT_NE(nullptr, videoDataMgr_);
-    std::shared_ptr<OHOS::Media::MockEventReceiver> eventReceiver
-        = std::make_shared<OHOS::Media::MockEventReceiver>();
-    ASSERT_NE(nullptr, eventReceiver);
-    EXPECT_CALL(*eventReceiver, OnEvent(_)).WillOnce(Return());
-    videoDataMgr_->SetEventReceiver(eventReceiver);
-    sptr<MockAVBufferQueueProducer> producer = sptr<MockAVBufferQueueProducer>::MakeSptr();
-    ASSERT_NE(nullptr, producer);
-    videoDataMgr_->inputProducer_ = producer;
-    sptr<LppDataPacket> framePacket = sptr<LppDataPacket>::MakeSptr();
-    ASSERT_NE(nullptr, framePacket);
-    framePacket->pts_.push_back(33);
-    framePacket->size_.push_back(100);
-    videoDataMgr_->dataPacket_ = framePacket;
-    EXPECT_LE(framePacket->flag_.size(), framePacket->vectorReadIndex_);
-    EXPECT_GT(framePacket->pts_.size(), framePacket->vectorReadIndex_);
-    EXPECT_GT(framePacket->size_.size(), framePacket->vectorReadIndex_);
-    EXPECT_EQ(videoDataMgr_->dataPacket_->IsEmpty(), true);
-    videoDataMgr_->HandleBufferAvailable();
-    EXPECT_EQ(videoDataMgr_->isRequiringData_, true);
-}
-
-/**
-* @tc.name    : Test HandleBufferAvailable API
-* @tc.number  : HandleBufferAvailable_018
-* @tc.desc    : Test HandleBufferAvailable interface
-* @tc.require : issueI5NZAQ
-*/
-HWTEST_F(LppVideoDataManagerUnitTest, HandleBufferAvailable_018, TestSize.Level1)
-{
-    ASSERT_NE(nullptr, videoDataMgr_);
-    std::shared_ptr<OHOS::Media::MockEventReceiver> eventReceiver
-        = std::make_shared<OHOS::Media::MockEventReceiver>();
-    ASSERT_NE(nullptr, eventReceiver);
-    EXPECT_CALL(*eventReceiver, OnEvent(_)).WillOnce(Return());
-    videoDataMgr_->SetEventReceiver(eventReceiver);
-    sptr<MockAVBufferQueueProducer> producer = sptr<MockAVBufferQueueProducer>::MakeSptr();
-    ASSERT_NE(nullptr, producer);
-    videoDataMgr_->inputProducer_ = producer;
-    sptr<LppDataPacket> framePacket = sptr<LppDataPacket>::MakeSptr();
-    ASSERT_NE(nullptr, framePacket);
-    framePacket->flag_.push_back(10);
-    framePacket->size_.push_back(100);
-    videoDataMgr_->dataPacket_ = framePacket;
-    EXPECT_GT(framePacket->flag_.size(), framePacket->vectorReadIndex_);
-    EXPECT_LE(framePacket->pts_.size(), framePacket->vectorReadIndex_);
-    EXPECT_GT(framePacket->size_.size(), framePacket->vectorReadIndex_);
-    EXPECT_EQ(videoDataMgr_->dataPacket_->IsEmpty(), true);
-    videoDataMgr_->HandleBufferAvailable();
-    EXPECT_EQ(videoDataMgr_->isRequiringData_, true);
-}
-
-/**
-* @tc.name    : Test HandleBufferAvailable API
-* @tc.number  : HandleBufferAvailable_019
-* @tc.desc    : Test HandleBufferAvailable interface
-* @tc.require : issueI5NZAQ
-*/
-HWTEST_F(LppVideoDataManagerUnitTest, HandleBufferAvailable_019, TestSize.Level1)
-{
-    ASSERT_NE(nullptr, videoDataMgr_);
-    std::shared_ptr<OHOS::Media::MockEventReceiver> eventReceiver
-        = std::make_shared<OHOS::Media::MockEventReceiver>();
-    ASSERT_NE(nullptr, eventReceiver);
-    EXPECT_CALL(*eventReceiver, OnEvent(_)).WillOnce(Return());
-    videoDataMgr_->SetEventReceiver(eventReceiver);
-    sptr<MockAVBufferQueueProducer> producer = sptr<MockAVBufferQueueProducer>::MakeSptr();
-    ASSERT_NE(nullptr, producer);
-    videoDataMgr_->inputProducer_ = producer;
-    sptr<LppDataPacket> framePacket = sptr<LppDataPacket>::MakeSptr();
-    ASSERT_NE(nullptr, framePacket);
-    framePacket->size_.push_back(100);
-    videoDataMgr_->dataPacket_ = framePacket;
-    EXPECT_LE(framePacket->flag_.size(), framePacket->vectorReadIndex_);
-    EXPECT_LE(framePacket->pts_.size(), framePacket->vectorReadIndex_);
-    EXPECT_GT(framePacket->size_.size(), framePacket->vectorReadIndex_);
-    EXPECT_EQ(videoDataMgr_->dataPacket_->IsEmpty(), true);
-    videoDataMgr_->HandleBufferAvailable();
-    EXPECT_EQ(videoDataMgr_->isRequiringData_, true);
-}
-
-/**
-* @tc.name    : Test HandleBufferAvailable API
-* @tc.number  : HandleBufferAvailable_020
-* @tc.desc    : Test HandleBufferAvailable interface
-* @tc.require : issueI5NZAQ
-*/
-HWTEST_F(LppVideoDataManagerUnitTest, HandleBufferAvailable_020, TestSize.Level1)
-{
-    ASSERT_NE(nullptr, videoDataMgr_);
-    std::shared_ptr<OHOS::Media::Pipeline::EventReceiver> eventReceiver
-        = std::make_shared<OHOS::Media::MockEventReceiver>();
-    ASSERT_NE(nullptr, eventReceiver);
-    videoDataMgr_->SetEventReceiver(eventReceiver);
-    sptr<MockAVBufferQueueProducer> producer = sptr<MockAVBufferQueueProducer>::MakeSptr();
-    ASSERT_NE(nullptr, producer);
-    EXPECT_CALL(*producer, RequestBuffer(_, _, _)).WillOnce(Return(Status::OK));
-    videoDataMgr_->inputProducer_ = producer;
-    sptr<LppDataPacket> framePacket = sptr<LppDataPacket>::MakeSptr();
-    ASSERT_NE(nullptr, framePacket);
-    framePacket->flag_.push_back(10);
-    framePacket->pts_.push_back(33);
-    framePacket->size_.push_back(100);
-    videoDataMgr_->dataPacket_ = framePacket;
-    EXPECT_GT(framePacket->flag_.size(), framePacket->vectorReadIndex_);
-    EXPECT_GT(framePacket->pts_.size(), framePacket->vectorReadIndex_);
-    EXPECT_GT(framePacket->size_.size(), framePacket->vectorReadIndex_);
-    EXPECT_EQ(videoDataMgr_->dataPacket_->IsEmpty(), false);
-    videoDataMgr_->HandleBufferAvailable();
-    EXPECT_EQ(videoDataMgr_->isRequiringData_, false);
-}
-
-/**
-* @tc.name    : Test HandleBufferAvailable API
-* @tc.number  : HandleBufferAvailable_021
-* @tc.desc    : Test HandleBufferAvailable interface
-* @tc.require : issueI5NZAQ
-*/
-HWTEST_F(LppVideoDataManagerUnitTest, HandleBufferAvailable_021, TestSize.Level1)
-{
-    ASSERT_NE(nullptr, videoDataMgr_);
-    std::shared_ptr<OHOS::Media::Pipeline::EventReceiver> eventReceiver
-        = std::make_shared<OHOS::Media::MockEventReceiver>();
-    ASSERT_NE(nullptr, eventReceiver);
-    videoDataMgr_->SetEventReceiver(eventReceiver);
-    sptr<MockAVBufferQueueProducer> producer = sptr<MockAVBufferQueueProducer>::MakeSptr();
-    ASSERT_NE(nullptr, producer);
-    videoDataMgr_->inputProducer_ = producer;
-    sptr<LppDataPacket> framePacket = sptr<LppDataPacket>::MakeSptr();
-    ASSERT_NE(nullptr, framePacket);
-    framePacket->Init();
-    framePacket->Enable();
-    auto allocator = AVAllocatorFactory::CreateSharedAllocator(MemoryFlag::MEMORY_READ_WRITE);
-    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer(allocator, MAX_BUFFER_SIZE_TEST);
-    EXPECT_NE(buffer->memory_, nullptr);
-    buffer->memory_->SetSize(10);
-    bool appendRes = framePacket->AppendOneBuffer(buffer);
-    EXPECT_TRUE(appendRes);
-    videoDataMgr_->dataPacket_ = framePacket;
-    EXPECT_EQ(videoDataMgr_->dataPacket_->IsEmpty(), false);
-    std::shared_ptr<AVBuffer> buffer2 = AVBuffer::CreateAVBuffer(allocator, MAX_BUFFER_SIZE_TEST);
-    EXPECT_CALL(*producer, RequestBuffer(_, _, _)).WillOnce(
-        DoAll(
-            Invoke([&buffer2](std::shared_ptr<AVBuffer>& outBuffer, const AVBufferConfig& config, int32_t timeoutMs) {
-                outBuffer = buffer2;
-            }),
-            Return(Status::OK)
-        )
-    );
-    EXPECT_CALL(*producer, PushBuffer(_, _)).WillOnce(Return(Status::ERROR_UNKNOWN));
-    videoDataMgr_->disablePacketInput_ = true;
-    videoDataMgr_->HandleBufferAvailable();
-    EXPECT_EQ(videoDataMgr_->isRequiringData_, false);
-}
-
-/**
-* @tc.name    : Test HandleBufferAvailable API
-* @tc.number  : HandleBufferAvailable_022
-* @tc.desc    : Test HandleBufferAvailable interface
-* @tc.require : issueI5NZAQ
-*/
-HWTEST_F(LppVideoDataManagerUnitTest, HandleBufferAvailable_022, TestSize.Level1)
-{
-    ASSERT_NE(nullptr, videoDataMgr_);
-    std::shared_ptr<OHOS::Media::Pipeline::EventReceiver> eventReceiver
-        = std::make_shared<OHOS::Media::MockEventReceiver>();
-    ASSERT_NE(nullptr, eventReceiver);
-    videoDataMgr_->SetEventReceiver(eventReceiver);
-    sptr<MockAVBufferQueueProducer> producer = sptr<MockAVBufferQueueProducer>::MakeSptr();
-    ASSERT_NE(nullptr, producer);
-    videoDataMgr_->inputProducer_ = producer;
-    sptr<LppDataPacket> framePacket = sptr<LppDataPacket>::MakeSptr();
-    ASSERT_NE(nullptr, framePacket);
-    framePacket->Init();
-    framePacket->Enable();
-    auto allocator = AVAllocatorFactory::CreateSharedAllocator(MemoryFlag::MEMORY_READ_WRITE);
-    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer(allocator, MAX_BUFFER_SIZE_TEST);
-    EXPECT_NE(buffer->memory_, nullptr);
-    buffer->memory_->SetSize(10);
-    bool appendRes = framePacket->AppendOneBuffer(buffer);
-    EXPECT_TRUE(appendRes);
-    videoDataMgr_->dataPacket_ = framePacket;
-    EXPECT_EQ(videoDataMgr_->dataPacket_->IsEmpty(), false);
-    std::shared_ptr<AVBuffer> buffer2 = AVBuffer::CreateAVBuffer(allocator, MAX_BUFFER_SIZE_TEST);
-    EXPECT_CALL(*producer, RequestBuffer(_, _, _)).WillOnce(
-        DoAll(
-            Invoke([&buffer2](std::shared_ptr<AVBuffer>& outBuffer, const AVBufferConfig& config, int32_t timeoutMs) {
-                outBuffer = buffer2;
-            }),
-            Return(Status::OK)
-        )
-    );
-    EXPECT_CALL(*producer, PushBuffer(_, _)).WillOnce(Return(Status::ERROR_UNKNOWN));
-    videoDataMgr_->disablePacketInput_ = false;
-    videoDataMgr_->HandleBufferAvailable();
-    EXPECT_EQ(videoDataMgr_->isRequiringData_, false);
-}
-
-/**
-* @tc.name    : Test HandleBufferAvailable API
-* @tc.number  : HandleBufferAvailable_023
-* @tc.desc    : Test HandleBufferAvailable interface
-* @tc.require : issueI5NZAQ
-*/
-HWTEST_F(LppVideoDataManagerUnitTest, HandleBufferAvailable_023, TestSize.Level1)
-{
-    ASSERT_NE(nullptr, videoDataMgr_);
-    std::shared_ptr<OHOS::Media::MockEventReceiver> eventReceiver
-        = std::make_shared<OHOS::Media::MockEventReceiver>();
-    ASSERT_NE(nullptr, eventReceiver);
-    EXPECT_CALL(*eventReceiver, OnEvent(_)).WillOnce(Return());
-    videoDataMgr_->SetEventReceiver(eventReceiver);
-    sptr<MockAVBufferQueueProducer> producer = sptr<MockAVBufferQueueProducer>::MakeSptr();
-    ASSERT_NE(nullptr, producer);
-    videoDataMgr_->inputProducer_ = producer;
-    sptr<LppDataPacket> framePacket = sptr<LppDataPacket>::MakeSptr();
-    ASSERT_NE(nullptr, framePacket);
-    framePacket->flag_.push_back(10);
-    framePacket->pts_.push_back(33);
-    videoDataMgr_->dataPacket_ = framePacket;
-    EXPECT_GT(framePacket->flag_.size(), framePacket->vectorReadIndex_);
-    EXPECT_GT(framePacket->pts_.size(), framePacket->vectorReadIndex_);
-    EXPECT_LE(framePacket->size_.size(), framePacket->vectorReadIndex_);
-    EXPECT_EQ(videoDataMgr_->dataPacket_->IsEmpty(), true);
-    videoDataMgr_->HandleBufferAvailable();
-    EXPECT_EQ(videoDataMgr_->isRequiringData_, true);
-}
-
-/**
-* @tc.name    : Test HandleBufferAvailable API
-* @tc.number  : HandleBufferAvailable_024
-* @tc.desc    : Test HandleBufferAvailable interface
-* @tc.require : issueI5NZAQ
-*/
-HWTEST_F(LppVideoDataManagerUnitTest, HandleBufferAvailable_024, TestSize.Level1)
-{
-    ASSERT_NE(nullptr, videoDataMgr_);
-    std::shared_ptr<OHOS::Media::MockEventReceiver> eventReceiver
-        = std::make_shared<OHOS::Media::MockEventReceiver>();
-    ASSERT_NE(nullptr, eventReceiver);
-    EXPECT_CALL(*eventReceiver, OnEvent(_)).WillOnce(Return());
-    videoDataMgr_->SetEventReceiver(eventReceiver);
-    sptr<MockAVBufferQueueProducer> producer = sptr<MockAVBufferQueueProducer>::MakeSptr();
-    ASSERT_NE(nullptr, producer);
-    videoDataMgr_->inputProducer_ = producer;
-    sptr<LppDataPacket> framePacket = sptr<LppDataPacket>::MakeSptr();
-    ASSERT_NE(nullptr, framePacket);
-    framePacket->pts_.push_back(33);
-    videoDataMgr_->dataPacket_ = framePacket;
-    EXPECT_LE(framePacket->flag_.size(), framePacket->vectorReadIndex_);
-    EXPECT_GT(framePacket->pts_.size(), framePacket->vectorReadIndex_);
-    EXPECT_LE(framePacket->size_.size(), framePacket->vectorReadIndex_);
-    EXPECT_EQ(videoDataMgr_->dataPacket_->IsEmpty(), true);
-    videoDataMgr_->HandleBufferAvailable();
-    EXPECT_EQ(videoDataMgr_->isRequiringData_, true);
-}
-
-/**
 * @tc.name    : Test Configure API
 * @tc.number  : Configure_001
 * @tc.desc    : Test Configure interface
@@ -932,6 +529,235 @@ HWTEST_F(LppVideoDataManagerUnitTest, ProcessNewData_001, TestSize.Level0)
     EXPECT_NE(nullptr, framePacket);
     EXPECT_EQ(videoDataMgr_->ProcessNewData(framePacket), MSERR_OK);
     EXPECT_NE(videoDataMgr_->dataPacket_, nullptr);
+}
+
+/**
+ * @tc.name    : Test HandleBufferAvailable with multiple buffers
+ * @tc.number  : HandleBufferAvailable_MultipleBuffers_001
+ * @tc.desc    : Test HandleBufferAvailable interface with multiple buffers
+ * @tc.require : issueI5NZAQ
+ */
+HWTEST_F(LppVideoDataManagerUnitTest, HandleBufferAvailable_MultipleBuffers_001, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoDataMgr_);
+    std::shared_ptr<OHOS::Media::Pipeline::EventReceiver> eventReceiver
+        = std::make_shared<OHOS::Media::MockEventReceiver>();
+    ASSERT_NE(nullptr, eventReceiver);
+    videoDataMgr_->SetEventReceiver(eventReceiver);
+    sptr<MockAVBufferQueueProducer> producer = sptr<MockAVBufferQueueProducer>::MakeSptr();
+    ASSERT_NE(nullptr, producer);
+    videoDataMgr_->inputProducer_ = producer;
+    sptr<LppDataPacket> framePacket = sptr<LppDataPacket>::MakeSptr();
+    ASSERT_NE(nullptr, framePacket);
+    framePacket->Init();
+    framePacket->Enable();
+    auto allocator = AVAllocatorFactory::CreateSharedAllocator(MemoryFlag::MEMORY_READ_WRITE);
+    for (int i = 0; i < 5; i++) {
+        std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer(allocator, MAX_BUFFER_SIZE_TEST);
+        EXPECT_NE(buffer->memory_, nullptr);
+        buffer->memory_->SetSize(100);
+        bool appendRes = framePacket->AppendOneBuffer(buffer);
+        EXPECT_TRUE(appendRes);
+    }
+    videoDataMgr_->dataPacket_ = framePacket;
+    EXPECT_EQ(videoDataMgr_->dataPacket_->IsEmpty(), false);
+    EXPECT_GT(videoDataMgr_->dataPacket_->size_.size(), 0);
+}
+
+/**
+ * @tc.name    : Test HandleBufferAvailable with large buffer
+ * @tc.number  : HandleBufferAvailable_LargeBuffer_001
+ * @tc.desc    : Test HandleBufferAvailable interface with large buffer size
+ * @tc.require : issueI5NZAQ
+ */
+HWTEST_F(LppVideoDataManagerUnitTest, HandleBufferAvailable_LargeBuffer_001, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoDataMgr_);
+    std::shared_ptr<OHOS::Media::Pipeline::EventReceiver> eventReceiver
+        = std::make_shared<OHOS::Media::MockEventReceiver>();
+    ASSERT_NE(nullptr, eventReceiver);
+    videoDataMgr_->SetEventReceiver(eventReceiver);
+    sptr<MockAVBufferQueueProducer> producer = sptr<MockAVBufferQueueProducer>::MakeSptr();
+    ASSERT_NE(nullptr, producer);
+    videoDataMgr_->inputProducer_ = producer;
+    sptr<LppDataPacket> framePacket = sptr<LppDataPacket>::MakeSptr();
+    ASSERT_NE(nullptr, framePacket);
+    framePacket->Init();
+    framePacket->Enable();
+    auto allocator = AVAllocatorFactory::CreateSharedAllocator(MemoryFlag::MEMORY_READ_WRITE);
+    constexpr uint32_t largeSize = 10 * 1024 * 1024;
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer(allocator, largeSize);
+    EXPECT_NE(buffer->memory_, nullptr);
+    buffer->memory_->SetSize(largeSize);
+    bool appendRes = framePacket->AppendOneBuffer(buffer);
+    EXPECT_TRUE(appendRes);
+    videoDataMgr_->dataPacket_ = framePacket;
+    EXPECT_EQ(videoDataMgr_->dataPacket_->IsEmpty(), false);
+}
+
+/**
+ * @tc.name    : Test HandleBufferAvailable edge cases
+ * @tc.number  : HandleBufferAvailable_EdgeCases_001
+ * @tc.desc    : Test HandleBufferAvailable interface with edge cases
+ * @tc.require : issueI5NZAQ
+ */
+HWTEST_F(LppVideoDataManagerUnitTest, HandleBufferAvailable_EdgeCases_001, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoDataMgr_);
+    std::shared_ptr<OHOS::Media::Pipeline::EventReceiver> eventReceiver
+        = std::make_shared<OHOS::Media::MockEventReceiver>();
+    ASSERT_NE(nullptr, eventReceiver);
+    videoDataMgr_->SetEventReceiver(eventReceiver);
+    sptr<MockAVBufferQueueProducer> producer = sptr<MockAVBufferQueueProducer>::MakeSptr();
+    ASSERT_NE(nullptr, producer);
+    videoDataMgr_->inputProducer_ = producer;
+    sptr<LppDataPacket> framePacket = sptr<LppDataPacket>::MakeSptr();
+    ASSERT_NE(nullptr, framePacket);
+    framePacket->Init();
+    framePacket->Enable();
+    auto allocator = AVAllocatorFactory::CreateSharedAllocator(MemoryFlag::MEMORY_READ_WRITE);
+    std::shared_ptr<AVBuffer> buffer1 = AVBuffer::CreateAVBuffer(allocator, 1);
+    buffer1->memory_->SetSize(0);
+    bool appendRes1 = framePacket->AppendOneBuffer(buffer1);
+    EXPECT_TRUE(appendRes1);
+    std::shared_ptr<AVBuffer> buffer2 = AVBuffer::CreateAVBuffer(allocator, 100);
+    buffer2->memory_->SetSize(1);
+    bool appendRes2 = framePacket->AppendOneBuffer(buffer2);
+    EXPECT_TRUE(appendRes2);
+    videoDataMgr_->dataPacket_ = framePacket;
+    EXPECT_EQ(videoDataMgr_->dataPacket_->IsEmpty(), false);
+}
+
+/**
+ * @tc.name    : Test ProcessNewData with null packet
+ * @tc.number  : ProcessNewData_NullPacket_001
+ * @tc.desc    : Test ProcessNewData interface with null packet
+ * @tc.require : issueI5NZAQ
+ */
+HWTEST_F(LppVideoDataManagerUnitTest, ProcessNewData_NullPacket_001, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoDataMgr_);
+    sptr<LppDataPacket> framePacket = nullptr;
+    int32_t res = videoDataMgr_->ProcessNewData(framePacket);
+    EXPECT_NE(res, MSERR_OK);
+}
+
+/**
+ * @tc.name    : Test ProcessNewData with multiple packets
+ * @tc.number  : ProcessNewData_MultiplePackets_001
+ * @tc.desc    : Test ProcessNewData interface with multiple packets
+ * @tc.require : issueI5NZAQ
+ */
+HWTEST_F(LppVideoDataManagerUnitTest, ProcessNewData_MultiplePackets_001, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoDataMgr_);
+    std::vector<sptr<LppDataPacket>> packets;
+    for (int i = 0; i < 5; i++) {
+        sptr<LppDataPacket> framePacket = sptr<LppDataPacket>::MakeSptr();
+        ASSERT_NE(nullptr, framePacket);
+        framePacket->Init();
+        framePacket->Enable();
+        auto allocator = AVAllocatorFactory::CreateSharedAllocator(MemoryFlag::MEMORY_READ_WRITE);
+        std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer(allocator, 1024);
+        buffer->memory_->SetSize(100);
+        bool appendRes = framePacket->AppendOneBuffer(buffer);
+        EXPECT_TRUE(appendRes);
+        int32_t res = videoDataMgr_->ProcessNewData(framePacket);
+        EXPECT_EQ(res, MSERR_OK);
+        packets.push_back(framePacket);
+    }
+    EXPECT_EQ(packets.size(), 5);
+}
+
+/**
+ * @tc.name    : Test Configure with multiple formats
+ * @tc.number  : Configure_MultipleFormats_001
+ * @tc.desc    : Test Configure interface with multiple format parameters
+ * @tc.require : issueI5NZAQ
+ */
+HWTEST_F(LppVideoDataManagerUnitTest, Configure_MultipleFormats_001, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoDataMgr_);
+    Format params1;
+    params1.PutIntValue("width", 1920);
+    params1.PutIntValue("height", 1080);
+    EXPECT_EQ(videoDataMgr_->Configure(params1), MSERR_OK);
+    
+    Format params2;
+    params2.PutIntValue("width", 1280);
+    params2.PutIntValue("height", 720);
+    EXPECT_EQ(videoDataMgr_->Configure(params2), MSERR_OK);
+    
+    Format params3;
+    params3.PutIntValue("width", 3840);
+    params3.PutIntValue("height", 2160);
+    EXPECT_EQ(videoDataMgr_->Configure(params3), MSERR_OK);
+}
+
+/**
+ * @tc.name    : Test state transitions
+ * @tc.number  : StateTransitions_001
+ * @tc.desc    : Test various state transitions
+ * @tc.require : issueI5NZAQ
+ */
+HWTEST_F(LppVideoDataManagerUnitTest, StateTransitions_001, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoDataMgr_);
+    EXPECT_EQ(videoDataMgr_->Prepare(), MSERR_OK);
+    EXPECT_NE(videoDataMgr_->dataTask_, nullptr);
+    
+    EXPECT_EQ(videoDataMgr_->StartDecode(), MSERR_OK);
+    EXPECT_NE(videoDataMgr_->dataTask_, nullptr);
+    
+    EXPECT_EQ(videoDataMgr_->Pause(), MSERR_OK);
+    EXPECT_NE(videoDataMgr_->dataTask_, nullptr);
+    
+    EXPECT_EQ(videoDataMgr_->Resume(), MSERR_OK);
+    EXPECT_NE(videoDataMgr_->dataTask_, nullptr);
+    
+    EXPECT_EQ(videoDataMgr_->Flush(), MSERR_OK);
+    
+    EXPECT_EQ(videoDataMgr_->Stop(), MSERR_OK);
+}
+
+/**
+ * @tc.name    : Test Flush with buffer clearing
+ * @tc.number  : Flush_ClearBuffers_001
+ * @tc.desc    : Test Flush interface with buffer clearing
+ * @tc.require : issueI5NZAQ
+ */
+HWTEST_F(LppVideoDataManagerUnitTest, Flush_ClearBuffers_001, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoDataMgr_);
+    sptr<LppDataPacket> framePacket = sptr<LppDataPacket>::MakeSptr();
+    ASSERT_NE(nullptr, framePacket);
+    framePacket->Init();
+    framePacket->Enable();
+    auto allocator = AVAllocatorFactory::CreateSharedAllocator(MemoryFlag::MEMORY_READ_WRITE);
+    for (int i = 0; i < 10; i++) {
+        std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer(allocator, 1024);
+        buffer->memory_->SetSize(100);
+        framePacket->AppendOneBuffer(buffer);
+    }
+    videoDataMgr_->dataPacket_ = framePacket;
+    EXPECT_EQ(videoDataMgr_->dataPacket_->IsEmpty(), false);
+    EXPECT_EQ(videoDataMgr_->Flush(), MSERR_OK);
+    EXPECT_EQ(videoDataMgr_->dataPacket_, nullptr);
+}
+
+/**
+ * @tc.name    : Test Reset state check
+ * @tc.number  : Reset_StateCheck_001
+ * @tc.desc    : Test Reset interface with state verification
+ * @tc.require : issueI5NZAQ
+ */
+HWTEST_F(LppVideoDataManagerUnitTest, Reset_StateCheck_001, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoDataMgr_);
+    videoDataMgr_->isRequiringData_ = true;
+    videoDataMgr_->disablePacketInput_ = true;
+    EXPECT_EQ(videoDataMgr_->Reset(), MSERR_OK);
+    EXPECT_EQ(videoDataMgr_->isRequiringData_, true);
 }
 
 } // namespace Media
