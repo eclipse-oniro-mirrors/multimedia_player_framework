@@ -4775,12 +4775,12 @@ void ScreenCaptureServer::PrivacyProtected(ScreenId& virtualScreenId, bool syste
 
     std::vector<std::string> privacyWindowTags;
     if (systemPrivacyProtectionSwitch == appPrivacyProtectionSwitch) {
-        privacyWindowTags.assign({"SCB_KEYBOARD_FLOATING", "TAG_SCREEN_PROTECTION_SENSITIVE_APP"});
+        privacyWindowTags.assign({"SCB_KEYBOARD_DEFAULT", "TAG_SCREEN_PROTECTION_SENSITIVE_APP"});
         ret = ScreenManager::GetInstance().SetScreenPrivacyWindowTagSwitch(virtualScreenId,
-            privacyWindowTags, appPrivacyProtectionSwitch);
+            std::move(privacyWindowTags), appPrivacyProtectionSwitch);
         MEDIA_LOGI("AppPrivacyProtected SetScreenSkipProtectedWindow done, ret: %{public}d", ret);
     } else {
-        privacyWindowTags.assign({"SCB_KEYBOARD_FLOATING"});
+        privacyWindowTags.assign({"SCB_KEYBOARD_DEFAULT"});
         ret = ScreenManager::GetInstance().SetScreenPrivacyWindowTagSwitch(virtualScreenId,
             std::move(privacyWindowTags), systemPrivacyProtectionSwitch);
         MEDIA_LOGI("KeyboardPrivacyProtected SetScreenSkipProtectedWindow done, ret: %{public}d", ret);
