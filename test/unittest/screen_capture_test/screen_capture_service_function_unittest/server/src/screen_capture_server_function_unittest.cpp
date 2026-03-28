@@ -3079,12 +3079,59 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetValueFromJson_004, TestSize.Level2)
     EXPECT_EQ(value, true);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, SystemPrivacyProtected_001, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, PrivacyProtected_001, TestSize.Level2)
 {
     ScreenId virtualScreenId = 1;
     bool systemPrivacyProtectionSwitch = true;
-    screenCaptureServer_->SystemPrivacyProtected(virtualScreenId, systemPrivacyProtectionSwitch);
+    bool appPrivacyProtectionSwitch = false;
+    screenCaptureServer_->PrivacyProtected(virtualScreenId, systemPrivacyProtectionSwitch,
+        appPrivacyProtectionSwitch);
     EXPECT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::CREATED);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, PrivacyProtected_002, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ScreenId virtualScreenId = screenCaptureServer_->virtualScreenId_;
+    bool systemPrivacyProtectionSwitch = true;
+    bool appPrivacyProtectionSwitch = true;
+    screenCaptureServer_->PrivacyProtected(virtualScreenId, systemPrivacyProtectionSwitch,
+        appPrivacyProtectionSwitch);
+    EXPECT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::STARTED);
+    screenCaptureServer_->StopScreenCapture();
+    screenCaptureServer_->Release();
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, PrivacyProtected_003, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ScreenId virtualScreenId = screenCaptureServer_->virtualScreenId_;
+    bool systemPrivacyProtectionSwitch = false;
+    bool appPrivacyProtectionSwitch = false;
+    screenCaptureServer_->PrivacyProtected(virtualScreenId, systemPrivacyProtectionSwitch,
+        appPrivacyProtectionSwitch);
+    EXPECT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::STARTED);
+    screenCaptureServer_->StopScreenCapture();
+    screenCaptureServer_->Release();
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, PrivacyProtected_004, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ScreenId virtualScreenId = screenCaptureServer_->virtualScreenId_;
+    bool systemPrivacyProtectionSwitch = false;
+    bool appPrivacyProtectionSwitch = true;
+    screenCaptureServer_->PrivacyProtected(virtualScreenId, systemPrivacyProtectionSwitch,
+        appPrivacyProtectionSwitch);
+    EXPECT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::STARTED);
+    screenCaptureServer_->StopScreenCapture();
+    screenCaptureServer_->Release();
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, InitLiveViewContent_001, TestSize.Level2)
@@ -3281,6 +3328,24 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleOriginalStreamPrivacy_003, TestS
     screenCaptureServer_->checkBoxSelected_ = false;
     screenCaptureServer_->HandleOriginalStreamPrivacy();
     EXPECT_EQ(screenCaptureServer_->checkBoxSelected_, false);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, HandleOriginalStreamPrivacy_004, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.dataType = DataType::INVAILD;
+    screenCaptureServer_->checkBoxSelected_ = true;
+    EXPECT_EQ(screenCaptureServer_->HandleOriginalStreamPrivacy(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, HandleOriginalStreamPrivacy_005, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    screenCaptureServer_->checkBoxSelected_ = true;
+    EXPECT_EQ(screenCaptureServer_->HandleOriginalStreamPrivacy(), MSERR_OK);
+    screenCaptureServer_->StopScreenCapture();
+    screenCaptureServer_->Release();
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, RegisterLanguageSwitchListener_001, TestSize.Level2)
