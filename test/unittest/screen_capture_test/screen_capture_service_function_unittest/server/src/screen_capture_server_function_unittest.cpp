@@ -3529,9 +3529,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleOriginalStreamPrivacy_007, TestS
     screenCaptureServer_->Release();
 }
 
-
-
-
 HWTEST_F(ScreenCaptureServerFunctionTest, RegisterLanguageSwitchListener_001, TestSize.Level2)
 {
     screenCaptureServer_->RegisterLanguageSwitchListener();
