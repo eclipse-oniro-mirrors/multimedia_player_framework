@@ -3446,6 +3446,24 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleOriginalStreamPrivacy_003, TestS
     EXPECT_EQ(screenCaptureServer_->checkBoxSelected_, false);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, HandleOriginalStreamPrivacy_006, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.dataType = DataType::INVAILD;
+    screenCaptureServer_->checkBoxSelected_ = false;
+    EXPECT_EQ(screenCaptureServer_->HandleOriginalStreamPrivacy(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, HandleOriginalStreamPrivacy_007, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    screenCaptureServer_->checkBoxSelected_ = false;
+    EXPECT_EQ(screenCaptureServer_->HandleOriginalStreamPrivacy(), MSERR_OK);
+    screenCaptureServer_->StopScreenCapture();
+    screenCaptureServer_->Release();
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, RegisterLanguageSwitchListener_001, TestSize.Level2)
 {
     screenCaptureServer_->RegisterLanguageSwitchListener();
