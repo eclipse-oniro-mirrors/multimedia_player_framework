@@ -124,6 +124,10 @@ void PlayerServiceProxy::InitPlayerFuncsPart2()
     playerFuncs_[GET_GLOBAL_INFO] = "Player::GetGlobalInfo";
     playerFuncs_[GET_CURRENT_PRESENTATION_TIMESTAMP] = "Player::GetCurrentPresentationTimestamp";
     playerFuncs_[REGISTER_DEVICE_CAPABILITY] = "Player::RegisterDeviceCapability";
+    playerFuncs_[GET_SEEKABLE_RANGES] = "Player::GetSeekableRanges";
+    playerFuncs_[GET_LOADED_RANGES] = "Player::GetLoadedRanges";
+    playerFuncs_[SEEK_TO_DEFAULT_POSITION] = "Player::SeekToDefaultPosition";
+    playerFuncs_[IS_LIVE_SEEK] = "Player::IsLiveSeek";
 }
 
 int32_t PlayerServiceProxy::SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -507,6 +511,22 @@ int32_t PlayerServiceProxy::Seek(int32_t mSeconds, PlayerSeekMode mode)
     return reply.ReadInt32();
 }
 
+int32_t PlayerServiceProxy::SeekToDefaultPosition()
+{
+    MediaTrace trace("PlayerServiceProxy::SeekToDefaultPosition");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    int32_t error = SendRequest(SEEK_TO_DEFAULT_POSITION, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SeekToDefaultPosition failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
 int32_t PlayerServiceProxy::GetCurrentTime(int32_t &currentTime)
 {
     MediaTrace trace("PlayerServiceProxy::GetCurrentTime");
@@ -734,6 +754,56 @@ int32_t PlayerServiceProxy::GetDuration(int32_t &duration)
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "GetDuration failed, error: %{public}d", error);
     duration = reply.ReadInt32();
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::GetSeekableRanges(std::vector<Plugins::SeekRange> &seekableRanges)
+{
+    MediaTrace trace("PlayerServiceProxy::GetSeekableRanges");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    int32_t error = SendRequest(GET_SEEKABLE_RANGES, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "GetSeekableRanges failed, error: %{public}d", error);
+    int32_t rangeCnt = reply.ReadInt32();
+    CHECK_AND_RETURN_RET_LOG(rangeCnt < MAX_TRACKCNT, MSERR_INVALID_OPERATION, "Invalid seekable range count");
+    seekableRanges.clear();
+    for (int32_t i = 0; i < rangeCnt; i++) {
+        Plugins::SeekRange range;
+        range.start = reply.ReadInt64();
+        range.end = reply.ReadInt64();
+        seekableRanges.push_back(range);
+    }
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::GetLoadedRanges(std::vector<Plugins::SeekRange> &loadedRanges)
+{
+    MediaTrace trace("PlayerServiceProxy::GetLoadedRanges");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    int32_t error = SendRequest(GET_LOADED_RANGES, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "GetLoadedRanges failed, error: %{public}d", error);
+    int32_t rangeCnt = reply.ReadInt32();
+    CHECK_AND_RETURN_RET_LOG(rangeCnt < MAX_TRACKCNT, MSERR_INVALID_OPERATION, "Invalid loaded range count");
+    loadedRanges.clear();
+    for (int32_t i = 0; i < rangeCnt; i++) {
+        Plugins::SeekRange range;
+        range.start = reply.ReadInt64();
+        range.end = reply.ReadInt64();
+        loadedRanges.push_back(range);
+    }
     return reply.ReadInt32();
 }
 
@@ -1601,6 +1671,23 @@ int32_t PlayerServiceProxy::RegisterDeviceCapability(const sptr<IRemoteObject> &
         "RegisterDeviceCapability failed, error: %{public}d", error);
 
     return reply.ReadInt32();
+}
+
+bool PlayerServiceProxy::IsLiveSeek()
+{
+    MediaTrace trace("PlayerServiceProxy::IsLiveSeek");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
+
+    int32_t error = SendRequest(IS_LIVE_SEEK, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, false,
+        "IsLiveSeek failed, error: %{public}d", error);
+
+    return reply.ReadBool();
 }
 } // namespace Media
 } // namespace OHOS

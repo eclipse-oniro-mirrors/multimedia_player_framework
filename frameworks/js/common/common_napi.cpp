@@ -1197,6 +1197,36 @@ napi_status MediaJsResultTrackFilter::GetSubtitleJsResult(napi_env env, napi_val
     return napi_ok;
 }
 
+napi_status MediaJsResultRangeArray::GetJsResult(napi_env env, napi_value &result)
+{
+    napi_status status = napi_create_array(env, &result);
+    if (status != napi_ok) {
+        return napi_cancelled;
+    }
+
+    auto vecSize = value_.size();
+    for (size_t index = 0; index < vecSize; ++index) {
+        napi_value rangeObj = nullptr;
+        status = napi_create_object(env, &rangeObj);
+        if (status != napi_ok) {
+            return status;
+        }
+
+        if (!CommonNapi::SetPropertyInt64(env, rangeObj, "min", value_[index].first)) {
+            return napi_invalid_arg;
+        }
+
+        if (!CommonNapi::SetPropertyInt64(env, rangeObj, "max", value_[index].second)) {
+            return napi_invalid_arg;
+        }
+
+        if (napi_set_element(env, result, index, rangeObj) != napi_ok) {
+            return napi_cancelled;
+        }
+    }
+    return napi_ok;
+}
+
 MediaAsyncContext::MediaAsyncContext(napi_env env)
     : env_(env)
 {

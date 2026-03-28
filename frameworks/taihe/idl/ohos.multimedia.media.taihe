@@ -336,6 +336,7 @@ interface AVPlayer {
     SetBitrate(bitrate: i32): void;
     SetDecryptionConfig(mediaKeySession: drm.MediaKeySession, secureVideoPath: bool): void;
     GetMediaKeySystemInfos(): Array<drm.MediaKeySystemInfo>;
+    SeekToDefaultPositionSync(): void;
 
     @gen_async("getTrackDescription")
     @gen_promise("getTrackDescription")
@@ -400,6 +401,12 @@ interface AVPlayer {
 
     @gen_promise("setPlaybackRange")
     SetPlaybackRangeSync(startTimeMs: i32, endTimeMs: i32, mode: Optional<SeekMode>): void;
+
+    @gen_promise("getSeekableTimeRanges")
+    GetSeekableTimeRangesSync(): Array<Range>;
+
+    @gen_promise("getLoadedTimeRanges")
+    GetLoadedTimeRangesSync(): Array<Range>;
 
     @gen_promise("setMediaMuted")
     SetMediaMutedSync(mediaType: MediaType, muted: bool): void;

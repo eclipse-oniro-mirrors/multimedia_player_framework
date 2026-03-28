@@ -175,6 +175,8 @@ public:
     MOCK_METHOD(Status, FrameId2SeekMs, (uint32_t frameId, int64_t &seekMs), ());
     MOCK_METHOD(Status, StartTask, (int32_t trackId), ());
     MOCK_METHOD(Status, SelectTrack, (int32_t trackId), ());
+    MOCK_METHOD(std::vector<Plugins::SeekRange>, GetSeekableRanges, (), ());
+    MOCK_METHOD(std::vector<Plugins::SeekRange>, GetLoadedRanges, (), ());
     MOCK_METHOD(std::vector<std::shared_ptr<Meta>>, GetStreamMetaInfo, (), (const));
     MOCK_METHOD(std::shared_ptr<Meta>, GetGlobalMetaInfo, (), (const));
     MOCK_METHOD(Status, LinkNext, (const std::shared_ptr<Filter> &nextFilter, StreamType outType), ());

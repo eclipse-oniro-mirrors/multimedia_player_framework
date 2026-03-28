@@ -268,6 +268,14 @@ int32_t PlayerClient::Seek(int32_t mSeconds, PlayerSeekMode mode)
     return playerProxy_->Seek(mSeconds, mode);
 }
 
+int32_t PlayerClient::SeekToDefaultPosition()
+{
+    MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " SeekToDefaultPosition in", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->SeekToDefaultPosition();
+}
+
 int32_t PlayerClient::GetCurrentTime(int32_t &currentTime)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -433,6 +441,20 @@ int32_t PlayerClient::GetDuration(int32_t &duration)
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerProxy_->GetDuration(duration);
+}
+
+int32_t PlayerClient::GetSeekableRanges(std::vector<Plugins::SeekRange> &seekableRanges)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->GetSeekableRanges(seekableRanges);
+}
+
+int32_t PlayerClient::GetLoadedRanges(std::vector<Plugins::SeekRange> &loadedRanges)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->GetLoadedRanges(loadedRanges);
 }
 
 int32_t PlayerClient::GetApiVersion(int32_t &apiVersion)
@@ -680,6 +702,13 @@ int32_t PlayerClient::RegisterDeviceCapability(IsAudioPassthrough callback, GetD
     sptr<IRemoteObject> object = dolbyPassthroughStub_->AsObject();
     CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "listener object is nullptr..");
     return playerProxy_->RegisterDeviceCapability(object);
+}
+
+bool PlayerClient::IsLiveSeek()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, false, "player service does not exist..");
+    return playerProxy_->IsLiveSeek();
 }
 } // namespace Media
 } // namespace OHOS

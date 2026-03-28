@@ -288,6 +288,14 @@ void PlayerServiceStub::FillPlayerFuncPart4()
         [this](MessageParcel &data, MessageParcel &reply) { return GetApiVersion(data, reply); } };
     playerFuncs_[IS_SEEK_CONTINUOUS_SUPPORTED] = { "IsSeekContinuousSupported",
         [this](MessageParcel &data, MessageParcel &reply) { return IsSeekContinuousSupported(data, reply); } };
+    playerFuncs_[GET_SEEKABLE_RANGES] = { "Player::GetSeekableRanges",
+        [this](MessageParcel &data, MessageParcel &reply) { return GetSeekableRanges(data, reply); } };
+    playerFuncs_[GET_LOADED_RANGES] = { "Player::GetLoadedRanges",
+        [this](MessageParcel &data, MessageParcel &reply) { return GetLoadedRanges(data, reply); } };
+    playerFuncs_[SEEK_TO_DEFAULT_POSITION] = { "Player::SeekToDefaultPosition",
+        [this](MessageParcel &data, MessageParcel &reply) { return SeekToDefaultPosition(data, reply); } };
+    playerFuncs_[IS_LIVE_SEEK] = { "Player::IsLiveSeek",
+        [this](MessageParcel &data, MessageParcel &reply) { return IsLiveSeek(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
@@ -551,6 +559,13 @@ int32_t PlayerServiceStub::Seek(int32_t mSeconds, PlayerSeekMode mode)
     return playerServer_->Seek(mSeconds, mode);
 }
 
+int32_t PlayerServiceStub::SeekToDefaultPosition()
+{
+    MediaTrace trace("PlayerServiceStub::SeekToDefaultPosition");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SeekToDefaultPosition();
+}
+
 int32_t PlayerServiceStub::GetCurrentTime(int32_t &currentTime)
 {
     MediaTrace trace("PlayerServiceStub::GetCurrentTime");
@@ -627,6 +642,20 @@ int32_t PlayerServiceStub::GetDuration(int32_t &duration)
     MediaTrace trace("PlayerServiceStub::GetDuration");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->GetDuration(duration);
+}
+
+int32_t PlayerServiceStub::GetSeekableRanges(std::vector<Plugins::SeekRange> &seekableRanges)
+{
+    MediaTrace trace("PlayerServiceStub::GetSeekableRanges");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->GetSeekableRanges(seekableRanges);
+}
+
+int32_t PlayerServiceStub::GetLoadedRanges(std::vector<Plugins::SeekRange> &loadedRanges)
+{
+    MediaTrace trace("PlayerServiceStub::GetLoadedRanges");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->GetLoadedRanges(loadedRanges);
 }
 
 int32_t PlayerServiceStub::GetApiVersion(int32_t &apiVersion)
@@ -995,6 +1024,13 @@ int32_t PlayerServiceStub::Seek(MessageParcel &data, MessageParcel &reply)
     return MSERR_OK;
 }
 
+int32_t PlayerServiceStub::SeekToDefaultPosition(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    reply.WriteInt32(SeekToDefaultPosition());
+    return MSERR_OK;
+}
+
 int32_t PlayerServiceStub::GetCurrentTime(MessageParcel &data, MessageParcel &reply)
 {
     (void)data;
@@ -1113,6 +1149,34 @@ int32_t PlayerServiceStub::GetDuration(MessageParcel &data, MessageParcel &reply
     int32_t duration = -1;
     int32_t ret = GetDuration(duration);
     reply.WriteInt32(duration);
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::GetSeekableRanges(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    std::vector<Plugins::SeekRange> seekableRanges;
+    int32_t ret = GetSeekableRanges(seekableRanges);
+    reply.WriteInt32(static_cast<int32_t>(seekableRanges.size()));
+    for (auto &range : seekableRanges) {
+        reply.WriteInt64(range.start);
+        reply.WriteInt64(range.end);
+    }
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::GetLoadedRanges(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    std::vector<Plugins::SeekRange> loadedRanges;
+    int32_t ret = GetLoadedRanges(loadedRanges);
+    reply.WriteInt32(static_cast<int32_t>(loadedRanges.size()));
+    for (auto &range : loadedRanges) {
+        reply.WriteInt64(range.start);
+        reply.WriteInt64(range.end);
+    }
     reply.WriteInt32(ret);
     return MSERR_OK;
 }
@@ -1776,6 +1840,20 @@ int32_t PlayerServiceStub::RegisterDeviceCapability(const sptr<IRemoteObject> &o
     CHECK_AND_RETURN_RET_LOG(dolbyPassthrough != nullptr, MSERR_NO_MEMORY,
         "failed to new DolbyPassthroughCallbackCallback");
     return playerServer_->SetDolbyPassthroughCallback(dolbyPassthrough);
+}
+
+int32_t PlayerServiceStub::IsLiveSeek(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    reply.WriteBool(IsLiveSeek());
+    return MSERR_OK;
+}
+
+bool PlayerServiceStub::IsLiveSeek()
+{
+    MediaTrace trace("PlayerServiceStub::IsLiveSeek");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, false, "player server is nullptr");
+    return playerServer_->IsLiveSeek();
 }
 } // namespace Media
 } // namespace OHOS
