@@ -46,9 +46,9 @@ public:
     void SetHapPermission();
 
 private:
-    const std::string ScreenRecorderBundleName =
+    const std::string screenRecorderBundleName =
         GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"];
-    const std::string HiviewCareBundleName =
+    const std::string hiviewCareBundleName =
         GetScreenCaptureSystemParam()["const.multimedia.screencapture.hiviewcarebundlename"];
     Security::AccessToken::HapInfoParams info_ = {
         .userID = 100, // 100 UserID
