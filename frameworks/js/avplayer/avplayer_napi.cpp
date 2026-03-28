@@ -34,6 +34,7 @@
 #include "meta/video_types.h"
 #include "media_source_napi.h"
 #include "media_log.h"
+#include "plugin/plugin_time.h"
 #ifndef CROSS_PLATFORM
 #include "ipc_skeleton.h"
 #include "tokenid_kit.h"
@@ -91,6 +92,7 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("reset", JsReset),
         DECLARE_NAPI_FUNCTION("release", JsRelease),
         DECLARE_NAPI_FUNCTION("seek", JsSeek),
+        DECLARE_NAPI_FUNCTION("seekToDefaultPosition", JsSeekToDefaultPosition),
         DECLARE_NAPI_FUNCTION("setPlaybackRange", JsSetPlaybackRange),
         DECLARE_NAPI_FUNCTION("setSuperResolution", JsSetSuperResolution),
         DECLARE_NAPI_FUNCTION("setVideoWindowSize", JsSetVideoWindowSize),
@@ -120,6 +122,8 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("setMediaMuted", JsSetMediaMuted),
         DECLARE_NAPI_FUNCTION("getPlaybackInfo", JsGetPlaybackInfo),
         DECLARE_NAPI_FUNCTION("getPlaybackStatisticMetrics", JsGetPlaybackStatisticMetrics),
+        DECLARE_NAPI_FUNCTION("getSeekableTimeRanges", JsGetSeekableTimeRanges),
+        DECLARE_NAPI_FUNCTION("getLoadedTimeRanges", JsGetLoadedTimeRanges),
         DECLARE_NAPI_FUNCTION("isSeekContinuousSupported", JsIsSeekContinuousSupported),
         DECLARE_NAPI_FUNCTION("getPlaybackPosition", JsGetPlaybackPosition),
         DECLARE_NAPI_FUNCTION("forceLoadVideo", JsForceLoadVideo),
@@ -772,8 +776,8 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
     size_t argCount = 2; // args[0]:timeMs, args[1]:SeekMode
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
-    if (jsPlayer->IsLiveSource()) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "The stream is live stream, not support seek");
+    if (jsPlayer->isFlvLive_) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "The stream is flv live stream, not support seek");
         return result;
     }
     napi_valuetype valueType = napi_undefined;
@@ -811,6 +815,46 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
         return result;
     }
     SeekEnqueueTask(jsPlayer, time, mode);
+    return result;
+}
+
+napi_value AVPlayerNapi::JsSeekToDefaultPosition(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::seekToDefaultPosition");
+    MEDIA_LOGI("JsSeekToDefaultPosition in");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+
+    if (!jsPlayer->IsControllable()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed, unsupport seekToDefault operation");
+        return result;
+    }
+
+    if (!jsPlayer->IsLiveSource()) {
+        SeekEnqueueTask(jsPlayer, 0, SEEK_PREVIOUS_SYNC);
+    } else if (!jsPlayer->player_->IsLiveSeek()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY,
+            "Current state is not in live seek mode, not support seekToDefaultPosition");
+        return result;
+    } else {
+        auto task = std::make_shared<TaskHandler<void>>([jsPlayer]() {
+            MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeekToDefaultPosition Task In", FAKE_POINTER(jsPlayer));
+            if (jsPlayer->player_ != nullptr) {
+                (void)jsPlayer->player_->SeekToDefaultPosition();
+            }
+            MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeekToDefaultPosition Task Out", FAKE_POINTER(jsPlayer));
+        });
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeekToDefaultPosition EnqueueTask In", FAKE_POINTER(jsPlayer));
+        (void)jsPlayer->taskQue_->EnqueueTask(task);
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeekToDefaultPosition Out", FAKE_POINTER(jsPlayer));
+    }
+
     return result;
 }
 
@@ -939,7 +983,7 @@ napi_value AVPlayerNapi::JsSetSpeed(napi_env env, napi_callback_info info)
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
-    if (jsPlayer->IsLiveSource()) {
+    if (jsPlayer->IsLiveSource() && jsPlayer->player_ != nullptr && !jsPlayer->player_->IsLiveSeek()) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "The stream is live stream, not support speed");
         return result;
     }
@@ -990,7 +1034,7 @@ napi_value AVPlayerNapi::JsSetPlaybackRate(napi_env env, napi_callback_info info
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
-    if (jsPlayer->IsLiveSource()) {
+    if (jsPlayer->IsLiveSource() && jsPlayer->player_ != nullptr && !jsPlayer->player_->IsLiveSeek()) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "The stream is live stream, not support rate");
         return result;
     }
@@ -1597,6 +1641,99 @@ napi_value AVPlayerNapi::JsGetPlaybackInfo(napi_env env, napi_callback_info info
     napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
     promiseCtx.release();
     MEDIA_LOGI("GetPlaybackInfo Out");
+    return result;
+}
+
+napi_value AVPlayerNapi::JsGetSeekableTimeRanges(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::JsGetSeekableTimeRanges");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("GetSeekableTimeRanges In");
+
+    auto promiseCtx = std::make_unique<AVPlayerContext>(env);
+    promiseCtx->napi = AVPlayerNapi::GetJsInstance(env, info);
+    CHECK_AND_RETURN_RET_LOG(promiseCtx->napi != nullptr, result, "failed to GetJsInstance");
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "JsGetSeekableTimeRanges", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
+        [](napi_env env, void *data) {
+            MEDIA_LOGI("GetSeekableTimeRanges Task");
+            auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
+            CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
+
+            auto jsPlayer = promiseCtx->napi;
+            if (jsPlayer == nullptr) {
+                return promiseCtx->SignError(
+                    MSERR_EXT_API9_OPERATE_NOT_PERMIT, "avplayer is deconstructed");
+            }
+
+            std::vector<Plugins::SeekRange> ranges;
+            std::vector<std::pair<int64_t, int64_t>> rangeValues;
+            if (jsPlayer->IsControllable() && !jsPlayer->isFlvLive_ && jsPlayer->player_ != nullptr) {
+                (void)jsPlayer->player_->GetSeekableRanges(ranges);
+            }
+
+            rangeValues.reserve(ranges.size());
+            for (auto &range : ranges) {
+                int64_t start = Plugins::HstTime2Ms(range.start);
+                int64_t end = Plugins::HstTime2Ms(range.end);
+                rangeValues.emplace_back(start, end);
+            }
+            promiseCtx->JsResult = std::make_unique<MediaJsResultRangeArray>(rangeValues);
+        },
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
+    promiseCtx.release();
+    MEDIA_LOGI("GetSeekableTimeRanges Out");
+    return result;
+}
+napi_value AVPlayerNapi::JsGetLoadedTimeRanges(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::JsGetLoadedTimeRanges");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("GetLoadedTimeRanges In");
+
+    auto promiseCtx = std::make_unique<AVPlayerContext>(env);
+    promiseCtx->napi = AVPlayerNapi::GetJsInstance(env, info);
+    CHECK_AND_RETURN_RET_LOG(promiseCtx->napi != nullptr, result, "failed to GetJsInstance");
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "JsGetLoadedTimeRanges", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
+        [](napi_env env, void *data) {
+            MEDIA_LOGI("GetLoadedTimeRanges Task");
+            auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
+            CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
+
+            auto jsPlayer = promiseCtx->napi;
+            if (jsPlayer == nullptr) {
+                return promiseCtx->SignError(
+                    MSERR_EXT_API9_OPERATE_NOT_PERMIT, "avplayer is deconstructed");
+            }
+
+            std::vector<Plugins::SeekRange> ranges;
+            if (jsPlayer->IsControllable() && jsPlayer->player_ != nullptr) {
+                (void)jsPlayer->player_->GetLoadedRanges(ranges);
+            }
+
+            std::vector<std::pair<int64_t, int64_t>> rangeValues;
+            rangeValues.reserve(ranges.size());
+            for (auto &range : ranges) {
+                int64_t start = Plugins::HstTime2Ms(range.start);
+                int64_t end = Plugins::HstTime2Ms(range.end);
+                rangeValues.emplace_back(start, end);
+            }
+            promiseCtx->JsResult = std::make_unique<MediaJsResultRangeArray>(rangeValues);
+        },
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
+    promiseCtx.release();
+    MEDIA_LOGI("GetLoadedTimeRanges Out");
     return result;
 }
 
@@ -2815,15 +2952,42 @@ bool AVPlayerNapi::JsHandleParameter(napi_env env, napi_value args, AVPlayerNapi
 void AVPlayerNapi::SeekEnqueueTask(AVPlayerNapi *jsPlayer, int32_t time, int32_t mode)
 {
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer, time, mode]() {
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeek Task In", FAKE_POINTER(jsPlayer));
-        if (jsPlayer->player_ != nullptr) {
-            (void)jsPlayer->player_->Seek(time, jsPlayer->TransferSeekMode(mode));
-        }
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeek Task Out", FAKE_POINTER(jsPlayer));
+        DoSeek(jsPlayer, time, mode);
     });
     MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeek EnqueueTask In", FAKE_POINTER(jsPlayer));
     (void)jsPlayer->taskQue_->EnqueueTask(task);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeek Out", FAKE_POINTER(jsPlayer));
+}
+
+void AVPlayerNapi::DoSeek(AVPlayerNapi *jsPlayer, int32_t time, int32_t mode)
+{
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeek Task In", FAKE_POINTER(jsPlayer));
+    bool isInSeekableRange = false;
+    if (jsPlayer->IsLiveSource()) {
+        std::vector<Plugins::SeekRange> ranges;
+        if (jsPlayer->player_ == nullptr) {
+            return;
+        }
+
+        (void)jsPlayer->player_->GetSeekableRanges(ranges);
+        for (auto &range : ranges) {
+            auto start = Plugins::HstTime2Ms(range.start);
+            auto end = Plugins::HstTime2Ms(range.end);
+            if (time >= start && time <= end) {
+                isInSeekableRange = true;
+                break;
+            }
+        }
+
+        if (!isInSeekableRange) {
+            jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "the seek time is out of seekable ranges");
+        }
+    }
+
+    if (jsPlayer->player_ != nullptr && (!jsPlayer->IsLiveSource() || isInSeekableRange)) {
+        (void)jsPlayer->player_->Seek(time, jsPlayer->TransferSeekMode(mode));
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeek Task Out", FAKE_POINTER(jsPlayer));
+    }
 }
 
 napi_value AVPlayerNapi::JsSetAudioRendererInfo(napi_env env, napi_callback_info info)
@@ -3915,6 +4079,11 @@ void AVPlayerNapi::NotifyVideoSize(int32_t width, int32_t height)
 void AVPlayerNapi::NotifyIsLiveStream()
 {
     isLiveStream_ = true;
+}
+
+void AVPlayerNapi::NotifyIsFlvLive(bool isFlvLive)
+{
+    isFlvLive_ = isFlvLive;
 }
 
 void AVPlayerNapi::NotifyDrmInfoUpdated(const std::multimap<std::string, std::vector<uint8_t>> &infos)

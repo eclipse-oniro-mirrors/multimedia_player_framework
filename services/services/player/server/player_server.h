@@ -26,6 +26,7 @@
 #include "os_account_manager.h"
 #include "hitrace/tracechain.h"
 #include "plugin/plugin_time.h"
+#include "meta/media_types.h"
 
 namespace OHOS {
 namespace Media {
@@ -92,6 +93,7 @@ public:
     int32_t SetVolume(float leftVolume, float rightVolume) override;
     int32_t SetVolumeMode(int32_t mode) override;
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
+    int32_t SeekToDefaultPosition() override;
     int32_t GetCurrentTime(int32_t &currentTime) override;
     int32_t GetPlaybackPosition(int32_t &playbackPosition) override;
     int32_t GetCurrentPresentationTimestamp(int64_t &currentPresentation) override;
@@ -103,6 +105,8 @@ public:
     int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override;
     int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) override;
     int32_t GetDuration(int32_t &duration) override;
+    int32_t GetSeekableRanges(std::vector<Plugins::SeekRange> &seekableRanges) override;
+    int32_t GetLoadedRanges(std::vector<Plugins::SeekRange> &loadedRanges) override;
     int32_t GetApiVersion(int32_t &apiVersion) override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
     int32_t SetPlaybackRate(float rate) override;
@@ -173,6 +177,7 @@ public:
     static std::shared_ptr<IDolbyPassthrough>& GetPassthroughCallbackInstance();
     bool IsAudioPass(const char* mimeType) override;
     std::vector<std::string> GetDolbyList() override;
+    bool IsLiveSeek() override;
 
 protected:
     class BaseState;

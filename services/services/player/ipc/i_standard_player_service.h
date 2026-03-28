@@ -21,6 +21,7 @@
 #include "iremote_proxy.h"
 #include "iremote_stub.h"
 #include "player.h"
+#include "meta/media_types.h"
 
 namespace OHOS {
 namespace Media {
@@ -77,6 +78,11 @@ public:
     virtual int32_t SetVolume(float leftVolume, float rightVolume) = 0;
     virtual int32_t SetVolumeMode(int32_t mode) = 0;
     virtual int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) = 0;
+    virtual int32_t SeekToDefaultPosition()
+    {
+        return 0;
+    }
+
     virtual int32_t GetCurrentTime(int32_t &currentTime) = 0;
     virtual int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) = 0;
     virtual int32_t GetPlaybackInfo(Format &playbackInfo) = 0;
@@ -85,6 +91,16 @@ public:
     virtual int32_t GetVideoWidth() = 0;
     virtual int32_t GetVideoHeight() = 0;
     virtual int32_t GetDuration(int32_t &duration) = 0;
+    virtual int32_t GetSeekableRanges(std::vector<Plugins::SeekRange> &seekableRanges)
+    {
+        (void)seekableRanges;
+        return 0;
+    }
+    virtual int32_t GetLoadedRanges(std::vector<Plugins::SeekRange> &loadedRanges)
+    {
+        (void)loadedRanges;
+        return 0;
+    }
     virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode) = 0;
     virtual int32_t SetPlaybackRate(float rate) = 0;
     virtual int32_t GetPlaybackSpeed(PlaybackRateMode &mode) = 0;
@@ -273,6 +289,11 @@ public:
         return 0;
     }
 
+    virtual bool IsLiveSeek()
+    {
+        return false;
+    }
+
     /**
      * IPC code ID
      */
@@ -302,6 +323,8 @@ public:
         GET_CURRENT_TIME,
         GET_PLAY_BACK_POSITION,
         GET_DURATION,
+        GET_SEEKABLE_RANGES,
+        GET_LOADED_RANGES,
         SET_PLAYERBACK_SPEED,
         SET_PLAYERBACK_RATE,
         GET_PLAYERBACK_SPEED,
@@ -350,6 +373,8 @@ public:
         REGISTER_DEVICE_CAPABILITY,
         GET_GLOBAL_INFO,
         GET_PLAYERBACK_RATE,
+        SEEK_TO_DEFAULT_POSITION,
+        IS_LIVE_SEEK,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardPlayerService");

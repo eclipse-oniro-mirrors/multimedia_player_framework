@@ -337,5 +337,52 @@ HWTEST_F(PlayerImplUnitTest, GetTrackSelectionFilter_001, TestSize.Level0)
     auto ret = playerImpl_->GetTrackSelectionFilter(trackFilter);
     EXPECT_EQ(ret, MSERR_OK);
 }
+
+/**
+ * @tc.name  : Test SeekToDefaultPosition
+ * @tc.number: SeekToDefaultPosition_001
+ * @tc.desc  : Test playerService_ != nullptr
+ */
+HWTEST_F(PlayerImplUnitTest, SeekToDefaultPosition_001, TestSize.Level0)
+{
+    ASSERT_NE(playerImpl_, nullptr);
+    auto mockService = std::make_shared<MockIPlayerService>();
+    EXPECT_CALL(*mockService, SeekToDefaultPosition()).WillOnce(Return(MSERR_OK));
+    playerImpl_->playerService_ = mockService;
+    auto ret = playerImpl_->SeekToDefaultPosition();
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test GetSeekableRanges
+ * @tc.number: GetSeekableRanges_001
+ * @tc.desc  : Test playerService_ != nullptr
+ */
+HWTEST_F(PlayerImplUnitTest, GetSeekableRanges_001, TestSize.Level0)
+{
+    ASSERT_NE(playerImpl_, nullptr);
+    auto mockService = std::make_shared<MockIPlayerService>();
+    EXPECT_CALL(*mockService, GetSeekableRanges(_)).WillOnce(Return(MSERR_OK));
+    playerImpl_->playerService_ = mockService;
+    std::vector<Plugins::SeekRange> testLoadedRanges;
+    auto ret = playerImpl_->GetSeekableRanges(testLoadedRanges);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test GetLoadedRanges
+ * @tc.number: GetLoadedRanges_001
+ * @tc.desc  : Test playerService_ != nullptr
+ */
+HWTEST_F(PlayerImplUnitTest, GetLoadedRanges_001, TestSize.Level0)
+{
+    ASSERT_NE(playerImpl_, nullptr);
+    auto mockService = std::make_shared<MockIPlayerService>();
+    EXPECT_CALL(*mockService, GetLoadedRanges(_)).WillOnce(Return(MSERR_OK));
+    playerImpl_->playerService_ = mockService;
+    std::vector<Plugins::SeekRange> testLoadedRanges;
+    auto ret = playerImpl_->GetLoadedRanges(testLoadedRanges);
+    EXPECT_EQ(ret, MSERR_OK);
+}
 } // namespace Media
 } // namespace OHOS

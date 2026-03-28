@@ -29,6 +29,7 @@
 #ifndef CROSS_PLATFORM
 #include "ipc_skeleton.h"
 #include "tokenid_kit.h"
+#include "plugin/plugin_time.h"
 #endif
 
 using namespace ANI::Media;
@@ -765,10 +766,6 @@ void AVPlayerImpl::Seek(int32_t timeMs, optional_view<SeekMode> mode)
 {
     MediaTrace trace("AVPlayerImpl::seek");
     MEDIA_LOGI("TaiheSeek in");
-    if (IsLiveSource()) {
-        OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "The stream is live stream, not support seek");
-        return;
-    }
     int32_t time = timeMs;
 
     if (time < 0 && !mode.has_value()) {
@@ -1542,6 +1539,74 @@ double AVPlayerImpl::GetPlaybackRateSync()
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, emptyRate, "failed to GetPlaybackRate");
     MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheGetRate Out", FAKE_POINTER(this));
     return static_cast<double>(rate);
+}
+
+void AVPlayerImpl::SeekToDefaultPositionSync()
+{
+    MediaTrace trace("AVPlayerImpl::seekToDefaultPosition");
+    MEDIA_LOGI("TaiheSeekToDefaultPosition In");
+
+    if (!IsControllable()) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed, unsupport seekToDefaultPosition operation");
+        return;
+    }
+
+    if (!IsLiveSource()) {
+        SeekEnqueueTask(this, 0, SEEK_PREVIOUS_SYNC);
+    } else {
+        auto task = std::make_shared<TaskHandler<void>>([this]() {
+            MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheSeekToDefaultPosition Task In", FAKE_POINTER(this));
+            if (player_ != nullptr) {
+                (void)player_->SeekToDefaultPosition();
+            }
+            MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheSeekToDefaultPosition Task Out", FAKE_POINTER(this));
+        });
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheSeekToDefaultPosition EnqueueTask In", FAKE_POINTER(this));
+        (void)taskQue_->EnqueueTask(task);
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheSeekToDefaultPosition Out", FAKE_POINTER(this));
+    }
+    return;
+}
+
+array<Range> AVPlayerImpl::GetSeekableTimeRangesSync()
+{
+    MediaTrace trace("AVPlayerImpl::GetSeekableTimeRangesSync");
+    MEDIA_LOGI("TaiheGetSeekableTimeRanges In");
+    std::vector<Plugins::SeekRange> ranges;
+    if (player_ != nullptr) {
+        (void)player_->GetSeekableRanges(ranges);
+    }
+    std::vector<Range> resultRanges;
+    for (const auto& seekRange : ranges) {
+        ::ohos::multimedia::media::Range rang = {
+            .min = Plugins::HstTime2Ms(seekRange.start),
+            .max = Plugins::HstTime2Ms(seekRange.end),
+        };
+        resultRanges.push_back(rang);
+    }
+    MEDIA_LOGI("TaiheGetSeekableTimeRanges Out");
+    return array<Range>(copy_data_t{}, resultRanges.data(), resultRanges.size());
+}
+
+array<Range> AVPlayerImpl::GetLoadedTimeRangesSync()
+{
+    MediaTrace trace("AVPlayerImpl::GetLoadedTimeRangesSync");
+    MEDIA_LOGI("TaiheGetLoadedTimeRanges In");
+    std::vector<Plugins::SeekRange> ranges;
+    if (player_ != nullptr) {
+        (void)player_->GetLoadedRanges(ranges);
+    }
+    std::vector<Range> resultRanges;
+    for (const auto& seekRange : ranges) {
+        ::ohos::multimedia::media::Range rang = {
+            .min = Plugins::HstTime2Ms(seekRange.start),
+            .max = Plugins::HstTime2Ms(seekRange.end),
+        };
+        resultRanges.push_back(rang);
+    }
+    MEDIA_LOGI("TaiheGetLoadedTimeRanges Out");
+    return array<Range>(copy_data_t{}, resultRanges.data(), resultRanges.size());
 }
 
 void AVPlayerImpl::SetPlaybackRangeSync(int32_t startTimeMs, int32_t endTimeMs,
