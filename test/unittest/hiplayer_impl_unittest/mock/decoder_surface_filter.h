@@ -68,6 +68,7 @@ public:
     MOCK_METHOD(Status, DoFlush, (), (override));
     MOCK_METHOD(Status, DoRelease, (), (override));
     MOCK_METHOD(Status, DoPreroll, (), (override));
+    MOCK_METHOD(void, ClosestSeekDone, (), ());
     MOCK_METHOD(Status, DoWaitPrerollDone, (bool render), (override));
     MOCK_METHOD(Status, DoSetPlayRange, (int64_t start, int64_t end), (override));
     MOCK_METHOD(Status, DoProcessInputBuffer, (int recvArg, bool dropFrame), (override));

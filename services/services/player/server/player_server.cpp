@@ -502,13 +502,12 @@ int32_t PlayerServer::OnPrepare(bool sync)
 int32_t PlayerServer::HandlePrepare()
 {
     MEDIA_LOGI("KPI-TRACE: PlayerServer HandlePrepare in");
-    int32_t ret = playerEngine_->PrepareAsync();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Server Prepare Failed!");
-    CHECK_AND_RETURN_RET_LOG(!isInterruptNeeded_, MSERR_OK, "Cancel prepare");
     if (config_.hasTrackSelectionFilter) {
         (void)playerEngine_->SetTrackSelectionFilter(config_.trackSelectionFilter_);
     }
-
+    int32_t ret = playerEngine_->PrepareAsync();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Server Prepare Failed!");
+    CHECK_AND_RETURN_RET_LOG(!isInterruptNeeded_, MSERR_OK, "Cancel prepare");
     if (config_.leftVolume < 1.0f) {
         (void)playerEngine_->SetVolume(config_.leftVolume, config_.rightVolume);
     }
@@ -1051,6 +1050,19 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
     return MSERR_OK;
 }
 
+int32_t PlayerServer::SeekToDefaultPosition()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("PlayerServer SeekToDefaultPosition in");
+
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    int32_t ret = playerEngine_->SeekToDefaultPosition();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine SeekToDefaultPosition Failed!");
+
+    MEDIA_LOGI("PlayerServer SeekToDefaultPosition end");
+    return MSERR_OK;
+}
+
 int32_t PlayerServer::HandleSeek(int32_t mSeconds, PlayerSeekMode mode)
 {
     MEDIA_LOGI("KPI-TRACE: PlayerServer HandleSeek in, mSeconds: %{public}d, mode: %{public}d", mSeconds, mode);
@@ -1268,6 +1280,42 @@ int32_t PlayerServer::GetDuration(int32_t &duration)
     return MSERR_OK;
 }
 
+int32_t PlayerServer::GetSeekableRanges(std::vector<Plugins::SeekRange> &seekableRanges)
+{
+    // delete lock, cannot be called concurrently with Reset or Release
+    if (lastOpStatus_ == PLAYER_IDLE || lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_STATE_ERROR) {
+        MEDIA_LOGE("Can not GetSeekableRanges, currentState is %{public}s",
+            GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+
+    MEDIA_LOGD("PlayerServer GetSeekableRanges in");
+    seekableRanges.clear();
+    if (playerEngine_ != nullptr) {
+        seekableRanges = playerEngine_->GetSeekableRanges();
+    }
+    MEDIA_LOGD("PlayerServer GetSeekableRanges size %{public}zu", seekableRanges.size());
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::GetLoadedRanges(std::vector<Plugins::SeekRange> &loadedRanges)
+{
+    // delete lock, cannot be called concurrently with Reset or Release
+    if (lastOpStatus_ == PLAYER_IDLE || lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_STATE_ERROR) {
+        MEDIA_LOGE("Can not GetLoadedRanges, currentState is %{public}s",
+            GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+
+    MEDIA_LOGD("PlayerServer GetLoadedRanges in");
+    loadedRanges.clear();
+    if (playerEngine_ != nullptr) {
+        loadedRanges = playerEngine_->GetLoadedRanges();
+    }
+    MEDIA_LOGD("PlayerServer GetLoadedRanges size %{public}zu", loadedRanges.size());
+    return MSERR_OK;
+}
+
 int32_t PlayerServer::GetApiVersion(int32_t &apiVersion)
 {
     apiVersion = apiVersion_.load();
@@ -1297,7 +1345,7 @@ int32_t PlayerServer::SetPlaybackSpeed(PlaybackRateMode mode)
         return MSERR_INVALID_OPERATION;
     }
     MEDIA_LOGD("PlayerServer SetPlaybackSpeed in, mode %{public}d", mode);
-    if (isLiveStream_) {
+    if (isLiveStream_ && !IsLiveSeek()) {
         MEDIA_LOGE("Can not SetPlaybackSpeed, it is live-stream");
         OnErrorMessage(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "Can not SetPlaybackSpeed, it is live-stream");
         return MSERR_INVALID_OPERATION;
@@ -1333,7 +1381,7 @@ int32_t PlayerServer::SetPlaybackRate(float rate)
         return MSERR_INVALID_OPERATION;
     }
     MEDIA_LOGD("PlayerServer SetPlaybackRate in, rate %{public}f", rate);
-    if (isLiveStream_) {
+    if (isLiveStream_ && !IsLiveSeek()) {
         MEDIA_LOGE("Can not SetPlaybackRate, it is live-stream");
         OnErrorMessage(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "Can not SetPlaybackRate, it is live-stream");
         return MSERR_INVALID_OPERATION;
@@ -2336,12 +2384,6 @@ int32_t PlayerServer::CheckSeek(int32_t mSeconds, PlayerSeekMode mode)
         MEDIA_LOGE("Seek failed, inValid mode");
         return MSERR_INVALID_VAL;
     }
-
-    if (isLiveStream_) {
-        MEDIA_LOGE("Can not Seek, it is live-stream");
-        OnErrorMessage(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "Can not Seek, it is live-stream");
-        return MSERR_INVALID_OPERATION;
-    }
     return MSERR_OK;
 }
 
@@ -2660,6 +2702,12 @@ std::vector<std::string> PlayerServer::GetDolbyList()
         dolbyList_ = callbackInstance->GetList();
     }
     return dolbyList_;
+}
+
+bool PlayerServer::IsLiveSeek()
+{
+    CHECK_AND_RETURN_RET(playerEngine_ != nullptr, false);
+    return playerEngine_->IsLiveSeek();
 }
 } // namespace Media
 } // namespace OHOS

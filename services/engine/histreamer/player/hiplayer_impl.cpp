@@ -1367,19 +1367,36 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
     if (audioSink_ != nullptr) {
         audioSink_->SetIsTransitent(true);
     }
-    FALSE_RETURN_V_MSG_E(durationMs_.load() > 0, Status::ERROR_INVALID_PARAMETER,
-        "Seek, invalid operation, source is unseekable or invalid");
+    int32_t curPosMs = 0;
+    int32_t curPostAfterSeek = std::numeric_limits<int32_t>::max();
+    (void)GetCurrentTime(curPosMs);
     isSeek_ = true;
-    int64_t seekPos = std::max(static_cast<int64_t>(0), std::min(mSeconds, static_cast<int64_t>(durationMs_.load())));
+    int64_t seekPos = mSeconds;
     auto rtv = seekPos >= 0 ? Status::OK : Status::ERROR_INVALID_PARAMETER;
-    if (rtv == Status::OK) {
-        rtv = HandleSeek(seekPos, mode, isUnFreezeSeek);
+    auto range = GetSeekableRanges();
+    if (range.empty()) {
+        MEDIA_LOG_E("Live stream seek failed, seekable range is empty");
+        return Status::ERROR_INVALID_PARAMETER;
+    }
+    for (const auto& item : range) {
+        if (rtv == Status::OK && seekPos >= Plugins::HstTime2Ms(item.start) &&
+            seekPos <= Plugins::HstTime2Ms(item.end)) {
+            // Seekable range uses absolute time, while seek interface uses relative time,
+            // so need to convert it to relative time before seek.
+            rtv = HandleSeek(seekPos - Plugins::HstTime2Ms(item.start), mode, isUnFreezeSeek);
+        }
     }
     NotifySeek(rtv, notifySeekDone, seekPos);
     if (audioSink_ != nullptr) {
         audioSink_->SetIsTransitent(false);
     }
     isSeek_ = false;
+    (void)GetCurrentTime(curPostAfterSeek);
+    MEDIA_LOG_I("curPosMs : " PUBLIC_LOG_D32 ", curPostAfterSeek : " PUBLIC_LOG_D32, curPosMs, curPostAfterSeek);
+    if (rtv == Status::OK && curPosMs > curPostAfterSeek) {
+        MEDIA_LOG_I("Into live stream seek mode.");
+        isLiveSeek_ = true;
+    }
     UpdateMaxSeekLatency(mode, seekStartTime);
     return rtv;
 }
@@ -1447,6 +1464,39 @@ int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
     }
     MEDIA_LOG_I("Seek.");
     return TransStatus(Seek(mSeconds, mode, true));
+}
+
+int32_t HiPlayerImpl::SeekToDefaultPosition()
+{
+    MEDIA_LOG_I("SeekToDefaultPosition.");
+    FALSE_RETURN_V_NOLOG(isLiveSeek_, MSERR_UNKNOWN);
+    FALSE_RETURN_V_NOLOG(demuxer_ != nullptr, MSERR_UNKNOWN);
+
+    demuxer_->DoFlush();
+    if (audioDecoder_ != nullptr) {
+        audioDecoder_->DoFlush();
+    }
+    if (audioSink_ != nullptr) {
+        audioSink_->DoFlush();
+    }
+    if (videoDecoder_ != nullptr) {
+        videoDecoder_->DoFlush();
+    }
+    Status ret = demuxer_->RebootPlugin();
+    if (ret == Status::OK) { // set flag
+        MEDIA_LOG_I("Out of live stream seek mode.");
+        isLiveSeek_ = false;
+    }
+    if (audioDecoder_ != nullptr) {
+        audioDecoder_->DoStart();
+    }
+    if (audioSink_ != nullptr) {
+        audioSink_->DoStart();
+    }
+    if (videoDecoder_ != nullptr) {
+        videoDecoder_->DoStart();
+    }
+    return TransStatus(ret);
 }
 
 Status HiPlayerImpl::doPreparedSeek(int64_t seekPos, PlayerSeekMode mode)
@@ -1843,6 +1893,18 @@ int32_t HiPlayerImpl::GetDuration(int32_t& durationMs)
     return TransStatus(Status::OK);
 }
 
+std::vector<Plugins::SeekRange> HiPlayerImpl::GetSeekableRanges()
+{
+    FALSE_RETURN_V(demuxer_ != nullptr, {});
+    return demuxer_->GetSeekableRanges();
+}
+
+std::vector<Plugins::SeekRange> HiPlayerImpl::GetLoadedRanges()
+{
+    FALSE_RETURN_V(demuxer_ != nullptr, {});
+    return demuxer_->GetLoadedRanges();
+}
+
 int32_t HiPlayerImpl::InitDuration()
 {
     FALSE_RETURN_V_MSG_E(demuxer_ != nullptr,
@@ -1853,6 +1915,13 @@ int32_t HiPlayerImpl::InitDuration()
         found = true;
     } else {
         MEDIA_LOG_W("Get media duration failed");
+    }
+    if (found && duration != playWindowDurationMs_.load()) {
+        if (duration < 0) {
+            playWindowDurationMs_ = Plugins::HstTime2Us(-1 * duration);
+        } else {
+            playWindowDurationMs_ = Plugins::HstTime2Us(duration);
+        }
     }
     if (found && duration > 0 && duration != durationMs_.load()) {
         durationMs_ = Plugins::HstTime2Us(duration);
@@ -2958,6 +3027,7 @@ Status HiPlayerImpl::Resume()
 void HiPlayerImpl::HandleIsLiveStreamEvent(bool isLiveStream)
 {
     Format format;
+    format.PutIntValue(PlayerKeys::PLAYER_IS_FLV_LIVE, isFlvLive_);
     callbackLooper_.OnInfo(INFO_TYPE_IS_LIVE_STREAM, isLiveStream, format);
 }
 
@@ -3380,7 +3450,9 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
     
     MEDIA_LOG_D_SHORT("NotifySeekDone seekPos: %{public}d", seekPos);
     syncManager_->UpdataPausedMediaTime(seekPos * TIME_CONVERSION_UNIT);
-    callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, seekPos, format);
+    if (durationMs_ > 0) {
+        callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, seekPos, format);
+    }
     callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, seekPos, format);
 }
 
@@ -3944,7 +4016,8 @@ int32_t HiPlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
 int32_t HiPlayerImpl::SetTrackSelectionFilter(AVPlayTrackSelectionFilter avTrackFilter)
 {
     MEDIA_LOG_I("SetTrackSelectionFilter");
-    
+    trackSelectionFilter_ = avTrackFilter;
+    hasTrackSelectionFilter_.store(true);
     FALSE_RETURN_V_MSG_W(demuxer_ != nullptr, MSERR_OK, "demuxer_ is nullptr");
     TrackSelectionFilter trackFilter;
     trackFilter.maxVideoBitrate = avTrackFilter.maxVideoBitrate;
@@ -4178,6 +4251,7 @@ int32_t HiPlayerImpl::EnableReportMediaProgress(bool enable)
 bool HiPlayerImpl::IsNeedChangePlaySpeed(PlaybackRateMode &mode, bool &isXSpeedPlay)
 {
     FALSE_RETURN_V(demuxer_ != nullptr && isFlvLive_, false);
+    FALSE_RETURN_V(!isLiveSeek_, false);
     uint64_t cacheDuration = demuxer_->GetCachedDuration();
     MEDIA_LOG_I("current cacheDuration is " PUBLIC_LOG_U64, cacheDuration);
     if ((cacheDuration < bufferDurationForPlaying_ * TIME_CONVERSION_UNIT) && isXSpeedPlay) {
@@ -4203,6 +4277,7 @@ void HiPlayerImpl::DoRestartLiveLink()
 {
     MediaTrace trace("HiPlayerImpl::DoRestartLiveLink");
     FALSE_RETURN_NOLOG(isFlvLive_);
+    FALSE_RETURN_NOLOG(!isLiveSeek_);
     FALSE_RETURN(demuxer_ != nullptr);
     demuxer_->DoFlush();
     if (audioDecoder_ != nullptr) {
@@ -4421,6 +4496,23 @@ void HiPlayerImpl::DoInitDemuxer()
         demuxer_->Init(playerEventReceiver_, playerFilterCallback_, interruptMonitor_);
     }
     (void)demuxer_->SetPlayerMode();
+    if (hasTrackSelectionFilter_.load()) {
+        TrackSelectionFilter trackFilter;
+        trackFilter.maxVideoBitrate = trackSelectionFilter_.maxVideoBitrate;
+        trackFilter.minVideoBitrate = trackSelectionFilter_.minVideoBitrate;
+        trackFilter.maxVideoFrameRate = trackSelectionFilter_.maxVideoFrameRate;
+        trackFilter.minVideoFrameRate = trackSelectionFilter_.minVideoFrameRate;
+        trackFilter.maxVideoResolution = trackSelectionFilter_.maxVideoResolution;
+        trackFilter.minVideoResolution = trackSelectionFilter_.minVideoResolution;
+        trackFilter.preferredVideoMimeTypes = trackSelectionFilter_.preferredVideoMimeTypes;
+        trackFilter.maxAudioBitrate = trackSelectionFilter_.maxAudioBitrate;
+        trackFilter.minAudioBitrate = trackSelectionFilter_.minAudioBitrate;
+        trackFilter.maxAudioChannels = trackSelectionFilter_.maxAudioChannels;
+        trackFilter.preferredAudioMimeTypes = trackSelectionFilter_.preferredAudioMimeTypes;
+        trackFilter.preferredAudioLanguages = trackSelectionFilter_.preferredAudioLanguages;
+        trackFilter.preferredSubtitleLanguages = trackSelectionFilter_.preferredSubtitleLanguages;
+        demuxer_->SetTrackSelectionFilter(trackFilter);
+    }
 }
 
 Status HiPlayerImpl::InitVideoDecoder()
@@ -4520,6 +4612,11 @@ std::vector<std::string> HiPlayerImpl::GetDolbyList()
 {
     MEDIA_LOG_I("HiPlayerImpl::GetDolbyList");
     return callbackLooper_.GetDolbyList();
+}
+
+bool HiPlayerImpl::IsLiveSeek()
+{
+    return isLiveSeek_;
 }
 
 void HiPlayerImpl::ExtractStrategyParams(const AVPlayStrategy &strategy)

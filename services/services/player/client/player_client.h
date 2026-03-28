@@ -56,6 +56,7 @@ public:
     int32_t GetPlaybackPosition(int32_t &playbackPosition) override;
     int32_t GetCurrentPresentationTimestamp(int64_t &currentPresentation) override;
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
+    int32_t SeekToDefaultPosition() override;
     int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) override;
     int32_t GetPlaybackSpeed(PlaybackRateMode &mode) override;
     int32_t GetPlaybackRate(float &rate) override;
@@ -65,6 +66,8 @@ public:
     int32_t SetPlaybackRate(float rate) override;
     int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) override;
     int32_t GetDuration(int32_t &duration) override;
+    int32_t GetSeekableRanges(std::vector<Plugins::SeekRange> &seekableRanges) override;
+    int32_t GetLoadedRanges(std::vector<Plugins::SeekRange> &loadedRanges) override;
     int32_t GetApiVersion(int32_t &apiVersion) override;
     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
     int32_t GetPlaybackInfo(Format &playbackInfo) override;
@@ -108,6 +111,7 @@ public:
     int32_t GetMediaDescription(Format &format) override;
     int32_t GetTrackDescription(Format &format, uint32_t trackIndex) override;
     int32_t RegisterDeviceCapability(IsAudioPassthrough callback, GetDolbyList getDolbyList) override;
+    bool IsLiveSeek() override;
 
 private:
     int32_t CreateListenerObject();

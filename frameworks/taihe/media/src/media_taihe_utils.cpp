@@ -188,7 +188,7 @@ ani_string MediaTaiheUtils::ToAniString(ani_env *env, const std::string &str)
 uintptr_t MediaTaiheUtils::GetUndefined(ani_env* env)
 {
     ani_ref undefinedRef {};
-    env->GetUndefined(&undefinedRef);
+    CHECK_AND_RETURN_RET_LOG(env->GetUndefined(&undefinedRef) == ANI_OK, 0, "GetUndefined failed");
     ani_object undefinedObject = static_cast<ani_object>(undefinedRef);
     return reinterpret_cast<uintptr_t>(undefinedObject);
 }

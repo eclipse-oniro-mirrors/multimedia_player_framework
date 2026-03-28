@@ -19,7 +19,7 @@
 #include <memory>
 #include <cstdlib>
 #include "media_log.h"
-#include "madvise_utils_test.h"
+#include "media_madvise_utils_test.h"
 #include "media_madvise_utils.h"
 
 using namespace testing::ext;
@@ -27,129 +27,129 @@ using namespace OHOS::Media;
 
 namespace OHOS {
 namespace Media {
-void MadviseUtilsTest::SetUpTestCase() {}
+void MediaMadviseUtilsTest::SetUpTestCase() {}
 
-void MadviseUtilsTest::TearDownTestCase() {}
+void MediaMadviseUtilsTest::TearDownTestCase() {}
 
-void MadviseUtilsTest::SetUp() {}
+void MediaMadviseUtilsTest::SetUp() {}
 
-void MadviseUtilsTest::TearDown() {}
+void MediaMadviseUtilsTest::TearDown() {}
 
-HWTEST_F(MadviseUtilsTest, PageSizeTest_001, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, PageSizeTest_001, TestSize.Level2)
 {
-    size_t pageSize = MadviseUtils::PageSize();
+    size_t pageSize = MediaMadviseUtils::PageSize();
     EXPECT_GT(pageSize, 0);
     EXPECT_EQ(pageSize % 4096, 0);
 }
 
-HWTEST_F(MadviseUtilsTest, ShouldOptimizeSegmentTest_001, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, ShouldOptimizeSegmentTest_001, TestSize.Level2)
 {
-    bool result = MadviseUtils::ShouldOptimizeSegment(PF_R);
+    bool result = MediaMadviseUtils::ShouldOptimizeSegment(PF_R);
     EXPECT_TRUE(result);
 }
 
-HWTEST_F(MadviseUtilsTest, ShouldOptimizeSegmentTest_002, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, ShouldOptimizeSegmentTest_002, TestSize.Level2)
 {
-    bool result = MadviseUtils::ShouldOptimizeSegment(PF_R | PF_X);
+    bool result = MediaMadviseUtils::ShouldOptimizeSegment(PF_R | PF_X);
     EXPECT_TRUE(result);
 }
 
-HWTEST_F(MadviseUtilsTest, ShouldOptimizeSegmentTest_003, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, ShouldOptimizeSegmentTest_003, TestSize.Level2)
 {
-    bool result = MadviseUtils::ShouldOptimizeSegment(PF_R | PF_W);
+    bool result = MediaMadviseUtils::ShouldOptimizeSegment(PF_R | PF_W);
     EXPECT_FALSE(result);
 }
 
-HWTEST_F(MadviseUtilsTest, ShouldOptimizeSegmentTest_004, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, ShouldOptimizeSegmentTest_004, TestSize.Level2)
 {
-    bool result = MadviseUtils::ShouldOptimizeSegment(PF_W);
+    bool result = MediaMadviseUtils::ShouldOptimizeSegment(PF_W);
     EXPECT_FALSE(result);
 }
 
-HWTEST_F(MadviseUtilsTest, ShouldOptimizeSegmentTest_005, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, ShouldOptimizeSegmentTest_005, TestSize.Level2)
 {
-    bool result = MadviseUtils::ShouldOptimizeSegment(PF_X);
+    bool result = MediaMadviseUtils::ShouldOptimizeSegment(PF_X);
     EXPECT_FALSE(result);
 }
 
-HWTEST_F(MadviseUtilsTest, ShouldOptimizeSegmentTest_006, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, ShouldOptimizeSegmentTest_006, TestSize.Level2)
 {
-    bool result = MadviseUtils::ShouldOptimizeSegment(PF_R | PF_W | PF_X);
+    bool result = MediaMadviseUtils::ShouldOptimizeSegment(PF_R | PF_W | PF_X);
     EXPECT_FALSE(result);
 }
 
-HWTEST_F(MadviseUtilsTest, ShouldOptimizeSegmentTest_007, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, ShouldOptimizeSegmentTest_007, TestSize.Level2)
 {
-    bool result = MadviseUtils::ShouldOptimizeSegment(0);
+    bool result = MediaMadviseUtils::ShouldOptimizeSegment(0);
     EXPECT_FALSE(result);
 }
 
-HWTEST_F(MadviseUtilsTest, ApplyMadviseAlignedTest_001, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, ApplyMadviseAlignedTest_001, TestSize.Level2)
 {
-    bool result = MadviseUtils::ApplyMadviseAligned(nullptr, 4096);
+    bool result = MediaMadviseUtils::ApplyMadviseAligned(nullptr, 4096);
     EXPECT_FALSE(result);
 }
 
-HWTEST_F(MadviseUtilsTest, ApplyMadviseAlignedTest_002, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, ApplyMadviseAlignedTest_002, TestSize.Level2)
 {
     void *addr = malloc(4096);
     ASSERT_NE(addr, nullptr);
-    bool result = MadviseUtils::ApplyMadviseAligned(addr, 0);
+    bool result = MediaMadviseUtils::ApplyMadviseAligned(addr, 0);
     EXPECT_FALSE(result);
     free(addr);
 }
 
-HWTEST_F(MadviseUtilsTest, ApplyMadviseAlignedTest_003, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, ApplyMadviseAlignedTest_003, TestSize.Level2)
 {
     void *addr = malloc(4096);
     ASSERT_NE(addr, nullptr);
-    bool result = MadviseUtils::ApplyMadviseAligned(addr, 4096);
+    bool result = MediaMadviseUtils::ApplyMadviseAligned(addr, 4096);
     EXPECT_TRUE(result);
     free(addr);
 }
 
-HWTEST_F(MadviseUtilsTest, ApplyMadviseAlignedTest_004, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, ApplyMadviseAlignedTest_004, TestSize.Level2)
 {
     void *addr = malloc(8192);
     ASSERT_NE(addr, nullptr);
-    bool result = MadviseUtils::ApplyMadviseAligned(addr, 8192);
+    bool result = MediaMadviseUtils::ApplyMadviseAligned(addr, 8192);
     EXPECT_TRUE(result);
     free(addr);
 }
 
-HWTEST_F(MadviseUtilsTest, ApplyMadviseAlignedTest_005, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, ApplyMadviseAlignedTest_005, TestSize.Level2)
 {
     void *addr = malloc(8192);
     ASSERT_NE(addr, nullptr);
     uintptr_t alignedAddr = reinterpret_cast<uintptr_t>(addr);
     alignedAddr = (alignedAddr + 4095) & ~4095ULL;
-    bool result = MadviseUtils::ApplyMadviseAligned(reinterpret_cast<void*>(alignedAddr), 4096);
+    bool result = MediaMadviseUtils::ApplyMadviseAligned(reinterpret_cast<void*>(alignedAddr), 4096);
     EXPECT_TRUE(result);
     free(addr);
 }
 
-HWTEST_F(MadviseUtilsTest, ApplyMadviseAlignedTest_006, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, ApplyMadviseAlignedTest_006, TestSize.Level2)
 {
     void *ra = mmap(nullptr, 4096, PROT_READ, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     ASSERT_NE(ra, MAP_FAILED);
-    bool result = MadviseUtils::ApplyMadviseAligned(ra, 4096);
+    bool result = MediaMadviseUtils::ApplyMadviseAligned(ra, 4096);
     EXPECT_TRUE(result);
     munmap(ra, 4096);
 }
 
-HWTEST_F(MadviseUtilsTest, ApplyMadviseAlignedTest_007, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, ApplyMadviseAlignedTest_007, TestSize.Level2)
 {
     void *ra = mmap(nullptr, 8192, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     ASSERT_NE(ra, MAP_FAILED);
-    bool result = MadviseUtils::ApplyMadviseAligned(ra, 4096);
+    bool result = MediaMadviseUtils::ApplyMadviseAligned(ra, 4096);
     EXPECT_TRUE(result);
     munmap(ra, 8192);
 }
 
-HWTEST_F(MadviseUtilsTest, PhdrCallbackSingleTest_001, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, PhdrCallbackSingleTest_001, TestSize.Level2)
 {
     std::string targetLib = "libmedia.so";
-    MadviseUtils::SingleLibContext ctx;
+    MediaMadviseUtils::SingleLibContext ctx;
     ctx.targetLib = targetLib;
     ctx.successCount = 0;
     ctx.failCount = 0;
@@ -160,16 +160,16 @@ HWTEST_F(MadviseUtilsTest, PhdrCallbackSingleTest_001, TestSize.Level2)
     info.dlpi_phdr = nullptr;
     info.dlpi_phnum = 0;
 
-    int32_t result = MadviseUtils::PhdrCallbackSingle(&info, 0, &ctx);
+    int32_t result = MediaMadviseUtils::PhdrCallbackSingle(&info, 0, &ctx);
     EXPECT_EQ(result, 0);
     EXPECT_EQ(ctx.successCount, 0);
     EXPECT_EQ(ctx.failCount, 0);
 }
 
-HWTEST_F(MadviseUtilsTest, PhdrCallbackSingleTest_002, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, PhdrCallbackSingleTest_002, TestSize.Level2)
 {
     std::string targetLib = "libmedia.so";
-    MadviseUtils::SingleLibContext ctx;
+    MediaMadviseUtils::SingleLibContext ctx;
     ctx.targetLib = targetLib;
     ctx.successCount = 0;
     ctx.failCount = 0;
@@ -180,16 +180,16 @@ HWTEST_F(MadviseUtilsTest, PhdrCallbackSingleTest_002, TestSize.Level2)
     info.dlpi_phdr = nullptr;
     info.dlpi_phnum = 0;
 
-    int32_t result = MadviseUtils::PhdrCallbackSingle(&info, 0, &ctx);
+    int32_t result = MediaMadviseUtils::PhdrCallbackSingle(&info, 0, &ctx);
     EXPECT_EQ(result, 0);
     EXPECT_EQ(ctx.successCount, 0);
     EXPECT_EQ(ctx.failCount, 0);
 }
 
-HWTEST_F(MadviseUtilsTest, PhdrCallbackSingleTest_003, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, PhdrCallbackSingleTest_003, TestSize.Level2)
 {
     std::string targetLib = "libmedia.so";
-    MadviseUtils::SingleLibContext ctx;
+    MediaMadviseUtils::SingleLibContext ctx;
     ctx.targetLib = targetLib;
     ctx.successCount = 0;
     ctx.failCount = 0;
@@ -200,16 +200,16 @@ HWTEST_F(MadviseUtilsTest, PhdrCallbackSingleTest_003, TestSize.Level2)
     info.dlpi_phdr = nullptr;
     info.dlpi_phnum = 0;
 
-    int32_t result = MadviseUtils::PhdrCallbackSingle(&info, 0, &ctx);
+    int32_t result = MediaMadviseUtils::PhdrCallbackSingle(&info, 0, &ctx);
     EXPECT_EQ(result, 0);
     EXPECT_EQ(ctx.successCount, 0);
     EXPECT_EQ(ctx.failCount, 0);
 }
 
-HWTEST_F(MadviseUtilsTest, PhdrCallbackSingleTest_004, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, PhdrCallbackSingleTest_004, TestSize.Level2)
 {
     std::string targetLib = "libmedia";
-    MadviseUtils::SingleLibContext ctx;
+    MediaMadviseUtils::SingleLibContext ctx;
     ctx.targetLib = targetLib;
     ctx.successCount = 0;
     ctx.failCount = 0;
@@ -220,14 +220,14 @@ HWTEST_F(MadviseUtilsTest, PhdrCallbackSingleTest_004, TestSize.Level2)
     info.dlpi_phdr = nullptr;
     info.dlpi_phnum = 0;
 
-    int32_t result = MadviseUtils::PhdrCallbackSingle(&info, 0, &ctx);
+    int32_t result = MediaMadviseUtils::PhdrCallbackSingle(&info, 0, &ctx);
     EXPECT_EQ(result, 0);
 }
 
-HWTEST_F(MadviseUtilsTest, PhdrCallbackSingleTest_005, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, PhdrCallbackSingleTest_005, TestSize.Level2)
 {
     std::string target = "test";
-    MadviseUtils::SingleLibContext ctx;
+    MediaMadviseUtils::SingleLibContext ctx;
     ctx.targetLib = target;
     ctx.successCount = 0;
     ctx.failCount = 0;
@@ -250,16 +250,16 @@ HWTEST_F(MadviseUtilsTest, PhdrCallbackSingleTest_005, TestSize.Level2)
     info.dlpi_phdr = phdr;
     info.dlpi_phnum = 2;
 
-    int32_t result = MadviseUtils::PhdrCallbackSingle(&info, 0, &ctx);
+    int32_t result = MediaMadviseUtils::PhdrCallbackSingle(&info, 0, &ctx);
     EXPECT_EQ(result, 0);
     EXPECT_EQ(ctx.successCount, 0);
     EXPECT_EQ(ctx.failCount, 0);
 }
 
-HWTEST_F(MadviseUtilsTest, PhdrCallbackSingleTest_006, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, PhdrCallbackSingleTest_006, TestSize.Level2)
 {
     std::string target = "test";
-    MadviseUtils::SingleLibContext ctx;
+    MediaMadviseUtils::SingleLibContext ctx;
     ctx.targetLib = target;
     ctx.successCount = 0;
     ctx.failCount = 0;
@@ -277,15 +277,15 @@ HWTEST_F(MadviseUtilsTest, PhdrCallbackSingleTest_006, TestSize.Level2)
     info.dlpi_phdr = phdr;
     info.dlpi_phnum = 1;
 
-    int32_t result = MadviseUtils::PhdrCallbackSingle(&info, 0, &ctx);
+    int32_t result = MediaMadviseUtils::PhdrCallbackSingle(&info, 0, &ctx);
     EXPECT_EQ(result, 0);
     EXPECT_EQ(ctx.successCount, 0);
 }
 
-HWTEST_F(MadviseUtilsTest, PhdrCallbackSingleTest_007, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, PhdrCallbackSingleTest_007, TestSize.Level2)
 {
     std::string target = "test";
-    MadviseUtils::SingleLibContext ctx;
+    MediaMadviseUtils::SingleLibContext ctx;
     ctx.targetLib = target;
     ctx.successCount = 0;
     ctx.failCount = 0;
@@ -308,34 +308,34 @@ HWTEST_F(MadviseUtilsTest, PhdrCallbackSingleTest_007, TestSize.Level2)
     info.dlpi_phdr = phdr;
     info.dlpi_phnum = 2;
 
-    int32_t result = MadviseUtils::PhdrCallbackSingle(&info, 0, &ctx);
+    int32_t result = MediaMadviseUtils::PhdrCallbackSingle(&info, 0, &ctx);
     EXPECT_EQ(result, 0);
     EXPECT_EQ(ctx.successCount, 0);
 }
 
-HWTEST_F(MadviseUtilsTest, MadviseSingleLibraryTest_001, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, MadviseSingleLibraryTest_001, TestSize.Level2)
 {
-    bool result = MadviseUtils::MadviseSingleLibrary("");
+    bool result = MediaMadviseUtils::MediaMadviseSingleLibrary("");
     EXPECT_FALSE(result);
 }
 
-HWTEST_F(MadviseUtilsTest, MadviseSingleLibraryTest_002, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, MadviseSingleLibraryTest_002, TestSize.Level2)
 {
-    bool result = MadviseUtils::MadviseSingleLibrary("libmeida_noExistent.so");
+    bool result = MediaMadviseUtils::MediaMadviseSingleLibrary("libmedia_noExistent.so");
     EXPECT_FALSE(result);
 }
 
-HWTEST_F(MadviseUtilsTest, MadviseSingleLibraryTest_003, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, MadviseSingleLibraryTest_003, TestSize.Level2)
 {
-    bool result = MadviseUtils::MadviseSingleLibrary("libmedia");
+    bool result = MediaMadviseUtils::MediaMadviseSingleLibrary("libmedia");
     EXPECT_TRUE(result);
 }
 
-HWTEST_F(MadviseUtilsTest, PhdrCallbackMultipleTest_001, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, PhdrCallbackMultipleTest_001, TestSize.Level2)
 {
     std::unordered_set<std::string> targetLibs = {"libmedia.so"};
     std::unordered_set<std::string> processedLibs;
-    MadviseUtils::MultiLibContext ctx;
+    MediaMadviseUtils::MultiLibContext ctx;
     ctx.targetLibs = targetLibs;
     ctx.successCount = 0;
     ctx.failCount = 0;
@@ -347,17 +347,17 @@ HWTEST_F(MadviseUtilsTest, PhdrCallbackMultipleTest_001, TestSize.Level2)
     info.dlpi_phdr = nullptr;
     info.dlpi_phnum = 0;
 
-    int32_t result = MadviseUtils::PhdrCallbackMultiple(&info, 0, &ctx);
+    int32_t result = MediaMadviseUtils::PhdrCallbackMultiple(&info, 0, &ctx);
     EXPECT_EQ(result, 0);
     EXPECT_EQ(ctx.successCount, 0);
     EXPECT_EQ(ctx.failCount, 0);
 }
 
-HWTEST_F(MadviseUtilsTest, PhdrCallbackMultipleTest_002, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, PhdrCallbackMultipleTest_002, TestSize.Level2)
 {
     std::unordered_set<std::string> targetLibs = {"libmedia.so"};
     std::unordered_set<std::string> processedLibs;
-    MadviseUtils::MultiLibContext ctx;
+    MediaMadviseUtils::MultiLibContext ctx;
     ctx.targetLibs = targetLibs;
     ctx.successCount = 0;
     ctx.failCount = 0;
@@ -369,17 +369,17 @@ HWTEST_F(MadviseUtilsTest, PhdrCallbackMultipleTest_002, TestSize.Level2)
     info.dlpi_phdr = nullptr;
     info.dlpi_phnum = 0;
 
-    int32_t result = MadviseUtils::PhdrCallbackMultiple(&info, 0, &ctx);
+    int32_t result = MediaMadviseUtils::PhdrCallbackMultiple(&info, 0, &ctx);
     EXPECT_EQ(result, 0);
     EXPECT_EQ(ctx.successCount, 0);
     EXPECT_EQ(ctx.failCount, 0);
 }
 
-HWTEST_F(MadviseUtilsTest, PhdrCallbackMultipleTest_003, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, PhdrCallbackMultipleTest_003, TestSize.Level2)
 {
     std::unordered_set<std::string> targetLibs = {"libmedia.so"};
     std::unordered_set<std::string> processedLibs;
-    MadviseUtils::MultiLibContext ctx;
+    MediaMadviseUtils::MultiLibContext ctx;
     ctx.targetLibs = targetLibs;
     ctx.successCount = 0;
     ctx.failCount = 0;
@@ -391,17 +391,17 @@ HWTEST_F(MadviseUtilsTest, PhdrCallbackMultipleTest_003, TestSize.Level2)
     info.dlpi_phdr = nullptr;
     info.dlpi_phnum = 0;
 
-    int32_t result = MadviseUtils::PhdrCallbackMultiple(&info, 0, &ctx);
+    int32_t result = MediaMadviseUtils::PhdrCallbackMultiple(&info, 0, &ctx);
     EXPECT_EQ(result, 0);
     EXPECT_EQ(ctx.successCount, 0);
     EXPECT_EQ(ctx.failCount, 0);
 }
 
-HWTEST_F(MadviseUtilsTest, PhdrCallbackMultipleTest_004, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, PhdrCallbackMultipleTest_004, TestSize.Level2)
 {
     std::unordered_set<std::string> targetLibs = {"libmedia.so"};
     std::unordered_set<std::string> processedLibs = {"libmedia.so"};
-    MadviseUtils::MultiLibContext ctx;
+    MediaMadviseUtils::MultiLibContext ctx;
     ctx.targetLibs = targetLibs;
     ctx.successCount = 0;
     ctx.failCount = 0;
@@ -413,17 +413,17 @@ HWTEST_F(MadviseUtilsTest, PhdrCallbackMultipleTest_004, TestSize.Level2)
     info.dlpi_phdr = nullptr;
     info.dlpi_phnum = 0;
 
-    int32_t result = MadviseUtils::PhdrCallbackMultiple(&info, 0, &ctx);
+    int32_t result = MediaMadviseUtils::PhdrCallbackMultiple(&info, 0, &ctx);
     EXPECT_EQ(result, 0);
     EXPECT_EQ(ctx.successCount, 0);
     EXPECT_EQ(ctx.failCount, 0);
 }
 
-HWTEST_F(MadviseUtilsTest, PhdrCallbackMultipleTest_005, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, PhdrCallbackMultipleTest_005, TestSize.Level2)
 {
     std::unordered_set<std::string> targetLibs = {"libmedia.so"};
     std::unordered_set<std::string> processedLibs;
-    MadviseUtils::MultiLibContext ctx;
+    MediaMadviseUtils::MultiLibContext ctx;
     ctx.targetLibs = targetLibs;
     ctx.successCount = 0;
     ctx.failCount = 0;
@@ -442,17 +442,17 @@ HWTEST_F(MadviseUtilsTest, PhdrCallbackMultipleTest_005, TestSize.Level2)
     info.dlpi_phdr = phdr;
     info.dlpi_phnum = 1;
 
-    int32_t result = MadviseUtils::PhdrCallbackMultiple(&info, 0, &ctx);
+    int32_t result = MediaMadviseUtils::PhdrCallbackMultiple(&info, 0, &ctx);
     EXPECT_EQ(result, 0);
     EXPECT_EQ(ctx.successCount, 0);
     EXPECT_GT(ctx.failCount, 0);
 }
 
-HWTEST_F(MadviseUtilsTest, PhdrCallbackMultipleTest_006, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, PhdrCallbackMultipleTest_006, TestSize.Level2)
 {
     std::unordered_set<std::string> targetLibs = {"libmedia_service.z.so"};
     std::unordered_set<std::string> processedLibs;
-    MadviseUtils::MultiLibContext ctx;
+    MediaMadviseUtils::MultiLibContext ctx;
     ctx.targetLibs = targetLibs;
     ctx.successCount = 0;
     ctx.failCount = 0;
@@ -471,17 +471,17 @@ HWTEST_F(MadviseUtilsTest, PhdrCallbackMultipleTest_006, TestSize.Level2)
     info.dlpi_phdr = phdr;
     info.dlpi_phnum = 1;
 
-    int32_t result = MadviseUtils::PhdrCallbackMultiple(&info, 0, &ctx);
+    int32_t result = MediaMadviseUtils::PhdrCallbackMultiple(&info, 0, &ctx);
     EXPECT_EQ(result, 0);
     EXPECT_EQ(ctx.successCount, 0);
     EXPECT_GT(ctx.failCount, 0);
 }
 
-HWTEST_F(MadviseUtilsTest, PhdrCallbackMultipleTest_007, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, PhdrCallbackMultipleTest_007, TestSize.Level2)
 {
     std::unordered_set<std::string> targetLibs = {"libmedia_service.z.so"};
     std::unordered_set<std::string> processedLibs;
-    MadviseUtils::MultiLibContext ctx;
+    MediaMadviseUtils::MultiLibContext ctx;
     ctx.targetLibs = targetLibs;
     ctx.successCount = 0;
     ctx.failCount = 0;
@@ -500,17 +500,17 @@ HWTEST_F(MadviseUtilsTest, PhdrCallbackMultipleTest_007, TestSize.Level2)
     info.dlpi_phdr = phdr;
     info.dlpi_phnum = 1;
 
-    int32_t result = MadviseUtils::PhdrCallbackMultiple(&info, 0, &ctx);
+    int32_t result = MediaMadviseUtils::PhdrCallbackMultiple(&info, 0, &ctx);
     EXPECT_EQ(result, 0);
     EXPECT_EQ(ctx.successCount, 0);
     EXPECT_GT(ctx.failCount, 0);
 }
 
-HWTEST_F(MadviseUtilsTest, PhdrCallbackMultipleTest_008, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, PhdrCallbackMultipleTest_008, TestSize.Level2)
 {
     std::unordered_set<std::string> targetLibs = {"libmedia_service.z.so"};
     std::unordered_set<std::string> processedLibs;
-    MadviseUtils::MultiLibContext ctx;
+    MediaMadviseUtils::MultiLibContext ctx;
     ctx.targetLibs = targetLibs;
     ctx.successCount = 0;
     ctx.failCount = 0;
@@ -534,17 +534,17 @@ HWTEST_F(MadviseUtilsTest, PhdrCallbackMultipleTest_008, TestSize.Level2)
     info.dlpi_phdr = phdr;
     info.dlpi_phnum = 2;
 
-    int32_t result = MadviseUtils::PhdrCallbackMultiple(&info, 0, &ctx);
+    int32_t result = MediaMadviseUtils::PhdrCallbackMultiple(&info, 0, &ctx);
     EXPECT_EQ(result, 0);
     EXPECT_EQ(ctx.successCount, 0);
     EXPECT_GT(ctx.failCount, 0);
 }
 
-HWTEST_F(MadviseUtilsTest, PhdrCallbackMultipleTest_009, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, PhdrCallbackMultipleTest_009, TestSize.Level2)
 {
     std::unordered_set<std::string> targetLibs = {"libmedia.so"};
     std::unordered_set<std::string> processedLibs;
-    MadviseUtils::MultiLibContext ctx;
+    MediaMadviseUtils::MultiLibContext ctx;
     ctx.targetLibs = targetLibs;
     ctx.successCount = 0;
     ctx.failCount = 0;
@@ -568,60 +568,60 @@ HWTEST_F(MadviseUtilsTest, PhdrCallbackMultipleTest_009, TestSize.Level2)
     info.dlpi_phdr = phdr;
     info.dlpi_phnum = 2;
 
-    int32_t result = MadviseUtils::PhdrCallbackMultiple(&info, 0, &ctx);
+    int32_t result = MediaMadviseUtils::PhdrCallbackMultiple(&info, 0, &ctx);
     EXPECT_EQ(result, 0);
     EXPECT_EQ(ctx.successCount, 0);
     EXPECT_GT(ctx.failCount, 0);
 }
 
-HWTEST_F(MadviseUtilsTest, MadviseMultipleLibrariesTest_001, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, MadviseMultipleLibrariesTest_001, TestSize.Level2)
 {
     std::vector<std::string> libNames;
-    int32_t result = MadviseUtils::MadviseMultipleLibraries(libNames);
+    int32_t result = MediaMadviseUtils::MediaMadviseMultipleLibraries(libNames);
     EXPECT_EQ(result, 0);
 }
 
-HWTEST_F(MadviseUtilsTest, MadviseMultipleLibrariesTest_002, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, MadviseMultipleLibrariesTest_002, TestSize.Level2)
 {
-    std::vector<std::string> libNames = {"libmeida_noExistent.so"};
-    int32_t result = MadviseUtils::MadviseMultipleLibraries(libNames);
+    std::vector<std::string> libNames = {"libmedia_noExistent.so"};
+    int32_t result = MediaMadviseUtils::MediaMadviseMultipleLibraries(libNames);
     EXPECT_EQ(result, 0);
 }
 
-HWTEST_F(MadviseUtilsTest, MadviseMultipleLibrariesTest_003, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, MadviseMultipleLibrariesTest_003, TestSize.Level2)
 {
     std::vector<std::string> libNames = {"libmedia.so"};
-    int32_t result = MadviseUtils::MadviseMultipleLibraries(libNames);
+    int32_t result = MediaMadviseUtils::MediaMadviseMultipleLibraries(libNames);
     EXPECT_GE(result, 0);
 }
 
-HWTEST_F(MadviseUtilsTest, MadviseMultipleLibrariesTest_004, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, MadviseMultipleLibrariesTest_004, TestSize.Level2)
 {
     std::vector<std::string> libNames = {"libmedia.so", "libm.so", "libpthread.so"};
-    int32_t result = MadviseUtils::MadviseMultipleLibraries(libNames);
+    int32_t result = MediaMadviseUtils::MediaMadviseMultipleLibraries(libNames);
     EXPECT_GE(result, 0);
 }
 
-HWTEST_F(MadviseUtilsTest, MadviseMultipleLibrariesTest_005, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, MadviseMultipleLibrariesTest_005, TestSize.Level2)
 {
     std::vector<std::string> libNames = {"libmedia.so", "libmedia.so"};
-    int32_t result = MadviseUtils::MadviseMultipleLibraries(libNames);
+    int32_t result = MediaMadviseUtils::MediaMadviseMultipleLibraries(libNames);
     EXPECT_GE(result, 0);
 }
 
-HWTEST_F(MadviseUtilsTest, IntegrationTest_001, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, IntegrationTest_001, TestSize.Level2)
 {
-    bool result1 = MadviseUtils::MadviseSingleLibrary("libmedia");
-    bool result2 = MadviseUtils::MadviseSingleLibrary("libmedia");
+    bool result1 = MediaMadviseUtils::MediaMadviseSingleLibrary("libmedia");
+    bool result2 = MediaMadviseUtils::MediaMadviseSingleLibrary("libmedia");
     EXPECT_TRUE(result1);
     EXPECT_TRUE(result2);
 }
 
-HWTEST_F(MadviseUtilsTest, IntegrationTest_002, TestSize.Level2)
+HWTEST_F(MediaMadviseUtilsTest, IntegrationTest_002, TestSize.Level2)
 {
     std::vector<std::string> libNames = {"libmedia.so"};
-    int32_t result1 = MadviseUtils::MadviseMultipleLibraries(libNames);
-    int32_t result2 = MadviseUtils::MadviseMultipleLibraries(libNames);
+    int32_t result1 = MediaMadviseUtils::MediaMadviseMultipleLibraries(libNames);
+    int32_t result2 = MediaMadviseUtils::MediaMadviseMultipleLibraries(libNames);
     EXPECT_GE(result1, 0);
     EXPECT_GE(result2, 0);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,20 +12,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef MEDIA_TEST_MADVISE_UTILS_TEST_H
-#define MEDIA_TEST_MADVISE_UTILS_TEST_H
 
-#include <gtest/gtest.h>
+#ifndef RECORDER_SERVICE_STUB_TEST_H
+#define RECORDER_SERVICE_STUB_TEST_H
+
+#include "gtest/gtest.h"
+
+#include "recorder_service_stub.h"
 
 namespace OHOS {
 namespace Media {
-class MadviseUtilsTest : public testing::Test {
+class RecorderServiceStubTest : public testing::Test {
 public:
-static void SetUpTestCase();
-static void TearDownTestCase();
-void SetUp();
-void TearDown();
+    // SetUpTestCase: Called before all test cases
+    static void SetUpTestCase(void);
+    // TearDownTestCase: Called after all test case
+    static void TearDownTestCase(void);
+    // SetUp: Called before each test cases
+    void SetUp(void);
+    // TearDown: Called after each test cases
+    void TearDown(void);
 };
 } // namespace Media
 } // namespace OHOS
-#endif // MEDIA_TEST_MADVISE_UTILS_TEST_H
+#endif // RECORDER_SERVICE_STUB_TEST_H

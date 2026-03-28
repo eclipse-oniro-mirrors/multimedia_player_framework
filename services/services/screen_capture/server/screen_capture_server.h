@@ -116,8 +116,8 @@ public:
     int32_t StopScreenCaptureByEvent(AVScreenCaptureStateCode stateCode);
     std::shared_ptr<OHOS::AbilityRuntime::WantAgent::WantAgent> GetWantAgent(const std::string& callingLabel,
         int32_t sessionId);
-    void SystemPrivacyProtected(ScreenId& virtualScreenId, bool systemPrivacyProtectionSwitch);
-    void AppPrivacyProtected(ScreenId& virtualScreenId, bool appPrivacyProtectionSwitch);
+    void PrivacyProtected(ScreenId& virtualScreenId, bool systemPrivacyProtectionSwitch,
+        bool appPrivacyProtectionSwitch);
     void OnUpdateMirrorDisplay(std::vector<uint64_t> &displayIds);
     void OnWindowInfoChanged(const uint64_t &displayId);
     void OnWindowLifecycle(SCWindowLifecycleListener::SessionLifecycleEvent event);
