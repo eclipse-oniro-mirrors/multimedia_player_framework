@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <utility>
 #include "player.h"
 #include "meta/format.h"
 #include "meta/meta.h"
@@ -226,6 +227,19 @@ public:
 
 private:
     std::vector<Format> value_;
+};
+
+class MediaJsResultRangeArray : public MediaJsResult {
+public:
+    explicit MediaJsResultRangeArray(const std::vector<std::pair<int64_t, int64_t>> &value)
+        : value_(value)
+    {
+    }
+    ~MediaJsResultRangeArray() override = default;
+    napi_status GetJsResult(napi_env env, napi_value &result) override;
+
+private:
+    std::vector<std::pair<int64_t, int64_t>> value_;
 };
 
 class MediaJsResultRange : public MediaJsResult {

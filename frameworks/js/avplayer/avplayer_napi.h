@@ -120,6 +120,10 @@ private:
      */
     static napi_value JsSeek(napi_env env, napi_callback_info info);
     /**
+     * seekToDefaultPosition(): void
+     */
+    static napi_value JsSeekToDefaultPosition(napi_env env, napi_callback_info info);
+    /**
      * setPlayRange(startTimeMs: number, endTimeMs: number, mode?: SeekMode): void
      */
     static napi_value JsSetPlaybackRange(napi_env env, napi_callback_info info);
@@ -225,6 +229,14 @@ private:
      * readonly duration: number
      */
     static napi_value JsGetDuration(napi_env env, napi_callback_info info);
+    /**
+     * getSeekableTimeRanges(): Promise<Array<Range>>
+     */
+    static napi_value JsGetSeekableTimeRanges(napi_env env, napi_callback_info info);
+    /**
+     * getLoadedTimeRanges(): Promise<Array<Range>>
+     */
+    static napi_value JsGetLoadedTimeRanges(napi_env env, napi_callback_info info);
     /**
      * readonly state: AVPlayState
      */
@@ -339,6 +351,7 @@ private:
         size_t &argc, napi_value *argv);
     static bool JsHandleParameter(napi_env env, napi_value args, AVPlayerNapi *jsPlayer);
     static void SeekEnqueueTask(AVPlayerNapi *jsPlayer, int32_t time, int32_t mode);
+    static void DoSeek(AVPlayerNapi *jsPlayer, int32_t time, int32_t mode);
     static bool VerifyExpectedType(const NapiTypeCheckUnit &unit, AVPlayerNapi *jsPlayer, const std::string &msg);
     static std::shared_ptr<AVMediaSource> GetAVMediaSource(napi_env env, napi_value value,
         std::shared_ptr<AVMediaSourceTmp> &srcTmp);
@@ -393,6 +406,7 @@ private:
     void NotifyState(PlayerStates state) override;
     void NotifyVideoSize(int32_t width, int32_t height) override;
     void NotifyIsLiveStream() override;
+    void NotifyIsFlvLive(bool isFlvLive) override;
     void NotifyDrmInfoUpdated(const std::multimap<std::string, std::vector<uint8_t>> &infos) override;
     void StopTaskQue();
     void WaitTaskQueStop();
@@ -477,6 +491,7 @@ private:
     int32_t position_ = -1;
     int32_t duration_ = -1;
     bool isLiveStream_ = false;
+    bool isFlvLive_ = false;
     std::shared_mutex drmMutex_{};
     std::multimap<std::string, std::vector<uint8_t>> localDrmInfos_;
     Format playbackInfo_;

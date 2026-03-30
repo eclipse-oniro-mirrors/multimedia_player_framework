@@ -22,6 +22,7 @@
 #include "surface.h"
 #endif
 #include "meta/format.h"
+#include "meta/media_types.h"
 #include "meta/meta.h"
 #include "media_data_source.h"
 #include "loading_request.h"
@@ -256,6 +257,7 @@ public:
     static constexpr std::string_view PLAYER_STALLING_MEDIA_TYPE = "stalling_media_type";
     static constexpr std::string_view PLAYER_SEI_PAYLOAD_TYPE = "payloadType";
     static constexpr std::string_view PLAYER_SEI_PAYLOAD_CONTENT = "payload";
+    static constexpr std::string_view PLAYER_IS_FLV_LIVE = "isFlvLive";
 };
 
 class PlaybackInfoKey {
@@ -688,6 +690,19 @@ public:
     virtual int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) = 0;
 
     /**
+     * @brief Seek to the default access point of the playback source.
+     *
+     * @return Returns {@link MSERR_OK} if the seek is done; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SeekToDefaultPosition()
+    {
+        return 0;
+    }
+
+    /**
      * @brief Obtains the playback position, accurate to millisecond.
      *
      * @param currentTime Indicates the playback position.
@@ -760,6 +775,36 @@ public:
      * @version 1.0
      */
     virtual int32_t GetDuration(int32_t &duration) = 0;
+
+    /**
+     * @brief Obtains the seekable time ranges of the media source.
+     *
+     * @param seekableRanges Indicates the seekable ranges.
+     * @return Returns {@link MSERR_OK} if the seekable ranges are obtained; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t GetSeekableRanges(std::vector<Plugins::SeekRange> &seekableRanges)
+    {
+        (void)seekableRanges;
+        return 0;
+    }
+
+    /**
+     * @brief Obtains the loaded time ranges of the media source.
+     *
+     * @param loadedRanges Indicates the loaded ranges.
+     * @return Returns {@link MSERR_OK} if the loaded ranges are obtained; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t GetLoadedRanges(std::vector<Plugins::SeekRange> &loadedRanges)
+    {
+        (void)loadedRanges;
+        return 0;
+    }
 
     /**
      * @brief set the player playback rate
@@ -1331,6 +1376,11 @@ public:
         (void)callback;
         (void)getDolbyList;
         return 0;
+    }
+
+    virtual bool IsLiveSeek()
+    {
+        return false;
     }
 };
 

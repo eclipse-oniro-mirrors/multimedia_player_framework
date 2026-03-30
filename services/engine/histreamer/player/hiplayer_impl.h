@@ -38,6 +38,7 @@
 #include "dfx_agent.h"
 #include "subtitle_sink_filter.h"
 #include "meta/meta.h"
+#include "meta/media_types.h"
 #include "dragging_player_agent.h"
 #include "interrupt_monitor.h"
 #include "plugin/plugin_time.h"
@@ -121,6 +122,7 @@ public:
     int32_t PauseSourceDownload() override;
     int32_t ResumeSourceDownload() override;
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
+    int32_t SeekToDefaultPosition() override;
     int32_t SetVolume(float leftVolume, float rightVolume) override;
     int32_t SetVolumeMode(int32_t mode) override;
     int32_t SetVideoSurface(sptr<Surface> surface) override;
@@ -133,6 +135,8 @@ public:
     int32_t GetPlaybackPosition(int32_t& playbackPositionMs) override;
     int32_t GetCurrentPresentationTimestamp(int64_t &currentPresentation) override;
     int32_t GetDuration(int32_t& durationMs) override;
+    std::vector<Plugins::SeekRange> GetSeekableRanges() override;
+    std::vector<Plugins::SeekRange> GetLoadedRanges() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
     int32_t SetPlaybackRate(float rate) override;
     int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) override;
@@ -211,7 +215,7 @@ public:
     bool IsAudioPass(const char* mimeType) override;
     std::vector<std::string> GetDolbyList() override;
     int32_t NotifySubtitleSeek();
-
+    bool IsLiveSeek() override;
 private:
     enum HiplayerSvpMode : int32_t {
         SVP_CLEAR = -1, /* it's not a protection video */
@@ -394,6 +398,7 @@ private:
     std::string subUrl_;
     bool hasExtSub_ {false};
     std::atomic<int32_t> durationMs_{-1};
+    std::atomic<int32_t> playWindowDurationMs_{-1};
     int64_t mediaStartPts_{0};
     std::shared_ptr<IMediaDataSource> dataSrc_{nullptr};
     std::shared_ptr<IMediaSourceLoader> sourceLoader_{nullptr};
@@ -533,8 +538,11 @@ private:
     bool notNotifyForSw_ = false;
     bool isVideoDecoderInited_ = false;
     bool enable_ = false;
+    AVPlayTrackSelectionFilter trackSelectionFilter_;
+    std::atomic<bool> hasTrackSelectionFilter_ {false};
     PlayerDfxSourceType sourceType_ = PlayerDfxSourceType::DFX_SOURCE_TYPE_UNKNOWN;
     FileType fileType_ = FileType::UNKNOW;
+    bool isLiveSeek_ = false;
 };
 } // namespace Media
 } // namespace OHOS

@@ -46,6 +46,7 @@ public:
     int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) override;
     int32_t AddSubSource(int32_t fd, int64_t offset, int64_t size) override;
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
+    int32_t SeekToDefaultPosition() override;
     int32_t Stop() override;
     int32_t GetPlaybackSpeed(PlaybackRateMode &mode) override;
     int32_t GetPlaybackRate(float &rate) override;
@@ -63,6 +64,8 @@ public:
     int32_t GetPlaybackStatisticMetrics(Format &playbackStatisticMetrics) override;
     int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) override;
     int32_t GetDuration(int32_t &duration) override;
+    int32_t GetSeekableRanges(std::vector<Plugins::SeekRange> &seekableRanges) override;
+    int32_t GetLoadedRanges(std::vector<Plugins::SeekRange> &loadedRanges) override;
     int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) override;
     int32_t SetTrackSelectionFilter(AVPlayTrackSelectionFilter trackFilter) override;
     int32_t GetTrackSelectionFilter(AVPlayTrackSelectionFilter &trackFilter) override;
@@ -101,6 +104,7 @@ public:
     int32_t GetMediaDescription(Format &format) override;
     int32_t GetTrackDescription(Format &format, uint32_t trackIndex) override;
     int32_t RegisterDeviceCapability(const sptr<IRemoteObject> &object) override;
+    bool IsLiveSeek() override;
 private:
     int32_t SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option);
     void InitPlayerFuncsPart1();

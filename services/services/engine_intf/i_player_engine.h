@@ -23,6 +23,7 @@
 #include "player.h"
 #include "common/event.h"
 #include "meta/video_types.h"
+#include "meta/media_types.h"
 #include "nocopyable.h"
 
 #ifdef SUPPORT_AVPLAYER_DRM
@@ -116,6 +117,10 @@ public:
     virtual int32_t SetVolume(float leftVolume, float rightVolume) = 0;
     virtual int32_t SetVolumeMode(int32_t mode) = 0;
     virtual int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) = 0;
+    virtual int32_t SeekToDefaultPosition()
+    {
+        return 0;
+    }
     virtual int32_t GetCurrentTime(int32_t &currentTime) = 0;
     virtual int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) = 0;
     virtual int32_t GetPlaybackInfo(Format &playbackInfo) = 0;
@@ -128,6 +133,14 @@ public:
     virtual int32_t GetVideoWidth() = 0;
     virtual int32_t GetVideoHeight() = 0;
     virtual int32_t GetDuration(int32_t &duration) = 0;
+    virtual std::vector<Plugins::SeekRange> GetSeekableRanges()
+    {
+        return {};
+    }
+    virtual std::vector<Plugins::SeekRange> GetLoadedRanges()
+    {
+        return {};
+    }
     virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode) = 0;
     virtual int32_t SetPlaybackRate(float rate) = 0;
     virtual int32_t GetPlaybackSpeed(PlaybackRateMode &mode) = 0;
@@ -441,6 +454,10 @@ public:
     virtual std::vector<std::string> GetDolbyList()
     {
         return {};
+    }
+    virtual bool IsLiveSeek()
+    {
+        return false;
     }
 };
 } // namespace Media

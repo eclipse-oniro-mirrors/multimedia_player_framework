@@ -373,6 +373,7 @@ include_dirs = [
     "$MEDIA_PLAYER_ROOT_DIR/services/services/recorder_profiles/server",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture/server",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture/client",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture_monitor/server",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture_monitor/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/transcoder/server",
@@ -392,6 +393,9 @@ include_dirs = [
   if (player_framework_support_screen_capture) {
     sources = [
       "screen_capture_ipc_test/screen_capture_service_stub_unittest/screen_capture_service_stub_unittest.cpp",
+      "screen_capture_ipc_test/screen_capture_listener_stub_unittest/screen_capture_listener_stub_unittest.cpp",
+      "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture/client/screen_capture_client.cpp",
+      "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture/ipc/screen_capture_listener_stub.cpp",
     ]
   }
 

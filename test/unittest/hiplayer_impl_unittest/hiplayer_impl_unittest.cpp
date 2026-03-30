@@ -940,5 +940,357 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_DoInitDemuxer_001, TestSize.Level0)
     EXPECT_EQ(hiplayer_->trackSelectionFilter_.preferredSubtitleLanguages,
         std::vector<std::string>({TEST_TRACK_FILTER_SUBTITLE_LANGUAGE}));
 }
+
+// @tc.name     Test Seek API
+// @tc.number   PHIUT_Seek_002
+// @tc.desc     Test Seek interface.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_Seek_002, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    std::shared_ptr<Meta> testptr = std::make_shared<Meta>();
+    testptr->SetData(Tag::MIME_TYPE, "video/test");
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    EXPECT_CALL(*mockDemuxer, GetGlobalMetaInfo()).WillRepeatedly(Return(testptr));
+    hiplayer_->demuxer_ = mockDemuxer;
+    int32_t mSeconds = 5;
+    PlayerSeekMode mode = PlayerSeekMode::SEEK_NEXT_SYNC;
+    hiplayer_->endTimeWithMode_ = -1;
+    hiplayer_->startTimeWithMode_ = 10;
+    int32_t ret = hiplayer_->Seek(mSeconds, mode);
+    EXPECT_NE(ret, 0);
+}
+
+// @tc.name     Test Seek API
+// @tc.number   PHIUT_Seek_003
+// @tc.desc     Test Seek interface, seekable range is empty (Branch 2).
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_Seek_003, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    std::vector<Plugins::SeekRange> emptyRanges;
+    EXPECT_CALL(*mockDemuxer, GetSeekableRanges()).WillRepeatedly(Return(emptyRanges));
+    hiplayer_->demuxer_ = mockDemuxer;
+    int32_t mSeconds = 50;
+    PlayerSeekMode mode = PlayerSeekMode::SEEK_NEXT_SYNC;
+    hiplayer_->endTimeWithMode_ = 100;
+    hiplayer_->startTimeWithMode_ = -1;
+    int32_t ret = hiplayer_->Seek(mSeconds, mode);
+    EXPECT_NE(ret, 0);
+}
+
+// @tc.name     Test Seek API
+// @tc.number   PHIUT_Seek_004
+// @tc.desc     Test Seek interface, seek time found in seekable range (Branch 3).
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_Seek_004, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    std::vector<Plugins::SeekRange> testRanges;
+    Plugins::SeekRange range = {0, 100};
+    testRanges.push_back(range);
+    EXPECT_CALL(*mockDemuxer, GetSeekableRanges()).WillRepeatedly(Return(testRanges));
+    hiplayer_->demuxer_ = mockDemuxer;
+    int32_t mSeconds = 50;
+    PlayerSeekMode mode = PlayerSeekMode::SEEK_NEXT_SYNC;
+    hiplayer_->endTimeWithMode_ = 100;
+    hiplayer_->startTimeWithMode_ = -1;
+    int32_t curPos = 0;
+    (void)hiplayer_->GetCurrentTime(curPos);
+    int32_t ret = hiplayer_->Seek(mSeconds, mode);
+    EXPECT_NE(ret, 0);
+}
+
+// @tc.name     Test Seek API
+// @tc.number   PHIUT_Seek_005
+// @tc.desc     Test Seek interface, isLiveSeek_ flag is set (Branch 3a).
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_Seek_005, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    std::vector<Plugins::SeekRange> testRanges;
+    Plugins::SeekRange range = {0, 100};
+    testRanges.push_back(range);
+    EXPECT_CALL(*mockDemuxer, GetSeekableRanges()).WillRepeatedly(Return(testRanges));
+    hiplayer_->demuxer_ = mockDemuxer;
+    int32_t mSeconds = 10;
+    PlayerSeekMode mode = PlayerSeekMode::SEEK_NEXT_SYNC;
+    hiplayer_->endTimeWithMode_ = 100;
+    hiplayer_->startTimeWithMode_ = -1;
+    hiplayer_->isLiveSeek_ = false;
+    int32_t curPos = 80;
+    (void)hiplayer_->GetCurrentTime(curPos);
+    int32_t ret = hiplayer_->Seek(mSeconds, mode);
+    EXPECT_NE(ret, 0);
+}
+
+// @tc.name     Test Seek API
+// @tc.number   PHIUT_Seek_006
+// @tc.desc     Test Seek interface, seek time not in seekable range (Branch 4).
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_Seek_006, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    std::vector<Plugins::SeekRange> testRanges;
+    Plugins::SeekRange range = {0, 50};
+    testRanges.push_back(range);
+    EXPECT_CALL(*mockDemuxer, GetSeekableRanges()).WillRepeatedly(Return(testRanges));
+    hiplayer_->demuxer_ = mockDemuxer;
+    int32_t mSeconds = 100;
+    PlayerSeekMode mode = PlayerSeekMode::SEEK_NEXT_SYNC;
+    hiplayer_->endTimeWithMode_ = 100;
+    hiplayer_->startTimeWithMode_ = -1;
+    int32_t ret = hiplayer_->Seek(mSeconds, mode);
+    EXPECT_NE(ret, 0);
+}
+
+// @tc.name     Test SeekToDefaultPosition API
+// @tc.number   PHIUT_SeekToDefaultPosition_001
+// @tc.desc     Test audioDecoder_ != nullptr, audioSink_ != nullptr, videoDecoder_ != nullptr.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SeekToDefaultPosition_001, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    EXPECT_CALL(*mockDemuxer, DoFlush()).WillRepeatedly(Return(Status::OK));
+    EXPECT_CALL(*mockDemuxer, RebootPlugin()).WillRepeatedly(Return(Status::OK));
+    hiplayer_->demuxer_ = mockDemuxer;
+    hiplayer_->audioDecoder_ = nullptr;
+    hiplayer_->audioSink_ = nullptr;
+    hiplayer_->videoDecoder_ = std::make_shared<DecoderSurfaceFilter>(name, type);
+    hiplayer_->isLiveSeek_ = true;
+    int32_t ret = hiplayer_->SeekToDefaultPosition();
+    EXPECT_EQ(ret, MSERR_UNKNOWN);
+}
+
+// @tc.name     Test SeekToDefaultPosition API
+// @tc.number   PHIUT_SeekToDefaultPosition_002
+// @tc.desc     Test audioDecoder_ == nullptr, audioSink_ == nullptr, videoDecoder_ == nullptr.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SeekToDefaultPosition_002, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    EXPECT_CALL(*mockDemuxer, DoFlush()).WillRepeatedly(Return(Status::OK));
+    EXPECT_CALL(*mockDemuxer, RebootPlugin()).WillRepeatedly(Return(Status::OK));
+    hiplayer_->demuxer_ = mockDemuxer;
+    hiplayer_->audioDecoder_ = nullptr;
+    hiplayer_->audioSink_ = nullptr;
+    hiplayer_->videoDecoder_ = nullptr;
+    hiplayer_->isLiveSeek_ = true;
+    int32_t ret = hiplayer_->SeekToDefaultPosition();
+    EXPECT_EQ(ret, MSERR_UNKNOWN);
+}
+
+// @tc.name     Test SeekToDefaultPosition API
+// @tc.number   PHIUT_SeekToDefaultPosition_003
+// @tc.desc     Test isLiveSeek_ == false.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SeekToDefaultPosition_003, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    hiplayer_->isLiveSeek_ = false;
+    int32_t ret = hiplayer_->SeekToDefaultPosition();
+    EXPECT_EQ(ret, MSERR_UNKNOWN);
+}
+
+// @tc.name     Test SeekToDefaultPosition API
+// @tc.number   PHIUT_SeekToDefaultPosition_004
+// @tc.desc     Test demuxer_ == nullptr.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SeekToDefaultPosition_004, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    hiplayer_->demuxer_ = nullptr;
+    hiplayer_->isLiveSeek_ = true;
+    int32_t ret = hiplayer_->SeekToDefaultPosition();
+    EXPECT_EQ(ret, MSERR_UNKNOWN);
+}
+
+// @tc.name     Test SeekToDefaultPosition API
+// @tc.number   PHIUT_SeekToDefaultPosition_005
+// @tc.desc     Test RebootPlugin returns error.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SeekToDefaultPosition_005, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    EXPECT_CALL(*mockDemuxer, DoFlush()).WillRepeatedly(Return(Status::OK));
+    EXPECT_CALL(*mockDemuxer, RebootPlugin()).WillRepeatedly(Return(Status::ERROR_UNKNOWN));
+    hiplayer_->demuxer_ = mockDemuxer;
+    hiplayer_->isLiveSeek_ = true;
+    int32_t ret = hiplayer_->SeekToDefaultPosition();
+    EXPECT_EQ(ret, MSERR_UNKNOWN);
+}
+
+// @tc.name     Test SeekToDefaultPosition API
+// @tc.number   PHIUT_SeekToDefaultPosition_008
+// @tc.desc     Test audioDecoder_ != nullptr, audioSink_ != nullptr, videoDecoder_ == nullptr.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SeekToDefaultPosition_008, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    EXPECT_CALL(*mockDemuxer, DoFlush()).WillRepeatedly(Return(Status::OK));
+    EXPECT_CALL(*mockDemuxer, RebootPlugin()).WillRepeatedly(Return(Status::OK));
+    hiplayer_->demuxer_ = mockDemuxer;
+    hiplayer_->videoDecoder_ = nullptr;
+    hiplayer_->isLiveSeek_ = true;
+    int32_t ret = hiplayer_->SeekToDefaultPosition();
+    EXPECT_EQ(ret, MSERR_UNKNOWN);
+}
+
+// @tc.name     Test SeekToDefaultPosition API
+// @tc.number   PHIUT_SeekToDefaultPosition_009
+// @tc.desc     Test RebootPlugin returns ERROR_INVALID_PARAMETER.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SeekToDefaultPosition_009, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    EXPECT_CALL(*mockDemuxer, DoFlush()).WillRepeatedly(Return(Status::OK));
+    EXPECT_CALL(*mockDemuxer, RebootPlugin()).WillRepeatedly(Return(Status::ERROR_INVALID_PARAMETER));
+    hiplayer_->demuxer_ = mockDemuxer;
+    hiplayer_->isLiveSeek_ = true;
+    int32_t ret = hiplayer_->SeekToDefaultPosition();
+    EXPECT_EQ(ret, MSERR_UNKNOWN);
+}
+
+// @tc.name     Test GetSeekableRanges API
+// @tc.number   PHIUT_GetSeekableRanges_001
+// @tc.desc     Test demuxer_ != nullptr.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_GetSeekableRanges_001, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::vector<Plugins::SeekRange> testSeekableRanges;
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    EXPECT_CALL(*mockDemuxer, GetSeekableRanges()).WillRepeatedly(Return(testSeekableRanges));
+    hiplayer_->demuxer_ = mockDemuxer;
+    auto ret = hiplayer_->GetSeekableRanges();
+    EXPECT_EQ(ret.size(), 0);
+}
+
+// @tc.name     Test GetLoadedRanges API
+// @tc.number   PHIUT_GetLoadedRanges_001
+// @tc.desc     Test demuxer_ != nullptr.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_GetLoadedRanges_001, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::vector<Plugins::SeekRange> testLoadedRanges;
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    EXPECT_CALL(*mockDemuxer, GetLoadedRanges()).WillRepeatedly(Return(testLoadedRanges));
+    hiplayer_->demuxer_ = mockDemuxer;
+    auto ret = hiplayer_->GetLoadedRanges();
+    EXPECT_EQ(ret.size(), 0);
+}
+
+// @tc.name     Test IsNeedChangePlaySpeed API
+// @tc.number   PHIUT_IsNeedChangePlaySpeed_001
+// @tc.desc     Test demuxer_ == nullptr.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsNeedChangePlaySpeed_001, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    PlaybackRateMode mode = PlaybackRateMode::SPEED_FORWARD_1_00_X;
+    bool isXSpeedPlay = false;
+    hiplayer_->demuxer_ = nullptr;
+    hiplayer_->isFlvLive_ = true;
+    bool ret = hiplayer_->IsNeedChangePlaySpeed(mode, isXSpeedPlay);
+    EXPECT_EQ(ret, false);
+}
+
+// @tc.name     Test IsNeedChangePlaySpeed API
+// @tc.number   PHIUT_IsNeedChangePlaySpeed_002
+// @tc.desc     Test isFlvLive_ == false.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsNeedChangePlaySpeed_002, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    hiplayer_->demuxer_ = mockDemuxer;
+    hiplayer_->isFlvLive_ = false;
+    PlaybackRateMode mode = PlaybackRateMode::SPEED_FORWARD_1_00_X;
+    bool isXSpeedPlay = false;
+    bool ret = hiplayer_->IsNeedChangePlaySpeed(mode, isXSpeedPlay);
+    EXPECT_EQ(ret, false);
+}
+
+// @tc.name     Test IsNeedChangePlaySpeed API
+// @tc.number   PHIUT_IsNeedChangePlaySpeed_003
+// @tc.desc     Test isLiveSeek_ == false.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsNeedChangePlaySpeed_003, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    hiplayer_->demuxer_ = mockDemuxer;
+    hiplayer_->isFlvLive_ = true;
+    hiplayer_->isLiveSeek_ = false;
+    PlaybackRateMode mode = PlaybackRateMode::SPEED_FORWARD_1_00_X;
+    bool isXSpeedPlay = false;
+    bool ret = hiplayer_->IsNeedChangePlaySpeed(mode, isXSpeedPlay);
+    EXPECT_EQ(ret, true);
+}
+
+// @tc.name     Test IsNeedChangePlaySpeed API
+// @tc.number   PHIUT_IsNeedChangePlaySpeed_004
+// @tc.desc     Test cacheDuration < bufferDurationForPlaying_ * TIME_CONVERSION_UNIT && isXSpeedPlay == true.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsNeedChangePlaySpeed_004, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    EXPECT_CALL(*mockDemuxer, GetCachedDuration()).WillRepeatedly(Return(100));
+    hiplayer_->demuxer_ = mockDemuxer;
+    hiplayer_->isFlvLive_ = true;
+    hiplayer_->isLiveSeek_ = true;
+    hiplayer_->bufferDurationForPlaying_ = 2.0;
+    hiplayer_->maxLivingDelayTime_ = 10.0;
+    PlaybackRateMode mode = PlaybackRateMode::SPEED_FORWARD_1_00_X;
+    bool isXSpeedPlay = true;
+    bool ret = hiplayer_->IsNeedChangePlaySpeed(mode, isXSpeedPlay);
+    EXPECT_EQ(ret, false);
+    EXPECT_EQ(mode, PlaybackRateMode::SPEED_FORWARD_1_00_X);
+    EXPECT_EQ(isXSpeedPlay, true);
+}
+
+// @tc.name     Test IsNeedChangePlaySpeed API
+// @tc.number   PHIUT_IsNeedChangePlaySpeed_005
+// @tc.desc     Test no condition met, return false.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsNeedChangePlaySpeed_005, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    EXPECT_CALL(*mockDemuxer, GetCachedDuration()).WillRepeatedly(Return(5000));
+    hiplayer_->demuxer_ = mockDemuxer;
+    hiplayer_->isFlvLive_ = true;
+    hiplayer_->isLiveSeek_ = true;
+    hiplayer_->bufferDurationForPlaying_ = 2.0;
+    hiplayer_->maxLivingDelayTime_ = 10.0;
+    PlaybackRateMode mode = PlaybackRateMode::SPEED_FORWARD_1_00_X;
+    bool isXSpeedPlay = false;
+    bool ret = hiplayer_->IsNeedChangePlaySpeed(mode, isXSpeedPlay);
+    EXPECT_EQ(ret, false);
+}
 } // namespace Media
 } // namespace OHOS
