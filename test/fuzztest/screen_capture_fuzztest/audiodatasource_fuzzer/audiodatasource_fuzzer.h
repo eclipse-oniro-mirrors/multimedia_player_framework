@@ -35,8 +35,6 @@ namespace OHOS {
 namespace Media {
 class AudioDataSourceFuzzer {
 public:
-    AudioDataSourceFuzzer();
-    ~AudioDataSourceFuzzer();
 
     bool FuzzSpeakerStateUpdate();
     bool FuzzHasSpeakerStream();
@@ -72,13 +70,14 @@ private:
     std::shared_ptr<AudioBuffer> CreateAudioBufferMic(int64_t timestamp);
     std::shared_ptr<AVBuffer> CreateAVBuffer();
     std::shared_ptr<AudioRendererChangeInfo> CreateAudioRendererChangeInfo();
+    void Init();
+    void Release();
 
     std::shared_ptr<ScreenCaptureServer> screenCaptureServer_ = nullptr;
     int32_t datasize = 2048;
     std::vector<uint8_t> AVbuf;
 };
 bool FuzzAudioDataSourceCase(uint8_t *data, size_t size);
-bool FuzzAudioDataSourceCaseInner(AudioDataSourceFuzzer *testAudioDataSource, int32_t testCase);
 }
 }
 #endif // AUDIODATASOURCE_FUZZER
