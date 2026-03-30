@@ -4099,6 +4099,7 @@ Status HiPlayerImpl::StartSeekContinous()
     }
     FALSE_RETURN_V(!draggingPlayerAgent_, Status::OK);
     FALSE_RETURN_V(demuxer_ && videoDecoder_, Status::OK);
+    videoDecoder_->DoFlush();
     draggingPlayerAgent_ = DraggingPlayerAgent::Create(pipeline_, demuxer_, videoDecoder_, playerId_);
     FALSE_RETURN_V_MSG_E(draggingPlayerAgent_ != nullptr, Status::ERROR_INVALID_OPERATION, "failed to create agent");
     Status res = draggingPlayerAgent_->Init();
