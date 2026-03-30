@@ -139,6 +139,7 @@ bool LppDataPacket::ReadVector(MessageParcel &parcel)
     for (int i = 0; i < size; i++) {
         int elem = 0;
         parcel.ReadInt32(elem);
+        CHECK_AND_RETURN_RET_LOG(elem >= 0 && elem <= MAX_BUFFER_SIZE, false, "invalid elem of size_");
         size_.push_back(elem);
     }
     return true;

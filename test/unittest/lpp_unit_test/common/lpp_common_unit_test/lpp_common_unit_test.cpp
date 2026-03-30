@@ -18,6 +18,7 @@
 #include "lpp_common_unit_test.h"
 
 constexpr uint32_t MAX_BUFFER_SIZE_TEST = 2 * 1024 * 1024;
+constexpr uint32_t MAX_BUFFER_SIZE = 10 * 1024 * 1024;
 namespace OHOS {
 namespace Media {
 using namespace std;
@@ -226,6 +227,230 @@ HWTEST_F(LppDataPacketUnitTest, WriteOneFrameToAVBuffer_005, TestSize.Level1)
     packet_->memory_ = nullptr;
     EXPECT_FALSE(packet_->IsEos());
     EXPECT_FALSE(packet_->WriteOneFrameToAVBuffer(buffer));
+}
+
+/**
+ * @tc.name  : ReadVector_001
+ * @tc.number: ReadVector
+ * @tc.desc  : Test ReadVector with negative elem in size_ vector (should return false)
+ */
+
+HWTEST_F(LppDataPacketUnitTest, ReadVector_001, TestSize.Level1)
+{
+    MessageParcel parcel;
+
+    int64_t size = 1;
+
+    parcel.WriteInt64(size);
+
+    for (int i = 0; i < size; i++) {
+        uint32_t flag = 1;
+        parcel.WriteUint32(flag);
+    }
+
+    parcel.WriteInt64(size);
+
+    for (int i = 0; i < size; i++) {
+        int64_t pts = 1000;
+        parcel.WriteInt64(pts);
+    }
+
+    parcel.WriteInt64(size);
+
+    int elem = -1;
+    parcel.WriteInt32(elem);
+
+    bool result = packet_->ReadVector(parcel);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.name  : ReadVector_002
+ * @tc.number: ReadVector
+ * @tc.desc  : Test ReadVector with elem exceeding MAX_BUFFER_SIZE (should return false)
+ */
+
+HWTEST_F(LppDataPacketUnitTest, ReadVector_002, TestSize.Level1)
+{
+    MessageParcel parcel;
+
+    int64_t size = 1;
+
+    parcel.WriteInt64(size);
+
+    for (int i = 0; i < size; i++) {
+        uint32_t flag = 1;
+        parcel.WriteUint32(flag);
+    }
+
+    parcel.WriteInt64(size);
+
+    for (int i = 0; i < size; i++) {
+        int64_t pts = 1000;
+        parcel.WriteInt64(pts);
+    }
+
+    parcel.WriteInt64(size);
+
+    int elem = MAX_BUFFER_SIZE + 1;
+    parcel.WriteInt32(elem);
+
+    bool result = packet_->ReadVector(parcel);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.name  : ReadVector_003
+ * @tc.number: ReadVector
+ * @tc.desc  : Test ReadVector with elem = 0 (boundary value, should return true)
+ */
+
+HWTEST_F(LppDataPacketUnitTest, ReadVector_003, TestSize.Level1)
+{
+    MessageParcel parcel;
+
+    int64_t size = 1;
+
+    parcel.WriteInt64(size);
+
+    for (int i = 0; i < size; i++) {
+        uint32_t flag = 1;
+        parcel.WriteUint32(flag);
+    }
+
+    parcel.WriteInt64(size);
+
+    for (int i = 0; i < size; i++) {
+        int64_t pts = 1000;
+        parcel.WriteInt64(pts);
+    }
+
+    parcel.WriteInt64(size);
+
+    int elem = 0;
+    parcel.WriteInt32(elem);
+
+    bool result = packet_->ReadVector(parcel);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(packet_->size_.size(), 1);
+    EXPECT_EQ(packet_->size_[0], 0);
+}
+
+/**
+ * @tc.name  : ReadVector_004
+ * @tc.number: ReadVector
+ * @tc.desc  : Test ReadVector with elem = MAX_BUFFER_SIZE (boundary value, should return true)
+ */
+
+HWTEST_F(LppDataPacketUnitTest, ReadVector_004, TestSize.Level1)
+{
+    MessageParcel parcel;
+
+    int64_t size = 1;
+
+    parcel.WriteInt64(size);
+
+    for (int i = 0; i < size; i++) {
+        uint32_t flag = 1;
+        parcel.WriteUint32(flag);
+    }
+
+    parcel.WriteInt64(size);
+
+    for (int i = 0; i < size; i++) {
+        int64_t pts = 1000;
+        parcel.WriteInt64(pts);
+    }
+
+    parcel.WriteInt64(size);
+
+    int elem = MAX_BUFFER_SIZE;
+    parcel.WriteInt32(elem);
+
+    bool result = packet_->ReadVector(parcel);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(packet_->size_.size(), 1);
+    EXPECT_EQ(packet_->size_[0], MAX_BUFFER_SIZE);
+}
+
+/**
+ * @tc.name  : ReadVector_005
+ * @tc.number: ReadVector
+ * @tc.desc  : Test ReadVector with normal valid elem (should return true)
+ */
+
+HWTEST_F(LppDataPacketUnitTest, ReadVector_005, TestSize.Level1)
+{
+    MessageParcel parcel;
+
+    int64_t size = 3;
+
+    parcel.WriteInt64(size);
+
+    for (int i = 0; i < size; i++) {
+        uint32_t flag = 1;
+        parcel.WriteUint32(flag);
+    }
+
+    parcel.WriteInt64(size);
+
+    for (int i = 0; i < size; i++) {
+        int64_t pts = 1000 + i;
+        parcel.WriteInt64(pts);
+    }
+
+    parcel.WriteInt64(size);
+
+    int elem1 = 1024;
+    int elem2 = 2048;
+    int elem3 = 4096;
+    parcel.WriteInt32(elem1);
+    parcel.WriteInt32(elem2);
+    parcel.WriteInt32(elem3);
+
+    bool result = packet_->ReadVector(parcel);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(packet_->size_.size(), 3);
+    EXPECT_EQ(packet_->size_[0], 1024);
+    EXPECT_EQ(packet_->size_[1], 2048);
+    EXPECT_EQ(packet_->size_[2], 4096);
+}
+
+/**
+ * @tc.name  : ReadVector_006
+ * @tc.number: ReadVector
+ * @tc.desc  : Test ReadVector with mixed valid and invalid elem (should return false on invalid)
+ */
+
+HWTEST_F(LppDataPacketUnitTest, ReadVector_006, TestSize.Level1)
+{
+    MessageParcel parcel;
+
+    int64_t size = 2;
+
+    parcel.WriteInt64(size);
+
+    for (int i = 0; i < size; i++) {
+        uint32_t flag = 1;
+        parcel.WriteUint32(flag);
+    }
+
+    parcel.WriteInt64(size);
+
+    for (int i = 0; i < size; i++) {
+        int64_t pts = 1000 + i;
+        parcel.WriteInt64(pts);
+    }
+
+    parcel.WriteInt64(size);
+
+    int elem1 = 1024;
+    int elem2 = -1;
+    parcel.WriteInt32(elem1);
+    parcel.WriteInt32(elem2);
+
+    bool result = packet_->ReadVector(parcel);
+    EXPECT_FALSE(result);
 }
 } // namespace Media
 } // namespace OHOS
