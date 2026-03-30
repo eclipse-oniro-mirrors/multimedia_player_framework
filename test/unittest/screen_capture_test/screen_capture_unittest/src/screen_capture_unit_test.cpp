@@ -3469,6 +3469,12 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_compatibility_006_2, TestSize.Lev
         .audioChannels = 2,
         .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT
     };
+    AudioCaptureInfo innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
     config_.audioInfo.micCapInfo = micCapInfo;
 
     // 测试CAPTURE_FILE模式
