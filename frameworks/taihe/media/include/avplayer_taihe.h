@@ -95,6 +95,7 @@ namespace AVPlayerEvent {
     const std::string EVENT_SEI_MESSAGE_INFO = "seiMessageReceived";
     const std::string EVENT_RATE_DONE = "playbackRateDone";
     const std::string EVENT_METRICS = "metricsEvent";
+    const std::string EVENT_PLAYBACK_CONTENT_CHANGE = "playbackContentChange";
 }
 
 class AVPlayerImpl : public AVPlayerNotify {
@@ -239,6 +240,19 @@ public:
     void GetAVPlayStrategyFromStrategyTmp(AVPlayStrategy &strategy, const AVPlayStrategyTmp &strategyTmp);
     void SetPlaybackRate(double rate);
     double GetPlaybackRateSync();
+    void SetPlaylistLoopMode(int32_t mode);
+    int32_t GetPlaylistLoopMode();
+    int32_t GetCurrentMediaSource();
+    int32_t GetMediaSourceCount();
+    array<ohos::multimedia::media::MediaSource> GetMediaSources();
+    void AddPlaybackMediaSourceSync(::ohos::multimedia::media::weak::MediaSource src, optional_view<int32_t> pos);
+    void RemovePlaybackMediaSourceSync(int32_t pos);
+    void ClearPlaybackListSync();
+    void AdvanceToNextMediaSourceSync();
+    void AdvanceToPrevMediaSourceSync();
+    void AdvanceToMediaSourceSync(::taihe::string_view id);
+    void OnPlaybackContentChange(callback_view<void(int32_t, int32_t)> callback);
+    void OffPlaybackContentChange(optional_view<callback<void(int32_t, int32_t)>> callback);
 private:
     static bool IsSystemApp();
     void ResetUserParameters();
@@ -269,6 +283,10 @@ private:
     void AddMediaStreamToAVMediaSource(
         const std::shared_ptr<AVMediaSourceTmp> &srcTmp, std::shared_ptr<AVMediaSource> &mediaSource);
     bool IsLivingMaxDelayTimeValid(const AVPlayStrategyTmp &strategyTmp);
+    bool IsListMode();
+    bool IsAllowAdvanceToMediaSource();
+    OHOS::ErrCode TransferErrCode(OHOS::ErrCode errCode);
+
     std::string GetCurrentState();
     std::shared_ptr<TaskHandler<TaskRet>> GetTrackDescriptionTask(const std::unique_ptr<AVPlayerContext> &Ctx);
     std::shared_ptr<TaskHandler<TaskRet>> SetVideoWindowSizeTask(int32_t width, int32_t height);
@@ -324,6 +342,8 @@ private:
     bool getApiVersionFlag_ = true;
     bool calMaxAmplitude_ = false;
     bool seiMessageCallbackflag_ = false;
+    int32_t listLoopMode_ = 1; // PLAYLIST_LOOP_MODE_ALL
+    std::vector<ohos::multimedia::media::MediaSource> mediaSourceRefList_;
 };
 } // namespace ANI::Media
 #endif //AVPLAYER_TAIHE_H

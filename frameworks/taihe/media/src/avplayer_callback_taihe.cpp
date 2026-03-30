@@ -148,6 +148,21 @@ public:
         }
     };
 
+    struct String : public Base {
+        std::string value;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> stringRef = callback.lock();
+            CHECK_AND_RETURN_LOG(stringRef != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
+            auto func = stringRef->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
+            std::shared_ptr<taihe::callback<void(string)>> cacheCallback =
+                std::reinterpret_pointer_cast<taihe::callback<void(string)>>(func);
+            (*cacheCallback)(value);
+        }
+    };
+
     struct IntVecEnum : public Base {
         std::vector<uint32_t> valueVec;
         void UvWork() override
@@ -533,8 +548,7 @@ bool AVPlayerCallback::IsValidState(PlayerStates state, std::string &stateStr)
     return true;
 }
 
-AVPlayerCallback::AVPlayerCallback(AVPlayerNotify *listener)
-    : listener_(listener)
+void AVPlayerCallback::InitInfoFuncsPart1()
 {
     onInfoFuncs_ = {
         { INFO_TYPE_STATE_CHANGE,
@@ -582,10 +596,24 @@ AVPlayerCallback::AVPlayerCallback(AVPlayerNotify *listener)
         { INFO_TYPE_AUDIO_DEVICE_CHANGE,
             [this](const int32_t extra, const Format &infoBody) { OnAudioDeviceChangeCb(extra, infoBody); } },
         { INFO_TYPE_EOS, [this](const int32_t extra, const Format &infoBody) { OnEosCb(extra, infoBody); } },
-        { INFO_TYPE_SEEKDONE, [this](const int32_t extra, const Format &infoBody) { OnSeekDoneCb(extra, infoBody); } },
-        { INFO_TYPE_METRICS_EVENT,
-            [this](const int32_t extra, const Format &infoBody) { OnMetricsEventCb(extra, infoBody); } },
+        { INFO_TYPE_SEEKDONE, [this](const int32_t extra, const Format &infoBody) { OnSeekDoneCb(extra, infoBody); } }
     };
+}
+
+void AVPlayerCallback::InitInfoFuncsPart2()
+{
+    onInfoFuncs_[INFO_TYPE_METRICS_EVENT] =
+        [this](const int32_t extra, const Format &infoBody) { OnMetricsEventCb(extra, infoBody); };
+    onInfoFuncs_[INFO_TYPE_PLAYBACK_CONTENT_CHANGE] =
+        [this](const int32_t extra, const Format &infoBody) { OnPlaybackContentChangeCb(extra, infoBody); };
+}
+
+AVPlayerCallback::AVPlayerCallback(AVPlayerNotify *listener)
+    : listener_(listener)
+{
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    InitInfoFuncsPart1();
+    InitInfoFuncsPart2();
 }
 
 void AVPlayerCallback::NotifyIsLiveStream(const int32_t extra, const Format &infoBody)
@@ -1288,6 +1316,28 @@ void AVPlayerCallback::OnMetricsEventCb(const int32_t extra, const Format &infoB
     cb->valueVec.push_back(stallingTimeline);
     cb->valueVec.push_back(stallingDuration);
     cb->valueVec.push_back(static_cast<int64_t>(stallingMediaType));
+    AniCallback::CompleteCallback(cb, mainHandler_);
+}
+
+void AVPlayerCallback::OnPlaybackContentChangeCb(const int32_t extra, const Format &infoBody)
+{
+    (void)extra;
+    CHECK_AND_RETURN_LOG(isLoaded_.load(), "current source is unready");
+    if (refMap_.find(AVPlayerEvent::EVENT_PLAYBACK_CONTENT_CHANGE) == refMap_.end()) {
+        return;
+    }
+
+    std::string changeId;
+    if (infoBody.ContainKey(PlayerKeys::PLAYER_LIST_MEDIA_SOURCE_CHANGE_ID)) {
+        (void)infoBody.GetStringValue(PlayerKeys::PLAYER_LIST_MEDIA_SOURCE_CHANGE_ID, changeId);
+    }
+    CHECK_AND_RETURN_LOG(!changeId.empty(), "changeId is empty");
+
+    AniCallback::String *cb = new(std::nothrow) AniCallback::String();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new String");
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_PLAYBACK_CONTENT_CHANGE);
+    cb->callbackName = AVPlayerEvent::EVENT_PLAYBACK_CONTENT_CHANGE;
+    cb->value = changeId;
     AniCallback::CompleteCallback(cb, mainHandler_);
 }
 

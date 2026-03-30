@@ -92,6 +92,10 @@ optional<string> AVPlayerImpl::GetUrl()
 {
     OHOS::Media::MediaTrace trace("AVPlayerImpl::get url");
     MEDIA_LOGD("GetUrl In");
+    if (IsListMode()) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "in list mode, unsupport get url");
+        return optional<string>(std::in_place_t{}, "");
+    }
     string url = MediaTaiheUtils::ToTaiheString(url_);
     MEDIA_LOGD("GetUrl Out Current Url: %{private}s", url_.c_str());
     return optional<string>(std::in_place_t{}, url);
@@ -103,6 +107,9 @@ void AVPlayerImpl::SetUrl(optional_view<string> url)
     MEDIA_LOGD("SetUrl In");
     if (GetCurrentState() != AVPlayerState::STATE_IDLE) {
         OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set url");
+        return;
+    } else if (IsListMode()) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "in list mode, unsupport set url");
         return;
     }
     StartListenCurrentResource();
@@ -436,6 +443,11 @@ optional<AVDataSrcDescriptor> AVPlayerImpl::GetDataSrc()
     MediaTrace trace("AVPlayerImpl::getDataSrc");
     MEDIA_LOGI("TaiheGetDataSrc In");
 
+    if (IsListMode()) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "in list mode, unsupport get dataSrc");
+        return optional<AVDataSrcDescriptor>(std::nullopt);
+    }
+
     CHECK_AND_RETURN_RET_LOG(dataSrcCb_ != nullptr,
         optional<AVDataSrcDescriptor>(std::nullopt), "failed to check dataSrcCb_");
     int64_t fileSize;
@@ -459,6 +471,9 @@ void AVPlayerImpl::SetDataSrc(optional_view<AVDataSrcDescriptor> dataSrc)
 
     if (GetCurrentState() != AVPlayerState::STATE_IDLE) {
         OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set dataSrc");
+        return;
+    } else if (IsListMode()) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "in list mode, unsupport set dataSrc");
         return;
     }
     StartListenCurrentResource();
@@ -635,6 +650,11 @@ optional<ohos::multimedia::media::AVFileDescriptor> AVPlayerImpl::GetFdSrc()
 {
     MediaTrace trace("AVPlayerImpl::get fd");
     MEDIA_LOGI("TaiheGetAVFileDescriptor In");
+
+    if (IsListMode()) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "in list mode, unsupport get fd");
+        return optional<ohos::multimedia::media::AVFileDescriptor>(std::nullopt);
+    }
 
     ohos::multimedia::media::AVFileDescriptor fdSrc;
     fdSrc.fd = fileDescriptor_.fd;
@@ -1032,6 +1052,9 @@ void AVPlayerImpl::SetMediaSourceSync(ohos::multimedia::media::weak::MediaSource
     MEDIA_LOGI("SetMediaSourceSync In");
     if (GetCurrentState() != AVPlayerState::STATE_IDLE) {
         OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set mediaSource");
+        return;
+    } else if (IsListMode()) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "unsupport set mediaSource operation");
         return;
     }
     StartListenCurrentResource(); // Listen to the events of the current resource
@@ -1628,6 +1651,8 @@ void AVPlayerImpl::SetPlaybackRangeSync(int32_t startTimeMs, int32_t endTimeMs,
     } else if (modeTmp < SEEK_PREVIOUS_SYNC || modeTmp > SEEK_MODE_CLOSEST) {
         set_business_error(MSERR_EXT_API9_INVALID_PARAMETER,
             "invalid seek mode, please check seek mode");
+    } else if (IsListMode()) {
+        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "unsupport set playback range operation in list mode");
     } else {
         promiseCtx->asyncTask = EqueueSetPlayRangeTask(startTimeMs, endTimeMs, modeTmp);
         MEDIA_LOGI("0x%{public}06" PRIXPTR " taiheSetPlaybackRange EnqueueTask Out", FAKE_POINTER(this));
@@ -1924,6 +1949,33 @@ bool AVPlayerImpl::IsLivingMaxDelayTimeValid(const AVPlayStrategyTmp &strategyTm
         return false;
     }
     return true;
+}
+
+bool AVPlayerImpl::IsListMode()
+{
+    bool isListMode = false;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        isListMode = !mediaSourceRefList_.empty();
+    }
+    return isListMode;
+}
+
+bool AVPlayerImpl::IsAllowAdvanceToMediaSource()
+{
+    std::string state = GetCurrentState();
+    return state == AVPlayerState::STATE_PREPARED || state == AVPlayerState::STATE_PLAYING ||
+        state == AVPlayerState::STATE_PAUSED || state == AVPlayerState::STATE_COMPLETED ||
+        state == AVPlayerState::STATE_ERROR;
+}
+
+OHOS::ErrCode AVPlayerImpl::TransferErrCode(OHOS::ErrCode errCode)
+{
+    OHOS::ErrCode transErrCode = errCode;
+    if (transErrCode != MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE) {
+        transErrCode = static_cast<OHOS::ErrCode>(MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode)));
+    }
+    return transErrCode;
 }
 
 void AVPlayerImpl::GetAVPlayStrategyFromStrategyTmp(AVPlayStrategy &strategy, const AVPlayStrategyTmp &strategyTmp)
@@ -2309,11 +2361,19 @@ void AVPlayerImpl::PrepareSync()
     std::shared_ptr<AVPlayerContext> context = std::make_shared<AVPlayerContext>();
 
     auto state = GetCurrentState();
+    int32_t usage = static_cast<int32_t>(audioRendererInfo_.streamUsage);
     if (state != AVPlayerState::STATE_INITIALIZED &&
         state != AVPlayerState::STATE_STOPPED &&
         state != AVPlayerState::STATE_PREPARED) {
         set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not stopped or initialized, unsupport prepare operation");
+    } else if (IsListMode() && usage != OHOS::AudioStandard::STREAM_USAGE_MUSIC &&
+        usage != OHOS::AudioStandard::STREAM_USAGE_MOVIE &&
+        usage != OHOS::AudioStandard::STREAM_USAGE_GAME &&
+        usage != OHOS::AudioStandard::STREAM_USAGE_AUDIOBOOK) {
+        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "In list playback mode, StreamUsage only supports STREAM_USAGE_MUSIC, STREAM_USAGE_MOVIE,"
+            "STREAM_USAGE_GAME, or STREAM_USAGE_AUDIOBOOK.");
     } else {
         MEDIA_LOGI("0x%{public}06" PRIXPTR " TaihePrepare EnqueueTask In", FAKE_POINTER(this));
         context->asyncTask = PrepareTask();
@@ -3450,6 +3510,343 @@ void AVPlayerImpl::OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::st
     std::lock_guard<std::mutex> lock(mutex_);
     if (playerCb_ != nullptr) {
         playerCb_->OnErrorCb(errorCode, errorMsg);
+    }
+}
+
+void AVPlayerImpl::SetPlaylistLoopMode(int32_t mode)
+{
+    MediaTrace trace("AVPlayerImpl::set listLoopMode");
+    MEDIA_LOGI("SetPlaylistLoopMode In");
+
+    if (mode < static_cast<int32_t>(OHOS::Media::PLAYLIST_LOOP_MODE_ALL) ||
+        mode > static_cast<int32_t>(OHOS::Media::PLAYLIST_LOOP_MODE_NONE)) {
+        OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, listLoopMode out of range");
+        return;
+    }
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        listLoopMode_ = mode;
+    }
+    auto task = std::make_shared<TaskHandler<void>>([this, mode]() {
+        if (player_ == nullptr) {
+            return;
+        }
+        player_->SetPlaylistLoopMode(static_cast<OHOS::Media::PlaylistLoopMode>(mode));
+    });
+    (void)taskQue_->EnqueueTask(task);
+}
+
+int32_t AVPlayerImpl::GetPlaylistLoopMode()
+{
+    MediaTrace trace("AVPlayerImpl::get listLoopMode");
+    MEDIA_LOGI("GetPlaylistLoopMode In");
+
+    int32_t listLoopMode = PLAYLIST_LOOP_MODE_ALL;
+    if (player_ != nullptr) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        listLoopMode_ = static_cast<int32_t>(player_->GetPlaylistLoopMode());
+        listLoopMode = listLoopMode_;
+    }
+    return listLoopMode;
+}
+
+int32_t AVPlayerImpl::GetCurrentMediaSource()
+{
+    MediaTrace trace("AVPlayerImpl::getCurrentMediaSource");
+    MEDIA_LOGI("GetCurrentMediaSource In");
+
+    if (!IsListMode()) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "unsupport get current mediaSource operation");
+        return 0;
+    }
+
+    int32_t index = 0;
+    // if (player_ == nullptr) {
+    //     return index;
+    // }
+    // (void)player_->GetCurrentMediaSource(index);
+    return index;
+}
+
+int32_t AVPlayerImpl::GetMediaSourceCount()
+{
+    MediaTrace trace("AVPlayerImpl::getMediaSourceCount");
+    MEDIA_LOGI("GetMediaSourceCount In");
+
+    if (!IsListMode()) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "unsupport get current mediaSource count operation");
+        return 0;
+    }
+
+    if (player_ == nullptr) {
+        return 0;
+    }
+    int32_t count = 0;
+    (void)player_->GetMediaSourceCount(count);
+    return count;
+}
+
+array<ohos::multimedia::media::MediaSource> AVPlayerImpl::GetMediaSources()
+{
+    MediaTrace trace("AVPlayerImpl::getMediaSources");
+    MEDIA_LOGI("GetMediaSources In");
+
+    std::vector<ohos::multimedia::media::MediaSource> emptyVec;
+    if (!IsListMode()) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "unsupport get media sources operation");
+        return array<ohos::multimedia::media::MediaSource>(copy_data_t{}, emptyVec.data(), emptyVec.size());
+    }
+
+    std::vector<std::shared_ptr<OHOS::Media::AVMediaSource>> mediaSourcesVec;
+    if (player_ == nullptr) {
+        return array<ohos::multimedia::media::MediaSource>(copy_data_t{}, emptyVec.data(), emptyVec.size());
+    }
+    return array<ohos::multimedia::media::MediaSource>(copy_data_t{}, mediaSourceRefList_.data(),
+        mediaSourceRefList_.size());
+}
+
+void AVPlayerImpl::AddPlaybackMediaSourceSync(::ohos::multimedia::media::weak::MediaSource src,
+    optional_view<int32_t> pos)
+{
+    MediaTrace trace("AVPlayerImpl::addPlaybackMediaSourceSync");
+    if (!IsListMode() && GetCurrentState() != AVPlayerState::STATE_IDLE) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport add mediaSource");
+        return;
+    }
+    StartListenCurrentResource(); // Listen to the events of the current resource
+    std::shared_ptr<AVMediaSourceTmp> srcTmp = MediaSourceImpl::GetMediaSource(src);
+    if (srcTmp == nullptr) {
+        OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, failed to get mediaSource");
+        return;
+    }
+    std::shared_ptr<AVMediaSource> mediaSource = GetAVMediaSource(src, srcTmp);
+    if (mediaSource == nullptr) {
+        OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, failed to create mediaSource");
+        return;
+    }
+    AddMediaStreamToAVMediaSource(srcTmp, mediaSource);
+
+    int32_t insertPos = -1;
+    if (pos.has_value()) {
+        insertPos = pos.value();
+    }
+    ohos::multimedia::media::MediaSource mediaSourceTaihe(src);
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this, mediaSource, pos = insertPos, mediaSourceTaihe]() {
+        if (player_ == nullptr) {
+            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "avplayer is deconstructed");
+        }
+        // int32_t ret = player_->AddPlaybackMediaSource(mediaSource, pos);
+        int32_t ret = 0;
+        if (ret != MSERR_OK) {
+            return TaskRet(TransferErrCode(static_cast<OHOS::ErrCode>(ret)), "failed to addPlaybackMediaSource");
+        }
+        std::lock_guard<std::mutex> lock(mutex_);
+        mediaSourceRefList_.insert(mediaSourceRefList_.begin() + pos, mediaSourceTaihe);
+        return TaskRet(MSERR_EXT_API9_OK, "Success");
+    });
+    (void)taskQue_->EnqueueTask(task);
+}
+
+void AVPlayerImpl::RemovePlaybackMediaSourceSync(int32_t pos)
+{
+    MediaTrace trace("AVPlayerImpl::removePlaybackMediaSourceSync");
+    if (!IsListMode()) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "unsupport remove mediaSource operation");
+        return;
+    }
+    int32_t rmPos = pos;
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this, pos = rmPos]() {
+        if (player_ == nullptr) {
+            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "avplayer is deconstructed");
+        }
+        int32_t ret = player_->RemovePlaybackMediaSource("pos");
+        if (ret != MSERR_OK) {
+            return TaskRet(TransferErrCode(static_cast<OHOS::ErrCode>(ret)), "failed to removePlaybackMediaSource");
+        }
+        std::lock_guard<std::mutex> lock(mutex_);
+        mediaSourceRefList_.erase(mediaSourceRefList_.begin() + pos);
+        return TaskRet(MSERR_EXT_API9_OK, "Success");
+    });
+    (void)taskQue_->EnqueueTask(task);
+}
+
+void AVPlayerImpl::ClearPlaybackListSync()
+{
+    MediaTrace trace("AVPlayerImpl::clearPlaybackListSync");
+    if (!IsListMode()) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "unsupport clear mediaSource operation");
+        return;
+    }
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this]() {
+        if (player_ == nullptr) {
+            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "avplayer is deconstructed");
+        }
+        int32_t ret = player_->ClearPlaybackList();
+        if (ret != MSERR_OK) {
+            return TaskRet(MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret)),
+                "failed to clearPlaybackList");
+        }
+        std::lock_guard<std::mutex> lock(mutex_);
+        mediaSourceRefList_.clear();
+        return TaskRet(MSERR_EXT_API9_OK, "Success");
+    });
+    (void)taskQue_->EnqueueTask(task);
+}
+
+void AVPlayerImpl::AdvanceToNextMediaSourceSync()
+{
+    MediaTrace trace("AVPlayerImpl::advanceToNextMediaSource");
+    MEDIA_LOGI("AdvanceToNextMediaSourceSync In");
+
+    if (!IsListMode()) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "unsupport advance to nextItem operation");
+        return;
+    } else if (IsListMode() && !IsAllowAdvanceToMediaSource()) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "In list playback mode, cur state advance to nextItem operation is unsupported");
+        return;
+    }
+
+    int32_t usage = static_cast<int32_t>(audioRendererInfo_.streamUsage);
+    int32_t mediaSourceCount = GetMediaSourceCount();
+    if (mediaSourceCount > 0 && usage != OHOS::AudioStandard::STREAM_USAGE_MUSIC &&
+        usage != OHOS::AudioStandard::STREAM_USAGE_MOVIE &&
+        usage != OHOS::AudioStandard::STREAM_USAGE_GAME &&
+        usage != OHOS::AudioStandard::STREAM_USAGE_AUDIOBOOK) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "In list playback mode, StreamUsage only supports STREAM_USAGE_MUSIC, STREAM_USAGE_MOVIE,"
+            "STREAM_USAGE_GAME, or STREAM_USAGE_AUDIOBOOK.");
+        return;
+    } else if (mediaSourceCount == 0) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "unsupport advance to nextItem operation");
+        return;
+    }
+
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this]() {
+        if (player_ == nullptr) {
+            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "avplayer is deconstructed");
+        }
+        int32_t ret = player_->AdvanceToNextMediaSource();
+        if (ret != MSERR_OK) {
+            return TaskRet(MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret)),
+                "failed to advanceToNextMediaSource");
+        }
+        return TaskRet(MSERR_EXT_API9_OK, "Success");
+    });
+    (void)taskQue_->EnqueueTask(task);
+}
+
+void AVPlayerImpl::AdvanceToPrevMediaSourceSync()
+{
+    MediaTrace trace("AVPlayerImpl::advanceToPrevMediaSource");
+    MEDIA_LOGI("AdvanceToPrevMediaSourceSync In");
+
+    if (!IsListMode()) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "unsupport advance to prevItem operation");
+        return;
+    } else if (IsListMode() && !IsAllowAdvanceToMediaSource()) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "In list playback mode, cur state advance to prevItem operation is unsupported");
+        return;
+    }
+
+    int32_t usage = static_cast<int32_t>(audioRendererInfo_.streamUsage);
+    int32_t mediaSourceCount = GetMediaSourceCount();
+    if (mediaSourceCount > 0 && usage != OHOS::AudioStandard::STREAM_USAGE_MUSIC &&
+        usage != OHOS::AudioStandard::STREAM_USAGE_MOVIE &&
+        usage != OHOS::AudioStandard::STREAM_USAGE_GAME &&
+        usage != OHOS::AudioStandard::STREAM_USAGE_AUDIOBOOK) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "In list playback mode, StreamUsage only supports STREAM_USAGE_MUSIC, STREAM_USAGE_MOVIE,"
+            "STREAM_USAGE_GAME, or STREAM_USAGE_AUDIOBOOK.");
+        return;
+    } else if (mediaSourceCount == 0) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "unsupport advance to prevItem operation");
+        return;
+    }
+
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this]() {
+        if (player_ == nullptr) {
+            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "avplayer is deconstructed");
+        }
+        int32_t ret = player_->AdvanceToPrevMediaSource();
+        if (ret != MSERR_OK) {
+            return TaskRet(MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret)),
+                "failed to advanceToPrevMediaSource");
+        }
+        return TaskRet(MSERR_EXT_API9_OK, "Success");
+    });
+    (void)taskQue_->EnqueueTask(task);
+}
+
+void AVPlayerImpl::AdvanceToMediaSourceSync(::taihe::string_view id)
+{
+    MediaTrace trace("AVPlayerImpl::advanceToMediaSource");
+    MEDIA_LOGI("AdvanceToMediaSourceSync In");
+
+    if (!IsListMode()) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "unsupport advance to media source operation");
+        return;
+    } else if (IsListMode() && !IsAllowAdvanceToMediaSource()) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "In list playback mode, cur state advance to Item operation is unsupported");
+        return;
+    }
+
+    int32_t usage = static_cast<int32_t>(audioRendererInfo_.streamUsage);
+    int32_t mediaSourceCount = GetMediaSourceCount();
+    if (mediaSourceCount > 0 && usage != OHOS::AudioStandard::STREAM_USAGE_MUSIC &&
+        usage != OHOS::AudioStandard::STREAM_USAGE_MOVIE &&
+        usage != OHOS::AudioStandard::STREAM_USAGE_GAME &&
+        usage != OHOS::AudioStandard::STREAM_USAGE_AUDIOBOOK) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "In list playback mode, StreamUsage only supports STREAM_USAGE_MUSIC, STREAM_USAGE_MOVIE,"
+            "STREAM_USAGE_GAME, or STREAM_USAGE_AUDIOBOOK.");
+        return;
+    } else if (mediaSourceCount == 0) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "unsupport advance to media source operation");
+        return;
+    }
+    std::string mediaSourceId(id);
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this, mediaSourceId]() {
+        if (player_ == nullptr) {
+            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "avplayer is deconstructed");
+        }
+        int32_t ret = player_->AdvanceToMediaSource(mediaSourceId);
+        if (ret != MSERR_OK) {
+            return TaskRet(TransferErrCode(static_cast<OHOS::ErrCode>(ret)), "failed to advanceToMediaSource");
+        }
+        return TaskRet(MSERR_EXT_API9_OK, "Success");
+    });
+    (void)taskQue_->EnqueueTask(task);
+}
+
+void AVPlayerImpl::OnPlaybackContentChange(callback_view<void(int32_t, int32_t)> callback)
+{
+    MediaTrace trace("AVPlayerImpl::OnPlaybackContentChange");
+    MEDIA_LOGD("TaiheOnPlaybackContentChange In");
+
+    if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to on event");
+        return;
+    }
+    ani_env *env = taihe::get_env();
+    std::shared_ptr<taihe::callback<void(int32_t, int32_t)>> taiheCallback =
+        std::make_shared<taihe::callback<void(int32_t, int32_t)>>(callback);
+    std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
+    std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
+    SaveCallbackReference(AVPlayerEvent::EVENT_PLAYBACK_CONTENT_CHANGE, autoRef);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheOnPlaybackContentChange callbackName: playbackContentChange success",
+        FAKE_POINTER(this));
+}
+
+void AVPlayerImpl::OffPlaybackContentChange(optional_view<callback<void(int32_t, int32_t)>> callback)
+{
+    MediaTrace trace("AVPlayerImpl::OffPlaybackContentChange");
+    MEDIA_LOGD("TaiheOffPlaybackContentChange In");
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (playerCb_ != nullptr) {
+        playerCb_->ClearCallbackReference(AVPlayerEvent::EVENT_PLAYBACK_CONTENT_CHANGE);
     }
 }
 

@@ -70,6 +70,7 @@ private:
     void OnBufferingUpdateCb(const int32_t extra, const Format &infoBody);
     void OnSubtitleUpdateCb(const int32_t extra, const Format &infoBody);
     void OnMessageCb(const int32_t extra, const Format &infoBody);
+    void OnPlaybackContentChangeCb(const int32_t extra, const Format &infoBody);
     void OnVideoSizeChangedCb(const int32_t extra, const Format &infoBody);
     void OnAudioInterruptCb(const int32_t extra, const Format &infoBody);
     void OnAudioDeviceChangeCb(const int32_t extra, const Format &infoBody);

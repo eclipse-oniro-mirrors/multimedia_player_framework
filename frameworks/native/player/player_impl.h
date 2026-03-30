@@ -71,6 +71,7 @@ public:
     int32_t GetPlaybackSpeed(PlaybackRateMode &mode) override;
     int32_t GetPlaybackRate(float &rate) override;
     int32_t SetLooping(bool loop) override;
+    void ResetListParameters() override;
 #ifdef SUPPORT_VIDEO
     int32_t SetVideoSurface(sptr<Surface> surface) override;
 #endif
@@ -112,10 +113,36 @@ public:
     int32_t GetTrackDescription(Format &format, uint32_t trackIndex) override;
     int32_t RegisterDeviceCapability(IsAudioPassthrough callback, GetDolbyList getDolbyList) override;
     bool IsLiveSeek() override;
+    int32_t AddPlaybackMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, const std::string &srcId,
+        std::string &generateSrcId) override;
+    int32_t RemovePlaybackMediaSource(std::string srcId) override;
+    int32_t ClearPlaybackList() override;
+    int32_t GetCurrentMediaSource(std::string &srcId) const override;
+    int32_t GetMediaSourceCount(int32_t &count) const override;
+    int32_t GetMediaSources(std::vector<std::shared_ptr<AVMediaSource>> &mediaSources) const override;
+    int32_t AdvanceToNextMediaSource() override;
+    int32_t AdvanceToPrevMediaSource() override;
+    int32_t AdvanceToMediaSource(const std::string &srcId) override;
+    void SetPlaylistLoopMode(PlaylistLoopMode mode) override;
+    PlaylistLoopMode GetPlaylistLoopMode() const override;
 private:
+    using MediaSourceIterator = std::vector<std::pair<std::string, std::shared_ptr<AVMediaSource>>>::iterator;
     void ResetSeekVariables();
     void HandleSeekDoneInfo(PlayerOnInfoType type, int32_t extra);
+    void HandleListStateInfo(PlayerStates state, bool &updateState, int32_t &extra);
+    void HandleListEOSInfo(bool &notifyEOS);
+    void HandleRemovePlaybackMediaSource(bool isLast, MediaSourceIterator nextIt);
     int32_t SetSourceTask(int32_t fd, int64_t offset, int64_t size);
+    bool IsInListMode() const;
+    bool ShouldLoopCurrent() const;
+    bool ShouldShuffle() const;
+    void RestoreLoopIfNeeded(bool wasInListMode, bool loop);
+    int32_t SelectNextIndex(bool isNext, MediaSourceIterator &nextIndex);
+    int32_t SwitchToIndex(MediaSourceIterator nextIndex);
+    int32_t SwitchSetMediaSource(MediaSourceIterator nextIndex);
+    void NotifyPlaybackContentChange(const std::string &changeId);
+    void CheckPlaybackContentChange();
+    MediaSourceIterator FindMediaSource(const std::string &id);
     std::recursive_mutex recMutex_;
     int32_t mCurrentPosition = INT32_MIN;
     PlayerSeekMode mCurrentSeekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
@@ -130,6 +157,16 @@ private:
     sptr<Surface> surface_ = nullptr;
     HiviewDFX::HiTraceId traceId_;
     std::mutex cbMutex_;
+
+    std::vector<std::pair<std::string, std::shared_ptr<AVMediaSource>>> itemList_; // media source list, protected by listMutex_
+    std::string curSrcId_ {}; // current playing media source index, protected by listMutex_
+    PlaylistLoopMode listLoopMode_ = PLAYLIST_LOOP_MODE_ALL; // list loop mode, protected by listMutex_
+    bool userLoop_ = false; // user set loop or not, only used, protected by listMutex_
+    mutable std::mutex listMutex_; // protects itemList_, currItemIdx_, listLoopMode_ and userLoop_
+
+    bool isSwitchingItem_ = false; // whether switching item when receive playback complete, protected by listMutex_
+    PlayerStates listState_ = PLAYER_IDLE; // the player state, protected by listMutex_
+    bool isFirstSelect_ = false; // whether first select item, protected by listMutex_
 };
 
 class PlayerImplCallback : public PlayerCallback {
