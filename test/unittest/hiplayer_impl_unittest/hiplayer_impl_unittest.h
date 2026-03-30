@@ -214,6 +214,7 @@ public:
     MOCK_METHOD(void, SetIsNotPrepareBeforeStart, (bool isNotPrepareBeforeStart), ());
     MOCK_METHOD(void, SetIsEnableReselectVideoTrack, (bool isEnable), ());
     MOCK_METHOD(void, SetApiVersion, (int32_t apiVersion), ());
+    MOCK_METHOD(void, SetTrackSelectionFilter, (const TrackSelectionFilter& trackFilter), ());
     MOCK_METHOD(bool, IsLocalFd, (), ());
     MOCK_METHOD(bool, IsFlvLiveStream, (), ());
     MOCK_METHOD(Status, RebootPlugin, (), ());

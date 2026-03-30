@@ -33,6 +33,12 @@ using namespace std;
 using namespace testing;
 using namespace testing::ext;
 namespace {
+constexpr int32_t TEST_MAX_VIDEO_BITRATE = 32000;
+constexpr int32_t TEST_MIN_VIDEO_WIDTH = 640;
+constexpr int32_t TEST_MIN_VIDEO_HEIGHT = 360;
+const std::string TEST_TRACK_FILTER_AUDIO_MIME = "audio/aac";
+const std::string TEST_TRACK_FILTER_SUBTITLE_LANGUAGE = "en";
+const std::string TEST_FILTER_NAME = "testname";
 constexpr int32_t AUDIO_TRACK_EVENT_INDEX = 0;
 constexpr int32_t INVALID_AUDIO_TRACK_ID = -1;
 const std::string TEST_AUDIO_MIME = "audio/test";
@@ -905,6 +911,34 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_ReportAllErrorEvents_001, TestSize.Leve
         EXPECT_EQ(std::get<1>(actualEvents[i]), std::get<1>(g_errorEvents[i]));
         EXPECT_EQ(std::get<2>(actualEvents[i]), std::get<2>(g_errorEvents[i]));
     }
+}
+
+// @tc.name     Test DoInitDemuxer API
+// @tc.number   PHIUT_DoInitDemuxer_001
+// @tc.desc     Test hasTrackSelectionFilter_ == true.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_DoInitDemuxer_001, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    auto mockPipeline = std::make_shared<NiceMock<MockPipeline>>();
+    auto mockDemuxer = std::make_shared<NiceMock<MockDemuxerFilter>>(TEST_FILTER_NAME, FilterType::VIDEO_CAPTURE);
+    EXPECT_CALL(*mockDemuxer, DoSetPerfRecEnabled(false)).WillOnce(Return(Status::OK));
+    EXPECT_CALL(*mockDemuxer, Init(_, _, _)).Times(1);
+    hiplayer_->pipeline_ = mockPipeline;
+    hiplayer_->demuxer_ = mockDemuxer;
+    hiplayer_->hasTrackSelectionFilter_.store(true);
+    hiplayer_->trackSelectionFilter_.maxVideoBitrate = TEST_MAX_VIDEO_BITRATE;
+    hiplayer_->trackSelectionFilter_.minVideoResolution = {TEST_MIN_VIDEO_WIDTH, TEST_MIN_VIDEO_HEIGHT};
+    hiplayer_->trackSelectionFilter_.preferredAudioMimeTypes = {TEST_TRACK_FILTER_AUDIO_MIME};
+    hiplayer_->trackSelectionFilter_.preferredSubtitleLanguages = {TEST_TRACK_FILTER_SUBTITLE_LANGUAGE};
+    hiplayer_->DoInitDemuxer();
+    EXPECT_TRUE(hiplayer_->hasTrackSelectionFilter_.load());
+    EXPECT_EQ(hiplayer_->trackSelectionFilter_.maxVideoBitrate, TEST_MAX_VIDEO_BITRATE);
+    EXPECT_EQ(hiplayer_->trackSelectionFilter_.minVideoResolution,
+        std::make_pair(TEST_MIN_VIDEO_WIDTH, TEST_MIN_VIDEO_HEIGHT));
+    EXPECT_EQ(hiplayer_->trackSelectionFilter_.preferredAudioMimeTypes,
+        std::vector<std::string>({TEST_TRACK_FILTER_AUDIO_MIME}));
+    EXPECT_EQ(hiplayer_->trackSelectionFilter_.preferredSubtitleLanguages,
+        std::vector<std::string>({TEST_TRACK_FILTER_SUBTITLE_LANGUAGE}));
 }
 } // namespace Media
 } // namespace OHOS
