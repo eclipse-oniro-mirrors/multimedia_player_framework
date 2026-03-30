@@ -4146,5 +4146,116 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetMultiDisplayCaptureCapability_001, 
     EXPECT_EQ(MSERR_OK, screenCaptureServer_->GetMultiDisplayCaptureCapability(displayIds, multiDisplayCapability));
     EXPECT_FALSE(multiDisplayCapability.isMultiDisplaySupport);
 }
+
+#ifdef SUPPORT_SCREEN_CAPTURE_PICKER
+#ifdef SUPPORT_PICKER_PHONE_PAD
+HWTEST_F(ScreenCaptureServerFunctionTest, BuildPickerParams_001, TestSize.Level2)
+{
+    std::string jsonStr = "R({displayId: 1})";
+    Json::Reader reader;
+    Json::Value root;
+    ASSERT_TRUE(reader.parse(jsonStr, root));
+    screenCaptureServer_->excludedWindowIDsVec_ = {1001, 1002, 1003};
+    EXPECT_FALSE(screenCaptureServer_->excludedWindowIDsVec_.empty());
+    screenCaptureServer_->BuildPickerParams(root);
+    EXPECT_TRUE(root.isMember("excludeWindowIDs"));
+    EXPECT_TRUE(root["excludeWindowsIDs"].isArray());
+    EXPECT_EQ(root["excludeWindowsIDs"].size(), 3);
+    EXPECT_EQ(root["excludeWindowsIDs"][0].asInt(), 1001);
+    EXPECT_EQ(root["excludeWindowsIDs"][1].asInt(), 1002);
+    EXPECT_EQ(root["excludeWindowsIDs"][2].asInt(), 1003);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, BuildPickerParams_002, TestSize.Level2)
+{
+    std::string jsonStr = "R({displayId: 1})";
+    Json::Reader reader;
+    Json::Value root;
+    ASSERT_TRUE(reader.parse(jsonStr, root));
+    screenCaptureServer_->excludedWindowIDsVec_ = {};
+    EXPECT_TRUE(screenCaptureServer_->excludedWindowIDsVec_.empty());
+    screenCaptureServer_->BuildPickerParams(root);
+    EXPECT_FALSE(root.isMember("excludeWindowIDs"));
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, BuildPickerParams_003, TestSize.Level2)
+{
+    std::string jsonStr = "R({displayId: 1})";
+    Json::Reader reader;
+    Json::Value root;
+    ASSERT_TRUE(reader.parse(jsonStr, root));
+    screenCaptureServer_->displayIds_ = {};
+    screenCaptureServer_->BuildPickerParams(root);
+    EXPECT_FALSE(root.isMember("excludeWindowIDs"));
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, BuildPickerParams_004, TestSize.Level2)
+{
+    std::string jsonStr = "R({displayId: 1})";
+    Json::Reader reader;
+    Json::Value root;
+    ASSERT_TRUE(reader.parse(jsonStr, root));
+    screenCaptureServer_->displayIds_ = {1, 2, 3};
+    screenCaptureServer_->BuildPickerParams(root);
+    EXPECT_TRUE(root.isMember("displayIds"));
+    EXPECT_TRUE(root["displayIds"].isArray());
+    EXPECT_EQ(root["displayIds"].size(), 3);
+    EXPECT_EQ(root["displayIds"][0].asInt(), 1);
+    EXPECT_EQ(root["displayIds"][1].asInt(), 2);
+    EXPECT_EQ(root["displayIds"][2].asInt(), 3);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, BuildPickerParams_005, TestSize.Level2)
+{
+    std::string jsonStr = "R({displayId: 1})";
+    Json::Reader reader;
+    Json::Value root;
+    ASSERT_TRUE(reader.parse(jsonStr, root));
+    screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs = {1001};
+    screenCaptureServer_->isSpecifiedWindowCapture_ = true;
+    ASSERT_NO_FATAL_FAILURE(screenCaptureServer_->BuildPickerParams(root));
+    EXPECT_TRUE(root.isMember("missionIds"));
+    EXPECT_TRUE(root["missionIds"].isArray());
+    EXPECT_EQ(root["missionIds"].size(), 1);
+    EXPECT_EQ(root["missionIds"][0].asInt(), 1001);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, BuildPickerParams_006, TestSize.Level2)
+{
+    std::string jsonStr = "R({displayId: 1})";
+    Json::Reader reader;
+    Json::Value root;
+    ASSERT_TRUE(reader.parse(jsonStr, root));
+    screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs = {1001, 1002};
+    screenCaptureServer_->isSpecifiedWindowCapture_ = true;
+    ASSERT_NO_FATAL_FAILURE(screenCaptureServer_->BuildPickerParams(root));
+    EXPECT_FALSE(root.isMember("missionIds"));
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, BuildPickerParams_007, TestSize.Level2)
+{
+    std::string jsonStr = "R({displayId: 1})";
+    Json::Reader reader;
+    Json::Value root;
+    ASSERT_TRUE(reader.parse(jsonStr, root));
+    screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs = {1001};
+    screenCaptureServer_->isSpecifiedWindowCapture_ = false;
+    ASSERT_NO_FATAL_FAILURE(screenCaptureServer_->BuildPickerParams(root));
+    EXPECT_FALSE(root.isMember("missionIds"));
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, BuildPickerParams_008, TestSize.Level2)
+{
+    std::string jsonStr = "R({displayId: 1})";
+    Json::Reader reader;
+    Json::Value root;
+    ASSERT_TRUE(reader.parse(jsonStr, root));
+    screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs = {1001, 1002};
+    screenCaptureServer_->isSpecifiedWindowCapture_ = false;
+    ASSERT_NO_FATAL_FAILURE(screenCaptureServer_->BuildPickerParams(root));
+    EXPECT_FALSE(root.isMember("missionIds"));
+}
+#endif
+#endif
 } // Media
 } // OHOS
