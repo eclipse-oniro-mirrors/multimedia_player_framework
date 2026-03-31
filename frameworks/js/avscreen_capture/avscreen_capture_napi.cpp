@@ -81,10 +81,20 @@ napi_value AVScreenCaptureNapi::Init(napi_env env, napi_value exports)
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to create reference of constructor");
 
     status = napi_set_named_property(env, exports, CLASS_NAME.c_str(), constructor);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to set constructor");
+    if (status != napi_ok) {
+        MEDIA_LOGE("Failed to set constructor");
+        (void)napi_delete_reference(env, constructor_);
+        constructor_ = nullptr;
+        return nullptr;
+    }
 
     status = napi_define_properties(env, exports, sizeof(staticProperty) / sizeof(staticProperty[0]), staticProperty);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define static function");
+    if (status != napi_ok) {
+        MEDIA_LOGE("Failed to define static function");
+        (void)napi_delete_reference(env, constructor_);
+        constructor_ = nullptr;
+        return nullptr;
+    }
 
     MEDIA_LOGD("AVScreenCaptureNapi Init success");
     return exports;
