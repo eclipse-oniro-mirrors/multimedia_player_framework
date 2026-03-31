@@ -343,7 +343,8 @@ bool AudioDataSourceFuzzer::FuzzGetSize()
         std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
     
     int64_t sizeResult = 0;
-    if (GetData<uint8_t>() % 2 == 0) {
+    uint8_t eventType = GetData<uint8_t>() % 2;
+    if (eventType == 0) {
         screenCaptureServer_->ReleaseInnerAudioBuffer();
     }
     audioDataSource->GetSize(sizeResult);
