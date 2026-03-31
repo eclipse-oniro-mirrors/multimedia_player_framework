@@ -96,10 +96,13 @@ public:
     void PrintMetadata();
     std::string ResolveMetadata(int32_t key);
     std::unordered_map<int32_t, std::string> ResolveMetadata();
+    MetadataResult GetAVMetadataWithTimeout(int64_t timeoutMs);
     std::shared_ptr<PixelMap> FetchFrameAtTime(int64_t timeUs, int32_t option, PixelMapParams param);
     std::shared_ptr<PixelMap> FetchFrameYuv(int64_t timeUs, int32_t option, PixelMapParams param);
     std::shared_ptr<PixelMap> FetchScaledFrameYuv(int64_t timeUs, int32_t option, PixelMapParams param);
     std::shared_ptr<AVSharedMemory> FetchArtPicture();
+    FetchFrameResult FetchScaledFrameYuvWithTimeout(int64_t timeUs, int32_t option, PixelMapParams param,
+        int64_t timeoutMs);
     void Release();
     void FrameToFile(std::shared_ptr<PixelMap> frame, const char *fileName, int64_t timeUs, int32_t queryOption);
     void SurfaceToFile(std::shared_ptr<AVSharedMemory> frame, const char *fileName);

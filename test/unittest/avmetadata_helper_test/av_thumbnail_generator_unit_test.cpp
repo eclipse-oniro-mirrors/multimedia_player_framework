@@ -115,6 +115,102 @@ HWTEST_F(AVThumbnailGeneratorUnitTest, FetchFrameAtTime, TestSize.Level1)
 }
 
 /**
+ * @tc.name: FetchFrameYuvWithTimeout
+ * @tc.desc: FetchFrameYuvWithTimeout
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVThumbnailGeneratorUnitTest, FetchFrameYuvWithTimeout, TestSize.Level1)
+{
+    avThumbnailGenerator_->videoDecoder_ = std::make_shared<MediaAVCodec::MockAVCodecVideoDecoder>();
+    struct OutputConfiguration param = {-1, -1, PixelFormat::RGB_565};
+    int64_t timeUs = 0;
+    int64_t timeoutMs = 10000;
+    int32_t queryOption = AVMetadataQueryOption::AV_META_QUERY_NEXT_SYNC;
+
+    std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
+    std::shared_ptr<Meta> videoMeta = std::make_shared<Meta>();
+    std::shared_ptr<Meta> imageMeta = std::make_shared<Meta>();
+    std::vector<std::shared_ptr<Meta>> trackInfos;
+    globalMeta->SetData(Tag::MEDIA_ALBUM, "FetchFrameYuvWithTimeout");
+    globalMeta->SetData(Tag::MEDIA_ALBUM_ARTIST, "FetchFrameYuvWithTimeout");
+    globalMeta->SetData(Tag::MEDIA_ARTIST, "FetchFrameYuvWithTimeout");
+    globalMeta->SetData(Tag::MEDIA_AUTHOR, "");
+    globalMeta->SetData(Tag::MEDIA_COMPOSER, "FetchFrameYuvWithTimeout");
+    globalMeta->SetData(Tag::MEDIA_DURATION, 10040000);
+    globalMeta->SetData(Tag::MEDIA_GENRE, "Lyrical");
+    globalMeta->SetData(Tag::MEDIA_HAS_AUDIO, true);
+    globalMeta->SetData(Tag::MEDIA_HAS_VIDEO, true);
+    globalMeta->SetData(Tag::MEDIA_TITLE, "test");
+    globalMeta->SetData(Tag::MEDIA_TRACK_COUNT, "3");
+    globalMeta->SetData(Tag::MEDIA_DATE, "2026");
+    globalMeta->SetData(Tag::MEDIA_FILE_TYPE, Plugins::FileType::MP4);
+ 
+    videoMeta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    videoMeta->SetData(Tag::VIDEO_HEIGHT, "480");
+    videoMeta->SetData(Tag::VIDEO_WIDTH, "720");
+    videoMeta->SetData(Tag::MIME_TYPE, "video/mp4");
+    imageMeta->SetData(Tag::MIME_TYPE, "image");
+    trackInfos.push_back(videoMeta);
+    trackInfos.push_back(imageMeta);
+    trackInfos.push_back(nullptr);
+ 
+    EXPECT_CALL(*mockMediaDemuxer_, GetGlobalMetaInfo()).WillRepeatedly(Return(globalMeta));
+    EXPECT_CALL(*mockMediaDemuxer_, GetStreamMetaInfo()).WillRepeatedly(Return(trackInfos));
+    EXPECT_CALL(*mockMediaDemuxer_, SeekTo).WillRepeatedly(Return(Status::OK));
+    auto result = avThumbnailGenerator_->FetchFrameYuvWithTimeout(timeUs, queryOption, param, timeoutMs);
+    EXPECT_TRUE(result.avbuffer == nullptr);
+}
+
+/**
+ * @tc.name: FetchFrameYuvsWithTimeout
+ * @tc.desc: FetchFrameYuvsWithTimeout
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVThumbnailGeneratorUnitTest, FetchFrameYuvsWithTimeout, TestSize.Level1)
+{
+    avThumbnailGenerator_->videoDecoder_ = std::make_shared<MediaAVCodec::MockAVCodecVideoDecoder>();
+    struct OutputConfiguration param = {-1, -1, PixelFormat::RGB_565};
+    int64_t timeUs = 0;
+    int64_t timeoutMs = 7000;
+    int32_t queryOption = AVMetadataQueryOption::AV_META_QUERY_NEXT_SYNC;
+
+    std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
+    std::shared_ptr<Meta> videoMeta = std::make_shared<Meta>();
+    std::shared_ptr<Meta> imageMeta = std::make_shared<Meta>();
+    std::vector<std::shared_ptr<Meta>> trackInfos;
+    globalMeta->SetData(Tag::MEDIA_ALBUM, "FetchFrameYuvWithTimeout");
+    globalMeta->SetData(Tag::MEDIA_ALBUM_ARTIST, "FetchFrameYuvWithTimeout");
+    globalMeta->SetData(Tag::MEDIA_ARTIST, "FetchFrameYuvWithTimeout");
+    globalMeta->SetData(Tag::MEDIA_AUTHOR, "");
+    globalMeta->SetData(Tag::MEDIA_COMPOSER, "FetchFrameYuvWithTimeout");
+    globalMeta->SetData(Tag::MEDIA_DURATION, 10040000);
+    globalMeta->SetData(Tag::MEDIA_GENRE, "Lyrical");
+    globalMeta->SetData(Tag::MEDIA_HAS_AUDIO, true);
+    globalMeta->SetData(Tag::MEDIA_HAS_VIDEO, true);
+    globalMeta->SetData(Tag::MEDIA_TITLE, "test");
+    globalMeta->SetData(Tag::MEDIA_TRACK_COUNT, "3");
+    globalMeta->SetData(Tag::MEDIA_DATE, "2026");
+    globalMeta->SetData(Tag::MEDIA_FILE_TYPE, Plugins::FileType::MP4);
+ 
+    videoMeta->SetData(Tag::VIDEO_ROTATION, Plugins::VideoRotation::VIDEO_ROTATION_0);
+    videoMeta->SetData(Tag::VIDEO_HEIGHT, "480");
+    videoMeta->SetData(Tag::VIDEO_WIDTH, "720");
+    videoMeta->SetData(Tag::MIME_TYPE, "video/mp4");
+    imageMeta->SetData(Tag::MIME_TYPE, "image");
+    trackInfos.push_back(videoMeta);
+    trackInfos.push_back(imageMeta);
+    trackInfos.push_back(nullptr);
+ 
+    EXPECT_CALL(*mockMediaDemuxer_, GetGlobalMetaInfo()).WillRepeatedly(Return(globalMeta));
+    EXPECT_CALL(*mockMediaDemuxer_, GetStreamMetaInfo()).WillRepeatedly(Return(trackInfos));
+    EXPECT_CALL(*mockMediaDemuxer_, SeekTo).WillRepeatedly(Return(Status::OK));
+    bool isTimeout = false;
+    auto buffer = avThumbnailGenerator_->FetchFrameYuvsWithTimeout(timeUs, queryOption, param, isTimeout, timeoutMs);
+    EXPECT_TRUE(buffer == nullptr);
+    EXPECT_TRUE(isTimeout == false);
+}
+
+/**
  * @tc.name: OnInputBufferAvailable
  * @tc.desc: OnInputBufferAvailable
  * @tc.type: FUNC

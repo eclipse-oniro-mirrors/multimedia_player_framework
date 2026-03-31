@@ -121,6 +121,12 @@ std::string AVMetadataMock::ResolveMetadata(int32_t key)
     return avMetadataHelper_->ResolveMetadata(key);
 }
 
+MetadataResult AVMetadataMock::GetAVMetadataWithTimeout(int64_t timeoutMs)
+{
+    UNITTEST_INFO_LOG("%s", __FUNCTION__);
+    return avMetadataHelper_->GetAVMetadataWithTimeout(timeoutMs);
+}
+
 std::shared_ptr<PixelMap> AVMetadataMock::FetchFrameAtTime(int64_t timeUs, int32_t option, PixelMapParams param)
 {
     UNITTEST_INFO_LOG("%s", __FUNCTION__);
@@ -137,6 +143,13 @@ std::shared_ptr<PixelMap> AVMetadataMock::FetchScaledFrameYuv(int64_t timeUs, in
 {
     UNITTEST_INFO_LOG("%s", __FUNCTION__);
     return avMetadataHelper_->FetchScaledFrameYuv(timeUs, option, param);
+}
+
+FetchFrameResult AVMetadataMock::FetchScaledFrameYuvWithTimeout(int64_t timeUs, int32_t option,
+    PixelMapParams param, int64_t timeoutMs)
+{
+    UNITTEST_INFO_LOG("%s", __FUNCTION__);
+    return avMetadataHelper_->FetchScaledFrameYuvWithTimeout(timeUs, option, param, timeoutMs);
 }
 
 std::shared_ptr<AVSharedMemory> AVMetadataMock::FetchArtPicture()

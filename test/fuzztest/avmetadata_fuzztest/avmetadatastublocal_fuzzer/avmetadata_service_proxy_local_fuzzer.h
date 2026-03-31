@@ -52,6 +52,10 @@ public:
     {
         return 0;
     }
+    MetadataResult GetAVMetadataWithTimeout(int64_t timeoutMs) override
+    {
+        return MetadataResult(nullptr, false);
+    }
     std::shared_ptr<Meta> GetAVMetadata() override
     {
         return nullptr;
@@ -70,8 +74,18 @@ public:
     {
         return nullptr;
     }
+    FetchFrameResult FetchFrameYuvWithTimeout(
+        int64_t timeUs, int32_t option, const OutputConfiguration &param, int64_t timeoutMs) override
+    {
+        return FetchFrameResult(nullptr, nullptr, false);
+    }
     int32_t FetchFrameYuvs(const std::vector<int64_t>& timeUs,
         int32_t option, const PixelMapParams &param) override
+    {
+        return 0;
+    }
+    int32_t FetchFrameYuvsWithTimeout(const std::vector<int64_t>& timeUs,
+        int32_t option, const PixelMapParams &param, int64_t timeoutMs) override
     {
         return 0;
     }

@@ -148,6 +148,25 @@ public:
      * Fetch a representative video frame near a given timestamp by considering the given
      * option if possible, and return a video frame with given parameters. This method must be
      * called after the SetSource.
+     * @param timeUs The time position in microseconds where the frame will be fetched.
+     * When fetching the frame at the given time position, there is no guarantee that
+     * the video source has a frame located at the position. When this happens, a frame
+     * nearby will be returned. If timeUs is negative, time position and option will ignored,
+     * and any frame that the implementation considers as representative may be returned.
+     * @param option the hint about how to fetch a frame, see {@link AVMetadataQueryOption}
+     * @param param the desired configuration of returned video frame, see {@link OutputConfiguration}.
+     * @param timeoutMs The timeout in milliseconds for fetching the frame. If the operation
+     * exceeds this time, it will return an error.
+     * @return Returns a FetchFrameResult containing the fetched frame data, which includes
+     * the AVBuffer, PixelMap, and timeout status.
+     */
+    virtual FetchFrameResult FetchFrameYuvWithTimeout(
+        int64_t timeUs, int32_t option, const OutputConfiguration &param, int64_t timeoutMs) = 0;
+
+    /**
+     * Fetch a representative video frame near a given timestamp by considering the given
+     * option if possible, and return a video frame with given parameters. This method must be
+     * called after the SetSource.
      * @param timeMs Every time position in microseconds in vector where the frame will be fetched.
      * When fetching the frame at the given time position, there is no guarantee that
      * the video source has a frame located at the position. When this happens, a frame
@@ -163,10 +182,35 @@ public:
         int64_t timeUs, int32_t option, const OutputConfiguration &param, bool &errCallback) = 0;
 
     /**
+     * Fetch a representative video frame near a given timestamp by considering the given
+     * option if possible, and return a video frame with given parameters. This method must be
+     * called after the SetSource.
+     * @param timeUs Every time position in microseconds in vector where the frame will be fetched.
+     * When fetching the frame at the given time position, there is no guarantee that
+     * the video source has a frame located at the position. When this happens, a frame
+     * nearby will be returned. If timeUs is negative, time position and option will ignored,
+     * and any frame that the implementation considers as representative may be returned.
+     * @param option the hint about how to fetch a frame, see {@link AVMetadataQueryOption}
+     * @param param the desired configuration of returned video frame, see {@link OutputConfiguration}.
+     * @param isTimeout Output parameter indicating whether the operation timed out.
+     * @param timeoutMs The timeout in milliseconds for fetching the frame. If the operation
+     * exceeds this time, isTimeout will be set to true.
+     * @return Returns a chunk of shared memory containing a scaled video frame, which
+     * can be null, if such a frame cannot be fetched.
+     */
+    virtual std::shared_ptr<AVBuffer> FetchFrameYuvsWithTimeout(int64_t timeUs, int32_t option,
+        const OutputConfiguration &param, bool &isTimeout, int64_t timeoutMs) = 0;
+
+    /**
      * Set interrupt state to demuxer and source
      * @param isInterruptNeeded : If should interrupt demuxer and source
      */
     virtual void SetInterruptState(bool isInterruptNeeded) {}
+
+    /**
+     * Stop demuxer and source
+     */
+    virtual void StopDemuxer() {}
 };
 } // namespace Media
 } // namespace OHOS

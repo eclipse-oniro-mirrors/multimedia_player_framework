@@ -707,6 +707,60 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
     return avBuffer_;
 }
 
+FetchFrameResult AVThumbnailGenerator::FetchFrameYuvWithTimeout(int64_t timeUs, int32_t option,
+    const OutputConfiguration &param, int64_t timeoutMs)
+{
+    MEDIA_LOGI("Fetch frame 0x%{public}06" PRIXPTR " timeUs:%{public}" PRId64 ", option:%{public}d,"
+        "dstWidth:%{public}d, dstHeight:%{public}d, colorFormat:%{public}d, timeoutMs:%{public}" PRId64 "ms",
+        FAKE_POINTER(this), timeUs, option, param.dstWidth, param.dstHeight,
+        static_cast<int32_t>(param.colorFormat), timeoutMs);
+    CHECK_AND_RETURN_RET_LOG(mediaDemuxer_ != nullptr, FetchFrameResult(nullptr, nullptr, false),
+        "FetchFrameAtTime demuxer is nullptr");
+    ResetParamsBeforeFetchFrame(timeUs, option, param);
+
+    trackInfo_ = GetVideoTrackInfo();
+    CHECK_AND_RETURN_RET_LOG(trackInfo_ != nullptr, FetchFrameResult(nullptr, nullptr, false),
+        "FetchFrameAtTime trackInfo_ is nullptr.");
+ 
+    mediaDemuxer_->SelectTrack(trackIndex_);
+    int64_t realSeekTime = timeUs;
+    int64_t seekTimeCostMs = 0;
+    auto res = SeekToTime(Plugins::Us2Ms(timeUs), static_cast<Plugins::SeekMode>(option), realSeekTime, seekTimeCostMs);
+    CHECK_AND_RETURN_RET_LOG(timeoutMs > seekTimeCostMs, FetchFrameResult(nullptr, nullptr, true),
+        "SeekToTime timeout");
+    if (res == Status::END_OF_STREAM && fileType_ == FileType::MPEGTS && tsCodecTypeSet.count(codecMimeName_) > 0) {
+        std::shared_ptr<AVBuffer> mpeg4EosBuffer(AVBuffer::CreateAVBuffer());
+        mpeg4EosBuffer->flag_ = (uint32_t)(AVBufferFlag::EOS);
+        return FetchFrameResult(mpeg4EosBuffer, nullptr, false);
+    }
+    CHECK_AND_RETURN_RET_LOG(res == Status::OK, FetchFrameResult(nullptr, nullptr, false), "Seek fail");
+    CHECK_AND_RETURN_RET_LOG(InitDecoder() == Status::OK, FetchFrameResult(nullptr, nullptr, false),
+        "FetchFrameAtTime InitDecoder failed.");
+    bool fetchFrameRes = false;
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        fetchFrameRes = cond_.wait_for(lock, std::chrono::milliseconds(timeoutMs - seekTimeCostMs),
+            [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); });
+    }
+    if (hasReceivedCodecErrCodeOfUnsupported_.load()) {
+        stopProcessing_.store(false);
+        SwitchToSoftWareDecoder();
+        {
+            std::unique_lock fetchFrameLock(mutex_);
+            fetchFrameRes = cond_.wait_for(fetchFrameLock, std::chrono::milliseconds(timeoutMs - seekTimeCostMs),
+                [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); });
+        }
+    }
+
+    if (fetchFrameRes) {
+        HandleFetchFrameYuvRes();
+    } else {
+        HandleFetchFrameYuvFailed();
+        return FetchFrameResult(nullptr, nullptr, true);
+    }
+    return FetchFrameResult(avBuffer_, nullptr, false);
+}
+
 std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuvs(int64_t timeUs, int32_t option,
     const OutputConfiguration &param, bool &errCallback)
 {
@@ -745,6 +799,54 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuvs(int64_t timeUs, i
         HandleFetchFrameYuvRes();
     } else {
         errCallback = true;
+        HandleFetchFrameYuvFailed();
+    }
+    return avBuffer_;
+}
+
+std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuvsWithTimeout(int64_t timeUs, int32_t option,
+    const OutputConfiguration &param, bool &isTimeout, int64_t timeoutMs)
+{
+    MEDIA_LOGI("Fetch frame 0x%{public}06" PRIXPTR " timeUs:%{public}" PRId64 ", option:%{public}d,"
+        "dstWidth:%{public}d, dstHeight:%{public}d, colorFormat:%{public}d, timeoutMs:%{public}" PRId64 "ms",
+        FAKE_POINTER(this), timeUs, option, param.dstWidth, param.dstHeight, static_cast<int32_t>(param.colorFormat),
+        timeoutMs);
+    CHECK_AND_RETURN_RET_LOG(mediaDemuxer_ != nullptr, nullptr, "FetchFrameAtTime demuxer is nullptr");
+    ResetParamsBeforeFetchFrame(timeUs, option, param);
+
+    trackInfo_ = GetVideoTrackInfo();
+    CHECK_AND_RETURN_RET_LOG(trackInfo_ != nullptr, nullptr, "FetchFrameAtTime trackInfo_ is nullptr.");
+    mediaDemuxer_->SelectTrack(trackIndex_);
+    int64_t realSeekTime = timeUs;
+    int64_t seekTimeCostMs = 0;
+    auto res = SeekToTime(Plugins::Us2Ms(timeUs), static_cast<Plugins::SeekMode>(option),
+        realSeekTime, seekTimeCostMs);
+    if (seekTimeCostMs >= timeoutMs) {
+        isTimeout = true;
+        MEDIA_LOGE("SeekToTime timeout");
+        return nullptr;
+    }
+    CHECK_AND_RETURN_RET_LOG(res == Status::OK, nullptr, "Seek fail");
+    CHECK_AND_RETURN_RET_LOG(InitDecoder() == Status::OK, nullptr, "FetchFrameAtTime InitDecoder failed.");
+    bool fetchFrameRes = false;
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        fetchFrameRes = cond_.wait_for(lock, std::chrono::milliseconds(timeoutMs - seekTimeCostMs),
+            [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); });
+    }
+    if (hasReceivedCodecErrCodeOfUnsupported_.load()) {
+        stopProcessing_.store(false);
+        SwitchToSoftWareDecoder();
+        {
+            std::unique_lock fetchFrameLock(mutex_);
+            fetchFrameRes = cond_.wait_for(fetchFrameLock, std::chrono::milliseconds(timeoutMs - seekTimeCostMs),
+                [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); });
+        }
+    }
+    if (fetchFrameRes) {
+        HandleFetchFrameYuvRes();
+    } else {
+        isTimeout = true;
         HandleFetchFrameYuvFailed();
     }
     return avBuffer_;
@@ -813,6 +915,38 @@ Status AVThumbnailGenerator::SeekToTime(int64_t timeMs, Plugins::SeekMode option
         res = seekFunc(timeMs, Plugins::SeekMode::SEEK_CLOSEST_SYNC, realSeekTime);
         seekMode_ = Plugins::SeekMode::SEEK_CLOSEST_SYNC;
     }
+    return res;
+}
+
+Status AVThumbnailGenerator::SeekToTime(int64_t timeMs, Plugins::SeekMode option,
+    int64_t realSeekTime, int64_t &seekTimeCostMs)
+{
+    auto startTime = std::chrono::steady_clock::now();
+    seekMode_ = option;
+    if (option == Plugins::SeekMode::SEEK_CLOSEST) {
+        option = Plugins::SeekMode::SEEK_PREVIOUS_SYNC;
+    }
+    timeMs = duration_ > 0 ? std::min(timeMs, Plugins::Us2Ms(duration_)) : timeMs;
+
+    if (fileType_ == FileType::MPEGTS && tsCodecTypeSet.count(codecMimeName_) > 0) {
+        MEDIA_LOGI("Replace SeekTo with SeekToKeyFrame");
+        Status res = (timeMs == 0) ? mediaDemuxer_->SeekToStart(timeMs, option, realSeekTime) :
+            mediaDemuxer_->SeekToKeyFrame(timeMs, option, realSeekTime, DemuxerCallerType::AVMETADATA);
+        return res;
+    }
+    std::function<Status(int64_t, Plugins::SeekMode, int64_t&)> seekFunc =
+        [this](int64_t t, Plugins::SeekMode m, int64_t& r) { return mediaDemuxer_->SeekTo(t, m, r); };
+    if (timeMs == 0) {
+        seekFunc = [this](int64_t t, Plugins::SeekMode m, int64_t& r) { return mediaDemuxer_->SeekToStart(t, m, r); };
+    }
+    Status res = seekFunc(timeMs, option, realSeekTime);
+    if (res != Status::OK && option != Plugins::SeekMode::SEEK_CLOSEST_SYNC) {
+        res = seekFunc(timeMs, Plugins::SeekMode::SEEK_CLOSEST_SYNC, realSeekTime);
+        seekMode_ = Plugins::SeekMode::SEEK_CLOSEST_SYNC;
+    }
+    auto endTime = std::chrono::steady_clock::now();
+    seekTimeCostMs = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+    MEDIA_LOGI("SeekToTime cost: %{public}" PRId64 "ms", seekTimeCostMs);
     return res;
 }
 

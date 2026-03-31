@@ -64,6 +64,20 @@ struct FrameInfo {
     int32_t fetchResult;
 };
 
+struct FetchFrameResult {
+    std::shared_ptr<AVBuffer> avbuffer;
+    std::shared_ptr<PixelMap> pixelmap;
+    bool isTimeout;
+    FetchFrameResult(std::shared_ptr<AVBuffer> buffer, std::shared_ptr<PixelMap> map, bool timeout)
+        : avbuffer(buffer), pixelmap(map), isTimeout(timeout) {}
+};
+
+struct MetadataResult {
+    std::shared_ptr<Meta> meta;
+    bool isTimeout;
+    MetadataResult(std::shared_ptr<Meta> metaPtr, bool timeout) : meta(metaPtr), isTimeout(timeout) {}
+};
+
 /**
  * @brief Enumerates avmetadata helper states.
  */
@@ -671,6 +685,27 @@ public:
      */
     virtual std::shared_ptr<PixelMap> FetchScaledFrameYuv(int64_t timeUs, int32_t option,
                                                           const PixelMapParams &param) = 0;
+
+    /**
+     * Fetch a representative video frame near a given timestamp by considering the given
+     * option if possible, and return a pixelmap with given parameters within a specific time.
+     * This method must be called after the SetSource. Additionally, this method supports
+     * maintaining aspect ratio scaling when resizing the pixelmap.
+     * @param timeUs The time position in microseconds where the frame will be fetched.
+     * When fetching the frame at the given time position, there is no guarantee that
+     * the video source has a frame located at the position. When this happens, a frame
+     * nearby will be returned. If timeUs is negative, time position and option will ignored,
+     * and any frame that the implementation considers as representative may be returned.
+     * @param option the hint about how to fetch a frame, see {@link AVMetadataQueryOption}
+     * @param param the desired configuration of returned pixelmap, see {@link PixelMapParams}.
+     * @param timeoutMs The timeout in milliseconds for fetching the frame. If the operation
+     * exceeds this time, it will return an error.
+     * @return Returns a FetchFrameResult containing the fetched frame data, which includes
+     * the AVBuffer, PixelMap, and timeout status.
+     */
+    virtual FetchFrameResult FetchScaledFrameYuvWithTimeout(int64_t timeUs, int32_t option,
+        const PixelMapParams &param, int64_t timeoutMs) = 0;
+
     /**
      * Fetch a representative video frame near a given timestamp by considering the given
      * option if possible, and return a pixelmap with given parameters. This method must be
@@ -688,8 +723,27 @@ public:
      */
     virtual int32_t FetchScaledFrameYuvs(const std::vector<int64_t>& timeUs,
         int32_t option, const PixelMapParams &param) = 0;
+
+    /**
+     * Fetch a representative video frame near a given timestamp by considering the given
+     * option if possible, and return a pixelmap with given parameters. This method must be
+     * called after the SetSource. Additionally, this method supports maintaining aspect ratio
+     * scaling when resizing the pixelmap.
+     * @param timeUs All the time position in microseconds in vector where the frame will be fetched.
+     * When fetching the frame at the given time position, there is no guarantee that
+     * the video source has a frame located at the position. When this happens, a frame
+     * nearby will be returned. If timeUs is negative, time position and option will ignored,
+     * and any frame that the implementation considers as representative may be returned.
+     * @param option the hint about how to fetch a frame, see {@link AVMetadataQueryOption}
+     * @param param the desired configuration of returned pixelmap, see {@link PixelMapParams}.
+     * @param timeoutMs The timeout in milliseconds for fetching the frame. If the operation
+     * exceeds this time, it will return an error.
+     * @return Returns status code indicating success or failure.
+     */
+    virtual int32_t FetchScaledFrameYuvsWithTimeout(const std::vector<int64_t>& timeUs,
+        int32_t option, const PixelMapParams &param, int64_t timeoutMs) = 0;
     
-     /**
+    /**
      * Process the obtained pixelmap.
      */
     virtual std::shared_ptr<PixelMap> ProcessPixelMap(const std::shared_ptr<AVBuffer> &frameBuffer,
@@ -706,6 +760,15 @@ public:
      * @return Returns the meta data values on success; nullptr on failure.
      */
     virtual std::shared_ptr<Meta> GetAVMetadata() = 0;
+
+    /**
+     * Get all meta data.
+     * This method must be called after the SetSource.
+     * @param timeoutMs The timeout in milliseconds for fetching metadata. If the operation
+     * exceeds this time, it will return an error.
+     * @return Returns a MetadataResult containing the metadata and timeout status.
+     */
+    virtual MetadataResult GetAVMetadataWithTimeout(int64_t timeoutMs) = 0;
 
     /**
      * Release the internel resource. After this method called, the avmetadatahelper instance

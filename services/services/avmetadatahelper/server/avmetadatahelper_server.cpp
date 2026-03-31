@@ -333,6 +333,32 @@ std::shared_ptr<Meta> AVMetadataHelperServer::GetAVMetadata()
     return result.Value();
 }
 
+MetadataResult AVMetadataHelperServer::GetAVMetadataWithTimeout(int64_t timeoutMs)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    MediaTrace trace("AVMetadataHelperServer::GetAVMetadataWithTimeout");
+    auto task = std::make_shared<TaskHandler<std::shared_ptr<Meta>>>([this] {
+        MediaTrace trace("AVMetadataHelperServer::ResolveMetadata_task");
+        std::shared_ptr<Meta> err = nullptr;
+        CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr, err, "avMetadataHelperEngine_ is nullptr");
+        CHECK_AND_RETURN_RET(currState_ == HELPER_PREPARED || currState_ == HELPER_CALL_DONE, err);
+        return avMetadataHelperEngine_->GetAVMetadata();
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MetadataResult(nullptr, false), "EnqueueTask failed");
+
+    auto result = task->GetResultWithTimeLimit(timeoutMs);
+    if (!result.HasResult()) {
+        MEDIA_LOGE("GetAVMetadataWithTimeout timed out after %{public}" PRIi64 "ms", timeoutMs);
+        avMetadataHelperEngine_->SetInterruptState(true);
+        avMetadataHelperEngine_->StopDemuxer();
+        return MetadataResult(nullptr, true);
+    } else {
+        ChangeState(HelperStates::HELPER_CALL_DONE);
+        return MetadataResult(result.Value(), false);
+    }
+}
+
 std::shared_ptr<AVSharedMemory> AVMetadataHelperServer::FetchArtPicture()
 {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -398,6 +424,32 @@ std::shared_ptr<AVBuffer> AVMetadataHelperServer::FetchFrameYuv(int64_t timeUs, 
     return result.Value();
 }
 
+FetchFrameResult AVMetadataHelperServer::FetchFrameYuvWithTimeout(int64_t timeUs, int32_t option,
+    const OutputConfiguration &param, int64_t timeoutMs)
+{
+    MediaTrace trace("AVMetadataHelperServer::FetchFrameYuvWithTimeout");
+    std::unique_lock<std::mutex> lock(mutex_);
+    auto task = std::make_shared<TaskHandler<FetchFrameResult>>([this, timeUs, option, param, timeoutMs] {
+        MediaTrace trace("AVMetadataHelperServer::FetchFrameYuvWithTimeout_task");
+        CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr, FetchFrameResult(nullptr, nullptr, false),
+            "avMetadataHelperEngine_ is nullptr");
+        CHECK_AND_RETURN_RET(currState_ == HELPER_PREPARED || currState_ == HELPER_CALL_DONE,
+            FetchFrameResult(nullptr, nullptr, false));
+        return avMetadataHelperEngine_->FetchFrameYuvWithTimeout(timeUs, option, param, timeoutMs);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, FetchFrameResult(nullptr, nullptr, false), "EnqueueTask failed");
+    auto result = task->GetResultWithTimeLimit(timeoutMs);
+    if (!result.HasResult()) {
+        MEDIA_LOGE("FetchFrameYuvWithTimeout timed out after %{public}" PRIi64 "ms", timeoutMs);
+        avMetadataHelperEngine_->SetInterruptState(true);
+        avMetadataHelperEngine_->StopDemuxer();
+        return FetchFrameResult(nullptr, nullptr, true);
+    } else {
+        return result.Value();
+    }
+}
+
 int32_t AVMetadataHelperServer::CancelAllFetchFrames()
 {
     MediaTrace trace("AVMetadataHelperServer::CancelAllFetchFrames");
@@ -445,6 +497,60 @@ int32_t AVMetadataHelperServer::FetchFrameYuvs(const std::vector<int64_t>& timeU
                 continue;
             } else if (frameBuffer_ == nullptr) {
                 FrameInfo frameinfo_ = {OPERATION_NOT_ALLOWED, timeUs, 0, FETCH_FAILED};
+                NotifyPixelCompleteCallback(HELPER_INFO_TYPE_PIXEL, err, frameinfo_, param);
+                continue;
+            } else {
+                actualTimeUs = frameBuffer_->pts_;
+                FrameInfo frameinfo_ = {NO_ERR, timeUs, actualTimeUs, FETCH_SUCCEEDED};
+                NotifyPixelCompleteCallback(HELPER_INFO_TYPE_PIXEL, frameBuffer_, frameinfo_, param);
+            }
+        }
+        return MSERR_EXT_API9_OK;
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    return ret == MSERR_OK? MSERR_OK : MSERR_EXT_API9_SERVICE_DIED;
+}
+
+int32_t AVMetadataHelperServer::FetchFrameYuvsWithTimeout(const std::vector<int64_t>& timeUsVector,
+    int32_t option, const PixelMapParams &param, int64_t timeoutMs)
+{
+    MediaTrace trace("AVMetadataHelperServer::FetchFrameYuvsWithTimeout");
+    std::unique_lock<std::mutex> lock(mutex_);
+    std::shared_ptr<AVBuffer> result = nullptr;
+    OutputConfiguration config = { .dstWidth = param.dstWidth,
+                                   .dstHeight = param.dstHeight,
+                                   .colorFormat = param.colorFormat };
+    if (isCanceled_.load()) {isCanceled_ = false;}
+
+    auto task = std::make_shared<TaskHandler<int32_t>>([this, timeUsVector, option, config, param, timeoutMs] {
+        MediaTrace trace("AVMetadataHelperServer::FetchFrameYuvsWithTimeout_task");
+        std::shared_ptr<AVBuffer> err(AVBuffer::CreateAVBuffer());
+        std::shared_ptr<AVBuffer> frameBuffer_ = nullptr;
+        CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr,
+            MSERR_EXT_API9_SERVICE_DIED, "avMetadataHelperEngine_ is nullptr");
+        CHECK_AND_RETURN_RET(currState_ == HELPER_PREPARED || currState_ == HELPER_CALL_DONE,
+            MSERR_EXT_API9_SERVICE_DIED);
+        int64_t actualTimeUs = 0;
+        for (const auto& timeUs : timeUsVector) {
+            if (isCanceled_.load()) {
+                FrameInfo frameinfo_ = {NO_ERR, timeUs, 0, FETCH_CANCELED};
+                NotifyPixelCompleteCallback(HELPER_INFO_TYPE_PIXEL, err, frameinfo_, param);
+                continue;
+            }
+            if (timeUs < 0) {
+                FrameInfo frameinfo_ = {UNSUPPORTED_FORMAT, timeUs, 0, FETCH_FAILED};
+                NotifyPixelCompleteCallback(HELPER_INFO_TYPE_PIXEL, err, frameinfo_, param);
+                continue;
+            }
+            bool isTimeout = false;
+            frameBuffer_ =
+                avMetadataHelperEngine_->FetchFrameYuvsWithTimeout(timeUs, option, config, isTimeout, timeoutMs);
+            if (isTimeout == true) {
+                FrameInfo frameinfo_ = {FETCH_TIMEOUT, timeUs, 0, FETCH_FAILED};
+                NotifyPixelCompleteCallback(HELPER_INFO_TYPE_PIXEL, err, frameinfo_, param);
+                continue;
+            } else if (frameBuffer_ == nullptr) {
+                FrameInfo frameinfo_ = {UNSUPPORTED_FORMAT, timeUs, 0, FETCH_FAILED};
                 NotifyPixelCompleteCallback(HELPER_INFO_TYPE_PIXEL, err, frameinfo_, param);
                 continue;
             } else {

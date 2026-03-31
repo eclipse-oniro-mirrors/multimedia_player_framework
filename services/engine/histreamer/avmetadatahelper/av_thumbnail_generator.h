@@ -41,8 +41,12 @@ public:
 
     std::shared_ptr<AVSharedMemory> FetchFrameAtTime(int64_t timeUs, int32_t option, const OutputConfiguration &param);
     std::shared_ptr<AVBuffer> FetchFrameYuv(int64_t timeUs, int32_t option, const OutputConfiguration &param);
+    FetchFrameResult FetchFrameYuvWithTimeout(int64_t timeUs, int32_t option, const OutputConfiguration &param,
+        int64_t timeoutMs);
     std::shared_ptr<AVBuffer> FetchFrameYuvs(int64_t timeUs, int32_t option, const OutputConfiguration &param,
         bool &errCallback);
+    std::shared_ptr<AVBuffer> FetchFrameYuvsWithTimeout(int64_t timeUs, int32_t option,
+        const OutputConfiguration &param, bool &isTimeout, int64_t timeoutMs);
     std::shared_ptr<AVSharedMemory> FetchArtPicture();
 
     void DfxReport(std::string apiCall);
@@ -111,6 +115,7 @@ private:
         int32_t strideHeight);
     int32_t GetYuvDataAlignStride(const sptr<SurfaceBuffer> &surfaceBuffer);
     Status SeekToTime(int64_t timeMs, Plugins::SeekMode option, int64_t realSeekTime);
+    Status SeekToTime(int64_t timeMs, Plugins::SeekMode option, int64_t realSeekTime, int64_t &seekTimeCostMs);
 
     int32_t width_ = 0;
     int32_t height_ = 0;

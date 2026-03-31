@@ -645,6 +645,29 @@ HWTEST_F(AVMetadataUnitTest, GetFrameIndexByTime_API_0100, Level2)
 }
 
 /**
+    * @tc.number    : GetAVMetadataWithTimeout_API_0100
+    * @tc.name      : SetSource 1kb.mp3
+    * @tc.desc      : GetAVMetadataWithTimeout API
+*/
+HWTEST_F(AVMetadataUnitTest, GetAVMetadataWithTimeout_API_0100, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("aac_44100Hz_143kbs_stereo.aac");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+
+    std::string value = helper->ResolveMetadata(AV_KEY_HAS_VIDEO);
+    EXPECT_EQ(value, "");
+    helper->ResolveMetadata(AV_KEY_HAS_AUDIO);
+    EXPECT_EQ(value, "");
+    MetadataResult result = helper->GetAVMetadataWithTimeout(1000);
+    EXPECT_EQ(nullptr, result.meta);
+    helper->Release();
+}
+
+/**
     * @tc.number    : GetTimeByFrameIndex_API_0100
     * @tc.name      : SetSource H264_AAC.mp4
     * @tc.desc      : SetSource API
@@ -1159,6 +1182,51 @@ HWTEST_F(AVMetadataUnitTest, FetchScaledFrameYuv_API_0500, Level2)
     pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
     ASSERT_EQ(pixelMap->GetWidth(), 720);
     ASSERT_EQ(pixelMap->GetHeight(), 480);
+}
+
+/**
+    * @tc.number    : FetchScaledFrameYuvWithTimeout_API_0100
+    * @tc.name      : FetchScaledFrameYuvWithTimeout H264_AAC.mp4 custom scaling
+    * @tc.desc      : FetchScaledFrameYuvWithTimeout API
+*/
+HWTEST_F(AVMetadataUnitTest, FetchScaledFrameYuvWithTimeout_API_0100, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("H264_AAC.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    int64_t time = 0;
+    PixelMapParams param;
+    param.dstWidth = 300;
+    param.dstHeight = 200;
+    auto fetchFrameResult = helper->FetchScaledFrameYuvWithTimeout(time, 0, param, 3000);
+    auto pixelMap = fetchFrameResult.pixelmap;
+    ASSERT_EQ(pixelMap->GetWidth(), 300);
+    ASSERT_EQ(pixelMap->GetHeight(), 200);
+}
+
+/**
+    * @tc.number    : FetchScaledFrameYuvWithTimeout_API_0200
+    * @tc.name      : FetchScaledFrameYuvWithTimeout mbaff.mp4
+    * @tc.desc      : FetchScaledFrameYuvWithTimeout API
+*/
+HWTEST_F(AVMetadataUnitTest, FetchScaledFrameYuvWithTimeout_API_0200, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("mbaff.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    int64_t time = 0;
+    PixelMapParams param;
+    param.convertColorSpace = false;
+    auto fetchFrameResult = helper->FetchScaledFrameYuvWithTimeout(time, 0, param, 3000);
+    auto pixelMap = fetchFrameResult.pixelmap;
+    ASSERT_EQ(pixelMap->GetWidth(), 1920);
+    ASSERT_EQ(pixelMap->GetHeight(), 1080);
 }
 
 /**
