@@ -28,7 +28,8 @@ namespace Media {
 std::optional<uintptr_t> SoundPoolCallBackTaihe::GetUndefined(ani_env* env) const
 {
     ani_ref undefinedRef {};
-    CHECK_AND_RETURN(env && env->GetUndefined(&undefinedRef) == ANI_OK, std::nullopt);
+    CHECK_AND_RETURN_RET_LOG(env && env->GetUndefined(&undefinedRef) == ANI_OK, std::nullopt,
+        "get undefined failed");
     ani_object undefinedObject = static_cast<ani_object>(undefinedRef);
     return reinterpret_cast<uintptr_t>(undefinedObject);
 }
@@ -407,7 +408,7 @@ void SoundPoolCallBackTaihe::OnTaiheplayCompletedCallBack(SoundPoolTaiheCallBack
                 "cached callback will not run");
             std::shared_ptr<taihe::callback<void(uintptr_t)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void(uintptr_t)>>(func);
-            (*cacheCallback)(static_cast<uintptr_t>(*undefined));
+            (*cacheCallback)(*undefined);
         }
     } while (0);
     delete taiheCb;
