@@ -1618,7 +1618,8 @@ int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
     } else if (switchSurface) {
         MEDIA_LOGI("switch surface in %{public}s state", GetStatusDescription(lastOpStatus_).c_str());
         auto innerSurface1 = weakSurface_.remote();
-        if (innerSurface1 == nullptr && !isForceLoadVideo_ && mutedMediaType_ != OHOS::Media::MediaType::MEDIA_TYPE_VID) {
+        if (innerSurface1 == nullptr && !isForceLoadVideo_ &&
+            mutedMediaType_ != OHOS::Media::MediaType::MEDIA_TYPE_VID) {
             MEDIA_LOGE("old surface is required before switching surface");
             return MSERR_INVALID_OPERATION;
         }
