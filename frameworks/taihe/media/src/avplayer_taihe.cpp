@@ -694,7 +694,7 @@ void AVPlayerImpl::SetSpeed(PlaybackSpeed speed)
     MediaTrace trace("AVPlayerImpl::setSpeed");
     MEDIA_LOGI("TaiheSetSpeed In");
 
-    if (IsLiveSource()) {
+    if (IsLiveSource() && player_ != nullptr && !player_->IsLiveSeek()) {
         OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "The stream is live stream, not support speed");
         return;
     }
@@ -768,6 +768,10 @@ void AVPlayerImpl::Seek(int32_t timeMs, optional_view<SeekMode> mode)
     MEDIA_LOGI("TaiheSeek in");
     int32_t time = timeMs;
 
+    if (isFlvLive_) {
+        OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "The stream is flv live stream, not support seek");
+        return;
+    }
     if (time < 0 && !mode.has_value()) {
         OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check seek time");
         return;
@@ -1491,7 +1495,7 @@ void AVPlayerImpl::SetPlaybackRate(double rate)
     MediaTrace trace("AVPlayerImpl::setRate");
     MEDIA_LOGI("TaiheSetRate In");
 
-    if (IsLiveSource()) {
+    if (IsLiveSource() && player_ != nullptr && !player_->IsLiveSeek()) {
         OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "The stream is live stream, not support rate");
         return;
     }
@@ -1548,12 +1552,16 @@ void AVPlayerImpl::SeekToDefaultPositionSync()
 
     if (!IsControllable()) {
         OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not prepared/playing/paused/completed, unsupport seekToDefaultPosition operation");
+            "current state is not prepared/playing/paused/completed, unsupport seekToDefault operation");
         return;
     }
 
     if (!IsLiveSource()) {
         SeekEnqueueTask(this, 0, SEEK_PREVIOUS_SYNC);
+    } else if (!player_->IsLiveSeek()) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "Current state is not in live seek mode, unsupport seekToDefault operation");
+        return;
     } else {
         auto task = std::make_shared<TaskHandler<void>>([this]() {
             MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheSeekToDefaultPosition Task In", FAKE_POINTER(this));
@@ -1574,7 +1582,7 @@ array<Range> AVPlayerImpl::GetSeekableTimeRangesSync()
     MediaTrace trace("AVPlayerImpl::GetSeekableTimeRangesSync");
     MEDIA_LOGI("TaiheGetSeekableTimeRanges In");
     std::vector<Plugins::SeekRange> ranges;
-    if (player_ != nullptr) {
+    if (IsControllable() && !isFlvLive_ && player_ != nullptr) {
         (void)player_->GetSeekableRanges(ranges);
     }
     std::vector<Range> resultRanges;
@@ -1594,7 +1602,7 @@ array<Range> AVPlayerImpl::GetLoadedTimeRangesSync()
     MediaTrace trace("AVPlayerImpl::GetLoadedTimeRangesSync");
     MEDIA_LOGI("TaiheGetLoadedTimeRanges In");
     std::vector<Plugins::SeekRange> ranges;
-    if (player_ != nullptr) {
+    if (IsControllable() && player_ != nullptr) {
         (void)player_->GetLoadedRanges(ranges);
     }
     std::vector<Range> resultRanges;
@@ -3315,6 +3323,11 @@ void AVPlayerImpl::NotifyVideoSize(int32_t width, int32_t height)
 void AVPlayerImpl::NotifyIsLiveStream()
 {
     isLiveStream_ = true;
+}
+
+void AVPlayerImpl::NotifyIsFlvLive(bool isFlvLive)
+{
+    isFlvLive_ = isFlvLive;
 }
 
 void AVPlayerImpl::NotifyDrmInfoUpdated(const std::multimap<std::string, std::vector<uint8_t>> &infos)

@@ -591,9 +591,11 @@ AVPlayerCallback::AVPlayerCallback(AVPlayerNotify *listener)
 void AVPlayerCallback::NotifyIsLiveStream(const int32_t extra, const Format &infoBody)
 {
     (void)extra;
-    (void)infoBody;
+    int32_t isFlvLive = 0;
+    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_IS_FLV_LIVE, isFlvLive);
     if (listener_ != nullptr) {
         listener_->NotifyIsLiveStream();
+        listener_->NotifyIsFlvLive(isFlvLive);
     }
 }
 
