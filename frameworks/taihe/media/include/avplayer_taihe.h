@@ -228,6 +228,7 @@ public:
     void NotifyState(OHOS::Media::PlayerStates state) override;
     void NotifyVideoSize(int32_t width, int32_t height) override;
     void NotifyIsLiveStream() override;
+    void NotifyIsFlvLive(bool isFlvLive) override;
     void NotifyDrmInfoUpdated(const std::multimap<std::string, std::vector<uint8_t>> &infos) override;
     int32_t GetJsApiVersion() override;
     void EnqueueNetworkTask(const std::string url);
@@ -283,6 +284,7 @@ private:
     void OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg);
     std::condition_variable stopTaskQueCond_;
     bool taskQueStoped_ = false;
+    bool isFlvLive_ = false;
     std::shared_ptr<OHOS::Media::Player> player_ = nullptr;
     std::shared_ptr<AVPlayerCallback> playerCb_ = nullptr;
     std::atomic<bool> isReleased_ = false;
