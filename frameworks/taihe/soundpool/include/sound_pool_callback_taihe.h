@@ -15,6 +15,8 @@
 #ifndef SOUND_POOL_CALLBACK_TAIHE_H
 #define SOUND_POOL_CALLBACK_TAIHE_H
 
+#include <optional>
+
 #include "media_errors.h"
 #include "media_log.h"
 #include "isoundpool.h"
@@ -47,7 +49,7 @@ public:
         ERROR_TYPE errorType, int32_t soundId, int32_t streamId) const;
     ani_status ToAniEnum(ani_env *env, ERROR_TYPE errorType, ani_enum_item &aniEnumItem) const;
     ani_object IntToAniObject(ani_env *env, int32_t value) const;
-    uintptr_t GetUndefined(ani_env* env) const;
+    std::optional<uintptr_t> GetUndefined(ani_env* env) const;
     std::shared_ptr<OHOS::AppExecFwk::EventHandler> mainHandler_ = nullptr;
 protected:
     void OnLoadCompleted(int32_t soundId) override;

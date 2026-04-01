@@ -25,10 +25,10 @@ namespace {
 
 namespace ANI {
 namespace Media {
-uintptr_t SoundPoolCallBackTaihe::GetUndefined(ani_env* env) const
+std::optional<uintptr_t> SoundPoolCallBackTaihe::GetUndefined(ani_env* env) const
 {
     ani_ref undefinedRef {};
-    env->GetUndefined(&undefinedRef);
+    CHECK_AND_RETURN(env && env->GetUndefined(&undefinedRef) == ANI_OK, std::nullopt);
     ani_object undefinedObject = static_cast<ani_object>(undefinedRef);
     return reinterpret_cast<uintptr_t>(undefinedObject);
 }
@@ -402,10 +402,12 @@ void SoundPoolCallBackTaihe::OnTaiheplayCompletedCallBack(SoundPoolTaiheCallBack
             std::shared_ptr<AutoRef> ref = taiheCb->autoRef.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
             auto func = ref->callbackRef_;
-            uintptr_t undefined = GetUndefined(get_env());
+            auto undefined = GetUndefined(get_env());
+            CHECK_AND_BREAK_LOG(undefined, "Get reference to undefined from environment context failed, "
+                "cached callback will not run");
             std::shared_ptr<taihe::callback<void(uintptr_t)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void(uintptr_t)>>(func);
-            (*cacheCallback)(static_cast<uintptr_t>(undefined));
+            (*cacheCallback)(static_cast<uintptr_t>(*undefined));
         }
     } while (0);
     delete taiheCb;
