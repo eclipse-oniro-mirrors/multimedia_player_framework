@@ -478,7 +478,7 @@ int32_t PlayerServer::OnPrepare(bool sync)
 #ifdef SUPPORT_VIDEO
         {
             std::lock_guard<std::mutex> lock(surfaceMutex_);
-            auto surface = weakSurface_.remote();
+            auto surface = weakSurface_.promote();
             if (surface != nullptr) {
                 int32_t res = playerEngine_->SetVideoSurface(surface);
                 CHECK_AND_RETURN_RET_LOG(res == MSERR_OK,
@@ -936,7 +936,7 @@ int32_t PlayerServer::Release()
     ReportMediaInfo(instanceId_);
     GetMediaInfoContainInstanceNum();
 #ifdef SUPPORT_VIDEO
-    auto surface = weakSurface_.remote();
+    auto surface = weakSurface_.promote();
     if (surface != nullptr) {
         surface_ = nullptr;
     }
@@ -1617,7 +1617,7 @@ int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
         MEDIA_LOGI("set surface first in %{public}s state", GetStatusDescription(lastOpStatus_).c_str());
     } else if (switchSurface) {
         MEDIA_LOGI("switch surface in %{public}s state", GetStatusDescription(lastOpStatus_).c_str());
-        auto innerSurface1 = weakSurface_.remote();
+        auto innerSurface1 = weakSurface_.promote();
         if (innerSurface1 == nullptr && !isForceLoadVideo_ &&
             mutedMediaType_ != OHOS::Media::MediaType::MEDIA_TYPE_VID) {
             MEDIA_LOGE("old surface is required before switching surface");
