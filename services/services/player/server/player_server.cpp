@@ -1638,7 +1638,7 @@ int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
         GetStatusDescription(lastOpStatus_).c_str(), playerEngine_ == nullptr);
     auto task = std::make_shared<TaskHandler<void>>([this]() {
         std::lock_guard<std::mutex> surfaceLock(surfaceMutex_);
-        auto innerSurface2 = weakSurface_.remote();
+        auto innerSurface2 = weakSurface_.promote();
         CHECK_AND_RETURN_LOG(innerSurface2 != nullptr, "surface is null");
         (void)playerEngine_->SetVideoSurface(innerSurface2);
         taskMgr_.MarkTaskDone("SetVideoSurface done");
