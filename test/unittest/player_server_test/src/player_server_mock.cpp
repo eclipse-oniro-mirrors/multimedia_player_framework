@@ -518,6 +518,14 @@ int32_t PlayerServerMock::Seek(int32_t mseconds, PlayerSeekMode mode)
     return ret;
 }
 
+int32_t PlayerServerMock::SeekToDefaultPosition()
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");
+    std::unique_lock<std::mutex> lock(mutex_);
+
+    return player_->SeekToDefaultPosition();
+}
+
 int32_t PlayerServerMock::Reset()
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");

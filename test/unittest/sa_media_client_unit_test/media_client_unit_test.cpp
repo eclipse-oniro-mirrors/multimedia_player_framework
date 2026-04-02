@@ -64,5 +64,43 @@ HWTEST_F(MediaClientUnitTest, MediaClientUnitTest_AVPlayerServerDied_test_001, T
 #undef SUPPORT_PLAYER
 #undef SUPPORT_METADATA
 }
+
+HWTEST_F(MediaClientUnitTest, MediaClientUnitTest_SeekToDefaultPosition_test_001, TestSize.Level0)
+{
+    sptr<IStandardPlayerService> ipcProxy;
+    auto playerClient = std::make_shared<PlayerClient>(ipcProxy);
+    ASSERT_NE(playerClient, nullptr);
+    int32_t ret = playerClient->SeekToDefaultPosition();
+    EXPECT_EQ(ret, MSERR_SERVICE_DIED);
+}
+
+HWTEST_F(MediaClientUnitTest, MediaClientUnitTest_GetSeekableRanges_test_001, TestSize.Level0)
+{
+    sptr<IStandardPlayerService> ipcProxy;
+    auto playerClient = std::make_shared<PlayerClient>(ipcProxy);
+    ASSERT_NE(playerClient, nullptr);
+    std::vector<Plugins::SeekRange> seekableRanges;
+    int32_t ret = playerClient->GetSeekableRanges(seekableRanges);
+    EXPECT_EQ(ret, MSERR_SERVICE_DIED);
+}
+
+HWTEST_F(MediaClientUnitTest, MediaClientUnitTest_GetLoadedRanges_test_001, TestSize.Level0)
+{
+    sptr<IStandardPlayerService> ipcProxy;
+    auto playerClient = std::make_shared<PlayerClient>(ipcProxy);
+    ASSERT_NE(playerClient, nullptr);
+    std::vector<Plugins::SeekRange> loadedRanges;
+    int32_t ret = playerClient->GetLoadedRanges(loadedRanges);
+    EXPECT_EQ(ret, MSERR_SERVICE_DIED);
+}
+
+HWTEST_F(MediaClientUnitTest, MediaClientUnitTest_IsLiveSeek_test_001, TestSize.Level0)
+{
+    sptr<IStandardPlayerService> ipcProxy;
+    auto playerClient = std::make_shared<PlayerClient>(ipcProxy);
+    ASSERT_NE(playerClient, nullptr);
+    bool ret = playerClient->IsLiveSeek();
+    EXPECT_EQ(ret, false);
+}
 } // namespace Media
 } // namespace OHOS

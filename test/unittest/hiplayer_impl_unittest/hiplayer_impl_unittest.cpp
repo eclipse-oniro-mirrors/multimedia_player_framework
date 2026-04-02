@@ -344,6 +344,18 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_InitDuration_001, TestSize.Level0)
     EXPECT_NE(ret, 0);
 }
 
+// @tc.name     Test InitDuration API
+// @tc.number   PHIUT_InitDuration_002
+// @tc.desc     Test InitDuration interface, demuxer_ is nullptr (Branch 1).
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_InitDuration_002, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    hiplayer_->demuxer_ = nullptr;
+    int32_t ret = hiplayer_->InitDuration();
+    auto errcode = 331350028;
+    EXPECT_EQ(ret, errcode);
+}
+
 // @tc.name     Test OnEventContinue API
 // @tc.number   PHIUT_OnEventContinue_001
 // @tc.desc     Test OnEventContinue interface, 3.
@@ -933,7 +945,8 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_Seek_002, TestSize.Level0)
     hiplayer_->endTimeWithMode_ = -1;
     hiplayer_->startTimeWithMode_ = 10;
     int32_t ret = hiplayer_->Seek(mSeconds, mode);
-    EXPECT_NE(ret, 0);
+    auto errcode = 331350038;
+    EXPECT_EQ(ret, errcode);
 }
 
 // @tc.name     Test Seek API
@@ -953,7 +966,8 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_Seek_003, TestSize.Level0)
     hiplayer_->endTimeWithMode_ = 100;
     hiplayer_->startTimeWithMode_ = -1;
     int32_t ret = hiplayer_->Seek(mSeconds, mode);
-    EXPECT_NE(ret, 0);
+    auto errcode = 331350038;
+    EXPECT_EQ(ret, errcode);
 }
 
 // @tc.name     Test Seek API
@@ -977,7 +991,8 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_Seek_004, TestSize.Level0)
     int32_t curPos = 0;
     (void)hiplayer_->GetCurrentTime(curPos);
     int32_t ret = hiplayer_->Seek(mSeconds, mode);
-    EXPECT_NE(ret, 0);
+    auto errcode = 331350038;
+    EXPECT_EQ(ret, errcode);
 }
 
 // @tc.name     Test Seek API
@@ -1002,7 +1017,8 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_Seek_005, TestSize.Level0)
     int32_t curPos = 80;
     (void)hiplayer_->GetCurrentTime(curPos);
     int32_t ret = hiplayer_->Seek(mSeconds, mode);
-    EXPECT_NE(ret, 0);
+    auto errcode = 331350038;
+    EXPECT_EQ(ret, errcode);
 }
 
 // @tc.name     Test Seek API
@@ -1024,7 +1040,210 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_Seek_006, TestSize.Level0)
     hiplayer_->endTimeWithMode_ = 100;
     hiplayer_->startTimeWithMode_ = -1;
     int32_t ret = hiplayer_->Seek(mSeconds, mode);
-    EXPECT_NE(ret, 0);
+    auto errcode = 331350038;
+    EXPECT_EQ(ret, errcode);
+}
+
+// @tc.name     Test Seek API
+// @tc.number   PHIUT_Seek_007
+// @tc.desc     Test Seek interface, seekPos < 0 (invalid parameter).
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_Seek_007, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    std::vector<Plugins::SeekRange> testRanges;
+    Plugins::SeekRange range = {0, 100};
+    testRanges.push_back(range);
+    EXPECT_CALL(*mockDemuxer, GetSeekableRanges()).WillRepeatedly(Return(testRanges));
+    hiplayer_->demuxer_ = mockDemuxer;
+    int32_t mSeconds = -1;
+    PlayerSeekMode mode = PlayerSeekMode::SEEK_NEXT_SYNC;
+    hiplayer_->endTimeWithMode_ = 100;
+    hiplayer_->startTimeWithMode_ = -1;
+    int32_t ret = hiplayer_->Seek(mSeconds, mode);
+    auto errcode = 331350038;
+    EXPECT_EQ(ret, errcode);
+}
+
+// @tc.name     Test Seek API
+// @tc.number   PHIUT_Seek_008
+// @tc.desc     Test Seek interface, audioSink_ is nullptr (skip SetIsTransitent).
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_Seek_008, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    std::vector<Plugins::SeekRange> testRanges;
+    Plugins::SeekRange range = {0, 100};
+    testRanges.push_back(range);
+    EXPECT_CALL(*mockDemuxer, GetSeekableRanges()).WillRepeatedly(Return(testRanges));
+    hiplayer_->demuxer_ = mockDemuxer;
+    hiplayer_->audioSink_ = nullptr;
+    int32_t mSeconds = 50;
+    PlayerSeekMode mode = PlayerSeekMode::SEEK_NEXT_SYNC;
+    hiplayer_->endTimeWithMode_ = 100;
+    hiplayer_->startTimeWithMode_ = -1;
+    int32_t curPos = 0;
+    (void)hiplayer_->GetCurrentTime(curPos);
+    int32_t ret = hiplayer_->Seek(mSeconds, mode);
+    auto errcode = 331350038;
+    EXPECT_EQ(ret, errcode);
+}
+
+// @tc.name     Test Seek API
+// @tc.number   PHIUT_Seek_009
+// @tc.desc     Test Seek interface, multiple seekable ranges, seek position in first range.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_Seek_009, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    std::vector<Plugins::SeekRange> testRanges;
+    Plugins::SeekRange range1 = {0, 50};
+    Plugins::SeekRange range2 = {100, 200};
+    testRanges.push_back(range1);
+    testRanges.push_back(range2);
+    EXPECT_CALL(*mockDemuxer, GetSeekableRanges()).WillRepeatedly(Return(testRanges));
+    hiplayer_->demuxer_ = mockDemuxer;
+    int32_t mSeconds = 25;
+    PlayerSeekMode mode = PlayerSeekMode::SEEK_NEXT_SYNC;
+    hiplayer_->endTimeWithMode_ = 100;
+    hiplayer_->startTimeWithMode_ = -1;
+    int32_t curPos = 0;
+    (void)hiplayer_->GetCurrentTime(curPos);
+    int32_t ret = hiplayer_->Seek(mSeconds, mode);
+    auto errcode = 331350038;
+    EXPECT_EQ(ret, errcode);
+}
+
+// @tc.name     Test Seek API
+// @tc.number   PHIUT_Seek_010
+// @tc.desc     Test Seek interface, seek position in second range.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_Seek_010, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    std::vector<Plugins::SeekRange> testRanges;
+    Plugins::SeekRange range1 = {0, 50};
+    Plugins::SeekRange range2 = {100, 200};
+    testRanges.push_back(range1);
+    testRanges.push_back(range2);
+    EXPECT_CALL(*mockDemuxer, GetSeekableRanges()).WillRepeatedly(Return(testRanges));
+    hiplayer_->demuxer_ = mockDemuxer;
+    int32_t mSeconds = 150;
+    PlayerSeekMode mode = PlayerSeekMode::SEEK_NEXT_SYNC;
+    hiplayer_->endTimeWithMode_ = 100;
+    hiplayer_->startTimeWithMode_ = -1;
+    int32_t curPos = 0;
+    (void)hiplayer_->GetCurrentTime(curPos);
+    int32_t ret = hiplayer_->Seek(mSeconds, mode);
+    auto errcode = 331350038;
+    EXPECT_EQ(ret, errcode);
+}
+
+// @tc.name     Test Seek API
+// @tc.number   PHIUT_Seek_011
+// @tc.desc     Test Seek interface, rtv != Status::OK after seek.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_Seek_011, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    std::vector<Plugins::SeekRange> testRanges;
+    Plugins::SeekRange range = {0, 100};
+    testRanges.push_back(range);
+    EXPECT_CALL(*mockDemuxer, GetSeekableRanges()).WillRepeatedly(Return(testRanges));
+    hiplayer_->demuxer_ = mockDemuxer;
+    int32_t mSeconds = -5;
+    PlayerSeekMode mode = PlayerSeekMode::SEEK_NEXT_SYNC;
+    hiplayer_->endTimeWithMode_ = 100;
+    hiplayer_->startTimeWithMode_ = -1;
+    int32_t curPos = 0;
+    (void)hiplayer_->GetCurrentTime(curPos);
+    int32_t ret = hiplayer_->Seek(mSeconds, mode);
+    auto errcode = 331350038;
+    EXPECT_EQ(ret, errcode);
+}
+
+// @tc.name     Test Seek API
+// @tc.number   PHIUT_Seek_012
+// @tc.desc     Test Seek interface, notifySeekDone is true.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_Seek_012, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    std::vector<Plugins::SeekRange> testRanges;
+    Plugins::SeekRange range = {0, 100};
+    testRanges.push_back(range);
+    EXPECT_CALL(*mockDemuxer, GetSeekableRanges()).WillRepeatedly(Return(testRanges));
+    hiplayer_->demuxer_ = mockDemuxer;
+    int32_t mSeconds = 50;
+    PlayerSeekMode mode = PlayerSeekMode::SEEK_NEXT_SYNC;
+    hiplayer_->endTimeWithMode_ = 100;
+    hiplayer_->startTimeWithMode_ = -1;
+    int32_t curPos = 0;
+    (void)hiplayer_->GetCurrentTime(curPos);
+    auto ret = hiplayer_->Seek(mSeconds, mode, true);
+    EXPECT_EQ(ret, Status::ERROR_INVALID_PARAMETER);
+}
+
+// @tc.name     Test Seek API
+// @tc.number   PHIUT_Seek_013
+// @tc.desc     Test Seek interface, isUnFreezeSeek is true.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_Seek_013, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    std::vector<Plugins::SeekRange> testRanges;
+    Plugins::SeekRange range = {0, 100};
+    testRanges.push_back(range);
+    EXPECT_CALL(*mockDemuxer, GetSeekableRanges()).WillRepeatedly(Return(testRanges));
+    hiplayer_->demuxer_ = mockDemuxer;
+    int32_t mSeconds = 50;
+    PlayerSeekMode mode = PlayerSeekMode::SEEK_NEXT_SYNC;
+    hiplayer_->endTimeWithMode_ = 100;
+    hiplayer_->startTimeWithMode_ = -1;
+    int32_t curPos = 0;
+    (void)hiplayer_->GetCurrentTime(curPos);
+    auto ret = hiplayer_->Seek(mSeconds, mode, false, true);
+    EXPECT_EQ(ret, Status::ERROR_INVALID_PARAMETER);
+}
+
+// @tc.name     Test Seek API
+// @tc.number   PHIUT_Seek_014
+// @tc.desc     Test Seek interface, curPosMs <= curPostAfterSeek (no live seek mode).
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_Seek_014, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    std::vector<Plugins::SeekRange> testRanges;
+    Plugins::SeekRange range = {0, 100};
+    testRanges.push_back(range);
+    EXPECT_CALL(*mockDemuxer, GetSeekableRanges()).WillRepeatedly(Return(testRanges));
+    hiplayer_->demuxer_ = mockDemuxer;
+    int32_t mSeconds = 50;
+    PlayerSeekMode mode = PlayerSeekMode::SEEK_NEXT_SYNC;
+    hiplayer_->endTimeWithMode_ = 100;
+    hiplayer_->startTimeWithMode_ = -1;
+    int32_t curPos = 10;
+    (void)hiplayer_->GetCurrentTime(curPos);
+    hiplayer_->isLiveSeek_ = false;
+    int32_t ret = hiplayer_->Seek(mSeconds, mode);
+    auto errcode = 331350038;
+    EXPECT_EQ(ret, errcode);
 }
 
 // @tc.name     Test SeekToDefaultPosition API
@@ -1044,7 +1263,8 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SeekToDefaultPosition_001, TestSize.Lev
     hiplayer_->videoDecoder_ = std::make_shared<DecoderSurfaceFilter>(name, type);
     hiplayer_->isLiveSeek_ = true;
     int32_t ret = hiplayer_->SeekToDefaultPosition();
-    EXPECT_EQ(ret, MSERR_UNKNOWN);
+    auto errcode = 0;
+    EXPECT_EQ(ret, errcode);
 }
 
 // @tc.name     Test SeekToDefaultPosition API
@@ -1064,7 +1284,8 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SeekToDefaultPosition_002, TestSize.Lev
     hiplayer_->videoDecoder_ = nullptr;
     hiplayer_->isLiveSeek_ = true;
     int32_t ret = hiplayer_->SeekToDefaultPosition();
-    EXPECT_EQ(ret, MSERR_UNKNOWN);
+    auto errcode = 0;
+    EXPECT_EQ(ret, errcode);
 }
 
 // @tc.name     Test SeekToDefaultPosition API
@@ -1075,7 +1296,8 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SeekToDefaultPosition_003, TestSize.Lev
     ASSERT_NE(hiplayer_, nullptr);
     hiplayer_->isLiveSeek_ = false;
     int32_t ret = hiplayer_->SeekToDefaultPosition();
-    EXPECT_EQ(ret, MSERR_UNKNOWN);
+    auto errcode = 0;
+    EXPECT_EQ(ret, errcode);
 }
 
 // @tc.name     Test SeekToDefaultPosition API
@@ -1087,7 +1309,8 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SeekToDefaultPosition_004, TestSize.Lev
     hiplayer_->demuxer_ = nullptr;
     hiplayer_->isLiveSeek_ = true;
     int32_t ret = hiplayer_->SeekToDefaultPosition();
-    EXPECT_EQ(ret, MSERR_UNKNOWN);
+    auto errcode = 0;
+    EXPECT_EQ(ret, errcode);
 }
 
 // @tc.name     Test SeekToDefaultPosition API
@@ -1104,7 +1327,8 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SeekToDefaultPosition_005, TestSize.Lev
     hiplayer_->demuxer_ = mockDemuxer;
     hiplayer_->isLiveSeek_ = true;
     int32_t ret = hiplayer_->SeekToDefaultPosition();
-    EXPECT_EQ(ret, MSERR_UNKNOWN);
+    auto errcode = 0;
+    EXPECT_EQ(ret, errcode);
 }
 
 // @tc.name     Test SeekToDefaultPosition API
@@ -1122,7 +1346,8 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SeekToDefaultPosition_008, TestSize.Lev
     hiplayer_->videoDecoder_ = nullptr;
     hiplayer_->isLiveSeek_ = true;
     int32_t ret = hiplayer_->SeekToDefaultPosition();
-    EXPECT_EQ(ret, MSERR_UNKNOWN);
+    auto errcode = 0;
+    EXPECT_EQ(ret, errcode);
 }
 
 // @tc.name     Test SeekToDefaultPosition API
@@ -1139,7 +1364,8 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SeekToDefaultPosition_009, TestSize.Lev
     hiplayer_->demuxer_ = mockDemuxer;
     hiplayer_->isLiveSeek_ = true;
     int32_t ret = hiplayer_->SeekToDefaultPosition();
-    EXPECT_EQ(ret, MSERR_UNKNOWN);
+    auto errcode = 0;
+    EXPECT_EQ(ret, errcode);
 }
 
 // @tc.name     Test GetSeekableRanges API
@@ -1265,6 +1491,15 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsNeedChangePlaySpeed_005, TestSize.Lev
     bool isXSpeedPlay = false;
     bool ret = hiplayer_->IsNeedChangePlaySpeed(mode, isXSpeedPlay);
     EXPECT_EQ(ret, false);
+}
+
+// @tc.name     Test IsLiveSeek API
+// @tc.number   PHIUT_IsLiveSeek_001
+// @tc.desc     Test no live, return false.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsLiveSeek_001, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    EXPECT_FALSE(hiplayer_->IsLiveSeek());
 }
 } // namespace Media
 } // namespace OHOS

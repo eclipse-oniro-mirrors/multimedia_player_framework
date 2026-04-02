@@ -933,8 +933,8 @@ napi_value AVPlayerNapi::JsSeekToDefaultPosition(napi_env env, napi_callback_inf
     if (!jsPlayer->IsLiveSource()) {
         SeekEnqueueTask(jsPlayer, 0, SEEK_PREVIOUS_SYNC);
     } else if (!jsPlayer->player_->IsLiveSeek()) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY,
-            "Current state is not in live seek mode, not support seekToDefaultPosition");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "Current state is not in live seek mode, unsupport seekToDefault operation");
         return result;
     } else {
         SeekToDefaultPositionEnqueueTask(jsPlayer);

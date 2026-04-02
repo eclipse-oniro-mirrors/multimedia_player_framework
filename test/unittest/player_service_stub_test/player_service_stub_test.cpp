@@ -387,5 +387,53 @@ HWTEST_F(PlayerServiceStubTest, TrackSelectionFilterProxy_001, TestSize.Level1)
     proxy->ReadTrackSelectionFilter(reply, outputFilter);
     EXPECT_TRUE(IsSameTrackSelectionFilter(outputFilter, inputFilter));
 }
+
+HWTEST_F(PlayerServiceStubTest, SeekToDefaultPosition_001, TestSize.Level1)
+{
+    sptr<PlayerServiceStub> playerServiceStub = PlayerServiceStub::Create();
+    ASSERT_NE(playerServiceStub, nullptr);
+
+    MessageParcel data;
+    MessageParcel reply;
+    int ret = playerServiceStub->SeekToDefaultPosition(data, reply);
+    EXPECT_EQ(ret, 0);
+    playerServiceStub = nullptr;
+}
+
+HWTEST_F(PlayerServiceStubTest, GetSeekableRanges_001, TestSize.Level1)
+{
+    sptr<PlayerServiceStub> playerServiceStub = PlayerServiceStub::Create();
+    ASSERT_NE(playerServiceStub, nullptr);
+
+    MessageParcel data;
+    MessageParcel reply;
+    int ret = playerServiceStub->GetSeekableRanges(data, reply);
+    EXPECT_EQ(ret, 0);
+    playerServiceStub = nullptr;
+}
+
+HWTEST_F(PlayerServiceStubTest, GetLoadedRanges_001, TestSize.Level1)
+{
+    sptr<PlayerServiceStub> playerServiceStub = PlayerServiceStub::Create();
+    ASSERT_NE(playerServiceStub, nullptr);
+
+    MessageParcel data;
+    MessageParcel reply;
+    int ret = playerServiceStub->GetLoadedRanges(data, reply);
+    EXPECT_EQ(ret, 0);
+    playerServiceStub = nullptr;
+}
+
+HWTEST_F(PlayerServiceStubTest, IsLiveSeek_001, TestSize.Level1)
+{
+    sptr<PlayerServiceStub> playerServiceStub = PlayerServiceStub::Create();
+    ASSERT_NE(playerServiceStub, nullptr);
+
+    MessageParcel data;
+    MessageParcel reply;
+    int ret = playerServiceStub->IsLiveSeek(data, reply);
+    EXPECT_EQ(ret, 0);
+    playerServiceStub = nullptr;
+}
 }
 }
