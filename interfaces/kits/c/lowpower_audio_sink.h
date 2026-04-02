@@ -202,7 +202,7 @@ OH_AVErrCode OH_LowPowerAudioSink_Flush(OH_LowPowerAudioSink* sink);
 OH_AVErrCode OH_LowPowerAudioSink_Stop(OH_LowPowerAudioSink* sink);
  
 /**
- * @brief Reset the lowpower audio sink. Too reuse this instance, you need to call the Configure.
+ * @brief Reset the lowpower audio sink. To reuse this instance, you need to call the Configure.
  *
  * @param {OH_LowPowerAudioSink*} sink Pointer to an OH_LowPowerAudioSink instance
  * @return Returns AV_ERR_OK if the execution is successful,
@@ -284,7 +284,7 @@ OH_AVErrCode OH_LowPowerAudioSink_SetPlaybackSpeed(OH_LowPowerAudioSink* sink, c
 OH_AVErrCode OH_LowPowerAudioSink_ReturnSamples(OH_LowPowerAudioSink* sink, OH_AVSamplesBuffer* samples);
  
 /**
- * @brief Regsister callback instance for lowpower audio sink.
+ * @brief Register callback instance for lowpower audio sink.
  *
  * @param {OH_LowPowerAudioSink*} sink Pointer to an OH_LowPowerAudioSink instance
  * @param {OH_LowPowerAudioSinkCallback*} callback Pointer to an OH_LowPowerAudioSinkCallback instance
