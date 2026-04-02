@@ -67,6 +67,8 @@ public:
     virtual int32_t SetCaptureArea(uint64_t displayId, OHOS::Rect area) = 0;
     virtual int32_t GetMultiDisplayCaptureCapability(const std::vector<uint64_t> &displayIds,
         MultiDisplayCapability &capability) = 0;
+    virtual int32_t PauseScreenCapture() = 0;
+    virtual int32_t ResumeScreenCapture() = 0;
 };
 } // namespace Media
 } // namespace OHOS

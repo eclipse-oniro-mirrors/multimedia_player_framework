@@ -360,6 +360,8 @@ public:
     virtual int32_t SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config) = 0;
     virtual int32_t GetMultiDisplayCaptureCapability (const std::vector<uint64_t> &displayIds,
         MultiDisplayCapability &multiDisplayCapability) = 0;
+    virtual int32_t PauseScreenCapture() = 0;
+    virtual int32_t ResumeScreenCapture() = 0;
 };
 
 class __attribute__((visibility("default"))) ScreenCaptureFactory {

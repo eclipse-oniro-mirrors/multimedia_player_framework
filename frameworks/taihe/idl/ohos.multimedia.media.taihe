@@ -1031,6 +1031,7 @@ struct AVScreenCaptureStrategy {
     keepCaptureDuringCall: Optional<bool>;
     enableBFrame: Optional<bool>;
     privacyMaskMode: Optional<i32>;
+    enablePause: Optional<bool>;
 }
 
 struct AVScreenCaptureRecordConfig {
@@ -1134,6 +1135,12 @@ interface AVScreenCaptureRecorder {
 
     @gen_promise("stopRecording")
     StopRecordingSync(): void;
+
+    @gen_promise("pauseRecording")
+    PauseRecordingSync(): void;
+
+    @gen_promise("resumeRecording")
+    ResumeRecordingSync(): void;
 
     @gen_promise("skipPrivacyMode")
     SkipPrivacyModeSync(windowIDs: Array<i32>): void;

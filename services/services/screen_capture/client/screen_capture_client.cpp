@@ -335,5 +335,19 @@ int32_t ScreenCaptureClient::GetMultiDisplayCaptureCapability(const std::vector<
     CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
     return screenCaptureProxy_->GetMultiDisplayCaptureCapability(displayIds, capability);
 }
+
+int32_t ScreenCaptureClient::PauseScreenCapture()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
+    return screenCaptureProxy_->PauseScreenCapture();
+}
+
+int32_t ScreenCaptureClient::ResumeScreenCapture()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
+    return screenCaptureProxy_->ResumeScreenCapture();
+}
 } // namespace Media
 } // namespace OHOS

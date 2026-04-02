@@ -94,7 +94,9 @@ enum AVScreenCaptureState : int32_t {
     POPUP_WINDOW = 1,
     STARTING = 2,
     STARTED = 3,
-    STOPPED = 4
+    PAUSED = 4,
+    RESUMED = 5,
+    STOPPED = 6
 };
 
 enum AVScreenCaptureAvType : int8_t {

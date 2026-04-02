@@ -596,6 +596,12 @@ int32_t ScreenCaptureCapiMock::StrategyForFillMode(AVScreenCaptureFillMode value
     return OH_AVScreenCapture_StrategyForFillMode(strategy_, static_cast<OH_AVScreenCapture_FillMode>(value));
 }
 
+int32_t ScreenCaptureCapiMock::StrategyForPause(bool value)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(strategy_ != nullptr, MSERR_UNKNOWN, "strategy_ == nullptr");
+    return OH_AVScreenCapture_StrategyForPause(strategy_, value);
+}
+
 OH_AVScreenCaptureHighlightConfig ScreenCaptureCapiMock::HighlightConfigConvert(AVScreenCaptureHighlightConfig config)
 {
     OH_AVScreenCaptureHighlightConfig highlightConfig;
@@ -611,7 +617,7 @@ int32_t ScreenCaptureCapiMock::SetCaptureAreaHighlight(AVScreenCaptureHighlightC
     OH_AVScreenCaptureHighlightConfig highlightConfig = HighlightConfigConvert(config);
     return OH_AVScreenCapture_SetCaptureAreaHighlight(screenCapture_, highlightConfig);
 }
- 
+
 int32_t ScreenCaptureCapiMock::GetMultiDisplayCaptureCapability(
     uint64_t *displayIds, size_t count, MultiDisplayCapability *multiDisplayCapability)
 {
@@ -622,4 +628,16 @@ int32_t ScreenCaptureCapiMock::GetMultiDisplayCaptureCapability(
     multiDisplayCapability->height = capability.height;
     multiDisplayCapability->isMultiDisplaySupport = capability.isMultiDisplaySupport;
     return ret;
+}
+
+int32_t ScreenCaptureCapiMock::PauseScreenRecording()
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_UNKNOWN, "screenCapture_ == nullptr");
+    return OH_AVScreenCapture_PauseScreenCapture(screenCapture_);
+}
+
+int32_t ScreenCaptureCapiMock::ResumeScreenRecording()
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_UNKNOWN, "screenCapture_ == nullptr");
+    return OH_AVScreenCapture_ResumeScreenCapture(screenCapture_);
 }

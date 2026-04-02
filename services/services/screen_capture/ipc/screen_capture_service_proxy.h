@@ -64,6 +64,8 @@ public:
     int32_t SetCaptureArea(uint64_t displayId, OHOS::Rect area) override;
     int32_t GetMultiDisplayCaptureCapability(const std::vector<uint64_t> &displayIds,
         MultiDisplayCapability &capability) override;
+    int32_t PauseScreenCapture() override;
+    int32_t ResumeScreenCapture() override;
 
 private:
     static inline BrokerDelegator<ScreenCaptureServiceProxy> delegator_;

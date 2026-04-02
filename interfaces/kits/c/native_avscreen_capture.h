@@ -699,6 +699,40 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetMultiDisplayCaptureCapability(
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetPrivacyProtectCallback(struct OH_AVScreenCapture *capture,
     OH_AVScreenCapture_OnPrivacyProtect callback, void *userData);
 
+/**
+ * @brief Allow to pause screen capture
+ * @param {OH_AVScreenCapture_CaptureStrategy *} strategy Pointer to an OH_AVScreenCapture_CaptureStrategy instance.
+ * @param {bool} value The default value is false, which means that screen recording is not allowed to pause
+ * @return Function result code.
+ *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
+ *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} strategy value is nullptr.
+ * @since 26.0.0
+ */
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForPause(
+    OH_AVScreenCapture_CaptureStrategy *strategy, bool value);
+
+/**
+ * @brief Pause screen capture
+ * @param {OH_AVScreenCapture*} capture Initialized screen capture instance.
+ * @return Function result code.
+ *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
+ *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} capture value is nullptr.
+ *         {@link AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT} operation not be permitted.
+ * @since 26.0.0
+ */
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_PauseScreenCapture(struct OH_AVScreenCapture *capture);
+
+/**
+ * @brief Resume screen capture
+ * @param {OH_AVScreenCapture*} capture Initialized screen capture instance.
+ * @return Function result code.
+ *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
+ *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} capture value is nullptr.
+ *         {@link AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT} operation not be permitted.
+ * otherwise returns a specific error code, refer to {@link OH_AVSCREEN_CAPTURE_ErrCode}
+ * @since 26.0.0
+ */
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ResumeScreenCapture(struct OH_AVScreenCapture *capture);
 #ifdef __cplusplus
 }
 #endif

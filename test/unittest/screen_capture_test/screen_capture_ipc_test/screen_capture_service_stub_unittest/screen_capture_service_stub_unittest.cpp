@@ -587,3 +587,47 @@ HWTEST_F(ScreenCaptureServiceStubTest, AcquireAudioBuffer_001, TestSize.Level1)
     EXPECT_EQ(reply.ReadInt32(), MSERR_INVALID_OPERATION);
     screenCaptureServiceStub = nullptr;
 }
+
+/**
+ * @tc.name  : PauseScreenCapture_001
+ * @tc.number: PauseScreenCapture_001
+ * @tc.desc  : FUNC
+ */
+HWTEST_F(ScreenCaptureServiceStubTest, PauseScreenCapture_001, TestSize.Level1)
+{
+    sptr<ScreenCaptureServiceStub> screenCaptureServiceStub = ScreenCaptureServiceStub::Create();
+    ASSERT_NE(screenCaptureServiceStub, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    bool token = data.WriteInterfaceToken(screenCaptureServiceStub->GetDescriptor());
+    ASSERT_EQ(token, true);
+
+    int ret = screenCaptureServiceStub->OnRemoteRequest(
+            IStandardScreenCaptureService::PAUSE_SCREEN_CAPTURE, data, reply, option);
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_EQ(reply.ReadInt32(), MSERR_INVALID_OPERATION);
+    screenCaptureServiceStub = nullptr;
+}
+
+/**
+ * @tc.name  : ResumeScreenCapture_001
+ * @tc.number: ResumeScreenCapture_001
+ * @tc.desc  : FUNC
+ */
+HWTEST_F(ScreenCaptureServiceStubTest, ResumeScreenCapture_001, TestSize.Level1)
+{
+    sptr<ScreenCaptureServiceStub> screenCaptureServiceStub = ScreenCaptureServiceStub::Create();
+    ASSERT_NE(screenCaptureServiceStub, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    bool token = data.WriteInterfaceToken(screenCaptureServiceStub->GetDescriptor());
+    ASSERT_EQ(token, true);
+
+    int ret = screenCaptureServiceStub->OnRemoteRequest(
+            IStandardScreenCaptureService::RESUME_SCREEN_CAPTURE, data, reply, option);
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_EQ(reply.ReadInt32(), MSERR_INVALID_OPERATION);
+    screenCaptureServiceStub = nullptr;
+}

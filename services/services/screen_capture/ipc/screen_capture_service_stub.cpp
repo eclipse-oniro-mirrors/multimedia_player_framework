@@ -92,6 +92,8 @@ int32_t ScreenCaptureServiceStub::Init()
     screenCaptureStubFuncs_[PRESENT_PICKER] = &ScreenCaptureServiceStub::PresentPicker;
     screenCaptureStubFuncs_[GET_MULTI_DISPLAY_CAPTURE_CAPABILITY] =
         &ScreenCaptureServiceStub::GetMultiDisplayCaptureCapability;
+    screenCaptureStubFuncs_[PAUSE_SCREEN_CAPTURE] = &ScreenCaptureServiceStub::PauseScreenCapture;
+    screenCaptureStubFuncs_[RESUME_SCREEN_CAPTURE] = &ScreenCaptureServiceStub::ResumeScreenCapture;
     return MSERR_OK;
 }
 
@@ -854,6 +856,7 @@ int32_t ScreenCaptureServiceStub::SetScreenCaptureStrategy(MessageParcel &data, 
     strategy.enableBFrame = data.ReadBool();
     strategy.pickerPopUp = static_cast<AVScreenCapturePickerPopUp>(data.ReadInt32());
     strategy.fillMode = static_cast<AVScreenCaptureFillMode>(data.ReadInt32());
+    strategy.enablePause = data.ReadBool();
     int32_t ret = SetScreenCaptureStrategy(strategy);
     reply.WriteInt32(ret);
     return MSERR_OK;
@@ -886,6 +889,40 @@ int32_t ScreenCaptureServiceStub::GetMultiDisplayCaptureCapability(MessageParcel
     reply.WriteUint32(capability.width);
     reply.WriteUint32(capability.height);
     reply.WriteBool(capability.isMultiDisplaySupport);
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServiceStub::PauseScreenCapture()
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    return screenCaptureServer_->PauseScreenCapture();
+}
+
+int32_t ScreenCaptureServiceStub::ResumeScreenCapture()
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    return screenCaptureServer_->ResumeScreenCapture();
+}
+
+int32_t ScreenCaptureServiceStub::PauseScreenCapture(MessageParcel &data, MessageParcel &reply)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    (void)data;
+    int32_t ret = PauseScreenCapture();
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServiceStub::ResumeScreenCapture(MessageParcel &data, MessageParcel &reply)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    (void)data;
+    int32_t ret = ResumeScreenCapture();
     reply.WriteInt32(ret);
     return MSERR_OK;
 }

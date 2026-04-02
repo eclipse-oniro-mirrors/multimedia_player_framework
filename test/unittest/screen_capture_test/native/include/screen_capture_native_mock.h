@@ -37,6 +37,8 @@ public:
     int32_t StopScreenCapture() override;
     int32_t StartScreenRecording() override;
     int32_t StopScreenRecording() override;
+    int32_t PauseScreenRecording() override;
+    int32_t ResumeScreenRecording() override;
     int32_t Release() override;
     int32_t PresentPicker() override;
     int32_t SetMicrophoneEnabled(bool isMicrophone) override;
@@ -74,6 +76,7 @@ public:
     int32_t StrategyForPrivacyMaskMode(int32_t value) override;
     int32_t StrategyForPickerPopUp(bool value) override;
     int32_t StrategyForFillMode(AVScreenCaptureFillMode value) override;
+    int32_t StrategyForPause(bool value) override;
     int32_t SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config) override;
     int32_t GetMultiDisplayCaptureCapability(uint64_t *displayIds, size_t count,
         MultiDisplayCapability *multiDisplayCapability) override;

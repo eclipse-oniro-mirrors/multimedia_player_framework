@@ -120,3 +120,17 @@ ohos_prebuilt_etc("screen_capture_light_image") {
   relative_install_dir = "screencapture"
   part_name = "player_framework"
 }
+
+ohos_prebuilt_etc("screen_capture_pause_image") {
+  source = "image/pause.svg"
+  subsystem_name = "multimedia"
+  relative_install_dir = "screencapture"
+  part_name = "player_framework"
+}
+
+ohos_prebuilt_etc("screen_capture_play_image") {
+  source = "image/play.svg"
+  subsystem_name = "multimedia"
+  relative_install_dir = "screencapture"
+  part_name = "player_framework"
+}

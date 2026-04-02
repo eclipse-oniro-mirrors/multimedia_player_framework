@@ -34,6 +34,8 @@ std::map<std::string,
     AVScreenCaptureRecorderImpl::AvScreenCaptureTaskqFunc> AVScreenCaptureRecorderImpl::taskQFuncs_ = {
     {AVScreenCapturegOpt::START_RECORDING, &AVScreenCaptureRecorderImpl::StartRecording},
     {AVScreenCapturegOpt::STOP_RECORDING, &AVScreenCaptureRecorderImpl::StopRecording},
+    {AVScreenCapturegOpt::PAUSE_RECORDING, &AVScreenCaptureRecorderImpl::PauseRecording},
+    {AVScreenCapturegOpt::RESUME_RECORDING, &AVScreenCaptureRecorderImpl::ResumeRecording},
     {AVScreenCapturegOpt::RELEASE, &AVScreenCaptureRecorderImpl::Release},
 };
 
@@ -368,6 +370,20 @@ RetInfo AVScreenCaptureRecorderImpl::StopRecording()
     return RetInfo(MSERR_EXT_API9_OK, "");
 }
 
+RetInfo AVScreenCaptureRecorderImpl::PauseRecording()
+{
+    int32_t ret = screenCapture_->PauseScreenCapture();
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(ret, "PauseRecording", ""));
+    return RetInfo(MSERR_EXT_API9_OK, "");
+}
+
+RetInfo AVScreenCaptureRecorderImpl::ResumeRecording()
+{
+    int32_t ret = screenCapture_->ResumeScreenCapture();
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(ret, "ResumeRecording", ""));
+    return RetInfo(MSERR_EXT_API9_OK, "");
+}
+
 int32_t AVScreenCaptureRecorderImpl::GetStrategy(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
     ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config)
 {
@@ -397,9 +413,15 @@ int32_t AVScreenCaptureRecorderImpl::GetStrategy(std::unique_ptr<AVScreenCapture
         strategy.strategyForPrivacyMaskMode = avStrategy.privacyMaskMode.value();
         strategy.setByUser = true;
     }
+    // get enablePause
+    if (avStrategy.enablePause.has_value()) {
+        strategy.enablePause = avStrategy.enablePause.value();
+        strategy.setByUser = true;
+    }
     MEDIA_LOGI("GetStrategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d, "
-        "enableBFrame: %{public}d, strategyForPrivacyMaskMode: %{public}d", strategy.enableDeviceLevelCapture,
-        strategy.keepCaptureDuringCall, strategy.enableBFrame, strategy.strategyForPrivacyMaskMode);
+        "enableBFrame: %{public}d, enablePause: %{public}d, strategyForPrivacyMaskMode: %{public}d",
+        strategy.enableDeviceLevelCapture, strategy.keepCaptureDuringCall, strategy.enableBFrame, strategy.enablePause,
+        strategy.strategyForPrivacyMaskMode);
     return MSERR_OK;
 }
 
@@ -502,6 +524,18 @@ void AVScreenCaptureRecorderImpl::StopRecordingSync()
 {
     MediaTrace trace("AVScreenCaptureRecorderImpl::TaiheStopRecording");
     return ExecuteByPromise(AVScreenCapturegOpt::STOP_RECORDING);
+}
+
+void AVScreenCaptureRecorderImpl::PauseRecordingSync()
+{
+    MediaTrace trace("AVScreenCaptureRecorderImpl::TaihePauseRecording");
+    return ExecuteByPromise(AVScreenCapturegOpt::PAUSE_RECORDING);
+}
+
+void AVScreenCaptureRecorderImpl::ResumeRecordingSync()
+{
+    MediaTrace trace("AVScreenCaptureRecorderImpl::TaiheResumeRecording");
+    return ExecuteByPromise(AVScreenCapturegOpt::RESUME_RECORDING);
 }
 
 std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureRecorderImpl::GetSkipPrivacyModeTask(

@@ -478,6 +478,26 @@ typedef enum OH_AVScreenCaptureStateCode {
     OH_SCREEN_CAPTURE_STATE_EXIT_PRIVATE_SCENE = 9,
     /* ScreenCapture stopped by user switches */
     OH_SCREEN_CAPTURE_STATE_STOPPED_BY_USER_SWITCHES = 10,
+    /**
+     * @brief Screen capture paused by user
+     * @since 26.0.0
+     */
+    OH_SCREEN_CAPTURE_STATE_PAUSED_BY_USER = 11,
+    /**
+     * @brief Screen capture resumed by user
+     * @since 26.0.0
+     */
+    OH_SCREEN_CAPTURE_STATE_RESUMED_BY_USER = 12,
+    /**
+     * @brief Screen capture paused by app
+     * @since 26.0.0
+     */
+    OH_SCREEN_CAPTURE_STATE_PAUSED_BY_APP = 13,
+    /**
+     * @brief Screen capture resumed by app
+     * @since 26.0.0
+     */
+    OH_SCREEN_CAPTURE_STATE_RESUMED_BY_APP = 14,
 } OH_AVScreenCaptureStateCode;
 
 /**

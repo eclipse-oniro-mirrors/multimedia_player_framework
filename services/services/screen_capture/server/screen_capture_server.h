@@ -108,6 +108,10 @@ public:
     int32_t SetCaptureArea(uint64_t displayId, OHOS::Rect area) override;
     int32_t GetMultiDisplayCaptureCapability(const std::vector<uint64_t> &displayIds,
         MultiDisplayCapability &capability) override;
+    int32_t PauseScreenCapture() override;
+    int32_t ResumeScreenCapture() override;
+    int32_t PauseScreenCaptureByUser();
+    int32_t ResumeScreenCaptureByUser();
 
     void SetSessionId(int32_t sessionId);
     void GetAndSetAppVersion();
@@ -168,6 +172,42 @@ public:
     bool IsCaptureScreen(uint64_t displayId);
     void SetCurDisplayId(uint64_t displayId);
     uint64_t GetCurDisplayId();
+    inline bool IsCreated() const
+    {
+        return captureState_ == AVScreenCaptureState::CREATED;
+    }
+
+    inline bool IsStopped() const
+    {
+        return captureState_ == AVScreenCaptureState::STOPPED;
+    }
+
+    inline bool IsPaused() const
+    {
+        return captureState_ == AVScreenCaptureState::PAUSED;
+    }
+
+    inline bool IsStarting() const
+    {
+        return captureState_ == AVScreenCaptureState::STARTING;
+    }
+
+    inline bool IsPopupWindow() const
+    {
+        return captureState_ == AVScreenCaptureState::POPUP_WINDOW;
+    }
+
+    inline bool IsStartedOrResumed() const
+    {
+        return captureState_ == AVScreenCaptureState::STARTED ||
+               captureState_ == AVScreenCaptureState::RESUMED;
+    }
+
+    inline bool IsActive() const
+    {
+        return IsStartedOrResumed() || IsPaused();
+    }
+
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
     int32_t RegisterServerCallbacks();
@@ -194,6 +234,7 @@ private:
     int32_t StartStreamMicAudioCapture();
     int32_t StartFileInnerAudioCapture();
     int32_t StartFileMicAudioCapture();
+    int32_t StartFileAudioCapture();
     int32_t StartMicAudioCapture();
     int32_t StopMicAudioCapture();
     int32_t StartStreamVideoCapture();
@@ -283,6 +324,7 @@ private:
     void SetupPublishRequest(NotificationRequest &request);
     void InitLiveViewContent();
     void UpdateLiveViewContent();
+    void UpdateLiveViewButton();
     void UpdateLiveViewPrivacy();
     std::shared_ptr<PixelMap> GetPixelMap(std::string path);
     std::shared_ptr<PixelMap> GetPixelMapSvg(std::string path, int32_t width, int32_t height);
@@ -322,6 +364,12 @@ private:
     void OnCaptureContentChanged(bool isMirrorChanged = false);
     int32_t RegisterRecordDisplayListener();
     int32_t UnRegisterRecordDisplayListener();
+    int32_t PauseVideoCapture();
+    int32_t ResumeVideoCapture();
+    int32_t PauseRecorder();
+    int32_t ResumeRecorder();
+    int32_t PauseScreenCaptureInner(AVScreenCaptureStateCode stateCode);
+    int32_t ResumeScreenCaptureInner(AVScreenCaptureStateCode stateCode);
 private:
     std::mutex mutex_;
     std::mutex cbMutex_;
@@ -387,6 +435,7 @@ private:
     std::atomic<AVScreenCaptureState> captureState_ = AVScreenCaptureState::CREATED;
     std::shared_ptr<NotificationLocalLiveViewContent> localLiveViewContent_;
     int64_t startTime_ = 0;
+    bool isTimePaused_ = false;
     sptr<UIExtensionAbilityConnection> connection_ = nullptr;
     sptr<SCWindowLifecycleListener> windowLifecycleListener_ = nullptr;
     sptr<SCDeathRecipientListener> lifecycleListenerDeathRecipient_ = nullptr;

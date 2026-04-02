@@ -374,6 +374,12 @@ int32_t ScreenCaptureNativeMock::StrategyForFillMode(AVScreenCaptureFillMode val
     return MSERR_OK;
 }
 
+int32_t ScreenCaptureNativeMock::StrategyForPause(bool value)
+{
+    strategy_.enablePause = value;
+    return MSERR_OK;
+}
+
 int32_t ScreenCaptureNativeMock::SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config)
 {
     return MSERR_OK;
@@ -388,6 +394,18 @@ int32_t ScreenCaptureNativeMock::GetMultiDisplayCaptureCapability(uint64_t *disp
     }
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
     return screenCapture_->GetMultiDisplayCaptureCapability(vec, *multiDisplayCapability);
+}
+
+int32_t ScreenCaptureNativeMock::PauseScreenRecording()
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    return screenCapture_->PauseScreenCapture();
+}
+
+int32_t ScreenCaptureNativeMock::ResumeScreenRecording()
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    return screenCapture_->ResumeScreenCapture();
 }
 } // namespace Media
 } // namespace OHOS
