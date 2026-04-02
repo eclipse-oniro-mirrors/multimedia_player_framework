@@ -349,7 +349,7 @@ interface AVPlayer {
     SetBitrate(bitrate: i32): void;
     SetDecryptionConfig(mediaKeySession: drm.MediaKeySession, secureVideoPath: bool): void;
     GetMediaKeySystemInfos(): Array<drm.MediaKeySystemInfo>;
-    SeekToDefaultPositionSync(): void;
+    SeekToDefaultPosition(): void;
 
     @gen_async("getTrackDescription")
     @gen_promise("getTrackDescription")
