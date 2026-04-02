@@ -21,6 +21,7 @@
 #include <filesystem>
 #include <fcntl.h>
 #include <unistd.h>
+#include <cinttypes>
 #include <sys/mman.h>
 #include "cache_manager.h"
 #include "media_log.h"
@@ -438,7 +439,7 @@ bool StreamCacheManager::RemoveCacheDirectory(const std::string& path)
 
     for (const auto& file : files) {
         if (removeSize >= NEED_REMOVE_CACHE_SIZE) {
-            MEDIA_LOGI("remove end, count:%{public}llu, size:%{public}d", removeSize, deletedCount);
+            MEDIA_LOGI("remove end, count:%{public}" PRIu64 ", size:%{public}d", removeSize, deletedCount);
             break;
         }
 
