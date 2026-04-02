@@ -1545,7 +1545,7 @@ double AVPlayerImpl::GetPlaybackRateSync()
     return static_cast<double>(rate);
 }
 
-void AVPlayerImpl::SeekToDefaultPositionSync()
+void AVPlayerImpl::SeekToDefaultPosition()
 {
     MediaTrace trace("AVPlayerImpl::seekToDefaultPosition");
     MEDIA_LOGI("TaiheSeekToDefaultPosition In");

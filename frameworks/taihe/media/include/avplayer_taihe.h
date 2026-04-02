@@ -158,7 +158,7 @@ public:
     void SetSuperResolutionSync(bool enabled);
     void SetPlaybackRangeSync(int32_t startTimeMs, int32_t endTimeMs,
         optional_view<::ohos::multimedia::media::SeekMode> mode);
-    void SeekToDefaultPositionSync();
+    void SeekToDefaultPosition();
     array<Range> GetSeekableTimeRangesSync();
     array<Range> GetLoadedTimeRangesSync();
     void SetMediaMutedSync(::ohos::multimedia::media::MediaType mediaType, bool muted);
