@@ -49,6 +49,7 @@
 #include "want_agent_helper.h"
 #include "common_event_manager.h"
 #include "screen_capture_record_display_listener.h"
+#include "metadata_helper.h"
 #ifdef PC_STANDARD
 #include "power_mgr_client.h"
 #include <parameters.h>
@@ -3666,7 +3667,7 @@ int32_t ScreenCaptureServer::GetMicAudioCaptureBufferSize(size_t &size)
 }
 
 int32_t ScreenCaptureServer::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence,
-                                                int64_t &timestamp, OHOS::Rect &damage)
+                                                int64_t &timestamp, OHOS::Rect &damage, OHOS::Rect &rsRect)
 {
     MediaTrace trace("ScreenCaptureServer::AcquireVideoBuffer", HITRACE_LEVEL_DEBUG);
     std::unique_lock<std::mutex> lock(mutex_);
@@ -3691,6 +3692,18 @@ int32_t ScreenCaptureServer::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfa
     }
     if (surfaceBuffer != nullptr) {
         MEDIA_LOGD("getcurrent surfaceBuffer info, size:%{public}u", surfaceBuffer->GetSize());
+        HDI::Display::Graphic::Common::V1_0::BufferHandleMetaRegion metaRegion;
+        std::vector<uint8_t> data;
+        surfaceBuffer->GetMetadata(HDI::Display::Graphic::Common::V1_0::ATTRKEY_CROP_REGION, data);
+        MetadataHelper::ConvertVecToMetadata(data, metaRegion);
+        rsRect.x = metaRegion.left;
+        rsRect.y = metaRegion.top;
+        rsRect.w = metaRegion.width;
+        rsRect.h = metaRegion.height;
+        MEDIA_LOGI("get surfaceBuffer rsRect.x: %{public}d, rsRect.y: %{public}d",
+            rsRect.x, rsRect.y);
+        MEDIA_LOGI("get surfaceBuffer rsRect.w: %{public}d, rsRect.h: %{public}d",
+            rsRect.w, rsRect.h);
         return MSERR_OK;
     }
     FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNKNOWN,

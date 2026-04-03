@@ -278,11 +278,11 @@ int32_t ScreenCaptureClient::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &au
 }
 
 int32_t ScreenCaptureClient::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence,
-                                                int64_t &timestamp, OHOS::Rect &damage)
+                                                int64_t &timestamp, OHOS::Rect &damage, OHOS::Rect &rsRect)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    return screenCaptureProxy_->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage);
+    return screenCaptureProxy_->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage, rsRect);
 }
 
 int32_t ScreenCaptureClient::ReleaseAudioBuffer(AudioCaptureSourceType type)
