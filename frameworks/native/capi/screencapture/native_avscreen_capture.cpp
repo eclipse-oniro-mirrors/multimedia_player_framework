@@ -306,7 +306,7 @@ private:
             "AcquireVideoBuffer failed format no memory!");
         // 将 rsRect 转换为 int32_t 数组
         int32_t rectData[4] = {rsRect.x, rsRect.y, rsRect.w, rsRect.h};
-        OH_AVFormat_SetIntBuffer(format, OH_MD_KEY_REFERENCE_TRACK_IDS, rectData, sizeof(rectData));
+        OH_AVFormat_SetIntBuffer(format, OH_MD_KEY_SCREEN_CAPTURE_WINDOW_RECT, rectData, sizeof(rectData));
         
         // 将 format 设置到 buffer
         OH_AVBuffer_SetParameter(reinterpret_cast<OH_AVBuffer*>(ohAvBuffer.GetRefPtr()), format);
