@@ -359,7 +359,7 @@ OH_AVErrCode OH_LowPowerVideoSink_SetPlaybackSpeed(OH_LowPowerVideoSink* sink, c
 OH_AVErrCode OH_LowPowerVideoSink_ReturnSamples(OH_LowPowerVideoSink* sink, OH_AVSamplesBuffer* samples);
  
 /**
- * @brief Regsister callback instance for lowpower video sink.
+ * @brief Register callback instance for lowpower video sink.
  *
  * @param {OH_LowPowerVideoSink*} sink Pointer to an OH_LowPowerVideoSink instance
  * @param {OH_LowPowerVideoSinkCallback*} callback Pointer to an OH_LowPowerVideoSinkCallback instance

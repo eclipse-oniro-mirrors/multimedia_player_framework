@@ -35,8 +35,8 @@
  * @since 20
  */
  
-#ifndef NATIVE_LOWPOWER_VIDEOSINK_BASH_H
-#define NATIVE_LOWPOWER_VIDEOSINK_BASH_H
+#ifndef NATIVE_LOWPOWER_VIDEO_SINK_BASE_H
+#define NATIVE_LOWPOWER_VIDEO_SINK_BASE_H
  
 #include <stdint.h>
 #include <stdbool.h>
@@ -139,7 +139,7 @@ typedef void (*OH_LowPowerVideoSink_OnStreamChanged)(OH_LowPowerVideoSink* sink,
 typedef void (*OH_LowPowerVideoSink_OnFirstFrameDecoded)(OH_LowPowerVideoSink* sink, void* userData);
  
 /**
- * @brief When the OH_LowPowerVideoSinkinstance play to end of stream, the function pointer will be called
+ * @brief When the OH_LowPowerVideoSink instance play to end of stream, the function pointer will be called
  * to report play completed event.
  *
  * @param {OH_LowPowerVideoSink*} sink OH_LowPowerVideoSink instance
@@ -151,6 +151,6 @@ typedef void (*OH_LowPowerVideoSink_OnEos)(OH_LowPowerVideoSink* sink, void* use
 #ifdef __cplusplus
 }
 #endif
-#endif // NATIVE_LOWPOWER_VIDEOSINK_BASH_H
+#endif // NATIVE_LOWPOWER_VIDEO_SINK_BASE_H
  
 /** @} */
