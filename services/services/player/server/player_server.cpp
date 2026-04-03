@@ -478,8 +478,9 @@ int32_t PlayerServer::OnPrepare(bool sync)
 #ifdef SUPPORT_VIDEO
         {
             std::lock_guard<std::mutex> lock(surfaceMutex_);
-            if (surface_ != nullptr) {
-                int32_t res = playerEngine_->SetVideoSurface(surface_);
+            auto surface = weakSurface_.promote();
+            if (surface != nullptr) {
+                int32_t res = playerEngine_->SetVideoSurface(surface);
                 CHECK_AND_RETURN_RET_LOG(res == MSERR_OK,
                     static_cast<int32_t>(MSERR_INVALID_OPERATION), "Engine SetVideoSurface Failed!");
             }
@@ -935,7 +936,8 @@ int32_t PlayerServer::Release()
     ReportMediaInfo(instanceId_);
     GetMediaInfoContainInstanceNum();
 #ifdef SUPPORT_VIDEO
-    if (surface_ != nullptr) {
+    auto surface = weakSurface_.promote();
+    if (surface != nullptr) {
         surface_ = nullptr;
     }
 #endif
@@ -1615,7 +1617,9 @@ int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
         MEDIA_LOGI("set surface first in %{public}s state", GetStatusDescription(lastOpStatus_).c_str());
     } else if (switchSurface) {
         MEDIA_LOGI("switch surface in %{public}s state", GetStatusDescription(lastOpStatus_).c_str());
-        if (surface_ == nullptr && !isForceLoadVideo_ && mutedMediaType_ != OHOS::Media::MediaType::MEDIA_TYPE_VID) {
+        auto innerSurface1 = weakSurface_.promote();
+        if (innerSurface1 == nullptr && !isForceLoadVideo_ &&
+            mutedMediaType_ != OHOS::Media::MediaType::MEDIA_TYPE_VID) {
             MEDIA_LOGE("old surface is required before switching surface");
             return MSERR_INVALID_OPERATION;
         }
@@ -1627,13 +1631,16 @@ int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
     {
         std::lock_guard<std::mutex> surfaceLock(surfaceMutex_);
         surface_ = surface;
+        weakSurface_ = wptr<Surface>(surface_);
     }
     CHECK_AND_RETURN_RET_LOG(switchSurface && playerEngine_ != nullptr, MSERR_OK,
         "current state: %{public}s, playerEngine == nullptr: %{public}d, can not SetVideoSurface",
         GetStatusDescription(lastOpStatus_).c_str(), playerEngine_ == nullptr);
     auto task = std::make_shared<TaskHandler<void>>([this]() {
         std::lock_guard<std::mutex> surfaceLock(surfaceMutex_);
-        (void)playerEngine_->SetVideoSurface(surface_);
+        auto innerSurface2 = weakSurface_.promote();
+        CHECK_AND_RETURN_LOG(innerSurface2 != nullptr, "surface is null");
+        (void)playerEngine_->SetVideoSurface(innerSurface2);
         taskMgr_.MarkTaskDone("SetVideoSurface done");
     });
     int32_t ret = taskMgr_.SetVideoSurfaeTask(task, "SetVideoSurface");

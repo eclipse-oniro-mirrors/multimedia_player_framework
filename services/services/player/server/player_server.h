@@ -287,6 +287,7 @@ private:
 
 #ifdef SUPPORT_VIDEO
     sptr<Surface> surface_ = nullptr;
+    wptr<Surface> weakSurface_;
 #endif
     std::shared_ptr<IMediaDataSource> dataSrc_ = nullptr;
     static constexpr float INVALID_VALUE = 2.0f;
