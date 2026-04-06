@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Huawei Device Co., Ltd.
+ * Copyright (C) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,6 +22,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
+
 #include "cache_manager.h"
 #include "media_log.h"
 #include "scoped_timer.h"
@@ -38,13 +39,14 @@ constexpr uint32_t VERSION = 1;
 constexpr uint64_t MAX_CACHE_FILE_SIZE = 4ULL * 1024ULL * 1024ULL * 1024ULL;
 constexpr uint64_t CACHE_FILE_SIZE_WATERLINE = 3ULL * 1024ULL * 1024ULL * 1024ULL;
 constexpr uint64_t NEED_REMOVE_CACHE_SIZE = 800ULL * 1024ULL * 1024ULL;
-constexpr std::string CACHE_DIR = "/data/storage/el2/base/cache/avplayer_downloaded_cache";
-constexpr std::string CACHE_MAPPING_FILE = "cache_mapping.txt";
+const std::string CACHE_DIR = "/data/storage/el2/base/cache/avplayer_downloaded_cache";
+const std::string CACHE_MAPPING_FILE = "cache_mapping.txt";
 constexpr size_t MAX_CACHE_MAPPING_FILE_SIZE = 10ULL * 1024ULL * 1024ULL;
 }
 
 namespace OHOS {
 namespace Media {
+namespace DownloadedCache {
 std::once_flag DownloadedCacheManager::onceFlag_;
 std::shared_ptr<DownloadedCacheManager> DownloadedCacheManager::cacheManager_;
 std::shared_ptr<DownloadedCacheManager> DownloadedCacheManager::Create()
@@ -459,7 +461,7 @@ bool DownloadedCacheManager::RemoveCacheDirectory(const std::string& path)
 
     for (const auto& file : files) {
         if (removeSize >= NEED_REMOVE_CACHE_SIZE) {
-            MEDIA_LOGI("remove end, count:%{public}llu, size:%{public}d", removeSize, deletedCount);
+            MEDIA_LOGI("remove end, count: " PUBLIC_LOG_U64 ", size: " PUBLIC_LOG_D32, removeSize, deletedCount);
             break;
         }
 
@@ -479,6 +481,57 @@ void DownloadedCacheManager::FlushCacheSize(uint64_t size)
     } else {
         cacheSize_.fetch_sub(size, std::memory_order_relaxed);
     }
+}
+
+bool DownloadedCacheManager::GetCacheMetaData(const std::string& url, CacheMetaData& metadata)
+{
+    if (mapped_ == MAP_FAILED) {
+        LoadMapping();
+        LoadIndex();
+    }
+    std::unique_lock<std::mutex> lock(mutex_);
+    std::string key = std::to_string(std::hash<std::string>()(url));
+    auto it = index_.find(key);
+    CHECK_AND_RETURN_RET_LOG(it != index_.end(), false,
+        "Cache not found for url: %{public}s", url.c_str());
+    
+    CacheEntryInfo info;
+    CHECK_AND_RETURN_RET_LOG(FindFirstEqualField(it->second, info, url, CacheFieldId::REQUEST_URL),
+        false, "Failed to find cache entry for url: %{public}s", url.c_str());
+    
+    CHECK_AND_RETURN_RET_LOG(mapped_ != MAP_FAILED, false, "mapped is invalid");
+    char* ptr = static_cast<char*>(mapped_);
+    CacheEntryHeader* header = reinterpret_cast<CacheEntryHeader*>(ptr + info.offset);
+    
+    metadata.type = ExtractField(ptr + info.offset, header->fieldCount, CacheFieldId::TYPE);
+    std::string randomAccessStr = ExtractField(ptr + info.offset, header->fieldCount, CacheFieldId::RANDOM_ACCESS);
+    metadata.randomAccess = (randomAccessStr == "1");
+    std::string sizeStr = ExtractField(ptr + info.offset, header->fieldCount, CacheFieldId::SIZE);
+    metadata.size = std::stoll(sizeStr);
+    metadata.url = url;
+    metadata.entry = ExtractField(ptr + info.offset, header->fieldCount, CacheFieldId::ENTRY);
+    
+    return true;
+}
+
+std::map<std::string, std::string> DownloadedCacheManager::BuildHttpHeaders(const std::string& url)
+{
+    CacheMetaData metadata;
+    if (!GetCacheMetaData(url, metadata)) {
+        MEDIA_LOGE("Failed to get cache metadata for url: %{public}s", url.c_str());
+        return {};
+    }
+    
+    std::map<std::string, std::string> headers;
+    headers["content-length"] = std::to_string(metadata.size);
+    headers["content-type"] = metadata.type;
+    
+    if (metadata.randomAccess) {
+        headers["accept-ranges"] = "bytes";
+    }
+    
+    return headers;
+}
 }
 }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Huawei Device Co., Ltd.
+ * Copyright (C) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,13 +19,14 @@
 #include <string>
 #include <memory>
 #include <map>
+#include "cache_reader.h"
+#include "loading_request.h"
 #include "osal/task/task.h"
 #include "osal/task/mutex.h"
-#include "loading_request.h"
-#include "custom_loader_callback.h"
 
 namespace OHOS {
 namespace Media {
+namespace DownloadedCache {
 
 class DownloadedCacheLoader : public LoaderCallback, public std::enable_shared_from_this<DownloadedCacheLoader> {
 public:
@@ -37,16 +38,14 @@ public:
 
 private:
     std::string url_;
-    std::shared_ptr<Task> downloadTask_;
     std::shared_ptr<Task> readTask_;
-    std::shared_ptr<Task> interruptedTask_;
-    std::map<int64_t, std::shared_ptr<DownloadedCacheLoaderCallback>> requestMap_;
+    std::map<int64_t, std::shared_ptr<CacheReader>> requestMap_;
     int64_t uuid_ = 0;
     std::mutex mutex_;
-    std::atomic<bool> isSupportLocalCache_;
     static std::atomic<uint32_t> instanceCount_;
 };
 
+} // namespace DownloadedCache
 } // namespace Media
 } // namespace OHOS
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Huawei Device Co., Ltd.
+ * Copyright (C) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,6 +28,7 @@
 
 namespace OHOS {
 namespace Media {
+namespace DownloadedCache {
 // 字段ID定义
 enum class CacheFieldId : uint32_t {
     KEY = 1,
@@ -69,17 +70,27 @@ struct FileInfo {
     }
 };
 
+struct CacheMetaData {
+    std::string type;
+    bool randomAccess;
+    int64_t size;
+    std::string url;
+    std::string entry;
+};
+
 class DownloadedCacheManager {
 public:
     static std::shared_ptr<DownloadedCacheManager> Create();
     DownloadedCacheManager();
     ~DownloadedCacheManager();
 
-    std::string GetMediaCache(const std::string& url);  // 根据url获取缓存目录更新访问时间
+    std::string GetMediaCache(const std::string& url);
     bool CreateMediaCache(const std::string& url, const std::string& type,
-        bool randomAccess, uint64_t size); // 添加缓存映射目录
-    bool FlushWriteLength(const std::string& path, uint64_t fileSize);      //刷新缓存文件大小
+        bool randomAccess, uint64_t size);
+    bool FlushWriteLength(const std::string& path, uint64_t fileSize);
     void ReleaseMap();
+    bool GetCacheMetaData(const std::string& url, CacheMetaData& metadata);
+    std::map<std::string, std::string> BuildHttpHeaders(const std::string& url);
 
 private:
     void LoadIndex();
@@ -107,6 +118,7 @@ private:
     std::mutex mutex_;
     std::atomic<uint64_t> cacheSize_;
 };
+} // namespace DownloadedCache
 } // namespace Media
 } // namespace OHOS
 #endif

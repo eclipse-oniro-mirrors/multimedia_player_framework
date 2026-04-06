@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Huawei Device Co., Ltd.
+ * Copyright (C) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,10 +22,11 @@
 
 namespace OHOS {
 namespace Media {
+namespace DownloadedCache {
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "DownloadedFileCacheManager"};
-    const std::string CACHE_DIR = "/data/storage/el2/base/cache/avplayer_media_loader";
-    const char FILE_SEPARATOR = std::filesystem::path::preferred_separator;
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "DownloadedFileCacheManager"};
+const std::string CACHE_DIR = "/data/storage/el2/base/cache/avplayer_downloaded_cache";
+const char FILE_SEPARATOR = std::filesystem::path::preferred_separator;
 }
 
 std::shared_ptr<DownloadedFileCacheManager> DownloadedFileCacheManager::Create()
@@ -118,7 +119,7 @@ bool DownloadedFileCacheManager::IsValid(const std::string& path, int64_t except
     int64_t actual = GetSize(path);
     if (actual != exceptedSize) {
         Clear(path);
-        MEDIA_LOG_D("Segment is invalid: excepted %lld, got %lld", exceptedSize, actual);
+        MEDIA_LOG_D("Segment is invalid: excepted " PUBLIC_LOG_D64 ", got " PUBLIC_LOG_D64, exceptedSize, actual);
         return false;
     }
     return true;
@@ -144,5 +145,6 @@ bool DownloadedFileCacheManager::IsValidPath(const std::string& inputPath)
     FALSE_RETURN_V_MSG_E(isPrefixValid, false, "path is not under the expected dir");
     return true;
 }
+} // namespace DownloadedCache
 } // namespace Media
 } // namespace OHOS
