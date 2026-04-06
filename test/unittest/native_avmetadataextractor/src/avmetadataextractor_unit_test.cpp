@@ -295,7 +295,7 @@ HWTEST_F(NativeMetadataExtractorUnitTest, AVMetadataExtractor_FetchFrameByTime_0
     EXPECT_EQ(AV_ERR_INVALID_VAL, result);
     EXPECT_EQ(nullptr, pixelMap);
 
-    EXPECT_NO_THROW(OH_AVMetadataExtractor_OutputParam_Destroy(pixelMapParams));
+    OH_AVMetadataExtractor_OutputParam_Destroy(pixelMapParams);
 }
 
 /**
@@ -808,7 +808,7 @@ HWTEST_F(NativeMetadataExtractorUnitTest, OH_AVMetadataExtractor_OutputParam_Des
 {
     auto pixelMapParams = OH_AVMetadataExtractor_OutputParam_Create();
     EXPECT_NE(pixelMapParams, nullptr);
-    EXPECT_NO_THROW(OH_AVMetadataExtractor_OutputParam_Destroy(pixelMapParams));
+    OH_AVMetadataExtractor_OutputParam_Destroy(pixelMapParams);
 }
 
 /**
@@ -821,7 +821,7 @@ HWTEST_F(NativeMetadataExtractorUnitTest, AVMetadataExtractor_OutputParams_SetSi
     auto pixelMapParams = OH_AVMetadataExtractor_OutputParam_Create();
     auto err = OH_AVMetadataExtractor_OutputParam_SetSize(pixelMapParams, 0, 0);
     EXPECT_EQ(true, err);
-    EXPECT_NO_THROW(OH_AVMetadataExtractor_OutputParam_Destroy(pixelMapParams));
+    OH_AVMetadataExtractor_OutputParam_Destroy(pixelMapParams);
 }
 
 /**
@@ -834,7 +834,7 @@ HWTEST_F(NativeMetadataExtractorUnitTest, AVMetadataExtractor_OutputParams_SetSi
     auto pixelMapParams = OH_AVMetadataExtractor_OutputParam_Create();
     auto err = OH_AVMetadataExtractor_OutputParam_SetSize(pixelMapParams, 100, 100);
     EXPECT_EQ(true, err);
-    EXPECT_NO_THROW(OH_AVMetadataExtractor_OutputParam_Destroy(pixelMapParams));
+    OH_AVMetadataExtractor_OutputParam_Destroy(pixelMapParams);
 }
 
 /**
@@ -847,7 +847,7 @@ HWTEST_F(NativeMetadataExtractorUnitTest, AVMetadataExtractor_OutputParams_SetSi
     auto pixelMapParams = OH_AVMetadataExtractor_OutputParam_Create();
     auto err = OH_AVMetadataExtractor_OutputParam_SetSize(pixelMapParams, -1, -1);
     EXPECT_EQ(true, err);
-    EXPECT_NO_THROW(OH_AVMetadataExtractor_OutputParam_Destroy(pixelMapParams));
+    OH_AVMetadataExtractor_OutputParam_Destroy(pixelMapParams);
 }
 
 /**
