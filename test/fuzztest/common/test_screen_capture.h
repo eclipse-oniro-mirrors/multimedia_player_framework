@@ -57,7 +57,7 @@ public:
     int32_t RemoveWhiteListWindows(std::vector<uint64_t> &windowIDsVec);
     int32_t SetMaxFrameRate(int32_t frameRate);
     int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type);
-    sptr<OHOS::SurfaceBuffer> AcquireVideoBuffer(int32_t &fence, int64_t &timestamp, Rect &damage);
+    sptr<OHOS::SurfaceBuffer> AcquireVideoBuffer(int32_t &fence, int64_t &timestamp, Rect &damage, Rect &rsRect);
     int32_t ReleaseAudioBuffer(AudioCaptureSourceType type);
     int32_t ReleaseVideoBuffer();
     int32_t UpdateSurface(sptr<Surface> surface);

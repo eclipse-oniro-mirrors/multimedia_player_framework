@@ -184,13 +184,13 @@ int32_t TestScreenCapture::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audi
     return screenCapture->AcquireAudioBuffer(audioBuffer, type);
 }
 
-sptr<OHOS::SurfaceBuffer> TestScreenCapture::AcquireVideoBuffer(int32_t &fence, int64_t &timestamp, Rect &damage)
+sptr<OHOS::SurfaceBuffer> TestScreenCapture::AcquireVideoBuffer(int32_t &fence, int64_t &timestamp, Rect &damage, Rect &rsRect)
 {
     if (screenCapture == nullptr) {
         cout << "error! screenCapture == nullptr!" << endl;
         return nullptr;
     }
-    return screenCapture->AcquireVideoBuffer(fence, timestamp, damage);
+    return screenCapture->AcquireVideoBuffer(fence, timestamp, damage, rsRect);
 }
 
 int32_t TestScreenCapture::ReleaseAudioBuffer(AudioCaptureSourceType type)
