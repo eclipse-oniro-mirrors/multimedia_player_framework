@@ -605,7 +605,7 @@ void AVPlayerCallback::InitInfoFuncsPart2()
     onInfoFuncs_[INFO_TYPE_METRICS_EVENT] =
         [this](const int32_t extra, const Format &infoBody) { OnMetricsEventCb(extra, infoBody); };
     onInfoFuncs_[INFO_TYPE_PLAYBACK_CONTENT_CHANGE] =
-        [this](const int32_t extra, const Format &infoBody) { OnPlaybackContentChangeCb(extra, infoBody); };
+        [this](const int32_t extra, const Format &infoBody) { OnPlaybackContentChangedCb(extra, infoBody); };
 }
 
 AVPlayerCallback::AVPlayerCallback(AVPlayerNotify *listener)
@@ -1319,7 +1319,7 @@ void AVPlayerCallback::OnMetricsEventCb(const int32_t extra, const Format &infoB
     AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
-void AVPlayerCallback::OnPlaybackContentChangeCb(const int32_t extra, const Format &infoBody)
+void AVPlayerCallback::OnPlaybackContentChangedCb(const int32_t extra, const Format &infoBody)
 {
     (void)extra;
     CHECK_AND_RETURN_LOG(isLoaded_.load(), "current source is unready");

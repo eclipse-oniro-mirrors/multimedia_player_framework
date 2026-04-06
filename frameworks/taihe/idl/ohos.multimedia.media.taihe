@@ -331,8 +331,8 @@ interface AVPlayer {
     @set SetSurfaceId(surfaceId: Optional<String>): void;
     @get GetLoop(): bool;
     @set SetLoop(loop: bool): void;
-    @get GetPlaylistLoopMode(): i32;
-    @set SetPlaylistLoopMode(mode: i32): void;
+    @get GetPlaylistLoopMode(): PlaylistLoopMode;
+    @set SetPlaylistLoopMode(mode: PlaylistLoopMode): void;
     @get GetFdSrc(): Optional<AVFileDescriptor>;
     @set SetFdSrc(fdSrc: Optional<AVFileDescriptor>): void;
     SetSpeed(speed: PlaybackSpeed): void;
@@ -473,8 +473,6 @@ interface AVPlayer {
           this.onAudioOutputDeviceChangeWithInfo(callback as (audioStreamDeviceChangeInfo: audio.AudioStreamDeviceChangeInfo)=> void);
         } else if (type === "playbackRateDone"){
           this.onPlaybackRateDone(callback as (rate: double)=> void);
-        } else if (type === "playbackContentChange"){
-          this.onPlaybackContentChange(callback as (prev: int, cur: int)=> void);
         } else {
             throw new Error(`Unknown type: ${type}`);
         }
@@ -501,7 +499,7 @@ interface AVPlayer {
     OnAudioInterrupt(callback: (data: audio.InterruptEvent) => void): void;
     OnAudioOutputDeviceChangeWithInfo(callback: (data: audio.AudioStreamDeviceChangeInfo) => void): void;
     OnPlaybackRateDone(callback: (rate: f64) => void): void;
-    OnPlaybackContentChange(callback: (prev: i32, cur: i32)=> void): void;
+    OnPlaybackContentChanged(callback: (data: String)=> void): void;
 
     @!sts_inject_into_interface("on(type: string, payloadTypes: Array<int>, callback: (messages: Array<SeiMessage>, playbackPosition?: int)=> void): void;")
     @!sts_inject_into_class("""on(type: string, payloadTypes: Array<int>, callback: object): void {
@@ -559,8 +557,6 @@ interface AVPlayer {
           this.offAudioOutputDeviceChangeWithInfo(callback as (((audioStreamDeviceChangeInfo: audio.AudioStreamDeviceChangeInfo)=> void) | undefined));
         } else if (type === "playbackRateDone"){
           this.offPlaybackRateDone(callback as (((rate: double)=> void) | undefined));
-        } else if (type === "playbackContentChange"){
-          this.offPlaybackContentChange(callback as (((prev: int, cur: int)=> void) | undefined));
         } else {
           throw new Error(`Unknown type: ${type}`);
         }
@@ -587,7 +583,7 @@ interface AVPlayer {
     OffAudioInterrupt(callback: Optional<(data: audio.InterruptEvent) => void>): void;
     OffAudioOutputDeviceChangeWithInfo(callback: Optional<(data: audio.AudioStreamDeviceChangeInfo) => void>): void;
     OffPlaybackRateDone(callback: Optional<(rate: f64) => void>): void;
-    OffPlaybackContentChange(callback: Optional<(prev: i32, cur: i32)=> void>): void;
+    OffPlaybackContentChanged(callback: Optional<(data: String)=> void>): void;
 
     @!sts_inject_into_interface("off(type: string, payloadTypes?: Array<int>, callback?: (messages: Array<SeiMessage>, playbackPosition?: int)=> void): void;")
     @!sts_inject_into_class("""off(type: string, payloadTypes?: Array<int>, callback?: object): void {
@@ -602,15 +598,14 @@ interface AVPlayer {
     GetPlaybackRateSync(): f64;
     OnMetricsEvent(callback: (data: Array<AVMetricsEvent>)=> void): void;
     OffMetricsEvent(callback: Optional<(data: Array<AVMetricsEvent>)=> void>): void;
-    GetCurrentMediaSource(): i32;
-    GetMediaSourceCount(): i32;
-    GetMediaSources(): Array<MediaSource>;
+    GetCurrentMediaSource(): Optional<MediaSource>;
+    GetMediaSources(): Array<Optional<MediaSource>>;
 
     @gen_promise("addPlaybackMediaSource")
-    AddPlaybackMediaSourceSync(src: MediaSource, pos: Optional<i32>): void;
+    AddPlaybackMediaSourceSync(src: MediaSource, pos: Optional<String>): String;
 
     @gen_promise("removePlaybackMediaSource")
-    RemovePlaybackMediaSourceSync(pos: i32): void;
+    RemovePlaybackMediaSourceSync(pos: String): void;
 
     @gen_promise("clearPlaybackList")
     ClearPlaybackListSync(): void;

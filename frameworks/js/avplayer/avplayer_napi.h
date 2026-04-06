@@ -284,7 +284,6 @@ private:
     static napi_value JsRemovePlaybackMediaSource(napi_env env, napi_callback_info info);
     static napi_value JsClearPlaybackList(napi_env env, napi_callback_info info);
     static napi_value JsGetCurrentMediaSource(napi_env env, napi_callback_info info);
-    static napi_value JsGetMediaSourceCount(napi_env env, napi_callback_info info);
     static napi_value JsGetMediaSources(napi_env env, napi_callback_info info);
     static napi_value JsAdvanceToNextMediaSource(napi_env env, napi_callback_info info);
     static napi_value JsAdvanceToPrevMediaSource(napi_env env, napi_callback_info info);
@@ -360,6 +359,9 @@ private:
     static napi_value JsSetOnMetricsEventCallback(napi_env env, napi_callback_info info);
     static napi_value JsClearOnMetricsEventCallback(napi_env env, napi_callback_info info);
 
+    static napi_value JsSetOnPlaybackContentChangedCallback(napi_env env, napi_callback_info info);
+    static napi_value JsClearOnPlaybackContentChangedCallback(napi_env env, napi_callback_info info);
+
     static AVPlayerNapi* GetJsInstance(napi_env env, napi_callback_info info);
     static AVPlayerNapi* GetJsInstanceWithParameter(napi_env env, napi_callback_info info,
         size_t &argc, napi_value *argv);
@@ -372,7 +374,6 @@ private:
     static bool IsSystemApp();
     static bool IsListMode(AVPlayerNapi *jsPlayer);
     static bool IsAllowAdvanceToMediaSource(AVPlayerNapi *jsPlayer);
-    static ErrCode TransferErrCode(ErrCode errCode);
     AVPlayerNapi();
     ~AVPlayerNapi() override;
     void SaveCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);

@@ -44,10 +44,12 @@ struct AVPlayerContext {
         if (asyncTask != nullptr) {
             auto result = isTimeLimited ? asyncTask->GetResultWithTimeLimit(milliseconds) : asyncTask->GetResult();
             if (result.HasResult() && result.Value().first != MSERR_EXT_API9_OK) {
+                errFlag = true;
                 SignError(result.Value().first, result.Value().second);
             }
         }
     }
+    bool errFlag = false;
     std::shared_ptr<TaskHandler<TaskRet>> asyncTask = nullptr;
     std::vector<Format> trackInfoVec_;
     AVPlayTrackSelectionFilter trackFilter_;
@@ -240,19 +242,18 @@ public:
     void GetAVPlayStrategyFromStrategyTmp(AVPlayStrategy &strategy, const AVPlayStrategyTmp &strategyTmp);
     void SetPlaybackRate(double rate);
     double GetPlaybackRateSync();
-    void SetPlaylistLoopMode(int32_t mode);
-    int32_t GetPlaylistLoopMode();
-    int32_t GetCurrentMediaSource();
-    int32_t GetMediaSourceCount();
-    array<ohos::multimedia::media::MediaSource> GetMediaSources();
-    void AddPlaybackMediaSourceSync(::ohos::multimedia::media::weak::MediaSource src, optional_view<int32_t> pos);
-    void RemovePlaybackMediaSourceSync(int32_t pos);
+    void SetPlaylistLoopMode(::ohos::multimedia::media::PlaylistLoopMode mode);
+    ::ohos::multimedia::media::PlaylistLoopMode GetPlaylistLoopMode();
+    optional<MediaSource> GetCurrentMediaSource();
+    array<optional<MediaSource>> GetMediaSources();
+    string AddPlaybackMediaSourceSync(::ohos::multimedia::media::weak::MediaSource src, optional_view<string> pos);
+    void RemovePlaybackMediaSourceSync(string_view pos);
     void ClearPlaybackListSync();
     void AdvanceToNextMediaSourceSync();
     void AdvanceToPrevMediaSourceSync();
     void AdvanceToMediaSourceSync(::taihe::string_view id);
-    void OnPlaybackContentChange(callback_view<void(int32_t, int32_t)> callback);
-    void OffPlaybackContentChange(optional_view<callback<void(int32_t, int32_t)>> callback);
+    void OnPlaybackContentChanged(callback_view<void(string_view data)> callback);
+    void OffPlaybackContentChanged(optional_view<callback<void(string_view data)>> callback);
 private:
     static bool IsSystemApp();
     void ResetUserParameters();
@@ -285,7 +286,6 @@ private:
     bool IsLivingMaxDelayTimeValid(const AVPlayStrategyTmp &strategyTmp);
     bool IsListMode();
     bool IsAllowAdvanceToMediaSource();
-    OHOS::ErrCode TransferErrCode(OHOS::ErrCode errCode);
 
     std::string GetCurrentState();
     std::shared_ptr<TaskHandler<TaskRet>> GetTrackDescriptionTask(const std::unique_ptr<AVPlayerContext> &Ctx);
@@ -297,6 +297,13 @@ private:
     std::shared_ptr<TaskHandler<TaskRet>> EqueueSetPlayRangeTask(int32_t start, int32_t end, int32_t mode);
     std::shared_ptr<TaskHandler<TaskRet>> SetMediaMutedTask(::OHOS::Media::MediaType type, bool isMuted);
     std::shared_ptr<TaskHandler<TaskRet>> SetPlaybackStrategyTask(AVPlayStrategy playStrategy);
+    std::shared_ptr<TaskHandler<TaskRet>> AddPlaybackMediaSourceTask(
+        const std::shared_ptr<AVMediaSource> &mediaSource, const std::string &insertPos, std::string &generateSrcId);
+    std::shared_ptr<TaskHandler<TaskRet>> RemovePlaybackMediaSourceTask(const std::string &pos);
+    std::shared_ptr<TaskHandler<TaskRet>> ClearPlaybackListTask();
+    std::shared_ptr<TaskHandler<TaskRet>> AdvanceToNextMediaSourceTask();
+    std::shared_ptr<TaskHandler<TaskRet>> AdvanceToPrevMediaSourceTask();
+    std::shared_ptr<TaskHandler<TaskRet>> AdvanceToMediaSourceTask(const std::string &mediaSourceId);
     void HandleSelectTrack(int32_t index, optional_view<SwitchMode> mode);
     void OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg);
     std::condition_variable stopTaskQueCond_;
@@ -343,7 +350,7 @@ private:
     bool calMaxAmplitude_ = false;
     bool seiMessageCallbackflag_ = false;
     int32_t listLoopMode_ = 1; // PLAYLIST_LOOP_MODE_ALL
-    std::vector<ohos::multimedia::media::MediaSource> mediaSourceRefList_;
+    std::vector<std::pair<std::string, ohos::multimedia::media::MediaSource>> mediaSourceRefList_;
 };
 } // namespace ANI::Media
 #endif //AVPLAYER_TAIHE_H

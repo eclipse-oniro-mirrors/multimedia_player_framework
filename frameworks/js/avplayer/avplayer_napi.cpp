@@ -164,9 +164,8 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("setMediaSource", JsSetMediaSource),
         DECLARE_NAPI_FUNCTION("addPlaybackMediaSource", JsAddPlaybackMediaSource),
         DECLARE_NAPI_FUNCTION("removePlaybackMediaSource", JsRemovePlaybackMediaSource),
-        DECLARE_NAPI_FUNCTION("ClearPlaybackList", JsClearPlaybackList),
+        DECLARE_NAPI_FUNCTION("clearPlaybackList", JsClearPlaybackList),
         DECLARE_NAPI_FUNCTION("getCurrentMediaSource", JsGetCurrentMediaSource),
-        DECLARE_NAPI_FUNCTION("getMediaSourceCount", JsGetMediaSourceCount),
         DECLARE_NAPI_FUNCTION("getMediaSources", JsGetMediaSources),
         DECLARE_NAPI_FUNCTION("advanceToNextMediaSource", JsAdvanceToNextMediaSource),
         DECLARE_NAPI_FUNCTION("advanceToPrevMediaSource", JsAdvanceToPrevMediaSource),
@@ -196,6 +195,8 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getCurrentPresentationTimestamp", JsGetCurrentPresentationTimestamp),
         DECLARE_NAPI_FUNCTION("onMetricsEvent", JsSetOnMetricsEventCallback),
         DECLARE_NAPI_FUNCTION("offMetricsEvent", JsClearOnMetricsEventCallback),
+        DECLARE_NAPI_FUNCTION("onPlaybackContentChanged", JsSetOnPlaybackContentChangedCallback),
+        DECLARE_NAPI_FUNCTION("offPlaybackContentChanged", JsClearOnPlaybackContentChangedCallback),
 
         DECLARE_NAPI_WRITABLE_FUNCTION("prepare", JsPrepare),
         DECLARE_NAPI_WRITABLE_FUNCTION("addSubtitleFromUrl", JsAddSubtitleUrl),
@@ -326,15 +327,6 @@ bool AVPlayerNapi::IsAllowAdvanceToMediaSource(AVPlayerNapi *jsPlayer)
     return state == AVPlayerState::STATE_PREPARED || state == AVPlayerState::STATE_PLAYING ||
         state == AVPlayerState::STATE_PAUSED || state == AVPlayerState::STATE_COMPLETED ||
         state == AVPlayerState::STATE_ERROR;
-}
-
-ErrCode AVPlayerNapi::TransferErrCode(ErrCode errCode)
-{
-    ErrCode transErrCode = errCode;
-    if (transErrCode != MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE) {
-        transErrCode = static_cast<ErrCode>(MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode)));
-    }
-    return transErrCode;
 }
 
 napi_value AVPlayerNapi::JsCreateAVPlayer(napi_env env, napi_callback_info info)
@@ -2835,6 +2827,7 @@ napi_value AVPlayerNapi::JsSetPlaylistLoopMode(napi_env env, napi_callback_info 
     MediaTrace trace("AVPlayerNapi::set playlistLoopMode");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsSetPlaylistLoopMode In");
 
     napi_value args[1] = { nullptr };
     size_t argCount = 1;
@@ -2874,6 +2867,7 @@ napi_value AVPlayerNapi::JsGetPlaylistLoopMode(napi_env env, napi_callback_info 
     MediaTrace trace("AVPlayerNapi::get playlistLoopMode");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsGetPlaylistLoopMode In");
 
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
@@ -2908,8 +2902,14 @@ void AVPlayerNapi::CheckMediaSource(const MediaSourceParams& params)
     params.jsPlayer->AddMediaStreamToAVMediaSource(srcTmp, params.mediaSource);
     if (params.argCount >= ARGS_TWO) {
         napi_valuetype valueType = napi_undefined;
+        bool isEmptySrcId = false;
         if (napi_typeof(params.env, params.args[1], &valueType) == napi_ok && valueType == napi_string) {
             params.promiseCtx->srcId = CommonNapi::GetStringArgument(params.env, params.args[1]);
+            isEmptySrcId = params.promiseCtx->srcId.empty() ? true : false;
+        }
+        if (isEmptySrcId) {
+            params.promiseCtx->SignError(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE, "srcId is empty");
+            return;
         }
     }
     napi_status s = napi_create_reference(params.env, params.args[0], 1, &params.promiseCtx->srcRef);
@@ -2923,6 +2923,7 @@ napi_value AVPlayerNapi::JsAddPlaybackMediaSource(napi_env env, napi_callback_in
     MediaTrace trace("AVPlayerNapi::addPlaybackMediaSource");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsAddPlaybackMediaSource In");
 
     napi_value args[2] = { nullptr };
     size_t argCount = 2;
@@ -2954,7 +2955,8 @@ napi_value AVPlayerNapi::JsAddPlaybackMediaSource(napi_env env, napi_callback_in
             }
             int32_t ret = jsPlayer->player_->AddPlaybackMediaSource(mediaSource, data->srcId, data->generateSrcId);
             if (ret != MSERR_OK) {
-                return TaskRet(TransferErrCode(static_cast<ErrCode>(ret)), "failed to addPlaybackMediaSource");
+                return TaskRet(MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret)),
+                    "failed to addPlaybackMediaSource");
             }
             return TaskRet(MSERR_EXT_API9_OK, "Success");
         });
@@ -2976,6 +2978,7 @@ napi_value AVPlayerNapi::JsRemovePlaybackMediaSource(napi_env env, napi_callback
     MediaTrace trace("AVPlayerNapi::removePlaybackMediaSource");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsRemovePlaybackMediaSource In");
 
     napi_value args[1] = { nullptr };
     size_t argCount = 1;
@@ -3001,7 +3004,8 @@ napi_value AVPlayerNapi::JsRemovePlaybackMediaSource(napi_env env, napi_callback
             }
             int32_t ret = jsPlayer->player_->RemovePlaybackMediaSource(srcId);
             if (ret != MSERR_OK) {
-                return TaskRet(TransferErrCode(static_cast<ErrCode>(ret)), "failed to removePlaybackMediaSource");
+                return TaskRet(MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret)),
+                    "failed to removePlaybackMediaSource");
             }
             return TaskRet(MSERR_EXT_API9_OK, "Success");
         });
@@ -3023,6 +3027,7 @@ napi_value AVPlayerNapi::JsClearPlaybackList(napi_env env, napi_callback_info in
     MediaTrace trace("AVPlayerNapi::ClearPlaybackList");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsClearPlaybackList In");
 
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
@@ -3064,6 +3069,7 @@ napi_value AVPlayerNapi::JsGetCurrentMediaSource(napi_env env, napi_callback_inf
     MediaTrace trace("AVPlayerNapi::getCurrentMediaSource");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsGetCurrentMediaSource In");
 
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
@@ -3077,28 +3083,18 @@ napi_value AVPlayerNapi::JsGetCurrentMediaSource(napi_env env, napi_callback_inf
 
     (void)jsPlayer->player_->GetCurrentMediaSource(srcId);
     napi_value value = nullptr;
-    (void)napi_create_string_utf8(env, srcId.c_str(), NAPI_AUTO_LENGTH, &value);
-    return value;
-}
-
-napi_value AVPlayerNapi::JsGetMediaSourceCount(napi_env env, napi_callback_info info)
-{
-    MediaTrace trace("AVPlayerNapi::getMediaSourceCount");
-    napi_value result = nullptr;
-    napi_get_undefined(env, &result);
-
-    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
-    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
-    if (jsPlayer->player_ == nullptr) {
-        return result;
-    } else if (!IsListMode(jsPlayer)) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "unsupport get current mediaSource count operation");
-        return result;
+    {
+        std::lock_guard<std::mutex> lock(jsPlayer->mutex_);
+        auto it = std::find_if(jsPlayer->mediaSourceRefList_.begin(), jsPlayer->mediaSourceRefList_.end(),
+            [srcId](const auto &item) {
+            return item.first == srcId;
+        });
+        if (it != jsPlayer->mediaSourceRefList_.end() && it->second != nullptr) {
+            (void)napi_get_reference_value(env, it->second, &value);
+        } else {
+            napi_get_undefined(env, &value);
+        }
     }
-    int32_t count = 0;
-    (void)jsPlayer->player_->GetMediaSourceCount(count);
-    napi_value value = nullptr;
-    (void)napi_create_int32(env, count, &value);
     return value;
 }
 
@@ -3107,6 +3103,7 @@ napi_value AVPlayerNapi::JsGetMediaSources(napi_env env, napi_callback_info info
     MediaTrace trace("AVPlayerNapi::getMediaSources");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsGetMediaSources In");
 
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
@@ -3138,6 +3135,7 @@ napi_value AVPlayerNapi::JsAdvanceToNextMediaSource(napi_env env, napi_callback_
     MediaTrace trace("AVPlayerNapi::advanceToNextMediaSource");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsAdvanceToNextMediaSource In");
 
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
@@ -3181,6 +3179,7 @@ napi_value AVPlayerNapi::JsAdvanceToPrevMediaSource(napi_env env, napi_callback_
     MediaTrace trace("AVPlayerNapi::advanceToPrevMediaSource");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsAdvanceToPrevMediaSource In");
 
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
@@ -3224,6 +3223,7 @@ napi_value AVPlayerNapi::JsAdvanceToMediaSource(napi_env env, napi_callback_info
     MediaTrace trace("AVPlayerNapi::advanceToMediaSource");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsAdvanceToMediaSource In");
 
     napi_value args[1] = { nullptr };
     size_t argCount = 1;
@@ -3251,7 +3251,8 @@ napi_value AVPlayerNapi::JsAdvanceToMediaSource(napi_env env, napi_callback_info
             }
             int32_t ret = jsPlayer->player_->AdvanceToMediaSource(id);
             if (ret != MSERR_OK) {
-                return TaskRet(TransferErrCode(static_cast<ErrCode>(ret)), "failed to advanceToMediaSource");
+                return TaskRet(MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret)),
+                    "failed to advanceToMediaSource");
             }
             return TaskRet(MSERR_EXT_API9_OK, "Success");
         });
@@ -4480,6 +4481,42 @@ napi_value AVPlayerNapi::JsSetOnMetricsEventCallback(napi_env env, napi_callback
     return result;
 }
 
+napi_value AVPlayerNapi::JsSetOnPlaybackContentChangedCallback(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::onPlaybackContentChanged");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGD("JsSetOnPlaybackContentChangedCallback In");
+
+    napi_value args[MIN_ARG_COUNTS] = { nullptr }; // args[0]: callback
+    size_t argCount = MIN_ARG_COUNTS;
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+    if (argCount > MIN_ARG_COUNTS) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "Mandatory parameters are left unspecified.");
+        return result;
+    }
+
+    if (jsPlayer->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to on event");
+        return result;
+    }
+
+    std::string callbackName = AVPlayerEvent::EVENT_PLAYBACK_CONTENT_CHANGE;
+    napi_ref ref = nullptr;
+    CHECK_AND_RETURN_RET_NOLOG(
+        VerifyExpectedType({env, args[0], napi_function}, jsPlayer, "param should be function."), result);
+    jsPlayer->HandleListenerStateChange(callbackName, true);
+    napi_status status = napi_create_reference(env, args[0], 1, &ref);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create reference!");
+
+    std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
+        jsPlayer->SaveCallbackReference(callbackName, autoRef);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSetOnPlaybackContentChangedCallback callbackName: %{public}s success",
+        FAKE_POINTER(jsPlayer), callbackName.c_str());
+    return result;
+}
+
 bool AVPlayerNapi::VerifyExpectedType(const NapiTypeCheckUnit &unit, AVPlayerNapi *jsPlayer, const std::string &msg)
 {
     napi_valuetype tmpType;
@@ -4532,6 +4569,35 @@ napi_value AVPlayerNapi::JsClearOnMetricsEventCallback(napi_env env, napi_callba
     return result;
 }
 
+napi_value AVPlayerNapi::JsClearOnPlaybackContentChangedCallback(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::offPlaybackContentChanged");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGD("JsClearOnPlaybackContentChangedCallback In");
+
+    napi_value args[ARRAY_ARG_COUNTS_THREE] = { nullptr }; // args[0]:type, args[1]: payloadTypes  args[2]:callback
+    size_t argCount = 3;
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+
+    if (jsPlayer->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        return result;
+    }
+
+    if (argCount > 1) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "Mandatory parameters are left unspecified.");
+        return result;
+    }
+
+    std::string callbackName = AVPlayerEvent::EVENT_PLAYBACK_CONTENT_CHANGE;
+
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " set callbackName: %{public}s", FAKE_POINTER(jsPlayer), callbackName.c_str());
+    jsPlayer->HandleListenerStateChange(callbackName, false);
+    jsPlayer->ClearCallbackReference(callbackName);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsClearOnCallback success", FAKE_POINTER(jsPlayer));
+    return result;
+}
 
 napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info)
 {

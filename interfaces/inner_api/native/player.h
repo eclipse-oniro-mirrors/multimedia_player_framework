@@ -678,12 +678,6 @@ public:
         return MSERR_INVALID_OPERATION;
     }
 
-    virtual int32_t GetMediaSourceCount(int32_t &count) const
-    {
-        (void)count;
-        return MSERR_INVALID_OPERATION;
-    }
-
     virtual int32_t GetMediaSources(std::vector<std::shared_ptr<AVMediaSource>> &mediaSources) const
     {
         (void)mediaSources;
