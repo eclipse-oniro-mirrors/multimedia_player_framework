@@ -57,8 +57,6 @@
 
 using OHOS::Rosen::DMError;
 
-using namesapce OHOS::HDI::Display::Graphic::Common::V1_0;
-
 namespace {
 const std::string DUMP_PATH = "/data/media/screen_capture.bin";
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureServer"};
