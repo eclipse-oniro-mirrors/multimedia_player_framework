@@ -1469,34 +1469,8 @@ int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
 int32_t HiPlayerImpl::SeekToDefaultPosition()
 {
     MEDIA_LOG_I("SeekToDefaultPosition.");
-    FALSE_RETURN_V_NOLOG(isLiveSeek_, MSERR_UNKNOWN);
-    FALSE_RETURN_V_NOLOG(demuxer_ != nullptr, MSERR_UNKNOWN);
-
-    demuxer_->DoFlush();
-    if (audioDecoder_ != nullptr) {
-        audioDecoder_->DoFlush();
-    }
-    if (audioSink_ != nullptr) {
-        audioSink_->DoFlush();
-    }
-    if (videoDecoder_ != nullptr) {
-        videoDecoder_->DoFlush();
-    }
-    Status ret = demuxer_->RebootPlugin();
-    if (ret == Status::OK) { // set flag
-        MEDIA_LOG_I("Out of live stream seek mode.");
-        isLiveSeek_ = false;
-    }
-    if (audioDecoder_ != nullptr) {
-        audioDecoder_->DoStart();
-    }
-    if (audioSink_ != nullptr) {
-        audioSink_->DoStart();
-    }
-    if (videoDecoder_ != nullptr) {
-        videoDecoder_->DoStart();
-    }
-    return TransStatus(ret);
+    isLiveSeek_ = false;
+    return TransStatus(Status::OK);
 }
 
 Status HiPlayerImpl::doPreparedSeek(int64_t seekPos, PlayerSeekMode mode)

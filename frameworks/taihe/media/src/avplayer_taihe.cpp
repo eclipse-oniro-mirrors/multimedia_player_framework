@@ -762,6 +762,29 @@ void AVPlayerImpl::SeekEnqueueTask(AVPlayerImpl *taihePlayer, int32_t time, int3
     MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheSeek Out", FAKE_POINTER(taihePlayer));
 }
 
+void AVPlayerImpl::SeekToDefaultPositionEnqueueTask(AVPlayerImpl *taihePlayer)
+{
+    auto task = std::make_shared<TaskHandler<void>>([taihePlayer]() {
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheSeekToDefaultPosition Task In", FAKE_POINTER(taihePlayer));
+        CHECK_AND_RETURN_LOG(taihePlayer->player_ != nullptr, "player is nullptr");
+        std::vector<Plugins::SeekRange> ranges;
+        int64_t time = 0;
+        (void)taihePlayer->player_->GetSeekableRanges(ranges);
+        for (auto &range : ranges) {
+            auto start = Plugins::HstTime2Ms(range.start);
+            auto end = Plugins::HstTime2Ms(range.end);
+            time = (start + end) / 2;
+            break;
+        }
+        (void)taihePlayer->player_->Seek(time, taihePlayer->TransferSeekMode(SEEK_PREVIOUS_SYNC));
+        (void)taihePlayer->player_->SeekToDefaultPosition();
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheSeekToDefaultPosition Task Out", FAKE_POINTER(taihePlayer));
+    });
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheSeekToDefaultPosition EnqueueTask In", FAKE_POINTER(taihePlayer));
+    (void)taihePlayer->taskQue_->EnqueueTask(task);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheSeekToDefaultPosition EnqueueTask Out", FAKE_POINTER(taihePlayer));
+}
+
 void AVPlayerImpl::Seek(int32_t timeMs, optional_view<SeekMode> mode)
 {
     MediaTrace trace("AVPlayerImpl::seek");
@@ -1563,16 +1586,7 @@ void AVPlayerImpl::SeekToDefaultPosition()
             "Current state is not in live seek mode, unsupport seekToDefault operation");
         return;
     } else {
-        auto task = std::make_shared<TaskHandler<void>>([this]() {
-            MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheSeekToDefaultPosition Task In", FAKE_POINTER(this));
-            if (player_ != nullptr) {
-                (void)player_->SeekToDefaultPosition();
-            }
-            MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheSeekToDefaultPosition Task Out", FAKE_POINTER(this));
-        });
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheSeekToDefaultPosition EnqueueTask In", FAKE_POINTER(this));
-        (void)taskQue_->EnqueueTask(task);
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheSeekToDefaultPosition Out", FAKE_POINTER(this));
+        SeekToDefaultPositionEnqueueTask(this);
     }
     return;
 }

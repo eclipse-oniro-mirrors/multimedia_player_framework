@@ -251,6 +251,7 @@ private:
     std::shared_ptr<TaskHandler<TaskRet>> ResetTask();
     std::shared_ptr<TaskHandler<TaskRet>> ReleaseTask();
     static void SeekEnqueueTask(AVPlayerImpl *jsPlayer, int32_t time, int32_t mode);
+    static void SeekToDefaultPositionEnqueueTask(AVPlayerImpl *taihePlayer);
     static std::shared_ptr<AVMediaSource> GetAVMediaSource(ohos::multimedia::media::weak::MediaSource src,
         std::shared_ptr<AVMediaSourceTmp> &srcTmp);
     static PlayerSeekMode TransferSeekMode(int32_t mode);
