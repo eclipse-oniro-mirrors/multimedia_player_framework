@@ -843,16 +843,7 @@ napi_value AVPlayerNapi::JsSeekToDefaultPosition(napi_env env, napi_callback_inf
             "Current state is not in live seek mode, not support seekToDefaultPosition");
         return result;
     } else {
-        auto task = std::make_shared<TaskHandler<void>>([jsPlayer]() {
-            MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeekToDefaultPosition Task In", FAKE_POINTER(jsPlayer));
-            if (jsPlayer->player_ != nullptr) {
-                (void)jsPlayer->player_->SeekToDefaultPosition();
-            }
-            MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeekToDefaultPosition Task Out", FAKE_POINTER(jsPlayer));
-        });
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeekToDefaultPosition EnqueueTask In", FAKE_POINTER(jsPlayer));
-        (void)jsPlayer->taskQue_->EnqueueTask(task);
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeekToDefaultPosition Out", FAKE_POINTER(jsPlayer));
+        SeekToDefaultPositionEnqueueTask(jsPlayer);
     }
 
     return result;
@@ -2959,16 +2950,36 @@ void AVPlayerNapi::SeekEnqueueTask(AVPlayerNapi *jsPlayer, int32_t time, int32_t
     MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeek Out", FAKE_POINTER(jsPlayer));
 }
 
+void AVPlayerNapi::SeekToDefaultPositionEnqueueTask(AVPlayerNapi *jsPlayer)
+{
+    auto task = std::make_shared<TaskHandler<void>>([jsPlayer]() {
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeekToDefaultPosition Task In", FAKE_POINTER(jsPlayer));
+        CHECK_AND_RETURN_LOG(jsPlayer->player_ != nullptr, "player is nullptr");
+        std::vector<Plugins::SeekRange> ranges;
+        int64_t time = 0;
+        (void)jsPlayer->player_->GetSeekableRanges(ranges);
+        for (auto &range : ranges) {
+            auto start = Plugins::HstTime2Ms(range.start);
+            auto end = Plugins::HstTime2Ms(range.end);
+            time = (start + end) / 2;
+            break;
+        }
+        (void)jsPlayer->player_->Seek(time, jsPlayer->TransferSeekMode(SEEK_PREVIOUS_SYNC));
+        (void)jsPlayer->player_->SeekToDefaultPosition();
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeekToDefaultPosition Task Out", FAKE_POINTER(jsPlayer));
+    });
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeekToDefaultPosition EnqueueTask In", FAKE_POINTER(jsPlayer));
+    (void)jsPlayer->taskQue_->EnqueueTask(task);
+     MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeekToDefaultPosition EnqueueTask Out", FAKE_POINTER(jsPlayer));
+}
+
 void AVPlayerNapi::DoSeek(AVPlayerNapi *jsPlayer, int32_t time, int32_t mode)
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeek Task In", FAKE_POINTER(jsPlayer));
     bool isInSeekableRange = false;
     if (jsPlayer->IsLiveSource()) {
+        CHECK_AND_RETURN_LOG(jsPlayer->player_ != nullptr, "player is nullptr");
         std::vector<Plugins::SeekRange> ranges;
-        if (jsPlayer->player_ == nullptr) {
-            return;
-        }
-
         (void)jsPlayer->player_->GetSeekableRanges(ranges);
         for (auto &range : ranges) {
             auto start = Plugins::HstTime2Ms(range.start);
