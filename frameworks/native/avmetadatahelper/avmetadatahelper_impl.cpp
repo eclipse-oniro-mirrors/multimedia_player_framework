@@ -488,6 +488,7 @@ Status AVMetadataHelperImpl::GetColorSpace(sptr<SurfaceBuffer> &surfaceBuffer, P
                  (static_cast<unsigned int>(colorSpaceInfo.matrix) << MATRIX_OFFSET) +
                  (static_cast<unsigned int>(colorSpaceInfo.range) << RANGE_OFFSET));
     pixelMapInfo.primaries = colorSpaceInfo.primaries;
+    pixelMapInfo.matrix = colorSpaceInfo.matrix;
     MEDIA_LOGI("colorSpaceType is %{public}u", type);
     if (pixelMapInfo.isHdr) {
         auto it = HDR_COLORSPACE_MAP.find(type);
@@ -524,6 +525,7 @@ Status AVMetadataHelperImpl::GetColorSpaceWithDefaultValue(sptr<SurfaceBuffer> &
                  (static_cast<unsigned int>(colorSpaceInfo.matrix) << MATRIX_OFFSET) +
                  (static_cast<unsigned int>(colorSpaceInfo.range) << RANGE_OFFSET));
     pixelMapInfo.primaries = colorSpaceInfo.primaries;
+    pixelMapInfo.matrix = colorSpaceInfo.matrix;
     MEDIA_LOGI("colorSpaceTypeWithDefaultValue is %{public}u", type);
 
     // using SDR_COLORSPACE_MAP for colorspace query when convertColorSpace_ is false
@@ -559,10 +561,9 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapFromSurfaceBuffer(
         auto ret = CopySurfaceBufferToPixelMap(surfaceBuffer, pixelMap, pixelMapInfo);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "CopySurfaceBufferToPixelMap failed");
         options.pixelFormat = pixelMapInfo.pixelFormat;
-        int32_t primaries = pixelMapInfo.primaries;
-        options.convertColorSpace.srcYuvConversion = primaries == CM_ColorPrimaries::COLORPRIMARIES_BT709 ?
+        options.convertColorSpace.srcYuvConversion = pixelMapInfo.matrix == CM_Matrix::MATRIX_BT709 ?
             YuvConversion::BT709 : YuvConversion::BT601;
-        options.convertColorSpace.dstYuvConversion = primaries == CM_ColorPrimaries::COLORPRIMARIES_BT709 ?
+        options.convertColorSpace.dstYuvConversion = pixelMapInfo.matrix == CM_Matrix::MATRIX_BT709 ?
             YuvConversion::BT709 : YuvConversion::BT601;
         MEDIA_LOGD("conversion: %{public}d", options.convertColorSpace.srcYuvConversion);
         pixelMap = PixelMap::Create(reinterpret_cast<const uint32_t *>(pixelMap->GetPixels()),

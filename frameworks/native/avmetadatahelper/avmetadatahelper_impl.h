@@ -78,6 +78,7 @@ private:
         int32_t height = 0;
         int32_t outputHeight = 0;
         int32_t primaries = 0;
+        int32_t matrix = 0;
         uint8_t srcRange = 0;
         ColorManager::ColorSpaceName colorSpaceName = ColorManager::ColorSpaceName::NONE;
     };
