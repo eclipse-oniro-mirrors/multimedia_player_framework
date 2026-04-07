@@ -495,7 +495,10 @@ int64_t AVThumbnailGenerator::StopTask()
 {
     if (readTask_ != nullptr) {
         readTask_->Stop();
-        readTaskExited_.store(true);
+        {
+            std::unique_lock<std::mutex> readTaskLock(readTaskMutex_);
+            readTaskExited_.store(true);
+        }
         readTaskAvailableCond_.notify_all();
     }
     return 0;
