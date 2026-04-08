@@ -135,8 +135,12 @@ int MediaServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messag
         FAKE_POINTER(this), code);
 
     auto remoteDescriptor = data.ReadInterfaceToken();
+    if (remoteDescriptor.empty()) {
+        MEDIA_LOGE("descriptor is empty");
+        return MSERR_INVALID_OPERATION;
+    }
     if (MediaServiceStub::GetDescriptor() != remoteDescriptor) {
-        MEDIA_LOGE("Invalid descriptor");
+        MEDIA_LOGE("Invalid descriptor: %{public}s", Str16ToStr8(remoteDescriptor).c_str());
         return MSERR_INVALID_OPERATION;
     }
     auto itFunc = mediaFuncs_.find(code);
