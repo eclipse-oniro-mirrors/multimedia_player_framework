@@ -198,6 +198,7 @@ ohos_unittest("player_service_stub_test") {
   ]
 
   sources = [
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc/player_service_proxy.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc/player_service_stub.cpp",
     "player_service_stub_test.cpp",
   ]

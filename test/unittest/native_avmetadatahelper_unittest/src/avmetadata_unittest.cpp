@@ -15,6 +15,7 @@
 
 #include "media_errors.h"
 #include "avmetadata_unittest.h"
+#include "player_client.h"
 
 
 namespace OHOS {
@@ -223,6 +224,20 @@ HWTEST_F(AVMetadataUnittest, CreatePixelMapYuv_001, TestSize.Level0)
     pixelMapInfo.pixelFormat = PixelFormat::UNKNOWN;
     auto ret = avmetadataPtr_->CreatePixelMapYuv(frameBuffer, pixelMapInfo);
     EXPECT_EQ(ret, nullptr);
+}
+
+/**
+ * @tc.number    : PlayerClient_TrackSelectionFilter_001
+ * @tc.name      : PlayerClientTrackSelectionFilter
+ * @tc.desc      : Test PlayerClient Set/GetTrackSelectionFilter when proxy is nullptr
+ */
+HWTEST_F(AVMetadataUnittest, PlayerClient_TrackSelectionFilter_001, TestSize.Level0)
+{
+    std::shared_ptr<PlayerClient> playerClient = std::make_shared<PlayerClient>(nullptr);
+    ASSERT_NE(playerClient, nullptr);
+    AVPlayTrackSelectionFilter trackFilter;
+    EXPECT_EQ(playerClient->SetTrackSelectionFilter(trackFilter), MSERR_SERVICE_DIED);
+    EXPECT_EQ(playerClient->GetTrackSelectionFilter(trackFilter), MSERR_SERVICE_DIED);
 }
 } // namespace Media
 } // namespace OHOS

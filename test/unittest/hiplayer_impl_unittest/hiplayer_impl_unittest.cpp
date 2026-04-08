@@ -33,6 +33,12 @@ using namespace std;
 using namespace testing;
 using namespace testing::ext;
 namespace {
+const std::string TEST_TRACK_FILTER_AUDIO_MIME = "audio/aac";
+const std::string TEST_TRACK_FILTER_SUBTITLE_LANGUAGE = "en";
+const std::string TEST_FILTER_NAME = "testname";
+constexpr int32_t AUDIO_TRACK_EVENT_INDEX = 0;
+constexpr int32_t INVALID_AUDIO_TRACK_ID = -1;
+const std::string TEST_AUDIO_MIME = "audio/test";
 std::vector<std::tuple<std::string, int32_t, std::string, PlayerErrorType>> g_errorEvents = {
     {"audioDecoder", MSERR_UNSUPPORT_AUD_DEC_TYPE, "audio/test_mime", PlayerErrorType::AUD_DEC_ERR},
     {"audioDecoder", MSERR_DRM_VERIFICATION_FAILED, "audio/test_mime", PlayerErrorType::DRM_ERR},
@@ -84,6 +90,30 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SetDefaultAudioRenderInfo_001, TestSize
     trackInfos.push_back(testptr);
     hiplayer_->SetDefaultAudioRenderInfo(trackInfos);
     EXPECT_EQ(hiplayer_->isNetWorkPlay_, false);
+}
+
+// @tc.name     Test HandleAudioTrackChangeEvent API
+// @tc.number   PHIUT_HandleAudioTrackChangeEvent_003
+// @tc.desc     Test branch currentAudioTrackId_ < 0 in HandleAudioTrackChangeEvent.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_HandleAudioTrackChangeEvent_003, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::shared_ptr<Meta> meta1 = std::make_shared<Meta>();
+    meta1->SetData(Tag::MIME_TYPE, std::string("audio/"));
+    std::vector<std::shared_ptr<Meta>> metaInfos;
+    metaInfos.push_back(meta1);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    EXPECT_CALL(*mockDemuxer, GetStreamMetaInfo())
+        .WillRepeatedly(Return(metaInfos));
+    hiplayer_->demuxer_ = mockDemuxer;
+    hiplayer_->currentAudioTrackId_ = INVALID_AUDIO_TRACK_ID;
+    hiplayer_->defaultAudioTrackId_ = INVALID_AUDIO_TRACK_ID;
+
+    Event event;
+    event.param = AUDIO_TRACK_EVENT_INDEX;
+    hiplayer_->HandleAudioTrackChangeEvent(event);
 }
 
 // @tc.name     Test SetSource API
@@ -868,6 +898,21 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_ReportAllErrorEvents_001, TestSize.Leve
         EXPECT_EQ(std::get<1>(actualEvents[i]), std::get<1>(g_errorEvents[i]));
         EXPECT_EQ(std::get<2>(actualEvents[i]), std::get<2>(g_errorEvents[i]));
     }
+}
+
+// @tc.name     Test DoInitDemuxer API
+// @tc.number   PHIUT_DoInitDemuxer_001
+// @tc.desc     Test hasTrackSelectionFilter_ == true.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_DoInitDemuxer_001, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    auto mockPipeline = std::make_shared<NiceMock<MockPipeline>>();
+    auto mockDemuxer = std::make_shared<NiceMock<MockDemuxerFilter>>(TEST_FILTER_NAME, FilterType::VIDEO_CAPTURE);
+    EXPECT_CALL(*mockPipeline, AddHeadFilters(_)).WillRepeatedly(Return(Status::OK));
+    hiplayer_->pipeline_ = mockPipeline;
+    hiplayer_->demuxer_ = mockDemuxer;
+    hiplayer_->hasTrackSelectionFilter_.store(true);
+    hiplayer_->DoInitDemuxer();
 }
 
 // @tc.name     Test Seek API
