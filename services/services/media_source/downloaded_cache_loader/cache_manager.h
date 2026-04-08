@@ -24,7 +24,8 @@
 #include <fstream>
 #include <atomic>
 #include <memory>
-#include <securec.h>
+#include <cstdint>
+#include <unordered_map>
 
 namespace OHOS {
 namespace Media {
@@ -60,8 +61,8 @@ struct CacheEntryInfo {
 };
 
 struct FileInfo {
-    std::filesystem::path path;
-    std::filesystem::file_time_type writeTime;
+    std::string path;
+    std::string writeTime;
     uint64_t size;
 
     // 按修改时间升序排序
@@ -85,34 +86,27 @@ public:
     ~DownloadedCacheManager();
 
     std::string GetMediaCache(const std::string& url);
-    bool CreateMediaCache(const std::string& url, const std::string& type,
-        bool randomAccess, uint64_t size);
-    bool FlushWriteLength(const std::string& path, uint64_t fileSize);
     void ReleaseMap();
     bool GetCacheMetaData(const std::string& url, CacheMetaData& metadata);
     std::map<std::string, std::string> BuildHttpHeaders(const std::string& url);
 
-private:
+ private:
     void LoadIndex();
-    std::string ExtractField(char* entryStart, uint32_t fieldCount, CacheFieldId targetId);
+    std::string ExtractField(const uint8_t* buffer, size_t bufferSize, size_t entryOffset, uint32_t fieldCount,
+        CacheFieldId targetId);
     bool CreateDirectories(const std::string& path);
     uint64_t ScanDirectorySize(const std::string& path);
     bool FindFirstEqualField(const std::vector<CacheEntryInfo>& entries, CacheEntryInfo& result,
         const std::string& value, CacheFieldId field);
     void LoadMapping();
-    bool UpdateLastAccessTime(CacheEntryInfo& info, const std::string& entry);
     std::string GetPrefixBeforeUnderscore(const std::string& str);
-    bool RemoveCacheDirectory(const std::string& path);
-    void FlushCacheSize(uint64_t size);
-    bool RemoveMediaCache(const std::string& url);
-    bool InsertMapping(const std::vector<std::pair<CacheFieldId, std::string>>& activeFields,
-        size_t headerSize, size_t fieldsHeaderSize);
 
     static std::shared_ptr<DownloadedCacheManager> cacheManager_;
     static std::once_flag onceFlag_;
-    int fd_;
-    void* mapped_;
-    size_t fileSize_;
+    
+    std::vector<uint8_t> fileBuffer_;
+    bool isLoaded_ = false;
+    
     std::unordered_map<std::string, std::string> entryIndex_;
     std::unordered_map<std::string, std::vector<CacheEntryInfo>> index_;
     std::mutex mutex_;

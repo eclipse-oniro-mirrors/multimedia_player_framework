@@ -49,6 +49,7 @@ namespace Media {
 namespace DownloadedCache {
 std::once_flag DownloadedCacheManager::onceFlag_;
 std::shared_ptr<DownloadedCacheManager> DownloadedCacheManager::cacheManager_;
+
 std::shared_ptr<DownloadedCacheManager> DownloadedCacheManager::Create()
 {
     std::call_once(onceFlag_, [] {
@@ -58,9 +59,8 @@ std::shared_ptr<DownloadedCacheManager> DownloadedCacheManager::Create()
     return cacheManager_;
 }
 
-DownloadedCacheManager::DownloadedCacheManager():fd_(-1), mapped_(MAP_FAILED), fileSize_(0)
+DownloadedCacheManager::DownloadedCacheManager()
 {
-    ScopedTimer timer("DownloadedCacheManager init", TIMER_INIT);
     LoadMapping();
     LoadIndex();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
@@ -71,65 +71,74 @@ void DownloadedCacheManager::LoadMapping()
     CreateDirectories(CACHE_DIR);
     cacheSize_.store(ScanDirectorySize(CACHE_DIR), std::memory_order_relaxed);
     std::string path = CACHE_DIR + fs::path::preferred_separator + CACHE_MAPPING_FILE;
-    fd_ = open(path.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-    CHECK_AND_RETURN_LOG(fd_ != -1, "open mapping file failed");
-
-    struct stat st;
-    CHECK_AND_RETURN_LOG(fstat(fd_, &st) != -1, "fstat fd failed");
-    fileSize_ = static_cast<size_t>(st.st_size);
-    if (fileSize_ == 0) {
-        MEDIA_LOGI("file_size is zero");
+    
+    std::ifstream file(path, std::ios::binary | std::ios::ate);
+    if (!file.is_open()) {
+        MEDIA_LOGE("Failed to open cache mapping file: %{public}s", path.c_str());
         return;
     }
-
-    // 映射文件
-    mapped_ = mmap(nullptr, fileSize_, PROT_READ | PROT_WRITE, MAP_SHARED, fd_, 0);
+    
+    auto fileSize = file.tellg();
+    if (fileSize == 0) {
+        MEDIA_LOGI("Mapping file is empty");
+        return;
+    }
+    
+    fileBuffer_.resize(fileSize);
+    file.seekg(0, std::ios::beg);
+    file.read(reinterpret_cast<char*>(fileBuffer_.data()), fileSize);
+    file.close();
+    
+    isLoaded_ = true;
+    MEDIA_LOGI("Successfully loaded cache mapping file, size: %{public}zu", fileSize);
 }
 
 DownloadedCacheManager::~DownloadedCacheManager()
 {
-    if (mapped_ != MAP_FAILED) {
-        munmap(mapped_, fileSize_);
-    }
-    if (fd_ != -1) {
-        close(fd_);
-    }
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
 void DownloadedCacheManager::LoadIndex()
 {
-    CHECK_AND_RETURN_LOG(mapped_ != MAP_FAILED, "mapped is invalid");
-    char* ptr = static_cast<char*>(mapped_);
+    if (!isLoaded_ || fileBuffer_.empty()) {
+        MEDIA_LOGW("File buffer not loaded, cannot build index");
+        return;
+    }
+    
+    const uint8_t* ptr = fileBuffer_.data();
+    size_t fileSize = fileBuffer_.size();
     size_t offset = 0;
-    while (offset < fileSize_) {
-        CHECK_AND_RETURN_LOG(offset + sizeof(CacheEntryHeader) < fileSize_, "header size exceed file size");
-        CacheEntryHeader* header = reinterpret_cast<CacheEntryHeader*>(ptr + offset);
+    
+    while (offset < fileSize) {
+        CHECK_AND_RETURN_LOG(offset + sizeof(CacheEntryHeader) < fileSize, 
+            "header size exceed file size");
+        const CacheEntryHeader* header = reinterpret_cast<const CacheEntryHeader*>(ptr + offset);
         CHECK_AND_RETURN_LOG(header != nullptr, "reinterpret_cast CacheEntryHeader is null");
+        
         if (header->fieldCount > MAX_FILED_COUNT) {
-            // 文件损坏
-            MEDIA_LOGE("file corruption cleans up directory");
-            fs::remove_all(CACHE_DIR);
+            MEDIA_LOGE("file corruption, abort!");
             index_.clear();
             entryIndex_.clear();
             LoadMapping();
             return;
         }
+        
         size_t fieldsSize = header->fieldCount * sizeof(CacheField);
-        CHECK_AND_RETURN_LOG(offset + sizeof(CacheEntryHeader) + fieldsSize < fileSize_,
+        CHECK_AND_RETURN_LOG(offset + sizeof(CacheEntryHeader) + fieldsSize < fileSize,
             "fieldSize exceeds file size, fieldCount:%{public}d", header->fieldCount);
 
-        // 读取所有字段头
-        CacheField* fields = reinterpret_cast<CacheField*>(ptr + offset + sizeof(CacheEntryHeader));
+        const CacheField* fields = reinterpret_cast<const CacheField*>(ptr + offset + sizeof(CacheEntryHeader));
         size_t totalSize = sizeof(CacheEntryHeader) + fieldsSize;
         for (uint32_t i = 0; i < header->fieldCount; ++i) {
             totalSize += fields[i].len;
         }
 
-        // 提取字段
-        std::string key = ExtractField(ptr + offset, header->fieldCount, CacheFieldId::KEY);
-        std::string entry = ExtractField(ptr + offset, header->fieldCount, CacheFieldId::ENTRY);
-        std::string lastAccessTime = ExtractField(ptr + offset, header->fieldCount, CacheFieldId::LAST_ACCESS_TIME);
+        std::string key = ExtractField(fileBuffer_.data(), fileBuffer_.size(), 
+            offset, header->fieldCount, CacheFieldId::KEY);
+        std::string entry = ExtractField(fileBuffer_.data(), fileBuffer_.size(), 
+            offset, header->fieldCount, CacheFieldId::ENTRY);
+        std::string lastAccessTime = ExtractField(fileBuffer_.data(), fileBuffer_.size(), 
+            offset, header->fieldCount, CacheFieldId::LAST_ACCESS_TIME);
         entryIndex_[entry] = lastAccessTime;
         index_[key].emplace_back(offset, totalSize);
 
@@ -137,173 +146,17 @@ void DownloadedCacheManager::LoadIndex()
     }
 }
 
-bool DownloadedCacheManager::FlushWriteLength(const std::string& path, uint64_t fileSize)
-{
-    if (mapped_ == MAP_FAILED) {
-        LoadMapping();
-        LoadIndex();
-    }
-    (void)path;
-    std::unique_lock<std::mutex> lock(mutex_);
-    cacheSize_.fetch_add(fileSize, std::memory_order_relaxed);
-    CHECK_AND_RETURN_RET_NOLOG(cacheSize_.load() > MAX_CACHE_FILE_SIZE, true);
-
-    MEDIA_LOGD("Clean cache directory start");
-    CHECK_AND_RETURN_RET_LOG(mapped_ != MAP_FAILED, false, "mapped is invalid");
-    std::vector<std::pair<std::string, std::string>> sortedVec;
-    sortedVec.reserve(entryIndex_.size());
-
-    for (const auto& kv : entryIndex_) {
-        sortedVec.push_back(kv);
-    }
-
-    // 访问时间排序
-    std::sort(sortedVec.begin(), sortedVec.end(),
-        [](const auto& a, const auto& b) {
-            return a.second < b.second;
-        });
-    for (const auto& cacheEntry : sortedVec) {
-        CHECK_AND_RETURN_RET_NOLOG(cacheSize_.load() > CACHE_FILE_SIZE_WATERLINE, true);
-        std::string entry = cacheEntry.first;
-        std::string key = GetPrefixBeforeUnderscore(entry);
-        uint64_t size = ScanDirectorySize(CACHE_DIR + fs::path::preferred_separator + entry);
-        auto it = index_.find(key);
-        if (size < NEED_REMOVE_CACHE_SIZE && it != index_.end()) {
-            CacheEntryInfo info;
-            CHECK_AND_CONTINUE_LOG(FindFirstEqualField(it->second, info, entry, CacheFieldId::ENTRY), "get error info");
-            char* ptr = static_cast<char*>(mapped_);
-            CacheEntryHeader* header = reinterpret_cast<CacheEntryHeader*>(ptr + info.offset);
-            std::string url = ExtractField(ptr + info.offset, header->fieldCount, CacheFieldId::REQUEST_URL);
-            RemoveMediaCache(url);
-            FlushCacheSize(size);
-        } else {
-            RemoveCacheDirectory(CACHE_DIR + fs::path::preferred_separator + entry);
-        }
-    }
-    MEDIA_LOGD("Clean cache directory end");
-
-    return true;
-}
-
-std::string DownloadedCacheManager::ExtractField(char* entryStart, uint32_t fieldCount, CacheFieldId targetId)
-{
-    char* ptr = entryStart;
-    ptr += sizeof(CacheEntryHeader);
-
-    CacheField* fields = reinterpret_cast<CacheField*>(ptr);
-
-    size_t offset = 0;
-    for (uint32_t i = 0; i < fieldCount; ++i) {
-        if (static_cast<uint32_t>(targetId) == fields[i].id) {
-            return std::string(ptr + sizeof(CacheField) * fieldCount + offset, fields[i].len);
-        }
-        offset += fields[i].len;
-    }
-    return "";
-}
-
-bool DownloadedCacheManager::CreateMediaCache(const std::string& url, const std::string& type,
-    bool randomAccess, uint64_t size)
-{
-    if (mapped_ == MAP_FAILED) {
-        LoadMapping();
-        LoadIndex();
-    }
-    std::unique_lock<std::mutex> lock(mutex_);
-    std::string key = std::to_string(std::hash<std::string>()(url));
-    auto it = index_.find(key);
-    CacheEntryInfo info;
-    CHECK_AND_RETURN_RET_LOG(it == index_.end() ||
-        !FindFirstEqualField(it->second, info, url, CacheFieldId::REQUEST_URL), true, "has create media cache");
-
-    auto millisec_since_epoch = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-    std::string lastAccessTime = std::to_string(millisec_since_epoch);
-    std::string entry = it != index_.end() ? key + "_" + lastAccessTime : key;
-
-    std::vector<std::pair<CacheFieldId, std::string>> activeFields = {
-        { CacheFieldId::KEY, key },
-        { CacheFieldId::ENTRY, entry },
-        { CacheFieldId::TYPE, type },
-        { CacheFieldId::RANDOM_ACCESS, std::to_string(randomAccess) },
-        { CacheFieldId::SIZE, std::to_string(size) },
-        { CacheFieldId::LAST_ACCESS_TIME, lastAccessTime },
-        { CacheFieldId::REQUEST_URL, url },
-    };
-
-    size_t headerSize = sizeof(CacheEntryHeader);
-    size_t fieldsHeaderSize = FILED_COUNT * sizeof(CacheField);
-    size_t contentSize = 0;
-    for (auto& f : activeFields) {
-        contentSize += f.second.size();
-    }
-
-    size_t totalSize = headerSize + fieldsHeaderSize + contentSize;
-    CHECK_AND_RETURN_RET_LOG(ftruncate(fd_, fileSize_ + totalSize) != -1, false,
-        "ftruncate failed:%{public}s", strerror(errno));
-
-    // 重新映射
-    void* newMapped = mmap(nullptr, fileSize_ + totalSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd_, 0);
-    CHECK_AND_RETURN_RET_LOG(newMapped != MAP_FAILED, false, "mmap failed: %{public}s", strerror(errno));
-    mapped_ = newMapped;
-
-    // 写入数据
-    InsertMapping(activeFields, headerSize, fieldsHeaderSize);
-
-    index_[key].emplace_back(fileSize_, totalSize);
-    entryIndex_[entry] = lastAccessTime;
-
-    if (fileSize_ >= MAX_CACHE_MAPPING_FILE_SIZE) {
-        MEDIA_LOGE("fileSize greater than max cache mapping size");
-        fs::remove_all(CACHE_DIR);
-        index_.clear();
-        entryIndex_.clear();
-        LoadMapping();
-    }
-
-    fileSize_ += totalSize;
-
-    // 刷新到磁盘
-    msync(mapped_, fileSize_, MS_SYNC);
-
-    return true;
-}
-
-bool DownloadedCacheManager::InsertMapping(const std::vector<std::pair<CacheFieldId, std::string>>& activeFields,
-    size_t headerSize, size_t fieldsHeaderSize)
-{
-    CHECK_AND_RETURN_RET_LOG(mapped_ != MAP_FAILED, false, "mapped is invalid");
-    char* ptr = static_cast<char*>(mapped_) + fileSize_;
-    CacheEntryHeader* header = reinterpret_cast<CacheEntryHeader*>(ptr);
-    CHECK_AND_RETURN_RET_LOG(header != nullptr, false, "reinterpret_cast CacheEntryHeader is null");
-    header->version = VERSION;
-    header->fieldCount = FILED_COUNT;
-
-    CacheField* fieldHeaders = reinterpret_cast<CacheField*>(ptr + sizeof(CacheEntryHeader));
-    char* contentPtr = ptr + headerSize + fieldsHeaderSize;
-    for (size_t i = 0; i < activeFields.size(); ++i) {
-        fieldHeaders[i].id = static_cast<uint32_t>(activeFields[i].first);
-        fieldHeaders[i].len = activeFields[i].second.size();
-        errno_t ret = memcpy_s(contentPtr, activeFields[i].second.size(),
-            activeFields[i].second.data(), activeFields[i].second.size());
-        CHECK_AND_RETURN_RET_LOG(ret == EOK, false, "memcpy_s failed");
-        contentPtr += activeFields[i].second.size();
-    }
-    return true;
-}
-
 void DownloadedCacheManager::ReleaseMap()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (mapped_ != MAP_FAILED) {
-        munmap(mapped_, fileSize_);
-        mapped_ = MAP_FAILED;
-    }
+    fileBuffer_.clear();
+    isLoaded_ = false;
     MEDIA_LOGD("0x%{public}06" PRIXPTR "ReleaseMap", FAKE_POINTER(this));
 }
 
 std::string DownloadedCacheManager::GetMediaCache(const std::string& url)
 {
-    if (mapped_ == MAP_FAILED) {
+    if (!isLoaded_) {
         LoadMapping();
         LoadIndex();
     }
@@ -311,181 +164,28 @@ std::string DownloadedCacheManager::GetMediaCache(const std::string& url)
     std::string key = std::to_string(std::hash<std::string>()(url));
     auto it = index_.find(key);
     CHECK_AND_RETURN_RET_LOG(it != index_.end(), "",
-        " directory corresponding to the url does not exist");
+        "directory corresponding to the url does not exist");
+
     CacheEntryInfo info;
     CHECK_AND_RETURN_RET_LOG(FindFirstEqualField(it->second, info, url, CacheFieldId::REQUEST_URL),
         "", "directory corresponding to the url does not exist");
-    CHECK_AND_RETURN_RET_LOG(mapped_ != MAP_FAILED, "", "mapped is invalid");
-    char* ptr = static_cast<char*>(mapped_);
-    CacheEntryHeader* header = reinterpret_cast<CacheEntryHeader*>(ptr + info.offset);
-    std::string entry = ExtractField(ptr + info.offset, header->fieldCount, CacheFieldId::ENTRY);
+
+    std::string entry = ExtractField(fileBuffer_.data(), fileBuffer_.size(), info.offset,
+        reinterpret_cast<const CacheEntryHeader*>(fileBuffer_.data() + info.offset)->fieldCount,
+        CacheFieldId::ENTRY);
+
     CHECK_AND_RETURN_RET_LOG(!entry.empty() && entry.find("..") == std::string::npos
         && entry.find('/') == std::string::npos && entry.find('\\') == std::string::npos,
         "", "get media cache file failed");
     
     std::string path = CACHE_DIR + fs::path::preferred_separator + entry;
     CreateDirectories(path.c_str());
-    UpdateLastAccessTime(info, entry);
-
     return path;
-}
-
-bool DownloadedCacheManager::RemoveMediaCache(const std::string& url)
-{
-    std::string key = std::to_string(std::hash<std::string>()(url));
-    auto it = index_.find(key);
-    CHECK_AND_RETURN_RET_LOG(it != index_.end(), false, " directory corresponding to the url does not exist");
-
-    // 向前移动
-    CacheEntryInfo info;
-    CHECK_AND_RETURN_RET_LOG(FindFirstEqualField(it->second, info, url, CacheFieldId::REQUEST_URL),
-        false, "find url failed");
-    CHECK_AND_RETURN_RET_LOG(mapped_ != MAP_FAILED, false, "mapped is invalid");
-    char* ptr = static_cast<char*>(mapped_);
-    CacheEntryHeader* header = reinterpret_cast<CacheEntryHeader*>(ptr + info.offset);
-    std::string entry = ExtractField(ptr + info.offset, header->fieldCount, CacheFieldId::ENTRY);
-    std::string path = CACHE_DIR + fs::path::preferred_separator + entry;
-    fs::remove_all(path);
-    MEDIA_LOGI("remove file:%{public}s", entry.c_str());
-    CHECK_AND_RETURN_RET_LOG(fileSize_ > 0 && fileSize_ <= MAX_CACHE_MAPPING_FILE_SIZE, false, "fileSize_ is invalid");
-    errno_t ret = memmove_s(ptr + info.offset, fileSize_ - info.offset, ptr + info.offset + info.cacheEntrySize,
-        fileSize_ - (info.offset + info.cacheEntrySize));
-    CHECK_AND_RETURN_RET_LOG(ret == EOK, false, "remove media cache falied");
-
-    fileSize_ -= info.cacheEntrySize;
-    ftruncate(fd_, fileSize_);
-    index_.clear();
-    entryIndex_.clear();
-    LoadIndex();
-
-    return true;
-}
-
-bool DownloadedCacheManager::CreateDirectories(const std::string& path)
-{
-    CHECK_AND_RETURN_RET_LOG(!fs::exists(path) || !fs::is_directory(path), true, "directory exists");
-    std::error_code ec;
-    bool success = fs::create_directories(path, ec);
-    CHECK_AND_RETURN_RET_LOG(success, false, "create_directories error:%{public}s", ec.message().c_str());
-    return success;
-}
-
-uint64_t DownloadedCacheManager::ScanDirectorySize(const std::string& path)
-{
-    uint64_t totalSize = 0;
-    CHECK_AND_RETURN_RET_LOG(fs::exists(path) && fs::is_directory(path), 0,
-        "file not exist or is not directory");
-    
-    // 遍历目录及其子目录
-    for (const auto& entry : fs::recursive_directory_iterator(path)) {
-        // 检查文件是否为普通文件
-        if (fs::is_regular_file(entry.status())) {
-            totalSize += fs::file_size(entry);
-        }
-    }
-
-    return totalSize;
-}
-
-bool DownloadedCacheManager::FindFirstEqualField(const std::vector<CacheEntryInfo>& entries,
-    CacheEntryInfo& result, const std::string& value, CacheFieldId field)
-{
-    CHECK_AND_RETURN_RET_LOG(mapped_ != MAP_FAILED, false, "mapped is invalid");
-    auto it = std::find_if(entries.begin(), entries.end(),
-        [&](const CacheEntryInfo& info) {
-            char* ptr = static_cast<char*>(mapped_);
-            CacheEntryHeader* header = reinterpret_cast<CacheEntryHeader*>(ptr + info.offset);
-            std::string target = ExtractField(ptr + info.offset, header->fieldCount, field);
-            return target == value;
-        });
-    if (it != entries.end()) {
-        result = *it;
-        return true;
-    }
-    return false;
-}
-
-bool DownloadedCacheManager::UpdateLastAccessTime(CacheEntryInfo &info, const std::string& entry)
-{
-    CHECK_AND_RETURN_RET_LOG(mapped_ != MAP_FAILED, false, "mapped is invalid");
-    char* ptr = static_cast<char*>(mapped_) + info.offset;
-    CacheEntryHeader* header = reinterpret_cast<CacheEntryHeader*>(ptr);
-    CHECK_AND_RETURN_RET_LOG(header != nullptr, false, "header is null");
-    CacheField* fieldHeaders = reinterpret_cast<CacheField*>(ptr + sizeof(CacheEntryHeader));
-    CHECK_AND_RETURN_RET_LOG(fieldHeaders != nullptr, false, "fieldHeaders is null");
-    char* contentPtr = ptr + sizeof(CacheEntryHeader) + (header->fieldCount * sizeof(CacheField));
-
-    size_t offset = 0;
-    for (size_t i = 0; i < header->fieldCount; ++i) {
-        if (fieldHeaders[i].id != static_cast<uint32_t>(CacheFieldId::LAST_ACCESS_TIME)) {
-            offset += fieldHeaders[i].len;
-            continue;
-        }
-        auto millisec_since_epoch = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-        std::string newTimeStr = std::to_string(millisec_since_epoch);
-
-        entryIndex_[entry] = newTimeStr;
-        CHECK_AND_RETURN_RET_LOG(fieldHeaders[i].len == newTimeStr.size(), true, "length is inconsistent");
-        errno_t ret = memcpy_s(contentPtr + offset, fieldHeaders[i].len, newTimeStr.data(), newTimeStr.size());
-        CHECK_AND_RETURN_RET_LOG(ret == EOK, false, "memcpy_s failed");
-        msync(mapped_, fileSize_, MS_SYNC);
-        return true;
-    }
-
-    MEDIA_LOGE("LAST_ACCESS_TIME field not found in entry at offset:%zu", offset);
-    return false;
-}
-
-std::string DownloadedCacheManager::GetPrefixBeforeUnderscore(const std::string& str)
-{
-    size_t pos = str.find('_');
-    CHECK_AND_RETURN_RET_NOLOG(pos != std::string::npos, str);
-    return str.substr(0, pos);
-}
-
-bool DownloadedCacheManager::RemoveCacheDirectory(const std::string& path)
-{
-    CHECK_AND_RETURN_RET_LOG(fs::exists(path) && fs::is_directory(path), false,
-        "file does not exist or is not a directory");
-    uint64_t removeSize = 0;
-    int deletedCount = 0;
-    std::vector<FileInfo> files;
-    for (const auto& entry : fs::recursive_directory_iterator(path)) {
-        if (fs::is_regular_file(entry.status())) {
-            auto writeTime = fs::last_write_time(entry.path());
-            uint64_t size = fs::file_size(entry.path());
-            files.push_back({ entry.path(), writeTime, size });
-        }
-    }
-    std::sort(files.begin(), files.end());
-
-    for (const auto& file : files) {
-        if (removeSize >= NEED_REMOVE_CACHE_SIZE) {
-            MEDIA_LOGI("remove end, count: " PUBLIC_LOG_U64 ", size: " PUBLIC_LOG_D32, removeSize, deletedCount);
-            break;
-        }
-
-        // 删除文件
-        CHECK_AND_CONTINUE_LOG(fs::remove(file.path), "remove file failed");
-        removeSize += file.size;
-        deletedCount++;
-        FlushCacheSize(removeSize);
-    }
-    return true;
-}
-
-void DownloadedCacheManager::FlushCacheSize(uint64_t size)
-{
-    if (cacheSize_.load() < size) {
-        cacheSize_.store(0, std::memory_order_relaxed);
-    } else {
-        cacheSize_.fetch_sub(size, std::memory_order_relaxed);
-    }
 }
 
 bool DownloadedCacheManager::GetCacheMetaData(const std::string& url, CacheMetaData& metadata)
 {
-    if (mapped_ == MAP_FAILED) {
+    if (!isLoaded_) {
         LoadMapping();
         LoadIndex();
     }
@@ -499,17 +199,19 @@ bool DownloadedCacheManager::GetCacheMetaData(const std::string& url, CacheMetaD
     CHECK_AND_RETURN_RET_LOG(FindFirstEqualField(it->second, info, url, CacheFieldId::REQUEST_URL),
         false, "Failed to find cache entry for url: %{public}s", url.c_str());
     
-    CHECK_AND_RETURN_RET_LOG(mapped_ != MAP_FAILED, false, "mapped is invalid");
-    char* ptr = static_cast<char*>(mapped_);
-    CacheEntryHeader* header = reinterpret_cast<CacheEntryHeader*>(ptr + info.offset);
-    
-    metadata.type = ExtractField(ptr + info.offset, header->fieldCount, CacheFieldId::TYPE);
-    std::string randomAccessStr = ExtractField(ptr + info.offset, header->fieldCount, CacheFieldId::RANDOM_ACCESS);
+    const CacheEntryHeader* header = reinterpret_cast<const CacheEntryHeader*>(fileBuffer_.data() + info.offset);
+
+    metadata.type = ExtractField(fileBuffer_.data(), fileBuffer_.size(), 
+        info.offset, header->fieldCount, CacheFieldId::TYPE);
+    std::string randomAccessStr = ExtractField(fileBuffer_.data(), fileBuffer_.size(), 
+        info.offset, header->fieldCount, CacheFieldId::RANDOM_ACCESS);
     metadata.randomAccess = (randomAccessStr == "1");
-    std::string sizeStr = ExtractField(ptr + info.offset, header->fieldCount, CacheFieldId::SIZE);
+    std::string sizeStr = ExtractField(fileBuffer_.data(), fileBuffer_.size(), 
+        info.offset, header->fieldCount, CacheFieldId::SIZE);
     metadata.size = std::stoll(sizeStr);
     metadata.url = url;
-    metadata.entry = ExtractField(ptr + info.offset, header->fieldCount, CacheFieldId::ENTRY);
+    metadata.entry = ExtractField(fileBuffer_.data(), fileBuffer_.size(), 
+        info.offset, header->fieldCount, CacheFieldId::ENTRY);
     
     return true;
 }
@@ -532,6 +234,87 @@ std::map<std::string, std::string> DownloadedCacheManager::BuildHttpHeaders(cons
     
     return headers;
 }
+
+std::string DownloadedCacheManager::ExtractField(const uint8_t* buffer, size_t bufferSize, size_t entryOffset,
+    uint32_t fieldCount, CacheFieldId targetId)
+{
+    if (entryOffset + sizeof(CacheEntryHeader) >= bufferSize) {
+        return "";
+    }
+    
+    const CacheEntryHeader* header = reinterpret_cast<const CacheEntryHeader*>(buffer + entryOffset);
+    const CacheField* fields = reinterpret_cast<const CacheField*>(buffer + entryOffset + sizeof(CacheEntryHeader));
+    
+    size_t contentOffset = sizeof(CacheEntryHeader) + (fieldCount * sizeof(CacheField));
+    for (uint32_t i = 0; i < fieldCount; ++i) {
+        if (fields[i].id == static_cast<uint32_t>(targetId)) {
+            if (contentOffset + fields[i].len > bufferSize) {
+                MEDIA_LOGE("Field content exceeds buffer size");
+                return "";
+            }
+            return std::string(reinterpret_cast<const char*>(buffer + entryOffset + contentOffset), fields[i].len);
+        }
+        contentOffset += fields[i].len;
+    }
+    
+    return "";
 }
+
+bool DownloadedCacheManager::FindFirstEqualField(const std::vector<CacheEntryInfo>& entries,
+    CacheEntryInfo& result, const std::string& value, CacheFieldId field)
+{
+    if (fileBuffer_.empty()) {
+        MEDIA_LOGE("File buffer is empty");
+        return false;
+    }
+
+    auto it = std::find_if(entries.begin(), entries.end(),
+        [&](const CacheEntryInfo& info) {
+            const CacheEntryHeader* header = 
+                reinterpret_cast<const CacheEntryHeader*>(fileBuffer_.data() + info.offset);
+            std::string target = ExtractField(fileBuffer_.data(), fileBuffer_.size(), 
+                info.offset, header->fieldCount, field);
+            return target == value;
+        });
+
+    if (it != entries.end()) {
+        result = *it;
+        return true;
+    }
+    return false;
 }
+
+bool DownloadedCacheManager::CreateDirectories(const std::string& path)
+{
+    CHECK_AND_RETURN_RET_LOG(!fs::exists(path) || !fs::is_directory(path), true, "directory exists");
+    std::error_code ec;
+    bool success = fs::create_directories(path, ec);
+    CHECK_AND_RETURN_RET_LOG(success, false, "create_directories error:%{public}s", ec.message().c_str());
+    return success;
 }
+
+uint64_t DownloadedCacheManager::ScanDirectorySize(const std::string& path)
+{
+    uint64_t totalSize = 0;
+    CHECK_AND_RETURN_RET_LOG(fs::exists(path) && fs::is_directory(path), 0,
+        "file not exist or is not directory");
+
+    for (const auto& entry : fs::recursive_directory_iterator(path)) {
+        if (fs::is_regular_file(entry.status())) {
+            totalSize += fs::file_size(entry);
+        }
+    }
+
+    return totalSize;
+}
+
+std::string DownloadedCacheManager::GetPrefixBeforeUnderscore(const std::string& str)
+{
+    size_t pos = str.find('_');
+    CHECK_AND_RETURN_RET_NOLOG(pos != std::string::npos, str);
+    return str.substr(0, pos);
+}
+
+} // namespace DownloadedCache
+} // namespace Media
+} // namespace OHOS
