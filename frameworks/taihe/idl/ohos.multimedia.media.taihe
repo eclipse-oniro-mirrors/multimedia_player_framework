@@ -702,6 +702,8 @@ enum CodecMimeType: String {
     VIDEO_HEVC = "video/hevc",
     AUDIO_MP3 = "audio/mpeg",
     AUDIO_G711MU = "audio/g711mu",
+    AUDIO_AMR_NB = "audio/3gpp",
+    AUDIO_AMR_WB = "audio/amr-wb",
 }
 
 enum ContainerFormatType: String {
@@ -1014,6 +1016,7 @@ struct AVTranscoderConfig {
     videoCodec: Optional<CodecMimeType>;
     videoFrameWidth: Optional<i32>;
     videoFrameHeight: Optional<i32>;
+    enableBFrame: Optional<bool>;
 }
 
 enum AVScreenCaptureRecordPreset:i32 {
