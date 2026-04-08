@@ -112,6 +112,10 @@ optional<::ohos::multimedia::image::image::PixelMap> AVImageGeneratorImpl::Fetch
     }
     pixelMapParams.colorFormat = colorFormat;
     auto pixelMap = helper_->FetchFrameYuv(timeUs, options.get_value(), pixelMapParams);
+    if (pixelMap == nullptr) {
+        set_business_error(OHOS::Media::MSERR_EXT_API9_UNSUPPORT_FORMAT, "pixelmap is nullptr");
+        return optional<::ohos::multimedia::image::image::PixelMap>(std::nullopt);
+    }
     MEDIA_LOGI("FetchFrameByTimeSync Out");
     return optional<::ohos::multimedia::image::image::PixelMap>(std::in_place_t{},
         Image::PixelMapImpl::CreatePixelMap(pixelMap));
@@ -141,6 +145,10 @@ optional<::ohos::multimedia::image::image::PixelMap> AVImageGeneratorImpl::Fetch
     OHOS::Media::PixelFormat colorFormat = OHOS::Media::PixelFormat::UNKNOWN;
     pixelMapParams.colorFormat = colorFormat;
     auto pixelMap = helper_->FetchScaledFrameYuv(timeUs, options.get_value(), pixelMapParams);
+    if (pixelMap == nullptr) {
+        set_business_error(OHOS::Media::MSERR_EXT_API9_UNSUPPORT_FORMAT, "pixelmap is nullptr");
+        return optional<::ohos::multimedia::image::image::PixelMap>(std::nullopt);
+    }
     MEDIA_LOGI("FetchScaledFrameByTimeSync Out");
     return optional<::ohos::multimedia::image::image::PixelMap>(std::in_place_t{},
         Image::PixelMapImpl::CreatePixelMap(pixelMap));

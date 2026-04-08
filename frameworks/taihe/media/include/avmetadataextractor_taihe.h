@@ -66,6 +66,7 @@ private:
     uint32_t index_ = 0;
     std::shared_ptr<OHOS::Media::PixelMap> artPicture_ = nullptr;
     void SetMetadataProperty(std::shared_ptr<OHOS::Media::Meta> metadata, AVMetadata &res);
+    void ParseMetadataOfTracks(std::shared_ptr<OHOS::Media::Meta> metadata, AVMetadata &res, std:string key);
     bool SetPropertyByType(AVMetadata &res, std::shared_ptr<OHOS::Media::Meta> metadata, std::string key);
     void SetDefaultMetadataProperty(AVMetadata &res);
     void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);

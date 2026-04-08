@@ -119,12 +119,14 @@ struct AVMetadata {
     trackCount: Optional<String>;
     sampleRate: Optional<String>;
     title: Optional<String>;
+    description: Optional<String>;
     videoHeight: Optional<String>;
     videoWidth: Optional<String>;
     videoOrientation: Optional<String>;
     hdrType: Optional<HdrType>;
     location: Optional<Location>;
     customInfo: Optional<@record Map<String, String>>;
+    tracks: Optional<Array<@record Map<String, MediaDescriptionValue>>>;
 }
 
 enum AVImageQueryOptions: i32 {

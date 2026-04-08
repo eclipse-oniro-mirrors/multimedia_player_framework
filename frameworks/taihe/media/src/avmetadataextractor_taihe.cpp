@@ -194,6 +194,7 @@ void AVMetadataExtractorImpl::SetDefaultMetadataProperty(AVMetadata &res)
     res.trackCount = optional<string>(std::nullopt);
     res.sampleRate = optional<string>(std::nullopt);
     res.title = optional<string>(std::nullopt);
+    res.description = optional<string>(std::nullopt);
     res.videoHeight = optional<string>(std::nullopt);
     res.videoWidth = optional<string>(std::nullopt);
     res.videoOrientation = optional<string>(std::nullopt);
@@ -225,6 +226,7 @@ bool AVMetadataExtractorImpl::SetPropertyByType(AVMetadata &res, std::shared_ptr
         {"trackCount", &AVMetadata::trackCount},
         {"sampleRate", &AVMetadata::sampleRate},
         {"title", &AVMetadata::title},
+        {"description", &AVMetadata::description},
         {"videoHeight", &AVMetadata::videoHeight},
         {"videoWidth", &AVMetadata::videoWidth},
         {"videoOrientation", &AVMetadata::videoOrientation}
@@ -290,10 +292,32 @@ void AVMetadataExtractorImpl::SetMetadataProperty(std::shared_ptr<OHOS::Media::M
             res.customInfo = optional<map<string, string>>(std::in_place_t{}, customInfo);
             continue;
         }
+        if (key == "tracks") {
+            ParseMetadataOfTracks(metadata, res, key);
+            continue;
+        }
         CHECK_AND_CONTINUE_LOG(SetPropertyByType(res, metadata, key),
             "SetProperty failed, key: %{public}s", key.c_str());
     }
 }
+
+void AVMetadataExtractorImpl::ParseMetadataOfTracks(std::shared_ptr<OHOS::Media::Meta> metadata,
+    AVMetadata &res, std::string key)
+{
+    if (key == "tracks") {
+        std::vector<OHOS::Media::Format> trackInfoVec;
+        std::vector<map<string, MediaDescriptionValue>> tracks;
+        bool ret = metadata->GetData(key, trackInfoVec);
+        CHECK_AND_RETURN_LOG(ret, "GetTracksData failed, key %{public}s", key.c_str());
+        for (size_t index = 0; index < trackInfoVec.size(); index++) {
+            map<string, MediaDescriptionValue> description;
+            description = MediaTaiheUtils::CreateFormatBuffer(trackInfoVec[index]);
+            tracks.push_back(description);
+        }
+        res.tracks = optional<array<map<string, MediaDescriptionValue>>>(std::in_place_t{}, tracks);
+    }
+}
+
 
 optional<AVMetadata> AVMetadataExtractorImpl::FetchMetadataSync()
 {
