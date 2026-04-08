@@ -2777,7 +2777,6 @@ void HiPlayerImpl::OnEventSubTrackChange(const Event &event)
                 break;
             }
             MEDIA_LOG_I_SHORT("BUFFERING_END PLAYING");
-            SetBuffering(false);
             NotifyBufferingEnd(AnyCast<int32_t>(event.param));
             break;
         }
@@ -2787,7 +2786,6 @@ void HiPlayerImpl::OnEventSubTrackChange(const Event &event)
                 break;
             }
             MEDIA_LOG_I_SHORT("BUFFERING_START PAUSE");
-            SetBuffering(true);
             NotifyBufferingStart(AnyCast<int32_t>(event.param));
             break;
         }
