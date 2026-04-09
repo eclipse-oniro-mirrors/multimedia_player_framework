@@ -4620,7 +4620,7 @@ int32_t HiPlayerImpl::NotifySubtitleSeek()
     return TransStatus(Status::OK);
 }
 
-void HandleReadyAudioInterrupt()
+void HiPlayerImpl::HandleReadyAudioInterrupt()
 {
     FALSE_RETURN_NOLOG(curState_ == PlayerStateId::READY && !isAudioInitialized_.load());
     HandleInitialPlayingStateChange(EventType::EVENT_AUDIO_FIRST_FRAME);
