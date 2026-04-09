@@ -287,6 +287,7 @@ private:
     bool IsSubtitleMime(const std::string& mime);
     bool IsNeedAudioSinkChangeTrack(std::vector<std::shared_ptr<Meta>>& metaInfo, int32_t newAudioTrackId);
     Status Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone, bool isUnFreezeSeek = false);
+    Status LiveSeek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone, bool isUnFreezeSeek);
     Status HandleSeek(int64_t seekPos, PlayerSeekMode mode, bool isUnFreezeSeek = false);
     
     Status doPreparedSeek(int64_t seekPos, PlayerSeekMode mode);
