@@ -18,6 +18,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include "file_cache_manager.h"
+#include "cache_mapping_format.h"
 #include "common/log.h"
 
 namespace OHOS {
@@ -32,23 +33,6 @@ const char FILE_SEPARATOR = std::filesystem::path::preferred_separator;
 std::shared_ptr<DownloadedFileCacheManager> DownloadedFileCacheManager::Create()
 {
     return std::make_shared<DownloadedFileCacheManager>();
-}
-
-int32_t DownloadedFileCacheManager::Write(const std::string& path, const void* buffer, int64_t size)
-{
-    FALSE_RETURN_V_MSG_E(IsValidPath(path), -1, "invalid path");
-    int fd = open(path.c_str(), O_RDWR | O_CREAT | O_APPEND, 0644);
-    if (fd == -1) {
-        MEDIA_LOG_E("WriteCacheData open file error");
-        return -1;
-    }
-    int written = write(fd, buffer, size);
-    close(fd);
-    if (written < size) {
-        MEDIA_LOG_E("WriteCacheData write error");
-        return -1;
-    }
-    return 0;
 }
 
 int32_t DownloadedFileCacheManager::Read(const std::string& path, void* buffer, int64_t offset, int64_t size)
@@ -104,46 +88,30 @@ int64_t DownloadedFileCacheManager::GetSize(const std::string& path)
     return buf.st_size;
 }
 
-int32_t DownloadedFileCacheManager::Clear(const std::string& path)
-{
-    int ret = unlink(path.c_str());
-    if (ret == -1) {
-        MEDIA_LOG_W("ClearCacheData unlink error");
-        return -1;
-    }
-    return 0;
-}
-
-bool DownloadedFileCacheManager::IsValid(const std::string& path, int64_t exceptedSize)
-{
-    int64_t actual = GetSize(path);
-    if (actual != exceptedSize) {
-        Clear(path);
-        MEDIA_LOG_D("Segment is invalid: excepted " PUBLIC_LOG_D64 ", got " PUBLIC_LOG_D64, exceptedSize, actual);
-        return false;
-    }
-    return true;
-}
-
 bool DownloadedFileCacheManager::IsValidPath(const std::string& inputPath)
 {
-    FALSE_RETURN_V_MSG_E(inputPath.length() <= PATH_MAX, false, "path len invalid");
+    if (inputPath.length() > PATH_MAX) {
+        MEDIA_LOG_E("path len invalid");
+        return false;
+    }
 
-    std::filesystem::path inPath(inputPath);
-    FALSE_RETURN_V_MSG_E(inPath.has_parent_path(), false, "path no parent path.");
+    std::string relativePath;
+    if (inputPath.length() > CACHE_DIR.length() && 
+        inputPath.compare(0, CACHE_DIR.length(), CACHE_DIR) == 0) {
+        relativePath = inputPath.substr(CACHE_DIR.length());
+        if (!relativePath.empty() && relativePath[0] == FILE_SEPARATOR) {
+            relativePath = relativePath.substr(1);
+        }
+    } else {
+        MEDIA_LOG_E("path is not under the expected dir");
+        return false;
+    }
 
-    // if path not exist, check parent path
-    auto checkPath = std::filesystem::exists(inputPath) ? inputPath : inPath.parent_path().string();
+    if (relativePath.empty()) {
+        return true;
+    }
 
-    char path[PATH_MAX + 1] = {0};
-    auto realPath = realpath(checkPath.c_str(), path);
-    FALSE_RETURN_V_MSG_E(realPath, false, "realPath fail");
-    std::string canonicalPath(path);
-    auto isPrefixValid = canonicalPath.length() >= CACHE_DIR.length() &&
-        (canonicalPath.compare(0, CACHE_DIR.length(), CACHE_DIR) == 0) &&
-        (canonicalPath.length() == CACHE_DIR.length() || canonicalPath[CACHE_DIR.length()] == FILE_SEPARATOR);
-    FALSE_RETURN_V_MSG_E(isPrefixValid, false, "path is not under the expected dir");
-    return true;
+    return PathValidator::Validate(CACHE_DIR, relativePath);
 }
 } // namespace DownloadedCache
 } // namespace Media

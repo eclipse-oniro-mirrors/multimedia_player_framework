@@ -26,14 +26,11 @@ class DownloadedFileCacheManager {
 public:
     static std::shared_ptr<DownloadedFileCacheManager> Create();
 
-    int32_t Write(const std::string& path, const void* buffer, int64_t size);
     int32_t Read(const std::string& path, void* buffer, int64_t offset, int64_t size);
     int64_t GetSize(const std::string& path);
-    int32_t Clear(const std::string& path);
-    bool IsValid(const std::string& path, int64_t exceptedSize);
 
 private:
- 	bool IsValidPath(const std::string& inputPath);
+    bool IsValidPath(const std::string& inputPath);
 };
 } // namespace DownloadedCache
 } // namespace Media

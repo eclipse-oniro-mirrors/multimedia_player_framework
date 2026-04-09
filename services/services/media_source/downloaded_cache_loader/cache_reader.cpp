@@ -29,7 +29,6 @@ namespace Media {
 namespace DownloadedCache {
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "CacheReader" };
-constexpr int64_t SHARD_SIZE = 4 * 1024 * 1024;
 constexpr int32_t CACHE_NOT_FOUND_ERROR = 404;
 }
 
@@ -120,89 +119,42 @@ void CacheReader::HandleCacheRequest(int64_t uuid, int64_t requestedOffset, int6
         return;
     }
 
-    int startIndex = static_cast<int>(requestedOffset / SHARD_SIZE);
-    int requestLength = (requestedLength <= 0) ? static_cast<int>(metadata_.size) : static_cast<int>(requestedLength);
-    int64_t end = requestedOffset + requestLength;
-    int endIndex = static_cast<int>((end - 1) / SHARD_SIZE);
-
-    MEDIA_LOG_I("Start read start: " PUBLIC_LOG_D32 ", end: " PUBLIC_LOG_D32 ", offset: " PUBLIC_LOG_D64
-        ", len = " PUBLIC_LOG_D64, startIndex, endIndex, requestedOffset, end);
-
-    requestedOffset_ = requestedOffset;
-    requestedLength_ = requestLength;
-
-    for (int i = startIndex; i <= endIndex; ++i) {
-        if (!ProcessShard(uuid, i, startIndex, endIndex)) {
-            break;
-        }
-    }
-
-    if (requestedLength == -1) {
-        request_->FinishLoading(uuid, 0);
-    }
-}
-
-bool CacheReader::ProcessShard(int64_t uuid, int index, int startIndex, int endIndex)
-{
-    if (isClosed_.load()) {
-        return false;
-    }
-
-    path_ = std::to_string(std::hash<std::string>()(url_)) + "_" + std::to_string(index);
-    std::string dataPath = urlDir_ + "/" + path_ + ".data";
-
-    int len = (index == static_cast<int>((metadata_.size - 1) / SHARD_SIZE)) ?
-              static_cast<int>(metadata_.size % SHARD_SIZE) : static_cast<int>(SHARD_SIZE);
-    if (len == 0) {
-        len = static_cast<int>(SHARD_SIZE);
-    }
-
-    if (!fileCacheManager_->IsValid(dataPath, len)) {
-        MEDIA_LOG_E("Cache shard invalid: %{public}s, expected size: %{public}d", dataPath.c_str(), len);
-        request_->FinishLoading(uuid, CACHE_NOT_FOUND_ERROR);
-        return false;
-    }
-
-    if (curOffset_ != requestedOffset_) {
-        MEDIA_LOG_I("drop requestedOffset: " PUBLIC_LOG_D64, requestedOffset_);
-        return false;
-    }
-
-    int64_t fileSize = fileCacheManager_->GetSize(dataPath);
+    int64_t fileSize = fileCacheManager_->GetSize(urlDir_);
     if (fileSize < 0) {
-        MEDIA_LOG_E("Failed to get cache file size: %{public}s", dataPath.c_str());
+        MEDIA_LOG_E("Failed to get cache file size: %{public}s", urlDir_.c_str());
         request_->FinishLoading(uuid, CACHE_NOT_FOUND_ERROR);
-        return false;
+        return;
     }
 
-    int64_t endOffset = requestedOffset_ + requestedLength_ - 1;
-    int fileBeg = (index == startIndex) ? static_cast<int>(requestedOffset_ % SHARD_SIZE) : 0;
-    int fileEnd = (index == endIndex) ? static_cast<int>(endOffset % SHARD_SIZE) : static_cast<int>(SHARD_SIZE - 1);
-    if (fileEnd >= static_cast<int>(fileSize)) {
-        fileEnd = static_cast<int>(fileSize - 1);
+    int64_t actualRequestedLength = (requestedLength <= 0) ? fileSize : requestedLength;
+    if (requestedOffset >= fileSize) {
+        MEDIA_LOG_E("Requested offset exceeds file size");
+        request_->FinishLoading(uuid, CACHE_NOT_FOUND_ERROR);
+        return;
     }
-    int fileReadLen = (fileEnd >= fileBeg) ? (fileEnd - fileBeg + 1) : 0;
 
-    if (fileReadLen <= 0) {
-        return true;
-    }
+    int64_t actualReadLength = std::min(actualRequestedLength, fileSize - requestedOffset);
+
+    MEDIA_LOG_I("Read from file offset: " PUBLIC_LOG_D64 ", length: " PUBLIC_LOG_D64,
+        requestedOffset, actualReadLength);
 
     auto buffer = std::make_shared<AVSharedMemoryBase>(
-        static_cast<int32_t>(fileReadLen), AVSharedMemory::FLAGS_READ_WRITE, "userBuffer");
+        static_cast<int32_t>(actualReadLength), AVSharedMemory::FLAGS_READ_WRITE, "userBuffer");
     buffer->Init();
 
-    if (fileCacheManager_->Read(dataPath, buffer->GetBase(), fileBeg, fileReadLen) != 0) {
-        MEDIA_LOG_E("Failed to read cache file: %{public}s", dataPath.c_str());
+    if (fileCacheManager_->Read(urlDir_, buffer->GetBase(), requestedOffset, actualReadLength) != 0) {
+        MEDIA_LOG_E("Failed to read cache file: %{public}s", urlDir_.c_str());
         request_->FinishLoading(uuid, CACHE_NOT_FOUND_ERROR);
-        return false;
+        return;
     }
 
-    int64_t offset = index * SHARD_SIZE + fileBeg;
-    MEDIA_LOG_I("RespondData offset: " PUBLIC_LOG_D64" fileReadLen: " PUBLIC_LOG_D32,
-        offset, fileReadLen);
+    MEDIA_LOG_I("RespondData offset: " PUBLIC_LOG_D64" readLen: " PUBLIC_LOG_D64,
+        requestedOffset, actualReadLength);
 
-    auto ret = request_->RespondData(uuid, offset, buffer);
-    return ret >= 0;
+    auto ret = request_->RespondData(uuid, requestedOffset, buffer);
+    if (ret < 0) {
+        MEDIA_LOG_E("RespondData failed");
+    }
 }
 
 void CacheReader::Close(int64_t uuid)
