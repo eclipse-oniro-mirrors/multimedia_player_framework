@@ -3700,10 +3700,6 @@ int32_t ScreenCaptureServer::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfa
         rsRect.y = metaRegion.top;
         rsRect.w = metaRegion.width;
         rsRect.h = metaRegion.height;
-        MEDIA_LOGI("get surfaceBuffer rsRect.x: %{public}d, rsRect.y: %{public}d",
-            rsRect.x, rsRect.y);
-        MEDIA_LOGI("get surfaceBuffer rsRect.w: %{public}d, rsRect.h: %{public}d",
-            rsRect.w, rsRect.h);
         return MSERR_OK;
     }
     FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNKNOWN,

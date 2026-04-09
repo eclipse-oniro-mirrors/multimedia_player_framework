@@ -288,10 +288,8 @@ private:
             screenCapture->AcquireVideoBuffer(fence, timestamp, damage, rsRect);
         CHECK_AND_RETURN_RET_LOG(surfaceBuffer != nullptr, AV_SCREEN_CAPTURE_ERR_NO_MEMORY,
             "AcquireVideoBuffer failed surfaceBuffer no memory!");
-        MEDIA_LOGI("get native surfaceBuffer rsRect.x: %{public}d, rsRect.y: %{public}d",
-            rsRect.x, rsRect.y);
-        MEDIA_LOGI("get native surfaceBuffer rsRect.w: %{public}d, rsRect.h: %{public}d",
-            rsRect.w, rsRect.h);
+        MEDIA_LOGD("get native surfaceBuffer rsRect: x: %{public}d, y: %{public}d, w: %{public}d, h: %{public}d",
+            rsRect.x, rsRect.y, rsRect.w, rsRect.h);
         std::shared_ptr<AVBuffer> avBuffer = AVBuffer::CreateAVBuffer(surfaceBuffer);
         CHECK_AND_RETURN_RET_LOG(avBuffer != nullptr && avBuffer->memory_ != nullptr, AV_SCREEN_CAPTURE_ERR_NO_MEMORY,
             "AcquireVideoBuffer failed avBuffer no memory!");
@@ -304,14 +302,9 @@ private:
         OH_AVFormat *format = OH_AVFormat_Create();
         CHECK_AND_RETURN_RET_LOG(format != nullptr, AV_SCREEN_CAPTURE_ERR_NO_MEMORY,
             "AcquireVideoBuffer failed format no memory!");
-        // 将 rsRect 转换为 int32_t 数组
         int32_t rectData[4] = {rsRect.x, rsRect.y, rsRect.w, rsRect.h};
         OH_AVFormat_SetIntBuffer(format, OH_MD_KEY_SCREEN_CAPTURE_WINDOW_RECT, rectData, sizeof(rectData));
-        
-        // 将 format 设置到 buffer
         OH_AVBuffer_SetParameter(reinterpret_cast<OH_AVBuffer*>(ohAvBuffer.GetRefPtr()), format);
-        
-        // 释放 format
         OH_AVFormat_Destroy(format);
         return AV_SCREEN_CAPTURE_ERR_OK;
     }
