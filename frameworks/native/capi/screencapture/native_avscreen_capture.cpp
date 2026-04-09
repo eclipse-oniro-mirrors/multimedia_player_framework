@@ -20,9 +20,6 @@
 #include <shared_mutex>
 #include <set>
 #include <fstream>
-#include <string>
-#include <fcntl.h>
-#include <sys/stat.h>
 
 #include "buffer/avbuffer.h"
 #include "common/native_mfmagic.h"
@@ -300,12 +297,16 @@ private:
             "AcquireVideoBuffer failed ohAvBuffer no memory!");
 
         OH_AVFormat *format = OH_AVFormat_Create();
-        CHECK_AND_RETURN_RET_LOG(format != nullptr, AV_SCREEN_CAPTURE_ERR_NO_MEMORY,
-            "AcquireVideoBuffer failed format no memory!");
-        int32_t rectData[4] = {rsRect.x, rsRect.y, rsRect.w, rsRect.h};
-        OH_AVFormat_SetIntBuffer(format, OH_MD_KEY_SCREEN_CAPTURE_WINDOW_RECT, rectData, sizeof(rectData));
-        OH_AVBuffer_SetParameter(reinterpret_cast<OH_AVBuffer*>(ohAvBuffer.GetRefPtr()), format);
-        OH_AVFormat_Destroy(format);
+        if (format != nullptr) {
+            int32_t rectData[4] = {rsRect.x, rsRect.y, rsRect.w, rsRect.h};
+            bool res = false;
+            res = OH_AVFormat_SetIntBuffer(format, OH_MD_KEY_SCREEN_CAPTURE_WINDOW_RECT, rectData, sizeof(rectData));
+            CHECK_AND_RETURN_RET_LOG(res, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "OH_AVFormat_SetIntBuffer failed");
+            OH_AVBuffer_SetParameter(reinterpret_cast<OH_AVBuffer*>(ohAvBuffer.GetRefPtr()), format);
+            CHECK_AND_RETURN_RET_LOG(res, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "OH_AVBuffer_SetParameter failed");
+            OH_AVFormat_Destroy(format);
+        }
+        
         return AV_SCREEN_CAPTURE_ERR_OK;
     }
 
