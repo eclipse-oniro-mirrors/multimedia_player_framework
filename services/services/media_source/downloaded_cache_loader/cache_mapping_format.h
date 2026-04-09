@@ -1,0 +1,104 @@
+/*
+ * Copyright (C) 2026 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef CACHE_MAPPING_FORMAT_H
+#define CACHE_MAPPING_FORMAT_H
+
+#include <cstdint>
+#include <array>
+#include <string>
+#include <vector>
+#include <fstream>
+#include <filesystem>
+
+namespace fs = std::experimental::filesystem;
+
+namespace OHOS {
+namespace Media {
+namespace DownloadedCache {
+
+constexpr uint32_t CACHE_MAPPING_MAGIC = 0x4D4D4D4;  // 'DCMH'
+constexpr uint32_t CACHE_MAPPING_VERSION = 1;
+
+#pragma pack(push, 1)
+struct CacheMappingHeader {
+    uint32_t magic;          // 魔数：0x4D4D4D4 ('DCMH')
+    uint32_t version;         // 版本号：1
+    uint32_t entryCount;      // 条目数量
+    uint8_t  reserved[8];     // 保留字段：8字节（放在条目数量之后、校验和之前）
+    uint32_t headerChecksum;   // 头部校验和（CRC32，包含保留字段）
+};
+#pragma pack(pop)
+
+static_assert(sizeof(CacheMappingHeader) == 24, "CacheMappingHeader size must be 24 bytes");
+
+#pragma pack(push, 1)
+struct CacheMappingEntryHeader {
+    uint8_t  urlHash[32];     // URL的SHA256完整哈希值（32字节）
+    uint32_t pathLength;       // 文件路径长度（UTF-8编码）
+    uint64_t fileSize;          // 文件总大小（字节）
+};
+#pragma pack(pop)
+
+static_assert(sizeof(CacheMappingEntryHeader) == 44, "CacheMappingEntryHeader size must be 44 bytes");
+
+struct CacheMappingEntry {
+    CacheMappingEntryHeader header;  // 40字节
+    std::string filePath;          // 文件路径（UTF-8编码，相对路径）
+    uint8_t  reserved[8];          // 保留字段：8字节（放在相对路径之后之后）
+    
+    size_t GetTotalSize() const {
+        return sizeof(header) + filePath.size() + sizeof(reserved);
+    }
+};
+
+class PathValidator {
+public:
+    static bool ValidateRelativePath(const std::string& path);
+    
+private:
+    static bool HasPathTraversalAttack(const std::string& path);
+    static bool ContainsIllegalCharacters(const std::string& path);
+    static bool ValidatePathComponent(const std::string& component);
+    static bool IsAbsolutePath(const std::string& path);
+};
+
+class SHA256Hasher {
+public:
+    static std::array<uint8_t, 32> GenerateHash(const std::string& url);
+    static bool CompareHash(const std::array<uint8_t, 32>& hash1, 
+                       const std::array<uint8_t, 32>& hash2);
+    static std::string HashToString(const std::array<uint8_t, 32>& hash);
+};
+
+class CacheMappingSerializer {
+public:
+    static bool WriteHeader(std::ofstream& file, const CacheMappingHeader& header);
+    static bool WriteEntry(std::ofstream& file, const CacheMappingEntry& entry);
+    static uint32_t CalculateHeaderChecksum(const CacheMappingHeader& header);
+};
+
+class CacheMappingDeserializer {
+public:
+    static bool ReadHeader(std::ifstream& file, CacheMappingHeader& header);
+    static bool ReadEntry(std::ifstream& file, CacheMappingEntry& entry);
+    static bool ValidateHeader(const CacheMappingHeader& header);
+};
+
+} // namespace DownloadedCache
+} // namespace Media
+} // namespace OHOS
+
+#endif // CACHE_MAPPING_FORMAT_H
