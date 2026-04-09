@@ -49,7 +49,6 @@ struct AudioBufferEntry {
 };
 
 enum class StreamState : int32_t {
-    ABNORMAL_STOPPED = -1,
     PREPARED = 1,
     PLAYING = 2,
     PAUSED = 3,

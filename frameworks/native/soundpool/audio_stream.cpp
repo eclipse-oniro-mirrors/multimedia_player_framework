@@ -285,12 +285,7 @@ int32_t AudioStream::DoPlayWithSameSoundInterrupt()
     MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt start");
     std::lock_guard lock(streamLock_);
     interruptMode_.store(InterruptMode::SAME_SOUND_INTERRUPT);
-    const auto curStatus = streamState_.load();
-    if (curStatus == StreamState::ABNORMAL_STOPPED) {
-        streamState_.store(StreamState::PREPARED);
-        return MSERR_INVALID_VAL;
-    }
-    if (curStatus == StreamState::RELEASED) {
+    if (streamState_.load() == StreamState::RELEASED) {
         MEDIA_LOGI("AudioStream::DoPlay end, invalid stream(%{public}d),  streamState_ is %{public}d", streamID_,
             streamState_.load());
         return MSERR_INVALID_VAL;
@@ -378,17 +373,7 @@ int32_t AudioStream::Stop()
     MediaTrace trace("AudioStream::Stop");
     std::lock_guard lock(streamLock_);
     MEDIA_LOGI("AudioStream::Stop, streamID is %{public}d", streamID_);
-    if (!audioRenderer_) {
-        streamState_.store(StreamState::ABNORMAL_STOPPED);
-        if (streamCallback_ != nullptr) {
-            MEDIA_LOGI("streamCallback_ call OnPlayFinished while audioRenderer_ is nullptr.");
-            streamCallback_->OnPlayFinished(streamID_);
-        }
-        if (callback_ != nullptr) {
-            MEDIA_LOGI("AudioStream::Stop, call OnPlayFinished while audioRenderer_ is nullptr.");
-            callback_->OnPlayFinished(streamID_);
-        }
-    } else if (streamState_.load() == StreamState::PLAYING) {
+    if (audioRenderer_ != nullptr && streamState_.load() == StreamState::PLAYING) {
         SoundPoolXCollie soundPoolXCollie("AudioStream audioRenderer::Pause or Stop time out",
             [](void *) {
                 MEDIA_LOGI("AudioStream audioRenderer::Pause or Stop time out");
@@ -442,9 +427,7 @@ int32_t AudioStream::Release()
     MediaTrace trace("AudioStream::Release");
     MEDIA_LOGI("AudioStream::Release start, streamID is %{public}d", streamID_);
     std::unique_lock lock(streamLock_);
-    if (!audioRenderer_) {
-        streamState_.store(StreamState::RELEASED);
-    } else {
+    if (audioRenderer_ != nullptr) {
         SoundPoolXCollie soundPoolXCollie("Release audioRenderer::Stop time out",
             [](void *) {
                 MEDIA_LOGI("Release audioRenderer::Stop time out");
