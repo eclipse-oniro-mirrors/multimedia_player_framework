@@ -527,6 +527,10 @@ optional<::ohos::multimedia::image::image::PixelMap> AVMetadataExtractorImpl::Fe
     }
     pixelMapParams.colorFormat = colorFormat;
     auto pixelMap = helper_->FetchScaledFrameYuv(timeUs, options.get_value(), pixelMapParams);
+    if (pixelMap == nullptr) {
+        set_business_error(OHOS::Media::MSERR_EXT_API9_UNSUPPORT_FORMAT, "pixelmap is nullptr");
+        return optional<::ohos::multimedia::image::image::PixelMap>(std::nullopt);
+    }
     MEDIA_LOGI("FetchFrameByTimeSync Out");
     return optional<::ohos::multimedia::image::image::PixelMap>(std::in_place_t{},
         Image::PixelMapImpl::CreatePixelMap(pixelMap));
