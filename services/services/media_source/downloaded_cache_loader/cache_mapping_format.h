@@ -22,6 +22,7 @@
 #include <vector>
 #include <fstream>
 #include <filesystem>
+#include <system_error>
 
 namespace fs = std::experimental::filesystem;
 
@@ -58,7 +59,7 @@ struct CacheMappingEntry {
     CacheMappingEntryHeader header;  // 40字节
     std::string filePath;          // 文件路径（UTF-8编码，相对路径）
     uint8_t  reserved[8];          // 保留字段：8字节（放在相对路径之后之后）
-    
+
     size_t GetTotalSize() const {
         return sizeof(header) + filePath.size() + sizeof(reserved);
     }
@@ -66,19 +67,18 @@ struct CacheMappingEntry {
 
 class PathValidator {
 public:
-    static bool ValidateRelativePath(const std::string& path);
-    
+    static bool Validate(const std::string& rootPath, const std::string& relativePath);
+
 private:
-    static bool HasPathTraversalAttack(const std::string& path);
+    static constexpr size_t MAX_PATH_LENGTH = 1024;
     static bool ContainsIllegalCharacters(const std::string& path);
-    static bool ValidatePathComponent(const std::string& component);
-    static bool IsAbsolutePath(const std::string& path);
+    static bool IsPathEscaped(const std::string& resolvedPath, const std::string& rootPath);
 };
 
 class SHA256Hasher {
 public:
     static std::array<uint8_t, 32> GenerateHash(const std::string& url);
-    static bool CompareHash(const std::array<uint8_t, 32>& hash1, 
+    static bool CompareHash(const std::array<uint8_t, 32>& hash1,
                        const std::array<uint8_t, 32>& hash2);
     static std::string HashToString(const std::array<uint8_t, 32>& hash);
 };

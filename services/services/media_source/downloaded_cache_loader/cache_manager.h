@@ -103,10 +103,10 @@ public:
 
     static std::shared_ptr<DownloadedCacheManager> cacheManager_;
     static std::once_flag onceFlag_;
-    
+
     std::vector<uint8_t> fileBuffer_;
     bool isLoaded_ = false;
-    
+
     std::unordered_map<std::string, std::string> entryIndex_;
     std::unordered_map<std::string, std::vector<CacheEntryInfo>> index_;
     std::mutex mutex_;

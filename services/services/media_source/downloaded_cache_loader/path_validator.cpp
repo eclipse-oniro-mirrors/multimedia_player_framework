@@ -15,59 +15,51 @@
 
 #include "cache_mapping_format.h"
 #include "../../../../utils/include/media_log.h"
-#include <sstream>
 #include <algorithm>
-#include <limits>
-
-namespace {
-constexpr int PATH_MAX_VALUE = 4096;
-}
-
-using namespace std::chrono;
-
-using namespace std::chrono;
 
 namespace OHOS {
 namespace Media {
 namespace DownloadedCache {
 
-bool PathValidator::ValidateRelativePath(const std::string& path)
+bool PathValidator::Validate(const std::string& rootPath, const std::string& relativePath)
 {
-    if (path.empty()) {
-        MEDIA_LOGE("Path is empty");
+    if (relativePath.length() > MAX_PATH_LENGTH) {
+        MEDIA_LOGE("Path exceeds max length: %{public}zu", relativePath.length());
         return false;
     }
-    
-    if (path.size() > PATH_MAX) {
-        MEDIA_LOGE("Path exceeds maximum length: %{public}zu", path.size());
-        return false;
-    }
-    
-    if (IsAbsolutePath(path)) {
-        MEDIA_LOGE("Path is absolute (starts with /): %{public}s", path.c_str());
-        return false;
-    }
-    
-    if (ContainsIllegalCharacters(path)) {
+
+    if (ContainsIllegalCharacters(relativePath)) {
         MEDIA_LOGE("Path contains illegal characters");
         return false;
     }
-    
-    if (HasPathTraversalAttack(path)) {
-        MEDIA_LOGE("Path contains traversal attack patterns");
+
+    std::error_code ec;
+    std::filesystem::path root(rootPath);
+    std::filesystem::path relative(relativePath);
+
+    std::filesystem::path resolved = root / relative;
+    resolved = std::filesystem::lexically_normal(resolved, ec);
+
+    if (ec) {
+        MEDIA_LOGE("Path resolve failed: %{public}s", ec.message().c_str());
         return false;
     }
-    
-    return true;
+
+    return !IsPathEscaped(resolved.u8string(), root.u8string());
 }
 
-bool PathValidator::IsAbsolutePath(const std::string& path)
+bool PathValidator::IsPathEscaped(const std::string& resolvedPath, const std::string& rootPath)
 {
-    if (path.size() >= 1 && path[0] == '/') {
-        MEDIA_LOGE("Path is absolute (starts with /): %{public}s", path.c_str());
+    if (resolvedPath.length() < rootPath.length()) {
         return true;
     }
-    
+    if (resolvedPath.compare(0, rootPath.length(), rootPath) != 0) {
+        return true;
+    }
+    if (resolvedPath.length() > rootPath.length() &&
+        resolvedPath[rootPath.length()] != '/') {
+        return true;
+    }
     return false;
 }
 
@@ -76,60 +68,12 @@ bool PathValidator::ContainsIllegalCharacters(const std::string& path)
     for (char c : path) {
         if (static_cast<unsigned char>(c) < 32) {
             if (c != '\t' && c != '\n' && c != '\r') {
-                MEDIA_LOGE("Path contains control character: 0x%{public}02X", 
+                MEDIA_LOGE("Path contains control character: 0x%{public}02X",
                            static_cast<uint8_t>(c));
                 return true;
             }
         }
     }
-    
-    return false;
-}
-
-bool PathValidator::HasPathTraversalAttack(const std::string& path)
-{
-    std::vector<std::string> components;
-    std::stringstream ss(path);
-    std::string component;
-    
-    while (std::getline(ss, component, '/')) {
-        if (!component.empty()) {
-            components.push_back(component);
-        }
-    }
-    
-    for (const auto& comp : components) {
-        if (!ValidatePathComponent(comp)) {
-            MEDIA_LOGE("Invalid path component: %{public}s", comp.c_str());
-            return true;
-        }
-    }
-    
-    return false;
-}
-
-bool PathValidator::ValidatePathComponent(const std::string& component)
-{
-    if (component.empty()) {
-        return true;
-    }
-    
-    if (component == "." || component == "..") {
-        return true;
-    }
-    
-    if (component.find("/../") != std::string::npos || 
-        component.find("\\..\\") != std::string::npos) {
-        MEDIA_LOGE("Component contains hidden traversal: %{public}s", component.c_str());
-        return true;
-    }
-    
-    if (component.find("%2e") != std::string::npos || 
-        component.find("%2f") != std::string::npos) {
-        MEDIA_LOGE("Component contains URL-encoded traversal: %{public}s", component.c_str());
-        return true;
-    }
-    
     return false;
 }
 

@@ -18,22 +18,22 @@
 
 #include <string>
 
-#define MEDIA_LOGI(fmt, ...) 
-#define MEDIA_LOGW(fmt, ...) 
-#define MEDIA_LOGE(fmt, ...) 
-#define MEDIA_LOGD(fmt, ...) 
+#define MEDIA_LOGI(fmt, ...)
+#define MEDIA_LOGW(fmt, ...)
+#define MEDIA_LOGE(fmt, ...)
+#define MEDIA_LOGD(fmt, ...)
 
 #define PUBLIC_LOG_D64 "PRIu64"
 #define PUBLIC_LOG_D32 "PRIu32"
 
-#define CHECK_AND_RETURN_LOG(condition, ret, fmt, ...) 
-#define CHECK_AND_RETURN_RET_LOG(condition, ret, fmt, ...) 
-#define CHECK_AND_RETURN_RET_NOLOG(condition, ret, fmt, ...) 
-#define CHECK_AND_CONTINUE_LOG(condition, fmt, ...) 
-#define FALSE_RETURN_V_MSG_E(condition, ret, fmt, ...) 
-#define FALSE_RETURN_MSG(condition, fmt, ...) 
-#define FALSE_RETURN_V(condition, ret) 
-#define FALSE_RETURN(condition) 
+#define CHECK_AND_RETURN_LOG(condition, ret, fmt, ...)
+#define CHECK_AND_RETURN_RET_LOG(condition, ret, fmt, ...)
+#define CHECK_AND_RETURN_RET_NOLOG(condition, ret, fmt, ...)
+#define CHECK_AND_CONTINUE_LOG(condition, fmt, ...)
+#define FALSE_RETURN_V_MSG_E(condition, ret, fmt, ...)
+#define FALSE_RETURN_MSG(condition, fmt, ...)
+#define FALSE_RETURN_V(condition, ret)
+#define FALSE_RETURN(condition)
 
 #define LOG_CORE 0
 #define LOG_DOMAIN_PLAYER 0

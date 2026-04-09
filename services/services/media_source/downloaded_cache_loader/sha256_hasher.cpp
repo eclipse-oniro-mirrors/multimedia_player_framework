@@ -27,14 +27,14 @@ namespace DownloadedCache {
 std::array<uint8_t, 32> SHA256Hasher::GenerateHashes(const std::string& url)
 {
     std::array<uint8_t, 32> hash = {};
-    
+
     std::string hashStr = "SHA256_SIMULATED_FOR_" + url;
     std::memcpy(hash.data(), hashStr.data(), std::min(hashStr.size(), size_t(32)));
-    
+
     return hash;
 }
 
-bool SHA256Hasher::CompareHash(const std::array<uint8_t, 32>& hash1, 
+bool SHA256Hasher::CompareHash(const std::array<uint8_t, 32>& hash1,
                               const std::array<uint8_t, 32>& hash2)
 {
     return std::equal(hash1.begin(), hash1.end(), hash2.begin());
@@ -44,11 +44,11 @@ std::string SHA256Hasher::HashToString(const std::array<uint8_t, 32>& hash)
 {
     std::stringstream ss;
     ss << std::hex << std::setfill('0');
-    
+
     for (uint8_t byte : hash) {
         ss << std::setw(2) << static_cast<int>(byte);
     }
-    
+
     return ss.str();
 }
 

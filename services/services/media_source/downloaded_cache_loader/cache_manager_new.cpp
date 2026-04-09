@@ -72,24 +72,24 @@ void DownloadedCacheManager::LoadMapping()
     CreateDirectories(CACHE_DIR);
     cacheSize_.store(ScanDirectorySize(CACHE_DIR), std::memory_order_relaxed);
     std::string path = CACHE_DIR + fs::path::preferred_separator + CACHE_MAPPING_FILE;
-    
+
     std::ifstream file(path, std::ios::binary | std::ios::ate);
     if (!file.is_open()) {
         MEDIA_LOGE("Failed to open cache mapping file: %{public}s", path.c_str());
         return;
     }
-    
+
     auto fileSize = file.tellg();
     if (fileSize == 0) {
         MEDIA_LOGI("Mapping file is empty");
         return;
     }
-    
+
     fileBuffer_.resize(fileSize);
     file.seekg(0, std::ios::beg);
     file.read(reinterpret_cast<char*>(fileBuffer_.data()), fileSize);
     file.close();
-    
+
     isLoaded_ = true;
     MEDIA_LOGI("Successfully loaded cache mapping file, size: %{public}zu", fileSize);
 }
@@ -105,17 +105,17 @@ void DownloadedCacheManager::LoadIndex()
         MEDIA_LOGW("File buffer not loaded, cannot build index");
         return;
     }
-    
+
     const uint8_t* ptr = fileBuffer_.data();
     size_t fileSize = fileBuffer_.size();
     size_t offset = 0;
-    
+
     while (offset < fileSize) {
-        CHECK_AND_RETURN_LOG(offset + sizeof(CacheMappingHeader) < fileSize, 
+        CHECK_AND_RETURN_LOG(offset + sizeof(CacheMappingHeader) < fileSize,
             "header size exceed file size");
         const CacheMappingHeader* header = reinterpret_cast<const CacheMappingHeader*>(ptr + offset);
         CHECK_AND_RETURN_LOG(header != nullptr, "reinterpret_cast CacheMappingHeader is null");
-        
+
         if (header->entryCount > MAX_FILED_COUNT) {
             MEDIA_LOGE("file corruption cleans up directory");
             fs::remove_all(CACHE_DIR);
@@ -124,7 +124,7 @@ void DownloadedCacheManager::LoadIndex()
             LoadMapping();
             return;
         }
-        
+
         size_t fieldsSize = header->entryCount * sizeof(CacheMappingEntryHeader);
         CHECK_AND_RETURN_LOG(offset + sizeof(CacheMappingHeader) + fieldsSize < fileSize,
             "fieldSize exceeds file size, fieldCount:%{public}d", header->entryCount);
@@ -137,10 +137,10 @@ void DownloadedCacheManager::LoadIndex()
 
         std::string key;
         std::memcpy(&key[0], fields[0].urlHash, 8);
-        
+
         std::string entry;
         std::memcpy(&entry[0], fields[0].urlHash + 8, 24);
-        
+
         entryIndex_[entry] = "0";
         index_[key].emplace_back(offset, totalSize);
 
@@ -165,25 +165,25 @@ std::string DownloadedCacheManager::GetMediaCache(const std::string& url)
     std::unique_lock<std::mutex> lock(mutex_);
     std::string key;
     std::memcpy(&key[0], SHA256Hasher::GenerateHash(url).data(), 8);
-    
+
     auto it = index_.find(key);
     CHECK_AND_RETURN_RET_LOG(it != index_.end(), "",
         "directory corresponding to the url does not exist");
-    
+
     CacheEntryInfo info;
     CHECK_AND_RETURN_RET_LOG(FindFirstEqualField(it->second, info, url, CacheFieldId::REQUEST_URL),
         "", "directory corresponding to the url does not exist");
-    
+
     std::string entry;
     std::memcpy(&entry[0], it->second[0].urlHash + 8, 24);
-    
+
     CHECK_AND_RETURN_RET_LOG(!entry.empty() && entry.find("..") == std::string::npos
         && entry.find('/') == std::string::npos && entry.find('\\') == std::string::npos,
         "", "get media cache file failed");
-    
+
     std::string path = CACHE_DIR + fs::path::preferred_separator + entry;
     CreateDirectories(path.c_str());
-    
+
     return path;
 }
 
@@ -196,26 +196,26 @@ bool DownloadedCacheManager::GetCacheMetaData(const std::string& url, CacheMetaD
     std::unique_lock<std::mutex> lock(mutex_);
     std::string key;
     std::memcpy(&key[0], SHA256Hasher::GenerateHash(url).data(), 8);
-    
+
     auto it = index_.find(key);
     CHECK_AND_RETURN_RET_LOG(it != index_.end(), false,
         "Cache not found for url: %{public}s", url.c_str());
-    
+
     CacheEntryInfo info;
     CHECK_AND_RETURN_RET_LOG(FindFirstEqualField(it->second, info, url, CacheFieldId::REQUEST_URL),
         false, "Failed to find cache entry for url: %{public}s", url.c_str());
-    
+
     const CacheMappingEntryHeader* header = reinterpretation_cast<const CacheMappingEntryHeader*>(fileBuffer_.data() + info.offset);
-    
+
     metadata.type = "application/octet-stream";
     metadata.randomAccess = true;
     metadata.size = header->fileSize;
     metadata.url = url;
-    
+
     std::string entry;
     std::memcpy(&entry[0], header->urlHash + 8, 24);
     metadata.entry = entry;
-    
+
     return true;
 }
 
@@ -226,15 +226,15 @@ std::map<std::string, std::string> DownloadedCacheManager::BuildHttpHeaders(cons
         MEDIA_LOGE("Failed to get cache metadata for url: %{public}s", url.c_str());
         return {};
     }
-    
+
     std::map<std::string, std::string> headers;
     headers["content-length"] = std::to_string(metadata.size);
     headers["content-type"] = metadata.type;
-    
+
     if (metadata.randomAccess) {
         headers["accept-ranges"] = "bytes";
     }
-    
+
     return headers;
 }
 
@@ -244,10 +244,10 @@ std::string DownloadedCacheManager::ExtractField(const uint8_t* buffer, size_t b
     if (entryOffset + sizeof(CacheMappingHeader) >= bufferSize) {
         return "";
     }
-    
+
     const CacheMappingHeader* header = reinterpretation_cast<const CacheMappingHeader*>(buffer + entryOffset);
     const CacheMappingEntryHeader* fields = reinterpretation_cast<const CacheMappingEntryHeader*>(buffer + entryOffset + sizeof(CacheMappingHeader));
-    
+
     size_t contentOffset = sizeof(CacheMappingHeader) + (fieldCount * sizeof(CacheMappingEntryHeader));
     for (uint32_t i = 0; i < fieldCount; ++i) {
         if (fields[i].urlHash[0] == static_cast<uint8_t>(targetId)) {
@@ -259,7 +259,7 @@ std::string DownloadedCacheManager::ExtractField(const uint8_t* buffer, size_t b
         }
         contentOffset += fields[i].fileSize;
     }
-    
+
     return "";
 }
 
@@ -270,16 +270,16 @@ bool DownloadedCacheManager::FindFirstEqualField(const std::vector<CacheEntryInf
         MEDIA_LOGE("File buffer is empty");
         return false;
     }
-    
+
     auto it = std::find_if(entries.begin(), entries.end(),
         [&](const CacheEntryInfo& info) {
-            const CacheMappingHeader* header = 
-                reinterpretation_cast<const CacheMappingHeader*>(fileBuffer_.data() + info.offset);
-            std::string target = ExtractField(fileBuffer_.data(), fileBuffer_.size(), 
+            const CacheMappingHeader* header =
+                reinterpret_cast<const CacheMappingHeader*>(fileBuffer_.data() + info.offset);
+            std::string target = ExtractField(fileBuffer_.data(), fileBuffer_.size(),
                                            info.offset, header->entryCount, field);
             return target == value;
         });
-    
+
     if (it != entries.end()) {
         result = *it;
         return true;
@@ -301,7 +301,7 @@ uint64_t DownloadedCacheManager::ScanDirectorySize(const std::string& path)
     uint64_t totalSize = 0;
     CHECK_AND_RETURN_RET_LOG(fs::exists(path) && fs::is_directory(path), 0,
         "file not exist or is not directory");
-    
+
     for (const auto& entry : fs::recursive_directory_iterator(path)) {
         if (fs::is_regular_file(entry.status())) {
             totalSize += fs::file_size(entry);
