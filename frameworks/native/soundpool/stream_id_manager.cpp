@@ -254,6 +254,22 @@ bool IStreamIDManager::InnerProcessOfOnPlayFinished(int32_t streamID)
     return true;
 }
 
+int32_t IStreamIDManager::StopAudioStream(int32_t streamID)
+{
+    std::shared_ptr<AudioStream> stream = GetStreamByStreamIDWithLock(streamID);
+    CHECK_AND_RETURN_RET_LOG(stream != nullptr, MSERR_INVALID_VAL,
+        "IStreamIDManager::StopAudioStream, stream is nullptr");
+    MEDIA_LOGI("StopAudioStream, streamID is %{public}d", stream->GetStreamID());
+    ThreadPool::Task streamStopTask = [stream] { stream->Stop(); };
+    CHECK_AND_RETURN_RET_LOG(streamPlayingThreadPool_ != nullptr, MSERR_INVALID_VAL,
+        "Failed to obtain streamStopThreadPool_");
+    CHECK_AND_RETURN_RET_LOG(streamStopTask != nullptr, MSERR_INVALID_VAL,
+        "StopAudioStream, streamStopTask is nullptr");
+    streamPlayingThreadPool_->AddTask(streamStopTask);
+    MEDIA_LOGI("StopAudioStream end, streamID is %{public}d", stream->GetStreamID());
+    return MSERR_OK;
+}
+
 int32_t IStreamIDManager::AddPlayTask(int32_t streamID)
 {
     MEDIA_LOGI("AddPlayTask, streamID is %{public}d", streamID);
