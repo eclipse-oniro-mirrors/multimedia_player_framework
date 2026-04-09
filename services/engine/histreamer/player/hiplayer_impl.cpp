@@ -2657,6 +2657,7 @@ void HiPlayerImpl::OnEvent(const Event &event)
             break;
         }
         case EventType::EVENT_AUDIO_FIRST_FRAME: {
+            isAudioInitialized_.store(true);
             NotifyAudioFirstFrame(event);
             HandleInitialPlayingStateChange(event.type);
             break;
@@ -3464,6 +3465,7 @@ void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
             callbackLooper_.StopReportMediaProgress();
             StopFlvCheckLiveDelayTime();
             callbackLooper_.StopCollectMaxAmplitude();
+            HandleReadyAudioInterrupt();
         }
     }
     {
@@ -4616,6 +4618,12 @@ int32_t HiPlayerImpl::NotifySubtitleSeek()
         subtitleSink_->NotifySeek();
     }
     return TransStatus(Status::OK);
+}
+
+void HandleReadyAudioInterrupt()
+{
+    FALSE_RETURN_NOLOG(curState_ == PlayerStateId::READY && !isAudioInitialized_.load());
+    HandleInitialPlayingStateChange(EventType::EVENT_AUDIO_FIRST_FRAME);
 }
 }  // namespace Media
 }  // namespace OHOS
