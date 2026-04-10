@@ -65,29 +65,27 @@ bool CacheMappingSerializer::WriteEntry(std::ofstream& file, const CacheMappingE
         MEDIA_LOGE("File stream is not open");
         return false;
     }
-
+    
     std::filesystem::path fsPath(entry.filePath);
     if (!PathValidator::Validate(CACHE_DIR, entry.filePath)) {
         MEDIA_LOGE("Invalid relative path: %{public}s", entry.filePath.c_str());
         return false;
     }
-
-    file.write(reinterpret_cast<const char*>(entry.header.urlHash),
+    
+    file.write(reinterpret_cast<const char*>(entry.header.urlHash), 
              sizeof(entry.header.urlHash));
-    file.write(reinterpret_cast<const char*>(&entry.header.pathLength),
+    file.write(reinterpret_cast<const char*>(&entry.header.pathLength), 
              sizeof(entry.header.pathLength));
-    file.write(reinterpret_cast<const char*>(&entry.header.fileSize),
+    file.write(reinterpret_cast<const char*>(&entry.header.fileSize), 
              sizeof(entry.header.fileSize));
-
+    
     file.write(entry.filePath.c_str(), entry.filePath.size());
-    file.write(reinterpret_cast<const char*>(entry.header.reserved),
-             sizeof(entry.header.reserved));
-
+    
     if (!file) {
         MEDIA_LOGE("Failed to write entry to file");
         return false;
     }
-
+    
     return true;
 }
 

@@ -50,18 +50,19 @@ struct CacheMappingEntryHeader {
     uint8_t  urlHash[32];     // URL的SHA256完整哈希值（32字节）
     uint32_t pathLength;       // 文件路径长度（UTF-8编码）
     uint64_t fileSize;          // 文件总大小（字节）
+    uint8_t  reserved[8];      // 保留字段：8字节（在fileSize之后）
 };
 #pragma pack(pop)
 
-static_assert(sizeof(CacheMappingEntryHeader) == 44, "CacheMappingEntryHeader size must be 44 bytes");
+// 条目头大小：48字节
+static_assert(sizeof(CacheMappingEntryHeader) == 48, "CacheMappingEntryHeader size must be 48 bytes");
 
 struct CacheMappingEntry {
-    CacheMappingEntryHeader header;  // 40字节
+    CacheMappingEntryHeader header;  // 48字节
     std::string filePath;          // 文件路径（UTF-8编码，相对路径）
-    uint8_t  reserved[8];          // 保留字段：8字节（放在相对路径之后之后）
-
+    
     size_t GetTotalSize() const {
-        return sizeof(header) + filePath.size() + sizeof(reserved);
+        return sizeof(header) + filePath.size();
     }
 };
 
