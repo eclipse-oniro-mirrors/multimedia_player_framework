@@ -32,7 +32,6 @@
 #include "native_avformat.h"
 #include "native_avcodec_base.h"
 #include "native_avsource.h"
-#include "native_avmuxer.h"
 
 namespace {
 constexpr int MAX_WINDOWS_LEN = 1000;
