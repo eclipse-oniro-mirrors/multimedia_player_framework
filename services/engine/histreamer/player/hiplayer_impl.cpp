@@ -3702,7 +3702,7 @@ void __attribute__((no_sanitize("cfi"))) HiPlayerImpl::OnStateChanged(PlayerStat
 void HiPlayerImpl::HandleTimedMetaData(std::shared_ptr<OHOS::MediaAVCodec::AVTimedMetaData> meta)
 {
     FALSE_RETURN_MSG(meta != nullptr, "HandleTimedMetaData: meta is nullptr");
-    FALSE_RETURN_MSG(callbackLooper_.IsStarted(), "HandleTimedMetaData: callbackLooper is not started"),
+    FALSE_RETURN_MSG(callbackLooper_.IsStarted(), "HandleTimedMetaData: callbackLooper is not started");
     Format format;
     (void)format.PutStringValue(std::string(PlaybackTimedMetaData::PLAYER_TIMED_META_ID), meta->id);
     (void)format.PutStringValue(std::string(PlaybackTimedMetaData::PLAYER_TIMED_META_CLASSIFY), meta->classify);
