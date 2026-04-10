@@ -1363,6 +1363,33 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
     MediaTrace trace("HiPlayerImpl::Seek");
     MEDIA_LOG_I("Seek entered. mSeconds : " PUBLIC_LOG_D64 ", seekMode : " PUBLIC_LOG_D32,
                 mSeconds, static_cast<int32_t>(mode));
+
+    if (durationMs_.load() > 0) {
+        int64_t seekStartTime = GetCurrentMillisecond();
+        if (audioSink_ != nullptr) {
+            audioSink_->SetIsTransitent(true);
+        }
+        isSeek_ = true;
+        int64_t seekPos = std::max(static_cast<int64_t>(0),
+            std::min(mSeconds, static_cast<int64_t>(durationMs_.load())));
+        auto rtv = seekPos >= 0 ? Status::OK : Status::ERROR_INVALID_PARAMETER;
+        if (rtv == Status::OK) {
+            rtv = HandleSeek(seekPos, mode, isUnFreezeSeek);
+        }
+        NotifySeek(rtv, notifySeekDone, seekPos);
+        if (audioSink_ != nullptr) {
+            audioSink_->SetIsTransitent(false);
+        }
+        isSeek_ = false;
+        UpdateMaxSeekLatency(mode, seekStartTime);
+        return rtv;
+    } else {
+        return LiveSeek(mSeconds, mode, notifySeekDone, isUnFreezeSeek);
+    }
+}
+
+Status HiPlayerImpl::LiveSeek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone, bool isUnFreezeSeek)
+{
     int64_t seekStartTime = GetCurrentMillisecond();
     if (audioSink_ != nullptr) {
         audioSink_->SetIsTransitent(true);
