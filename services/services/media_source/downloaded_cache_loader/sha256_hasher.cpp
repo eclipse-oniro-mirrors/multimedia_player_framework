@@ -14,7 +14,8 @@
  */
 
 #include "sha256_hasher.h"
-#include <cstring>
+#include <string>
+#include <sstream>
 #include <algorithm>
 
 namespace OHOS {

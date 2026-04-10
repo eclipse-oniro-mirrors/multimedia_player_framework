@@ -21,6 +21,7 @@
 #include "cache_mapping_format.h"
 #include "common/log.h"
 #include "media_log.h"
+#include "path_validator.h"
 
 namespace OHOS {
 namespace Media {

@@ -24,7 +24,7 @@
 #include <filesystem>
 #include <system_error>
 
-namespace fs = std::experimental::filesystem;
+namespace fs = std::filesystem;
 
 namespace OHOS {
 namespace Media {
