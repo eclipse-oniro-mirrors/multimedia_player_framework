@@ -24,7 +24,7 @@ namespace OHOS {
 namespace Media {
 namespace DownloadedCache {
 
-std::array<uint8_t, 32> SHA256Hasher::GenerateHashes(const std::string& url)
+std::array<uint8_t, 32> SHA256Hasher::GenerateHash(const std::string& url)
 {
     std::array<uint8_t, 32> hash = {};
 

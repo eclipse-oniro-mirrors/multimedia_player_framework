@@ -66,18 +66,19 @@ bool CacheMappingSerializer::WriteEntry(std::ofstream& file, const CacheMappingE
         return false;
     }
     
-    std::filesystem::path fsPath(entry.filePath);
     if (!PathValidator::Validate(CACHE_DIR, entry.filePath)) {
         MEDIA_LOGE("Invalid relative path: %{public}s", entry.filePath.c_str());
         return false;
     }
     
-    file.write(reinterpret_cast<const char*>(entry.header.urlHash), 
+    file.write(reinterpret_cast<const char*>(entry.header.urlHash),
              sizeof(entry.header.urlHash));
-    file.write(reinterpret_cast<const char*>(&entry.header.pathLength), 
+    file.write(reinterpret_cast<const char*>(&entry.header.pathLength),
              sizeof(entry.header.pathLength));
-    file.write(reinterpret_cast<const char*>(&entry.header.fileSize), 
+    file.write(reinterpret_cast<const char*>(&entry.header.fileSize),
              sizeof(entry.header.fileSize));
+    file.write(reinterpret_cast<const char*>(entry.header.reserved),
+             sizeof(entry.header.reserved));
     
     file.write(entry.filePath.c_str(), entry.filePath.size());
     
@@ -123,19 +124,22 @@ bool CacheMappingDeserializer::ReadEntry(std::ifstream& file, CacheMappingEntry&
             sizeof(entry.header.pathLength));
     file.read(reinterpret_cast<char*>(&entry.header.fileSize),
             sizeof(entry.header.fileSize));
-
-    entry.filePath.resize(entry.header.pathLength);
-    file.read(&entry.filePath[0], entry.header.pathLength);
-
     file.read(reinterpret_cast<char*>(entry.header.reserved),
             sizeof(entry.header.reserved));
 
     if (!file) {
-        MEDIA_LOGE("Failed to read entry from file");
+        MEDIA_LOGE("Failed to read entry header from file");
         return false;
     }
 
-    std::filesystem::path fsPath(entry.filePath);
+    entry.filePath.resize(entry.header.pathLength);
+    file.read(&entry.filePath[0], entry.header.pathLength);
+
+    if (!file) {
+        MEDIA_LOGE("Failed to read entry path from file");
+        return false;
+    }
+
     if (!PathValidator::Validate(CACHE_DIR, entry.filePath)) {
         MEDIA_LOGW("Skipping entry with invalid path: %{public}s",
                   entry.filePath.c_str());

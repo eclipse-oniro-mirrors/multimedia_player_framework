@@ -27,49 +27,11 @@
 #include <cstdint>
 #include <unordered_map>
 
+#include "cache_mapping_format.h"
+
 namespace OHOS {
 namespace Media {
 namespace DownloadedCache {
-// 字段ID定义
-enum class CacheFieldId : uint32_t {
-    KEY = 1,
-    ENTRY = 2,
-    TYPE = 3,
-    RANDOM_ACCESS = 4,
-    SIZE = 5,
-    LAST_ACCESS_TIME = 6,
-    REQUEST_URL = 7,
-};
-
-// 结构体定义
-struct CacheEntryHeader {
-    uint32_t version;
-    uint32_t fieldCount;
-};
-
-struct CacheField {
-    uint32_t id;
-    uint32_t len;
-};
-
-struct CacheEntryInfo {
-    size_t offset;
-    size_t cacheEntrySize;
-    CacheEntryInfo() = default;
-    CacheEntryInfo(size_t offset, size_t cacheEntrySize)
-        : offset(offset), cacheEntrySize(cacheEntrySize) {}
-};
-
-struct FileInfo {
-    std::string path;
-    std::string writeTime;
-    uint64_t size;
-
-    // 按修改时间升序排序
-    bool operator<(const FileInfo& other) const {
-        return writeTime < other.writeTime;
-    }
-};
 
 struct CacheMetaData {
     std::string type;
@@ -92,14 +54,9 @@ public:
 
  private:
     void LoadIndex();
-    std::string ExtractField(const uint8_t* buffer, size_t bufferSize, size_t entryOffset, uint32_t fieldCount,
-        CacheFieldId targetId);
     bool CreateDirectories(const std::string& path);
     uint64_t ScanDirectorySize(const std::string& path);
-    bool FindFirstEqualField(const std::vector<CacheEntryInfo>& entries, CacheEntryInfo& result,
-        const std::string& value, CacheFieldId field);
     void LoadMapping();
-    std::string GetPrefixBeforeUnderscore(const std::string& str);
 
     static std::shared_ptr<DownloadedCacheManager> cacheManager_;
     static std::once_flag onceFlag_;
@@ -108,7 +65,7 @@ public:
     bool isLoaded_ = false;
 
     std::unordered_map<std::string, std::string> entryIndex_;
-    std::unordered_map<std::string, std::vector<CacheEntryInfo>> index_;
+    std::unordered_map<std::string, std::vector<CacheMappingEntry>> index_;
     std::mutex mutex_;
     std::atomic<uint64_t> cacheSize_;
 };

@@ -13,31 +13,20 @@
  * limitations under the License.
  */
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
 #include <algorithm>
 #include <sys/stat.h>
 #include <filesystem>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/mman.h>
 #include "cache_manager.h"
 #include "cache_mapping_format.h"
 #include "path_validator.h"
 #include "sha256_hasher.h"
-#include "cache_mapping_serializer.h"
+#include "cache_mapping_serializer.cpp"
 #include "media_log.h"
 
 namespace fs = std::experimental::filesystem;
-using namespace std::chrono;
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "DownloadedCacheManager"};
 constexpr int64_t TIMER_INIT = 10;
-constexpr uint32_t FILED_COUNT = 7;
-constexpr uint32_t MAX_FILED_COUNT = 7;
-constexpr uint32_t VERSION = 1;
 constexpr uint64_t MAX_CACHE_FILE_SIZE = 4ULL * 1024ULL * 1024ULL;
 constexpr uint64_t CACHE_FILE_SIZE_WATERLINE = 3ULL * 1024ULL * 1024ULL;
 constexpr uint64_t NEED_REMOVE_CACHE_SIZE = 800ULL * 1024ULL * 1024ULL;
@@ -49,7 +38,7 @@ constexpr size_t MAX_CACHE_MAPPING_FILE_SIZE = 10ULL * 1024ULL * 1024ULL;
 namespace OHOS {
 namespace Media {
 namespace DownloadedCache {
-std::once_flag DownloadedCacheManager::once onceFlag_;
+std::once_flag DownloadedCacheManager::onceFlag_;
 std::shared_ptr<DownloadedCacheManager> DownloadedCacheManager::cacheManager_;
 
 std::shared_ptr<DownloadedCacheManager> DownloadedCacheManager::Create()
@@ -81,8 +70,9 @@ void DownloadedCacheManager::LoadMapping()
     }
     
     auto fileSize = file.tellg();
-    if (fileSize == 0) {
-        MEDIA_LOGI("Mapping file is empty");
+    if (fileSize == 0 || fileSize > MAX_CACHE_MAPPING_FILE_SIZE) {
+        MEDIA_LOGI("Mapping file is empty or too large");
+        file.close();
         return;
     }
     
@@ -107,45 +97,36 @@ void DownloadedCacheManager::LoadIndex()
         return;
     }
     
-    const uint8_t* ptr = fileBuffer_.data();
-    size_t fileSize = fileBuffer_.size();
-    size_t offset = 0;
+    std::ifstream file;
+    file.rdbuf()->pubsetbuf(reinterpret_cast<char*>(fileBuffer_.data()), fileBuffer_.size());
     
-    while (offset < fileSize) {
-        CHECK_AND_RETURN_LOG(offset + sizeof(CacheMappingHeader) < fileSize, 
-            "header size exceed file size");
-        const CacheMappingHeader* header = reinterpret_cast (const CacheMappingHeader*>(ptr + offset);
-        CHECK_AND_RETURN_LOG(header != nullptr, "reinterpret_cast CacheMappingHeader is null");
-        
-        if (header->entryCount > MAX_FILED_COUNT) {
-            MEDIA_LOGE("file corruption cleans up directory");
-            fs::remove_all(CACHE_DIR);
-            index_.clear();
-            entryIndex_.clear();
-            LoadMapping();
-            return;
+    CacheMappingHeader header;
+    if (!CacheMappingDeserializer::ReadHeader(file, header)) {
+        MEDIA_LOGE("Failed to read mapping header");
+        return;
+    }
+    
+    if (!CacheMappingDeserializer::ValidateHeader(header)) {
+        MEDIA_LOGE("Invalid mapping header");
+        fs::remove_all(CACHE_DIR);
+        index_.clear();
+        entryIndex_.clear();
+        LoadMapping();
+        return;
+    }
+    
+    for (uint32_t i = 0; i < header.entryCount; ++i) {
+        CacheMappingEntry entry;
+        if (!CacheMappingDeserializer::ReadEntry(file, entry)) {
+            MEDIA_LOGW("Failed to read entry %{public}u, skipping", i);
+            continue;
         }
         
-        size_t fieldsSize = header->entryCount * sizeof(CacheMappingEntryHeader);
-        CHECK_AND_RETURN_LOG(offset + sizeof(CacheMappingHeader) + fieldsSize < fileSize,
-            "fieldSize exceeds file size, fieldCount:%{public}d", header->entryCount);
-
-        const CacheMappingEntryHeader* fields = reinterpret_cast (const CacheMappingEntryHeader*>(ptr + offset + sizeof(CacheMappingHeader));
-        size_t totalSize = sizeof(CacheMappingHeader) + fieldsSize;
-        for (uint32_t i = 0; i < header->entryCount; ++i) {
-            totalSize += fields[i].fileSize;
-        }
-
-        std::string key;
-        std::memcpy(&key[0], fields[0].urlHash, 8);
+        std::string key = SHA256Hasher::HashToString(
+            std::array<uint8_t, 32>(entry.header.urlHash, entry.header.urlHash + 32));
         
-        std::string entry;
-        std::memcpy(&entry[0], fields[0].urlHash + 8, 24);
-        
-        entryIndex_[entry] = "0";
-        index_[key].emplace_back(offset, totalSize);
-
-        offset += totalSize;
+        index_[key].push_back(entry);
+        entryIndex_[entry.filePath] = key;
     }
 }
 
@@ -164,26 +145,23 @@ std::string DownloadedCacheManager::GetMediaCache(const std::string& url)
         LoadIndex();
     }
     std::unique_lock<std::mutex> lock(mutex_);
-    std::string key;
-    std::memcpy(&key[0], SHA256Hasher::GenerateHash(url).data(), 8);
+    
+    auto hash = SHA256Hasher::GenerateHash(url);
+    std::string key = SHA256Hasher::HashToString(hash);
     
     auto it = index_.find(key);
-    CHECK_AND_RETURN_RET_LOG(it != index_.end(), "",
+    CHECK_AND_RETURN_RET_LOG(it != index_.end() && !it->second.empty(), "",
         "directory corresponding to the url does not exist");
     
-    CacheEntryInfo info;
-    CHECK_AND_RETURN_RET_LOG(FindFirstEqualField(it->second, info, url, CacheFieldId::REQUEST_URL),
-        "", "directory corresponding to the url does not exist");
+    const CacheMappingEntry& entry = it->second[0];
+    std::string relativePath = entry.filePath;
     
-    std::string entry;
-    std::memcpy(&entry[0], it->second[0].urlHash + 8, 24);
+    CHECK_AND_RETURN_RET_LOG(!relativePath.empty() && 
+        relativePath.find("..") == std::string::npos &&
+        relativePath.find('/') != std::string::npos, "",
+        "get media cache file failed: invalid path");
     
-    CHECK_AND_RETURN_RET_LOG(!entry.empty() && entry.find("..") == std::string::npos
-        && entry.find('/') == std::string::npos && entry.find('\\') == std::string::npos,
-        "", "get media cache file failed");
-    
-    std::string path = CACHE_DIR + fs::path::preferred_separator + entry;
-    CreateDirectories(path.c_str());
+    std::string path = CACHE_DIR + fs::path::preferred_separator + relativePath;
     
     return path;
 }
@@ -191,26 +169,25 @@ std::string DownloadedCacheManager::GetMediaCache(const std::string& url)
 bool DownloadedCacheManager::GetCacheMetaData(const std::string& url, CacheMetaData& metadata)
 {
     if (!isLoaded_) {
-        Load (Mapping();
+        LoadMapping();
         LoadIndex();
     }
     std::unique_lock<std::mutex> lock(mutex_);
-    std::string key;
-    std::memcpy(&key[0], SHA256Hasher::GenerateHash(url).data(), 8);
+    
+    auto hash = SHA256Hasher::GenerateHash(url);
+    std::string key = SHA256Hasher::HashToString(hash);
     
     auto it = index_.find(key);
-    CHECK_AND_RETURN_RET_LOG(it != index_.end(), false,
+    CHECK_AND_RETURN_RET_LOG(it != index_.end() && !it->second.empty(), false,
         "Cache not found for url: %{public}s", url.c_str());
     
-    const CacheMappingEntryInfo& info = it->second;
-    std::string entry;
-    std::memcpy(&entry[0], info.header.urlHash + 8, 24);
+    const CacheMappingEntry& entry = it->second[0];
     
     metadata.url = url;
-    metadata.size = info.header.fileSize;
+    metadata.size = entry.header.fileSize;
     metadata.type = "application/octet-stream";
     metadata.randomAccess = true;
-    metadata.entry = entry;
+    metadata.entry = entry.filePath;
     
     return true;
 }
@@ -241,7 +218,9 @@ bool DownloadedCacheManager::CreateDirectories(const std::string& path)
     bool success = fs::create_directories(path, ec);
     CHECK_AND_RETURN_RET_LOG(success, false, "create_directories error:%{public}s", ec.message().c_str());
     return success;
-    uint64_t DownloadedCacheManager::ScanDirectorySize(const std::string& path)
+}
+
+uint64_t DownloadedCacheManager::ScanDirectorySize(const std::string& path)
 {
     uint64_t totalSize = 0;
     CHECK_AND_RETURN_RET_LOG(fs::exists(path) && fs::is_directory(path), 0,

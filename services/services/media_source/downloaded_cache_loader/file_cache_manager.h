@@ -13,11 +13,12 @@
  * limitations under the License.
  */
 
-#ifndef FILE_CAHE_MANAGER_H
-#define FILE_CAHE_MANAGER_H
+#ifndef FILE_CACHE_MANAGER_H
+#define FILE_CACHE_MANAGER_H
 
 #include <string>
 #include <cstdint>
+#include <memory>
 
 namespace OHOS {
 namespace Media {
@@ -36,4 +37,4 @@ private:
 } // namespace Media
 } // namespace OHOS
 
-#endif // FILE_CAHE_MANAGER_H
+#endif // FILE_CACHE_MANAGER_H
