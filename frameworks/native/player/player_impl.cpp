@@ -14,9 +14,14 @@
  */
 
 #include "player_impl.h"
+#include <string>
+#include <random>
+#include <sstream>
+#include <algorithm>
 #include "i_media_service.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "scope_guard.h"
 #include "scoped_timer.h"
 #include "player_xcollie.h"
 #ifdef SUPPORT_AVPLAYER_DRM
@@ -38,6 +43,15 @@ const int32_t TIME_OUT_SECOND = 15;
 
 namespace OHOS {
 namespace Media {
+
+namespace {
+thread_local std::mt19937_64 g_shuffleRng = []() {
+    std::random_device rd;
+    std::mt19937_64::result_type seed = static_cast<std::mt19937_64::result_type>(rd()) ^
+        (static_cast<std::mt19937_64::result_type>(rd()) << 32);
+    return std::mt19937_64(seed);
+}();
+}
 
 std::shared_ptr<Player> PlayerFactory::CreatePlayer()
 {
@@ -281,6 +295,16 @@ int32_t PlayerImpl::Pause()
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Pause in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     int32_t ret = MSERR_OK;
+    {
+        std::lock_guard<std::mutex> lock(listMutex_);
+        // If pause is called during switch mediaSource.
+        if (IsInListMode() && isSwitchingItem_) {
+            MEDIA_LOGD("Pause called during switch mediaSource, deal with after switch mediaSource.");
+            CHECK_AND_RETURN_RET_LOG(!isListStopped_, MSERR_INVALID_OPERATION, "pause called after stop not allow.");
+            isListPaused_ = true;
+            return ret;
+        }
+    }
     LISTENER(ret = playerService_->Pause(), "Pause", false, TIME_OUT_SECOND);
     return ret;
 }
@@ -290,6 +314,15 @@ int32_t PlayerImpl::Stop()
     ScopedTimer timer("Stop", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Stop in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    {
+        std::lock_guard<std::mutex> lock(listMutex_);
+        // If stop is called during switch mediaSource.
+        if (IsInListMode() && isSwitchingItem_) {
+            MEDIA_LOGD("Stop called during switch mediaSource, deal with after switch mediaSource.");
+            isListStopped_ = true;
+            return MSERR_OK;
+        }
+    }
     ResetSeekVariables();
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->Stop(), "Stop", false, TIME_OUT_SECOND);
@@ -417,6 +450,86 @@ void PlayerImpl::HandleSeekDoneInfo(PlayerOnInfoType type, int32_t extra)
     }
 }
 
+PlayerImpl::MediaSourceIterator PlayerImpl::FindSourceInList(const std::string &id)
+{
+    return std::find_if(itemList_.begin(), itemList_.end(),
+        [&id](const auto &item) {
+            return item.first == id;
+        });
+}
+
+int32_t PlayerImpl::DealWithSwitchingOpt()
+{
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    int32_t ret = MSERR_OK;
+    if (isListPaused_) {
+        MEDIA_LOGD("Pause player when switching item.");
+        isListPaused_ = false;
+        LISTENER(ret = playerService_->Pause(), "Pause", false, TIME_OUT_SECOND);
+    }
+    if (isListStopped_) {
+        MEDIA_LOGD("Stop player when switching item.");
+        ResetSeekVariables();
+        isListStopped_ = false;
+        LISTENER(ret = playerService_->Stop(), "Stop", false, TIME_OUT_SECOND);
+    }
+    return ret;
+}
+
+void PlayerImpl::HandleListStateInfo(PlayerStates state, bool &shouldUpdateState, int32_t &extra)
+{
+    if (state == PLAYER_PLAYBACK_COMPLETE) {
+        bool shouldSwitch = false;
+        int32_t count = static_cast<int32_t>(itemList_.size());
+        auto currentIt = FindSourceInList(curSrcId_);
+        CHECK_AND_RETURN_LOG(currentIt != itemList_.end(), "current source id not found in list");
+        bool isLast = (count > 0 && currentIt == std::prev(itemList_.end()));
+        if (listLoopMode_ != PLAYLIST_LOOP_MODE_NONE || !isLast) {
+            shouldSwitch = ShouldLoopCurrent() ? false : true;
+            shouldUpdateState = false;
+        } else {
+            listState_ = PLAYER_PLAYBACK_COMPLETE;
+            SwitchSetMediaSource(itemList_.begin());
+        }
+        if (shouldSwitch) {
+            MediaSourceIterator nextIt = SelectNextIndex(true);
+            if (nextIt != itemList_.end()) {
+                auto ret = SwitchToIndex(nextIt);
+                CHECK_AND_RETURN_LOG(ret == MSERR_OK, "switch mediaSource failed when handle list state info");
+            }
+        }
+    } else if (isSwitchingItem_) {
+        if (state == PLAYER_IDLE) {
+            MEDIA_LOGD("Switching item, current state is %{public}d, wait for PLAYER_STARTED", state);
+            shouldUpdateState = false;
+            NotifyPlaybackContentChange();
+        } else if (state == PLAYER_INITIALIZED || state == PLAYER_PREPARED) {
+            MEDIA_LOGD("Switching item, current state is %{public}d, wait for PLAYER_STARTED", state);
+            shouldUpdateState = false;
+        } else if (state == PLAYER_STARTED) {
+            listState_ = PLAYER_STARTED;
+            isSwitchingItem_ = false;
+            shouldUpdateState = isSwitchUpdate_ ? true : false;
+            isSwitchUpdate_ = isSwitchUpdate_ ? false : isSwitchUpdate_;
+            auto ret = DealWithSwitchingOpt();
+            CHECK_AND_RETURN_LOG(ret == MSERR_OK, "switch mediaSource failed when handle user interrupt option");
+        }
+    } else {
+        listState_ = state;
+        extra = static_cast<int32_t>(listState_);
+    }
+}
+
+void PlayerImpl::HandleListEOSInfo(bool &notifyEOS)
+{
+    // Only in no loop mode and playback complete state, the EOS callback will be reported to upper.
+    if (listState_ == PLAYER_PLAYBACK_COMPLETE && listLoopMode_ == PLAYLIST_LOOP_MODE_NONE) {
+        MEDIA_LOGD("EOS of last item, wait for state change to switch item");
+    } else {
+        notifyEOS = false;
+    }
+}
+
 void PlayerImpl::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
     HandleSeekDoneInfo(type, extra);
@@ -427,6 +540,28 @@ void PlayerImpl::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &info
     }
 
     CHECK_AND_RETURN_LOG(callback != nullptr, "callback is nullptr.");
+
+    {
+        std::lock_guard<std::mutex> lock(listMutex_);
+        if (type == INFO_TYPE_STATE_CHANGE && IsInListMode()) {
+            PlayerStates state = static_cast<PlayerStates>(extra);
+            bool shouldUpdateState = true;
+            HandleListStateInfo(state, shouldUpdateState, extra);
+            if (!shouldUpdateState) {
+                MEDIA_LOGD("State change to %{public}d, but not update to upper layer", state);
+                return;
+            }
+        }
+        if (type == INFO_TYPE_EOS && IsInListMode()) {
+            bool notifyEOS = true;
+            HandleListEOSInfo(notifyEOS);
+            if (!notifyEOS) {
+                MEDIA_LOGD("Receive EOS, but not notify upper layer");
+                return;
+            }
+        }
+    }
+
     if (type == INFO_TYPE_SEEKDONE) {
         if (extra == -1) {
             MEDIA_LOGI("seek done error callback, no need report");
@@ -440,6 +575,394 @@ void PlayerImpl::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &info
     } else {
         callback->OnInfo(type, extra, infoBody);
     }
+}
+
+bool PlayerImpl::IsInListMode() const
+{
+    return !itemList_.empty();
+}
+
+bool PlayerImpl::ShouldLoopCurrent() const
+{
+    return listLoopMode_ == PLAYLIST_LOOP_MODE_ONE;
+}
+
+bool PlayerImpl::ShouldShuffle() const
+{
+    return listLoopMode_ == PLAYLIST_LOOP_MODE_SHUFFLE;
+}
+
+void PlayerImpl::RestoreLoopIfNeeded(bool wasInListMode, bool loop)
+{
+    if (wasInListMode) {
+        (void)SetLooping(loop);
+    }
+}
+
+static std::string GenerateUniqueId()
+{
+    thread_local std::mt19937 gen(std::random_device{}());
+    thread_local std::uniform_int_distribution<> dis(0, 15); // 15 is the maximum value for a single hex digit
+
+    std::stringstream ss;
+    ss << std::hex;
+
+    for (int i = 0; i < 8; ++i) ss << dis(gen); // 8 hex digits
+    ss << "-";
+    for (int i = 0; i < 4; ++i) ss << dis(gen); // 4 hex digits
+    ss << "-";
+    for (int i = 0; i < 4; ++i) ss << dis(gen); // 4 hex digits
+    ss << "-";
+    for (int i = 0; i < 4; ++i) ss << dis(gen); // 4 hex digits
+    ss << "-";
+    for (int i = 0; i < 12; ++i) ss << dis(gen); // 12 hex digits
+    return ss.str();
+}
+
+int32_t PlayerImpl::AddPlaybackMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, const std::string &srcId,
+    std::string &generateSrcId)
+{
+    CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr");
+
+    generateSrcId = GenerateUniqueId();
+    bool isFirstAdd = false;
+    bool isListHead = false;
+    {
+        std::lock_guard<std::mutex> lock(listMutex_);
+        auto it = FindSourceInList(srcId);
+        if (!srcId.empty() && (it == itemList_.end())) {
+            MEDIA_LOGD("invalid srcId");
+            return MSERR_PARAM_OUT_OF_RANGE;
+        }
+
+        isFirstAdd = !IsInListMode();
+        isListHead = (it == itemList_.begin());
+    }
+
+    if (isFirstAdd) {
+        MEDIA_LOGD("PlayerImpl::AddPlaybackMediaSource first add, set mediaSource to service");
+        int32_t ret = SetMediaSource(mediaSource, AVPlayStrategy());
+        if (ret != MSERR_OK) {
+            MEDIA_LOGE("PlayerImpl::AddPlaybackMediaSource first add failed, ret=%{public}d", ret);
+            return ret;
+        }
+        std::lock_guard<std::mutex> lock(listMutex_);
+        itemList_.push_back(std::make_pair(generateSrcId, mediaSource));
+        if (itemList_.size() == 1) {
+            curSrcId_ = generateSrcId;
+            listState_ = PLAYER_INITIALIZED;
+        }
+        return MSERR_OK;
+    } else if (isListHead && (listState_ == PLAYER_INITIALIZED || listState_ == PLAYER_PREPARED)) {
+        MEDIA_LOGD("PlayerImpl::AddPlaybackMediaSource insert to begin, set mediaSource to service");
+        itemList_.insert(itemList_.begin(), std::make_pair(generateSrcId, mediaSource));
+        int32_t ret = SwitchSetMediaSource(itemList_.begin());
+        if (ret != MSERR_OK) {
+            MEDIA_LOGE("PlayerImpl::AddPlaybackMediaSource insert to begin failed, ret=%{public}d", ret);
+            return ret;
+        }
+        return MSERR_OK;
+    } else {
+        std::lock_guard<std::mutex> lock(listMutex_);
+        auto it = FindSourceInList(srcId);
+        itemList_.insert(it, std::make_pair(generateSrcId, mediaSource));
+    }
+    return MSERR_OK;
+}
+
+void PlayerImpl::SelectAndSwitchAfterRemove(bool isLast, MediaSourceIterator nextIt)
+{
+    auto selectIt = isLast ? itemList_.begin() : nextIt;
+    if (ShouldShuffle()) {
+        std::uniform_int_distribution<int32_t> dist(0, itemList_.size() - 1);
+        int32_t idx = dist(g_shuffleRng);
+        selectIt = itemList_.begin() + idx;
+    }
+    if (listState_ == PLAYER_STARTED) {
+        (void)SwitchToIndex(selectIt);
+    } else {
+        (void)SwitchSetMediaSource(selectIt);
+    }
+}
+
+int32_t PlayerImpl::RemovePlaybackMediaSource(std::string srcId)
+{
+    std::lock_guard<std::mutex> lock(listMutex_);
+
+    auto it = FindSourceInList(srcId);
+    if (it == itemList_.end()) {
+        return MSERR_PARAM_OUT_OF_RANGE;
+    }
+
+    bool isLast = (it == std::prev(itemList_.end()));
+    bool isCurrent = (srcId == curSrcId_);
+    bool isListHead = (it == itemList_.begin());
+
+    auto nextIt = itemList_.erase(it);
+    if (itemList_.empty()) {
+        curSrcId_.clear();
+        listState_ = PLAYER_IDLE;
+        isSwitchUpdate_ = false;
+        isSwitchingItem_ = false;
+        listLoopMode_ = PLAYLIST_LOOP_MODE_ALL;
+        Reset();
+        return MSERR_OK;
+    } else if (isListHead && (listState_ == PLAYER_INITIALIZED || listState_ == PLAYER_PREPARED)) {
+        int32_t ret = SwitchSetMediaSource(itemList_.begin());
+        if (ret != MSERR_OK) {
+            MEDIA_LOGE("PlayerImpl::RemovePlaybackMediaSource set mediaSource to service failed, ret=%{public}d", ret);
+            return ret;
+        }
+        return MSERR_OK;
+    }
+
+    if (isCurrent) {
+        if (isLast && listLoopMode_ == PLAYLIST_LOOP_MODE_NONE) {
+            MEDIA_LOGD("already the last item and not in loop mode, after remove, not switch to next");
+            SwitchSetMediaSource(itemList_.begin());
+            return MSERR_PARAM_OUT_OF_RANGE;
+        }
+        SelectAndSwitchAfterRemove(isLast, nextIt);
+    }
+    return MSERR_OK;
+}
+
+int32_t PlayerImpl::ClearPlaybackList()
+{
+    {
+        std::lock_guard<std::mutex> lock(listMutex_);
+        itemList_.clear();
+        curSrcId_ = "";
+        listState_ = PLAYER_IDLE;
+        isSwitchUpdate_ = false;
+        isSwitchingItem_ = false;
+        listLoopMode_ = PLAYLIST_LOOP_MODE_ALL;
+        int32_t ret = Reset();
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "[%{public}s] Reset failed", __func__);
+    }
+    return MSERR_OK;
+}
+
+int32_t PlayerImpl::GetCurrentMediaSource(std::string &srcId) const
+{
+    std::lock_guard<std::mutex> lock(listMutex_);
+    srcId = curSrcId_;
+    return MSERR_OK;
+}
+
+int32_t PlayerImpl::GetMediaSources(std::vector<std::shared_ptr<AVMediaSource>> &mediaSources) const
+{
+    std::lock_guard<std::mutex> lock(listMutex_);
+    for (const auto &item : itemList_) {
+        mediaSources.push_back(item.second);
+    }
+    return MSERR_OK;
+}
+
+void PlayerImpl::SetPlaylistLoopMode(PlaylistLoopMode mode)
+{
+    CHECK_AND_RETURN_LOG(mode >= PLAYLIST_LOOP_MODE_ALL && mode <= PLAYLIST_LOOP_MODE_NONE,
+        "invalid list loop mode: %{public}d", static_cast<int32_t>(mode));
+    bool serverLoop = false;
+    {
+        std::lock_guard<std::mutex> lock(listMutex_);
+        listLoopMode_ = mode;
+        serverLoop = (mode == PLAYLIST_LOOP_MODE_ONE);
+    }
+
+    (void)SetLooping(serverLoop);
+}
+
+PlaylistLoopMode PlayerImpl::GetPlaylistLoopMode() const
+{
+    std::lock_guard<std::mutex> lock(listMutex_);
+    return listLoopMode_;
+}
+
+int32_t PlayerImpl::AdvanceToNextMediaSource()
+{
+    std::lock_guard<std::mutex> lock(listMutex_);
+    MediaSourceIterator nextIt;
+    CHECK_AND_RETURN_RET_LOG(IsInListMode(), MSERR_INVALID_STATE, "not in list mode");
+    if (ShouldLoopCurrent()) {
+        nextIt = FindSourceInList(curSrcId_);
+    } else if (FindSourceInList(curSrcId_) == std::prev(itemList_.end()) && listLoopMode_ == PLAYLIST_LOOP_MODE_NONE) {
+        MEDIA_LOGD("already the last item and not in loop mode, not advance to next");
+        return MSERR_PARAM_OUT_OF_RANGE;
+    } else {
+        nextIt = SelectNextIndex(true);
+        CHECK_AND_RETURN_RET_LOG(nextIt != itemList_.end(), MSERR_PARAM_OUT_OF_RANGE,
+            "SelectNextIndex failed when advance to next");
+    }
+    auto ret = SwitchToIndex(nextIt);
+    return ret;
+}
+
+int32_t PlayerImpl::AdvanceToPrevMediaSource()
+{
+    std::lock_guard<std::mutex> lock(listMutex_);
+    MediaSourceIterator nextIt;
+    CHECK_AND_RETURN_RET_LOG(IsInListMode(), MSERR_INVALID_STATE, "not in list mode");
+    if (ShouldLoopCurrent()) {
+        nextIt = FindSourceInList(curSrcId_);
+    } else if (FindSourceInList(curSrcId_) == itemList_.begin() && listLoopMode_ == PLAYLIST_LOOP_MODE_NONE) {
+        MEDIA_LOGD("already the first item, not advance to prev");
+        return MSERR_PARAM_OUT_OF_RANGE;
+    } else {
+        nextIt = SelectNextIndex(false);
+        CHECK_AND_RETURN_RET_LOG(nextIt != itemList_.end(), MSERR_PARAM_OUT_OF_RANGE,
+            "SelectNextIndex failed when advance to prev");
+    }
+    auto ret = SwitchToIndex(nextIt);
+    return ret;
+}
+
+int32_t PlayerImpl::AdvanceToMediaSource(const std::string &srcId)
+{
+    std::lock_guard<std::mutex> lock(listMutex_);
+    CHECK_AND_RETURN_RET_LOG(IsInListMode(), MSERR_INVALID_STATE, "not in list mode");
+    auto it = FindSourceInList(srcId);
+    CHECK_AND_RETURN_RET_LOG(it != itemList_.end(), MSERR_PARAM_OUT_OF_RANGE, "invalid srcId");
+    auto ret = SwitchToIndex(it);
+    return ret;
+}
+
+PlayerImpl::MediaSourceIterator PlayerImpl::SelectNextIndex(bool isNext)
+{
+    if (!IsInListMode()) {
+        return itemList_.end();
+    }
+    int32_t count = static_cast<int32_t>(itemList_.size());
+    MediaSourceIterator currentIt = FindSourceInList(curSrcId_);
+    if (currentIt == itemList_.end()) {
+        return itemList_.begin();
+    }
+    if (ShouldLoopCurrent()) {
+        return currentIt;
+    }
+    if (ShouldShuffle()) {
+        std::uniform_int_distribution<int32_t> dist(0, count - 1);
+        int32_t idx = dist(g_shuffleRng);
+        if (count > 1) {
+            int32_t currentIdx = std::distance(itemList_.begin(), currentIt);
+            while (idx == currentIdx) {
+                idx = dist(g_shuffleRng);
+            }
+        }
+        return (itemList_.begin() + idx);
+    }
+    if (isNext) {
+        if (currentIt == std::prev(itemList_.end())) {
+            return itemList_.begin();
+        } else {
+            std::advance(currentIt, 1);
+            return currentIt;
+        }
+    } else {
+        if (currentIt == itemList_.begin()) {
+            return std::prev(itemList_.end());
+        } else {
+            std::advance(currentIt, -1);
+            return currentIt;
+        }
+    }
+    return itemList_.end();
+}
+
+int32_t PlayerImpl::SwitchSetMediaSource(MediaSourceIterator nextIndex)
+{
+    if (nextIndex == itemList_.end() || itemList_.empty()) {
+        return MSERR_INVALID_VAL;
+    }
+
+    std::shared_ptr<AVMediaSource> nextSource = nextIndex->second;
+    std::string prevSrcId = curSrcId_;
+    curSrcId_ = nextIndex->first;
+
+    CHECK_AND_RETURN_RET_LOG(nextSource != nullptr, MSERR_INVALID_VAL, "nextSource is nullptr");
+
+    ON_SCOPE_EXIT(0) {
+        curSrcId_ = prevSrcId;
+    };
+
+    int32_t ret = Reset();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "[%{public}s] Reset failed", __func__);
+
+    ret = SetMediaSource(nextSource, AVPlayStrategy());
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "[%{public}s] SetMediaSource failed", __func__);
+
+    CANCEL_SCOPE_EXIT_GUARD(0);
+    return MSERR_OK;
+}
+
+int32_t PlayerImpl::SwitchToIndex(MediaSourceIterator nextIndex)
+{
+    if (nextIndex == itemList_.end() || itemList_.empty()) {
+        return MSERR_INVALID_VAL;
+    }
+
+    std::shared_ptr<AVMediaSource> nextSource = nextIndex->second;
+    CHECK_AND_RETURN_RET_LOG(nextSource != nullptr, MSERR_INVALID_VAL, "nextSource is nullptr");
+
+    MediaSourceIterator prevIndex = FindSourceInList(curSrcId_);
+    bool prevIsFirstSelect = isSwitchUpdate_;
+
+    curSrcId_ = nextIndex->first;
+    isSwitchingItem_ = true;
+    isSwitchUpdate_ = (listState_ != PLAYER_STARTED) ? true : false;
+
+    ON_SCOPE_EXIT(0) {
+        if (prevIndex != itemList_.end()) {
+            curSrcId_ = prevIndex->first;
+        } else {
+            curSrcId_.clear();
+        }
+        isSwitchingItem_ = false;
+        isSwitchUpdate_ = prevIsFirstSelect;
+    };
+
+    int32_t ret = Reset();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "[%{public}s] Reset failed", __func__);
+
+    ret = SetMediaSource(nextSource, AVPlayStrategy());
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "[%{public}s] SetMediaSource failed", __func__);
+
+    ret = Prepare();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "[%{public}s] Prepare failed", __func__);
+
+    ret = Play();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "[%{public}s] Play failed", __func__);
+
+    CANCEL_SCOPE_EXIT_GUARD(0);
+    return MSERR_OK;
+}
+
+void PlayerImpl::NotifyPlaybackContentChange()
+{
+    CHECK_AND_RETURN_LOG(!curSrcId_.empty(), "changeId is invalid.");
+
+    std::string changeId = curSrcId_;
+    std::shared_ptr<PlayerCallback> callback;
+    {
+        std::unique_lock<std::mutex> lock(cbMutex_);
+        callback = callback_;
+    }
+    CHECK_AND_RETURN_LOG(callback != nullptr, "callback is nullptr.");
+
+    Format format;
+    (void)format.PutStringValue(PlayerKeys::PLAYER_LIST_MEDIA_SOURCE_CHANGE_ID, changeId);
+    callback->OnInfo(INFO_TYPE_PLAYBACK_CONTENT_CHANGE, 0, format);
+}
+
+void PlayerImpl::ResetListParameters()
+{
+    std::lock_guard<std::mutex> lock(listMutex_);
+    itemList_.clear();
+    curSrcId_ = "";
+    listState_ = PLAYER_IDLE;
+    isSwitchUpdate_ = false;
+    isSwitchingItem_ = false;
+    listLoopMode_ = PLAYLIST_LOOP_MODE_ALL;
 }
 
 int32_t PlayerImpl::GetCurrentTime(int32_t &currentTime)
@@ -672,7 +1195,14 @@ bool PlayerImpl::IsLooping()
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " IsLooping in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, false, "player service does not exist..");
-
+    {
+        std::lock_guard<std::mutex> lock(listMutex_);
+        if (IsInListMode()) {
+            // In list loop mode, whether to loop is determined by the user settings; in non-list loop mode, whether to
+            // loop is determined by the server settings
+            return listLoopMode_ != PLAYLIST_LOOP_MODE_NONE;
+        }
+    }
     return playerService_->IsLooping();
 }
 
@@ -681,8 +1211,16 @@ int32_t PlayerImpl::SetLooping(bool loop)
     ScopedTimer timer("SetLooping", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetLooping in, loop %{public}d", FAKE_POINTER(this), loop);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    bool serverLoop = loop;
+    {
+        std::lock_guard<std::mutex> lock(listMutex_);
+        if (IsInListMode() && listLoopMode_ != PLAYLIST_LOOP_MODE_ONE) {
+            serverLoop = false;
+        }
+    }
+
     int32_t ret = MSERR_OK;
-    LISTENER(ret = playerService_->SetLooping(loop), "SetLooping", false, TIME_OUT_SECOND);
+    LISTENER(ret = playerService_->SetLooping(serverLoop), "SetLooping", false, TIME_OUT_SECOND);
     return ret;
 }
 

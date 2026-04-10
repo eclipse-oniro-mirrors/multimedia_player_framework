@@ -139,6 +139,41 @@ public:
         }
     };
 
+    struct String : public Base {
+        std::string value;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> stringRef = callback.lock();
+            CHECK_AND_RETURN_LOG(stringRef != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(stringRef->env_, &scope);
+            CHECK_AND_RETURN_LOG(scope != nullptr,
+                "%{public}s scope is nullptr", callbackName.c_str());
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(stringRef->env_, scope);
+            };
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(stringRef->env_, stringRef->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+
+            napi_value jsValue = nullptr;
+            status = napi_create_string_utf8(stringRef->env_, value.c_str(), NAPI_AUTO_LENGTH, &jsValue);
+            CHECK_AND_RETURN_LOG(status == napi_ok,
+                "%{public}s failed to napi_create_string_utf8", callbackName.c_str());
+
+            napi_value args[1] = {jsValue}; // callback: (string)
+
+            napi_value result = nullptr;
+            status = napi_call_function(stringRef->env_, nullptr, jsCallback, 1, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok,
+                "%{public}s failed to napi_call_function", callbackName.c_str());
+        }
+    };
+
     struct IntVec : public Base {
         std::vector<int32_t> valueVec;
         void UvWork() override
@@ -775,6 +810,8 @@ void AVPlayerCallback::InitInfoFuncsPart2()
         [this](const int32_t extra, const Format &infoBody) { OnPlaybackRateDoneCb(extra, infoBody); };
     onInfoFuncs_[INFO_TYPE_METRICS_EVENT] =
         [this](const int32_t extra, const Format &infoBody) { OnMetricsEventCb(extra, infoBody); };
+    onInfoFuncs_[INFO_TYPE_PLAYBACK_CONTENT_CHANGE] =
+        [this](const int32_t extra, const Format &infoBody) { OnPlaybackContentChangeCb(extra, infoBody); };
 }
 
 void AVPlayerCallback::OnAudioDeviceChangeCb(const int32_t extra, const Format &infoBody)
@@ -1161,6 +1198,27 @@ void AVPlayerCallback::OnMessageCb(const int32_t extra, const Format &infoBody)
     if (extra == PlayerMessageType::PLAYER_INFO_VIDEO_RENDERING_START) {
         AVPlayerCallback::OnStartRenderFrameCb();
     }
+}
+
+void AVPlayerCallback::OnPlaybackContentChangeCb(const int32_t extra, const Format &infoBody)
+{
+    (void)extra;
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    if (refMap_.find(AVPlayerEvent::EVENT_PLAYBACK_CONTENT_CHANGE) == refMap_.end()) {
+        return;
+    }
+    std::string changeId;
+    if (infoBody.ContainKey(PlayerKeys::PLAYER_LIST_MEDIA_SOURCE_CHANGE_ID)) {
+        (void)infoBody.GetStringValue(PlayerKeys::PLAYER_LIST_MEDIA_SOURCE_CHANGE_ID, changeId);
+    }
+    CHECK_AND_RETURN_LOG(!changeId.empty(), "changeId is empty");
+
+    NapiCallback::String *cb = new(std::nothrow) NapiCallback::String();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new String callback");
+    cb->value = changeId;
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_PLAYBACK_CONTENT_CHANGE);
+    cb->callbackName = AVPlayerEvent::EVENT_PLAYBACK_CONTENT_CHANGE;
+    NapiCallback::CompleteCallback(env_, cb);
 }
 
 void AVPlayerCallback::OnStartRenderFrameCb() const

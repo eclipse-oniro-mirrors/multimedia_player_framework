@@ -69,6 +69,7 @@ const std::string EVENT_AMPLITUDE_UPDATE = "amplitudeUpdate";
 const std::string EVENT_SEI_MESSAGE_INFO = "seiMessageReceived";
 const std::string EVENT_SUPER_RESOLUTION_CHANGED = "superResolutionChanged";
 const std::string EVENT_METRICS = "metricsEvent";
+const std::string EVENT_PLAYBACK_CONTENT_CHANGE = "playbackContentChange";
 }
 
 using TaskRet = std::pair<int32_t, std::string>;
@@ -278,6 +279,18 @@ private:
     static napi_value JsSetDecryptConfig(napi_env env, napi_callback_info info);
 
     static napi_value JsSetMediaSource(napi_env env, napi_callback_info info);
+
+    static napi_value JsAddPlaybackMediaSource(napi_env env, napi_callback_info info);
+    static napi_value JsRemovePlaybackMediaSource(napi_env env, napi_callback_info info);
+    static napi_value JsClearPlaybackList(napi_env env, napi_callback_info info);
+    static napi_value JsGetCurrentMediaSource(napi_env env, napi_callback_info info);
+    static napi_value JsGetMediaSources(napi_env env, napi_callback_info info);
+    static napi_value JsAdvanceToNextMediaSource(napi_env env, napi_callback_info info);
+    static napi_value JsAdvanceToPrevMediaSource(napi_env env, napi_callback_info info);
+    static napi_value JsAdvanceToMediaSource(napi_env env, napi_callback_info info);
+
+    static napi_value JsSetPlaylistLoopMode(napi_env env, napi_callback_info info);
+    static napi_value JsGetPlaylistLoopMode(napi_env env, napi_callback_info info);
     /**
      * getMediaKeySystemInfos(): Array<MediaKeySystemInfo>;
      */
@@ -346,6 +359,9 @@ private:
     static napi_value JsSetOnMetricsEventCallback(napi_env env, napi_callback_info info);
     static napi_value JsClearOnMetricsEventCallback(napi_env env, napi_callback_info info);
 
+    static napi_value JsSetOnPlaybackContentChangedCallback(napi_env env, napi_callback_info info);
+    static napi_value JsClearOnPlaybackContentChangedCallback(napi_env env, napi_callback_info info);
+
     static AVPlayerNapi* GetJsInstance(napi_env env, napi_callback_info info);
     static AVPlayerNapi* GetJsInstanceWithParameter(napi_env env, napi_callback_info info,
         size_t &argc, napi_value *argv);
@@ -357,6 +373,8 @@ private:
     static std::shared_ptr<AVMediaSource> GetAVMediaSource(napi_env env, napi_value value,
         std::shared_ptr<AVMediaSourceTmp> &srcTmp);
     static bool IsSystemApp();
+    static bool IsListMode(AVPlayerNapi *jsPlayer);
+    static bool IsAllowAdvanceToMediaSource(AVPlayerNapi *jsPlayer);
     AVPlayerNapi();
     ~AVPlayerNapi() override;
     void SaveCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
@@ -450,13 +468,36 @@ private:
         AVPlayerNapi *napi = nullptr;
         std::vector<Format> trackInfoVec_;
         AVPlayTrackSelectionFilter trackFilter_;
+        enum class ListOp : uint8_t {
+            NONE,
+            ADD,
+            REMOVE,
+            CLEAR,
+        };
+        ListOp listOp = ListOp::NONE;
+        napi_ref srcRef = nullptr;
+        std::string srcId {};
+        std::string generateSrcId {};
     };
+    struct MediaSourceParams {
+        napi_env env;
+        napi_value* args;
+        size_t argCount;
+        AVPlayerNapi* jsPlayer;
+        std::shared_ptr<AVMediaSource>& mediaSource;
+        std::unique_ptr<AVPlayerContext>& promiseCtx;
+    };
+
+    static void ExecuteWaitListTask(napi_env env, void *data);
+    static void CompleteListTask(napi_env env, napi_status status, void *data);
+    static void HandleMediaSourceListOp(napi_env env, AVPlayerNapi* jsPlayer, AVPlayerContext* ctx);
     std::shared_ptr<TaskHandler<TaskRet>> GetTrackDescriptionTask(const std::unique_ptr<AVPlayerContext> &promiseCtx);
     std::shared_ptr<TaskHandler<TaskRet>> GetTrackSelectionFilterTask(const std::unique_ptr<AVPlayerContext>
                                                                       &promiseCtx);
     void GetCurrentTrackTask(std::unique_ptr<AVPlayerContext> &promiseCtx, napi_env env, napi_value args);
     void HandleSelectTrack(std::unique_ptr<AVPlayerContext> &promiseCtx, napi_env env, napi_value args[],
         size_t argCount);
+    static void CheckMediaSource(const MediaSourceParams& params);
     static thread_local napi_ref constructor_;
     napi_env env_ = nullptr;
     std::shared_ptr<Player> player_ = nullptr;
@@ -470,6 +511,7 @@ private:
     struct AVDataSrcDescriptor dataSrcDescriptor_;
     std::string surface_ = "";
     bool loop_ = false;
+    int32_t playlistLoopMode_ = 1;
     int32_t videoScaleType_ = 0;
     std::vector<Format> trackInfoVec_;
     OHOS::AudioStandard::InterruptMode interruptMode_ = AudioStandard::InterruptMode::SHARE_MODE;
@@ -483,6 +525,7 @@ private:
     std::mutex mutex_;
     std::mutex taskMutex_;
     std::map<std::string, std::shared_ptr<AutoRef>> refMap_;
+    std::vector<std::pair<std::string, napi_ref>> mediaSourceRefList_;
     PlayerStates state_ = PLAYER_IDLE;
     std::condition_variable stateChangeCond_;
     std::atomic<bool> stopWait_;

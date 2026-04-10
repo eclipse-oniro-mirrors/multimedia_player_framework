@@ -258,6 +258,15 @@ public:
     static constexpr std::string_view PLAYER_SEI_PAYLOAD_TYPE = "payloadType";
     static constexpr std::string_view PLAYER_SEI_PAYLOAD_CONTENT = "payload";
     static constexpr std::string_view PLAYER_IS_FLV_LIVE = "isFlvLive";
+
+    static constexpr std::string_view PLAYER_LIST_MEDIA_SOURCE_CHANGE_ID = "list_media_source_change_id";
+};
+
+enum PlaylistLoopMode : int32_t {
+    PLAYLIST_LOOP_MODE_ALL = 1,
+    PLAYLIST_LOOP_MODE_ONE = 2,
+    PLAYLIST_LOOP_MODE_SHUFFLE = 3,
+    PLAYLIST_LOOP_MODE_NONE = 4
 };
 
 class PlaybackInfoKey {
@@ -353,6 +362,8 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_POSITION_UPDATE,
     /* return the playback message. */
     INFO_TYPE_MESSAGE,
+    /* return the message when media source changed in list mode. */
+    INFO_TYPE_PLAYBACK_CONTENT_CHANGE,
     /* return the message when volume changed. */
     INFO_TYPE_VOLUME_CHANGE,
     /* return the message when video size is first known or updated. */
@@ -640,6 +651,66 @@ public:
      * @version 1.0
      */
     virtual int32_t Reset() = 0;
+
+    virtual int32_t AddPlaybackMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, const std::string &srcId,
+        std::string &generateSrcId)
+    {
+        (void)mediaSource;
+        (void)srcId;
+        (void)generateSrcId;
+        return MSERR_INVALID_OPERATION;
+    }
+
+    virtual int32_t RemovePlaybackMediaSource(std::string srcId)
+    {
+        (void)srcId;
+        return MSERR_INVALID_OPERATION;
+    }
+
+    virtual int32_t ClearPlaybackList()
+    {
+        return MSERR_INVALID_OPERATION;
+    }
+
+    virtual int32_t GetCurrentMediaSource(std::string &srcId) const
+    {
+        (void)srcId;
+        return MSERR_INVALID_OPERATION;
+    }
+
+    virtual int32_t GetMediaSources(std::vector<std::shared_ptr<AVMediaSource>> &mediaSources) const
+    {
+        (void)mediaSources;
+        return MSERR_INVALID_OPERATION;
+    }
+
+    virtual int32_t AdvanceToNextMediaSource()
+    {
+        return MSERR_INVALID_OPERATION;
+    }
+
+    virtual int32_t AdvanceToPrevMediaSource()
+    {
+        return MSERR_INVALID_OPERATION;
+    }
+
+    virtual int32_t AdvanceToMediaSource(const std::string &srcId)
+    {
+        (void)srcId;
+        return MSERR_INVALID_OPERATION;
+    }
+
+    virtual void SetPlaylistLoopMode(PlaylistLoopMode mode)
+    {
+        (void)mode;
+    }
+
+    virtual PlaylistLoopMode GetPlaylistLoopMode() const
+    {
+        return PLAYLIST_LOOP_MODE_ALL;
+    }
+
+    virtual void ResetListParameters() = 0;
 
     /**
      * @brief Releases player resources async

@@ -111,6 +111,7 @@ const std::map<MediaServiceErrCode, std::string> MSERRCODE_INFOS = {
     {MSERR_RS_DATA_FALLBACK_FAILED, "RS of the LPP data fallback failed"},
     {MSERR_LPP_INSTANCE_EXCEED_LIMIT, "LPP instance limit exceeded"},
     {MSERR_HARDWARE_ERROR, "underlying hardware error happened"},
+    {MSERR_PARAM_OUT_OF_RANGE, "parameter is out of range"},
 };
 
 const std::map<MediaServiceErrCode, MediaServiceExtErrCode> MSERRCODE_TO_EXTERRORCODE = {
@@ -280,6 +281,7 @@ const std::map<MediaServiceErrCode, MediaServiceExtErrCodeAPI9> MSERRCODE_TO_EXT
     {MSERR_RS_DATA_FALLBACK_FAILED,             MSERR_EXT_API20_HARDWARE_FAILED},
     {MSERR_LPP_INSTANCE_EXCEED_LIMIT,           MSERR_EXT_API20_HARDWARE_FAILED},
     {MSERR_HARDWARE_ERROR,                      MSERR_EXT_API20_HARDWARE_FAILED},
+    {MSERR_PARAM_OUT_OF_RANGE,                  MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE},
 };
 
 const std::map<MediaServiceExtErrCodeAPI9, std::string> MSEXTERRCODE_API9_INFOS = {

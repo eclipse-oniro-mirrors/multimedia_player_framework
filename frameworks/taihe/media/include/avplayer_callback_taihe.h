@@ -80,6 +80,7 @@ public:
     void OnSeiInfoCb(const int32_t extra, const Format &infoBody);
     void OnSubtitleInfoCb(const int32_t extra, const Format &infoBody);
     void OnMetricsEventCb(const int32_t extra, const Format &infoBody);
+    void OnPlaybackContentChangedCb(const int32_t extra, const Format &infoBody);
     int32_t SetDrmInfoData(const uint8_t *drmInfoAddr, int32_t infoCount,
         std::multimap<std::string, std::vector<uint8_t>> &drmInfoMap);
     void SaveCallbackReference(const std::string &name, std::weak_ptr<AutoRef> ref);
@@ -87,6 +88,8 @@ public:
     void Start();
     void Pause();
     void Release();
+    void InitInfoFuncsPart1();
+    void InitInfoFuncsPart2();
     std::atomic<bool> isSetVolume_ = false;
     std::shared_ptr<OHOS::AppExecFwk::EventHandler> mainHandler_ = nullptr;
 private:
