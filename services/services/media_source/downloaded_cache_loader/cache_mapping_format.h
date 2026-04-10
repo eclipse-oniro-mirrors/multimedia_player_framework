@@ -49,13 +49,12 @@ static_assert(sizeof(CacheMappingHeader) == 24, "CacheMappingHeader size must be
 struct CacheMappingEntryHeader {
     uint8_t  urlHash[32];     // URL的SHA256完整哈希值（32字节）
     uint32_t pathLength;       // 文件路径长度（UTF-8编码）
-    uint64_t fileSize;          // 文件总大小（字节）
+    uint64_t fileSize;         // 文件总大小（字节）
     uint8_t  reserved[8];      // 保留字段：8字节（在fileSize之后）
 };
 #pragma pack(pop)
 
-// 条目头大小：48字节
-static_assert(sizeof(CacheMappingEntryHeader) == 48, "CacheMappingEntryHeader size must be 48 bytes");
+static_assert(sizeof(CacheMappingEntryHeader) == 52, "CacheMappingEntryHeader size must be 52 bytes");
 
 struct CacheMappingEntry {
     CacheMappingEntryHeader header;  // 48字节
