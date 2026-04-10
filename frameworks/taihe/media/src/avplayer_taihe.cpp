@@ -3396,15 +3396,14 @@ void AVPlayerImpl::OffTimedMetaData(optional_view<callback<void(
     ::ohos::multimedia::media::AVTimedMetaData const&)>> callback)
 {
     MediaTrace trace("AVPlayerImpl::OffTimedMetaData");
-    MEDIA_LOGD("OffTimedMetaData In");
+    MEDIA_LOGD("TaiheOffTimedMetaData In");
 
     if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
         return;
     }
-
     std::string callbackName = AVPlayerEvent::EVENT_TIMED_META_DATA;
     ClearCallbackReference(callbackName);
-    MEDIA_LOGI("OffTimedMetaData End");
+    MEDIA_LOGI("OffTimedMetaData End"); 
 }
 
 bool AVPlayerImpl::GetIntArrayArgument(std::vector<int32_t> &vec, const std::vector<int32_t> &inputArray)

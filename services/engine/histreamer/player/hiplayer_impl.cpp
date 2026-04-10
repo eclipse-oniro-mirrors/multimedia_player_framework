@@ -3702,24 +3702,21 @@ void __attribute__((no_sanitize("cfi"))) HiPlayerImpl::OnStateChanged(PlayerStat
 void HiPlayerImpl::HandleTimedMetaData(std::shared_ptr<OHOS::MediaAVCodec::AVTimedMetaData> meta)
 {
     FALSE_RETURN_MSG(meta != nullptr, "HandleTimedMetaData: meta is nullptr");
-    MEDIA_LOG_D_SHORT("HandleTimedMetaData id: %{public}s, classify: %{public}s",
-        meta->id.c_str(), meta->classify.c_str());
-    if (callbackLooper_.IsStarted()) {
-        Format format;
-        (void)format.PutStringValue(std::string(PlaybackTimedMetaData::PLAYER_TIMED_META_ID), meta->id);
-        (void)format.PutStringValue(std::string(PlaybackTimedMetaData::PLAYER_TIMED_META_CLASSIFY), meta->classify);
-        (void)format.PutLongValue(std::string(PlaybackTimedMetaData::PLAYER_TIMED_META_START), meta->start);
-        (void)format.PutLongValue(std::string(PlaybackTimedMetaData::PLAYER_TIMED_META_DURATION), meta->duration);
+    FALSE_RETURN_MSG(callbackLooper_.IsStarted(), "HandleTimedMetaData: callbackLooper is not started"),
+    Format format;
+    (void)format.PutStringValue(std::string(PlaybackTimedMetaData::PLAYER_TIMED_META_ID), meta->id);
+    (void)format.PutStringValue(std::string(PlaybackTimedMetaData::PLAYER_TIMED_META_CLASSIFY), meta->classify);
+    (void)format.PutLongValue(std::string(PlaybackTimedMetaData::PLAYER_TIMED_META_START), meta->start);
+    (void)format.PutLongValue(std::string(PlaybackTimedMetaData::PLAYER_TIMED_META_DURATION), meta->duration);
 
-        // Write contents map directly as key-value pairs
-        for (const auto &[key, val] : meta->contents) {
-            (void)format.PutStringValue(key, val);
-        }
-        callbackLooper_.OnInfo(INFO_TYPE_TIMED_META_DATA, 0, format);
-        MEDIA_LOG_I("sending timedMetaData event: id=%{public}s, classify=%{public}s, start=%{public}" PRId64
-            ", duration=%{public}" PRId64 ", contentsSize=%{public}zu",
-            meta->id.c_str(), meta->classify.c_str(), meta->start, meta->duration, meta->contents.size());
+    // Write contents map directly as key-value pairs
+    for (const auto &[key, val] : meta->contents) {
+        (void)format.PutStringValue(key, val);
     }
+    callbackLooper_.OnInfo(INFO_TYPE_TIMED_META_DATA, 0, format);
+    MEDIA_LOG_I("sending timedMetaData event: id=%{public}s, classify=%{public}s, start=%{public}" PRId64
+        ", duration=%{public}" PRId64 ", contentsSize=%{public}zu",
+        meta->id.c_str(), meta->classify.c_str(), meta->start, meta->duration, meta->contents.size());
 }
 
 void HiPlayerImpl::HandleMetricsEvent(int64_t timeStamp, int64_t timeLine, int64_t duration,

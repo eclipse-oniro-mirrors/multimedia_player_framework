@@ -761,7 +761,6 @@ public:
             napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
             CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
                 "%{public}s failed to napi_get_reference_value", callbackName.c_str());
-            MEDIA_LOGI("zzs UvWork start");
             napi_value obj = nullptr;
             napi_create_object(ref->env_, &obj);
             CommonNapi::SetPropertyString(ref->env_, obj, "id", meta.id);
@@ -769,9 +768,6 @@ public:
             CommonNapi::SetPropertyInt64(ref->env_, obj, "start", meta.start);
             CommonNapi::SetPropertyInt64(ref->env_, obj, "duration", meta.duration);
             CommonNapi::SetPropertyMap(ref->env_, obj, "contents", meta.contents);
-            for (const auto& [key, value] : meta.contents) {
-                MEDIA_LOGI("zzs UvWork vParseEvent contents_ key: %{public}s, value: %{public}s", key.c_str(), value.c_str());
-            }
             napi_value args[1] = { obj };
             napi_value result = nullptr;
             status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);

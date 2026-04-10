@@ -499,8 +499,7 @@ public:
         void UvWork() override
         {
             std::shared_ptr<AutoRef> timedMetaRef = callback.lock();
-            CHECK_AND_RETURN_LOG(timedMetaRef != nullptr,
-                "%{public}s AutoRef is nullptr", callbackName.c_str());
+            CHECK_AND_RETURN_LOG(timedMetaRef != nullptr,"%{public}s AutoRef is nullptr", callbackName.c_str());
 
             auto func = timedMetaRef->callbackRef_;
             CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
@@ -514,9 +513,9 @@ public:
                 taiheContents.emplace(taihe::string(key), taihe::string(val));
             }
             ::ohos::multimedia::media::AVTimedMetaData timedMeta {
-                .id       = taihe::string(meta.id),
+                .id = taihe::string(meta.id),
                 .classify = taihe::string(meta.classify),
-                .start    = meta.start,
+                .start = meta.start,
                 .duration = meta.duration,
                 .contents = taiheContents,
             };
