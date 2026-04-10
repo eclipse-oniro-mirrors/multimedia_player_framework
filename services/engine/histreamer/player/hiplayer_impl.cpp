@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+﻿/*
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -2717,6 +2717,10 @@ void HiPlayerImpl::OnEventContinue(const Event &event)
             NotifySeekClosest(AnyCast<bool>(event.param));
             break;
         }
+        case EventType::EVENT_TIMED_METADATA: {
+            HandleTimedMetaData(AnyCast<std::shared_ptr<MediaAVCodec::AVTimedMetaData>>(event.param));
+            break;
+        }
         default:
             break;
     }
@@ -3692,6 +3696,29 @@ void __attribute__((no_sanitize("cfi"))) HiPlayerImpl::OnStateChanged(PlayerStat
     {
         AutoLock lock(stateMutex_);
         cond_.NotifyOne();
+    }
+}
+
+void HiPlayerImpl::HandleTimedMetaData(std::shared_ptr<OHOS::MediaAVCodec::AVTimedMetaData> meta)
+{
+    FALSE_RETURN_MSG(meta != nullptr, "HandleTimedMetaData: meta is nullptr");
+    MEDIA_LOG_D_SHORT("HandleTimedMetaData id: %{public}s, classify: %{public}s",
+        meta->id.c_str(), meta->classify.c_str());
+    if (callbackLooper_.IsStarted()) {
+        Format format;
+        (void)format.PutStringValue(std::string(PlaybackTimedMetaData::PLAYER_TIMED_META_ID), meta->id);
+        (void)format.PutStringValue(std::string(PlaybackTimedMetaData::PLAYER_TIMED_META_CLASSIFY), meta->classify);
+        (void)format.PutLongValue(std::string(PlaybackTimedMetaData::PLAYER_TIMED_META_START), meta->start);
+        (void)format.PutLongValue(std::string(PlaybackTimedMetaData::PLAYER_TIMED_META_DURATION), meta->duration);
+
+        // Write contents map directly as key-value pairs
+        for (const auto &[key, val] : meta->contents) {
+            (void)format.PutStringValue(key, val);
+        }
+        callbackLooper_.OnInfo(INFO_TYPE_TIMED_META_DATA, 0, format);
+        MEDIA_LOG_I("sending timedMetaData event: id=%{public}s, classify=%{public}s, start=%{public}" PRId64
+            ", duration=%{public}" PRId64 ", contentsSize=%{public}zu",
+            meta->id.c_str(), meta->classify.c_str(), meta->start, meta->duration, meta->contents.size());
     }
 }
 

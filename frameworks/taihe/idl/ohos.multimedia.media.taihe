@@ -303,6 +303,14 @@ struct AVMetricsEvent {
   details: @record Map<String, i64>;
 }
 
+struct AVTimedMetaData {
+    id: String;
+    classify: String;
+    start: i64;
+    duration: i64;
+    contents: Map<String, String>;
+}
+
 struct VideoSize{
     width: Optional<i32>;
     height: Optional<i32>;
@@ -615,6 +623,8 @@ interface AVPlayer {
     OffMetricsEvent(callback: Optional<(data: Array<AVMetricsEvent>)=> void>): void;
     GetCurrentMediaSource(): Optional<MediaSource>;
     GetMediaSources(): Array<Optional<MediaSource>>;
+    OnTimedMetaData(callback: (data: AVTimedMetaData) => void): void;
+    OffTimedMetaData(callback: Optional<(data: AVTimedMetaData) => void>): void;
 
     @gen_promise("addPlaybackMediaSource")
     AddPlaybackMediaSourceSync(src: MediaSource, pos: Optional<String>): String;
