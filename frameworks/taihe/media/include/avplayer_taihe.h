@@ -68,6 +68,7 @@ struct AVPlayStrategyTmp {
     double thresholdForAutoQuickPlay;
     bool isSetBufferDurationForPlaying {true};
     bool isSetThresholdForAutoQuickPlay {true};
+    bool keepDecodingOnMute;
 };
 
 namespace AVPlayerEvent {
