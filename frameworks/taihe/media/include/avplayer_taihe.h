@@ -98,6 +98,7 @@ namespace AVPlayerEvent {
     const std::string EVENT_RATE_DONE = "playbackRateDone";
     const std::string EVENT_METRICS = "metricsEvent";
     const std::string EVENT_PLAYBACK_CONTENT_CHANGE = "playbackContentChange";
+    const std::string EVENT_TIMED_META_DATA = "timedMetaData";
 }
 
 class AVPlayerImpl : public AVPlayerNotify {

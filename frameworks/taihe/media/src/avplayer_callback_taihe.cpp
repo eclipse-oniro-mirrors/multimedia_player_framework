@@ -625,8 +625,6 @@ void AVPlayerCallback::InitInfoFuncsPart1()
             [this](const int32_t extra, const Format &infoBody) { OnAudioInterruptCb(extra, infoBody); } },
         { INFO_TYPE_AUDIO_DEVICE_CHANGE,
             [this](const int32_t extra, const Format &infoBody) { OnAudioDeviceChangeCb(extra, infoBody); } },
-        { INFO_TYPE_TIMED_META_DATA,
-            [this](const int32_t extra, const Format &infoBody) { OnTimedMetaDataCb(extra, infoBody); } },
         { INFO_TYPE_EOS, [this](const int32_t extra, const Format &infoBody) { OnEosCb(extra, infoBody); } },
         { INFO_TYPE_SEEKDONE, [this](const int32_t extra, const Format &infoBody) { OnSeekDoneCb(extra, infoBody); } }
     };
@@ -638,6 +636,8 @@ void AVPlayerCallback::InitInfoFuncsPart2()
         [this](const int32_t extra, const Format &infoBody) { OnMetricsEventCb(extra, infoBody); };
     onInfoFuncs_[INFO_TYPE_PLAYBACK_CONTENT_CHANGE] =
         [this](const int32_t extra, const Format &infoBody) { OnPlaybackContentChangedCb(extra, infoBody); };
+    onInfoFuncs_[INFO_TYPE_TIMED_META_DATA] =
+        [this](const int32_t extra, const Format &infoBody) { OnTimedMetaDataCb(extra, infoBody); };
 }
 
 AVPlayerCallback::AVPlayerCallback(AVPlayerNotify *listener)
