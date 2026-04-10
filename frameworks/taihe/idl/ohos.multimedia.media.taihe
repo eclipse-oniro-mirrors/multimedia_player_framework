@@ -178,6 +178,7 @@ struct PlaybackStrategy {
     preferredBufferDurationForPlaying: Optional<f64>;
     enableSuperResolution: Optional<bool>;
     thresholdForAutoQuickPlay: Optional<f64>;
+    keepDecodingOnMute: Optional<bool>;
 }
 
 interface AVMetadataExtractor {
@@ -440,6 +441,9 @@ interface AVPlayer {
 
     @gen_promise("getPlaybackStatisticMetrics")
     GetPlaybackStatisticMetricsSync(): @record Map<PlaybackMetricsKey, PlaybackMetricsValue>;
+
+    @gen_promise("setLoudnessGain")
+    SetLoudnessGainSync(loudnessGain: f64): void;
 
     @!sts_inject_into_interface("on(type: string, callback: (state: String, reason: StateChangeReason)=> void): void;")
     @!sts_inject_into_interface("on(type: string, callback: (err: BusinessError<void>)=> void): void;")
