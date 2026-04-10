@@ -21,11 +21,13 @@
 #include "cache_mapping_format.h"
 #include "path_validator.h"
 #include "sha256_hasher.h"
+#include "common/log.h"
 #include "media_log.h"
 
 namespace fs = std::experimental::filesystem;
 
 namespace {
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "DownloadedCacheMemoryReader"};
 const std::string CACHE_DIR = "/data/storage/el2/base/cache/avplayer_downloaded_cache";
 const std::string CACHE_MAPPING_FILE = "cache_mapping.txt";
 const size_t MAX_CACHE_MAPPING_FILE_SIZE = 10ULL * 1024ULL * 1024ULL;

@@ -28,7 +28,7 @@ namespace OHOS {
 namespace Media {
 namespace DownloadedCache {
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "CacheReader" };
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "DownloadedCacheReader" };
 constexpr int32_t CACHE_NOT_FOUND_ERROR = 404;
 }
 

@@ -65,25 +65,6 @@ struct CacheMappingEntry {
     }
 };
 
-class PathValidator {
-public:
-    static bool Validate(const std::string& rootPath, const std::string& relativePath);
-
-private:
-    static constexpr size_t MAX_PATH_LENGTH = 1024;
-    static bool ContainsIllegalCharacters(const std::string& path);
-    static bool IsPathEscaped(const std::string& resolvedPath, const std::string& rootPath);
-    static std::string NormalizePath(const std::string& path);
-};
-
-class SHA256Hasher {
-public:
-    static std::array<uint8_t, 32> GenerateHash(const std::string& url);
-    static bool CompareHash(const std::array<uint8_t, 32>& hash1,
-                       const std::array<uint8_t, 32>& hash2);
-    static std::string HashToString(const std::array<uint8_t, 32>& hash);
-};
-
 class CacheMappingSerializer {
 public:
     static bool WriteHeader(std::ofstream& file, const CacheMappingHeader& header);

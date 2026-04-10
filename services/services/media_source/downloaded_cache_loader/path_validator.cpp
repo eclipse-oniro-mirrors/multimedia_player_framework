@@ -13,14 +13,18 @@
  * limitations under the License.
  */
 
-#include "cache_mapping_format.h"
-#include "../../../../utils/include/media_log.h"
+#include "path_validator.h"
+#include "common/log.h"
+#include "media_log.h"
 #include <algorithm>
 #include <sstream>
 
 namespace OHOS {
 namespace Media {
 namespace DownloadedCache {
+namespace {
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "DownloadedCachePathValidator"};
+}
 
 bool PathValidator::Validate(const std::string& rootPath, const std::string& relativePath)
 {

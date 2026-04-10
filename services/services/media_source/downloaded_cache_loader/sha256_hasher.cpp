@@ -13,12 +13,9 @@
  * limitations under the License.
  */
 
-#include "cache_mapping_format.h"
-#include "../../../../utils/include/media_log.h"
-#include <string>
-#include <array>
-#include <sstream>
-#include <iomanip>
+#include "sha256_hasher.h"
+#include <cstring>
+#include <algorithm>
 
 namespace OHOS {
 namespace Media {

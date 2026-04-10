@@ -56,6 +56,7 @@ public:
     uint64_t ScanDirectorySize(const std::string& path);
     void LoadMapping();
 
+    static std::shared_ptr<DownloadedCacheManager> cacheManager_;
     static std::once_flag onceFlag_;
 
     std::vector<uint8_t> fileBuffer_;

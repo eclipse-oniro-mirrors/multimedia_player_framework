@@ -14,10 +14,13 @@
  */
 
 #include "cache_mapping_format.h"
+#include "path_validator.h"
+#include "common/log.h"
 #include "media_log.h"
 #include <fstream>
 
 namespace {
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "DownloadedCacheMappingSerializer"};
 constexpr const char* CACHE_DIR = "/data/storage/el2/base/cache/avplayer_downloaded_cache";
 }
 
