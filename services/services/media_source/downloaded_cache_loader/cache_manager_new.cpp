@@ -16,28 +16,48 @@
 #include <algorithm>
 #include <sys/stat.h>
 #include <filesystem>
+#include <cstring>
 #include "cache_manager.h"
 #include "cache_mapping_format.h"
 #include "path_validator.h"
 #include "sha256_hasher.h"
-#include "cache_mapping_serializer.cpp"
 #include "media_log.h"
 
 namespace fs = std::experimental::filesystem;
 
 namespace {
-constexpr int64_t TIMER_INIT = 10;
-constexpr uint64_t MAX_CACHE_FILE_SIZE = 4ULL * 1024ULL * 1024ULL;
-constexpr uint64_t CACHE_FILE_SIZE_WATERLINE = 3ULL * 1024ULL * 1024ULL;
-constexpr uint64_t NEED_REMOVE_CACHE_SIZE = 800ULL * 1024ULL * 1024ULL;
-constexpr std::string CACHE_DIR = "/data/storage/el2/base/cache/avplayer_downloaded_cache";
-constexpr std::string CACHE_MAPPING_FILE = "cache_mapping.txt";
-constexpr size_t MAX_CACHE_MAPPING_FILE_SIZE = 10ULL * 1024ULL * 1024ULL;
+const std::string CACHE_DIR = "/data/storage/el2/base/cache/avplayer_downloaded_cache";
+const std::string CACHE_MAPPING_FILE = "cache_mapping.txt";
+const size_t MAX_CACHE_MAPPING_FILE_SIZE = 10ULL * 1024ULL * 1024ULL;
 }
 
 namespace OHOS {
 namespace Media {
 namespace DownloadedCache {
+
+class MemoryReader {
+public:
+    MemoryReader(const std::vector<uint8_t>& buffer)
+        : buffer_(buffer), offset_(0) {}
+    
+    bool Read(void* dest, size_t size) {
+        if (offset_ + size > buffer_.size()) {
+            return false;
+        }
+        std::memcpy(dest, buffer_.data() + offset_, size);
+        offset_ += size;
+        return true;
+    }
+    
+    size_t GetOffset() const { return offset_; }
+    size_t GetSize() const { return buffer_.size(); }
+    bool HasMore() const { return offset_ < buffer_.size(); }
+
+private:
+    const std::vector<uint8_t>& buffer_;
+    size_t offset_;
+};
+
 std::once_flag DownloadedCacheManager::onceFlag_;
 std::shared_ptr<DownloadedCacheManager> DownloadedCacheManager::cacheManager_;
 
@@ -61,7 +81,7 @@ void DownloadedCacheManager::LoadMapping()
 {
     CreateDirectories(CACHE_DIR);
     cacheSize_.store(ScanDirectorySize(CACHE_DIR), std::memory_order_relaxed);
-    std::string path = CACHE_DIR + fs::path::preferred_separator + CACHE_MAPPING_FILE;
+    std::string path = CACHE_DIR + "/" + CACHE_MAPPING_FILE;
     
     std::ifstream file(path, std::ios::binary | std::ios::ate);
     if (!file.is_open()) {
@@ -70,7 +90,7 @@ void DownloadedCacheManager::LoadMapping()
     }
     
     auto fileSize = file.tellg();
-    if (fileSize == 0 || fileSize > MAX_CACHE_MAPPING_FILE_SIZE) {
+    if (fileSize == 0 || static_cast<size_t>(fileSize) > MAX_CACHE_MAPPING_FILE_SIZE) {
         MEDIA_LOGI("Mapping file is empty or too large");
         file.close();
         return;
@@ -82,7 +102,7 @@ void DownloadedCacheManager::LoadMapping()
     file.close();
     
     isLoaded_ = true;
-    MEDIA_LOGI("Successfully loaded cache mapping file, size: %{public}zu", fileSize);
+    MEDIA_LOGI("Successfully loaded cache mapping file, size: %{public}zu", static_cast<size_t>(fileSize));
 }
 
 DownloadedCacheManager::~DownloadedCacheManager()
@@ -97,36 +117,70 @@ void DownloadedCacheManager::LoadIndex()
         return;
     }
     
-    std::ifstream file;
-    file.rdbuf()->pubsetbuf(reinterpret_cast<char*>(fileBuffer_.data()), fileBuffer_.size());
+    MemoryReader reader(fileBuffer_);
     
     CacheMappingHeader header;
-    if (!CacheMappingDeserializer::ReadHeader(file, header)) {
+    if (!reader.Read(&header.magic, sizeof(header.magic)) ||
+        !reader.Read(&header.version, sizeof(header.version)) ||
+        !reader.Read(&header.entryCount, sizeof(header.entryCount)) ||
+        !reader.Read(header.reserved, sizeof(header.reserved)) ||
+        !reader.Read(&header.headerChecksum, sizeof(header.headerChecksum))) {
         MEDIA_LOGE("Failed to read mapping header");
         return;
     }
     
-    if (!CacheMappingDeserializer::ValidateHeader(header)) {
-        MEDIA_LOGE("Invalid mapping header");
+    if (header.magic != CACHE_MAPPING_MAGIC) {
+        MEDIA_LOGE("Invalid magic number: 0x%{public}08X", header.magic);
+        return;
+    }
+    
+    if (header.version != CACHE_MAPPING_VERSION) {
+        MEDIA_LOGE("Unsupported version: %{public}u", header.version);
+        return;
+    }
+    
+    uint32_t calculatedChecksum = CacheMappingSerializer::CalculateHeaderChecksum(header);
+    if (header.headerChecksum != calculatedChecksum) {
+        MEDIA_LOGE("Header checksum mismatch");
         fs::remove_all(CACHE_DIR);
         index_.clear();
-        entryIndex_.clear();
         LoadMapping();
         return;
     }
     
     for (uint32_t i = 0; i < header.entryCount; ++i) {
         CacheMappingEntry entry;
-        if (!CacheMappingDeserializer::ReadEntry(file, entry)) {
-            MEDIA_LOGW("Failed to read entry %{public}u, skipping", i);
+        
+        if (!reader.Read(entry.header.urlHash, sizeof(entry.header.urlHash)) ||
+            !reader.Read(&entry.header.pathLength, sizeof(entry.header.pathLength)) ||
+            !reader.Read(&entry.header.fileSize, sizeof(entry.header.fileSize)) ||
+            !reader.Read(entry.header.reserved, sizeof(entry.header.reserved))) {
+            MEDIA_LOGW("Failed to read entry %{public}u header, skipping", i);
+            break;
+        }
+        
+        if (entry.header.pathLength > reader.GetSize() - reader.GetOffset()) {
+            MEDIA_LOGW("Invalid path length %{public}u at entry %{public}u", 
+                      entry.header.pathLength, i);
+            break;
+        }
+        
+        entry.filePath.resize(entry.header.pathLength);
+        if (!reader.Read(&entry.filePath[0], entry.header.pathLength)) {
+            MEDIA_LOGW("Failed to read entry %{public}u path, skipping", i);
+            break;
+        }
+        
+        if (!PathValidator::Validate(CACHE_DIR, entry.filePath)) {
+            MEDIA_LOGW("Skipping entry %{public}u with invalid path", i);
             continue;
         }
         
-        std::string key = SHA256Hasher::HashToString(
-            std::array<uint8_t, 32>(entry.header.urlHash, entry.header.urlHash + 32));
+        std::array<uint8_t, 32> hashArr;
+        std::memcpy(hashArr.data(), entry.header.urlHash, 32);
+        std::string key = SHA256Hasher::HashToString(hashArr);
         
         index_[key].push_back(entry);
-        entryIndex_[entry.filePath] = key;
     }
 }
 
@@ -157,11 +211,10 @@ std::string DownloadedCacheManager::GetMediaCache(const std::string& url)
     std::string relativePath = entry.filePath;
     
     CHECK_AND_RETURN_RET_LOG(!relativePath.empty() && 
-        relativePath.find("..") == std::string::npos &&
-        relativePath.find('/') != std::string::npos, "",
+        relativePath.find("..") == std::string::npos, "",
         "get media cache file failed: invalid path");
     
-    std::string path = CACHE_DIR + fs::path::preferred_separator + relativePath;
+    std::string path = CACHE_DIR + "/" + relativePath;
     
     return path;
 }

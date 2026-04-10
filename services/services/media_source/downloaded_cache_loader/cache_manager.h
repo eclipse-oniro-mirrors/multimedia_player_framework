@@ -19,9 +19,7 @@
 #include <string>
 #include <map>
 #include <vector>
-#include <thread>
 #include <mutex>
-#include <fstream>
 #include <atomic>
 #include <memory>
 #include <cstdint>
@@ -58,16 +56,14 @@ public:
     uint64_t ScanDirectorySize(const std::string& path);
     void LoadMapping();
 
-    static std::shared_ptr<DownloadedCacheManager> cacheManager_;
     static std::once_flag onceFlag_;
 
     std::vector<uint8_t> fileBuffer_;
     bool isLoaded_ = false;
 
-    std::unordered_map<std::string, std::string> entryIndex_;
     std::unordered_map<std::string, std::vector<CacheMappingEntry>> index_;
     std::mutex mutex_;
-    std::atomic<uint64_t> cacheSize_;
+    std::atomic<uint64_t> cacheSize_{0};
 };
 } // namespace DownloadedCache
 } // namespace Media

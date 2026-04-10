@@ -57,8 +57,8 @@ struct CacheMappingEntryHeader {
 static_assert(sizeof(CacheMappingEntryHeader) == 52, "CacheMappingEntryHeader size must be 52 bytes");
 
 struct CacheMappingEntry {
-    CacheMappingEntryHeader header;  // 48字节
-    std::string filePath;          // 文件路径（UTF-8编码，相对路径）
+    CacheMappingEntryHeader header;  // 52字节
+    std::string filePath;            // 文件路径（UTF-8编码，相对路径）
     
     size_t GetTotalSize() const {
         return sizeof(header) + filePath.size();
@@ -73,6 +73,7 @@ private:
     static constexpr size_t MAX_PATH_LENGTH = 1024;
     static bool ContainsIllegalCharacters(const std::string& path);
     static bool IsPathEscaped(const std::string& resolvedPath, const std::string& rootPath);
+    static std::string NormalizePath(const std::string& path);
 };
 
 class SHA256Hasher {

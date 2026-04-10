@@ -16,6 +16,7 @@
 #include "cache_mapping_format.h"
 #include "../../../../utils/include/media_log.h"
 #include <algorithm>
+#include <sstream>
 
 namespace OHOS {
 namespace Media {
@@ -33,19 +34,51 @@ bool PathValidator::Validate(const std::string& rootPath, const std::string& rel
         return false;
     }
 
-    std::error_code ec;
-    std::filesystem::path root(rootPath);
-    std::filesystem::path relative(relativePath);
-
-    std::filesystem::path resolved = root / relative;
-    resolved = std::filesystem::lexically_normal(resolved, ec);
-
-    if (ec) {
-        MEDIA_LOGE("Path resolve failed: %{public}s", ec.message().c_str());
+    std::string resolvedPath = NormalizePath(rootPath + "/" + relativePath);
+    
+    std::string normalizedRoot = NormalizePath(rootPath);
+    
+    if (resolvedPath.length() < normalizedRoot.length()) {
+        MEDIA_LOGE("Resolved path shorter than root path");
+        return false;
+    }
+    
+    if (resolvedPath.substr(0, normalizedRoot.length()) != normalizedRoot) {
+        MEDIA_LOGE("Path escapes root directory");
         return false;
     }
 
-    return !IsPathEscaped(resolved.u8string(), root.u8string());
+    return true;
+}
+
+std::string PathValidator::NormalizePath(const std::string& path)
+{
+    std::vector<std::string> components;
+    std::stringstream ss(path);
+    std::string component;
+    
+    while (std::getline(ss, component, '/')) {
+        if (component.empty() || component == ".") {
+            continue;
+        }
+        if (component == "..") {
+            if (!components.empty()) {
+                components.pop_back();
+            }
+        } else {
+            components.push_back(component);
+        }
+    }
+    
+    std::string result;
+    for (const auto& comp : components) {
+        if (!result.empty()) {
+            result += "/";
+        }
+        result += comp;
+    }
+    
+    return result;
 }
 
 bool PathValidator::IsPathEscaped(const std::string& resolvedPath, const std::string& rootPath)
