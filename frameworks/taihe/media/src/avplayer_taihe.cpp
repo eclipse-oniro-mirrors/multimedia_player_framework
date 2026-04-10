@@ -1838,6 +1838,7 @@ void AVPlayerImpl::SetPlaybackStrategySync(::ohos::multimedia::media::PlaybackSt
             AVPlayStrategy strategyRes;
             GetAVPlayStrategyFromStrategyTmp(strategyRes, strategyTmp);
             context->asyncTask = SetPlaybackStrategyTask(strategyRes);
+            mutedMediaType_ = strategyRes.mutedMediaType;
         }
     }
     context->CheckTaskResult();
