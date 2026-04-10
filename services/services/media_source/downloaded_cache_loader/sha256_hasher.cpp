@@ -14,6 +14,7 @@
  */
 
 #include "sha256_hasher.h"
+#include <iomanip>
 #include <string>
 #include <sstream>
 #include <algorithm>
