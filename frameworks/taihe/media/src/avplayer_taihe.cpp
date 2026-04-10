@@ -589,7 +589,7 @@ void AVPlayerImpl::SetSurfaceId(optional_view<string> surfaceId)
     } else if (switchSurface) {
         MEDIA_LOGI("TaiheSetSurfaceID switch surface in %{public}s state", curState.c_str());
         std::string oldSurface = surface_;
-        if (oldSurface.empty()) {
+        if (oldSurface.empty() && mutedMediaType_ != OHOS::Media::MediaType::MEDIA_TYPE_VID) {
             OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
                 "switch surface with no old surface");
             return;
@@ -1020,6 +1020,7 @@ void AVPlayerImpl::GetDefaultStrategy(AVPlayStrategyTmp &playStrategy)
     playStrategy.isSetBufferDurationForPlaying = false;
     playStrategy.thresholdForAutoQuickPlay = -1;
     playStrategy.isSetThresholdForAutoQuickPlay = false;
+    playStrategy.keepDecodingOnMute = false;
 }
 
 void AVPlayerImpl::GetPlayStrategy(AVPlayStrategyTmp &playStrategy, PlaybackStrategy strategy)
@@ -1058,6 +1059,9 @@ void AVPlayerImpl::GetPlayStrategy(AVPlayStrategyTmp &playStrategy, PlaybackStra
     if (strategy.thresholdForAutoQuickPlay.has_value()) {
         playStrategy.thresholdForAutoQuickPlay = strategy.thresholdForAutoQuickPlay.value();
         playStrategy.isSetThresholdForAutoQuickPlay = true;
+    }
+    if (strategy.keepDecodingOnMute.has_value()) {
+        playStrategy.keepDecodingOnMute = strategy.keepDecodingOnMute.value();
     }
 }
 
@@ -2006,6 +2010,7 @@ void AVPlayerImpl::GetAVPlayStrategyFromStrategyTmp(AVPlayStrategy &strategy, co
         strategyTmp.preferredBufferDurationForPlaying : -1;
     strategy.thresholdForAutoQuickPlay = strategyTmp.isSetThresholdForAutoQuickPlay ?
         strategyTmp.thresholdForAutoQuickPlay : -1;
+    strategy.keepDecodingOnMute = strategyTmp.keepDecodingOnMute;
 }
 
 std::shared_ptr<TaskHandler<TaskRet>> AVPlayerImpl::SetPlaybackStrategyTask(AVPlayStrategy playStrategy)
@@ -2509,6 +2514,33 @@ void AVPlayerImpl::SaveCallbackReference(const std::string &callbackName, std::s
     if (playerCb_ != nullptr) {
         playerCb_->SaveCallbackReference(callbackName, ref);
     }
+}
+
+void AVPlayerImpl::SetLoudnessGainSync(double loudnessGain)
+{
+    MediaTrace trace("AVPlayerImpl::SetLoudnessGain");
+    MEDIA_LOGI("TaiheSetLoudnessGain In");
+
+    if (loudnessGain < -90.0f || loudnessGain > 24.0f) {
+        OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, check loudnessGain");
+        return;
+    }
+
+    if (!CanSetLoudnessGain()) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed/stopped, unsupport audio effect mode operation");
+        return;
+    }
+
+    auto task = std::make_shared<TaskHandler<void>>([this, loudnessGain]() {
+        MEDIA_LOGI("SetVideoScaleType Task");
+        if (player_ != nullptr && player_->SetLoudnessGain(loudnessGain)) {
+            OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "unsupport stream type");
+        }
+    });
+    (void)taskQue_->EnqueueTask(task);
+    MEDIA_LOGI("TaiheSetLoudnessGain Out");
+    return;
 }
 
 void AVPlayerImpl::OnError(callback_view<void(uintptr_t)> callback)
@@ -3435,6 +3467,17 @@ bool AVPlayerImpl::IsControllable()
     } else {
         return false;
     }
+}
+
+bool AVPlayerImpl::CanSetLoudnessGain()
+{
+    auto state = GetCurrentState();
+    if (state == AVPlayerState::STATE_COMPLETED || state == AVPlayerState::STATE_PREPARED ||
+        state == AVPlayerState::STATE_PLAYING || state == AVPlayerState::STATE_PAUSED ||
+        state == AVPlayerState::STATE_STOPPED) {
+        return true;
+    }
+    return false;
 }
 
 bool AVPlayerImpl::CanGetPlaybackStatisticMetrics()
