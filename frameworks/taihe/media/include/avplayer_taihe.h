@@ -255,6 +255,7 @@ public:
     void AdvanceToMediaSourceSync(::taihe::string_view id);
     void OnPlaybackContentChanged(callback_view<void(string_view data)> callback);
     void OffPlaybackContentChanged(optional_view<callback<void(string_view data)>> callback);
+    void SetLoudnessGainSync(double loudnessGain);
 private:
     static bool IsSystemApp();
     void ResetUserParameters();
@@ -288,6 +289,7 @@ private:
     bool IsLivingMaxDelayTimeValid(const AVPlayStrategyTmp &strategyTmp);
     bool IsListMode();
     bool IsAllowAdvanceToMediaSource();
+    bool CanSetLoudnessGain();
 
     std::string GetCurrentState();
     std::shared_ptr<TaskHandler<TaskRet>> GetTrackDescriptionTask(const std::unique_ptr<AVPlayerContext> &Ctx);
@@ -354,6 +356,7 @@ private:
     bool seiMessageCallbackflag_ = false;
     int32_t listLoopMode_ = 1; // PLAYLIST_LOOP_MODE_ALL
     std::vector<std::pair<std::string, ohos::multimedia::media::MediaSource>> mediaSourceRefList_;
+    int32_t mutedMediaType_ = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
 };
 } // namespace ANI::Media
 #endif //AVPLAYER_TAIHE_H
