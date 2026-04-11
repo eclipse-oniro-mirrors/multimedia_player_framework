@@ -133,10 +133,12 @@ void DownloadedCacheManager::LoadIndex()
     
     uint32_t calculatedChecksum = CacheMappingSerializer::CalculateHeaderChecksum(header);
     if (header.headerChecksum != calculatedChecksum) {
-        MEDIA_LOGE("Header checksum mismatch");
-        fs::remove_all(cacheDir_);
+        MEDIA_LOGE("Header checksum mismatch, expected: %{public}08X, actual: %{public}08X",
+                   header.headerChecksum, calculatedChecksum);
+        MEDIA_LOGE("Cache mapping file is corrupted, please check or regenerate cache data");
+        isLoaded_ = false;
         index_.clear();
-        LoadMapping();
+        fileBuffer_.clear();
         return;
     }
     
