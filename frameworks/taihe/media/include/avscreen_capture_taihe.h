@@ -75,7 +75,7 @@ public:
     void ResumeRecordingSync();
     void SkipPrivacyModeSync(::taihe::array_view<int32_t> windowIDs);
     void SetMicEnabledSync(bool enable);
-    void SetPickerModeSync(int32_t pickerMode);
+    void SetPickerModeSync(::ohos::multimedia::media::PickerMode pickerMode);
     void ExcludePickerWindowsSync(::taihe::array_view<int32_t> excludedWindows);
     void ReleaseSync();
 
@@ -114,7 +114,8 @@ public:
     std::shared_ptr<TaskHandler<RetInfo>> GetSetMicrophoneEnableTask(
         const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const bool enable);
     std::shared_ptr<TaskHandler<RetInfo>> GetSetPickerModeTask(
-        const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const int32_t pickerMode);
+        const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
+        const ::ohos::multimedia::media::PickerMode pickerMode);
     std::shared_ptr<TaskHandler<RetInfo>> GetExcludePickerWindowsTask(
         const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const std::vector<int32_t> windowIDsVec);
     void OnStateChange(callback_view<void(ohos::multimedia::media::AVScreenCaptureStateCode)> callback);

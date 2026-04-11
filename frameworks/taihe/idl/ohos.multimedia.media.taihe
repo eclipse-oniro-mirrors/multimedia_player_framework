@@ -1062,7 +1062,7 @@ enum AVScreenCaptureFillMode:i32 {
     SCALE_TO_FILL = 1,
 }
 
-enum PickerMode:i32 {
+enum PickerMode: i32 {
     WINDOW_ONLY = 0,
     SCREEN_ONLY = 1,
     SCREEN_AND_WINDOW = 2,
@@ -1191,7 +1191,7 @@ interface AVScreenCaptureRecorder {
     SetMicEnabledSync(enable: bool): void;
 
     @gen_promise("setPickerMode")
-    SetPickerModeSync(pickerMode: i32): void;
+    SetPickerModeSync(pickerMode: PickerMode): void;
 
     @gen_promise("excludePickerWindows")
     ExcludePickerWindowsSync(excludedWindows: Array<i32>): void;
