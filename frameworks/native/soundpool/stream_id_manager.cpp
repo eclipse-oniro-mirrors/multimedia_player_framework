@@ -32,6 +32,7 @@ namespace {
     static const size_t MAX_NUMBER_OF_PLAYING = 32;
     static const int32_t MAX_NUMBER_OF_HELD_STREAMS = 6;
     static const int32_t MAX_TASK_NUM_MULTIPLE = 2;
+    static const int32_t SYNC_WAIT_FOR_MS_5 = 5;
 }
 
 namespace OHOS {
@@ -254,17 +255,27 @@ bool IStreamIDManager::InnerProcessOfOnPlayFinished(int32_t streamID)
     return true;
 }
 
+void IStreamIDManager::NotifyToAddStopTask()
+{
+    canAddStopTask.store(true);
+    cv.notify_one();
+}
+
 int32_t IStreamIDManager::StopAudioStream(int32_t streamID)
 {
-    std::shared_ptr<AudioStream> stream = GetStreamByStreamIDWithLock(streamID);
+    std::shared_ptr<AudioStream> stream = streamIdManager_->GetStreamByStreamIDWithLock(streamID);
     CHECK_AND_RETURN_RET_LOG(stream != nullptr, MSERR_INVALID_VAL,
         "IStreamIDManager::StopAudioStream, stream is nullptr");
     MEDIA_LOGI("StopAudioStream, streamID is %{public}d", stream->GetStreamID());
     ThreadPool::Task streamStopTask = [stream] { stream->Stop(); };
     CHECK_AND_RETURN_RET_LOG(streamPlayingThreadPool_ != nullptr, MSERR_INVALID_VAL,
-        "Failed to obtain streamStopThreadPool_");
+        "Failed to obtain streamPlayingThreadPool_");
     CHECK_AND_RETURN_RET_LOG(streamStopTask != nullptr, MSERR_INVALID_VAL,
         "StopAudioStream, streamStopTask is nullptr");
+    {
+        std::unique_lock lock(stopTaskMutex);
+        cv.wait_for(lock, std::chrono::milliseconds(SYNC_WAIT_FOR_MS_5), [this](){ return canAddStopTask.load(); });
+    }
     streamPlayingThreadPool_->AddTask(streamStopTask);
     MEDIA_LOGI("StopAudioStream end, streamID is %{public}d", stream->GetStreamID());
     return MSERR_OK;
@@ -285,6 +296,7 @@ int32_t IStreamIDManager::AddPlayTask(int32_t streamID)
 
     MEDIA_LOGI("AddPlayTask, QueueAndSortPlayingStreamID end");
     streamPlayingThreadPool_->AddTask(streamPlayTask);
+    canAddStopTask.store(false);
     MEDIA_LOGI("AddPlayTask end, streamID is %{public}d", streamID);
     return MSERR_OK;
 }

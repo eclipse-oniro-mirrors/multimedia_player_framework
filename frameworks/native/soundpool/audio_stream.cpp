@@ -279,11 +279,19 @@ int32_t AudioStream::DoPlayWithNoInterrupt()
     return MSERR_OK;
 }
 
+void AudioStream::NotifyToAddStopTask()
+{
+    if (auto manager = manager_.lock()) {
+        manager->NotifyToAddStopTask();
+    }
+}
+
 int32_t AudioStream::DoPlayWithSameSoundInterrupt()
 {
     MediaTrace trace("AudioStream::DoPlayWithSameSoundInterrupt");
     MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt start");
     std::lock_guard lock(streamLock_);
+    NotifyToAddStopTask();
     interruptMode_.store(InterruptMode::SAME_SOUND_INTERRUPT);
     if (streamState_.load() == StreamState::RELEASED) {
         MEDIA_LOGI("AudioStream::DoPlay end, invalid stream(%{public}d),  streamState_ is %{public}d", streamID_,
