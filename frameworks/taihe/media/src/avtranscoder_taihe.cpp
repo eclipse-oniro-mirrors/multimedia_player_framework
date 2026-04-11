@@ -565,6 +565,9 @@ RetInfo AVTranscoderImpl::Configure(std::shared_ptr<AVTransCoderConfigInner> con
     ret = transCoder_->SetVideoEncodingBitRate(config->videoBitrate);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoEncoderBitRate", "videoBitrate"));
 
+    ret = transCoder_->SetEnableBFrame(config->enableBFrame);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoEncoderEnableBFrame", "enableBFrame"));
+
     hasConfiged_ = true;
     return RetInfo(MSERR_EXT_API9_OK, "");
 }
@@ -674,6 +677,9 @@ int32_t AVTranscoderImpl::GetVideoConfig(AVTranscoderConfig const& config,
     }
     if (config.videoFrameHeight.has_value()) {
         configInner->videoFrameHeight = config.videoFrameHeight.value();
+    }
+    if (config.enableBFrame.has_value()) {
+        configInner->enableBFrame = config.enableBFrame.value();
     }
     return MSERR_OK;
 }

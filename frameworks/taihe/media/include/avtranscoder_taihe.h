@@ -108,6 +108,7 @@ struct AVTransCoderConfigInner {
     int32_t videoBitrate = AVTRANSCODER_DEFAULT_VIDEO_BIT_RATE;
     int32_t videoFrameWidth = AVTRANSCODER_DEFAULT_FRAME_WIDTH;
     int32_t videoFrameHeight = AVTRANSCODER_DEFAULT_FRAME_HEIGHT;
+    bool enableBFrame = false;
 };
 
 class AVTranscoderImpl {
