@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FILE_CACHE_MANAGER_H
-#define FILE_CACHE_MANAGER_H
+#ifndef DOWNLOADED_FILE_CACHE_MANAGER_H
+#define DOWNLOADED_FILE_CACHE_MANAGER_H
 
 #include <string>
 #include <cstdint>
@@ -39,4 +39,4 @@ private:
 } // namespace Media
 } // namespace OHOS
 
-#endif // FILE_CACHE_MANAGER_H
+#endif // DOWNLOADED_FILE_CACHE_MANAGER_H

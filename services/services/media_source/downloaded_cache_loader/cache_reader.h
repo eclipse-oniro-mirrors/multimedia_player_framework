@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef CACHE_READER_H
-#define CACHE_READER_H
+#ifndef DOWNLOADED_CACHE_READER_H
+#define DOWNLOADED_CACHE_READER_H
 
 #include <memory>
 #include <string>
@@ -73,4 +73,4 @@ private:
 } // namespace DownloadedCache
 } // namespace Media
 } // namespace OHOS
-#endif // CACHE_READER_H
+#endif // DOWNLOADED_CACHE_READER_H

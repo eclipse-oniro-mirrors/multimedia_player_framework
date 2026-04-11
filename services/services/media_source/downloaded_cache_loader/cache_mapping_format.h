@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef CACHE_MAPPING_FORMAT_H
-#define CACHE_MAPPING_FORMAT_H
+#ifndef DOWNLOADED_CACHE_MAPPING_FORMAT_H
+#define DOWNLOADED_CACHE_MAPPING_FORMAT_H
 
 #include <cstdint>
 #include <array>
@@ -83,4 +83,4 @@ public:
 } // namespace Media
 } // namespace OHOS
 
-#endif // CACHE_MAPPING_FORMAT_H
+#endif // DOWNLOADED_CACHE_MAPPING_FORMAT_H

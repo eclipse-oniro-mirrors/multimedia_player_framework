@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef PATH_VALIDATOR_H
-#define PATH_VALIDATOR_H
+#ifndef DOWNLOADED_CACHE_PATH_VALIDATOR_H
+#define DOWNLOADED_CACHE_PATH_VALIDATOR_H
 
 #include <string>
 
@@ -37,4 +37,4 @@ private:
 } // namespace Media
 } // namespace OHOS
 
-#endif // PATH_VALIDATOR_H
+#endif // DOWNLOADED_CACHE_PATH_VALIDATOR_H

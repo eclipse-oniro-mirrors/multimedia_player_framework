@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef SHA256_HASHER_H
-#define SHA256_HASHER_H
+#ifndef DOWNLOADED_CACHE_SHA256_HASHER_H
+#define DOWNLOADED_CACHE_SHA256_HASHER_H
 
 #include <array>
 #include <string>
@@ -36,4 +36,4 @@ public:
 } // namespace Media
 } // namespace OHOS
 
-#endif // SHA256_HASHER_H
+#endif // DOWNLOADED_CACHE_SHA256_HASHER_H

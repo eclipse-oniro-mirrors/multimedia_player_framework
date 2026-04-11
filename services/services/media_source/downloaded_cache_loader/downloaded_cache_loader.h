@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef MEDIA_LOADER_H
-#define MEDIA_LOADER_H
+#ifndef DOWNLOADED_CACHE_MEDIA_LOADER_H
+#define DOWNLOADED_CACHE_MEDIA_LOADER_H
 
 #include <string>
 #include <memory>
@@ -49,4 +49,4 @@ private:
 } // namespace Media
 } // namespace OHOS
 
-#endif // MEDIA_LOADER_H
+#endif // DOWNLOADED_CACHE_MEDIA_LOADER_H

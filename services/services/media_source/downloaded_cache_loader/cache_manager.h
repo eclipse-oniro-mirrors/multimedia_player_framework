@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef CACHE_MANAGER_H
-#define CACHE_MANAGER_H
+#ifndef DOWNLOADED_CACHE_MANAGER_H
+#define DOWNLOADED_CACHE_MANAGER_H
 
 #include <string>
 #include <map>
@@ -67,4 +67,4 @@ public:
 } // namespace DownloadedCache
 } // namespace Media
 } // namespace OHOS
-#endif
+#endif // DOWNLOADED_CACHE_MANAGER_H
