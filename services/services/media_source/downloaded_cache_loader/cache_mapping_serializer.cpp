@@ -18,6 +18,7 @@
 #include "common/log.h"
 #include "media_log.h"
 #include <fstream>
+#include <cstring>
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "DownloadedCacheMappingSerializer"};
@@ -29,7 +30,11 @@ namespace DownloadedCache {
 
 uint32_t CacheMappingSerializer::CalculateHeaderChecksum(const CacheMappingHeader& header)
 {
-    uint32_t data = header.magic ^ header.version ^ header.entryCount;
+    uint32_t data = 0;
+    for (int i = 0; i < 4; i++) {
+        data ^= header.magic[i] << (24 - i * 8);
+    }
+    data ^= header.version ^ header.entryCount;
 
     for (int i = 0; i < 8; i++) {
         data ^= header.reserved[i];
@@ -45,7 +50,7 @@ bool CacheMappingSerializer::WriteHeader(std::ofstream& file, const CacheMapping
         return false;
     }
 
-    file.write(reinterpret_cast<const char*>(&header.magic), sizeof(header.magic));
+    file.write(reinterpret_cast<const char*>(header.magic), sizeof(header.magic));
     file.write(reinterpret_cast<const char*>(&header.version), sizeof(header.version));
     file.write(reinterpret_cast<const char*>(&header.entryCount), sizeof(header.entryCount));
     file.write(reinterpret_cast<const char*>(header.reserved), sizeof(header.reserved));
@@ -100,7 +105,7 @@ bool CacheMappingDeserializer::ReadHeader(std::ifstream& file, CacheMappingHeade
         return false;
     }
 
-    file.read(reinterpret_cast<char*>(&header.magic), sizeof(header.magic));
+    file.read(reinterpret_cast<char*>(header.magic), sizeof(header.magic));
     file.read(reinterpret_cast<char*>(&header.version), sizeof(header.version));
     file.read(reinterpret_cast<char*>(&header.entryCount), sizeof(header.entryCount));
     file.read(reinterpret_cast<char*>(header.reserved), sizeof(header.reserved));
@@ -155,8 +160,9 @@ bool CacheMappingDeserializer::ReadEntry(std::ifstream& file, CacheMappingEntry&
 
 bool CacheMappingDeserializer::ValidateHeader(const CacheMappingHeader& header)
 {
-    if (header.magic != CACHE_MAPPING_MAGIC) {
-        MEDIA_LOGE("Invalid magic number: 0x%{public}08X", header.magic);
+    if (std::memcmp(header.magic, CACHE_MAPPING_MAGIC, 4) != 0) {
+        MEDIA_LOGE("Invalid magic number: %{public}c%c%c%c",
+                   header.magic[0], header.magic[1], header.magic[2], header.magic[3]);
         return false;
     }
 

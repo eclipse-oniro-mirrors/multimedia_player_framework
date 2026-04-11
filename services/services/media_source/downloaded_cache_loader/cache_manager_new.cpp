@@ -111,7 +111,7 @@ void DownloadedCacheManager::LoadIndex()
     MemoryReader reader(fileBuffer_);
     
     CacheMappingHeader header;
-    if (!reader.Read(&header.magic, sizeof(header.magic)) ||
+    if (!reader.Read(header.magic, sizeof(header.magic)) ||
         !reader.Read(&header.version, sizeof(header.version)) ||
         !reader.Read(&header.entryCount, sizeof(header.entryCount)) ||
         !reader.Read(header.reserved, sizeof(header.reserved)) ||
@@ -120,8 +120,9 @@ void DownloadedCacheManager::LoadIndex()
         return;
     }
     
-    if (header.magic != CACHE_MAPPING_MAGIC) {
-        MEDIA_LOGE("Invalid magic number: 0x%{public}08X", header.magic);
+    if (std::memcmp(header.magic, CACHE_MAPPING_MAGIC, 4) != 0) {
+        MEDIA_LOGE("Invalid magic number: %{public}c%c%c%c", 
+                   header.magic[0], header.magic[1], header.magic[2], header.magic[3]);
         return;
     }
     
