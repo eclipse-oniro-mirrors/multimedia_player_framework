@@ -31,14 +31,13 @@ namespace DownloadedCache {
 
 class DownloadedCacheLoader : public LoaderCallback, public std::enable_shared_from_this<DownloadedCacheLoader> {
 public:
-    DownloadedCacheLoader(std::string url, std::shared_ptr<DownloadedCacheManager> cacheManager);
+    explicit DownloadedCacheLoader(std::shared_ptr<DownloadedCacheManager> cacheManager);
     ~DownloadedCacheLoader();
     int64_t Open(std::shared_ptr<LoadingRequest>& request) override;
     void Read(int64_t uuid, int64_t requestedOffset, int64_t requestedLength) override;
     void Close(int64_t uuid) override;
 
 private:
-    std::string url_;
     std::shared_ptr<DownloadedCacheManager> cacheManager_;
     std::shared_ptr<Task> readTask_;
     std::map<int64_t, std::shared_ptr<CacheReader>> requestMap_;

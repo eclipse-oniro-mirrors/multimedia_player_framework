@@ -68,14 +68,14 @@ struct CacheMappingEntry {
 class CacheMappingSerializer {
 public:
     static bool WriteHeader(std::ofstream& file, const CacheMappingHeader& header);
-    static bool WriteEntry(std::ofstream& file, const CacheMappingEntry& entry);
+    static bool WriteEntry(std::ofstream& file, const CacheMappingEntry& entry, const std::string& cacheDir);
     static uint32_t CalculateHeaderChecksum(const CacheMappingHeader& header);
 };
 
 class CacheMappingDeserializer {
 public:
     static bool ReadHeader(std::ifstream& file, CacheMappingHeader& header);
-    static bool ReadEntry(std::ifstream& file, CacheMappingEntry& entry);
+    static bool ReadEntry(std::ifstream& file, CacheMappingEntry& entry, const std::string& cacheDir);
     static bool ValidateHeader(const CacheMappingHeader& header);
 };
 

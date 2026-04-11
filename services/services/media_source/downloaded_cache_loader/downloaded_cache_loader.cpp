@@ -24,9 +24,8 @@ namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "DownloadedCacheLoader"};
 }
 
-DownloadedCacheLoader::DownloadedCacheLoader(std::string url, 
-    std::shared_ptr<DownloadedCacheManager> cacheManager) 
-    : url_(url), cacheManager_(cacheManager)
+DownloadedCacheLoader::DownloadedCacheLoader(std::shared_ptr<DownloadedCacheManager> cacheManager) 
+    : cacheManager_(cacheManager)
 {
     readTask_ = std::make_shared<Task>("OS_Custom_Read", "", TaskType::SINGLETON, TaskPriority::HIGH, false);
     MEDIA_LOG_I("DownloadedCacheLoader constructor");
@@ -44,7 +43,7 @@ int64_t DownloadedCacheLoader::Open(std::shared_ptr<LoadingRequest>& request)
     std::lock_guard<std::mutex> lock(mutex_);
     ++uuid_;
     requestMap_[uuid_] = std::make_shared<CacheReader>(uuid_, request, readTask_, cacheManager_);
-    requestMap_[uuid_]->SetUrl(url_);
+    requestMap_[uuid_]->SetUrl(request->GetUrl());
     return requestMap_[uuid_]->Open(request);
 }
 

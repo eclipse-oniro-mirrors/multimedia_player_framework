@@ -28,13 +28,17 @@ namespace Media {
 namespace DownloadedCache {
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "DownloadedFileCacheManager"};
-const std::string CACHE_DIR = "/data/storage/el2/base/cache/avplayer_downloaded_cache";
 const char FILE_SEPARATOR = std::filesystem::path::preferred_separator;
 }
 
-std::shared_ptr<DownloadedFileCacheManager> DownloadedFileCacheManager::Create()
+DownloadedFileCacheManager::DownloadedFileCacheManager(const std::string& cacheDir)
+    : cacheDir_(cacheDir)
 {
-    return std::make_shared<DownloadedFileCacheManager>();
+}
+
+std::shared_ptr<DownloadedFileCacheManager> DownloadedFileCacheManager::Create(const std::string& cacheDir)
+{
+    return std::make_shared<DownloadedFileCacheManager>(cacheDir);
 }
 
 int32_t DownloadedFileCacheManager::Read(const std::string& path, void* buffer, int64_t offset, int64_t size)
@@ -98,9 +102,9 @@ bool DownloadedFileCacheManager::IsValidPath(const std::string& inputPath)
     }
 
     std::string relativePath;
-    if (inputPath.length() > CACHE_DIR.length() && 
-        inputPath.compare(0, CACHE_DIR.length(), CACHE_DIR) == 0) {
-        relativePath = inputPath.substr(CACHE_DIR.length());
+    if (inputPath.length() > cacheDir_.length() && 
+        inputPath.compare(0, cacheDir_.length(), cacheDir_) == 0) {
+        relativePath = inputPath.substr(cacheDir_.length());
         if (!relativePath.empty() && relativePath[0] == FILE_SEPARATOR) {
             relativePath = relativePath.substr(1);
         }
@@ -113,7 +117,7 @@ bool DownloadedFileCacheManager::IsValidPath(const std::string& inputPath)
         return true;
     }
 
-    return PathValidator::Validate(CACHE_DIR, relativePath);
+    return PathValidator::Validate(cacheDir_, relativePath);
 }
 } // namespace DownloadedCache
 } // namespace Media

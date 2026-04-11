@@ -27,8 +27,7 @@
 namespace fs = std::filesystem;
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "DownloadedCacheMemoryReader"};
-const std::string CACHE_DIR = "/data/storage/el2/base/cache/avplayer_downloaded_cache";
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "DownloadedCacheManager"};
 const std::string CACHE_MAPPING_FILE = "cache_mapping.txt";
 const size_t MAX_CACHE_MAPPING_FILE_SIZE = 10ULL * 1024ULL * 1024ULL;
 }
@@ -60,18 +59,20 @@ private:
     size_t offset_;
 };
 
-DownloadedCacheManager::DownloadedCacheManager()
+DownloadedCacheManager::DownloadedCacheManager(const std::string& cacheDir)
+    : cacheDir_(cacheDir)
 {
     LoadMapping();
     LoadIndex();
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create, cacheDir: %{public}s", 
+               FAKE_POINTER(this), cacheDir_.c_str());
 }
 
 void DownloadedCacheManager::LoadMapping()
 {
-    CreateDirectories(CACHE_DIR);
-    cacheSize_.store(ScanDirectorySize(CACHE_DIR), std::memory_order_relaxed);
-    std::string path = CACHE_DIR + "/" + CACHE_MAPPING_FILE;
+    CreateDirectories(cacheDir_);
+    cacheSize_.store(ScanDirectorySize(cacheDir_), std::memory_order_relaxed);
+    std::string path = cacheDir_ + "/" + CACHE_MAPPING_FILE;
     
     std::ifstream file(path, std::ios::binary | std::ios::ate);
     if (!file.is_open()) {
@@ -132,7 +133,7 @@ void DownloadedCacheManager::LoadIndex()
     uint32_t calculatedChecksum = CacheMappingSerializer::CalculateHeaderChecksum(header);
     if (header.headerChecksum != calculatedChecksum) {
         MEDIA_LOGE("Header checksum mismatch");
-        fs::remove_all(CACHE_DIR);
+        fs::remove_all(cacheDir_);
         index_.clear();
         LoadMapping();
         return;
@@ -161,7 +162,7 @@ void DownloadedCacheManager::LoadIndex()
             break;
         }
         
-        if (!PathValidator::Validate(CACHE_DIR, entry.filePath)) {
+        if (!PathValidator::Validate(cacheDir_, entry.filePath)) {
             MEDIA_LOGW("Skipping entry %{public}u with invalid path", i);
             continue;
         }
@@ -204,7 +205,7 @@ std::string DownloadedCacheManager::GetMediaCache(const std::string& url)
         relativePath.find("..") == std::string::npos, "",
         "get media cache file failed: invalid path");
     
-    std::string path = CACHE_DIR + "/" + relativePath;
+    std::string path = cacheDir_ + "/" + relativePath;
     
     return path;
 }

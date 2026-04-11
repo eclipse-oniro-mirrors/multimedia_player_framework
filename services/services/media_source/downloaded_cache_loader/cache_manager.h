@@ -41,9 +41,10 @@ struct CacheMetaData {
 
 class DownloadedCacheManager {
 public:
-    DownloadedCacheManager();
+    explicit DownloadedCacheManager(const std::string& cacheDir);
     ~DownloadedCacheManager();
 
+    std::string GetCacheDir() const { return cacheDir_; }
     std::string GetMediaCache(const std::string& url);
     void ReleaseMap();
     bool GetCacheMetaData(const std::string& url, CacheMetaData& metadata);
@@ -55,6 +56,7 @@ public:
     uint64_t ScanDirectorySize(const std::string& path);
     void LoadMapping();
 
+    std::string cacheDir_;
     std::vector<uint8_t> fileBuffer_;
     bool isLoaded_ = false;
 

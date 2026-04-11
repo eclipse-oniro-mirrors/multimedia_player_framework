@@ -21,7 +21,6 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "DownloadedCacheMappingSerializer"};
-constexpr const char* CACHE_DIR = "/data/storage/el2/base/cache/avplayer_downloaded_cache";
 }
 
 namespace OHOS {
@@ -62,14 +61,15 @@ bool CacheMappingSerializer::WriteHeader(std::ofstream& file, const CacheMapping
     return true;
 }
 
-bool CacheMappingSerializer::WriteEntry(std::ofstream& file, const CacheMappingEntry& entry)
+bool CacheMappingSerializer::WriteEntry(std::ofstream& file, const CacheMappingEntry& entry, 
+    const std::string& cacheDir)
 {
     if (!file.is_open()) {
         MEDIA_LOGE("File stream is not open");
         return false;
     }
     
-    if (!PathValidator::Validate(CACHE_DIR, entry.filePath)) {
+    if (!PathValidator::Validate(cacheDir, entry.filePath)) {
         MEDIA_LOGE("Invalid relative path: %{public}s", entry.filePath.c_str());
         return false;
     }
@@ -114,7 +114,8 @@ bool CacheMappingDeserializer::ReadHeader(std::ifstream& file, CacheMappingHeade
     return true;
 }
 
-bool CacheMappingDeserializer::ReadEntry(std::ifstream& file, CacheMappingEntry& entry)
+bool CacheMappingDeserializer::ReadEntry(std::ifstream& file, CacheMappingEntry& entry,
+    const std::string& cacheDir)
 {
     if (!file.is_open()) {
         MEDIA_LOGE("File stream is not open");
@@ -143,7 +144,7 @@ bool CacheMappingDeserializer::ReadEntry(std::ifstream& file, CacheMappingEntry&
         return false;
     }
 
-    if (!PathValidator::Validate(CACHE_DIR, entry.filePath)) {
+    if (!PathValidator::Validate(cacheDir, entry.filePath)) {
         MEDIA_LOGW("Skipping entry with invalid path: %{public}s",
                   entry.filePath.c_str());
         return false;

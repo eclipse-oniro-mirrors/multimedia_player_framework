@@ -25,13 +25,16 @@ namespace Media {
 namespace DownloadedCache {
 class DownloadedFileCacheManager {
 public:
-    static std::shared_ptr<DownloadedFileCacheManager> Create();
+    static std::shared_ptr<DownloadedFileCacheManager> Create(const std::string& cacheDir);
 
     int32_t Read(const std::string& path, void* buffer, int64_t offset, int64_t size);
     int64_t GetSize(const std::string& path);
 
 private:
+    explicit DownloadedFileCacheManager(const std::string& cacheDir);
     bool IsValidPath(const std::string& inputPath);
+    
+    std::string cacheDir_;
 };
 } // namespace DownloadedCache
 } // namespace Media
