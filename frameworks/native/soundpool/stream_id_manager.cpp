@@ -263,7 +263,7 @@ void IStreamIDManager::NotifyToAddStopTask()
 
 int32_t IStreamIDManager::StopAudioStream(int32_t streamID)
 {
-    std::shared_ptr<AudioStream> stream = streamIdManager_->GetStreamByStreamIDWithLock(streamID);
+    std::shared_ptr<AudioStream> stream = GetStreamByStreamIDWithLock(streamID);
     CHECK_AND_RETURN_RET_LOG(stream != nullptr, MSERR_INVALID_VAL,
         "IStreamIDManager::StopAudioStream, stream is nullptr");
     MEDIA_LOGI("StopAudioStream, streamID is %{public}d", stream->GetStreamID());
