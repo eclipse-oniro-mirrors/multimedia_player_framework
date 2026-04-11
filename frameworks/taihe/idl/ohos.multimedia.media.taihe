@@ -1184,6 +1184,12 @@ interface AVScreenCaptureRecorder {
     @gen_promise("setMicEnabled")
     SetMicEnabledSync(enable: bool): void;
 
+    @gen_promise("setPickerMode")
+    SetPickerModeSync(pickerMode: i32): void;
+
+    @gen_promise("excludePickerWindows")
+    ExcludePickerWindowsSync(excludedWindows: Array<i32>): void;
+
     @gen_promise("release")
     ReleaseSync(): void;
 

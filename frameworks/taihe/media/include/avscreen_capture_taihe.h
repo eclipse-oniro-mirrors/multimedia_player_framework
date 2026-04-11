@@ -37,6 +37,8 @@ namespace AVScreenCapturegOpt {
     const std::string RESUME_RECORDING = "ResumeRecording";
     const std::string SKIP_PRIVACY_MODE = "SkipPrivacyMode";
     const std::string SET_MIC_ENABLE = "SetMicrophoneEnable";
+    const std::string SET_PICKER_MODE = "SetPickerMode";
+    const std::string EXCLUDE_PICKER_WINDOWS = "ExcludePickerWindows";
     const std::string RELEASE = "Release";
 }
 constexpr int32_t AVSCREENCAPTURE_DEFAULT_AUDIO_BIT_RATE = 96000;
@@ -73,6 +75,8 @@ public:
     void ResumeRecordingSync();
     void SkipPrivacyModeSync(::taihe::array_view<int32_t> windowIDs);
     void SetMicEnabledSync(bool enable);
+    void SetPickerModeSync(int32_t pickerMode);
+    void ExcludePickerWindowsSync(::taihe::array_view<int32_t> excludedWindows);
     void ReleaseSync();
 
     RetInfo StartRecording();
@@ -109,6 +113,10 @@ public:
         const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const std::vector<uint64_t> windowIDsVec);
     std::shared_ptr<TaskHandler<RetInfo>> GetSetMicrophoneEnableTask(
         const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const bool enable);
+    std::shared_ptr<TaskHandler<RetInfo>> GetSetPickerModeTask(
+        const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const int32_t pickerMode);
+    std::shared_ptr<TaskHandler<RetInfo>> GetExcludePickerWindowsTask(
+        const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const std::vector<int32_t> windowIDsVec);
     void OnStateChange(callback_view<void(ohos::multimedia::media::AVScreenCaptureStateCode)> callback);
     void OffStateChange(optional_view<callback<void(ohos::multimedia::media::AVScreenCaptureStateCode)>> callback);
 
