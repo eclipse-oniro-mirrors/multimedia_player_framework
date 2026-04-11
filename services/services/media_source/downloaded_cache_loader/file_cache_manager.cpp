@@ -31,14 +31,14 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYE
 const char FILE_SEPARATOR = std::filesystem::path::preferred_separator;
 }
 
-DownloadedFileCacheManager::DownloadedFileCacheManager(const std::string& cacheDir)
-    : cacheDir_(cacheDir)
+DownloadedFileCacheManager::DownloadedFileCacheManager(DownloadedFileCacheManager::CreateHelper helper)
+    : cacheDir_(helper.cacheDir_)
 {
 }
 
 std::shared_ptr<DownloadedFileCacheManager> DownloadedFileCacheManager::Create(const std::string& cacheDir)
 {
-    return std::make_shared<DownloadedFileCacheManager>(cacheDir);
+    return std::make_shared<DownloadedFileCacheManager>(DownloadedFileCacheManager::CreateHelper(cacheDir));
 }
 
 int32_t DownloadedFileCacheManager::Read(const std::string& path, void* buffer, int64_t offset, int64_t size)

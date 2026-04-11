@@ -31,7 +31,12 @@ public:
     int64_t GetSize(const std::string& path);
 
 private:
-    explicit DownloadedFileCacheManager(const std::string& cacheDir);
+    struct CreateHelper {
+        explicit CreateHelper(const std::string& cacheDir) : cacheDir_(cacheDir) {}
+        std::string cacheDir_;
+    };
+    
+    explicit DownloadedFileCacheManager(CreateHelper helper);
     bool IsValidPath(const std::string& inputPath);
     
     std::string cacheDir_;
