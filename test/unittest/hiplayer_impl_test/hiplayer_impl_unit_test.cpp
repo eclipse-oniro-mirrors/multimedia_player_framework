@@ -1664,19 +1664,19 @@ HWTEST_F(HiplayerImplUnitTest, SetTrackSelectionFilter_001, TestSize.Level0)
 * @tc.name    : Test HandleTimedMetaData API - meta is nullptr
 * @tc.number  : HandleTimedMetaData_001
 * @tc.desc    : Test HandleTimedMetaData when meta is nullptr
-* @tc.require : 
+* @tc.require :
 */
 HWTEST_F(HiplayerImplUnitTest, HandleTimedMetaData_001, TestSize.Level0)
 {
     std::shared_ptr<MediaAVCodec::AVTimedMetaData> meta = nullptr;
     hiplayer_->HandleTimedMetaData(meta);
 }
- 
+
 /**
 * @tc.name    : Test HandleTimedMetaData API - callbackLooper not started
 * @tc.number  : HandleTimedMetaData_002
 * @tc.desc    : Test HandleTimedMetaData when callbackLooper is not started
-* @tc.require : 
+* @tc.require :
 */
 HWTEST_F(HiplayerImplUnitTest, HandleTimedMetaData_002, TestSize.Level0)
 {
@@ -1688,12 +1688,12 @@ HWTEST_F(HiplayerImplUnitTest, HandleTimedMetaData_002, TestSize.Level0)
     meta->duration = 5000;
     hiplayer_->HandleTimedMetaData(meta);
 }
- 
+
 /**
 * @tc.name    : Test HandleTimedMetaData API - normal case with empty contents
 * @tc.number  : HandleTimedMetaData_003
 * @tc.desc    : Test HandleTimedMetaData with normal meta but empty contents
-* @tc.require : 
+* @tc.require :
 */
 HWTEST_F(HiplayerImplUnitTest, HandleTimedMetaData_003, TestSize.Level0)
 {
@@ -1707,12 +1707,12 @@ HWTEST_F(HiplayerImplUnitTest, HandleTimedMetaData_003, TestSize.Level0)
     hiplayer_->HandleTimedMetaData(meta);
     hiplayer_->callbackLooper_.Stop();
 }
- 
+
 /**
 * @tc.name    : Test HandleTimedMetaData API - normal case with contents
 * @tc.number  : HandleTimedMetaData_004
 * @tc.desc    : Test HandleTimedMetaData with normal meta and non-empty contents
-* @tc.require : 
+* @tc.require :
 */
 HWTEST_F(HiplayerImplUnitTest, HandleTimedMetaData_004, TestSize.Level0)
 {
@@ -1729,12 +1729,12 @@ HWTEST_F(HiplayerImplUnitTest, HandleTimedMetaData_004, TestSize.Level0)
     hiplayer_->HandleTimedMetaData(meta);
     hiplayer_->callbackLooper_.Stop();
 }
- 
+
 /**
 * @tc.name    : Test HandleTimedMetaData API - with multiple contents
 * @tc.number  : HandleTimedMetaData_005
 * @tc.desc    : Test HandleTimedMetaData with multiple key-value pairs in contents
-* @tc.require : 
+* @tc.require :
 */
 HWTEST_F(HiplayerImplUnitTest, HandleTimedMetaData_005, TestSize.Level0)
 {
@@ -1751,12 +1751,12 @@ HWTEST_F(HiplayerImplUnitTest, HandleTimedMetaData_005, TestSize.Level0)
     hiplayer_->HandleTimedMetaData(meta);
     hiplayer_->callbackLooper_.Stop();
 }
- 
+
 /**
 * @tc.name    : Test HandleTimedMetaData API - zero start and duration
 * @tc.number  : HandleTimedMetaData_006
 * @tc.desc    : Test HandleTimedMetaData with zero start and duration values
-* @tc.require : 
+* @tc.require :
 */
 HWTEST_F(HiplayerImplUnitTest, HandleTimedMetaData_006, TestSize.Level0)
 {
@@ -1770,12 +1770,12 @@ HWTEST_F(HiplayerImplUnitTest, HandleTimedMetaData_006, TestSize.Level0)
     hiplayer_->HandleTimedMetaData(meta);
     hiplayer_->callbackLooper_.Stop();
 }
- 
+
 /**
 * @tc.name    : Test HandleTimedMetaData API - large duration
 * @tc.number  : HandleTimedMetaData_007
 * @tc.desc    : Test HandleTimedMetaData with large duration value
-* @tc.require : 
+* @tc.require :
 */
 HWTEST_F(HiplayerImplUnitTest, HandleTimedMetaData_007, TestSize.Level0)
 {
