@@ -68,6 +68,7 @@
       ],
       "deps": {
         "components": [
+          "openssl",
           "av_session",
           "ets_runtime",
           "safwk",

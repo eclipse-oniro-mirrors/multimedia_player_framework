@@ -239,6 +239,7 @@ ohos_shared_library("media_client") {
     "qos_manager:qos",
     "samgr:samgr_proxy",
     "hdf_core:libhdi",
+    "openssl:libcrypto_shared",
   ]
 
   if (player_framework_support_libcurl) {
