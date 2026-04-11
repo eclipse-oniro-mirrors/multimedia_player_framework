@@ -37,7 +37,7 @@ CacheReader::CacheReader(int64_t uuid, const std::shared_ptr<LoadingRequest>& re
     std::shared_ptr<DownloadedCacheManager> cacheManager)
     : uuid_(uuid), request_(request), readTask_(readTask),
       cacheManager_(cacheManager),
-      fileCacheManager_(DownloadedFileCacheManager::Create(cacheManager->GetCacheDir())),
+      fileCacheManager_(std::make_shared<DownloadedFileCacheManager>(cacheManager->GetCacheDir())),
       isClosed_(false), isHeaderResponded_(false) {
 }
 
