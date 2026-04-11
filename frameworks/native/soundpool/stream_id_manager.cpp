@@ -274,7 +274,7 @@ int32_t IStreamIDManager::StopAudioStream(int32_t streamID)
         "StopAudioStream, streamStopTask is nullptr");
     {
         std::unique_lock lock(stopTaskMutex);
-        cv.wait_for(lock, std::chrono::milliseconds(SYNC_WAIT_FOR_MS_5), [this](){ return canAddStopTask.load(); });
+        cv.wait_for(lock, std::chrono::milliseconds(SYNC_WAIT_FOR_MS_5), [this]() { return canAddStopTask.load(); });
     }
     streamPlayingThreadPool_->AddTask(streamStopTask);
     MEDIA_LOGI("StopAudioStream end, streamID is %{public}d", stream->GetStreamID());
