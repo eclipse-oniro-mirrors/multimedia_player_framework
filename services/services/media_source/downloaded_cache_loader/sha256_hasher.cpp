@@ -14,8 +14,8 @@
  */
 
 #include "sha256_hasher.h"
+#include <openssl/sha.h>
 #include <iomanip>
-#include <string>
 #include <sstream>
 #include <algorithm>
 
@@ -27,8 +27,9 @@ std::array<uint8_t, 32> SHA256Hasher::GenerateHash(const std::string& url)
 {
     std::array<uint8_t, 32> hash = {};
 
-    std::string hashStr = "SHA256_SIMULATED_FOR_" + url;
-    std::memcpy(hash.data(), hashStr.data(), std::min(hashStr.size(), size_t(32)));
+    SHA256(reinterpret_cast<const unsigned char*>(url.c_str()),
+           url.size(),
+           reinterpret_cast<unsigned char*>(hash.data()));
 
     return hash;
 }

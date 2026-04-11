@@ -30,13 +30,13 @@ namespace OHOS {
 namespace Media {
 namespace DownloadedCache {
 
-constexpr uint32_t CACHE_MAPPING_MAGIC = 0x4D4D4D4;  // 'DCMH'
+constexpr uint32_t CACHE_MAPPING_MAGIC = 0x44434D48;  // 'DCMH' (D=0x44, C=0x43, M=0x4D, H=0x48)
 constexpr uint32_t CACHE_MAPPING_VERSION = 1;
 
 #pragma pack(push, 1)
 struct CacheMappingHeader {
-    uint32_t magic;          // 魔数：0x4D4D4D4 ('DCMH')
-    uint32_t version;         // 版本号：1
+    uint32_t magic;          // 魔数：0x44434D48 ('DCMH')
+    uint32_t version;        // 版本号：1
     uint32_t entryCount;      // 条目数量
     uint8_t  reserved[8];     // 保留字段：8字节（放在条目数量之后、校验和之前）
     uint32_t headerChecksum;   // 头部校验和（CRC32，包含保留字段）
