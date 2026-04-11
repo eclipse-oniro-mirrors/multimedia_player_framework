@@ -1062,6 +1062,12 @@ enum AVScreenCaptureFillMode:i32 {
     SCALE_TO_FILL = 1,
 }
 
+enum PickerMode:i32 {
+    WINDOW_ONLY = 0,
+    SCREEN_ONLY = 1,
+    SCREEN_AND_WINDOW = 2,
+}
+
 struct AVScreenCaptureStrategy {
     enableDeviceLevelCapture: Optional<bool>;
     keepCaptureDuringCall: Optional<bool>;

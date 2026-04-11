@@ -638,14 +638,14 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureRecorderImpl::GetSetPickerM
         const std::string &option = AVScreenCapturegOpt::SET_PICKER_MODE;
         MEDIA_LOGI("%{public}s Start", option.c_str());
 
-        CHECK_AND_RETURN_RET(pickerMode >= static_cast<int32_t>(PickerMode::MIN_VAL) &&
-            pickerMode <= static_cast<int32_t>(PickerMode::MAX_VAL),
+        CHECK_AND_RETURN_RET(pickerMode >= static_cast<int32_t>(OHOS::Media::PickerMode::MIN_VAL) &&
+            pickerMode <= static_cast<int32_t>(OHOS::Media::PickerMode::MAX_VAL),
             GetReturnInfo(MSERR_INVALID_VAL, option, "pickerMode"));
 
         CHECK_AND_RETURN_RET(taihe != nullptr && taihe->screenCapture_ != nullptr,
             GetReturnInfo(MSERR_INVALID_OPERATION, option, ""));
 
-        int32_t ret = taihe->screenCapture_->SetPickerMode(static_cast<PickerMode>(pickerMode));
+        int32_t ret = taihe->screenCapture_->SetPickerMode(static_cast<OHOS::Media::PickerMode>(pickerMode));
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(MSERR_UNKNOWN, option, ""));
 
         MEDIA_LOGI("%{public}s End", option.c_str());
