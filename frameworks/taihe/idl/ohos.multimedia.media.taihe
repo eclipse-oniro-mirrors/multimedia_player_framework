@@ -127,6 +127,7 @@ struct AVMetadata {
     location: Optional<Location>;
     customInfo: Optional<@record Map<String, String>>;
     tracks: Optional<Array<@record Map<String, MediaDescriptionValue>>>;
+    encoder: Optional<String>;
 }
 
 enum AVImageQueryOptions: i32 {
