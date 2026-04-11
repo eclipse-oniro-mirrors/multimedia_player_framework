@@ -1659,5 +1659,135 @@ HWTEST_F(HiplayerImplUnitTest, SetTrackSelectionFilter_001, TestSize.Level0)
     int32_t ret = hiplayer_->SetTrackSelectionFilter(trackFilter);
     EXPECT_EQ(ret, MSERR_OK);
 }
+
+/**
+* @tc.name    : Test HandleTimedMetaData API - meta is nullptr
+* @tc.number  : HandleTimedMetaData_001
+* @tc.desc    : Test HandleTimedMetaData when meta is nullptr
+* @tc.require : 
+*/
+HWTEST_F(HiplayerImplUnitTest, HandleTimedMetaData_001, TestSize.Level0)
+{
+    std::shared_ptr<MediaAVCodec::AVTimedMetaData> meta = nullptr;
+    hiplayer_->HandleTimedMetaData(meta);
+}
+ 
+/**
+* @tc.name    : Test HandleTimedMetaData API - callbackLooper not started
+* @tc.number  : HandleTimedMetaData_002
+* @tc.desc    : Test HandleTimedMetaData when callbackLooper is not started
+* @tc.require : 
+*/
+HWTEST_F(HiplayerImplUnitTest, HandleTimedMetaData_002, TestSize.Level0)
+{
+    hiplayer_->callbackLooper_.Stop();
+    auto meta = std::make_shared<MediaAVCodec::AVTimedMetaData>();
+    meta->id = "test_id";
+    meta->classify = "test_classify";
+    meta->start = 1000;
+    meta->duration = 5000;
+    hiplayer_->HandleTimedMetaData(meta);
+}
+ 
+/**
+* @tc.name    : Test HandleTimedMetaData API - normal case with empty contents
+* @tc.number  : HandleTimedMetaData_003
+* @tc.desc    : Test HandleTimedMetaData with normal meta but empty contents
+* @tc.require : 
+*/
+HWTEST_F(HiplayerImplUnitTest, HandleTimedMetaData_003, TestSize.Level0)
+{
+    testObs_ = std::make_shared<MockIPlayerEngineObs>();
+    hiplayer_->callbackLooper_.StartWithPlayerEngineObs(testObs_);
+    auto meta = std::make_shared<MediaAVCodec::AVTimedMetaData>();
+    meta->id = "event_id_001";
+    meta->classify = "urn:scte:scte35:2013";
+    meta->start = 1000;
+    meta->duration = 5000;
+    hiplayer_->HandleTimedMetaData(meta);
+    hiplayer_->callbackLooper_.Stop();
+}
+ 
+/**
+* @tc.name    : Test HandleTimedMetaData API - normal case with contents
+* @tc.number  : HandleTimedMetaData_004
+* @tc.desc    : Test HandleTimedMetaData with normal meta and non-empty contents
+* @tc.require : 
+*/
+HWTEST_F(HiplayerImplUnitTest, HandleTimedMetaData_004, TestSize.Level0)
+{
+    testObs_ = std::make_shared<MockIPlayerEngineObs>();
+    hiplayer_->callbackLooper_.StartWithPlayerEngineObs(testObs_);
+    auto meta = std::make_shared<MediaAVCodec::AVTimedMetaData>();
+    meta->id = "event_id_002";
+    meta->classify = "urn:test:event";
+    meta->start = 2000;
+    meta->duration = 10000;
+    meta->contents["SpliceInfoSection"] = "xmln=urn:scte";
+    meta->contents["SpliceInsert"] = "outOfNetworkIndicator=true,spliceImmediateFlag=false";
+    meta->contents["BreakDuration"] = "duration=5000,autoReturn=true";
+    hiplayer_->HandleTimedMetaData(meta);
+    hiplayer_->callbackLooper_.Stop();
+}
+ 
+/**
+* @tc.name    : Test HandleTimedMetaData API - with multiple contents
+* @tc.number  : HandleTimedMetaData_005
+* @tc.desc    : Test HandleTimedMetaData with multiple key-value pairs in contents
+* @tc.require : 
+*/
+HWTEST_F(HiplayerImplUnitTest, HandleTimedMetaData_005, TestSize.Level0)
+{
+    testObs_ = std::make_shared<MockIPlayerEngineObs>();
+    hiplayer_->callbackLooper_.StartWithPlayerEngineObs(testObs_);
+    auto meta = std::make_shared<MediaAVCodec::AVTimedMetaData>();
+    meta->id = "event_id_003";
+    meta->classify = "custom_classify";
+    meta->start = 0;
+    meta->duration = 0;
+    meta->contents["key1"] = "value1";
+    meta->contents["key2"] = "value2";
+    meta->contents["key3"] = "value3";
+    hiplayer_->HandleTimedMetaData(meta);
+    hiplayer_->callbackLooper_.Stop();
+}
+ 
+/**
+* @tc.name    : Test HandleTimedMetaData API - zero start and duration
+* @tc.number  : HandleTimedMetaData_006
+* @tc.desc    : Test HandleTimedMetaData with zero start and duration values
+* @tc.require : 
+*/
+HWTEST_F(HiplayerImplUnitTest, HandleTimedMetaData_006, TestSize.Level0)
+{
+    testObs_ = std::make_shared<MockIPlayerEngineObs>();
+    hiplayer_->callbackLooper_.StartWithPlayerEngineObs(testObs_);
+    auto meta = std::make_shared<MediaAVCodec::AVTimedMetaData>();
+    meta->id = "event_zero";
+    meta->classify = "zero_event";
+    meta->start = 0;
+    meta->duration = 0;
+    hiplayer_->HandleTimedMetaData(meta);
+    hiplayer_->callbackLooper_.Stop();
+}
+ 
+/**
+* @tc.name    : Test HandleTimedMetaData API - large duration
+* @tc.number  : HandleTimedMetaData_007
+* @tc.desc    : Test HandleTimedMetaData with large duration value
+* @tc.require : 
+*/
+HWTEST_F(HiplayerImplUnitTest, HandleTimedMetaData_007, TestSize.Level0)
+{
+    testObs_ = std::make_shared<MockIPlayerEngineObs>();
+    hiplayer_->callbackLooper_.StartWithPlayerEngineObs(testObs_);
+    auto meta = std::make_shared<MediaAVCodec::AVTimedMetaData>();
+    meta->id = "event_large";
+    meta->classify = "large_event";
+    meta->start = 100000;
+    meta->duration = 3600000;
+    hiplayer_->HandleTimedMetaData(meta);
+    hiplayer_->callbackLooper_.Stop();
+}
 } // namespace Media
 } // namespace OHOS
