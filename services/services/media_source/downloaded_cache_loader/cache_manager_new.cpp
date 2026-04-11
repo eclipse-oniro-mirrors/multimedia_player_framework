@@ -60,18 +60,6 @@ private:
     size_t offset_;
 };
 
-std::once_flag DownloadedCacheManager::onceFlag_;
-std::shared_ptr<DownloadedCacheManager> DownloadedCacheManager::cacheManager_;
-
-std::shared_ptr<DownloadedCacheManager> DownloadedCacheManager::Create()
-{
-    std::call_once(onceFlag_, [] {
-        cacheManager_ = std::make_shared<DownloadedCacheManager>();
-        MEDIA_LOGI("createManager success");
-    });
-    return cacheManager_;
-}
-
 DownloadedCacheManager::DownloadedCacheManager()
 {
     LoadMapping();

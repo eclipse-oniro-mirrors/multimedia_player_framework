@@ -24,21 +24,17 @@ namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "DownloadedCacheLoader"};
 }
 
-std::atomic<uint32_t> DownloadedCacheLoader::instanceCount_ = 0;
-
-DownloadedCacheLoader::DownloadedCacheLoader(std::string url) : url_(url)
+DownloadedCacheLoader::DownloadedCacheLoader(std::string url, 
+    std::shared_ptr<DownloadedCacheManager> cacheManager) 
+    : url_(url), cacheManager_(cacheManager)
 {
     readTask_ = std::make_shared<Task>("OS_Custom_Read", "", TaskType::SINGLETON, TaskPriority::HIGH, false);
-    instanceCount_.fetch_add(1);
-    MEDIA_LOG_I("DownloadedCacheLoader construtor");
+    MEDIA_LOG_I("DownloadedCacheLoader constructor");
 }
 
 DownloadedCacheLoader::~DownloadedCacheLoader()
 {
     MEDIA_LOG_I("~DownloadedCacheLoader");
-    instanceCount_.fetch_sub(1);
-    FALSE_RETURN_MSG(instanceCount_.load() == 0, "Instance count is not zero.");
-    DownloadedCacheManager::Create()->ReleaseMap();
 }
 
 int64_t DownloadedCacheLoader::Open(std::shared_ptr<LoadingRequest>& request)
@@ -47,7 +43,7 @@ int64_t DownloadedCacheLoader::Open(std::shared_ptr<LoadingRequest>& request)
     FALSE_RETURN_V_MSG_E(request != nullptr, -1, "request is nullptr");
     std::lock_guard<std::mutex> lock(mutex_);
     ++uuid_;
-    requestMap_[uuid_] = std::make_shared<CacheReader>(uuid_, request, readTask_);
+    requestMap_[uuid_] = std::make_shared<CacheReader>(uuid_, request, readTask_, cacheManager_);
     requestMap_[uuid_]->SetUrl(url_);
     return requestMap_[uuid_]->Open(request);
 }

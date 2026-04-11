@@ -33,9 +33,10 @@ constexpr int32_t CACHE_NOT_FOUND_ERROR = 404;
 }
 
 CacheReader::CacheReader(int64_t uuid, const std::shared_ptr<LoadingRequest>& request,
-    const std::shared_ptr<Task>& readTask)
+    const std::shared_ptr<Task>& readTask,
+    std::shared_ptr<DownloadedCacheManager> cacheManager)
     : uuid_(uuid), request_(request), readTask_(readTask),
-      cacheManager_(DownloadedCacheManager::Create()),
+      cacheManager_(cacheManager),
       fileCacheManager_(DownloadedFileCacheManager::Create()),
       isClosed_(false), isHeaderResponded_(false) {
 }

@@ -41,7 +41,6 @@ struct CacheMetaData {
 
 class DownloadedCacheManager {
 public:
-    static std::shared_ptr<DownloadedCacheManager> Create();
     DownloadedCacheManager();
     ~DownloadedCacheManager();
 
@@ -55,9 +54,6 @@ public:
     bool CreateDirectories(const std::string& path);
     uint64_t ScanDirectorySize(const std::string& path);
     void LoadMapping();
-
-    static std::shared_ptr<DownloadedCacheManager> cacheManager_;
-    static std::once_flag onceFlag_;
 
     std::vector<uint8_t> fileBuffer_;
     bool isLoaded_ = false;

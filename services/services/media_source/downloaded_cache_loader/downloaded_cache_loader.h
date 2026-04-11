@@ -20,6 +20,7 @@
 #include <memory>
 #include <map>
 #include "cache_reader.h"
+#include "cache_manager.h"
 #include "loading_request.h"
 #include "osal/task/task.h"
 #include "osal/task/mutex.h"
@@ -30,7 +31,7 @@ namespace DownloadedCache {
 
 class DownloadedCacheLoader : public LoaderCallback, public std::enable_shared_from_this<DownloadedCacheLoader> {
 public:
-    explicit DownloadedCacheLoader(std::string url);
+    DownloadedCacheLoader(std::string url, std::shared_ptr<DownloadedCacheManager> cacheManager);
     ~DownloadedCacheLoader();
     int64_t Open(std::shared_ptr<LoadingRequest>& request) override;
     void Read(int64_t uuid, int64_t requestedOffset, int64_t requestedLength) override;
@@ -38,11 +39,11 @@ public:
 
 private:
     std::string url_;
+    std::shared_ptr<DownloadedCacheManager> cacheManager_;
     std::shared_ptr<Task> readTask_;
     std::map<int64_t, std::shared_ptr<CacheReader>> requestMap_;
     int64_t uuid_ = 0;
     std::mutex mutex_;
-    static std::atomic<uint32_t> instanceCount_;
 };
 
 } // namespace DownloadedCache

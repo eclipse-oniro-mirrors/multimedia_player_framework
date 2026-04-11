@@ -35,7 +35,8 @@ namespace DownloadedCache {
 class CacheReader : public LoaderCallback, public std::enable_shared_from_this<CacheReader> {
 public:
     CacheReader(int64_t uuid, const std::shared_ptr<LoadingRequest>& request,
-        const std::shared_ptr<Task>& readTask);
+        const std::shared_ptr<Task>& readTask,
+        std::shared_ptr<DownloadedCacheManager> cacheManager);
 
     ~CacheReader();
 
