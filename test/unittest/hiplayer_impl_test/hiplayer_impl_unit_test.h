@@ -18,7 +18,6 @@
 
 #include "gtest/gtest.h"
 #include "hiplayer_impl.h"
-#include "mock/mock_iplayer_engine.h"
 
 namespace OHOS {
 namespace Media {
@@ -34,7 +33,6 @@ public:
     void TearDown(void);
 
     std::unique_ptr<HiPlayerImpl> hiplayer_;
-    std::shared_ptr<MockIPlayerEngineObs> testObs_;
 };
 
 class DemuxerFilterMock : public DemuxerFilter {
