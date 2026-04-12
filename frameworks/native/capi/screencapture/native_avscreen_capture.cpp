@@ -300,9 +300,9 @@ private:
             int32_t rectData[4] = {rsRect.x, rsRect.y, rsRect.w, rsRect.h};
             bool res = false;
             res = OH_AVFormat_SetIntBuffer(format, OH_MD_KEY_SCREEN_CAPTURE_WINDOW_RECT, rectData, sizeof(rectData));
-            CHECK_AND_RETURN_RET_LOG(res, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "OH_AVFormat_SetIntBuffer failed");
+            CHECK_AND_RETURN_RET_LOG(res, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "OH_AVFormat_SetIntBuffer failed!");
             OH_AVBuffer_SetParameter(reinterpret_cast<OH_AVBuffer*>(ohAvBuffer.GetRefPtr()), format);
-            CHECK_AND_RETURN_RET_LOG(res, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "OH_AVBuffer_SetParameter failed");
+            CHECK_AND_RETURN_RET_LOG(res, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "OH_AVBuffer_SetParameter failed!");
             OH_AVFormat_Destroy(format);
         }
         
