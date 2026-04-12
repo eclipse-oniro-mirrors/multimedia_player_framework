@@ -710,7 +710,7 @@ public:
         return PLAYLIST_LOOP_MODE_ALL;
     }
 
-    virtual void ResetListParameters() = 0;
+    virtual void ResetListParameters() {}
 
     /**
      * @brief Releases player resources async
