@@ -4623,6 +4623,7 @@ int32_t HiPlayerImpl::NotifySubtitleSeek()
 void HiPlayerImpl::HandleReadyAudioInterrupt()
 {
     FALSE_RETURN_NOLOG(curState_ == PlayerStateId::READY && !isAudioInitialized_.load());
+    isAudioInitialized_.store(true);
     HandleInitialPlayingStateChange(EventType::EVENT_AUDIO_FIRST_FRAME);
 }
 }  // namespace Media
