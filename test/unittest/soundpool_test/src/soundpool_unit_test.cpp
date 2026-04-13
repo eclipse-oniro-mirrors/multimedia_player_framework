@@ -1735,6 +1735,7 @@ void SoundPoolUnitTest::functionTest043(std::shared_ptr<SoundPoolMock> soundPool
     EXPECT_EQ(MSERR_OK, soundPool1->Stop(streamIDs_[num1]));
     EXPECT_EQ(MSERR_OK, soundPool2->Stop(streamIDs_[num2]));
     EXPECT_EQ(MSERR_OK, soundPool2->Stop(streamIDs_[num3]));
+    sleep(waitTime1);
 
     ASSERT_TRUE(cb1->WaitLoadedSoundNum(soundNum));
     EXPECT_EQ(soundNum, cb1->GetHavePlayedSoundNum());
@@ -1823,6 +1824,7 @@ void SoundPoolUnitTest::functionTest094(std::shared_ptr<SoundPoolMock> soundPool
     EXPECT_EQ(MSERR_OK, soundPool1->Stop(streamIDs_[num1]));
     EXPECT_EQ(MSERR_OK, soundPool2->Stop(streamIDs_[num2]));
     EXPECT_EQ(MSERR_OK, soundPool2->Stop(streamIDs_[num3]));
+    sleep(waitTime1);
 
     EXPECT_EQ(soundNum, cb1->GetHaveLoadedSoundNum());
     EXPECT_EQ(soundNum, cb1->GetHavePlayedSoundNum());
@@ -1910,6 +1912,7 @@ void SoundPoolUnitTest::functionTest095(std::shared_ptr<SoundPoolMock> soundPool
     EXPECT_EQ(MSERR_OK, soundPool1->Stop(streamIDs_[num1]));
     EXPECT_EQ(MSERR_OK, soundPool2->Stop(streamIDs_[num2]));
     EXPECT_EQ(MSERR_OK, soundPool2->Stop(streamIDs_[num3]));
+    sleep(waitTime1);
 
     EXPECT_EQ(soundNum, cb1->GetHaveLoadedSoundNum());
     EXPECT_EQ(soundNum, cb1->GetHavePlayedSoundNum());

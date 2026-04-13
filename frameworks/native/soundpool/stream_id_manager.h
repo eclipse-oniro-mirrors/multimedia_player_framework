@@ -17,6 +17,7 @@
 #define STREAM_ID_MANAGER_H
 
 #include <atomic>
+#include <condition_variable>
 #include <thread>
 
 #include "cpp/mutex.h"
@@ -50,6 +51,7 @@ public:
     int32_t SetCallback(const std::shared_ptr<ISoundPoolCallback> &callback);
     int32_t SetFrameWriteCallback(const std::shared_ptr<ISoundPoolFrameWriteCallback> &callback);
     void StopAllTasksInThreadPool();
+    void NotifyToAddStopTask();
     
 protected:
     IStreamIDManager(int32_t maxStreams, const AudioStandard::AudioRendererInfo &audioRenderInfo);
@@ -114,6 +116,10 @@ protected:
     std::deque<int32_t> playingStreamIDs_;
     std::deque<StreamIDAndPlayParamsInfo> willPlayStreamInfos_;
     std::atomic<int32_t> currentStreamsNum_;
+
+    std::mutex stopTaskMutex;
+    std::condition_variable cv;
+    std::atomic<bool> canAddStopTask = true;
 };
 
 class StreamIDManagerWithSameSoundInterrupt : public IStreamIDManager,
