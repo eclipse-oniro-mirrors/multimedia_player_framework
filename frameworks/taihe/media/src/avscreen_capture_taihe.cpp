@@ -631,6 +631,101 @@ void AVScreenCaptureRecorderImpl::SetMicEnabledSync(bool enable)
     MEDIA_LOGI("Taihe %{public}s End", option.c_str());
 }
 
+std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureRecorderImpl::GetSetPickerModeTask(
+    const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
+    const ::ohos::multimedia::media::PickerMode pickerMode)
+{
+    return std::make_shared<TaskHandler<RetInfo>>([taihe = asyncCtx->taihe, pickerMode]() {
+        const std::string &option = AVScreenCapturegOpt::SET_PICKER_MODE;
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+
+        int32_t mode = static_cast<int32_t>(pickerMode);
+        CHECK_AND_RETURN_RET(mode >= static_cast<int32_t>(OHOS::Media::PickerMode::MIN_VAL) &&
+            mode <= static_cast<int32_t>(OHOS::Media::PickerMode::MAX_VAL),
+            GetReturnInfo(MSERR_INVALID_VAL, option, "pickerMode"));
+
+        CHECK_AND_RETURN_RET(taihe != nullptr && taihe->screenCapture_ != nullptr,
+            GetReturnInfo(MSERR_INVALID_OPERATION, option, ""));
+
+        int32_t ret = taihe->screenCapture_->SetPickerMode(static_cast<OHOS::Media::PickerMode>(mode));
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(MSERR_UNKNOWN, option, ""));
+
+        MEDIA_LOGI("%{public}s End", option.c_str());
+        return RetInfo(MSERR_EXT_API9_OK, "");
+    });
+}
+
+std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureRecorderImpl::GetExcludePickerWindowsTask(
+    const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const std::vector<int32_t> windowIDsVec)
+{
+    return std::make_shared<TaskHandler<RetInfo>>([taihe = asyncCtx->taihe, windowIDsVec]() {
+        const std::string &option = AVScreenCapturegOpt::EXCLUDE_PICKER_WINDOWS;
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+
+        CHECK_AND_RETURN_RET(taihe != nullptr && taihe->screenCapture_ != nullptr,
+            GetReturnInfo(MSERR_INVALID_OPERATION, option, ""));
+
+        int32_t ret = taihe->screenCapture_->ExcludePickerWindows(const_cast<std::vector<int32_t> &>(windowIDsVec));
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(MSERR_UNKNOWN, option, ""));
+
+        MEDIA_LOGI("%{public}s End", option.c_str());
+        return RetInfo(MSERR_EXT_API9_OK, "");
+    });
+}
+
+void AVScreenCaptureRecorderImpl::SetPickerModeSync(::ohos::multimedia::media::PickerMode pickerMode)
+{
+    MediaTrace trace("AVScreenCapture::TaiheSetPickerMode");
+    const std::string &option = AVScreenCapturegOpt::SET_PICKER_MODE;
+    MEDIA_LOGI("Taihe %{public}s Start", option.c_str());
+
+    auto asyncCtx = std::make_unique<AVScreenCaptureAsyncContext>();
+    CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
+    asyncCtx->taihe = this;
+    CHECK_AND_RETURN_LOG(asyncCtx->taihe != nullptr, "failed to GetTaiheInstanceAndArgs");
+    CHECK_AND_RETURN_LOG(asyncCtx->taihe->taskQue_ != nullptr, "taskQue is nullptr!");
+
+    asyncCtx->task_ = AVScreenCaptureRecorderImpl::GetSetPickerModeTask(asyncCtx, pickerMode);
+    (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+
+    if (asyncCtx->task_) {
+        auto result = asyncCtx->task_->GetResult();
+        if (result.Value().first != MSERR_EXT_API9_OK) {
+            set_business_error(result.Value().first, result.Value().second);
+        }
+    }
+    asyncCtx.release();
+
+    MEDIA_LOGI("Taihe %{public}s End", option.c_str());
+}
+
+void AVScreenCaptureRecorderImpl::ExcludePickerWindowsSync(::taihe::array_view<int32_t> excludedWindows)
+{
+    MediaTrace trace("AVScreenCapture::TaiheExcludePickerWindows");
+    const std::string &option = AVScreenCapturegOpt::EXCLUDE_PICKER_WINDOWS;
+    MEDIA_LOGI("Taihe %{public}s Start", option.c_str());
+
+    auto asyncCtx = std::make_unique<AVScreenCaptureAsyncContext>();
+    CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
+    asyncCtx->taihe = this;
+    CHECK_AND_RETURN_LOG(asyncCtx->taihe != nullptr, "failed to GetTaiheInstanceAndArgs");
+    CHECK_AND_RETURN_LOG(asyncCtx->taihe->taskQue_ != nullptr, "taskQue is nullptr!");
+
+    std::vector<int32_t> excludeWindowsVec(excludedWindows.begin(), excludedWindows.end());
+    asyncCtx->task_ = AVScreenCaptureRecorderImpl::GetExcludePickerWindowsTask(asyncCtx, excludeWindowsVec);
+    (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+
+    if (asyncCtx->task_) {
+        auto result = asyncCtx->task_->GetResult();
+        if (result.Value().first != MSERR_EXT_API9_OK) {
+            set_business_error(result.Value().first, result.Value().second);
+        }
+    }
+    asyncCtx.release();
+
+    MEDIA_LOGI("Taihe %{public}s End", option.c_str());
+}
+
 RetInfo AVScreenCaptureRecorderImpl::Release()
 {
     int32_t ret = screenCapture_->Release();
