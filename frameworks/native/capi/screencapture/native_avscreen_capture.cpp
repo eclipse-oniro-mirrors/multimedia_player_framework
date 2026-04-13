@@ -19,7 +19,6 @@
 #include <queue>
 #include <shared_mutex>
 #include <set>
-#include <fstream>
 
 #include "buffer/avbuffer.h"
 #include "common/native_mfmagic.h"
