@@ -4622,7 +4622,11 @@ int32_t HiPlayerImpl::NotifySubtitleSeek()
 
 void HiPlayerImpl::HandleReadyAudioInterrupt()
 {
-    FALSE_RETURN_NOLOG(curState_ == PlayerStateId::READY && !isAudioInitialized_.load());
+    {
+        AutoLock lock(stateChangeMutex_);
+        FALSE_RETURN_NOLOG(curState_ == PlayerStateId::READY);
+    }
+    FALSE_RETURN_NOLOG(!isAudioInitialized_.load());
     isAudioInitialized_.store(true);
     HandleInitialPlayingStateChange(EventType::EVENT_AUDIO_FIRST_FRAME);
 }
