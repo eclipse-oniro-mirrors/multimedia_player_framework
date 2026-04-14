@@ -339,11 +339,11 @@ int32_t ScreenCaptureServiceStub::AcquireAudioBuffer(std::shared_ptr<AudioBuffer
 }
 
 int32_t ScreenCaptureServiceStub::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence,
-                                                     int64_t &timestamp, OHOS::Rect &damage)
+                                                     int64_t &timestamp, OHOS::Rect &damage, OHOS::Rect &rsRect)
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
-    return screenCaptureServer_->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage);
+    return screenCaptureServer_->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage, rsRect);
 }
 
 int32_t ScreenCaptureServiceStub::ReleaseAudioBuffer(AudioCaptureSourceType type)
@@ -767,8 +767,9 @@ int32_t ScreenCaptureServiceStub::AcquireVideoBuffer(MessageParcel &data, Messag
     int32_t fence = -1; // init value start here
     int64_t timestamp = 0;
     OHOS::Rect damage;
+    OHOS::Rect rsRect;
     sptr<OHOS::SurfaceBuffer> videoBuffer = nullptr;
-    int32_t ret = AcquireVideoBuffer(videoBuffer, fence, timestamp, damage);
+    int32_t ret = AcquireVideoBuffer(videoBuffer, fence, timestamp, damage, rsRect);
     reply.WriteInt32(ret);
     if (ret == MSERR_OK) {
         if (videoBuffer != nullptr) {
@@ -780,6 +781,10 @@ int32_t ScreenCaptureServiceStub::AcquireVideoBuffer(MessageParcel &data, Messag
         reply.WriteInt32(damage.y);
         reply.WriteInt32(damage.w);
         reply.WriteInt32(damage.h);
+        reply.WriteInt32(rsRect.x);
+        reply.WriteInt32(rsRect.y);
+        reply.WriteInt32(rsRect.w);
+        reply.WriteInt32(rsRect.h);
     }
     return MSERR_OK;
 }

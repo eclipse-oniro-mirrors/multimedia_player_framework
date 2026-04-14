@@ -438,14 +438,15 @@ int32_t ScreenCaptureImpl::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audi
     return screenCaptureService_->AcquireAudioBuffer(audiobuffer, type);
 }
 
-sptr<OHOS::SurfaceBuffer> ScreenCaptureImpl::AcquireVideoBuffer(int32_t &fence, int64_t &timestamp, OHOS::Rect &damage)
+sptr<OHOS::SurfaceBuffer> ScreenCaptureImpl::AcquireVideoBuffer(int32_t &fence, int64_t &timestamp,
+    OHOS::Rect &damage, OHOS::Rect &rsRect)
 {
     MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " AcquireVideoBuffer in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, nullptr,
         "screen capture service does not exist.");
 
     sptr<OHOS::SurfaceBuffer> surfacebuffer = new SurfaceBufferImpl(0);
-    int32_t ret = screenCaptureService_->AcquireVideoBuffer(surfacebuffer, fence, timestamp, damage);
+    int32_t ret = screenCaptureService_->AcquireVideoBuffer(surfacebuffer, fence, timestamp, damage, rsRect);
     if (ret != MSERR_OK) {
         MEDIA_LOGE("AcquireVideoBuffer get failed");
         return nullptr;

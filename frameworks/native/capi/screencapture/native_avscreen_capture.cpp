@@ -28,6 +28,9 @@
 #include "native_player_magic.h"
 #include "surface_buffer_impl.h"
 #include "native_window.h"
+#include "native_avformat.h"
+#include "native_avcodec_base.h"
+#include "native_avsource.h"
 
 namespace {
 constexpr int MAX_WINDOWS_LEN = 1000;
@@ -275,10 +278,13 @@ private:
     {
         int32_t fence = -1;
         OHOS::Rect damage;
+        OHOS::Rect rsRect;
         OHOS::sptr<OHOS::SurfaceBuffer> surfaceBuffer =
-            screenCapture->AcquireVideoBuffer(fence, timestamp, damage);
+            screenCapture->AcquireVideoBuffer(fence, timestamp, damage, rsRect);
         CHECK_AND_RETURN_RET_LOG(surfaceBuffer != nullptr, AV_SCREEN_CAPTURE_ERR_NO_MEMORY,
             "AcquireVideoBuffer failed surfaceBuffer no memory!");
+        MEDIA_LOGD("get native surfaceBuffer rsRect: x: %{public}d, y: %{public}d, w: %{public}d, h: %{public}d",
+            rsRect.x, rsRect.y, rsRect.w, rsRect.h);
         std::shared_ptr<AVBuffer> avBuffer = AVBuffer::CreateAVBuffer(surfaceBuffer);
         CHECK_AND_RETURN_RET_LOG(avBuffer != nullptr && avBuffer->memory_ != nullptr, AV_SCREEN_CAPTURE_ERR_NO_MEMORY,
             "AcquireVideoBuffer failed avBuffer no memory!");
@@ -287,6 +293,18 @@ private:
         ohAvBuffer = new(std::nothrow) OH_AVBuffer(avBuffer);
         CHECK_AND_RETURN_RET_LOG(ohAvBuffer != nullptr, AV_SCREEN_CAPTURE_ERR_NO_MEMORY,
             "AcquireVideoBuffer failed ohAvBuffer no memory!");
+
+        OH_AVFormat *format = OH_AVFormat_Create();
+        if (format != nullptr) {
+            int32_t rectData[4] = {rsRect.x, rsRect.y, rsRect.w, rsRect.h};
+            bool res = false;
+            res = OH_AVFormat_SetIntBuffer(format, OH_MD_KEY_SCREEN_CAPTURE_WINDOW_RECT, rectData, sizeof(rectData));
+            CHECK_AND_RETURN_RET_LOG(res, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "OH_AVFormat_SetIntBuffer failed.");
+            OH_AVBuffer_SetParameter(reinterpret_cast<OH_AVBuffer*>(ohAvBuffer.GetRefPtr()), format);
+            CHECK_AND_RETURN_RET_LOG(res, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "OH_AVBuffer_SetParameter failed.");
+            OH_AVFormat_Destroy(format);
+        }
+        
         return AV_SCREEN_CAPTURE_ERR_OK;
     }
 
@@ -923,8 +941,9 @@ OH_NativeBuffer* OH_AVScreenCapture_AcquireVideoBuffer(struct OH_AVScreenCapture
         return nullptr;
     }
     OHOS::Rect damage;
+    OHOS::Rect rsRect;
     OHOS::sptr<OHOS::SurfaceBuffer> sufacebuffer =
-        screenCaptureObj->screenCapture_->AcquireVideoBuffer(*fence, *timestamp, damage);
+        screenCaptureObj->screenCapture_->AcquireVideoBuffer(*fence, *timestamp, damage, rsRect);
     region->x = damage.x;
     region->y = damage.y;
     region->width = damage.w;
