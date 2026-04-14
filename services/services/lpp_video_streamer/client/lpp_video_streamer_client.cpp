@@ -147,7 +147,24 @@ int32_t LppVideoStreamerClient::SetOutputSurface(sptr<Surface> surface)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerProxy_->SetOutputSurface(std::move(surface));
+    surface_ = surface;
+    auto ret = playerProxy_->SetOutputSurface(std::move(surface));
+
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "LppVideoStreamerClient SetOutputSurface failed.");
+    
+    int32_t fd = -1;
+    GetShareBufferFd(fd);
+    cachedShareBufferFd_ = fd;
+    MEDIA_LOGI("Cached shareBufferFd_: %{public}d", cachedShareBufferFd_);
+   
+    return MSERR_OK;
+}
+
+int32_t LppVideoStreamerClient::GetShareBufferFd(int32_t &fd)
+{
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, 
+        "player service does not exist..");
+    return playerProxy_->GetShareBufferFd(fd);
 }
 
 int32_t LppVideoStreamerClient::SetSyncAudioStreamer(AudioStreamer *audioStreamer)
@@ -244,6 +261,13 @@ void LppVideoStreamerClient::MediaServerDied()
         std::lock_guard<std::mutex> lock(mutex_);
         playerProxy_ = nullptr;
         listenerStub_ = nullptr;
+        if (surface_ != nullptr) {
+            MEDIA_LOGI("==yan==LppVideoStreamerClient::MediaServerDied2");
+            MEDIA_LOGI("==yan==Cached shareBufferFd_: %{public}d", cachedShareBufferFd_);
+            surface_->SetLppShareFd(cachedShareBufferFd_, false);
+            surface_ = nullptr;
+            cachedShareBufferFd_ = -1;
+        }
     }
     if (callback_ != nullptr) {
         callback_->OnError(MSERR_SERVICE_DIED,

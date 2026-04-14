@@ -67,6 +67,7 @@ public:
     virtual std::shared_ptr<ILppSyncManager> GetLppSyncManager() = 0;
     virtual int32_t RenderFirstFrame() = 0;
     virtual int32_t GetLatestPts(int64_t &pts) = 0;
+    virtual int32_t GetShareBufferFd(int32_t &fd) = 0;
 };
 }  // namespace Media
 }  // namespace OHOS

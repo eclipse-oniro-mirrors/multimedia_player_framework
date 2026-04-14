@@ -150,6 +150,16 @@ int32_t HiLppVideoStreamerImpl::Configure(const Format &param)
     return MSERR_OK;
 }
 
+int32_t HiLppVideoStreamerImpl::GetShareBufferFd(int32_t &fd)
+{
+    MEDIA_LOG_I("HiLppVideoStreamerImpl::GetShareBufferFd");
+    FALSE_RETURN_V_MSG(syncMgr_ != nullptr, MSERR_INVALID_OPERATION, "syncMgr_ is nullptr");
+    int32_t ret = syncMgr_->GetShareBuffer(fd);
+    FALSE_RETURN_V_MSG(ret == MSERR_OK, MSERR_UNKNOWN, "syncMgr_ GetShareBuffer failed");
+    MEDIA_LOG_I("HiLppVideoStreamerImpl::GetShareBufferFd: %{public}d", fd);
+    return MSERR_OK;
+}
+
 int32_t HiLppVideoStreamerImpl::SetVideoSurface(sptr<Surface> surface)
 {
     FALSE_RETURN_V_MSG(syncMgr_ != nullptr, MSERR_INVALID_OPERATION, "object is nullptr");

@@ -85,6 +85,8 @@ public:
 
     int32_t GetLatestPts(int64_t &pts) override;
 
+    nt32_t GetShareBufferFd(int32_t &fd) override;
+
     int32_t Init();
     void SetPlayerFuncs();
     void FillPlayerFuncPart1();
@@ -122,6 +124,8 @@ public:
     int32_t GetStreamerId(MessageParcel &data, MessageParcel &reply);
     int32_t RenderFirstFrame(MessageParcel &data, MessageParcel &reply);
     int32_t GetLatestPts(MessageParcel &data, MessageParcel &reply);
+
+    int32_t GetShareBufferFd(MessageParcel &data, MessageParcel &reply);
 
     std::shared_ptr<ILppVideoStreamerService> lppVideoPlayerServer_ = nullptr;
     std::map<uint32_t, std::pair<std::string, PlayerStubFunc>> playerFuncs_;

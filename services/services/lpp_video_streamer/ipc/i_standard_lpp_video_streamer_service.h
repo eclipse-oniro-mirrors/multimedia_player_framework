@@ -84,6 +84,8 @@ public:
 
     virtual int32_t GetLatestPts(int64_t &pts) = 0;
 
+    virtual int32_t GetShareBufferFd(int32_t &fd) = 0;
+
     /**
      * IPC code ID
      */
@@ -115,6 +117,7 @@ public:
         RENDER_FIRST_FRAME,
         GET_LATEST_PTS,
         GET_PARAMETER,
+        GET_SHARE_BUFFER_FD,
         MAX_IPC_ID,                   // all IPC codes should be added before MAX_IPC_ID
     };
 

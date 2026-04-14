@@ -106,6 +106,7 @@ public:
     void OnTargetArrived(const int64_t targetPts, const bool isTimeout) override;
     void OnFirstFrameReady() override;
     void OnStreamChanged(Format &format) override;
+    int32_t GetShareBufferFd(int32_t &fd) override;
 
 private:
     int32_t CreateStreamerEngine();
