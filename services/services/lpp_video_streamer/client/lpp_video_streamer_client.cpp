@@ -162,7 +162,7 @@ int32_t LppVideoStreamerClient::SetOutputSurface(sptr<Surface> surface)
 
 int32_t LppVideoStreamerClient::GetShareBufferFd(int32_t &fd)
 {
-    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, 
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED,
         "player service does not exist..");
     return playerProxy_->GetShareBufferFd(fd);
 }

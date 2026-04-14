@@ -437,7 +437,7 @@ void LppVideoStreamerServer::OnStreamChanged(Format &format)
 int32_t LppVideoStreamerServer::GetShareBufferFd(int32_t &fd)
 {
     MEDIA_LOGI("LppVideoStreamerServer::GetShareBufferFd");
-    CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, 
+    CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION,
         "streamerEngine_ is nullptr");
     
     auto ret = streamerEngine_->GetShareBufferFd(fd);
