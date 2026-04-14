@@ -44,6 +44,7 @@
 #include <algorithm>
 #include <set>
 #include <common/rs_common_def.h>
+#include <v1_0/buffer_handle_meta_key_type.h>
 #include "session_manager_lite.h"
 #include "window_manager_lite.h"
 #include "want_agent_info.h"
