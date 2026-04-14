@@ -147,6 +147,9 @@ void LppVideoStreamerServiceStub::FillPlayerFuncPart2()
 {
     playerFuncs_[GET_LATEST_PTS] = {"Player::GetLatestPts",
         [this](MessageParcel &data, MessageParcel &reply) { return GetLatestPts(data, reply); }};
+
+    playerFuncs_[GET_SHARE_BUFFER_FD] = {"Player::GetShareBufferFd",
+        [this](MessageParcel &data, MessageParcel &reply) { return GetShareBufferFd(data, reply); }};
 }
 
 int LppVideoStreamerServiceStub::OnRemoteRequest(
@@ -577,6 +580,24 @@ int32_t LppVideoStreamerServiceStub::GetLatestPts(MessageParcel &data, MessagePa
     reply.WriteInt32(ret);
     reply.WriteInt64(pts);
     return MSERR_OK;
+}
+
+int32_t LppVideoStreamerServiceStub::GetShareBufferFd(int32_t &fd)
+{
+    MEDIA_LOGI("LppVideoStreamerServiceStub::GetShareBufferFd");
+    CHECK_AND_RETURN_RET_LOG(lppVideoPlayerServer_ != nullptr, MSERR_INVALID_OPERATION, "player server is nullptr");
+    return lppVideoPlayerServer_->GetShareBufferFd(fd);
+}
+
+int32_t LppVideoStreamerServiceStub::GetShareBufferFd(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    int32_t fd = -1;
+    int32_t ret = GetShareBufferFd(fd);
+    MEDIA_LOGI("LppVideoStreamerServiceStub::GetShareBufferFd %{public}d %{public}d", ret, fd);
+    reply.WriteInt32(ret);
+    reply.WriteInt32(fd);
+    return ret;
 }
 }  // namespace Media
 }  // namespace OHOS

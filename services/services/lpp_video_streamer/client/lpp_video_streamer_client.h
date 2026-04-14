@@ -82,12 +82,16 @@ public:
 
     void MediaServerDied();
 
+    int32_t GetShareBufferFd(int32_t &fd) override;
+
 private:
     int32_t CreateListenerObject();
 
     sptr<IStandardLppVideoStreamerService> playerProxy_ = nullptr;
     sptr<LppVideoStreamerListenerStub> listenerStub_ = nullptr;
     std::shared_ptr<VideoStreamerCallback> callback_ = nullptr;
+    int32_t cachedShareBufferFd_{-1};
+    sptr<Surface> surface_ = nullptr;
     std::mutex mutex_;
 };
 } // namespace Media

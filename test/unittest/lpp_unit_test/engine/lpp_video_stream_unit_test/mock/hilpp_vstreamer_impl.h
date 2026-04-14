@@ -54,6 +54,7 @@ public:
     int32_t RenderFirstFrame() override;
     int32_t GetLatestPts(int64_t &pts) override;
     void OnEvent(const Event &event);
+    int32_t GetShareBufferFd(int32_t &fd) override;
 
 private:
     void InitLppMode();

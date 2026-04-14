@@ -79,6 +79,8 @@ public:
     int32_t GetLatestPts(int64_t &pts) override;
 
     int32_t RenderFirstFrame() override;
+
+    int32_t GetShareBufferFd(int32_t &fd) override;
 private:
     static inline BrokerDelegator<LppVideoStreamerServiceProxy> delegator_;
 };

@@ -269,6 +269,27 @@ int32_t LppVideoStreamerServiceProxy::SetOutputSurface(sptr<Surface> surface)
     return reply.ReadInt32();
 }
 
+int32_t LppVideoStreamerServiceProxy::GetShareBufferFd(int32_t &fd)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(LppVideoStreamerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Write interface token failed!");
+    
+    int32_t ret = Remote()->SendRequest(
+        IStandardLppVideoStreamerService::GET_SHARE_BUFFER_FD, data, reply, option);
+
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Send request failed");
+     
+    ret = reply.ReadInt32();
+    fd = reply.ReadInt32();
+    
+    MEDIA_LOGI("GetShareBufferFd success, fd: %{public}d", fd);
+    return ret;
+}
+
 int32_t LppVideoStreamerServiceProxy::SetSyncAudioStreamer(AudioStreamer *audioStreamer)
 {
     (void)audioStreamer;

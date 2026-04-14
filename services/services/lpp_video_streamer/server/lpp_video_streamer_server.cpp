@@ -433,5 +433,18 @@ void LppVideoStreamerServer::OnStreamChanged(Format &format)
     CHECK_AND_RETURN_LOG(callback_ != nullptr, "callback_ is nullptr");
     callback_->OnInfo(VIDEO_INFO_TYPE_LPP_STREAM_CHANGED, 0, format);
 }
+
+int32_t LppVideoStreamerServer::GetShareBufferFd(int32_t &fd)
+{
+    MEDIA_LOGI("LppVideoStreamerServer::GetShareBufferFd");
+    CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION,
+        "streamerEngine_ is nullptr");
+    
+    auto ret = streamerEngine_->GetShareBufferFd(fd);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "GetShareBufferFd Failed!");
+    
+    MEDIA_LOGI("GetShareBufferFd success, fd: %{public}d", fd);
+    return MSERR_OK;
+}
 }  // namespace Media
 }  // namespace OHOS
