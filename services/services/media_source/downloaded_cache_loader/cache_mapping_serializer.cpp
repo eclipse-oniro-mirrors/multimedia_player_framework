@@ -33,14 +33,14 @@ uint32_t CacheMappingSerializer::CalculateHeaderChecksum(const CacheMappingHeade
 {
     const uint8_t* data = reinterpret_cast<const uint8_t*>(&header);
     size_t dataSize = sizeof(CacheMappingHeader) - sizeof(header.headerChecksum);
-    
+
     // zlib CRC32函数：
     // 参数1: 初始CRC值（首次计算时为0）
     // 参数2: 数据缓冲区
     // 参数3: 数据长度
     // 返回: CRC32值
     uint32_t crc = crc32(0, data, static_cast<uInt>(dataSize));
-    
+
     return crc;
 }
 
@@ -67,19 +67,19 @@ bool CacheMappingSerializer::WriteHeader(std::ofstream& file, const CacheMapping
     return true;
 }
 
-bool CacheMappingSerializer::WriteEntry(std::ofstream& file, const CacheMappingEntry& entry, 
+bool CacheMappingSerializer::WriteEntry(std::ofstream& file, const CacheMappingEntry& entry,
     const std::string& cacheDir)
 {
     if (!file.is_open()) {
         MEDIA_LOGE("File stream is not open");
         return false;
     }
-    
+
     if (!PathValidator::Validate(cacheDir, entry.filePath)) {
         MEDIA_LOGE("Invalid relative path: %{public}s", entry.filePath.c_str());
         return false;
     }
-    
+
     file.write(reinterpret_cast<const char*>(entry.header.urlHash),
              sizeof(entry.header.urlHash));
     file.write(reinterpret_cast<const char*>(&entry.header.pathLength),
@@ -88,14 +88,14 @@ bool CacheMappingSerializer::WriteEntry(std::ofstream& file, const CacheMappingE
              sizeof(entry.header.fileSize));
     file.write(reinterpret_cast<const char*>(entry.header.reserved),
              sizeof(entry.header.reserved));
-    
+
     file.write(entry.filePath.c_str(), entry.filePath.size());
-    
+
     if (!file) {
         MEDIA_LOGE("Failed to write entry to file");
         return false;
     }
-    
+
     return true;
 }
 

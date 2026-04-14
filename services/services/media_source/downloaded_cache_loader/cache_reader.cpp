@@ -29,7 +29,8 @@ namespace Media {
 namespace DownloadedCache {
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "DownloadedCacheReader" };
-constexpr int32_t CACHE_NOT_FOUND_ERROR = 404;
+constexpr int32_t LOADING_ERROR_SUCCESS = 0;
+constexpr int32_t LOADING_ERROR_NOT_READY = 1;
 }
 
 CacheReader::CacheReader(int64_t uuid, const std::shared_ptr<LoadingRequest>& request,
@@ -54,7 +55,7 @@ int64_t CacheReader::Open(std::shared_ptr<LoadingRequest>& request)
     auto urlStr = cacheManager_->GetMediaCache(url_);
     if (urlStr.empty()) {
         MEDIA_LOG_E("Cache not found for url: %{public}s", url_.c_str());
-        request_->FinishLoading(uuid_, CACHE_NOT_FOUND_ERROR);
+        request_->FinishLoading(uuid_, LOADING_ERROR_NOT_READY);
         return -1;
     }
 
@@ -62,7 +63,7 @@ int64_t CacheReader::Open(std::shared_ptr<LoadingRequest>& request)
 
     if (!cacheManager_->GetCacheMetaData(url_, metadata_)) {
         MEDIA_LOG_E("Failed to get cache metadata for url: %{public}s", url_.c_str());
-        request_->FinishLoading(uuid_, CACHE_NOT_FOUND_ERROR);
+        request_->FinishLoading(uuid_, LOADING_ERROR_NOT_READY);
         return -1;
     }
 
@@ -83,7 +84,7 @@ void CacheReader::RespondHeader(int64_t uuid)
     auto headers = cacheManager_->BuildHttpHeaders(url_);
     if (headers.empty()) {
         MEDIA_LOG_E("Failed to build HTTP headers for url: %{public}s", url_.c_str());
-        request_->FinishLoading(uuid, CACHE_NOT_FOUND_ERROR);
+        request_->FinishLoading(uuid, LOADING_ERROR_NOT_READY);
         return;
     }
 
@@ -100,7 +101,7 @@ void CacheReader::Read(int64_t uuid, int64_t requestedOffset, int64_t requestedL
 
     if (requestedLength == 0) {
         MEDIA_LOG_W("RequestedLength is zero, finish it.");
-        request_->FinishLoading(uuid, 0);
+        request_->FinishLoading(uuid, LOADING_ERROR_SUCCESS);
         return;
     }
 
@@ -123,14 +124,14 @@ void CacheReader::HandleCacheRequest(int64_t uuid, int64_t requestedOffset, int6
     int64_t fileSize = fileCacheManager_->GetSize(urlDir_);
     if (fileSize < 0) {
         MEDIA_LOG_E("Failed to get cache file size: %{public}s", urlDir_.c_str());
-        request_->FinishLoading(uuid, CACHE_NOT_FOUND_ERROR);
+        request_->FinishLoading(uuid, LOADING_ERROR_NOT_READY);
         return;
     }
 
     int64_t actualRequestedLength = (requestedLength <= 0) ? fileSize : requestedLength;
     if (requestedOffset >= fileSize) {
         MEDIA_LOG_E("Requested offset exceeds file size");
-        request_->FinishLoading(uuid, CACHE_NOT_FOUND_ERROR);
+        request_->FinishLoading(uuid, LOADING_ERROR_NOT_READY);
         return;
     }
 
@@ -145,7 +146,7 @@ void CacheReader::HandleCacheRequest(int64_t uuid, int64_t requestedOffset, int6
 
     if (fileCacheManager_->Read(urlDir_, buffer->GetBase(), requestedOffset, actualReadLength) != 0) {
         MEDIA_LOG_E("Failed to read cache file: %{public}s", urlDir_.c_str());
-        request_->FinishLoading(uuid, CACHE_NOT_FOUND_ERROR);
+        request_->FinishLoading(uuid, LOADING_ERROR_NOT_READY);
         return;
     }
 
@@ -155,6 +156,14 @@ void CacheReader::HandleCacheRequest(int64_t uuid, int64_t requestedOffset, int6
     auto ret = request_->RespondData(uuid, requestedOffset, buffer);
     if (ret < 0) {
         MEDIA_LOG_E("RespondData failed");
+        request_->FinishLoading(uuid, LOADING_ERROR_NOT_READY);
+        return;
+    }
+
+    if (requestedLength == -1) {
+        MEDIA_LOG_I("RespondData whole file complete, offset: " PUBLIC_LOG_D64" readLen: " PUBLIC_LOG_D64,
+            requestedOffset, actualReadLength);
+        request_->FinishLoading(uuid, LOADING_ERROR_SUCCESS);
     }
 }
 

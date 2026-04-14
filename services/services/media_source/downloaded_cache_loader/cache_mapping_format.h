@@ -59,7 +59,7 @@ static_assert(sizeof(CacheMappingEntryHeader) == 52, "CacheMappingEntryHeader si
 struct CacheMappingEntry {
     CacheMappingEntryHeader header;  // 52字节
     std::string filePath;            // 文件路径（UTF-8编码，相对路径）
-    
+
     size_t GetTotalSize() const {
         return sizeof(header) + filePath.size();
     }

@@ -32,7 +32,7 @@ public:
 
 private:
     bool IsValidPath(const std::string& inputPath);
-    
+
     std::string cacheDir_;
 };
 } // namespace DownloadedCache

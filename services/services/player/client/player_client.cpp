@@ -383,7 +383,6 @@ int32_t PlayerClient::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
         return playerProxy_->SetMediaSource(mediaSource, strategy);
     }
 
-    bool isDownloadedCache = true;
     if (mediaSource->mediaSourceLoaderCb_ != nullptr) {
         MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " mediaSource->mediaSourceLoaderCb_ in", FAKE_POINTER(this));
         sourceLoaderStub_ = new(std::nothrow) MediaSourceLoaderStub(mediaSource->mediaSourceLoaderCb_);
@@ -409,22 +408,6 @@ int32_t PlayerClient::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
 
             CHECK_AND_RETURN_RET_LOG(playerProxy_->SetSourceLoader(object) == MSERR_OK,
                 MSERR_UNKNOWN, "Custom SetSourceLoader error");
-        } else if (isDownloadedCache) {
-            auto cacheManager = std::make_shared<DownloadedCache::DownloadedCacheManager>(DEFAULT_CACHE_DIR);
-            std::shared_ptr<LoaderCallback> mediaSourceLoaderCb = 
-                std::make_shared<DownloadedCache::DownloadedCacheLoader>(cacheManager);
-            mediaSource->mediaSourceLoaderCb_ = mediaSourceLoaderCb;
-
-            MEDIA_LOGI("PlayerClient:0x%{public}06" PRIXPTR
-                " DownloadedCacheLoader mediaSourceLoaderCb_ in", FAKE_POINTER(this));
-            sourceLoaderStub_ = new(std::nothrow) MediaSourceLoaderStub(mediaSource->mediaSourceLoaderCb_);
-            CHECK_AND_RETURN_RET_LOG(sourceLoaderStub_ != nullptr, MSERR_NO_MEMORY, "failed to new LoaderStub object");
-
-            sptr<IRemoteObject> object = sourceLoaderStub_->AsObject();
-            CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "listener object is nullptr..");
-
-            CHECK_AND_RETURN_RET_LOG(playerProxy_->SetSourceLoader(object) == MSERR_OK,
-                MSERR_UNKNOWN, "DownloadedCache SetSourceLoader error");
         }
     }
     MEDIA_LOGD("url_=%{private}s playMediaStreamVec_size=%{public}zu mimeType_=%{public}s",

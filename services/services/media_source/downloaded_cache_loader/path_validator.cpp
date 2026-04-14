@@ -39,14 +39,14 @@ bool PathValidator::Validate(const std::string& rootPath, const std::string& rel
     }
 
     std::string resolvedPath = NormalizePath(rootPath + "/" + relativePath);
-    
+
     std::string normalizedRoot = NormalizePath(rootPath);
-    
+
     if (resolvedPath.length() < normalizedRoot.length()) {
         MEDIA_LOGE("Resolved path shorter than root path");
         return false;
     }
-    
+
     if (resolvedPath.substr(0, normalizedRoot.length()) != normalizedRoot) {
         MEDIA_LOGE("Path escapes root directory");
         return false;
@@ -60,7 +60,7 @@ std::string PathValidator::NormalizePath(const std::string& path)
     std::vector<std::string> components;
     std::stringstream ss(path);
     std::string component;
-    
+
     while (std::getline(ss, component, '/')) {
         if (component.empty() || component == ".") {
             continue;
@@ -73,7 +73,7 @@ std::string PathValidator::NormalizePath(const std::string& path)
             components.push_back(component);
         }
     }
-    
+
     std::string result;
     for (const auto& comp : components) {
         if (!result.empty()) {
@@ -81,7 +81,7 @@ std::string PathValidator::NormalizePath(const std::string& path)
         }
         result += comp;
     }
-    
+
     return result;
 }
 
