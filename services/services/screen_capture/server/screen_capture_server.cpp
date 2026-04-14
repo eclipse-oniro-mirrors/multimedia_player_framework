@@ -44,13 +44,13 @@
 #include <algorithm>
 #include <set>
 #include <common/rs_common_def.h>
+#include <v1_0/buffer_handle_meta_key_type.h>
 #include "session_manager_lite.h"
 #include "window_manager_lite.h"
 #include "want_agent_info.h"
 #include "want_agent_helper.h"
 #include "common_event_manager.h"
 #include "screen_capture_record_display_listener.h"
-#include "metadata_helper.h"
 #ifdef PC_STANDARD
 #include "power_mgr_client.h"
 #include <parameters.h>
@@ -3730,7 +3730,6 @@ int32_t ScreenCaptureServer::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfa
         HDI::Display::Graphic::Common::V1_0::BufferHandleMetaRegion metaRegion;
         std::vector<uint8_t> data;
         surfaceBuffer->GetMetadata(HDI::Display::Graphic::Common::V1_0::ATTRKEY_CROP_REGION, data);
-        MetadataHelper::ConvertVecToMetadata(data, metaRegion);
         rsRect.x = metaRegion.left;
         rsRect.y = metaRegion.top;
         rsRect.w = metaRegion.width;
@@ -4824,7 +4823,7 @@ void ScreenCaptureServer::PrivacyProtected(ScreenId& virtualScreenId, bool syste
         ret = ScreenManager::GetInstance().SetScreenPrivacyWindowTagSwitch(virtualScreenId,
             std::move(privacyWindowTags), systemPrivacyProtectionSwitch);
         MEDIA_LOGI("KeyboardPrivacyProtected SetScreenSkipProtectedWindow done, ret: %{public}d", ret);
-        
+
         privacyWindowTags.assign({"TAG_SCREEN_PROTECTION_SENSITIVE_APP"});
         ret = ScreenManager::GetInstance().SetScreenPrivacyWindowTagSwitch(virtualScreenId,
             std::move(privacyWindowTags), appPrivacyProtectionSwitch);
