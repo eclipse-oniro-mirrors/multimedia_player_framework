@@ -597,7 +597,7 @@ int32_t LppVideoStreamerServiceStub::GetShareBufferFd(MessageParcel &data, Messa
     MEDIA_LOGI("LppVideoStreamerServiceStub::GetShareBufferFd %{public}d %{public}d", ret, fd);
     reply.WriteInt32(ret);
     reply.WriteInt32(fd);
-    return MSERR_OK;
+    return ret;
 }
 }  // namespace Media
 }  // namespace OHOS
