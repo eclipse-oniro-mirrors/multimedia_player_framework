@@ -98,6 +98,7 @@ namespace AVPlayerEvent {
     const std::string EVENT_RATE_DONE = "playbackRateDone";
     const std::string EVENT_METRICS = "metricsEvent";
     const std::string EVENT_PLAYBACK_CONTENT_CHANGE = "playbackContentChange";
+    const std::string EVENT_TIMED_META_DATA = "timedMetaData";
 }
 
 class AVPlayerImpl : public AVPlayerNotify {
@@ -192,6 +193,7 @@ public:
     void OnAudioOutputDeviceChangeWithInfo(callback_view<void(
         ohos::multimedia::audio::AudioStreamDeviceChangeInfo const&)> callback);
     void OnMetricsEvent(callback_view<void(array_view<::ohos::multimedia::media::AVMetricsEvent> data)> callback);
+    void OnTimedMetaData(callback_view<void(::ohos::multimedia::media::AVTimedMetaData const&)> callback);
 
     void OffError(optional_view<callback<void(uintptr_t)>> callback);
     void OffStateChange(optional_view<callback<void(string_view,
@@ -222,6 +224,7 @@ public:
         ::ohos::multimedia::audio::AudioStreamDeviceChangeInfo const&)>> callback);
     void OffMetricsEvent(optional_view<callback<void(
         array_view<::ohos::multimedia::media::AVMetricsEvent> data)>> callback);
+    void OffTimedMetaData(optional_view<callback<void(::ohos::multimedia::media::AVTimedMetaData const&)>> callback);
     bool GetIntArrayArgument(std::vector<int32_t> &vec, const std::vector<int32_t> &inputArray);
     void SeiMessageCallbackOff(std::string &callbackName, const std::vector<int32_t> &payloadTypes);
     void MaxAmplitudeCallbackOff(std::string callbackName);

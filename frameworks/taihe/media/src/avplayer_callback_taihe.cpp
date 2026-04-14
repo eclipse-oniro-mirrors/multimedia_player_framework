@@ -494,6 +494,35 @@ public:
         }
     };
 
+    struct TimedMetaDataEvent : public Base {
+        ::OHOS::Media::AVTimedMetaData meta = {};
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> timedMetaRef = callback.lock();
+            CHECK_AND_RETURN_LOG(timedMetaRef != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            auto func = timedMetaRef->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
+            std::shared_ptr<taihe::callback<void(
+                ::ohos::multimedia::media::AVTimedMetaData const&)>> cacheCallback =
+                std::reinterpret_pointer_cast<taihe::callback<void(
+                    ::ohos::multimedia::media::AVTimedMetaData const&)>>(func);
+
+            map<string, string> taiheContents;
+            for (const auto &[key, val] : meta.contents) {
+                taiheContents.emplace(taihe::string(key), taihe::string(val));
+            }
+            ::ohos::multimedia::media::AVTimedMetaData timedMeta {
+                .id = taihe::string(meta.id),
+                .classify = taihe::string(meta.classify),
+                .start = meta.start,
+                .duration = meta.duration,
+                .contents = taiheContents,
+            };
+            (*cacheCallback)(timedMeta);
+        }
+    };
+
     static void CompleteCallback(AniCallback::Base *aniCb, std::shared_ptr<OHOS::AppExecFwk::EventHandler> mainHandler)
     {
         CHECK_AND_RETURN_LOG(aniCb != nullptr, "aniCb is nullptr");
@@ -595,17 +624,21 @@ void AVPlayerCallback::InitInfoFuncsPart1()
             [this](const int32_t extra, const Format &infoBody) { OnAudioInterruptCb(extra, infoBody); } },
         { INFO_TYPE_AUDIO_DEVICE_CHANGE,
             [this](const int32_t extra, const Format &infoBody) { OnAudioDeviceChangeCb(extra, infoBody); } },
-        { INFO_TYPE_EOS, [this](const int32_t extra, const Format &infoBody) { OnEosCb(extra, infoBody); } },
-        { INFO_TYPE_SEEKDONE, [this](const int32_t extra, const Format &infoBody) { OnSeekDoneCb(extra, infoBody); } }
     };
 }
 
 void AVPlayerCallback::InitInfoFuncsPart2()
 {
+    onInfoFuncs_[INFO_TYPE_EOS] =
+        [this](const int32_t extra, const Format &infoBody) { OnEosCb(extra, infoBody); };
+    onInfoFuncs_[INFO_TYPE_SEEKDONE] =
+        [this](const int32_t extra, const Format &infoBody) { OnSeekDoneCb(extra, infoBody); };
     onInfoFuncs_[INFO_TYPE_METRICS_EVENT] =
         [this](const int32_t extra, const Format &infoBody) { OnMetricsEventCb(extra, infoBody); };
     onInfoFuncs_[INFO_TYPE_PLAYBACK_CONTENT_CHANGE] =
         [this](const int32_t extra, const Format &infoBody) { OnPlaybackContentChangedCb(extra, infoBody); };
+    onInfoFuncs_[INFO_TYPE_TIMED_META_DATA] =
+        [this](const int32_t extra, const Format &infoBody) { OnTimedMetaDataCb(extra, infoBody); };
 }
 
 AVPlayerCallback::AVPlayerCallback(AVPlayerNotify *listener)
@@ -1340,6 +1373,49 @@ void AVPlayerCallback::OnPlaybackContentChangedCb(const int32_t extra, const For
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_PLAYBACK_CONTENT_CHANGE);
     cb->callbackName = AVPlayerEvent::EVENT_PLAYBACK_CONTENT_CHANGE;
     cb->value = changeId;
+    AniCallback::CompleteCallback(cb, mainHandler_);
+}
+
+void AVPlayerCallback::OnTimedMetaDataCb(const int32_t extra, const Format &infoBody)
+{
+    (void)extra;
+    CHECK_AND_RETURN_LOG(isLoaded_.load(), "current source is unready");
+
+    if (refMap_.find(AVPlayerEvent::EVENT_TIMED_META_DATA) == refMap_.end()) {
+        MEDIA_LOGW("can not find timedMetaData callback!");
+        return;
+    }
+
+    AniCallback::TimedMetaDataEvent *cb = new(std::nothrow) AniCallback::TimedMetaDataEvent();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new TimedMetaDataEvent");
+
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_TIMED_META_DATA);
+    cb->callbackName = AVPlayerEvent::EVENT_TIMED_META_DATA;
+
+    (void)infoBody.GetStringValue(std::string(PlaybackTimedMetaData::PLAYER_TIMED_META_ID), cb->meta.id);
+    (void)infoBody.GetStringValue(std::string(PlaybackTimedMetaData::PLAYER_TIMED_META_CLASSIFY), cb->meta.classify);
+    (void)infoBody.GetLongValue(std::string(PlaybackTimedMetaData::PLAYER_TIMED_META_START), cb->meta.start);
+    (void)infoBody.GetLongValue(std::string(PlaybackTimedMetaData::PLAYER_TIMED_META_DURATION), cb->meta.duration);
+
+    // Extract contents: all keys in infoBody except fixed keys are dynamic contents
+    static const std::set<std::string> fixedKeys = {
+        std::string(PlaybackTimedMetaData::PLAYER_TIMED_META_ID),
+        std::string(PlaybackTimedMetaData::PLAYER_TIMED_META_CLASSIFY),
+        std::string(PlaybackTimedMetaData::PLAYER_TIMED_META_START),
+        std::string(PlaybackTimedMetaData::PLAYER_TIMED_META_DURATION)
+    };
+    std::vector<std::string> allKeys;
+    infoBody.GetKeys(allKeys);
+    for (const auto &key : allKeys) {
+        if (fixedKeys.find(key) == fixedKeys.end()) {
+            std::string val;
+            (void)infoBody.GetStringValue(key, val);
+            cb->meta.contents[key] = val;
+        }
+    }
+
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnTimedMetaDataCb id=%{public}s classify=%{public}s",
+        FAKE_POINTER(this), cb->meta.id.c_str(), cb->meta.classify.c_str());
     AniCallback::CompleteCallback(cb, mainHandler_);
 }
 

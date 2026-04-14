@@ -1,5 +1,5 @@
-/*
- * Copyright (C) 2021-2025 Huawei Device Co., Ltd.
+﻿/*
+ * Copyright (C) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +17,7 @@
 #define PLAYER_H
 
 #include <cstdint>
+#include <map>
 #include "media_core.h"
 #ifndef SUPPORT_AUDIO_ONLY
 #include "surface.h"
@@ -100,6 +101,18 @@ struct AVMetricsEvent {
     int64_t timeStamp = 0;
     int64_t playbackPosition = 0;
     std::map<std::string, int64_t> details;
+};
+
+/**
+ * @brief Timed metadata carried by a media stream (HLS/DASH).
+ * Reported via OnInfo(INFO_TYPE_TIMED_META_DATA).
+ */
+struct AVTimedMetaData {
+    std::string id;               // d.ts: id?
+    std::string classify;         // d.ts: classify?
+    int64_t start{0};         // d.ts: start
+    int64_t duration{0};      // d.ts: duration
+    std::map<std::string, std::string> contents;  // d.ts: contents
 };
 
 struct FileDescriptor {
@@ -291,6 +304,16 @@ public:
     static constexpr std::string_view TOTAL_STALLING_TIME = "total_stalling_time";
 };
 
+/* Format keys for TimedMetaData fields in OnInfo infoBody */
+class PlaybackTimedMetaData {
+public:
+    static constexpr std::string_view PLAYER_TIMED_META_ID = "timed_meta_id";
+    static constexpr std::string_view PLAYER_TIMED_META_CLASSIFY = "timed_meta_classify";
+    static constexpr std::string_view PLAYER_TIMED_META_START = "timed_meta_start";
+    static constexpr std::string_view PLAYER_TIMED_META_DURATION = "timed_meta_duration";
+    static constexpr std::string_view PLAYER_TIMED_META_CONTENTS = "timed_meta_contents";
+};
+
 enum PlayerErrorType : int32_t {
     /* Valid error, error code reference defined in media_errors.h */
     PLAYER_ERROR,
@@ -422,6 +445,8 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_RATEDONE,
     /* return the message when metrics event occurs. */
     INFO_TYPE_METRICS_EVENT,
+    /* return the message when timed metadata is available. */
+    INFO_TYPE_TIMED_META_DATA,
 };
 
 enum PlayerStates : int32_t {

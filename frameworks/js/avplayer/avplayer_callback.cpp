@@ -1,5 +1,5 @@
-/*
- * Copyright (C) 2022-2025 Huawei Device Co., Ltd.
+﻿/*
+ * Copyright (C) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,7 +25,6 @@
 #include "scope_guard.h"
 #include "event_queue.h"
 #include "avplayer_callback.h"
-
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "AVPlayerCallback" };
@@ -740,6 +739,41 @@ public:
                 "%{public}s failed to napi_call_function", callbackName.c_str());
         }
     };
+
+    /**
+     * timedMetaData: callback(info: { id, classify, start, duration, contents })
+     */
+    struct TimedMetaDataCb : public Base {
+        OHOS::Media::AVTimedMetaData meta = {};
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_RETURN_LOG(scope != nullptr, "%{public}s scope is nullptr", callbackName.c_str());
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(ref->env_, scope);
+            };
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+            napi_value obj = nullptr;
+            napi_create_object(ref->env_, &obj);
+            CommonNapi::SetPropertyString(ref->env_, obj, "id", meta.id);
+            CommonNapi::SetPropertyString(ref->env_, obj, "classify", meta.classify);
+            CommonNapi::SetPropertyInt64(ref->env_, obj, "start", meta.start);
+            CommonNapi::SetPropertyInt64(ref->env_, obj, "duration", meta.duration);
+            CommonNapi::SetPropertyMap(ref->env_, obj, "contents", meta.contents);
+            napi_value args[1] = { obj };
+            napi_value result = nullptr;
+            status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok, "%{public}s fail to napi_call_function", callbackName.c_str());
+        }
+    };
 };
 
 AVPlayerCallback::AVPlayerCallback(napi_env env, AVPlayerNotify *listener)
@@ -812,6 +846,8 @@ void AVPlayerCallback::InitInfoFuncsPart2()
         [this](const int32_t extra, const Format &infoBody) { OnMetricsEventCb(extra, infoBody); };
     onInfoFuncs_[INFO_TYPE_PLAYBACK_CONTENT_CHANGE] =
         [this](const int32_t extra, const Format &infoBody) { OnPlaybackContentChangeCb(extra, infoBody); };
+    onInfoFuncs_[INFO_TYPE_TIMED_META_DATA] =
+        [this](const int32_t extra, const Format &infoBody) { OnTimedMetaDataCb(extra, infoBody); };
 }
 
 void AVPlayerCallback::OnAudioDeviceChangeCb(const int32_t extra, const Format &infoBody)
@@ -1456,6 +1492,58 @@ void AVPlayerCallback::OnMetricsEventCb(const int32_t extra, const Format &infoB
     cb->valueVec.push_back(stallingTimeline);
     cb->valueVec.push_back(stallingDuration);
     cb->valueVec.push_back(static_cast<int64_t>(stallingMediaType));
+    NapiCallback::CompleteCallback(env_, cb);
+}
+
+void AVPlayerCallback::OnTimedMetaDataCb(const int32_t extra, const Format &infoBody)
+{
+    (void)extra;
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    if (refMap_.find(AVPlayerEvent::EVENT_TIMED_META_DATA) == refMap_.end()) {
+        MEDIA_LOGD("0x%{public}06" PRIXPTR " can not find timedMetaData callback!", FAKE_POINTER(this));
+        return;
+    }
+
+    NapiCallback::TimedMetaDataCb *cb = new(std::nothrow) NapiCallback::TimedMetaDataCb();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new TimedMetaDataCb");
+
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_TIMED_META_DATA);
+    cb->callbackName = AVPlayerEvent::EVENT_TIMED_META_DATA;
+
+    std::string id;
+    std::string classify;
+    int64_t start = 0;
+    int64_t duration = 0;
+
+    (void)infoBody.GetStringValue(std::string(PlaybackTimedMetaData::PLAYER_TIMED_META_ID), id);
+    (void)infoBody.GetStringValue(std::string(PlaybackTimedMetaData::PLAYER_TIMED_META_CLASSIFY), classify);
+    (void)infoBody.GetLongValue(std::string(PlaybackTimedMetaData::PLAYER_TIMED_META_START), start);
+    (void)infoBody.GetLongValue(std::string(PlaybackTimedMetaData::PLAYER_TIMED_META_DURATION), duration);
+
+    cb->meta.id = id;
+    cb->meta.classify = classify;
+    cb->meta.start = start;
+    cb->meta.duration = duration;
+
+    // Extract contents: all keys in infoBody except fixed keys are dynamic contents
+    static const std::set<std::string> fixedKeys = {
+        std::string(PlaybackTimedMetaData::PLAYER_TIMED_META_ID),
+        std::string(PlaybackTimedMetaData::PLAYER_TIMED_META_CLASSIFY),
+        std::string(PlaybackTimedMetaData::PLAYER_TIMED_META_START),
+        std::string(PlaybackTimedMetaData::PLAYER_TIMED_META_DURATION)
+    };
+    std::vector<std::string> allKeys;
+    infoBody.GetKeys(allKeys);
+    for (const auto &key : allKeys) {
+        if (fixedKeys.find(key) == fixedKeys.end()) {
+            std::string val;
+            (void)infoBody.GetStringValue(key, val);
+            cb->meta.contents[key] = val;
+        }
+    }
+
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnTimedMetaDataCb id=%{public}s classify=%{public}s",
+        FAKE_POINTER(this), id.c_str(), classify.c_str());
     NapiCallback::CompleteCallback(env_, cb);
 }
 

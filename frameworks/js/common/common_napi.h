@@ -65,6 +65,8 @@ public:
     // support Record<string, string>
     static napi_status GetPropertyRecord(napi_env env, napi_value in, Meta &meta, std::string type);
     static bool GetPropertyMap(napi_env env, napi_value value, std::map<std::string, std::string>& map);
+    static bool SetPropertyMap(napi_env env, napi_value &obj, const std::string &key,
+        const std::map<std::string, std::string> &map);
     static bool GetPropertyVideoSize(napi_env env, napi_value value, const std::string &type,
                                      std::pair<int32_t, int32_t> &result);
     static bool GetPropertyArrayString(napi_env env, napi_value value, const std::string &type,

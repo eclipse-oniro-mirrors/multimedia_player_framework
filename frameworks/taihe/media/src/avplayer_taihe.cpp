@@ -2993,7 +2993,7 @@ void AVPlayerImpl::OnMetricsEvent(callback_view<void(
         std::make_shared<taihe::callback<void(array_view<::ohos::multimedia::media::AVMetricsEvent> data)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
-    SaveCallbackReference(AVPlayerEvent::EVENT_DRM_INFO_UPDATE, autoRef);
+    SaveCallbackReference(AVPlayerEvent::EVENT_METRICS, autoRef);
     MEDIA_LOGI("0x%{public}06" PRIXPTR
         " TaiheOnMetricsEvent callbackName: metricsEvent success", FAKE_POINTER(this));
     return;
@@ -3370,6 +3370,40 @@ void AVPlayerImpl::OffMetricsEvent(optional_view<callback<void(
     std::string callbackName = AVPlayerEvent::EVENT_METRICS;
     ClearCallbackReference(callbackName);
     MEDIA_LOGI("OffMetricsEvent End");
+}
+
+void AVPlayerImpl::OnTimedMetaData(callback_view<void(
+    ::ohos::multimedia::media::AVTimedMetaData const&)> callback)
+{
+    MediaTrace trace("AVPlayerImpl::OnTimedMetaData");
+    MEDIA_LOGD("TaiheOnTimedMetaData In");
+
+    if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to on event");
+        return;
+    }
+
+    ani_env *env = taihe::get_env();
+    std::shared_ptr<taihe::callback<void(::ohos::multimedia::media::AVTimedMetaData const&)>> taiheCallback =
+        std::make_shared<taihe::callback<void(::ohos::multimedia::media::AVTimedMetaData const&)>>(callback);
+    std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
+    std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
+    SaveCallbackReference(AVPlayerEvent::EVENT_TIMED_META_DATA, autoRef);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR "TaiheOnTimedMetaData callbackName: timedMetaData success", FAKE_POINTER(this));
+}
+
+void AVPlayerImpl::OffTimedMetaData(optional_view<callback<void(
+    ::ohos::multimedia::media::AVTimedMetaData const&)>> callback)
+{
+    MediaTrace trace("AVPlayerImpl::OffTimedMetaData");
+    MEDIA_LOGD("TaiheOffTimedMetaData In");
+
+    if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        return;
+    }
+    std::string callbackName = AVPlayerEvent::EVENT_TIMED_META_DATA;
+    ClearCallbackReference(callbackName);
+    MEDIA_LOGI("OffTimedMetaData End");
 }
 
 bool AVPlayerImpl::GetIntArrayArgument(std::vector<int32_t> &vec, const std::vector<int32_t> &inputArray)

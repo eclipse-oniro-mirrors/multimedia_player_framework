@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -70,6 +70,7 @@ const std::string EVENT_SEI_MESSAGE_INFO = "seiMessageReceived";
 const std::string EVENT_SUPER_RESOLUTION_CHANGED = "superResolutionChanged";
 const std::string EVENT_METRICS = "metricsEvent";
 const std::string EVENT_PLAYBACK_CONTENT_CHANGE = "playbackContentChange";
+const std::string EVENT_TIMED_META_DATA = "timedMetaData";
 }
 
 using TaskRet = std::pair<int32_t, std::string>;
@@ -358,6 +359,9 @@ private:
 
     static napi_value JsSetOnMetricsEventCallback(napi_env env, napi_callback_info info);
     static napi_value JsClearOnMetricsEventCallback(napi_env env, napi_callback_info info);
+
+    static napi_value JsOnTimedMetaData(napi_env env, napi_callback_info info);
+    static napi_value JsOffTimedMetaData(napi_env env, napi_callback_info info);
 
     static napi_value JsSetOnPlaybackContentChangedCallback(napi_env env, napi_callback_info info);
     static napi_value JsClearOnPlaybackContentChangedCallback(napi_env env, napi_callback_info info);

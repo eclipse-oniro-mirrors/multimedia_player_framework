@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -82,6 +82,7 @@ private:
     void OnSeiInfoCb(const int32_t extra, const Format &infoBody);
     void OnSuperResolutionChangedCb(const int32_t extra, const Format &infoBody);
     void OnMetricsEventCb(const int32_t extra, const Format &infoBody);
+    void OnTimedMetaDataCb(const int32_t extra, const Format &infoBody);
 
     void OnEosCb(const int32_t extra, const Format &infoBody);
     void NotifyIsLiveStream(const int32_t extra, const Format &infoBody);

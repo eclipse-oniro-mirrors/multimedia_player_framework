@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -197,6 +197,8 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("offMetricsEvent", JsClearOnMetricsEventCallback),
         DECLARE_NAPI_FUNCTION("onPlaybackContentChanged", JsSetOnPlaybackContentChangedCallback),
         DECLARE_NAPI_FUNCTION("offPlaybackContentChanged", JsClearOnPlaybackContentChangedCallback),
+        DECLARE_NAPI_FUNCTION("onTimedMetaData", JsOnTimedMetaData),
+        DECLARE_NAPI_FUNCTION("offTimedMetaData", JsOffTimedMetaData),
 
         DECLARE_NAPI_WRITABLE_FUNCTION("prepare", JsPrepare),
         DECLARE_NAPI_WRITABLE_FUNCTION("addSubtitleFromUrl", JsAddSubtitleUrl),
@@ -4524,6 +4526,67 @@ napi_value AVPlayerNapi::JsSetOnPlaybackContentChangedCallback(napi_env env, nap
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
         jsPlayer->SaveCallbackReference(callbackName, autoRef);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSetOnPlaybackContentChangedCallback callbackName: %{public}s success",
+        FAKE_POINTER(jsPlayer), callbackName.c_str());
+    return result;
+}
+
+napi_value AVPlayerNapi::JsOnTimedMetaData(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::onTimedMetaData");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGD("JsOnTimedMetaData In");
+
+    napi_value args[MIN_ARG_COUNTS] = { nullptr }; // args[0]: callback
+    size_t argCount = MIN_ARG_COUNTS;
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+
+    if (argCount < MIN_ARG_COUNTS) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "Mandatory parameters are left unspecified.");
+        return result;
+    }
+
+    if (jsPlayer->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is released, unsupport to register timedMetaData event");
+        return result;
+    }
+
+    CHECK_AND_RETURN_RET_NOLOG(
+        VerifyExpectedType({env, args[0], napi_function}, jsPlayer, "param should be function."), result);
+
+    std::string callbackName = AVPlayerEvent::EVENT_TIMED_META_DATA;
+    napi_ref ref = nullptr;
+    napi_status status = napi_create_reference(env, args[0], 1, &ref);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create reference!");
+
+    std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
+    jsPlayer->SaveCallbackReference(callbackName, autoRef);
+
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsOnTimedMetaData registered successfully", FAKE_POINTER(jsPlayer));
+    return result;
+}
+
+napi_value AVPlayerNapi::JsOffTimedMetaData(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::offTimedMetaData");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGD("JsOffTimedMetaData In");
+
+    napi_value args[MIN_ARG_COUNTS] = { nullptr };
+    size_t argCount = MIN_ARG_COUNTS;
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+
+    if (jsPlayer->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        return result;
+    }
+
+    std::string callbackName = AVPlayerEvent::EVENT_TIMED_META_DATA;
+    jsPlayer->ClearCallbackReference(callbackName);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsOffTimedMetaData callbackName: %{public}s success",
         FAKE_POINTER(jsPlayer), callbackName.c_str());
     return result;
 }
