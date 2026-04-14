@@ -605,6 +605,50 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureRecorderImpl::GetSetMicroph
     });
 }
 
+std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureRecorderImpl::GetPresentPickerTask(
+    const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx)
+{
+    return std::make_shared<TaskHandler<RetInfo>>([taihe = asyncCtx->taihe]() {
+        const std::string &option = AVScreenCapturegOpt::PRESENT_PICKER;
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+
+        CHECK_AND_RETURN_RET(taihe != nullptr && taihe->screenCapture_ != nullptr,
+            GetReturnInfo(MSERR_INVALID_OPERATION, option, ""));
+
+        int32_t ret = taihe->screenCapture_->PresentPicker();
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(MSERR_UNKNOWN, option, ""));
+
+        MEDIA_LOGI("%{public}s End", option.c_str());
+        return RetInfo(MSERR_EXT_API9_OK, "");
+    });
+}
+
+void AVScreenCaptureRecorderImpl::PresentPickerSync()
+{
+    MediaTrace trace("AVScreenCapture::TaihePresentPicker");
+    const std::string &option = AVScreenCapturegOpt::PRESENT_PICKER;
+    MEDIA_LOGI("Taihe %{public}s Start", option.c_str());
+
+    auto asyncCtx = std::make_unique<AVScreenCaptureAsyncContext>();
+    CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
+    asyncCtx->taihe = this;
+    CHECK_AND_RETURN_LOG(asyncCtx->taihe != nullptr, "failed to GetTaiheInstanceAndArgs");
+    CHECK_AND_RETURN_LOG(asyncCtx->taihe->taskQue_ != nullptr, "taskQue is nullptr!");
+
+    asyncCtx->task_ = AVScreenCaptureRecorderImpl::GetPresentPickerTask(asyncCtx);
+    (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+
+    if (asyncCtx->task_) {
+        auto result = asyncCtx->task_->GetResult();
+        if (result.Value().first != MSERR_EXT_API9_OK) {
+            set_business_error(result.Value().first, result.Value().second);
+        }
+    }
+    asyncCtx.release();
+
+    MEDIA_LOGI("Taihe %{public}s End", option.c_str());
+}
+
 void AVScreenCaptureRecorderImpl::SetMicEnabledSync(bool enable)
 {
     MediaTrace trace("AVScreenCapture::TaiheSetMicrophoneEnabled");

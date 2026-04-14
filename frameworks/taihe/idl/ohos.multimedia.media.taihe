@@ -1194,6 +1194,9 @@ interface AVScreenCaptureRecorder {
     @gen_promise("resumeRecording")
     ResumeRecordingSync(): void;
 
+    @gen_promise("presentPicker")
+    PresentPickerSync(): void;
+
     @gen_promise("skipPrivacyMode")
     SkipPrivacyModeSync(windowIDs: Array<i32>): void;
 
