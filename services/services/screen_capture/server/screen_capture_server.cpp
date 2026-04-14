@@ -3733,7 +3733,7 @@ int32_t ScreenCaptureServer::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfa
         if (memcpy_s(&metaRegion, sizeof(HDI::Display::Graphic::Common::V1_0::BufferHandleMetaRegion),
             data.data(), data.size()) != EOK) {
                 return MSERR_UNKNOWN;
-            }
+        }
         rsRect.x = static_cast<int32_t>(metaRegion.left);
         rsRect.y = static_cast<int32_t>(metaRegion.top);
         rsRect.w = static_cast<int32_t>(metaRegion.width);
