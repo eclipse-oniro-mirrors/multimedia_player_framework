@@ -265,8 +265,7 @@ sptr<OHOS::SurfaceBuffer> ScreenCaptureNativeMock::AcquireVideoBuffer(int32_t &f
     OHOS::Rect &damage)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, nullptr, "screenCapture_ == nullptr");
-    OHOS::Rect rsRect;
-    return screenCapture_->AcquireVideoBuffer(fence, timestamp, damage, rsRect);
+    return screenCapture_->AcquireVideoBuffer(fence, timestamp, damage);
 }
 
 int32_t ScreenCaptureNativeMock::SetCaptureArea(uint64_t displayId, OHOS::Rect &area)

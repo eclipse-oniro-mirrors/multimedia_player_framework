@@ -53,7 +53,7 @@ public:
     MOCK_METHOD(int32_t, AcquireAudioBuffer,
         (std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type), (override));
     MOCK_METHOD(int32_t, AcquireVideoBuffer, (sptr<OHOS::SurfaceBuffer> &surfacebuffer, int32_t &fence,
-        int64_t &timestamp, OHOS::Rect &damage, OHOS::Rect &rsRect), (override));
+        int64_t &timestamp, OHOS::Rect &damage), (override));
     MOCK_METHOD(int32_t, ReleaseAudioBuffer, (AudioCaptureSourceType type), (override));
     MOCK_METHOD(int32_t, ReleaseVideoBuffer, (), (override));
     MOCK_METHOD(int32_t, SetMicrophoneEnabled, (bool isMicrophone), (override));

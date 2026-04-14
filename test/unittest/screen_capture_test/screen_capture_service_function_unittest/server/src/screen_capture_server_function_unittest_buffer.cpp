@@ -50,9 +50,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AcquireVideoBuffer_001, TestSize.Level
     int32_t fence = 0;
     int64_t timestamp = 0;
     OHOS::Rect damage;
-    OHOS::Rect rsRect;
     screenCaptureServer_->isDump_ = false;
-    ASSERT_NE(screenCaptureServer_->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage, rsRect), MSERR_OK);
+    ASSERT_NE(screenCaptureServer_->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage), MSERR_OK);
     screenCaptureServer_->ReleaseVideoBuffer();
 }
 
@@ -71,9 +70,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AcquireVideoBuffer_002, TestSize.Level
     int32_t fence = 0;
     int64_t timestamp = 0;
     OHOS::Rect damage;
-    OHOS::Rect rsRect;
     screenCaptureServer_->isDump_ = true;
-    ASSERT_NE(screenCaptureServer_->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage, rsRect), MSERR_OK);
+    ASSERT_NE(screenCaptureServer_->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage), MSERR_OK);
     screenCaptureServer_->ReleaseVideoBuffer();
 }
 

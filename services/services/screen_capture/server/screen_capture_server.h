@@ -86,7 +86,7 @@ public:
     int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBack> &callback) override;
     int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type) override;
     int32_t AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence,
-        int64_t &timestamp, OHOS::Rect &damage, OHOS::Rect &rsRect) override;
+        int64_t &timestamp, OHOS::Rect &damage) override;
     int32_t ReleaseAudioBuffer(AudioCaptureSourceType type) override;
     int32_t ReleaseVideoBuffer() override;
     int32_t SetMicrophoneEnabled(bool isMicrophone) override;

@@ -409,7 +409,7 @@ int32_t ScreenCaptureServiceProxy::AcquireAudioBuffer(std::shared_ptr<AudioBuffe
 }
 
 int32_t ScreenCaptureServiceProxy::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence,
-                                                      int64_t &timestamp, OHOS::Rect &damage, OHOS::Rect &rsRect)
+                                                      int64_t &timestamp, OHOS::Rect &damage)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -432,10 +432,6 @@ int32_t ScreenCaptureServiceProxy::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> 
         damage.y = reply.ReadInt32();
         damage.w = reply.ReadInt32();
         damage.h = reply.ReadInt32();
-        rsRect.x = reply.ReadInt32();
-        rsRect.y = reply.ReadInt32();
-        rsRect.w = reply.ReadInt32();
-        rsRect.h = reply.ReadInt32();
     }
     return ret;
 }

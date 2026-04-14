@@ -46,8 +46,7 @@ public:
     int32_t StopScreenRecording() override;
     int32_t PresentPicker() override;
     int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audiobuffer, AudioCaptureSourceType type) override;
-    sptr<OHOS::SurfaceBuffer> AcquireVideoBuffer(int32_t &fence, int64_t &timestamp, OHOS::Rect &damage,
-        OHOS::Rect &rsRect) override;
+    sptr<OHOS::SurfaceBuffer> AcquireVideoBuffer(int32_t &fence, int64_t &timestamp, OHOS::Rect &damage) override;
     int32_t ReleaseAudioBuffer(AudioCaptureSourceType type) override;
     int32_t ReleaseVideoBuffer() override;
     int32_t Release() override;
