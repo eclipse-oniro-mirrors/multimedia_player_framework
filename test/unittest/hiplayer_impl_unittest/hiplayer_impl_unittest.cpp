@@ -114,6 +114,7 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_HandleAudioTrackChangeEvent_003, TestSi
     Event event;
     event.param = AUDIO_TRACK_EVENT_INDEX;
     hiplayer_->HandleAudioTrackChangeEvent(event);
+    EXPECT_EQ(hiplayer_->currentAudioTrackId_, INVALID_AUDIO_TRACK_ID);
 }
 
 // @tc.name     Test SetSource API
