@@ -280,10 +280,8 @@ int32_t LppVideoStreamerServiceProxy::GetShareBufferFd(int32_t &fd)
     
     int32_t ret = Remote()->SendRequest(
         IStandardLppVideoStreamerService::GET_SHARE_BUFFER_FD, data, reply, option);
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("Send request failed, ret: %{public}d", ret);
-        return ret;
-    }
+
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Send request failed");
      
     ret = reply.ReadInt32();
     fd = reply.ReadInt32();

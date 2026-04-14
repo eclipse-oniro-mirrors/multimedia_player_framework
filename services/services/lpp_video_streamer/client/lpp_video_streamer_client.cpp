@@ -262,8 +262,7 @@ void LppVideoStreamerClient::MediaServerDied()
         playerProxy_ = nullptr;
         listenerStub_ = nullptr;
         if (surface_ != nullptr) {
-            MEDIA_LOGI("==yan==LppVideoStreamerClient::MediaServerDied2");
-            MEDIA_LOGI("==yan==Cached shareBufferFd_: %{public}d", cachedShareBufferFd_);
+            MEDIA_LOGI("Cached shareBufferFd_: %{public}d", cachedShareBufferFd_)
             surface_->SetLppShareFd(cachedShareBufferFd_, false);
             surface_ = nullptr;
             cachedShareBufferFd_ = -1;
