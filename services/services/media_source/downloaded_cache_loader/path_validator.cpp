@@ -24,6 +24,7 @@ namespace Media {
 namespace DownloadedCache {
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "DownloadedCachePathValidator"};
+constexpr int SHA256_LEN = 32;
 }
 
 bool PathValidator::Validate(const std::string& rootPath, const std::string& relativePath)
@@ -39,9 +40,7 @@ bool PathValidator::Validate(const std::string& rootPath, const std::string& rel
     }
 
     std::string resolvedPath = NormalizePath(rootPath + "/" + relativePath);
-
     std::string normalizedRoot = NormalizePath(rootPath);
-
     if (resolvedPath.length() < normalizedRoot.length()) {
         MEDIA_LOGE("Resolved path shorter than root path");
         return false;
@@ -103,7 +102,7 @@ bool PathValidator::IsPathEscaped(const std::string& resolvedPath, const std::st
 bool PathValidator::ContainsIllegalCharacters(const std::string& path)
 {
     for (char c : path) {
-        if (static_cast<unsigned char>(c) < 32) {
+        if (static_cast<unsigned char>(c) < SHA256_LEN) {
             if (c != '\t' && c != '\n' && c != '\r') {
                 MEDIA_LOGE("Path contains control character: 0x%{public}02X",
                            static_cast<uint8_t>(c));

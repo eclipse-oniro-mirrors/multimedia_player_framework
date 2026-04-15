@@ -23,30 +23,29 @@ namespace OHOS {
 namespace Media {
 namespace DownloadedCache {
 
-std::array<uint8_t, 32> SHA256Hasher::GenerateHash(const std::string& url)
+std::array<uint8_t, SHA256_LEN> SHA256Hasher::GenerateHash(const std::string& url)
 {
-    std::array<uint8_t, 32> hash = {};
+    std::array<uint8_t, SHA256_LEN> hash = {};
 
-    SHA256(reinterpret_cast<const unsigned char*>(url.c_str()),
-           url.size(),
-           reinterpret_cast<unsigned char*>(hash.data()));
+    SHA256(reinterpret_cast<const unsigned char*>(url.c_str()), url.size(),
+        reinterpret_cast<unsigned char*>(hash.data()));
 
     return hash;
 }
 
-bool SHA256Hasher::CompareHash(const std::array<uint8_t, 32>& hash1,
-                              const std::array<uint8_t, 32>& hash2)
+bool SHA256Hasher::CompareHash(const std::array<uint8_t, SHA256_LEN>& hash1,
+    const std::array<uint8_t, SHA256_LEN>& hash2)
 {
     return std::equal(hash1.begin(), hash1.end(), hash2.begin());
 }
 
-std::string SHA256Hasher::HashToString(const std::array<uint8_t, 32>& hash)
+std::string SHA256Hasher::HashToString(const std::array<uint8_t, SHA256_LEN>& hash)
 {
     std::stringstream ss;
     ss << std::hex << std::setfill('0');
 
     for (uint8_t byte : hash) {
-        ss << std::setw(2) << static_cast<int>(byte);
+        ss << std::setw(2) << static_cast<int>(byte); // sha256 result is 32 values. each value fill to 2 bytes width
     }
 
     return ss.str();

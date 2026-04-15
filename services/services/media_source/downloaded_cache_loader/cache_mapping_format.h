@@ -32,6 +32,7 @@ namespace DownloadedCache {
 
 constexpr uint8_t CACHE_MAPPING_MAGIC[4] = {'D', 'C', 'M', 'H'};  // ASCII: D=0x44, C=0x43, M=0x4D, H=0x48
 constexpr uint32_t CACHE_MAPPING_VERSION = 1;
+constexpr int SHA256_LEN = 32;
 
 #pragma pack(push, 1)
 struct CacheMappingHeader {
@@ -47,7 +48,7 @@ static_assert(sizeof(CacheMappingHeader) == 24, "CacheMappingHeader size must be
 
 #pragma pack(push, 1)
 struct CacheMappingEntryHeader {
-    uint8_t  urlHash[32];     // URL的SHA256完整哈希值（32字节）
+    uint8_t  urlHash[SHA256_LEN];     // URL的SHA256完整哈希值（32字节）
     uint32_t pathLength;       // 文件路径长度（UTF-8编码）
     uint64_t fileSize;         // 文件总大小（字节）
     uint8_t  reserved[8];      // 保留字段：8字节（在fileSize之后）
@@ -60,7 +61,8 @@ struct CacheMappingEntry {
     CacheMappingEntryHeader header;  // 52字节
     std::string filePath;            // 文件路径（UTF-8编码，相对路径）
 
-    size_t GetTotalSize() const {
+    size_t GetTotalSize() const
+    {
         return sizeof(header) + filePath.size();
     }
 };

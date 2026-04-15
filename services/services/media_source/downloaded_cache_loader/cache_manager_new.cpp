@@ -30,6 +30,7 @@ namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "DownloadedCacheManager"};
 const std::string CACHE_MAPPING_FILE = "cache_mapping.txt";
 const size_t MAX_CACHE_MAPPING_FILE_SIZE = 10ULL * 1024ULL * 1024ULL;
+constexpr int SHA256_LEN = 32;
 }
 
 namespace OHOS {
@@ -38,14 +39,16 @@ namespace DownloadedCache {
 
 class MemoryReader {
 public:
-    MemoryReader(const std::vector<uint8_t>& buffer)
+    explicit MemoryReader(const std::vector<uint8_t>& buffer)
         : buffer_(buffer), offset_(0) {}
 
-    bool Read(void* dest, size_t size) {
+    bool Read(void* dest, size_t size)
+    {
         if (offset_ + size > buffer_.size()) {
             return false;
         }
-        std::memcpy(dest, buffer_.data() + offset_, size);
+        errno_t ret = std::memcpy_s(dest, size, buffer_.data() + offset_, size);
+        CHECK_AND_RETURN_RET_LOG(ret == EOK, false, "memcpy_s failed");
         offset_ += size;
         return true;
     }
@@ -65,7 +68,7 @@ DownloadedCacheManager::DownloadedCacheManager(const std::string& cacheDir)
     LoadMapping();
     LoadIndex();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create, cacheDir: %{public}s",
-               FAKE_POINTER(this), cacheDir_.c_str());
+        FAKE_POINTER(this), cacheDir_.c_str());
 }
 
 void DownloadedCacheManager::LoadMapping()
@@ -120,9 +123,9 @@ void DownloadedCacheManager::LoadIndex()
         return;
     }
 
-    if (std::memcmp(header.magic, CACHE_MAPPING_MAGIC, 4) != 0) {
-        MEDIA_LOGE("Invalid magic number: %{public}c%c%c%c",
-                   header.magic[0], header.magic[1], header.magic[2], header.magic[3]);
+    if (std::memcmp(header.magic, CACHE_MAPPING_MAGIC, 4) != 0) { // CACHE_MAPPING_MAGIC has 4 bytes
+        MEDIA_LOGE("Invalid magic number: %{public}c%{public}c%{public}c%{public}c",
+            header.magic[0], header.magic[1], header.magic[2], header.magic[3]); // log 0,1,2,3 of CACHE_MAPPING_MAGIC
         return;
     }
 
@@ -142,9 +145,13 @@ void DownloadedCacheManager::LoadIndex()
         return;
     }
 
+    LoadIndexEntries(reader, header);
+}
+
+void DownloadedCacheManager::LoadIndexEntries(MemoryReader& reader, CacheMappingHeader& header)
+{
     for (uint32_t i = 0; i < header.entryCount; ++i) {
         CacheMappingEntry entry;
-
         if (!reader.Read(entry.header.urlHash, sizeof(entry.header.urlHash)) ||
             !reader.Read(&entry.header.pathLength, sizeof(entry.header.pathLength)) ||
             !reader.Read(&entry.header.fileSize, sizeof(entry.header.fileSize)) ||
@@ -154,8 +161,7 @@ void DownloadedCacheManager::LoadIndex()
         }
 
         if (entry.header.pathLength > reader.GetSize() - reader.GetOffset()) {
-            MEDIA_LOGW("Invalid path length %{public}u at entry %{public}u",
-                      entry.header.pathLength, i);
+            MEDIA_LOGW("Invalid path length %{public}u at entry %{public}u", entry.header.pathLength, i);
             break;
         }
 
@@ -170,8 +176,13 @@ void DownloadedCacheManager::LoadIndex()
             continue;
         }
 
-        std::array<uint8_t, 32> hashArr;
-        std::memcpy(hashArr.data(), entry.header.urlHash, 32);
+        std::array<uint8_t, SHA256_LEN> hashArr;
+        errno_t ret = std::memcpy_s(hashArr.data(), SHA256_LEN, entry.header.urlHash, SHA256_LEN);
+        if (ret != EOK) {
+            MEDIA_LOGW("Skipping entry %{public}u with memcpy_s failed", i);
+            continue;
+        }
+
         std::string hashIndex = SHA256Hasher::HashToString(hashArr);
 
         index_[hashIndex].push_back(entry);
@@ -206,8 +217,7 @@ std::string DownloadedCacheManager::GetMediaCache(const std::string& url)
     const CacheMappingEntry& entry = it->second[0];
     std::string relativePath = entry.filePath;
 
-    CHECK_AND_RETURN_RET_LOG(!relativePath.empty() &&
-        relativePath.find("..") == std::string::npos, "",
+    CHECK_AND_RETURN_RET_LOG(!relativePath.empty() && relativePath.find("..") == std::string::npos, "",
         "get media cache file failed: invalid path");
 
     std::string path = cacheDir_ + "/" + relativePath;

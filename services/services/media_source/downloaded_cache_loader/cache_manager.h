@@ -52,6 +52,7 @@ public:
 
  private:
     void LoadIndex();
+    void LoadIndexEntries(MemoryReader& reader, CacheMappingHeader& header);
     bool CreateDirectories(const std::string& path);
     uint64_t ScanDirectorySize(const std::string& path);
     void LoadMapping();

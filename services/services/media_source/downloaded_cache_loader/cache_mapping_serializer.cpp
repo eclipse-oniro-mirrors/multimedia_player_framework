@@ -80,15 +80,10 @@ bool CacheMappingSerializer::WriteEntry(std::ofstream& file, const CacheMappingE
         return false;
     }
 
-    file.write(reinterpret_cast<const char*>(entry.header.urlHash),
-             sizeof(entry.header.urlHash));
-    file.write(reinterpret_cast<const char*>(&entry.header.pathLength),
-             sizeof(entry.header.pathLength));
-    file.write(reinterpret_cast<const char*>(&entry.header.fileSize),
-             sizeof(entry.header.fileSize));
-    file.write(reinterpret_cast<const char*>(entry.header.reserved),
-             sizeof(entry.header.reserved));
-
+    file.write(reinterpret_cast<const char*>(entry.header.urlHash), sizeof(entry.header.urlHash));
+    file.write(reinterpret_cast<const char*>(&entry.header.pathLength), sizeof(entry.header.pathLength));
+    file.write(reinterpret_cast<const char*>(&entry.header.fileSize), sizeof(entry.header.fileSize));
+    file.write(reinterpret_cast<const char*>(entry.header.reserved), sizeof(entry.header.reserved));
     file.write(entry.filePath.c_str(), entry.filePath.size());
 
     if (!file) {
@@ -128,14 +123,10 @@ bool CacheMappingDeserializer::ReadEntry(std::ifstream& file, CacheMappingEntry&
         return false;
     }
 
-    file.read(reinterpret_cast<char*>(entry.header.urlHash),
-            sizeof(entry.header.urlHash));
-    file.read(reinterpret_cast<char*>(&entry.header.pathLength),
-            sizeof(entry.header.pathLength));
-    file.read(reinterpret_cast<char*>(&entry.header.fileSize),
-            sizeof(entry.header.fileSize));
-    file.read(reinterpret_cast<char*>(entry.header.reserved),
-            sizeof(entry.header.reserved));
+    file.read(reinterpret_cast<char*>(entry.header.urlHash), sizeof(entry.header.urlHash));
+    file.read(reinterpret_cast<char*>(&entry.header.pathLength), sizeof(entry.header.pathLength));
+    file.read(reinterpret_cast<char*>(&entry.header.fileSize), sizeof(entry.header.fileSize));
+    file.read(reinterpret_cast<char*>(entry.header.reserved), sizeof(entry.header.reserved));
 
     if (!file) {
         MEDIA_LOGE("Failed to read entry header from file");
@@ -151,8 +142,7 @@ bool CacheMappingDeserializer::ReadEntry(std::ifstream& file, CacheMappingEntry&
     }
 
     if (!PathValidator::Validate(cacheDir, entry.filePath)) {
-        MEDIA_LOGW("Skipping entry with invalid path: %{public}s",
-                  entry.filePath.c_str());
+        MEDIA_LOGW("Skipping entry with invalid path: %{public}s", entry.filePath.c_str());
         return false;
     }
 
@@ -161,9 +151,9 @@ bool CacheMappingDeserializer::ReadEntry(std::ifstream& file, CacheMappingEntry&
 
 bool CacheMappingDeserializer::ValidateHeader(const CacheMappingHeader& header)
 {
-    if (std::memcmp(header.magic, CACHE_MAPPING_MAGIC, 4) != 0) {
-        MEDIA_LOGE("Invalid magic number: %{public}c%c%c%c",
-                   header.magic[0], header.magic[1], header.magic[2], header.magic[3]);
+    if (std::memcmp(header.magic, CACHE_MAPPING_MAGIC, 4) != 0) { // CACHE_MAPPING_MAGIC has 4 bytes
+        MEDIA_LOGE("Invalid magic number: %{public}c%{public}c%{public}c%{public}c",
+            header.magic[0], header.magic[1], header.magic[2], header.magic[3]); // log 0,1,2,3 of CACHE_MAPPING_MAGIC
         return false;
     }
 

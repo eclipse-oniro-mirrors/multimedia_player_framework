@@ -24,7 +24,7 @@ namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "DownloadedCacheLoader"};
 }
 
-DownloadedCacheLoader::DownloadedCacheLoader(std::shared_ptr<DownloadedCacheManager> cacheManager) 
+DownloadedCacheLoader::DownloadedCacheLoader(std::shared_ptr<DownloadedCacheManager> cacheManager)
     : cacheManager_(cacheManager)
 {
     readTask_ = std::make_shared<Task>("OS_Custom_Read", "", TaskType::SINGLETON, TaskPriority::HIGH, false);
