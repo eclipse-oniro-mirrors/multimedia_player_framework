@@ -39,6 +39,7 @@ struct CacheMetaData {
     std::string entry;
 };
 
+class MemoryReader;
 class DownloadedCacheManager {
 public:
     explicit DownloadedCacheManager(const std::string& cacheDir);

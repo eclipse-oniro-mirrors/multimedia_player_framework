@@ -17,6 +17,7 @@
 #include <sys/stat.h>
 #include <filesystem>
 #include <cstring>
+#include <securec.h>
 #include "cache_manager.h"
 #include "cache_mapping_format.h"
 #include "path_validator.h"
