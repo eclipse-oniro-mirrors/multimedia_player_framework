@@ -260,6 +260,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_013, T
         "{\"stopRecording\": \"true\","
         "\"appPrivacyProtectionSwitch\": \"true\","
         "\"systemPrivacyProtectionSwitch\": \"true\"}";
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::POPUP_WINDOW;
     ASSERT_EQ(screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice), MSERR_OK);
 }
 
@@ -307,6 +308,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_015, T
         "{\"stopRecording\": \"false\","
         "\"appPrivacyProtectionSwitch\": \"true\","
         "\"systemPrivacyProtectionSwitch\": \"false\"}";
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::POPUP_WINDOW;
     screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice);
     ASSERT_EQ(screenCaptureServer_->systemPrivacyProtectionSwitch_, false);
 }
@@ -331,6 +333,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_016, T
         "{\"stopRecording\": \"false\","
         "\"appPrivacyProtectionSwitch\": \"false\","
         "\"systemPrivacyProtectionSwitch\": \"true\"}";
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::POPUP_WINDOW;
     screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice);
     ASSERT_EQ(screenCaptureServer_->systemPrivacyProtectionSwitch_, true);
 }
