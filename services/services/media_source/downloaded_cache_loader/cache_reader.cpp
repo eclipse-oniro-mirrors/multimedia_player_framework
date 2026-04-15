@@ -150,7 +150,7 @@ void CacheReader::HandleCacheRequest(int64_t uuid, int64_t requestedOffset, int6
         return;
     }
 
-    MEDIA_LOG_I("RespondData offset: " PUBLIC_LOG_D64" readLen: " PUBLIC_LOG_D64,
+    MEDIA_LOG_I("RespondData offset: " PUBLIC_LOG_D64 ", readLen: " PUBLIC_LOG_D64,
         requestedOffset, actualReadLength);
 
     auto ret = request_->RespondData(uuid, requestedOffset, buffer);
@@ -160,9 +160,9 @@ void CacheReader::HandleCacheRequest(int64_t uuid, int64_t requestedOffset, int6
         return;
     }
 
-    if (requestedLength == -1) {
-        MEDIA_LOG_I("RespondData whole file complete, offset: " PUBLIC_LOG_D64" readLen: " PUBLIC_LOG_D64,
-            requestedOffset, actualReadLength);
+    if (requestedLength == -1 || actualReadLength != requestedLength) {
+        MEDIA_LOG_I("RespondData whole file complete, offset: " PUBLIC_LOG_D64 ", request: " PUBLIC_LOG_D64
+            ", readLen: " PUBLIC_LOG_D64, requestedOffset, requestedLength, actualReadLength);
         request_->FinishLoading(uuid, LOADING_ERROR_SUCCESS);
     }
 }
