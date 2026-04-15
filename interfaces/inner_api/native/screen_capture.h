@@ -86,6 +86,8 @@ enum CaptureMode : int32_t {
     CAPTURE_SPECIFIED_SCREEN = 1,
     /* capture a specified window */
     CAPTURE_SPECIFIED_WINDOW = 2,
+    /* capture a specified app */
+    CAPTURE_SPECIFIED_APP = 3,
     CAPTURE_INVAILD = -1
 };
 
@@ -178,6 +180,10 @@ enum class PickerMode : int32_t {
     WINDOW_ONLY = 0,
     SCREEN_ONLY = 1,
     SCREEN_AND_WINDOW = 2,
+    APP_ONLY = 3,
+    SCREEN_AND_APP = 4,
+    WINDOW_AND_APP = 5,
+    SCREEN_WINDOW_AND_APP = 6,
 
     // 注意：新增枚举值时，请在当前注释行上方新增，并更新下方的边界值（边界值用于枚举值合法性判断）。
     MIN_VAL = WINDOW_ONLY,

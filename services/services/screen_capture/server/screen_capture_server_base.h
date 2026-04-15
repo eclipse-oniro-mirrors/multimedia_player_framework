@@ -60,6 +60,8 @@
 #include "window_manager.h"
 #include "limitIdGenerator.h"
 #include "system_ability_status_change_stub.h"
+#include "session_manager_lite.h"
+#include "window_manager_lite.h"
 #include "i_input_device_listener.h"
 #include "input_manager.h"
 #include "session_lifecycle_listener_stub.h"
@@ -185,17 +187,7 @@ private:
     std::vector<uint64_t> screenIds_;
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
 };
-
-class SCWindowLifecycleListener : public Rosen::SessionLifecycleListenerStub {
-public:
-    explicit SCWindowLifecycleListener(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
-    ~SCWindowLifecycleListener() override = default;
-    void OnLifecycleEvent(SessionLifecycleEvent event, const LifecycleEventPayload& payload) override;
-        
-private:
-    std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
-};
-    
+ 
 class SCDeathRecipientListener : public IRemoteObject::DeathRecipient {
 public:
     using ListenerDiedHandler = std::function<void(const wptr<IRemoteObject>&)>;
