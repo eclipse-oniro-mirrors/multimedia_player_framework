@@ -52,6 +52,7 @@ ohos_shared_library("cj_avtranscoder_ffi") {
     "bundle_framework:appexecfwk_base",
     "c_utils:utils",
     "eventhandler:libeventhandler",
+    "graphic_surface:surface",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "ipc:ipc_core",

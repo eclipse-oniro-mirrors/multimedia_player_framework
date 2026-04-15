@@ -206,6 +206,7 @@ taihe_shared_library("media_taihe") {
     "c_utils:utils",
     "ets_runtime:libark_jsruntime",
     "eventhandler:libeventhandler",
+    "graphic_surface:surface",
     "graphic_2d:2d_graphics",
     "hilog:libhilog",
     "hisysevent:libhisysevent",

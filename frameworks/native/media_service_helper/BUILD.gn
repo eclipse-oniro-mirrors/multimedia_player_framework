@@ -101,6 +101,7 @@ ohos_shared_library("media_helper_client") {
     "image_framework:image_native",
     "ipc:ipc_single",
     "media_foundation:media_foundation",
+    "qos_manager:qos",
   ]
 
   if (player_framework_support_lowpower_av_sink && drivers_interface_lpplayer_flag) {
