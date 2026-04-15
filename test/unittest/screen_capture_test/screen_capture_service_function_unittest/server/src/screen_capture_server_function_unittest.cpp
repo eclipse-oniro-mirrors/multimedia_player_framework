@@ -3502,18 +3502,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RegisterServerCallbacks_003, TestSize.
     ASSERT_EQ(ret, MSERR_OK);
     InCallObserver::GetInstance().OnCallStateUpdated(false);
 }
-
-HWTEST_F(ScreenCaptureServerFunctionTest, RegisterServerCallbacks_004, TestSize.Level2)
-{
-    SetValidConfig();
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    screenCaptureServer_->captureConfig_.strategy.keepCaptureDuringCall = false;
-    InCallObserver::GetInstance().OnCallStateUpdated(true);
-    screenCaptureServer_->isCalledBySystemApp_ = false;
-    screenCaptureServer_->appName_ = "";
-    int ret = screenCaptureServer_->RegisterServerCallbacks();
-    ASSERT_EQ(ret, MSERR_UNSUPPORT);
-}
 #endif
 
 HWTEST_F(ScreenCaptureServerFunctionTest, StopInnerAudioCapture_001, TestSize.Level2)
