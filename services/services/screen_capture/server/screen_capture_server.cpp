@@ -3732,7 +3732,7 @@ int32_t ScreenCaptureServer::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfa
         surfaceBuffer->GetMetadata(HDI::Display::Graphic::Common::V1_0::ATTRKEY_CROP_REGION, data);
         if (memcpy_s(&metaRegion, sizeof(HDI::Display::Graphic::Common::V1_0::BufferHandleMetaRegion),
             data.data(), data.size()) != EOK) {
-            MEDIA_LOGE("BufferHandleMetaRegion memcpy_s failed, destSize=%{public}zu, srcSize=%{public}zu",
+            MEDIA_LOGE("BufferHandleMetaRegion memcpy_s failed. destSize=%{public}zu, srcSize=%{public}zu",
                 sizeof(HDI::Display::Graphic::Common::V1_0::BufferHandleMetaRegion), data.size());
             return MSERR_UNKNOWN;
         }
