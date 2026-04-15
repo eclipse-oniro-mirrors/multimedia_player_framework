@@ -189,12 +189,24 @@ public:
     {
         return dataSrc_;
     }
+
+    void SetID(const std::string& id)
+    {
+        id_ = id;
+    }
+ 
+    std::string GetID() const
+    {
+        return id_;
+    }
+
     std::string url {};
     std::string mimeType_ {};
     bool enable_ {false};
     std::map<std::string, std::string> header;
     std::shared_ptr<LoaderCallback> mediaSourceLoaderCb_ {nullptr};
     std::shared_ptr<Plugins::IMediaSourceLoader> sourceLoader_ {nullptr};
+    std::string id_ {};
 private:
     std::vector<AVPlayMediaStream> mediaStreamVec_;
     FileDescriptor fileDescriptor_ {};

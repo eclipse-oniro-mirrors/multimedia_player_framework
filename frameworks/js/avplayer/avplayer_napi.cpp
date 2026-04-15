@@ -2516,9 +2516,33 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
 std::shared_ptr<AVMediaSource> AVPlayerNapi::GetAVMediaSource(napi_env env, napi_value value,
     std::shared_ptr<AVMediaSourceTmp> &srcTmp)
 {
-    std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(srcTmp->url, srcTmp->header);
+    std::shared_ptr<AVMediaSource> mediaSource = nullptr;
+ 
+    if (!srcTmp->url.empty() || !srcTmp->getAVPlayMediaStreamTmpList().empty()) {
+        // handle createmediasourcewithurl and createmediasourcewithstreamdata
+        mediaSource = std::make_shared<AVMediaSource>(srcTmp->url, srcTmp->header);
+    } else if (srcTmp->fd.fd != 0) {
+        FileDescriptor fileDesc;
+        fileDesc.fd = srcTmp->fd.fd;
+        fileDesc.offset = srcTmp->fd.offset;
+        fileDesc.size = srcTmp->fd.length;
+        mediaSource = std::make_shared<AVMediaSource>(fileDesc);
+    } else if (srcTmp->dataSrc.fileSize != 0 || srcTmp->dataSrc.callback != nullptr) {
+        if (srcTmp->dataSrc.fileSize < -1 || srcTmp->dataSrc.fileSize == 0) {
+            MEDIA_LOGE("invalid parameters, please check parameter fileSize");
+            return nullptr;
+        }
+        auto dataSrcCb = std::make_shared<MediaDataSourceCallback>(env, srcTmp->dataSrc.fileSize);
+        CHECK_AND_RETURN_RET_LOG(dataSrcCb != nullptr, nullptr, "create MediaDataSourceCallback failed!");
+ 
+        std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, srcTmp->dataSrc.callback, false);
+        dataSrcCb->SaveCallbackReference(READAT_CALLBACK_NAME, autoRef);
+        mediaSource = std::make_shared<AVMediaSource>(dataSrcCb);
+    }
+ 
     CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, nullptr, "create mediaSource failed!");
     mediaSource->SetMimeType(srcTmp->GetMimeType());
+    mediaSource->SetID(srcTmp->GetID());
     mediaSource->enableOfflineCache(srcTmp->GetenableOfflineCache());
     mediaSource->mediaSourceLoaderCb_ = MediaSourceNapi::GetSourceLoader(env, value);
     if (mediaSource->mediaSourceLoaderCb_ == nullptr) {
@@ -2575,9 +2599,9 @@ napi_value AVPlayerNapi::JsSetDataSrc(napi_env env, napi_callback_info info)
     napi_value callback = nullptr;
     napi_ref ref = nullptr;
     napi_get_named_property(env, args[0], "callback", &callback);
-    jsPlayer->dataSrcDescriptor_.callback = callback;
     napi_status status = napi_create_reference(env, callback, 1, &ref);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create reference!");
+    jsPlayer->dataSrcDescriptor_.callback = ref;
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
     jsPlayer->dataSrcCb_->SaveCallbackReference(READAT_CALLBACK_NAME, autoRef);
     jsPlayer->SetDataSource(jsPlayer);

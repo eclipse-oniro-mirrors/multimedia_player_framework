@@ -15,6 +15,8 @@
 #ifndef MEDIA_ANI_COMMON_H
 #define MEDIA_ANI_COMMON_H
 
+#include <random>
+#include <sstream>
 #include "common_taihe.h"
 #include "ohos.multimedia.media.proj.hpp"
 #include "ohos.multimedia.media.impl.hpp"
@@ -64,9 +66,38 @@ public:
         return mediaStreamVec_;
     }
 
+    void SetID(const std::string& id)
+    {
+        id_ = id;
+    }
+ 
+    std::string GetID() const
+    {
+        return id_;
+    }
+ 
+    static std::string GenerateUniqueId()
+    {
+        thread_local std::mt19937 gen(std::random_device{}());
+        thread_local std::uniform_int_distribution<> dis(0, 15);
+ 
+        std::stringstream ss;
+        for (int i = 0; i < 4; ++i) ss << dis(gen);
+        ss << "-";
+        for (int i = 0; i < 4; ++i) ss << dis(gen);
+        ss << "-";
+        for (int i = 0; i < 4; ++i) ss << dis(gen);
+        ss << "-";
+        for (int i = 0; i < 12; ++i) ss << dis(gen);
+        return ss.str();
+    }
+
     std::map<std::string, std::string> header;
     std::string url {};
     std::string mimeType_ {};
+    std::string id_ {};
+    ::ohos::multimedia::media::AVFileDescriptor fd {};
+    DataSrcDescriptor dataSrc {};
 private:
     std::vector<AVPlayMediaStreamTmp> mediaStreamVec_;
 };

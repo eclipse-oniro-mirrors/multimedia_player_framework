@@ -599,32 +599,12 @@ void PlayerImpl::RestoreLoopIfNeeded(bool wasInListMode, bool loop)
     }
 }
 
-static std::string GenerateUniqueId()
-{
-    thread_local std::mt19937 gen(std::random_device{}());
-    thread_local std::uniform_int_distribution<> dis(0, 15); // 15 is the maximum value for a single hex digit
-
-    std::stringstream ss;
-    ss << std::hex;
-
-    for (int i = 0; i < 8; ++i) ss << dis(gen); // 8 hex digits
-    ss << "-";
-    for (int i = 0; i < 4; ++i) ss << dis(gen); // 4 hex digits
-    ss << "-";
-    for (int i = 0; i < 4; ++i) ss << dis(gen); // 4 hex digits
-    ss << "-";
-    for (int i = 0; i < 4; ++i) ss << dis(gen); // 4 hex digits
-    ss << "-";
-    for (int i = 0; i < 12; ++i) ss << dis(gen); // 12 hex digits
-    return ss.str();
-}
-
 int32_t PlayerImpl::AddPlaybackMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, const std::string &srcId,
     std::string &generateSrcId)
 {
     CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr");
 
-    generateSrcId = GenerateUniqueId();
+    generateSrcId = mediaSource->GetID();
     bool isFirstAdd = false;
     bool isListHead = false;
     {

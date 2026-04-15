@@ -142,6 +142,8 @@ HWTEST_F(PlayerServiceStubTest, SetMediaSource_001, TestSize.Level1)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+    // sourceType: 0x01 表示 URL 源
+    data.WriteUint8(0x01);
     std::string url = "fd://abc?d";
     data.WriteString(url);
     auto headerSize = 0;
@@ -167,6 +169,8 @@ HWTEST_F(PlayerServiceStubTest, SetMediaSource_002, TestSize.Level1)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+    // sourceType: 0x01 表示 URL 源
+    data.WriteUint8(0x01);
     std::string url = "abc?d";
     data.WriteString(url);
     auto headerSize = 0;
@@ -192,6 +196,8 @@ HWTEST_F(PlayerServiceStubTest, SetMediaSource_003, TestSize.Level1)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+    // sourceType: 0x01 表示 URL 源
+    data.WriteUint8(0x01);
     std::string url = "fd://abc";
     data.WriteString(url);
     auto headerSize = 0;
@@ -217,6 +223,8 @@ HWTEST_F(PlayerServiceStubTest, SetMediaSource_004, TestSize.Level1)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+    // sourceType: 0x01 表示 URL 源
+    data.WriteUint8(0x01);
     std::string url = "fd://abc";
     data.WriteString(url);
     auto headerSize = 0;
@@ -241,6 +249,8 @@ HWTEST_F(PlayerServiceStubTest, SetMediaSource_005, TestSize.Level1)
 
     MessageParcel data;
     MessageParcel reply;
+    // sourceType: 0x01 表示 URL 源
+    data.WriteUint8(0x01);
     std::string url = "fd://abc";
     data.WriteString(url);
     auto headerSize = 0;

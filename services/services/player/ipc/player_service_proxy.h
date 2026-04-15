@@ -115,6 +115,10 @@ private:
     void WriteMediaStreamListToMessageParcel(const std::shared_ptr<AVMediaSource> &mediaSource, MessageParcel& data);
     void ReadTrackSelectionFilter(MessageParcel &reply, AVPlayTrackSelectionFilter &trackFilter);
     void ReadTrackSelectionFilterInner(MessageParcel &reply, AVPlayTrackSelectionFilter &trackFilter);
+    int32_t WriteUrlSourceToParcel(MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource);
+    int32_t WriteM3U8FdToParcel(MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource);
+    int32_t WriteFdSourceToParcel(MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource);
+    int32_t WriteDataSourceToParcel(MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource);
 
     static inline BrokerDelegator<PlayerServiceProxy> delegator_;
     std::map<uint32_t, std::string> playerFuncs_;

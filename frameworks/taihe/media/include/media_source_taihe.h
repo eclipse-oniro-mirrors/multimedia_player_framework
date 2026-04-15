@@ -37,15 +37,24 @@ public:
         ohos::multimedia::media::weak::MediaSource mediaSource);
     MediaSourceImpl(string_view url, optional_view<map<string, string>> headers);
     MediaSourceImpl(array_view<::ohos::multimedia::media::MediaStream> streams);
+    MediaSourceImpl(::ohos::multimedia::media::AVFileDescriptor fd);
+    MediaSourceImpl(::ohos::multimedia::media::AVDataSrcDescriptor dataSrc);
     int64_t GetImplPtr();
     void SetMimeType(::ohos::multimedia::media::AVMimeTypes mimeType);
     void SetMediaResourceLoaderDelegate(::ohos::multimedia::media::MediaSourceLoader const& resourceLoader);
+    std::string GetID();
 private:
     static optional<::ohos::multimedia::media::MediaSource> CreateMediaSourceWithUrl(string_view url,
         optional_view<map<string, string>> headers);
 
     static optional<::ohos::multimedia::media::MediaSource> CreateMediaSourceWithStreamData(
         array_view<::ohos::multimedia::media::MediaStream> streams);
+
+    static optional<::ohos::multimedia::media::MediaSource> CreateMediaSourceWithFd(
+        ::ohos::multimedia::media::AVFileDescriptor fd);
+ 
+    static optional<::ohos::multimedia::media::MediaSource> CreateMediaSourceWithDataSource(
+        ::ohos::multimedia::media::AVDataSrcDescriptor dataSrc);
 
     std::shared_ptr<AVMediaSourceTmp> mediaSource_ {nullptr};
     std::shared_ptr<MediaSourceLoaderCallback> mediaSourceLoaderCb_ {nullptr};

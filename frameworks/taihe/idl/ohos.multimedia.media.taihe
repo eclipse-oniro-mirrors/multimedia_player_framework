@@ -78,6 +78,8 @@ function CreateAVScreenCaptureRecorderSync(): Optional<AVScreenCaptureRecorder>;
 
 function CreateMediaSourceWithUrl(url: String, headers: Optional<@record Map<String, String>>): Optional<MediaSource>;
 function CreateMediaSourceWithStreamData(streams: Array<MediaStream>): Optional<MediaSource>;
+function CreateMediaSourceWithFd(fd: AVFileDescriptor): Optional<MediaSource>;
+function CreateMediaSourceWithDataSource(dataSrc: AVDataSrcDescriptor): Optional<MediaSource>;
 
 @gen_promise("reportAVScreenCaptureUserChoice")
 function ReportAVScreenCaptureUserChoiceSync(sessionId: i32, choice: String): void;
@@ -1274,4 +1276,5 @@ interface MediaSource {
     GetImplPtr(): i64;
     SetMimeType(mimeType: AVMimeTypes): void;
     SetMediaResourceLoaderDelegate(resourceLoader: MediaSourceLoader): void;
+    GetID(): String;
 }
