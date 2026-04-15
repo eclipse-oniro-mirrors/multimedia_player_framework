@@ -31,7 +31,6 @@ namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "DownloadedCacheManager"};
 const std::string CACHE_MAPPING_FILE = "cache_mapping.txt";
 const size_t MAX_CACHE_MAPPING_FILE_SIZE = 10ULL * 1024ULL * 1024ULL;
-constexpr int SHA256_LEN = 32;
 }
 
 namespace OHOS {
