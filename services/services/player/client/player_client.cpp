@@ -17,11 +17,9 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "../media_source/loader/media_loader.h"
-#include "../media_source/downloaded_cache_loader/downloaded_cache_loader.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerClient"};
-const char* DEFAULT_CACHE_DIR = "/data/storage/el2/base/cache/avplayer_downloaded_cache";
 }
 
 namespace OHOS {
