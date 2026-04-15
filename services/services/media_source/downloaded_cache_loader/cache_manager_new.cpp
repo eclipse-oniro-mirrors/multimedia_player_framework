@@ -48,7 +48,7 @@ public:
         if (offset_ + size > buffer_.size()) {
             return false;
         }
-        errno_t ret = std::memcpy_s(dest, size, buffer_.data() + offset_, size);
+        errno_t ret = memcpy_s(dest, size, buffer_.data() + offset_, size);
         CHECK_AND_RETURN_RET_LOG(ret == EOK, false, "memcpy_s failed");
         offset_ += size;
         return true;
@@ -178,7 +178,7 @@ void DownloadedCacheManager::LoadIndexEntries(MemoryReader& reader, CacheMapping
         }
 
         std::array<uint8_t, SHA256_LEN> hashArr;
-        errno_t ret = std::memcpy_s(hashArr.data(), SHA256_LEN, entry.header.urlHash, SHA256_LEN);
+        errno_t ret = memcpy_s(hashArr.data(), SHA256_LEN, entry.header.urlHash, SHA256_LEN);
         if (ret != EOK) {
             MEDIA_LOGW("Skipping entry %{public}u with memcpy_s failed", i);
             continue;
