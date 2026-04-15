@@ -15,6 +15,7 @@
 
 #include "player_service_proxy.h"
 #include "player_listener_stub.h"
+#include "media_data_source_stub.h"
 
 #ifdef SUPPORT_AVPLAYER_DRM
 #include "media_key_session_service_proxy.h"
@@ -884,35 +885,51 @@ int32_t PlayerServiceProxy::SetMediaSource(const std::shared_ptr<AVMediaSource> 
     CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr!");
     bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
-    data.WriteString(mediaSource->url);
-    auto headerSize = static_cast<uint32_t>(mediaSource->header.size());
-    if (!data.WriteUint32(headerSize)) {
-        MEDIA_LOGI("Write mapSize failed");
-        return MSERR_INVALID_OPERATION;
+
+    // 区分三种场景：URL、FileDescriptor、DataSource
+    bool isUrlSource = !mediaSource->url.empty();
+    bool isFdSource = mediaSource->IsFileDescriptorSet();
+    bool isDataSource = mediaSource->IsDataSourceSet();
+    
+    // 写入场景类型标志
+    uint8_t sourceType = 0;
+    if (isUrlSource) {
+        sourceType |= 0x01;  // URL source
     }
-    for (auto [kstr, vstr] : mediaSource->header) {
-        if (!data.WriteString(kstr)) {
-            MEDIA_LOGI("Write kstr failed");
-            return MSERR_INVALID_OPERATION;
-        }
-        if (!data.WriteString(vstr)) {
-            MEDIA_LOGI("Write vstr failed");
-            return MSERR_INVALID_OPERATION;
-        }
+    if (isFdSource) {
+        sourceType |= 0x02;  // FD source
     }
+    if (isDataSource) {
+        sourceType |= 0x04;  // DataSource
+    }
+    data.WriteUint8(sourceType);
+    
+    // 写入 URL 场景数据
+    if (isUrlSource) {
+        int32_t ret = WriteUrlSourceToParcel(data, mediaSource);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "WriteUrlSourceToParcel failed");
+    }
+ 
+    // 写入 mimeType
     std::string mimeType = mediaSource->GetMimeType();
     data.WriteString(mimeType);
-    std::string uri = mediaSource->url;
-    int32_t fd = -1;
-    size_t fdHeadPos = uri.find("fd://");
-    size_t fdTailPos = uri.find("?");
-    if (mimeType == AVMimeType::APPLICATION_M3U8 && fdHeadPos != std::string::npos &&
-        fdTailPos != std::string::npos) {
-        CHECK_AND_RETURN_RET_LOG(fdHeadPos < fdTailPos, MSERR_INVALID_VAL, "Failed to read fd.");
-        std::string fdStr = uri.substr(strlen("fd://"), fdTailPos - strlen("fd://"));
-        CHECK_AND_RETURN_RET_LOG(StrToInt(fdStr, fd), MSERR_INVALID_VAL, "Failed to read fd.");
-        (void)data.WriteFileDescriptor(fd);
-        MEDIA_LOGI("fd : %d", fd);
+ 
+    // 写入 M3U8 fd
+    if (isUrlSource) {
+        int32_t ret = WriteM3U8FdToParcel(data, mediaSource);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "WriteM3U8FdToParcel failed");
+    }
+ 
+    // 写入 FD 场景数据
+    if (isFdSource) {
+        int32_t ret = WriteFdSourceToParcel(data, mediaSource);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "WriteFdSourceToParcel failed");
+    }
+ 
+    // 写入 DataSource 场景数据
+    if (isDataSource) {
+        int32_t ret = WriteDataSourceToParcel(data, mediaSource);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "WriteDataSourceToParcel failed");
     }
     WriteMediaStreamListToMessageParcel(mediaSource, data);
     WritePlaybackStrategy(data, strategy);
@@ -953,6 +970,77 @@ int32_t PlayerServiceProxy::GetPlaybackSpeed(PlaybackRateMode &mode)
     int32_t tempMode = reply.ReadInt32();
     mode = static_cast<PlaybackRateMode>(tempMode);
     return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::WriteUrlSourceToParcel(MessageParcel &data,
+    const std::shared_ptr<AVMediaSource> &mediaSource)
+{
+    data.WriteString(mediaSource->url);
+    auto headerSize = static_cast<uint32_t>(mediaSource->header.size());
+    if (!data.WriteUint32(headerSize)) {
+        MEDIA_LOGI("Write mapSize failed");
+        return MSERR_INVALID_OPERATION;
+    }
+    for (auto [kstr, vstr] : mediaSource->header) {
+        if (!data.WriteString(kstr)) {
+            MEDIA_LOGI("Write kstr failed");
+            return MSERR_INVALID_OPERATION;
+        }
+        if (!data.WriteString(vstr)) {
+            MEDIA_LOGI("Write vstr failed");
+            return MSERR_INVALID_OPERATION;
+        }
+    }
+    return MSERR_OK;
+}
+ 
+int32_t PlayerServiceProxy::WriteM3U8FdToParcel(MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource)
+{
+    std::string mimeType = mediaSource->GetMimeType();
+    if (mimeType != AVMimeType::APPLICATION_M3U8) {
+        return MSERR_OK;
+    }
+    
+    std::string uri = mediaSource->url;
+    int32_t fd = -1;
+    size_t fdHeadPos = uri.find("fd://");
+    size_t fdTailPos = uri.find("?");
+    if (fdHeadPos != std::string::npos && fdTailPos != std::string::npos) {
+        CHECK_AND_RETURN_RET_LOG(fdHeadPos < fdTailPos, MSERR_INVALID_VAL, "Failed to read fd.");
+        std::string fdStr = uri.substr(strlen("fd://"), fdTailPos - strlen("fd://"));
+        CHECK_AND_RETURN_RET_LOG(StrToInt(fdStr, fd), MSERR_INVALID_VAL, "Failed to read fd.");
+        (void)data.WriteFileDescriptor(fd);
+    } else {
+        (void)data.WriteFileDescriptor(-1);
+    }
+    return MSERR_OK;
+}
+ 
+int32_t PlayerServiceProxy::WriteFdSourceToParcel(MessageParcel &data,
+    const std::shared_ptr<AVMediaSource> &mediaSource)
+{
+    const FileDescriptor& fileDesc = mediaSource->GetFileDescriptor();
+    data.WriteFileDescriptor(fileDesc.fd);
+    data.WriteInt64(fileDesc.offset);
+    data.WriteInt64(fileDesc.size);
+    MEDIA_LOGI("Write FileDescriptor: fd=%{public}d, offset=%{public}" PRId64 ", size=%{public}" PRId64,
+        fileDesc.fd, fileDesc.offset, fileDesc.size);
+    return MSERR_OK;
+}
+ 
+int32_t PlayerServiceProxy::WriteDataSourceToParcel(MessageParcel &data,
+    const std::shared_ptr<AVMediaSource> &mediaSource)
+{
+    auto dataSrc = mediaSource->GetDataSource();
+    if (dataSrc != nullptr) {
+        auto dataSrcStub = new(std::nothrow) MediaDataSourceStub(dataSrc);
+        CHECK_AND_RETURN_RET_LOG(dataSrcStub != nullptr, MSERR_NO_MEMORY, "failed to new MediaDataSourceStub");
+        sptr<IRemoteObject> object = dataSrcStub->AsObject();
+        CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "dataSrcStub object is nullptr");
+        data.WriteRemoteObject(object);
+        MEDIA_LOGI("Write DataSource");
+    }
+    return MSERR_OK;
 }
 
 int32_t PlayerServiceProxy::GetPlaybackRate(float &rate)

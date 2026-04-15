@@ -37,6 +37,16 @@ private:
     static napi_value JsCreateMediaSourceWithUrl(napi_env env, napi_callback_info info);
 
     /**
+     * function createMediaSourceWithFd(fdSrc: AVFileDescriptor): MediaSource
+     */
+    static napi_value JsCreateMediaSourceWithFd(napi_env env, napi_callback_info info);
+ 
+    /**
+     * function createMediaSourceWithDataSource(dataSrc: AVDataSrcDescriptor): MediaSource
+     */
+    static napi_value JsCreateMediaSourceWithDataSource(napi_env env, napi_callback_info info);
+
+    /**
      * function createMediaSourceWithStreamData(streams: Array<MediaStream>): MediaSource;
      */
 
@@ -55,6 +65,12 @@ private:
      * function SetMediaResourceLoaderDelegate(resourceLoader: MediaSourceLoader): void
      */
     static napi_value JsSetMediaResourceLoaderDelegate(napi_env env, napi_callback_info info);
+
+    /**
+     * function getID(): string
+     */
+    static napi_value JsGetID(napi_env env, napi_callback_info info);
+
     MediaSourceNapi() = default;
     virtual ~MediaSourceNapi() = default;
 

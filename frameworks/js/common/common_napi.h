@@ -21,6 +21,8 @@
 #include <vector>
 #include <unordered_map>
 #include <utility>
+#include <random>
+#include <sstream>
 #include "player.h"
 #include "meta/format.h"
 #include "meta/meta.h"
@@ -391,23 +393,25 @@ struct MediaAsyncContext {
 };
 
 struct AutoRef {
-    AutoRef(napi_env env, napi_ref cb)
-        : env_(env), cb_(cb)
+    AutoRef(napi_env env, napi_ref cb, bool isDelete = true)
+        : env_(env), cb_(cb), isDelete_(isDelete)
     {
     }
     ~AutoRef()
     {
-        if (env_ != nullptr && cb_ != nullptr) {
+        // napi_ref must be deleted on the same thread where it was created
+        if (env_ != nullptr && cb_ != nullptr && isDelete_) {
             (void)napi_delete_reference(env_, cb_);
         }
     }
     napi_env env_;
     napi_ref cb_;
+    bool isDelete_;
 };
 
 struct AVDataSrcDescriptor {
     int64_t fileSize = 0;
-    napi_value callback = nullptr;
+    napi_ref callback = nullptr;
 };
 
 class AVMediaSourceTmp {
@@ -448,10 +452,39 @@ public:
         return enable_;
     }
 
+    void SetID(const std::string& id)
+    {
+        id_ = id;
+    }
+ 
+    std::string GetID() const
+    {
+        return id_;
+    }
+ 
+    static std::string GenerateUniqueId()
+    {
+        thread_local std::mt19937 gen(std::random_device{}());
+        thread_local std::uniform_int_distribution<> dis(0, 15);
+ 
+        std::stringstream ss;
+        for (int i = 0; i < 4; ++i) ss << dis(gen);
+        ss << "-";
+        for (int i = 0; i < 4; ++i) ss << dis(gen);
+        ss << "-";
+        for (int i = 0; i < 4; ++i) ss << dis(gen);
+        ss << "-";
+        for (int i = 0; i < 12; ++i) ss << dis(gen);
+        return ss.str();
+    }
+
     std::map<std::string, std::string> header;
     std::string url {};
     std::string mimeType_ {};
+    std::string id_ {};
     bool enable_ {false};
+    AVFileDescriptor fd {};
+    AVDataSrcDescriptor dataSrc {};
 private:
     std::vector<AVPlayMediaStreamTmp> mediaStreamVec_;
 };

@@ -20,6 +20,7 @@
 #include "media_taihe_utils.h"
 
 using namespace ANI::Media;
+using DataSrcCallback = taihe::callback<int32_t(taihe::array_view<uint8_t>, int64_t, taihe::optional_view<int64_t>)>;
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_RECORDER, "MediaSourceTaihe"};
@@ -44,6 +45,7 @@ MediaSourceImpl::MediaSourceImpl(string_view url, optional_view<map<string, stri
             mediaSource_->header.emplace(strKey, strValue);
         }
     }
+    mediaSource_->SetID(AVMediaSourceTmp::GenerateUniqueId());
 }
 
 MediaSourceImpl::MediaSourceImpl(array_view<::ohos::multimedia::media::MediaStream> streams)
@@ -77,7 +79,39 @@ MediaSourceImpl::MediaSourceImpl(array_view<::ohos::multimedia::media::MediaStre
             mediaStream.bitrate);
         mediaSource_->AddAVPlayMediaStreamTmp(mediaStream);
     }
+    mediaSource_->SetID(AVMediaSourceTmp::GenerateUniqueId());
     MEDIA_LOGD("TaiheCreateMediaSourceWithStreamData get mediaStreamVec length=%{public}u", streams.size());
+}
+
+MediaSourceImpl::MediaSourceImpl(::ohos::multimedia::media::AVFileDescriptor fd)
+{
+    mediaSource_ = std::make_shared<AVMediaSourceTmp>();
+    if (mediaSource_ == nullptr) {
+        MEDIA_LOGE("TaiheCreateMediaSourceWithFd GetMediaSource fail");
+        MediaTaiheUtils::ThrowExceptionError("TaiheCreateMediaSourceWithFd GetMediaSource fail");
+        return;
+    }
+    mediaSource_->fd = fd;
+    int64_t offset = fd.offset.has_value() ? fd.offset.value() : 0;
+    int64_t length = fd.length.has_value() ? fd.length.value() : 0;
+    MEDIA_LOGD("TaiheCreateMediaSourceWithFd fd: %{public}d, offset: %{public}" PRIi64 ", length: %{public}" PRIi64,
+        mediaSource_->fd.fd, offset, length);
+    mediaSource_->SetID(AVMediaSourceTmp::GenerateUniqueId());
+}
+ 
+MediaSourceImpl::MediaSourceImpl(::ohos::multimedia::media::AVDataSrcDescriptor dataSrc)
+{
+    mediaSource_ = std::make_shared<AVMediaSourceTmp>();
+    if (mediaSource_ == nullptr) {
+        MEDIA_LOGE("TaiheCreateMediaSourceWithDataSource GetMediaSource fail");
+        MediaTaiheUtils::ThrowExceptionError("TaiheCreateMediaSourceWithDataSource GetMediaSource fail");
+        return;
+    }
+    mediaSource_->dataSrc.fileSize = dataSrc.fileSize;
+    auto callbackPtr = std::make_shared<DataSrcCallback>(dataSrc.callback);
+    mediaSource_->dataSrc.callback = std::reinterpret_pointer_cast<uintptr_t>(callbackPtr);
+    MEDIA_LOGD("TaiheCreateMediaSourceWithDataSource fileSize: %{public}" PRId64, mediaSource_->dataSrc.fileSize);
+    mediaSource_->SetID(AVMediaSourceTmp::GenerateUniqueId());
 }
 
 int64_t MediaSourceImpl::GetImplPtr()
@@ -103,6 +137,32 @@ optional<::ohos::multimedia::media::MediaSource> CreateMediaSourceWithStreamData
 {
     MEDIA_LOGD("TaiheCreateMediaSourceWithStreamData In");
     auto res = taihe::make_holder<MediaSourceImpl, ::ohos::multimedia::media::MediaSource>(streams);
+    if (taihe::has_error()) {
+        MEDIA_LOGE("Create MediaSource failed!");
+        taihe::reset_error();
+        return optional<::ohos::multimedia::media::MediaSource>(std::nullopt);
+    }
+    return optional<::ohos::multimedia::media::MediaSource>(std::in_place, res);
+}
+
+optional<::ohos::multimedia::media::MediaSource> CreateMediaSourceWithFd(
+    ::ohos::multimedia::media::AVFileDescriptor fd)
+{
+    MEDIA_LOGD("TaiheCreateMediaSourceWithFd In");
+    auto res = taihe::make_holder<MediaSourceImpl, ::ohos::multimedia::media::MediaSource>(fd);
+    if (taihe::has_error()) {
+        MEDIA_LOGE("Create MediaSource failed!");
+        taihe::reset_error();
+        return optional<::ohos::multimedia::media::MediaSource>(std::nullopt);
+    }
+    return optional<::ohos::multimedia::media::MediaSource>(std::in_place, res);
+}
+ 
+optional<::ohos::multimedia::media::MediaSource> CreateMediaSourceWithDataSource(
+    ::ohos::multimedia::media::AVDataSrcDescriptor dataSrc)
+{
+    MEDIA_LOGD("TaiheCreateMediaSourceWithDataSource In");
+    auto res = taihe::make_holder<MediaSourceImpl, ::ohos::multimedia::media::MediaSource>(dataSrc);
     if (taihe::has_error()) {
         MEDIA_LOGE("Create MediaSource failed!");
         taihe::reset_error();
@@ -181,7 +241,22 @@ void MediaSourceImpl::SetMediaResourceLoaderDelegate(::ohos::multimedia::media::
     mediaSourceLoaderCb_->SaveCallbackReference(FunctionName::SOURCE_CLOSE, autoRef);
     MEDIA_LOGI("TaiheSetMediaResourceLoaderDelegate Out");
 }
+
+std::string MediaSourceImpl::GetID()
+{
+    MEDIA_LOGI("TaiheGetID In");
+    std::shared_ptr<AVMediaSourceTmp> mediaSource = GetMediaSource(this);
+    if (mediaSource == nullptr) {
+        MEDIA_LOGE("Fail to get mediaSource instance.");
+        return "";
+    }
+    std::string id = mediaSource->GetID();
+    MEDIA_LOGI("TaiheGetID Out, id=%{public}s", id.c_str());
+    return id;
+}
 } // namespace ANI::Media
 
 TH_EXPORT_CPP_API_CreateMediaSourceWithUrl(CreateMediaSourceWithUrl);
 TH_EXPORT_CPP_API_CreateMediaSourceWithStreamData(CreateMediaSourceWithStreamData);
+TH_EXPORT_CPP_API_CreateMediaSourceWithFd(CreateMediaSourceWithFd);
+TH_EXPORT_CPP_API_CreateMediaSourceWithDataSource(CreateMediaSourceWithDataSource);

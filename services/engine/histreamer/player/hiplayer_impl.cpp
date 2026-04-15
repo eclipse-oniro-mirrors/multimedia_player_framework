@@ -448,20 +448,70 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     MEDIA_LOG_I("SetMediaSource entered media source stream");
     CreatePlaybackInfo(CallType::AVPLAYER, appUid_, instanceId_);
     CreateStallingInfo(CallType::AVPLAYER, appUid_, instanceId_);
+    if (!ValidateAndInitMediaSource(mediaSource)) {
+        return MSERR_INVALID_VAL;
+    }
+    this->ExtractStrategyParams(strategy);
+    SetFlvLiveParams(strategy);
+    FALSE_RETURN_V(IsLivingMaxDelayTimeValid(), TransStatus(Status::ERROR_INVALID_PARAMETER));
+ 
+    if (HandleDataSource(mediaSource)) {
+        return playStatisticalInfo_.errCode;
+    }
+    HandleFileDescriptor(mediaSource);
+    int32_t ret = HandleFileUrl();
+    if (ret != MSERR_OK) {
+        return ret;
+    }
+    DetermineSourceType();
+    pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
+    ret = TransStatus(Status::OK);
+    playStatisticalInfo_.errCode = ret;
+    return ret;
+}
+ 
+bool HiPlayerImpl::ValidateAndInitMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource)
+{
     if (mediaSource == nullptr) {
         CollectionErrorInfo(MSERR_INVALID_VAL, "mediaSource is nullptr");
-        return MSERR_INVALID_VAL;
+        return false;
     }
     enable_ = mediaSource->GetenableOfflineCache();
     header_ = mediaSource->header;
-
     playMediaStreamVec_ = mediaSource->GetAVPlayMediaStreamList();
     url_ = playMediaStreamVec_.empty() ? mediaSource->url : playMediaStreamVec_[0].url;
     sourceLoader_ = mediaSource->sourceLoader_;
-    this->ExtractStrategyParams(strategy);
     mimeType_ = mediaSource->GetMimeType();
-    SetFlvLiveParams(strategy);
-    FALSE_RETURN_V(IsLivingMaxDelayTimeValid(), TransStatus(Status::ERROR_INVALID_PARAMETER));
+    return true;
+}
+ 
+bool HiPlayerImpl::HandleDataSource(const std::shared_ptr<AVMediaSource> &mediaSource)
+{
+    if (!mediaSource->IsDataSourceSet()) {
+        return false;
+    }
+    dataSrc_ = mediaSource->GetDataSource();
+    if (dfxAgent_ != nullptr) {
+        dfxAgent_->SetSourceType(PlayerDfxSourceType::DFX_SOURCE_TYPE_DATASRC);
+        sourceType_ = PlayerDfxSourceType::DFX_SOURCE_TYPE_DATASRC;
+    }
+    pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
+    int ret = TransStatus(Status::OK);
+    playStatisticalInfo_.errCode = ret;
+    return true;
+}
+ 
+void HiPlayerImpl::HandleFileDescriptor(const std::shared_ptr<AVMediaSource> &mediaSource)
+{
+    if (mediaSource->IsFileDescriptorSet()) {
+        fileDescriptor_ = mediaSource->GetFileDescriptor();
+        url_ = "fd://" + std::to_string(fileDescriptor_.fd) + "?offset=" +
+               std::to_string(fileDescriptor_.offset) + "&size=" + std::to_string(fileDescriptor_.size);
+    }
+}
+ 
+int32_t HiPlayerImpl::HandleFileUrl()
+{
     if (mimeType_ != AVMimeTypes::APPLICATION_M3U8 && IsFileUrl(url_)) {
         std::string realUriPath;
         int32_t result = GetRealPath(url_, realUriPath);
@@ -471,7 +521,11 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
         }
         url_ = "file://" + realUriPath;
     }
-
+    return MSERR_OK;
+}
+ 
+void HiPlayerImpl::DetermineSourceType()
+{
     PlayerDfxSourceType sourceType = PlayerDfxSourceType::DFX_SOURCE_TYPE_MEDIASOURCE_LOCAL;
     if (IsNetworkUrl(url_)) {
         isNetWorkPlay_ = true;
@@ -481,11 +535,6 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
         dfxAgent_->SetSourceType(sourceType);
         sourceType_ = sourceType;
     }
-
-    pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
-    int ret = TransStatus(Status::OK);
-    playStatisticalInfo_.errCode = ret;
-    return ret;
 }
 
 int32_t HiPlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc)

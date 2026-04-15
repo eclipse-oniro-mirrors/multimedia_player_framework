@@ -275,6 +275,11 @@ private:
     int64_t GetCurrentMillisecond();
     void UpdatePlayStatistics();
     void DoSetMediaSource(Status& ret);
+    bool ValidateAndInitMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource);
+    bool HandleDataSource(const std::shared_ptr<AVMediaSource> &mediaSource);
+    void HandleFileDescriptor(const std::shared_ptr<AVMediaSource> &mediaSource);
+    int32_t HandleFileUrl();
+    void DetermineSourceType();
     void UpdatePlayerStateAndNotify();
     void UpdateMediaFirstPts();
     void UpdateMaxSeekLatency(PlayerSeekMode mode, int64_t seekStartTime);
@@ -404,6 +409,7 @@ private:
     int64_t mediaStartPts_{0};
     std::shared_ptr<IMediaDataSource> dataSrc_{nullptr};
     std::shared_ptr<IMediaSourceLoader> sourceLoader_{nullptr};
+    FileDescriptor fileDescriptor_ {};
     std::atomic<int32_t> videoWidth_{0};
     std::atomic<int32_t> videoHeight_{0};
     std::atomic<bool> needSwapWH_{false};

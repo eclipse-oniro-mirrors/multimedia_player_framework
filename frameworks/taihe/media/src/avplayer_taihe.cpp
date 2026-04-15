@@ -18,6 +18,7 @@
 #include "media_errors.h"
 #include "media_taihe_utils.h"
 #include "media_dfx.h"
+#include "media_data_source_callback_taihe.h"
 #ifdef SUPPORT_AVPLAYER_DRM
 #include "key_session_taihe.h"
 #endif
@@ -982,9 +983,33 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerImpl::StopTask()
 std::shared_ptr<AVMediaSource> AVPlayerImpl::GetAVMediaSource(ohos::multimedia::media::weak::MediaSource src,
     std::shared_ptr<AVMediaSourceTmp> &srcTmp)
 {
-    std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(srcTmp->url, srcTmp->header);
+    std::shared_ptr<AVMediaSource> mediaSource = nullptr;
+ 
+    if (!srcTmp->url.empty()) {
+        mediaSource = std::make_shared<AVMediaSource>(srcTmp->url, srcTmp->header);
+    } else if (srcTmp->fd.fd != 0) {
+        OHOS::Media::FileDescriptor fileDesc;
+        fileDesc.fd = srcTmp->fd.fd;
+        fileDesc.offset = srcTmp->fd.offset.has_value() ? srcTmp->fd.offset.value() : 0;
+        fileDesc.size = srcTmp->fd.length.has_value() ? srcTmp->fd.length.value() : 0;
+        mediaSource = std::make_shared<AVMediaSource>(fileDesc);
+    } else if (srcTmp->dataSrc.fileSize != 0 || srcTmp->dataSrc.callback != nullptr) {
+        if (srcTmp->dataSrc.fileSize < -1 || srcTmp->dataSrc.fileSize == 0) {
+            MEDIA_LOGE("invalid parameters, please check parameter fileSize");
+            return nullptr;
+        }
+        auto dataSrcCb = std::make_shared<MediaDataSourceCallback>(srcTmp->dataSrc.fileSize);
+        CHECK_AND_RETURN_RET_LOG(dataSrcCb != nullptr, nullptr, "create MediaDataSourceCallback failed!");
+ 
+        ani_env *env = taihe::get_env();
+        std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, srcTmp->dataSrc.callback);
+        dataSrcCb->SaveCallbackReference(READAT_CALLBACK_NAME, autoRef);
+        mediaSource = std::make_shared<AVMediaSource>(dataSrcCb);
+    }
+ 
     CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, nullptr, "create mediaSource failed!");
     mediaSource->SetMimeType(srcTmp->GetMimeType());
+    mediaSource->SetID(srcTmp->GetID());
     mediaSource->mediaSourceLoaderCb_ = MediaSourceImpl::GetSourceLoader(src);
     if (mediaSource->mediaSourceLoaderCb_ == nullptr) {
         MEDIA_LOGI("mediaSourceLoaderCb_ nullptr");

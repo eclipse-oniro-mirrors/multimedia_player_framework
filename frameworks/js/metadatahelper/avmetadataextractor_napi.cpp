@@ -971,9 +971,9 @@ napi_value AVMetadataExtractorNapi::JsSetDataSrc(napi_env env, napi_callback_inf
     napi_value callback = nullptr;
     napi_ref ref = nullptr;
     napi_get_named_property(env, args[0], "callback", &callback);
-    jsMetaHelper->dataSrcDescriptor_.callback = callback;
     napi_status status = napi_create_reference(env, callback, 1, &ref);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create reference!");
+    jsMetaHelper->dataSrcDescriptor_.callback = ref;
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
     const std::string callbackName = "readAt";
     jsMetaHelper->dataSrcCb_->SaveCallbackReference(callbackName, autoRef);

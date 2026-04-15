@@ -224,6 +224,18 @@ private:
     void ReadTrackSelectionFilterInner(MessageParcel &data, AVPlayTrackSelectionFilter &filter);
     void WriteTrackSelectionFilter(MessageParcel &reply, const AVPlayTrackSelectionFilter &filter);
     void WriteTrackSelectionFilterInner(MessageParcel &reply, const AVPlayTrackSelectionFilter &filter);
+    int32_t ReadUrlSourceFromParcel(MessageParcel &data, bool isUrlSource, std::string &url,
+        std::map<std::string, std::string> &header);
+    int32_t ReadM3U8FdFromParcel(MessageParcel &data, bool isUrlSource, const std::string &mimeType);
+    int32_t ReadFdSourceFromParcel(MessageParcel &data, bool isFdSource, FileDescriptor &fileDesc);
+    int32_t ReadDataSourceFromParcel(MessageParcel &data, bool isDataSource,
+        sptr<IRemoteObject> &dataSourceObject);
+    std::shared_ptr<AVMediaSource> CreateMediaSourceFromUrl(const std::string &url,
+        const std::map<std::string, std::string> &header);
+    std::shared_ptr<AVMediaSource> CreateMediaSourceFromFd(const FileDescriptor &fileDesc);
+    std::shared_ptr<AVMediaSource> CreateMediaSourceFromDataSource(
+        const sptr<IRemoteObject> &dataSourceObject);
+    int32_t UpdateM3U8FdUrl(std::shared_ptr<AVMediaSource> &mediaSource, const std::string &mimeType, int32_t fd);
 
     int32_t CheckandDoUnFreeze();
     std::map<uint32_t, std::pair<std::string, PlayerStubFunc>> playerFuncs_;
