@@ -358,6 +358,7 @@ private:
     void MetricsUpdateDuration();
     void SetMediaKitReport(const std::string &apiCall);
     void ExtractStrategyParams(const AVPlayStrategy& strategy);
+    void HandleReadyAudioInterrupt();
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
@@ -545,6 +546,7 @@ private:
     PlayerDfxSourceType sourceType_ = PlayerDfxSourceType::DFX_SOURCE_TYPE_UNKNOWN;
     FileType fileType_ = FileType::UNKNOW;
     bool isLiveSeek_ = false;
+    std::atomic<bool> isAudioInitialized_ {false};
 };
 } // namespace Media
 } // namespace OHOS
