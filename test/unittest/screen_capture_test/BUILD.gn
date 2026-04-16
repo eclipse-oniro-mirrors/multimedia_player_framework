@@ -194,7 +194,7 @@ ohos_unittest("screen_capture_capi_unit_test") {
 
   deps = [
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:native_avscreen_capture",
-    "$MEDIA_ROOT_DIR/interfaces/inner_api/native:media_client",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
   ]
 
   external_deps = [
@@ -251,7 +251,7 @@ ohos_unittest("screen_capture_server_function_unit_test") {
     "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
     "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service",
-    "$MEDIA_ROOT_DIR/interfaces/inner_api/native:media_client",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
   ]
 
   if (player_framework_support_screen_capture) {
