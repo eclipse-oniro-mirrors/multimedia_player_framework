@@ -623,7 +623,8 @@ void AVMetadataExtractorImpl::FetchFramesByTimes(array_view<int64_t> timesUs,
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SetCallbackReference(callbackName, autoRef);
     if (timesUs.size() < framesArrMinLength || timesUs.size() > framesArrMaxLength) {
-        set_business_error(OHOS::Media::MSERR_INVALID_VAL, "timesus array size is invalid");
+        set_business_error(OHOS::Media::MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
+            "timesus array size is invalid");
         return;
     }
     std::vector<int64_t> timesUsTypeInt(timesUs.begin(), timesUs.end());
@@ -679,7 +680,8 @@ void AVMetadataExtractorImpl::FetchFramesByTimesWithTimeout(array_view<int64_t> 
     SetCallbackReference(callbackName, autoRef);
     std::vector<int64_t> timesUsTypeInt;
     if (timesUs.size() < framesArrMinLength || timesUs.size() > framesArrMaxLength) {
-        set_business_error(OHOS::Media::MSERR_INVALID_VAL, "timesus array size is invalid");
+        set_business_error(OHOS::Media::MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
+            "timesus array size is invalid");
         return;
     }
     timesUsTypeInt.reserve(timesUs.size());
