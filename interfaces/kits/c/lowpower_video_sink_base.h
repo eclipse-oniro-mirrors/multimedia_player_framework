@@ -97,7 +97,7 @@ typedef void (*OH_LowPowerVideoSink_OnError)(
  * @brief When the OH_LowPowerVideoSink instance report target video frame arrived, the function pointer will be called.
  *
  * @param {OH_LowPowerVideoSink*} sink OH_LowPowerVideoSink instance
- * @param {const int64_t} targetPts Target pts of renderred frame
+ * @param {const int64_t} targetPts Target pts of renderred frame,in microseconds
  * @param {const bool} isTimeout If wait target pts timeout, it is false
  * @param {void*} userData User specific data
  * @since 20

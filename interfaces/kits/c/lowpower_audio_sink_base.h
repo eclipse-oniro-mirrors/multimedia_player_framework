@@ -81,7 +81,7 @@ typedef void (*OH_LowPowerAudioSink_OnError)(
  * to report position information.
  *
  * @param {OH_LowPowerAudioSink*} sink OH_LowPowerAudioSink instance
- * @param {int64_t} currentPosition Returns the current playback progress value of the service
+ * @param {int64_t} currentPosition Returns the current playback progress value of the service,in milliseconds
  * @param {void*} userData User specific data
  * @since 20
  */
