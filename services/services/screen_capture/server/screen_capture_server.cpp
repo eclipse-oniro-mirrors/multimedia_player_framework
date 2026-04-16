@@ -1009,7 +1009,7 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
     if (server->IsPopupWindow()) {
         return server->HandlePopupWindowCase(root, content);
     }
-    CHECK_AND_RETURN_RET(server->GetSCServerDataType() == DataType::ORIGINAL_STREAM && server->IsStartedOrResumed(),
+    CHECK_AND_RETURN_RET(server->GetSCServerDataType() != DataType::ORIGINAL_STREAM || !server->IsStartedOrResumed(),
         server->HandleStreamDataCase(root, content));
     return MSERR_UNKNOWN;
 }
