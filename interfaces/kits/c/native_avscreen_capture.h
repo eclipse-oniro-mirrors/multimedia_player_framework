@@ -565,7 +565,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetSelectionCallback(struct OH_AV
  * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
  * @param {OH_AVScreenCapture_UserSelectionInfo*} selection Pointer to an OH_AVScreenCapture_UserSelectionInfo instance
  * @param {int32_t*} type The capture object type selected by the user, 0: represents the screen, 1: represents the
- *        window.
+ *        window, 2: represents the app.
  * @return Function result code.
  *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
  *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} if selections is nullptr.

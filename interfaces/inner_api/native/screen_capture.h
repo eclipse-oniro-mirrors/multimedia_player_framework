@@ -181,13 +181,13 @@ enum class PickerMode : int32_t {
     SCREEN_ONLY = 1,
     SCREEN_AND_WINDOW = 2,
     APP_ONLY = 3,
-    SCREEN_AND_APP = 4,
-    WINDOW_AND_APP = 5,
+    WINDOW_AND_APP = 4,
+    SCREEN_AND_APP = 5,
     SCREEN_WINDOW_AND_APP = 6,
 
     // 注意：新增枚举值时，请在当前注释行上方新增，并更新下方的边界值（边界值用于枚举值合法性判断）。
     MIN_VAL = WINDOW_ONLY,
-    MAX_VAL = SCREEN_AND_WINDOW,
+    MAX_VAL = SCREEN_WINDOW_AND_APP,
 };
 
 struct ScreenCaptureContentFilter {

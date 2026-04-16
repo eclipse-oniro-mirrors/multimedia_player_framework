@@ -1424,6 +1424,12 @@ void ScreenCaptureServer::ClearAppMissionIds()
     appMissionIdsForGround_.clear();
 }
 
+bool ScreenCaptureServer::AppMissionIdsIsEmtpy()
+{
+    std::unique_lock<std::shared_mutex> read_lock(appMissionIdslock_);
+    return appMissionIds_.empty();
+}
+
 void ScreenCaptureServer::RemoveAppMissionIds(uint64_t missionId)
 {
     std::unique_lock<std::shared_mutex> write_lock(appMissionIdslock_);
@@ -2489,7 +2495,7 @@ void ScreenCaptureServer::PrepareUserSelectionInfo(ScreenCaptureUserSelectionInf
         selectionInfo.selectType = SELECT_TYPE_SCREEN;
         selectionInfo.displayIds = displayIds_;
     }
-    if (appMissionIds_.size() > 0) {
+    if (!AppMissionIdsIsEmtpy()) {
         selectionInfo.selectType = SELECT_TYPE_APP;
         sptr<Rosen::Display> defaultDisplay = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
         CHECK_AND_RETURN_LOG(defaultDisplay != nullptr, "PrepareUserSelectionInfo GetDefaultDisplaySync failed");
@@ -3543,16 +3549,19 @@ uint64_t ScreenCaptureServer::GetDisplayIdOfWindows(uint64_t displayId)
         }
         MEDIA_LOGI("MakeVirtualScreenMirror 0x%{public}06" PRIXPTR
             " For Specific Window %{public}" PRIu64, FAKE_POINTER(this), defaultDisplayIdValue);
-    } else if (appMissionIds_.size() > 0) {
+    } else if (!AppMissionIdsIsEmtpy()) {
         std::unordered_map<uint64_t, uint64_t> windowDisplayIdMap;
         Rosen::FocusChangeInfo focusedWindowInfo;
         Rosen::WindowManager::GetInstance().GetFocusWindowInfo(focusedWindowInfo);
         uint32_t times = 0;
-        while (std::find(appMissionIds_.begin(), appMissionIds_.end(),
-            focusedWindowInfo.windowId_) == appMissionIds_.end() && times < FOCUS_MAX_GET_TIMES) {
-            Rosen::WindowManager::GetInstance().GetFocusWindowInfo(focusedWindowInfo);
-            times++;
-            std::this_thread::sleep_for(std::chrono::milliseconds(FOCUS_SLEEP_TIME));
+        {
+            std::unique_lock<std::shared_mutex> appread_lock(appMissionIdslock_);
+            while (std::find(appMissionIds_.begin(), appMissionIds_.end(),
+                focusedWindowInfo.windowId_) == appMissionIds_.end() && times < FOCUS_MAX_GET_TIMES) {
+                Rosen::WindowManager::GetInstance().GetFocusWindowInfo(focusedWindowInfo);
+                times++;
+                std::this_thread::sleep_for(std::chrono::milliseconds(FOCUS_SLEEP_TIME));
+            }
         }
         std::vector<uint64_t> missionIds = {focusedWindowInfo.windowId_};
         auto ret = WindowManager::GetInstance().GetDisplayIdByWindowId(missionIds, windowDisplayIdMap);
