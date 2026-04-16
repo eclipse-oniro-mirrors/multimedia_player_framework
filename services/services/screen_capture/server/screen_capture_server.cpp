@@ -1198,7 +1198,7 @@ void ScreenCaptureServer::ParseAppMissionIds(const Json::Value &appInformation)
         }
     }
     SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_APP, -1);
-    MEDIA_LOGI("ParseAppMissionIds appMissionIds size: %{public}lu", appMissionIds_.size());
+    MEDIA_LOGI("ParseAppMissionIds appMissionIds size: %{public}u", appMissionIds_.size());
 }
 
 void ScreenCaptureServer::ParseDisplayId(const Json::Value &displayIdJson)
@@ -1406,7 +1406,7 @@ void ScreenCaptureServer::SetAppMissionIds(const std::vector<uint64_t> &missionI
 {
     std::unique_lock<std::shared_mutex> write_lock(appMissionIdslock_);
     appMissionIds_ = missionIds;
-    MEDIA_LOGI("SetAppMissionIds appMissionIds_.size(): %{public}lu", appMissionIds_.size());
+    MEDIA_LOGI("SetAppMissionIds appMissionIds_.size(): %{public}u", appMissionIds_.size());
     appMissionIdsCondVar_.notify_all();
     CHECK_AND_RETURN_LOG(virtualScreenId_ != SCREEN_ID_INVALID,
         "SetAppMissionIds virtualScreenId_ is SCREEN_ID_INVALID");
