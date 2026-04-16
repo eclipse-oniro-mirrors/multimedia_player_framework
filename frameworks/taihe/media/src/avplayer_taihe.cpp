@@ -2534,7 +2534,7 @@ void AVPlayerImpl::SetLoudnessGainSync(double loudnessGain)
     }
 
     auto task = std::make_shared<TaskHandler<void>>([this, loudnessGain]() {
-        MEDIA_LOGI("SetVideoScaleType Task");
+        MEDIA_LOGI("SetLoudnessGain Task");
         if (player_ != nullptr && player_->SetLoudnessGain(loudnessGain)) {
             OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "unsupport stream type");
         }
