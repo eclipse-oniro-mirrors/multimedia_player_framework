@@ -74,7 +74,6 @@ DownloadedCacheManager::DownloadedCacheManager(const std::string& cacheDir)
 void DownloadedCacheManager::LoadMapping()
 {
     CreateDirectories(cacheDir_);
-    cacheSize_.store(ScanDirectorySize(cacheDir_), std::memory_order_relaxed);
     std::string path = cacheDir_ + "/" + CACHE_MAPPING_FILE;
 
     std::ifstream file(path, std::ios::binary | std::ios::ate);
@@ -185,7 +184,7 @@ void DownloadedCacheManager::LoadIndexEntries(MemoryReader& reader, CacheMapping
 
         std::string hashIndex = SHA256Hasher::HashToString(hashArr);
 
-        index_[hashIndex].push_back(entry);
+        index_[hashIndex] = entry;
         MEDIA_LOGI("0x%{public}06" PRIXPTR " load entry: %{public}s", FAKE_POINTER(this), hashIndex.c_str());
     }
 }
@@ -200,21 +199,16 @@ void DownloadedCacheManager::ReleaseMap()
 
 std::string DownloadedCacheManager::GetMediaCache(const std::string& url)
 {
-    if (!isLoaded_) {
-        LoadMapping();
-        LoadIndex();
-    }
     std::unique_lock<std::mutex> lock(mutex_);
 
     auto hash = SHA256Hasher::GenerateHash(url);
     std::string hashIndex = SHA256Hasher::HashToString(hash);
 
     auto it = index_.find(hashIndex);
-    CHECK_AND_RETURN_RET_LOG(it != index_.end() && !it->second.empty(), "",
-        "directory corresponding to the url does not exist");
+    CHECK_AND_RETURN_RET_LOG(it != index_.end(), "", "Cache not found for url: %{public}s", url.c_str());
 
     MEDIA_LOGI("0x%{public}06" PRIXPTR " search entry: %{public}s", FAKE_POINTER(this), hashIndex.c_str());
-    const CacheMappingEntry& entry = it->second[0];
+    const CacheMappingEntry& entry = it->second;
     std::string relativePath = entry.filePath;
 
     CHECK_AND_RETURN_RET_LOG(!relativePath.empty() && relativePath.find("..") == std::string::npos, "",
@@ -227,21 +221,16 @@ std::string DownloadedCacheManager::GetMediaCache(const std::string& url)
 
 bool DownloadedCacheManager::GetCacheMetaData(const std::string& url, CacheMetaData& metadata)
 {
-    if (!isLoaded_) {
-        LoadMapping();
-        LoadIndex();
-    }
     std::unique_lock<std::mutex> lock(mutex_);
 
     auto hash = SHA256Hasher::GenerateHash(url);
     std::string hashIndex = SHA256Hasher::HashToString(hash);
 
     auto it = index_.find(hashIndex);
-    CHECK_AND_RETURN_RET_LOG(it != index_.end() && !it->second.empty(), false,
-        "Cache not found for url: %{public}s", url.c_str());
+    CHECK_AND_RETURN_RET_LOG(it != index_.end(), false, "Cache meta not found for url: %{public}s", url.c_str());
 
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " search entry: %{public}s", FAKE_POINTER(this), hashIndex.c_str());
-    const CacheMappingEntry& entry = it->second[0];
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " search meta entry: %{public}s", FAKE_POINTER(this), hashIndex.c_str());
+    const CacheMappingEntry& entry = it->second;
 
     metadata.url = url;
     metadata.size = entry.header.fileSize;
@@ -278,21 +267,6 @@ bool DownloadedCacheManager::CreateDirectories(const std::string& path)
     bool success = fs::create_directories(path, ec);
     CHECK_AND_RETURN_RET_LOG(success, false, "create_directories error:%{public}s", ec.message().c_str());
     return success;
-}
-
-uint64_t DownloadedCacheManager::ScanDirectorySize(const std::string& path)
-{
-    uint64_t totalSize = 0;
-    CHECK_AND_RETURN_RET_LOG(fs::exists(path) && fs::is_directory(path), 0,
-        "file not exist or is not directory");
-
-    for (const auto& entry : fs::recursive_directory_iterator(path)) {
-        if (fs::is_regular_file(entry.status())) {
-            totalSize += fs::file_size(entry);
-        }
-    }
-
-    return totalSize;
 }
 
 } // namespace DownloadedCache

@@ -44,12 +44,7 @@ public:
     void Read(int64_t uuid, int64_t requestedOffset, int64_t requestedLength) override;
     void Close(int64_t uuid) override;
 
-    void SetUrl(std::string url);
-
 private:
-    bool ValidateCache(const std::string& url);
-    int32_t ReadFromCache(int64_t uuid, int64_t offset, int64_t length);
-    bool ProcessShard(int64_t uuid, int index, int startIndex, int endIndex);
     void RespondHeader(int64_t uuid);
     void HandleCacheRequest(int64_t uuid, int64_t requestedOffset, int64_t requestedLength);
 
@@ -62,13 +57,9 @@ private:
     std::shared_ptr<DownloadedFileCacheManager> fileCacheManager_;
 
     CacheMetaData metadata_;
-    std::string path_;
-    int64_t requestedOffset_ = 0;
-    int64_t requestedLength_ = 0;
-    int64_t curOffset_ = 0;
-    std::atomic<bool> isClosed_;
+    std::atomic<bool> isClosed_ {false};
     std::mutex mutex_;
-    bool isHeaderResponded_ = false;
+    std::atomic<bool> isHeaderResponded_ {false};
 };
 } // namespace DownloadedCache
 } // namespace Media

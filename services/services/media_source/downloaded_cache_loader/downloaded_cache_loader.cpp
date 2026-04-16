@@ -40,32 +40,43 @@ int64_t DownloadedCacheLoader::Open(std::shared_ptr<LoadingRequest>& request)
 {
     MEDIA_LOG_I("DownloadedCacheLoader Open");
     FALSE_RETURN_V_MSG_E(request != nullptr, -1, "request is nullptr");
-    std::lock_guard<std::mutex> lock(mutex_);
-    ++uuid_;
-    requestMap_[uuid_] = std::make_shared<CacheReader>(uuid_, request, readTask_, cacheManager_);
-    requestMap_[uuid_]->SetUrl(request->GetUrl());
-    return requestMap_[uuid_]->Open(request);
+    auto cacheReader = std::shared_ptr<CacheReader>(nullptr);
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        ++uuid_;
+        cacheReader = std::make_shared<CacheReader>(uuid_, request, readTask_, cacheManager_);
+        requestMap_[uuid_] = cacheReader;
+    }
+    return cacheReader->Open(request);
 }
 
 void DownloadedCacheLoader::Read(int64_t uuid, int64_t requestedOffset, int64_t requestedLength)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    auto request = requestMap_.find(uuid);
-    if (request == requestMap_.end()) {
-        MEDIA_LOG_I("Read error, invalid id: " PUBLIC_LOG_D64, uuid);
-        return;
+    auto cacheReader = std::shared_ptr<CacheReader>(nullptr);
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        auto request = requestMap_.find(uuid);
+        if (request == requestMap_.end()) {
+            MEDIA_LOG_I("Read error, invalid id: " PUBLIC_LOG_D64, uuid);
+            return;
+        }
+        cacheReader = request->second;
     }
-    request->second->Read(uuid, requestedOffset, requestedLength);
+    cacheReader->Read(uuid, requestedOffset, requestedLength);
 }
 
 void DownloadedCacheLoader::Close(int64_t uuid)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    auto it = requestMap_.find(uuid);
-    if (it != requestMap_.end()) {
-        it->second->Close(uuid);
-        requestMap_.erase(it);
+    auto cacheReader = std::shared_ptr<CacheReader>(nullptr);
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        auto it = requestMap_.find(uuid);
+        if (it != requestMap_.end()) {
+            cacheReader = it->second;
+            requestMap_.erase(it);
+        }
     }
+    cacheReader->Close(uuid);
 }
 } // namespace DownloadedCache
 } // namespace Media

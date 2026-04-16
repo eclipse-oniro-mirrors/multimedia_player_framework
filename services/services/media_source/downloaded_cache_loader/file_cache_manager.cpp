@@ -97,8 +97,7 @@ bool DownloadedFileCacheManager::IsValidPath(const std::string& inputPath)
     }
 
     std::string relativePath;
-    if (inputPath.length() > cacheDir_.length() &&
-        inputPath.compare(0, cacheDir_.length(), cacheDir_) == 0) {
+    if (inputPath.length() > cacheDir_.length() && inputPath.compare(0, cacheDir_.length(), cacheDir_) == 0) {
         relativePath = inputPath.substr(cacheDir_.length());
         if (!relativePath.empty() && relativePath[0] == FILE_SEPARATOR) {
             relativePath = relativePath.substr(1);

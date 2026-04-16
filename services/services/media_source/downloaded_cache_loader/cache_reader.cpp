@@ -51,6 +51,7 @@ int64_t CacheReader::Open(std::shared_ptr<LoadingRequest>& request)
     FALSE_RETURN_V_MSG_E(request != nullptr, -1, "request is nullptr");
     std::lock_guard<std::mutex> lock(mutex_);
     request_ = request;
+    url_ = request->GetUrl();
 
     auto urlStr = cacheManager_->GetMediaCache(url_);
     if (urlStr.empty()) {
@@ -70,17 +71,16 @@ int64_t CacheReader::Open(std::shared_ptr<LoadingRequest>& request)
     return uuid_;
 }
 
-void CacheReader::SetUrl(std::string url)
-{
-    url_ = url;
-}
-
 void CacheReader::RespondHeader(int64_t uuid)
 {
-    if (isHeaderResponded_) {
+    if (isHeaderResponded_.load()) {
         return;
     }
+    isHeaderResponded_.store(true);
 
+    if (isClosed_.load()) {
+        return;
+    }
     auto headers = cacheManager_->BuildHttpHeaders(url_);
     if (headers.empty()) {
         MEDIA_LOG_E("Failed to build HTTP headers for url: %{public}s", url_.c_str());
@@ -89,21 +89,12 @@ void CacheReader::RespondHeader(int64_t uuid)
     }
 
     request_->RespondHeader(uuid, headers, "");
-    isHeaderResponded_ = true;
 }
 
 void CacheReader::Read(int64_t uuid, int64_t requestedOffset, int64_t requestedLength)
 {
     MEDIA_LOG_I(PUBLIC_LOG_D64 " Read requestedOffset: " PUBLIC_LOG_D64" requestedLength: " PUBLIC_LOG_D64
         " randomAccess_ = " PUBLIC_LOG_D32, uuid, requestedOffset, requestedLength, metadata_.randomAccess);
-
-    RespondHeader(uuid);
-
-    if (requestedLength == 0) {
-        MEDIA_LOG_W("RequestedLength is zero, finish it.");
-        request_->FinishLoading(uuid, LOADING_ERROR_SUCCESS);
-        return;
-    }
 
     auto weakThis = weak_from_this();
     readTask_->SubmitJobOnce([weakThis, uuid, requestedOffset, requestedLength] {
@@ -118,6 +109,14 @@ void CacheReader::Read(int64_t uuid, int64_t requestedOffset, int64_t requestedL
 void CacheReader::HandleCacheRequest(int64_t uuid, int64_t requestedOffset, int64_t requestedLength)
 {
     if (isClosed_.load()) {
+        return;
+    }
+
+    RespondHeader(uuid);
+
+    if (requestedLength == 0) {
+        MEDIA_LOG_W("RequestedLength is zero, finish it.");
+        request_->FinishLoading(uuid, LOADING_ERROR_SUCCESS);
         return;
     }
 

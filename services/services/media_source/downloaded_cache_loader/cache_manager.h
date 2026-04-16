@@ -55,16 +55,14 @@ public:
     void LoadIndex();
     void LoadIndexEntries(MemoryReader& reader, CacheMappingHeader& header);
     bool CreateDirectories(const std::string& path);
-    uint64_t ScanDirectorySize(const std::string& path);
     void LoadMapping();
 
     std::string cacheDir_;
     std::vector<uint8_t> fileBuffer_;
-    bool isLoaded_ = false;
+    std::atomic<bool> isLoaded_ {false};
 
-    std::unordered_map<std::string, std::vector<CacheMappingEntry>> index_;
+    std::unordered_map<std::string, CacheMappingEntry> index_;
     std::mutex mutex_;
-    std::atomic<uint64_t> cacheSize_{0};
 };
 } // namespace DownloadedCache
 } // namespace Media

@@ -27,8 +27,7 @@ namespace DownloadedCache {
 class SHA256Hasher {
 public:
     static std::array<uint8_t, 32> GenerateHash(const std::string& url);
-    static bool CompareHash(const std::array<uint8_t, 32>& hash1,
-                       const std::array<uint8_t, 32>& hash2);
+    static bool CompareHash(const std::array<uint8_t, 32>& hash1, const std::array<uint8_t, 32>& hash2);
     static std::string HashToString(const std::array<uint8_t, 32>& hash);
 };
 
