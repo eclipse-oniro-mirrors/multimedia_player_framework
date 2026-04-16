@@ -103,6 +103,8 @@ private:
     std::vector<std::shared_ptr<AVBuffer>> bufferVector_;
 
     Status InitDecoder(const std::string &codecName = "");
+    Status ConfigureAndStartDecoder();
+    bool IsSupportHWDecoder();
     void SwitchToSoftWareDecoder();
 
     std::shared_ptr<Meta> GetVideoTrackInfo();
