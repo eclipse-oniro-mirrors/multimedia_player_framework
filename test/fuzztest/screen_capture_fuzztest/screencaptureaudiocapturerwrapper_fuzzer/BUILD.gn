@@ -132,7 +132,6 @@ ohos_fuzztest("ScreenCaptureAudioCapturerWrapperFuzzTest") {
     "ipc:ipc_single",
     "media_foundation:media_foundation",
     "os_account:os_account_innerkits",
-    "player_framework:media_client",
     "qos_manager:qos",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
