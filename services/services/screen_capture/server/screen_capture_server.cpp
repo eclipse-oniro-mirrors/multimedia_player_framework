@@ -3729,7 +3729,7 @@ int32_t ScreenCaptureServer::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfa
         MEDIA_LOGD("getcurrent surfaceBuffer info, size:%{public}u", surfaceBuffer->GetSize());
         HDI::Display::Graphic::Common::V1_0::BufferHandleMetaRegion metaRegion;
         std::vector<uint8_t> data;
-        auto ret  = surfaceBuffer->GetMetadata(HDI::Display::Graphic::Common::V1_0::ATTRKEY_CROP_REGION, data);
+        auto ret = surfaceBuffer->GetMetadata(HDI::Display::Graphic::Common::V1_0::ATTRKEY_CROP_REGION, data);
         if (ret == GSERROR_OK && memcpy_s(&metaRegion,
             sizeof(HDI::Display::Graphic::Common::V1_0::BufferHandleMetaRegion), data.data(), data.size()) == EOK) {
             rsRect.x = static_cast<int32_t>(metaRegion.left);
