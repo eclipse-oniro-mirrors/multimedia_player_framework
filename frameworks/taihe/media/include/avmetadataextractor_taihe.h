@@ -63,6 +63,8 @@ private:
     struct DataSrcDescriptor dataSrcDescriptor_;
     OHOS::Media::HelperState state_ { OHOS::Media::HelperState::HELPER_STATE_IDLE };
     uint64_t timeStamp_ = 0;
+    uint32_t framesArrMinLength = 1;
+    uint32_t framesArrMaxLength = 4096;
     uint32_t index_ = 0;
     std::shared_ptr<OHOS::Media::PixelMap> artPicture_ = nullptr;
     void SetMetadataProperty(std::shared_ptr<OHOS::Media::Meta> metadata, AVMetadata &res);

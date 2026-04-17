@@ -201,6 +201,7 @@ void AVMetadataExtractorImpl::SetDefaultMetadataProperty(AVMetadata &res)
     res.hdrType = optional<HdrType>(std::nullopt);
     res.location = optional<Location>(std::nullopt);
     res.customInfo = optional<map<string, string>>(std::nullopt);
+    res.encoder = optional<string>(std::nullopt);
 }
 
 bool AVMetadataExtractorImpl::SetPropertyByType(AVMetadata &res, std::shared_ptr<OHOS::Media::Meta> metadata,
@@ -229,7 +230,8 @@ bool AVMetadataExtractorImpl::SetPropertyByType(AVMetadata &res, std::shared_ptr
         {"description", &AVMetadata::description},
         {"videoHeight", &AVMetadata::videoHeight},
         {"videoWidth", &AVMetadata::videoWidth},
-        {"videoOrientation", &AVMetadata::videoOrientation}
+        {"videoOrientation", &AVMetadata::videoOrientation},
+        {"encoder", &AVMetadata::encoder}
     };
     bool ret = true;
     OHOS::Media::AnyValueType type = metadata->GetValueType(key);
@@ -610,7 +612,6 @@ void AVMetadataExtractorImpl::FetchFramesByTimes(array_view<int64_t> timesUs,
             "Current state is not runnable, can't fetchFrame.");
         return;
     }
-
     std::string callbackName = "OnFrameFetched";
     ani_env *env = taihe::get_env();
     std::shared_ptr<taihe::callback<void(::ohos::multimedia::media::FrameInfo const&,
@@ -621,20 +622,15 @@ void AVMetadataExtractorImpl::FetchFramesByTimes(array_view<int64_t> timesUs,
         std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SetCallbackReference(callbackName, autoRef);
-
-    std::vector<int64_t> timesUsTypeInt;
-    timesUsTypeInt.reserve(timesUs.size());
-    for (int64_t value : timesUs) {
-        timesUsTypeInt.push_back(value);
+    if (timesUs.size() < framesArrMinLength || timesUs.size() > framesArrMaxLength) {
+        set_business_error(OHOS::Media::MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
+            "timesus array size is invalid");
+        return;
     }
-
+    std::vector<int64_t> timesUsTypeInt(timesUs.begin(), timesUs.end());
     OHOS::Media::PixelMapParams pixelMapParams;
-    if (param.height.has_value()) {
-        pixelMapParams.dstHeight = param.height.value();
-    }
-    if (param.width.has_value()) {
-        pixelMapParams.dstWidth = param.width.value();
-    }
+    pixelMapParams.dstHeight = param.height.has_value() ? param.height.value() : 0;
+    pixelMapParams.dstWidth = param.width.has_value() ? param.width.value() : 0;
     OHOS::Media::PixelFormat colorFormat = OHOS::Media::PixelFormat::RGBA_8888;
     if (param.colorFormat.has_value()) {
         int32_t formatVal = static_cast<int32_t>(param.colorFormat.value());
@@ -647,11 +643,10 @@ void AVMetadataExtractorImpl::FetchFramesByTimes(array_view<int64_t> timesUs,
         }
     }
     pixelMapParams.colorFormat = colorFormat;
-
     CHECK_AND_RETURN_LOG(helper_ != nullptr, "inner helper_ is null.");
     int32_t fetchRes = helper_->FetchScaledFrameYuvs(timesUsTypeInt, queryOption.get_value(), pixelMapParams);
     if (fetchRes != OHOS::Media::MSERR_OK) {
-        MediaTaiheUtils::ThrowExceptionError("SERVICE DIED.");
+        set_business_error(OHOS::Media::MSERR_EXT_API9_SERVICE_DIED, "Service died, can't fetchFrame.");
     }
     return;
 }
@@ -673,7 +668,6 @@ void AVMetadataExtractorImpl::FetchFramesByTimesWithTimeout(array_view<int64_t> 
             "Current state is not runnable, can't fetchFrame.");
         return;
     }
-
     std::string callbackName = "OnFrameFetched";
     ani_env *env = taihe::get_env();
     std::shared_ptr<taihe::callback<void(::ohos::multimedia::media::FrameInfo const&,
@@ -684,13 +678,16 @@ void AVMetadataExtractorImpl::FetchFramesByTimesWithTimeout(array_view<int64_t> 
         std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SetCallbackReference(callbackName, autoRef);
-
     std::vector<int64_t> timesUsTypeInt;
+    if (timesUs.size() < framesArrMinLength || timesUs.size() > framesArrMaxLength) {
+        set_business_error(OHOS::Media::MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
+            "timesus array size is invalid");
+        return;
+    }
     timesUsTypeInt.reserve(timesUs.size());
     for (int64_t value : timesUs) {
         timesUsTypeInt.push_back(value);
     }
-
     OHOS::Media::PixelMapParams pixelMapParams;
     if (param.height.has_value()) {
         pixelMapParams.dstHeight = param.height.value();
@@ -710,7 +707,6 @@ void AVMetadataExtractorImpl::FetchFramesByTimesWithTimeout(array_view<int64_t> 
         }
     }
     pixelMapParams.colorFormat = colorFormat;
-
     CHECK_AND_RETURN_LOG(helper_ != nullptr, "inner helper_ is null.");
     int32_t fetchRes = helper_->FetchScaledFrameYuvsWithTimeout(
         timesUsTypeInt, queryOption.get_value(), pixelMapParams, timeoutMs);
