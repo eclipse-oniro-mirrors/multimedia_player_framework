@@ -524,7 +524,7 @@ int32_t ScreenCaptureServer::UnRegisterAppLifecycleListener()
         lifecycleListenerDeathRecipient_ = nullptr;
     }
 
-    if(FocusChangedListener_){
+    if (FocusChangedListener_) {
         WindowManager::GetInstance().UnregisterFocusChangedListener(FocusChangedListener_);
         FocusChangedListener_ = nullptr;
     }
@@ -1210,10 +1210,9 @@ void ScreenCaptureServer::ParseAppMissionIds(const Json::Value &appInformation)
     isGetAppMissionId_  = appMissionIdsCondVar_.wait_until(write_lock,
         std::chrono::system_clock::now() + std::chrono::seconds(APPMISSIONID_WAIT_TIME),
         [this] { return !appMissionIds_.empty() && focusAppMissionId_ != 0; });
-
     if (isGetAppMissionId_) {
         MEDIA_LOGI("ParseAppMissionIds appMissionIds size: %{public}d",
-        static_cast<uint32_t>(appMissionIds_.size()));
+            static_cast<uint32_t>(appMissionIds_.size()));
     } else {
         MEDIA_LOGE("wait_for appMissionIds_ timeout");
     }
