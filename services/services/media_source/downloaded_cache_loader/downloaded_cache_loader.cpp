@@ -46,7 +46,7 @@ int64_t DownloadedCacheLoader::Open(std::shared_ptr<LoadingRequest>& request)
         cacheReader = std::make_shared<CacheReader>(uuid_, request, readTask_, cacheManager_);
         requestMap_[uuid_] = cacheReader;
     }
-    MEDIA_LOG_I("DownloadedCacheLoader Open: " PUBLIC_LOG_D64, uuid);
+    MEDIA_LOG_I("DownloadedCacheLoader Open: " PUBLIC_LOG_D64, uuid_);
     return cacheReader->Open(request);
 }
 
