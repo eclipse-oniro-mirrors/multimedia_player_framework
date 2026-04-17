@@ -3736,8 +3736,7 @@ int32_t ScreenCaptureServer::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfa
             rsRect.y = static_cast<int32_t>(metaRegion.top);
             rsRect.w = static_cast<int32_t>(metaRegion.width);
             rsRect.h = static_cast<int32_t>(metaRegion.height);
-        }
-        else {
+        } else {
             rsRect.x = -1;
             rsRect.y = -1;
             rsRect.w = -1;
