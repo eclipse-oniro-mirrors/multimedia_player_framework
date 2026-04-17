@@ -38,7 +38,6 @@ DownloadedCacheLoader::~DownloadedCacheLoader()
 
 int64_t DownloadedCacheLoader::Open(std::shared_ptr<LoadingRequest>& request)
 {
-    MEDIA_LOG_I("DownloadedCacheLoader Open");
     FALSE_RETURN_V_MSG_E(request != nullptr, -1, "request is nullptr");
     auto cacheReader = std::shared_ptr<CacheReader>(nullptr);
     {
@@ -47,6 +46,7 @@ int64_t DownloadedCacheLoader::Open(std::shared_ptr<LoadingRequest>& request)
         cacheReader = std::make_shared<CacheReader>(uuid_, request, readTask_, cacheManager_);
         requestMap_[uuid_] = cacheReader;
     }
+    MEDIA_LOG_I("DownloadedCacheLoader Open: " PUBLIC_LOG_D64, uuid);
     return cacheReader->Open(request);
 }
 
@@ -57,7 +57,7 @@ void DownloadedCacheLoader::Read(int64_t uuid, int64_t requestedOffset, int64_t 
         std::lock_guard<std::mutex> lock(mutex_);
         auto request = requestMap_.find(uuid);
         if (request == requestMap_.end()) {
-            MEDIA_LOG_I("Read error, invalid id: " PUBLIC_LOG_D64, uuid);
+            MEDIA_LOG_W("Read error, invalid id: " PUBLIC_LOG_D64, uuid);
             return;
         }
         cacheReader = request->second;
@@ -71,10 +71,12 @@ void DownloadedCacheLoader::Close(int64_t uuid)
     {
         std::lock_guard<std::mutex> lock(mutex_);
         auto it = requestMap_.find(uuid);
-        if (it != requestMap_.end()) {
-            cacheReader = it->second;
-            requestMap_.erase(it);
+        if (it == requestMap_.end()) {
+            MEDIA_LOG_W("Close error, invalid id: " PUBLIC_LOG_D64, uuid);
+            return;
         }
+        cacheReader = it->second;
+        requestMap_.erase(it);
     }
     cacheReader->Close(uuid);
 }
