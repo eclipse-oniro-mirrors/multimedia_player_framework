@@ -104,8 +104,6 @@ static const uint32_t MAX_LINE_WIDTH = 8;
 static const uint32_t MAX_LINE_COLOR_RGB = 0xffffff;
 static const uint32_t MIN_LINE_COLOR_ARGB = 0xff000000;
 static const size_t MAX_DISPLAY_LEN = 1000;
-static const uint32_t FOCUS_SLEEP_TIME = 10;
-static const uint32_t FOCUS_MAX_GET_TIMES = 10;
 static const uint32_t APPMISSIONID_WAIT_TIME = 3;
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     static const int32_t NOTIFICATION_MAX_TRY_NUM = 3;
@@ -491,6 +489,10 @@ int32_t ScreenCaptureServer::RegisterAppLifecycleListener(const std::string &bun
         }
     }
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer(shared_from_this());
+    sptr<FocusChangedListener> listenerFocus(new (std::nothrow) FocusChangedListener(screenCaptureServer));
+    FocusChangedListener_ = listenerFocus;
+    WindowManager::GetInstance().RegisterFocusChangedListener(FocusChangedListener_);
+
     sptr<SCWindowLifecycleListener> listener(new (std::nothrow) SCWindowLifecycleListener(screenCaptureServer));
     CHECK_AND_RETURN_RET_LOG(listener != nullptr, MSERR_INVALID_OPERATION,
         "create new appLifecycleListener failed.");
@@ -520,6 +522,11 @@ int32_t ScreenCaptureServer::UnRegisterAppLifecycleListener()
             MEDIA_LOGI("UnRegisterAppLifecycleListener RemoveDeathRecipient success.");
         }
         lifecycleListenerDeathRecipient_ = nullptr;
+    }
+
+    if(FocusChangedListener_){
+        WindowManager::GetInstance().UnregisterFocusChangedListener(FocusChangedListener_);
+        FocusChangedListener_ = nullptr;
     }
 
     if (!appLifecycleListener_) {
@@ -1043,6 +1050,7 @@ void ScreenCaptureServer::PrepareSelectWindow(Json::Value &root)
         SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_WINDOW, missionId);
     }
     ParseAppMissionIds(root["appInformation"]);
+    CHECK_AND_RETURN_LOG(isGetAppMissionId_, "get appInformation false");
     ScreenCaptureUserSelectionInfo selectionInfo;
     PrepareUserSelectionInfo(selectionInfo);
     NotifyUserSelected(selectionInfo);
@@ -1093,11 +1101,15 @@ int32_t ScreenCaptureServer::HandlePopupWindowCase(Json::Value& root, const std:
 
     if (USER_CHOICE_ALLOW.compare(choice) == 0) {
         PrepareSelectWindow(root);
-        int32_t ret = OnReceiveUserPrivacyAuthority(true);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret,
-            "ReportAVScreenCaptureUserChoice user choice is true but start failed");
-        MEDIA_LOGI("ReportAVScreenCaptureUserChoice user choice is true and start success");
-        return MSERR_OK;
+        if (isGetAppMissionId_) {
+            int32_t ret = OnReceiveUserPrivacyAuthority(true);
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret,
+                "ReportAVScreenCaptureUserChoice user choice is true but start failed");
+            MEDIA_LOGI("ReportAVScreenCaptureUserChoice user choice is true and start success");
+            return MSERR_OK;
+        } else {
+            Release();
+        }
     } else if (USER_CHOICE_DENY.compare(choice) == 0) {
         return OnReceiveUserPrivacyAuthority(false);
     } else {
@@ -1156,6 +1168,10 @@ int32_t ScreenCaptureServer::HandlePresentPickerWindowCase(Json::Value& root, co
     UnRegisterWindowLifecycleListener();
     UnRegisterWindowInfoChangedListener();
     ScreenManager::GetInstance().UnregisterScreenListener(screenConnectListener_);
+    if (!isGetAppMissionId_) {
+        Release();
+        return MSERR_UNKNOWN;
+    }
     int32_t ret = MSERR_OK;
     if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
         auto consumerSurface = isSurfaceMode_ ? surface_ : producerSurface_;
@@ -1190,16 +1206,17 @@ void ScreenCaptureServer::ParseAppMissionIds(const Json::Value &appInformation)
  
     RegisterAppLifecycleListener(bundleNameJson.asString(), static_cast<int32_t>(appIndexJson.asInt()));
     std::unique_lock<std::shared_mutex> write_lock(appMissionIdslock_);
-    while (appMissionIds_.size() <= 0) {
-        if (appMissionIdsCondVar_.wait_for(write_lock,
-            std::chrono::seconds(APPMISSIONID_WAIT_TIME)) == std::cv_status::timeout) {
-            MEDIA_LOGE("wait_for appMissionIds_ timeout");
-            break;
-        }
-    }
     SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_APP, -1);
-    MEDIA_LOGI("ParseAppMissionIds appMissionIds size: %{public}u",
-    static_cast<uint32_t>(appMissionIds_.size()));
+    isGetAppMissionId_  = appMissionIdsCondVar_.wait_until(write_lock,
+        std::chrono::system_clock::now() + std::chrono::seconds(APPMISSIONID_WAIT_TIME),
+        [this] { return !appMissionIds_.empty() && focusAppMissionId_ != 0; });
+
+    if (isGetAppMissionId_) {
+        MEDIA_LOGI("ParseAppMissionIds appMissionIds size: %{public}d",
+        static_cast<uint32_t>(appMissionIds_.size()));
+    } else {
+        MEDIA_LOGE("wait_for appMissionIds_ timeout");
+    }
 }
 
 void ScreenCaptureServer::ParseDisplayId(const Json::Value &displayIdJson)
@@ -1239,6 +1256,7 @@ void ScreenCaptureServer::HandleSetDisplayIdAndMissionId(Json::Value &root)
         SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_WINDOW, missionId);
     }
     ParseAppMissionIds(root["appInformation"]);
+    CHECK_AND_RETURN_LOG(isGetAppMissionId_, "get appInformation false");
     UpdateHighlightOutline(true);
     MEDIA_LOGI("HandleSetDisplayIdAndMissionId end");
     ScreenCaptureUserSelectionInfo selectionInfo;
@@ -1446,6 +1464,14 @@ void ScreenCaptureServer::RemoveAppMissionIdsGround(uint64_t missionId)
         appMissionIdsForGround_.end(), missionId), appMissionIdsForGround_.end());
     if (appMissionIdsForGround_.size() == 0) {
         NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE, nullptr);
+    }
+}
+
+void ScreenCaptureServer::SetFocusAppMissionId(uint64_t missionId)
+{
+    std::unique_lock<std::shared_mutex> write_lock(appMissionIdslock_);
+    if (std::find(appMissionIds_.begin(), appMissionIds_.end(), missionId) != appMissionIds_.end()) {
+        focusAppMissionId_ = missionId;
     }
 }
 
@@ -3469,7 +3495,7 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
     }
     {
         std::shared_lock<std::shared_mutex> appread_lock(appMissionIdslock_);
-        if (appMissionIds_.size() > 0) {
+        if (!appMissionIds_.empty()) {
             virScrOption.missionIds_ = appMissionIds_;
         }
     }
@@ -3551,19 +3577,7 @@ uint64_t ScreenCaptureServer::GetDisplayIdOfWindows(uint64_t displayId)
             " For Specific Window %{public}" PRIu64, FAKE_POINTER(this), defaultDisplayIdValue);
     } else if (!AppMissionIdsIsEmtpy()) {
         std::unordered_map<uint64_t, uint64_t> windowDisplayIdMap;
-        Rosen::FocusChangeInfo focusedWindowInfo;
-        Rosen::WindowManager::GetInstance().GetFocusWindowInfo(focusedWindowInfo);
-        uint32_t times = 0;
-        {
-            std::unique_lock<std::shared_mutex> appread_lock(appMissionIdslock_);
-            while (std::find(appMissionIds_.begin(), appMissionIds_.end(),
-                focusedWindowInfo.windowId_) == appMissionIds_.end() && times < FOCUS_MAX_GET_TIMES) {
-                Rosen::WindowManager::GetInstance().GetFocusWindowInfo(focusedWindowInfo);
-                times++;
-                std::this_thread::sleep_for(std::chrono::milliseconds(FOCUS_SLEEP_TIME));
-            }
-        }
-        std::vector<uint64_t> missionIds = {focusedWindowInfo.windowId_};
+        std::vector<uint64_t> missionIds = {focusAppMissionId_};
         auto ret = WindowManager::GetInstance().GetDisplayIdByWindowId(missionIds, windowDisplayIdMap);
         MEDIA_LOGI("MakeVirtualScreenMirror 0x%{public}06" PRIXPTR
             "GetWindowDisplayIds ret:%{public}d", FAKE_POINTER(this), ret);

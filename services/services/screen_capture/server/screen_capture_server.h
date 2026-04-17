@@ -20,6 +20,7 @@
 #include "ui_extension_ability_connection.h"
 #include "audio_data_source.h"
 #include "window_life_cycle_listener.h"
+#include "focus_changed_listener.h"
 
 namespace OHOS {
 namespace Media {
@@ -151,6 +152,7 @@ public:
     void RemoveAppMissionIds(uint64_t missionId);
     void SetAppMissionIdsGround(uint64_t missionId);
     void RemoveAppMissionIdsGround(uint64_t missionId);
+    void SetFocusAppMissionId(uint64_t missionId);
     bool IsTelInCallSkipList();
     int32_t GetAppPid();
     int32_t GetAppUid();
@@ -443,6 +445,8 @@ private:
     std::vector<uint64_t> appMissionIds_ = {};
     std::vector<uint64_t> appMissionIdsForGround_ = {};
     std::vector<int32_t> windowIdList_ = {};
+    std::atomic<uint64_t> focusAppMissionId_ = 0;
+    std::atomic<bool> isGetAppMissionId_ = true;
     std::atomic<ScreenId> curWindowInDisplayId_{SCREEN_ID_INVALID};
     std::atomic<AVScreenCaptureContentChangedEvent> curWindowEvent_ =
         AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE;
@@ -456,6 +460,7 @@ private:
     sptr<UIExtensionAbilityConnection> connection_ = nullptr;
     sptr<SCWindowLifecycleListener> windowLifecycleListener_ = nullptr;
     sptr<SCWindowLifecycleListener> appLifecycleListener_ = nullptr;
+    sptr<FocusChangedListener> FocusChangedListener_ = nullptr;
     sptr<SCDeathRecipientListener> lifecycleListenerDeathRecipient_ = nullptr;
     sptr<SCWindowInfoChangedListener> windowInfoChangedListener_ = nullptr;
     sptr<ScreenManager::IRecordDisplayListener> recordDisplayListener_ = nullptr;

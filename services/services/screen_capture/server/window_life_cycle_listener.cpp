@@ -44,7 +44,7 @@ void SCWindowLifecycleListener::OnBatchLifecycleEvent(const std::vector<Lifecycl
     CHECK_AND_RETURN_LOG(SCServer != nullptr, "screenCaptureServer is nullptr");
     nlohmann::json payloadsJson = nlohmann::json::array();
     std::vector<uint64_t> missionIds;
-    for (auto payload : payloads) {
+    for (auto& payload : payloads) {
         nlohmann::json payloadJson;
         payloadJson["bundleName_"] = payload.bundleName_;
         payloadJson["moduleName_"] = payload.moduleName_;
@@ -62,7 +62,7 @@ void SCWindowLifecycleListener::OnBatchLifecycleEvent(const std::vector<Lifecycl
             missionIds.emplace_back(payload.persistentId_);
         }
     }
-    if (missionIds.size() > 0) {
+    if (!missionIds.empty()) {
         SCServer->SetAppMissionIds(missionIds);
     }
     std::string events = payloadsJson.dump(4);
