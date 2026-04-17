@@ -1472,6 +1472,7 @@ void ScreenCaptureServer::SetFocusAppMissionId(uint64_t missionId)
     std::unique_lock<std::shared_mutex> write_lock(appMissionIdslock_);
     if (std::find(appMissionIds_.begin(), appMissionIds_.end(), missionId) != appMissionIds_.end()) {
         focusAppMissionId_ = missionId;
+        appMissionIdsCondVar_.notify_all();
     }
 }
 
