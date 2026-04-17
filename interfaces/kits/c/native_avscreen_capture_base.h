@@ -624,7 +624,7 @@ typedef enum OH_CapturePickerMode {
      * @since 26.0.0
      */
     OH_CAPTURE_PICKER_MODE_SCREEN_AND_APP = 5,
- 	
+
     /**
      * @brief Show screen, window, and application options
      * @since 26.0.0
