@@ -3729,20 +3729,20 @@ int32_t ScreenCaptureServer::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfa
         MEDIA_LOGD("getcurrent surfaceBuffer info, size:%{public}u", surfaceBuffer->GetSize());
         HDI::Display::Graphic::Common::V1_0::BufferHandleMetaRegion metaRegion;
         std::vector<uint8_t> data;
-        surfaceBuffer->GetMetadata(HDI::Display::Graphic::Common::V1_0::ATTRKEY_CROP_REGION, data);
+        int32_t ret  = surfaceBuffer->GetMetadata(HDI::Display::Graphic::Common::V1_0::ATTRKEY_CROP_REGION, data);
         if (memcpy_s(&metaRegion, sizeof(HDI::Display::Graphic::Common::V1_0::BufferHandleMetaRegion),
-            data.data(), data.size()) != EOK) {
-            MEDIA_LOGE("BufferHandleMetaRegion memcpy_s failed. destSize=%{public}zu, srcSize=%{public}zu",
-                sizeof(HDI::Display::Graphic::Common::V1_0::BufferHandleMetaRegion), data.size());
+            data.data(), data.size()) == EOK && ret == GSERROR_OK) {
+            rsRect.x = static_cast<int32_t>(metaRegion.left);
+            rsRect.y = static_cast<int32_t>(metaRegion.top);
+            rsRect.w = static_cast<int32_t>(metaRegion.width);
+            rsRect.h = static_cast<int32_t>(metaRegion.height);
+        }
+        else {
             rsRect.x = -1;
             rsRect.y = -1;
             rsRect.w = -1;
             rsRect.h = -1;
         }
-        rsRect.x = static_cast<int32_t>(metaRegion.left);
-        rsRect.y = static_cast<int32_t>(metaRegion.top);
-        rsRect.w = static_cast<int32_t>(metaRegion.width);
-        rsRect.h = static_cast<int32_t>(metaRegion.height);
         return MSERR_OK;
     }
     FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNKNOWN,
