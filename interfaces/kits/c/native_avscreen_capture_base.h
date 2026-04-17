@@ -606,24 +606,28 @@ typedef enum OH_CapturePickerMode {
 
     /** Show both screen and window options (default mode) */
     OH_CAPTURE_PICKER_MODE_SCREEN_AND_WINDOW = 2,
+
     /**
-     * @brief Show application options only
-     * @since 26
+     * @brief Show application options only 
+     * @since 26.0.0
      */
     OH_CAPTURE_PICKER_MODE_APP_ONLY = 3,
+
     /**
      * @brief Show both window and application options
-     * @since 26
+     * @since 26.0.0
      */
- 	OH_CAPTURE_PICKER_MODE_WINDOW_AND_APP = 4,
+    OH_CAPTURE_PICKER_MODE_WINDOW_AND_APP = 4,
+
     /**
      * @brief Show both screen and application options
-     * @since 26
+     * @since 26.0.0
      */
  	OH_CAPTURE_PICKER_MODE_SCREEN_AND_APP = 5,
+ 	
     /**
      * @brief Show screen, window, and application options
-     * @since 26
+     * @since 26.0.0
      */
  	OH_CAPTURE_PICKER_MODE_SCREEN_WINDOW_AND_APP = 6,
 } OH_CapturePickerMode;
