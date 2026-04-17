@@ -60,8 +60,6 @@
 #include "window_manager.h"
 #include "limitIdGenerator.h"
 #include "system_ability_status_change_stub.h"
-#include "session_manager_lite.h"
-#include "window_manager_lite.h"
 #include "i_input_device_listener.h"
 #include "input_manager.h"
 #include "session_lifecycle_listener_stub.h"
