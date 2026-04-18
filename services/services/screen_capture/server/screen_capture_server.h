@@ -152,7 +152,6 @@ public:
     void RemoveAppMissionIds(uint64_t missionId);
     void SetAppMissionIdsGround(uint64_t missionId);
     void RemoveAppMissionIdsGround(uint64_t missionId);
-    void SetFocusAppMissionId(uint64_t missionId);
     bool IsTelInCallSkipList();
     int32_t GetAppPid();
     int32_t GetAppUid();

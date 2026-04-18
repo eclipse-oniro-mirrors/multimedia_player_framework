@@ -489,10 +489,6 @@ int32_t ScreenCaptureServer::RegisterAppLifecycleListener(const std::string &bun
         }
     }
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer(shared_from_this());
-    sptr<FocusChangedListener> listenerFocus(new (std::nothrow) FocusChangedListener(screenCaptureServer));
-    FocusChangedListener_ = listenerFocus;
-    WindowManager::GetInstance().RegisterFocusChangedListener(FocusChangedListener_);
-
     sptr<SCWindowLifecycleListener> listener(new (std::nothrow) SCWindowLifecycleListener(screenCaptureServer));
     CHECK_AND_RETURN_RET_LOG(listener != nullptr, MSERR_INVALID_OPERATION,
         "create new appLifecycleListener failed.");
@@ -522,11 +518,6 @@ int32_t ScreenCaptureServer::UnRegisterAppLifecycleListener()
             MEDIA_LOGI("UnRegisterAppLifecycleListener RemoveDeathRecipient success.");
         }
         lifecycleListenerDeathRecipient_ = nullptr;
-    }
-
-    if (FocusChangedListener_) {
-        WindowManager::GetInstance().UnregisterFocusChangedListener(FocusChangedListener_);
-        FocusChangedListener_ = nullptr;
     }
 
     if (!appLifecycleListener_) {
@@ -1108,7 +1099,8 @@ int32_t ScreenCaptureServer::HandlePopupWindowCase(Json::Value& root, const std:
             MEDIA_LOGI("ReportAVScreenCaptureUserChoice user choice is true and start success");
             return MSERR_OK;
         } else {
-            Release();
+            StopScreenCaptureInnerUnBind();
+            PostStartScreenCaptureFail();
         }
     } else if (USER_CHOICE_DENY.compare(choice) == 0) {
         return OnReceiveUserPrivacyAuthority(false);
@@ -1169,7 +1161,8 @@ int32_t ScreenCaptureServer::HandlePresentPickerWindowCase(Json::Value& root, co
     UnRegisterWindowInfoChangedListener();
     ScreenManager::GetInstance().UnregisterScreenListener(screenConnectListener_);
     if (!isGetAppMissionId_) {
-        Release();
+        StopScreenCaptureInnerUnBind();
+        PostStartScreenCaptureFail();
         return MSERR_UNKNOWN;
     }
     int32_t ret = MSERR_OK;
@@ -1198,6 +1191,8 @@ int32_t ScreenCaptureServer::HandlePresentPickerWindowCase(Json::Value& root, co
 
 void ScreenCaptureServer::ParseAppMissionIds(const Json::Value &appInformation)
 {
+    MediaTrace trace("ScreenCaptureServer::ParseAppMissionIds");
+    MEDIA_LOGI("ParseAppMissionIds start.",);
     ClearAppMissionIds();
     CHECK_AND_RETURN_LOG(!appInformation.isNull(), "appInformation isNull");
     const Json::Value bundleNameJson = appInformation["bundleName"];
@@ -1211,10 +1206,10 @@ void ScreenCaptureServer::ParseAppMissionIds(const Json::Value &appInformation)
         std::chrono::system_clock::now() + std::chrono::seconds(APPMISSIONID_WAIT_TIME),
         [this] { return !appMissionIds_.empty() && focusAppMissionId_ != 0; });
     if (isGetAppMissionId_) {
-        MEDIA_LOGI("ParseAppMissionIds appMissionIds size: %{public}d",
+        MEDIA_LOGI("ParseAppMissionIds end. appMissionIds size: %{public}d",
             static_cast<uint32_t>(appMissionIds_.size()));
     } else {
-        MEDIA_LOGE("wait_for appMissionIds_ timeout");
+        MEDIA_LOGE("ParseAppMissionIds end. wait_for appMissionIds_ timeout");
     }
 }
 
@@ -1394,6 +1389,12 @@ void ScreenCaptureServer::SetAppMissionIds(uint64_t missionId)
     std::unique_lock<std::shared_mutex> write_lock(appMissionIdslock_);
     if (std::find(appMissionIds_.begin(), appMissionIds_.end(), missionId) == appMissionIds_.end()) {
         appMissionIds_.emplace_back(missionId);
+        Rosen::FocusChangeInfo focusedWindowInfo;
+        Rosen::WindowManager::GetInstance().GetFocusWindowInfo(focusedWindowInfo);
+        if (std::find(appMissionIds_.begin(), appMissionIds_.end(),
+            focusedWindowInfo.windowId_) != appMissionIds_.end() && focusAppMissionId_ == 0) {
+            focusAppMissionId_ = focusedWindowInfo.windowId_;
+        }
         appMissionIdsCondVar_.notify_all();
         CHECK_AND_RETURN_LOG(virtualScreenId_ != SCREEN_ID_INVALID,
             "SetAppMissionIds virtualScreenId_ is SCREEN_ID_INVALID");
@@ -1426,6 +1427,12 @@ void ScreenCaptureServer::SetAppMissionIds(const std::vector<uint64_t> &missionI
     appMissionIds_ = missionIds;
     MEDIA_LOGI("SetAppMissionIds appMissionIds_.size(): %{public}d",
         static_cast<uint32_t>(appMissionIds_.size()));
+    Rosen::FocusChangeInfo focusedWindowInfo;
+    Rosen::WindowManager::GetInstance().GetFocusWindowInfo(focusedWindowInfo);
+    if (std::find(appMissionIds_.begin(), appMissionIds_.end(),
+        focusedWindowInfo.windowId_) != appMissionIds_.end() && focusAppMissionId_ == 0) {
+        focusAppMissionId_ = focusedWindowInfo.windowId_;
+    }
     appMissionIdsCondVar_.notify_all();
     CHECK_AND_RETURN_LOG(virtualScreenId_ != SCREEN_ID_INVALID,
         "SetAppMissionIds virtualScreenId_ is SCREEN_ID_INVALID");
@@ -1463,15 +1470,6 @@ void ScreenCaptureServer::RemoveAppMissionIdsGround(uint64_t missionId)
         appMissionIdsForGround_.end(), missionId), appMissionIdsForGround_.end());
     if (appMissionIdsForGround_.size() == 0) {
         NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE, nullptr);
-    }
-}
-
-void ScreenCaptureServer::SetFocusAppMissionId(uint64_t missionId)
-{
-    std::unique_lock<std::shared_mutex> write_lock(appMissionIdslock_);
-    if (std::find(appMissionIds_.begin(), appMissionIds_.end(), missionId) != appMissionIds_.end()) {
-        focusAppMissionId_ = missionId;
-        appMissionIdsCondVar_.notify_all();
     }
 }
 
