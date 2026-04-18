@@ -68,6 +68,7 @@
       ],
       "deps": {
         "components": [
+          "openssl",
           "av_session",
           "ets_runtime",
           "safwk",
@@ -82,6 +83,7 @@
           "graphic_surface",
           "hisysevent",
           "c_utils",
+          "zlib",
           "access_token",
           "image_framework",
           "hiview",
