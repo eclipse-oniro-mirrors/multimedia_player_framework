@@ -211,9 +211,6 @@ std::string DownloadedCacheManager::GetMediaCache(const std::string& url)
     const CacheMappingEntry& entry = it->second;
     std::string relativePath = entry.filePath;
 
-    CHECK_AND_RETURN_RET_LOG(!relativePath.empty() && relativePath.find("..") == std::string::npos, "",
-        "get media cache file failed: invalid path");
-
     std::string path = cacheDir_ + "/" + relativePath;
 
     return path;
