@@ -70,7 +70,6 @@ ohos_fuzztest("ScreenCaptureVideoCodecFileFuzzTest") {
     "graphic_surface:surface",
     "graphic_surface:sync_fence",
     "hilog:libhilog",
-    "player_framework:media_client",
     "graphic_2d:librender_service_client",
   ]
 }

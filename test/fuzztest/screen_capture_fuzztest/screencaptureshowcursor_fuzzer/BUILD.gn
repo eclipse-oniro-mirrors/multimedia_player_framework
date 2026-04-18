@@ -67,6 +67,5 @@ ohos_fuzztest("ScreenCaptureShowCursorFuzzTest") {
     "graphic_surface:surface",
     "graphic_surface:sync_fence",
     "hilog:libhilog",
-    "player_framework:media_client",
   ]
 }
