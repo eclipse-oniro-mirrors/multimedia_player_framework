@@ -1192,7 +1192,7 @@ int32_t ScreenCaptureServer::HandlePresentPickerWindowCase(Json::Value& root, co
 void ScreenCaptureServer::ParseAppMissionIds(const Json::Value &appInformation)
 {
     MediaTrace trace("ScreenCaptureServer::ParseAppMissionIds");
-    MEDIA_LOGI("ParseAppMissionIds start.",);
+    MEDIA_LOGI("ParseAppMissionIds start.");
     ClearAppMissionIds();
     CHECK_AND_RETURN_LOG(!appInformation.isNull(), "appInformation isNull");
     const Json::Value bundleNameJson = appInformation["bundleName"];
