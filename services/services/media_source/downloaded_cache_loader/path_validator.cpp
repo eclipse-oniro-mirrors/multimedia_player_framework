@@ -28,6 +28,11 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAY
 
 bool PathValidator::Validate(const std::string& rootPath, const std::string& relativePath)
 {
+    if (rootPath.empty()) {
+        MEDIA_LOGE("Root path is empty");
+        return false;
+    }
+
     if (relativePath.length() > MAX_PATH_LENGTH) {
         MEDIA_LOGE("Path exceeds max length: %{public}zu", relativePath.length());
         return false;

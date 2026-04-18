@@ -35,34 +35,14 @@ public:
 
 HWTEST_F(CacheMappingTest, MagicNumber_Definition_001, TestSize.Level0)
 {
+    EXPECT_EQ(sizeof(CACHE_MAPPING_MAGIC), 4);
     EXPECT_EQ(CACHE_MAPPING_MAGIC[0], 'D');
     EXPECT_EQ(CACHE_MAPPING_MAGIC[1], 'C');
     EXPECT_EQ(CACHE_MAPPING_MAGIC[2], 'M');
     EXPECT_EQ(CACHE_MAPPING_MAGIC[3], 'H');
-}
-
-HWTEST_F(CacheMappingTest, MagicNumber_ArrayType_001, TestSize.Level0)
-{
-    EXPECT_EQ(sizeof(CACHE_MAPPING_MAGIC), 4);
-}
-
-HWTEST_F(CacheMappingTest, Version_Definition_001, TestSize.Level0)
-{
     EXPECT_EQ(CACHE_MAPPING_VERSION, 1);
-}
-
-HWTEST_F(CacheMappingTest, HeaderSize_001, TestSize.Level0)
-{
     EXPECT_EQ(sizeof(CacheMappingHeader), 24);
-}
-
-HWTEST_F(CacheMappingTest, EntryHeaderSize_001, TestSize.Level0)
-{
     EXPECT_EQ(sizeof(CacheMappingEntryHeader), 52);
-}
-
-HWTEST_F(CacheMappingTest, Sha256Len_001, TestSize.Level0)
-{
     EXPECT_EQ(SHA256_LEN, 32);
 }
 
@@ -301,7 +281,7 @@ HWTEST_F(CacheMappingTest, ValidateHeader_Valid_001, TestSize.Level0)
 
 HWTEST_F(CacheMappingTest, WriteHeader_Success_001, TestSize.Level0)
 {
-    std::string testFile = "/tmp/test_mapping.bin";
+    std::string testFile = "/data/test/test_mapping.bin";
     std::ofstream file(testFile, std::ios::binary | std::ios::trunc);
 
     CacheMappingHeader header;
@@ -317,7 +297,7 @@ HWTEST_F(CacheMappingTest, WriteHeader_Success_001, TestSize.Level0)
 
 HWTEST_F(CacheMappingTest, ReadHeader_Success_001, TestSize.Level0)
 {
-    std::string testFile = "/tmp/test_mapping.bin";
+    std::string testFile = "/data/test/test_mapping.bin";
 
     CacheMappingHeader writeHeader;
     memcpy(writeHeader.magic, CACHE_MAPPING_MAGIC, 4);

@@ -48,16 +48,10 @@ protected:
 
 HWTEST_F(CacheManagerTest, Constructor_001, TestSize.Level0)
 {
-    auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
-    ASSERT_NE(manager, nullptr);
-    EXPECT_EQ(manager->GetCacheDir(), testCacheDir_);
-}
-
-HWTEST_F(CacheManagerTest, Constructor_EmptyMapping_001, TestSize.Level0)
-{
     TestCommon::CreateTestMappingFile(testCacheDir_, {});
     auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
     ASSERT_NE(manager, nullptr);
+    EXPECT_EQ(manager->GetCacheDir(), testCacheDir_);
 }
 
 HWTEST_F(CacheManagerTest, GetMediaCache_Success_001, TestSize.Level0)
@@ -318,7 +312,7 @@ HWTEST_F(CacheManagerTest, EmptyRelativePath_Entry_001, TestSize.Level0)
 
     auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
     std::string result = manager->GetMediaCache(testUrl);
-    EXPECT_EQ(result, testCacheDir_ + "/");
+    EXPECT_EQ(result, "");
 }
 
 HWTEST_F(CacheManagerTest, EntryWithPathTraversal_001, TestSize.Level0)
@@ -446,7 +440,7 @@ HWTEST_F(CacheManagerTest, GetMediaCache_RelativePathContainsDoubleDot_001, Test
     EXPECT_EQ(result, "");
 }
 
-HWTEST_F(CacheManagerTest, Destructor_001, TestSize.Level0)
+HWTEST_F(CacheManagerTest, GetMediaCache_NormalPath_AfterTraversal_001, TestSize.Level0)
 {
     std::string testUrl = "http://example.com/test.mp4";
     std::string testPath = "videos/test.mp4";
@@ -454,7 +448,9 @@ HWTEST_F(CacheManagerTest, Destructor_001, TestSize.Level0)
     TestCommon::CreateTestMappingFile(testCacheDir_, {{testUrl, testPath}});
 
     auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
-    manager.reset();
+    std::string result = manager->GetMediaCache(testUrl);
+    EXPECT_NE(result, "");
+    EXPECT_EQ(result, testCacheDir_ + "/" + testPath);
 }
 
 HWTEST_F(CacheManagerTest, LargeFileSize_001, TestSize.Level0)

@@ -15,6 +15,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <memory>
@@ -40,24 +41,30 @@ public:
 
     std::string GetUrl() override { return url_; }
 
-    int32_t RespondHeader(int64_t uuid, const std::map<std::string, std::string>& headers,
-        const std::string& info) override {
+    std::map<std::string, std::string> GetHeader() override { return responseHeaders_; }
+
+    uint64_t GetUniqueId() override { return 0; }
+
+    int32_t RespondHeader(int64_t uuid, std::map<std::string, std::string>& header, std::string redirectUrl) override
+    {
         respondHeaderCalled_ = true;
-        responseHeaders_ = headers;
+        responseHeaders_ = header;
         return 0;
     }
 
-    int32_t RespondData(int64_t uuid, int64_t offset,
-        std::shared_ptr<AVSharedMemoryBase> buffer) override {
+    int32_t RespondData(int64_t uuid, int64_t offset, const std::shared_ptr<AVSharedMemory>& mem) override
+    {
         respondDataCalled_ = true;
         responseOffset_ = offset;
-        responseBuffer_ = buffer;
+        responseBuffer_ = mem;
         return 0;
     }
 
-    void FinishLoading(int64_t uuid, int32_t code) override {
+    int32_t FinishLoading(int64_t uuid, int32_t code) override
+    {
         finishLoadingCalled_ = true;
         finishLoadingCode_ = code;
+        return 0;
     }
 
     bool IsRespondHeaderCalled() const { return respondHeaderCalled_; }
@@ -74,7 +81,7 @@ private:
     std::atomic<int32_t> finishLoadingCode_;
     std::map<std::string, std::string> responseHeaders_;
     int64_t responseOffset_;
-    std::shared_ptr<AVSharedMemoryBase> responseBuffer_;
+    std::shared_ptr<AVSharedMemory> responseBuffer_;
 };
 
 class IntegrationTest : public testing::Test {
@@ -190,9 +197,11 @@ HWTEST_F(IntegrationTest, MultipleOpens_001, TestSize.Level0)
 
     auto request1 = std::make_shared<MockLoadingRequest>(url1);
     auto request2 = std::make_shared<MockLoadingRequest>(url2);
+    std::shared_ptr<LoadingRequest> loadingRequest1 = request1;
+    std::shared_ptr<LoadingRequest> loadingRequest2 = request2;
 
-    int64_t uuid1 = loader->Open(std::shared_ptr<LoadingRequest>(request1));
-    int64_t uuid2 = loader->Open(std::shared_ptr<LoadingRequest>(request2));
+    int64_t uuid1 = loader->Open(loadingRequest1);
+    int64_t uuid2 = loader->Open(loadingRequest2);
 
     EXPECT_GT(uuid1, 0);
     EXPECT_GT(uuid2, 0);
@@ -205,14 +214,14 @@ HWTEST_F(IntegrationTest, MultipleOpens_001, TestSize.Level0)
 HWTEST_F(IntegrationTest, OpenAfterClose_001, TestSize.Level0)
 {
     auto request = std::make_shared<MockLoadingRequest>(testUrl_);
-    auto requestPtr = std::shared_ptr<LoadingRequest>(request);
-
+    std::shared_ptr<LoadingRequest> requestPtr = request;
     int64_t uuid1 = cacheLoader_->Open(requestPtr);
     EXPECT_GT(uuid1, 0);
     cacheLoader_->Close(uuid1);
 
     auto request2 = std::make_shared<MockLoadingRequest>(testUrl_);
-    int64_t uuid2 = cacheLoader_->Open(std::shared_ptr<LoadingRequest>(request2));
+    std::shared_ptr<LoadingRequest> requestPtr2 = request2;
+    int64_t uuid2 = cacheLoader_->Open(requestPtr2);
     EXPECT_GT(uuid2, 0);
     EXPECT_NE(uuid1, uuid2);
 
@@ -222,7 +231,8 @@ HWTEST_F(IntegrationTest, OpenAfterClose_001, TestSize.Level0)
 HWTEST_F(IntegrationTest, LoaderDestructor_001, TestSize.Level0)
 {
     auto request = std::make_shared<MockLoadingRequest>(testUrl_);
-    int64_t uuid = cacheLoader_->Open(std::shared_ptr<LoadingRequest>(request));
+    std::shared_ptr<LoadingRequest> requestPtr = request;
+    int64_t uuid = cacheLoader_->Open(requestPtr);
     EXPECT_GT(uuid, 0);
 
     cacheLoader_.reset();
@@ -234,7 +244,8 @@ HWTEST_F(IntegrationTest, ManagerDestructor_001, TestSize.Level0)
     auto loader = std::make_shared<DownloadedCacheLoader>(manager);
 
     auto request = std::make_shared<MockLoadingRequest>(testUrl_);
-    int64_t uuid = loader->Open(std::shared_ptr<LoadingRequest>(request));
+    std::shared_ptr<LoadingRequest> requestPtr = request;
+    int64_t uuid = loader->Open(requestPtr);
     EXPECT_GT(uuid, 0);
 
     loader.reset();
@@ -247,7 +258,8 @@ HWTEST_F(IntegrationTest, EmptyCacheDir_001, TestSize.Level0)
     auto loader = std::make_shared<DownloadedCacheLoader>(manager);
 
     auto request = std::make_shared<MockLoadingRequest>(testUrl_);
-    int64_t uuid = loader->Open(std::shared_ptr<LoadingRequest>(request));
+    std::shared_ptr<LoadingRequest> requestPtr = request;
+    int64_t uuid = loader->Open(requestPtr);
     EXPECT_LT(uuid, 0);
 }
 
@@ -275,9 +287,11 @@ HWTEST_F(IntegrationTest, DifferentCacheDirs_001, TestSize.Level0)
 
     auto request1 = std::make_shared<MockLoadingRequest>(url1);
     auto request2 = std::make_shared<MockLoadingRequest>(url2);
+    std::shared_ptr<LoadingRequest> loadingRequest1 = request1;
+    std::shared_ptr<LoadingRequest> loadingRequest2 = request2;
 
-    int64_t uuid1 = loader1->Open(std::shared_ptr<LoadingRequest>(request1));
-    int64_t uuid2 = loader2->Open(std::shared_ptr<LoadingRequest>(request2));
+    int64_t uuid1 = loader1->Open(loadingRequest1);
+    int64_t uuid2 = loader2->Open(loadingRequest2);
 
     EXPECT_GT(uuid1, 0);
     EXPECT_GT(uuid2, 0);
@@ -292,7 +306,8 @@ HWTEST_F(IntegrationTest, DifferentCacheDirs_001, TestSize.Level0)
 HWTEST_F(IntegrationTest, Open_EmptyUrl_001, TestSize.Level0)
 {
     auto request = std::make_shared<MockLoadingRequest>("");
-    int64_t uuid = cacheLoader_->Open(std::shared_ptr<LoadingRequest>(request));
+    std::shared_ptr<LoadingRequest> requestPtr = request;
+    int64_t uuid = cacheLoader_->Open(requestPtr);
     EXPECT_LT(uuid, 0);
 }
 
@@ -308,7 +323,8 @@ HWTEST_F(IntegrationTest, Open_SpecialUrl_001, TestSize.Level0)
     auto loader = std::make_shared<DownloadedCacheLoader>(manager);
 
     auto request = std::make_shared<MockLoadingRequest>(specialUrl);
-    int64_t uuid = loader->Open(std::shared_ptr<LoadingRequest>(request));
+    std::shared_ptr<LoadingRequest> requestPtr = request;
+    int64_t uuid = loader->Open(requestPtr);
     EXPECT_GT(uuid, 0);
 
     loader->Close(uuid);

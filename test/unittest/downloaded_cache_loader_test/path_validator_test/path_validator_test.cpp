@@ -64,7 +64,7 @@ HWTEST_F(PathValidatorTest, DeepPathTraversal_001, TestSize.Level0)
 
 HWTEST_F(PathValidatorTest, IllegalChar_Null_001, TestSize.Level0)
 {
-    std::string relativePath = "videos/\x00test.mp4";
+    std::string relativePath("videos/\x00test.mp4", 16);
     bool result = PathValidator::Validate(testCacheDir_, relativePath);
     EXPECT_FALSE(result);
 }
@@ -178,14 +178,14 @@ HWTEST_F(PathValidatorTest, EmptyRootPath_001, TestSize.Level0)
 {
     std::string relativePath = "videos/test.mp4";
     bool result = PathValidator::Validate("", relativePath);
-    EXPECT_TRUE(result);
+    EXPECT_FALSE(result);
 }
 
 HWTEST_F(PathValidatorTest, BothEmpty_001, TestSize.Level0)
 {
     std::string relativePath = "";
     bool result = PathValidator::Validate("", relativePath);
-    EXPECT_TRUE(result);
+    EXPECT_FALSE(result);
 }
 
 HWTEST_F(PathValidatorTest, RootPathWithSlash_001, TestSize.Level0)
