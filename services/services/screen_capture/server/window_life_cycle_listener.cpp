@@ -45,19 +45,7 @@ void SCWindowLifecycleListener::OnBatchLifecycleEvent(const std::vector<Lifecycl
     nlohmann::json payloadsJson = nlohmann::json::array();
     std::vector<uint64_t> missionIds;
     for (auto& payload : payloads) {
-        nlohmann::json payloadJson;
-        payloadJson["bundleName_"] = payload.bundleName_;
-        payloadJson["moduleName_"] = payload.moduleName_;
-        payloadJson["abilityName_"] = payload.abilityName_;
-        payloadJson["appIndex_"] = payload.appIndex_;
-        payloadJson["persistentId_"] = payload.persistentId_;
-        payloadJson["appInstanceKey_"] = payload.appInstanceKey_;
-        payloadJson["sessionState_"] = payload.sessionState_;
-        payloadJson["resultCode_"] = payload.resultCode_;
-        payloadJson["fromScreenId_"] = payload.fromScreenId_;
-        payloadJson["toScreenId_"] = payload.toScreenId_;
-        payloadJson["screenId_"] = payload.screenId_;
-        payloadsJson.push_back(payloadJson);
+        payloadsJson.push_back(SetLogJson(payload));
         if (payload.sessionState_ != SessionState::STATE_DISCONNECT) {
             missionIds.emplace_back(payload.persistentId_);
         }
@@ -75,19 +63,6 @@ void SCWindowLifecycleListener::OnAppInstanceLifecycleEvent(const LifecycleEvent
     MEDIA_LOGI("SCWindowLifecycleListener::OnAppInstanceLifecycleEvent Start.");
     auto SCServer = screenCaptureServer_.lock();
     CHECK_AND_RETURN_LOG(SCServer != nullptr, "screenCaptureServer is nullptr");
-    nlohmann::json payloadJson;
-    payloadJson["bundleName_"] = payload.bundleName_;
-    payloadJson["moduleName_"] = payload.moduleName_;
-    payloadJson["abilityName_"] = payload.abilityName_;
-    payloadJson["appIndex_"] = payload.appIndex_;
-    payloadJson["persistentId_"] = payload.persistentId_;
-    payloadJson["appInstanceKey_"] = payload.appInstanceKey_;
-    payloadJson["sessionState_"] = payload.sessionState_;
-    payloadJson["resultCode_"] = payload.resultCode_;
-    payloadJson["fromScreenId_"] = payload.fromScreenId_;
-    payloadJson["toScreenId_"] = payload.toScreenId_;
-    payloadJson["screenId_"] = payload.screenId_;
-    std::string events = payloadJson.dump(4);
     switch (payload.sessionState_) {
         case SessionState::STATE_CONNECT:
         case SessionState::STATE_FOREGROUND: {
@@ -111,8 +86,26 @@ void SCWindowLifecycleListener::OnAppInstanceLifecycleEvent(const LifecycleEvent
             break;
         }
     }
+    std::string events = SetLogJson(payload).dump(4);
     MEDIA_LOGD("OnAppInstanceLifecycleEvent payloadJson %{public}s", events.c_str());
     MEDIA_LOGI("OnAppInstanceLifecycleEvent End.");
 }
- 
+
+nlohmann::json SCWindowLifecycleListener::SetLogJson(const LifecycleEventPayload& payload)
+{
+    nlohmann::json payloadJson;
+    payloadJson["bundleName_"] = payload.bundleName_;
+    payloadJson["moduleName_"] = payload.moduleName_;
+    payloadJson["abilityName_"] = payload.abilityName_;
+    payloadJson["appIndex_"] = payload.appIndex_;
+    payloadJson["persistentId_"] = payload.persistentId_;
+    payloadJson["appInstanceKey_"] = payload.appInstanceKey_;
+    payloadJson["sessionState_"] = payload.sessionState_;
+    payloadJson["resultCode_"] = payload.resultCode_;
+    payloadJson["fromScreenId_"] = payload.fromScreenId_;
+    payloadJson["toScreenId_"] = payload.toScreenId_;
+    payloadJson["screenId_"] = payload.screenId_;
+    return payloadJson;
+}
+
 }

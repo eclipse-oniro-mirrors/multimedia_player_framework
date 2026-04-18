@@ -21,7 +21,8 @@
 #include "window_manager_lite.h"
 #include "session_lifecycle_listener_stub.h"
 #include <memory>
- 
+#include "json/json.h"
+
 namespace OHOS {
 namespace Media {
 class ScreenCaptureServer;
@@ -33,7 +34,10 @@ public:
     void OnLifecycleEvent(SessionLifecycleEvent event, const LifecycleEventPayload& payload) override;
     void OnBatchLifecycleEvent(const std::vector<LifecycleEventPayload>& payloads) override;
     void OnAppInstanceLifecycleEvent(const LifecycleEventPayload& payload) override;
+
 private:
+    nlohmann::json SetLogJson(const LifecycleEventPayload& payload);
+
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
 };
 }
