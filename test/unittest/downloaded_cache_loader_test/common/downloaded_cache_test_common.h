@@ -62,10 +62,10 @@ inline void CreateTestMappingFile(const std::string& cacheDir,
     std::string mappingPath = cacheDir + "/" + TEST_MAPPING_FILE;
 
     CacheMappingHeader header;
-    memcpy(header.magic, CACHE_MAPPING_MAGIC, 4);
+    (void)memcpy_s(header.magic, 4, CACHE_MAPPING_MAGIC, 4);
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = static_cast<uint32_t>(entries.size());
-    memset(header.reserved, 0, 8);
+    (void)memset_s(header.reserved, 0, 8);
     header.headerChecksum = CacheMappingSerializer::CalculateHeaderChecksum(header);
 
     std::ofstream file(mappingPath, std::ios::binary | std::ios::trunc);
@@ -102,10 +102,10 @@ inline void CreateTestMappingFileWithChecksum(const std::string& cacheDir,
     std::string mappingPath = cacheDir + "/" + TEST_MAPPING_FILE;
 
     CacheMappingHeader header;
-    memcpy(header.magic, CACHE_MAPPING_MAGIC, 4);
+    (void)memcpy_s(header.magic, 4, CACHE_MAPPING_MAGIC, 4);
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = static_cast<uint32_t>(entries.size());
-    memset(header.reserved, 0, 8);
+    (void)memset_s(header.reserved, 0, 8);
     header.headerChecksum = checksumOverride;
 
     std::ofstream file(mappingPath, std::ios::binary | std::ios::trunc);

@@ -320,10 +320,10 @@ HWTEST_F(CacheManagerTest, EntryWithPathTraversal_001, TestSize.Level0)
     std::string mappingPath = testCacheDir_ + "/cache_mapping.txt";
 
     CacheMappingHeader header;
-    memcpy(header.magic, CACHE_MAPPING_MAGIC, 4);
+    (void)memcpy_s(header.magic, 4, CACHE_MAPPING_MAGIC, 4);
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = 1;
-    memset(header.reserved, 0, 8);
+    (void)memset_s(header.reserved, 0, 8);
     header.headerChecksum = CacheMappingSerializer::CalculateHeaderChecksum(header);
 
     std::ofstream file(mappingPath, std::ios::binary | std::ios::trunc);
@@ -335,10 +335,10 @@ HWTEST_F(CacheManagerTest, EntryWithPathTraversal_001, TestSize.Level0)
 
     CacheMappingEntry entry;
     auto hash = SHA256Hasher::GenerateHash("http://example.com/test.mp4");
-    memcpy(entry.header.urlHash, hash.data(), SHA256_LEN);
+    (void)memcpy_s(entry.header.urlHash, SHA256_LEN, hash.data(), SHA256_LEN);
     entry.header.pathLength = 13;
     entry.header.fileSize = 1024;
-    memset(entry.header.reserved, 0, 8);
+    (void)memset_s(entry.header.reserved, 0, 8);
     std::string traversalPath = "../../../etc/passwd";
     entry.filePath = traversalPath;
 
@@ -359,10 +359,10 @@ HWTEST_F(CacheManagerTest, EntryWithInvalidPathLength_001, TestSize.Level0)
     std::string mappingPath = testCacheDir_ + "/cache_mapping.txt";
 
     CacheMappingHeader header;
-    memcpy(header.magic, CACHE_MAPPING_MAGIC, 4);
+    (void)memcpy_s(header.magic, 4, CACHE_MAPPING_MAGIC, 4);
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = 1;
-    memset(header.reserved, 0, 8);
+    (void)memset_s(header.reserved, 0, 8);
     header.headerChecksum = CacheMappingSerializer::CalculateHeaderChecksum(header);
 
     std::ofstream file(mappingPath, std::ios::binary | std::ios::trunc);
@@ -374,10 +374,10 @@ HWTEST_F(CacheManagerTest, EntryWithInvalidPathLength_001, TestSize.Level0)
 
     CacheMappingEntry entry;
     auto hash = SHA256Hasher::GenerateHash("http://example.com/test.mp4");
-    memcpy(entry.header.urlHash, hash.data(), SHA256_LEN);
+    (void)memcpy_s(entry.header.urlHash, SHA256_LEN, hash.data(), SHA256_LEN);
     entry.header.pathLength = 999999;
     entry.header.fileSize = 1024;
-    memset(entry.header.reserved, 0, 8);
+    (void)memset_s(entry.header.reserved, 0, 8);
 
     file.write(reinterpret_cast<const char*>(entry.header.urlHash), SHA256_LEN);
     file.write(reinterpret_cast<const char*>(&entry.header.pathLength), 4);
@@ -395,10 +395,10 @@ HWTEST_F(CacheManagerTest, TruncatedEntry_001, TestSize.Level0)
     std::string mappingPath = testCacheDir_ + "/cache_mapping.txt";
 
     CacheMappingHeader header;
-    memcpy(header.magic, CACHE_MAPPING_MAGIC, 4);
+    (void)memcpy_s(header.magic, 4, CACHE_MAPPING_MAGIC, 4);
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = 1;
-    memset(header.reserved, 0, 8);
+    (void)memset_s(header.reserved, 0, 8);
     header.headerChecksum = CacheMappingSerializer::CalculateHeaderChecksum(header);
 
     std::ofstream file(mappingPath, std::ios::binary | std::ios::trunc);
@@ -461,10 +461,10 @@ HWTEST_F(CacheManagerTest, LargeFileSize_001, TestSize.Level0)
 
     std::string mappingPath = testCacheDir_ + "/cache_mapping.txt";
     CacheMappingHeader header;
-    memcpy(header.magic, CACHE_MAPPING_MAGIC, 4);
+    (void)memcpy_s(header.magic, 4, CACHE_MAPPING_MAGIC, 4);
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = 1;
-    memset(header.reserved, 0, 8);
+    (void)memset_s(header.reserved, 0, 8);
     header.headerChecksum = CacheMappingSerializer::CalculateHeaderChecksum(header);
 
     std::ofstream file(mappingPath, std::ios::binary | std::ios::trunc);
@@ -476,10 +476,10 @@ HWTEST_F(CacheManagerTest, LargeFileSize_001, TestSize.Level0)
 
     CacheMappingEntry entry;
     auto hash = SHA256Hasher::GenerateHash(testUrl);
-    memcpy(entry.header.urlHash, hash.data(), SHA256_LEN);
+    (void)memcpy_s(entry.header.urlHash, SHA256_LEN, hash.data(), SHA256_LEN);
     entry.header.pathLength = static_cast<uint32_t>(testPath.size());
     entry.header.fileSize = static_cast<uint64_t>(10ULL * 1024ULL * 1024ULL * 1024ULL);
-    memset(entry.header.reserved, 0, 8);
+    (void)memset_s(entry.header.reserved, 0, 8);
     entry.filePath = testPath;
 
     file.write(reinterpret_cast<const char*>(entry.header.urlHash), SHA256_LEN);
