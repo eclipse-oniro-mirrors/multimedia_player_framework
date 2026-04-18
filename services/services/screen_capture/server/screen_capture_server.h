@@ -457,7 +457,6 @@ private:
     sptr<UIExtensionAbilityConnection> connection_ = nullptr;
     sptr<SCWindowLifecycleListener> windowLifecycleListener_ = nullptr;
     sptr<SCWindowLifecycleListener> appLifecycleListener_ = nullptr;
-    sptr<FocusChangedListener> FocusChangedListener_ = nullptr;
     sptr<SCDeathRecipientListener> lifecycleListenerDeathRecipient_ = nullptr;
     sptr<SCWindowInfoChangedListener> windowInfoChangedListener_ = nullptr;
     sptr<ScreenManager::IRecordDisplayListener> recordDisplayListener_ = nullptr;
