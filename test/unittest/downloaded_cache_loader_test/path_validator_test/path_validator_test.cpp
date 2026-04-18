@@ -30,11 +30,13 @@ class PathValidatorTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {}
     static void TearDownTestCase(void) {}
-    void SetUp(void) {
+    void SetUp(void)
+    {
         testCacheDir_ = TestCommon::GetTestCacheDir("path_validator");
         TestCommon::SetupTestDirectory(testCacheDir_);
     }
-    void TearDown(void) {
+    void TearDown(void)
+    {
         TestCommon::CleanupTestDirectory(testCacheDir_);
     }
 protected:
@@ -234,7 +236,9 @@ HWTEST_F(PathValidatorTest, UnicodePath_001, TestSize.Level0)
 HWTEST_F(PathValidatorTest, AllControlChars_001, TestSize.Level0)
 {
     for (int i = 1; i < 32; i++) {
-        if (i == 9 || i == 10 || i == 13) continue;
+        if (i == 9 || i == 10 || i == 13) {
+            continue;
+        }
         std::string relativePath = "videos/test";
         relativePath += static_cast<char>(i);
         relativePath += ".mp4";

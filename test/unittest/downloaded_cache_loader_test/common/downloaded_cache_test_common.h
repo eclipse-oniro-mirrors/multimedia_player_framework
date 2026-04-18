@@ -55,7 +55,7 @@ inline void CreateTestCacheFile(const std::string& cacheDir, const std::string& 
     }
 }
 
-inline void CreateTestMappingFile(const std::string& cacheDir,
+void CreateTestMappingFile(const std::string& cacheDir,
     const std::vector<std::pair<std::string, std::string>>& entries,
     uint64_t fileSize = 1024)
 {
@@ -65,7 +65,7 @@ inline void CreateTestMappingFile(const std::string& cacheDir,
     (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = static_cast<uint32_t>(entries.size());
-    (void)memset_s(header.reserved, 0, 8);
+    (void)memset_s(header.reserved, 8, 0, 8);
     header.headerChecksum = CacheMappingSerializer::CalculateHeaderChecksum(header);
 
     std::ofstream file(mappingPath, std::ios::binary | std::ios::trunc);
@@ -95,7 +95,7 @@ inline void CreateTestMappingFile(const std::string& cacheDir,
     file.close();
 }
 
-inline void CreateTestMappingFileWithChecksum(const std::string& cacheDir,
+void CreateTestMappingFileWithChecksum(const std::string& cacheDir,
     const std::vector<std::pair<std::string, std::string>>& entries,
     uint32_t checksumOverride)
 {
@@ -105,7 +105,7 @@ inline void CreateTestMappingFileWithChecksum(const std::string& cacheDir,
     (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = static_cast<uint32_t>(entries.size());
-    (void)memset_s(header.reserved, 0, 8);
+    (void)memset_s(header.reserved, 8, 0, 8);
     header.headerChecksum = checksumOverride;
 
     std::ofstream file(mappingPath, std::ios::binary | std::ios::trunc);

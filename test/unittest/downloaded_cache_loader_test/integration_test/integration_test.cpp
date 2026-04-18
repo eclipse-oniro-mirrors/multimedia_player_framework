@@ -35,7 +35,7 @@ namespace DownloadedCache {
 
 class MockLoadingRequest : public LoadingRequest {
 public:
-    MockLoadingRequest(const std::string& url) : url_(url),
+    explicit MockLoadingRequest(const std::string& url) : url_(url),
         respondHeaderCalled_(false), respondDataCalled_(false),
         finishLoadingCalled_(false), finishLoadingCode_(0) {}
 
@@ -95,9 +95,9 @@ public:
 
         testUrl_ = "http://example.com/test.mp4";
         testPath_ = "videos/test.mp4";
-        testData_ = std::vector<uint8_t>(1024, 'A');
+        testData_ = std::vector<uint8_t>(1024, 'A'); // 1024 is 1KB
         for (size_t i = 0; i < testData_.size(); i++) {
-            testData_[i] = static_cast<uint8_t>(i % 256);
+            testData_[i] = static_cast<uint8_t>(i % 256); // 256 mod for uint8_t
         }
 
         TestCommon::CreateTestCacheFile(testCacheDir_, testPath_, testData_);

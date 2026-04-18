@@ -71,7 +71,7 @@ HWTEST_F(CacheMappingTest, Checksum_Calculate_001, TestSize.Level0)
     (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = 1;
-    (void)memset_s(header.reserved, 0, 8);
+    (void)memset_s(header.reserved, 8, 0, 8);
 
     uint32_t checksum = CacheMappingSerializer::CalculateHeaderChecksum(header);
     EXPECT_NE(checksum, 0);
@@ -83,7 +83,7 @@ HWTEST_F(CacheMappingTest, Checksum_Consistent_001, TestSize.Level0)
     (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = 5;
-    (void)memset_s(header.reserved, 0, 8);
+    (void)memset_s(header.reserved, 8, 0, 8);
 
     uint32_t checksum1 = CacheMappingSerializer::CalculateHeaderChecksum(header);
     uint32_t checksum2 = CacheMappingSerializer::CalculateHeaderChecksum(header);
@@ -96,13 +96,13 @@ HWTEST_F(CacheMappingTest, Checksum_Different_EntryCount_001, TestSize.Level0)
     (void)memcpy_s(header1.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header1.version = CACHE_MAPPING_VERSION;
     header1.entryCount = 1;
-    (void)memset_s(header1.reserved, 0, 8);
+    (void)memset_s(header1.reserved, 8, 0, 8);
 
     CacheMappingHeader header2;
     (void)memcpy_s(header2.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header2.version = CACHE_MAPPING_VERSION;
     header2.entryCount = 2;
-    (void)memset_s(header2.reserved, 0, 8);
+    (void)memset_s(header2.reserved, 8, 0, 8);
 
     uint32_t checksum1 = CacheMappingSerializer::CalculateHeaderChecksum(header1);
     uint32_t checksum2 = CacheMappingSerializer::CalculateHeaderChecksum(header2);
@@ -115,13 +115,13 @@ HWTEST_F(CacheMappingTest, Checksum_Different_Version_001, TestSize.Level0)
     (void)memcpy_s(header1.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header1.version = 1;
     header1.entryCount = 1;
-    (void)memset_s(header1.reserved, 0, 8);
+    (void)memset_s(header1.reserved, 8, 0, 8);
 
     CacheMappingHeader header2;
     (void)memcpy_s(header2.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header2.version = 2;
     header2.entryCount = 1;
-    (void)memset_s(header2.reserved, 0, 8);
+    (void)memset_s(header2.reserved, 8, 0, 8);
 
     uint32_t checksum1 = CacheMappingSerializer::CalculateHeaderChecksum(header1);
     uint32_t checksum2 = CacheMappingSerializer::CalculateHeaderChecksum(header2);
@@ -131,7 +131,7 @@ HWTEST_F(CacheMappingTest, Checksum_Different_Version_001, TestSize.Level0)
 HWTEST_F(CacheMappingTest, Entry_GetTotalSize_001, TestSize.Level0)
 {
     CacheMappingEntry entry;
-    (void)memset_s(&entry.header, 0, sizeof(entry.header));
+    (void)memset_s(&entry.header, sizeof(entry.header), 0, sizeof(entry.header));
     entry.filePath = "videos/test.mp4";
 
     size_t totalSize = entry.GetTotalSize();
@@ -141,7 +141,7 @@ HWTEST_F(CacheMappingTest, Entry_GetTotalSize_001, TestSize.Level0)
 HWTEST_F(CacheMappingTest, Entry_GetTotalSize_EmptyPath_001, TestSize.Level0)
 {
     CacheMappingEntry entry;
-    (void)memset_s(&entry.header, 0, sizeof(entry.header));
+    (void)memset_s(&entry.header, sizeof(entry.header), 0, sizeof(entry.header));
     entry.filePath = "";
 
     size_t totalSize = entry.GetTotalSize();
@@ -151,7 +151,7 @@ HWTEST_F(CacheMappingTest, Entry_GetTotalSize_EmptyPath_001, TestSize.Level0)
 HWTEST_F(CacheMappingTest, Header_Reserved_001, TestSize.Level0)
 {
     CacheMappingHeader header;
-    (void)memset_s(header.reserved, 0xFF, 8);
+    (void)memset_s(header.reserved, 8, 0xFF, 8);
 
     (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header.version = CACHE_MAPPING_VERSION;
@@ -159,7 +159,7 @@ HWTEST_F(CacheMappingTest, Header_Reserved_001, TestSize.Level0)
 
     uint32_t checksum1 = CacheMappingSerializer::CalculateHeaderChecksum(header);
 
-    (void)memset_s(header.reserved, 0, 8);
+    (void)memset_s(header.reserved, 8, 0, 8);
     uint32_t checksum2 = CacheMappingSerializer::CalculateHeaderChecksum(header);
 
     EXPECT_NE(checksum1, checksum2);
@@ -171,7 +171,7 @@ HWTEST_F(CacheMappingTest, Header_MagicNotIncluded_001, TestSize.Level0)
     (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header.version = 1;
     header.entryCount = 1;
-    (void)memset_s(header.reserved, 0, 8);
+    (void)memset_s(header.reserved, 8, 0, 8);
     header.headerChecksum = 0;
 
     uint32_t checksum = CacheMappingSerializer::CalculateHeaderChecksum(header);
@@ -189,7 +189,7 @@ HWTEST_F(CacheMappingTest, WriteHeader_FileNotOpen_001, TestSize.Level0)
     (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = 0;
-    (void)memset_s(header.reserved, 0, 8);
+    (void)memset_s(header.reserved, 8, 0, 8);
 
     bool result = CacheMappingSerializer::WriteHeader(file, header);
     EXPECT_FALSE(result);
@@ -208,7 +208,7 @@ HWTEST_F(CacheMappingTest, WriteEntry_FileNotOpen_001, TestSize.Level0)
 {
     std::ofstream file;
     CacheMappingEntry entry;
-    (void)memset_s(&entry.header, 0, sizeof(entry.header));
+    (void)memset_s(&entry.header, sizeof(entry.header), 0, sizeof(entry.header));
     entry.filePath = "test.mp4";
 
     bool result = CacheMappingSerializer::WriteEntry(file, entry, "/tmp/cache");
@@ -233,7 +233,7 @@ HWTEST_F(CacheMappingTest, ValidateHeader_InvalidMagic_001, TestSize.Level0)
     header.magic[3] = 'W';
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = 0;
-    (void)memset_s(header.reserved, 0, 8);
+    (void)memset_s(header.reserved, 8, 0, 8);
     header.headerChecksum = 0;
 
     bool result = CacheMappingDeserializer::ValidateHeader(header);
@@ -246,7 +246,7 @@ HWTEST_F(CacheMappingTest, ValidateHeader_InvalidVersion_001, TestSize.Level0)
     (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header.version = 999;
     header.entryCount = 0;
-    (void)memset_s(header.reserved, 0, 8);
+    (void)memset_s(header.reserved, 8, 0, 8);
     header.headerChecksum = CacheMappingSerializer::CalculateHeaderChecksum(header);
 
     bool result = CacheMappingDeserializer::ValidateHeader(header);
@@ -259,7 +259,7 @@ HWTEST_F(CacheMappingTest, ValidateHeader_ChecksumMismatch_001, TestSize.Level0)
     (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = 0;
-    (void)memset_s(header.reserved, 0, 8);
+    (void)memset_s(header.reserved, 8, 0, 8);
     header.headerChecksum = 12345678;
 
     bool result = CacheMappingDeserializer::ValidateHeader(header);
@@ -272,7 +272,7 @@ HWTEST_F(CacheMappingTest, ValidateHeader_Valid_001, TestSize.Level0)
     (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = 0;
-    (void)memset_s(header.reserved, 0, 8);
+    (void)memset_s(header.reserved, 8, 0, 8);
     header.headerChecksum = CacheMappingSerializer::CalculateHeaderChecksum(header);
 
     bool result = CacheMappingDeserializer::ValidateHeader(header);
@@ -288,7 +288,7 @@ HWTEST_F(CacheMappingTest, WriteHeader_Success_001, TestSize.Level0)
     (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = 0;
-    (void)memset_s(header.reserved, 0, 8);
+    (void)memset_s(header.reserved, 8, 0, 8);
 
     bool result = CacheMappingSerializer::WriteHeader(file, header);
     EXPECT_TRUE(result);
@@ -303,7 +303,7 @@ HWTEST_F(CacheMappingTest, ReadHeader_Success_001, TestSize.Level0)
     (void)memcpy_s(writeHeader.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     writeHeader.version = CACHE_MAPPING_VERSION;
     writeHeader.entryCount = 0;
-    (void)memset_s(writeHeader.reserved, 0, 8);
+    (void)memset_s(writeHeader.reserved, 8, 0, 8);
     writeHeader.headerChecksum = CacheMappingSerializer::CalculateHeaderChecksum(writeHeader);
 
     std::ofstream writeFile(testFile, std::ios::binary | std::ios::trunc);
@@ -327,7 +327,7 @@ HWTEST_F(CacheMappingTest, Checksum_DifferentReserved_001, TestSize.Level0)
     (void)memcpy_s(header1.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header1.version = CACHE_MAPPING_VERSION;
     header1.entryCount = 1;
-    (void)memset_s(header1.reserved, 0, 8);
+    (void)memset_s(header1.reserved, 8, 0, 8);
 
     CacheMappingHeader header2;
     (void)memcpy_s(header2.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
@@ -344,7 +344,7 @@ HWTEST_F(CacheMappingTest, Checksum_DifferentReserved_001, TestSize.Level0)
 HWTEST_F(CacheMappingTest, EntryHeader_Packing_001, TestSize.Level0)
 {
     CacheMappingEntryHeader entryHeader;
-    (void)memset_s(&entryHeader, 0, sizeof(entryHeader));
+    (void)memset_s(&entryHeader, sizeof(entryHeader), 0, sizeof(entryHeader));
 
     uintptr_t urlHashOffset = reinterpret_cast<uintptr_t>(&entryHeader.urlHash);
     uintptr_t pathLengthOffset = reinterpret_cast<uintptr_t>(&entryHeader.pathLength);
@@ -359,7 +359,7 @@ HWTEST_F(CacheMappingTest, EntryHeader_Packing_001, TestSize.Level0)
 HWTEST_F(CacheMappingTest, Header_Packing_001, TestSize.Level0)
 {
     CacheMappingHeader header;
-    (void)memset_s(&header, 0, sizeof(header));
+    (void)memset_s(&header, sizeof(header), 0, sizeof(header));
 
     uintptr_t magicOffset = reinterpret_cast<uintptr_t>(&header.magic);
     uintptr_t versionOffset = reinterpret_cast<uintptr_t>(&header.version);
@@ -379,7 +379,7 @@ HWTEST_F(CacheMappingTest, ZeroEntryCount_001, TestSize.Level0)
     (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = 0;
-    (void)memset_s(header.reserved, 0, 8);
+    (void)memset_s(header.reserved, 8, 0, 8);
 
     uint32_t checksum = CacheMappingSerializer::CalculateHeaderChecksum(header);
     EXPECT_NE(checksum, 0);
@@ -395,7 +395,7 @@ HWTEST_F(CacheMappingTest, MaxEntryCount_001, TestSize.Level0)
     (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = UINT32_MAX;
-    (void)memset_s(header.reserved, 0, 8);
+    (void)memset_s(header.reserved, 8, 0, 8);
 
     uint32_t checksum = CacheMappingSerializer::CalculateHeaderChecksum(header);
     EXPECT_NE(checksum, 0);
