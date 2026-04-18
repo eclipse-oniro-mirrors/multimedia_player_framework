@@ -147,7 +147,7 @@ public:
     void SetAppMissionIds(uint64_t missionId);
     void SetAppMissionIds(const std::vector<uint64_t> &missionIds);
     void ClearAppMissionIds();
-    bool AppMissionIdsIsEmtpy();
+    bool AppMissionIdsIsEmpty();
     void RemoveAppMissionIds(uint64_t missionId);
     void SetAppMissionIdsGround(uint64_t missionId);
     void RemoveAppMissionIdsGround(uint64_t missionId);

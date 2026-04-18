@@ -1449,7 +1449,7 @@ void ScreenCaptureServer::ClearAppMissionIds()
     appMissionIdsForGround_.clear();
 }
 
-bool ScreenCaptureServer::AppMissionIdsIsEmtpy()
+bool ScreenCaptureServer::AppMissionIdsIsEmpty()
 {
     std::unique_lock<std::shared_mutex> read_lock(appMissionIdslock_);
     return appMissionIds_.empty();
@@ -2520,7 +2520,7 @@ void ScreenCaptureServer::PrepareUserSelectionInfo(ScreenCaptureUserSelectionInf
         selectionInfo.selectType = SELECT_TYPE_SCREEN;
         selectionInfo.displayIds = displayIds_;
     }
-    if (!AppMissionIdsIsEmtpy()) {
+    if (!AppMissionIdsIsEmpty()) {
         selectionInfo.selectType = SELECT_TYPE_APP;
         sptr<Rosen::Display> defaultDisplay = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
         CHECK_AND_RETURN_LOG(defaultDisplay != nullptr, "PrepareUserSelectionInfo GetDefaultDisplaySync failed");
@@ -3574,7 +3574,7 @@ uint64_t ScreenCaptureServer::GetDisplayIdOfWindows(uint64_t displayId)
         }
         MEDIA_LOGI("MakeVirtualScreenMirror 0x%{public}06" PRIXPTR
             " For Specific Window %{public}" PRIu64, FAKE_POINTER(this), defaultDisplayIdValue);
-    } else if (!AppMissionIdsIsEmtpy()) {
+    } else if (!AppMissionIdsIsEmpty()) {
         std::unordered_map<uint64_t, uint64_t> windowDisplayIdMap;
         std::vector<uint64_t> missionIds = {focusAppMissionId_};
         auto ret = WindowManager::GetInstance().GetDisplayIdByWindowId(missionIds, windowDisplayIdMap);

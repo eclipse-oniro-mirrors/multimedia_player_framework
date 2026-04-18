@@ -49,6 +49,10 @@ void SCWindowLifecycleListener::OnBatchLifecycleEvent(const std::vector<Lifecycl
         if (payload.sessionState_ != SessionState::STATE_DISCONNECT) {
             missionIds.emplace_back(payload.persistentId_);
         }
+        if (payload.sessionState_ == SessionState::STATE_CONNECT ||
+            payload.sessionState_ == SessionState::STATE_FOREGROUND) {
+            SCServer->SetAppMissionIdsGround(payload.persistentId_);
+        }
     }
     if (!missionIds.empty()) {
         SCServer->SetAppMissionIds(missionIds);
