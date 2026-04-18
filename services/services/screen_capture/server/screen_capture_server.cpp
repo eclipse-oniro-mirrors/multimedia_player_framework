@@ -1425,13 +1425,14 @@ void ScreenCaptureServer::SetAppMissionIds(const std::vector<uint64_t> &missionI
 {
     std::unique_lock<std::shared_mutex> write_lock(appMissionIdslock_);
     appMissionIds_ = missionIds;
-    MEDIA_LOGI("SetAppMissionIds appMissionIds_.size(): %{public}d",
-        static_cast<uint32_t>(appMissionIds_.size()));
+    MEDIA_LOGI("SetAppMissionIds appMissionIds_.size(): %{public}d", static_cast<uint32_t>(appMissionIds_.size()));
+    CHECK_AND_RETURN_LOG(!appMissionIds_.empty(), "appMissionIds_ is empty");
+
     Rosen::FocusChangeInfo focusedWindowInfo;
     Rosen::WindowManager::GetInstance().GetFocusWindowInfo(focusedWindowInfo);
     focusAppMissionId_ = missionIds.front();
     if (std::find(appMissionIds_.begin(), appMissionIds_.end(),
-        focusedWindowInfo.windowId_) != appMissionIds_.end() && focusAppMissionId_ == 0) {
+        focusedWindowInfo.windowId_) != appMissionIds_.end() && focusAppMissionId_ == missionIds.front()) {
         focusAppMissionId_ = focusedWindowInfo.windowId_;
     }
     appMissionIdsCondVar_.notify_all();
