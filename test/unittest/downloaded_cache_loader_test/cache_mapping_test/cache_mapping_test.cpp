@@ -68,7 +68,7 @@ HWTEST_F(CacheMappingTest, EntryHeaderFields_001, TestSize.Level0)
 HWTEST_F(CacheMappingTest, Checksum_Calculate_001, TestSize.Level0)
 {
     CacheMappingHeader header;
-    (void)memcpy_s(header.magic, 4, CACHE_MAPPING_MAGIC, 4);
+    (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = 1;
     (void)memset_s(header.reserved, 0, 8);
@@ -80,7 +80,7 @@ HWTEST_F(CacheMappingTest, Checksum_Calculate_001, TestSize.Level0)
 HWTEST_F(CacheMappingTest, Checksum_Consistent_001, TestSize.Level0)
 {
     CacheMappingHeader header;
-    (void)memcpy_s(header.magic, 4, CACHE_MAPPING_MAGIC, 4);
+    (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = 5;
     (void)memset_s(header.reserved, 0, 8);
@@ -93,13 +93,13 @@ HWTEST_F(CacheMappingTest, Checksum_Consistent_001, TestSize.Level0)
 HWTEST_F(CacheMappingTest, Checksum_Different_EntryCount_001, TestSize.Level0)
 {
     CacheMappingHeader header1;
-    (void)memcpy_s(header1.magic, 4, CACHE_MAPPING_MAGIC, 4);
+    (void)memcpy_s(header1.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header1.version = CACHE_MAPPING_VERSION;
     header1.entryCount = 1;
     (void)memset_s(header1.reserved, 0, 8);
 
     CacheMappingHeader header2;
-    (void)memcpy_s(header2.magic, 4, CACHE_MAPPING_MAGIC, 4);
+    (void)memcpy_s(header2.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header2.version = CACHE_MAPPING_VERSION;
     header2.entryCount = 2;
     (void)memset_s(header2.reserved, 0, 8);
@@ -112,13 +112,13 @@ HWTEST_F(CacheMappingTest, Checksum_Different_EntryCount_001, TestSize.Level0)
 HWTEST_F(CacheMappingTest, Checksum_Different_Version_001, TestSize.Level0)
 {
     CacheMappingHeader header1;
-    (void)memcpy_s(header1.magic, 4, CACHE_MAPPING_MAGIC, 4);
+    (void)memcpy_s(header1.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header1.version = 1;
     header1.entryCount = 1;
     (void)memset_s(header1.reserved, 0, 8);
 
     CacheMappingHeader header2;
-    (void)memcpy_s(header2.magic, 4, CACHE_MAPPING_MAGIC, 4);
+    (void)memcpy_s(header2.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header2.version = 2;
     header2.entryCount = 1;
     (void)memset_s(header2.reserved, 0, 8);
@@ -153,7 +153,7 @@ HWTEST_F(CacheMappingTest, Header_Reserved_001, TestSize.Level0)
     CacheMappingHeader header;
     (void)memset_s(header.reserved, 0xFF, 8);
 
-    (void)memcpy_s(header.magic, 4, CACHE_MAPPING_MAGIC, 4);
+    (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = 0;
 
@@ -168,7 +168,7 @@ HWTEST_F(CacheMappingTest, Header_Reserved_001, TestSize.Level0)
 HWTEST_F(CacheMappingTest, Header_MagicNotIncluded_001, TestSize.Level0)
 {
     CacheMappingHeader header;
-    (void)memcpy_s(header.magic, 4, CACHE_MAPPING_MAGIC, 4);
+    (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header.version = 1;
     header.entryCount = 1;
     (void)memset_s(header.reserved, 0, 8);
@@ -186,7 +186,7 @@ HWTEST_F(CacheMappingTest, WriteHeader_FileNotOpen_001, TestSize.Level0)
 {
     std::ofstream file;
     CacheMappingHeader header;
-    (void)memcpy_s(header.magic, 4, CACHE_MAPPING_MAGIC, 4);
+    (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = 0;
     (void)memset_s(header.reserved, 0, 8);
@@ -243,7 +243,7 @@ HWTEST_F(CacheMappingTest, ValidateHeader_InvalidMagic_001, TestSize.Level0)
 HWTEST_F(CacheMappingTest, ValidateHeader_InvalidVersion_001, TestSize.Level0)
 {
     CacheMappingHeader header;
-    (void)memcpy_s(header.magic, 4, CACHE_MAPPING_MAGIC, 4);
+    (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header.version = 999;
     header.entryCount = 0;
     (void)memset_s(header.reserved, 0, 8);
@@ -256,7 +256,7 @@ HWTEST_F(CacheMappingTest, ValidateHeader_InvalidVersion_001, TestSize.Level0)
 HWTEST_F(CacheMappingTest, ValidateHeader_ChecksumMismatch_001, TestSize.Level0)
 {
     CacheMappingHeader header;
-    (void)memcpy_s(header.magic, 4, CACHE_MAPPING_MAGIC, 4);
+    (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = 0;
     (void)memset_s(header.reserved, 0, 8);
@@ -269,7 +269,7 @@ HWTEST_F(CacheMappingTest, ValidateHeader_ChecksumMismatch_001, TestSize.Level0)
 HWTEST_F(CacheMappingTest, ValidateHeader_Valid_001, TestSize.Level0)
 {
     CacheMappingHeader header;
-    (void)memcpy_s(header.magic, 4, CACHE_MAPPING_MAGIC, 4);
+    (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = 0;
     (void)memset_s(header.reserved, 0, 8);
@@ -285,7 +285,7 @@ HWTEST_F(CacheMappingTest, WriteHeader_Success_001, TestSize.Level0)
     std::ofstream file(testFile, std::ios::binary | std::ios::trunc);
 
     CacheMappingHeader header;
-    (void)memcpy_s(header.magic, 4, CACHE_MAPPING_MAGIC, 4);
+    (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = 0;
     (void)memset_s(header.reserved, 0, 8);
@@ -300,7 +300,7 @@ HWTEST_F(CacheMappingTest, ReadHeader_Success_001, TestSize.Level0)
     std::string testFile = "/data/test/test_mapping.bin";
 
     CacheMappingHeader writeHeader;
-    (void)memcpy_s(writeHeader.magic, 4, CACHE_MAPPING_MAGIC, 4);
+    (void)memcpy_s(writeHeader.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     writeHeader.version = CACHE_MAPPING_VERSION;
     writeHeader.entryCount = 0;
     (void)memset_s(writeHeader.reserved, 0, 8);
@@ -324,13 +324,13 @@ HWTEST_F(CacheMappingTest, ReadHeader_Success_001, TestSize.Level0)
 HWTEST_F(CacheMappingTest, Checksum_DifferentReserved_001, TestSize.Level0)
 {
     CacheMappingHeader header1;
-    (void)memcpy_s(header1.magic, 4, CACHE_MAPPING_MAGIC, 4);
+    (void)memcpy_s(header1.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header1.version = CACHE_MAPPING_VERSION;
     header1.entryCount = 1;
     (void)memset_s(header1.reserved, 0, 8);
 
     CacheMappingHeader header2;
-    (void)memcpy_s(header2.magic, 4, CACHE_MAPPING_MAGIC, 4);
+    (void)memcpy_s(header2.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header2.version = CACHE_MAPPING_VERSION;
     header2.entryCount = 1;
     header2.reserved[0] = 1;
@@ -376,7 +376,7 @@ HWTEST_F(CacheMappingTest, Header_Packing_001, TestSize.Level0)
 HWTEST_F(CacheMappingTest, ZeroEntryCount_001, TestSize.Level0)
 {
     CacheMappingHeader header;
-    (void)memcpy_s(header.magic, 4, CACHE_MAPPING_MAGIC, 4);
+    (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = 0;
     (void)memset_s(header.reserved, 0, 8);
@@ -392,7 +392,7 @@ HWTEST_F(CacheMappingTest, ZeroEntryCount_001, TestSize.Level0)
 HWTEST_F(CacheMappingTest, MaxEntryCount_001, TestSize.Level0)
 {
     CacheMappingHeader header;
-    (void)memcpy_s(header.magic, 4, CACHE_MAPPING_MAGIC, 4);
+    (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = UINT32_MAX;
     (void)memset_s(header.reserved, 0, 8);

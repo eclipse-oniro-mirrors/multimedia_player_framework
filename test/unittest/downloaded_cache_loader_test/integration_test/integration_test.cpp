@@ -88,7 +88,8 @@ class IntegrationTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {}
     static void TearDownTestCase(void) {}
-    void SetUp(void) {
+    void SetUp(void)
+    {
         testCacheDir_ = TestCommon::GetTestCacheDir("integration");
         TestCommon::SetupTestDirectory(testCacheDir_);
 
@@ -105,7 +106,8 @@ public:
         cacheManager_ = std::make_shared<DownloadedCacheManager>(testCacheDir_);
         cacheLoader_ = std::make_shared<DownloadedCacheLoader>(cacheManager_);
     }
-    void TearDown(void) {
+    void TearDown(void)
+    {
         cacheLoader_.reset();
         cacheManager_.reset();
         TestCommon::CleanupTestDirectory(testCacheDir_);

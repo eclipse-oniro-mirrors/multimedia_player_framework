@@ -62,7 +62,7 @@ inline void CreateTestMappingFile(const std::string& cacheDir,
     std::string mappingPath = cacheDir + "/" + TEST_MAPPING_FILE;
 
     CacheMappingHeader header;
-    (void)memcpy_s(header.magic, 4, CACHE_MAPPING_MAGIC, 4);
+    (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = static_cast<uint32_t>(entries.size());
     (void)memset_s(header.reserved, 0, 8);
@@ -102,7 +102,7 @@ inline void CreateTestMappingFileWithChecksum(const std::string& cacheDir,
     std::string mappingPath = cacheDir + "/" + TEST_MAPPING_FILE;
 
     CacheMappingHeader header;
-    (void)memcpy_s(header.magic, 4, CACHE_MAPPING_MAGIC, 4);
+    (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = static_cast<uint32_t>(entries.size());
     (void)memset_s(header.reserved, 0, 8);

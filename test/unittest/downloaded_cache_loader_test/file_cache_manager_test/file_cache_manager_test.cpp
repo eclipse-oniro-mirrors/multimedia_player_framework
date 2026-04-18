@@ -31,7 +31,8 @@ class FileCacheManagerTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {}
     static void TearDownTestCase(void) {}
-    void SetUp(void) {
+    void SetUp(void)
+    {
         testCacheDir_ = TestCommon::GetTestCacheDir("file_cache");
         TestCommon::SetupTestDirectory(testCacheDir_);
         testFilePath_ = testCacheDir_ + "/test.bin";
@@ -39,7 +40,8 @@ public:
         testData_ = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A};
         TestCommon::CreateTestCacheFile(testCacheDir_, testRelativePath_, testData_);
     }
-    void TearDown(void) {
+    void TearDown(void)
+    {
         TestCommon::CleanupTestDirectory(testCacheDir_);
     }
 protected:

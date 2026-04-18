@@ -35,11 +35,13 @@ class CacheManagerTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {}
     static void TearDownTestCase(void) {}
-    void SetUp(void) {
+    void SetUp(void)
+    {
         testCacheDir_ = TestCommon::GetTestCacheDir("cache_manager");
         TestCommon::SetupTestDirectory(testCacheDir_);
     }
-    void TearDown(void) {
+    void TearDown(void)
+    {
         TestCommon::CleanupTestDirectory(testCacheDir_);
     }
 protected:
@@ -320,7 +322,7 @@ HWTEST_F(CacheManagerTest, EntryWithPathTraversal_001, TestSize.Level0)
     std::string mappingPath = testCacheDir_ + "/cache_mapping.txt";
 
     CacheMappingHeader header;
-    (void)memcpy_s(header.magic, 4, CACHE_MAPPING_MAGIC, 4);
+    (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = 1;
     (void)memset_s(header.reserved, 0, 8);
@@ -359,7 +361,7 @@ HWTEST_F(CacheManagerTest, EntryWithInvalidPathLength_001, TestSize.Level0)
     std::string mappingPath = testCacheDir_ + "/cache_mapping.txt";
 
     CacheMappingHeader header;
-    (void)memcpy_s(header.magic, 4, CACHE_MAPPING_MAGIC, 4);
+    (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = 1;
     (void)memset_s(header.reserved, 0, 8);
@@ -395,7 +397,7 @@ HWTEST_F(CacheManagerTest, TruncatedEntry_001, TestSize.Level0)
     std::string mappingPath = testCacheDir_ + "/cache_mapping.txt";
 
     CacheMappingHeader header;
-    (void)memcpy_s(header.magic, 4, CACHE_MAPPING_MAGIC, 4);
+    (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = 1;
     (void)memset_s(header.reserved, 0, 8);
@@ -461,7 +463,7 @@ HWTEST_F(CacheManagerTest, LargeFileSize_001, TestSize.Level0)
 
     std::string mappingPath = testCacheDir_ + "/cache_mapping.txt";
     CacheMappingHeader header;
-    (void)memcpy_s(header.magic, 4, CACHE_MAPPING_MAGIC, 4);
+    (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
     header.version = CACHE_MAPPING_VERSION;
     header.entryCount = 1;
     (void)memset_s(header.reserved, 0, 8);
