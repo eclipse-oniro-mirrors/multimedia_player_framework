@@ -23,6 +23,7 @@
 #include <filesystem>
 #include <cstring>
 #include <unistd.h>
+#include <securec.h>
 
 #include "cache_mapping_format.h"
 #include "sha256_hasher.h"
