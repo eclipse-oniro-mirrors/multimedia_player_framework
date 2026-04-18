@@ -1430,21 +1430,25 @@ void AVRecorderImpl::SetMetadataSync(std::map<std::string, std::string> metadata
     CHECK_AND_RETURN_LOG(asyncCtx->taihe != nullptr, "failed to GetJsInstanceAndArgs");
     CHECK_AND_RETURN_LOG(asyncCtx->taihe->taskQue_ != nullptr, "taskQue is nullptr!");
 
-    uint64_t accessTokenIDEx = OHOS::IPCSkeleton::GetCallingFullTokenID();
-    bool isSystemApp = OHOS::Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIDEx);
-    if (!isSystemApp) {
-        asyncCtx->taihe->ErrorCallback(MSERR_EXT_API9_PERMISSION_DENIED, "SetMetadata", "not system app");
-        return;
+    if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
+        CHECK_AND_RETURN_LOG(metadata.size() != 0, "metadata has no data");
+        asyncCtx->task_ = std::make_shared<TaskHandler<void>>([taihe = asyncCtx->taihe, metadata]() {
+            if (taihe != nullptr) {
+                (void)taihe->SetMetadata(metadata);
+            }
+        });
+        (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+    } else {
+        SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
     }
-    CHECK_AND_RETURN_LOG(asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK, "on error state");
-    CHECK_AND_RETURN_LOG(asyncCtx->taihe->CheckRepeatOperation(opt) == MSERR_OK, "on error Operation");
-    CHECK_AND_RETURN_LOG(metadata.size() != 0, "metadata has no data");
-    auto task = std::make_shared<TaskHandler<void>>([taihe = asyncCtx->taihe, metadata]() {
-        if (taihe != nullptr) {
-            (void)taihe->SetMetadata(metadata);
+    if (asyncCtx->task_) {
+        auto result = asyncCtx->task_->GetResult();
+        if (result.Value().first != MSERR_EXT_API9_OK) {
+            set_business_error(result.Value().first, result.Value().second);
         }
-    });
-    (void)asyncCtx->taihe->taskQue_->EnqueueTask(task);
+    }
+
+    asyncCtx.release();
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
 }
 
