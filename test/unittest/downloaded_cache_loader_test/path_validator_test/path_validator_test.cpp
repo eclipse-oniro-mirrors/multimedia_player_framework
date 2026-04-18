@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <string>
+#include <securec.h>
 #include "../common/downloaded_cache_test_common.h"
 #include "path_validator.h"
 

@@ -19,6 +19,7 @@
 #include <memory>
 #include <vector>
 #include <fstream>
+#include <securec.h>
 #include "downloaded_cache_test_common.h"
 #include "cache_manager.h"
 #include "cache_mapping_format.h"

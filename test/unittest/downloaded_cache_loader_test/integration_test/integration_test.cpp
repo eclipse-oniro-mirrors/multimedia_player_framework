@@ -21,6 +21,7 @@
 #include <memory>
 #include <atomic>
 #include <map>
+#include <securec.h>
 #include "../common/downloaded_cache_test_common.h"
 #include "downloaded_cache_loader.h"
 #include "cache_manager.h"

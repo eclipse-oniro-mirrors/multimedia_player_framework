@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <cstring>
+#include <securec.h>
 #include "cache_mapping_format.h"
 
 using namespace testing;

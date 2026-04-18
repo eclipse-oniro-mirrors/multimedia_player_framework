@@ -17,6 +17,7 @@
 #include <gmock/gmock.h>
 #include <string>
 #include <vector>
+#include <securec.h>
 #include "downloaded_cache_test_common.h"
 #include "file_cache_manager.h"
 

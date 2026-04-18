@@ -17,6 +17,7 @@
 #include <gmock/gmock.h>
 #include <string>
 #include <array>
+#include <securec.h>
 #include "sha256_hasher.h"
 
 using namespace testing;
