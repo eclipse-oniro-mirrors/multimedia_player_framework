@@ -289,7 +289,7 @@ HWTEST_F(FileCacheManagerTest, GetSize_AfterCreate_001, TestSize.Level0)
 {
     auto fileManager = std::make_shared<DownloadedFileCacheManager>(testCacheDir_);
     int64_t size1 = fileManager->GetSize(testFilePath_);
-    EXPECT_EQ(size2, 10);
+    EXPECT_EQ(size1, 10);
 
     std::string newFile = testCacheDir_ + "/new.bin";
     std::vector<uint8_t> newData(50, 0xFF);

@@ -45,7 +45,7 @@ public:
 
     uint64_t GetUniqueId() override { return 0; }
 
-    int32_t RespondHeader(int64_t uuid, std::map<std::string, std::string>& header, std::string redirectUrl) override
+    int32_t RespondHeader(int64_t uuid, std::map<std::string, std::string> header, std::string redirectUrl) override
     {
         respondHeaderCalled_ = true;
         responseHeaders_ = header;
