@@ -44,12 +44,12 @@ group("media_unit_test") {
       "unittest/dfx_agent_test:dfx_agent_unit_test",
       "unittest/dfx_log_dump_unittest:dfx_log_dump_unittest",
       "unittest/dfx_test:player_framework_dfx_test",
-      "unittest/downloaded_cache_loader_test/cache_manager_test:downloaded_cache_manager_test"
-      "unittest/downloaded_cache_loader_test/cache_mapping_test:downloaded_cache_mapping_test"
-      "unittest/downloaded_cache_loader_test/file_cache_manager_test:downloaded_file_cache_manager_test"
-      "unittest/downloaded_cache_loader_test/integration_test:downloaded_integration_test"
-      "unittest/downloaded_cache_loader_test/path_validator_test:downloaded_path_validator_test"
-      "unittest/downloaded_cache_loader_test/sha256_hasher_test:downloaded_sha256_hasher_test"
+      "unittest/downloaded_cache_loader_test/cache_manager_test:downloaded_cache_manager_test",
+      "unittest/downloaded_cache_loader_test/cache_mapping_test:downloaded_cache_mapping_test",
+      "unittest/downloaded_cache_loader_test/file_cache_manager_test:downloaded_file_cache_manager_test",
+      "unittest/downloaded_cache_loader_test/integration_test:downloaded_integration_test",
+      "unittest/downloaded_cache_loader_test/path_validator_test:downloaded_path_validator_test",
+      "unittest/downloaded_cache_loader_test/sha256_hasher_test:downloaded_sha256_hasher_test",
       "unittest/dragging_player_agent_unittest:dragging_player_agent_unittest",
       "unittest/hiplayer_impl_test:hiplayer_impl_unit_test",
       "unittest/hiplayer_impl_unittest:hiplayer_impl_unittest",
