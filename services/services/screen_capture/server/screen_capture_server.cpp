@@ -1430,10 +1430,12 @@ void ScreenCaptureServer::SetAppMissionIds(const std::vector<uint64_t> &missionI
 
     Rosen::FocusChangeInfo focusedWindowInfo;
     Rosen::WindowManager::GetInstance().GetFocusWindowInfo(focusedWindowInfo);
-    focusAppMissionId_ = missionIds.front();
+
     if (std::find(appMissionIds_.begin(), appMissionIds_.end(),
-        focusedWindowInfo.windowId_) != appMissionIds_.end() && focusAppMissionId_ == missionIds.front()) {
+        focusedWindowInfo.windowId_) != appMissionIds_.end() && focusAppMissionId_ == 0) {
         focusAppMissionId_ = focusedWindowInfo.windowId_;
+    } else {
+        focusAppMissionId_ = missionIds.front();
     }
     appMissionIdsCondVar_.notify_all();
     CHECK_AND_RETURN_LOG(virtualScreenId_ != SCREEN_ID_INVALID,
