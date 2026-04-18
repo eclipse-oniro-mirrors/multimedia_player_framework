@@ -20,7 +20,6 @@
 #include "ui_extension_ability_connection.h"
 #include "audio_data_source.h"
 #include "window_life_cycle_listener.h"
-#include "focus_changed_listener.h"
 
 namespace OHOS {
 namespace Media {
