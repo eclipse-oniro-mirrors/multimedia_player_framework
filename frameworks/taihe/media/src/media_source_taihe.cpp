@@ -80,7 +80,7 @@ MediaSourceImpl::MediaSourceImpl(array_view<::ohos::multimedia::media::MediaStre
         mediaSource_->AddAVPlayMediaStreamTmp(mediaStream);
     }
     mediaSource_->SetID(AVMediaSourceTmp::GenerateUniqueId());
-    MEDIA_LOGD("TaiheCreateMediaSourceWithStreamData get mediaStreamVec length=%{public}u", streams.size());
+    MEDIA_LOGD("TaiheCreateMediaSourceWithStreamData get mediaStreamVec length=%{public}zu", streams.size());
 }
 
 MediaSourceImpl::MediaSourceImpl(::ohos::multimedia::media::AVFileDescriptor fd)
