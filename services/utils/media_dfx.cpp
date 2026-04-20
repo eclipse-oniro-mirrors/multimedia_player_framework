@@ -64,6 +64,7 @@ namespace {
 
     void SetPlaybackMetrics(CallType callType, int32_t uid, json &playbackMetrics)
     {
+        std::lock_guard<std::mutex> lock(collectMut_);
         auto playbackCallTypeIt = reportPlaybackInfoMap_.find(callType);
         if (playbackCallTypeIt == reportPlaybackInfoMap_.end()) {
             return;
