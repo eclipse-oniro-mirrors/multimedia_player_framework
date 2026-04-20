@@ -1418,7 +1418,7 @@ int32_t AVRecorderImpl::IsWatermarkSupported(bool &isWatermarkSupported)
     return recorder_->IsWatermarkSupported(isWatermarkSupported);
 }
 
-void AVRecorderImpl::SetMetadataSync(std::map<std::string, std::string> metadata)
+void AVRecorderImpl::SetMetadataSync(taihe::map<taihe::string, taihe::string> metadata)
 {
     MediaTrace trace("AVRecorder::SetMetadata");
     const std::string &opt = AVRecordergOpt::SET_METADATA;
@@ -1461,7 +1461,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::GetSetMetadataTask(
         std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
         for (auto &meta : metadata) {
             MEDIA_LOGI("metadata tag: %{public}s, value: %{public}s", meta.first.c_str(), meta.second.c_str());
-            userMeta->SetData(meta.first, meta.second);
+            userMeta->SetData(std::string(meta.first), std::string(meta.second));
         }
 
         taihe->recorder_->SetUserMeta(userMeta);
