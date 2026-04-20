@@ -2887,6 +2887,10 @@ void HiPlayerImpl::OnEventSubTrackChange(const Event &event)
             break;
         }
         case EventType::EVENT_SUPER_RESOLUTION_CHANGED: {
+            if (isReInitPostProcessor_) {
+                isReInitPostProcessor_ = false;
+                break;
+            }
             NotifySuperResolutionChanged(event);
             break;
         }
@@ -4061,6 +4065,7 @@ int32_t HiPlayerImpl::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMut
         FALSE_RETURN_V_NOLOG(needReinit, MSERR_OK);
         MEDIA_LOG_I("HiPlayerImpl::SetMediaMuted init video decoder");
         FALSE_RETURN_V_NOLOG(videoDecoder_ != nullptr, MSERR_OK);
+        isReInitPostProcessor_ = true;
         videoDecoder_->ReInitAndStart();
         isVideoDecoderInited_ = true;
         return MSERR_OK;
@@ -4119,6 +4124,7 @@ int32_t HiPlayerImpl::SetSuperResolution(bool enabled)
         MSERR_SUPER_RESOLUTION_NOT_ENABLED);
     isPostProcessorOn_ = enabled;
     FALSE_RETURN_V_NOLOG(videoDecoder_ != nullptr, MSERR_OK);
+    isReInitPostProcessor_ = false;
     auto ret = videoDecoder_->SetPostProcessorOn(enabled);
     return ret == Status::ERROR_UNSUPPORTED_FORMAT ? MSERR_SUPER_RESOLUTION_UNSUPPORTED : TransStatus(ret);
 }

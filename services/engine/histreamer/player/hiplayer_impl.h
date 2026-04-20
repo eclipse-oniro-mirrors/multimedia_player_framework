@@ -545,6 +545,7 @@ private:
     bool isVideoMuted_ = false;
     bool isNeedSwDecoder_ = false;
     bool notNotifyForSw_ = false;
+    bool isReInitPostProcessor_ = false;
     bool isVideoDecoderInited_ = false;
     bool enable_ = false;
     AVPlayTrackSelectionFilter trackSelectionFilter_;
