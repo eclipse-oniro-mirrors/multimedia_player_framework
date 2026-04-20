@@ -1432,11 +1432,8 @@ void AVRecorderImpl::SetMetadataSync(std::map<std::string, std::string> metadata
 
     if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
         CHECK_AND_RETURN_LOG(metadata.size() != 0, "metadata has no data");
-        asyncCtx->task_ = std::make_shared<TaskHandler<void>>([taihe = asyncCtx->taihe, metadata]() {
-            if (taihe != nullptr) {
-                (void)taihe->SetMetadata(metadata);
-            }
-        });
+        asyncCtx->metadata_ = metadata;
+        asyncCtx->task_ = GetSetMetadataTask(asyncCtx);
         (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
     } else {
         SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
@@ -1452,14 +1449,26 @@ void AVRecorderImpl::SetMetadataSync(std::map<std::string, std::string> metadata
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
 }
 
-int32_t AVRecorderImpl::SetMetadata(const std::map<std::string, std::string> &recordMeta)
+std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::GetSetMetadataTask(
+    const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
 {
-    std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
-    for (auto &meta : recordMeta) {
-        MEDIA_LOGI("recordMeta tag: %{public}s, value: %{public}s", meta.first.c_str(), meta.second.c_str());
-        userMeta->SetData(meta.first, meta.second);
-    }
-    return recorder_->SetUserMeta(userMeta);
+    return std::make_shared<TaskHandler<RetInfo>>([taihe = asyncCtx->taihe, metadata = asyncCtx->metadata_]() {
+        const std::string &option = AVRecordergOpt::SET_METADATA;
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+        CHECK_AND_RETURN_RET(taihe != nullptr && taihe->recorder_ != nullptr,
+            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
+
+        std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
+        for (auto &meta : metadata) {
+            MEDIA_LOGI("metadata tag: %{public}s, value: %{public}s", meta.first.c_str(), meta.second.c_str());
+            userMeta->SetData(meta.first, meta.second);
+        }
+
+        taihe->recorder_->SetUserMeta(userMeta);
+
+        MEDIA_LOGI("%{public}s End", option.c_str());
+        return RetInfo(MSERR_EXT_API9_OK, "");
+    });
 }
 
 void AVRecorderImpl::UpdateRotationSync(int32_t rotation)

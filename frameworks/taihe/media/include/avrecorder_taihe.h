@@ -163,7 +163,9 @@ public:
     void ReleaseSync();
     void ResetSync();
     void ResumeSync();
+
     void SetMetadataSync(std::map<std::string, std::string> metadata);
+    std::shared_ptr<TaskHandler<RetInfo>> GetSetMetadataTask(const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
 
     optional<::ohos::multimedia::media::AVRecorderConfig> GetAVRecorderConfigSync();
     std::shared_ptr<TaskHandler<RetInfo>> GetAVRecorderConfigTask(
@@ -311,7 +313,6 @@ private:
     int32_t videoFrameWidth_ = -1;
     int32_t videoFrameHeight_ = -1;
     OHOS::sptr<OHOS::Surface> metaSurface_ = nullptr;
-    int32_t SetMetadata(const std::map<std::string, std::string> &recordMeta);
 };
 
 struct AVRecorderAsyncContext {
@@ -330,6 +331,7 @@ struct AVRecorderAsyncContext {
     std::shared_ptr<WatermarkConfig> watermarkConfig_ = nullptr;
     std::shared_ptr<PixelMap> pixelMap_ = nullptr;
     bool isWatermarkSupported_ = false;
+    std::map<std::string, std::string> metadata_;
 };
 
 struct AVRecorderProfile {
