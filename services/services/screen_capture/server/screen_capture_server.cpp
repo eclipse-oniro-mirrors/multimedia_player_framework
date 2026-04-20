@@ -3377,7 +3377,6 @@ uint64_t ScreenCaptureServer::GetDisplayIdOfWindows(uint64_t displayId)
     return defaultDisplayIdValue;
 }
 
-#ifdef PC_STANDARD
 bool ScreenCaptureServer::CheckCustScrRecPermission()
 {
     MEDIA_LOGI("Verify custom screen recording permission");
@@ -3389,6 +3388,7 @@ bool ScreenCaptureServer::CheckCustScrRecPermission()
     return true;
 }
 
+#ifdef PC_STANDARD
 bool ScreenCaptureServer::IsHopper()
 {
     std::string foldScreenFlag = system::GetParameter("const.window.foldscreen.type", "0,0,0,0");
@@ -4838,12 +4838,8 @@ void ScreenCaptureServer::PrivacyProtected(ScreenId& virtualScreenId, bool syste
 
 bool ScreenCaptureServer::IsSkipPrivacyWindow()
 {
-#if defined(PC_STANDARD) && defined(SUPPORT_SCREEN_CAPTURE_PICKER)
     return GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_ ||
            (CheckCustScrRecPermission() && !IsPickerPopUp());
-#else
-    return GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_;
-#endif
 }
 
 ScreenCaptureObserverCallBack::ScreenCaptureObserverCallBack(
