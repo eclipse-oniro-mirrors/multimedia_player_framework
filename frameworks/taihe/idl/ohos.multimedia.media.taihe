@@ -1078,6 +1078,10 @@ enum PickerMode: i32 {
     WINDOW_ONLY = 0,
     SCREEN_ONLY = 1,
     SCREEN_AND_WINDOW = 2,
+    APP_ONLY = 3,
+    WINDOW_AND_APP = 4,
+    SCREEN_AND_APP = 5,
+    SCREEN_WINDOW_AND_APP = 6
 }
 
 struct AVScreenCaptureStrategy {
