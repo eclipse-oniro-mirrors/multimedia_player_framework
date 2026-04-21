@@ -4843,7 +4843,7 @@ bool ScreenCaptureServer::IsSkipPrivacyWindow()
            (CheckCustScrRecPermission() && !IsPickerPopUp());
 #else
     return GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_ ||
-           (CheckCustScrRecPermission() && !IsPickerPopUp());
+           (CheckCustScrRecPermission());
 #endif
 }
 
