@@ -485,11 +485,10 @@ void PlayerImpl::HandleListStateInfo(PlayerStates state, bool &shouldUpdateState
         CHECK_AND_RETURN_LOG(currentIt != itemList_.end(), "current source id not found in list");
         bool isLast = (count > 0 && currentIt == std::prev(itemList_.end()));
         if (listLoopMode_ != PLAYLIST_LOOP_MODE_NONE || !isLast) {
-            shouldSwitch = ShouldLoopCurrent() ? false : true;
             shouldUpdateState = false;
+            shouldSwitch = true;
         } else {
             listState_ = PLAYER_PLAYBACK_COMPLETE;
-            SwitchSetMediaSource(itemList_.begin());
         }
         if (shouldSwitch) {
             MediaSourceIterator nextIt = SelectNextIndex(true);
@@ -513,6 +512,8 @@ void PlayerImpl::HandleListStateInfo(PlayerStates state, bool &shouldUpdateState
             isSwitchUpdate_ = isSwitchUpdate_ ? false : isSwitchUpdate_;
             auto ret = DealWithSwitchingOpt();
             CHECK_AND_RETURN_LOG(ret == MSERR_OK, "switch mediaSource failed when handle user interrupt option");
+        } else if (state == PLAYER_STATE_ERROR) {
+            listState_ = state;
         }
     } else {
         listState_ = state;
@@ -743,14 +744,11 @@ void PlayerImpl::SetPlaylistLoopMode(PlaylistLoopMode mode)
 {
     CHECK_AND_RETURN_LOG(mode >= PLAYLIST_LOOP_MODE_ALL && mode <= PLAYLIST_LOOP_MODE_NONE,
         "invalid list loop mode: %{public}d", static_cast<int32_t>(mode));
-    bool serverLoop = false;
     {
         std::lock_guard<std::mutex> lock(listMutex_);
         listLoopMode_ = mode;
-        serverLoop = (mode == PLAYLIST_LOOP_MODE_ONE);
     }
-
-    (void)SetLooping(serverLoop);
+    (void)SetLooping(false);
 }
 
 PlaylistLoopMode PlayerImpl::GetPlaylistLoopMode() const
@@ -1194,7 +1192,7 @@ int32_t PlayerImpl::SetLooping(bool loop)
     bool serverLoop = loop;
     {
         std::lock_guard<std::mutex> lock(listMutex_);
-        if (IsInListMode() && listLoopMode_ != PLAYLIST_LOOP_MODE_ONE) {
+        if (IsInListMode()) {
             serverLoop = false;
         }
     }
