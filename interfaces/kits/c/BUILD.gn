@@ -262,6 +262,7 @@ ohos_shared_library("avimage_generator") {
     "hisysevent:libhisysevent",
     "image_framework:ohimage",
     "image_framework:pixelmap",
+    "napi:ace_napi",
     "ipc:ipc_core",
     "media_foundation:media_foundation",
     "qos_manager:qos",
@@ -320,6 +321,7 @@ ohos_shared_library("avmetadata_extractor") {
     "image_framework:image_native",
     "image_framework:ohimage",
     "image_framework:pixelmap",
+    "napi:ace_napi",
     "ipc:ipc_core",
     "media_foundation:media_foundation",
     "media_foundation:native_media_core",
@@ -334,7 +336,7 @@ ohos_shared_library("avmetadata_extractor") {
   }
   
   if (player_framework_support_drm) {
-    public_external_deps = [
+    external_deps += [
       "drm_framework:drm_framework",
       "drm_framework:native_drm",
     ]
@@ -388,6 +390,7 @@ ohos_shared_library("avmedia_source") {
     "image_framework:image_native",
     "image_framework:ohimage",
     "image_framework:pixelmap",
+    "napi:ace_napi",
     "ipc:ipc_core",
     "media_foundation:media_foundation",
     "samgr:samgr_proxy",
@@ -451,6 +454,7 @@ ohos_shared_library("avmedia_base") {
     "image_framework:image_native",
     "image_framework:ohimage",
     "image_framework:pixelmap",
+    "napi:ace_napi",
     "ipc:ipc_core",
     "media_foundation:media_foundation",
     "samgr:samgr_proxy",
@@ -564,6 +568,7 @@ ohos_shared_library("lowpower_avsink") {
     "ipc:ipc_core",
     "media_foundation:media_foundation",
     "image_framework:pixelmap",
+    "napi:ace_napi",
     "hisysevent:libhisysevent",
   ]
 

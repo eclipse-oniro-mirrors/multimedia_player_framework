@@ -40,7 +40,10 @@ ohos_fuzztest("AVmetadataHelperFuzzTest") {
     "src/avmetadatahelper_fuzzer.cpp",
   ]
 
-  deps = [ "$MEDIA_ROOT_DIR/services/services:media_service" ]
+  deps = [
+    "$MEDIA_ROOT_DIR/services/services:media_service",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
+  ]
 
   external_deps = [
     "c_utils:utils",
@@ -48,7 +51,6 @@ ohos_fuzztest("AVmetadataHelperFuzzTest") {
     "hilog:libhilog",
     "image_framework:image_native",
     "ipc:ipc_single",
-    "player_framework:media_client",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
