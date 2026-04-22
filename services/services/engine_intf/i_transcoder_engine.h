@@ -119,7 +119,7 @@ public:
      * Return MSERR_OK indicates success, or others indicate failed.
      */
     virtual int32_t Cancel() = 0;
-    virtual int32_t addwatermark() = 0;
+    virtual int32_t AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer, int32_t width, int32_t height) = 0;
 
     /**
      * Get current transcodering time.
