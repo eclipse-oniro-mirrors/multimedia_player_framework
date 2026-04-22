@@ -107,7 +107,10 @@ ohos_unittest("hitranscode_unit_test") {
     "qos_manager:qos",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "graphic_common:graphic_common"
+    "graphic_2d:EGL",
+    "graphic_2d:libnative_image",
+    "graphic_2d:GLESv3",
+    "graphic_2d:color_manager",
   ]
 
   if (player_framework_support_drm) {
