@@ -89,6 +89,7 @@ ohos_shared_library("media_soundpool") {
     "bundle_framework:appexecfwk_base",
     "c_utils:utils",
     "eventhandler:libeventhandler",
+    "graphic_surface:surface",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
