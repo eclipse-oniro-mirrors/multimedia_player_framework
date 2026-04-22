@@ -44,7 +44,7 @@ public:
     virtual int32_t Resume() = 0;
     virtual int32_t Cancel() = 0;
     virtual int32_t Release() = 0;
-    virtual int32_t addwatermark() = 0;
+    virtual int32_t AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer, int32_t width, int32_t height) = 0;
     virtual int32_t DestroyStub() = 0;
 
     /**
@@ -70,6 +70,7 @@ public:
         CANCEL,
         RELEASE,
         DESTROY,
+        ADD_WATERMARK
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardTransCoderService");
