@@ -1440,5 +1440,16 @@ HWTEST_F(PlayerImplUnitTest, SwitchSetMediaSource_004, TestSize.Level0)
     auto ret = playerImpl_->SwitchSetMediaSource(nextIndex);
     EXPECT_EQ(ret, MSERR_INVALID_VAL);
 }
+
+/**
+ * @tc.name : Test IsLiveSeek
+ * @tc.number: IsLiveSeek_001
+ * @tc.desc : Test playerService_ == nullptr
+ */
+HWTEST_F(PlayerImplUnitTest, IsLiveSeek_001, TestSize.Level0)
+{
+    ASSERT_NE(playerImpl_, nullptr);
+    EXPECT_FALSE(playerImpl_->IsLiveSeek());
+}
 } // namespace Media
 } // namespace OHOS

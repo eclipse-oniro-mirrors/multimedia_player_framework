@@ -346,6 +346,83 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlaybackRate_006, TestSize.Level1)
 }
 
 /**
+ * @tc.name  : Test SetPlaybackSpeed API
+ * @tc.number: Player_SetPlaybackSpeed_007
+ * @tc.desc  : Test SetPlaybackSpeed when state is PLAYER_IDLE
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetPlaybackSpeed_007, TestSize.Level1)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    server_->lastOpStatus_ = PLAYER_IDLE;
+    EXPECT_EQ(MSERR_INVALID_OPERATION, server_->SetPlaybackSpeed(SPEED_FORWARD_1_00_X));
+}
+/**
+ * @tc.name  : Test SetPlaybackSpeed API
+ * @tc.number: Player_SetPlaybackSpeed_008
+ * @tc.desc  : Test SetPlaybackSpeed when state is PLAYER_INITIALIZED
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetPlaybackSpeed_008, TestSize.Level1)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    server_->lastOpStatus_ = PLAYER_INITIALIZED;
+    EXPECT_EQ(MSERR_INVALID_OPERATION, server_->SetPlaybackSpeed(SPEED_FORWARD_1_00_X));
+}
+/**
+ * @tc.name  : Test SetPlaybackSpeed API
+ * @tc.number: Player_SetPlaybackSpeed_009
+ * @tc.desc  : Test SetPlaybackSpeed when state is PLAYER_PREPARING
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetPlaybackSpeed_009, TestSize.Level1)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    server_->lastOpStatus_ = PLAYER_PREPARING;
+    EXPECT_EQ(MSERR_INVALID_OPERATION, server_->SetPlaybackSpeed(SPEED_FORWARD_1_00_X));
+}
+
+/**
+ * @tc.name  : Test SetPlaybackSpeed API
+ * @tc.number: Player_SetPlaybackSpeed_010
+ * @tc.desc  : Test SetPlaybackSpeed when state is PLAYER_STOPPED
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetPlaybackSpeed_010, TestSize.Level1)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    server_->lastOpStatus_ = PLAYER_STOPPED;
+    EXPECT_EQ(MSERR_INVALID_OPERATION, server_->SetPlaybackSpeed(SPEED_FORWARD_1_00_X));
+}
+
+/**
+ * @tc.name  : Test SetPlaybackSpeed API
+ * @tc.number: Player_SetPlaybackSpeed_011
+ * @tc.desc  : Test SetPlaybackSpeed when state is PLAYER_STATE_ERROR
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetPlaybackSpeed_011, TestSize.Level1)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    server_->lastOpStatus_ = PLAYER_STATE_ERROR;
+    EXPECT_EQ(MSERR_INVALID_OPERATION, server_->SetPlaybackSpeed(SPEED_FORWARD_1_00_X));
+}
+
+/**
+ * @tc.name  : Test SetPlaybackSpeed API
+ * @tc.number: Player_SetPlaybackSpeed_012
+ * @tc.desc  : Test SetPlaybackSpeed when isLiveStream_ is true and IsLiveSeek returns false
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetPlaybackSpeed_012, TestSize.Level1)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    server_->lastOpStatus_ = PLAYER_STARTED;
+    server_->isLiveStream_ = true;
+    EXPECT_EQ(MSERR_INVALID_OPERATION, server_->SetPlaybackSpeed(SPEED_FORWARD_1_00_X));
+}
+
+/**
  * @tc.name  : Test SetMediaSource API
  * @tc.number: Player_SetMediaSource_007
  * @tc.desc  : Test Player SetMediaSource interface
@@ -584,6 +661,202 @@ HWTEST_F(PlayerServerUnitTest, Player_OnError_Coverage_001, TestSize.Level1)
         EXPECT_NE(callback->errorMsg_.find(std::get<2>(scenario)), std::string::npos);
         server->Release();
     }
+}
+
+/**
+ * @tc.name  : Test GetSeekableRanges
+ * @tc.number: Player_GetSeekableRanges_001
+ * @tc.desc  : Test GetSeekableRanges when state is PLAYER_IDLE
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetSeekableRanges_001, TestSize.Level1)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    server_->lastOpStatus_ = PLAYER_IDLE;
+    std::vector<Plugins::SeekRange> seekableRanges;
+    EXPECT_EQ(MSERR_INVALID_OPERATION, server_->GetSeekableRanges(seekableRanges));
+}
+/**
+
+* @tc.name  : Test GetSeekableRanges
+* @tc.number: Player_GetSeekableRanges_002
+* @tc.desc  : Test GetSeckableRanges when state is PLAYER_INITIALIZED
+*/
+HWTEST_F(PlayerServerUnitTest, Player_GetSeekableRanges_002, TestSize.Level1)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    server_->lastOpStatus_ = PLAYER_INITIALIZED;
+    std::vector<Plugins::SeekRange> seekableRanges;
+    EXPECT_EQ(MSERR_INVALID_OPERATION, server_->GetSeekableRanges(seekableRanges));
+}
+/**
+
+* @tc.name  : Test GetSeekableRanges
+* @tc.number: Player_GetSeekableRanges_003
+* @tc.desc  : Test GetSeekableRanges when state is PLAYER_STATE_ERROR
+*/
+HWTEST_F(PlayerServerUnitTest, Player_GetSeekableRanges_003, TestSize.Level1)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    server_->lastOpStatus_ = PLAYER_STATE_ERROR;
+    std::vector<Plugins::SeekRange> seekableRanges;
+    EXPECT_EQ(MSERR_INVALID_OPERATION, server_->GetSeekableRanges(seekableRanges));
+}
+
+/**
+ * @tc.name  : Test GetSeekableRanges
+ * @tc.number: Player_GetSeekableRanges_004
+ * @tc.desc  : Test GetSeekableRanges when state is PLAYER_PREPARED
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetSeekableRanges_004, TestSize.Level1)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    server_->lastOpStatus_ = PLAYER_PREPARED;
+    std::vector<Plugins::SeekRange> seekableRanges;
+    EXPECT_EQ(MSERR_OK, server_->GetSeekableRanges(seekableRanges));
+}
+
+/**
+ * @tc.name  : Test GetSeekableRanges
+ * @tc.number: Player_GetSeekableRanges_005
+ * @tc.desc  : Test GetSeekableRanges when state is PLAYER_STARTED
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetSeekableRanges_005, TestSize.Level1)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    server_->lastOpStatus_ = PLAYER_STARTED;
+    std::vector<Plugins::SeekRange> seekableRanges;
+    EXPECT_EQ(MSERR_OK, server_->GetSeekableRanges(seekableRanges));
+}
+
+/**
+ * @tc.name  : Test GetSeekableRanges
+ * @tc.number: Player_GetSeekableRanges_006
+ * @tc.desc  : Test GetSeekableRanges when state is PLAYER_PAUSED
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetSeekableRanges_006, TestSize.Level1)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    server_->lastOpStatus_ = PLAYER_PAUSED;
+    std::vector<Plugins::SeekRange> seekableRanges;
+    EXPECT_EQ(MSERR_OK, server_->GetSeekableRanges(seekableRanges));
+}
+
+/**
+ * @tc.name  : Test GetSeekableRanges
+ * @tc.number: Player_GetSeekableRanges_007
+ * @tc.desc  : Test GetSeekableRanges when state is PLAYER_PLAYBACK_COMPLETE
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetSeekableRanges_007, TestSize.Level1)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    server_->lastOpStatus_ = PLAYER_PLAYBACK_COMPLETE;
+    std::vector<Plugins::SeekRange> seekableRanges;
+    EXPECT_EQ(MSERR_OK, server_->GetSeekableRanges(seekableRanges));
+}
+
+/**
+ * @tc.name  : Test GetLoadedRanges
+ * @tc.number: Player_GetLoadedRanges_001
+ * @tc.desc  : Test GetLoadedRanges when state is PLAYER_IDLE
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetLoadedRanges_001, TestSize. Level1)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    server_->lastOpStatus_ = PLAYER_IDLE;
+    std::vector<Plugins::SeekRange> loadedRanges;
+    EXPECT_EQ(MSERR_INVALID_OPERATION, server_->GetLoadedRanges(loadedRanges));
+}
+
+/**
+ * @tc.name  : Test GetLoadedRanges
+ * @tc.number: Player_GetLoadedRanges_002
+ * @tc.desc  : Test GetLoadedRanges when state is PLAYER_INITIALIZED
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetLoadedRanges_002, TestSize. Level1)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    server_->lastOpStatus_ = PLAYER_INITIALIZED;
+    std::vector<Plugins::SeekRange> loadedRanges;
+    EXPECT_EQ(MSERR_INVALID_OPERATION, server_->GetLoadedRanges(loadedRanges));
+}
+
+/**
+ * @tc.name  : Test GetLoadedRanges
+ * @tc.number: Player_GetLoadedRanges_003
+ * @tc.desc  : Test GetLoadedRanges when state is PLAYER_STATE_ERROR
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetLoadedRanges_003, TestSize.Level1)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    server_->lastOpStatus_ = PLAYER_STATE_ERROR;
+    std::vector<Plugins::SeekRange> loadedRanges;
+    EXPECT_EQ(MSERR_INVALID_OPERATION, server_->GetLoadedRanges(loadedRanges));
+}
+
+/**
+ * @tc.name  : Test GetLoadedRanges
+ * @tc.number: Player_GetLoadedRanges_004
+ * @tc.desc  : Test GetLoadedRanges when state is PLAYER_PREPARED
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetLoadedRanges_004, TestSize.Level1)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    server_->lastOpStatus_ = PLAYER_PREPARED;
+    std::vector<Plugins::SeekRange> loadedRanges;
+    EXPECT_EQ(MSERR_OK, server_->GetLoadedRanges(loadedRanges));
+}
+
+/**
+ * @tc.name  : Test GetLoadedRanges
+ * @tc.number: Player_GetLoadedRanges_005
+ * @tc.desc  : Test GetLoadedRanges when state is PLAYER_STARTED
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetLoadedRanges_005, TestSize.Level1)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    server_->lastOpStatus_ = PLAYER_STARTED;
+    std::vector<Plugins::SeekRange> loadedRanges;
+    EXPECT_EQ(MSERR_OK, server_->GetLoadedRanges(loadedRanges));
+}
+
+/**
+ * @tc.name  : Test GetLoadedRanges
+ * @tc.number: Player_GetLoadedRanges_006
+ * @tc.desc : Test GetLoadedRanges when state is PLAYER_PAUSED
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetLoadedRanges_006, TestSize.Level1)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    server_->lastOpStatus_ = PLAYER_PAUSED;
+    std::vector<Plugins::SeekRange> loadedRanges;
+    EXPECT_EQ(MSERR_OK, server_->GetLoadedRanges(loadedRanges));
+}
+
+/**
+ * @tc.name  : Test GetLoadedRanges
+ * @tc.number: Player_GetLoadedRanges_007
+ * @tc.desc  : Test GetLoadedRanges when state is PLAYER_PLAYBACK_COMPLETE
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetLoadedRanges_007, TestSize.Level1)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    server_->lastOpStatus_ = PLAYER_PLAYBACK_COMPLETE;
+    std::vector<Plugins::SeekRange> loadedRanges;
+    EXPECT_EQ(MSERR_OK, server_->GetLoadedRanges(loadedRanges));
 }
 } // namespace Media
 } // namespace OHOS

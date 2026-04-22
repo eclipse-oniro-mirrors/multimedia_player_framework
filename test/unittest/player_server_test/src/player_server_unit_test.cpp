@@ -5792,5 +5792,22 @@ HWTEST_F(PlayerServerUnitTest, Player_GetTrackSelectionFilter_001, TestSize.Leve
     EXPECT_TRUE(trackFilter.preferredAudioLanguages.empty());
     EXPECT_TRUE(trackFilter.preferredSubtitleLanguages.empty());
 }
+
+/**
+ * @tc.name  : Test Player SeekToDefaultPosition API
+ * @tc.number: Player_SeekToDefaultPosition_001
+ * @tc.desc  : Test Player SeekToDefaultPosition interface
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SeekToDefaultPosition_001, TestSize.Level1)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->SeekToDefaultPosition());
+}
 } // namespace Media
 } // namespace OHOS

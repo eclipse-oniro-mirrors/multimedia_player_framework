@@ -135,6 +135,7 @@ public:
     int32_t Release();
     int32_t ReleaseSync();
     int32_t Seek(int32_t mseconds, PlayerSeekMode mode);
+    int32_t SeekToDefaultPosition();
     int32_t SetVolume(float leftVolume, float rightVolume);
     int32_t SetLooping(bool loop);
     int32_t GetCurrentTime(int32_t &currentTime);
