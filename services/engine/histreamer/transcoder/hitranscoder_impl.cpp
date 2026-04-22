@@ -25,6 +25,7 @@
 #include "common/log.h"
 #include "avcodec_info.h"
 #include "osal/task/pipeline_threadpool.h"
+#include "water_mark_filter.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "HiTransCoder" };

@@ -245,5 +245,9 @@ int32_t TransCoderClient::Release()
     MEDIA_LOGD("Release");
     return ExecuteWhen(transCoderProxy_->Release(), true);
 }
+
+int32_t TransCoderClient::addwatermark(VideoCodecFormat encoder)
+{ 
+}
 } // namespace Media
 } // namespace OHOS

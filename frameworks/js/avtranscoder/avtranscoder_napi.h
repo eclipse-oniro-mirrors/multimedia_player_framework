@@ -23,6 +23,7 @@
 #include "common_napi.h"
 #include "task_queue.h"
 #include "transcoder.h"
+#include "pixel_map_napi.h"
 
 namespace OHOS {
 namespace Media {

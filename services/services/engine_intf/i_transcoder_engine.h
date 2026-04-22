@@ -119,6 +119,7 @@ public:
      * Return MSERR_OK indicates success, or others indicate failed.
      */
     virtual int32_t Cancel() = 0;
+    virtual int32_t addwatermark() = 0;
 
     /**
      * Get current transcodering time.

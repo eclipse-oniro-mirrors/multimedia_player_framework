@@ -43,6 +43,7 @@ public:
     int32_t Resume() override;
     int32_t Cancel() override;
     int32_t Release() override;
+    int32_t addwatermark() override;
     int32_t DestroyStub() override;
 
 private:

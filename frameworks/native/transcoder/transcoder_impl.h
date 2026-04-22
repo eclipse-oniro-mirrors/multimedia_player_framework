@@ -45,6 +45,7 @@ public:
     int32_t Resume() override;
     int32_t Cancel() override;
     int32_t Release() override;
+    int32_t AddWatermark();
     int32_t Init();
 
 private:

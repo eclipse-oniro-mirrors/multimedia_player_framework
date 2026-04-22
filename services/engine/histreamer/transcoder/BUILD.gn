@@ -80,6 +80,7 @@ ohos_static_library("media_engine_histreamer_transcoder") {
     "ipc:ipc_single",
     "media_foundation:media_foundation",
     "safwk:system_ability_fwk",
+    "graphic_2d:EGL",
   ]
 
   if (player_framework_support_drm) {

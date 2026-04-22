@@ -48,6 +48,7 @@ public:
     MOCK_METHOD(int32_t, Cancel, (), ());
     MOCK_METHOD(int32_t, GetCurrentTime, (int32_t &currentTime), ());
     MOCK_METHOD(int32_t, GetDuration, (int32_t &duration), ());
+    MOCK_METHOD(int32_t, addwatermark, (), ());
 };
 } // namespace Media
 } // namespace OHOS

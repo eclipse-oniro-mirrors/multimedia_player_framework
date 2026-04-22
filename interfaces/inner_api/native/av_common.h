@@ -162,6 +162,12 @@ class AVMimeType {
 public:
     static constexpr std::string_view APPLICATION_M3U8 = "application/m3u8";
 };
+
+struct WatermarkConfiguration
+{
+    /* data */
+};
+
 } // namespace Media
 } // namespace OHOS
 #endif // AV_COMMOM_H

@@ -17,6 +17,7 @@
 #include "transcoder_listener_stub.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "pixel.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "TransCoderServiceProxy"};

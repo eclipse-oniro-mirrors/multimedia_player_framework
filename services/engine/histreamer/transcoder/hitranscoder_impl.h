@@ -37,6 +37,9 @@
 namespace OHOS {
 namespace Media {
 
+/**
+ * 
+ */
 class HiTransCoderImpl : public ITransCoderEngine {
 public:
     HiTransCoderImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId);

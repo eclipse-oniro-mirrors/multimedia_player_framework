@@ -107,6 +107,7 @@ ohos_unittest("hitranscode_impl_unittest") {
     "qos_manager:qos",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "graphic_common:graphic_common"
   ]
 
   if (player_framework_support_drm) {

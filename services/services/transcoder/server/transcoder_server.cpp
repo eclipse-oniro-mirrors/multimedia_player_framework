@@ -440,6 +440,10 @@ int32_t TransCoderServer::Release()
     return MSERR_OK;
 }
 
+void TransCoderServer::addwatermark(TransCoderErrorType errorType, int32_t errorCode)
+{
+
+}
 void TransCoderServer::ReleaseInner()
 {
     MEDIA_LOGI("ReleaseInner enter");

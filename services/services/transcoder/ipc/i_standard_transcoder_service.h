@@ -44,6 +44,7 @@ public:
     virtual int32_t Resume() = 0;
     virtual int32_t Cancel() = 0;
     virtual int32_t Release() = 0;
+    virtual int32_t addwatermark() = 0;
     virtual int32_t DestroyStub() = 0;
 
     /**

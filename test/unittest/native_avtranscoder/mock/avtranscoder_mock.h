@@ -44,6 +44,7 @@ public:
     int32_t Resume() override;
     int32_t Cancel() override;
     int32_t Release() override;
+    int32_t addwatermark(int32_t &duration) override;
 
 private:
     std::shared_ptr<TransCoderCallback> callback_;

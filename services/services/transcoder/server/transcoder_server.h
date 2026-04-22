@@ -64,6 +64,7 @@ public:
     int32_t Resume() override;
     int32_t Cancel() override;
     int32_t Release() override;
+    int32_t addwatermark(int32_t &currentTime) override;
 
     // ITransCoderEngineObs override
     void OnError(TransCoderErrorType errorType, int32_t errorCode) override;

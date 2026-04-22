@@ -240,6 +240,10 @@ public:
      * @version 1.0
      */
     virtual int32_t Release() = 0;
+
+    /**
+     * 
+     */
 };
 } // namespace Media
 } // namespace OHOS

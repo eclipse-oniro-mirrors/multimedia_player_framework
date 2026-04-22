@@ -129,3 +129,8 @@ int32_t MockAVTransCoder::Release()
 {
     return MSERR_OK;
 }
+
+int32_t MockAVTransCoder::addwatermark()
+{
+    return MSERR_OK;
+}

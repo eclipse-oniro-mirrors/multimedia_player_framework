@@ -226,5 +226,9 @@ int32_t TransCoderImpl::Release()
     return MSERR_OK;
 }
 
+int32_t TransCoderImpl::AddWatermark()
+{ 
+}
+
 } // namespace Media
 } // namespace OHOS

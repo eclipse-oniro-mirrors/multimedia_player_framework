@@ -24,6 +24,7 @@
 #include "accesstoken_kit.h"
 #include "media_dfx.h"
 #include "media_utils.h"
+#include "pixel.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "TransCoderServiceStub"};

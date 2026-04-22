@@ -53,6 +53,7 @@ public:
     int32_t Cancel() override;
     int32_t Release() override;
     int32_t DumpInfo(int32_t fd);
+    int32_t addwatermark() override;
     int32_t DestroyStub() override;
 
     // MonitorServerObject override
