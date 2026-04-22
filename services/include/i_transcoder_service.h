@@ -242,8 +242,18 @@ public:
     virtual int32_t Release() = 0;
 
     /**
-     * 
+     * @brief Add watermark for transcodering.
+     *
+     * This function must be called before {@link Prepare}.
+     *
+     * @param pixelMap Indicates the watermark image.
+     * @param watermarkConfig Indicates the watermark configuration.
+     * @return Returns {@link SUCCESS} if the setting is successful; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
      */
+    virtual int32_t AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer, int32_t width, int32_t height) = 0;
 };
 } // namespace Media
 } // namespace OHOS
