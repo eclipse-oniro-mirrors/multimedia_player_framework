@@ -52,8 +52,8 @@ public:
     int32_t Resume() override;
     int32_t Cancel() override;
     int32_t Release() override;
+    int32_t AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer, int32_t width, int32_t height) override;
     int32_t DumpInfo(int32_t fd);
-    int32_t addwatermark() override;
     int32_t DestroyStub() override;
 
     // MonitorServerObject override
@@ -81,6 +81,7 @@ private:
     int32_t Resume(MessageParcel &data, MessageParcel &reply);
     int32_t Cancel(MessageParcel &data, MessageParcel &reply);
     int32_t Release(MessageParcel &data, MessageParcel &reply);
+    int32_t AddWatermark(MessageParcel &data, MessageParcel &reply);
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);
 
     std::shared_ptr<ITransCoderService> transCoderServer_ = nullptr;
