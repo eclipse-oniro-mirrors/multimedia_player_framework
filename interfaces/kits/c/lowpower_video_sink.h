@@ -297,7 +297,8 @@ OH_AVErrCode OH_LowPowerVideoSink_SetSyncAudioSink(
  * @param {const int64_t} framePts target video frame pts,in microseconds
  * @param {OH_LowPowerVideoSink_OnTargetArrived*} onTargetArrived OH_LowPowerVideoSink_OnTargetArrived func,
  * will be called once, refer to {@link OH_LowPowerVideoSink_OnTargetArrived}
- * @param {const int64_t} timeoutMs if wait first frame over timeoutMs, onTargetArrived will be called directly,in milliseconds.
+ * @param {const int64_t} timeoutMs if wait first frame over timeoutMs, onTargetArrived will be called directly,
+ * in milliseconds.
  * @param {void *} userData User specific data
  * @return Returns AV_ERR_OK if the execution is successful,
  * otherwise returns a specific error code, refer to {@link OH_AVErrCode}
