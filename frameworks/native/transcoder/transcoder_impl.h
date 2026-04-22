@@ -45,7 +45,7 @@ public:
     int32_t Resume() override;
     int32_t Cancel() override;
     int32_t Release() override;
-    int32_t AddWatermark();
+    int32_t AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer, int32_t width, int32_t height) override;
     int32_t Init();
 
 private:
