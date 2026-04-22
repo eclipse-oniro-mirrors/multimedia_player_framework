@@ -130,7 +130,7 @@ int32_t MockAVTransCoder::Release()
     return MSERR_OK;
 }
 
-int32_t MockAVTransCoder::addwatermark()
+int32_t MockAVTransCoder::AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer, int32_t width, int32_t height)
 {
     return MSERR_OK;
 }
