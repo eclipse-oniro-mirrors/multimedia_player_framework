@@ -17,7 +17,7 @@
 #include "transcoder_listener_stub.h"
 #include "media_log.h"
 #include "media_errors.h"
-#include "pixel.h"
+#include "pixel_map.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "TransCoderServiceProxy"};
@@ -318,6 +318,27 @@ int32_t TransCoderServiceProxy::Release()
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "Release failed, error: %{public}d", error);
 
+    return reply.ReadInt32();
+}
+
+int32_t TransCoderServiceProxy::AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer, int32_t width, int32_t height)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+ 
+    bool token = data.WriteInterfaceToken(TransCoderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+    
+    CHECK_AND_RETURN_RET_LOG(waterMarkBuffer->WriteToMessageParcel(data),
+        MSERR_INVALID_OPERATION, "Failed to write waterMarkBuffer!");
+    (void)data.WriteInt32(width);
+    (void)data.WriteInt32(height);
+ 
+    int error = Remote()->SendRequest(ADD_WATERMARK, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "AddWatermark failed, error: %{public}d", error);
+ 
     return reply.ReadInt32();
 }
 
