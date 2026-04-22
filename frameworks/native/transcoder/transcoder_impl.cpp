@@ -226,9 +226,12 @@ int32_t TransCoderImpl::Release()
     return MSERR_OK;
 }
 
-int32_t TransCoderImpl::AddWatermark()
-{ 
+int32_t TransCoderImpl::AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer, int32_t width, int32_t height)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr,
+        MSERR_INVALID_OPERATION, "transcoder service does not exist.");
+    return transCoderService_->AddWatermark(waterMarkBuffer, width, height);
 }
-
 } // namespace Media
 } // namespace OHOS
