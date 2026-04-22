@@ -87,9 +87,9 @@ static const std::string ICON_PATH_PAUSE = "/etc/screencapture/pause.svg";
 static const std::string ICON_PATH_RESUME = "/etc/screencapture/play.svg";
 static const std::string BACK_GROUND_COLOR = "#E84026";
 static const std::string SYS_SCR_RECR_KEY = "const.multimedia.screencapture.screenrecorderbundlename";
+static const std::string PERM_CUST_SCR_REC = "ohos.permission.CUSTOM_SCREEN_RECORDING";
 static const std::string VIRTUAL_SCREENAME_SCREEN_CAPTRURE = "screeen_capture";
 static const std::string VIRTUAL_SCREENAME_SCREEN_CAPTRURE_FILE = "screeen_capture_file";
-static const std::string PERM_CUST_SCR_REC = "ohos.permission.CUSTOM_SCREEN_RECORDING";
 #ifdef PC_STANDARD
 static const std::string SELECT_ABILITY_NAME = "SelectWindowAbility";
 static const std::string TIMEOUT_SCREENOFF_DISABLE_LOCK = "ohos.permission.TIMEOUT_SCREENOFF_DISABLE_LOCK";
