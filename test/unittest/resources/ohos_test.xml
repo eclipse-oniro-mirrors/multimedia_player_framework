@@ -576,6 +576,7 @@
             <option name="push" value="test_videofile/SDR_HF.mp4 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/request.mp4 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/mbaff.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/h264_4148_1920.mp4 -> /data/test" src="res"/>
         </preparer>
     </target>
     <target name="avmetadatahelper_unit_test">

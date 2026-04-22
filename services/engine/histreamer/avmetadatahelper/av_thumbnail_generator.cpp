@@ -31,6 +31,7 @@
 #include "sync_fence.h"
 #include "uri_helper.h"
 #include "media_dfx.h"
+#include "native_avcapability.h"
 
 #include "v1_0/cm_color_space.h"
 #include "v1_0/hdr_static_metadata.h"
@@ -194,9 +195,48 @@ Status AVThumbnailGenerator::InitDecoder(const std::string& codecName)
     callerInfo->SetData(Media::Tag::AV_CODEC_FORWARD_CALLER_UID, appUid_);
     callerInfo->SetData(Media::Tag::AV_CODEC_FORWARD_CALLER_PROCESS_NAME, appName_);
     format.SetMeta(callerInfo);
-    ret = codecName == "" ? MediaAVCodec::VideoDecoderFactory::CreateByMime(trackMime_, format, videoDecoder_) :
-        MediaAVCodec::VideoDecoderFactory::CreateByName(codecName, format, videoDecoder_);
-    MEDIA_LOGI("VideoDecoderAdapter::Init CreateByMime errorCode %{public}d", ret);
+    bool isSupportHWDecoder = IsSupportHWDecoder();
+    MEDIA_LOGI("IsSupportHWDecoder: %{public}d", isSupportHWDecoder);
+    if (!isSupportHWDecoder || !codecName.empty()) {
+        std::shared_ptr<MediaAVCodec::AVCodecList> codeclist = MediaAVCodec::AVCodecListFactory::CreateAVCodecList();
+        CHECK_AND_RETURN_RET_LOG(codeclist != nullptr, Status::ERROR_NULL_POINTER, "codeclist is nullptr.");
+        MediaAVCodec::CapabilityData *capabilityData =
+            codeclist->GetCapability(trackMime_, false, MediaAVCodec::AVCodecCategory::AVCODEC_SOFTWARE);
+        CHECK_AND_RETURN_RET_LOG(capabilityData != nullptr, Status::ERROR_NULL_POINTER,
+            "GetCapability failed, capabilityData is nullptr.");
+        ret = MediaAVCodec::VideoDecoderFactory::CreateByName(
+            codecName.empty() ? capabilityData->codecName : codecName, format, videoDecoder_);
+        MEDIA_LOGI("init software decoder, codecName: %{public}s, ret: %{public}d",
+            capabilityData->codecName.c_str(), ret);
+    } else {
+        ret = MediaAVCodec::VideoDecoderFactory::CreateByMime(trackMime_, format, videoDecoder_);
+        MEDIA_LOGI("init hardware decoder, createByMime ret %{public}d", ret);
+    }
+    return ConfigureAndStartDecoder();
+}
+ 
+bool AVThumbnailGenerator::IsSupportHWDecoder()
+{
+    CHECK_AND_RETURN_RET_LOG(trackInfo_ != nullptr, false, "track info init failed");
+    Format trackFormat{};
+    trackFormat.SetMeta(trackInfo_);
+    int32_t width = 0;
+    int32_t height = 0;
+    trackFormat.GetIntValue(MediaDescriptionKey::MD_KEY_WIDTH, width);
+    trackFormat.GetIntValue(MediaDescriptionKey::MD_KEY_HEIGHT, height);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Init decoder trackFormat width:%{public}d, height:%{public}d",
+        FAKE_POINTER(this), width, height);
+    CHECK_AND_RETURN_RET_LOG(width > 0 && height > 0, false, "width and height must larger than 0");
+    
+    OH_AVCapability* capability = OH_AVCodec_GetCapability(trackMime_.c_str(), false);
+    if (!capability) {
+        MEDIA_LOGE("No codec capability found for mime type");
+        return false;
+    }
+    return OH_AVCapability_IsVideoSizeSupported(capability, width, height);
+}
+Status AVThumbnailGenerator::ConfigureAndStartDecoder()
+{
     CHECK_AND_RETURN_RET_LOG(videoDecoder_ != nullptr, Status::ERROR_NO_MEMORY, "Create videoDecoder_ is nullptr");
     MEDIA_LOGI("appUid: %{public}d, appPid: %{public}d, appName: %{public}s", appUid_, appPid_, appName_.c_str());
     CHECK_AND_RETURN_RET_LOG(trackInfo_ != nullptr, Status::ERROR_NULL_POINTER, "track info init failed");
