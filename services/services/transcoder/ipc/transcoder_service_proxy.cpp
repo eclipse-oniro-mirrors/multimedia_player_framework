@@ -329,6 +329,7 @@ int32_t TransCoderServiceProxy::AddWatermark(std::shared_ptr<AVBuffer> &waterMar
  
     bool token = data.WriteInterfaceToken(TransCoderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+    CHECK_AND_RETURN_RET_LOG(waterMarkBuffer != nullptr, MSERR_NO_MEMORY, "input param waterMarkBuffer is nullptr.");
     
     CHECK_AND_RETURN_RET_LOG(waterMarkBuffer->WriteToMessageParcel(data),
         MSERR_INVALID_OPERATION, "Failed to write waterMarkBuffer!");
