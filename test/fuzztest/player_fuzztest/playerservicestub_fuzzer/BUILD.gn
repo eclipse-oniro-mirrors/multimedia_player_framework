@@ -61,7 +61,6 @@ ohos_fuzztest("PlayerServiceStubFuzzTest") {
     "c_utils:utils",
     "graphic_surface:surface",
     "ipc:ipc_single",
-    "player_framework:media_client",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
