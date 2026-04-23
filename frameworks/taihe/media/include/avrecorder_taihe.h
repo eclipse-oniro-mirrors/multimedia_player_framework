@@ -94,7 +94,8 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::GET_ENCODER_INFO,
         AVRecordergOpt::GET_AV_RECORDER_CONFIG,
         AVRecordergOpt::IS_WATERMARK_SUPPORTED,
-        AVRecordergOpt::SET_WATERMARK
+        AVRecordergOpt::SET_WATERMARK,
+        AVRecordergOpt::SET_METADATA
     }},
     {AVRecorderState::STATE_STARTED, {
         AVRecordergOpt::START,
@@ -107,7 +108,8 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::GET_MAX_AMPLITUDE,
         AVRecordergOpt::GET_ENCODER_INFO,
         AVRecordergOpt::GET_AV_RECORDER_CONFIG,
-        AVRecordergOpt::IS_WATERMARK_SUPPORTED
+        AVRecordergOpt::IS_WATERMARK_SUPPORTED,
+        AVRecordergOpt::SET_METADATA
     }},
     {AVRecorderState::STATE_PAUSED, {
         AVRecordergOpt::PAUSE,
@@ -119,7 +121,8 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::GET_MAX_AMPLITUDE,
         AVRecordergOpt::GET_ENCODER_INFO,
         AVRecordergOpt::GET_AV_RECORDER_CONFIG,
-        AVRecordergOpt::IS_WATERMARK_SUPPORTED
+        AVRecordergOpt::IS_WATERMARK_SUPPORTED,
+        AVRecordergOpt::SET_METADATA
     }},
     {AVRecorderState::STATE_STOPPED, {
         AVRecordergOpt::STOP,
@@ -331,7 +334,7 @@ struct AVRecorderAsyncContext {
     std::shared_ptr<WatermarkConfig> watermarkConfig_ = nullptr;
     std::shared_ptr<PixelMap> pixelMap_ = nullptr;
     bool isWatermarkSupported_ = false;
-    taihe::map<taihe::string, taihe::string> metadata_;
+    std::shared_ptr<Meta> metadata_;
 };
 
 struct AVRecorderProfile {

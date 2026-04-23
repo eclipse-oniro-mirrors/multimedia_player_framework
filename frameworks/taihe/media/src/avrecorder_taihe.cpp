@@ -1433,7 +1433,8 @@ void AVRecorderImpl::SetMetadata(taihe::map_view<taihe::string, taihe::string> m
     if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
         CHECK_AND_RETURN_LOG(metadata.size() != 0, "metadata has no data");
         for (const auto &pair : metadata) {
-            asyncCtx->metadata_.emplace(taihe::string(pair.first), taihe::string(pair.second));
+            MEDIA_LOGI("metadata tag: %{public}s, value: %{public}s", pair.first.c_str(), pair.second.c_str());
+            asyncCtx->metadata_->SetData(std::string(pair.first), std::string(pair.second));
         }
         asyncCtx->task_ = GetSetMetadataTask(asyncCtx);
         (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
@@ -1460,13 +1461,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::GetSetMetadataTask(
         CHECK_AND_RETURN_RET(taihe != nullptr && taihe->recorder_ != nullptr,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
 
-        std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
-        for (auto &meta : metadata) {
-            MEDIA_LOGI("metadata tag: %{public}s, value: %{public}s", meta.first.c_str(), meta.second.c_str());
-            userMeta->SetData(std::string(meta.first), std::string(meta.second));
-        }
-
-        taihe->recorder_->SetUserMeta(userMeta);
+        taihe->recorder_->SetUserMeta(metadata);
 
         MEDIA_LOGI("%{public}s End", option.c_str());
         return RetInfo(MSERR_EXT_API9_OK, "");
