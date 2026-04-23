@@ -229,8 +229,9 @@ int32_t TransCoderImpl::Release()
 int32_t TransCoderImpl::AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer, int32_t width, int32_t height)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr,
-        MSERR_INVALID_OPERATION, "transcoder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(waterMarkBuffer != nullptr, MSERR_INVALID_VAL, "input param waterMarkBuffer is nullptr.");
+    CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr, MSERR_INVALID_OPERATION,
+        "transcoder service does not exist.");
     return transCoderService_->AddWatermark(waterMarkBuffer, width, height);
 }
 } // namespace Media
