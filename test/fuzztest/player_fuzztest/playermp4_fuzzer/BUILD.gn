@@ -62,7 +62,11 @@ ohos_fuzztest("PlayerMp4FuzzTest") {
       "playermp4_fuzzer.cpp",
     ]
   }
-  deps = [ "$MEDIA_ROOT_DIR/services/services:media_service" ]
+  deps = [
+    "$MEDIA_ROOT_DIR/services/services:media_service",
+    "$MEDIA_ROOT_DIR/interfaces/inner_api/native:media_client",
+  ]
+
   external_deps = [
     "c_utils:utils",
     "graphic_surface:surface",
