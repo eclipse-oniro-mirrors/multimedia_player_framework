@@ -334,7 +334,7 @@ struct AVRecorderAsyncContext {
     std::shared_ptr<WatermarkConfig> watermarkConfig_ = nullptr;
     std::shared_ptr<PixelMap> pixelMap_ = nullptr;
     bool isWatermarkSupported_ = false;
-    std::shared_ptr<Meta> metadata_;
+    std::shared_ptr<Meta> metadata_ = nullptr;
 };
 
 struct AVRecorderProfile {

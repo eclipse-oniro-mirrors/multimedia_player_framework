@@ -1432,6 +1432,7 @@ void AVRecorderImpl::SetMetadata(taihe::map_view<taihe::string, taihe::string> m
 
     if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
         CHECK_AND_RETURN_LOG(metadata.size() != 0, "metadata has no data");
+        asyncCtx->metadata_ = std::make_shared<Meta>();
         for (const auto &pair : metadata) {
             MEDIA_LOGI("metadata tag: %{public}s, value: %{public}s", pair.first.c_str(), pair.second.c_str());
             asyncCtx->metadata_->SetData(std::string(pair.first), std::string(pair.second));
