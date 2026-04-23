@@ -62,9 +62,7 @@ ohos_unittest("service_dump_manager_unittest") {
 
   cflags = service_dump_manager_unittest_cflags
 
-  deps = [
-
-  ]
+  deps = []
 
   external_deps = [
     "c_utils:utils",
