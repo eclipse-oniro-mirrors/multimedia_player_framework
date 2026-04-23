@@ -850,11 +850,10 @@ int32_t AVTransCoderNapi::AddWatermark(std::shared_ptr<PixelMap> &pixelMap,
     CHECK_AND_RETURN_RET_LOG(pixelMap->GetPixelFormat() == PixelFormat::RGBA_8888, MSERR_INVALID_VAL,
         "Invalid pixel format");
     size_t dataSize = pixelMap->GetHeight() * pixelMap->GetRowStride();
-    uint8_t* data = new uint8_t[dataSize];
     auto allocator = AVAllocatorFactory::CreateSharedAllocator(MemoryFlag::MEMORY_READ_WRITE);
-    memcpy_s(data, dataSize, pixelMap->GetPixels(), dataSize);
     auto buffer = AVBuffer::CreateAVBuffer(allocator, dataSize);
-    buffer->memory_->Write(data, dataSize, 0);
+    CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_INVALID_VAL, "Create buffer failed");
+    buffer->memory_->Write(pixelMap->GetPixels(), dataSize, 0);
     buffer->meta_->Set<Tag::VIDEO_COORDINATE_X>(watermarkConfig->left);
     buffer->meta_->Set<Tag::VIDEO_COORDINATE_Y>(watermarkConfig->top);
     buffer->meta_->Set<Tag::VIDEO_COORDINATE_W>(pixelMap->GetWidth());
@@ -1091,12 +1090,12 @@ int32_t AVTransCoderNapi::GetWatermarkConfig(std::unique_ptr<AVTransCoderAsyncCo
     bool ret = CommonNapi::GetPropertyInt32(env, args, "top", config->top);
     CHECK_AND_RETURN_RET(ret,
         (asyncCtx->AVTransCoderSignError(MSERR_PARAMETER_VERIFICATION_FAILED, "GetWatermarkConfig", "top",
-        "config top cannot be null or less than zero"), MSERR_PARAMETER_VERIFICATION_FAILED));
+        "config top cannot be null"), MSERR_PARAMETER_VERIFICATION_FAILED));
  
     ret = CommonNapi::GetPropertyInt32(env, args, "left", config->left);
     CHECK_AND_RETURN_RET(ret,
         (asyncCtx->AVTransCoderSignError(MSERR_PARAMETER_VERIFICATION_FAILED, "GetWatermarkConfig", "left",
-        "config left cannot be null or less than zero"), MSERR_PARAMETER_VERIFICATION_FAILED));
+        "config left cannot be null"), MSERR_PARAMETER_VERIFICATION_FAILED));
  
     if (CommonNapi::CheckhasNamedProperty(env, args, "width")) {
         ret = CommonNapi::GetPropertyInt32(env, args, "width", config->width);
