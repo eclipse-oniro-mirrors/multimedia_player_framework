@@ -41,6 +41,7 @@ ohos_fuzztest("PlayerFileFuzzTest") {
       "playerfile_fuzzer.cpp",
     ]
   }
+  deps = [ "../../../../interfaces/inner_api/native:media_client" ]
   external_deps = [
     "c_utils:utils",
     "graphic_2d:librender_service_base",
