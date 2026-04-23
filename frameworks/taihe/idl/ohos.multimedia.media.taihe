@@ -890,8 +890,7 @@ interface AVRecorder {
     @gen_promise("isWatermarkSupported")
     IsWatermarkSupportedSync(): bool;
 
-    @gen_promise("setMetadata")
-    SetMetadataSync(metadata: @record Map<String, String>): void;
+    SetMetadata(metadata: @record Map<String, String>): void;
 
     @gen_promise("setWatermark")
     SetWatermarkSync(watermark: image.PixelMap, config: WatermarkConfig): void;

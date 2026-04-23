@@ -1418,7 +1418,7 @@ int32_t AVRecorderImpl::IsWatermarkSupported(bool &isWatermarkSupported)
     return recorder_->IsWatermarkSupported(isWatermarkSupported);
 }
 
-void AVRecorderImpl::SetMetadataSync(taihe::map<taihe::string, taihe::string> metadata)
+void AVRecorderImpl::SetMetadata(taihe::map_view<taihe::string, taihe::string> metadata)
 {
     MediaTrace trace("AVRecorder::SetMetadata");
     const std::string &opt = AVRecordergOpt::SET_METADATA;
@@ -1432,7 +1432,9 @@ void AVRecorderImpl::SetMetadataSync(taihe::map<taihe::string, taihe::string> me
 
     if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
         CHECK_AND_RETURN_LOG(metadata.size() != 0, "metadata has no data");
-        asyncCtx->metadata_ = metadata;
+        for (const auto &pair : metadata) {
+            asyncCtx->metadata_.emplace(taihe::string(pair.first), taihe::string(pair.second));
+        }
         asyncCtx->task_ = GetSetMetadataTask(asyncCtx);
         (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
     } else {

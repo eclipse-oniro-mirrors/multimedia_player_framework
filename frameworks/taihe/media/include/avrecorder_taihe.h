@@ -164,7 +164,7 @@ public:
     void ResetSync();
     void ResumeSync();
 
-    void SetMetadataSync(taihe::map<taihe::string, taihe::string> metadata);
+    void SetMetadata(taihe::map_view<taihe::string, taihe::string> metadata);
     std::shared_ptr<TaskHandler<RetInfo>> GetSetMetadataTask(const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
 
     optional<::ohos::multimedia::media::AVRecorderConfig> GetAVRecorderConfigSync();
