@@ -83,7 +83,6 @@ ohos_fuzztest("PlayerDataSrcFuzzTest") {
     "hilog:libhilog",
     "image_framework:image_native",
     "ipc:ipc_single",
-    "player_framework:media_client",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
