@@ -2,9 +2,9 @@
 
 ## 简介 / Introduction
 
-本仓库是OpenHarmony/HarmonyOS媒体组件（multimedia_player_framework），提供音视频播放、录制、转码、录屏等媒体服务的API实现。代码主要使用C++，采用GN（Generate Ninja）构建系统。
+本仓库是OpenHarmony媒体组件（multimedia_player_framework），提供音视频播放、录制、转码、录屏等媒体服务的API实现。代码主要使用C++，采用GN（Generate Ninja）构建系统。
 
-This is the OpenHarmony/HarmonyOS multimedia player framework repository. It provides APIs for audio/video playback, recording, transcoding, screen capture, and related media services. The codebase is primarily C++ using the GN build system.
+This is the OpenHarmony multimedia player framework repository. It provides APIs for audio/video playback, recording, transcoding, screen capture, and related media services. The codebase is primarily C++ using the GN build system.
 
 ## 目录结构 / Directory Structure
 
