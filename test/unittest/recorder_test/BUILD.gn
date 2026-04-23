@@ -52,7 +52,10 @@ ohos_unittest("recorder_native_unit_test") {
     ]
   }
 
-  public_deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avrecorder" ]
+  deps = [
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avrecorder",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
+  ]
 
   external_deps += [
     "ability_base:base",
@@ -78,7 +81,6 @@ ohos_unittest("recorder_native_unit_test") {
     "image_framework:image_source",
     "image_framework:ohimage",
     "napi:ace_napi",
-    "player_framework:media_client",
     "resource_management:librawfile",
     "window_manager:libdm",
     "media_foundation:native_media_core",
@@ -136,7 +138,10 @@ ohos_unittest("recorder_function_unit_test") {
     ]
   }
 
-  public_deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avrecorder" ]
+  deps = [
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avrecorder",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
+  ]
 
   external_deps += [
     "ability_base:base",
@@ -162,7 +167,6 @@ ohos_unittest("recorder_function_unit_test") {
     "image_framework:image_source",
     "image_framework:ohimage",
     "napi:ace_napi",
-    "player_framework:media_client",
     "resource_management:librawfile",
     "window_manager:libdm",
   ]
@@ -222,7 +226,7 @@ ohos_unittest("recorder_server_unit_test") {
     ]
   }
 
-  public_deps = [
+  deps = [
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
     "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",

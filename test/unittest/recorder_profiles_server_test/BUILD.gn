@@ -53,7 +53,7 @@ ohos_unittest("recorder_profiles_server_unit_test") {
     sources = [ "recorder_profiles_server_unit_test.cpp" ]
   }
 
-  public_deps = [
+  deps = [
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/common:media_engine_common",
     "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service",
@@ -103,7 +103,7 @@ ohos_unittest("recorder_profiles_server_mock_unit_test") {
     sources = [ "recorder_profiles_server_mock_unit_test.cpp" ]
   }
 
-  public_deps = [
+  deps = [
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/common:media_engine_common",
     "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service",
