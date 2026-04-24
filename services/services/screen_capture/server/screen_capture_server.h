@@ -313,9 +313,9 @@ private:
         std::vector<ScreenId> &mirrorIds);
     int32_t MakeVirtualScreenMirrorForSpecifiedScreenForHopper(const sptr<Rosen::Display> &defaultDisplay,
         std::vector<ScreenId> &mirrorIds);
-    bool CheckCustScrRecPermission();
     void SetTimeoutScreenoffDisableLock(bool lockScreen);
 #endif
+    bool CheckCustScrRecPermission();
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     int32_t TryStartNotification();
     int32_t TryNotificationOnPostStartScreenCapture();

@@ -87,11 +87,11 @@ static const std::string ICON_PATH_PAUSE = "/etc/screencapture/pause.svg";
 static const std::string ICON_PATH_RESUME = "/etc/screencapture/play.svg";
 static const std::string BACK_GROUND_COLOR = "#E84026";
 static const std::string SYS_SCR_RECR_KEY = "const.multimedia.screencapture.screenrecorderbundlename";
+static const std::string PERM_CUST_SCR_REC = "ohos.permission.CUSTOM_SCREEN_RECORDING";
 static const std::string VIRTUAL_SCREENAME_SCREEN_CAPTRURE = "screeen_capture";
 static const std::string VIRTUAL_SCREENAME_SCREEN_CAPTRURE_FILE = "screeen_capture_file";
 #ifdef PC_STANDARD
 static const std::string SELECT_ABILITY_NAME = "SelectWindowAbility";
-static const std::string PERM_CUST_SCR_REC = "ohos.permission.CUSTOM_SCREEN_RECORDING";
 static const std::string TIMEOUT_SCREENOFF_DISABLE_LOCK = "ohos.permission.TIMEOUT_SCREENOFF_DISABLE_LOCK";
 #endif
 static const int32_t SVG_HEIGHT = 80;
@@ -3377,7 +3377,6 @@ uint64_t ScreenCaptureServer::GetDisplayIdOfWindows(uint64_t displayId)
     return defaultDisplayIdValue;
 }
 
-#ifdef PC_STANDARD
 bool ScreenCaptureServer::CheckCustScrRecPermission()
 {
     MEDIA_LOGI("Verify custom screen recording permission");
@@ -3389,6 +3388,7 @@ bool ScreenCaptureServer::CheckCustScrRecPermission()
     return true;
 }
 
+#ifdef PC_STANDARD
 bool ScreenCaptureServer::IsHopper()
 {
     std::string foldScreenFlag = system::GetParameter("const.window.foldscreen.type", "0,0,0,0");
@@ -4839,12 +4839,12 @@ void ScreenCaptureServer::PrivacyProtected(ScreenId& virtualScreenId, bool syste
 
 bool ScreenCaptureServer::IsSkipPrivacyWindow()
 {
-#if defined(PC_STANDARD) && defined(SUPPORT_SCREEN_CAPTURE_PICKER)
     return GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_ ||
-           (CheckCustScrRecPermission() && !IsPickerPopUp());
-#else
-    return GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_;
+           (CheckCustScrRecPermission()
+#ifdef SUPPORT_SCREEN_CAPTURE_PICKER
+           && !IsPickerPopUp()
 #endif
+           );
 }
 
 ScreenCaptureObserverCallBack::ScreenCaptureObserverCallBack(
