@@ -1,0 +1,94 @@
+/*
+ * Copyright (C) 2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import("//build/ohos.gni")
+import("//foundation/multimedia/player_framework/config.gni")
+
+config("net_downloader_config") {
+    visibility = [ ":*" ]
+    cflags = [
+        "-O2",
+        "-fPIC",
+        "-Wall",
+        "-Werror",
+        "-Wno-error=deprecated-declarations",
+    ]
+    
+    cflags_cc = [
+        "-std=c++17",
+        "-fexceptions",
+    ]
+    
+    include_dirs = [
+        "//foundation/multimedia/player_framework/interfaces/inner_api/native/media_download",
+        "//foundation/multimedia/player_framework/services/services/media_source/net_downloader",
+        "//foundation/multimedia/player_framework/services/utils/include",
+        "//commonlibrary/c_utils/base/include",
+        "//third_party/libcurl/include",
+    ]
+}
+
+ohos_shared_library("net_downloader") {
+    sources = [
+        "downloader_impl.cpp",
+        "download_task.cpp",
+        "message_queue.cpp",
+        "download_network_client.cpp",
+        "download_file_writer.cpp",
+        "downloader_factory.cpp",
+        "network_monitor.cpp",
+    ]
+    
+    configs = [ ":net_downloader_config" ]
+    
+    deps = [
+        "//foundation/multimedia/player_framework/services/utils:media_utils",
+    ]
+    
+    external_deps = [
+        "c_utils:utils",
+        "hilog:libhilog",
+    ]
+    
+    output_name = "net_downloader"
+    output_extension = "so"
+    
+    subsystem_name = "multimedia"
+    part_name = "player_framework"
+}
+
+ohos_executable("net_downloader_test") {
+    sources = [
+        "downloader_test.cpp",
+    ]
+    
+    configs = [ ":net_downloader_config" ]
+    
+    deps = [
+        ":net_downloader",
+    ]
+    
+    external_deps = [
+        "c_utils:utils",
+        "hilog:libhilog",
+    ]
+    
+    output_name = "net_downloader_test"
+    
+    subsystem_name = "multimedia"
+    part_name = "player_framework"
+    
+    install_enable = false
+}
