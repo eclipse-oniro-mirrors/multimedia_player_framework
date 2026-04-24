@@ -271,6 +271,23 @@ typedef enum AVPlayerTrackSwitchMode {
 } AVPlayerTrackSwitchMode;
 
 /**
+ * @brief Result of Video output.
+ * @since 26.0.0
+ */
+typedef enum OH_VideoOutputResult {
+    /**
+     * @brief Output one decoded video frame.
+     * @since 26.0.0
+     */
+    OH_VIDEO_OUTPUT_OK = 0,
+    /**
+     * @brief No frame ready to render.
+     * @since 26.0.0
+     */
+    OH_VIDEO_OUTPUT_NO_IMAGE = 1,
+} OH_VideoOutputResult;
+
+/**
  * @brief Key to get state, value type is int32_t.
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @since 12

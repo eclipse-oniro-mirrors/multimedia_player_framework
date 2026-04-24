@@ -124,6 +124,8 @@ public:
     int32_t AdvanceToMediaSource(const std::string &srcId) override;
     void SetPlaylistLoopMode(PlaylistLoopMode mode) override;
     PlaylistLoopMode GetPlaylistLoopMode() const override;
+    int32_t SetVideoOutput(sptr<Surface> surface) override;
+    int32_t GetVideoSample(int32_t &outputResult) override;
 private:
     using MediaSourceIterator = std::vector<std::pair<std::string, std::shared_ptr<AVMediaSource>>>::iterator;
     void ResetSeekVariables();

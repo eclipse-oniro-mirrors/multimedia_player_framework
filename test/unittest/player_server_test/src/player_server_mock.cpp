@@ -894,5 +894,19 @@ int32_t PlayerServerMock::GetTrackSelectionFilter(AVPlayTrackSelectionFilter &tr
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     return player_->GetTrackSelectionFilter(trackFilter);
 }
+
+int32_t PlayerServerMock::SetVideoOutput(sptr<Surface> surface)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    std::unique_lock<std::mutex> lock(mutex_);
+    return player_->SetVideoOutput(surface);
+}
+
+int32_t PlayerServerMock::GetVideoSample(int32_t &outputResult)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    std::unique_lock<std::mutex> lock(mutex_);
+    return player_->GetVideoSample(outputResult);
+}
 } // namespace Media
 } // namespace OHOS

@@ -85,6 +85,8 @@ public:
     MOCK_METHOD(int32_t, UnFreeze, (), ());
 #ifdef SUPPORT_VIDEO
     MOCK_METHOD(int32_t, SetVideoSurface, ((sptr<Surface> surface)), (override));
+    MOCK_METHOD(int32_t, SetVideoOutput, ((sptr<Surface> surface)), (override));
+    MOCK_METHOD(int32_t, GetVideoSample, ((int32_t &outputResult)), (override));
 #endif
     MOCK_METHOD(int32_t, SetLooping, (bool loop), (override));
     MOCK_METHOD(int32_t, SetParameter, (const Format &param), (override));

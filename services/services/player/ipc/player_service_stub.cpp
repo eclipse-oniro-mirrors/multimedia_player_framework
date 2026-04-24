@@ -296,6 +296,10 @@ void PlayerServiceStub::FillPlayerFuncPart4()
         [this](MessageParcel &data, MessageParcel &reply) { return SeekToDefaultPosition(data, reply); } };
     playerFuncs_[IS_LIVE_SEEK] = { "Player::IsLiveSeek",
         [this](MessageParcel &data, MessageParcel &reply) { return IsLiveSeek(data, reply); } };
+    playerFuncs_[SET_VIDEO_OUTPUT] = { "Player::SetVideoOutput",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetVideoOutput(data, reply); } };
+    playerFuncs_[GET_VIDEO_SAMPLE] = { "Player::GetVideoSample",
+        [this](MessageParcel &data, MessageParcel &reply) { return GetVideoSample(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
@@ -1977,6 +1981,50 @@ bool PlayerServiceStub::IsLiveSeek()
     MediaTrace trace("PlayerServiceStub::IsLiveSeek");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, false, "player server is nullptr");
     return playerServer_->IsLiveSeek();
+}
+
+int32_t PlayerServiceStub::SetVideoOutput(sptr<Surface> surface)
+{
+    MediaTrace trace("PlayerServiceStub::SetVideoOutput");
+    MEDIA_LOGD("PlayerServiceStub SetVideoOutput in");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetVideoOutput(surface);
+}
+ 
+int32_t PlayerServiceStub::GetVideoSample(int32_t &outputResult)
+{
+    MediaTrace trace("PlayerServiceStub::GetVideoSample");
+    MEDIA_LOGD("PlayerServiceStub GetVideoSample in");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->GetVideoSample(outputResult);
+}
+
+int32_t PlayerServiceStub::SetVideoOutput(MessageParcel &data, MessageParcel &reply)
+{
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "object is nullptr");
+ 
+    sptr<IBufferProducer> producer = iface_cast<IBufferProducer>(object);
+    CHECK_AND_RETURN_RET_LOG(producer != nullptr, MSERR_NO_MEMORY, "failed to convert object to producer");
+ 
+    sptr<Surface> surface = Surface::CreateSurfaceAsProducer(producer);
+    CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_NO_MEMORY, "failed to create surface");
+ 
+    std::string format = data.ReadString();
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " surfaceFormat is %{public}s!", FAKE_POINTER(this), format.c_str());
+    (void)surface->SetUserData("SURFACE_FORMAT", format);
+    reply.WriteInt32(SetVideoOutput(surface));
+    return MSERR_OK;
+}
+ 
+int32_t PlayerServiceStub::GetVideoSample(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    int32_t outputResult = -1;
+    int32_t ret = GetVideoSample(outputResult);
+    reply.WriteInt32(outputResult);
+    reply.WriteInt32(ret);
+    return MSERR_OK;
 }
 } // namespace Media
 } // namespace OHOS

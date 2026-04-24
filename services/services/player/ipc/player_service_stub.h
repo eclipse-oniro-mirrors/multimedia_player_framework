@@ -125,6 +125,8 @@ public:
     int32_t GetTrackDescription(Format &format, uint32_t trackIndex) override;
     int32_t RegisterDeviceCapability(const sptr<IRemoteObject> &object) override;
     bool IsLiveSeek() override;
+    int32_t SetVideoOutput(sptr<Surface> surface) override;
+    int32_t GetVideoSample(int32_t &outputResult) override;
 protected:
     PlayerServiceStub();
     virtual int32_t Init();
@@ -216,6 +218,8 @@ private:
     int32_t GetTrackDescription(MessageParcel &data, MessageParcel &reply);
     int32_t RegisterDeviceCapability(MessageParcel &data, MessageParcel &reply);
     int32_t IsLiveSeek(MessageParcel &data, MessageParcel &reply);
+    int32_t SetVideoOutput(MessageParcel &data, MessageParcel &reply);
+    int32_t GetVideoSample(MessageParcel &data, MessageParcel &reply);
 
     int32_t ReadMediaStreamListFromMessageParcel(
         MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource);

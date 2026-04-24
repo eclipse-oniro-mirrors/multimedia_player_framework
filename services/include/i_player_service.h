@@ -476,6 +476,28 @@ public:
      * @version 1.0
      */
     virtual int32_t SetVideoSurface(sptr<Surface> surface) = 0;
+
+    /**
+     * @brief Method to set the side output surface.
+     *
+     * @param surface pointer of the surface.
+     * @return Returns {@link MSERR_OK} if the surface is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetVideoOutput(sptr<Surface> surface) = 0;
+ 
+    /**
+     * @brief Method to get video sample.
+     *
+     * @param outputResult output result.
+     * @return Returns {@link MSERR_OK} if video sample is get; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t GetVideoSample(int32_t &outputResult) = 0;
 #endif
 
     /**

@@ -247,6 +247,8 @@ public:
     int32_t GetPlaybackPosition(int32_t &playbackPosition) override;
     bool IsNeedChangePlaySpeed(PlaybackRateMode &mode, bool &isXSpeedPlay) override;
     void TriggerError(PlayerErrorType errorType, int32_t errorCode, const std::string &msg);
+    int32_t SetVideoOutput(sptr<Surface> surface) override;
+    int32_t GetVideoSample(int32_t &outputResult) override;
 private:
     std::weak_ptr<IPlayerEngineObs> obs_;
 };

@@ -119,6 +119,8 @@ public:
     virtual int32_t SelectTrack(int32_t index, PlayerSwitchMode mode = PlayerSwitchMode::SWITCH_SMOOTH) = 0;
     virtual int32_t DeselectTrack(int32_t index) = 0;
     virtual int32_t GetCurrentTrack(int32_t trackType, int32_t &index) = 0;
+    virtual int32_t SetVideoOutput(sptr<Surface> surface) = 0;
+    virtual int32_t GetVideoSample(int32_t &outputResult) = 0;
     virtual int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     {
         (void)playbackStrategy;
@@ -375,6 +377,8 @@ public:
         GET_PLAYERBACK_RATE,
         SEEK_TO_DEFAULT_POSITION,
         IS_LIVE_SEEK,
+        SET_VIDEO_OUTPUT,
+        GET_VIDEO_SAMPLE,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardPlayerService");
