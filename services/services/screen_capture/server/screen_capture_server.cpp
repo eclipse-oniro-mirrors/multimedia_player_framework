@@ -3604,6 +3604,7 @@ VirtualScreenOption ScreenCaptureServer::InitVirtualScreenOption(const std::stri
         .isForShot_ = true,
         .missionIds_ = {},
         .virtualScreenType_ = VirtualScreenType::SCREEN_RECORDING,
+        .bundleName_ = appName_,
     };
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " InitVirtualScreenOption end.", FAKE_POINTER(this));
     return virScrOption;
