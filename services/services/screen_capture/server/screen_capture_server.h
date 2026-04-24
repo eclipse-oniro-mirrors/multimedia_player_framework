@@ -370,6 +370,7 @@ private:
     int32_t ResumeRecorder();
     int32_t PauseScreenCaptureInner(AVScreenCaptureStateCode stateCode);
     int32_t ResumeScreenCaptureInner(AVScreenCaptureStateCode stateCode);
+    void StopCaptureOnError(const std::string &reportMsg);
 private:
     std::mutex mutex_;
     std::mutex cbMutex_;

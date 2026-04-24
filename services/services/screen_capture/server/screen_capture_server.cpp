@@ -4961,17 +4961,17 @@ int32_t ScreenCaptureServer::PauseScreenCaptureInner(AVScreenCaptureStateCode st
 
     int32_t ret = MSERR_OK;
     if (dataMode_ == AVScreenCaptureDataMode::FILE_MODE) {
-        ret = PauseRecorder();
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret,
+        CHECK_AND_RETURN_RET_LOG((ret = PauseRecorder()) == MSERR_OK,
+            (StopCaptureOnError("pauseRecording fail"), ret),
             "PauseScreenCaptureInner: PauseRecorder failed, ret:%{public}d", ret);
     }
 
-    ret = PauseVideoCapture();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret,
+    CHECK_AND_RETURN_RET_LOG((ret = PauseVideoCapture()) == MSERR_OK,
+        (StopCaptureOnError("pauseRecording fail"), ret),
         "PauseScreenCaptureInner: PauseVideoCapture failed, ret:%{public}d", ret);
 
-    ret = StopAudioCapture();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret,
+    CHECK_AND_RETURN_RET_LOG((ret = StopAudioCapture()) == MSERR_OK,
+        (StopCaptureOnError("pauseRecording fail"), ret),
         "PauseScreenCaptureInner: StopAudioCapture failed, ret:%{public}d", ret);
 
     if (audioSource_) {
@@ -5029,16 +5029,13 @@ int32_t ScreenCaptureServer::ResumeScreenCaptureInner(AVScreenCaptureStateCode s
     }
 #endif
 
-    int32_t ret = ResumeVideoCapture();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret,
+    int32_t ret = MSERR_OK;
+    CHECK_AND_RETURN_RET_LOG((ret = ResumeVideoCapture()) == MSERR_OK,
+        (StopCaptureOnError("resumeRecording fail"), ret),
         "ResumeScreenCaptureInner: ResumeVideoCapture failed, ret:%{public}d", ret);
 
-    if (dataMode_ == AVScreenCaptureDataMode::FILE_MODE) {
-        ret = StartFileAudioCapture();
-    } else {
-        ret = StartAudioCapture();
-    }
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret,
+    ret = dataMode_ == AVScreenCaptureDataMode::FILE_MODE ? StartFileAudioCapture() : StartAudioCapture();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, (StopCaptureOnError("resumeRecording fail"), ret),
         "ResumeScreenCaptureInner: StartAudioCapture failed, ret:%{public}d", ret);
 
     if (audioSource_) {
@@ -5046,8 +5043,8 @@ int32_t ScreenCaptureServer::ResumeScreenCaptureInner(AVScreenCaptureStateCode s
     }
 
     if (dataMode_ == AVScreenCaptureDataMode::FILE_MODE) {
-        ret = ResumeRecorder();
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret,
+        CHECK_AND_RETURN_RET_LOG((ret = ResumeRecorder()) == MSERR_OK,
+            (StopCaptureOnError("resumeRecording fail"), ret),
             "ResumeScreenCaptureInner: ResumeRecorder failed, ret:%{public}d", ret);
     }
 
@@ -5113,6 +5110,15 @@ int32_t ScreenCaptureServer::ResumeRecorder()
     }
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " ResumeRecorder end.", FAKE_POINTER(this));
     return MSERR_OK;
+}
+
+void ScreenCaptureServer::StopCaptureOnError(const std::string &reportMsg)
+{
+    if (screenCaptureCb_ != nullptr) {
+        screenCaptureCb_->OnError(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL,
+            AVScreenCaptureErrorCode::SCREEN_CAPTURE_ERR_UNKNOWN);
+    }
+    StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
 }
 } // namespace Media
 } // namespace OHOS
