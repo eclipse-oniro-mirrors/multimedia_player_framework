@@ -53,7 +53,7 @@ public:
     int32_t GetCurrentTime(int32_t &currentTime) override;
     int32_t GetPlaybackPosition(int32_t &playbackPosition) override;
     int32_t GetCurrentPresentationTimestamp(int64_t &currentPresentation) override;
-    int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
+    int32_t Seek(int64_t mSeconds, PlayerSeekMode mode) override;
     int32_t SeekToDefaultPosition() override;
     int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override;
     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
@@ -143,9 +143,9 @@ private:
     MediaSourceIterator FindSourceInList(const std::string &id);
     int32_t DealWithSwitchingOpt();
     std::recursive_mutex recMutex_;
-    int32_t mCurrentPosition = INT32_MIN;
+    int64_t mCurrentPosition = INT64_MIN;
     PlayerSeekMode mCurrentSeekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
-    int32_t mSeekPosition = INT32_MIN;
+    int64_t mSeekPosition = INT64_MIN;
     PlayerSeekMode mSeekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
     std::atomic<bool> isSeeking_{false};
     int32_t prevTrackIndex_ = INT32_MIN;

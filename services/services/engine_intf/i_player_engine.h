@@ -116,7 +116,7 @@ public:
     }
     virtual int32_t SetVolume(float leftVolume, float rightVolume) = 0;
     virtual int32_t SetVolumeMode(int32_t mode) = 0;
-    virtual int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) = 0;
+    virtual int32_t Seek(int64_t mSeconds, PlayerSeekMode mode) = 0;
     virtual int32_t SeekToDefaultPosition()
     {
         return 0;
@@ -310,7 +310,7 @@ public:
         return 0;
     }
 
-    virtual int32_t SeekContinous(int32_t mSeconds, int64_t seekContinousBatchNo)
+    virtual int32_t SeekContinous(int64_t mSeconds, int64_t seekContinousBatchNo)
     {
         (void)mSeconds;
         (void)seekContinousBatchNo;

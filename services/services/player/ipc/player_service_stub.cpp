@@ -552,7 +552,7 @@ int32_t PlayerServiceStub::SetStartFrameRateOptEnabled(bool enabled)
     return playerServer_->SetStartFrameRateOptEnabled(enabled);
 }
 
-int32_t PlayerServiceStub::Seek(int32_t mSeconds, PlayerSeekMode mode)
+int32_t PlayerServiceStub::Seek(int64_t mSeconds, PlayerSeekMode mode)
 {
     MediaTrace trace("PlayerServiceStub::Seek");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
@@ -1018,7 +1018,7 @@ int32_t PlayerServiceStub::SetStartFrameRateOptEnabled(MessageParcel &data, Mess
 
 int32_t PlayerServiceStub::Seek(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t mSeconds = data.ReadInt32();
+    int64_t mSeconds = data.ReadInt64();
     int32_t mode = data.ReadInt32();
     reply.WriteInt32(Seek(mSeconds, static_cast<PlayerSeekMode>(mode)));
     return MSERR_OK;

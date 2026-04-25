@@ -65,7 +65,7 @@ public:
     MOCK_METHOD(int32_t, Reset, (), (override));
     MOCK_METHOD(int32_t, SetVolume, (float leftVolume, float rightVolume), (override));
     MOCK_METHOD(int32_t, SetVolumeMode, (int32_t mode), (override));
-    MOCK_METHOD(int32_t, Seek, (int32_t mSeconds, PlayerSeekMode mode), (override));
+    MOCK_METHOD(int32_t, Seek, (int64_t mSeconds, PlayerSeekMode mode), (override));
     MOCK_METHOD(int32_t, GetCurrentTime, (int32_t &currentTime), (override));
     MOCK_METHOD(int32_t, GetVideoTrackInfo, (std::vector<Format> &videoTrack), (override));
     MOCK_METHOD(int32_t, GetPlaybackInfo, (Format &playbackInfo), (override));

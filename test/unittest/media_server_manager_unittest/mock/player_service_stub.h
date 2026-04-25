@@ -53,7 +53,7 @@ public:
     MOCK_METHOD(int32_t, SetSource, (const std::string &url), (override));
     MOCK_METHOD(int32_t, Pause, (), (override));
     MOCK_METHOD(int32_t, Prepare, (), (override));
-    MOCK_METHOD(int32_t, Seek, (int32_t mSeconds, PlayerSeekMode mode), (override));
+    MOCK_METHOD(int32_t, Seek, (int64_t mSeconds, PlayerSeekMode mode), (override));
     MOCK_METHOD(int32_t, AddSubSource, (int32_t fd, int64_t offset, int64_t size), (override));
     MOCK_METHOD(int32_t, SetRenderFirstFrame, (bool display), (override));
     MOCK_METHOD(int32_t, SetPlayRange, (int64_t start, int64_t end), (override));

@@ -359,7 +359,7 @@ bool HiPlayerImpl::IsValidPlayRange(int64_t start, int64_t end) const
     return true;
 }
 
-bool HiPlayerImpl::IsInValidSeekTime(int32_t seekPos)
+bool HiPlayerImpl::IsInValidSeekTime(int64_t seekPos)
 {
     if (endTimeWithMode_ == PLAY_RANGE_DEFAULT_VALUE) {
         return false;
@@ -1527,7 +1527,7 @@ void HiPlayerImpl::NotifySeek(Status rtv, bool flag, int64_t seekPos)
     flag ? NotifySeekDone(seekPos) : NotifyBufferEnd();
 }
 
-int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
+int32_t HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode)
 {
     MediaTrace trace("HiPlayerImpl::Seek.");
     AutoLock lock(handleCompleteMutex_);
@@ -4143,7 +4143,7 @@ int32_t HiPlayerImpl::SetVideoWindowSize(int32_t width, int32_t height)
     return ret == Status::ERROR_UNSUPPORTED_FORMAT ? MSERR_SUPER_RESOLUTION_UNSUPPORTED : TransStatus(ret);
 }
 
-int32_t HiPlayerImpl::SeekContinous(int32_t mSeconds, int64_t seekContinousBatchNo)
+int32_t HiPlayerImpl::SeekContinous(int64_t mSeconds, int64_t seekContinousBatchNo)
 {
     std::lock_guard<std::mutex> lock(seekContinousMutex_);
     FALSE_RETURN_V(demuxer_ && videoDecoder_, TransStatus(Status::OK));
@@ -4153,7 +4153,7 @@ int32_t HiPlayerImpl::SeekContinous(int32_t mSeconds, int64_t seekContinousBatch
     if (seekContinousBatchNo_.load() == seekContinousBatchNo) {
         FALSE_RETURN_V(draggingPlayerAgent_ != nullptr, TransStatus(Status::OK));
         draggingPlayerAgent_->UpdateSeekPos(mSeconds);
-        MEDIA_LOG_I("HiPlayerImpl::SeekContinous in " PUBLIC_LOG_D32, mSeconds);
+        MEDIA_LOG_I("HiPlayerImpl::SeekContinous in " PUBLIC_LOG_D64, mSeconds);
         return TransStatus(Status::OK);
     }
     seekContinousBatchNo_.store(seekContinousBatchNo);
@@ -4161,7 +4161,7 @@ int32_t HiPlayerImpl::SeekContinous(int32_t mSeconds, int64_t seekContinousBatch
     FALSE_RETURN_V_MSG_E(res == Status::OK && draggingPlayerAgent_ != nullptr, TransStatus(res),
         "StartSeekContinous failed");
     draggingPlayerAgent_->UpdateSeekPos(mSeconds);
-    MEDIA_LOG_I("HiPlayerImpl::SeekContinous start " PUBLIC_LOG_D32, mSeconds);
+    MEDIA_LOG_I("HiPlayerImpl::SeekContinous start " PUBLIC_LOG_D64, mSeconds);
     return TransStatus(Status::OK);
 }
 

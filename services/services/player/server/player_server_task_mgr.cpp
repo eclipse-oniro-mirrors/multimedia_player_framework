@@ -130,7 +130,7 @@ int32_t PlayerServerTaskMgr::SpeedTask(const std::shared_ptr<ITaskHandler> &task
 }
 
 int32_t PlayerServerTaskMgr::EnqueueSeekTask(const std::shared_ptr<ITaskHandler> &task,
-    PlayerServerTaskType type, const std::string &taskName, int32_t seekMode, int32_t seekTime)
+    PlayerServerTaskType type, const std::string &taskName, int32_t seekMode, int64_t seekTime)
 {
     (void)taskThread_->EnqueueTask(task);
     currTwoPhaseTask_ = task;
@@ -145,7 +145,7 @@ int32_t PlayerServerTaskMgr::EnqueueSeekTask(const std::shared_ptr<ITaskHandler>
 
 int32_t PlayerServerTaskMgr::SeekTask(const std::shared_ptr<ITaskHandler> &task,
     const std::shared_ptr<ITaskHandler> &cancelTask,
-    const std::string &taskName, int32_t seekMode, int32_t seekTime)
+    const std::string &taskName, int32_t seekMode, int64_t seekTime)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(isInited_, MSERR_INVALID_OPERATION, "not init");

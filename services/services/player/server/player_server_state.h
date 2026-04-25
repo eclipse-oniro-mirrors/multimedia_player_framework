@@ -30,11 +30,11 @@ public:
     virtual int32_t Pause(bool isSystemOperation);
     virtual int32_t Freeze();
     virtual int32_t UnFreeze();
-    virtual int32_t Seek(int32_t mSeconds, PlayerSeekMode mode);
+    virtual int32_t Seek(int64_t mSeconds, PlayerSeekMode mode);
     virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode);
     virtual int32_t SetPlaybackRate(float rate);
     virtual int32_t Stop();
-    virtual int32_t SeekContinous(int32_t mSeconds, int64_t batchNo);
+    virtual int32_t SeekContinous(int64_t mSeconds, int64_t batchNo);
     virtual int32_t PauseDemuxer();
     virtual int32_t ResumeDemuxer();
     virtual int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode);
@@ -105,11 +105,11 @@ public:
 
     int32_t Prepare() override;
     int32_t Play() override;
-    int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
+    int32_t Seek(int64_t mSeconds, PlayerSeekMode mode) override;
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
     int32_t SetPlaybackRate(float rate) override;
-    int32_t SeekContinous(int32_t mSeconds, int64_t batchNo) override;
+    int32_t SeekContinous(int64_t mSeconds, int64_t batchNo) override;
     int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
     int32_t PauseDemuxer() override;
     int32_t ResumeDemuxer() override;
@@ -128,11 +128,11 @@ public:
     int32_t Pause(bool isSystemOperation) override;
     int32_t Freeze() override;
     int32_t UnFreeze() override;
-    int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
+    int32_t Seek(int64_t mSeconds, PlayerSeekMode mode) override;
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
     int32_t SetPlaybackRate(float rate) override;
-    int32_t SeekContinous(int32_t mSeconds, int64_t batchNo) override;
+    int32_t SeekContinous(int64_t mSeconds, int64_t batchNo) override;
     int32_t PauseDemuxer() override;
     int32_t ResumeDemuxer() override;
 
@@ -154,11 +154,11 @@ public:
     int32_t Play() override;
     int32_t Pause(bool isSystemOperation) override;
     int32_t UnFreeze() override;
-    int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
+    int32_t Seek(int64_t mSeconds, PlayerSeekMode mode) override;
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
     int32_t SetPlaybackRate(float rate) override;
-    int32_t SeekContinous(int32_t mSeconds, int64_t batchNo) override;
+    int32_t SeekContinous(int64_t mSeconds, int64_t batchNo) override;
     int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
     int32_t PauseDemuxer() override;
     int32_t ResumeDemuxer() override;
@@ -185,12 +185,12 @@ public:
     ~PlaybackCompletedState() = default;
 
     int32_t Play() override;
-    int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
+    int32_t Seek(int64_t mSeconds, PlayerSeekMode mode) override;
     int32_t UnFreeze() override;
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
     int32_t SetPlaybackRate(float rate) override;
-    int32_t SeekContinous(int32_t mSeconds, int64_t batchNo) override;
+    int32_t SeekContinous(int64_t mSeconds, int64_t batchNo) override;
     int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
     void StateEnter() override;
 

@@ -103,7 +103,7 @@ public:
     {
         return 0;
     }
-    int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override
+    int32_t Seek(int64_t mSeconds, PlayerSeekMode mode) override
     {
         return 0;
     }

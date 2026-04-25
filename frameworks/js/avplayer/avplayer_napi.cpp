@@ -881,8 +881,8 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "seek time is not number");
         return result;
     }
-    int32_t time = -1;
-    napi_status status = napi_get_value_int32(env, args[0], &time);
+    int64_t time = -1;
+    napi_status status = napi_get_value_int64(env, args[0], &time);
     if (status != napi_ok || (time < 0 && argCount == 1)) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check seek time");
         return result;
@@ -3536,7 +3536,7 @@ bool AVPlayerNapi::JsHandleParameter(napi_env env, napi_value args, AVPlayerNapi
     return true;
 }
 
-void AVPlayerNapi::SeekEnqueueTask(AVPlayerNapi *jsPlayer, int32_t time, int32_t mode)
+void AVPlayerNapi::SeekEnqueueTask(AVPlayerNapi *jsPlayer, int64_t time, int32_t mode)
 {
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer, time, mode]() {
         DoSeek(jsPlayer, time, mode);
@@ -3569,7 +3569,7 @@ void AVPlayerNapi::SeekToDefaultPositionEnqueueTask(AVPlayerNapi *jsPlayer)
      MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeekToDefaultPosition EnqueueTask Out", FAKE_POINTER(jsPlayer));
 }
 
-void AVPlayerNapi::DoSeek(AVPlayerNapi *jsPlayer, int32_t time, int32_t mode)
+void AVPlayerNapi::DoSeek(AVPlayerNapi *jsPlayer, int64_t time, int32_t mode)
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeek Task In", FAKE_POINTER(jsPlayer));
     bool isInSeekableRange = false;

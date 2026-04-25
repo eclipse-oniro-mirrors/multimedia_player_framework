@@ -88,7 +88,7 @@ public:
     MOCK_METHOD(int32_t, SeekToDefaultPosition, (), (override));
     MOCK_METHOD(int32_t, GetSeekableRanges, (std::vector<Plugins::SeekRange> &seekableRanges), (override));
     MOCK_METHOD(int32_t, GetLoadedRanges, (std::vector<Plugins::SeekRange> &loadedRanges), (override));
-    MOCK_METHOD(int32_t, Seek, (int32_t mSeconds, PlayerSeekMode mode), (override));
+    MOCK_METHOD(int32_t, Seek, (int64_t mSeconds, PlayerSeekMode mode), (override));
     MOCK_METHOD(int32_t, GetCurrentTime, (int32_t &currentTime), (override));
     MOCK_METHOD(int32_t, GetPlaybackPosition, (int32_t &playbackPosition), (override));
     MOCK_METHOD(int32_t, GetVideoTrackInfo, (std::vector<Format> &videoTrack), (override));
