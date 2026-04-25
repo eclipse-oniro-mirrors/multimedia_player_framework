@@ -135,6 +135,7 @@ public:
         const std::string &toneUri, std::shared_ptr<ToneHapticsAttrs> &toneHapticsAttrs) override;
     int32_t OpenToneHaptics(const std::shared_ptr<AbilityRuntime::Context> &context,
         const std::string &hapticsUri) override;
+    std::string GetDefaultHapticsUri(const DatabaseTool &databaseTool);
 
     // other public functions
     std::string GetRingtoneTitle(const std::string &ringtoneUri);

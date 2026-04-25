@@ -275,6 +275,10 @@ void SystemTonePlayerImpl::GetNewHapticUriForAudioUri(const std::string &audioUr
     std::string hapticUri = GetNewHapticUriForAudioUri(audioUri, RINGTONE_PATH, STANDARD_HAPTICS_PATH);
     if (hapticUri.empty()) {
         MEDIA_LOGW("Failed to find the default json file. Play system tone without vibration.");
+        // the device can not support vibrate mute, but need supply hapticsUri file
+        hapticUri = systemSoundMgr_.GetDefaultHapticsUri(databaseTool_);
+        supportedHapticsFeatures_.push_back(ToneHapticsFeature::STANDARD);
+        hapticsUriMap[ToneHapticsFeature::STANDARD] = hapticUri;
         isHapticUriEmpty_ = true;
         return;
     }
