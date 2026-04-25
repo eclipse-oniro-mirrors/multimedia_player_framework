@@ -2024,7 +2024,7 @@ int32_t PlayerServiceStub::GetVideoSample(MessageParcel &data, MessageParcel &re
     int32_t ret = GetVideoSample(outputResult);
     reply.WriteInt32(outputResult);
     reply.WriteInt32(ret);
-    return MSERR_OK;
+    return ret;
 }
 } // namespace Media
 } // namespace OHOS
