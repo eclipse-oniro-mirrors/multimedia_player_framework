@@ -486,7 +486,11 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual int32_t SetVideoOutput(sptr<Surface> surface) = 0;
+    virtual int32_t SetVideoOutput(sptr<Surface> surface)
+    {
+        (void)surface;
+        return 0;
+    }
  
     /**
      * @brief Method to get video sample.
@@ -497,7 +501,11 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual int32_t GetVideoSample(int32_t &outputResult) = 0;
+    virtual int32_t GetVideoSample(int32_t &outputResult)
+    {
+        (void)outputResult;
+        return 0;
+    }
 #endif
 
     /**
