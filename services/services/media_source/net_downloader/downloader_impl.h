@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Huawei Device Co., Ltd.
+ * Copyright (C) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,10 +33,11 @@ namespace OHOS {
 namespace Media {
 namespace MediaDownload {
 
-class DownloaderImpl : public Downloader, public NoCopyable {
+class DownloaderImpl : public Downloader, public DownloadTaskCallback, public NoCopyable,
+    public std::enable_shared_from_this<DownloaderImpl> {
 public:
     DownloaderImpl();
-    ~DownloaderImpl();
+    ~DownloaderImpl() override;
 
     uint64_t GetDownloaderId() override;
     uint64_t GetCurrentTaskId() override;
@@ -57,6 +58,7 @@ public:
     int32_t GetProgress(DownloadProgress &progress) override;
 
 private:
+    int32_t InnerStart();
     int32_t ValidateUrl(const std::string &url);
     int32_t ValidateOutputPath(const std::string &path);
     bool CanRelease() const;
@@ -65,10 +67,11 @@ private:
     void NotifyCompleted(int64_t downloadedSize);
     void NotifyFailed(DownloadErrorType errorType, int32_t errorCode, const std::string &errorMsg);
     void NotifyProgress(const DownloadProgress &progress);
-    void OnTaskStateChanged(DownloadState state);
-    void OnTaskCompleted(int64_t downloadedSize);
-    void OnTaskFailed(DownloadErrorType errorType, int32_t errorCode, const std::string &errorMsg);
-    void OnTaskProgress(const DownloadProgress &progress);
+
+    void OnStateChanged(DownloadState state) override;
+    void OnCompleted(int64_t downloadedSize) override;
+    void OnFailed(DownloadErrorType errorType, int32_t errorCode, const std::string &errorMsg) override;
+    void OnProgress(const DownloadProgress &progress) override;
 
     uint64_t downloaderId_;
     uint64_t taskId_;
@@ -78,6 +81,7 @@ private:
     DownloadConfig config_;
     std::weak_ptr<DownloadCallback> callback_;
     std::atomic<DownloadState> state_;
+    std::mutex progressMutex_;
     DownloadProgress progress_;
     std::shared_ptr<DownloadTask> task_;
     std::unique_ptr<MessageQueue> messageQueue_;

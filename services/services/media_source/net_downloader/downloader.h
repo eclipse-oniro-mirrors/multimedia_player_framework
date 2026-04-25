@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Huawei Device Co., Ltd.
+ * Copyright (C) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -48,7 +48,7 @@ enum DownloadErrorType : int32_t {
 };
 
 enum DownloadErrorCode : int32_t {
-    DOWNLOAD_ERROR_OK = 0,
+    DOWNLOAD_RET_OK = 0,
     DOWNLOAD_ERROR_INVALID_OPERATION = -1,
     DOWNLOAD_ERROR_INVALID_PARAM = -2,
     DOWNLOAD_ERROR_NOT_SET_URL = -3,

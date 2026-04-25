@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Huawei Device Co., Ltd.
+ * Copyright (C) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,7 +16,9 @@
 #ifndef DOWNLOAD_NETWORK_CLIENT_H
 #define DOWNLOAD_NETWORK_CLIENT_H
 
+#include <atomic>
 #include <cstdint>
+#include <condition_variable>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -24,36 +26,80 @@
 
 #include "downloader.h"
 #include "nocopyable.h"
+#include "network/network_client.h"
+#include "network/network_typs.h"
+#include "status.h"
 
 namespace OHOS {
 namespace Media {
 namespace MediaDownload {
 
+class DownloadTaskCallback;
+
 class NetworkClient : public NoCopyable {
 public:
     NetworkClient(const std::string &url, const std::map<std::string, std::string> &header,
-                  int32_t timeoutMs, int32_t retryCount);
+        int32_t timeoutMs, int32_t retryCount);
     ~NetworkClient();
 
-    int32_t Connect();
+    int32_t SetOutputPath(const std::string &path);
+    int32_t Connect(int64_t startPos = 0);
     void Disconnect();
-    int32_t Read(uint8_t *buffer, int32_t size, int32_t &bytesRead);
     int64_t GetTotalSize();
     bool IsConnected();
+    int64_t GetDownloadedSize();
+    int GetOutputFd() const;
+
+    void PauseDownload();
+    void ResumeDownload();
+    bool IsPaused() const;
+
+    void Cancel();
+
+    using DataCallback = std::function<bool(const char* data, size_t len, int64_t totalSize)>;
+    void SetDataCallback(DataCallback cb);
+
+    bool IsRequestCompleted() const;
+    bool IsRequestSuccess() const;
 
 private:
-    int32_t DoConnect();
+    static size_t RxHeaderCallback(void* buffer, size_t size, size_t nitems, void* userParam);
+    static size_t RxBodyCallback(void* buffer, size_t size, size_t nitems, void* userParam);
+
+    int32_t DoConnect(int64_t startPos = 0);
     bool IsValidUrl(const std::string &url);
+    void HandleResponse(const int32_t clientCode, const int32_t serverCode, const std::string &ca, const Status ret);
 
     std::string url_;
     std::map<std::string, std::string> header_;
     int32_t timeoutMs_;
-    int32_t retryCount_;
-    bool connected_;
-    int64_t totalSize_;
+    std::atomic<bool> connected_;
+    std::atomic<int64_t> totalSize_;
+
     std::mutex mutex_;
-    void *curlHandle_;
-    void *curlMulti_;
+
+    std::mutex pauseMutex_;
+    std::condition_variable pauseCv_;
+    std::atomic<bool> paused_{false};
+
+    DataCallback dataCallback_;
+
+    struct DownloadContext {
+        NetworkClient* parent;
+        std::shared_ptr<Plugins::HttpPlugin::NetworkClient> client;
+        std::atomic<bool> isRunning{false};
+        std::atomic<bool> requestSuccess{false};
+        std::atomic<bool> requestCompleted{false};
+        std::atomic<int64_t> totalSize{-1};
+        std::atomic<int64_t> downloadedSize{0};
+        std::atomic<bool> isHeaderReceived{false};
+        std::string outputPath;
+        int outputFd{-1};
+        std::map<std::string, std::string> responseHeaders;
+        std::mutex mutex;
+        std::condition_variable cv;
+    };
+    std::shared_ptr<DownloadContext> ctx_;
 };
 
 } // namespace MediaDownload
