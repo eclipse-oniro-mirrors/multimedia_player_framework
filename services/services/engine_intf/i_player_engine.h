@@ -146,8 +146,6 @@ public:
     virtual int32_t GetPlaybackSpeed(PlaybackRateMode &mode) = 0;
     virtual int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) = 0;
     virtual int32_t SetVideoSurface(sptr<Surface> surface) = 0;
-    virtual int32_t SetVideoOutput(sptr<Surface> surface) = 0;
-    virtual int32_t GetVideoSample(int32_t &outputResult) = 0;
     virtual float GetMaxAmplitude() = 0;
 
     virtual int32_t SetDecryptConfig(const sptr<OHOS::DrmStandard::IMediaKeySessionService> &keySessionProxy,
@@ -460,6 +458,16 @@ public:
     virtual bool IsLiveSeek()
     {
         return false;
+    }
+    virtual int32_t SetVideoOutput(sptr<Surface> surface)
+    {
+        (void)surface;
+        return 0;
+    }
+    virtual int32_t GetVideoSample(int32_t &outputResult)
+    {
+        (void)outputResult;
+        return 0;
     }
 };
 } // namespace Media
