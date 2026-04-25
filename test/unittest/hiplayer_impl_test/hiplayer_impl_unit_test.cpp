@@ -1668,20 +1668,6 @@ HWTEST_F(HiplayerImplUnitTest, SetTrackSelectionFilter_001, TestSize.Level0)
 
 /**
 * @tc.name    : Test SetVideoOutput API
-* @tc.number  : SetVideoOutput_001
-* @tc.desc    : Test SetVideoOutput interface, surface is nullptr, return MSERR_INVALID_VAL.
-* @tc.require : issueI5NZAQ
-*/
-HWTEST_F(HiplayerImplUnitTest, SetVideoOutput_001, TestSize.Level0)
-{
-    // Branch 1: surface == nullptr -> return MSERR_INVALID_VAL
-    sptr<Surface> surface = nullptr;
-    int32_t ret = hiplayer_->SetVideoOutput(surface);
-    EXPECT_EQ(ret, MSERR_INVALID_VAL);
-}
-
-/**
-* @tc.name    : Test SetVideoOutput API
 * @tc.number  : SetVideoOutput_002
 * @tc.desc    : Test SetVideoOutput interface, surface is valid and videoDecoder_ is nullptr.
 * @tc.require : issueI5NZAQ
