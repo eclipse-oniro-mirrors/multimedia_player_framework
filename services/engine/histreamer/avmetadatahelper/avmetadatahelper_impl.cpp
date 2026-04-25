@@ -171,6 +171,7 @@ Status AVMetadataHelperImpl::SetSourceInternel(const std::string &uri,
         interruptMonitor_->RegisterListener(mediaDemuxer_);
         interruptMonitor_->SetInterruptState(isInterruptNeeded_.load());
     }
+    mediaDemuxer->SetMetadataMode();
     Status ret = Status::OK;
     if (!header.empty()) {
         MEDIA_LOGI("DoSetSource header");
