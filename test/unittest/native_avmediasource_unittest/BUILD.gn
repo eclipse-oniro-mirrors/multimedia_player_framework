@@ -65,6 +65,7 @@ ohos_unittest("native_avmediasource_unit_test") {
     "image_framework:image_native",
     "image_framework:image_receiver_ndk",
     "image_framework:pixelmap",
+    "napi:ace_napi",
     "init:libbegetutil",
     "ipc:ipc_core",
     "media_foundation:media_foundation",

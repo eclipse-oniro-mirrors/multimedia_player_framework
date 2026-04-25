@@ -44,7 +44,7 @@ ohos_unittest("native_avimagegenerator_unit_test") {
   if (player_framework_support_metadata) {
     sources = [ "src/avimagegenerator_unit_test.cpp" ]
   }
-  public_deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avimage_generator" ]
+  deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avimage_generator" ]
 
   external_deps = [
     "audio_framework:audio_capturer",
@@ -57,7 +57,7 @@ ohos_unittest("native_avimagegenerator_unit_test") {
     "hisysevent:libhisysevent",
     "image_framework:ohimage",
     "image_framework:pixelmap",
-    "image_framework:pixelmap",
+    "napi:ace_napi",
     "init:libbegetutil",
     "ipc:ipc_core",
     "media_foundation:media_foundation",
