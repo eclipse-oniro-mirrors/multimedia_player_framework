@@ -59,6 +59,7 @@ const std::string DEFAULT_RINGTONE_PATH = "ringtones/";
 const std::string DEFAULT_SYSTEM_TONE_URI_JSON = "ringtone_sms-notification.json";
 const std::string DEFAULT_SYSTEM_TONE_PATH = "notifications/";
 const std::string EXT_SERVICE_AUDIO = "const.mulitimedia.service_audio";
+const std::string DEFAULT_HAPTIC_QUERY_FLAG = "application/json";
 const std::string FIX_MP4 = ".mp4";
 const int STORAGE_MANAGER_MANAGER_ID = 5003;
 const int UNSUPPORTED_ERROR = -5;
@@ -1066,6 +1067,27 @@ ToneAttrs SystemSoundManagerImpl::GetSystemToneAttrs(const DatabaseTool &databas
         toneAttrs.SetUri(NO_SYSTEM_SOUND);
     }
     return toneAttrs;
+}
+
+std::string SystemSoundManagerImpl::GetDefaultHapticsUri(const DatabaseTool &databaseTool)
+{
+    CHECK_AND_RETURN_RET_LOG(databaseTool.isInitialized && databaseTool.dataShareHelper != nullptr, "",
+        "The database tool is not ready!");
+    DataShare::DatashareBusinessError businessError;
+    DataShare::DataSharePredicates queryPredicates;
+    queryPredicates.EqualTo(RINGTONE_COLUMN_MIME_TYPE, DEFAULT_HAPTIC_QUERY_FLAG);
+    std::string queryUri = databaseTool.isProxy ? RINGTONE_LIBRARY_PROXY_DATA_URI_TONE_FILES + "&user=" +
+    std::to_string(SystemSoundManagerUtils::GetCurrentUserId()) : RINGTONE_PATH_URI;
+    Uri QUERYURI(queryUri);
+
+    auto resultSet = databaseTool.dataShareHelper->Query(QUERYURI, queryPredicates, COLUMNS, &businessError);
+    auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
+    CHECK_AND_RETURN_RET_LOG(results != nullptr, "", "query failed, ringtone library error.");
+    unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
+    CHECK_AND_RETURN_RET_LOG(ringtoneAsset != nullptr, "", "query failed, no preload haptic uri.");
+    string hapticsUri = ringtoneAsset->GetPath();
+    MEDIA_LOGI("GetDefaultNonSyncedHapticsUri: default haptics %{public}s", hapticsUri.c_str());
+    return hapticsUri;
 }
 
 std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultRingtoneAttrs(
