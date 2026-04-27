@@ -395,6 +395,13 @@ std::string ErrorMessageAudioInterruped(const std::string & param1, const std::s
     return message;
 }
 
+std::string ErrorMessageParamOutOfRange(const std::string & param1, const std::string& param2)
+{
+    (void)param2;
+    std::string message = "Parameter " + param1 + " is out of range.";
+    return message;
+}
+
 const std::map<MediaServiceExtErrCodeAPI9, ErrorMessageFunc> MSEXTERRAPI9CODE_FUNCS = {
     {MSERR_EXT_API9_OK, &ErrorMessageOk},
     {MSERR_EXT_API9_NO_PERMISSION, &ErrorMessageNoPermission},
@@ -407,6 +414,7 @@ const std::map<MediaServiceExtErrCodeAPI9, ErrorMessageFunc> MSEXTERRAPI9CODE_FU
     {MSERR_EXT_API9_SERVICE_DIED, &ErrorMessageServiceDied},
     {MSERR_EXT_API9_UNSUPPORT_FORMAT, &ErrorMessageUnsupportFormat},
     {MSERR_EXT_API9_AUDIO_INTERRUPTED, &ErrorMessageAudioInterruped},
+    {MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE, &ErrorMessageParamOutOfRange},
 };
 
 std::string MSErrorToString(MediaServiceErrCode code)
