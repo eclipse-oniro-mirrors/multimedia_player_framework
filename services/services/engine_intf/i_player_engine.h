@@ -459,6 +459,16 @@ public:
     {
         return false;
     }
+    virtual int32_t SetVideoOutput(sptr<Surface> surface)
+    {
+        (void)surface;
+        return 0;
+    }
+    virtual int32_t GetVideoSample(int32_t &outputResult)
+    {
+        (void)outputResult;
+        return 0;
+    }
 };
 } // namespace Media
 } // namespace OHOS

@@ -5763,6 +5763,376 @@ HWTEST_F(PlayerServerUnitTest, Player_GetCurrentPresentationTimestamp_002, TestS
 }
 
 /**
+ * @tc.name  : Test SetVideoOutput API
+ * @tc.number: Player_SetVideoOutput_001
+ * @tc.desc  : Test Player SetVideoOutput interface, surface is nullptr, return MSERR_INVALID_VAL
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetVideoOutput_001, TestSize.Level1)
+{
+    sptr<Surface> surface = nullptr;
+    EXPECT_EQ(MSERR_INVALID_VAL, player_->SetVideoOutput(surface));
+}
+
+/**
+ * @tc.name  : Test SetVideoOutput API
+ * @tc.number: Player_SetVideoOutput_002
+ * @tc.desc  : Test Player SetVideoOutput interface, lastOpStatus_ is PLAYER_IDLE
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetVideoOutput_002, TestSize.Level1)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->lastOpStatus_ = PLAYER_IDLE;
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    int32_t ret = server->SetVideoOutput(videoSurface);
+    // RegisterVideoPlayer may fail if exceed limit
+    EXPECT_FALSE(ret == MSERR_OK || ret == MSERR_DATA_SOURCE_OBTAIN_MEM_ERROR);
+}
+
+/**
+ * @tc.name  : Test SetVideoOutput API
+ * @tc.number: Player_SetVideoOutput_003
+ * @tc.desc  : Test Player SetVideoOutput interface, lastOpStatus_ is PLAYER_INITIALIZED
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetVideoOutput_003, TestSize.Level1)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->lastOpStatus_ = PLAYER_INITIALIZED;
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    int32_t ret = server->SetVideoOutput(videoSurface);
+    EXPECT_FALSE(ret == MSERR_OK || ret == MSERR_DATA_SOURCE_OBTAIN_MEM_ERROR);
+}
+
+/**
+ * @tc.name  : Test SetVideoOutput API
+ * @tc.number: Player_SetVideoOutput_004
+ * @tc.desc  : Test Player SetVideoOutput interface, lastOpStatus_ is PLAYER_PREPARED
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetVideoOutput_004, TestSize.Level2)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->lastOpStatus_ = PLAYER_PREPARED;
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_INVALID_OPERATION, server->SetVideoOutput(videoSurface));
+}
+
+/**
+ * @tc.name  : Test SetVideoOutput API
+ * @tc.number: Player_SetVideoOutput_005
+ * @tc.desc  : Test Player SetVideoOutput interface, lastOpStatus_ is PLAYER_STARTED
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetVideoOutput_005, TestSize.Level2)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->lastOpStatus_ = PLAYER_STARTED;
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_INVALID_OPERATION, server->SetVideoOutput(videoSurface));
+}
+
+/**
+ * @tc.name  : Test SetVideoOutput API
+ * @tc.number: Player_SetVideoOutput_006
+ * @tc.desc  : Test Player SetVideoOutput interface, lastOpStatus_ is PLAYER_PAUSED
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetVideoOutput_006, TestSize.Level2)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->lastOpStatus_ = PLAYER_PAUSED;
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_INVALID_OPERATION, server->SetVideoOutput(videoSurface));
+}
+
+/**
+ * @tc.name  : Test SetVideoOutput API
+ * @tc.number: Player_SetVideoOutput_007
+ * @tc.desc  : Test Player SetVideoOutput interface, lastOpStatus_ is PLAYER_STOPPED
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetVideoOutput_007, TestSize.Level2)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->lastOpStatus_ = PLAYER_STOPPED;
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_INVALID_OPERATION, server->SetVideoOutput(videoSurface));
+}
+
+/**
+ * @tc.name  : Test SetVideoOutput API
+ * @tc.number: Player_SetVideoOutput_008
+ * @tc.desc  : Test Player SetVideoOutput interface, lastOpStatus_ is PLAYER_PLAYBACK_COMPLETE
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetVideoOutput_008, TestSize.Level2)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->lastOpStatus_ = PLAYER_PLAYBACK_COMPLETE;
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_INVALID_OPERATION, server->SetVideoOutput(videoSurface));
+}
+
+/**
+ * @tc.name  : Test SetVideoOutput API
+ * @tc.number: Player_SetVideoOutput_009
+ * @tc.desc  : Test Player SetVideoOutput interface, lastOpStatus_ is PLAYER_STATE_ERROR
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetVideoOutput_009, TestSize.Level2)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->lastOpStatus_ = PLAYER_STATE_ERROR;
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_INVALID_OPERATION, server->SetVideoOutput(videoSurface));
+}
+
+/**
+ * @tc.name  : Test GetVideoSample API
+ * @tc.number: Player_GetVideoSample_001
+ * @tc.desc  : Test Player GetVideoSample interface, lastOpStatus_ is PLAYER_IDLE
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetVideoSample_001, TestSize.Level1)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->lastOpStatus_ = PLAYER_IDLE;
+    int32_t outputResult = 0;
+    EXPECT_EQ(MSERR_INVALID_OPERATION, server->GetVideoSample(outputResult));
+}
+
+/**
+ * @tc.name  : Test GetVideoSample API
+ * @tc.number: Player_GetVideoSample_002
+ * @tc.desc  : Test Player GetVideoSample interface, lastOpStatus_ is PLAYER_INITIALIZED
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetVideoSample_002, TestSize.Level2)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->lastOpStatus_ = PLAYER_INITIALIZED;
+    int32_t outputResult = 0;
+    EXPECT_EQ(MSERR_INVALID_OPERATION, server->GetVideoSample(outputResult));
+}
+
+/**
+ * @tc.name  : Test GetVideoSample API
+ * @tc.number: Player_GetVideoSample_003
+ * @tc.desc  : Test Player GetVideoSample interface, lastOpStatus_ is PLAYER_PREPARED
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetVideoSample_003, TestSize.Level2)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->lastOpStatus_ = PLAYER_PREPARED;
+    int32_t outputResult = 0;
+    EXPECT_EQ(MSERR_INVALID_OPERATION, server->GetVideoSample(outputResult));
+}
+
+/**
+ * @tc.name  : Test GetVideoSample API
+ * @tc.number: Player_GetVideoSample_004
+ * @tc.desc  : Test Player GetVideoSample interface, lastOpStatus_ is PLAYER_STARTED with playerEngine_ nullptr
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetVideoSample_004, TestSize.Level2)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->lastOpStatus_ = PLAYER_STARTED;
+    server->playerEngine_ = nullptr;
+    int32_t outputResult = 0;
+    EXPECT_EQ(MSERR_OK, server->GetVideoSample(outputResult));
+}
+
+/**
+ * @tc.name  : Test GetVideoSample API
+ * @tc.number: Player_GetVideoSample_005
+ * @tc.desc  : Test Player GetVideoSample interface, lastOpStatus_ is PLAYER_PAUSED
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetVideoSample_005, TestSize.Level2)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->lastOpStatus_ = PLAYER_PAUSED;
+    int32_t outputResult = 0;
+    EXPECT_EQ(MSERR_OK, server->GetVideoSample(outputResult));
+}
+
+/**
+ * @tc.name  : Test GetVideoSample API
+ * @tc.number: Player_GetVideoSample_006
+ * @tc.desc  : Test Player GetVideoSample interface, lastOpStatus_ is PLAYER_STOPPED
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetVideoSample_006, TestSize.Level2)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->lastOpStatus_ = PLAYER_STOPPED;
+    int32_t outputResult = 0;
+    EXPECT_EQ(MSERR_INVALID_OPERATION, server->GetVideoSample(outputResult));
+}
+
+/**
+ * @tc.name  : Test GetVideoSample API
+ * @tc.number: Player_GetVideoSample_007
+ * @tc.desc  : Test Player GetVideoSample interface, lastOpStatus_ is PLAYER_PLAYBACK_COMPLETE
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetVideoSample_007, TestSize.Level2)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->lastOpStatus_ = PLAYER_PLAYBACK_COMPLETE;
+    int32_t outputResult = 0;
+    EXPECT_EQ(MSERR_INVALID_OPERATION, server->GetVideoSample(outputResult));
+}
+
+/**
+ * @tc.name  : Test GetVideoSample API
+ * @tc.number: Player_GetVideoSample_008
+ * @tc.desc  : Test Player GetVideoSample interface, lastOpStatus_ is PLAYER_STATE_ERROR
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetVideoSample_008, TestSize.Level2)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->lastOpStatus_ = PLAYER_STATE_ERROR;
+    int32_t outputResult = 0;
+    EXPECT_EQ(MSERR_INVALID_OPERATION, server->GetVideoSample(outputResult));
+}
+
+/**
+ * @tc.name  : Test GetVideoSample API
+ * @tc.number: Player_GetVideoSample_009
+ * @tc.desc  : Test Player GetVideoSample interface, lastOpStatus_ is PLAYER_PREPARING
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetVideoSample_009, TestSize.Level2)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->lastOpStatus_ = PLAYER_PREPARING;
+    int32_t outputResult = 0;
+    EXPECT_EQ(MSERR_INVALID_OPERATION, server->GetVideoSample(outputResult));
+}
+
+/**
+ * @tc.name  : Test SetVideoOutput API
+ * @tc.number: Player_SetVideoOutput_010
+ * @tc.desc  : Test Player SetVideoOutput interface, bypass output is mutually exclusive with super resolution
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetVideoOutput_010, TestSize.Level2)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->lastOpStatus_ = PLAYER_INITIALIZED;
+    server->isSuperResolutionEnabled_.store(true);
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_INVALID_OPERATION, server->SetVideoOutput(videoSurface));
+}
+
+/**
+ * @tc.name  : Test SetVideoOutput API
+ * @tc.number: Player_SetVideoOutput_011
+ * @tc.desc  : Test Player SetVideoOutput interface, bypass output is mutually exclusive with camera postprocessing
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetVideoOutput_011, TestSize.Level2)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->lastOpStatus_ = PLAYER_INITIALIZED;
+    server->isCameraPostprocessingEnabled_.store(true);
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_INVALID_OPERATION, server->SetVideoOutput(videoSurface));
+}
+
+/**
+ * @tc.name  : Test GetVideoSample API
+ * @tc.number: Player_GetVideoSample_010
+ * @tc.desc  : Test Player GetVideoSample interface, bypass output is mutually exclusive with super resolution
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetVideoSample_010, TestSize.Level2)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->lastOpStatus_ = PLAYER_STARTED;
+    server->isSuperResolutionEnabled_.store(true);
+    int32_t outputResult = 0;
+    EXPECT_EQ(MSERR_INVALID_OPERATION, server->GetVideoSample(outputResult));
+}
+
+/**
+ * @tc.name  : Test GetVideoSample API
+ * @tc.number: Player_GetVideoSample_011
+ * @tc.desc  : Test Player GetVideoSample interface, bypass output is mutually exclusive with camera postprocessing
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetVideoSample_011, TestSize.Level2)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->lastOpStatus_ = PLAYER_STARTED;
+    server->isCameraPostprocessingEnabled_.store(true);
+    int32_t outputResult = 0;
+    EXPECT_EQ(MSERR_INVALID_OPERATION, server->GetVideoSample(outputResult));
+}
+
+/**
+ * @tc.name  : Test SetSuperResolution API
+ * @tc.number: Player_SetSuperResolution_001
+ * @tc.desc  : Test Player SetSuperResolution interface, super resolution is mutually exclusive with bypass output
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetSuperResolution_001, TestSize.Level2)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->lastOpStatus_ = PLAYER_PREPARED;
+    server->isVideoOutputEnabled_.store(true);
+    EXPECT_NE(MSERR_OK, server->SetSuperResolution(true));
+}
+
+/**
+ * @tc.name  : Test SetSuperResolution API
+ * @tc.number: Player_SetSuperResolution_002
+ * @tc.desc  : Test Player SetSuperResolution interface, super resolution can be enabled when bypass output is disabled
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetSuperResolution_002, TestSize.Level2)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->lastOpStatus_ = PLAYER_PREPARED;
+    server->isVideoOutputEnabled_.store(false);
+    EXPECT_EQ(MSERR_NO_MEMORY, server->SetSuperResolution(true));
+}
+
+/**
+ * @tc.name  : Test EnableCameraPostprocessing API
+ * @tc.number: Player_EnableCameraPostprocessing_001
+ * @tc.desc  : Test Player EnableCameraPostprocessing interface,
+ * camera postprocessing is mutually exclusive with bypass output
+ */
+HWTEST_F(PlayerServerUnitTest, Player_EnableCameraPostprocessing_001, TestSize.Level2)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->lastOpStatus_ = PLAYER_INITIALIZED;
+    server->isVideoOutputEnabled_.store(true);
+    EXPECT_NE(MSERR_INVALID_OPERATION, server->EnableCameraPostprocessing());
+}
+
+/**
+ * @tc.name  : Test EnableCameraPostprocessing API
+ * @tc.number: Player_EnableCameraPostprocessing_002
+ * @tc.desc  : Test Player EnableCameraPostprocessing interface,
+ * camera postprocessing can be enabled when bypass output is disabled
+ */
+HWTEST_F(PlayerServerUnitTest, Player_EnableCameraPostprocessing_002, TestSize.Level2)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->lastOpStatus_ = PLAYER_INITIALIZED;
+    server->isVideoOutputEnabled_.store(false);
+    EXPECT_EQ(MSERR_NO_MEMORY, server->EnableCameraPostprocessing());
+}
+
+/**
+ * @tc.name  : Test SetSuperResolution and EnableCameraPostprocessing
+ * @tc.number: Player_SuperResolution_CameraPostprocessing_001
+ * @tc.desc  : Test super resolution and camera postprocessing are not mutually exclusive
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SuperResolution_CameraPostprocessing_001, TestSize.Level2)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->lastOpStatus_ = PLAYER_INITIALIZED;
+    server->isVideoOutputEnabled_.store(false);
+    server->isSuperResolutionEnabled_.store(true);
+    EXPECT_NE(MSERR_INVALID_STATE, server->EnableCameraPostprocessing());
+}
+
+/**
  * @tc.name  : Test SetTrackSelectionFilter
  * @tc.number: Player_SetTrackSelectionFilter_001
  * @tc.desc  : Test Player SetTrackSelectionFilter

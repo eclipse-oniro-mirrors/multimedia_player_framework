@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -216,6 +216,8 @@ public:
     std::vector<std::string> GetDolbyList() override;
     int32_t NotifySubtitleSeek();
     bool IsLiveSeek() override;
+    int32_t SetVideoOutput(sptr<Surface> surface) override;
+    int32_t GetVideoSample(int32_t &outputResult) override;
 private:
     enum HiplayerSvpMode : int32_t {
         SVP_CLEAR = -1, /* it's not a protection video */
@@ -402,6 +404,7 @@ private:
     LiveController liveController_ {};
     std::weak_ptr<IPlayerEngineObs> playerEngineObs_{};
     sptr<Surface> surface_ {nullptr};
+    sptr<Surface> sideOutputSurface_ {nullptr};
     std::string url_;
     std::string subUrl_;
     bool hasExtSub_ {false};

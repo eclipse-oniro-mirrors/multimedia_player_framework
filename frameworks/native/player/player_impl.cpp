@@ -1533,5 +1533,25 @@ bool PlayerImpl::IsLiveSeek()
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, false, "player service does not exist..");
     LISTENER(return playerService_->IsLiveSeek(), "IsLiveSeek", false, TIME_OUT_SECOND);
 }
+
+int32_t PlayerImpl::SetVideoOutput(sptr<Surface> surface)
+{
+    ScopedTimer timer("SetVideoOutput", OVERTIME_WARNING_MS);
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetVideoOutput in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    int32_t ret = MSERR_OK;
+    LISTENER(ret = playerService_->SetVideoOutput(surface), "SetVideoOutput", false, TIME_OUT_SECOND);
+    return ret;
+}
+ 
+int32_t PlayerImpl::GetVideoSample(int32_t &outputResult)
+{
+    ScopedTimer timer("GetVideoSample", OVERTIME_WARNING_MS);
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetVideoSample in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    int32_t ret = MSERR_OK;
+    LISTENER(ret = playerService_->GetVideoSample(outputResult), "GetVideoSample", false, TIME_OUT_SECOND);
+    return ret;
+}
 } // namespace Media
 } // namespace OHOS

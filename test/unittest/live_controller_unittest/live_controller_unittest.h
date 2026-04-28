@@ -95,6 +95,8 @@ public:
     MOCK_METHOD(int32_t, SetPlaybackRate, (float rate), (override));
     MOCK_METHOD(int32_t, SetTrackSelectionFilter, (AVPlayTrackSelectionFilter trackFilter), (override));
     MOCK_METHOD(int32_t, GetTrackSelectionFilter, (AVPlayTrackSelectionFilter &trackFilter), ());
+    MOCK_METHOD(int32_t, SetVideoOutput, (sptr<Surface> surface), (override));
+    MOCK_METHOD(int32_t, GetVideoSample, (int32_t &outputResult), (override));
 };
 class MockTask : public Task {
 public:

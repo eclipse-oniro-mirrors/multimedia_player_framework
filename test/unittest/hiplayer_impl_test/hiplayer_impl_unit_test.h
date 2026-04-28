@@ -32,6 +32,7 @@ public:
     // TearDown: Called after each test cases
     void TearDown(void);
 
+    sptr<Surface> GetTestSurface();
     std::unique_ptr<HiPlayerImpl> hiplayer_;
 };
 

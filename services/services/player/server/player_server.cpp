@@ -485,6 +485,14 @@ int32_t PlayerServer::OnPrepare(bool sync)
                     static_cast<int32_t>(MSERR_INVALID_OPERATION), "Engine SetVideoSurface Failed!");
             }
         }
+        {
+            std::lock_guard<std::mutex> lock(sideOutputSurfaceMutex_);
+            if (sideOutputSurface_ != nullptr) {
+                int32_t res = playerEngine_->SetVideoOutput(sideOutputSurface_);
+                CHECK_AND_RETURN_RET_LOG(res == MSERR_OK,
+                    static_cast<int32_t>(MSERR_INVALID_OPERATION), "Engine SetVideoOutput Failed!");
+            }
+        }
 #endif
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
         return currState->Prepare();
@@ -915,6 +923,9 @@ int32_t PlayerServer::HandleReset()
     errorCbOnce_ = false;
     disableNextSeekDone_ = false;
     totalMemoryUage_ = 0;
+    isVideoOutputEnabled_.store(false);
+    isSuperResolutionEnabled_.store(false);
+    isCameraPostprocessingEnabled_.store(false);
     Format format;
     OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_IDLE, format);
     return MSERR_OK;
@@ -2360,6 +2371,11 @@ int32_t PlayerServer::SetSuperResolution(bool enabled)
     CHECK_AND_RETURN_RET_LOG(isValidState, MSERR_INVALID_STATE,
         "can not set super resolution, current state is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+
+    CHECK_AND_RETURN_RET_LOG(!isVideoOutputEnabled_.load(), MSERR_INVALID_OPERATION,
+        "super resolution is mutually exclusive with side output");
+
+    isSuperResolutionEnabled_.store(enabled);
     return playerEngine_->SetSuperResolution(enabled);
 }
 
@@ -2556,6 +2572,11 @@ int32_t PlayerServer::EnableCameraPostprocessing()
     CHECK_AND_RETURN_RET_LOG(isValidState, MSERR_INVALID_STATE,
         "can not enable camera postProcessor, current state is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+
+    CHECK_AND_RETURN_RET_LOG(!isVideoOutputEnabled_.load(), MSERR_INVALID_OPERATION,
+        "camera postprocessing is mutually exclusive with side output");
+
+    isCameraPostprocessingEnabled_.store(true);
     return playerEngine_->EnableCameraPostprocessing();
 }
 
@@ -2715,6 +2736,63 @@ bool PlayerServer::IsLiveSeek()
 {
     CHECK_AND_RETURN_RET(playerEngine_ != nullptr, false);
     return playerEngine_->IsLiveSeek();
+}
+
+int32_t PlayerServer::SetVideoOutput(sptr<Surface> surface)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_INVALID_VAL, "surface is nullptr");
+
+    CHECK_AND_RETURN_RET_LOG(!isSuperResolutionEnabled_.load() && !isCameraPostprocessingEnabled_.load(),
+        MSERR_INVALID_OPERATION, "side output is mutually exclusive with super resolution or camera postprocessing");
+ 
+    bool isRightStatus = lastOpStatus_ == PLAYER_IDLE ||
+        lastOpStatus_ == PLAYER_INITIALIZED;
+    
+    if (!isRightStatus) {
+        MEDIA_LOGE("current state: %{public}s, can not SetVideoOutput", GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+    
+    isVideoOutputEnabled_.store(true);
+    MEDIA_LOGD("PlayerServer SetVideoOutput in");
+    {
+        std::lock_guard<std::mutex> surfaceLock(sideOutputSurfaceMutex_);
+        sideOutputSurface_ = surface;
+    }
+    auto task = std::make_shared<TaskHandler<void>>([this]() {
+        std::lock_guard<std::mutex> surfaceLock(sideOutputSurfaceMutex_);
+        (void)playerEngine_->SetVideoOutput(sideOutputSurface_);
+        taskMgr_.MarkTaskDone("SetVideoOutput done");
+    });
+    int32_t ret = taskMgr_.SetVideoSurfaeTask(task, "SetVideoOutput");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetVideoOutput launch task failed");
+    return MSERR_OK;
+}
+ 
+int32_t PlayerServer::GetVideoSample(int32_t &outputResult)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    CHECK_AND_RETURN_RET_LOG(!isSuperResolutionEnabled_.load() && !isCameraPostprocessingEnabled_.load(),
+        MSERR_INVALID_OPERATION, "side output is mutually exclusive with super resolution or camera postprocessing");
+ 
+    bool isRightStatus = (lastOpStatus_ == PLAYER_STARTED || lastOpStatus_ == PLAYER_PAUSED);
+    
+    if (!isRightStatus) {
+        MEDIA_LOGE("current state: %{public}s, can not GetVideoSample", GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+
+    CHECK_AND_RETURN_RET_LOG(!isInSeekContinous_, MSERR_INVALID_OPERATION,
+        "calling this interface is not supported during seeking");
+
+    if (playerEngine_ != nullptr) {
+        int ret = playerEngine_->GetVideoSample(outputResult);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine GetVideoSample Failed!");
+    }
+    MEDIA_LOGD("PlayerServer GetVideoSample %{public}d", outputResult);
+    return MSERR_OK;
 }
 } // namespace Media
 } // namespace OHOS

@@ -54,6 +54,10 @@ extern "C" {
 
 typedef struct MediaKeySession MediaKeySession;
 typedef struct DRM_MediaKeySystemInfo DRM_MediaKeySystemInfo;
+typedef struct OH_AVPlayerVideoOutput {
+    OH_AVPlayer *player = nullptr;
+    OHNativeWindow *window = nullptr;
+} OH_AVPlayerVideoOutput;
 
 typedef void (*Player_MediaKeySystemInfoCallback)(OH_AVPlayer *play, DRM_MediaKeySystemInfo* mediaKeySystemInfo);
 
@@ -1048,6 +1052,24 @@ uint32_t OH_AVPlayer_GetTrackCount(OH_AVPlayer *player);
  * @since 23
  */
 OH_AVFormat *OH_AVPlayer_GetTrackFormat(OH_AVPlayer *player, uint32_t trackIndex);
+
+/**
+ * @brief Method to set video decoded frame output callback.
+ * @param player Pointer to an OH_AVPlayer instance.
+ * @param window A pointer to a OHNativeWindow instance, see {@link OHNativeWindow}
+ * @return Returns a pointer to an OH_AVPlayerVideoOutput instance. nullptr means failed.
+ * @since 26.0.0
+ */
+OH_AVPlayerVideoOutput* OH_AVPlayer_SetVideoSideOutput(OH_AVPlayer *player, OHNativeWindow *window);
+
+/**
+ * @brief Method to get one video decoded frame.
+ * @param videoOutput Pointer to an OH_AVPlayerVideoOutput instance returned by OH_AVPlayer_SetVideoSideOutput.
+ * @return Returns VIDEO_OUTPUT_OK when got a frame.
+ *         Returns VIDEO_OUTPUT_NO_IMAGE when there is no frame ready to render.
+ * @since 26.0.0
+ */
+OH_VideoOutputResult OH_AVPlayerVideoOutput_GetNewestVideoSample(OH_AVPlayerVideoOutput *videoOutput);
 
 #ifdef __cplusplus
 }

@@ -1011,6 +1011,16 @@ int32_t PlayerEngineMock::SetVideoSurface(sptr<Surface> surface)
     return MSERR_OK;
 }
 
+int32_t PlayerEngineMock::SetVideoOutput(sptr<Surface> surface)
+{
+    return MSERR_OK;
+}
+
+int32_t PlayerEngineMock::GetVideoSample(int32_t &outputResult)
+{
+    return MSERR_OK;
+}
+
 float PlayerEngineMock::GetMaxAmplitude()
 {
     return 0.0;

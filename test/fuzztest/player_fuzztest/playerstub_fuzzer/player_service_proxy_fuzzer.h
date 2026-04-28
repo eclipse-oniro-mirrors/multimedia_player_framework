@@ -204,6 +204,14 @@ public:
     {
         return 0;
     }
+    int32_t SetVideoOutput(sptr<Surface> surface) override
+    {
+        return 0;
+    }
+    int32_t GetVideoSample(int32_t &outputResult) override
+    {
+        return 0;
+    }
     static int32_t SetListenerObjectStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
     static int32_t SetSourceStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
     static int32_t SetMediaDataSourceStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size,
@@ -244,6 +252,8 @@ public:
     static int32_t SelectTrackStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
     static int32_t DeselectTrackStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
     static int32_t GetCurrentTrackStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t SetVideoOutputStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t GetVideoSampleStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
 
 private:
     int32_t SendRequest(uint32_t code, MessageParcel &inputData, MessageParcel &reply, MessageOption &option);

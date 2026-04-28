@@ -93,6 +93,8 @@ public:
     MOCK_METHOD(int32_t, EnableCameraPostprocessing, (), (override));
     MOCK_METHOD(int32_t, SetTrackSelectionFilter, (AVPlayTrackSelectionFilter trackFilter), (override));
     MOCK_METHOD(int32_t, GetTrackSelectionFilter, (AVPlayTrackSelectionFilter &trackFilter), (override));
+    MOCK_METHOD(int32_t, SetVideoOutput, (sptr<Surface> surface), (override));
+    MOCK_METHOD(int32_t, GetVideoSample, (int32_t &outputResult), (override));
 };
 } // namespace Media
 } // namespace OHOS

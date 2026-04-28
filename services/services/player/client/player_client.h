@@ -112,6 +112,8 @@ public:
     int32_t GetTrackDescription(Format &format, uint32_t trackIndex) override;
     int32_t RegisterDeviceCapability(IsAudioPassthrough callback, GetDolbyList getDolbyList) override;
     bool IsLiveSeek() override;
+    int32_t SetVideoOutput(sptr<Surface> surface) override;
+    int32_t GetVideoSample(int32_t &outputResult) override;
 
 private:
     int32_t CreateListenerObject();

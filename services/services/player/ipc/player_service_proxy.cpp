@@ -99,6 +99,8 @@ void PlayerServiceProxy::InitPlayerFuncsPart1()
     playerFuncs_[GET_VIDEO_WIDTH] = "Player::GetVideoWidth";
     playerFuncs_[GET_VIDEO_HEIGHT] = "Player::GetVideoHeight";
     playerFuncs_[SELECT_BIT_RATE] = "Player::SelectBitRate";
+    playerFuncs_[SET_VIDEO_OUTPUT] = "Player::SetVideoOutput";
+    playerFuncs_[GET_VIDEO_SAMPLE] = "Player::GetVideoSample";
 }
 
 void PlayerServiceProxy::InitPlayerFuncsPart2()
@@ -1776,6 +1778,51 @@ bool PlayerServiceProxy::IsLiveSeek()
         "IsLiveSeek failed, error: %{public}d", error);
 
     return reply.ReadBool();
+}
+
+int32_t PlayerServiceProxy::SetVideoOutput(sptr<Surface> surface)
+{
+    MediaTrace trace("PlayerServiceProxy::SetVideoOutput");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+ 
+    CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_NO_MEMORY, "surface is nullptr");
+    sptr<IBufferProducer> producer = surface->GetProducer();
+    CHECK_AND_RETURN_RET_LOG(producer != nullptr, MSERR_NO_MEMORY, "producer is nullptr");
+ 
+    sptr<IRemoteObject> object = producer->AsObject();
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "object is nullptr");
+ 
+    std::string format = surface->GetUserData("SURFACE_FORMAT");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " surfaceFormat is %{public}s!", FAKE_POINTER(this), format.c_str());
+ 
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+ 
+    (void)data.WriteRemoteObject(object);
+    data.WriteString(format);
+    int32_t error = SendRequest(SET_VIDEO_OUTPUT, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetVideoOutput failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+ 
+int32_t PlayerServiceProxy::GetVideoSample(int32_t &outputResult)
+{
+    MediaTrace trace("PlayerServiceProxy::GetVideoSample");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+ 
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+ 
+    int32_t error = SendRequest(GET_VIDEO_SAMPLE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "GetVideoSample failed, error: %{public}d", error);
+    outputResult = reply.ReadInt32();
+    return reply.ReadInt32();
 }
 } // namespace Media
 } // namespace OHOS

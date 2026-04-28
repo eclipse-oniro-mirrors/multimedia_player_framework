@@ -48,6 +48,12 @@ void HiplayerImplUnitTest::TearDown(void)
     hiplayer_ = nullptr;
 }
 
+sptr<Surface> HiplayerImplUnitTest::GetTestSurface()
+{
+    sptr<Surface> surface = Surface::CreateSurfaceAsConsumer("TestSurface");
+    return surface;
+}
+
 /**
 * @tc.name    : Test GetRealPath API
 * @tc.number  : GetRealPath_001
@@ -1657,6 +1663,86 @@ HWTEST_F(HiplayerImplUnitTest, SetTrackSelectionFilter_001, TestSize.Level0)
 {
     AVPlayTrackSelectionFilter trackFilter;
     int32_t ret = hiplayer_->SetTrackSelectionFilter(trackFilter);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+/**
+* @tc.name    : Test SetVideoOutput API
+* @tc.number  : SetVideoOutput_002
+* @tc.desc    : Test SetVideoOutput interface, surface is valid and videoDecoder_ is nullptr.
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, SetVideoOutput_002, TestSize.Level0)
+{
+    // Branch 2: surface != nullptr && videoDecoder_ == nullptr
+    // -> set sideOutputSurface_ and videoPostProcessorType_, return MSERR_OK
+    hiplayer_->videoDecoder_ = nullptr;
+    hiplayer_->sideOutputSurface_ = nullptr;
+    hiplayer_->videoPostProcessorType_ = VideoPostProcessorType::NONE;
+    
+    sptr<Surface> surface = GetTestSurface();
+    ASSERT_NE(surface, nullptr);
+    
+    int32_t ret = hiplayer_->SetVideoOutput(surface);
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_EQ(hiplayer_->sideOutputSurface_, surface);
+    EXPECT_EQ(hiplayer_->videoPostProcessorType_, VideoPostProcessorType::SIDE_OUTPUT);
+}
+
+/**
+* @tc.name    : Test SetVideoOutput API
+* @tc.number  : SetVideoOutput_003
+* @tc.desc    : Test SetVideoOutput interface, surface is valid and videoDecoder_ is not nullptr.
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, SetVideoOutput_003, TestSize.Level0)
+{
+    // Branch 3: surface != nullptr && videoDecoder_ != nullptr
+    // -> set sideOutputSurface_, videoPostProcessorType_ and call videoDecoder_ methods, return MSERR_OK
+    hiplayer_->videoDecoder_ = FilterFactory::Instance().CreateFilter<DecoderSurfaceFilter>("player.videodecoder",
+        FilterType::FILTERTYPE_VDEC);
+    hiplayer_->sideOutputSurface_ = nullptr;
+    hiplayer_->videoPostProcessorType_ = VideoPostProcessorType::NONE;
+    
+    sptr<Surface> surface = GetTestSurface();
+    ASSERT_NE(surface, nullptr);
+    
+    int32_t ret = hiplayer_->SetVideoOutput(surface);
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_EQ(hiplayer_->sideOutputSurface_, surface);
+    EXPECT_EQ(hiplayer_->videoPostProcessorType_, VideoPostProcessorType::SIDE_OUTPUT);
+}
+
+/**
+* @tc.name    : Test GetVideoSample API
+* @tc.number  : GetVideoSample_001
+* @tc.desc    : Test GetVideoSample interface, videoDecoder_ is nullptr, return MSERR_OK.
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, GetVideoSample_001, TestSize.Level0)
+{
+    // Branch 1: videoDecoder_ == nullptr -> do not call videoDecoder_->GetVideoSample, return MSERR_OK
+    hiplayer_->videoDecoder_ = nullptr;
+    int32_t outputResult = 0;
+    
+    int32_t ret = hiplayer_->GetVideoSample(outputResult);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+/**
+* @tc.name    : Test GetVideoSample API
+* @tc.number  : GetVideoSample_002
+* @tc.desc    : Test GetVideoSample interface, videoDecoder_ is not nullptr, return MSERR_OK.
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, GetVideoSample_002, TestSize.Level0)
+{
+    // Branch 2: videoDecoder_ != nullptr -> call videoDecoder_->GetVideoSample, return MSERR_OK
+    hiplayer_->videoDecoder_ = FilterFactory::Instance().CreateFilter<DecoderSurfaceFilter>("player.videodecoder",
+        FilterType::FILTERTYPE_VDEC);
+    int32_t outputResult = 0;
+    
+    int32_t ret = hiplayer_->GetVideoSample(outputResult);
     EXPECT_EQ(ret, MSERR_OK);
 }
 } // namespace Media

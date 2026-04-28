@@ -710,5 +710,20 @@ bool PlayerClient::IsLiveSeek()
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, false, "player service does not exist..");
     return playerProxy_->IsLiveSeek();
 }
+
+int32_t PlayerClient::SetVideoOutput(sptr<Surface> surface)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_NO_MEMORY, "surface is nullptr..");
+    return playerProxy_->SetVideoOutput(surface);
+}
+ 
+int32_t PlayerClient::GetVideoSample(int32_t &outputResult)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->GetVideoSample(outputResult);
+}
 } // namespace Media
 } // namespace OHOS

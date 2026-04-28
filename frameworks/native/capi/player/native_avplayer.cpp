@@ -236,6 +236,7 @@ struct PlayerObject : public OH_AVPlayer {
     std::shared_ptr<NativeAVPlayerCallback> callback_ = nullptr;
     std::multimap<std::vector<uint8_t>, std::vector<uint8_t>> localDrmInfos_;
     std::atomic<bool> isReleased_ = false;
+    OH_AVPlayerVideoOutput* videoOutput_ = nullptr;
 };
 
 #ifdef SUPPORT_AVPLAYER_DRM
@@ -1227,6 +1228,10 @@ OH_AVErrCode OH_AVPlayer_Reset(OH_AVPlayer *player)
     struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
     CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
     playerObj->PauseListenCurrentResource(); // Pause event listening for the current resource
+    if (playerObj->videoOutput_ != nullptr) {
+        delete playerObj->videoOutput_;
+        playerObj->videoOutput_ = nullptr;
+    }
     int32_t ret = playerObj->player_->Reset();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player Reset failed");
     return AV_ERR_OK;
@@ -1239,6 +1244,11 @@ OH_AVErrCode OH_AVPlayer_Release(OH_AVPlayer *player)
     CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
     CHECK_AND_RETURN_RET_LOG(!playerObj->isReleased_.load(), AV_ERR_OK, "player alreay isReleased");
     playerObj->PauseListenCurrentResource(); // Pause event listening for the current resource
+
+    if (playerObj->videoOutput_ != nullptr) {
+        delete playerObj->videoOutput_;
+        playerObj->videoOutput_ = nullptr;
+    }
     int32_t ret = playerObj->player_->Release();
     playerObj->isReleased_.store(true);
     if (playerObj->callback_ != nullptr) {
@@ -1257,6 +1267,10 @@ OH_AVErrCode OH_AVPlayer_ReleaseSync(OH_AVPlayer *player)
     CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
     CHECK_AND_RETURN_RET_LOG(!playerObj->isReleased_.load(), AV_ERR_OK, "player alreay isReleased");
     playerObj->PauseListenCurrentResource(); // Pause event listening for the current resource
+    if (playerObj->videoOutput_ != nullptr) {
+        delete playerObj->videoOutput_;
+        playerObj->videoOutput_ = nullptr;
+    }
     int32_t ret = playerObj->player_->ReleaseSync();
     playerObj->isReleased_.store(true);
     if (playerObj->callback_ != nullptr) {
@@ -2384,4 +2398,47 @@ OH_AVFormat *OH_AVSeiMessage_GetSei(OH_AVSeiMessageArray *message, uint32_t inde
 
     avFormat->format_ = messageObj->payloadGroup_[index];
     return avFormat;
+}
+
+OH_AVPlayerVideoOutput* OH_AVPlayer_SetVideoSideOutput(OH_AVPlayer *player, OHNativeWindow *window)
+{
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, nullptr, "input player is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(window != nullptr, nullptr, "input window is nullptr!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, nullptr, "player_ is null");
+ 
+    int32_t ret = playerObj->player_->SetVideoOutput(window->surface);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "SetVideoSideOutput failed!");
+    
+    if (playerObj->videoOutput_ != nullptr) {
+        delete playerObj->videoOutput_;
+        playerObj->videoOutput_ = nullptr;
+    }
+    
+    OH_AVPlayerVideoOutput *videoOutput = new (std::nothrow) OH_AVPlayerVideoOutput();
+    CHECK_AND_RETURN_RET_LOG(videoOutput != nullptr, nullptr, "failed to create OH_AVPlayerVideoOutput");
+    videoOutput->player = player;
+    videoOutput->window = window;
+    
+    playerObj->videoOutput_ = videoOutput;
+    
+    return videoOutput;
+}
+ 
+OH_VideoOutputResult OH_AVPlayerVideoOutput_GetNewestVideoSample(OH_AVPlayerVideoOutput* videoOutput)
+{
+    CHECK_AND_RETURN_RET_LOG(videoOutput != nullptr, OH_VIDEO_OUTPUT_NO_IMAGE, "input videoOutput is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(videoOutput->player != nullptr, OH_VIDEO_OUTPUT_NO_IMAGE,
+        "videoOutput player is nullptr!");
+    
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(videoOutput->player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, OH_VIDEO_OUTPUT_NO_IMAGE, "player_ is null");
+     
+    int32_t result = 0;
+    playerObj->player_->GetVideoSample(result);
+    
+    if (result == 0) {
+        return OH_VIDEO_OUTPUT_OK;
+    }
+    return OH_VIDEO_OUTPUT_NO_IMAGE;
 }

@@ -293,6 +293,16 @@ public:
     {
         return false;
     }
+    virtual int32_t SetVideoOutput(sptr<Surface> surface)
+    {
+        (void)surface;
+        return 0;
+    }
+    virtual int32_t GetVideoSample(int32_t &outputResult)
+    {
+        (void)outputResult;
+        return 0;
+    }
 
     /**
      * IPC code ID
@@ -375,6 +385,8 @@ public:
         GET_PLAYERBACK_RATE,
         SEEK_TO_DEFAULT_POSITION,
         IS_LIVE_SEEK,
+        SET_VIDEO_OUTPUT,
+        GET_VIDEO_SAMPLE,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardPlayerService");

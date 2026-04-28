@@ -178,6 +178,8 @@ public:
     bool IsAudioPass(const char* mimeType) override;
     std::vector<std::string> GetDolbyList() override;
     bool IsLiveSeek() override;
+    int32_t SetVideoOutput(sptr<Surface> surface) override;
+    int32_t GetVideoSample(int32_t &outputResult) override;
 
 protected:
     class BaseState;
@@ -333,6 +335,11 @@ private:
     bool isMemoryExchanged_ = false;
     OHOS::Media::MediaType mutedMediaType_ = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
     static std::vector<std::string> dolbyList_;
+    sptr<Surface> sideOutputSurface_ = nullptr;
+    std::mutex sideOutputSurfaceMutex_;
+    std::atomic<bool> isVideoOutputEnabled_ {false};
+    std::atomic<bool> isSuperResolutionEnabled_ {false};
+    std::atomic<bool> isCameraPostprocessingEnabled_ {false};
 };
 } // namespace Media
 } // namespace OHOS

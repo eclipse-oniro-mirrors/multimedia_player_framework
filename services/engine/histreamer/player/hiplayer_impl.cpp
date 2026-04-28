@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -4613,6 +4613,9 @@ Status HiPlayerImpl::InitVideoDecoder()
         videoDecoder_->SetVideoSurface(surface_);
         videoDecoder_->SetSeiMessageCbStatus(seiMessageCbStatus_  && IsLiveStream(), payloadTypes_);
     }
+    if (sideOutputSurface_ != nullptr) {
+        SetVideoOutput(sideOutputSurface_);
+    }
     videoDecoder_->SetPerfRecEnabled(isPerfRecEnabled_);
     // set decrypt config for drm videos
     if (isDrmProtected_) {
@@ -4735,6 +4738,36 @@ void HiPlayerImpl::HandleReadyAudioInterrupt()
     FALSE_RETURN_NOLOG(!isAudioInitialized_.load());
     isAudioInitialized_.store(true);
     HandleInitialPlayingStateChange(EventType::EVENT_AUDIO_FIRST_FRAME);
+}
+
+int32_t HiPlayerImpl::SetVideoOutput(sptr<Surface> surface)
+{
+    MEDIA_LOG_I("SetVideoOutput in");
+#ifdef SUPPORT_VIDEO
+    FALSE_RETURN_V_MSG_E(surface != nullptr, (int32_t)(Status::ERROR_INVALID_PARAMETER),
+        "Set video output surface failed, surface == nullptr");
+    sideOutputSurface_ = surface;
+    videoPostProcessorType_ = VideoPostProcessorType::SIDE_OUTPUT;
+    if (videoDecoder_ != nullptr) {
+        MEDIA_LOG_I("SetPostProcessorType in");
+        videoDecoder_->SetPostProcessorType(videoPostProcessorType_);
+        videoDecoder_->SetVideoOutput(surface);
+    }
+#endif
+    return TransStatus(Status::OK);
+}
+
+int32_t HiPlayerImpl::GetVideoSample(int32_t &outputResult)
+{
+    MEDIA_LOG_I("GetVideoSample in");
+    FALSE_RETURN_V_MSG_E(!isSeek_.load(), MSERR_INVALID_OPERATION,
+        "Calling this interface is not supported during seeking");
+#ifdef SUPPORT_VIDEO
+    if (videoDecoder_ != nullptr) {
+        videoDecoder_->GetVideoSample(outputResult);
+    }
+#endif
+    return TransStatus(Status::OK);
 }
 }  // namespace Media
 }  // namespace OHOS
