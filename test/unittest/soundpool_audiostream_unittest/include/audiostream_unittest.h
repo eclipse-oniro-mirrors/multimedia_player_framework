@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef CACHEBUFFER_UNIT_TEST_H
-#define CACHEBUFFER_UNIT_TEST_H
+#ifndef AUDIOSTREAM_UNITTEST_H
+#define AUDIOSTREAM_UNITTEST_H
 
 #include "gtest/gtest.h"
 #include "audiostream_mock.h"
