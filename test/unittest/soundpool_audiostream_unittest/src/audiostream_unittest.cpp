@@ -23,7 +23,7 @@ using namespace OHOS::Media;
 using namespace std;
 using namespace testing::ext;
 
-static const char *const g_fileNames[6] = {
+static const char *const RESOURCE_FILE_NAMES[6] = {
     "/data/test/test_06.ogg",
     "/data/test/test_02.mp3",
     "/data/test/test_01.mp3",
@@ -228,9 +228,9 @@ HWTEST_F(AudioStreamTest, soundpool_SoundParseOnError_test_001, TestSize.Level2)
     Format format;
     CreateAudioStream(format, soundID, streamID);
     audioStream_->audioStream_->streamID_ = streamID;
-    int32_t fd = GetFileFdByName(g_fileNames[soundID]);
+    int32_t fd = GetFileFdByName(RESOURCE_FILE_NAMES[soundID]);
     EXPECT_GT(fd, 0);
-    size_t filesize = audioStream_->GetFileSizeByName(g_fileNames[soundID]);
+    size_t filesize = audioStream_->GetFileSizeByName(RESOURCE_FILE_NAMES[soundID]);
     int64_t length = static_cast<int64_t>(filesize);
     std::shared_ptr<MediaAVCodec::AVSource> source =
         MediaAVCodec::AVSourceFactory::CreateWithFD(fd, 0, length);
@@ -384,7 +384,7 @@ HWTEST_F(AudioStreamTest, soundpool_SetCallback_test_003, TestSize.Level2)
     if (audioStream_->audioStream_->callback_) {
         audioStream_->audioStream_->callback_->OnLoadCompleted(soundID);
         SoundPoolCallbackMock *call =
-            dynamic_cast<SoundPoolCallbackMock*>((audioStream_->audioStream_->callback_).get());
+            reinterpret_cast<SoundPoolCallbackMock*>((audioStream_->audioStream_->callback_).get());
         EXPECT_NE(nullptr, call);
         EXPECT_EQ(soundID, call->GetLoadCompletedSoundId());
     }
