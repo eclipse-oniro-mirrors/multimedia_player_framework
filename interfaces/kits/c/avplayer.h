@@ -1054,19 +1054,22 @@ uint32_t OH_AVPlayer_GetTrackCount(OH_AVPlayer *player);
 OH_AVFormat *OH_AVPlayer_GetTrackFormat(OH_AVPlayer *player, uint32_t trackIndex);
 
 /**
- * @brief Method to set video decoded frame output callback.
+ * @brief Method to set video decoded frame output callback. This API can be called only
+ *     when the avplayer is in the idle or initalized state.
  * @param player Pointer to an OH_AVPlayer instance.
  * @param window A pointer to a OHNativeWindow instance, see {@link OHNativeWindow}
- * @return Returns a pointer to an OH_AVPlayerVideoOutput instance. nullptr means failed.
+ * @return Returns a pointer to an OH_AVPlayerVideoOutput instance, released by system when avplayer was
+ *     reset or release. nullptr means failed.
  * @since 26.0.0
  */
 OH_AVPlayerVideoOutput* OH_AVPlayer_SetVideoSideOutput(OH_AVPlayer *player, OHNativeWindow *window);
 
 /**
- * @brief Method to get one video decoded frame.
+ * @brief Method to get one video decoded frame. This API can be called only when the avplayer is
+ *     in the paused or playing state.
  * @param videoOutput Pointer to an OH_AVPlayerVideoOutput instance returned by OH_AVPlayer_SetVideoSideOutput.
- * @return Returns VIDEO_OUTPUT_OK when got a frame.
- *         Returns VIDEO_OUTPUT_NO_IMAGE when there is no frame ready to render.
+ * @return Returns OH_VIDEO_OUTPUT_OK when got a frame.
+ *         Returns OH_VIDEO_OUTPUT_NO_IMAGE when there is no frame ready to render.
  * @since 26.0.0
  */
 OH_VideoOutputResult OH_AVPlayerVideoOutput_GetNewestVideoSample(OH_AVPlayerVideoOutput *videoOutput);
