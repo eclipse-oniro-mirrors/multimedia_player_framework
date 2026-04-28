@@ -195,11 +195,14 @@ int32_t SoundPoolImpl::ParserPlayOption(const PlayParameters &params, PlayParams
     if (params.parallelPlayFlag.has_value()) {
         playParameters.parallelPlayFlag = static_cast<bool>(params.parallelPlayFlag.value());
     }
+    if (params.pitch.has_value()) {
+        playParameters.pitch = static_cast<float>(params.pitch.value());
+    }
     playParameters.cacheDir = "/data/storage/el2/base/temp";
-    MEDIA_LOGI("playParameters loop:%{public}d, rate:%{public}d, leftVolume:%{public}f, rightvolume:%{public}f,"
-        "priority:%{public}d, parallelPlayFlag:%{public}d", playParameters.loop, playParameters.rate,
+    MEDIA_LOGI("Taihe playParameters loop:%{public}d, rate:%{public}d, leftVolume:%{public}f, rightvolume:%{public}f,"
+        "priority:%{public}d, parallelPlayFlag:%{public}d, pitch%{public}f", playParameters.loop, playParameters.rate,
         playParameters.leftVolume, playParameters.rightVolume, playParameters.priority,
-        playParameters.parallelPlayFlag);
+        playParameters.parallelPlayFlag, playParameters.pitch);
     return MSERR_OK;
 }
 

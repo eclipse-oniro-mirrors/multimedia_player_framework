@@ -187,6 +187,7 @@ struct SoundPoolAsyncContext : public MediaAsyncContext {
     int32_t priority_ = 0;
     float leftVolume_ = 0.0f;
     float rightVolume_ = 0.0f;
+    float pitch_ = 1.0f;
     int32_t interruptMode_ = 0;
     AudioStandard::AudioRendererRate renderRate_ = AudioStandard::AudioRendererRate::RENDER_RATE_NORMAL;
 };

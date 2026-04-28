@@ -268,6 +268,8 @@ int32_t AudioStream::DoPlayWithNoInterrupt()
             MEDIA_LOGI("AudioStream::DoPlayWithNoInterrupt, audioRenderer::Start time out");
         });
     streamState_.store(StreamState::PLAYING);
+    audioRenderer_->SetPitch(std::clamp(playParameters_.pitch, MINPITCH, MAXPITCH));
+    lastPitch_ = playParameters_.pitch;
     if (!audioRenderer_->Start()) {
         MEDIA_LOGI("AudioStream::DoPlayWithNoInterrupt, audioRenderer_->Start()");
         soundPoolXCollie.CancelXCollieTimer();
@@ -311,7 +313,8 @@ int32_t AudioStream::DoPlayWithSameSoundInterrupt()
         if (streamCallback_ != nullptr) {
             streamCallback_->OnPlayFinished(streamID_);
         }
-        if (lastLoop_ == currentLoop_) {
+        if (lastLoop_ == currentLoop_ && lastPitch_ == playParameters_.pitch) {
+            MEDIA_LOGI("lastLoop_ == currentLoop_ && lastPitch_ == playParameters_.pitch");
             return RestartAudioStream();
         }
         audioRenderer_->Stop();
@@ -324,6 +327,8 @@ int32_t AudioStream::DoPlayWithSameSoundInterrupt()
         streamState_.store(StreamState::PLAYING);
     }
     audioRenderer_->SetLoopTimes(currentLoop_);  // avoid calling during stream playing
+    audioRenderer_->SetPitch(std::clamp(playParameters_.pitch, MINPITCH, MAXPITCH));
+    lastPitch_ = playParameters_.pitch;
     if (!audioRenderer_->Start()) {
         MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt, audioRenderer_->Start()");
         streamState_.store(StreamState::RELEASED);

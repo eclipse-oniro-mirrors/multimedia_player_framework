@@ -847,6 +847,11 @@ int32_t SoundPoolNapi::ParserPlayOptionFromJs(std::unique_ptr<SoundPoolAsyncCont
     if (ret > 0) {
         asyncCtx->playParameters_.rightVolume = static_cast<float>(leftVolume);
     }
+    double pitch;
+    ret = CommonNapi::GetPropertyDouble(env, argv[PARAM1], "pitch", pitch);
+    if (ret > 0) {
+        asyncCtx->playParameters_.pitch = static_cast<float>(pitch);
+    }
     CommonNapi::GetPropertyInt32(env, argv[PARAM1], "priority", asyncCtx->playParameters_.priority);
     GetPropertyBool(env, argv[PARAM1], "parallelPlayFlag", asyncCtx->playParameters_.parallelPlayFlag);
 
@@ -857,10 +862,10 @@ int32_t SoundPoolNapi::ParserPlayOptionFromJs(std::unique_ptr<SoundPoolAsyncCont
         asyncCtx->playParameters_.cacheDir = "/data/storage/el2/base/temp";
     }
     MEDIA_LOGI("playParameters_ loop:%{public}d, rate:%{public}d, leftVolume:%{public}f, rightvolume:%{public}f,"
-        "priority:%{public}d, parallelPlayFlag:%{public}d", asyncCtx->playParameters_.loop,
+        "priority:%{public}d, parallelPlayFlag:%{public}d, pitch:%{public}f", asyncCtx->playParameters_.loop,
         asyncCtx->playParameters_.rate, asyncCtx->playParameters_.leftVolume,
         asyncCtx->playParameters_.rightVolume, asyncCtx->playParameters_.priority,
-        asyncCtx->playParameters_.parallelPlayFlag);
+        asyncCtx->playParameters_.parallelPlayFlag, asyncCtx->playParameters_.pitch);
     return MSERR_OK;
 }
 

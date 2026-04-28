@@ -55,7 +55,8 @@ enum class StreamState : int32_t {
     STOPPED = 4,
     RELEASED = 5,
 };
-
+const float MAXPITCH = 4;
+const float MINPITCH = 0.25;
 class AudioStream :
     public AudioStandard::AudioRendererFirstFrameWritingCallback,
     public AudioStandard::AudioRendererCallback,

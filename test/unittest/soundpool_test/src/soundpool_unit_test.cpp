@@ -1944,5 +1944,580 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_096, TestSize.Level2)
     MEDIA_LOGI("soundpool_unit_test soundpool_function_044 after");
 }
 
+/**
+ * @tc.name: soundpool_function_097
+ * @tc.desc: function test Play with undefault playParameters
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundPoolUnitTest, soundpool_function_097, TestSize.Level2)
+{
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_097 before");
+    int maxStreams = 3;
+    create(maxStreams);
+    std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
+    int32_t ret = soundPool_->SetSoundPoolCallback(cb);
+    ASSERT_TRUE(ret == 0);
+
+    loadUrl(g_fileName[loadNum_], loadNum_);
+    sleep(waitTime3);
+    ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
+    cb->ResetHaveLoadedSoundNum();
+    struct PlayParams playParameters;
+    playParameters.loop = -1;
+    playParameters.rate = 1;
+    playParameters.leftVolume = 0.5;
+    playParameters.rightVolume = 0.3;
+    playParameters.priority = 1;
+    playParameters.pitch = 2;
+    if (soundIDs_[loadNum_] > 0) {
+        streamIDs_[playNum_] = soundPool_->Play(soundIDs_[loadNum_], playParameters);
+        EXPECT_GT(streamIDs_[playNum_], 0);
+        sleep(waitTime3);
+    }
+    cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_097 after");
+}
+
+/**
+ * @tc.name: soundpool_function_098
+ * @tc.desc: function test Play with pitch=0.25 (minimum normal)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundPoolUnitTest, soundpool_function_098, TestSize.Level2)
+{
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_098 before");
+    int maxStreams = 3;
+    create(maxStreams);
+    std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
+    int32_t ret = soundPool_->SetSoundPoolCallback(cb);
+    ASSERT_TRUE(ret == 0);
+
+    loadUrl(g_fileName[loadNum_], loadNum_);
+    sleep(waitTime3);
+    ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
+    cb->ResetHaveLoadedSoundNum();
+    struct PlayParams playParameters;
+    playParameters.loop = -1;
+    playParameters.rate = 1;
+    playParameters.leftVolume = 0.5;
+    playParameters.rightVolume = 0.3;
+    playParameters.priority = 1;
+    playParameters.pitch = 0.25;
+    if (soundIDs_[loadNum_] > 0) {
+        streamIDs_[playNum_] = soundPool_->Play(soundIDs_[loadNum_], playParameters);
+        EXPECT_GT(streamIDs_[playNum_], 0);
+        sleep(waitTime3);
+    }
+    cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_098 after");
+}
+
+/**
+ * @tc.name: soundpool_function_099
+ * @tc.desc: function test Play with pitch=0.5 (lower bound typical)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundPoolUnitTest, soundpool_function_099, TestSize.Level2)
+{
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_099 before");
+    int maxStreams = 3;
+    create(maxStreams);
+    std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
+    int32_t ret = soundPool_->SetSoundPoolCallback(cb);
+    ASSERT_TRUE(ret == 0);
+
+    loadUrl(g_fileName[loadNum_], loadNum_);
+    sleep(waitTime3);
+    ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
+    cb->ResetHaveLoadedSoundNum();
+    struct PlayParams playParameters;
+    playParameters.loop = -1;
+    playParameters.rate = 1;
+    playParameters.leftVolume = 0.5;
+    playParameters.rightVolume = 0.3;
+    playParameters.priority = 1;
+    playParameters.pitch = 0.5;
+    if (soundIDs_[loadNum_] > 0) {
+        streamIDs_[playNum_] = soundPool_->Play(soundIDs_[loadNum_], playParameters);
+        EXPECT_GT(streamIDs_[playNum_], 0);
+        sleep(waitTime3);
+    }
+    cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_099 after");
+}
+
+/**
+ * @tc.name: soundpool_function_100
+ * @tc.desc: function test Play with pitch=1.0 (normal)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundPoolUnitTest, soundpool_function_100, TestSize.Level2)
+{
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_100 before");
+    int maxStreams = 3;
+    create(maxStreams);
+    std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
+    int32_t ret = soundPool_->SetSoundPoolCallback(cb);
+    ASSERT_TRUE(ret == 0);
+
+    loadUrl(g_fileName[loadNum_], loadNum_);
+    sleep(waitTime3);
+    ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
+    cb->ResetHaveLoadedSoundNum();
+    struct PlayParams playParameters;
+    playParameters.loop = -1;
+    playParameters.rate = 1;
+    playParameters.leftVolume = 0.5;
+    playParameters.rightVolume = 0.3;
+    playParameters.priority = 1;
+    playParameters.pitch = 1.0;
+    if (soundIDs_[loadNum_] > 0) {
+        streamIDs_[playNum_] = soundPool_->Play(soundIDs_[loadNum_], playParameters);
+        EXPECT_GT(streamIDs_[playNum_], 0);
+        sleep(waitTime3);
+    }
+    cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_100 after");
+}
+
+/**
+ * @tc.name: soundpool_function_101
+ * @tc.desc: function test Play with pitch=2.0 (upper bound typical)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundPoolUnitTest, soundpool_function_101, TestSize.Level2)
+{
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_101 before");
+    int maxStreams = 3;
+    create(maxStreams);
+    std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
+    int32_t ret = soundPool_->SetSoundPoolCallback(cb);
+    ASSERT_TRUE(ret == 0);
+
+    loadUrl(g_fileName[loadNum_], loadNum_);
+    sleep(waitTime3);
+    ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
+    cb->ResetHaveLoadedSoundNum();
+    struct PlayParams playParameters;
+    playParameters.loop = -1;
+    playParameters.rate = 1;
+    playParameters.leftVolume = 0.5;
+    playParameters.rightVolume = 0.3;
+    playParameters.priority = 1;
+    playParameters.pitch = 2.0;
+    if (soundIDs_[loadNum_] > 0) {
+        streamIDs_[playNum_] = soundPool_->Play(soundIDs_[loadNum_], playParameters);
+        EXPECT_GT(streamIDs_[playNum_], 0);
+        sleep(waitTime3);
+    }
+    cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_101 after");
+}
+
+/**
+ * @tc.name: soundpool_function_102
+ * @tc.desc: function test Play with pitch=4.0 (maximum normal)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundPoolUnitTest, soundpool_function_102, TestSize.Level2)
+{
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_102 before");
+    int maxStreams = 3;
+    create(maxStreams);
+    std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
+    int32_t ret = soundPool_->SetSoundPoolCallback(cb);
+    ASSERT_TRUE(ret == 0);
+
+    loadUrl(g_fileName[loadNum_], loadNum_);
+    sleep(waitTime3);
+    ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
+    cb->ResetHaveLoadedSoundNum();
+    struct PlayParams playParameters;
+    playParameters.loop = -1;
+    playParameters.rate = 1;
+    playParameters.leftVolume = 0.5;
+    playParameters.rightVolume = 0.3;
+    playParameters.priority = 1;
+    playParameters.pitch = 4.0;
+    if (soundIDs_[loadNum_] > 0) {
+        streamIDs_[playNum_] = soundPool_->Play(soundIDs_[loadNum_], playParameters);
+        EXPECT_GT(streamIDs_[playNum_], 0);
+        sleep(waitTime3);
+    }
+    cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_102 after");
+}
+
+/**
+ * @tc.name: soundpool_function_103
+ * @tc.desc: function test Play with pitch=0.1 (below range, out-of-bound)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundPoolUnitTest, soundpool_function_103, TestSize.Level2)
+{
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_103 before");
+    int maxStreams = 3;
+    create(maxStreams);
+    std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
+    int32_t ret = soundPool_->SetSoundPoolCallback(cb);
+    ASSERT_TRUE(ret == 0);
+
+    loadUrl(g_fileName[loadNum_], loadNum_);
+    sleep(waitTime3);
+    ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
+    cb->ResetHaveLoadedSoundNum();
+    struct PlayParams playParameters;
+    playParameters.loop = -1;
+    playParameters.rate = 1;
+    playParameters.leftVolume = 0.5;
+    playParameters.rightVolume = 0.3;
+    playParameters.priority = 1;
+    playParameters.pitch = 0.1;
+    if (soundIDs_[loadNum_] > 0) {
+        streamIDs_[playNum_] = soundPool_->Play(soundIDs_[loadNum_], playParameters);
+        EXPECT_GT(streamIDs_[playNum_], 0);
+        sleep(waitTime3);
+    }
+    cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_103 after");
+}
+
+/**
+ * @tc.name: soundpool_function_104
+ * @tc.desc: function test Play with pitch=5.0 (above range, out-of-bound)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundPoolUnitTest, soundpool_function_104, TestSize.Level2)
+{
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_104 before");
+    int maxStreams = 3;
+    create(maxStreams);
+    std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
+    int32_t ret = soundPool_->SetSoundPoolCallback(cb);
+    ASSERT_TRUE(ret == 0);
+
+    loadUrl(g_fileName[loadNum_], loadNum_);
+    sleep(waitTime3);
+    ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
+    cb->ResetHaveLoadedSoundNum();
+    struct PlayParams playParameters;
+    playParameters.loop = -1;
+    playParameters.rate = 1;
+    playParameters.leftVolume = 0.5;
+    playParameters.rightVolume = 0.3;
+    playParameters.priority = 1;
+    playParameters.pitch = 5.0;
+    if (soundIDs_[loadNum_] > 0) {
+        streamIDs_[playNum_] = soundPool_->Play(soundIDs_[loadNum_], playParameters);
+        EXPECT_GT(streamIDs_[playNum_], 0);
+        sleep(waitTime3);
+    }
+    cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_104 after");
+}
+
+/**
+ * @tc.name: soundpool_function_105
+ * @tc.desc: function test Play with pitch=1.5 (mid-range)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundPoolUnitTest, soundpool_function_105, TestSize.Level2)
+{
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_105 before");
+    int maxStreams = 3;
+    create(maxStreams);
+    std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
+    int32_t ret = soundPool_->SetSoundPoolCallback(cb);
+    ASSERT_TRUE(ret == 0);
+
+    loadUrl(g_fileName[loadNum_], loadNum_);
+    sleep(waitTime3);
+    ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
+    cb->ResetHaveLoadedSoundNum();
+    struct PlayParams playParameters;
+    playParameters.loop = -1;
+    playParameters.rate = 1;
+    playParameters.leftVolume = 0.5;
+    playParameters.rightVolume = 0.3;
+    playParameters.priority = 1;
+    playParameters.pitch = 1.5;
+    if (soundIDs_[loadNum_] > 0) {
+        streamIDs_[playNum_] = soundPool_->Play(soundIDs_[loadNum_], playParameters);
+        EXPECT_GT(streamIDs_[playNum_], 0);
+        sleep(waitTime3);
+    }
+    cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_105 after");
+}
+
+/**
+ * @tc.name: soundpool_function_106
+ * @tc.desc: function test Play with pitch=2.5 (within 0.25-4 range)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundPoolUnitTest, soundpool_function_106, TestSize.Level2)
+{
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_106 before");
+    int maxStreams = 3;
+    create(maxStreams);
+    std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
+    int32_t ret = soundPool_->SetSoundPoolCallback(cb);
+    ASSERT_TRUE(ret == 0);
+
+    loadUrl(g_fileName[loadNum_], loadNum_);
+    sleep(waitTime3);
+    ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
+    cb->ResetHaveLoadedSoundNum();
+    struct PlayParams playParameters;
+    playParameters.loop = -1;
+    playParameters.rate = 1;
+    playParameters.leftVolume = 0.5;
+    playParameters.rightVolume = 0.3;
+    playParameters.priority = 1;
+    playParameters.pitch = 2.5;
+    if (soundIDs_[loadNum_] > 0) {
+        streamIDs_[playNum_] = soundPool_->Play(soundIDs_[loadNum_], playParameters);
+        EXPECT_GT(streamIDs_[playNum_], 0);
+        sleep(waitTime3);
+    }
+    cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_106 after");
+}
+
+/**
+ * @tc.name: soundpool_function_107
+ * @tc.desc: function test Play with pitch=3.0 (within 0.25-4 range)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundPoolUnitTest, soundpool_function_107, TestSize.Level2)
+{
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_107 before");
+    int maxStreams = 3;
+    create(maxStreams);
+    std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
+    int32_t ret = soundPool_->SetSoundPoolCallback(cb);
+    ASSERT_TRUE(ret == 0);
+
+    loadUrl(g_fileName[loadNum_], loadNum_);
+    sleep(waitTime3);
+    ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
+    cb->ResetHaveLoadedSoundNum();
+    struct PlayParams playParameters;
+    playParameters.loop = -1;
+    playParameters.rate = 1;
+    playParameters.leftVolume = 0.5;
+    playParameters.rightVolume = 0.3;
+    playParameters.priority = 1;
+    playParameters.pitch = 3.0;
+    if (soundIDs_[loadNum_] > 0) {
+        streamIDs_[playNum_] = soundPool_->Play(soundIDs_[loadNum_], playParameters);
+        EXPECT_GT(streamIDs_[playNum_], 0);
+        sleep(waitTime3);
+    }
+    cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_107 after");
+}
+
+/**
+ * @tc.name: soundpool_function_108
+ * @tc.desc: function test Play with pitch=-0.5 (negative, out-of-range)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundPoolUnitTest, soundpool_function_108, TestSize.Level2)
+{
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_108 before");
+    int maxStreams = 3;
+    create(maxStreams);
+    std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
+    int32_t ret = soundPool_->SetSoundPoolCallback(cb);
+    ASSERT_TRUE(ret == 0);
+
+    loadUrl(g_fileName[loadNum_], loadNum_);
+    sleep(waitTime3);
+    ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
+    cb->ResetHaveLoadedSoundNum();
+    struct PlayParams playParameters;
+    playParameters.loop = -1;
+    playParameters.rate = 1;
+    playParameters.leftVolume = 0.5;
+    playParameters.rightVolume = 0.3;
+    playParameters.priority = 1;
+    playParameters.pitch = -0.5;
+    if (soundIDs_[loadNum_] > 0) {
+        streamIDs_[playNum_] = soundPool_->Play(soundIDs_[loadNum_], playParameters);
+        EXPECT_GT(streamIDs_[playNum_], 0);
+        sleep(waitTime3);
+    }
+    cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_108 after");
+}
+
+/**
+ * @tc.name: soundpool_function_109
+ * @tc.desc: function test Play with pitch=-1.0 (negative, out-of-range)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundPoolUnitTest, soundpool_function_109, TestSize.Level2)
+{
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_109 before");
+    int maxStreams = 3;
+    create(maxStreams);
+    std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
+    int32_t ret = soundPool_->SetSoundPoolCallback(cb);
+    ASSERT_TRUE(ret == 0);
+
+    loadUrl(g_fileName[loadNum_], loadNum_);
+    sleep(waitTime3);
+    ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
+    cb->ResetHaveLoadedSoundNum();
+    struct PlayParams playParameters;
+    playParameters.loop = -1;
+    playParameters.rate = 1;
+    playParameters.leftVolume = 0.5;
+    playParameters.rightVolume = 0.3;
+    playParameters.priority = 1;
+    playParameters.pitch = -1.0;
+    if (soundIDs_[loadNum_] > 0) {
+        streamIDs_[playNum_] = soundPool_->Play(soundIDs_[loadNum_], playParameters);
+        EXPECT_GT(streamIDs_[playNum_], 0);
+        sleep(waitTime3);
+    }
+    cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_109 after");
+}
+
+/**
+ * @tc.name: soundpool_function_110
+ * @tc.desc: function test Play with pitch=-2.0 (negative, out-of-range)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundPoolUnitTest, soundpool_function_110, TestSize.Level2)
+{
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_110 before");
+    int maxStreams = 3;
+    create(maxStreams);
+    std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
+    int32_t ret = soundPool_->SetSoundPoolCallback(cb);
+    ASSERT_TRUE(ret == 0);
+
+    loadUrl(g_fileName[loadNum_], loadNum_);
+    sleep(waitTime3);
+    ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
+    cb->ResetHaveLoadedSoundNum();
+    struct PlayParams playParameters;
+    playParameters.loop = -1;
+    playParameters.rate = 1;
+    playParameters.leftVolume = 0.5;
+    playParameters.rightVolume = 0.3;
+    playParameters.priority = 1;
+    playParameters.pitch = -2.0;
+    if (soundIDs_[loadNum_] > 0) {
+        streamIDs_[playNum_] = soundPool_->Play(soundIDs_[loadNum_], playParameters);
+        EXPECT_GT(streamIDs_[playNum_], 0);
+        sleep(waitTime3);
+    }
+    cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_110 after");
+}
+
+/**
+ * @tc.name: soundpool_function_111
+ * @tc.desc: function test Play with pitch=0
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundPoolUnitTest, soundpool_function_111, TestSize.Level2)
+{
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_111 before");
+    int maxStreams = 3;
+    create(maxStreams);
+    std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
+    int32_t ret = soundPool_->SetSoundPoolCallback(cb);
+    ASSERT_TRUE(ret == 0);
+
+    loadUrl(g_fileName[loadNum_], loadNum_);
+    sleep(waitTime3);
+    ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
+    cb->ResetHaveLoadedSoundNum();
+    struct PlayParams playParameters;
+    playParameters.loop = -1;
+    playParameters.rate = 1;
+    playParameters.leftVolume = 0.5;
+    playParameters.rightVolume = 0.3;
+    playParameters.priority = 1;
+    playParameters.pitch = 0;
+    if (soundIDs_[loadNum_] > 0) {
+        streamIDs_[playNum_] = soundPool_->Play(soundIDs_[loadNum_], playParameters);
+        EXPECT_GT(streamIDs_[playNum_], 0);
+        sleep(waitTime3);
+    }
+    cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_111 after");
+}
+
+/**
+ * @tc.name: soundpool_function_112
+ * @tc.desc: function test Play with pitch=6.0 (above maximum, out-of-range)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundPoolUnitTest, soundpool_function_112, TestSize.Level2)
+{
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_112 before");
+    int maxStreams = 3;
+    create(maxStreams);
+    std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
+    int32_t ret = soundPool_->SetSoundPoolCallback(cb);
+    ASSERT_TRUE(ret == 0);
+
+    loadUrl(g_fileName[loadNum_], loadNum_);
+    sleep(waitTime3);
+    ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
+    cb->ResetHaveLoadedSoundNum();
+    struct PlayParams playParameters;
+    playParameters.loop = -1;
+    playParameters.rate = 1;
+    playParameters.leftVolume = 0.5;
+    playParameters.rightVolume = 0.3;
+    playParameters.priority = 1;
+    playParameters.pitch = 6.0;
+    if (soundIDs_[loadNum_] > 0) {
+        streamIDs_[playNum_] = soundPool_->Play(soundIDs_[loadNum_], playParameters);
+        EXPECT_GT(streamIDs_[playNum_], 0);
+        sleep(waitTime3);
+    }
+    cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_112 after");
+}
 } // namespace Media
 } // namespace OHOS
