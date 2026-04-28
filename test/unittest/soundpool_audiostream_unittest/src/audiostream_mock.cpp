@@ -116,7 +116,7 @@ bool SoundPoolAudioStreamMock::CreateAudioStream(
 
     audioStream_ = std::make_shared<AudioStream>(trackFormat, soundID, streamID,
         audioStreamStopThreadPool);
-    return audioStream_ == nullptr;
+    return audioStream_ != nullptr;
 }
 
 bool SoundPoolAudioStreamMock::IsAudioRendererCanMix(
