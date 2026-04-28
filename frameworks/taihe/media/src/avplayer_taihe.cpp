@@ -3881,7 +3881,7 @@ void AVPlayerImpl::RemovePlaybackMediaSourceSync(string_view pos)
 {
     MediaTrace trace("AVPlayerImpl::removePlaybackMediaSourceSync");
     if (!IsListMode()) {
-        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "unsupport remove mediaSource operation");
+        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "unsupport remove mediaSource operation");
         return;
     }
     std::string rmPos = std::string(pos);
