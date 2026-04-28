@@ -384,7 +384,7 @@ HWTEST_F(AudioStreamTest, soundpool_SetCallback_test_003, TestSize.Level2)
     if (audioStream_->audioStream_->callback_) {
         audioStream_->audioStream_->callback_->OnLoadCompleted(soundID);
         SoundPoolCallbackMock *call =
-            reinterpret_cast<SoundPoolCallbackMock*>((audioStream_->audioStream_->callback_).get());
+            dynamic_cast<SoundPoolCallbackMock*>((audioStream_->audioStream_->callback_).get());
         EXPECT_NE(nullptr, call);
         EXPECT_EQ(soundID, call->GetLoadCompletedSoundId());
     }
