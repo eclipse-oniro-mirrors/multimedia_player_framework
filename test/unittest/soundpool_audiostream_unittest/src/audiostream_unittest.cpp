@@ -37,12 +37,12 @@ namespace Media {
 
 static const std::string THREAD_POOL_NAME_AUDIO_STREAM = "OS_AudioStreamUT";
 
-static constexpr int32_t WATING_TIME_01 = 1;
-static constexpr int32_t WATING_TIME_02 = 2;
-static constexpr int32_t WATING_TIME_04 = 4;
-static constexpr int32_t WATING_TIME_08 = 8;
-static constexpr int32_t WATING_TIME_16 = 16;
-static constexpr int32_t WATING_TIME_32 = 32;
+static constexpr int32_t WAITING_TIME_01 = 1;
+static constexpr int32_t WAITING_TIME_02 = 2;
+static constexpr int32_t WAITING_TIME_04 = 4;
+static constexpr int32_t WAITING_TIME_08 = 8;
+static constexpr int32_t WAITING_TIME_16 = 16;
+static constexpr int32_t WAITING_TIME_32 = 32;
 
 void AudioStreamTest::SetUpTestCase(void) {}
 
@@ -65,7 +65,7 @@ void AudioStreamTest::TearDown(void)
     if (audioStream_) {
         audioStream_.reset();
     }
-    sleep(WATING_TIME_02);
+    sleep(WAITING_TIME_02);
 }
 
 void AudioStreamTest::CreateAudioStream(const Format &trackFormat,
@@ -73,8 +73,8 @@ void AudioStreamTest::CreateAudioStream(const Format &trackFormat,
 {
     if (audioStream_) {
         stopThreadPoolForAudioStream_ = std::make_shared<ThreadPool>(THREAD_POOL_NAME_AUDIO_STREAM);
-        stopThreadPoolForAudioStream_->Start(WATING_TIME_01);
-        stopThreadPoolForAudioStream_->SetMaxTaskNum(WATING_TIME_01);
+        stopThreadPoolForAudioStream_->Start(WAITING_TIME_01);
+        stopThreadPoolForAudioStream_->SetMaxTaskNum(WAITING_TIME_01);
         isAudioStreamStopThreadPoolStarted_.store(true);
         audioStream_->CreateAudioStream(
             trackFormat, soundID, streamID, stopThreadPoolForAudioStream_);
@@ -104,7 +104,7 @@ HWTEST_F(AudioStreamTest, soundpool_audioStream_test_001, TestSize.Level0)
     std::shared_ptr<SoundPool> impl;
     EXPECT_EQ(
         MSERR_OK, SoundPoolManager::GetInstance().GetSoundPool(getpid(), impl));
-    sleep(WATING_TIME_01);
+    sleep(WAITING_TIME_01);
     EXPECT_EQ(MSERR_OK, SoundPoolManager::GetInstance().Release(getpid()));
     EXPECT_EQ(MSERR_OK, SoundPoolManager::GetInstance().Release(321));
     MEDIA_LOGI("AudioStreamTest soundpool_audioStream_test_001 after");
@@ -127,12 +127,12 @@ HWTEST_F(AudioStreamTest, soundpool_rendererInfo_test_001, TestSize.Level2)
     audioRenderInfo1.contentType = CONTENT_TYPE_UNKNOWN;
     audioRenderInfo1.streamUsage = STREAM_USAGE_MOVIE;
     EXPECT_EQ(true, audioStream_->IsAudioRendererCanMix(audioRenderInfo1));
-    sleep(WATING_TIME_01);
+    sleep(WAITING_TIME_01);
     AudioStandard::AudioRendererInfo audioRenderInfo2;
     audioRenderInfo2.contentType = CONTENT_TYPE_UNKNOWN;
     audioRenderInfo2.streamUsage = STREAM_USAGE_AUDIOBOOK;
     EXPECT_EQ(true, audioStream_->IsAudioRendererCanMix(audioRenderInfo2));
-    sleep(WATING_TIME_01);
+    sleep(WAITING_TIME_01);
     AudioStandard::AudioRendererInfo audioRenderInfo3;
     audioRenderInfo3.contentType = CONTENT_TYPE_UNKNOWN;
     audioRenderInfo3.streamUsage = STREAM_USAGE_SYSTEM;
