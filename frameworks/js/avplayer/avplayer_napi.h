@@ -370,9 +370,9 @@ private:
     static AVPlayerNapi* GetJsInstanceWithParameter(napi_env env, napi_callback_info info,
         size_t &argc, napi_value *argv);
     static bool JsHandleParameter(napi_env env, napi_value args, AVPlayerNapi *jsPlayer);
-    static void SeekEnqueueTask(AVPlayerNapi *jsPlayer, int32_t time, int32_t mode);
+    static void SeekEnqueueTask(AVPlayerNapi *jsPlayer, int64_t time, int32_t mode);
     static void SeekToDefaultPositionEnqueueTask(AVPlayerNapi *jsPlayer);
-    static void DoSeek(AVPlayerNapi *jsPlayer, int32_t time, int32_t mode);
+    static void DoSeek(AVPlayerNapi *jsPlayer, int64_t time, int32_t mode);
     static bool VerifyExpectedType(const NapiTypeCheckUnit &unit, AVPlayerNapi *jsPlayer, const std::string &msg);
     static std::shared_ptr<AVMediaSource> GetAVMediaSource(napi_env env, napi_value value,
         std::shared_ptr<AVMediaSourceTmp> &srcTmp);

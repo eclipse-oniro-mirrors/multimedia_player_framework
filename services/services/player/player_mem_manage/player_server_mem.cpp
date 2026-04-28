@@ -397,7 +397,7 @@ int32_t PlayerServerMem::SetVolume(float leftVolume, float rightVolume)
     return PlayerServer::SetVolume(leftVolume, rightVolume);
 }
 
-int32_t PlayerServerMem::Seek(int32_t mSeconds, PlayerSeekMode mode)
+int32_t PlayerServerMem::Seek(int64_t mSeconds, PlayerSeekMode mode)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");

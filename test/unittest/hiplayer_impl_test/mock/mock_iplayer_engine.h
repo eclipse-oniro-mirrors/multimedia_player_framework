@@ -62,7 +62,7 @@ public:
     MOCK_METHOD(int32_t, UnFreeze, (), ());
     MOCK_METHOD(int32_t, SetVolume, (float leftVolume, float rightVolume), ());
     MOCK_METHOD(int32_t, SetVolumeMode, (int32_t mode), ());
-    MOCK_METHOD(int32_t, Seek, (int32_t mSeconds, PlayerSeekMode mode), ());
+    MOCK_METHOD(int32_t, Seek, (int64_t mSeconds, PlayerSeekMode mode), ());
     MOCK_METHOD(int32_t, GetCurrentTime, (int32_t &currentTime), ());
     MOCK_METHOD(int32_t, GetVideoTrackInfo, (std::vector<Format> &videoTrack), ());
     MOCK_METHOD(int32_t, GetPlaybackInfo, (Format &playbackInfo), ());

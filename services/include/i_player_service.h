@@ -266,7 +266,7 @@ public:
      * @since 1.0
      * @version 1.0
     */
-    virtual int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) = 0;
+    virtual int32_t Seek(int64_t mSeconds, PlayerSeekMode mode) = 0;
 
     /**
      * @brief Seek to the default access point of the playback source.

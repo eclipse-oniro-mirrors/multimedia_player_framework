@@ -941,7 +941,7 @@ int32_t PlayerEngineMock::SetVolumeMode(int32_t mode)
     return MSERR_OK;
 }
 
-int32_t PlayerEngineMock::Seek(int32_t mSeconds, PlayerSeekMode mode)
+int32_t PlayerEngineMock::Seek(int64_t mSeconds, PlayerSeekMode mode)
 {
     return MSERR_OK;
 }

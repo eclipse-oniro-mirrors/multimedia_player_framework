@@ -53,7 +53,7 @@ public:
     int32_t LaunchTask(const std::shared_ptr<ITaskHandler> &task, PlayerServerTaskType type,
         const std::string &taskName, const std::shared_ptr<ITaskHandler> &cancelTask = nullptr);
     int32_t SeekTask(const std::shared_ptr<ITaskHandler> &task, const std::shared_ptr<ITaskHandler> &cancelTask,
-        const std::string &taskName, int32_t seekMode, int32_t seekTime);
+        const std::string &taskName, int32_t seekMode, int64_t seekTime);
     int32_t SpeedTask(const std::shared_ptr<ITaskHandler> &task, const std::shared_ptr<ITaskHandler> &cancelTask,
         const std::string &taskName, int32_t speedMode);
     int32_t SeekContinousTask(const std::shared_ptr<ITaskHandler> &task, const std::string &taskName);
@@ -71,14 +71,14 @@ private:
     int32_t EnqueueTask(const std::shared_ptr<ITaskHandler> &task, PlayerServerTaskType type,
         const std::string &taskName);
     int32_t EnqueueSeekTask(const std::shared_ptr<ITaskHandler> &task, PlayerServerTaskType type,
-        const std::string &taskName, int32_t seekMode, int32_t seekTime);
+        const std::string &taskName, int32_t seekMode, int64_t seekTime);
     struct TwoPhaseTaskItem {
         PlayerServerTaskType type;
         std::shared_ptr<ITaskHandler> task;
         std::shared_ptr<ITaskHandler> cancelTask;
         std::string taskName;
         int32_t seekMode_ = -1;
-        int32_t seekTime_ = -1;
+        int64_t seekTime_ = -1;
         int32_t speedMode_ = -1;
     };
 
@@ -87,7 +87,7 @@ private:
     PlayerServerTaskType currTwoPhaseType_ = PlayerServerTaskType::BUTT;
     std::string currTwoPhaseTaskName_ = "Unknown";
     int32_t currentSeekMode_ = -1;
-    int32_t currentSeekTime_ = -1;
+    int64_t currentSeekTime_ = -1;
     std::list<TwoPhaseTaskItem> pendingTwoPhaseTasks_;
     bool isInited_ = false;
     std::thread::id taskThreadId_;

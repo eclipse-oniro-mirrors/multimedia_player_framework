@@ -75,7 +75,7 @@ int32_t PlayerServer::BaseState::ResumeDemuxer()
     return MSERR_INVALID_STATE;
 }
 
-int32_t PlayerServer::BaseState::Seek(int32_t mSeconds, PlayerSeekMode mode)
+int32_t PlayerServer::BaseState::Seek(int64_t mSeconds, PlayerSeekMode mode)
 {
     (void)mSeconds;
     (void)mode;
@@ -106,7 +106,7 @@ int32_t PlayerServer::BaseState::SetPlaybackRate(float rate)
     return MSERR_INVALID_STATE;
 }
 
-int32_t PlayerServer::BaseState::SeekContinous(int32_t mSeconds, int64_t batchNo)
+int32_t PlayerServer::BaseState::SeekContinous(int64_t mSeconds, int64_t batchNo)
 {
     (void)mSeconds;
     (void)batchNo;
@@ -292,7 +292,7 @@ int32_t PlayerServer::PreparedState::Play()
     return server_.HandlePlay();
 }
 
-int32_t PlayerServer::PreparedState::Seek(int32_t mSeconds, PlayerSeekMode mode)
+int32_t PlayerServer::PreparedState::Seek(int64_t mSeconds, PlayerSeekMode mode)
 {
     return server_.HandleSeek(mSeconds, mode);
 }
@@ -312,7 +312,7 @@ int32_t PlayerServer::PreparedState::SetPlaybackRate(float rate)
     return server_.HandleSetPlaybackRate(rate);
 }
 
-int32_t PlayerServer::PreparedState::SeekContinous(int32_t mSeconds, int64_t batchNo)
+int32_t PlayerServer::PreparedState::SeekContinous(int64_t mSeconds, int64_t batchNo)
 {
     return server_.HandleSeekContinous(mSeconds, batchNo);
 }
@@ -385,7 +385,7 @@ int32_t PlayerServer::PlayingState::ResumeDemuxer()
     return server_.HandleResumeDemuxer();
 }
 
-int32_t PlayerServer::PlayingState::Seek(int32_t mSeconds, PlayerSeekMode mode)
+int32_t PlayerServer::PlayingState::Seek(int64_t mSeconds, PlayerSeekMode mode)
 {
     return server_.HandleSeek(mSeconds, mode);
 }
@@ -405,7 +405,7 @@ int32_t PlayerServer::PlayingState::SetPlaybackRate(float rate)
     return server_.HandleSetPlaybackRate(rate);
 }
 
-int32_t PlayerServer::PlayingState::SeekContinous(int32_t mSeconds, int64_t batchNo)
+int32_t PlayerServer::PlayingState::SeekContinous(int64_t mSeconds, int64_t batchNo)
 {
     return server_.HandleSeekContinous(mSeconds, batchNo);
 }
@@ -486,7 +486,7 @@ int32_t PlayerServer::PausedState::Pause(bool isSystemOperation)
     return MSERR_OK;
 }
 
-int32_t PlayerServer::PausedState::Seek(int32_t mSeconds, PlayerSeekMode mode)
+int32_t PlayerServer::PausedState::Seek(int64_t mSeconds, PlayerSeekMode mode)
 {
     return server_.HandleSeek(mSeconds, mode);
 }
@@ -511,7 +511,7 @@ int32_t PlayerServer::PausedState::SetPlaybackRate(float rate)
     return server_.HandleSetPlaybackRate(rate);
 }
 
-int32_t PlayerServer::PausedState::SeekContinous(int32_t mSeconds, int64_t batchNo)
+int32_t PlayerServer::PausedState::SeekContinous(int64_t mSeconds, int64_t batchNo)
 {
     return server_.HandleSeekContinous(mSeconds, batchNo);
 }
@@ -592,12 +592,12 @@ int32_t PlayerServer::PlaybackCompletedState::Play()
     return res;
 }
 
-int32_t PlayerServer::PlaybackCompletedState::Seek(int32_t mSeconds, PlayerSeekMode mode)
+int32_t PlayerServer::PlaybackCompletedState::Seek(int64_t mSeconds, PlayerSeekMode mode)
 {
     return server_.HandleSeek(mSeconds, mode);
 }
 
-int32_t PlayerServer::PlaybackCompletedState::SeekContinous(int32_t mSeconds, int64_t batchNo)
+int32_t PlayerServer::PlaybackCompletedState::SeekContinous(int64_t mSeconds, int64_t batchNo)
 {
     return server_.HandleSeekContinous(mSeconds, batchNo);
 }

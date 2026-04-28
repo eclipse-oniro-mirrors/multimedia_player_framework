@@ -1030,17 +1030,17 @@ bool PlayerServer::IsValidSeekMode(PlayerSeekMode mode)
     return true;
 }
 
-int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
+int32_t PlayerServer::Seek(int64_t mSeconds, PlayerSeekMode mode)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     int32_t checkRet = CheckSeek(mSeconds, mode);
     CHECK_AND_RETURN_RET_LOG(checkRet == MSERR_OK, checkRet, "check seek faild");
 
-    MEDIA_LOGD("seek position %{public}d, seek mode is %{public}d", mSeconds, mode);
+    MEDIA_LOGD("seek position %{public}lld, seek mode is %{public}d", mSeconds, mode);
     if (mode == SEEK_CONTINOUS) {
         return SeekContinous(mSeconds);
     }
-    mSeconds = std::max(0, mSeconds);
+    mSeconds = std::max(int64_t {0}, mSeconds);
     auto seekTask = std::make_shared<TaskHandler<void>>([this, mSeconds, mode]() {
         MediaTrace::TraceBegin("PlayerServer::Seek", FAKE_POINTER(this));
         MEDIA_LOGI("PlayerServer::Seek start");
@@ -1059,7 +1059,7 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
     int32_t ret = taskMgr_.SeekTask(seekTask, cancelTask, "seek", mode, mSeconds);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Seek failed");
 
-    MEDIA_LOGI("Queue seekTask end, position %{public}d, seek mode is %{public}d", mSeconds, mode);
+    MEDIA_LOGI("Queue seekTask end, position %{public}lld, seek mode is %{public}d", mSeconds, mode);
     return MSERR_OK;
 }
 
@@ -1076,9 +1076,9 @@ int32_t PlayerServer::SeekToDefaultPosition()
     return MSERR_OK;
 }
 
-int32_t PlayerServer::HandleSeek(int32_t mSeconds, PlayerSeekMode mode)
+int32_t PlayerServer::HandleSeek(int64_t mSeconds, PlayerSeekMode mode)
 {
-    MEDIA_LOGI("KPI-TRACE: PlayerServer HandleSeek in, mSeconds: %{public}d, mode: %{public}d", mSeconds, mode);
+    MEDIA_LOGI("KPI-TRACE: PlayerServer HandleSeek in, mSeconds: %{public}lld, mode: %{public}d", mSeconds, mode);
     ExitSeekContinous(false);
     int32_t ret = playerEngine_->Seek(mSeconds, mode);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Seek Failed!");
@@ -2392,7 +2392,7 @@ int32_t PlayerServer::SetVideoWindowSize(int32_t width, int32_t height)
     return playerEngine_->SetVideoWindowSize(width, height);
 }
 
-int32_t PlayerServer::CheckSeek(int32_t mSeconds, PlayerSeekMode mode)
+int32_t PlayerServer::CheckSeek(int64_t mSeconds, PlayerSeekMode mode)
 {
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
 
@@ -2410,7 +2410,7 @@ int32_t PlayerServer::CheckSeek(int32_t mSeconds, PlayerSeekMode mode)
     return MSERR_OK;
 }
 
-int32_t PlayerServer::SeekContinous(int32_t mSeconds)
+int32_t PlayerServer::SeekContinous(int64_t mSeconds)
 {
     if (mSeconds == -1) {
         ExitSeekContinousAsync(true);
@@ -2424,7 +2424,7 @@ int32_t PlayerServer::SeekContinous(int32_t mSeconds)
         }
     }
     int64_t seekContinousBatchNo = seekContinousBatchNo_.load();
-    mSeconds = std::max(0, mSeconds);
+    mSeconds = std::max(int64_t {0}, mSeconds);
     auto seekContinousTask = std::make_shared<TaskHandler<void>>([this, mSeconds, seekContinousBatchNo]() {
         MediaTrace trace("PlayerServer::SeekContinous");
         MEDIA_LOGI("PlayerServer::Seek start");
@@ -2437,13 +2437,13 @@ int32_t PlayerServer::SeekContinous(int32_t mSeconds)
     int32_t ret = taskMgr_.SeekContinousTask(seekContinousTask, "seek continous");
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SeekContinous failed");
 
-    MEDIA_LOGI("Queue seekTask end, position %{public}d", mSeconds);
+    MEDIA_LOGI("Queue seekTask end, position %{public}lld", mSeconds);
     return MSERR_OK;
 }
 
-int32_t PlayerServer::HandleSeekContinous(int32_t mSeconds, int64_t batchNo)
+int32_t PlayerServer::HandleSeekContinous(int64_t mSeconds, int64_t batchNo)
 {
-    MEDIA_LOGI("KPI-TRACE: PlayerServer HandleSeek in, mSeconds: %{public}d,", mSeconds);
+    MEDIA_LOGI("KPI-TRACE: PlayerServer HandleSeek in, mSeconds: %{public}lld,", mSeconds);
     int32_t ret = playerEngine_->SeekContinous(mSeconds, batchNo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Seek Failed!");
     MEDIA_LOGI("PlayerServer HandleSeek end");

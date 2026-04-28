@@ -496,7 +496,7 @@ int32_t PlayerServiceProxy::SetVolume(float leftVolume, float rightVolume)
     return reply.ReadInt32();
 }
 
-int32_t PlayerServiceProxy::Seek(int32_t mSeconds, PlayerSeekMode mode)
+int32_t PlayerServiceProxy::Seek(int64_t mSeconds, PlayerSeekMode mode)
 {
     MediaTrace trace("PlayerServiceProxy::Seek");
     MessageParcel data;
@@ -506,7 +506,7 @@ int32_t PlayerServiceProxy::Seek(int32_t mSeconds, PlayerSeekMode mode)
     bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    data.WriteInt32(mSeconds);
+    data.WriteInt64(mSeconds);
     data.WriteInt32(mode);
     int32_t error = SendRequest(SEEK, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,

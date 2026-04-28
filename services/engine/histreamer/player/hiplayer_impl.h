@@ -121,7 +121,7 @@ public:
     int32_t UnFreeze() override;
     int32_t PauseSourceDownload() override;
     int32_t ResumeSourceDownload() override;
-    int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
+    int32_t Seek(int64_t mSeconds, PlayerSeekMode mode) override;
     int32_t SeekToDefaultPosition() override;
     int32_t SetVolume(float leftVolume, float rightVolume) override;
     int32_t SetVolumeMode(int32_t mode) override;
@@ -186,7 +186,7 @@ public:
     void OnStateChanged(PlayerStateId state, bool isSystemOperation = false);
     void HandleMetricsEvent(int64_t timeStamp, int64_t timeLine, int64_t duration, OHOS::Media::MediaType);
     Status OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd, StreamType outType);
-    int32_t SeekContinous(int32_t mSeconds, int64_t seekContinousBatchNo) override;
+    int32_t SeekContinous(int64_t mSeconds, int64_t seekContinousBatchNo) override;
     int32_t ExitSeekContinous(bool align, int64_t seekContinousBatchNo) override;
     int32_t PauseDemuxer() override;
     int32_t ResumeDemuxer() override;
@@ -323,7 +323,7 @@ private:
     Status SelectSeekType(int64_t seekPos, PlayerSeekMode mode);
     Status DoSetPlayRange();
     void ResetPlayRangeParameter();
-    bool IsInValidSeekTime(int32_t seekPos);
+    bool IsInValidSeekTime(int64_t seekPos);
     int64_t GetPlayStartTime();
     Status StartSeekContinous();
     void FlushVideoEOS();

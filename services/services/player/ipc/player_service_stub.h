@@ -47,7 +47,7 @@ public:
     int32_t SetSource(const std::string &url) override;
     int32_t Pause() override;
     int32_t Prepare() override;
-    int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
+    int32_t Seek(int64_t mSeconds, PlayerSeekMode mode) override;
     int32_t SeekToDefaultPosition() override;
     int32_t AddSubSource(int32_t fd, int64_t offset, int64_t size) override;
     int32_t SetRenderFirstFrame(bool display) override;

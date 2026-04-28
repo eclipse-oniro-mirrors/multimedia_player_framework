@@ -58,7 +58,7 @@ public:
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
     int32_t GetPlaybackSpeed(PlaybackRateMode &mode) override;
     int32_t SetVolume(float leftVolume, float rightVolume) override;
-    int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
+    int32_t Seek(int64_t mSeconds, PlayerSeekMode mode) override;
 #ifdef SUPPORT_VIDEO
     int32_t SetVideoSurface(sptr<Surface> surface) override;
 #endif

@@ -260,7 +260,7 @@ int32_t PlayerClient::SetVolumeMode(int32_t mode)
     return playerProxy_->SetVolumeMode(mode);
 }
 
-int32_t PlayerClient::Seek(int32_t mSeconds, PlayerSeekMode mode)
+int32_t PlayerClient::Seek(int64_t mSeconds, PlayerSeekMode mode)
 {
     MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " Seek in", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(mutex_);

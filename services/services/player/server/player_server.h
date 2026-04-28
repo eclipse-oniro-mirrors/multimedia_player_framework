@@ -92,7 +92,7 @@ public:
     int32_t Pause() override;
     int32_t SetVolume(float leftVolume, float rightVolume) override;
     int32_t SetVolumeMode(int32_t mode) override;
-    int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
+    int32_t Seek(int64_t mSeconds, PlayerSeekMode mode) override;
     int32_t SeekToDefaultPosition() override;
     int32_t GetCurrentTime(int32_t &currentTime) override;
     int32_t GetPlaybackPosition(int32_t &playbackPosition) override;
@@ -255,7 +255,7 @@ private:
     int32_t HandleResumeDemuxer();
     int32_t HandleStop();
     int32_t HandleReset();
-    int32_t HandleSeek(int32_t mSeconds, PlayerSeekMode mode);
+    int32_t HandleSeek(int64_t mSeconds, PlayerSeekMode mode);
     int32_t HandleSetPlayRange(int64_t start, int64_t end, PlayerSeekMode mode);
     int32_t HandleSetPlaybackSpeed(PlaybackRateMode mode);
     int32_t HandleSetPlaybackRate(float rate);
@@ -272,9 +272,9 @@ private:
     void OnErrorCb(int32_t errorCode, const std::string &errorMsg);
     void InnerOnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody, const int32_t ret);
 
-    int32_t CheckSeek(int32_t mSeconds, PlayerSeekMode mode);
-    int32_t SeekContinous(int32_t mSeconds);
-    int32_t HandleSeekContinous(int32_t mSeconds, int64_t batchNo);
+    int32_t CheckSeek(int64_t mSeconds, PlayerSeekMode mode);
+    int32_t SeekContinous(int64_t mSeconds);
+    int32_t HandleSeekContinous(int64_t mSeconds, int64_t batchNo);
     int32_t ExitSeekContinous(bool align);
     int32_t ExitSeekContinousAsync(bool align);
     void UpdateContinousBatchNo();
