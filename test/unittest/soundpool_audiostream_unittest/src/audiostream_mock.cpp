@@ -127,9 +127,10 @@ bool SoundPoolAudioStreamMock::IsAudioRendererCanMix(
     return audioStream_->IsAudioRendererCanMix(audioRendererInfo);
 }
 
-void SoundPoolAudioStreamMock::DestroyMock() {
-    if (audio_stream_) {
-        audio_stream_.reset();
+void SoundPoolAudioStreamMock::DestroyMock()
+{
+    if (audioStream_) {
+        audioStream_.reset();
     }
 }
 

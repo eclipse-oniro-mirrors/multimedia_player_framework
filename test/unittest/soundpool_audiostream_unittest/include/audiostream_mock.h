@@ -15,6 +15,17 @@
 #ifndef AUDIOSTREAM_MOCK_H
 #define AUDIOSTREAM_MOCK_H
 
+#include <atomic>
+#include <cstdlib>
+#include <cstdio>
+#include <fcntl.h>
+#include <iostream>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <thread>
+#include <vector>
+
 #include "audio_stream.h"
 #include "gtest/gtest.h"
 #include "isoundpool.h"
@@ -107,6 +118,7 @@ public:
     bool CreateAudioStream(const Format &trackFormat, int32_t soundID, int32_t streamID,
         std::shared_ptr<ThreadPool> audioStreamStopThreadPool);
     bool IsAudioRendererCanMix(const AudioStandard::AudioRendererInfo &audioRendererInfo);
+    void DestroyMock();
     int32_t CreateAudioRenderer(const int32_t streamID,
         const AudioStandard::AudioRendererInfo audioRendererInfo, const PlayParams playParams);
     size_t GetFileSizeByName(const char *fileName);

@@ -330,7 +330,7 @@ HWTEST_F(AudioStreamTest, soundpool_SetCallback_test_001, TestSize.Level2)
     MEDIA_LOGI("AudioStreamTest soundpool_SetCallback_test_001 before");
     const int32_t soundID = 1;
     const int32_t streamID = 1;
-    std::shared_ptr<ISoundPoolCallback> callbk = std::make_shared<AudioStreamCallbackMock>();
+    std::shared_ptr<ISoundPoolCallback> callbk = std::make_shared<SoundPoolCallbackMock>();
     Format format;
     CreateAudioStream(format, soundID, streamID);
     audioStream_->audioStream_->streamID_ = streamID;
@@ -352,7 +352,7 @@ HWTEST_F(AudioStreamTest, soundpool_SetCallback_test_002, TestSize.Level2)
     MEDIA_LOGI("AudioStreamTest soundpool_SetCallback_test_002 before");
     const int32_t soundID = 1;
     const int32_t streamID = 1;
-    std::shared_ptr<ISoundPoolCallback> callbk = std::make_shared<AudioStreamCallbackMock>();
+    std::shared_ptr<ISoundPoolCallback> callbk = std::make_shared<SoundPoolCallbackMock>();
     Format format;
     CreateAudioStream(format, soundID, streamID);
     audioStream_->audioStream_->streamID_ = streamID;
@@ -373,7 +373,7 @@ HWTEST_F(AudioStreamTest, soundpool_SetCallback_test_003, TestSize.Level2)
     MEDIA_LOGI("AudioStreamTest soundpool_SetCallback_test_003 before");
     const int32_t soundID = 1;
     const int32_t streamID = 1;
-    std::shared_ptr<ISoundPoolCallback> callbk = std::make_shared<AudioStreamCallbackMock>();
+    std::shared_ptr<ISoundPoolCallback> callbk = std::make_shared<SoundPoolCallbackMock>();
     Format format;
     CreateAudioStream(format, soundID, streamID);
     audioStream_->audioStream_->streamID_ = streamID;
@@ -383,8 +383,8 @@ HWTEST_F(AudioStreamTest, soundpool_SetCallback_test_003, TestSize.Level2)
     EXPECT_NE(nullptr, audioStream_->audioStream_->callback_);
     if (audioStream_->audioStream_->callback_) {
         audioStream_->audioStream_->callback_->OnLoadCompleted(soundID);
-        AudioStreamCallbackMock *call =
-            reinterpret_cast<AudioStreamCallbackMock*>((audioStream_->audioStream_->callback_).get());
+        SoundPoolCallbackMock *call =
+            reinterpret_cast<SoundPoolCallbackMock*>((audioStream_->audioStream_->callback_).get());
         EXPECT_NE(nullptr, call);
         EXPECT_EQ(soundID, call->GetLoadCompletedSoundId());
     }

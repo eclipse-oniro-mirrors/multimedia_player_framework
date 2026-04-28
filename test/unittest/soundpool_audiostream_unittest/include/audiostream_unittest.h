@@ -16,7 +16,7 @@
 #define CACHEBUFFER_UNIT_TEST_H
 
 #include "gtest/gtest.h"
-#include "cachebuffer_mock.h"
+#include "audiostream_mock.h"
 #include "soundpool.h"
 #include "soundpool_manager.h"
 #include "sound_parser.h"
@@ -41,7 +41,7 @@ protected:
     int32_t loadNum_ = 0;
     void CreateAudioStream(const Format &trackFormat, const int32_t &soundID, const int32_t &streamID);
     int32_t GetFileFdByName(const char *fileName);
-    std::shared_ptr<AudioStreamMock> audioStream_ = nullptr;
+    std::shared_ptr<SoundPoolAudioStreamMock> audioStream_ = nullptr;
     std::shared_ptr<ThreadPool> stopThreadPoolForAudioStream_;
     std::atomic<bool> isAudioStreamStopThreadPoolStarted_ = false;
 };
