@@ -380,7 +380,7 @@ std::string ErrorMessageUnsupportFormat(const std::string& param1, const std::st
     return message;
 }
 
-std::string ErrorMessageAudioInterruped(const std::string & param1, const std::string& param2)
+std::string ErrorMessageAudioInterruped(const std::string& param1, const std::string& param2)
 {
     (void)param1;
     (void)param2;
@@ -388,7 +388,7 @@ std::string ErrorMessageAudioInterruped(const std::string & param1, const std::s
     return message;
 }
 
-std::string ErrorMessageParamOutOfRange(const std::string & param1, const std::string& param2)
+std::string ErrorMessageParamOutOfRange(const std::string& param1, const std::string& param2)
 {
     (void)param2;
     std::string message = "Parameter " + param1 + " is out of range.";
