@@ -89,6 +89,7 @@ group("media_unit_test") {
       "unittest/service_dump_manager_unittest:service_dump_manager_unittest",
       "unittest/services/utils:utils_unit_test",
       "unittest/sound_parser_unittest:sound_parser_unittest",
+      "unittest/soundpool_audiostream_unittest:soundpool_audiostream_unittest",
       "unittest/soundpool_cachebuffer_test:soundpool_cachebuffer_unit_test",
       "unittest/soundpool_cachebuffer_unittest:soundpool_cachebuffer_unittest",
       "unittest/soundpool_test:soundpool_unit_test",
