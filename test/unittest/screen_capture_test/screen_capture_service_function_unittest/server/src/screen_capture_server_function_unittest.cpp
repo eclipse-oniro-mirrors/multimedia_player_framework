@@ -401,6 +401,7 @@ void ScreenCaptureServerFunctionTest::SetSCMicAudioCaptureAndPushData(std::share
 std::shared_ptr<AudioCapturerWrapper> ScreenCaptureServerFunctionTest::CreateTestWrapper(
     AudioCaptureInfo &audioInfo, const std::string &name, bool isInner, bool expectStart)
 {
+    MEDIA_LOGI("CreateTestWrapper S");
     auto wrapper = std::make_shared<AudioCapturerWrapper>(
         audioInfo, screenCaptureServer_->screenCaptureCb_, std::string(name),
         screenCaptureServer_->contentFilter_);
@@ -415,6 +416,7 @@ std::shared_ptr<AudioCapturerWrapper> ScreenCaptureServerFunctionTest::CreateTes
 
 void ScreenCaptureServerFunctionTest::SetWrapperBuilder(std::shared_ptr<AudioCapturerWrapper> wrapper, bool expectStart)
 {
+    MEDIA_LOGI("SetWrapperBuilder S");
     wrapper->audioCapturerBuilder_ =
         [expectStart](const AudioStandard::AudioCapturerOptions &options,
            const AudioStandard::AppInfo &appInfo) -> std::shared_ptr<AudioStandard::AudioCapturer> {
