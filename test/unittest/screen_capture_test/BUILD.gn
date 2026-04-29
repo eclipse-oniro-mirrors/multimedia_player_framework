@@ -41,6 +41,7 @@ config("screen_capture_test_config") {
 
   include_dirs = [
     "./",
+    "./mock",
     "./screen_capture_unittest/include",
     "./capi/include",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/sa_media/ipc",
@@ -284,6 +285,7 @@ ohos_unittest("screen_capture_server_function_unit_test") {
     "access_token:libnativetoken_shared",
     "access_token:libprivacy_sdk",
     "access_token:libtokensetproc_shared",
+    "audio_framework:audio_capturer",
     "audio_framework:audio_client",
     "audio_framework:audio_foundation",
     "av_codec:av_codec_client",
@@ -291,6 +293,7 @@ ohos_unittest("screen_capture_server_function_unit_test") {
     "call_manager:tel_call_manager_api",
     "core_service:tel_core_service_api",
     "distributed_notification_service:ans_innerkits",
+    "googletest:gmock",
     "graphic_2d:librender_service_base",
     "graphic_surface:surface",
     "hilog:libhilog",

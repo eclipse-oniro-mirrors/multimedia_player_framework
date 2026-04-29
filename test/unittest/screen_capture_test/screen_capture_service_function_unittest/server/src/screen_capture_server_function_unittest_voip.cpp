@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include "screen_capture_server_function_unittest.h"
+#include "mock/mock_audio_capturer.h"
 #include "ui_extension_ability_connection.h"
 #include "image_source.h"
 #include "image_type.h"
@@ -130,7 +131,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnVoIPStatusChanged_005, TestSize.Leve
     screenCaptureServer_->innerAudioCapture_ = std::make_shared<AudioCapturerWrapper>(
         screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, screenCaptureServer_->screenCaptureCb_,
         std::string("InnerAudioCapture_voip_005"), screenCaptureServer_->contentFilter_);
-    screenCaptureServer_->innerAudioCapture_->bundleName_ = ScreenRecorderBundleName;
+    SetWrapperBuilder(screenCaptureServer_->innerAudioCapture_);
     screenCaptureServer_->innerAudioCapture_->captureState_ = AudioCapturerWrapperState::CAPTURER_UNKNOWN;
     ASSERT_EQ(screenCaptureServer_->OnVoIPStatusChanged(true), MSERR_OK);
 }
@@ -150,7 +151,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnVoIPStatusChanged_006, TestSize.Leve
     screenCaptureServer_->innerAudioCapture_ = std::make_shared<AudioCapturerWrapper>(
         screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, screenCaptureServer_->screenCaptureCb_,
         std::string("InnerAudioCapture_voip_006"), screenCaptureServer_->contentFilter_);
-    screenCaptureServer_->innerAudioCapture_->bundleName_ = ScreenRecorderBundleName;
+    SetWrapperBuilder(screenCaptureServer_->innerAudioCapture_);
     screenCaptureServer_->innerAudioCapture_->captureState_ = AudioCapturerWrapperState::CAPTURER_UNKNOWN;
     ASSERT_EQ(screenCaptureServer_->OnVoIPStatusChanged(true), MSERR_OK);
 }
@@ -167,11 +168,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnVoIPStatusChanged_007, TestSize.Leve
         AVScreenCaptureMixMode::INNER_MODE, screenCaptureServer_.get());
     screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
     screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
-    screenCaptureServer_->innerAudioCapture_ = std::make_shared<AudioCapturerWrapper>(
-        screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, screenCaptureServer_->screenCaptureCb_,
-        std::string("InnerAudioCapture_voip_007"), screenCaptureServer_->contentFilter_);
-    screenCaptureServer_->innerAudioCapture_->bundleName_ = ScreenRecorderBundleName;
-    screenCaptureServer_->innerAudioCapture_->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
+    auto wrapper = CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
+        "InnerAudioCapture_voip_007", true);
+    wrapper->bundleName_ = ScreenRecorderBundleName;
+    wrapper->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
     screenCaptureServer_->audioSource_->isInVoIPCall_ = true;
     ASSERT_EQ(screenCaptureServer_->OnVoIPStatusChanged(true), MSERR_OK);
 }
@@ -188,11 +188,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnVoIPStatusChanged_008, TestSize.Leve
         AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
     screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
     screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
-    screenCaptureServer_->innerAudioCapture_ = std::make_shared<AudioCapturerWrapper>(
-        screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, screenCaptureServer_->screenCaptureCb_,
-        std::string("InnerAudioCapture_voip_008"), screenCaptureServer_->contentFilter_);
-    screenCaptureServer_->innerAudioCapture_->bundleName_ = ScreenRecorderBundleName;
-    screenCaptureServer_->innerAudioCapture_->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
+    auto wrapper2 = CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
+        "InnerAudioCapture_voip_008", true);
+    wrapper2->bundleName_ = ScreenRecorderBundleName;
+    wrapper2->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
     screenCaptureServer_->audioSource_->isInVoIPCall_ = true;
     ASSERT_EQ(screenCaptureServer_->OnVoIPStatusChanged(true), MSERR_OK);
 }

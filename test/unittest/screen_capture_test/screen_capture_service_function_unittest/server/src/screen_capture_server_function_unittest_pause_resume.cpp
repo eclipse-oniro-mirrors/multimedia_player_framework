@@ -380,6 +380,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnResponse_PauseButton_001, TestSize.L
     std::shared_ptr<ScreenCaptureServer> screenCaptureServerInner;
     std::shared_ptr<IScreenCaptureService> tempServer = ScreenCaptureServer::Create();
     screenCaptureServerInner = std::static_pointer_cast<ScreenCaptureServer>(tempServer);
+    SetMockBuilder(screenCaptureServerInner);
     RecorderInfo recorderInfo{};
     SetValidConfigFile(recorderInfo);
     config_.dataType = DataType::ORIGINAL_STREAM;
@@ -413,6 +414,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnResponse_ResumeButton_001, TestSize.
     std::shared_ptr<ScreenCaptureServer> screenCaptureServerInner;
     std::shared_ptr<IScreenCaptureService> tempServer = ScreenCaptureServer::Create();
     screenCaptureServerInner = std::static_pointer_cast<ScreenCaptureServer>(tempServer);
+    SetMockBuilder(screenCaptureServerInner);
     RecorderInfo recorderInfo{};
     SetValidConfigFile(recorderInfo);
     config_.dataType = DataType::ORIGINAL_STREAM;

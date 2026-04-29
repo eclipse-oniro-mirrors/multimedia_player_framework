@@ -492,6 +492,15 @@ private:
     static int32_t CheckCaptureMode(CaptureMode captureMode);
     static int32_t CheckDataType(DataType dataType);
 
+    using AudioCapturerWrapperBuilder = std::function<std::shared_ptr<AudioCapturerWrapper>(
+        AudioCaptureInfo&, std::shared_ptr<ScreenCaptureCallBack>&,
+        std::string&&, ScreenCaptureContentFilter)>;
+
+    AudioCapturerWrapperBuilder audioCapturerWrapperBuilder_;
+    std::shared_ptr<AudioCapturerWrapper> CreateAudioCapturerWrapper(
+        AudioCaptureInfo &audioInfo, std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb,
+        std::string &&name, ScreenCaptureContentFilter filter);
+
 private:
     static constexpr int32_t ROOT_UID = 0;
     static constexpr int32_t AUDIO_BITRATE_MIN = 8000;

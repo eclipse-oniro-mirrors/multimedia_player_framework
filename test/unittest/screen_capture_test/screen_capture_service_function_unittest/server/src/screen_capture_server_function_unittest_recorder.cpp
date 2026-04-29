@@ -92,6 +92,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_001, TestSize.Le
     std::shared_ptr<ScreenCaptureServer> screenCaptureServerInner;
     std::shared_ptr<IScreenCaptureService> tempServer = ScreenCaptureServer::Create();
     screenCaptureServerInner = std::static_pointer_cast<ScreenCaptureServer>(tempServer);
+    SetMockBuilder(screenCaptureServerInner);
     RecorderInfo recorderInfo;
     int outputFd = open("/data/test/media/screen_capture_recorder_001.mp4", O_RDWR);
     recorderInfo.url = "fd://" + std::to_string(outputFd);
@@ -123,6 +124,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_002, TestSize.Le
     std::shared_ptr<ScreenCaptureServer> screenCaptureServerInner;
     std::shared_ptr<IScreenCaptureService> tempServer = ScreenCaptureServer::Create();
     screenCaptureServerInner = std::static_pointer_cast<ScreenCaptureServer>(tempServer);
+    SetMockBuilder(screenCaptureServerInner);
     RecorderInfo recorderInfo;
     int outputFd = open("/data/test/media/screen_capture_recorder_002.mp4", O_RDWR);
     recorderInfo.url = "fd://" + std::to_string(outputFd);
@@ -151,6 +153,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_003, TestSize.Le
     std::shared_ptr<ScreenCaptureServer> screenCaptureServerInner;
     std::shared_ptr<IScreenCaptureService> tempServer = ScreenCaptureServer::Create();
     screenCaptureServerInner = std::static_pointer_cast<ScreenCaptureServer>(tempServer);
+    SetMockBuilder(screenCaptureServerInner);
     RecorderInfo recorderInfo;
     int outputFd = open("/data/test/media/screen_capture_recorder_003.mp4", O_RDWR);
     recorderInfo.url = "fd://" + std::to_string(outputFd);
@@ -199,6 +202,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureStream_001, TestSize.Leve
     std::shared_ptr<ScreenCaptureServer> screenCaptureServerInner;
     std::shared_ptr<IScreenCaptureService> tempServer = ScreenCaptureServer::Create();
     screenCaptureServerInner = std::static_pointer_cast<ScreenCaptureServer>(tempServer);
+    SetMockBuilder(screenCaptureServerInner);
     RecorderInfo recorderInfo{};
     SetValidConfigFile(recorderInfo);
     config_.dataType = DataType::ORIGINAL_STREAM;
