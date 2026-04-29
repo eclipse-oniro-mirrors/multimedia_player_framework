@@ -25,7 +25,7 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "LppDataPacket"};
-constexpr uint32_t MAX_BUFFER_SIZE = 10 * 1024 * 1024;
+constexpr int32_t MAX_BUFFER_SIZE = 10 * 1024 * 1024;
 const std::string DUMP_FILE_DIR_SANDBOX = "/data/storage/el2/base/files/";
 const std::string DUMP_FILE_DIR_SERVER = "/data/media/pipelinedump/";
 constexpr size_t DUMP_DATA_UNIT = 1;  // data unit is 1 byte
@@ -137,7 +137,7 @@ bool LppDataPacket::ReadVector(MessageParcel &parcel)
     parcel.ReadInt64(size);
     CHECK_AND_RETURN_RET_LOG(size >= 0 && size <= MAX_BUFFER_CNT, false, "invalid size_ cnt");
     for (int i = 0; i < size; i++) {
-        int elem = 0;
+        int32_t elem = 0;
         parcel.ReadInt32(elem);
         CHECK_AND_RETURN_RET_LOG(elem >= 0 && elem <= MAX_BUFFER_SIZE, false, "invalid elem of size_");
         size_.push_back(elem);
