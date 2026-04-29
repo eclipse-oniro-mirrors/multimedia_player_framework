@@ -2057,7 +2057,7 @@ HWTEST_F(RecorderServerUnitTest, recorder_SetUserMeta_001, TestSize.Level2)
 HWTEST_F(RecorderServerUnitTest, recorder_SetUserMeta_002, TestSize.Level2)
 {
     g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
-    g_videoRecorderConfig.video.videoFormat = H264;
+    g_videoRecorderConfig.videoFormat = H264;
     g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetUserMeta_002.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
@@ -2280,7 +2280,7 @@ HWTEST_F(RecorderServerUnitTest, recorder_SetUserMeta_010, TestSize.Level2)
     for (int i = 0; i < 3; i++) {
         std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
         ASSERT_NE(nullptr, userMeta);
-        userMeta->SetData(Tag::USER_META_TEST, "metadata_" + std::to_string(i));
+        userMeta->SetData("USER_META_TEST", "metadata_" + std::to_string(i));
         
         EXPECT_EQ(MSERR_OK, recorderServer_->SetUserMeta(userMeta));
     }
@@ -2298,7 +2298,7 @@ HWTEST_F(RecorderServerUnitTest, recorder_SetUserMeta_010, TestSize.Level2)
 HWTEST_F(RecorderServerUnitTest, recorder_SetUserMeta_011, TestSize.Level2)
 {
     g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
-    g_videoRecorderConfig.videoFormat = H264Encoder;
+    g_videoRecorderConfig.videoFormat = H264;
     g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetUserMeta_011.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
