@@ -2401,7 +2401,7 @@ HWTEST_F(RecorderServerUnitTest, recorder_UnregisterShutdownCallbackIfNeeded_002
 {
     g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
     g_videoRecorderConfig.videoFormat = H264;
-    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + 
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT +
         "recorder_UnregisterShutdownCallbackIfNeeded_002.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
@@ -2443,7 +2443,7 @@ HWTEST_F(RecorderServerUnitTest, recorder_UnregisterShutdownCallbackIfNeeded_003
 
 /**
  * @tc.name: recorder_UnregisterShutdownCallbackIfNeeded_004
- * @tc.desc: Test UnregisterShutdownCallbackIfNeeded when syncCallback_ and 
+ * @tc.desc: Test UnregisterShutdownCallbackIfNeeded when syncCallback_ and
  *           isShutdownRegistered_ are both valid, GetShutdown() returns false.
  *           Should call UnRegisterShutdownCallback and reset isShutdownRegistered_.
  * @tc.type: FUNC
