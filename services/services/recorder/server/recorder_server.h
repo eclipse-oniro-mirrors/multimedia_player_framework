@@ -147,6 +147,9 @@ private:
     const std::string &GetStatusDescription(OHOS::Media::RecorderServer::RecStatus status);
     bool CheckCameraOutputState();
     void SetMediaKitReport(RecStatus status);
+#ifdef SUPPORT_POWER_MANAGER
+    void UnregisterShutdownCallbackIfNeeded();
+#endif
 
     std::unique_ptr<IRecorderEngine> recorderEngine_ = nullptr;
     std::shared_ptr<RecorderCallback> recorderCb_ = nullptr;
@@ -207,6 +210,7 @@ private:
     QOS::QosLevel clientQos_ = QOS::QosLevel::QOS_BACKGROUND;
 #ifdef SUPPORT_POWER_MANAGER
     sptr<SaveDocumentSyncCallback> syncCallback_ = nullptr;
+    bool isShutdownRegistered_ = false;
     PowerMgr::ShutdownClient &shutdownClient_ = PowerMgr::ShutdownClient::GetInstance();
 #endif
 };

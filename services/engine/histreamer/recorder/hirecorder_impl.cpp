@@ -537,7 +537,10 @@ Status HiRecorderImpl::HandleStopOperation()
 void HiRecorderImpl::ClearAllConfiguration()
 {
     std::lock_guard<std::mutex> lock(configurationMutex_);
-    MEDIA_LOG_I("HiRecorderImpl ClearAllConfiguration remove filter enter.");
+    MEDIA_LOG_I("ClearAllConfiguration enter.");
+    if (fd_) {
+        CloseFd();
+    }
     audioCount_ = 0;
     videoCount_ = 0;
     audioSourceId_ = 0;
