@@ -140,7 +140,7 @@ public:
     int32_t SetGenre(std::string &genre);
     int32_t SetUserCustomInfo(Meta &userCustomInfo);
     int32_t SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback);
-    int32_t SetUserMeta(std::shared_ptr<Meta> &userMeta);
+    int32_t SetUserMeta(const std::shared_ptr<Meta> &userMeta);
     int32_t Prepare();
     int32_t Start();
     int32_t Pause();
