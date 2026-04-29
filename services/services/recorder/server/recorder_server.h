@@ -208,6 +208,7 @@ private:
 #ifdef SUPPORT_POWER_MANAGER
     sptr<SaveDocumentSyncCallback> syncCallback_ = nullptr;
     PowerMgr::ShutdownClient &shutdownClient_ = PowerMgr::ShutdownClient::GetInstance();
+    void UnregisterShutdownCallbackIfNeeded();
 #endif
 };
 } // namespace Media
