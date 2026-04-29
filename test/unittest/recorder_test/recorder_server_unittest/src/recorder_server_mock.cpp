@@ -245,16 +245,16 @@ int32_t OHOS::Media::RecorderServerMock::SetUserCustomInfo(Meta &userCustomInfo)
     return recorder_->SetUserCustomInfo(userCustomInfo);
 }
 
-int32_t RecorderServerMock::SetRecorderCallback(const std::shared_ptr<Meta> &userMeta)
+int32_t RecorderServerMock::SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     return recorder_->SetRecorderCallback(callback);
 }
 
-int32_t RecorderServerMock::SetUserMeta(const std::shared_ptr<RecorderCallback> &callback)
+int32_t RecorderServerMock::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
-    return recorder_->SetUserMeta(callback);
+    return recorder_->SetUserMeta(userMeta);
 }
 
 int32_t RecorderServerMock::Prepare()
