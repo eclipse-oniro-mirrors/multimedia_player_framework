@@ -320,6 +320,29 @@
             <option name="shell" value="touch /data/test/media/recorder_SetMaxDuration_007.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_SetVideoEnableStableQualityMode_001.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_SetVideoEnableStableQualityMode_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetUserMeta_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetUserMeta_003.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetUserMeta_004.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetUserMeta_005.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetUserMeta_006.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetUserMeta_007.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetUserMeta_008.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetUserMeta_009.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetUserMeta_010.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetUserMeta_011.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetUserMeta_012.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetUserMeta_013.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_UnregisterShutdownCallbackIfNeeded_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_UnregisterShutdownCallbackIfNeeded_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_UnregisterShutdownCallbackIfNeeded_003.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_UnregisterShutdownCallbackIfNeeded_004.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_UnregisterShutdownCallbackIfNeeded_005.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_UnregisterShutdownCallbackIfNeeded_006.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_UnregisterShutdownCallbackIfNeeded_007.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_UnregisterShutdownCallbackIfNeeded_008.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_UnregisterShutdownCallbackIfNeeded_009.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_UnregisterShutdownCallbackIfNeeded_0010.m4a"/>
+
         </preparer>
     </target>
     <target name="screen_capture_native_unit_test">
