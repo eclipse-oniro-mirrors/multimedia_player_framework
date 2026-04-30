@@ -1034,9 +1034,9 @@ int32_t RecorderServer::Release()
         (void)task->GetResult();
 #ifdef SUPPORT_POWER_MANAGER
         if (syncCallback_) {
-        if (!syncCallback_->GetShutdown()) {
-            shutdownClient_.UnRegisterShutdownCallback(static_cast<sptr<PowerMgr::ISyncShutdownCallback>>
-                (syncCallback_));
+            if (!syncCallback_->GetShutdown()) {
+                shutdownClient_.UnRegisterShutdownCallback(static_cast<sptr<PowerMgr::ISyncShutdownCallback>>
+                    (syncCallback_));
             }
         }
 #endif
