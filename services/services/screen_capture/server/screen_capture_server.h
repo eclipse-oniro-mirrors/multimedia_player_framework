@@ -475,6 +475,7 @@ private:
     /* used for customize picker */
     std::vector<int32_t> excludedWindowIDsVec_;
     PickerMode pickerMode_ = PickerMode::SCREEN_AND_WINDOW;
+    bool isPickerModePopUp_ = false;
 #ifdef SUPPORT_CALL
     std::atomic<bool> isInTelCall_ = false;
     std::atomic<bool> isInTelCallAudio_ = false;
