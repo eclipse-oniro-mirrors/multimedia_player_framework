@@ -89,7 +89,6 @@ RecorderServer::~RecorderServer()
         std::lock_guard<std::mutex> lock(mutex_);
         recorderEngine_ = nullptr;
 #ifdef SUPPORT_POWER_MANAGER
-        UnregisterShutdownCallbackIfNeeded();
         syncCallback_ = nullptr;
 #endif
         taskQue_.Stop();
@@ -897,10 +896,9 @@ int32_t RecorderServer::Start()
         return MSERR_INVALID_OPERATION;
     }
 #ifdef SUPPORT_POWER_MANAGER
-    if (syncCallback_ && !isShutdownRegistered_) {
+    if (syncCallback_) {
         shutdownClient_.RegisterShutdownCallback(static_cast<sptr<PowerMgr::ISyncShutdownCallback>>(syncCallback_),
             PowerMgr::ShutdownPriority::HIGH);
-            isShutdownRegistered_ = true;
     }
 #endif
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_PREPARED, MSERR_INVALID_OPERATION);
@@ -990,9 +988,6 @@ int32_t RecorderServer::Stop(bool block)
     ret = result.Value();
     MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " Stop out ret: %{public}d", FAKE_POINTER(this), ret);
     status_ = (ret == MSERR_OK ? REC_INITIALIZED : REC_ERROR);
-#ifdef SUPPORT_POWER_MANAGER
-    UnregisterShutdownCallbackIfNeeded();
-#endif
     if (status_ == REC_INITIALIZED) {
         int64_t endTime = GetCurrentMillisecond();
         statisticalEventInfo_.recordDuration = static_cast<int32_t>(endTime - startTime_ -
@@ -1038,7 +1033,12 @@ int32_t RecorderServer::Release()
         (void)taskQue_.EnqueueTask(task);
         (void)task->GetResult();
 #ifdef SUPPORT_POWER_MANAGER
-        UnregisterShutdownCallbackIfNeeded();
+        if (syncCallback_) {	 
+        if (!syncCallback_->GetShutdown()) { 
+            shutdownClient_.UnRegisterShutdownCallback(static_cast<sptr<PowerMgr::ISyncShutdownCallback>> 
+                (syncCallback_)); 
+            } 
+        }
 #endif
     }
     SetMetaDataReport();
@@ -1411,18 +1411,6 @@ void SaveDocumentSyncCallback::OnSyncShutdown()
     std::lock_guard<std::mutex> lock(mutex_);
     isShutdown_ = true;
     usleep(intervalTime_); // wait 500 ms
-}
-
-void RecorderServer::UnregisterShutdownCallbackIfNeeded()
-{
-    if (syncCallback_ && isShutdownRegistered_) {
-        if (!syncCallback_->GetShutdown()) {
-            MEDIA_LOGI("UnregisterShutdownCallbackIfNeeded start");
-            shutdownClient_.UnRegisterShutdownCallback(
-                static_cast<sptr<PowerMgr::ISyncShutdownCallback>>(syncCallback_));
-        }
-        isShutdownRegistered_ = false;
-    }
 }
 #endif
 } // namespace Media
