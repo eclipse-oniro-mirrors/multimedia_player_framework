@@ -2175,7 +2175,7 @@ HWTEST_F(RecorderServerUnitTest, recorder_SetUserMeta_006, TestSize.Level2)
     std::shared_ptr<Meta> userMeta = nullptr;
     
     int32_t ret = recorderServer_->SetUserMeta(userMeta);
-    EXPECT_TRUE(ret == MSERR_OK || ret == MSERR_NO_MEMORY || ret == MSERR_INVALID_STATE);
+    EXPECT_TRUE(ret == MSERR_INVALID_VAL);
     
     EXPECT_EQ(MSERR_OK, recorderServer_->Release());
     close(g_videoRecorderConfig.outputFd);
