@@ -31,6 +31,7 @@ struct CPlayParameters {
     int32_t rate = 0; // default AudioRendererRate::RENDER_RATE_NORMAL
     float leftVolume = (float)1.0;
     float rightVolume = (float)1.0;
+    float pitch = (float)1.0;
     int32_t priority = 0;
     bool parallelPlayFlag = false;
     char *cacheDir;

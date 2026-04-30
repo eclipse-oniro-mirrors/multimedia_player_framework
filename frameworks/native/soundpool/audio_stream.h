@@ -55,7 +55,8 @@ enum class StreamState : int32_t {
     STOPPED = 4,
     RELEASED = 5,
 };
-
+const float MAXPITCH = 4;
+const float MINPITCH = 0.25;
 class AudioStream :
     public AudioStandard::AudioRendererFirstFrameWritingCallback,
     public AudioStandard::AudioRendererCallback,
@@ -135,6 +136,7 @@ private:
     std::weak_ptr<OHOS::Media::IStreamIDManager> manager_;
 
     int32_t lastLoop_ = 0;
+    float lastPitch_ = 1;
     int32_t currentLoop_ = 0;
     int32_t priority_ = 0;
     int32_t rendererFlags_ = 0;

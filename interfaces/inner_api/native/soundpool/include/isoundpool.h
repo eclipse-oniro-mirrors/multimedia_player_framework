@@ -33,6 +33,7 @@ struct PlayParams {
     bool parallelPlayFlag = false;
     std::string cacheDir;
     int32_t audioHapticsSyncId = 0;
+    float pitch = (float)1.0;
 };
 
 enum InterruptMode : int32_t {

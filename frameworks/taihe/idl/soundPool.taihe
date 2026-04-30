@@ -65,6 +65,7 @@ struct PlayParameters {
   leftVolume: Optional<f64>;
   rightVolume: Optional<f64>;
   priority: Optional<i32>;
+  pitch: Optional<f64>;
   parallelPlayFlag: Optional<bool>;
 }
 
