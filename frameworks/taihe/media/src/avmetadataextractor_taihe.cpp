@@ -612,7 +612,7 @@ void AVMetadataExtractorImpl::FetchFramesByTimes(array_view<int64_t> timesUs,
             "Current state is not runnable, can't fetchFrame.");
         return;
     }
-    std::string callbackName = "OnFrameFetched";
+    std::string callbackName = "onFrameFetched";
     ani_env *env = taihe::get_env();
     std::shared_ptr<taihe::callback<void(::ohos::multimedia::media::FrameInfo const&,
         taihe::optional_view<uintptr_t>)>> taiheCallback = std::make_shared
