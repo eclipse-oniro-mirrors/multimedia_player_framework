@@ -125,12 +125,12 @@ void AVRecorderCallback::SendPhotoAssertAvailableCallback(const std::string &uri
         return;
     }
 
+#ifdef SUPPORT_RECORDER_CREATE_FILE
     AVRecordJsCallback *cb = new(std::nothrow) AVRecordJsCallback();
     CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
     cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE);
     cb->callbackName = AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE;
     cb->uri = uri;
-#ifdef SUPPORT_RECORDER_CREATE_FILE
     return OnJsPhotoAssertAvailableCallback(cb);
 #endif
 }

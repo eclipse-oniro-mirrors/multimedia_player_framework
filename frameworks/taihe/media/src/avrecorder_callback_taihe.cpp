@@ -133,7 +133,7 @@ void AVRecorderCallback::OnTaihePhotoAssertAvailableCallback(AVRecordTaiheCallba
         do {
             std::string request = event->callbackName;
             std::shared_ptr<AutoRef> ref = event->autoRef.lock();
-            CHECK_AND_RETURN_LOG(ref != nullptr, "ref is nullptr");
+            CHECK_AND_BREAK_LOG(ref != nullptr, "ref is nullptr");
             auto func = ref->callbackRef_;
             std::shared_ptr<taihe::callback<void(uintptr_t)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void(uintptr_t)>>(func);
@@ -206,12 +206,12 @@ void AVRecorderCallback::SendPhotoAssertAvailableCallback(const std::string &uri
         return;
     }
 
+#ifdef SUPPORT_RECORDER_CREATE_FILE
     AVRecordTaiheCallback *cb = new(std::nothrow) AVRecordTaiheCallback();
     CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
     cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE);
     cb->callbackName = AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE;
     cb->uri = uri;
-#ifdef SUPPORT_RECORDER_CREATE_FILE
     OnTaihePhotoAssertAvailableCallback(cb);
 #endif
 }
