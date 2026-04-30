@@ -89,6 +89,7 @@ RecorderServer::~RecorderServer()
         std::lock_guard<std::mutex> lock(mutex_);
         recorderEngine_ = nullptr;
 #ifdef SUPPORT_POWER_MANAGER
+        UnregisterShutdownCallbackIfNeeded();
         syncCallback_ = nullptr;
 #endif
         taskQue_.Stop();
@@ -999,6 +1000,9 @@ int32_t RecorderServer::Stop(bool block)
 #endif
     }
     SetMediaKitReport(status_);
+#ifdef SUPPORT_POWER_MANAGER
+    UnregisterShutdownCallbackIfNeeded();
+#endif
     return ret;
 }
 
@@ -1033,12 +1037,7 @@ int32_t RecorderServer::Release()
         (void)taskQue_.EnqueueTask(task);
         (void)task->GetResult();
 #ifdef SUPPORT_POWER_MANAGER
-        if (syncCallback_) {
-            if (!syncCallback_->GetShutdown()) {
-                shutdownClient_.UnRegisterShutdownCallback(static_cast<sptr<PowerMgr::ISyncShutdownCallback>>
-                    (syncCallback_));
-            }
-        }
+        UnregisterShutdownCallbackIfNeeded();
 #endif
     }
     SetMetaDataReport();
@@ -1411,6 +1410,21 @@ void SaveDocumentSyncCallback::OnSyncShutdown()
     std::lock_guard<std::mutex> lock(mutex_);
     isShutdown_ = true;
     usleep(intervalTime_); // wait 500 ms
+}
+
+void RecorderServer::UnregisterShutdownCallbackIfNeeded()
+{
+    if (!syncCallback_) {
+        MEDIA_LOGD("UnregisterShutdownCallback callback is null");
+        return;
+    }
+    bool isShuttingDown = syncCallback_->GetShutdown();
+    if (isShuttingDown) {
+        MEDIA_LOGI("UnRegisterShutdownCallback already in shutdown");
+        return;
+    }
+    shutdownClient_.UnRegisterShutdownCallback(static_cast<sptr<PowerMgr::ISyncShutdownCallback>>(syncCallback_));
+    MEDIA_LOGI("UnRegisterShutdownCallback unregister successfully");
 }
 #endif
 } // namespace Media
