@@ -224,11 +224,11 @@ std::shared_ptr<AudioCapturer> AudioCapturerWrapper::CreateAudioCapturer(const O
     }
     capturerOptions.capturerInfo.capturerFlags = 0;
     capturerOptions.strategy = { AudioConcurrencyMode::MIX_WITH_OTHERS };
-    std::shared_ptr<AudioCapturer> audioCapturer = AudioCapturer::Create(capturerOptions, newInfo);
+    std::shared_ptr<AudioCapturer> audioCapturer = audioCapturerBuilder_ ?
+        audioCapturerBuilder_(capturerOptions, newInfo) : AudioCapturer::Create(capturerOptions, newInfo);
     CHECK_AND_RETURN_RET_LOG(audioCapturer != nullptr, nullptr, "AudioCapturer::Create failed");
     std::shared_ptr<AudioCapturerCallbackImpl> callback = std::make_shared<AudioCapturerCallbackImpl>();
-    int ret = audioCapturer->SetCapturerCallback(callback);
-    if (ret != MSERR_OK) {
+    if (audioCapturer->SetCapturerCallback(callback) != MSERR_OK) {
         audioCapturer->Release();
         MEDIA_LOGE("SetCapturerCallback failed, threadName:%{public}s", threadName_.c_str());
         return nullptr;

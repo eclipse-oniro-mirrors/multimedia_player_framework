@@ -87,6 +87,11 @@ protected:
 private:
     std::shared_ptr<OHOS::AudioStandard::AudioCapturer> CreateAudioCapturer(
         const OHOS::AudioStandard::AppInfo &appInfo);
+
+    using AudioCapturerBuilder = std::function<std::shared_ptr<OHOS::AudioStandard::AudioCapturer>(
+        const OHOS::AudioStandard::AudioCapturerOptions&, const OHOS::AudioStandard::AppInfo&)>;
+    AudioCapturerBuilder audioCapturerBuilder_;
+
     void SetInnerStreamUsage(std::vector<OHOS::AudioStandard::StreamUsage> &usages);
     void PartiallyPrintLog(int32_t lineNumber, std::string str);
     int32_t RelativeSleep(int64_t nanoTime);

@@ -25,6 +25,7 @@
 #include "token_setproc.h"
 #include "screen_capture_listener_proxy.h"
 #include "screen_capture_server.h"
+#include "mock/mock_audio_capturer.h"
 #include "gtest/gtest.h"
 
 namespace OHOS {
@@ -50,6 +51,11 @@ public:
     int32_t StartStreamAudioCapture();
     void SetSCInnerAudioCaptureAndPushData(std::shared_ptr<AudioBuffer> innerAudioBuffer);
     void SetSCMicAudioCaptureAndPushData(std::shared_ptr<AudioBuffer> micAudioBuffer);
+    std::shared_ptr<AudioCapturerWrapper> CreateTestWrapper(
+        AudioCaptureInfo &audioInfo, const std::string &name, bool isInner = true, bool expectStart = true);
+    void SetWrapperBuilder(std::shared_ptr<AudioCapturerWrapper> wrapper, bool expectStart = true);
+    void SetupAudioDataSource(AVScreenCaptureMixMode mode);
+    void SetMockBuilder(std::shared_ptr<ScreenCaptureServer> server);
 
 protected:
     std::shared_ptr<ScreenCaptureServer> screenCaptureServer_;
