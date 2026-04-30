@@ -136,6 +136,7 @@ private:
     std::weak_ptr<OHOS::Media::IStreamIDManager> manager_;
 
     int32_t lastLoop_ = 0;
+    float lastPitch_ = 1;
     int32_t currentLoop_ = 0;
     int32_t priority_ = 0;
     int32_t rendererFlags_ = 0;
