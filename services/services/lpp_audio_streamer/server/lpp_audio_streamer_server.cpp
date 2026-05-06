@@ -31,6 +31,8 @@ namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "LppAudioStreamerServer"};
 constexpr float MAX_LOUDNESS_GAIN = 24.0f;
 constexpr float MIN_LOUDNESS_GAIN = -90.0f;
+constexpr float MAX_SPEED = 4.0f;
+constexpr float MIN_SPEED = 0.25f;
 }
 
 namespace OHOS {
@@ -242,7 +244,7 @@ int32_t LppAudioStreamerServer::SetLoudnessGain(const float loudnessGain)
     }
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
     CHECK_AND_RETURN_RET_LOG(loudnessGain >= MIN_LOUDNESS_GAIN &&
-        loudnessGain <= MAX_LOUDNESS_GAIN, MSERR_INVALID_OPERATION,
+        loudnessGain <= MAX_LOUDNESS_GAIN, MSERR_INVALID_VAL,
         "SetLoudnessGain failed, the loudnessGain should be set to a value ranging from -90 to 24");
     auto ret = streamerEngine_->SetLoudnessGain(loudnessGain);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "loudnessGain Failed!");
@@ -253,6 +255,9 @@ int32_t LppAudioStreamerServer::SetPlaybackSpeed(float speed)
 {
     MEDIA_LOGI("LppAudioStreamerServer SetPlaybackSpeed");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(speed >= MIN_SPEED &&
+        speed <= MAX_SPEED, MSERR_INVALID_VAL,
+        "SetPlaybackSpeed failed, the speed should be set to a value ranging from 0.25 to 4");
     auto ret = streamerEngine_->SetPlaybackSpeed(speed);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetPlaybackSpeed Failed!");
     return MSERR_OK;
