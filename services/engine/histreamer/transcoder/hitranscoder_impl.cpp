@@ -1066,7 +1066,7 @@ Status HiTransCoderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, co
                     return LinkWaterMark(filter, outType);
                 }
                 // 水印或其他：直接链接编码器
-                return LinkVideoEncoderFilter(filter, outType); 
+                return LinkVideoEncoderFilter(filter, outType);
             }
             case Pipeline::StreamType::STREAMTYPE_ENCODED_VIDEO:
                 if (filter->GetFilterType() == Pipeline::FilterType::FILTERTYPE_DEMUXER) {
@@ -1181,7 +1181,7 @@ Status HiTransCoderImpl::LinkWaterMark(const std::shared_ptr<Pipeline::Filter>& 
 Status HiTransCoderImpl::ConnectDecoderToEncoder()
 {
     FALSE_RETURN_V_MSG_E(videoEncoderFilter_ != nullptr && videoDecoderFilter_ != nullptr,
-    Status::ERROR_NULL_POINTER, "VideoDecoder or VideoEncoder is nullptr");
+        Status::ERROR_NULL_POINTER, "VideoDecoder or VideoEncoder is nullptr");
     sptr<Surface> encoderFilterSurface = videoEncoderFilter_->GetInputSurface();
     FALSE_RETURN_V_MSG_E(encoderFilterSurface != nullptr, Status::ERROR_GET_INPUT_SURFACE_FAILED,
         "encoderFilterSurface is nullptr");
