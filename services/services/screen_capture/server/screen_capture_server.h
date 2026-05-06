@@ -146,11 +146,15 @@ public:
     void SetDisplayScreenId(std::vector<uint64_t> &&displayIds);
     void SetAppMissionIds(uint64_t missionId);
     void SetAppMissionIds(const std::vector<uint64_t> &missionIds);
+    void SetWhiteAndFocusId();
     void ClearAppMissionIds();
     bool AppMissionIdsIsEmpty();
     void RemoveAppMissionIds(uint64_t missionId);
     void SetAppMissionIdsGround(uint64_t missionId);
     void RemoveAppMissionIdsGround(uint64_t missionId);
+    void ChangeMirrorScreen();
+    void ChangeMirrorScreenForRemove();
+    void ChangeMirrorScreenForSet();
     bool IsTelInCallSkipList();
     int32_t GetAppPid();
     int32_t GetAppUid();
@@ -442,7 +446,7 @@ private:
     std::vector<uint64_t> appMissionIds_ = {};
     std::vector<uint64_t> appMissionIdsForGround_ = {};
     std::vector<int32_t> windowIdList_ = {};
-    std::atomic<uint64_t> focusAppMissionId_ = 0;
+    std::atomic<uint64_t> focusAppMissionId_ = INVALID_FOCUS_MISSIONID;
     std::atomic<bool> isGetAppMissionId_ = true;
     std::atomic<ScreenId> curWindowInDisplayId_{SCREEN_ID_INVALID};
     std::atomic<AVScreenCaptureContentChangedEvent> curWindowEvent_ =
@@ -535,6 +539,7 @@ private:
     static constexpr int32_t SELECT_TYPE_SCREEN = 0;
     static constexpr int32_t SELECT_TYPE_WINDOW = 1;
     static constexpr int32_t SELECT_TYPE_APP = 2;
+    static constexpr uint64_t INVALID_FOCUS_MISSIONID = std::numeric_limits<uint64_t>::max();
 };
 } // namespace Media
 } // namespace OHOS

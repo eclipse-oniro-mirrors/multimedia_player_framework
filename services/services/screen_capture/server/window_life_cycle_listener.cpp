@@ -49,8 +49,8 @@ void SCWindowLifecycleListener::OnBatchLifecycleEvent(const std::vector<Lifecycl
         if (payload.sessionState_ != SessionState::STATE_DISCONNECT) {
             missionIds.emplace_back(payload.persistentId_);
         }
-        if (payload.sessionState_ == SessionState::STATE_CONNECT ||
-            payload.sessionState_ == SessionState::STATE_FOREGROUND) {
+        if (payload.sessionState_ == SessionState::STATE_FOREGROUND ||
+            payload.sessionState_ == SessionState::STATE_ACTIVE) {
             SCServer->SetAppMissionIdsGround(payload.persistentId_);
         }
     }
@@ -68,11 +68,11 @@ void SCWindowLifecycleListener::OnAppInstanceLifecycleEvent(const LifecycleEvent
     auto SCServer = screenCaptureServer_.lock();
     CHECK_AND_RETURN_LOG(SCServer != nullptr, "screenCaptureServer is nullptr");
     switch (payload.sessionState_) {
-        case SessionState::STATE_CONNECT:
-        case SessionState::STATE_FOREGROUND: {
-            MEDIA_LOGI("OnAppInstanceLifecycleEvent: SessionState::STATE_FOREGROUND OR SessionState::STATE_CONNECT");
-            SCServer->SetAppMissionIds(payload.persistentId_);
+        case SessionState::STATE_FOREGROUND:
+        case SessionState::STATE_ACTIVE: {
+            MEDIA_LOGI("OnAppInstanceLifecycleEvent: SessionState::STATE_FOREGROUND OR SessionState::STATE_ACTIVE");
             SCServer->SetAppMissionIdsGround(payload.persistentId_);
+            SCServer->SetAppMissionIds(payload.persistentId_);
             break;
         }
         case SessionState::STATE_BACKGROUND: {

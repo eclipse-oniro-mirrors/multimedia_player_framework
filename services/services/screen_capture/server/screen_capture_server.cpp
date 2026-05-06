@@ -1204,7 +1204,7 @@ void ScreenCaptureServer::ParseAppMissionIds(const Json::Value &appInformation)
     SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_APP, -1);
     isGetAppMissionId_  = appMissionIdsCondVar_.wait_until(write_lock,
         std::chrono::system_clock::now() + std::chrono::seconds(APPMISSIONID_WAIT_TIME),
-        [this] { return !appMissionIds_.empty() && focusAppMissionId_ != 0; });
+        [this] { return !appMissionIds_.empty() && focusAppMissionId_ != INVALID_FOCUS_MISSIONID; });
     if (isGetAppMissionId_) {
         MEDIA_LOGI("ParseAppMissionIds end. appMissionIds size: %{public}d",
             static_cast<uint32_t>(appMissionIds_.size()));
@@ -1384,23 +1384,35 @@ void ScreenCaptureServer::SetMissionId(uint64_t missionId)
     missionIds_.emplace_back(missionId);
 }
 
+void ScreenCaptureServer::SetWhiteAndFocusId()
+{
+    CHECK_AND_RETURN_LOG(!appMissionIds_.empty() && !appMissionIdsForGround_.empty(),
+        "appMissionIds_ or appMissionIdsForGround_ is empty");
+    Rosen::FocusChangeInfo focusedWindowInfo;
+    Rosen::WindowManager::GetInstance().GetFocusWindowInfo(focusedWindowInfo);
+    if (std::find(appMissionIdsForGround_.begin(), appMissionIdsForGround_.end(),
+        focusedWindowInfo.windowId_) != appMissionIdsForGround_.end() &&
+        focusAppMissionId_ == INVALID_FOCUS_MISSIONID) {
+        focusAppMissionId_ = focusedWindowInfo.windowId_;
+    } else {
+        focusAppMissionId_ = appMissionIdsForGround_.back();
+    }
+    MEDIA_LOGI("SetWhiteAndFocusId focusedWindowId:%{public}d,focusAppMissionId_:%{public}" PRIu64,
+        focusedWindowInfo.windowId_, focusAppMissionId_.load());
+    appMissionIdsCondVar_.notify_all();
+    CHECK_AND_RETURN_LOG(virtualScreenId_ != SCREEN_ID_INVALID,
+        "SetWhiteAndFocusId virtualScreenId_ is SCREEN_ID_INVALID");
+    DMError ret = ScreenManager::GetInstance().AddVirtualScreenWhiteList(virtualScreenId_,
+        appMissionIds_);
+    CHECK_AND_RETURN_LOG(ret == DMError::DM_OK, "AddVirtualScreenWhiteList failed, ret:%{public}d", ret);
+}
+
 void ScreenCaptureServer::SetAppMissionIds(uint64_t missionId)
 {
     std::unique_lock<std::shared_mutex> write_lock(appMissionIdslock_);
     if (std::find(appMissionIds_.begin(), appMissionIds_.end(), missionId) == appMissionIds_.end()) {
         appMissionIds_.emplace_back(missionId);
-        Rosen::FocusChangeInfo focusedWindowInfo;
-        Rosen::WindowManager::GetInstance().GetFocusWindowInfo(focusedWindowInfo);
-        if (std::find(appMissionIds_.begin(), appMissionIds_.end(),
-            focusedWindowInfo.windowId_) != appMissionIds_.end() && focusAppMissionId_ == 0) {
-            focusAppMissionId_ = focusedWindowInfo.windowId_;
-        }
-        appMissionIdsCondVar_.notify_all();
-        CHECK_AND_RETURN_LOG(virtualScreenId_ != SCREEN_ID_INVALID,
-            "SetAppMissionIds virtualScreenId_ is SCREEN_ID_INVALID");
-        DMError ret = ScreenManager::GetInstance().AddVirtualScreenWhiteList(virtualScreenId_,
-            appMissionIds_);
-        CHECK_AND_RETURN_LOG(ret == DMError::DM_OK, "AddVirtualScreenWhiteList failed, ret:%{public}d", ret);
+        SetWhiteAndFocusId();
     }
 }
 
@@ -1410,6 +1422,7 @@ void ScreenCaptureServer::SetAppMissionIdsGround(uint64_t missionId)
     if (std::find(appMissionIdsForGround_.begin(), appMissionIdsForGround_.end(), missionId) ==
         appMissionIdsForGround_.end()) {
         appMissionIdsForGround_.emplace_back(missionId);
+        ChangeMirrorScreenForSet();
         WindowInfoOption windowInfoOption;
         std::vector<sptr<WindowInfo>> infos;
         windowInfoOption.windowId = missionId;
@@ -1426,23 +1439,7 @@ void ScreenCaptureServer::SetAppMissionIds(const std::vector<uint64_t> &missionI
     std::unique_lock<std::shared_mutex> write_lock(appMissionIdslock_);
     appMissionIds_ = missionIds;
     MEDIA_LOGI("SetAppMissionIds appMissionIds_.size(): %{public}d", static_cast<uint32_t>(appMissionIds_.size()));
-    CHECK_AND_RETURN_LOG(!appMissionIds_.empty(), "appMissionIds_ is empty");
-
-    Rosen::FocusChangeInfo focusedWindowInfo;
-    Rosen::WindowManager::GetInstance().GetFocusWindowInfo(focusedWindowInfo);
-
-    if (std::find(appMissionIds_.begin(), appMissionIds_.end(),
-        focusedWindowInfo.windowId_) != appMissionIds_.end() && focusAppMissionId_ == 0) {
-        focusAppMissionId_ = focusedWindowInfo.windowId_;
-    } else {
-        focusAppMissionId_ = missionIds.front();
-    }
-    appMissionIdsCondVar_.notify_all();
-    CHECK_AND_RETURN_LOG(virtualScreenId_ != SCREEN_ID_INVALID,
-        "SetAppMissionIds virtualScreenId_ is SCREEN_ID_INVALID");
-    DMError ret = ScreenManager::GetInstance().AddVirtualScreenWhiteList(virtualScreenId_,
-        appMissionIds_);
-    CHECK_AND_RETURN_LOG(ret == DMError::DM_OK, "AddVirtualScreenWhiteList failed, ret:%{public}d", ret);
+    SetWhiteAndFocusId();
 }
 
 void ScreenCaptureServer::ClearAppMissionIds()
@@ -1472,9 +1469,64 @@ void ScreenCaptureServer::RemoveAppMissionIdsGround(uint64_t missionId)
     std::unique_lock<std::shared_mutex> write_lock(appMissionIdslock_);
     appMissionIdsForGround_.erase(std::remove(appMissionIdsForGround_.begin(),
         appMissionIdsForGround_.end(), missionId), appMissionIdsForGround_.end());
+    ChangeMirrorScreenForRemove();
     if (appMissionIdsForGround_.size() == 0) {
         NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE, nullptr);
     }
+}
+
+
+void ScreenCaptureServer::ChangeMirrorScreenForRemove()
+{
+    CHECK_AND_RETURN_NOLOG(appMissionIdsForGround_.size() > 0);
+    ChangeMirrorScreen();
+}
+
+void ScreenCaptureServer::ChangeMirrorScreenForSet()
+{
+    CHECK_AND_RETURN_NOLOG(appMissionIdsForGround_.size() == 1);
+    ChangeMirrorScreen();
+}
+
+void ScreenCaptureServer::ChangeMirrorScreen()
+{
+    CHECK_AND_RETURN_LOG(virtualScreenId_ >= 0 && virtualScreenId_ != SCREEN_ID_INVALID,
+        "ChangeMirrorScreen failed, invalid screenId");
+    uint64_t defaultDisplayIdValue = GetCurDisplayId();
+    std::unordered_map<uint64_t, uint64_t> windowDisplayIdMap;
+    auto retWindowManager = WindowManager::GetInstance().
+        GetDisplayIdByWindowId(appMissionIdsForGround_, windowDisplayIdMap);
+    MEDIA_LOGI("ChangeMirrorScreen 0x%{public}06" PRIXPTR
+        "GetWindowDisplayIds ret:%{public}d", FAKE_POINTER(this), retWindowManager);
+    for (const auto& pair : windowDisplayIdMap) {
+        MEDIA_LOGI("ChangeMirrorScreen 0x%{public}06" PRIXPTR " WindowId:%{public}" PRIu64
+            " in DisplayId:%{public}" PRIu64, FAKE_POINTER(this), pair.first, pair.second);
+        CHECK_AND_RETURN_LOG(!IsCaptureScreen(pair.second),
+            "ChangeMirrorScreen have missionId in capture screen");
+        defaultDisplayIdValue = pair.second;
+    }
+
+    std::vector<ScreenId> mirrorIds;
+    mirrorIds.push_back(virtualScreenId_);
+    sptr<Rosen::Display> defaultDisplay = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
+    ScreenId mirrorGroup = defaultDisplay->GetScreenId();
+    uint64_t defaultDisplayId = defaultDisplayIdValue;
+    DMError retScreenManager;
+#ifdef PC_STANDARD
+    if (IsHopper() && captureConfig_.strategy.enableDeviceLevelCapture == false) {
+        std::vector<ScreenId> displayIds{defaultDisplayId};
+        retScreenManager = ScreenManager::GetInstance().MakeMirrorForRecord(displayIds, mirrorIds, mirrorGroup);
+    } else {
+        retScreenManager = ScreenManager::GetInstance().MakeMirror(defaultDisplayId, mirrorIds, mirrorGroup);
+    }
+#else
+    retScreenManager = ScreenManager::GetInstance().MakeMirror(defaultDisplayId, mirrorIds, mirrorGroup);
+#endif
+    CHECK_AND_RETURN_LOG(retScreenManager == DMError::DM_OK,
+        "ChangeMirrorScreen failed, ret:%{public}d", retScreenManager);
+    MEDIA_LOGI("ChangeMirrorScreen window screen success, screenId:%{public}" PRIu64,
+        defaultDisplayId);
+    SetDisplayScreenId(defaultDisplayId);
 }
 
 AVScreenCaptureState ScreenCaptureServer::GetSCServerCaptureState()
