@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,6 +23,7 @@
 #include "media_source_loader_stub.h"
 #include "monitor_client_object.h"
 #include "dolby_passthrough_stub.h"
+#include "pcm_output_callback_stub.h"
 
 namespace OHOS {
 namespace Media {
@@ -114,16 +115,19 @@ public:
     bool IsLiveSeek() override;
     int32_t SetVideoOutput(sptr<Surface> surface) override;
     int32_t GetVideoSample(int32_t &outputResult) override;
+    int32_t SetPCMOutputCallback(const std::shared_ptr<PlayerCallback>& callback) override;
 
 private:
     int32_t CreateListenerObject();
     int32_t DisableWhenOK(int32_t ret);
+    int32_t CancelPCMCallbackStub(bool isProcessor);
 
     sptr<IStandardPlayerService> playerProxy_ = nullptr;
     sptr<PlayerListenerStub> listenerStub_ = nullptr;
     sptr<MediaDataSourceStub> dataSrcStub_ = nullptr;
     sptr<DolbyPassthroughStub> dolbyPassthroughStub_ = nullptr;
     sptr<MediaSourceLoaderStub> sourceLoaderStub_ = nullptr;
+    sptr<PCMOutputCallbackStub> pcmOutputCallbackStub_ = nullptr;
     std::shared_ptr<PlayerCallback> callback_ = nullptr;
     std::mutex mutex_;
 };

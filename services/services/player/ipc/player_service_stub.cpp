@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,6 +19,7 @@
 #include "media_data_source_proxy.h"
 #include "media_server_manager.h"
 #include "dolby_passthrough_proxy.h"
+#include "pcm_output_callback_proxy.h"
 
 #ifdef SUPPORT_AVPLAYER_DRM
 #include "media_key_session_service_proxy.h"
@@ -300,6 +301,8 @@ void PlayerServiceStub::FillPlayerFuncPart4()
         [this](MessageParcel &data, MessageParcel &reply) { return SetVideoOutput(data, reply); } };
     playerFuncs_[GET_VIDEO_SAMPLE] = { "Player::GetVideoSample",
         [this](MessageParcel &data, MessageParcel &reply) { return GetVideoSample(data, reply); } };
+    playerFuncs_[SET_PCM_OUTPUT_CALLBACK] = { "Player::SetPCMOutputCallback",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetPCMOutputCallback(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
@@ -2025,6 +2028,35 @@ int32_t PlayerServiceStub::GetVideoSample(MessageParcel &data, MessageParcel &re
     reply.WriteInt32(outputResult);
     reply.WriteInt32(ret);
     return ret;
+}
+
+int32_t PlayerServiceStub::SetPCMProcessorCallback(MessageParcel &data, MessageParcel &reply)
+{
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
+    reply.WriteInt32(SetPCMProcessorCallback(object));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetPCMOutputCallback(const sptr<IRemoteObject> &object)
+{
+    MediaTrace trace("PlayerServiceStub::SetPCMOutputCallback");
+    MEDIA_LOGI("PlayerServiceStub SetPCMOutputCallback");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+
+    auto callback = std::function<void(const std::shared_ptr<AVBuffer>&)>();
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, playerServer_->SetPCMOutputCallback(callback),
+        "object is nullptr, cancel callback");
+
+    sptr<IStandardPCMOutputCallback> proxy = iface_cast<IStandardPCMOutputCallback>(object);
+    CHECK_AND_RETURN_RET_LOG(proxy != nullptr, MSERR_NO_MEMORY, "failed to convert PCMOutputCallbackProxy");
+
+    callback = [proxy](const std::shared_ptr<AVBuffer> &buffer) {
+        CHECK_AND_RETURN_LOG(buffer != nullptr, "buffer is nullptr");
+        CHECK_AND_RETURN_LOG(proxy != nullptr, "proxy is nullptr");
+        proxy->OnPCMOutput(buffer);
+    };
+
+    return playerServer_->SetPCMOutputCallback(callback);
 }
 } // namespace Media
 } // namespace OHOS

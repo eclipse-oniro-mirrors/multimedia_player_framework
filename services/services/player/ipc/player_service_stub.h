@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -220,6 +220,8 @@ private:
     int32_t IsLiveSeek(MessageParcel &data, MessageParcel &reply);
     int32_t SetVideoOutput(MessageParcel &data, MessageParcel &reply);
     int32_t GetVideoSample(MessageParcel &data, MessageParcel &reply);
+    int32_t SetPCMOutputCallback(MessageParcel &data, MessageParcel &reply);
+    int32_t SetPCMOutputCallback(const sptr<IRemoteObject> &object) override;
 
     int32_t ReadMediaStreamListFromMessageParcel(
         MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource);

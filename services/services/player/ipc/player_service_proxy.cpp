@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -131,6 +131,7 @@ void PlayerServiceProxy::InitPlayerFuncsPart2()
     playerFuncs_[GET_LOADED_RANGES] = "Player::GetLoadedRanges";
     playerFuncs_[SEEK_TO_DEFAULT_POSITION] = "Player::SeekToDefaultPosition";
     playerFuncs_[IS_LIVE_SEEK] = "Player::IsLiveSeek";
+    playerFuncs_[SET_PCM_OUTPUT_CALLBACK] = "Player::SetPCMOutputCallback";
 }
 
 int32_t PlayerServiceProxy::SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -1822,6 +1823,24 @@ int32_t PlayerServiceProxy::GetVideoSample(int32_t &outputResult)
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "GetVideoSample failed, error: %{public}d", error);
     outputResult = reply.ReadInt32();
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::SetPCMOutputCallback(const sptr<IRemoteObject> &object)
+{
+    MediaTrace trace("PlayerServiceProxy::SetPCMOutputCallback");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    (void)data.WriteRemoteObject(object);
+    int32_t error = SendRequest(SET_PCM_OUTPUT_CALLBACK, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetPCMOutputCallback failed, error: %{public}d", error);
+
     return reply.ReadInt32();
 }
 } // namespace Media

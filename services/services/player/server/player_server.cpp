@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -2793,6 +2793,17 @@ int32_t PlayerServer::GetVideoSample(int32_t &outputResult)
     }
     MEDIA_LOGD("PlayerServer GetVideoSample %{public}d", outputResult);
     return MSERR_OK;
+}
+
+int32_t PlayerServer::SetPCMOutputCallback(const std::function<void(const std::shared_ptr<AVBuffer>&)>& callback)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    bool isValidState = lastOpStatus_ == PLAYER_IDLE || lastOpStatus_ == PLAYER_INITIALIZED;
+    CHECK_AND_RETURN_RET_LOG(isValidState, MSERR_INVALID_STATE,
+        "can not SetPCMOutputCallback, current state is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
+
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_INVALID_STATE, "playerEngine_ is nullptr");
+    return playerEngine_->SetPCMOutputCallback(callback);
 }
 } // namespace Media
 } // namespace OHOS

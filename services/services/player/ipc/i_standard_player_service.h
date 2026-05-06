@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -304,6 +304,12 @@ public:
         return 0;
     }
 
+    virtual int32_t SetPCMOutputCallback(const sptr<IRemoteObject> &object)
+    {
+        (void)object;
+        return 0;
+    }
+
     /**
      * IPC code ID
      */
@@ -379,6 +385,7 @@ public:
         GET_TRACK_DESCRIPTION,
         GET_PLAYBACK_STATISTIC_METRICS,
         GET_CURRENT_PRESENTATION_TIMESTAMP,
+        SET_PCM_OUTPUT_CALLBACK,
         MAX_IPC_ID,                   // all IPC codes should be added before MAX_IPC_ID
         REGISTER_DEVICE_CAPABILITY,
         GET_GLOBAL_INFO,
