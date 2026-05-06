@@ -17,6 +17,7 @@
 #define I_STANDARD_PCM_OUTPUT_CALLBACK_H
 
 #include "ipc_types.h"
+#include "iremote_broker.h"
 #include "avbuffer.h"
 
 namespace OHOS {
