@@ -37,6 +37,7 @@ ohos_unittest("player_service_stub_test") {
     "$MEDIA_PLAYER_ROOT_DIR/services/services/monitor/client",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/monitor/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/monitor/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/pcm_output/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/recorder/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/recorder/server",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/avmetadatahelper/ipc",
