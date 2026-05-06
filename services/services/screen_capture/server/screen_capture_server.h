@@ -446,7 +446,7 @@ private:
     std::vector<uint64_t> appMissionIds_ = {};
     std::vector<uint64_t> appMissionIdsForGround_ = {};
     std::vector<int32_t> windowIdList_ = {};
-    std::atomic<uint64_t> focusAppMissionId_ = INVALID_FOCUS_MISSIONID;
+    std::atomic<uint64_t> focusAppMissionId_ = INVALID_FOCUS_MISSION_ID;
     std::atomic<bool> isGetAppMissionId_ = true;
     std::atomic<ScreenId> curWindowInDisplayId_{SCREEN_ID_INVALID};
     std::atomic<AVScreenCaptureContentChangedEvent> curWindowEvent_ =
@@ -539,7 +539,7 @@ private:
     static constexpr int32_t SELECT_TYPE_SCREEN = 0;
     static constexpr int32_t SELECT_TYPE_WINDOW = 1;
     static constexpr int32_t SELECT_TYPE_APP = 2;
-    static constexpr uint64_t INVALID_FOCUS_MISSIONID = std::numeric_limits<uint64_t>::max();
+    static constexpr uint64_t INVALID_FOCUS_MISSION_ID = std::numeric_limits<uint64_t>::max();
 };
 } // namespace Media
 } // namespace OHOS

@@ -1199,7 +1199,7 @@ void ScreenCaptureServer::ParseAppMissionIds(const Json::Value &appInformation)
     SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_APP, -1);
     isGetAppMissionId_  = appMissionIdsCondVar_.wait_until(write_lock,
         std::chrono::system_clock::now() + std::chrono::seconds(APPMISSIONID_WAIT_TIME),
-        [this] { return !appMissionIds_.empty() && focusAppMissionId_ != INVALID_FOCUS_MISSIONID; });
+        [this] { return !appMissionIds_.empty() && focusAppMissionId_ != INVALID_FOCUS_MISSION_ID; });
     if (isGetAppMissionId_) {
         MEDIA_LOGI("ParseAppMissionIds end. appMissionIds size: %{public}d",
             static_cast<uint32_t>(appMissionIds_.size()));
@@ -1387,7 +1387,7 @@ void ScreenCaptureServer::SetWhiteAndFocusId()
     Rosen::WindowManager::GetInstance().GetFocusWindowInfo(focusedWindowInfo);
     if (std::find(appMissionIdsForGround_.begin(), appMissionIdsForGround_.end(),
         focusedWindowInfo.windowId_) != appMissionIdsForGround_.end() &&
-        focusAppMissionId_ == INVALID_FOCUS_MISSIONID) {
+        focusAppMissionId_ == INVALID_FOCUS_MISSION_ID) {
         focusAppMissionId_ = focusedWindowInfo.windowId_;
     } else {
         focusAppMissionId_ = appMissionIdsForGround_.back();
