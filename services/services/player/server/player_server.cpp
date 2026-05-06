@@ -2444,7 +2444,7 @@ int32_t PlayerServer::SeekContinous(int64_t mSeconds)
 
 int32_t PlayerServer::HandleSeekContinous(int64_t mSeconds, int64_t batchNo)
 {
-    MEDIA_LOGI("KPI-TRACE: PlayerServer HandleSeek in, mSeconds: %{public}," PRId64, mSeconds);
+    MEDIA_LOGI("KPI-TRACE: PlayerServer HandleSeek in, mSeconds: %{public}" PRId64, mSeconds);
     int32_t ret = playerEngine_->SeekContinous(mSeconds, batchNo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Seek Failed!");
     MEDIA_LOGI("PlayerServer HandleSeek end");
