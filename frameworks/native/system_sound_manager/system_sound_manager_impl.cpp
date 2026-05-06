@@ -1700,7 +1700,25 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByFd(const std::shared_ptr<
     const std::shared_ptr<ToneAttrs> &toneAttrs, const int32_t &fd)
 {
     MEDIA_LOGI("AddCustomizedToneByFd: Start.");
-    ParamsForAddCustomizedTone paramsForAddCustomizedTone = { "", fd, INT_MAX, 0, false };
+    if (fd < 0) {
+        MEDIA_LOGE("AddCustomizedToneByFd: fd is invalid");
+        return "";
+    }
+    off_t fileSize = lseek(fd, 0, SEEK_END);
+    if (fileSize == -1) {
+        MEDIA_LOGE("AddCustomizedToneByFd: lseek failed, error: %{public}s", strerror(errno));
+        return "";
+    }
+    if (fileSize > INT32_MAX) {
+        MEDIA_LOGE("AddCustomizedToneByFd: fileSize %{public}lld exceeds INT32_MAX", static_cast<long long>(fileSize));
+        return "";
+    }
+    off_t seekRet = lseek(fd, 0, SEEK_SET);
+    if (seekRet == -1) {
+        MEDIA_LOGE("AddCustomizedToneByFd: lseek reset failed, error: %{public}s", strerror(errno));
+        return "";
+    }
+    ParamsForAddCustomizedTone paramsForAddCustomizedTone = { "", fd, static_cast<int32_t>(fileSize), 0, false };
     return AddCustomizedToneByFdAndOffset(context, toneAttrs, paramsForAddCustomizedTone);
 }
 
