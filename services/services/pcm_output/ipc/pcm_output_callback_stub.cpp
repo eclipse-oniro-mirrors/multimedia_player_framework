@@ -14,6 +14,7 @@
  */
 
 #include "pcm_output_callback_stub.h"
+#include "iremote_broker.h"
 #include "media_errors.h"
 #include "media_log.h"
 #include "native_avbuffer.h"
