@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -126,6 +126,8 @@ public:
     PlaylistLoopMode GetPlaylistLoopMode() const override;
     int32_t SetVideoOutput(sptr<Surface> surface) override;
     int32_t GetVideoSample(int32_t &outputResult) override;
+    int32_t SetPCMOutputCallback(const std::shared_ptr<PlayerCallback>& callback) override;
+
 private:
     using MediaSourceIterator = std::vector<std::pair<std::string, std::shared_ptr<AVMediaSource>>>::iterator;
     void ResetSeekVariables();

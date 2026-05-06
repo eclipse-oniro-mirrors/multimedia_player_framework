@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1551,6 +1551,16 @@ int32_t PlayerImpl::GetVideoSample(int32_t &outputResult)
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->GetVideoSample(outputResult), "GetVideoSample", false, TIME_OUT_SECOND);
+    return ret;
+}
+
+int32_t PlayerImpl::SetPCMOutputCallback(const std::shared_ptr<PlayerCallback>& callback)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetPCMOutputCallback", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    
+    int32_t ret = MSERR_OK;
+    LISTENER(ret = playerService_->SetPCMOutputCallback(callback), "SetPCMOutputCallback", false, TIME_OUT_SECOND);
     return ret;
 }
 } // namespace Media
