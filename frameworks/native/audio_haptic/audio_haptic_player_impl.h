@@ -73,6 +73,7 @@ private:
     // var for all
     AudioLatencyMode latencyMode_;
     AudioStandard::StreamUsage streamUsage_ = AudioStandard::STREAM_USAGE_UNKNOWN;
+    bool isMockMode_ = false;
     bool muteAudio_;
     bool muteHaptic_;
     bool parallelPlayFlag_ = false;

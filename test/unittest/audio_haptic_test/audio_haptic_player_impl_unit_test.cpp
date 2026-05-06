@@ -1245,5 +1245,101 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_064, TestSize.Leve
 
     audioHapticPlayerImpl->ReleaseVibratorInternal();
 }
+
+/**
+ * @tc.name  : Test AudioHapticPlayerImpl MockMode
+ * @tc.number: MockMode_AudioHapticPlayerImpl_LoadPlayer_001
+ * @tc.desc  : Test LoadPlayer in Mock mode (rendererFlags = VKB_NORMAL)
+ */
+HWTEST_F(AudioHapticPlayerImplUnitTest, MockMode_AudioHapticPlayerImpl_LoadPlayer_001, TestSize.Level0)
+{
+    auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
+    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    
+    AudioHapticPlayerParam param;
+    param.audioSource = {.audioUri = "test_audio_uri"};
+    param.hapticSource = {.hapticUri = "test_haptic_uri"};
+    param.latencyMode = AUDIO_LATENCY_MODE_NORMAL;
+    param.streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
+    param.isMockMode = true;
+    
+    audioHapticPlayerImpl->SetPlayerParam(param);
+    EXPECT_EQ(audioHapticPlayerImpl->isMockMode_, true);
+    
+    audioHapticPlayerImpl->audioHapticSound_ = nullptr;
+    audioHapticPlayerImpl->muteAudio_ = false;
+    audioHapticPlayerImpl->parallelPlayFlag_ = false;
+    audioHapticPlayerImpl->LoadPlayer();
+}
+
+/**
+ * @tc.name  : Test AudioHapticPlayerImpl MockMode
+ * @tc.number: MockMode_AudioHapticPlayerImpl_LoadPlayer_002
+ * @tc.desc  : Test LoadPlayer in normal mode (rendererFlags = NORMAL)
+ */
+HWTEST_F(AudioHapticPlayerImplUnitTest, MockMode_AudioHapticPlayerImpl_LoadPlayer_002, TestSize.Level0)
+{
+    auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
+    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    
+    AudioHapticPlayerParam param;
+    param.audioSource = {.audioUri = "test_audio_uri"};
+    param.hapticSource = {.hapticUri = "test_haptic_uri"};
+    param.latencyMode = AUDIO_LATENCY_MODE_NORMAL;
+    param.streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
+    param.isMockMode = false;
+    
+    audioHapticPlayerImpl->SetPlayerParam(param);
+    EXPECT_EQ(audioHapticPlayerImpl->isMockMode_, false);
+    
+    audioHapticPlayerImpl->audioHapticSound_ = nullptr;
+    audioHapticPlayerImpl->muteAudio_ = false;
+    audioHapticPlayerImpl->parallelPlayFlag_ = false;
+    audioHapticPlayerImpl->LoadPlayer();
+}
+
+/**
+ * @tc.name  : Test AudioHapticPlayerImpl MockMode
+ * @tc.number: MockMode_AudioHapticPlayerImpl_SetVolume_001
+ * @tc.desc  : Test SetVolume in Mock mode with volume 0
+ */
+HWTEST_F(AudioHapticPlayerImplUnitTest, MockMode_AudioHapticPlayerImpl_SetVolume_001, TestSize.Level1)
+{
+    auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
+    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    
+    audioHapticPlayerImpl->latencyMode_ = AUDIO_LATENCY_MODE_NORMAL;
+    audioHapticPlayerImpl->streamUsage_ = AudioStandard::StreamUsage::STREAM_USAGE_VOICE_RINGTONE;
+    audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_RUNNING;
+    audioHapticPlayerImpl->volume_ = 1.0f;
+    audioHapticPlayerImpl->isMockMode_ = true;
+    audioHapticPlayerImpl->audioHapticVibrator_ = std::make_shared<AudioHapticVibratorImpl>(*audioHapticPlayerImpl);
+    
+    float volume = 0.0f;
+    int32_t result = audioHapticPlayerImpl->SetVolume(volume);
+    EXPECT_EQ(result, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test AudioHapticPlayerImpl MockMode
+ * @tc.number: MockMode_AudioHapticPlayerImpl_SetVolume_002
+ * @tc.desc  : Test SetVolume in normal mode with volume 0
+ */
+HWTEST_F(AudioHapticPlayerImplUnitTest, MockMode_AudioHapticPlayerImpl_SetVolume_002, TestSize.Level1)
+{
+    auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
+    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    
+    audioHapticPlayerImpl->latencyMode_ = AUDIO_LATENCY_MODE_NORMAL;
+    audioHapticPlayerImpl->streamUsage_ = AudioStandard::StreamUsage::STREAM_USAGE_VOICE_RINGTONE;
+    audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_RUNNING;
+    audioHapticPlayerImpl->volume_ = 1.0f;
+    audioHapticPlayerImpl->isMockMode_ = false;
+    audioHapticPlayerImpl->audioHapticVibrator_ = std::make_shared<AudioHapticVibratorImpl>(*audioHapticPlayerImpl);
+    
+    float volume = 0.0f;
+    int32_t result = audioHapticPlayerImpl->SetVolume(volume);
+    EXPECT_EQ(result, MSERR_OK);
+}
 } // namespace Media
 } // namespace OHOS

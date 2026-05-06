@@ -149,6 +149,10 @@ std::vector<std::string> RINGTONETYPE = {{RINGTONE_CONTAINER_TYPE_MP3}, {RINGTON
     {RINGTONE_CONTAINER_TYPE_ADT}, {RINGTONE_CONTAINER_TYPE_SND}, {RINGTONE_CONTAINER_TYPE_MP2},
     {RINGTONE_CONTAINER_TYPE_MP1}, {RINGTONE_CONTAINER_TYPE_MPA}, {RINGTONE_CONTAINER_TYPE_MPA},
     {RINGTONE_CONTAINER_TYPE_M4R}};
+std::vector<std::string> HAPTIC_2_TONE_TABLE_COLUMNS = {{HAPTIC_2_TONE_COLUMN_ID}, {HAPTIC_2_TONE_COLUMN_DATA},
+    {HAPTIC_2_TONE_COLUMN_SIZE}, {HAPTIC_2_TONE_COLUMN_DISPLAY_NAME}, {HAPTIC_2_TONE_COLUMN_TITLE},
+    {HAPTIC_2_TONE_COLUMN_HAPTIC_2_TONE_TYPE}, {HAPTIC_2_TONE_COLUMN_SOURCE_TYPE}, {HAPTIC_2_TONE_COLUMN_DATE_ADDED},
+    {HAPTIC_2_TONE_COLUMN_DATE_MODIFIED}, {HAPTIC_2_TONE_COLUMN_PLAY_MODE}, {HAPTIC_2_TONE_COLUMN_SCANNER_FLAG}};
 
 std::shared_ptr<SystemSoundManager> SystemSoundManagerFactory::CreateSystemSoundManager()
 {
@@ -2967,6 +2971,20 @@ std::string SystemSoundManagerImpl::OpenAudioFile(const DatabaseTool &databaseTo
     return newAudioUri;
 }
 
+std::string SystemSoundManagerImpl::OpenMockAudioUri(const std::string &uri)
+{
+    std::string newAudioUri = uri;
+    int32_t fd = open(uri.c_str(), O_RDONLY);
+    if (fd > 0) {
+        newAudioUri = FDHEAD + to_string(fd);
+    } else {
+        SendPlaybackFailedEvent(OPEN_FAILED);
+        MEDIA_LOGE("The audioUri open failed!");
+    }
+    MEDIA_LOGI("OpenMockAudioUri result: newAudioUri is %{public}s", newAudioUri.c_str());
+    return newAudioUri;
+}
+
 std::string SystemSoundManagerImpl::OpenCustomAudioUri(const std::string &customAudioUri)
 {
     std::string newAudioUri = customAudioUri;
@@ -3180,5 +3198,162 @@ void SystemSoundManagerImpl::SendPlaybackFailedEvent(const int32_t &errorCode)
     bean->Add("ERROR_REASON", SystemSoundManagerUtils::GetTonePlaybackErrorReason(errorCode));
     Media::MediaMonitor::MediaMonitorManager::GetInstance().WriteLogMsg(bean);
 }
-} // namesapce Media
+
+static ToneHapticsMode ConvertRingMockHapticPlayModeToToneHapticsMode(int32_t dbValue)
+{
+    if (dbValue == RING_MOCK_HAPTIC_AUDIO_PLAYMODE_SYNC) {
+        return ToneHapticsMode::SYNC;
+    } else if (dbValue == RING_MOCK_HAPTIC_AUDIO_PLAYMODE_CLASSIC) {
+        return ToneHapticsMode::NON_SYNC;
+    }
+    return ToneHapticsMode::NONE;
+}
+
+std::shared_ptr<RingtonePlayer> SystemSoundManagerImpl::GetMockHapticRingTonePlayer(
+    const std::shared_ptr<AbilityRuntime::Context> &context, const RingtoneType ringtoneType,
+    std::string &ringtoneUri)
+{
+    MEDIA_LOGI("GetMockHapticRingTonePlayer: ringtoneUri %{public}s, ringtoneType %{public}d",
+        ringtoneUri.c_str(), ringtoneType);
+    CHECK_AND_RETURN_RET_LOG(IsRingtoneTypeValid(ringtoneType), nullptr, "Invalid ringtoneType");
+
+    bool isProxy = false;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper;
+    SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID, isProxy, dataShareHelper);
+    CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, nullptr,
+        "Create dataShare failed, datashare or ringtone library error.");
+    DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
+
+    if (ringtoneUri.empty()) {
+        MEDIA_LOGI("GetMockHapticRingTonePlayer: ringtoneUri is empty, querying by ringtoneType %{public}d",
+            ringtoneType);
+        ToneAttrs toneAttrs = GetRingtoneAttrs(databaseTool, ringtoneType);
+        ringtoneUri = toneAttrs.GetUri();
+        if (ringtoneUri.empty()) {
+            MEDIA_LOGE("GetMockHapticRingTonePlayer: Failed to get ringtoneUri for ringtoneType %{public}d",
+                ringtoneType);
+            dataShareHelper->Release();
+            return nullptr;
+        }
+        MEDIA_LOGI("GetMockHapticRingTonePlayer: Queried ringtoneUri %{public}s", ringtoneUri.c_str());
+    }
+
+    ToneHapticsType toneHapticsType = static_cast<ToneHapticsType>(ringtoneType);
+
+    ToneHapticsSettings settings;
+    int32_t result = GetToneHapticsSettings(databaseTool, ringtoneUri, toneHapticsType, settings);
+    dataShareHelper->Release();
+
+    CHECK_AND_RETURN_RET_LOG(result == SUCCESS && !settings.hapticsUri.empty(), nullptr,
+        "GetMockHapticRingTonePlayer: GetToneHapticsSettings failed or hapticsUri is empty");
+    
+    std::string hapticUri = settings.hapticsUri;
+    return GetMockHapticRingTonePlayer(context, hapticUri);
+}
+
+std::shared_ptr<RingtonePlayer> SystemSoundManagerImpl::GetMockHapticRingTonePlayer(
+    const std::shared_ptr<AbilityRuntime::Context> &context, std::string &hapticUri)
+{
+    MEDIA_LOGI("GetMockHapticRingTonePlayer: hapticUri %{public}s", hapticUri.c_str());
+    CHECK_AND_RETURN_RET_LOG(!hapticUri.empty(), nullptr, "GetMockHapticRingTonePlayer: hapticUri is empty");
+
+    bool isProxy = false;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper;
+    SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID, isProxy, dataShareHelper);
+    CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, nullptr,
+        "Create dataShare failed, datashare or ringtone library error.");
+    DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
+
+    std::string toneUri = QueryToneUriByHapticUri(databaseTool, hapticUri);
+    ToneHapticsMode hapticMode = QueryPlayModeByHapticUri(databaseTool, hapticUri);
+    dataShareHelper->Release();
+
+    CHECK_AND_RETURN_RET_LOG(!toneUri.empty(), nullptr, "GetMockHapticRingTonePlayer: toneUri is empty");
+
+    ToneHapticsSettings settings;
+    settings.hapticsUri = hapticUri;
+    settings.mode = hapticMode;
+
+    MockToneHapticsSettings mockSettings;
+    mockSettings.ringtoneUri = toneUri;
+    mockSettings.isMockMode = true;
+    mockSettings.mockHapticSettings = settings;
+
+    std::shared_ptr<RingtonePlayer> ringtonePlayer = std::make_shared<RingtonePlayerImpl>(
+        context, *this, RINGTONE_TYPE_SIM_CARD_0, mockSettings);
+    CHECK_AND_RETURN_RET_LOG(ringtonePlayer != nullptr, nullptr,
+        "Failed to create ringtone player object");
+    return ringtonePlayer;
+}
+
+std::string SystemSoundManagerImpl::QueryToneUriByHapticUri(const DatabaseTool &databaseTool,
+    const std::string &hapticUri)
+{
+    CHECK_AND_RETURN_RET_LOG(databaseTool.isInitialized && databaseTool.dataShareHelper != nullptr,
+        "", "QueryToneUriByHapticUri: databaseTool not initialized");
+    CHECK_AND_RETURN_RET_LOG(!hapticUri.empty(), "", "QueryToneUriByHapticUri: hapticUri is empty");
+
+    std::string displayName = SystemSoundManagerUtils::ExtractDisplayName(hapticUri);
+
+    std::string queryUriStr = databaseTool.isProxy ?
+        RINGTONE_LIBRARY_PROXY_DATA_URI_HAPTIC_2_TONE +
+        "&user=" + std::to_string(SystemSoundManagerUtils::GetCurrentUserId()) :
+        HAPTIC_2_TONE_PATH_URI;
+    Uri queryUri(queryUriStr);
+
+    DataShare::DatashareBusinessError businessError;
+    DataShare::DataSharePredicates predicates;
+    predicates.EqualTo(HAPTIC_2_TONE_COLUMN_TITLE, displayName);
+
+    auto resultSet = databaseTool.dataShareHelper->Query(queryUri, predicates,
+        HAPTIC_2_TONE_TABLE_COLUMNS, &businessError);
+    auto results = make_unique<RingtoneFetchResult<Haptic2ToneAsset>>(move(resultSet));
+    CHECK_AND_RETURN_RET_LOG(results != nullptr, "", "QueryToneUriByHapticUri: query failed, ringtone library error.");
+
+    unique_ptr<Haptic2ToneAsset> toneAssetByUri = results->GetFirstObject();
+    CHECK_AND_RETURN_RET_LOG(toneAssetByUri != nullptr, "", "QueryToneUriByHapticUri: no data in ringtone library");
+    std::string toneUri = toneAssetByUri->GetPath();
+    results->Close();
+    MEDIA_LOGI("QueryToneUriByHapticUri: found toneUri %{public}s for displayName %{public}s",
+        toneUri.c_str(), displayName.c_str());
+    return toneUri;
+}
+
+ToneHapticsMode SystemSoundManagerImpl::QueryPlayModeByHapticUri(const DatabaseTool &databaseTool,
+    const std::string &hapticUri)
+{
+    CHECK_AND_RETURN_RET_LOG(databaseTool.isInitialized && databaseTool.dataShareHelper != nullptr,
+        ToneHapticsMode::NONE, "QueryPlayModeByHapticUri: databaseTool not initialized");
+    CHECK_AND_RETURN_RET_LOG(!hapticUri.empty(), ToneHapticsMode::NONE, "QueryPlayModeByHapticUri: hapticUri is empty");
+
+    std::string displayName = SystemSoundManagerUtils::ExtractDisplayName(hapticUri);
+
+    std::string queryUriStr = databaseTool.isProxy ?
+        RINGTONE_LIBRARY_PROXY_DATA_URI_HAPTIC_2_TONE +
+        "&user=" + std::to_string(SystemSoundManagerUtils::GetCurrentUserId()) :
+        HAPTIC_2_TONE_PATH_URI;
+    Uri queryUri(queryUriStr);
+
+    DataShare::DatashareBusinessError businessError;
+    DataShare::DataSharePredicates predicates;
+    predicates.EqualTo(HAPTIC_2_TONE_COLUMN_TITLE, displayName);
+
+    auto resultSet = databaseTool.dataShareHelper->Query(queryUri, predicates,
+        HAPTIC_2_TONE_TABLE_COLUMNS, &businessError);
+    auto results = make_unique<RingtoneFetchResult<Haptic2ToneAsset>>(move(resultSet));
+    CHECK_AND_RETURN_RET_LOG(results != nullptr, ToneHapticsMode::NONE,
+        "QueryPlayModeByHapticUri: query failed, ringtone library error.");
+
+    unique_ptr<Haptic2ToneAsset> haptic2ToneAsset = results->GetFirstObject();
+    CHECK_AND_RETURN_RET_LOG(haptic2ToneAsset != nullptr, ToneHapticsMode::NONE,
+        "QueryPlayModeByHapticUri: no data in ringtone library for displayName %{public}s", displayName.c_str());
+
+    int32_t playMode = haptic2ToneAsset->GetPlayMode();
+    results->Close();
+    ToneHapticsMode hapticMode = ConvertRingMockHapticPlayModeToToneHapticsMode(playMode);
+    MEDIA_LOGI("QueryPlayModeByHapticUri: found playMode %{public}d, hapticMode %{public}d for displayName %{public}s",
+        playMode, static_cast<int32_t>(hapticMode), displayName.c_str());
+    return hapticMode;
+}
+} // namespace Media
 } // namespace OHOS

@@ -417,6 +417,7 @@ napi_status SystemSoundManagerNapi::DefineClassProperties(napi_env env, napi_val
         DECLARE_NAPI_FUNCTION("getCurrentRingtoneAttribute", GetCurrentRingtoneAttribute),
         DECLARE_NAPI_FUNCTION("removeCustomizedToneList", RemoveCustomizedToneList),
         DECLARE_NAPI_FUNCTION("openToneList", OpenToneList),
+        DECLARE_NAPI_FUNCTION("getMockHapticRingTonePlayer", GetMockHapticRingTonePlayer),
     };
 
     return napi_define_class(env, SYSTEM_SND_MNGR_NAPI_CLASS_NAME.c_str(), NAPI_AUTO_LENGTH,
@@ -2149,6 +2150,122 @@ void SystemSoundManagerNapi::RemoveCustomizedToneAsyncCallbackComp(napi_env env,
         } else {
             napi_reject_deferred(env, context->deferred, result[PARAM0]);
         }
+    }
+    napi_delete_async_work(env, context->work);
+    delete context;
+    context = nullptr;
+}
+
+napi_value SystemSoundManagerNapi::GetMockHapticRingTonePlayer(napi_env env, napi_callback_info info)
+{
+    CHECK_AND_RETURN_RET_LOG(VerifySelfSystemPermission(),
+        ThrowErrorAndReturn(env, NAPI_ERR_PERMISSION_DENIED_INFO, NAPI_ERR_PERMISSION_DENIED), "No system permission");
+    napi_value result = nullptr;
+    napi_value resource = nullptr;
+    napi_value thisVar = nullptr;
+    size_t argc = ARGS_FOUR;
+    napi_value argv[ARGS_FOUR] = {0};
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr);
+    napi_get_undefined(env, &result);
+    CHECK_AND_RETURN_RET_LOG((status == napi_ok && thisVar != nullptr), result,
+        "GetMockHapticRingTonePlayer: Failed to retrieve details about the callback");
+    CHECK_AND_RETURN_RET_LOG(argc >= ARGS_TWO, ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO,
+        NAPI_ERR_INPUT_INVALID), "invalid arguments");
+
+    std::unique_ptr<SystemSoundManagerAsyncContext> asyncContext =
+        std::make_unique<SystemSoundManagerAsyncContext>();
+    status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->objectInfo != nullptr, result,
+        "GetMockHapticRingTonePlayer: Failed to unwrap object");
+
+    for (size_t i = PARAM0; i < argc; i++) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, argv[i], &valueType);
+        if (i == PARAM0) {
+            asyncContext->abilityContext_ = GetAbilityContext(env, argv[i]);
+        } else if (i == PARAM1 && valueType == napi_number) {
+            napi_get_value_int32(env, argv[i], &asyncContext->ringtoneType);
+        } else if (i == PARAM1 && valueType == napi_string) {
+            asyncContext->hapticsUri = ExtractStringToEnv(env, argv[i]);
+        } else if (i == PARAM2 && valueType == napi_string) {
+            asyncContext->uri = ExtractStringToEnv(env, argv[i]);
+        } else if (i == PARAM3 && valueType == napi_function) {
+            napi_create_reference(env, argv[i], 1, &asyncContext->callbackRef);
+            break;
+        }
+    }
+
+    if (asyncContext->callbackRef == nullptr) {
+        napi_create_promise(env, &asyncContext->deferred, &result);
+    }
+
+    napi_create_string_utf8(env, "GetMockHapticRingTonePlayer", NAPI_AUTO_LENGTH, &resource);
+    status = napi_create_async_work(env, nullptr, resource, AsyncGetMockHapticRingTonePlayer,
+        GetMockHapticRingTonePlayerAsyncCallbackComp, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+    if (status != napi_ok) {
+        MEDIA_LOGE("GetMockHapticRingTonePlayer: Failed to get create async work");
+        napi_get_undefined(env, &result);
+    } else {
+        napi_queue_async_work(env, asyncContext->work);
+        asyncContext.release();
+    }
+
+    return result;
+}
+
+void SystemSoundManagerNapi::AsyncGetMockHapticRingTonePlayer(napi_env env, void *data)
+{
+    SystemSoundManagerAsyncContext *context = static_cast<SystemSoundManagerAsyncContext *>(data);
+    if (!context->uri.empty()) {
+        context->ringtonePlayer = context->objectInfo->sysSoundMgrClient_->GetMockHapticRingTonePlayer(
+            context->abilityContext_, static_cast<RingtoneType>(context->ringtoneType), context->uri);
+    } else if (!context->hapticsUri.empty()) {
+        context->ringtonePlayer = context->objectInfo->sysSoundMgrClient_->GetMockHapticRingTonePlayer(
+            context->abilityContext_, context->hapticsUri);
+    }
+    context->status = context->ringtonePlayer != nullptr ? SUCCESS : ERROR;
+}
+
+void SystemSoundManagerNapi::GetMockHapticRingTonePlayerAsyncCallbackComp(napi_env env, napi_status status, void *data)
+{
+    auto context = static_cast<SystemSoundManagerAsyncContext *>(data);
+    napi_value callback = nullptr;
+    napi_value retVal = nullptr;
+    napi_value result[2] = {};
+    napi_value playerResult = nullptr;
+
+    if (context->ringtonePlayer != nullptr) {
+        playerResult = RingtonePlayerNapi::GetRingtonePlayerInstance(env, context->ringtonePlayer);
+        if (playerResult == nullptr) {
+            MEDIA_LOGE("Failed to get mock haptic ringtone player!");
+            napi_value message = nullptr;
+            napi_create_string_utf8(env, "GetMockHapticRingTonePlayer Error: Operation failed",
+                NAPI_AUTO_LENGTH, &message);
+            napi_create_error(env, nullptr, message, &result[PARAM0]);
+            napi_get_undefined(env, &result[PARAM1]);
+        } else {
+            napi_get_undefined(env, &result[PARAM0]);
+            result[PARAM1] = playerResult;
+        }
+    } else {
+        MEDIA_LOGE("Failed to get mock haptic ringtone player!");
+        napi_value message = nullptr;
+        napi_create_string_utf8(env, "GetMockHapticRingTonePlayer Error: Operation failed",
+            NAPI_AUTO_LENGTH, &message);
+        napi_create_error(env, nullptr, message, &result[PARAM0]);
+        napi_get_undefined(env, &result[PARAM1]);
+    }
+
+    if (context->deferred) {
+        if (!context->status) {
+            napi_resolve_deferred(env, context->deferred, result[PARAM1]);
+        } else {
+            napi_reject_deferred(env, context->deferred, result[PARAM0]);
+        }
+    } else {
+        napi_get_reference_value(env, context->callbackRef, &callback);
+        napi_call_function(env, nullptr, callback, ARGS_TWO, result, &retVal);
+        napi_delete_reference(env, context->callbackRef);
     }
     napi_delete_async_work(env, context->work);
     delete context;

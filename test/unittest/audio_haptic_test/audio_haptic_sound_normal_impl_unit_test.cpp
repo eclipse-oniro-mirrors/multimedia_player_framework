@@ -1197,5 +1197,95 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_048, TestSize
     Format infoBody;
     aHSoundNormalCallback->HandleAudioInterruptEvent(extra, infoBody);
 }
+
+/**
+ * @tc.name  : Test AudioHapticSoundNormalImpl MockMode
+ * @tc.number: MockMode_AudioHapticSoundNormalImpl_001
+ * @tc.desc  : Test constructor with rendererFlags = VKB_NORMAL
+ */
+HWTEST_F(AudioHapticSoundNormalImplUnitTest, MockMode_AudioHapticSoundNormalImpl_001, TestSize.Level0)
+{
+    AudioSource audioSource = {.audioUri = "123"};
+    bool muteAudio = true;
+    AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
+    int32_t rendererFlags = AudioStandard::AUDIO_FLAG_VKB_NORMAL;
+    
+    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(
+        audioSource, muteAudio, streamUsage, rendererFlags);
+    
+    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    EXPECT_EQ(audioHapticSoundNormalImpl->rendererFlags_, AudioStandard::AUDIO_FLAG_VKB_NORMAL);
+}
+
+/**
+ * @tc.name  : Test AudioHapticSoundNormalImpl MockMode
+ * @tc.number: MockMode_AudioHapticSoundNormalImpl_002
+ * @tc.desc  : Test constructor with rendererFlags = 0 (normal mode)
+ */
+HWTEST_F(AudioHapticSoundNormalImplUnitTest, MockMode_AudioHapticSoundNormalImpl_002, TestSize.Level0)
+{
+    AudioSource audioSource = {.audioUri = "123"};
+    bool muteAudio = true;
+    AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
+    int32_t rendererFlags = 0;
+    
+    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(
+        audioSource, muteAudio, streamUsage, rendererFlags);
+    
+    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    EXPECT_EQ(audioHapticSoundNormalImpl->rendererFlags_, 0);
+}
+
+/**
+ * @tc.name  : Test AudioHapticSoundNormalImpl MockMode
+ * @tc.number: MockMode_AudioHapticSoundNormalImpl_ResetAVPlayer_001
+ * @tc.desc  : Test ResetAVPlayer with rendererFlags != 0
+ */
+HWTEST_F(AudioHapticSoundNormalImplUnitTest, MockMode_AudioHapticSoundNormalImpl_ResetAVPlayer_001, TestSize.Level1)
+{
+    AudioSource audioSource = {.audioUri = "123"};
+    bool muteAudio = true;
+    AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
+    int32_t rendererFlags = AudioStandard::AUDIO_FLAG_VKB_NORMAL;
+    
+    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(
+        audioSource, muteAudio, streamUsage, rendererFlags);
+    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    
+    audioHapticSoundNormalImpl->avPlayer_ = PlayerFactory::CreatePlayer();
+    EXPECT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
+    
+    audioHapticSoundNormalImpl->streamUsage_ = streamUsage;
+    audioHapticSoundNormalImpl->rendererFlags_ = rendererFlags;
+    
+    int32_t ret = audioHapticSoundNormalImpl->ResetAVPlayer();
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test AudioHapticSoundNormalImpl MockMode
+ * @tc.number: MockMode_AudioHapticSoundNormalImpl_ResetAVPlayer_002
+ * @tc.desc  : Test ResetAVPlayer with rendererFlags = 0
+ */
+HWTEST_F(AudioHapticSoundNormalImplUnitTest, MockMode_AudioHapticSoundNormalImpl_ResetAVPlayer_002, TestSize.Level1)
+{
+    AudioSource audioSource = {.audioUri = "123"};
+    bool muteAudio = true;
+    AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
+    int32_t rendererFlags = 0;
+    
+    auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(
+        audioSource, muteAudio, streamUsage, rendererFlags);
+    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    
+    audioHapticSoundNormalImpl->avPlayer_ = PlayerFactory::CreatePlayer();
+    EXPECT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
+    
+    audioHapticSoundNormalImpl->streamUsage_ = streamUsage;
+    audioHapticSoundNormalImpl->rendererFlags_ = rendererFlags;
+    
+    int32_t ret = audioHapticSoundNormalImpl->ResetAVPlayer();
+    EXPECT_EQ(ret, MSERR_OK);
+}
 } // namespace Media
 } // namespace OHOS

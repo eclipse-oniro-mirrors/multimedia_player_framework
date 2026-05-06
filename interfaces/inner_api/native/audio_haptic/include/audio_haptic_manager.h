@@ -48,6 +48,8 @@ public:
 
     virtual int32_t SetStreamUsage(const int32_t &sourceID, const AudioStandard::StreamUsage &streamUsage) = 0;
 
+    virtual int32_t SetMockMode(const int32_t &sourceID, const bool &isMockMode) = 0;
+
     virtual std::shared_ptr<AudioHapticPlayer> CreatePlayer(const int32_t &sourceID,
         const AudioHapticPlayerOptions &audioHapticPlayerOptions) = 0;
 };

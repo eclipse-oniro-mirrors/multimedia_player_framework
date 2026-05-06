@@ -107,7 +107,7 @@ std::mutex AudioHapticSound::createAudioHapticSoundMutex_;
 
 std::shared_ptr<AudioHapticSound> AudioHapticSound::CreateAudioHapticSound(
     const AudioLatencyMode &latencyMode, const AudioSource& audioSource, const bool &muteAudio,
-    const AudioStandard::StreamUsage &streamUsage, const bool &parallelPlayFlag)
+    const AudioStandard::StreamUsage &streamUsage, const bool &parallelPlayFlag, const int32_t &rendererFlags)
 {
     if (latencyMode != AUDIO_LATENCY_MODE_NORMAL && latencyMode != AUDIO_LATENCY_MODE_FAST) {
         MEDIA_LOGE("Invalid param: the latency mode %{public}d is unsupported.", latencyMode);
@@ -119,7 +119,7 @@ std::shared_ptr<AudioHapticSound> AudioHapticSound::CreateAudioHapticSound(
     switch (latencyMode) {
         case AUDIO_LATENCY_MODE_NORMAL:
             audioHapticSound =
-                std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
+                std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage, rendererFlags);
             break;
         case AUDIO_LATENCY_MODE_FAST:
             audioHapticSound = std::make_shared<AudioHapticSoundLowLatencyImpl>(
@@ -156,13 +156,18 @@ void AudioHapticPlayerImpl::SetPlayerParam(const AudioHapticPlayerParam &param)
     hapticSource_ = param.hapticSource;
     latencyMode_ = param.latencyMode;
     streamUsage_ = param.streamUsage;
+    isMockMode_ = param.isMockMode;
 }
 
 void AudioHapticPlayerImpl::LoadPlayer()
 {
     // Load audio player
+    int32_t rendererFlags = AudioStandard::AUDIO_FLAG_NORMAL;
+    if (isMockMode_) {
+        rendererFlags = AudioStandard::AUDIO_FLAG_VKB_NORMAL;
+    }
     audioHapticSound_ = AudioHapticSound::CreateAudioHapticSound(
-        latencyMode_, audioSource_, muteAudio_, streamUsage_, parallelPlayFlag_);
+        latencyMode_, audioSource_, muteAudio_, streamUsage_, parallelPlayFlag_, rendererFlags);
     CHECK_AND_RETURN_LOG(audioHapticSound_ != nullptr, "Failed to create audio haptic sound instance");
     soundCallback_ = std::make_shared<AudioHapticSoundCallbackImpl>(shared_from_this());
     (void)audioHapticSound_->SetAudioHapticSoundCallback(soundCallback_);
@@ -328,7 +333,7 @@ int32_t AudioHapticPlayerImpl::SetVolume(float volume)
     if (latencyMode_ == AUDIO_LATENCY_MODE_NORMAL &&
         (streamUsage_ == AudioStandard::StreamUsage::STREAM_USAGE_VOICE_RINGTONE ||
         streamUsage_ == AudioStandard::StreamUsage::STREAM_USAGE_RINGTONE) &&
-        playerState_ == AudioHapticPlayerState::STATE_RUNNING &&
+        playerState_ == AudioHapticPlayerState::STATE_RUNNING && !isMockMode_ &&
         std::abs(volume_ - 0.0f) <= std::numeric_limits<float>::epsilon()) {
         // only for the call manager ringtone
         StopVibrate();
@@ -538,6 +543,7 @@ int32_t AudioHapticPlayerImpl::StartVibrate()
         int32_t notSupportDelay = (static_cast<int32_t>(this->audioLatency_) - hapticDelay) > 0 ?
             static_cast<int32_t>(this->audioLatency_) - hapticDelay : 0;
         int32_t delayMS = isSupportDSPSync_ ? GetDelayTime(playedTimes) : notSupportDelay;
+        MEDIA_LOGI("Triggering the vibration delayMS: %{public}d", delayMS);
         waitResult = condStartVibrate_.wait_for(lockWait, std::chrono::milliseconds(delayMS),
             [this]() { return isVibrationStopped_.load(); });
         if (isVibrationStopped_) {

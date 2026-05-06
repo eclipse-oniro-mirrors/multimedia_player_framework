@@ -111,16 +111,19 @@ struct AudioHapticPlayerParam {
     HapticSource hapticSource;
     AudioLatencyMode latencyMode;
     AudioStandard::StreamUsage streamUsage;
+    bool isMockMode = false;
 
     AudioHapticPlayerParam() {};
     AudioHapticPlayerParam(const AudioHapticPlayerOptions &options,
         const AudioSource& audioSource, const HapticSource &hapticSource,
-        const AudioLatencyMode &latencyMode, const AudioStandard::StreamUsage &streamUsage)
+        const AudioLatencyMode &latencyMode, const AudioStandard::StreamUsage &streamUsage,
+        const bool &isMockMode = false)
         : options(options),
           audioSource(audioSource),
           hapticSource(hapticSource),
           latencyMode(latencyMode),
-          streamUsage(streamUsage) {};
+          streamUsage(streamUsage),
+          isMockMode(isMockMode) {};
 };
 
 class AudioHapticPlayerCallback;

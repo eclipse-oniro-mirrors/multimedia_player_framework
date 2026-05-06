@@ -869,5 +869,90 @@ HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_RegisterSourceFr
     close(audioFd);
     close(hapticDd);
 }
+
+/**
+ * @tc.name  : Test AudioHapticManagerImpl SetMockMode API
+ * @tc.number: AudioHapticManagerImpl_SetMockMode_001
+ * @tc.desc  : Test SetMockMode with invalid sourceID
+ */
+HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_SetMockMode_001, TestSize.Level0)
+{
+    EXPECT_NE(g_audioHapticManagerImpl, nullptr);
+    int32_t invalidSourceID = 999;
+    int32_t result = g_audioHapticManagerImpl->SetMockMode(invalidSourceID, true);
+    EXPECT_EQ(result, MSERR_INVALID_VAL);
+}
+
+/**
+ * @tc.name  : Test AudioHapticManagerImpl SetMockMode API
+ * @tc.number: AudioHapticManagerImpl_SetMockMode_002
+ * @tc.desc  : Test SetMockMode with valid sourceID and true
+ */
+HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_SetMockMode_002, TestSize.Level1)
+{
+    EXPECT_NE(g_audioHapticManagerImpl, nullptr);
+    std::string audioUri = AUDIO_TEST_URI;
+    std::string hapticUri = HAPTIC_TEST_URI;
+    
+    g_audioHapticManagerImpl->curPlayerCount_ = 0;
+    int32_t sourceId = g_audioHapticManagerImpl->RegisterSource(audioUri, hapticUri);
+    EXPECT_NE(sourceId, INVALID_SOURCE_ID);
+    
+    int32_t result = g_audioHapticManagerImpl->SetMockMode(sourceId, true);
+    EXPECT_EQ(result, MSERR_OK);
+    
+    if (g_audioHapticManagerImpl->audioHapticPlayerMap_.count(sourceId) > 0) {
+        auto playerInfo = g_audioHapticManagerImpl->audioHapticPlayerMap_[sourceId];
+        if (playerInfo != nullptr) {
+            EXPECT_EQ(playerInfo->isMockMode_, true);
+        }
+    }
+}
+
+/**
+ * @tc.name  : Test AudioHapticManagerImpl SetMockMode API
+ * @tc.number: AudioHapticManagerImpl_SetMockMode_003
+ * @tc.desc  : Test SetMockMode with valid sourceID and false
+ */
+HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_SetMockMode_003, TestSize.Level1)
+{
+    EXPECT_NE(g_audioHapticManagerImpl, nullptr);
+    std::string audioUri = AUDIO_TEST_URI;
+    std::string hapticUri = HAPTIC_TEST_URI;
+    
+    g_audioHapticManagerImpl->curPlayerCount_ = 0;
+    int32_t sourceId = g_audioHapticManagerImpl->RegisterSource(audioUri, hapticUri);
+    EXPECT_NE(sourceId, INVALID_SOURCE_ID);
+    
+    int32_t result = g_audioHapticManagerImpl->SetMockMode(sourceId, false);
+    EXPECT_EQ(result, MSERR_OK);
+    
+    if (g_audioHapticManagerImpl->audioHapticPlayerMap_.count(sourceId) > 0) {
+        auto playerInfo = g_audioHapticManagerImpl->audioHapticPlayerMap_[sourceId];
+        if (playerInfo != nullptr) {
+            EXPECT_EQ(playerInfo->isMockMode_, false);
+        }
+    }
+}
+
+/**
+ * @tc.name  : Test AudioHapticManagerImpl SetMockMode API
+ * @tc.number: AudioHapticManagerImpl_SetMockMode_004
+ * @tc.desc  : Test SetMockMode with null playerInfo (covers condition2)
+ */
+HWTEST_F(AudioHapticManagerImplUnitTest, AudioHapticManagerImpl_SetMockMode_004, TestSize.Level0)
+{
+    EXPECT_NE(g_audioHapticManagerImpl, nullptr);
+    
+    g_audioHapticManagerImpl->audioHapticPlayerMap_.clear();
+    
+    int32_t sourceId = 100;
+    g_audioHapticManagerImpl->audioHapticPlayerMap_[sourceId] = nullptr;
+    
+    int32_t result = g_audioHapticManagerImpl->SetMockMode(sourceId, true);
+    EXPECT_EQ(result, MSERR_INVALID_VAL);
+    
+    g_audioHapticManagerImpl->audioHapticPlayerMap_.erase(sourceId);
+}
 } // namespace Media
 } // namespace OHOS

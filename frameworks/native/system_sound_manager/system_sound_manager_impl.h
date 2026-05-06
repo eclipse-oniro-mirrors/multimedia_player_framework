@@ -32,6 +32,7 @@
 #include "ringtone_asset.h"
 #include "simcard_setting_asset.h"
 #include "vibrate_asset.h"
+#include "haptic_2_tone_asset.h"
 #include "ringtone_fetch_result.h"
 #include "iservice_registry.h"
 #include <unistd.h>
@@ -145,6 +146,7 @@ public:
     ToneAttrs GetSystemToneAttrs(const DatabaseTool &databaseTool, SystemToneType systemToneType);
     ToneAttrs GetAlarmToneAttrs(const std::shared_ptr<AbilityRuntime::Context> &context);
     std::string OpenAudioUri(const DatabaseTool &databaseTool, const std::string &audioUri);
+    std::string OpenMockAudioUri(const std::string &audioUri);
     std::string OpenHapticsUri(const DatabaseTool &databaseTool, const std::string &hapticsUri);
     std::string GetHapticsUriByStyle(const DatabaseTool &databaseTool,
         const std::string &standardHapticsUri, HapticsStyle hapticsStyle);
@@ -163,6 +165,12 @@ public:
     std::vector<std::tuple<std::string, int64_t, SystemSoundError>> OpenToneList(
         const std::vector<std::string> &uriList, SystemSoundError &errCode) override;
     std::vector<ToneInfo> GetCurrentToneInfos() override;
+
+    std::shared_ptr<RingtonePlayer> GetMockHapticRingTonePlayer(
+        const std::shared_ptr<AbilityRuntime::Context> &context, const RingtoneType ringtoneType,
+        std::string &ringtoneUri) override;
+    std::shared_ptr<RingtonePlayer> GetMockHapticRingTonePlayer(
+        const std::shared_ptr<AbilityRuntime::Context> &context, std::string &hapticUri) override;
 
 private:
     void InitDefaultToneHapticsMap();
@@ -288,6 +296,9 @@ private:
     void SetToneAttrs(std::shared_ptr<ToneAttrs> &toneAttrs, const std::unique_ptr<RingtoneAsset> &ringtoneAsset);
     DataShare::DataSharePredicates CreateVibrationListQueryPredicates(bool isSynced);
     DataShare::DataSharePredicates CreateVibrateQueryPredicates(const std::string &displayName, int32_t vibrateType);
+
+    std::string QueryToneUriByHapticUri(const DatabaseTool &databaseTool, const std::string &hapticUri);
+    ToneHapticsMode QueryPlayModeByHapticUri(const DatabaseTool &databaseTool, const std::string &hapticUri);
     
     std::string systemSoundPath_ = "";
     std::mutex uriMutex_;

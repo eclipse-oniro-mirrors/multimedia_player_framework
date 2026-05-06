@@ -237,6 +237,20 @@ std::string SystemSoundManagerUtils::GetTonePlaybackErrorReason(const int32_t &e
     return errorReason;
 }
 
+std::string SystemSoundManagerUtils::ExtractDisplayName(const std::string &uri)
+{
+    std::string displayName;
+    size_t lastSlashPos = uri.find_last_of('/');
+    if (lastSlashPos != std::string::npos) {
+        displayName = uri.substr(lastSlashPos + 1);
+        size_t lastDotPos = displayName.find_last_of('.');
+        if (lastDotPos != std::string::npos) {
+            displayName = displayName.substr(0, lastDotPos);
+        }
+    }
+    return displayName;
+}
+
 MediaTrace::MediaTrace(const std::string &funcName)
 {
     StartTrace(HITRACE_TAG_ZMEDIA, funcName);

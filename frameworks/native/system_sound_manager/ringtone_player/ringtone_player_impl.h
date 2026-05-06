@@ -37,6 +37,8 @@ public:
         SystemSoundManagerImpl &sysSoundMgr, RingtoneType type);
     RingtonePlayerImpl(const std::shared_ptr<AbilityRuntime::Context> &context,
         SystemSoundManagerImpl &sysSoundMgr, const RingtoneType type, std::string &ringtoneUri);
+    RingtonePlayerImpl(const std::shared_ptr<AbilityRuntime::Context> &context,
+        SystemSoundManagerImpl &sysSoundMgr, const RingtoneType type, MockToneHapticsSettings &mockSettings);
     ~RingtonePlayerImpl();
     void NotifyEndofStreamEvent();
     void NotifyInterruptEvent(const AudioStandard::InterruptEvent &interruptEvent);
@@ -87,6 +89,8 @@ private:
     std::string specifyRingtoneUri_ = "";
     std::unique_ptr<AudioStandard::AudioRenderer> audioRenderer_ {nullptr};
     AudioStandard::AudioRendererParams rendererParams_ {};
+    ToneHapticsSettings mockToneHapticsSettings_;
+    bool isMockMode_ = false;
 
     std::mutex playerMutex_;
 };

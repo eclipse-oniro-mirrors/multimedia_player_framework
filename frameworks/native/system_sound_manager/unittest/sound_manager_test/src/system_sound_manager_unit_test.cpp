@@ -2459,6 +2459,245 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_OpenHapticsUri_001, TestSi
     EXPECT_NE(newUri, "");
 }
 
+/**
+ * @tc.name  : Test GetMockHapticRingTonePlayer with ringtoneUri
+ * @tc.number: SystemSoundManagerImpl_GetMockHapticRingTonePlayer_001
+ * @tc.desc  : Test GetMockHapticRingTonePlayer with invalid ringtoneType
+ */
+HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_GetMockHapticRingTonePlayer_001, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    EXPECT_NE(systemSoundManagerImpl_, nullptr);
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+    RingtoneType invalidType = static_cast<RingtoneType>(99);
+    std::string ringtoneUri = "/path/to/ringtone.ogg";
+    auto ringtonePlayer = systemSoundManagerImpl_->GetMockHapticRingTonePlayer(context_, invalidType, ringtoneUri);
+    EXPECT_EQ(ringtonePlayer, nullptr);
+}
+
+/**
+ * @tc.name  : Test GetMockHapticRingTonePlayer with ringtoneUri
+ * @tc.number: SystemSoundManagerImpl_GetMockHapticRingTonePlayer_002
+ * @tc.desc  : Test GetMockHapticRingTonePlayer with empty ringtoneUri
+ */
+HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_GetMockHapticRingTonePlayer_002, TestSize.Level1)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    EXPECT_NE(systemSoundManagerImpl_, nullptr);
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+    RingtoneType ringtoneType = RingtoneType::RINGTONE_TYPE_SIM_CARD_0;
+    std::string ringtoneUri = "";
+    auto ringtonePlayer = systemSoundManagerImpl_->GetMockHapticRingTonePlayer(context_, ringtoneType, ringtoneUri);
+    EXPECT_EQ(ringtonePlayer, nullptr);
+}
+
+/**
+ * @tc.name  : Test GetMockHapticRingTonePlayer with hapticUri
+ * @tc.number: SystemSoundManagerImpl_GetMockHapticRingTonePlayer_003
+ * @tc.desc  : Test GetMockHapticRingTonePlayer with empty hapticUri
+ */
+HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_GetMockHapticRingTonePlayer_003, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    EXPECT_NE(systemSoundManagerImpl_, nullptr);
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+    std::string hapticUri = "";
+    auto ringtonePlayer = systemSoundManagerImpl_->GetMockHapticRingTonePlayer(context_, hapticUri);
+    EXPECT_EQ(ringtonePlayer, nullptr);
+}
+
+/**
+ * @tc.name  : Test QueryToneUriByHapticUri
+ * @tc.number: SystemSoundManagerImpl_QueryToneUriByHapticUri_001
+ * @tc.desc  : Test QueryToneUriByHapticUri with uninitialized databaseTool
+ */
+HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_QueryToneUriByHapticUri_001, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    EXPECT_NE(systemSoundManagerImpl_, nullptr);
+    DatabaseTool databaseTool = {false, false, nullptr};
+    std::string hapticUri = "/path/to/vibration.json";
+    std::string toneUri = systemSoundManagerImpl_->QueryToneUriByHapticUri(databaseTool, hapticUri);
+    EXPECT_EQ(toneUri, "");
+}
+
+/**
+ * @tc.name  : Test QueryToneUriByHapticUri
+ * @tc.number: SystemSoundManagerImpl_QueryToneUriByHapticUri_002
+ * @tc.desc  : Test QueryToneUriByHapticUri with null dataShareHelper
+ */
+HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_QueryToneUriByHapticUri_002, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    EXPECT_NE(systemSoundManagerImpl_, nullptr);
+    DatabaseTool databaseTool = {true, false, nullptr};
+    std::string hapticUri = "/path/to/vibration.json";
+    std::string toneUri = systemSoundManagerImpl_->QueryToneUriByHapticUri(databaseTool, hapticUri);
+    EXPECT_EQ(toneUri, "");
+}
+
+/**
+ * @tc.name  : Test QueryToneUriByHapticUri
+ * @tc.number: SystemSoundManagerImpl_QueryToneUriByHapticUri_003
+ * @tc.desc  : Test QueryToneUriByHapticUri with empty hapticUri
+ */
+HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_QueryToneUriByHapticUri_003, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    EXPECT_NE(systemSoundManagerImpl_, nullptr);
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
+        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    DatabaseTool databaseTool = {true, false, dataShareHelper};
+    std::string hapticUri = "";
+    std::string toneUri = systemSoundManagerImpl_->QueryToneUriByHapticUri(databaseTool, hapticUri);
+    EXPECT_EQ(toneUri, "");
+}
+
+/**
+ * @tc.name  : Test QueryPlayModeByHapticUri
+ * @tc.number: SystemSoundManagerImpl_QueryPlayModeByHapticUri_001
+ * @tc.desc  : Test QueryPlayModeByHapticUri with uninitialized databaseTool
+ */
+HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_QueryPlayModeByHapticUri_001, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    EXPECT_NE(systemSoundManagerImpl_, nullptr);
+    DatabaseTool databaseTool = {false, false, nullptr};
+    std::string hapticUri = "/path/to/vibration.json";
+    ToneHapticsMode hapticMode = systemSoundManagerImpl_->QueryPlayModeByHapticUri(databaseTool, hapticUri);
+    EXPECT_EQ(hapticMode, ToneHapticsMode::NONE);
+}
+
+/**
+ * @tc.name  : Test QueryPlayModeByHapticUri
+ * @tc.number: SystemSoundManagerImpl_QueryPlayModeByHapticUri_002
+ * @tc.desc  : Test QueryPlayModeByHapticUri with null dataShareHelper
+ */
+HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_QueryPlayModeByHapticUri_002, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    EXPECT_NE(systemSoundManagerImpl_, nullptr);
+    DatabaseTool databaseTool = {true, false, nullptr};
+    std::string hapticUri = "/path/to/vibration.json";
+    ToneHapticsMode hapticMode = systemSoundManagerImpl_->QueryPlayModeByHapticUri(databaseTool, hapticUri);
+    EXPECT_EQ(hapticMode, ToneHapticsMode::NONE);
+}
+
+/**
+ * @tc.name  : Test QueryPlayModeByHapticUri
+ * @tc.number: SystemSoundManagerImpl_QueryPlayModeByHapticUri_003
+ * @tc.desc  : Test QueryPlayModeByHapticUri with empty hapticUri
+ */
+HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_QueryPlayModeByHapticUri_003, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    EXPECT_NE(systemSoundManagerImpl_, nullptr);
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
+        SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    DatabaseTool databaseTool = {true, false, dataShareHelper};
+    std::string hapticUri = "";
+    ToneHapticsMode hapticMode = systemSoundManagerImpl_->QueryPlayModeByHapticUri(databaseTool, hapticUri);
+    EXPECT_EQ(hapticMode, ToneHapticsMode::NONE);
+}
+
+/**
+ * @tc.name  : Test OpenMockAudioUri
+ * @tc.number: SystemSoundManagerImpl_OpenMockAudioUri_001
+ * @tc.desc  : Test OpenMockAudioUri with invalid path
+ */
+HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_OpenMockAudioUri_001, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    EXPECT_NE(systemSoundManagerImpl_, nullptr);
+    std::string invalidUri = "/invalid/path/audio.ogg";
+    std::string resultUri = systemSoundManagerImpl_->OpenMockAudioUri(invalidUri);
+    EXPECT_EQ(resultUri, invalidUri);
+}
+
+/**
+ * @tc.name  : Test OpenMockAudioUri
+ * @tc.number: SystemSoundManagerImpl_OpenMockAudioUri_002
+ * @tc.desc  : Test OpenMockAudioUri with valid file path
+ */
+HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_OpenMockAudioUri_002, TestSize.Level1)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    EXPECT_NE(systemSoundManagerImpl_, nullptr);
+    std::string testUri = "/data/storage/el2/base/files/ringtone.ogg";
+    std::string resultUri = systemSoundManagerImpl_->OpenMockAudioUri(testUri);
+    EXPECT_EQ(resultUri, testUri);
+}
+
+/**
+ * @tc.name  : Test SystemSoundManagerUtils ExtractDisplayName
+ * @tc.number: SystemSoundManagerUtils_ExtractDisplayName_001
+ * @tc.desc  : Test ExtractDisplayName with path containing slash and dot
+ */
+HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerUtils_ExtractDisplayName_001, TestSize.Level0)
+{
+    std::string uri = "/path/to/file.txt";
+    std::string result = SystemSoundManagerUtils::ExtractDisplayName(uri);
+    EXPECT_EQ(result, "file");
+}
+
+/**
+ * @tc.name  : Test SystemSoundManagerUtils ExtractDisplayName
+ * @tc.number: SystemSoundManagerUtils_ExtractDisplayName_002
+ * @tc.desc  : Test ExtractDisplayName with path containing slash but no dot
+ */
+HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerUtils_ExtractDisplayName_002, TestSize.Level0)
+{
+    std::string uri = "/path/to/file";
+    std::string result = SystemSoundManagerUtils::ExtractDisplayName(uri);
+    EXPECT_EQ(result, "file");
+}
+
+/**
+ * @tc.name  : Test SystemSoundManagerUtils ExtractDisplayName
+ * @tc.number: SystemSoundManagerUtils_ExtractDisplayName_003
+ * @tc.desc  : Test ExtractDisplayName with no slash in uri
+ */
+HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerUtils_ExtractDisplayName_003, TestSize.Level0)
+{
+    std::string uri = "filename.txt";
+    std::string result = SystemSoundManagerUtils::ExtractDisplayName(uri);
+    EXPECT_EQ(result, "");
+}
+
+/**
+ * @tc.name  : Test SystemSoundManagerUtils ExtractDisplayName
+ * @tc.number: SystemSoundManagerUtils_ExtractDisplayName_004
+ * @tc.desc  : Test ExtractDisplayName with empty uri
+ */
+HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerUtils_ExtractDisplayName_004, TestSize.Level0)
+{
+    std::string uri = "";
+    std::string result = SystemSoundManagerUtils::ExtractDisplayName(uri);
+    EXPECT_EQ(result, "");
+}
+
 #endif
 } // namespace Media
 } // namespace OHOS
