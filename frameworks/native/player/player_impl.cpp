@@ -18,6 +18,7 @@
 #include <random>
 #include <sstream>
 #include <algorithm>
+#include <cinttypes> 
 #include "i_media_service.h"
 #include "media_log.h"
 #include "media_errors.h"
@@ -386,7 +387,7 @@ int32_t PlayerImpl::SetVolume(float leftVolume, float rightVolume)
 int32_t PlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode)
 {
     ScopedTimer timer("Seek", OVERTIME_WARNING_MS);
-    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Seek in, seek to %{public}lld ms, mode is %{public}d",
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Seek in, seek to %{public}" PRId64 " ms, mode is %{public}d",
         FAKE_POINTER(this), mSeconds, mode);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
 
@@ -414,7 +415,7 @@ int32_t PlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode)
     } else {
         MEDIA_LOGE("Seeking not completed, need wait the lastest seek end, then seek again.");
     }
-    MEDIA_LOGI("Seeking task end. %{public}lld ms, mode is %{public}d", mSeconds, mode);
+    MEDIA_LOGI("Seeking task end. %{public}" PRId64 " ms, mode is %{public}d", mSeconds, mode);
     return MSERR_OK;
 }
 
@@ -438,7 +439,7 @@ void PlayerImpl::HandleSeekDoneInfo(PlayerOnInfoType type, int32_t extra)
         }
         std::unique_lock<std::recursive_mutex> lock(recMutex_);
         if (mSeekPosition != mCurrentPosition || mSeekMode != mCurrentSeekMode) {
-            MEDIA_LOGI("Start seek again (%{public}lld, %{public}d)", mCurrentPosition, mCurrentSeekMode);
+            MEDIA_LOGI("Start seek again (%{public}" PRId64 ", %{public}d)", mCurrentPosition, mCurrentSeekMode);
             mSeekPosition = mCurrentPosition;
             mSeekMode = mCurrentSeekMode;
             playerService_->Seek(mCurrentPosition, mCurrentSeekMode);
@@ -446,7 +447,7 @@ void PlayerImpl::HandleSeekDoneInfo(PlayerOnInfoType type, int32_t extra)
             MEDIA_LOGI("All seeks complete - return to regularly scheduled program");
             ResetSeekVariables();
         }
-        MEDIA_LOGI("HandleSeekDoneInfo end seekTo(%{public}lld, %{public}d)", mCurrentPosition, mCurrentSeekMode);
+        MEDIA_LOGI("HandleSeekDoneInfo end seekTo(%{public}" PRId64 ", %{public}d)", mCurrentPosition, mCurrentSeekMode);
     }
 }
 
@@ -571,7 +572,7 @@ void PlayerImpl::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &info
         if (!isSeeking_) {
             callback->OnInfo(type, extra, infoBody);
         } else {
-            MEDIA_LOGD("Is seeking to (%{public}lld, %{public}d), not update now", mCurrentPosition, mCurrentSeekMode);
+            MEDIA_LOGD("Is seeking to (%{public}" PRId64 ", %{public}d), not update now", mCurrentPosition, mCurrentSeekMode);
         }
     } else {
         callback->OnInfo(type, extra, infoBody);
