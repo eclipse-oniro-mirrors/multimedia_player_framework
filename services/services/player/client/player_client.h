@@ -120,7 +120,7 @@ public:
 private:
     int32_t CreateListenerObject();
     int32_t DisableWhenOK(int32_t ret);
-    int32_t CancelPCMCallbackStub(bool isProcessor);
+    int32_t CancelPCMCallbackStub();
 
     sptr<IStandardPlayerService> playerProxy_ = nullptr;
     sptr<PlayerListenerStub> listenerStub_ = nullptr;

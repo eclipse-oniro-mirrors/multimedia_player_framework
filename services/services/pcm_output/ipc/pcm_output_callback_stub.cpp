@@ -14,7 +14,7 @@
  */
 
 #include "pcm_output_callback_stub.h"
-#include "avsharedmemory.h"
+#include "media_errors.h"
 #include "media_log.h"
 #include "native_avbuffer.h"
 
@@ -24,11 +24,10 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PCM
 
 namespace OHOS {
 namespace Media {
-PCMOutputCallbackStub::PCMOutputCallbackStub(const std::function<void(const std::shared_ptr<AVBuffer>&)>& callback,
-    bool isProcessor)
-    : callback_(callback), isProcessor_(isProcessor)
+PCMOutputCallbackStub::PCMOutputCallbackStub(const std::function<void(const std::shared_ptr<AVBuffer>&)>& callback)
+    : callback_(callback)
 {
-    MEDIA_LOGD("PCMOutputCallbackStub ctor called, isProcessor: %{public}d", isProcessor);
+    MEDIA_LOGD("PCMOutputCallbackStub ctor called");
 }
 
 int32_t PCMOutputCallbackStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
@@ -39,9 +38,8 @@ int32_t PCMOutputCallbackStub::OnRemoteRequest(uint32_t code, MessageParcel &dat
 
     switch (code) {
         case IStandardPCMOutputCallback::ON_PCM_OUTPUT: {
-            // Create AVBuffer and read from MessageParcel
             std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
-            CHECK_AND_RETURN_RET_LOG(buffer != nullptr, ERR_NO_MEMORY, "Failed to create AVBuffer");
+            CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_NO_MEMORY, "Failed to create AVBuffer");
 
             bool ret = buffer->ReadFromMessageParcel(data);
             CHECK_AND_RETURN_RET(ret, MSERR_INVALID_VAL);
@@ -49,15 +47,16 @@ int32_t PCMOutputCallbackStub::OnRemoteRequest(uint32_t code, MessageParcel &dat
             OnPCMOutput(buffer);
             return ERR_OK;
         }
-        default:
+        default: {
             MEDIA_LOGE("Unknown request code: %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+        }
     }
 }
 
 void PCMOutputCallbackStub::OnPCMOutput(const std::shared_ptr<AVBuffer> &buffer)
 {
-    CHECK_AND_RETURN(callback_ != nullptr && !isProcessor_);
+    CHECK_AND_RETURN(callback_ != nullptr);
     callback_(buffer);
 }
 } // namespace Media

@@ -2030,10 +2030,10 @@ int32_t PlayerServiceStub::GetVideoSample(MessageParcel &data, MessageParcel &re
     return ret;
 }
 
-int32_t PlayerServiceStub::SetPCMProcessorCallback(MessageParcel &data, MessageParcel &reply)
+int32_t PlayerServiceStub::SetPCMOutputCallback(MessageParcel &data, MessageParcel &reply)
 {
     sptr<IRemoteObject> object = data.ReadRemoteObject();
-    reply.WriteInt32(SetPCMProcessorCallback(object));
+    reply.WriteInt32(SetPCMOutputCallback(object));
     return MSERR_OK;
 }
 
