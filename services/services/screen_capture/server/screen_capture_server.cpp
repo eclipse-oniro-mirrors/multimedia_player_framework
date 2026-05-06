@@ -1160,11 +1160,6 @@ int32_t ScreenCaptureServer::HandlePresentPickerWindowCase(Json::Value& root, co
     UnRegisterWindowLifecycleListener();
     UnRegisterWindowInfoChangedListener();
     ScreenManager::GetInstance().UnregisterScreenListener(screenConnectListener_);
-    if (!isGetAppMissionId_) {
-        StopScreenCaptureInnerUnBind();
-        PostStartScreenCaptureFail();
-        return MSERR_UNKNOWN;
-    }
     int32_t ret = MSERR_OK;
     if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
         auto consumerSurface = isSurfaceMode_ ? surface_ : producerSurface_;
