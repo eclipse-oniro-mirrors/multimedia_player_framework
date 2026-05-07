@@ -87,7 +87,7 @@ enum CaptureMode : int32_t {
     /* capture a specified window */
     CAPTURE_SPECIFIED_WINDOW = 2,
     /* capture a specified app */
-    CAPTURE_SPECIFIED_APP = 3,
+    CAPTURE_SPECIFIED_APP = 4,
     CAPTURE_INVAILD = -1
 };
 

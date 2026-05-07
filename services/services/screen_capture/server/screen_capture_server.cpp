@@ -1446,7 +1446,7 @@ void ScreenCaptureServer::ClearAppMissionIds()
 
 bool ScreenCaptureServer::AppMissionIdsIsEmpty()
 {
-    std::unique_lock<std::shared_mutex> read_lock(appMissionIdslock_);
+    std::shared_lock<std::shared_mutex> read_lock(appMissionIdslock_);
     return appMissionIds_.empty();
 }
 
