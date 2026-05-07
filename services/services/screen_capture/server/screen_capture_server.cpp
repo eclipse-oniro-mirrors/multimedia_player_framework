@@ -1506,6 +1506,7 @@ void ScreenCaptureServer::ChangeMirrorScreen()
     sptr<Rosen::Display> defaultDisplay = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
     ScreenId mirrorGroup = defaultDisplay->GetScreenId();
     uint64_t defaultDisplayId = defaultDisplayIdValue;
+    ScreenManager::GetInstance().StopMirror(mirrorIds);
     DMError retScreenManager;
 #ifdef PC_STANDARD
     if (IsHopper() && captureConfig_.strategy.enableDeviceLevelCapture == false) {
