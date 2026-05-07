@@ -129,8 +129,8 @@ ohos_shared_library("media_service") {
   }
 
   sources = [
-    "//foundation/multimedia/player_framework/frameworks/native/common/media_errors.cpp",
     "//foundation/multimedia/player_framework/frameworks/native/common/lpp_common.cpp",
+    "//foundation/multimedia/player_framework/frameworks/native/common/media_errors.cpp",
     "common/avsharedmemory_ipc.cpp",
     "factory/engine_factory_repo.cpp",
     "monitor/ipc/monitor_service_stub.cpp",
@@ -145,11 +145,11 @@ ohos_shared_library("media_service") {
   ]
   if (player_framework_support_player) {
     sources += [
+      "dolby_passthrough/ipc/dolby_passthrough_proxy.cpp",
       "media_data_source/ipc/media_data_source_proxy.cpp",
       "media_source/ipc/media_source_loader_proxy.cpp",
       "media_source/ipc/media_source_loading_request_stub.cpp",
       "player/audio_background_adapter/audio_background_adapter.cpp",
-      "dolby_passthrough/ipc/dolby_passthrough_proxy.cpp",
       "player/ipc/player_listener_proxy.cpp",
       "player/ipc/player_service_stub.cpp",
       "player/server/player_server.cpp",
@@ -204,11 +204,11 @@ ohos_shared_library("media_service") {
       "screen_capture/server/audio_data_source.cpp",
       "screen_capture/server/limitIdGenerator.cpp",
       "screen_capture/server/screen_cap_buffer_consumer_listener.cpp",
-      "screen_capture/server/screen_capture_record_display_listener.cpp",
       "screen_capture/server/screen_capture_controller_server.cpp",
+      "screen_capture/server/screen_capture_record_display_listener.cpp",
       "screen_capture/server/screen_capture_server.cpp",
-      "screen_capture/server/window_life_cycle_listener.cpp",
       "screen_capture/server/ui_extension_ability_connection.cpp",
+      "screen_capture/server/window_life_cycle_listener.cpp",
       "screen_capture_monitor/ipc/screen_capture_monitor_listener_proxy.cpp",
       "screen_capture_monitor/ipc/screen_capture_monitor_service_stub.cpp",
       "screen_capture_monitor/server/screen_capture_monitor_server.cpp",
@@ -232,17 +232,17 @@ ohos_shared_library("media_service") {
 
   if (player_framework_support_lowpower_av_sink) {
     sources += [
+      "lpp_audio_streamer/ipc/lpp_audio_streamer_listener_proxy.cpp",
       "lpp_audio_streamer/ipc/lpp_audio_streamer_service_stub.cpp",
       "lpp_audio_streamer/server/lpp_audio_streamer_server.cpp",
-      "lpp_audio_streamer/ipc/lpp_audio_streamer_listener_proxy.cpp",
     ]
   }
 
   if (player_framework_support_lowpower_av_sink) {
     sources += [
+      "lpp_video_streamer/ipc/lpp_video_streamer_listener_proxy.cpp",
       "lpp_video_streamer/ipc/lpp_video_streamer_service_stub.cpp",
       "lpp_video_streamer/server/lpp_video_streamer_server.cpp",
-      "lpp_video_streamer/ipc/lpp_video_streamer_listener_proxy.cpp",
     ]
   }
 
@@ -258,7 +258,8 @@ ohos_shared_library("media_service") {
   ]
 
   if (ohos_indep_compiler_enable) {
-    include_dirs = ["//binarys/third_party/icu/innerapis/shared_icuuc/includes/common"]
+    include_dirs =
+        [ "//binarys/third_party/icu/innerapis/shared_icuuc/includes/common" ]
   }
 
   external_deps = [
@@ -269,7 +270,9 @@ ohos_shared_library("media_service") {
     "av_codec:av_codec_client",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
+    "drivers_interface_display:display_commontype_idl_headers",
     "graphic_2d:librender_service_base",
+    "graphic_surface:surface",
     "hdf_core:libhdi",
     "hicollie:libhicollie",
     "hilog:libhilog",
@@ -281,9 +284,9 @@ ohos_shared_library("media_service") {
     "image_framework:image_native",
     "init:libbegetutil",
     "ipc:ipc_single",
-    "jsoncpp:jsoncpp",
-    "libxml2:libxml2",
-    "media_foundation:media_foundation",
+    "jsoncpp",
+    "libxml2",
+    "media_foundation",
     "memmgr:memmgrclient",
     "napi:ace_napi",
     "os_account:os_account_innerkits",
@@ -292,8 +295,6 @@ ohos_shared_library("media_service") {
     "resource_schedule_service:ressched_client",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "graphic_surface:surface",
-    "drivers_interface_display:display_commontype_idl_headers",
   ]
 
   if (player_framework_support_video) {
@@ -335,7 +336,8 @@ ohos_shared_library("media_service") {
     ]
   }
 
-  if (player_framework_support_lowpower_av_sink && drivers_interface_lpplayer_flag) {
+  if (player_framework_support_lowpower_av_sink &&
+      drivers_interface_lpplayer_flag) {
     external_deps += [
       "drivers_interface_lpplayer:liblow_power_player_proxy_1.0",
       "hdf_core:libhdi",
@@ -355,7 +357,7 @@ ohos_shared_library("media_service") {
 
   if (player_framework_support_auto_create_file) {
     external_deps += [
-      "camera_framework:camera_framework",
+      "camera_framework",
       "data_share:datashare_common",
       "data_share:datashare_consumer",
       "media_library:media_library_camera_helper",
@@ -364,7 +366,7 @@ ohos_shared_library("media_service") {
   }
 
   if (player_framework_support_drm) {
-    external_deps += [ "drm_framework:drm_framework" ]
+    external_deps += [ "drm_framework" ]
   }
 
   if (player_framework_support_power_manager) {
