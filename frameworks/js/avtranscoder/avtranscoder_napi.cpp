@@ -692,11 +692,13 @@ napi_value AVTransCoderNapi::JsAddWatermark(napi_env env, napi_callback_info inf
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
         AVTransCoderAsyncContext* asyncCtx = reinterpret_cast<AVTransCoderAsyncContext *>(data);
         CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
-        
+
         if (asyncCtx->task_) {
             auto result = asyncCtx->task_->GetResult();
             if (result.Value().first != MSERR_EXT_API9_OK) {
                 asyncCtx->SignError(result.Value().first, result.Value().second);
+            } else {
+                asyncCtx->JsResult = std::make_unique<MediaJsResultInt>(asyncCtx->napi->watermarkCount_);
             }
         }
         MEDIA_LOGI("The js thread of addWatermark finishes execution and returns");
@@ -862,7 +864,7 @@ int32_t AVTransCoderNapi::AddWatermark(std::shared_ptr<PixelMap> &pixelMap,
     std::shared_lock<std::shared_mutex> transCoderlock(transCoderMutex_);
     return transCoder_->AddWatermark(buffer, watermarkConfig->width, watermarkConfig->height);
 }
- 
+
 std::shared_ptr<TaskHandler<RetInfo>> AVTransCoderNapi::AddWatermarkTask(
     const std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx)
 {
@@ -870,18 +872,22 @@ std::shared_ptr<TaskHandler<RetInfo>> AVTransCoderNapi::AddWatermarkTask(
         watermarkConfig = asyncCtx->watermarkConfig_]() mutable {
         const std::string &option = AVTransCoderOpt::ADD_WATERMARK;
         MEDIA_LOGI("%{public}s Start", option.c_str());
- 
+
         CHECK_AND_RETURN_RET(napi != nullptr, GetReturnRet(MSERR_INVALID_OPERATION, option, ""));
- 
+
         CHECK_AND_RETURN_RET(napi->CheckStateMachine(option) == MSERR_OK,
             GetReturnRet(MSERR_INVALID_OPERATION, option, ""));
- 
+
         int32_t ret = napi->AddWatermark(pixelMap, watermarkConfig);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, GetReturnRet(ret, "AddWatermarkTask", ""),
             "AddWatermarkTask failed");
- 
+
         MEDIA_LOGI("%{public}s End", option.c_str());
-        return RetInfo(MSERR_EXT_API9_OK, "");
+        if (napi->watermarkCount_ <= AVTRANSCODER_WATERMARK_MAX_NUM) {
+            napi->watermarkCount_++;
+        }
+        MEDIA_LOGI("%{public}s End, watermark count: %{public}d", option.c_str(), napi->watermarkCount_);
+        return RetInfo(MSERR_EXT_API9_OK, std::to_string(napi->watermarkCount_));
     });
 }
 
@@ -1046,19 +1052,19 @@ int32_t AVTransCoderNapi::GetWatermarkParameter(std::unique_ptr<AVTransCoderAsyn
 {
     int32_t ret = GetWatermark(asyncCtx, env, watermark);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetWatermark");
- 
+
     ret = GetWatermarkConfig(asyncCtx, env, watermarkConfig);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetWatermarkConfig");
- 
+
     return MSERR_OK;
 }
- 
+
 int32_t AVTransCoderNapi::GetWatermark(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx,
     napi_env env, napi_value args)
 {
     CHECK_AND_RETURN_RET(CommonNapi::CheckValueType(env, args, napi_object),
         (asyncCtx->AVTransCoderSignError(MSERR_INVALID_VAL, "GetPixelMap", "PixelMap"), MSERR_INVALID_VAL));
- 
+
     asyncCtx->pixelMap_ = Media::PixelMapNapi::GetPixelMap(env, args);
     CHECK_AND_RETURN_RET(asyncCtx->pixelMap_ != nullptr,
         (asyncCtx->AVTransCoderSignError(MSERR_INVALID_VAL, "GetPixelMap", "pixelMap"), MSERR_INVALID_VAL));
@@ -1079,24 +1085,24 @@ int32_t AVTransCoderNapi::GetWatermarkConfig(std::unique_ptr<AVTransCoderAsyncCo
     CHECK_AND_RETURN_RET(CommonNapi::CheckValueType(env, args, napi_object),
         (asyncCtx->AVTransCoderSignError(MSERR_INVALID_VAL,
             "GetWatermarkConfig", "WatermarkConfiguration"), MSERR_INVALID_VAL));
- 
+
     asyncCtx->watermarkConfig_ = std::make_shared<WatermarkConfiguration>();
     CHECK_AND_RETURN_RET(asyncCtx->watermarkConfig_,
         (asyncCtx->AVTransCoderSignError(MSERR_NO_MEMORY, "GetWatermarkConfig", "WatermarkConfiguration"),
         MSERR_NO_MEMORY));
- 
+
     std::shared_ptr<WatermarkConfiguration> config = asyncCtx->watermarkConfig_;
- 
+
     bool ret = CommonNapi::GetPropertyInt32(env, args, "top", config->top);
     CHECK_AND_RETURN_RET(ret,
         (asyncCtx->AVTransCoderSignError(MSERR_PARAMETER_VERIFICATION_FAILED, "GetWatermarkConfig", "top",
         "config top cannot be null"), MSERR_PARAMETER_VERIFICATION_FAILED));
- 
+
     ret = CommonNapi::GetPropertyInt32(env, args, "left", config->left);
     CHECK_AND_RETURN_RET(ret,
         (asyncCtx->AVTransCoderSignError(MSERR_PARAMETER_VERIFICATION_FAILED, "GetWatermarkConfig", "left",
         "config left cannot be null"), MSERR_PARAMETER_VERIFICATION_FAILED));
- 
+
     if (CommonNapi::CheckhasNamedProperty(env, args, "width")) {
         ret = CommonNapi::GetPropertyInt32(env, args, "width", config->width);
         CHECK_AND_RETURN_RET(ret && config->width > 0
@@ -1104,7 +1110,7 @@ int32_t AVTransCoderNapi::GetWatermarkConfig(std::unique_ptr<AVTransCoderAsyncCo
             (asyncCtx->AVTransCoderSignError(MSERR_PARAMETER_VERIFICATION_FAILED, "GetWatermarkConfig", "width",
             "config width must be greater than zero and less than 4097"), MSERR_PARAMETER_VERIFICATION_FAILED));
     }
- 
+
     if (CommonNapi::CheckhasNamedProperty(env, args, "height")) {
         ret = CommonNapi::GetPropertyInt32(env, args, "height", config->height);
         CHECK_AND_RETURN_RET(ret && config->height > 0
@@ -1112,7 +1118,7 @@ int32_t AVTransCoderNapi::GetWatermarkConfig(std::unique_ptr<AVTransCoderAsyncCo
             (asyncCtx->AVTransCoderSignError(MSERR_PARAMETER_VERIFICATION_FAILED, "GetWatermarkConfig", "height",
             "config height must be greater than zero and less than 4097"), MSERR_PARAMETER_VERIFICATION_FAILED));
     }
- 
+
     return MSERR_OK;
 }
 
