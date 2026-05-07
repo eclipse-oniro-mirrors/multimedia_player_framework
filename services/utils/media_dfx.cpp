@@ -332,7 +332,7 @@ void MediaEvent::MediaKitStatistics(const std::string& syscap, const std::string
     const std::string& instanceId, const std::string& APICall, const std::string& events)
 {
     MEDIA_LOG_I("MediaEvent::MediaKitStatistics start");
-    std::async(std::launch::async, [this, syscap, appName, instanceId, APICall, events] {
+    std::async(std::launch::async, [syscap, appName, instanceId, APICall, events] {
         nlohmann::json mediaKitEvent;
         mediaKitEvent["syscap"] = syscap;
         mediaKitEvent["appName"] = appName;
