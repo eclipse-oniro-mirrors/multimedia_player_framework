@@ -735,7 +735,7 @@ int32_t PlayerClient::SetPCMOutputCallback(const std::shared_ptr<PlayerCallback>
 
     std::function<void(const std::shared_ptr<AVBuffer>&)> func = [callback](const std::shared_ptr<AVBuffer> &buffer) {
         callback->OnPCMOutput(buffer);
-    }; 
+    };
     pcmOutputCallbackStub_ = new(std::nothrow) PCMOutputCallbackStub(func);
     CHECK_AND_RETURN_RET_LOG(pcmOutputCallbackStub_ != nullptr, MSERR_NO_MEMORY,
         "failed to create PCMOutputCallbackStub");

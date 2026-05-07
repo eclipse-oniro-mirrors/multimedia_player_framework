@@ -341,6 +341,7 @@ private:
     std::atomic<bool> isVideoOutputEnabled_ {false};
     std::atomic<bool> isSuperResolutionEnabled_ {false};
     std::atomic<bool> isCameraPostprocessingEnabled_ {false};
+    std::function<void(const std::shared_ptr<AVBuffer>&)> pcmOutputCallback_ {};
 };
 } // namespace Media
 } // namespace OHOS

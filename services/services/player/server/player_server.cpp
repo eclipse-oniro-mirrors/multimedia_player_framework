@@ -278,6 +278,9 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     ret = playerEngine_->EnableReportMediaProgress(
         playerProducer_ == PlayerProducer::NAPI ? enableReportMediaProgress_ : true);
     TRUE_LOG(ret != MSERR_OK, MEDIA_LOGW, "PlayerEngine enable report media progress failed, ret %{public}d", ret);
+    ret = playerEngine_->SetPCMOutputCallback(pcmOutputCallback_);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetPCMOutputCallback Failed!");
+
     if (playerCb_ != nullptr) {
         playerCb_->SetInterruptListenerFlag(
             playerProducer_ == PlayerProducer::NAPI ? enableReportAudioInterrupt_ : true);
@@ -2804,6 +2807,11 @@ int32_t PlayerServer::SetPCMOutputCallback(const std::function<void(const std::s
 
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_INVALID_STATE, "playerEngine_ is nullptr");
     return playerEngine_->SetPCMOutputCallback(callback);
+
+    // If playerEngine_ not init, save pcmOutputCallback_ and use it after playerEngine_ init
+    pcmOutputCallback_ = callback;
+    CHECK_AND_RETURN_RET_NOLOG(playerEngine_ == nullptr, playerEngine_->SetPCMOutputCallback(callback));
+    return MSERR_OK;
 }
 } // namespace Media
 } // namespace OHOS
