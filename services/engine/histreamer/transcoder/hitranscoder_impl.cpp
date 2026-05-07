@@ -1060,7 +1060,7 @@ Status HiTransCoderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, co
                     !skipProcessFilterFlag_.AddVideoWaterMarkFilter()) {
                     return LinkVideoResizeFilter(filter, outType);
                 }
- 
+
                 if (filterType == Pipeline::FilterType::FILTERTYPE_VIDEODEC &&
                     skipProcessFilterFlag_.AddVideoWaterMarkFilter()) {
                     return LinkWaterMark(filter, outType);
@@ -1124,7 +1124,7 @@ Status HiTransCoderImpl::BuildPipeline(VideoProcessMode mode, int32_t outputVide
         case VideoProcessMode::DECODER_WATERMARK_ENCODER:
         case VideoProcessMode::DECODER_RESIZE_WATERMARK_ENCODER:
             return ConnectDecoderWatermarkEncoder(outputVideoWidth, outputVideoHeight);
- 
+
         default:
             MEDIA_LOG_E("Invalid video process mode: %{public}d", static_cast<int>(mode));
             return ConnectDecoderToEncoder();
@@ -1159,7 +1159,7 @@ std::string HiTransCoderImpl::GetModeString(VideoProcessMode mode)
             return "Unknown Mode";
     }
 }
- 
+
 Status HiTransCoderImpl::LinkWaterMark(const std::shared_ptr<Pipeline::Filter>& preFilter,
     Pipeline::StreamType type)
 {
@@ -1173,8 +1173,8 @@ Status HiTransCoderImpl::LinkWaterMark(const std::shared_ptr<Pipeline::Filter>& 
     pipeline_->LinkFilters(preFilter, {waterMarkFilter_}, type);
     return Status::OK;
 }
- 
- 
+
+
 /**
  *  连接：解码器 -> 编码器
  */
