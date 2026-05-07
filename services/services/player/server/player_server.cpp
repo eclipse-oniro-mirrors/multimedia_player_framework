@@ -2805,9 +2805,6 @@ int32_t PlayerServer::SetPCMOutputCallback(const std::function<void(const std::s
     CHECK_AND_RETURN_RET_LOG(isValidState, MSERR_INVALID_STATE,
         "can not SetPCMOutputCallback, current state is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
 
-    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_INVALID_STATE, "playerEngine_ is nullptr");
-    return playerEngine_->SetPCMOutputCallback(callback);
-
     // If playerEngine_ not init, save pcmOutputCallback_ and use it after playerEngine_ init
     pcmOutputCallback_ = callback;
     CHECK_AND_RETURN_RET_NOLOG(playerEngine_ == nullptr, playerEngine_->SetPCMOutputCallback(callback));
