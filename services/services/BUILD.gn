@@ -284,9 +284,9 @@ ohos_shared_library("media_service") {
     "image_framework:image_native",
     "init:libbegetutil",
     "ipc:ipc_single",
-    "jsoncpp",
-    "libxml2",
-    "media_foundation",
+    "jsoncpp:jsoncpp",
+    "libxml2:libxml2",
+    "media_foundation:media_foundation",
     "memmgr:memmgrclient",
     "napi:ace_napi",
     "os_account:os_account_innerkits",
@@ -357,7 +357,7 @@ ohos_shared_library("media_service") {
 
   if (player_framework_support_auto_create_file) {
     external_deps += [
-      "camera_framework",
+      "camera_framework:camera_framework",
       "data_share:datashare_common",
       "data_share:datashare_consumer",
       "media_library:media_library_camera_helper",
@@ -366,7 +366,7 @@ ohos_shared_library("media_service") {
   }
 
   if (player_framework_support_drm) {
-    external_deps += [ "drm_framework" ]
+    external_deps += [ "drm_framework:drm_framework" ]
   }
 
   if (player_framework_support_power_manager) {
