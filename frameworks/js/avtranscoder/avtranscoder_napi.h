@@ -55,6 +55,7 @@ constexpr int32_t AVTRANSCODER_DEFAULT_VIDEO_BIT_RATE = -1;
 constexpr int32_t AVTRANSCODER_DEFAULT_FRAME_HEIGHT = -1;
 constexpr int32_t AVTRANSCODER_DEFAULT_FRAME_WIDTH = -1;
 constexpr int32_t AVTRANSCODER_WATERMARK_MAX_LENGTH = 4096;
+constexpr int32_t AVTRANSCODER_WATERMARK_MAX_NUM = 5;
 
 const std::map<std::string, std::vector<std::string>> STATE_LIST = {
     {AVTransCoderState::STATE_IDLE, {
@@ -245,6 +246,7 @@ private:
     std::string srcUrl_ = "";
     struct AVFileDescriptor srcFd_;
     int32_t dstFd_ = -1;
+    int32_t watermarkCount_ = 0;
 };
 
 struct AVTransCoderAsyncContext : public MediaAsyncContext {
