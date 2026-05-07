@@ -717,7 +717,7 @@ int32_t HiTransCoderImpl::AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffe
     FALSE_RETURN_V_MSG_E(waterMarkBuffer != nullptr, MSERR_INVALID_VAL, "Param waterMarkBuffer is nullptr");
     auto filter = static_cast<Pipeline::WaterMarkFilter*>(waterMarkFilter_.get());
     filter->SetVideoResize(inputVideoWidth_, inputVideoHeight_);
-    auto ret = filter->AddWatermark(waterMarkBuffer, width, height);
+    auto ret = filter->SetWatermark(waterMarkBuffer, width, height);
     FALSE_RETURN_V_MSG_E(ret == Status::OK, MSERR_INVALID_OPERATION, "ERROR_INVALID_PARAMETER");
     return MSERR_OK;
 }
