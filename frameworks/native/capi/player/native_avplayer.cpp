@@ -2481,18 +2481,16 @@ OH_VideoOutputResult OH_AVPlayerVideoOutput_GetNewestVideoSample(OH_AVPlayerVide
 OH_AVErrCode OH_AVPlayer_SetPCMOutputCallback(OH_AVPlayer *player, OH_AVPlayerPCMOutputCallback callback,
     void *userData)
 {
-    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "SetPCMOutput input player is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
     struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
-    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL,
-        "SetPCMOutput player_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is nullptr");
 
     AVPlayerState currentState;
     OH_AVErrCode errCode = OH_AVPlayer_GetState(player, &currentState);
-    CHECK_AND_RETURN_RET_LOG(errCode == AV_ERR_OK, errCode, "OH_AVPlayer_GetState failed");
+    CHECK_AND_RETURN_RET_LOG(errCode == AV_ERR_OK, errCode, "failed to get current state");
     CHECK_AND_RETURN_RET_LOG(currentState == AVPlayerState::AV_IDLE || currentState == AVPlayerState::AV_INITIALIZED,
-        AV_ERR_INVALID_VAL, "current state is not idle or initialized, unsupport to set pcm output callback");
+        AV_ERR_OPERATE_NOT_PERMIT, "current state is not idle or initialized, unsupport to set pcm output callback");
 
-    // Set PCM output callback to PlayerImpl
     std::shared_ptr<NativeAVPlayerPCMOutputCallback> pcmCallback = nullptr;
     if (callback != nullptr) {
         NativeAVPlayerPCMOutputCallback *cb =
