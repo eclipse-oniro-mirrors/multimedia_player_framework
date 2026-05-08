@@ -1420,7 +1420,7 @@ void ScreenCaptureServer::SetAppMissionIdsGround(uint64_t missionId)
         ChangeMirrorScreenForSet();
         WindowInfoOption windowInfoOption;
         std::vector<sptr<WindowInfo>> infos;
-        windowInfoOption.windowId = missionId;
+        windowInfoOption.windowId = static_cast<int32_t>(missionId);
         Rosen::WMError ret = Rosen::WindowManager::GetInstance().ListWindowInfo(windowInfoOption, infos);
         CHECK_AND_RETURN_LOG(ret == Rosen::WMError::WM_OK && !infos.empty(), "ListWindowInfo failed.");
         NotifyCaptureContentChanged(
