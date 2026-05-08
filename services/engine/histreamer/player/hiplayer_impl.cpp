@@ -2721,8 +2721,10 @@ void HiPlayerImpl::OnEvent(const Event &event)
             break;
         }
         case EventType::EVENT_ERROR: {
+            if ((curState_ != PlayerStateId::IDLE) && (state != PlayerStateId::INIT) && (state != PlayerStateId::PREPARING)) {
+                HandleErrorEvent(event);
+            }
             OnStateChanged(PlayerStateId::ERROR);
-            HandleErrorEvent(event);
             break;
         }
         case EventType::EVENT_READY: {
