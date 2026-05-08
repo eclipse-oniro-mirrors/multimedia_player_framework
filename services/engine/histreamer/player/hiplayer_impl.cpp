@@ -2721,10 +2721,13 @@ void HiPlayerImpl::OnEvent(const Event &event)
             break;
         }
         case EventType::EVENT_ERROR: {
-            if ((curState_ != PlayerStateId::IDLE) && (state != PlayerStateId::INIT) && (state != PlayerStateId::PREPARING)) {
-                HandleErrorEvent(event);
+            if ((curState_ != PlayerStateId::IDLE) && (state != PlayerStateId::INIT) &&
+            (state != PlayerStateId::PREPARING)) {
+                PlayerErrorType errorType = GetPlayerErrorType(event);
+                SetMediaKitReport("avplayer error: " + std::to_string(errorType));
             }
             OnStateChanged(PlayerStateId::ERROR);
+            HandleErrorEvent(event);
             break;
         }
         case EventType::EVENT_READY: {
@@ -3253,7 +3256,6 @@ void HiPlayerImpl::HandleErrorEvent(const Event& event)
 {
     int32_t errorCode = AnyCast<int32_t>(event.param);
     PlayerErrorType errorType = GetPlayerErrorType(event);
-    SetMediaKitReport("avplayer error: " + std::to_string(errorType));
     callbackLooper_.OnError(errorType, errorCode, event.description);
 }
 
