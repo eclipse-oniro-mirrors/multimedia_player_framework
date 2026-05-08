@@ -2541,6 +2541,27 @@ int32_t ScreenCaptureServer::InitVideoCap(VideoCaptureInfo videoInfo)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitVideoCap CheckVideoCapInfo failed");
     captureConfig_.videoInfo.videoCapInfo = videoInfo;
     SetDisplayId(videoInfo.displayId);
+
+#ifdef PC_STANDARD
+    isPickerModePopUp_ = false;
+    if (captureConfig_.captureMode == CAPTURE_SPECIFIED_SCREEN) {
+        isPickerModePopUp_ = true;
+    }
+    if (CheckCaptureSpecifiedWindowForSelectWindow()) {
+        if (captureConfig_.videoInfo.videoCapInfo.taskIDs.empty()) {
+            isPickerModePopUp_ = true;
+        } else {
+            Rosen::WindowInfoOption windowInfoOption;
+            std::vector<sptr<Rosen::WindowInfo>> infos;
+            windowInfoOption.windowId = captureConfig_.videoInfo.videoCapInfo.taskIDs.front();
+            auto wmRet = Rosen::WindowManager::GetInstance().ListWindowInfo(windowInfoOption, infos);
+            isPickerModePopUp_ = (wmRet != Rosen::WMError::WM_OK || infos.empty() ||
+                infos.front()->windowMetaInfo.pid != appInfo_.appPid);
+            MEDIA_LOGI("list window info ret:%{public}d, isPickerModePopUp:%{public}d", ret, isPickerModePopUp_);
+        }
+    }
+#endif
+
     avType_ = (avType_ == AVScreenCaptureAvType::AUDIO_TYPE) ? AVScreenCaptureAvType::AV_TYPE :
         AVScreenCaptureAvType::VIDEO_TYPE;
     statisticalEventInfo_.videoResolution = std::to_string(videoInfo.videoFrameWidth) + " * " +
@@ -2827,8 +2848,7 @@ bool ScreenCaptureServer::IsPickerPopUp()
 #ifdef PC_STANDARD
     CHECK_AND_RETURN_RET_NOLOG(captureConfig_.strategy.pickerPopUp
         != AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_DISABLE, false);
-    return !isRegionCapture_ &&
-           (captureConfig_.captureMode == CAPTURE_SPECIFIED_SCREEN || CheckCaptureSpecifiedWindowForSelectWindow());
+    return !isRegionCapture_ && isPickerModePopUp_;
 #else
     return false;
 #endif
