@@ -61,7 +61,7 @@ int32_t ScreenCaptureListenerStub::OnUserSelectedStub(MessageParcel &data, Messa
     ScreenCaptureUserSelectionInfo selectionInfo;
     CHECK_AND_RETURN_RET_LOG(data.ReadInt32(selectionInfo.selectType) &&
         data.ReadUInt64Vector(&selectionInfo.displayIds), MSERR_UNKNOWN, "Failed to read selectionInfo");
-    CHECK_AND_RETURN_RET_LOG(selectionInfo.selectType == 0 || selectionInfo.selectType == 1, MSERR_INVALID_VAL,
+    CHECK_AND_RETURN_RET_LOG(selectionInfo.selectType >= 0, MSERR_INVALID_VAL,
         "OnUserSelected selectType invalid");
     OnUserSelected(selectionInfo);
     return MSERR_OK;

@@ -939,6 +939,185 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetDefaultDisplayIdOfWindows_001, Test
     ASSERT_NE(screenCaptureServer_->GetCurDisplayId(), SCREEN_ID_INVALID);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, AppMissionId_001, TestSize.Level2)
+{
+    EXPECT_EQ(screenCaptureServer_->appMissionIds_.size(), 0);
+    EXPECT_EQ(screenCaptureServer_->appMissionIdsForGround_.size(), 0);
+    screenCaptureServer_->virtualScreenId_ = 1;
+    screenCaptureServer_->SetAppMissionIds(0);
+    screenCaptureServer_->SetAppMissionIdsGround(0);
+    EXPECT_EQ(screenCaptureServer_->appMissionIds_.size(), 1);
+    EXPECT_EQ(screenCaptureServer_->appMissionIdsForGround_.size(), 1);
+    screenCaptureServer_->SetAppMissionIds(0);
+    screenCaptureServer_->SetAppMissionIdsGround(0);
+    EXPECT_EQ(screenCaptureServer_->appMissionIds_.size(), 1);
+    EXPECT_EQ(screenCaptureServer_->appMissionIdsForGround_.size(), 1);
+    screenCaptureServer_->SetAppMissionIds({0, 1, 2});
+    EXPECT_EQ(screenCaptureServer_->appMissionIds_.size(), 3);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, AppMissionId_002, TestSize.Level2)
+{
+    EXPECT_EQ(screenCaptureServer_->appMissionIds_.size(), 0);
+    EXPECT_EQ(screenCaptureServer_->appMissionIdsForGround_.size(), 0);
+    screenCaptureServer_->SetAppMissionIds(0);
+    screenCaptureServer_->SetAppMissionIdsGround(0);
+    screenCaptureServer_->SetAppMissionIds(1);
+    screenCaptureServer_->SetAppMissionIdsGround(1);
+    screenCaptureServer_->RemoveAppMissionIds(0);
+    screenCaptureServer_->RemoveAppMissionIdsGround(0);
+    EXPECT_EQ(screenCaptureServer_->appMissionIds_.size(), 1);
+    EXPECT_EQ(screenCaptureServer_->appMissionIdsForGround_.size(), 1);
+    screenCaptureServer_->RemoveAppMissionIds(1);
+    screenCaptureServer_->RemoveAppMissionIdsGround(1);
+    EXPECT_EQ(screenCaptureServer_->appMissionIds_.size(), 0);
+    EXPECT_EQ(screenCaptureServer_->appMissionIdsForGround_.size(), 0);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, RegisterAppLifecycleListener_001, TestSize.Level2)
+{
+    screenCaptureServer_->windowIdList_ = {};
+    screenCaptureServer_->appLifecycleListener_ = nullptr;
+    screenCaptureServer_->lifecycleListenerDeathRecipient_ = nullptr;
+    screenCaptureServer_->RegisterAppLifecycleListener("appName", 0);
+    screenCaptureServer_->RegisterAppLifecycleListener("appName", 0);
+    ASSERT_NE(screenCaptureServer_->lifecycleListenerDeathRecipient_, nullptr);
+    ASSERT_NE(screenCaptureServer_->appLifecycleListener_, nullptr);
+    screenCaptureServer_->UnRegisterAppLifecycleListener();
+    screenCaptureServer_->UnRegisterAppLifecycleListener();
+    ASSERT_EQ(screenCaptureServer_->lifecycleListenerDeathRecipient_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->appLifecycleListener_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_001, TestSize.Level2)
+{
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    sptr<SCWindowLifecycleListener> listener(new (std::nothrow) SCWindowLifecycleListener(screenCaptureServer));
+    screenCaptureServer_->windowLifecycleListener_ = listener;
+    SCWindowLifecycleListener::LifecycleEventPayload payload;
+    payload.sessionState_ = SessionState::STATE_FOREGROUND;
+    payload.persistentId_ = 0;
+    screenCaptureServer_->windowLifecycleListener_->OnAppInstanceLifecycleEvent(payload);
+ 
+    ASSERT_NE(screenCaptureServer_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_002, TestSize.Level2)
+{
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    sptr<SCWindowLifecycleListener> listener(new (std::nothrow) SCWindowLifecycleListener(screenCaptureServer));
+    screenCaptureServer_->windowLifecycleListener_ = listener;
+    SCWindowLifecycleListener::LifecycleEventPayload payload;
+    payload.sessionState_ = SessionState::STATE_CONNECT;
+    payload.persistentId_ = 0;
+    screenCaptureServer_->windowLifecycleListener_->OnAppInstanceLifecycleEvent(payload);
+    ASSERT_NE(screenCaptureServer_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_003, TestSize.Level2)
+{
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    sptr<SCWindowLifecycleListener> listener(new (std::nothrow) SCWindowLifecycleListener(screenCaptureServer));
+    screenCaptureServer_->windowLifecycleListener_ = listener;
+    SCWindowLifecycleListener::LifecycleEventPayload payload;
+    payload.sessionState_ = SessionState::STATE_BACKGROUND;
+    payload.persistentId_ = 0;
+    screenCaptureServer_->windowLifecycleListener_->OnAppInstanceLifecycleEvent(payload);
+    ASSERT_NE(screenCaptureServer_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_004, TestSize.Level2)
+{
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    sptr<SCWindowLifecycleListener> listener(new (std::nothrow) SCWindowLifecycleListener(screenCaptureServer));
+    screenCaptureServer_->windowLifecycleListener_ = listener;
+    SCWindowLifecycleListener::LifecycleEventPayload payload;
+    payload.sessionState_ = SessionState::STATE_DISCONNECT;
+    payload.persistentId_ = 0;
+    screenCaptureServer_->windowLifecycleListener_->OnAppInstanceLifecycleEvent(payload);
+    ASSERT_NE(screenCaptureServer_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_005, TestSize.Level2)
+{
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    sptr<SCWindowLifecycleListener> listener(new (std::nothrow) SCWindowLifecycleListener(screenCaptureServer));
+    screenCaptureServer_->windowLifecycleListener_ = listener;
+    SCWindowLifecycleListener::LifecycleEventPayload payload;
+    payload.sessionState_ = SessionState::STATE_ACTIVE;
+    screenCaptureServer_->windowLifecycleListener_->OnAppInstanceLifecycleEvent(payload);
+    ASSERT_NE(screenCaptureServer_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_006, TestSize.Level2)
+{
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    sptr<SCWindowLifecycleListener> listener(new (std::nothrow) SCWindowLifecycleListener(screenCaptureServer));
+    screenCaptureServer_->windowLifecycleListener_ = listener;
+    SCWindowLifecycleListener::LifecycleEventPayload payload;
+    payload.sessionState_ = SessionState::STATE_CONNECT;
+    payload.persistentId_ = 1;
+    std::vector<SCWindowLifecycleListener::LifecycleEventPayload> payloads = {payload};
+    screenCaptureServer_->windowLifecycleListener_->OnBatchLifecycleEvent(payloads);
+    ASSERT_NE(screenCaptureServer_, nullptr);
+    EXPECT_EQ(screenCaptureServer_->appMissionIdsForGround_.size(), 1);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_007, TestSize.Level2)
+{
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    sptr<SCWindowLifecycleListener> listener(new (std::nothrow) SCWindowLifecycleListener(screenCaptureServer));
+    screenCaptureServer_->windowLifecycleListener_ = listener;
+    SCWindowLifecycleListener::LifecycleEventPayload payload;
+    payload.sessionState_ = SessionState::STATE_FOREGROUND;
+    payload.persistentId_ = 1;
+    std::vector<SCWindowLifecycleListener::LifecycleEventPayload> payloads = {payload};
+    screenCaptureServer_->windowLifecycleListener_->OnBatchLifecycleEvent(payloads);
+    ASSERT_NE(screenCaptureServer_, nullptr);
+    EXPECT_EQ(screenCaptureServer_->appMissionIdsForGround_.size(), 1);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ParseAppMissionIds_001, TestSize.Level2)
+{
+    Json::Value appInformation;
+    appInformation["bundleName"] = "bundleName_001";
+    appInformation["appIndex"] = 0;
+    screenCaptureServer_->ParseAppMissionIds(appInformation);
+    EXPECT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_APP);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ParseAppMissionIds_002, TestSize.Level2)
+{
+    Json::Value appInformation;
+    appInformation["bundleName"] = "bundleName_002";
+    appInformation["appIndex"] = 0;
+    screenCaptureServer_->ParseAppMissionIds(appInformation);
+    screenCaptureServer_->SetAppMissionIds(1);
+    EXPECT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_APP);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ParseAppMissionIds_003, TestSize.Level2)
+{
+    Json::Value appInformation;
+    appInformation["bundleName"] = "bundleName_003";
+    appInformation["appIndex"] = 0;
+    screenCaptureServer_->SetAppMissionIds(1);
+    screenCaptureServer_->ParseAppMissionIds(appInformation);
+    EXPECT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_APP);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ParseAppMissionIds_004, TestSize.Level2)
+{
+    Json::Value appInformation;
+    appInformation["bundleName"] = "bundleName_004";
+    appInformation["appIndex"] = 0;
+    screenCaptureServer_->ParseAppMissionIds(appInformation);
+    std::vector<uint64_t> missionIds = {1};
+    screenCaptureServer_->SetAppMissionIds(missionIds);
+    EXPECT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_APP);
+}
+
+
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
 HWTEST_F(ScreenCaptureServerFunctionTest, WindowLifecycleListener_001, TestSize.Level2)
 {
@@ -1049,6 +1228,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnLifecycleEvent_001, TestSize.Level2)
         SCWindowLifecycleListener::SessionLifecycleEvent::BACKGROUND, payload);
     screenCaptureServer_->windowLifecycleListener_->OnLifecycleEvent(
         SCWindowLifecycleListener::SessionLifecycleEvent::DESTROYED, payload);
+    std::vector<SCWindowLifecycleListener::LifecycleEventPayload> payloads = {payload};
+    screenCaptureServer_->windowLifecycleListener_->OnBatchLifecycleEvent(payloads);
+    screenCaptureServer_->windowLifecycleListener_->OnAppInstanceLifecycleEvent(payload);
     ASSERT_NE(screenCaptureServer_, nullptr);
 }
 

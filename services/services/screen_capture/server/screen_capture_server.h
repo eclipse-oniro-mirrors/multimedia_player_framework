@@ -19,6 +19,7 @@
 #include "screen_capture_server_base.h"
 #include "ui_extension_ability_connection.h"
 #include "audio_data_source.h"
+#include "window_life_cycle_listener.h"
 
 namespace OHOS {
 namespace Media {
@@ -143,6 +144,17 @@ public:
     void SetDisplayId(std::vector<uint64_t> &&displayIds);
     void SetDisplayScreenId(uint64_t displayId);
     void SetDisplayScreenId(std::vector<uint64_t> &&displayIds);
+    void SetAppMissionIds(uint64_t missionId);
+    void SetAppMissionIds(const std::vector<uint64_t> &missionIds);
+    void SetWhiteAndFocusId();
+    void ClearAppMissionIds();
+    bool AppMissionIdsIsEmpty();
+    void RemoveAppMissionIds(uint64_t missionId);
+    void SetAppMissionIdsGround(uint64_t missionId);
+    void RemoveAppMissionIdsGround(uint64_t missionId);
+    void ChangeMirrorScreen();
+    void ChangeMirrorScreenForRemove();
+    void ChangeMirrorScreenForSet();
     bool IsTelInCallSkipList();
     int32_t GetAppPid();
     int32_t GetAppUid();
@@ -275,6 +287,7 @@ private:
     int32_t SetVirtualScreenAutoRotation();
     int32_t PrepareVirtualScreenMirror();
     void DestroyVirtualScreen();
+    void ParseAppMissionIds(const Json::Value &appInformation);
     void ParseDisplayId(const Json::Value &displayIdJson);
     void HandleSetDisplayIdAndMissionId(Json::Value &root);
 
@@ -348,6 +361,9 @@ private:
     bool DestroyPopWindow();
     bool DestroyPrivacySheet();
     void StopNotStartedScreenCapture(AVScreenCaptureStateCode stateCode);
+    int32_t RegisterAppLifecycleListener(const std::string &bundleName, int32_t appIndex,
+        const std::string& appInstanceKey = "");
+    int32_t UnRegisterAppLifecycleListener();
     int32_t RegisterWindowLifecycleListener(std::vector<int32_t> windowIdList);
     int32_t UnRegisterWindowLifecycleListener();
     int32_t RegisterWindowInfoChangedListener();
@@ -379,6 +395,8 @@ private:
     std::mutex displayScreenIdsMutex_;
     std::shared_mutex windowIdListMutex_;
     mutable std::shared_mutex rw_lock_;
+    mutable std::shared_mutex appMissionIdslock_;
+    mutable std::condition_variable_any appMissionIdsCondVar_;
     std::shared_ptr<ScreenCaptureObserverCallBack> screenCaptureObserverCb_ = nullptr;
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
     bool canvasRotation_ = false;
@@ -426,7 +444,11 @@ private:
     std::vector<ScreenId> displayScreenIds_;
     std::vector<ScreenId> displayIds_;
     std::vector<uint64_t> missionIds_;
+    std::vector<uint64_t> appMissionIds_ = {};
+    std::vector<uint64_t> appMissionIdsForGround_ = {};
     std::vector<int32_t> windowIdList_ = {};
+    std::atomic<uint64_t> focusAppMissionId_ = INVALID_FOCUS_MISSION_ID;
+    std::atomic<bool> isGetAppMissionId_ = true;
     std::atomic<ScreenId> curWindowInDisplayId_{SCREEN_ID_INVALID};
     std::atomic<AVScreenCaptureContentChangedEvent> curWindowEvent_ =
         AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE;
@@ -439,6 +461,7 @@ private:
     bool isTimePaused_ = false;
     sptr<UIExtensionAbilityConnection> connection_ = nullptr;
     sptr<SCWindowLifecycleListener> windowLifecycleListener_ = nullptr;
+    sptr<SCWindowLifecycleListener> appLifecycleListener_ = nullptr;
     sptr<SCDeathRecipientListener> lifecycleListenerDeathRecipient_ = nullptr;
     sptr<SCWindowInfoChangedListener> windowInfoChangedListener_ = nullptr;
     sptr<ScreenManager::IRecordDisplayListener> recordDisplayListener_ = nullptr;
@@ -526,6 +549,8 @@ private:
     static constexpr int64_t NEG_AUDIO_INTERVAL_IN_NS = -20000000; // 20ms
     static constexpr int32_t SELECT_TYPE_SCREEN = 0;
     static constexpr int32_t SELECT_TYPE_WINDOW = 1;
+    static constexpr int32_t SELECT_TYPE_APP = 2;
+    static constexpr uint64_t INVALID_FOCUS_MISSION_ID = std::numeric_limits<uint64_t>::max();
 };
 } // namespace Media
 } // namespace OHOS
