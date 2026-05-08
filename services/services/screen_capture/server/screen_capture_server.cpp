@@ -1418,6 +1418,8 @@ void ScreenCaptureServer::SetAppMissionIdsGround(uint64_t missionId)
         appMissionIdsForGround_.end()) {
         appMissionIdsForGround_.emplace_back(missionId);
         ChangeMirrorScreenForSet();
+        CHECK_AND_RETURN_LOG(missionId <= static_cast<uint64_t>(std::numeric_limits<int32_t>::max()),
+            "missionId bigger max int32_t.");
         WindowInfoOption windowInfoOption;
         std::vector<sptr<WindowInfo>> infos;
         windowInfoOption.windowId = static_cast<int32_t>(missionId);
