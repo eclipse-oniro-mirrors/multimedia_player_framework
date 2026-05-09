@@ -332,29 +332,27 @@ void MediaEvent::MediaKitStatistics(const std::string& syscap, const std::string
     const std::string& instanceId, const std::string& APICall, const std::string& events)
 {
     MEDIA_LOG_I("MediaEvent::MediaKitStatistics start");
-    std::async(std::launch::async, [syscap, appName, instanceId, APICall, events] {
-        nlohmann::json mediaKitEvent;
-        mediaKitEvent["syscap"] = syscap;
-        mediaKitEvent["appName"] = appName;
-        mediaKitEvent["instanceId"] = instanceId;
-        mediaKitEvent["APICall"] = APICall;
-        mediaKitEvent["events"] = events;
-        std::lock_guard<std::mutex> lock(mediaKitMut_);
-        mediaKitEvents_.push_back(mediaKitEvent);
-        auto currentTime = std::chrono::system_clock::now();
-        auto diff = currentTime - currentTimeForMediaKit_;
-        auto hour = std::chrono::duration_cast<std::chrono::hours>(diff).count();
-        if (hour < HOURS_BETWEEN_REPORTS && mediaKitEvents_.size() < MAX_MAP_SIZE) {
-            MEDIA_LOG_I("MediaEvent::MediaKitStatistics without eventWrite end");
-            return;
-        }
-        HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::MULTI_MEDIA, "RECORDER_STATISTICS",
-                        OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
-                        "MEDIA_KIT_EVENTS", mediaKitEvents_.dump());
-        currentTimeForMediaKit_ = currentTime;
-        mediaKitEvents_.clear();
+    nlohmann::json mediaKitEvent;
+    mediaKitEvent["syscap"] = syscap;
+    mediaKitEvent["appName"] = appName;
+    mediaKitEvent["instanceId"] = instanceId;
+    mediaKitEvent["APICall"] = APICall;
+    mediaKitEvent["events"] = events;
+    std::lock_guard<std::mutex> lock(mediaKitMut_);
+    mediaKitEvents_.push_back(mediaKitEvent);
+    auto currentTime = std::chrono::system_clock::now();
+    auto diff = currentTime - currentTimeForMediaKit_;
+    auto hour = std::chrono::duration_cast<std::chrono::hours>(diff).count();
+    if (hour < HOURS_BETWEEN_REPORTS && mediaKitEvents_.size() < MAX_MAP_SIZE) {
+        MEDIA_LOG_I("MediaEvent::MediaKitStatistics without eventWrite end");
+        return;
+    }
+    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::MULTI_MEDIA, "RECORDER_STATISTICS",
+                    OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
+                    "MEDIA_KIT_EVENTS", mediaKitEvents_.dump());
+    currentTimeForMediaKit_ = currentTime;
+    mediaKitEvents_.clear();
     MEDIA_LOG_I("MediaEvent::MediaKitStatistics end");
-    });
 }
 
 void MediaEvent::ScreenCaptureEventWrite(const std::string& eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
