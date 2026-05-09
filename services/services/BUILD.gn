@@ -146,7 +146,6 @@ ohos_shared_library("media_service") {
   ]
   if (player_framework_support_player) {
     sources += [
-      "dolby_passthrough/ipc/dolby_passthrough_proxy.cpp",
       "media_data_source/ipc/media_data_source_proxy.cpp",
       "media_source/ipc/media_source_loader_proxy.cpp",
       "media_source/ipc/media_source_loading_request_stub.cpp",
