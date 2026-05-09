@@ -1060,8 +1060,8 @@ int32_t PlayerImpl::SetPlaybackRate(float rate)
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetPlaybackRate in, mode is %{public}f", FAKE_POINTER(this), rate);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     const double minRate = 0.125f;
-    const double maxRate = 4.0f;
-    const double eps = 1e-15;
+    const double maxRate = 8.0f;
+    const double eps = 1e-6;
     if ((rate < minRate - eps) || (rate > maxRate + eps)) {
         return MSERR_INVALID_VAL;
     }
