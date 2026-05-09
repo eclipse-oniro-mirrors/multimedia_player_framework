@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (C) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1052,6 +1052,19 @@ uint32_t OH_AVPlayer_GetTrackCount(OH_AVPlayer *player);
  * @since 23
  */
 OH_AVFormat *OH_AVPlayer_GetTrackFormat(OH_AVPlayer *player, uint32_t trackIndex);
+
+/**
+ * @brief Method to set audio pcm data callback.
+ * @param player Pointer to an OH_AVPlayer instance.
+ * @param callback Pointer to callback function, nullptr indicates unregister callback.
+ * @param userData Pointer to user specific data.
+ * @return Function result code.
+ *         {@link AV_ERR_OK} if the execution is successful.
+ *         {@link AV_ERR_INVALID_VAL} if input player is null or player SetPCMOutputCallback failed.
+ * @since 26.0.0
+ */
+OH_AVErrCode OH_AVPlayer_SetPCMOutputCallback(OH_AVPlayer *player, OH_AVPlayerPCMOutputCallback callback,
+    void *userData);
 
 /**
  * @brief Method to set video decoded frame output callback. This API can be called only

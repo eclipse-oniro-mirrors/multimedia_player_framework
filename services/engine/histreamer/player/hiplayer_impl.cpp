@@ -3932,6 +3932,7 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
     SetAudioRendererParameter();
     SetPrivacyType(audioPrivacyType_);
     audioSink_->SetSyncCenter(syncManager_);
+    audioSink_->SetPCMOutputCallback(GetPCMOutputCallback());
 
     completeState_.emplace_back(std::make_pair("AudioSink", false));
     initialAVStates_.emplace_back(std::make_pair(EventType::EVENT_AUDIO_FIRST_FRAME, false));
@@ -4768,6 +4769,19 @@ int32_t HiPlayerImpl::GetVideoSample(int32_t &outputResult)
     }
 #endif
     return TransStatus(Status::OK);
+}
+
+int32_t HiPlayerImpl::SetPCMOutputCallback(const std::function<void(const std::shared_ptr<AVBuffer>&)>& callback)
+{
+    std::lock_guard<std::mutex> lock(pcmCallbackMutex_);
+    pcmOutputCallback_ = callback;
+    return TransStatus(Status::OK);
+}
+
+std::function<void(const std::shared_ptr<AVBuffer>&)> HiPlayerImpl::GetPCMOutputCallback()
+{
+    std::lock_guard<std::mutex> lock(pcmCallbackMutex_);
+    return pcmOutputCallback_;
 }
 }  // namespace Media
 }  // namespace OHOS

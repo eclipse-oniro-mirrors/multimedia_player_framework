@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -279,6 +279,9 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     ret = playerEngine_->EnableReportMediaProgress(
         playerProducer_ == PlayerProducer::NAPI ? enableReportMediaProgress_ : true);
     TRUE_LOG(ret != MSERR_OK, MEDIA_LOGW, "PlayerEngine enable report media progress failed, ret %{public}d", ret);
+    ret = playerEngine_->SetPCMOutputCallback(pcmOutputCallback_);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetPCMOutputCallback Failed!");
+
     if (playerCb_ != nullptr) {
         playerCb_->SetInterruptListenerFlag(
             playerProducer_ == PlayerProducer::NAPI ? enableReportAudioInterrupt_ : true);
@@ -2793,6 +2796,19 @@ int32_t PlayerServer::GetVideoSample(int32_t &outputResult)
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine GetVideoSample Failed!");
     }
     MEDIA_LOGD("PlayerServer GetVideoSample %{public}d", outputResult);
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::SetPCMOutputCallback(const std::function<void(const std::shared_ptr<AVBuffer>&)>& callback)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    bool isValidState = lastOpStatus_ == PLAYER_IDLE || lastOpStatus_ == PLAYER_INITIALIZED;
+    CHECK_AND_RETURN_RET_LOG(isValidState, MSERR_INVALID_STATE,
+        "can not SetPCMOutputCallback, current state is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
+
+    // If playerEngine_ not init, save pcmOutputCallback_ and use it after playerEngine_ init
+    pcmOutputCallback_ = callback;
+    CHECK_AND_RETURN_RET_NOLOG(playerEngine_ == nullptr, playerEngine_->SetPCMOutputCallback(callback));
     return MSERR_OK;
 }
 } // namespace Media

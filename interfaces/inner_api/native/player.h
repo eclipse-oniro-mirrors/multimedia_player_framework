@@ -554,6 +554,11 @@ public:
     {
         (void)isRegistered;
     }
+
+    virtual void OnPCMOutput(const std::shared_ptr<AVBuffer> &buffer)
+    {
+        (void)buffer;
+    }
 };
 
 class Player {
@@ -1519,6 +1524,12 @@ public:
     virtual bool IsLiveSeek()
     {
         return false;
+    }
+
+    virtual int32_t SetPCMOutputCallback(const std::shared_ptr<PlayerCallback>& callback)
+    {
+        (void)callback;
+        return MSERR_OK;
     }
 };
 

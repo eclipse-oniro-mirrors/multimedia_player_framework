@@ -218,6 +218,8 @@ public:
     bool IsLiveSeek() override;
     int32_t SetVideoOutput(sptr<Surface> surface) override;
     int32_t GetVideoSample(int32_t &outputResult) override;
+    int32_t SetPCMOutputCallback(const std::function<void(const std::shared_ptr<AVBuffer>&)>& callback) override;
+
 private:
     enum HiplayerSvpMode : int32_t {
         SVP_CLEAR = -1, /* it's not a protection video */
@@ -366,6 +368,7 @@ private:
     void SetMediaKitReport(const std::string &apiCall);
     void ExtractStrategyParams(const AVPlayStrategy& strategy);
     void HandleReadyAudioInterrupt();
+    std::function<void(const std::shared_ptr<AVBuffer>&)> GetPCMOutputCallback();
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
@@ -557,6 +560,8 @@ private:
     FileType fileType_ = FileType::UNKNOW;
     bool isLiveSeek_ = false;
     std::atomic<bool> isAudioInitialized_ {false};
+    std::mutex pcmCallbackMutex_;
+    std::function<void(const std::shared_ptr<AVBuffer>&)> pcmOutputCallback_ {};
 };
 } // namespace Media
 } // namespace OHOS

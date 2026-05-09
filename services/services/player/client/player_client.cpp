@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -724,6 +724,32 @@ int32_t PlayerClient::GetVideoSample(int32_t &outputResult)
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerProxy_->GetVideoSample(outputResult);
+}
+
+int32_t PlayerClient::SetPCMOutputCallback(const std::shared_ptr<PlayerCallback>& callback)
+{
+    MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " SetPCMOutputCallback", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(callback != nullptr, CancelPCMCallbackStub(), "callback is null, unregister callback");
+
+    std::function<void(const std::shared_ptr<AVBuffer>&)> func = [callback](const std::shared_ptr<AVBuffer> &buffer) {
+        callback->OnPCMOutput(buffer);
+    };
+    pcmOutputCallbackStub_ = new(std::nothrow) PCMOutputCallbackStub(func);
+    CHECK_AND_RETURN_RET_LOG(pcmOutputCallbackStub_ != nullptr, MSERR_NO_MEMORY,
+        "failed to create PCMOutputCallbackStub");
+
+    sptr<IRemoteObject> object = pcmOutputCallbackStub_->AsObject();
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "pcmOutputCallbackStub object is nullptr.");
+
+    return playerProxy_->SetPCMOutputCallback(object);
+}
+
+int32_t PlayerClient::CancelPCMCallbackStub()
+{
+    pcmOutputCallbackStub_ = nullptr;
+    return playerProxy_->SetPCMOutputCallback(nullptr);
 }
 } // namespace Media
 } // namespace OHOS

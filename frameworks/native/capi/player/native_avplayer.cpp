@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -323,6 +323,41 @@ public:
 
 private:
     OH_AVPlayerOnAmplitudeUpdateCallback callback_ = nullptr;
+    void *userData_ = nullptr;
+};
+
+class NativeAVPlayerPCMOutputCallback : public PlayerCallback {
+public:
+    NativeAVPlayerPCMOutputCallback(OH_AVPlayer *player, OH_AVPlayerPCMOutputCallback callback, void *userData)
+        : player_(player), callback_(callback), userData_(userData) {}
+    virtual ~NativeAVPlayerPCMOutputCallback() = default;
+
+    void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) override
+    {
+        (void)type;
+        (void)extra;
+        (void)infoBody;
+    }
+
+    void OnError(int32_t errorCode, const std::string &errorMsg) override
+    {
+        (void)errorCode;
+        (void)errorMsg;
+    }
+
+    void OnPCMOutput(const std::shared_ptr<AVBuffer> &buffer) override
+    {
+        CHECK_AND_RETURN(buffer != nullptr && callback_ != nullptr && player_ != nullptr);
+        OH_AVBuffer *pcmBuffer = new (std::nothrow) OH_AVBuffer(buffer);
+        CHECK_AND_RETURN(pcmBuffer != nullptr);
+        callback_(player_, pcmBuffer, userData_);
+        delete pcmBuffer;
+        pcmBuffer = nullptr;
+    }
+
+private:
+    OH_AVPlayer *player_ = nullptr;
+    OH_AVPlayerPCMOutputCallback callback_ = nullptr;
     void *userData_ = nullptr;
 };
 
@@ -2441,4 +2476,30 @@ OH_VideoOutputResult OH_AVPlayerVideoOutput_GetNewestVideoSample(OH_AVPlayerVide
         return OH_VIDEO_OUTPUT_OK;
     }
     return OH_VIDEO_OUTPUT_NO_IMAGE;
+}
+
+OH_AVErrCode OH_AVPlayer_SetPCMOutputCallback(OH_AVPlayer *player, OH_AVPlayerPCMOutputCallback callback,
+    void *userData)
+{
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is nullptr");
+
+    AVPlayerState currentState;
+    OH_AVErrCode errCode = OH_AVPlayer_GetState(player, &currentState);
+    CHECK_AND_RETURN_RET_LOG(errCode == AV_ERR_OK, errCode, "failed to get current state");
+    CHECK_AND_RETURN_RET_LOG(currentState == AVPlayerState::AV_IDLE || currentState == AVPlayerState::AV_INITIALIZED,
+        AV_ERR_OPERATE_NOT_PERMIT, "current state is not idle or initialized, unsupport to set pcm output callback");
+
+    std::shared_ptr<NativeAVPlayerPCMOutputCallback> pcmCallback = nullptr;
+    if (callback != nullptr) {
+        NativeAVPlayerPCMOutputCallback *cb =
+            new (std::nothrow) NativeAVPlayerPCMOutputCallback(player, callback, userData);
+        CHECK_AND_RETURN_RET_LOG(cb != nullptr, AV_ERR_NO_MEMORY, "NativeAVPlayerPCMOutputCallback create failed");
+        pcmCallback = std::shared_ptr<NativeAVPlayerPCMOutputCallback>(cb);
+    }
+
+    int32_t ret = playerObj->player_->SetPCMOutputCallback(pcmCallback);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "SetPCMOutputCallback failed");
+    return AV_ERR_OK;
 }
