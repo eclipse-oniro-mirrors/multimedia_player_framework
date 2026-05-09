@@ -185,17 +185,7 @@ private:
     std::vector<uint64_t> screenIds_;
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
 };
-
-class SCWindowLifecycleListener : public Rosen::SessionLifecycleListenerStub {
-public:
-    explicit SCWindowLifecycleListener(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
-    ~SCWindowLifecycleListener() override = default;
-    void OnLifecycleEvent(SessionLifecycleEvent event, const LifecycleEventPayload& payload) override;
-        
-private:
-    std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
-};
-    
+ 
 class SCDeathRecipientListener : public IRemoteObject::DeathRecipient {
 public:
     using ListenerDiedHandler = std::function<void(const wptr<IRemoteObject>&)>;

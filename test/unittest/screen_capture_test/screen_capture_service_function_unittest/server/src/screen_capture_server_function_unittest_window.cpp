@@ -600,6 +600,14 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrepareUserSelectionInfo_002, TestSize
     ASSERT_EQ(selectionInfo.displayIds.front(), 1);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, PrepareUserSelectionInfo_003, TestSize.Level2)
+{
+    screenCaptureServer_->SetAppMissionIds(1);
+    ScreenCaptureUserSelectionInfo selectionInfo;
+    screenCaptureServer_->PrepareUserSelectionInfo(selectionInfo);
+    ASSERT_EQ(selectionInfo.selectType, 2);
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, PrivateWindowListenerInScreenCapture_001, TestSize.Level2)
 {
     screenCaptureServer_->RegisterPrivateWindowListener();
@@ -651,6 +659,13 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetDisplayIdOfWindows_002, TestSize.Le
     ASSERT_EQ(screenCaptureServer_->GetDisplayIdOfWindows(defaultDisplayIdValue), defaultDisplayIdValue);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, GetDisplayIdOfWindows_003, TestSize.Level2)
+{
+    uint64_t defaultDisplayIdValue = 0;
+    screenCaptureServer_->SetAppMissionIds(1);
+    ASSERT_EQ(screenCaptureServer_->GetDisplayIdOfWindows(defaultDisplayIdValue), defaultDisplayIdValue);
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, GetAVScreenCaptureConfigurableParameters_001, TestSize.Level2)
 {
     int32_t sessionId = screenCaptureServer_->sessionId_;
@@ -695,6 +710,16 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CreateVirtualScreen_004, TestSize.Leve
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
     screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs = {1, 2};
+    int32_t ret = screenCaptureServer_->CreateVirtualScreen("test_screen", nullptr);
+    ASSERT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, CreateVirtualScreen_005, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
+    screenCaptureServer_->appMissionIds_ = {1};
     int32_t ret = screenCaptureServer_->CreateVirtualScreen("test_screen", nullptr);
     ASSERT_EQ(ret, MSERR_OK);
 }

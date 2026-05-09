@@ -29,6 +29,8 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "LppVideoStreamerServer"};
+constexpr float MAX_SPEED = 4.0f;
+constexpr float MIN_SPEED = 0.25f;
 }
 
 namespace OHOS {
@@ -261,6 +263,9 @@ int32_t LppVideoStreamerServer::SetPlaybackSpeed(float speed)
 {
     MEDIA_LOGI("LppVideoStreamerServer SetPlaybackSpeed");
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(speed >= MIN_SPEED &&
+        speed <= MAX_SPEED, MSERR_INVALID_VAL,
+        "SetPlaybackSpeed failed, the speed should be set to a value ranging from 0.25 to 4");
     auto ret = streamerEngine_->SetPlaybackSpeed(speed);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetPlaybackSpeed Failed!");
     return MSERR_OK;

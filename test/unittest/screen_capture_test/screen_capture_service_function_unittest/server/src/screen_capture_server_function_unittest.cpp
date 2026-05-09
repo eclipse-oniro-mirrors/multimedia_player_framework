@@ -904,6 +904,66 @@ HWTEST_F(ScreenCaptureServerFunctionTest, IsPickerPopUp_002, TestSize.Level2)
 #endif
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, InitVideoCap_PickerModePopUp_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
+    VideoCaptureInfo videoInfo;
+    videoInfo.videoFrameWidth = 1920;
+    videoInfo.videoFrameHeight = 1080;
+    videoInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+    videoInfo.displayId = 0;
+    ASSERT_EQ(screenCaptureServer_->InitVideoCap(videoInfo), MSERR_OK);
+#ifdef PC_STANDARD
+    ASSERT_EQ(screenCaptureServer_->IsPickerPopUp(), true);
+#endif
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, InitVideoCap_PickerModePopUp_002, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
+    VideoCaptureInfo videoInfo;
+    videoInfo.videoFrameWidth = 1920;
+    videoInfo.videoFrameHeight = 1080;
+    videoInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+    videoInfo.taskIDs.push_back(1001);
+    ASSERT_EQ(screenCaptureServer_->InitVideoCap(videoInfo), MSERR_OK);
+#ifdef PC_STANDARD
+    ASSERT_EQ(screenCaptureServer_->IsPickerPopUp(), true);
+#endif
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, InitVideoCap_PickerModePopUp_003, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
+    VideoCaptureInfo videoInfo;
+    videoInfo.videoFrameWidth = 1920;
+    videoInfo.videoFrameHeight = 1080;
+    videoInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+    videoInfo.taskIDs.push_back(1001);
+    videoInfo.taskIDs.push_back(1002);
+    ASSERT_EQ(screenCaptureServer_->InitVideoCap(videoInfo), MSERR_OK);
+#ifdef PC_STANDARD
+    ASSERT_EQ(screenCaptureServer_->IsPickerPopUp(), false);
+#endif
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, InitVideoCap_PickerModePopUp_004, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_INVAILD;
+    VideoCaptureInfo videoInfo;
+    videoInfo.videoFrameWidth = 1920;
+    videoInfo.videoFrameHeight = 1080;
+    videoInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+    ASSERT_EQ(screenCaptureServer_->InitVideoCap(videoInfo), MSERR_OK);
+#ifdef PC_STANDARD
+    ASSERT_EQ(screenCaptureServer_->IsPickerPopUp(), true);
+#endif
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, SetScreenScaleMode_001, TestSize.Level2)
 {
     ASSERT_NE(screenCaptureServer_->SetScreenScaleMode(), MSERR_OK);

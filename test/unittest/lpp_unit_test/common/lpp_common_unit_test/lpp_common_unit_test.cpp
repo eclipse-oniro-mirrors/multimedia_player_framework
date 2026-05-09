@@ -18,7 +18,7 @@
 #include "lpp_common_unit_test.h"
 
 constexpr uint32_t MAX_BUFFER_SIZE_TEST = 2 * 1024 * 1024;
-constexpr uint32_t MAX_BUFFER_SIZE = 10 * 1024 * 1024;
+constexpr int32_t MAX_BUFFER_SIZE = 10 * 1024 * 1024;
 namespace OHOS {
 namespace Media {
 using namespace std;
@@ -257,7 +257,7 @@ HWTEST_F(LppDataPacketUnitTest, ReadVector_001, TestSize.Level1)
 
     parcel.WriteInt64(size);
 
-    int elem = -1;
+    int32_t elem = -1;
     parcel.WriteInt32(elem);
 
     bool result = packet_->ReadVector(parcel);
@@ -292,7 +292,7 @@ HWTEST_F(LppDataPacketUnitTest, ReadVector_002, TestSize.Level1)
 
     parcel.WriteInt64(size);
 
-    int elem = MAX_BUFFER_SIZE + 1;
+    int32_t elem = MAX_BUFFER_SIZE + 1;
     parcel.WriteInt32(elem);
 
     bool result = packet_->ReadVector(parcel);
@@ -327,7 +327,7 @@ HWTEST_F(LppDataPacketUnitTest, ReadVector_003, TestSize.Level1)
 
     parcel.WriteInt64(size);
 
-    int elem = 0;
+    int32_t elem = 0;
     parcel.WriteInt32(elem);
 
     bool result = packet_->ReadVector(parcel);
@@ -364,7 +364,7 @@ HWTEST_F(LppDataPacketUnitTest, ReadVector_004, TestSize.Level1)
 
     parcel.WriteInt64(size);
 
-    int elem = MAX_BUFFER_SIZE;
+    int32_t elem = MAX_BUFFER_SIZE;
     parcel.WriteInt32(elem);
 
     bool result = packet_->ReadVector(parcel);
@@ -401,9 +401,9 @@ HWTEST_F(LppDataPacketUnitTest, ReadVector_005, TestSize.Level1)
 
     parcel.WriteInt64(size);
 
-    int elem1 = 1024;
-    int elem2 = 2048;
-    int elem3 = 4096;
+    int32_t elem1 = 1024;
+    int32_t elem2 = 2048;
+    int32_t elem3 = 4096;
     parcel.WriteInt32(elem1);
     parcel.WriteInt32(elem2);
     parcel.WriteInt32(elem3);
@@ -444,8 +444,8 @@ HWTEST_F(LppDataPacketUnitTest, ReadVector_006, TestSize.Level1)
 
     parcel.WriteInt64(size);
 
-    int elem1 = 1024;
-    int elem2 = -1;
+    int32_t elem1 = 1024;
+    int32_t elem2 = -1;
     parcel.WriteInt32(elem1);
     parcel.WriteInt32(elem2);
 
