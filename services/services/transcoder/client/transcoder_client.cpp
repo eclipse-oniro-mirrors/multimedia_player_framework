@@ -245,5 +245,15 @@ int32_t TransCoderClient::Release()
     MEDIA_LOGD("Release");
     return ExecuteWhen(transCoderProxy_->Release(), true);
 }
+
+int32_t TransCoderClient::AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer, int32_t width, int32_t height)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(waterMarkBuffer != nullptr, MSERR_NO_MEMORY, "input param waterMarkBuffer is nullptr.");
+    CHECK_AND_RETURN_RET_LOG(transCoderProxy_ != nullptr, MSERR_NO_MEMORY, "transcoder service does not exist.");
+ 
+    MEDIA_LOGD("AddWatermark");
+    return transCoderProxy_->AddWatermark(waterMarkBuffer, width, height);
+}
 } // namespace Media
 } // namespace OHOS

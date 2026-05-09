@@ -37,6 +37,18 @@
 namespace OHOS {
 namespace Media {
 
+/**
+ * @brief 视频处理模式枚举
+ *
+ * 定义所有可能的视频处理pipeline配置
+ */
+enum class VideoProcessMode {
+    DECODER_TO_ENCODER,            // 解码 -> 编码
+    DECODER_RESIZE_ENCODER,        // 解码 -> 分辨率修改 -> 编码
+    DECODER_WATERMARK_ENCODER,     // 解码 -> 水印 -> 编码
+    DECODER_RESIZE_WATERMARK_ENCODER // 解码 -> 分辨率修改 -> 水印 -> 编码
+};
+
 class HiTransCoderImpl : public ITransCoderEngine {
 public:
     HiTransCoderImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId);
@@ -53,6 +65,7 @@ public:
     int32_t Pause();
     int32_t Resume();
     int32_t Cancel();
+    int32_t AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer, int32_t width, int32_t height);
     void OnEvent(const Event &event);
     Status OnCallback(std::shared_ptr<Pipeline::Filter> filter, const Pipeline::FilterCallBackCommand cmd,
         Pipeline::StreamType outType);
@@ -73,6 +86,7 @@ private:
     Status LinkVideoDecoderFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
     Status LinkVideoEncoderFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
     Status LinkVideoResizeFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
+    Status LinkWaterMark(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
     Status LinkMuxerFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
     Status SetSurfacePipeline(int32_t outputVideoWidth, int32_t outputVideoHeight);
     void HandleErrorEvent(int32_t errorCode);
@@ -94,11 +108,18 @@ private:
     void ConfigureVideoDefaultEncFormat();
     void ConfigureAudioDefaultEncFormat();
     Status ConfigureEnableBFrameEncoding(const TransCoderParam &transCoderParam);
+    VideoProcessMode DetermineProcessMode();
+    Status BuildPipeline(VideoProcessMode mode, int32_t outputVideoWidth, int32_t outputVideoHeight);
+    Status ConnectDecoderToEncoder();
+    Status ConnectDecoderResizeEncoder(int32_t outputVideoWidth, int32_t outputVideoHeight);
+    Status ConnectDecoderWatermarkEncoder(int32_t outputVideoWidth, int32_t outputVideoHeight);
+    static std::string GetModeString(VideoProcessMode mode);
 
     struct SkipProcessFilterFlag {
         bool isSameAudioEncFmt = false;
         bool isSameAudioBitrate = false;
         bool isSameVideoResolution = false;
+        bool isAddWaterMark = false;
         bool CanSkipAudioDecAndEncFilter()
         {
             return isSameAudioEncFmt && isSameAudioBitrate;
@@ -106,6 +127,10 @@ private:
         bool CanSkipVideoResizeFilter()
         {
             return isSameVideoResolution;
+        }
+        bool AddVideoWaterMarkFilter()
+        {
+            return isAddWaterMark;
         }
     };
 
@@ -123,6 +148,7 @@ private:
     std::shared_ptr<Pipeline::AudioEncoderFilter> audioEncoderFilter_;
     std::shared_ptr<Pipeline::SurfaceEncoderFilter> videoEncoderFilter_;
     std::shared_ptr<Pipeline::VideoResizeFilter> videoResizeFilter_;
+    std::shared_ptr<Pipeline::Filter> waterMarkFilter_;
     std::shared_ptr<Pipeline::MuxerFilter> muxerFilter_;
 
     std::shared_ptr<Pipeline::EventReceiver> transCoderEventReceiver_;

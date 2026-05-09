@@ -440,6 +440,23 @@ int32_t TransCoderServer::Release()
     return MSERR_OK;
 }
 
+int32_t TransCoderServer::AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer, int32_t width, int32_t height)
+{
+    MEDIA_LOGI("AddWatermark in");
+    std::lock_guard<std::mutex> lock(mutex_);
+    MediaTrace trace("TransCoderServer::AddWatermark");
+    CHECK_AND_RETURN_RET_LOG(status_ < REC_PREPARED, MSERR_INVALID_OPERATION, "Can not set Watermark");
+    CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return transCoderEngine_->AddWatermark(waterMarkBuffer, width, height);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+ 
+    auto result = task->GetResult();
+    return result.Value();
+}
+
 void TransCoderServer::ReleaseInner()
 {
     MEDIA_LOGI("ReleaseInner enter");

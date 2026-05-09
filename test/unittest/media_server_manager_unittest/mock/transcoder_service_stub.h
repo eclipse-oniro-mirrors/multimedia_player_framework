@@ -79,6 +79,7 @@ public:
     MOCK_METHOD(int32_t, CancelInner, (MessageParcel &data, MessageParcel &reply));
     MOCK_METHOD(int32_t, ReleaseInner, (MessageParcel &data, MessageParcel &reply));
     MOCK_METHOD(int32_t, DestroyStubInner, (MessageParcel &data, MessageParcel &reply));
+    MOCK_METHOD(int32_t, AddWatermark, (std::shared_ptr<AVBuffer> &waterMarkBuffer, int32_t width, int32_t height), ());
 };
 } // namespace Media
 } // namespace OHOS

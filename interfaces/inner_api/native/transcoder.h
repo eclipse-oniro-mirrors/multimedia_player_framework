@@ -27,6 +27,7 @@
 #include "av_common.h"
 #include "codec_capability.h"
 #include "media_core.h"
+#include "buffer/avbuffer.h"
 
 namespace OHOS {
 namespace Media {
@@ -365,6 +366,16 @@ public:
      * @version 1.0
      */
     virtual int32_t Release() = 0;
+     
+     /**
+     * @brief Set watermarkBuffer to transcoder.
+     *
+     * @param waterMarkBuffer watermark image and config
+     * @return Returns {@link MSERR_OK} If the AddWatermark succeeds; returns an error code otherwise.
+     * @since 1.0
+     * @version 1.0
+    */
+    virtual int32_t AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer, int32_t width, int32_t height) = 0;
 };
 
 class __attribute__((visibility("default"))) TransCoderFactory {

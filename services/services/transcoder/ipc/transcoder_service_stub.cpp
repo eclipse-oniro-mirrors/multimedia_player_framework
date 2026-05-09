@@ -24,6 +24,7 @@
 #include "accesstoken_kit.h"
 #include "media_dfx.h"
 #include "media_utils.h"
+#include "pixel_map.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "TransCoderServiceStub"};
@@ -82,6 +83,7 @@ int32_t TransCoderServiceStub::Init()
     recFuncs_[RESUME] = &TransCoderServiceStub::Resume;
     recFuncs_[CANCEL] = &TransCoderServiceStub::Cancel;
     recFuncs_[RELEASE] = &TransCoderServiceStub::Release;
+    recFuncs_[ADD_WATERMARK] = &TransCoderServiceStub::AddWatermark;
     recFuncs_[DESTROY] = &TransCoderServiceStub::DestroyStub;
 
     pid_ = IPCSkeleton::GetCallingPid();
@@ -241,6 +243,12 @@ int32_t TransCoderServiceStub::Release()
     return transCoderServer_->Release();
 }
 
+int32_t TransCoderServiceStub::AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer, int32_t width, int32_t height)
+{
+    CHECK_AND_RETURN_RET_LOG(transCoderServer_ != nullptr, MSERR_NO_MEMORY, "transcoder server is nullptr");
+    return transCoderServer_->AddWatermark(waterMarkBuffer, width, height);
+}
+
 int32_t TransCoderServiceStub::DoIpcAbnormality()
 {
     MEDIA_LOGI("Enter DoIpcAbnormality.");
@@ -380,6 +388,19 @@ int32_t TransCoderServiceStub::Release(MessageParcel &data, MessageParcel &reply
 {
     (void)data;
     reply.WriteInt32(Release());
+    return MSERR_OK;
+}
+
+int32_t TransCoderServiceStub::AddWatermark(MessageParcel &data, MessageParcel &reply)
+{
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
+    CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_NO_MEMORY, "create AVBuffer failed");
+    CHECK_AND_RETURN_RET_LOG(buffer->ReadFromMessageParcel(data, false),
+        MSERR_INVALID_OPERATION, "read buffer failed");
+    int32_t width = data.ReadInt32();
+    int32_t height = data.ReadInt32();
+    CHECK_AND_RETURN_RET_LOG(reply.WriteInt32(AddWatermark(buffer, width, height)),
+        MSERR_INVALID_OPERATION, "reply write failed");
     return MSERR_OK;
 }
 

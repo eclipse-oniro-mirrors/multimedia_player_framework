@@ -25,6 +25,7 @@
 #include "common/log.h"
 #include "avcodec_info.h"
 #include "osal/task/pipeline_threadpool.h"
+#include "water_mark_filter.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "HiTransCoder" };
@@ -626,23 +627,9 @@ int32_t HiTransCoderImpl::Prepare()
 
 Status HiTransCoderImpl::SetSurfacePipeline(int32_t outputVideoWidth, int32_t outputVideoHeight)
 {
-    FALSE_RETURN_V_MSG_E(videoEncoderFilter_ != nullptr && videoDecoderFilter_ != nullptr,
-        Status::ERROR_NULL_POINTER, "VideoDecoder setOutputSurface failed");
-    if (!skipProcessFilterFlag_.CanSkipVideoResizeFilter() && videoResizeFilter_ != nullptr) {
-        sptr<Surface> resizeFilterSurface = videoResizeFilter_->GetInputSurface();
-        FALSE_RETURN_V_MSG_E(resizeFilterSurface != nullptr, Status::ERROR_GET_INPUT_SURFACE_FAILED,
-            "resizeFilterSurface is nullptr");
-        Status ret = videoDecoderFilter_->SetOutputSurface(resizeFilterSurface);
-        FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "VideoDecoder setOutputSurface failed");
-        sptr<Surface> encoderFilterSurface = videoEncoderFilter_->GetInputSurface();
-        FALSE_RETURN_V_MSG_E(encoderFilterSurface != nullptr, Status::ERROR_GET_INPUT_SURFACE_FAILED,
-            "encoderFilterSurface is nullptr");
-        return videoResizeFilter_->SetOutputSurface(encoderFilterSurface, outputVideoWidth, outputVideoHeight);
-    }
-    sptr<Surface> encoderFilterSurface = videoEncoderFilter_->GetInputSurface();
-    FALSE_RETURN_V_MSG_E(encoderFilterSurface != nullptr, Status::ERROR_GET_INPUT_SURFACE_FAILED,
-        "encoderFilterSurface is nullptr");
-    return videoDecoderFilter_->SetOutputSurface(encoderFilterSurface);
+    MEDIA_LOG_I("Prepare SetSurfacePipeline");
+    auto mode = DetermineProcessMode();
+    return BuildPipeline(mode, outputVideoWidth, outputVideoHeight);
 }
 
 int32_t HiTransCoderImpl::Start()
@@ -715,6 +702,23 @@ int32_t HiTransCoderImpl::Cancel()
     startTime_ = -1;
     AppendTranscoderMediaInfo();
     ReportMediaInfo(instanceId_);
+    return MSERR_OK;
+}
+
+int32_t HiTransCoderImpl::AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer, int32_t width, int32_t height)
+{
+    MEDIA_LOG_I("HiTransCoderImpl::AddWatermark()");
+    if (!skipProcessFilterFlag_.AddVideoWaterMarkFilter()) {
+        skipProcessFilterFlag_.isAddWaterMark = true;
+        waterMarkFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::WaterMarkFilter>(
+            "Watermark", Pipeline::FilterType::WATERMARK);
+    }
+    FALSE_RETURN_V_MSG_E(waterMarkFilter_ != nullptr, MSERR_INVALID_OPERATION, "Watermark filter is nullptr");
+    FALSE_RETURN_V_MSG_E(waterMarkBuffer != nullptr, MSERR_INVALID_VAL, "Param waterMarkBuffer is nullptr");
+    auto filter = static_cast<Pipeline::WaterMarkFilter*>(waterMarkFilter_.get());
+    filter->SetVideoResize(inputVideoWidth_, inputVideoHeight_);
+    auto ret = filter->SetWatermark(waterMarkBuffer, width, height);
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, MSERR_INVALID_OPERATION, "ERROR_INVALID_PARAMETER");
     return MSERR_OK;
 }
 
@@ -1029,8 +1033,9 @@ Status HiTransCoderImpl::LinkMuxerFilter(const std::shared_ptr<Pipeline::Filter>
 Status HiTransCoderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, const Pipeline::FilterCallBackCommand cmd,
     Pipeline::StreamType outType)
 {
-    MEDIA_LOG_I("HiPlayerImpl::OnCallback filter, outType: %{public}d", static_cast<int32_t>(outType));
     FALSE_RETURN_V_MSG_E(filter != nullptr, Status::ERROR_NULL_POINTER, "filter is nullptr");
+    MEDIA_LOG_I("HiTransCoderImpl::OnCallback filter, outType: %{public}d  %{public}d",
+        static_cast<int32_t>(outType), static_cast<int32_t>(filter->GetFilterType()));
     if (cmd == Pipeline::FilterCallBackCommand::NEXT_FILTER_NEEDED) {
         switch (outType) {
             case Pipeline::StreamType::STREAMTYPE_RAW_AUDIO:
@@ -1047,12 +1052,22 @@ Status HiTransCoderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, co
                         LinkAudioDecoderFilter(filter, outType));
                 }
                 return LinkMuxerFilter(filter, outType);
-            case Pipeline::StreamType::STREAMTYPE_RAW_VIDEO:
-                if (skipProcessFilterFlag_.CanSkipVideoResizeFilter() ||
-                    filter->GetFilterType() == Pipeline::FilterType::FILTERTYPE_VIDRESIZE) {
-                    return LinkVideoEncoderFilter(filter, outType);
+            case Pipeline::StreamType::STREAMTYPE_RAW_VIDEO: {
+                Pipeline::FilterType filterType = filter->GetFilterType();
+                // 解码器特殊处理：可能需要先链接resize
+                if (filterType == Pipeline::FilterType::FILTERTYPE_VIDEODEC &&
+                    !skipProcessFilterFlag_.CanSkipVideoResizeFilter() &&
+                    !skipProcessFilterFlag_.AddVideoWaterMarkFilter()) {
+                    return LinkVideoResizeFilter(filter, outType);
                 }
-                return LinkVideoResizeFilter(filter, outType);
+
+                if (filterType == Pipeline::FilterType::FILTERTYPE_VIDEODEC &&
+                    skipProcessFilterFlag_.AddVideoWaterMarkFilter()) {
+                    return LinkWaterMark(filter, outType);
+                }
+                // 水印或其他：直接链接编码器
+                return LinkVideoEncoderFilter(filter, outType);
+            }
             case Pipeline::StreamType::STREAMTYPE_ENCODED_VIDEO:
                 if (filter->GetFilterType() == Pipeline::FilterType::FILTERTYPE_DEMUXER) {
                     FALSE_RETURN_V(!isVideoTrackLinked_, Status::OK);
@@ -1093,6 +1108,134 @@ void HiTransCoderImpl::CollectionErrorInfo(int32_t errCode, const std::string& e
     MEDIA_LOG_E_SHORT("Error: " PUBLIC_LOG_S, errMsg.c_str());
     errCode_ = errCode;
     errMsg_ = errMsg;
+}
+
+Status HiTransCoderImpl::BuildPipeline(VideoProcessMode mode, int32_t outputVideoWidth, int32_t outputVideoHeight)
+{
+    MEDIA_LOG_I("Building video pipeline: %{public}s", GetModeString(mode).c_str());
+ 
+    switch (mode) {
+        case VideoProcessMode::DECODER_TO_ENCODER:
+            return ConnectDecoderToEncoder();
+ 
+        case VideoProcessMode::DECODER_RESIZE_ENCODER:
+            return ConnectDecoderResizeEncoder(outputVideoWidth, outputVideoHeight);
+ 
+        case VideoProcessMode::DECODER_WATERMARK_ENCODER:
+        case VideoProcessMode::DECODER_RESIZE_WATERMARK_ENCODER:
+            return ConnectDecoderWatermarkEncoder(outputVideoWidth, outputVideoHeight);
+
+        default:
+            MEDIA_LOG_E("Invalid video process mode: %{public}d", static_cast<int>(mode));
+            return ConnectDecoderToEncoder();
+    }
+}
+ 
+VideoProcessMode HiTransCoderImpl::DetermineProcessMode()
+{
+    bool hasResize = videoResizeFilter_ != nullptr && !skipProcessFilterFlag_.CanSkipVideoResizeFilter();
+    bool hasWatermark = waterMarkFilter_ != nullptr && skipProcessFilterFlag_.AddVideoWaterMarkFilter();
+    if (hasResize && hasWatermark) {
+        return VideoProcessMode::DECODER_RESIZE_WATERMARK_ENCODER;
+    } else if (hasResize) {
+        return VideoProcessMode::DECODER_RESIZE_ENCODER;
+    } else if (hasWatermark) {
+        return VideoProcessMode::DECODER_WATERMARK_ENCODER;
+    }
+    return VideoProcessMode::DECODER_TO_ENCODER;
+}
+ 
+std::string HiTransCoderImpl::GetModeString(VideoProcessMode mode)
+{
+    switch (mode) {
+        case VideoProcessMode::DECODER_TO_ENCODER:
+            return "Decoder -> Encoder";
+        case VideoProcessMode::DECODER_RESIZE_ENCODER:
+            return "Decoder -> Resize -> Encoder";
+        case VideoProcessMode::DECODER_WATERMARK_ENCODER:
+        case VideoProcessMode::DECODER_RESIZE_WATERMARK_ENCODER:
+            return "Decoder(RESIZE) -> Watermark -> Encoder";
+        default:
+            return "Unknown Mode";
+    }
+}
+
+Status HiTransCoderImpl::LinkWaterMark(const std::shared_ptr<Pipeline::Filter>& preFilter,
+    Pipeline::StreamType type)
+{
+    MEDIA_LOG_I("HiTransCoderImpl::LinkWaterMark()");
+    auto filter = static_cast<Pipeline::WaterMarkFilter*>(waterMarkFilter_.get());
+    FALSE_RETURN_V_MSG_E(filter != nullptr, Status::ERROR_NULL_POINTER,
+        "WaterMarkFilter is nullptr");
+    filter->Init(transCoderEventReceiver_, transCoderFilterCallback_);
+    FALSE_RETURN_V_MSG_E(pipeline_ != nullptr, Status::ERROR_NULL_POINTER,
+        "pipeline_ is nullptr");
+    pipeline_->LinkFilters(preFilter, {waterMarkFilter_}, type);
+    return Status::OK;
+}
+
+
+/**
+ *  连接：解码器 -> 编码器
+ */
+Status HiTransCoderImpl::ConnectDecoderToEncoder()
+{
+    FALSE_RETURN_V_MSG_E(videoEncoderFilter_ != nullptr && videoDecoderFilter_ != nullptr,
+        Status::ERROR_NULL_POINTER, "VideoDecoder or VideoEncoder is nullptr");
+    sptr<Surface> encoderFilterSurface = videoEncoderFilter_->GetInputSurface();
+    FALSE_RETURN_V_MSG_E(encoderFilterSurface != nullptr, Status::ERROR_GET_INPUT_SURFACE_FAILED,
+        "encoderFilterSurface is nullptr");
+    return videoDecoderFilter_->SetOutputSurface(encoderFilterSurface);
+}
+ 
+/**
+ *  连接：解码器 -> 分辨率修改 -> 编码器
+ */
+Status HiTransCoderImpl::ConnectDecoderResizeEncoder(int32_t outputVideoWidth, int32_t outputVideoHeight)
+{
+    FALSE_RETURN_V_MSG_E(videoEncoderFilter_ != nullptr && videoDecoderFilter_ != nullptr &&
+        videoResizeFilter_ != nullptr, Status::ERROR_NULL_POINTER,
+        "VideoDecoder, VideoEncoder or VideoResizeFilter is nullptr");
+ 
+    // 解码器 -> 分辨率修改
+    sptr<Surface> resizeSurface = videoResizeFilter_->GetInputSurface();
+    FALSE_RETURN_V_MSG_E(resizeSurface != nullptr, Status::ERROR_GET_INPUT_SURFACE_FAILED,
+        "resizeSurface is nullptr");
+    Status ret = videoDecoderFilter_->SetOutputSurface(resizeSurface);
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "videoDecoderFilter_ setOutputSurface failed");
+ 
+    // 分辨率修改 -> 编码器
+    sptr<Surface> encoderSurface = videoEncoderFilter_->GetInputSurface();
+    FALSE_RETURN_V_MSG_E(encoderSurface != nullptr, Status::ERROR_GET_INPUT_SURFACE_FAILED,
+        "encoderSurface is nullptr");
+ 
+    return videoResizeFilter_->SetOutputSurface(encoderSurface, outputVideoWidth, outputVideoHeight);
+}
+ 
+/**
+*  连接：解码器 -> 水印 -> 编码器
+*/
+Status HiTransCoderImpl::ConnectDecoderWatermarkEncoder(int32_t outputVideoWidth, int32_t outputVideoHeight)
+{
+    FALSE_RETURN_V_MSG_E(videoEncoderFilter_ != nullptr && videoDecoderFilter_ != nullptr,
+        Status::ERROR_NULL_POINTER, "VideoEncoder or VideoDecoder is nullptr");
+    auto filter = static_cast<Pipeline::WaterMarkFilter*>(waterMarkFilter_.get());
+    FALSE_RETURN_V_MSG_E(filter != nullptr,
+        Status::ERROR_NULL_POINTER, "waterMarkFilter is nullptr");
+ 
+    // 解码器 -> 水印
+    sptr<Surface> waterMarkFilterSurface = filter->GetInputSurface();
+    FALSE_RETURN_V_MSG_E(waterMarkFilterSurface != nullptr, Status::ERROR_GET_INPUT_SURFACE_FAILED,
+        "waterMarkFilterSurface is nullptr");
+    Status ret = videoDecoderFilter_->SetOutputSurface(waterMarkFilterSurface);
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "videoDecoderFilter_ setOutputSurface failed");
+ 
+    // 水印 -> 编码器
+    sptr<Surface> encoderSurface = videoEncoderFilter_->GetInputSurface();
+    FALSE_RETURN_V_MSG_E(encoderSurface != nullptr, Status::ERROR_GET_INPUT_SURFACE_FAILED,
+        "encoderSurface is nullptr");
+ 
+    return filter->SetOutputSurface(encoderSurface, outputVideoWidth, outputVideoHeight);
 }
 } // namespace MEDIA
 } // namespace OHOS

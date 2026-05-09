@@ -23,6 +23,8 @@
 #include "common_napi.h"
 #include "task_queue.h"
 #include "transcoder.h"
+#include "pixel_map_napi.h"
+#include "buffer/avbuffer.h"
 
 namespace OHOS {
 namespace Media {
@@ -45,17 +47,21 @@ const std::string RESUME = "Resume";
 const std::string CANCEL = "Cancel";
 const std::string RELEASE = "Release";
 const std::string SET_AV_TRANSCODER_CONFIG = "SetAVTransCoderConfig";
+const std::string ADD_WATERMARK = "AddWatermark";
 }
 
 constexpr int32_t AVTRANSCODER_DEFAULT_AUDIO_BIT_RATE = INT32_MAX;
 constexpr int32_t AVTRANSCODER_DEFAULT_VIDEO_BIT_RATE = -1;
 constexpr int32_t AVTRANSCODER_DEFAULT_FRAME_HEIGHT = -1;
 constexpr int32_t AVTRANSCODER_DEFAULT_FRAME_WIDTH = -1;
+constexpr int32_t AVTRANSCODER_WATERMARK_MAX_LENGTH = 4096;
+constexpr int32_t AVTRANSCODER_WATERMARK_MAX_NUM = 5;
 
 const std::map<std::string, std::vector<std::string>> STATE_LIST = {
     {AVTransCoderState::STATE_IDLE, {
         AVTransCoderOpt::PREPARE,
-        AVTransCoderOpt::RELEASE
+        AVTransCoderOpt::RELEASE,
+        AVTransCoderOpt::ADD_WATERMARK
     }},
     {AVTransCoderState::STATE_PREPARED, {
         AVTransCoderOpt::START,
@@ -164,6 +170,10 @@ private:
      * off(type: 'progressUpdate'): void
      */
     static napi_value JsCancelEventCallback(napi_env env, napi_callback_info info);
+    /**
+     * addWatermark(watermark: image.PixelMap, config: WatermarkConfiguration): promise<void>;
+    */
+    static napi_value JsAddWatermark(napi_env env, napi_callback_info info);
 
     /**
      * srcUrl: string
@@ -208,10 +218,19 @@ private:
     void CancelCallback();
 
     RetInfo Configure(std::shared_ptr<AVTransCoderConfig> config);
+    int32_t AddWatermark(std::shared_ptr<PixelMap> &pixelMap, std::shared_ptr<WatermarkConfiguration> &watermarkConfig);
+    static std::shared_ptr<TaskHandler<RetInfo>> AddWatermarkTask(
+        const std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx);
     int32_t GetAudioConfig(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetVideoConfig(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetConfig(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx, napi_env env, napi_value args);
 
+    int32_t GetWatermarkParameter(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx,
+        napi_env env, napi_value watermark, napi_value watermarkConfig);
+    int32_t GetWatermark(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx,
+        napi_env env, napi_value args);
+    int32_t GetWatermarkConfig(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx,
+        napi_env env, napi_value args);
     static thread_local napi_ref constructor_;
     napi_env env_ = nullptr;
     std::shared_ptr<TransCoder> transCoder_ = nullptr;
@@ -227,6 +246,7 @@ private:
     std::string srcUrl_ = "";
     struct AVFileDescriptor srcFd_;
     int32_t dstFd_ = -1;
+    int32_t watermarkCount_ = 0;
 };
 
 struct AVTransCoderAsyncContext : public MediaAsyncContext {
@@ -238,6 +258,8 @@ struct AVTransCoderAsyncContext : public MediaAsyncContext {
 
     AVTransCoderNapi *napi = nullptr;
     std::shared_ptr<AVTransCoderConfig> config_ = nullptr;
+    std::shared_ptr<PixelMap> pixelMap_ = nullptr;
+    std::shared_ptr<WatermarkConfiguration> watermarkConfig_ = nullptr;
     std::string opt_ = "";
     std::shared_ptr<TaskHandler<RetInfo>> task_ = nullptr;
 };
