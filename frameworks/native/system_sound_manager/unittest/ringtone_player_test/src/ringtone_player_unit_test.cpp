@@ -452,7 +452,7 @@ HWTEST(RingtonePlayerUnitTest, MockMode_RingtonePlayer_001, TestSize.Level0)
     mockSettings.mode = ToneHapticsMode::SYNC;
 
     MockToneHapticsSettings mockToneSettings;
-    mockToneSettings.ringtoneUri = toneUri;
+    mockToneSettings.ringtoneUri = ringtoneUri;
     mockToneSettings.isMockMode = true;
     mockToneSettings.mockHapticSettings = settings;
 
@@ -478,7 +478,7 @@ HWTEST(RingtonePlayerUnitTest, MockMode_RingtonePlayer_002, TestSize.Level1)
     mockSettings.mode = ToneHapticsMode::NONE;
 
     MockToneHapticsSettings mockToneSettings;
-    mockToneSettings.ringtoneUri = toneUri;
+    mockToneSettings.ringtoneUri = ringtoneUri;
     mockToneSettings.isMockMode = true;
     mockToneSettings.mockHapticSettings = settings;
 
@@ -547,7 +547,7 @@ HWTEST(RingtonePlayerUnitTest, MockMode_RingtonePlayer_RegisterSource_001, TestS
     mockSettings.hapticsUri = "/path/to/vibration.json";
 
     MockToneHapticsSettings mockToneSettings;
-    mockToneSettings.ringtoneUri = toneUri;
+    mockToneSettings.ringtoneUri = ringtoneUri;
     mockToneSettings.isMockMode = true;
     mockToneSettings.mockHapticSettings = settings;
 
@@ -576,7 +576,7 @@ HWTEST(RingtonePlayerUnitTest, MockMode_RingtonePlayer_RegisterSource_002, TestS
     ToneHapticsSettings mockSettings;
 
     MockToneHapticsSettings mockToneSettings;
-    mockToneSettings.ringtoneUri = toneUri;
+    mockToneSettings.ringtoneUri = ringtoneUri;
     mockToneSettings.isMockMode = false;
     mockToneSettings.mockHapticSettings = settings;
 
