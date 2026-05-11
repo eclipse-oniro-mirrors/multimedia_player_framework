@@ -1418,7 +1418,7 @@ int32_t AVRecorderImpl::IsWatermarkSupported(bool &isWatermarkSupported)
     return recorder_->IsWatermarkSupported(isWatermarkSupported);
 }
 
-void AVRecorderImpl::SetMetadataSync(std::map<std::string, std::string> metadata)
+void AVRecorderImpl::SetMetadata(taihe::map_view<taihe::string, taihe::string> metadata)
 {
     MediaTrace trace("AVRecorder::SetMetadata");
     const std::string &opt = AVRecordergOpt::SET_METADATA;
@@ -1430,32 +1430,43 @@ void AVRecorderImpl::SetMetadataSync(std::map<std::string, std::string> metadata
     CHECK_AND_RETURN_LOG(asyncCtx->taihe != nullptr, "failed to GetJsInstanceAndArgs");
     CHECK_AND_RETURN_LOG(asyncCtx->taihe->taskQue_ != nullptr, "taskQue is nullptr!");
 
-    uint64_t accessTokenIDEx = OHOS::IPCSkeleton::GetCallingFullTokenID();
-    bool isSystemApp = OHOS::Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIDEx);
-    if (!isSystemApp) {
-        asyncCtx->taihe->ErrorCallback(MSERR_EXT_API9_PERMISSION_DENIED, "SetMetadata", "not system app");
-        return;
-    }
-    CHECK_AND_RETURN_LOG(asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK, "on error state");
-    CHECK_AND_RETURN_LOG(asyncCtx->taihe->CheckRepeatOperation(opt) == MSERR_OK, "on error Operation");
-    CHECK_AND_RETURN_LOG(metadata.size() != 0, "metadata has no data");
-    auto task = std::make_shared<TaskHandler<void>>([taihe = asyncCtx->taihe, metadata]() {
-        if (taihe != nullptr) {
-            (void)taihe->SetMetadata(metadata);
+    if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
+        CHECK_AND_RETURN_LOG(metadata.size() != 0, "metadata has no data");
+        asyncCtx->metadata_ = std::make_shared<Meta>();
+        for (const auto &pair : metadata) {
+            MEDIA_LOGI("metadata tag: %{public}s, value: %{public}s", pair.first.c_str(), pair.second.c_str());
+            asyncCtx->metadata_->SetData(std::string(pair.first), std::string(pair.second));
         }
-    });
-    (void)asyncCtx->taihe->taskQue_->EnqueueTask(task);
+        asyncCtx->task_ = GetSetMetadataTask(asyncCtx);
+        (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+    } else {
+        SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
+    }
+    if (asyncCtx->task_) {
+        auto result = asyncCtx->task_->GetResult();
+        if (result.Value().first != MSERR_EXT_API9_OK) {
+            set_business_error(result.Value().first, result.Value().second);
+        }
+    }
+
+    asyncCtx.release();
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
 }
 
-int32_t AVRecorderImpl::SetMetadata(const std::map<std::string, std::string> &recordMeta)
+std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::GetSetMetadataTask(
+    const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
 {
-    std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
-    for (auto &meta : recordMeta) {
-        MEDIA_LOGI("recordMeta tag: %{public}s, value: %{public}s", meta.first.c_str(), meta.second.c_str());
-        userMeta->SetData(meta.first, meta.second);
-    }
-    return recorder_->SetUserMeta(userMeta);
+    return std::make_shared<TaskHandler<RetInfo>>([taihe = asyncCtx->taihe, metadata = asyncCtx->metadata_]() {
+        const std::string &option = AVRecordergOpt::SET_METADATA;
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+        CHECK_AND_RETURN_RET(taihe != nullptr && taihe->recorder_ != nullptr,
+            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
+
+        taihe->recorder_->SetUserMeta(metadata);
+
+        MEDIA_LOGI("%{public}s End", option.c_str());
+        return RetInfo(MSERR_EXT_API9_OK, "");
+    });
 }
 
 void AVRecorderImpl::UpdateRotationSync(int32_t rotation)
