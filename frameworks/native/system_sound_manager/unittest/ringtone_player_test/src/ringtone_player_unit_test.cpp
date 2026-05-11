@@ -454,7 +454,7 @@ HWTEST(RingtonePlayerUnitTest, MockMode_RingtonePlayer_001, TestSize.Level0)
     MockToneHapticsSettings mockToneSettings;
     mockToneSettings.ringtoneUri = ringtoneUri;
     mockToneSettings.isMockMode = true;
-    mockToneSettings.mockHapticSettings = settings;
+    mockToneSettings.mockHapticSettings = mockSettings;
 
     auto ringtonePlayerImpl_ = std::make_shared<RingtonePlayerImpl>(
         context_, *sysSoundMgr, type, mockToneSettings);
@@ -480,7 +480,7 @@ HWTEST(RingtonePlayerUnitTest, MockMode_RingtonePlayer_002, TestSize.Level1)
     MockToneHapticsSettings mockToneSettings;
     mockToneSettings.ringtoneUri = ringtoneUri;
     mockToneSettings.isMockMode = true;
-    mockToneSettings.mockHapticSettings = settings;
+    mockToneSettings.mockHapticSettings = mockSettings;
 
     auto ringtonePlayerImpl_ = std::make_shared<RingtonePlayerImpl>(
         context_, *sysSoundMgr, type, mockToneSettings);
@@ -549,7 +549,7 @@ HWTEST(RingtonePlayerUnitTest, MockMode_RingtonePlayer_RegisterSource_001, TestS
     MockToneHapticsSettings mockToneSettings;
     mockToneSettings.ringtoneUri = ringtoneUri;
     mockToneSettings.isMockMode = true;
-    mockToneSettings.mockHapticSettings = settings;
+    mockToneSettings.mockHapticSettings = mockSettings;
 
     auto ringtonePlayerImpl_ = std::make_shared<RingtonePlayerImpl>(
         context_, *sysSoundMgr, type, mockToneSettings);
@@ -578,7 +578,7 @@ HWTEST(RingtonePlayerUnitTest, MockMode_RingtonePlayer_RegisterSource_002, TestS
     MockToneHapticsSettings mockToneSettings;
     mockToneSettings.ringtoneUri = ringtoneUri;
     mockToneSettings.isMockMode = false;
-    mockToneSettings.mockHapticSettings = settings;
+    mockToneSettings.mockHapticSettings = mockSettings;
 
     auto ringtonePlayerImpl_ = std::make_shared<RingtonePlayerImpl>(
         context_, *sysSoundMgr, type, mockToneSettings);
