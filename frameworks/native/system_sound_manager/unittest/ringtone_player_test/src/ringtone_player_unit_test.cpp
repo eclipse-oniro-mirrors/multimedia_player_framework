@@ -498,26 +498,13 @@ HWTEST(RingtonePlayerUnitTest, MockMode_RingtonePlayer_Start_001, TestSize.Level
     auto context_ = std::make_shared<ContextImpl>();
     auto sysSoundMgr = std::make_shared<SystemSoundManagerImpl>();
     RingtoneType type = RINGTONE_TYPE_SIM_CARD_0;
-    std::string ringtoneUri = "/path/to/ringtone.ogg";
-    ToneHapticsSettings mockSettings;
-    mockSettings.hapticsUri = "/path/to/vibration.json";
-    mockSettings.mode = ToneHapticsMode::SYNC;
-
-    MockToneHapticsSettings mockToneSettings;
-    mockToneSettings.ringtoneUri = toneUri;
-    mockToneSettings.isMockMode = true;
-    mockToneSettings.mockHapticSettings = settings;
-
-    auto ringtonePlayerImpl_ = std::make_shared<RingtonePlayerImpl>(
-        context_, *sysSoundMgr, type, mockToneSettings);
-    EXPECT_NE(ringtonePlayerImpl_, nullptr);
-    EXPECT_EQ(ringtonePlayerImpl_->isMockMode_, true);
-    
+    auto ringtonePlayerImpl_ = std::make_shared<RingtonePlayerImpl>(context_, *sysSoundMgr, type);
     int32_t sourceId = 1;
     AudioHapticPlayerOptions options = {false, false};
     ringtonePlayerImpl_->player_ = ringtonePlayerImpl_->audioHapticManager_->CreatePlayer(sourceId, options);
     EXPECT_NE(ringtonePlayerImpl_->player_, nullptr);
     
+    ringtonePlayerImpl_->isMockMode_ = true;
     ringtonePlayerImpl_->ringtoneState_ = STATE_NEW;
     int32_t result = ringtonePlayerImpl_->Start(HapticStartupMode::DEFAULT);
     EXPECT_NE(result, MSERR_INVALID_OPERATION);
@@ -533,60 +520,8 @@ HWTEST(RingtonePlayerUnitTest, MockMode_RingtonePlayer_Start_002, TestSize.Level
     auto context_ = std::make_shared<ContextImpl>();
     auto sysSoundMgr = std::make_shared<SystemSoundManagerImpl>();
     sysSoundMgr->ringerMode_ = AudioStandard::AudioRingerMode::RINGER_MODE_NORMAL;
-    
     RingtoneType type = RINGTONE_TYPE_SIM_CARD_0;
-    std::string ringtoneUri = "/path/to/ringtone.ogg";
-    ToneHapticsSettings mockSettings;
-    mockSettings.hapticsUri = "/path/to/vibration.json";
-    mockSettings.mode = ToneHapticsMode::SYNC;
-
-    MockToneHapticsSettings mockToneSettings;
-    mockToneSettings.ringtoneUri = toneUri;
-    mockToneSettings.isMockMode = true;
-    mockToneSettings.mockHapticSettings = settings;
-
-    auto ringtonePlayerImpl_ = std::make_shared<RingtonePlayerImpl>(
-        context_, *sysSoundMgr, type, mockToneSettings);
-    EXPECT_NE(ringtonePlayerImpl_, nullptr);
-    EXPECT_EQ(ringtonePlayerImpl_->isMockMode_, true);
-    
-    int32_t sourceId = 1;
-    AudioHapticPlayerOptions options = {false, false};
-    ringtonePlayerImpl_->player_ = ringtonePlayerImpl_->audioHapticManager_->CreatePlayer(sourceId, options);
-    EXPECT_NE(ringtonePlayerImpl_->player_, nullptr);
-    
-    ringtonePlayerImpl_->ringtoneState_ = STATE_NEW;
-    int32_t result = ringtonePlayerImpl_->Start(HapticStartupMode::FAST);
-    EXPECT_NE(result, MSERR_INVALID_OPERATION);
-}
-
-/**
- * @tc.name  : Test MediaRingtonePlayer MockMode
- * @tc.number: MockMode_RingtonePlayer_Start_003
- * @tc.desc  : Test Mock mode Start with FAST mode and NeedToVibrate=false
- */
-HWTEST(RingtonePlayerUnitTest, MockMode_RingtonePlayer_Start_003, TestSize.Level1)
-{
-    auto context_ = std::make_shared<ContextImpl>();
-    auto sysSoundMgr = std::make_shared<SystemSoundManagerImpl>();
-    sysSoundMgr->ringerMode_ = AudioStandard::AudioRingerMode::RINGER_MODE_SILENT;
-    
-    RingtoneType type = RINGTONE_TYPE_SIM_CARD_0;
-    std::string ringtoneUri = "/path/to/ringtone.ogg";
-    ToneHapticsSettings mockSettings;
-    mockSettings.hapticsUri = "";
-    mockSettings.mode = ToneHapticsMode::NONE;
-
-    MockToneHapticsSettings mockToneSettings;
-    mockToneSettings.ringtoneUri = toneUri;
-    mockToneSettings.isMockMode = true;
-    mockToneSettings.mockHapticSettings = settings;
-
-    auto ringtonePlayerImpl_ = std::make_shared<RingtonePlayerImpl>(
-        context_, *sysSoundMgr, type, mockToneSettings);
-    EXPECT_NE(ringtonePlayerImpl_, nullptr);
-    EXPECT_EQ(ringtonePlayerImpl_->isMockMode_, true);
-    
+    auto ringtonePlayerImpl_ = std::make_shared<RingtonePlayerImpl>(context_, *sysSoundMgr, type);
     int32_t sourceId = 1;
     AudioHapticPlayerOptions options = {false, false};
     ringtonePlayerImpl_->player_ = ringtonePlayerImpl_->audioHapticManager_->CreatePlayer(sourceId, options);
