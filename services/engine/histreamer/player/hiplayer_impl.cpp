@@ -1186,9 +1186,9 @@ int32_t HiPlayerImpl::ResumeDemuxer()
     StartFlvCheckLiveDelayTime();
     callbackLooper_.StartCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
     syncManager_->Resume();
-    Status ret = demuxer_->ResumeDemuxerReadLoop();
+    FALSE_GOON_NOEXEC(pipelineStates_ != PlayerStates::PLAYER_PAUSED, demuxer_->ResumeDemuxerReadLoop());
     SetBuffering(false);
-    return TransStatus(ret);
+    return TransStatus(Status::OK);
 }
 
 int32_t HiPlayerImpl::SetBuffering(bool isBuffering)
