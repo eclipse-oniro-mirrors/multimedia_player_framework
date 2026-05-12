@@ -931,7 +931,7 @@ Status HiTransCoderImpl::LinkAudioEncoderFilter(const std::shared_ptr<Pipeline::
     audioEncFormat_->Set<Tag::APP_UID>(appUid_);
     audioEncFormat_->Set<Tag::APP_PID>(appPid_);
     audioEncFormat_->Set<Tag::APP_FULL_TOKEN_ID>(appFullTokenId_);
-    audioEncFormat_->Set<Tag::AUDIO_ENCODE_PTS_MODE>(GENERATE_ENCODE_PTS_BY_INPUT_MODE);
+    audioEncFormat_->Set<Tag::AUDIO_ENCODE_PTS_MODE>(FIRST_INPUT_START_ENCODE_PTS_MODE);
     Status ret = audioEncoderFilter_->SetCodecFormat(audioEncFormat_);
     FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "audioEncoderFilter SetCodecFormat fail");
     ret = audioEncoderFilter_->SetTranscoderMode();
