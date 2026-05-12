@@ -284,6 +284,18 @@ int32_t AudioHapticManagerImpl::SetStreamUsage(const int32_t &sourceID, const Au
     return MSERR_OK;
 }
 
+int32_t AudioHapticManagerImpl::SetMockMode(const int32_t &sourceID, const bool &isMockMode)
+{
+    std::lock_guard<std::mutex> lock(audioHapticManagerMutex_);
+    if (audioHapticPlayerMap_.count(sourceID) == 0 || audioHapticPlayerMap_[sourceID] == nullptr) {
+        MEDIA_LOGE("SetMockMode: failed for invalid sourceID: %{public}d", sourceID);
+        return MSERR_INVALID_VAL;
+    }
+    audioHapticPlayerMap_[sourceID]->isMockMode_ = isMockMode;
+    MEDIA_LOGI("SetMockMode: sourceID %{public}d, isMockMode %{public}d", sourceID, isMockMode);
+    return MSERR_OK;
+}
+
 std::shared_ptr<AudioHapticPlayer> AudioHapticManagerImpl::CreatePlayer(const int32_t &sourceID,
     const AudioHapticPlayerOptions &audioHapticPlayerOptions)
 {
@@ -296,7 +308,8 @@ std::shared_ptr<AudioHapticPlayer> AudioHapticManagerImpl::CreatePlayer(const in
     std::shared_ptr<AudioHapticPlayerInfo> audioHapticPlayerInfo = audioHapticPlayerMap_[sourceID];
     AudioHapticPlayerParam param = AudioHapticPlayerParam(audioHapticPlayerOptions,
         audioHapticPlayerInfo->audioSource_, audioHapticPlayerInfo->hapticSource_,
-        audioHapticPlayerInfo->latencyMode_, audioHapticPlayerInfo->streamUsage_);
+        audioHapticPlayerInfo->latencyMode_, audioHapticPlayerInfo->streamUsage_,
+        audioHapticPlayerInfo->isMockMode_);
     std::shared_ptr<AudioHapticPlayer> audioHapticPlayer = AudioHapticPlayerFactory::CreateAudioHapticPlayer(param);
 
     if (audioHapticPlayer == nullptr) {

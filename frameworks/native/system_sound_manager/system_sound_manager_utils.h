@@ -41,6 +41,7 @@ public:
     static int32_t GetTypeForSystemSoundUri(const std::string &audioUri);
     static std::string GetErrorReason(const int32_t &errorCode);
     static std::string GetTonePlaybackErrorReason(const int32_t &errorCode);
+    static std::string ExtractDisplayName(const std::string &uri);
 private:
     static std::shared_ptr<DataShare::DataShareHelper> CreateDataShareHelperUri(int32_t systemAbilityId);
 };

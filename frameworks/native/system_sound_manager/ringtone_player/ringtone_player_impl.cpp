@@ -91,6 +91,30 @@ RingtonePlayerImpl::RingtonePlayerImpl(const shared_ptr<Context> &context,
     ReleaseDatabaseTool();
 }
 
+RingtonePlayerImpl::RingtonePlayerImpl(const shared_ptr<Context> &context,
+    SystemSoundManagerImpl &sysSoundMgr, const RingtoneType type, MockToneHapticsSettings &mockSettings)
+    : volume_(HIGH_VOL),
+      loop_(false),
+      context_(context),
+      systemSoundMgr_(sysSoundMgr),
+      type_(type),
+      specifyRingtoneUri_(mockSettings.ringtoneUri),
+      mockToneHapticsSettings_(mockSettings.mockHapticSettings),
+      isMockMode_(mockSettings.isMockMode)
+{
+    if (!InitDatabaseTool()) {
+        MEDIA_LOGE("Failed to init DatabaseTool!");
+        return;
+    }
+
+    audioHapticManager_ = AudioHapticManagerFactory::CreateAudioHapticManager();
+    CHECK_AND_RETURN_LOG(audioHapticManager_ != nullptr, "Failed to get audio haptic manager");
+
+    AudioHapticPlayerOptions options = {false, false};
+    InitPlayer(specifyRingtoneUri_, mockToneHapticsSettings_, options);
+    ReleaseDatabaseTool();
+}
+
 RingtonePlayerImpl::~RingtonePlayerImpl()
 {
     if (player_ != nullptr) {
@@ -247,7 +271,12 @@ ToneHapticsSettings RingtonePlayerImpl::GetHapticSettings(std::string &audioUri,
 
 int32_t RingtonePlayerImpl::RegisterSource(const std::string &audioUri, const std::string &hapticUri)
 {
-    string newAudioUri = systemSoundMgr_.OpenAudioUri(databaseTool_, audioUri);
+    string newAudioUri;
+    if (isMockMode_) {
+        newAudioUri = systemSoundMgr_.OpenMockAudioUri(audioUri);
+    } else {
+        newAudioUri = systemSoundMgr_.OpenAudioUri(databaseTool_, audioUri);
+    }
     string newHapticUri = systemSoundMgr_.OpenHapticsUri(databaseTool_, hapticUri);
 
     if (newAudioUri.find(FDHEAD) == std::string::npos && newAudioUri != NO_RING_SOUND) {
@@ -293,6 +322,10 @@ void RingtonePlayerImpl::InitPlayer(std::string &audioUri, ToneHapticsSettings &
     CHECK_AND_RETURN_LOG(sourceId_ != -1, "Failed to register source for audio haptic manager");
     (void)audioHapticManager_->SetAudioLatencyMode(sourceId_, AUDIO_LATENCY_MODE_NORMAL);
     (void)audioHapticManager_->SetStreamUsage(sourceId_, AudioStandard::StreamUsage::STREAM_USAGE_VOICE_RINGTONE);
+
+    if (isMockMode_) {
+        (void)audioHapticManager_->SetMockMode(sourceId_, true);
+    }
 
     bool hapticsSwitchStatus = systemSoundMgr_.CheckVibrateSwitchStatus();
     AudioStandard::AudioRingerMode ringerMode = systemSoundMgr_.GetRingerMode();
@@ -361,13 +394,21 @@ int32_t RingtonePlayerImpl::Start(const HapticStartupMode startupMode)
         return ERRCODE_IOERROR;
     }
 
+    if (isMockMode_) {
+        MEDIA_LOGI("Mock mode enabled. Use saved mockToneHapticsSettings_ directly.");
+        ReleaseDatabaseTool();
+        int32_t ret = player_->Start();
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_START_FAILED, "Start failed %{public}d", ret);
+        ringtoneState_ = STATE_RUNNING;
+        return MSERR_OK;
+    }
+
     MEDIA_LOGI("RingtonePlayerImpl::specifyRingtoneUri_ %{public}s", specifyRingtoneUri_.c_str());
     std::string ringtoneUri = "";
     if (specifyRingtoneUri_ == "") {
         ringtoneUri = systemSoundMgr_.GetRingtoneUri(databaseTool_, type_);
         MEDIA_LOGI("RingtonePlayerImpl::ringtoneUri: %{public}s", ringtoneUri.c_str());
     } else if (specifyRingtoneUri_ == "-1") {
-        // The current ringtone is no ringtone.
         ringtoneUri = NO_RING_SOUND;
         MEDIA_LOGI("RingtonePlayerImpl::ringtoneUri: %{public}s", ringtoneUri.c_str());
     } else {

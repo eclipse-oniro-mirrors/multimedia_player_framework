@@ -32,6 +32,12 @@ struct ToneHapticsSettings {
     std::string hapticsUri = "";
 };
 
+struct MockToneHapticsSettings {
+    std::string ringtoneUri = "";
+    ToneHapticsSettings mockHapticSettings;
+    bool isMockMode = false;
+};
+
 class ToneHapticsAttrs {
 public:
     ToneHapticsAttrs(std::string title, std::string fileName, std::string uri, std::string gentleTitle,

@@ -442,6 +442,30 @@ public:
      * @return Returns ToneInfo vector.
      */
     virtual std::vector<ToneInfo> GetCurrentToneInfos() = 0;
+
+    /**
+     * @brief Returns the mock haptic ringtone player instance by ringtone uri.
+     *
+     * @param context Indicates the Context object on OHOS.
+     * @param ringtoneType Indicates the ringtone type for which player instance has to be returned.
+     * @param ringtoneUri Indicates the ringtone URI for mock haptic player.
+     * @return Returns RingtonePlayer.
+     * @since 12
+     */
+    virtual std::shared_ptr<RingtonePlayer> GetMockHapticRingTonePlayer(
+        const std::shared_ptr<AbilityRuntime::Context> &context, const RingtoneType ringtoneType,
+        std::string &ringtoneUri) = 0;
+
+    /**
+     * @brief Returns the mock haptic ringtone player instance by haptic uri.
+     *
+     * @param context Indicates the Context object on OHOS.
+     * @param hapticUri Indicates the haptic URI for mock haptic player.
+     * @return Returns RingtonePlayer.
+     * @since 12
+     */
+    virtual std::shared_ptr<RingtonePlayer> GetMockHapticRingTonePlayer(
+        const std::shared_ptr<AbilityRuntime::Context> &context, std::string &hapticUri) = 0;
 };
 
 class __attribute__((visibility("default"))) SystemSoundManagerFactory {

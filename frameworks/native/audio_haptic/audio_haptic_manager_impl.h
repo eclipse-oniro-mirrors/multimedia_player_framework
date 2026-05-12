@@ -26,14 +26,17 @@ struct AudioHapticPlayerInfo {
     HapticSource hapticSource_;
     AudioLatencyMode latencyMode_;
     AudioStandard::StreamUsage streamUsage_;
+    bool isMockMode_ = false;
 
     AudioHapticPlayerInfo() {};
     AudioHapticPlayerInfo(const AudioSource& audioSource, const HapticSource &hapticSource,
-        const AudioLatencyMode &latencyMode, const AudioStandard::StreamUsage &streamUsage)
+        const AudioLatencyMode &latencyMode, const AudioStandard::StreamUsage &streamUsage,
+        const bool &isMockMode = false)
         : audioSource_(audioSource),
           hapticSource_(hapticSource),
           latencyMode_(latencyMode),
-          streamUsage_(streamUsage) {};
+          streamUsage_(streamUsage),
+          isMockMode_(isMockMode) {};
 };
 const int32_t INVALID_SOURCE_ID = -1;
 
@@ -54,6 +57,8 @@ public:
     int32_t SetAudioLatencyMode(const int32_t &sourceId, const AudioLatencyMode &latencyMode) override;
 
     int32_t SetStreamUsage(const int32_t &sourceID, const AudioStandard::StreamUsage &streamUsage) override;
+
+    int32_t SetMockMode(const int32_t &sourceID, const bool &isMockMode) override;
 
     std::shared_ptr<AudioHapticPlayer> CreatePlayer(const int32_t &sourceID,
         const AudioHapticPlayerOptions &audioHapticPlayerOptions) override;
