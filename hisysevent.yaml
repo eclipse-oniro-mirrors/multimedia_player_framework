@@ -156,6 +156,7 @@ PLAYER_COMMON_STATISTICS:
 RECORDER_STATISTICS:
   __BASE: {type: STATISTIC, level: MINOR, desc: Recorder statistics}
   EVENTS: {type: STRING, arrsize: 100, desc: Group of recorder events}
+  MEDIA_KIT_EVENTS: {type: STRING, arrsize: 100, desc: media kit events}
 
 SCREEN_CAPTURE_STATISTICS:
   __BASE: {type: STATISTIC, level: MINOR, desc: Screen capture statistics}

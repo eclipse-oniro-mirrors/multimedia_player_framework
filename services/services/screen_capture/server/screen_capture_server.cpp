@@ -2645,6 +2645,7 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
         MEDIA_LOGI("PostStartScreenCaptureSuccessAction START.");
         UpdateHighlightOutline(true);
         PostStartScreenCaptureSuccessAction();
+        SetMediaKitReport("startRecording");
     } else {
         PostStartScreenCaptureFail();
         return;
@@ -3008,7 +3009,6 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
     }
 
     ret = OnStartScreenCapture();
-    SetMediaKitReport("startRecording");
     PostStartScreenCapture(ret == MSERR_OK);
 
     MEDIA_LOGI("StartScreenCaptureInner E, appUid:%{public}d, appPid:%{public}d", appInfo_.appUid, appInfo_.appPid);
