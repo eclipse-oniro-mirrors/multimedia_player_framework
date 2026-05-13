@@ -1008,7 +1008,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_002, TestS
     sptr<SCWindowLifecycleListener> listener(new (std::nothrow) SCWindowLifecycleListener(screenCaptureServer));
     screenCaptureServer_->windowLifecycleListener_ = listener;
     SCWindowLifecycleListener::LifecycleEventPayload payload;
-    payload.sessionState_ = SessionState::STATE_CONNECT;
+    payload.sessionState_ = SessionState::STATE_FOREGROUND;
     payload.persistentId_ = 0;
     screenCaptureServer_->windowLifecycleListener_->OnAppInstanceLifecycleEvent(payload);
     ASSERT_NE(screenCaptureServer_, nullptr);
@@ -1055,7 +1055,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_006, TestS
     sptr<SCWindowLifecycleListener> listener(new (std::nothrow) SCWindowLifecycleListener(screenCaptureServer));
     screenCaptureServer_->windowLifecycleListener_ = listener;
     SCWindowLifecycleListener::LifecycleEventPayload payload;
-    payload.sessionState_ = SessionState::STATE_CONNECT;
+    payload.sessionState_ = SessionState::STATE_FOREGROUND;
     payload.persistentId_ = 1;
     std::vector<SCWindowLifecycleListener::LifecycleEventPayload> payloads = {payload};
     screenCaptureServer_->windowLifecycleListener_->OnBatchLifecycleEvent(payloads);
