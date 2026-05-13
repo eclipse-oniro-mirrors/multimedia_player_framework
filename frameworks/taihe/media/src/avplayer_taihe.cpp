@@ -1973,8 +1973,8 @@ TrackSelectionFilter AVPlayerImpl::GetTrackSelectionFilterSync()
 bool AVPlayerImpl::IsRateValid(double rate)
 {
     const double minRate = 0.125f;
-    const double maxRate = 4.0f;
-    const double eps = 1e-15;
+    const double maxRate = 8.0f;
+    const double eps = 1e-6;
     if ((rate < minRate - eps) || (rate > maxRate + eps)) {
         return false;
     }
