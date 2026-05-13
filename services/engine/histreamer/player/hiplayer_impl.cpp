@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1225,8 +1225,11 @@ int32_t HiPlayerImpl::Stop()
 
     // close demuxer first to avoid concurrent problem
     auto ret = Status::ERROR_UNKNOWN;
-    if (pipeline_ != nullptr) {
-        ret = pipeline_->Stop();
+    {
+        std::unique_lock<std::mutex> lock(pipelineMutex_);
+        if (pipeline_ != nullptr) {
+            ret = pipeline_->Stop();
+        }
     }
     syncManager_->Stop();
     if (audioDecoder_ != nullptr) {
