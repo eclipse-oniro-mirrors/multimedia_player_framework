@@ -91,6 +91,7 @@ bool DraggingPlayerAgent::IsDraggingSupported(const shared_ptr<DemuxerFilter> de
 {
     FALSE_RETURN_V_MSG_E(demuxer != nullptr && decoder != nullptr, false, "demuxer or decoder is null");
     FALSE_RETURN_V_MSG_E(demuxer->IsLocalFd(), false, "source is not local fd");
+    FALSE_RETURN_V_MSG_E(decoder->IsResolutionSupportSeekContinuous(), false, "resolution is not support");
     FALSE_RETURN_V_MSG_E(LoadSymbol() && checkSupportedFunc_ != nullptr, false, "no so");
     return checkSupportedFunc_(demuxer.get(), decoder.get());
 }
