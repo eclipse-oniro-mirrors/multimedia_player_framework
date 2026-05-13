@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1545,6 +1545,8 @@ int32_t HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode)
 int32_t HiPlayerImpl::SeekToDefaultPosition()
 {
     MEDIA_LOG_I("SeekToDefaultPosition.");
+    SetPlaybackSpeed(PlaybackRateMode::SPEED_FORWARD_1_00_X);
+    SetPlaybackRate(1.0f);
     isLiveSeek_ = false;
     return TransStatus(Status::OK);
 }
