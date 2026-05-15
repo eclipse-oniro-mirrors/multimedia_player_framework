@@ -254,6 +254,10 @@ public:
     static int32_t GetCurrentTrackStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
     static int32_t SetVideoOutputStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
     static int32_t GetVideoSampleStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t SetTrackSelectionFilterStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData,
+        size_t size, bool isFuzz);
+    static int32_t GetTrackSelectionFilterStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData,
+        size_t size, bool isFuzz);
 
 private:
     int32_t SendRequest(uint32_t code, MessageParcel &inputData, MessageParcel &reply, MessageOption &option);

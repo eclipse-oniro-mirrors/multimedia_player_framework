@@ -37,6 +37,7 @@ const char *DATA_PATH = "/data/test/fuzz_create.mp4";
 const int32_t SYSTEM_ABILITY_ID = 3002;
 const bool RUN_ON_CREATE = false;
 const int32_t PLAY_TIME_1_SEC = 1;
+const int NUMBER_4 = 4;
 int32_t g_duration = 0;
 
 PlayerApiFuzzer::PlayerApiFuzzer()
@@ -45,6 +46,93 @@ PlayerApiFuzzer::PlayerApiFuzzer()
 
 PlayerApiFuzzer::~PlayerApiFuzzer()
 {
+}
+
+namespace {
+AVPlayTrackSelectionFilter BuildTrackFilter(uint8_t *data, size_t size)
+{
+    FuzzedDataProvider fdpTrack(data, size);
+    AVPlayTrackSelectionFilter trackFilter;
+    trackFilter.maxVideoBitrate = fdpTrack.ConsumeIntegral<int32_t>();
+    trackFilter.minVideoBitrate = fdpTrack.ConsumeIntegral<int32_t>();
+    trackFilter.maxVideoFrameRate = fdpTrack.ConsumeIntegral<int32_t>();
+    trackFilter.minVideoFrameRate = fdpTrack.ConsumeIntegral<int32_t>();
+    trackFilter.maxVideoResolution = std::make_pair(fdpTrack.ConsumeIntegral<int32_t>(),
+        fdpTrack.ConsumeIntegral<int32_t>());
+    trackFilter.minVideoResolution = std::make_pair(fdpTrack.ConsumeIntegral<int32_t>(),
+        fdpTrack.ConsumeIntegral<int32_t>());
+    trackFilter.maxAudioBitrate = fdpTrack.ConsumeIntegral<int32_t>();
+    trackFilter.minAudioBitrate = fdpTrack.ConsumeIntegral<int32_t>();
+    trackFilter.maxAudioChannels = fdpTrack.ConsumeIntegral<int32_t>();
+
+    auto appendStrings = [&fdpTrack](std::vector<std::string> &out, size_t maxCount) {
+        uint32_t count = fdpTrack.ConsumeIntegralInRange<uint32_t>(0, static_cast<uint32_t>(maxCount));
+        for (uint32_t i = 0; i < count; i++) {
+            out.emplace_back(fdpTrack.ConsumeRandomLengthString(16));
+        }
+    };
+
+    appendStrings(trackFilter.preferredVideoMimeTypes, NUMBER_4);
+    appendStrings(trackFilter.preferredAudioMimeTypes, NUMBER_4);
+    appendStrings(trackFilter.preferredAudioLanguages, NUMBER_4);
+    appendStrings(trackFilter.preferredSubtitleLanguages, NUMBER_4);
+    return trackFilter;
+}
+
+bool ConfigurePlayer(const sptr<IRemoteStub<IStandardPlayerService>> &playerStub, int32_t fd, size_t size)
+{
+    playerStub->SetSource(fd, 0, size);
+    sleep(PLAY_TIME_1_SEC);
+    playerStub->SetRenderFirstFrame(false);
+    AVPlayStrategy playbackStrategy = {.mutedMediaType = OHOS::Media::MediaType::MEDIA_TYPE_AUD};
+    playerStub->SetPlaybackStrategy(playbackStrategy);
+    sleep(PLAY_TIME_1_SEC);
+    return true;
+}
+
+bool RunPlaybackFlow(const sptr<IRemoteStub<IStandardPlayerService>> &playerStub, uint8_t *data, size_t size)
+{
+    AVPlayTrackSelectionFilter trackFilter = BuildTrackFilter(data, size);
+    playerStub->SetTrackSelectionFilter(trackFilter);
+    AVPlayTrackSelectionFilter outFilter;
+    playerStub->GetTrackSelectionFilter(outFilter);
+    playerStub->Prepare();
+    sleep(PLAY_TIME_1_SEC);
+    playerStub->SelectBitRate(0);
+    sleep(PLAY_TIME_1_SEC);
+    playerStub->SetVolume(1, 1);
+    sleep(PLAY_TIME_1_SEC);
+    playerStub->SetPlaybackSpeed(SPEED_FORWARD_0_50_X);
+    sleep(PLAY_TIME_1_SEC);
+    playerStub->GetDuration(g_duration);
+    if (g_duration == 0) {
+        playerStub->Release();
+        sleep(PLAY_TIME_1_SEC);
+        return false;
+    }
+    playerStub->SetPlayRange(0, g_duration);
+    sleep(PLAY_TIME_1_SEC);
+    playerStub->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_AUD, true);
+    sleep(PLAY_TIME_1_SEC);
+    PlayerApiFuzzer().SelectTrack(playerStub);
+    FuzzedDataProvider fdp(data, size);
+    int seekTime = abs(fdp.ConsumeIntegral<int32_t>()) % g_duration;
+    playerStub->Seek(seekTime, SEEK_NEXT_SYNC);
+    sleep(PLAY_TIME_1_SEC);
+    playerStub->Play();
+    sleep(PLAY_TIME_1_SEC);
+    playerStub->Pause();
+    sleep(PLAY_TIME_1_SEC);
+    playerStub->Play();
+    sleep(PLAY_TIME_1_SEC);
+    playerStub->SetLooping(true);
+    sleep(PLAY_TIME_1_SEC);
+    playerStub->Stop();
+    sleep(PLAY_TIME_1_SEC);
+    playerStub->Release();
+    sleep(PLAY_TIME_1_SEC);
+    return true;
+}
 }
 
 void PlayerApiFuzzer::SelectTrack(const sptr<IRemoteStub<IStandardPlayerService>> &playerStub)
@@ -91,51 +179,13 @@ bool PlayerApiFuzzer::RunFuzz(uint8_t *data, size_t size)
     int32_t fd = open(DATA_PATH, O_RDONLY);
     sptr<IRemoteStub<IStandardPlayerService>> playerStub = GetPlayStub();
     if (playerStub == nullptr) {
+        close(fd);
         return false;
     }
-    playerStub->SetSource(fd, 0, size);
-    sleep(PLAY_TIME_1_SEC);
-    playerStub->SetRenderFirstFrame(false);
-    AVPlayStrategy playbackStrategy = {.mutedMediaType = OHOS::Media::MediaType::MEDIA_TYPE_AUD};
-    playerStub->SetPlaybackStrategy(playbackStrategy);
-    sleep(PLAY_TIME_1_SEC);
-    playerStub->Prepare();
-    sleep(PLAY_TIME_1_SEC);
-    playerStub->SelectBitRate(0);
-    sleep(PLAY_TIME_1_SEC);
-    playerStub->SetVolume(1, 1);
-    sleep(PLAY_TIME_1_SEC);
-    playerStub->SetPlaybackSpeed(SPEED_FORWARD_0_50_X);
-    sleep(PLAY_TIME_1_SEC);
-    playerStub->GetDuration(g_duration);
-    if (g_duration == 0) {
-        playerStub->Release();
-        sleep(PLAY_TIME_1_SEC);
-        return false;
-    }
-    playerStub->SetPlayRange(0, g_duration);
-    sleep(PLAY_TIME_1_SEC);
-    playerStub->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_AUD, true);
-    sleep(PLAY_TIME_1_SEC);
-    SelectTrack(playerStub);
-    FuzzedDataProvider fdp(data, size);
-    int seekTime = abs(fdp.ConsumeIntegral<int32_t>())%g_duration;
-    playerStub->Seek(seekTime, SEEK_NEXT_SYNC);
-    sleep(PLAY_TIME_1_SEC);
-    playerStub->Play();
-    sleep(PLAY_TIME_1_SEC);
-    playerStub->Pause();
-    sleep(PLAY_TIME_1_SEC);
-    playerStub->Play();
-    sleep(PLAY_TIME_1_SEC);
-    playerStub->SetLooping(true);
-    sleep(PLAY_TIME_1_SEC);
-    playerStub->Stop();
-    sleep(PLAY_TIME_1_SEC);
-    playerStub->Release();
-    sleep(PLAY_TIME_1_SEC);
+    ConfigurePlayer(playerStub, fd, size);
+    bool result = RunPlaybackFlow(playerStub, data, size);
     close(fd);
-    return true;
+    return result;
 }
 }
 }
