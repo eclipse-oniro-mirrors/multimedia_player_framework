@@ -2225,7 +2225,7 @@ HWTEST_F(RecorderServerUnitTest, recorder_SetUserMeta_008, TestSize.Level2)
     std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
     ASSERT_NE(nullptr, userMeta);
     
-    EXPECT_NE(MSERR_OK, recorderServer_->SetUserMeta(userMeta));
+    EXPECT_EQ(MSERR_NO_MEMORY, recorderServer_->SetUserMeta(userMeta));
     EXPECT_EQ(MSERR_OK, recorderServer_->Release());
     close(g_videoRecorderConfig.outputFd);
 }
@@ -2365,6 +2365,5 @@ HWTEST_F(RecorderServerUnitTest, recorder_SetUserMeta_013, TestSize.Level2)
     EXPECT_NE(MSERR_NO_MEMORY, recorderServer_->SetUserMeta(userMeta));
     close(g_videoRecorderConfig.outputFd);
 }
-#endif
 } // namespace Media
 } // namespace OHOS
