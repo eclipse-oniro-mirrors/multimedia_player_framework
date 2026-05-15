@@ -16,6 +16,7 @@
 #include "ohos.multimedia.systemSoundManager.ani.hpp"
 #include "ringtonePlayer.ani.hpp"
 #include "systemTonePlayer.ani.hpp"
+#include "SystemSoundPlayer.ani.hpp"
 #if __has_include(<ani.h>)
 #include <ani.h>
 #elif __has_include(<ani/ani.h>)
@@ -40,6 +41,10 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
     }
     if (ANI_OK != systemTonePlayer::ANIRegister(env)) {
         std::cerr << "Error from systemTonePlayer::ANIRegister" << std::endl;
+        status = ANI_ERROR;
+    }
+    if (ANI_OK != SystemSoundPlayer::ANIRegister(env)) {
+        std::cerr << "Error from SystemSoundPlayer::ANIRegister" << std::endl;
         status = ANI_ERROR;
     }
     *result = ANI_VERSION_1;

@@ -23,6 +23,7 @@
 #include "ringtone_common_taihe.h"
 #include "system_sound_manager.h"
 #include "system_tone_player_taihe.h"
+#include "system_sound_player_taihe.h"
 #include "taihe/runtime.hpp"
 
 namespace ANI::Media {
@@ -37,6 +38,7 @@ using ToneHapticsSettings = ::ohos::multimedia::systemSoundManager::ToneHapticsS
 using ToneHapticsTypeTaihe = ::ohos::multimedia::systemSoundManager::ToneHapticsType;
 using WeakToneAttrsTaihe = ::ohos::multimedia::systemSoundManager::weak::ToneAttrs;
 using SystemSoundErrorTaihe = ::ohos::multimedia::systemSoundManager::SystemSoundError;
+using SystemSoundPlayerTaihe = ::SystemSoundPlayer::SystemSoundPlayer;
 
 class SystemSoundManagerImpl {
 public:
@@ -109,6 +111,7 @@ public:
     ::taihe::array<uintptr_t> OpenToneList(::taihe::array_view<::taihe::string> uriList);
 
     friend SystemSoundManagerTaihe GetSystemSoundManager();
+    friend SystemSoundPlayerTaihe CreateSystemSoundPlayer();
 
 private:
     static bool CheckResultUriAndThrowError(std::string uri);
