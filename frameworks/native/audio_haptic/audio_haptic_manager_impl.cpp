@@ -261,6 +261,7 @@ bool AudioHapticManagerImpl::CheckAudioStreamUsage(const AudioStandard::StreamUs
         case AudioStandard::STREAM_USAGE_NAVIGATION:
         case AudioStandard::STREAM_USAGE_DTMF:
         case AudioStandard::STREAM_USAGE_ENFORCED_TONE:
+        case AudioStandard::STREAM_USAGE_VOICE_TRANSFER_RINGTONE:
             return true;
         default:
             break;

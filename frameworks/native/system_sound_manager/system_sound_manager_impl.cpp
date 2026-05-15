@@ -801,29 +801,31 @@ std::shared_ptr<RingtonePlayer> SystemSoundManagerImpl::GetRingtonePlayer(const 
     CHECK_AND_RETURN_RET_LOG(IsRingtoneTypeValid(ringtoneType), nullptr, "invalid ringtone type");
     MEDIA_LOGI("GetRingtonePlayer: for ringtoneType %{public}d", ringtoneType);
 
-    std::shared_ptr<RingtonePlayer> ringtonePlayer = std::make_shared<RingtonePlayerImpl>(context, *this, ringtoneType);
+    std::shared_ptr<RingtonePlayer> ringtonePlayer = std::make_shared<RingtonePlayerImpl>(context, *this, ringtoneType,
+        AudioStandard::StreamUsage::STREAM_USAGE_VOICE_RINGTONE);
     CHECK_AND_RETURN_RET_LOG(ringtonePlayer != nullptr, nullptr,
         "Failed to create ringtone player object");
     return ringtonePlayer;
 }
 
 std::shared_ptr<RingtonePlayer> SystemSoundManagerImpl::GetSpecificRingTonePlayer(
-    const shared_ptr<Context> &context, const RingtoneType ringtoneType, string &ringtoneUri)
+    const shared_ptr<Context> &context, const RingtoneType ringtoneType, string &ringtoneUri,
+    AudioStandard::StreamUsage usage)
 {
     std::lock_guard<std::mutex> lock(playerMutex_);
     CHECK_AND_RETURN_RET_LOG(IsRingtoneTypeValid(ringtoneType), nullptr, "invalid ringtone type");
-    MEDIA_LOGI("GetSpecificRingTonePlayer: for ringtoneType %{public}d", ringtoneType);
+    MEDIA_LOGI("GetSpecificRingTonePlayer: for ringtoneType %{public}d, streamUsage %{public}d", ringtoneType, usage);
 
     if (ringtoneUri.empty()) {
         // ringtoneUri is empty. Use current ringtone uri.
         std::shared_ptr<RingtonePlayer> ringtonePlayer =
-            std::make_shared<RingtonePlayerImpl>(context, *this, ringtoneType);
+            std::make_shared<RingtonePlayerImpl>(context, *this, ringtoneType, usage);
         CHECK_AND_RETURN_RET_LOG(ringtonePlayer != nullptr, nullptr,
             "Failed to create ringtone player object");
         return ringtonePlayer;
     }
     std::shared_ptr<RingtonePlayer> ringtonePlayer = std::make_shared<RingtonePlayerImpl>(context,
-        *this, ringtoneType, ringtoneUri);
+        *this, ringtoneType, ringtoneUri, usage);
     CHECK_AND_RETURN_RET_LOG(ringtonePlayer != nullptr, nullptr,
         "Failed to create ringtone player object");
     return ringtonePlayer;

@@ -91,7 +91,8 @@ public:
     std::shared_ptr<RingtonePlayer> GetRingtonePlayer(const std::shared_ptr<AbilityRuntime::Context> &context,
         RingtoneType ringtoneType) override;
     std::shared_ptr<RingtonePlayer> GetSpecificRingTonePlayer(const std::shared_ptr<AbilityRuntime::Context> &context,
-        const RingtoneType ringtoneType, std::string &ringtoneUri) override;
+        const RingtoneType ringtoneType, std::string &ringtoneUri,
+        AudioStandard::StreamUsage usage = AudioStandard::StreamUsage::STREAM_USAGE_VOICE_RINGTONE) override;
 
     int32_t SetSystemToneUri(const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri,
         SystemToneType systemToneType) override;
