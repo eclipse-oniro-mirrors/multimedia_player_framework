@@ -17,6 +17,7 @@
 #include "osal/task/pipeline_threadpool.h"
 #include "sync_fence.h"
 #include "media_dfx.h"
+#include "water_mark_filter.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_RECORDER, "HiRecorder" };
@@ -162,37 +163,18 @@ int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId
         (int32_t)Status::ERROR_INVALID_OPERATION);
     auto tempSourceId = SourceIdGenerator::GenerateVideoSourceId(videoCount_);
     Status ret;
-    if (source == VideoSourceType::VIDEO_SOURCE_SURFACE_YUV ||
-        source == VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA) {
-        videoSourceIsYuv_ = true;
-        if (!videoEncoderFilter_) {
-            videoEncoderFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::SurfaceEncoderFilter>
-                ("videoEncoderFilter", Pipeline::FilterType::FILTERTYPE_VENC);
-        }
-        FALSE_RETURN_V_MSG_E(videoEncoderFilter_ != nullptr, (int32_t)Status::ERROR_NULL_POINTER,
-            "create videoEncoderFilter failed");
-        videoEncoderFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
-        ret = pipeline_->AddHeadFilters({videoEncoderFilter_});
-        if (source == VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA) {
-            videoSourceIsRGBA_ = true;
-        } else {
-            videoSourceIsRGBA_ = false;
-        }
-        MEDIA_LOG_I("SetVideoSource VIDEO_SOURCE_SURFACE_YUV.");
+    if (hasWatermark_ && (source == VideoSourceType::VIDEO_SOURCE_SURFACE_YUV ||
+        source == VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA)) {
+        ret = SetVideoSourceWithWatermark(source);
+    } else if (!hasWatermark_ && (source == VideoSourceType::VIDEO_SOURCE_SURFACE_YUV ||
+        source == VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA)) {
+        ret = SetVideoSourceSurfaceYuvOrRgba(source);
     } else if (source == VideoSourceType::VIDEO_SOURCE_SURFACE_ES) {
-        videoSourceIsYuv_ = false;
-        videoSourceIsRGBA_ = false;
-        videoCaptureFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::VideoCaptureFilter>
-            ("videoEncoderFilter", Pipeline::FilterType::VIDEO_CAPTURE);
-        FALSE_RETURN_V_MSG_E(videoCaptureFilter_ != nullptr, (int32_t)Status::ERROR_NULL_POINTER,
-            "create videoCaptureFilter failed");
-        ret = pipeline_->AddHeadFilters({videoCaptureFilter_});
-        MEDIA_LOG_I("SetVideoSource VIDEO_SOURCE_SURFACE_ES.");
+        ret = SetVideoSourceSurfaceEs();
     } else {
         ret = Status::OK;
     }
     FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "AddFilters videoEncoder to pipeline fail");
-
     MEDIA_LOG_I("SetVideoSource success.");
     videoCount_++;
     videoSourceId_ = tempSourceId;
@@ -200,6 +182,42 @@ int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId
     OnStateChanged(StateId::RECORDING_SETTING);
 
     return (int32_t)ret;
+}
+
+Status HiRecorderImpl::SetVideoSourceWithWatermark(VideoSourceType source)
+{
+    MEDIA_LOG_I("SetVideoSource with watermark.");
+    FALSE_RETURN_V_MSG_E(waterMarkFilter_ != nullptr, Status::ERROR_NULL_POINTER,
+        "Watermark filter is nullptr");
+    source_ = source;
+    return pipeline_->AddHeadFilters({waterMarkFilter_});
+}
+
+Status HiRecorderImpl::SetVideoSourceSurfaceYuvOrRgba(VideoSourceType source)
+{
+    MEDIA_LOG_I("SetVideoSource with yuv or rgba.");
+    videoSourceIsYuv_ = true;
+    if (!videoEncoderFilter_) {
+        videoEncoderFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::SurfaceEncoderFilter>
+            ("videoEncoderFilter", Pipeline::FilterType::FILTERTYPE_VENC);
+    }
+    FALSE_RETURN_V_MSG_E(videoEncoderFilter_ != nullptr, Status::ERROR_NULL_POINTER,
+        "create videoEncoderFilter failed");
+    videoEncoderFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
+    videoSourceIsRGBA_ = (source == VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA);
+    return pipeline_->AddHeadFilters({videoEncoderFilter_});
+}
+
+Status HiRecorderImpl::SetVideoSourceSurfaceEs()
+{
+    MEDIA_LOG_I("SetVideoSource with es.");
+    videoSourceIsYuv_ = false;
+    videoSourceIsRGBA_ = false;
+    videoCaptureFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::VideoCaptureFilter>
+        ("videoEncoderFilter", Pipeline::FilterType::VIDEO_CAPTURE);
+    FALSE_RETURN_V_MSG_E(videoCaptureFilter_ != nullptr, Status::ERROR_NULL_POINTER,
+        "create videoCaptureFilter failed");
+    return pipeline_->AddHeadFilters({videoCaptureFilter_});
 }
 
 int32_t HiRecorderImpl::SetMetaSource(MetaSourceType source, int32_t &sourceId)
@@ -350,13 +368,37 @@ int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recPara
 
 sptr<Surface> HiRecorderImpl::GetSurface(int32_t sourceId)
 {
-    MEDIA_LOG_I("HiRecorderImpl GetSurface enter.");
-    if (videoEncoderFilter_) {
-        producerSurface_ = videoEncoderFilter_->GetInputSurface();
+    MEDIA_LOG_I("HiRecorderImpl GetSurface Enter.");
+    if (waterMarkFilter_) {
+        return GetSurfaceFromWaterMarkFilter();
+    } else if (videoEncoderFilter_) {
+        return GetSurfaceFromVideoEncoder();
+    } else if (videoCaptureFilter_) {
+        return GetSurfaceFromVideoCapture();
     }
-    if (videoCaptureFilter_) {
-        producerSurface_ = videoCaptureFilter_->GetInputSurface();
-    }
+
+    return producerSurface_;
+}
+
+sptr<Surface> HiRecorderImpl::GetSurfaceFromWaterMarkFilter()
+{
+    MEDIA_LOG_I("HiRecorderImpl Get Surface From WaterMarkFilter.");
+    auto filter = static_cast<Pipeline::WaterMarkFilter*>(waterMarkFilter_.get());
+    producerSurface_ = filter->GetInputSurface();
+    return producerSurface_;
+}
+
+sptr<Surface> HiRecorderImpl::GetSurfaceFromVideoEncoder()
+{
+    MEDIA_LOG_I("HiRecorderImpl Get Surface From VideoEncoder.");
+    producerSurface_ = videoEncoderFilter_->GetInputSurface();
+    return producerSurface_;
+}
+
+sptr<Surface> HiRecorderImpl::GetSurfaceFromVideoCapture()
+{
+    MEDIA_LOG_I("HiRecorderImpl Get Surface From VideoCapture.");
+    producerSurface_ = videoCaptureFilter_->GetInputSurface();
     return producerSurface_;
 }
 
@@ -372,6 +414,24 @@ sptr<Surface> HiRecorderImpl::GetMetaSurface(int32_t sourceId)
     return producerMetaSurface_;
 }
 
+Status HiRecorderImpl::SetVideoEncoderSurface()
+{
+    // 编码->水印
+    sptr<Surface> encoderSurface = videoEncoderFilter_->GetInputSurface();
+    FALSE_RETURN_V_MSG_E(encoderSurface != nullptr, Status::ERROR_NULL_POINTER, "encoderSurface is nullptr");
+
+    int32_t videoWidth = 0;
+    int32_t videoHeight = 0;
+    videoEncFormat_->GetData(Tag::VIDEO_WIDTH, videoWidth);
+    videoEncFormat_->GetData(Tag::VIDEO_HEIGHT, videoHeight);
+    MEDIA_LOG_I("GetSurface videoWidth:" PUBLIC_LOG_D32 " videoHeight:" PUBLIC_LOG_D32,
+        videoWidth, videoHeight);
+    Status ret = Status::OK;
+    auto filter = static_cast<Pipeline::WaterMarkFilter*>(waterMarkFilter_.get());
+    ret = filter->SetOutputSurface(encoderSurface, videoWidth, videoHeight, rotation_);
+    return ret;
+}
+
 int32_t HiRecorderImpl::Prepare()
 {
     MediaTrace trace("HiRecorderImpl::Prepare");
@@ -384,6 +444,8 @@ int32_t HiRecorderImpl::Prepare()
     FALSE_RETURN_V_MSG_E(result == ERR_NONE, result, "PrepareAudioCapture fail");
     result = PrepareAudioDataSource();
     FALSE_RETURN_V_MSG_E(result == ERR_NONE, result, "PrepareAudioDataSource fail");
+    result = PrepareWatermark();
+    FALSE_RETURN_V_MSG_E(result == ERR_NONE, result, "PrepareWatermark fail");
     result = PrepareVideoEncoder();
     FALSE_RETURN_V_MSG_E(result == ERR_NONE, result, "PrepareVideoEncoder fail");
     result = PrepareMetaData();
@@ -431,8 +493,20 @@ int32_t HiRecorderImpl::PrepareAudioDataSource()
     return ERR_NONE;
 }
 
+int32_t HiRecorderImpl::PrepareWatermark()
+{
+    MEDIA_LOG_I("HiRecorderImpl PrepareWatermark enter.");
+    if (waterMarkFilter_) {
+        auto filter = static_cast<Pipeline::WaterMarkFilter*>(waterMarkFilter_.get());
+        filter->Init(recorderEventReceiver_, recorderCallback_);
+        filter->SetAVRecorderMode();
+    }
+    return ERR_NONE;
+}
+
 int32_t HiRecorderImpl::PrepareVideoEncoder()
 {
+    MEDIA_LOG_I("HiRecorderImpl PrepareVideoEncoder enter.");
     if (videoEncoderFilter_) {
         if (videoSourceIsRGBA_) {
             videoEncFormat_->Set<Tag::VIDEO_PIXEL_FORMAT>(Plugins::VideoPixelFormat::RGBA);
@@ -440,6 +514,9 @@ int32_t HiRecorderImpl::PrepareVideoEncoder()
         ConfigureVidEncBitrateMode();
         videoEncoderFilter_->SetCodecFormat(videoEncFormat_);
         videoEncoderFilter_->Init(recorderEventReceiver_, recorderCallback_);
+        if (hasWatermark_) {
+            videoEncoderFilter_->SetWatermarkMode();
+        }
         videoEncoderFilter_->SetVideoEnableBFrame(enableBFrame_);
         FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_) == Status::OK,
             ERR_UNKNOWN_REASON, "videoEncoderFilter Configure fail");
@@ -479,6 +556,9 @@ int32_t HiRecorderImpl::Start()
     MediaTrace trace("HiRecorderImpl::Start");
     MEDIA_LOG_I("Start enter.");
     Status ret = Status::OK;
+    if (hasWatermark_) {
+        ret = SetVideoEncoderSurface();
+    }
     if (curState_ == StateId::PAUSE) {
         ret = pipeline_->Resume();
     } else {
@@ -526,6 +606,10 @@ Status HiRecorderImpl::HandleStopOperation()
     if (audioDataSourceFilter_) {
         ret = audioDataSourceFilter_->SendEos();
     }
+    if (waterMarkFilter_) {
+        auto filter = static_cast<Pipeline::WaterMarkFilter*>(waterMarkFilter_.get());
+        ret = filter->NotifyNextFilterEos();
+    }
     ret = pipeline_->Stop();
     if (ret == Status::OK) {
         OnStateChanged(StateId::INIT);
@@ -544,6 +628,7 @@ void HiRecorderImpl::ClearAllConfiguration()
     videoSourceId_ = 0;
     muxerFilter_ = nullptr;
     isWatermarkSupported_ = false;
+    hasWatermark_ = false;
     codecMimeType_ = "";
     if (audioEncFormat_) {
         audioEncFormat_->Clear();
@@ -565,6 +650,7 @@ void HiRecorderImpl::ClearAllConfiguration()
     RemoveFilterAction(audioCaptureFilter_);
     RemoveFilterAction(videoEncoderFilter_);
     RemoveFilterAction(videoCaptureFilter_);
+    RemoveFilterAction(waterMarkFilter_);
 
     for (auto iter : metaDataFilters_) {
         if (metaDataFormats_.find(iter.first) != metaDataFormats_.end()) {
@@ -676,42 +762,77 @@ Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
     Pipeline::StreamType outType)
 {
     MEDIA_LOG_I("OnCallback enter.");
-    
     FALSE_RETURN_V(cmd == Pipeline::FilterCallBackCommand::NEXT_FILTER_NEEDED, Status::OK);
-
     switch (outType) {
         case Pipeline::StreamType::STREAMTYPE_RAW_AUDIO:
-            audioEncoderFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::AudioEncoderFilter>
-                ("audioEncoderFilter", Pipeline::FilterType::FILTERTYPE_AENC);
-            FALSE_RETURN_V_MSG_E(audioEncoderFilter_ != nullptr,
-                Status::ERROR_NULL_POINTER, "audioEncoderFilter_ is null");
-            audioEncoderFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
-            audioEncoderFilter_->SetCodecFormat(audioEncFormat_);
-            audioEncoderFilter_->Init(recorderEventReceiver_, recorderCallback_);
-            FALSE_RETURN_V_MSG_E(audioEncoderFilter_->Configure(audioEncFormat_) == Status::OK,
-                Status::ERROR_INVALID_DATA, "audioEncoderFilter_ Configure fail");
-            pipeline_->LinkFilters(filter, {audioEncoderFilter_}, outType);
-            break;
+            return HandleRawAudioCallback(filter, outType);
         case Pipeline::StreamType::STREAMTYPE_ENCODED_AUDIO:
         case Pipeline::StreamType::STREAMTYPE_ENCODED_VIDEO:
-            if (muxerFilter_ == nullptr) {
-                muxerFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::MuxerFilter>
-                    ("muxerFilter", Pipeline::FilterType::FILTERTYPE_MUXER);
-                FALSE_RETURN_V_MSG_E(muxerFilter_ != nullptr,
-                    Status::ERROR_NULL_POINTER, "muxerFilter_ is null");
-                muxerFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
-                muxerFilter_->Init(recorderEventReceiver_, recorderCallback_);
-                muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_, outputFormatType_);
-                muxerFilter_->SetParameter(muxerFormat_);
-                muxerFilter_->SetUserMeta(userMeta_);
-                muxerFilter_->SetMaxDuration(maxDuration_);
-                CloseFd();
-            }
-            pipeline_->LinkFilters(filter, {muxerFilter_}, outType);
-            break;
+            return HandleEncodedAudioOrVideoCallback(filter, outType);
+        case Pipeline::StreamType::STREAMTYPE_WATERMARK:
+            return HandleWatermarkCallback(filter, outType);
         default:
             break;
     }
+    return Status::OK;
+}
+
+Status HiRecorderImpl::HandleRawAudioCallback(std::shared_ptr<Pipeline::Filter> filter, Pipeline::StreamType outType)
+{
+    MEDIA_LOG_I("HandleRawAudioCallback enter.");
+    audioEncoderFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::AudioEncoderFilter>
+        ("audioEncoderFilter", Pipeline::FilterType::FILTERTYPE_AENC);
+    FALSE_RETURN_V_MSG_E(audioEncoderFilter_ != nullptr,
+        Status::ERROR_NULL_POINTER, "audioEncoderFilter_ is null");
+    audioEncoderFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
+    audioEncoderFilter_->SetCodecFormat(audioEncFormat_);
+    audioEncoderFilter_->Init(recorderEventReceiver_, recorderCallback_);
+    FALSE_RETURN_V_MSG_E(audioEncoderFilter_->Configure(audioEncFormat_) == Status::OK,
+        Status::ERROR_INVALID_DATA, "audioEncoderFilter_ Configure fail");
+    pipeline_->LinkFilters(filter, {audioEncoderFilter_}, outType);
+    return Status::OK;
+}
+
+Status HiRecorderImpl::HandleEncodedAudioOrVideoCallback(std::shared_ptr<Pipeline::Filter> filter,
+    Pipeline::StreamType outType)
+{
+    MEDIA_LOG_I("HandleEncodedAudioOrVideoCallback enter.");
+    if (muxerFilter_ == nullptr) {
+        muxerFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::MuxerFilter>
+            ("muxerFilter", Pipeline::FilterType::FILTERTYPE_MUXER);
+        FALSE_RETURN_V_MSG_E(muxerFilter_ != nullptr,
+            Status::ERROR_NULL_POINTER, "muxerFilter_ is null");
+
+        muxerFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
+        muxerFilter_->Init(recorderEventReceiver_, recorderCallback_);
+        muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_, outputFormatType_);
+        muxerFilter_->SetParameter(muxerFormat_);
+        muxerFilter_->SetUserMeta(userMeta_);
+        muxerFilter_->SetMaxDuration(maxDuration_);
+        CloseFd();
+    }
+    pipeline_->LinkFilters(filter, {muxerFilter_}, outType);
+    return Status::OK;
+}
+
+Status HiRecorderImpl::HandleWatermarkCallback(std::shared_ptr<Pipeline::Filter> filter,
+    Pipeline::StreamType outType)
+{
+    MEDIA_LOG_I("HandleWatermarkCallback enter.");
+    videoSourceIsYuv_ = true;
+    if (!videoEncoderFilter_) {
+        videoEncoderFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::SurfaceEncoderFilter>
+            ("videoEncoderFilter", Pipeline::FilterType::FILTERTYPE_VENC);
+        FALSE_RETURN_V_MSG_E(videoEncoderFilter_ != nullptr, Status::ERROR_NULL_POINTER,
+            "create videoEncoderFilter failed");
+        videoEncoderFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
+        videoSourceIsRGBA_ = (source_ == VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA);
+        int32_t result = PrepareVideoEncoder();
+        FALSE_RETURN_V_MSG_E(result == ERR_NONE, static_cast<Status>(result),
+            "HandleWatermarkCallback PrepareVideoEncoder fail");
+    }
+
+    pipeline_->LinkFilters(filter, {videoEncoderFilter_}, outType);
     return Status::OK;
 }
 
@@ -1048,6 +1169,7 @@ bool HiRecorderImpl::CheckAudioSourceType(AudioSourceType sourceType)
 void HiRecorderImpl::ConfigureRotation(const RecorderParam &recParam)
 {
     RotationAngle rotationAngle = static_cast<const RotationAngle&>(recParam);
+    rotation_ = rotationAngle.rotation;
     if (rotationAngle.rotation == Plugins::VideoRotation::VIDEO_ROTATION_0) {
         muxerFormat_->Set<Tag::VIDEO_ROTATION>(Plugins::VideoRotation::VIDEO_ROTATION_0);
     } else if (rotationAngle.rotation == Plugins::VideoRotation::VIDEO_ROTATION_90) {
@@ -1261,6 +1383,25 @@ int32_t HiRecorderImpl::SetWillMuteWhenInterrupted(bool muteWhenInterrupted)
 {
     muteWhenInterrupted_ = muteWhenInterrupted;
     return static_cast<int32_t>(Status::OK);
+}
+
+int32_t HiRecorderImpl::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width, int32_t height)
+{
+    MEDIA_LOG_I("HiRecorderImpl::AddWatermark, width: %{public}d height: %{public}d", width, height);
+    FALSE_RETURN_V_MSG_E(watermarkBuffer != nullptr, static_cast<int32_t>(Status::ERROR_NULL_POINTER),
+        "watermarkBuffer is nullptr");
+    if (!waterMarkFilter_) {
+        waterMarkFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::WaterMarkFilter>(
+            "Watermark", Pipeline::FilterType::WATERMARK);
+        FALSE_RETURN_V_MSG_E(waterMarkFilter_ != nullptr, static_cast<int32_t>(Status::ERROR_NULL_POINTER),
+            "Watermark filter is nullptr");
+    }
+    auto filter = static_cast<Pipeline::WaterMarkFilter*>(waterMarkFilter_.get());
+    Status ret = filter->SetWatermark(watermarkBuffer, width, height);
+    if (ret == Status::OK) {
+        hasWatermark_ = true;
+    }
+    return static_cast<int32_t>(ret);
 }
 } // namespace MEDIA
 } // namespace OHOS

@@ -378,6 +378,13 @@ int32_t RecorderServerMock::GetStubFile()
     return MSERR_OK;
 }
 
+int32_t RecorderServerMock::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width, int32_t height,
+    int32_t &watermarkCount)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
+    return recorder_->AddWatermark(watermarkBuffer, width, height, watermarkCount);
+}
+
 uint64_t RecorderServerMock::GetPts()
 {
     struct timespec timestamp = {0, 0};

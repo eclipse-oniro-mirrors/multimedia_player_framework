@@ -222,6 +222,11 @@ public:
     */
     virtual int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer) = 0;
     /**
+     * Add watermark with pixel data and position
+    */
+    virtual int32_t AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width, int32_t height) = 0;
+
+    /**
      * Set user meta
     */
     virtual Status SetUserMeta(const std::shared_ptr<Meta> &userMeta) = 0;

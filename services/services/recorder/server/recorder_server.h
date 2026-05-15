@@ -123,6 +123,8 @@ public:
     int32_t GetMaxAmplitude(int32_t &amplitude) override;
     int32_t IsWatermarkSupported(bool &isWatermarkSupported) override;
     int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer) override;
+    int32_t AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width, int32_t height,
+        int32_t &watermarkCount) override;
     int32_t SetUserMeta(const std::shared_ptr<Meta> &userMeta) override;
     int32_t SetWillMuteWhenInterrupted(bool muteWhenInterrupted) override;
     int32_t TransmitQos(QOS::QosLevel level) override;
@@ -138,6 +140,7 @@ public:
     std::string GetVideoMime(VideoCodecFormat encoder);
     std::string GetAudioMime(AudioCodecFormat encoder);
     std::string GetContainerFormat(OutputFormatType format);
+    int32_t GetWatermarkCount(int32_t &watermarkCount);
 
     /* used for DFX events */
     uint64_t instanceId_ = 0;
@@ -210,6 +213,7 @@ private:
     PowerMgr::ShutdownClient &shutdownClient_ = PowerMgr::ShutdownClient::GetInstance();
     void UnregisterShutdownCallbackIfNeeded();
 #endif
+    int32_t watermarkCount_ = 0;
 };
 } // namespace Media
 } // namespace OHOS

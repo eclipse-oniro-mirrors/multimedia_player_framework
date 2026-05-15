@@ -83,6 +83,8 @@ public:
     int32_t GetMaxAmplitude(int32_t &amplitude) override;
     int32_t IsWatermarkSupported(bool &isWatermarkSupported) override;
     int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer) override;
+    int32_t AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width, int32_t height,
+        int32_t &watermarkCount) override;
     int32_t SetUserMeta(const std::shared_ptr<Meta> &userMeta) override;
     int32_t SetWillMuteWhenInterrupted(bool muteWhenInterrupted) override;
     int32_t TransmitQos(QOS::QosLevel level) override;
@@ -140,6 +142,7 @@ private:
     int32_t GetMaxAmplitude(MessageParcel &data, MessageParcel &reply);
     int32_t IsWatermarkSupported(MessageParcel &data, MessageParcel &reply);
     int32_t SetWatermark(MessageParcel &data, MessageParcel &reply);
+    int32_t AddWatermark(MessageParcel &data, MessageParcel &reply);
     int32_t SetUserMeta(MessageParcel &data, MessageParcel &reply);
     int32_t SetWillMuteWhenInterrupted(MessageParcel &data, MessageParcel &reply);
     int32_t TransmitQos(MessageParcel &data, MessageParcel &reply);
@@ -147,6 +150,7 @@ private:
     void FillRecFuncPart1();
     void FillRecFuncPart2();
     void FillRecFuncPart3();
+    void FillRecFuncPart4();
 
     std::shared_ptr<IRecorderService> recorderServer_ = nullptr;
     std::map<uint32_t, RecorderStubFunc> recFuncs_;

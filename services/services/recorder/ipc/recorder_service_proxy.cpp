@@ -1006,6 +1006,29 @@ int32_t RecorderServiceProxy::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkB
     return reply.ReadInt32();
 }
 
+int32_t RecorderServiceProxy::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width, int32_t height,
+    int32_t &watermarkCount)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+    CHECK_AND_RETURN_RET_LOG(watermarkBuffer->WriteToMessageParcel(data),
+        MSERR_INVALID_OPERATION, "Failed to write watermarkBuffer!");
+
+    token = data.WriteInt32(width) && data.WriteInt32(height);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
+    int error = Remote()->SendRequest(ADD_WATERMARK, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "AddWatermark failed, error: %{public}d", error);
+
+    watermarkCount = reply.ReadInt32();
+    int32_t ret = reply.ReadInt32();
+    return ret;
+}
+
 int32_t RecorderServiceProxy::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
 {
     (void)userMeta;

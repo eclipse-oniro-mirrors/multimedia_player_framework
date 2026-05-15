@@ -85,6 +85,7 @@ public:
     int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer);
     Status SetUserMeta(const std::shared_ptr<Meta> &userMeta);
     int32_t SetWillMuteWhenInterrupted(bool muteWhenInterrupted);
+    int32_t AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width, int32_t height);
 
 private:
     void ConfigureAudioCapture();
@@ -113,6 +114,7 @@ private:
     void ClearAllConfiguration();
     int32_t PrepareAudioCapture();
     int32_t PrepareAudioDataSource();
+    int32_t PrepareWatermark();
     int32_t PrepareVideoEncoder();
     int32_t PrepareMetaData();
     int32_t PrepareVideoCapture();
@@ -122,6 +124,22 @@ private:
     void UpdateVideoFirstFramePts(const Event &event);
     AudioRecorderChangeInfo ConvertCapturerChangeInfo(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo);
     void CloseFd();
+
+    // Helper methods for SetVideoSource
+    Status SetVideoSourceWithWatermark(VideoSourceType source);
+    Status SetVideoSourceSurfaceYuvOrRgba(VideoSourceType source);
+    Status SetVideoSourceSurfaceEs();
+    Status SetVideoEncoderSurface();
+
+    // Helper methods for GetSurface
+    sptr<Surface> GetSurfaceFromWaterMarkFilter();
+    sptr<Surface> GetSurfaceFromVideoEncoder();
+    sptr<Surface> GetSurfaceFromVideoCapture();
+
+    // Helper methods for OnCallback
+    Status HandleRawAudioCallback(std::shared_ptr<Pipeline::Filter> filter, Pipeline::StreamType outType);
+    Status HandleEncodedAudioOrVideoCallback(std::shared_ptr<Pipeline::Filter> filter, Pipeline::StreamType outType);
+    Status HandleWatermarkCallback(std::shared_ptr<Pipeline::Filter> filter, Pipeline::StreamType outType);
     std::atomic<uint32_t> audioCount_{0};
     std::atomic<uint32_t> videoCount_{0};
     std::atomic<int32_t> audioSourceId_{0};
@@ -135,6 +153,7 @@ private:
     std::shared_ptr<Pipeline::AudioCaptureFilter> audioCaptureFilter_;
     std::shared_ptr<Pipeline::AudioDataSourceFilter> audioDataSourceFilter_;
     std::shared_ptr<Pipeline::AudioEncoderFilter> audioEncoderFilter_;
+    std::shared_ptr<Pipeline::Filter> waterMarkFilter_;
     std::shared_ptr<Pipeline::SurfaceEncoderFilter> videoEncoderFilter_;
     std::shared_ptr<Pipeline::VideoCaptureFilter> videoCaptureFilter_;
     std::shared_ptr<Pipeline::MuxerFilter> muxerFilter_;
@@ -162,6 +181,7 @@ private:
     bool videoSourceIsYuv_ = false;
     bool videoSourceIsRGBA_ = false;
     bool isWatermarkSupported_ = false;
+    bool hasWatermark_ = false;
     bool enableStableQualityMode_ = false;
     bool enableBFrame_ = false;
 
@@ -181,6 +201,9 @@ private:
     std::string codecMimeType_ = "";
     uint64_t instanceId_ = 0;
     bool muteWhenInterrupted_ = false;
+    std::shared_ptr<AVBuffer> buffer_ = nullptr;
+    VideoSourceType source_;
+    int32_t rotation_ = 0;
 };
 } // namespace MEDIA
 } // namespace OHOS

@@ -63,6 +63,7 @@ namespace AVRecordergOpt {
     const std::string IS_WATERMARK_SUPPORTED = "IsWatermarkSupported";
     const std::string SET_WATERMARK = "SetWatermark";
     const std::string SET_METADATA = "SetMetadata";
+    const std::string ADD_WATERMARK = "AddWatermark";
 }
 
 constexpr int32_t AVRECORDER_DEFAULT_AUDIO_BIT_RATE = 48000;
@@ -80,7 +81,8 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::RELEASE,
         AVRecordergOpt::GET_AV_RECORDER_PROFILE,
         AVRecordergOpt::SET_AV_RECORDER_CONFIG,
-        AVRecordergOpt::GET_ENCODER_INFO
+        AVRecordergOpt::GET_ENCODER_INFO,
+        AVRecordergOpt::ADD_WATERMARK
     }},
     {AVRecorderState::STATE_PREPARED, {
         AVRecordergOpt::SET_ORIENTATION_HINT,
@@ -152,6 +154,7 @@ struct AVRecorderAsyncContext;
 struct WatermarkConfig;
 struct AVRecorderConfig;
 struct AVRecorderProfile;
+struct WatermarkConfiguration;
 
 class AVRecorderImpl {
 public:
@@ -220,6 +223,15 @@ public:
     std::shared_ptr<TaskHandler<RetInfo>> SetWatermarkTask(const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     int32_t SetWatermark(std::shared_ptr<PixelMap> &pixelMap,
         std::shared_ptr<WatermarkConfig> &watermarkConfig);
+    void AddWatermarkSync(::ohos::multimedia::image::image::weak::PixelMap watermark,
+        ::ohos::multimedia::media::WatermarkConfiguration const& config);
+    std::shared_ptr<TaskHandler<RetInfo>> AddWatermarkTask(const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
+    int32_t AddWatermark(std::shared_ptr<PixelMap> &pixelMap,
+        std::shared_ptr<WatermarkConfiguration> &watermarkConfig, int32_t &watermarkCount);
+    int32_t GetAddWatermarkParameter(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
+        ::ohos::multimedia::image::image::weak::PixelMap watermark,
+        ::ohos::multimedia::media::WatermarkConfiguration const& config);
+    
     int32_t ConfigAVBufferMeta(std::shared_ptr<PixelMap> &pixelMap,
         std::shared_ptr<WatermarkConfig> &watermarkConfig, std::shared_ptr<Meta> &meta);
     int32_t GetWatermarkParameter(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
@@ -332,9 +344,11 @@ struct AVRecorderAsyncContext {
     std::vector<EncoderCapabilityData> encoderInfo_;
     OHOS::Media::MetaSourceType metaType_ = OHOS::Media::MetaSourceType::VIDEO_META_SOURCE_INVALID;
     std::shared_ptr<WatermarkConfig> watermarkConfig_ = nullptr;
+    std::shared_ptr<WatermarkConfiguration> watermarkConfiguration_ = nullptr;
     std::shared_ptr<PixelMap> pixelMap_ = nullptr;
     bool isWatermarkSupported_ = false;
     std::shared_ptr<Meta> metadata_ = nullptr;
+    int32_t addWatermarkCount_ = 0;
 };
 
 struct AVRecorderProfile {
@@ -374,6 +388,13 @@ struct AVRecorderConfig {
 struct WatermarkConfig {
     int32_t top = -1; // offset of the watermark to the top line of pixel
     int32_t left = -1; // offset of the watermark to the left line if pixel
+};
+
+struct WatermarkConfiguration {
+    int32_t top = -1; // offset of the watermark to the top line of pixel
+    int32_t left = -1; // offset of the watermark to the left line if pixel
+    int32_t width = 0; // target width of the watermark in pixel
+    int32_t height = 0; // target height of the watermark in pixel
 };
 } // namespace ANI::Media
 #endif // AVRECORDER_TAIHE_H

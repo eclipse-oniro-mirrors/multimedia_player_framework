@@ -91,6 +91,7 @@ napi_value AVRecorderNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getAudioCapturerMaxAmplitude", JsGetAudioCapturerMaxAmplitude),
         DECLARE_NAPI_FUNCTION("getAvailableEncoder", JsGetAvailableEncoder),
         DECLARE_NAPI_FUNCTION("setWatermark", JsSetWatermark),
+        DECLARE_NAPI_FUNCTION("addWatermark", JsAddWatermark),
         DECLARE_NAPI_FUNCTION("setMetadata", JsSetMetadata),
         DECLARE_NAPI_FUNCTION("isWatermarkSupported", JsIsWatermarkSupported),
         DECLARE_NAPI_FUNCTION("setWillMuteWhenInterrupted", JsSetWillMuteWhenInterrupted),
@@ -402,6 +403,169 @@ napi_value AVRecorderNapi::JsSetWatermark(napi_env env, napi_callback_info info)
 
     MEDIA_LOGI("Js %{public}s End", opt.c_str());
     return result;
+}
+
+napi_value AVRecorderNapi::JsAddWatermark(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVRecorder::JsAddWatermark");
+    const std::string &opt = AVRecordergOpt::ADD_WATERMARK;
+    MEDIA_LOGI("Js %{public}s Start", opt.c_str());
+
+    const int32_t maxParam = 2; // pixelMap + WatermarkConfig
+    size_t argCount = maxParam;
+    napi_value args[maxParam] = { nullptr };
+
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<AVRecorderAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+    asyncCtx->napi = AVRecorderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi->taskQue_ != nullptr, result, "taskQue is nullptr!");
+    
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
+    
+    if (asyncCtx->napi->CheckStateMachine(opt) == MSERR_OK) {
+        if (asyncCtx->napi->GetWatermarkParam(asyncCtx, env, args[0], args[1]) == MSERR_OK) {
+            asyncCtx->task_ = AVRecorderNapi::AddWatermarkTask(asyncCtx);
+            (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
+            asyncCtx->opt_ = opt;
+        }
+    } else {
+        asyncCtx->AVRecorderSignError(MSERR_INVALID_OPERATION, opt, "");
+    }
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        AVRecorderAsyncContext* asyncCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
+        if (asyncCtx->task_) {
+            auto result = asyncCtx->task_->GetResult();
+            if (result.Value().first != MSERR_EXT_API9_OK) {
+                asyncCtx->SignError(result.Value().first, result.Value().second);
+            }
+
+            if ((result.Value().first == MSERR_EXT_API9_OK) &&
+                (asyncCtx->opt_ == AVRecordergOpt::ADD_WATERMARK)) {
+                asyncCtx->JsResult = std::make_unique<MediaJsResultInt>(asyncCtx->addWatermarkCount_);
+            }
+        }
+        MEDIA_LOGI("The js thread of AddWatermark finishes execution and returns");
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
+    asyncCtx.release();
+    
+    MEDIA_LOGI("Js %{public}s End", opt.c_str());
+    return result;
+}
+
+int32_t AVRecorderNapi::GetWatermarkParam(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
+    napi_env env, napi_value watermark, napi_value watermarkConfig)
+{
+    int32_t ret = GetWatermark(asyncCtx, env, watermark);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetWatermark");
+    ret = GetWatermarkConfiguration(asyncCtx, env, watermarkConfig);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetWatermarkConfig");
+    return MSERR_OK;
+}
+
+std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::AddWatermarkTask(
+    const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
+{
+    return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, &pixelMap = asyncCtx->pixelMap_,
+        &watermarkConfig = asyncCtx->watermarkConfiguration_, &watermarkCount = asyncCtx->addWatermarkCount_]() {
+        const std::string &option = AVRecordergOpt::ADD_WATERMARK;
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+        CHECK_AND_RETURN_RET(napi != nullptr, GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
+        CHECK_AND_RETURN_RET(napi->CheckStateMachine(option) == MSERR_OK,
+            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
+        int32_t ret = napi->AddWatermark(pixelMap, watermarkConfig, watermarkCount);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, GetRetInfo(ret, "AddWatermarkTask", ""),
+            "AddWatermarkTask failed");
+
+        MEDIA_LOGI("%{public}s End", option.c_str());
+        return RetInfo(MSERR_EXT_API9_OK, "");
+    });
+}
+
+int32_t AVRecorderNapi::GetWatermarkConfiguration(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
+    napi_env env, napi_value args)
+{
+    CHECK_AND_RETURN_RET(CommonNapi::CheckValueType(env, args, napi_object),
+        (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetWatermarkConfiguration", "WatermarkConfig"),
+        MSERR_INVALID_VAL));
+
+    asyncCtx->watermarkConfiguration_ = std::make_shared<WatermarkConfiguration>();
+    CHECK_AND_RETURN_RET(asyncCtx->watermarkConfiguration_,
+        (asyncCtx->AVRecorderSignError(MSERR_PARAMETER_VERIFICATION_FAILED, "GetWatermarkConfiguration",
+        "WatermarkConfig"), MSERR_PARAMETER_VERIFICATION_FAILED));
+
+    std::shared_ptr<WatermarkConfiguration> config = asyncCtx->watermarkConfiguration_;
+    bool ret = CommonNapi::GetPropertyInt32(env, args, "top", config->top);
+    CHECK_AND_RETURN_RET(ret,
+        (asyncCtx->AVRecorderSignError(MSERR_PARAMETER_VERIFICATION_FAILED, "GetWatermarkConfiguration", "top",
+        "config top cannot be null or less than zero"), MSERR_PARAMETER_VERIFICATION_FAILED));
+
+    ret = CommonNapi::GetPropertyInt32(env, args, "left", config->left);
+    CHECK_AND_RETURN_RET(ret,
+        (asyncCtx->AVRecorderSignError(MSERR_PARAMETER_VERIFICATION_FAILED, "GetWatermarkConfiguration", "left",
+        "config left cannot be null or less than zero"), MSERR_PARAMETER_VERIFICATION_FAILED));
+
+    // width和height是可选参数，此处对-1进行判断，但会导致默认缺省值失效
+    if (CommonNapi::CheckhasNamedProperty(env, args, "width")) {
+        ret = CommonNapi::GetPropertyInt32(env, args, "width", config->width);
+        CHECK_AND_RETURN_RET(ret && config->width > 0 && config->width <= WATERMARK_WIDTH_HEIGHT_MAX,
+            (asyncCtx->AVRecorderSignError(MSERR_PARAMETER_VERIFICATION_FAILED, "GetWatermarkConfiguration", "width",
+            "config width must be greater than zero and less than or equal to 4096"),
+            MSERR_PARAMETER_VERIFICATION_FAILED));
+    }
+
+    if (CommonNapi::CheckhasNamedProperty(env, args, "height")) {
+        ret = CommonNapi::GetPropertyInt32(env, args, "height", config->height);
+        CHECK_AND_RETURN_RET(ret && config->height > 0 && config->height <= WATERMARK_WIDTH_HEIGHT_MAX,
+            (asyncCtx->AVRecorderSignError(MSERR_PARAMETER_VERIFICATION_FAILED, "GetWatermarkConfiguration", "height",
+            "config height must be greater than zero and less than or equal to 4096"),
+            MSERR_PARAMETER_VERIFICATION_FAILED));
+    }
+
+    return MSERR_OK;
+}
+
+int32_t AVRecorderNapi::AddWatermark(std::shared_ptr<PixelMap> &pixelMap,
+    std::shared_ptr<WatermarkConfiguration> &watermarkConfig, int32_t &watermarkCount)
+{
+    MEDIA_LOGI("pixelMap Width: %{public}d, height: %{public}d, adjust Width:  %{public}d, adjust height: %{public}d,"
+        "pixelformat %{public}d, RowStride %{public}d", pixelMap->GetWidth(), pixelMap->GetHeight(),
+        watermarkConfig->width, watermarkConfig->height, pixelMap->GetPixelFormat(), pixelMap->GetRowStride());
+    CHECK_AND_RETURN_RET_LOG(pixelMap->GetPixelFormat() == PixelFormat::RGBA_8888, MSERR_INVALID_VAL,
+        "Invalid pixel format");
+
+    int32_t dataSize = pixelMap->GetHeight() * pixelMap->GetRowStride();
+    CHECK_AND_RETURN_RET_LOG(dataSize > 0 && dataSize <= MAX_WATERMARK_SIZE, MSERR_INVALID_VAL, "Invalid data size");
+    std::vector<uint8_t> dataBuffer(dataSize);
+    errno_t err = memcpy_s(dataBuffer.data(), dataSize, pixelMap->GetPixels(), dataSize);
+    CHECK_AND_RETURN_RET_LOG(err == 0, MSERR_INVALID_VAL, "memcpy_s failed with error: %{public}d", err);
+
+    auto allocator = AVAllocatorFactory::CreateSharedAllocator(MemoryFlag::MEMORY_READ_WRITE);
+    CHECK_AND_RETURN_RET_LOG(allocator != nullptr, MSERR_NO_MEMORY, "Failed to create allocator");
+
+    auto buffer = AVBuffer::CreateAVBuffer(allocator, dataSize);
+    CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_NO_MEMORY, "Failed to create AVBuffer");
+
+    CHECK_AND_RETURN_RET_LOG(buffer->memory_ != nullptr, MSERR_INVALID_VAL, "AVBuffer memory is null");
+    CHECK_AND_RETURN_RET_LOG(buffer->meta_ != nullptr, MSERR_INVALID_VAL, "AVBuffer meta is null");
+
+    bool writeRet = buffer->memory_->Write(dataBuffer.data(), dataSize, 0);
+    CHECK_AND_RETURN_RET_LOG(writeRet, MSERR_INVALID_VAL, "Failed to write data to AVBuffer");
+
+    buffer->meta_->Set<Tag::VIDEO_COORDINATE_X>(watermarkConfig->left);
+    buffer->meta_->Set<Tag::VIDEO_COORDINATE_Y>(watermarkConfig->top);
+    buffer->meta_->Set<Tag::VIDEO_COORDINATE_W>(pixelMap->GetWidth());
+    buffer->meta_->Set<Tag::VIDEO_COORDINATE_H>(pixelMap->GetHeight());
+    buffer->meta_->Set<Tag::VIDEO_STRIDE>(pixelMap->GetRowStride());
+    return recorder_->AddWatermark(buffer, watermarkConfig->width, watermarkConfig->height, watermarkCount);
 }
 
 napi_value AVRecorderNapi::JsSetMetadata(napi_env env, napi_callback_info info)
