@@ -55,11 +55,11 @@ enum AudioCapturerWrapperState : int32_t {
 
 class AudioCapturerWrapper {
 public:
-    explicit AudioCapturerWrapper(AudioCaptureInfo &audioInfo,
-        std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb, std::string &&name,
-        ScreenCaptureContentFilter filter)
-        : screenCaptureCb_(screenCaptureCb), audioInfo_(audioInfo), threadName_(std::move(name)),
-        contentFilter_(filter) {}
+    explicit AudioCapturerWrapper(AudioCaptureInfo &audioInfo, std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb,
+        std::string &&name, const ScreenCaptureContentFilter &filter)
+        : screenCaptureCb_(screenCaptureCb), audioInfo_(audioInfo), threadName_(std::move(name)), contentFilter_(filter)
+    {
+    }
     virtual ~AudioCapturerWrapper();
     int32_t Start(const OHOS::AudioStandard::AppInfo &appInfo);
     int32_t Stop();
@@ -141,7 +141,7 @@ class MicAudioCapturerWrapper : public AudioCapturerWrapper {
 public:
     explicit MicAudioCapturerWrapper(AudioCaptureInfo &audioInfo,
         std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb, std::string &&name,
-        ScreenCaptureContentFilter filter)
+        const ScreenCaptureContentFilter &filter)
         : AudioCapturerWrapper(audioInfo, screenCaptureCb, std::move(name),
         filter) {}
     ~MicAudioCapturerWrapper() override {}
