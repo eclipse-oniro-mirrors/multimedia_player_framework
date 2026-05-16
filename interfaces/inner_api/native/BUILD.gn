@@ -150,6 +150,13 @@ ohos_shared_library("media_client") {
       "$MEDIA_ROOT_DIR/services/services/media_source/downloaded_cache_loader/file_cache_manager.cpp",
       "$MEDIA_ROOT_DIR/services/services/media_source/downloaded_cache_loader/path_validator.cpp",
       "$MEDIA_ROOT_DIR/services/services/media_source/downloaded_cache_loader/sha256_hasher.cpp",
+      "$MEDIA_ROOT_DIR/services/services/media_source/net_downloader/downloader_impl.cpp",
+      "$MEDIA_ROOT_DIR/services/services/media_source/net_downloader/download_task.cpp",
+      "$MEDIA_ROOT_DIR/services/services/media_source/net_downloader/message_queue.cpp",
+      "$MEDIA_ROOT_DIR/services/services/media_source/net_downloader/download_network_client.cpp",
+      "$MEDIA_ROOT_DIR/services/services/media_source/net_downloader/network_client_agent.cpp",
+      "$MEDIA_ROOT_DIR/services/services/media_source/net_downloader/downloader_factory.cpp",
+      "$MEDIA_ROOT_DIR/services/services/media_source/net_downloader/network_monitor.cpp",
     ]
   }
   if (player_framework_support_recorder) {
