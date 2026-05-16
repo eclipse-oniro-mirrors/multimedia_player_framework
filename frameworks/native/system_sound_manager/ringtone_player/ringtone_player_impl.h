@@ -34,9 +34,11 @@ class RingtonePlayerInterruptCallback;
 class RingtonePlayerImpl : public RingtonePlayer {
 public:
     RingtonePlayerImpl(const std::shared_ptr<AbilityRuntime::Context> &context,
-        SystemSoundManagerImpl &sysSoundMgr, RingtoneType type);
+        SystemSoundManagerImpl &sysSoundMgr, RingtoneType type,
+        AudioStandard::StreamUsage usage = AudioStandard::StreamUsage::STREAM_USAGE_VOICE_RINGTONE);
     RingtonePlayerImpl(const std::shared_ptr<AbilityRuntime::Context> &context,
-        SystemSoundManagerImpl &sysSoundMgr, const RingtoneType type, std::string &ringtoneUri);
+        SystemSoundManagerImpl &sysSoundMgr, const RingtoneType type, std::string &ringtoneUri,
+        AudioStandard::StreamUsage usage = AudioStandard::StreamUsage::STREAM_USAGE_VOICE_RINGTONE);
     RingtonePlayerImpl(const std::shared_ptr<AbilityRuntime::Context> &context,
         SystemSoundManagerImpl &sysSoundMgr, const RingtoneType type, MockToneHapticsSettings &mockSettings);
     ~RingtonePlayerImpl();
@@ -57,7 +59,8 @@ public:
     int32_t SetRingtoneHapticsRamp(int32_t duration, float startIntensity, float endIntensity) override;
 
 private:
-    void InitPlayer(std::string &audioUri, ToneHapticsSettings &settings, AudioHapticPlayerOptions options);
+    void InitPlayer(std::string &audioUri, ToneHapticsSettings &settings, AudioHapticPlayerOptions options,
+        AudioStandard::StreamUsage usage = AudioStandard::StreamUsage::STREAM_USAGE_VOICE_RINGTONE);
     bool NeedToVibrate(const ToneHapticsSettings &settings);
     int32_t StartForNoRing(const HapticStartupMode startupMode = HapticStartupMode::DEFAULT);
     std::string GetNewHapticUriForAudioUri(const std::string &audioUri, const std::string &ringtonePath,
@@ -91,6 +94,7 @@ private:
     AudioStandard::AudioRendererParams rendererParams_ {};
     ToneHapticsSettings mockToneHapticsSettings_;
     bool isMockMode_ = false;
+    AudioStandard::StreamUsage streamUsage_;
 
     std::mutex playerMutex_;
 };

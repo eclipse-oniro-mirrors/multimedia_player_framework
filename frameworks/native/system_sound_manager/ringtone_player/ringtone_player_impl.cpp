@@ -46,12 +46,13 @@ const std::string NON_SYNC_HAPTICS_PATH = "resource/media/haptics/standard/non-s
 const std::string FDHEAD = "fd://";
 
 RingtonePlayerImpl::RingtonePlayerImpl(const shared_ptr<Context> &context,
-    SystemSoundManagerImpl &sysSoundMgr, RingtoneType type)
+    SystemSoundManagerImpl &sysSoundMgr, RingtoneType type, AudioStandard::StreamUsage usage)
     : volume_(HIGH_VOL),
       loop_(false),
       context_(context),
       systemSoundMgr_(sysSoundMgr),
-      type_(type)
+      type_(type),
+      streamUsage_(usage)
 {
     if (!InitDatabaseTool()) {
         MEDIA_LOGE("Failed to init DatabaseTool!");
@@ -64,18 +65,20 @@ RingtonePlayerImpl::RingtonePlayerImpl(const shared_ptr<Context> &context,
     std::string ringtoneUri = systemSoundMgr_.GetRingtoneUri(databaseTool_, type_);
     AudioHapticPlayerOptions options = {false, false};
     ToneHapticsSettings settings = GetHapticSettings(ringtoneUri, options.muteHaptics);
-    InitPlayer(ringtoneUri, settings, options);
+    InitPlayer(ringtoneUri, settings, options, streamUsage_);
     ReleaseDatabaseTool();
 }
 
 RingtonePlayerImpl::RingtonePlayerImpl(const shared_ptr<Context> &context,
-    SystemSoundManagerImpl &sysSoundMgr, const RingtoneType type, string &ringtoneUri)
+    SystemSoundManagerImpl &sysSoundMgr, const RingtoneType type, string &ringtoneUri,
+    AudioStandard::StreamUsage usage)
     : volume_(HIGH_VOL),
       loop_(false),
       context_(context),
       systemSoundMgr_(sysSoundMgr),
       type_(type),
-      specifyRingtoneUri_(ringtoneUri)
+      specifyRingtoneUri_(ringtoneUri),
+      streamUsage_(usage)
 {
     if (!InitDatabaseTool()) {
         MEDIA_LOGE("Failed to init DatabaseTool!");
@@ -87,7 +90,7 @@ RingtonePlayerImpl::RingtonePlayerImpl(const shared_ptr<Context> &context,
 
     AudioHapticPlayerOptions options = {false, false};
     ToneHapticsSettings settings = GetHapticSettings(specifyRingtoneUri_, options.muteHaptics);
-    InitPlayer(specifyRingtoneUri_, settings, options);
+    InitPlayer(specifyRingtoneUri_, settings, options, streamUsage_);
     ReleaseDatabaseTool();
 }
 
@@ -111,7 +114,8 @@ RingtonePlayerImpl::RingtonePlayerImpl(const shared_ptr<Context> &context,
     CHECK_AND_RETURN_LOG(audioHapticManager_ != nullptr, "Failed to get audio haptic manager");
 
     AudioHapticPlayerOptions options = {false, false};
-    InitPlayer(specifyRingtoneUri_, mockToneHapticsSettings_, options);
+    InitPlayer(specifyRingtoneUri_, mockToneHapticsSettings_, options,
+        AudioStandard::StreamUsage::STREAM_USAGE_VOICE_RINGTONE);
     ReleaseDatabaseTool();
 }
 
@@ -308,7 +312,7 @@ int32_t RingtonePlayerImpl::RegisterSource(const std::string &audioUri, const st
 }
 
 void RingtonePlayerImpl::InitPlayer(std::string &audioUri, ToneHapticsSettings &settings,
-    AudioHapticPlayerOptions options)
+    AudioHapticPlayerOptions options, AudioStandard::StreamUsage usage)
 {
     MEDIA_LOGI("InitPlayer: ToneUri:%{public}s, hapticsUri:%{public}s, mode:%{public}d.",
         audioUri.c_str(), settings.hapticsUri.c_str(), settings.mode);
@@ -321,7 +325,7 @@ void RingtonePlayerImpl::InitPlayer(std::string &audioUri, ToneHapticsSettings &
     sourceId_ = RegisterSource(audioUri, settings.hapticsUri);
     CHECK_AND_RETURN_LOG(sourceId_ != -1, "Failed to register source for audio haptic manager");
     (void)audioHapticManager_->SetAudioLatencyMode(sourceId_, AUDIO_LATENCY_MODE_NORMAL);
-    (void)audioHapticManager_->SetStreamUsage(sourceId_, AudioStandard::StreamUsage::STREAM_USAGE_VOICE_RINGTONE);
+    (void)audioHapticManager_->SetStreamUsage(sourceId_, usage);
 
     if (isMockMode_) {
         (void)audioHapticManager_->SetMockMode(sourceId_, true);
@@ -426,7 +430,7 @@ int32_t RingtonePlayerImpl::Start(const HapticStartupMode startupMode)
     if (ringtoneUri != configuredUri_ || settings.hapticsUri != configuredHaptcisSettings_.hapticsUri ||
         settings.mode != configuredHaptcisSettings_.mode) {
         MEDIA_LOGI("Ringtone uri changed. Reload player");
-        InitPlayer(ringtoneUri, settings, options);
+        InitPlayer(ringtoneUri, settings, options, streamUsage_);
     }
     ReleaseDatabaseTool();
     int32_t ret = player_->Start();
@@ -448,7 +452,7 @@ int32_t RingtonePlayerImpl::StartForNoRing(const HapticStartupMode startupMode)
     if (ringtoneUri != configuredUri_ || settings.hapticsUri != configuredHaptcisSettings_.hapticsUri ||
         settings.mode != configuredHaptcisSettings_.mode) {
         MEDIA_LOGI("Ringtone uri changed. Reload player");
-        InitPlayer(ringtoneUri, settings, options);
+        InitPlayer(ringtoneUri, settings, options, streamUsage_);
     }
     // Start an empty audio stream for NoRing.
     rendererParams_.sampleFormat = AudioStandard::SAMPLE_S24LE;

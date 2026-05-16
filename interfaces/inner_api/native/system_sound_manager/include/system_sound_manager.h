@@ -116,7 +116,8 @@ public:
      * @return Returns SpecificRingTonePlayer.
      */
     virtual std::shared_ptr<RingtonePlayer> GetSpecificRingTonePlayer(const std::shared_ptr<AbilityRuntime::Context>
-        &context, const RingtoneType ringtoneType, std::string &ringtoneUri) = 0;
+        &context, const RingtoneType ringtoneType, std::string &ringtoneUri,
+        AudioStandard::StreamUsage usage = AudioStandard::StreamUsage::STREAM_USAGE_VOICE_RINGTONE) = 0;
 
     /**
      * @brief API used for setting the ringtone uri.

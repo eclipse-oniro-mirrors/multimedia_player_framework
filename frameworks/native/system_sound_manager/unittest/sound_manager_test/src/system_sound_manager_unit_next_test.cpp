@@ -365,6 +365,27 @@ HWTEST(SystemSoundManagerUnitNextTest, GetSpecificRingTonePlayer_001, TestSize.L
 }
 
 /**
+ * @tc.name  : GetSpecificRingTonePlayer_WithStreamUsage
+ * @tc.number: GetSpecificRingTonePlayer_002
+ * @tc.desc  : Test GetSpecificRingTonePlayer with custom StreamUsage
+ */
+HWTEST(SystemSoundManagerUnitNextTest, GetSpecificRingTonePlayer_002, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(systemSoundManagerImpl_, nullptr);
+
+    std::shared_ptr<AbilityRuntime::Context> context = std::make_shared<ContextImpl>();
+    RingtoneType ringtoneType = RINGTONE_TYPE_SIM_CARD_0;
+    std::string ringtoneUri = "valid_uri";
+    AudioStandard::StreamUsage usage = AudioStandard::StreamUsage::STREAM_USAGE_NOTIFICATION;
+    std::shared_ptr<RingtonePlayer> result = systemSoundManagerImpl_->GetSpecificRingTonePlayer(context,
+        ringtoneType, ringtoneUri, usage);
+    EXPECT_NE(result, nullptr);
+}
+
+/**
  * @tc.name  : SetRingtoneUri_NoRingSound
  * @tc.number: SetRingtoneUri_001
  * @tc.desc  : Test SetRingtoneUri when uri is NO_RING_SOUND
