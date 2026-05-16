@@ -45,6 +45,9 @@ MediaSourceLoadingRequestStub::MediaSourceLoadingRequestStub(
 
 MediaSourceLoadingRequestStub::~MediaSourceLoadingRequestStub()
 {
+    if (entireDumpFile_) {
+        fclose(entireDumpFile_);
+    }
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
