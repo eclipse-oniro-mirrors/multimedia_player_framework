@@ -2722,7 +2722,7 @@ void HiPlayerImpl::OnEvent(const Event &event)
         }
         case EventType::EVENT_ERROR: {
             if ((curState_ != PlayerStateId::IDLE) && (curState_ != PlayerStateId::INIT) &&
-            (curState_ != PlayerStateId::PREPARING)) {
+                (curState_ != PlayerStateId::PREPARING)) {
                 PlayerErrorType errorType = GetPlayerErrorType(event);
                 SetMediaKitReport("avplayer error: " + std::to_string(errorType));
             }
