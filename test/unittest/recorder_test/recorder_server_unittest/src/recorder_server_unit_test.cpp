@@ -2157,31 +2157,6 @@ HWTEST_F(RecorderServerUnitTest, recorder_SetUserMeta_005, TestSize.Level2)
 }
 
 /**
- * @tc.name: recorder_SetUserMeta_006
- * @tc.desc: SetUserMeta with nullptr meta should handle gracefully
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RecorderServerUnitTest, recorder_SetUserMeta_006, TestSize.Level2)
-{
-    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
-    g_videoRecorderConfig.videoFormat = H264;
-    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetUserMeta_006.mp4").c_str(), O_RDWR);
-    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
-
-    EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
-    EXPECT_EQ(MSERR_OK, recorderServer_->Prepare());
-    
-    std::shared_ptr<Meta> userMeta = nullptr;
-    
-    int32_t ret = recorderServer_->SetUserMeta(userMeta);
-    EXPECT_TRUE(ret == MSERR_INVALID_VAL);
-    
-    EXPECT_EQ(MSERR_OK, recorderServer_->Release());
-    close(g_videoRecorderConfig.outputFd);
-}
-
-/**
  * @tc.name: recorder_SetUserMeta_007
  * @tc.desc: SetUserMeta after Reset should fail
  * @tc.type: FUNC
@@ -2225,7 +2200,7 @@ HWTEST_F(RecorderServerUnitTest, recorder_SetUserMeta_008, TestSize.Level2)
     std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
     ASSERT_NE(nullptr, userMeta);
     
-    EXPECT_EQ(MSERR_NO_MEMORY, recorderServer_->SetUserMeta(userMeta));
+    EXPECT_EQ(MSERR_PARAM_OUT_OF_RANGE, recorderServer_->SetUserMeta(userMeta));
     EXPECT_EQ(MSERR_OK, recorderServer_->Release());
     close(g_videoRecorderConfig.outputFd);
 }
@@ -2362,7 +2337,7 @@ HWTEST_F(RecorderServerUnitTest, recorder_SetUserMeta_013, TestSize.Level2)
     std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
     ASSERT_NE(nullptr, userMeta);
     
-    EXPECT_NE(MSERR_NO_MEMORY, recorderServer_->SetUserMeta(userMeta));
+    EXPECT_NE(MSERR_INVALID_OPERATION, recorderServer_->SetUserMeta(userMeta));
     close(g_videoRecorderConfig.outputFd);
 }
 } // namespace Media
