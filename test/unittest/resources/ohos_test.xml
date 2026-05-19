@@ -332,17 +332,6 @@
             <option name="shell" value="touch /data/test/media/recorder_SetUserMeta_011.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_SetUserMeta_012.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_SetUserMeta_013.mp4"/>
-            <option name="shell" value="touch /data/test/media/recorder_UnregisterShutdownCallbackIfNeeded_001.mp4"/>
-            <option name="shell" value="touch /data/test/media/recorder_UnregisterShutdownCallbackIfNeeded_002.mp4"/>
-            <option name="shell" value="touch /data/test/media/recorder_UnregisterShutdownCallbackIfNeeded_003.mp4"/>
-            <option name="shell" value="touch /data/test/media/recorder_UnregisterShutdownCallbackIfNeeded_004.mp4"/>
-            <option name="shell" value="touch /data/test/media/recorder_UnregisterShutdownCallbackIfNeeded_005.mp4"/>
-            <option name="shell" value="touch /data/test/media/recorder_UnregisterShutdownCallbackIfNeeded_006.mp4"/>
-            <option name="shell" value="touch /data/test/media/recorder_UnregisterShutdownCallbackIfNeeded_007.mp4"/>
-            <option name="shell" value="touch /data/test/media/recorder_UnregisterShutdownCallbackIfNeeded_008.mp4"/>
-            <option name="shell" value="touch /data/test/media/recorder_UnregisterShutdownCallbackIfNeeded_009.mp4"/>
-            <option name="shell" value="touch /data/test/media/recorder_UnregisterShutdownCallbackIfNeeded_0010.m4a"/>
-
         </preparer>
     </target>
     <target name="screen_capture_native_unit_test">
