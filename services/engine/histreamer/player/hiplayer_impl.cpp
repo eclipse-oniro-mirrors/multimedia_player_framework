@@ -2593,7 +2593,8 @@ void HiPlayerImpl::SetMediaKitReport(const std::string &apiCall)
     std::string videoMime = "";
     std::string audioMime = "";
     std::string subtitleMime = "";
-    if (demuxer_ != nullptr) {
+    if (demuxer_ != nullptr && curState_ != PlayerStateId::IDLE && curState_ != PlayerStateId::INIT &&
+ 	    curState_ != PlayerStateId::PREPARING) {
         std::string mime;
         std::vector<std::shared_ptr<Meta>> streamMetaInfo = demuxer_->GetStreamMetaInfo();
         for (size_t trackIndex = 0; trackIndex < streamMetaInfo.size(); trackIndex++) {
@@ -2721,11 +2722,6 @@ void HiPlayerImpl::OnEvent(const Event &event)
             break;
         }
         case EventType::EVENT_ERROR: {
-            if ((curState_ != PlayerStateId::IDLE) && (curState_ != PlayerStateId::INIT) &&
-                (curState_ != PlayerStateId::PREPARING)) {
-                PlayerErrorType errorType = GetPlayerErrorType(event);
-                SetMediaKitReport("avplayer error: " + std::to_string(errorType));
-            }
             OnStateChanged(PlayerStateId::ERROR);
             HandleErrorEvent(event);
             break;
@@ -3256,6 +3252,7 @@ void HiPlayerImpl::HandleErrorEvent(const Event& event)
 {
     int32_t errorCode = AnyCast<int32_t>(event.param);
     PlayerErrorType errorType = GetPlayerErrorType(event);
+    SetMediaKitReport("avplayer error: " + std::to_string(errorType));
     callbackLooper_.OnError(errorType, errorCode, event.description);
 }
 
