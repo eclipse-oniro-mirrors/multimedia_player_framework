@@ -18,6 +18,7 @@
 #include <gtest/gtest.h>
 #include "screen_capture_server_function_unittest.h"
 #include "mock/mock_audio_capturer.h"
+#include "mock/mock_external_service_providers.h"
 #include "ui_extension_ability_connection.h"
 #include "image_source.h"
 #include "image_type.h"
@@ -73,11 +74,20 @@ void ScreenCaptureServerFunctionTest::SetUp()
 
 void ScreenCaptureServerFunctionTest::SetMockBuilder(std::shared_ptr<ScreenCaptureServer> server)
 {
-    server->audioCapturerWrapperBuilder_ = [this](AudioCaptureInfo &audioInfo,
-        std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb, std::string &&name,
-        ScreenCaptureContentFilter filter) -> std::shared_ptr<AudioCapturerWrapper> {
-        return CreateTestWrapper(audioInfo, name, true, true);
-    };
+    auto mockProviders = CreateMockProviders();
+    auto *mockCommonService = static_cast<MockCommonServiceProvider *>(mockProviders->commonService.get());
+
+    EXPECT_CALL(*mockCommonService, CreateAudioCapturerWrapper(_, _, _, _))
+        .WillRepeatedly(
+        [this](AudioCaptureInfo &audioInfo, std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb,
+            std::string &&name, const ScreenCaptureContentFilter &filter) -> std::shared_ptr<AudioCapturerWrapper> {
+            return CreateTestWrapper(audioInfo, name, true, true);
+        });
+    EXPECT_CALL(*mockCommonService, SubscribeCommonEvent(_)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*mockCommonService, UnSubscribeCommonEvent(_)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*mockCommonService, PublishCommonEvent(_, _)).WillRepeatedly(Return(true));
+
+    server->providers_ = std::move(mockProviders);
 }
 
 void ScreenCaptureServerFunctionTest::TearDown()

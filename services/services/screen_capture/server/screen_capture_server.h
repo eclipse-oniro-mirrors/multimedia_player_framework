@@ -20,6 +20,7 @@
 #include "ui_extension_ability_connection.h"
 #include "audio_data_source.h"
 #include "window_life_cycle_listener.h"
+#include "external_service_providers.h"
 
 namespace OHOS {
 namespace Media {
@@ -460,6 +461,7 @@ private:
     int64_t startTime_ = 0;
     bool isTimePaused_ = false;
     sptr<UIExtensionAbilityConnection> connection_ = nullptr;
+    std::unique_ptr<ExternalServiceProviders> providers_ = CreateDefaultProviders();
     sptr<SCWindowLifecycleListener> windowLifecycleListener_ = nullptr;
     sptr<SCWindowLifecycleListener> appLifecycleListener_ = nullptr;
     sptr<SCDeathRecipientListener> lifecycleListenerDeathRecipient_ = nullptr;
@@ -516,15 +518,6 @@ private:
     static int32_t CheckVideoEncInfo(VideoEncInfo &videoEncInfo);
     static int32_t CheckCaptureMode(CaptureMode captureMode);
     static int32_t CheckDataType(DataType dataType);
-
-    using AudioCapturerWrapperBuilder = std::function<std::shared_ptr<AudioCapturerWrapper>(
-        AudioCaptureInfo&, std::shared_ptr<ScreenCaptureCallBack>&,
-        std::string&&, ScreenCaptureContentFilter)>;
-
-    AudioCapturerWrapperBuilder audioCapturerWrapperBuilder_;
-    std::shared_ptr<AudioCapturerWrapper> CreateAudioCapturerWrapper(
-        AudioCaptureInfo &audioInfo, std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb,
-        std::string &&name, ScreenCaptureContentFilter filter);
 
 private:
     static constexpr int32_t ROOT_UID = 0;
