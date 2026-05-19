@@ -76,7 +76,7 @@ private:
     bool CheckBufferSize(size_t length);
     int32_t GetBufferDesc(AudioStandard::BufferDesc &bufDesc);
     void ReleaseCacheBuffer(bool isSwapBuffer = false);
-    int32_t GetAudioPosition(timespec &time, uint32_t &framePosition);
+    int32_t GetAudioPosition(timespec &time, int64_t &framePosition);
     void GetLatency(int64_t &latency);
     void ClearAvailableOutputBuffers();
     void ClearInputBuffer();

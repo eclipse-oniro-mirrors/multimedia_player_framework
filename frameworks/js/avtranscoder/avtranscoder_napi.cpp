@@ -38,6 +38,8 @@ namespace Media {
 using namespace MediaAVCodec;
 thread_local napi_ref AVTransCoderNapi::constructor_ = nullptr;
 const std::string CLASS_NAME = "AVTransCoder";
+const int32_t MAX_PIXEL_HEIGHT = 4096;
+const int32_t MAX_ROWSTRIDE = 4096 * 5;
 const std::map<std::string, std::vector<std::string>> STATE_CTRL = {
     {AVTransCoderState::STATE_IDLE, {
         AVTransCoderOpt::SET_AV_TRANSCODER_CONFIG,
@@ -851,7 +853,9 @@ int32_t AVTransCoderNapi::AddWatermark(std::shared_ptr<PixelMap> &pixelMap,
         pixelMap->GetWidth(), pixelMap->GetHeight(), pixelMap->GetPixelFormat(), pixelMap->GetRowStride());
     CHECK_AND_RETURN_RET_LOG(pixelMap->GetPixelFormat() == PixelFormat::RGBA_8888, MSERR_INVALID_VAL,
         "Invalid pixel format");
-    size_t dataSize = pixelMap->GetHeight() * pixelMap->GetRowStride();
+    CHECK_AND_RETURN_RET_LOG(pixelMap->GetHeight() >= 0 && pixelMap->GetHeight() <= MAX_PIXEL_HEIGHT, MSERR_INVALID_VAL, "Invalid pixel Height");
+    CHECK_AND_RETURN_RET_LOG(pixelMap->GetRowStride() >= 0 && pixelMap->GetRowStride() <= MAX_ROWSTRIDE, MSERR_INVALID_VAL, "Invalid pixel RowStride");
+    int32_t dataSize = pixelMap->GetHeight() * pixelMap->GetRowStride();
     auto allocator = AVAllocatorFactory::CreateSharedAllocator(MemoryFlag::MEMORY_READ_WRITE);
     auto buffer = AVBuffer::CreateAVBuffer(allocator, dataSize);
     CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_INVALID_VAL, "Create buffer failed");
