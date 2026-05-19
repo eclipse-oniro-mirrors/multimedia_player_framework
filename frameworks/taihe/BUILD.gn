@@ -140,6 +140,7 @@ taihe_shared_library("soundpool_taihe") {
 }
 
 taihe_shared_library("media_taihe") {
+  shlib_type = "ani"
   sanitize = {
     integer_overflow = true
     ubsan = true
