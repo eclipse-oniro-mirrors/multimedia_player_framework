@@ -56,6 +56,7 @@ constexpr int32_t AVTRANSCODER_DEFAULT_FRAME_HEIGHT = -1;
 constexpr int32_t AVTRANSCODER_DEFAULT_FRAME_WIDTH = -1;
 constexpr int32_t AVTRANSCODER_WATERMARK_MAX_LENGTH = 4096;
 constexpr int32_t AVTRANSCODER_WATERMARK_MAX_NUM = 5;
+constexpr int32_t AVTRANSCODER_WATERMARK_MAX_ROWSTRIDE_NUM = 5;
 
 const std::map<std::string, std::vector<std::string>> STATE_LIST = {
     {AVTransCoderState::STATE_IDLE, {
