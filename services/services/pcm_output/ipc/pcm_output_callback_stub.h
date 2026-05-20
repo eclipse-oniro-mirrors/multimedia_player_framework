@@ -18,20 +18,24 @@
 
 #include "i_standard_pcm_output_callback.h"
 #include "iremote_stub.h"
+#include "player.h"
 
 namespace OHOS {
 namespace Media {
 class PCMOutputCallbackStub : public IRemoteStub<IStandardPCMOutputCallback> {
 public:
-    explicit PCMOutputCallbackStub(const std::function<void(const std::shared_ptr<AVBuffer>&)>& callback);
+    explicit PCMOutputCallbackStub();
     virtual ~PCMOutputCallbackStub() = default;
 
     int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
                             MessageOption &option) override;
     void OnPCMOutput(const std::shared_ptr<AVBuffer> &buffer) override;
+    void OnPCMProcessor(const std::shared_ptr<AVBuffer> &buffer) override;
+    void SetPCMCallback(const std::shared_ptr<PlayerCallback> &callback);
 
 private:
-    std::function<void(const std::shared_ptr<AVBuffer>&)> callback_;
+    std::mutex callbackMutex_;
+    std::shared_ptr<PlayerCallback> pcmCallback_;
 };
 } // namespace Media
 } // namespace OHOS

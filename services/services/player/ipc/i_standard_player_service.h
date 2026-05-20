@@ -304,9 +304,27 @@ public:
         return 0;
     }
 
-    virtual int32_t SetPCMOutputCallback(const sptr<IRemoteObject> &object)
+    virtual int32_t SetPCMCallback(const sptr<IRemoteObject> &object)
     {
         (void)object;
+        return 0;
+    }
+
+    virtual int32_t SetPCMOutputStatus(bool isEnable)
+    {
+        (void)isEnable;
+        return MSERR_OK;
+    }
+
+    virtual int32_t SetPCMProcessorStatus(bool isEnable)
+    {
+        (void)isEnable;
+        return MSERR_OK;
+    }
+
+    virtual int32_t SetPCMProcessorMaxLen(int32_t maxProcessedPCMLen)
+    {
+        (void)maxProcessedPCMLen;
         return 0;
     }
 
@@ -385,7 +403,10 @@ public:
         GET_TRACK_DESCRIPTION,
         GET_PLAYBACK_STATISTIC_METRICS,
         GET_CURRENT_PRESENTATION_TIMESTAMP,
-        SET_PCM_OUTPUT_CALLBACK,
+        SET_PCM_CALLBACK,
+        SET_PCM_OUTPUT_CB_STATUS,
+        SET_PCM_PROCESSOR_CB_STATUS,
+        SET_PCM_PROCESSOR_MAX_LEN,
         MAX_IPC_ID,                   // all IPC codes should be added before MAX_IPC_ID
         REGISTER_DEVICE_CAPABILITY,
         GET_GLOBAL_INFO,

@@ -218,7 +218,10 @@ public:
     bool IsLiveSeek() override;
     int32_t SetVideoOutput(sptr<Surface> surface) override;
     int32_t GetVideoSample(int32_t &outputResult) override;
-    int32_t SetPCMOutputCallback(const std::function<void(const std::shared_ptr<AVBuffer>&)>& callback) override;
+    int32_t SetPCMCallback(const std::shared_ptr<IPCMCallback> &callback) override;
+    int32_t SetPCMOutputStatus(bool isEnable) override;
+    int32_t SetPCMProcessorStatus(bool isEnable) override;
+    int32_t SetPCMProcessorMaxLen(int32_t maxProcessedPcmLen) override;
 
 private:
     enum HiplayerSvpMode : int32_t {
@@ -368,7 +371,7 @@ private:
     void SetMediaKitReport(const std::string &apiCall);
     void ExtractStrategyParams(const AVPlayStrategy& strategy);
     void HandleReadyAudioInterrupt();
-    std::function<void(const std::shared_ptr<AVBuffer>&)> GetPCMOutputCallback();
+    void InitPcmCallback();
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
@@ -561,7 +564,10 @@ private:
     bool isLiveSeek_ = false;
     std::atomic<bool> isAudioInitialized_ {false};
     std::mutex pcmCallbackMutex_;
-    std::function<void(const std::shared_ptr<AVBuffer>&)> pcmOutputCallback_ {};
+    std::shared_ptr<IPCMCallback> pcmCallback_ {};
+    bool isPcmOutputEnable_ {false};
+    bool isPcmProcessorEnable_ {false};
+    int32_t maxProcessedPcmLen_ {0};
 };
 } // namespace Media
 } // namespace OHOS

@@ -279,8 +279,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     ret = playerEngine_->EnableReportMediaProgress(
         playerProducer_ == PlayerProducer::NAPI ? enableReportMediaProgress_ : true);
     TRUE_LOG(ret != MSERR_OK, MEDIA_LOGW, "PlayerEngine enable report media progress failed, ret %{public}d", ret);
-    ret = playerEngine_->SetPCMOutputCallback(pcmOutputCallback_);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetPCMOutputCallback Failed!");
+    InitPcmCallback();
 
     if (playerCb_ != nullptr) {
         playerCb_->SetInterruptListenerFlag(
@@ -2799,17 +2798,72 @@ int32_t PlayerServer::GetVideoSample(int32_t &outputResult)
     return MSERR_OK;
 }
 
-int32_t PlayerServer::SetPCMOutputCallback(const std::function<void(const std::shared_ptr<AVBuffer>&)>& callback)
+int32_t PlayerServer::SetPCMCallback(const std::shared_ptr<IPCMCallback> &callback)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     bool isValidState = lastOpStatus_ == PLAYER_IDLE || lastOpStatus_ == PLAYER_INITIALIZED;
     CHECK_AND_RETURN_RET_LOG(isValidState, MSERR_INVALID_STATE,
-        "can not SetPCMOutputCallback, current state is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
+        "can not SetPCMCallback, current state is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
 
-    // If playerEngine_ not init, save pcmOutputCallback_ and use it after playerEngine_ init
-    pcmOutputCallback_ = callback;
-    CHECK_AND_RETURN_RET_NOLOG(playerEngine_ == nullptr, playerEngine_->SetPCMOutputCallback(callback));
+    // If playerEngine_ not init, save pcmCallback_ and use it after playerEngine_ init
+    pcmCallback_ = callback;
+    CHECK_AND_RETURN_RET_NOLOG(playerEngine_ == nullptr, playerEngine_->SetPCMCallback(callback));
     return MSERR_OK;
+}
+
+int32_t PlayerServer::SetPCMOutputStatus(bool isEnable)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    bool isValidState = lastOpStatus_ == PLAYER_IDLE || lastOpStatus_ == PLAYER_INITIALIZED;
+    CHECK_AND_RETURN_RET_LOG(isValidState, MSERR_INVALID_STATE,
+        "can not SetPCMOutputStatus, current state is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
+
+    // If playerEngine_ not init, save isPcmOutputEnable_ and use it after playerEngine_ init
+    isPcmOutputEnable_ = isEnable;
+    CHECK_AND_RETURN_RET_NOLOG(playerEngine_ == nullptr, playerEngine_->SetPCMOutputStatus(isEnable));
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::SetPCMProcessorStatus(bool isEnable)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    bool isValidState = lastOpStatus_ == PLAYER_IDLE || lastOpStatus_ == PLAYER_INITIALIZED;
+    CHECK_AND_RETURN_RET_LOG(isValidState, MSERR_INVALID_STATE,
+        "can not SetPCMProcessorStatus, current state is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
+
+    // If playerEngine_ not init, save isPcmProcessorEnable_ and use it after playerEngine_ init
+    isPcmProcessorEnable_ = isEnable;
+    CHECK_AND_RETURN_RET_NOLOG(playerEngine_ == nullptr, playerEngine_->SetPCMProcessorStatus(isEnable));
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::SetPCMProcessorMaxLen(int32_t maxProcessedPcmLen)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    bool isValidState = lastOpStatus_ == PLAYER_IDLE || lastOpStatus_ == PLAYER_INITIALIZED;
+    CHECK_AND_RETURN_RET_LOG(isValidState, MSERR_INVALID_STATE,
+        "can not SetPCMProcessorMaxLen, current state is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
+
+    // If playerEngine_ not init, save maxProcessedPcmLen_ and use it after playerEngine_ init
+    maxProcessedPcmLen_ = maxProcessedPcmLen;
+    CHECK_AND_RETURN_RET_NOLOG(playerEngine_ == nullptr, playerEngine_->SetPCMProcessorMaxLen(maxProcessedPcmLen));
+    return MSERR_OK;
+}
+
+void PlayerServer::InitPcmCallback()
+{
+    CHECK_AND_RETURN_LOG(playerEngine_ != nullptr, "PlayerEngine is nullptr.");
+    int32_t ret = playerEngine_->SetPCMCallback(pcmCallback_);
+    TRUE_LOG(ret != MSERR_OK, MEDIA_LOGW, "PlayerEngine SetPCMOutputCallback failed, ret %{public}d", ret);
+
+    ret = playerEngine_->SetPCMOutputStatus(isPcmOutputEnable_);
+    TRUE_LOG(ret != MSERR_OK, MEDIA_LOGW, "PlayerEngine SetPCMOutputStatus failed, ret %{public}d", ret);
+
+    ret = playerEngine_->SetPCMProcessorStatus(isPcmProcessorEnable_);
+    TRUE_LOG(ret != MSERR_OK, MEDIA_LOGW, "PlayerEngine SetPCMProcessorStatus failed, ret %{public}d", ret);
+
+    ret = playerEngine_->SetPCMProcessorMaxLen(maxProcessedPcmLen_);
+    TRUE_LOG(ret != MSERR_OK, MEDIA_LOGW, "PlayerEngine SetPCMProcessorMaxLen failed, ret %{public}d", ret);
 }
 } // namespace Media
 } // namespace OHOS

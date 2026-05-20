@@ -127,6 +127,8 @@ public:
     int32_t SetVideoOutput(sptr<Surface> surface) override;
     int32_t GetVideoSample(int32_t &outputResult) override;
     int32_t SetPCMOutputCallback(const std::shared_ptr<PlayerCallback>& callback) override;
+    int32_t SetPCMProcessorCallback(const std::shared_ptr<PlayerCallback>& callback) override;
+    int32_t SetPCMProcessorMaxLen(int32_t maxProcessedPCMLen) override;
 
 private:
     using MediaSourceIterator = std::vector<std::pair<std::string, std::shared_ptr<AVMediaSource>>>::iterator;

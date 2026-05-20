@@ -180,7 +180,10 @@ public:
     bool IsLiveSeek() override;
     int32_t SetVideoOutput(sptr<Surface> surface) override;
     int32_t GetVideoSample(int32_t &outputResult) override;
-    int32_t SetPCMOutputCallback(const std::function<void(const std::shared_ptr<AVBuffer>&)>& callback) override;
+    int32_t SetPCMCallback(const std::shared_ptr<IPCMCallback> &callback) override;
+    int32_t SetPCMOutputStatus(bool isEnable) override;
+    int32_t SetPCMProcessorStatus(bool isEnable) override;
+    int32_t SetPCMProcessorMaxLen(int32_t maxProcessedPcmLen) override;
 
 protected:
     class BaseState;
@@ -287,6 +290,7 @@ private:
     void TryFlvLiveRestartLink();
     void UpdateFlvLivePauseTime();
     void SetParameter();
+    void InitPcmCallback();
 
 #ifdef SUPPORT_VIDEO
     sptr<Surface> surface_ = nullptr;
@@ -341,7 +345,10 @@ private:
     std::atomic<bool> isVideoOutputEnabled_ {false};
     std::atomic<bool> isSuperResolutionEnabled_ {false};
     std::atomic<bool> isCameraPostprocessingEnabled_ {false};
-    std::function<void(const std::shared_ptr<AVBuffer>&)> pcmOutputCallback_ {};
+    std::shared_ptr<IPCMCallback> pcmCallback_ {};
+    bool isPcmOutputEnable_ {false};
+    bool isPcmProcessorEnable_ {false};
+    int32_t maxProcessedPcmLen_ {0};
 };
 } // namespace Media
 } // namespace OHOS

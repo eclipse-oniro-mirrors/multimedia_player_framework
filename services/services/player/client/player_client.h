@@ -115,19 +115,21 @@ public:
     bool IsLiveSeek() override;
     int32_t SetVideoOutput(sptr<Surface> surface) override;
     int32_t GetVideoSample(int32_t &outputResult) override;
-    int32_t SetPCMOutputCallback(const std::shared_ptr<PlayerCallback>& callback) override;
+    int32_t SetPCMOutputCallback(const std::shared_ptr<PlayerCallback> &callback) override;
+    int32_t SetPCMProcessorCallback(const std::shared_ptr<PlayerCallback> &callback) override;
+    int32_t SetPCMProcessorMaxLen(int32_t maxProcessedPcmLen) override;
 
 private:
     int32_t CreateListenerObject();
     int32_t DisableWhenOK(int32_t ret);
-    int32_t CancelPCMCallbackStub();
+    int32_t CreatePCMCallbackObject();
 
     sptr<IStandardPlayerService> playerProxy_ = nullptr;
     sptr<PlayerListenerStub> listenerStub_ = nullptr;
     sptr<MediaDataSourceStub> dataSrcStub_ = nullptr;
     sptr<DolbyPassthroughStub> dolbyPassthroughStub_ = nullptr;
     sptr<MediaSourceLoaderStub> sourceLoaderStub_ = nullptr;
-    sptr<PCMOutputCallbackStub> pcmOutputCallbackStub_ = nullptr;
+    sptr<PCMOutputCallbackStub> pcmCallbackStub_ = nullptr;
     std::shared_ptr<PlayerCallback> callback_ = nullptr;
     std::mutex mutex_;
 };

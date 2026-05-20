@@ -903,15 +903,39 @@ public:
         return false;
     }
 
-    virtual int32_t SetPCMOutputCallback(const std::function<void(const std::shared_ptr<AVBuffer>&)>& callback)
+    virtual int32_t SetPCMCallback(const std::shared_ptr<IPCMCallback> &callback)
     {
         (void)callback;
         return MSERR_OK;
     }
 
-    virtual int32_t SetPCMOutputCallback(const std::shared_ptr<PlayerCallback>& callback)
+    virtual int32_t SetPCMOutputCallback(const std::shared_ptr<PlayerCallback> &callback)
     {
         (void)callback;
+        return MSERR_OK;
+    }
+
+    virtual int32_t SetPCMProcessorCallback(const std::shared_ptr<PlayerCallback> &callback)
+    {
+        (void)callback;
+        return MSERR_OK;
+    }
+
+    virtual int32_t SetPCMOutputStatus(bool isEnable)
+    {
+        (void)isEnable;
+        return MSERR_OK;
+    }
+
+    virtual int32_t SetPCMProcessorStatus(bool isEnable)
+    {
+        (void)isEnable;
+        return MSERR_OK;
+    }
+
+    virtual int32_t SetPCMProcessorMaxLen(int32_t maxProcessedPcmLen)
+    {
+        (void)maxProcessedPcmLen;
         return MSERR_OK;
     }
 };

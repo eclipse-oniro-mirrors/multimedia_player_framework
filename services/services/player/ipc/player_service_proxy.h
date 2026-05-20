@@ -107,7 +107,10 @@ public:
     bool IsLiveSeek() override;
     int32_t SetVideoOutput(sptr<Surface> surface) override;
     int32_t GetVideoSample(int32_t &outputResult) override;
-    int32_t SetPCMOutputCallback(const sptr<IRemoteObject> &object) override;
+    int32_t SetPCMCallback(const sptr<IRemoteObject> &object) override;
+    int32_t SetPCMOutputStatus(bool isEnable) override;
+    int32_t SetPCMProcessorStatus(bool isEnable) override;
+    int32_t SetPCMProcessorMaxLen(int32_t maxProcessedPCMLen) override;
 
 private:
     int32_t SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option);
