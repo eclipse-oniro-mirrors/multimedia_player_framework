@@ -130,7 +130,6 @@ void AVRecorderImpl::PrepareSync(ohos::multimedia::media::AVRecorderConfig const
     MEDIA_LOGI("Taihe %{public}s Start", opt.c_str());
 
     auto asyncCtx = std::make_unique<AVRecorderAsyncContext>();
-    CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
     asyncCtx->taihe = this;
     CHECK_AND_RETURN_LOG(asyncCtx->taihe->taskQue_ != nullptr, "taskQue is nullptr!");
     if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
@@ -878,8 +877,6 @@ void AVRecorderImpl::ExecuteByPromise(const std::string &opt)
     MEDIA_LOGI("Taihe %{public}s Start", opt.c_str());
     auto asyncCtx = std::make_unique<AVRecorderAsyncContext>();
     asyncCtx->taihe = this;
-    CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
-    CHECK_AND_RETURN_LOG(asyncCtx->taihe != nullptr, "failed to GetTaiheInstance");
     CHECK_AND_RETURN_LOG(asyncCtx->taihe->taskQue_ != nullptr, "taskQue is nullptr!");
     if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
         asyncCtx->task_ = GetPromiseTask(asyncCtx->taihe, opt);
@@ -950,14 +947,14 @@ void AVRecorderImpl::SetAVRecorderConfig(
     const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, ::ohos::multimedia::media::AVRecorderConfig &res)
 {
     auto config = asyncCtx->config_;
-    if (config->withAudio == true) {
+    if (config->withAudio) {
         ohos::multimedia::media::AudioSourceType::key_t audioSourceTypeKey;
         MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::media::AudioSourceType>(
             config->audioSourceType, audioSourceTypeKey);
         res.audioSourceType =
             optional<::ohos::multimedia::media::AudioSourceType>(std::in_place_t{}, audioSourceTypeKey);
     }
-    if (config->withVideo == true) {
+    if (config->withVideo) {
         ohos::multimedia::media::VideoSourceType::key_t videoSourceTypeKey;
         MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::media::VideoSourceType>(
             config->videoSourceType, videoSourceTypeKey);
@@ -1072,7 +1069,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::GetAVRecorderConfigTask(
         MEDIA_LOGI("%{public}s Start", option.c_str());
         config = std::make_shared<AVRecorderConfig>();
 
-        CHECK_AND_RETURN_RET(taihe != nullptr && config != nullptr,
+        CHECK_AND_RETURN_RET(taihe != nullptr,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
 
         CHECK_AND_RETURN_RET(taihe->CheckStateMachine(option) == MSERR_OK,
@@ -1258,8 +1255,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::GetEncoderInfoTask(
 
 int32_t AVRecorderImpl::GetEncoderInfo(std::vector<EncoderCapabilityData> &encoderInfo)
 {
-    int32_t ret = recorder_->GetAvailableEncoder(encoderInfo);
-    return ret;
+    return recorder_->GetAvailableEncoder(encoderInfo);
 }
 
 optional<::taihe::string> AVRecorderImpl::GetInputMetaSurfaceSync(::ohos::multimedia::media::MetaSourceType type)
@@ -1269,9 +1265,7 @@ optional<::taihe::string> AVRecorderImpl::GetInputMetaSurfaceSync(::ohos::multim
     MEDIA_LOGI("Taihe %{public}s Start", opt.c_str());
     auto res = optional<string>(std::nullopt);
     auto asyncCtx = std::make_unique<AVRecorderAsyncContext>();
-    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, res, "failed to get AsyncContext");
     asyncCtx->taihe = this;
-    CHECK_AND_RETURN_RET_LOG(asyncCtx->taihe != nullptr, res, "failed to GetTaiheInstance");
     CHECK_AND_RETURN_RET_LOG(asyncCtx->taihe->taskQue_ != nullptr, res, "taskQue is nullptr!");
 
     if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
@@ -1425,9 +1419,7 @@ void AVRecorderImpl::SetMetadata(taihe::map_view<taihe::string, taihe::string> m
     MEDIA_LOGI("Taihe %{public}s Start", opt.c_str());
 
     auto asyncCtx = std::make_unique<AVRecorderAsyncContext>();
-    CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
     asyncCtx->taihe = this;
-    CHECK_AND_RETURN_LOG(asyncCtx->taihe != nullptr, "failed to GetJsInstanceAndArgs");
     CHECK_AND_RETURN_LOG(asyncCtx->taihe->taskQue_ != nullptr, "taskQue is nullptr!");
 
     if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
@@ -1476,9 +1468,7 @@ void AVRecorderImpl::UpdateRotationSync(int32_t rotation)
     MEDIA_LOGI("Taihe %{public}s Start", opt.c_str());
 
     auto asyncCtx = std::make_unique<AVRecorderAsyncContext>();
-    CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
     asyncCtx->taihe = this;
-    CHECK_AND_RETURN_LOG(asyncCtx->taihe != nullptr, "failed to GetInstanceAndArgs");
     CHECK_AND_RETURN_LOG(asyncCtx->taihe->taskQue_ != nullptr, "taskQue is nullptr!");
 
     if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
@@ -1548,9 +1538,7 @@ int32_t AVRecorderImpl::GetAudioCapturerMaxAmplitudeSync()
 
     int32_t ret = -1;
     auto asyncCtx = std::make_unique<AVRecorderAsyncContext>();
-    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, ret, "failed to get AsyncContext");
     asyncCtx->taihe = this;
-    CHECK_AND_RETURN_RET_LOG(asyncCtx->taihe != nullptr, ret, "failed to GetInstanceAndArgs");
     CHECK_AND_RETURN_RET_LOG(asyncCtx->taihe->taskQue_ != nullptr, ret, "taskQue is nullptr!");
 
     if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
@@ -1614,9 +1602,7 @@ void AVRecorderImpl::SetWatermarkSync(::ohos::multimedia::image::image::weak::Pi
     MEDIA_LOGI("Taihe %{public}s Start", opt.c_str());
 
     auto asyncCtx = std::make_unique<AVRecorderAsyncContext>();
-    CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
     asyncCtx->taihe = this;
-    CHECK_AND_RETURN_LOG(asyncCtx->taihe != nullptr, "failed to GetInstanceAndArgs");
     CHECK_AND_RETURN_LOG(asyncCtx->taihe->taskQue_ != nullptr, "taskQue is nullptr!");
 
     if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
@@ -1959,8 +1945,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::GetCurrentCapturerChangeIn
 
 int32_t AVRecorderImpl::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo)
 {
-    int32_t ret = recorder_->GetCurrentCapturerChangeInfo(changeInfo);
-    return ret;
+    return recorder_->GetCurrentCapturerChangeInfo(changeInfo);
 }
 
 RetInfo AVRecorderImpl::GetInputSurface()
@@ -2100,7 +2085,6 @@ void AVRecorderImpl::OnError(callback_view<void(uintptr_t)> callback)
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SetCallbackReference(AVRecorderEvent::EVENT_ERROR, autoRef);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheOnError callbackName: error success", FAKE_POINTER(this));
-    return;
 }
 
 void AVRecorderImpl::OffError(optional_view<callback<void(uintptr_t)>> callback)
@@ -2124,7 +2108,6 @@ void AVRecorderImpl::OnStateChange(callback_view<void(string_view,
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SetCallbackReference(AVRecorderEvent::EVENT_STATE_CHANGE, autoRef);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheOnStateChange callbackName: stateChange success", FAKE_POINTER(this));
-    return;
 }
 
 void AVRecorderImpl::OffStateChange(optional_view<callback<void(string_view,
@@ -2149,7 +2132,6 @@ void AVRecorderImpl::OnAudioCapturerChange(
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SetCallbackReference(AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE, autoRef);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheOnStateChange callbackName: stateChange success", FAKE_POINTER(this));
-    return;
 }
 
 void AVRecorderImpl::OffAudioCapturerChange(
@@ -2173,7 +2155,6 @@ void AVRecorderImpl::OnPhotoAssetAvailable(callback_view<void(uintptr_t)> callba
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SetCallbackReference(AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE, autoRef);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheOnStateChange callbackName: stateChange success", FAKE_POINTER(this));
-    return;
 }
 
 void AVRecorderImpl::OffPhotoAssetAvailable(optional_view<callback<void(uintptr_t)>> callback)
@@ -2183,6 +2164,120 @@ void AVRecorderImpl::OffPhotoAssetAvailable(optional_view<callback<void(uintptr_
 
     ErrorCallback(MSERR_PARAMETER_VERIFICATION_FAILED, "CancelEventCallback",
         "type must be error, stateChange or audioCapturerChange.");
+}
+
+void AVRecorderImpl::AddWatermarkSync(::ohos::multimedia::image::image::weak::PixelMap watermark,
+    ::ohos::multimedia::media::WatermarkConfiguration const& config)
+{
+    MediaTrace trace("AVRecorder::AddWatermarkSync");
+    const std::string &opt = AVRecordergOpt::ADD_WATERMARK;
+    MEDIA_LOGI("Taihe %{public}s Start", opt.c_str());
+
+    auto asyncCtx = std::make_unique<AVRecorderAsyncContext>();
+    asyncCtx->taihe = this;
+    CHECK_AND_RETURN_LOG(asyncCtx->taihe->taskQue_ != nullptr, "taskQue is nullptr!");
+ 
+    if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
+        if (asyncCtx->taihe->GetAddWatermarkParameter(asyncCtx, watermark, config) == MSERR_OK) {
+            asyncCtx->task_ = AddWatermarkTask(asyncCtx);
+            (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+            asyncCtx->opt_ = opt;
+        }
+    } else {
+        SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
+    }
+    if (asyncCtx->task_) {
+        auto result = asyncCtx->task_->GetResult();
+        if (result.Value().first != MSERR_EXT_API9_OK) {
+            set_business_error(result.Value().first, result.Value().second);
+        }
+    }
+    asyncCtx.release();
+ 
+    MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
+}
+ 
+int32_t AVRecorderImpl::GetAddWatermarkParameter(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
+    ::ohos::multimedia::image::image::weak::PixelMap watermark,
+    ::ohos::multimedia::media::WatermarkConfiguration const& config)
+{
+    asyncCtx->pixelMap_ = Image::PixelMapImpl::GetPixelMap(watermark);
+    CHECK_AND_RETURN_RET(asyncCtx->pixelMap_ != nullptr,
+        (SetRetInfoError(MSERR_INVALID_VAL, "GetAddWatermarkPixelMap", "PixelMap"), MSERR_INVALID_VAL));
+ 
+    asyncCtx->watermarkConfiguration_ = std::make_shared<WatermarkConfiguration>();
+    asyncCtx->watermarkConfiguration_->top = config.top;
+    CHECK_AND_RETURN_RET(asyncCtx->watermarkConfiguration_->top >= 0,
+        (SetRetInfoError(MSERR_PARAMETER_VERIFICATION_FAILED, "GetAddWatermarkParameter", "top",
+            "config top cannot be null or less than zero"), MSERR_PARAMETER_VERIFICATION_FAILED));
+ 
+    asyncCtx->watermarkConfiguration_->left = config.left;
+    CHECK_AND_RETURN_RET(asyncCtx->watermarkConfiguration_->left >= 0,
+        (SetRetInfoError(MSERR_PARAMETER_VERIFICATION_FAILED, "GetAddWatermarkParameter", "left",
+            "config left cannot be null or less than zero"), MSERR_PARAMETER_VERIFICATION_FAILED));
+    return MSERR_OK;
+}
+ 
+std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::AddWatermarkTask(
+    const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
+{
+    return std::make_shared<TaskHandler<RetInfo>>([taihe = asyncCtx->taihe, &pixelMap = asyncCtx->pixelMap_,
+        &watermarkConfig = asyncCtx->watermarkConfiguration_, &watermarkCount = asyncCtx->addWatermarkCount_]() {
+        const std::string &option = AVRecordergOpt::ADD_WATERMARK;
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+ 
+        CHECK_AND_RETURN_RET(taihe != nullptr,
+            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
+ 
+        CHECK_AND_RETURN_RET(taihe->CheckStateMachine(option) == MSERR_OK,
+            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
+ 
+        int32_t ret = taihe->AddWatermark(pixelMap, watermarkConfig, watermarkCount);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, GetRetInfo(ret, "AddWatermarkTask", ""),
+            "AddWatermarkTask failed");
+ 
+        MEDIA_LOGI("%{public}s End", option.c_str());
+        return RetInfo(MSERR_EXT_API9_OK, "");
+    });
+}
+ 
+int32_t AVRecorderImpl::AddWatermark(std::shared_ptr<PixelMap> &pixelMap,
+    std::shared_ptr<WatermarkConfiguration> &watermarkConfig, int32_t &watermarkCount)
+{
+    MEDIA_LOGI("pixelMap Width: %{public}d, height: %{public}d, adjust Width: %{public}d, adjust height: %{public}d, "
+        "pixelformat %{public}d, RowStride %{public}d", pixelMap->GetWidth(), pixelMap->GetHeight(),
+        watermarkConfig->width, watermarkConfig->height, pixelMap->GetPixelFormat(), pixelMap->GetRowStride());
+    CHECK_AND_RETURN_RET_LOG(pixelMap->GetPixelFormat() == OHOS::Media::PixelFormat::RGBA_8888, MSERR_INVALID_VAL,
+        "Invalid pixel format");
+ 
+    size_t dataSize = pixelMap->GetHeight() * pixelMap->GetRowStride();
+    CHECK_AND_RETURN_RET_LOG(dataSize > 0 && dataSize <= MAX_WATERMARK_SIZE, MSERR_INVALID_VAL, "Invalid data size");
+ 
+    std::vector<uint8_t> dataBuffer(dataSize);
+ 
+    errno_t err = memcpy_s(dataBuffer.data(), dataSize, pixelMap->GetPixels(), dataSize);
+    CHECK_AND_RETURN_RET_LOG(err == 0, MSERR_INVALID_VAL, "memcpy_s failed with error: %{public}d", err);
+ 
+    auto allocator = OHOS::Media::AVAllocatorFactory::CreateSharedAllocator(
+        OHOS::Media::MemoryFlag::MEMORY_READ_WRITE);
+    CHECK_AND_RETURN_RET_LOG(allocator != nullptr, MSERR_INVALID_OPERATION, "Failed to create allocator");
+ 
+    auto buffer = OHOS::Media::AVBuffer::CreateAVBuffer(allocator, dataSize);
+    CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_INVALID_OPERATION, "Failed to create AVBuffer");
+ 
+    CHECK_AND_RETURN_RET_LOG(buffer->memory_ != nullptr, MSERR_INVALID_OPERATION, "AVBuffer memory is null");
+    CHECK_AND_RETURN_RET_LOG(buffer->meta_ != nullptr, MSERR_INVALID_OPERATION, "AVBuffer meta is null");
+ 
+    bool writeRet = buffer->memory_->Write(dataBuffer.data(), dataSize, 0);
+    CHECK_AND_RETURN_RET_LOG(writeRet, MSERR_INVALID_OPERATION, "Failed to write data to AVBuffer");
+ 
+    buffer->meta_->Set<OHOS::Media::Tag::VIDEO_COORDINATE_X>(watermarkConfig->left);
+    buffer->meta_->Set<OHOS::Media::Tag::VIDEO_COORDINATE_Y>(watermarkConfig->top);
+    buffer->meta_->Set<OHOS::Media::Tag::VIDEO_COORDINATE_W>(pixelMap->GetWidth());
+    buffer->meta_->Set<OHOS::Media::Tag::VIDEO_COORDINATE_H>(pixelMap->GetHeight());
+    buffer->meta_->Set<OHOS::Media::Tag::VIDEO_STRIDE>(pixelMap->GetRowStride());
+ 
+    return recorder_->AddWatermark(buffer, watermarkConfig->width, watermarkConfig->height, watermarkCount);
 }
 } // namespace ANI::Media
 

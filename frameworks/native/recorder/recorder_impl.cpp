@@ -432,6 +432,13 @@ int32_t RecorderImpl::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer)
     return recorderService_->SetWatermark(waterMarkBuffer);
 }
 
+int32_t RecorderImpl::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width, int32_t height,
+    int32_t &watermarkCount)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    return recorderService_->AddWatermark(watermarkBuffer, width, height, watermarkCount);
+}
+
 int32_t RecorderImpl::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
 {
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");

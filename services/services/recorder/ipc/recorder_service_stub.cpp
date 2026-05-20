@@ -59,6 +59,7 @@ int32_t RecorderServiceStub::Init()
     FillRecFuncPart1();
     FillRecFuncPart2();
     FillRecFuncPart3();
+    FillRecFuncPart4();
     pid_ = IPCSkeleton::GetCallingPid();
     (void)RegisterMonitor(pid_);
     return MSERR_OK;
@@ -146,6 +147,10 @@ void RecorderServiceStub::FillRecFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return GetAvailableEncoder(data, reply); };
     recFuncs_[GET_MAX_AMPLITUDE] =
         [this](MessageParcel &data, MessageParcel &reply) { return GetMaxAmplitude(data, reply); };
+}
+
+void RecorderServiceStub::FillRecFuncPart4()
+{
     recFuncs_[SET_META_CONFIGS] =
         [this](MessageParcel &data, MessageParcel &reply) { return SetMetaConfigs(data, reply); };
     recFuncs_[SET_META_SOURCE] =
@@ -162,6 +167,8 @@ void RecorderServiceStub::FillRecFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return IsWatermarkSupported(data, reply); };
     recFuncs_[SET_WATERMARK] =
         [this](MessageParcel &data, MessageParcel &reply) { return SetWatermark(data, reply); };
+    recFuncs_[ADD_WATERMARK] =
+        [this](MessageParcel &data, MessageParcel &reply) { return AddWatermark(data, reply); };
     recFuncs_[SET_USERMETA] =
         [this](MessageParcel &data, MessageParcel &reply) { return SetUserMeta(data, reply); };
 }
@@ -532,6 +539,13 @@ int32_t RecorderServiceStub::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBu
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
     return recorderServer_->SetWatermark(waterMarkBuffer);
+}
+
+int32_t RecorderServiceStub::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width, int32_t height,
+    int32_t &watermarkCount)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->AddWatermark(watermarkBuffer, width, height, watermarkCount);
 }
 
 int32_t RecorderServiceStub::SetWillMuteWhenInterrupted(bool muteWhenInterrupted)
@@ -1173,6 +1187,22 @@ int32_t RecorderServiceStub::SetWatermark(MessageParcel &data, MessageParcel &re
     CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_NO_MEMORY, "create AVBuffer failed");
     CHECK_AND_RETURN_RET_LOG(buffer->ReadFromMessageParcel(data), MSERR_INVALID_OPERATION, "read buffer failed");
     CHECK_AND_RETURN_RET_LOG(reply.WriteInt32(SetWatermark(buffer)), MSERR_INVALID_OPERATION, "reply write failed");
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::AddWatermark(MessageParcel &data, MessageParcel &reply)
+{
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
+    CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_NO_MEMORY, "create AVBuffer failed");
+    CHECK_AND_RETURN_RET_LOG(buffer->ReadFromMessageParcel(data), MSERR_INVALID_OPERATION, "read buffer failed");
+
+    int32_t width = data.ReadInt32();
+    int32_t height = data.ReadInt32();
+    int32_t watermarkCount = 0;
+    int32_t ret = AddWatermark(buffer, width, height, watermarkCount);
+    CHECK_AND_RETURN_RET_LOG(reply.WriteInt32(watermarkCount), MSERR_INVALID_OPERATION,
+        "reply write watermarkCount failed");
+    CHECK_AND_RETURN_RET_LOG(reply.WriteInt32(ret), MSERR_INVALID_OPERATION, "reply write failed");
     return MSERR_OK;
 }
 

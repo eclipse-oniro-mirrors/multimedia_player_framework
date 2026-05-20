@@ -562,6 +562,16 @@ int32_t RecorderClient::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer)
     return recorderProxy_->SetWatermark(waterMarkBuffer);
 }
 
+int32_t RecorderClient::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width, int32_t height,
+    int32_t &watermarkCount)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+
+    MEDIA_LOGD("AddWatermark");
+    return recorderProxy_->AddWatermark(watermarkBuffer, width, height, watermarkCount);
+}
+
 int32_t RecorderClient::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
 {
     std::lock_guard<std::mutex> lock(mutex_);

@@ -24,6 +24,7 @@
 #include "media_dfx.h"
 #include "hitrace/tracechain.h"
 #include "media_utils.h"
+#include "av_common.h"
 #ifdef SUPPORT_RECORDER_CREATE_FILE
 #include "media_library_adapter.h"
 #include "system_ability_definition.h"
@@ -1021,6 +1022,9 @@ int32_t RecorderServer::Reset()
     auto result = task->GetResult();
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_INITIALIZED : REC_ERROR);
+    if (status_ == REC_INITIALIZED) {
+        watermarkCount_ = 0;
+    }
     SetMediaKitReport(status_);
     return ret;
 }
@@ -1039,6 +1043,7 @@ int32_t RecorderServer::Release()
 #ifdef SUPPORT_POWER_MANAGER
         UnregisterShutdownCallbackIfNeeded();
 #endif
+        watermarkCount_ = 0;
     }
     SetMetaDataReport();
     return MSERR_OK;
@@ -1202,6 +1207,40 @@ int32_t RecorderServer::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer)
 
     auto result = task->GetResult();
     return result.Value();
+}
+
+int32_t RecorderServer::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width, int32_t height,
+    int32_t &watermarkCount)
+{
+    MEDIA_LOGI("AddWatermark in, width: %{public}d height: %{public}d", width, height);
+    std::lock_guard<std::mutex> lock(mutex_);
+    MediaTrace trace("RecorderServer::AddWatermark");
+    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_INITIALIZED && status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(width > 0 && width <= WATERMARK_WIDTH_HEIGHT_MAX, MSERR_INVALID_VAL,
+        "Invalid watermark width");
+    CHECK_AND_RETURN_RET_LOG(height > 0 && height <= WATERMARK_WIDTH_HEIGHT_MAX, MSERR_INVALID_VAL,
+        "Invalid watermark height");
+    auto ret = GetWatermarkCount(watermarkCount);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to add watermark, watermarks is over five.");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->AddWatermark(watermarkBuffer, width, height);
+    });
+    ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
+}
+
+int32_t RecorderServer::GetWatermarkCount(int32_t &watermarkCount)
+{
+    CHECK_AND_RETURN_RET_LOG(watermarkCount_ < WATERMARK_COUNT_MAX, MSERR_INVALID_OPERATION,
+        "GetWatermarkCount Failed to add watermark");
+    watermarkCount_++;
+    watermarkCount = watermarkCount_;
+    MEDIA_LOGI("GetWatermarkCount watermarkCount: %{public}d", watermarkCount);
+    return MSERR_OK;
 }
 
 int32_t RecorderServer::SetUserMeta(const std::shared_ptr<Meta> &userMeta)

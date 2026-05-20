@@ -44,6 +44,13 @@ void RecorderServiceStubTest::TearDown(void)
 {
 }
 
+sptr<RecorderServiceStub> RecorderServiceStubTest::CreateStub()
+{
+    sptr<RecorderServiceStub> stub = RecorderServiceStub::Create();
+    EXPECT_NE(stub, nullptr) << "Failed to create RecorderServiceStub";
+    return stub;
+}
+
 /**
  * @tc.name: ~RecorderServiceStub
  * @tc.desc: ~RecorderServiceStub
@@ -292,6 +299,101 @@ HWTEST_F(RecorderServiceStubTest, SetVideoEncoder_InvalidCodecFormat, TestSize.L
     sptr<RecorderServiceStub> recorderServiceStub_ = RecorderServiceStub::Create();
     int32_t ret = recorderServiceStub_->SetVideoEncoder(data, reply);
     EXPECT_EQ(ret, MSERR_INVALID_VAL);
+}
+
+/**
+ * @tc.name: AddWatermark_NullRecorderServer
+ * @tc.desc: AddWatermark_NullRecorderServer
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServiceStubTest, AddWatermark_NullRecorderServer, TestSize.Level2)
+{
+    MessageParcel data, reply;
+    sptr<RecorderServiceStub> recorderServiceStub_ = CreateStub();
+    recorderServiceStub_->recorderServer_ = nullptr;
+    int32_t ret = recorderServiceStub_->AddWatermark(data, reply);
+    EXPECT_NE(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name: AddWatermark_InvalidBufferRead
+ * @tc.desc: AddWatermark_InvalidBufferRead
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServiceStubTest, AddWatermark_InvalidBufferRead, TestSize.Level2)
+{
+    MessageParcel emptyData, reply;
+    sptr<RecorderServiceStub> recorderServiceStub_ = CreateStub();
+    int32_t ret = recorderServiceStub_->AddWatermark(emptyData, reply);
+    EXPECT_NE(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name: AddWatermark_ReplyWriteFailure
+ * @tc.desc: AddWatermark_ReplyWriteFailure
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServiceStubTest, AddWatermark_ReplyWriteFailure, TestSize.Level2)
+{
+    MessageParcel data;
+    MessageParcel emptyReply;
+    sptr<RecorderServiceStub> recorderServiceStub_ = CreateStub();
+    int32_t ret = recorderServiceStub_->AddWatermark(data, emptyReply);
+    EXPECT_NE(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name: AddWatermark_ZeroDimensions
+ * @tc.desc: AddWatermark_ZeroDimensions
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServiceStubTest, AddWatermark_ZeroDimensions, TestSize.Level2)
+{
+    MessageParcel data, reply;
+    sptr<RecorderServiceStub> recorderServiceStub_ = CreateStub();
+    recorderServiceStub_->recorderServer_ = nullptr;
+    data.WriteInt32(0);
+    data.WriteInt32(0);
+    int32_t ret = recorderServiceStub_->AddWatermark(data, reply);
+    EXPECT_NE(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name: AddWatermark_NegativeDimensions
+ * @tc.desc: AddWatermark_NegativeDimensions
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServiceStubTest, AddWatermark_NegativeDimensions, TestSize.Level2)
+{
+    MessageParcel data, reply;
+    sptr<RecorderServiceStub> recorderServiceStub_ = CreateStub();
+    recorderServiceStub_->recorderServer_ = nullptr;
+    data.WriteInt32(-1);
+    data.WriteInt32(-1);
+    int32_t ret = recorderServiceStub_->AddWatermark(data, reply);
+    EXPECT_NE(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name: AddWatermark_LargeDimensions
+ * @tc.desc: AddWatermark_LargeDimensions
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServiceStubTest, AddWatermark_LargeDimensions, TestSize.Level2)
+{
+    MessageParcel data, reply;
+    sptr<RecorderServiceStub> recorderServiceStub_ = CreateStub();
+    recorderServiceStub_->recorderServer_ = nullptr;
+    data.WriteInt32(INT_MAX);
+    data.WriteInt32(INT_MAX);
+    int32_t ret = recorderServiceStub_->AddWatermark(data, reply);
+    EXPECT_NE(ret, MSERR_OK);
 }
 } // namespace Media
 } // namespace OHOS

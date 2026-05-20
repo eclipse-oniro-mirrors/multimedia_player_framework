@@ -32,6 +32,9 @@ public:
     void SetUp(void);
     // TearDown: Called after each test cases
     void TearDown(void);
+
+    // Helper function to create RecorderServiceStub and validate
+    static sptr<RecorderServiceStub> CreateStub();
 };
 } // namespace Media
 } // namespace OHOS

@@ -829,6 +829,13 @@ struct WatermarkConfig {
     left: i32;
 }
 
+struct WatermarkConfiguration {
+    top: i32;
+    left: i32;
+    width: Optional<i32>;
+    height: Optional<i32>;
+}
+
 interface AVImageGenerator {
     @get GetFdSrc(): Optional<AVFileDescriptor>;
     @set SetFdSrc(fdSrc: Optional<AVFileDescriptor>): void;
@@ -894,6 +901,9 @@ interface AVRecorder {
 
     @gen_promise("setWatermark")
     SetWatermarkSync(watermark: image.PixelMap, config: WatermarkConfig): void;
+
+     @gen_promise("addWatermark")
+    AddWatermarkSync(watermark: image.PixelMap, config: WatermarkConfiguration): void;
 
     @gen_promise("updateRotation")
     UpdateRotationSync(rotation: i32): void;

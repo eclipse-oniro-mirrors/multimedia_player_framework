@@ -987,6 +987,17 @@ public:
     virtual int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer) = 0;
 
     /**
+     * @brief Add watermark with pixel data and position to avrecorder.
+     *
+     * @param watermarkBuffer watermark image buffer in RGBA8888 format
+     * @return Returns {@link MSERR_OK} If the AddWatermark succeeds; returns an error code otherwise.
+     * @since 1.0
+     * @version 1.0
+    */
+    virtual int32_t AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width, int32_t height,
+        int32_t &watermarkCount) = 0;
+
+    /**
      * @brief Set UserMeta to avrecorder.
      *
      * @param userMeta metadata

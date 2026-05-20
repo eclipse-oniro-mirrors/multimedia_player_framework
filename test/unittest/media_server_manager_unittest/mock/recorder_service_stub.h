@@ -89,6 +89,8 @@ public:
     MOCK_METHOD(int32_t, GetMaxAmplitude, (int32_t &amplitude), (override));
     MOCK_METHOD(int32_t, IsWatermarkSupported, (bool &isWatermarkSupported), (override));
     MOCK_METHOD(int32_t, SetWatermark, (std::shared_ptr<AVBuffer> &waterMarkBuffer), (override));
+    MOCK_METHOD(int32_t, AddWatermark, (std::shared_ptr<AVBuffer> &waterMarkBuffer,
+        int32_t width, int32_t height, int32_t &watermarkCount), (override));
     MOCK_METHOD(int32_t, SetUserMeta, (const std::shared_ptr<Meta> &userMeta), (override));
     MOCK_METHOD(int32_t, SetWillMuteWhenInterrupted, (bool muteWhenInterrupted), (override));
     MOCK_METHOD(int32_t, TransmitQos, (QOS::QosLevel level), (override));

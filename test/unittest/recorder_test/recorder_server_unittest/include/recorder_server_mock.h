@@ -162,6 +162,8 @@ public:
     void GetFileFd();
     uint64_t GetPts();
     int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo);
+    int32_t AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width, int32_t height,
+        int32_t &watermarkCount);
 
 private:
     int32_t SetAudVidFormat(
