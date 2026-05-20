@@ -510,5 +510,6 @@ int32_t Stream::GetPriority()
     return priority_;
 }
 // LCOV_EXCL_STOP
+
 } // namespace Media
 } // namespace OHOS

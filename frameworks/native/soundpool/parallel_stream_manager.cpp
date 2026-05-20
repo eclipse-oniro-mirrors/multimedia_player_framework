@@ -452,5 +452,6 @@ void ParallelStreamManager::StreamCallBack::OnError(int32_t errorCode)
     (void)errorCode;
 }
 // LCOV_EXCL_STOP
+
 } // namespace Media
 } // namespace OHOS
