@@ -38,8 +38,6 @@ namespace Media {
 using namespace MediaAVCodec;
 thread_local napi_ref AVTransCoderNapi::constructor_ = nullptr;
 const std::string CLASS_NAME = "AVTransCoder";
-const int32_t MAX_PIXEL_HEIGHT = 4096;
-const int32_t MAX_ROWSTRIDE = 4096 * 5;
 const std::map<std::string, std::vector<std::string>> STATE_CTRL = {
     {AVTransCoderState::STATE_IDLE, {
         AVTransCoderOpt::SET_AV_TRANSCODER_CONFIG,
