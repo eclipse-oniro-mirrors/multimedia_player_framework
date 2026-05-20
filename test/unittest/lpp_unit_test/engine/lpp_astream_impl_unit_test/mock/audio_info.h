@@ -136,7 +136,7 @@ public:
         time.tv_nsec = 0;
     }
     virtual ~Timestamp() = default;
-    uint32_t framePosition;
+    int64_t framePosition;
     struct timespec time;
     enum Timestampbase {
         /** Monotonically increasing time, excluding the system sleep time */

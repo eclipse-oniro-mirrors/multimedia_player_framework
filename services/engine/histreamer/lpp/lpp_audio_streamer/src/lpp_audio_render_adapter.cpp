@@ -366,7 +366,7 @@ int32_t LppAudioRenderAdapter::SetLoudnessGain(const float loudnessGain)
     return MSERR_OK;
 }
 
-int32_t LppAudioRenderAdapter::GetAudioPosition(timespec &time, uint32_t &framePosition)
+int32_t LppAudioRenderAdapter::GetAudioPosition(timespec &time, int64_t &framePosition)
 {
     FALSE_RETURN_V_MSG(audioRenderer_ != nullptr, MSERR_INVALID_OPERATION, "GetAudioPosition audioRender_ is nullptr");
     AudioStandard::Timestamp audioPositionTimestamp;
@@ -675,7 +675,7 @@ void LppAudioRenderAdapter::UpdateTimeAnchor(int64_t bufferPts)
     FALSE_RETURN_NOLOG(needUpdate);
     
     timespec time{};
-    uint32_t position;
+    int64_t position;
     auto ret = GetAudioPosition(time, position);
     FALSE_RETURN_MSG(ret == MSERR_OK, "GetAudioPosition failed");
     anchorClock_ = time.tv_sec * SEC_TO_US + time.tv_nsec / US_TO_MS;  // convert to us

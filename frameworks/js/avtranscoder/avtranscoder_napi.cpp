@@ -851,7 +851,14 @@ int32_t AVTransCoderNapi::AddWatermark(std::shared_ptr<PixelMap> &pixelMap,
         pixelMap->GetWidth(), pixelMap->GetHeight(), pixelMap->GetPixelFormat(), pixelMap->GetRowStride());
     CHECK_AND_RETURN_RET_LOG(pixelMap->GetPixelFormat() == PixelFormat::RGBA_8888, MSERR_INVALID_VAL,
         "Invalid pixel format");
-    size_t dataSize = pixelMap->GetHeight() * pixelMap->GetRowStride();
+
+    bool isValidHeight = (pixelMap->GetHeight() >= 0) && (pixelMap->GetHeight() <= AVTRANSCODER_WATERMARK_MAX_LENGTH);
+    CHECK_AND_RETURN_RET_LOG(isValidHeight, MSERR_INVALID_VAL, "Invalid pixel Height");
+    bool isValidRowStride = (pixelMap->GetRowStride() >= 0) &&
+        (pixelMap->GetRowStride() <= AVTRANSCODER_WATERMARK_MAX_LENGTH * AVTRANSCODER_WATERMARK_MAX_ROWSTRIDE_NUM);
+    CHECK_AND_RETURN_RET_LOG(isValidRowStride, MSERR_INVALID_VAL, "Invalid pixel RowStride");
+
+    int32_t dataSize = pixelMap->GetHeight() * pixelMap->GetRowStride();
     auto allocator = AVAllocatorFactory::CreateSharedAllocator(MemoryFlag::MEMORY_READ_WRITE);
     auto buffer = AVBuffer::CreateAVBuffer(allocator, dataSize);
     CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_INVALID_VAL, "Create buffer failed");
