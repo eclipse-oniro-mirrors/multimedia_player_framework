@@ -2033,5 +2033,312 @@ HWTEST_F(RecorderServerUnitTest, recorder_SetVideoEnableStableQualityMode_002, T
     EXPECT_EQ(MSERR_OK, recorderServer_->Release());
     close(g_videoRecorderConfig.outputFd);
 }
+
+/**
+ * @tc.name: recorder_SetUserMeta_001
+ * @tc.desc: SetUserMeta in REC_INITIALIZED state should fail
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, recorder_SetUserMeta_001, TestSize.Level2)
+{
+    std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
+    ASSERT_NE(nullptr, userMeta);
+    
+    EXPECT_EQ(MSERR_INVALID_STATE, recorderServer_->SetUserMeta(userMeta));
+}
+
+/**
+ * @tc.name: recorder_SetUserMeta_002
+ * @tc.desc: SetUserMeta in REC_CONFIGURED state should fail
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, recorder_SetUserMeta_002, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetUserMeta_002.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    
+    std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
+    ASSERT_NE(nullptr, userMeta);
+    
+    EXPECT_EQ(MSERR_INVALID_STATE, recorderServer_->SetUserMeta(userMeta));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_SetUserMeta_003
+ * @tc.desc: SetUserMeta in REC_PREPARED state with valid meta should succeed
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, recorder_SetUserMeta_003, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetUserMeta_003.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Prepare());
+    
+    std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
+    ASSERT_NE(nullptr, userMeta);
+    userMeta->SetData("USER_META_TEST", "test_metadata");
+    
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetUserMeta(userMeta));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_SetUserMeta_004
+ * @tc.desc: SetUserMeta in REC_RECORDING state should succeed
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, recorder_SetUserMeta_004, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetUserMeta_004.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorderServer_->RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Start());
+    
+    std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
+    ASSERT_NE(nullptr, userMeta);
+    userMeta->SetData("USER_META_TEST", "recording_metadata");
+    
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetUserMeta(userMeta));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Stop(false));
+    recorderServer_->StopBuffer(PURE_VIDEO);
+    EXPECT_EQ(MSERR_OK, recorderServer_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_SetUserMeta_005
+ * @tc.desc: SetUserMeta in REC_PAUSED state should succeed
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, recorder_SetUserMeta_005, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetUserMeta_005.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorderServer_->RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Start());
+    sleep(1);
+    EXPECT_EQ(MSERR_OK, recorderServer_->Pause());
+    
+    std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
+    ASSERT_NE(nullptr, userMeta);
+    userMeta->SetData("USER_META_TEST", "paused_metadata");
+    
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetUserMeta(userMeta));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Stop(false));
+    recorderServer_->StopBuffer(PURE_VIDEO);
+    EXPECT_EQ(MSERR_OK, recorderServer_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_SetUserMeta_007
+ * @tc.desc: SetUserMeta after Reset should fail
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, recorder_SetUserMeta_007, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetUserMeta_007.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorderServer_->Reset());
+    
+    std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
+    ASSERT_NE(nullptr, userMeta);
+    
+    EXPECT_EQ(MSERR_INVALID_STATE, recorderServer_->SetUserMeta(userMeta));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_SetUserMeta_008
+ * @tc.desc: SetUserMeta with empty meta in REC_PREPARED state
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, recorder_SetUserMeta_008, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetUserMeta_008.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Prepare());
+    
+    std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
+    ASSERT_NE(nullptr, userMeta);
+    
+    EXPECT_EQ(MSERR_PARAM_OUT_OF_RANGE, recorderServer_->SetUserMeta(userMeta));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_SetUserMeta_009
+ * @tc.desc: SetUserMeta with complex metadata in REC_RECORDING state
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, recorder_SetUserMeta_009, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetUserMeta_009.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorderServer_->RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Start());
+    
+    std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
+    ASSERT_NE(nullptr, userMeta);
+    userMeta->SetData("USER_META_TEST", "complex_metadata");
+    userMeta->SetData(Tag::MEDIA_TITLE, "Test Title");
+    userMeta->SetData(Tag::MEDIA_ARTIST, "Test Artist");
+    
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetUserMeta(userMeta));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Stop(false));
+    recorderServer_->StopBuffer(PURE_VIDEO);
+    EXPECT_EQ(MSERR_OK, recorderServer_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_SetUserMeta_010
+ * @tc.desc: SetUserMeta multiple times in REC_PREPARED state
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, recorder_SetUserMeta_010, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetUserMeta_010.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Prepare());
+    
+    for (int i = 0; i < 3; i++) {
+        std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
+        ASSERT_NE(nullptr, userMeta);
+        userMeta->SetData("USER_META_TEST", "metadata_" + std::to_string(i));
+        
+        EXPECT_EQ(MSERR_OK, recorderServer_->SetUserMeta(userMeta));
+    }
+    
+    EXPECT_EQ(MSERR_OK, recorderServer_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_SetUserMeta_011
+ * @tc.desc: SetUserMeta in REC_ERROR state should fail
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, recorder_SetUserMeta_011, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetUserMeta_011.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorderServer_->RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Start());
+    EXPECT_EQ(MSERR_OK, recorderServer_->Stop(false));
+    
+    std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
+    ASSERT_NE(nullptr, userMeta);
+    
+    EXPECT_EQ(MSERR_INVALID_STATE, recorderServer_->SetUserMeta(userMeta));
+    recorderServer_->StopBuffer(PURE_VIDEO);
+    EXPECT_EQ(MSERR_OK, recorderServer_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_SetUserMeta_012
+ * @tc.desc: SetUserMeta with audio and video recording
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, recorder_SetUserMeta_012, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetUserMeta_012.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(AUDIO_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Prepare());
+    
+    std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
+    ASSERT_NE(nullptr, userMeta);
+    userMeta->SetData("USER_META_TEST", "av_metadata");
+    
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetUserMeta(userMeta));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_SetUserMeta_013
+ * @tc.desc: SetUserMeta after Release should fail
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, recorder_SetUserMeta_013, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetUserMeta_013.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorderServer_->Release());
+    
+    std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
+    ASSERT_NE(nullptr, userMeta);
+    
+    EXPECT_NE(MSERR_INVALID_OPERATION, recorderServer_->SetUserMeta(userMeta));
+    close(g_videoRecorderConfig.outputFd);
+}
 } // namespace Media
 } // namespace OHOS

@@ -251,6 +251,12 @@ int32_t RecorderServerMock::SetRecorderCallback(const std::shared_ptr<RecorderCa
     return recorder_->SetRecorderCallback(callback);
 }
 
+int32_t RecorderServerMock::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
+    return recorder_->SetUserMeta(userMeta);
+}
+
 int32_t RecorderServerMock::Prepare()
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
