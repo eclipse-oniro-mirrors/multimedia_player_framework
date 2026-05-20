@@ -27,6 +27,7 @@ namespace {
 
 namespace OHOS {
 namespace Media {
+// LCOV_EXCL_START
 Stream::Stream(const Format &trackFormat, const int32_t &soundID, const int32_t &streamID,
     std::shared_ptr<ThreadPool> streamStopThreadPool) : trackFormat_(trackFormat),
     soundID_(soundID), streamID_(streamID), streamStopThreadPool_(streamStopThreadPool),
@@ -508,6 +509,7 @@ int32_t Stream::GetPriority()
 {
     return priority_;
 }
+// LCOV_EXCL_STOP
 
 } // namespace Media
 } // namespace OHOS

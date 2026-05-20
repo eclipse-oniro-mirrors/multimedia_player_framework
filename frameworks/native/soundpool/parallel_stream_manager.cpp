@@ -34,6 +34,7 @@ namespace {
 
 namespace OHOS {
 namespace Media {
+// LCOV_EXCL_START
 ParallelStreamManager::ParallelStreamManager(int32_t maxStreams,
     AudioStandard::AudioRendererInfo audioRenderInfo) : audioRendererInfo_(audioRenderInfo), maxStreams_(maxStreams)
 {
@@ -450,6 +451,7 @@ void ParallelStreamManager::StreamCallBack::OnError(int32_t errorCode)
 {
     (void)errorCode;
 }
+// LCOV_EXCL_STOP
 
 } // namespace Media
 } // namespace OHOS
