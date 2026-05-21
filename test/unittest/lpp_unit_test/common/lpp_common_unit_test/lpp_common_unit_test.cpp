@@ -452,5 +452,135 @@ HWTEST_F(LppDataPacketUnitTest, ReadVector_006, TestSize.Level1)
     bool result = packet_->ReadVector(parcel);
     EXPECT_FALSE(result);
 }
+
+/**
+ * @tc.name  : Init_001
+ * @tc.number: Init_001
+ * @tc.desc  : Test Init with streamerId
+ */
+HWTEST_F(LppDataPacketUnitTest, Init_001, TestSize.Level1)
+{
+    packet_->Init("test_streamer");
+    EXPECT_NE(packet_->streamerId_, "");
+    EXPECT_EQ(packet_->dumpFileNameInput_, "test_streamer_DUMP_INPUT.bin");
+}
+
+/**
+ * @tc.name  : WriteToMessageParcel_001
+ * @tc.number: WriteToMessageParcel_001
+ * @tc.desc  : Test WriteToMessageParcel with valid data
+ */
+HWTEST_F(LppDataPacketUnitTest, WriteToMessageParcel_001, TestSize.Level1)
+{
+    packet_->Init();
+    packet_->Enable();
+    auto allocator = AVAllocatorFactory::CreateSharedAllocator(MemoryFlag::MEMORY_READ_WRITE);
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer(allocator, 1024);
+    buffer->memory_->SetSize(100);
+    packet_->AppendOneBuffer(buffer);
+    MessageParcel parcel;
+    EXPECT_TRUE(packet_->WriteToMessageParcel(parcel));
+}
+
+/**
+ * @tc.name  : WriteToMessageParcel_002
+ * @tc.number: WriteToMessageParcel_002
+ * @tc.desc  : Test WriteToMessageParcel with nullptr buffer_
+ */
+HWTEST_F(LppDataPacketUnitTest, WriteToMessageParcel_002, TestSize.Level1)
+{
+    packet_->buffer_ = nullptr;
+    MessageParcel parcel;
+    EXPECT_FALSE(packet_->WriteToMessageParcel(parcel));
+}
+
+/**
+ * @tc.name  : ReadFromMessageParcel_001
+ * @tc.number: ReadFromMessageParcel_001
+ * @tc.desc  : Test ReadFromMessageParcel with valid data
+ */
+HWTEST_F(LppDataPacketUnitTest, ReadFromMessageParcel_001, TestSize.Level1)
+{
+    packet_->Init();
+    packet_->Enable();
+    auto allocator = AVAllocatorFactory::CreateSharedAllocator(MemoryFlag::MEMORY_READ_WRITE);
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer(allocator, 1024);
+    buffer->memory_->SetSize(100);
+    packet_->AppendOneBuffer(buffer);
+    MessageParcel writeParcel;
+    packet_->WriteToMessageParcel(writeParcel);
+    packet_->Clear();
+    EXPECT_TRUE(packet_->ReadFromMessageParcel(writeParcel));
+}
+
+/**
+ * @tc.name  : ReadFromMessageParcel_002
+ * @tc.number: ReadFromMessageParcel_002
+ * @tc.desc  : Test ReadFromMessageParcel with invalid data
+ */
+HWTEST_F(LppDataPacketUnitTest, ReadFromMessageParcel_002, TestSize.Level1)
+{
+    MessageParcel parcel;
+    parcel.WriteInt64(-1);
+    EXPECT_FALSE(packet_->ReadFromMessageParcel(parcel));
+}
+
+/**
+ * @tc.name  : WriteVector_001
+ * @tc.number: WriteVector_001
+ * @tc.desc  : Test WriteVector with valid data
+ */
+HWTEST_F(LppDataPacketUnitTest, WriteVector_001, TestSize.Level1)
+{
+    packet_->flag_.push_back(1);
+    packet_->pts_.push_back(1000);
+    packet_->size_.push_back(100);
+    MessageParcel parcel;
+    EXPECT_TRUE(packet_->WriteVector(parcel));
+}
+
+/**
+ * @tc.name  : DumpAVBufferToFile_001
+ * @tc.number: DumpAVBufferToFile_001
+ * @tc.desc  : Test DumpAVBufferToFile when dump is disabled
+ */
+HWTEST_F(LppDataPacketUnitTest, DumpAVBufferToFile_001, TestSize.Level1)
+{
+    packet_->dumpBufferNeeded_ = false;
+    auto allocator = AVAllocatorFactory::CreateSharedAllocator(MemoryFlag::MEMORY_READ_WRITE);
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer(allocator, 1024);
+    buffer->memory_->SetSize(100);
+    packet_->DumpAVBufferToFile("a", buffer, true);
+}
+
+/**
+ * @tc.name  : DumpAVBufferToFile_002
+ * @tc.number: DumpAVBufferToFile_002
+ * @tc.desc  : Test DumpAVBufferToFile with invalid parameter
+ */
+HWTEST_F(LppDataPacketUnitTest, DumpAVBufferToFile_002, TestSize.Level1)
+{
+    packet_->dumpBufferNeeded_ = true;
+    packet_->dumpFileNameInput_ = "";
+    auto allocator = AVAllocatorFactory::CreateSharedAllocator(MemoryFlag::MEMORY_READ_WRITE);
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer(allocator, 1024);
+    buffer->memory_->SetSize(100);
+    packet_->DumpAVBufferToFile("x", buffer, true);
+}
+
+/**
+ * @tc.name  : DumpAVBufferToFile_003
+ * @tc.number: DumpAVBufferToFile_003
+ * @tc.desc  : Test DumpAVBufferToFile with zero size buffer
+ */
+HWTEST_F(LppDataPacketUnitTest, DumpAVBufferToFile_003, TestSize.Level1)
+{
+    packet_->dumpBufferNeeded_ = true;
+    packet_->dumpFileNameInput_ = "test.bin";
+    auto allocator = AVAllocatorFactory::CreateSharedAllocator(MemoryFlag::MEMORY_READ_WRITE);
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer(allocator, 1024);
+    buffer->memory_->SetSize(0);
+    packet_->DumpAVBufferToFile("a", buffer, true);
+}
 } // namespace Media
 } // namespace OHOS
