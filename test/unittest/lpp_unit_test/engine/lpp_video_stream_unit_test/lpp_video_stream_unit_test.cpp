@@ -892,5 +892,188 @@ HWTEST_F(LppVideoStreamUnitTest, GetLatestPts_002, TestSize.Level0)
     auto res = videoStreamImpl_->GetLatestPts(pts);
     EXPECT_EQ(res, MSERR_OK);
 }
+
+/**
+* @tc.name    : Test SetLppAudioStreamerId API
+* @tc.number  : SetLppAudioStreamerId_002
+* @tc.desc    : Test SetLppAudioStreamerId with valid audioStreamerEngine
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(LppVideoStreamUnitTest, SetLppAudioStreamerId_002, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoStreamImpl_);
+    auto mockEngine = std::make_shared<MockILppAudioStreamerEngine>();
+    auto &lppEngineManager = ILppEngineManager::GetInstance();
+    EXPECT_CALL(lppEngineManager, GetLppAudioInstance(_)).WillOnce(Return(mockEngine));
+    std::string audioStreamerId = "test_audio_id";
+    auto ret = videoStreamImpl_->SetLppAudioStreamerId(audioStreamerId);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+/**
+* @tc.name    : Test GetShareBufferFd API
+* @tc.number  : GetShareBufferFd_002
+* @tc.desc    : Test GetShareBufferFd when syncMgr_ is nullptr
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(LppVideoStreamUnitTest, GetShareBufferFd_002, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoStreamImpl_);
+    videoStreamImpl_->syncMgr_ = nullptr;
+    int32_t fd = -1;
+    auto ret = videoStreamImpl_->GetShareBufferFd(fd);
+    EXPECT_NE(ret, MSERR_OK);
+}
+
+/**
+* @tc.name    : Test GetShareBufferFd API
+* @tc.number  : GetShareBufferFd_003
+* @tc.desc    : Test GetShareBufferFd when GetShareBuffer fails
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(LppVideoStreamUnitTest, GetShareBufferFd_003, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoStreamImpl_);
+    videoStreamImpl_->syncMgr_ = syncMgr_;
+    EXPECT_CALL(*syncMgr_, GetShareBuffer(_)).WillOnce(Return(MSERR_UNKNOWN));
+    int32_t fd = -1;
+    auto ret = videoStreamImpl_->GetShareBufferFd(fd);
+    EXPECT_NE(ret, MSERR_OK);
+}
+
+/**
+* @tc.name    : Test SetVideoSurface API
+* @tc.number  : SetVideoSurface_003
+* @tc.desc    : Test SetVideoSurface when syncMgr_ is nullptr
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(LppVideoStreamUnitTest, SetVideoSurface_003, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoStreamImpl_);
+    videoStreamImpl_->syncMgr_ = nullptr;
+    sptr<Surface> surface = Surface::CreateSurfaceAsConsumer();
+    auto res = videoStreamImpl_->SetVideoSurface(surface);
+    EXPECT_NE(res, MSERR_OK);
+}
+
+/**
+* @tc.name    : Test SetVideoSurface API
+* @tc.number  : SetVideoSurface_004
+* @tc.desc    : Test SetVideoSurface when vdec_ is nullptr
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(LppVideoStreamUnitTest, SetVideoSurface_004, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoStreamImpl_);
+    videoStreamImpl_->syncMgr_ = syncMgr_;
+    videoStreamImpl_->vdec_ = nullptr;
+    sptr<Surface> surface = Surface::CreateSurfaceAsConsumer();
+    auto res = videoStreamImpl_->SetVideoSurface(surface);
+    EXPECT_NE(res, MSERR_OK);
+}
+
+/**
+* @tc.name    : Test SetVideoSurface API
+* @tc.number  : SetVideoSurface_005
+* @tc.desc    : Test SetVideoSurface when surface is nullptr
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(LppVideoStreamUnitTest, SetVideoSurface_005, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoStreamImpl_);
+    videoStreamImpl_->syncMgr_ = syncMgr_;
+    videoStreamImpl_->vdec_ = vdec_;
+    sptr<Surface> surface = nullptr;
+    auto res = videoStreamImpl_->SetVideoSurface(surface);
+    EXPECT_NE(res, MSERR_OK);
+}
+
+/**
+* @tc.name    : Test SetVideoSurface API
+* @tc.number  : SetVideoSurface_006
+* @tc.desc    : Test SetVideoSurface with isSwitchSurface=true
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(LppVideoStreamUnitTest, SetVideoSurface_006, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoStreamImpl_);
+    videoStreamImpl_->surface_ = Surface::CreateSurfaceAsConsumer();
+    videoStreamImpl_->isLpp_ = true;
+    videoStreamImpl_->syncMgr_ = syncMgr_;
+    videoStreamImpl_->vdec_ = vdec_;
+    videoStreamImpl_->shareBufferFd_ = 1;
+    sptr<Surface> surface = Surface::CreateSurfaceAsConsumer();
+    auto res = videoStreamImpl_->SetVideoSurface(surface);
+    EXPECT_EQ(res, MSERR_OK);
+}
+
+/**
+* @tc.name    : Test StartRender API
+* @tc.number  : StartRender_005
+* @tc.desc    : Test StartRender when syncMgr_->StartRender fails
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(LppVideoStreamUnitTest, StartRender_005, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoStreamImpl_);
+    videoStreamImpl_->surface_ = Surface::CreateSurfaceAsConsumer();
+    videoStreamImpl_->vdec_ = vdec_;
+    videoStreamImpl_->dataMgr_ = dataMgr_;
+    videoStreamImpl_->syncMgr_ = syncMgr_;
+    videoStreamImpl_->isLpp_ = true;
+    EXPECT_CALL(*syncMgr_, GetShareBuffer(_)).WillOnce(Return(MSERR_OK));
+    EXPECT_CALL(*vdec_, StartRender()).WillOnce(Return(MSERR_OK));
+    EXPECT_CALL(*syncMgr_, StartRender()).WillOnce(Return(MSERR_INVALID_VAL));
+    auto res = videoStreamImpl_->StartRender();
+    EXPECT_NE(res, MSERR_OK);
+}
+
+/**
+* @tc.name    : Test Stop API
+* @tc.number  : Stop_005
+* @tc.desc    : Test Stop when vdec_->Stop fails
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(LppVideoStreamUnitTest, Stop_005, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoStreamImpl_);
+    videoStreamImpl_->vdec_ = vdec_;
+    videoStreamImpl_->syncMgr_ = syncMgr_;
+    EXPECT_CALL(*syncMgr_, Stop()).WillOnce(Return(MSERR_OK));
+    EXPECT_CALL(*vdec_, Stop()).WillOnce(Return(MSERR_INVALID_VAL));
+    auto ret = videoStreamImpl_->Stop();
+    EXPECT_NE(ret, MSERR_OK);
+}
+
+/**
+* @tc.name    : Test ReturnFrames API
+* @tc.number  : ReturnFrames_002
+* @tc.desc    : Test ReturnFrames when framePacket is nullptr
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(LppVideoStreamUnitTest, ReturnFrames_002, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoStreamImpl_);
+    videoStreamImpl_->dataMgr_ = dataMgr_;
+    sptr<LppDataPacket> framePacket = nullptr;
+    auto ret = videoStreamImpl_->ReturnFrames(framePacket);
+    EXPECT_NE(ret, MSERR_OK);
+}
+
+/**
+* @tc.name    : Test HandleTargetArrivedEvent API
+* @tc.number  : HandleTargetArrivedEvent_001
+* @tc.desc    : Test HandleTargetArrivedEvent interface with valid event
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(LppVideoStreamUnitTest, HandleTargetArrivedEvent_001, TestSize.Level1)
+{
+    ASSERT_NE(nullptr, videoStreamImpl_);
+    videoStreamImpl_->callbackLooper_ = callbackLooper_;
+    Event event;
+    event.param = std::pair<int64_t, bool>(1000, true);
+    EXPECT_CALL(*callbackLooper_, OnTargetArrived(_, _)).Times(1);
+    videoStreamImpl_->HandleTargetArrivedEvent(event);
+}
 } // namespace Media
 } // namespace OHOS
