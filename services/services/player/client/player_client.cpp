@@ -230,6 +230,7 @@ int32_t PlayerClient::Release()
     dataSrcStub_ = nullptr;
     dolbyPassthroughStub_ = nullptr;
     sourceLoaderStub_ = nullptr;
+    pcmCallbackStub_ = nullptr;
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return DisableWhenOK(playerProxy_->Release());
 }
@@ -242,6 +243,7 @@ int32_t PlayerClient::ReleaseSync()
     dataSrcStub_ = nullptr;
     sourceLoaderStub_ = nullptr;
     dolbyPassthroughStub_ = nullptr;
+    pcmCallbackStub_ = nullptr;
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return DisableWhenOK(playerProxy_->ReleaseSync());
 }
@@ -726,30 +728,58 @@ int32_t PlayerClient::GetVideoSample(int32_t &outputResult)
     return playerProxy_->GetVideoSample(outputResult);
 }
 
-int32_t PlayerClient::SetPCMOutputCallback(const std::shared_ptr<PlayerCallback>& callback)
+int32_t PlayerClient::CreatePCMCallbackObject()
+{
+    MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " CreatePCMCallbackObject", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_NOLOG(pcmCallbackStub_ == nullptr, MSERR_OK);
+
+    pcmCallbackStub_ = new(std::nothrow) PCMOutputCallbackStub();
+    CHECK_AND_RETURN_RET_LOG(pcmCallbackStub_ != nullptr, MSERR_NO_MEMORY,
+        "failed to create PCMOutputCallbackStub");
+
+    sptr<IRemoteObject> object = pcmCallbackStub_->AsObject();
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "pcmOutputCallbackStub object is nullptr.");
+
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    return playerProxy_->SetPCMCallback(object);
+}
+
+int32_t PlayerClient::SetPCMOutputCallback(const std::shared_ptr<PlayerCallback> &callback)
 {
     MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " SetPCMOutputCallback", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(mutex_);
+    auto ret = CreatePCMCallbackObject();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to create pcm callback stub.");
+
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
-    CHECK_AND_RETURN_RET_LOG(callback != nullptr, CancelPCMCallbackStub(), "callback is null, unregister callback");
+    ret = playerProxy_->SetPCMOutputStatus(callback != nullptr);
 
-    std::function<void(const std::shared_ptr<AVBuffer>&)> func = [callback](const std::shared_ptr<AVBuffer> &buffer) {
-        callback->OnPCMOutput(buffer);
-    };
-    pcmOutputCallbackStub_ = new(std::nothrow) PCMOutputCallbackStub(func);
-    CHECK_AND_RETURN_RET_LOG(pcmOutputCallbackStub_ != nullptr, MSERR_NO_MEMORY,
-        "failed to create PCMOutputCallbackStub");
-
-    sptr<IRemoteObject> object = pcmOutputCallbackStub_->AsObject();
-    CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "pcmOutputCallbackStub object is nullptr.");
-
-    return playerProxy_->SetPCMOutputCallback(object);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to set pcm output status");
+    pcmCallbackStub_->SetPCMCallback(callback);
+    return MSERR_OK;
 }
 
-int32_t PlayerClient::CancelPCMCallbackStub()
+int32_t PlayerClient::SetPCMProcessorCallback(const std::shared_ptr<PlayerCallback> &callback)
 {
-    pcmOutputCallbackStub_ = nullptr;
-    return playerProxy_->SetPCMOutputCallback(nullptr);
+    MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " SetPCMProcessorCallback", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto ret = CreatePCMCallbackObject();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to create pcm callback stub.");
+
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    ret = playerProxy_->SetPCMProcessorStatus(callback != nullptr);
+
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to set pcm processor status");
+    pcmCallbackStub_->SetPCMCallback(callback);
+    return MSERR_OK;
+}
+
+int32_t PlayerClient::SetPCMProcessorMaxLen(int32_t maxProcessedPcmLen)
+{
+    MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " SetPCMProcessorMaxLen", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+
+    return playerProxy_->SetPCMProcessorMaxLen(maxProcessedPcmLen);
 }
 } // namespace Media
 } // namespace OHOS

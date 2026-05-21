@@ -301,8 +301,14 @@ void PlayerServiceStub::FillPlayerFuncPart4()
         [this](MessageParcel &data, MessageParcel &reply) { return SetVideoOutput(data, reply); } };
     playerFuncs_[GET_VIDEO_SAMPLE] = { "Player::GetVideoSample",
         [this](MessageParcel &data, MessageParcel &reply) { return GetVideoSample(data, reply); } };
-    playerFuncs_[SET_PCM_OUTPUT_CALLBACK] = { "Player::SetPCMOutputCallback",
-        [this](MessageParcel &data, MessageParcel &reply) { return SetPCMOutputCallback(data, reply); } };
+    playerFuncs_[SET_PCM_CALLBACK] = { "Player::SetPCMCallback",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetPCMCallback(data, reply); } };
+    playerFuncs_[SET_PCM_OUTPUT_CB_STATUS] = { "Player::SetPCMOutputStatus",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetPCMOutputStatus(data, reply); } };
+    playerFuncs_[SET_PCM_PROCESSOR_CB_STATUS] = { "Player::SetPCMProcessorStatus",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetPCMProcessorStatus(data, reply); } };
+    playerFuncs_[SET_PCM_PROCESSOR_MAX_LEN] = { "Player::SetPCMProcessorMaxLen",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetPCMProcessorMaxLen(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
@@ -2030,33 +2036,68 @@ int32_t PlayerServiceStub::GetVideoSample(MessageParcel &data, MessageParcel &re
     return ret;
 }
 
-int32_t PlayerServiceStub::SetPCMOutputCallback(MessageParcel &data, MessageParcel &reply)
+int32_t PlayerServiceStub::SetPCMCallback(MessageParcel &data, MessageParcel &reply)
 {
     sptr<IRemoteObject> object = data.ReadRemoteObject();
-    reply.WriteInt32(SetPCMOutputCallback(object));
+    reply.WriteInt32(SetPCMCallback(object));
     return MSERR_OK;
 }
 
-int32_t PlayerServiceStub::SetPCMOutputCallback(const sptr<IRemoteObject> &object)
+int32_t PlayerServiceStub::SetPCMCallback(const sptr<IRemoteObject> &object)
 {
-    MediaTrace trace("PlayerServiceStub::SetPCMOutputCallback");
-    MEDIA_LOGI("PlayerServiceStub SetPCMOutputCallback");
+    MediaTrace trace("PlayerServiceStub::SetPCMCallback");
+    MEDIA_LOGI("PlayerServiceStub SetPCMCallback");
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "object is nullptr");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
-
-    auto callback = std::function<void(const std::shared_ptr<AVBuffer>&)>();
-    CHECK_AND_RETURN_RET_LOG(object != nullptr, playerServer_->SetPCMOutputCallback(callback),
-        "object is nullptr, cancel callback");
 
     sptr<IStandardPCMOutputCallback> proxy = iface_cast<IStandardPCMOutputCallback>(object);
     CHECK_AND_RETURN_RET_LOG(proxy != nullptr, MSERR_NO_MEMORY, "failed to convert PCMOutputCallbackProxy");
 
-    callback = [proxy](const std::shared_ptr<AVBuffer> &buffer) {
-        CHECK_AND_RETURN_LOG(buffer != nullptr, "buffer is nullptr");
-        CHECK_AND_RETURN_LOG(proxy != nullptr, "proxy is nullptr");
-        proxy->OnPCMOutput(buffer);
-    };
+    std::shared_ptr<IPCMCallback> pcmCallback = std::make_shared<PCMCallback>(proxy);
+    CHECK_AND_RETURN_RET_LOG(pcmCallback != nullptr, MSERR_NO_MEMORY, "failed to new PCMCallback");
+    return playerServer_->SetPCMCallback(pcmCallback);
+}
 
-    return playerServer_->SetPCMOutputCallback(callback);
+int32_t PlayerServiceStub::SetPCMOutputStatus(MessageParcel &data, MessageParcel &reply)
+{
+    bool isEnable = data.ReadBool();
+    reply.WriteInt32(SetPCMOutputStatus(isEnable));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetPCMOutputStatus(bool isEnable)
+{
+    MediaTrace trace("PlayerServiceStub::SetPCMOutputStatus");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetPCMOutputStatus(isEnable);
+}
+
+int32_t PlayerServiceStub::SetPCMProcessorStatus(MessageParcel &data, MessageParcel &reply)
+{
+    bool isEnable = data.ReadBool();
+    reply.WriteInt32(SetPCMProcessorStatus(isEnable));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetPCMProcessorStatus(bool isEnable)
+{
+    MediaTrace trace("PlayerServiceStub::SetPCMProcessorStatus");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetPCMProcessorStatus(isEnable);
+}
+
+int32_t PlayerServiceStub::SetPCMProcessorMaxLen(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t maxProcessedPcmLen = data.ReadInt32();
+    reply.WriteInt32(SetPCMProcessorMaxLen(maxProcessedPcmLen));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetPCMProcessorMaxLen(int32_t maxProcessedPcmLen)
+{
+    MediaTrace trace("PlayerServiceStub::SetPCMProcessorMaxLen");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetPCMProcessorMaxLen(maxProcessedPcmLen);
 }
 } // namespace Media
 } // namespace OHOS

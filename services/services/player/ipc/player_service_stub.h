@@ -127,6 +127,11 @@ public:
     bool IsLiveSeek() override;
     int32_t SetVideoOutput(sptr<Surface> surface) override;
     int32_t GetVideoSample(int32_t &outputResult) override;
+    int32_t SetPCMCallback(const sptr<IRemoteObject> &object) override;
+    int32_t SetPCMOutputStatus(bool isEnable) override;
+    int32_t SetPCMProcessorStatus(bool isEnable) override;
+    int32_t SetPCMProcessorMaxLen(int32_t maxProcessedPcmLen) override;
+
 protected:
     PlayerServiceStub();
     virtual int32_t Init();
@@ -220,8 +225,10 @@ private:
     int32_t IsLiveSeek(MessageParcel &data, MessageParcel &reply);
     int32_t SetVideoOutput(MessageParcel &data, MessageParcel &reply);
     int32_t GetVideoSample(MessageParcel &data, MessageParcel &reply);
-    int32_t SetPCMOutputCallback(MessageParcel &data, MessageParcel &reply);
-    int32_t SetPCMOutputCallback(const sptr<IRemoteObject> &object) override;
+    int32_t SetPCMCallback(MessageParcel &data, MessageParcel &reply);
+    int32_t SetPCMOutputStatus(MessageParcel &data, MessageParcel &reply);
+    int32_t SetPCMProcessorStatus(MessageParcel &data, MessageParcel &reply);
+    int32_t SetPCMProcessorMaxLen(MessageParcel &data, MessageParcel &reply);
 
     int32_t ReadMediaStreamListFromMessageParcel(
         MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource);

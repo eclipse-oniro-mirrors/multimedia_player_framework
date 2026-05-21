@@ -3937,7 +3937,7 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
     SetAudioRendererParameter();
     SetPrivacyType(audioPrivacyType_);
     audioSink_->SetSyncCenter(syncManager_);
-    audioSink_->SetPCMOutputCallback(GetPCMOutputCallback());
+    InitPcmCallback();
 
     completeState_.emplace_back(std::make_pair("AudioSink", false));
     initialAVStates_.emplace_back(std::make_pair(EventType::EVENT_AUDIO_FIRST_FRAME, false));
@@ -4776,17 +4776,49 @@ int32_t HiPlayerImpl::GetVideoSample(int32_t &outputResult)
     return TransStatus(Status::OK);
 }
 
-int32_t HiPlayerImpl::SetPCMOutputCallback(const std::function<void(const std::shared_ptr<AVBuffer>&)>& callback)
+int32_t HiPlayerImpl::SetPCMCallback(const std::shared_ptr<IPCMCallback>& callback)
 {
     std::lock_guard<std::mutex> lock(pcmCallbackMutex_);
-    pcmOutputCallback_ = callback;
+    pcmCallback_ = callback;
     return TransStatus(Status::OK);
 }
 
-std::function<void(const std::shared_ptr<AVBuffer>&)> HiPlayerImpl::GetPCMOutputCallback()
+int32_t HiPlayerImpl::SetPCMOutputStatus(bool isEnable)
 {
     std::lock_guard<std::mutex> lock(pcmCallbackMutex_);
-    return pcmOutputCallback_;
+
+    // If isPcmProcessorEnable_ is true, can not set SetPCMOutputStatus
+    FALSE_RETURN_V(!isPcmProcessorEnable_, TransStatus(Status::ERROR_INVALID_OPERATION));
+    isPcmOutputEnable_ = isEnable;
+    return TransStatus(Status::OK);
+}
+
+int32_t HiPlayerImpl::SetPCMProcessorStatus(bool isEnable)
+{
+    std::lock_guard<std::mutex> lock(pcmCallbackMutex_);
+
+    // If isPcmOutputEnable_ is true, can not set SetPCMProcessorStatus
+    FALSE_RETURN_V(!isPcmOutputEnable_, TransStatus(Status::ERROR_INVALID_OPERATION));
+    isPcmProcessorEnable_ = isEnable;
+    return TransStatus(Status::OK);
+}
+
+int32_t HiPlayerImpl::SetPCMProcessorMaxLen(int32_t maxProcessedPcmLen)
+{
+    std::lock_guard<std::mutex> lock(pcmCallbackMutex_);
+    maxProcessedPcmLen_ = maxProcessedPcmLen;
+    return TransStatus(Status::OK);
+}
+
+void HiPlayerImpl::InitPcmCallback()
+{
+    FALSE_RETURN(audioSink_ != nullptr);
+
+    std::lock_guard<std::mutex> lock(pcmCallbackMutex_);
+    audioSink_->SetPCMCallback(pcmCallback_);
+    audioSink_->SetPCMOutputStatus(isPcmOutputEnable_);
+    audioSink_->SetPCMProcessorStatus(isPcmProcessorEnable_);
+    audioSink_->SetPCMProcessorMaxLen(maxProcessedPcmLen_);
 }
 }  // namespace Media
 }  // namespace OHOS

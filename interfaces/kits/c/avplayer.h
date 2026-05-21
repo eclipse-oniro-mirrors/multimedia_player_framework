@@ -1087,6 +1087,32 @@ OH_AVPlayerVideoOutput* OH_AVPlayer_SetVideoSideOutput(OH_AVPlayer *player, OHNa
  */
 OH_VideoOutputResult OH_AVPlayerVideoOutput_GetNewestVideoSample(OH_AVPlayerVideoOutput *videoOutput);
 
+/**
+ * @brief Method to set audio pcm data process callback.
+ * @param player Pointer to an OH_AVPlayer instance.
+ * @param callback Pointer to callback function, nullptr indicates unregister callback.
+ * @param userData Pointer to user specific data.
+ * @return Function result code.
+ *         {@link AV_ERR_OK} if the execution is successful.
+ *         {@link AV_ERR_INVALID_VAL} if input player is null or player SetPCMProcessorCallback failed.
+ * @since 26.0.0
+ */
+OH_AVErrCode OH_AVPlayer_SetPCMProcessorCallback(OH_AVPlayer *player, OH_AVPlayerPCMOutputCallback callback,
+    void *userData);
+
+/**
+ * @brief Sets the maximum amount of data that can be returned at a time during audio post-processing.
+ * Allows some PCM data to be cached and returned with the next PCM data
+ * @param player Pointer to an OH_AVPlayer instance.
+ * @param maxProcessedPCMLen the maximum amount of PCM data returned at one time.
+ *     OH_AVPlayerPCMProcessorCallback ensures that the returned pcmBuffer's Capacity is not less than this value.
+ * @return Function result code.
+ *         {@link AV_ERR_OK} if the execution is successful.
+ *         {@link AV_ERR_INVALID_VAL} if input player is null or maxProcessedPCMLen is error.
+ * @since 26.0.0
+ */
+OH_AVErrCode OH_AVPlayer_SetPCMProcessorMaxLen(OH_AVPlayer *player, int maxProcessedPCMLen);
+
 #ifdef __cplusplus
 }
 #endif

@@ -625,6 +625,15 @@ typedef void (*OH_AVPlayerOnSeiMessageReceivedCallback)(OH_AVPlayer *player, OH_
 typedef void (*OH_AVPlayerPCMOutputCallback)(OH_AVPlayer *player, OH_AVBuffer *pcmBuffer, void *userData);
 
 /**
+ * @brief This callback provides a PCM buffer for processing.
+ * @param player Pointer to an OH_AVPlayer instance
+ * @param pcmBuffer Decoded PCM audio data.
+ * @param userData Pointer to user specific data
+ * @since 26.0.0
+ */
+typedef void (*OH_AVPlayerPCMProcessorCallback)(OH_AVPlayer *player, OH_AVBuffer *pcmBuffer, void *userData);
+
+/**
  * @brief A collection of all callback function pointers in OH_AVPlayer. Register an instance of this
  * structure to the OH_AVPlayer instance, and process the information reported through the callback to ensure the
  * normal operation of OH_AVPlayer.

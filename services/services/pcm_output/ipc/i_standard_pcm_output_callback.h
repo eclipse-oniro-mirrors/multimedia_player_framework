@@ -26,9 +26,11 @@ class IStandardPCMOutputCallback : public IRemoteBroker {
 public:
     virtual ~IStandardPCMOutputCallback() = default;
     virtual void OnPCMOutput(const std::shared_ptr<AVBuffer> &buffer) = 0;
+    virtual void OnPCMProcessor(const std::shared_ptr<AVBuffer> &buffer) = 0;
 
     enum PCMOutputCallbackMsg {
         ON_PCM_OUTPUT = 0,
+        ON_PCM_PROCESSOR = 1,
         MAX_IPC_ID,
     };
 

@@ -131,7 +131,10 @@ void PlayerServiceProxy::InitPlayerFuncsPart2()
     playerFuncs_[GET_LOADED_RANGES] = "Player::GetLoadedRanges";
     playerFuncs_[SEEK_TO_DEFAULT_POSITION] = "Player::SeekToDefaultPosition";
     playerFuncs_[IS_LIVE_SEEK] = "Player::IsLiveSeek";
-    playerFuncs_[SET_PCM_OUTPUT_CALLBACK] = "Player::SetPCMOutputCallback";
+    playerFuncs_[SET_PCM_CALLBACK] = "Player::SetPCMCallback";
+    playerFuncs_[SET_PCM_OUTPUT_CB_STATUS] = "Player::SetPCMOutputStatus";
+    playerFuncs_[SET_PCM_PROCESSOR_CB_STATUS] = "Player::SetPCMProcessorStatus";
+    playerFuncs_[SET_PCM_PROCESSOR_MAX_LEN] = "Player::SetPCMProcessorMaxLen";
 }
 
 int32_t PlayerServiceProxy::SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -1826,9 +1829,9 @@ int32_t PlayerServiceProxy::GetVideoSample(int32_t &outputResult)
     return reply.ReadInt32();
 }
 
-int32_t PlayerServiceProxy::SetPCMOutputCallback(const sptr<IRemoteObject> &object)
+int32_t PlayerServiceProxy::SetPCMCallback(const sptr<IRemoteObject> &object)
 {
-    MediaTrace trace("PlayerServiceProxy::SetPCMOutputCallback");
+    MediaTrace trace("PlayerServiceProxy::SetPCMCallback");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -1837,9 +1840,63 @@ int32_t PlayerServiceProxy::SetPCMOutputCallback(const sptr<IRemoteObject> &obje
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
     (void)data.WriteRemoteObject(object);
-    int32_t error = SendRequest(SET_PCM_OUTPUT_CALLBACK, data, reply, option);
+    int32_t error = SendRequest(SET_PCM_CALLBACK, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
-        "SetPCMOutputCallback failed, error: %{public}d", error);
+        "SetPCMCallback failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::SetPCMOutputStatus(bool isEnable)
+{
+    MediaTrace trace("PlayerServiceProxy::SetPCMOutputStatus");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    (void)data.WriteBool(isEnable);
+    int32_t error = SendRequest(SET_PCM_OUTPUT_CB_STATUS, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetPCMOutputStatus failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::SetPCMProcessorStatus(bool isEnable)
+{
+    MediaTrace trace("PlayerServiceProxy::SetPCMProcessorStatus");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    (void)data.WriteBool(isEnable);
+    int32_t error = SendRequest(SET_PCM_PROCESSOR_CB_STATUS, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetPCMProcessorStatus failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::SetPCMProcessorMaxLen(int32_t maxProcessedPcmLen)
+{
+    MediaTrace trace("PlayerServiceProxy::SetPCMProcessorMaxLen");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    (void)data.WriteInt32(maxProcessedPcmLen);
+    int32_t error = SendRequest(SET_PCM_PROCESSOR_MAX_LEN, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetPCMProcessorMaxLen failed, error: %{public}d", error);
 
     return reply.ReadInt32();
 }

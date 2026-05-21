@@ -61,6 +61,7 @@ config("media_service_config") {
     "media_source/server",
     "monitor/client",
     "monitor/ipc",
+    "pcm_output/ipc",
     "monitor/server",
     "pcm_output/ipc",
     "recorder/ipc",

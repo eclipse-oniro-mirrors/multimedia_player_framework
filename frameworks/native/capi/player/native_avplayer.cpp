@@ -361,6 +361,41 @@ private:
     void *userData_ = nullptr;
 };
 
+class NativeAVPlayerPCMProcessorCallback : public PlayerCallback {
+public:
+    NativeAVPlayerPCMProcessorCallback(OH_AVPlayer *player, OH_AVPlayerPCMProcessorCallback callback, void *userData)
+        : player_(player), callback_(callback), userData_(userData) {}
+    virtual ~NativeAVPlayerPCMProcessorCallback() = default;
+
+    void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) override
+    {
+        (void)type;
+        (void)extra;
+        (void)infoBody;
+    }
+
+    void OnError(int32_t errorCode, const std::string &errorMsg) override
+    {
+        (void)errorCode;
+        (void)errorMsg;
+    }
+
+    void OnPCMProcessor(const std::shared_ptr<AVBuffer> &buffer) override
+    {
+        CHECK_AND_RETURN(buffer != nullptr && callback_ != nullptr && player_ != nullptr);
+        OH_AVBuffer *pcmBuffer = new (std::nothrow) OH_AVBuffer(buffer);
+        CHECK_AND_RETURN(pcmBuffer != nullptr);
+        callback_(player_, pcmBuffer, userData_);
+        delete pcmBuffer;
+        pcmBuffer = nullptr;
+    }
+
+private:
+    OH_AVPlayer *player_ = nullptr;
+    OH_AVPlayerPCMProcessorCallback callback_ = nullptr;
+    void *userData_ = nullptr;
+};
+
 #ifdef SUPPORT_AVPLAYER_DRM
 class NativeAVPlayerCallback : public PlayerCallback, public DrmSystemInfoCallback {
 public:
@@ -2500,6 +2535,54 @@ OH_AVErrCode OH_AVPlayer_SetPCMOutputCallback(OH_AVPlayer *player, OH_AVPlayerPC
     }
 
     int32_t ret = playerObj->player_->SetPCMOutputCallback(pcmCallback);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_INVALID_OPERATION, AV_ERR_OPERATE_NOT_PERMIT);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "SetPCMOutputCallback failed");
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVPlayer_SetPCMProcessorCallback(OH_AVPlayer *player, OH_AVPlayerPCMProcessorCallback callback,
+    void *userData)
+{
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "SetPCMProcessor input player is nullptr!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL,
+        "SetPCMProcessor player_ is nullptr");
+
+    AVPlayerState currentState;
+    OH_AVErrCode errCode = OH_AVPlayer_GetState(player, &currentState);
+    CHECK_AND_RETURN_RET_LOG(errCode == AV_ERR_OK, errCode, "OH_AVPlayer_GetState failed");
+    CHECK_AND_RETURN_RET_LOG(currentState == AVPlayerState::AV_IDLE || currentState == AVPlayerState::AV_INITIALIZED,
+        AV_ERR_OPERATE_NOT_PERMIT, "current state is not idle or initialized, unsupport to set pcm processor callback");
+
+    // Set PCM processor callback to PlayerImpl
+    std::shared_ptr<NativeAVPlayerPCMProcessorCallback> pcmCallback = nullptr;
+    if (callback != nullptr) {
+        NativeAVPlayerPCMProcessorCallback *cb =
+            new (std::nothrow) NativeAVPlayerPCMProcessorCallback(player, callback, userData);
+        CHECK_AND_RETURN_RET_LOG(cb != nullptr, AV_ERR_NO_MEMORY, "NativeAVPlayerPCMProcessorCallback create failed");
+        pcmCallback = std::shared_ptr<NativeAVPlayerPCMProcessorCallback>(cb);
+    }
+
+    int32_t ret = playerObj->player_->SetPCMProcessorCallback(pcmCallback);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_INVALID_OPERATION, AV_ERR_OPERATE_NOT_PERMIT);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "SetPCMProcessorCallback failed");
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVPlayer_SetPCMProcessorMaxLen(OH_AVPlayer *player, int maxProcessedPCMLen)
+{
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "SetPCMProcessorMaxLen input player is nullptr!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL,
+        "SetPCMProcessorMaxLen player_ is nullptr");
+
+    AVPlayerState currentState;
+    OH_AVErrCode errCode = OH_AVPlayer_GetState(player, &currentState);
+    CHECK_AND_RETURN_RET_LOG(errCode == AV_ERR_OK, errCode, "OH_AVPlayer_GetState failed");
+    CHECK_AND_RETURN_RET_LOG(currentState == AVPlayerState::AV_IDLE || currentState == AVPlayerState::AV_INITIALIZED,
+        AV_ERR_OPERATE_NOT_PERMIT, "current state is not idle or initialized, unsupport to set pcm processor max len");
+
+    int32_t ret = playerObj->player_->SetPCMProcessorMaxLen(maxProcessedPCMLen);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "SetPCMProcessorMaxLen failed");
     return AV_ERR_OK;
 }

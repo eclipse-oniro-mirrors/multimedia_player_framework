@@ -18,15 +18,29 @@
 
 #include "i_standard_pcm_output_callback.h"
 #include "iremote_proxy.h"
+#include "dolby_passthrough.h"
 
 namespace OHOS {
 namespace Media {
+class PCMCallback : public IPCMCallback, public NoCopyable {
+public:
+    explicit PCMCallback(const sptr<IStandardPCMOutputCallback> &ipcProxy);
+    virtual ~PCMCallback();
+
+    void OnPCMOutput(const std::shared_ptr<AVBuffer> &buffer) override;
+    void OnPCMProcessor(const std::shared_ptr<AVBuffer> &buffer) override;
+
+private:
+    sptr<IStandardPCMOutputCallback> callbackProxy_ = nullptr;
+};
+
 class PCMOutputCallbackProxy : public IRemoteProxy<IStandardPCMOutputCallback>, public NoCopyable {
 public:
     explicit PCMOutputCallbackProxy(const sptr<IRemoteObject> &impl);
     virtual ~PCMOutputCallbackProxy() = default;
 
     void OnPCMOutput(const std::shared_ptr<AVBuffer> &buffer) override;
+    void OnPCMProcessor(const std::shared_ptr<AVBuffer> &buffer) override;
 
 private:
     static inline BrokerDelegator<PCMOutputCallbackProxy> delegator_;

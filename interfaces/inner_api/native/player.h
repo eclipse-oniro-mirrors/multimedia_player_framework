@@ -559,6 +559,11 @@ public:
     {
         (void)buffer;
     }
+
+    virtual void OnPCMProcessor(const std::shared_ptr<AVBuffer> &buffer)
+    {
+        (void)buffer;
+    }
 };
 
 class Player {
@@ -1526,9 +1531,21 @@ public:
         return false;
     }
 
-    virtual int32_t SetPCMOutputCallback(const std::shared_ptr<PlayerCallback>& callback)
+    virtual int32_t SetPCMOutputCallback(const std::shared_ptr<PlayerCallback> &callback)
     {
         (void)callback;
+        return MSERR_OK;
+    }
+
+    virtual int32_t SetPCMProcessorCallback(const std::shared_ptr<PlayerCallback> &callback)
+    {
+        (void)callback;
+        return MSERR_OK;
+    }
+
+    virtual int32_t SetPCMProcessorMaxLen(int32_t maxProcessedPcmLen)
+    {
+        (void)maxProcessedPcmLen;
         return MSERR_OK;
     }
 };
