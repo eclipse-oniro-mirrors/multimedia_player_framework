@@ -519,7 +519,6 @@ HWTEST_F(LppAudioRenderAdapterUnitTest, Prepare_001, TestSize.Level1)
  */
 HWTEST_F(LppAudioRenderAdapterUnitTest, Prepare_002, TestSize.Level0)
 {
-
     std::vector<AudioStandard::AudioEncodingType> encodingTypes = {
         AudioStandard::AudioEncodingType::ENCODING_PCM
     };
@@ -1003,8 +1002,6 @@ HWTEST_F(LppAudioRenderAdapterUnitTest, OnWriteData_002, TestSize.Level1)
     AudioStandard::BufferDesc bufDesc;
     bufDesc.buffer = new uint8_t[1024];
     bufDesc.bufLength = 1024;
-    // EXPECT_CALL(*(renderAdapter_->audioRenderer_), GetBufferDesc(_))
-    //     .WillOnce(SetArgReferee<0>(bufDesc));
     renderAdapter_->OnWriteData(1024);
     delete[] bufDesc.buffer;
 }
@@ -1039,7 +1036,8 @@ HWTEST_F(LppAudioRenderAdapterUnitTest, GetBufferQueueProducer_001, TestSize.Lev
 */
 HWTEST_F(LppAudioRenderAdapterUnitTest, OnBufferAvailable_001, TestSize.Level1)
 {
-    renderAdapter_->renderTask_ = std::make_unique<Task>("Test", "test", TaskType::SINGLETON, TaskPriority::NORMAL, false);
+    renderAdapter_->renderTask_ = std::make_unique<Task>("Test", "test", TaskType::SINGLETON,
+        TaskPriority::NORMAL, false);
     renderAdapter_->OnBufferAvailable();
 }
 
