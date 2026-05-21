@@ -19,9 +19,11 @@
 #include <unistd.h>
 #include "directory_ex.h"
 #include "media_parcel.h"
+#include "fuzzer/FuzzedDataProvider.h"
 
 namespace OHOS {
 namespace Media {
+const int NUMBER_4 = 4;
 namespace {
     using Fuzzer = PlayerServiceProxyFuzzer;
     using PlayerStubFunc = std::function<int32_t(Fuzzer*, uint8_t*, size_t, bool)>;
@@ -64,6 +66,8 @@ namespace {
         {Fuzzer::GET_CURRENT_TRACK, Fuzzer::GetCurrentTrackStatic},
         {Fuzzer::SET_VIDEO_OUTPUT, Fuzzer::SetVideoOutputStatic},
         {Fuzzer::GET_VIDEO_SAMPLE, Fuzzer::GetVideoSampleStatic},
+        {Fuzzer::SET_TRACK_SELECTION_FILTER, Fuzzer::SetTrackSelectionFilterStatic},
+        {Fuzzer::GET_TRACK_SELECTION_FILTER, Fuzzer::GetTrackSelectionFilterStatic},
     };
 }
 PlayerServiceProxyFuzzer::PlayerServiceProxyFuzzer(const sptr<IRemoteObject> &impl)
@@ -875,6 +879,69 @@ int32_t PlayerServiceProxyFuzzer::GetVideoSampleStatic(PlayerServiceProxyFuzzer*
 
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
     return ptr->SendRequest(GET_VIDEO_SAMPLE, data, reply, option);
+}
+
+int32_t PlayerServiceProxyFuzzer::SetTrackSelectionFilterStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
+{
+    (void)isFuzz;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
+    if (!token) {
+        std::cout << "SetTrackSelectionFilter:Failed to write descriptor!" << std::endl;
+        return false;
+    }
+
+    FuzzedDataProvider fdp(inputData, size);
+    (void)data.WriteInt32(fdp.ConsumeIntegral<int32_t>());
+    (void)data.WriteInt32(fdp.ConsumeIntegral<int32_t>());
+    (void)data.WriteInt32(fdp.ConsumeIntegral<int32_t>());
+    (void)data.WriteInt32(fdp.ConsumeIntegral<int32_t>());
+    (void)data.WriteInt32(fdp.ConsumeIntegral<int32_t>());
+    (void)data.WriteInt32(fdp.ConsumeIntegral<int32_t>());
+    (void)data.WriteInt32(fdp.ConsumeIntegral<int32_t>());
+    (void)data.WriteInt32(fdp.ConsumeIntegral<int32_t>());
+    (void)data.WriteInt32(fdp.ConsumeIntegral<int32_t>());
+    (void)data.WriteInt32(fdp.ConsumeIntegral<int32_t>());
+    (void)data.WriteInt32(fdp.ConsumeIntegral<int32_t>());
+
+    auto writeStringVector = [&data, &fdp](size_t maxCount) {
+        uint32_t count = fdp.ConsumeIntegralInRange<uint32_t>(0, static_cast<uint32_t>(maxCount));
+        (void)data.WriteUint32(count);
+        for (uint32_t i = 0; i < count; i++) {
+            std::string value = fdp.ConsumeRandomLengthString(16);
+            (void)data.WriteString(value);
+        }
+    };
+
+    writeStringVector(NUMBER_4);
+    writeStringVector(NUMBER_4);
+    writeStringVector(NUMBER_4);
+    writeStringVector(NUMBER_4);
+
+    return ptr->SendRequest(SET_TRACK_SELECTION_FILTER, data, reply, option);
+}
+
+int32_t PlayerServiceProxyFuzzer::GetTrackSelectionFilterStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
+{
+    (void)inputData;
+    (void)size;
+    (void)isFuzz;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
+    if (!token) {
+        std::cout << "GetTrackSelectionFilter:Failed to write descriptor!" << std::endl;
+        return false;
+    }
+
+    return ptr->SendRequest(GET_TRACK_SELECTION_FILTER, data, reply, option);
 }
 
 int32_t PlayerServiceProxyFuzzer::SendRequest(uint32_t code,
