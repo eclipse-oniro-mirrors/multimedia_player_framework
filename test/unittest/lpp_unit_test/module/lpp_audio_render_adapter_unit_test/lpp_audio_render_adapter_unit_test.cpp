@@ -715,7 +715,8 @@ HWTEST_F(LppAudioRenderAdapterUnitTest, Start_002, TestSize.Level1)
 */
 HWTEST_F(LppAudioRenderAdapterUnitTest, Start_003, TestSize.Level1)
 {
-    renderAdapter_->renderTask_ = std::make_unique<Task>("Test", "test", TaskType::SINGLETON, TaskPriority::NORMAL, false);
+    renderAdapter_->renderTask_ = std::make_unique<Task>("Test", "test", TaskType::SINGLETON,
+        TaskPriority::NORMAL, false);
     EXPECT_CALL(*(renderAdapter_->audioRenderer_), Start()).WillOnce(Return(false));
     int32_t ret = renderAdapter_->Start();
     EXPECT_EQ(ret, MediaServiceErrCode::MSERR_START_FAILED);
@@ -728,7 +729,8 @@ HWTEST_F(LppAudioRenderAdapterUnitTest, Start_003, TestSize.Level1)
 */
 HWTEST_F(LppAudioRenderAdapterUnitTest, Start_004, TestSize.Level0)
 {
-    renderAdapter_->renderTask_ = std::make_unique<Task>("Test", "test", TaskType::SINGLETON, TaskPriority::NORMAL, false);
+    renderAdapter_->renderTask_ = std::make_unique<Task>("Test", "test", TaskType::SINGLETON,
+        TaskPriority::NORMAL, false);
     EXPECT_CALL(*(renderAdapter_->audioRenderer_), Start()).WillOnce(Return(true));
     int32_t ret = renderAdapter_->Start();
     EXPECT_EQ(ret, MediaServiceErrCode::MSERR_OK);
@@ -753,7 +755,8 @@ HWTEST_F(LppAudioRenderAdapterUnitTest, Pause_001, TestSize.Level1)
 */
 HWTEST_F(LppAudioRenderAdapterUnitTest, Pause_002, TestSize.Level1)
 {
-    renderAdapter_->renderTask_ = std::make_unique<Task>("Test", "test", TaskType::SINGLETON, TaskPriority::NORMAL, false);
+    renderAdapter_->renderTask_ = std::make_unique<Task>("Test", "test", TaskType::SINGLETON,
+        TaskPriority::NORMAL, false);
     EXPECT_CALL(*(renderAdapter_->audioRenderer_), GetStatus())
         .WillOnce(Return(AudioStandard::RendererState::RENDERER_PAUSED));
     int32_t ret = renderAdapter_->Pause();
@@ -767,7 +770,8 @@ HWTEST_F(LppAudioRenderAdapterUnitTest, Pause_002, TestSize.Level1)
 */
 HWTEST_F(LppAudioRenderAdapterUnitTest, Pause_003, TestSize.Level1)
 {
-    renderAdapter_->renderTask_ = std::make_unique<Task>("Test", "test", TaskType::SINGLETON, TaskPriority::NORMAL, false);
+    renderAdapter_->renderTask_ = std::make_unique<Task>("Test", "test", TaskType::SINGLETON,
+        TaskPriority::NORMAL, false);
     EXPECT_CALL(*(renderAdapter_->audioRenderer_), GetStatus())
         .WillOnce(Return(AudioStandard::RendererState::RENDERER_RUNNING));
     EXPECT_CALL(*(renderAdapter_->audioRenderer_), Pause()).WillOnce(Return(false));
@@ -782,7 +786,8 @@ HWTEST_F(LppAudioRenderAdapterUnitTest, Pause_003, TestSize.Level1)
 */
 HWTEST_F(LppAudioRenderAdapterUnitTest, Pause_004, TestSize.Level0)
 {
-    renderAdapter_->renderTask_ = std::make_unique<Task>("Test", "test", TaskType::SINGLETON, TaskPriority::NORMAL, false);
+    renderAdapter_->renderTask_ = std::make_unique<Task>("Test", "test", TaskType::SINGLETON,
+        TaskPriority::NORMAL, false);
     EXPECT_CALL(*(renderAdapter_->audioRenderer_), GetStatus())
         .WillOnce(Return(AudioStandard::RendererState::RENDERER_RUNNING));
     EXPECT_CALL(*(renderAdapter_->audioRenderer_), Pause()).WillOnce(Return(true));
@@ -797,7 +802,8 @@ HWTEST_F(LppAudioRenderAdapterUnitTest, Pause_004, TestSize.Level0)
 */
 HWTEST_F(LppAudioRenderAdapterUnitTest, Pause_005, TestSize.Level1)
 {
-    renderAdapter_->renderTask_ = std::make_unique<Task>("Test", "test", TaskType::SINGLETON, TaskPriority::NORMAL, false);
+    renderAdapter_->renderTask_ = std::make_unique<Task>("Test", "test", TaskType::SINGLETON,
+        TaskPriority::NORMAL, false);
     EXPECT_CALL(*(renderAdapter_->audioRenderer_), GetStatus())
         .WillOnce(Return(AudioStandard::RendererState::RENDERER_STOPPED));
     int32_t ret = renderAdapter_->Pause();
@@ -835,7 +841,8 @@ HWTEST_F(LppAudioRenderAdapterUnitTest, Resume_002, TestSize.Level1)
 */
 HWTEST_F(LppAudioRenderAdapterUnitTest, Resume_003, TestSize.Level1)
 {
-    renderAdapter_->renderTask_ = std::make_unique<Task>("Test", "test", TaskType::SINGLETON, TaskPriority::NORMAL, false);
+    renderAdapter_->renderTask_ = std::make_unique<Task>("Test", "test", TaskType::SINGLETON,
+        TaskPriority::NORMAL, false);
     EXPECT_CALL(*(renderAdapter_->audioRenderer_), Start()).WillOnce(Return(false));
     int32_t ret = renderAdapter_->Resume();
     EXPECT_EQ(ret, MediaServiceErrCode::MSERR_START_FAILED);
