@@ -2895,9 +2895,6 @@ int32_t SystemSoundManagerImpl::GetGentleHapticsAttr(const DatabaseTool &databas
         resultsByUri->Close();
     }
     if (!getResult) {
-        if (resultsByUri != nullptr) {
-            resultsByUri->Close();
-        }
         return IO_ERROR;
     }
     DataShare::DataSharePredicates queryPredicatesByDisplayName;
