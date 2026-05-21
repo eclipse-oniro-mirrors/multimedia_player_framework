@@ -848,7 +848,8 @@ HWTEST_F(LppAudioRenderAdapterUnitTest, Resume_003, TestSize.Level1)
 */
 HWTEST_F(LppAudioRenderAdapterUnitTest, Resume_004, TestSize.Level0)
 {
-    renderAdapter_->renderTask_ = std::make_unique<Task>("Test", "test", TaskType::SINGLETON, TaskPriority::NORMAL, false);
+    renderAdapter_->renderTask_ = std::make_unique<Task>("Test", "test", TaskType::SINGLETON,
+        TaskPriority::NORMAL, false);
     EXPECT_CALL(*(renderAdapter_->audioRenderer_), Start()).WillOnce(Return(true));
     int32_t ret = renderAdapter_->Resume();
     EXPECT_EQ(ret, MediaServiceErrCode::MSERR_OK);
