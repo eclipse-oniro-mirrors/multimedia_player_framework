@@ -27,7 +27,8 @@ copy_taihe_idl("copy_system_sound_manager_taihe") {
     "//foundation/multimedia/player_framework/frameworks/taihe/idl/ohos.multimedia.systemSoundManager.taihe",
     "//foundation/multimedia/player_framework/frameworks/taihe/idl/ohos.multimedia.systemSoundManager.context.taihe",
     "//foundation/multimedia/player_framework/frameworks/taihe/idl/systemTonePlayer.taihe",
-    "//foundation/multimedia/player_framework/frameworks/taihe/idl/ringtonePlayer.taihe"
+    "//foundation/multimedia/player_framework/frameworks/taihe/idl/ringtonePlayer.taihe",
+    "//foundation/multimedia/player_framework/frameworks/taihe/idl/SystemSoundPlayer.taihe"
   ]
 }
 
@@ -41,6 +42,8 @@ ohos_taihe("run_system_sound_manager_taihe") {
     "$taihe_generated_file_path/src/systemTonePlayer.abi.c",
     "$taihe_generated_file_path/src/ringtonePlayer.ani.cpp",
     "$taihe_generated_file_path/src/ringtonePlayer.abi.c",
+    "$taihe_generated_file_path/src/SystemSoundPlayer.ani.cpp",
+    "$taihe_generated_file_path/src/SystemSoundPlayer.abi.c",
   ]
 }
 
@@ -63,6 +66,7 @@ taihe_shared_library("system_sound_manager_taihe") {
     "./include",
     "./include/ringtone_player",
     "./include/system_tone_player",
+    "./include/system_sound_player",
     "./include/tone_attrs",
     "./include/tone_haptics_attrs",
     "./../common",
@@ -83,6 +87,7 @@ taihe_shared_library("system_sound_manager_taihe") {
     "./src/system_sound_manager_taihe_ext.cpp",
     "./src/system_tone_player/system_tone_callback_taihe.cpp",
     "./src/system_tone_player/system_tone_player_taihe.cpp",
+    "./src/system_sound_player/system_sound_player_taihe.cpp",
     "./src/tone_attrs/tone_attrs_taihe.cpp",
     "./src/tone_haptics_attrs/tone_haptics_attrs_taihe.cpp",
     "./src/tone_haptics_attrs/tone_haptics_settings_taihe.cpp",
@@ -126,6 +131,7 @@ generate_static_abc("system_sound_manager_taihe_abc") {
     "$taihe_generated_file_path/@ohos.multimedia.systemSoundManager.ets",
     "$taihe_generated_file_path/multimedia.ringtonePlayer.ets",
     "$taihe_generated_file_path/multimedia.systemTonePlayer.ets",
+    "$taihe_generated_file_path/multimedia.SystemSoundPlayer.ets",
   ]
   is_boot_abc = "True"
   device_dst_file = "/system/framework/system_sound_manager_taihe_abc.abc"

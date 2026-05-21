@@ -689,7 +689,20 @@ SystemSoundManagerTaihe GetSystemSoundManager()
     }
     return make_holder<SystemSoundManagerImpl, SystemSoundManagerTaihe>();
 }
+
+SystemSoundPlayerTaihe CreateSystemSoundPlayer()
+{
+    MEDIA_LOGI("CreateSystemSoundPlayer in.");
+    std::unique_ptr<SystemSoundPlayerImpl> obj = std::make_unique<SystemSoundPlayerImpl>();
+    obj->SetSystemSoundPlayer(OHOS::Media::SystemSoundPlayerFactory::CreateSystemSoundPlayer());
+    if (obj->GetSystemSoundPlayer() == nullptr) {
+        MEDIA_LOGE("Failed to create systemSoundPlayer_ instance.");
+        return make_holder<SystemSoundPlayerImpl, SystemSoundPlayerTaihe>();
+    }
+    return make_holder<SystemSoundPlayerImpl, SystemSoundPlayerTaihe>(std::move(obj));
+}
 } // namespace ANI::Media
 
 TH_EXPORT_CPP_API_CreateCustomizedToneAttrs(CreateCustomizedToneAttrs);
 TH_EXPORT_CPP_API_GetSystemSoundManager(GetSystemSoundManager);
+TH_EXPORT_CPP_API_CreateSystemSoundPlayer(CreateSystemSoundPlayer);
