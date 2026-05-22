@@ -298,12 +298,11 @@ private:
         OH_AVFormat *format = OH_AVFormat_Create();
         if (format != nullptr) {
             if (rsRect.x >= 0) {
-            int32_t rectData[4] = {rsRect.x, rsRect.y, rsRect.w, rsRect.h};
-            bool res = false;
-            res = OH_AVFormat_SetIntBuffer(format, OH_SCREEN_CAPTURE_CONTENT_RECT, rectData, sizeof(rectData));
-           TRUE_LOG(!res, MEDIA_LOGE, "OH_AVFormat_SetIntBuffer failed.");
-            res = OH_AVBuffer_SetParameter(reinterpret_cast<OH_AVBuffer*>(ohAvBuffer.GetRefPtr()), format);
-           TRUE_LOG(!res, MEDIA_LOGE, "OH_AVBuffer_SetParameter failed.");
+                int32_t rectData[4] = {rsRect.x, rsRect.y, rsRect.w, rsRect.h};
+                bool res =
+                    (OH_AVFormat_SetIntBuffer(format, OH_SCREEN_CAPTURE_CONTENT_RECT, rectData, sizeof(rectData)) &&
+                     OH_AVBuffer_SetParameter(reinterpret_cast<OH_AVBuffer*>(ohAvBuffer.GetRefPtr()), format));
+                TRUE_LOG(!res, MEDIA_LOGE, "OH_AVFormat_SetIntBuffer or OH_AVBuffer_SetParameter failed.");
             }
             OH_AVFormat_Destroy(format);
         }
