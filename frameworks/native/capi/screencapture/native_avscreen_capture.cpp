@@ -43,8 +43,8 @@ constexpr uint32_t MAX_LINE_COLOR_RGB = 0xffffff;
 constexpr uint32_t MIN_LINE_COLOR_ARGB = 0xff000000;
 constexpr uint32_t MAX_LINE_COLOR_ARGB = 0xffffffff;
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "NativeScreenCapture"};
-const char *OH_SCREEN_CAPTURE_CONTENT_RECT = "screen_capture_content_rect";
 }
+const char *OH_SCREEN_CAPTURE_CONTENT_RECT = "screen_capture_content_rect";
 
 typedef struct NativeWindow OHNativeWindow;
 
@@ -296,13 +296,15 @@ private:
             "AcquireVideoBuffer failed ohAvBuffer no memory!");
 
         OH_AVFormat *format = OH_AVFormat_Create();
-        if (format != nullptr && rsRect.x >= 0) {
+        if (format != nullptr) {
+            if (rsRect.x >= 0) {
             int32_t rectData[4] = {rsRect.x, rsRect.y, rsRect.w, rsRect.h};
             bool res = false;
             res = OH_AVFormat_SetIntBuffer(format, OH_SCREEN_CAPTURE_CONTENT_RECT, rectData, sizeof(rectData));
-            CHECK_AND_RETURN_RET_LOG(res, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "OH_AVFormat_SetIntBuffer failed.");
+           TRUE_LOG(!res, MEDIA_LOGE, "OH_AVFormat_SetIntBuffer failed.");
             res = OH_AVBuffer_SetParameter(reinterpret_cast<OH_AVBuffer*>(ohAvBuffer.GetRefPtr()), format);
-            CHECK_AND_RETURN_RET_LOG(res, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "OH_AVBuffer_SetParameter failed.");
+           TRUE_LOG(!res, MEDIA_LOGE, "OH_AVBuffer_SetParameter failed.");
+            }
             OH_AVFormat_Destroy(format);
         }
         
