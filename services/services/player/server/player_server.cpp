@@ -1482,6 +1482,8 @@ int32_t PlayerServer::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
         CHECK_AND_RETURN_RET_LOG(pos2 + strlen("offset=") < pos3, MSERR_INVALID_VAL, "Failed to read fd.");
         std::string fdStr = uri.substr(strlen("fd://"), pos1 - strlen("fd://"));
         std::string offsetStr = uri.substr(pos2 + strlen("offset="), pos3 - pos2 - strlen("offset="));
+        CHECK_AND_RETURN_RET_LOG(pos3 + sizeof("&size") < uri.size(),
+            MSERR_INVALID_VAL, "Failed to read fd.");
         std::string sizeStr = uri.substr(pos3 + sizeof("&size"));
         int32_t fd = -1;
         int32_t offset = -1;
