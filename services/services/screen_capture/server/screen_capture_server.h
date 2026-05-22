@@ -171,7 +171,7 @@ public:
     void SetSCServerSaUid(int32_t saUid);
     int32_t GetSCServerSaUid();
     DataType GetSCServerDataType();
-    AVScreenCaptureState GetSCServerCaptureState();
+    bool Can(uint32_t cap) const;
     bool IsSCRecorderFileWithVideo();
     std::shared_ptr<AudioCapturerWrapper> GetInnerAudioCapture();
     std::shared_ptr<AudioCapturerWrapper> GetMicAudioCapture();
@@ -188,41 +188,6 @@ public:
     bool IsCaptureScreen(uint64_t displayId);
     void SetCurDisplayId(uint64_t displayId);
     uint64_t GetCurDisplayId();
-    inline bool IsCreated() const
-    {
-        return captureState_ == AVScreenCaptureState::CREATED;
-    }
-
-    inline bool IsStopped() const
-    {
-        return captureState_ == AVScreenCaptureState::STOPPED;
-    }
-
-    inline bool IsPaused() const
-    {
-        return captureState_ == AVScreenCaptureState::PAUSED;
-    }
-
-    inline bool IsStarting() const
-    {
-        return captureState_ == AVScreenCaptureState::STARTING;
-    }
-
-    inline bool IsPopupWindow() const
-    {
-        return captureState_ == AVScreenCaptureState::POPUP_WINDOW;
-    }
-
-    inline bool IsStartedOrResumed() const
-    {
-        return captureState_ == AVScreenCaptureState::STARTED ||
-               captureState_ == AVScreenCaptureState::RESUMED;
-    }
-
-    inline bool IsActive() const
-    {
-        return IsStartedOrResumed() || IsPaused();
-    }
 
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);

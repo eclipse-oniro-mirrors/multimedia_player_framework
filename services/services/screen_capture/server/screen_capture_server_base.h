@@ -120,6 +120,17 @@ enum StopReason: int8_t {
     STOP_REASON_INVALID = 4
 };
 
+enum Capability : uint32_t {
+    CAP_NONE = 0,
+    CAP_INIT = 1 << 0,
+    CAP_CONFIG = 1 << 1,
+    CAP_ALIVE = 1 << 2,
+    CAP_POPUP = 1 << 4,
+    CAP_RUNNING = 1 << 5,
+    CAP_PAUSED = 1 << 6,
+    CAP_ACTIVE = 1 << 7,
+};
+
 struct StatisticalEventInfo {
     int32_t errCode = 0;
     std::string errMsg;
@@ -185,7 +196,7 @@ private:
     std::vector<uint64_t> screenIds_;
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
 };
- 
+
 class SCDeathRecipientListener : public IRemoteObject::DeathRecipient {
 public:
     using ListenerDiedHandler = std::function<void(const wptr<IRemoteObject>&)>;
@@ -197,7 +208,7 @@ public:
             diedHandler_(remote);
         }
     }
-    
+
 private:
     ListenerDiedHandler diedHandler_;
 };
