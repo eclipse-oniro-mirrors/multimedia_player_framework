@@ -536,6 +536,7 @@ int32_t AVRecorderNapi::GetWatermarkConfiguration(std::unique_ptr<AVRecorderAsyn
 int32_t AVRecorderNapi::AddWatermark(std::shared_ptr<PixelMap> &pixelMap,
     std::shared_ptr<WatermarkConfiguration> &watermarkConfig, int32_t &watermarkCount)
 {
+#ifndef CROSS_PLATFORM
     MEDIA_LOGI("pixelMap Width: %{public}d, height: %{public}d, adjust Width:  %{public}d, adjust height: %{public}d,"
         "pixelformat %{public}d, RowStride %{public}d", pixelMap->GetWidth(), pixelMap->GetHeight(),
         watermarkConfig->width, watermarkConfig->height, pixelMap->GetPixelFormat(), pixelMap->GetRowStride());
@@ -566,6 +567,9 @@ int32_t AVRecorderNapi::AddWatermark(std::shared_ptr<PixelMap> &pixelMap,
     buffer->meta_->Set<Tag::VIDEO_COORDINATE_H>(pixelMap->GetHeight());
     buffer->meta_->Set<Tag::VIDEO_STRIDE>(pixelMap->GetRowStride());
     return recorder_->AddWatermark(buffer, watermarkConfig->width, watermarkConfig->height, watermarkCount);
+#else
+    return MSERR_OK;
+#endif
 }
 
 napi_value AVRecorderNapi::JsSetMetadata(napi_env env, napi_callback_info info)
