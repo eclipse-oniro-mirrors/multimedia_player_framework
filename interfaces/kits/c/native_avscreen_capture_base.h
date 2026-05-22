@@ -746,7 +746,7 @@ typedef void (*OH_AVScreenCapture_OnPrivacyProtect)(OH_AVScreenCapture* capture,
  * The value can be obtained from {@link OH_AVFormat_GetIntBuffer}.
  * @since 26.0.0
  */
-extern const char *OH_MD_KEY_SCREEN_CAPTURE_CONTENT_RECT;
+extern const char *OH_SCREEN_CAPTURE_CONTENT_RECT;
 
 #ifdef __cplusplus
 }
