@@ -1451,5 +1451,105 @@ HWTEST_F(PlayerImplUnitTest, IsLiveSeek_001, TestSize.Level0)
     ASSERT_NE(playerImpl_, nullptr);
     EXPECT_FALSE(playerImpl_->IsLiveSeek());
 }
+
+/**
+ * @tc.name  : Test SetPCMOutputCallback
+ * @tc.number: SetPCMOutputCallback_001
+ * @tc.desc  : Test playerService_ is nullptr, return MSERR_SERVICE_DIED
+ */
+HWTEST_F(PlayerImplUnitTest, SetPCMOutputCallback_001, TestSize.Level0)
+{
+    ASSERT_NE(playerImpl_, nullptr);
+    auto callback = std::make_shared<MockPlayerCallback>();
+    auto ret = playerImpl_->SetPCMOutputCallback(callback);
+    EXPECT_EQ(ret, MSERR_SERVICE_DIED);
+}
+
+/**
+ * @tc.name  : Test SetPCMOutputCallback
+ * @tc.number: SetPCMOutputCallback_002
+ * @tc.desc  : Test SetPCMOutputCallback with mock service, return MSERR_OK
+ */
+HWTEST_F(PlayerImplUnitTest, SetPCMOutputCallback_002, TestSize.Level0)
+{
+    ASSERT_NE(playerImpl_, nullptr);
+    auto mockService = std::make_shared<MockIPlayerService>();
+    playerImpl_->playerService_ = mockService;
+    auto callback = std::make_shared<MockPlayerCallback>();
+    EXPECT_CALL(*mockService, SetPCMOutputCallback(_)).WillOnce(Return(MSERR_OK));
+    auto ret = playerImpl_->SetPCMOutputCallback(callback);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test SetPCMProcessorCallback
+ * @tc.number: SetPCMProcessorCallback_001
+ * @tc.desc  : Test playerService_ is nullptr, return MSERR_SERVICE_DIED
+ */
+HWTEST_F(PlayerImplUnitTest, SetPCMProcessorCallback_001, TestSize.Level0)
+{
+    ASSERT_NE(playerImpl_, nullptr);
+    auto callback = std::make_shared<MockPlayerCallback>();
+    auto ret = playerImpl_->SetPCMProcessorCallback(callback);
+    EXPECT_EQ(ret, MSERR_SERVICE_DIED);
+}
+
+/**
+ * @tc.name  : Test SetPCMProcessorCallback
+ * @tc.number: SetPCMProcessorCallback_002
+ * @tc.desc  : Test SetPCMProcessorCallback with mock service, return MSERR_OK
+ */
+HWTEST_F(PlayerImplUnitTest, SetPCMProcessorCallback_002, TestSize.Level0)
+{
+    ASSERT_NE(playerImpl_, nullptr);
+    auto mockService = std::make_shared<MockIPlayerService>();
+    playerImpl_->playerService_ = mockService;
+    auto callback = std::make_shared<MockPlayerCallback>();
+    EXPECT_CALL(*mockService, SetPCMProcessorCallback(_)).WillOnce(Return(MSERR_OK));
+    auto ret = playerImpl_->SetPCMProcessorCallback(callback);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test SetPCMProcessorMaxLen
+ * @tc.number: SetPCMProcessorMaxLen_001
+ * @tc.desc  : Test playerService_ is nullptr, return MSERR_SERVICE_DIED
+ */
+HWTEST_F(PlayerImplUnitTest, SetPCMProcessorMaxLen_001, TestSize.Level0)
+{
+    ASSERT_NE(playerImpl_, nullptr);
+    auto ret = playerImpl_->SetPCMProcessorMaxLen(NUM_1);
+    EXPECT_EQ(ret, MSERR_SERVICE_DIED);
+}
+
+/**
+ * @tc.name  : Test SetPCMProcessorMaxLen
+ * @tc.number: SetPCMProcessorMaxLen_002
+ * @tc.desc  : Test SetPCMProcessorMaxLen with mock service, return MSERR_OK
+ */
+HWTEST_F(PlayerImplUnitTest, SetPCMProcessorMaxLen_002, TestSize.Level0)
+{
+    ASSERT_NE(playerImpl_, nullptr);
+    auto mockService = std::make_shared<MockIPlayerService>();
+    playerImpl_->playerService_ = mockService;
+    EXPECT_CALL(*mockService, SetPCMProcessorMaxLen(_)).WillOnce(Return(MSERR_OK));
+    auto ret = playerImpl_->SetPCMProcessorMaxLen(NUM_1);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test SetPCMProcessorMaxLen
+ * @tc.number: SetPCMProcessorMaxLen_003
+ * @tc.desc  : Test SetPCMProcessorMaxLen exceeds 5MB limit, return MSERR_INVALID_VAL
+ */
+HWTEST_F(PlayerImplUnitTest, SetPCMProcessorMaxLen_003, TestSize.Level0)
+{
+    ASSERT_NE(playerImpl_, nullptr);
+    auto mockService = std::make_shared<MockIPlayerService>();
+    playerImpl_->playerService_ = mockService;
+    const int32_t exceededMaxLen = 5 * 1024 * 1024 + 1;
+    auto ret = playerImpl_->SetPCMProcessorMaxLen(exceededMaxLen);
+    EXPECT_EQ(ret, MSERR_INVALID_VAL);
+}
 } // namespace Media
 } // namespace OHOS
