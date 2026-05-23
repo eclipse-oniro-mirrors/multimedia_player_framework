@@ -119,7 +119,7 @@ ohos_unittest("hitranscode_impl_unittest") {
   }
 
   if (player_framework_support_audio_convert) {
-    external_deps += [ "audio_framework:audio_suite"]
+    external_deps += [ "audio_framework:audio_suite" ]
   }
 
   deps = [
