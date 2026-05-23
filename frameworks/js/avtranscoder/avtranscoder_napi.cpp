@@ -825,7 +825,7 @@ RetInfo AVTransCoderNapi::Configure(std::shared_ptr<AVTransCoderConfig> config)
     int32_t ret = transCoder_->SetOutputFormat(config->fileFormat);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetOutputFormat", "fileFormat"));
 
-    AudioCodecFormat outputAudioCodec = isAudioV2Vaild ? config->audioCodecFormatV2 : config->audioCodecFormat;
+    AudioCodecFormat outputAudioCodec = isAudioV2Valid ? config->audioCodecFormatV2 : config->audioCodecFormat;
     ret = transCoder_->SetAudioEncoder(outputAudioCodec);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetAudioEncoder", "audioCodecFormat"));
     
@@ -999,8 +999,8 @@ int32_t AVTransCoderNapi::GetAudioConfig(std::unique_ptr<AVTransCoderAsyncContex
     std::string audioCodecV2 = CommonNapi::GetPropertyString(env, args, "audioCodecV2");
     (void)AVTransCoderNapi::GetAudioCodecFormat(audioCodec, config->audioCodecFormat);
     (void)AVTransCoderNapi::GetAudioCodecFormatV2(audioCodecV2, config->audioCodecFormatV2);
-    isAudioV2Vaild = !audioCodecV2.empty();
-    if (isAudioV2Vaild) {
+    isAudioV2Valid = !audioCodecV2.empty();
+    if (isAudioV2Valid) {
         MEDIA_LOGI("audio encoder mime is v2 %{public}s", audioCodecV2.c_str());
     } else {
         MEDIA_LOGI("audio encoder mime is %{public}s", audioCodec.c_str());
