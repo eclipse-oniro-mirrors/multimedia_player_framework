@@ -154,6 +154,8 @@ enum AudioCodecFormat : int32_t {
     AUDIO_AMR_NB = 9,
     /** AUDIO_AMR_WB format */
     AUDIO_AMR_WB = 10,
+    /** AUDIO_RAW format */
+    AUDIO_RAW = 11,
     /** Invalid value */
     AUDIO_CODEC_FORMAT_BUTT,
 };

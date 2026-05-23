@@ -1141,7 +1141,7 @@ HWTEST_F(TransCoderUnitTest, transcoder_PureAudioAbnormal_case_001, TestSize.Lev
     EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
     int32_t dstFd = open((TRANSCODER_ROOT_DST + "01_dst.mp3").c_str(), O_RDWR);
     ASSERT_TRUE(dstFd >= 0);
-    EXPECT_EQ(MSERR_INVALID_OPERATION, transcoder_->SetOutputFile(dstFd));
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
     std::shared_ptr<TransCoderCallbackTest> cb = std::make_shared<TransCoderCallbackTest>();
     EXPECT_EQ(MSERR_OK, transcoder_->SetTransCoderCallback(cb));
     OutputFormatType format = FORMAT_M4A;

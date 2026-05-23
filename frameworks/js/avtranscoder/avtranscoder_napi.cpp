@@ -607,7 +607,7 @@ napi_value AVTransCoderNapi::JsSetDstFd(napi_env env, napi_callback_info info)
     napi_get_value_int32(env, args[0], &asyncCtx->napi->dstFd_);
 
     auto task = std::make_shared<TaskHandler<void>>([napi = asyncCtx->napi]() {
-        MEDIA_LOGI("JsSetSrcFd Task");
+        MEDIA_LOGI("JsSetDstFd Task");
         napi->SetOutputFile(napi->dstFd_);
     });
     (void)asyncCtx->napi->taskQue_->EnqueueTask(task);

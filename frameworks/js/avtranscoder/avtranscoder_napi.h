@@ -248,6 +248,7 @@ private:
     struct AVFileDescriptor srcFd_;
     int32_t dstFd_ = -1;
     int32_t watermarkCount_ = 0;
+    bool isAudioV2Valid = false;
 };
 
 struct AVTransCoderAsyncContext : public MediaAsyncContext {

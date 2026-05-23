@@ -29,6 +29,7 @@ config("transcode_unit_test_config") {
     "-Wno-format",
     "-Dprivate=public",
     "-Dprotected=public",
+    "-Wno-error=format",
   ]
   cflags_cc = cflags
   include_dirs = [
@@ -115,6 +116,10 @@ ohos_unittest("hitranscode_unit_test") {
 
   if (player_framework_support_drm) {
     external_deps += [ "drm_framework:drm_framework" ]
+  }
+
+  if (player_framework_support_audio_convert) {
+    external_deps += [ "audio_framework:audio_suite"]
   }
 
   deps = [

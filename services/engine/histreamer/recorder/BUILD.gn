@@ -83,6 +83,10 @@ ohos_static_library("media_engine_histreamer_recorder") {
     "graphic_2d:color_manager",
   ]
 
+  if (player_framework_support_audio_convert) {
+    external_deps += [ "audio_framework:audio_suite"]
+  }
+
   subsystem_name = "multimedia"
   part_name = "player_framework"
 }

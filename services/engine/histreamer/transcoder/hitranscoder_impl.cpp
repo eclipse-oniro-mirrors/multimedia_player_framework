@@ -249,6 +249,7 @@ void HiTransCoderImpl::ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta
     bool isInitializeVideoEncFormat = false;
     bool isInitializeAudioEncFormat = false;
     isExistVideoTrack_ = false;
+    isExistAudioTrack_ = false;
     (void)SetValueByType(globalInfo, muxerFormat_);
     for (size_t index = 0; index < trackInfos.size(); index++) {
         MEDIA_LOG_I("trackInfos index: %{public}zu", index);

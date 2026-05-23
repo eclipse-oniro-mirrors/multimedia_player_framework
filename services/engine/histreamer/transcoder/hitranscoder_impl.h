@@ -173,6 +173,7 @@ private:
     int32_t inputVideoHeight_ = 0;
     std::string inputAudioMimeType_;
     bool isExistVideoTrack_ = false;
+    bool isExistAudioTrack_ = false;
     bool isConfiguredVideoBitrate_ = false;
     std::atomic<int32_t> durationMs_{-1};
 
