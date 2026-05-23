@@ -94,6 +94,7 @@ private:
     void SkipAudioDecAndEnc();
     Status ConfigureVideoAudioMetaData();
     void ConfigureVideoWidthHeight(const TransCoderParam &transCoderParam);
+    const char* GetAudioEncFormat(const AudioCodecFormat &encFmt);
     Status ConfigureAudioParam(const TransCoderParam &transCoderParam);
     Status ConfigureVideoParam(const TransCoderParam &transCoderParam);
     Status ConfigureVideoBitrate();
