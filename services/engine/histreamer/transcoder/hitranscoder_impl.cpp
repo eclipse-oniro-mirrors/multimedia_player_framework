@@ -249,6 +249,7 @@ void HiTransCoderImpl::ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta
     bool isInitializeVideoEncFormat = false;
     bool isInitializeAudioEncFormat = false;
     isExistVideoTrack_ = false;
+    isExistAudioTrack_ = false;
     (void)SetValueByType(globalInfo, muxerFormat_);
     for (size_t index = 0; index < trackInfos.size(); index++) {
         MEDIA_LOG_I("trackInfos index: %{public}zu", index);
@@ -271,10 +272,11 @@ void HiTransCoderImpl::ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta
             (void)SetValueByType(meta, audioEncFormat_);
             (void)SetValueByType(meta, srcAudioFormat_);
             (void)SetValueByType(meta, muxerFormat_);
+            isExistAudioTrack_ = true;
             isInitializeAudioEncFormat = true;
         }
     }
-    if (!isExistVideoTrack_) {
+    if (!isExistVideoTrack_ && !isExistAudioTrack_) {
         MEDIA_LOG_E("No video track found.");
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_VID_SRC_TYPE});
     }
@@ -284,7 +286,6 @@ void HiTransCoderImpl::ConfigureDefaultParameter()
 {
     ConfigureVideoDefaultEncFormat();
     ConfigureVideoBitrate();
-    ConfigureAudioDefaultEncFormat();
 }
  
 void HiTransCoderImpl::ConfigureVideoDefaultEncFormat()
@@ -377,7 +378,7 @@ Status HiTransCoderImpl::ConfigureVideoAudioMetaData()
     std::shared_ptr<Meta> globalInfo = demuxerFilter_->GetGlobalMetaInfo();
     std::vector<std::shared_ptr<Meta>> trackInfos = demuxerFilter_->GetStreamMetaInfo();
     size_t trackCount = trackInfos.size();
-    MEDIA_LOG_I("trackCount: %{public}d", trackCount);
+    MEDIA_LOG_I("trackCount: %{public}zu", trackCount);
     if (trackCount == 0) {
         MEDIA_LOG_E("No track found in the source");
         CollectionErrorInfo(TransTranscoderStatus(Status::ERROR_NO_TRACK),
@@ -472,7 +473,7 @@ Status HiTransCoderImpl::ConfigureVideoBitrate()
     if (videoEncFormat_->Find(Tag::MEDIA_BITRATE) != videoEncFormat_->end()) {
         videoEncFormat_->Get<Tag::MEDIA_BITRATE>(videoBitrate);
     }
-    MEDIA_LOG_D("get videoBitrate: %{public}d", videoBitrate);
+    MEDIA_LOG_D("get videoBitrate: %{public}lld", videoBitrate);
     int32_t width = 0;
     int32_t height = 0;
     videoEncFormat_->GetData(Tag::VIDEO_WIDTH, width);
@@ -540,8 +541,26 @@ Status HiTransCoderImpl::ConfigureVideoParam(const TransCoderParam &transCoderPa
     return ret;
 }
 
+const char* HiTransCoderImpl::GetAudioEncFormat(const AudioCodecFormat &encFmt)
+{
+    MEDIA_LOG_I("GetAudioEncFormat is %{public}d", encFmt);
+    const std::map<AudioCodecFormat, const char*> extensionToOutputFormat = {
+        { AudioCodecFormat::AUDIO_MPEG, Plugins::MimeType::AUDIO_MPEG },
+        { AudioCodecFormat::AUDIO_RAW, Plugins::MimeType::AUDIO_RAW },
+        { AudioCodecFormat::AUDIO_AMR_NB, Plugins::MimeType::AUDIO_AMR_NB },
+        { AudioCodecFormat::AUDIO_AMR_WB, Plugins::MimeType::AUDIO_AMR_WB },
+    };
+
+    auto iter = extensionToOutputFormat.find(encFmt);
+    if (iter != extensionToOutputFormat.end()) {
+        return iter->second;
+    }
+    return Plugins::MimeType::AUDIO_AAC;
+}
+
 Status HiTransCoderImpl::ConfigureAudioParam(const TransCoderParam &transCoderParam)
 {
+    std::string audioDecCodec;
     switch (transCoderParam.type) {
         case TransCoderPublicParamType::AUDIO_ENC_FMT: {
             AudioEnc audioEnc = static_cast<const AudioEnc&>(transCoderParam);
@@ -549,7 +568,14 @@ Status HiTransCoderImpl::ConfigureAudioParam(const TransCoderParam &transCoderPa
             if (inputAudioMimeType_ == Plugins::MimeType::AUDIO_AAC) {
                 skipProcessFilterFlag_.isSameAudioEncFmt = true;
             }
-            audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_AAC);
+            srcAudioFormat_->Get<Tag::MIME_TYPE>(audioDecCodec);
+            if (audioDecCodec == Plugins::MimeType::AUDIO_RAW && audioEnc.encFmt == AudioCodecFormat::AUDIO_RAW) {
+                skipProcessFilterFlag_.isSameAudioEncFmt = true;
+                skipProcessFilterFlag_.isSameAudioBitrate = true;
+                MEDIA_LOG_I("Configure skip audioEnc %{public}s", audioDecCodec.c_str());
+            }
+            auto audioSetEnc = GetAudioEncFormat(audioEnc.encFmt);
+            audioEncFormat_->Set<Tag::MIME_TYPE>(audioSetEnc);
             break;
         }
         case TransCoderPublicParamType::AUDIO_BITRATE: {
@@ -618,10 +644,14 @@ int32_t HiTransCoderImpl::Prepare()
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, errCode});
         return errCode;
     }
-    Status errCode = SetSurfacePipeline(width, height);
-    if (errCode == Status::ERROR_UNKNOWN) {
-        errCode = Status::ERROR_SET_OUTPUT_SURFACE_FAILED;
+    Status errCode = Status::OK;
+    if (isExistVideoTrack_) {
+        errCode = SetSurfacePipeline(width, height);
+        if (errCode == Status::ERROR_UNKNOWN) {
+            errCode = Status::ERROR_SET_OUTPUT_SURFACE_FAILED;
+        }
     }
+
     return TransTranscoderStatus(errCode);
 }
 
@@ -718,7 +748,7 @@ int32_t HiTransCoderImpl::AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffe
     auto filter = static_cast<Pipeline::WaterMarkFilter*>(waterMarkFilter_.get());
     filter->SetVideoResize(inputVideoWidth_, inputVideoHeight_);
     auto ret = filter->SetWatermark(waterMarkBuffer, width, height);
-    FALSE_RETURN_V_MSG_E(ret == Status::OK, MSERR_INVALID_OPERATION, "ERROR_INVALID_PARAMETER");
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, TransTranscoderStatus(ret), "Watermark filter error");
     return MSERR_OK;
 }
 
@@ -916,6 +946,12 @@ Status HiTransCoderImpl::LinkAudioDecoderFilter(const std::shared_ptr<Pipeline::
     audioDecoderFilter_->Init(transCoderEventReceiver_, transCoderFilterCallback_);
     Status ret = pipeline_->LinkFilters(preFilter, {audioDecoderFilter_}, type);
     FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "Add audioDecoderFilter to pipeline fail");
+    std::string audioEncCodec;
+    audioEncFormat_->Get<Tag::MIME_TYPE>(audioEncCodec);
+    if (audioEncCodec == Plugins::MimeType::AUDIO_RAW) {
+        MEDIA_LOG_I("Audio decoder to muxer, outType: %{public}s", audioEncCodec.c_str());
+        audioDecoderFilter_->ResetOutputAudioMime(audioEncCodec);
+    }
     return Status::OK;
 }
 
@@ -1036,12 +1072,18 @@ Status HiTransCoderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, co
     FALSE_RETURN_V_MSG_E(filter != nullptr, Status::ERROR_NULL_POINTER, "filter is nullptr");
     MEDIA_LOG_I("HiTransCoderImpl::OnCallback filter, outType: %{public}d  %{public}d",
         static_cast<int32_t>(outType), static_cast<int32_t>(filter->GetFilterType()));
+    std::string audioEncCodec;
     if (cmd == Pipeline::FilterCallBackCommand::NEXT_FILTER_NEEDED) {
         switch (outType) {
             case Pipeline::StreamType::STREAMTYPE_RAW_AUDIO:
                 if (filter->GetFilterType() == Pipeline::FilterType::FILTERTYPE_DEMUXER) {
                     FALSE_RETURN_V(!isAudioTrackLinked_, Status::OK);
                     isAudioTrackLinked_ = true;
+                }
+                audioEncFormat_->Get<Tag::MIME_TYPE>(audioEncCodec);
+                if (audioEncCodec == Plugins::MimeType::AUDIO_RAW) {
+                    MEDIA_LOG_I("Audio encoder type is %{public}s, link to muxer", audioEncCodec.c_str());
+                    return LinkMuxerFilter(filter, Pipeline::StreamType::STREAMTYPE_RAW_AUDIO);
                 }
                 return LinkAudioEncoderFilter(filter, outType);
             case Pipeline::StreamType::STREAMTYPE_ENCODED_AUDIO:
@@ -1181,7 +1223,7 @@ Status HiTransCoderImpl::LinkWaterMark(const std::shared_ptr<Pipeline::Filter>& 
 Status HiTransCoderImpl::ConnectDecoderToEncoder()
 {
     FALSE_RETURN_V_MSG_E(videoEncoderFilter_ != nullptr && videoDecoderFilter_ != nullptr,
-        Status::ERROR_NULL_POINTER, "VideoDecoder or VideoEncoder is nullptr");
+    Status::ERROR_NULL_POINTER, "VideoDecoder or VideoEncoder is nullptr");
     sptr<Surface> encoderFilterSurface = videoEncoderFilter_->GetInputSurface();
     FALSE_RETURN_V_MSG_E(encoderFilterSurface != nullptr, Status::ERROR_GET_INPUT_SURFACE_FAILED,
         "encoderFilterSurface is nullptr");

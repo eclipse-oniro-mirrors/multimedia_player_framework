@@ -111,6 +111,7 @@ struct AVTransCoderAsyncContext;
 
 struct AVTransCoderConfig {
     AudioCodecFormat audioCodecFormat = AudioCodecFormat::AUDIO_CODEC_FORMAT_BUTT;
+    AudioCodecFormat audioCodecFormatV2 = AudioCodecFormat::AUDIO_CODEC_FORMAT_BUTT;
     int32_t audioBitrate = AVTRANSCODER_DEFAULT_AUDIO_BIT_RATE;
     OutputFormatType fileFormat = OutputFormatType::FORMAT_DEFAULT;
     VideoCodecFormat videoCodecFormat = VideoCodecFormat::VIDEO_DEFAULT;
@@ -194,6 +195,7 @@ private:
     static std::shared_ptr<TaskHandler<RetInfo>> GetPromiseTask(AVTransCoderNapi *avnapi, const std::string &opt);
 
     static int32_t GetAudioCodecFormat(const std::string &mime, AudioCodecFormat &codecFormat);
+    static int32_t GetAudioCodecFormatV2(const std::string &mime, AudioCodecFormat &codecFormat);
     static int32_t GetVideoCodecFormat(const std::string &mime, VideoCodecFormat &codecFormat);
     static int32_t GetOutputFormat(const std::string &extension, OutputFormatType &type);
 
@@ -248,6 +250,7 @@ private:
     struct AVFileDescriptor srcFd_;
     int32_t dstFd_ = -1;
     int32_t watermarkCount_ = 0;
+    bool isAudioV2Valid = false;
 };
 
 struct AVTransCoderAsyncContext : public MediaAsyncContext {

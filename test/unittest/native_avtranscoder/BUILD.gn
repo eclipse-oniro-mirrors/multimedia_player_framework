@@ -61,6 +61,10 @@ ohos_unittest("native_avtranscoder_unit_test") {
     "hitrace:libhitracechain",
   ]
 
+  if (player_framework_support_audio_convert) {
+    external_deps += [ "audio_framework:audio_suite" ]
+  }
+
   resource_config_file =
       "$MEDIA_PLAYER_ROOT_DIR/test/unittest/resources/ohos_test.xml"
 

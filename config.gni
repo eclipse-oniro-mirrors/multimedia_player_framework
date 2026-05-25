@@ -38,6 +38,7 @@ declare_args() {
   player_framework_enable_start_stop_on_demand = false
   player_framework_support_lowpower_av_sink = false
   player_framework_support_media_madvise = false
+  player_framework_support_audio_convert = false
   drivers_interface_lpplayer_flag = false
   if (defined(build_seccomp) && build_seccomp) {
     player_framework_support_seccomp = true

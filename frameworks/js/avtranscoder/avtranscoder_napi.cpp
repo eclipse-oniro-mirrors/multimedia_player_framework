@@ -280,6 +280,8 @@ napi_value AVTransCoderNapi::JsPrepare(napi_env env, napi_callback_info info)
             auto result = asyncCtx->task_->GetResult();
             if (result.Value().first != MSERR_EXT_API9_OK) {
                 asyncCtx->SignError(result.Value().first, result.Value().second);
+            } else {
+                asyncCtx->JsResult = std::make_unique<MediaJsResultInt>(asyncCtx->napi->watermarkCount_);
             }
         }
         MEDIA_LOGI("The js thread of prepare finishes execution and returns");
@@ -607,7 +609,7 @@ napi_value AVTransCoderNapi::JsSetDstFd(napi_env env, napi_callback_info info)
     napi_get_value_int32(env, args[0], &asyncCtx->napi->dstFd_);
 
     auto task = std::make_shared<TaskHandler<void>>([napi = asyncCtx->napi]() {
-        MEDIA_LOGI("JsSetSrcFd Task");
+        MEDIA_LOGI("JsSetDstFd Task");
         napi->SetOutputFile(napi->dstFd_);
     });
     (void)asyncCtx->napi->taskQue_->EnqueueTask(task);
@@ -823,7 +825,8 @@ RetInfo AVTransCoderNapi::Configure(std::shared_ptr<AVTransCoderConfig> config)
     int32_t ret = transCoder_->SetOutputFormat(config->fileFormat);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetOutputFormat", "fileFormat"));
 
-    ret = transCoder_->SetAudioEncoder(config->audioCodecFormat);
+    AudioCodecFormat outputAudioCodec = isAudioV2Valid ? config->audioCodecFormatV2 : config->audioCodecFormat;
+    ret = transCoder_->SetAudioEncoder(outputAudioCodec);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetAudioEncoder", "audioCodecFormat"));
     
     ret = transCoder_->SetAudioEncodingBitRate(config->audioBitrate);
@@ -968,12 +971,40 @@ int32_t AVTransCoderNapi::GetAudioCodecFormat(const std::string &mime, AudioCode
     return MSERR_INVALID_VAL;
 }
 
+int32_t AVTransCoderNapi::GetAudioCodecFormatV2(const std::string &mime, AudioCodecFormat &codecFormat)
+{
+    MEDIA_LOGI("mime %{public}s", mime.c_str());
+    const std::map<std::string_view, AudioCodecFormat> mimeStrToCodecFormat = {
+        { CodecMimeType::AUDIO_AAC, AudioCodecFormat::AAC_LC },
+        { CodecMimeType::AUDIO_AMR_NB, AudioCodecFormat::AUDIO_AMR_NB },
+        { CodecMimeType::AUDIO_AMR_WB, AudioCodecFormat::AUDIO_AMR_WB },
+        { CodecMimeType::AUDIO_MPEG, AudioCodecFormat::AUDIO_MPEG },
+        { CodecMimeType::AUDIO_RAW, AudioCodecFormat::AUDIO_RAW },
+        { "", AudioCodecFormat::AUDIO_DEFAULT },
+    };
+
+    auto iter = mimeStrToCodecFormat.find(mime);
+    if (iter != mimeStrToCodecFormat.end()) {
+        codecFormat = iter->second;
+        return MSERR_OK;
+    }
+    return MSERR_INVALID_VAL;
+}
+
 int32_t AVTransCoderNapi::GetAudioConfig(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx,
     napi_env env, napi_value args)
 {
     std::shared_ptr<AVTransCoderConfig> config = asyncCtx->config_;
     std::string audioCodec = CommonNapi::GetPropertyString(env, args, "audioCodec");
+    std::string audioCodecV2 = CommonNapi::GetPropertyString(env, args, "audioCodecV2");
     (void)AVTransCoderNapi::GetAudioCodecFormat(audioCodec, config->audioCodecFormat);
+    (void)AVTransCoderNapi::GetAudioCodecFormatV2(audioCodecV2, config->audioCodecFormatV2);
+    isAudioV2Valid = !audioCodecV2.empty();
+    if (isAudioV2Valid) {
+        MEDIA_LOGI("audio encoder mime is v2 %{public}s", audioCodecV2.c_str());
+    } else {
+        MEDIA_LOGI("audio encoder mime is %{public}s", audioCodec.c_str());
+    }
     (void)CommonNapi::GetPropertyInt32(env, args, "audioBitrate", config->audioBitrate);
     return MSERR_OK;
 }
@@ -1014,6 +1045,10 @@ int32_t AVTransCoderNapi::GetOutputFormat(const std::string &extension, OutputFo
     const std::map<std::string, OutputFormatType> extensionToOutputFormat = {
         { "mp4", OutputFormatType::FORMAT_MPEG_4 },
         { "m4a", OutputFormatType::FORMAT_M4A },
+        { "amr", OutputFormatType::FORMAT_AMR },
+        { "mp3", OutputFormatType::FORMAT_MP3 },
+        { "aac", OutputFormatType::FORMAT_AAC },
+        { "wav", OutputFormatType::FORMAT_WAV },
         { "", OutputFormatType::FORMAT_DEFAULT },
     };
 

@@ -94,6 +94,7 @@ private:
     void SkipAudioDecAndEnc();
     Status ConfigureVideoAudioMetaData();
     void ConfigureVideoWidthHeight(const TransCoderParam &transCoderParam);
+    const char* GetAudioEncFormat(const AudioCodecFormat &encFmt);
     Status ConfigureAudioParam(const TransCoderParam &transCoderParam);
     Status ConfigureVideoParam(const TransCoderParam &transCoderParam);
     Status ConfigureVideoBitrate();
@@ -173,6 +174,7 @@ private:
     int32_t inputVideoHeight_ = 0;
     std::string inputAudioMimeType_;
     bool isExistVideoTrack_ = false;
+    bool isExistAudioTrack_ = false;
     bool isConfiguredVideoBitrate_ = false;
     std::atomic<int32_t> durationMs_{-1};
 
