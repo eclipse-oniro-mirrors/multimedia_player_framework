@@ -297,7 +297,7 @@ private:
 
         OH_AVFormat *format = OH_AVFormat_Create();
         if (format != nullptr) {
-            if (rsRect.x >= 0) {
+            if (rsRect.x >= 0 && rsRect.y >= 0 && rsRect.w >= 0 && rsRect.h >= 0) {
                 int32_t rectData[4] = {rsRect.x, rsRect.y, rsRect.w, rsRect.h};
                 bool res =
                     (OH_AVFormat_SetIntBuffer(format, OH_SCREEN_CAPTURE_CONTENT_RECT, rectData, sizeof(rectData)) &&
