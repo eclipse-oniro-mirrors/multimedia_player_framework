@@ -27,6 +27,7 @@ namespace Media {
 std::shared_ptr<AVMetadataHelperClient> AVMetadataHelperClient::Create(
     const sptr<IStandardAVMetadataHelperService> &ipcProxy)
 {
+    CHECK_AND_RETURN_RET_LOG(ipcProxy != nullptr, nullptr, "IStandardAVMetadataHelperService is nullptr.");
     std::shared_ptr<AVMetadataHelperClient> AVMetadataHelper = std::make_shared<AVMetadataHelperClient>(ipcProxy);
     int32_t ret = AVMetadataHelper->CreateListenerObject();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to create listener object..");
@@ -165,12 +166,14 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperClient::FetchFrameAtTime(int64_t
 
 int32_t AVMetadataHelperClient::GetTimeByFrameIndex(uint32_t index, uint64_t &time)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperProxy_ != nullptr, 0, "avmetadatahelper service does not exist.");
     return avMetadataHelperProxy_->GetTimeByFrameIndex(index, time);
 }
 
 int32_t AVMetadataHelperClient::GetFrameIndexByTime(uint64_t time, uint32_t &index)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperProxy_ != nullptr, 0, "avmetadatahelper service does not exist.");
     return avMetadataHelperProxy_->GetFrameIndexByTime(time, index);
 }
