@@ -641,3 +641,9 @@ int32_t ScreenCaptureCapiMock::ResumeScreenRecording()
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_UNKNOWN, "screenCapture_ == nullptr");
     return OH_AVScreenCapture_ResumeScreenCapture(screenCapture_);
 }
+
+int32_t ScreenCaptureCapiMock::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width,
+    int32_t height, int32_t &watermarkCount)
+{
+    return MSERR_OK;
+}

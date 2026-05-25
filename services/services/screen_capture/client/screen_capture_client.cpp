@@ -349,5 +349,13 @@ int32_t ScreenCaptureClient::ResumeScreenCapture()
     CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
     return screenCaptureProxy_->ResumeScreenCapture();
 }
+
+int32_t ScreenCaptureClient::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width,
+    int32_t height, int32_t &watermarkCount)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
+    return screenCaptureProxy_->AddWatermark(watermarkBuffer, width, height, watermarkCount);
+}
 } // namespace Media
 } // namespace OHOS

@@ -66,6 +66,8 @@ public:
         MultiDisplayCapability &capability) override;
     int32_t PauseScreenCapture() override;
     int32_t ResumeScreenCapture() override;
+    int32_t AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width, int32_t height,
+        int32_t &watermarkCount) override;
 
 private:
     bool IsAudioCapInfoIgnored(const AudioCaptureInfo &audioCapInfo);

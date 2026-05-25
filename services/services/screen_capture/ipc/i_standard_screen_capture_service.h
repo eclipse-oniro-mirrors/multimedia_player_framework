@@ -71,9 +71,11 @@ public:
         MultiDisplayCapability &capability) = 0;
     virtual int32_t PauseScreenCapture() = 0;
     virtual int32_t ResumeScreenCapture() = 0;
+    virtual int32_t AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width, int32_t height,
+        int32_t &watermarkCount) = 0;
     /**
-     * IPC code ID
-     */
+      * IPC code ID
+      */
     enum ScreenCaptureServiceMsg {
         SET_LISTENER_OBJ = 0,
         RELEASE = 1,
@@ -114,6 +116,7 @@ public:
         GET_MULTI_DISPLAY_CAPTURE_CAPABILITY = 36,
         PAUSE_SCREEN_CAPTURE = 37,
         RESUME_SCREEN_CAPTURE = 38,
+        ADD_WATERMARK = 39,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardScreenCaptureService");

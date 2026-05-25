@@ -109,6 +109,8 @@ public:
     virtual int32_t ExcludeAudioContent(AVScreenCaptureFilterableAudioContent audioType) = 0;
     virtual int32_t SetPickerMode(PickerMode pickerMode) = 0;
     virtual int32_t ExcludePickerWindows(int32_t *windowIDsVec, uint32_t windowCount) = 0;
+    virtual int32_t AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width,
+        int32_t height, int32_t &watermarkCount) = 0;
     virtual bool IsErrorCallbackEnabled()
     {
         return false;

@@ -58,6 +58,8 @@ public:
     int32_t ExcludeWindowContent(int32_t *windowIDs, int32_t windowCount) override;
     int32_t ExcludeAudioContent(AVScreenCaptureFilterableAudioContent audioType) override;
     int32_t SetPickerMode(PickerMode pickerMode) override;
+    int32_t AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width,
+        int32_t height, int32_t &watermarkCount) override;
     int32_t ExcludePickerWindows(int32_t *windowIDsVec, uint32_t windowCount) override;
     bool IsStateChangeCallbackEnabled() override
     {

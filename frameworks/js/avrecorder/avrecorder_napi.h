@@ -458,6 +458,7 @@ private:
     int32_t videoFrameWidth_ = -1; // Required for watermarking. Synchronize the modification if any.
     int32_t videoFrameHeight_ = -1; // Required for watermarking. Synchronize the modification if any.
     int32_t rotation_ = 0; // Required for watermarking. Synchronize the modification if any.
+    int32_t watermarkCount_ = 0;
 };
 
 struct AVRecorderAsyncContext : public MediaAsyncContext {

@@ -2878,8 +2878,10 @@ int32_t ScreenCaptureServer::InitRecorder()
     CHECK_AND_RETURN_RET_LOG(outputFd_ > 0, MSERR_INVALID_OPERATION, "the outputFd is invalid");
     MEDIA_LOGI("InitRecorder start");
     MediaTrace trace("ScreenCaptureServer::InitRecorder");
-    recorder_ = Media::RecorderServer::Create();
-    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_UNKNOWN, "init Recoder failed");
+    if (!recorder_) {
+        recorder_ = Media::RecorderServer::Create();
+        CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_UNKNOWN, "init Recoder failed");
+    }
     ON_SCOPE_EXIT(0) {
         recorder_->Release();
     };
@@ -5025,6 +5027,7 @@ void ScreenCaptureServer::ReleaseInner()
     }
     MEDIA_LOGI("ScreenCaptureServer::ReleaseInner before RemoveScreenCaptureServerMap");
 
+    watermarkCount_ = 0;
     RemoveSaAppInfoMap(saUid_);
     RemoveScreenCaptureServerMap(sessionId_);
     sessionId_ = SESSION_ID_INVALID;
@@ -5405,6 +5408,39 @@ int32_t ScreenCaptureServer::ResumeRecorder()
             "ResumeRecorder failed %{public}d", FAKE_POINTER(this), ret);
     }
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " ResumeRecorder end.", FAKE_POINTER(this));
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServer::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width, int32_t height,
+    int32_t &watermarkCount)
+{
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " AddWatermark in, width: %{public}d height: %{public}d",
+        FAKE_POINTER(this), width, height);
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::CREATED, MSERR_INVALID_OPERATION,
+        "AddWatermark captureState_ is not CREATED, not allowed. captureState_: %{public}d", captureState_.load());
+    CHECK_AND_RETURN_RET_LOG(captureConfig_.dataType == DataType::CAPTURE_FILE, MSERR_UNKNOWN,
+        "dataType is not CAPTURE_FILE. dataType: %{public}d", captureConfig_.dataType);
+    auto ret = GetWatermarkCount(watermarkCount);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to add watermark, watermarks is over 5.");
+    if (!recorder_) {
+        recorder_ = Media::RecorderServer::Create();
+    }
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_UNKNOWN, "Create Recoder failed");
+    ret = recorder_->AddWatermark(watermarkBuffer, width, height, watermarkCount);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ScreenCaptureServer: 0x%{public}06" PRIXPTR
+        "AddWatermark failed %{public}d", FAKE_POINTER(this), ret);
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " AddWatermark end.", FAKE_POINTER(this));
+    return MSERR_OK;
+}
+    
+int32_t ScreenCaptureServer::GetWatermarkCount(int32_t &watermarkCount)
+{
+    CHECK_AND_RETURN_RET_LOG(watermarkCount_ < WATERMARK_COUNT_MAX, MSERR_INVALID_OPERATION,
+        "GetWatermarkCount Failed to add watermark");
+    watermarkCount_++;
+    watermarkCount = watermarkCount_;
+    MEDIA_LOGI("GetWatermarkCount watermarkCount: %{public}d", watermarkCount);
     return MSERR_OK;
 }
 
