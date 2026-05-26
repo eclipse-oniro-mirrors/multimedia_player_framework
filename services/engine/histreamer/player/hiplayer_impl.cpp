@@ -2512,8 +2512,8 @@ int32_t HiPlayerImpl::GetPlaybackStatisticMetrics(Format &playbackStatisticMetri
     int64_t totalSyncDurationMs = 0;
     FALSE_RETURN_V(videoDecoder_ != nullptr, TransStatus(Status::OK));
     videoDecoder_->GetAVSyncInfo(syncCount, totalSyncDurationMs);
-    playbackStatisticMetrics.PutLongValue("syncCount", syncCount);
-    playbackStatisticMetrics.PutLongValue("totalSyncDurationMs", totalSyncDurationMs);
+    playbackStatisticMetrics.PutLongValue("lip_async_count", syncCount);
+    playbackStatisticMetrics.PutLongValue("total_lip_async_time", totalSyncDurationMs);
     return TransStatus(Status::OK);
 }
 

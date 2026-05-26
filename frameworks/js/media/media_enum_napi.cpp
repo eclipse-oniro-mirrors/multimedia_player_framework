@@ -373,6 +373,8 @@ static const std::vector<struct JsEnumString> g_playbackMetricsKey = {
     { "TOTAL_DOWNLOAD_SIZE", "total_loading_bytes" },
     { "STALLING_COUNT", "stalling_count" },
     { "TOTAL_STALLING_TIME", "total_stalling_time" },
+    { "LIP_ASYNC_COUNT", "lip_async_count" },
+    { "TOTAL_LIP_ASYNC_TIME", "total_lip_async_time" },
 };
 
 static const std::vector<struct JsEnumString> g_codecMimeType = {
