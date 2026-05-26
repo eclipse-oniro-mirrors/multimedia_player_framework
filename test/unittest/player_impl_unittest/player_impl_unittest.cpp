@@ -1596,7 +1596,7 @@ HWTEST_F(PlayerImplUnitTest, OnPCMOutput_002, TestSize.Level0)
     auto ret = playerImpl_->SetPCMOutputCallback(callback);
     EXPECT_EQ(ret, MSERR_OK);
     ASSERT_NE(savedCallback, nullptr);
-    auto buffer = AVBuffer::Create(1024);
+    auto buffer = AVBuffer::CreateAVBuffer();
     ASSERT_NE(buffer, nullptr);
     EXPECT_CALL(*callback, OnPCMOutput(_)).Times(1);
     savedCallback->OnPCMOutput(buffer);
@@ -1646,7 +1646,7 @@ HWTEST_F(PlayerImplUnitTest, OnPCMProcessor_002, TestSize.Level0)
     auto ret = playerImpl_->SetPCMProcessorCallback(callback);
     EXPECT_EQ(ret, MSERR_OK);
     ASSERT_NE(savedCallback, nullptr);
-    auto buffer = AVBuffer::Create(1024);
+    auto buffer = AVBuffer::CreateAVBuffer();
     ASSERT_NE(buffer, nullptr);
     EXPECT_CALL(*callback, OnPCMProcessor(_)).Times(1);
     savedCallback->OnPCMProcessor(buffer);
