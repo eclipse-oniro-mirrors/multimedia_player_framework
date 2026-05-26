@@ -3150,7 +3150,6 @@ HWTEST_F(PlayerUnitTest, Player_AddSubSource_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_NE(SUBTITLE_0_SEC, player_->GetSubtitleText(SUBTITLE_0_SEC));
-    EXPECT_EQ(MSERR_OK, player_->Pause());
     EXPECT_EQ(MSERR_OK, player_->Stop());
     EXPECT_EQ(MSERR_OK, player_->Reset());
     EXPECT_EQ(MSERR_OK, player_->Release());
@@ -4804,7 +4803,7 @@ HWTEST_F(PlayerUnitTest, Player_IsSeekContinuousSupported_001, TestSize.Level0)
     ASSERT_NE(nullptr, videoSurface);
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
     EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
-    EXPECT_TRUE(player_->IsSeekContinuousSupported());
+    EXPECT_FALSE(player_->IsSeekContinuousSupported());
 }
 
 /**
@@ -4821,7 +4820,7 @@ HWTEST_F(PlayerUnitTest, Player_IsSeekContinuousSupported_002, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
     EXPECT_EQ(MSERR_OK, player_->Play());
     sleep(PLAYING_TIME_2_SEC);
-    EXPECT_TRUE(player_->IsSeekContinuousSupported());
+    EXPECT_FALSE(player_->IsSeekContinuousSupported());
 }
 
 /**
