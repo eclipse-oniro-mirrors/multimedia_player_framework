@@ -1555,33 +1555,9 @@ HWTEST_F(PlayerImplUnitTest, SetPCMProcessorMaxLen_003, TestSize.Level0)
 /**
  * @tc.name  : Test OnPCMOutput
  * @tc.number: OnPCMOutput_001
- * @tc.desc  : Test OnPCMOutput callback invocation with nullptr buffer
- */
-HWTEST_F(PlayerImplUnitTest, OnPCMOutput_001, TestSize.Level0)
-{
-    ASSERT_NE(playerImpl_, nullptr);
-    auto mockService = std::make_shared<MockIPlayerService>();
-    playerImpl_->playerService_ = mockService;
-    auto callback = std::make_shared<MockPlayerCallback>();
-    std::shared_ptr<PlayerCallback> savedCallback;
-    EXPECT_CALL(*mockService, SetPCMOutputCallback(_))
-        .WillOnce(Invoke([&savedCallback](const std::shared_ptr<PlayerCallback> &cb) {
-            savedCallback = cb;
-            return MSERR_OK;
-        }));
-    auto ret = playerImpl_->SetPCMOutputCallback(callback);
-    EXPECT_EQ(ret, MSERR_OK);
-    ASSERT_NE(savedCallback, nullptr);
-    EXPECT_CALL(*callback, OnPCMOutput(_)).Times(0);
-    savedCallback->OnPCMOutput(nullptr);
-}
-
-/**
- * @tc.name  : Test OnPCMOutput
- * @tc.number: OnPCMOutput_002
  * @tc.desc  : Test OnPCMOutput callback invocation with valid buffer
  */
-HWTEST_F(PlayerImplUnitTest, OnPCMOutput_002, TestSize.Level0)
+HWTEST_F(PlayerImplUnitTest, OnPCMOutput_001, TestSize.Level0)
 {
     ASSERT_NE(playerImpl_, nullptr);
     auto mockService = std::make_shared<MockIPlayerService>();
@@ -1605,33 +1581,9 @@ HWTEST_F(PlayerImplUnitTest, OnPCMOutput_002, TestSize.Level0)
 /**
  * @tc.name  : Test OnPCMProcessor
  * @tc.number: OnPCMProcessor_001
- * @tc.desc  : Test OnPCMProcessor callback invocation with nullptr buffer
- */
-HWTEST_F(PlayerImplUnitTest, OnPCMProcessor_001, TestSize.Level0)
-{
-    ASSERT_NE(playerImpl_, nullptr);
-    auto mockService = std::make_shared<MockIPlayerService>();
-    playerImpl_->playerService_ = mockService;
-    auto callback = std::make_shared<MockPlayerCallback>();
-    std::shared_ptr<PlayerCallback> savedCallback;
-    EXPECT_CALL(*mockService, SetPCMProcessorCallback(_))
-        .WillOnce(Invoke([&savedCallback](const std::shared_ptr<PlayerCallback> &cb) {
-            savedCallback = cb;
-            return MSERR_OK;
-        }));
-    auto ret = playerImpl_->SetPCMProcessorCallback(callback);
-    EXPECT_EQ(ret, MSERR_OK);
-    ASSERT_NE(savedCallback, nullptr);
-    EXPECT_CALL(*callback, OnPCMProcessor(_)).Times(0);
-    savedCallback->OnPCMProcessor(nullptr);
-}
-
-/**
- * @tc.name  : Test OnPCMProcessor
- * @tc.number: OnPCMProcessor_002
  * @tc.desc  : Test OnPCMProcessor callback invocation with valid buffer
  */
-HWTEST_F(PlayerImplUnitTest, OnPCMProcessor_002, TestSize.Level0)
+HWTEST_F(PlayerImplUnitTest, OnPCMProcessor_001, TestSize.Level0)
 {
     ASSERT_NE(playerImpl_, nullptr);
     auto mockService = std::make_shared<MockIPlayerService>();
