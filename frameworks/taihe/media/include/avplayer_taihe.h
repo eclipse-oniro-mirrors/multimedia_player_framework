@@ -260,6 +260,12 @@ public:
     void OnPlaybackContentChanged(callback_view<void(string_view data)> callback);
     void OffPlaybackContentChanged(optional_view<callback<void(string_view data)>> callback);
     void SetLoudnessGainSync(double loudnessGain);
+    int32_t GetCurrentTrackSync(::ohos::multimedia::media::MediaType mediaType);
+    void SetPrivacyType(optional_view<::ohos::multimedia::audio::AudioPrivacyType> privacyType);
+    optional<::ohos::multimedia::audio::AudioPrivacyType> GetPrivacyType();
+    void SetEnableStartFrameRateOpt(optional_view<bool> enabled);
+    void EnableCameraPostprocessingSync();
+    void ForceLoadVideoSync(bool status);
 private:
     static bool IsSystemApp();
     void ResetUserParameters();
@@ -294,6 +300,7 @@ private:
     bool IsListMode();
     bool IsAllowAdvanceToMediaSource();
     bool CanSetLoudnessGain();
+    bool CanCameraPostprocessing();
 
     std::string GetCurrentState();
     std::shared_ptr<TaskHandler<TaskRet>> GetTrackDescriptionTask(const std::unique_ptr<AVPlayerContext> &Ctx);
@@ -312,6 +319,8 @@ private:
     std::shared_ptr<TaskHandler<TaskRet>> AdvanceToNextMediaSourceTask();
     std::shared_ptr<TaskHandler<TaskRet>> AdvanceToPrevMediaSourceTask();
     std::shared_ptr<TaskHandler<TaskRet>> AdvanceToMediaSourceTask(const std::string &mediaSourceId);
+    std::shared_ptr<TaskHandler<TaskRet>> EnableCameraPostprocessingTask();
+    std::shared_ptr<TaskHandler<TaskRet>> ForceLoadVideoTask(bool status);
     void HandleSelectTrack(int32_t index, optional_view<SwitchMode> mode);
     void OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg);
     std::condition_variable stopTaskQueCond_;
@@ -361,6 +370,7 @@ private:
     int32_t listLoopMode_ = 1; // PLAYLIST_LOOP_MODE_ALL
     std::vector<std::pair<std::string, ohos::multimedia::media::MediaSource>> mediaSourceRefList_;
     int32_t mutedMediaType_ = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
+    int32_t privacyType_ = 0;
 };
 } // namespace ANI::Media
 #endif //AVPLAYER_TAIHE_H

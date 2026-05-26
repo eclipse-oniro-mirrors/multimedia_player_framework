@@ -4005,6 +4005,203 @@ void AVPlayerImpl::OffPlaybackContentChanged(optional_view<callback<void(string_
     }
 }
 
+int32_t AVPlayerImpl::GetCurrentTrackSync(::ohos::multimedia::media::MediaType mediaType)
+{
+    MediaTrace trace("AVPlayerImpl::getCurrentTrack");
+    MEDIA_LOGI("TaiheGetCurrentTrack In");
+    int32_t mediaTypeTmp = static_cast<int32_t>(mediaType.get_value());
+    if (mediaTypeTmp < static_cast<int32_t>(OHOS::Media::MediaType::MEDIA_TYPE_AUD) ||
+        mediaTypeTmp > static_cast<int32_t>(OHOS::Media::MediaType::MEDIA_TYPE_VID)) {
+        MEDIA_LOGE("TaiheGetCurrentTrack failed, invalid mediaType: %{public}d", mediaTypeTmp);
+        set_business_error(MSERR_EXT_API9_INVALID_PARAMETER, "invalid mediaType");
+        return -1;
+    }
+    
+    int32_t index = -1;
+    if (IsControllable()) {
+        int32_t ret = player_->GetCurrentTrack(static_cast<OHOS::Media::MediaType>(mediaTypeTmp), index);
+        if (ret != MSERR_OK) {
+            MEDIA_LOGE("TaiheGetCurrentTrack failed, ret: %{public}d", ret);
+            auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
+            set_business_error(errCode, "failed to GetCurrentTrack");
+            return -1;
+        }
+    } else {
+        MEDIA_LOGE("TaiheGetCurrentTrack failed, current state is not prepared/playing/paused/completed");
+        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed, unsupport getCurrentTrack operation");
+        return -1;
+    }
+    
+    MEDIA_LOGI("TaiheGetCurrentTrack Out, index: %{public}d", index);
+    return index;
+}
+
+void AVPlayerImpl::SetPrivacyType(optional_view<::ohos::multimedia::audio::AudioPrivacyType> privacyType)
+{
+    MediaTrace trace("AVPlayerImpl::setPrivacyType");
+    MEDIA_LOGI("TaiheSetPrivacyType In");
+ 
+    if (GetCurrentState() != AVPlayerState::STATE_INITIALIZED) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not initialized, unsupport to set privacy type");
+        return;
+    }
+ 
+    int32_t privacyTypeValue = 0;
+    if (privacyType.has_value()) {
+        privacyTypeValue = static_cast<int32_t>(privacyType.value().get_value());
+    }
+    if (privacyTypeValue < 0) {
+        OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check the input privacyType");
+        return;
+    }
+    privacyType_ = privacyTypeValue;
+ 
+    auto task = std::make_shared<TaskHandler<void>>([this, privacyTypeValue]() {
+        MEDIA_LOGI("SetPrivacyType Task");
+        if (player_ != nullptr) {
+            Format format;
+            (void)format.PutIntValue(PlayerKeys::PRIVACY_TYPE, privacyTypeValue);
+            (void)player_->SetParameter(format);
+        }
+    });
+    (void)taskQue_->EnqueueTask(task);
+    MEDIA_LOGI("TaiheSetPrivacyType Out");
+    return;
+}
+ 
+optional<::ohos::multimedia::audio::AudioPrivacyType> AVPlayerImpl::GetPrivacyType()
+{
+    MediaTrace trace("AVPlayerImpl::getPrivacyType");
+    MEDIA_LOGI("TaiheGetPrivacyType In");
+ 
+    ::ohos::multimedia::audio::AudioPrivacyType::key_t key;
+    MediaTaiheUtils::GetEnumKeyByValue<::ohos::multimedia::audio::AudioPrivacyType>(privacyType_, key);
+    ::ohos::multimedia::audio::AudioPrivacyType audioPrivacyType = ::ohos::multimedia::audio::AudioPrivacyType(key);
+    MEDIA_LOGI("TaiheGetPrivacyType Out Current PrivacyType: %{public}d", privacyType_);
+    return optional<::ohos::multimedia::audio::AudioPrivacyType>(std::in_place_t{}, audioPrivacyType);
+}
+ 
+void AVPlayerImpl::SetEnableStartFrameRateOpt(optional_view<bool> enabled)
+{
+    MediaTrace trace("AVPlayerImpl::SetEnableStartFrameRateOpt");
+    MEDIA_LOGD("TaiheEnableStartFrameRateOpt In");
+    
+    bool enabledValue = false;
+    if (enabled.has_value()) {
+        enabledValue = enabled.value();
+    }
+    
+    auto task = std::make_shared<TaskHandler<void>>([this, enabledValue]() {
+        MEDIA_LOGD("SetStartFrameRateOptEnabled Task");
+        if (player_ != nullptr) {
+            (void)player_->SetStartFrameRateOptEnabled(enabledValue);
+            MEDIA_LOGI("TaiheEnableStartFrameRateOpt SetParameter success");
+        }
+    });
+    (void)taskQue_->EnqueueTask(task);
+    
+    MEDIA_LOGD("TaiheEnableStartFrameRateOpt Out, enabled: %{public}d", enabledValue);
+}
+ 
+void AVPlayerImpl::EnableCameraPostprocessingSync()
+{
+    MediaTrace trace("AVPlayerImpl::enableCameraPostprocessing");
+    MEDIA_LOGD("TaiheEnableCameraPostprocessing In");
+    
+    auto promiseCtx = std::make_unique<AVPlayerContext>();
+    
+    if (!IsSystemApp()) {
+        set_business_error(MSERR_EXT_API9_PERMISSION_DENIED, "systemapi permission denied");
+        MEDIA_LOGE("TaiheEnableCameraPostprocessing failed: permission denied");
+        return;
+    }
+    
+    if (!CanCameraPostprocessing()) {
+        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not initialized, unsupport enable cameraPostProcessor");
+        MEDIA_LOGE("TaiheEnableCameraPostprocessing failed: state not support");
+        return;
+    }
+    
+    promiseCtx->asyncTask = EnableCameraPostprocessingTask();
+    promiseCtx->CheckTaskResult();
+    
+    MEDIA_LOGD("TaiheEnableCameraPostprocessing Out");
+}
+ 
+void AVPlayerImpl::ForceLoadVideoSync(bool status)
+{
+    MediaTrace trace("AVPlayerImpl::forceLoadVideo");
+    MEDIA_LOGI("TaiheForceLoadVideo In");
+    
+    auto promiseCtx = std::make_unique<AVPlayerContext>();
+    
+    if (!IsSystemApp()) {
+        set_business_error(MSERR_EXT_API9_PERMISSION_DENIED, "only system app support this function");
+        MEDIA_LOGE("TaiheForceLoadVideo failed: permission denied");
+        return;
+    }
+    
+    auto curState = GetCurrentState();
+    if (curState != AVPlayerState::STATE_INITIALIZED && curState != AVPlayerState::STATE_STOPPED) {
+        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "state unsupport this operation");
+        MEDIA_LOGE("TaiheForceLoadVideo failed: state not support");
+        return;
+    }
+    
+    promiseCtx->asyncTask = ForceLoadVideoTask(status);
+    promiseCtx->CheckTaskResult();
+    
+    MEDIA_LOGI("TaiheForceLoadVideo Out");
+}
+
+std::shared_ptr<TaskHandler<TaskRet>> AVPlayerImpl::EnableCameraPostprocessingTask()
+{
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this]() {
+        std::unique_lock<std::mutex> lock(taskMutex_);
+        if (CanCameraPostprocessing()) {
+            int32_t ret = player_->EnableCameraPostprocessing();
+            if (ret != MSERR_OK) {
+                auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
+                return TaskRet(errCode, "failed to enable cameraPostProcessor");
+            }
+        } else {
+            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "current state is not initialized, unsupport enable cameraPostProcessor");
+        }
+        return TaskRet(MSERR_EXT_API9_OK, "Success");
+    });
+    (void)taskQue_->EnqueueTask(task);
+    return task;
+}
+ 
+std::shared_ptr<TaskHandler<TaskRet>> AVPlayerImpl::ForceLoadVideoTask(bool status)
+{
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this, status] {
+        std::unique_lock<std::mutex> lock(taskMutex_);
+        auto state = GetCurrentState();
+        CHECK_AND_RETURN_RET(state == AVPlayerState::STATE_INITIALIZED || state == AVPlayerState::STATE_STOPPED,
+            TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "state unsupport this operation"));
+        auto ret = player_->ForceLoadVideo(status);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK,
+            TaskRet(MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret)), "ForceLoadVideo failed"));
+        return TaskRet(MSERR_EXT_API9_OK, "Success");
+    });
+    (void)taskQue_->EnqueueTask(task);
+    return task;
+}
+
+bool AVPlayerImpl::CanCameraPostprocessing()
+{
+    auto state = GetCurrentState();
+    if (state == AVPlayerState::STATE_INITIALIZED) {
+        return true;
+    }
+    return false;
+}
+
 optional<AVPlayer> CreateAVPlayerSync()
 {
     auto res = make_holder<AVPlayerImpl, AVPlayer>();
