@@ -79,6 +79,8 @@ public:
         MultiDisplayCapability &capability) override;
     int32_t PauseScreenCapture() override;
     int32_t ResumeScreenCapture() override;
+    int32_t AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width,
+        int32_t height, int32_t &watermarkCount) override;
 
 private:
     ScreenCaptureServiceStub();
@@ -120,6 +122,7 @@ private:
     int32_t GetMultiDisplayCaptureCapability(MessageParcel &data, MessageParcel &reply);
     int32_t PauseScreenCapture(MessageParcel &data, MessageParcel &reply);
     int32_t ResumeScreenCapture(MessageParcel &data, MessageParcel &reply);
+    int32_t AddWatermark(MessageParcel &data, MessageParcel &reply);
 
     int32_t Release(MessageParcel &data, MessageParcel &reply);
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);

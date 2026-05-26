@@ -23,6 +23,9 @@
 #include "napi/native_node_api.h"
 #include "common_napi.h"
 #include "task_queue.h"
+#include "buffer/avbuffer.h"
+#include "av_common.h"
+#include "pixel_map_napi.h"
 
 namespace OHOS {
 namespace Media {
@@ -40,6 +43,7 @@ const std::string RELEASE = "Release";
 const std::string EXCLUDE_PICKER_WINDOWS = "ExcludePickerWindows";
 const std::string SET_PICKER_MODE = "SetPickerMode";
 const std::string PRESENT_PICKER = "PresentPicker";
+const std::string ADD_WATERMARK = "AddWatermark";
 }
 constexpr int32_t AVSCREENCAPTURE_DEFAULT_AUDIO_BIT_RATE = 96000;
 constexpr int32_t AVSCREENCAPTURE_DEFAULT_AUDIO_CHANNELS = 2;
@@ -126,8 +130,12 @@ private:
      */
     static napi_value JsSetMicrophoneEnabled(napi_env env, napi_callback_info info);
     /**
-     * release(): Promise<void>
-     */
+      * addWatermark(watermark: AVScreenCaptureWatermark): Promise<void>
+      */
+    static napi_value JsAddWatermark(napi_env env, napi_callback_info info);
+    /**
+      * release(): Promise<void>
+      */
     static napi_value JsRelease(napi_env env, napi_callback_info info);
     /**
      * on(type: 'stateChange', callback: Callback<AVScreenCaptureOnInfoType>): void
@@ -172,6 +180,15 @@ private:
     static napi_status GetInt32VectorParams(std::vector<int32_t> &vec, napi_env env, napi_value arg);
     static int32_t SetScreenCaptureFillMode(ScreenCaptureStrategy &strategy, const int32_t &fillMode);
     static napi_value ThrowCustomError(napi_env env, int32_t errorCode, const char* errorMessage);
+    static int32_t GetWatermarkParam(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
+        napi_env env, napi_value watermark, napi_value watermarkConfig);
+    static std::shared_ptr<TaskHandler<RetInfo>> AddWatermarkTask(
+        const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx);
+    static int32_t GetWatermarkConfiguration(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
+        napi_env env, napi_value args);
+    static int32_t GetWatermark(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env, napi_value args);
+    int32_t AddWatermark(std::shared_ptr<PixelMap> &pixelMap,
+        std::shared_ptr<WatermarkConfiguration> &watermarkConfig, int32_t &watermarkCount);
 
     AVScreenCaptureNapi();
     ~AVScreenCaptureNapi();
@@ -216,6 +233,9 @@ struct AVScreenCaptureAsyncContext : public MediaAsyncContext {
     std::shared_ptr<ScreenCaptureController> controller_ = nullptr;
     std::string opt_ = "";
     std::shared_ptr<TaskHandler<RetInfo>> task_ = nullptr;
+    std::shared_ptr<PixelMap> pixelMap_ = nullptr;
+    std::shared_ptr<WatermarkConfiguration> watermarkConfiguration_ = nullptr;
+    int32_t addWatermarkCount_ = 0;
 };
 
 } // namespace Media

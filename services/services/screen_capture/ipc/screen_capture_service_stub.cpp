@@ -94,6 +94,7 @@ int32_t ScreenCaptureServiceStub::Init()
         &ScreenCaptureServiceStub::GetMultiDisplayCaptureCapability;
     screenCaptureStubFuncs_[PAUSE_SCREEN_CAPTURE] = &ScreenCaptureServiceStub::PauseScreenCapture;
     screenCaptureStubFuncs_[RESUME_SCREEN_CAPTURE] = &ScreenCaptureServiceStub::ResumeScreenCapture;
+    screenCaptureStubFuncs_[ADD_WATERMARK] = &ScreenCaptureServiceStub::AddWatermark;
     return MSERR_OK;
 }
 
@@ -929,6 +930,34 @@ int32_t ScreenCaptureServiceStub::ResumeScreenCapture(MessageParcel &data, Messa
     (void)data;
     int32_t ret = ResumeScreenCapture();
     reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServiceStub::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer,
+    int32_t width, int32_t height, int32_t &watermarkCount)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    return screenCaptureServer_->AddWatermark(watermarkBuffer, width, height, watermarkCount);
+}
+
+int32_t ScreenCaptureServiceStub::AddWatermark(MessageParcel &data, MessageParcel &reply)
+{
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
+    CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_NO_MEMORY, "create AVBuffer failed");
+    CHECK_AND_RETURN_RET_LOG(buffer->ReadFromMessageParcel(data), MSERR_INVALID_OPERATION, "read buffer failed");
+
+    int32_t width = data.ReadInt32();
+    int32_t height = data.ReadInt32();
+
+    CHECK_AND_RETURN_RET_LOG(width > 0 && height > 0, MSERR_INVALID_VAL,
+        "Invalid watermark dimensions, width: %{public}d, height: %{public}d", width, height);
+
+    int32_t watermarkCount = 0;
+    int32_t ret = AddWatermark(buffer, width, height, watermarkCount);
+    reply.WriteInt32(watermarkCount);
+    reply.WriteInt32(ret);
+
     return MSERR_OK;
 }
 } // namespace Media

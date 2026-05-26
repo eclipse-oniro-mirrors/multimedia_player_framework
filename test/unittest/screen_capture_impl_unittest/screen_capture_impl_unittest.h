@@ -78,6 +78,8 @@ public:
         MultiDisplayCapability &capability), (override));
     MOCK_METHOD(int32_t, PauseScreenCapture, (), (override));
     MOCK_METHOD(int32_t, ResumeScreenCapture, (), (override));
+    MOCK_METHOD(int32_t, AddWatermark, (std::shared_ptr<AVBuffer> &watermarkBuffer,
+        int32_t width, int32_t height, int32_t &watermarkCount), (override));
 };
 
 class MockSurface : public Surface {

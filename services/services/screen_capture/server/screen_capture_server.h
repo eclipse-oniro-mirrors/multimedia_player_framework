@@ -114,6 +114,8 @@ public:
     int32_t ResumeScreenCapture() override;
     int32_t PauseScreenCaptureByUser();
     int32_t ResumeScreenCaptureByUser();
+    int32_t AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width, int32_t height,
+        int32_t &watermarkCount) override;
 
     void SetSessionId(int32_t sessionId);
     void GetAndSetAppVersion();
@@ -387,6 +389,7 @@ private:
     int32_t ResumeRecorder();
     int32_t PauseScreenCaptureInner(AVScreenCaptureStateCode stateCode);
     int32_t ResumeScreenCaptureInner(AVScreenCaptureStateCode stateCode);
+    int32_t GetWatermarkCount(int32_t &watermarkCount);
     void StopCaptureOnError(const std::string &reportMsg);
 private:
     std::mutex mutex_;
@@ -497,6 +500,7 @@ private:
     Global::Resource::ResConfig *resConfig_ = nullptr;
     OHOS::sptr<Rosen::ScreenManager::IScreenListener> screenConnectListener_ = nullptr;
     std::shared_ptr<ScreenCaptureSubscriber> subscriber_ = nullptr;
+    int32_t watermarkCount_ = 0;
 
     /* used for customize picker */
     std::vector<int32_t> excludedWindowIDsVec_;

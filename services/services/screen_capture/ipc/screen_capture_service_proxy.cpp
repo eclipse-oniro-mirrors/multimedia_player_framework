@@ -826,5 +826,30 @@ int32_t ScreenCaptureServiceProxy::ResumeScreenCapture()
 
     return reply.ReadInt32();
 }
+
+int32_t ScreenCaptureServiceProxy::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer,
+    int32_t width, int32_t height, int32_t &watermarkCount)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    MEDIA_LOGI("ScreenCaptureServiceProxy AddWatermark, width: %{public}d height: %{public}d", width, height);
+    bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    CHECK_AND_RETURN_RET_LOG(watermarkBuffer->WriteToMessageParcel(data),
+        MSERR_INVALID_OPERATION, "Failed to write watermarkBuffer!");
+
+    token = data.WriteInt32(width) && data.WriteInt32(height);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
+    int error = Remote()->SendRequest(ADD_WATERMARK, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "AddWatermark failed, error: %{public}d", error);
+    watermarkCount = reply.ReadInt32();
+    MEDIA_LOGI("AddWatermark watermarkCount result: %{public}d", watermarkCount);
+
+    return reply.ReadInt32();
+}
 } // namespace Media
 } // namespace OHOS

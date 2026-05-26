@@ -313,6 +313,13 @@ int32_t ScreenCaptureNativeMock::SetPickerMode(PickerMode pickerMode)
     return screenCapture_->SetPickerMode(pickerMode);
 }
 
+int32_t ScreenCaptureNativeMock::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width,
+    int32_t height, int32_t &watermarkCount)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    return screenCapture_->AddWatermark(watermarkBuffer, width, height, watermarkCount);
+}
+
 int32_t ScreenCaptureNativeMock::ExcludePickerWindows(int32_t *windowIDsVec, uint32_t windowCount)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
