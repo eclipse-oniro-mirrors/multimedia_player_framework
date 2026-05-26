@@ -456,6 +456,20 @@ interface AVPlayer {
     @gen_promise("setLoudnessGain")
     SetLoudnessGainSync(loudnessGain: f64): void;
 
+    @gen_promise("getCurrentTrack")
+    GetCurrentTrackSync(mediaType: MediaType): i32;
+
+    @get GetPrivacyType(): Optional<audio.AudioPrivacyType>;
+    @set SetPrivacyType(privacyType: Optional<audio.AudioPrivacyType>): void;
+ 
+    @set SetEnableStartFrameRateOpt(enabled: Optional<bool>): void;
+ 
+    @gen_promise("enableCameraPostprocessing")
+    EnableCameraPostprocessingSync(): void;
+ 
+    @gen_promise("forceLoadVideo")
+    ForceLoadVideoSync(status: bool): void;
+
     @!sts_inject_into_interface("on(type: string, callback: (state: String, reason: StateChangeReason)=> void): void;")
     @!sts_inject_into_interface("on(type: string, callback: (err: BusinessError<void>)=> void): void;")
     @!sts_inject_into_class("""on(type: string, callback: object): void {
