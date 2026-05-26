@@ -140,6 +140,8 @@ public:
     MOCK_METHOD(void, OnError, (int32_t errorCode, const std::string &errorMsg), (override));
     MOCK_METHOD(void, SetFreezeFlag, (bool isFrozen), (override));
     MOCK_METHOD(void, SetInterruptListenerFlag, (bool isRegistered), (override));
+    MOCK_METHOD(void, OnPCMOutput, (const std::shared_ptr<AVBuffer> &buffer), (override));
+    MOCK_METHOD(void, OnPCMProcessor, (const std::shared_ptr<AVBuffer> &buffer), (override));
 };
 
 class MockIMediaDataSource : public IMediaDataSource {
