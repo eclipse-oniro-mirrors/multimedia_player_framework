@@ -4009,12 +4009,8 @@ int32_t AVPlayerImpl::GetCurrentTrackSync(::ohos::multimedia::media::MediaType m
 {
     MediaTrace trace("AVPlayerImpl::getCurrentTrack");
     MEDIA_LOGI("TaiheGetCurrentTrack In");
-    
-    // 获取实际的枚举值
     int32_t mediaTypeTmp = static_cast<int32_t>(mediaType.get_value());
-    
-    // 参数范围检查
-    if (mediaTypeTmp < static_cast<int32_t>(OHOS::Media::MediaType::MEDIA_TYPE_AUD) || 
+    if (mediaTypeTmp < static_cast<int32_t>(OHOS::Media::MediaType::MEDIA_TYPE_AUD) ||
         mediaTypeTmp > static_cast<int32_t>(OHOS::Media::MediaType::MEDIA_TYPE_VID)) {
         MEDIA_LOGE("TaiheGetCurrentTrack failed, invalid mediaType: %{public}d", mediaTypeTmp);
         set_business_error(MSERR_EXT_API9_INVALID_PARAMETER, "invalid mediaType");
