@@ -106,7 +106,7 @@ string GetAVScreenCaptureConfigurableParametersSync(int32_t sessionId)
         set_business_error(MSERR_EXT_API9_PERMISSION_DENIED, "failed to create controller.");
         return res;
     }
-    
+
     int32_t ret = asyncCtx->controller_->GetAVScreenCaptureConfigurableParameters(sessionId, resultStr);
     if (ret != MSERR_OK) {
         set_business_error(MSERR_EXT_API20_SESSION_NOT_EXIST, "session does not exist.");
@@ -124,7 +124,7 @@ RetInfo GetReturnInfo(int32_t errCode, const std::string &operate, const std::st
     MEDIA_LOGE("failed to %{public}s, param %{public}s, errCode = %{public}d",
         operate.c_str(), param.c_str(), errCode);
     MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode));
-    
+
     std::string message;
     if (err == MSERR_EXT_API9_INVALID_PARAMETER) {
         message = MSExtErrorAPI9ToString(err, param, "") + add;
@@ -508,7 +508,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureRecorderImpl::GetPromiseTas
         auto memberFunc = itFunc->second;
         CHECK_AND_RETURN_RET_LOG(memberFunc != nullptr, ret, "memberFunc is nullptr!");
         ret = (taihe->*memberFunc)();
-        
+
         MEDIA_LOGI("%{public}s End", option.c_str());
         return ret;
     });
@@ -697,6 +697,50 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureRecorderImpl::GetSetPickerM
         MEDIA_LOGI("%{public}s End", option.c_str());
         return RetInfo(MSERR_EXT_API9_OK, "");
     });
+}
+
+std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureRecorderImpl::GetSetCanvasRotationTask(
+    const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const bool canvasRotation)
+{
+    return std::make_shared<TaskHandler<RetInfo>>([taihe = asyncCtx->taihe, canvasRotation]() {
+        const std::string &option = AVScreenCapturegOpt::SET_CANVAS_ROTATION;
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+
+        CHECK_AND_RETURN_RET(taihe != nullptr && taihe->screenCapture_ != nullptr,
+            GetReturnInfo(MSERR_INVALID_OPERATION, option, ""));
+
+        int32_t ret = taihe->screenCapture_->SetContentAutoRotation(canvasRotation);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(ret, option, ""));
+
+        MEDIA_LOGI("%{public}s End", option.c_str());
+        return RetInfo(MSERR_EXT_API9_OK, "");
+    });
+}
+
+void AVScreenCaptureRecorderImpl::SetCanvasRotationSync(bool canvasRotation)
+{
+    MediaTrace trace("AVScreenCapture::TaiheSetCanvasRotation");
+    const std::string &option = AVScreenCapturegOpt::SET_CANVAS_ROTATION;
+    MEDIA_LOGI("Taihe %{public}s Start", option.c_str());
+
+    auto asyncCtx = std::make_unique<AVScreenCaptureAsyncContext>();
+    CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
+    asyncCtx->taihe = this;
+    CHECK_AND_RETURN_LOG(asyncCtx->taihe != nullptr, "failed to GetTaiheInstanceAndArgs");
+    CHECK_AND_RETURN_LOG(asyncCtx->taihe->taskQue_ != nullptr, "taskQue is nullptr!");
+
+    asyncCtx->task_ = AVScreenCaptureRecorderImpl::GetSetCanvasRotationTask(asyncCtx, canvasRotation);
+    (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+
+    if (asyncCtx->task_) {
+        auto result = asyncCtx->task_->GetResult();
+        if (result.Value().first != MSERR_EXT_API9_OK) {
+            set_business_error(result.Value().first, result.Value().second);
+        }
+    }
+    asyncCtx.release();
+
+    MEDIA_LOGI("Taihe %{public}s End", option.c_str());
 }
 
 std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureRecorderImpl::GetExcludePickerWindowsTask(

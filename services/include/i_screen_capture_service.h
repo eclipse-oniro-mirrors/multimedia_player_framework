@@ -51,6 +51,7 @@ public:
     virtual int32_t ReleaseVideoBuffer() = 0;
     virtual int32_t SetMicrophoneEnabled(bool isMicrophone) = 0;
     virtual int32_t SetCanvasRotation(bool canvasRotation) = 0;
+    virtual int32_t SetContentAutoRotation(bool contentAutoRotation) = 0;
     virtual int32_t ShowCursor(bool showCursor) = 0;
     virtual int32_t ResizeCanvas(int32_t width, int32_t height) = 0;
     virtual int32_t SkipPrivacyMode(const std::vector<uint64_t> &windowIDsVec) = 0;

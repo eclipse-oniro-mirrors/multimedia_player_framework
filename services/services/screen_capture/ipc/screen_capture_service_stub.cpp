@@ -57,6 +57,7 @@ int32_t ScreenCaptureServiceStub::Init()
     screenCaptureStubFuncs_[RELEASE] = &ScreenCaptureServiceStub::Release;
     screenCaptureStubFuncs_[SET_MIC_ENABLE] = &ScreenCaptureServiceStub::SetMicrophoneEnabled;
     screenCaptureStubFuncs_[SET_SCREEN_ROTATION] = &ScreenCaptureServiceStub::SetCanvasRotation;
+    screenCaptureStubFuncs_[SET_CONTENT_AUTO_ROTATION] = &ScreenCaptureServiceStub::SetContentAutoRotation;
     screenCaptureStubFuncs_[RESIZE_CANVAS] = &ScreenCaptureServiceStub::ResizeCanvas;
     screenCaptureStubFuncs_[SKIP_PRIVACY] = &ScreenCaptureServiceStub::SkipPrivacyMode;
     screenCaptureStubFuncs_[SET_MAX_FRAME_RATE] = &ScreenCaptureServiceStub::SetMaxVideoFrameRate;
@@ -303,6 +304,13 @@ int32_t ScreenCaptureServiceStub::SetCanvasRotation(bool canvasRotation)
     return screenCaptureServer_->SetCanvasRotation(canvasRotation);
 }
 
+int32_t ScreenCaptureServiceStub::SetContentAutoRotation(bool contentAutoRotation)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+                             "screen capture server is nullptr");
+    return screenCaptureServer_->SetContentAutoRotation(contentAutoRotation);
+}
+
 int32_t ScreenCaptureServiceStub::ShowCursor(bool showCursor)
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
@@ -487,6 +495,16 @@ int32_t ScreenCaptureServiceStub::SetCanvasRotation(MessageParcel &data, Message
                              "screen capture server is nullptr");
     bool canvasRotation = data.ReadBool();
     int32_t ret = SetCanvasRotation(canvasRotation);
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServiceStub::SetContentAutoRotation(MessageParcel &data, MessageParcel &reply)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+                             "screen capture server is nullptr");
+    bool contentAutoRotation = data.ReadBool();
+    int32_t ret = SetContentAutoRotation(contentAutoRotation);
     reply.WriteInt32(ret);
     return MSERR_OK;
 }

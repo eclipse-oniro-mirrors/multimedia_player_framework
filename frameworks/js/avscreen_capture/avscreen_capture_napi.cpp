@@ -74,6 +74,7 @@ napi_value AVScreenCaptureNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("off", JsCancelEventCallback),
         DECLARE_NAPI_FUNCTION("excludePickerWindows", JsExcludePickerWindows),
         DECLARE_NAPI_FUNCTION("setPickerMode", JsSetPickerMode),
+        DECLARE_NAPI_FUNCTION("setContentAutoRotation", JsSetContentAutoRotation),
         DECLARE_NAPI_FUNCTION("presentPicker", JsPresentPicker),
     };
 
@@ -595,6 +596,64 @@ napi_value AVScreenCaptureNapi::JsSetMicrophoneEnabled(napi_env env, napi_callba
     return result;
 }
 
+napi_value AVScreenCaptureNapi::JsSetContentAutoRotation(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVScreenCapture::JsSetContentAutoRotation");
+    const std::string &opt = AVScreenCapturegOpt::SET_CONTENT_AUTO_ROTATION;
+    MEDIA_LOGI("Js %{public}s Start", opt.c_str());
+
+    const int32_t maxParam = 1;
+    size_t argCount = maxParam;
+    napi_value args[maxParam] = { nullptr };
+
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<AVScreenCaptureAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+    asyncCtx->napi = AVScreenCaptureNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi->taskQue_ != nullptr, result, "taskQue is nullptr!");
+
+    napi_valuetype valueType = napi_undefined;
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_boolean) {
+        asyncCtx->AVScreenCaptureSignError(MSERR_EXT_API9_INVALID_PARAMETER, "SetContentAutoRotation",
+            "setContentAutoRotation input is not boolean");
+        return result;
+    }
+    bool canvasRotation;
+    napi_status status = napi_get_value_bool(env, args[0], &canvasRotation);
+    if (status != napi_ok) {
+        asyncCtx->AVScreenCaptureSignError(MSERR_EXT_API9_INVALID_PARAMETER, "SetContentAutoRotation",
+            "setContentAutoRotation get value failed");
+        return result;
+    }
+
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
+    asyncCtx->task_ = AVScreenCaptureNapi::GetSetContentAutoRotationTask(asyncCtx, canvasRotation);
+    (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        AVScreenCaptureAsyncContext* asyncCtx = reinterpret_cast<AVScreenCaptureAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
+
+        if (asyncCtx->task_) {
+            auto result = asyncCtx->task_->GetResult();
+            if (result.Value().first != MSERR_EXT_API9_OK) {
+                asyncCtx->SignError(result.Value().first, result.Value().second);
+            }
+        }
+        MEDIA_LOGI("The js thread of init finishes execution and returns");
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
+    asyncCtx.release();
+
+    MEDIA_LOGI("Js %{public}s End", opt.c_str());
+    return result;
+}
+
 napi_value AVScreenCaptureNapi::JsExcludePickerWindows(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVScreenCapture::JsExcludePickerWindows");
@@ -851,6 +910,24 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureNapi::GetSetMicrophoneEnabl
 
         int32_t ret = napi->screenCapture_->SetMicrophoneEnabled(enable);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(MSERR_UNKNOWN, option, ""));
+
+        MEDIA_LOGI("%{public}s End", option.c_str());
+        return RetInfo(MSERR_EXT_API9_OK, "");
+    });
+}
+
+std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureNapi::GetSetContentAutoRotationTask(
+    const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const bool canvasRotation)
+{
+    return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, canvasRotation]() {
+        const std::string &option = AVScreenCapturegOpt::SET_CONTENT_AUTO_ROTATION;
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+
+        CHECK_AND_RETURN_RET(napi != nullptr && napi->screenCapture_ != nullptr,
+            GetReturnInfo(MSERR_INVALID_OPERATION, option, ""));
+
+        int32_t ret = napi->screenCapture_->SetContentAutoRotation(canvasRotation);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(ret, option, ""));
 
         MEDIA_LOGI("%{public}s End", option.c_str());
         return RetInfo(MSERR_EXT_API9_OK, "");

@@ -91,6 +91,7 @@ public:
     int32_t SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config) override;
     int32_t GetMultiDisplayCaptureCapability(uint64_t *displayIds, size_t count,
         MultiDisplayCapability *multiDisplayCapability) override;
+    int32_t SetContentAutoRotation(bool contentAutoRotation) override;
 private:
     static void SetScreenCaptureCallback(OH_AVScreenCapture *screencapture,
         std::shared_ptr<ScreenCaptureCallbackMock> cb);

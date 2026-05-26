@@ -58,6 +58,7 @@ public:
     MOCK_METHOD(int32_t, ReleaseVideoBuffer, (), (override));
     MOCK_METHOD(int32_t, SetMicrophoneEnabled, (bool isMicrophone), (override));
     MOCK_METHOD(int32_t, SetCanvasRotation, (bool canvasRotation), (override));
+    MOCK_METHOD(int32_t, SetContentAutoRotation, (bool contentAutoRotation), (override));
     MOCK_METHOD(int32_t, ShowCursor, (bool showCursor), (override));
     MOCK_METHOD(int32_t, ResizeCanvas, (int32_t width, int32_t height), (override));
     MOCK_METHOD(int32_t, SkipPrivacyMode, (const std::vector<uint64_t> &windowIDsVec), (override));

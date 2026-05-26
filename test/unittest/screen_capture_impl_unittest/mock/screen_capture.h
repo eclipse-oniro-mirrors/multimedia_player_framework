@@ -365,6 +365,7 @@ public:
     virtual int32_t ResumeScreenCapture() = 0;
     virtual int32_t AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width,
         int32_t height, int32_t &watermarkCount) = 0;
+    virtual int32_t SetContentAutoRotation(bool contentAutoRotation) = 0;
 };
 
 class __attribute__((visibility("default"))) ScreenCaptureFactory {

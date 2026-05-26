@@ -4474,6 +4474,19 @@ int32_t ScreenCaptureServer::SetCanvasRotationInner()
     return MSERR_OK;
 }
 
+int32_t ScreenCaptureServer::SetContentAutoRotation(bool contentAutoRotation)
+{
+    MediaTrace trace("ScreenCaptureServer::SetContentAutoRotation");
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(IsCreated(), MSERR_INVALID_OPERATION,
+        "SetContentAutoRotation failed, capture is not CREATED, state:%{public}d", captureState_.load());
+    canvasRotation_ = contentAutoRotation;
+    MEDIA_LOGI("ScreenCaptureServer::SetContentAutoRotation, contentAutoRotation:%{public}d", canvasRotation_);
+    CHECK_AND_RETURN_RET(IsActive(), MSERR_OK);
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " SetContentAutoRotation end.", FAKE_POINTER(this));
+    return MSERR_OK;
+}
+
 int32_t ScreenCaptureServer::ShowCursor(bool showCursor)
 {
     MediaTrace trace("ScreenCaptureServer::ShowCursor");
@@ -5433,7 +5446,7 @@ int32_t ScreenCaptureServer::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBu
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " AddWatermark end.", FAKE_POINTER(this));
     return MSERR_OK;
 }
-    
+
 int32_t ScreenCaptureServer::GetWatermarkCount(int32_t &watermarkCount)
 {
     CHECK_AND_RETURN_RET_LOG(watermarkCount_ < WATERMARK_COUNT_MAX, MSERR_INVALID_OPERATION,

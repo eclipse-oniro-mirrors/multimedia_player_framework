@@ -615,6 +615,24 @@ int32_t ScreenCaptureServiceProxy::SetCanvasRotation(bool canvasRotation)
     return reply.ReadInt32();
 }
 
+int32_t ScreenCaptureServiceProxy::SetContentAutoRotation(bool contentAutoRotation)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    token = data.WriteBool(contentAutoRotation);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write ContentAutoRotation state!");
+
+    int error = Remote()->SendRequest(SET_CONTENT_AUTO_ROTATION, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+                             "SetContentAutoRotation failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
 int32_t ScreenCaptureServiceProxy::ShowCursor(bool showCursor)
 {
     MessageParcel data;

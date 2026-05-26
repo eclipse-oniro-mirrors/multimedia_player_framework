@@ -184,6 +184,14 @@ int32_t ScreenCaptureImpl::SetCanvasRotation(bool canvasRotation)
     return screenCaptureService_->SetCanvasRotation(canvasRotation);
 }
 
+int32_t ScreenCaptureImpl::SetContentAutoRotation(bool contentAutoRotation)
+{
+    MEDIA_LOGD("SetContentAutoRotation:0x%{public}06" PRIXPTR " init in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_SERVICE_DIED,
+                             "screen capture service does not exist.");
+    return screenCaptureService_->SetContentAutoRotation(contentAutoRotation);
+}
+
 int32_t ScreenCaptureImpl::ShowCursor(bool showCursor)
 {
     MEDIA_LOGD("ShowCursor:0x%{public}06" PRIXPTR " init in", FAKE_POINTER(this));
@@ -199,7 +207,7 @@ int32_t ScreenCaptureImpl::ResizeCanvas(int32_t width, int32_t height)
                              "screen capture service does not exist.");
     return screenCaptureService_->ResizeCanvas(width, height);
 }
- 
+
 int32_t ScreenCaptureImpl::UpdateSurface(sptr<Surface> surface)
 {
     MEDIA_LOGD("UpdateSurface:0x%{public}06" PRIXPTR " init in", FAKE_POINTER(this));

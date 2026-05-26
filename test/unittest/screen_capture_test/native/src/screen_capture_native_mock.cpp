@@ -200,6 +200,12 @@ int32_t ScreenCaptureNativeMock::SetCanvasRotation(bool canvasRotation)
     return screenCapture_->SetCanvasRotation(canvasRotation);
 }
 
+int32_t ScreenCaptureNativeMock::SetContentAutoRotation(bool contentAutoRotation)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    return screenCapture_->SetContentAutoRotation(contentAutoRotation);
+}
+
 int32_t ScreenCaptureNativeMock::ShowCursor(bool showCursor)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");

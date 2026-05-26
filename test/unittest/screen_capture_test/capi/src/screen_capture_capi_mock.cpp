@@ -647,3 +647,8 @@ int32_t ScreenCaptureCapiMock::AddWatermark(std::shared_ptr<AVBuffer> &watermark
 {
     return MSERR_OK;
 }
+
+int32_t ScreenCaptureCapiMock::SetContentAutoRotation(bool contentAutoRotation)
+{
+    return MSERR_OK;
+}
