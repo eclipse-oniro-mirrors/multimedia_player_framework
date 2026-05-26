@@ -56,7 +56,12 @@ const std::map<DfxEventType, DfxEventHandleFunc> DfxAgent::DFX_EVENT_HANDLERS_ =
     { DfxEventType::DFX_INFO_PLAYER_STREAM_LAG, DfxAgent::ProcessStreamLagEvent },
     { DfxEventType::DFX_INFO_PLAYER_EOS_SEEK, DfxAgent::ProcessEosSeekEvent },
     { DfxEventType::DFX_INFO_PERF_REPORT, DfxAgent::ProcessPerfInfoEvent },
-    { DfxEventType::DFX_EVENT_STALLING, DfxAgent::ProcessMetricsEvent }
+    { DfxEventType::DFX_EVENT_STALLING, DfxAgent::ProcessMetricsEvent },
+    { DfxEventType::DFX_EVENT_AVDESYNC, DfxAgent::ProcessPlayErrEvent },
+    { DfxEventType::DFX_EVENT_MEDIA_CHANGED, DfxAgent::ProcessPlayErrEvent },
+    { DfxEventType::DFX_EVENT_LOADING_ERROR, DfxAgent::ProcessPlayErrEvent },
+    { DfxEventType::DFX_EVENT_MEDIA_DISCONTINUE, DfxAgent::ProcessPlayErrEvent },
+    { DfxEventType::DFX_EVENT_AUDIO_ERROR, DfxAgent::ProcessPlayErrEvent }
 };
 
 const std::unordered_map<std::string, bool> PERF_ITEM_NECESSITY = {
@@ -227,6 +232,13 @@ void DfxAgent::ProcessMetricsEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &
     agent->ReportMetricsEvent(event);
 }
 
+void DfxAgent::ProcessPlayErrEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event)
+{
+    auto agent = ptr.lock();
+    FALSE_RETURN(agent != nullptr);
+    agent->ReportPlayErrEvent(event);
+}
+
 void DfxAgent::UpdateDfxInfo(const DfxEvent &event)
 {
     auto data = AnyCast<MainPerfData>(event.param);
@@ -341,6 +353,39 @@ void DfxAgent::ReportMetricsEvent(const DfxEvent &event)
         metricsCallback_(shared_from_this(), eventCopy);
     }
 }
+
+void DfxAgent::ReportPlayErrEvent(const DfxEvent &event)
+{
+    PlayErrEvent eventType;
+    switch (event.type) {
+        case DfxEventType::DFX_EVENT_AVDESYNC:
+            eventType = OHOS::Media::PlayErrEvent::AVDESYNC;
+            break;
+        case DfxEventType::DFX_EVENT_MEDIA_CHANGED:
+            eventType = OHOS::Media::PlayErrEvent::MEDIA_CHANGED;
+            break;
+        case DfxEventType::DFX_EVENT_LOADING_ERROR:
+            eventType = OHOS::Media::PlayErrEvent::LOADING_ERROR;
+            break;
+        case DfxEventType::DFX_EVENT_MEDIA_DISCONTINUE:
+            eventType = OHOS::Media::PlayErrEvent::MEDIA_DISCONTINUE;
+            break;
+        case DfxEventType::DFX_EVENT_AUDIO_ERROR:
+            eventType = OHOS::Media::PlayErrEvent::AUDIO_ERROR;
+            break;
+        default:
+            return;
+    }
+    uint64_t instanceId = 0;
+    const auto &instanceIdStr = agent->instanceId_;
+    auto parseRes = std::from_chars(instanceIdStr.data(), instanceIdStr.data() + instanceIdStr.size(), instanceId);
+    if (parseRes.ec != std::errc()) {
+        MEDIA_LOG_E("ReportMetricsEvent invalid instanceId: %{public}s", instanceIdStr.c_str());
+        return;
+    }
+    AppendPlayErrInfo(eventType, instanceId);
+}
+
 
 void DfxAgent::GetTotalStallingDuration(int64_t* duration)
 {

@@ -38,6 +38,7 @@ namespace {
     using PlaybackEventInfo = OHOS::Media::PlaybackEventInfo;
     using StallingEventList = std::list<std::pair<uint64_t, std::shared_ptr<std::vector<StallingInfo>>>>;
     using json = nlohmann::json;
+    using PlayErrEvent = OHOS::Media::PlayErrEvent;
 
     constexpr uint32_t MAX_STRING_SIZE = 256;
     constexpr int64_t HOURS_BETWEEN_REPORTS = 4;
@@ -58,12 +59,70 @@ namespace {
         std::map<int32_t, std::list<std::pair<uint64_t, std::shared_ptr<std::vector<OHOS::Media::Format>>>>>>
         reportPlaybackInfoMap_;
     std::map<OHOS::Media::CallType, std::map<int32_t, StallingEventList>> reportStallingInfoMap_;
+    std::map<OHOS::Media::CallType,
+        std::map<int32_t, std::map<PlayErrEvent, uint32_t>>> playErrInfoMap_;
     nlohmann::json mediaKitEvents_ = nlohmann::json::array();
 
     std::chrono::system_clock::time_point currentTime_ = std::chrono::system_clock::now();
     std::chrono::system_clock::time_point currentTimeForMediaKit_ = std::chrono::system_clock::now();
     bool g_reachMaxMapSize {false};
     bool g_reachMaxMapSizeStalling {false};
+
+    int32_t ValidateOrInstanceId(CallType callType, int32_t uid, uint64_t instanceId, const char* funcName)
+    {
+        auto instanceIdMap = idMap_.find(instanceId);
+        if (instanceIdMap != idMap_.end()) {
+            auto existPair = instanceIdMap->second;
+            if (existPair.first != callType || existPair.second != uid) {
+                MEDIA_LOG_W("%{public}s instanceId exists with different owner", funcName);
+                return OHOS::Media::MSERR_INVALID_VAL;
+            }
+            MEDIA_LOG_D("%{public}s reuse existing instanceId mapping", funcName);
+        } else {
+            MEDIA_LOG_D("%{public}s not found instanceId in idMap_, add the instanceId to idMap_", funcName);
+            idMap_[instanceId] = std::make_pair(callType, uid);
+        }
+        return OHOS::Media::MSERR_OK;
+    }
+
+    void SetPlayErrEvents(CallType callType, int32_t uid, json &eventInfoJson)
+    {
+        std::lock_guard<std::mutex> lock(collectMut_);
+        auto  playErrIt = playErrInfoMap_.find(callType);
+        if (playErrIt == playErrInfoMap_.end()) {
+            return;
+        }
+        auto uidIt = playErrIt->second.find(uid);
+        if (uidIt == playErrIt->second.end()) {
+            return;
+        }
+        json playErrEvents;
+        for (const auto& errPair : uidIt->second) {
+            switch (errPair.first) {
+                case PlayErrEvent::AVDESYNC:
+                    playErrEvents["avdesync"] = errPair.second;
+                    break;
+                case PlayErrEvent::AVDESYNC:
+                    playErrEvents["avdesync"] = errPair.second;
+                    break;
+                case PlayErrEvent::AVDESYNC:
+                    playErrEvents["avdesync"] = errPair.second;
+                    break;
+                case PlayErrEvent::AVDESYNC:
+                    playErrEvents["avdesync"] = errPair.second;
+                    break;
+                case PlayErrEvent::AVDESYNC:
+                    playErrEvents["avdesync"] = errPair.second;
+                    break;
+                default:
+                    continue;
+            }
+        }
+        if (!playErrEvents.empty()) {
+            eventInfoJson["playErrEvents"] = playErrEvents;
+            MEDIA_LOG_I("SetPlayErrEvents success");
+        }
+    }
 
     void SetPlaybackMetrics(CallType callType, int32_t uid, json &playbackMetrics)
     {
@@ -239,6 +298,7 @@ namespace {
         {
             std::lock_guard<std::mutex> lock(collectMut_);
             reportStallingInfoMap_.clear();
+            playErrInfoMap_.clear();
         }
     }
     
@@ -413,6 +473,7 @@ void MediaEvent::CommonStatisicsEventWrite(CallType callType, OHOS::HiviewDFX::H
             eventInfoJson["maxInstanceNum"] = 0;
             eventInfoJson["playbackMetrics"] = playbackMetrics;
         }
+        SetPlayErrEvents(callType, kv.first, eventInfoJson);
         jsonArray.push_back(eventInfoJson);
         infoArr.push_back(jsonArray.dump());
     }
@@ -593,17 +654,9 @@ int32_t CreatePlaybackInfo(CallType callType, int32_t uid, uint64_t instanceId)
     MEDIA_LOG_I("CreatePlaybackInfo uid is: %{public}" PRId32, uid);
     {
         std::lock_guard<std::mutex> lock(collectMut_);
-        auto instanceIdMap = idMap_.find(instanceId);
-        if (instanceIdMap != idMap_.end()) {
-            auto existPair = instanceIdMap->second;
-            if (existPair.first != callType || existPair.second != uid) {
-                MEDIA_LOG_W("CreatePlaybackInfo instanceId exists with different owner");
-                return MSERR_INVALID_VAL;
-            }
-            MEDIA_LOG_D("CreatePlaybackInfo reuse existing instanceId mapping");
-        } else {
-            MEDIA_LOG_D("CreatePlaybackInfo not found instanceId in idMap_, add the instanceId to idMap_");
-            idMap_[instanceId] = std::make_pair(callType, uid);
+        auto ret = ValidateOrInstanceId(callType, uid, instanceId, "CreatePlaybackInfo");
+        if (ret != OHOS::Media::MSERR_OK) {
+            return ret;
         }
         std::shared_ptr<std::vector<Format>> playbackInfo = std::make_shared<std::vector<Format>>();
         std::pair<uint64_t, std::shared_ptr<std::vector<Format>>> playbackInfoPair(instanceId, playbackInfo);
@@ -631,17 +684,9 @@ int32_t CreateStallingInfo(CallType callType, int32_t uid, uint64_t instanceId)
     MEDIA_LOG_I("CreateStallingInfo uid is: %{public}" PRId32, uid);
     {
         std::lock_guard<std::mutex> lock(collectMut_);
-        auto instanceIdMap = idMap_.find(instanceId);
-        if (instanceIdMap != idMap_.end()) {
-            auto existPair = instanceIdMap->second;
-            if (existPair.first != callType || existPair.second != uid) {
-                MEDIA_LOG_W("CreateStallingInfo instanceId exists with different owner");
-                return MSERR_INVALID_VAL;
-            }
-            MEDIA_LOG_I("CreateStallingInfo reuse existing instanceId mapping");
-        } else {
-            MEDIA_LOG_I("CreateStallingInfo not found instanceId in idMap_, add the instanceId to idMap_");
-            idMap_[instanceId] = std::make_pair(callType, uid);
+        auto ret = ValidateOrInstanceId(callType, uid, instanceId, "CreateStallingInfo");
+        if (ret != OHOS::Media::MSERR_OK) {
+            return ret;
         }
         auto metaList = std::make_shared<std::vector<StallingInfo>>();
         std::pair<uint64_t, std::shared_ptr<std::vector<StallingInfo>>> stallingMetaPair(instanceId, metaList);
@@ -651,6 +696,19 @@ int32_t CreateStallingInfo(CallType callType, int32_t uid, uint64_t instanceId)
     }
     g_reachMaxMapSizeStalling = (reportStallingInfoMap_[callType].size() >= MAX_MAP_SIZE);
     return MSERR_OK;
+}
+
+int32_t CreatePlayErrInfo(CallType callType, int32_t uid, uint64_t instanceId)
+{
+    MEDIA_LOG_I("CreatePlayErrInfo uid is: %{public}" PRId32, uid);
+    std::lock_guard<std::mutex> lock(collectMut_);
+    auto ret = ValidateOrInstanceId(callType, uid, instanceId, "CreateStallingInfo");
+    if (ret != OHOS::Media::MSERR_OK) {
+        return ret;
+    }
+    playErrInfoMap_[callType][uid] = std::map<PlayErrEvent, uint32_t>();
+    MEDIA_LOG_D("CreatePlayErrInfo Successfully created playErrInfo for callType and uid");
+    return OHOS::Media::MSERR_OK;
 }
 
 void GetMaxInstanceNumber(CallType callType, int32_t uid, uint64_t instanceId, int32_t curInsNumber)
@@ -791,6 +849,22 @@ int32_t AppendStallingInfo(const StallingInfo &info, uint64_t instanceId)
         MEDIA_LOG_I("instanceId not found in instanceList while appending stalling meta");
         return MSERR_INVALID_OPERATION;
     }
+    return MSERR_OK;
+}
+
+int32_t AppendPlayErrInfo(PlayErrEvent eventType, uint64_t instanceId);
+{
+    MEDIA_LOG_I("AppendPlayErrInfo.");
+    std::lock_guard<std::mutex> lock(collectMut_);
+    auto idMapIt = idMap_.find(instanceId);
+    if (idMapIt == idMap_.end()) {
+        MEDIA_LOG_I("Not found instanceId when append stalling meta");
+        return MSERR_INVALID_VAL;
+    }
+    CallType ct = idMapIt->second.first;
+    int32_t uid = idMapIt->second.second;
+    playErrInfoMap_[ct][uid][eventType]++;
+    MEDIA_LOG_D("AppendPlayErrInfo: Successfully appended play err info for callType and uid");
     return MSERR_OK;
 }
 
