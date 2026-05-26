@@ -353,7 +353,7 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_InitDuration_002, TestSize.Level0)
     ASSERT_NE(hiplayer_, nullptr);
     hiplayer_->demuxer_ = nullptr;
     int32_t ret = hiplayer_->InitDuration();
-    auto errcode = 331350028;
+    auto errcode = 331350528;
     EXPECT_EQ(ret, errcode);
 }
 
