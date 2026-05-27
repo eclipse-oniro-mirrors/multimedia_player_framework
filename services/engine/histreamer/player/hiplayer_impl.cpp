@@ -2593,7 +2593,8 @@ void HiPlayerImpl::SetMediaKitReport(const std::string &apiCall)
     std::string videoMime = "";
     std::string audioMime = "";
     std::string subtitleMime = "";
-    if (demuxer_ != nullptr) {
+    if (demuxer_ != nullptr && curState_ != PlayerStateId::IDLE && curState_ != PlayerStateId::INIT &&
+ 	    curState_ != PlayerStateId::PREPARING) {
         std::string mime;
         std::vector<std::shared_ptr<Meta>> streamMetaInfo = demuxer_->GetStreamMetaInfo();
         for (size_t trackIndex = 0; trackIndex < streamMetaInfo.size(); trackIndex++) {
