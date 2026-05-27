@@ -486,13 +486,13 @@ static const std::vector<struct JsEnumInt> g_listLoopMode = {
 };
 
 static const std::vector<struct JsEnumInt> g_pickerMode = {
-    { "WINDOW_ONLY", PickerMode::WINDOW_ONLY },
-    { "SCREEN_ONLY", PickerMode::SCREEN_ONLY },
-    { "SCREEN_AND_WINDOW", PickerMode::SCREEN_AND_WINDOW },
-    { "APP_ONLY", PickerMode::APP_ONLY },
-    { "WINDOW_AND_APP", PickerMode::WINDOW_AND_APP },
-    { "SCREEN_AND_APP", PickerMode::SCREEN_AND_APP },
-    { "SCREEN_WINDOW_AND_APP", PickerMode::SCREEN_WINDOW_AND_APP },
+    { "WINDOW_ONLY", static_cast<int32_t>(PickerMode::WINDOW_ONLY) },
+    { "SCREEN_ONLY", static_cast<int32_t>(PickerMode::SCREEN_ONLY) },
+    { "SCREEN_AND_WINDOW", static_cast<int32_t>(PickerMode::SCREEN_AND_WINDOW) },
+    { "APP_ONLY", static_cast<int32_t>(PickerMode::APP_ONLY) },
+    { "WINDOW_AND_APP", static_cast<int32_t>(PickerMode::WINDOW_AND_APP) },
+    { "SCREEN_AND_APP", static_cast<int32_t>(PickerMode::SCREEN_AND_APP) },
+    { "SCREEN_WINDOW_AND_APP", static_cast<int32_t>(PickerMode::SCREEN_WINDOW_AND_APP) },
 };
 
 static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_intEnumClassMap = {
