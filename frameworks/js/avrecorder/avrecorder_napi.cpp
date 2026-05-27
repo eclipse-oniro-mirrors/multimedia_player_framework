@@ -537,14 +537,18 @@ int32_t AVRecorderNapi::AddWatermark(std::shared_ptr<PixelMap> &pixelMap,
     std::shared_ptr<WatermarkConfiguration> &watermarkConfig, int32_t &watermarkCount)
 {
 #ifndef CROSS_PLATFORM
+    int32_t pixelMapWidth = pixelMap->GetWidth();
+    int32_t pixelMapHeight = pixelMap->GetHeight();
+    int32_t pixelMapRowStride = pixelMap->GetRowStride();
     MEDIA_LOGI("pixelMap Width: %{public}d, height: %{public}d, adjust Width:  %{public}d, adjust height: %{public}d,"
-        "pixelformat %{public}d, RowStride %{public}d", pixelMap->GetWidth(), pixelMap->GetHeight(),
-        watermarkConfig->width, watermarkConfig->height, pixelMap->GetPixelFormat(), pixelMap->GetRowStride());
+        "pixelformat %{public}d, RowStride %{public}d", pixelMapWidth, pixelMapHeight,
+        watermarkConfig->width, watermarkConfig->height, pixelMap->GetPixelFormat(), pixelMapRowStride);
     CHECK_AND_RETURN_RET_LOG(pixelMap->GetPixelFormat() == PixelFormat::RGBA_8888, MSERR_INVALID_VAL,
         "Invalid pixel format");
 
-    int32_t dataSize = pixelMap->GetHeight() * pixelMap->GetRowStride();
-    CHECK_AND_RETURN_RET_LOG(dataSize > 0 && dataSize <= MAX_WATERMARK_SIZE, MSERR_INVALID_VAL, "Invalid data size");
+    CHECK_AND_RETURN_RET_LOG(pixelMapHeight > 0 && pixelMapRowStride > 0 &&
+        pixelMapHeight <= MAX_WATERMARK_SIZE / pixelMapRowStride, MSERR_INVALID_VAL, "Invalid data size");
+    int32_t dataSize = pixelMapHeight * pixelMapRowStride;
     std::vector<uint8_t> dataBuffer(dataSize);
     errno_t err = memcpy_s(dataBuffer.data(), dataSize, pixelMap->GetPixels(), dataSize);
     CHECK_AND_RETURN_RET_LOG(err == 0, MSERR_INVALID_VAL, "memcpy_s failed with error: %{public}d", err);
@@ -563,9 +567,9 @@ int32_t AVRecorderNapi::AddWatermark(std::shared_ptr<PixelMap> &pixelMap,
 
     buffer->meta_->Set<Tag::VIDEO_COORDINATE_X>(watermarkConfig->left);
     buffer->meta_->Set<Tag::VIDEO_COORDINATE_Y>(watermarkConfig->top);
-    buffer->meta_->Set<Tag::VIDEO_COORDINATE_W>(pixelMap->GetWidth());
-    buffer->meta_->Set<Tag::VIDEO_COORDINATE_H>(pixelMap->GetHeight());
-    buffer->meta_->Set<Tag::VIDEO_STRIDE>(pixelMap->GetRowStride());
+    buffer->meta_->Set<Tag::VIDEO_COORDINATE_W>(pixelMapWidth);
+    buffer->meta_->Set<Tag::VIDEO_COORDINATE_H>(pixelMapHeight);
+    buffer->meta_->Set<Tag::VIDEO_STRIDE>(pixelMapRowStride);
     return recorder_->AddWatermark(buffer, watermarkConfig->width, watermarkConfig->height, watermarkCount);
 #else
     return MSERR_OK;
