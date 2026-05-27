@@ -339,7 +339,7 @@ sptr<Surface> PlayerServerMock::GetVideoSurface()
     previewWindow_->Show();
     Rosen::RSSurfaceNodeConfig surfaceNodeConfig;
     surfaceNodeConfig.SurfaceNodeName = "avplayer_demo";
-    auto surfaceNode = Rosen:RSSurfaceNode::Create(surfaceNodeConfig);
+    auto surfaceNode = Rosen::RSSurfaceNode::Create(surfaceNodeConfig);
     surfaceNode->SetFrameGravity(Rosen::Gravity::RESIZE);
     Rosen::RSTransaction::FlushImplicitTransaction();
     return surfaceNode->GetSurface();
@@ -778,7 +778,7 @@ sptr<Surface> PlayerServerMock::GetVideoSurfaceNext()
     previewWindowNext_->Show();
     Rosen::RSSurfaceNodeConfig surfaceNodeConfig;
     surfaceNodeConfig.SurfaceNodeName = "avplayer_demo";
-    auto surfaceNode = Rosen:RSSurfaceNode::Create(surfaceNodeConfig);
+    auto surfaceNode = Rosen::RSSurfaceNode::Create(surfaceNodeConfig);
     surfaceNode->SetFrameGravity(Rosen::Gravity::RESIZE);
     Rosen::RSTransaction::FlushImplicitTransaction();
     return surfaceNode->GetSurface();
