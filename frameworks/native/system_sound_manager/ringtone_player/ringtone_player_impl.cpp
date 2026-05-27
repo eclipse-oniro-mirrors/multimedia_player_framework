@@ -278,6 +278,8 @@ int32_t RingtonePlayerImpl::RegisterSource(const std::string &audioUri, const st
     string newAudioUri;
     if (isMockMode_) {
         newAudioUri = systemSoundMgr_.OpenMockAudioUri(audioUri);
+        CHECK_AND_RETURN_RET_LOG(newAudioUri.find(FDHEAD) != std::string::npos, -1,
+            "Failed to open mock ringtone file.");
     } else {
         newAudioUri = systemSoundMgr_.OpenAudioUri(databaseTool_, audioUri);
     }

@@ -164,7 +164,7 @@ void AudioHapticPlayerImpl::LoadPlayer()
     // Load audio player
     int32_t rendererFlags = AudioStandard::AUDIO_FLAG_NORMAL;
     if (isMockMode_) {
-        rendererFlags = AudioStandard::AUDIO_FLAG_VKB_NORMAL;
+        rendererFlags = AudioStandard::AUDIO_FLAG_VKB_ALL_RING;
     }
     audioHapticSound_ = AudioHapticSound::CreateAudioHapticSound(
         latencyMode_, audioSource_, muteAudio_, streamUsage_, parallelPlayFlag_, rendererFlags);
