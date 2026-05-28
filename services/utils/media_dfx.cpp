@@ -853,7 +853,7 @@ int32_t AppendStallingInfo(const StallingInfo &info, uint64_t instanceId)
     return MSERR_OK;
 }
 
-int32_t AppendPlayErrInfo(PlayErrEvent eventType, uint64_t instanceId);
+int32_t AppendPlayErrInfo(PlayErrEvent eventType, uint64_t instanceId)
 {
     MEDIA_LOG_I("AppendPlayErrInfo.");
     std::lock_guard<std::mutex> lock(collectMut_);
