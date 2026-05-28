@@ -58,6 +58,8 @@ int32_t ScreenCaptureMonitorServiceStub::Init()
     screenCaptureMonitorServer_ = ScreenCaptureMonitorServer::GetInstance();
     CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer_ != nullptr, MSERR_NO_MEMORY,
         "failed to create ScreenCaptureMonitorServer");
+    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer_->HasSystemPermission(), MSERR_INVALID_OPERATION,
+        "is not system app failed to init ScreenCaptureMonitorServer");
     screenCaptureMonitorStubFuncs_[SET_LISTENER_OBJ] = &ScreenCaptureMonitorServiceStub::SetListenerObject;
     screenCaptureMonitorStubFuncs_[IS_SCREEN_CAPTURE_WORKING] =
         &ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking;
