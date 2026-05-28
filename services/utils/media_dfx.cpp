@@ -102,19 +102,20 @@ namespace {
                 case PlayErrEvent::AVDESYNC:
                     playErrEvents["avdesync"] = errPair.second;
                     break;
-                case PlayErrEvent::AVDESYNC:
-                    playErrEvents["avdesync"] = errPair.second;
+                case PlayErrEvent::MEDIA_CHANGED:
+                    playErrEvents["media_changed"] = errPair.second;
                     break;
-                case PlayErrEvent::AVDESYNC:
-                    playErrEvents["avdesync"] = errPair.second;
+                case PlayErrEvent::LOADING_ERROR:
+                    playErrEvents["loading_error"] = errPair.second;
                     break;
-                case PlayErrEvent::AVDESYNC:
-                    playErrEvents["avdesync"] = errPair.second;
+                case PlayErrEvent::MEDIA_DISCONTINUE:
+                    playErrEvents["media_discontinue"] = errPair.second;
                     break;
-                case PlayErrEvent::AVDESYNC:
-                    playErrEvents["avdesync"] = errPair.second;
+                case PlayErrEvent::AUDIO_ERROR:
+                    playErrEvents["audio_error"] = errPair.second;
                     break;
                 default:
+                    MEDIA_LOG_I("Unknown playErrEvent");
                     continue;
             }
         }
