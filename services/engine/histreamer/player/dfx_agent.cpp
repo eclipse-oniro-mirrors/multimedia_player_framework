@@ -15,7 +15,6 @@
 
 #define HST_LOG_TAG "DfxAgent"
 
-
 #include <charconv>
 #include "dfx_agent.h"
 #include "common/log.h"
