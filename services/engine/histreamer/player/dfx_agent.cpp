@@ -386,7 +386,6 @@ void DfxAgent::ReportPlayErrEvent(const DfxEvent &event)
     AppendPlayErrInfo(eventType, instanceId);
 }
 
-
 void DfxAgent::GetTotalStallingDuration(int64_t* duration)
 {
     *duration = totalStallingDuration_.load();
