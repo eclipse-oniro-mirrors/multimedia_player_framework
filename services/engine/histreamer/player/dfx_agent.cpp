@@ -377,7 +377,7 @@ void DfxAgent::ReportPlayErrEvent(const DfxEvent &event)
             return;
     }
     uint64_t instanceId = 0;
-    const auto &instanceIdStr = agent->instanceId_;
+    const auto &instanceIdStr = this->instanceId_;
     auto parseRes = std::from_chars(instanceIdStr.data(), instanceIdStr.data() + instanceIdStr.size(), instanceId);
     if (parseRes.ec != std::errc()) {
         MEDIA_LOG_E("ReportMetricsEvent invalid instanceId: %{public}s", instanceIdStr.c_str());
