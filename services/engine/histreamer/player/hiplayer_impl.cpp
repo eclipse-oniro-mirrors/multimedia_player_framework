@@ -2510,6 +2510,12 @@ int32_t HiPlayerImpl::GetPlaybackStatisticMetrics(Format &playbackStatisticMetri
         dfxAgent_->GetTotalStallingDuration(&totalStallingTime);
         playbackStatisticMetrics.PutUintValue("total_stalling_time", static_cast<uint32_t>(totalStallingTime));
     }
+    int64_t syncCount = 0;
+    int64_t totalSyncDurationMs = 0;
+    FALSE_RETURN_V(videoDecoder_ != nullptr, TransStatus(Status::OK));
+    videoDecoder_->GetAVSyncInfo(syncCount, totalSyncDurationMs);
+    playbackStatisticMetrics.PutLongValue("lip_async_count", syncCount);
+    playbackStatisticMetrics.PutLongValue("total_lip_async_time", totalSyncDurationMs);
     return TransStatus(Status::OK);
 }
 
