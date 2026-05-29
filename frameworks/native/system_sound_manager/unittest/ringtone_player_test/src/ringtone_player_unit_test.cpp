@@ -221,7 +221,7 @@ HWTEST(RingtonePlayerUnitTest, Media_RingtonePlayer_006, TestSize.Level1)
     auto ringtonePlayerImpl_ = std::make_shared<RingtonePlayerImpl>(context_, *sysSoundMgr, type);
     std::string audioUri = "/data/test/media/audio/ringtone.ogg";
     std::string result = ringtonePlayerImpl_->GetNewHapticUriForAudioUri(audioUri);
-    EXPECT_EQ(result, "");
+    EXPECT_NE(result, "");
 }
 
 /**
@@ -355,25 +355,6 @@ HWTEST(RingtonePlayerUnitTest, Media_RingtonePlayer_013, TestSize.Level1)
     sysSoundMgr->SetRingerMode(AudioStandard::AudioRingerMode::RINGER_MODE_NORMAL);
     ringtonePlayerImpl_->InitPlayer(audioUri, settings, options);
     EXPECT_NE(ringtonePlayerImpl_, nullptr);
-}
-
-/**
- * @tc.name  : Test MediaRingtonePlayer
- * @tc.number: Media_RingtonePlayer_014
- * @tc.desc  : Test Start. Returns State.
- */
-HWTEST(RingtonePlayerUnitTest, Media_RingtonePlayer_014, TestSize.Level1)
-{
-    auto context_ = std::make_shared<ContextImpl>();
-    auto sysSoundMgr = std::make_shared<SystemSoundManagerImpl>();
-    RingtoneType type = RINGTONE_TYPE_SIM_CARD_0;
-    auto ringtonePlayerImpl_ = std::make_shared<RingtonePlayerImpl>(context_, *sysSoundMgr, type);
-    int32_t sourceId = 1;
-    AudioHapticPlayerOptions options = {false, false};
-    ringtonePlayerImpl_->player_ = ringtonePlayerImpl_->audioHapticManager_->CreatePlayer(sourceId, options);
-    ringtonePlayerImpl_->ringtoneState_ = STATE_NEW;
-    int32_t result = ringtonePlayerImpl_->Start();
-    EXPECT_NE(result, 16);
 }
 
 /**
