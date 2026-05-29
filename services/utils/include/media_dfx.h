@@ -64,6 +64,14 @@ struct PlaybackEventInfo {
     uint32_t totalStallingTime {0};
 };
 
+enum PlayErrEvent {
+    AVDESYNC,
+    MEDIA_CHANGED,
+    LOADING_ERROR,
+    MEDIA_DISCONTINUE,
+    AUDIO_ERROR
+};
+
 using StallingEventList = std::list<std::pair<uint64_t, std::shared_ptr<std::vector<StallingInfo>>>>;
 
 enum CallType {
@@ -141,10 +149,12 @@ __attribute__((visibility("default"))) bool GetPlaybackEventInfo(const OHOS::Med
 __attribute__((visibility("default"))) int32_t CreateStallingInfo(CallType callType, int32_t uid,
     uint64_t instanceId);
 __attribute__((visibility("default"))) int32_t CreatePlaybackInfo(CallType callType, int32_t uid, uint64_t instanceId);
-
+__attribute__((visibility("default"))) int32_t CreatePlayErrInfo(CallType callType, int32_t uid,
+    uint64_t instanceId);
 __attribute__((visibility("default"))) int32_t AppendStallingInfo(const StallingInfo &info, uint64_t instanceId);
 __attribute__((visibility("default"))) int32_t AppendPlaybackInfo(
     const std::shared_ptr<OHOS::Media::Format> &fmt, uint64_t instanceId);
+__attribute__((visibility("default"))) int32_t AppendPlayErrInfo(PlayErrEvent eventType, uint64_t instanceId);
 
 class __attribute__((visibility("default"))) MediaTrace : public NoCopyable {
 public:

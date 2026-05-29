@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+
 #include "player.h"
 #define HST_LOG_TAG "HiPlayer"
 
@@ -407,6 +408,7 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
     CreateMediaInfo(CallType::AVPLAYER, appUid_, instanceId_);
     CreatePlaybackInfo(CallType::AVPLAYER, appUid_, instanceId_);
     CreateStallingInfo(CallType::AVPLAYER, appUid_, instanceId_);
+    CreatePlayErrInfo(CallType::AVPLAYER, appUid_, instanceId_);
     playStatisticalInfo_.sourceUrl = "private";
     playStatisticalInfo_.sourceType = static_cast<int32_t>(SourceType::SOURCE_TYPE_URI);
     url_ = uri;
