@@ -18,6 +18,7 @@
 #include <thread>
 #include "common_taihe.h"
 #include "ringtone_player_taihe.h"
+#include "directory_ex.h"
 #include "system_sound_log.h"
 #include "tone_attrs_taihe.h"
 
@@ -614,6 +615,98 @@ RingtonePlayerOrNull SystemSoundManagerImpl::GetRingtonePlayerSync(
 RingtonePlayerOrNull SystemSoundManagerImpl::GetRingtonePlayer(uintptr_t context, RingtoneTypeTaihe type)
 {
     return GetRingtonePlayerSync(context, type);
+}
+
+RingtonePlayerOrNull SystemSoundManagerImpl::GetMockHapticRingtonePlayerByTypeAndUriSync(
+    uintptr_t context, RingtoneTypeTaihe type, ::taihe::string_view toneUri)
+{
+    if (!(CommonTaihe::VerifyRingtonePermission())) {
+        MEDIA_LOGE("Permission denied");
+        CommonTaihe::ThrowError(TAIHE_ERR_PERMISSION_DENIED, TAIHE_ERR_PERMISSION_DENIED_INFO);
+        return RingtonePlayerOrNull::make_type_null();
+    }
+    std::shared_ptr<OHOS::AbilityRuntime::Context> abilityContext = GetAbilityContext(get_env(), context);
+    int32_t typeInner = type.get_value();
+    if (abilityContext == nullptr) {
+        MEDIA_LOGE("invalid arguments");
+        CommonTaihe::ThrowError(TAIHE_ERR_PARAM_CHECK_ERROR, "Parameter verification failed.");
+        return RingtonePlayerOrNull::make_type_null();
+    }
+    if (typeInner < OHOS::Media::RingtoneType::RINGTONE_TYPE_SIM_CARD_0 ||
+        typeInner > OHOS::Media::RingtoneType::RINGTONE_TYPE_SIM_CARD_1) {
+        CommonTaihe::ThrowError(TAIHE_ERR_PARAM_CHECK_ERROR, "Parameter verification failed.");
+        return RingtonePlayerOrNull::make_type_null();
+    }
+    std::string uriInner = std::string(toneUri);
+    std::string absFilePath;
+    if (!OHOS::PathToRealPath(uriInner, absFilePath)) {
+        CommonTaihe::ThrowError(TAIHE_ERR_PARAM_CHECK_ERROR, "Parameter verification failed.");
+        return RingtonePlayerOrNull::make_type_null();
+    }
+    if (sysSoundMgrClient_ == nullptr) {
+        CommonTaihe::ThrowError(TAIHE_ERR_IO_ERROR, TAIHE_ERR_IO_ERROR_INFO);
+        return RingtonePlayerOrNull::make_type_null();
+    }
+
+    std::shared_ptr<OHOS::Media::RingtonePlayer> ringtonePlayer = sysSoundMgrClient_->GetMockHapticRingtonePlayer(
+        abilityContext, static_cast<OHOS::Media::RingtoneType>(typeInner), uriInner);
+    if (ringtonePlayer == nullptr) {
+        CommonTaihe::ThrowError(TAIHE_ERR_IO_ERROR, TAIHE_ERR_IO_ERROR_INFO);
+        return RingtonePlayerOrNull::make_type_null();
+    }
+    return RingtonePlayerOrNull::make_type_ringtonePlayer(make_holder<RingtonePlayerImpl,
+        ::ringtonePlayer::RingtonePlayer>(ringtonePlayer));
+}
+
+RingtonePlayerOrNull SystemSoundManagerImpl::GetMockHapticRingtonePlayerByTypeAndUri(
+    uintptr_t context, RingtoneTypeTaihe type, ::taihe::string_view toneUri)
+{
+    return GetMockHapticRingtonePlayerByTypeAndUriSync(context, type, toneUri);
+}
+
+RingtonePlayerOrNull SystemSoundManagerImpl::GetMockHapticRingtonePlayerByHapticsUriSync(
+    uintptr_t context, ::taihe::string_view hapticsUri)
+{
+    if (!(CommonTaihe::VerifyRingtonePermission())) {
+        MEDIA_LOGE("Permission denied");
+        CommonTaihe::ThrowError(TAIHE_ERR_PERMISSION_DENIED, TAIHE_ERR_PERMISSION_DENIED_INFO);
+        return RingtonePlayerOrNull::make_type_null();
+    }
+    std::shared_ptr<OHOS::AbilityRuntime::Context> abilityContext = GetAbilityContext(get_env(), context);
+    if (abilityContext == nullptr) {
+        MEDIA_LOGE("invalid arguments");
+        CommonTaihe::ThrowError(TAIHE_ERR_PARAM_CHECK_ERROR, "Parameter verification failed.");
+        return RingtonePlayerOrNull::make_type_null();
+    }
+    if (sysSoundMgrClient_ == nullptr) {
+        CommonTaihe::ThrowError(TAIHE_ERR_IO_ERROR, TAIHE_ERR_IO_ERROR_INFO);
+        return RingtonePlayerOrNull::make_type_null();
+    }
+    std::string uriInner = std::string(hapticsUri);
+    if (uriInner.empty()) {
+        CommonTaihe::ThrowError(TAIHE_ERR_PARAM_CHECK_ERROR, "Parameter verification failed.");
+        return RingtonePlayerOrNull::make_type_null();
+    }
+    std::string absFilePath;
+    if (!OHOS::PathToRealPath(uriInner, absFilePath)) {
+        CommonTaihe::ThrowError(TAIHE_ERR_PARAM_CHECK_ERROR, "Parameter verification failed.");
+        return RingtonePlayerOrNull::make_type_null();
+    }
+
+    std::shared_ptr<OHOS::Media::RingtonePlayer> ringtonePlayer = sysSoundMgrClient_->GetMockHapticRingtonePlayer(
+        abilityContext, uriInner);
+    if (ringtonePlayer == nullptr) {
+        CommonTaihe::ThrowError(TAIHE_ERR_IO_ERROR, TAIHE_ERR_IO_ERROR_INFO);
+        return RingtonePlayerOrNull::make_type_null();
+    }
+    return RingtonePlayerOrNull::make_type_ringtonePlayer(make_holder<RingtonePlayerImpl,
+        ::ringtonePlayer::RingtonePlayer>(ringtonePlayer));
+}
+
+RingtonePlayerOrNull SystemSoundManagerImpl::GetMockHapticRingtonePlayerByHapticsUri(
+    uintptr_t context, ::taihe::string_view hapticsUri)
+{
+    return GetMockHapticRingtonePlayerByHapticsUriSync(context, hapticsUri);
 }
 
 ::taihe::string SystemSoundManagerImpl::GetRingtoneUriSync(uintptr_t context, RingtoneTypeTaihe type)

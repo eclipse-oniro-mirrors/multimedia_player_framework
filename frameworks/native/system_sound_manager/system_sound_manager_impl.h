@@ -167,10 +167,10 @@ public:
         const std::vector<std::string> &uriList, SystemSoundError &errCode) override;
     std::vector<ToneInfo> GetCurrentToneInfos() override;
 
-    std::shared_ptr<RingtonePlayer> GetMockHapticRingTonePlayer(
+    std::shared_ptr<RingtonePlayer> GetMockHapticRingtonePlayer(
         const std::shared_ptr<AbilityRuntime::Context> &context, const RingtoneType ringtoneType,
         std::string &ringtoneUri) override;
-    std::shared_ptr<RingtonePlayer> GetMockHapticRingTonePlayer(
+    std::shared_ptr<RingtonePlayer> GetMockHapticRingtonePlayer(
         const std::shared_ptr<AbilityRuntime::Context> &context, std::string &hapticUri) override;
 
 private:

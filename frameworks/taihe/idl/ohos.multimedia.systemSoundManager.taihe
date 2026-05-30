@@ -210,6 +210,18 @@ interface SystemSoundManager {
     context: @sts_type("BaseContext") Opaque, type: RingtoneType): RingtonePlayerOrNull;
   @promise GetRingtonePlayer(
     context: @sts_type("BaseContext") Opaque, type: RingtoneType): RingtonePlayerOrNull;
+  
+  GetMockHapticRingtonePlayerByTypeAndUriSync(
+    context: @sts_type("BaseContext") Opaque, type: RingtoneType, toneUri: String): RingtonePlayerOrNull;
+  @rename("GetMockHapticRingtonePlayer")
+  @promise GetMockHapticRingtonePlayerByTypeAndUri(
+    context: @sts_type("BaseContext") Opaque, type: RingtoneType, toneUri: String): RingtonePlayerOrNull;
+
+  GetMockHapticRingtonePlayerByHapticsUriSync(
+    context: @sts_type("BaseContext") Opaque, hapticsUri: String): RingtonePlayerOrNull;
+  @rename("GetMockHapticRingtonePlayer")
+  @promise GetMockHapticRingtonePlayerByHapticsUri(
+    context: @sts_type("BaseContext") Opaque, hapticsUri: String): RingtonePlayerOrNull;
 
   GetRingtoneUriSync(context: @sts_type("BaseContext") Opaque, type: RingtoneType): String;
   @promise GetRingtoneUri(context: @sts_type("BaseContext") Opaque, type: RingtoneType): String;

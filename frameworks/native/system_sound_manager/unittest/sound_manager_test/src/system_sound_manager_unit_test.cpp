@@ -2460,11 +2460,11 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_OpenHapticsUri_001, TestSi
 }
 
 /**
- * @tc.name  : Test GetMockHapticRingTonePlayer with ringtoneUri
- * @tc.number: SystemSoundManagerImpl_GetMockHapticRingTonePlayer_001
- * @tc.desc  : Test GetMockHapticRingTonePlayer with invalid ringtoneType
+ * @tc.name  : Test GetMockHapticRingtonePlayer with ringtoneUri
+ * @tc.number: SystemSoundManagerImpl_GetMockHapticRingtonePlayer_001
+ * @tc.desc  : Test GetMockHapticRingtonePlayer with invalid ringtoneType
  */
-HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_GetMockHapticRingTonePlayer_001, TestSize.Level0)
+HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_GetMockHapticRingtonePlayer_001, TestSize.Level0)
 {
     auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
     std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
@@ -2473,16 +2473,16 @@ HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_GetMockHapticRingToneP
     std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
     RingtoneType invalidType = static_cast<RingtoneType>(99);
     std::string ringtoneUri = "/path/to/ringtone.ogg";
-    auto ringtonePlayer = systemSoundManagerImpl_->GetMockHapticRingTonePlayer(context_, invalidType, ringtoneUri);
+    auto ringtonePlayer = systemSoundManagerImpl_->GetMockHapticRingtonePlayer(context_, invalidType, ringtoneUri);
     EXPECT_EQ(ringtonePlayer, nullptr);
 }
 
 /**
- * @tc.name  : Test GetMockHapticRingTonePlayer with ringtoneUri
- * @tc.number: SystemSoundManagerImpl_GetMockHapticRingTonePlayer_002
- * @tc.desc  : Test GetMockHapticRingTonePlayer with empty ringtoneUri
+ * @tc.name  : Test GetMockHapticRingtonePlayer with ringtoneUri
+ * @tc.number: SystemSoundManagerImpl_GetMockHapticRingtonePlayer_002
+ * @tc.desc  : Test GetMockHapticRingtonePlayer with empty ringtoneUri
  */
-HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_GetMockHapticRingTonePlayer_002, TestSize.Level1)
+HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_GetMockHapticRingtonePlayer_002, TestSize.Level1)
 {
     auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
     std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
@@ -2491,16 +2491,16 @@ HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_GetMockHapticRingToneP
     std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
     RingtoneType ringtoneType = RingtoneType::RINGTONE_TYPE_SIM_CARD_0;
     std::string ringtoneUri = "";
-    auto ringtonePlayer = systemSoundManagerImpl_->GetMockHapticRingTonePlayer(context_, ringtoneType, ringtoneUri);
+    auto ringtonePlayer = systemSoundManagerImpl_->GetMockHapticRingtonePlayer(context_, ringtoneType, ringtoneUri);
     EXPECT_EQ(ringtonePlayer, nullptr);
 }
 
 /**
- * @tc.name  : Test GetMockHapticRingTonePlayer with hapticUri
- * @tc.number: SystemSoundManagerImpl_GetMockHapticRingTonePlayer_003
- * @tc.desc  : Test GetMockHapticRingTonePlayer with empty hapticUri
+ * @tc.name  : Test GetMockHapticRingtonePlayer with hapticUri
+ * @tc.number: SystemSoundManagerImpl_GetMockHapticRingtonePlayer_003
+ * @tc.desc  : Test GetMockHapticRingtonePlayer with empty hapticUri
  */
-HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_GetMockHapticRingTonePlayer_003, TestSize.Level0)
+HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_GetMockHapticRingtonePlayer_003, TestSize.Level0)
 {
     auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
     std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
@@ -2508,7 +2508,7 @@ HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_GetMockHapticRingToneP
     EXPECT_NE(systemSoundManagerImpl_, nullptr);
     std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
     std::string hapticUri = "";
-    auto ringtonePlayer = systemSoundManagerImpl_->GetMockHapticRingTonePlayer(context_, hapticUri);
+    auto ringtonePlayer = systemSoundManagerImpl_->GetMockHapticRingtonePlayer(context_, hapticUri);
     EXPECT_EQ(ringtonePlayer, nullptr);
 }
 
