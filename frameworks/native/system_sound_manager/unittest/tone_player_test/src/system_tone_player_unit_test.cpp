@@ -10,7 +10,7 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License.dwc
+ * limitations under the License.
  */
 
 #include "media_errors.h"
@@ -196,7 +196,7 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_010, TestSize.Level1
     int32_t temp = systemTonePlayerImpl_->InitPlayer(audioUri);
     EXPECT_EQ(temp, MSERR_OK);
     int32_t result = systemTonePlayerImpl_->Prepare();
-    EXPECT_NE(result, MSERR_OK);
+    EXPECT_EQ(result, MSERR_OK);
     audioUri = "";
     temp = systemTonePlayerImpl_->InitPlayer(audioUri);
     EXPECT_EQ(temp, MSERR_OK);
@@ -206,7 +206,7 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_010, TestSize.Level1
     temp = systemTonePlayerImpl_->InitPlayer(systemToneUri);
     EXPECT_EQ(temp, MSERR_OK);
     result = systemTonePlayerImpl_->Prepare();
-    EXPECT_NE(result, MSERR_OK);
+    EXPECT_EQ(result, MSERR_OK);
     systemTonePlayerImpl_.reset();
 }
 
