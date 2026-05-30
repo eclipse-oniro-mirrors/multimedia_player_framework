@@ -72,6 +72,22 @@ bool CreateCustomInfo(std::shared_ptr<Meta>& meta, CCustomInfo& info)
         info.size = 0;
         return false;
     }
+    if (memset_s(info.key, index * sizeof(char*), 0, index * sizeof(char*)) != 0) {
+        free(info.key);
+        free(info.value);
+        info.key = nullptr;
+        info.value = nullptr;
+        info.size = 0;
+        return false;
+    }
+    if (memset_s(info.value, index * sizeof(char*), 0, index * sizeof(char*)) != 0) {
+        free(info.key);
+        free(info.value);
+        info.key = nullptr;
+        info.value = nullptr;
+        info.size = 0;
+        return false;
+    }
     index = 0;
     for (auto iter = meta->begin(); iter != meta->end(); iter++) {
         AnyValueType type = meta->GetValueType(iter->first);
@@ -83,6 +99,7 @@ bool CreateCustomInfo(std::shared_ptr<Meta>& meta, CCustomInfo& info)
         CHECK_AND_CONTINUE_LOG(ret, "Create data failed, key %{public}s", iter->first.c_str());
         index++;
     }
+    info.size = index;
     return true;
 }
 
