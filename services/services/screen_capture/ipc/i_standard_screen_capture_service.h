@@ -48,6 +48,7 @@ public:
     virtual int32_t PresentPicker() = 0;
     virtual int32_t SetMicrophoneEnabled(bool isMicrophone) = 0;
     virtual int32_t SetCanvasRotation(bool canvasRotation) = 0;
+    virtual int32_t SetContentAutoRotation(bool contentAutoRotation) = 0;
     virtual int32_t ShowCursor(bool showCursor) = 0;
     virtual int32_t ResizeCanvas(int32_t width, int32_t height) = 0;
     virtual int32_t SkipPrivacyMode(const std::vector<uint64_t> &windowIDsVec) = 0;
@@ -117,6 +118,7 @@ public:
         PAUSE_SCREEN_CAPTURE = 37,
         RESUME_SCREEN_CAPTURE = 38,
         ADD_WATERMARK = 39,
+        SET_CONTENT_AUTO_ROTATION = 40,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardScreenCaptureService");

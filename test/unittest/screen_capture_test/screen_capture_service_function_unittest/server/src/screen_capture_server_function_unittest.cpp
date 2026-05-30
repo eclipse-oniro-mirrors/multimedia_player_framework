@@ -3024,6 +3024,20 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetCanvasRotation_002, TestSize.Level2
     ASSERT_EQ(ret, MSERR_OK);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, SetContentAutoRotation_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    int ret = screenCaptureServer_->SetContentAutoRotation(true);
+    ASSERT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetContentAutoRotation_002, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    int ret = screenCaptureServer_->SetContentAutoRotation(true);
+    ASSERT_EQ(ret, MSERR_INVALID_OPERATION);
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, ResizeCanvas_001, TestSize.Level2)
 {
     screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;

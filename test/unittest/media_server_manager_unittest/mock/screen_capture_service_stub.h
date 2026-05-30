@@ -80,6 +80,7 @@ public:
     MOCK_METHOD(int32_t, ResumeScreenCapture, (), (override));
     MOCK_METHOD(int32_t, AddWatermark, (std::shared_ptr<AVBuffer> &watermarkBuffer,
         int32_t width, int32_t height, int32_t &watermarkCount), (override));
+    MOCK_METHOD(int32_t, SetContentAutoRotation, (bool contentAutoRotation), (override));
     MOCK_METHOD(int32_t, SetCaptureModeInner, (MessageParcel &data, MessageParcel &reply));
     MOCK_METHOD(int32_t, SetDataTypeInner, (MessageParcel &data, MessageParcel &reply));
     MOCK_METHOD(int32_t, SetRecorderInfoInner, (MessageParcel &data, MessageParcel &reply));

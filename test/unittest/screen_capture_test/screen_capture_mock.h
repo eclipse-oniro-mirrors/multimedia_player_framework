@@ -93,6 +93,7 @@ public:
     virtual int32_t Release() = 0;
     virtual int32_t SetMicrophoneEnabled(bool isMicrophone) = 0;
     virtual int32_t SetCanvasRotation(bool canvasRotation) = 0;
+    virtual int32_t SetContentAutoRotation(bool contentAutoRotation) = 0;
     virtual int32_t ShowCursor(bool showCursor) = 0;
     virtual int32_t SkipPrivacyMode(int32_t *windowIDs, int32_t windowCount) = 0;
     virtual int32_t AddWhiteListWindows(int32_t *windowIDs, int32_t windowCount) = 0;

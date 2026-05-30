@@ -212,6 +212,28 @@ HWTEST_F(ScreenCaptureServiceStubTest, SetCanvasRotation_001, TestSize.Level1)
 }
 
 /**
+ * @tc.name  : SetContentAutoRotation_001
+ * @tc.number: SetContentAutoRotation_001
+ * @tc.desc  : FUNC
+ */
+HWTEST_F(ScreenCaptureServiceStubTest, SetContentAutoRotation_001, TestSize.Level1)
+{
+    sptr<ScreenCaptureServiceStub> screenCaptureServiceStub = ScreenCaptureServiceStub::Create();
+    ASSERT_NE(screenCaptureServiceStub, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    bool token = data.WriteInterfaceToken(screenCaptureServiceStub->GetDescriptor());
+    ASSERT_EQ(token, true);
+    data.WriteBool(true);
+    int ret = screenCaptureServiceStub->OnRemoteRequest(
+            IStandardScreenCaptureService::SET_CONTENT_AUTO_ROTATION, data, reply, option);
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_EQ(reply.ReadInt32(), MSERR_OK);
+    screenCaptureServiceStub = nullptr;
+}
+
+/**
  * @tc.name  : ResizeCanvas_001
  * @tc.number: ResizeCanvas_001
  * @tc.desc  : FUNC

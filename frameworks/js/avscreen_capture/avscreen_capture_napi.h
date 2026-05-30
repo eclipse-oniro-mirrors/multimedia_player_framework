@@ -42,6 +42,7 @@ const std::string SET_MIC_ENABLE = "SetMicrophoneEnable";
 const std::string RELEASE = "Release";
 const std::string EXCLUDE_PICKER_WINDOWS = "ExcludePickerWindows";
 const std::string SET_PICKER_MODE = "SetPickerMode";
+const std::string SET_CONTENT_AUTO_ROTATION = "SetContentAutoRotation";
 const std::string PRESENT_PICKER = "PresentPicker";
 const std::string ADD_WATERMARK = "AddWatermark";
 }
@@ -130,12 +131,16 @@ private:
      */
     static napi_value JsSetMicrophoneEnabled(napi_env env, napi_callback_info info);
     /**
-      * addWatermark(watermark: AVScreenCaptureWatermark): Promise<void>
-      */
+     * addWatermark(watermark: AVScreenCaptureWatermark): Promise<void>
+     */
     static napi_value JsAddWatermark(napi_env env, napi_callback_info info);
     /**
-      * release(): Promise<void>
-      */
+     * setContentAutoRotation(canvasRotation: boolean): Promise<void>
+     */
+    static napi_value JsSetContentAutoRotation(napi_env env, napi_callback_info info);
+    /**
+     * release(): Promise<void>
+     */
     static napi_value JsRelease(napi_env env, napi_callback_info info);
     /**
      * on(type: 'stateChange', callback: Callback<AVScreenCaptureOnInfoType>): void
@@ -156,6 +161,8 @@ private:
         const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx);
     static std::shared_ptr<TaskHandler<RetInfo>> GetSetMicrophoneEnableTask(
         const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const bool enable);
+    static std::shared_ptr<TaskHandler<RetInfo>> GetSetContentAutoRotationTask(
+        const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const bool canvasRotation);
     static std::shared_ptr<TaskHandler<RetInfo>> GetSkipPrivacyModeTask(
         const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const std::vector<uint64_t> windowIDsVec);
     static std::shared_ptr<TaskHandler<RetInfo>> GetExcludePickerWindowsTask(

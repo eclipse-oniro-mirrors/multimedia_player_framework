@@ -38,6 +38,7 @@ namespace AVScreenCapturegOpt {
     const std::string SKIP_PRIVACY_MODE = "SkipPrivacyMode";
     const std::string SET_MIC_ENABLE = "SetMicrophoneEnable";
     const std::string SET_PICKER_MODE = "SetPickerMode";
+    const std::string SET_CANVAS_ROTATION = "SetCanvasRotation";
     const std::string EXCLUDE_PICKER_WINDOWS = "ExcludePickerWindows";
     const std::string PRESENT_PICKER = "PresentPicker";
     const std::string RELEASE = "Release";
@@ -78,6 +79,7 @@ public:
     void PresentPickerSync();
     void SetMicEnabledSync(bool enable);
     void SetPickerModeSync(::ohos::multimedia::media::PickerMode pickerMode);
+    void SetCanvasRotationSync(bool canvasRotation);
     void ExcludePickerWindowsSync(::taihe::array_view<int32_t> excludedWindows);
     void ReleaseSync();
 
@@ -120,6 +122,8 @@ public:
     std::shared_ptr<TaskHandler<RetInfo>> GetSetPickerModeTask(
         const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
         const ::ohos::multimedia::media::PickerMode pickerMode);
+    std::shared_ptr<TaskHandler<RetInfo>> GetSetCanvasRotationTask(
+        const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const bool canvasRotation);
     std::shared_ptr<TaskHandler<RetInfo>> GetExcludePickerWindowsTask(
         const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const std::vector<int32_t> windowIDsVec);
     void OnStateChange(callback_view<void(ohos::multimedia::media::AVScreenCaptureStateCode)> callback);

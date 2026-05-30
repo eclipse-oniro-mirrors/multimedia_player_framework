@@ -312,7 +312,7 @@ int32_t ScreenCaptureClient::SetCaptureAreaHighlight(AVScreenCaptureHighlightCon
     CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
     return screenCaptureProxy_->SetCaptureAreaHighlight(config);
 }
- 
+
 int32_t ScreenCaptureClient::UpdateSurface(sptr<Surface> surface)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -356,6 +356,14 @@ int32_t ScreenCaptureClient::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBu
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
     return screenCaptureProxy_->AddWatermark(watermarkBuffer, width, height, watermarkCount);
+}
+
+int32_t ScreenCaptureClient::SetContentAutoRotation(bool contentAutoRotation)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_SERVICE_DIED,
+        "screenCapture service does not exist.");
+    return screenCaptureProxy_->SetContentAutoRotation(contentAutoRotation);
 }
 } // namespace Media
 } // namespace OHOS
