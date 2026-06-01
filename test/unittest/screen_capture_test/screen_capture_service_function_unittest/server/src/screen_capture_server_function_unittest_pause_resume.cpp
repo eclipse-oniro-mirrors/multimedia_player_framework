@@ -289,14 +289,14 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_State_Verification_001, Te
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->GetSCServerCaptureState(), AVScreenCaptureState::STARTED);
+    ASSERT_EQ(screenCaptureServer_->captureState_.load(), AVScreenCaptureState::STARTED);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
     ASSERT_EQ(screenCaptureServer_->PauseScreenCapture(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->GetSCServerCaptureState(), AVScreenCaptureState::PAUSED);
+    ASSERT_EQ(screenCaptureServer_->captureState_.load(), AVScreenCaptureState::PAUSED);
 
     ASSERT_EQ(screenCaptureServer_->ResumeScreenCapture(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->GetSCServerCaptureState(), AVScreenCaptureState::RESUMED);
+    ASSERT_EQ(screenCaptureServer_->captureState_.load(), AVScreenCaptureState::RESUMED);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, PauseScreenCaptureByUser_001, TestSize.Level2)
@@ -307,7 +307,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseScreenCaptureByUser_001, TestSize
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
     ASSERT_EQ(screenCaptureServer_->PauseScreenCaptureByUser(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->GetSCServerCaptureState(), AVScreenCaptureState::PAUSED);
+    ASSERT_EQ(screenCaptureServer_->captureState_.load(), AVScreenCaptureState::PAUSED);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ResumeScreenCaptureByUser_001, TestSize.Level2)
@@ -315,12 +315,12 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ResumeScreenCaptureByUser_001, TestSiz
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->GetSCServerCaptureState(), AVScreenCaptureState::STARTED);
+    ASSERT_EQ(screenCaptureServer_->captureState_.load(), AVScreenCaptureState::STARTED);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
     ASSERT_EQ(screenCaptureServer_->PauseScreenCapture(), MSERR_OK);
     ASSERT_EQ(screenCaptureServer_->ResumeScreenCaptureByUser(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->GetSCServerCaptureState(), AVScreenCaptureState::RESUMED);
+    ASSERT_EQ(screenCaptureServer_->captureState_.load(), AVScreenCaptureState::RESUMED);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, PauseVideoCapture_InvalidScreenId_001, TestSize.Level2)
@@ -404,7 +404,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnResponse_PauseButton_001, TestSize.L
         new(std::nothrow) OHOS::Notification::NotificationButtonOption();
     buttonOption->SetButtonName(BUTTON_NAME_PAUSE);
     notificationSubscriber.OnResponse(notificationId, buttonOption);
-    ASSERT_EQ(screenCaptureServerInner->GetSCServerCaptureState(), AVScreenCaptureState::PAUSED);
+    ASSERT_EQ(screenCaptureServerInner->captureState_.load(), AVScreenCaptureState::PAUSED);
 
     screenCaptureServerInner->Release();
 }
@@ -443,7 +443,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnResponse_ResumeButton_001, TestSize.
         new(std::nothrow) OHOS::Notification::NotificationButtonOption();
     resumeOption->SetButtonName(BUTTON_NAME_RESUME);
     notificationSubscriber.OnResponse(notificationId, resumeOption);
-    ASSERT_EQ(screenCaptureServerInner->GetSCServerCaptureState(), AVScreenCaptureState::RESUMED);
+    ASSERT_EQ(screenCaptureServerInner->captureState_.load(), AVScreenCaptureState::RESUMED);
 
     screenCaptureServerInner->Release();
 }

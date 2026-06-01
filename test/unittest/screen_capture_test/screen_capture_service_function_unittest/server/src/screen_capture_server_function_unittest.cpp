@@ -1356,7 +1356,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReadAtMix_001, TestSize.Level2)
 {
     screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
     screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
-    screenCaptureServer_->GetSCServerCaptureState();
     screenCaptureServer_->IsMicrophoneSwitchTurnOn();
     screenCaptureServer_->IsSCRecorderFileWithVideo();
     screenCaptureServer_->GetInnerAudioCapture();
