@@ -614,24 +614,25 @@ napi_value AVScreenCaptureNapi::JsSetContentAutoRotation(napi_env env, napi_call
     asyncCtx->napi = AVScreenCaptureNapi::GetJsInstanceAndArgs(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
     CHECK_AND_RETURN_RET_LOG(asyncCtx->napi->taskQue_ != nullptr, result, "taskQue is nullptr!");
-
+    bool isError = false;
     napi_valuetype valueType = napi_undefined;
     if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_boolean) {
         asyncCtx->AVScreenCaptureSignError(MSERR_EXT_API9_INVALID_PARAMETER, "SetContentAutoRotation",
             "setContentAutoRotation input is not boolean");
-        return result;
+        isError = true;
     }
     bool canvasRotation;
     napi_status status = napi_get_value_bool(env, args[0], &canvasRotation);
-    if (status != napi_ok) {
+    if (status != napi_ok && !isError) {
         asyncCtx->AVScreenCaptureSignError(MSERR_EXT_API9_INVALID_PARAMETER, "SetContentAutoRotation",
             "setContentAutoRotation get value failed");
-        return result;
+        isError = true;
     }
-
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
-    asyncCtx->task_ = AVScreenCaptureNapi::GetSetContentAutoRotationTask(asyncCtx, canvasRotation);
-    (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
+    if (!isError) {
+        asyncCtx->task_ = AVScreenCaptureNapi::GetSetContentAutoRotationTask(asyncCtx, canvasRotation);
+        (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
+    }
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
