@@ -99,6 +99,13 @@ public:
     void SetSystemToneUri(uintptr_t context, ::taihe::string_view uri, SystemToneTypeTaihe type);
     RingtonePlayerOrNull GetRingtonePlayerSync(uintptr_t context, RingtoneTypeTaihe type);
     RingtonePlayerOrNull GetRingtonePlayer(uintptr_t context, RingtoneTypeTaihe type);
+    RingtonePlayerOrNull GetMockHapticRingtonePlayerByTypeAndUriSync(uintptr_t context, RingtoneTypeTaihe type,
+        ::taihe::string_view toneUri);
+    RingtonePlayerOrNull GetMockHapticRingtonePlayerByTypeAndUri(uintptr_t context, RingtoneTypeTaihe type,
+        ::taihe::string_view toneUri);
+    RingtonePlayerOrNull GetMockHapticRingtonePlayerByHapticsUriSync(uintptr_t context,
+        ::taihe::string_view hapticsUri);
+    RingtonePlayerOrNull GetMockHapticRingtonePlayerByHapticsUri(uintptr_t context, ::taihe::string_view hapticsUri);
     ::taihe::string GetRingtoneUriSync(uintptr_t context, RingtoneTypeTaihe type);
     ::taihe::string GetRingtoneUri(uintptr_t context, RingtoneTypeTaihe type);
     void SetRingtoneUriSync(uintptr_t context, ::taihe::string_view uri, RingtoneTypeTaihe type);

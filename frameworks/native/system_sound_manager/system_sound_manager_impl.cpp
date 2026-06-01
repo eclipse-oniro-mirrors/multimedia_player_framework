@@ -3292,11 +3292,11 @@ static ToneHapticsMode ConvertRingMockHapticPlayModeToToneHapticsMode(int32_t db
     return ToneHapticsMode::NONE;
 }
 
-std::shared_ptr<RingtonePlayer> SystemSoundManagerImpl::GetMockHapticRingTonePlayer(
+std::shared_ptr<RingtonePlayer> SystemSoundManagerImpl::GetMockHapticRingtonePlayer(
     const std::shared_ptr<AbilityRuntime::Context> &context, const RingtoneType ringtoneType,
     std::string &ringtoneUri)
 {
-    MEDIA_LOGI("GetMockHapticRingTonePlayer: ringtoneUri %{public}s, ringtoneType %{public}d",
+    MEDIA_LOGI("GetMockHapticRingtonePlayer: ringtoneUri %{public}s, ringtoneType %{public}d",
         ringtoneUri.c_str(), ringtoneType);
     CHECK_AND_RETURN_RET_LOG(IsRingtoneTypeValid(ringtoneType), nullptr, "Invalid ringtoneType");
 
@@ -3308,17 +3308,17 @@ std::shared_ptr<RingtonePlayer> SystemSoundManagerImpl::GetMockHapticRingTonePla
     DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
 
     if (ringtoneUri.empty()) {
-        MEDIA_LOGI("GetMockHapticRingTonePlayer: ringtoneUri is empty, querying by ringtoneType %{public}d",
+        MEDIA_LOGI("GetMockHapticRingtonePlayer: ringtoneUri is empty, querying by ringtoneType %{public}d",
             ringtoneType);
         ToneAttrs toneAttrs = GetRingtoneAttrs(databaseTool, ringtoneType);
         ringtoneUri = toneAttrs.GetUri();
         if (ringtoneUri.empty()) {
-            MEDIA_LOGE("GetMockHapticRingTonePlayer: Failed to get ringtoneUri for ringtoneType %{public}d",
+            MEDIA_LOGE("GetMockHapticRingtonePlayer: Failed to get ringtoneUri for ringtoneType %{public}d",
                 ringtoneType);
             dataShareHelper->Release();
             return nullptr;
         }
-        MEDIA_LOGI("GetMockHapticRingTonePlayer: Queried ringtoneUri %{public}s", ringtoneUri.c_str());
+        MEDIA_LOGI("GetMockHapticRingtonePlayer: Queried ringtoneUri %{public}s", ringtoneUri.c_str());
     }
 
     ToneHapticsType toneHapticsType = static_cast<ToneHapticsType>(ringtoneType);
@@ -3328,17 +3328,17 @@ std::shared_ptr<RingtonePlayer> SystemSoundManagerImpl::GetMockHapticRingTonePla
     dataShareHelper->Release();
 
     CHECK_AND_RETURN_RET_LOG(result == SUCCESS && !settings.hapticsUri.empty(), nullptr,
-        "GetMockHapticRingTonePlayer: GetToneHapticsSettings failed or hapticsUri is empty");
+        "GetMockHapticRingtonePlayer: GetToneHapticsSettings failed or hapticsUri is empty");
     
     std::string hapticUri = settings.hapticsUri;
-    return GetMockHapticRingTonePlayer(context, hapticUri);
+    return GetMockHapticRingtonePlayer(context, hapticUri);
 }
 
-std::shared_ptr<RingtonePlayer> SystemSoundManagerImpl::GetMockHapticRingTonePlayer(
+std::shared_ptr<RingtonePlayer> SystemSoundManagerImpl::GetMockHapticRingtonePlayer(
     const std::shared_ptr<AbilityRuntime::Context> &context, std::string &hapticUri)
 {
-    MEDIA_LOGI("GetMockHapticRingTonePlayer: hapticUri %{public}s", hapticUri.c_str());
-    CHECK_AND_RETURN_RET_LOG(!hapticUri.empty(), nullptr, "GetMockHapticRingTonePlayer: hapticUri is empty");
+    MEDIA_LOGI("GetMockHapticRingtonePlayer: hapticUri %{public}s", hapticUri.c_str());
+    CHECK_AND_RETURN_RET_LOG(!hapticUri.empty(), nullptr, "GetMockHapticRingtonePlayer: hapticUri is empty");
 
     bool isProxy = false;
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper;
@@ -3351,7 +3351,7 @@ std::shared_ptr<RingtonePlayer> SystemSoundManagerImpl::GetMockHapticRingTonePla
     ToneHapticsMode hapticMode = QueryPlayModeByHapticUri(databaseTool, hapticUri);
     dataShareHelper->Release();
 
-    CHECK_AND_RETURN_RET_LOG(!toneUri.empty(), nullptr, "GetMockHapticRingTonePlayer: toneUri is empty");
+    CHECK_AND_RETURN_RET_LOG(!toneUri.empty(), nullptr, "GetMockHapticRingtonePlayer: toneUri is empty");
 
     ToneHapticsSettings settings;
     settings.hapticsUri = hapticUri;

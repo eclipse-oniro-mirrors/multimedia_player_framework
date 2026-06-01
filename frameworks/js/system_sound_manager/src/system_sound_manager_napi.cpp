@@ -18,6 +18,7 @@
 #include "access_token.h"
 #include "accesstoken_kit.h"
 #include "audio_renderer_info_napi.h"
+#include "directory_ex.h"
 #include "ipc_skeleton.h"
 #include "system_sound_log.h"
 #include "tokenid_kit.h"
@@ -417,7 +418,7 @@ napi_status SystemSoundManagerNapi::DefineClassProperties(napi_env env, napi_val
         DECLARE_NAPI_FUNCTION("getCurrentRingtoneAttribute", GetCurrentRingtoneAttribute),
         DECLARE_NAPI_FUNCTION("removeCustomizedToneList", RemoveCustomizedToneList),
         DECLARE_NAPI_FUNCTION("openToneList", OpenToneList),
-        DECLARE_NAPI_FUNCTION("getMockHapticRingTonePlayer", GetMockHapticRingTonePlayer),
+        DECLARE_NAPI_FUNCTION("getMockHapticRingtonePlayer", GetMockHapticRingtonePlayer),
     };
 
     return napi_define_class(env, SYSTEM_SND_MNGR_NAPI_CLASS_NAME.c_str(), NAPI_AUTO_LENGTH,
@@ -2156,7 +2157,7 @@ void SystemSoundManagerNapi::RemoveCustomizedToneAsyncCallbackComp(napi_env env,
     context = nullptr;
 }
 
-napi_value SystemSoundManagerNapi::GetMockHapticRingTonePlayer(napi_env env, napi_callback_info info)
+napi_value SystemSoundManagerNapi::GetMockHapticRingtonePlayer(napi_env env, napi_callback_info info)
 {
     CHECK_AND_RETURN_RET_LOG(VerifySelfSystemPermission(),
         ThrowErrorAndReturn(env, NAPI_ERR_PERMISSION_DENIED_INFO, NAPI_ERR_PERMISSION_DENIED), "No system permission");
@@ -2168,15 +2169,15 @@ napi_value SystemSoundManagerNapi::GetMockHapticRingTonePlayer(napi_env env, nap
     napi_status status = napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr);
     napi_get_undefined(env, &result);
     CHECK_AND_RETURN_RET_LOG((status == napi_ok && thisVar != nullptr), result,
-        "GetMockHapticRingTonePlayer: Failed to retrieve details about the callback");
-    CHECK_AND_RETURN_RET_LOG(argc >= ARGS_TWO, ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO,
-        NAPI_ERR_INPUT_INVALID), "invalid arguments");
+        "GetMockHapticRingtonePlayer: Failed to retrieve details about the callback");
+    CHECK_AND_RETURN_RET_LOG((argc == ARGS_TWO || argc == ARGS_THREE),
+        ThrowErrorAndReturn(env, NAPI_ERR_PARAM_CHECK_ERROR_INFO, NAPI_ERR_PARAM_CHECK_ERROR), "invalid arguments");
 
     std::unique_ptr<SystemSoundManagerAsyncContext> asyncContext =
         std::make_unique<SystemSoundManagerAsyncContext>();
     status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->objectInfo != nullptr, result,
-        "GetMockHapticRingTonePlayer: Failed to unwrap object");
+        "GetMockHapticRingtonePlayer: Failed to unwrap object");
 
     for (size_t i = PARAM0; i < argc; i++) {
         napi_valuetype valueType = napi_undefined;
@@ -2199,11 +2200,11 @@ napi_value SystemSoundManagerNapi::GetMockHapticRingTonePlayer(napi_env env, nap
         napi_create_promise(env, &asyncContext->deferred, &result);
     }
 
-    napi_create_string_utf8(env, "GetMockHapticRingTonePlayer", NAPI_AUTO_LENGTH, &resource);
-    status = napi_create_async_work(env, nullptr, resource, AsyncGetMockHapticRingTonePlayer,
-        GetMockHapticRingTonePlayerAsyncCallbackComp, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+    napi_create_string_utf8(env, "GetMockHapticRingtonePlayer", NAPI_AUTO_LENGTH, &resource);
+    status = napi_create_async_work(env, nullptr, resource, AsyncGetMockHapticRingtonePlayer,
+        GetMockHapticRingtonePlayerAsyncCallbackComp, static_cast<void*>(asyncContext.get()), &asyncContext->work);
     if (status != napi_ok) {
-        MEDIA_LOGE("GetMockHapticRingTonePlayer: Failed to get create async work");
+        MEDIA_LOGE("GetMockHapticRingtonePlayer: Failed to get create async work");
         napi_get_undefined(env, &result);
     } else {
         napi_queue_async_work(env, asyncContext->work);
@@ -2213,20 +2214,47 @@ napi_value SystemSoundManagerNapi::GetMockHapticRingTonePlayer(napi_env env, nap
     return result;
 }
 
-void SystemSoundManagerNapi::AsyncGetMockHapticRingTonePlayer(napi_env env, void *data)
+void SystemSoundManagerNapi::AsyncGetMockHapticRingtonePlayer(napi_env env, void *data)
 {
     SystemSoundManagerAsyncContext *context = static_cast<SystemSoundManagerAsyncContext *>(data);
-    if (!context->uri.empty()) {
-        context->ringtonePlayer = context->objectInfo->sysSoundMgrClient_->GetMockHapticRingTonePlayer(
+    RingtoneType type = static_cast<RingtoneType>(context->ringtoneType);
+    context->status = ERROR;
+    if (type > RINGTONE_TYPE_SIM_CARD_1 || type < RINGTONE_TYPE_SIM_CARD_0) {
+        context->errCode = NAPI_ERR_PARAM_CHECK_ERROR;
+        context->errMessage = "Parameter verification failed.";
+        return;
+    }
+    if (context->uri.empty() && context->hapticsUri.empty()) {
+        context->errCode = NAPI_ERR_PARAM_CHECK_ERROR;
+        context->errMessage = "Parameter verification failed.";
+        return;
+    } else if (!context->uri.empty()) {
+        std::string absFilePath;
+        if (!PathToRealPath(context->uri, absFilePath)) {
+            context->errCode = NAPI_ERR_PARAM_CHECK_ERROR;
+            context->errMessage = "Parameter verification failed.";
+            return;
+        }
+        context->ringtonePlayer = context->objectInfo->sysSoundMgrClient_->GetMockHapticRingtonePlayer(
             context->abilityContext_, static_cast<RingtoneType>(context->ringtoneType), context->uri);
     } else if (!context->hapticsUri.empty()) {
-        context->ringtonePlayer = context->objectInfo->sysSoundMgrClient_->GetMockHapticRingTonePlayer(
+        std::string absFilePath;
+        if (!PathToRealPath(context->hapticsUri, absFilePath)) {
+            context->errCode = NAPI_ERR_PARAM_CHECK_ERROR;
+            context->errMessage = "Parameter verification failed.";
+            return;
+        }
+        context->ringtonePlayer = context->objectInfo->sysSoundMgrClient_->GetMockHapticRingtonePlayer(
             context->abilityContext_, context->hapticsUri);
     }
     context->status = context->ringtonePlayer != nullptr ? SUCCESS : ERROR;
+    if (context->status) {
+        context->errCode = NAPI_ERR_IO_ERROR;
+        context->errMessage = NAPI_ERR_IO_ERROR_INFO;
+    }
 }
 
-void SystemSoundManagerNapi::GetMockHapticRingTonePlayerAsyncCallbackComp(napi_env env, napi_status status, void *data)
+void SystemSoundManagerNapi::GetMockHapticRingtonePlayerAsyncCallbackComp(napi_env env, napi_status status, void *data)
 {
     auto context = static_cast<SystemSoundManagerAsyncContext *>(data);
     napi_value callback = nullptr;
@@ -2238,21 +2266,14 @@ void SystemSoundManagerNapi::GetMockHapticRingTonePlayerAsyncCallbackComp(napi_e
         playerResult = RingtonePlayerNapi::GetRingtonePlayerInstance(env, context->ringtonePlayer);
         if (playerResult == nullptr) {
             MEDIA_LOGE("Failed to get mock haptic ringtone player!");
-            napi_value message = nullptr;
-            napi_create_string_utf8(env, "GetMockHapticRingTonePlayer Error: Operation failed",
-                NAPI_AUTO_LENGTH, &message);
-            napi_create_error(env, nullptr, message, &result[PARAM0]);
+            result[PARAM0] = AsyncThrowErrorAndReturn(env, NAPI_ERR_IO_ERROR_INFO, NAPI_ERR_IO_ERROR);
             napi_get_undefined(env, &result[PARAM1]);
         } else {
             napi_get_undefined(env, &result[PARAM0]);
             result[PARAM1] = playerResult;
         }
     } else {
-        MEDIA_LOGE("Failed to get mock haptic ringtone player!");
-        napi_value message = nullptr;
-        napi_create_string_utf8(env, "GetMockHapticRingTonePlayer Error: Operation failed",
-            NAPI_AUTO_LENGTH, &message);
-        napi_create_error(env, nullptr, message, &result[PARAM0]);
+        result[PARAM0] = AsyncThrowErrorAndReturn(env, context->errMessage, context->errCode);
         napi_get_undefined(env, &result[PARAM1]);
     }
 

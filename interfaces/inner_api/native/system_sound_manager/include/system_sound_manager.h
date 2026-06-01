@@ -453,7 +453,7 @@ public:
      * @return Returns RingtonePlayer.
      * @since 12
      */
-    virtual std::shared_ptr<RingtonePlayer> GetMockHapticRingTonePlayer(
+    virtual std::shared_ptr<RingtonePlayer> GetMockHapticRingtonePlayer(
         const std::shared_ptr<AbilityRuntime::Context> &context, const RingtoneType ringtoneType,
         std::string &ringtoneUri) = 0;
 
@@ -465,7 +465,7 @@ public:
      * @return Returns RingtonePlayer.
      * @since 12
      */
-    virtual std::shared_ptr<RingtonePlayer> GetMockHapticRingTonePlayer(
+    virtual std::shared_ptr<RingtonePlayer> GetMockHapticRingtonePlayer(
         const std::shared_ptr<AbilityRuntime::Context> &context, std::string &hapticUri) = 0;
 };
 
