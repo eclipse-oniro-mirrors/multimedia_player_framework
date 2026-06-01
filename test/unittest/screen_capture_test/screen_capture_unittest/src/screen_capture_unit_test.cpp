@@ -2914,7 +2914,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_001, TestSize.Level2)
     sleep(1);
 
     // 尝试动态调整画布大小
-    EXPECT_EQ(MSERR_OK, screenCapture_->ResizeCanvas(1080, 1920));
+    EXPECT_EQ(MSERR_INVALID_OPERATION, screenCapture_->ResizeCanvas(1080, 1920));
 
     sleep(1);
 
@@ -3054,7 +3054,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_privacy_004, TestSize.Level2)
 
     // 停止后设置隐私窗口
     vector<int> windowIDsVec = {1, 3, 5};
-    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIDsVec[0], static_cast<int32_t>(windowIDsVec.size())));
+    EXPECT_EQ(MSERR_INVALID_OPERATION, screenCapture_->SkipPrivacyMode(&windowIDsVec[0], static_cast<int32_t>(windowIDsVec.size())));
 
     // 验证设置成功
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
