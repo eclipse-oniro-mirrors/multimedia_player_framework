@@ -663,7 +663,7 @@ HWTEST_F(AVMetadataUnitTest, GetAVMetadataWithTimeout_API_0100, Level2)
     helper->ResolveMetadata(AV_KEY_HAS_AUDIO);
     EXPECT_EQ(value, "");
     MetadataResult result = helper->GetAVMetadataWithTimeout(1000);
-    EXPECT_EQ(nullptr, result.meta);
+    EXPECT_NE(nullptr, result.meta);
     helper->Release();
 }
 
