@@ -656,7 +656,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0100, Level2)
 HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0200, Level2)
 {
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-        std::string("HDR.mp4");
+        std::string("H264_AAC.mp4");
     auto helper = AVMetadataHelperServer::Create();
     ASSERT_NE(nullptr, helper);
     ASSERT_EQ(MSERR_OK, helper->SetSource(uri, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
