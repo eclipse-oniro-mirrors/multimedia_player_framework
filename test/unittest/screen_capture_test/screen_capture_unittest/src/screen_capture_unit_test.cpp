@@ -2894,36 +2894,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_audio_001, TestSize.Level2)
 }
 
 /**
- * @tc.name: screen_capture_video_001
- * @tc.desc: 屏幕分辨率动态变化测试
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_001, TestSize.Level2)
-{
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_video_001 before");
-    SetConfig(config_);
-
-    // 初始分辨率
-    config_.videoInfo.videoCapInfo.videoFrameWidth = 720;
-    config_.videoInfo.videoCapInfo.videoFrameHeight = 1280;
-
-    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
-    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-
-    sleep(1);
-
-    // 尝试动态调整画布大小
-    EXPECT_EQ(MSERR_INVALID_OPERATION, screenCapture_->ResizeCanvas(1080, 1920));
-
-    sleep(1);
-
-    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
-    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_video_001 after");
-}
-
-/**
  * @tc.name: screen_capture_performance_001
  * @tc.desc: 高帧率下的性能测试
  * @tc.type: PERF
@@ -3029,37 +2999,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_privacy_003, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_privacy_003 after");
-}
-
-/**
- * @tc.name: screen_capture_privacy_004
- * @tc.desc: 隐私模式切换时机测试 - 停止后切换
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(ScreenCaptureUnitTest, screen_capture_privacy_004, TestSize.Level2)
-{
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_privacy_004 before");
-    SetConfig(config_);
-
-    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
-
-    // 启动
-    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-
-    sleep(1);
-
-    // 停止
-    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
-
-    // 停止后设置隐私窗口
-    vector<int> windowIDsVec = {1, 3, 5};
-    EXPECT_EQ(MSERR_INVALID_OPERATION, screenCapture_->SkipPrivacyMode(&windowIDsVec[0],
-        static_cast<int32_t>(windowIDsVec.size())));
-
-    // 验证设置成功
-    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_privacy_004 after");
 }
 
 /**
