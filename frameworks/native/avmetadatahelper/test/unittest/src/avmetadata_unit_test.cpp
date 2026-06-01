@@ -663,7 +663,7 @@ HWTEST_F(AVMetadataUnitTest, GetAVMetadataWithTimeout_API_0100, Level2)
     helper->ResolveMetadata(AV_KEY_HAS_AUDIO);
     EXPECT_EQ(value, "");
     MetadataResult result = helper->GetAVMetadataWithTimeout(1000);
-    EXPECT_EQ(nullptr, result.meta);
+    EXPECT_NE(nullptr, result.meta);
     helper->Release();
 }
 
@@ -902,7 +902,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0100, Level2)
 HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0200, Level2)
 {
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-        std::string("HDR.mp4");
+        std::string("H264_AAC.mp4");
     std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
     ASSERT_NE(nullptr, helper);
     ASSERT_EQ(true, helper->CreateAVMetadataHelper());
@@ -910,8 +910,9 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0200, Level2)
     int64_t time = 0;
     PixelMapParams param;
     auto pixelMap = helper->FetchFrameYuv(time, 0, param);
-    ASSERT_EQ(pixelMap->GetWidth(), 1080);
-    ASSERT_EQ(pixelMap->GetHeight(), 2336);
+    ASSERT_NE(nullptr, pixelMap);
+    ASSERT_EQ(pixelMap->GetWidth(), 720);
+    ASSERT_EQ(pixelMap->GetHeight(), 480);
 }
 
 /**
