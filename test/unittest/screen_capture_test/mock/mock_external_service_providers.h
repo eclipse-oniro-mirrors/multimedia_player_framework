@@ -35,6 +35,20 @@ public:
 class MockScreenManagerProvider : public IScreenManagerProvider {
 public:
     MOCK_METHOD(Rosen::ScreenManager &, GetInstance, (), (override));
+    MOCK_METHOD(Rosen::DMError, MakeMirror,
+        (Rosen::ScreenId mainScreenId, const std::vector<Rosen::ScreenId> &mirrorScreenId,
+            Rosen::ScreenId &screenGroupId),
+        (override));
+    MOCK_METHOD(Rosen::DMError, MakeMirror,
+        (Rosen::ScreenId mainScreenId, const std::vector<Rosen::ScreenId> &mirrorScreenId,
+            Rosen::ScreenId &screenGroupId, Rosen::Rotation rotation),
+        (override));
+    MOCK_METHOD(Rosen::DMError, MakeMirrorForRecord,
+        (const std::vector<Rosen::ScreenId> &mainScreenIds, std::vector<Rosen::ScreenId> &mirrorScreenIds,
+            Rosen::ScreenId &screenGroupId),
+        (override));
+    MOCK_METHOD(Rosen::DMError, StopMirror, (const std::vector<Rosen::ScreenId> &mirrorScreenIds), (override));
+    MOCK_METHOD(Rosen::ScreenId, CreateVirtualScreen, (const Rosen::VirtualScreenOption &option), (override));
 };
 
 class MockWindowManagerProvider : public IWindowManagerProvider {

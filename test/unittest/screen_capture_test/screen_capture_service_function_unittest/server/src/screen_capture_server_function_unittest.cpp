@@ -3001,6 +3001,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PostStartScreenCaptureSuccessAction_00
     screenCaptureServer_->showCursor_ = false;
     screenCaptureServer_->PostStartScreenCaptureSuccessAction();
     ASSERT_EQ(screenCaptureServer_->showCursor_ == false, true);
+    screenCaptureServer_->PostStopScreenCapture(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, PostStartScreenCaptureSuccessAction_002, TestSize.Level2)
@@ -3008,6 +3009,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PostStartScreenCaptureSuccessAction_00
     screenCaptureServer_->showCursor_ = true;
     screenCaptureServer_->PostStartScreenCaptureSuccessAction();
     ASSERT_EQ(screenCaptureServer_->showCursor_ == true, true);
+    screenCaptureServer_->PostStopScreenCapture(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SetCanvasRotation_001, TestSize.Level2)
@@ -3309,6 +3311,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, IsSystemScreenRecorder_002, TestSize.L
 HWTEST_F(ScreenCaptureServerFunctionTest, StartStreamHomeVideoCapture_001, TestSize.Level2)
 {
     SetValidConfig();
+    screenCaptureServer_->captureConfig_ = config_;
     screenCaptureServer_->isSurfaceMode_ = false;
     ASSERT_EQ(screenCaptureServer_->StartStreamHomeVideoCapture(), MSERR_OK);
 }
@@ -4255,29 +4258,32 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleSetDisplayIdAndMissionId_001, Te
     EXPECT_EQ(screenCaptureServer_->missionIds_.size(), 1);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, MakeVirtualScreenMirrorForSpecifiedScreen_001, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, SetupVirtualScreenMirror_001, TestSize.Level2)
 {
     auto defaultDisplay = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
     std::vector<ScreenId> mirrorIds{0};
-    EXPECT_EQ(screenCaptureServer_->MakeVirtualScreenMirrorForSpecifiedScreen(defaultDisplay, mirrorIds),
+    screenCaptureServer_->captureConfig_.captureMode = CAPTURE_SPECIFIED_SCREEN;
+    EXPECT_EQ(screenCaptureServer_->SetupVirtualScreenMirror(defaultDisplay, mirrorIds),
         MSERR_UNKNOWN);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, MakeVirtualScreenMirrorForSpecifiedScreen_002, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, SetupVirtualScreenMirror_002, TestSize.Level2)
 {
     auto defaultDisplay = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
     std::vector<ScreenId> mirrorIds{0};
     screenCaptureServer_->displayIds_ = {0};
-    EXPECT_EQ(screenCaptureServer_->MakeVirtualScreenMirrorForSpecifiedScreen(defaultDisplay, mirrorIds),
+    screenCaptureServer_->captureConfig_.captureMode = CAPTURE_SPECIFIED_SCREEN;
+    EXPECT_EQ(screenCaptureServer_->SetupVirtualScreenMirror(defaultDisplay, mirrorIds),
         MSERR_UNKNOWN);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, MakeVirtualScreenMirrorForSpecifiedScreen_003, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, SetupVirtualScreenMirror_003, TestSize.Level2)
 {
     auto defaultDisplay = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
     std::vector<ScreenId> mirrorIds{0};
     screenCaptureServer_->displayIds_ = {333};
-    EXPECT_EQ(screenCaptureServer_->MakeVirtualScreenMirrorForSpecifiedScreen(defaultDisplay, mirrorIds),
+    screenCaptureServer_->captureConfig_.captureMode = CAPTURE_SPECIFIED_SCREEN;
+    EXPECT_EQ(screenCaptureServer_->SetupVirtualScreenMirror(defaultDisplay, mirrorIds),
         MSERR_UNKNOWN);
 }
 
@@ -4429,5 +4435,164 @@ HWTEST_F(ScreenCaptureServerFunctionTest, BuildPickerParams_008, TestSize.Level2
 }
 #endif
 #endif
+
+HWTEST_F(ScreenCaptureServerFunctionTest, CreateMirror_001, TestSize.Level0)
+{
+    std::vector<uint64_t> displayIds;
+    std::vector<ScreenId> mirrorIds;
+    DMError ret = screenCaptureServer_->CreateMirror(displayIds, mirrorIds);
+    EXPECT_EQ(ret, DMError::DM_ERROR_INVALID_PARAM);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, CreateMirror_002, TestSize.Level0)
+{
+    std::vector<uint64_t> displayIds{0, 1};
+    std::vector<ScreenId> mirrorIds;
+    DMError ret = screenCaptureServer_->CreateMirror(displayIds, mirrorIds);
+    EXPECT_EQ(ret, DMError::DM_ERROR_INVALID_PARAM);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, CreateMirror_003, TestSize.Level1)
+{
+    std::vector<uint64_t> displayIds{0};
+    std::vector<ScreenId> mirrorIds;
+    auto *screenMock = static_cast<MockScreenManagerProvider *>(screenCaptureServer_->providers_->screenManager.get());
+    EXPECT_CALL(*screenMock, MakeMirror(testing::_, testing::_, testing::_)).WillOnce(testing::Return(DMError::DM_OK));
+    DMError ret = screenCaptureServer_->CreateMirror(displayIds, mirrorIds);
+    EXPECT_NE(ret, DMError::DM_ERROR_INVALID_PARAM);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, CreateMirror_WithRotation_001, TestSize.Level1)
+{
+    std::vector<uint64_t> displayIds{0};
+    std::vector<ScreenId> mirrorIds;
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::PAUSED;
+    screenCaptureServer_->canvasRotation_ = false;
+    screenCaptureServer_->targetRotation_ = Rosen::Rotation::ROTATION_90;
+    auto *screenMock = static_cast<MockScreenManagerProvider *>(screenCaptureServer_->providers_->screenManager.get());
+    EXPECT_CALL(*screenMock, MakeMirror(testing::_, testing::_, testing::_, Rosen::Rotation::ROTATION_90))
+        .WillOnce(testing::Return(DMError::DM_OK));
+    DMError ret = screenCaptureServer_->CreateMirror(displayIds, mirrorIds);
+    EXPECT_NE(ret, DMError::DM_ERROR_INVALID_PARAM);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetupVirtualScreenMirror_CaptureWindow_001, TestSize.Level1)
+{
+    sptr<Rosen::Display> defaultDisplay = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
+    if (defaultDisplay == nullptr) {
+        GTEST_SKIP() << "GetDefaultDisplaySync returned null, skip";
+    }
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
+    screenCaptureServer_->virtualScreenId_ = 0;
+    std::vector<ScreenId> mirrorIds;
+    auto *screenMock = static_cast<MockScreenManagerProvider *>(screenCaptureServer_->providers_->screenManager.get());
+    EXPECT_CALL(*screenMock, MakeMirror(testing::_, testing::_, testing::_)).WillOnce(testing::Return(DMError::DM_OK));
+    int32_t ret = screenCaptureServer_->SetupVirtualScreenMirror(defaultDisplay, mirrorIds);
+    EXPECT_NE(ret, MSERR_UNKNOWN);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, MakeVirtualScreenMirror_Resume_001, TestSize.Level0)
+{
+    screenCaptureServer_->virtualScreenId_ = 0;
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::PAUSED;
+    screenCaptureServer_->canvasRotation_ = false;
+    screenCaptureServer_->targetRotation_ = Rosen::Rotation::ROTATION_90;
+    screenCaptureServer_->captureConfig_.captureMode = CAPTURE_HOME_SCREEN;
+    sptr<Rosen::Display> defaultDisplay = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
+    if (defaultDisplay == nullptr) {
+        GTEST_SKIP() << "GetDefaultDisplaySync returned null, skip";
+    }
+    std::vector<ScreenId> mirrorIds;
+    auto *screenMock = static_cast<MockScreenManagerProvider *>(screenCaptureServer_->providers_->screenManager.get());
+    EXPECT_CALL(*screenMock, MakeMirror(testing::_, testing::_, testing::_, Rosen::Rotation::ROTATION_90))
+        .WillOnce(testing::Return(DMError::DM_OK));
+    int32_t ret = screenCaptureServer_->MakeVirtualScreenMirror();
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetupVirtualScreenMirror_EmptyDisplayIds_001, TestSize.Level0)
+{
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
+    screenCaptureServer_->displayIds_ = {99999};
+    sptr<Rosen::Display> defaultDisplay = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
+    if (defaultDisplay == nullptr) {
+        GTEST_SKIP() << "GetDefaultDisplaySync returned null, skip";
+    }
+    std::vector<ScreenId> mirrorIds;
+    std::vector<Rosen::DisplayId> allDisplayIds = Rosen::DisplayManager::GetInstance().GetAllDisplayIds();
+    if (allDisplayIds.empty()) {
+        GTEST_SKIP() << "GetAllDisplayIds returned empty, skip";
+    }
+    int32_t ret = screenCaptureServer_->SetupVirtualScreenMirror(defaultDisplay, mirrorIds);
+    EXPECT_NE(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetupVirtualScreenMirror_CaptureHomeScreen_001, TestSize.Level1)
+{
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_HOME_SCREEN;
+    screenCaptureServer_->virtualScreenId_ = 0;
+    sptr<Rosen::Display> defaultDisplay = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
+    if (defaultDisplay == nullptr) {
+        GTEST_SKIP() << "GetDefaultDisplaySync returned null, skip";
+    }
+    std::vector<ScreenId> mirrorIds;
+    auto *screenMock = static_cast<MockScreenManagerProvider *>(screenCaptureServer_->providers_->screenManager.get());
+    EXPECT_CALL(*screenMock, MakeMirror(testing::_, testing::_, testing::_)).WillOnce(testing::Return(DMError::DM_OK));
+    int32_t ret = screenCaptureServer_->SetupVirtualScreenMirror(defaultDisplay, mirrorIds);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, MakeVirtualScreenMirror_InvalidScreenId_001, TestSize.Level0)
+{
+    screenCaptureServer_->virtualScreenId_ = SCREEN_ID_INVALID;
+    int32_t ret = screenCaptureServer_->MakeVirtualScreenMirror();
+    EXPECT_EQ(ret, MSERR_UNKNOWN);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ScreenManagerProvider_MakeMirror3_001, TestSize.Level1)
+{
+    auto providers = CreateDefaultProviders();
+    ScreenId mirrorGroup = 0;
+    std::vector<ScreenId> mirrorIds;
+    DMError ret = providers->screenManager->MakeMirror(SCREEN_ID_INVALID, mirrorIds, mirrorGroup);
+    EXPECT_NE(ret, DMError::DM_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ScreenManagerProvider_MakeMirror4_001, TestSize.Level1)
+{
+    auto providers = CreateDefaultProviders();
+    ScreenId mirrorGroup = 0;
+    std::vector<ScreenId> mirrorIds;
+    DMError ret = providers->screenManager->MakeMirror(SCREEN_ID_INVALID, mirrorIds, mirrorGroup,
+        Rosen::Rotation::ROTATION_0);
+    EXPECT_NE(ret, DMError::DM_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ScreenManagerProvider_MakeMirrorForRecord_001, TestSize.Level1)
+{
+    auto providers = CreateDefaultProviders();
+    std::vector<ScreenId> mainScreenIds{SCREEN_ID_INVALID};
+    std::vector<ScreenId> mirrorIds;
+    ScreenId mirrorGroup = 0;
+    DMError ret = providers->screenManager->MakeMirrorForRecord(mainScreenIds, mirrorIds, mirrorGroup);
+    EXPECT_NE(ret, DMError::DM_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ScreenManagerProvider_StopMirror_001, TestSize.Level1)
+{
+    auto providers = CreateDefaultProviders();
+    std::vector<ScreenId> mirrorIds{SCREEN_ID_INVALID};
+    DMError ret = providers->screenManager->StopMirror(mirrorIds);
+    EXPECT_EQ(ret, DMError::DM_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ScreenManagerProvider_CreateVirtualScreen_001, TestSize.Level1)
+{
+    auto providers = CreateDefaultProviders();
+    Rosen::VirtualScreenOption option;
+    ScreenId ret = providers->screenManager->CreateVirtualScreen(option);
+    EXPECT_NE(ret, SCREEN_ID_INVALID);
+}
+
 } // Media
 } // OHOS
