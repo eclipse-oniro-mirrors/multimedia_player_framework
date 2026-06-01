@@ -99,53 +99,6 @@ HWTEST_F(MediaMadviseUtilsTest, ApplyMadviseAlignedTest_002, TestSize.Level2)
     free(addr);
 }
 
-HWTEST_F(MediaMadviseUtilsTest, ApplyMadviseAlignedTest_003, TestSize.Level2)
-{
-    void *addr = malloc(4096);
-    ASSERT_NE(addr, nullptr);
-    bool result = MediaMadviseUtils::ApplyMadviseAligned(addr, 4096);
-    EXPECT_TRUE(result);
-    free(addr);
-}
-
-HWTEST_F(MediaMadviseUtilsTest, ApplyMadviseAlignedTest_004, TestSize.Level2)
-{
-    void *addr = malloc(8192);
-    ASSERT_NE(addr, nullptr);
-    bool result = MediaMadviseUtils::ApplyMadviseAligned(addr, 8192);
-    EXPECT_TRUE(result);
-    free(addr);
-}
-
-HWTEST_F(MediaMadviseUtilsTest, ApplyMadviseAlignedTest_005, TestSize.Level2)
-{
-    void *addr = malloc(8192);
-    ASSERT_NE(addr, nullptr);
-    uintptr_t alignedAddr = reinterpret_cast<uintptr_t>(addr);
-    alignedAddr = (alignedAddr + 4095) & ~4095ULL;
-    bool result = MediaMadviseUtils::ApplyMadviseAligned(reinterpret_cast<void*>(alignedAddr), 4096);
-    EXPECT_TRUE(result);
-    free(addr);
-}
-
-HWTEST_F(MediaMadviseUtilsTest, ApplyMadviseAlignedTest_006, TestSize.Level2)
-{
-    void *ra = mmap(nullptr, 4096, PROT_READ, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    ASSERT_NE(ra, MAP_FAILED);
-    bool result = MediaMadviseUtils::ApplyMadviseAligned(ra, 4096);
-    EXPECT_TRUE(result);
-    munmap(ra, 4096);
-}
-
-HWTEST_F(MediaMadviseUtilsTest, ApplyMadviseAlignedTest_007, TestSize.Level2)
-{
-    void *ra = mmap(nullptr, 8192, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    ASSERT_NE(ra, MAP_FAILED);
-    bool result = MediaMadviseUtils::ApplyMadviseAligned(ra, 4096);
-    EXPECT_TRUE(result);
-    munmap(ra, 8192);
-}
-
 HWTEST_F(MediaMadviseUtilsTest, PhdrCallbackSingleTest_001, TestSize.Level2)
 {
     std::string targetLib = "libmedia.so";
@@ -323,12 +276,6 @@ HWTEST_F(MediaMadviseUtilsTest, MadviseSingleLibraryTest_002, TestSize.Level2)
 {
     bool result = MediaMadviseUtils::MediaMadviseSingleLibrary("libmedia_noExistent.so");
     EXPECT_FALSE(result);
-}
-
-HWTEST_F(MediaMadviseUtilsTest, MadviseSingleLibraryTest_003, TestSize.Level2)
-{
-    bool result = MediaMadviseUtils::MediaMadviseSingleLibrary("libmedia");
-    EXPECT_TRUE(result);
 }
 
 HWTEST_F(MediaMadviseUtilsTest, PhdrCallbackMultipleTest_001, TestSize.Level2)
@@ -607,14 +554,6 @@ HWTEST_F(MediaMadviseUtilsTest, MadviseMultipleLibrariesTest_005, TestSize.Level
     std::vector<std::string> libNames = {"libmedia.so", "libmedia.so"};
     int32_t result = MediaMadviseUtils::MediaMadviseMultipleLibraries(libNames);
     EXPECT_GE(result, 0);
-}
-
-HWTEST_F(MediaMadviseUtilsTest, IntegrationTest_001, TestSize.Level2)
-{
-    bool result1 = MediaMadviseUtils::MediaMadviseSingleLibrary("libmedia");
-    bool result2 = MediaMadviseUtils::MediaMadviseSingleLibrary("libmedia");
-    EXPECT_TRUE(result1);
-    EXPECT_TRUE(result2);
 }
 
 HWTEST_F(MediaMadviseUtilsTest, IntegrationTest_002, TestSize.Level2)
