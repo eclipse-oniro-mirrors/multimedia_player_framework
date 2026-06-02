@@ -285,6 +285,8 @@ void PlayerServiceStub::FillPlayerFuncPart4()
         [this](MessageParcel &data, MessageParcel &reply) { return SetMaxAmplitudeCbStatus(data, reply); } };
     playerFuncs_[SET_DEVICE_CHANGE_CB_STATUS] = { "Player::SetDeviceChangeCbStatus",
         [this](MessageParcel &data, MessageParcel &reply) { return SetDeviceChangeCbStatus(data, reply); } };
+    playerFuncs_[SET_SUBTITLE_CB_DFX_STATUS] = { "Player::SetSubtitleCbDfxStatus",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetSubtitleCbDfxStatus(data, reply); } };
     playerFuncs_[GET_API_VERSION] = { "GetApiVersion",
         [this](MessageParcel &data, MessageParcel &reply) { return GetApiVersion(data, reply); } };
     playerFuncs_[IS_SEEK_CONTINUOUS_SUPPORTED] = { "IsSeekContinuousSupported",
@@ -1790,6 +1792,20 @@ int32_t PlayerServiceStub::SetDeviceChangeCbStatus(MessageParcel &data, MessageP
 {
     bool status = data.ReadInt32();
     reply.WriteInt32(SetDeviceChangeCbStatus(status));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetSubtitleCbDfxStatus(bool isRegistered)
+{
+    MediaTrace trace("PlayerServiceStub::SetSubtitleCbDfxStatus");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetSubtitleCbDfxStatus(isRegistered);
+}
+
+int32_t PlayerServiceStub::SetSubtitleCbDfxStatus(MessageParcel &data, MessageParcel &reply)
+{
+    bool isRegistered = data.ReadBool();
+    reply.WriteInt32(SetSubtitleCbDfxStatus(isRegistered));
     return MSERR_OK;
 }
 

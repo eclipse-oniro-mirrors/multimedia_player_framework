@@ -123,6 +123,7 @@ void PlayerServiceProxy::InitPlayerFuncsPart2()
     playerFuncs_[ENABLE_CAMERA_POSTPROCESSING] = "Player::EnableCameraPostprocessing";
     playerFuncs_[ENABLE_REPORT_MEDIA_PROGRESS] = "Player::EnableReportMediaProgress";
     playerFuncs_[ENABLE_REPORT_AUDIO_INTERRUPT] = "Player::EnableReportAudioInterrupt";
+    playerFuncs_[SET_SUBTITLE_CB_DFX_STATUS] = "Player::SetSubtitleCbDfxStatus";
     playerFuncs_[SET_CAMERA_POST_POSTPROCESSING] = "Player::SetCameraPostprocessing";
     playerFuncs_[GET_GLOBAL_INFO] = "Player::GetGlobalInfo";
     playerFuncs_[GET_CURRENT_PRESENTATION_TIMESTAMP] = "Player::GetCurrentPresentationTimestamp";
@@ -1320,6 +1321,23 @@ int32_t PlayerServiceProxy::SetDeviceChangeCbStatus(bool status)
     int32_t error = SendRequest(SET_DEVICE_CHANGE_CB_STATUS, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetDeviceChangeCbStatus failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::SetSubtitleCbDfxStatus(bool isRegistered)
+{
+    MediaTrace trace("PlayerServiceProxy::SetSubtitleCbDfxStatus");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteBool(isRegistered);
+    int32_t error = SendRequest(SET_SUBTITLE_CB_DFX_STATUS, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetSubtitleCbDfxStatus failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
 

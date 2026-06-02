@@ -35,6 +35,7 @@ public:
     MOCK_METHOD(int32_t, Freeze, (), (override));
     MOCK_METHOD(int32_t, UnFreeze, (), (override));
     MOCK_METHOD(int32_t, EnableReportAudioInterrupt, (bool enable), (override));
+    MOCK_METHOD(int32_t, SetSubtitleCbDfxStatus, (bool isRegistered), (override));
     MOCK_METHOD(int32_t, Prepare, (), (override));
     MOCK_METHOD(int32_t, SetRenderFirstFrame, (bool display), (override));
     MOCK_METHOD(int32_t, SetPlayRange, (int64_t start, int64_t end), (override));

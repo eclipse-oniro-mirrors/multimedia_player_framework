@@ -182,6 +182,7 @@ public:
     int32_t GetPlaybackPosition(int32_t &playbackPosition);
     int32_t SetTrackSelectionFilter(AVPlayTrackSelectionFilter trackFilter);
     int32_t GetTrackSelectionFilter(AVPlayTrackSelectionFilter &trackFilter);
+    int32_t SetSubtitleCbDfxStatus(bool isRegistered);
 private:
     void SeekPrepare(int32_t &mseconds, PlayerSeekMode &mode);
     std::shared_ptr<IPlayerService> player_ = nullptr;

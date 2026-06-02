@@ -160,6 +160,7 @@ public:
     bool IsBootCompleted();
     int32_t SetMaxAmplitudeCbStatus(bool status) override;
     int32_t SetDeviceChangeCbStatus(bool status) override;
+    int32_t SetSubtitleCbDfxStatus(bool isRegistered) override;
     bool IsSeekContinuousSupported() override;
     int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes) override;
     int32_t SetStartFrameRateOptEnabled(bool enabled) override;

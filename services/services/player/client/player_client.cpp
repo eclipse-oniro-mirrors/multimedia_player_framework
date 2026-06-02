@@ -561,6 +561,13 @@ int32_t PlayerClient::SetDeviceChangeCbStatus(bool status)
     return playerProxy_->SetDeviceChangeCbStatus(status);
 }
 
+int32_t PlayerClient::SetSubtitleCbDfxStatus(bool isRegistered)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    return playerProxy_->SetSubtitleCbDfxStatus(isRegistered);
+}
+
 int32_t PlayerClient::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
 {
     std::lock_guard<std::mutex> lock(mutex_);

@@ -445,5 +445,50 @@ HWTEST_F(PlayerServiceStubTest, IsLiveSeek_001, TestSize.Level1)
     EXPECT_EQ(ret, 0);
     playerServiceStub = nullptr;
 }
+
+HWTEST_F(PlayerServiceStubTest, SetSubtitleCbDfxStatus_001, TestSize.Level1)
+{
+    sptr<PlayerServiceStub> playerServiceStub = PlayerServiceStub::Create();
+    ASSERT_NE(playerServiceStub, nullptr);
+
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteBool(true);
+
+    int ret = playerServiceStub->SetSubtitleCbDfxStatus(data, reply);
+    EXPECT_EQ(ret, 0);
+    playerServiceStub = nullptr;
+}
+
+HWTEST_F(PlayerServiceStubTest, SetSubtitleCbDfxStatus_002, TestSize.Level1)
+{
+    sptr<PlayerServiceStub> playerServiceStub = PlayerServiceStub::Create();
+    ASSERT_NE(playerServiceStub, nullptr);
+
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteBool(false);
+
+    int ret = playerServiceStub->SetSubtitleCbDfxStatus(data, reply);
+    EXPECT_EQ(ret, 0);
+    playerServiceStub = nullptr;
+}
+
+HWTEST_F(PlayerServiceStubTest, SetSubtitleCbDfxStatus_DirectCall_001, TestSize.Level1)
+{
+    sptr<PlayerServiceStub> playerServiceStub = PlayerServiceStub::Create();
+    ASSERT_NE(playerServiceStub, nullptr);
+    playerServiceStub->playerServer_ = std::make_shared<PlayerServer>();
+    EXPECT_EQ(playerServiceStub->SetSubtitleCbDfxStatus(true), MSERR_OK);
+    playerServiceStub->playerServer_ = nullptr;
+    playerServiceStub = nullptr;
+}
+
+HWTEST_F(PlayerServiceStubTest, SetSubtitleCbDfxStatus_Proxy_001, TestSize.Level1)
+{
+    sptr<PlayerServiceProxy> proxy = new(std::nothrow) PlayerServiceProxy(nullptr);
+    ASSERT_NE(proxy, nullptr);
+    EXPECT_EQ(proxy->SetSubtitleCbDfxStatus(true), MSERR_INVALID_OPERATION);
+}
 }
 }

@@ -181,6 +181,7 @@ public:
     int32_t GetCurrentPresentationTimestamp(int64_t &currentPresentation);
     int32_t SetTrackSelectionFilter(AVPlayTrackSelectionFilter trackFilter);
     int32_t GetTrackSelectionFilter(AVPlayTrackSelectionFilter &trackFilter);
+    int32_t SetSubtitleCbDfxStatus(bool isRegistered);
     int32_t SetVideoOutput(sptr<Surface> surface);
     int32_t GetVideoSample(int32_t &outputResult);
 private:

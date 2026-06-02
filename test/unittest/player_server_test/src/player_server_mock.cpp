@@ -912,5 +912,12 @@ int32_t PlayerServerMock::GetVideoSample(int32_t &outputResult)
     std::unique_lock<std::mutex> lock(mutex_);
     return player_->GetVideoSample(outputResult);
 }
+
+int32_t PlayerServerMock::SetSubtitleCbDfxStatus(bool isRegistered)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->SetSubtitleCbDfxStatus(isRegistered);
+}
 } // namespace Media
 } // namespace OHOS

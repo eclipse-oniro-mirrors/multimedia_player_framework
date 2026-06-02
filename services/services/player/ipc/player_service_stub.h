@@ -107,6 +107,7 @@ public:
     int32_t DoIpcAbnormality() override;
     int32_t DoIpcRecovery(bool fromMonitor) override;
     int32_t SetDeviceChangeCbStatus(bool status) override;
+    int32_t SetSubtitleCbDfxStatus(bool isRegistered) override;
     int32_t SetMaxAmplitudeCbStatus(bool status) override;
     bool IsSeekContinuousSupported() override;
     int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes) override;
@@ -207,6 +208,7 @@ private:
     int32_t SetSuperResolution(MessageParcel &data, MessageParcel &reply);
     int32_t SetVideoWindowSize(MessageParcel &data, MessageParcel &reply);
     int32_t SetDeviceChangeCbStatus(MessageParcel &data, MessageParcel &reply);
+    int32_t SetSubtitleCbDfxStatus(MessageParcel &data, MessageParcel &reply);
     int32_t SetMaxAmplitudeCbStatus(MessageParcel &data, MessageParcel &reply);
     int32_t IsSeekContinuousSupported(MessageParcel &data, MessageParcel &reply);
     int32_t SetSeiMessageCbStatus(MessageParcel &data, MessageParcel &reply);

@@ -180,6 +180,7 @@ public:
     int32_t EnableReportMediaProgress(bool enable);
     void ReleaseClientListener();
     int32_t EnableReportAudioInterrupt(bool enable);
+    int32_t SetSubtitleCbDfxStatus(bool isRegistered);
     int32_t GetGlobalInfo(std::shared_ptr<Meta> &globalInfo);
     int32_t SetPlayRangeUsWithMode(int64_t start, int64_t end,
         PlayerSeekMode mode = SEEK_PREVIOUS_SYNC);

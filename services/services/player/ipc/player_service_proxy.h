@@ -89,6 +89,7 @@ public:
         bool svp) override;
     int32_t SetMaxAmplitudeCbStatus(bool status) override;
     int32_t SetDeviceChangeCbStatus(bool status) override;
+    int32_t SetSubtitleCbDfxStatus(bool isRegistered) override;
     int32_t GetApiVersion(int32_t &apiVersion) override;
     bool IsSeekContinuousSupported() override;
     int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes) override;

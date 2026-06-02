@@ -853,6 +853,13 @@ int32_t PlayerMock::EnableReportAudioInterrupt(bool enable)
     return player_->EnableReportAudioInterrupt(enable);
 }
 
+int32_t PlayerMock::SetSubtitleCbDfxStatus(bool isRegistered)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    UNITTEST_CHECK_AND_RETURN_LOG(player_ != nullptr, "player_ == nullptr");
+    return player_->SetSubtitleCbDfxStatus(isRegistered);
+}
+
 void PlayerMock::ReleaseClientListener()
 {
     UNITTEST_CHECK_AND_RETURN_LOG(player_ != nullptr, "player_ == nullptr");
