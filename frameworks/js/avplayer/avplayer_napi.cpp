@@ -1519,6 +1519,10 @@ napi_value AVPlayerNapi::JsSetStartFrameRateOptEnabled(napi_env env, napi_callba
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
+    if (!IsSystemApp()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_PERMISSION_DENIED, "only system app support this function");
+        return result;
+    }
     napi_valuetype valueType = napi_undefined;
     if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_boolean) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "enableStartFrameRateOpt is not napi_boolean");
