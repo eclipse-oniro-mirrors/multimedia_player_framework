@@ -59,12 +59,49 @@ const std::map<std::string, std::vector<std::string>> STATE_CTRL = {
     {AVTransCoderState::STATE_COMPLETED, {}},
     {AVTransCoderState::STATE_ERROR, {}},
 };
+const std::set<MediaServiceErrCode> MSERRCODE_AVTRANSCODER_INFOS = {
+    MSERR_AUD_FAILED,
+    MSERR_AUD_INIT_FAILED,
+    MSERR_AUD_START_FAILED,
+    MSERR_AUD_STOP_FAILED,
+    MSERR_AUD_DEC_INIT_FAILED,
+    MSERR_AUD_DEC_CONFIGURE_FAILED,
+    MSERR_AUD_ENC_FAILED,
+    MSERR_AUD_ENC_INIT_FAILED,
+    MSERR_AUD_ENC_START_FAILED,
+    MSERR_AUD_ENC_STOP_FAILED,
+    MSERR_VID_DEC_INIT_FAILED,
+    MSERR_VID_DEC_CONFIGURE_FAILED,
+    MSERR_VID_ENHANCER_CONFIGURE_FAILED,
+    MSERR_VID_ENC_FAILED,
+    MSERR_VID_ENC_CONFIG_FAILED,
+    MSERR_VID_ENC_INIT_FAILED,
+    MSERR_VID_ENC_START_FAILED,
+    MSERR_VID_ENC_STOP_FAILED,
+    MSERR_SET_INPUT_DATA_SOURCE_FAILED,
+    MSERR_NO_VALID_TRACK_FOUND,
+    MSERR_MUXER_FAILED,
+    MSERR_MUXER_INIT_FAILED,
+    MSERR_MUXER_START_FAILED,
+    MSERR_MUXER_STOP_FAILED,
+    MSERR_FRAMEWORK_ERROR,
+};
 std::map<std::string, AVTransCoderNapi::AvTransCoderTaskqFunc> AVTransCoderNapi::taskQFuncs_ = {
     {AVTransCoderOpt::START, &AVTransCoderNapi::Start},
     {AVTransCoderOpt::PAUSE, &AVTransCoderNapi::Pause},
     {AVTransCoderOpt::RESUME, &AVTransCoderNapi::Resume},
     {AVTransCoderOpt::CANCEL, &AVTransCoderNapi::Cancel},
     {AVTransCoderOpt::RELEASE, &AVTransCoderNapi::Release},
+};
+const std::unordered_map<AudioCodecFormat, std::set<OutputFormatType>> AUDIO_MUX_FORMAT_INFO = {
+    {AudioCodecFormat::AAC_LC, {OutputFormatType::FORMAT_MPEG_4, OutputFormatType::FORMAT_M4A,
+        OutputFormatType::FORMAT_AAC}},
+    {AudioCodecFormat::AUDIO_MPEG, {OutputFormatType::FORMAT_MPEG_4, OutputFormatType::FORMAT_MP3}},
+    {AudioCodecFormat::AUDIO_AMR_NB, {OutputFormatType::FORMAT_AMR}},
+    {AudioCodecFormat::AUDIO_AMR_WB, {OutputFormatType::FORMAT_AMR}},
+    {AudioCodecFormat::AUDIO_RAW, {OutputFormatType::FORMAT_WAV}},
+    {AudioCodecFormat::AUDIO_DEFAULT, {OutputFormatType::FORMAT_MPEG_4, OutputFormatType::FORMAT_M4A,
+        OutputFormatType::FORMAT_AAC}},
 };
 
 AVTransCoderNapi::AVTransCoderNapi()
@@ -97,7 +134,6 @@ napi_value AVTransCoderNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_GETTER_SETTER("fdSrc", JsGetSrcFd, JsSetSrcFd),
         DECLARE_NAPI_GETTER_SETTER("fdDst", JsGetDstFd, JsSetDstFd),
     };
-    const ;
 
     napi_value constructor = nullptr;
     napi_status status = napi_define_class(env, CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, Constructor, nullptr,
@@ -227,6 +263,7 @@ napi_value AVTransCoderNapi::JsCreateAVTransCoder(napi_env env, napi_callback_in
 RetInfo GetReturnRet(int32_t errCode, const std::string &operate, const std::string &param, const std::string &add = "")
 {
     MEDIA_LOGE("failed to %{public}s, param %{public}s, errCode = %{public}d", operate.c_str(), param.c_str(), errCode);
+    MediaServiceErrCode extCode = static_cast<MediaServiceErrCode>(errCode);
     MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode));
     
     std::string message;
@@ -234,6 +271,10 @@ RetInfo GetReturnRet(int32_t errCode, const std::string &operate, const std::str
         message = MSExtErrorAPI9ToString(err, param, "") + add;
     } else {
         message = MSExtErrorAPI9ToString(err, operate, "") + add;
+    }
+
+    if (MSERRCODE_AVTRANSCODER_INFOS.find(extCode) != MSERRCODE_AVTRANSCODER_INFOS.end()) {
+        message = message + " " + MSErrorToString(extCode);
     }
 
     MEDIA_LOGE("errCode: %{public}d, errMsg: %{public}s", err, message.c_str());
@@ -999,8 +1040,9 @@ int32_t AVTransCoderNapi::GetAudioConfig(std::unique_ptr<AVTransCoderAsyncContex
     std::string audioCodec = CommonNapi::GetPropertyString(env, args, "audioCodec");
     std::string audioCodecV2 = CommonNapi::GetPropertyString(env, args, "audioCodecV2");
     (void)AVTransCoderNapi::GetAudioCodecFormat(audioCodec, config->audioCodecFormat);
-    (void)AVTransCoderNapi::GetAudioCodecFormatV2(audioCodecV2, config->audioCodecFormatV2);
+    int32_t ret = AVTransCoderNapi::GetAudioCodecFormatV2(audioCodecV2, config->audioCodecFormatV2);
     isAudioV2Valid = !audioCodecV2.empty();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to set audioCodecV2");
     if (isAudioV2Valid) {
         MEDIA_LOGI("audio encoder mime is v2 %{public}s", audioCodecV2.c_str());
     } else {
@@ -1061,6 +1103,15 @@ int32_t AVTransCoderNapi::GetOutputFormat(const std::string &extension, OutputFo
     return MSERR_INVALID_VAL;
 }
 
+bool AVTransCoderNapi::CanAddTrack(const AudioCodecFormat &audioType, const OutputFormatType &muxerType)
+{
+    auto it = AUDIO_MUX_FORMAT_INFO.find(static_cast<AudioCodecFormat>(audioType));
+    if (it == AUDIO_MUX_FORMAT_INFO.end()) {
+        return false;
+    }
+    return it->second.find(muxerType) != it->second.end();
+}
+
 int32_t AVTransCoderNapi::GetConfig(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx,
     napi_env env, napi_value args)
 {
@@ -1086,6 +1137,15 @@ int32_t AVTransCoderNapi::GetConfig(std::unique_ptr<AVTransCoderAsyncContext> &a
     std::string fileFormat = CommonNapi::GetPropertyString(env, args, "fileFormat");
     ret = AVTransCoderNapi::GetOutputFormat(fileFormat, config->fileFormat);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, (asyncCtx->AVTransCoderSignError(ret, "GetOutputFormat", "fileFormat"), ret));
+    if (isAudioV2Valid) {
+        CHECK_AND_RETURN_RET(CanAddTrack(config->audioCodecFormatV2, config->fileFormat),
+            (asyncCtx->AVTransCoderSignError(MSERR_INVALID_VAL, "GetOutputFormat", "fileFormat"), MSERR_INVALID_VAL));
+    } else {
+        CHECK_AND_RETURN_RET(CanAddTrack(AudioCodecFormat::AAC_LC, config->fileFormat),
+            (asyncCtx->AVTransCoderSignError(MSERR_INVALID_VAL, "GetOutputFormat", "fileFormat"), MSERR_INVALID_VAL));
+        CHECK_AND_RETURN_RET(config->fileFormat != OutputFormatType::FORMAT_AAC,
+            (asyncCtx->AVTransCoderSignError(MSERR_INVALID_VAL, "GetOutputFormat", "fileFormat"), MSERR_INVALID_VAL));
+    }
     
     return MSERR_OK;
 }
