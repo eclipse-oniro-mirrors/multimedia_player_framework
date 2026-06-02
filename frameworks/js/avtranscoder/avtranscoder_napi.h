@@ -227,6 +227,7 @@ private:
     int32_t GetAudioConfig(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetVideoConfig(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetConfig(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx, napi_env env, napi_value args);
+    bool;
 
     int32_t GetWatermarkParameter(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx,
         napi_env env, napi_value watermark, napi_value watermarkConfig);
