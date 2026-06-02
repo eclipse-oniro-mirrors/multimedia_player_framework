@@ -932,7 +932,7 @@ interface AVRecorder {
     SetWatermarkSync(watermark: image.PixelMap, config: WatermarkConfig): void;
 
      @gen_promise("addWatermark")
-    AddWatermarkSync(watermark: image.PixelMap, config: WatermarkConfiguration): i32;
+    AddWatermarkSync(watermark: image.PixelMap, config: WatermarkConfiguration): void;
 
     @gen_promise("updateRotation")
     UpdateRotationSync(rotation: i32): void;
