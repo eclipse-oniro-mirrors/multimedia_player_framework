@@ -59,33 +59,6 @@ const std::map<std::string, std::vector<std::string>> STATE_CTRL = {
     {AVTransCoderState::STATE_COMPLETED, {}},
     {AVTransCoderState::STATE_ERROR, {}},
 };
-const std::set<MediaServiceErrCode> MSERRCODE_AVTRANSCODER_INFOS = {
-    MSERR_AUD_FAILED,
-    MSERR_AUD_INIT_FAILED,
-    MSERR_AUD_START_FAILED,
-    MSERR_AUD_STOP_FAILED,
-    MSERR_AUD_DEC_INIT_FAILED,
-    MSERR_AUD_DEC_CONFIGURE_FAILED,
-    MSERR_AUD_ENC_FAILED,
-    MSERR_AUD_ENC_INIT_FAILED,
-    MSERR_AUD_ENC_START_FAILED,
-    MSERR_AUD_ENC_STOP_FAILED,
-    MSERR_VID_DEC_INIT_FAILED,
-    MSERR_VID_DEC_CONFIGURE_FAILED,
-    MSERR_VID_ENHANCER_CONFIGURE_FAILED,
-    MSERR_VID_ENC_FAILED,
-    MSERR_VID_ENC_CONFIG_FAILED,
-    MSERR_VID_ENC_INIT_FAILED,
-    MSERR_VID_ENC_START_FAILED,
-    MSERR_VID_ENC_STOP_FAILED,
-    MSERR_SET_INPUT_DATA_SOURCE_FAILED,
-    MSERR_NO_VALID_TRACK_FOUND,
-    MSERR_MUXER_FAILED,
-    MSERR_MUXER_INIT_FAILED,
-    MSERR_MUXER_START_FAILED,
-    MSERR_MUXER_STOP_FAILED,
-    MSERR_FRAMEWORK_ERROR,
-};
 std::map<std::string, AVTransCoderNapi::AvTransCoderTaskqFunc> AVTransCoderNapi::taskQFuncs_ = {
     {AVTransCoderOpt::START, &AVTransCoderNapi::Start},
     {AVTransCoderOpt::PAUSE, &AVTransCoderNapi::Pause},
@@ -263,7 +236,6 @@ napi_value AVTransCoderNapi::JsCreateAVTransCoder(napi_env env, napi_callback_in
 RetInfo GetReturnRet(int32_t errCode, const std::string &operate, const std::string &param, const std::string &add = "")
 {
     MEDIA_LOGE("failed to %{public}s, param %{public}s, errCode = %{public}d", operate.c_str(), param.c_str(), errCode);
-    MediaServiceErrCode extCode = static_cast<MediaServiceErrCode>(errCode);
     MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode));
     
     std::string message;
@@ -271,10 +243,6 @@ RetInfo GetReturnRet(int32_t errCode, const std::string &operate, const std::str
         message = MSExtErrorAPI9ToString(err, param, "") + add;
     } else {
         message = MSExtErrorAPI9ToString(err, operate, "") + add;
-    }
-
-    if (MSERRCODE_AVTRANSCODER_INFOS.find(extCode) != MSERRCODE_AVTRANSCODER_INFOS.end()) {
-        message = message + " " + MSErrorToString(extCode);
     }
 
     MEDIA_LOGE("errCode: %{public}d, errMsg: %{public}s", err, message.c_str());
