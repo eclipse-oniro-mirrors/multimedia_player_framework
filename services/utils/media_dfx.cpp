@@ -344,7 +344,6 @@ namespace {
         }
         return subtitleCbStats;
     }
-
 } // namespace
 
 namespace OHOS {
