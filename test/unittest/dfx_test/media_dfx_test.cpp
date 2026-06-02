@@ -409,7 +409,7 @@ HWTEST_F(MediaDfxTest, BuildSubtitleCbStatsJson_CallTypeNotFound, TestSize.Level
     EXPECT_TRUE(result.empty());
     result = BuildSubtitleCbStatsJson(CallType::AVRECORDER, 999);
     EXPECT_TRUE(result.empty());
-    json result = BuildSubtitleCbStatsJson(CallType::METADATA_RETRIEVER, TEST_UID_ID_1);
+    result = BuildSubtitleCbStatsJson(CallType::METADATA_RETRIEVER, TEST_UID_ID_1);
     EXPECT_TRUE(result.empty());
     subtitleCbCounterMap_.clear();
     reportSubtitleCbCounterMap_.clear();
