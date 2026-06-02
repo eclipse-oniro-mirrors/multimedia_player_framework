@@ -172,6 +172,11 @@ public:
         (void)status;
         return 0;
     }
+    virtual int32_t SetSubtitleCbDfxStatus(bool isRegistered)
+    {
+        (void)isRegistered;
+        return 0;
+    }
 
     virtual int32_t GetApiVersion(int32_t &apiVersion)
     {
@@ -415,6 +420,7 @@ public:
         IS_LIVE_SEEK,
         SET_VIDEO_OUTPUT,
         GET_VIDEO_SAMPLE,
+        SET_SUBTITLE_CB_DFX_STATUS,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardPlayerService");

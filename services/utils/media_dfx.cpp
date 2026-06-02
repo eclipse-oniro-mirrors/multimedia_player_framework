@@ -36,6 +36,7 @@ namespace {
     using CallType = OHOS::Media::CallType;
     using StallingInfo = OHOS::Media::StallingInfo;
     using PlaybackEventInfo = OHOS::Media::PlaybackEventInfo;
+    using SubtitleCbStateCounter = OHOS::Media::SubtitleCbStateCounter;
     using StallingEventList = std::list<std::pair<uint64_t, std::shared_ptr<std::vector<StallingInfo>>>>;
     using json = nlohmann::json;
     using PlayErrEvent = OHOS::Media::PlayErrEvent;
@@ -54,6 +55,11 @@ namespace {
         std::map<int32_t, std::list<std::pair<uint64_t, std::shared_ptr<OHOS::Media::Meta>>>>> reportMediaInfoMap_;
     std::map<OHOS::Media::CallType, std::map<int32_t, int32_t>> mediaMaxInstanceNumberMap_;
     std::map<uint64_t, std::pair<OHOS::Media::CallType, int32_t>> idMap_;
+
+    std::mutex subtitleCbMut_;
+    std::mutex subtitleCbReportMut_;
+    std::map<uint64_t, SubtitleCbStateCounter> subtitleCbCounterMap_;
+    std::map<OHOS::Media::CallType, std::map<int32_t, std::list<SubtitleCbStateCounter>>> reportSubtitleCbCounterMap_;
 
     std::map<OHOS::Media::CallType,
         std::map<int32_t, std::list<std::pair<uint64_t, std::shared_ptr<std::vector<OHOS::Media::Format>>>>>>
@@ -247,6 +253,7 @@ namespace {
             reportMediaInfoMap_[ct][uid].push_back(metaAppIdPair);
         }
         g_reachMaxMapSize = (reportMediaInfoMap_[ct].size() >= MAX_MAP_SIZE);
+        CollectSubtitleCbCounter(ct, uid, instanceId);
         return true;
     }
 
@@ -267,6 +274,10 @@ namespace {
         {
             std::lock_guard<std::mutex> lock(collectMut_);
             reportPlaybackInfoMap_.clear();
+        }
+        {
+            std::lock_guard<std::mutex> lock(subtitleCbReportMut_);
+            reportSubtitleCbCounterMap_.clear();
         }
         UpdateMaxInsNumberMap(OHOS::Media::CallType::AVPLAYER);
         return OHOS::Media::MSERR_OK;
@@ -302,7 +313,37 @@ namespace {
             playErrInfoMap_.clear();
         }
     }
-    
+
+    json BuildSubtitleCbStatsJson(CallType callType, int32_t uid)
+    {
+        std::lock_guard<std::mutex> lock(subtitleCbReportMut_);
+        json subtitleCbStats = json::array();
+        auto ctIt = reportSubtitleCbCounterMap_.find(callType);
+        if (ctIt == reportSubtitleCbCounterMap_.end()) {
+            return subtitleCbStats;
+        }
+        auto uidIt = ctIt->second.find(uid);
+        if (uidIt == ctIt->second.end()) {
+            return subtitleCbStats;
+        }
+        for (const auto &counter : uidIt->second) {
+            json statJson;
+            statJson["appName"] = counter.appName;
+            statJson["instanceId"] = std::to_string(counter.instanceId);
+            json regByState = json::object();
+            for (const auto &pair : counter.registerCountByState) {
+                regByState[std::to_string(pair.first)] = pair.second;
+            }
+            statJson["registerCountByState"] = regByState;
+            json unregByState = json::object();
+            for (const auto &pair : counter.unregisterCountByState) {
+                unregByState[std::to_string(pair.first)] = pair.second;
+            }
+            statJson["unregisterCountByState"] = unregByState;
+            subtitleCbStats.push_back(statJson);
+        }
+        return subtitleCbStats;
+    }
 } // namespace
 
 namespace OHOS {
@@ -466,6 +507,7 @@ void MediaEvent::CommonStatisicsEventWrite(CallType callType, OHOS::HiviewDFX::H
                     eventInfoJson["maxInstanceNum"] = 0;
                 }
             }
+            SetSubtitleCbStats(callType, kv.first, eventInfoJson);
             if (hasPlaybackMetrics) {
                 eventInfoJson["playbackMetrics"] = playbackMetrics;
             }
@@ -481,6 +523,16 @@ void MediaEvent::CommonStatisicsEventWrite(CallType callType, OHOS::HiviewDFX::H
 #endif
     StatisicsHiSysEventWrite(callType, type, infoArr);
 }
+
+#ifndef CROSS_PLATFORM
+void MediaEvent::SetSubtitleCbStats(CallType callType, int32_t uid, json& eventInfoJson)
+{
+    json subtitleCbStats = BuildSubtitleCbStatsJson(callType, uid);
+    if (!subtitleCbStats.empty()) {
+        eventInfoJson["subtitleCbStats"] = subtitleCbStats;
+    }
+}
+#endif
 
 #ifndef CROSS_PLATFORM
 void MediaEvent::ParseOneEvent(const std::pair<uint64_t, std::shared_ptr<OHOS::Media::Meta>> &listPair,
@@ -731,6 +783,59 @@ void GetMaxInstanceNumber(CallType callType, int32_t uid, uint64_t instanceId, i
     } else {
         mediaMaxInstanceNumberMap_[callType][uid] = curInsNumber;
         MEDIA_LOG_I("CreateMediaInfo: Successfully created new maxInsNumber for callType and uid ");
+    }
+}
+
+int32_t RecordSubtitleCbRegister(CallType callType, int32_t uid, uint64_t instanceId, int32_t state)
+{
+    std::lock_guard<std::mutex> lock(subtitleCbMut_);
+    auto it = subtitleCbCounterMap_.find(instanceId);
+    if (it == subtitleCbCounterMap_.end()) {
+        SubtitleCbStateCounter counter;
+        counter.appName = GetClientBundleName(uid);
+        counter.uid = uid;
+        counter.instanceId = instanceId;
+        counter.registerCountByState[state] = 1;
+        subtitleCbCounterMap_[instanceId] = counter;
+    } else {
+        it->second.registerCountByState[state]++;
+    }
+    return MSERR_OK;
+}
+
+int32_t RecordSubtitleCbUnregister(CallType callType, int32_t uid, uint64_t instanceId, int32_t state)
+{
+    std::lock_guard<std::mutex> lock(subtitleCbMut_);
+    auto it = subtitleCbCounterMap_.find(instanceId);
+    if (it == subtitleCbCounterMap_.end()) {
+        SubtitleCbStateCounter counter;
+        counter.appName = GetClientBundleName(uid);
+        counter.uid = uid;
+        counter.instanceId = instanceId;
+        counter.unregisterCountByState[state] = 1;
+        subtitleCbCounterMap_[instanceId] = counter;
+    } else {
+        it->second.unregisterCountByState[state]++;
+    }
+    return MSERR_OK;
+}
+
+void CollectSubtitleCbCounter(CallType ct, int32_t uid, uint64_t instanceId)
+{
+    SubtitleCbStateCounter subtitleCounter;
+    {
+        std::lock_guard<std::mutex> subtitleLock(subtitleCbMut_);
+        auto subIt = subtitleCbCounterMap_.find(instanceId);
+        if (subIt != subtitleCbCounterMap_.end()) {
+            subtitleCounter = subIt->second;
+            subtitleCbCounterMap_.erase(subIt);
+        } else {
+            MEDIA_LOG_W("CollectSubtitleCbCounter: not found for instanceId=%{public}" PRIu64, instanceId);
+        }
+    }
+    if (subtitleCounter.instanceId != 0) {
+        std::lock_guard<std::mutex> subtitleLock(subtitleCbReportMut_);
+        reportSubtitleCbCounterMap_[ct][uid].push_back(subtitleCounter);
     }
 }
 

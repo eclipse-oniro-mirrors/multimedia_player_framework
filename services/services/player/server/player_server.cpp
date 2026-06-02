@@ -2504,6 +2504,18 @@ int32_t PlayerServer::SetDeviceChangeCbStatus(bool status)
     return MSERR_OK;
 }
 
+int32_t PlayerServer::SetSubtitleCbDfxStatus(bool isRegistered)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    int32_t state = static_cast<int32_t>(lastOpStatus_.load());
+    if (isRegistered) {
+        RecordSubtitleCbRegister(CallType::AVPLAYER, appUid_, instanceId_, state);
+    } else {
+        RecordSubtitleCbUnregister(CallType::AVPLAYER, appUid_, instanceId_, state);
+    }
+    return MSERR_OK;
+}
+
 void PlayerServer::UpdateContinousBatchNo()
 {
     seekContinousBatchNo_++;

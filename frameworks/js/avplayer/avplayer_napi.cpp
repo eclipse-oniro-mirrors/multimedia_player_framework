@@ -4416,6 +4416,11 @@ void AVPlayerNapi::HandleListenerStateChange(std::string callbackName, bool stat
     if (callbackName == "audioInterrupt") {
         return (void)player_->EnableReportAudioInterrupt(state);
     }
+
+    if (callbackName == "subtitleUpdate") {
+        MEDIA_LOGI("HandleListenerStateChange: subtitleUpdate, state=%{public}d", state);
+        return (void)player_->SetSubtitleCbDfxStatus(state);
+    }
 }
 
 void AVPlayerNapi::SeiMessageCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName,

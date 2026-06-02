@@ -858,5 +858,23 @@ HWTEST_F(PlayerServerUnitTest, Player_GetLoadedRanges_007, TestSize.Level1)
     std::vector<Plugins::SeekRange> loadedRanges;
     EXPECT_EQ(MSERR_OK, server_->GetLoadedRanges(loadedRanges));
 }
+
+HWTEST_F(PlayerServerUnitTest, Player_SetSubtitleCbDfxStatus_Register_001, TestSize.Level1)
+{
+    std::shared_ptr<PlayerServerTestAccessor> accessor = std::make_shared<PlayerServerTestAccessor>();
+    (void)accessor->Init();
+    accessor->lastOpStatus_ = PLAYER_PREPARED;
+    EXPECT_EQ(MSERR_OK, accessor->SetSubtitleCbDfxStatus(true));
+    EXPECT_EQ(MSERR_OK, accessor->SetSubtitleCbDfxStatus(false));
+}
+
+HWTEST_F(PlayerServerUnitTest, Player_SetSubtitleCbDfxStatus_Unregister_001, TestSize.Level1)
+{
+    std::shared_ptr<PlayerServerTestAccessor> accessor = std::make_shared<PlayerServerTestAccessor>();
+    (void)accessor->Init();
+    accessor->lastOpStatus_ = PLAYER_STARTED;
+    EXPECT_EQ(MSERR_OK, accessor->SetSubtitleCbDfxStatus(false));
+    EXPECT_EQ(MSERR_OK, accessor->SetSubtitleCbDfxStatus(true));
+}
 } // namespace Media
 } // namespace OHOS

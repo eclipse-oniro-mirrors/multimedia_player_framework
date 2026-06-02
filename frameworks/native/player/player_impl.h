@@ -96,6 +96,7 @@ public:
     int32_t SetVideoWindowSize(int32_t width, int32_t height) override;
     int32_t SetMaxAmplitudeCbStatus(bool status) override;
     int32_t SetDeviceChangeCbStatus(bool status) override;
+    int32_t SetSubtitleCbDfxStatus(bool isRegistered) override;
     bool IsSeekContinuousSupported() override;
     int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes) override;
     int32_t EnableReportMediaProgress(bool enable) override;

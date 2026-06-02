@@ -128,6 +128,7 @@ public:
     MOCK_METHOD(int32_t, GetTrackSelectionFilter, (AVPlayTrackSelectionFilter &trackFilter), (override));
     MOCK_METHOD(int32_t, SetVideoOutput, (sptr<Surface> surface), (override));
     MOCK_METHOD(int32_t, GetVideoSample, (int32_t &outputResult), (override));
+    MOCK_METHOD(int32_t, SetSubtitleCbDfxStatus, (bool isRegistered), (override));
     MOCK_METHOD(int32_t, SetPCMOutputCallback, (const std::shared_ptr<PlayerCallback> &callback), (override));
     MOCK_METHOD(int32_t, SetPCMProcessorCallback, (const std::shared_ptr<PlayerCallback> &callback), (override));
     MOCK_METHOD(int32_t, SetPCMProcessorMaxLen, (int32_t maxProcessedPcmLen), (override));

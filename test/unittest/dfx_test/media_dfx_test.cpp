@@ -304,5 +304,200 @@ HWTEST_F(MediaDfxTest, ParseOneEvent_StatisticEventWriteBundleName, TestSize.Lev
     EXPECT_NE(ret, false);
     EXPECT_EQ(mediaEvent_->msg_, testvalue);
 }
+
+HWTEST_F(MediaDfxTest, RecordSubtitleCbRegister_001, TestSize.Level0) {
+    uint64_t instanceId = 100;
+    int32_t state = 4;
+    int32_t ret = RecordSubtitleCbRegister(CallType::AVPLAYER, TEST_UID_ID_1, instanceId, state);
+    EXPECT_EQ(ret, MSERR_OK);
+    ret = RecordSubtitleCbRegister(CallType::AVPLAYER, TEST_UID_ID_1, instanceId, state);
+    EXPECT_EQ(ret, MSERR_OK);
+    CollectSubtitleCbCounter(CallType::AVPLAYER, TEST_UID_ID_1, instanceId);
+    json result = BuildSubtitleCbStatsJson(CallType::AVPLAYER, TEST_UID_ID_1);
+    ASSERT_FALSE(result.empty());
+    EXPECT_EQ(result[0]["registerCountByState"][std::to_string(state)], 2);
+    subtitleCbCounterMap_.clear();
+    reportSubtitleCbCounterMap_.clear();
+}
+
+HWTEST_F(MediaDfxTest, RecordSubtitleCbUnregister_001, TestSize.Level0) {
+    uint64_t instanceId = 101;
+    int32_t state = 4;
+    int32_t ret = RecordSubtitleCbUnregister(CallType::AVPLAYER, TEST_UID_ID_1, instanceId, state);
+    EXPECT_EQ(ret, MSERR_OK);
+    ret = RecordSubtitleCbUnregister(CallType::AVPLAYER, TEST_UID_ID_1, instanceId, state);
+    EXPECT_EQ(ret, MSERR_OK);
+    CollectSubtitleCbCounter(CallType::AVPLAYER, TEST_UID_ID_1, instanceId);
+    json result = BuildSubtitleCbStatsJson(CallType::AVPLAYER, TEST_UID_ID_1);
+    ASSERT_FALSE(result.empty());
+    EXPECT_EQ(result[0]["unregisterCountByState"][std::to_string(state)], 2);
+    subtitleCbCounterMap_.clear();
+    reportSubtitleCbCounterMap_.clear();
+}
+
+HWTEST_F(MediaDfxTest, RecordSubtitleCbRegister_Unregister_001, TestSize.Level0) {
+    uint64_t instanceId = 102;
+    int32_t regState = 2;
+    int32_t unregState = 4;
+    int32_t ret = RecordSubtitleCbRegister(CallType::AVPLAYER, TEST_UID_ID_1, instanceId, regState);
+    EXPECT_EQ(ret, MSERR_OK);
+    ret = RecordSubtitleCbUnregister(CallType::AVPLAYER, TEST_UID_ID_1, instanceId, unregState);
+    EXPECT_EQ(ret, MSERR_OK);
+    CollectSubtitleCbCounter(CallType::AVPLAYER, TEST_UID_ID_1, instanceId);
+    json result = BuildSubtitleCbStatsJson(CallType::AVPLAYER, TEST_UID_ID_1);
+    ASSERT_FALSE(result.empty());
+    EXPECT_EQ(result[0]["registerCountByState"][std::to_string(regState)], 1);
+    EXPECT_EQ(result[0]["unregisterCountByState"][std::to_string(unregState)], 1);
+    subtitleCbCounterMap_.clear();
+    reportSubtitleCbCounterMap_.clear();
+}
+
+HWTEST_F(MediaDfxTest, RecordSubtitleCbRegister_MultipleStates, TestSize.Level0) {
+    uint64_t instanceId = 200;
+    int32_t ret = RecordSubtitleCbRegister(CallType::AVPLAYER, TEST_UID_ID_1, instanceId, 2);
+    EXPECT_EQ(ret, MSERR_OK);
+    ret = RecordSubtitleCbRegister(CallType::AVPLAYER, TEST_UID_ID_1, instanceId, 4);
+    EXPECT_EQ(ret, MSERR_OK);
+    auto it = subtitleCbCounterMap_.find(instanceId);
+    ASSERT_NE(it, subtitleCbCounterMap_.end());
+    EXPECT_EQ(it->second.registerCountByState[2], 1);
+    EXPECT_EQ(it->second.registerCountByState[4], 1);
+    subtitleCbCounterMap_.clear();
+    reportSubtitleCbCounterMap_.clear();
+}
+
+HWTEST_F(MediaDfxTest, RecordSubtitleCbUnregister_MultipleStates, TestSize.Level0) {
+    uint64_t instanceId = 201;
+    int32_t ret = RecordSubtitleCbUnregister(CallType::AVPLAYER, TEST_UID_ID_1, instanceId, 2);
+    EXPECT_EQ(ret, MSERR_OK);
+    ret = RecordSubtitleCbUnregister(CallType::AVPLAYER, TEST_UID_ID_1, instanceId, 4);
+    EXPECT_EQ(ret, MSERR_OK);
+    auto it = subtitleCbCounterMap_.find(instanceId);
+    ASSERT_NE(it, subtitleCbCounterMap_.end());
+    EXPECT_EQ(it->second.unregisterCountByState[2], 1);
+    EXPECT_EQ(it->second.unregisterCountByState[4], 1);
+    subtitleCbCounterMap_.clear();
+    reportSubtitleCbCounterMap_.clear();
+}
+
+HWTEST_F(MediaDfxTest, CollectSubtitleCbCounter_FoundInMap, TestSize.Level0) {
+    uint64_t instanceId = 300;
+    RecordSubtitleCbRegister(CallType::AVPLAYER, TEST_UID_ID_1, instanceId, 4);
+    ASSERT_NE(subtitleCbCounterMap_.find(instanceId), subtitleCbCounterMap_.end());
+    CollectSubtitleCbCounter(CallType::AVPLAYER, TEST_UID_ID_1, instanceId);
+    EXPECT_EQ(subtitleCbCounterMap_.find(instanceId), subtitleCbCounterMap_.end());
+    ASSERT_NE(reportSubtitleCbCounterMap_.find(CallType::AVPLAYER), reportSubtitleCbCounterMap_.end());
+    ASSERT_NE(reportSubtitleCbCounterMap_[CallType::AVPLAYER].find(TEST_UID_ID_1),
+        reportSubtitleCbCounterMap_[CallType::AVPLAYER].end());
+    EXPECT_EQ(reportSubtitleCbCounterMap_[CallType::AVPLAYER][TEST_UID_ID_1].size(), 1);
+    subtitleCbCounterMap_.clear();
+    reportSubtitleCbCounterMap_.clear();
+}
+
+HWTEST_F(MediaDfxTest, CollectSubtitleCbCounter_NotFoundInMap, TestSize.Level0) {
+    uint64_t instanceId = 301;
+    EXPECT_EQ(subtitleCbCounterMap_.find(instanceId), subtitleCbCounterMap_.end());
+    CollectSubtitleCbCounter(CallType::AVPLAYER, TEST_UID_ID_1, instanceId);
+    EXPECT_EQ(reportSubtitleCbCounterMap_.find(CallType::AVPLAYER), reportSubtitleCbCounterMap_.end());
+    subtitleCbCounterMap_.clear();
+    reportSubtitleCbCounterMap_.clear();
+}
+
+HWTEST_F(MediaDfxTest, BuildSubtitleCbStatsJson_CallTypeNotFound, TestSize.Level0) {
+    reportSubtitleCbCounterMap_[CallType::AVRECORDER] = {};
+    json result = BuildSubtitleCbStatsJson(CallType::AVRECORDER, TEST_UID_ID_1);
+    EXPECT_TRUE(result.empty());
+    result = BuildSubtitleCbStatsJson(CallType::AVRECORDER, 999);
+    EXPECT_TRUE(result.empty());
+    result = BuildSubtitleCbStatsJson(CallType::METADATA_RETRIEVER, TEST_UID_ID_1);
+    EXPECT_TRUE(result.empty());
+    subtitleCbCounterMap_.clear();
+    reportSubtitleCbCounterMap_.clear();
+}
+
+HWTEST_F(MediaDfxTest, BuildSubtitleCbStatsJson_UidNotFound, TestSize.Level0) {
+    reportSubtitleCbCounterMap_[CallType::AVPLAYER] = {};
+    json result = BuildSubtitleCbStatsJson(CallType::AVPLAYER, TEST_UID_ID_1);
+    EXPECT_TRUE(result.empty());
+    subtitleCbCounterMap_.clear();
+    reportSubtitleCbCounterMap_.clear();
+}
+
+#ifndef CROSS_PLATFORM
+HWTEST_F(MediaDfxTest, BuildSubtitleCbStatsJson_HasData, TestSize.Level0) {
+    uint64_t instanceId = 400;
+    RecordSubtitleCbRegister(CallType::AVPLAYER, TEST_UID_ID_1, instanceId, 2);
+    RecordSubtitleCbRegister(CallType::AVPLAYER, TEST_UID_ID_1, instanceId, 4);
+    RecordSubtitleCbUnregister(CallType::AVPLAYER, TEST_UID_ID_1, instanceId, 4);
+    CollectSubtitleCbCounter(CallType::AVPLAYER, TEST_UID_ID_1, instanceId);
+    json result = BuildSubtitleCbStatsJson(CallType::AVPLAYER, TEST_UID_ID_1);
+    EXPECT_FALSE(result.empty());
+    EXPECT_EQ(result.size(), 1);
+    subtitleCbCounterMap_.clear();
+    reportSubtitleCbCounterMap_.clear();
+}
+
+HWTEST_F(MediaDfxTest, SetSubtitleCbStats_EmptyStats, TestSize.Level0) {
+    json eventInfoJson;
+    reportSubtitleCbCounterMap_[CallType::AVRECORDER] = {};
+    mediaEvent_->SetSubtitleCbStats(CallType::AVRECORDER, TEST_UID_ID_1, eventInfoJson);
+    EXPECT_TRUE(eventInfoJson.find("subtitleCbStats") == eventInfoJson.end());
+    mediaEvent_->SetSubtitleCbStats(CallType::AVPLAYER, TEST_UID_ID_1, eventInfoJson);
+    EXPECT_TRUE(eventInfoJson.find("subtitleCbStats") == eventInfoJson.end());
+    subtitleCbCounterMap_.clear();
+    reportSubtitleCbCounterMap_.clear();
+}
+
+HWTEST_F(MediaDfxTest, SetSubtitleCbStats_NonEmptyStats, TestSize.Level0) {
+    uint64_t instanceId = 401;
+    RecordSubtitleCbRegister(CallType::AVPLAYER, TEST_UID_ID_1, instanceId, 4);
+    CollectSubtitleCbCounter(CallType::AVPLAYER, TEST_UID_ID_1, instanceId);
+    json eventInfoJson;
+    mediaEvent_->SetSubtitleCbStats(CallType::AVPLAYER, TEST_UID_ID_1, eventInfoJson);
+    EXPECT_TRUE(eventInfoJson.find("subtitleCbStats") != eventInfoJson.end());
+    subtitleCbCounterMap_.clear();
+    reportSubtitleCbCounterMap_.clear();
+}
+#endif
+
+HWTEST_F(MediaDfxTest, CollectReportMediaInfo_WithSubtitleData, TestSize.Level0) {
+    uint64_t instanceId = 500;
+    int32_t ret = CreateMediaInfo(CallType::AVPLAYER, TEST_UID_ID_1, instanceId);
+    ASSERT_EQ(ret, MSERR_OK);
+    RecordSubtitleCbRegister(CallType::AVPLAYER, TEST_UID_ID_1, instanceId, 4);
+    ASSERT_NE(subtitleCbCounterMap_.find(instanceId), subtitleCbCounterMap_.end());
+    ret = ReportMediaInfo(instanceId);
+    ASSERT_EQ(ret, MSERR_OK);
+    ASSERT_NE(reportSubtitleCbCounterMap_.find(CallType::AVPLAYER), reportSubtitleCbCounterMap_.end());
+    subtitleCbCounterMap_.clear();
+    reportSubtitleCbCounterMap_.clear();
+}
+
+HWTEST_F(MediaDfxTest, CollectReportMediaInfo_NoSubtitleData, TestSize.Level0) {
+    uint64_t instanceId = 501;
+    int32_t ret = CreateMediaInfo(CallType::AVPLAYER, TEST_UID_ID_1, instanceId);
+    ASSERT_EQ(ret, MSERR_OK);
+    EXPECT_EQ(subtitleCbCounterMap_.find(instanceId), subtitleCbCounterMap_.end());
+    ret = ReportMediaInfo(instanceId);
+    ASSERT_EQ(ret, MSERR_OK);
+    EXPECT_EQ(reportSubtitleCbCounterMap_.find(CallType::AVPLAYER), reportSubtitleCbCounterMap_.end());
+    subtitleCbCounterMap_.clear();
+    reportSubtitleCbCounterMap_.clear();
+}
+
+HWTEST_F(MediaDfxTest, StatisticsEventReport_ClearsSubtitleReportMap, TestSize.Level0) {
+    reportMediaInfoMap_[CallType::AVPLAYER][TEST_UID_ID_1] = {};
+    SubtitleCbStateCounter counter;
+    counter.appName = "test";
+    counter.uid = TEST_UID_ID_1;
+    counter.instanceId = 600;
+    counter.registerCountByState[4] = 1;
+    reportSubtitleCbCounterMap_[CallType::AVPLAYER][TEST_UID_ID_1].push_back(counter);
+    ASSERT_NE(reportSubtitleCbCounterMap_.find(CallType::AVPLAYER), reportSubtitleCbCounterMap_.end());
+    int32_t result = StatisticsEventReport();
+    ASSERT_EQ(result, MSERR_OK);
+    EXPECT_EQ(reportSubtitleCbCounterMap_.find(CallType::AVPLAYER), reportSubtitleCbCounterMap_.end());
+    reportMediaInfoMap_.clear();
+}
 }
 }

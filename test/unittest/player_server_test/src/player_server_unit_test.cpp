@@ -6187,5 +6187,31 @@ HWTEST_F(PlayerServerUnitTest, Player_SeekToDefaultPosition_001, TestSize.Level1
     EXPECT_EQ(MSERR_OK, player_->Pause());
     EXPECT_EQ(MSERR_OK, player_->SeekToDefaultPosition());
 }
+
+HWTEST_F(PlayerServerUnitTest, Player_SetSubtitleCbDfxStatus_Register_001, TestSize.Level1)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->SetSubtitleCbDfxStatus(true));
+    EXPECT_EQ(MSERR_OK, player_->SetSubtitleCbDfxStatus(false));
+}
+
+HWTEST_F(PlayerServerUnitTest, Player_SetSubtitleCbDfxStatus_Unregister_001, TestSize.Level1)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->SetSubtitleCbDfxStatus(false));
+    EXPECT_EQ(MSERR_OK, player_->SetSubtitleCbDfxStatus(true));
+}
+
+HWTEST_F(PlayerServerUnitTest, Player_SetSubtitleCbDfxStatus_RegisterAfterPrepare_001, TestSize.Level1)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->SetSubtitleCbDfxStatus(true));
+}
 } // namespace Media
 } // namespace OHOS

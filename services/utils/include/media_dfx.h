@@ -72,6 +72,14 @@ enum PlayErrEvent {
     AUDIO_ERROR
 };
 
+struct SubtitleCbStateCounter {
+    std::string appName {};
+    int32_t uid {0};
+    uint64_t instanceId {0};
+    std::map<int32_t, int32_t> registerCountByState {};
+    std::map<int32_t, int32_t> unregisterCountByState {};
+};
+
 using StallingEventList = std::list<std::pair<uint64_t, std::shared_ptr<std::vector<StallingInfo>>>>;
 
 enum CallType {
@@ -120,6 +128,7 @@ private:
         const std::vector<std::string>& infoArr);
 #ifndef CROSS_PLATFORM
     void ParseOneEvent(const std::pair<uint64_t, std::shared_ptr<OHOS::Media::Meta>> &listPair, json& metaInfoJson);
+    void SetSubtitleCbStats(CallType callType, int32_t uid, json& eventInfoJson);
 #endif
     std::string msg_;
 };
@@ -155,6 +164,13 @@ __attribute__((visibility("default"))) int32_t AppendStallingInfo(const Stalling
 __attribute__((visibility("default"))) int32_t AppendPlaybackInfo(
     const std::shared_ptr<OHOS::Media::Format> &fmt, uint64_t instanceId);
 __attribute__((visibility("default"))) int32_t AppendPlayErrInfo(PlayErrEvent eventType, uint64_t instanceId);
+
+__attribute__((visibility("default"))) int32_t RecordSubtitleCbRegister(CallType callType, int32_t uid,
+    uint64_t instanceId, int32_t state);
+__attribute__((visibility("default"))) int32_t RecordSubtitleCbUnregister(CallType callType, int32_t uid,
+    uint64_t instanceId, int32_t state);
+__attribute__((visibility("default"))) void CollectSubtitleCbCounter(CallType callType, int32_t uid,
+    uint64_t instanceId);
 
 class __attribute__((visibility("default"))) MediaTrace : public NoCopyable {
 public:

@@ -704,6 +704,21 @@ public:
         (void)status;
         return 0;
     }
+
+    /**
+     * @brief Set subtitle callback dfx status for tracking subtitle update register/unregister.
+     *
+     * @return Returns {@link MSERR_OK} if the subtitle callback dfx status is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetSubtitleCbDfxStatus(bool isRegistered)
+    {
+        (void)isRegistered;
+        return 0;
+    }
+
     /**
      * @brief Obtain the api version of application.
      *

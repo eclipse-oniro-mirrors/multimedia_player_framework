@@ -1603,5 +1603,33 @@ HWTEST_F(PlayerImplUnitTest, OnPCMProcessor_001, TestSize.Level0)
     EXPECT_CALL(*callback, OnPCMProcessor(_)).Times(1);
     savedCallback->OnPCMProcessor(buffer);
 }
+
+HWTEST_F(PlayerImplUnitTest, SetSubtitleCbDfxStatus_Register_001, TestSize.Level0)
+{
+    ASSERT_NE(playerImpl_, nullptr);
+    auto mockService = std::make_shared<MockIPlayerService>();
+    playerImpl_->playerService_ = mockService;
+    EXPECT_CALL(*mockService, SetSubtitleCbDfxStatus(true)).WillOnce(Return(MSERR_OK));
+    auto ret = playerImpl_->SetSubtitleCbDfxStatus(true);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(PlayerImplUnitTest, SetSubtitleCbDfxStatus_Unregister_001, TestSize.Level0)
+{
+    ASSERT_NE(playerImpl_, nullptr);
+    auto mockService = std::make_shared<MockIPlayerService>();
+    playerImpl_->playerService_ = mockService;
+    EXPECT_CALL(*mockService, SetSubtitleCbDfxStatus(false)).WillOnce(Return(MSERR_OK));
+    auto ret = playerImpl_->SetSubtitleCbDfxStatus(false);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(PlayerImplUnitTest, SetSubtitleCbDfxStatus_NullService_001, TestSize.Level0)
+{
+    ASSERT_NE(playerImpl_, nullptr);
+    playerImpl_->playerService_ = nullptr;
+    auto ret = playerImpl_->SetSubtitleCbDfxStatus(true);
+    EXPECT_EQ(ret, MSERR_SERVICE_DIED);
+}
 } // namespace Media
 } // namespace OHOS
