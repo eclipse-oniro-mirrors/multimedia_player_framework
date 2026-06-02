@@ -66,6 +66,16 @@ std::map<std::string, AVTransCoderNapi::AvTransCoderTaskqFunc> AVTransCoderNapi:
     {AVTransCoderOpt::CANCEL, &AVTransCoderNapi::Cancel},
     {AVTransCoderOpt::RELEASE, &AVTransCoderNapi::Release},
 };
+const std::unordered_map<AudioCodecFormat, std::set<OutputFormatType>> AUDIO_MUX_FORMAT_INFO = {
+    {AudioCodecFormat::AAC_LC, {OutputFormatType::FORMAT_MPEG_4, OutputFormatType::FORMAT_M4A,
+        OutputFormatType::FORMAT_AAC}},
+    {AudioCodecFormat::AUDIO_MPEG, {OutputFormatType::FORMAT_MPEG_4, OutputFormatType::FORMAT_MP3}},
+    {AudioCodecFormat::AUDIO_AMR_NB, {OutputFormatType::FORMAT_AMR}},
+    {AudioCodecFormat::AUDIO_AMR_WB, {OutputFormatType::FORMAT_AMR}},
+    {AudioCodecFormat::AUDIO_RAW, {OutputFormatType::FORMAT_WAV}},
+    {AudioCodecFormat::AUDIO_DEFAULT, {OutputFormatType::FORMAT_MPEG_4, OutputFormatType::FORMAT_M4A,
+        OutputFormatType::FORMAT_AAC}},
+};
 
 AVTransCoderNapi::AVTransCoderNapi()
 {
@@ -998,8 +1008,9 @@ int32_t AVTransCoderNapi::GetAudioConfig(std::unique_ptr<AVTransCoderAsyncContex
     std::string audioCodec = CommonNapi::GetPropertyString(env, args, "audioCodec");
     std::string audioCodecV2 = CommonNapi::GetPropertyString(env, args, "audioCodecV2");
     (void)AVTransCoderNapi::GetAudioCodecFormat(audioCodec, config->audioCodecFormat);
-    (void)AVTransCoderNapi::GetAudioCodecFormatV2(audioCodecV2, config->audioCodecFormatV2);
+    int32_t ret = AVTransCoderNapi::GetAudioCodecFormatV2(audioCodecV2, config->audioCodecFormatV2);
     isAudioV2Valid = !audioCodecV2.empty();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to set audioCodecV2");
     if (isAudioV2Valid) {
         MEDIA_LOGI("audio encoder mime is v2 %{public}s", audioCodecV2.c_str());
     } else {
@@ -1060,6 +1071,15 @@ int32_t AVTransCoderNapi::GetOutputFormat(const std::string &extension, OutputFo
     return MSERR_INVALID_VAL;
 }
 
+bool AVTransCoderNapi::CanAddTrack(const AudioCodecFormat &audioType, const OutputFormatType &muxerType)
+{
+    auto it = AUDIO_MUX_FORMAT_INFO.find(static_cast<AudioCodecFormat>(audioType));
+    if (it == AUDIO_MUX_FORMAT_INFO.end()) {
+        return false;
+    }
+    return it->second.find(muxerType) != it->second.end();
+}
+
 int32_t AVTransCoderNapi::GetConfig(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx,
     napi_env env, napi_value args)
 {
@@ -1085,6 +1105,15 @@ int32_t AVTransCoderNapi::GetConfig(std::unique_ptr<AVTransCoderAsyncContext> &a
     std::string fileFormat = CommonNapi::GetPropertyString(env, args, "fileFormat");
     ret = AVTransCoderNapi::GetOutputFormat(fileFormat, config->fileFormat);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, (asyncCtx->AVTransCoderSignError(ret, "GetOutputFormat", "fileFormat"), ret));
+    if (isAudioV2Valid) {
+        CHECK_AND_RETURN_RET(CanAddTrack(config->audioCodecFormatV2, config->fileFormat),
+            (asyncCtx->AVTransCoderSignError(MSERR_INVALID_VAL, "GetOutputFormat", "fileFormat"), MSERR_INVALID_VAL));
+    } else {
+        CHECK_AND_RETURN_RET(CanAddTrack(AudioCodecFormat::AAC_LC, config->fileFormat),
+            (asyncCtx->AVTransCoderSignError(MSERR_INVALID_VAL, "GetOutputFormat", "fileFormat"), MSERR_INVALID_VAL));
+        CHECK_AND_RETURN_RET(config->fileFormat != OutputFormatType::FORMAT_AAC,
+            (asyncCtx->AVTransCoderSignError(MSERR_INVALID_VAL, "GetOutputFormat", "fileFormat"), MSERR_INVALID_VAL));
+    }
     
     return MSERR_OK;
 }
