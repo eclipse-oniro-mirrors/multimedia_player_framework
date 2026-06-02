@@ -16,7 +16,6 @@
 #include "avplayer_taihe.h"
 #include "media_log.h"
 #include "media_errors.h"
-#include "media_taihe_utils.h"
 #include "media_dfx.h"
 #include "media_data_source_callback_taihe.h"
 #ifdef SUPPORT_AVPLAYER_DRM

@@ -20,7 +20,7 @@
 #include "taihe/runtime.hpp"
 
 namespace ANI::Media {
-
+const;
 namespace AVPlayerState {
     const std::string STATE_IDLE = "idle";
     const std::string STATE_INITIALIZED = "initialized";

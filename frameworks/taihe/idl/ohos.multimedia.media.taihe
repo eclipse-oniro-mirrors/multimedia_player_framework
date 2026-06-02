@@ -1089,6 +1089,7 @@ interface AVTranscoder {
 struct AVTranscoderConfig {
     audioBitrate: Optional<i32>;
     audioCodec: Optional<CodecMimeType>;
+    audioCodecV2: Optional<CodecMimeType>;
     fileFormat: ContainerFormatType;
     videoBitrate: Optional<i32>;
     videoCodec: Optional<CodecMimeType>;

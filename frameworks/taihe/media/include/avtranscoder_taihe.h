@@ -120,7 +120,7 @@ public:
     void SetFdSrc(ohos::multimedia::media::AVFileDescriptor const& fdSrc);
     int32_t GetFdDst();
     void SetFdDst(int32_t fdDst);
-    void PrepareSync(AVTranscoderConfig const& config);
+    uint PrepareSync(AVTranscoderConfig const& config);
     RetInfo Start();
     RetInfo Pause();
     RetInfo Resume();

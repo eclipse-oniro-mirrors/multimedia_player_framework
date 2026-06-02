@@ -27,6 +27,7 @@
 #include "taihe/runtime.hpp"
 #include "media_data_source_callback_taihe.h"
 #include "task_queue.h"
+#include "media_taihe_utils.h"
 
 namespace ANI::Media {
 using namespace taihe;

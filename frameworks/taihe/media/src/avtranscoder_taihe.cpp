@@ -296,7 +296,7 @@ int32_t AVTranscoderImpl::CheckRepeatOperation(const std::string &opt)
     return MSERR_OK;
 }
 
-void AVTranscoderImpl::PrepareSync(AVTranscoderConfig const& config)
+uint AVTranscoderImpl::PrepareSync(AVTranscoderConfig const& config)
 {
     MediaTrace trace("AVTransCoder::TaihePrepare");
     const std::string &opt = AVTransCoderOpt::PREPARE;
