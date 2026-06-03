@@ -739,6 +739,15 @@ typedef void (*OH_AVScreenCapture_OnUserSelected)(OH_AVScreenCapture* capture,
 typedef void (*OH_AVScreenCapture_OnPrivacyProtect)(OH_AVScreenCapture* capture,
     OH_PrivacyProtectInfo* privacyProtect, void *userData);
 
+/**
+ * @brief Key for obtaining the valid content area information in the screen recording image frame.
+ * The returned value is an int32_t array. The array length is 4.
+ * The array elements are defined as [top,left,width,height].
+ * The value can be obtained from {@link OH_AVFormat_GetIntBuffer}.
+ * @since 26.0.0
+ */
+extern const char *OH_SCREEN_CAPTURE_CONTENT_RECT;
+
 #ifdef __cplusplus
 }
 #endif
