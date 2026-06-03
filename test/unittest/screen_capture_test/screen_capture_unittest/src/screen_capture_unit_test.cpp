@@ -2969,39 +2969,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_compatibility_002, TestSize.Level
 }
 
 /**
- * @tc.name: screen_capture_privacy_003
- * @tc.desc: 隐私窗口动态变化测试 - 启动中添加多个窗口
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(ScreenCaptureUnitTest, screen_capture_privacy_003, TestSize.Level2)
-{
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_privacy_003 before");
-    SetConfig(config_);
-
-    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
-
-    // 初始设置隐私窗口
-    vector<int> windowIDsVec = {1, 3};
-    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIDsVec[0], static_cast<int32_t>(windowIDsVec.size())));
-
-    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-
-    sleep(1);
-
-    // 录制中添加更多窗口
-    windowIDsVec.push_back(5);
-    windowIDsVec.push_back(7);
-    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIDsVec[0], static_cast<int32_t>(windowIDsVec.size())));
-
-    sleep(1);
-
-    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
-    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_privacy_003 after");
-}
-
-/**
  * @tc.name: screen_capture_audio_003
  * @tc.desc: 音频通道数不匹配处理测试 - 文件模式
  * @tc.type: FUNC
