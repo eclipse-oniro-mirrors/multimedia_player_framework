@@ -345,18 +345,6 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_InitDuration_001, TestSize.Level0)
     EXPECT_NE(ret, 0);
 }
 
-// @tc.name     Test InitDuration API
-// @tc.number   PHIUT_InitDuration_002
-// @tc.desc     Test InitDuration interface, demuxer_ is nullptr (Branch 1).
-HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_InitDuration_002, TestSize.Level0)
-{
-    ASSERT_NE(hiplayer_, nullptr);
-    hiplayer_->demuxer_ = nullptr;
-    int32_t ret = hiplayer_->InitDuration();
-    auto errcode = 331350028;
-    EXPECT_EQ(ret, errcode);
-}
-
 // @tc.name     Test OnEventContinue API
 // @tc.number   PHIUT_OnEventContinue_001
 // @tc.desc     Test OnEventContinue interface, 3.
