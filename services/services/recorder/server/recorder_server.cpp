@@ -1248,7 +1248,6 @@ int32_t RecorderServer::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
     MEDIA_LOGI("SetUserMeta in");
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("RecorderServer::SetUserMeta");
-    CHECK_AND_RETURN_RET_LOG(userMeta != nullptr, MSERR_INVALID_VAL, "userMeta is nullptr");
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_PREPARED && status_ != REC_RECORDING && status_ != REC_PAUSED,
         MSERR_INVALID_STATE);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
