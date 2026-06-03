@@ -380,29 +380,41 @@ interface AVPlayer {
     @gen_promise("getTrackDescription")
     GetTrackDescriptionSync(): Array<@record Map<String, MediaDescriptionValue>>;
 
-    @gen_async("stop")
-    @gen_promise("stop")
-    StopSync(): void;
+    @overload("stop")
+    StopAsync(callback: @sts_type("AsyncCallback<void>") Opaque): void;
 
-    @gen_async("play")
-    @gen_promise("play")
-    PlaySync(): void;
+    @overload("stop")
+    StopPromise(): @sts_type("Promise<void>") Opaque;
 
-    @gen_async("reset")
-    @gen_promise("reset")
-    ResetSync(): void;
+    @overload("play")
+    PlayAsync(callback: @sts_type("AsyncCallback<void>") Opaque): void;
 
-    @gen_async("release")
-    @gen_promise("release")
-    ReleaseSync(): void;
+    @overload("play")
+    PlayPromise(): @sts_type("Promise<void>") Opaque;
 
-    @gen_async("pause")
-    @gen_promise("pause")
-    PauseSync(): void;
+    @overload("reset")
+    ResetAsync(callback: @sts_type("AsyncCallback<void>") Opaque): void;
 
-    @gen_async("prepare")
-    @gen_promise("prepare")
-    PrepareSync(): void;
+    @overload("reset")
+    ResetPromise(): @sts_type("Promise<void>") Opaque;
+
+    @overload("release")
+    ReleaseAsync(callback: @sts_type("AsyncCallback<void>") Opaque): void;
+
+    @overload("release")
+    ReleasePromise(): @sts_type("Promise<void>") Opaque;
+
+    @overload("pause")
+    PauseAsync(callback: @sts_type("AsyncCallback<void>") Opaque): void;
+
+    @overload("pause")
+    PausePromise(): @sts_type("Promise<void>") Opaque;
+
+    @overload("prepare")
+    PrepareAsync(callback: @sts_type("AsyncCallback<void>") Opaque): void;
+
+    @overload("prepare")
+    PreparePromise(): @sts_type("Promise<void>") Opaque;
 
     @gen_promise("getSelectedTracks")
     GetSelectedTracksSync(): Array<i32>;
@@ -770,6 +782,7 @@ enum CodecMimeType: String {
     AUDIO_G711MU = "audio/g711mu",
     AUDIO_AMR_NB = "audio/3gpp",
     AUDIO_AMR_WB = "audio/amr-wb",
+    AUDIO_RAW = "audio/raw",
 }
 
 enum ContainerFormatType: String {
@@ -1026,29 +1039,26 @@ interface AVTranscoder {
     @get GetFdDst(): i32;
     @set SetFdDst(fdDst: i32): void;
 
-    @gen_async("prepare")
-    @gen_promise("prepare")
-    PrepareSync(config: AVTranscoderConfig): void;
+    @overload("prepare")
+    PrepareSync(config: AVTranscoderConfig): @sts_type("Promise<void>") Opaque;
 
-    @gen_async("start")
-    @gen_promise("start")
-    StartSync(): void;
+    @overload("start")
+    StartSync(): @sts_type("Promise<void>") Opaque;
 
-    @gen_async("resume")
-    @gen_promise("resume")
-    ResumeSync(): void;
+    @overload("resume")
+    ResumeSync(): @sts_type("Promise<void>") Opaque;
 
-    @gen_async("cancel")
-    @gen_promise("cancel")
-    CancelSync(): void;
+    @overload("cancel")
+    CancelSync(): @sts_type("Promise<void>") Opaque;
 
-    @gen_async("pause")
-    @gen_promise("pause")
-    PauseSync(): void;
+    @overload("pause")
+    PauseSync(): @sts_type("Promise<void>") Opaque;
 
-    @gen_async("release")
-    @gen_promise("release")
-    ReleaseSync(): void;
+    @overload("release")
+    ReleaseSync(): @sts_type("Promise<void>") Opaque;
+
+    @overload("addWatermark")
+    AddWatermarkSync(watermark: image.PixelMap, config: WatermarkConfiguration): @sts_type("Promise<int>") Opaque;
 
     @!sts_inject_into_interface("on(type: string, callback: (data: object)=> void): void;")
     @!sts_inject_into_class("""on(type: string, callback: object): void {
@@ -1089,6 +1099,7 @@ interface AVTranscoder {
 struct AVTranscoderConfig {
     audioBitrate: Optional<i32>;
     audioCodec: Optional<CodecMimeType>;
+    audioCodecV2: Optional<CodecMimeType>;
     fileFormat: ContainerFormatType;
     videoBitrate: Optional<i32>;
     videoCodec: Optional<CodecMimeType>;

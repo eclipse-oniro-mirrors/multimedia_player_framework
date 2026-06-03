@@ -20,6 +20,7 @@
 #include "taihe/runtime.hpp"
 
 namespace ANI::Media {
+constexpr size_t ARGS_SIZE_ONE = 1;
 
 namespace AVPlayerState {
     const std::string STATE_IDLE = "idle";

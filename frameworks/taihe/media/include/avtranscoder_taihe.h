@@ -21,6 +21,17 @@
 #include "transcoder.h"
 #include "task_queue.h"
 #include "media_ani_common.h"
+#include "pixel_map.h"
+
+namespace OHOS {
+namespace Media {
+struct WatermarkConfiguration;
+} // namespace Media
+
+namespace Image {
+class PixelMap;
+} // namespace Image
+} // namespace OHOS
 
 namespace ANI::Media {
 using namespace taihe;
@@ -48,17 +59,21 @@ namespace AVTransCoderOpt {
     const std::string CANCEL = "Cancel";
     const std::string RELEASE = "Release";
     const std::string SET_AV_TRANSCODER_CONFIG = "SetAVTransCoderConfig";
+    const std::string ADD_WATERMARK = "AddWatermark";
 }
 
 constexpr int32_t AVTRANSCODER_DEFAULT_AUDIO_BIT_RATE = 48000;
 constexpr int32_t AVTRANSCODER_DEFAULT_VIDEO_BIT_RATE = -1;
 constexpr int32_t AVTRANSCODER_DEFAULT_FRAME_HEIGHT = -1;
 constexpr int32_t AVTRANSCODER_DEFAULT_FRAME_WIDTH = -1;
+constexpr int32_t AVTRANSCODER_WATERMARK_MAX_LENGTH = 4096;
+constexpr int32_t AVTRANSCODER_WATERMARK_MAX_NUM = 5;
 
 const std::map<std::string, std::vector<std::string>> STATE_LIST = {
     {AVTransCoderState::STATE_IDLE, {
         AVTransCoderOpt::PREPARE,
-        AVTransCoderOpt::RELEASE
+        AVTransCoderOpt::RELEASE,
+        AVTransCoderOpt::ADD_WATERMARK
     }},
     {AVTransCoderState::STATE_PREPARED, {
         AVTransCoderOpt::START,
@@ -102,6 +117,7 @@ struct AVTransCoderAsyncContext;
 
 struct AVTransCoderConfigInner {
     AudioCodecFormat audioCodecFormat = AudioCodecFormat::AUDIO_DEFAULT;
+    AudioCodecFormat audioCodecFormatV2 = AudioCodecFormat::AUDIO_CODEC_FORMAT_BUTT;
     int32_t audioBitrate = AVTRANSCODER_DEFAULT_AUDIO_BIT_RATE;
     OutputFormatType fileFormat = OutputFormatType::FORMAT_DEFAULT;
     VideoCodecFormat videoCodecFormat = VideoCodecFormat::VIDEO_DEFAULT;
@@ -120,7 +136,7 @@ public:
     void SetFdSrc(ohos::multimedia::media::AVFileDescriptor const& fdSrc);
     int32_t GetFdDst();
     void SetFdDst(int32_t fdDst);
-    void PrepareSync(AVTranscoderConfig const& config);
+    uintptr_t PrepareSync(AVTranscoderConfig const& config);
     RetInfo Start();
     RetInfo Pause();
     RetInfo Resume();
@@ -128,12 +144,12 @@ public:
     RetInfo Release();
     RetInfo SetOutputFile(int32_t fd);
 
-    void PauseSync();
-    void ReleaseSync();
-    void StartSync();
-    void ResumeSync();
-    void CancelSync();
-    void ExecuteByPromise(AVTranscoderImpl *taihe, const std::string &opt);
+    uintptr_t PauseSync();
+    uintptr_t ReleaseSync();
+    uintptr_t StartSync();
+    uintptr_t ResumeSync();
+    uintptr_t CancelSync();
+    uintptr_t ExecuteByPromise(AVTranscoderImpl *taihe, const std::string &opt);
     int32_t CheckRepeatOperation(const std::string &opt);
     RetInfo SetInputFile(int32_t fd, int64_t offset, int64_t size);
     int32_t CheckStateMachine(const std::string &opt);
@@ -143,9 +159,11 @@ public:
     static std::shared_ptr<TaskHandler<RetInfo>> GetPrepareTask(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx);
     RetInfo Configure(std::shared_ptr<AVTransCoderConfigInner> config);
     int32_t GetConfig(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx, AVTranscoderConfig const& config);
+    bool CanAddTrack(const AudioCodecFormat &audioType, const OutputFormatType &muxerType);
     int32_t GetAudioConfig(AVTranscoderConfig const& config, std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx);
     int32_t GetVideoConfig(AVTranscoderConfig const& config, std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx);
     int32_t GetAudioCodecFormat(const std::string &mime, AudioCodecFormat &codecFormat);
+    int32_t GetAudioCodecFormatV2(const std::string &mime, AudioCodecFormat &codecFormat);
     int32_t GetVideoCodecFormat(const std::string &mime, VideoCodecFormat &codecFormat);
     int32_t GetOutputFormat(const std::string &extension, OutputFormatType &type);
     void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
@@ -160,6 +178,20 @@ public:
     void OnProgressUpdate(callback_view<void(int32_t)> callback);
     void OffProgressUpdate(optional_view<callback<void(int32_t)>> callback);
 
+    uintptr_t AddWatermarkSync(::ohos::multimedia::image::image::weak::PixelMap watermark,
+        ::ohos::multimedia::media::WatermarkConfiguration const& config);
+    static std::shared_ptr<TaskHandler<RetInfo>> AddWatermarkTask(
+        const std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx);
+    int32_t AddWatermark(std::shared_ptr<OHOS::Media::PixelMap> &pixelMap,
+        std::shared_ptr<OHOS::Media::WatermarkConfiguration> &watermarkConfig);
+    int32_t GetWatermarkParameter(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx,
+        ::ohos::multimedia::image::image::weak::PixelMap watermark,
+        ::ohos::multimedia::media::WatermarkConfiguration const& config);
+    int32_t GetWatermark(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx,
+        ::ohos::multimedia::image::image::weak::PixelMap watermark);
+    int32_t GetWatermarkConfig(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx,
+        ::ohos::multimedia::media::WatermarkConfiguration const& config);
+
     using AvTransCoderTaskqFunc = RetInfo (AVTranscoderImpl::*)();
 private:
     std::shared_ptr<TransCoder> transCoder_ = nullptr;
@@ -172,15 +204,27 @@ private:
     std::shared_ptr<AVTransCoderConfigInner> config_ = nullptr;
     std::map<std::string, std::shared_ptr<AutoRef>> eventCbMap_;
     int32_t dstFd_ = -1;
+    int32_t watermarkCount_ = 0;
+    bool isAudioV2Valid = false;
 };
 
 struct AVTransCoderAsyncContext {
     explicit AVTransCoderAsyncContext() {}
-    ~AVTransCoderAsyncContext() = default;
+    ~AVTransCoderAsyncContext();
 
     void AVTransCoderSignError(int32_t errCode, const std::string &operate,
         const std::string &param, const std::string &add = "");
     void SignError(int32_t code, const std::string &message, bool del = true);
+    void CompleteCallback(RetInfo& result);
+    ani_ref GetTaiheResult(ani_env *threadEnv, RetInfo& result);
+    ani_object IntToAniObject(ani_env *env, int32_t value);
+    ani_env* GetCurrentEnv(ani_vm *vm, bool &isAttach);
+    void ConfigContextEnv();
+    ani_env* env_;
+    ani_resolver bindDeferred_;
+    ani_object promise_;
+    ani_vm *etsVm_;
+    bool isAttach_ = false;
     AVTranscoderImpl *avTransCoder = nullptr;
     std::shared_ptr<AVTransCoderConfigInner> config_ = nullptr;
     std::string opt_ = "";
@@ -190,6 +234,8 @@ struct AVTransCoderAsyncContext {
     std::string errMessage = "";
     bool delFlag = true;
     AVTranscoderImpl *taihe = nullptr;
+    std::shared_ptr<OHOS::Media::PixelMap> pixelMap_ = nullptr;
+    std::shared_ptr<OHOS::Media::WatermarkConfiguration> watermarkConfig_ = nullptr;
 };
 }
 #endif // AVTRANSCODER_TAIHE_H

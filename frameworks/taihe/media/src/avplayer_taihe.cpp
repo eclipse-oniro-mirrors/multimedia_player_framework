@@ -16,7 +16,6 @@
 #include "avplayer_taihe.h"
 #include "media_log.h"
 #include "media_errors.h"
-#include "media_taihe_utils.h"
 #include "media_dfx.h"
 #include "media_data_source_callback_taihe.h"
 #ifdef SUPPORT_AVPLAYER_DRM
@@ -2163,7 +2162,18 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerImpl::AdvanceToMediaSourceTask(con
     return task;
 }
 
-void AVPlayerImpl::StopSync()
+void AVPlayerImpl::StopAsync(uintptr_t callback)
+{
+    StopSync(callback);
+}
+
+uintptr_t AVPlayerImpl::StopPromise()
+{
+    uintptr_t res = StopSync(reinterpret_cast<uintptr_t>(nullptr));
+    return res;
+}
+
+uintptr_t AVPlayerImpl::StopSync(uintptr_t cb)
 {
     MediaTrace trace("AVPlayerImpl::stop");
     MEDIA_LOGI("TaiheStop In");
@@ -2175,7 +2185,7 @@ void AVPlayerImpl::StopSync()
         state == AVPlayerState::STATE_INITIALIZED ||
         state == AVPlayerState::STATE_RELEASED ||
         state == AVPlayerState::STATE_ERROR) {
-        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+        context->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not prepared/playing/paused/completed, unsupport stop operation");
     } else {
         MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheStop EnqueueTask In", FAKE_POINTER(this));
@@ -2183,12 +2193,17 @@ void AVPlayerImpl::StopSync()
         MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheStop EnqueueTask Out", FAKE_POINTER(this));
     }
     MEDIA_LOGI("Wait TaiheStop Task Start");
-    auto t1 = std::thread([context]() {
+
+    context->ConfigContextEnv(cb);
+    
+    std::thread([context]() {
         context->CheckTaskResult();
-    });
-    t1.detach();
+        context->CompleteCallback();
+    }).detach();
+    
     MEDIA_LOGI("Wait TaiheStop Task End");
     MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheStop Out", FAKE_POINTER(this));
+    return reinterpret_cast<uintptr_t>(context->promise_);
 }
 
 bool AVPlayerImpl::IsSystemApp()
@@ -2244,7 +2259,18 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerImpl::PlayTask()
     return task;
 }
 
-void AVPlayerImpl::PlaySync()
+void AVPlayerImpl::PlayAsync(uintptr_t callback)
+{
+    PlaySync(callback);
+}
+
+uintptr_t AVPlayerImpl::PlayPromise()
+{
+    uintptr_t res = PlaySync(reinterpret_cast<uintptr_t>(nullptr));
+    return res;
+}
+
+uintptr_t AVPlayerImpl::PlaySync(uintptr_t cb)
 {
     MediaTrace trace("AVPlayerImpl::play");
     MEDIA_LOGI("TaihePlay In");
@@ -2255,19 +2281,23 @@ void AVPlayerImpl::PlaySync()
         state != AVPlayerState::STATE_PAUSED &&
         state != AVPlayerState::STATE_COMPLETED &&
         state != AVPlayerState::STATE_PLAYING) {
-        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+        context->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not prepared/paused/completed, unsupport play operation");
     } else if (state == AVPlayerState::STATE_COMPLETED && IsLiveSource()) {
-        set_business_error(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "In live mode, replay not be allowed.");
+        context->SignError(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "In live mode, replay not be allowed.");
     } else {
         context->asyncTask = PlayTask();
     }
     MEDIA_LOGI("0x%{public}06" PRIXPTR " TaihePlay EnqueueTask In", FAKE_POINTER(this));
-    auto t1 = std::thread([context]() {
+    context->ConfigContextEnv(cb);
+    
+    std::thread([context]() {
         context->CheckTaskResult(true, TASK_TIME_LIMIT_MS);
-    });
-    t1.detach();
+        context->CompleteCallback();
+    }).detach();
+    
     MEDIA_LOGI("0x%{public}06" PRIXPTR " TaihePlay Out", FAKE_POINTER(this));
+    return reinterpret_cast<uintptr_t>(context->promise_);
 }
 
 void AVPlayerImpl::PauseListenCurrentResource()
@@ -2324,14 +2354,25 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerImpl::ResetTask()
     return task;
 }
 
-void AVPlayerImpl::ResetSync()
+void AVPlayerImpl::ResetAsync(uintptr_t callback)
+{
+    ResetSync(callback);
+}
+
+uintptr_t AVPlayerImpl::ResetPromise()
+{
+    uintptr_t res = ResetSync(reinterpret_cast<uintptr_t>(nullptr));
+    return res;
+}
+
+uintptr_t AVPlayerImpl::ResetSync(uintptr_t cb)
 {
     MediaTrace trace("AVPlayerImpl::reset");
     MEDIA_LOGI("TaiheReset In");
     std::shared_ptr<AVPlayerContext> context = std::make_shared<AVPlayerContext>();
 
     if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
-        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+        context->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is released, unsupport reset operation");
     } else {
         MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheReset EnqueueTask In", FAKE_POINTER(this));
@@ -2343,8 +2384,15 @@ void AVPlayerImpl::ResetSync()
         }
         isLiveStream_ = false;
     }
-    context->CheckTaskResult();
+    context->ConfigContextEnv(cb);
+    
+    std::thread([context]() {
+        context->CheckTaskResult();
+        context->CompleteCallback();
+    }).detach();
+    
     MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheReset Out", FAKE_POINTER(this));
+    return reinterpret_cast<uintptr_t>(context->promise_);
 }
 
 void AVPlayerImpl::StopTaskQue()
@@ -2397,7 +2445,18 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerImpl::ReleaseTask()
     return task;
 }
 
-void AVPlayerImpl::ReleaseSync()
+void AVPlayerImpl::ReleaseAsync(uintptr_t callback)
+{
+    ReleaseSync(callback);
+}
+
+uintptr_t AVPlayerImpl::ReleasePromise()
+{
+    uintptr_t res = ReleaseSync(reinterpret_cast<uintptr_t>(nullptr));
+    return res;
+}
+
+uintptr_t AVPlayerImpl::ReleaseSync(uintptr_t cb)
 {
     MediaTrace trace("AVPlayerImpl::release");
     MEDIA_LOGI("TaiheRelease In");
@@ -2410,11 +2469,14 @@ void AVPlayerImpl::ReleaseSync()
         dataSrcCb_->ClearCallbackReference();
         dataSrcCb_ = nullptr;
     }
-    auto t1 = std::thread([context]() {
+    context->ConfigContextEnv(cb);
+
+    std::thread([context]() {
         context->CheckTaskResult();
-    });
-    t1.detach();
+        context->CompleteCallback();
+    }).detach();
     MEDIA_LOGI("0x%{public}06" PRIXPTR " TaiheRelease Out", FAKE_POINTER(this));
+    return reinterpret_cast<uintptr_t>(context->promise_);
 }
 
 std::shared_ptr<TaskHandler<TaskRet>> AVPlayerImpl::PauseTask()
@@ -2445,26 +2507,40 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerImpl::PauseTask()
     return task;
 }
 
-void AVPlayerImpl::PauseSync()
+void AVPlayerImpl::PauseAsync(uintptr_t callback)
+{
+    (void)PauseSync(callback);
+}
+
+uintptr_t AVPlayerImpl::PausePromise()
+{
+    uintptr_t res = PauseSync(reinterpret_cast<uintptr_t>(nullptr));
+    return res;
+}
+
+uintptr_t AVPlayerImpl::PauseSync(uintptr_t cb)
 {
     MediaTrace trace("AVPlayerImpl::pause");
     MEDIA_LOGI("TaihePause In");
     std::shared_ptr<AVPlayerContext> context = std::make_shared<AVPlayerContext>();
     auto state = GetCurrentState();
     if (state != AVPlayerState::STATE_PLAYING && state != AVPlayerState::STATE_PAUSED) {
-        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+        context->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not playing, unsupport pause operation");
     } else {
         MEDIA_LOGI("0x%{public}06" PRIXPTR " TaihePause EnqueueTask In", FAKE_POINTER(this));
         context->asyncTask = PauseTask();
         MEDIA_LOGI("0x%{public}06" PRIXPTR " TaihePause EnqueueTask Out", FAKE_POINTER(this));
     }
-    auto t1 = std::thread([context]() {
+    context->ConfigContextEnv(cb);
+
+    std::thread([context]() {
         context->CheckTaskResult();
-    });
-    t1.detach();
+        context->CompleteCallback();
+    }).detach();
+    
     MEDIA_LOGI("0x%{public}06" PRIXPTR " TaihePause Out", FAKE_POINTER(this));
-    return;
+    return reinterpret_cast<uintptr_t>(context->promise_);
 }
 
 std::shared_ptr<TaskHandler<TaskRet>> AVPlayerImpl::PrepareTask()
@@ -2501,7 +2577,18 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerImpl::PrepareTask()
     return task;
 }
 
-void AVPlayerImpl::PrepareSync()
+void AVPlayerImpl::PrepareAsync(uintptr_t callback)
+{
+    (void)PrepareSync(callback);
+}
+
+uintptr_t AVPlayerImpl::PreparePromise()
+{
+    uintptr_t res = PrepareSync(reinterpret_cast<uintptr_t>(nullptr));
+    return res;
+}
+
+uintptr_t AVPlayerImpl::PrepareSync(uintptr_t cb)
 {
     MediaTrace trace("AVPlayerImpl::prepare");
     MEDIA_LOGI("TaihePrepare In");
@@ -2512,7 +2599,7 @@ void AVPlayerImpl::PrepareSync()
     if (state != AVPlayerState::STATE_INITIALIZED &&
         state != AVPlayerState::STATE_STOPPED &&
         state != AVPlayerState::STATE_PREPARED) {
-        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+        context->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not stopped or initialized, unsupport prepare operation");
     } else if (IsListMode() && usage != OHOS::AudioStandard::STREAM_USAGE_MUSIC &&
         usage != OHOS::AudioStandard::STREAM_USAGE_MOVIE &&
@@ -2526,11 +2613,15 @@ void AVPlayerImpl::PrepareSync()
         context->asyncTask = PrepareTask();
         MEDIA_LOGI("0x%{public}06" PRIXPTR " TaihePrepare EnqueueTask Out", FAKE_POINTER(this));
     }
-    auto t1 = std::thread([context]() {
+    context->ConfigContextEnv(cb);
+    
+    std::thread([context]() {
         context->CheckTaskResult(true, TASK_TIME_LIMIT_MS);
-    });
-    t1.detach();
+        context->CompleteCallback();
+    }).detach();
+  
     MEDIA_LOGI("0x%{public}06" PRIXPTR " TaihePrepare Out", FAKE_POINTER(this));
+    return reinterpret_cast<uintptr_t>(context->promise_);
 }
 
 void AVPlayerImpl::SaveCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref)
@@ -3725,6 +3816,8 @@ void AVPlayerImpl::StartListenCurrentResource()
 
 void AVPlayerContext::SignError(int32_t code, const std::string &message)
 {
+    errMessage_ = message;
+    errCode_ = code;
     set_business_error(code, message);
     MEDIA_LOGE("SignError: %{public}s", message.c_str());
 }
@@ -4002,6 +4095,119 @@ void AVPlayerImpl::OffPlaybackContentChanged(optional_view<callback<void(string_
     std::lock_guard<std::mutex> lock(mutex_);
     if (playerCb_ != nullptr) {
         playerCb_->ClearCallbackReference(AVPlayerEvent::EVENT_PLAYBACK_CONTENT_CHANGE);
+    }
+}
+
+ani_env* AVPlayerContext::GetCurrentEnv(ani_vm *vm, bool &isAttach)
+{
+    if (vm == nullptr) {
+        MEDIA_LOGE("null vm");
+        return nullptr;
+    }
+
+    ani_env *threadEnv;
+    if (vm->GetEnv(ANI_VERSION_1, &threadEnv) != ANI_OK) {
+        MEDIA_LOGE("GetEnv failed, AttachCurrentThread");
+        ani_options aniArgs {0, nullptr};
+        ani_status status = vm->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &threadEnv);
+        if (status != ANI_OK) {
+            MEDIA_LOGE("GetCurrentEnv failed, status(%{public}d)", status);
+            return nullptr;
+        }
+        isAttach = true;
+    }
+    return threadEnv;
+}
+
+void AVPlayerContext::ConfigContextEnv(uintptr_t cb)
+{
+    ani_ref callbackRef;
+    env_ = taihe::get_env();
+    CHECK_AND_RETURN_LOG(env_ != nullptr, "taihe env is null");
+    ani_vm *etsVm;
+    auto status = env_->GetVM(&etsVm);
+    if (status != ANI_OK) {
+        MEDIA_LOGE("GetVM failed, status: %{public}d", status);
+        return;
+    }
+    etsVm_ = etsVm;
+    status = env_->Promise_New(&bindDeferred_, &promise_);
+    if (status != ANI_OK) {
+        MEDIA_LOGE("Promise_New failed, status: %{public}d", status);
+        return;
+    }
+    if (cb != 0) {
+        ani_object cb_o = reinterpret_cast<ani_object>(cb);
+        status = env_->GlobalReference_Create(static_cast<ani_ref>(cb_o), &callbackRef);
+        if (status != ANI_OK) {
+            MEDIA_LOGE("GlobalReference_Create failed, status: %{public}d", status);
+            return;
+        }
+        callbackRef_ = callbackRef;
+        callback_ = reinterpret_cast<ani_fn_object>(callbackRef_);
+    }
+}
+
+void AVPlayerContext::CompleteCallback()
+{
+    ani_env *threadEnv = GetCurrentEnv(etsVm_, isAttach_);
+    if (threadEnv == nullptr) {
+        MEDIA_LOGE("taihe get current env is nullptr");
+        return;
+    }
+    ani_ref err = nullptr;
+    if (errCode_ != 0) {
+        err = MediaTaiheUtils::ToBusinessError(threadEnv, errCode_, errMessage_);
+    } else {
+        threadEnv->GetNull(&err);
+    }
+    if (callback_ != nullptr) {
+        ani_size nr_refs = 16;
+        ani_status status = threadEnv->CreateLocalScope(nr_refs);
+        if (status != ANI_OK) {
+            MEDIA_LOGE("CreateLocalScope failed, status(%{public}d)", status);
+        }
+        ani_ref argv[ARGS_SIZE_ONE] = {err};
+        ani_ref callRet = nullptr;
+        status = threadEnv->FunctionalObject_Call(callback_, ARGS_SIZE_ONE, argv, &callRet);
+        if (status != ANI_OK) {
+            MEDIA_LOGE("FunctionalObject_Call failed, status(%{public}d)", status);
+        }
+        status = threadEnv->DestroyLocalScope();
+        if (status != ANI_OK) {
+            MEDIA_LOGE("DestroyLocalScope failed, status(%{public}d)", status);
+        }
+    } else {
+        ani_size nr_refs = 16;
+        threadEnv->CreateLocalScope(nr_refs);
+        if (errCode_ == 0) {
+            auto status = threadEnv->PromiseResolver_Resolve(bindDeferred_, err);
+            if (status != ANI_OK) {
+                MEDIA_LOGE("PromiseResolver_Resolve failed, status: %{public}d", status);
+            }
+        } else {
+            auto status = threadEnv->PromiseResolver_Reject(bindDeferred_, reinterpret_cast<ani_error>(err));
+            if (status != ANI_OK) {
+                MEDIA_LOGE("PromiseResolver_Reject failed, status: %{public}d", status);
+            }
+        }
+        auto status = threadEnv->DestroyLocalScope();
+        if (status != ANI_OK) {
+            MEDIA_LOGE("DestroyLocalScope failed, status(%{public}d)", status);
+        }
+    }
+
+    if (callbackRef_ != nullptr) {
+        auto status = threadEnv->GlobalReference_Delete(callbackRef_);
+
+        if (status != ANI_OK) {
+            MEDIA_LOGE("GlobalReference_Delete failed, status: %{public}d", status);
+        }
+        callbackRef_ = nullptr;
+    }
+
+    if (isAttach_) {
+        etsVm_->DetachCurrentThread();
     }
 }
 
