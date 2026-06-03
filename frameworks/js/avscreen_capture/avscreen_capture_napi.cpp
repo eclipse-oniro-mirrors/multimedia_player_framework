@@ -614,6 +614,7 @@ napi_value AVScreenCaptureNapi::JsSetContentAutoRotation(napi_env env, napi_call
     asyncCtx->napi = AVScreenCaptureNapi::GetJsInstanceAndArgs(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
     CHECK_AND_RETURN_RET_LOG(asyncCtx->napi->taskQue_ != nullptr, result, "taskQue is nullptr!");
+
     napi_valuetype valueType = napi_undefined;
     if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_boolean) {
         ThrowCustomError(env, MSERR_EXT_API9_INVALID_PARAMETER, "setContentAutoRotation input is not boolean");
