@@ -142,7 +142,7 @@ HWTEST_F(RecorderServerUnitTest, recorder_GetCurrentCapturerChangeInfo_001, Test
 
 /**
  * @tc.name: recorder_SetLocation_001
- * @tc.desc: record video with setLocation
+ * @tc.desc: record video with  setLocation
  * @tc.type: FUNC
  * @tc.require:
  */
