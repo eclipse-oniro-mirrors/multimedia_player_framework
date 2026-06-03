@@ -2850,7 +2850,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnTelCallStateChanged_002, TestSize.Le
 
 /**
 * @tc.name: OnTelCallStateChanged_003
-* @tc.desc: in call and out call with mic off, CAPTURE_FILE
+* @tc.desc: in call and out call with mic off,  CAPTURE_FILE
 * @tc.type: FUNC
 */
 HWTEST_F(ScreenCaptureServerFunctionTest, OnTelCallStateChanged_003, TestSize.Level2)
