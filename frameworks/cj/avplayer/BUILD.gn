@@ -65,6 +65,7 @@ ohos_shared_library("cj_avplayer_ffi") {
     "napi:cj_bind_native",
     "qos_manager:qos",
     "graphic_surface:surface",
+    "c_utils:utils",
   ]
 
   cflags = [
