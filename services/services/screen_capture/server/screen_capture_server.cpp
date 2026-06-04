@@ -4384,7 +4384,6 @@ int32_t ScreenCaptureServer::TelCallStateUpdated(bool isInTelCall)
 
 int32_t ScreenCaptureServer::TelCallAudioStateUpdated(bool isInTelCallAudio)
 {
-    CHECK_AND_RETURN_RET(Can(CAP_ACTIVE), MSERR_OK);
     if (IsTelInCallSkipList() || isInTelCallAudio_.load() == isInTelCallAudio) {
         return MSERR_OK;
     }

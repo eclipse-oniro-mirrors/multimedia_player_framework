@@ -182,6 +182,9 @@ int32_t AudioDataSource::RegisterAudioRendererEventListener(const int32_t client
             .compare(appName_) == 0 && region == "CN") {
         VoIPStateUpdate(audioRendererChangeInfos);
     }
+#ifdef SUPPORT_CALL
+    TelCallAudioStateUpdate(audioRendererChangeInfos);
+#endif
     return ret;
 }
 
