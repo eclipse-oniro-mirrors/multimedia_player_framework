@@ -17,6 +17,9 @@
 #define EXTERNAL_SERVICE_WRAPPERS_H
 
 #include <memory>
+#include <vector>
+#include <dm_common.h>
+#include <screen.h>
 
 namespace OHOS::Rosen {
 class DisplayManager;
@@ -52,6 +55,14 @@ class IScreenManagerProvider {
 public:
     virtual ~IScreenManagerProvider() = default;
     virtual Rosen::ScreenManager &GetInstance() = 0;
+    virtual Rosen::DMError MakeMirror(Rosen::ScreenId mainScreenId, const std::vector<Rosen::ScreenId> &mirrorScreenId,
+        Rosen::ScreenId &screenGroupId) = 0;
+    virtual Rosen::DMError MakeMirror(Rosen::ScreenId mainScreenId, const std::vector<Rosen::ScreenId> &mirrorScreenId,
+        Rosen::ScreenId &screenGroupId, Rosen::Rotation rotation) = 0;
+    virtual Rosen::DMError MakeMirrorForRecord(const std::vector<Rosen::ScreenId> &mainScreenIds,
+        std::vector<Rosen::ScreenId> &mirrorScreenIds, Rosen::ScreenId &screenGroupId) = 0;
+    virtual Rosen::DMError StopMirror(const std::vector<Rosen::ScreenId> &mirrorScreenIds) = 0;
+    virtual Rosen::ScreenId CreateVirtualScreen(const Rosen::VirtualScreenOption &option) = 0;
 };
 
 class IWindowManagerProvider {

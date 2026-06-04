@@ -245,12 +245,9 @@ private:
 
     VirtualScreenOption InitVirtualScreenOption(const std::string &name, sptr<OHOS::Surface> consumer);
     int32_t GetMissionIds(std::vector<uint64_t> &missionIds);
-    int32_t MakeVirtualScreenMirrorForWindow(const sptr<Rosen::Display> &defaultDisplay,
+    int32_t SetupVirtualScreenMirror(const sptr<Rosen::Display> &defaultDisplay,
         std::vector<ScreenId> &mirrorIds);
-    int32_t MakeVirtualScreenMirrorForHomeScreen(const sptr<Rosen::Display> &defaultDisplay,
-        std::vector<ScreenId> &mirrorIds);
-    int32_t MakeVirtualScreenMirrorForSpecifiedScreen(const sptr<Rosen::Display> &defaultDisplay,
-        std::vector<ScreenId> &mirrorIds);
+    DMError CreateMirror(const std::vector<uint64_t> &displayIds, std::vector<ScreenId> &mirrorIds);
     int32_t MakeVirtualScreenMirror();
     int32_t CreateVirtualScreen(const std::string &name, sptr<OHOS::Surface> consumer);
     int32_t SetVirtualScreenAutoRotation();
@@ -289,12 +286,6 @@ private:
 
 #ifdef PC_STANDARD
     bool IsHopper();
-    int32_t MakeVirtualScreenMirrorForWindowForHopper(const sptr<Rosen::Display> &defaultDisplay,
-        std::vector<ScreenId> &mirrorIds);
-    int32_t MakeVirtualScreenMirrorForHomeScreenForHopper(const sptr<Rosen::Display> &defaultDisplay,
-        std::vector<ScreenId> &mirrorIds);
-    int32_t MakeVirtualScreenMirrorForSpecifiedScreenForHopper(const sptr<Rosen::Display> &defaultDisplay,
-        std::vector<ScreenId> &mirrorIds);
     void SetTimeoutScreenoffDisableLock(bool lockScreen);
 #endif
     bool CheckCustScrRecPermission();
@@ -411,6 +402,7 @@ private:
     bool isDump_ = false;
     bool isSystemUI2_ = false;
     ScreenId virtualScreenId_ = SCREEN_ID_INVALID;
+    Rosen::Rotation targetRotation_ = Rosen::Rotation::ROTATION_0;
     std::vector<ScreenId> displayScreenIds_;
     std::vector<ScreenId> displayIds_;
     std::vector<uint64_t> missionIds_;

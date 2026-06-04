@@ -32,6 +32,29 @@ public:
 class ScreenManagerProviderImpl : public IScreenManagerProvider {
 public:
     Rosen::ScreenManager &GetInstance() override { return Rosen::ScreenManager::GetInstance(); }
+    Rosen::DMError MakeMirror(Rosen::ScreenId mainScreenId, const std::vector<Rosen::ScreenId> &mirrorScreenId,
+        Rosen::ScreenId &screenGroupId) override
+    {
+        return Rosen::ScreenManager::GetInstance().MakeMirror(mainScreenId, mirrorScreenId, screenGroupId);
+    }
+    Rosen::DMError MakeMirror(Rosen::ScreenId mainScreenId, const std::vector<Rosen::ScreenId> &mirrorScreenId,
+        Rosen::ScreenId &screenGroupId, Rosen::Rotation rotation) override
+    {
+        return Rosen::ScreenManager::GetInstance().MakeMirror(mainScreenId, mirrorScreenId, screenGroupId, rotation);
+    }
+    Rosen::DMError MakeMirrorForRecord(const std::vector<Rosen::ScreenId> &mainScreenIds,
+        std::vector<Rosen::ScreenId> &mirrorScreenIds, Rosen::ScreenId &screenGroupId) override
+    {
+        return Rosen::ScreenManager::GetInstance().MakeMirrorForRecord(mainScreenIds, mirrorScreenIds, screenGroupId);
+    }
+    Rosen::DMError StopMirror(const std::vector<Rosen::ScreenId> &mirrorScreenIds) override
+    {
+        return Rosen::ScreenManager::GetInstance().StopMirror(mirrorScreenIds);
+    }
+    Rosen::ScreenId CreateVirtualScreen(const Rosen::VirtualScreenOption &option) override
+    {
+        return Rosen::ScreenManager::GetInstance().CreateVirtualScreen(option);
+    }
 };
 
 class WindowManagerProviderImpl : public IWindowManagerProvider {
