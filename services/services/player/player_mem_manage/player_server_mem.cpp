@@ -168,11 +168,6 @@ int32_t PlayerServerMem::SetConfigInternal()
     ret = SetSaveParameter();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "failed to SetParameter");
 
-    if (recoverConfig_.bitRate != 0) {
-        ret = PlayerServer::SelectBitRate(recoverConfig_.bitRate);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "failed to SelectBitRate");
-    }
-
     return ret;
 }
 
@@ -181,6 +176,12 @@ int32_t PlayerServerMem::SetBehaviorInternal()
     int ret = MSERR_OK;
     MEDIA_LOGI("speedMode:%{public}d currentTime:%{public}d audioIndex:%{public}d",
         recoverConfig_.speedMode, recoverConfig_.currentTime, recoverConfig_.audioIndex);
+
+    if (recoverConfig_.bitRate != 0) {
+        ret = PlayerServer::SelectBitRate(recoverConfig_.bitRate);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "failed to SelectBitRate");
+    }
+
     if (recoverConfig_.speedMode != SPEED_FORWARD_1_00_X) {
         ret = PlayerServer::SetPlaybackSpeed(recoverConfig_.speedMode);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "failed to SetPlaybackSpeed");
@@ -206,6 +207,11 @@ int32_t PlayerServerMem::SetPlaybackSpeedInternal()
     if (recoverConfig_.speedMode != SPEED_FORWARD_1_00_X) {
         ret = PlayerServer::SetPlaybackSpeed(recoverConfig_.speedMode);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "PreparedState failed to SetPlaybackSpeed");
+    }
+    
+    if (recoverConfig_.bitRate != 0) {
+        ret = PlayerServer::SelectBitRate(recoverConfig_.bitRate);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "failed to SelectBitRate");
     }
 
     if (NeedSelectAudioTrack()) {
