@@ -617,15 +617,13 @@ napi_value AVScreenCaptureNapi::JsSetContentAutoRotation(napi_env env, napi_call
 
     napi_valuetype valueType = napi_undefined;
     if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_boolean) {
-        asyncCtx->AVScreenCaptureSignError(MSERR_EXT_API9_INVALID_PARAMETER, "SetContentAutoRotation",
-            "setContentAutoRotation input is not boolean");
+        ThrowCustomError(env, MSERR_EXT_API9_INVALID_PARAMETER, "setContentAutoRotation input is not boolean");
         return result;
     }
     bool canvasRotation;
     napi_status status = napi_get_value_bool(env, args[0], &canvasRotation);
     if (status != napi_ok) {
-        asyncCtx->AVScreenCaptureSignError(MSERR_EXT_API9_INVALID_PARAMETER, "SetContentAutoRotation",
-            "setContentAutoRotation get value failed");
+        ThrowCustomError(env, MSERR_EXT_API9_INVALID_PARAMETER, "setContentAutoRotation get value failed");
         return result;
     }
 

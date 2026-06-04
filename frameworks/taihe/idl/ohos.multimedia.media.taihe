@@ -1259,7 +1259,7 @@ interface AVScreenCaptureRecorder {
     @gen_promise("excludePickerWindows")
     ExcludePickerWindowsSync(excludedWindows: Array<i32>): void;
 
-    @gen_promise("setCanvasRotation")
+    @gen_promise("setContentAutoRotation")
     SetCanvasRotationSync(canvasRotation: bool): void;
 
     @gen_promise("release")
