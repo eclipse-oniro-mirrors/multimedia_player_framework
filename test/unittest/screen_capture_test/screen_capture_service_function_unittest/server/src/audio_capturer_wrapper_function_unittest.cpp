@@ -33,7 +33,6 @@ using namespace OHOS::Media::ScreenCaptureTestParam;
 using namespace OHOS::Media;
 
 namespace {
-static constexpr int64_t AUDIO_CAPTURE_READ_FRAME_TIME = 21333333;
 }
 
 namespace OHOS {
