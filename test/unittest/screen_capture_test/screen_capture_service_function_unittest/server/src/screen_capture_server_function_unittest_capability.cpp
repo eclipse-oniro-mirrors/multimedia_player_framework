@@ -26,105 +26,105 @@ namespace Media {
 HWTEST_F(ScreenCaptureServerFunctionTest, Can_CREATED_001, TestSize.Level0)
 {
     screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_NONE), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_INIT), true);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_CONFIG), true);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_ALIVE), true);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_POPUP), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_RUNNING), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_PAUSED), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_ACTIVE), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_ALIVE) && !screenCaptureServer_->Can(CAP_ACTIVE), true);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_INIT | CAP_CONFIG), true);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_INIT | CAP_ALIVE), true);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_RUNNING | CAP_PAUSED), false);
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_NONE));
+    EXPECT_TRUE(screenCaptureServer_->IsState(CAP_INIT));
+    EXPECT_TRUE(screenCaptureServer_->IsState(CAP_CONFIG));
+    EXPECT_TRUE(screenCaptureServer_->IsState(CAP_ALIVE));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_POPUP));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_RUNNING));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_PAUSED));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_ACTIVE));
+    EXPECT_TRUE(screenCaptureServer_->IsState(CAP_ALIVE) && !screenCaptureServer_->IsState(CAP_ACTIVE));
+    EXPECT_TRUE(screenCaptureServer_->IsState(CAP_INIT | CAP_CONFIG));
+    EXPECT_TRUE(screenCaptureServer_->IsState(CAP_INIT | CAP_ALIVE));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_RUNNING | CAP_PAUSED));
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, Can_POPUP_WINDOW_001, TestSize.Level0)
 {
     screenCaptureServer_->captureState_ = AVScreenCaptureState::POPUP_WINDOW;
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_NONE), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_INIT), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_CONFIG), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_ALIVE), true);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_POPUP), true);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_RUNNING), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_PAUSED), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_ACTIVE), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_ALIVE) && !screenCaptureServer_->Can(CAP_ACTIVE), true);
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_NONE));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_INIT));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_CONFIG));
+    EXPECT_TRUE(screenCaptureServer_->IsState(CAP_ALIVE));
+    EXPECT_TRUE(screenCaptureServer_->IsState(CAP_POPUP));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_RUNNING));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_PAUSED));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_ACTIVE));
+    EXPECT_TRUE(screenCaptureServer_->IsState(CAP_ALIVE) && !screenCaptureServer_->IsState(CAP_ACTIVE));
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, Can_STARTING_001, TestSize.Level0)
 {
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTING;
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_NONE), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_INIT), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_CONFIG), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_ALIVE), true);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_POPUP), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_RUNNING), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_PAUSED), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_ACTIVE), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_ALIVE) && !screenCaptureServer_->Can(CAP_ACTIVE), true);
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_NONE));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_INIT));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_CONFIG));
+    EXPECT_TRUE(screenCaptureServer_->IsState(CAP_ALIVE));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_POPUP));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_RUNNING));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_PAUSED));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_ACTIVE));
+    EXPECT_TRUE(screenCaptureServer_->IsState(CAP_ALIVE) && !screenCaptureServer_->IsState(CAP_ACTIVE));
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, Can_STARTED_001, TestSize.Level0)
 {
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_NONE), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_INIT), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_CONFIG), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_ALIVE), true);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_POPUP), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_RUNNING), true);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_PAUSED), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_ACTIVE), true);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_ALIVE) && !screenCaptureServer_->Can(CAP_ACTIVE), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_ALIVE | CAP_RUNNING | CAP_ACTIVE), true);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_RUNNING | CAP_PAUSED), true);
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_NONE));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_INIT));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_CONFIG));
+    EXPECT_TRUE(screenCaptureServer_->IsState(CAP_ALIVE));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_POPUP));
+    EXPECT_TRUE(screenCaptureServer_->IsState(CAP_RUNNING));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_PAUSED));
+    EXPECT_TRUE(screenCaptureServer_->IsState(CAP_ACTIVE));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_ALIVE) && !screenCaptureServer_->IsState(CAP_ACTIVE));
+    EXPECT_TRUE(screenCaptureServer_->IsState(CAP_ALIVE | CAP_RUNNING | CAP_ACTIVE));
+    EXPECT_TRUE(screenCaptureServer_->IsState(CAP_RUNNING | CAP_PAUSED));
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, Can_PAUSED_001, TestSize.Level0)
 {
     screenCaptureServer_->captureState_ = AVScreenCaptureState::PAUSED;
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_NONE), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_INIT), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_CONFIG), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_ALIVE), true);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_POPUP), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_RUNNING), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_PAUSED), true);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_ACTIVE), true);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_ALIVE) && !screenCaptureServer_->Can(CAP_ACTIVE), false);
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_NONE));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_INIT));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_CONFIG));
+    EXPECT_TRUE(screenCaptureServer_->IsState(CAP_ALIVE));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_POPUP));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_RUNNING));
+    EXPECT_TRUE(screenCaptureServer_->IsState(CAP_PAUSED));
+    EXPECT_TRUE(screenCaptureServer_->IsState(CAP_ACTIVE));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_ALIVE) && !screenCaptureServer_->IsState(CAP_ACTIVE));
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, Can_RESUMED_001, TestSize.Level0)
 {
     screenCaptureServer_->captureState_ = AVScreenCaptureState::RESUMED;
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_NONE), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_INIT), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_CONFIG), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_ALIVE), true);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_POPUP), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_RUNNING), true);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_PAUSED), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_ACTIVE), true);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_ALIVE) && !screenCaptureServer_->Can(CAP_ACTIVE), false);
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_NONE));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_INIT));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_CONFIG));
+    EXPECT_TRUE(screenCaptureServer_->IsState(CAP_ALIVE));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_POPUP));
+    EXPECT_TRUE(screenCaptureServer_->IsState(CAP_RUNNING));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_PAUSED));
+    EXPECT_TRUE(screenCaptureServer_->IsState(CAP_ACTIVE));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_ALIVE) && !screenCaptureServer_->IsState(CAP_ACTIVE));
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, Can_STOPPED_001, TestSize.Level0)
 {
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STOPPED;
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_NONE), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_INIT), true);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_CONFIG), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_ALIVE), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_POPUP), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_RUNNING), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_PAUSED), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_ACTIVE), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_ALIVE) && !screenCaptureServer_->Can(CAP_ACTIVE), false);
-    EXPECT_EQ(screenCaptureServer_->Can(CAP_POPUP | CAP_RUNNING), false);
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_NONE));
+    EXPECT_TRUE(screenCaptureServer_->IsState(CAP_INIT));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_CONFIG));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_ALIVE));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_POPUP));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_RUNNING));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_PAUSED));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_ACTIVE));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_ALIVE) && !screenCaptureServer_->IsState(CAP_ACTIVE));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_POPUP | CAP_RUNNING));
 }
 
 } // namespace Media

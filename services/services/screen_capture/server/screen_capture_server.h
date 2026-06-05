@@ -171,7 +171,7 @@ public:
     void SetSCServerSaUid(int32_t saUid);
     int32_t GetSCServerSaUid();
     DataType GetSCServerDataType();
-    bool Can(uint32_t cap) const;
+    bool IsState(uint32_t cap) const;
     bool IsSCRecorderFileWithVideo();
     std::shared_ptr<AudioCapturerWrapper> GetInnerAudioCapture();
     std::shared_ptr<AudioCapturerWrapper> GetMicAudioCapture();
