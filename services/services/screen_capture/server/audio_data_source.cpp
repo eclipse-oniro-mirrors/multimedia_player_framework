@@ -516,7 +516,7 @@ AudioDataSourceReadAtActionState AudioDataSource::ReadAudioBuffer(
     MEDIA_LOGD("AudioDataSource ReadAt start");
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, AudioDataSourceReadAtActionState::RETRY_SKIP,
         "ReadAt screenCaptureServer null");
-    if (!screenCaptureServer_->Can(CAP_ACTIVE)) {
+    if (!screenCaptureServer_->IsState(CAP_ACTIVE)) {
         return AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG;
     }
     if (screenCaptureServer_->IsSCRecorderFileWithVideo() && firstVideoFramePts_.load() == -1) { // video frame not come
