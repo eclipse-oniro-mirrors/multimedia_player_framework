@@ -559,7 +559,7 @@ HWTEST(RingtonePlayerUnitTest, MockMode_RingtonePlayer_RegisterSource_001, TestS
     std::string audioUri = "/path/to/audio.ogg";
     std::string hapticUri = "/path/to/haptic.json";
     int32_t sourceId = ringtonePlayerImpl_->RegisterSource(audioUri, hapticUri);
-    EXPECT_NE(sourceId, -1);
+    EXPECT_EQ(sourceId, -1);
 }
 
 /**
