@@ -122,6 +122,7 @@ HWTEST_F(RecorderProfilesXmlParserUnitTest, PackageVideoRecorderCaps_001, TestSi
     // Test CONTAINER_VIDEOCAPS_AUDIO_MAP.find(formatType) == CONTAINER_VIDEOCAPS_AUDIO_MAP.end()
     std::string formatType = "invalid_format";
     recorderProfilesXmlParser_->PackageVideoRecorderCaps(formatType);
+    EXPECT_TRUE(recorderProfilesXmlParser_->capabilityDataArray_.empty());
 
     // Test itVideoCodec == CONTAINER_VIDEOCAPS_VIDEO_MAP.at(formatType).end()
     formatType = "mp4";
@@ -156,6 +157,7 @@ HWTEST_F(RecorderProfilesXmlParserUnitTest, PackageAudioRecorderCaps_001, TestSi
     // Test CONTAINER_AUDIOCAPS_AUDIO_MAP.find(formatType) == CONTAINER_AUDIOCAPS_AUDIO_MAP.end()
     std::string formatType = "invalid_format";
     recorderProfilesXmlParser_->PackageAudioRecorderCaps(formatType);
+    EXPECT_TRUE(recorderProfilesXmlParser_->capabilityDataArray_.empty());
 
     // Test itAudioCodec == CONTAINER_AUDIOCAPS_AUDIO_MAP.at(formatType).end()
     formatType = "m4a";
