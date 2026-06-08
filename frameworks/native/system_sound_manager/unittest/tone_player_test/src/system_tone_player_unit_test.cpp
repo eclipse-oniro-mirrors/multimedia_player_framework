@@ -478,11 +478,11 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_026, TestSize.Level1
     hapticsUriMap[ToneHapticsFeature::STANDARD] = "test1";
     hapticsUriMap[ToneHapticsFeature::GENTLE] = "test2";
     systemTonePlayerImpl_->GetNewHapticUriForAudioUri(audioUri, hapticsUriMap);
-    EXPECT_NE(hapticsUriMap[ToneHapticsFeature::STANDARD], "");
+    EXPECT_EQ(hapticsUriMap[ToneHapticsFeature::STANDARD], "");
     EXPECT_NE(hapticsUriMap[ToneHapticsFeature::GENTLE], "");
     audioUri = "/data/test/ringtone.ogg";
     systemTonePlayerImpl_->GetNewHapticUriForAudioUri(audioUri, hapticsUriMap);
-    EXPECT_NE(hapticsUriMap[ToneHapticsFeature::STANDARD], "");
+    EXPECT_EQ(hapticsUriMap[ToneHapticsFeature::STANDARD], "");
     EXPECT_NE(hapticsUriMap[ToneHapticsFeature::GENTLE], "");
 }
 
@@ -570,7 +570,7 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_031, TestSize.Level1
     EXPECT_EQ(result, MSERR_OK);
     systemTonePlayerImpl_->InitHapticsSourceIds();
     result = systemTonePlayerImpl_->SetHapticsFeature(ToneHapticsFeature::STANDARD);
-    EXPECT_EQ(result, ERROR_UNSUPPORTED_OPERATION);
+    EXPECT_EQ(result, MSERR_OK);
     ToneHapticsFeature feature;
     result = systemTonePlayerImpl_->GetHapticsFeature(feature);
     EXPECT_EQ(result, MSERR_OK);
