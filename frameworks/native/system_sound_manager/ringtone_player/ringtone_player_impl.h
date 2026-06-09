@@ -94,7 +94,7 @@ private:
     AudioStandard::AudioRendererParams rendererParams_ {};
     ToneHapticsSettings mockToneHapticsSettings_;
     bool isMockMode_ = false;
-    AudioStandard::StreamUsage streamUsage_;
+    AudioStandard::StreamUsage streamUsage_ = AudioStandard::StreamUsage::STREAM_USAGE_VOICE_RINGTONE;
 
     std::mutex playerMutex_;
 };
