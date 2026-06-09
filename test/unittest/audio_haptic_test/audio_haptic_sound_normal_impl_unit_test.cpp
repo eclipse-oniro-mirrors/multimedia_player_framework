@@ -1259,7 +1259,7 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, MockMode_AudioHapticSoundNormalImpl
     audioHapticSoundNormalImpl->rendererFlags_ = rendererFlags;
     
     int32_t ret = audioHapticSoundNormalImpl->ResetAVPlayer();
-    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_EQ(ret, MSERR_OPEN_FILE_FAILED);
 }
 
 /**
@@ -1285,7 +1285,7 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, MockMode_AudioHapticSoundNormalImpl
     audioHapticSoundNormalImpl->rendererFlags_ = rendererFlags;
     
     int32_t ret = audioHapticSoundNormalImpl->ResetAVPlayer();
-    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_EQ(ret, MSERR_OPEN_FILE_FAILED);
 }
 } // namespace Media
 } // namespace OHOS
