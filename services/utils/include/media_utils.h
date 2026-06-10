@@ -38,6 +38,7 @@ namespace Media {
     std::string __attribute__((visibility("default"))) GetBundleResourceLabel(std::string bundleName);
     int __attribute__((visibility("default"))) TransStatus(Status status);
     int32_t __attribute__((visibility("default"))) TransTranscoderStatus(Status status);
+    int32_t __attribute__((visibility("default"))) TransRecorderStatus(Status status);
     PlayerStates __attribute__((visibility("default"))) TransStateId2PlayerState(PlayerStateId state);
     Plugins::SeekMode __attribute__((visibility("default"))) Transform2SeekMode(PlayerSeekMode mode);
     const std::string& __attribute__((visibility("default"))) StringnessPlayerState(PlayerStates state);

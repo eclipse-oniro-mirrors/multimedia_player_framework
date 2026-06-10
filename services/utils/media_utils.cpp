@@ -64,6 +64,46 @@ const std::unordered_map<Status, int32_t> transcoder_statusPair = {
     {Status::ERROR_VID_RESIZE_FAILED, MSERR_VID_RESIZE_FAILED},
 };
 
+
+const std::unordered_map<Status, int32_t> recorder_statusPair = {
+    {Status::OK, MSERR_OK},
+    {Status::ERROR_UNKNOWN, MSERR_UNKNOWN},
+    {Status::ERROR_NO_MEMORY, MSERR_NO_MEMORY},
+    {Status::ERROR_INVALID_STATE, MSERR_INVALID_STATE},
+    {Status::ERROR_INVALID_PARAMETER, MSERR_INVALID_VAL},
+    {Status::ERROR_INVALID_OPERATION, MSERR_INVALID_OPERATION},
+    {Status::ERROR_UNSUPPORTED_FORMAT, MSERR_UNSUPPORT},
+    {Status::ERROR_NOT_EXISTED, MSERR_OPEN_FILE_FAILED},
+    {Status::ERROR_NULL_POINTER, MSERR_INVALID_VAL},
+    {Status::ERROR_AUDIO_INTERRUPT, MSERR_AUD_INTERRUPT},
+    {Status::ERROR_GET_INPUT_SURFACE_FAILED, MSERR_GET_INPUT_SURFACE_FAILED},
+    {Status::ERROR_SET_OUTPUT_SURFACE_FAILED, MSERR_SET_OUTPUT_SURFACE_FAILED},
+    {Status::ERROR_VID_RESIZE_FAILED, MSERR_VID_RESIZE_FAILED},
+    {Status::ERROR_NULL_SURFACE, MSERR_INVALID_VAL},
+    {Status::ERROR_SURFACE_INNER, MSERR_INVALID_OPERATION},
+    {Status::ERROR_AUD_FAILED, MSERR_AUD_FAILED},
+    {Status::ERROR_AUD_INIT_FAILED, MSERR_AUD_INIT_FAILED},
+    {Status::ERROR_AUD_START_FAILED, MSERR_AUD_START_FAILED},
+    {Status::ERROR_AUD_STOP_FAILED, MSERR_AUD_STOP_FAILED},
+    {Status::ERROR_AUD_ENC_FAILED, MSERR_AUD_ENC_FAILED},
+    {Status::ERROR_AUD_ENC_INIT_FAILED, MSERR_AUD_ENC_INIT_FAILED},
+    {Status::ERROR_AUD_ENC_START_FAILED, MSERR_AUD_ENC_START_FAILED},
+    {Status::ERROR_AUD_ENC_STOP_FAILED, MSERR_AUD_ENC_STOP_FAILED},
+    {Status::ERROR_VID_ENC_FAILED, MSERR_VID_ENC_FAILED},
+    {Status::ERROR_VID_ENC_INIT_FAILED, MSERR_VID_ENC_INIT_FAILED},
+    {Status::ERROR_VID_ENC_START_FAILED, MSERR_VID_ENC_START_FAILED},
+    {Status::ERROR_VID_ENC_STOP_FAILED, MSERR_VID_ENC_STOP_FAILED},
+    {Status::ERROR_MUXER_FAILED, MSERR_MUXER_FAILED},
+    {Status::ERROR_MUXER_INIT_FAILED, MSERR_MUXER_INIT_FAILED},
+    {Status::ERROR_MUXER_STOP_FAILED, MSERR_MUXER_START_FAILED},
+    {Status::ERROR_MUXER_STOP_FAILED, MSERR_MUXER_STOP_FAILED},
+    {Status::ERROR_FRAMEWORK_ERR, MSERR_FRAMEWORK_ERROR},
+    {Status::ERROR_INVALID_VAL, MSERR_INVALID_VAL},
+    {Status::ERROR_OPEN_FILE_FAILED, MSERR_OPEN_FILE_FAILED},
+    {Status::ERROR_FILE_ACCESS_FAILED, MSERR_FILE_ACCESS_FAILED},
+    {Status::ERROR_INVALID_TIMESTAMP, MSERR_INVALID_TIMESTAMP},
+};
+
 const std::array<std::pair<PlaybackRateMode, float>, 12> PLAY_RATE_REFS = {
     std::make_pair(PlaybackRateMode::SPEED_FORWARD_0_75_X, 0.75),
     std::make_pair(PlaybackRateMode::SPEED_FORWARD_1_00_X, 1.0),
@@ -221,6 +261,15 @@ int32_t __attribute__((visibility("default"))) TransTranscoderStatus(Status stat
         return errCodeIter->second;
     }
     return MSERR_UNKNOWN;
+}
+
+int32_t __attribute__((visibility("default"))) TransRecorderStatus(Status status)
+{
+    auto it = recorder_statusPair.find(status);
+    if (it != recorder_statusPair.end()) {
+        return it->second;
+    }
+    return MSERR_FRAMEWORK_ERROR;
 }
 
 PlayerStates __attribute__((visibility("default"))) TransStateId2PlayerState(PlayerStateId state)

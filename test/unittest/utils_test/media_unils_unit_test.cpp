@@ -14,6 +14,7 @@
  */
 #include "gtest/gtest.h"
 #include "media_unils_unit_test.h"
+#include "status.h"
 
 using namespace OHOS;
 using namespace OHOS::Media;
@@ -130,6 +131,19 @@ HWTEST_F(MediaUtilsUnitTest, ShouldReturnSeekClosest_WhenSeekModeIsClosest, Test
 // Scenario5: Test case for default case
 HWTEST_F(MediaUtilsUnitTest, ShouldReturnSeekClosest_WhenSeekModeIsDefault, TestSize.Level0) {
     EXPECT_EQ(Plugins::SeekMode::SEEK_CLOSEST, Transform2SeekMode(static_cast<PlayerSeekMode>(-1)));
+}
+
+/**
+ * @tc.name: recorder_TransRecorderStatus_001
+ * @tc.desc: Test TransRecorderStatus function for Status to MSERR conversion
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(MediaUtilsUnitTest, recorder_TransRecorderStatus_001, TestSize.Level2)
+{
+    EXPECT_EQ(MSERR_OK, TransRecorderStatus(Status::OK));
+    EXPECT_EQ(MSERR_UNKNOWN, TransRecorderStatus(Status::ERROR_UNKNOWN));
+    EXPECT_EQ(MSERR_MUXER_FAILED, TransRecorderStatus(Status::ERROR_MUXER_FAILED));
 }
 } // namespace Media
 } // namespace OHOS

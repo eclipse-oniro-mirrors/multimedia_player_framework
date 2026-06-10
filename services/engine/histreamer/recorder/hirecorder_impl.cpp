@@ -18,6 +18,7 @@
 #include "sync_fence.h"
 #include "media_dfx.h"
 #include "water_mark_filter.h"
+#include "media_utils.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_RECORDER, "HiRecorder" };
@@ -436,24 +437,24 @@ int32_t HiRecorderImpl::Prepare()
 {
     MediaTrace trace("HiRecorderImpl::Prepare");
     MEDIA_LOG_I("Prepare enter.");
-    FALSE_RETURN_V_MSG_E(lseek(fd_, 0, SEEK_CUR) != -1,
-        (int32_t)Status::ERROR_UNKNOWN, "The fd is invalid.");
+    FALSE_RETURN_V_MSG_E(lseek(fd_, 0, SEEK_CUR) != -1, MSERR_OPEN_FILE_FAILED, "The fd is invalid.");
 
-    int32_t result = ERR_NONE;
+    int32_t result = MSERR_OK;
     result = PrepareAudioCapture();
-    FALSE_RETURN_V_MSG_E(result == ERR_NONE, result, "PrepareAudioCapture fail");
+    FALSE_RETURN_V_MSG_E(result == MSERR_OK, MSERR_AUD_INIT_FAILED, "PrepareAudioCapture fail");
     result = PrepareAudioDataSource();
-    FALSE_RETURN_V_MSG_E(result == ERR_NONE, result, "PrepareAudioDataSource fail");
+    FALSE_RETURN_V_MSG_E(result == MSERR_OK, MSERR_FRAMEWORK_ERROR, "PrepareAudioDataSource fail");
     result = PrepareWatermark();
-    FALSE_RETURN_V_MSG_E(result == ERR_NONE, result, "PrepareWatermark fail");
+    FALSE_RETURN_V_MSG_E(result == MSERR_OK, MSERR_FRAMEWORK_ERROR, "PrepareWatermark fail");
     result = PrepareVideoEncoder();
-    FALSE_RETURN_V_MSG_E(result == ERR_NONE, result, "PrepareVideoEncoder fail");
+    FALSE_RETURN_V_MSG_E(result == MSERR_OK, result, "PrepareVideoEncoder fail");
     result = PrepareMetaData();
-    FALSE_RETURN_V_MSG_E(result == ERR_NONE, result, "PrepareMetaData fail");
+    FALSE_RETURN_V_MSG_E(result == MSERR_OK, result, "PrepareMetaData fail");
     result = PrepareVideoCapture();
-    FALSE_RETURN_V_MSG_E(result == ERR_NONE, result, "PrepareVideoCapture fail");
+    FALSE_RETURN_V_MSG_E(result == MSERR_OK, result, "PrepareVideoCapture fail");
     Status ret = pipeline_->Prepare();
-    return (int32_t)ret;
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, MSERR_FRAMEWORK_ERROR, "Pipeline prepare fail");
+    return MSERR_OK;
 }
 
 int32_t HiRecorderImpl::PrepareAudioCapture()
@@ -477,7 +478,7 @@ int32_t HiRecorderImpl::PrepareAudioCapture()
             audioCaptureFilter_->SetWillMuteWhenInterrupted(muteWhenInterrupted_);
         }
     }
-    return ERR_NONE;
+    return MSERR_OK;
 }
 
 int32_t HiRecorderImpl::PrepareAudioDataSource()
@@ -490,7 +491,7 @@ int32_t HiRecorderImpl::PrepareAudioDataSource()
         audioEncFormat_->Set<Tag::AUDIO_SAMPLE_FORMAT>(Plugins::AudioSampleFormat::SAMPLE_S16LE);
         audioDataSourceFilter_->Init(recorderEventReceiver_, recorderCallback_);
     }
-    return ERR_NONE;
+    return MSERR_OK;
 }
 
 int32_t HiRecorderImpl::PrepareWatermark()
@@ -501,7 +502,7 @@ int32_t HiRecorderImpl::PrepareWatermark()
         filter->Init(recorderEventReceiver_, recorderCallback_);
         filter->SetAVRecorderMode();
     }
-    return ERR_NONE;
+    return MSERR_OK;
 }
 
 int32_t HiRecorderImpl::PrepareVideoEncoder()
@@ -521,7 +522,7 @@ int32_t HiRecorderImpl::PrepareVideoEncoder()
         FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_) == Status::OK,
             ERR_UNKNOWN_REASON, "videoEncoderFilter Configure fail");
     }
-    return ERR_NONE;
+    return MSERR_OK;
 }
 
 int32_t HiRecorderImpl::PrepareMetaData()
@@ -537,7 +538,7 @@ int32_t HiRecorderImpl::PrepareMetaData()
             iter.second->Init(recorderEventReceiver_, recorderCallback_);
         }
     }
-    return ERR_NONE;
+    return MSERR_OK;
 }
 
 int32_t HiRecorderImpl::PrepareVideoCapture()
@@ -548,49 +549,48 @@ int32_t HiRecorderImpl::PrepareVideoCapture()
         FALSE_RETURN_V_MSG_E(videoCaptureFilter_->Configure(videoEncFormat_) == Status::OK,
             ERR_UNKNOWN_REASON, "videoCaptureFilter Configure fail");
     }
-    return ERR_NONE;
+    return MSERR_OK;
 }
 
 int32_t HiRecorderImpl::Start()
 {
     MediaTrace trace("HiRecorderImpl::Start");
-    MEDIA_LOG_I("Start enter.");
-    Status ret = Status::OK;
+    int32_t ret = MSERR_OK;
     if (hasWatermark_) {
-        ret = SetVideoEncoderSurface();
+    ret = TransRecorderStatus(SetVideoEncoderSurface());
     }
     if (curState_ == StateId::PAUSE) {
-        ret = pipeline_->Resume();
+    ret = TransRecorderStatus(pipeline_->Resume());
     } else {
-        ret = pipeline_->Start();
+    ret = TransRecorderStatus(pipeline_->Start());
     }
-    FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "HiRecorderImpl Start fail");
+    FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "HiRecorderImpl Start fail");
     OnStateChanged(StateId::RECORDING);
-    return (int32_t)ret;
+    return ret;
 }
 
 int32_t HiRecorderImpl::Pause()
 {
     MediaTrace trace("HiRecorderImpl::Pause");
     MEDIA_LOG_I("Pause enter.");
-    Status ret = Status::OK;
+    int32_t ret = MSERR_OK;
     if (curState_ != StateId::READY) {
-        ret = pipeline_->Pause();
-        FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "HiRecorderImpl Pause fail");
+    ret = TransRecorderStatus(pipeline_->Pause());
+    FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "HiRecorderImpl Pause fail");
     }
     OnStateChanged(StateId::PAUSE);
-    return (int32_t)ret;
+    return ret;
 }
 
 int32_t HiRecorderImpl::Resume()
 {
     MediaTrace trace("HiRecorderImpl::Resume");
     MEDIA_LOG_I("Resume enter.");
-    Status ret = Status::OK;
-    ret = pipeline_->Resume();
-    FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "HiRecorderImpl Resume fail");
+    int32_t ret = MSERR_OK;
+    ret = TransRecorderStatus(pipeline_->Resume());
+    FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "HiRecorderImpl Resume fail");
     OnStateChanged(StateId::RECORDING);
-    return (int32_t)ret;
+    return ret;
 }
 
 Status HiRecorderImpl::HandleStopOperation()
@@ -669,11 +669,12 @@ int32_t HiRecorderImpl::Stop(bool isDrainAll)
         return static_cast<int32_t>(Status::OK);
     }
     // real stop operations
-    Status ret = HandleStopOperation();
+    int32_t ret = MSERR_OK;
+    ret = TransRecorderStatus(HandleStopOperation());
     // clear all configurations and remove all filters
     ClearAllConfiguration();
-    FALSE_RETURN_V_MSG_E(curState_ == StateId::INIT, ERR_UNKNOWN_REASON, "stop fail");
-    return (int32_t)ret;
+    FALSE_RETURN_V_MSG_E(curState_ == StateId::INIT, ret, "pipeline stop fail");
+    return ret;
 }
 
 int32_t HiRecorderImpl::Reset()
@@ -828,7 +829,7 @@ Status HiRecorderImpl::HandleWatermarkCallback(std::shared_ptr<Pipeline::Filter>
         videoEncoderFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
         videoSourceIsRGBA_ = (source_ == VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA);
         int32_t result = PrepareVideoEncoder();
-        FALSE_RETURN_V_MSG_E(result == ERR_NONE, static_cast<Status>(result),
+        FALSE_RETURN_V_MSG_E(result == MSERR_OK, static_cast<Status>(result),
             "HandleWatermarkCallback PrepareVideoEncoder fail");
     }
 
