@@ -53,6 +53,29 @@ std::map<std::string, AVRecorderNapi::AvRecorderTaskqFunc> AVRecorderNapi::taskQ
     {AVRecordergOpt::RELEASE, &AVRecorderNapi::Release},
 };
 
+const std::set<MediaServiceErrCode> MSERRCODE_AVRECORDER_INFOS = {
+    MSERR_AUD_FAILED,
+    MSERR_AUD_INIT_FAILED,
+    MSERR_AUD_START_FAILED,
+    MSERR_AUD_STOP_FAILED,
+    MSERR_AUD_ENC_FAILED,
+    MSERR_AUD_ENC_INIT_FAILED,
+    MSERR_AUD_ENC_START_FAILED,
+    MSERR_AUD_ENC_STOP_FAILED,
+    MSERR_VID_ENC_FAILED,
+    MSERR_VID_ENC_CONFIG_FAILED,
+    MSERR_VID_ENC_INIT_FAILED,
+    MSERR_VID_ENC_START_FAILED,
+    MSERR_VID_ENC_STOP_FAILED,
+    MSERR_MUXER_FAILED,
+    MSERR_MUXER_INIT_FAILED,
+    MSERR_MUXER_START_FAILED,
+    MSERR_MUXER_STOP_FAILED,
+    MSERR_VID_CAPTURE_CONFIG_FAILED,
+    MSERR_INVALID_TIMESTAMP,
+    MSERR_FRAMEWORK_ERROR,
+};
+
 AVRecorderNapi::AVRecorderNapi()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR "Instances create", FAKE_POINTER(this));
@@ -223,24 +246,28 @@ napi_value AVRecorderNapi::JsCreateAVRecorder(napi_env env, napi_callback_info i
 RetInfo GetRetInfo(int32_t errCode, const std::string &operate, const std::string &param, const std::string &add = "")
 {
     MEDIA_LOGE("failed to %{public}s, param %{public}s, errCode = %{public}d", operate.c_str(), param.c_str(), errCode);
-    MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode));
-    if (errCode == MSERR_UNSUPPORT_VID_PARAMS) {
-        return RetInfo(err, "The video parameter is not supported. Please check the type and range.");
+    MediaServiceErrCode extCode = static_cast<MediaServiceErrCode>(errCode);
+    MediaServiceExtErrCodeAPI9 extErr = MSErrorToExtErrorAPI9(extCode);
+
+    if (MSERRCODE_AVRECORDER_INFOS.find(extCode) != MSERRCODE_AVRECORDER_INFOS.end()) {
+        std::string message;
+        if (operate.empty()) {
+            message = MSErrorToString(extCode);
+        } else {
+            message = "[" + operate + "] " + MSErrorToString(extCode);
+        }
+        MEDIA_LOGE("errCode: %{public}d, errMsg: %{public}s", extErr, message.c_str());
+        return RetInfo(extErr, message);
     }
-    
-    if (errCode == MSERR_UNSUPPORT_AUD_PARAMS) {
-        return RetInfo(err, "The audio parameter is not supported. Please check the type and range.");
-    }
-    
     std::string message;
-    if (err == MSERR_EXT_API9_INVALID_PARAMETER) {
-        message = MSExtErrorAPI9ToString(err, param, "") + add;
+    if (extErr == MSERR_EXT_API9_INVALID_PARAMETER) {
+        message = MSExtErrorAPI9ToString(extErr, param, "") + add;
     } else {
-        message = MSExtErrorAPI9ToString(err, operate, "") + add;
+        message = MSExtErrorAPI9ToString(extErr, operate, "") + add;
     }
 
-    MEDIA_LOGE("errCode: %{public}d, errMsg: %{public}s", err, message.c_str());
-    return RetInfo(err, message);
+    MEDIA_LOGE("errCode: %{public}d, errMsg: %{public}s", extErr, message.c_str());
+    return RetInfo(extErr, message);
 }
 
 napi_value AVRecorderNapi::JsPrepare(napi_env env, napi_callback_info info)
@@ -1603,7 +1630,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::SetWillMuteWhenInterrupted
         CHECK_AND_RETURN_RET(napi->CheckRepeatOperation(option) == MSERR_OK,
             RetInfo(MSERR_EXT_API9_OK, ""));
         int32_t ret = napi->SetWillMuteWhenInterrupted(enable);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, GetRetInfo(MSERR_UNKNOWN, "SetWillMuteWhenInterruptedTask", ""),
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, GetRetInfo(MSERR_FRAMEWORK_ERROR, "SetWillMuteWhenInterrupted", ""),
             "SetWillMuteWhenInterruptedTask fail");
         MEDIA_LOGI("%{public}s End", option.c_str());
         return RetInfo(MSERR_EXT_API9_OK, "");

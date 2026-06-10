@@ -1347,6 +1347,7 @@ int64_t RecorderServer::GetCurrentMillisecond()
 
 void RecorderServer::SetErrorInfo(int32_t errCode, std::string &errMsg)
 {
+    MEDIA_LOGE("SetErrorInfo: errCode=%{public}d, errMsg=%{public}s", errCode, errMsg.c_str());
     statisticalEventInfo_.errCode = errCode;
     statisticalEventInfo_.errMsg = errMsg;
 }
