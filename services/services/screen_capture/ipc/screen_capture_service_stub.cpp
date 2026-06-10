@@ -968,14 +968,10 @@ int32_t ScreenCaptureServiceStub::AddWatermark(MessageParcel &data, MessageParce
     int32_t width = data.ReadInt32();
     int32_t height = data.ReadInt32();
 
-    CHECK_AND_RETURN_RET_LOG(width > 0 && height > 0, MSERR_INVALID_VAL,
-        "Invalid watermark dimensions, width: %{public}d, height: %{public}d", width, height);
-
     int32_t watermarkCount = 0;
     int32_t ret = AddWatermark(buffer, width, height, watermarkCount);
     reply.WriteInt32(watermarkCount);
     reply.WriteInt32(ret);
-
     return MSERR_OK;
 }
 } // namespace Media

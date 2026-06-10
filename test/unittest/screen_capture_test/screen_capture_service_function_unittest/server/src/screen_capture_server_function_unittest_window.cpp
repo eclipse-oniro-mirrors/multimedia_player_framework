@@ -723,5 +723,80 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CreateVirtualScreen_005, TestSize.Leve
     int32_t ret = screenCaptureServer_->CreateVirtualScreen("test_screen", nullptr);
     ASSERT_EQ(ret, MSERR_OK);
 }
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnStartScreenCapture_SkipPrivacy_001, TestSize.Level2) {
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
+    screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs = {100};
+    screenCaptureServer_->OnStartScreenCapture(false);
+    ASSERT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::STARTING);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnStartScreenCapture_SkipPrivacy_002, TestSize.Level2) {
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
+    screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs = {100};
+    screenCaptureServer_->OnStartScreenCapture(true);
+    ASSERT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::STARTING);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnStartScreenCapture_SkipPrivacy_003, TestSize.Level2) {
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_HOME_SCREEN;
+    screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs = {100};
+    screenCaptureServer_->OnStartScreenCapture(true);
+    ASSERT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::STARTING);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnStartScreenCapture_SkipPrivacy_004, TestSize.Level2) {
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
+    screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs = {};
+    screenCaptureServer_->OnStartScreenCapture(true);
+    ASSERT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::STARTING);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnStartScreenCapture_SkipPrivacy_005, TestSize.Level2) {
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
+    screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs = {100, 200};
+    screenCaptureServer_->OnStartScreenCapture(true);
+    ASSERT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::STARTING);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_SkipPrivacy_001, TestSize.Level2) {
+    screenCaptureServer_->appInfo_.appUid = ScreenCaptureServer::ROOT_UID;
+    screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
+    screenCaptureServer_->appName_ = ScreenRecorderBundleName;
+    bool isSkipPrivacyWindow = false;
+    ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(isSkipPrivacyWindow), MSERR_OK);
+    ASSERT_EQ(isSkipPrivacyWindow, true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_SkipPrivacy_002, TestSize.Level2) {
+    screenCaptureServer_->appInfo_.appUid = ScreenCaptureServer::ROOT_UID + 1;
+    screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
+    screenCaptureServer_->appName_ = ScreenRecorderBundleName;
+    bool isSkipPrivacyWindow = false;
+    ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(isSkipPrivacyWindow), MSERR_OK);
+    ASSERT_EQ(isSkipPrivacyWindow, true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureInner_SkipPrivacy_001, TestSize.Level2) {
+    SetValidConfig();
+    config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
+    config_.videoInfo.videoCapInfo.taskIDs = {100};
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->appInfo_.appUid = ScreenCaptureServer::ROOT_UID;
+    screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
+    screenCaptureServer_->appName_ = ScreenRecorderBundleName;
+    screenCaptureServer_->isScreenCaptureAuthority_ = true;
+    ASSERT_EQ(screenCaptureServer_->StartScreenCaptureInner(true), MSERR_OK);
+}
 } // Media
 } // OHOS

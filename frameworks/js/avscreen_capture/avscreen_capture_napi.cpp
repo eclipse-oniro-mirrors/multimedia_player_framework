@@ -214,8 +214,8 @@ RetInfo GetReturnInfo(int32_t errCode, const std::string &operate, const std::st
     std::string message;
     if (errCode == MSERR_INVALID_VAL) {
         message = MSExtErrorAPI9ToString(err, param, "") + add;
-    }  else {
-        message = operate+ " " + MSErrorToString(static_cast<MediaServiceErrCode>(errCode)) + add;
+    } else {
+        message = operate + " " + MSErrorToString(static_cast<MediaServiceErrCode>(errCode)) + add;
     }
 
     MEDIA_LOGE("errCode: %{public}d, errMsg: %{public}s", err, message.c_str());

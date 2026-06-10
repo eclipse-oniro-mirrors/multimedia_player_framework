@@ -192,7 +192,7 @@ public:
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
     int32_t RegisterServerCallbacks();
-    int32_t OnStartScreenCapture();
+    int32_t OnStartScreenCapture(bool isSkipPrivacyWindow = false);
     bool IsFirstStartPidInstance(int32_t pid);
     bool FirstPidUpdatePrivacyUsingPermissionState(int32_t pid);
     void PostStartScreenCapture(bool isSuccess);
