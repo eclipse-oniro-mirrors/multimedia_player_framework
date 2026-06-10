@@ -44,10 +44,16 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_001, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     audioHapticSoundNormalImpl->avPlayer_ = PlayerFactory::CreatePlayer();
-    EXPECT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
+
+    // Destructor calls ReleaseSoundInternal when avPlayer_ != nullptr
+    auto ret = audioHapticSoundNormalImpl->ReleaseSoundInternal();
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_EQ(audioHapticSoundNormalImpl->avPlayer_, nullptr);
+    EXPECT_EQ(audioHapticSoundNormalImpl->playerState_, AudioHapticPlayerState::STATE_RELEASED);
 }
 
 /**
@@ -63,10 +69,12 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_002, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     audioHapticSoundNormalImpl->avPlayer_ = nullptr;
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    // When avPlayer_ is nullptr, destructor skips ReleaseSoundInternal
+    EXPECT_EQ(audioHapticSoundNormalImpl->avPlayer_, nullptr);
+    EXPECT_EQ(audioHapticSoundNormalImpl->playerState_, AudioHapticPlayerState::STATE_NEW);
 }
 
 /**
@@ -82,10 +90,10 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_003, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     audioHapticSoundNormalImpl->avPlayer_ = PlayerFactory::CreatePlayer();
-    EXPECT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
 
     audioHapticSoundNormalImpl->audioSource_ = {.audioUri = "abc"};
     audioHapticSoundNormalImpl->configuredAudioSource_ = {.audioUri = "abc"};
@@ -107,10 +115,10 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_004, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     audioHapticSoundNormalImpl->avPlayer_ = PlayerFactory::CreatePlayer();
-    EXPECT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
 
     audioHapticSoundNormalImpl->playerState_ = AudioHapticPlayerState::STATE_RUNNING;
     audioHapticSoundNormalImpl->audioSource_ = {.audioUri = "abc"};
@@ -132,10 +140,10 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_005, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     audioHapticSoundNormalImpl->avPlayer_ = PlayerFactory::CreatePlayer();
-    EXPECT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
 
     audioHapticSoundNormalImpl->playerState_ = AudioHapticPlayerState::STATE_STOPPED;
     audioHapticSoundNormalImpl->audioSource_ = {.audioUri = "abc"};
@@ -157,10 +165,10 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_006, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     audioHapticSoundNormalImpl->avPlayer_ = PlayerFactory::CreatePlayer();
-    EXPECT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
 
     audioHapticSoundNormalImpl->playerState_ = AudioHapticPlayerState::STATE_NEW;
     audioHapticSoundNormalImpl->audioSource_ = {.audioUri = "abc"};
@@ -183,10 +191,10 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_007, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     audioHapticSoundNormalImpl->avPlayer_ = PlayerFactory::CreatePlayer();
-    EXPECT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
 
     audioHapticSoundNormalImpl->playerState_ = AudioHapticPlayerState::STATE_NEW;
     audioHapticSoundNormalImpl->audioSource_ = {.audioUri = "abc"};
@@ -209,10 +217,10 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_008, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     audioHapticSoundNormalImpl->avPlayer_ = PlayerFactory::CreatePlayer();
-    EXPECT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
 
     audioHapticSoundNormalImpl->playerState_ = AudioHapticPlayerState::STATE_NEW;
     auto ret = audioHapticSoundNormalImpl->StopSound();
@@ -233,10 +241,10 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_009, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     audioHapticSoundNormalImpl->avPlayer_ = PlayerFactory::CreatePlayer();
-    EXPECT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
 
     audioHapticSoundNormalImpl->playerState_ = AudioHapticPlayerState::STATE_STOPPED;
     auto ret = audioHapticSoundNormalImpl->StopSound();
@@ -257,13 +265,16 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_010, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     audioHapticSoundNormalImpl->avPlayer_ = PlayerFactory::CreatePlayer();
-    EXPECT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
     audioHapticSoundNormalImpl->fileDes_ = 0;
 
     audioHapticSoundNormalImpl->ReleaseAVPlayer();
+    EXPECT_EQ(audioHapticSoundNormalImpl->avPlayer_, nullptr);
+    EXPECT_EQ(audioHapticSoundNormalImpl->avPlayerCallback_, nullptr);
+    EXPECT_EQ(audioHapticSoundNormalImpl->fileDes_, -1);
 }
 
 /**
@@ -279,12 +290,15 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_011, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     audioHapticSoundNormalImpl->avPlayer_ = nullptr;
     audioHapticSoundNormalImpl->fileDes_ = -1;
 
     audioHapticSoundNormalImpl->ReleaseAVPlayer();
+    EXPECT_EQ(audioHapticSoundNormalImpl->avPlayer_, nullptr);
+    EXPECT_EQ(audioHapticSoundNormalImpl->avPlayerCallback_, nullptr);
+    EXPECT_EQ(audioHapticSoundNormalImpl->fileDes_, -1);
 }
 
 /**
@@ -300,7 +314,7 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_012, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     float volume = g_nuM1;
 
@@ -321,7 +335,7 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_013, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     float volume = g_nuM2;
 
@@ -342,12 +356,12 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_014, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     float volume = g_nuM3;
     audioHapticSoundNormalImpl->playerState_ = AudioHapticPlayerState::STATE_NEW;
     audioHapticSoundNormalImpl->avPlayer_ = PlayerFactory::CreatePlayer();
-    EXPECT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
 
     auto ret = audioHapticSoundNormalImpl->SetVolume(volume);
     EXPECT_EQ(ret, MSERR_OK);
@@ -366,12 +380,12 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_015, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     float volume = g_nuM3;
     audioHapticSoundNormalImpl->playerState_ = AudioHapticPlayerState::STATE_RUNNING;
     audioHapticSoundNormalImpl->avPlayer_ = PlayerFactory::CreatePlayer();
-    EXPECT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
 
     auto ret = audioHapticSoundNormalImpl->SetVolume(volume);
     EXPECT_EQ(ret, MSERR_OK);
@@ -390,12 +404,12 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_016, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     float volume = g_nuM3;
     audioHapticSoundNormalImpl->playerState_ = AudioHapticPlayerState::STATE_PREPARED;
     audioHapticSoundNormalImpl->avPlayer_ = PlayerFactory::CreatePlayer();
-    EXPECT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
 
     auto ret = audioHapticSoundNormalImpl->SetVolume(volume);
     EXPECT_EQ(ret, MSERR_OK);
@@ -414,12 +428,12 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_017, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     bool loop = true;
     audioHapticSoundNormalImpl->playerState_ = AudioHapticPlayerState::STATE_NEW;
     audioHapticSoundNormalImpl->avPlayer_ = PlayerFactory::CreatePlayer();
-    EXPECT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
 
     auto ret = audioHapticSoundNormalImpl->SetLoop(loop);
     EXPECT_EQ(ret, MSERR_OK);
@@ -438,12 +452,12 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_018, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     bool loop = true;
     audioHapticSoundNormalImpl->playerState_ = AudioHapticPlayerState::STATE_RUNNING;
     audioHapticSoundNormalImpl->avPlayer_ = PlayerFactory::CreatePlayer();
-    EXPECT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
 
     auto ret = audioHapticSoundNormalImpl->SetLoop(loop);
     EXPECT_EQ(ret, MSERR_OK);
@@ -462,12 +476,12 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_019, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     bool loop = true;
     audioHapticSoundNormalImpl->playerState_ = AudioHapticPlayerState::STATE_PREPARED;
     audioHapticSoundNormalImpl->avPlayer_ = PlayerFactory::CreatePlayer();
-    EXPECT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
 
     auto ret = audioHapticSoundNormalImpl->SetLoop(loop);
     EXPECT_EQ(ret, MSERR_OK);
@@ -486,10 +500,10 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_020, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     audioHapticSoundNormalImpl->avPlayer_ = PlayerFactory::CreatePlayer();
-    EXPECT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
 
     auto ret = audioHapticSoundNormalImpl->GetAudioCurrentTime();
     EXPECT_EQ(ret, g_nuM4);
@@ -508,7 +522,7 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_021, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     audioHapticSoundNormalImpl->avPlayer_ = nullptr;
     auto ret = audioHapticSoundNormalImpl->GetAudioCurrentTime();
@@ -528,10 +542,10 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_022, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     auto callback = std::make_shared<AudioHapticSoundCallbackImpl>(std::make_shared<AudioHapticPlayerImpl>());
-    EXPECT_NE(callback, nullptr);
+    ASSERT_NE(callback, nullptr);
 
     auto ret = audioHapticSoundNormalImpl->SetAudioHapticSoundCallback(callback);
     EXPECT_EQ(ret, MSERR_OK);
@@ -550,7 +564,7 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_023, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     std::shared_ptr<AudioHapticSoundCallback> callback = nullptr;
     auto ret = audioHapticSoundNormalImpl->SetAudioHapticSoundCallback(callback);
@@ -570,11 +584,14 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_024, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     int32_t errorCode = MediaServiceErrCode::MSERR_UNSUPPORT_FILE;
     audioHapticSoundNormalImpl->audioHapticPlayerCallback_.reset();
     audioHapticSoundNormalImpl->NotifyErrorEvent(errorCode);
+    // MSERR_UNSUPPORT_FILE sets isUnsupportedFile_ to true
+    EXPECT_EQ(audioHapticSoundNormalImpl->isUnsupportedFile_, true);
+    EXPECT_EQ(audioHapticSoundNormalImpl->audioHapticPlayerCallback_.lock(), nullptr);
 }
 
 /**
@@ -590,16 +607,19 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_025, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     int32_t errorCode = MediaServiceErrCode::MSERR_OK;
 
     std::shared_ptr<AudioHapticSoundCallback> sharedcb =
         std::make_shared<AudioHapticSoundCallbackImpl>(std::make_shared<AudioHapticPlayerImpl>());
     audioHapticSoundNormalImpl->audioHapticPlayerCallback_ = sharedcb;
-    EXPECT_NE(audioHapticSoundNormalImpl->audioHapticPlayerCallback_.lock(), nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl->audioHapticPlayerCallback_.lock(), nullptr);
 
     audioHapticSoundNormalImpl->NotifyErrorEvent(errorCode);
+    // MSERR_OK is not MSERR_UNSUPPORT_FILE, so isUnsupportedFile_ remains false
+    EXPECT_EQ(audioHapticSoundNormalImpl->isUnsupportedFile_, false);
+    ASSERT_NE(audioHapticSoundNormalImpl->audioHapticPlayerCallback_.lock(), nullptr);
 }
 
 /**
@@ -615,16 +635,18 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_026, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     uint64_t latency = 0;
 
     std::shared_ptr<AudioHapticSoundCallback> sharedcb =
         std::make_shared<AudioHapticSoundCallbackImpl>(std::make_shared<AudioHapticPlayerImpl>());
     audioHapticSoundNormalImpl->audioHapticPlayerCallback_ = sharedcb;
-    EXPECT_NE(audioHapticSoundNormalImpl->audioHapticPlayerCallback_.lock(), nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl->audioHapticPlayerCallback_.lock(), nullptr);
 
     audioHapticSoundNormalImpl->NotifyFirstFrameEvent(latency);
+    // Callback should still be valid after notification
+    ASSERT_NE(audioHapticSoundNormalImpl->audioHapticPlayerCallback_.lock(), nullptr);
 }
 
 /**
@@ -640,13 +662,14 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_027, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     uint64_t latency = 0;
 
     audioHapticSoundNormalImpl->audioHapticPlayerCallback_.reset();
     audioHapticSoundNormalImpl->NotifyFirstFrameEvent(latency);
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    // Callback remains null after notification with null callback
+    EXPECT_EQ(audioHapticSoundNormalImpl->audioHapticPlayerCallback_.lock(), nullptr);
 }
 
 /**
@@ -662,16 +685,18 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_028, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     AudioStandard::InterruptEvent interruptEvent;
 
     std::shared_ptr<AudioHapticSoundCallback> sharedcb =
         std::make_shared<AudioHapticSoundCallbackImpl>(std::make_shared<AudioHapticPlayerImpl>());
     audioHapticSoundNormalImpl->audioHapticPlayerCallback_ = sharedcb;
-    EXPECT_NE(audioHapticSoundNormalImpl->audioHapticPlayerCallback_.lock(), nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl->audioHapticPlayerCallback_.lock(), nullptr);
 
     audioHapticSoundNormalImpl->NotifyInterruptEvent(interruptEvent);
+    // Callback should still be valid after notification
+    ASSERT_NE(audioHapticSoundNormalImpl->audioHapticPlayerCallback_.lock(), nullptr);
 }
 
 /**
@@ -687,13 +712,14 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_029, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     AudioStandard::InterruptEvent interruptEvent;
 
     audioHapticSoundNormalImpl->audioHapticPlayerCallback_.reset();
     audioHapticSoundNormalImpl->NotifyInterruptEvent(interruptEvent);
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    // Callback remains null after notification with null callback
+    EXPECT_EQ(audioHapticSoundNormalImpl->audioHapticPlayerCallback_.lock(), nullptr);
 }
 
 /**
@@ -709,14 +735,17 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_030, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     std::shared_ptr<AudioHapticSoundCallback> sharedcb =
         std::make_shared<AudioHapticSoundCallbackImpl>(std::make_shared<AudioHapticPlayerImpl>());
     audioHapticSoundNormalImpl->audioHapticPlayerCallback_ = sharedcb;
-    EXPECT_NE(audioHapticSoundNormalImpl->audioHapticPlayerCallback_.lock(), nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl->audioHapticPlayerCallback_.lock(), nullptr);
 
     audioHapticSoundNormalImpl->NotifyEndOfStreamEvent(false);
+    // isLoop=false => playerState_ changes to STATE_STOPPED
+    EXPECT_EQ(audioHapticSoundNormalImpl->playerState_, AudioHapticPlayerState::STATE_STOPPED);
+    ASSERT_NE(audioHapticSoundNormalImpl->audioHapticPlayerCallback_.lock(), nullptr);
 }
 
 /**
@@ -732,11 +761,13 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_031, Tes
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     audioHapticSoundNormalImpl->audioHapticPlayerCallback_.reset();
     audioHapticSoundNormalImpl->NotifyEndOfStreamEvent(true);
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    // isLoop=true => playerState_ does NOT change to STATE_STOPPED
+    EXPECT_EQ(audioHapticSoundNormalImpl->playerState_, AudioHapticPlayerState::STATE_NEW);
+    EXPECT_EQ(audioHapticSoundNormalImpl->audioHapticPlayerCallback_.lock(), nullptr);
 }
 
 /**
@@ -752,20 +783,21 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_032, TestSize
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     auto aHSoundNormalCallback = std::make_shared<AHSoundNormalCallback>(audioHapticSoundNormalImpl);
-    EXPECT_NE(aHSoundNormalCallback, nullptr);
+    ASSERT_NE(aHSoundNormalCallback, nullptr);
 
     std::shared_ptr<AudioHapticSoundNormalImpl> sharedcb =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
     aHSoundNormalCallback->soundNormalImpl_ = sharedcb;
-    EXPECT_NE(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
+    ASSERT_NE(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
 
-    int32_t errorCode = 0;
+    int32_t errorCode = MediaServiceErrCode::MSERR_UNSUPPORT_FILE;
     std::string errorMsg = "abc";
     aHSoundNormalCallback->OnError(errorCode, errorMsg);
-    EXPECT_NE(aHSoundNormalCallback, nullptr);
+    // OnError calls NotifyErrorEvent which sets isUnsupportedFile_ = true for MSERR_UNSUPPORT_FILE
+    EXPECT_EQ(sharedcb->isUnsupportedFile_, true);
 }
 
 /**
@@ -781,17 +813,18 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_033, TestSize
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     auto aHSoundNormalCallback = std::make_shared<AHSoundNormalCallback>(audioHapticSoundNormalImpl);
-    EXPECT_NE(aHSoundNormalCallback, nullptr);
+    ASSERT_NE(aHSoundNormalCallback, nullptr);
 
     aHSoundNormalCallback->soundNormalImpl_.reset();
 
     int32_t errorCode = 0;
     std::string errorMsg = "abc";
     aHSoundNormalCallback->OnError(errorCode, errorMsg);
-    EXPECT_NE(aHSoundNormalCallback, nullptr);
+    // With expired impl, OnError returns early without calling NotifyErrorEvent
+    EXPECT_EQ(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
 }
 
 /**
@@ -807,18 +840,19 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_034, TestSize
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     auto aHSoundNormalCallback = std::make_shared<AHSoundNormalCallback>(audioHapticSoundNormalImpl);
-    EXPECT_NE(aHSoundNormalCallback, nullptr);
+    ASSERT_NE(aHSoundNormalCallback, nullptr);
 
     aHSoundNormalCallback->soundNormalImpl_.reset();
 
     Media::PlayerOnInfoType type = PlayerOnInfoType::INFO_TYPE_STATE_CHANGE;
-    int32_t extra = 0;
+    int32_t extra = PlayerStates::PLAYER_IDLE;
     Media::Format infoBody;
     aHSoundNormalCallback->OnInfo(type, extra, infoBody);
-    EXPECT_NE(aHSoundNormalCallback, nullptr);
+    // HandleStateChangeEvent updates playerState_ based on state change
+    EXPECT_EQ(aHSoundNormalCallback->playerState_, AudioHapticPlayerState::STATE_NEW);
 }
 
 /**
@@ -834,10 +868,10 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_035, TestSize
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     auto aHSoundNormalCallback = std::make_shared<AHSoundNormalCallback>(audioHapticSoundNormalImpl);
-    EXPECT_NE(aHSoundNormalCallback, nullptr);
+    ASSERT_NE(aHSoundNormalCallback, nullptr);
 
     aHSoundNormalCallback->soundNormalImpl_.reset();
 
@@ -845,7 +879,8 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_035, TestSize
     int32_t extra = 0;
     Media::Format infoBody;
     aHSoundNormalCallback->OnInfo(type, extra, infoBody);
-    EXPECT_NE(aHSoundNormalCallback, nullptr);
+    // HandleAudioInterruptEvent with expired impl returns early
+    EXPECT_EQ(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
 }
 
 /**
@@ -861,10 +896,10 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_036, TestSize
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     auto aHSoundNormalCallback = std::make_shared<AHSoundNormalCallback>(audioHapticSoundNormalImpl);
-    EXPECT_NE(aHSoundNormalCallback, nullptr);
+    ASSERT_NE(aHSoundNormalCallback, nullptr);
 
     aHSoundNormalCallback->soundNormalImpl_.reset();
 
@@ -872,7 +907,8 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_036, TestSize
     int32_t extra = 0;
     Media::Format infoBody;
     aHSoundNormalCallback->OnInfo(type, extra, infoBody);
-    EXPECT_NE(aHSoundNormalCallback, nullptr);
+    // HandleAudioFirstFrameEvent with expired impl returns early
+    EXPECT_EQ(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
 }
 
 /**
@@ -888,10 +924,10 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_037, TestSize
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     auto aHSoundNormalCallback = std::make_shared<AHSoundNormalCallback>(audioHapticSoundNormalImpl);
-    EXPECT_NE(aHSoundNormalCallback, nullptr);
+    ASSERT_NE(aHSoundNormalCallback, nullptr);
 
     aHSoundNormalCallback->soundNormalImpl_.reset();
 
@@ -899,7 +935,8 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_037, TestSize
     int32_t extra = 0;
     Media::Format infoBody;
     aHSoundNormalCallback->OnInfo(type, extra, infoBody);
-    EXPECT_NE(aHSoundNormalCallback, nullptr);
+    // INFO_TYPE_AUDIO_DEVICE_CHANGE is not handled, OnInfo returns early
+    EXPECT_EQ(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
 }
 
 /**
@@ -915,10 +952,10 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_038, TestSize
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     auto aHSoundNormalCallback = std::make_shared<AHSoundNormalCallback>(audioHapticSoundNormalImpl);
-    EXPECT_NE(aHSoundNormalCallback, nullptr);
+    ASSERT_NE(aHSoundNormalCallback, nullptr);
 
     aHSoundNormalCallback->soundNormalImpl_.reset();
 
@@ -941,10 +978,10 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_039, TestSize
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     auto aHSoundNormalCallback = std::make_shared<AHSoundNormalCallback>(audioHapticSoundNormalImpl);
-    EXPECT_NE(aHSoundNormalCallback, nullptr);
+    ASSERT_NE(aHSoundNormalCallback, nullptr);
 
     aHSoundNormalCallback->soundNormalImpl_.reset();
 
@@ -967,15 +1004,15 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_040, TestSize
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     auto aHSoundNormalCallback = std::make_shared<AHSoundNormalCallback>(audioHapticSoundNormalImpl);
-    EXPECT_NE(aHSoundNormalCallback, nullptr);
+    ASSERT_NE(aHSoundNormalCallback, nullptr);
 
     std::shared_ptr<AudioHapticSoundNormalImpl> sharedcb =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
     aHSoundNormalCallback->soundNormalImpl_ = sharedcb;
-    EXPECT_NE(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
+    ASSERT_NE(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
 
 
     int32_t extra = PlayerStates::PLAYER_PREPARED;
@@ -997,10 +1034,10 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_041, TestSize
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     auto aHSoundNormalCallback = std::make_shared<AHSoundNormalCallback>(audioHapticSoundNormalImpl);
-    EXPECT_NE(aHSoundNormalCallback, nullptr);
+    ASSERT_NE(aHSoundNormalCallback, nullptr);
 
     aHSoundNormalCallback->soundNormalImpl_.reset();
 
@@ -1023,10 +1060,10 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_042, TestSize
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     auto aHSoundNormalCallback = std::make_shared<AHSoundNormalCallback>(audioHapticSoundNormalImpl);
-    EXPECT_NE(aHSoundNormalCallback, nullptr);
+    ASSERT_NE(aHSoundNormalCallback, nullptr);
 
     aHSoundNormalCallback->soundNormalImpl_.reset();
 
@@ -1049,15 +1086,15 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_043, TestSize
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     auto aHSoundNormalCallback = std::make_shared<AHSoundNormalCallback>(audioHapticSoundNormalImpl);
-    EXPECT_NE(aHSoundNormalCallback, nullptr);
+    ASSERT_NE(aHSoundNormalCallback, nullptr);
 
     std::shared_ptr<AudioHapticSoundNormalImpl> sharedcb =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
     aHSoundNormalCallback->soundNormalImpl_ = sharedcb;
-    EXPECT_NE(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
+    ASSERT_NE(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
 
 
     int32_t extra = PlayerStates::PLAYER_PLAYBACK_COMPLETE;
@@ -1079,10 +1116,10 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_044, TestSize
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     auto aHSoundNormalCallback = std::make_shared<AHSoundNormalCallback>(audioHapticSoundNormalImpl);
-    EXPECT_NE(aHSoundNormalCallback, nullptr);
+    ASSERT_NE(aHSoundNormalCallback, nullptr);
 
     aHSoundNormalCallback->soundNormalImpl_.reset();
 
@@ -1105,16 +1142,18 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_045, TestSize
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     auto aHSoundNormalCallback = std::make_shared<AHSoundNormalCallback>(audioHapticSoundNormalImpl);
-    EXPECT_NE(aHSoundNormalCallback, nullptr);
+    ASSERT_NE(aHSoundNormalCallback, nullptr);
 
     aHSoundNormalCallback->soundNormalImpl_.reset();
 
     int32_t extra = PlayerStates::PLAYER_INITIALIZED;
     Format infoBody;
     aHSoundNormalCallback->HandleAudioInterruptEvent(extra, infoBody);
+    // With expired impl, HandleAudioInterruptEvent returns early
+    EXPECT_EQ(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
 }
 
 /**
@@ -1130,19 +1169,21 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_046, TestSize
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     auto aHSoundNormalCallback = std::make_shared<AHSoundNormalCallback>(audioHapticSoundNormalImpl);
-    EXPECT_NE(aHSoundNormalCallback, nullptr);
+    ASSERT_NE(aHSoundNormalCallback, nullptr);
 
     std::shared_ptr<AudioHapticSoundNormalImpl> sharedcb =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
     aHSoundNormalCallback->soundNormalImpl_ = sharedcb;
-    EXPECT_NE(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
+    ASSERT_NE(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
 
     int32_t extra = PlayerStates::PLAYER_INITIALIZED;
     Format infoBody;
     aHSoundNormalCallback->HandleAudioInterruptEvent(extra, infoBody);
+    // With valid impl, HandleAudioInterruptEvent calls NotifyInterruptEvent
+    ASSERT_NE(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
 }
 
 /**
@@ -1158,19 +1199,21 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_047, TestSize
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     auto aHSoundNormalCallback = std::make_shared<AHSoundNormalCallback>(audioHapticSoundNormalImpl);
-    EXPECT_NE(aHSoundNormalCallback, nullptr);
+    ASSERT_NE(aHSoundNormalCallback, nullptr);
 
     std::shared_ptr<AudioHapticSoundNormalImpl> sharedcb =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
     aHSoundNormalCallback->soundNormalImpl_ = sharedcb;
-    EXPECT_NE(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
+    ASSERT_NE(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
 
     int32_t extra = PlayerStates::PLAYER_INITIALIZED;
     Format infoBody;
     aHSoundNormalCallback->HandleAudioFirstFrameEvent(extra, infoBody);
+    // With valid impl, HandleAudioFirstFrameEvent calls NotifyFirstFrameEvent
+    ASSERT_NE(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
 }
 
 /**
@@ -1186,16 +1229,18 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_048, TestSize
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     auto aHSoundNormalCallback = std::make_shared<AHSoundNormalCallback>(audioHapticSoundNormalImpl);
-    EXPECT_NE(aHSoundNormalCallback, nullptr);
+    ASSERT_NE(aHSoundNormalCallback, nullptr);
 
     aHSoundNormalCallback->soundNormalImpl_.reset();
 
     int32_t extra = PlayerStates::PLAYER_INITIALIZED;
     Format infoBody;
     aHSoundNormalCallback->HandleAudioInterruptEvent(extra, infoBody);
+    // Duplicate case: verify expired impl path returns early
+    EXPECT_EQ(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
 }
 
 /**
@@ -1213,7 +1258,7 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, MockMode_AudioHapticSoundNormalImpl
     auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(
         audioSource, muteAudio, streamUsage, rendererFlags);
     
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
     EXPECT_EQ(audioHapticSoundNormalImpl->rendererFlags_, AudioStandard::AUDIO_FLAG_VKB_NORMAL);
 }
 
@@ -1232,7 +1277,7 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, MockMode_AudioHapticSoundNormalImpl
     auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(
         audioSource, muteAudio, streamUsage, rendererFlags);
     
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
     EXPECT_EQ(audioHapticSoundNormalImpl->rendererFlags_, 0);
 }
 
@@ -1250,10 +1295,10 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, MockMode_AudioHapticSoundNormalImpl
     
     auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(
         audioSource, muteAudio, streamUsage, rendererFlags);
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
     
     audioHapticSoundNormalImpl->avPlayer_ = PlayerFactory::CreatePlayer();
-    EXPECT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
     
     audioHapticSoundNormalImpl->streamUsage_ = streamUsage;
     audioHapticSoundNormalImpl->rendererFlags_ = rendererFlags;
@@ -1276,10 +1321,10 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, MockMode_AudioHapticSoundNormalImpl
     
     auto audioHapticSoundNormalImpl = std::make_shared<AudioHapticSoundNormalImpl>(
         audioSource, muteAudio, streamUsage, rendererFlags);
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
     
     audioHapticSoundNormalImpl->avPlayer_ = PlayerFactory::CreatePlayer();
-    EXPECT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl->avPlayer_, nullptr);
     
     audioHapticSoundNormalImpl->streamUsage_ = streamUsage;
     audioHapticSoundNormalImpl->rendererFlags_ = rendererFlags;

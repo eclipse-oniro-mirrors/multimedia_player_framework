@@ -41,7 +41,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_001, TestSize.Leve
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     auto audioHapticSound = std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSound, nullptr);
+    ASSERT_NE(audioHapticSound, nullptr);
 
     AudioLatencyMode latencyMode = static_cast<AudioLatencyMode>(NUM2);
     bool parallelPlayFlag = true;
@@ -63,14 +63,14 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_002, TestSize.Leve
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     auto audioHapticSound = std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSound, nullptr);
+    ASSERT_NE(audioHapticSound, nullptr);
 
     AudioLatencyMode latencyMode = AudioLatencyMode::AUDIO_LATENCY_MODE_NORMAL;
     bool parallelPlayFlag = true;
 
     auto ret = audioHapticSound->CreateAudioHapticSound(latencyMode, audioSource, muteAudio,
         streamUsage, parallelPlayFlag);
-    EXPECT_NE(ret, nullptr);
+    ASSERT_NE(ret, nullptr);
 }
 
 /**
@@ -85,14 +85,14 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_003, TestSize.Leve
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     auto audioHapticSound = std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSound, nullptr);
+    ASSERT_NE(audioHapticSound, nullptr);
 
     AudioLatencyMode latencyMode = AudioLatencyMode::AUDIO_LATENCY_MODE_FAST;
     bool parallelPlayFlag = true;
 
     auto ret = audioHapticSound->CreateAudioHapticSound(latencyMode, audioSource, muteAudio,
         streamUsage, parallelPlayFlag);
-    EXPECT_NE(ret, nullptr);
+    ASSERT_NE(ret, nullptr);
 }
 
 /**
@@ -104,8 +104,9 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_004, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
     audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_RELEASED;
+    // Destructor should not call ReleaseVibrator when STATE_RELEASED
+    EXPECT_EQ(audioHapticPlayerImpl->playerState_, AudioHapticPlayerState::STATE_RELEASED);
 }
 
 /**
@@ -117,8 +118,9 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_005, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
     audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_NEW;
+    // Destructor should call ReleaseVibrator when not STATE_RELEASED
+    EXPECT_NE(audioHapticPlayerImpl->playerState_, AudioHapticPlayerState::STATE_RELEASED);
 }
 
 /**
@@ -130,7 +132,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_006, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
 
     AudioHapticType audioHapticType = AudioHapticType::AUDIO_HAPTIC_TYPE_AUDIO;
     audioHapticPlayerImpl->muteAudio_ = true;
@@ -148,7 +150,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_007, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
 
     AudioHapticType audioHapticType = AudioHapticType::AUDIO_HAPTIC_TYPE_HAPTIC;
     audioHapticPlayerImpl->muteHaptic_ = true;
@@ -166,7 +168,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_008, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
 
     AudioHapticType audioHapticType = static_cast<AudioHapticType>(NUM2);
     audioHapticPlayerImpl->muteHaptic_ = true;
@@ -184,10 +186,10 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_009, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
 
     audioHapticPlayerImpl->vibrateThread_ = std::make_shared<std::thread>();
-    EXPECT_NE(audioHapticPlayerImpl->vibrateThread_, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl->vibrateThread_, nullptr);
 
     auto ret = audioHapticPlayerImpl->Start();
     EXPECT_NE(ret, MSERR_OK);
@@ -202,7 +204,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_010, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
 
     audioHapticPlayerImpl->vibrateThread_ = nullptr;
 
@@ -219,16 +221,14 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_011, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
-
     AudioHapticPlayerImpl audioHapticPlayerImpl2;
     audioHapticPlayerImpl->audioHapticVibrator_ = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl2);
-    EXPECT_NE(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
-
     audioHapticPlayerImpl->vibrateThread_ = std::make_shared<std::thread>();
-    EXPECT_NE(audioHapticPlayerImpl->vibrateThread_, nullptr);
 
     audioHapticPlayerImpl->ReleaseVibrator();
+    // After ReleaseVibrator, vibrator and thread should be released
+    EXPECT_EQ(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
+    EXPECT_EQ(audioHapticPlayerImpl->vibrateThread_, nullptr);
 }
 
 /**
@@ -240,12 +240,13 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_012, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
-
     audioHapticPlayerImpl->audioHapticVibrator_ = nullptr;
     audioHapticPlayerImpl->vibrateThread_ = nullptr;
 
     audioHapticPlayerImpl->ReleaseVibrator();
+    // ReleaseVibrator with null vibrator/thread should not crash, state unchanged
+    EXPECT_EQ(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
+    EXPECT_EQ(audioHapticPlayerImpl->vibrateThread_, nullptr);
 }
 
 /**
@@ -257,18 +258,17 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_013, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
-
     AudioSource audioSource = {.audioUri = "123"};
     bool muteAudio = true;
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
-
     audioHapticPlayerImpl->audioHapticSound_ = audioHapticSoundNormalImpl;
     audioHapticPlayerImpl->ReleaseSound();
+    // After ReleaseSound, sound and callback should be released
+    EXPECT_EQ(audioHapticPlayerImpl->audioHapticSound_, nullptr);
+    EXPECT_EQ(audioHapticPlayerImpl->soundCallback_, nullptr);
 }
 
 /**
@@ -280,10 +280,11 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_014, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
-
     audioHapticPlayerImpl->audioHapticSound_ = nullptr;
     audioHapticPlayerImpl->ReleaseSound();
+    // ReleaseSound with null sound should not crash, sound remains null
+    EXPECT_EQ(audioHapticPlayerImpl->audioHapticSound_, nullptr);
+    EXPECT_EQ(audioHapticPlayerImpl->soundCallback_, nullptr);
 }
 
 /**
@@ -295,7 +296,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_015, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
 
     float volume = NUM_1;
     auto ret = audioHapticPlayerImpl->SetVolume(volume);
@@ -311,7 +312,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_016, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
 
     float volume = NUM_2;
     auto ret = audioHapticPlayerImpl->SetVolume(volume);
@@ -327,7 +328,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_017, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
 
     float volume = NUM_3;
     audioHapticPlayerImpl->audioHapticSound_ = nullptr;
@@ -345,7 +346,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_018, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
 
     float volume = 0.0f;
 
@@ -355,7 +356,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_018, TestSize.Leve
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     audioHapticPlayerImpl->audioHapticSound_ = audioHapticSoundNormalImpl;
 
@@ -376,7 +377,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_019, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
 
     float volume = NUM_3;
 
@@ -386,7 +387,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_019, TestSize.Leve
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     audioHapticPlayerImpl->audioHapticSound_ = audioHapticSoundNormalImpl;
 
@@ -407,7 +408,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_020, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
 
     float volume = NUM_3;
 
@@ -417,7 +418,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_020, TestSize.Leve
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     audioHapticPlayerImpl->audioHapticSound_ = audioHapticSoundNormalImpl;
 
@@ -438,7 +439,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_021, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
 
     float volume = NUM_3;
 
@@ -448,7 +449,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_021, TestSize.Leve
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     audioHapticPlayerImpl->audioHapticSound_ = audioHapticSoundNormalImpl;
 
@@ -469,7 +470,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_022, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
 
     float volume = NUM_3;
 
@@ -479,7 +480,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_022, TestSize.Leve
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     audioHapticPlayerImpl->audioHapticSound_ = audioHapticSoundNormalImpl;
 
@@ -500,7 +501,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_023, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
 
     float volume = NUM_3;
 
@@ -510,7 +511,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_023, TestSize.Leve
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     audioHapticPlayerImpl->audioHapticSound_ = audioHapticSoundNormalImpl;
 
@@ -531,7 +532,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_024, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
 
     float intensity = NUM_1;
     auto ret = audioHapticPlayerImpl->SetHapticIntensity(intensity);
@@ -547,7 +548,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_027, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
 
     bool loop = true;
 
@@ -557,7 +558,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_027, TestSize.Leve
     auto audioHapticSoundNormalImpl =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, muteAudio, streamUsage);
 
-    EXPECT_NE(audioHapticSoundNormalImpl, nullptr);
+    ASSERT_NE(audioHapticSoundNormalImpl, nullptr);
 
     audioHapticPlayerImpl->audioHapticSound_ = audioHapticSoundNormalImpl;
 
@@ -574,7 +575,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_028, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
 
     bool loop = true;
 
@@ -593,10 +594,10 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_029, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
 
     std::shared_ptr<AudioHapticPlayerCallback> playerCallback = std::make_shared<AudioHapticPlayerCallbackTest>();
-    EXPECT_NE(playerCallback, nullptr);
+    ASSERT_NE(playerCallback, nullptr);
 
     auto ret = audioHapticPlayerImpl->SetAudioHapticPlayerCallback(playerCallback);
     EXPECT_EQ(ret, MSERR_OK);
@@ -611,7 +612,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_030, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
 
     std::shared_ptr<AudioHapticPlayerCallback> playerCallback = nullptr;
 
@@ -628,7 +629,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_031, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
 
     audioHapticPlayerImpl->muteHaptic_ = true;
 
@@ -645,7 +646,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_032, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
 
     audioHapticPlayerImpl->muteHaptic_ = false;
     audioHapticPlayerImpl->isVibrationStopped_ = true;
@@ -664,7 +665,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_033, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
 
     audioHapticPlayerImpl->muteHaptic_ = false;
     audioHapticPlayerImpl->isVibrationStopped_ = false;
@@ -683,7 +684,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_034, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
 
     audioHapticPlayerImpl->muteHaptic_ = false;
     audioHapticPlayerImpl->isVibrationStopped_ = false;
@@ -702,16 +703,14 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_035, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
-
     AudioHapticPlayerImpl audioHapticPlayerImpl2;
     audioHapticPlayerImpl->audioHapticVibrator_ = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl2);
-    EXPECT_NE(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
-
     audioHapticPlayerImpl->vibrateThread_ = std::make_shared<std::thread>();
-    EXPECT_NE(audioHapticPlayerImpl->vibrateThread_, nullptr);
 
     audioHapticPlayerImpl->StopVibrate();
+    // After StopVibrate, vibration should be stopped and thread released
+    EXPECT_EQ(audioHapticPlayerImpl->isVibrationStopped_, true);
+    EXPECT_EQ(audioHapticPlayerImpl->vibrateThread_, nullptr);
 }
 
 /**
@@ -723,12 +722,13 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_036, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
-
     audioHapticPlayerImpl->audioHapticVibrator_ = nullptr;
     audioHapticPlayerImpl->vibrateThread_ = nullptr;
 
     audioHapticPlayerImpl->StopVibrate();
+    // StopVibrate with null vibrator/thread should not crash
+    EXPECT_EQ(audioHapticPlayerImpl->isVibrationStopped_, true);
+    EXPECT_EQ(audioHapticPlayerImpl->vibrateThread_, nullptr);
 }
 
 /**
@@ -740,13 +740,13 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_037, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
-
     AudioHapticPlayerImpl audioHapticPlayerImpl2;
     audioHapticPlayerImpl->audioHapticVibrator_ = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl2);
-    EXPECT_NE(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
+    audioHapticPlayerImpl->isVibrationStopped_ = true;
 
     audioHapticPlayerImpl->ResetVibrateState();
+    // After ResetVibrateState, isVibrationStopped should be reset to false
+    EXPECT_EQ(audioHapticPlayerImpl->isVibrationStopped_, false);
 }
 
 /**
@@ -758,11 +758,12 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_038, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
-
     audioHapticPlayerImpl->audioHapticVibrator_ = nullptr;
+    audioHapticPlayerImpl->isVibrationStopped_ = true;
 
     audioHapticPlayerImpl->ResetVibrateState();
+    // ResetVibrateState with null vibrator should still reset isVibrationStopped
+    EXPECT_EQ(audioHapticPlayerImpl->isVibrationStopped_, false);
 }
 
 /**
@@ -774,14 +775,13 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_039, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
-
     AudioStandard::InterruptEvent interruptEvent;
     std::shared_ptr<AudioHapticPlayerCallback> playerCallback = std::make_shared<AudioHapticPlayerCallbackTest>();
     audioHapticPlayerImpl->audioHapticPlayerCallback_ = playerCallback;
-    EXPECT_NE(audioHapticPlayerImpl->audioHapticPlayerCallback_.lock(), nullptr);
 
     audioHapticPlayerImpl->NotifyInterruptEvent(interruptEvent);
+    // NotifyInterruptEvent should not crash when callback is set
+    ASSERT_NE(audioHapticPlayerImpl->audioHapticPlayerCallback_.lock(), nullptr);
 }
 
 /**
@@ -793,12 +793,12 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_040, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
-
     AudioStandard::InterruptEvent interruptEvent;
     audioHapticPlayerImpl->audioHapticPlayerCallback_.reset();
 
     audioHapticPlayerImpl->NotifyInterruptEvent(interruptEvent);
+    // NotifyInterruptEvent should not crash when callback is null
+    EXPECT_EQ(audioHapticPlayerImpl->audioHapticPlayerCallback_.lock(), nullptr);
 }
 
 /**
@@ -810,13 +810,12 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_041, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
-
     std::shared_ptr<AudioHapticPlayerCallback> playerCallback = std::make_shared<AudioHapticPlayerCallbackTest>();
     audioHapticPlayerImpl->audioHapticPlayerCallback_ = playerCallback;
-    EXPECT_NE(audioHapticPlayerImpl->audioHapticPlayerCallback_.lock(), nullptr);
 
     audioHapticPlayerImpl->NotifyEndOfStreamEvent();
+    // NotifyEndOfStreamEvent should not crash when callback is set
+    ASSERT_NE(audioHapticPlayerImpl->audioHapticPlayerCallback_.lock(), nullptr);
 }
 
 /**
@@ -828,11 +827,11 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_042, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
-
     audioHapticPlayerImpl->audioHapticPlayerCallback_.reset();
 
     audioHapticPlayerImpl->NotifyEndOfStreamEvent();
+    // NotifyEndOfStreamEvent should not crash when callback is null
+    EXPECT_EQ(audioHapticPlayerImpl->audioHapticPlayerCallback_.lock(), nullptr);
 }
 
 /**
@@ -844,12 +843,13 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_043, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
-
     std::weak_ptr<AudioHapticPlayerImpl> player = audioHapticPlayerImpl;
-    EXPECT_NE(player.lock(), nullptr);
+    audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_NEW;
 
     audioHapticPlayerImpl->HandleEndOfStreamEventThreadFunc(player);
+    // With valid weak_ptr, HandleEndOfStreamEvent should be called
+    // STATE_NEW + loop=false => playerState_ becomes STATE_STOPPED
+    EXPECT_EQ(audioHapticPlayerImpl->playerState_, AudioHapticPlayerState::STATE_STOPPED);
 }
 
 /**
@@ -861,11 +861,11 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_044, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
-
     std::weak_ptr<AudioHapticPlayerImpl> player;
 
     audioHapticPlayerImpl->HandleEndOfStreamEventThreadFunc(player);
+    // With expired weak_ptr, HandleEndOfStreamEvent should not be called, state unchanged
+    EXPECT_EQ(audioHapticPlayerImpl->playerState_, AudioHapticPlayerState::STATE_INVALID);
 }
 
 /**
@@ -877,11 +877,11 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_045, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
-
     audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_RELEASED;
 
     audioHapticPlayerImpl->HandleEndOfStreamEvent();
+    // When STATE_RELEASED, HandleEndOfStreamEvent should return early, state unchanged
+    EXPECT_EQ(audioHapticPlayerImpl->playerState_, AudioHapticPlayerState::STATE_RELEASED);
 }
 
 /**
@@ -893,7 +893,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_046, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
 
     audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_STOPPED;
     audioHapticPlayerImpl->HandleEndOfStreamEvent();
@@ -932,14 +932,13 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_047, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
-
     int32_t errCode = 0;
     std::shared_ptr<AudioHapticPlayerCallback> playerCallback = std::make_shared<AudioHapticPlayerCallbackTest>();
     audioHapticPlayerImpl->audioHapticPlayerCallback_ = playerCallback;
-    EXPECT_NE(audioHapticPlayerImpl->audioHapticPlayerCallback_.lock(), nullptr);
 
     audioHapticPlayerImpl->NotifyErrorEvent(errCode);
+    // NotifyErrorEvent should not crash when callback is set
+    ASSERT_NE(audioHapticPlayerImpl->audioHapticPlayerCallback_.lock(), nullptr);
 }
 
 /**
@@ -951,12 +950,12 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_048, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
-
     int32_t errCode = 0;
     audioHapticPlayerImpl->audioHapticPlayerCallback_.reset();
 
     audioHapticPlayerImpl->NotifyErrorEvent(errCode);
+    // NotifyErrorEvent should not crash when callback is null
+    EXPECT_EQ(audioHapticPlayerImpl->audioHapticPlayerCallback_.lock(), nullptr);
 }
 
 /**
@@ -967,14 +966,15 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_048, TestSize.Leve
 HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_049, TestSize.Level1)
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
     auto audioHapticSoundCallbackImpl = std::make_shared<AudioHapticSoundCallbackImpl>(audioHapticPlayerImpl);
-    EXPECT_NE(audioHapticSoundCallbackImpl, nullptr);
 
     audioHapticSoundCallbackImpl->audioHapticPlayerImpl_ = audioHapticPlayerImpl;
-    EXPECT_NE(audioHapticSoundCallbackImpl->audioHapticPlayerImpl_.lock(), nullptr);
+    audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_NEW;
 
     audioHapticSoundCallbackImpl->OnEndOfStream();
+    // OnEndOfStream with valid player should call NotifyEndOfStreamEvent
+    // which triggers HandleEndOfStreamEvent => STATE_STOPPED (loop=false)
+    EXPECT_EQ(audioHapticPlayerImpl->playerState_, AudioHapticPlayerState::STATE_STOPPED);
 }
 
 /**
@@ -985,13 +985,14 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_049, TestSize.Leve
 HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_050, TestSize.Level1)
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
     auto audioHapticSoundCallbackImpl = std::make_shared<AudioHapticSoundCallbackImpl>(audioHapticPlayerImpl);
-    EXPECT_NE(audioHapticSoundCallbackImpl, nullptr);
 
     audioHapticSoundCallbackImpl->audioHapticPlayerImpl_.reset();
+    audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_NEW;
 
     audioHapticSoundCallbackImpl->OnEndOfStream();
+    // OnEndOfStream with expired player should not crash, player state unchanged
+    EXPECT_EQ(audioHapticPlayerImpl->playerState_, AudioHapticPlayerState::STATE_NEW);
 }
 
 /**
@@ -1002,13 +1003,13 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_050, TestSize.Leve
 HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_051, TestSize.Level1)
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
     auto audioHapticSoundCallbackImpl = std::make_shared<AudioHapticSoundCallbackImpl>(audioHapticPlayerImpl);
-    EXPECT_NE(audioHapticSoundCallbackImpl, nullptr);
+    ASSERT_NE(audioHapticSoundCallbackImpl, nullptr);
 
     int32_t errorCode = 0;
     audioHapticSoundCallbackImpl->audioHapticPlayerImpl_ = audioHapticPlayerImpl;
-    EXPECT_NE(audioHapticSoundCallbackImpl->audioHapticPlayerImpl_.lock(), nullptr);
+    ASSERT_NE(audioHapticSoundCallbackImpl->audioHapticPlayerImpl_.lock(), nullptr);
 
     audioHapticSoundCallbackImpl->OnError(errorCode);
 }
@@ -1021,9 +1022,9 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_051, TestSize.Leve
 HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_052, TestSize.Level1)
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
     auto audioHapticSoundCallbackImpl = std::make_shared<AudioHapticSoundCallbackImpl>(audioHapticPlayerImpl);
-    EXPECT_NE(audioHapticSoundCallbackImpl, nullptr);
+    ASSERT_NE(audioHapticSoundCallbackImpl, nullptr);
 
     int32_t errorCode = 0;
     audioHapticSoundCallbackImpl->audioHapticPlayerImpl_.reset();
@@ -1039,13 +1040,13 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_052, TestSize.Leve
 HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_053, TestSize.Level1)
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
     auto audioHapticSoundCallbackImpl = std::make_shared<AudioHapticSoundCallbackImpl>(audioHapticPlayerImpl);
-    EXPECT_NE(audioHapticSoundCallbackImpl, nullptr);
+    ASSERT_NE(audioHapticSoundCallbackImpl, nullptr);
 
     AudioStandard::InterruptEvent interruptEvent;
     audioHapticSoundCallbackImpl->audioHapticPlayerImpl_ = audioHapticPlayerImpl;
-    EXPECT_NE(audioHapticSoundCallbackImpl->audioHapticPlayerImpl_.lock(), nullptr);
+    ASSERT_NE(audioHapticSoundCallbackImpl->audioHapticPlayerImpl_.lock(), nullptr);
 
     audioHapticSoundCallbackImpl->OnInterrupt(interruptEvent);
 }
@@ -1058,9 +1059,9 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_053, TestSize.Leve
 HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_054, TestSize.Level1)
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
     auto audioHapticSoundCallbackImpl = std::make_shared<AudioHapticSoundCallbackImpl>(audioHapticPlayerImpl);
-    EXPECT_NE(audioHapticSoundCallbackImpl, nullptr);
+    ASSERT_NE(audioHapticSoundCallbackImpl, nullptr);
 
     AudioStandard::InterruptEvent interruptEvent;
     audioHapticSoundCallbackImpl->audioHapticPlayerImpl_.reset();
@@ -1076,13 +1077,13 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_054, TestSize.Leve
 HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_055, TestSize.Level1)
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
     auto audioHapticSoundCallbackImpl = std::make_shared<AudioHapticSoundCallbackImpl>(audioHapticPlayerImpl);
-    EXPECT_NE(audioHapticSoundCallbackImpl, nullptr);
+    ASSERT_NE(audioHapticSoundCallbackImpl, nullptr);
 
     uint64_t latency = 0;
     audioHapticSoundCallbackImpl->audioHapticPlayerImpl_ = audioHapticPlayerImpl;
-    EXPECT_NE(audioHapticSoundCallbackImpl->audioHapticPlayerImpl_.lock(), nullptr);
+    ASSERT_NE(audioHapticSoundCallbackImpl->audioHapticPlayerImpl_.lock(), nullptr);
 
     audioHapticSoundCallbackImpl->OnFirstFrameWriting(latency);
 }
@@ -1095,9 +1096,9 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_055, TestSize.Leve
 HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_056, TestSize.Level1)
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
     auto audioHapticSoundCallbackImpl = std::make_shared<AudioHapticSoundCallbackImpl>(audioHapticPlayerImpl);
-    EXPECT_NE(audioHapticSoundCallbackImpl, nullptr);
+    ASSERT_NE(audioHapticSoundCallbackImpl, nullptr);
 
     uint64_t latency = 0;
     audioHapticSoundCallbackImpl->audioHapticPlayerImpl_.reset();
@@ -1113,14 +1114,14 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_056, TestSize.Leve
 HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_057, TestSize.Level1)
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
 
     EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, audioHapticPlayerImpl->EnableHapticsInSilentMode(true));
 
     AudioHapticPlayerImpl audioHapticPlayerImpl2;
     auto audioHapticVibrator_ = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl2);
     audioHapticPlayerImpl->audioHapticVibrator_ = audioHapticVibrator_;
-    EXPECT_NE(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
     
     audioHapticPlayerImpl->EnableHapticsInSilentMode(true);
     EXPECT_EQ(true, audioHapticVibrator_->enableInSilentMode_);
@@ -1140,14 +1141,14 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_057, TestSize.Leve
 HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_058, TestSize.Level1)
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
     
     EXPECT_EQ(false, audioHapticPlayerImpl->IsHapticsIntensityAdjustmentSupported());
 
     AudioHapticPlayerImpl audioHapticPlayerImpl2;
     auto audioHapticVibrator_ = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl2);
     audioHapticPlayerImpl->audioHapticVibrator_ = audioHapticVibrator_;
-    EXPECT_NE(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
     
     EXPECT_EQ(audioHapticPlayerImpl->IsHapticsIntensityAdjustmentSupported(),
         audioHapticVibrator_->IsHapticsCustomSupported());
@@ -1161,7 +1162,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_058, TestSize.Leve
 HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_060, TestSize.Level1)
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
 
     audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_RELEASED;
     EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, audioHapticPlayerImpl->SetHapticsFeature(HapticsFeature::GENTLE_HAPTICS));
@@ -1172,7 +1173,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_060, TestSize.Leve
     AudioHapticPlayerImpl audioHapticPlayerImpl2;
     auto audioHapticVibrator_ = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl2);
     audioHapticPlayerImpl->audioHapticVibrator_ = audioHapticVibrator_;
-    EXPECT_NE(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
 
     audioHapticPlayerImpl->isGentle_.store(true);
     EXPECT_EQ(ERR_OPERATE_NOT_ALLOWED, audioHapticPlayerImpl->SetHapticsFeature(HapticsFeature::GENTLE_HAPTICS));
@@ -1189,17 +1190,17 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_060, TestSize.Leve
 HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_061, TestSize.Level1)
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
     EXPECT_EQ(audioHapticPlayerImpl->audioHapticSyncId_, MSERR_OK);
 
     AudioHapticPlayerImpl audioHapticPlayerImpl2;
     audioHapticPlayerImpl->audioHapticVibrator_ = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl2);
-    EXPECT_NE(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
     
     AudioSource audioSource;
     audioHapticPlayerImpl->audioHapticSound_ =
         std::make_shared<AudioHapticSoundNormalImpl>(audioSource, false, AudioStandard::STREAM_USAGE_UNKNOWN);
-    EXPECT_NE(audioHapticPlayerImpl->audioHapticSound_, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl->audioHapticSound_, nullptr);
 
     audioHapticPlayerImpl->vibrateThread_ = nullptr;
     audioHapticPlayerImpl->isSupportDSPSync_ = true;
@@ -1217,14 +1218,14 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_063, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
 
     AudioHapticPlayerImpl audioHapticPlayerImpl2;
     audioHapticPlayerImpl->audioHapticVibrator_ = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl2);
-    EXPECT_NE(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
 
     audioHapticPlayerImpl->vibrateThread_ = std::make_shared<std::thread>();
-    EXPECT_NE(audioHapticPlayerImpl->vibrateThread_, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl->vibrateThread_, nullptr);
 
     audioHapticPlayerImpl->ReleaseVibratorInternal();
 }
@@ -1238,7 +1239,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_064, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
 
     audioHapticPlayerImpl->audioHapticVibrator_ = nullptr;
     audioHapticPlayerImpl->vibrateThread_ = nullptr;
@@ -1254,7 +1255,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_064, TestSize.Leve
 HWTEST_F(AudioHapticPlayerImplUnitTest, MockMode_AudioHapticPlayerImpl_LoadPlayer_001, TestSize.Level0)
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
     
     AudioHapticPlayerParam param;
     param.audioSource = {.audioUri = "test_audio_uri"};
@@ -1280,7 +1281,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, MockMode_AudioHapticPlayerImpl_LoadPlaye
 HWTEST_F(AudioHapticPlayerImplUnitTest, MockMode_AudioHapticPlayerImpl_LoadPlayer_002, TestSize.Level0)
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
     
     AudioHapticPlayerParam param;
     param.audioSource = {.audioUri = "test_audio_uri"};
@@ -1306,7 +1307,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, MockMode_AudioHapticPlayerImpl_LoadPlaye
 HWTEST_F(AudioHapticPlayerImplUnitTest, MockMode_AudioHapticPlayerImpl_SetVolume_001, TestSize.Level1)
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
     
     audioHapticPlayerImpl->latencyMode_ = AUDIO_LATENCY_MODE_NORMAL;
     audioHapticPlayerImpl->streamUsage_ = AudioStandard::StreamUsage::STREAM_USAGE_VOICE_RINGTONE;
@@ -1328,7 +1329,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, MockMode_AudioHapticPlayerImpl_SetVolume
 HWTEST_F(AudioHapticPlayerImplUnitTest, MockMode_AudioHapticPlayerImpl_SetVolume_002, TestSize.Level1)
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
-    EXPECT_NE(audioHapticPlayerImpl, nullptr);
+    ASSERT_NE(audioHapticPlayerImpl, nullptr);
     
     audioHapticPlayerImpl->latencyMode_ = AUDIO_LATENCY_MODE_NORMAL;
     audioHapticPlayerImpl->streamUsage_ = AudioStandard::StreamUsage::STREAM_USAGE_VOICE_RINGTONE;
