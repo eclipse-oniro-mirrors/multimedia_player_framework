@@ -125,7 +125,7 @@ int32_t RecorderServer::Init()
 
     status_ = REC_INITIALIZED;
 #ifdef SUPPORT_POWER_MANAGER
-    syncCallback_ = new SaveDocumentSyncCallback();
+    syncCallback_ = new (std::nothrow) SaveDocumentSyncCallback();
 #endif
     return MSERR_OK;
 }

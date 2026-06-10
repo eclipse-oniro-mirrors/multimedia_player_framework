@@ -59,15 +59,6 @@ void ScreenCapBufferConsumerListener::OnBufferAvailableAction()
         MEDIA_LOGD("OnBufferAvailableAction cache enable");
         buffer->InvalidateCache();
     }
-    void *addr = buffer->GetVirAddr();
-    if (addr == nullptr) {
-        MEDIA_LOGE("Acquire SurfaceBuffer address invalid");
-        int32_t releaseBufferRet = consumer_->ReleaseBuffer(buffer, -1); // -1 not wait
-        TRUE_LOG(releaseBufferRet != GSERROR_OK, MEDIA_LOGE,
-            "OnBufferAvailableAction: 0x%{public}06" PRIXPTR " ReleaseBuffer Fail Code %{public}d",
-            FAKE_POINTER(this), releaseBufferRet);
-        return;
-    }
     MEDIA_LOGD("OnBufferAvailableAction SurfaceBuffer size: %{public}u", buffer->GetSize());
     {
         std::unique_lock<std::mutex> lock(bufferMutex_);
