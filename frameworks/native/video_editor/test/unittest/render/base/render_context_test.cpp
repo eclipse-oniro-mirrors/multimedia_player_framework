@@ -43,66 +43,93 @@ private:
 // test RenderContextTest Create method
 HWTEST_F(RenderContextTest, RenderContextTest_Create, TestSize.Level0)
 {
-    EXPECT_TRUE(renderContext->Create(nullptr));
+    // verify function can return normally(whatever the GL context is valid or not)
+    bool result = renderContext->Create(nullptr);
+    EXPECT_TRUE(result);
 }
 
 // test RenderContextTest Init method
 HWTEST_F(RenderContextTest, RenderContextTest_Init, TestSize.Level0)
 {
-    EXPECT_TRUE(renderContext->Init());
+    bool result = renderContext->Init();
+    EXPECT_TRUE(result);
 }
 
 // test RenderContextTest Release method
 HWTEST_F(RenderContextTest, RenderContextTest_Release, TestSize.Level0)
 {
     renderContext->SetReady(true);
-    EXPECT_FALSE(renderContext->Release());
+    // Release should return false when context is ready
+    EXPECT_TRUE(renderContext->IsReady());
+    // verify function can return normally(whatever the GL context is valid or not)
+    bool result = renderContext->Release();
+    EXPECT_FALSE(result);
 }
 
 HWTEST_F(RenderContextTest, RenderContextTest_Release_true, TestSize.Level0)
 {
     renderContext->SetReady(false);
-    EXPECT_TRUE(renderContext->Release());
+    EXPECT_FALSE(renderContext->IsReady());
+    // verify function can return normally(whatever the GL context is valid or not)
+    bool result = renderContext->Release();
+    EXPECT_TRUE(result);
 }
 
 // test RenderContextTest MakeCurrent method
 HWTEST_F(RenderContextTest, RenderContextTest_MakeCurrent, TestSize.Level0)
 {
     renderContext->SetReady(true);
-    EXPECT_FALSE(renderContext->MakeCurrent(nullptr));
+    EXPECT_TRUE(renderContext->IsReady());
+    // verify ready state should not influence MakeCurrent function
+    bool result = renderContext->MakeCurrent(nullptr);
+    EXPECT_FALSE(result);
 }
 
 HWTEST_F(RenderContextTest, RenderContextTest_MakeCurrent_false, TestSize.Level0)
 {
     renderContext->SetReady(false);
-    EXPECT_FALSE(renderContext->MakeCurrent(nullptr));
+    EXPECT_FALSE(renderContext->IsReady());
+    // verify ready state should not influence MakeCurrent function
+    bool result = renderContext->MakeCurrent(nullptr);
+    EXPECT_FALSE(result);
 }
 
 // test RenderContextTest ReleaseCurrent method
 HWTEST_F(RenderContextTest, RenderContextTest_ReleaseCurrent, TestSize.Level0)
 {
     renderContext->SetReady(true);
-    EXPECT_FALSE(renderContext->ReleaseCurrent());
+    EXPECT_TRUE(renderContext->IsReady());
+    // if not init render context successfully, ReleaseCurrent should return false
+    bool result = renderContext->ReleaseCurrent();
+    EXPECT_FALSE(result);
 }
 
 HWTEST_F(RenderContextTest, RenderContextTest_ReleaseCurrent_false, TestSize.Level0)
 {
     renderContext->SetReady(false);
-    EXPECT_FALSE(renderContext->ReleaseCurrent());
+    // if not init render context successfully, ReleaseCurrent should return false
+    EXPECT_FALSE(renderContext->IsReady());
+    bool result = renderContext->ReleaseCurrent();
+    EXPECT_FALSE(result);
 }
 
 // test RenderContextTest SwapBuffers method
 HWTEST_F(RenderContextTest, RenderContextTest_SwapBuffers, TestSize.Level0)
 {
     renderContext->SetReady(true);
-    EXPECT_FALSE(renderContext->SwapBuffers(nullptr));
+    EXPECT_TRUE(renderContext->IsReady());
+    bool result = renderContext->SwapBuffers(nullptr);
+    EXPECT_FALSE(result);
 }
 
 HWTEST_F(RenderContextTest, RenderContextTest_SwapBuffers_surface_not_nullptr, TestSize.Level0)
 {
     renderContext->SetReady(true);
+    EXPECT_TRUE(renderContext->IsReady());
     auto surface = new (std::nothrow) RenderSurface(std::string());
-    EXPECT_FALSE(renderContext->SwapBuffers(surface));
+    ASSERT_NE(surface, nullptr);
+    bool result = renderContext->SwapBuffers(surface);
+    EXPECT_FALSE(result);
     delete surface;
     surface = nullptr;
 }

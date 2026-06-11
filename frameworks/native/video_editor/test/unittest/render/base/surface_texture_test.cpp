@@ -70,6 +70,7 @@ HWTEST_F(SurfaceTextureTest, AwaitNativeImage_frameNum_negative_one, TestSize.Le
     SurfaceTexture surfaceText;
     surfaceText.frameNum_ = -1;
     surfaceText.AwaitNativeImage();
+    // 被测函数有超时机制，超时后会将frameNum_减1
     EXPECT_EQ(surfaceText.frameNum_, -2);
 }
 } // namespace Media

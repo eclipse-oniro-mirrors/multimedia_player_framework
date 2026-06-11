@@ -44,8 +44,14 @@ protected:
 
 HWTEST_F(ShaderPassOnScreenTest, ShaderPassOnScreenTest_Render, TestSize.Level0)
 {
+    auto shaderBefore = shaderPassOnScreen_->shader_;
+    EXPECT_EQ(shaderBefore, nullptr);
+    auto renderEffectData = shaderPassOnScreen_->GetRenderEffectData();
+    ASSERT_NE(renderEffectData, nullptr);
     RenderTexturePtr renderTexture = shaderPassOnScreen_->Render();
+    auto shaderAfter = shaderPassOnScreen_->shader_;
     EXPECT_EQ(renderTexture, nullptr);
+    EXPECT_NE(shaderAfter, nullptr);
 }
 } // namespace Media
 } // namespace OHOS

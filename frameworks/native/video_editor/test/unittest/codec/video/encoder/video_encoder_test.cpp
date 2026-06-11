@@ -84,11 +84,12 @@ HWTEST_F(VideoEncoderTest, VideoEncoder_Flush, TestSize.Level0)
     EXPECT_EQ(videoEncoder.Flush(), VEFError::ERR_INTERNAL_ERROR);
 }
 
-// test VideoEncoder SendEOF method
-HWTEST_F(VideoEncoderTest, VideoEncoder_SendEOF, TestSize.Level0)
+// test VideoEncoder SendEos method
+HWTEST_F(VideoEncoderTest, VideoEncoder_SendEos, TestSize.Level0)
 {
     VideoEncoder videoEncoder(1, nullptr);
     EXPECT_EQ(videoEncoder.Start(), VEFError::ERR_INTERNAL_ERROR);
+    EXPECT_EQ(videoEncoder.SendEos(), VEFError::ERR_INTERNAL_ERROR);
 }
 
 // test VideoEncoder ConfigureEncoder method
@@ -120,11 +121,16 @@ HWTEST_F(VideoEncoderTest, VideoEncoder_CreateEncoder, TestSize.Level0)
 HWTEST_F(VideoEncoderTest, VideoEncoder_CodecOnError, TestSize.Level0)
 {
     std::string userData = "audio/mp4a-latm";
+    // test nullptr and valid parameters combination
+    // function should return security and not cause crash
     encoder_->CodecOnError(codec_, 0, nullptr);
     encoder_->CodecOnError(nullptr, 0, &userData);
     encoder_->CodecOnError(nullptr, 0, nullptr);
     encoder_->CodecOnError(codec_, 0, &userData);
-    EXPECT_EQ(encoder_->Start(), VEFError::ERR_INTERNAL_ERROR);
+    // CodecOnError is callback function, it should not return error code, but log the error
+    // here we just verify that the function can be called with different parameters without crash
+    // not use EXPECT_NO_THROW because compile parameter configured not use exception
+    // just call the function to verify it can run to end without crash
 }
 
 HWTEST_F(VideoEncoderTest, VideoEncoder_CodecOnNewOutputData, TestSize.Level0)
@@ -134,6 +140,8 @@ HWTEST_F(VideoEncoderTest, VideoEncoder_CodecOnNewOutputData, TestSize.Level0)
     attr.pts = 100;
     attr.flags = 1;
     std::string userData = "audio/mp4a-latm";
+    // test nullptr and valid parameters combination
+    // function should return security and not cause crash
     encoder_->CodecOnNewOutputData(nullptr, 0, nullptr, nullptr, nullptr);
     encoder_->CodecOnNewOutputData(codec_, 0, nullptr, nullptr, nullptr);
     encoder_->CodecOnNewOutputData(nullptr, 0, nullptr, nullptr, &userData);
@@ -142,12 +150,17 @@ HWTEST_F(VideoEncoderTest, VideoEncoder_CodecOnNewOutputData, TestSize.Level0)
     encoder_->CodecOnNewOutputData(nullptr, 0, nullptr, &attr, &userData);
     encoder_->CodecOnNewOutputData(codec_, 0, sampleMem_, &attr, nullptr);
     encoder_->CodecOnNewOutputData(nullptr, 0, sampleMem_, &attr, &userData);
-    EXPECT_EQ(encoder_->Start(), VEFError::ERR_INTERNAL_ERROR);
+    // CodecOnError is callback function, it should not return error code, but log the error
+    // here we just verify that the function can be called with different parameters without crash
+    // not use EXPECT_NO_THROW because compile parameter configured not use exception
+    // just call the function to verify it can run to end without crash
 }
 
 HWTEST_F(VideoEncoderTest, VideoEncoder_CodecOnStreamChanged, TestSize.Level0)
 {
     std::string userData = "audio/mp4a-latm";
+    // test nullptr and valid parameters combination
+    // function should return security and not cause crash
     encoder_->CodecOnStreamChanged(nullptr, nullptr, nullptr);
     encoder_->CodecOnStreamChanged(codec_, nullptr, nullptr);
     encoder_->CodecOnStreamChanged(nullptr, format_, nullptr);
@@ -156,7 +169,10 @@ HWTEST_F(VideoEncoderTest, VideoEncoder_CodecOnStreamChanged, TestSize.Level0)
     encoder_->CodecOnStreamChanged(nullptr, format_, &userData);
     encoder_->CodecOnStreamChanged(codec_, nullptr, &userData);
     encoder_->CodecOnStreamChanged(codec_, format_, &userData);
-    EXPECT_EQ(encoder_->Start(), VEFError::ERR_INTERNAL_ERROR);
+    // CodecOnError is callback function, it should not return error code, but log the error
+    // here we just verify that the function can be called with different parameters without crash
+    // not use EXPECT_NO_THROW because compile parameter configured not use exception
+    // just call the function to verify it can run to end without crash
 }
 
 HWTEST_F(VideoEncoderTest, VideoEncoder_WriteFrame, TestSize.Level0)

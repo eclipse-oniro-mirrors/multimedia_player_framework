@@ -79,7 +79,9 @@ HWTEST_F(VideoDecoderEngineImplTest, on_decode_frame_ok, TestSize.Level0)
 {
     VideoDecodeCallbackTester* cb = new VideoDecodeCallbackTester();
     auto engine = std::make_shared<VideoDecoderEngineImpl>(12345, 50, cb);
-    uint64_t pts = 0;
+    uint64_t pts = 100;
+    engine->OnVideoDecoderFrame(pts);
+    // Verify that the callback's OnDecodeFrame method is called with the correct pts value
     EXPECT_EQ(cb->pts_, pts);
 }
 
@@ -124,8 +126,16 @@ HWTEST_F(VideoDecoderEngineImplTest, OnVideoDecodeResult_nullptr, TestSize.Level
     std::string fileName = "H264_AAC.mp4";
     int32_t srcFd = VideoResource::instance().getFileResource(fileName);
     auto engine = std::make_shared<VideoDecoderEngineImpl>(1, srcFd, nullptr);
-    engine->OnVideoDecoderFrame(80);
+    // test OnVideoDecodeResult when callback is nullptr, it should not crash and just log the error
     ASSERT_EQ(engine->cb_, nullptr);
+    // verify that the function can be called without crash when cb_ is nullptr
+    uint64_t pts = 100;
+    engine->OnVideoDecoderFrame(pts);
+    // verify that the function can be called without crash when cb_ is nullptr
+    // not use EXPECT_NO_THROW because compile parameter configured not use exception
+    // just call the function to verify it can run to end without crash
+    CodecResult sucResult = CodecResult::SUCCESS;
+    engine->OnVideoDecodeResult(sucResult);
     (void)close(srcFd);
 }
 
@@ -346,6 +356,8 @@ HWTEST_F(VideoDecoderEngineImplTest, VideoDecoderEngineImpl_SetAudioOutputBuffer
     ASSERT_NE(encoderEngine, nullptr);
     auto inputPcmBufferQueue = encoderEngine->GetAudioInputBufferQueue();
     auto engine = std::make_shared<VideoDecoderEngineImpl>(1, srcFd, deCb);
+    EXPECT_EQ(engine->Init(), VEFError::ERR_OK);
+    // test SetAudioOutputBuffferQueue when audioDecoder_ is nullptr, it should not crash and just log the error
     engine->audioDecoder_ = nullptr;
     engine->SetAudioOutputBufferQueue(inputPcmBufferQueue);
     (void)close(srcFd);

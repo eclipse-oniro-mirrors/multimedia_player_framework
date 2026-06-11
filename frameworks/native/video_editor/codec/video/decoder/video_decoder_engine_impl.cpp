@@ -325,6 +325,10 @@ void VideoDecoderEngineImpl::OnVideoDecodeResult(CodecResult result)
 
 void VideoDecoderEngineImpl::NotifyDecodeResult()
 {
+    if (cb_ == nullptr) {
+        MEDIA_LOGE("[%{public}s] NotifyDecodeResult, but callback is expired.", logTag_.c_str());
+        return;
+    }
     if (audioDecoderState_ == CodecState::FINISH_SUCCESS && videoDecoderState_ == CodecState::FINISH_SUCCESS) {
         cb_->OnDecodeResult(CodecResult::SUCCESS);
     } else if (audioDecoderState_ == CodecState::FINISH_FAILED || videoDecoderState_ == CodecState::FINISH_FAILED) {
