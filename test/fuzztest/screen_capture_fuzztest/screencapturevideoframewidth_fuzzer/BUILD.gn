@@ -71,5 +71,6 @@ ohos_fuzztest("ScreenCaptureVideoFrameWidthFuzzTest") {
     "graphic_surface:sync_fence",
     "hilog:libhilog",
     "graphic_2d:librender_service_client",
+    "media_foundation:media_foundation",
   ]
 }

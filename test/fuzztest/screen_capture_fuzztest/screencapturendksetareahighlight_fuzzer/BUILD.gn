@@ -72,5 +72,6 @@ ohos_fuzztest("ScreenCaptureNdkSetAreaHighlightFuzzTest") {
     "graphic_surface:surface",
     "graphic_surface:sync_fence",
     "hilog:libhilog",
+    "media_foundation:media_foundation",
   ]
 }

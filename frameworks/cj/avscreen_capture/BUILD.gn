@@ -68,6 +68,7 @@ ohos_shared_library("cj_avscreen_capture_ffi") {
     "napi:cj_bind_native",
     "qos_manager:qos",
     "resource_management:global_resmgr",
+    "media_foundation:media_foundation",
   ]
   sources = [
     "src/avscreen_capture_ffi.cpp",
