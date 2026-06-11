@@ -92,6 +92,7 @@ ohos_shared_library("media_avplayer") {
     "napi:ace_napi",
     "qos_manager:qos",
     "samgr:samgr_proxy",
+    "media_foundation:media_foundation",
   ]
 
   if (player_framework_support_video) {
