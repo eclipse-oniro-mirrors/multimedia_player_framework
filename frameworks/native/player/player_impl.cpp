@@ -481,6 +481,9 @@ void PlayerImpl::HandleListStateInfo(PlayerStates state, bool &shouldUpdateState
 {
     if (state == PLAYER_PLAYBACK_COMPLETE) {
         bool shouldSwitch = false;
+        CHECK_AND_RETURN_LOG(itemList_.size() >
+            static_cast<std::size_t>(std::numeric_limits<int32_t>::max()),
+            "itemList_ is invalid");
         int32_t count = static_cast<int32_t>(itemList_.size());
         auto currentIt = FindSourceInList(curSrcId_);
         CHECK_AND_RETURN_LOG(currentIt != itemList_.end(), "current source id not found in list");

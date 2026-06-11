@@ -711,6 +711,7 @@ int32_t CJAVPlayer::OnStateChange(int64_t callbackId)
     auto cFunc = reinterpret_cast<void (*)(char *stateStr, int32_t reason)>(callbackId);
     playerCb_->stateChangeCallback = [lambda = CJLambda::Create(cFunc)](std::string &stateStr, int32_t reason) -> void {
         auto cstr = MallocCString(stateStr);
+        CHECK_AND_RETURN_LOG(cstr != nullptr, "cstr is invalid");
         lambda(cstr, reason);
         free(cstr);
     };
