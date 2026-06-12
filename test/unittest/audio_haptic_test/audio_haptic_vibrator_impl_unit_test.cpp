@@ -107,7 +107,7 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, PlayVibrateForSoundPool_001, TestSize.
     auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
     EXPECT_NE(audioHapticVibratorImpl, nullptr);
 
-    auto vibratorPkg = std::make_shared<VibratorPackage>();
+    auto vibratorPkg = CreatePackage();
     EXPECT_NE(vibratorPkg, nullptr);
     std::unique_lock<std::mutex> lock(vibrateMutex_);
 
@@ -129,7 +129,7 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, PlayVibrateForSoundPool_002, TestSize.
     auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
     EXPECT_NE(audioHapticVibratorImpl, nullptr);
 
-    auto vibratorPkg = std::make_shared<VibratorPackage>();
+    auto vibratorPkg = CreatePackage();
     EXPECT_NE(vibratorPkg, nullptr);
     std::unique_lock<std::mutex> lock(vibrateMutex_);
 
@@ -151,13 +151,13 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, PlayVibrateForSoundPool_003, TestSize.
     auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
     EXPECT_NE(audioHapticVibratorImpl, nullptr);
 
-    auto vibratorPkg = std::make_shared<VibratorPackage>();
+    auto vibratorPkg = CreatePackage();
     EXPECT_NE(vibratorPkg, nullptr);
     std::unique_lock<std::mutex> lock(vibrateMutex_);
 
     audioHapticVibratorImpl->isStopped_ = false;
     audioHapticVibratorImpl->isNeedRestart_ = true;
-    audioHapticVibratorImpl->seekVibratorPkg_ = std::make_shared<VibratorPackage>();
+    audioHapticVibratorImpl->seekVibratorPkg_ = CreatePackage();
     EXPECT_NE(audioHapticVibratorImpl->seekVibratorPkg_, nullptr);
     int32_t result = audioHapticVibratorImpl->PlayVibrateForSoundPool(vibratorPkg, lock);
     EXPECT_EQ(result, MSERR_OK);
@@ -174,13 +174,13 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, PlayVibrateForSoundPool_004, TestSize.
     auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
     EXPECT_NE(audioHapticVibratorImpl, nullptr);
 
-    auto vibratorPkg = std::make_shared<VibratorPackage>();
+    auto vibratorPkg = CreatePackage();
     EXPECT_NE(vibratorPkg, nullptr);
     std::unique_lock<std::mutex> lock(vibrateMutex_);
 
     audioHapticVibratorImpl->isStopped_ = false;
     audioHapticVibratorImpl->isNeedRestart_ = false;
-    audioHapticVibratorImpl->seekVibratorPkg_ = std::make_shared<VibratorPackage>();
+    audioHapticVibratorImpl->seekVibratorPkg_ = CreatePackage();
     EXPECT_NE(audioHapticVibratorImpl->seekVibratorPkg_, nullptr);
     int32_t result = audioHapticVibratorImpl->PlayVibrateForSoundPool(vibratorPkg, lock);
     EXPECT_EQ(result, MSERR_OK);
@@ -197,7 +197,7 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, PlayVibrateForSoundPool_005, TestSize.
     auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
     EXPECT_NE(audioHapticVibratorImpl, nullptr);
 
-    auto vibratorPkg = std::make_shared<VibratorPackage>();
+    auto vibratorPkg = CreatePackage();
     EXPECT_NE(vibratorPkg, nullptr);
     std::unique_lock<std::mutex> lock(vibrateMutex_);
 
@@ -219,7 +219,7 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, RunVibrationPatterns_001, TestSize.Lev
     auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
     EXPECT_NE(audioHapticVibratorImpl, nullptr);
 
-    auto vibratorPkg = std::make_shared<VibratorPackage>();
+    auto vibratorPkg = CreatePackage();
     EXPECT_NE(vibratorPkg, nullptr);
     std::unique_lock<std::mutex> lock(vibrateMutex_);
 
@@ -241,7 +241,7 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, RunVibrationPatterns_002, TestSize.Lev
     auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
     EXPECT_NE(audioHapticVibratorImpl, nullptr);
 
-    auto vibratorPkg = std::make_shared<VibratorPackage>();
+    auto vibratorPkg = CreatePackage();
     EXPECT_NE(vibratorPkg, nullptr);
     std::unique_lock<std::mutex> lock(vibrateMutex_);
 
@@ -263,13 +263,13 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, RunVibrationPatterns_003, TestSize.Lev
     auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
     EXPECT_NE(audioHapticVibratorImpl, nullptr);
 
-    auto vibratorPkg = std::make_shared<VibratorPackage>();
+    auto vibratorPkg = CreatePackage();
     EXPECT_NE(vibratorPkg, nullptr);
     std::unique_lock<std::mutex> lock(vibrateMutex_);
 
     audioHapticVibratorImpl->isStopped_ = false;
     audioHapticVibratorImpl->isNeedRestart_ = true;
-    audioHapticVibratorImpl->seekVibratorPkg_ = std::make_shared<VibratorPackage>();
+    audioHapticVibratorImpl->seekVibratorPkg_ = CreatePackage();
     EXPECT_NE(audioHapticVibratorImpl->seekVibratorPkg_, nullptr);
     int32_t result = audioHapticVibratorImpl->RunVibrationPatterns(vibratorPkg, lock);
     EXPECT_EQ(result, MSERR_OK);
@@ -286,13 +286,13 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, RunVibrationPatterns_004, TestSize.Lev
     auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
     EXPECT_NE(audioHapticVibratorImpl, nullptr);
 
-    auto vibratorPkg = std::make_shared<VibratorPackage>();
+    auto vibratorPkg = CreatePackage();
     EXPECT_NE(vibratorPkg, nullptr);
     std::unique_lock<std::mutex> lock(vibrateMutex_);
 
     audioHapticVibratorImpl->isStopped_ = false;
     audioHapticVibratorImpl->isNeedRestart_ = false;
-    audioHapticVibratorImpl->seekVibratorPkg_ = std::make_shared<VibratorPackage>();
+    audioHapticVibratorImpl->seekVibratorPkg_ = CreatePackage();
     EXPECT_NE(audioHapticVibratorImpl->seekVibratorPkg_, nullptr);
     int32_t result = audioHapticVibratorImpl->RunVibrationPatterns(vibratorPkg, lock);
     EXPECT_EQ(result, MSERR_OK);
@@ -309,7 +309,7 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, RunVibrationPatterns_005, TestSize.Lev
     auto audioHapticVibratorImpl = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl);
     EXPECT_NE(audioHapticVibratorImpl, nullptr);
 
-    auto vibratorPkg = std::make_shared<VibratorPackage>();
+    auto vibratorPkg = CreatePackage();
     EXPECT_NE(vibratorPkg, nullptr);
     std::unique_lock<std::mutex> lock(vibrateMutex_);
 

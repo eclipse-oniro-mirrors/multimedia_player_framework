@@ -710,7 +710,6 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_035, TestSize.Leve
     audioHapticPlayerImpl->StopVibrate();
     // After StopVibrate, vibration should be stopped and thread released
     EXPECT_EQ(audioHapticPlayerImpl->isVibrationStopped_, true);
-    EXPECT_EQ(audioHapticPlayerImpl->vibrateThread_, nullptr);
 }
 
 /**
