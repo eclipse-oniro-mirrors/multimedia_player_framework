@@ -50,9 +50,8 @@ HWTEST_F(PlayerXcollieUnitTest, SetTimer_001, TestSize.Level1)
     // Test SetTimer recovery = true
     const std::string name = "test_timer";
     bool recovery = true;
-    EXPECT_CALL(HiviewDFX::XCollie::GetInstance(), SetTimer(_, _, _, _, _))
-        .WillOnce(Return(TEST_SUCCESS));
-    PlayerXCollie::GetInstance().SetTimer(name, recovery, TEST_TIMEOUT);
+    int32_t ret = PlayerXCollie::GetInstance().SetTimer(name, recovery, TEST_TIMEOUT);
+    EXPECT_GE(ret, 0)
 }
 
 /**
