@@ -751,7 +751,7 @@ int32_t HiTransCoderImpl::AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffe
     FALSE_RETURN_V_MSG_E(ret == Status::OK, TransTranscoderStatus(ret), "Watermark filter error");
     return MSERR_OK;
 }
-
+int32_t HiTransCoderImpl::AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer, int32_t width, int32_t height)
 void HiTransCoderImpl::AppendTranscoderMediaInfo()
 {
     MEDIA_LOG_I("HiTransCoderImplAppendTranscoderMediaInfo");
