@@ -1,8 +1,8 @@
-# AVPlayer 播放失败回调错误码分析
+# AVPlayer 播放失败分析
 
 > **版本**: v1.2
 > **更新日期**: 2026-05-28
-> **适用系统**: HarmonyOS AVPlayer
+> **适用场景**: AVPlayer 播放失败问题原因和解决方案分析
 > **文档类型**: Skill定义文件
 
 本文档定义了 AVPlayer 播放失败回调错误码的分析规则和排查方法。agent 应按此规则分析 OnErrorCb 回调和错误码，定位播放失败的根本原因。
@@ -109,11 +109,11 @@
 #### 使用AVPlayer的日志
 
 ```
-12-02 11:02:25.215  1663 37705 I C02B32/av_codec_service/HCODEC: [985_e Uninit PrintCaller] [pid 13622][com.huawei.hmos.camera] -> player -> avcodec
+12-02 11:02:25.215  1663 37705 I C02B32/av_codec_service/HCODEC: [985_e Uninit PrintCaller] [pid 13622][com.xx.camera] -> player -> avcodec
 ```
 
 **特征分析**：
-- 调用链: `[pid 13622][com.huawei.hmos.camera] -> player -> avcodec`
+- 调用链: `[pid 13622][com.xx.camera] -> player -> avcodec`
 - 包含 `player` 中间层
 - **结论**: 使用了AVPlayer
 
@@ -147,7 +147,6 @@
 ### 注意事项
 
 - `PrintCaller` 日志可能在解码器初始化（Init）或反初始化（Uninit）时打印
-- 如果日志中同时出现两种模式，以首次出现的为准
 - 某些场景下可能需要检查多个 `PrintCaller` 日志来确认
 - 对于使用AVPlayer的场景，优先使用本错误码文档进行分析
 
@@ -781,16 +780,13 @@ enum MediaServiceExtErrCodeAPI9 : int32_t {
   - 文件权限不足
   - 目录权限不足
   - 跨域访问被拒绝
-  - 需要认证但未提供
 - **排查方向**:
   - 检查文件权限
   - 检查目录权限
   - 检查 CORS 配置
-  - 检查认证信息
 - **解决建议**:
   - 修改文件权限
   - 配置 CORS
-  - 提供认证信息
   - 使用有权限的账号
 
 #### 5411006 - IO_NETWORK_ACCESS_DENIED
@@ -835,7 +831,6 @@ enum MediaServiceExtErrCodeAPI9 : int32_t {
 - **阶段**: 数据读取
 - **现象**: 需要 SSL 客户端证书
 - **常见场景**:
-  - 服务器要求双向认证
   - 未配置客户端证书
   - 证书过期
 - **排查方向**:
@@ -1167,15 +1162,11 @@ enum MediaServiceExtErrCodeAPI9 : int32_t {
 
 **排查步骤**:
 1. 检查设备内存占用
-   ```bash
-   # 查看内存使用情况
-   dumpsys meminfo
-   ```
 2. 查看内存分配日志
 3. 检查是否有内存泄漏
 
 **解决建议**:
-- 释放其他应用内存
+- 释放内存
 - 降低播放分辨率
 - 减小缓冲区大小
 - 修复内存泄漏
@@ -1199,8 +1190,7 @@ enum MediaServiceExtErrCodeAPI9 : int32_t {
 #### 5400103 - IO
 **错误日志示例**:
 ```
-04-01 10:10:26.214 44082 440821A00220/com.huawei.hmos.photos/videoPlayerController: [StateMachineListener] [C_ONE] errorcode: 5400103, error msg : IO Error: AUD_OUTPUT_ERR-n
-ull-unsupport interface, audio render failed.
+errorcode: 5400103, error msg : IO Error: AUD_OUTPUT_ERR-null-unsupport interface, audio render failed.
 ```
 
 **排查步骤**:
@@ -1216,7 +1206,7 @@ ull-unsupport interface, audio render failed.
 #### 5400104 - TIMEOUT
 **错误日志示例**:
 ```
-08-15 22:17:11.423 4595 4595 1 A06666/com.huawei.hmsapp.music/FL20/PlayMainController:#dealErr #onPlayErr errorCode:5400104, song: ***-66709373)-1PLAYFULL-Qundefined, msg:time out for set datasource
+onPlayErr errorCode:5400104, song: ***-66709373)-1PLAYFULL-Qundefined, msg:time out for set datasource
 ```
 
 **排查步骤**:
@@ -1232,7 +1222,7 @@ ull-unsupport interface, audio render failed.
 #### 5400105 - SERVICE_DIED
 **错误日志示例**:
 ```
-11-27 09:44:53.704	9432	9432 I A00220/com.huawei.hmos.photos/videoPlayerController: [StateMachineListener) (C_TNO] error code: 5400105, error msg : Service Died: mediaserver is died, please create a new playback instance
+error code: 5400105, error msg : Service Died: mediaserver is died, please create a new playback instance
 ```
 
 **排查步骤**:
@@ -1250,7 +1240,7 @@ ull-unsupport interface, audio render failed.
 #### 5400106 - UNSUPPORT_FORMAT
 **错误日志示例**:
 ```
-11-20 20:35:35.478 17210 17460 E C02B2B/com.huawei.hmos.camera/AVPlayerCallback: #787 OnErrorCb:errorCode 5400106, errorMsg Unsupported Format: unsupport interface, unsupport video params(other params)
+OnErrorCb:errorCode 5400106, errorMsg Unsupported Format: unsupport interface, unsupport video params(other params)
 ```
 
 **排查步骤**:
@@ -1308,7 +1298,7 @@ ull-unsupport interface, audio render failed.
 #### 5411002 - IO_CONNECTION_TIMEOUT
 **错误日志示例**:
 ```
-12-01 15:56:52.490 30767 31306 E C02B2B/com.huawei.hmsapp.himovie/AVPlayerCallback: #787 OnErrorCb:errorCode 5411002, errorMsg IO Connection Timeout: IO error, IO connection timeout
+OnErrorCb:errorCode 5411002, errorMsg IO Connection Timeout: IO error, IO connection timeout
 ```
 
 **排查步骤**:
@@ -1347,7 +1337,7 @@ ull-unsupport interface, audio render failed.
 #### 5411007 - IO_RESOURE_NOT_FOUND
 **错误日志示例**:
 ```
-08-16 19:12:51.401 61267 61267 E A06666/com.huawei.shortvideodemo/HMV/SHVAVPlayer_3: onError 5411007 IO Resource Not Found: IO error, IO resource not found
+onError 5411007 IO Resource Not Found: IO error, IO resource not found
 ```
 
 **排查步骤**:
@@ -1417,10 +1407,6 @@ ull-unsupport interface, audio render failed.
 ---
 
 ## 附录
-
-### 相关文档
-- HarmonyOS AVPlayer 开发指南(https://developer.huawei.com/consumer/cn/doc/harmonyos-guides/video-playback)
-- HiLog 日志采集指南
 
 ### 工具推荐
 - ffprobe - 媒体文件分析
