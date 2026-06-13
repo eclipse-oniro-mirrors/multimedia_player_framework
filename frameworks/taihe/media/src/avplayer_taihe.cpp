@@ -4293,7 +4293,12 @@ void AVPlayerImpl::SetEnableStartFrameRateOpt(optional_view<bool> enabled)
 {
     MediaTrace trace("AVPlayerImpl::SetEnableStartFrameRateOpt");
     MEDIA_LOGD("TaiheEnableStartFrameRateOpt In");
-    
+
+    if (!IsSystemApp()) {
+        set_business_error(MSERR_EXT_API9_PERMISSION_DENIED, "systemapi permission denied");
+        MEDIA_LOGE("TaiheEnableStartFrameRateOpt failed: permission denied");
+        return;
+    }
     bool enabledValue = false;
     if (enabled.has_value()) {
         enabledValue = enabled.value();
