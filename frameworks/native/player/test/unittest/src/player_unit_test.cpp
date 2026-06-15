@@ -130,29 +130,6 @@ void PlayerUnitTest::NoRunPlayFunTest(const std::string &protocol)
     }
 }
 
-
-void PlayerUnitTest::GetSetParaFunTest()
-{
-    if (player_ != nullptr) {
-        int32_t duration = 0;
-        int32_t time = 0;
-        float playbackRate = 2.5f;
-        PlaybackRateMode mode;
-        std::vector<Format> videoTrack;
-        std::vector<Format> audioTrack;
-        player_->GetVideoTrackInfo(videoTrack);
-        player_->GetAudioTrackInfo(audioTrack);
-        player_->GetCurrentTime(time);
-        player_->GetDuration(duration);
-        player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X);
-        player_->SetPlaybackRate(playbackRate);
-        player_->GetPlaybackSpeed(mode);
-        player_->SetLooping(true);
-        player_->IsLooping();
-        player_->SetVolume(1, 1);
-    }
-}
-
 void PlayerUnitTest::MediaServiceErrCodeTest(MediaServiceErrCode code)
 {
     if (MSERRCODE_INFOS.count(code) != 0) {
