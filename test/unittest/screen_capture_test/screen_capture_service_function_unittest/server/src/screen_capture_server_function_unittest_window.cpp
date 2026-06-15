@@ -509,7 +509,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_001, TestSize.Leve
 {
     Json::Value root;
     screenCaptureServer_->PrepareSelectWindow(root);
-    ASSERT_NE(screenCaptureServer_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->displayIds_.size(), 0);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_002, TestSize.Level2)
@@ -519,7 +519,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_002, TestSize.Leve
     Json::Reader reader;
     reader.parse(rawString, root);
     screenCaptureServer_->PrepareSelectWindow(root);
-    ASSERT_NE(screenCaptureServer_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->displayIds_[0], 1);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_003, TestSize.Level2)
@@ -529,7 +529,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_003, TestSize.Leve
     Json::Reader reader;
     reader.parse(rawString, root);
     screenCaptureServer_->PrepareSelectWindow(root);
-    ASSERT_NE(screenCaptureServer_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->displayIds_[0], 0);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_004, TestSize.Level2)
@@ -539,7 +539,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_004, TestSize.Leve
     Json::Reader reader;
     reader.parse(rawString, root);
     screenCaptureServer_->PrepareSelectWindow(root);
-    ASSERT_NE(screenCaptureServer_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->missionIds_[0], 1);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_005, TestSize.Level2)
@@ -549,7 +549,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_005, TestSize.Leve
     Json::Reader reader;
     reader.parse(rawString, root);
     screenCaptureServer_->PrepareSelectWindow(root);
-    ASSERT_NE(screenCaptureServer_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->missionIds_[0], 1);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_006, TestSize.Level2)
@@ -559,7 +559,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_006, TestSize.Leve
     Json::Reader reader;
     reader.parse(rawString, root);
     screenCaptureServer_->PrepareSelectWindow(root);
-    ASSERT_NE(screenCaptureServer_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->displayIds_[0], 1);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_007, TestSize.Level2)
@@ -569,7 +569,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_007, TestSize.Leve
     Json::Reader reader;
     reader.parse(rawString, root);
     screenCaptureServer_->PrepareSelectWindow(root);
-    ASSERT_NE(screenCaptureServer_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->displayIds_[0], 1);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_008, TestSize.Level2)

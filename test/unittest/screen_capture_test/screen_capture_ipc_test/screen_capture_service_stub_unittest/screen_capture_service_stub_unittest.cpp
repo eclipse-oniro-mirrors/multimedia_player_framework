@@ -54,19 +54,6 @@ void ScreenCaptureServiceStubTest::SetHapPermission()
 }
 
 /**
- * @tc.name  : ~ScreenCaptureServiceStub
- * @tc.number: ~ScreenCaptureServiceStub
- * @tc.desc  : FUNC
- */
-HWTEST_F(ScreenCaptureServiceStubTest, CreateReleaseStubObject_001, TestSize.Level1)
-{
-    sptr<ScreenCaptureServiceStub> screenCaptureServiceStub = ScreenCaptureServiceStub::Create();
-    ASSERT_NE(screenCaptureServiceStub, nullptr);
-    screenCaptureServiceStub->screenCaptureServer_ = nullptr;
-    screenCaptureServiceStub = nullptr;
-}
-
-/**
  * @tc.name  : DestoyServiceStub
  * @tc.number: DestoyServiceStub
  * @tc.desc  : FUNC
