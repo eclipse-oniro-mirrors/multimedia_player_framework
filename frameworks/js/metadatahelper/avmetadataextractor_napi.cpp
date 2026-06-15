@@ -577,7 +577,8 @@ napi_value AVMetadataExtractorNapi::JsFetchFramesAtTimes(napi_env env, napi_call
         valueType != napi_object ||
         extractor->GetFetchFrameVectorArgs(asyncCtx, env, args[ARG_ZERO], args[ARG_ONE], args[ARG_TWO]) != MSERR_OK;
     if (notParamValid) {
-        ThrowError(env, MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE, "Parameter check failed.");
+        ThrowError(env, MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
+            "Parameter check failed. The size of array must be greater than 0 and less than 4097.");
         return result;
     }
     if (extractor->state_ == HelperState::HELPER_STATE_HTTP_INTERCEPTED) {
@@ -631,7 +632,8 @@ napi_value AVMetadataExtractorNapi::JsFetchFramesAtTimesWithTimeout(napi_env env
         valueType != napi_object ||
         extractor->GetFetchFrameVectorArgs(asyncCtx, env, args[ARG_ZERO], args[ARG_ONE], args[ARG_TWO]) != MSERR_OK;
     if (notParamValid || asyncCtx->timeoutMs <= 0 || asyncCtx->timeoutMs > MAX_TIMEOUT_MS) {
-        ThrowError(env, MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE, "Parameter check failed.");
+        ThrowError(env, MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
+            "Parameter check failed. The size of array must be greater than 0 and less than 4097.");
         return result;
     }
     if (extractor->state_ == HelperState::HELPER_STATE_HTTP_INTERCEPTED) {
@@ -650,7 +652,6 @@ napi_value AVMetadataExtractorNapi::JsFetchFramesAtTimesWithTimeout(napi_env env
         ThrowError(env, MSERR_EXT_API9_SERVICE_DIED, "Service died.");
     }
     asyncCtx.release();
-    MEDIA_LOGI("AVMetadataExtractorNapi::JsFetchFramesAtTimesWithTimeout out");
     return result;
 }
 
