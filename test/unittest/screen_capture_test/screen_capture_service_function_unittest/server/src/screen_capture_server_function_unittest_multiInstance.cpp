@@ -1055,6 +1055,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_005, TestS
     screenCaptureServer_->windowLifecycleListener_->OnAppInstanceLifecycleEvent(payload);
     ASSERT_EQ(screenCaptureServer_->appMissionIds_.size(), 1);
     ASSERT_EQ(screenCaptureServer_->appMissionIdsForGround_.size(), 0);
+}
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_006, TestSize.Level2)
 {
