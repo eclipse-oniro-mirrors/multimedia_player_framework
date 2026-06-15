@@ -219,7 +219,7 @@ int32_t AVImageGeneratorNapi::GetFetchFrameArgs(std::unique_ptr<AVImageGenerator
 napi_value AVImageGeneratorNapi::JsFetchFrameAtTime(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVImageGeneratorNapi::JsFetchFrameAtTime");
-    MEDIA_LOGI("JsFetchFrameAtTime  in");
+    MEDIA_LOGI("JsFetchFrameAtTime in");
     const int32_t maxArgs = ARG_FOUR;  // args + callback
     const int32_t argCallback = ARG_THREE;  // index three, the 4th param if exist
     const int32_t argPixelParam = ARG_TWO;  // index 2, the 3rd param
@@ -256,7 +256,8 @@ napi_value AVImageGeneratorNapi::JsFetchFrameAtTime(napi_env env, napi_callback_
             FetchFrameYuv(asyncCtx->timeUs_, asyncCtx->option_, asyncCtx->param_);
         asyncCtx->pixel_ = pixelMap;
         CHECK_AND_RETURN(asyncCtx->pixel_ == nullptr);
-        asyncCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT, "FetchFrameByTime failed.");
+        asyncCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT,
+            "Failed to fetch frame. Video parsing failed or format unsupported.");
     }, CreatePixelMapComplete, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
@@ -371,7 +372,8 @@ napi_value AVImageGeneratorNapi::JsFetchScaledFrameAtTime(napi_env env, napi_cal
             FetchScaledFrameYuv(asyncCtx->timeUs_, asyncCtx->option_, asyncCtx->param_);
         asyncCtx->pixel_ = pixelMap;
         if (asyncCtx->pixel_ == nullptr) {
-            asyncCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT, "JsFetchScaledFrameAtTime failed.");
+            asyncCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT,
+                "Failed to fetch frame. Video parsing failed or format unsupported.");
         }
     }, CreatePixelMapComplete, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));

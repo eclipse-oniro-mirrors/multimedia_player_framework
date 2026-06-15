@@ -232,7 +232,8 @@ napi_value AVMetadataExtractorNapi::JsResolveMetadata(napi_env env, napi_callbac
         promiseCtx->metadata_ = promiseCtx->innerHelper_->GetAVMetadata();
         CHECK_AND_RETURN(promiseCtx->metadata_ == nullptr);
         MEDIA_LOGE("ResolveMetadata AVMetadata is nullptr");
-        promiseCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT, "failed to ResolveMetadata, AVMetadata is nullptr!");
+        promiseCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT,
+            "Failed to resolve metadata. Media format unsupported or demuxer parsing failed.");
     }, ResolveMetadataComplete, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
     promiseCtx.release();
@@ -284,7 +285,8 @@ napi_value AVMetadataExtractorNapi::JsResolveMetadataWithTimeout(napi_env env, n
         promiseCtx->metadata_ = result.meta;
         if (promiseCtx->metadata_ == nullptr && !promiseCtx->errFlag) {
             MEDIA_LOGE("ResolveMetadata AVMetadata is nullptr");
-            promiseCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT, "failed to ResolveMetadata, AVMetadata is nullptr!");
+            promiseCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT,
+                "Failed to resolve metadata. Media format unsupported or demuxer parsing failed.");
         }
     }, ResolveMetadataComplete, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
@@ -475,7 +477,8 @@ napi_value AVMetadataExtractorNapi::JsFetchArtPicture(napi_env env, napi_callbac
         auto sharedMemory = promiseCtx->innerHelper_->FetchArtPicture();
         promiseCtx->artPicture_ = ConvertMemToPixelMap(sharedMemory);
         if (promiseCtx->artPicture_ == nullptr) {
-            promiseCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT, "Failed to fetchAlbumCover");
+            promiseCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT,
+                "Failed to fetch album cover. Media format unsupported or demuxer parsing failed.");
         }
     }, FetchArtPictureComplete, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
@@ -686,7 +689,7 @@ void AVMetadataExtractorNapi::setHelper(const std::shared_ptr<AVMetadataHelper> 
 napi_value AVMetadataExtractorNapi::JsFetchFrameAtTime(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVMetadataExtractorNapi::JsFetchFrameAtTime");
-    MEDIA_LOGI("JsFetchFrameAtTime  in");
+    MEDIA_LOGI("JsFetchFrameAtTime in");
     const int32_t maxArgs = ARG_FOUR;  // args + callback
     const int32_t argCallback = ARG_THREE;  // index three, the 4th param if exist
     const int32_t argPixelParam = ARG_TWO;  // index 2, the 3rd param
@@ -729,7 +732,8 @@ napi_value AVMetadataExtractorNapi::JsFetchFrameAtTime(napi_env env, napi_callba
             FetchScaledFrameYuv(asyncCtx->timeUs, asyncCtx->option, asyncCtx->param_);
         asyncCtx->pixel_ = pixelMap;
         if (asyncCtx->pixel_ == nullptr) {
-            asyncCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT, "FetchFrameByTime failed.");
+            asyncCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT,
+                "Failed to fetch frame. Video parsing failed or format unsupported.");
         }
     }, CreatePixelMapComplete, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
@@ -786,7 +790,8 @@ napi_value AVMetadataExtractorNapi::JsFetchFrameAtTimeWithTimeout(napi_env env, 
         }
         asyncCtx->pixel_ = fetchFrameResult.pixelmap;
         if (asyncCtx->pixel_ == nullptr && !fetchFrameResult.isTimeout) {
-            asyncCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT, "FetchFrameByTime failed, maybe unsupport format.");
+            asyncCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT,
+                "Failed to fetch frame. Video parsing failed or format unsupported.");
         }
     }, CreatePixelMapComplete, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));

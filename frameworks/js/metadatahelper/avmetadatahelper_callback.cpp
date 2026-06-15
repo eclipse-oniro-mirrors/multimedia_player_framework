@@ -220,7 +220,7 @@ void AVMetadataHelperCallback::SendPixelCompleteCallback(const FrameInfo &info,
             cb->errorMs = "FETCH_TIMEOUT";
             break;
         case UNSUPPORTED_FORMAT:
-            cb->errorMs = "UNSUPPORTED_FORMAT";
+            cb->errorMs = "Failed to fetch frame. Video parsing failed or format unsupported.";
             break;
         default:
             cb->errorMs = "NO_ERR";
