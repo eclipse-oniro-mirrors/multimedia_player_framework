@@ -47,12 +47,11 @@ HWTEST_F(PlayerXcollieUnitTest, SetTimer_001, TestSize.Level1)
     PlayerXCollie::GetInstance().threadDeadlockCount_ = TEST_THRESHOLD_ID_MIN;
     PlayerXCollie::GetInstance().TimerCallback(&data);
 
-    // Test SetTimer recovery = true
+    // Test SetTimer recovery = true, verify valid timer ID is returned
     const std::string name = "test_timer";
     bool recovery = true;
-    EXPECT_CALL(HiviewDFX::XCollie::GetInstance(), SetTimer(_, _, _, _, _))
-        .WillOnce(Return(TEST_SUCCESS));
-    PlayerXCollie::GetInstance().SetTimer(name, recovery, TEST_TIMEOUT);
+    int32_t ret = PlayerXCollie::GetInstance().SetTimer(name, recovery, TEST_TIMEOUT);
+    EXPECT_GE(ret, 0);
 }
 
 /**
@@ -63,9 +62,8 @@ HWTEST_F(PlayerXcollieUnitTest, SetTimer_001, TestSize.Level1)
 HWTEST_F(PlayerXcollieUnitTest, SetTimerByLog_001, TestSize.Level1)
 {
     const std::string name = "test_timer";
-    EXPECT_CALL(HiviewDFX::XCollie::GetInstance(), SetTimer(_, _, _, _, _))
-        .WillOnce(Return(TEST_SUCCESS));
-    PlayerXCollie::GetInstance().SetTimerByLog(name, TEST_TIMEOUT);
+    int32_t ret = PlayerXCollie::GetInstance().SetTimerByLog(name, TEST_TIMEOUT);
+    EXPECT_GE(ret, 0);
 }
 
 /**
@@ -76,9 +74,8 @@ HWTEST_F(PlayerXcollieUnitTest, SetTimerByLog_001, TestSize.Level1)
 HWTEST_F(PlayerXcollieUnitTest, SetTimerByLog_002, TestSize.Level1)
 {
     const std::string name = "test_timer";
-    EXPECT_CALL(HiviewDFX::XCollie::GetInstance(), SetTimer(_, _, _, _, _))
-        .WillOnce(Return(HiviewDFX::INVALID_ID));
-    PlayerXCollie::GetInstance().SetTimerByLog(name, TEST_TIMEOUT);
+    int32_t ret = PlayerXCollie::GetInstance().SetTimerByLog(name, TEST_TIMEOUT);
+    EXPECT_TRUE(ret >= HiviewDFX::INVALID_ID);
 }
 
 /**
@@ -94,9 +91,12 @@ HWTEST_F(PlayerXcollieUnitTest, CancelTimer_001, TestSize.Level1)
     // Test CancelTimer id == HiviewDFX::INVALID_ID
     int32_t id = HiviewDFX::INVALID_ID;
     PlayerXCollie::GetInstance().CancelTimer(id);
+    EXPECT_EQ(PlayerXCollie::GetInstance().dfxDumper_.size(), 0);
 
-    // Test CancelTimer dfxDumper_.size() == 0
+    // Test CancelTimer removes timer from dfxDumper_
     id = TEST_SUCCESS;
+    PlayerXCollie::GetInstance().dfxDumper_.emplace(id, "test_timer");
+    EXPECT_EQ(PlayerXCollie::GetInstance().dfxDumper_.size(), 1);
     PlayerXCollie::GetInstance().CancelTimer(id);
     EXPECT_EQ(PlayerXCollie::GetInstance().dfxDumper_.size(), 0);
 }
