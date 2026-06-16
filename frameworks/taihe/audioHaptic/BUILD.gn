@@ -37,6 +37,7 @@ ohos_taihe("run_audioHaptic_taihe") {
 }
 
 taihe_shared_library("audioHaptic_taihe") {
+  shlib_type = "ani"
   stack_protector_ret = true
   sanitize = {
     integer_overflow = true
