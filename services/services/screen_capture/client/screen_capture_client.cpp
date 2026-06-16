@@ -339,14 +339,16 @@ int32_t ScreenCaptureClient::GetMultiDisplayCaptureCapability(const std::vector<
 int32_t ScreenCaptureClient::PauseScreenCapture()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_SERVICE_DIED, "screenCapture service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_SERVICE_DIED,
+        "screenCapture service does not exist.");
     return screenCaptureProxy_->PauseScreenCapture();
 }
 
 int32_t ScreenCaptureClient::ResumeScreenCapture()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_SERVICE_DIED, "screenCapture service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_SERVICE_DIED,
+        "screenCapture service does not exist.");
     return screenCaptureProxy_->ResumeScreenCapture();
 }
 
@@ -354,7 +356,8 @@ int32_t ScreenCaptureClient::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBu
     int32_t height, int32_t &watermarkCount)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_SERVICE_DIED, "screenCapture service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_SERVICE_DIED,
+        "screenCapture service does not exist.");
     return screenCaptureProxy_->AddWatermark(watermarkBuffer, width, height, watermarkCount);
 }
 

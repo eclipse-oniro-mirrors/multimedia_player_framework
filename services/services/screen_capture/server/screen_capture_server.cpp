@@ -5327,7 +5327,7 @@ int32_t ScreenCaptureServer::ResumeRecorder()
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " ResumeRecorder start.", FAKE_POINTER(this));
     if (recorder_) {
         auto ret = recorder_->Resume();
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN_RECORDER_RESUME, 
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN_RECORDER_RESUME,
             "ScreenCaptureServer: 0x%{public}06" PRIXPTR "ResumeRecorder failed %{public}d", FAKE_POINTER(this), ret);
     }
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " ResumeRecorder end.", FAKE_POINTER(this));

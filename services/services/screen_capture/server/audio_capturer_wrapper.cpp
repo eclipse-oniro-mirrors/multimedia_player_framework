@@ -62,7 +62,8 @@ int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
 #endif
     appInfo_ = appInfo;
     std::shared_ptr<AudioCapturer> audioCapturer = CreateAudioCapturer(appInfo);
-    CHECK_AND_RETURN_RET_LOG(audioCapturer != nullptr, MSERR_UNKNOWN_AUDIO_CREATE, "Start failed, create AudioCapturer failed");
+    CHECK_AND_RETURN_RET_LOG(audioCapturer != nullptr, MSERR_UNKNOWN_AUDIO_CREATE,
+        "Start failed, create AudioCapturer failed");
     if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
             .compare(bundleName_) == 0) {
         std::vector<SourceType> targetSources = {
