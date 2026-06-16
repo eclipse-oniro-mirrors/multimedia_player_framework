@@ -86,7 +86,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StartScreenCaptureWithSurface(str
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StopScreenCapture(struct OH_AVScreenCapture *capture);
 
 /**
- * @brief Start av screen record use to start save screen record file.
+ * @brief Start av screen recording to save screen recording file.
  * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
  * @param capture Pointer to an OH_AVScreenCapture instance
  * @return Returns AV_SCREEN_CAPTURE_ERR_OK if the execution is successful,
@@ -97,7 +97,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StopScreenCapture(struct OH_AVScr
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StartScreenRecording(struct OH_AVScreenCapture *capture);
 
 /**
- * @brief Start av screen record use to stop save screen record file.
+ * @brief Stop av screen recording and save screen recording file.
  * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
  * @param capture Pointer to an OH_AVScreenCapture instance
  * @return Returns AV_SCREEN_CAPTURE_ERR_OK if the execution is successful,
@@ -360,12 +360,12 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ContentFilter_AddWindowContent(
  * @brief Resize the Resolution of the Screen
  * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
  * @param capture Pointer to an OH_AVScreenCapture instance
- * @param width Video frame width of avscreeencapture
- * @param height Video frame height of avscreeencapture
+ * @param width Video frame width of avscreeencapture, in px.
+ * @param height Video frame height of avscreeencapture, in px.
  * @return Function result code.
  *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
  *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} input capture is nullptr.
- *         {@link AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT} opertation not be permitted.
+ *         {@link AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT} operation not permitted.
  * @since 12
  * @version 1.0
  */
@@ -382,7 +382,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ResizeCanvas(struct OH_AVScreenCa
  *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
  *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} input capture is nullptr or input windowIDs are not belong current
  *         app.
- *         {@link AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT} opertation not be permitted.
+ *         {@link AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT} operation not permitted.
  * @since 12
  * @version 1.0
  */
@@ -393,11 +393,11 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SkipPrivacyMode(struct OH_AVScree
  * @brief set up the max number of video frame per second
  * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
  * @param capture Pointer to an OH_AVScreenCapture instance
- * @param frameRate max frame rate of video
+ * @param frameRate max frame rate of video, in fps.
  * @return Function result code.
  *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
  *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} input capture is nullptr or frameRate is not support.
- *         {@link AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT} opertation not be permitted.
+ *         {@link AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT} operation not permitted.
  * @since 14
  * @version 1.0
  */
@@ -412,7 +412,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetMaxVideoFrameRate(struct OH_AV
  * @return Function result code.
  *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
  *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} input capture is nullptr.
- *         {@link AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT} opertation not be permitted, show cursor failed.
+ *         {@link AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT} operation not permitted, show cursor failed.
  * @since 15
  * @version 1.0
  */
@@ -494,7 +494,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForKeepCaptureDuringCall(
  * @return Function result code.
  *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
  *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} input capture is nullptr or input callback is nullptr.
- *         {@link AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT} opertation not be permitted, set ErrorCallback failed.
+ *         {@link AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT} operation not permitted, set ErrorCallback failed.
  * @since 20
  */
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureContentChangedCallback(struct OH_AVScreenCapture *capture,
@@ -658,7 +658,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureAreaHighlight(struct OH
  * @details Activates system visual picker with two usage scenarios:
  *          1. Initial capture configuration: Select source before starting capture
  *          2. Dynamic source switching: Change capture target during active capture
- * @param capture [in] Initialized screen capture instance
+ * @param capture [in] Point to an initialized OH_AVScreenCapture instance.
  * @return Operation status codes:
  *         - AV_SCREEN_CAPTURE_ERR_OK(0): Picker activated successfully
  *         - AV_SCREEN_CAPTURE_ERR_INVALID_VAL: Null pointer or uninitialized instance
@@ -712,7 +712,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForPause(
 
 /**
  * @brief Pause screen capture
- * @param {OH_AVScreenCapture*} capture Initialized screen capture instance.
+ * @param {OH_AVScreenCapture*} capture Point to an initialized OH_AVScreenCapture instance.
  * @return Function result code.
  *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
  *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} capture value is nullptr.
@@ -723,7 +723,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_PauseScreenCapture(struct OH_AVSc
 
 /**
  * @brief Resume screen capture
- * @param {OH_AVScreenCapture*} capture Initialized screen capture instance.
+ * @param {OH_AVScreenCapture*} capture Point to an initialized OH_AVScreenCapture instance.
  * @return Function result code.
  *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
  *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} capture value is nullptr.

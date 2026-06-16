@@ -64,7 +64,7 @@ typedef enum OH_CaptureMode {
     OH_CAPTURE_SPECIFIED_SCREEN = 1,
     /* capture a specified window */
     OH_CAPTURE_SPECIFIED_WINDOW = 2,
-    OH_CAPTURE_INVAILD = -1
+    OH_CAPTURE_INVALID = -1
 } OH_CaptureMode;
 
 /**
@@ -141,7 +141,7 @@ typedef enum OH_DataType {
     OH_ENCODED_STREAM = 1,
     /* mp4 file */
     OH_CAPTURE_FILE = 2,
-    OH_INVAILD = -1
+    OH_INVALID = -1
 } OH_DataType;
 
 /**
@@ -246,7 +246,7 @@ typedef struct OH_VideoCaptureInfo {
 } OH_VideoCaptureInfo;
 
 /**
- * @brief Videoc encoder info
+ * @brief Video encoder info
  * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
  *
  * @since 10
@@ -421,7 +421,7 @@ typedef struct OH_AVScreenCaptureCallback {
 typedef struct OH_Rect {
     /* X-coordinate of screen recording */
     int32_t x;
-    /* y-coordinate of screen recording */
+    /* Y-coordinate of screen recording */
     int32_t y;
     /* Width of screen recording */
     int32_t width;
