@@ -786,7 +786,7 @@ napi_value AVMetadataExtractorNapi::JsFetchFrameAtTimeWithTimeout(napi_env env, 
 }
 
 int32_t AVMetadataExtractorNapi::CheckParamsOfJsFetchFrameAtTimeWithTimeout(napi_env env, napi_value args,
-    std::make_unique<AVMetadataExtractorAsyncContext>& asyncCtx, AVMetadataExtractorNapi* extractor)
+    std::unique_ptr<AVMetadataExtractorAsyncContext>& asyncCtx, AVMetadataExtractorNapi* extractor)
 {
     CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr && extractor != nullptr, MSERR_INVALID_VAL,
         "asyncCtx or extractor is invalid");
