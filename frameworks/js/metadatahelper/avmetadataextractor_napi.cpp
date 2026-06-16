@@ -264,7 +264,8 @@ napi_value AVMetadataExtractorNapi::JsResolveMetadataWithTimeout(napi_env env, n
     CHECK_AND_RETURN_RET_LOG(ret == napi_ok, result, "failed to get timeoutMs.");
 
     if (promiseCtx->timeoutMs <= 0 || promiseCtx->timeoutMs > MAX_TIMEOUT_MS) {
-        promiseCtx->SignError(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE, "Parameter check failed.");
+        promiseCtx->SignError(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
+            "Parameter check failed. The valid range for timeoutMs is (0, 20000]");
     }
     if (extractor->state_ != HelperState::HELPER_STATE_RUNNABLE && !promiseCtx->errFlag) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Can't fetchMetadata, please set source.");
@@ -634,7 +635,8 @@ napi_value AVMetadataExtractorNapi::JsFetchFramesAtTimesWithTimeout(napi_env env
         valueType != napi_object ||
         extractor->GetFetchFrameVectorArgs(asyncCtx, env, args[ARG_ZERO], args[ARG_ONE], args[ARG_TWO]) != MSERR_OK;
     if (notParamValid || asyncCtx->timeoutMs <= 0 || asyncCtx->timeoutMs > MAX_TIMEOUT_MS) {
-        ThrowError(env, MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE, "Parameter check failed.");
+        ThrowError(env, MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
+            "Parameter check failed. The valid range for timeoutMs is (0, 20000]");
         return result;
     }
     if (extractor->state_ == HelperState::HELPER_STATE_HTTP_INTERCEPTED) {
@@ -769,7 +771,8 @@ napi_value AVMetadataExtractorNapi::JsFetchFrameAtTimeWithTimeout(napi_env env, 
         valueType != napi_object || extractor->GetFetchFrameArgs(
             asyncCtx, env, args[ARG_ZERO], args[ARG_ONE], args[ARG_TWO]) != MSERR_OK;
     if (notParamValid || asyncCtx->timeoutMs <= 0 || asyncCtx->timeoutMs > MAX_TIMEOUT_MS) {
-        asyncCtx->SignError(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE, "Parameter check failed");
+        asyncCtx->SignError(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
+            "Parameter check failed. The valid range for timeoutMs is (0, 20000]");
     }
     if (extractor->state_ != HelperState::HELPER_STATE_RUNNABLE && !asyncCtx->errFlag) {
         asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Current state is not runnable, can't fetchFrame.");
