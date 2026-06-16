@@ -45,10 +45,21 @@ void MonitorServerTest::TearDown(void)
 HWTEST_F(MonitorServerTest, EnableMonitor, TestSize.Level1)
 {
     pid_t pid = IPCSkeleton::GetCallingPid();
+
     int32_t ret = MonitorServer::GetInstance().EnableMonitor(pid);
     EXPECT_EQ(ret, 0);
+
+    auto& timesMap = MonitorServer::GetInstance().timesMap_;
+    auto it = timesMap.find(pid);
+    EXPECT_NE(it, timesMap.end());
+    EXPECT_EQ(it->second.time, MONITOR_TIMEMS);
+    EXPECT_TRUE(it->second.triggerFlag);
+
     ret = MonitorServer::GetInstance().DisableMonitor(pid);
     EXPECT_EQ(ret, 0);
+
+    it = timesMap.find(pid);
+    EXPECT_EQ(it, timesMap.end());
 }
 }
 }

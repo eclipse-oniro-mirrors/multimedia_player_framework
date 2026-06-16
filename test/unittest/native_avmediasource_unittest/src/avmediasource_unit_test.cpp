@@ -152,6 +152,9 @@ HWTEST_F(NativeAVMediaSourceUnitTest, AVMediaSource_CreateWithUrl_0100, Level2)
     OH_AVHttpHeader *header = OH_AVHttpHeader_Create();
     OH_AVMediaSource *mediasource = OH_AVMediaSource_CreateWithUrl(url, header);
     ASSERT_NE(mediasource, nullptr);
+    OH_AVErrCode ret = OH_AVMediaSource_Destroy(mediasource);
+    ASSERT_EQ(ret, AV_ERR_OK);
+    OH_AVHttpHeader_Destroy(header);
 }
 
 /**
@@ -190,6 +193,8 @@ HWTEST_F(NativeAVMediaSourceUnitTest, AVMediaSource_CreateWithDataSource_0100, L
 
     OH_AVMediaSource *source = OH_AVMediaSource_CreateWithDataSource(&dataSource);
     ASSERT_NE(source, nullptr);
+    OH_AVErrCode ret = OH_AVMediaSource_Destroy(source);
+    ASSERT_EQ(ret, AV_ERR_OK);
 }
 
 /**
@@ -230,11 +235,14 @@ HWTEST_F(NativeAVMediaSourceUnitTest, AVMediaSource_CreateWithFd_0100, Level2)
 
     OH_AVMediaSource *source = OH_AVMediaSource_CreateWithFd(fd, offset, size);
     ASSERT_NE(source, nullptr);
+    OH_AVErrCode ret = OH_AVMediaSource_Destroy(source);
+    ASSERT_EQ(ret, AV_ERR_OK);
+    close(fd);
 }
 
 /**
  * @tc.name: AVMediaSource_CreateWithFd_0200
- * @tc.desc: Test create mediasource with fd with invalid parameter
+ * @tc.desc: Test create mediasource with fd=0
  * @tc.type: FUNC
  */
 HWTEST_F(NativeAVMediaSourceUnitTest, AVMediaSource_CreateWithFd_0200, Level2)
@@ -245,11 +253,13 @@ HWTEST_F(NativeAVMediaSourceUnitTest, AVMediaSource_CreateWithFd_0200, Level2)
 
     OH_AVMediaSource *source = OH_AVMediaSource_CreateWithFd(fd, offset, size);
     ASSERT_NE(source, nullptr);
+    OH_AVErrCode ret = OH_AVMediaSource_Destroy(source);
+    ASSERT_EQ(ret, AV_ERR_OK);
 }
 
 /**
  * @tc.name: AVMediaSource_CreateWithFd_0300
- * @tc.desc: Test create mediasource with empty fd
+ * @tc.desc: Test create mediasource with large offset
  * @tc.type: FUNC
  */
 HWTEST_F(NativeAVMediaSourceUnitTest, AVMediaSource_CreateWithFd_0300, Level2)
@@ -260,6 +270,9 @@ HWTEST_F(NativeAVMediaSourceUnitTest, AVMediaSource_CreateWithFd_0300, Level2)
 
     OH_AVMediaSource *source = OH_AVMediaSource_CreateWithFd(fd, offset, size);
     ASSERT_NE(source, nullptr);
+    OH_AVErrCode ret = OH_AVMediaSource_Destroy(source);
+    ASSERT_EQ(ret, AV_ERR_OK);
+    close(fd);
 }
 
 /**
@@ -667,7 +680,8 @@ HWTEST_F(NativeAVMediaSourceUnitTest, OH_AVMediaSourceLoader_Create_001, Level0)
     loader = OH_AVMediaSourceLoader_Create();
 
     ASSERT_NE(nullptr, loader);
-    OH_AVMediaSourceLoader_Destroy(loader);
+    OH_AVErrCode ret = OH_AVMediaSourceLoader_Destroy(loader);
+    ASSERT_EQ(ret, AV_ERR_OK);    
 }
 
 int64_t SourceOpenCallbackFunc(OH_AVMediaSourceLoadingRequest *request, void *userData)

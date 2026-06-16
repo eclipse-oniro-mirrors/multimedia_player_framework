@@ -47,6 +47,7 @@ public:
         TaskPriority priority = TaskPriority::NORMAL, bool singleLoop = true):Task(name, groupId, type,
         priority, singleLoop) {}
     MOCK_METHOD(bool, IsTaskRunning, (), (override));
+    MOCK_METHOD(bool, StopAsync, (), (override));
 };
 } // namespace Media
 } // namespace OHOS

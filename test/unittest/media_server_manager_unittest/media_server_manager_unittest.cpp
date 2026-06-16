@@ -831,8 +831,10 @@ HWTEST_F(MediaServerManagerUnitTest, DestoryMemoryReportTask_002, TestSize.Level
 
     auto mockTask = std::make_unique<MockTask>("testName");
     EXPECT_CALL(*mockTask, IsTaskRunning()).WillRepeatedly(Return(true));
+    EXPECT_CALL(*mockTask, StopAsync()).Times(1);
     mediaServerManager.memoryReportTask_ = std::move(mockTask);
     mediaServerManager.DestoryMemoryReportTask();
+    ASSERT_TRUE(mediaServerManager.memoryReportTask_ == nullptr);
 }
 }
 }

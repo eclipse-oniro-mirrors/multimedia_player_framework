@@ -42,7 +42,7 @@ void MonitorServerObjectUnitTest::TearDown(void)
 /**
  * @tc.name  : Test IpcAbnormality
  * @tc.number: IpcAbnormality_001
- * @tc.desc  : Test alarmed_ == false
+ * @tc.desc  : Test alarmed_ == false (calls DoIpcAbnormality)
  */
 HWTEST_F(MonitorServerObjectUnitTest, IpcAbnormality_001, TestSize.Level0)
 {
@@ -53,9 +53,22 @@ HWTEST_F(MonitorServerObjectUnitTest, IpcAbnormality_001, TestSize.Level0)
 }
 
 /**
+ * @tc.name  : Test IpcAbnormality
+ * @tc.number: IpcAbnormality_002
+ * @tc.desc  : Test alarmed_ == true (early return)
+ */
+HWTEST_F(MonitorServerObjectUnitTest, IpcAbnormality_002, TestSize.Level0)
+{
+    ASSERT_NE(object_, nullptr);
+    object_->alarmed_ = true;
+    auto ret = object_->IpcAbnormality();
+    EXPECT_EQ(ret, 0);
+}
+
+/**
  * @tc.name  : Test IpcRecovery
  * @tc.number: IpcRecovery_001
- * @tc.desc  : Test alarmed_ == true
+ * @tc.desc  : Test alarmed_ == true (calls DoIpcRecovery)
  */
 HWTEST_F(MonitorServerObjectUnitTest, IpcRecovery_001, TestSize.Level0)
 {
@@ -63,6 +76,19 @@ HWTEST_F(MonitorServerObjectUnitTest, IpcRecovery_001, TestSize.Level0)
     object_->alarmed_ = true;
     auto ret = object_->IpcRecovery(true);
     EXPECT_EQ(ret, NUM_1);
+}
+
+/**
+ * @tc.name  : Test IpcRecovery
+ * @tc.number: IpcRecovery_002
+ * @tc.desc  : Test alarmed_ == false (early return)
+ */
+HWTEST_F(MonitorServerObjectUnitTest, IpcRecovery_002, TestSize.Level0)
+{
+    ASSERT_NE(object_, nullptr);
+    object_->alarmed_ = false;
+    auto ret = object_->IpcRecovery(true);
+    EXPECT_EQ(ret, 0);
 }
 
 } // namespace Media

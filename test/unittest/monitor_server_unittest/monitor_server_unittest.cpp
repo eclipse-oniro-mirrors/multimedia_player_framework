@@ -73,6 +73,8 @@ HWTEST_F(PlayerMonitorServerTest, ObjCtrlUnitTest_001, TestSize.Level0)
     abnormalList.push_back(weakObj2);
     int32_t ret = testPtr->ObjCtrl(recoveryList, abnormalList);
     EXPECT_EQ(ret, 0);
+    EXPECT_EQ(recoveryList.size(), 1);
+    EXPECT_EQ(abnormalList.size(), 1);
     weakObj1 = nullptr;
     weakObj2 = nullptr;
 }
@@ -87,11 +89,15 @@ HWTEST_F(PlayerMonitorServerTest, GetObjListByPidUnitTest_001, TestSize.Level0)
     ASSERT_NE(testPtr, nullptr);
     int32_t pid = PID_TEST;
     OHOS::wptr<OHOS::Media::MonitorServerObject> weakObj1;
-    std::list<wptr<MonitorServerObject>> recoveryList;
-    recoveryList.push_back(weakObj1);
-    testPtr->objListMap_.insert(std::pair<int32_t, std::list<wptr<MonitorServerObject>>>(pid, recoveryList));
-    int32_t ret = testPtr->GetObjListByPid(pid, recoveryList);
+    std::list<wptr<MonitorServerObject>> inputList;
+    inputList.push_back(weakObj1);
+    testPtr->objListMap_.insert(std::pair<int32_t, std::list<wptr<MonitorServerObject>>>(pid, inputList));
+
+    std::list<wptr<MonitorServerObject>> outputList;
+    int32_t ret = testPtr->GetObjListByPid(pid, outputList);
     EXPECT_EQ(ret, 0);
+    EXPECT_EQ(outputList.size(), 1);
+    EXPECT_TRUE(outputList.begin() -> promote() == nullptr);
     weakObj1 = nullptr;
 }
 
@@ -137,9 +143,8 @@ HWTEST_F(PlayerMonitorServerTest, ObjectIpcRecoveryUnitTest_001, TestSize.Level0
     ASSERT_NE(testPtr2, nullptr);
     testPtr2->alarmed_ = false;
     bool fromMonitor = true;
-    int32_t ret = -1;
-    ret = testPtr2->IpcRecovery(fromMonitor);
-    EXPECT_NE(ret, -1);
+    int32_t ret = testPtr2->IpcRecovery(fromMonitor);
+    EXPECT_EQ(ret, MSERR_OK);
     testPtr2 = nullptr;
 }
 
