@@ -253,7 +253,10 @@ int32_t SoundPool::Stop(int32_t streamID)
         return MSERR_INVALID_OPERATION;
     }
     if (streamIdManager_ != nullptr) {
-        return streamIdManager_->StopAudioStream(streamID);
+        std::shared_ptr<AudioStream> stream = streamIdManager_->GetStreamByStreamIDWithLock(streamID);
+        CHECK_AND_RETURN_RET_LOG(stream != nullptr, MSERR_INVALID_VAL,
+            "SoundPool::Stop, stream is nullptr");
+        return stream->Stop();
     }
     MEDIA_LOGE("SoundPool::Stop, can not find the stream(%{public}d)", streamID);
     return MSERR_INVALID_OPERATION;
