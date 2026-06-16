@@ -529,7 +529,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_003, TestSize.Leve
     Json::Reader reader;
     reader.parse(rawString, root);
     screenCaptureServer_->PrepareSelectWindow(root);
-    ASSERT_EQ(screenCaptureServer_->missionIds_[0], 0);
+    ASSERT_EQ(screenCaptureServer_->displayIds_.size(), 0);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_004, TestSize.Level2)
