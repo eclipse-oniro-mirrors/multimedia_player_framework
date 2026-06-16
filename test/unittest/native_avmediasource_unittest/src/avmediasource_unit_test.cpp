@@ -681,7 +681,7 @@ HWTEST_F(NativeAVMediaSourceUnitTest, OH_AVMediaSourceLoader_Create_001, Level0)
 
     ASSERT_NE(nullptr, loader);
     OH_AVErrCode ret = OH_AVMediaSourceLoader_Destroy(loader);
-    ASSERT_EQ(ret, AV_ERR_OK);    
+    ASSERT_EQ(ret, AV_ERR_OK);
 }
 
 int64_t SourceOpenCallbackFunc(OH_AVMediaSourceLoadingRequest *request, void *userData)
