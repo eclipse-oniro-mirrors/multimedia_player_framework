@@ -548,16 +548,16 @@ int32_t ScreenCaptureServiceProxy::ExcludePickerWindows(std::vector<int32_t> &wi
     MessageOption option;
 
     bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
-    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_UNKNOWN, "Failed to write descriptor!");
     token = data.WriteUint64(windowIDsVec.size());
-    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write windowIDsVec size!");
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_UNKNOWN, "Failed to write windowIDsVec size!");
     for (const auto &element : windowIDsVec) {
         token = data.WriteInt32(element);
-        CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write windowIDsVec");
+        CHECK_AND_RETURN_RET_LOG(token, MSERR_UNKNOWN, "Failed to write windowIDsVec");
     }
 
     int error = Remote()->SendRequest(EXCLUDE_PICKER_WINDOWS, data, reply, option);
-    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_UNKNOWN,
         "ExcludePickerWindows failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
@@ -569,12 +569,12 @@ int32_t ScreenCaptureServiceProxy::SetPickerMode(PickerMode pickerMode)
     MessageOption option;
 
     bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
-    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_UNKNOWN, "Failed to write descriptor!");
     token = data.WriteInt32(static_cast<int32_t>(pickerMode));
-    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write pickerMode!");
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_UNKNOWN, "Failed to write pickerMode!");
 
     int error = Remote()->SendRequest(SET_PICKER_MODE, data, reply, option);
-    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_UNKNOWN,
         "SetPickerMode failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
@@ -586,13 +586,13 @@ int32_t ScreenCaptureServiceProxy::SetMicrophoneEnabled(bool isMicrophone)
     MessageOption option;
 
     bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
-    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_UNKNOWN, "Failed to write descriptor!");
 
     token = data.WriteBool(isMicrophone);
-    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write Microphone state!");
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_UNKNOWN, "Failed to write Microphone state!");
 
     int error = Remote()->SendRequest(SET_MIC_ENABLE, data, reply, option);
-    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_UNKNOWN,
                              "SetMicrophoneEnabled failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
@@ -700,15 +700,15 @@ int32_t ScreenCaptureServiceProxy::SkipPrivacyMode(const std::vector<uint64_t> &
     MessageOption option;
 
     bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
-    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_UNKNOWN, "Failed to write descriptor!");
     token = data.WriteInt32(static_cast<int32_t>(windowIDsVec.size()));
-    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write windowIDsVec size!");
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_UNKNOWN, "Failed to write windowIDsVec size!");
     for (size_t i = 0; i < windowIDsVec.size(); i++) {
         token = data.WriteUint64(static_cast<uint64_t>(windowIDsVec[i]));
-        CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write windowIDs");
+        CHECK_AND_RETURN_RET_LOG(token, MSERR_UNKNOWN, "Failed to write windowIDs");
     }
     int error = Remote()->SendRequest(SKIP_PRIVACY, data, reply, option);
-    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_UNKNOWN,
                              "SkipPrivacyMode failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
@@ -862,7 +862,7 @@ int32_t ScreenCaptureServiceProxy::AddWatermark(std::shared_ptr<AVBuffer> &water
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
 
     int error = Remote()->SendRequest(ADD_WATERMARK, data, reply, option);
-    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_SERVICE_DIED,
         "AddWatermark failed, error: %{public}d", error);
     watermarkCount = reply.ReadInt32();
     MEDIA_LOGI("AddWatermark watermarkCount result: %{public}d", watermarkCount);

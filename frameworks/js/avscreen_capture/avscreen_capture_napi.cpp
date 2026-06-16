@@ -41,6 +41,14 @@ std::map<std::string, AVScreenCaptureNapi::AvScreenCaptureTaskqFunc> AVScreenCap
     {AVScreenCapturegOpt::PRESENT_PICKER, &AVScreenCaptureNapi::PresentPicker},
 };
 
+std::string MSSCErrorToString(MediaServiceErrCode code)
+{
+    if (MSSCERRCODE_FUNCS.count(code) != 0) {
+        return MSSCERRCODE_FUNCS.at(code);
+    }
+    return "unkown error";
+}
+
 AVScreenCaptureNapi::AVScreenCaptureNapi()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR "Instances create", FAKE_POINTER(this));
@@ -212,10 +220,10 @@ RetInfo GetReturnInfo(int32_t errCode, const std::string &operate, const std::st
     MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode));
 
     std::string message;
-    if (err == MSERR_EXT_API9_INVALID_PARAMETER) {
+    if (errCode == MSERR_INVALID_VAL) {
         message = MSExtErrorAPI9ToString(err, param, "") + add;
-    } else {
-        message = MSExtErrorAPI9ToString(err, operate, "") + add;
+    }  else {
+        message = operate + MSSCErrorToString(static_cast<MediaServiceErrCode>(errCode)) + add;
     }
 
     MEDIA_LOGE("errCode: %{public}d, errMsg: %{public}s", err, message.c_str());
@@ -858,7 +866,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureNapi::GetSkipPrivacyModeTas
         CHECK_AND_RETURN_RET(napi != nullptr && napi->screenCapture_ != nullptr,
             GetReturnInfo(MSERR_INVALID_OPERATION, option, ""));
         int32_t ret = napi->screenCapture_->SkipPrivacyMode(const_cast<std::vector<uint64_t> &>(windowIDsVec));
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(MSERR_UNKNOWN, option, ""));
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(ret, option, ""));
         MEDIA_LOGI("%{public}s End", option.c_str());
         return RetInfo(MSERR_EXT_API9_OK, "");
     });
@@ -873,7 +881,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureNapi::GetExcludePickerWindo
         CHECK_AND_RETURN_RET(napi != nullptr && napi->screenCapture_ != nullptr,
             GetReturnInfo(MSERR_INVALID_OPERATION, option, ""));
         int32_t ret = napi->screenCapture_->ExcludePickerWindows(const_cast<std::vector<int32_t> &>(windowIDsVec));
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(MSERR_UNKNOWN, option, ""));
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(ret, option, ""));
         MEDIA_LOGI("%{public}s End", option.c_str());
         return RetInfo(MSERR_EXT_API9_OK, "");
     });
@@ -890,7 +898,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureNapi::GetSetPickerModeTask(
         CHECK_AND_RETURN_RET(napi != nullptr && napi->screenCapture_ != nullptr,
             GetReturnInfo(MSERR_INVALID_OPERATION, option, ""));
         int32_t ret = napi->screenCapture_->SetPickerMode(pickerMode);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(MSERR_UNKNOWN, option, ""));
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(ret, option, ""));
         MEDIA_LOGI("%{public}s End", option.c_str());
         return RetInfo(MSERR_EXT_API9_OK, "");
     });
@@ -907,7 +915,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureNapi::GetSetMicrophoneEnabl
             GetReturnInfo(MSERR_INVALID_OPERATION, option, ""));
 
         int32_t ret = napi->screenCapture_->SetMicrophoneEnabled(enable);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(MSERR_UNKNOWN, option, ""));
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(ret, option, ""));
 
         MEDIA_LOGI("%{public}s End", option.c_str());
         return RetInfo(MSERR_EXT_API9_OK, "");
@@ -1144,10 +1152,10 @@ int32_t AVScreenCaptureNapi::GetRecorderInfo(std::unique_ptr<AVScreenCaptureAsyn
     int32_t fd = -1;
     (void)CommonNapi::GetPropertyInt32(env, args, "fd", fd);
     CHECK_AND_RETURN_RET(fd > 0, // 0 to 2 for system std log
-        (asyncCtx->AVScreenCaptureSignError(MSERR_INVALID_VAL, "GetRecorderInfo", "url"), MSERR_INVALID_VAL));
+        (asyncCtx->AVScreenCaptureSignError(MSERR_INVALID_FD, "GetRecorderInfo", "url"), MSERR_INVALID_FD));
     recorderConfig.url = "fd://" + std::to_string(fd);
     CHECK_AND_RETURN_RET(recorderConfig.url != "",
-        (asyncCtx->AVScreenCaptureSignError(MSERR_INVALID_VAL, "GetRecorderInfo", "url"), MSERR_INVALID_VAL));
+        (asyncCtx->AVScreenCaptureSignError(MSERR_INVALID_FD, "GetRecorderInfo", "url"), MSERR_INVALID_FD));
     MEDIA_LOGI("input url %{public}s", recorderConfig.url.c_str());
     return MSERR_OK;
 }
@@ -1216,7 +1224,7 @@ int32_t AVScreenCaptureNapi::GetStrategy(std::unique_ptr<AVScreenCaptureAsyncCon
 int32_t AVScreenCaptureNapi::CheckAudioSampleRate(const int32_t &audioSampleRate)
 {
     if (audioSampleRate == 48000 || audioSampleRate == 16000) { // 16000 48000 AudioSampleRate options
-        return MSERR_OK;
+        return MSERR_INVALID_AUD_SAMPLE_RATE;
     }
     return MSERR_INVALID_VAL;
 }
@@ -1226,7 +1234,7 @@ int32_t AVScreenCaptureNapi::CheckAudioChannelCount(const int32_t &audioChannelC
     if (audioChannelCount == 1 || audioChannelCount == 2) { // 1 2 channelCount number options
         return MSERR_OK;
     }
-    return MSERR_INVALID_VAL;
+    return MSERR_INVALID_AUD_CHANNEL;
 }
 
 int32_t AVScreenCaptureNapi::CheckVideoFrameFormat(const int32_t &frameWidth, const int32_t &frameHeight,
@@ -1237,7 +1245,7 @@ int32_t AVScreenCaptureNapi::CheckVideoFrameFormat(const int32_t &frameWidth, co
         !(frameWidth == 0 && frameHeight == 0)) { // 0 one of width height is zero, use default display
         sptr<Rosen::Display> display = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
         if (display == nullptr) {
-            return MSERR_INVALID_VAL;
+            return MSERR_INVALID_VID_WIDTH_HEIGHT;
         }
         MEDIA_LOGI("check video frame get displayInfo width:%{public}d,height:%{public}d,density:%{public}f",
             display->GetWidth(), display->GetHeight(), display->GetVirtualPixelRatio());
@@ -1268,7 +1276,7 @@ int32_t AVScreenCaptureNapi::CheckVideoCodecFormat(const int32_t &preset)
         static_cast<int32_t>(AVScreenCaptureRecorderPreset::SCREEN_RECORD_PRESET_H265_AAC_MP4) >= preset) {
         return MSERR_OK;
     }
-    return MSERR_INVALID_VAL;
+    return MSERR_INVALID_VID_CODEC_FORMAT;
 }
 
 VideoCodecFormat AVScreenCaptureNapi::GetVideoCodecFormat(const int32_t &preset)
@@ -1293,7 +1301,7 @@ int32_t AVScreenCaptureNapi::SetScreenCaptureFillMode(ScreenCaptureStrategy &str
         { 1, AVScreenCaptureFillMode::SCALE_TO_FILL }
     };
     auto iter = intToFillMode.find(fillMode);
-    int32_t ret = MSERR_INVALID_VAL;
+    int32_t ret = MSERR_INVALID_FILL_MODE;
     if (iter != intToFillMode.end()) {
         strategy.fillMode = iter->second;
         strategy.setByUser = true;
