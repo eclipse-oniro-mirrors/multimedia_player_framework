@@ -49,6 +49,7 @@ void AccountSubscriberUnitTest::TearDown(void)
  */
 HWTEST_F(AccountSubscriberUnitTest, DispatchEvent_001, TestSize.Level1)
 {
+    
     int32_t userId = TEST_USER_ID;
     std::string expectedAction = TEST_ACTION;
 
