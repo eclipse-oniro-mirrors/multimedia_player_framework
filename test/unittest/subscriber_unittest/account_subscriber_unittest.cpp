@@ -49,20 +49,21 @@ void AccountSubscriberUnitTest::TearDown(void)
  */
 HWTEST_F(AccountSubscriberUnitTest, DispatchEvent_001, TestSize.Level1)
 {
-    
     int32_t userId = TEST_USER_ID;
     std::string expectedAction = TEST_ACTION;
 
     // Test DispatchEvent mapIt == userMap_.end()
     accountSubscriber_->userMap_.clear();
     accountSubscriber_->DispatchEvent(userId, expectedAction);
+    EXPECT_TRUE(accountSubscriber_->userMap_.empty());
 
     // Test DispatchEvent mapIt != userMap_.end()
-    accountSubscriber_->userMap_[TEST_USER_ID] = { std::make_shared<MockCommonEventReceiver>() };
-    EXPECT_CALL(*std::static_pointer_cast<MockCommonEventReceiver>(accountSubscriber_->userMap_[TEST_USER_ID][0]),
-                OnCommonEventReceived(_))
+    auto mockReceiver = std::make_shared<MockCommonEventReceiver>();
+    accountSubscriber_->userMap_[TEST_USER_ID] = { mockReceiver };
+    EXPECT_CALL(*mockReceiver, OnCommonEventReceived(_))
         .Times(TIME_ONE);
     accountSubscriber_->DispatchEvent(userId, expectedAction);
+    EXPECT_FALSE(accountSubscriber_->userMap_.empty());
 }
 
 /**
@@ -79,13 +80,15 @@ HWTEST_F(AccountSubscriberUnitTest, DispatchEvent_002, TestSize.Level1)
     // Test DispatchEvent receiver == nullptr
     accountSubscriber_->userMap_[TEST_USER_ID] = { nullptr };
     accountSubscriber_->DispatchEvent(userId, expectedAction);
+    EXPECT_EQ(accountSubscriber_->userMap_[TEST_USER_ID].size(), 1);
 
     // Test DispatchEvent receiver != nullptr
-    accountSubscriber_->userMap_[TEST_USER_ID] = { std::make_shared<MockCommonEventReceiver>() };
-    EXPECT_CALL(*std::static_pointer_cast<MockCommonEventReceiver>(accountSubscriber_->userMap_[TEST_USER_ID][0]),
-                OnCommonEventReceived(_))
+    auto mockReceiver = std::make_shared<MockCommonEventReceiver>();
+    accountSubscriber_->userMap_[TEST_USER_ID] = { mockReceiver };
+    EXPECT_CALL(*mockReceiver, OnCommonEventReceived(_))
         .Times(TIME_ONE);
     accountSubscriber_->DispatchEvent(userId, expectedAction);
+    EXPECT_EQ(accountSubscriber_->userMap_[TEST_USER_ID].size(), 1);
 }
 
 /**
