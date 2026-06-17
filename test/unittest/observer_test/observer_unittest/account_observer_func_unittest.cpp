@@ -90,10 +90,9 @@ void AccountObserverInnerUnitTest::TearDown(void)
  */
 HWTEST_F(AccountObserverInnerUnitTest, RegisterAccountObserverCallBack_01, TestSize.Level1)
 {
-    auto accountObserverCallBack = std::make_shared<AccountObserverTestCallBack>();
+    auto accountObserverCallBack = std::make_shared<AccountObserverTestFalseCallBack>();
     ASSERT_TRUE(AccountObserver::GetInstance().RegisterAccountObserverCallBack(accountObserverCallBack));
-    ASSERT_TRUE(accountObserverCallBack->StopAndRelease(
-        AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER_SWITCHES));
+    ASSERT_FALSE(AccountObserver::GetInstance().OnAccountsSwitch());
     AccountObserver::GetInstance().UnregisterAccountObserverCallBack(accountObserverCallBack);
 }
 

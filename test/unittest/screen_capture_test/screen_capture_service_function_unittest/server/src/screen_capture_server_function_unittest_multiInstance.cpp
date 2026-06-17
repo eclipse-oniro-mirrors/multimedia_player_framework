@@ -893,7 +893,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_001, TestS
         AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE, area);
     screenCaptureServer_->NotifyCaptureContentChanged(
         AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_UNAVAILABLE, nullptr);
-    ASSERT_NE(screenCaptureServer_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->curWindowEvent_,
+        AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_UNAVAILABLE);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_002, TestSize.Level2)
@@ -910,7 +911,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_002, TestS
         AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE, nullptr);
     screenCaptureServer_->NotifyCaptureContentChanged(
         AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_UNAVAILABLE, nullptr);
-    ASSERT_NE(screenCaptureServer_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->curWindowEvent_,
+        AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_UNAVAILABLE);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_003, TestSize.Level2)
@@ -919,7 +921,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_003, TestS
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     screenCaptureServer_->NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE,
         nullptr);
-    ASSERT_NE(screenCaptureServer_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->curWindowEvent_,
+        AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_004, TestSize.Level2)
@@ -928,7 +931,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_004, TestS
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STOPPED;
     screenCaptureServer_->NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE,
         nullptr);
-    ASSERT_NE(screenCaptureServer_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->curWindowEvent_,
+        AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SetDefaultDisplayIdOfWindows_001, TestSize.Level2)
@@ -999,7 +1003,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_001, TestS
     payload.persistentId_ = 0;
     screenCaptureServer_->windowLifecycleListener_->OnAppInstanceLifecycleEvent(payload);
  
-    ASSERT_NE(screenCaptureServer_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->appMissionIds_.size(), 1);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_002, TestSize.Level2)
@@ -1008,10 +1012,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_002, TestS
     sptr<SCWindowLifecycleListener> listener(new (std::nothrow) SCWindowLifecycleListener(screenCaptureServer));
     screenCaptureServer_->windowLifecycleListener_ = listener;
     SCWindowLifecycleListener::LifecycleEventPayload payload;
-    payload.sessionState_ = SessionState::STATE_FOREGROUND;
+    payload.sessionState_ = SessionState::STATE_ACTIVE;
     payload.persistentId_ = 0;
     screenCaptureServer_->windowLifecycleListener_->OnAppInstanceLifecycleEvent(payload);
-    ASSERT_NE(screenCaptureServer_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->appMissionIds_.size(), 1);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_003, TestSize.Level2)
@@ -1023,7 +1027,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_003, TestS
     payload.sessionState_ = SessionState::STATE_BACKGROUND;
     payload.persistentId_ = 0;
     screenCaptureServer_->windowLifecycleListener_->OnAppInstanceLifecycleEvent(payload);
-    ASSERT_NE(screenCaptureServer_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->appMissionIds_.size(), 0);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_004, TestSize.Level2)
@@ -1035,7 +1039,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_004, TestS
     payload.sessionState_ = SessionState::STATE_DISCONNECT;
     payload.persistentId_ = 0;
     screenCaptureServer_->windowLifecycleListener_->OnAppInstanceLifecycleEvent(payload);
-    ASSERT_NE(screenCaptureServer_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->appMissionIds_.size(), 0);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_005, TestSize.Level2)
@@ -1045,8 +1049,12 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_005, TestS
     screenCaptureServer_->windowLifecycleListener_ = listener;
     SCWindowLifecycleListener::LifecycleEventPayload payload;
     payload.sessionState_ = SessionState::STATE_ACTIVE;
+    payload.persistentId_ = 0;
     screenCaptureServer_->windowLifecycleListener_->OnAppInstanceLifecycleEvent(payload);
-    ASSERT_NE(screenCaptureServer_, nullptr);
+    payload.sessionState_ = SessionState::STATE_BACKGROUND;
+    screenCaptureServer_->windowLifecycleListener_->OnAppInstanceLifecycleEvent(payload);
+    ASSERT_EQ(screenCaptureServer_->appMissionIds_.size(), 1);
+    ASSERT_EQ(screenCaptureServer_->appMissionIdsForGround_.size(), 0);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_006, TestSize.Level2)
@@ -1059,8 +1067,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_006, TestS
     payload.persistentId_ = 1;
     std::vector<SCWindowLifecycleListener::LifecycleEventPayload> payloads = {payload};
     screenCaptureServer_->windowLifecycleListener_->OnBatchLifecycleEvent(payloads);
-    ASSERT_NE(screenCaptureServer_, nullptr);
-    EXPECT_EQ(screenCaptureServer_->appMissionIdsForGround_.size(), 1);
+    EXPECT_EQ(screenCaptureServer_->appMissionIdsForGround_.size(), payloads.size());
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_007, TestSize.Level2)
@@ -1073,7 +1080,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_007, TestS
     payload.persistentId_ = 1;
     std::vector<SCWindowLifecycleListener::LifecycleEventPayload> payloads = {payload};
     screenCaptureServer_->windowLifecycleListener_->OnBatchLifecycleEvent(payloads);
-    ASSERT_NE(screenCaptureServer_, nullptr);
     EXPECT_EQ(screenCaptureServer_->appMissionIdsForGround_.size(), 1);
 }
 
@@ -1224,14 +1230,16 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnLifecycleEvent_001, TestSize.Level2)
     SCWindowLifecycleListener::LifecycleEventPayload payload;
     screenCaptureServer_->windowLifecycleListener_->OnLifecycleEvent(
         SCWindowLifecycleListener::SessionLifecycleEvent::FOREGROUND, payload);
+    ASSERT_EQ(screenCaptureServer_->curWindowLifecycle_,
+        SCWindowLifecycleListener::SessionLifecycleEvent::FOREGROUND);
     screenCaptureServer_->windowLifecycleListener_->OnLifecycleEvent(
         SCWindowLifecycleListener::SessionLifecycleEvent::BACKGROUND, payload);
+    ASSERT_EQ(screenCaptureServer_->curWindowLifecycle_,
+        SCWindowLifecycleListener::SessionLifecycleEvent::BACKGROUND);
     screenCaptureServer_->windowLifecycleListener_->OnLifecycleEvent(
         SCWindowLifecycleListener::SessionLifecycleEvent::DESTROYED, payload);
-    std::vector<SCWindowLifecycleListener::LifecycleEventPayload> payloads = {payload};
-    screenCaptureServer_->windowLifecycleListener_->OnBatchLifecycleEvent(payloads);
-    screenCaptureServer_->windowLifecycleListener_->OnAppInstanceLifecycleEvent(payload);
-    ASSERT_NE(screenCaptureServer_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->curWindowLifecycle_,
+        SCWindowLifecycleListener::SessionLifecycleEvent::DESTROYED);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnLifecycleEvent_002, TestSize.Level2)
@@ -1245,9 +1253,12 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnLifecycleEvent_002, TestSize.Level2)
     SCWindowLifecycleListener::LifecycleEventPayload payload;
     screenCaptureServer_->windowLifecycleListener_->OnLifecycleEvent(
         SCWindowLifecycleListener::SessionLifecycleEvent::FOREGROUND, payload);
+    ASSERT_EQ(screenCaptureServer_->curWindowLifecycle_,
+        SCWindowLifecycleListener::SessionLifecycleEvent::FOREGROUND);
     screenCaptureServer_->windowLifecycleListener_->OnLifecycleEvent(
         SCWindowLifecycleListener::SessionLifecycleEvent::BACKGROUND, payload);
-    ASSERT_NE(screenCaptureServer_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->curWindowLifecycle_,
+        SCWindowLifecycleListener::SessionLifecycleEvent::BACKGROUND);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnLifecycleEvent_003, TestSize.Level2)
@@ -1262,7 +1273,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnLifecycleEvent_003, TestSize.Level2)
     SCWindowLifecycleListener::LifecycleEventPayload payload;
     screenCaptureServer_->windowLifecycleListener_->OnLifecycleEvent(
         SCWindowLifecycleListener::SessionLifecycleEvent::FOREGROUND, payload);
-    ASSERT_NE(screenCaptureServer_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->curWindowLifecycle_,
+        SCWindowLifecycleListener::SessionLifecycleEvent::FOREGROUND);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnWindowInfoChanged_001, TestSize.Level2)
@@ -1273,7 +1285,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnWindowInfoChanged_001, TestSize.Leve
     std::vector<std::unordered_map<WindowInfoKey, WindowChangeInfoType>> myWindowInfoList;
     screenCaptureServer_->windowIdList_ = {};
     screenCaptureServer_->windowInfoChangedListener_->OnWindowInfoChanged(myWindowInfoList);
-    ASSERT_NE(screenCaptureServer_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->GetWindowIdList().size(), 0);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnWindowInfoChanged_002, TestSize.Level2)
@@ -1291,7 +1303,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnWindowInfoChanged_002, TestSize.Leve
     myWindowInfoList.push_back(myWindowInfo);
     screenCaptureServer_->windowInfoChangedListener_->OnWindowInfoChanged(myWindowInfoList);
     ASSERT_EQ(screenCaptureServer_->curWindowInDisplayId_, 1);
-    ASSERT_NE(screenCaptureServer_, nullptr);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnWindowInfoChanged_003, TestSize.Level2)
@@ -1309,7 +1320,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnWindowInfoChanged_003, TestSize.Leve
     myWindowInfoList.push_back(myWindowInfo);
     screenCaptureServer_->windowInfoChangedListener_->OnWindowInfoChanged(myWindowInfoList);
     ASSERT_EQ(screenCaptureServer_->curWindowInDisplayId_, 1);
-    ASSERT_NE(screenCaptureServer_, nullptr);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnWindowInfoChanged_004, TestSize.Level2)
@@ -1324,7 +1334,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnWindowInfoChanged_004, TestSize.Leve
     myWindowInfoList.push_back(myWindowInfo);
     screenCaptureServer_->windowInfoChangedListener_->OnWindowInfoChanged(myWindowInfoList);
     ASSERT_EQ(screenCaptureServer_->curWindowInDisplayId_, 0);
-    ASSERT_NE(screenCaptureServer_, nullptr);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureRegisterListener_001, TestSize.Level2)
@@ -1394,7 +1403,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnDisconnect_001, TestSize.Level2)
         screenCaptureServer_->displayScreenIds_, screenCaptureServer);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     screenCaptureServer_->screenConnectListener_->OnDisconnect(screenId);
-    ASSERT_NE(screenCaptureServer_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->curWindowEvent_,
+        AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_UNAVAILABLE);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnDisconnect_002, TestSize.Level2)
@@ -1406,7 +1416,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnDisconnect_002, TestSize.Level2)
         screenCaptureServer_->displayScreenIds_, screenCaptureServer);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     screenCaptureServer_->screenConnectListener_->OnDisconnect(screenId);
-    ASSERT_NE(screenCaptureServer_, nullptr);
+    ASSERT_NE(screenCaptureServer_->curWindowEvent_,
+        AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_UNAVAILABLE);
 }
 #endif
 } // Media

@@ -62,6 +62,8 @@ private:
     void ReleaseSound();
     static void HandleEndOfStreamEventThreadFunc(std::weak_ptr<AudioHapticPlayerImpl> player);
     void HandleEndOfStreamEvent();
+    static void HandleInterruptEventThreadFunc(std::weak_ptr<AudioHapticPlayerImpl> player);
+    void HandleInterruptEvent();
     // func for vibration
     int32_t StartVibrate();
     void StopVibrate();
@@ -98,7 +100,7 @@ private:
     std::mutex waitStartVibrateMutex_;
     std::condition_variable condStartVibrate_;
     bool canStartVibrate_ = false;
-    std::atomic<bool> isVibrationStopped_ = false;
+    std::atomic<bool> isVibrationStopped_ = true;
     std::atomic_bool isVibrationRunning_{false};
     std::atomic<bool> isGentle_ = false;
     std::atomic<bool> isRamp_ = false;

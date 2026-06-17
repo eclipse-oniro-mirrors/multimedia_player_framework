@@ -566,6 +566,7 @@ int32_t AudioHapticPlayerImpl::StartVibrate()
 
 void AudioHapticPlayerImpl::StopVibrate()
 {
+    CHECK_AND_RETURN_LOG(!isVibrationStopped_, "Vibrate not start before.");
     MEDIA_LOGI("Stop vibrate for audio haptic player right now.");
     if (audioHapticVibrator_ != nullptr) {
         audioHapticVibrator_->StopVibrate();
@@ -595,6 +596,7 @@ void AudioHapticPlayerImpl::ResetVibrateState()
 
 void AudioHapticPlayerImpl::NotifyInterruptEvent(const AudioStandard::InterruptEvent &interruptEvent)
 {
+    std::thread(HandleInterruptEventThreadFunc, shared_from_this()).detach();
     std::shared_ptr<AudioHapticPlayerCallback> cb = audioHapticPlayerCallback_.lock();
     if (cb != nullptr) {
         MEDIA_LOGI("NotifyInterruptEvent for napi object or caller");
@@ -649,6 +651,22 @@ void AudioHapticPlayerImpl::HandleEndOfStreamEvent()
     if (isSupportDSPSync_) {
         audioHapticSyncId_++;
     }
+}
+
+void AudioHapticPlayerImpl::HandleInterruptEventThreadFunc(std::weak_ptr<AudioHapticPlayerImpl> player)
+{
+    std::shared_ptr<AudioHapticPlayerImpl> playerPtr = player.lock();
+    if (playerPtr != nullptr) {
+        playerPtr->HandleInterruptEvent();
+    }
+}
+
+void AudioHapticPlayerImpl::HandleInterruptEvent()
+{
+    std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
+    StopVibrate();
+    playerState_ = AudioHapticPlayerState::STATE_STOPPED;
+    SendHapticPlayerEvent(MSERR_OK, "INTERRUPT_HAPTIC_PLAYER");
 }
 
 void AudioHapticPlayerImpl::NotifyErrorEvent(int32_t errCode)

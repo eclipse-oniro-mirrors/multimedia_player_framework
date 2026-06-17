@@ -48,6 +48,7 @@ ohos_taihe("run_system_sound_manager_taihe") {
 }
 
 taihe_shared_library("system_sound_manager_taihe") {
+  shlib_type = "ani"
   taihe_generated_file_path = "$taihe_generated_file_path"
   subsystem_name = "$subsystem_name"
   part_name = "$part_name"

@@ -217,24 +217,30 @@ HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_05, TestSize.Level1)
     auto telephonyObserver = std::make_unique<MediaTelephonyListener>().release();
     std::u16string phoneNumber = u"";
     telephonyObserver->OnCallStateUpdated(3, 1, phoneNumber); // 3 invalid slot id
+    ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(false));
     int32_t slotId = -1; // -1 all slot id
     for (int i = -1; i <= 9; i++) { // -1 9 foreach all state
         telephonyObserver->OnCallStateUpdated(slotId, i, phoneNumber);
     }
+    ASSERT_FALSE(InCallObserver::GetInstance().IsInCall(false));
     telephonyObserver->OnCallStateUpdated(slotId, 6, phoneNumber); // CALL_STATUS_DISCONNECTED
     const std::vector<sptr<OHOS::Telephony::SignalInformation>> vecSigInfo{};
     telephonyObserver->OnSignalInfoUpdated(slotId, vecSigInfo);
     telephonyObserver->OnNetworkStateUpdated(slotId, nullptr);
+    ASSERT_FALSE(InCallObserver::GetInstance().IsInCall(false));
     const std::vector<sptr<OHOS::Telephony::CellInformation>> vecCellInfo{};
     telephonyObserver->OnCellInfoUpdated(slotId, vecCellInfo);
     telephonyObserver->OnSimStateUpdated(slotId, OHOS::Telephony::CardType::UNKNOWN_CARD,
         OHOS::Telephony::SimState::SIM_STATE_UNKNOWN, OHOS::Telephony::LockReason::SIM_NONE);
+    ASSERT_FALSE(InCallObserver::GetInstance().IsInCall(false));
     telephonyObserver->OnCellularDataConnectStateUpdated(slotId, 0, 0);
+    ASSERT_FALSE(InCallObserver::GetInstance().IsInCall(false));
     telephonyObserver->OnCellularDataFlowUpdated(slotId, 0);
     telephonyObserver->OnCfuIndicatorUpdated(slotId, false);
     telephonyObserver->OnVoiceMailMsgIndicatorUpdated(slotId, false);
     telephonyObserver->OnIccAccountUpdated();
     InCallObserver::GetInstance().IsInCall(false);
+    ASSERT_FALSE(InCallObserver::GetInstance().IsInCall(false));
     ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(false));
 }
 

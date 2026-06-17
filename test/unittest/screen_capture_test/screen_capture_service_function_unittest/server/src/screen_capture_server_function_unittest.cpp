@@ -2009,6 +2009,271 @@ HWTEST_F(ScreenCaptureServerFunctionTest, InnerMicAudioSync_003, TestSize.Level2
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
 
+// Test AudioDataSource::SetAppPid and GetAppPid
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_SetAppPid_GetAppPid, TestSize.Level2)
+{
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    int32_t testPid = 12345;
+    screenCaptureServer_->audioSource_->SetAppPid(testPid);
+    ASSERT_EQ(screenCaptureServer_->audioSource_->GetAppPid(), testPid);
+}
+ 
+// Test AudioDataSource::GetIsInVoIPCall
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_GetIsInVoIPCall, TestSize.Level2)
+{
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    ASSERT_EQ(screenCaptureServer_->audioSource_->GetIsInVoIPCall(), false);
+    screenCaptureServer_->audioSource_->isInVoIPCall_ = true;
+    ASSERT_EQ(screenCaptureServer_->audioSource_->GetIsInVoIPCall(), true);
+}
+ 
+// Test AudioDataSource::SetAppName
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_SetAppName, TestSize.Level2)
+{
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    std::string testName = "test.app";
+    screenCaptureServer_->audioSource_->SetAppName(testName);
+    ASSERT_EQ(screenCaptureServer_->audioSource_->appName_, testName);
+}
+ 
+// Test AudioDataSource::GetScreenCaptureServer
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_GetScreenCaptureServer, TestSize.Level2)
+{
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    ASSERT_EQ(screenCaptureServer_->audioSource_->GetScreenCaptureServer(), screenCaptureServer_.get());
+}
+ 
+// Test AudioDataSource::GetCurrentTimeNs
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_GetCurrentTimeNs, TestSize.Level2)
+{
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    int64_t time1 = screenCaptureServer_->audioSource_->GetCurrentTimeNs();
+    int64_t time2 = screenCaptureServer_->audioSource_->GetCurrentTimeNs();
+    ASSERT_GE(time2, time1);
+    ASSERT_GT(time1, 0);
+}
+ 
+// Test AudioDataSource::Pause and Resume
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_Pause_Resume, TestSize.Level2)
+{
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->audioSource_->Pause();
+    ASSERT_GT(screenCaptureServer_->audioSource_->pauseStartTime_.load(), 0);
+    sleep(1);
+    screenCaptureServer_->audioSource_->Resume();
+    ASSERT_GT(screenCaptureServer_->audioSource_->pauseDuration_.load(), 0);
+    ASSERT_GE(screenCaptureServer_->audioSource_->pauseDuration_.load(), 1000000000); // At least 1 second in ns
+}
+ 
+// Test AudioDataSource::SetVideoFirstFramePts
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_SetVideoFirstFramePts, TestSize.Level2)
+{
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    int64_t testPts = 123456789;
+    screenCaptureServer_->audioSource_->SetVideoFirstFramePts(testPts);
+    ASSERT_EQ(screenCaptureServer_->audioSource_->firstVideoFramePts_.load(), testPts);
+}
+ 
+// Test AudioDataSource::SetAudioFirstFramePts
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_SetAudioFirstFramePts, TestSize.Level2)
+{
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    int64_t testPts = 987654321;
+    screenCaptureServer_->audioSource_->SetAudioFirstFramePts(testPts);
+    ASSERT_EQ(screenCaptureServer_->audioSource_->firstAudioFramePts_.load(), testPts);
+    // Test that it only sets once
+    screenCaptureServer_->audioSource_->SetAudioFirstFramePts(111111111);
+    ASSERT_EQ(screenCaptureServer_->audioSource_->firstAudioFramePts_.load(), testPts);
+}
+ 
+// Test AudioDataSource::HasSpeakerStream with headset devices
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_HasSpeakerStream_Headset, TestSize.Level2)
+{
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    std::vector<std::shared_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
+    auto changeInfo = std::make_shared<AudioRendererChangeInfo>();
+    changeInfo->outputDeviceInfo.deviceType_ = DEVICE_TYPE_WIRED_HEADSET;
+    audioRendererChangeInfos.push_back(changeInfo);
+    ASSERT_EQ(screenCaptureServer_->audioSource_->HasSpeakerStream(audioRendererChangeInfos), false);
+}
+ 
+// Test AudioDataSource::HasSpeakerStream with speaker device
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_HasSpeakerStream_Speaker, TestSize.Level2)
+{
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    std::vector<std::shared_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
+    auto changeInfo = std::make_shared<AudioRendererChangeInfo>();
+    changeInfo->outputDeviceInfo.deviceType_ = DEVICE_TYPE_SPEAKER;
+    audioRendererChangeInfos.push_back(changeInfo);
+    ASSERT_EQ(screenCaptureServer_->audioSource_->HasSpeakerStream(audioRendererChangeInfos), true);
+}
+ 
+// Test AudioDataSource::HasVoIPStream with empty list
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_HasVoIPStream_Empty, TestSize.Level2)
+{
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    std::vector<std::shared_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
+    ASSERT_EQ(screenCaptureServer_->audioSource_->HasVoIPStream(audioRendererChangeInfos), false);
+}
+ 
+// Test AudioDataSource::HasVoIPStream with voice communication
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_HasVoIPStream_VoiceComm, TestSize.Level2)
+{
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    std::vector<std::shared_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
+    auto changeInfo = std::make_shared<AudioRendererChangeInfo>();
+    changeInfo->rendererInfo.streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_VOICE_COMMUNICATION;
+    audioRendererChangeInfos.push_back(changeInfo);
+    ASSERT_EQ(screenCaptureServer_->audioSource_->HasVoIPStream(audioRendererChangeInfos), true);
+}
+ 
+// Test AudioDataSource::HasVoIPStream with video communication
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_HasVoIPStream_VideoComm, TestSize.Level2)
+{
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    std::vector<std::shared_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
+    auto changeInfo = std::make_shared<AudioRendererChangeInfo>();
+    changeInfo->rendererInfo.streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_VIDEO_COMMUNICATION;
+    audioRendererChangeInfos.push_back(changeInfo);
+    ASSERT_EQ(screenCaptureServer_->audioSource_->HasVoIPStream(audioRendererChangeInfos), true);
+}
+ 
+// Test AudioDataSource::HasVoIPStream with media stream
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_HasVoIPStream_Media, TestSize.Level2)
+{
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    std::vector<std::shared_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
+    auto changeInfo = std::make_shared<AudioRendererChangeInfo>();
+    changeInfo->rendererInfo.streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_MEDIA;
+    audioRendererChangeInfos.push_back(changeInfo);
+    ASSERT_EQ(screenCaptureServer_->audioSource_->HasVoIPStream(audioRendererChangeInfos), false);
+}
+ 
+// Test AudioDataSource::SpeakerStateUpdate with no change
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_SpeakerStateUpdate_NoChange, TestSize.Level2)
+{
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->audioSource_->speakerAliveStatus_ = true;
+    std::vector<std::shared_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
+    // Should not crash even with empty list
+    screenCaptureServer_->audioSource_->SpeakerStateUpdate(audioRendererChangeInfos);
+    ASSERT_EQ(screenCaptureServer_->audioSource_->speakerAliveStatus_, true);
+}
+ 
+// Test AudioDataSource::VoIPStateUpdate with no change
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_VoIPStateUpdate_NoChange, TestSize.Level2)
+{
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->audioSource_->isInVoIPCall_ = false;
+    std::vector<std::shared_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
+    // Should not crash even with empty list
+    screenCaptureServer_->audioSource_->VoIPStateUpdate(audioRendererChangeInfos);
+    ASSERT_EQ(screenCaptureServer_->audioSource_->isInVoIPCall_.load(), false);
+}
+ 
+// Test AudioDataSource::LostFrameNum
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_LostFrameNum, TestSize.Level2)
+{
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->audioSource_->firstAudioFramePts_ = 100000000; // 100ms
+    screenCaptureServer_->audioSource_->writedFrameTime_ = 50000000; // 50ms
+    screenCaptureServer_->audioSource_->pauseDuration_ = 0;
+    int64_t timestamp = 150000000; // 150ms
+    int32_t lostNum = screenCaptureServer_->audioSource_->LostFrameNum(timestamp);
+    // (150ms - 0 - (50ms + 100ms)) / frame_duration = 0
+    ASSERT_EQ(lostNum, 0);
+}
+ 
+// Test AudioDataSource::FillLostBuffer
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_FillLostBuffer, TestSize.Level2)
+{
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    const int64_t lostNum = 5;
+    const int64_t timestamp = 100000000;
+    const uint32_t bufferSize = 1024;
+    size_t queueSizeBefore = screenCaptureServer_->audioSource_->audioBufferQ_.size();
+    screenCaptureServer_->audioSource_->FillLostBuffer(lostNum, timestamp, bufferSize);
+    size_t queueSizeAfter = screenCaptureServer_->audioSource_->audioBufferQ_.size();
+    ASSERT_EQ(queueSizeAfter - queueSizeBefore, static_cast<size_t>(lostNum));
+}
+ 
+// Test AudioDataSource::HandlePastMicBuffer
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_HandlePastMicBuffer, TestSize.Level2)
+{
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    const int bufferSize = 10;
+    uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    std::shared_ptr<AudioBuffer> micAudioBuffer = std::make_shared<AudioBuffer>(micBuffer, bufferSize, 0,
+                                                                             SOURCE_DEFAULT);
+    micAudioBuffer->timestamp = 1000000;
+    screenCaptureServer_->audioSource_->lastWriteAudioFramePts_ = 2000000;
+    screenCaptureServer_->audioSource_->lastMicAudioFramePts_ = 1500000;
+    screenCaptureServer_->audioSource_->lastWriteType_ = AVScreenCaptureMixBufferType::INNER;
+    // Mock the ReleaseMicAudioBuffer call
+    screenCaptureServer_->micAudioCapture_ = nullptr;
+    screenCaptureServer_->audioSource_->HandlePastMicBuffer(micAudioBuffer);
+    // Buffer should be set to nullptr
+    ASSERT_EQ(micAudioBuffer, nullptr);
+}
+ 
+// Test AudioDataSource::HandleBufferTimeStamp
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_HandleBufferTimeStamp, TestSize.Level2)
+{
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    const int bufferSize = 10;
+    uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    std::shared_ptr<AudioBuffer> innerAudioBuffer = std::make_shared<AudioBuffer>(innerBuffer, bufferSize, 0,
+                                                                               SOURCE_DEFAULT);
+    std::shared_ptr<AudioBuffer> micAudioBuffer = std::make_shared<AudioBuffer>(micBuffer, bufferSize, 0,
+                                                                             SOURCE_DEFAULT);
+    innerAudioBuffer->timestamp = 1000000;
+    micAudioBuffer->timestamp = 2000000;
+    screenCaptureServer_->audioSource_->lastWriteAudioFramePts_ = 3000000;
+    screenCaptureServer_->audioSource_->speakerAliveStatus_ = true;
+    screenCaptureServer_->audioSource_->isInVoIPCall_ = false;
+    screenCaptureServer_->innerAudioCapture_ = nullptr;
+    screenCaptureServer_->audioSource_->HandleBufferTimeStamp(innerAudioBuffer, micAudioBuffer);
+    // Inner buffer should be dropped
+    ASSERT_EQ(innerAudioBuffer, nullptr);
+}
+ 
+// Test AudioDataSource::SetMixAudioTypeLog
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_SetMixAudioTypeLog, TestSize.Level2)
+{
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->audioSource_->audioType_ = AVScreenCaptureMixBufferType::INNER;
+    screenCaptureServer_->audioSource_->lastWriteType_ = AVScreenCaptureMixBufferType::MIC;
+    screenCaptureServer_->audioSource_->audioTypeSize_ = 10;
+    screenCaptureServer_->audioSource_->SetMixAudioTypeLog();
+    ASSERT_EQ(screenCaptureServer_->audioSource_->audioType_.load(), AVScreenCaptureMixBufferType::MIC);
+    ASSERT_EQ(screenCaptureServer_->audioSource_->audioTypeSize_.load(), 1);
+    // Call again with same type
+    screenCaptureServer_->audioSource_->SetMixAudioTypeLog();
+    ASSERT_EQ(screenCaptureServer_->audioSource_->audioTypeSize_.load(), 2);
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, HandleMicBeforeInnerSync_001, TestSize.Level2)
 {
     RecorderInfo recorderInfo;

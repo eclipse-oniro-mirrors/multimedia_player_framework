@@ -214,13 +214,13 @@ void AVMetadataHelperCallback::SendPixelCompleteCallback(const FrameInfo &info,
     MEDIA_LOGI("AVMetadataHelperCallback::SendPixelCompleteCallback cb->errorCode, %{public}d", cb->errorCode);
     switch (info.err) {
         case OPERATION_NOT_ALLOWED:
-            cb->errorMs = "OPERATION_NOT_ALLOWED";
+            cb->errorMs = "Failed to get pixelmap. Operations on null AVBuffer is not allowed.";
             break;
         case FETCH_TIMEOUT:
-            cb->errorMs = "FETCH_TIMEOUT";
+            cb->errorMs = "Failed to get pixelmap. Wait for fetchFrameRes time out.";
             break;
         case UNSUPPORTED_FORMAT:
-            cb->errorMs = "Failed to fetch frame. Video parsing failed or format unsupported.";
+            cb->errorMs = "Failed to get pixelmap. The input might be a negative number.";
             break;
         default:
             cb->errorMs = "NO_ERR";

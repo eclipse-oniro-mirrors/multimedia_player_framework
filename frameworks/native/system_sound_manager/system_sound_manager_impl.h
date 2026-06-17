@@ -185,9 +185,7 @@ private:
         std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper);
     bool DeleteCustomizedTone(const std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
         const std::shared_ptr<ToneAttrs> &toneAttrs, int32_t &length);
-    int32_t WriteUriToDatabase(const std::string &key, const std::string &uri);
-    std::string GetUriFromDatabase(const std::string &key);
-    std::string GetKeyForDatabase(const std::string &systemSoundType, int32_t type);
+
     void InitRingerMode(void);
     void GetCustomizedTone(const std::shared_ptr<ToneAttrs> &toneAttrs);
     void InitMap();

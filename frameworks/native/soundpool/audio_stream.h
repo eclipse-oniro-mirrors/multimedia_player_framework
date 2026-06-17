@@ -114,7 +114,6 @@ private:
     int32_t PreparePlayInner(const AudioStandard::AudioRendererInfo &audioRendererInfo, const PlayParams &playParams);
     int32_t RestartAudioStream();
     int32_t HandleRendererNotStart();
-    void NotifyToAddStopTask();
 
     Format trackFormat_;
     int32_t soundID_ = 0;
