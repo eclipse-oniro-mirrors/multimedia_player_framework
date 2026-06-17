@@ -215,7 +215,7 @@ RetInfo GetReturnInfo(int32_t errCode, const std::string &operate, const std::st
     if (errCode == MSERR_INVALID_VAL) {
         message = MSExtErrorAPI9ToString(err, param, "") + add;
     }  else {
-        message = operate + MSErrorToString(static_cast<MediaServiceErrCode>(errCode)) + add;
+        message = operate+ " " + MSErrorToString(static_cast<MediaServiceErrCode>(errCode)) + add;
     }
 
     MEDIA_LOGE("errCode: %{public}d, errMsg: %{public}s", err, message.c_str());
@@ -1216,9 +1216,9 @@ int32_t AVScreenCaptureNapi::GetStrategy(std::unique_ptr<AVScreenCaptureAsyncCon
 int32_t AVScreenCaptureNapi::CheckAudioSampleRate(const int32_t &audioSampleRate)
 {
     if (audioSampleRate == 48000 || audioSampleRate == 16000) { // 16000 48000 AudioSampleRate options
-        return MSERR_INVALID_AUD_SAMPLE_RATE;
+        return MSERR_OK;
     }
-    return MSERR_INVALID_VAL;
+    return MSERR_INVALID_AUD_SAMPLE_RATE;
 }
 
 int32_t AVScreenCaptureNapi::CheckAudioChannelCount(const int32_t &audioChannelCount)
