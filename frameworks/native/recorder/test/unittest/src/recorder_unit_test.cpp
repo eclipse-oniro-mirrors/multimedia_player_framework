@@ -154,6 +154,10 @@ HWTEST_F(RecorderUnitTest, recorder_SetLocation_001, TestSize.Level2)
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
     recorder_->SetLocation(1, 1);
+    Location location;
+    recorder_->GetLocation(location);
+    EXPECT_EQ(location.latitude, 1);
+    EXPECT_EQ(location.longitude, 1);
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(g_videoRecorderConfig.outputFd);
 }
@@ -213,7 +217,7 @@ HWTEST_F(RecorderUnitTest, recorder_SetFileSplitDuration_001, TestSize.Level2)
 
     EXPECT_EQ(MSERR_OK, recorder_->Start());
     EXPECT_EQ(MSERR_OK, recorder_->Pause());
-    recorder_->SetFileSplitDuration(FileSplitType::FILE_SPLIT_POST, -1, 1000);
+    EXPECT_EQ(MSERR_OK, recorder_->SetFileSplitDuration(FileSplitType::FILE_SPLIT_POST, -1, 1000));
     EXPECT_EQ(MSERR_OK, recorder_->Resume());
     EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
     recorder_->StopBuffer(PURE_VIDEO);
@@ -255,6 +259,7 @@ HWTEST_F(RecorderUnitTest, recorder_GetSurface_Error_001, TestSize.Level2)
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
     OHOS::sptr<OHOS::Surface> surface = recorder_->GetSurface(2);
+    EXPECT_EQ(surface, nullptr);
     close(g_videoRecorderConfig.outputFd);
 }
 
@@ -1531,7 +1536,7 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetCaptureRate_001, TestSize.Level0)
     g_videoRecorderConfig.videoFormat = H264;
     g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_SetCaptureRate_001.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
-    recorder_->SetCaptureRate(0, -0.1);
+    EXPECT_EQ(MSERR_OK, recorder_->SetCaptureRate(0, -0.1));
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Reset());
@@ -1552,11 +1557,9 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetMaxFileSize_001, TestSize.Level0)
     g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_SetMaxFileSize_001.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
-    recorder_->SetCaptureRate(0, 30);
-    recorder_->SetMaxFileSize(-1);
-    recorder_->SetMaxFileSize(5000);
-    recorder_->SetNextOutputFile(g_videoRecorderConfig.outputFd);
-    recorder_->SetFileSplitDuration(FileSplitType::FILE_SPLIT_POST, -1, 1000);
+    EXPECT_EQ(MSERR_OK, recorder_->SetMaxFileSize(-1));
+    EXPECT_EQ(MSERR_OK, recorder_->SetMaxFileSize(5000));
+    EXPECT_EQ(MSERR_OK, recorder_->SetNextOutputFile(g_videoRecorderConfig.outputFd));
     close(g_videoRecorderConfig.outputFd);
 }
 
@@ -1573,9 +1576,8 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetMaxFileSize_002, TestSize.Level0)
     g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_SetMaxFileSize_002.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
-    recorder_->SetMaxFileSize(-1);
-    recorder_->SetNextOutputFile(g_videoRecorderConfig.outputFd);
-    recorder_->SetFileSplitDuration(FileSplitType::FILE_SPLIT_POST, -1, 1000);
+    EXPECT_EQ(MSERR_OK, recorder_->SetMaxFileSize(-1));
+    EXPECT_EQ(MSERR_OK, recorder_->SetNextOutputFile(g_videoRecorderConfig.outputFd));
     close(g_videoRecorderConfig.outputFd);
 }
 
@@ -1743,7 +1745,7 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetGenre_001, TestSize.Level0)
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
-    recorder_->SetGenre(videoRecorderConfig.genre);
+    EXPECT_EQ(MSERR_OK, recorder_->SetGenre(videoRecorderConfig.genre));
     EXPECT_EQ(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(AUDIO_VIDEO, videoRecorderConfig));
 
@@ -1772,7 +1774,7 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetGenre_002, TestSize.Level0)
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
-    recorder_->SetGenre(videoRecorderConfig.genre);
+    EXPECT_EQ(MSERR_OK, recorder_->SetGenre(videoRecorderConfig.genre));
     EXPECT_EQ(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Start());
     sleep(RECORDER_TIME);
@@ -1802,7 +1804,7 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetCustomInfo_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
     Meta customInfo;
     customInfo.SetData("key", "value");
-    recorder_->SetUserCustomInfo(customInfo);
+    EXPECT_EQ(MSERR_OK, recorder_->SetUserCustomInfo(customInfo));
     EXPECT_EQ(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(AUDIO_VIDEO, videoRecorderConfig));
 
@@ -1833,7 +1835,7 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetCustomInfo_002, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
     Meta customInfo;
     customInfo.SetData("key", "value");
-    recorder_->SetUserCustomInfo(customInfo);
+    EXPECT_EQ(MSERR_OK, recorder_->SetUserCustomInfo(customInfo));
     EXPECT_EQ(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Start());
     sleep(RECORDER_TIME);

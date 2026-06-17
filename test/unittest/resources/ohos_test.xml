@@ -264,7 +264,6 @@
             <option name="shell" value="touch /data/test/media/recorder_av_yuv_H264.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_video_yuv_H264.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_video_SetMaxFileSize_001.mp4"/>
-            <option name="shell" value="touch /data/test/media/recorder_video_SetMaxFileSize_002.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_video_SetParameter_001.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_SetDataSource_001.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_video_SetOrientationHint_001.mp4"/>

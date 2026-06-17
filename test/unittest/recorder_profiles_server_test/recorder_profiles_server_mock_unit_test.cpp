@@ -251,7 +251,7 @@ HWTEST_F(RecorderProfilesServerMockUnitTest, recorder_profile_GetVideoRecorderPr
     std::shared_ptr<VideoRecorderProfile> videoRecorderProfile =
         std::make_shared<VideoRecorderProfile>(capability.recorderProfile);
     ASSERT_TRUE(videoRecorderProfile != nullptr);
-    EXPECT_NE(ContainerFormatType::CFT_MPEG_4, videoRecorderProfile->containerFormatType);
+    EXPECT_EQ(videoRecorderProfile->containerFormatType, "");
 }
 
 /**
@@ -294,7 +294,7 @@ HWTEST_F(RecorderProfilesServerMockUnitTest, recorder_profile_GetVideoRecorderPr
     std::shared_ptr<VideoRecorderProfile> videoRecorderProfile =
         std::make_shared<VideoRecorderProfile>(capability.recorderProfile);
     ASSERT_TRUE(videoRecorderProfile != nullptr);
-    EXPECT_NE(ContainerFormatType::CFT_MPEG_4, videoRecorderProfile->containerFormatType);
+    EXPECT_EQ(videoRecorderProfile->containerFormatType, "");
 }
 } // namespace Media
 } // namespace OHOS
