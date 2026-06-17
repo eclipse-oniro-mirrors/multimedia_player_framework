@@ -631,15 +631,6 @@ MediaServiceExtErrCodeAPI9 MSErrorToExtErrorAPI9(MediaServiceErrCode code)
     return MSERR_EXT_API9_IO;
 }
 
-std::string MSSCErrorToStringScreenCapture(MediaServiceErrCode code)
-{
-    if (MSERRCODE_INFOS.count(code) != 0) {
-        return MSERRCODE_INFOS.at(code);
-    }
-    return "unkown error";
-}
-
-
 bool IsAPI14IOError(MediaServiceErrCode code)
 {
     return API14_EXT_IO_ERRORS.find(code) != API14_EXT_IO_ERRORS.end();
