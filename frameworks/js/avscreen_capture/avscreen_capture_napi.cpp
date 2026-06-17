@@ -41,14 +41,6 @@ std::map<std::string, AVScreenCaptureNapi::AvScreenCaptureTaskqFunc> AVScreenCap
     {AVScreenCapturegOpt::PRESENT_PICKER, &AVScreenCaptureNapi::PresentPicker},
 };
 
-std::string MSSCErrorToString(MediaServiceErrCode code)
-{
-    if (MSSCERRCODE_FUNCS.count(code) != 0) {
-        return MSSCERRCODE_FUNCS.at(code);
-    }
-    return "unkown error";
-}
-
 AVScreenCaptureNapi::AVScreenCaptureNapi()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR "Instances create", FAKE_POINTER(this));
@@ -223,7 +215,7 @@ RetInfo GetReturnInfo(int32_t errCode, const std::string &operate, const std::st
     if (errCode == MSERR_INVALID_VAL) {
         message = MSExtErrorAPI9ToString(err, param, "") + add;
     }  else {
-        message = operate + MSSCErrorToString(static_cast<MediaServiceErrCode>(errCode)) + add;
+        message = operate + MSSCErrorToStringScreenCapture(static_cast<MediaServiceErrCode>(errCode)) + add;
     }
 
     MEDIA_LOGE("errCode: %{public}d, errMsg: %{public}s", err, message.c_str());

@@ -36,6 +36,7 @@ __attribute__((visibility("default"))) MediaServiceExtErrCodeAPI9 MSErrorToExtEr
 
 __attribute__((visibility("default"))) std::string MSExtAVErrorToString(MediaServiceExtErrCodeAPI9 code);
 __attribute__((visibility("default"))) bool IsAPI14IOError(MediaServiceErrCode code);
+__attribute__((visibility("default"))) std::string MSSCErrorToStringScreenCapture(MediaServiceErrCode code);
 } // namespace Media
 } // namespace OHOS
 #endif // MEDIA_ERRORS_H
