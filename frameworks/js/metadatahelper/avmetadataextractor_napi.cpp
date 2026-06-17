@@ -636,8 +636,8 @@ napi_value AVMetadataExtractorNapi::JsFetchFramesAtTimesWithTimeout(napi_env env
         extractor->GetFetchFrameVectorArgs(asyncCtx, env, args[ARG_ZERO], args[ARG_ONE], args[ARG_TWO]) != MSERR_OK;
     if (notParamValid || asyncCtx->timeoutMs <= 0 || asyncCtx->timeoutMs > MAX_TIMEOUT_MS) {
         ThrowError(env, MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
-            "Parameter check failed. The valid range of timeoutMs is (0, 20000],
-            the valid size of timesUs is (0, 4096]");
+            "Parameter check failed. The valid range of timeoutMs is (0, 20000], "
+            "the valid size of timesUs is (0, 4096]");
         return result;
     }
     if (extractor->state_ == HelperState::HELPER_STATE_HTTP_INTERCEPTED) {
