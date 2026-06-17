@@ -164,7 +164,6 @@ const std::map<MediaServiceErrCode, std::string> MSERRCODE_INFOS = {
     {MSERR_INVALID_OPERATION_STARTED_RESUMED,   "Capture state is not in STARTED or RESUMED."},
     {MSERR_INVALID_OPERATION_PAUSED,            "Capture state is not in PAUSED."},
     {MSERR_INVALID_OPERATION_AREA,              "GetScreenAreaOfDisplayArea failed."},
-    {MSERR_PARAM_OUT_OF_RANGE,                  "Failed to add watermark, watermarks is over 5."},
     {MSERR_INVALID_OPERATION_UNSUPPORT,         "Device not support."},
     {MSERR_INVALID_OPERATION_PRESENT,           "PresentPicker not support picker."},
     {MSERR_INVALID_OPERATION_STARTED,           "Capture state is not in STARTED."},
