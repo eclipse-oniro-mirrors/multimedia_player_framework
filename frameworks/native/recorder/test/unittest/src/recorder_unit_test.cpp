@@ -155,7 +155,7 @@ HWTEST_F(RecorderUnitTest, recorder_SetLocation_001, TestSize.Level2)
 
     recorder_->SetLocation(1, 1);
     Location location;
-    recorder_->GetLocation(location);
+    EXPECT_EQ(MSERR_OK, recorder_->GetLocation(location));
     EXPECT_EQ(location.latitude, 1);
     EXPECT_EQ(location.longitude, 1);
     EXPECT_EQ(MSERR_OK, recorder_->Release());

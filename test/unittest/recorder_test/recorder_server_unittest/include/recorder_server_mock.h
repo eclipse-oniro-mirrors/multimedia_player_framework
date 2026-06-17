@@ -136,6 +136,7 @@ public:
     int32_t SetOutputFile(int32_t fd);
     int32_t SetNextOutputFile(int32_t fd);
     void SetLocation(float latitude, float longitude);
+    int32_t GetLocation(Location &location);
     void SetOrientationHint(int32_t rotation);
     int32_t SetGenre(std::string &genre);
     int32_t SetUserCustomInfo(Meta &userCustomInfo);
