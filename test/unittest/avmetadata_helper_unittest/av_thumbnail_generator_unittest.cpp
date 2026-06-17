@@ -42,7 +42,6 @@ namespace OHOS {
 namespace Media {
 namespace Test {
 static const int32_t NUM_TEST = 1000;
-static const int64_t ERR_OK = 0;
 void AVThumbnailGeneratorUnitTest::SetUpTestCase(void) {}
  
 void AVThumbnailGeneratorUnitTest::TearDownTestCase(void) {}
