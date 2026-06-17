@@ -103,7 +103,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperStart_005, TestSiz
         ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL, SCREEN_CAPTURE_ERR_UNKNOWN);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperPause_001, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapper_001, TestSize.Level2)
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
@@ -114,7 +114,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperPause_001, TestSiz
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Stop(), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperPause_002, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapper_002, TestSize.Level2)
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
@@ -125,7 +125,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperPause_002, TestSiz
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Stop(), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperPause_003, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapper_003, TestSize.Level2)
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
