@@ -304,52 +304,6 @@ void SystemSoundManagerImpl::InitDefaultToneHapticsMap()
     ReadDefaultToneHaptics(PARAM_HAPTICS_SETTING_NOTIFICATIONTONE, ToneHapticsType::NOTIFICATION);
 }
 
-int32_t SystemSoundManagerImpl::WriteUriToDatabase(const std::string &key, const std::string &uri)
-{
-    int32_t result = AudioStandard::AudioSystemManager::GetInstance()->SetSystemSoundUri(key, uri);
-    MEDIA_LOGI("WriteUriToDatabase: key: %{public}s, uri: %{public}s, result: %{public}d",
-        key.c_str(), uri.c_str(), result);
-    return result;
-}
-
-std::string SystemSoundManagerImpl::GetUriFromDatabase(const std::string &key)
-{
-    std::string uri = AudioStandard::AudioSystemManager::GetInstance()->GetSystemSoundUri(key);
-
-    MEDIA_LOGI("GetUriFromDatabase: key [%{public}s], uri [%{public}s]", key.c_str(), uri.c_str());
-    return uri;
-}
-
-std::string SystemSoundManagerImpl::GetKeyForDatabase(const std::string &systemSoundType, int32_t type)
-{
-    if (systemSoundType == RING_TONE) {
-        switch (static_cast<RingtoneType>(type)) {
-            case RINGTONE_TYPE_SIM_CARD_0:
-                return "ringtone_for_sim_card_0";
-            case RINGTONE_TYPE_SIM_CARD_1:
-                return "ringtone_for_sim_card_1";
-            default:
-                MEDIA_LOGE("GetKeyForDatabase: ringtoneType %{public}d is unavailable", type);
-                return "";
-        }
-    } else if (systemSoundType == SYSTEM_TONE) {
-        switch (static_cast<SystemToneType>(type)) {
-            case SYSTEM_TONE_TYPE_SIM_CARD_0:
-                return "system_tone_for_sim_card_0";
-            case SYSTEM_TONE_TYPE_SIM_CARD_1:
-                return "system_tone_for_sim_card_1";
-            case SYSTEM_TONE_TYPE_NOTIFICATION:
-                return "system_tone_for_notification";
-            default:
-                MEDIA_LOGE("GetKeyForDatabase: systemToneType %{public}d is unavailable", type);
-                return "";
-        }
-    } else {
-        MEDIA_LOGE("GetKeyForDatabase: systemSoundType %{public}s is unavailable", systemSoundType.c_str());
-        return "";
-    }
-}
-
 int32_t SystemSoundManagerImpl::UpdateToneTypeUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
     const UpdateToneTypeParams &params)
 {
