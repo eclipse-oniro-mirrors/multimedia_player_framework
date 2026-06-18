@@ -751,6 +751,20 @@ int32_t HiTransCoderImpl::AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffe
     FALSE_RETURN_V_MSG_E(ret == Status::OK, TransTranscoderStatus(ret), "Watermark filter error");
     return MSERR_OK;
 }
+ 
+int32_t HiTransCoderImpl::AddVideoResize(int32_t width, int32_t height)
+{
+    MEDIA_LOG_I("HiTransCoderImpl::AddVideoResize()");
+    if (!skipProcessFilterFlag_.AddVideoWaterMarkFilter()) {
+        skipProcessFilterFlag_.isAddWaterMark = true;
+        waterMarkFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::WaterMarkFilter>(
+            "Watermark", Pipeline::FilterType::WATERMARK);
+    }
+    FALSE_RETURN_V_MSG_E(waterMarkFilter_ != nullptr, MSERR_INVALID_OPERATION, "Watermark filter is nullptr");
+    auto filter = static_cast<Pipeline::WaterMarkFilter*>(waterMarkFilter_.get());
+    filter->SetVideoResize(inputVideoWidth_, inputVideoHeight_);
+    return MSERR_OK;
+}
 
 void HiTransCoderImpl::AppendTranscoderMediaInfo()
 {
@@ -1096,15 +1110,18 @@ Status HiTransCoderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, co
                 return LinkMuxerFilter(filter, outType);
             case Pipeline::StreamType::STREAMTYPE_RAW_VIDEO: {
                 Pipeline::FilterType filterType = filter->GetFilterType();
+                if (filterType == Pipeline::FilterType::FILTERTYPE_VIDEODEC &&
+                    skipProcessFilterFlag_.AddVideoWaterMarkFilter()) {
+                    MEDIA_LOG_I("Pipeline build mode: add watermark");
+                    return LinkWaterMark(filter, outType);
+                }
+ 
                 // 解码器特殊处理：可能需要先链接resize
                 if (filterType == Pipeline::FilterType::FILTERTYPE_VIDEODEC &&
                     !skipProcessFilterFlag_.CanSkipVideoResizeFilter() &&
                     !skipProcessFilterFlag_.AddVideoWaterMarkFilter()) {
-                    return LinkVideoResizeFilter(filter, outType);
-                }
-
-                if (filterType == Pipeline::FilterType::FILTERTYPE_VIDEODEC &&
-                    skipProcessFilterFlag_.AddVideoWaterMarkFilter()) {
+                    MEDIA_LOG_I("Pipeline build mode: video resize");
+                    AddVideoResize(inputVideoWidth_, inputVideoHeight_);
                     return LinkWaterMark(filter, outType);
                 }
                 // 水印或其他：直接链接编码器
@@ -1178,12 +1195,16 @@ VideoProcessMode HiTransCoderImpl::DetermineProcessMode()
     bool hasResize = videoResizeFilter_ != nullptr && !skipProcessFilterFlag_.CanSkipVideoResizeFilter();
     bool hasWatermark = waterMarkFilter_ != nullptr && skipProcessFilterFlag_.AddVideoWaterMarkFilter();
     if (hasResize && hasWatermark) {
+        MEDIA_LOG_I("ProcessMode is DECODER_RESIZE_ENCODER");
         return VideoProcessMode::DECODER_RESIZE_WATERMARK_ENCODER;
     } else if (hasResize) {
+        MEDIA_LOG_I("ProcessMode is DECODER_RESIZE_ENCODER");
         return VideoProcessMode::DECODER_RESIZE_ENCODER;
     } else if (hasWatermark) {
+        MEDIA_LOG_I("ProcessMode is DECODER_WATERMARK_ENCODER");
         return VideoProcessMode::DECODER_WATERMARK_ENCODER;
     }
+    MEDIA_LOG_I("ProcessMode is DECODER_TO_ENCODER");
     return VideoProcessMode::DECODER_TO_ENCODER;
 }
  

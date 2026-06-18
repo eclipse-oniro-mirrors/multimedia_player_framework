@@ -1400,6 +1400,7 @@ int32_t HiRecorderImpl::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer,
     auto filter = static_cast<Pipeline::WaterMarkFilter*>(waterMarkFilter_.get());
     Status ret = filter->SetWatermark(watermarkBuffer, width, height);
     if (ret == Status::OK) {
+        filter->InitOpenGl();
         hasWatermark_ = true;
     }
     return static_cast<int32_t>(ret);
