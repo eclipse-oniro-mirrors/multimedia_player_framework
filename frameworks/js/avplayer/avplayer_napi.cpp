@@ -741,6 +741,7 @@ napi_value AVPlayerNapi::JsReset(napi_env env, napi_callback_info info)
             jsPlayer->dataSrcCb_ = nullptr;
         }
         jsPlayer->isLiveStream_ = false;
+        jsPlayer->isFlvLive_ = false;
     }
 
     napi_value resource = nullptr;
