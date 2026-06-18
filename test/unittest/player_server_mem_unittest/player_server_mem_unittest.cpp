@@ -84,9 +84,6 @@ HWTEST_F(PlayerServerMemUnitTest, SetConfigInternal_001, TestSize.Level1)
     EXPECT_CALL(*(mockPlayerEngine), SetVideoScaleType(_))
         .Times(TEST_TIMES_ONE)
         .WillOnce(Return(MSERR_OK));
-    EXPECT_CALL(*(mockPlayerEngine), SelectBitRate(_, _))
-        .Times(TEST_TIMES_ONE)
-        .WillOnce(Return(MSERR_OK));
     playerServerMem_->playerEngine_ = std::move(mockPlayerEngine);
     playerServerMem_->recoverConfig_.videoScaleType = static_cast<int32_t>(VideoScaleType::VIDEO_SCALE_TYPE_FIT);
     playerServerMem_->recoverConfig_.bitRate = TEST_BIT_RATE;

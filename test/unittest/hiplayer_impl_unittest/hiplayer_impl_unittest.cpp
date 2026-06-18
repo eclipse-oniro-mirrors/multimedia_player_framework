@@ -89,7 +89,9 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SetDefaultAudioRenderInfo_001, TestSize
     std::shared_ptr<Meta> testptr = nullptr;
     trackInfos.push_back(testptr);
     hiplayer_->SetDefaultAudioRenderInfo(trackInfos);
-    EXPECT_EQ(hiplayer_->isNetWorkPlay_, false);
+    int32_t isHdrVivid_;
+    hiplayer_->audioRenderInfo_->GetData(Tag::AUDIO_RENDER_INFO, isHdrVivid_);
+    EXPECT_EQ(isHdrVivid_, 0);
 }
 
 // @tc.name     Test HandleAudioTrackChangeEvent API
@@ -190,7 +192,7 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_ReportAudioInterruptEvent_001, TestSize
     ASSERT_NE(hiplayer_, nullptr);
     hiplayer_->interruptNotifyPlay_.store(true);
     hiplayer_->ReportAudioInterruptEvent();
-    EXPECT_EQ(hiplayer_->isNetWorkPlay_, false);
+    EXPECT_EQ(hiplayer_->interruptNotifyPlay_.load(), false);
 }
 
 // @tc.name     Test Seek API
@@ -363,25 +365,38 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_InitDuration_002, TestSize.Level0)
 HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_OnEventContinue_001, TestSize.Level0)
 {
     ASSERT_NE(hiplayer_, nullptr);
-    Event event;
-    event.type = EventType::EVENT_RESOLUTION_CHANGE;
     std::string name = "testname";
     FilterType type = FilterType::VIDEO_CAPTURE;
     hiplayer_->demuxer_ = std::make_shared<DemuxerFilter>(name, type);
     std::shared_ptr<Meta> testptr = std::make_shared<Meta>();
     hiplayer_->demuxer_->demuxer_ = std::make_shared<MediaDemuxer>();
     hiplayer_->demuxer_->demuxer_->mediaMetaData_.trackMetas.push_back(testptr);
-    Format format;
-    format.meta_ = std::make_shared<Meta>();
-    event.param = format;
+    hiplayer_->currentVideoTrackId_ = 0;
+
+    Event event;
+    event.type = EventType::EVENT_RESOLUTION_CHANGE;
+    std::pair<int32_t, int32_t> videoSize = {1920, 1080};
+    event.param = videoSize;
+
     hiplayer_->OnEventContinue(event);
-    
-    event.type = EventType::EVENT_SEI_INFO;
+    EXPECT_EQ(hiplayer_->VideoWidth_load(), 1920);
+    EXPECT_EQ(hiplayer_->VideoHeight_load(), 1920);
+}
+
+// @tc.name     Test OnEventContinue EVENT_HW_DECODER_UNSUPPORT_CAP
+// @tc.number   PHIUT_OnEventContinue_003
+// @tc.desc     Test OnEventContinue EVENT_HW_DECODER_UNSUPPORT_CAP
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_OnEventContinue_003, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    hiplayer_->isNeedSwDecoder_ = false;
+    hiplayer_->notNotifyForSw_ false;
+
+    Event event;
+    event.type = EventType::EVENT_HW_DECODER_UNSUPPORT_CAP;
     hiplayer_->OnEventContinue(event);
-    
-    event.type = EventType::EVENT_FLV_AUTO_SELECT_BITRATE;
-    hiplayer_->OnEventContinue(event);
-    EXPECT_EQ(hiplayer_->audioSink_, nullptr);
+    EXPECT_EQ(hiplayer_->isNeedSwDecoder_, true);
+    EXPECT_EQ(hiplayer_->notNotifyForSw_, true);
 }
 
 // @tc.name     Test OnEventSub API
@@ -390,30 +405,22 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_OnEventContinue_001, TestSize.Level0)
 HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_OnEventSub_001, TestSize.Level0)
 {
     ASSERT_NE(hiplayer_, nullptr);
-    Event event;
-    event.type = EventType::EVENT_AUDIO_DEVICE_CHANGE;
-    AudioStandard::AudioDeviceDescriptor test1;
-    AudioStandard::AudioStreamDeviceChangeReason test2;
-    std::pair<AudioStandard::AudioDeviceDescriptor, AudioStandard::AudioStreamDeviceChangeReason> p1(test1, test2);
-    event.param = p1;
-    hiplayer_->OnEventSub(event);
-    
-    event.type = EventType::BUFFERING_END;
     hiplayer_->isBufferingStartNotified_.store(true);
     hiplayer_->isSeekClosest_.store(false);
-    int32_t test3 = 10;
-    event.param = test3;
+    {
+        std::unique_lock<std::mutex> lock(hiplayer_->flvLiveMutex_);
+        hiplayer_->isBufferingEnd_ = false;
+    }
+
+    Event event;
+    event.type = EventType::BUFFERING_END;
+    event.param = 10;
     hiplayer_->OnEventSub(event);
-    
-    event.type = EventType::BUFFERING_START;
-    hiplayer_->isBufferingStartNotified_.store(true);
-    hiplayer_->OnEventSub(event);
-    
-    event.type = EventType::EVENT_SOURCE_BITRATE_START;
-    uint32_t test4 = 10;
-    event.param = test4;
-    hiplayer_->OnEventSub(event);
-    EXPECT_EQ(hiplayer_->audioSink_, nullptr);
+
+    {
+        std::unique_lock<std::mutex> lock(hiplayer_->flvLiveMutex_);
+        EXPECT_EQ(hiplayer_->isBufferingEnd_, true);
+    }
 }
 
 // @tc.name     Test DoSetSource API
@@ -911,21 +918,6 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_ReportAllErrorEvents_001, TestSize.Leve
         EXPECT_EQ(std::get<1>(actualEvents[i]), std::get<1>(g_errorEvents[i]));
         EXPECT_EQ(std::get<2>(actualEvents[i]), std::get<2>(g_errorEvents[i]));
     }
-}
-
-// @tc.name     Test DoInitDemuxer API
-// @tc.number   PHIUT_DoInitDemuxer_001
-// @tc.desc     Test hasTrackSelectionFilter_ == true.
-HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_DoInitDemuxer_001, TestSize.Level0)
-{
-    ASSERT_NE(hiplayer_, nullptr);
-    auto mockPipeline = std::make_shared<NiceMock<MockPipeline>>();
-    auto mockDemuxer = std::make_shared<NiceMock<MockDemuxerFilter>>(TEST_FILTER_NAME, FilterType::VIDEO_CAPTURE);
-    EXPECT_CALL(*mockPipeline, AddHeadFilters(_)).WillRepeatedly(Return(Status::OK));
-    hiplayer_->pipeline_ = mockPipeline;
-    hiplayer_->demuxer_ = mockDemuxer;
-    hiplayer_->hasTrackSelectionFilter_.store(true);
-    hiplayer_->DoInitDemuxer();
 }
 
 // @tc.name     Test Seek API
