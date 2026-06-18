@@ -379,8 +379,8 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_OnEventContinue_001, TestSize.Level0)
     event.param = videoSize;
 
     hiplayer_->OnEventContinue(event);
-    EXPECT_EQ(hiplayer_->VideoWidth_load(), 1920);
-    EXPECT_EQ(hiplayer_->VideoHeight_load(), 1920);
+    EXPECT_EQ(hiplayer_->videoWidth_.load(), 1920);
+    EXPECT_EQ(hiplayer_->videoHeight_.load(), 1080);
 }
 
 // @tc.name     Test OnEventContinue EVENT_HW_DECODER_UNSUPPORT_CAP
@@ -390,7 +390,7 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_OnEventContinue_003, TestSize.Level0)
 {
     ASSERT_NE(hiplayer_, nullptr);
     hiplayer_->isNeedSwDecoder_ = false;
-    hiplayer_->notNotifyForSw_ false;
+    hiplayer_->notNotifyForSw_ = false;
 
     Event event;
     event.type = EventType::EVENT_HW_DECODER_UNSUPPORT_CAP;
