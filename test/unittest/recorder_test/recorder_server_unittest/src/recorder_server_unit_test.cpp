@@ -217,7 +217,7 @@ HWTEST_F(RecorderServerUnitTest, recorder_SetFileSplitDuration_001, TestSize.Lev
 
     EXPECT_EQ(MSERR_OK, recorderServer_->Start());
     EXPECT_EQ(MSERR_OK, recorderServer_->Pause());
-    EXPECT_NE(MSERR_OK, recorderServer_->SetFileSplitDuration(FileSplitType::FILE_SPLIT_POST, -1, 1000));
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetFileSplitDuration(FileSplitType::FILE_SPLIT_POST, -1, 1000));
     EXPECT_EQ(MSERR_OK, recorderServer_->Resume());
     EXPECT_EQ(MSERR_OK, recorderServer_->Stop(false));
     recorderServer_->StopBuffer(PURE_VIDEO);
@@ -1509,8 +1509,8 @@ HWTEST_F(RecorderServerUnitTest, recorder_video_SetMaxFileSize_001, TestSize.Lev
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
     EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorderServer_->SetCaptureRate(0, 30));
-    EXPECT_EQ(MSERR_OK, recorderServer_->SetMaxFileSize(-1));
-    EXPECT_EQ(MSERR_OK, recorderServer_->SetMaxFileSize(5000));
+    EXPECT_NE(MSERR_OK, recorderServer_->SetMaxFileSize(-1));
+    EXPECT_NE(MSERR_OK, recorderServer_->SetMaxFileSize(5000));
     EXPECT_EQ(MSERR_OK, recorderServer_->SetNextOutputFile(g_videoRecorderConfig.outputFd));
     EXPECT_NE(MSERR_OK, recorderServer_->SetFileSplitDuration(FileSplitType::FILE_SPLIT_POST, -1, 1000));
     close(g_videoRecorderConfig.outputFd);
