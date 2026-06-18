@@ -89,9 +89,9 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SetDefaultAudioRenderInfo_001, TestSize
     std::shared_ptr<Meta> testptr = nullptr;
     trackInfos.push_back(testptr);
     hiplayer_->SetDefaultAudioRenderInfo(trackInfos);
-    int32_t isHdrVivid_;
-    hiplayer_->audioRenderInfo_->GetData(Tag::AUDIO_RENDER_INFO, isHdrVivid_);
-    EXPECT_EQ(isHdrVivid_, 0);
+    int32_t isHdrVivid;
+    hiplayer_->audioRenderInfo_->GetData(Tag::AUDIO_RENDER_INFO, isHdrVivid);
+    EXPECT_EQ(isHdrVivid, 0);
 }
 
 // @tc.name     Test HandleAudioTrackChangeEvent API
