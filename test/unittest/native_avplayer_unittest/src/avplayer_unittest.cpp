@@ -904,7 +904,6 @@ HWTEST_F(AVPlayerMp4UnitTest, OH_AVPlayer_SetPlaybackRangeTest001, Level1)
 HWTEST_F(AVPlayerUnitTest, OH_AVPlayer_SetPlaybackRangeTest002, Level1)
 {
     OH_AVPlayer *player = nullptr;
-    ASSERT_EQ(player, nullptr);
     int64_t mSecondsStart = -1;
     int64_t mSecondsEnd = -1;
     bool closestRange = true;
@@ -993,7 +992,6 @@ HWTEST_F(AVPlayerMp4UnitTest, OH_AVPlayer_SetMediaMutedTest001, Level1)
 HWTEST_F(AVPlayerUnitTest, OH_AVPlayer_SetMediaMutedTest002, Level1)
 {
     OH_AVPlayer *player = nullptr;
-    ASSERT_EQ(player, nullptr);
     OH_AVErrCode ret = OH_AVPlayer_SetMediaMuted(player, OH_MediaType::MEDIA_TYPE_AUD, true);
     ASSERT_EQ(AV_ERR_INVALID_VAL, ret);
 }
@@ -1019,7 +1017,6 @@ HWTEST_F(AVPlayerUnitTest, OH_AVPlayer_SetMediaMutedTest003, Level1)
 HWTEST_F(AVPlayerUnitTest, OH_AVPlayer_AddUrlSubtitleSource001, Level1)
 {
     OH_AVPlayer *player = nullptr;
-    ASSERT_EQ(player, nullptr);
     const char* url = "nullptr";
     OH_AVErrCode ret = OH_AVPlayer_AddUrlSubtitleSource(player, url);
     ASSERT_EQ(AV_ERR_INVALID_VAL, ret);
@@ -1124,8 +1121,9 @@ HWTEST_F(AVPlayerUnitTest, OH_AVPlayer_AddFdSubtitleSource002, Level1)
     int64_t offset = 0;
     int64_t size = -1;
     OH_AVErrCode ret = OH_AVPlayer_AddFdSubtitleSource(player, fd, offset, size);
-    close(fd);
     ASSERT_EQ(AV_ERR_INVALID_VAL, ret);
+    close(fd);
+    OH_AVPlayer_Release(player);
 }
 
 /**
@@ -1164,7 +1162,6 @@ HWTEST_F(AVPlayerMp4UnitTest, OH_AVPlayer_IsSeekContinuousSupported001, Level1)
 HWTEST_F(AVPlayerUnitTest, OH_AVPlayer_IsSeekContinuousSupported002, Level1)
 {
     OH_AVPlayer *player = nullptr;
-    ASSERT_EQ(player, nullptr);
     bool isSeek = OH_AVPlayer_IsSeekContinuousSupported(player);
     ASSERT_EQ(false, isSeek);
 }
@@ -1203,7 +1200,6 @@ HWTEST_F(AVPlayerMp4UnitTest, OH_AVPlayer_SelectTrackWithMode001, Level1)
 HWTEST_F(AVPlayerUnitTest, OH_AVPlayer_SelectTrackWithMode002, Level1)
 {
     OH_AVPlayer *player = nullptr;
-    ASSERT_EQ(player, nullptr);
     OH_AVErrCode ret = OH_AVPlayer_SelectTrackWithMode(player, 0, AV_TRACK_SWITCH_MODE_SMOOTH);
     ASSERT_EQ(AV_ERR_INVALID_VAL, ret);
 }
@@ -1268,7 +1264,6 @@ HWTEST_F(AVPlayerUnitTest, OH_AVPlayer_GetPlaybackInfo001, Level1)
 HWTEST_F(AVPlayerUnitTest, OH_AVPlayer_GetPlaybackInfo002, Level1)
 {
     OH_AVPlayer *player = nullptr;
-    ASSERT_EQ(player, nullptr);
     OH_AVFormat *avformat = OH_AVPlayer_GetPlaybackInfo(player);
     ASSERT_EQ(avformat, nullptr);
 }
@@ -1319,7 +1314,6 @@ HWTEST_F(AVPlayerMp4UnitTest, OH_AVPlayer_GetTrackCount002, Level1)
 HWTEST_F(AVPlayerUnitTest, OH_AVPlayer_GetTrackCount003, Level1)
 {
     OH_AVPlayer *player = nullptr;
-    ASSERT_EQ(player, nullptr);
     uint32_t trackCount = OH_AVPlayer_GetTrackCount(player);
     ASSERT_EQ(trackCount, 0);
 }
@@ -1358,7 +1352,6 @@ HWTEST_F(AVPlayerMp4UnitTest, OH_AVPlayer_GetTrackFormat002, Level1)
 HWTEST_F(AVPlayerUnitTest, OH_AVPlayer_GetTrackFormat003, Level1)
 {
     OH_AVPlayer *player = nullptr;
-    ASSERT_EQ(player, nullptr);
     OH_AVFormat *avformat = OH_AVPlayer_GetTrackFormat(player, 0);
     ASSERT_EQ(avformat, nullptr);
 }
@@ -1389,7 +1382,6 @@ HWTEST_F(AVPlayerMp4UnitTest, OH_AVPlayer_GetPlaybackSpeed001, Level1)
 HWTEST_F(AVPlayerUnitTest, OH_AVPlayer_GetPlaybackSpeed002, Level1)
 {
     OH_AVPlayer *player = nullptr;
-    ASSERT_EQ(player, nullptr);
     AVPlaybackSpeed speed = AV_SPEED_FORWARD_0_75_X;
     OH_AVErrCode ret = OH_AVPlayer_GetPlaybackSpeed(player, &speed);
     ASSERT_EQ(AV_ERR_INVALID_VAL, ret);
@@ -1435,7 +1427,6 @@ HWTEST_F(AVPlayerMp4UnitTest, OH_AVPlayer_GetPlaybackRate001, Level1)
 HWTEST_F(AVPlayerUnitTest, OH_AVPlayer_GetPlaybackRate002, Level1)
 {
     OH_AVPlayer *player = nullptr;
-    ASSERT_EQ(player, nullptr);
     float speed = 0.75f;
     OH_AVErrCode ret = OH_AVPlayer_GetPlaybackRate(player, &speed);
     ASSERT_EQ(AV_ERR_INVALID_VAL, ret);
@@ -1475,7 +1466,6 @@ HWTEST_F(AVPlayerMp4UnitTest, OH_AVPlayer_GetPlaybackPosition001, Level1)
 HWTEST_F(AVPlayerUnitTest, OH_AVPlayer_GetPlaybackPosition002, Level1)
 {
     OH_AVPlayer *player = nullptr;
-    ASSERT_EQ(player, nullptr);
     int32_t position = OH_AVPlayer_GetPlaybackPosition(player);
     ASSERT_EQ(position, -1);
 }

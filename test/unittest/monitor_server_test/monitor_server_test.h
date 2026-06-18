@@ -23,6 +23,8 @@
 
 namespace OHOS {
 namespace Media {
+constexpr int32_t MONITOR_TIMEMS = 15000;
+
 class MonitorServerTest : public testing::Test {
 public:
     // SetUpTestCase: Called before all test cases
