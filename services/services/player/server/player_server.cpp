@@ -1954,9 +1954,9 @@ std::string PlayerServer::GetPlayerErrorTypeStr(PlayerErrorType errorType)
 void PlayerServer::OnError(PlayerErrorType errorType, int32_t errorCode, const std::string &description)
 {
     auto errorMsg = GetPlayerErrorTypeStr(errorType);
-    errorMsg += description != "" ? description + "-" : "null-";
     errorMsg += MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode)) + ", ";
-    errorMsg += MSErrorToString(static_cast<MediaServiceErrCode>(errorCode));
+    errorMsg += MSErrorToString(static_cast<MediaServiceErrCode>(errorCode))+ ", ";
+    errorMsg += description != "" ? description + "-" : "null-";
     return OnErrorMessage(errorCode, errorMsg);
 }
 

@@ -3125,7 +3125,7 @@ PlayerErrorType HiPlayerImpl::GetPlayerErrorTypeFromDemuxerFilter(const Event& e
             errorType = PlayerErrorType::NET_ERR;
             break;
         default:
-            if (event.description == "server") {
+            if (event.description == "server" || event.description.find("requestError: true")) {
                 errorType = PlayerErrorType::NET_ERR;
             }
             break;
