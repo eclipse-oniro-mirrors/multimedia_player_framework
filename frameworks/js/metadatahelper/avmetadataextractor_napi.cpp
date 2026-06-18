@@ -232,7 +232,8 @@ napi_value AVMetadataExtractorNapi::JsResolveMetadata(napi_env env, napi_callbac
         promiseCtx->metadata_ = promiseCtx->innerHelper_->GetAVMetadata();
         CHECK_AND_RETURN(promiseCtx->metadata_ == nullptr);
         MEDIA_LOGE("ResolveMetadata AVMetadata is nullptr");
-        promiseCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT, "failed to ResolveMetadata, AVMetadata is nullptr!");
+        promiseCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT,
+            "Failed to resolve metadata. Media format unsupported or demuxer parsing failed.");
     }, ResolveMetadataComplete, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
     promiseCtx.release();
@@ -263,7 +264,8 @@ napi_value AVMetadataExtractorNapi::JsResolveMetadataWithTimeout(napi_env env, n
     CHECK_AND_RETURN_RET_LOG(ret == napi_ok, result, "failed to get timeoutMs.");
 
     if (promiseCtx->timeoutMs <= 0 || promiseCtx->timeoutMs > MAX_TIMEOUT_MS) {
-        promiseCtx->SignError(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE, "Parameter check failed.");
+        promiseCtx->SignError(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
+            "Parameter check failed. The valid range of timeoutMs is (0, 20000]");
     }
     if (extractor->state_ != HelperState::HELPER_STATE_RUNNABLE && !promiseCtx->errFlag) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Can't fetchMetadata, please set source.");
@@ -284,7 +286,8 @@ napi_value AVMetadataExtractorNapi::JsResolveMetadataWithTimeout(napi_env env, n
         promiseCtx->metadata_ = result.meta;
         if (promiseCtx->metadata_ == nullptr && !promiseCtx->errFlag) {
             MEDIA_LOGE("ResolveMetadata AVMetadata is nullptr");
-            promiseCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT, "failed to ResolveMetadata, AVMetadata is nullptr!");
+            promiseCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT,
+                "Failed to resolve metadata. Media format unsupported or demuxer parsing failed.");
         }
     }, ResolveMetadataComplete, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
@@ -475,7 +478,8 @@ napi_value AVMetadataExtractorNapi::JsFetchArtPicture(napi_env env, napi_callbac
         auto sharedMemory = promiseCtx->innerHelper_->FetchArtPicture();
         promiseCtx->artPicture_ = ConvertMemToPixelMap(sharedMemory);
         if (promiseCtx->artPicture_ == nullptr) {
-            promiseCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT, "Failed to fetchAlbumCover");
+            promiseCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT,
+                "Failed to fetch album cover. Media format unsupported or demuxer parsing failed.");
         }
     }, FetchArtPictureComplete, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
@@ -578,7 +582,7 @@ napi_value AVMetadataExtractorNapi::JsFetchFramesAtTimes(napi_env env, napi_call
         extractor->GetFetchFrameVectorArgs(asyncCtx, env, args[ARG_ZERO], args[ARG_ONE], args[ARG_TWO]) != MSERR_OK;
     if (notParamValid) {
         ThrowError(env, MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
-            "Parameter check failed. The size of array must be greater than 0 and less than 4097.");
+            "Parameter check failed. The valid size of timesUs is (0, 4096]");
         return result;
     }
     if (extractor->state_ == HelperState::HELPER_STATE_HTTP_INTERCEPTED) {
@@ -612,8 +616,7 @@ napi_value AVMetadataExtractorNapi::JsFetchFramesAtTimesWithTimeout(napi_env env
     napi_value args[maxArgs] = { nullptr };
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    AVMetadataExtractorNapi* extractor
-        = AVMetadataExtractorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    AVMetadataExtractorNapi* extractor = AVMetadataExtractorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(extractor != nullptr, result, "failed to GetJsInstance");
     auto asyncCtx = std::make_unique<AVMetadataExtractorAsyncContext>(env);
     CHECK_AND_RETURN_RET_LOG(asyncCtx, result, "failed to GetAsyncContext");
@@ -633,7 +636,8 @@ napi_value AVMetadataExtractorNapi::JsFetchFramesAtTimesWithTimeout(napi_env env
         extractor->GetFetchFrameVectorArgs(asyncCtx, env, args[ARG_ZERO], args[ARG_ONE], args[ARG_TWO]) != MSERR_OK;
     if (notParamValid || asyncCtx->timeoutMs <= 0 || asyncCtx->timeoutMs > MAX_TIMEOUT_MS) {
         ThrowError(env, MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
-            "Parameter check failed. The size of array must be greater than 0 and less than 4097.");
+            "Parameter check failed. The valid range of timeoutMs is (0, 20000], "
+            "the valid size of timesUs is (0, 4096]");
         return result;
     }
     if (extractor->state_ == HelperState::HELPER_STATE_HTTP_INTERCEPTED) {
@@ -687,7 +691,7 @@ void AVMetadataExtractorNapi::setHelper(const std::shared_ptr<AVMetadataHelper> 
 napi_value AVMetadataExtractorNapi::JsFetchFrameAtTime(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVMetadataExtractorNapi::JsFetchFrameAtTime");
-    MEDIA_LOGI("JsFetchFrameAtTime  in");
+    MEDIA_LOGI("JsFetchFrameAtTime in");
     const int32_t maxArgs = ARG_FOUR;  // args + callback
     const int32_t argCallback = ARG_THREE;  // index three, the 4th param if exist
     const int32_t argPixelParam = ARG_TWO;  // index 2, the 3rd param
@@ -730,7 +734,8 @@ napi_value AVMetadataExtractorNapi::JsFetchFrameAtTime(napi_env env, napi_callba
             FetchScaledFrameYuv(asyncCtx->timeUs, asyncCtx->option, asyncCtx->param_);
         asyncCtx->pixel_ = pixelMap;
         if (asyncCtx->pixel_ == nullptr) {
-            asyncCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT, "FetchFrameByTime failed.");
+            asyncCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT,
+                "Failed to fetch frame. Video parsing failed or format unsupported.");
         }
     }, CreatePixelMapComplete, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
@@ -749,31 +754,16 @@ napi_value AVMetadataExtractorNapi::JsFetchFrameAtTimeWithTimeout(napi_env env, 
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    AVMetadataExtractorNapi* extractor
-        = AVMetadataExtractorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
-    CHECK_AND_RETURN_RET_LOG(extractor != nullptr, result, "failed to GetJsInstance");
+    AVMetadataExtractorNapi* extractor = AVMetadataExtractorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(extractor != nullptr, result, "Failed to get AVMetadataExtractor instance");
 
     auto asyncCtx = std::make_unique<AVMetadataExtractorAsyncContext>(env);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx, result, "failed to GetAsyncContext");
+    CHECK_AND_RETURN_RET_LOG(asyncCtx, result, "AVMetadataExtractorAsyncContext is invalid");
     asyncCtx->innerHelper_ = extractor->helper_;
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[argCallback]);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
-    napi_valuetype valueType = napi_undefined;
- 
-    napi_status ret = napi_get_value_int64(env, args[ARG_THREE], &asyncCtx->timeoutMs);
-    CHECK_AND_RETURN_RET_LOG(ret == napi_ok, result, "failed to get timeoutMs.");
-    bool notParamValid = maxArgs < argCallback || napi_typeof(env, args[ARG_TWO], &valueType) != napi_ok ||
-        valueType != napi_object || extractor->GetFetchFrameArgs(
-            asyncCtx, env, args[ARG_ZERO], args[ARG_ONE], args[ARG_TWO]) != MSERR_OK;
-    if (notParamValid || asyncCtx->timeoutMs <= 0 || asyncCtx->timeoutMs > MAX_TIMEOUT_MS) {
-        asyncCtx->SignError(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE, "Parameter check failed");
-    }
-    if (extractor->state_ != HelperState::HELPER_STATE_RUNNABLE && !asyncCtx->errFlag) {
-        asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Current state is not runnable, can't fetchFrame.");
-    }
-    if (extractor->state_ == HelperState::HELPER_STATE_HTTP_INTERCEPTED) {
-        asyncCtx->SignError(MSERR_EXT_API20_IO_CLEARTEXT_NOT_PERMITTED, "Http plaintext access is not allowed.");
-    }
+    CHECK_AND_RETURN_RET(extractor->CheckParamsOfJsFetchFrameAtTimeWithTimeout(env, args, asyncCtx) == MSERR_OK,
+        result);
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsFetchFrameAtTimeWithTimeout", NAPI_AUTO_LENGTH, &resource);
@@ -787,12 +777,35 @@ napi_value AVMetadataExtractorNapi::JsFetchFrameAtTimeWithTimeout(napi_env env, 
         }
         asyncCtx->pixel_ = fetchFrameResult.pixelmap;
         if (asyncCtx->pixel_ == nullptr && !fetchFrameResult.isTimeout) {
-            asyncCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT, "FetchFrameByTime failed, maybe unsupport format.");
+            asyncCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT,
+                "Failed to fetch frame. Video parsing failed or format unsupported.");
         }
     }, CreatePixelMapComplete, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
     return result;
+}
+
+int32_t AVMetadataExtractorNapi::CheckParamsOfJsFetchFrameAtTimeWithTimeout(napi_env env, napi_value* args,
+    std::unique_ptr<AVMetadataExtractorAsyncContext>& asyncCtx)
+{
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, MSERR_INVALID_VAL, "asyncCtx is invalid");
+    napi_valuetype valueType = napi_undefined;
+    napi_status ret = napi_get_value_int64(env, args[ARG_THREE], &asyncCtx->timeoutMs);
+    CHECK_AND_RETURN_RET_LOG(ret == napi_ok, MSERR_INVALID_VAL, "Failed to get timeoutMs.");
+    bool notParamValid = napi_typeof(env, args[ARG_TWO], &valueType) != napi_ok || valueType != napi_object ||
+        GetFetchFrameArgs(asyncCtx, env, args[ARG_ZERO], args[ARG_ONE], args[ARG_TWO]) != MSERR_OK;
+    if (notParamValid || asyncCtx->timeoutMs <= 0 || asyncCtx->timeoutMs > MAX_TIMEOUT_MS) {
+        asyncCtx->SignError(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
+            "Parameter check failed. The valid range of timeoutMs is (0, 20000]");
+    }
+    if (state_ != HelperState::HELPER_STATE_RUNNABLE && !asyncCtx->errFlag) {
+        asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Current state is not runnable, can't fetchFrame.");
+    }
+    if (state_ == HelperState::HELPER_STATE_HTTP_INTERCEPTED) {
+        asyncCtx->SignError(MSERR_EXT_API20_IO_CLEARTEXT_NOT_PERMITTED, "Http plaintext access is not allowed.");
+    }
+    return MSERR_OK;
 }
 
 void AVMetadataExtractorNapi::CreatePixelMapComplete(napi_env env, napi_status status, void *data)
