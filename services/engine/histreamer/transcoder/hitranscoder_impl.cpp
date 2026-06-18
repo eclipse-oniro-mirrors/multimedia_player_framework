@@ -1008,6 +1008,7 @@ Status HiTransCoderImpl::LinkVideoEncoderFilter(const std::shared_ptr<Pipeline::
         "videoEncoderFilter is nullptr");
     FALSE_RETURN_V_MSG_E(videoEncFormat_ != nullptr, Status::ERROR_NULL_POINTER,
         "videoEncFormat is nullptr");
+    videoEncFormat_->SetCallingInfo(appTokenId_, appUid_, appPid_, appFullTokenId_);
     videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(Plugins::VideoEncodeBitrateMode::VBR);
     Status ret = videoEncoderFilter_->SetCodecFormat(videoEncFormat_);
     FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "videoEncoderFilter SetCodecFormat fail");
