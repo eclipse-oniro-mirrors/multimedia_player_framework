@@ -190,8 +190,9 @@ void ScreenCaptureMonitorServer::SubscribeDataShareReadyEvent()
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY);
     EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
     auto onReceiveEvent = std::bind(&ScreenCaptureMonitorServer::OnReceiveEvent, this, std::placeholders::_1);
-    subscriber_ = std::make_shared<ScreenCaptureMonitorSubscriber>(subscribeInfo, onReceiveEvent);
-    CHECK_AND_RETURN_LOG(subscriber_ == nullptr, "SubscribeDataShareReadyEvent subscriber_ is null");
+    auto * tempSubscriber = new (std::nothrow) ScreenCaptureMonitorSubscriber(subscribeInfo, onReceiveEvent);
+    CHECK_AND_RETURN_LOG(tempSubscriber == nullptr, "SubscribeDataShareReadyEvent subscriber_ is null");
+    subscriber_ = std::shared_ptr<ScreenCaptureMonitorSubscriber>(tempSubscriber);
     bool result = EventFwk::CommonEventManager::SubscribeCommonEvent(subscriber_);
     MEDIA_LOGI("ScreenCaptureMonitorServer::SubscribeDataShareReadyEvent result: %{public}d", result);
 }
