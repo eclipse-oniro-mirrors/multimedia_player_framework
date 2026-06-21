@@ -28,6 +28,8 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureMonitorServer"};
+static const std::string SHOW_TOUCH_HINT_KEY = "settings.app.show_touch_hint";
+static const std::string SHOW_TOUCH_HINT_VALUE_NONE = "none";
 }
 
 namespace OHOS {
@@ -46,11 +48,13 @@ std::shared_ptr<ScreenCaptureMonitorServer> ScreenCaptureMonitorServer::GetInsta
 ScreenCaptureMonitorServer::ScreenCaptureMonitorServer()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    SubscribeDataShareReadyEvent();
 }
 
 ScreenCaptureMonitorServer::~ScreenCaptureMonitorServer()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+    UnSubscribeDataShareReadyEvent();
     Release();
 }
 
@@ -177,6 +181,45 @@ bool ScreenCaptureMonitorServer::HasSystemPermission()
         return true;
     }
     return IsSystemApp();
+}
+
+void ScreenCaptureMonitorServer::SubscribeDataShareReadyEvent()
+{
+    MEDIA_LOGI("ScreenCaptureMonitorServer::SubscribeDataShareReadyEvent");
+    EventFwk::MatchingSkills matchingSkills;
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY);
+    EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+    auto onReceiveEvent = std::bind(&ScreenCaptureMonitorServer::OnReceiveEvent, this, std::placeholders::_1);
+    subscriber_ = std::make_shared<ScreenCaptureMonitorSubscriber>(subscribeInfo, onReceiveEvent);
+    CHECK_AND_RETURN_LOG(subscriber_ == nullptr, "SubscribeDataShareReadyEvent subscriber_ is null");
+    bool result = EventFwk::CommonEventManager::SubscribeCommonEvent(subscriber_);
+    MEDIA_LOGI("ScreenCaptureMonitorServer::SubscribeDataShareReadyEvent result: %{public}d", result);
+}
+
+void ScreenCaptureMonitorServer::UnSubscribeDataShareReadyEvent()
+{
+    MEDIA_LOGI("ScreenCaptureMonitorServer::UnSubscribeDataShareReadyEvent");
+    CHECK_AND_RETURN_LOG(subscriber_ == nullptr, "UnSubscribeDataShareReadyEvent subscriber_ is null");
+    bool result = EventFwk::CommonEventManager::UnSubscribeCommonEvent(subscriber_);
+    MEDIA_LOGI("ScreenCaptureMonitorServer::UnSubscribeDataShareReadyEvent result: %{public}d", result);
+    subscriber_ = nullptr;
+}
+
+void ScreenCaptureMonitorServer::OnReceiveEvent(const EventFwk::CommonEventData &data)
+{
+    auto const &want = data.GetWant();
+    std::string action = want.GetAction();
+    MEDIA_LOGI("ScreenCaptureMonitorServer::OnReceiveEvent action: %{public}s", action.c_str());
+    if (action == EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY) {
+        HandleDataShareReadyEvent();
+    }
+}
+
+void ScreenCaptureMonitorServer::HandleDataShareReadyEvent()
+{
+    MEDIA_LOGI("ScreenCaptureMonitorServer::HandleDataShareReadyEvent");
+    int32_t ret = UpdateSettingsValue(SHOW_TOUCH_HINT_KEY, SHOW_TOUCH_HINT_VALUE_NONE);
+    MEDIA_LOGI("ScreenCaptureMonitorServer::HandleDataShareReadyEvent update result: %{public}d", ret);
 }
 } // namespace Media
 } // namespace OHOS
