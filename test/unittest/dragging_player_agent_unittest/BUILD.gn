@@ -90,8 +90,6 @@ ohos_unittest("dragging_player_agent_unittest") {
     "c_utils:utils",
     "googletest:gmock_main",
     "graphic_surface:surface",
-    "data_share:datashare_common",
-    "data_share:datashare_consumer",
     "graphic_surface:sync_fence",
     "hicollie:libhicollie",
     "hilog:libhilog",
