@@ -1005,6 +1005,8 @@ Status HiTransCoderImpl::LinkVideoDecoderFilter(const std::shared_ptr<Pipeline::
         "surfacedecoder", Pipeline::FilterType::FILTERTYPE_VIDEODEC);
     FALSE_RETURN_V_MSG_E(videoDecoderFilter_ != nullptr, Status::ERROR_NULL_POINTER,
         "videoDecoderFilter is nullptr");
+    std::string bundleName_ = GetClientBundleName(appUid_);
+    videoDecoderFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
     videoDecoderFilter_->SetCodecFormat(videoEncFormat_);
     videoDecoderFilter_->Init(transCoderEventReceiver_, transCoderFilterCallback_);
     Status ret = pipeline_->LinkFilters(preFilter, {videoDecoderFilter_}, type);
@@ -1022,6 +1024,8 @@ Status HiTransCoderImpl::LinkVideoEncoderFilter(const std::shared_ptr<Pipeline::
         "videoEncoderFilter is nullptr");
     FALSE_RETURN_V_MSG_E(videoEncFormat_ != nullptr, Status::ERROR_NULL_POINTER,
         "videoEncFormat is nullptr");
+    std::string bundleName_ = GetClientBundleName(appUid_);
+    videoEncoderFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
     videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(Plugins::VideoEncodeBitrateMode::VBR);
     Status ret = videoEncoderFilter_->SetCodecFormat(videoEncFormat_);
     FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "videoEncoderFilter SetCodecFormat fail");
