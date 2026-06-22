@@ -224,6 +224,12 @@ HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_05, TestSize.Level1)
     const std::vector<sptr<OHOS::Telephony::SignalInformation>> vecSigInfo{};
     telephonyObserver->OnSignalInfoUpdated(slotId, vecSigInfo);
     telephonyObserver->OnNetworkStateUpdated(slotId, nullptr);
+    const std::vector<sptr<OHOS::Telephony::CellInformation>> vecCellInfo{};
+    telephonyObserver->OnCellInfoUpdated(slotId, vecCellInfo);
+    telephonyObserver->OnSimStateUpdated(slotId, OHOS::Telephony::CardType::UNKNOWN_CARD,
+        OHOS::Telephony::SimState::SIM_STATE_UNKNOWN, OHOS::Telephony::LockReason::SIM_NONE);
+    telephonyObserver->OnCellularDataConnectStateUpdated(slotId, 0, 0);
+    telephonyObserver->OnCellularDataFlowUpdated(slotId, 0);
     telephonyObserver->OnCfuIndicatorUpdated(slotId, false);
     telephonyObserver->OnVoiceMailMsgIndicatorUpdated(slotId, false);
     telephonyObserver->OnIccAccountUpdated();
