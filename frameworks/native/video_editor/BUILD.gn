@@ -102,6 +102,8 @@ ohos_shared_library("video_editor") {
     "hilog:libhilog",
     "media_foundation:native_media_core",
     "skia:skia_canvaskit",
+    "egl:libEGL",
+    "opengles:libGLES",
   ]
 
   defines = []

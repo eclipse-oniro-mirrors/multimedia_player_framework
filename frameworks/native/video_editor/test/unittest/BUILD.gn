@@ -132,6 +132,8 @@ ohos_unittest("video_editor_unit_test") {
     "media_foundation:native_media_core",
     "skia:skia_canvaskit",
     "googletest:gmock_main",
+    "egl:libEGL",
+    "opengles:libGLES",
   ]
 
   defines = []
