@@ -1901,7 +1901,6 @@ napi_value AVPlayerNapi::JsSetPlaybackStrategy(napi_env env, napi_callback_info 
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsSetPlaybackStrategy");
-
     size_t paramCountSingle = PARAM_COUNT_SINGLE;
     napi_value args[PARAM_COUNT_SINGLE] = { nullptr };
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, paramCountSingle, args);
@@ -2262,7 +2261,7 @@ napi_value AVPlayerNapi::JsSetVideoWindowSize(napi_env env, napi_callback_info i
     auto promiseCtx = std::make_unique<AVPlayerContext>(env);
     promiseCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
     napi_valuetype valueType = napi_undefined;
-    auto state = GetCurrentState();
+    auto state = jsPlayer->GetCurrentState();
     if (!jsPlayer->CanSetSuperResolution()) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "The current state is "+ state + 
@@ -2519,7 +2518,6 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
     std::shared_ptr<AVMediaSource> mediaSource = GetAVMediaSource(env, args[0], srcTmp);
     CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, result, "create mediaSource failed!");
     jsPlayer->AddMediaStreamToAVMediaSource(srcTmp, mediaSource);
-
     struct AVPlayStrategyTmp strategyTmp;
     struct AVPlayStrategy strategy;
     if (!CommonNapi::GetPlayStrategy(env, args[1], strategyTmp)) {
