@@ -135,7 +135,7 @@ int32_t ScreenCaptureImpl::RemoveWhiteListWindows(const std::vector<uint64_t> &w
 int32_t ScreenCaptureImpl::ExcludePickerWindows(std::vector<int32_t> &windowIDsVec)
 {
     MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " ExcludePickerWindows in", FAKE_POINTER(this));
-    CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_NO_MEMORY,
+    CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_UNKNOWN,
         "screen capture service does not exist.");
     return screenCaptureService_->ExcludePickerWindows(windowIDsVec);
 }
@@ -143,7 +143,7 @@ int32_t ScreenCaptureImpl::ExcludePickerWindows(std::vector<int32_t> &windowIDsV
 int32_t ScreenCaptureImpl::SetPickerMode(PickerMode pickerMode)
 {
     MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " SetPickerMode in", FAKE_POINTER(this));
-    CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_NO_MEMORY,
+    CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_UNKNOWN,
         "screen capture service does not exist.");
     return screenCaptureService_->SetPickerMode(pickerMode);
 }
@@ -171,7 +171,7 @@ bool ScreenCaptureImpl::IsVideoCapInfoIgnored(const VideoCaptureInfo &videoCapIn
 int32_t ScreenCaptureImpl::SetMicrophoneEnabled(bool isMicrophone)
 {
     MEDIA_LOGD("SetMicrophoneEnabled:0x%{public}06" PRIXPTR " init in", FAKE_POINTER(this));
-    CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_NO_MEMORY,
+    CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_UNKNOWN,
         "screen capture service does not exist.");
     return screenCaptureService_->SetMicrophoneEnabled(isMicrophone);
 }
@@ -219,7 +219,7 @@ int32_t ScreenCaptureImpl::UpdateSurface(sptr<Surface> surface)
 int32_t ScreenCaptureImpl::SkipPrivacyMode(const std::vector<uint64_t> &windowIDsVec)
 {
     MEDIA_LOGD("SkipPrivacyMode:0x%{public}06" PRIXPTR " init in", FAKE_POINTER(this));
-    CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_NO_MEMORY,
+    CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_UNKNOWN,
                              "screen capture service does not exist.");
     return screenCaptureService_->SkipPrivacyMode(windowIDsVec);
 }
@@ -324,17 +324,17 @@ int32_t ScreenCaptureImpl::InitCaptureFile(AVScreenCaptureConfig config)
     int32_t ret = screenCaptureService_->SetRecorderInfo(config.recorderInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetRecorderInfo failed");
     const std::string fdHead = "fd://";
-    CHECK_AND_RETURN_RET_LOG(config.recorderInfo.url.find(fdHead) != std::string::npos, MSERR_INVALID_VAL,
+    CHECK_AND_RETURN_RET_LOG(config.recorderInfo.url.find(fdHead) != std::string::npos, MSERR_INVALID_FD,
         "check url failed");
     int32_t outputFd = -1;
     std::string inputFd = config.recorderInfo.url.substr(fdHead.size());
-    CHECK_AND_RETURN_RET_LOG(StrToInt(inputFd, outputFd) == true && outputFd >= 0, MSERR_INVALID_VAL,
+    CHECK_AND_RETURN_RET_LOG(StrToInt(inputFd, outputFd) == true && outputFd >= 0, MSERR_INVALID_FD,
         "open file failed");
     ret = screenCaptureService_->SetOutputFile(outputFd);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetOutputFile failed");
     ret = screenCaptureService_->InitAudioEncInfo(config.audioInfo.audioEncInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitAudioEncInfo failed");
-    CHECK_AND_RETURN_RET_LOG(!IsAudioCapInfoIgnored(config.audioInfo.innerCapInfo), MSERR_INVALID_VAL,
+    CHECK_AND_RETURN_RET_LOG(!IsAudioCapInfoIgnored(config.audioInfo.innerCapInfo), MSERR_INVALID_INNERCAP,
         "init innerCapInfo failed, innerCapInfo ignored is not allowed");
     if (!IsAudioCapInfoIgnored(config.audioInfo.micCapInfo)) {
         if ((config.audioInfo.micCapInfo.audioChannels != config.audioInfo.innerCapInfo.audioChannels) ||
@@ -532,7 +532,7 @@ int32_t ScreenCaptureImpl::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuff
     int32_t height, int32_t &watermarkCount)
 {
     MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " AddWatermark in", FAKE_POINTER(this));
-    CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_NO_MEMORY,
+    CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_SERVICE_DIED,
         "screen capture service does not exist.");
     return screenCaptureService_->AddWatermark(watermarkBuffer, width, height, watermarkCount);
 }

@@ -852,13 +852,13 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetOutputFile_002, TestSize.Level2)
 {
     int outputFd = open("/data/test/media/SetOutputFile_002.mp4", O_CREAT | O_RDONLY, 0644);
     close(outputFd);
-    ASSERT_EQ(screenCaptureServer_->SetOutputFile(outputFd), MSERR_INVALID_VAL);
+    ASSERT_EQ(screenCaptureServer_->SetOutputFile(outputFd), MSERR_INVALID_FD);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SetOutputFile_003, TestSize.Level2)
 {
     int outputFd = open("/data/test/media/SetOutputFile_003.mp4", O_CREAT | O_RDONLY, 0644);
-    ASSERT_EQ(screenCaptureServer_->SetOutputFile(outputFd), MSERR_INVALID_VAL);
+    ASSERT_EQ(screenCaptureServer_->SetOutputFile(outputFd), MSERR_INVALID_WRITE);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnStartScreenCapture_001, TestSize.Level2)

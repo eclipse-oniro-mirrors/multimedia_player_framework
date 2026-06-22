@@ -57,12 +57,13 @@ int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
 #ifdef SUPPORT_CALL
     if (isInTelCall_.load()) {
         MEDIA_LOGE("Start failed, is in telephony call, threadName:%{public}s", threadName_.c_str());
-        return MSERR_UNKNOWN;
+        return MSERR_UNKNOWN_INCALL;
     }
 #endif
     appInfo_ = appInfo;
     std::shared_ptr<AudioCapturer> audioCapturer = CreateAudioCapturer(appInfo);
-    CHECK_AND_RETURN_RET_LOG(audioCapturer != nullptr, MSERR_UNKNOWN, "Start failed, create AudioCapturer failed");
+    CHECK_AND_RETURN_RET_LOG(audioCapturer != nullptr, MSERR_UNKNOWN_AUDIO_CREATE,
+        "Start failed, create AudioCapturer failed");
     if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
             .compare(bundleName_) == 0) {
         std::vector<SourceType> targetSources = {
@@ -86,7 +87,7 @@ int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
         audioCapturer->Release();
         audioCapturer = nullptr;
         OnStartFailed(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL, SCREEN_CAPTURE_ERR_UNKNOWN);
-        return MSERR_UNKNOWN;
+        return MSERR_UNKNOWN_AUDIO_START;
     }
     MEDIA_LOGI("0x%{public}06" PRIXPTR "Start success, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
 

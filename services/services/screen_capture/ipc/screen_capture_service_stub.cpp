@@ -285,14 +285,14 @@ int32_t ScreenCaptureServiceStub::ExcludePickerWindows(std::vector<int32_t> &win
 
 int32_t ScreenCaptureServiceStub::SetPickerMode(PickerMode pickerMode)
 {
-    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_UNKNOWN,
         "screen capture server is nullptr");
     return screenCaptureServer_->SetPickerMode(pickerMode);
 }
 
 int32_t ScreenCaptureServiceStub::SetMicrophoneEnabled(bool isMicrophone)
 {
-    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_UNKNOWN,
         "screen capture server is nullptr");
     return screenCaptureServer_->SetMicrophoneEnabled(isMicrophone);
 }
@@ -327,7 +327,7 @@ int32_t ScreenCaptureServiceStub::ResizeCanvas(int32_t width, int32_t height)
 
 int32_t ScreenCaptureServiceStub::SkipPrivacyMode(const std::vector<uint64_t> &windowIDsVec)
 {
-    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_UNKNOWN,
                              "screen capture server is nullptr");
     return screenCaptureServer_->SkipPrivacyMode(windowIDsVec);
 }
@@ -469,10 +469,10 @@ int32_t ScreenCaptureServiceStub::ExcludePickerWindows(MessageParcel &data, Mess
 
 int32_t ScreenCaptureServiceStub::SetPickerMode(MessageParcel &data, MessageParcel &reply)
 {
-    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_UNKNOWN,
         "screen capture server is nullptr");
     int32_t mode = 0;
-    CHECK_AND_RETURN_RET_LOG(data.ReadInt32(mode), MSERR_INVALID_STATE, "failed to read data from MessageParcel");
+    CHECK_AND_RETURN_RET_LOG(data.ReadInt32(mode), MSERR_UNKNOWN, "failed to read data from MessageParcel");
     PickerMode pickerMode = static_cast<PickerMode>(mode);
     int32_t ret = SetPickerMode(pickerMode);
     reply.WriteInt32(ret);
@@ -481,7 +481,7 @@ int32_t ScreenCaptureServiceStub::SetPickerMode(MessageParcel &data, MessageParc
 
 int32_t ScreenCaptureServiceStub::SetMicrophoneEnabled(MessageParcel &data, MessageParcel &reply)
 {
-    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_UNKNOWN,
         "screen capture server is nullptr");
     bool setMicEnable = data.ReadBool();
     int32_t ret = SetMicrophoneEnabled(setMicEnable);
@@ -532,10 +532,10 @@ int32_t ScreenCaptureServiceStub::ResizeCanvas(MessageParcel &data, MessageParce
 
 int32_t ScreenCaptureServiceStub::SkipPrivacyMode(MessageParcel &data, MessageParcel &reply)
 {
-    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_UNKNOWN,
                              "screen capture server is nullptr");
     int32_t windowIdSize = data.ReadInt32();
-    CHECK_AND_RETURN_RET_LOG(windowIdSize < MAX_FILTER_CONTENTS_COUNT, MSERR_INVALID_STATE,
+    CHECK_AND_RETURN_RET_LOG(windowIdSize < MAX_FILTER_CONTENTS_COUNT, MSERR_UNKNOWN,
                              "windowID size is exceed max range");
     if (windowIdSize >= 0) {
         std::vector<uint64_t> vec;
@@ -919,21 +919,21 @@ int32_t ScreenCaptureServiceStub::GetMultiDisplayCaptureCapability(MessageParcel
 
 int32_t ScreenCaptureServiceStub::PauseScreenCapture()
 {
-    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_SERVICE_DIED,
         "screen capture server is nullptr");
     return screenCaptureServer_->PauseScreenCapture();
 }
 
 int32_t ScreenCaptureServiceStub::ResumeScreenCapture()
 {
-    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_SERVICE_DIED,
         "screen capture server is nullptr");
     return screenCaptureServer_->ResumeScreenCapture();
 }
 
 int32_t ScreenCaptureServiceStub::PauseScreenCapture(MessageParcel &data, MessageParcel &reply)
 {
-    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_SERVICE_DIED,
         "screen capture server is nullptr");
     (void)data;
     int32_t ret = PauseScreenCapture();
@@ -943,7 +943,7 @@ int32_t ScreenCaptureServiceStub::PauseScreenCapture(MessageParcel &data, Messag
 
 int32_t ScreenCaptureServiceStub::ResumeScreenCapture(MessageParcel &data, MessageParcel &reply)
 {
-    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_SERVICE_DIED,
         "screen capture server is nullptr");
     (void)data;
     int32_t ret = ResumeScreenCapture();
@@ -954,7 +954,7 @@ int32_t ScreenCaptureServiceStub::ResumeScreenCapture(MessageParcel &data, Messa
 int32_t ScreenCaptureServiceStub::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer,
     int32_t width, int32_t height, int32_t &watermarkCount)
 {
-    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_SERVICE_DIED,
         "screen capture server is nullptr");
     return screenCaptureServer_->AddWatermark(watermarkBuffer, width, height, watermarkCount);
 }
