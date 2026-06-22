@@ -2173,8 +2173,7 @@ napi_value SystemSoundManagerNapi::GetMockHapticRingtonePlayer(napi_env env, nap
     CHECK_AND_RETURN_RET_LOG((argc == ARGS_TWO || argc == ARGS_THREE),
         ThrowErrorAndReturn(env, NAPI_ERR_PARAM_CHECK_ERROR_INFO, NAPI_ERR_PARAM_CHECK_ERROR), "invalid arguments");
 
-    std::unique_ptr<SystemSoundManagerAsyncContext> asyncContext =
-        std::make_unique<SystemSoundManagerAsyncContext>();
+    auto asyncContext = std::make_unique<SystemSoundManagerAsyncContext>();
     status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->objectInfo != nullptr, result,
         "GetMockHapticRingtonePlayer: Failed to unwrap object");
@@ -2184,6 +2183,8 @@ napi_value SystemSoundManagerNapi::GetMockHapticRingtonePlayer(napi_env env, nap
         napi_typeof(env, argv[i], &valueType);
         if (i == PARAM0) {
             asyncContext->abilityContext_ = GetAbilityContext(env, argv[i]);
+            CHECK_AND_RETURN_RET_LOG(asyncContext->abilityContext_ != nullptr,
+                ThrowErrorAndReturn(env, NAPI_ERR_PARAM_CHECK_ERROR_INFO, NAPI_ERR_PARAM_CHECK_ERROR), "context null");
         } else if (i == PARAM1 && valueType == napi_number) {
             napi_get_value_int32(env, argv[i], &asyncContext->ringtoneType);
         } else if (i == PARAM1 && valueType == napi_string) {
@@ -2192,7 +2193,6 @@ napi_value SystemSoundManagerNapi::GetMockHapticRingtonePlayer(napi_env env, nap
             asyncContext->uri = ExtractStringToEnv(env, argv[i]);
         } else if (i == PARAM3 && valueType == napi_function) {
             napi_create_reference(env, argv[i], 1, &asyncContext->callbackRef);
-            break;
         }
     }
 
