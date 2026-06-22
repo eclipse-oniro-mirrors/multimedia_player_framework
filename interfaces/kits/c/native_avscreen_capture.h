@@ -365,7 +365,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ContentFilter_AddWindowContent(
  * @return Function result code.
  *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
  *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} input capture is nullptr.
- *         {@link AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT} operation not permitted.
+ *         {@link AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT} The operation is not allowed.
  * @since 12
  * @version 1.0
  */
@@ -382,7 +382,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ResizeCanvas(struct OH_AVScreenCa
  *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
  *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} input capture is nullptr or input windowIDs are not belong current
  *         app.
- *         {@link AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT} operation not permitted.
+ *         {@link AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT} The operation is not allowed.
  * @since 12
  * @version 1.0
  */
@@ -397,7 +397,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SkipPrivacyMode(struct OH_AVScree
  * @return Function result code.
  *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
  *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} input capture is nullptr or frameRate is not support.
- *         {@link AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT} operation not permitted.
+ *         {@link AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT} The operation is not allowed.
  * @since 14
  * @version 1.0
  */
@@ -412,7 +412,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetMaxVideoFrameRate(struct OH_AV
  * @return Function result code.
  *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
  *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} input capture is nullptr.
- *         {@link AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT} operation not permitted, show cursor failed.
+ *         {@link AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT} The operation is not allowed. The cursor setting fails.
  * @since 15
  * @version 1.0
  */
@@ -494,7 +494,8 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForKeepCaptureDuringCall(
  * @return Function result code.
  *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
  *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} input capture is nullptr or input callback is nullptr.
- *         {@link AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT} operation not permitted, set ErrorCallback failed.
+ *         {@link AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT} The operation is not allowed.
+           The screen capture callback fails to be set.
  * @since 20
  */
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureContentChangedCallback(struct OH_AVScreenCapture *capture,

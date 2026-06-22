@@ -64,7 +64,7 @@ typedef enum OH_CaptureMode {
     OH_CAPTURE_SPECIFIED_SCREEN = 1,
     /* capture a specified window */
     OH_CAPTURE_SPECIFIED_WINDOW = 2,
-    OH_CAPTURE_INVALID = -1
+    OH_CAPTURE_INVAILD = -1
 } OH_CaptureMode;
 
 /**
@@ -141,7 +141,7 @@ typedef enum OH_DataType {
     OH_ENCODED_STREAM = 1,
     /* mp4 file */
     OH_CAPTURE_FILE = 2,
-    OH_INVALID = -1
+    OH_INVAILD = -1
 } OH_DataType;
 
 /**
