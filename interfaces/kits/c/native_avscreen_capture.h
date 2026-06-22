@@ -659,7 +659,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureAreaHighlight(struct OH
  * @details Activates system visual picker with two usage scenarios:
  *          1. Initial capture configuration: Select source before starting capture
  *          2. Dynamic source switching: Change capture target during active capture
- * @param capture [in] Point to an initialized OH_AVScreenCapture instance.
+ * @param capture [in] Pointer to an initialized OH_AVScreenCapture instance.
  * @return Operation status codes:
  *         - AV_SCREEN_CAPTURE_ERR_OK(0): Picker activated successfully
  *         - AV_SCREEN_CAPTURE_ERR_INVALID_VAL: Null pointer or uninitialized instance
@@ -713,7 +713,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForPause(
 
 /**
  * @brief Pause screen capture
- * @param {OH_AVScreenCapture*} capture Point to an initialized OH_AVScreenCapture instance.
+ * @param {OH_AVScreenCapture*} capture Pointer to an initialized OH_AVScreenCapture instance.
  * @return Function result code.
  *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
  *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} capture value is nullptr.
@@ -724,7 +724,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_PauseScreenCapture(struct OH_AVSc
 
 /**
  * @brief Resume screen capture
- * @param {OH_AVScreenCapture*} capture Point to an initialized OH_AVScreenCapture instance.
+ * @param {OH_AVScreenCapture*} capture Pointer to an initialized OH_AVScreenCapture instance.
  * @return Function result code.
  *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
  *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} capture value is nullptr.
