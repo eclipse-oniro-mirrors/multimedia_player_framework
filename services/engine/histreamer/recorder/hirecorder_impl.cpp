@@ -437,6 +437,10 @@ int32_t HiRecorderImpl::Prepare()
 {
     MediaTrace trace("HiRecorderImpl::Prepare");
     MEDIA_LOG_I("Prepare enter.");
+    if (lseek(fd_, 0, SEEK_CUR) == -1) {
+        MEDIA_LOG_I("The fd is invalid, fd: %{public}d, errno: %{public}d.", fd_, errno);
+        return MSERR_OPEN_FILE_FAILED;
+    }
     FALSE_RETURN_V_MSG_E(lseek(fd_, 0, SEEK_CUR) != -1, MSERR_OPEN_FILE_FAILED, "The fd is invalid.");
 
     int32_t result = MSERR_OK;
