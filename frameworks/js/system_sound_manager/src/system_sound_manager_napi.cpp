@@ -2193,7 +2193,6 @@ napi_value SystemSoundManagerNapi::GetMockHapticRingtonePlayer(napi_env env, nap
             asyncContext->uri = ExtractStringToEnv(env, argv[i]);
         } else if (i == PARAM3 && valueType == napi_function) {
             napi_create_reference(env, argv[i], 1, &asyncContext->callbackRef);
-            break;
         }
     }
 
