@@ -2262,7 +2262,7 @@ napi_value AVPlayerNapi::JsSetVideoWindowSize(napi_env env, napi_callback_info i
     auto promiseCtx = std::make_unique<AVPlayerContext>(env);
     promiseCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
     napi_valuetype valueType = napi_undefined;
-    auto state = this->GetCurrentState();
+    auto state = GetCurrentState();
     if (!jsPlayer->CanSetSuperResolution()) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "The current state is "+ state + 
