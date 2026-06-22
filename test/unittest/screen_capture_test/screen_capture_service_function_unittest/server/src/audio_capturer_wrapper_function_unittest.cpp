@@ -112,6 +112,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapper_001, TestSize.Lev
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
     sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Stop(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->GetAudioCapturerState(), CAPTURER_STOPED);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperRelativeSleep_001, TestSize.Level2)
