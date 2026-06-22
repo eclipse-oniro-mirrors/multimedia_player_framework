@@ -2192,7 +2192,7 @@ napi_value AVPlayerNapi::JsSetSuperResolution(napi_env env, napi_callback_info i
     promiseCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
     napi_valuetype valueType = napi_undefined;
 
-    auto state = GetCurrentState();
+    auto state = jsPlayer->GetCurrentState();
     if (!jsPlayer->CanSetSuperResolution()) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "The current state is " + state + 
@@ -2227,7 +2227,6 @@ napi_value AVPlayerNapi::JsSetSuperResolution(napi_env env, napi_callback_info i
 
 std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::SetSuperResolutionTask(bool enable)
 {
-    auto state = GetCurrentState();
     auto task = std::make_shared<TaskHandler<TaskRet>>([this, enable]() {
         std::unique_lock<std::mutex> lock(taskMutex_);
         if (CanSetSuperResolution()) {
@@ -2237,6 +2236,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::SetSuperResolutionTask(bool 
                 return TaskRet(errCode, "failed to set super resolution");
             }
         } else {
+            auto state = this->GetCurrentState();
             return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
                 "The current state is " + state +
                     "SetSuperResolution only supports initialized/prepared/playing/paused/completed/stopped state.");
@@ -2262,7 +2262,7 @@ napi_value AVPlayerNapi::JsSetVideoWindowSize(napi_env env, napi_callback_info i
     auto promiseCtx = std::make_unique<AVPlayerContext>(env);
     promiseCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
     napi_valuetype valueType = napi_undefined;
-    auto state = GetCurrentState();
+    auto state = this->GetCurrentState();
     if (!jsPlayer->CanSetSuperResolution()) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "The current state is "+ state + 
@@ -2336,14 +2336,14 @@ napi_value AVPlayerNapi::JsEnableCameraPostprocessing(napi_env env, napi_callbac
     CHECK_AND_RETURN_RET_LOG(promiseCtx != nullptr, result, "promiseCtx is null");
     promiseCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
  
-    auto state = GetCurrentState();
+    auto state = jsPlayer->GetCurrentState();
 
     if (!IsSystemApp()) {
         promiseCtx->SignError(MSERR_EXT_API9_PERMISSION_DENIED, "systemapi permission denied");
     }
     if (!jsPlayer->CanCameraPostprocessing()) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "The current state is "+ state + 
+            "The current state is " + state + 
                 "cameraPostProcessor only supports initialized state.");
     } else {
         promiseCtx->asyncTask = jsPlayer->EnableCameraPostprocessingTask();
@@ -2419,7 +2419,7 @@ napi_value AVPlayerNapi::JsSetAVFileDescriptor(napi_env env, napi_callback_info 
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
-    auto state = GetCurrentState();
+    auto state = jsPlayer->GetCurrentState();
     if (jsPlayer->GetCurrentState() != AVPlayerState::STATE_IDLE) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "The current state is " + 
             state + ",set fd operation only supprots idle state.");
@@ -2494,7 +2494,7 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
     size_t argCount = 2;
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
-    auto state = GetCurrentState();
+    auto state = jsPlayer->GetCurrentState();
     if (jsPlayer->GetCurrentState() != AVPlayerState::STATE_IDLE) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "The current state is " + 
             state + ",set mediaSource only supports idle state.");
@@ -2601,7 +2601,7 @@ napi_value AVPlayerNapi::JsSetDataSrc(napi_env env, napi_callback_info info)
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
-    auto state = GetCurrentState();
+    auto state = jsPlayer->GetCurrentState();
     if (jsPlayer->GetCurrentState() != AVPlayerState::STATE_IDLE) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,  "The current state is " + 
             state + ",set dataSrc only supports idle state.");
@@ -2821,7 +2821,7 @@ napi_value AVPlayerNapi::JsSetLoop(napi_env env, napi_callback_info info)
         jsPlayer->OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "The stream is live stream, not support loop");
         return result;
     }
-    auto state = GetCurrentState();
+    auto state = jsPlayer->GetCurrentState();
     if (!jsPlayer->IsControllable()) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "The current state is "+ state + 
