@@ -246,7 +246,7 @@ typedef struct OH_VideoCaptureInfo {
 } OH_VideoCaptureInfo;
 
 /**
- * @brief Video encoder info
+ * @brief The struct describes the video encoding information.
  * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
  *
  * @since 10
