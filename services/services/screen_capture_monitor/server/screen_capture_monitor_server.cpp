@@ -29,7 +29,7 @@
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureMonitorServer"};
 static const std::string SHOW_TOUCH_HINT_KEY = "settings.app.show_touch_hint";
-static const std::string SHOW_TOUCH_HINT_VALUE_NONE = "none";
+static const std::string SHOW_TOUCH_HINT_VALUE_NONE = "false";
 }
 
 namespace OHOS {
