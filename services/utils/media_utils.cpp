@@ -461,6 +461,7 @@ std::shared_ptr<DataShare::DataShareHelper> CreateDataShareHelper()
 
 int32_t __attribute__((visibility("default"))) UpdateSettingsValue(const std::string &key, const std::string &value)
 {
+    MEDIA_LOG_I("UpdateSettingsValue update start key: %{public}s", key.c_str());
     auto dataShareHelper = CreateDataShareHelper();
     CHECK_AND_RETURN_RET_LOG(dataShareHelper == nullptr, MSERR_INVALID_VAL, "dataShareHelper is nullptr");
     Uri uri(SETTINGS_DATA_BASE_URI);
