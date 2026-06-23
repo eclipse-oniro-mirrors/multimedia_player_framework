@@ -611,7 +611,6 @@ HWTEST_F(ScreenCaptureServiceStubTest, PauseScreenCapture_001, TestSize.Level1)
     MessageOption option;
     bool token = data.WriteInterfaceToken(screenCaptureServiceStub->GetDescriptor());
     ASSERT_EQ(token, true);
-
     int ret = screenCaptureServiceStub->OnRemoteRequest(
             IStandardScreenCaptureService::MSERR_INVALID_OPERATION_STARTED_RESUMED, data, reply, option);
     EXPECT_EQ(ret, MSERR_OK);
@@ -633,7 +632,6 @@ HWTEST_F(ScreenCaptureServiceStubTest, ResumeScreenCapture_001, TestSize.Level1)
     MessageOption option;
     bool token = data.WriteInterfaceToken(screenCaptureServiceStub->GetDescriptor());
     ASSERT_EQ(token, true);
-
     int ret = screenCaptureServiceStub->OnRemoteRequest(
             IStandardScreenCaptureService::MSERR_INVALID_OPERATION_PAUSED, data, reply, option);
     EXPECT_EQ(ret, MSERR_OK);
