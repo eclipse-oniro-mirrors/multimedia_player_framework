@@ -2900,6 +2900,12 @@ int32_t ScreenCaptureServer::StartPrivacyWindow(const std::string &cmdStr)
     auto ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,
         nullptr, -1);
     MEDIA_LOGI("StartPrivacyWindow ret=%{public}d", ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret != ERR_OK, ret);
+    want.SetElementName("com.ohos.sceneboard", "com.ohos.sceneboard.systemdialog");
+    connection_ = sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(cmdStr));
+    ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,
+        nullptr, -1);
+    MEDIA_LOGI("StartPrivacyWindow ret=%{public}d", ret);
     return ret;
 }
 
