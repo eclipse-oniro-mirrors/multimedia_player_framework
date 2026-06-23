@@ -3507,8 +3507,10 @@ int32_t ScreenCaptureServer::StartStreamVideoCapture()
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartStreamVideoCapture start, state:%{public}d, "
         "dataType:%{public}d, isSurfaceMode:%{public}s.", FAKE_POINTER(this),
         captureConfig_.videoInfo.videoCapInfo.state, captureConfig_.dataType, isSurfaceMode_ ? "true" : "false");
-    CHECK_AND_RETURN_RET_LOGI(captureConfig_.videoInfo.videoCapInfo.state
-        != AVScreenCaptureParamValidationState::VALIDATION_IGNORE, MSERR_OK, "StartStreamVideoCapture is ignored");
+    if (captureConfig_.videoInfo.videoCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_IGNORE) {
+        MEDIA_LOGI("StartStreamVideoCapture is ignored");
+        return MSERR_OK;
+    }
     CHECK_AND_RETURN_RET_LOG(
         captureConfig_.videoInfo.videoCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID,
         MSERR_INVALID_VAL, "StartStreamVideoCapture failed, invalid param, dataType:%{public}d",
