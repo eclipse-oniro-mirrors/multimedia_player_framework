@@ -4617,7 +4617,7 @@ void HiPlayerImpl::DoInitDemuxer()
     demuxer_->SetApiVersion(apiVersion_);
     demuxer_->SetSyncCenter(syncManager_);
     demuxer_->SetSpeedChangeCallback([this](float speed) {
-        this->DoSetPlaybackSpeed(speed);
+        this->doSetPlaybackSpeed(speed);
     });
     pipeline_->AddHeadFilters({demuxer_});
     {
