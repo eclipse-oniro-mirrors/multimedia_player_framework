@@ -38,7 +38,6 @@
 #ifndef MULTIMEDIA_PLAYER_FRAMEWORK_AVTRANSCODER_BASE_H
 #define MULTIMEDIA_PLAYER_FRAMEWORK_AVTRANSCODER_BASE_H
 
-#include <string>
 #include <stdint.h>
 
 #ifdef __cplusplus
