@@ -659,7 +659,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureAreaHighlight(struct OH
  * @details Activates system visual picker with two usage scenarios:
  *          1. Initial capture configuration: Select source before starting capture
  *          2. Dynamic source switching: Change capture target during active capture
- * @param capture [in] Pointer to an initialized OH_AVScreenCapture instance.
+ * @param capture [in] Pointer to the OH_AVScreenCapture instance.
  * @return Operation status codes:
  *         - AV_SCREEN_CAPTURE_ERR_OK(0): Picker activated successfully
  *         - AV_SCREEN_CAPTURE_ERR_INVALID_VAL: Null pointer or uninitialized instance
