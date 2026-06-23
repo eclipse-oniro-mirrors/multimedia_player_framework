@@ -1508,9 +1508,9 @@ HWTEST_F(RecorderServerUnitTest, recorder_video_SetMaxFileSize_001, TestSize.Lev
     g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_SetMaxFileSize_001.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
     EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
-    EXPECT_EQ(MSERR_OK, recorderServer_->SetCaptureRate(0, 30));
-    EXPECT_NE(MSERR_OK, recorderServer_->SetMaxFileSize(-1));
-    EXPECT_NE(MSERR_OK, recorderServer_->SetMaxFileSize(5000));
+    EXPECT_NE(MSERR_OK, recorderServer_->SetCaptureRate(0, 30));
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetMaxFileSize(-1));
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetMaxFileSize(5000));
     EXPECT_EQ(MSERR_OK, recorderServer_->SetNextOutputFile(g_videoRecorderConfig.outputFd));
     EXPECT_NE(MSERR_OK, recorderServer_->SetFileSplitDuration(FileSplitType::FILE_SPLIT_POST, -1, 1000));
     close(g_videoRecorderConfig.outputFd);

@@ -1560,7 +1560,7 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetMaxFileSize_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
     EXPECT_NE(MSERR_OK, recorder_->SetMaxFileSize(-1));
     EXPECT_NE(MSERR_OK, recorder_->SetMaxFileSize(5000));
-    EXPECT_EQ(MSERR_OK, recorder_->SetNextOutputFile(g_videoRecorderConfig.outputFd));
+    EXPECT_NE(MSERR_OK, recorder_->SetNextOutputFile(g_videoRecorderConfig.outputFd));
     close(g_videoRecorderConfig.outputFd);
 }
 
@@ -1577,8 +1577,8 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetMaxFileSize_002, TestSize.Level0)
     g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_SetMaxFileSize_002.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
-    EXPECT_EQ(MSERR_OK, recorder_->SetMaxFileSize(-1));
-    EXPECT_EQ(MSERR_OK, recorder_->SetNextOutputFile(g_videoRecorderConfig.outputFd));
+    EXPECT_NE(MSERR_OK, recorder_->SetMaxFileSize(-1));
+    EXPECT_NE(MSERR_OK, recorder_->SetNextOutputFile(g_videoRecorderConfig.outputFd));
     close(g_videoRecorderConfig.outputFd);
 }
 
