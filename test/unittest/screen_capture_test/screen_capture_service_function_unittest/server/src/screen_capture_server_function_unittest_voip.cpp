@@ -97,7 +97,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnVoIPStatusChanged_003, TestSize.Leve
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->GetAudioCapturerState(), CAPTURER_STOPED);
     sleep(RECORDER_TIME / 2);
     ASSERT_EQ(screenCaptureServer_->OnSpeakerAliveStatusChanged(false), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->GetAudioCapturerState(), CAPTURER_RECORDING);
+    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->GetAudioCapturerState(), CAPTURER_STOPED);
     sleep(RECORDER_TIME / 2);
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }

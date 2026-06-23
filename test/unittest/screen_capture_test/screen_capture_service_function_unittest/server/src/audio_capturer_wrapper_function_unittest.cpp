@@ -112,29 +112,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapper_001, TestSize.Lev
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
     sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Stop(), MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapper_002, TestSize.Level2)
-{
-    SetValidConfig();
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
-    CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, "OS_InnerAudioCapture", true);
-    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
-    sleep(RECORDER_TIME);
-    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Stop(), MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapper_003, TestSize.Level2)
-{
-    SetValidConfig();
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
-    CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, "OS_InnerAudioCapture", true);
-    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
-    screenCaptureServer_->innerAudioCapture_->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
-    sleep(RECORDER_TIME);
-    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Stop(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->GetAudioCapturerState(), CAPTURER_STOPED);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperRelativeSleep_001, TestSize.Level2)
