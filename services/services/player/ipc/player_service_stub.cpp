@@ -1396,49 +1396,6 @@ int32_t PlayerServiceStub::UpdateM3U8FdUrl(std::shared_ptr<AVMediaSource> &media
     return MSERR_OK;
 }
 
-int32_t PlayerServiceStub::ReadAVMediaSourceFromParcel(MessageParcel &data,
-    std::shared_ptr<AVMediaSource> &mediaSource, int32_t &fd, std::string &mimeType)
-{
-    AVMediaSourceParam param {};
- 
-    // 读取场景类型标志
-    uint8_t sourceType = data.ReadUint8();
-    param.isUrlSource = (sourceType & 0x01) != 0;
-    param.isFdSource = (sourceType & 0x02) != 0;
-    param.isDataSource = (sourceType & 0x04) != 0;
-    param.isDirectorySource = (sourceType & 0x08) != 0; // 读取离线缓存目录场景
- 
-    // 读取 URL 场景数据
-    int32_t ret = ReadUrlSourceFromParcel(data, param.isUrlSource, param.url, param.header);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ReadUrlSourceFromParcel failed");
- 
-    // 读取 mimeType
-    mimeType = data.ReadString();
- 
-    // 读取 M3U8 fd
-    fd = ReadM3U8FdFromParcel(data, param.isUrlSource, mimeType);
- 
-    // 读取 FD 和 DataSource 数据
-    ret = ReadFdSourceFromParcel(data, param.isFdSource, param.fileDesc);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ReadFdSourceFromParcel failed");
- 
-    ret = ReadDataSourceFromParcel(data, param.isDataSource, param.dataSourceObject);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ReadDataSourceFromParcel failed");
- 
-    // 读取 Directory 场景数据
-    param.directoryPath = param.isDirectorySource ? data.ReadString() : "";
- 
-    // 创建 AVMediaSource
-    mediaSource = CreateAVMediaSource(param);
-    CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr");
- 
-    // 设置通用属性
-    mediaSource->SetMimeType(mimeType);
-
-    ret = UpdateM3U8FdUrl(mediaSource, mimeType, fd);
-    return ret;
-}
-
 int32_t PlayerServiceStub::ReadMediaStreamListFromMessageParcel(
     MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource)
 {
