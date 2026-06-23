@@ -2491,48 +2491,56 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
     size_t argCount = 2;
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
-    auto state = jsPlayer->GetCurrentState();
     if (jsPlayer->GetCurrentState() != AVPlayerState::STATE_IDLE) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "The current state is " + 
-            state + ",set mediaSource only supports idle state.");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "The current state is " +
+            jsPlayer->GetCurrentState() + ",set mediaSource only supports idle state.");
         return result;
     } else if (IsListMode(jsPlayer)) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "setMediaSource is not supported in list playback mode");
         return result;
     }
-    jsPlayer->StartListenCurrentResource(); // Listen to the events of the current resource
+    jsPlayer->StartListenCurrentResource();
     napi_valuetype valueType = napi_undefined;
     if (argCount < MIN_ARG_COUNTS || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "src type should be MediaSource.");
         return result;
     }
-    if (argCount > MAX_ARG_COUNTS) { // api allow one param
+    if (argCount > MAX_ARG_COUNTS) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check");
         return result;
     }
-    std::shared_ptr<AVMediaSourceTmp> srcTmp = MediaSourceNapi::GetMediaSource(env, args[0]);
-    CHECK_AND_RETURN_RET_LOG(srcTmp != nullptr, result, "get GetMediaSource argument failed!");
-    std::shared_ptr<AVMediaSource> mediaSource = GetAVMediaSource(env, args[0], srcTmp);
+    std::shared_ptr<AVMediaSource> mediaSource = GetAVMediaSource(env, args[0],
+        MediaSourceNapi::GetMediaSource(env, args[0]));
     CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, result, "create mediaSource failed!");
-    jsPlayer->AddMediaStreamToAVMediaSource(srcTmp, mediaSource);
-    struct AVPlayStrategyTmp strategyTmp;
     struct AVPlayStrategy strategy;
-    if (!CommonNapi::GetPlayStrategy(env, args[1], strategyTmp)) {
+    if (!ValidatePlayStrategy(env, args[1], jsPlayer, strategy)) {
+        return result;
+    }
+    jsPlayer->EnqueueMediaSourceTask(jsPlayer, mediaSource, strategy);
+    return result;
+}
+
+bool AVPlayerNapi::ValidatePlayStrategy(napi_env env, napi_value strategyArg, AVPlayerNapi *jsPlayer,
+    struct AVPlayStrategy &strategy)
+{
+    struct AVPlayStrategyTmp strategyTmp;
+    if (!CommonNapi::GetPlayStrategy(env, strategyArg, strategyTmp)) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "strategy type should be PlaybackStrategy.");
-        return result;
-    } else if (!jsPlayer->IsPalyingDurationValid(strategyTmp)) {
+        return false;
+    }
+    if (!jsPlayer->IsPalyingDurationValid(strategyTmp)) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "playing duration is invalid");
-        return result;
-    } else if (!jsPlayer->IsLivingMaxDelayTimeValid(strategyTmp)) {
+        return false;
+    }
+    if (!jsPlayer->IsLivingMaxDelayTimeValid(strategyTmp)) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "thresholdForAutoQuickPlay is invalid");
-        return result;
+        return false;
     }
     jsPlayer->GetAVPlayStrategyFromStrategyTmp(strategy, strategyTmp);
     if (jsPlayer->GetJsApiVersion() < API_VERSION_17) {
         strategy.mutedMediaType = MediaType::MEDIA_TYPE_MAX_COUNT;
     }
-    jsPlayer->EnqueueMediaSourceTask(jsPlayer, mediaSource, strategy);
-    return result;
+    return true;
 }
 
 std::shared_ptr<AVMediaSource> AVPlayerNapi::GetAVMediaSource(napi_env env, napi_value value,
