@@ -1910,8 +1910,7 @@ napi_value AVPlayerNapi::JsSetPlaybackStrategy(napi_env env, napi_callback_info 
     std::string currentState = jsPlayer->GetCurrentState();
     napi_valuetype valueType = napi_undefined;
     if (currentState != AVPlayerState::STATE_INITIALIZED && currentState != AVPlayerState::STATE_STOPPED) {
-        promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "The current state is " + currentState + 
+        promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "The current state is " + currentState + 
                 ",SetPlaybackStrategy only supports initialized / stopped state.");
     } else if (napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
         promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check input parameter");
@@ -1925,8 +1924,7 @@ napi_value AVPlayerNapi::JsSetPlaybackStrategy(napi_env env, napi_callback_info 
             promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER,
                                   "playing duration is above buffer duration or below zero");
         } else if (!jsPlayer->IsLivingMaxDelayTimeValid(strategyTmp)) {
-            promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER,
-                                  "thresholdForAutoQuickPlay is invalid");
+            promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "thresholdForAutoQuickPlay is invalid");
         } else {
             AVPlayStrategy strategy;
             jsPlayer->GetAVPlayStrategyFromStrategyTmp(strategy, strategyTmp);
@@ -2514,7 +2512,6 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
     }
     std::shared_ptr<AVMediaSourceTmp> srcTmp = MediaSourceNapi::GetMediaSource(env, args[0]);
     CHECK_AND_RETURN_RET_LOG(srcTmp != nullptr, result, "get GetMediaSource argument failed!");
-
     std::shared_ptr<AVMediaSource> mediaSource = GetAVMediaSource(env, args[0], srcTmp);
     CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, result, "create mediaSource failed!");
     jsPlayer->AddMediaStreamToAVMediaSource(srcTmp, mediaSource);
