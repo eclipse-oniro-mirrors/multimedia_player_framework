@@ -86,7 +86,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StartScreenCaptureWithSurface(str
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StopScreenCapture(struct OH_AVScreenCapture *capture);
 
 /**
- * @brief Start av screen recording to save screen recording file.
+ * @brief Starts screen recording, with recordings saved in files.
  * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
  * @param capture Pointer to an OH_AVScreenCapture instance
  * @return Returns AV_SCREEN_CAPTURE_ERR_OK if the execution is successful,
@@ -97,7 +97,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StopScreenCapture(struct OH_AVScr
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StartScreenRecording(struct OH_AVScreenCapture *capture);
 
 /**
- * @brief Stop av screen recording and save screen recording file.
+ * @brief Stops screen recording. This function is used in pair with {@link OH_AVScreenCapture_StartScreenRecording}.
  * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
  * @param capture Pointer to an OH_AVScreenCapture instance
  * @return Returns AV_SCREEN_CAPTURE_ERR_OK if the execution is successful,
@@ -713,7 +713,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForPause(
 
 /**
  * @brief Pause screen capture
- * @param {OH_AVScreenCapture*} capture Pointer to an initialized OH_AVScreenCapture instance.
+ * @param {OH_AVScreenCapture*} capture Initialized screen capture instance.
  * @return Function result code.
  *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
  *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} capture value is nullptr.
@@ -724,7 +724,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_PauseScreenCapture(struct OH_AVSc
 
 /**
  * @brief Resume screen capture
- * @param {OH_AVScreenCapture*} capture Pointer to an initialized OH_AVScreenCapture instance.
+ * @param {OH_AVScreenCapture*} capture Initialized screen capture instance.
  * @return Function result code.
  *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
  *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} capture value is nullptr.
