@@ -30,6 +30,7 @@
 
 namespace OHOS {
 namespace Media {
+
 namespace AVPlayerState {
 const std::string STATE_IDLE = "idle";
 const std::string STATE_INITIALIZED = "initialized";
@@ -71,13 +72,18 @@ const std::string EVENT_SUPER_RESOLUTION_CHANGED = "superResolutionChanged";
 const std::string EVENT_METRICS = "metricsEvent";
 const std::string EVENT_PLAYBACK_CONTENT_CHANGE = "playbackContentChange";
 const std::string EVENT_TIMED_META_DATA = "timedMetaData";
+const std::string EVENT_ADS_CHANGE = "adsChange";
 }
 
 using TaskRet = std::pair<int32_t, std::string>;
 
+class AVAdsControllerNapi;
+
 class AVPlayerNapi : public AVPlayerNotify {
+    friend class AVAdsControllerNapi;
 public:
     __attribute__((visibility("default"))) static napi_value Init(napi_env env, napi_value exports);
+    std::shared_ptr<Player> GetPlayerInstance() const;
 
 private:
     static napi_value Constructor(napi_env env, napi_callback_info info);
@@ -546,7 +552,7 @@ private:
     Format PlaybackStatisticMetrics_;
     int32_t index_ = -1;
     int32_t mode_ = SWITCH_SMOOTH;
-    std::mutex syncMutex_;
+    mutable std::mutex syncMutex_;
     bool getApiVersionFlag_ = true;
 
     std::atomic<bool> isReadyReleased_ = false;

@@ -115,6 +115,42 @@ struct AVTimedMetaData {
     std::map<std::string, std::string> contents;  // d.ts: contents
 };
 
+/**
+ * @brief Ads event type values (used as int32_t in AVAdsChangeEvent).
+ * Matches av_codec's Media::AdsEventType enum class values.
+ */
+static constexpr int32_t ADS_START = 0;
+static constexpr int32_t ADS_END = 1;
+
+/**
+ * @brief Ads end reason values (used as int32_t in AVAdsChangeEvent).
+ * Matches av_codec's Media::AdsEndReason enum class values.
+ */
+static constexpr int32_t ADS_COMPLETED = 0;
+static constexpr int32_t ADS_SKIPPED = 1;
+static constexpr int32_t ADS_ERROR = 2;
+
+/**
+ * @brief Ads playback event information.
+ * Reported via OnInfo(INFO_TYPE_ADS_CHANGE).
+ */
+struct AVAdsChangeEvent {
+    int32_t type{0};              // AdsEventType: START / END
+    std::string eventId;          // ads event identifier
+    int64_t startMs{-1};          // trigger time point in main content, -1 means unknown
+    int64_t durationMs{-1};       // only valid for START, -1 means unknown
+    int32_t reason{0};            // only valid for END: AdsEndReason
+};
+
+class PlaybackAds {
+public:
+    static constexpr std::string_view PLAYER_ADS_TYPE = "ads_type";
+    static constexpr std::string_view PLAYER_ADS_EVENT_ID = "ads_event_id";
+    static constexpr std::string_view PLAYER_ADS_START_MS = "ads_start_ms";
+    static constexpr std::string_view PLAYER_ADS_DURATION_MS = "ads_duration_ms";
+    static constexpr std::string_view PLAYER_ADS_REASON = "ads_reason";
+};
+
 struct FileDescriptor {
     int32_t fd = 0;
     int64_t offset = 0;
@@ -459,6 +495,8 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_METRICS_EVENT,
     /* return the message when timed metadata is available. */
     INFO_TYPE_TIMED_META_DATA,
+    /* return the message when ads playback content/state changes. */
+    INFO_TYPE_ADS_CHANGE,
 };
 
 enum PlayerStates : int32_t {
@@ -1560,6 +1598,73 @@ public:
     virtual int32_t SetPCMProcessorMaxLen(int32_t maxProcessedPcmLen)
     {
         (void)maxProcessedPcmLen;
+        return MSERR_OK;
+    }
+
+    /**
+     * @brief Adds an advertisement media source at the specified start time.
+     *
+     * This function adds a media source to be played as advertisement content starting at the specified time.
+     *
+     * @param mediaSource Indicates the advertisement media source.
+     * @param startMs Indicates the start time in milliseconds for the advertisement.
+     * @param outId Output parameter for the generated advertisement ID.
+     * @return Returns {@link MSERR_OK} if the advertisement media source is added successfully;
+     * returns an error code defined in {@link media_errors.h} otherwise.
+     * @since 7.0
+     * @version 7.0
+     */
+    virtual int32_t AddAdsMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource,
+        int64_t startMs, std::string &outId)
+    {
+        (void)mediaSource;
+        (void)startMs;
+        (void)outId;
+        return MSERR_OK;
+    }
+
+    /**
+     * @brief Removes the advertisement media source with the specified ID.
+     *
+     * @param id Indicates the advertisement ID to remove.
+     * @return Returns {@link MSERR_OK} if the advertisement is removed successfully;
+     * returns an error code defined in {@link media_errors.h} otherwise.
+     * @since 7.0
+     * @version 7.0
+     */
+    virtual int32_t RemoveAdsMediaSource(const std::string &id)
+    {
+        (void)id;
+        return MSERR_OK;
+    }
+
+    /**
+     * @brief Skips the current advertisement media source.
+     *
+     * This function skips the currently playing advertisement content and resumes the main content.
+     *
+     * @return Returns {@link MSERR_OK} if the current advertisement is skipped successfully;
+     * returns an error code defined in {@link media_errors.h} otherwise.
+     * @since 7.0
+     * @version 7.0
+     */
+    virtual int32_t SkipCurrentAdsMediaSource()
+    {
+        return MSERR_OK;
+    }
+
+    /**
+     * @brief Disables all remaining advertisement media sources.
+     *
+     * This function prevents any further advertisements from playing in the current session.
+     *
+     * @return Returns {@link MSERR_OK} if all advertisements are disabled successfully;
+     * returns an error code defined in {@link media_errors.h} otherwise.
+     * @since 7.0
+     * @version 7.0
+     */
+    virtual int32_t DisableAllAdsMediaSource()
+    {
         return MSERR_OK;
     }
 };

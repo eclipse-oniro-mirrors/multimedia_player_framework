@@ -222,6 +222,11 @@ public:
     int32_t SetPCMOutputStatus(bool isEnable) override;
     int32_t SetPCMProcessorStatus(bool isEnable) override;
     int32_t SetPCMProcessorMaxLen(int32_t maxProcessedPcmLen) override;
+    int32_t AddAdsMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource,
+        int64_t startMs, std::string &outId) override;
+    int32_t RemoveAdsMediaSource(const std::string &id) override;
+    int32_t SkipCurrentAdsMediaSource() override;
+    int32_t DisableAllAdsMediaSource() override;
 
 private:
     enum HiplayerSvpMode : int32_t {
@@ -248,6 +253,7 @@ private:
     void HandleFlvAutoSelectBitRate(uint32_t bitRate);
     void HandleSeiInfoEvent(const Event &event);
     void HandleTimedMetaData(std::shared_ptr<MediaAVCodec::AVTimedMetaData> meta);
+    void HandleAdsChange(std::shared_ptr<MediaAVCodec::AVAdsChangeEvent> event);
     void NotifyBufferingStart(int32_t param);
     void NotifyBufferingEnd(int32_t param);
     void NotifyCachedDuration(int32_t param);
@@ -467,6 +473,8 @@ private:
     bool isSetBufferDurationForPlaying_ {false};
     bool isFlvLive_ {false};
     bool preferHDR_ = false;
+    std::atomic<bool> isAdsPlaying_ {false};
+
     OHOS::Media::MediaType mutedMediaType_ = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
     std::string audioLanguage_;
     std::string subtitleLanguage_;

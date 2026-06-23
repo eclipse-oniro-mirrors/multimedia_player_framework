@@ -311,6 +311,14 @@ void PlayerServiceStub::FillPlayerFuncPart4()
         [this](MessageParcel &data, MessageParcel &reply) { return SetPCMProcessorStatus(data, reply); } };
     playerFuncs_[SET_PCM_PROCESSOR_MAX_LEN] = { "Player::SetPCMProcessorMaxLen",
         [this](MessageParcel &data, MessageParcel &reply) { return SetPCMProcessorMaxLen(data, reply); } };
+    playerFuncs_[ADD_ADS_MEDIA_SOURCE] = { "Player::AddAdsMediaSource",
+        [this](MessageParcel &data, MessageParcel &reply) { return AddAdsMediaSource(data, reply); } };
+    playerFuncs_[REMOVE_ADS_MEDIA_SOURCE] = { "Player::RemoveAdsMediaSource",
+        [this](MessageParcel &data, MessageParcel &reply) { return RemoveAdsMediaSource(data, reply); } };
+    playerFuncs_[SKIP_CURRENT_ADS_MEDIA_SOURCE] = { "Player::SkipCurrentAdsMediaSource",
+        [this](MessageParcel &data, MessageParcel &reply) { return SkipCurrentAdsMediaSource(data, reply); } };
+    playerFuncs_[DISABLE_ALL_ADS_MEDIA_SOURCE] = { "Player::DisableAllAdsMediaSource",
+        [this](MessageParcel &data, MessageParcel &reply) { return DisableAllAdsMediaSource(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
@@ -1222,58 +1230,17 @@ int32_t PlayerServiceStub::SetPlaybackRate(MessageParcel &data, MessageParcel &r
  
 int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &reply)
 {
-    // 读取场景类型标志
-    uint8_t sourceType = data.ReadUint8();
-    bool isUrlSource = (sourceType & 0x01) != 0;
-    bool isFdSource = (sourceType & 0x02) != 0;
-    bool isDataSource = (sourceType & 0x04) != 0;
-
-    // 读取 URL 场景数据
-    std::string url;
-    std::map<std::string, std::string> header;
-    int32_t ret = ReadUrlSourceFromParcel(data, isUrlSource, url, header);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ReadUrlSourceFromParcel failed");
-
-    // 读取 mimeType
-    std::string mimeType = data.ReadString();
- 
-    // 读取 M3U8 fd
-    int32_t fd = ReadM3U8FdFromParcel(data, isUrlSource, mimeType);
- 
-    // 读取 FD 和 DataSource 数据
-    FileDescriptor fileDesc;
-    sptr<IRemoteObject> dataSourceObject = nullptr;
-    
-    ret = ReadFdSourceFromParcel(data, isFdSource, fileDesc);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ReadFdSourceFromParcel failed");
-    
-    ret = ReadDataSourceFromParcel(data, isDataSource, dataSourceObject);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ReadDataSourceFromParcel failed");
-    
-    // 创建 AVMediaSource
     std::shared_ptr<AVMediaSource> mediaSource = nullptr;
-    if (isFdSource) {
-        mediaSource = CreateMediaSourceFromFd(fileDesc);
-    } else if (isDataSource && dataSourceObject != nullptr) {
-        mediaSource = CreateMediaSourceFromDataSource(dataSourceObject);
-    } else {
-        // handle createmediasourcewithurl and createmediasourcewithstreamdata
-        mediaSource = CreateMediaSourceFromUrl(url, header);
-    }
-    CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr");
-    
-    // 设置通用属性
-    mediaSource->SetMimeType(mimeType);
+    int32_t fd = -1;
+    std::string mimeType;
+    int32_t ret = ReadAVMediaSourceFromParcel(data, mediaSource, fd, mimeType);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ReadAVMediaSourceFromParcel failed");
+
     if (sourceLoader_ != nullptr) {
         mediaSource->sourceLoader_ = std::move(sourceLoader_);
     }
-    
-    // 更新 M3U8 fd URL
-    ret = UpdateM3U8FdUrl(mediaSource, mimeType, fd);
-    
-    // 读取 MediaStream 列表
-    ret = ReadMediaStreamListFromMessageParcel(data, mediaSource);
 
+    ret = ReadMediaStreamListFromMessageParcel(data, mediaSource);
     if (ret != MSERR_OK) {
         MEDIA_LOGE("ReadMediaStreamListFromMessageParcel failed");
         if (fd != -1) {
@@ -1281,22 +1248,56 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
         }
         return ret;
     }
-    
-    // 读取播放策略和离线缓存设置
+
     struct AVPlayStrategy strategy;
     ReadPlayStrategyFromMessageParcel(data, strategy);
     bool enableOfflineCache = data.ReadBool();
     mediaSource->enableOfflineCache(enableOfflineCache);
-    
-    // 调用 SetMediaSource
+
     reply.WriteInt32(SetMediaSource(mediaSource, strategy));
-    
-    // 关闭 M3U8 fd
+
     if (mimeType == AVMimeType::APPLICATION_M3U8 && fd != -1) {
         (void)::close(fd);
     }
-    
+
     return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::ReadAVMediaSourceFromParcel(MessageParcel &data,
+    std::shared_ptr<AVMediaSource> &mediaSource, int32_t &fd, std::string &mimeType)
+{
+    uint8_t sourceType = data.ReadUint8();
+    bool isUrlSource = (sourceType & 0x01) != 0;
+    bool isFdSource = (sourceType & 0x02) != 0;
+    bool isDataSource = (sourceType & 0x04) != 0;
+
+    std::string url;
+    std::map<std::string, std::string> header;
+    int32_t ret = ReadUrlSourceFromParcel(data, isUrlSource, url, header);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ReadUrlSourceFromParcel failed");
+
+    mimeType = data.ReadString();
+    fd = ReadM3U8FdFromParcel(data, isUrlSource, mimeType);
+
+    FileDescriptor fileDesc;
+    sptr<IRemoteObject> dataSourceObject = nullptr;
+    ret = ReadFdSourceFromParcel(data, isFdSource, fileDesc);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ReadFdSourceFromParcel failed");
+    ret = ReadDataSourceFromParcel(data, isDataSource, dataSourceObject);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ReadDataSourceFromParcel failed");
+
+    if (isFdSource) {
+        mediaSource = CreateMediaSourceFromFd(fileDesc);
+    } else if (isDataSource && dataSourceObject != nullptr) {
+        mediaSource = CreateMediaSourceFromDataSource(dataSourceObject);
+    } else {
+        mediaSource = CreateMediaSourceFromUrl(url, header);
+    }
+    CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr");
+    mediaSource->SetMimeType(mimeType);
+    ret = UpdateM3U8FdUrl(mediaSource, mimeType, fd);
+
+    return ret;
 }
 
 int32_t PlayerServiceStub::ReadUrlSourceFromParcel(MessageParcel &data, bool isUrlSource,
@@ -1393,6 +1394,49 @@ int32_t PlayerServiceStub::UpdateM3U8FdUrl(std::shared_ptr<AVMediaSource> &media
         mediaSource->url = "fd://" + std::to_string(fd) + uri.substr(fdTailPos);
     }
     return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::ReadAVMediaSourceFromParcel(MessageParcel &data,
+    std::shared_ptr<AVMediaSource> &mediaSource, int32_t &fd, std::string &mimeType)
+{
+    AVMediaSourceParam param {};
+ 
+    // 读取场景类型标志
+    uint8_t sourceType = data.ReadUint8();
+    param.isUrlSource = (sourceType & 0x01) != 0;
+    param.isFdSource = (sourceType & 0x02) != 0;
+    param.isDataSource = (sourceType & 0x04) != 0;
+    param.isDirectorySource = (sourceType & 0x08) != 0; // 读取离线缓存目录场景
+ 
+    // 读取 URL 场景数据
+    int32_t ret = ReadUrlSourceFromParcel(data, param.isUrlSource, param.url, param.header);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ReadUrlSourceFromParcel failed");
+ 
+    // 读取 mimeType
+    mimeType = data.ReadString();
+ 
+    // 读取 M3U8 fd
+    fd = ReadM3U8FdFromParcel(data, param.isUrlSource, mimeType);
+ 
+    // 读取 FD 和 DataSource 数据
+    ret = ReadFdSourceFromParcel(data, param.isFdSource, param.fileDesc);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ReadFdSourceFromParcel failed");
+ 
+    ret = ReadDataSourceFromParcel(data, param.isDataSource, param.dataSourceObject);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ReadDataSourceFromParcel failed");
+ 
+    // 读取 Directory 场景数据
+    param.directoryPath = param.isDirectorySource ? data.ReadString() : "";
+ 
+    // 创建 AVMediaSource
+    mediaSource = CreateAVMediaSource(param);
+    CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr");
+ 
+    // 设置通用属性
+    mediaSource->SetMimeType(mimeType);
+
+    ret = UpdateM3U8FdUrl(mediaSource, mimeType, fd);
+    return ret;
 }
 
 int32_t PlayerServiceStub::ReadMediaStreamListFromMessageParcel(
@@ -2114,6 +2158,79 @@ int32_t PlayerServiceStub::SetPCMProcessorMaxLen(int32_t maxProcessedPcmLen)
     MediaTrace trace("PlayerServiceStub::SetPCMProcessorMaxLen");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetPCMProcessorMaxLen(maxProcessedPcmLen);
+}
+
+int32_t PlayerServiceStub::AddAdsMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource,
+    int64_t startMs, std::string &outId)
+{
+    MediaTrace trace("PlayerServiceStub::AddAdsMediaSource");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->AddAdsMediaSource(mediaSource, startMs, outId);
+}
+ 
+int32_t PlayerServiceStub::RemoveAdsMediaSource(const std::string &id)
+{
+    MediaTrace trace("PlayerServiceStub::RemoveAdsMediaSource");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->RemoveAdsMediaSource(id);
+}
+ 
+int32_t PlayerServiceStub::SkipCurrentAdsMediaSource()
+{
+    MediaTrace trace("PlayerServiceStub::SkipCurrentAdsMediaSource");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SkipCurrentAdsMediaSource();
+}
+ 
+int32_t PlayerServiceStub::DisableAllAdsMediaSource()
+{
+    MediaTrace trace("PlayerServiceStub::DisableAllAdsMediaSource");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->DisableAllAdsMediaSource();
+}
+ 
+int32_t PlayerServiceStub::AddAdsMediaSource(MessageParcel &data, MessageParcel &reply)
+{
+    int64_t startMs = data.ReadInt64();
+ 
+    std::shared_ptr<AVMediaSource> mediaSource = nullptr;
+    int32_t fd = -1;
+    std::string mimeType;
+    int32_t ret = ReadAVMediaSourceFromParcel(data, mediaSource, fd, mimeType);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ReadAVMediaSourceFromParcel failed");
+ 
+    if (mimeType == AVMimeType::APPLICATION_M3U8 && fd != -1) {
+        (void)::close(fd);
+    }
+ 
+    std::string outId;
+    int32_t result = AddAdsMediaSource(mediaSource, startMs, outId);
+    reply.WriteInt32(result);
+    if (result == MSERR_OK) {
+        reply.WriteString(outId);
+    }
+    return MSERR_OK;
+}
+ 
+int32_t PlayerServiceStub::RemoveAdsMediaSource(MessageParcel &data, MessageParcel &reply)
+{
+    std::string id = data.ReadString();
+    reply.WriteInt32(RemoveAdsMediaSource(id));
+    return MSERR_OK;
+}
+ 
+int32_t PlayerServiceStub::SkipCurrentAdsMediaSource(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    reply.WriteInt32(SkipCurrentAdsMediaSource());
+    return MSERR_OK;
+}
+ 
+int32_t PlayerServiceStub::DisableAllAdsMediaSource(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    reply.WriteInt32(DisableAllAdsMediaSource());
+    return MSERR_OK;
 }
 } // namespace Media
 } // namespace OHOS

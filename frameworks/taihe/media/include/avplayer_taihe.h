@@ -113,6 +113,7 @@ namespace AVPlayerEvent {
     const std::string EVENT_METRICS = "metricsEvent";
     const std::string EVENT_PLAYBACK_CONTENT_CHANGE = "playbackContentChange";
     const std::string EVENT_TIMED_META_DATA = "timedMetaData";
+    const std::string EVENT_ADS_CHANGE = "adsChange";
 }
 
 class AVPlayerImpl : public AVPlayerNotify {
@@ -220,6 +221,7 @@ public:
         ohos::multimedia::audio::AudioStreamDeviceChangeInfo const&)> callback);
     void OnMetricsEvent(callback_view<void(array_view<::ohos::multimedia::media::AVMetricsEvent> data)> callback);
     void OnTimedMetaData(callback_view<void(::ohos::multimedia::media::AVTimedMetaData const&)> callback);
+    void OnAdsChange(callback_view<void(::ohos::multimedia::media::AVAdsChangeEvent const&)> callback);
 
     void OffError(optional_view<callback<void(uintptr_t)>> callback);
     void OffStateChange(optional_view<callback<void(string_view,
@@ -251,6 +253,8 @@ public:
     void OffMetricsEvent(optional_view<callback<void(
         array_view<::ohos::multimedia::media::AVMetricsEvent> data)>> callback);
     void OffTimedMetaData(optional_view<callback<void(::ohos::multimedia::media::AVTimedMetaData const&)>> callback);
+    void OffAdsChange(
+        optional_view<callback<void(::ohos::multimedia::media::AVAdsChangeEvent const&)>> callback);
     bool GetIntArrayArgument(std::vector<int32_t> &vec, const std::vector<int32_t> &inputArray);
     void SeiMessageCallbackOff(std::string &callbackName, const std::vector<int32_t> &payloadTypes);
     void MaxAmplitudeCallbackOff(std::string callbackName);
@@ -282,6 +286,10 @@ public:
     void AdvanceToNextMediaSourceSync();
     void AdvanceToPrevMediaSourceSync();
     void AdvanceToMediaSourceSync(::taihe::string_view id);
+    string AddAdsMediaSourceSync(::ohos::multimedia::media::weak::MediaSource src, int64_t startMs);
+    void RemoveAdsMediaSourceSync(::taihe::string_view id);
+    void SkipCurrentAdsMediaSourceSync();
+    void DisableAllAdsMediaSourceSync();
     void OnPlaybackContentChanged(callback_view<void(string_view data)> callback);
     void OffPlaybackContentChanged(optional_view<callback<void(string_view data)>> callback);
     void SetLoudnessGainSync(double loudnessGain);
@@ -344,6 +352,11 @@ private:
     std::shared_ptr<TaskHandler<TaskRet>> AdvanceToNextMediaSourceTask();
     std::shared_ptr<TaskHandler<TaskRet>> AdvanceToPrevMediaSourceTask();
     std::shared_ptr<TaskHandler<TaskRet>> AdvanceToMediaSourceTask(const std::string &mediaSourceId);
+    std::shared_ptr<TaskHandler<TaskRet>> AddAdsMediaSourceTask(const std::shared_ptr<AVMediaSource> &mediaSource,
+        int64_t startMs, std::string &outId);
+    std::shared_ptr<TaskHandler<TaskRet>> RemoveAdsMediaSourceTask(const std::string &id);
+    std::shared_ptr<TaskHandler<TaskRet>> SkipCurrentAdsMediaSourceTask();
+    std::shared_ptr<TaskHandler<TaskRet>> DisableAllAdsMediaSourceTask();
     std::shared_ptr<TaskHandler<TaskRet>> EnableCameraPostprocessingTask();
     std::shared_ptr<TaskHandler<TaskRet>> ForceLoadVideoTask(bool status);
     void HandleSelectTrack(int32_t index, optional_view<SwitchMode> mode);

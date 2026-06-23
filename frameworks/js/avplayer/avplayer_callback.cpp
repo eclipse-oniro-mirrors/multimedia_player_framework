@@ -774,6 +774,38 @@ public:
             CHECK_AND_RETURN_LOG(status == napi_ok, "%{public}s fail to napi_call_function", callbackName.c_str());
         }
     };
+
+    struct AdsChangeCb : public Base {
+        OHOS::Media::AVAdsChangeEvent meta = {};
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_RETURN_LOG(scope != nullptr, "%{public}s scope is nullptr", callbackName.c_str());
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(ref->env_, scope);
+            };
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+            napi_value obj = nullptr;
+            napi_create_object(ref->env_, &obj);
+            CommonNapi::SetPropertyInt32(ref->env_, obj, "type", meta.type);
+            CommonNapi::SetPropertyString(ref->env_, obj, "eventId", meta.eventId);
+            CommonNapi::SetPropertyInt64(ref->env_, obj, "startMs", meta.startMs);
+            CommonNapi::SetPropertyInt64(ref->env_, obj, "durationMs", meta.durationMs);
+            CommonNapi::SetPropertyInt32(ref->env_, obj, "reason", meta.reason);
+            napi_value args[1] = { obj };
+            napi_value result = nullptr;
+            status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok, "%{public}s fail to napi_call_function", callbackName.c_str());
+        }
+    };
 };
 
 AVPlayerCallback::AVPlayerCallback(napi_env env, AVPlayerNotify *listener)
@@ -848,6 +880,8 @@ void AVPlayerCallback::InitInfoFuncsPart2()
         [this](const int32_t extra, const Format &infoBody) { OnPlaybackContentChangeCb(extra, infoBody); };
     onInfoFuncs_[INFO_TYPE_TIMED_META_DATA] =
         [this](const int32_t extra, const Format &infoBody) { OnTimedMetaDataCb(extra, infoBody); };
+    onInfoFuncs_[INFO_TYPE_ADS_CHANGE] =
+        [this](const int32_t extra, const Format &infoBody) { OnAdsChangeCb(extra, infoBody); };
 }
 
 void AVPlayerCallback::OnAudioDeviceChangeCb(const int32_t extra, const Format &infoBody)
@@ -1544,6 +1578,33 @@ void AVPlayerCallback::OnTimedMetaDataCb(const int32_t extra, const Format &info
 
     MEDIA_LOGI("0x%{public}06" PRIXPTR " OnTimedMetaDataCb id=%{public}s classify=%{public}s",
         FAKE_POINTER(this), id.c_str(), classify.c_str());
+    NapiCallback::CompleteCallback(env_, cb);
+}
+
+void AVPlayerCallback::OnAdsChangeCb(const int32_t extra, const Format &infoBody)
+{
+    (void)extra;
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    if (refMap_.find(AVPlayerEvent::EVENT_ADS_CHANGE) == refMap_.end()) {
+        MEDIA_LOGD("0x%{public}06" PRIXPTR " can not find adsChange callback!", FAKE_POINTER(this));
+        return;
+    }
+
+    NapiCallback::AdsChangeCb *cb = new(std::nothrow) NapiCallback::AdsChangeCb();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new AdsChangeCb");
+
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_ADS_CHANGE);
+    cb->callbackName = AVPlayerEvent::EVENT_ADS_CHANGE;
+
+    (void)infoBody.GetIntValue(std::string(PlaybackAds::PLAYER_ADS_TYPE), cb->meta.type);
+    (void)infoBody.GetStringValue(std::string(PlaybackAds::PLAYER_ADS_EVENT_ID), cb->meta.eventId);
+    (void)infoBody.GetLongValue(std::string(PlaybackAds::PLAYER_ADS_START_MS), cb->meta.startMs);
+    (void)infoBody.GetLongValue(std::string(PlaybackAds::PLAYER_ADS_DURATION_MS),
+        cb->meta.durationMs);
+    (void)infoBody.GetIntValue(std::string(PlaybackAds::PLAYER_ADS_REASON), cb->meta.reason);
+
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnAdsChangeCb type=%{public}d eventId=%{public}s",
+        FAKE_POINTER(this), cb->meta.type, cb->meta.eventId.c_str());
     NapiCallback::CompleteCallback(env_, cb);
 }
 

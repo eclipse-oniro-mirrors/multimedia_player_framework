@@ -83,6 +83,7 @@ private:
     void OnSuperResolutionChangedCb(const int32_t extra, const Format &infoBody);
     void OnMetricsEventCb(const int32_t extra, const Format &infoBody);
     void OnTimedMetaDataCb(const int32_t extra, const Format &infoBody);
+    void OnAdsChangeCb(const int32_t extra, const Format &infoBody);
 
     void OnEosCb(const int32_t extra, const Format &infoBody);
     void NotifyIsLiveStream(const int32_t extra, const Format &infoBody);

@@ -1606,5 +1606,36 @@ int32_t PlayerImpl::SetPCMProcessorMaxLen(int32_t maxProcessedPcmLen)
         "SetPCMProcessorMaxLen", false, TIME_OUT_SECOND);
     return ret;
 }
+
+int32_t PlayerImpl::AddAdsMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource,
+    int64_t startMs, std::string &outId)
+{
+    MEDIA_LOGI("PlayerImpl:0x%{public}06" PRIXPTR " AddAdsMediaSource startMs=%{public}" PRId64,
+        FAKE_POINTER(this), startMs);
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    return playerService_->AddAdsMediaSource(mediaSource, startMs, outId);
+}
+
+int32_t PlayerImpl::RemoveAdsMediaSource(const std::string &id)
+{
+    MEDIA_LOGI("PlayerImpl:0x%{public}06" PRIXPTR " RemoveAdsMediaSource id=%{public}s",
+        FAKE_POINTER(this), id.c_str());
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    return playerService_->RemoveAdsMediaSource(id);
+}
+
+int32_t PlayerImpl::SkipCurrentAdsMediaSource()
+{
+    MEDIA_LOGI("PlayerImpl:0x%{public}06" PRIXPTR " SkipCurrentAdsMediaSource", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    return playerService_->SkipCurrentAdsMediaSource();
+}
+
+int32_t PlayerImpl::DisableAllAdsMediaSource()
+{
+    MEDIA_LOGI("PlayerImpl:0x%{public}06" PRIXPTR " DisableAllAdsMediaSource", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    return playerService_->DisableAllAdsMediaSource();
+}
 } // namespace Media
 } // namespace OHOS

@@ -81,6 +81,7 @@ public:
     void OnSubtitleInfoCb(const int32_t extra, const Format &infoBody);
     void OnMetricsEventCb(const int32_t extra, const Format &infoBody);
     void OnTimedMetaDataCb(const int32_t extra, const Format &infoBody);
+    void OnAdsChangeCb(const int32_t extra, const Format &infoBody);
     void OnPlaybackContentChangedCb(const int32_t extra, const Format &infoBody);
     int32_t SetDrmInfoData(const uint8_t *drmInfoAddr, int32_t infoCount,
         std::multimap<std::string, std::vector<uint8_t>> &drmInfoMap);

@@ -893,51 +893,9 @@ int32_t PlayerServiceProxy::SetMediaSource(const std::shared_ptr<AVMediaSource> 
     bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    // 区分三种场景：URL、FileDescriptor、DataSource
-    bool isUrlSource = !mediaSource->url.empty();
-    bool isFdSource = mediaSource->IsFileDescriptorSet();
-    bool isDataSource = mediaSource->IsDataSourceSet();
-    
-    // 写入场景类型标志
-    uint8_t sourceType = 0;
-    if (isUrlSource) {
-        sourceType |= 0x01;  // URL source
-    }
-    if (isFdSource) {
-        sourceType |= 0x02;  // FD source
-    }
-    if (isDataSource) {
-        sourceType |= 0x04;  // DataSource
-    }
-    data.WriteUint8(sourceType);
-    
-    // 写入 URL 场景数据
-    if (isUrlSource) {
-        int32_t ret = WriteUrlSourceToParcel(data, mediaSource);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "WriteUrlSourceToParcel failed");
-    }
- 
-    // 写入 mimeType
-    std::string mimeType = mediaSource->GetMimeType();
-    data.WriteString(mimeType);
- 
-    // 写入 M3U8 fd
-    if (isUrlSource) {
-        int32_t ret = WriteM3U8FdToParcel(data, mediaSource);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "WriteM3U8FdToParcel failed");
-    }
- 
-    // 写入 FD 场景数据
-    if (isFdSource) {
-        int32_t ret = WriteFdSourceToParcel(data, mediaSource);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "WriteFdSourceToParcel failed");
-    }
- 
-    // 写入 DataSource 场景数据
-    if (isDataSource) {
-        int32_t ret = WriteDataSourceToParcel(data, mediaSource);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "WriteDataSourceToParcel failed");
-    }
+    int32_t ret = WriteAVMediaSourceToParcel(data, mediaSource);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "WriteAVMediaSourceToParcel failed");
+
     WriteMediaStreamListToMessageParcel(mediaSource, data);
     WritePlaybackStrategy(data, strategy);
     data.WriteBool(mediaSource->GetenableOfflineCache());
@@ -945,6 +903,47 @@ int32_t PlayerServiceProxy::SetMediaSource(const std::shared_ptr<AVMediaSource> 
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetMediaSource failed, error: %{public}d", error);
     return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::WriteAVMediaSourceToParcel(MessageParcel &data,
+    const std::shared_ptr<AVMediaSource> &mediaSource)
+{
+    CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr!");
+
+    bool isUrlSource = !mediaSource->url.empty();
+    bool isFdSource = mediaSource->IsFileDescriptorSet();
+    bool isDataSource = mediaSource->IsDataSourceSet();
+
+    uint8_t sourceType = 0;
+    if (isUrlSource) {
+        sourceType |= 0x01;
+    }
+    if (isFdSource) {
+        sourceType |= 0x02;
+    }
+    if (isDataSource) {
+        sourceType |= 0x04;
+    }
+    data.WriteUint8(sourceType);
+
+    if (isUrlSource) {
+        int32_t ret = WriteUrlSourceToParcel(data, mediaSource);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "WriteUrlSourceToParcel failed");
+    }
+    data.WriteString(mediaSource->GetMimeType());
+    if (isUrlSource) {
+        int32_t ret = WriteM3U8FdToParcel(data, mediaSource);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "WriteM3U8FdToParcel failed");
+    }
+    if (isFdSource) {
+        int32_t ret = WriteFdSourceToParcel(data, mediaSource);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "WriteFdSourceToParcel failed");
+    }
+    if (isDataSource) {
+        int32_t ret = WriteDataSourceToParcel(data, mediaSource);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "WriteDataSourceToParcel failed");
+    }
+    return MSERR_OK;
 }
 
 void PlayerServiceProxy::WriteMediaStreamListToMessageParcel(
@@ -1915,6 +1914,87 @@ int32_t PlayerServiceProxy::SetPCMProcessorMaxLen(int32_t maxProcessedPcmLen)
     int32_t error = SendRequest(SET_PCM_PROCESSOR_MAX_LEN, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetPCMProcessorMaxLen failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::AddAdsMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource,
+    int64_t startMs, std::string &outId)
+{
+    MediaTrace trace("PlayerServiceProxy::AddAdsMediaSource");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr!");
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteInt64(startMs);
+
+    int32_t ret = WriteAVMediaSourceToParcel(data, mediaSource);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "WriteAVMediaSourceToParcel failed");
+
+    int32_t error = SendRequest(ADD_ADS_MEDIA_SOURCE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "AddAdsMediaSource failed, error: %{public}d", error);
+
+    int32_t result = reply.ReadInt32();
+    if (result == MSERR_OK) {
+        outId = reply.ReadString();
+    }
+    return result;
+}
+
+int32_t PlayerServiceProxy::RemoveAdsMediaSource(const std::string &id)
+{
+    MediaTrace trace("PlayerServiceProxy::RemoveAdsMediaSource");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteString(id);
+
+    int32_t error = SendRequest(REMOVE_ADS_MEDIA_SOURCE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "RemoveAdsMediaSource failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::SkipCurrentAdsMediaSource()
+{
+    MediaTrace trace("PlayerServiceProxy::SkipCurrentAdsMediaSource");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    int32_t error = SendRequest(SKIP_CURRENT_ADS_MEDIA_SOURCE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SkipCurrentAdsMediaSource failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::DisableAllAdsMediaSource()
+{
+    MediaTrace trace("PlayerServiceProxy::DisableAllAdsMediaSource");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    int32_t error = SendRequest(DISABLE_ALL_ADS_MEDIA_SOURCE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "DisableAllAdsMediaSource failed, error: %{public}d", error);
 
     return reply.ReadInt32();
 }

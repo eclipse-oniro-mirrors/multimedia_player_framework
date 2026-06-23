@@ -126,6 +126,12 @@ void AVPlayerNapi::CompleteListTask(napi_env env, napi_status status, void *data
 thread_local napi_ref AVPlayerNapi::constructor_ = nullptr;
 const std::string CLASS_NAME = "AVPlayer";
 
+std::shared_ptr<Player> AVPlayerNapi::GetPlayerInstance() const
+{
+    std::lock_guard<std::mutex> lock(syncMutex_);
+    return player_;
+}
+
 AVPlayerNapi::AVPlayerNapi()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " ctor", FAKE_POINTER(this));

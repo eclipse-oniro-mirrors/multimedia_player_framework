@@ -493,6 +493,31 @@ public:
         (void)maxProcessedPcmLen;
         return 0;
     }
+
+    virtual int32_t AddAdsMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource,
+        int64_t startMs, std::string &outId)
+    {
+        (void)mediaSource;
+        (void)startMs;
+        (void)outId;
+        return 0;
+    }
+
+    virtual int32_t RemoveAdsMediaSource(const std::string &id)
+    {
+        (void)id;
+        return 0;
+    }
+
+    virtual int32_t SkipCurrentAdsMediaSource()
+    {
+        return 0;
+    }
+
+    virtual int32_t DisableAllAdsMediaSource()
+    {
+        return 0;
+    }
 };
 } // namespace Media
 } // namespace OHOS
