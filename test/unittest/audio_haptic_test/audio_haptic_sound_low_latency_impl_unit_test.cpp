@@ -47,7 +47,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     AudioStandard::AudioRendererInfo audioRendererInfo;
     audioRendererInfo.contentType = AudioStandard::ContentType::CONTENT_TYPE_UNKNOWN;
@@ -57,7 +57,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     audioHapticSoundLowLatencyImpl->soundPoolPlayer_ =
         SoundPoolFactory::CreateSoundPool(MAX_SOUND_POOL_STREAMS, audioRendererInfo);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl->soundPoolPlayer_, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl->soundPoolPlayer_, nullptr);
 }
 
 /**
@@ -74,11 +74,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     audioHapticSoundLowLatencyImpl->soundPoolPlayer_ = nullptr;
-
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    // When soundPoolPlayer_ is nullptr, destructor skips ReleaseSoundInternal
+    EXPECT_EQ(audioHapticSoundLowLatencyImpl->soundPoolPlayer_, nullptr);
+    EXPECT_EQ(audioHapticSoundLowLatencyImpl->playerState_, AudioHapticPlayerState::STATE_NEW);
 }
 
 /**
@@ -95,7 +96,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     audioHapticSoundLowLatencyImpl->fileDes_ = 0;
     audioHapticSoundLowLatencyImpl->audioSource_ = {.audioUri = "123"};
@@ -118,7 +119,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     audioHapticSoundLowLatencyImpl->fileDes_ = -1;
     audioHapticSoundLowLatencyImpl->audioSource_ = {.audioUri = "123"};
@@ -141,7 +142,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     audioHapticSoundLowLatencyImpl->playerState_ = AudioHapticPlayerState::STATE_NEW;
 
@@ -163,7 +164,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     AudioStandard::AudioRendererInfo audioRendererInfo;
     audioRendererInfo.contentType = AudioStandard::ContentType::CONTENT_TYPE_UNKNOWN;
@@ -172,7 +173,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
 
     audioHapticSoundLowLatencyImpl->soundPoolPlayer_ =
         SoundPoolFactory::CreateSoundPool(MAX_SOUND_POOL_STREAMS, audioRendererInfo);
-    EXPECT_NE(audioHapticSoundLowLatencyImpl->soundPoolPlayer_, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl->soundPoolPlayer_, nullptr);
 
     audioHapticSoundLowLatencyImpl->playerState_ = AudioHapticPlayerState::STATE_STOPPED;
 
@@ -194,7 +195,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     AudioStandard::AudioRendererInfo audioRendererInfo;
     audioRendererInfo.contentType = AudioStandard::ContentType::CONTENT_TYPE_UNKNOWN;
@@ -205,7 +206,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
         SoundPoolFactory::CreateSoundPool(MAX_SOUND_POOL_STREAMS, audioRendererInfo);
 
     audioHapticSoundLowLatencyImpl->playerState_ = AudioHapticPlayerState::STATE_RUNNING;
-    EXPECT_NE(audioHapticSoundLowLatencyImpl->soundPoolPlayer_, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl->soundPoolPlayer_, nullptr);
 
     auto ret = audioHapticSoundLowLatencyImpl->StartSound();
     EXPECT_EQ(ret, MSERR_OK);
@@ -225,7 +226,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     AudioStandard::AudioRendererInfo audioRendererInfo;
     audioRendererInfo.contentType = AudioStandard::ContentType::CONTENT_TYPE_UNKNOWN;
@@ -236,7 +237,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
         SoundPoolFactory::CreateSoundPool(MAX_SOUND_POOL_STREAMS, audioRendererInfo);
 
     audioHapticSoundLowLatencyImpl->playerState_ = AudioHapticPlayerState::STATE_PREPARED;
-    EXPECT_NE(audioHapticSoundLowLatencyImpl->soundPoolPlayer_, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl->soundPoolPlayer_, nullptr);
 
     auto ret = audioHapticSoundLowLatencyImpl->StartSound();
     EXPECT_EQ(ret, MSERR_OK);
@@ -256,7 +257,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     AudioStandard::AudioRendererInfo audioRendererInfo;
     audioRendererInfo.contentType = AudioStandard::ContentType::CONTENT_TYPE_UNKNOWN;
@@ -266,11 +267,15 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     audioHapticSoundLowLatencyImpl->soundPoolPlayer_ =
         SoundPoolFactory::CreateSoundPool(MAX_SOUND_POOL_STREAMS, audioRendererInfo);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl->soundPoolPlayer_, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl->soundPoolPlayer_, nullptr);
 
     audioHapticSoundLowLatencyImpl->fileDes_ = 0;
 
     audioHapticSoundLowLatencyImpl->ReleaseSoundPoolPlayer();
+    // After ReleaseSoundPoolPlayer, soundPoolPlayer_ should be nullptr and fileDes_ should be -1
+    EXPECT_EQ(audioHapticSoundLowLatencyImpl->soundPoolPlayer_, nullptr);
+    EXPECT_EQ(audioHapticSoundLowLatencyImpl->soundPoolCallback_, nullptr);
+    EXPECT_EQ(audioHapticSoundLowLatencyImpl->fileDes_, -1);
 }
 
 /**
@@ -287,12 +292,16 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     audioHapticSoundLowLatencyImpl->soundPoolPlayer_ = nullptr;
     audioHapticSoundLowLatencyImpl->fileDes_ = -1;
 
     audioHapticSoundLowLatencyImpl->ReleaseSoundPoolPlayer();
+    // ReleaseSoundPoolPlayer with null player should not crash, state unchanged
+    EXPECT_EQ(audioHapticSoundLowLatencyImpl->soundPoolPlayer_, nullptr);
+    EXPECT_EQ(audioHapticSoundLowLatencyImpl->soundPoolCallback_, nullptr);
+    EXPECT_EQ(audioHapticSoundLowLatencyImpl->fileDes_, -1);
 }
 
 /**
@@ -309,7 +318,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     float volume = NUM1;
 
@@ -331,7 +340,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     float volume = NUM2;
 
@@ -353,7 +362,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     float volume = NUM3;
     audioHapticSoundLowLatencyImpl->playerState_ = AudioHapticPlayerState::STATE_NEW;
@@ -376,7 +385,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     float volume = NUM3;
     audioHapticSoundLowLatencyImpl->playerState_ = AudioHapticPlayerState::STATE_RUNNING;
@@ -390,7 +399,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
         SoundPoolFactory::CreateSoundPool(MAX_SOUND_POOL_STREAMS, audioRendererInfo);
 
     audioHapticSoundLowLatencyImpl->streamID_ = 0;
-    EXPECT_NE(audioHapticSoundLowLatencyImpl->soundPoolPlayer_, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl->soundPoolPlayer_, nullptr);
 
     auto ret = audioHapticSoundLowLatencyImpl->SetVolume(volume);
     EXPECT_NE(ret, MSERR_OK);
@@ -410,7 +419,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     float volume = NUM3;
     audioHapticSoundLowLatencyImpl->playerState_ = AudioHapticPlayerState::STATE_PREPARED;
@@ -434,7 +443,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     bool loop = true;
     audioHapticSoundLowLatencyImpl->playerState_ = AudioHapticPlayerState::STATE_NEW;
@@ -457,7 +466,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     bool loop = true;
     audioHapticSoundLowLatencyImpl->playerState_ = AudioHapticPlayerState::STATE_RUNNING;
@@ -470,7 +479,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
 
     audioHapticSoundLowLatencyImpl->soundPoolPlayer_ =
         SoundPoolFactory::CreateSoundPool(MAX_SOUND_POOL_STREAMS, audioRendererInfo);
-    EXPECT_NE(audioHapticSoundLowLatencyImpl->soundPoolPlayer_, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl->soundPoolPlayer_, nullptr);
 
 
     auto ret = audioHapticSoundLowLatencyImpl->SetLoop(loop);
@@ -491,7 +500,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     bool loop = true;
     audioHapticSoundLowLatencyImpl->playerState_ = AudioHapticPlayerState::STATE_PREPARED;
@@ -515,10 +524,10 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     auto callback = std::make_shared<AudioHapticSoundCallbackImpl>(std::make_shared<AudioHapticPlayerImpl>());
-    EXPECT_NE(callback, nullptr);
+    ASSERT_NE(callback, nullptr);
 
     auto ret = audioHapticSoundLowLatencyImpl->SetAudioHapticSoundCallback(callback);
     EXPECT_EQ(ret, MSERR_OK);
@@ -538,7 +547,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     std::shared_ptr<AudioHapticSoundCallback> callback = nullptr;
 
@@ -560,11 +569,14 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     int32_t errorCode = MediaServiceErrCode::MSERR_UNSUPPORT_FILE;
     audioHapticSoundLowLatencyImpl->audioHapticPlayerCallback_.reset();
     audioHapticSoundLowLatencyImpl->NotifyErrorEvent(errorCode);
+    // MSERR_UNSUPPORT_FILE sets isUnsupportedFile_ to true
+    EXPECT_EQ(audioHapticSoundLowLatencyImpl->isUnsupportedFile_, true);
+    EXPECT_EQ(audioHapticSoundLowLatencyImpl->audioHapticPlayerCallback_.lock(), nullptr);
 }
 
 /**
@@ -581,7 +593,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     int32_t errorCode = MediaServiceErrCode::MSERR_OK;
 
@@ -589,9 +601,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
         std::make_shared<AudioHapticSoundCallbackImpl>(std::make_shared<AudioHapticPlayerImpl>());
         audioHapticSoundLowLatencyImpl->audioHapticPlayerCallback_ = sharedcb;
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl->audioHapticPlayerCallback_.lock(), nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl->audioHapticPlayerCallback_.lock(), nullptr);
 
     audioHapticSoundLowLatencyImpl->NotifyErrorEvent(errorCode);
+    // MSERR_OK is not MSERR_UNSUPPORT_FILE, so isUnsupportedFile_ remains false
+    EXPECT_EQ(audioHapticSoundLowLatencyImpl->isUnsupportedFile_, false);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl->audioHapticPlayerCallback_.lock(), nullptr);
 }
 
 /**
@@ -608,12 +623,14 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     uint64_t latency = 0;
 
     audioHapticSoundLowLatencyImpl->audioHapticPlayerCallback_.reset();
     audioHapticSoundLowLatencyImpl->NotifyFirstFrameEvent(latency);
+    // Callback remains null after notification with null callback
+    EXPECT_EQ(audioHapticSoundLowLatencyImpl->audioHapticPlayerCallback_.lock(), nullptr);
 }
 
 /**
@@ -630,7 +647,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     uint64_t latency = 0;
 
@@ -638,9 +655,11 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
         std::make_shared<AudioHapticSoundCallbackImpl>(std::make_shared<AudioHapticPlayerImpl>());
         audioHapticSoundLowLatencyImpl->audioHapticPlayerCallback_ = sharedcb;
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl->audioHapticPlayerCallback_.lock(), nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl->audioHapticPlayerCallback_.lock(), nullptr);
 
     audioHapticSoundLowLatencyImpl->NotifyFirstFrameEvent(latency);
+    // Callback should still be valid after notification
+    ASSERT_NE(audioHapticSoundLowLatencyImpl->audioHapticPlayerCallback_.lock(), nullptr);
 }
 
 /**
@@ -657,10 +676,13 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     audioHapticSoundLowLatencyImpl->audioHapticPlayerCallback_.reset();
     audioHapticSoundLowLatencyImpl->NotifyEndOfStreamEvent();
+    // NotifyEndOfStreamEvent sets playerState_ to STATE_STOPPED
+    EXPECT_EQ(audioHapticSoundLowLatencyImpl->playerState_, AudioHapticPlayerState::STATE_STOPPED);
+    EXPECT_EQ(audioHapticSoundLowLatencyImpl->audioHapticPlayerCallback_.lock(), nullptr);
 }
 
 /**
@@ -677,15 +699,18 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     std::shared_ptr<AudioHapticSoundCallback> sharedcb =
         std::make_shared<AudioHapticSoundCallbackImpl>(std::make_shared<AudioHapticPlayerImpl>());
         audioHapticSoundLowLatencyImpl->audioHapticPlayerCallback_ = sharedcb;
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl->audioHapticPlayerCallback_.lock(), nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl->audioHapticPlayerCallback_.lock(), nullptr);
 
     audioHapticSoundLowLatencyImpl->NotifyEndOfStreamEvent();
+    // NotifyEndOfStreamEvent sets playerState_ to STATE_STOPPED
+    EXPECT_EQ(audioHapticSoundLowLatencyImpl->playerState_, AudioHapticPlayerState::STATE_STOPPED);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl->audioHapticPlayerCallback_.lock(), nullptr);
 }
 
 /**
@@ -702,15 +727,17 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     auto aHSoundLowLatencyCallback = std::make_shared<AHSoundLowLatencyCallback>(audioHapticSoundLowLatencyImpl);
-    EXPECT_NE(aHSoundLowLatencyCallback, nullptr);
+    ASSERT_NE(aHSoundLowLatencyCallback, nullptr);
 
     int32_t soundId = 0;
     aHSoundLowLatencyCallback->soundLowLatencyImpl_.reset();
 
     aHSoundLowLatencyCallback->OnLoadCompleted(soundId);
+    // With expired impl, OnLoadCompleted returns early
+    EXPECT_EQ(aHSoundLowLatencyCallback->soundLowLatencyImpl_.lock(), nullptr);
 }
 
 /**
@@ -727,10 +754,10 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     auto aHSoundLowLatencyCallback = std::make_shared<AHSoundLowLatencyCallback>(audioHapticSoundLowLatencyImpl);
-    EXPECT_NE(aHSoundLowLatencyCallback, nullptr);
+    ASSERT_NE(aHSoundLowLatencyCallback, nullptr);
 
     int32_t soundId = 0;
 
@@ -738,10 +765,12 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
     aHSoundLowLatencyCallback->soundLowLatencyImpl_ = sharedcb;
 
-    EXPECT_NE(aHSoundLowLatencyCallback->soundLowLatencyImpl_.lock(), nullptr);
+    ASSERT_NE(aHSoundLowLatencyCallback->soundLowLatencyImpl_.lock(), nullptr);
 
 
     aHSoundLowLatencyCallback->OnLoadCompleted(soundId);
+    // With valid impl, OnLoadCompleted calls NotifyPreparedEvent
+    ASSERT_NE(aHSoundLowLatencyCallback->soundLowLatencyImpl_.lock(), nullptr);
 }
 
 /**
@@ -758,15 +787,17 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     auto aHSoundLowLatencyCallback = std::make_shared<AHSoundLowLatencyCallback>(audioHapticSoundLowLatencyImpl);
-    EXPECT_NE(aHSoundLowLatencyCallback, nullptr);
+    ASSERT_NE(aHSoundLowLatencyCallback, nullptr);
 
     int32_t streamID = 0;
     aHSoundLowLatencyCallback->soundLowLatencyImpl_.reset();
 
     aHSoundLowLatencyCallback->OnPlayFinished(streamID);
+    // With expired impl, OnPlayFinished returns early
+    EXPECT_EQ(aHSoundLowLatencyCallback->soundLowLatencyImpl_.lock(), nullptr);
 }
 
 /**
@@ -783,19 +814,21 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     auto aHSoundLowLatencyCallback = std::make_shared<AHSoundLowLatencyCallback>(audioHapticSoundLowLatencyImpl);
-    EXPECT_NE(aHSoundLowLatencyCallback, nullptr);
+    ASSERT_NE(aHSoundLowLatencyCallback, nullptr);
 
     int32_t streamID = 0;
     std::shared_ptr<AudioHapticSoundLowLatencyImpl> sharedcb =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
     aHSoundLowLatencyCallback->soundLowLatencyImpl_ = sharedcb;
 
-    EXPECT_NE(aHSoundLowLatencyCallback->soundLowLatencyImpl_.lock(), nullptr);
+    ASSERT_NE(aHSoundLowLatencyCallback->soundLowLatencyImpl_.lock(), nullptr);
 
     aHSoundLowLatencyCallback->OnPlayFinished(streamID);
+    // With valid impl, OnPlayFinished calls NotifyEndOfStreamEvent
+    ASSERT_NE(aHSoundLowLatencyCallback->soundLowLatencyImpl_.lock(), nullptr);
 }
 
 /**
@@ -812,15 +845,17 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     auto aHSoundLowLatencyCallback = std::make_shared<AHSoundLowLatencyCallback>(audioHapticSoundLowLatencyImpl);
-    EXPECT_NE(aHSoundLowLatencyCallback, nullptr);
+    ASSERT_NE(aHSoundLowLatencyCallback, nullptr);
 
     int32_t errorCode = 0;
     aHSoundLowLatencyCallback->soundLowLatencyImpl_.reset();
 
     aHSoundLowLatencyCallback->OnError(errorCode);
+    // With expired impl, OnError returns early
+    EXPECT_EQ(aHSoundLowLatencyCallback->soundLowLatencyImpl_.lock(), nullptr);
 }
 
 /**
@@ -837,19 +872,21 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     auto aHSoundLowLatencyCallback = std::make_shared<AHSoundLowLatencyCallback>(audioHapticSoundLowLatencyImpl);
-    EXPECT_NE(aHSoundLowLatencyCallback, nullptr);
+    ASSERT_NE(aHSoundLowLatencyCallback, nullptr);
 
     int32_t errorCode = 0;
     std::shared_ptr<AudioHapticSoundLowLatencyImpl> sharedcb =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
     aHSoundLowLatencyCallback->soundLowLatencyImpl_ = sharedcb;
 
-    EXPECT_NE(aHSoundLowLatencyCallback->soundLowLatencyImpl_.lock(), nullptr);
+    ASSERT_NE(aHSoundLowLatencyCallback->soundLowLatencyImpl_.lock(), nullptr);
 
     aHSoundLowLatencyCallback->OnError(errorCode);
+    // With valid impl, OnError calls NotifyErrorEvent
+    ASSERT_NE(aHSoundLowLatencyCallback->soundLowLatencyImpl_.lock(), nullptr);
 }
 
 /**
@@ -866,15 +903,17 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     auto aHSoundFirstFrameCallback = std::make_shared<AHSoundFirstFrameCallback>(audioHapticSoundLowLatencyImpl);
-    EXPECT_NE(aHSoundFirstFrameCallback, nullptr);
+    ASSERT_NE(aHSoundFirstFrameCallback, nullptr);
 
     uint64_t latency = 0;
     aHSoundFirstFrameCallback->soundLowLatencyImpl_.reset();
 
     aHSoundFirstFrameCallback->OnFirstAudioFrameWritingCallback(latency);
+    // With expired impl, OnFirstAudioFrameWritingCallback returns early
+    EXPECT_EQ(aHSoundFirstFrameCallback->soundLowLatencyImpl_.lock(), nullptr);
 }
 
 /**
@@ -891,19 +930,21 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     auto audioHapticSoundLowLatencyImpl =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
 
-    EXPECT_NE(audioHapticSoundLowLatencyImpl, nullptr);
+    ASSERT_NE(audioHapticSoundLowLatencyImpl, nullptr);
 
     auto aHSoundFirstFrameCallback = std::make_shared<AHSoundFirstFrameCallback>(audioHapticSoundLowLatencyImpl);
-    EXPECT_NE(aHSoundFirstFrameCallback, nullptr);
+    ASSERT_NE(aHSoundFirstFrameCallback, nullptr);
 
     uint64_t latency = 0;
     std::shared_ptr<AudioHapticSoundLowLatencyImpl> sharedcb =
         std::make_shared<AudioHapticSoundLowLatencyImpl>(audioSource, muteAudio, streamUsage, parallelPlayFlag);
     aHSoundFirstFrameCallback->soundLowLatencyImpl_ = sharedcb;
 
-    EXPECT_NE(aHSoundFirstFrameCallback->soundLowLatencyImpl_.lock(), nullptr);
+    ASSERT_NE(aHSoundFirstFrameCallback->soundLowLatencyImpl_.lock(), nullptr);
 
     aHSoundFirstFrameCallback->OnFirstAudioFrameWritingCallback(latency);
+    // With valid impl, OnFirstAudioFrameWritingCallback calls NotifyFirstFrameEvent
+    ASSERT_NE(aHSoundFirstFrameCallback->soundLowLatencyImpl_.lock(), nullptr);
 }
 } // namespace Media
 } // namespace OHOS
