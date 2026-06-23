@@ -46,8 +46,8 @@ void ScreenCapBufferConsumerListener::OnBufferAvailableAction()
     OHOS::sptr<OHOS::SurfaceBuffer> buffer = nullptr;
     sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
     int32_t acquireBufferRet = consumer_->AcquireBuffer(buffer, acquireFence, timestamp, damage);
-    TRUE_LOG(acquireBufferRet != GSERROR_OK, MEDIA_LOGE,
-        "OnBufferAvailableAction AcquireBuffer Fail Code %{public}d", acquireBufferRet);
+    TRUE_LOG(acquireBufferRet != GSERROR_OK, MEDIA_LOGE, "OnBufferAvailableAction AcquireBuffer Fail Code %{public}d",
+        acquireBufferRet);
     MEDIA_LOGD("OnBufferAvailableAction: 0x%{public}06" PRIXPTR " after AcquireBuffer.", FAKE_POINTER(this));
     int32_t flushFence = -1;
     if (acquireFence != nullptr && acquireFence != SyncFence::INVALID_FENCE) {
@@ -65,9 +65,8 @@ void ScreenCapBufferConsumerListener::OnBufferAvailableAction()
         if (availBuffers_.size() > MAX_BUFFER_SIZE) {
             MEDIA_LOGE("OnBufferAvailableAction consume slow, drop video frame");
             int32_t releaseBufferRet = consumer_->ReleaseBuffer(buffer, -1); // -1 not wait
-            TRUE_LOG(releaseBufferRet != GSERROR_OK, MEDIA_LOGE,
-                "OnBufferAvailableAction: 0x%{public}06" PRIXPTR " consume slow ReleaseBuffer Fail Code %{public}d",
-                FAKE_POINTER(this), releaseBufferRet);
+            TRUE_LOG(releaseBufferRet != GSERROR_OK, MEDIA_LOGE, "OnBufferAvailableAction: 0x%{public}06" PRIXPTR
+                " consume slow ReleaseBuffer Fail Code %{public}d", FAKE_POINTER(this), releaseBufferRet);
             return;
         }
         availBuffers_.push(std::make_unique<SurfaceBufferEntry>(buffer, flushFence, timestamp, damage));
@@ -174,9 +173,8 @@ int32_t ScreenCapBufferConsumerListener::ReleaseBuffer()
     while (!availBuffers_.empty()) {
         if (consumer_ != nullptr) {
             int32_t releaseBufferRet = consumer_->ReleaseBuffer(availBuffers_.front()->buffer, -1);  // -1 not wait
-            TRUE_LOG(releaseBufferRet != GSERROR_OK, MEDIA_LOGE,
-                "ScreenCapBufferConsumerListener: 0x%{public}06" PRIXPTR " ReleaseBuffer Fail Code %{public}d",
-                FAKE_POINTER(this), releaseBufferRet);
+            TRUE_LOG(releaseBufferRet != GSERROR_OK, MEDIA_LOGE, "ScreenCapBufferConsumerListener: 0x%{public}06"
+                PRIXPTR " ReleaseBuffer Fail Code %{public}d", FAKE_POINTER(this), releaseBufferRet);
         }
         availBuffers_.pop();
     }
@@ -193,9 +191,8 @@ int32_t ScreenCapBufferConsumerListener::ReleaseVideoBuffer()
 
     if (consumer_ != nullptr) {
         int32_t releaseBufferRet = consumer_->ReleaseBuffer(availBuffers_.front()->buffer, -1); // -1 not wait
-        TRUE_LOG(releaseBufferRet != GSERROR_OK, MEDIA_LOGE,
-            "ScreenCapBufferConsumerListener: 0x%{public}06" PRIXPTR " ReleaseVideoBuffer Fail Code %{public}d",
-            FAKE_POINTER(this), releaseBufferRet);
+        TRUE_LOG(releaseBufferRet != GSERROR_OK, MEDIA_LOGE, "ScreenCapBufferConsumerListener: 0x%{public}06" PRIXPTR
+            " ReleaseVideoBuffer Fail Code %{public}d", FAKE_POINTER(this), releaseBufferRet);
     }
     availBuffers_.pop();
     MEDIA_LOGD("ScreenCapBufferConsumerListener: 0x%{public}06" PRIXPTR " ReleaseVideoBuffer end.", FAKE_POINTER(this));

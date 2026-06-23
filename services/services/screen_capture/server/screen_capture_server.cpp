@@ -860,10 +860,12 @@ bool ScreenCaptureServer::IsSAServiceCalling()
     MEDIA_LOGI("ScreenCaptureServer::IsSAServiceCalling START.");
     const auto tokenId = IPCSkeleton::GetCallingTokenID();
     const auto tokenTypeFlag = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
-    CHECK_AND_RETURN_RET_NOLOG(tokenTypeFlag == Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE ||
-        tokenTypeFlag == Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL, false);
-    MEDIA_LOGI("ScreenCaptureServer::IsSAServiceCalling true.");
-    return true;
+    if (tokenTypeFlag == Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE ||
+        tokenTypeFlag == Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL) {
+        MEDIA_LOGI("ScreenCaptureServer::IsSAServiceCalling true.");
+        return true;
+    }
+    return false;
 }
 
 std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::Create()
@@ -1781,7 +1783,6 @@ bool ScreenCaptureServer::CheckScreenCapturePermission()
         "ohos.permission.CAPTURE_SCREEN");
     CHECK_AND_RETURN_RET_LOG(result == Security::AccessToken::PERMISSION_GRANTED, false,
         "user do not have the right to access capture screen!");
-    MEDIA_LOGI("user have the right to access capture screen!");
     return true;
 }
 
@@ -2128,10 +2129,12 @@ bool ScreenCaptureServer::CheckPrivacyWindowSkipPermission()
     MEDIA_LOGI("ScreenCaptureServer::CheckPrivacyWindowSkipPermission() START.");
     int result = Security::AccessToken::AccessTokenKit::VerifyAccessToken(appInfo_.appTokenId,
         "ohos.permission.EXEMPT_CAPTURE_SCREEN_AUTHORIZE");
-    CHECK_AND_RETURN_RET_LOG(result == Security::AccessToken::PERMISSION_GRANTED, false,
-        "CheckPrivacyWindowSkipPermission: user do not have the right to skip privacywindow");
-    MEDIA_LOGI("CheckPrivacyWindowSkipPermission: user have the right to skip privacywindow");
-    return true;
+    if (result == Security::AccessToken::PERMISSION_GRANTED) {
+        MEDIA_LOGI("CheckPrivacyWindowSkipPermission: user have the right to skip privacywindow");
+        return true;
+    }
+    MEDIA_LOGD("CheckPrivacyWindowSkipPermission: user do not have the right to skip privacywindow");
+    return false;
 }
 
 int32_t ScreenCaptureServer::RequestUserPrivacyAuthority(bool &isSkipPrivacyWindow)
@@ -2340,9 +2343,11 @@ int32_t ScreenCaptureServer::StartScreenCaptureStream()
         ret, captureConfig_.dataType);
 
     ret = StartStreamVideoCapture();
-    CHECK_AND_RETURN_RET_LOGI(ret != MSERR_OK, ret, "StartScreenCaptureStream success");
-    StopAudioCapture();
-    MEDIA_LOGE("StartScreenCaptureStream failed");
+    if (ret != MSERR_OK) {
+        StopAudioCapture();
+        MEDIA_LOGE("StartScreenCaptureStream failed");
+        return ret;
+    }
     return ret;
 }
 
@@ -2390,12 +2395,24 @@ int32_t ScreenCaptureServer::StartScreenCaptureFile()
     return ret;
 }
 
-int32_t ScreenCaptureServer::OnStartScreenCapture()
+int32_t ScreenCaptureServer::OnStartScreenCapture(bool isSkipPrivacyWindow)
 {
     MediaTrace trace("ScreenCaptureServer::OnStartScreenCapture");
     MEDIA_LOGI("OnStartScreenCapture start, dataType:%{public}d", captureConfig_.dataType);
     captureState_ = AVScreenCaptureState::STARTING;
     int32_t ret = MSERR_UNSUPPORT;
+    if (isSkipPrivacyWindow &&
+        captureConfig_.captureMode == CAPTURE_SPECIFIED_WINDOW &&
+        captureConfig_.videoInfo.videoCapInfo.taskIDs.size() == 1) {
+        const auto& missionId = captureConfig_.videoInfo.videoCapInfo.taskIDs.front();
+        auto amsClient = AAFwk::AbilityManagerClient::GetInstance();
+        if (amsClient) {
+            auto aaRet = amsClient->MoveMissionToFront(missionId);
+            MEDIA_LOGI("MoveMissionToFront missionId: %{public}d, ret: %{public}d", missionId, aaRet);
+        } else {
+            MEDIA_LOGE("Ability manager client is null");
+        }
+    }
     PublishScreenCaptureEvent("start");
     if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
         ret = StartScreenCaptureStream();
@@ -2951,7 +2968,7 @@ bool ScreenCaptureServer::UpdatePrivacyUsingPermissionState(VideoPermissionState
     int res = 0;
     if (state == START_VIDEO) {
         res = PrivacyKit::StartUsingPermission(appInfo_.appTokenId, "ohos.permission.CAPTURE_SCREEN", appInfo_.appPid);
-        CHECK_AND_RETURN_RET_LOG(res == 0, false, "start using perm error");
+        CHECK_AND_RETURN_RET_LOG(res == 0, false, "start using perm error: %{public}d", res);
         res = PrivacyKit::AddPermissionUsedRecord(appInfo_.appTokenId, "ohos.permission.CAPTURE_SCREEN", 1, 0);
         CHECK_AND_RETURN_RET_LOG(res == 0, false, "add screen capture record error: %{public}d", res);
     } else if (state == STOP_VIDEO) {
@@ -2997,8 +3014,8 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
     MEDIA_LOGI("StartScreenCaptureInner showSensitiveCheckBox: %{public}d, checkBoxSelected: %{public}d",
         showSensitiveCheckBox_, checkBoxSelected_);
 
+    bool isSkipPrivacyWindow = false;
     if (!isScreenCaptureAuthority_ && IsUserPrivacyAuthorityNeeded()) {
-        bool isSkipPrivacyWindow = false;
         ret = RequestUserPrivacyAuthority(isSkipPrivacyWindow);
         if (ret != MSERR_OK) {
             captureState_ = AVScreenCaptureState::STOPPED;
@@ -3008,14 +3025,16 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
             return ret;
         }
 
-        CHECK_AND_RETURN_RET_LOGI(!isPrivacyAuthorityEnabled_ || isSkipPrivacyWindow, MSERR_OK,
-            "Wait for user interactions to ALLOW/DENY capture");
+        if (isPrivacyAuthorityEnabled_ && !isSkipPrivacyWindow) {
+            MEDIA_LOGI("Wait for user interactions to ALLOW/DENY capture");
+            return MSERR_OK;
+        }
         MEDIA_LOGI("privacy notification window not support, app has CAPTURE_SCREEN permission and go on");
     } else {
         MEDIA_LOGI("Privacy Authority granted automatically and go on"); // for root and skip permission
     }
 
-    ret = OnStartScreenCapture();
+    ret = OnStartScreenCapture(isSkipPrivacyWindow);
     PostStartScreenCapture(ret == MSERR_OK);
 
     MEDIA_LOGI("StartScreenCaptureInner E, appUid:%{public}d, appPid:%{public}d", appInfo_.appUid, appInfo_.appPid);
@@ -3101,8 +3120,9 @@ bool ScreenCaptureServer::IsPickerPopUp()
         return true;
     }
 #ifdef PC_STANDARD
-    CHECK_AND_RETURN_RET_NOLOG(captureConfig_.strategy.pickerPopUp
-        != AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_DISABLE, false);
+    if (captureConfig_.strategy.pickerPopUp == AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_DISABLE) {
+        return false;
+    }
     return !isRegionCapture_ && isPickerModePopUp_;
 #else
     return false;
@@ -3595,9 +3615,7 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
     CHECK_AND_RETURN_RET_LOG(HandleOriginalStreamPrivacy() == MSERR_OK,
         MSERR_UNKNOWN, "SetScreenSkipProtectedWindow failed");
     if (!showCursor_) {
-        MEDIA_LOGI("CreateVirtualScreen without cursor");
-        int32_t ret = ShowCursorInner();
-        TRUE_LOG(ret != MSERR_OK, MEDIA_LOGE, "CreateVirtualScreen SetVirtualScreenBlackList failed");
+        ShowCursorInner();
     }
     MEDIA_LOGI("CreateVirtualScreen success, screenId: %{public}" PRIu64, virtualScreenId_);
     return PrepareVirtualScreenMirror();
@@ -4895,8 +4913,9 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
 #endif
     isPrivacyAuthorityEnabled_ = false;
     isRegionCapture_ = false;
-    TRUE_LOG(!LastPidUpdatePrivacyUsingPermissionState(appInfo_.appPid), MEDIA_LOGE,
-        "UpdatePrivacyUsingPermissionState STOP failed, dataType:%{public}d", captureConfig_.dataType);
+    if (!LastPidUpdatePrivacyUsingPermissionState(appInfo_.appPid)) {
+        MEDIA_LOGE("UpdatePrivacyUsingPermissionState STOP failed, dataType:%{public}d", captureConfig_.dataType);
+    }
     std::unordered_map<std::string, std::string> payload;
     int64_t value = ResourceSchedule::ResType::ScreenCaptureStatus::STOP_SCREEN_CAPTURE;
     ResSchedReportData(value, payload);
@@ -5060,12 +5079,12 @@ void ScreenCaptureServer::PrivacyProtected(ScreenId &virtualScreenId, bool syste
 
 bool ScreenCaptureServer::IsSkipPrivacyWindow()
 {
-    return GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_ ||
-           (CheckCustScrRecPermission()
 #ifdef SUPPORT_SCREEN_CAPTURE_PICKER
-           && !IsPickerPopUp()
+    return GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_ ||
+        (CheckCustScrRecPermission() && !IsPickerPopUp());
+#else
+    return GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_ || CheckCustScrRecPermission();
 #endif
-           );
 }
 
 ScreenCaptureObserverCallBack::ScreenCaptureObserverCallBack(
@@ -5352,16 +5371,6 @@ int32_t ScreenCaptureServer::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBu
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ScreenCaptureServer: 0x%{public}06" PRIXPTR
         "AddWatermark failed %{public}d", FAKE_POINTER(this), ret);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " AddWatermark end.", FAKE_POINTER(this));
-    return MSERR_OK;
-}
-
-int32_t ScreenCaptureServer::GetWatermarkCount(int32_t &watermarkCount)
-{
-    CHECK_AND_RETURN_RET_LOG(watermarkCount_ < WATERMARK_COUNT_MAX, MSERR_INVALID_OPERATION,
-        "GetWatermarkCount Failed to add watermark");
-    watermarkCount_++;
-    watermarkCount = watermarkCount_;
-    MEDIA_LOGI("GetWatermarkCount watermarkCount: %{public}d", watermarkCount);
     return MSERR_OK;
 }
 

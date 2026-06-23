@@ -22,6 +22,7 @@
 #include "task_queue.h"
 #include "screen_capture.h"
 #include "screen_capture_controller.h"
+#include "pixel_map.h"
 
 namespace ANI::Media {
 using namespace taihe;
@@ -42,6 +43,7 @@ namespace AVScreenCapturegOpt {
     const std::string EXCLUDE_PICKER_WINDOWS = "ExcludePickerWindows";
     const std::string PRESENT_PICKER = "PresentPicker";
     const std::string RELEASE = "Release";
+    const std::string ADD_WATERMARK = "AddWatermark";
 }
 constexpr int32_t AVSCREENCAPTURE_DEFAULT_AUDIO_BIT_RATE = 96000;
 constexpr int32_t AVSCREENCAPTURE_DEFAULT_AUDIO_CHANNELS = 2;
@@ -51,6 +53,7 @@ constexpr int32_t AVSCREENCAPTURE_DEFAULT_VIDEO_BIT_RATE = 10000000;
 constexpr int32_t AVSCREENCAPTURE_DEFAULT_FRAME_HEIGHT = -1;
 constexpr int32_t AVSCREENCAPTURE_DEFAULT_FRAME_WIDTH = -1;
 constexpr int32_t AVSCREENCAPTURE_DEFAULT_DISPLAY_ID = 0;
+constexpr int32_t AVSCREENCAPTURE_WATERMARK_MAX_LENGTH = 4096;
 const std::string AVSCREENCAPTURE_DEFAULT_FILE_FORMAT = "mp4";
 
 namespace AVScreenCaptureEvent {
@@ -64,6 +67,7 @@ enum AVScreenCaptureRecorderPreset: int32_t {
 };
 
 struct AVScreenCaptureAsyncContext;
+struct WatermarkConfiguration;
 
 using RetInfo = std::pair<int32_t, std::string>;
 
@@ -82,6 +86,22 @@ public:
     void SetCanvasRotationSync(bool canvasRotation);
     void ExcludePickerWindowsSync(::taihe::array_view<int32_t> excludedWindows);
     void ReleaseSync();
+    int32_t AddWatermarkSync(::ohos::multimedia::image::image::weak::PixelMap watermark,
+        ::ohos::multimedia::media::WatermarkConfiguration const& config);
+    std::shared_ptr<TaskHandler<RetInfo>> AddWatermarkTask(
+        const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx);
+    int32_t AddWatermark(std::shared_ptr<PixelMap> &pixelMap,
+        std::shared_ptr<WatermarkConfiguration> &watermarkConfig,
+        int32_t &watermarkCount);
+    int32_t CreateWatermarkBuffer(std::shared_ptr<PixelMap> &pixelMap,
+        int32_t pixelMapWidth, int32_t pixelMapHeight, std::shared_ptr<OHOS::Media::AVBuffer> &buffer);
+    int32_t GetAddWatermarkPixelMap(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
+        ::ohos::multimedia::image::image::weak::PixelMap watermark);
+    int32_t GetAddWatermarkConfig(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
+        ::ohos::multimedia::media::WatermarkConfiguration const& config);
+    int32_t GetAddWatermarkParameter(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
+        ::ohos::multimedia::image::image::weak::PixelMap watermark,
+        ::ohos::multimedia::media::WatermarkConfiguration const& config);
 
     RetInfo StartRecording();
     RetInfo StopRecording();
@@ -154,6 +174,16 @@ struct AVScreenCaptureAsyncContext {
     std::shared_ptr<ScreenCaptureController> controller_ = nullptr;
     std::string opt_ = "";
     std::shared_ptr<TaskHandler<RetInfo>> task_ = nullptr;
+    std::shared_ptr<PixelMap> pixelMap_ = nullptr;
+    std::shared_ptr<WatermarkConfiguration> watermarkConfiguration_ = nullptr;
+    int32_t addWatermarkCount_ = 0;
+};
+
+struct WatermarkConfiguration {
+    int32_t top = 0; // offset of the watermark to the top line of pixel
+    int32_t left = 0; // offset of the watermark to the left line if pixel
+    int32_t width = -1; // target width of the watermark in pixel
+    int32_t height = -1; // target height of the watermark in pixel
 };
 }
 #endif // AVSCREEN_CAPTURE_TAIHE_H
