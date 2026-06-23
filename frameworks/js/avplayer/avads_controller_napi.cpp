@@ -26,6 +26,7 @@ namespace Media {
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "AVAdsControllerNapi" };
     const std::string CLASS_NAME = "AVAdsController";
+    constexpr int32_t MIN_REQUIRED_ARGS = 2;
     constexpr int32_t ERR_ADS_PARAM_INVALID = 5400108;
 
     void RejectPromise(napi_env env, napi_deferred deferred, int32_t code, const std::string &msg)
@@ -283,7 +284,7 @@ napi_value AVAdsControllerNapi::JsAddAdsMediaSource(napi_env env, napi_callback_
 
     napi_valuetype type;
     napi_typeof(env, argv[1], &type);
-    if (argc < 2 || ctx->player == nullptr || type != napi_number) {
+    if (argc < MIN_REQUIRED_ARGS || ctx->player == nullptr || type != napi_number) {
         RejectPromise(env, ctx->deferred, ERR_ADS_PARAM_INVALID, "Invalid arguments");
         delete ctx;
         return result;

@@ -26,7 +26,7 @@ namespace OHOS {
 namespace Media {
 
 struct AdsAsyncContext {
-    explicit AdsAsyncContext(void* env) : env_(env) {}
+    explicit AdsAsyncContext(void* envValue) : env(envValue) {}
     ~AdsAsyncContext() = default;
 
     enum class OpType : uint8_t {
@@ -45,7 +45,7 @@ struct AdsAsyncContext {
     bool errFlag = false;
     int32_t errCode = 0;
     std::string errMessage = "";
-    void* env_ = nullptr;
+    void* env = nullptr;
 };
 
 class AVAdsControllerNapi {
@@ -53,11 +53,13 @@ public:
     AVAdsControllerNapi() : player_(nullptr) {}
     ~AVAdsControllerNapi() {}
 
-    void SetPlayer(void* player) {
+    void SetPlayer(void* player)
+    {
         std::lock_guard<std::mutex> lock(mutex_);
         player_ = player;
     }
-    void* GetPlayer() const {
+    void* GetPlayer() const
+    {
         std::lock_guard<std::mutex> lock(mutex_);
         return player_;
     }
