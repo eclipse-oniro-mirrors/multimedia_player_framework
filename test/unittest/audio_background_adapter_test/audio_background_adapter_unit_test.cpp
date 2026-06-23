@@ -48,16 +48,17 @@ HWTEST_F(AudioBackGroundAdapterUnitTest, AddListener, TestSize.Level1)
     auto playerServer = PlayerServer::Create();
     EXPECT_NE(playerServer, nullptr);
     AudioBackgroundAdapter::Instance().AddListener(playerServer, CONSTRUCTED_UID_1);
+    auto it = AudioBackgroundAdapter::Instance().playerMap_.find(CONSTRUCTED_UID_1);
+    EXPECT_NE(it, AudioBackgroundAdapter::Instance().playerMap_.end());
+    EXPECT_EQ(it->second.size(), 1);
     playerServer = nullptr;
     auto playerServer2 = PlayerServer::Create();
     EXPECT_NE(playerServer2, nullptr);
     AudioBackgroundAdapter::Instance().AddListener(playerServer2, CONSTRUCTED_UID_1);
-    auto playerServer3 = PlayerServer::Create();
-    EXPECT_NE(playerServer3, nullptr);
-    AudioBackgroundAdapter::Instance().AddListener(playerServer3, CONSTRUCTED_UID_1);
-    EXPECT_NE(AudioBackgroundAdapter::Instance().playerMap_.size(), 0);
+    it = AudioBackgroundAdapter::Instance().playerMap_.find(CONSTRUCTED_UID_1);
+    EXPECT_NE(it, AudioBackgroundAdapter::Instance().playerMap_.end());
+    EXPECT_EQ(it->second.size(), 1);
     playerServer2 = nullptr;
-    playerServer3 = nullptr;
 }
 
 /**
@@ -68,10 +69,11 @@ HWTEST_F(AudioBackGroundAdapterUnitTest, AddListener, TestSize.Level1)
 HWTEST_F(AudioBackGroundAdapterUnitTest, OnBackgroundMute, TestSize.Level1)
 {
     auto playerServer = std::static_pointer_cast<PlayerServer>(PlayerServer::Create());
-    ASSERT_NE(playerServer, nullptr);
+    EXPECT_NE(playerServer, nullptr);
     playerServer->lastOpStatus_ = PLAYER_STARTED;
     AudioBackgroundAdapter::Instance().AddListener(playerServer, CONSTRUCTED_UID_2);
     AudioBackgroundAdapter::Instance().OnBackgroundMute(CONSTRUCTED_UID_2);
+    EXPECT_NE(playerServer->lastOpStatus_, PLAYER_PAUSED);
     AudioBackgroundAdapter::Instance().OnAudioRestart();
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 }

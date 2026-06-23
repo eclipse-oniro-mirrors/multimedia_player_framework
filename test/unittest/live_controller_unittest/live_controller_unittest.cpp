@@ -67,11 +67,14 @@ HWTEST_F(LiveControllerUnittest, LCUEnqueue_001, TestSize.Level0)
 HWTEST_F(LiveControllerUnittest, LCULoopOnce_001, TestSize.Level0)
 {
     ASSERT_NE(liveController_, nullptr);
-    std::shared_ptr<LiveController::Event> event = std::make_shared<LiveController::Event>(0, 0, Any());
-    event->what = 0;
+    auto mockObs = std::make_shared<MockIPlayerEngineObs>();
+    liveController_->obs_ = mockObs;
+    liveController_->isCheckLiveDelayTimeSet_.store(true);
+    std::shared_ptr<LiveController::Event> event = std::make_shared<LiveController::Event>(1, 0, Any());
+    EXPECT_CALL(*mockObs, OnSystemOperation(OPERATION_TYPE_CHECK_LIVE_DELAY, OPERATION_REASON_CHECK_LIVE_DELAY_TIME))
+        .Times(1);
     liveController_->LoopOnce(event);
-    EXPECT_EQ(event->what, 0);
-    EXPECT_EQ(event->whenMs, 0);
+    liveController_->isCheckLiveDelayTimeSet_.store(false);
 }
 
 /**
@@ -84,7 +87,7 @@ HWTEST_F(LiveControllerUnittest, LCUDoCheckLiveDelayTime_001, TestSize.Level0)
     ASSERT_NE(liveController_, nullptr);
     liveController_->isCheckLiveDelayTimeSet_ = false;
     liveController_->DoCheckLiveDelayTime();
-    EXPECT_NE(liveController_->isCheckLiveDelayTimeSet_, true);
+    EXPECT_EQ(liveController_->task_, nullptr);
 }
 
 /**
