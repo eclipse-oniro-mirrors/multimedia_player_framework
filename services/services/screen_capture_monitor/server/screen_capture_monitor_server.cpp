@@ -28,8 +28,6 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureMonitorServer"};
-static const std::string SHOW_TOUCH_HINT_KEY = "settings.app.show_touch_hint";
-static const std::string SHOW_TOUCH_HINT_VALUE_NONE = "false";
 }
 
 namespace OHOS {
@@ -189,9 +187,8 @@ void ScreenCaptureMonitorServer::SubscribeDataShareReadyEvent()
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY);
     EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
-    auto onReceiveEvent = std::bind(&ScreenCaptureMonitorServer::OnReceiveEvent, this, std::placeholders::_1);
-    auto *tempSubscriber = new (std::nothrow) ScreenCaptureMonitorSubscriber(subscribeInfo, onReceiveEvent);
-    CHECK_AND_RETURN_LOG(tempSubscriber == nullptr, "SubscribeDataShareReadyEvent subscriber_ is null");
+    auto *tempSubscriber = new (std::nothrow) ScreenCaptureMonitorSubscriber(subscribeInfo);
+    CHECK_AND_RETURN_LOG(tempSubscriber != nullptr, "SubscribeDataShareReadyEvent subscriber_ is null");
     subscriber_ = std::shared_ptr<ScreenCaptureMonitorSubscriber>(tempSubscriber);
     bool result = EventFwk::CommonEventManager::SubscribeCommonEvent(subscriber_);
     MEDIA_LOGI("ScreenCaptureMonitorServer::SubscribeDataShareReadyEvent result: %{public}d", result);
@@ -200,26 +197,20 @@ void ScreenCaptureMonitorServer::SubscribeDataShareReadyEvent()
 void ScreenCaptureMonitorServer::UnSubscribeDataShareReadyEvent()
 {
     MEDIA_LOGI("ScreenCaptureMonitorServer::UnSubscribeDataShareReadyEvent");
-    CHECK_AND_RETURN_LOG(subscriber_ == nullptr, "UnSubscribeDataShareReadyEvent subscriber_ is null");
+    CHECK_AND_RETURN_LOG(subscriber_ != nullptr, "UnSubscribeDataShareReadyEvent subscriber_ is null");
     bool result = EventFwk::CommonEventManager::UnSubscribeCommonEvent(subscriber_);
     MEDIA_LOGI("ScreenCaptureMonitorServer::UnSubscribeDataShareReadyEvent result: %{public}d", result);
     subscriber_ = nullptr;
 }
 
-void ScreenCaptureMonitorServer::OnReceiveEvent(const EventFwk::CommonEventData &data)
+ScreenCaptureMonitorSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &data)
 {
     auto const &want = data.GetWant();
     std::string action = want.GetAction();
     MEDIA_LOGI("ScreenCaptureMonitorServer::OnReceiveEvent action: %{public}s", action.c_str());
-    if (action == EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY) {
-        HandleDataShareReadyEvent();
-    }
-}
-
-void ScreenCaptureMonitorServer::HandleDataShareReadyEvent()
-{
+    CHECK_AND_RETURN(action == EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY);
     MEDIA_LOGI("ScreenCaptureMonitorServer::HandleDataShareReadyEvent");
-    int32_t ret = UpdateSettingsValue(SHOW_TOUCH_HINT_KEY, SHOW_TOUCH_HINT_VALUE_NONE);
+    int32_t ret = DeleteSettingsByKey("settings.app.show_touch_hint");
     MEDIA_LOGI("ScreenCaptureMonitorServer::HandleDataShareReadyEvent update result: %{public}d", ret);
 }
 } // namespace Media

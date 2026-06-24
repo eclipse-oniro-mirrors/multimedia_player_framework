@@ -78,6 +78,7 @@ void MediaServer::OnStart()
     MEDIA_LOGD("InCallObserver init OnStart");
     InCallObserver::GetInstance();
 #endif
+    ScreenCaptureMonitorServer::GetInstance();
 }
 
 void MediaServer::OnStop()

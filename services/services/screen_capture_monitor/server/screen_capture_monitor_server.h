@@ -38,12 +38,7 @@ public:
         : EventFwk::CommonEventSubscriber(subscribeInfo), callback_(callback)
     {}
     ~ScreenCaptureMonitorSubscriber() = default;
-    void OnReceiveEvent(const EventFwk::CommonEventData &data) override
-    {
-        if (callback_ != nullptr) {
-            callback_(data);
-        }
-    }
+    void OnReceiveEvent(const EventFwk::CommonEventData &data) override;
 private:
     std::function<void(const EventFwk::CommonEventData &)> callback_;
 };
@@ -77,8 +72,6 @@ private:
     bool IsSystemApp();
     void SubscribeDataShareReadyEvent();
     void UnSubscribeDataShareReadyEvent();
-    void OnReceiveEvent(const EventFwk::CommonEventData &data);
-    void HandleDataShareReadyEvent();
 
     std::mutex mutex_;
     std::mutex mutexCb_;

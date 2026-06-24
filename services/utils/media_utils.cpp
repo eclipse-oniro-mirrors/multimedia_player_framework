@@ -453,28 +453,22 @@ int32_t __attribute__((visibility("default"))) GetAPIVersion()
 std::shared_ptr<DataShare::DataShareHelper> CreateDataShareHelper()
 {
     auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    CHECK_AND_RETURN_RET_LOG(samgr == nullptr, nullptr, "GetSystemAbilityManager failed");
+    CHECK_AND_RETURN_RET_LOG(samgr != nullptr, nullptr, "GetSystemAbilityManager failed");
     sptr<IRemoteObject> remoteObj = samgr->GetSystemAbility(MEDIA_SERVICE_SA_ID);
-    CHECK_AND_RETURN_RET_LOG(remoteObj == nullptr, nullptr, "GetSystemAbility service failed");
+    CHECK_AND_RETURN_RET_LOG(remoteObj != nullptr, nullptr, "GetSystemAbility service failed");
     return DataShare::DataShareHelper::Creator(remoteObj, SETTINGS_DATA_BASE_URI, SETTINGS_DATA_EXT_URI);
 }
 
-int32_t __attribute__((visibility("default"))) UpdateSettingsValue(const std::string &key, const std::string &value)
+int32_t __attribute__((visibility("default"))) DeleteSettingsByKey(const std::string &key)
 {
-    MEDIA_LOG_I("UpdateSettingsValue update start key: %{public}s", key.c_str());
+    MEDIA_LOG_I("DeleteSettingsByKey start key: %{public}s", key.c_str());
     auto dataShareHelper = CreateDataShareHelper();
-    CHECK_AND_RETURN_RET_LOG(dataShareHelper == nullptr, MSERR_INVALID_VAL, "dataShareHelper is nullptr");
+    CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, MSERR_INVALID_VAL, "dataShareHelper is nullptr");
     Uri uri(SETTINGS_DATA_BASE_URI);
     DataShare::DataSharePredicates predicates;
     predicates.EqualTo(SETTINGS_DATA_FIELD_KEYWORD, key);
-    DataShare::DataShareValuesBucket bucket;
-    bucket.Put(SETTINGS_DATA_FIELD_KEYWORD, DataShare::DataShareValueObject(key));
-    bucket.Put(SETTINGS_DATA_FIELD_VALUE, DataShare::DataShareValueObject(value));
-    int32_t updateResult = dataShareHelper->Update(uri, predicates, bucket);
-    if (updateResult <= 0) {
-        MEDIA_LOG_I("UpdateSettingsValue update failed, try insert key: %{public}s", key.c_str());
-        dataShareHelper->Insert(uri, bucket);
-    }
+    int32_t updateResult = dataShareHelper->Delete(uri, predicates);
+    MEDIA_LOG_I("DeleteSettingsByKey dataShareHelper->Update: %{public}d", updateResult);
     dataShareHelper->Release();
     return MSERR_OK;
 }
