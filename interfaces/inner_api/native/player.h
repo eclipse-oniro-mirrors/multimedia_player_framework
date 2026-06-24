@@ -119,38 +119,28 @@ struct AVTimedMetaData {
  * @brief Ads event type values (used as int32_t in AVAdsChangeEvent).
  * Matches av_codec's Media::AdsEventType enum class values.
  */
-static constexpr int32_t ADS_START = 0;
-static constexpr int32_t ADS_END = 1;
-
-/**
- * @brief Ads end reason values (used as int32_t in AVAdsChangeEvent).
- * Matches av_codec's Media::AdsEndReason enum class values.
- */
-static constexpr int32_t ADS_COMPLETED = 0;
-static constexpr int32_t ADS_SKIPPED = 1;
-static constexpr int32_t ADS_ERROR = 2;
+static constexpr int32_t ADS_STARTED = 0;
+static constexpr int32_t ADS_COMPLETED = 1;
+static constexpr int32_t ADS_SKIPPED = 2;
+static constexpr int32_t ADS_ERROR = 3;
 
 /**
  * @brief Ads playback event information.
  * Reported via OnInfo(INFO_TYPE_ADS_CHANGE).
  */
 struct AVAdsChangeEvent {
-    int32_t type{0};              // AdsEventType: START / END
+    int32_t type{0};              // AdsEventType: STARTED / COMPLETED / SKIPPED / ERROR
     std::string eventId;          // ads event identifier
-    int64_t startMs{-1};          // trigger time point in main content, -1 means unknown
-    int64_t durationMs{-1};       // only valid for START, -1 means unknown
-    int32_t reason{0};            // only valid for END: AdsEndReason
-    int32_t errorCode{0};         // only valid for END with reason=ERROR: MSERR_* error code
-    std::string errorMessage;     // only valid for END with reason=ERROR: error description
+    int64_t durationMs{-1};       // only valid for STARTED, -1 means unknown
+    int32_t errorCode{0};         // only valid for ERROR: MSERR_* error code
+    std::string errorMessage;     // only valid for ERROR: error description
 };
 
 class PlaybackAds {
 public:
     static constexpr std::string_view PLAYER_ADS_TYPE = "ads_type";
     static constexpr std::string_view PLAYER_ADS_EVENT_ID = "ads_event_id";
-    static constexpr std::string_view PLAYER_ADS_START_MS = "ads_start_ms";
     static constexpr std::string_view PLAYER_ADS_DURATION_MS = "ads_duration_ms";
-    static constexpr std::string_view PLAYER_ADS_REASON = "ads_reason";
     static constexpr std::string_view PLAYER_ADS_ERROR_CODE = "ads_error_code";
     static constexpr std::string_view PLAYER_ADS_ERROR_MESSAGE = "ads_error_message";
 };

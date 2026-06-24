@@ -3825,18 +3825,16 @@ void HiPlayerImpl::HandleAdsChange(std::shared_ptr<MediaAVCodec::AVAdsChangeEven
 {
     FALSE_RETURN_MSG(event != nullptr, "HandleAdsChange: event is nullptr");
     FALSE_RETURN_MSG(callbackLooper_.IsStarted(), "HandleAdsChange: callbackLooper is not started");
-    if (event->type == ADS_START) {
+    if (event->type == ADS_STARTED) {
         isAdsPlaying_.store(true);
-    } else if (event->type == ADS_END) {
+    } else if (event->type == ADS_COMPLETED || event->type == ADS_SKIPPED || event->type == ADS_ERROR) {
         isAdsPlaying_.store(false);
     }
 
     Format format;
     (void)format.PutIntValue(std::string(PlaybackAds::PLAYER_ADS_TYPE), static_cast<int32_t>(event->type));
     (void)format.PutStringValue(std::string(PlaybackAds::PLAYER_ADS_EVENT_ID), event->eventId);
-    (void)format.PutLongValue(std::string(PlaybackAds::PLAYER_ADS_START_MS), event->startMs);
     (void)format.PutLongValue(std::string(PlaybackAds::PLAYER_ADS_DURATION_MS), event->durationMs);
-    (void)format.PutIntValue(std::string(PlaybackAds::PLAYER_ADS_REASON), static_cast<int32_t>(event->reason));
     (void)format.PutIntValue(std::string(PlaybackAds::PLAYER_ADS_ERROR_CODE), event->errorCode);
     (void)format.PutStringValue(std::string(PlaybackAds::PLAYER_ADS_ERROR_MESSAGE), event->errorMessage);
 
