@@ -526,6 +526,7 @@ public:
     struct AdsLoadingErrorEvent : public Base {
         std::string eventId;
         int32_t errorCode = 0;
+        std::string errorMessage;
         void UvWork() override
         {
             std::shared_ptr<AutoRef> ref = callback.lock();
@@ -533,10 +534,11 @@ public:
 
             auto func = ref->callbackRef_;
             CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
-            std::shared_ptr<taihe::callback<void(::taihe::string_view, int32_t)>> cacheCallback =
-                std::reinterpret_pointer_cast<taihe::callback<void(::taihe::string_view, int32_t)>>(func);
+            auto err = MediaTaiheUtils::ToBusinessError(get_env(), errorCode, errorMessage);
+            std::shared_ptr<taihe::callback<void(::taihe::string_view, uintptr_t)>> cacheCallback =
+                std::reinterpret_pointer_cast<taihe::callback<void(::taihe::string_view, uintptr_t)>>(func);
 
-            (*cacheCallback)(taihe::string(eventId), errorCode);
+            (*cacheCallback)(taihe::string(eventId), reinterpret_cast<uintptr_t>(err));
         }
     };
 
@@ -1496,10 +1498,14 @@ void AVPlayerCallback::OnAdsChangeCb(const int32_t extra, const Format &infoBody
     std::string eventId;
     int64_t durationMs = -1;
     int32_t reason = 0;
+    int32_t errorCode = 0;
+    std::string errorMessage;
     (void)infoBody.GetIntValue(std::string(PlaybackAds::PLAYER_ADS_TYPE), type);
     (void)infoBody.GetStringValue(std::string(PlaybackAds::PLAYER_ADS_EVENT_ID), eventId);
     (void)infoBody.GetLongValue(std::string(PlaybackAds::PLAYER_ADS_DURATION_MS), durationMs);
     (void)infoBody.GetIntValue(std::string(PlaybackAds::PLAYER_ADS_REASON), reason);
+    (void)infoBody.GetIntValue(std::string(PlaybackAds::PLAYER_ADS_ERROR_CODE), errorCode);
+    (void)infoBody.GetStringValue(std::string(PlaybackAds::PLAYER_ADS_ERROR_MESSAGE), errorMessage);
 
     MEDIA_LOGI("0x%{public}06" PRIXPTR " OnAdsChangeCb type=%{public}d eventId=%{public}s reason=%{public}d",
         FAKE_POINTER(this), type, eventId.c_str(), reason);
@@ -1507,7 +1513,7 @@ void AVPlayerCallback::OnAdsChangeCb(const int32_t extra, const Format &infoBody
     if (type == OHOS::Media::ADS_START) {
         HandleAdsStartedEvent(eventId, durationMs);
     } else if (type == OHOS::Media::ADS_END) {
-        HandleAdsEndEvent(eventId, reason);
+        HandleAdsEndEvent(eventId, reason, errorCode, errorMessage);
     }
 }
 
@@ -1526,18 +1532,23 @@ void AVPlayerCallback::HandleAdsStartedEvent(const std::string &eventId, int64_t
     AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
-void AVPlayerCallback::HandleAdsLoadingErrorEvent(const std::string &eventId)
+void AVPlayerCallback::HandleAdsLoadingErrorEvent(const std::string &eventId, int32_t errorCode,
+    const std::string &errorMessage)
 {
     if (refMap_.find(AVPlayerEvent::EVENT_ADS_LOADING_ERROR) == refMap_.end()) {
         MEDIA_LOGW("can not find adsLoadingError callback!");
         return;
     }
+    MediaServiceExtErrCodeAPI9 api9Code = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errorCode));
+    std::string message = MSExtAVErrorToString(api9Code) + errorMessage;
+
     AniCallback::AdsLoadingErrorEvent *cb = new(std::nothrow) AniCallback::AdsLoadingErrorEvent();
     CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new AdsLoadingErrorEvent");
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_ADS_LOADING_ERROR);
     cb->callbackName = AVPlayerEvent::EVENT_ADS_LOADING_ERROR;
     cb->eventId = eventId;
-    cb->errorCode = 5400108;
+    cb->errorCode = api9Code;
+    cb->errorMessage = message;
     AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
@@ -1569,10 +1580,11 @@ void AVPlayerCallback::HandleAdsCompletedEvent(const std::string &eventId)
     AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
-void AVPlayerCallback::HandleAdsEndEvent(const std::string &eventId, int32_t reason)
+void AVPlayerCallback::HandleAdsEndEvent(const std::string &eventId, int32_t reason, int32_t errorCode,
+    const std::string &errorMessage)
 {
     if (reason == OHOS::Media::ADS_ERROR) {
-        HandleAdsLoadingErrorEvent(eventId);
+        HandleAdsLoadingErrorEvent(eventId, errorCode, errorMessage);
     } else if (reason == OHOS::Media::ADS_SKIPPED) {
         HandleAdsSkippedEvent(eventId);
     } else if (reason == OHOS::Media::ADS_COMPLETED) {

@@ -3555,7 +3555,8 @@ void AVPlayerImpl::OffTimedMetaData(optional_view<callback<void(
     MEDIA_LOGI("OffTimedMetaData End");
 }
 
-void AVPlayerImpl::OnAdsEventListenerLoadingError(callback_view<void(::taihe::string_view, int32_t)> callback)
+void AVPlayerImpl::OnAdsEventListenerLoadingError(
+    callback_view<void(::taihe::string_view, uintptr_t)> callback)
 {
     MediaTrace trace("AVPlayerImpl::OnAdsEventListenerLoadingError");
     MEDIA_LOGD("TaiheOnAdsEventListenerLoadingError In");
@@ -3566,8 +3567,8 @@ void AVPlayerImpl::OnAdsEventListenerLoadingError(callback_view<void(::taihe::st
     }
 
     ani_env *env = taihe::get_env();
-    std::shared_ptr<taihe::callback<void(::taihe::string_view, int32_t)>> taiheCallback =
-        std::make_shared<taihe::callback<void(::taihe::string_view, int32_t)>>(callback);
+    std::shared_ptr<taihe::callback<void(::taihe::string_view, uintptr_t)>> taiheCallback =
+        std::make_shared<taihe::callback<void(::taihe::string_view, uintptr_t)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
     SaveCallbackReference(AVPlayerEvent::EVENT_ADS_LOADING_ERROR, autoRef);
@@ -3575,7 +3576,7 @@ void AVPlayerImpl::OnAdsEventListenerLoadingError(callback_view<void(::taihe::st
 }
 
 void AVPlayerImpl::OffAdsEventListenerLoadingError(
-    optional_view<callback<void(::taihe::string_view, int32_t)>> callback)
+    optional_view<callback<void(::taihe::string_view, uintptr_t)>> callback)
 {
     MediaTrace trace("AVPlayerImpl::OffAdsEventListenerLoadingError");
     MEDIA_LOGD("TaiheOffAdsEventListenerLoadingError In");

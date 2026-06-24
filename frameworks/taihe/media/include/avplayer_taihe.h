@@ -224,7 +224,7 @@ public:
         ohos::multimedia::audio::AudioStreamDeviceChangeInfo const&)> callback);
     void OnMetricsEvent(callback_view<void(array_view<::ohos::multimedia::media::AVMetricsEvent> data)> callback);
     void OnTimedMetaData(callback_view<void(::ohos::multimedia::media::AVTimedMetaData const&)> callback);
-    void OnAdsEventListenerLoadingError(callback_view<void(::taihe::string_view, int32_t)> callback);
+    void OnAdsEventListenerLoadingError(callback_view<void(::taihe::string_view, uintptr_t)> callback);
     void OnAdsListenerAdsStarted(callback_view<void(::taihe::string_view, int64_t)> callback);
     void OnAdsListenerAdsSkipped(callback_view<void(::taihe::string_view)> callback);
     void OnAdsListenerAdsCompleted(callback_view<void(::taihe::string_view)> callback);
@@ -260,7 +260,7 @@ public:
         array_view<::ohos::multimedia::media::AVMetricsEvent> data)>> callback);
     void OffTimedMetaData(optional_view<callback<void(::ohos::multimedia::media::AVTimedMetaData const&)>> callback);
     void OffAdsEventListenerLoadingError(
-        optional_view<callback<void(::taihe::string_view, int32_t)>> callback);
+        optional_view<callback<void(::taihe::string_view, uintptr_t)>> callback);
     void OffAdsListenerAdsStarted(
         optional_view<callback<void(::taihe::string_view, int64_t)>> callback);
     void OffAdsListenerAdsSkipped(

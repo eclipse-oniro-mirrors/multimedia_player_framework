@@ -140,6 +140,8 @@ struct AVAdsChangeEvent {
     int64_t startMs{-1};          // trigger time point in main content, -1 means unknown
     int64_t durationMs{-1};       // only valid for START, -1 means unknown
     int32_t reason{0};            // only valid for END: AdsEndReason
+    int32_t errorCode{0};         // only valid for END with reason=ERROR: MSERR_* error code
+    std::string errorMessage;     // only valid for END with reason=ERROR: error description
 };
 
 class PlaybackAds {
@@ -149,6 +151,8 @@ public:
     static constexpr std::string_view PLAYER_ADS_START_MS = "ads_start_ms";
     static constexpr std::string_view PLAYER_ADS_DURATION_MS = "ads_duration_ms";
     static constexpr std::string_view PLAYER_ADS_REASON = "ads_reason";
+    static constexpr std::string_view PLAYER_ADS_ERROR_CODE = "ads_error_code";
+    static constexpr std::string_view PLAYER_ADS_ERROR_MESSAGE = "ads_error_message";
 };
 
 struct FileDescriptor {

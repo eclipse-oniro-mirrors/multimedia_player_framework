@@ -323,6 +323,8 @@ struct AVAdsChangeEvent {
     startMs: i64;
     durationMs: i64;
     reason: i32;
+    errorCode: i32;
+    errorMessage: String;
 }
 
 struct VideoSize{
@@ -668,8 +670,8 @@ interface AVPlayer {
     GetMediaSources(): Array<Optional<MediaSource>>;
     OnTimedMetaData(callback: (data: AVTimedMetaData) => void): void;
     OffTimedMetaData(callback: Optional<(data: AVTimedMetaData) => void>): void;
-    OnAdsEventListenerLoadingError(callback: (adsId: String, reason: i32) => void): void;
-    OffAdsEventListenerLoadingError(callback: Optional<(adsId: String, reason: i32) => void>): void;
+    OnAdsEventListenerLoadingError(callback: (adsId: String, reason: @sts_type("BusinessError<void>") Opaque) => void): void;
+    OffAdsEventListenerLoadingError(callback: Optional<(adsId: String, reason: @sts_type("BusinessError<void>") Opaque) => void>): void;
     OnAdsListenerAdsStarted(callback: (adsId: String, duration: i64) => void): void;
     OffAdsListenerAdsStarted(callback: Optional<(adsId: String, duration: i64) => void>): void;
     OnAdsListenerAdsSkipped(callback: (adsId: String) => void): void;

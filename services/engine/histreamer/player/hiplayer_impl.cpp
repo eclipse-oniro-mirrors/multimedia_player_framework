@@ -3837,6 +3837,8 @@ void HiPlayerImpl::HandleAdsChange(std::shared_ptr<MediaAVCodec::AVAdsChangeEven
     (void)format.PutLongValue(std::string(PlaybackAds::PLAYER_ADS_START_MS), event->startMs);
     (void)format.PutLongValue(std::string(PlaybackAds::PLAYER_ADS_DURATION_MS), event->durationMs);
     (void)format.PutIntValue(std::string(PlaybackAds::PLAYER_ADS_REASON), static_cast<int32_t>(event->reason));
+    (void)format.PutIntValue(std::string(PlaybackAds::PLAYER_ADS_ERROR_CODE), event->errorCode);
+    (void)format.PutStringValue(std::string(PlaybackAds::PLAYER_ADS_ERROR_MESSAGE), event->errorMessage);
 
     callbackLooper_.OnInfo(INFO_TYPE_ADS_CHANGE, 0, format);
     MEDIA_LOG_I("adsChange: type=%{public}d, eventId=%{public}s", static_cast<int32_t>(event->type),

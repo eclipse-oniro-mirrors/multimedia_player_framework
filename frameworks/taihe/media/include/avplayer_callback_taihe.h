@@ -83,8 +83,8 @@ public:
     void OnTimedMetaDataCb(const int32_t extra, const Format &infoBody);
     void OnAdsChangeCb(const int32_t extra, const Format &infoBody);
     void HandleAdsStartedEvent(const std::string &eventId, int64_t durationMs);
-    void HandleAdsEndEvent(const std::string &eventId, int32_t reason);
-    void HandleAdsLoadingErrorEvent(const std::string &eventId);
+    void HandleAdsEndEvent(const std::string &eventId, int32_t reason, int32_t errorCode, const std::string &errorMessage);
+    void HandleAdsLoadingErrorEvent(const std::string &eventId, int32_t errorCode, const std::string &errorMessage);
     void HandleAdsSkippedEvent(const std::string &eventId);
     void HandleAdsCompletedEvent(const std::string &eventId);
     void OnPlaybackContentChangedCb(const int32_t extra, const Format &infoBody);
