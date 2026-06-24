@@ -203,7 +203,7 @@ void ScreenCaptureMonitorServer::UnSubscribeDataShareReadyEvent()
     subscriber_ = nullptr;
 }
 
-ScreenCaptureMonitorSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &data)
+void ScreenCaptureMonitorSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &data)
 {
     auto const &want = data.GetWant();
     std::string action = want.GetAction();
