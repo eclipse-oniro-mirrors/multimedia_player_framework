@@ -80,6 +80,18 @@ public:
     void OnSeiInfoCb(const int32_t extra, const Format &infoBody);
     void OnSubtitleInfoCb(const int32_t extra, const Format &infoBody);
     void OnMetricsEventCb(const int32_t extra, const Format &infoBody);
+    void FillStallingEvent(const Format &infoBody);
+    void FillLoadingRateChangeEvent(const Format &infoBody);
+    void FillLoadingErrorEvent(const Format &infoBody);
+    struct ContentChangedData;
+    void FillContentChangedEvent(const Format &infoBody);
+    void ExtractContentChangedData(const Format &infoBody, ContentChangedData &data);
+    void PushContentChangedValuesToCb(const ContentChangedData &data, std::vector<int64_t>& valueVec);
+    void PushContentChangedStringsToCb(const ContentChangedData &data, std::vector<std::string>& stringVec);
+    void FillLipAsyncEvent(const Format &infoBody);
+    void FillCodecAbnormalEvent(const Format &infoBody);
+    void FillAudioAbnormalEvent(const Format &infoBody);
+    void FillContentDiscontinuityEvent(const Format &infoBody);
     void OnTimedMetaDataCb(const int32_t extra, const Format &infoBody);
     void OnAdsChangeCb(const int32_t extra, const Format &infoBody);
     void OnPlaybackContentChangedCb(const int32_t extra, const Format &infoBody);

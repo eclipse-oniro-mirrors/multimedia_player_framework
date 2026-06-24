@@ -300,13 +300,21 @@ enum PlaybackMetricsKey: String {
 
 enum AVMetricsEventType: i32 {
   AV_METRICS_EVENT_STALLING = 1,
+  AV_METRICS_EVENT_LIP_ASYNC = 2,
+  AV_METRICS_EVENT_LOADINGRATE_CHANGE = 3,
+  AV_METRICS_EVENT_LOADING_ERROR = 4,
+  AV_METRICS_EVENT_CONTENT_CHANGED = 5,
+  AV_METRICS_EVENT_CONTENT_DISCONTINUITY = 6,
+  AV_METRICS_EVENT_CODEC_ABNORMAL = 7,
+  AV_METRICS_EVENT_AUDIO_ABNORMAL = 8,
 }
 
 struct AVMetricsEvent {
   event: AVMetricsEventType;
   timeStamp: i64;
-  playbackPosition: i32;
-  details: @record Map<String, i64>;
+  playbackPosition: i64;
+  details: Map<String, i64>;
+  stringDetails: Map<String, String>;
 }
 
 struct AVTimedMetaData {

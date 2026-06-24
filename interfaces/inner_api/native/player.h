@@ -100,7 +100,7 @@ struct AVMetricsEvent {
     int32_t metricsEventType = 0;
     int64_t timeStamp = 0;
     int64_t playbackPosition = 0;
-    std::map<std::string, int64_t> details;
+    std::map<std::string, Any> details;
 };
 
 /**
@@ -316,9 +316,69 @@ public:
     static constexpr std::string_view PLAYER_STALLING_TIMELINE = "stalling_timeline";
     static constexpr std::string_view PLAYER_STALLING_DURATION = "stalling_duration";
     static constexpr std::string_view PLAYER_STALLING_MEDIA_TYPE = "stalling_media_type";
+    static constexpr std::string_view PLAYER_TIMESTAMP = "timestamp";
+    static constexpr std::string_view PLAYER_PLAYBACK_POSITION = "playback_position";
+    static constexpr std::string_view PLAYER_LOADING_BITRATE_BEFORE = "loading_bitrate_before";
+    static constexpr std::string_view PLAYER_LOADING_BITRATE_AFTER = "loading_bitrate_after";
+    static constexpr std::string_view PLAYER_REQUEST_STAGE = "request_stage";
+    static constexpr std::string_view PLAYER_REQUEST_TIMESTAMP = "request_timestamp";
+    static constexpr std::string_view PLAYER_ERROR_CODE = "error_code";
+    static constexpr std::string_view PLAYER_AUDIO_STATE_BEFORE = "audio_state_before";
+    static constexpr std::string_view PLAYER_AUDIO_STATE_AFTER = "audio_state_after";
+    static constexpr std::string_view PLAYER_AUDIO_INTERRUPT_HINT = "audio_interrupt_hint";
+    static constexpr std::string_view PLAYER_MEDIA_STREAM_TYPE = "media_stream_type";
+    static constexpr std::string_view PLAYER_CHANGE_REASON = "change_reason";
+    static constexpr std::string_view PLAYER_CHANGE_RESULT = "change_result";
+    static constexpr std::string_view PLAYER_STREAM_ID_BEFORE = "stream_id_before";
+    static constexpr std::string_view PLAYER_STREAM_ID_AFTER = "stream_id_after";
+    static constexpr std::string_view PLAYER_BITRATE_BEFORE = "bitrate_before";
+    static constexpr std::string_view PLAYER_BITRATE_AFTER = "bitrate_after";
+    static constexpr std::string_view PLAYER_VIDEO_WIDTH_BEFORE = "video_width_before";
+    static constexpr std::string_view PLAYER_VIDEO_HEIGHT_BEFORE = "video_height_before";
+    static constexpr std::string_view PLAYER_VIDEO_WIDTH_AFTER = "video_width_after";
+    static constexpr std::string_view PLAYER_VIDEO_HEIGHT_AFTER = "video_height_after";
+    static constexpr std::string_view PLAYER_VIDEO_FRAMERATE_BEFORE = "video_framerate_before";
+    static constexpr std::string_view PLAYER_VIDEO_FRAMERATE_AFTER = "video_framerate_after";
+    static constexpr std::string_view PLAYER_AUDIO_CHANNELS_BEFORE = "audio_channels_before";
+    static constexpr std::string_view PLAYER_AUDIO_SAMPLE_RATE_BEFORE = "audio_sample_rate_before";
+    static constexpr std::string_view PLAYER_AUDIO_CHANNELS_AFTER = "audio_channels_after";
+    static constexpr std::string_view PLAYER_AUDIO_SAMPLE_RATE_AFTER = "audio_sample_rate_after";
+    static constexpr std::string_view PLAYER_LANG_BEFORE = "lang_before";
+    static constexpr std::string_view PLAYER_LANG_AFTER = "lang_after";
+    static constexpr std::string_view PLAYER_AUDIO_LANG_BEFORE = "audio_lang_before";
+    static constexpr std::string_view PLAYER_AUDIO_LANG_AFTER = "audio_lang_after";
+    static constexpr std::string_view PLAYER_SUBTITLE_LANG_BEFORE = "subtitle_lang_before";
+    static constexpr std::string_view PLAYER_SUBTITLE_LANG_AFTER = "subtitle_lang_after";
+    static constexpr std::string_view PLAYER_IS_LOCAL_FD = "is_local_fd";
+    static constexpr std::string_view PLAYER_MIME_TYPE_BEFORE = "mime_type_before";
+    static constexpr std::string_view PLAYER_MIME_TYPE_AFTER = "mime_type_after";
+    static constexpr std::string_view PLAYER_AUDIO_MIME_TYPE_BEFORE = "audio_mime_type_before";
+    static constexpr std::string_view PLAYER_AUDIO_MIME_TYPE_AFTER = "audio_mime_type_after";
+    static constexpr std::string_view PLAYER_VIDEO_MIME_TYPE_BEFORE = "video_mime_type_before";
+    static constexpr std::string_view PLAYER_VIDEO_MIME_TYPE_AFTER = "video_mime_type_after";
+    static constexpr std::string_view PLAYER_VIDEO_TYPE_BEFORE = "video_type_before";
+    static constexpr std::string_view PLAYER_VIDEO_TYPE_AFTER = "video_type_after";
+    static constexpr std::string_view PLAYER_CODECS_BEFORE = "codecs_before";
+    static constexpr std::string_view PLAYER_CODECS_AFTER = "codecs_after";
+    static constexpr std::string_view PLAYER_ORIGIN_CODECS_BEFORE = "origin_codecs_before";
+    static constexpr std::string_view PLAYER_ORIGIN_CODECS_AFTER = "origin_codecs_after";
+    static constexpr std::string_view PLAYER_DISCONTINUE_TYPE = "discontinue_type";
+    static constexpr std::string_view PLAYER_PTS_BEFORE = "pts_before";
+    static constexpr std::string_view PLAYER_PTS_AFTER = "pts_after";
+    static constexpr std::string_view PLAYER_SAMPLE_RATE_BEFORE = "sample_rate_before";
+    static constexpr std::string_view PLAYER_SAMPLE_RATE_AFTER = "sample_rate_after";
+    static constexpr std::string_view PLAYER_CHANNELS_BEFORE = "chennel_count_before";
+    static constexpr std::string_view PLAYER_CHANNELS_AFTER = "chennel_count_after";
+    static constexpr std::string_view PLAYER_SAMPLE_FORMAT_BEFORE = "sample_format_before";
+    static constexpr std::string_view PLAYER_SAMPLE_FORMAT_AFTER = "sample_format_after";
     static constexpr std::string_view PLAYER_SEI_PAYLOAD_TYPE = "payloadType";
     static constexpr std::string_view PLAYER_SEI_PAYLOAD_CONTENT = "payload";
     static constexpr std::string_view PLAYER_IS_FLV_LIVE = "isFlvLive";
+    static constexpr std::string_view PLAYER_DECODER_TYPE = "decoder_type";
+    static constexpr std::string_view PLAYER_CODEC_ERROR_CODE = "codec_error_code";
+    static constexpr std::string_view PLAYER_ASYNC_TYPE = "async_type";
+    static constexpr std::string_view PLAYER_START_TIME = "start_time";
+    static constexpr std::string_view PLAYER_END_TIME = "end_time";
 
     static constexpr std::string_view PLAYER_LIST_MEDIA_SOURCE_CHANGE_ID = "list_media_source_change_id";
 };
@@ -558,6 +618,13 @@ enum PlayerProducer : int32_t {
 
 enum AVMetricsEventType : int32_t {
     AV_METRICS_EVENT_TYPE_STALLING = 1,
+    AV_METRICS_EVENT_TYPE_LIP_ASYNC = 2,
+    AV_METRICS_EVENT_TYPE_LOADINGRATE_CHANGE = 3,
+    AV_METRICS_EVENT_TYPE_LOADING_ERROR = 4,
+    AV_METRICS_EVENT_TYPE_CONTENT_CHANGED = 5,
+    AV_METRICS_EVENT_TYPE_CONTENT_DISCONTINUITY = 6,
+    AV_METRICS_EVENT_TYPE_CODEC_ABNORMAL = 7,
+    AV_METRICS_EVENT_TYPE_AUDIO_ABNORMAL = 8,
 };
 
 typedef bool(*IsAudioPassthrough)(const char* mime);

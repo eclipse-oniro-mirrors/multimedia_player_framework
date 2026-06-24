@@ -31,6 +31,76 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "AV
 constexpr int32_t ARGS_TWO = 2;
 constexpr int32_t ARGS_THREE = 3;
 constexpr int32_t ARGS_FOUR = 4;
+constexpr int32_t ARGS_FIVE = 5;
+constexpr int32_t ARGS_SIX = 6;
+constexpr int32_t ARGS_SEVEN = 7;
+constexpr int32_t ARGS_EIGHT = 8;
+constexpr int32_t ARGS_NINE = 9;
+constexpr int32_t ARGS_TEN = 10;
+constexpr int32_t INDEX_IS_LOCAL_FD = 3;
+constexpr int32_t INDEX_VIDEO_WIDTH_BEFORE = 4;
+constexpr int32_t INDEX_VIDEO_HEIGHT_BEFORE = 5;
+constexpr int32_t INDEX_VIDEO_WIDTH_AFTER = 6;
+constexpr int32_t INDEX_VIDEO_HEIGHT_AFTER = 7;
+constexpr int32_t INDEX_VIDEO_FRAMERATE_BEFORE = 8;
+constexpr int32_t INDEX_VIDEO_FRAMERATE_AFTER = 9;
+constexpr int32_t INDEX_AUDIO_CHANNELS_BEFORE = 10;
+constexpr int32_t INDEX_AUDIO_CHANNELS_AFTER = 11;
+constexpr int32_t INDEX_AUDIO_SAMPLE_RATE_BEFORE = 12;
+constexpr int32_t INDEX_AUDIO_SAMPLE_RATE_AFTER = 13;
+constexpr int32_t INDEX_STREAM_ID_BEFORE = 14;
+constexpr int32_t INDEX_STREAM_ID_AFTER = 15;
+constexpr int32_t INDEX_BITRATE_BEFORE = 16;
+constexpr int32_t INDEX_BITRATE_AFTER = 17;
+constexpr int32_t STRING_INDEX_STREAM_TYPE = 0;
+constexpr int32_t STRING_INDEX_CHANGE_REASON = 1;
+constexpr int32_t STRING_INDEX_CHANGE_RESULT = 2;
+constexpr int32_t STRING_INDEX_AUDIO_LANG_BEFORE = 3;
+constexpr int32_t STRING_INDEX_AUDIO_LANG_AFTER = 4;
+constexpr int32_t STRING_INDEX_SUBTITLE_LANG_BEFORE = 5;
+constexpr int32_t STRING_INDEX_SUBTITLE_LANG_AFTER = 6;
+constexpr int32_t STRING_INDEX_AUDIO_MIME_TYPE_BEFORE = 7;
+constexpr int32_t STRING_INDEX_AUDIO_MIME_TYPE_AFTER = 8;
+constexpr int32_t STRING_INDEX_VIDEO_MIME_TYPE_BEFORE = 9;
+constexpr int32_t STRING_INDEX_VIDEO_MIME_TYPE_AFTER = 10;
+constexpr int32_t STRING_INDEX_VIDEO_TYPE_BEFORE = 11;
+constexpr int32_t STRING_INDEX_VIDEO_TYPE_AFTER = 12;
+constexpr int32_t STRING_INDEX_CODECS_BEFORE = 13;
+constexpr int32_t STRING_INDEX_CODECS_AFTER = 14;
+constexpr int32_t STRING_INDEX_ORIGIN_CODECS_BEFORE = 15;
+constexpr int32_t STRING_INDEX_ORIGIN_CODECS_AFTER = 16;
+constexpr int32_t VIDEO_TYPE_SDR = 0;
+constexpr int32_t VIDEO_TYPE_HDR_VIVID = 1;
+constexpr int32_t VIDEO_TYPE_HDR_10 = 2;
+constexpr int32_t INTERRUPT_HINT_NONE = 0;
+constexpr int32_t INTERRUPT_HINT_RESUME = 1;
+constexpr int32_t INTERRUPT_HINT_PAUSE = 2;
+constexpr int32_t INTERRUPT_HINT_STOP = 3;
+constexpr int32_t INTERRUPT_HINT_DUCK = 4;
+constexpr int32_t INTERRUPT_HINT_UNDUCK = 5;
+
+std::string GetVideoTypeStr(int32_t videoType)
+{
+    switch (videoType) {
+        case VIDEO_TYPE_SDR: return "SDR";
+        case VIDEO_TYPE_HDR_VIVID: return "HDR_VIVID";
+        case VIDEO_TYPE_HDR_10: return "HDR_10";
+        default: return "UNKNOWN";
+    }
+}
+
+std::string GetInterruptHintStr(int32_t interruptHint)
+{
+    switch (interruptHint) {
+        case INTERRUPT_HINT_NONE: return "NONE";
+        case INTERRUPT_HINT_RESUME: return "RESUME";
+        case INTERRUPT_HINT_PAUSE: return "PAUSE";
+        case INTERRUPT_HINT_STOP: return "STOP";
+        case INTERRUPT_HINT_DUCK: return "DUCK";
+        case INTERRUPT_HINT_UNDUCK: return "UNDUCK";
+        default: return "UNKNOWN";
+    }
+}
 }
 
 namespace OHOS {
@@ -344,14 +414,233 @@ public:
         }
     };
 
-    struct MetricsEvent : public Base {
+struct MetricsEvent : public Base {
         std::vector<int64_t> valueVec;
+        std::vector<std::string> stringVec;
+
+        void FillLoadingRateChangeDetails(napi_env env, napi_value metric)
+        {
+            std::map<std::string, int64_t> detailMap = {
+                {std::string("bitrate_before"), valueVec[ARGS_THREE]},
+                {std::string("bitrate_after"), valueVec[ARGS_FOUR]},
+            };
+            (void)CommonNapi::SetPropertyMap(env, metric, "details", detailMap);
+        }
+
+        void FillLoadingErrorDetails(napi_env env, napi_value metric)
+        {
+            napi_value details = nullptr;
+            napi_create_object(env, &details);
+            if (stringVec.size() >= 1) {
+                (void)CommonNapi::SetPropertyString(env, details, "request_stage", stringVec[0]);
+            }
+            (void)CommonNapi::SetPropertyInt64(env, details, "request_timestamp", valueVec[ARGS_THREE]);
+            (void)CommonNapi::SetPropertyInt64(env, details, "error_code", valueVec[ARGS_FOUR]);
+            napi_value detailsKey = nullptr;
+            napi_create_string_utf8(env, "details", NAPI_AUTO_LENGTH, &detailsKey);
+            napi_set_property(env, metric, detailsKey, details);
+        }
+
+        void FillContentChangedDetails(napi_env env, napi_value metric)
+        {
+            napi_value details = nullptr;
+            napi_create_object(env, &details);
+            if (valueVec.size() <= ARGS_THREE) {
+                napi_value detailsKey = nullptr;
+                napi_create_string_utf8(env, "details", NAPI_AUTO_LENGTH, &detailsKey);
+                napi_set_property(env, metric, detailsKey, details);
+                return;
+            }
+            bool isLocalFd = (valueVec[INDEX_IS_LOCAL_FD] == 1);
+            if (stringVec.size() >= ARGS_THREE) {
+                if (!isLocalFd) {
+                    (void)CommonNapi::SetPropertyString(env, details, "stream_type",
+                        stringVec[STRING_INDEX_STREAM_TYPE]);
+                }
+                (void)CommonNapi::SetPropertyString(env, details, "change_reason",
+                    stringVec[STRING_INDEX_CHANGE_REASON]);
+                (void)CommonNapi::SetPropertyString(env, details, "change_result",
+                    stringVec[STRING_INDEX_CHANGE_RESULT]);
+            }
+            if (valueVec.size() > INDEX_AUDIO_SAMPLE_RATE_AFTER) {
+                (void)CommonNapi::SetPropertyInt64(env, details, "video_width_before",
+                    valueVec[INDEX_VIDEO_WIDTH_BEFORE]);
+                (void)CommonNapi::SetPropertyInt64(env, details, "video_height_before",
+                    valueVec[INDEX_VIDEO_HEIGHT_BEFORE]);
+                (void)CommonNapi::SetPropertyInt64(env, details, "video_width_after",
+                    valueVec[INDEX_VIDEO_WIDTH_AFTER]);
+                (void)CommonNapi::SetPropertyInt64(env, details, "video_height_after",
+                    valueVec[INDEX_VIDEO_HEIGHT_AFTER]);
+                (void)CommonNapi::SetPropertyInt64(env, details, "video_framerate_before",
+                    valueVec[INDEX_VIDEO_FRAMERATE_BEFORE]);
+                (void)CommonNapi::SetPropertyInt64(env, details, "video_framerate_after",
+                    valueVec[INDEX_VIDEO_FRAMERATE_AFTER]);
+                (void)CommonNapi::SetPropertyInt64(env, details, "audio_channels_before",
+                    valueVec[INDEX_AUDIO_CHANNELS_BEFORE]);
+                (void)CommonNapi::SetPropertyInt64(env, details, "audio_channels_after",
+                    valueVec[INDEX_AUDIO_CHANNELS_AFTER]);
+                (void)CommonNapi::SetPropertyInt64(env, details, "audio_sample_rate_before",
+                    valueVec[INDEX_AUDIO_SAMPLE_RATE_BEFORE]);
+                (void)CommonNapi::SetPropertyInt64(env, details, "audio_sample_rate_after",
+                    valueVec[INDEX_AUDIO_SAMPLE_RATE_AFTER]);
+            }
+            if (!isLocalFd && valueVec.size() > INDEX_BITRATE_AFTER) {
+                (void)CommonNapi::SetPropertyInt64(env, details, "stream_id_before",
+                    valueVec[INDEX_STREAM_ID_BEFORE]);
+                (void)CommonNapi::SetPropertyInt64(env, details, "stream_id_after",
+                    valueVec[INDEX_STREAM_ID_AFTER]);
+                (void)CommonNapi::SetPropertyInt64(env, details, "bitrate_before",
+                    valueVec[INDEX_BITRATE_BEFORE]);
+                (void)CommonNapi::SetPropertyInt64(env, details, "bitrate_after",
+                    valueVec[INDEX_BITRATE_AFTER]);
+            }
+            FillContentChangedStringDetails(env, details, isLocalFd);
+            napi_value detailsKey = nullptr;
+            napi_create_string_utf8(env, "details", NAPI_AUTO_LENGTH, &detailsKey);
+            napi_set_property(env, metric, detailsKey, details);
+        }
+
+        void FillContentChangedStringDetails(napi_env env, napi_value details, bool isLocalFd)
+        {
+            if (stringVec.size() <= STRING_INDEX_VIDEO_TYPE_AFTER) {
+                return;
+            }
+            (void)CommonNapi::SetPropertyString(env, details, "audio_lang_before",
+                stringVec[STRING_INDEX_AUDIO_LANG_BEFORE]);
+            (void)CommonNapi::SetPropertyString(env, details, "audio_lang_after",
+                stringVec[STRING_INDEX_AUDIO_LANG_AFTER]);
+            (void)CommonNapi::SetPropertyString(env, details, "subtitle_lang_before",
+                stringVec[STRING_INDEX_SUBTITLE_LANG_BEFORE]);
+            (void)CommonNapi::SetPropertyString(env, details, "subtitle_lang_after",
+                stringVec[STRING_INDEX_SUBTITLE_LANG_AFTER]);
+            (void)CommonNapi::SetPropertyString(env, details, "audio_mime_type_before",
+                stringVec[STRING_INDEX_AUDIO_MIME_TYPE_BEFORE]);
+            (void)CommonNapi::SetPropertyString(env, details, "audio_mime_type_after",
+                stringVec[STRING_INDEX_AUDIO_MIME_TYPE_AFTER]);
+            (void)CommonNapi::SetPropertyString(env, details, "video_mime_type_before",
+                stringVec[STRING_INDEX_VIDEO_MIME_TYPE_BEFORE]);
+            (void)CommonNapi::SetPropertyString(env, details, "video_mime_type_after",
+                stringVec[STRING_INDEX_VIDEO_MIME_TYPE_AFTER]);
+            (void)CommonNapi::SetPropertyString(env, details, "video_type_before",
+                stringVec[STRING_INDEX_VIDEO_TYPE_BEFORE]);
+            (void)CommonNapi::SetPropertyString(env, details, "video_type_after",
+                stringVec[STRING_INDEX_VIDEO_TYPE_AFTER]);
+            
+            if (!isLocalFd && stringVec.size() > STRING_INDEX_ORIGIN_CODECS_AFTER) {
+                (void)CommonNapi::SetPropertyString(env, details, "codecs_before",
+                    stringVec[STRING_INDEX_CODECS_BEFORE]);
+                (void)CommonNapi::SetPropertyString(env, details, "codecs_after",
+                    stringVec[STRING_INDEX_CODECS_AFTER]);
+                (void)CommonNapi::SetPropertyString(env, details, "origin_codecs_before",
+                    stringVec[STRING_INDEX_ORIGIN_CODECS_BEFORE]);
+                (void)CommonNapi::SetPropertyString(env, details, "origin_codecs_after",
+                    stringVec[STRING_INDEX_ORIGIN_CODECS_AFTER]);
+            }
+        }
+
+        void FillAudioAbnormalDetails(napi_env env, napi_value metric)
+        {
+            napi_value details = nullptr;
+            napi_create_object(env, &details);
+            if (stringVec.size() > ARGS_TWO) {
+                (void)CommonNapi::SetPropertyString(env, details, "state_before", stringVec[0]);
+                (void)CommonNapi::SetPropertyString(env, details, "state_after", stringVec[1]);
+                (void)CommonNapi::SetPropertyString(env, details, "interrupt_hint", stringVec[ARGS_TWO]);
+            }
+            napi_value detailsKey = nullptr;
+            napi_create_string_utf8(env, "details", NAPI_AUTO_LENGTH, &detailsKey);
+            napi_set_property(env, metric, detailsKey, details);
+        }
+
+        void FillCodecAbnormalDetails(napi_env env, napi_value metric)
+        {
+            napi_value details = nullptr;
+            napi_create_object(env, &details);
+            if (stringVec.size() >= 1) {
+                (void)CommonNapi::SetPropertyString(env, details, "decoder_type", stringVec[0]);
+            }
+            (void)CommonNapi::SetPropertyInt64(env, details, "error_code", valueVec[ARGS_THREE]);
+            napi_value detailsKey = nullptr;
+            napi_create_string_utf8(env, "details", NAPI_AUTO_LENGTH, &detailsKey);
+            napi_set_property(env, metric, detailsKey, details);
+        }
+
+        void FillContentDiscontinuityDetails(napi_env env, napi_value metric)
+        {
+            napi_value details = nullptr;
+            napi_create_object(env, &details);
+            if (stringVec.size() >= ARGS_TWO) {
+                (void)CommonNapi::SetPropertyString(env, details, "stream_type", stringVec[0]);
+                (void)CommonNapi::SetPropertyString(env, details, "discontinue_type", stringVec[1]);
+            }
+            if (stringVec.size() > ARGS_FOUR && stringVec[1] == "PTS") {
+                (void)CommonNapi::SetPropertyInt64(env, details, "pts_before", valueVec[ARGS_THREE]);
+                (void)CommonNapi::SetPropertyInt64(env, details, "pts_after", valueVec[ARGS_FOUR]);
+            } else if (stringVec.size() > ARGS_TEN && stringVec[1] == "AUDIO_PARAM") {
+                (void)CommonNapi::SetPropertyInt64(env, details, "sample_rate_before", valueVec[ARGS_FIVE]);
+                (void)CommonNapi::SetPropertyInt64(env, details, "sample_rate_after", valueVec[ARGS_SIX]);
+                (void)CommonNapi::SetPropertyInt64(env, details, "channels_before", valueVec[ARGS_SEVEN]);
+                (void)CommonNapi::SetPropertyInt64(env, details, "channels_after", valueVec[ARGS_EIGHT]);
+                (void)CommonNapi::SetPropertyInt64(env, details, "sample_format_before", valueVec[ARGS_NINE]);
+                (void)CommonNapi::SetPropertyInt64(env, details, "sample_format_after", valueVec[ARGS_TEN]);
+            }
+            napi_value detailsKey = nullptr;
+            napi_create_string_utf8(env, "details", NAPI_AUTO_LENGTH, &detailsKey);
+            napi_set_property(env, metric, detailsKey, details);
+        }
+
+        void FillLipAsyncDetails(napi_env env, napi_value metric)
+        {
+            napi_value details = nullptr;
+            napi_create_object(env, &details);
+            if (stringVec.size() >= 1) {
+                (void)CommonNapi::SetPropertyString(env, details, "async_type", stringVec[0]);
+            }
+            if (valueVec.size() >= ARGS_FOUR) {
+                (void)CommonNapi::SetPropertyInt64(env, details, "start_time", valueVec[ARGS_THREE]);
+                (void)CommonNapi::SetPropertyInt64(env, details, "end_time", valueVec[ARGS_FOUR]);
+            }
+            napi_value detailsKey = nullptr;
+            napi_create_string_utf8(env, "details", NAPI_AUTO_LENGTH, &detailsKey);
+            napi_set_property(env, metric, detailsKey, details);
+        }
+
+        void FillStallingDetails(napi_env env, napi_value metric)
+        {
+            std::map<std::string, int64_t> detailMap = {
+                {std::string("media_type"), valueVec[ARGS_FOUR]},
+                {std::string("duration"), valueVec[ARGS_THREE]}
+            };
+            (void)CommonNapi::SetPropertyMap(env, metric, "details", detailMap);
+        }
+
+        void FillMetricDetails(napi_env env, napi_value metric)
+        {
+            if (valueVec[0] == AV_METRICS_EVENT_TYPE_LOADINGRATE_CHANGE) {
+                FillLoadingRateChangeDetails(env, metric);
+            } else if (valueVec[0] == AV_METRICS_EVENT_TYPE_LOADING_ERROR) {
+                FillLoadingErrorDetails(env, metric);
+            } else if (valueVec[0] == AV_METRICS_EVENT_TYPE_CONTENT_CHANGED) {
+                FillContentChangedDetails(env, metric);
+            } else if (valueVec[0] == AV_METRICS_EVENT_TYPE_AUDIO_ABNORMAL) {
+                FillAudioAbnormalDetails(env, metric);
+            } else if (valueVec[0] == AV_METRICS_EVENT_TYPE_CODEC_ABNORMAL) {
+                FillCodecAbnormalDetails(env, metric);
+            } else if (valueVec[0] == AV_METRICS_EVENT_TYPE_CONTENT_DISCONTINUITY) {
+                FillContentDiscontinuityDetails(env, metric);
+            } else if (valueVec[0] == AV_METRICS_EVENT_TYPE_LIP_ASYNC) {
+                FillLipAsyncDetails(env, metric);
+            } else {
+                FillStallingDetails(env, metric);
+            }
+        }
+
+    public:
         void UvWork() override
         {
             std::shared_ptr<AutoRef> stallingRef = callback.lock();
             CHECK_AND_RETURN_LOG(stallingRef != nullptr,
                 "%{public}s AutoRef is nullptr", callbackName.c_str());
-
             napi_handle_scope scope = nullptr;
             napi_open_handle_scope(stallingRef->env_, &scope);
             CHECK_AND_RETURN_LOG(scope != nullptr,
@@ -359,28 +648,21 @@ public:
             ON_SCOPE_EXIT(0) {
                 napi_close_handle_scope(stallingRef->env_, scope);
             };
-
             napi_value jsCallback = nullptr;
             napi_status status = napi_get_reference_value(stallingRef->env_, stallingRef->cb_, &jsCallback);
             CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
                 "%{public}s failed to napi_get_reference_value", callbackName.c_str());
-
             napi_value array = nullptr;
             (void)napi_create_array_with_length(stallingRef->env_, 1, &array);
-
             napi_value metric = nullptr;
             napi_create_object(stallingRef->env_, &metric);
             (void)CommonNapi::SetPropertyInt32(stallingRef->env_, metric, "event", valueVec[0]);
             (void)CommonNapi::SetPropertyInt64(stallingRef->env_, metric, "timeStamp", valueVec[1]);
             (void)CommonNapi::SetPropertyInt64(stallingRef->env_, metric, "playbackPosition", valueVec[ARGS_TWO]);
-            std::map<std::string, int64_t> detailMap = {{"media_type", valueVec[ARGS_FOUR]},
-                {"duration", valueVec[ARGS_THREE]}};
-            (void)CommonNapi::SetPropertyMap(stallingRef->env_, metric, "details", detailMap);
+            FillMetricDetails(stallingRef->env_, metric);
             (void)napi_set_element(stallingRef->env_, array, 0, metric);
-
             napi_value result = nullptr;
             napi_value args[1] = {array};
-
             status = napi_call_function(stallingRef->env_, nullptr, jsCallback, 1, args, &result);
             CHECK_AND_RETURN_LOG(status == napi_ok,
                 "%{public}s failed to napi_call_function", callbackName.c_str());
@@ -1490,43 +1772,409 @@ void AVPlayerCallback::OnSuperResolutionChangedCb(const int32_t extra, const For
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnMetricsEventCb(const int32_t extra, const Format &infoBody)
+struct AVPlayerCallback::ContentChangedData {
+    int64_t timestamp = 0;
+    int64_t playbackPosition = 0;
+    std::string streamType;
+    std::string changeReason;
+    std::string changeResult;
+    bool isLocalFd = false;
+    int32_t streamIdBefore = 0;
+    int32_t streamIdAfter = 0;
+    int64_t bitrateBefore = 0;
+    int64_t bitrateAfter = 0;
+    int32_t videoWidthBefore = 0;
+    int32_t videoHeightBefore = 0;
+    int32_t videoWidthAfter = 0;
+    int32_t videoHeightAfter = 0;
+    int32_t videoFrameRateBefore = 0;
+    int32_t videoFrameRateAfter = 0;
+    int32_t audioChannelsBefore = 0;
+    int32_t audioChannelsAfter = 0;
+    int32_t audioSampleRateBefore = 0;
+    int32_t audioSampleRateAfter = 0;
+    int32_t videoTypeBefore = 0;
+    int32_t videoTypeAfter = 0;
+    std::string audioLangBefore;
+    std::string audioLangAfter;
+    std::string subtitleLangBefore;
+    std::string subtitleLangAfter;
+    std::string audioMimeTypeBefore;
+    std::string audioMimeTypeAfter;
+    std::string videoMimeTypeBefore;
+    std::string videoMimeTypeAfter;
+    std::string codecsBefore;
+    std::string codecsAfter;
+    std::string originCodecsBefore;
+    std::string originCodecsAfter;
+};
+
+void AVPlayerCallback::FillLoadingRateChangeEvent(const Format &infoBody)
 {
-    (void)extra;
-    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
-    
-    // Extract stalling event information from infoBody
-    int32_t stallingEventType = 0;
-    int64_t stallingTimestamp = 0;
-    int64_t stallingTimeline = 0;
-    int64_t stallingDuration = 0;
-    int32_t stallingMediaType = 0;
-
-    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_METRICS_EVENT_TYPE, stallingEventType);
-    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_STALLING_TIMESTAMP, stallingTimestamp);
-    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_STALLING_TIMELINE, stallingTimeline);
-    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_STALLING_DURATION, stallingDuration);
-    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_STALLING_MEDIA_TYPE, stallingMediaType);
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnMetricsEventCb is called, timestamp = %{public}" PRId64
-        ", timeline = %{public}" PRId64 ", duration = %{public}" PRId64 ", mediaType = %{public}" PRId32,
-        FAKE_POINTER(this), stallingTimestamp, stallingTimeline, stallingDuration, stallingMediaType);
-
-    if (refMap_.find(AVPlayerEvent::EVENT_METRICS) == refMap_.end()) {
-        MEDIA_LOGW("can not find metrics event callback!");
-        return;
-    }
-    
+    int64_t timestamp = 0;
+    int64_t playbackPosition = 0;
+    int64_t bitrateBefore = 0;
+    int64_t bitrateAfter = 0;
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_TIMESTAMP, timestamp);
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_PLAYBACK_POSITION, playbackPosition);
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_LOADING_BITRATE_BEFORE, bitrateBefore);
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_LOADING_BITRATE_AFTER, bitrateAfter);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnMetricsEventCb LOADING_BITRATE, timestamp = %{public}" PRId64
+        ", playbackPosition = %{public}" PRId64 ", bitrateBefore = %{public}" PRId64
+        ", bitrateAfter = %{public}" PRId64, FAKE_POINTER(this), timestamp, playbackPosition,
+        bitrateBefore, bitrateAfter);
     NapiCallback::MetricsEvent *cb = new(std::nothrow) NapiCallback::MetricsEvent();
     CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new MetricsEvent");
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_METRICS);
     cb->callbackName = AVPlayerEvent::EVENT_METRICS;
-    cb->valueVec.push_back(stallingEventType);
+    cb->valueVec.push_back(AV_METRICS_EVENT_TYPE_LOADINGRATE_CHANGE);
+    cb->valueVec.push_back(timestamp);
+    cb->valueVec.push_back(playbackPosition);
+    cb->valueVec.push_back(bitrateBefore);
+    cb->valueVec.push_back(bitrateAfter);
+    NapiCallback::CompleteCallback(env_, cb);
+}
+
+void AVPlayerCallback::FillLoadingErrorEvent(const Format &infoBody)
+{
+    int64_t timestamp = 0;
+    int64_t playbackPosition = 0;
+    std::string requestStage;
+    int64_t requestTimestamp = 0;
+    int64_t errorCode = 0;
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_TIMESTAMP, timestamp);
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_PLAYBACK_POSITION, playbackPosition);
+    (void)infoBody.GetStringValue(PlayerKeys::PLAYER_REQUEST_STAGE, requestStage);
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_REQUEST_TIMESTAMP, requestTimestamp);
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_ERROR_CODE, errorCode);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnMetricsEventCb LOADING_ERROR, timestamp = %{public}" PRId64
+        ", playbackPosition = %{public}" PRId64 ", requestStage = %{public}s"
+        ", requestTimestamp = %{public}" PRId64 ", errorCode = %{public}" PRId64,
+        FAKE_POINTER(this), timestamp, playbackPosition, requestStage.c_str(), requestTimestamp, errorCode);
+
+    NapiCallback::MetricsEvent *cb = new(std::nothrow) NapiCallback::MetricsEvent();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new MetricsEvent");
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_METRICS);
+    cb->callbackName = AVPlayerEvent::EVENT_METRICS;
+    cb->valueVec.push_back(AV_METRICS_EVENT_TYPE_LOADING_ERROR);
+    cb->valueVec.push_back(timestamp);
+    cb->valueVec.push_back(playbackPosition);
+    cb->stringVec.push_back(requestStage);
+    cb->valueVec.push_back(requestTimestamp);
+    cb->valueVec.push_back(errorCode);
+    NapiCallback::CompleteCallback(env_, cb);
+}
+
+void AVPlayerCallback::ExtractContentChangedData(const Format &infoBody, ContentChangedData &data)
+{
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_TIMESTAMP, data.timestamp);
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_PLAYBACK_POSITION, data.playbackPosition);
+    (void)infoBody.GetStringValue(PlayerKeys::PLAYER_MEDIA_STREAM_TYPE, data.streamType);
+    (void)infoBody.GetStringValue(PlayerKeys::PLAYER_CHANGE_REASON, data.changeReason);
+    (void)infoBody.GetStringValue(PlayerKeys::PLAYER_CHANGE_RESULT, data.changeResult);
+    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_STREAM_ID_BEFORE, data.streamIdBefore);
+    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_STREAM_ID_AFTER, data.streamIdAfter);
+    int32_t isLocalFd = 0;
+    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_IS_LOCAL_FD, isLocalFd);
+    data.isLocalFd = (isLocalFd == 1);
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_BITRATE_BEFORE, data.bitrateBefore);
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_BITRATE_AFTER, data.bitrateAfter);
+    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_VIDEO_WIDTH_BEFORE, data.videoWidthBefore);
+    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_VIDEO_HEIGHT_BEFORE, data.videoHeightBefore);
+    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_VIDEO_WIDTH_AFTER, data.videoWidthAfter);
+    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_VIDEO_HEIGHT_AFTER, data.videoHeightAfter);
+    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_VIDEO_FRAMERATE_BEFORE, data.videoFrameRateBefore);
+    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_VIDEO_FRAMERATE_AFTER, data.videoFrameRateAfter);
+    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_AUDIO_CHANNELS_BEFORE, data.audioChannelsBefore);
+    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_AUDIO_CHANNELS_AFTER, data.audioChannelsAfter);
+    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_AUDIO_SAMPLE_RATE_BEFORE, data.audioSampleRateBefore);
+    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_AUDIO_SAMPLE_RATE_AFTER, data.audioSampleRateAfter);
+    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_VIDEO_TYPE_BEFORE, data.videoTypeBefore);
+    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_VIDEO_TYPE_AFTER, data.videoTypeAfter);
+    (void)infoBody.GetStringValue(std::string(PlayerKeys::PLAYER_AUDIO_LANG_BEFORE), data.audioLangBefore);
+    (void)infoBody.GetStringValue(std::string(PlayerKeys::PLAYER_AUDIO_LANG_AFTER), data.audioLangAfter);
+    (void)infoBody.GetStringValue(std::string(PlayerKeys::PLAYER_SUBTITLE_LANG_BEFORE), data.subtitleLangBefore);
+    (void)infoBody.GetStringValue(std::string(PlayerKeys::PLAYER_SUBTITLE_LANG_AFTER), data.subtitleLangAfter);
+    (void)infoBody.GetStringValue(std::string(PlayerKeys::PLAYER_AUDIO_MIME_TYPE_BEFORE), data.audioMimeTypeBefore);
+    (void)infoBody.GetStringValue(std::string(PlayerKeys::PLAYER_AUDIO_MIME_TYPE_AFTER), data.audioMimeTypeAfter);
+    (void)infoBody.GetStringValue(std::string(PlayerKeys::PLAYER_VIDEO_MIME_TYPE_BEFORE), data.videoMimeTypeBefore);
+    (void)infoBody.GetStringValue(std::string(PlayerKeys::PLAYER_VIDEO_MIME_TYPE_AFTER), data.videoMimeTypeAfter);
+    (void)infoBody.GetStringValue(std::string(PlayerKeys::PLAYER_CODECS_BEFORE), data.codecsBefore);
+    (void)infoBody.GetStringValue(std::string(PlayerKeys::PLAYER_CODECS_AFTER), data.codecsAfter);
+    (void)infoBody.GetStringValue(std::string(PlayerKeys::PLAYER_ORIGIN_CODECS_BEFORE), data.originCodecsBefore);
+    (void)infoBody.GetStringValue(std::string(PlayerKeys::PLAYER_ORIGIN_CODECS_AFTER), data.originCodecsAfter);
+}
+
+void AVPlayerCallback::PushContentChangedValuesToCb(const ContentChangedData &data, std::vector<int64_t>& valueVec)
+{
+    bool isLocalFd = data.isLocalFd;
+    
+    valueVec.push_back(data.timestamp);
+    valueVec.push_back(data.playbackPosition);
+    valueVec.push_back(isLocalFd ? 1 : 0);
+    valueVec.push_back(static_cast<int64_t>(data.videoWidthBefore));
+    valueVec.push_back(static_cast<int64_t>(data.videoHeightBefore));
+    valueVec.push_back(static_cast<int64_t>(data.videoWidthAfter));
+    valueVec.push_back(static_cast<int64_t>(data.videoHeightAfter));
+    valueVec.push_back(static_cast<int64_t>(data.videoFrameRateBefore));
+    valueVec.push_back(static_cast<int64_t>(data.videoFrameRateAfter));
+    valueVec.push_back(static_cast<int64_t>(data.audioChannelsBefore));
+    valueVec.push_back(static_cast<int64_t>(data.audioChannelsAfter));
+    valueVec.push_back(static_cast<int64_t>(data.audioSampleRateBefore));
+    valueVec.push_back(static_cast<int64_t>(data.audioSampleRateAfter));
+    if (isLocalFd) {
+        return;
+    }
+    valueVec.push_back(static_cast<int64_t>(data.streamIdBefore));
+    valueVec.push_back(static_cast<int64_t>(data.streamIdAfter));
+    valueVec.push_back(data.bitrateBefore);
+    valueVec.push_back(data.bitrateAfter);
+}
+
+void AVPlayerCallback::PushContentChangedStringsToCb(const ContentChangedData &data,
+    std::vector<std::string>& stringVec)
+{
+    bool isLocalFd = data.isLocalFd;
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnMetricsEventCb MEDIA_CHANGED, timestamp = %{public}" PRId64
+        ", playbackPosition = %{public}" PRId64 ", streamType = %{public}s"
+        ", changeReason = %{public}s, changeResult = %{public}s",
+        FAKE_POINTER(this), data.timestamp, data.playbackPosition,
+        data.streamType.c_str(), data.changeReason.c_str(), data.changeResult.c_str());
+    if (!isLocalFd) {
+        stringVec.push_back(data.streamType);
+    } else {
+        stringVec.push_back("");
+    }
+    stringVec.push_back(data.changeReason);
+    stringVec.push_back(data.changeResult);
+    std::string videoTypeBeforeStr = GetVideoTypeStr(data.videoTypeBefore);
+    std::string videoTypeAfterStr = GetVideoTypeStr(data.videoTypeAfter);
+    stringVec.push_back(data.audioLangBefore);
+    stringVec.push_back(data.audioLangAfter);
+    stringVec.push_back(data.subtitleLangBefore);
+    stringVec.push_back(data.subtitleLangAfter);
+    stringVec.push_back(data.audioMimeTypeBefore);
+    stringVec.push_back(data.audioMimeTypeAfter);
+    stringVec.push_back(data.videoMimeTypeBefore);
+    stringVec.push_back(data.videoMimeTypeAfter);
+    stringVec.push_back(videoTypeBeforeStr);
+    stringVec.push_back(videoTypeAfterStr);
+    if (!isLocalFd) {
+        stringVec.push_back(data.codecsBefore);
+        stringVec.push_back(data.codecsAfter);
+        stringVec.push_back(data.originCodecsBefore);
+        stringVec.push_back(data.originCodecsAfter);
+    }
+}
+
+void AVPlayerCallback::FillContentChangedEvent(const Format &infoBody)
+{
+    ContentChangedData data;
+    ExtractContentChangedData(infoBody, data);
+    NapiCallback::MetricsEvent *cb = new(std::nothrow) NapiCallback::MetricsEvent();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new MetricsEvent");
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_METRICS);
+    cb->callbackName = AVPlayerEvent::EVENT_METRICS;
+    cb->valueVec.push_back(AV_METRICS_EVENT_TYPE_CONTENT_CHANGED);
+    PushContentChangedValuesToCb(data, cb->valueVec);
+    PushContentChangedStringsToCb(data, cb->stringVec);
+    NapiCallback::CompleteCallback(env_, cb);
+}
+
+void AVPlayerCallback::FillAudioAbnormalEvent(const Format &infoBody)
+{
+    int64_t timestamp = 0;
+    int64_t playbackPosition = 0;
+    std::string stateBefore;
+    std::string stateAfter;
+    int32_t interruptHint = 0;
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_TIMESTAMP, timestamp);
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_PLAYBACK_POSITION, playbackPosition);
+    (void)infoBody.GetStringValue(PlayerKeys::PLAYER_AUDIO_STATE_BEFORE, stateBefore);
+    (void)infoBody.GetStringValue(PlayerKeys::PLAYER_AUDIO_STATE_AFTER, stateAfter);
+    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_AUDIO_INTERRUPT_HINT, interruptHint);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnMetricsEventCb AUDIO_STATUS, timestamp = %{public}" PRId64
+        ", playbackPosition = %{public}" PRId64 ", stateBefore = %{public}s"
+        ", stateAfter = %{public}s, interruptHint = %{public}d",
+        FAKE_POINTER(this), timestamp, playbackPosition, stateBefore.c_str(), stateAfter.c_str(), interruptHint);
+    NapiCallback::MetricsEvent *cb = new(std::nothrow) NapiCallback::MetricsEvent();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new MetricsEvent");
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_METRICS);
+    cb->callbackName = AVPlayerEvent::EVENT_METRICS;
+    cb->valueVec.push_back(AV_METRICS_EVENT_TYPE_AUDIO_ABNORMAL);
+    cb->valueVec.push_back(timestamp);
+    cb->valueVec.push_back(playbackPosition);
+    cb->stringVec.push_back(stateBefore);
+    cb->stringVec.push_back(stateAfter);
+    std::string interruptHintStr = GetInterruptHintStr(interruptHint);
+    cb->stringVec.push_back(interruptHintStr);
+    NapiCallback::CompleteCallback(env_, cb);
+}
+
+void AVPlayerCallback::FillCodecAbnormalEvent(const Format &infoBody)
+{
+    int64_t timestamp = 0;
+    int64_t playbackPosition = 0;
+    std::string decoderType;
+    int64_t errorCode = 0;
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_TIMESTAMP, timestamp);
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_PLAYBACK_POSITION, playbackPosition);
+    (void)infoBody.GetStringValue(PlayerKeys::PLAYER_DECODER_TYPE, decoderType);
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_CODEC_ERROR_CODE, errorCode);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnMetricsEventCb CODEC_ABNORMAL, timestamp = %{public}" PRId64
+        ", playbackPosition = %{public}" PRId64 ", decoderType = %{public}s, errorCode = %{public}" PRId64,
+        FAKE_POINTER(this), timestamp, playbackPosition, decoderType.c_str(), errorCode);
+    NapiCallback::MetricsEvent *cb = new(std::nothrow) NapiCallback::MetricsEvent();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new MetricsEvent");
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_METRICS);
+    cb->callbackName = AVPlayerEvent::EVENT_METRICS;
+    cb->valueVec.push_back(AV_METRICS_EVENT_TYPE_CODEC_ABNORMAL);
+    cb->valueVec.push_back(timestamp);
+    cb->valueVec.push_back(playbackPosition);
+    cb->stringVec.push_back(decoderType);
+    cb->valueVec.push_back(errorCode);
+    NapiCallback::CompleteCallback(env_, cb);
+}
+
+void AVPlayerCallback::FillContentDiscontinuityEvent(const Format &infoBody)
+{
+    int64_t timestamp = 0;
+    int64_t playbackPosition = 0;
+    std::string streamType;
+    std::string discontinueType;
+    int64_t ptsBefore = 0;
+    int64_t ptsAfter = 0;
+    int32_t sampleRateBefore = 0;
+    int32_t sampleRateAfter = 0;
+    int32_t channelsBefore = 0;
+    int32_t channelsAfter = 0;
+    int32_t sampleFormatBefore = 0;
+    int32_t sampleFormatAfter = 0;
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_TIMESTAMP, timestamp);
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_PLAYBACK_POSITION, playbackPosition);
+    (void)infoBody.GetStringValue(PlayerKeys::PLAYER_MEDIA_STREAM_TYPE, streamType);
+    (void)infoBody.GetStringValue(PlayerKeys::PLAYER_DISCONTINUE_TYPE, discontinueType);
+    if (discontinueType == "PTS") {
+        (void)infoBody.GetLongValue(PlayerKeys::PLAYER_PTS_BEFORE, ptsBefore);
+        (void)infoBody.GetLongValue(PlayerKeys::PLAYER_PTS_AFTER, ptsAfter);
+    } else if (discontinueType == "AUDIO_PARAM") {
+        (void)infoBody.GetIntValue(PlayerKeys::PLAYER_SAMPLE_RATE_BEFORE, sampleRateBefore);
+        (void)infoBody.GetIntValue(PlayerKeys::PLAYER_SAMPLE_RATE_AFTER, sampleRateAfter);
+        (void)infoBody.GetIntValue(PlayerKeys::PLAYER_CHANNELS_BEFORE, channelsBefore);
+        (void)infoBody.GetIntValue(PlayerKeys::PLAYER_CHANNELS_AFTER, channelsAfter);
+        (void)infoBody.GetIntValue(PlayerKeys::PLAYER_SAMPLE_FORMAT_BEFORE, sampleFormatBefore);
+        (void)infoBody.GetIntValue(PlayerKeys::PLAYER_SAMPLE_FORMAT_AFTER, sampleFormatAfter);
+    }
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnMetricsEventCb CONTENT_DISCONTINUITY, timestamp = %{public}" PRId64
+        ", playbackPosition = %{public}" PRId64 ", streamType = %{public}s, discontinueType = %{public}s",
+        FAKE_POINTER(this), timestamp, playbackPosition, streamType.c_str(), discontinueType.c_str());
+    NapiCallback::MetricsEvent *cb = new(std::nothrow) NapiCallback::MetricsEvent();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new MetricsEvent");
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_METRICS);
+    cb->callbackName = AVPlayerEvent::EVENT_METRICS;
+    cb->valueVec.push_back(AV_METRICS_EVENT_TYPE_CONTENT_DISCONTINUITY);
+    cb->valueVec.push_back(timestamp);
+    cb->valueVec.push_back(playbackPosition);
+    cb->stringVec.push_back(streamType);
+    cb->stringVec.push_back(discontinueType);
+    cb->valueVec.push_back(ptsBefore);
+    cb->valueVec.push_back(ptsAfter);
+    cb->valueVec.push_back(static_cast<int64_t>(sampleRateBefore));
+    cb->valueVec.push_back(static_cast<int64_t>(sampleRateAfter));
+    cb->valueVec.push_back(static_cast<int64_t>(channelsBefore));
+    cb->valueVec.push_back(static_cast<int64_t>(channelsAfter));
+    cb->valueVec.push_back(static_cast<int64_t>(sampleFormatBefore));
+    cb->valueVec.push_back(static_cast<int64_t>(sampleFormatAfter));
+    NapiCallback::CompleteCallback(env_, cb);
+}
+
+void AVPlayerCallback::FillLipAsyncEvent(const Format &infoBody)
+{
+    int64_t timestamp = 0;
+    int64_t playbackPosition = 0;
+    std::string asyncType;
+    int64_t startTime = 0;
+    int64_t endTime = 0;
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_TIMESTAMP, timestamp);
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_PLAYBACK_POSITION, playbackPosition);
+    (void)infoBody.GetStringValue(PlayerKeys::PLAYER_ASYNC_TYPE, asyncType);
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_START_TIME, startTime);
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_END_TIME, endTime);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnMetricsEventCb LIP_ASYNC, timestamp = %{public}" PRId64
+        ", playbackPosition = %{public}" PRId64 ", asyncType = %{public}s, startTime = %{public}" PRId64
+        ", endTime = %{public}" PRId64,
+        FAKE_POINTER(this), timestamp, playbackPosition, asyncType.c_str(), startTime, endTime);
+    NapiCallback::MetricsEvent *cb = new(std::nothrow) NapiCallback::MetricsEvent();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new MetricsEvent");
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_METRICS);
+    cb->callbackName = AVPlayerEvent::EVENT_METRICS;
+    cb->valueVec.push_back(AV_METRICS_EVENT_TYPE_LIP_ASYNC);
+    cb->valueVec.push_back(timestamp);
+    cb->valueVec.push_back(playbackPosition);
+    cb->stringVec.push_back(asyncType);
+    cb->valueVec.push_back(startTime);
+    cb->valueVec.push_back(endTime);
+    NapiCallback::CompleteCallback(env_, cb);
+}
+
+void AVPlayerCallback::FillStallingEvent(const Format &infoBody)
+{
+    int64_t stallingTimestamp = 0;
+    int64_t stallingTimeline = 0;
+    int64_t stallingDuration = 0;
+    int32_t stallingMediaType = 0;
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_STALLING_TIMESTAMP, stallingTimestamp);
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_STALLING_TIMELINE, stallingTimeline);
+    (void)infoBody.GetLongValue(PlayerKeys::PLAYER_STALLING_DURATION, stallingDuration);
+    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_STALLING_MEDIA_TYPE, stallingMediaType);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnMetricsEventCb STALLING, timestamp = %{public}" PRId64
+        ", timeline = %{public}" PRId64 ", duration = %{public}" PRId64 ", mediaType = %{public}" PRId32,
+        FAKE_POINTER(this), stallingTimestamp, stallingTimeline, stallingDuration, stallingMediaType);
+    NapiCallback::MetricsEvent *cb = new(std::nothrow) NapiCallback::MetricsEvent();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new MetricsEvent");
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_METRICS);
+    cb->callbackName = AVPlayerEvent::EVENT_METRICS;
+    cb->valueVec.push_back(AV_METRICS_EVENT_TYPE_STALLING);
     cb->valueVec.push_back(stallingTimestamp);
     cb->valueVec.push_back(stallingTimeline);
     cb->valueVec.push_back(stallingDuration);
     cb->valueVec.push_back(static_cast<int64_t>(stallingMediaType));
     NapiCallback::CompleteCallback(env_, cb);
+}
+
+void AVPlayerCallback::OnMetricsEventCb(const int32_t extra, const Format &infoBody)
+{
+    (void)extra;
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+
+    if (refMap_.find(AVPlayerEvent::EVENT_METRICS) == refMap_.end()) {
+        MEDIA_LOGW("can not find metrics event callback!");
+        return;
+    }
+
+    int32_t metricsEventType = 0;
+    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_METRICS_EVENT_TYPE, metricsEventType);
+
+    if (metricsEventType == AV_METRICS_EVENT_TYPE_LOADINGRATE_CHANGE) {
+        FillLoadingRateChangeEvent(infoBody);
+    } else if (metricsEventType == AV_METRICS_EVENT_TYPE_LOADING_ERROR) {
+        FillLoadingErrorEvent(infoBody);
+    } else if (metricsEventType == AV_METRICS_EVENT_TYPE_CONTENT_CHANGED) {
+        FillContentChangedEvent(infoBody);
+    } else if (metricsEventType == AV_METRICS_EVENT_TYPE_AUDIO_ABNORMAL) {
+        FillAudioAbnormalEvent(infoBody);
+    } else if (metricsEventType == AV_METRICS_EVENT_TYPE_CODEC_ABNORMAL) {
+        FillCodecAbnormalEvent(infoBody);
+    } else if (metricsEventType == AV_METRICS_EVENT_TYPE_CONTENT_DISCONTINUITY) {
+        FillContentDiscontinuityEvent(infoBody);
+    } else if (metricsEventType == AV_METRICS_EVENT_TYPE_LIP_ASYNC) {
+        FillLipAsyncEvent(infoBody);
+    } else if (metricsEventType == AV_METRICS_EVENT_TYPE_STALLING) {
+        FillStallingEvent(infoBody);
+    } else {
+        return;
+    }
 }
 
 void AVPlayerCallback::OnTimedMetaDataCb(const int32_t extra, const Format &infoBody)

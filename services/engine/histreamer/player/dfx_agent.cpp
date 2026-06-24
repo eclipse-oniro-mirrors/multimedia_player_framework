@@ -20,8 +20,12 @@
 #include "common/log.h"
 #include "common/media_source.h"
 #include "hisysevent.h"
+#include "event.h"
+#include "meta/any.h"
+#include "media_demuxer.h"
 #include "media_dfx.h"
 #include "format.h"
+#include "player.h"
 
 namespace OHOS {
 namespace Media {
@@ -48,6 +52,219 @@ namespace {
         int64_t timeFrameInterval = 0;
         int64_t timeCurFramePts = 0;
     };
+
+    constexpr int32_t STREAM_TYPE_MIXED = 0;
+    constexpr int32_t STREAM_TYPE_VIDEO = 1;
+    constexpr int32_t STREAM_TYPE_AUDIO = 2;
+    constexpr int32_t STREAM_TYPE_SUBTITLE = 3;
+    constexpr int32_t CHANGE_REASON_NETWORK_QUALITY = 1;
+    constexpr int32_t CHANGE_REASON_MANUAL = 2;
+    constexpr int32_t LOADING_STAGE_CONNECTION = 0;
+    constexpr int32_t LOADING_STAGE_PLAYLIST = 1;
+    constexpr int32_t LOADING_STAGE_MEDIA_DATA = 2;
+    constexpr int32_t VIDEO_TYPE_SDR = 0;
+    constexpr int32_t VIDEO_TYPE_HDR_VIVID = 1;
+    constexpr int32_t VIDEO_TYPE_HDR_10 = 2;
+    constexpr int32_t DISCONTINUE_TYPE_AUDIO_PARAM = 1;
+    constexpr int32_t DISCONTINUE_TYPE_PTS = 2;
+    constexpr int32_t RENDERER_STATE_RUNNING = 2;
+    constexpr int32_t RENDERER_STATE_STOPPED = 3;
+    constexpr int32_t RENDERER_STATE_PAUSED = 5;
+    constexpr int32_t DECODER_TYPE_VIDEO = 1;
+    constexpr int32_t DECODER_TYPE_AUDIO = 2;
+    constexpr int32_t ASYNC_TYPE_VIDEO_AHEAD = 1;
+    constexpr int32_t ASYNC_TYPE_VIDEO_BEHIND = 2;
+    constexpr int32_t DISCONTINUE_TYPE_AUDIO = 1;
+    constexpr int32_t DISCONTINUE_TYPE_VIDEO = 2;
+
+    static std::string GetStreamTypeStr(int32_t streamType)
+    {
+        switch (streamType) {
+            case STREAM_TYPE_MIXED:
+                return "MIXED";
+            case STREAM_TYPE_VIDEO:
+                return "VIDEO";
+            case STREAM_TYPE_AUDIO:
+                return "AUDIO";
+            case STREAM_TYPE_SUBTITLE:
+                return "SUBTITLE";
+            default:
+                return "UNKNOWN";
+        }
+    }
+
+    static std::string GetChangeReasonStr(int32_t changeReason)
+    {
+        switch (changeReason) {
+            case CHANGE_REASON_NETWORK_QUALITY:
+                return "NETWORK_QUALITY";
+            case CHANGE_REASON_MANUAL:
+                return "MANUAL";
+            default:
+                return "UNKNOWN";
+        }
+    }
+
+    static std::string GetRequestStageStr(int32_t requestStage)
+    {
+        switch (requestStage) {
+            case LOADING_STAGE_CONNECTION:
+                return "CONNECTION";
+            case LOADING_STAGE_PLAYLIST:
+                return "PLAYLIST";
+            case LOADING_STAGE_MEDIA_DATA:
+                return "MEDIA_DATA";
+            default:
+                return "UNKNOWN";
+        }
+    }
+
+    static std::string GetVideoTypeStr(int32_t videoType)
+    {
+        switch (videoType) {
+            case VIDEO_TYPE_SDR:
+                return "SDR";
+            case VIDEO_TYPE_HDR_VIVID:
+                return "HDR_VIVID";
+            case VIDEO_TYPE_HDR_10:
+                return "HDR_10";
+            default:
+                return "UNKNOWN";
+        }
+    }
+
+    static void FillStreamBitrateDetails(std::map<std::string, Any>& details,
+        const OHOS::Media::MediaChangeInfo& changeInfo, bool isLocalFd)
+    {
+        details["stream_id_before"] = Any(static_cast<int64_t>(changeInfo.streamIdBefore));
+        details["stream_id_after"] = Any(static_cast<int64_t>(changeInfo.streamIdAfter));
+        
+        if (isLocalFd) {
+            return;
+        }
+        details["bitrate_before"] = Any(static_cast<int64_t>(changeInfo.bitrateBefore));
+        details["bitrate_after"] = Any(static_cast<int64_t>(changeInfo.bitrateAfter));
+    }
+
+    static void FillVideoDimensionDetails(std::map<std::string, Any>& details,
+        const OHOS::Media::MediaChangeInfo& changeInfo, bool isLocalFd)
+    {
+        details["video_width_before"] = Any(static_cast<int64_t>(changeInfo.videoWidthBefore));
+        details["video_height_before"] = Any(static_cast<int64_t>(changeInfo.videoHeightBefore));
+        details["video_width_after"] = Any(static_cast<int64_t>(changeInfo.videoWidthAfter));
+        details["video_height_after"] = Any(static_cast<int64_t>(changeInfo.videoHeightAfter));
+    }
+
+    static void FillVideoFrameRateDetails(std::map<std::string, Any>& details,
+        const OHOS::Media::MediaChangeInfo& changeInfo, bool isLocalFd)
+    {
+        details["video_framerate_before"] = Any(static_cast<int64_t>(changeInfo.videoFrameRateBefore));
+        details["video_framerate_after"] = Any(static_cast<int64_t>(changeInfo.videoFrameRateAfter));
+    }
+
+    static void FillAudioDetails(std::map<std::string, Any>& details,
+        const OHOS::Media::MediaChangeInfo& changeInfo, bool isLocalFd)
+    {
+        details["audio_channels_before"] = Any(static_cast<int64_t>(changeInfo.audioChannelsBefore));
+        details["audio_channels_after"] = Any(static_cast<int64_t>(changeInfo.audioChannelsAfter));
+        details["audio_sample_rate_before"] = Any(static_cast<int64_t>(changeInfo.audioSampleRateBefore));
+        details["audio_sample_rate_after"] = Any(static_cast<int64_t>(changeInfo.audioSampleRateAfter));
+    }
+
+    static void FillOtherDetails(std::map<std::string, Any>& details,
+        const OHOS::Media::MediaChangeInfo& changeInfo, bool isLocalFd)
+    {
+        std::string videoTypeBeforeStr = GetVideoTypeStr(changeInfo.videoTypeBefore);
+        std::string videoTypeAfterStr = GetVideoTypeStr(changeInfo.videoTypeAfter);
+        details["video_type_before"] = Any(videoTypeBeforeStr);
+        details["video_type_after"] = Any(videoTypeAfterStr);
+        details["audio_lang_before"] = Any(changeInfo.audioLangBefore);
+        details["audio_lang_after"] = Any(changeInfo.audioLangAfter);
+        details["subtitle_lang_before"] = Any(changeInfo.subtitleLangBefore);
+        details["subtitle_lang_after"] = Any(changeInfo.subtitleLangAfter);
+        details["audio_mime_type_before"] = Any(changeInfo.audioMimeTypeBefore);
+        details["audio_mime_type_after"] = Any(changeInfo.audioMimeTypeAfter);
+        details["video_mime_type_before"] = Any(changeInfo.videoMimeTypeBefore);
+        details["video_mime_type_after"] = Any(changeInfo.videoMimeTypeAfter);
+        
+        if (isLocalFd) {
+            return;
+        }
+        details["codecs_before"] = Any(changeInfo.codecsBefore);
+        details["codecs_after"] = Any(changeInfo.codecsAfter);
+        details["origin_codecs_before"] = Any(changeInfo.originCodecsBefore);
+        details["origin_codecs_after"] = Any(changeInfo.originCodecsAfter);
+    }
+
+    static void FillMediaChangeDetails(std::map<std::string, Any>& details,
+        const OHOS::Media::MediaChangeInfo& changeInfo, bool isLocalFd)
+    {
+        FillStreamBitrateDetails(details, changeInfo, isLocalFd);
+        FillVideoDimensionDetails(details, changeInfo, isLocalFd);
+        FillVideoFrameRateDetails(details, changeInfo, isLocalFd);
+        FillAudioDetails(details, changeInfo, isLocalFd);
+        FillOtherDetails(details, changeInfo, isLocalFd);
+    }
+
+    static std::string GetStreamTypeStrDiscontinue(int32_t streamType)
+    {
+        if (streamType == DISCONTINUE_TYPE_AUDIO) {
+            return "AUDIO";
+        }
+        if (streamType == DISCONTINUE_TYPE_VIDEO) {
+            return "VIDEO";
+        }
+        return "UNKNOWN";
+    }
+
+    static std::string GetDiscontinueTypeStr(int32_t discontinueType)
+    {
+        if (discontinueType == DISCONTINUE_TYPE_AUDIO_PARAM) {
+            return "AUDIO_PARAM";
+        }
+        if (discontinueType == DISCONTINUE_TYPE_PTS) {
+            return "PTS";
+        }
+        return "UNKNOWN";
+    }
+
+    static std::string GetAudioStateStr(int32_t state)
+    {
+        switch (state) {
+            case RENDERER_STATE_RUNNING:
+                return "RUNNING";
+            case RENDERER_STATE_STOPPED:
+                return "STOPPED";
+            case RENDERER_STATE_PAUSED:
+                return "PAUSED";
+            default:
+                return "UNKNOWN";
+        }
+    }
+
+    static std::string GetDecoderTypeStr(int32_t decoderType)
+    {
+        switch (decoderType) {
+            case DECODER_TYPE_VIDEO:
+                return "VIDEO";
+            case DECODER_TYPE_AUDIO:
+                return "AUDIO";
+            default:
+                return "UNKNOWN";
+        }
+    }
+
+    static std::string GetAsyncTypeStr(int32_t asyncType)
+    {
+        switch (asyncType) {
+            case ASYNC_TYPE_VIDEO_AHEAD:
+                return "VIDEO_AHEAD";
+            case ASYNC_TYPE_VIDEO_BEHIND:
+                return "VIDEO_BEHIND";
+            default:
+                return "UNKNOWN";
+        }
+    }
 }
 
 const std::map<DfxEventType, DfxEventHandleFunc> DfxAgent::DFX_EVENT_HANDLERS_ = {
@@ -57,11 +274,14 @@ const std::map<DfxEventType, DfxEventHandleFunc> DfxAgent::DFX_EVENT_HANDLERS_ =
     { DfxEventType::DFX_INFO_PLAYER_EOS_SEEK, DfxAgent::ProcessEosSeekEvent },
     { DfxEventType::DFX_INFO_PERF_REPORT, DfxAgent::ProcessPerfInfoEvent },
     { DfxEventType::DFX_EVENT_STALLING, DfxAgent::ProcessMetricsEvent },
-    { DfxEventType::DFX_EVENT_AVDESYNC, DfxAgent::ProcessPlayErrEvent },
-    { DfxEventType::DFX_EVENT_MEDIA_CHANGED, DfxAgent::ProcessPlayErrEvent },
-    { DfxEventType::DFX_EVENT_LOADING_ERROR, DfxAgent::ProcessPlayErrEvent },
-    { DfxEventType::DFX_EVENT_MEDIA_DISCONTINUE, DfxAgent::ProcessPlayErrEvent },
-    { DfxEventType::DFX_EVENT_AUDIO_ERROR, DfxAgent::ProcessPlayErrEvent }
+    { DfxEventType::DFX_EVENT_AVDESYNC, DfxAgent::ProcessLipAsyncEvent },
+    { DfxEventType::DFX_EVENT_LOADING_BITRATE, DfxAgent::ProcessLoadingBitrateEvent },
+    { DfxEventType::DFX_EVENT_LOADING_ERROR, DfxAgent::ProcessLoadingErrorEvent },
+    { DfxEventType::DFX_EVENT_MEDIA_CHANGED, DfxAgent::ProcessMediaChangedEvent },
+    { DfxEventType::DFX_EVENT_MEDIA_DISCONTINUE, DfxAgent::ProcessMediaDiscontinueEvent },
+    { DfxEventType::DFX_EVENT_AUDIO_STATUS, DfxAgent::ProcessAudioStatusEvent },
+    { DfxEventType::DFX_EVENT_CODEC_ABNORMAL, DfxAgent::ProcessCodecAbnormalEvent },
+    { DfxEventType::DFX_EVENT_AUDIO_ERROR, DfxAgent::ProcessPlayErrEvent },
 };
 
 const std::unordered_map<std::string, bool> PERF_ITEM_NECESSITY = {
@@ -321,10 +541,13 @@ void DfxAgent::ReportMetricsEvent(const DfxEvent &event)
     totalStallingTimes_.fetch_add(1);
     FALSE_RETURN(delayTimeMs >= 0);
 
-    AVMetricsEvent info {
+AVMetricsEvent info {
         .timeStamp = CalculateEventTimestamp(expected),
         .playbackPosition = ts.timeCurFramePts,
-        .details = {{"MediaType", OHOS::Media::MediaType::MEDIA_TYPE_VID}, {"Duration", delayTimeMs}},
+        .details = {
+            {"MediaType", Any(OHOS::Media::MediaType::MEDIA_TYPE_VID)},
+            {"Duration", Any(delayTimeMs)}
+        }
     };
     auto agent = shared_from_this();
     FALSE_RETURN_MSG(agent != nullptr, "DfxAgent is released");
@@ -358,9 +581,6 @@ void DfxAgent::ReportPlayErrEvent(const DfxEvent &event)
 {
     PlayErrEvent eventType;
     switch (event.type) {
-        case DfxEventType::DFX_EVENT_AVDESYNC:
-            eventType = OHOS::Media::PlayErrEvent::AVDESYNC;
-            break;
         case DfxEventType::DFX_EVENT_MEDIA_CHANGED:
             eventType = OHOS::Media::PlayErrEvent::MEDIA_CHANGED;
             break;
@@ -418,5 +638,212 @@ std::string DfxAgent::GetPerfStr(const bool needWaitAllData)
     return (!isAllDataReady && needWaitAllData) ? waitFor : perfStr;
 }
 
+void DfxAgent::ProcessLoadingBitrateEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event)
+{
+    auto agent = ptr.lock();
+    FALSE_RETURN(agent != nullptr);
+    auto bitratePair = AnyCast<std::pair<uint32_t, uint32_t>>(event.param);
+    int64_t steadyMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()
+    ).count();
+    AVMetricsEvent info {
+        .metricsEventType = AVMetricsEventType::AV_METRICS_EVENT_TYPE_LOADINGRATE_CHANGE,
+        .timeStamp = agent->CalculateEventTimestamp(steadyMs),
+        .playbackPosition = 0,
+        .details = {
+            {"bitrate_before", Any(static_cast<int64_t>(bitratePair.first))},
+            {"bitrate_after", Any(static_cast<int64_t>(bitratePair.second))}
+        },
+    };
+    DfxEvent eventCopy;
+    eventCopy.param = info;
+    if (agent->metricsCallback_ != nullptr) {
+        agent->metricsCallback_(ptr, eventCopy);
+    }
+}
+
+void DfxAgent::ProcessLoadingErrorEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event)
+{
+    auto agent = ptr.lock();
+    FALSE_RETURN(agent != nullptr);
+    auto errorInfo = AnyCast<std::tuple<int32_t, int64_t, int32_t>>(event.param);
+    int32_t requestStage = std::get<0>(errorInfo);
+    int64_t requestTimestamp = std::get<1>(errorInfo);
+    int32_t errorCode = std::get<2>(errorInfo);
+    AVMetricsEvent info {
+        .metricsEventType = AVMetricsEventType::AV_METRICS_EVENT_TYPE_LOADING_ERROR,
+        .timeStamp = agent->CalculateEventTimestamp(requestTimestamp),
+        .playbackPosition = 0,
+        .details = {
+            {"request_stage", Any(GetRequestStageStr(requestStage))},
+            {"request_timestamp", Any(agent->CalculateEventTimestamp(requestTimestamp))},
+            {"error_code", Any(static_cast<int64_t>(errorCode))}
+        },
+    };
+    DfxEvent eventCopy;
+    eventCopy.param = info;
+    if (agent->metricsCallback_ != nullptr) {
+        agent->metricsCallback_(ptr, eventCopy);
+    }
+}
+
+void DfxAgent::ProcessMediaChangedEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event)
+{
+    auto agent = ptr.lock();
+    FALSE_RETURN(agent != nullptr);
+    auto changeInfo = AnyCast<OHOS::Media::MediaChangeInfo>(event.param);
+    int64_t steadyMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()
+    ).count();
+
+    bool isLocalFd = changeInfo.isLocalFd;
+    std::string streamTypeStr = GetStreamTypeStr(changeInfo.streamType);
+    std::string changeReasonStr = GetChangeReasonStr(changeInfo.changeReason);
+    std::string changeResultStr = (changeInfo.changeResult == 0) ? "SUCCESS" : "FAILED";
+    std::map<std::string, Any> details;
+    details["is_local_fd"] = Any(isLocalFd);
+    if (!isLocalFd) {
+        details["media_stream_type"] = Any(streamTypeStr);
+    }
+    details["change_reason"] = Any(changeReasonStr);
+    details["change_result"] = Any(changeResultStr);
+    FillMediaChangeDetails(details, changeInfo, isLocalFd);
+
+    AVMetricsEvent info {
+        .metricsEventType = AVMetricsEventType::AV_METRICS_EVENT_TYPE_CONTENT_CHANGED,
+        .timeStamp = agent->CalculateEventTimestamp(steadyMs),
+        .playbackPosition = 0,
+        .details = details,
+    };
+    DfxEvent eventCopy;
+    eventCopy.param = info;
+    if (agent->metricsCallback_ != nullptr) {
+        agent->metricsCallback_(ptr, eventCopy);
+    }
+}
+
+void DfxAgent::ProcessMediaDiscontinueEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event)
+{
+    auto agent = ptr.lock();
+    FALSE_RETURN(agent != nullptr);
+    auto discontinueInfo = AnyCast<OHOS::Media::MediaDiscontinueInfo>(event.param);
+    int64_t steadyMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()
+    ).count();
+    
+    std::string streamTypeStr = GetStreamTypeStrDiscontinue(discontinueInfo.streamType);
+    std::string discontinueTypeStr = GetDiscontinueTypeStr(discontinueInfo.discontinueType);
+
+    AVMetricsEvent info {
+        .metricsEventType = AVMetricsEventType::AV_METRICS_EVENT_TYPE_CONTENT_DISCONTINUITY,
+        .timeStamp = agent->CalculateEventTimestamp(steadyMs),
+        .playbackPosition = 0,
+        .details = {
+            {"media_stream_type", Any(streamTypeStr)},
+            {"discontinue_type", Any(discontinueTypeStr)}
+        },
+    };
+    if (discontinueInfo.discontinueType == DISCONTINUE_TYPE_PTS) {
+        info.details["pts_before"] = Any(discontinueInfo.ptsBefore);
+        info.details["pts_after"] = Any(discontinueInfo.ptsAfter);
+    } else if (discontinueInfo.discontinueType == DISCONTINUE_TYPE_AUDIO_PARAM) {
+        info.details["sample_rate_before"] = Any(static_cast<int64_t>(discontinueInfo.sampleRateBefore));
+        info.details["sample_rate_after"] = Any(static_cast<int64_t>(discontinueInfo.sampleRateAfter));
+        info.details["channels_before"] = Any(static_cast<int64_t>(discontinueInfo.channelsBefore));
+        info.details["channels_after"] = Any(static_cast<int64_t>(discontinueInfo.channelsAfter));
+        info.details["sample_format_before"] = Any(static_cast<int64_t>(discontinueInfo.sampleFormatBefore));
+        info.details["sample_format_after"] = Any(static_cast<int64_t>(discontinueInfo.sampleFormatAfter));
+    }
+    DfxEvent eventCopy;
+    eventCopy.param = info;
+    if (agent->metricsCallback_ != nullptr) {
+        agent->metricsCallback_(ptr, eventCopy);
+    }
+}
+
+void DfxAgent::ProcessAudioStatusEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event)
+{
+    auto agent = ptr.lock();
+    FALSE_RETURN(agent != nullptr);
+    auto statusInfo = AnyCast<AudioStatusInfo>(event.param);
+    int64_t steadyMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()
+    ).count();
+
+    std::string stateBeforeStr = GetAudioStateStr(statusInfo.stateBefore);
+    std::string stateAfterStr = GetAudioStateStr(statusInfo.stateAfter);
+
+    AVMetricsEvent info {
+        .metricsEventType = AVMetricsEventType::AV_METRICS_EVENT_TYPE_AUDIO_ABNORMAL,
+        .timeStamp = agent->CalculateEventTimestamp(steadyMs),
+        .playbackPosition = 0,
+        .details = {
+            {"state_before", Any(stateBeforeStr)},
+            {"state_after", Any(stateAfterStr)},
+            {"interrupt_hint", Any(statusInfo.interruptHint)}
+        },
+    };
+    DfxEvent eventCopy;
+    eventCopy.param = info;
+    if (agent->metricsCallback_ != nullptr) {
+        agent->metricsCallback_(ptr, eventCopy);
+    }
+}
+
+void DfxAgent::ProcessCodecAbnormalEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event)
+{
+    auto agent = ptr.lock();
+    FALSE_RETURN(agent != nullptr);
+    auto codecAbnormalInfo = AnyCast<OHOS::Media::CodecAbnormalInfo>(event.param);
+    int64_t steadyMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()
+    ).count();
+
+    std::string decoderTypeStr = GetDecoderTypeStr(codecAbnormalInfo.decoderType);
+
+    AVMetricsEvent info {
+        .metricsEventType = AVMetricsEventType::AV_METRICS_EVENT_TYPE_CODEC_ABNORMAL,
+        .timeStamp = agent->CalculateEventTimestamp(steadyMs),
+        .playbackPosition = 0,
+        .details = {
+            {"decoder_type", Any(decoderTypeStr)},
+            {"error_code", Any(static_cast<int64_t>(codecAbnormalInfo.errorCode))}
+        },
+    };
+    DfxEvent eventCopy;
+    eventCopy.param = info;
+    if (agent->metricsCallback_ != nullptr) {
+        agent->metricsCallback_(ptr, eventCopy);
+    }
+}
+
+void DfxAgent::ProcessLipAsyncEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event)
+{
+    auto agent = ptr.lock();
+    FALSE_RETURN(agent != nullptr);
+    auto lipAsyncInfo = AnyCast<OHOS::Media::LipAsyncInfo>(event.param);
+    int64_t steadyMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()
+    ).count();
+
+    std::string asyncTypeStr = GetAsyncTypeStr(lipAsyncInfo.asyncType);
+
+    AVMetricsEvent info {
+        .metricsEventType = AVMetricsEventType::AV_METRICS_EVENT_TYPE_LIP_ASYNC,
+        .timeStamp = agent->CalculateEventTimestamp(steadyMs),
+        .playbackPosition = lipAsyncInfo.endTimeMs,
+        .details = {
+            {"async_type", Any(asyncTypeStr)},
+            {"start_time", Any(lipAsyncInfo.startTimeMs)},
+            {"end_time", Any(lipAsyncInfo.endTimeMs)}
+        },
+    };
+    DfxEvent eventCopy;
+    eventCopy.param = info;
+    if (agent->metricsCallback_ != nullptr) {
+        agent->metricsCallback_(ptr, eventCopy);
+    }
+}
+
 }  // namespace Media
-}  // namespace OHOS
+} // namespace OHOS

@@ -25,6 +25,7 @@
 
 namespace OHOS {
 namespace Media {
+class NapiCallback;
 class AVPlayerNotify {
 public:
     AVPlayerNotify() = default;
@@ -86,6 +87,19 @@ private:
     void OnAdsChangeCb(const int32_t extra, const Format &infoBody);
 
     void OnEosCb(const int32_t extra, const Format &infoBody);
+
+    struct ContentChangedData;
+    void FillLoadingRateChangeEvent(const Format &infoBody);
+    void FillLoadingErrorEvent(const Format &infoBody);
+    void FillContentChangedEvent(const Format &infoBody);
+    void ExtractContentChangedData(const Format &infoBody, ContentChangedData &data);
+    void PushContentChangedValuesToCb(const ContentChangedData &data, std::vector<int64_t>& valueVec);
+    void PushContentChangedStringsToCb(const ContentChangedData &data, std::vector<std::string>& stringVec);
+    void FillAudioAbnormalEvent(const Format &infoBody);
+    void FillCodecAbnormalEvent(const Format &infoBody);
+    void FillContentDiscontinuityEvent(const Format &infoBody);
+    void FillLipAsyncEvent(const Format &infoBody);
+    void FillStallingEvent(const Format &infoBody);
     void NotifyIsLiveStream(const int32_t extra, const Format &infoBody);
     void OnTrackChangedCb(const int32_t extra, const Format &infoBody);
     void OnTrackInfoUpdate(const int32_t extra, const Format &infoBody);
