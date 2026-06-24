@@ -2310,6 +2310,12 @@ int32_t HiPlayerImpl::InnerSelectTrack(std::string mime, int32_t trackId, Player
     }
     if (IsSubtitleMime(mime)) {
         currentSubtitleTrackId_ = trackId;
+    } else if (IsAudioMime(mime)) {
+        currentAudioTrackId_ = trackId;
+        int32_t curPosMs = 0;
+        GetCurrentTime(curPosMs);
+        MEDIA_LOG_I("Audio SelectTrack seek begin " PUBLIC_LOG_D32, trackId);
+        return TransStatus(Seek(curPosMs, PlayerSeekMode::SEEK_CLOSEST, false));
     } else if (IsVideoMime(mime)) {
         currentVideoTrackId_ = trackId;
         int32_t curPosMs = 0;
