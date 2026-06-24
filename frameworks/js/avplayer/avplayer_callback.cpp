@@ -775,8 +775,9 @@ public:
         }
     };
 
-    struct AdsChangeCb : public Base {
-        OHOS::Media::AVAdsChangeEvent meta = {};
+    struct AdsLoadingErrorCb : public Base {
+        std::string eventId;
+        int32_t errorCode = 0;
         void UvWork() override
         {
             std::shared_ptr<AutoRef> ref = callback.lock();
@@ -793,14 +794,105 @@ public:
             napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
             CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
                 "%{public}s failed to napi_get_reference_value", callbackName.c_str());
-            napi_value obj = nullptr;
-            napi_create_object(ref->env_, &obj);
-            CommonNapi::SetPropertyInt32(ref->env_, obj, "type", meta.type);
-            CommonNapi::SetPropertyString(ref->env_, obj, "eventId", meta.eventId);
-            CommonNapi::SetPropertyInt64(ref->env_, obj, "startMs", meta.startMs);
-            CommonNapi::SetPropertyInt64(ref->env_, obj, "durationMs", meta.durationMs);
-            CommonNapi::SetPropertyInt32(ref->env_, obj, "reason", meta.reason);
-            napi_value args[1] = { obj };
+
+            napi_value adsIdVal = nullptr;
+            napi_create_string_utf8(ref->env_, eventId.c_str(), eventId.length(), &adsIdVal);
+
+            napi_value reasonVal = nullptr;
+            CommonNapi::CreateError(ref->env_, errorCode, "ads loading error", reasonVal);
+
+            napi_value args[2] = { adsIdVal, reasonVal };
+            napi_value result = nullptr;
+            status = napi_call_function(ref->env_, nullptr, jsCallback, 2, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok, "%{public}s fail to napi_call_function", callbackName.c_str());
+        }
+    };
+
+    struct AdsStartedCb : public Base {
+        std::string eventId;
+        int64_t durationMs = 0;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_RETURN_LOG(scope != nullptr, "%{public}s scope is nullptr", callbackName.c_str());
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(ref->env_, scope);
+            };
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+
+            napi_value adsIdVal = nullptr;
+            napi_create_string_utf8(ref->env_, eventId.c_str(), eventId.length(), &adsIdVal);
+
+            napi_value durationVal = nullptr;
+            napi_create_int64(ref->env_, durationMs, &durationVal);
+
+            napi_value args[2] = { adsIdVal, durationVal };
+            napi_value result = nullptr;
+            status = napi_call_function(ref->env_, nullptr, jsCallback, 2, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok, "%{public}s fail to napi_call_function", callbackName.c_str());
+        }
+    };
+
+    struct AdsSkippedCb : public Base {
+        std::string eventId;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_RETURN_LOG(scope != nullptr, "%{public}s scope is nullptr", callbackName.c_str());
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(ref->env_, scope);
+            };
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+
+            napi_value adsIdVal = nullptr;
+            napi_create_string_utf8(ref->env_, eventId.c_str(), eventId.length(), &adsIdVal);
+
+            napi_value args[1] = { adsIdVal };
+            napi_value result = nullptr;
+            status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok, "%{public}s fail to napi_call_function", callbackName.c_str());
+        }
+    };
+
+    struct AdsCompletedCb : public Base {
+        std::string eventId;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_RETURN_LOG(scope != nullptr, "%{public}s scope is nullptr", callbackName.c_str());
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(ref->env_, scope);
+            };
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+
+            napi_value adsIdVal = nullptr;
+            napi_create_string_utf8(ref->env_, eventId.c_str(), eventId.length(), &adsIdVal);
+
+            napi_value args[1] = { adsIdVal };
             napi_value result = nullptr;
             status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
             CHECK_AND_RETURN_LOG(status == napi_ok, "%{public}s fail to napi_call_function", callbackName.c_str());
@@ -1585,27 +1677,68 @@ void AVPlayerCallback::OnAdsChangeCb(const int32_t extra, const Format &infoBody
 {
     (void)extra;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
-    if (refMap_.find(AVPlayerEvent::EVENT_ADS_CHANGE) == refMap_.end()) {
-        MEDIA_LOGD("0x%{public}06" PRIXPTR " can not find adsChange callback!", FAKE_POINTER(this));
-        return;
+
+    int32_t type = 0;
+    std::string eventId;
+    int64_t durationMs = -1;
+    int32_t reason = 0;
+    (void)infoBody.GetIntValue(std::string(PlaybackAds::PLAYER_ADS_TYPE), type);
+    (void)infoBody.GetStringValue(std::string(PlaybackAds::PLAYER_ADS_EVENT_ID), eventId);
+    (void)infoBody.GetLongValue(std::string(PlaybackAds::PLAYER_ADS_DURATION_MS), durationMs);
+    (void)infoBody.GetIntValue(std::string(PlaybackAds::PLAYER_ADS_REASON), reason);
+
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnAdsChangeCb type=%{public}d eventId=%{public}s reason=%{public}d",
+        FAKE_POINTER(this), type, eventId.c_str(), reason);
+
+    if (type == OHOS::Media::ADS_START) {
+        if (refMap_.find(AVPlayerEvent::EVENT_ADS_STARTED) == refMap_.end()) {
+            MEDIA_LOGD("can not find adsStarted callback!");
+            return;
+        }
+        NapiCallback::AdsStartedCb *cb = new(std::nothrow) NapiCallback::AdsStartedCb();
+        CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new AdsStartedCb");
+        cb->callback = refMap_.at(AVPlayerEvent::EVENT_ADS_STARTED);
+        cb->callbackName = AVPlayerEvent::EVENT_ADS_STARTED;
+        cb->eventId = eventId;
+        cb->durationMs = durationMs;
+        NapiCallback::CompleteCallback(env_, cb);
+    } else if (type == OHOS::Media::ADS_END) {
+        if (reason == OHOS::Media::ADS_ERROR) {
+            if (refMap_.find(AVPlayerEvent::EVENT_ADS_LOADING_ERROR) == refMap_.end()) {
+                MEDIA_LOGD("can not find adsLoadingError callback!");
+                return;
+            }
+            NapiCallback::AdsLoadingErrorCb *cb = new(std::nothrow) NapiCallback::AdsLoadingErrorCb();
+            CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new AdsLoadingErrorCb");
+            cb->callback = refMap_.at(AVPlayerEvent::EVENT_ADS_LOADING_ERROR);
+            cb->callbackName = AVPlayerEvent::EVENT_ADS_LOADING_ERROR;
+            cb->eventId = eventId;
+            cb->errorCode = 5400108;
+            NapiCallback::CompleteCallback(env_, cb);
+        } else if (reason == OHOS::Media::ADS_SKIPPED) {
+            if (refMap_.find(AVPlayerEvent::EVENT_ADS_SKIPPED) == refMap_.end()) {
+                MEDIA_LOGD("can not find adsSkipped callback!");
+                return;
+            }
+            NapiCallback::AdsSkippedCb *cb = new(std::nothrow) NapiCallback::AdsSkippedCb();
+            CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new AdsSkippedCb");
+            cb->callback = refMap_.at(AVPlayerEvent::EVENT_ADS_SKIPPED);
+            cb->callbackName = AVPlayerEvent::EVENT_ADS_SKIPPED;
+            cb->eventId = eventId;
+            NapiCallback::CompleteCallback(env_, cb);
+        } else if (reason == OHOS::Media::ADS_COMPLETED) {
+            if (refMap_.find(AVPlayerEvent::EVENT_ADS_COMPLETED) == refMap_.end()) {
+                MEDIA_LOGD("can not find adsCompleted callback!");
+                return;
+            }
+            NapiCallback::AdsCompletedCb *cb = new(std::nothrow) NapiCallback::AdsCompletedCb();
+            CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new AdsCompletedCb");
+            cb->callback = refMap_.at(AVPlayerEvent::EVENT_ADS_COMPLETED);
+            cb->callbackName = AVPlayerEvent::EVENT_ADS_COMPLETED;
+            cb->eventId = eventId;
+            NapiCallback::CompleteCallback(env_, cb);
+        }
     }
-
-    NapiCallback::AdsChangeCb *cb = new(std::nothrow) NapiCallback::AdsChangeCb();
-    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new AdsChangeCb");
-
-    cb->callback = refMap_.at(AVPlayerEvent::EVENT_ADS_CHANGE);
-    cb->callbackName = AVPlayerEvent::EVENT_ADS_CHANGE;
-
-    (void)infoBody.GetIntValue(std::string(PlaybackAds::PLAYER_ADS_TYPE), cb->meta.type);
-    (void)infoBody.GetStringValue(std::string(PlaybackAds::PLAYER_ADS_EVENT_ID), cb->meta.eventId);
-    (void)infoBody.GetLongValue(std::string(PlaybackAds::PLAYER_ADS_START_MS), cb->meta.startMs);
-    (void)infoBody.GetLongValue(std::string(PlaybackAds::PLAYER_ADS_DURATION_MS),
-        cb->meta.durationMs);
-    (void)infoBody.GetIntValue(std::string(PlaybackAds::PLAYER_ADS_REASON), cb->meta.reason);
-
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnAdsChangeCb type=%{public}d eventId=%{public}s",
-        FAKE_POINTER(this), cb->meta.type, cb->meta.eventId.c_str());
-    NapiCallback::CompleteCallback(env_, cb);
 }
 
 int32_t AVPlayerCallback::SetDrmInfoData(const uint8_t *drmInfoAddr, int32_t infoCount,

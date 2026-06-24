@@ -3555,11 +3555,10 @@ void AVPlayerImpl::OffTimedMetaData(optional_view<callback<void(
     MEDIA_LOGI("OffTimedMetaData End");
 }
 
-void AVPlayerImpl::OnAdsChange(callback_view<void(
-    ::ohos::multimedia::media::AVAdsChangeEvent const&)> callback)
+void AVPlayerImpl::OnAdsEventListenerLoadingError(callback_view<void(::taihe::string_view, int32_t)> callback)
 {
-    MediaTrace trace("AVPlayerImpl::OnAdsChange");
-    MEDIA_LOGD("TaiheOnAdsChange In");
+    MediaTrace trace("AVPlayerImpl::OnAdsEventListenerLoadingError");
+    MEDIA_LOGD("TaiheOnAdsEventListenerLoadingError In");
 
     if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
         OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to on event");
@@ -3567,27 +3566,121 @@ void AVPlayerImpl::OnAdsChange(callback_view<void(
     }
 
     ani_env *env = taihe::get_env();
-    std::shared_ptr<taihe::callback<void(::ohos::multimedia::media::AVAdsChangeEvent const&)>> taiheCallback =
-        std::make_shared<taihe::callback<void(::ohos::multimedia::media::AVAdsChangeEvent const&)>>(callback);
+    std::shared_ptr<taihe::callback<void(::taihe::string_view, int32_t)>> taiheCallback =
+        std::make_shared<taihe::callback<void(::taihe::string_view, int32_t)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
-    SaveCallbackReference(AVPlayerEvent::EVENT_ADS_CHANGE, autoRef);
-    MEDIA_LOGI("0x%{public}06" PRIXPTR "TaiheOnAdsChange callbackName: adsChange success",
-        FAKE_POINTER(this));
+    SaveCallbackReference(AVPlayerEvent::EVENT_ADS_LOADING_ERROR, autoRef);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR "TaiheOnAdsEventListenerLoadingError success", FAKE_POINTER(this));
 }
 
-void AVPlayerImpl::OffAdsChange(optional_view<callback<void(
-    ::ohos::multimedia::media::AVAdsChangeEvent const&)>> callback)
+void AVPlayerImpl::OffAdsEventListenerLoadingError(
+    optional_view<callback<void(::taihe::string_view, int32_t)>> callback)
 {
-    MediaTrace trace("AVPlayerImpl::OffAdsChange");
-    MEDIA_LOGD("TaiheOffAdsChange In");
+    MediaTrace trace("AVPlayerImpl::OffAdsEventListenerLoadingError");
+    MEDIA_LOGD("TaiheOffAdsEventListenerLoadingError In");
 
     if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
         return;
     }
-    std::string callbackName = AVPlayerEvent::EVENT_ADS_CHANGE;
-    ClearCallbackReference(callbackName);
-    MEDIA_LOGI("OffAdsChange End");
+    ClearCallbackReference(AVPlayerEvent::EVENT_ADS_LOADING_ERROR);
+    MEDIA_LOGI("OffAdsEventListenerLoadingError End");
+}
+
+void AVPlayerImpl::OnAdsListenerAdsStarted(callback_view<void(::taihe::string_view, int64_t)> callback)
+{
+    MediaTrace trace("AVPlayerImpl::OnAdsListenerAdsStarted");
+    MEDIA_LOGD("TaiheOnAdsListenerAdsStarted In");
+
+    if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to on event");
+        return;
+    }
+
+    ani_env *env = taihe::get_env();
+    std::shared_ptr<taihe::callback<void(::taihe::string_view, int64_t)>> taiheCallback =
+        std::make_shared<taihe::callback<void(::taihe::string_view, int64_t)>>(callback);
+    std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
+    std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
+    SaveCallbackReference(AVPlayerEvent::EVENT_ADS_STARTED, autoRef);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR "TaiheOnAdsListenerAdsStarted success", FAKE_POINTER(this));
+}
+
+void AVPlayerImpl::OffAdsListenerAdsStarted(
+    optional_view<callback<void(::taihe::string_view, int64_t)>> callback)
+{
+    MediaTrace trace("AVPlayerImpl::OffAdsListenerAdsStarted");
+    MEDIA_LOGD("TaiheOffAdsListenerAdsStarted In");
+
+    if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        return;
+    }
+    ClearCallbackReference(AVPlayerEvent::EVENT_ADS_STARTED);
+    MEDIA_LOGI("OffAdsListenerAdsStarted End");
+}
+
+void AVPlayerImpl::OnAdsListenerAdsSkipped(callback_view<void(::taihe::string_view)> callback)
+{
+    MediaTrace trace("AVPlayerImpl::OnAdsListenerAdsSkipped");
+    MEDIA_LOGD("TaiheOnAdsListenerAdsSkipped In");
+
+    if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to on event");
+        return;
+    }
+
+    ani_env *env = taihe::get_env();
+    std::shared_ptr<taihe::callback<void(::taihe::string_view)>> taiheCallback =
+        std::make_shared<taihe::callback<void(::taihe::string_view)>>(callback);
+    std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
+    std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
+    SaveCallbackReference(AVPlayerEvent::EVENT_ADS_SKIPPED, autoRef);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR "TaiheOnAdsListenerAdsSkipped success", FAKE_POINTER(this));
+}
+
+void AVPlayerImpl::OffAdsListenerAdsSkipped(
+    optional_view<callback<void(::taihe::string_view)>> callback)
+{
+    MediaTrace trace("AVPlayerImpl::OffAdsListenerAdsSkipped");
+    MEDIA_LOGD("TaiheOffAdsListenerAdsSkipped In");
+
+    if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        return;
+    }
+    ClearCallbackReference(AVPlayerEvent::EVENT_ADS_SKIPPED);
+    MEDIA_LOGI("OffAdsListenerAdsSkipped End");
+}
+
+void AVPlayerImpl::OnAdsListenerAdsCompleted(callback_view<void(::taihe::string_view)> callback)
+{
+    MediaTrace trace("AVPlayerImpl::OnAdsListenerAdsCompleted");
+    MEDIA_LOGD("TaiheOnAdsListenerAdsCompleted In");
+
+    if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to on event");
+        return;
+    }
+
+    ani_env *env = taihe::get_env();
+    std::shared_ptr<taihe::callback<void(::taihe::string_view)>> taiheCallback =
+        std::make_shared<taihe::callback<void(::taihe::string_view)>>(callback);
+    std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
+    std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
+    SaveCallbackReference(AVPlayerEvent::EVENT_ADS_COMPLETED, autoRef);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR "TaiheOnAdsListenerAdsCompleted success", FAKE_POINTER(this));
+}
+
+void AVPlayerImpl::OffAdsListenerAdsCompleted(
+    optional_view<callback<void(::taihe::string_view)>> callback)
+{
+    MediaTrace trace("AVPlayerImpl::OffAdsListenerAdsCompleted");
+    MEDIA_LOGD("TaiheOffAdsListenerAdsCompleted In");
+
+    if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        return;
+    }
+    ClearCallbackReference(AVPlayerEvent::EVENT_ADS_COMPLETED);
+    MEDIA_LOGI("OffAdsListenerAdsCompleted End");
 }
 
 bool AVPlayerImpl::GetIntArrayArgument(std::vector<int32_t> &vec, const std::vector<int32_t> &inputArray)

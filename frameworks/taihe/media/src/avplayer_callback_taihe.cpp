@@ -523,28 +523,69 @@ public:
         }
     };
 
-    struct AdsChangeEvent : public Base {
-        ::OHOS::Media::AVAdsChangeEvent meta = {};
+    struct AdsLoadingErrorEvent : public Base {
+        std::string eventId;
+        int32_t errorCode = 0;
         void UvWork() override
         {
-            std::shared_ptr<AutoRef> interstitialRef = callback.lock();
-            CHECK_AND_RETURN_LOG(interstitialRef != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
 
-            auto func = interstitialRef->callbackRef_;
+            auto func = ref->callbackRef_;
             CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
-            std::shared_ptr<taihe::callback<void(
-                ::ohos::multimedia::media::AVAdsChangeEvent const&)>> cacheCallback =
-                std::reinterpret_pointer_cast<taihe::callback<void(
-                    ::ohos::multimedia::media::AVAdsChangeEvent const&)>>(func);
+            std::shared_ptr<taihe::callback<void(::taihe::string_view, int32_t)>> cacheCallback =
+                std::reinterpret_pointer_cast<taihe::callback<void(::taihe::string_view, int32_t)>>(func);
 
-            ::ohos::multimedia::media::AVAdsChangeEvent adsInfo {
-                .type = meta.type,
-                .eventId = taihe::string(meta.eventId),
-                .startMs = meta.startMs,
-                .durationMs = meta.durationMs,
-                .reason = meta.reason,
-            };
-            (*cacheCallback)(adsInfo);
+            (*cacheCallback)(taihe::string(eventId), errorCode);
+        }
+    };
+
+    struct AdsStartedEvent : public Base {
+        std::string eventId;
+        int64_t durationMs = 0;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            auto func = ref->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
+            std::shared_ptr<taihe::callback<void(::taihe::string_view, int64_t)>> cacheCallback =
+                std::reinterpret_pointer_cast<taihe::callback<void(::taihe::string_view, int64_t)>>(func);
+
+            (*cacheCallback)(taihe::string(eventId), durationMs);
+        }
+    };
+
+    struct AdsSkippedEvent : public Base {
+        std::string eventId;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            auto func = ref->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
+            std::shared_ptr<taihe::callback<void(::taihe::string_view)>> cacheCallback =
+                std::reinterpret_pointer_cast<taihe::callback<void(::taihe::string_view)>>(func);
+
+            (*cacheCallback)(taihe::string(eventId));
+        }
+    };
+
+    struct AdsCompletedEvent : public Base {
+        std::string eventId;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            auto func = ref->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
+            std::shared_ptr<taihe::callback<void(::taihe::string_view)>> cacheCallback =
+                std::reinterpret_pointer_cast<taihe::callback<void(::taihe::string_view)>>(func);
+
+            (*cacheCallback)(taihe::string(eventId));
         }
     };
 
@@ -1451,27 +1492,67 @@ void AVPlayerCallback::OnAdsChangeCb(const int32_t extra, const Format &infoBody
     (void)extra;
     CHECK_AND_RETURN_LOG(isLoaded_.load(), "current source is unready");
 
-    if (refMap_.find(AVPlayerEvent::EVENT_ADS_CHANGE) == refMap_.end()) {
-        MEDIA_LOGW("can not find adsChange callback!");
-        return;
+    int32_t type = 0;
+    std::string eventId;
+    int64_t durationMs = -1;
+    int32_t reason = 0;
+    (void)infoBody.GetIntValue(std::string(PlaybackAds::PLAYER_ADS_TYPE), type);
+    (void)infoBody.GetStringValue(std::string(PlaybackAds::PLAYER_ADS_EVENT_ID), eventId);
+    (void)infoBody.GetLongValue(std::string(PlaybackAds::PLAYER_ADS_DURATION_MS), durationMs);
+    (void)infoBody.GetIntValue(std::string(PlaybackAds::PLAYER_ADS_REASON), reason);
+
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnAdsChangeCb type=%{public}d eventId=%{public}s reason=%{public}d",
+        FAKE_POINTER(this), type, eventId.c_str(), reason);
+
+    if (type == OHOS::Media::ADS_START) {
+        if (refMap_.find(AVPlayerEvent::EVENT_ADS_STARTED) == refMap_.end()) {
+            MEDIA_LOGW("can not find adsStarted callback!");
+            return;
+        }
+        AniCallback::AdsStartedEvent *cb = new(std::nothrow) AniCallback::AdsStartedEvent();
+        CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new AdsStartedEvent");
+        cb->callback = refMap_.at(AVPlayerEvent::EVENT_ADS_STARTED);
+        cb->callbackName = AVPlayerEvent::EVENT_ADS_STARTED;
+        cb->eventId = eventId;
+        cb->durationMs = durationMs;
+        AniCallback::CompleteCallback(cb, mainHandler_);
+    } else if (type == OHOS::Media::ADS_END) {
+        if (reason == OHOS::Media::ADS_ERROR) {
+            if (refMap_.find(AVPlayerEvent::EVENT_ADS_LOADING_ERROR) == refMap_.end()) {
+                MEDIA_LOGW("can not find adsLoadingError callback!");
+                return;
+            }
+            AniCallback::AdsLoadingErrorEvent *cb = new(std::nothrow) AniCallback::AdsLoadingErrorEvent();
+            CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new AdsLoadingErrorEvent");
+            cb->callback = refMap_.at(AVPlayerEvent::EVENT_ADS_LOADING_ERROR);
+            cb->callbackName = AVPlayerEvent::EVENT_ADS_LOADING_ERROR;
+            cb->eventId = eventId;
+            cb->errorCode = 5400108;
+            AniCallback::CompleteCallback(cb, mainHandler_);
+        } else if (reason == OHOS::Media::ADS_SKIPPED) {
+            if (refMap_.find(AVPlayerEvent::EVENT_ADS_SKIPPED) == refMap_.end()) {
+                MEDIA_LOGW("can not find adsSkipped callback!");
+                return;
+            }
+            AniCallback::AdsSkippedEvent *cb = new(std::nothrow) AniCallback::AdsSkippedEvent();
+            CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new AdsSkippedEvent");
+            cb->callback = refMap_.at(AVPlayerEvent::EVENT_ADS_SKIPPED);
+            cb->callbackName = AVPlayerEvent::EVENT_ADS_SKIPPED;
+            cb->eventId = eventId;
+            AniCallback::CompleteCallback(cb, mainHandler_);
+        } else if (reason == OHOS::Media::ADS_COMPLETED) {
+            if (refMap_.find(AVPlayerEvent::EVENT_ADS_COMPLETED) == refMap_.end()) {
+                MEDIA_LOGW("can not find adsCompleted callback!");
+                return;
+            }
+            AniCallback::AdsCompletedEvent *cb = new(std::nothrow) AniCallback::AdsCompletedEvent();
+            CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new AdsCompletedEvent");
+            cb->callback = refMap_.at(AVPlayerEvent::EVENT_ADS_COMPLETED);
+            cb->callbackName = AVPlayerEvent::EVENT_ADS_COMPLETED;
+            cb->eventId = eventId;
+            AniCallback::CompleteCallback(cb, mainHandler_);
+        }
     }
-
-    AniCallback::AdsChangeEvent *cb = new(std::nothrow) AniCallback::AdsChangeEvent();
-    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new AdsChangeEvent");
-
-    cb->callback = refMap_.at(AVPlayerEvent::EVENT_ADS_CHANGE);
-    cb->callbackName = AVPlayerEvent::EVENT_ADS_CHANGE;
-
-    (void)infoBody.GetIntValue(std::string(PlaybackAds::PLAYER_ADS_TYPE), cb->meta.type);
-    (void)infoBody.GetStringValue(std::string(PlaybackAds::PLAYER_ADS_EVENT_ID), cb->meta.eventId);
-    (void)infoBody.GetLongValue(std::string(PlaybackAds::PLAYER_ADS_START_MS), cb->meta.startMs);
-    (void)infoBody.GetLongValue(std::string(PlaybackAds::PLAYER_ADS_DURATION_MS),
-        cb->meta.durationMs);
-    (void)infoBody.GetIntValue(std::string(PlaybackAds::PLAYER_ADS_REASON), cb->meta.reason);
-
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnAdsChangeCb type=%{public}d eventId=%{public}s",
-        FAKE_POINTER(this), cb->meta.type, cb->meta.eventId.c_str());
-    AniCallback::CompleteCallback(cb, mainHandler_);
 }
 
 int32_t AVPlayerCallback::SetDrmInfoData(const uint8_t *drmInfoAddr, int32_t infoCount,

@@ -113,7 +113,10 @@ namespace AVPlayerEvent {
     const std::string EVENT_METRICS = "metricsEvent";
     const std::string EVENT_PLAYBACK_CONTENT_CHANGE = "playbackContentChange";
     const std::string EVENT_TIMED_META_DATA = "timedMetaData";
-    const std::string EVENT_ADS_CHANGE = "adsChange";
+    const std::string EVENT_ADS_LOADING_ERROR = "adsLoadingError";
+    const std::string EVENT_ADS_STARTED = "adsStarted";
+    const std::string EVENT_ADS_SKIPPED = "adsSkipped";
+    const std::string EVENT_ADS_COMPLETED = "adsCompleted";
 }
 
 class AVPlayerImpl : public AVPlayerNotify {
@@ -221,7 +224,10 @@ public:
         ohos::multimedia::audio::AudioStreamDeviceChangeInfo const&)> callback);
     void OnMetricsEvent(callback_view<void(array_view<::ohos::multimedia::media::AVMetricsEvent> data)> callback);
     void OnTimedMetaData(callback_view<void(::ohos::multimedia::media::AVTimedMetaData const&)> callback);
-    void OnAdsChange(callback_view<void(::ohos::multimedia::media::AVAdsChangeEvent const&)> callback);
+    void OnAdsEventListenerLoadingError(callback_view<void(::taihe::string_view, int32_t)> callback);
+    void OnAdsListenerAdsStarted(callback_view<void(::taihe::string_view, int64_t)> callback);
+    void OnAdsListenerAdsSkipped(callback_view<void(::taihe::string_view)> callback);
+    void OnAdsListenerAdsCompleted(callback_view<void(::taihe::string_view)> callback);
 
     void OffError(optional_view<callback<void(uintptr_t)>> callback);
     void OffStateChange(optional_view<callback<void(string_view,
@@ -253,8 +259,14 @@ public:
     void OffMetricsEvent(optional_view<callback<void(
         array_view<::ohos::multimedia::media::AVMetricsEvent> data)>> callback);
     void OffTimedMetaData(optional_view<callback<void(::ohos::multimedia::media::AVTimedMetaData const&)>> callback);
-    void OffAdsChange(
-        optional_view<callback<void(::ohos::multimedia::media::AVAdsChangeEvent const&)>> callback);
+    void OffAdsEventListenerLoadingError(
+        optional_view<callback<void(::taihe::string_view, int32_t)>> callback);
+    void OffAdsListenerAdsStarted(
+        optional_view<callback<void(::taihe::string_view, int64_t)>> callback);
+    void OffAdsListenerAdsSkipped(
+        optional_view<callback<void(::taihe::string_view)>> callback);
+    void OffAdsListenerAdsCompleted(
+        optional_view<callback<void(::taihe::string_view)>> callback);
     bool GetIntArrayArgument(std::vector<int32_t> &vec, const std::vector<int32_t> &inputArray);
     void SeiMessageCallbackOff(std::string &callbackName, const std::vector<int32_t> &payloadTypes);
     void MaxAmplitudeCallbackOff(std::string callbackName);

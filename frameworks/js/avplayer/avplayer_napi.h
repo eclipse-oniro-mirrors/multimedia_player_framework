@@ -72,7 +72,10 @@ const std::string EVENT_SUPER_RESOLUTION_CHANGED = "superResolutionChanged";
 const std::string EVENT_METRICS = "metricsEvent";
 const std::string EVENT_PLAYBACK_CONTENT_CHANGE = "playbackContentChange";
 const std::string EVENT_TIMED_META_DATA = "timedMetaData";
-const std::string EVENT_ADS_CHANGE = "adsChange";
+const std::string EVENT_ADS_LOADING_ERROR = "adsLoadingError";
+const std::string EVENT_ADS_STARTED = "adsStarted";
+const std::string EVENT_ADS_SKIPPED = "adsSkipped";
+const std::string EVENT_ADS_COMPLETED = "adsCompleted";
 }
 
 using TaskRet = std::pair<int32_t, std::string>;

@@ -668,8 +668,14 @@ interface AVPlayer {
     GetMediaSources(): Array<Optional<MediaSource>>;
     OnTimedMetaData(callback: (data: AVTimedMetaData) => void): void;
     OffTimedMetaData(callback: Optional<(data: AVTimedMetaData) => void>): void;
-    OnAdsChange(callback: (info: AVAdsChangeEvent) => void): void;
-    OffAdsChange(callback: Optional<(info: AVAdsChangeEvent) => void>): void;
+    OnAdsEventListenerLoadingError(callback: (adsId: String, reason: i32) => void): void;
+    OffAdsEventListenerLoadingError(callback: Optional<(adsId: String, reason: i32) => void>): void;
+    OnAdsListenerAdsStarted(callback: (adsId: String, duration: i64) => void): void;
+    OffAdsListenerAdsStarted(callback: Optional<(adsId: String, duration: i64) => void>): void;
+    OnAdsListenerAdsSkipped(callback: (adsId: String) => void): void;
+    OffAdsListenerAdsSkipped(callback: Optional<(adsId: String) => void>): void;
+    OnAdsListenerAdsCompleted(callback: (adsId: String) => void): void;
+    OffAdsListenerAdsCompleted(callback: Optional<(adsId: String) => void>): void;
 
     @gen_promise("addAdsMediaSource")
     AddAdsMediaSourceSync(src: MediaSource, startMs: i64): String;
