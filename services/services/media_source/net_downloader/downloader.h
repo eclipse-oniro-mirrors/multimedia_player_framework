@@ -20,6 +20,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 
 namespace OHOS {
 namespace Media {
@@ -31,11 +32,36 @@ enum DownloadState : int32_t {
     DOWNLOAD_IDLE = 0,
     DOWNLOAD_PREPARING,
     DOWNLOAD_RUNNING,
+    DOWNLOAD_PAUSING,
     DOWNLOAD_PAUSED,
+    DOWNLOAD_RESUMING,
+    DOWNLOAD_CANCELING,
     DOWNLOAD_COMPLETED,
     DOWNLOAD_FAILED,
     DOWNLOAD_CANCELED,
 };
+
+const std::unordered_map<DownloadState, const char*> DOWNLOAD_STATE_MAP = {
+    {DOWNLOAD_IDLE, "DOWNLOAD_IDLE"},
+    {DOWNLOAD_PREPARING, "DOWNLOAD_PREPARING"},
+    {DOWNLOAD_RUNNING, "DOWNLOAD_RUNNING"},
+    {DOWNLOAD_PAUSING, "DOWNLOAD_PAUSING"},
+    {DOWNLOAD_PAUSED, "DOWNLOAD_PAUSED"},
+    {DOWNLOAD_RESUMING, "DOWNLOAD_RESUMING"},
+    {DOWNLOAD_CANCELING, "DOWNLOAD_CANCELING"},
+    {DOWNLOAD_COMPLETED, "DOWNLOAD_COMPLETED"},
+    {DOWNLOAD_FAILED, "DOWNLOAD_FAILED"},
+    {DOWNLOAD_CANCELED, "DOWNLOAD_CANCELED"},
+};
+
+inline const char* DownloadStateLog(DownloadState state)
+{
+    auto it = DOWNLOAD_STATE_MAP.find(state);
+    if (it != DOWNLOAD_STATE_MAP.end()) {
+        return it->second;
+    }
+    return "DOWNLOAD_STATE_UNKNOWN";
+}
 
 enum DownloadErrorType : int32_t {
     DOWNLOAD_ERROR_NONE = 0,
@@ -66,7 +92,7 @@ struct DownloadProgress {
 
 struct DownloadConfig {
     int32_t progressCallbackIntervalMs = 1000;
-    int32_t timeoutMs = 30000;
+    int32_t timeoutMs = 60000;
     int32_t retryCount = 3;
     int32_t bufferSize = 8192;
     bool allowWifi = true;
@@ -78,11 +104,11 @@ class DownloadCallback {
 public:
     virtual ~DownloadCallback() = default;
 
-    virtual void OnStateChanged(DownloadState state) = 0;
-    virtual void OnCompleted(int64_t downloadedSize) = 0;
-    virtual void OnFailed(DownloadErrorType errorType, int32_t errorCode,
+    virtual void OnStateChanged(uint64_t downloaderId, DownloadState state) = 0;
+    virtual void OnCompleted(uint64_t downloaderId, int64_t downloadedSize) = 0;
+    virtual void OnFailed(uint64_t downloaderId, DownloadErrorType errorType, int32_t errorCode,
                           const std::string &errorMsg) = 0;
-    virtual void OnProgress(const DownloadProgress &progress) = 0;
+    virtual void OnProgress(uint64_t downloaderId, const DownloadProgress &progress) = 0;
 };
 
 class __attribute__((visibility("default"))) Downloader {
@@ -96,6 +122,7 @@ public:
     virtual int32_t SetOutputPath(const std::string &path) = 0;
     virtual int32_t SetHeader(const std::map<std::string, std::string> &header) = 0;
     virtual int32_t SetConfig(const DownloadConfig &config) = 0;
+    virtual int32_t AddFileTask(const std::string &url, const std::string &path, const DownloadConfig &config) = 0;
     virtual int32_t SetDownloadCallback(const std::shared_ptr<DownloadCallback> &callback) = 0;
 
     virtual int32_t Start() = 0;
@@ -106,6 +133,7 @@ public:
 
     virtual DownloadState GetState() = 0;
     virtual int32_t GetProgress(DownloadProgress &progress) = 0;
+    virtual std::string GetCurrentFilePath() const = 0;
 };
 
 class __attribute__((visibility("default"))) DownloaderFactory {

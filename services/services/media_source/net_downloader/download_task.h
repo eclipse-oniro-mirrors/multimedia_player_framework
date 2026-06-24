@@ -65,20 +65,27 @@ public:
 
 private:
     void Run();
-    void DoPrepare();
-    void DoDownload();
-    void DoCleanup();
+    bool EnterRunningState();
+    void StartProgressThread(std::thread& progressThread, std::atomic<bool>& progressRunning,
+        std::mutex& progressMutex, std::condition_variable& progressCv);
+    void StopProgressThread(std::thread& progressThread, std::atomic<bool>& progressRunning,
+        std::condition_variable& progressCv);
+    void CheckDownloadResult(bool success);
+    bool HandleDownloadCompleted(bool success);
+    bool HandleDownloadPaused();
+    bool HandleDownloadCanceled();
+    void HandleDownloadFailed();
+    void NotifyFinish();
+    void InitClient();
+    void ExecuteDownload();
+    void ReleaseClient();
     void HandleError(DownloadErrorType errorType, int32_t errorCode, const std::string &errorMsg);
-    bool DoRetry(std::function<int32_t()> operation, DownloadErrorType errorType);
     int64_t CalculateSpeed();
     void UpdateProgress();
-    void SleepWithExponentialBackoff(int32_t retryIndex);
     static int64_t GetFileSize(const std::string &path);
 
-    bool OnDataReceived(const char* data, size_t len, int64_t totalSize);
-    void StartProgressThread();
-    void StopProgressThread();
-    void ProgressReporterThread();
+    void RunProgressThread(std::atomic<bool>& progressRunning,
+        std::mutex& progressMutex, std::condition_variable& progressCv);
     std::shared_ptr<NetworkClient> GetClient()
     {
         std::lock_guard<std::mutex> lock(clientMutex_);
@@ -97,16 +104,13 @@ private:
     std::map<std::string, std::string> header_;
     DownloadConfig config_;
     std::atomic<DownloadState> state_;
+    std::mutex stateMutex_;
     std::atomic<int64_t> downloadedSize_;
     std::chrono::steady_clock::time_point lastSpeedUpdateTime_ {};
     std::chrono::steady_clock::time_point lastProgressTime_ {};
     int64_t lastDownloadedSize_ {0};
     std::atomic<int64_t> totalSize_;
     std::atomic<int64_t> downloadSpeed_;
-    std::atomic<bool> running_;
-    std::atomic<bool> paused_;
-    std::atomic<bool> canceled_;
-    std::atomic<bool> downloadTerminated_;
     std::thread workerThread_;
     std::mutex mutex_;
     std::condition_variable cv_;
@@ -115,12 +119,9 @@ private:
     std::mutex clientMutex_;
     std::shared_ptr<NetworkClient> networkClient_;
 
-    std::thread progressThread_;
-    std::atomic<bool> progressThreadRunning_{false};
-    int outputFd_{-1};
-
     std::atomic<DownloadErrorType> lastErrorType_{DOWNLOAD_ERROR_NONE};
     std::atomic<int32_t> lastErrorCode_{0};
+    std::atomic<int64_t> resumePos_{0};
 };
 
 } // namespace MediaDownload

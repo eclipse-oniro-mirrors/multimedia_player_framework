@@ -47,7 +47,7 @@ static const std::string HTTP_SOURCE_SO_PATH = "/system/lib/media/media_plugins/
 
 void *NetworkClientAgent::handler_ = nullptr;
 Plugins::HttpPlugin::NetworkClient* (*NetworkClientAgent::createFunc_)(Plugins::HttpPlugin::RxHeader,
-    Plugins::HttpPlugin::RxBody, void *) = nullptr;
+    Plugins::HttpPlugin::RxBody, void *, std::optional<uint32_t>) = nullptr;
 std::mutex NetworkClientAgent::loadMutex_;
 
 bool NetworkClientAgent::Create()
@@ -63,8 +63,8 @@ bool NetworkClientAgent::Create()
         return false;
     }
     using CreateFuncType = Plugins::HttpPlugin::NetworkClient* (*)(Plugins::HttpPlugin::RxHeader,
-        Plugins::HttpPlugin::RxBody, void *);
-    CreateFuncType createFunc = (CreateFuncType)(::dlsym(handler_, "CreateNetworkClient"));
+        Plugins::HttpPlugin::RxBody, void *, std::optional<uint32_t>);
+    CreateFuncType createFunc = (CreateFuncType)(::dlsym(handler_, "CreateNetworkClientExt"));
     if (createFunc == nullptr) {
         MEDIA_LOGE("create func is nullptr");
         Unload();
@@ -94,13 +94,14 @@ void NetworkClientAgent::DestroyInner()
 std::shared_ptr<Plugins::HttpPlugin::NetworkClient> NetworkClientAgent::NewInstance(
     Plugins::HttpPlugin::RxHeader headCallback,
     Plugins::HttpPlugin::RxBody bodyCallback,
-    void *userParam)
+    void *userParam,
+    std::optional<uint32_t> connectTimeoutMs)
 {
     if (createFunc_ == nullptr) {
         MEDIA_LOGE("create func is nullptr");
         return nullptr;
     }
-    auto *clientPtr = createFunc_(headCallback, bodyCallback, userParam);
+    auto *clientPtr = createFunc_(headCallback, bodyCallback, userParam, connectTimeoutMs);
     if (clientPtr == nullptr) {
         MEDIA_LOGE("clientPtr is nullptr");
         return nullptr;

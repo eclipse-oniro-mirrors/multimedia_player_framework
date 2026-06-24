@@ -42,22 +42,23 @@ public:
         int32_t timeoutMs, int32_t retryCount);
     ~NetworkClient();
 
-    int32_t SetOutputPath(const std::string &path);
-    int32_t Connect(int64_t startPos = 0);
-    void Disconnect();
+    int32_t SetOutputPath(const std::string &path, int64_t existingSize = 0);
+    int32_t Download(int64_t startPos = 0);
     int64_t GetTotalSize();
     bool IsConnected();
     int64_t GetDownloadedSize();
     int GetOutputFd() const;
 
     void PauseDownload();
-    void ResumeDownload();
-    bool IsPaused() const;
+    bool IsPaused();
 
     void Cancel();
 
-    using DataCallback = std::function<bool(const char* data, size_t len, int64_t totalSize)>;
-    void SetDataCallback(DataCallback cb);
+    using ProgressCallback = std::function<void(int64_t downloadedSize, int64_t totalSize)>;
+    void SetProgressCallback(ProgressCallback cb);
+
+    using ErrorCallback = std::function<void(DownloadErrorType errorType, int32_t errorCode)>;
+    void SetErrorCallback(ErrorCallback cb);
 
     bool IsRequestCompleted() const;
     bool IsRequestSuccess() const;
@@ -66,9 +67,17 @@ private:
     static size_t RxHeaderCallback(void* buffer, size_t size, size_t nitems, void* userParam);
     static size_t RxBodyCallback(void* buffer, size_t size, size_t nitems, void* userParam);
 
-    int32_t DoConnect(int64_t startPos = 0);
+    int32_t DoDownload(int64_t startPos = 0);
     bool IsValidUrl(const std::string &url);
     void HandleResponse(const int32_t clientCode, const int32_t serverCode, const std::string &ca, const Status ret);
+    void ProcessHttpSuccess(int32_t clientCode);
+    void ProcessHttp416RangeNotSatisfiable();
+    void ProcessHttpError(int32_t clientCode);
+    void ProcessStatusError(const Status ret);
+    void InitDownloadContext(int64_t startPos);
+    std::shared_ptr<Plugins::HttpPlugin::NetworkClient> CreateAndInitClient();
+    Plugins::HttpPlugin::RequestInfo BuildRequestInfo(int64_t startPos);
+    void CloseOutputFd();
 
     std::string url_;
     std::map<std::string, std::string> header_;
@@ -79,15 +88,13 @@ private:
     std::mutex mutex_;
 
     std::mutex pauseMutex_;
-    std::condition_variable pauseCv_;
     std::atomic<bool> paused_{false};
 
-    DataCallback dataCallback_;
+    ProgressCallback progressCallback_;
+    ErrorCallback errorCallback_;
 
     struct DownloadContext {
         NetworkClient* parent;
-        std::shared_ptr<Plugins::HttpPlugin::NetworkClient> client;
-        std::atomic<bool> isRunning{false};
         std::atomic<bool> requestSuccess{false};
         std::atomic<bool> requestCompleted{false};
         std::atomic<int64_t> totalSize{-1};
@@ -100,6 +107,8 @@ private:
         std::condition_variable cv;
     };
     std::shared_ptr<DownloadContext> ctx_;
+    int64_t startPos_{0};
+    std::optional<uint32_t> connectTimeoutMs_ {std::nullopt};
 };
 
 } // namespace MediaDownload
