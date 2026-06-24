@@ -15,6 +15,8 @@
 
 #include "system_sound_manager_impl.h"
 
+#include <algorithm>
+#include <cctype>
 #include <fstream>
 
 #include "config_policy_utils.h"
@@ -1869,6 +1871,8 @@ std::string SystemSoundManagerImpl::AddCustomizedToneCheck(const std::shared_ptr
             return result;
         }
         std::string tail = fileName.substr(fileName.length() - FIX_MP4.length(), FIX_MP4.length());
+        std::transform(tail.begin(), tail.end(), tail.begin(),
+            [](unsigned char c) { return static_cast<char>(::tolower(c)); });
         if (tail != FIX_MP4) {
             MEDIA_LOGE("AddCustomizedToneCheck: video type, but file format is not mp4!");
             return result;
