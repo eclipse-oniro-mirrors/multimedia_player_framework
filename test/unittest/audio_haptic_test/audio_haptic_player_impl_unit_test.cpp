@@ -71,6 +71,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_002, TestSize.Leve
     auto ret = audioHapticSound->CreateAudioHapticSound(latencyMode, audioSource, muteAudio,
         streamUsage, parallelPlayFlag);
     ASSERT_NE(ret, nullptr);
+    EXPECT_EQ(ret->SetVolume(NUM_1), MSERR_INVALID_VAL);
 }
 
 /**
@@ -93,6 +94,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_003, TestSize.Leve
     auto ret = audioHapticSound->CreateAudioHapticSound(latencyMode, audioSource, muteAudio,
         streamUsage, parallelPlayFlag);
     ASSERT_NE(ret, nullptr);
+    EXPECT_EQ(ret->SetVolume(NUM_1), MSERR_INVALID_VAL);
 }
 
 /**
@@ -192,7 +194,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_009, TestSize.Leve
     ASSERT_NE(audioHapticPlayerImpl->vibrateThread_, nullptr);
 
     auto ret = audioHapticPlayerImpl->Start();
-    EXPECT_NE(ret, MSERR_OK);
+    EXPECT_EQ(ret, MSERR_INVALID_OPERATION);
 }
 
 /**
@@ -209,7 +211,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_010, TestSize.Leve
     audioHapticPlayerImpl->vibrateThread_ = nullptr;
 
     auto ret = audioHapticPlayerImpl->Start();
-    EXPECT_NE(ret, MSERR_OK);
+    EXPECT_EQ(ret, MSERR_INVALID_OPERATION);
 }
 
 /**
@@ -779,8 +781,8 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_039, TestSize.Leve
     audioHapticPlayerImpl->audioHapticPlayerCallback_ = playerCallback;
 
     audioHapticPlayerImpl->NotifyInterruptEvent(interruptEvent);
-    // NotifyInterruptEvent should not crash when callback is set
-    ASSERT_NE(audioHapticPlayerImpl->audioHapticPlayerCallback_.lock(), nullptr);
+    // NotifyInterruptEvent forwards event to callback, callback remains valid
+    EXPECT_EQ(audioHapticPlayerImpl->audioHapticPlayerCallback_.lock(), playerCallback);
 }
 
 /**
@@ -813,8 +815,9 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_041, TestSize.Leve
     audioHapticPlayerImpl->audioHapticPlayerCallback_ = playerCallback;
 
     audioHapticPlayerImpl->NotifyEndOfStreamEvent();
-    // NotifyEndOfStreamEvent should not crash when callback is set
-    ASSERT_NE(audioHapticPlayerImpl->audioHapticPlayerCallback_.lock(), nullptr);
+    // NotifyEndOfStreamEvent calls HandleEndOfStreamEvent => playerState_ becomes STATE_STOPPED
+    EXPECT_EQ(audioHapticPlayerImpl->playerState_, AudioHapticPlayerState::STATE_STOPPED);
+    EXPECT_EQ(audioHapticPlayerImpl->audioHapticPlayerCallback_.lock(), playerCallback);
 }
 
 /**
@@ -936,8 +939,8 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_047, TestSize.Leve
     audioHapticPlayerImpl->audioHapticPlayerCallback_ = playerCallback;
 
     audioHapticPlayerImpl->NotifyErrorEvent(errCode);
-    // NotifyErrorEvent should not crash when callback is set
-    ASSERT_NE(audioHapticPlayerImpl->audioHapticPlayerCallback_.lock(), nullptr);
+    // NotifyErrorEvent forwards event to callback, callback remains valid
+    EXPECT_EQ(audioHapticPlayerImpl->audioHapticPlayerCallback_.lock(), playerCallback);
 }
 
 /**
@@ -1011,6 +1014,8 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_051, TestSize.Leve
     ASSERT_NE(audioHapticSoundCallbackImpl->audioHapticPlayerImpl_.lock(), nullptr);
 
     audioHapticSoundCallbackImpl->OnError(errorCode);
+    // OnError with valid impl calls NotifyErrorEvent, but no callback on player so event not forwarded
+    EXPECT_EQ(audioHapticPlayerImpl->audioHapticPlayerCallback_.lock(), nullptr);
 }
 
 /**
@@ -1029,6 +1034,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_052, TestSize.Leve
     audioHapticSoundCallbackImpl->audioHapticPlayerImpl_.reset();
 
     audioHapticSoundCallbackImpl->OnError(errorCode);
+    EXPECT_EQ(audioHapticSoundCallbackImpl->audioHapticPlayerImpl_.lock(), nullptr);
 }
 
 /**
@@ -1048,6 +1054,8 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_053, TestSize.Leve
     ASSERT_NE(audioHapticSoundCallbackImpl->audioHapticPlayerImpl_.lock(), nullptr);
 
     audioHapticSoundCallbackImpl->OnInterrupt(interruptEvent);
+    // OnInterrupt with valid impl calls NotifyInterruptEvent, but no callback on player so event not forwarded
+    EXPECT_EQ(audioHapticPlayerImpl->audioHapticPlayerCallback_.lock(), nullptr);
 }
 
 /**
@@ -1103,6 +1111,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_056, TestSize.Leve
     audioHapticSoundCallbackImpl->audioHapticPlayerImpl_.reset();
 
     audioHapticSoundCallbackImpl->OnFirstFrameWriting(latency);
+    EXPECT_EQ(audioHapticSoundCallbackImpl->audioHapticPlayerImpl_.lock(), nullptr);
 }
 
 /**
@@ -1244,6 +1253,8 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_064, TestSize.Leve
     audioHapticPlayerImpl->vibrateThread_ = nullptr;
 
     audioHapticPlayerImpl->ReleaseVibratorInternal();
+    EXPECT_EQ(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
+    EXPECT_EQ(audioHapticPlayerImpl->vibrateThread_, nullptr);
 }
 
 /**
