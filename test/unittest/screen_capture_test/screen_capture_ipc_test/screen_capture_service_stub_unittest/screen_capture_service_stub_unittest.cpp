@@ -368,7 +368,7 @@ HWTEST_F(ScreenCaptureServiceStubTest, SetOutputFile_001, TestSize.Level1)
     int ret = screenCaptureServiceStub->OnRemoteRequest(
             IStandardScreenCaptureService::SET_OUTPUT_FILE, data, reply, option);
     EXPECT_EQ(ret, MSERR_OK);
-    EXPECT_EQ(reply.ReadInt32(), MSERR_INVALID_VAL);
+    EXPECT_EQ(reply.ReadInt32(), MSERR_INVALID_FD);
     screenCaptureServiceStub = nullptr;
 }
 
@@ -615,7 +615,7 @@ HWTEST_F(ScreenCaptureServiceStubTest, PauseScreenCapture_001, TestSize.Level1)
     int ret = screenCaptureServiceStub->OnRemoteRequest(
             IStandardScreenCaptureService::PAUSE_SCREEN_CAPTURE, data, reply, option);
     EXPECT_EQ(ret, MSERR_OK);
-    EXPECT_EQ(reply.ReadInt32(), MSERR_SERVICE_DIED);
+    EXPECT_EQ(reply.ReadInt32(), MSERR_INVALID_OPERATION_STARTED_RESUMED);
     screenCaptureServiceStub = nullptr;
 }
 
@@ -637,6 +637,6 @@ HWTEST_F(ScreenCaptureServiceStubTest, ResumeScreenCapture_001, TestSize.Level1)
     int ret = screenCaptureServiceStub->OnRemoteRequest(
             IStandardScreenCaptureService::RESUME_SCREEN_CAPTURE, data, reply, option);
     EXPECT_EQ(ret, MSERR_OK);
-    EXPECT_EQ(reply.ReadInt32(), MSERR_SERVICE_DIED);
+    EXPECT_EQ(reply.ReadInt32(), MSERR_INVALID_OPERATION_PAUSED);
     screenCaptureServiceStub = nullptr;
 }
