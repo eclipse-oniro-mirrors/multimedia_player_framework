@@ -25,6 +25,7 @@
 #ifdef SUPPORT_CALL
 #include "incall_observer.h"
 #endif
+#include "screen_capture_monitor_server.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaServer"};
