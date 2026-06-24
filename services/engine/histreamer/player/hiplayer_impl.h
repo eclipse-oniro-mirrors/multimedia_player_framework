@@ -184,8 +184,18 @@ public:
     void HandleDfxEvent(const DfxEvent &event);
     void HandleMemoryUsageEvent(const DfxEvent &event);
     void OnStateChanged(PlayerStateId state, bool isSystemOperation = false);
-    void HandleMetricsEvent(int64_t timeStamp, int64_t timeLine, int64_t duration, OHOS::Media::MediaType);
-    Status OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd, StreamType outType);
+    void HandleLoadingBitrateEvent(const AVMetricsEvent& infoCopy);
+    void HandleLoadingErrorEvent(const AVMetricsEvent& info);
+    void HandleMediaChangedEvent(const AVMetricsEvent& info);
+    void FillAudioSampleRateFromDemuxer(const std::string& changeResultStr,
+        int32_t audioSampleRateAfter, Format& format);
+    void HandleMediaDiscontinueEvent(const AVMetricsEvent& info);
+    void HandleAudioStatusEvent(const AVMetricsEvent& info);
+    void HandleCodecAbnormalEvent(const AVMetricsEvent& info);
+    void HandleLipAsyncEvent(const AVMetricsEvent& info);
+    void FillMediaChangedInfo(Format& format, const AVMetricsEvent& info);
+    Status OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd,
+        OHOS::Media::Pipeline::StreamType outType);
     int32_t SeekContinous(int64_t mSeconds, int64_t seekContinousBatchNo) override;
     int32_t ExitSeekContinous(bool align, int64_t seekContinousBatchNo) override;
     int32_t PauseDemuxer() override;
@@ -231,13 +241,15 @@ public:
 private:
     enum HiplayerSvpMode : int32_t {
         SVP_CLEAR = -1, /* it's not a protection video */
-        SVP_FALSE, /* it's a protection video but not need secure decoder */
+        SVP_FALSE, /* it's a protection video but not secure decoder */
         SVP_TRUE, /* it's a protection video and need secure decoder */
     };
 
     Status DoSetSource(const std::shared_ptr<MediaSource> source);
     void DoSetPlayStrategy(const std::shared_ptr<MediaSource> source);
     void DoSetPlayMediaStream(const std::shared_ptr<MediaSource>& source);
+    void HandleMetricsEventByType(const AVMetricsEvent& infoCopy);
+    void HandleStallingEvent(const AVMetricsEvent& infoCopy);
     Status Resume();
     void GetDumpFlag();
     void HandleCompleteEvent(const Event& event);
@@ -262,15 +274,16 @@ private:
     void NotifyDurationUpdate(const std::string_view& type, int32_t param);
     void NotifySeekDone(int32_t seekPos);
     void NotifyAudioInterrupt(const Event& event);
+    void NotifyAudioStatusDfxEvent(int32_t hintType);
     void NotifyAudioDeviceChange(const Event& event);
     void NotifyAudioServiceDied();
     void NotifyAudioFirstFrame(const Event& event);
     void NotifyResolutionChange();
     void NotifyPositionUpdate();
     void NotifySuperResolutionChanged(const Event& event);
-    Status LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
-    Status LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
-    Status LinkSubtitleSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
+    Status LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFilter, OHOS::Media::Pipeline::StreamType type);
+    Status LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilter, OHOS::Media::Pipeline::StreamType type);
+    Status LinkSubtitleSinkFilter(const std::shared_ptr<Filter>& preFilter, OHOS::Media::Pipeline::StreamType type);
     void SetAudioRendererParameter();
     void NotifySubtitleUpdate(const Event& event);
     void NotifyDecoderErrorFrame(int64_t pts);
@@ -297,8 +310,8 @@ private:
     void UpdateMediaFirstPts();
     void UpdateMaxSeekLatency(PlayerSeekMode mode, int64_t seekStartTime);
 #ifdef SUPPORT_VIDEO
-    Status LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
-    Status LinkSeiDecoder(const std::shared_ptr<Filter>& preFilter, StreamType type);
+    Status LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter, OHOS::Media::Pipeline::StreamType type);
+    Status LinkSeiDecoder(const std::shared_ptr<Filter>& preFilter, OHOS::Media::Pipeline::StreamType type);
     bool IsVideoMime(const std::string& mime);
     Status InitVideoDecoder();
 #endif

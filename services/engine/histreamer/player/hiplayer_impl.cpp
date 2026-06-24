@@ -38,9 +38,12 @@
 #include "media_utils.h"
 #include "meta_utils.h"
 #include "meta/media_types.h"
+#include "meta/format.h"
+#include "meta/any.h"
 #include "param_wrapper.h"
 #include "osal/utils/steady_clock.h"
 #include "scoped_timer.h"
+#include "dfx_agent.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "HiPlayer" };
@@ -77,12 +80,47 @@ constexpr uint32_t MEMORY_B_TO_KB = 1024;
 static const std::unordered_map<std::string, uint32_t> MEMORY_USAGE_REPORT_LIMITS = {
     { DEMUXER_PLUGIN, MAX_DEMUXER_MEMORY_USAGE }
 };
+
+static void CopyStringDetail(const std::map<std::string, OHOS::Media::Any>& details,
+    const std::string_view& key, OHOS::Media::Format& format)
+{
+    auto it = details.find(std::string(key));
+    if (it != details.end()) {
+        format.PutStringValue(key, OHOS::Media::AnyCast<std::string>(it->second));
+    }
+}
+
+static void CopyBoolDetail(const std::map<std::string, OHOS::Media::Any>& details,
+    const std::string_view& key, OHOS::Media::Format& format)
+{
+    auto it = details.find(std::string(key));
+    if (it != details.end()) {
+        format.PutIntValue(key, static_cast<int32_t>(OHOS::Media::AnyCast<bool>(it->second)));
+    }
+}
+
+static void CopyIntDetail(const std::map<std::string, OHOS::Media::Any>& details,
+    const std::string_view& key, OHOS::Media::Format& format)
+{
+    auto it = details.find(std::string(key));
+    if (it != details.end()) {
+        format.PutIntValue(key, static_cast<int32_t>(OHOS::Media::AnyCast<int64_t>(it->second)));
+    }
+}
+
+static void CopyLongDetail(const std::map<std::string, OHOS::Media::Any>& details,
+    const std::string_view& key, OHOS::Media::Format& format)
+{
+    auto it = details.find(std::string(key));
+    if (it != details.end()) {
+        format.PutLongValue(key, OHOS::Media::AnyCast<int64_t>(it->second));
+    }
+}
 }
 
 namespace OHOS {
 namespace Media {
 using namespace Pipeline;
-using namespace OHOS::Media::Plugins;
 class PlayerEventReceiver : public EventReceiver {
 public:
     explicit PlayerEventReceiver(HiPlayerImpl* hiPlayerImpl, std::string playerId)
@@ -144,7 +182,8 @@ public:
         hiPlayerImpl_ = hiPlayerImpl;
     }
 
-    Status OnCallback(const std::shared_ptr<Filter>& filter, FilterCallBackCommand cmd, StreamType outType) override
+    Status OnCallback(const std::shared_ptr<Filter>& filter, FilterCallBackCommand cmd,
+        OHOS::Media::Pipeline::StreamType outType) override
     {
         MEDIA_LOG_D("PlayerFilterCallback OnCallback.");
         std::shared_lock<std::shared_mutex> lk(cbMutex_);
@@ -195,17 +234,72 @@ HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, 
     bundleName_ = GetClientBundleName(appUid);
     dfxAgent_ = std::make_shared<DfxAgent>(playerId_, bundleName_);
     dfxAgent_->SetMetricsCallback([this](std::weak_ptr<DfxAgent> agent, const DfxEvent& event) {
-        auto info = AnyCast<DfxAgent::AVMetricsEvent>(event.param);
-        AVMetricsEvent infoCopy = {
-            .metricsEventType = info.metricsEventType,
-            .timeStamp = info.timeStamp,
-            .playbackPosition = info.playbackPosition,
-            .details = info.details
-        };
-        HandleMetricsEvent(infoCopy.timeStamp, infoCopy.playbackPosition,
-            infoCopy.details["Duration"],
-            static_cast<OHOS::Media::MediaType>(infoCopy.details["MediaType"]));
+        auto info = AnyCast<AVMetricsEvent>(event.param);
+        FALSE_RETURN(syncManager_ != nullptr);
+        int64_t playbackPosMs = Plugins::HstTime2Ms(syncManager_->GetMediaTimeNow());
+        info.playbackPosition = playbackPosMs;
+        HandleMetricsEventByType(info);
     });
+}
+
+void HiPlayerImpl::HandleMetricsEventByType(const AVMetricsEvent& infoCopy)
+{
+    MEDIA_LOG_I_SHORT("infoCopy.metricsEventType: " PUBLIC_LOG_D32, infoCopy.metricsEventType);
+    switch (infoCopy.metricsEventType) {
+        case AVMetricsEventType::AV_METRICS_EVENT_TYPE_LOADINGRATE_CHANGE: {
+            HandleLoadingBitrateEvent(infoCopy);
+            break;
+        }
+        case AVMetricsEventType::AV_METRICS_EVENT_TYPE_LOADING_ERROR: {
+            HandleLoadingErrorEvent(infoCopy);
+            break;
+        }
+        case AVMetricsEventType::AV_METRICS_EVENT_TYPE_CONTENT_CHANGED: {
+            HandleMediaChangedEvent(infoCopy);
+            break;
+        }
+        case AVMetricsEventType::AV_METRICS_EVENT_TYPE_CONTENT_DISCONTINUITY: {
+            HandleMediaDiscontinueEvent(infoCopy);
+            break;
+        }
+        case AVMetricsEventType::AV_METRICS_EVENT_TYPE_AUDIO_ABNORMAL: {
+            HandleAudioStatusEvent(infoCopy);
+            break;
+        }
+        case AVMetricsEventType::AV_METRICS_EVENT_TYPE_CODEC_ABNORMAL: {
+            HandleCodecAbnormalEvent(infoCopy);
+            break;
+        }
+        case AVMetricsEventType::AV_METRICS_EVENT_TYPE_LIP_ASYNC: {
+            HandleLipAsyncEvent(infoCopy);
+            break;
+        }
+        case AVMetricsEventType::AV_METRICS_EVENT_TYPE_STALLING: {
+            HandleStallingEvent(infoCopy);
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+void HiPlayerImpl::HandleStallingEvent(const AVMetricsEvent& infoCopy)
+{
+    int64_t duration = AnyCast<int64_t>(infoCopy.details.at("Duration"));
+    int32_t mediaType = AnyCast<int32_t>(infoCopy.details.at("MediaType"));
+    if (callbackLooper_.IsStarted()) {
+        Format format;
+        format.PutIntValue(PlayerKeys::PLAYER_METRICS_EVENT_TYPE,
+            static_cast<int32_t>(AV_METRICS_EVENT_TYPE_STALLING));
+        format.PutLongValue(PlayerKeys::PLAYER_STALLING_TIMESTAMP, infoCopy.timeStamp);
+        format.PutLongValue(PlayerKeys::PLAYER_STALLING_TIMELINE, infoCopy.playbackPosition);
+        format.PutLongValue(PlayerKeys::PLAYER_STALLING_DURATION, duration);
+        format.PutIntValue(PlayerKeys::PLAYER_STALLING_MEDIA_TYPE, static_cast<int32_t>(mediaType));
+        MEDIA_LOG_I("sending stalling event: timestamp=%{public}" PRId64 ", timeline=%{public}" PRId64\
+            ", duration=%{public}" PRId64 ", mediaType=%{public}d",
+            infoCopy.timeStamp, infoCopy.playbackPosition, duration, static_cast<int32_t>(mediaType));
+        callbackLooper_.OnInfo(INFO_TYPE_METRICS_EVENT, 0, format);
+    }
 }
 
 HiPlayerImpl::~HiPlayerImpl()
@@ -3570,6 +3664,7 @@ void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
             StopFlvCheckLiveDelayTime();
             callbackLooper_.StopCollectMaxAmplitude();
             HandleReadyAudioInterrupt();
+            NotifyAudioStatusDfxEvent(hintType);
         }
     }
     {
@@ -3593,6 +3688,20 @@ void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
             || hintType == OHOS::AudioStandard::INTERRUPT_HINT_STOP) {
             callbackLooper_.OnSystemOperation(OPERATION_TYPE_PAUSE, OPERATION_REASON_AUDIO_INTERRUPT);
         }
+    }
+}
+
+void HiPlayerImpl::NotifyAudioStatusDfxEvent(int32_t hintType)
+{
+    if (dfxAgent_ != nullptr) {
+        AudioStatusInfo statusInfo {
+            .stateBefore = static_cast<int32_t>(AudioStandard::RendererState::RENDERER_RUNNING),
+            .stateAfter = static_cast<int32_t>(hintType == AudioStandard::INTERRUPT_HINT_PAUSE
+                ? AudioStandard::RendererState::RENDERER_PAUSED
+                : AudioStandard::RendererState::RENDERER_STOPPED),
+            .interruptHint = hintType
+        };
+        dfxAgent_->OnDfxEvent({"HiPlayer", DfxEventType::DFX_EVENT_AUDIO_STATUS, statusInfo});
     }
 }
 
@@ -3843,45 +3952,255 @@ void HiPlayerImpl::HandleAdsChange(std::shared_ptr<MediaAVCodec::AVAdsChangeEven
         event->eventId.c_str());
 }
 
-void HiPlayerImpl::HandleMetricsEvent(int64_t timeStamp, int64_t timeLine, int64_t duration,
-    OHOS::Media::MediaType mediaType)
+void HiPlayerImpl::HandleLoadingBitrateEvent(const AVMetricsEvent& infoCopy)
 {
-    MEDIA_LOG_D_SHORT("HandleMetricsEvent timestamp: %{public}" PRId64 ", timeline: %{public}" PRId64 ",\
-        duration: %{public}" PRId64 ", mediaType: %{public}d",
-        timeStamp, timeLine, duration, static_cast<int32_t>(mediaType));
+    int64_t bitrateBefore = AnyCast<int64_t>(infoCopy.details.at("bitrate_before"));
+    int64_t bitrateAfter = AnyCast<int64_t>(infoCopy.details.at("bitrate_after"));
+    MEDIA_LOG_I("HandleLoadingBitrateEvent timestamp: %{public}" PRId64 ", playbackPosition: %{public}" PRId64 \
+        ", bitrateBefore: %{public}" PRId64 ", bitrateAfter: %{public}" PRId64,
+        infoCopy.timeStamp, infoCopy.playbackPosition, bitrateBefore, bitrateAfter);
     if (callbackLooper_.IsStarted()) {
         Format format;
         format.PutIntValue(PlayerKeys::PLAYER_METRICS_EVENT_TYPE,
-            static_cast<int32_t>(AV_METRICS_EVENT_TYPE_STALLING));
-        format.PutLongValue(PlayerKeys::PLAYER_STALLING_TIMESTAMP, timeStamp);
-        format.PutLongValue(PlayerKeys::PLAYER_STALLING_TIMELINE, timeLine);
-        format.PutLongValue(PlayerKeys::PLAYER_STALLING_DURATION, duration);
-        format.PutIntValue(PlayerKeys::PLAYER_STALLING_MEDIA_TYPE, static_cast<int32_t>(mediaType));
-        MEDIA_LOG_I("sending stalling event: timestamp=%{public}" PRId64 ", timeline=%{public}" PRId64\
-            ", duration=%{public}" PRId64 ", mediaType=%{public}d",
-            timeStamp, timeLine, duration, static_cast<int32_t>(mediaType));
-
+            static_cast<int32_t>(AV_METRICS_EVENT_TYPE_LOADINGRATE_CHANGE));
+        format.PutLongValue(PlayerKeys::PLAYER_TIMESTAMP, infoCopy.timeStamp);
+        format.PutLongValue(PlayerKeys::PLAYER_PLAYBACK_POSITION, infoCopy.playbackPosition);
+        format.PutLongValue(PlayerKeys::PLAYER_LOADING_BITRATE_BEFORE, bitrateBefore);
+        format.PutLongValue(PlayerKeys::PLAYER_LOADING_BITRATE_AFTER, bitrateAfter);
         callbackLooper_.OnInfo(INFO_TYPE_METRICS_EVENT, 0, format);
     }
 }
 
-Status HiPlayerImpl::OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd, StreamType outType)
+void HiPlayerImpl::HandleLoadingErrorEvent(const AVMetricsEvent& info)
+{
+    std::string requestStage = info.details.count("request_stage") > 0 ?
+        AnyCast<std::string>(info.details.at("request_stage")) : "";
+    int64_t requestTimestamp = info.details.count("request_timestamp") > 0 ?
+        AnyCast<int64_t>(info.details.at("request_timestamp")) : 0;
+    int64_t errorCode = info.details.count("error_code") > 0 ?
+        AnyCast<int64_t>(info.details.at("error_code")) : 0;
+    MEDIA_LOG_I("HandleLoadingErrorEvent timestamp: %{public}" PRId64 ", playbackPosition: %{public}" PRId64 \
+        ", requestStage: %{public}s, requestTimestamp: %{public}" PRId64 \
+        ", errorCode: %{public}" PRId64,
+        info.timeStamp, info.playbackPosition, requestStage.c_str(), requestTimestamp, errorCode);
+    if (callbackLooper_.IsStarted()) {
+        Format format;
+        format.PutIntValue(PlayerKeys::PLAYER_METRICS_EVENT_TYPE,
+            static_cast<int32_t>(AV_METRICS_EVENT_TYPE_LOADING_ERROR));
+        format.PutLongValue(PlayerKeys::PLAYER_TIMESTAMP, info.timeStamp);
+        format.PutLongValue(PlayerKeys::PLAYER_PLAYBACK_POSITION, info.playbackPosition);
+        format.PutStringValue(PlayerKeys::PLAYER_REQUEST_STAGE, requestStage);
+        format.PutLongValue(PlayerKeys::PLAYER_REQUEST_TIMESTAMP, requestTimestamp);
+        format.PutLongValue(PlayerKeys::PLAYER_ERROR_CODE, errorCode);
+        callbackLooper_.OnInfo(INFO_TYPE_METRICS_EVENT, 0, format);
+    }
+}
+
+void HiPlayerImpl::FillMediaChangedInfo(Format& format, const AVMetricsEvent& info)
+{
+    CopyBoolDetail(info.details, PlayerKeys::PLAYER_IS_LOCAL_FD, format);
+    CopyStringDetail(info.details, PlayerKeys::PLAYER_MEDIA_STREAM_TYPE, format);
+    CopyStringDetail(info.details, PlayerKeys::PLAYER_CHANGE_REASON, format);
+    CopyStringDetail(info.details, PlayerKeys::PLAYER_CHANGE_RESULT, format);
+    CopyIntDetail(info.details, PlayerKeys::PLAYER_STREAM_ID_BEFORE, format);
+    CopyIntDetail(info.details, PlayerKeys::PLAYER_STREAM_ID_AFTER, format);
+    CopyLongDetail(info.details, PlayerKeys::PLAYER_BITRATE_BEFORE, format);
+    CopyLongDetail(info.details, PlayerKeys::PLAYER_BITRATE_AFTER, format);
+    CopyIntDetail(info.details, PlayerKeys::PLAYER_VIDEO_WIDTH_BEFORE, format);
+    CopyIntDetail(info.details, PlayerKeys::PLAYER_VIDEO_HEIGHT_BEFORE, format);
+    CopyIntDetail(info.details, PlayerKeys::PLAYER_VIDEO_WIDTH_AFTER, format);
+    CopyIntDetail(info.details, PlayerKeys::PLAYER_VIDEO_HEIGHT_AFTER, format);
+    CopyIntDetail(info.details, PlayerKeys::PLAYER_VIDEO_FRAMERATE_BEFORE, format);
+    CopyIntDetail(info.details, PlayerKeys::PLAYER_VIDEO_FRAMERATE_AFTER, format);
+    CopyIntDetail(info.details, PlayerKeys::PLAYER_AUDIO_CHANNELS_BEFORE, format);
+    CopyIntDetail(info.details, PlayerKeys::PLAYER_AUDIO_CHANNELS_AFTER, format);
+    CopyIntDetail(info.details, PlayerKeys::PLAYER_AUDIO_SAMPLE_RATE_BEFORE, format);
+    CopyIntDetail(info.details, PlayerKeys::PLAYER_AUDIO_SAMPLE_RATE_AFTER, format);
+    CopyStringDetail(info.details, PlayerKeys::PLAYER_VIDEO_TYPE_BEFORE, format);
+    CopyStringDetail(info.details, PlayerKeys::PLAYER_VIDEO_TYPE_AFTER, format);
+    CopyStringDetail(info.details, PlayerKeys::PLAYER_AUDIO_LANG_BEFORE, format);
+    CopyStringDetail(info.details, PlayerKeys::PLAYER_AUDIO_LANG_AFTER, format);
+    CopyStringDetail(info.details, PlayerKeys::PLAYER_SUBTITLE_LANG_BEFORE, format);
+    CopyStringDetail(info.details, PlayerKeys::PLAYER_SUBTITLE_LANG_AFTER, format);
+    CopyStringDetail(info.details, PlayerKeys::PLAYER_AUDIO_MIME_TYPE_BEFORE, format);
+    CopyStringDetail(info.details, PlayerKeys::PLAYER_AUDIO_MIME_TYPE_AFTER, format);
+    CopyStringDetail(info.details, PlayerKeys::PLAYER_VIDEO_MIME_TYPE_BEFORE, format);
+    CopyStringDetail(info.details, PlayerKeys::PLAYER_VIDEO_MIME_TYPE_AFTER, format);
+    CopyStringDetail(info.details, PlayerKeys::PLAYER_CODECS_BEFORE, format);
+    CopyStringDetail(info.details, PlayerKeys::PLAYER_CODECS_AFTER, format);
+    CopyStringDetail(info.details, PlayerKeys::PLAYER_ORIGIN_CODECS_BEFORE, format);
+    CopyStringDetail(info.details, PlayerKeys::PLAYER_ORIGIN_CODECS_AFTER, format);
+}
+
+void HiPlayerImpl::HandleMediaChangedEvent(const AVMetricsEvent& info)
+{
+    MEDIA_LOG_I("HandleMediaChangedEvent timestamp: %{public}" PRId64 ", playbackPosition: %{public}" PRId64,
+        info.timeStamp, info.playbackPosition);
+    if (callbackLooper_.IsStarted()) {
+        Format format;
+        format.PutIntValue(PlayerKeys::PLAYER_METRICS_EVENT_TYPE,
+            static_cast<int32_t>(AV_METRICS_EVENT_TYPE_CONTENT_CHANGED));
+        format.PutLongValue(PlayerKeys::PLAYER_TIMESTAMP, info.timeStamp);
+        format.PutLongValue(PlayerKeys::PLAYER_PLAYBACK_POSITION, info.playbackPosition);
+        FillMediaChangedInfo(format, info);
+
+        auto itChangeResult = info.details.find(std::string(PlayerKeys::PLAYER_CHANGE_RESULT));
+        std::string changeResultStr = (itChangeResult != info.details.end()) ?
+            AnyCast<std::string>(itChangeResult->second) : "";
+
+        auto itAudioSampleRate = info.details.find(std::string(PlayerKeys::PLAYER_AUDIO_SAMPLE_RATE_AFTER));
+        int32_t audioSampleRateAfter = (itAudioSampleRate != info.details.end()) ?
+            static_cast<int32_t>(AnyCast<int64_t>(itAudioSampleRate->second)) : 0;
+
+        FillAudioSampleRateFromDemuxer(changeResultStr, audioSampleRateAfter, format);
+        callbackLooper_.OnInfo(INFO_TYPE_METRICS_EVENT, 0, format);
+    }
+}
+
+void HiPlayerImpl::FillAudioSampleRateFromDemuxer(const std::string& changeResultStr,
+    int32_t audioSampleRateAfter, Format& format)
+{
+    if (changeResultStr == "FAILED" || audioSampleRateAfter != 0 || demuxer_ == nullptr) {
+        return;
+    }
+    std::vector<std::shared_ptr<Meta>> trackMetas = demuxer_->GetStreamMetaInfo();
+    int32_t audioTrackId = demuxer_->GetCurrentAudioTrackId();
+    if (audioTrackId < 0 || audioTrackId >= static_cast<int32_t>(trackMetas.size())) {
+        return;
+    }
+    const auto& trackMeta = trackMetas[audioTrackId];
+    if (trackMeta == nullptr) {
+        return;
+    }
+    int32_t sampleRate = 0;
+    if (trackMeta->GetData(Tag::AUDIO_SAMPLE_RATE, sampleRate) && sampleRate > 0) {
+        format.PutIntValue(PlayerKeys::PLAYER_AUDIO_SAMPLE_RATE_AFTER, sampleRate);
+    }
+}
+
+void HiPlayerImpl::HandleMediaDiscontinueEvent(const AVMetricsEvent& info)
+{
+    MEDIA_LOG_I("HandleMediaDiscontinueEvent timestamp: %{public}" PRId64 ", playbackPosition: %{public}" PRId64,
+        info.timeStamp, info.playbackPosition);
+    if (callbackLooper_.IsStarted()) {
+        Format format;
+        format.PutIntValue(PlayerKeys::PLAYER_METRICS_EVENT_TYPE,
+            static_cast<int32_t>(AV_METRICS_EVENT_TYPE_CONTENT_DISCONTINUITY));
+        format.PutLongValue(PlayerKeys::PLAYER_TIMESTAMP, info.timeStamp);
+        format.PutLongValue(PlayerKeys::PLAYER_PLAYBACK_POSITION, info.playbackPosition);
+        CopyStringDetail(info.details, PlayerKeys::PLAYER_MEDIA_STREAM_TYPE, format);
+        CopyStringDetail(info.details, PlayerKeys::PLAYER_DISCONTINUE_TYPE, format);
+        std::string discontinueTypeStr = AnyCast<std::string>(info.details.at("discontinue_type"));
+        if (discontinueTypeStr == "PTS") {
+            format.PutLongValue(PlayerKeys::PLAYER_PTS_BEFORE,
+                AnyCast<int64_t>(info.details.at("pts_before")));
+            format.PutLongValue(PlayerKeys::PLAYER_PTS_AFTER,
+                AnyCast<int64_t>(info.details.at("pts_after")));
+        } else if (discontinueTypeStr == "AUDIO_PARAM") {
+            format.PutIntValue(PlayerKeys::PLAYER_SAMPLE_RATE_BEFORE,
+                AnyCast<int32_t>(info.details.at("sample_rate_before")));
+            format.PutIntValue(PlayerKeys::PLAYER_SAMPLE_RATE_AFTER,
+                AnyCast<int32_t>(info.details.at("sample_rate_after")));
+            format.PutIntValue(PlayerKeys::PLAYER_CHANNELS_BEFORE,
+                AnyCast<int32_t>(info.details.at("channels_before")));
+            format.PutIntValue(PlayerKeys::PLAYER_CHANNELS_AFTER,
+                AnyCast<int32_t>(info.details.at("channels_after")));
+            format.PutIntValue(PlayerKeys::PLAYER_SAMPLE_FORMAT_BEFORE,
+                AnyCast<int32_t>(info.details.at("sample_format_before")));
+            format.PutIntValue(PlayerKeys::PLAYER_SAMPLE_FORMAT_AFTER,
+                AnyCast<int32_t>(info.details.at("sample_format_after")));
+        }
+        callbackLooper_.OnInfo(INFO_TYPE_METRICS_EVENT, 0, format);
+    }
+}
+
+void HiPlayerImpl::HandleAudioStatusEvent(const AVMetricsEvent& info)
+{
+    std::string stateBefore = info.details.count("state_before") > 0 ?
+        AnyCast<std::string>(info.details.at("state_before")) : "UNKNOWN";
+    std::string stateAfter = info.details.count("state_after") > 0 ?
+        AnyCast<std::string>(info.details.at("state_after")) : "UNKNOWN";
+    int32_t interruptHint = info.details.count("interrupt_hint") > 0 ?
+        AnyCast<int32_t>(info.details.at("interrupt_hint")) : 0;
+    MEDIA_LOG_I("HandleAudioStatusEvent timestamp: %{public}" PRId64 ", playbackPosition: %{public}" PRId64 \
+        ", stateBefore: %{public}s, stateAfter: %{public}s, interruptHint: %{public}d",
+        info.timeStamp, info.playbackPosition, stateBefore.c_str(), stateAfter.c_str(), interruptHint);
+    if (callbackLooper_.IsStarted()) {
+        Format format;
+        format.PutIntValue(PlayerKeys::PLAYER_METRICS_EVENT_TYPE,
+            static_cast<int32_t>(AV_METRICS_EVENT_TYPE_AUDIO_ABNORMAL));
+        format.PutLongValue(PlayerKeys::PLAYER_TIMESTAMP, info.timeStamp);
+        format.PutLongValue(PlayerKeys::PLAYER_PLAYBACK_POSITION, info.playbackPosition);
+        format.PutStringValue(PlayerKeys::PLAYER_AUDIO_STATE_BEFORE, stateBefore);
+        format.PutStringValue(PlayerKeys::PLAYER_AUDIO_STATE_AFTER, stateAfter);
+        format.PutIntValue(PlayerKeys::PLAYER_AUDIO_INTERRUPT_HINT, interruptHint);
+        callbackLooper_.OnInfo(INFO_TYPE_METRICS_EVENT, 0, format);
+    }
+}
+
+void HiPlayerImpl::HandleCodecAbnormalEvent(const AVMetricsEvent& info)
+{
+    std::string decoderType = info.details.count("decoder_type") > 0 ?
+        AnyCast<std::string>(info.details.at("decoder_type")) : "";
+    int64_t errorCode = info.details.count("error_code") > 0 ?
+        AnyCast<int64_t>(info.details.at("error_code")) : 0;
+    MEDIA_LOG_I("HandleCodecAbnormalEvent timestamp: %{public}" PRId64 ", playbackPosition: %{public}" PRId64 \
+        ", decoderType: %{public}s, errorCode: %{public}" PRId64,
+        info.timeStamp, info.playbackPosition, decoderType.c_str(), errorCode);
+    if (callbackLooper_.IsStarted()) {
+        Format format;
+        format.PutIntValue(PlayerKeys::PLAYER_METRICS_EVENT_TYPE,
+            static_cast<int32_t>(AV_METRICS_EVENT_TYPE_CODEC_ABNORMAL));
+        format.PutLongValue(PlayerKeys::PLAYER_TIMESTAMP, info.timeStamp);
+        format.PutLongValue(PlayerKeys::PLAYER_PLAYBACK_POSITION, info.playbackPosition);
+        format.PutStringValue(PlayerKeys::PLAYER_DECODER_TYPE, decoderType);
+        format.PutLongValue(PlayerKeys::PLAYER_CODEC_ERROR_CODE, errorCode);
+        callbackLooper_.OnInfo(INFO_TYPE_METRICS_EVENT, 0, format);
+    }
+}
+
+void HiPlayerImpl::HandleLipAsyncEvent(const AVMetricsEvent& info)
+{
+    std::string asyncType = info.details.count("async_type") > 0 ?
+        AnyCast<std::string>(info.details.at("async_type")) : "";
+    int64_t startTime = info.details.count("start_time") > 0 ?
+        AnyCast<int64_t>(info.details.at("start_time")) : 0;
+    int64_t endTime = info.details.count("end_time") > 0 ?
+        AnyCast<int64_t>(info.details.at("end_time")) : 0;
+    MEDIA_LOG_I("HandleLipAsyncEvent timestamp: %{public}" PRId64 ", playbackPosition: %{public}" PRId64 \
+        ", asyncType: %{public}s, startTime: %{public}" PRId64 ", endTime: %{public}" PRId64,
+        info.timeStamp, info.playbackPosition, asyncType.c_str(), startTime, endTime);
+    if (callbackLooper_.IsStarted()) {
+        Format format;
+        format.PutIntValue(PlayerKeys::PLAYER_METRICS_EVENT_TYPE,
+            static_cast<int32_t>(AV_METRICS_EVENT_TYPE_LIP_ASYNC));
+        format.PutLongValue(PlayerKeys::PLAYER_TIMESTAMP, info.timeStamp);
+        format.PutLongValue(PlayerKeys::PLAYER_PLAYBACK_POSITION, info.playbackPosition);
+        format.PutStringValue(PlayerKeys::PLAYER_ASYNC_TYPE, asyncType);
+        format.PutLongValue(PlayerKeys::PLAYER_START_TIME, startTime);
+        format.PutLongValue(PlayerKeys::PLAYER_END_TIME, endTime);
+        callbackLooper_.OnInfo(INFO_TYPE_METRICS_EVENT, 0, format);
+    }
+}
+
+Status HiPlayerImpl::OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd,
+    OHOS::Media::Pipeline::StreamType outType)
 {
     MEDIA_LOG_D_SHORT("HiPlayerImpl::OnCallback filter, outType: %{public}d", outType);
     if (cmd == FilterCallBackCommand::NEXT_FILTER_NEEDED) {
         switch (outType) {
-            case StreamType::STREAMTYPE_SUBTITLE:
+            case OHOS::Media::Pipeline::StreamType::STREAMTYPE_SUBTITLE:
                 return LinkSubtitleSinkFilter(filter, outType);
-            case StreamType::STREAMTYPE_RAW_AUDIO:
+            case OHOS::Media::Pipeline::StreamType::STREAMTYPE_RAW_AUDIO:
                 return LinkAudioSinkFilter(filter, outType);
-            case StreamType::STREAMTYPE_DOLBY:
+            case OHOS::Media::Pipeline::StreamType::STREAMTYPE_DOLBY:
                 return LinkAudioSinkFilter(filter, outType);
-            case StreamType::STREAMTYPE_ENCODED_AUDIO:
+            case OHOS::Media::Pipeline::StreamType::STREAMTYPE_ENCODED_AUDIO:
                 return LinkAudioDecoderFilter(filter, outType);
 #ifdef SUPPORT_VIDEO
-            case StreamType::STREAMTYPE_RAW_VIDEO:
+            case OHOS::Media::Pipeline::StreamType::STREAMTYPE_RAW_VIDEO:
                 break;
-            case StreamType::STREAMTYPE_ENCODED_VIDEO:
+            case OHOS::Media::Pipeline::StreamType::STREAMTYPE_ENCODED_VIDEO:
                 return LinkVideoDecoderFilter(filter, outType);
 #endif
             default:
@@ -3907,7 +4226,8 @@ void HiPlayerImpl::OnDumpInfo(int32_t fd)
 #endif
 }
 
-Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type)
+Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFilter,
+    OHOS::Media::Pipeline::StreamType type)
 {
     MediaTrace trace("HiPlayerImpl::LinkAudioDecoderFilter");
     MEDIA_LOG_I_SHORT("HiPlayerImpl::LinkAudioDecoderFilter");
@@ -3950,7 +4270,8 @@ Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFi
 #endif
 }
 
-Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type)
+Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilter,
+    OHOS::Media::Pipeline::StreamType type)
 {
     MediaTrace trace("HiPlayerImpl::LinkAudioSinkFilter");
     MEDIA_LOG_I("HiPlayerImpl::LinkAudioSinkFilter");
@@ -3964,7 +4285,7 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
     audioSink_->SetMaxAmplitudeCbStatus(maxAmplitudeCbStatus_);
     audioSink_->SetPerfRecEnabled(isPerfRecEnabled_);
     audioSink_->SetIsCalledBySystemApp(isCalledBySystemApp_);
-    if (type == StreamType::STREAMTYPE_DOLBY) {
+    if (type == OHOS::Media::Pipeline::StreamType::STREAMTYPE_DOLBY) {
         audioSink_->SetAudioPassFlag(true);
     }
     if (demuxer_ != nullptr && audioRenderInfo_ == nullptr) {
@@ -4028,7 +4349,8 @@ bool HiPlayerImpl::IsLiveStream()
 }
 
 #ifdef SUPPORT_VIDEO
-Status HiPlayerImpl::LinkSeiDecoder(const std::shared_ptr<Filter>& preFilter, StreamType type)
+Status HiPlayerImpl::LinkSeiDecoder(const std::shared_ptr<Filter>& preFilter,
+    OHOS::Media::Pipeline::StreamType type)
 {
     MEDIA_LOG_I("Link SeiParserFilterFilter Enter.");
     if (seiDecoder_ == nullptr) {
@@ -4042,7 +4364,8 @@ Status HiPlayerImpl::LinkSeiDecoder(const std::shared_ptr<Filter>& preFilter, St
     return pipeline_->LinkFilters(preFilter, {seiDecoder_}, type);
 }
 
-Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type)
+Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter,
+    OHOS::Media::Pipeline::StreamType type)
 {
     MediaTrace trace("HiPlayerImpl::LinkVideoDecoderFilter");
     MEDIA_LOG_I("LinkVideoDecoderFilter");
@@ -4069,7 +4392,8 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
 }
 #endif
 
-Status HiPlayerImpl::LinkSubtitleSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type)
+Status HiPlayerImpl::LinkSubtitleSinkFilter(const std::shared_ptr<Filter>& preFilter,
+    OHOS::Media::Pipeline::StreamType type)
 {
     MediaTrace trace("HiPlayerImpl::LinkSubtitleSinkFilter");
     FALSE_RETURN_V(subtitleSink_ == nullptr, Status::OK);
@@ -4317,6 +4641,15 @@ int32_t HiPlayerImpl::ExitSeekContinous(bool align, int64_t seekContinousBatchNo
 
 void HiPlayerImpl::HandleDfxEvent(const DfxEvent &event)
 {
+    if (event.type == DfxEventType::DFX_EVENT_NEW_TRACK_RENDER_START) {
+        if (Any::IsSameTypeWith<uint64_t>(event.param)) {
+            uint64_t renderSeqNum = AnyCast<uint64_t>(event.param);
+            if (demuxer_ != nullptr) {
+                demuxer_->OnNewTrackRender(renderSeqNum);
+            }
+        }
+        return;
+    }
     FALSE_RETURN(dfxAgent_ != nullptr);
     dfxAgent_->OnDfxEvent(event);
 }

@@ -21,6 +21,7 @@
 #include "osal/task/task.h"
 #include "filter/filter.h"
 #include "common/performance_utils.h"
+#include "common/event.h"
  
 namespace OHOS {
 namespace Media {
@@ -33,6 +34,12 @@ enum class PlayerDfxSourceType : uint8_t {
     DFX_SOURCE_TYPE_MEDIASOURCE_LOCAL = 4,
     DFX_SOURCE_TYPE_MEDIASOURCE_NETWORK = 5,
     DFX_SOURCE_TYPE_UNKNOWN = 127,
+};
+
+struct AudioStatusInfo {
+    int32_t stateBefore = 0;
+    int32_t stateAfter = 0;
+    int32_t interruptHint = 0;
 };
 
 class DfxAgent;
@@ -50,13 +57,6 @@ public:
     void GetTotalStallingDuration(int64_t* duration);
     void GetTotalStallingTimes(int64_t* times);
 
-    struct AVMetricsEvent {
-        int32_t metricsEventType = 0;
-        int64_t timeStamp = 0;
-        int64_t playbackPosition = 0;
-        std::map<std::string, int64_t> details;
-    };
-
 private:
     void ReportLagEvent(int64_t lagDuration, const std::string& eventMsg);
     void ReportEosSeek0Event(int32_t appUid);
@@ -71,6 +71,13 @@ private:
     static void ProcessPerfInfoEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
     static void ProcessMetricsEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
     static void ProcessPlayErrEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
+    static void ProcessLoadingBitrateEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
+    static void ProcessLoadingErrorEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
+    static void ProcessMediaChangedEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
+    static void ProcessMediaDiscontinueEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
+    static void ProcessAudioStatusEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
+    static void ProcessCodecAbnormalEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
+    static void ProcessLipAsyncEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
     int64_t CalculateEventTimestamp(int64_t steadyMs);
     DfxEventHandleFunc metricsCallback_;
     std::string groupId_ {};
