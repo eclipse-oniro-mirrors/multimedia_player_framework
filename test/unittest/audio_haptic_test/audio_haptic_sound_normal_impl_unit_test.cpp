@@ -99,7 +99,7 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_003, Tes
     audioHapticSoundNormalImpl->configuredAudioSource_ = {.audioUri = "abc"};
     auto ret = audioHapticSoundNormalImpl->PrepareSound();
 
-    EXPECT_NE(ret, MSERR_OK);
+    EXPECT_EQ(ret, MSERR_OPEN_FILE_FAILED);
 }
 
 /**
@@ -201,7 +201,7 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_007, Tes
     audioHapticSoundNormalImpl->configuredAudioSource_ = {.audioUri = "abc"};
     auto ret = audioHapticSoundNormalImpl->StartSound();
 
-    EXPECT_NE(ret, MSERR_OK);
+    EXPECT_EQ(ret, MSERR_START_FAILED);
 }
 
 /**
@@ -1183,7 +1183,8 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_046, TestSize
     Format infoBody;
     aHSoundNormalCallback->HandleAudioInterruptEvent(extra, infoBody);
     // With valid impl, HandleAudioInterruptEvent calls NotifyInterruptEvent
-    ASSERT_NE(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
+    // but no callback set on sharedcb, so event cannot be forwarded
+    EXPECT_EQ(sharedcb->audioHapticPlayerCallback_.lock(), nullptr);
 }
 
 /**
@@ -1213,7 +1214,8 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_047, TestSize
     Format infoBody;
     aHSoundNormalCallback->HandleAudioFirstFrameEvent(extra, infoBody);
     // With valid impl, HandleAudioFirstFrameEvent calls NotifyFirstFrameEvent
-    ASSERT_NE(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
+    // but no callback set on sharedcb, so event cannot be forwarded
+    EXPECT_EQ(sharedcb->audioHapticPlayerCallback_.lock(), nullptr);
 }
 
 /**

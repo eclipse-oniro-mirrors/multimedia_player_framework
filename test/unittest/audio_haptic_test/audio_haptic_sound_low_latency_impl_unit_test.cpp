@@ -102,7 +102,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     audioHapticSoundLowLatencyImpl->audioSource_ = {.audioUri = "123"};
 
     auto ret = audioHapticSoundLowLatencyImpl->OpenAudioSource();
-    EXPECT_NE(ret, MSERR_OK);
+    EXPECT_EQ(ret, MSERR_OPEN_FILE_FAILED);
 }
 
 /**
@@ -125,7 +125,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     audioHapticSoundLowLatencyImpl->audioSource_ = {.audioUri = "123"};
 
     auto ret = audioHapticSoundLowLatencyImpl->OpenAudioSource();
-    EXPECT_NE(ret, MSERR_OK);
+    EXPECT_EQ(ret, MSERR_OPEN_FILE_FAILED);
 }
 
 /**
@@ -402,7 +402,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     ASSERT_NE(audioHapticSoundLowLatencyImpl->soundPoolPlayer_, nullptr);
 
     auto ret = audioHapticSoundLowLatencyImpl->SetVolume(volume);
-    EXPECT_NE(ret, MSERR_OK);
+    EXPECT_EQ(ret, MSERR_INVALID_OPERATION);
 }
 
 /**
@@ -658,8 +658,8 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     ASSERT_NE(audioHapticSoundLowLatencyImpl->audioHapticPlayerCallback_.lock(), nullptr);
 
     audioHapticSoundLowLatencyImpl->NotifyFirstFrameEvent(latency);
-    // Callback should still be valid after notification
-    ASSERT_NE(audioHapticSoundLowLatencyImpl->audioHapticPlayerCallback_.lock(), nullptr);
+    // NotifyFirstFrameEvent forwards event to callback, callback object remains valid
+    EXPECT_EQ(audioHapticSoundLowLatencyImpl->audioHapticPlayerCallback_.lock(), sharedcb);
 }
 
 /**
@@ -769,8 +769,8 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
 
 
     aHSoundLowLatencyCallback->OnLoadCompleted(soundId);
-    // With valid impl, OnLoadCompleted calls NotifyPreparedEvent
-    ASSERT_NE(aHSoundLowLatencyCallback->soundLowLatencyImpl_.lock(), nullptr);
+    // OnLoadCompleted → NotifyPreparedEvent → sets isPrepared_ = true
+    EXPECT_EQ(sharedcb->isPrepared_, true);
 }
 
 /**
@@ -827,8 +827,8 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     ASSERT_NE(aHSoundLowLatencyCallback->soundLowLatencyImpl_.lock(), nullptr);
 
     aHSoundLowLatencyCallback->OnPlayFinished(streamID);
-    // With valid impl, OnPlayFinished calls NotifyEndOfStreamEvent
-    ASSERT_NE(aHSoundLowLatencyCallback->soundLowLatencyImpl_.lock(), nullptr);
+    // OnPlayFinished → NotifyEndOfStreamEvent → sets playerState_ = STATE_STOPPED
+    EXPECT_EQ(sharedcb->playerState_, AudioHapticPlayerState::STATE_STOPPED);
 }
 
 /**
@@ -885,8 +885,9 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     ASSERT_NE(aHSoundLowLatencyCallback->soundLowLatencyImpl_.lock(), nullptr);
 
     aHSoundLowLatencyCallback->OnError(errorCode);
-    // With valid impl, OnError calls NotifyErrorEvent
-    ASSERT_NE(aHSoundLowLatencyCallback->soundLowLatencyImpl_.lock(), nullptr);
+    // OnError(0) → NotifyErrorEvent(MSERR_OK): isUnsupportedFile_ stays false, no callback to forward to
+    EXPECT_EQ(sharedcb->isUnsupportedFile_, false);
+    EXPECT_EQ(sharedcb->audioHapticPlayerCallback_.lock(), nullptr);
 }
 
 /**
@@ -943,8 +944,8 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     ASSERT_NE(aHSoundFirstFrameCallback->soundLowLatencyImpl_.lock(), nullptr);
 
     aHSoundFirstFrameCallback->OnFirstAudioFrameWritingCallback(latency);
-    // With valid impl, OnFirstAudioFrameWritingCallback calls NotifyFirstFrameEvent
-    ASSERT_NE(aHSoundFirstFrameCallback->soundLowLatencyImpl_.lock(), nullptr);
+    // OnFirstAudioFrameWritingCallback → NotifyFirstFrameEvent: no callback to forward to
+    EXPECT_EQ(sharedcb->audioHapticPlayerCallback_.lock(), nullptr);
 }
 } // namespace Media
 } // namespace OHOS
