@@ -33,14 +33,11 @@ namespace Media {
 
 class ScreenCaptureMonitorSubscriber : public EventFwk::CommonEventSubscriber {
 public:
-    ScreenCaptureMonitorSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo,
-        const std::function<void(const EventFwk::CommonEventData &)> &callback)
-        : EventFwk::CommonEventSubscriber(subscribeInfo), callback_(callback)
+    ScreenCaptureMonitorSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo)
+        : EventFwk::CommonEventSubscriber(subscribeInfo)
     {}
     ~ScreenCaptureMonitorSubscriber() = default;
     void OnReceiveEvent(const EventFwk::CommonEventData &data) override;
-private:
-    std::function<void(const EventFwk::CommonEventData &)> callback_;
 };
 
 class ScreenCaptureMonitorServer : public IScreenCaptureMonitorService, public NoCopyable {
