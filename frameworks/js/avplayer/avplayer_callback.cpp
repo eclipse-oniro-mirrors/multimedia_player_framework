@@ -1691,53 +1691,78 @@ void AVPlayerCallback::OnAdsChangeCb(const int32_t extra, const Format &infoBody
         FAKE_POINTER(this), type, eventId.c_str(), reason);
 
     if (type == OHOS::Media::ADS_START) {
-        if (refMap_.find(AVPlayerEvent::EVENT_ADS_STARTED) == refMap_.end()) {
-            MEDIA_LOGD("can not find adsStarted callback!");
-            return;
-        }
-        NapiCallback::AdsStartedCb *cb = new(std::nothrow) NapiCallback::AdsStartedCb();
-        CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new AdsStartedCb");
-        cb->callback = refMap_.at(AVPlayerEvent::EVENT_ADS_STARTED);
-        cb->callbackName = AVPlayerEvent::EVENT_ADS_STARTED;
-        cb->eventId = eventId;
-        cb->durationMs = durationMs;
-        NapiCallback::CompleteCallback(env_, cb);
+        HandleAdsStartedEvent(eventId, durationMs);
     } else if (type == OHOS::Media::ADS_END) {
-        if (reason == OHOS::Media::ADS_ERROR) {
-            if (refMap_.find(AVPlayerEvent::EVENT_ADS_LOADING_ERROR) == refMap_.end()) {
-                MEDIA_LOGD("can not find adsLoadingError callback!");
-                return;
-            }
-            NapiCallback::AdsLoadingErrorCb *cb = new(std::nothrow) NapiCallback::AdsLoadingErrorCb();
-            CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new AdsLoadingErrorCb");
-            cb->callback = refMap_.at(AVPlayerEvent::EVENT_ADS_LOADING_ERROR);
-            cb->callbackName = AVPlayerEvent::EVENT_ADS_LOADING_ERROR;
-            cb->eventId = eventId;
-            cb->errorCode = 5400108;
-            NapiCallback::CompleteCallback(env_, cb);
-        } else if (reason == OHOS::Media::ADS_SKIPPED) {
-            if (refMap_.find(AVPlayerEvent::EVENT_ADS_SKIPPED) == refMap_.end()) {
-                MEDIA_LOGD("can not find adsSkipped callback!");
-                return;
-            }
-            NapiCallback::AdsSkippedCb *cb = new(std::nothrow) NapiCallback::AdsSkippedCb();
-            CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new AdsSkippedCb");
-            cb->callback = refMap_.at(AVPlayerEvent::EVENT_ADS_SKIPPED);
-            cb->callbackName = AVPlayerEvent::EVENT_ADS_SKIPPED;
-            cb->eventId = eventId;
-            NapiCallback::CompleteCallback(env_, cb);
-        } else if (reason == OHOS::Media::ADS_COMPLETED) {
-            if (refMap_.find(AVPlayerEvent::EVENT_ADS_COMPLETED) == refMap_.end()) {
-                MEDIA_LOGD("can not find adsCompleted callback!");
-                return;
-            }
-            NapiCallback::AdsCompletedCb *cb = new(std::nothrow) NapiCallback::AdsCompletedCb();
-            CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new AdsCompletedCb");
-            cb->callback = refMap_.at(AVPlayerEvent::EVENT_ADS_COMPLETED);
-            cb->callbackName = AVPlayerEvent::EVENT_ADS_COMPLETED;
-            cb->eventId = eventId;
-            NapiCallback::CompleteCallback(env_, cb);
-        }
+        HandleAdsEndEvent(eventId, reason);
+    }
+}
+
+void AVPlayerCallback::HandleAdsStartedEvent(const std::string &eventId, int64_t durationMs)
+{
+    if (refMap_.find(AVPlayerEvent::EVENT_ADS_STARTED) == refMap_.end()) {
+        MEDIA_LOGD("can not find adsStarted callback!");
+        return;
+    }
+    NapiCallback::AdsStartedCb *cb = new(std::nothrow) NapiCallback::AdsStartedCb();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new AdsStartedCb");
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_ADS_STARTED);
+    cb->callbackName = AVPlayerEvent::EVENT_ADS_STARTED;
+    cb->eventId = eventId;
+    cb->durationMs = durationMs;
+    NapiCallback::CompleteCallback(env_, cb);
+}
+
+void AVPlayerCallback::HandleAdsLoadingErrorEvent(const std::string &eventId)
+{
+    if (refMap_.find(AVPlayerEvent::EVENT_ADS_LOADING_ERROR) == refMap_.end()) {
+        MEDIA_LOGD("can not find adsLoadingError callback!");
+        return;
+    }
+    NapiCallback::AdsLoadingErrorCb *cb = new(std::nothrow) NapiCallback::AdsLoadingErrorCb();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new AdsLoadingErrorCb");
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_ADS_LOADING_ERROR);
+    cb->callbackName = AVPlayerEvent::EVENT_ADS_LOADING_ERROR;
+    cb->eventId = eventId;
+    cb->errorCode = 5400108;
+    NapiCallback::CompleteCallback(env_, cb);
+}
+
+void AVPlayerCallback::HandleAdsSkippedEvent(const std::string &eventId)
+{
+    if (refMap_.find(AVPlayerEvent::EVENT_ADS_SKIPPED) == refMap_.end()) {
+        MEDIA_LOGD("can not find adsSkipped callback!");
+        return;
+    }
+    NapiCallback::AdsSkippedCb *cb = new(std::nothrow) NapiCallback::AdsSkippedCb();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new AdsSkippedCb");
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_ADS_SKIPPED);
+    cb->callbackName = AVPlayerEvent::EVENT_ADS_SKIPPED;
+    cb->eventId = eventId;
+    NapiCallback::CompleteCallback(env_, cb);
+}
+
+void AVPlayerCallback::HandleAdsCompletedEvent(const std::string &eventId)
+{
+    if (refMap_.find(AVPlayerEvent::EVENT_ADS_COMPLETED) == refMap_.end()) {
+        MEDIA_LOGD("can not find adsCompleted callback!");
+        return;
+    }
+    NapiCallback::AdsCompletedCb *cb = new(std::nothrow) NapiCallback::AdsCompletedCb();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new AdsCompletedCb");
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_ADS_COMPLETED);
+    cb->callbackName = AVPlayerEvent::EVENT_ADS_COMPLETED;
+    cb->eventId = eventId;
+    NapiCallback::CompleteCallback(env_, cb);
+}
+
+void AVPlayerCallback::HandleAdsEndEvent(const std::string &eventId, int32_t reason)
+{
+    if (reason == OHOS::Media::ADS_ERROR) {
+        HandleAdsLoadingErrorEvent(eventId);
+    } else if (reason == OHOS::Media::ADS_SKIPPED) {
+        HandleAdsSkippedEvent(eventId);
+    } else if (reason == OHOS::Media::ADS_COMPLETED) {
+        HandleAdsCompletedEvent(eventId);
     }
 }
 

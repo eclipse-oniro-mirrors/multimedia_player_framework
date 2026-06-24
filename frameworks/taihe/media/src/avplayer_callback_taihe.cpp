@@ -1505,53 +1505,78 @@ void AVPlayerCallback::OnAdsChangeCb(const int32_t extra, const Format &infoBody
         FAKE_POINTER(this), type, eventId.c_str(), reason);
 
     if (type == OHOS::Media::ADS_START) {
-        if (refMap_.find(AVPlayerEvent::EVENT_ADS_STARTED) == refMap_.end()) {
-            MEDIA_LOGW("can not find adsStarted callback!");
-            return;
-        }
-        AniCallback::AdsStartedEvent *cb = new(std::nothrow) AniCallback::AdsStartedEvent();
-        CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new AdsStartedEvent");
-        cb->callback = refMap_.at(AVPlayerEvent::EVENT_ADS_STARTED);
-        cb->callbackName = AVPlayerEvent::EVENT_ADS_STARTED;
-        cb->eventId = eventId;
-        cb->durationMs = durationMs;
-        AniCallback::CompleteCallback(cb, mainHandler_);
+        HandleAdsStartedEvent(eventId, durationMs);
     } else if (type == OHOS::Media::ADS_END) {
-        if (reason == OHOS::Media::ADS_ERROR) {
-            if (refMap_.find(AVPlayerEvent::EVENT_ADS_LOADING_ERROR) == refMap_.end()) {
-                MEDIA_LOGW("can not find adsLoadingError callback!");
-                return;
-            }
-            AniCallback::AdsLoadingErrorEvent *cb = new(std::nothrow) AniCallback::AdsLoadingErrorEvent();
-            CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new AdsLoadingErrorEvent");
-            cb->callback = refMap_.at(AVPlayerEvent::EVENT_ADS_LOADING_ERROR);
-            cb->callbackName = AVPlayerEvent::EVENT_ADS_LOADING_ERROR;
-            cb->eventId = eventId;
-            cb->errorCode = 5400108;
-            AniCallback::CompleteCallback(cb, mainHandler_);
-        } else if (reason == OHOS::Media::ADS_SKIPPED) {
-            if (refMap_.find(AVPlayerEvent::EVENT_ADS_SKIPPED) == refMap_.end()) {
-                MEDIA_LOGW("can not find adsSkipped callback!");
-                return;
-            }
-            AniCallback::AdsSkippedEvent *cb = new(std::nothrow) AniCallback::AdsSkippedEvent();
-            CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new AdsSkippedEvent");
-            cb->callback = refMap_.at(AVPlayerEvent::EVENT_ADS_SKIPPED);
-            cb->callbackName = AVPlayerEvent::EVENT_ADS_SKIPPED;
-            cb->eventId = eventId;
-            AniCallback::CompleteCallback(cb, mainHandler_);
-        } else if (reason == OHOS::Media::ADS_COMPLETED) {
-            if (refMap_.find(AVPlayerEvent::EVENT_ADS_COMPLETED) == refMap_.end()) {
-                MEDIA_LOGW("can not find adsCompleted callback!");
-                return;
-            }
-            AniCallback::AdsCompletedEvent *cb = new(std::nothrow) AniCallback::AdsCompletedEvent();
-            CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new AdsCompletedEvent");
-            cb->callback = refMap_.at(AVPlayerEvent::EVENT_ADS_COMPLETED);
-            cb->callbackName = AVPlayerEvent::EVENT_ADS_COMPLETED;
-            cb->eventId = eventId;
-            AniCallback::CompleteCallback(cb, mainHandler_);
-        }
+        HandleAdsEndEvent(eventId, reason);
+    }
+}
+
+void AVPlayerCallback::HandleAdsStartedEvent(const std::string &eventId, int64_t durationMs)
+{
+    if (refMap_.find(AVPlayerEvent::EVENT_ADS_STARTED) == refMap_.end()) {
+        MEDIA_LOGW("can not find adsStarted callback!");
+        return;
+    }
+    AniCallback::AdsStartedEvent *cb = new(std::nothrow) AniCallback::AdsStartedEvent();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new AdsStartedEvent");
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_ADS_STARTED);
+    cb->callbackName = AVPlayerEvent::EVENT_ADS_STARTED;
+    cb->eventId = eventId;
+    cb->durationMs = durationMs;
+    AniCallback::CompleteCallback(cb, mainHandler_);
+}
+
+void AVPlayerCallback::HandleAdsLoadingErrorEvent(const std::string &eventId)
+{
+    if (refMap_.find(AVPlayerEvent::EVENT_ADS_LOADING_ERROR) == refMap_.end()) {
+        MEDIA_LOGW("can not find adsLoadingError callback!");
+        return;
+    }
+    AniCallback::AdsLoadingErrorEvent *cb = new(std::nothrow) AniCallback::AdsLoadingErrorEvent();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new AdsLoadingErrorEvent");
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_ADS_LOADING_ERROR);
+    cb->callbackName = AVPlayerEvent::EVENT_ADS_LOADING_ERROR;
+    cb->eventId = eventId;
+    cb->errorCode = 5400108;
+    AniCallback::CompleteCallback(cb, mainHandler_);
+}
+
+void AVPlayerCallback::HandleAdsSkippedEvent(const std::string &eventId)
+{
+    if (refMap_.find(AVPlayerEvent::EVENT_ADS_SKIPPED) == refMap_.end()) {
+        MEDIA_LOGW("can not find adsSkipped callback!");
+        return;
+    }
+    AniCallback::AdsSkippedEvent *cb = new(std::nothrow) AniCallback::AdsSkippedEvent();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new AdsSkippedEvent");
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_ADS_SKIPPED);
+    cb->callbackName = AVPlayerEvent::EVENT_ADS_SKIPPED;
+    cb->eventId = eventId;
+    AniCallback::CompleteCallback(cb, mainHandler_);
+}
+
+void AVPlayerCallback::HandleAdsCompletedEvent(const std::string &eventId)
+{
+    if (refMap_.find(AVPlayerEvent::EVENT_ADS_COMPLETED) == refMap_.end()) {
+        MEDIA_LOGW("can not find adsCompleted callback!");
+        return;
+    }
+    AniCallback::AdsCompletedEvent *cb = new(std::nothrow) AniCallback::AdsCompletedEvent();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new AdsCompletedEvent");
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_ADS_COMPLETED);
+    cb->callbackName = AVPlayerEvent::EVENT_ADS_COMPLETED;
+    cb->eventId = eventId;
+    AniCallback::CompleteCallback(cb, mainHandler_);
+}
+
+void AVPlayerCallback::HandleAdsEndEvent(const std::string &eventId, int32_t reason)
+{
+    if (reason == OHOS::Media::ADS_ERROR) {
+        HandleAdsLoadingErrorEvent(eventId);
+    } else if (reason == OHOS::Media::ADS_SKIPPED) {
+        HandleAdsSkippedEvent(eventId);
+    } else if (reason == OHOS::Media::ADS_COMPLETED) {
+        HandleAdsCompletedEvent(eventId);
     }
 }
 
