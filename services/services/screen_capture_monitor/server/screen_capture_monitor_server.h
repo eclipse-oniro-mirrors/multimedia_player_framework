@@ -33,7 +33,7 @@ namespace Media {
 
 class ScreenCaptureMonitorSubscriber : public EventFwk::CommonEventSubscriber {
 public:
-    ScreenCaptureMonitorSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo)
+    explicit ScreenCaptureMonitorSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo)
         : EventFwk::CommonEventSubscriber(subscribeInfo)
     {}
     ~ScreenCaptureMonitorSubscriber() = default;
