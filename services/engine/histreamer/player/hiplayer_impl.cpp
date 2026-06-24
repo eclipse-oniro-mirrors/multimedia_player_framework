@@ -2814,6 +2814,10 @@ void HiPlayerImpl::OnEventContinue(const Event &event)
             HandleTimedMetaData(AnyCast<std::shared_ptr<MediaAVCodec::AVTimedMetaData>>(event.param));
             break;
         }
+        case EventType::EVENT_ADS_CHANGE: {
+            HandleAdsChange(AnyCast<std::shared_ptr<MediaAVCodec::AVAdsChangeEvent>>(event.param));
+            break;
+        }
         default:
             break;
     }
@@ -3503,8 +3507,8 @@ void HiPlayerImpl::NotifyDurationUpdate(const std::string_view& type, int32_t pa
 {
     Format format;
     format.PutIntValue(std::string(type), param);
-    MEDIA_LOG_I("NotifyDurationUpdate " PUBLIC_LOG_D64, durationMs_.load());
-    callbackLooper_.OnInfo(INFO_TYPE_DURATION_UPDATE, durationMs_.load(), format);
+    MEDIA_LOG_I("NotifyDurationUpdate " PUBLIC_LOG_D32, param);
+    callbackLooper_.OnInfo(INFO_TYPE_DURATION_UPDATE, param, format);
 }
 
 void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
@@ -3815,6 +3819,28 @@ void HiPlayerImpl::HandleTimedMetaData(std::shared_ptr<OHOS::MediaAVCodec::AVTim
     MEDIA_LOG_I("sending timedMetaData event: id=%{public}s, classify=%{public}s, start=%{public}" PRId64
         ", duration=%{public}" PRId64 ", contentsSize=%{public}zu",
         meta->id.c_str(), meta->classify.c_str(), meta->start, meta->duration, meta->contents.size());
+}
+
+void HiPlayerImpl::HandleAdsChange(std::shared_ptr<MediaAVCodec::AVAdsChangeEvent> event)
+{
+    FALSE_RETURN_MSG(event != nullptr, "HandleAdsChange: event is nullptr");
+    FALSE_RETURN_MSG(callbackLooper_.IsStarted(), "HandleAdsChange: callbackLooper is not started");
+    if (event->type == ADS_START) {
+        isAdsPlaying_.store(true);
+    } else if (event->type == ADS_END) {
+        isAdsPlaying_.store(false);
+    }
+
+    Format format;
+    (void)format.PutIntValue(std::string(PlaybackAds::PLAYER_ADS_TYPE), static_cast<int32_t>(event->type));
+    (void)format.PutStringValue(std::string(PlaybackAds::PLAYER_ADS_EVENT_ID), event->eventId);
+    (void)format.PutLongValue(std::string(PlaybackAds::PLAYER_ADS_START_MS), event->startMs);
+    (void)format.PutLongValue(std::string(PlaybackAds::PLAYER_ADS_DURATION_MS), event->durationMs);
+    (void)format.PutIntValue(std::string(PlaybackAds::PLAYER_ADS_REASON), static_cast<int32_t>(event->reason));
+
+    callbackLooper_.OnInfo(INFO_TYPE_ADS_CHANGE, 0, format);
+    MEDIA_LOG_I("adsChange: type=%{public}d, eventId=%{public}s", static_cast<int32_t>(event->type),
+        event->eventId.c_str());
 }
 
 void HiPlayerImpl::HandleMetricsEvent(int64_t timeStamp, int64_t timeLine, int64_t duration,
@@ -4590,6 +4616,9 @@ void HiPlayerImpl::DoInitDemuxer()
     demuxer_->SetPerfRecEnabled(isPerfRecEnabled_);
     demuxer_->SetApiVersion(apiVersion_);
     demuxer_->SetSyncCenter(syncManager_);
+    demuxer_->SetSpeedChangeCallback([this](float speed) {
+        this->doSetPlaybackSpeed(speed);
+    });
     pipeline_->AddHeadFilters({demuxer_});
     {
         ScopedTimer timer("Demuxer Init", DEMUXER_INIT_WARNING_MS);
@@ -4830,6 +4859,33 @@ void HiPlayerImpl::InitPcmCallback()
     audioSink_->SetPCMOutputStatus(isPcmOutputEnable_);
     audioSink_->SetPCMProcessorStatus(isPcmProcessorEnable_);
     audioSink_->SetPCMProcessorMaxLen(maxProcessedPcmLen_);
+}
+
+int32_t HiPlayerImpl::AddAdsMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource,
+    int64_t startMs, std::string &outId)
+{
+    FALSE_RETURN_V_MSG_E(demuxer_ != nullptr, MSERR_INVALID_OPERATION, "DemuxerFilter is nullptr");
+    FALSE_RETURN_V_MSG_E(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr");
+    auto source = std::make_shared<MediaSource>(mediaSource->url);
+    return TransStatus(demuxer_->AddAdsMediaSource(source, startMs, IsLiveStream(), outId));
+}
+
+int32_t HiPlayerImpl::RemoveAdsMediaSource(const std::string &id)
+{
+    FALSE_RETURN_V_MSG_E(demuxer_ != nullptr, MSERR_INVALID_OPERATION, "DemuxerFilter is nullptr");
+    return TransStatus(demuxer_->RemoveAdsMediaSource(id));
+}
+
+int32_t HiPlayerImpl::SkipCurrentAdsMediaSource()
+{
+    FALSE_RETURN_V_MSG_E(demuxer_ != nullptr, MSERR_INVALID_OPERATION, "DemuxerFilter is nullptr");
+    return TransStatus(demuxer_->SkipCurrentAdsMediaSource());
+}
+
+int32_t HiPlayerImpl::DisableAllAdsMediaSource()
+{
+    FALSE_RETURN_V_MSG_E(demuxer_ != nullptr, MSERR_INVALID_OPERATION, "DemuxerFilter is nullptr");
+    return TransStatus(demuxer_->DisableAllAdsMediaSource());
 }
 }  // namespace Media
 }  // namespace OHOS

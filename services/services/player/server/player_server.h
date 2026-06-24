@@ -185,6 +185,11 @@ public:
     int32_t SetPCMOutputStatus(bool isEnable) override;
     int32_t SetPCMProcessorStatus(bool isEnable) override;
     int32_t SetPCMProcessorMaxLen(int32_t maxProcessedPcmLen) override;
+    int32_t AddAdsMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource,
+        int64_t startMs, std::string &outId) override;
+    int32_t RemoveAdsMediaSource(const std::string &id) override;
+    int32_t SkipCurrentAdsMediaSource() override;
+    int32_t DisableAllAdsMediaSource() override;
 
 protected:
     class BaseState;

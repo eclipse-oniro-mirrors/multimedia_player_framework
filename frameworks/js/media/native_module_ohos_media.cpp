@@ -15,6 +15,9 @@
 
 #include "native_module_ohos_media.h"
 #include "media_log.h"
+#ifdef SUPPORT_PLAYER_API9
+#include "avads_controller_napi.h"
+#endif
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "JSMediaModule"};
@@ -40,6 +43,7 @@ static napi_value Export(napi_env env, napi_value exports)
 #endif
 #ifdef SUPPORT_PLAYER_API9
     OHOS::Media::AVPlayerNapi::Init(env, exports);
+    OHOS::Media::AVAdsControllerNapi::Init(env, exports);
 #endif
 #ifdef SUPPORT_RECORDER
     OHOS::Media::AudioRecorderNapi::Init(env, exports);

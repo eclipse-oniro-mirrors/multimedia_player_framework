@@ -523,6 +523,31 @@ public:
         }
     };
 
+    struct AdsChangeEvent : public Base {
+        ::OHOS::Media::AVAdsChangeEvent meta = {};
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> interstitialRef = callback.lock();
+            CHECK_AND_RETURN_LOG(interstitialRef != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            auto func = interstitialRef->callbackRef_;
+            CHECK_AND_RETURN_LOG(func != nullptr, "failed to get callback");
+            std::shared_ptr<taihe::callback<void(
+                ::ohos::multimedia::media::AVAdsChangeEvent const&)>> cacheCallback =
+                std::reinterpret_pointer_cast<taihe::callback<void(
+                    ::ohos::multimedia::media::AVAdsChangeEvent const&)>>(func);
+
+            ::ohos::multimedia::media::AVAdsChangeEvent adsInfo {
+                .type = meta.type,
+                .eventId = taihe::string(meta.eventId),
+                .startMs = meta.startMs,
+                .durationMs = meta.durationMs,
+                .reason = meta.reason,
+            };
+            (*cacheCallback)(adsInfo);
+        }
+    };
+
     static void CompleteCallback(AniCallback::Base *aniCb, std::shared_ptr<OHOS::AppExecFwk::EventHandler> mainHandler)
     {
         CHECK_AND_RETURN_LOG(aniCb != nullptr, "aniCb is nullptr");
@@ -639,6 +664,8 @@ void AVPlayerCallback::InitInfoFuncsPart2()
         [this](const int32_t extra, const Format &infoBody) { OnPlaybackContentChangedCb(extra, infoBody); };
     onInfoFuncs_[INFO_TYPE_TIMED_META_DATA] =
         [this](const int32_t extra, const Format &infoBody) { OnTimedMetaDataCb(extra, infoBody); };
+    onInfoFuncs_[INFO_TYPE_ADS_CHANGE] =
+        [this](const int32_t extra, const Format &infoBody) { OnAdsChangeCb(extra, infoBody); };
 }
 
 AVPlayerCallback::AVPlayerCallback(AVPlayerNotify *listener)
@@ -1416,6 +1443,34 @@ void AVPlayerCallback::OnTimedMetaDataCb(const int32_t extra, const Format &info
 
     MEDIA_LOGI("0x%{public}06" PRIXPTR " OnTimedMetaDataCb id=%{public}s classify=%{public}s",
         FAKE_POINTER(this), cb->meta.id.c_str(), cb->meta.classify.c_str());
+    AniCallback::CompleteCallback(cb, mainHandler_);
+}
+
+void AVPlayerCallback::OnAdsChangeCb(const int32_t extra, const Format &infoBody)
+{
+    (void)extra;
+    CHECK_AND_RETURN_LOG(isLoaded_.load(), "current source is unready");
+
+    if (refMap_.find(AVPlayerEvent::EVENT_ADS_CHANGE) == refMap_.end()) {
+        MEDIA_LOGW("can not find adsChange callback!");
+        return;
+    }
+
+    AniCallback::AdsChangeEvent *cb = new(std::nothrow) AniCallback::AdsChangeEvent();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new AdsChangeEvent");
+
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_ADS_CHANGE);
+    cb->callbackName = AVPlayerEvent::EVENT_ADS_CHANGE;
+
+    (void)infoBody.GetIntValue(std::string(PlaybackAds::PLAYER_ADS_TYPE), cb->meta.type);
+    (void)infoBody.GetStringValue(std::string(PlaybackAds::PLAYER_ADS_EVENT_ID), cb->meta.eventId);
+    (void)infoBody.GetLongValue(std::string(PlaybackAds::PLAYER_ADS_START_MS), cb->meta.startMs);
+    (void)infoBody.GetLongValue(std::string(PlaybackAds::PLAYER_ADS_DURATION_MS),
+        cb->meta.durationMs);
+    (void)infoBody.GetIntValue(std::string(PlaybackAds::PLAYER_ADS_REASON), cb->meta.reason);
+
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnAdsChangeCb type=%{public}d eventId=%{public}s",
+        FAKE_POINTER(this), cb->meta.type, cb->meta.eventId.c_str());
     AniCallback::CompleteCallback(cb, mainHandler_);
 }
 

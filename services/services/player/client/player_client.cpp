@@ -788,5 +788,38 @@ int32_t PlayerClient::SetPCMProcessorMaxLen(int32_t maxProcessedPcmLen)
 
     return playerProxy_->SetPCMProcessorMaxLen(maxProcessedPcmLen);
 }
+
+int32_t PlayerClient::AddAdsMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource,
+    int64_t startMs, std::string &outId)
+{
+    MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " AddAdsMediaSource in", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->AddAdsMediaSource(mediaSource, startMs, outId);
+}
+
+int32_t PlayerClient::RemoveAdsMediaSource(const std::string &id)
+{
+    MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " RemoveAdsMediaSource in", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->RemoveAdsMediaSource(id);
+}
+
+int32_t PlayerClient::SkipCurrentAdsMediaSource()
+{
+    MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " SkipCurrentAdsMediaSource in", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->SkipCurrentAdsMediaSource();
+}
+
+int32_t PlayerClient::DisableAllAdsMediaSource()
+{
+    MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " DisableAllAdsMediaSource in", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->DisableAllAdsMediaSource();
+}
 } // namespace Media
 } // namespace OHOS

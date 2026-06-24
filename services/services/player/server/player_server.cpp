@@ -2879,5 +2879,38 @@ void PlayerServer::InitPcmCallback()
     ret = playerEngine_->SetPCMProcessorMaxLen(maxProcessedPcmLen_);
     TRUE_LOG(ret != MSERR_OK, MEDIA_LOGW, "PlayerEngine SetPCMProcessorMaxLen failed, ret %{public}d", ret);
 }
+
+int32_t PlayerServer::AddAdsMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource,
+    int64_t startMs, std::string &outId)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    MEDIA_LOGI("PlayerServer AddAdsMediaSource in, startMs: %{public}" PRId64, startMs);
+    return playerEngine_->AddAdsMediaSource(mediaSource, startMs, outId);
+}
+
+int32_t PlayerServer::RemoveAdsMediaSource(const std::string &id)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    MEDIA_LOGI("PlayerServer RemoveAdsMediaSource in, id: %{public}s", id.c_str());
+    return playerEngine_->RemoveAdsMediaSource(id);
+}
+
+int32_t PlayerServer::SkipCurrentAdsMediaSource()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    MEDIA_LOGI("PlayerServer SkipCurrentAdsMediaSource in");
+    return playerEngine_->SkipCurrentAdsMediaSource();
+}
+
+int32_t PlayerServer::DisableAllAdsMediaSource()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    MEDIA_LOGI("PlayerServer DisableAllAdsMediaSource in");
+    return playerEngine_->DisableAllAdsMediaSource();
+}
 } // namespace Media
 } // namespace OHOS

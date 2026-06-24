@@ -111,7 +111,12 @@ public:
     int32_t SetPCMCallback(const sptr<IRemoteObject> &object) override;
     int32_t SetPCMOutputStatus(bool isEnable) override;
     int32_t SetPCMProcessorStatus(bool isEnable) override;
-    int32_t SetPCMProcessorMaxLen(int32_t maxProcessedPCMLen) override;
+    int32_t SetPCMProcessorMaxLen(int32_t maxProcessedPcmLen) override;
+    int32_t AddAdsMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource,
+        int64_t startMs, std::string &outId) override;
+    int32_t RemoveAdsMediaSource(const std::string &id) override;
+    int32_t SkipCurrentAdsMediaSource() override;
+    int32_t DisableAllAdsMediaSource() override;
 
 private:
     int32_t SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option);
@@ -123,6 +128,7 @@ private:
     void WriteMediaStreamListToMessageParcel(const std::shared_ptr<AVMediaSource> &mediaSource, MessageParcel& data);
     void ReadTrackSelectionFilter(MessageParcel &reply, AVPlayTrackSelectionFilter &trackFilter);
     void ReadTrackSelectionFilterInner(MessageParcel &reply, AVPlayTrackSelectionFilter &trackFilter);
+    int32_t WriteAVMediaSourceToParcel(MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource);
     int32_t WriteUrlSourceToParcel(MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource);
     int32_t WriteM3U8FdToParcel(MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource);
     int32_t WriteFdSourceToParcel(MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource);

@@ -119,6 +119,11 @@ public:
     int32_t SetPCMOutputCallback(const std::shared_ptr<PlayerCallback> &callback) override;
     int32_t SetPCMProcessorCallback(const std::shared_ptr<PlayerCallback> &callback) override;
     int32_t SetPCMProcessorMaxLen(int32_t maxProcessedPcmLen) override;
+    int32_t AddAdsMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource,
+        int64_t startMs, std::string &outId) override;
+    int32_t RemoveAdsMediaSource(const std::string &id) override;
+    int32_t SkipCurrentAdsMediaSource() override;
+    int32_t DisableAllAdsMediaSource() override;
 
 private:
     int32_t CreateListenerObject();

@@ -132,6 +132,11 @@ public:
     int32_t SetPCMOutputStatus(bool isEnable) override;
     int32_t SetPCMProcessorStatus(bool isEnable) override;
     int32_t SetPCMProcessorMaxLen(int32_t maxProcessedPcmLen) override;
+    int32_t AddAdsMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource,
+        int64_t startMs, std::string &outId) override;
+    int32_t RemoveAdsMediaSource(const std::string &id) override;
+    int32_t SkipCurrentAdsMediaSource() override;
+    int32_t DisableAllAdsMediaSource() override;
 
 protected:
     PlayerServiceStub();
@@ -231,6 +236,10 @@ private:
     int32_t SetPCMOutputStatus(MessageParcel &data, MessageParcel &reply);
     int32_t SetPCMProcessorStatus(MessageParcel &data, MessageParcel &reply);
     int32_t SetPCMProcessorMaxLen(MessageParcel &data, MessageParcel &reply);
+    int32_t AddAdsMediaSource(MessageParcel &data, MessageParcel &reply);
+    int32_t RemoveAdsMediaSource(MessageParcel &data, MessageParcel &reply);
+    int32_t SkipCurrentAdsMediaSource(MessageParcel &data, MessageParcel &reply);
+    int32_t DisableAllAdsMediaSource(MessageParcel &data, MessageParcel &reply);
 
     int32_t ReadMediaStreamListFromMessageParcel(
         MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource);
@@ -258,6 +267,8 @@ private:
     void FillPlayerFuncPart2();
     void FillPlayerFuncPart3();
     void FillPlayerFuncPart4();
+    int32_t ReadAVMediaSourceFromParcel(MessageParcel &data, std::shared_ptr<AVMediaSource> &mediaSource,
+        int32_t &fd, std::string &mimeType);
 };
 } // namespace Media
 } // namespace OHOS

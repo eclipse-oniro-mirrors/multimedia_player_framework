@@ -327,9 +327,34 @@ public:
         return MSERR_OK;
     }
 
-    virtual int32_t SetPCMProcessorMaxLen(int32_t maxProcessedPCMLen)
+    virtual int32_t SetPCMProcessorMaxLen(int32_t maxProcessedPcmLen)
     {
-        (void)maxProcessedPCMLen;
+        (void)maxProcessedPcmLen;
+        return 0;
+    }
+
+    virtual int32_t AddAdsMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource,
+        int64_t startMs, std::string &outId)
+    {
+        (void)mediaSource;
+        (void)startMs;
+        (void)outId;
+        return 0;
+    }
+    
+    virtual int32_t RemoveAdsMediaSource(const std::string &id)
+    {
+        (void)id;
+        return 0;
+    }
+    
+    virtual int32_t SkipCurrentAdsMediaSource()
+    {
+        return 0;
+    }
+
+    virtual int32_t DisableAllAdsMediaSource()
+    {
         return 0;
     }
 
@@ -421,6 +446,10 @@ public:
         SET_VIDEO_OUTPUT,
         GET_VIDEO_SAMPLE,
         SET_SUBTITLE_CB_DFX_STATUS,
+        ADD_ADS_MEDIA_SOURCE,
+        REMOVE_ADS_MEDIA_SOURCE,
+        SKIP_CURRENT_ADS_MEDIA_SOURCE,
+        DISABLE_ALL_ADS_MEDIA_SOURCE,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardPlayerService");

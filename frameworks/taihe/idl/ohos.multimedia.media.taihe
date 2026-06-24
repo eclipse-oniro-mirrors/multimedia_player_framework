@@ -317,6 +317,14 @@ struct AVTimedMetaData {
     contents: Map<String, String>;
 }
 
+struct AVAdsChangeEvent {
+    type: i32;
+    eventId: String;
+    startMs: i64;
+    durationMs: i64;
+    reason: i32;
+}
+
 struct VideoSize{
     width: Optional<i32>;
     height: Optional<i32>;
@@ -660,6 +668,20 @@ interface AVPlayer {
     GetMediaSources(): Array<Optional<MediaSource>>;
     OnTimedMetaData(callback: (data: AVTimedMetaData) => void): void;
     OffTimedMetaData(callback: Optional<(data: AVTimedMetaData) => void>): void;
+    OnAdsChange(callback: (info: AVAdsChangeEvent) => void): void;
+    OffAdsChange(callback: Optional<(info: AVAdsChangeEvent) => void>): void;
+
+    @gen_promise("addAdsMediaSource")
+    AddAdsMediaSourceSync(src: MediaSource, startMs: i64): String;
+
+    @gen_promise("removeAdsMediaSource")
+    RemoveAdsMediaSourceSync(id: String): void;
+
+    @gen_promise("skipCurrentAdsMediaSource")
+    SkipCurrentAdsMediaSourceSync(): void;
+
+    @gen_promise("disableAllAdsMediaSource")
+    DisableAllAdsMediaSourceSync(): void;
 
     @gen_promise("addPlaybackMediaSource")
     AddPlaybackMediaSourceSync(src: MediaSource, pos: Optional<String>): String;
