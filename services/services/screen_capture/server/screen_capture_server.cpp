@@ -4945,7 +4945,8 @@ void ScreenCaptureServer::ReleaseInner()
             StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
             MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner Stop done, sessionId:%{public}d",
                 FAKE_POINTER(this), sessionId_);
-            CHECK_AND_RETURN(GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_);
+        }
+        if (GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_) {
             DeleteSettingsByKey("settings.app.show_touch_hint");
         }
     }
