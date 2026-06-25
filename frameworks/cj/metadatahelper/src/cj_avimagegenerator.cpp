@@ -102,6 +102,8 @@ void CJAVImageGeneratorImpl::Release()
         return;
     }
     helper_->Release();
+    helper_ = nullptr;
+    state_ = HelperState::HELPER_STATE_RELEASED;
 }
 
 } // namespace Media
