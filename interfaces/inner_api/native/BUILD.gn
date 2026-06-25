@@ -35,6 +35,7 @@ config("media_client_ipc_config") {
     "$MEDIA_ROOT_DIR/services/services/media_data_source/ipc",
     "$MEDIA_ROOT_DIR/services/services/dolby_passthrough/ipc",
     "$MEDIA_ROOT_DIR/services/services/media_source/ipc",
+    "$MEDIA_ROOT_DIR/services/services/media_source/utils",
     "$MEDIA_ROOT_DIR/services/services/monitor/client",
     "$MEDIA_ROOT_DIR/services/services/monitor/ipc",
     "$MEDIA_ROOT_DIR/services/services/pcm_output/ipc",
@@ -157,6 +158,7 @@ ohos_shared_library("media_client") {
       "$MEDIA_ROOT_DIR/services/services/media_source/net_downloader/network_client_agent.cpp",
       "$MEDIA_ROOT_DIR/services/services/media_source/net_downloader/downloader_factory.cpp",
       "$MEDIA_ROOT_DIR/services/services/media_source/net_downloader/network_monitor.cpp",
+      "$MEDIA_ROOT_DIR/services/services/media_source/utils/network_utils.cpp",
     ]
   }
   if (player_framework_support_recorder) {
@@ -244,6 +246,7 @@ ohos_shared_library("media_client") {
     "image_framework:image_native",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "netmanager_base:net_conn_manager_if",
     "netmanager_base:net_security_config_if",
     "qos_manager:qos",
     "samgr:samgr_proxy",
