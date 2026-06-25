@@ -36,6 +36,7 @@ static const std::string SETTINGS_DATA_BASE_URI =
     "datashare:///com.ohos.settingsdata/entry/settingsdata/SETTINGSDATA?Proxy=true";
 static const std::string SETTINGS_DATA_EXT_URI = "datashare:///com.ohos.settingsdata.DataAbility";
 static const std::string SETTINGS_DATA_FIELD_KEYWORD = "KEYWORD";
+static const std::string SETTINGS_DATA_FIELD_VALUE = "VALUE";
 }
 
 namespace OHOS {
@@ -465,12 +466,14 @@ int32_t __attribute__((visibility("default"))) DeleteSettingsByKey(const std::st
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, MSERR_INVALID_VAL, "dataShareHelper is nullptr");
     Uri uri(SETTINGS_DATA_BASE_URI);
     DataShare::DataSharePredicates predicates;
-    predicates.EqualTo(SETTINGS_DATA_FIELD_KEYWORD, static_cast<std::string>(key));
-    int32_t updateResult = dataShareHelper->Delete(uri, predicates);
-    MEDIA_LOG_I("DeleteSettingsByKey Delete %{public}d", updateResult);
-    predicates.EqualTo(SETTINGS_DATA_FIELD_KEYWORD, "settings.app.show_touch_hint");
-    updateResult = dataShareHelper->Delete(uri, predicates);
-    MEDIA_LOG_I("DeleteSettingsByKey2 Delete %{public}d", updateResult);
+    predicates.EqualTo(SETTINGS_DATA_FIELD_KEYWORD, key);
+    DataShare::DataShareValuesBucket bucket;
+    DataShare::DataShareValueObject keyObj(key);
+    DataShare::DataShareValueObject valueObj("");
+    bucket.Put(SETTINGS_DATA_FIELD_KEYWORD, keyObj);
+    bucket.Put(SETTINGS_DATA_FIELD_VALUE, valueObj);
+    int32_t updateResult = dataShareHelper->Update(uri, predicates, bucket);
+    MEDIA_LOG_I("DeleteSettingsByKey update %{public}d", updateResult);
     dataShareHelper->Release();
     return MSERR_OK;
 }
