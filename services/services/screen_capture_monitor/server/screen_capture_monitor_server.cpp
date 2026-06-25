@@ -27,6 +27,7 @@
 #include "access_token.h"
 
 namespace {
+static const std::string SHOW_TOUCH_HINT_KEY = "settings.app.show_touch_hint";
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureMonitorServer"};
 }
 
@@ -210,7 +211,7 @@ void ScreenCaptureMonitorSubscriber::OnReceiveEvent(const EventFwk::CommonEventD
     MEDIA_LOGI("ScreenCaptureMonitorServer::OnReceiveEvent action: %{public}s", action.c_str());
     CHECK_AND_RETURN(action == EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY);
     MEDIA_LOGI("ScreenCaptureMonitorServer::HandleDataShareReadyEvent");
-    int32_t ret = DeleteSettingsByKey("settings.app.show_touch_hint");
+    int32_t ret = DeleteSettingsByKey(SHOW_TOUCH_HINT_KEY);
     MEDIA_LOGI("ScreenCaptureMonitorServer::HandleDataShareReadyEvent update result: %{public}d", ret);
 }
 } // namespace Media
