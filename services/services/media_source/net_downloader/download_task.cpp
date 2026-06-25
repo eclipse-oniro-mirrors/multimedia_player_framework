@@ -51,7 +51,7 @@ constexpr int64_t PAUSE_TIMEOUT_SECONDS = 1;
 }
 
 DownloadTask::DownloadTask(const DownloadTaskInfo &info, const DownloadConfig &config,
-        const std::weak_ptr<DownloadTaskCallback> &callback)
+    const std::weak_ptr<DownloadTaskCallback> &callback)
     : taskId_(info.taskId),
       url_(info.url),
       outputPath_(info.outputPath),
