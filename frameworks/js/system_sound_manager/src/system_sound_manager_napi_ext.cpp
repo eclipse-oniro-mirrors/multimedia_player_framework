@@ -809,8 +809,7 @@ napi_value SystemSoundManagerNapi::GetCurrentRingtoneAttribute(napi_env env, nap
 
     napi_get_value_int32(env, argv[PARAM0], &asyncContext->ringtoneType);
     MEDIA_LOGI("GetCurrentRingtoneAttribute ringtoneType is: %{public}d", asyncContext->ringtoneType);
-    CHECK_AND_RETURN_RET_LOG(asyncContext->ringtoneType == RINGTONE_TYPE_SIM_CARD_0 || asyncContext->ringtoneType
-        == RINGTONE_TYPE_SIM_CARD_1,
+    CHECK_AND_RETURN_RET_LOG(IsValidRingtoneType(static_cast<RingtoneType>(asyncContext->ringtoneType)),
         ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO, NAPI_ERR_INPUT_INVALID), "Parameter error");
 
     napi_create_promise(env, &asyncContext->deferred, &result);
