@@ -56,7 +56,7 @@ constexpr int32_t HTTP_CAN_NOT_CONNECT = 7;
 }
 
 NetworkClient::NetworkClient(const std::string &url, const std::map<std::string, std::string> &header,
-                              int32_t timeoutMs, int32_t retryCount)
+    int32_t timeoutMs, int32_t retryCount)
     : url_(url),
       header_(header),
       timeoutMs_(timeoutMs),
