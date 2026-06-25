@@ -302,6 +302,7 @@ ohos_shared_library("media_service") {
     "media_foundation:media_foundation",
     "memmgr:memmgrclient",
     "napi:ace_napi",
+    "netmanager_base:net_conn_manager_if",
     "os_account:os_account_innerkits",
     "qos_manager:qos",
     "resource_management:global_resmgr",
