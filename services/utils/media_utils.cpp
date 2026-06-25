@@ -465,7 +465,7 @@ int32_t __attribute__((visibility("default"))) DeleteSettingsByKey(const std::st
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, MSERR_INVALID_VAL, "dataShareHelper is nullptr");
     Uri uri(SETTINGS_DATA_BASE_URI);
     DataShare::DataSharePredicates predicates;
-    predicates.EqualTo(SETTINGS_DATA_FIELD_KEYWORD, key);
+    predicates.EqualTo(SETTINGS_DATA_FIELD_KEYWORD, static_cast<std::string>(key));
     int32_t updateResult = dataShareHelper->Delete(uri, predicates);
     MEDIA_LOG_I("DeleteSettingsByKey Delete %{public}d", updateResult);
     predicates.EqualTo(SETTINGS_DATA_FIELD_KEYWORD, "settings.app.show_touch_hint");
