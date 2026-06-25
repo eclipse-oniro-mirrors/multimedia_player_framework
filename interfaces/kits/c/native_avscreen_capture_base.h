@@ -24,7 +24,7 @@ extern "C" {
 #endif
 
 /**
- * @brief Nativebuffer of avscreeencapture that from graphics.
+ * @brief The struct describes the native video stream class for screen capture.
  * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
  *
  * @since 10
@@ -33,7 +33,9 @@ extern "C" {
 typedef struct OH_NativeBuffer OH_NativeBuffer;
 
 /**
- * @brief Initialization of avscreeencapture
+ * @brief Defines all the asynchronous callback function pointers of an **OH_AVScreenCapture** instance. To ensure the
+ * normal running of **OH_AVScreenCapture**, you must register the instance of this struct with the **
+ * OH_AVScreenCapture** instance to process the information reported by the callback functions.
  * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
  *
  * @since 10
@@ -208,7 +210,7 @@ typedef struct OH_AudioEncInfo {
 } OH_AudioEncInfo;
 
 /**
- * @brief The audio info of avscreeencapture
+ * @brief The struct describes the audio information.
  * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
  *
  * @since 10
@@ -246,7 +248,7 @@ typedef struct OH_VideoCaptureInfo {
 } OH_VideoCaptureInfo;
 
 /**
- * @brief Videoc encoder info
+ * @brief The struct describes the video encoding information.
  * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
  *
  * @since 10
@@ -412,7 +414,7 @@ typedef struct OH_AVScreenCaptureCallback {
 } OH_AVScreenCaptureCallback;
 
 /**
- * @brief avscreeencapture rect info
+ * @brief The struct describes the width, height, and image information of the rectangle used for screen capture.
  * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
  *
  * @since 10
@@ -546,7 +548,7 @@ typedef enum OH_AVScreenCaptureContentChangedEvent_Enum {
 } OH_AVScreenCaptureContentChangedEvent;
 
 /**
- * @brief content fill mode.
+ * @brief Enumerates the image fill modes.
  *
  * @since 20
  */
