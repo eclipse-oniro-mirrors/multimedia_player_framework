@@ -573,40 +573,40 @@ HWTEST_F(NativeMetadataExtractorUnitTest, AVMetadataExtractor_FetchFramesByTimes
     ASSERT_EQ(AV_ERR_OK, res);
 }
 
-/** 
- * @ts.name: AVMetadataExtractor_CancelAllFetchFrames_0100 
- * @tc.desc: Test cancel all fetch frames requests. 
- * @tc.type: FUNC 
- */ 
-HWTEST_F(NativeMetadataExtractorUnitTest, AVMetadataExtractor_CancelAllFetchFrames_0100, Level2) 
-{ 
-    auto metadataextractor = OH_AVMetadataExtractor_Create(); 
-    ASSERT_NE(nullptr, metadataextractor); 
+/**
+ * @ts.name: AVMetadataExtractor_CancelAllFetchFrames_0100
+ * @tc.desc: Test cancel all fetch frames requests.
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeMetadataExtractorUnitTest, AVMetadataExtractor_CancelAllFetchFrames_0100, Level2)
+{
+    auto metadataextractor = OH_AVMetadataExtractor_Create();
+    ASSERT_NE(nullptr, metadataextractor);
 
-    int32_t fd = open(MD, O_RDONLY); 
-    ASSERT_GT(fd, 0); 
-    int64_t fileSize = -1; 
-    int64_t offset = 0; 
+    int32_t fd = open(MD, O_RDONLY);
+    ASSERT_GT(fd, 0);
+    int64_t fileSize = -1;
+    int64_t offset = 0;
 
-    auto re = OH_AVMetadataExtractor_SetFDSource(metadataextractor, fd, offset, fileSize); 
-    close(fd); 
-    EXPECT_EQ(AV_ERR_OK, re); 
+    auto re = OH_AVMetadataExtractor_SetFDSource(metadataextractor, fd, offset, fileSize);
+    close(fd);
+    EXPECT_EQ(AV_ERR_OK, re);
 
-    int64_t timeUs = 100; 
-    OH_PixelmapNative* pixelMap = nullptr; 
+    int64_t timeUs = 100;
+    OH_PixelmapNative* pixelMap = nullptr;
 
-    auto pixelMapParams = OH_AVMetadataExtractor_OutputParam_Create(); 
-    auto err = OH_AVMetadataExtractor_OutputParam_SetSize(pixelMapParams, 100, 100); 
-    EXPECT_EQ(true, err); 
+    auto pixelMapParams = OH_AVMetadataExtractor_OutputParam_Create();
+    auto err = OH_AVMetadataExtractor_OutputParam_SetSize(pixelMapParams, 100, 100);
+    EXPECT_EQ(true, err);
 
-    auto result = OH_AVMetadataExtractor_FetchFrameByTime(metadataextractor, timeUs, 
-        OH_AVMedia_SeekMode::OH_AVMEDIA_SEEK_NEXT_SYNC, pixelMapParams, &pixelMap); 
-    OH_AVMetadataExtractor_CancelAllFetchFrames(metadataextractor); 
-    EXPECT_EQ(AV_ERR_OK, result); 
+    auto result = OH_AVMetadataExtractor_FetchFrameByTime(metadataextractor, timeUs,
+        OH_AVMedia_SeekMode::OH_AVMEDIA_SEEK_NEXT_SYNC, pixelMapParams, &pixelMap);
+    OH_AVMetadataExtractor_CancelAllFetchFrames(metadataextractor);
+    EXPECT_EQ(AV_ERR_OK, result);
 
-    OH_AVMetadataExtractor_OutputParam_Destroy(pixelMapParams); 
-    auto res = OH_AVMetadataExtractor_Release(metadataextractor); 
-    ASSERT_EQ(AV_ERR_OK, res); 
+    OH_AVMetadataExtractor_OutputParam_Destroy(pixelMapParams);
+    auto res = OH_AVMetadataExtractor_Release(metadataextractor);
+    ASSERT_EQ(AV_ERR_OK, res);
 }
 
 /**
