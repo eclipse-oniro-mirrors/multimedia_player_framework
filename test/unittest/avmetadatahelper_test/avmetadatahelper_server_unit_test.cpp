@@ -90,6 +90,38 @@ HWTEST_F(AVMetadataHelperServerUnitTest, ChangeState, TestSize.Level1)
     EXPECT_EQ(avmetadataHelperServer_->currState_, HelperStates::HELPER_STATE_ERROR);
 }
 
+/** 
+ * @tc.name: NotifyErrorCallback 
+ * @tc.desc: NotifyErrorCallback 
+ * @tc.type: FUNC 
+ */ 
+HWTEST_F(AVMetadataHelperServerUnitTest, NotifyErrorCallback, TestSize.Level1) 
+{ 
+    int32_t code = 0; 
+    const std::string msg = "test"; 
+    avmetadataHelperServer_->helperCb_ = nullptr; 
+    avmetadataHelperServer_->NotifyErrorCallback(code, msg); 
+    avmetadataHelperServer_->helperCb_ = std::make_shared<TestHelperCallback>(); 
+    avmetadataHelperServer_->NotifyErrorCallback(code, msg); 
+    EXPECT_EQ(avmetadataHelperServer_->isLiveStream_, false); 
+} 
+
+/** 
+ * @tc.name: GetStatusDescription 
+ * @tc.desc: GetStatusDescription 
+ * @tc.type: FUNC 
+ */ 
+HWTEST_F(AVMetadataHelperServerUnitTest, GetStatusDescription, TestSize.Level1) 
+{ 
+    int32_t status = -1; 
+    avmetadataHelperServer_->GetStatusDescription(status); 
+    status = 5; 
+    avmetadataHelperServer_->GetStatusDescription(status); 
+    status = 2; 
+    avmetadataHelperServer_->GetStatusDescription(status); 
+    EXPECT_EQ(avmetadataHelperServer_->isLiveStream_, false); 
+}
+
 /**
  * @tc.name: MediaTrace
  * @tc.desc: MediaTrace
