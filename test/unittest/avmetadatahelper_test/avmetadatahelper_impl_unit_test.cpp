@@ -188,6 +188,36 @@ HWTEST_F(AVMetadtahelperImplUnitTest, FreePixelMapData, TestSize.Level1)
 }
 
 /**
+ * @tc.name: DumpPixelMap
+ * @tc.desc: DumpPixelMap
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetadtahelperImplUnitTest, DumpPixelMap, TestSize.Level1)
+{
+    auto res = helper_->DumpPixelMap(true, nullptr, ".data");
+    ASSERT_EQ(res, MSERR_INVALID_VAL);
+
+    InitializationOptions opts;
+    opts.size.width = 1;
+    opts.size.height = 1;
+    opts.pixelFormat = PixelFormat::NV12;
+    std::shared_ptr<PixelMap> pixelMap = PixelMap::Create(opts);
+    ASSERT_NE(pixelMap, nullptr);
+    res = helper_->DumpPixelMap(true, pixelMap, ".data");
+}
+
+/**
+ * @tc.name: DumpAVBuffer
+ * @tc.desc: DumpAVBuffer
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVMetadtahelperImplUnitTest, DumpAVBuffer, TestSize.Level1)
+{
+    auto res = helper_->DumpAVBuffer(true, nullptr, ".data");
+    ASSERT_EQ(res, MSERR_INVALID_VAL);
+}
+
+/**
  * @tc.name: pixelFormatToString
  * @tc.desc: pixelFormatToString
  * @tc.type: FUNC

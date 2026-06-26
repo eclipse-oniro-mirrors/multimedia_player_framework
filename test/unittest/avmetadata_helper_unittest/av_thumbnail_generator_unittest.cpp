@@ -42,6 +42,7 @@ namespace OHOS {
 namespace Media {
 namespace Test {
 static const int32_t NUM_TEST = 1000;
+static const int64_t ERR_OK = 0;
 void AVThumbnailGeneratorUnitTest::SetUpTestCase(void) {}
  
 void AVThumbnailGeneratorUnitTest::TearDownTestCase(void) {}
@@ -60,6 +61,18 @@ void AVThumbnailGeneratorUnitTest::TearDown(void)
 }
 
 /**
+ * @tc.name: StopTask
+ * @tc.desc: Test readTask_ != nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVThumbnailGeneratorUnitTest, StopTask, TestSize.Level1)
+{
+    avThumbnailGenerator_->readTask_ = nullptr;
+    auto ret = avThumbnailGenerator_->StopTask();
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.name: OnError
  * @tc.desc: Test all
  * @tc.type: FUNC
@@ -71,6 +84,183 @@ HWTEST_F(AVThumbnailGeneratorUnitTest, OnError, TestSize.Level1)
     int32_t errorCode = -1;
     avThumbnailGenerator_->OnError(errorType, errorCode);
     EXPECT_EQ(avThumbnailGenerator_->stopProcessing_, true);
+}
+
+/**
+  * @tc.name: OnOutputFormatChanged
+  * @tc.desc: Test all
+  * @tc.type: FUNC
+  */
+HWTEST_F(AVThumbnailGeneratorUnitTest, OnOutputFormatChanged, TestSize.Level1)
+{
+    ASSERT_NE(avThumbnailGenerator_, nullptr);
+    MediaAVCodec::Format format;
+    avThumbnailGenerator_->OnOutputFormatChanged(format);
+    EXPECT_EQ(avThumbnailGenerator_->width_, 0);
+}
+
+/**
+ * @tc.name: OnInputBufferAvailable
+ * @tc.desc: Test if (stopProcessing_.load() || hasFetchedFrame_.load() || readErrorFlag_.load())
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVThumbnailGeneratorUnitTest, OnInputBufferAvailable_003, TestSize.Level1)
+{
+    ASSERT_NE(avThumbnailGenerator_, nullptr);
+    uint32_t index = 0;
+    auto mockBuffer = std::make_shared<AVBuffer>();
+    EXPECT_CALL(*mockBuffer, GetUniqueId()).WillRepeatedly(Return(1));
+    mockBuffer->meta_ = std::make_shared<Meta>();
+    std::shared_ptr<AVBuffer> buffer = mockBuffer;
+    mockInputBufferQueueConsumer_ = new MockAVBufferQueueConsumer();
+    avThumbnailGenerator_->inputBufferQueueConsumer_ = mockInputBufferQueueConsumer_;
+    avThumbnailGenerator_->stopProcessing_ = true;
+    avThumbnailGenerator_->hasFetchedFrame_ = true;
+    avThumbnailGenerator_->readErrorFlag_ = true;
+    avThumbnailGenerator_->OnInputBufferAvailable(index, buffer);
+}
+
+/**
+ * @tc.name: OnOutputBufferAvailable
+ * @tc.desc: Test if (!isValidBuffer || !isValidState)
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVThumbnailGeneratorUnitTest, OnOutputBufferAvailable, TestSize.Level1)
+{
+    ASSERT_NE(avThumbnailGenerator_, nullptr);
+    uint32_t index = 0;
+    auto mockAVCodecVideoDecoder = std::make_shared<MediaAVCodec::MockAVCodecVideoDecoder>();
+    EXPECT_CALL(*(mockAVCodecVideoDecoder), ReleaseOutputBuffer(_,_)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*(mockAVCodecVideoDecoder), Stop()).WillRepeatedly(Return(0));
+    EXPECT_CALL(*(mockAVCodecVideoDecoder), Release()).WillRepeatedly(Return(0));
+    avThumbnailGenerator_->videoDecoder_ = mockAVCodecVideoDecoder;
+    auto mockBuffer = std::make_shared<AVBuffer>();
+    EXPECT_CALL(*mockBuffer, GetUniqueId()).WillRepeatedly(Return(1));
+    mockBuffer->flag_ = static_cast<uint32_t>(AVBufferFlag::EOS);
+    auto mockMemory = std::make_shared<AVMemory>();
+    EXPECT_CALL(*mockMemory, GetSize()).WillRepeatedly(Return(1));
+    EXPECT_CALL(*mockMemory, GetSurfaceBuffer()).WillRepeatedly(Return(nullptr));
+    mockBuffer->memory_ = mockMemory;
+    std::shared_ptr<AVBuffer> buffer = mockBuffer;
+    avThumbnailGenerator_->stopProcessing_ = true;
+    avThumbnailGenerator_->hasFetchedFrame_ = true;
+    avThumbnailGenerator_->OnOutputBufferAvailable(index, buffer);
+}
+
+/**
+ * @tc.name: OnOutputBufferAvailable
+ * @tc.desc: Test if (!isAvailableFrame)
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVThumbnailGeneratorUnitTest, OnOutputBufferAvailable_003, TestSize.Level1)
+{
+    ASSERT_NE(avThumbnailGenerator_, nullptr);
+    uint32_t index = 0;
+    auto mockAVCodecVideoDecoder = std::make_shared<MediaAVCodec::MockAVCodecVideoDecoder>();
+    EXPECT_CALL(*(mockAVCodecVideoDecoder), ReleaseOutputBuffer(_,_)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*(mockAVCodecVideoDecoder), Stop()).WillRepeatedly(Return(0));
+    EXPECT_CALL(*(mockAVCodecVideoDecoder), Release()).WillRepeatedly(Return(0));
+    avThumbnailGenerator_->videoDecoder_ = mockAVCodecVideoDecoder;
+    auto mockBuffer = std::make_shared<AVBuffer>();
+    EXPECT_CALL(*mockBuffer, GetUniqueId()).WillRepeatedly(Return(1));
+    mockBuffer->flag_ = static_cast<uint32_t>(AVBufferFlag::NONE);
+    auto mockMemory = std::make_shared<AVMemory>();
+    EXPECT_CALL(*mockMemory, GetSize()).WillRepeatedly(Return(1));
+    EXPECT_CALL(*mockMemory, GetSurfaceBuffer()).WillRepeatedly(Return(nullptr));
+    mockBuffer->memory_ = mockMemory;
+    std::shared_ptr<AVBuffer> buffer = mockBuffer;
+    avThumbnailGenerator_->stopProcessing_ = false;
+    avThumbnailGenerator_->hasFetchedFrame_ = false;
+    avThumbnailGenerator_->seekMode_ = Plugins::SeekMode::SEEK_CLOSEST;
+    buffer->pts_ = -1;
+    avThumbnailGenerator_->OnOutputBufferAvailable(index, buffer);
+}
+
+/**
+ * @tc.name: OnOutputBufferAvailable
+ * @tc.desc: Test if (isClosest && avBuffer_ != nullptr) && buffer->flag_ & (uint32_t)(AVBufferFlag::EOS)
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVThumbnailGeneratorUnitTest, OnOutputBufferAvailable_004, TestSize.Level1)
+{
+    ASSERT_NE(avThumbnailGenerator_, nullptr);
+    uint32_t index = 0;
+    auto mockAVCodecVideoDecoder = std::make_shared<MediaAVCodec::MockAVCodecVideoDecoder>();
+    EXPECT_CALL(*(mockAVCodecVideoDecoder), ReleaseOutputBuffer(_,_)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*(mockAVCodecVideoDecoder), Stop()).WillRepeatedly(Return(0));
+    EXPECT_CALL(*(mockAVCodecVideoDecoder), Release()).WillRepeatedly(Return(0));
+    avThumbnailGenerator_->videoDecoder_ = mockAVCodecVideoDecoder;
+    auto mockBuffer = std::make_shared<AVBuffer>();
+    EXPECT_CALL(*mockBuffer, GetUniqueId()).WillRepeatedly(Return(1));
+    mockBuffer->flag_ = static_cast<uint32_t>(AVBufferFlag::EOS);
+    auto mockMemory = std::make_shared<AVMemory>();
+    EXPECT_CALL(*mockMemory, GetSize()).WillRepeatedly(Return(1));
+    EXPECT_CALL(*mockMemory, GetSurfaceBuffer()).WillRepeatedly(Return(nullptr));
+    mockBuffer->memory_ = mockMemory;
+    std::shared_ptr<AVBuffer> buffer = mockBuffer;
+    avThumbnailGenerator_->stopProcessing_ = false;
+    avThumbnailGenerator_->hasFetchedFrame_ = false;
+
+    avThumbnailGenerator_->seekMode_ = Plugins::SeekMode::SEEK_CLOSEST;
+    auto mockBuffer2 = std::make_shared<AVBuffer>();
+    avThumbnailGenerator_->avBuffer_ = mockBuffer2;
+    avThumbnailGenerator_->OnOutputBufferAvailable(index, buffer);
+}
+
+/**
+ * @tc.name: OnOutputBufferAvailable
+ * @tc.desc: Test buffer->flag_ != (uint32_t)(AVBufferFlag::EOS)
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVThumbnailGeneratorUnitTest, OnOutputBufferAvailable_005, TestSize.Level1)
+{
+    ASSERT_NE(avThumbnailGenerator_, nullptr);
+    uint32_t index = 0;
+    auto mockAVCodecVideoDecoder = std::make_shared<MediaAVCodec::MockAVCodecVideoDecoder>();
+    EXPECT_CALL(*(mockAVCodecVideoDecoder), ReleaseOutputBuffer(_,_)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*(mockAVCodecVideoDecoder), Stop()).WillRepeatedly(Return(0));
+    EXPECT_CALL(*(mockAVCodecVideoDecoder), Release()).WillRepeatedly(Return(0));
+    avThumbnailGenerator_->videoDecoder_ = mockAVCodecVideoDecoder;
+    auto mockBuffer = std::make_shared<AVBuffer>();
+    EXPECT_CALL(*mockBuffer, GetUniqueId()).WillRepeatedly(Return(1));
+    mockBuffer->flag_ = static_cast<uint32_t>(AVBufferFlag::NONE);
+    auto mockMemory = std::make_shared<AVMemory>();
+    EXPECT_CALL(*mockMemory, GetSize()).WillRepeatedly(Return(1));
+    EXPECT_CALL(*mockMemory, GetSurfaceBuffer()).WillRepeatedly(Return(nullptr));
+    mockBuffer->memory_ = mockMemory;
+    std::shared_ptr<AVBuffer> buffer = mockBuffer;
+    avThumbnailGenerator_->stopProcessing_ = false;
+    avThumbnailGenerator_->hasFetchedFrame_ = false;
+
+    avThumbnailGenerator_->seekMode_ = Plugins::SeekMode::SEEK_CLOSEST;
+    auto mockAVBuffer = std::make_shared<AVBuffer>();
+    mockAVBuffer->pts_ = -1;
+    avThumbnailGenerator_->avBuffer_ = mockAVBuffer;
+    avThumbnailGenerator_->OnOutputBufferAvailable(index, buffer);
+}
+
+/**
+ * @tc.name: HandleFetchFrameYuvFailed
+ * @tc.desc: Test all
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVThumbnailGeneratorUnitTest, HandleFetchFrameYuvFailed, TestSize.Level1)
+{
+    ASSERT_NE(avThumbnailGenerator_, nullptr);
+    EXPECT_CALL(*(mockMediaDemuxer_), Pause()).WillRepeatedly(Return(Status::OK));
+    EXPECT_CALL(*(mockMediaDemuxer_), Flush()).WillRepeatedly(Return(Status::OK));
+    avThumbnailGenerator_->readErrorFlag_ = false;
+    avThumbnailGenerator_->stopProcessing_ = false;
+    auto mockAVCodecVideoDecoder = std::make_shared<MediaAVCodec::MockAVCodecVideoDecoder>();
+    EXPECT_CALL(*(mockAVCodecVideoDecoder), ReleaseOutputBuffer(_,_)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*(mockAVCodecVideoDecoder), Flush()).WillRepeatedly(Return(0));
+    EXPECT_CALL(*(mockAVCodecVideoDecoder), Stop()).WillRepeatedly(Return(0));
+    EXPECT_CALL(*(mockAVCodecVideoDecoder), Release()).WillRepeatedly(Return(0));
+    EXPECT_CALL(*(mockAVCodecVideoDecoder), SetParameter(_)).WillRepeatedly(Return(0));
+    avThumbnailGenerator_->videoDecoder_ = mockAVCodecVideoDecoder;
+
+    avThumbnailGenerator_->HandleFetchFrameYuvFailed();
+    EXPECT_EQ(avThumbnailGenerator_->hasFetchedFrame_, true);
 }
 
 /**

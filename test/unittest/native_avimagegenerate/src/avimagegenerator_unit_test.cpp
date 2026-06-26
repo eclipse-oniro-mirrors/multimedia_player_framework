@@ -37,6 +37,19 @@ void NativeImageGeneratorUnitTest::SetUp(void) {}
 void NativeImageGeneratorUnitTest::TearDown(void) {}
 
 /**
+    * @tc.number    : AVImageGenerator_Create_0100
+    * @tc.name      : SetSource AVImageGenerator_Create
+    * @tc.desc      : Verify the functionality of creating AVImageGenerator object.
+ */
+HWTEST_F(NativeImageGeneratorUnitTest, OH_AVImageGenerator_Create_0100, Level2)
+{
+    auto imagegenerator = OH_AVImageGenerator_Create();
+    ASSERT_NE(nullptr, imagegenerator);
+
+    OH_AVImageGenerator_Release(imagegenerator);
+}
+
+/**
     * @tc.number    : AVImageGenerator_SetFDSource_0100
     * @tc.name      : SetSource AVImageGenerator_SetFDSource
     * @tc.desc      : AVImageGenerator set file descriptor source
@@ -90,4 +103,17 @@ HWTEST_F(NativeImageGeneratorUnitTest, OH_AVImageGenerator_FetchFrameByTime_0100
     EXPECT_EQ(IMAGE_SUCCESS, err);
     auto res = OH_AVImageGenerator_Release(imagegenerator);
     ASSERT_EQ(AV_ERR_OK, res);
+}
+
+/**
+    * @tc.number    : AVImageGenerator_Release_0100
+    * @tc.name      : SetSource AVImageGenerator_Release
+    * @tc.desc      : AVImageGenerator release
+ */
+HWTEST_F(NativeImageGeneratorUnitTest, OH_AVImageGenerator_Release_0100, Level2)
+{
+    auto imagegenerator  = OH_AVImageGenerator_Create();
+    ASSERT_NE(nullptr, imagegenerator);
+    auto result = OH_AVImageGenerator_Release(imagegenerator);
+    ASSERT_EQ(AV_ERR_OK, result);
 }
