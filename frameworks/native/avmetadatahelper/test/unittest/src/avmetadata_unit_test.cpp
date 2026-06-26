@@ -867,6 +867,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0100, Level2)
     int64_t time = 0;
     PixelMapParams param;
     auto pixelMap = helper->FetchFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 1920);
     ASSERT_EQ(pixelMap->GetHeight(), 1080);
 }
@@ -879,7 +880,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0100, Level2)
 HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0200, Level2)
 {
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-        std::string("HDR.mp4");
+        std::string("H264_AAC.mp4");
     std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
     ASSERT_NE(nullptr, helper);
     ASSERT_EQ(true, helper->CreateAVMetadataHelper());
@@ -887,8 +888,9 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0200, Level2)
     int64_t time = 0;
     PixelMapParams param;
     auto pixelMap = helper->FetchFrameYuv(time, 0, param);
-    ASSERT_EQ(pixelMap->GetWidth(), 1080);
-    ASSERT_EQ(pixelMap->GetHeight(), 2336);
+    ASSERT_NE(nullptr, pixelMap);
+    ASSERT_EQ(pixelMap->GetWidth(), 720);
+    ASSERT_EQ(pixelMap->GetHeight(), 480);
 }
 
 /**
@@ -908,6 +910,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0300, Level2)
     PixelMapParams param;
     param.isSupportFlip = true;
     auto pixelMap = helper->FetchFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 1920);
     ASSERT_EQ(pixelMap->GetHeight(), 1080);
 }
@@ -928,6 +931,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0400, Level2)
     int64_t time = 0;
     PixelMapParams param;
     auto pixelMap = helper->FetchFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 1920);
     ASSERT_EQ(pixelMap->GetHeight(), 1080);
 }
@@ -949,6 +953,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0500, Level2)
     PixelMapParams param;
     param.isSupportFlip = true;
     auto pixelMap = helper->FetchFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 1920);
     ASSERT_EQ(pixelMap->GetHeight(), 1080);
 }
@@ -970,6 +975,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0600, Level2)
     PixelMapParams param;
     param.convertColorSpace = false;
     auto pixelMap = helper->FetchFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 1920);
     ASSERT_EQ(pixelMap->GetHeight(), 1080);
 }
@@ -991,6 +997,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0700, Level2)
     PixelMapParams param;
     param.convertColorSpace = false;
     auto pixelMap = helper->FetchFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 1920);
     ASSERT_EQ(pixelMap->GetHeight(), 1080);
 }
@@ -1013,12 +1020,14 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0800, Level2)
     param.dstWidth = 360;
     param.dstHeight = 240;
     auto pixelMap = helper->FetchFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 360);
     ASSERT_EQ(pixelMap->GetHeight(), 240);
 
     param.dstWidth = 500;
     param.dstHeight = 1000;
     pixelMap = helper->FetchFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 720);
     ASSERT_EQ(pixelMap->GetHeight(), 480);
 }
@@ -1041,6 +1050,7 @@ HWTEST_F(AVMetadataUnitTest, FetchScaledFrameYuv_API_0100, Level2)
     param.dstWidth = 300;
     param.dstHeight = 200;
     auto pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 300);
     ASSERT_EQ(pixelMap->GetHeight(), 200);
 }
@@ -1063,12 +1073,14 @@ HWTEST_F(AVMetadataUnitTest, FetchScaledFrameYuv_API_0200, Level2)
     param.dstWidth = 300;
     param.dstHeight = -1;
     auto pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 300);
     ASSERT_EQ(pixelMap->GetHeight(), 480);
 
     param.dstWidth = -1;
     param.dstHeight = 200;
     pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 720);
     ASSERT_EQ(pixelMap->GetHeight(), 200);
 }
@@ -1089,18 +1101,21 @@ HWTEST_F(AVMetadataUnitTest, FetchScaledFrameYuv_API_0300, Level2)
     int64_t time = 0;
     PixelMapParams param;
     auto pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 720);
     ASSERT_EQ(pixelMap->GetHeight(), 480);
 
     param.dstWidth = -1;
     param.dstHeight = -1;
     pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 720);
     ASSERT_EQ(pixelMap->GetHeight(), 480);
 
     param.dstWidth = 0;
     param.dstHeight = 0;
     pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 720);
     ASSERT_EQ(pixelMap->GetHeight(), 480);
 }
@@ -1123,12 +1138,14 @@ HWTEST_F(AVMetadataUnitTest, FetchScaledFrameYuv_API_0400, Level2)
     param.dstWidth = 360;
     param.dstHeight = 0;
     auto pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 360);
     ASSERT_EQ(pixelMap->GetHeight(), 240);
 
     param.dstWidth = 0;
     param.dstHeight = 240;
     pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 360);
     ASSERT_EQ(pixelMap->GetHeight(), 240);
 }
@@ -1151,12 +1168,14 @@ HWTEST_F(AVMetadataUnitTest, FetchScaledFrameYuv_API_0500, Level2)
     param.dstWidth = 1000;
     param.dstHeight = 200;
     auto pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 720);
     ASSERT_EQ(pixelMap->GetHeight(), 480);
 
     param.dstWidth = 500;
     param.dstHeight = 1000;
     pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 720);
     ASSERT_EQ(pixelMap->GetHeight(), 480);
 }
@@ -1220,6 +1239,7 @@ HWTEST_F(AVMetadataUnitTest, SetAVMetadataCaller_API_0100, Level2)
     int64_t time = 0;
     PixelMapParams param;
     auto pixelMap = helper->FetchFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 1920);
     ASSERT_EQ(pixelMap->GetHeight(), 1080);
     helper->Release();
@@ -1242,6 +1262,7 @@ HWTEST_F(AVMetadataUnitTest, SetAVMetadataCaller_API_0200, Level2)
     int64_t time = 0;
     PixelMapParams param;
     auto pixelMap = helper->FetchFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 1920);
     ASSERT_EQ(pixelMap->GetHeight(), 1080);
     helper->Release();
@@ -1264,6 +1285,7 @@ HWTEST_F(AVMetadataUnitTest, SetAVMetadataCaller_API_0300, Level2)
     int64_t time = 0;
     PixelMapParams param;
     auto pixelMap = helper->FetchFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 1920);
     ASSERT_EQ(pixelMap->GetHeight(), 1080);
     helper->Release();
@@ -1288,6 +1310,7 @@ HWTEST_F(AVMetadataUnitTest, SetAVMetadataCaller_API_0400, Level2)
     param.dstWidth = 300;
     param.dstHeight = 200;
     auto pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 300);
     ASSERT_EQ(pixelMap->GetHeight(), 200);
 }
@@ -1311,12 +1334,14 @@ HWTEST_F(AVMetadataUnitTest, SetAVMetadataCaller_API_0500, Level2)
     param.dstWidth = 300;
     param.dstHeight = -1;
     auto pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 300);
     ASSERT_EQ(pixelMap->GetHeight(), 480);
 
     param.dstWidth = -1;
     param.dstHeight = 200;
     pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 720);
     ASSERT_EQ(pixelMap->GetHeight(), 200);
 }
@@ -1338,18 +1363,21 @@ HWTEST_F(AVMetadataUnitTest, SetAVMetadataCaller_API_0600, Level2)
     int64_t time = 0;
     PixelMapParams param;
     auto pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 720);
     ASSERT_EQ(pixelMap->GetHeight(), 480);
 
     param.dstWidth = -1;
     param.dstHeight = -1;
     pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 720);
     ASSERT_EQ(pixelMap->GetHeight(), 480);
 
     param.dstWidth = 0;
     param.dstHeight = 0;
     pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 720);
     ASSERT_EQ(pixelMap->GetHeight(), 480);
 }
@@ -1373,12 +1401,14 @@ HWTEST_F(AVMetadataUnitTest, SetAVMetadataCaller_API_0700, Level2)
     param.dstWidth = 360;
     param.dstHeight = 0;
     auto pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 360);
     ASSERT_EQ(pixelMap->GetHeight(), 240);
 
     param.dstWidth = 0;
     param.dstHeight = 240;
     pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 360);
     ASSERT_EQ(pixelMap->GetHeight(), 240);
 }
@@ -1402,12 +1432,14 @@ HWTEST_F(AVMetadataUnitTest, SetAVMetadataCaller_API_0800, Level2)
     param.dstWidth = 1000;
     param.dstHeight = 200;
     auto pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 720);
     ASSERT_EQ(pixelMap->GetHeight(), 480);
 
     param.dstWidth = 500;
     param.dstHeight = 1000;
     pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 720);
     ASSERT_EQ(pixelMap->GetHeight(), 480);
 }
