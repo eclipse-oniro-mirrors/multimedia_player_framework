@@ -92,6 +92,7 @@ static const std::string SYS_SCR_RECR_KEY = "const.multimedia.screencapture.scre
 static const std::string PERM_CUST_SCR_REC = "ohos.permission.CUSTOM_SCREEN_RECORDING";
 static const std::string VIRTUAL_SCREENAME_SCREEN_CAPTRURE = "screeen_capture";
 static const std::string VIRTUAL_SCREENAME_SCREEN_CAPTRURE_FILE = "screeen_capture_file";
+static const std::string SHOW_TOUCH_HINT_KEY = "settings.app.show_touch_hint";
 #ifdef PC_STANDARD
 static const std::string SELECT_ABILITY_NAME = "SelectWindowAbility";
 static const std::string TIMEOUT_SCREENOFF_DISABLE_LOCK = "ohos.permission.TIMEOUT_SCREENOFF_DISABLE_LOCK";
@@ -4967,6 +4968,9 @@ void ScreenCaptureServer::ReleaseInner()
             StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
             MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner Stop done, sessionId:%{public}d",
                 FAKE_POINTER(this), sessionId_);
+        }
+        if (GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_) {
+            DeleteSettingsByKey(SHOW_TOUCH_HINT_KEY);
         }
     }
     MEDIA_LOGI("ScreenCaptureServer::ReleaseInner before RemoveScreenCaptureServerMap");

@@ -99,6 +99,8 @@ ohos_unittest("live_controller_unittest") {
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "data_share:datashare_common",
+    "data_share:datashare_consumer",
     "googletest:gmock",
     "graphic_surface:surface",
     "graphic_surface:sync_fence",

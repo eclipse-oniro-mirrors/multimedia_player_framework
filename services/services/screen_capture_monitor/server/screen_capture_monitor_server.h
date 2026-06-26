@@ -17,7 +17,10 @@
 #define SCREEN_CAPTURE_MONITOR_SERVICE_SERVER_H
 
 #include <chrono>
+#include <functional>
 
+#include "common_event_manager.h"
+#include "common_event_support.h"
 #include "i_screen_capture_monitor_service.h"
 #include "nocopyable.h"
 #include "task_queue.h"
@@ -27,6 +30,15 @@
 
 namespace OHOS {
 namespace Media {
+
+class ScreenCaptureMonitorSubscriber : public EventFwk::CommonEventSubscriber {
+public:
+    explicit ScreenCaptureMonitorSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo)
+        : EventFwk::CommonEventSubscriber(subscribeInfo)
+    {}
+    ~ScreenCaptureMonitorSubscriber() = default;
+    void OnReceiveEvent(const EventFwk::CommonEventData &data) override;
+};
 
 class ScreenCaptureMonitorServer : public IScreenCaptureMonitorService, public NoCopyable {
 public:
@@ -55,11 +67,14 @@ public:
 private:
     int32_t Init();
     bool IsSystemApp();
+    void SubscribeDataShareReadyEvent();
+    void UnSubscribeDataShareReadyEvent();
 
     std::mutex mutex_;
     std::mutex mutexCb_;
     std::set<sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener>> screenCaptureMonitorCbSet_;
     bool isSystemScreenRecorderWorking_ = false;
+    std::shared_ptr<ScreenCaptureMonitorSubscriber> subscriber_ = nullptr;
 };
 } // namespace Media
 } // namespace OHOS
