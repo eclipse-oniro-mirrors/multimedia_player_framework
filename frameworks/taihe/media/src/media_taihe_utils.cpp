@@ -164,7 +164,7 @@ ani_object MediaTaiheUtils::ToBusinessError(ani_env *env, int32_t code, const st
     ani_object err {};
     ani_method ctor {};
     ani_status errCode = env->Class_FindMethod(static_cast<ani_class>(MediaTaiheUtils::globalRef),
-        "<ctor>", ":(I)", &ctor);
+        "<ctor>", ":", &ctor);
     CHECK_AND_RETURN_RET_LOG(errCode == ANI_OK, err,
         "find method BusinessError constructor failed");
     ani_object error {};
