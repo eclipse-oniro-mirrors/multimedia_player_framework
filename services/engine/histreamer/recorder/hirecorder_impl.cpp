@@ -709,8 +709,8 @@ void HiRecorderImpl::OnEvent(const Event &event)
             MEDIA_LOG_I("EVENT_ERROR.");
             auto ptr = obs_.lock();
             if (ptr != nullptr) {
-                switch (AnyCast<Status>(event.param)) {
-                    case Status::ERROR_AUDIO_INTERRUPT:
+                switch (AnyCast<int32_t>(event.param)) {
+                    case static_cast<int32_t>(Status::ERROR_AUDIO_INTERRUPT):
                         // audio interrupted, recorder first stop then error
                         Stop(true);
                         ptr->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, MSERR_AUD_INTERRUPT);
@@ -900,7 +900,8 @@ void HiRecorderImpl::ConfigureAudio(const RecorderParam &recParam)
         case RecorderPublicParamType::AUD_BITRATE: {
             AudBitRate audBitRate = static_cast<const AudBitRate&>(recParam);
             if (audBitRate.bitRate <= 0) {
-                OnEvent({"audioBitRate", EventType::EVENT_ERROR, Status::ERROR_INVALID_PARAMETER});
+                OnEvent({"audioBitRate", EventType::EVENT_ERROR,
+                    static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER)});
             }
             audioEncFormat_->Set<Tag::MEDIA_BITRATE>(audBitRate.bitRate);
             break;
@@ -1074,7 +1075,7 @@ void HiRecorderImpl::ConfigureVidBitRate(const RecorderParam &recParam)
 {
     VidBitRate vidBitRate = static_cast<const VidBitRate&>(recParam);
     if (vidBitRate.bitRate <= 0) {
-        OnEvent({"videoBitRate", EventType::EVENT_ERROR, Status::ERROR_INVALID_PARAMETER});
+        OnEvent({"videoBitRate", EventType::EVENT_ERROR, static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER)});
     }
     videoEncFormat_->Set<Tag::MEDIA_BITRATE>(vidBitRate.bitRate);
 }
