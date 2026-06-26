@@ -208,7 +208,7 @@ HWTEST_F(AVThumbnailGeneratorUnitTest, OnOutputBufferAvailable_004, TestSize.Lev
 }
 
 /**
- * @tc.name: OnOutputBufferAvailable 
+ * @tc.name: OnOutputBufferAvailable
  * @tc.desc: Test buffer->flag_ != (uint32_t)(AVBufferFlag::EOS)
  * @tc.type: FUNC
  */
@@ -239,7 +239,7 @@ HWTEST_F(AVThumbnailGeneratorUnitTest, OnOutputBufferAvailable_005, TestSize.Lev
     avThumbnailGenerator_->OnOutputBufferAvailable(index, buffer);
 }
 
-/** 
+/**
  * @tc.name: HandleFetchFrameYuvFailed
  * @tc.desc: Test all
  * @tc.type: FUNC
